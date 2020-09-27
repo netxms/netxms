@@ -567,6 +567,27 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
       else
          g_flags &= ~AF_ENABLE_NXSL_CONTAINER_FUNCTIONS;
    }
+   else if (!_tcscmp(name, _T("SNMP.Traps.AllowVarbindsConversion")))
+   {
+      if (_tcstol(value, nullptr, 0))
+         g_flags |= AF_ALLOW_TRAP_VARBIND_CONVERSION;
+      else
+         g_flags &= ~AF_ALLOW_TRAP_VARBIND_CONVERSION;
+   }
+   else if (!_tcscmp(name, _T("SNMP.Traps.LogAll")))
+   {
+      if (_tcstol(value, nullptr, 0))
+         g_flags |= AF_LOG_ALL_SNMP_TRAPS;
+      else
+         g_flags &= ~AF_LOG_ALL_SNMP_TRAPS;
+   }
+   else if (!_tcscmp(name, _T("SNMP.Traps.ProcessUnmanagedNodes")))
+   {
+      if (_tcstol(value, nullptr, 0))
+         g_flags |= AF_TRAPS_FROM_UNMANAGED_NODES;
+      else
+         g_flags &= ~AF_TRAPS_FROM_UNMANAGED_NODES;
+   }
    else if (!_tcscmp(name, _T("SNMP.Traps.RateLimit.Threshold")))
    {
       g_snmpTrapStormCountThreshold = ConvertToUint32(value, 0);

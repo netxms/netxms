@@ -49,7 +49,7 @@ Zone::Zone() : super()
 /**
  * Constructor for new zone object
  */
-Zone::Zone(UINT32 uin, const TCHAR *name) : super()
+Zone::Zone(int32_t uin, const TCHAR *name) : super()
 {
    m_id = 0;
    m_uin = uin;
