@@ -42,9 +42,7 @@ VolatileCounter64 g_snmpTrapsReceived = 0;
  */
 static Mutex s_trapCfgLock;
 static ObjectArray<SNMPTrapConfiguration> m_trapCfgList(16, 4, Ownership::True);
-static bool s_logAllTraps = false;
 static VolatileCounter64 s_trapId = 0; // Next free trap ID
-static bool s_allowVarbindConversion = true;
 static uint16_t s_trapListenerPort = 162;
 
 /**
@@ -399,8 +397,6 @@ void LoadTrapCfg()
 void InitTraps()
 {
    LoadTrapCfg();
-   s_logAllTraps = ConfigReadBoolean(_T("LogAllSNMPTraps"), false);
-   s_allowVarbindConversion = ConfigReadBoolean(_T("AllowTrapVarbindsConversion"), true);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(trap_id) FROM snmp_trap_log"));
@@ -444,7 +440,7 @@ static void GenerateTrapEvent(const shared_ptr<Node>& node, UINT32 dwIndex, SNMP
             TCHAR name[64], buffer[3072];
             _sntprintf(name, 64, _T("%d"), pm->getPosition());
 				parameters.set(name,
-               (s_allowVarbindConversion && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
+               ((g_flags & AF_ALLOW_TRAP_VARBIND_CONVERSION) && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
                   varbind->getValueAsPrintableString(buffer, 3072, &convertToHex) :
                   varbind->getValueAsString(buffer, 3072));
          }
@@ -461,7 +457,7 @@ static void GenerateTrapEvent(const shared_ptr<Node>& node, UINT32 dwIndex, SNMP
 					bool convertToHex = true;
 					TCHAR buffer[3072];
 					parameters.set(varbind->getName().toString(),
-                  (s_allowVarbindConversion && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
+                  ((g_flags & AF_ALLOW_TRAP_VARBIND_CONVERSION) && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
                      varbind->getValueAsPrintableString(buffer, 3072, &convertToHex) :
                      varbind->getValueAsString(buffer, 3072));
                break;
@@ -524,7 +520,7 @@ static StringBuffer BuildVarbindList(SNMP_PDU *pdu)
       v->getName().toString(oidText, 1024);
 
       bool convertToHex = true;
-      if (s_allowVarbindConversion)
+      if (g_flags & AF_ALLOW_TRAP_VARBIND_CONVERSION)
          v->getValueAsPrintableString(data, 4096, &convertToHex);
       else
          v->getValueAsString(data, 4096);
@@ -556,22 +552,21 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int
 
 	if (isInformRq)
 	{
-		SNMP_PDU *response = new SNMP_PDU(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
+		SNMP_PDU response(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
 		if (snmpTransport->getSecurityContext() == nullptr)
 		{
 		   snmpTransport->setSecurityContext(new SNMP_SecurityContext(pdu->getCommunity()));
 		}
-		response->setMessageId(pdu->getMessageId());
-		response->setContextEngineId(localEngine->getId(), localEngine->getIdLen());
-		snmpTransport->sendMessage(response, 0);
-		delete response;
+		response.setMessageId(pdu->getMessageId());
+		response.setContextEngineId(localEngine->getId(), localEngine->getIdLen());
+		snmpTransport->sendMessage(&response, 0);
 	}
 
    // Match IP address to object
    shared_ptr<Node> node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, srcAddr);
 
    // Write trap to log if required
-   if (s_logAllTraps || (node != nullptr))
+   if ((node != nullptr) || (g_flags & AF_LOG_ALL_SNMP_TRAPS))
    {
       time_t timestamp = time(nullptr);
 

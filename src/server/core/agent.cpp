@@ -444,74 +444,77 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
          InetAddress originSenderIP = msg->getFieldAsInetAddress(VID_IP_ADDRESS);
          size_t pduLenght;
          const BYTE *pduBytes = msg->getBinaryFieldPtr(VID_PDU, &pduLenght);
-         int32_t zoneUIN = IsZoningEnabled() ? msg->getFieldAsUInt32(VID_ZONE_UIN) : 0;
-         shared_ptr<Node> originNode = FindNodeByIP(zoneUIN, originSenderIP);
-         if ((originNode != nullptr) || ConfigReadBoolean(_T("LogAllSNMPTraps"), false))
+         int32_t zoneUIN;
+         if (IsZoningEnabled())
          {
-            SNMP_PDU *pdu = new SNMP_PDU;
-            SNMP_SecurityContext *sctx = (originNode != nullptr) ? originNode->getSnmpSecurityContext() : nullptr;
-            if (pdu->parse(pduBytes, pduLenght, sctx, true))
-            {
-               nxlog_debug(6, _T("SNMPTrapReceiver: received PDU of type %d"), pdu->getCommand());
-               if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
-               {
-                  bool isInformRequest = (pdu->getCommand() == SNMP_INFORM_REQUEST);
-                  SNMP_ProxyTransport *snmpTransport = isInformRequest ? CreateSNMPProxyTransport(self(), originNode.get(), originSenderIP, msg->getFieldAsUInt16(VID_PORT)) : nullptr;
-                  if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_INFORM_REQUEST))
-                  {
-                     SNMP_SecurityContext *context = snmpTransport->getSecurityContext();
-                     context->setAuthoritativeEngine(localEngine);
-                  }
-                  if (snmpTransport != nullptr)
-                     snmpTransport->setWaitForResponse(false);
-                  ProcessTrap(pdu, originSenderIP, zoneUIN, msg->getFieldAsUInt16(VID_PORT), snmpTransport, &localEngine, isInformRequest);
-                  delete snmpTransport;
-               }
-               else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
-               {
-                  // Engine ID discovery
-                  nxlog_debug(6, _T("SNMPTrapReceiver: EngineId discovery"));
-
-                  SNMP_ProxyTransport *snmpTransport = CreateSNMPProxyTransport(self(), originNode.get(), originSenderIP, msg->getFieldAsUInt16(VID_PORT));
-
-                  SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
-                  response->setReportable(false);
-                  response->setMessageId(pdu->getMessageId());
-                  response->setContextEngineId(localEngine.getId(), localEngine.getIdLen());
-
-                  SNMP_Variable *var = new SNMP_Variable(_T(".1.3.6.1.6.3.15.1.1.4.0"));
-                  var->setValueFromString(ASN_INTEGER, _T("2"));
-                  response->bindVariable(var);
-
-                  SNMP_SecurityContext *context = new SNMP_SecurityContext();
-                  localEngine.setTime((int)time(nullptr));
-                  context->setAuthoritativeEngine(localEngine);
-                  context->setSecurityModel(SNMP_SECURITY_MODEL_USM);
-                  context->setAuthMethod(SNMP_AUTH_NONE);
-                  context->setPrivMethod(SNMP_ENCRYPT_NONE);
-                  snmpTransport->setSecurityContext(context);
-
-                  snmpTransport->setWaitForResponse(false);
-                  snmpTransport->sendMessage(response, 0);
-                  delete response;
-                  delete snmpTransport;
-               }
-               else if (pdu->getCommand() == SNMP_REPORT)
-               {
-                  debugPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): REPORT PDU with error %s"), (const TCHAR *)pdu->getVariable(0)->getName().toString());
-               }
-               delete pdu;
-            }
-            else if (pdu->getCommand() == SNMP_REPORT)
-            {
-               debugPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): REPORT PDU with error %s"), (const TCHAR *)pdu->getVariable(0)->getName().toString());
-            }
-            delete sctx;
+            shared_ptr<Zone> zone = FindZoneByProxyId(m_nodeId);
+            zoneUIN = (zone != nullptr) ? zone->getUIN() : msg->getFieldAsInt32(VID_ZONE_UIN);
          }
          else
          {
-            debugPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): cannot find origin node with IP %s and not accepting traps from unknown sources"), originSenderIP.toString(ipStringBuffer));
+            zoneUIN = 0;
          }
+         shared_ptr<Node> originNode = FindNodeByIP(zoneUIN, originSenderIP);
+
+         // Do not check for node existence here - it will be checked by ProcessTrap
+
+         SNMP_PDU pdu;
+         SNMP_SecurityContext *sctx = (originNode != nullptr) ? originNode->getSnmpSecurityContext() : nullptr;
+         if (pdu.parse(pduBytes, pduLenght, sctx, true))
+         {
+            nxlog_debug(6, _T("SNMPTrapReceiver: received PDU of type %d"), pdu.getCommand());
+            if ((pdu.getCommand() == SNMP_TRAP) || (pdu.getCommand() == SNMP_INFORM_REQUEST))
+            {
+               bool isInformRequest = (pdu.getCommand() == SNMP_INFORM_REQUEST);
+               SNMP_ProxyTransport *snmpTransport = isInformRequest ? CreateSNMPProxyTransport(self(), originNode.get(), originSenderIP, msg->getFieldAsUInt16(VID_PORT)) : nullptr;
+               if ((pdu.getVersion() == SNMP_VERSION_3) && (pdu.getCommand() == SNMP_INFORM_REQUEST))
+               {
+                  SNMP_SecurityContext *context = snmpTransport->getSecurityContext();
+                  context->setAuthoritativeEngine(localEngine);
+               }
+               if (snmpTransport != nullptr)
+                  snmpTransport->setWaitForResponse(false);
+               ProcessTrap(&pdu, originSenderIP, zoneUIN, msg->getFieldAsUInt16(VID_PORT), snmpTransport, &localEngine, isInformRequest);
+               delete snmpTransport;
+            }
+            else if ((pdu.getVersion() == SNMP_VERSION_3) && (pdu.getCommand() == SNMP_GET_REQUEST) && (pdu.getAuthoritativeEngine().getIdLen() == 0))
+            {
+               // Engine ID discovery
+               nxlog_debug(6, _T("SNMPTrapReceiver: EngineId discovery"));
+
+               SNMP_ProxyTransport *snmpTransport = CreateSNMPProxyTransport(self(), originNode.get(), originSenderIP, msg->getFieldAsUInt16(VID_PORT));
+
+               SNMP_PDU response(SNMP_REPORT, pdu.getRequestId(), pdu.getVersion());
+               response.setReportable(false);
+               response.setMessageId(pdu.getMessageId());
+               response.setContextEngineId(localEngine.getId(), localEngine.getIdLen());
+
+               SNMP_Variable *var = new SNMP_Variable(_T(".1.3.6.1.6.3.15.1.1.4.0"));
+               var->setValueFromString(ASN_INTEGER, _T("2"));
+               response.bindVariable(var);
+
+               SNMP_SecurityContext *context = new SNMP_SecurityContext();
+               localEngine.setTime((int)time(nullptr));
+               context->setAuthoritativeEngine(localEngine);
+               context->setSecurityModel(SNMP_SECURITY_MODEL_USM);
+               context->setAuthMethod(SNMP_AUTH_NONE);
+               context->setPrivMethod(SNMP_ENCRYPT_NONE);
+               snmpTransport->setSecurityContext(context);
+
+               snmpTransport->setWaitForResponse(false);
+               snmpTransport->sendMessage(&response, 0);
+               delete snmpTransport;
+            }
+            else if (pdu.getCommand() == SNMP_REPORT)
+            {
+               debugPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): REPORT PDU with error %s"), pdu.getVariable(0)->getName().toString().cstr());
+            }
+         }
+         else
+         {
+            debugPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): error parsing PDU"));
+         }
+         delete sctx;
       }
    }
    else

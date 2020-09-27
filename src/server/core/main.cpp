@@ -387,6 +387,10 @@ static void LoadGlobalConfig()
       g_flags |= AF_ENABLE_SNMP_TRAPD;
    if (ConfigReadBoolean(_T("SNMP.Traps.ProcessUnmanagedNodes"), false))
       g_flags |= AF_TRAPS_FROM_UNMANAGED_NODES;
+   if (ConfigReadBoolean(_T("SNMP.Traps.LogAll"), false))
+      g_flags |= AF_LOG_ALL_SNMP_TRAPS;
+   if (ConfigReadBoolean(_T("SNMP.Traps.AllowVarbindsConversion"), true))
+      g_flags |= AF_ALLOW_TRAP_VARBIND_CONVERSION;
    if (ConfigReadBoolean(_T("EnableZoning"), false))
       g_flags |= AF_ENABLE_ZONING;
    if (ConfigReadBoolean(_T("EnableObjectTransactions"), false))
