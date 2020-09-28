@@ -219,19 +219,24 @@ static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
  */
 static bool ImportDataTables(sqlite3 *db, const StringList& excludedTables)
 {
-   IntegerArray<UINT32> *targets = GetDataCollectionTargets();
+   IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
    if (targets == nullptr)
       return false;
+
+   bool singleTable = (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0) != 0);
 
 	// Create and import idata_xx tables for each data collection target
    bool success = true;
 	for(int i = 0; i < targets->size(); i++)
 	{
 		uint32_t id = targets->get(i);
-		if (!CreateIDataTable(id))
+		if (!singleTable)
 		{
-		   success = false;
-			break;	// Failed to create idata_xx table
+         if (!CreateIDataTable(id))
+         {
+            success = false;
+            break;	// Failed to create idata_xx table
+         }
 		}
 
 		TCHAR table[64];
@@ -323,11 +328,10 @@ void ImportDatabase(const char *file, const StringList& excludedTables)
 	}
 
 	// Check schema version
-   int legacy = 0, major = 0, minor = 0, singleTablePerfData = 0;
+   int legacy = 0, major = 0, minor = 0;
    if ((sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersion'", GetSchemaVersionCB, &legacy, &errmsg) != SQLITE_OK) ||
        (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersionMajor'", GetSchemaVersionCB, &major, &errmsg) != SQLITE_OK) ||
-       (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersionMinor'", GetSchemaVersionCB, &minor, &errmsg) != SQLITE_OK) ||
-       (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SingeTablePerfData'", GetSchemaVersionCB, &singleTablePerfData, &errmsg) != SQLITE_OK))
+       (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersionMinor'", GetSchemaVersionCB, &minor, &errmsg) != SQLITE_OK))
 	{
 		_tprintf(_T("ERROR: SQL query failed (%hs)\n"), errmsg);
 		sqlite3_free(errmsg);
@@ -345,10 +349,10 @@ void ImportDatabase(const char *file, const StringList& excludedTables)
 		goto cleanup;
 
 	// Import tables
-	for(i = 0; g_tables[i] != NULL; i++)
+	for(i = 0; g_tables[i] != nullptr; i++)
 	{
 	   const TCHAR *table = g_tables[i];
-	   if (excludedTables.contains(table))
+	   if (!_tcsncmp(table, _T("idata"), 5) || !_tcsncmp(table, _T("tdata"), 5) || excludedTables.contains(table))
 	   {
 	      _tprintf(_T("Skipping table %s\n"), table);
 	      continue;
@@ -357,11 +361,8 @@ void ImportDatabase(const char *file, const StringList& excludedTables)
 			goto cleanup;
 	}
 
-	if (!singleTablePerfData)
-	{
-      if (!ImportDataTables(db, excludedTables))
-         goto cleanup;
-	}
+   if (!ImportDataTables(db, excludedTables))
+      goto cleanup;
 
 	ModuleTableImportData data;
 	data.db = db;
