@@ -1638,6 +1638,7 @@ static int F_ExpandString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
    {
       if (!argv[2]->isObject(_T("Event")))
          return NXSL_ERR_NOT_OBJECT;
+      event = static_cast<Event*>(argv[2]->getValueAsObject()->getData());
    }
 
    *result = vm->createValue(object->expandText(argv[0]->getValueAsCString(), NULL, event, NULL, NULL, NULL, NULL));
