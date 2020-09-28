@@ -22,8 +22,8 @@
      <id>console</id>
      <repositories>
         <repository>
-            <id>eclipse-4.11</id>
-            <url>http://download.eclipse.org/eclipse/updates/4.11</url>
+            <id>eclipse-4.15</id>
+            <url>http://download.eclipse.org/eclipse/updates/4.15</url>
             <layout>p2</layout>
         </repository>
      </repositories>
