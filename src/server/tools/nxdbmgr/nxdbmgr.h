@@ -32,9 +32,9 @@
 #include <nxdbmgr_tools.h>
 
 /**
- * Well-known fields to be fixed during import or migration
+ * Column identifier (table.column)
  */
-struct FIX_FIELD
+struct COLUMN_IDENTIFIER
 {
    const TCHAR *table;
    const char *column;
@@ -85,10 +85,11 @@ bool EnumerateModuleSchemas(bool (*handler)(const TCHAR *, void *), void *userDa
 bool UpgradeModuleSchemas();
 bool CheckModuleSchemas();
 
-bool IsColumnFixNeeded(const TCHAR *table, const char *name);
+bool IsColumnIntegerFixNeeded(const TCHAR *table, const char *name);
+bool IsTimestampColumn(const TCHAR *table, const char *name);
 
 bool LoadDataCollectionObjects();
-const TCHAR *GetDCObjectStorageClass(UINT32 id);
+const TCHAR *GetDCObjectStorageClass(uint32_t id);
 
 /**
  * Global variables
