@@ -165,7 +165,6 @@
     <ClCompile Include="clear.cpp" />
     <ClCompile Include="datacoll.cpp" />
     <ClCompile Include="export.cpp" />
-    <ClCompile Include="import.cpp" />
     <ClCompile Include="init.cpp" />
     <ClCompile Include="migrate.cpp" />
     <ClCompile Include="mm.cpp" />

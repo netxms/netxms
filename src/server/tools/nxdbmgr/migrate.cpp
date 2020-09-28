@@ -58,52 +58,131 @@ static DB_HANDLE s_hdbSource = NULL;
 static int s_sourceSyntax = DB_SYNTAX_UNKNOWN;
 
 /**
+ * Import/migrate flag
+ */
+static bool s_import = false;
+
+/**
+ * Well-known integer fields to be fixed during import
+ */
+static COLUMN_IDENTIFIER s_integerFixColumns[] =
+{
+   { _T("dct_threshold_instances"), "tt_row_number" },
+   { _T("graphs"), "flags" },
+   { _T("network_maps"), "bg_zoom" },
+   { _T("nodes"), "capabilities" },
+   { _T("nodes"), "port_rows" },
+   { _T("nodes"), "port_numbering_scheme" },
+   { _T("object_properties"), "state_before_maint" },
+   { _T("snmp_communities"), "zone" },
+   { _T("thresholds"), "state_before_maint" },
+   { _T("usm_credentials"), "zone" },
+   { nullptr, nullptr },
+};
+
+/**
+ * Well-known timestamp columns that should be converted for TimescaleDB
+ */
+static COLUMN_IDENTIFIER s_timestampColumns[] =
+{
+   { _T("event_log"), "event_timestamp" },
+   { _T("syslog"), "msg_timestamp" },
+   { _T("snmp_trap_log"), "trap_timestamp" },
+   { nullptr, nullptr },
+};
+
+/**
+ * Check if fix is needed for column
+ */
+static bool IsColumnInList(const COLUMN_IDENTIFIER *list, const TCHAR *table, const char *name)
+{
+   for(int n = 0; list[n].table != nullptr; n++)
+   {
+      if (!_tcsicmp(list[n].table, table) &&
+          !stricmp(list[n].column, name))
+         return true;
+   }
+   return false;
+}
+
+/**
+ * Check if integer fix is needed for column
+ */
+bool IsColumnIntegerFixNeeded(const TCHAR *table, const char *name)
+{
+   return IsColumnInList(s_integerFixColumns, table, name);
+}
+
+/**
+ * Check if timestamp conversion is needed for column
+ */
+bool IsTimestampColumn(const TCHAR *table, const char *name)
+{
+   return IsColumnInList(s_timestampColumns, table, name);
+}
+
+/**
  * Connect to source database
  */
 static bool ConnectToSource()
 {
-	s_driver = DBLoadDriver(s_dbDriver, s_dbDrvParams, false, NULL, NULL);
-	if (s_driver == NULL)
+	s_driver = DBLoadDriver(s_dbDriver, s_dbDrvParams, false, nullptr, nullptr);
+	if (s_driver == nullptr)
    {
-      _tprintf(_T("Unable to load and initialize database driver \"%s\"\n"), s_dbDriver);
+	   WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Unable to load and initialize database driver \"%s\"\n"), s_dbDriver);
       return false;
    }
    WriteToTerminalEx(_T("Database driver \x1b[1m%s\x1b[0m loaded\n"), s_dbDriver);
 
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    s_hdbSource = DBConnect(s_driver, s_dbServer, s_dbName, s_dbLogin, s_dbPassword, s_dbSchema, errorText);
-   if (s_hdbSource == NULL)
+   if (s_hdbSource == nullptr)
    {
-		_tprintf(_T("Unable to connect to database %s@%s as %s: %s\n"), s_dbName, s_dbServer, s_dbLogin, errorText);
+      if (s_import)
+         WriteToTerminal(_T("\x1b[31;1mERROR:\x1b[0m Cannot open import file\n"));
+      else
+         WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Unable to connect to database %s@%s as %s: %s\n"), s_dbName, s_dbServer, s_dbLogin, errorText);
       return false;
    }
-   WriteToTerminal(_T("Connected to source database\n"));
+   if (!s_import)
+      WriteToTerminal(_T("Connected to source database\n"));
 
    // Get database syntax
-	s_sourceSyntax = DBGetSyntax(s_hdbSource);
-	if (s_sourceSyntax == DB_SYNTAX_UNKNOWN)
-	{
-	   WriteToTerminal(_T("Unable to determine source database syntax\n"));
-      return false;
+   if (s_import)
+   {
+      s_sourceSyntax = DB_SYNTAX_SQLITE;
+   }
+   else
+   {
+      s_sourceSyntax = DBGetSyntax(s_hdbSource);
+      if (s_sourceSyntax == DB_SYNTAX_UNKNOWN)
+      {
+         WriteToTerminal(_T("\x1b[31;1mERROR:\x1b[0m Unable to determine source database syntax\n"));
+         return false;
+      }
    }
 
    // Check source schema version
 	INT32 major, minor;
    if (!DBGetSchemaVersion(s_hdbSource, &major, &minor))
    {
-      WriteToTerminal(_T("Unable to determine source database version.\n"));
+      WriteToTerminal(s_import ? _T("\x1b[31;1mERROR:\x1b[0m Import file is corrupted.\n") : _T("\x1b[31;1mERROR:\x1b[0m Unable to determine source database version.\n"));
       return false;
    }
    if ((major > DB_SCHEMA_VERSION_MAJOR) || ((major == DB_SCHEMA_VERSION_MAJOR) && (minor > DB_SCHEMA_VERSION_MINOR)))
    {
-      _tprintf(_T("Source database has format version %d.%d, this tool is compiled for version %d.%d.\n")
+      _tprintf(_T("%s has format version %d.%d, this tool is compiled for version %d.%d.\n")
                _T("You need to upgrade your server before using this database.\n"),
-                major, minor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
+             s_import ? _T("Import file") : _T("Source database"), major, minor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
        return false;
    }
    if ((major < DB_SCHEMA_VERSION_MAJOR) || ((major == DB_SCHEMA_VERSION_MAJOR) && (minor < DB_SCHEMA_VERSION_MINOR)))
    {
-      _tprintf(_T("Source database has format version %d.%d, this tool is compiled for version %d.%d.\nUse \"upgrade\" command to upgrade source database first.\n"),
+      if (s_import)
+         _tprintf(_T("Import file has format version %d.%d, this tool is compiled for version %d.%d.\n"),
+               major, minor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
+      else
+         _tprintf(_T("Source database has format version %d.%d, this tool is compiled for version %d.%d.\nUse \"upgrade\" command to upgrade source database first.\n"),
                major, minor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
       return false;
    }
@@ -116,7 +195,7 @@ static bool ConnectToSource()
  */
 static bool MigrateTable(const TCHAR *table)
 {
-	WriteToTerminalEx(_T("Migrating table \x1b[1m%s\x1b[0m\n"), table);
+	WriteToTerminalEx(_T("%s table \x1b[1m%s\x1b[0m\n"), s_import ? _T("Importing") : _T("Migrating"), table);
 
 	if (!DBBegin(g_dbHandle))
 	{
@@ -137,8 +216,8 @@ static bool MigrateTable(const TCHAR *table)
 
    // build INSERT query
    StringBuffer query = _T("INSERT INTO ");
-   query += table;
-   query += _T(" (");
+   query.append(table);
+   query.append(_T(" ("));
 	int columnCount = DBGetColumnCount(hResult);
 	for(int i = 0; i < columnCount; i++)
 	{
@@ -337,7 +416,7 @@ static bool LoadDCIStorageClasses()
 static bool MigrateDataToSingleTable(uint32_t nodeId, bool tdata)
 {
    const TCHAR *prefix = tdata ? _T("tdata") : _T("idata");
-   WriteToTerminalEx(_T("Migrating table \x1b[1m%s_%u\x1b[0m to \x1b[1m%s\x1b[0m\n"), prefix, nodeId, prefix);
+   WriteToTerminalEx(_T("%s table \x1b[1m%s_%u\x1b[0m to \x1b[1m%s\x1b[0m\n"), s_import ? _T("Importing") : _T("Migrating"), prefix, nodeId, prefix);
 
    if (!DBBegin(g_dbHandle))
    {
@@ -447,7 +526,7 @@ static inline StringBuffer BuildDataInsertQuery(bool tdata, const TCHAR *sclass)
 static bool MigrateDataToSingleTable_TSDB(uint32_t nodeId, bool tdata)
 {
    const TCHAR *prefix = tdata ? _T("tdata") : _T("idata");
-   WriteToTerminalEx(_T("Migrating table \x1b[1m%s_%u\x1b[0m to \x1b[1m%s\x1b[0m\n"), prefix, nodeId, prefix);
+   WriteToTerminalEx(_T("%s table \x1b[1m%s_%u\x1b[0m to \x1b[1m%s\x1b[0m\n"), s_import ? _T("Importing") : _T("Migrating"), prefix, nodeId, prefix);
 
    bool success = false;
    TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
@@ -563,7 +642,7 @@ static bool MigrateDataToSingleTable_TSDB(uint32_t nodeId, bool tdata)
 static bool MigrateSingleDataTableToTSDB(bool tdata)
 {
    const TCHAR *prefix = tdata ? _T("tdata") : _T("idata");
-   WriteToTerminalEx(_T("Migrating table \x1b[1m%s\x1b[0m\n"), prefix);
+   WriteToTerminalEx(_T("%s table \x1b[1m%s\x1b[0m\n"), s_import ? _T("Importing") : _T("Migrating"), prefix);
 
    bool success = false;
    TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
@@ -714,7 +793,7 @@ static bool MigrateDataTablesToSingleTable()
 static bool MigrateDataFromSingleTable(uint32_t nodeId, bool tdata)
 {
    const TCHAR *prefix = tdata ? _T("tdata") : _T("idata");
-   WriteToTerminalEx(_T("Migrating table \x1b[1m%s_%u\x1b[0m from \x1b[1m%s\x1b[0m\n"), prefix, nodeId, prefix);
+   WriteToTerminalEx(_T("%s table \x1b[1m%s_%u\x1b[0m from \x1b[1m%s\x1b[0m\n"), s_import ? _T("Importing") : _T("Migrating"), prefix, nodeId, prefix);
 
    if (!DBBegin(g_dbHandle))
    {
@@ -869,90 +948,46 @@ static bool MigrateTableCallback(const TCHAR *table, void *context)
 }
 
 /**
- * Migrate database
+ * Do database import or migration
  */
-void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skipAudit, bool skipAlarms,
-         bool skipEvent, bool skipSysLog, bool skipTrapLog, const StringList& excludedTables)
+static bool ImportOrMigrateDatabase(bool skipAudit, bool skipAlarms, bool skipEvent, bool skipSysLog, bool skipTrapLog, const StringList& excludedTables)
 {
-   bool success = false;
-
-   // Load source config
-	Config *config = new Config();
-	if (!config->loadIniConfig(sourceConfig, _T("server")) || !config->parseTemplate(_T("server"), m_cfgTemplate))
-   {
-      _tprintf(_T("Error loading source configuration from %s\n"), sourceConfig);
-      goto cleanup;
-   }
-
-	TCHAR sourceConfFields[2048];
-	_sntprintf(sourceConfFields, 2048, _T("\tDriver: %s\n\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbDriver, s_dbName, s_dbServer, s_dbLogin);
-
-	TCHAR options[1024];
-	if (g_dataOnlyMigration)
-	{
-	   _tcscpy(options, _T("\tData only migration"));
-	}
-	else
-	{
-      _sntprintf(options, 1024,
-               _T("\tSkip audit log.............: %s\n")
-               _T("\tSkip alarm log.............: %s\n")
-               _T("\tSkip event log.............: %s\n")
-               _T("\tSkip syslog................: %s\n")
-               _T("\tSkip SNMP trap log.........: %s\n")
-               _T("\tSkip collected data........: %s\n")
-               _T("\tSkip data collection schema: %s"),
-               skipAudit ? _T("yes") : _T("no"),
-               skipAlarms ? _T("yes") : _T("no"),
-               skipEvent ? _T("yes") : _T("no"),
-               skipSysLog ? _T("yes") : _T("no"),
-               skipTrapLog ? _T("yes") : _T("no"),
-               g_skipDataMigration ? _T("yes") : _T("no"),
-               g_skipDataSchemaMigration ? _T("yes") : _T("no")
-       );
-	}
-
-	if (!GetYesNo(_T("Source:\n%s\n\nTarget:\n%s\n\nOptions:\n%s\n\nConfirm database migration?"), sourceConfFields, destConfFields, options))
-	   goto cleanup;
-
-	// Decrypt password
-   DecryptPassword(s_dbLogin, s_dbPassword, s_dbPassword, MAX_PASSWORD);
-
    if (!ConnectToSource())
-      goto cleanup;
+      return false;
 
+   bool success = false;
    if (!g_dataOnlyMigration)
    {
-	   if (!ClearDatabase(true))
-		   goto cleanup;
+      if (!ClearDatabase(!s_import))
+         goto cleanup;
 
-	   // Migrate tables
-	   for(int i = 0; g_tables[i] != nullptr; i++)
-	   {
-	      if (!_tcsncmp(g_tables[i], _T("idata"), 5) ||
+      // Migrate tables
+      for(int i = 0; g_tables[i] != nullptr; i++)
+      {
+         if (!_tcsncmp(g_tables[i], _T("idata"), 5) ||
              !_tcsncmp(g_tables[i], _T("tdata"), 5))
-	         continue;  // idata and tdata migrated separately
+            continue;  // idata and tdata migrated separately
 
-	      if ((skipAudit && !_tcscmp(g_tables[i], _T("audit_log"))) ||
-	          (skipEvent && !_tcscmp(g_tables[i], _T("event_log"))) ||
-	          (skipAlarms && (!_tcscmp(g_tables[i], _T("alarms")) ||
-	                          !_tcscmp(g_tables[i], _T("alarm_notes")) ||
-	                          !_tcscmp(g_tables[i], _T("alarm_events")))) ||
-	          (skipTrapLog && !_tcscmp(g_tables[i], _T("snmp_trap_log"))) ||
-	          (skipSysLog && !_tcscmp(g_tables[i], _T("syslog"))) ||
-	          ((g_skipDataMigration || g_skipDataSchemaMigration) &&
-	                   !_tcscmp(g_tables[i], _T("raw_dci_values"))) ||
-	          excludedTables.contains(g_tables[i]))
-	      {
-	         WriteToTerminalEx(_T("Skipping table \x1b[1m%s\x1b[0m\n"), g_tables[i]);
-	         continue;
-	      }
+         if ((skipAudit && !_tcscmp(g_tables[i], _T("audit_log"))) ||
+             (skipEvent && !_tcscmp(g_tables[i], _T("event_log"))) ||
+             (skipAlarms && (!_tcscmp(g_tables[i], _T("alarms")) ||
+                             !_tcscmp(g_tables[i], _T("alarm_notes")) ||
+                             !_tcscmp(g_tables[i], _T("alarm_events")))) ||
+             (skipTrapLog && !_tcscmp(g_tables[i], _T("snmp_trap_log"))) ||
+             (skipSysLog && !_tcscmp(g_tables[i], _T("syslog"))) ||
+             ((g_skipDataMigration || g_skipDataSchemaMigration) &&
+                      !_tcscmp(g_tables[i], _T("raw_dci_values"))) ||
+             excludedTables.contains(g_tables[i]))
+         {
+            WriteToTerminalEx(_T("Skipping table \x1b[1m%s\x1b[0m\n"), g_tables[i]);
+            continue;
+         }
 
-	      if (!MigrateTable(g_tables[i]))
-			   goto cleanup;
-	   }
+         if (!MigrateTable(g_tables[i]))
+            goto cleanup;
+      }
 
-	   if (!EnumerateModuleTables(MigrateTableCallback, (void *)&excludedTables))
+      if (!EnumerateModuleTables(MigrateTableCallback, (void *)&excludedTables))
          goto cleanup;
    }
 
@@ -1032,13 +1067,78 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skip
       }
    }
 
-	success = true;
+   success = true;
 
 cleanup:
    if (s_hdbSource != nullptr)
       DBDisconnect(s_hdbSource);
    if (s_driver != nullptr)
       DBUnloadDriver(s_driver);
-	delete config;
+   return success;
+}
+
+/**
+ * Migrate database
+ */
+void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skipAudit, bool skipAlarms,
+         bool skipEvent, bool skipSysLog, bool skipTrapLog, const StringList& excludedTables)
+{
+   // Load source config
+	Config config;
+	if (!config.loadIniConfig(sourceConfig, _T("server")) || !config.parseTemplate(_T("server"), m_cfgTemplate))
+   {
+      _tprintf(_T("Error loading source configuration from %s\n"), sourceConfig);
+      return;
+   }
+
+	TCHAR sourceConfFields[2048];
+	_sntprintf(sourceConfFields, 2048, _T("\tDriver: %s\n\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbDriver, s_dbName, s_dbServer, s_dbLogin);
+
+	TCHAR options[1024];
+	if (g_dataOnlyMigration)
+	{
+	   _tcscpy(options, _T("\tData only migration"));
+	}
+	else
+	{
+      _sntprintf(options, 1024,
+               _T("\tSkip audit log.............: %s\n")
+               _T("\tSkip alarm log.............: %s\n")
+               _T("\tSkip event log.............: %s\n")
+               _T("\tSkip syslog................: %s\n")
+               _T("\tSkip SNMP trap log.........: %s\n")
+               _T("\tSkip collected data........: %s\n")
+               _T("\tSkip data collection schema: %s"),
+               skipAudit ? _T("yes") : _T("no"),
+               skipAlarms ? _T("yes") : _T("no"),
+               skipEvent ? _T("yes") : _T("no"),
+               skipSysLog ? _T("yes") : _T("no"),
+               skipTrapLog ? _T("yes") : _T("no"),
+               g_skipDataMigration ? _T("yes") : _T("no"),
+               g_skipDataSchemaMigration ? _T("yes") : _T("no")
+       );
+	}
+
+	if (!GetYesNo(_T("Source:\n%s\n\nTarget:\n%s\n\nOptions:\n%s\n\nConfirm database migration?"), sourceConfFields, destConfFields, options))
+	   return;
+
+   DecryptPassword(s_dbLogin, s_dbPassword, s_dbPassword, MAX_PASSWORD);
+   bool success = ImportOrMigrateDatabase(skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog, excludedTables);
 	_tprintf(success ? _T("Database migration complete.\n") : _T("Database migration failed.\n"));
+}
+
+/**
+ * Migrate database
+ */
+void ImportDatabase(const char *file, bool skipAudit, bool skipAlarms, bool skipEvent, bool skipSysLog, bool skipTrapLog, const StringList& excludedTables)
+{
+   _tcscpy(s_dbDriver, _T("sqlite.ddr"));
+#ifdef UNICODE
+   MultiByteToWideCharSysLocale(file, s_dbName, MAX_DB_NAME);
+#else
+   strlcpy(s_dbName, file, MAX_DB_NAME);
+#endif
+   s_import = true;
+   bool success = ImportOrMigrateDatabase(skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog, excludedTables);
+   _tprintf(success ? _T("Database import complete.\n") : _T("Database import failed.\n"));
 }

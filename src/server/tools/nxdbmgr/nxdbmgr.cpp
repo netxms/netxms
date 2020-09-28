@@ -361,7 +361,7 @@ stop_search:
                      _T("   -d          : Check collected data (may take very long time).\n")
                      _T("   -D          : Migrate only collected data.\n")
                      _T("   -e <table>  : Exclude specific table from export, import, or migration.\n")
-                     _T("   -E          : Skip export or migration of event log\n")
+                     _T("   -E          : Skip export, import, or migration of event log\n")
                      _T("   -f          : Force repair - do not ask for confirmation.\n")
                      _T("   -F <syntax> : Fallback database syntax to use if not set in metadata.\n")
 #ifdef _WIN32
@@ -369,19 +369,19 @@ stop_search:
 #endif
                      _T("   -h          : Display help and exit.\n")
                      _T("   -I          : MySQL only - specify TYPE=InnoDB for new tables.\n")
-                     _T("   -L          : Skip export or migration of alarm log.\n")
+                     _T("   -L          : Skip export, import, or migration of alarm log.\n")
                      _T("   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n")
                      _T("   -N          : Do not replace existing configuration value (\"set\" command only).\n")
                      _T("   -o          : Show output from SELECT statements in a batch.\n")
                      _T("   -q          : Quiet mode (don't show startup banner).\n")
-                     _T("   -R          : Skip export or migration of SNMP trap log.\n")
-                     _T("   -s          : Skip collected data during migration on export.\n")
-                     _T("   -S          : Skip collected data during migration on export and do not clear or create data tables.\n")
+                     _T("   -R          : Skip export, import, or migration of SNMP trap log.\n")
+                     _T("   -s          : Skip collected data during export, import, or migration.\n")
+                     _T("   -S          : Skip collected data during export, import, or migration and do not clear or create data tables.\n")
                      _T("   -t          : Enable trace mode (show executed SQL queries).\n")
                      _T("   -T <recs>   : Transaction size for migration.\n")
                      _T("   -v          : Display version and exit.\n")
                      _T("   -X          : Ignore SQL errors when upgrading (USE WITH CAUTION!!!)\n")
-                     _T("   -Y          : Skip export or migration of collected syslog records.\n")
+                     _T("   -Y          : Skip export, import, or migration of collected syslog records.\n")
                      _T("\n"), configFile);
             bStart = FALSE;
             break;
@@ -682,7 +682,7 @@ stop_search:
       }
       else if (!strcmp(argv[optind], "import"))
       {
-         ImportDatabase(argv[optind + 1], excludedTables);
+         ImportDatabase(argv[optind + 1], skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog, excludedTables);
       }
       else if (!strcmp(argv[optind], "migrate"))
 		{
