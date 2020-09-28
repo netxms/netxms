@@ -1,5 +1,5 @@
 bin_PROGRAMS = nxdbmgr
-nxdbmgr_SOURCES = nxdbmgr.cpp check.cpp clear.cpp datacoll.cpp export.cpp import.cpp \
+nxdbmgr_SOURCES = nxdbmgr.cpp check.cpp clear.cpp datacoll.cpp export.cpp \
                   init.cpp migrate.cpp mm.cpp modules.cpp reindex.cpp \
 		  resetadmin.cpp tables.cpp tdata_convert.cpp unlock.cpp \
 		  upgrade.cpp upgrade_online.cpp upgrade_v0.cpp upgrade_v21.cpp \
