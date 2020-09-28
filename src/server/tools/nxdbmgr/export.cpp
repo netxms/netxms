@@ -77,12 +77,12 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 
 	_tprintf(_T("Exporting table %s\n"), name);
 
-	if (sqlite3_exec(db, "BEGIN", NULL, NULL, &errmsg) == SQLITE_OK)
+	if (sqlite3_exec(db, "BEGIN", nullptr, nullptr, &errmsg) == SQLITE_OK)
 	{
 		_sntprintf(buffer, 256, _T("SELECT * FROM %s"), name);
 
 		DB_UNBUFFERED_RESULT hResult = SQLSelectUnbuffered(buffer);
-		if (hResult != NULL)
+		if (hResult != nullptr)
 		{
 			while(DBFetch(hResult))
 			{
@@ -112,7 +112,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 				query += _T(")");
 
 				char *utf8query = query.getUTF8String();
-				if (sqlite3_exec(db, utf8query, NULL, NULL, &errmsg) != SQLITE_OK)
+				if (sqlite3_exec(db, utf8query, nullptr, nullptr, &errmsg) != SQLITE_OK)
 				{
 				   MemFree(utf8query);
 					_tprintf(_T("ERROR: SQLite query failed: %hs\n   Query: %s\n"), errmsg, (const TCHAR *)query);
@@ -126,7 +126,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 
 			if (success)
 			{
-				if (sqlite3_exec(db, "COMMIT", NULL, NULL, &errmsg) != SQLITE_OK)
+				if (sqlite3_exec(db, "COMMIT", nullptr, nullptr, &errmsg) != SQLITE_OK)
 				{
 					_tprintf(_T("ERROR: Cannot commit transaction: %hs"), errmsg);
 					sqlite3_free(errmsg);
@@ -135,7 +135,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 			}
 			else
 			{
-				if (sqlite3_exec(db, "ROLLBACK", NULL, NULL, &errmsg) != SQLITE_OK)
+				if (sqlite3_exec(db, "ROLLBACK", nullptr, nullptr, &errmsg) != SQLITE_OK)
 				{
 					_tprintf(_T("ERROR: Cannot rollback transaction: %hs"), errmsg);
 					sqlite3_free(errmsg);
@@ -145,7 +145,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 		else
 		{
 			success = FALSE;
-			if (sqlite3_exec(db, "ROLLBACK", NULL, NULL, &errmsg) != SQLITE_OK)
+			if (sqlite3_exec(db, "ROLLBACK", nullptr, nullptr, &errmsg) != SQLITE_OK)
 			{
 				_tprintf(_T("ERROR: Cannot rollback transaction: %hs"), errmsg);
 				sqlite3_free(errmsg);
@@ -211,7 +211,7 @@ static bool ExecuteSchemaFile(const TCHAR *prefix, void *userArg)
    TCHAR schemaFile[MAX_PATH];
    GetNetXMSDirectory(nxDirShare, schemaFile);
    _tcslcat(schemaFile, FS_PATH_SEPARATOR _T("sql") FS_PATH_SEPARATOR, MAX_PATH);
-   if (prefix != NULL)
+   if (prefix != nullptr)
    {
       _tcslcat(schemaFile, prefix, MAX_PATH);
       _tcslcat(schemaFile, _T("_"), MAX_PATH);
@@ -226,7 +226,7 @@ static bool ExecuteSchemaFile(const TCHAR *prefix, void *userArg)
    }
 
    char *errmsg;
-   bool success = (sqlite3_exec(static_cast<sqlite3*>(userArg), data, NULL, NULL, &errmsg) == SQLITE_OK);
+   bool success = (sqlite3_exec(static_cast<sqlite3*>(userArg), data, nullptr, nullptr, &errmsg) == SQLITE_OK);
    if (!success)
    {
       _tprintf(_T("\x1b[31;1mERROR:\x1b[0m unable to apply database schema (%hs)\n"), errmsg);
@@ -356,7 +356,7 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
    int legacy = 0, major = 0, minor = 0;
    bool success = false;
 
-   if (sqlite3_exec(db, "PRAGMA page_size=65536", NULL, NULL, &errmsg) != SQLITE_OK)
+   if (sqlite3_exec(db, "PRAGMA page_size=65536", nullptr, nullptr, &errmsg) != SQLITE_OK)
    {
       _tprintf(_T("ERROR: cannot set page size for export file (%hs)\n"), errmsg);
       sqlite3_free(errmsg);
@@ -364,7 +364,7 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
    }
 
 	// Setup database schema
-   if (!ExecuteSchemaFile(NULL, db))
+   if (!ExecuteSchemaFile(nullptr, db))
       goto cleanup;
    if (!EnumerateModuleSchemas(ExecuteSchemaFile, db))
       goto cleanup;

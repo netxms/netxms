@@ -128,7 +128,7 @@ static bool MigrateTable(const TCHAR *table)
    TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
    _sntprintf(buffer, 256, _T("SELECT * FROM %s"), table);
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
-   if (hResult == NULL)
+   if (hResult == nullptr)
    {
 		_tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
       DBRollback(g_dbHandle);
@@ -143,17 +143,33 @@ static bool MigrateTable(const TCHAR *table)
 	for(int i = 0; i < columnCount; i++)
 	{
 		DBGetColumnName(hResult, i, buffer, 256);
-		query += buffer;
-		query += _T(",");
+		query.append(buffer);
+		query.append(_T(","));
 	}
 	query.shrink();
-	query += _T(") VALUES (?");
-	for(int i = 1; i < columnCount; i++)
-      query += _T(",?");
+	query.append(_T(") VALUES ("));
+	if (g_dbSyntax == DB_SYNTAX_TSDB)
+	{
+      for(int i = 0; i < columnCount; i++)
+      {
+         char cname[256];
+         DBGetColumnNameA(hResult, i, cname, 256);
+         if (IsTimestampColumn(table, cname))
+            query.append(_T("to_timestamp(?),"));
+         else
+            query.append(_T("?,"));
+      }
+	}
+	else
+	{
+      for(int i = 0; i < columnCount; i++)
+         query.append(_T("?,"));
+	}
+   query.shrink();
    query += _T(")");
 
    DB_STATEMENT hStmt = DBPrepareEx(g_dbHandle, query, true, errorText);
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       success = true;
       int rows = 0, totalRows = 0;
@@ -161,12 +177,12 @@ static bool MigrateTable(const TCHAR *table)
       {
 			for(int i = 0; i < columnCount; i++)
          {
-			   TCHAR *value = DBGetField(hResult, i, NULL, 0);
-			   if ((value == NULL) || (*value == 0))
+			   TCHAR *value = DBGetField(hResult, i, nullptr, 0);
+			   if ((value == nullptr) || (*value == 0))
 			   {
 			      char cname[256];
 			      DBGetColumnNameA(hResult, i, cname, 256);
-               DBBind(hStmt, i + 1, DB_SQLTYPE_VARCHAR, IsColumnFixNeeded(table, cname) ? _T("0") : _T(""), DB_BIND_STATIC);
+               DBBind(hStmt, i + 1, DB_SQLTYPE_VARCHAR, IsColumnIntegerFixNeeded(table, cname) ? _T("0") : _T(""), DB_BIND_STATIC);
                MemFree(value);
 			   }
 			   else
@@ -180,7 +196,7 @@ static bool MigrateTable(const TCHAR *table)
             for(int i = 0; i < columnCount; i++)
             {
                DBGetColumnName(hResult, i, buffer, 256);
-               TCHAR *value = DBGetField(hResult, i, NULL, 0);
+               TCHAR *value = DBGetField(hResult, i, nullptr, 0);
                _tprintf(_T("   %s = \"%s\"\n"), buffer, CHECK_NULL(value));
                MemFree(value);
             }
@@ -224,8 +240,8 @@ static bool MigrateTable(const TCHAR *table)
  */
 static bool MigrateDataTables()
 {
-   IntegerArray<UINT32> *targets = GetDataCollectionTargets();
-   if (targets == NULL)
+   IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
+   if (targets == nullptr)
       return false;
 
 	// Create and import idata_xx and tdata_xx tables for each data collection target
@@ -233,7 +249,7 @@ static bool MigrateDataTables()
    int i;
 	for(i = 0; i < count; i++)
 	{
-		UINT32 id = targets->get(i);
+	   uint32_t id = targets->get(i);
       if (!g_dataOnlyMigration)
       {
 		   if (!CreateIDataTable(id))
@@ -270,7 +286,7 @@ static bool MigrateDataTables()
 /**
  * DCI storage classes
  */
-static HashMap<UINT32, int> s_dciStorageClasses(Ownership::False);
+static HashMap<uint32_t, int> s_dciStorageClasses(Ownership::False);
 static int s_storageClassNumbers[6] = { 0, 1, 2, 3, 4, 5 };
 
 /**
@@ -334,7 +350,7 @@ static bool MigrateDataToSingleTable(UINT32 nodeId, bool tdata)
    _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s_%u"),
             prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, nodeId);
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
-   if (hResult == NULL)
+   if (hResult == nullptr)
    {
       _tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
       DBRollback(g_dbHandle);
@@ -346,7 +362,7 @@ static bool MigrateDataToSingleTable(UINT32 nodeId, bool tdata)
                _T("INSERT INTO tdata (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)")
                : _T("INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)"),
             true, errorText);
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       success = true;
       int rows = 0, totalRows = 0;
@@ -356,12 +372,12 @@ static bool MigrateDataToSingleTable(UINT32 nodeId, bool tdata)
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 1));
          if (tdata)
          {
-            DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DBGetField(hResult, 2, NULL, 0), DB_BIND_DYNAMIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DBGetField(hResult, 2, nullptr, 0), DB_BIND_DYNAMIC);
          }
          else
          {
-            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 2, NULL, 0), DB_BIND_DYNAMIC);
-            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 3, NULL, 0), DB_BIND_DYNAMIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 2, nullptr, 0), DB_BIND_DYNAMIC);
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 3, nullptr, 0), DB_BIND_DYNAMIC);
          }
          if (!SQLExecute(hStmt))
          {
@@ -438,7 +454,7 @@ static bool MigrateDataToSingleTable_TSDB(uint32_t nodeId, bool tdata)
    _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s_%u"),
             prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, nodeId);
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
-   if (hResult == NULL)
+   if (hResult == nullptr)
    {
       _tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
       return false;
@@ -469,13 +485,13 @@ static bool MigrateDataToSingleTable_TSDB(uint32_t nodeId, bool tdata)
       query.append(_T(",to_timestamp("));
       query.append(DBGetFieldULong(hResult, 1));
       query.append(_T("),"));
-      TCHAR *value = DBGetField(hResult, 2, NULL, 0);
+      TCHAR *value = DBGetField(hResult, 2, nullptr, 0);
       query.append(DBPrepareString(g_dbHandle, value));
       MemFree(value);
       if (!tdata)
       {
          query.append(_T(','));
-         TCHAR *value = DBGetField(hResult, 3, NULL, 0);
+         TCHAR *value = DBGetField(hResult, 3, nullptr, 0);
          query.append(DBPrepareString(g_dbHandle, value));
          MemFree(value);
       }
@@ -554,7 +570,7 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
    _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s"),
             prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix);
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
-   if (hResult == NULL)
+   if (hResult == nullptr)
    {
       _tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
       return false;
@@ -577,7 +593,7 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
    {
       UINT32 dciId = DBGetFieldULong(hResult, 0);
       int *sclassPtr = s_dciStorageClasses.get(dciId);
-      int sclass = (sclassPtr != NULL) ? *sclassPtr : 0;
+      int sclass = (sclassPtr != nullptr) ? *sclassPtr : 0;
 
       StringBuffer& query = queries[sclass];
       query.append(hasContent[sclass] ? _T(",(") : _T(" ("));
@@ -585,13 +601,13 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
       query.append(_T(",to_timestamp("));
       query.append(DBGetFieldULong(hResult, 1));
       query.append(_T("),"));
-      TCHAR *value = DBGetField(hResult, 2, NULL, 0);
+      TCHAR *value = DBGetField(hResult, 2, nullptr, 0);
       query.append(DBPrepareString(g_dbHandle, value));
       MemFree(value);
       if (!tdata)
       {
          query.append(_T(','));
-         TCHAR *value = DBGetField(hResult, 3, NULL, 0);
+         TCHAR *value = DBGetField(hResult, 3, nullptr, 0);
          query.append(DBPrepareString(g_dbHandle, value));
          MemFree(value);
       }
@@ -662,8 +678,8 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
  */
 static bool MigrateDataTablesToSingleTable()
 {
-   IntegerArray<UINT32> *targets = GetDataCollectionTargets();
-   if (targets == NULL)
+   IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
+   if (targets == nullptr)
       return false;
 
    // Copy data from idata_xx and tdata_xx tables for each node in "nodes" table
@@ -671,7 +687,7 @@ static bool MigrateDataTablesToSingleTable()
    int i;
    for(i = 0; i < count; i++)
    {
-      UINT32 id = targets->get(i);
+      uint32_t id = targets->get(i);
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
          if (!MigrateDataToSingleTable_TSDB(id, false))
@@ -695,7 +711,7 @@ static bool MigrateDataTablesToSingleTable()
 /**
  * Migrate collected data from single table to multi-single table configuration
  */
-static bool MigrateDataFromSingleTable(UINT32 nodeId, bool tdata)
+static bool MigrateDataFromSingleTable(uint32_t nodeId, bool tdata)
 {
    const TCHAR *prefix = tdata ? _T("tdata") : _T("idata");
    WriteToTerminalEx(_T("Migrating table \x1b[1m%s_%u\x1b[0m from \x1b[1m%s\x1b[0m\n"), prefix, nodeId, prefix);
@@ -719,7 +735,7 @@ static bool MigrateDataFromSingleTable(UINT32 nodeId, bool tdata)
                prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, nodeId);
    }
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
-   if (hResult == NULL)
+   if (hResult == nullptr)
    {
       _tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
       DBRollback(g_dbHandle);
@@ -731,7 +747,7 @@ static bool MigrateDataFromSingleTable(UINT32 nodeId, bool tdata)
    else
       _sntprintf(buffer, 256, _T("INSERT INTO idata_%u (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)"), nodeId);
    DB_STATEMENT hStmt = DBPrepareEx(g_dbHandle, buffer, true, errorText);
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       success = true;
       int rows = 0, totalRows = 0;
@@ -741,12 +757,12 @@ static bool MigrateDataFromSingleTable(UINT32 nodeId, bool tdata)
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 1));
          if (tdata)
          {
-            DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DBGetField(hResult, 2, NULL, 0), DB_BIND_DYNAMIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DBGetField(hResult, 2, nullptr, 0), DB_BIND_DYNAMIC);
          }
          else
          {
-            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 2, NULL, 0), DB_BIND_DYNAMIC);
-            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 3, NULL, 0), DB_BIND_DYNAMIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 2, nullptr, 0), DB_BIND_DYNAMIC);
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 3, nullptr, 0), DB_BIND_DYNAMIC);
          }
          if (!SQLExecute(hStmt))
          {
@@ -755,7 +771,7 @@ static bool MigrateDataFromSingleTable(UINT32 nodeId, bool tdata)
             for(int i = 0; i < columnCount; i++)
             {
                DBGetColumnName(hResult, i, buffer, 256);
-               TCHAR *value = DBGetField(hResult, i, NULL, 0);
+               TCHAR *value = DBGetField(hResult, i, nullptr, 0);
                _tprintf(_T("   %s = \"%s\"\n"), buffer, CHECK_NULL(value));
                MemFree(value);
             }
@@ -799,8 +815,8 @@ static bool MigrateDataFromSingleTable(UINT32 nodeId, bool tdata)
  */
 static bool MigrateDataTablesFromSingleTable()
 {
-   IntegerArray<UINT32> *targets = GetDataCollectionTargets();
-   if (targets == NULL)
+   IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
+   if (targets == nullptr)
       return false;
 
    // Create and import idata_xx and tdata_xx tables for each data collection target
@@ -808,7 +824,7 @@ static bool MigrateDataTablesFromSingleTable()
    int i;
    for(i = 0; i < count; i++)
    {
-      UINT32 id = targets->get(i);
+      uint32_t id = targets->get(i);
 
       if (!g_dataOnlyMigration)
       {
@@ -844,7 +860,7 @@ static bool MigrateDataTablesFromSingleTable()
  */
 static bool MigrateTableCallback(const TCHAR *table, void *context)
 {
-   if (((const StringList *)context)->contains(table))
+   if (static_cast<const StringList*>(context)->contains(table))
    {
       WriteToTerminalEx(_T("Skipping table \x1b[1m%s\x1b[0m\n"), table);
       return true;

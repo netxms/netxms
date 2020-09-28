@@ -31,7 +31,7 @@ extern const TCHAR *g_tables[];
 /**
  * Well-known integer fields to be fixed during import
  */
-static FIX_FIELD s_fixFields[] =
+static COLUMN_IDENTIFIER s_integerFixColumns[] =
 {
    { _T("dct_threshold_instances"), "tt_row_number" },
    { _T("graphs"), "flags" },
@@ -43,21 +43,48 @@ static FIX_FIELD s_fixFields[] =
    { _T("snmp_communities"), "zone" },
    { _T("thresholds"), "state_before_maint" },
    { _T("usm_credentials"), "zone" },
-   { NULL, NULL },
+   { nullptr, nullptr },
+};
+
+/**
+ * Well-known timestamp columns that should be converted for TimescaleDB
+ */
+static COLUMN_IDENTIFIER s_timestampColumns[] =
+{
+   { _T("event_log"), "event_timestamp" },
+   { _T("syslog"), "msg_timestamp" },
+   { _T("snmp_trap_log"), "trap_timestamp" },
+   { nullptr, nullptr },
 };
 
 /**
  * Check if fix is needed for column
  */
-bool IsColumnFixNeeded(const TCHAR *table, const char *name)
+static bool IsColumnInList(const COLUMN_IDENTIFIER *list, const TCHAR *table, const char *name)
 {
-   for(int n = 0; s_fixFields[n].table != NULL; n++)
+   for(int n = 0; list[n].table != nullptr; n++)
    {
-      if (!_tcsicmp(s_fixFields[n].table, table) &&
-          !stricmp(s_fixFields[n].column, name))
+      if (!_tcsicmp(list[n].table, table) &&
+          !stricmp(list[n].column, name))
          return true;
    }
    return false;
+}
+
+/**
+ * Check if integer fix is needed for column
+ */
+bool IsColumnIntegerFixNeeded(const TCHAR *table, const char *name)
+{
+   return IsColumnInList(s_integerFixColumns, table, name);
+}
+
+/**
+ * Check if timestamp conversion is needed for column
+ */
+bool IsTimestampColumn(const TCHAR *table, const char *name)
+{
+   return IsColumnInList(s_timestampColumns, table, name);
 }
 
 /**
@@ -78,28 +105,37 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 	query += _T(") VALUES (");
 	for(i = 0; i < cols; i++)
 	{
-		if (data[i] != NULL)
+		if (data[i] != nullptr)
 		{
 			if (*data[i] == 0)
 			{
-            query.append(IsColumnFixNeeded(static_cast<TCHAR*>(arg), names[i]) ? _T("0,") : _T("'',"));
+            query.append(IsColumnIntegerFixNeeded(static_cast<TCHAR*>(arg), names[i]) ? _T("0,") : _T("'',"));
 			}
 			else
 			{
+				if ((g_dbSyntax == DB_SYNTAX_TSDB) && IsTimestampColumn(static_cast<TCHAR*>(arg), names[i]))
+				{
+               query.append(_T("to_timestamp("));
+               query.appendMBString(data[i], strlen(data[i]), CP_UTF8);
+               query.append(_T("),"));
+				}
+				else
+				{
 #ifdef UNICODE
-				WCHAR *wcData = WideStringFromUTF8String(data[i]);
-				String prepData = DBPrepareString(g_dbHandle, wcData);
-				MemFree(wcData);
+               WCHAR *wcData = WideStringFromUTF8String(data[i]);
+               String prepData = DBPrepareString(g_dbHandle, wcData);
+               MemFree(wcData);
 #else
-				String prepData = DBPrepareString(g_dbHandle, data[i]);
+               String prepData = DBPrepareString(g_dbHandle, data[i]);
 #endif
-				query.append(prepData);
-				query.append(_T(","));
+               query.append(prepData);
+               query.append(_T(","));
+				}
 			}
       }
       else
       {
-         query.append(IsColumnFixNeeded(static_cast<TCHAR*>(arg), names[i]) ? _T("0,") : _T("NULL,"));
+         query.append(IsColumnIntegerFixNeeded(static_cast<TCHAR*>(arg), names[i]) ? _T("0,") : _T("NULL,"));
       }
    }
    query.shrink();
