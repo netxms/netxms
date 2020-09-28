@@ -86,10 +86,10 @@ bool LoadDataCollectionObjects()
 /**
  * Get storage class for DCI
  */
-const TCHAR *GetDCObjectStorageClass(UINT32 id)
+const TCHAR *GetDCObjectStorageClass(uint32_t id)
 {
    DCObjectInfo *object = s_dcObjects.get(id);
-   if ((object == NULL) || (object->retentionTime == 0))
+   if ((object == nullptr) || (object->retentionTime == 0))
       return _T("default");
    if (object->retentionTime <= 7)
       return _T("7");
