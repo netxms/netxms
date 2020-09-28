@@ -28,7 +28,9 @@
 
 - Fixed network map filter script read form database 
 - Fixed issues:
-	NX-1930 (NodeJS POST requests to NetXMS WebAPI fail with http error 500 internal error / error 46 )
+	NX-1928 (nxdbmgr export/import does not work properly with TimescaleDB)
+	NX-1930 (NodeJS POST requests to NetXMS WebAPI fail with http error 500 internal error / error 46)
+	NX-1953 (Migration from MySQL to TimescaleDB fails)
 
 *
 * 3.5.90

@@ -334,7 +334,7 @@ static bool LoadDCIStorageClasses()
 /**
  * Migrate collected data from multi-table to single table configuration
  */
-static bool MigrateDataToSingleTable(UINT32 nodeId, bool tdata)
+static bool MigrateDataToSingleTable(uint32_t nodeId, bool tdata)
 {
    const TCHAR *prefix = tdata ? _T("tdata") : _T("idata");
    WriteToTerminalEx(_T("Migrating table \x1b[1m%s_%u\x1b[0m to \x1b[1m%s\x1b[0m\n"), prefix, nodeId, prefix);
@@ -726,13 +726,13 @@ static bool MigrateDataFromSingleTable(uint32_t nodeId, bool tdata)
    TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
    if (s_sourceSyntax == DB_SYNTAX_TSDB)
    {
-      _sntprintf(buffer, 256, _T("SELECT item_id,date_part('epoch',%s_timestamp)::int,%s_value%s FROM %s WHERE node_id=%u"),
-               prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, nodeId);
+      _sntprintf(buffer, 256, _T("SELECT item_id,date_part('epoch',%s_timestamp)::int,%s_value%s FROM %s WHERE item_id IN (SELECT item_id FROM %s WHERE node_id=%u)"),
+               prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, tdata ? _T("dc_tables") : _T("items"), nodeId);
    }
    else
    {
-      _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s WHERE node_id=%u"),
-               prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, nodeId);
+      _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s WHERE item_id IN (SELECT item_id FROM %s WHERE node_id=%u)"),
+               prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, tdata ? _T("dc_tables") : _T("items"), nodeId);
    }
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
    if (hResult == nullptr)
@@ -927,7 +927,7 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skip
 		   goto cleanup;
 
 	   // Migrate tables
-	   for(int i = 0; g_tables[i] != NULL; i++)
+	   for(int i = 0; g_tables[i] != nullptr; i++)
 	   {
 	      if (!_tcsncmp(g_tables[i], _T("idata"), 5) ||
              !_tcsncmp(g_tables[i], _T("tdata"), 5))
@@ -1035,9 +1035,9 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skip
 	success = true;
 
 cleanup:
-   if (s_hdbSource != NULL)
+   if (s_hdbSource != nullptr)
       DBDisconnect(s_hdbSource);
-   if (s_driver != NULL)
+   if (s_driver != nullptr)
       DBUnloadDriver(s_driver);
 	delete config;
 	_tprintf(success ? _T("Database migration complete.\n") : _T("Database migration failed.\n"));

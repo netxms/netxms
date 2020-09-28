@@ -31,16 +31,18 @@ extern const TCHAR *g_tables[];
 /**
  * Escape string for SQLite
  */
-static TCHAR *EscapeString(const TCHAR *str)
+static TCHAR *EscapeString(TCHAR *str)
 {
-	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
-	int bufferSize = len + 128;
-	TCHAR *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
-	out[0] = _T('\'');
+   if (NumChars(str, _T('\'')) == 0)
+      return str;
+
+	size_t len = _tcslen(str) + 1;
+	size_t bufferSize = len + 128;
+	TCHAR *out = MemAllocString(bufferSize);
 
 	const TCHAR *src = str;
 	int outPos;
-	for(outPos = 1; *src != 0; src++)
+	for(outPos = 0; *src != 0; src++)
 	{
 		if (*src == _T('\''))
 		{
@@ -48,7 +50,7 @@ static TCHAR *EscapeString(const TCHAR *str)
 			if (len >= bufferSize)
 			{
 				bufferSize += 128;
-				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
+				out = MemReallocArray(out, bufferSize);
 			}
 			out[outPos++] = _T('\'');
 			out[outPos++] = _T('\'');
@@ -58,106 +60,140 @@ static TCHAR *EscapeString(const TCHAR *str)
 			out[outPos++] = *src;
 		}
 	}
-	out[outPos++] = _T('\'');
-	out[outPos++] = 0;
+	out[outPos] = 0;
 
+	MemFree(str);
 	return out;
 }
 
 /**
  * Export single database table
  */
-static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
+static bool ExportTable(sqlite3 *db, const TCHAR *name)
 {
+   _tprintf(_T("Exporting table %s\n"), name);
+
+   char *errmsg;
+   if (sqlite3_exec(db, "BEGIN", nullptr, nullptr, &errmsg) != SQLITE_OK)
+   {
+      WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Cannot start transaction: %hs"), errmsg);
+      sqlite3_free(errmsg);
+      return false;
+   }
+
 	StringBuffer query;
-	TCHAR buffer[256];
-	char *errmsg;
 	int i, columnCount = 0;
-	BOOL success = TRUE;
+	bool success = true;
+   char cname[256];
+   StringBuffer selectQuery(_T("SELECT * FROM "));
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      selectQuery.append(name);
+      DB_RESULT hResult = SQLSelect(selectQuery);
+      if (hResult != nullptr)
+      {
+         columnCount = DBGetColumnCount(hResult);
+         if (columnCount > 0)
+         {
+            selectQuery = _T("SELECT ");
+            for(i = 0; i < columnCount; i++)
+            {
+               DBGetColumnNameA(hResult, i, cname, 256);
+               if (IsTimestampColumn(name, cname))
+               {
+                  selectQuery.append(_T("date_part('epoch',"));
+                  selectQuery.appendMBString(cname, strlen(cname), CP_UTF8);
+                  selectQuery.append(_T(")::int AS "));
+                  selectQuery.appendMBString(cname, strlen(cname), CP_UTF8);
+                  selectQuery.append(_T(","));
+               }
+               else
+               {
+                  selectQuery.appendMBString(cname, strlen(cname), CP_UTF8);
+                  selectQuery.append(_T(","));
+               }
+            }
+            selectQuery.shrink();
+            selectQuery.append(_T(" FROM "));
+            selectQuery.append(name);
+         }
+         DBFreeResult(hResult);
+      }
+   }
+   else
+   {
+      selectQuery.append(name);
+   }
 
-	_tprintf(_T("Exporting table %s\n"), name);
+   DB_UNBUFFERED_RESULT hResult = SQLSelectUnbuffered(selectQuery);
+   if (hResult != nullptr)
+   {
+      while(DBFetch(hResult))
+      {
+         query.clear();
 
-	if (sqlite3_exec(db, "BEGIN", nullptr, nullptr, &errmsg) == SQLITE_OK)
-	{
-		_sntprintf(buffer, 256, _T("SELECT * FROM %s"), name);
+         // Column names
+         columnCount = DBGetColumnCount(hResult);
+         query.appendFormattedString(_T("INSERT INTO %s ("), name);
+         for(i = 0; i < columnCount; i++)
+         {
+            DBGetColumnNameA(hResult, i, cname, 256);
+            query.appendMBString(cname, strlen(cname), CP_UTF8);
+            query.append(_T(","));
+         }
+         query.shrink();
+         query += _T(") VALUES (");
 
-		DB_UNBUFFERED_RESULT hResult = SQLSelectUnbuffered(buffer);
-		if (hResult != nullptr)
-		{
-			while(DBFetch(hResult))
-			{
-				query = _T("");
+         // Data
+         for(i = 0; i < columnCount; i++)
+         {
+            query.append(_T("'"));
+            query.appendPreallocated(EscapeString(DBGetField(hResult, i, nullptr, 0)));
+            query += _T("',");
+         }
+         query.shrink();
+         query += _T(")");
 
-				// Column names
-				columnCount = DBGetColumnCount(hResult);
-				query.appendFormattedString(_T("INSERT INTO %s ("), name);
-				for(i = 0; i < columnCount; i++)
-				{
-					DBGetColumnName(hResult, i, buffer, 256);
-					query += buffer;
-					query += _T(",");
-				}
-				query.shrink();
-				query += _T(") VALUES (");
+         char *utf8query = query.getUTF8String();
+         if (sqlite3_exec(db, utf8query, nullptr, nullptr, &errmsg) != SQLITE_OK)
+         {
+            MemFree(utf8query);
+            WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m SQLite query failed: %hs\n   Query: %s\n"), errmsg, (const TCHAR *)query);
+            sqlite3_free(errmsg);
+            success = false;
+            break;
+         }
+         MemFree(utf8query);
+      }
+      DBFreeResult(hResult);
 
-				// Data
-				TCHAR data[8192];
-				for(i = 0; i < columnCount; i++)
-				{
-					TCHAR *escapedString = EscapeString(DBGetField(hResult, i, data, 8192));
-					query.appendPreallocated(escapedString);
-					query += _T(",");
-				}
-				query.shrink();
-				query += _T(")");
-
-				char *utf8query = query.getUTF8String();
-				if (sqlite3_exec(db, utf8query, nullptr, nullptr, &errmsg) != SQLITE_OK)
-				{
-				   MemFree(utf8query);
-					_tprintf(_T("ERROR: SQLite query failed: %hs\n   Query: %s\n"), errmsg, (const TCHAR *)query);
-					sqlite3_free(errmsg);
-					success = FALSE;
-					break;
-				}
-				MemFree(utf8query);
-			}
-			DBFreeResult(hResult);
-
-			if (success)
-			{
-				if (sqlite3_exec(db, "COMMIT", nullptr, nullptr, &errmsg) != SQLITE_OK)
-				{
-					_tprintf(_T("ERROR: Cannot commit transaction: %hs"), errmsg);
-					sqlite3_free(errmsg);
-					success = FALSE;
-				}
-			}
-			else
-			{
-				if (sqlite3_exec(db, "ROLLBACK", nullptr, nullptr, &errmsg) != SQLITE_OK)
-				{
-					_tprintf(_T("ERROR: Cannot rollback transaction: %hs"), errmsg);
-					sqlite3_free(errmsg);
-				}
-			}
-		}
-		else
-		{
-			success = FALSE;
-			if (sqlite3_exec(db, "ROLLBACK", nullptr, nullptr, &errmsg) != SQLITE_OK)
-			{
-				_tprintf(_T("ERROR: Cannot rollback transaction: %hs"), errmsg);
-				sqlite3_free(errmsg);
-			}
-		}
-	}
-	else
-	{
-		success = FALSE;
-		_tprintf(_T("ERROR: Cannot start transaction: %hs"), errmsg);
-		sqlite3_free(errmsg);
-	}
+      if (success)
+      {
+         if (sqlite3_exec(db, "COMMIT", nullptr, nullptr, &errmsg) != SQLITE_OK)
+         {
+            WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Cannot commit transaction: %hs"), errmsg);
+            sqlite3_free(errmsg);
+            success = false;
+         }
+      }
+      else
+      {
+         if (sqlite3_exec(db, "ROLLBACK", nullptr, nullptr, &errmsg) != SQLITE_OK)
+         {
+            WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Cannot rollback transaction: %hs"), errmsg);
+            sqlite3_free(errmsg);
+         }
+      }
+   }
+   else
+   {
+      success = false;
+      if (sqlite3_exec(db, "ROLLBACK", nullptr, nullptr, &errmsg) != SQLITE_OK)
+      {
+         WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Cannot rollback transaction: %hs"), errmsg);
+         sqlite3_free(errmsg);
+      }
+   }
 
 	return success;
 }
@@ -167,7 +203,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
  */
 static int GetSchemaVersionCB(void *arg, int cols, char **data, char **names)
 {
-	*((int *)arg) = strtol(data[0], NULL, 10);
+	*((int *)arg) = strtol(data[0], nullptr, 10);
 	return 0;
 }
 
@@ -176,8 +212,7 @@ static int GetSchemaVersionCB(void *arg, int cols, char **data, char **names)
  */
 static int GetIDataQueryCB(void *arg, int cols, char **data, char **names)
 {
-	strncpy((char *)arg, data[0], MAX_DB_STRING);
-	((char *)arg)[MAX_DB_STRING - 1] = 0;
+	strlcpy((char *)arg, data[0], MAX_DB_STRING);
 	return 0;
 }
 
@@ -229,7 +264,7 @@ static bool ExecuteSchemaFile(const TCHAR *prefix, void *userArg)
    bool success = (sqlite3_exec(static_cast<sqlite3*>(userArg), data, nullptr, nullptr, &errmsg) == SQLITE_OK);
    if (!success)
    {
-      _tprintf(_T("\x1b[31;1mERROR:\x1b[0m unable to apply database schema (%hs)\n"), errmsg);
+      WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m unable to apply database schema (%hs)\n"), errmsg);
       sqlite3_free(errmsg);
    }
 
@@ -238,18 +273,137 @@ static bool ExecuteSchemaFile(const TCHAR *prefix, void *userArg)
 }
 
 /**
- * Export single table performance data
+ * Process performance data read from idata or tdata table
  */
-static bool ExportSingleTablePerfData(sqlite3 *db, const StringList& excludedTables)
+static bool ProcessPerfData(DB_UNBUFFERED_RESULT hResult, sqlite3 *db, const TCHAR *name, bool tdata)
 {
-   _tprintf(_T("\x1b[31;1mERROR:\x1b[0m performance data export from this database is unsupported\n"));
-   return false;
+   bool success = true;
+   StringBuffer query;
+   TCHAR id[64], ts[64];
+   while(DBFetch(hResult))
+   {
+      query = _T("INSERT INTO ");
+      query.append(name);
+      query.append(tdata ? _T(" (item_id,tdata_timestamp,tdata_value) VALUES (") : _T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES ("));
+      query.append(DBGetField(hResult, 0, id, 64));
+      query.append(_T(","));
+      query.append(DBGetField(hResult, 1, ts, 64));
+      query.append(_T(",'"));
+      query.appendPreallocated(EscapeString(DBGetField(hResult, 2, nullptr, 0)));
+      if (!tdata)
+      {
+         query.append(_T("','"));
+         query.appendPreallocated(EscapeString(DBGetField(hResult, 3, nullptr, 0)));
+      }
+      query.append(_T("')"));
+
+      char *utf8query = query.getUTF8String();
+      char *errmsg;
+      if (sqlite3_exec(db, utf8query, nullptr, nullptr, &errmsg) != SQLITE_OK)
+      {
+         MemFree(utf8query);
+         WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m SQLite query failed: %hs\n   Query: %s\n"), errmsg, (const TCHAR *)query);
+         sqlite3_free(errmsg);
+         success = false;
+         break;
+      }
+      MemFree(utf8query);
+   }
+   return success;
+}
+
+/**
+ * Export performance data from single table to per-node tables
+ */
+static bool ExportPerfDataTable(sqlite3 *db, const TCHAR *name, bool tdata, uint32_t objectId)
+{
+   _tprintf(_T("Exporting table %s\n"), name);
+
+   char *errmsg;
+   if (sqlite3_exec(db, "BEGIN", nullptr, nullptr, &errmsg) != SQLITE_OK)
+   {
+      WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Cannot start transaction: %hs"), errmsg);
+      sqlite3_free(errmsg);
+      return false;
+   }
+
+   bool success = true;
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      static const TCHAR *storageClass[] = { _T("default"), _T("7"), _T("30"), _T("90"), _T("180"), _T("other") };
+      for(int i = 0; i < 6; i++)
+      {
+         TCHAR query[256];
+         if (tdata)
+         {
+            _sntprintf(query, 256, _T("SELECT item_id,date_part('epoch',tdata_timestamp)::int,tdata_value FROM tdata_sc_%s WHERE item_id IN (SELECT item_id FROM dc_tables WHERE node_id=%u)"), storageClass[i], objectId);
+         }
+         else
+         {
+            _sntprintf(query, 256, _T("SELECT item_id,date_part('epoch',idata_timestamp)::int,idata_value,raw_value FROM idata_sc_%s WHERE item_id IN (SELECT item_id FROM items WHERE node_id=%u)"), storageClass[i], objectId);
+         }
+
+         DB_UNBUFFERED_RESULT hResult = SQLSelectUnbuffered(query);
+         if (hResult == nullptr)
+         {
+            success = false;
+            break;
+         }
+
+         success = ProcessPerfData(hResult, db, name, tdata);
+         DBFreeResult(hResult);
+         if (!success)
+            break;
+      }
+   }
+   else
+   {
+      TCHAR query[256];
+      if (tdata)
+      {
+         _sntprintf(query, 256, _T("SELECT item_id,tdata_timestamp,tdata_value FROM tdata WHERE item_id IN (SELECT item_id FROM dc_tables WHERE node_id=%u)"), objectId);
+      }
+      else
+      {
+         _sntprintf(query, 256, _T("SELECT item_id,idata_timestamp,idata_value,raw_value FROM idata WHERE item_id IN (SELECT item_id FROM items WHERE node_id=%u)"), objectId);
+      }
+      DB_UNBUFFERED_RESULT hResult = SQLSelectUnbuffered(query);
+      if (hResult != nullptr)
+      {
+         success = ProcessPerfData(hResult, db, name, tdata);
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
+   if (success)
+   {
+      if (sqlite3_exec(db, "COMMIT", nullptr, nullptr, &errmsg) != SQLITE_OK)
+      {
+         WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Cannot commit transaction: %hs"), errmsg);
+         sqlite3_free(errmsg);
+         success = false;
+      }
+   }
+   else
+   {
+      if (sqlite3_exec(db, "ROLLBACK", nullptr, nullptr, &errmsg) != SQLITE_OK)
+      {
+         WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Cannot rollback transaction: %hs"), errmsg);
+         sqlite3_free(errmsg);
+      }
+   }
+
+   return success;
 }
 
 /**
  * Export multi-table performance data
  */
-static bool ExportMultiTablePerfData(sqlite3 *db, const StringList& excludedTables)
+static bool ExportPerfData(sqlite3 *db, const StringList& excludedTables)
 {
    char queryTemplate[11][MAX_DB_STRING];
    memset(queryTemplate, 0, sizeof(queryTemplate));
@@ -258,7 +412,7 @@ static bool ExportMultiTablePerfData(sqlite3 *db, const StringList& excludedTabl
    if (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='IDataTableCreationCommand'",
                     GetIDataQueryCB, queryTemplate[0], &errmsg) != SQLITE_OK)
    {
-      _tprintf(_T("ERROR: SQLite query failed (%hs)\n"), errmsg);
+      WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m SQLite query failed (%hs)\n"), errmsg);
       sqlite3_free(errmsg);
       return false;
    }
@@ -269,7 +423,7 @@ static bool ExportMultiTablePerfData(sqlite3 *db, const StringList& excludedTabl
       sprintf(query, "SELECT var_value FROM metadata WHERE var_name='TDataTableCreationCommand_%d'", i);
       if (sqlite3_exec(db, query, GetIDataQueryCB, queryTemplate[i + 1], &errmsg) != SQLITE_OK)
       {
-         _tprintf(_T("ERROR: SQLite query failed (%hs)\n"), errmsg);
+         WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m SQLite query failed (%hs)\n"), errmsg);
          sqlite3_free(errmsg);
          return false;
       }
@@ -279,7 +433,13 @@ static bool ExportMultiTablePerfData(sqlite3 *db, const StringList& excludedTabl
 
    shared_ptr<IntegerArray<uint32_t>> targets(GetDataCollectionTargets());
    if (targets == nullptr)
+   {
+      WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m cannot collect list of data collection targets\n"));
       return false;
+   }
+
+   bool singleTable = (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0) != 0);
+
    for(int i = 0; i < targets->size(); i++)
    {
       uint32_t id = targets->get(i);
@@ -293,9 +453,9 @@ static bool ExportMultiTablePerfData(sqlite3 *db, const StringList& excludedTabl
 
             char query[1024];
             snprintf(query, 1024, queryTemplate[j], id, id);
-            if (sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK)
+            if (sqlite3_exec(db, query, nullptr, nullptr, &errmsg) != SQLITE_OK)
             {
-               _tprintf(_T("ERROR: SQLite query failed: %hs (%hs)\n"), query, errmsg);
+               WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m SQLite query failed: %hs (%hs)\n"), query, errmsg);
                sqlite3_free(errmsg);
                return false;
             }
@@ -308,9 +468,15 @@ static bool ExportMultiTablePerfData(sqlite3 *db, const StringList& excludedTabl
          _sntprintf(idataTable, 128, _T("idata_%d"), id);
          if (!excludedTables.contains(idataTable))
          {
-            if (!ExportTable(db, idataTable))
+            if (singleTable)
             {
-               return false;
+               if (!ExportPerfDataTable(db, idataTable, false, id))
+                  return false;
+            }
+            else
+            {
+               if (!ExportTable(db, idataTable))
+                  return false;
             }
          }
          else
@@ -321,9 +487,15 @@ static bool ExportMultiTablePerfData(sqlite3 *db, const StringList& excludedTabl
          _sntprintf(idataTable, 128, _T("tdata_%d"), id);
          if (!excludedTables.contains(idataTable))
          {
-            if (!ExportTable(db, idataTable))
+            if (singleTable)
             {
-               return false;
+               if (!ExportPerfDataTable(db, idataTable, true, id))
+                  return false;
+            }
+            else
+            {
+               if (!ExportTable(db, idataTable))
+                  return false;
             }
          }
          else
@@ -348,7 +520,7 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
    sqlite3 *db;
 	if (sqlite3_open(file, &db) != SQLITE_OK)
 	{
-		_tprintf(_T("ERROR: unable to open output file\n"));
+	   WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m unable to open output file\n"));
 		return;
 	}
 
@@ -358,7 +530,7 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
 
    if (sqlite3_exec(db, "PRAGMA page_size=65536", nullptr, nullptr, &errmsg) != SQLITE_OK)
    {
-      _tprintf(_T("ERROR: cannot set page size for export file (%hs)\n"), errmsg);
+      WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m cannot set page size for export file (%hs)\n"), errmsg);
       sqlite3_free(errmsg);
       goto cleanup;
    }
@@ -374,7 +546,7 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
 	    (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersionMajor'", GetSchemaVersionCB, &major, &errmsg) != SQLITE_OK) ||
 	    (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersionMinor'", GetSchemaVersionCB, &minor, &errmsg) != SQLITE_OK))
 	{
-		_tprintf(_T("ERROR: SQL query failed (%hs)\n"), errmsg);
+	   WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m SQL query failed (%hs)\n"), errmsg);
 		sqlite3_free(errmsg);
 		goto cleanup;
 	}
@@ -382,12 +554,12 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
 	INT32 dbmajor, dbminor;
 	if (!DBGetSchemaVersion(g_dbHandle, &dbmajor, &dbminor))
 	{
-      _tprintf(_T("ERROR: Cannot determine database schema version. Please check that NetXMS server installed correctly.\n"));
+	   WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Cannot determine database schema version. Please check that NetXMS server installed correctly.\n"));
       goto cleanup;
 	}
 	if ((dbmajor != major) || (dbminor != minor))
 	{
-		_tprintf(_T("ERROR: Schema version mismatch between dbschema_sqlite.sql and your database. Please check that NetXMS server installed correctly.\n"));
+	   WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Schema version mismatch between dbschema_sqlite.sql and your database. Please check that NetXMS server installed correctly.\n"));
 		goto cleanup;
 	}
 
@@ -422,17 +594,10 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
 
 	if (!g_skipDataMigration || !g_skipDataSchemaMigration)
 	{
-	   if (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0))
-	   {
-	      ExportSingleTablePerfData(db, excludedTables);
-	   }
-	   else
-	   {
-         ExportMultiTablePerfData(db, excludedTables);
-	   }
+      ExportPerfData(db, excludedTables);
 	}
 
-	success = TRUE;
+	success = true;
 
 cleanup:
 	sqlite3_close(db);
