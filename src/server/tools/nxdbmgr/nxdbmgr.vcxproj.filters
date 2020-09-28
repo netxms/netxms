@@ -27,9 +27,6 @@
     <ClCompile Include="export.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="import.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
