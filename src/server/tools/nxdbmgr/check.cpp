@@ -524,7 +524,7 @@ static void CollectObjectIdentifiers(const TCHAR *className, IntegerArray<uint32
  */
 IntegerArray<uint32_t> *GetDataCollectionTargets()
 {
-   IntegerArray<UINT32> *list = new IntegerArray<uint32_t>(128, 128);
+   IntegerArray<uint32_t> *list = new IntegerArray<uint32_t>(128, 128);
    CollectObjectIdentifiers(_T("nodes"), list);
    CollectObjectIdentifiers(_T("clusters"), list);
    CollectObjectIdentifiers(_T("mobile_devices"), list);
