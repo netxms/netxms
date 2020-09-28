@@ -597,19 +597,19 @@ extern "C" const char __EXPORT *DrvGetColumnName(SQLITE_RESULT *hResult, int col
 extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    SQLITE_UNBUFFERED_RESULT *result;
-   char *pszQueryUTF8;
    sqlite3_stmt *stmt;
 
-   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+   char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(hConn->mutexQueryLock);
 retry:
-   int rc = sqlite3_prepare(hConn->pdb, pszQueryUTF8, -1, &stmt, NULL);
+   int rc = sqlite3_prepare(hConn->pdb, pszQueryUTF8, -1, &stmt, nullptr);
 	if (rc == SQLITE_OK)
    {
-      result = (SQLITE_UNBUFFERED_RESULT *)malloc(sizeof(SQLITE_UNBUFFERED_RESULT));
+      result = MemAllocStruct<SQLITE_UNBUFFERED_RESULT>();
       result->connection = hConn;
       result->stmt = stmt;
       result->prepared = false;
+      result->numColumns = -1;
 		*pdwError = DBERR_SUCCESS;
    }
    else if ((rc == SQLITE_LOCKED) || (rc == SQLITE_LOCKED_SHAREDCACHE))
@@ -622,10 +622,10 @@ retry:
    {
 		GetErrorMessage(hConn->pdb, errorText);
       MutexUnlock(hConn->mutexQueryLock);
-      result = NULL;
+      result = nullptr;
 		*pdwError = DBERR_OTHER_ERROR;
    }
-   free(pszQueryUTF8);
+   MemFree(pszQueryUTF8);
    return result;
 }
 
@@ -634,13 +634,14 @@ retry:
  */
 extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(SQLITE_CONN *hConn, sqlite3_stmt *stmt, DWORD *pdwError, WCHAR *errorText)
 {
-   if ((hConn == NULL) || (stmt == NULL))
-      return NULL;
+   if ((hConn == nullptr) || (stmt == nullptr))
+      return nullptr;
 
-   SQLITE_UNBUFFERED_RESULT *result = (SQLITE_UNBUFFERED_RESULT *)malloc(sizeof(SQLITE_UNBUFFERED_RESULT));
+   SQLITE_UNBUFFERED_RESULT *result = MemAllocStruct<SQLITE_UNBUFFERED_RESULT>();
    result->connection = hConn;
    result->stmt = stmt;
    result->prepared = true;
+   result->numColumns = -1;
    *pdwError = DBERR_SUCCESS;
    return result;
 }
@@ -650,7 +651,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(SQLITE_C
  */
 extern "C" bool __EXPORT DrvFetch(SQLITE_UNBUFFERED_RESULT *result)
 {
-	if (result == NULL)
+	if (result == nullptr)
 		return false;
 
 retry:
@@ -685,20 +686,18 @@ extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(SQLITE_UNBUFFERED_RESULT *r
  */
 extern "C" WCHAR __EXPORT *DrvGetFieldUnbuffered(SQLITE_UNBUFFERED_RESULT *result, int iColumn, WCHAR *pBuffer, int iBufSize)
 {
-   char *pszData;
-   WCHAR *pwszRet = NULL;
-
+   WCHAR *value = nullptr;
    if ((iColumn >= 0) && (iColumn < result->numColumns))
    {
-      pszData = (char *)sqlite3_column_text(result->stmt, iColumn);
-      if (pszData != NULL)
+      char *data = (char *)sqlite3_column_text(result->stmt, iColumn);
+      if (data != nullptr)
       {
-         MultiByteToWideChar(CP_UTF8, 0, pszData, -1, pBuffer, iBufSize);
+         utf8_to_wchar(data, -1, pBuffer, iBufSize);
          pBuffer[iBufSize - 1] = 0;
-         pwszRet = pBuffer;
+         value = pBuffer;
       }
    }
-   return pwszRet;
+   return value;
 }
 
 /**
@@ -706,16 +705,13 @@ extern "C" WCHAR __EXPORT *DrvGetFieldUnbuffered(SQLITE_UNBUFFERED_RESULT *resul
  */
 extern "C" char __EXPORT *DrvGetFieldUnbufferedUTF8(SQLITE_UNBUFFERED_RESULT *result, int iColumn, char *pBuffer, int iBufSize)
 {
-   char *pszData;
-   char *value = NULL;
-
+   char *value = nullptr;
    if ((iColumn >= 0) && (iColumn < result->numColumns))
    {
-      pszData = (char *)sqlite3_column_text(result->stmt, iColumn);
-      if (pszData != NULL)
+      char *data = (char *)sqlite3_column_text(result->stmt, iColumn);
+      if (data != nullptr)
       {
-         strncpy(pBuffer, pszData, iBufSize);
-         pBuffer[iBufSize - 1] = 0;
+         strlcpy(pBuffer, data, iBufSize);
          value = pBuffer;
       }
    }
@@ -727,7 +723,11 @@ extern "C" char __EXPORT *DrvGetFieldUnbufferedUTF8(SQLITE_UNBUFFERED_RESULT *re
  */
 extern "C" int __EXPORT DrvGetColumnCountUnbuffered(SQLITE_UNBUFFERED_RESULT *result)
 {
-	return (result != NULL) ? result->numColumns : 0;
+   if (result == nullptr)
+      return 0;
+   if (result->numColumns == -1)
+      result->numColumns = sqlite3_column_count(result->stmt);
+   return result->numColumns;
 }
 
 /**
@@ -735,13 +735,16 @@ extern "C" int __EXPORT DrvGetColumnCountUnbuffered(SQLITE_UNBUFFERED_RESULT *re
  */
 extern "C" const char __EXPORT *DrvGetColumnNameUnbuffered(SQLITE_UNBUFFERED_RESULT *result, int column)
 {
-   const char *pszRet = NULL;
-
+   if (result == nullptr)
+      return nullptr;
+   if (result->numColumns == -1)
+      result->numColumns = sqlite3_column_count(result->stmt);
+   const char *name = nullptr;
    if ((column >= 0) && (column < result->numColumns))
    {
-      pszRet = sqlite3_column_name(result->stmt, column);
+      name = sqlite3_column_name(result->stmt, column);
    }
-   return pszRet;
+   return name;
 }
 
 /**
@@ -749,14 +752,14 @@ extern "C" const char __EXPORT *DrvGetColumnNameUnbuffered(SQLITE_UNBUFFERED_RES
  */
 extern "C" void __EXPORT DrvFreeUnbufferedResult(SQLITE_UNBUFFERED_RESULT *result)
 {
-   if (result != NULL)
+   if (result != nullptr)
    {
       if (result->prepared)
          sqlite3_reset(result->stmt);
       else
          sqlite3_finalize(result->stmt);
       MutexUnlock(result->connection->mutexQueryLock);
-      free(result);
+      MemFree(result);
    }
 }
 
