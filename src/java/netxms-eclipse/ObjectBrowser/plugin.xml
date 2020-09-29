@@ -166,7 +166,7 @@
            class="org.netxms.ui.eclipse.objectbrowser.ObjectPropertyTester"
            id="org.netxms.ui.eclipse.objectbrowser.ObjectPropertyTester"
            namespace="org.netxms.ui.eclipse.objectbrowser"
-           properties="isAlarmsVisible,isCustomAttributePresented"
+           properties="isAlarmsVisible,isCustomAttributePresented,isWindows"
            type="org.netxms.client.objects.AbstractObject">
      </propertyTester>
   </extension>

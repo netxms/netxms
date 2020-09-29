@@ -2278,3 +2278,36 @@ CREATE TABLE dci_delete_list
    PRIMARY KEY (node_id,dci_id)
 ) TABLE_TYPE;
 
+/*
+** Stored Windows event log messages
+*/
+CREATE TABLE win_event_log (
+   id SQL_INT64 not null,
+#ifdef DB_TSDB
+   event_timestamp timestamptz not null,
+#else
+   event_timestamp integer not null,
+#endif
+   node_id integer not null,
+   zone_uin integer not null,
+   origin_timestamp integer not null,
+   log_name varchar(63) null,
+   event_source varchar(127) null,
+   event_severity integer not null,
+   event_code integer not null,
+   message varchar(2000) null,
+   raw_data SQL_TEXT null,
+#ifdef DB_TSDB
+   PRIMARY KEY(id,event_timestamp)
+#else
+   PRIMARY KEY(id)
+#endif
+) TABLE_TYPE;
+
+CREATE INDEX idx_win_event_log_timestamp ON win_event_log(event_timestamp);
+CREATE INDEX idx_win_event_log_node ON win_event_log(node_id);
+
+#ifdef DB_TSDB
+SELECT create_hypertable('win_event_log', 'event_timestamp', chunk_time_interval => interval '86400 seconds');
+#endif
+

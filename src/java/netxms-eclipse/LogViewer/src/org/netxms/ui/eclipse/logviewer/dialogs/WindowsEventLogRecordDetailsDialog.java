@@ -1,0 +1,97 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2020 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.ui.eclipse.logviewer.dialogs;
+
+import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.log.LogRecordDetails;
+
+/**
+ * Dialog for displaying windows event log record details
+ */
+public class WindowsEventLogRecordDetailsDialog extends Dialog
+{
+   private LogRecordDetails data;
+   private StyledText text;
+
+   /**
+    * Create dialog
+    * 
+    * @param parentShell parent shell
+    * @param data audit log record details
+    */
+   public WindowsEventLogRecordDetailsDialog(Shell parentShell, LogRecordDetails data)
+   {
+      super(parentShell);
+      this.data = data;
+   }
+
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
+   @Override
+   protected void configureShell(Shell newShell)
+   {
+      super.configureShell(newShell);
+      newShell.setText("Windows Event Log Record Details");
+   }
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#isResizable()
+    */
+   @Override
+   protected boolean isResizable()
+   {
+      return true;
+   }
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected void createButtonsForButtonBar(Composite parent)
+   {
+      createButton(parent, IDialogConstants.OK_ID, "Close", true);
+   }
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected Control createDialogArea(Composite parent)
+   {
+      Composite dialogArea = (Composite)super.createDialogArea(parent);
+      dialogArea.setLayout(new FillLayout());
+
+      String rawData = data.getValue("raw_data");
+
+      text = new StyledText(dialogArea, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY);
+      text.setFont(JFaceResources.getTextFont());
+      text.setText(rawData);
+
+      return dialogArea;
+   }
+}

@@ -858,12 +858,14 @@ private:
    void onSnmpTrapCallback(NXCPMessage *msg);
    void onTrapCallback(NXCPMessage *msg);
    void onSyslogMessageCallback(NXCPMessage *msg);
+   void onWindowsEventCallback(NXCPMessage *msg);
    void postRawMessageCallback(NXCP_MESSAGE *msg);
 
 protected:
    virtual AbstractCommChannel *createChannel();
    virtual void onTrap(NXCPMessage *pMsg);
-   virtual void onSyslogMessage(NXCPMessage *pMsg);
+   virtual void onSyslogMessage(const NXCPMessage& msg);
+   virtual void onWindowsEvent(const NXCPMessage& msg);
    virtual void onDataPush(NXCPMessage *msg);
    virtual void onFileMonitoringData(NXCPMessage *msg);
    virtual void onSnmpTrap(NXCPMessage *pMsg);

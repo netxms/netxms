@@ -40,9 +40,9 @@ static Mutex s_resolversLock;
 /**
  * Get symbolic name for message code
  */
-TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
+TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
 {
-   static const TCHAR *pszMsgNames[] =
+   static const TCHAR *messageNames[] =
    {
       _T("CMD_LOGIN"),
       _T("CMD_LOGIN_RESP"),
@@ -247,7 +247,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
 		_T("CMD_0x00C9"), // unused
 		_T("CMD_0x00CA"), // unused
 		_T("CMD_0x00CB"), // unused
-		_T("CMD_0x00CC"), // unused
+		_T("CMD_WINDOWS_EVENT"),
 		_T("CMD_QUERY_L2_TOPOLOGY"),
 		_T("CMD_AUDIT_RECORD"),
 		_T("CMD_GET_AUDIT_LOG"),
@@ -461,23 +461,23 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
 
    if ((code >= CMD_LOGIN) && (code <= CMD_GET_DCI_LAST_VALUE))
    {
-      _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
+      _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }
    else
    {
       bool resolved = false;
       s_resolversLock.lock();
       for(int i = 0; i < s_resolvers.size(); i++)
-         if (((NXCPMessageNameResolver)s_resolvers.get(i))(code, pszBuffer))
+         if (((NXCPMessageNameResolver)s_resolvers.get(i))(code, buffer))
          {
             resolved = true;
             break;
          }
       s_resolversLock.unlock();
       if (!resolved)
-         _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), code);
+         _sntprintf(buffer, 64, _T("CMD_0x%04X"), code);
    }
-   return pszBuffer;
+   return buffer;
 }
 
 /**

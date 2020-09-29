@@ -354,6 +354,18 @@ void AgentConnectionReceiver::run()
                      delete msg;
                   }
                   break;
+               case CMD_WINDOWS_EVENT:
+                  if (g_agentConnectionThreadPool != nullptr)
+                  {
+                     TCHAR key[64];
+                     _sntprintf(key, 64, _T("WinEvent_%p"), this);
+                     ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onWindowsEventCallback, msg);
+                  }
+                  else
+                  {
+                     delete msg;
+                  }
+                  break;
                case CMD_PUSH_DCI_DATA:
                   if (g_agentConnectionThreadPool != nullptr)
                   {
@@ -1368,7 +1380,7 @@ void AgentConnection::onTrap(NXCPMessage *pMsg)
  */
 void AgentConnection::onSyslogMessageCallback(NXCPMessage *msg)
 {
-   onSyslogMessage(msg);
+   onSyslogMessage(*msg);
    delete msg;
 }
 
@@ -1376,7 +1388,24 @@ void AgentConnection::onSyslogMessageCallback(NXCPMessage *msg)
  * Syslog message handler. Should be overriden in derived classes to implement
  * actual message processing. Default implementation do nothing.
  */
-void AgentConnection::onSyslogMessage(NXCPMessage *pMsg)
+void AgentConnection::onSyslogMessage(const NXCPMessage& msg)
+{
+}
+
+/**
+ * Callback for processing incoming windows evens on separate thread
+ */
+void AgentConnection::onWindowsEventCallback(NXCPMessage *msg)
+{
+   onWindowsEvent(*msg);
+   delete msg;
+}
+
+/**
+ * Windows event handler. Should be overriden in derived classes to implement
+ * actual event processing. Default implementation do nothing.
+ */
+void AgentConnection::onWindowsEvent(const NXCPMessage& msg)
 {
 }
 

@@ -111,6 +111,21 @@ static NXCORE_LOG s_logs[] =
          { nullptr, nullptr, 0, 0 }
 		}
 	},
+   { _T("WindowsEventLog"), _T("win_event_log"), _T("id"), _T("node_id"), SYSTEM_ACCESS_VIEW_SYSLOG,
+      {
+         { _T("event_timestamp"), _T("Time"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { _T("origin_timestamp"), _T("Origin time"), LC_TIMESTAMP, 0 },
+         { _T("node_id"), _T("Source"), LC_OBJECT_ID, 0 },
+         { _T("zone_uin"), _T("Zone"), LC_ZONE_UIN, 0 },
+         { _T("log_name"), _T("Log name"), LC_TEXT, 0 },
+         { _T("event_source"), _T("Event source"), LC_TEXT, 0 },
+         { _T("event_severity"), _T("Event severity"), LC_INTEGER, 0 },
+         { _T("event_code"), _T("Event code"), LC_INTEGER, 0 },
+         { _T("message"), _T("Message"), LC_TEXT, 0 },
+         { _T("raw_data"), _T("Raw data"), LC_JSON_DETAILS, 0 },
+         { nullptr, nullptr, 0, 0 }
+      }
+   },
 	{ nullptr, nullptr, nullptr, nullptr, 0 }
 };
 

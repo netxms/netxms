@@ -449,7 +449,7 @@ typedef struct
 //#define CMD_ADD_CA_CERTIFICATE		      0x00C9
 //#define CMD_DELETE_CERTIFICATE		      0x00CA
 //#define CMD_GET_CERT_LIST				      0x00CB
-//#define CMD_UPDATE_CERT_COMMENTS		      0x00CC
+#define CMD_WINDOWS_EVENT      		      0x00CC
 #define CMD_QUERY_L2_TOPOLOGY			      0x00CD
 #define CMD_AUDIT_RECORD                  0x00CE
 #define CMD_GET_AUDIT_LOG                 0x00CF
@@ -1384,6 +1384,9 @@ typedef struct
 #define VID_NAME_ON_MAP             ((UINT32)712)
 #define VID_EXTPROV_CERTIFICATE     ((UINT32)713)
 #define VID_AGENT_CERT_SUBJECT      ((UINT32)714)
+#define VID_EVENT_SOURCE            ((UINT32)715)
+#define VID_EVENT_SEVERITY          ((UINT32)716)
+#define VID_RAW_DATA                ((UINT32)717)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

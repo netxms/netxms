@@ -343,6 +343,7 @@
     <ClCompile Include="vrrp.cpp" />
     <ClCompile Include="watchdog.cpp" />
     <ClCompile Include="websvc.cpp" />
+    <ClCompile Include="winevent.cpp" />
     <ClCompile Include="winperf.cpp" />
     <ClCompile Include="xmpp.cpp" />
     <ClCompile Include="zeromq.cpp" />

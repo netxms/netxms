@@ -1036,6 +1036,26 @@ public:
 };
 
 /**
+ * Structure for Windows event
+ */
+struct WindowsEvent
+{
+   time_t timestamp;
+   uint32_t nodeId;
+   int32_t zoneUIN;
+   TCHAR logName[64];
+   time_t originTimestamp;
+   TCHAR eventSource[128];
+   int eventSeverity;
+   int eventCode;
+   TCHAR *message;
+   TCHAR *rawData;
+
+   WindowsEvent(uint32_t _nodeId, int32_t _zoneUIN, const NXCPMessage& msg);
+   ~WindowsEvent();
+};
+
+/**
  * Watchdog thread state codes
  */
 enum WatchdogState
