@@ -756,14 +756,14 @@ void DCObject::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_PERFTAB_SETTINGS, m_pszPerfTabSettings);
 	if (m_schedules != nullptr)
 	{
-      pMsg->setField(VID_NUM_SCHEDULES, (UINT32)m_schedules->size());
-      UINT32 fieldId = VID_DCI_SCHEDULE_BASE;
+      pMsg->setField(VID_NUM_SCHEDULES, static_cast<uint32_t>(m_schedules->size()));
+      uint32_t fieldId = VID_DCI_SCHEDULE_BASE;
       for(int i = 0; i < m_schedules->size(); i++, fieldId++)
          pMsg->setField(fieldId, m_schedules->get(i));
 	}
 	else
 	{
-      pMsg->setField(VID_NUM_SCHEDULES, (UINT32)0);
+      pMsg->setField(VID_NUM_SCHEDULES, static_cast<uint32_t>(0));
 	}
    pMsg->setField(VID_INSTD_METHOD, m_instanceDiscoveryMethod);
    pMsg->setField(VID_INSTD_DATA, m_instanceDiscoveryData);
@@ -1580,10 +1580,17 @@ shared_ptr<DCObjectInfo> DCObject::createDescriptorInternal() const
  */
 void DCObject::fillSchedulingDataMessage(NXCPMessage *msg, uint32_t base) const
 {
-   msg->setField(base++, m_schedules->size());
-   for(int i = 0; i < m_schedules->size(); i++)
+   if (m_schedules != nullptr)
    {
-      msg->setField(base++, m_schedules->get(i));
+      msg->setField(base++, static_cast<uint32_t>(m_schedules->size()));
+      for(int i = 0; i < m_schedules->size(); i++)
+      {
+         msg->setField(base++, m_schedules->get(i));
+      }
+   }
+   else
+   {
+      msg->setField(base++, static_cast<uint32_t>(0));
    }
 }
 

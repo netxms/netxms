@@ -1139,7 +1139,7 @@ void DCTable::createExportRecord(StringBuffer &xml)
 		xml.append(_T("</transformation>\n"));
 	}
 
-   if ((m_schedules != nullptr) && (m_schedules->size() > 0))
+   if ((m_schedules != nullptr) && !m_schedules->isEmpty())
    {
       xml.append(_T("\t\t\t\t\t<schedules>\n"));
       for(int i = 0; i < m_schedules->size(); i++)
