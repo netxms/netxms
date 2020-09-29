@@ -4051,7 +4051,7 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
       }
       else     // Object(s) is not a node
       {
-         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else  // No object(s) with given ID
