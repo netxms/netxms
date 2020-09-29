@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.objectbrowser;
 
 import org.eclipse.core.expressions.PropertyTester;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
 
 /**
  * Property tester for NetXMS objects
@@ -40,6 +41,9 @@ public class ObjectPropertyTester extends PropertyTester
       
       if (property.equals("isCustomAttributePresented") && (args.length > 0)) //$NON-NLS-1$
          return ((AbstractObject)receiver).getCustomAttributes().containsKey(args[0]);
+
+      if (property.equals("isWindows")) //$NON-NLS-1$
+         return (receiver instanceof Node) && ((Node)receiver).getPlatformName().contains("windows");
       
       return false;
    }

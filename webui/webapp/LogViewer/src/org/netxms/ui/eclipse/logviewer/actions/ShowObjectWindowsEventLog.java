@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,14 +36,13 @@ import org.netxms.client.log.LogFilter;
 import org.netxms.client.log.OrderingColumn;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.views.LogViewer;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
- * Handler for "show object syslogs" command
+ * Handler for "show object windows event logs" command
  */
-public class ShowObjectSyslog extends AbstractHandler
+public class ShowObjectWindowsEventLog extends AbstractHandler
 {
    /* (non-Javadoc)
     * @see org.eclipse.core.commands.AbstractHandler#execute(org.eclipse.core.commands.ExecutionEvent)
@@ -67,19 +66,19 @@ public class ShowObjectSyslog extends AbstractHandler
       
       try
       {
-         LogViewer view = (LogViewer)window.getActivePage().showView(LogViewer.ID, "syslog", IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
+         LogViewer view = (LogViewer)window.getActivePage().showView(LogViewer.ID, "WindowsEventLog", IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
 
          LogFilter filter = new LogFilter();
-         filter.setColumnFilter("source_object_id", cf); //$NON-NLS-1$
+         filter.setColumnFilter("node_id", cf); //$NON-NLS-1$
          List<OrderingColumn> orderingColumns = new ArrayList<OrderingColumn>(1);
-         orderingColumns.add(new OrderingColumn("msg_timestamp", Messages.get().ShowObjectSyslog_Time, true)); //$NON-NLS-1$
+         orderingColumns.add(new OrderingColumn("event_timestamp", "Time", true)); //$NON-NLS-1$
          filter.setOrderingColumns(orderingColumns);
          
          view.queryWithFilter(filter);
       }
       catch(PartInitException e)
       {
-         MessageDialogHelper.openError(window.getShell(), Messages.get().ShowObjectSyslog_Error, String.format(Messages.get().ShowObjectSyslog_ErrorOpenLogViewer, e.getMessage()));
+         MessageDialogHelper.openError(window.getShell(), "Error", String.format("Cannot open log viewer: %s", e.getMessage()));
       }
       
       return null;

@@ -28,6 +28,7 @@
  */
 void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq);
 void QueueProxiedSyslogMessage(const InetAddress &addr, int32_t zoneUIN, UINT32 nodeId, time_t timestamp, const char *msg, int msgLen);
+void QueueWinEventLogMessage(WindowsEventLogRecord *event);
 
 /**
  * Create normal agent connection
@@ -214,6 +215,55 @@ void AgentConnectionEx::onSyslogMessage(NXCPMessage *msg)
       debugPrintf(5, _T("AgentConnectionEx::onSyslogMessage(): Cannot find node for IP address %s"), getIpAddr().toString(buffer));
    }
 }
+
+/**
+ * Incoming windows event log message processor
+ */
+void AgentConnectionEx::onWindowsEventLog(NXCPMessage *msg)
+{
+   if (IsShutdownInProgress())
+      return;
+
+   TCHAR buffer[64];
+   debugPrintf(3, _T("AgentConnectionEx::onWindowsEventLog(): Received message from agent at %s, node ID %d"), getIpAddr().toString(buffer), m_nodeId);
+
+   int32_t zoneUIN = msg->getFieldAsUInt32(VID_ZONE_UIN);
+   shared_ptr<Node> node;
+   if (m_nodeId != 0)
+      node = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
+   if (node == nullptr)
+      node = FindNodeByIP(zoneUIN, getIpAddr());
+   if (node != nullptr)
+   {
+      // Check for duplicate messages - only accept messages with ID
+      // higher than last received
+      if (node->checkWindowsEventLogId(msg->getFieldAsUInt64(VID_REQUEST_ID)))
+      {
+         WindowsEventLogRecord *event = new WindowsEventLogRecord();
+         event->timestamp = time(nullptr);
+         event->nodeId = node->getId();
+         event->zoneUIN = zoneUIN;
+         msg->getFieldAsString(VID_LOG_NAME, event->logName, 64);
+         event->originTimestamp = msg->getFieldAsTime(VID_TIMESTAMP);
+         msg->getFieldAsString(VID_EVENT_SOURCE, event->eventSource, 127);
+         event->eventSeverity = msg->getFieldAsInt32(VID_EVENT_SEVERITY);
+         event->eventCode = msg->getFieldAsInt32(VID_EVENT_CODE);
+         event->message = msg->getFieldAsString(VID_MESSAGE);
+         event->rawData = msg->getFieldAsString(VID_RAW_DATA);
+
+         QueueWinEventLogMessage(event);
+      }
+      else
+      {
+         debugPrintf(5, _T("AgentConnectionEx::onSyslogMessage(): message ID is invalid (node %s [%d])"), node->getName(), node->getId());
+      }
+   }
+   else
+   {
+      debugPrintf(5, _T("AgentConnectionEx::onSyslogMessage(): Cannot find node for IP address %s"), getIpAddr().toString(buffer));
+   }
+}
+
 
 /**
  * Handler for data push

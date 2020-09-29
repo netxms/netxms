@@ -349,6 +349,22 @@ static void HouseKeeper()
             break;
 		}
 
+      // Remove outdated windows event log records
+      retentionTime = ConfigReadULong(_T("WinEventLogRetentionTime"), 90);
+      if (retentionTime > 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing windows event log (retention time %d days)"), retentionTime);
+         retentionTime *= 86400; // Convert days to seconds
+         TCHAR query[256];
+         if (g_dbSyntax == DB_SYNTAX_TSDB)
+            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), 'win_event_log')"), static_cast<int64_t>(cycleStartTime - retentionTime));
+         else
+            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM win_event_log WHERE event_timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
+         DBQuery(hdb, query);
+         if (!ThrottleHousekeeper())
+            break;
+      }
+
 		// Remove outdated audit log records
 		retentionTime = ConfigReadULong(_T("AuditLogRetentionTime"), 90);
 		if (retentionTime > 0)

@@ -24,12 +24,62 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 36.5 to 40.0
+ * Upgrade from 36.6 to 40.0
  */
-static bool H_UpgradeFromV5()
+static bool H_UpgradeFromV6()
 {
    CHK_EXEC(SetMajorSchemaVersion(40, 0));
    return true;
+}
+
+/**
+ * Upgrade from 36.5 to 36.6
+ */
+static bool H_UpgradeFromV5()
+{
+  CHK_EXEC(CreateConfigParam(_T("WinEventLogRetentionTime"), _T("90"), _T("Retention time in days for records in windows event log. All records older than specified will be deleted by housekeeping process."), _T("days"), 'I', true, false, false, false));
+
+  if (g_dbSyntax == DB_SYNTAX_TSDB)
+  {
+     CHK_EXEC(CreateTable(
+        _T("CREATE TABLE win_event_log (")
+        _T("  id $SQL:INT64 not null,")
+        _T("  event_timestamp timestamptz not null,")
+        _T("  node_id integer not null,")
+        _T("  zone_uin integer not null,")
+        _T("  origin_timestamp integer not null,")
+        _T("  log_name varchar(63) null,")
+        _T("  event_source varchar(126) null,")
+        _T("  event_severity integer not null,")
+        _T("  event_code integer not null,")
+        _T("  message varchar(4000) null,")
+        _T("  raw_data $SQL:TEXT null,")
+        _T("PRIMARY KEY(id,event_timestamp))")));
+
+     CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('win_event_log', 'timestamp', chunk_time_interval => interval '86400 seconds')")));
+  }
+  else
+  {
+     CHK_EXEC(CreateTable(
+        _T("CREATE TABLE win_event_log (")
+        _T("  id $SQL:INT64 not null,")
+        _T("  event_timestamp integer not null,")
+        _T("  node_id integer not null,")
+        _T("  zone_uin integer not null,")
+        _T("  origin_timestamp integer not null,")
+        _T("  log_name varchar(63) null,")
+        _T("  event_source varchar(126) null,")
+        _T("  event_severity integer not null,")
+        _T("  event_code integer not null,")
+        _T("  message varchar(4000) null,")
+        _T("  raw_data $SQL:TEXT null,")
+        _T("PRIMARY KEY(id))")));
+  }
+  CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_win_event_log_event_timestamp ON win_event_log(event_timestamp)")));
+  CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_win_event_log_node ON win_event_log(node_id)")));
+
+  CHK_EXEC(SetMinorSchemaVersion(6));
+  return true;
 }
 
 /**
@@ -109,7 +159,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 5,  40, 0,  H_UpgradeFromV5  },
+   { 6,  40, 0,  H_UpgradeFromV6  },
+   { 5,  36, 6,  H_UpgradeFromV5  },
    { 4,  36, 5,  H_UpgradeFromV4  },
    { 3,  36, 4,  H_UpgradeFromV3  },
    { 2,  36, 3,  H_UpgradeFromV2  },

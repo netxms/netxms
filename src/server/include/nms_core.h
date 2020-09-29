@@ -1036,6 +1036,26 @@ public:
 };
 
 /**
+ * Structure for windows event log entry
+ */
+struct WindowsEventLogRecord
+{
+   time_t timestamp;
+   uint32_t nodeId;
+   int32_t zoneUIN;
+   TCHAR logName[64];
+   time_t originTimestamp;
+   TCHAR eventSource[127];
+   int eventSeverity;
+   int eventCode;
+   TCHAR *message;
+   TCHAR *rawData;
+
+   WindowsEventLogRecord();
+   ~WindowsEventLogRecord();
+};
+
+/**
  * Watchdog thread state codes
  */
 enum WatchdogState

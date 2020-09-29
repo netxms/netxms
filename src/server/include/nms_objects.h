@@ -110,6 +110,7 @@ protected:
    virtual AbstractCommChannel *createChannel() override;
    virtual void onTrap(NXCPMessage *msg) override;
    virtual void onSyslogMessage(NXCPMessage *pMsg) override;
+   virtual void onWindowsEventLog(NXCPMessage *msg) override;
    virtual void onDataPush(NXCPMessage *msg) override;
    virtual void onFileMonitoringData(NXCPMessage *msg) override;
    virtual void onSnmpTrap(NXCPMessage *pMsg) override;
@@ -2825,6 +2826,7 @@ protected:
    uint64_t m_lastAgentPushRequestId; // ID of last received agent push request
    uint32_t m_lastSNMPTrapId;
    uint64_t m_lastSyslogMessageId; // ID of last received syslog message
+   uint64_t m_lastWindowsEventLogId; // ID of last received windows event log message
    uint32_t m_pollerNode;      // Node used for network service polling
    uint32_t m_agentProxy;      // Node used as proxy for agent connection
    uint32_t m_snmpProxy;       // Node used as proxy for SNMP requests
@@ -3139,6 +3141,7 @@ public:
 	bool checkAgentTrapId(UINT64 id);
 	bool checkSNMPTrapId(UINT32 id);
    bool checkSyslogMessageId(UINT64 id);
+   bool checkWindowsEventLogId(uint64_t id);
    bool checkAgentPushRequestId(UINT64 id);
 
    bool connectToSMCLP();

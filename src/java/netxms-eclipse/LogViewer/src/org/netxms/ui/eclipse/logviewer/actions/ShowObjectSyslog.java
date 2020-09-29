@@ -41,7 +41,7 @@ import org.netxms.ui.eclipse.logviewer.views.LogViewer;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
- * Handler for "show object alarms" command
+ * Handler for "show object syslogs" command
  */
 public class ShowObjectSyslog extends AbstractHandler
 {

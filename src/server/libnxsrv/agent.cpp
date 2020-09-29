@@ -354,6 +354,18 @@ void AgentConnectionReceiver::run()
                      delete msg;
                   }
                   break;
+               case CMD_WIN_EVENT_LOG:
+                  if (g_agentConnectionThreadPool != nullptr)
+                  {
+                     TCHAR key[64];
+                     _sntprintf(key, 64, _T("WinEventLog_%p"), this);
+                     ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onWindowsEventLogCallback, msg);
+                  }
+                  else
+                  {
+                     delete msg;
+                  }
+                  break;
                case CMD_PUSH_DCI_DATA:
                   if (g_agentConnectionThreadPool != nullptr)
                   {
@@ -1377,6 +1389,23 @@ void AgentConnection::onSyslogMessageCallback(NXCPMessage *msg)
  * actual message processing. Default implementation do nothing.
  */
 void AgentConnection::onSyslogMessage(NXCPMessage *pMsg)
+{
+}
+
+/**
+ * Callback for processing incoming windows event log message on separate thread
+ */
+void AgentConnection::onWindowsEventLogCallback(NXCPMessage *msg)
+{
+   onWindowsEventLog(msg);
+   delete msg;
+}
+
+/**
+ * Windows event log message handler. Should be overriden in derived classes to implement
+ * actual message processing. Default implementation do nothing.
+ */
+void AgentConnection::onWindowsEventLog(NXCPMessage *Msg)
 {
 }
 

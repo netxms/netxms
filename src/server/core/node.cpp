@@ -9634,6 +9634,19 @@ bool Node::checkSyslogMessageId(UINT64 id)
 }
 
 /**
+ * Check and update last windows log message ID
+ */
+bool Node::checkWindowsEventLogId(uint64_t id)
+{
+   lockProperties();
+   bool valid = (id > m_lastWindowsEventLogId);
+   if (valid)
+      m_lastWindowsEventLogId = id;
+   unlockProperties();
+   return valid;
+}
+
+/**
  * Check and update last agent data push request ID
  */
 bool Node::checkAgentPushRequestId(UINT64 requestId)

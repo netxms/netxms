@@ -65,6 +65,12 @@
             id="org.netxms.ui.eclipse.logviewer.commands.objectTrapLog"
             name="SNMP trap log">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open Windows event log"
+            id="org.netxms.ui.eclipse.logviewer.commands.openWindowsEventLog"
+            name="Open Windows event log">
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -109,6 +115,16 @@
 			   class="org.netxms.ui.eclipse.logviewer.actions.OpenAuditLog"
 			   definitionId="org.netxms.ui.eclipse.logviewer.commands.openAuditLog">
 		   </action>
+     <action
+           class="org.netxms.ui.eclipse.logviewer.actions.OpenWindowsEventLog"
+           definitionId="org.netxms.ui.eclipse.logviewer.commands.openWindowsEventLog"
+           icon="icons/EventLog.png"
+           id="org.netxms.ui.eclipse.logviewer.actions.openWindowsEventLog"
+           label="Windows event log"
+           menubarPath="view/logs"
+           toolbarPath="logs/additions"
+           tooltip="Windows event log">
+     </action>
 	   </actionSet>
    </extension>
 
@@ -160,6 +176,12 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M3+Shift+T">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.logviewer.commands.openWindowsEventLog"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M3+Shift+W">
+      </key>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
@@ -182,6 +204,10 @@
       <handler
             class="org.netxms.ui.eclipse.logviewer.actions.ShowObjectSnmpTrapLog"
             commandId="org.netxms.ui.eclipse.logviewer.commands.objectTrapLog">
+      </handler>
+      <handler
+            class="org.netxms.ui.eclipse.logviewer.actions.ShowObjectWindowsEventLog"
+            commandId="org.netxms.ui.eclipse.logviewer.commands.windowsEventHistory">
       </handler>
    </extension>
    <extension
@@ -250,6 +276,27 @@
                         <test
                               forcePluginActivation="true"
                               property="org.netxms.ui.eclipse.objectbrowser.isAlarmsVisible">
+                        </test>
+                     </and>
+                  </iterate>
+               </visibleWhen>
+            </command>
+            <command
+                  commandId="org.netxms.ui.eclipse.logviewer.commands.windowsEventHistory"
+                  label="Windwos event log"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <iterate
+                        ifEmpty="false"
+                        operator="and">
+                     <and>
+                        <instanceof
+                              value="org.netxms.client.objects.Node">
+                        </instanceof>
+                        <test
+                              forcePluginActivation="true"
+                              property="org.netxms.ui.eclipse.objectbrowser.isWindows">
                         </test>
                      </and>
                   </iterate>

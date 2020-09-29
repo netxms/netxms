@@ -655,6 +655,7 @@ typedef struct
 #define CMD_UPDATE_SNMP_PORT_LIST         0x019B
 #define CMD_GET_LOG_RECORD_DETAILS        0x019C
 #define CMD_GET_DCI_LAST_VALUE            0x019D
+#define CMD_WIN_EVENT_LOG                 0x019E
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1384,6 +1385,9 @@ typedef struct
 #define VID_NAME_ON_MAP             ((UINT32)712)
 #define VID_EXTPROV_CERTIFICATE     ((UINT32)713)
 #define VID_AGENT_CERT_SUBJECT      ((UINT32)714)
+#define VID_EVENT_SOURCE            ((UINT32)715)
+#define VID_EVENT_SEVERITY          ((UINT32)716)
+#define VID_RAW_DATA                ((UINT32)717)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
