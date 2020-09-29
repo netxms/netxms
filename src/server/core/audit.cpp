@@ -243,7 +243,11 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
 #endif
       if (ctx != nullptr)
       {
+#if OPENSSL_VERSION_NUMBER >= 0x10000000
          if (HMAC_Init_ex(ctx, g_auditLogKey, static_cast<int>(strlen(g_auditLogKey)), EVP_sha256(), nullptr))
+#else
+         HMAC_Init_ex(ctx, g_auditLogKey, static_cast<int>(strlen(g_auditLogKey)), EVP_sha256(), nullptr);
+#endif
          {
             char localBuffer[4096];
             for(int i = 0; i < bindCount; i++)
