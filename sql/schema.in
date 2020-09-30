@@ -2304,7 +2304,7 @@ CREATE TABLE win_event_log (
 #endif
 ) TABLE_TYPE;
 
-CREATE INDEX idx_win_event_log_event_timestamp ON win_event_log(event_timestamp);
+CREATE INDEX idx_win_event_log_timestamp ON win_event_log(event_timestamp);
 CREATE INDEX idx_win_event_log_node ON win_event_log(node_id);
 
 #ifdef DB_TSDB

@@ -70,7 +70,7 @@ static bool H_UpgradeFromV17()
            _T("  raw_data $SQL:TEXT null,")
            _T("PRIMARY KEY(id))")));
      }
-     CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_win_event_log_event_timestamp ON win_event_log(event_timestamp)")));
+     CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_win_event_log_timestamp ON win_event_log(event_timestamp)")));
      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_win_event_log_node ON win_event_log(node_id)")));
 
      CHK_EXEC(SetSchemaLevelForMajorVersion(36, 6));
