@@ -402,7 +402,7 @@ bool DataCollectionOwner::deleteDCObject(uint32_t dcObjectId, bool needLock, uin
             m_dcObjects->remove(i);
 
             // Check if it is instance DCI
-            if ((object->getType() == DCO_TYPE_ITEM) && (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE))
+            if (object->getInstanceDiscoveryMethod() != IDM_NONE)
             {
                deleteChildDCIs(dcObjectId);
             }
