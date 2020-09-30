@@ -132,17 +132,17 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, UINT32 us
    super::fillMessageInternalStage2(msg, userId);
 
    // Sent all DCIs marked for display on overview page or in tooltips
-   UINT32 fieldIdOverview = VID_OVERVIEW_DCI_LIST_BASE;
-   UINT32 countOverview = 0;
-   UINT32 fieldIdTooltip = VID_TOOLTIP_DCI_LIST_BASE;
-   UINT32 countTooltip = 0;
+   uint32_t fieldIdOverview = VID_OVERVIEW_DCI_LIST_BASE;
+   uint32_t countOverview = 0;
+   uint32_t fieldIdTooltip = VID_TOOLTIP_DCI_LIST_BASE;
+   uint32_t countTooltip = 0;
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
       DCObject *dci = m_dcObjects->get(i);
       if ((dci->getType() == DCO_TYPE_ITEM) &&
           (dci->getStatus() == ITEM_STATUS_ACTIVE) &&
-          (((DCItem *)dci)->getInstanceDiscoveryMethod() == IDM_NONE) &&
+          (dci->getInstanceDiscoveryMethod() == IDM_NONE) &&
           dci->hasAccess(userId))
 		{
          if  (dci->isShowInObjectOverview())
@@ -650,7 +650,7 @@ void DataCollectionTarget::unbindFromTemplate(const shared_ptr<DataCollectionOwn
    {
       writeLockDciAccess();  // write lock
 
-		UINT32 *deleteList = MemAllocArray<UINT32>(m_dcObjects->size());
+      uint32_t *deleteList = MemAllocArray<uint32_t>(m_dcObjects->size());
 		int numDeleted = 0;
 
 		int i;
