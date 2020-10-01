@@ -29,13 +29,6 @@
 static VolatileCounter s_referenceCount = 0;
 
 /**
- * Event log reading mode
- */
-#ifdef _WIN32
-bool s_eventLogV6 = false;
-#endif
-
-/**
  * Init log parser library
  */
 void LIBNXLP_EXPORTABLE InitLogParserLibrary()
@@ -44,15 +37,6 @@ void LIBNXLP_EXPORTABLE InitLogParserLibrary()
       return;  // already initialized
 
 #ifdef _WIN32
-	if (InitEventLogParsersV6())
-	{
-		s_eventLogV6 = true;
-	}
-	else
-	{
-		s_eventLogV6 = false;
-		InitEventLogParsers();
-	}
    InitVSSWrapper();
 #endif
 }
@@ -64,31 +48,9 @@ void LIBNXLP_EXPORTABLE CleanupLogParserLibrary()
 {
    if (InterlockedDecrement(&s_referenceCount) > 0)
       return;  // still referenced
-
-#ifdef _WIN32
-   if (!s_eventLogV6)
-   {
-      CleanupEventLogParsers();
-   }
-#endif
 }
 
 #ifdef _WIN32
-
-/**
- * Event log parsing wrapper. Calls appropriate implementation.
- */
-bool LogParser::monitorEventLog(const TCHAR *markerPrefix)
-{
-   if (markerPrefix != NULL)
-   {
-      size_t len = _tcslen(markerPrefix) + _tcslen(m_fileName) + 2;
-      m_marker = MemAllocString(len);
-      _sntprintf(m_marker, len, _T("%s.%s"), markerPrefix, &m_fileName[1]);
-      nxlog_debug_tag(DEBUG_TAG, 3, _T("Created marker %s"), m_marker);
-   }
-   return s_eventLogV6 ? monitorEventLogV6() : monitorEventLogV4();
-}
 
 /**
  * Save timestamp of last processed record

@@ -26,19 +26,6 @@
 #include <winmeta.h>
 
 /**
- * Static data
- */
-static BOOL (WINAPI *_EvtClose)(EVT_HANDLE);
-static EVT_HANDLE (WINAPI *_EvtCreateRenderContext)(DWORD, LPCWSTR *, DWORD);
-static BOOL (WINAPI *_EvtGetPublisherMetadataProperty)(EVT_HANDLE, EVT_PUBLISHER_METADATA_PROPERTY_ID, DWORD, DWORD, PEVT_VARIANT, PDWORD);
-static BOOL (WINAPI *_EvtFormatMessage)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PEVT_VARIANT, DWORD, DWORD, LPWSTR, PDWORD);
-static BOOL (WINAPI *_EvtNext)(EVT_HANDLE, DWORD, EVT_HANDLE *, DWORD, DWORD, PDWORD);
-static EVT_HANDLE (WINAPI *_EvtOpenPublisherMetadata)(EVT_HANDLE, LPCWSTR, LPCWSTR, LCID, DWORD);
-static EVT_HANDLE (WINAPI *_EvtQuery)(EVT_HANDLE, LPCWSTR, LPCWSTR, DWORD);
-static BOOL (WINAPI *_EvtRender)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PVOID, PDWORD, PDWORD);
-static EVT_HANDLE (WINAPI *_EvtSubscribe)(EVT_HANDLE, HANDLE, LPCWSTR, LPCWSTR, EVT_HANDLE, PVOID, EVT_SUBSCRIBE_CALLBACK, DWORD);
-
-/**
  * Log metadata property
  */
 static void LogMetadataProperty(EVT_HANDLE pubMetadata, EVT_PUBLISHER_METADATA_PROPERTY_ID id, const TCHAR *name)
@@ -46,7 +33,7 @@ static void LogMetadataProperty(EVT_HANDLE pubMetadata, EVT_PUBLISHER_METADATA_P
 	WCHAR buffer[4096];
 	PEVT_VARIANT p = PEVT_VARIANT(buffer);
 	DWORD size;
-	if (_EvtGetPublisherMetadataProperty(pubMetadata, id, 0, sizeof(buffer), p, &size))
+	if (EvtGetPublisherMetadataProperty(pubMetadata, id, 0, sizeof(buffer), p, &size))
    {
       switch(p->Type)
       {
@@ -75,24 +62,24 @@ static StringList *ExtractVariables(EVT_HANDLE event)
    void *renderBuffer = buffer;
 
    static PCWSTR eventProperties[] = { L"Event/EventData/Data[1]" };
-   EVT_HANDLE renderContext = _EvtCreateRenderContext(0, NULL, EvtRenderContextUser);
-   if (renderContext == NULL)
+   EVT_HANDLE renderContext = EvtCreateRenderContext(0, nullptr, EvtRenderContextUser);
+   if (renderContext == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("ExtractVariables: Call to EvtCreateRenderContext failed: %s"),
          GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
-      return NULL;
+      return nullptr;
    }
 
-   StringList *variables = NULL;
+   StringList *variables = nullptr;
 
    // Get event values
    DWORD reqSize, propCount = 0;
-   BOOL renderSuccess = _EvtRender(renderContext, event, EvtRenderEventValues, sizeof(buffer), renderBuffer, &reqSize, &propCount);
+   BOOL renderSuccess = EvtRender(renderContext, event, EvtRenderEventValues, sizeof(buffer), renderBuffer, &reqSize, &propCount);
    if (!renderSuccess && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("ExtractVariables: Call to EvtRender requires larger buffer (%u bytes)"), reqSize);
       renderBuffer = MemAlloc(reqSize);
-      renderSuccess = _EvtRender(renderContext, event, EvtRenderEventValues, reqSize, renderBuffer, &reqSize, &propCount);
+      renderSuccess = EvtRender(renderContext, event, EvtRenderEventValues, reqSize, renderBuffer, &reqSize, &propCount);
    }
    if (!renderSuccess)
    {
@@ -155,7 +142,7 @@ static StringList *ExtractVariables(EVT_HANDLE event)
    }
 
 cleanup:
-   _EvtClose(renderContext);
+   EvtClose(renderContext);
    if (renderBuffer != buffer)
       MemFree(renderBuffer);
    return variables;
@@ -184,7 +171,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
       L"Event/System/EventRecordID",
       L"Event/System/TimeCreated/@SystemTime"
    };
-	EVT_HANDLE renderContext = _EvtCreateRenderContext(6, eventProperties, EvtRenderContextValues);
+	EVT_HANDLE renderContext = EvtCreateRenderContext(6, eventProperties, EvtRenderContextValues);
 	if (renderContext == nullptr)
 	{
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to EvtCreateRenderContext failed: %s"), GetSystemErrorText(GetLastError(), buffer, 4096));
@@ -192,12 +179,12 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	}
 
 	// Get event values
-   BOOL renderSuccess = _EvtRender(renderContext, event, EvtRenderEventValues, sizeof(buffer), renderBuffer, &reqSize, &propCount);
+   BOOL renderSuccess = EvtRender(renderContext, event, EvtRenderEventValues, sizeof(buffer), renderBuffer, &reqSize, &propCount);
    if (!renderSuccess && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("Call to EvtRender requires larger buffer (%u bytes)"), reqSize);
       renderBuffer = MemAlloc(reqSize);
-      renderSuccess = _EvtRender(renderContext, event, EvtRenderEventValues, reqSize, renderBuffer, &reqSize, &propCount);
+      renderSuccess = EvtRender(renderContext, event, EvtRenderEventValues, reqSize, renderBuffer, &reqSize, &propCount);
    }
    if (!renderSuccess)
    {
@@ -283,7 +270,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
    }
 
 	// Open publisher metadata
-	pubMetadata = _EvtOpenPublisherMetadata(NULL, values[0].StringVal, nullptr, MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT), 0);
+	pubMetadata = EvtOpenPublisherMetadata(NULL, values[0].StringVal, nullptr, MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT), 0);
 	if (pubMetadata == nullptr)
 	{
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to EvtOpenPublisherMetadata failed: %s"), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
@@ -291,7 +278,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	}
 
 	// Format message text
-	success = _EvtFormatMessage(pubMetadata, event, 0, 0, nullptr, EvtFormatMessageEvent, 4096, buffer, &reqSize);
+	success = EvtFormatMessage(pubMetadata, event, 0, 0, nullptr, EvtFormatMessageEvent, 4096, buffer, &reqSize);
 	if (!success)
 	{
       DWORD error = GetLastError();
@@ -306,7 +293,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
       if (error == ERROR_INSUFFICIENT_BUFFER)
       {
 		   msg = MemAllocStringW(reqSize);
-		   success = _EvtFormatMessage(pubMetadata, event, 0, 0, NULL, EvtFormatMessageEvent, reqSize, msg, &reqSize);
+		   success = EvtFormatMessage(pubMetadata, event, 0, 0, NULL, EvtFormatMessageEvent, reqSize, msg, &reqSize);
 		   if (!success)
 		   {
             error = GetLastError();
@@ -336,8 +323,8 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 
 cleanup:
 	if (pubMetadata != NULL)
-		_EvtClose(pubMetadata);
-	_EvtClose(renderContext);
+		EvtClose(pubMetadata);
+	EvtClose(renderContext);
 	if (msg != buffer)
 		MemFree(msg);
    if (renderBuffer != buffer)
@@ -348,15 +335,23 @@ cleanup:
 /**
  * Event log parser thread
  */
-bool LogParser::monitorEventLogV6()
+bool LogParser::monitorEventLog(const TCHAR *markerPrefix)
 {
+   if (markerPrefix != nullptr)
+   {
+      size_t len = _tcslen(markerPrefix) + _tcslen(m_fileName) + 2;
+      m_marker = MemAllocString(len);
+      _sntprintf(m_marker, len, _T("%s.%s"), markerPrefix, &m_fileName[1]);
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Created marker %s"), m_marker);
+   }
+
    bool success;
 
    // Read old records if needed
-   if (m_marker != NULL)
+   if (m_marker != nullptr)
    {
       time_t startTime = readLastProcessedRecordTimestamp();
-      time_t now = time(NULL);
+      time_t now = time(nullptr);
       if (startTime < now)
       {
 		   nxlog_debug_tag(DEBUG_TAG, 1, _T("Reading old events between %I64d and %I64d from %s"), (INT64)startTime, (INT64)now, &m_fileName[1]);
@@ -364,20 +359,20 @@ bool LogParser::monitorEventLogV6()
          WCHAR query[256];
          _snwprintf(query, 256, L"*[System/TimeCreated[timediff(@SystemTime) < %I64d]]", (INT64)(now - startTime) * 1000LL);
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Event log query: \"%s\""), query);
-         EVT_HANDLE handle = _EvtQuery(NULL, &m_fileName[1], query, EvtQueryChannelPath | EvtQueryForwardDirection);
-         if (handle != NULL)
+         EVT_HANDLE handle = EvtQuery(nullptr, &m_fileName[1], query, EvtQueryChannelPath | EvtQueryForwardDirection);
+         if (handle != nullptr)
          {
             EVT_HANDLE events[64];
             DWORD count;
-            while(_EvtNext(handle, 64, events, 5000, 0, &count))
+            while(EvtNext(handle, 64, events, 5000, 0, &count))
             {
                for(DWORD i = 0; i < count; i++)
                {
                   SubscribeCallback(EvtSubscribeActionDeliver, this, events[i]);
-                  _EvtClose(events[i]);
+                  EvtClose(events[i]);
                }
             }
-   		   _EvtClose(handle);
+   		   EvtClose(handle);
          }
          else
          {
@@ -388,20 +383,20 @@ bool LogParser::monitorEventLogV6()
    }
 
 #ifdef UNICODE
-	EVT_HANDLE handle = _EvtSubscribe(NULL, NULL, &m_fileName[1], NULL, NULL, this, SubscribeCallback, EvtSubscribeToFutureEvents);
+	EVT_HANDLE handle = EvtSubscribe(NULL, NULL, &m_fileName[1], NULL, NULL, this, SubscribeCallback, EvtSubscribeToFutureEvents);
 #else
 	WCHAR channel[MAX_PATH];
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &m_fileName[1], -1, channel, MAX_PATH);
 	channel[MAX_PATH - 1] = 0;
-	EVT_HANDLE handle = _EvtSubscribe(NULL, NULL, channel, NULL, NULL, this, SubscribeCallback, EvtSubscribeToFutureEvents);
+	EVT_HANDLE handle = EvtSubscribe(NULL, NULL, channel, NULL, NULL, this, SubscribeCallback, EvtSubscribeToFutureEvents);
 #endif
 	if (handle != NULL)
 	{
-		nxlog_debug_tag(DEBUG_TAG, 1, _T("Start watching event log \"%s\" (using EvtSubscribe)"), &m_fileName[1]);
+		nxlog_debug_tag(DEBUG_TAG, 1, _T("Start watching event log \"%s\""), &m_fileName[1]);
 		setStatus(LPS_RUNNING);
 		ConditionWait(m_stopCondition, INFINITE);
-		nxlog_debug_tag(DEBUG_TAG, 1, _T("Stop watching event log \"%s\" (using EvtSubscribe)"), &m_fileName[1]);
-		_EvtClose(handle);
+		nxlog_debug_tag(DEBUG_TAG, 1, _T("Stop watching event log \"%s\""), &m_fileName[1]);
+		EvtClose(handle);
       success = true;
 	}
 	else
@@ -413,33 +408,4 @@ bool LogParser::monitorEventLogV6()
       success = false;
 	}
    return success;
-}
-
-/**
- * Initialize event log reader for Windows Vista and later
- */
-bool InitEventLogParsersV6()
-{
-	HMODULE module = LoadLibrary(_T("wevtapi.dll"));
-	if (module == NULL)
-	{
-		TCHAR buffer[1024];
-		nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot load wevtapi.dll: %s"), GetSystemErrorText(GetLastError(), buffer, 1024));
-		return false;
-	}
-
-	_EvtClose = (BOOL (WINAPI *)(EVT_HANDLE))GetProcAddress(module, "EvtClose");
-	_EvtCreateRenderContext = (EVT_HANDLE (WINAPI *)(DWORD, LPCWSTR *, DWORD))GetProcAddress(module, "EvtCreateRenderContext");
-	_EvtGetPublisherMetadataProperty = (BOOL (WINAPI *)(EVT_HANDLE, EVT_PUBLISHER_METADATA_PROPERTY_ID, DWORD, DWORD, PEVT_VARIANT, PDWORD))GetProcAddress(module, "EvtGetPublisherMetadataProperty");
-	_EvtFormatMessage = (BOOL (WINAPI *)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PEVT_VARIANT, DWORD, DWORD, LPWSTR, PDWORD))GetProcAddress(module, "EvtFormatMessage");
-   _EvtNext = (BOOL (WINAPI *)(EVT_HANDLE, DWORD, EVT_HANDLE *, DWORD, DWORD, PDWORD))GetProcAddress(module, "EvtNext");
-   _EvtOpenPublisherMetadata = (EVT_HANDLE (WINAPI *)(EVT_HANDLE, LPCWSTR, LPCWSTR, LCID, DWORD))GetProcAddress(module, "EvtOpenPublisherMetadata");
-	_EvtQuery = (EVT_HANDLE (WINAPI *)(EVT_HANDLE, LPCWSTR, LPCWSTR, DWORD))GetProcAddress(module, "EvtQuery");
-	_EvtRender = (BOOL (WINAPI *)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PVOID, PDWORD, PDWORD))GetProcAddress(module, "EvtRender");
-	_EvtSubscribe = (EVT_HANDLE (WINAPI *)(EVT_HANDLE, HANDLE, LPCWSTR, LPCWSTR, EVT_HANDLE, PVOID, EVT_SUBSCRIBE_CALLBACK, DWORD))GetProcAddress(module, "EvtSubscribe");
-
-	return (_EvtClose != NULL) && (_EvtCreateRenderContext != NULL) &&
-          (_EvtGetPublisherMetadataProperty != NULL) && (_EvtFormatMessage != NULL) && 
-	       (_EvtNext != NULL) && (_EvtOpenPublisherMetadata != NULL) &&
-          (_EvtQuery != NULL) && (_EvtRender != NULL) && (_EvtSubscribe != NULL);
 }
