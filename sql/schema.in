@@ -2292,10 +2292,10 @@ CREATE TABLE win_event_log (
    zone_uin integer not null,
    origin_timestamp integer not null,
    log_name varchar(63) null,
-   event_source varchar(126) null,
+   event_source varchar(127) null,
    event_severity integer not null,
    event_code integer not null,
-   message varchar(4000) null,
+   message varchar(2000) null,
    raw_data SQL_TEXT null,
 #ifdef DB_TSDB
    PRIMARY KEY(id,event_timestamp)

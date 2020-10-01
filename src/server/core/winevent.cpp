@@ -20,30 +20,31 @@
 **
 **/
 
-
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("winevt")
+
 /**
- * Constructor for Windows event log structure
+ * Constructor for Windows event structure
  */
-WindowsEventLogRecord::WindowsEventLogRecord()
+WindowsEvent::WindowsEvent(uint32_t _nodeId, int32_t _zoneUIN, const NXCPMessage& msg)
 {
-   timestamp = 0;
-   nodeId = 0;
-   zoneUIN = 0;
-   *logName = 0;
-   originTimestamp = 0;
-   *eventSource = 0;
-   eventSeverity = 0;
-   eventCode = 0;
-   message = nullptr;
-   rawData = nullptr;
+   timestamp = time(nullptr);
+   nodeId = _nodeId;
+   zoneUIN = _zoneUIN;
+   msg.getFieldAsString(VID_LOG_NAME, logName, 64);
+   originTimestamp = msg.getFieldAsTime(VID_TIMESTAMP);
+   msg.getFieldAsString(VID_EVENT_SOURCE, eventSource, 128);
+   eventSeverity = msg.getFieldAsInt32(VID_EVENT_SEVERITY);
+   eventCode = msg.getFieldAsInt32(VID_EVENT_CODE);
+   message = msg.getFieldAsString(VID_MESSAGE);
+   rawData = msg.getFieldAsString(VID_RAW_DATA);
 }
 
 /**
- * Destructor for  Windows event log structure
+ * Destructor for Windows event structure
  */
-WindowsEventLogRecord::~WindowsEventLogRecord()
+WindowsEvent::~WindowsEvent()
 {
    MemFree(message);
    MemFree(rawData);
@@ -52,38 +53,38 @@ WindowsEventLogRecord::~WindowsEventLogRecord()
 /**
  * Windows event log processing queue
  */
-static ObjectQueue<WindowsEventLogRecord> s_windowsEventLogQueue;
-static THREAD s_processingThread = INVALID_THREAD_HANDLE;
+static ObjectQueue<WindowsEvent> s_windowsEventQueue;
+static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static uint64_t s_eventId = 1;
 
 /**
  * Put new event log message to the queue
  */
-void QueueWinEventLogMessage(WindowsEventLogRecord *event)
+void QueueWindowsEvent(WindowsEvent *event)
 {
-   s_windowsEventLogQueue.put(event);
+   s_windowsEventQueue.put(event);
 }
 
-
 /**
- * Windows event log processing thread
+ * Windows event writer thread
  */
-static THREAD_RESULT THREAD_CALL WinEventLogProcessingThread(void *pArg)
+static void WindowsEventWriterThread()
 {
-   ThreadSetName("WinEventLogProcessor");
+   ThreadSetName("WinEvtWriter");
+   int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Windows event writer started"));
+
    while(true)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      WindowsEventLogRecord *event = s_windowsEventLogQueue.getOrBlock();
-      int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
-
+      WindowsEvent *event = s_windowsEventQueue.getOrBlock();
       if (event == INVALID_POINTER_VALUE)
          break;
 
       DB_STATEMENT hStmt = DBPrepare(hdb,
-                     (g_dbSyntax == DB_SYNTAX_TSDB) ?
-                              _T("INSERT INTO win_event_log (id,timestamp,node_id,zone_uin,origin_timestamp,log_name,event_source,event_severity,event_code,message,raw_data) VALUES (?,to_timestamp(?),?,?,?,?,?,?,?,?,?)") :
-                              _T("INSERT INTO win_event_log (id,timestamp,node_id,zone_uin,origin_timestamp,log_name,event_source,event_severity,event_code,message,raw_data) VALUES (?,?,?,?,?,?,?,?,?,?,?)"), true);
+            (g_dbSyntax == DB_SYNTAX_TSDB) ?
+                  _T("INSERT INTO win_event_log (id,timestamp,node_id,zone_uin,origin_timestamp,log_name,event_source,event_severity,event_code,message,raw_data) VALUES (?,to_timestamp(?),?,?,?,?,?,?,?,?,?)") :
+                  _T("INSERT INTO win_event_log (id,timestamp,node_id,zone_uin,origin_timestamp,log_name,event_source,event_severity,event_code,message,raw_data) VALUES (?,?,?,?,?,?,?,?,?,?,?)"), true);
       if (hStmt == nullptr)
       {
          delete event;
@@ -101,23 +102,23 @@ static THREAD_RESULT THREAD_CALL WinEventLogProcessingThread(void *pArg)
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, event->zoneUIN);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (int32_t)event->originTimestamp);
          DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, event->logName, DB_BIND_STATIC, 63);
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, event->eventSource, DB_BIND_STATIC, 126);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, event->eventSource, DB_BIND_STATIC, 127);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, event->eventSeverity);
          DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, event->eventCode);
-         DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, event->message, DB_BIND_STATIC, MAX_DB_VARCHAR);
+         DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, event->message, DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
          DBBind(hStmt, 11, DB_SQLTYPE_TEXT, event->rawData, DB_BIND_STATIC);
-
-
          if (!DBExecute(hStmt))
          {
             delete event;
             break;
          }
          delete event;
+
          count++;
          if (count == maxRecords)
             break;
-         event = s_windowsEventLogQueue.getOrBlock(500);
+
+         event = s_windowsEventQueue.getOrBlock(500);
          if ((event == nullptr) || (event == INVALID_POINTER_VALUE))
             break;
       }
@@ -127,13 +128,14 @@ static THREAD_RESULT THREAD_CALL WinEventLogProcessingThread(void *pArg)
       if (event == INVALID_POINTER_VALUE)
          break;
    }
-   return THREAD_OK;
+
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Windows event writer stopped"));
 }
 
 /**
- * Start Windows event log processing thread
+ * Start Windows event log writer thread
  */
-void StartWinEventLogWriter()
+void StartWindowsEventWriter()
 {
    // Determine first available event id
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -148,15 +150,15 @@ void StartWinEventLogWriter()
    }
    DBConnectionPoolReleaseConnection(hdb);
 
-   s_processingThread = ThreadCreateEx(WinEventLogProcessingThread, 0, nullptr);
+   s_writerThread = ThreadCreateEx(WindowsEventWriterThread);
 }
 
 /**
- * Stop Windows event log processing thread
+ * Stop Windows event log writer thread
  */
-void StopWinEventLogWriter()
+void StopWindowsEventWriter()
 {
-   // Stop processing thread
-   s_windowsEventLogQueue.put(INVALID_POINTER_VALUE);
-   ThreadJoin(s_processingThread);
+   s_windowsEventQueue.put(INVALID_POINTER_VALUE);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Waiting for Windows event writer to stop"));
+   ThreadJoin(s_writerThread);
 }

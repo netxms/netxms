@@ -112,6 +112,7 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_lastAgentTrapId = 0;
    m_lastSNMPTrapId = 0;
    m_lastSyslogMessageId = 0;
+   m_lastWindowsEventId = 0;
    m_lastAgentPushRequestId = 0;
    m_agentCertSubject = nullptr;
    m_agentCertMappingMethod = MAP_CERTIFICATE_BY_CN;
@@ -232,6 +233,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_lastAgentTrapId = 0;
    m_lastSNMPTrapId = 0;
    m_lastSyslogMessageId = 0;
+   m_lastWindowsEventId = 0;
    m_lastAgentPushRequestId = 0;
    m_agentCertSubject = nullptr;
    m_agentCertMappingMethod = MAP_CERTIFICATE_BY_CN;
@@ -9636,12 +9638,12 @@ bool Node::checkSyslogMessageId(UINT64 id)
 /**
  * Check and update last windows log message ID
  */
-bool Node::checkWindowsEventLogId(uint64_t id)
+bool Node::checkWindowsEventId(uint64_t id)
 {
    lockProperties();
-   bool valid = (id > m_lastWindowsEventLogId);
+   bool valid = (id > m_lastWindowsEventId);
    if (valid)
-      m_lastWindowsEventLogId = id;
+      m_lastWindowsEventId = id;
    unlockProperties();
    return valid;
 }
