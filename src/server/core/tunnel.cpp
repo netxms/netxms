@@ -1154,10 +1154,14 @@ static long DecodeTLSVersion(int version)
    switch(version)
    {
       case 3:
-         protoVersion = SSL_OP_NO_TLSv1_2;
+#if OPENSSL_VERSION_NUMBER >= 0x10001000L
+         protoVersion |= SSL_OP_NO_TLSv1_2;
+#endif
          /* no break */
       case 2:
+#if OPENSSL_VERSION_NUMBER >= 0x10001000L
          protoVersion |= SSL_OP_NO_TLSv1_1;
+#endif
          /* no break */
       case 1:
          protoVersion |= SSL_OP_NO_TLSv1;
