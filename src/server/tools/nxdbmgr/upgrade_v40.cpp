@@ -23,8 +23,6 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
-
-
 /**
  * Upgrade from 40.16 to 40.18
  */
@@ -32,48 +30,48 @@ static bool H_UpgradeFromV17()
 {
    if (GetSchemaLevelForMajorVersion(36) < 6)
    {
-     CHK_EXEC(CreateConfigParam(_T("WinEventLogRetentionTime"), _T("90"), _T("Retention time in days for records in windows event log. All records older than specified will be deleted by housekeeping process."), _T("days"), 'I', true, false, false, false));
+      CHK_EXEC(CreateConfigParam(_T("WinEventLogRetentionTime"), _T("90"), _T("Retention time in days for records in windows event log. All records older than specified will be deleted by housekeeping process."), _T("days"), 'I', true, false, false, false));
 
-     if (g_dbSyntax == DB_SYNTAX_TSDB)
-     {
-        CHK_EXEC(CreateTable(
-           _T("CREATE TABLE win_event_log (")
-           _T("  id $SQL:INT64 not null,")
-           _T("  event_timestamp timestamptz not null,")
-           _T("  node_id integer not null,")
-           _T("  zone_uin integer not null,")
-           _T("  origin_timestamp integer not null,")
-           _T("  log_name varchar(63) null,")
-           _T("  event_source varchar(126) null,")
-           _T("  event_severity integer not null,")
-           _T("  event_code integer not null,")
-           _T("  message varchar(4000) null,")
-           _T("  raw_data $SQL:TEXT null,")
-           _T("PRIMARY KEY(id,event_timestamp))")));
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+      {
+         CHK_EXEC(CreateTable(
+               _T("CREATE TABLE win_event_log (")
+               _T("  id $SQL:INT64 not null,")
+               _T("  event_timestamp timestamptz not null,")
+               _T("  node_id integer not null,")
+               _T("  zone_uin integer not null,")
+               _T("  origin_timestamp integer not null,")
+               _T("  log_name varchar(63) null,")
+               _T("  event_source varchar(126) null,")
+               _T("  event_severity integer not null,")
+               _T("  event_code integer not null,")
+               _T("  message varchar(4000) null,")
+               _T("  raw_data $SQL:TEXT null,")
+               _T("PRIMARY KEY(id,event_timestamp))")));
 
-        CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('win_event_log', 'timestamp', chunk_time_interval => interval '86400 seconds')")));
-     }
-     else
-     {
-        CHK_EXEC(CreateTable(
-           _T("CREATE TABLE win_event_log (")
-           _T("  id $SQL:INT64 not null,")
-           _T("  event_timestamp integer not null,")
-           _T("  node_id integer not null,")
-           _T("  zone_uin integer not null,")
-           _T("  origin_timestamp integer not null,")
-           _T("  log_name varchar(63) null,")
-           _T("  event_source varchar(126) null,")
-           _T("  event_severity integer not null,")
-           _T("  event_code integer not null,")
-           _T("  message varchar(4000) null,")
-           _T("  raw_data $SQL:TEXT null,")
-           _T("PRIMARY KEY(id))")));
-     }
-     CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_win_event_log_timestamp ON win_event_log(event_timestamp)")));
-     CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_win_event_log_node ON win_event_log(node_id)")));
+         CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('win_event_log', 'timestamp', chunk_time_interval => interval '86400 seconds')")));
+      }
+      else
+      {
+         CHK_EXEC(CreateTable(
+               _T("CREATE TABLE win_event_log (")
+               _T("  id $SQL:INT64 not null,")
+               _T("  event_timestamp integer not null,")
+               _T("  node_id integer not null,")
+               _T("  zone_uin integer not null,")
+               _T("  origin_timestamp integer not null,")
+               _T("  log_name varchar(63) null,")
+               _T("  event_source varchar(126) null,")
+               _T("  event_severity integer not null,")
+               _T("  event_code integer not null,")
+               _T("  message varchar(4000) null,")
+               _T("  raw_data $SQL:TEXT null,")
+               _T("PRIMARY KEY(id))")));
+      }
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_win_event_log_timestamp ON win_event_log(event_timestamp)")));
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_win_event_log_node ON win_event_log(node_id)")));
 
-     CHK_EXEC(SetSchemaLevelForMajorVersion(36, 6));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(36, 6));
    }
    CHK_EXEC(SetMinorSchemaVersion(18));
    return true;
