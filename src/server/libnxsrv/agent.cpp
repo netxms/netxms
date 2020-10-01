@@ -354,11 +354,11 @@ void AgentConnectionReceiver::run()
                      delete msg;
                   }
                   break;
-               case CMD_WIN_EVENT_LOG:
+               case CMD_WINDOWS_EVENT:
                   if (g_agentConnectionThreadPool != nullptr)
                   {
                      TCHAR key[64];
-                     _sntprintf(key, 64, _T("WinEventLog_%p"), this);
+                     _sntprintf(key, 64, _T("WinEvent_%p"), this);
                      ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onWindowsEventCallback, msg);
                   }
                   else

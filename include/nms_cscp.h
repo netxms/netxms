@@ -449,7 +449,7 @@ typedef struct
 //#define CMD_ADD_CA_CERTIFICATE		      0x00C9
 //#define CMD_DELETE_CERTIFICATE		      0x00CA
 //#define CMD_GET_CERT_LIST				      0x00CB
-//#define CMD_UPDATE_CERT_COMMENTS		      0x00CC
+#define CMD_WINDOWS_EVENT      		      0x00CC
 #define CMD_QUERY_L2_TOPOLOGY			      0x00CD
 #define CMD_AUDIT_RECORD                  0x00CE
 #define CMD_GET_AUDIT_LOG                 0x00CF
@@ -655,7 +655,6 @@ typedef struct
 #define CMD_UPDATE_SNMP_PORT_LIST         0x019B
 #define CMD_GET_LOG_RECORD_DETAILS        0x019C
 #define CMD_GET_DCI_LAST_VALUE            0x019D
-#define CMD_WIN_EVENT_LOG                 0x019E
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

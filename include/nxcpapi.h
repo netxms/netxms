@@ -613,7 +613,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
          void (* progressCallback)(int64_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE,
          VolatileCounter *cancellationFlag = nullptr);
 
-TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(UINT16 wCode, TCHAR *buffer);
+TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t vode, TCHAR *buffer);
 void LIBNETXMS_EXPORTABLE NXCPRegisterMessageNameResolver(NXCPMessageNameResolver r);
 void LIBNETXMS_EXPORTABLE NXCPUnregisterMessageNameResolver(NXCPMessageNameResolver r);
 
