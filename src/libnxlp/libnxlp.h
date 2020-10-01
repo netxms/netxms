@@ -33,9 +33,6 @@
 #ifdef _WIN32
 
 THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *);
-bool InitEventLogParsersV6();
-void InitEventLogParsers();
-void CleanupEventLogParsers();
 bool InitVSSWrapper();
 
 #endif

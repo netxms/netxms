@@ -13,6 +13,6 @@ libnxlp_la_LIBADD += @top_srcdir@/src/libexpat/libexpat/libnxexpat.la
 endif
 
 EXTRA_DIST = \
-	eventlog.cpp vss.cpp wevt.cpp \
+	vss.cpp wevt.cpp \
 	libnxlp.vcxproj libnxlp.vcxproj.filters \
 	libnxlp.h

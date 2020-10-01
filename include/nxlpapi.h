@@ -272,11 +272,7 @@ private:
 
 #ifdef _WIN32
    void parseEvent(EVENTLOGRECORD *rec);
-
    bool monitorFileWithSnapshot();
-   bool monitorEventLogV6();
-	bool monitorEventLogV4();
-
    time_t readLastProcessedRecordTimestamp();
 #endif
 
