@@ -3654,27 +3654,6 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
       POLL_CANCELLATION_CHECKPOINT();
 
-      updateSystemHardwareInformation(poller, rqId);
-      updateHardwareComponents(poller, rqId);
-      updateSoftwarePackages(poller, rqId);
-
-      POLL_CANCELLATION_CHECKPOINT();
-
-      applyUserTemplates();
-      updateContainerMembership();
-
-      POLL_CANCELLATION_CHECKPOINT();
-
-      // Call hooks in loaded modules
-      ENUMERATE_MODULES(pfConfPollHook)
-      {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.szName);
-         if (CURRENT_MODULE.pfConfPollHook(this, session, rqId, poller))
-            modified |= MODIFY_ALL;   // FIXME: change module call to get exact modifications
-      }
-
-      POLL_CANCELLATION_CHECKPOINT();
-
       // Setup permanent connection to agent if not present (needed for proper configuration re-sync)
       if (m_capabilities & NC_IS_NATIVE_AGENT)
       {
@@ -3682,6 +3661,14 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          connectToAgent();
          agentUnlock();
       }
+
+      POLL_CANCELLATION_CHECKPOINT();
+
+      updateSystemHardwareInformation(poller, rqId);
+      updateHardwareComponents(poller, rqId);
+      updateSoftwarePackages(poller, rqId);
+
+      POLL_CANCELLATION_CHECKPOINT();
 
       // Update node type
       TCHAR hypervisorType[MAX_HYPERVISOR_TYPE_LENGTH], hypervisorInfo[MAX_HYPERVISOR_INFO_LENGTH];
@@ -3712,9 +3699,24 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
       POLL_CANCELLATION_CHECKPOINT();
 
+      // Call hooks in loaded modules
+      ENUMERATE_MODULES(pfConfPollHook)
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_name, m_id, CURRENT_MODULE.szName);
+         if (CURRENT_MODULE.pfConfPollHook(this, session, rqId, poller))
+            modified |= MODIFY_ALL;   // FIXME: change module call to get exact modifications
+      }
+
+      POLL_CANCELLATION_CHECKPOINT();
+
       // Execute hook script
       poller->setStatus(_T("hook"));
       executeHookScript(_T("ConfigurationPoll"));
+
+      POLL_CANCELLATION_CHECKPOINT();
+
+      applyUserTemplates();
+      updateContainerMembership();
 
       sendPollerMsg(rqId, _T("Finished configuration poll for node %s\r\n"), m_name);
       sendPollerMsg(rqId, _T("Node configuration was%schanged after poll\r\n"), (modified != 0) ? _T(" ") : _T(" not "));
