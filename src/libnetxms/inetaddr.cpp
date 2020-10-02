@@ -351,7 +351,7 @@ int InetAddress::compareTo(const InetAddress &a) const
    }
    else
    {
-      r = memcmp(a.m_addr.v6, m_addr.v6, 16);
+      r = memcmp(m_addr.v6, a.m_addr.v6, 16);
       return (r == 0) ? (m_maskBits - a.m_maskBits) : r;
    }
 }
