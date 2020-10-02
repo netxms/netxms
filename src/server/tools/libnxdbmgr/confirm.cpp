@@ -83,11 +83,11 @@ static bool GetYesNoInternal(bool allowBulk, const TCHAR *format, va_list args)
       if (s_noForAll)
          return false;
 
-      TCHAR message[4096];
-      _vsntprintf(message, 4096, format, args);
+      TCHAR message[8192];
+      _vsntprintf(message, 8192, format, args);
 
 #ifdef _WIN32
-      return MessageBox(NULL, message, _T("NetXMS Database Manager"), MB_YESNO | MB_ICONQUESTION) == IDYES;
+      return MessageBox(nullptr, message, _T("NetXMS Database Manager"), MB_YESNO | MB_ICONQUESTION) == IDYES;
 #else
       return false;
 #endif

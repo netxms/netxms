@@ -222,6 +222,7 @@ static int GetIDataQueryCB(void *arg, int cols, char **data, char **names)
 struct ModuleTableExportData
 {
   const StringList *excludedTables;
+  const StringList *includedTables;
   sqlite3 *db;
 };
 
@@ -230,7 +231,8 @@ struct ModuleTableExportData
  */
 static bool ExportModuleTable(const TCHAR *table, void *context)
 {
-   if (static_cast<ModuleTableExportData*>(context)->excludedTables->contains(table))
+   if (static_cast<ModuleTableExportData*>(context)->excludedTables->contains(table) ||
+       (!static_cast<ModuleTableExportData*>(context)->includedTables->isEmpty() && !static_cast<ModuleTableExportData*>(context)->includedTables->contains(table)))
    {
       _tprintf(_T("Skipping table %s\n"), table);
       return true;
@@ -510,7 +512,7 @@ static bool ExportPerfData(sqlite3 *db, const StringList& excludedTables)
 /**
  * Export database
  */
-void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent, bool skipSysLog, bool skipTrapLog, const StringList& excludedTables)
+void ExportDatabase(char *file, const StringList& excludedTables, const StringList& includedTables)
 {
    if (!ValidateDatabase())
       return;
@@ -564,20 +566,15 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
 	}
 
 	// Export tables
-	for(int i = 0; g_tables[i] != NULL; i++)
+	for(int i = 0; g_tables[i] != nullptr; i++)
 	{
 	   const TCHAR *table = g_tables[i];
-	   if ((skipAudit && !_tcscmp(table, _T("audit_log"))) ||
-          (skipEvent && !_tcscmp(table, _T("event_log"))) ||
-          (skipAlarms && (!_tcscmp(table, _T("alarms")) ||
-                         !_tcscmp(table, _T("alarm_notes")) ||
-                         !_tcscmp(table, _T("alarm_events")))) ||
-          (skipTrapLog && !_tcscmp(table, _T("snmp_trap_log"))) ||
-          (skipSysLog && !_tcscmp(table, _T("syslog"))) ||
-          ((g_skipDataMigration || g_skipDataSchemaMigration) && !_tcscmp(table, _T("raw_dci_values"))) ||
-          !_tcsncmp(table, _T("idata"), 5) ||
-          !_tcsncmp(table, _T("tdata"), 5) ||
-          excludedTables.contains(table))
+      if (!_tcsncmp(g_tables[i], _T("idata"), 5) ||
+          !_tcsncmp(g_tables[i], _T("tdata"), 5))
+         continue;  // idata and tdata exported separately
+	   if (((g_skipDataMigration || g_skipDataSchemaMigration) && !_tcscmp(table, _T("raw_dci_values"))) ||
+	       excludedTables.contains(table) ||
+	       (!includedTables.isEmpty() && !includedTables.contains(table)))
 	   {
 	      _tprintf(_T("Skipping table %s\n"), table);
          continue;
@@ -589,6 +586,7 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
 	ModuleTableExportData data;
 	data.db = db;
 	data.excludedTables = &excludedTables;
+   data.includedTables = &includedTables;
    if (!EnumerateModuleTables(ExportModuleTable, &data))
       goto cleanup;
 

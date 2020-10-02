@@ -110,10 +110,10 @@ bool LoadServerModules(TCHAR *moduleLoadList)
    TCHAR *curr, *next, *ptr;
    bool success = true;
 
-   for(curr = moduleLoadList; curr != NULL; curr = next)
+   for(curr = moduleLoadList; curr != nullptr; curr = nullptr)
    {
       next = _tcschr(curr, _T('\n'));
-      if (next != NULL)
+      if (next != nullptr)
       {
          *next = 0;
          next++;
@@ -126,7 +126,7 @@ bool LoadServerModules(TCHAR *moduleLoadList)
 
       // Check for "mandatory" option
       ptr = _tcschr(curr, _T(','));
-      if (ptr != NULL)
+      if (ptr != nullptr)
       {
          *ptr = 0;
          ptr++;
@@ -155,12 +155,12 @@ bool EnumerateModuleTables(bool (*handler)(const TCHAR *, void *), void *userDat
    for(int i = 0; i < s_modules.size(); i++)
    {
       Module *m = s_modules.get(i);
-      if (m->GetTables == NULL)
+      if (m->GetTables == nullptr)
          continue;
       const TCHAR * const *tables = m->GetTables();
-      if (tables == NULL)
+      if (tables == nullptr)
          continue;
-      for(int j = 0; tables[j] != NULL; j++)
+      for(int j = 0; tables[j] != nullptr; j++)
       {
          if (!handler(tables[j], userData))
             return false;
@@ -177,10 +177,10 @@ bool EnumerateModuleSchemas(bool (*handler)(const TCHAR *, void *), void *userDa
    for(int i = 0; i < s_modules.size(); i++)
    {
       Module *m = s_modules.get(i);
-      if (m->GetSchemaPrefix == NULL)
+      if (m->GetSchemaPrefix == nullptr)
          continue;
       const TCHAR *schema = m->GetSchemaPrefix();
-      if (schema == NULL)
+      if (schema == nullptr)
          continue;
       if (!handler(schema, userData))
          return false;
@@ -196,7 +196,7 @@ bool UpgradeModuleSchemas()
    for(int i = 0; i < s_modules.size(); i++)
    {
       Module *m = s_modules.get(i);
-      if (m->UpgradeDB == NULL)
+      if (m->UpgradeDB == nullptr)
          continue;
       if (!m->UpgradeDB())
          return false;
@@ -212,7 +212,7 @@ bool CheckModuleSchemas()
    for(int i = 0; i < s_modules.size(); i++)
    {
       Module *m = s_modules.get(i);
-      if (m->CheckDB == NULL)
+      if (m->CheckDB == nullptr)
          continue;
       if (!m->CheckDB())
          return false;

@@ -177,7 +177,7 @@ static const DB_TYPE s_dbTypesODBC[] =
    { "oracle", _T("Oracle") },
    { "pgsql", _T("PostgreSQL") },
    { "tsdb", _T("TimeScaleDB") },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 
 /**
@@ -187,7 +187,7 @@ static const DB_TYPE s_dbTypesPostgreSQL[] =
 {
    { "pgsql", _T("PostgreSQL") },
    { "tsdb", _T("TimeScaleDB") },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 
 /**
@@ -199,7 +199,7 @@ static const char *SelectDatabaseType(const char *driver)
 
    const DB_TYPE *types = !strcmp(driver, "odbc") ? s_dbTypesODBC : s_dbTypesPostgreSQL;
    int index = 0;
-   for(; types[index].name != NULL; index++)
+   for(; types[index].name != nullptr; index++)
    {
       _tprintf(_T("   %d. %s (%hs)\n"), index + 1, types[index].displayName, types[index].name);
    }
@@ -211,11 +211,11 @@ static const char *SelectDatabaseType(const char *driver)
       fflush(stdout);
 
       TCHAR buffer[256];
-      if (_fgetts(buffer, 256, stdin) == NULL)
+      if (_fgetts(buffer, 256, stdin) == nullptr)
          return NULL;
 
       TCHAR *p = _tcschr(buffer, _T('\n'));
-      if (p != NULL)
+      if (p != nullptr)
          *p = 0;
       Trim(buffer);
 
@@ -224,7 +224,7 @@ static const char *SelectDatabaseType(const char *driver)
       if ((*eptr == 0) && (selection >= 0) && (selection <= index))
          break;
    }
-   return (selection > 0) ? types[selection - 1].name : NULL;
+   return (selection > 0) ? types[selection - 1].name : nullptr;
 }
 
 /**
@@ -260,16 +260,11 @@ static void PrintConfig(const TCHAR *pattern)
  */
 int main(int argc, char *argv[])
 {
-   BOOL bStart = TRUE, bQuiet = FALSE;
+   bool bStart = true, bQuiet = false;
    bool replaceValue = true;
-   bool skipAudit = false;
-   bool skipAlarms = false;
-   bool skipEvent = false;
-   bool skipSysLog = false;
-   bool skipTrapLog = false;
    bool showOutput = false;
 	TCHAR fallbackSyntax[32] = _T("");
-	StringList excludedTables;
+	StringList includedTables, excludedTables;
    int ch;
 
    InitNetXMSProcess(true);
@@ -333,7 +328,7 @@ stop_search:
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "Ac:dDe:EfF:GhILMNoqRsStT:vXY")) != -1)
+   while((ch = getopt(argc, argv, "c:dDe:fF:GhIL:MNoqsStT:vXY:Z:")) != -1)
    {
       switch(ch)
       {
@@ -356,12 +351,10 @@ stop_search:
                      _T("   unlock               : Forced database unlock\n")
                      _T("   upgrade              : Upgrade database to new version\n")
                      _T("Valid options are:\n")
-                     _T("   -A          : Skip export of audit log\n")
                      _T("   -c <config> : Use alternate configuration file. Default is %s\n")
                      _T("   -d          : Check collected data (may take very long time).\n")
                      _T("   -D          : Migrate only collected data.\n")
                      _T("   -e <table>  : Exclude specific table from export, import, or migration.\n")
-                     _T("   -E          : Skip export, import, or migration of event log\n")
                      _T("   -f          : Force repair - do not ask for confirmation.\n")
                      _T("   -F <syntax> : Fallback database syntax to use if not set in metadata.\n")
 #ifdef _WIN32
@@ -369,28 +362,30 @@ stop_search:
 #endif
                      _T("   -h          : Display help and exit.\n")
                      _T("   -I          : MySQL only - specify TYPE=InnoDB for new tables.\n")
-                     _T("   -L          : Skip export, import, or migration of alarm log.\n")
+                     _T("   -L <log>    : Migrate only specific log.\n")
                      _T("   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n")
                      _T("   -N          : Do not replace existing configuration value (\"set\" command only).\n")
                      _T("   -o          : Show output from SELECT statements in a batch.\n")
                      _T("   -q          : Quiet mode (don't show startup banner).\n")
-                     _T("   -R          : Skip export, import, or migration of SNMP trap log.\n")
                      _T("   -s          : Skip collected data during export, import, or migration.\n")
                      _T("   -S          : Skip collected data during export, import, or migration and do not clear or create data tables.\n")
                      _T("   -t          : Enable trace mode (show executed SQL queries).\n")
                      _T("   -T <recs>   : Transaction size for migration.\n")
                      _T("   -v          : Display version and exit.\n")
                      _T("   -X          : Ignore SQL errors when upgrading (USE WITH CAUTION!!!)\n")
-                     _T("   -Y          : Skip export, import, or migration of collected syslog records.\n")
+                     _T("   -Y <table>  : Migrate only given table.\n")
+                     _T("   -Z <log>    : Exclude specific log from export, import, or migration.\n")
+                     _T("Valid log names are:\n")
+                     _T("   alarm audit event snmptrap syslog winevent\n")
+                     _T("Notes:\n")
+                     _T("   * -e, -L, -Y, and -Z options can be specified more than once for different tables\n")
+                     _T("   * -L and -Y options automatically exclude all other (not explicitly listed) tables\n")
                      _T("\n"), configFile);
             bStart = FALSE;
             break;
          case 'v':   // Print version and exit
 			   _tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n\n"));
             bStart = FALSE;
-            break;
-         case 'A':
-            skipAudit = true;
             break;
          case 'c':
 #ifdef UNICODE
@@ -409,9 +404,6 @@ stop_search:
          case 'e':
             excludedTables.addMBString(optarg);
             break;
-         case 'E':
-            skipEvent = true;
-            break;
          case 'f':
             SetDBMgrForcedConfirmationMode(true);
             break;
@@ -426,6 +418,40 @@ stop_search:
 			case 'G':
 			   SetDBMgrGUIMode(true);
 				break;
+         case 'I':
+            SetTableSuffix(_T(" TYPE=InnoDB"));
+            break;
+         case 'L':
+            if (!stricmp(optarg, "audit"))
+            {
+               includedTables.add(_T("audit_log"));
+            }
+            else if (!stricmp(optarg, "alarm"))
+            {
+               includedTables.add(_T("alarms"));
+               includedTables.add(_T("alarm_events"));
+               includedTables.add(_T("alarm_notes"));
+            }
+            else if (!stricmp(optarg, "event"))
+            {
+               includedTables.add(_T("event_log"));
+            }
+            else if (!stricmp(optarg, "snmptrap"))
+            {
+               includedTables.add(_T("snmp_trap_log"));
+            }
+            else if (!stricmp(optarg, "syslog"))
+            {
+               includedTables.add(_T("syslog"));
+            }
+            else if (!stricmp(optarg, "winevent"))
+            {
+               includedTables.add(_T("win_event_log"));
+            }
+            break;
+         case 'M':
+            SetTableSuffix(_T(" TYPE=MyISAM"));
+            break;
          case 'N':
             replaceValue = false;
             break;
@@ -433,10 +459,7 @@ stop_search:
             showOutput = true;
             break;
          case 'q':
-            bQuiet = TRUE;
-            break;
-         case 'R':
-            skipTrapLog = true;
+            bQuiet = true;
             break;
          case 's':
             g_skipDataMigration = true;
@@ -449,30 +472,49 @@ stop_search:
             SetQueryTraceMode(true);
             break;
          case 'T':
-            g_migrationTxnSize = strtol(optarg, NULL, 0);
+            g_migrationTxnSize = strtol(optarg, nullptr, 0);
             if ((g_migrationTxnSize < 1) || (g_migrationTxnSize > 100000))
             {
                _tprintf(_T("WARNING: invalid transaction size, reset to default"));
                g_migrationTxnSize = 4096;
             }
             break;
-         case 'I':
-            SetTableSuffix(_T(" TYPE=InnoDB"));
-            break;
-         case 'L':
-            skipAlarms = true;
-            break;
-         case 'M':
-            SetTableSuffix(_T(" TYPE=MyISAM"));
-            break;
          case 'X':
             g_ignoreErrors = true;
             break;
          case 'Y':
-            skipSysLog = true;
+            includedTables.addMBString(optarg);
+            break;
+         case 'Z':
+            if (!stricmp(optarg, "audit"))
+            {
+               excludedTables.add(_T("audit_log"));
+            }
+            else if (!stricmp(optarg, "alarm"))
+            {
+               excludedTables.add(_T("alarms"));
+               excludedTables.add(_T("alarm_events"));
+               excludedTables.add(_T("alarm_notes"));
+            }
+            else if (!stricmp(optarg, "event"))
+            {
+               excludedTables.add(_T("event_log"));
+            }
+            else if (!stricmp(optarg, "snmptrap"))
+            {
+               excludedTables.add(_T("snmp_trap_log"));
+            }
+            else if (!stricmp(optarg, "syslog"))
+            {
+               excludedTables.add(_T("syslog"));
+            }
+            else if (!stricmp(optarg, "winevent"))
+            {
+               excludedTables.add(_T("win_event_log"));
+            }
             break;
          case '?':
-            bStart = FALSE;
+            bStart = false;
             break;
          default:
             break;
@@ -678,11 +720,11 @@ stop_search:
       }
       else if (!strcmp(argv[optind], "export"))
       {
-         ExportDatabase(argv[optind + 1], skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog, excludedTables);
+         ExportDatabase(argv[optind + 1], excludedTables, includedTables);
       }
       else if (!strcmp(argv[optind], "import"))
       {
-         ImportDatabase(argv[optind + 1], skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog, excludedTables);
+         ImportDatabase(argv[optind + 1], excludedTables, includedTables);
       }
       else if (!strcmp(argv[optind], "migrate"))
 		{
@@ -693,7 +735,7 @@ stop_search:
 #endif
 			TCHAR destConfFields[2048];
 			_sntprintf(destConfFields, 2048, _T("\tDriver: %s\n\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbDriver, s_dbName, s_dbServer, s_dbLogin);
-         MigrateDatabase(sourceConfig, destConfFields, skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog, excludedTables);
+         MigrateDatabase(sourceConfig, destConfFields, excludedTables, includedTables);
 #ifdef UNICODE
          MemFree(sourceConfig);
 #endif

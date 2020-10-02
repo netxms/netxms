@@ -1877,7 +1877,7 @@ public:
 	bool contains(const TCHAR *value) const { return indexOf(value) != -1; }
 	int indexOfIgnoreCase(const TCHAR *value) const;
    bool containsIgnoreCase(const TCHAR *value) const { return indexOfIgnoreCase(value) != -1; }
-   TCHAR *join(const TCHAR *separator);
+   TCHAR *join(const TCHAR *separator) const;
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) const;
    void loadMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 countId);

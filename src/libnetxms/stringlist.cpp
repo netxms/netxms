@@ -366,7 +366,7 @@ void StringList::merge(const StringList *src, bool matchCase)
  * @param separator separator string
  * @return string with all list elements concatenated
  */
-TCHAR *StringList::join(const TCHAR *separator)
+TCHAR *StringList::join(const TCHAR *separator) const
 {
    if (m_count == 0)
       return MemCopyString(_T(""));
