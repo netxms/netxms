@@ -158,7 +158,7 @@ static UINT32 HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport *
             new AccessPointInfo(
                response->getVariable(4)->getValueAsUInt(),
                var->getValueAsMACAddr(),
-               ntohl(_t_inet_addr(response->getVariable(2)->getValueAsString(ipAddr, 32))), 
+               InetAddress::parse(response->getVariable(2)->getValueAsString(ipAddr, 32)), 
                AP_ADOPTED, 
                response->getVariable(1)->getValueAsString(name, 256),
                response->getVariable(3)->getValueAsString(vendor, 256),

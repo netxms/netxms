@@ -337,7 +337,7 @@ bool InetAddress::equals(const InetAddress &a) const
 }
 
 /**
- * Compare two inet addresses
+ * Compare two inet addresses. Returns -1 if this address is lesser then given, and 1 if greater.
  */
 int InetAddress::compareTo(const InetAddress &a) const
 {
@@ -351,7 +351,7 @@ int InetAddress::compareTo(const InetAddress &a) const
    }
    else
    {
-      r = memcmp(a.m_addr.v6, m_addr.v6, 16);
+      r = memcmp(m_addr.v6, a.m_addr.v6, 16);
       return (r == 0) ? (m_maskBits - a.m_maskBits) : r;
    }
 }
@@ -412,6 +412,23 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
    if (!isValid())
       return nullptr;
 
+#ifdef _WIN32
+   SOCKADDR_INET sa;
+   memset(&sa, 0, sizeof(sa));
+   if (m_family == AF_INET)
+   {
+      sa.Ipv4.sin_family = AF_INET;
+      sa.Ipv4.sin_addr.s_addr = htonl(m_addr.v4);
+   }
+   else
+   {
+      sa.Ipv6.sin6_family = AF_INET6;
+      memcpy(sa.Ipv6.sin6_addr.s6_addr, m_addr.v6, 16);
+   }
+   if (GetNameInfo(reinterpret_cast<SOCKADDR*>(&sa), SA_LEN(reinterpret_cast<SOCKADDR*>(&sa)),
+         buffer, static_cast<DWORD>(buflen), nullptr, 0, NI_NAMEREQD) != 0)
+      return nullptr;
+#else
    struct hostent *hs = nullptr;
    if (m_family == AF_INET)
    {
@@ -436,6 +453,7 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
 #else
    strlcpy(buffer, hs->h_name, buflen);
 #endif
+#endif   /* _WIN32 */
 
    return buffer;
 }
@@ -504,9 +522,33 @@ InetAddress InetAddress::parse(const WCHAR *str)
    if ((str == nullptr) || (*str == 0))
       return InetAddress();
 
+#ifdef _WIN32
+   WCHAR strCopy[256];
+   wcslcpy(strCopy, str, 256);
+
+   struct sockaddr_in addr4;
+   addr4.sin_family = AF_INET;
+   INT addrLen = sizeof(addr4);
+   if (WSAStringToAddressW(strCopy, AF_INET, nullptr, reinterpret_cast<SOCKADDR*>(&addr4), &addrLen) == 0)
+   {
+      return InetAddress(ntohl(addr4.sin_addr.s_addr));
+   }
+
+   // Check for IPv6 address
+   struct sockaddr_in6 addr6;
+   addr6.sin6_family = AF_INET6;
+   addrLen = sizeof(addr6);
+   if (WSAStringToAddressW(strCopy, AF_INET6, nullptr, reinterpret_cast<SOCKADDR*>(&addr6), &addrLen) == 0)
+   {
+      return InetAddress(addr6.sin6_addr.u.Byte);
+   }
+
+   return InetAddress();
+#else
    char mb[256];
    wchar_to_mb(str, -1, mb, 256);
    return parse(mb);
+#endif
 }
 
 /**
@@ -517,43 +559,27 @@ InetAddress InetAddress::parse(const char *str)
    if ((str == nullptr) || (*str == 0))
       return InetAddress();
 
-   // Check for IPv4 address
 #ifdef _WIN32
-   char strCopy[256];
-   strlcpy(strCopy, str, 256);
-
-   struct sockaddr_in addr4;
-   addr4.sin_family = AF_INET;
-   INT addrLen = sizeof(addr4);
-   if (WSAStringToAddressA(strCopy, AF_INET, nullptr, (struct sockaddr *)&addr4, &addrLen) == 0)
-   {
-      return InetAddress(ntohl(addr4.sin_addr.s_addr));
-   }
+   WCHAR wc[256];
+   mb_to_wchar(str, -1, wc, 256);
+   return parse(wc);
 #else
+   // Check for IPv4 address
    struct in_addr addr4;
    if (inet_aton(str, &addr4))
    {
       return InetAddress(ntohl(addr4.s_addr));
    }
-#endif
 
    // Check for IPv6 address
-#if defined(_WIN32)
-   struct sockaddr_in6 addr6;
-   addr6.sin6_family = AF_INET6;
-   addrLen = sizeof(addr6);
-   if (WSAStringToAddressA(strCopy, AF_INET6, NULL, (struct sockaddr *)&addr6, &addrLen) == 0)
-   {
-      return InetAddress(addr6.sin6_addr.u.Byte);
-   }
-#elif defined(WITH_IPV6)
    struct in6_addr addr6;
    if (inet_pton(AF_INET6, str, &addr6))
    {
       return InetAddress(addr6.s6_addr);
    }
-#endif
+
    return InetAddress();
+#endif
 }
 
 /**
@@ -564,10 +590,27 @@ InetAddress InetAddress::parse(const WCHAR *addrStr, const WCHAR *maskStr)
    if ((addrStr == nullptr) || (*addrStr == 0) || (maskStr == nullptr) || (*maskStr == 0))
       return InetAddress();
 
+#ifdef _WIN32
+   WCHAR addrCopy[256], maskCopy[256];
+   wcslcpy(addrCopy, addrStr, 256);
+   wcslcpy(maskCopy, maskStr, 256);
+
+   struct sockaddr_in addr, mask;
+   addr.sin_family = AF_INET;
+   mask.sin_family = AF_INET;
+   INT addrLen = sizeof(addr), maskLen = sizeof(mask);
+   if ((WSAStringToAddressW(addrCopy, AF_INET, nullptr, (struct sockaddr *)&addr, &addrLen) == 0) &&
+       (WSAStringToAddressW(maskCopy, AF_INET, nullptr, (struct sockaddr *)&mask, &maskLen) == 0))
+   {
+      return InetAddress(ntohl(addr.sin_addr.s_addr), BitsInMask(ntohl(mask.sin_addr.s_addr)));
+   }
+   return InetAddress();
+#else
    char mbAddr[256], mbMask[256];
    wchar_to_mb(addrStr, -1, mbAddr, 256);
    wchar_to_mb(maskStr, -1, mbMask, 256);
    return parse(mbAddr, mbMask);
+#endif
 }
 
 /**
@@ -579,27 +622,18 @@ InetAddress InetAddress::parse(const char *addrStr, const char *maskStr)
       return InetAddress();
 
 #ifdef _WIN32
-   char addrCopy[256], maskCopy[256];
-   strlcpy(addrCopy, addrStr, 256);
-   strlcpy(maskCopy, maskStr, 256);
-
-   struct sockaddr_in addr, mask;
-   addr.sin_family = AF_INET;
-   mask.sin_family = AF_INET;
-   INT addrLen = sizeof(addr), maskLen = sizeof(mask);
-   if ((WSAStringToAddressA(addrCopy, AF_INET, nullptr, (struct sockaddr *)&addr, &addrLen) == 0) &&
-       (WSAStringToAddressA(maskCopy, AF_INET, nullptr, (struct sockaddr *)&mask, &maskLen) == 0))
-   {
-      return InetAddress(ntohl(addr.sin_addr.s_addr), BitsInMask(ntohl(mask.sin_addr.s_addr)));
-   }
+   WCHAR wcAddr[256], wcMask[256];
+   mb_to_wchar(addrStr, -1, wcAddr, 256);
+   mb_to_wchar(maskStr, -1, wcMask, 256);
+   return parse(wcAddr, wcMask);
 #else
    struct in_addr addr, mask;
    if (inet_aton(addrStr, &addr) && inet_aton(maskStr, &mask))
    {
       return InetAddress(ntohl(addr.s_addr), BitsInMask(ntohl(mask.s_addr)));
    }
-#endif
    return InetAddress();
+#endif
 }
 
 /**

@@ -1035,6 +1035,8 @@ void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUser
   OSVERSIONINFOEXA ver;
   ZeroMemory(&ver, sizeof(OSVERSIONINFOEXA));
   ver.dwOSVersionInfoSize = sizeof(ver);
+#pragma warning(push)
+#pragma warning(disable : 4996)
   if (GetVersionExA( (OSVERSIONINFOA*) &ver) != FALSE)
   {
     _snprintf(buffer, STACKWALK_MAX_NAMELEN, "OS-Version: %d.%d.%d (%s) 0x%x-0x%x\n", 
@@ -1042,6 +1044,7 @@ void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUser
       ver.szCSDVersion, ver.wSuiteMask, ver.wProductType);
     OnOutput(buffer);
   }
+#pragma warning(pop)
 }
 
 void StackWalker::OnOutput(LPCSTR buffer)

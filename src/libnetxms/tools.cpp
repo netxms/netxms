@@ -1589,7 +1589,10 @@ void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize)
    OSVERSIONINFO ver;
 
    ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+#pragma warning(push)
+#pragma warning(disable : 4996)
    GetVersionEx(&ver);
+#pragma warning(pop)
    switch(ver.dwPlatformId)
    {
       case VER_PLATFORM_WIN32_WINDOWS:
@@ -1703,19 +1706,22 @@ void LIBNETXMS_EXPORTABLE WindowsProductNameFromVersion(OSVERSIONINFOEX *ver, TC
 /**
  * Get more specific Windows version string
  */
-BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strSize)
+bool LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, size_t size)
 {
 	OSVERSIONINFOEX ver;
 	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	if (!GetVersionEx((OSVERSIONINFO *)&ver))
-		return FALSE;
+#pragma warning(push)
+#pragma warning(disable : 4996)
+   if (!GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&ver)))
+		return false;
+#pragma warning(pop)
 
    TCHAR buffer[256];
    WindowsProductNameFromVersion(&ver, buffer);
 
-	_sntprintf(versionString, strSize, _T("Windows %s Build %d %s"), buffer, ver.dwBuildNumber, ver.szCSDVersion);
+	_sntprintf(versionString, size, _T("Windows %s Build %d %s"), buffer, ver.dwBuildNumber, ver.szCSDVersion);
 	StrStrip(versionString);
-	return TRUE;
+	return true;
 }
 
 #endif

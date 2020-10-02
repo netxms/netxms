@@ -419,14 +419,19 @@ int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
    int nRet;
-   UINT32 dwAddr, dwStart, dwEnd;
-
    if (argv[0]->isString() && argv[1]->isString() && argv[2]->isString())
    {
-      dwAddr = ntohl(_t_inet_addr(argv[0]->getValueAsCString()));
-      dwStart = ntohl(_t_inet_addr(argv[1]->getValueAsCString()));
-      dwEnd = ntohl(_t_inet_addr(argv[2]->getValueAsCString()));
-      *ppResult = vm->createValue((LONG)(((dwAddr >= dwStart) && (dwAddr <= dwEnd)) ? 1 : 0));
+      InetAddress addr = InetAddress::parse(argv[0]->getValueAsCString());
+      InetAddress start = InetAddress::parse(argv[1]->getValueAsCString());
+      InetAddress end = InetAddress::parse(argv[2]->getValueAsCString());
+      if ((addr.getFamily() == start.getFamily()) && (addr.getFamily() == end.getFamily()))
+      {
+         *ppResult = vm->createValue((addr.compareTo(start) >= 0) && (addr.compareTo(end) <= 0));
+      }
+      else
+      {
+         *ppResult = vm->createValue(false);
+      }
       nRet = 0;
    }
    else
@@ -442,14 +447,27 @@ int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *v
 int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
    int nRet;
-   UINT32 dwAddr, dwSubnet, dwMask;
-
    if (argv[0]->isString() && argv[1]->isString() && argv[2]->isString())
    {
-      dwAddr = ntohl(_t_inet_addr(argv[0]->getValueAsCString()));
-      dwSubnet = ntohl(_t_inet_addr(argv[1]->getValueAsCString()));
-      dwMask = ntohl(_t_inet_addr(argv[2]->getValueAsCString()));
-      *ppResult = vm->createValue((LONG)(((dwAddr & dwMask) == dwSubnet) ? 1 : 0));
+      InetAddress addr = InetAddress::parse(argv[0]->getValueAsCString());
+      InetAddress subnet = InetAddress::parse(argv[1]->getValueAsCString());
+      if (addr.getFamily() == subnet.getFamily())
+      {
+         if (argv[2]->isInteger())
+         {
+            subnet.setMaskBits(argv[2]->getValueAsUInt32());
+         }
+         else
+         {
+            InetAddress mask = InetAddress::parse(argv[2]->getValueAsCString());
+            subnet.setMaskBits((mask.getFamily() == AF_INET) ? BitsInMask(mask.getAddressV4()) : BitsInMask(mask.getAddressV6(), 16));
+         }
+         *ppResult = vm->createValue(subnet.contain(addr));
+      }
+      else
+      {
+         *ppResult = vm->createValue(false);
+      }
       nRet = 0;
    }
    else

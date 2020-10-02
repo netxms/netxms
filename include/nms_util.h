@@ -3925,7 +3925,7 @@ UINT64 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64A(const char *optStri
 
 #ifdef _WIN32
 TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 error, TCHAR *buffer, size_t size);
-BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strSize);
+bool LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, size_t size);
 void LIBNETXMS_EXPORTABLE WindowsProductNameFromVersion(OSVERSIONINFOEX *ver, TCHAR *buffer);
 INT64 LIBNETXMS_EXPORTABLE GetProcessRSS();
 #endif

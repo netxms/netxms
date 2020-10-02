@@ -318,12 +318,6 @@
 
 #endif	/* _WIN32 */
 
-#ifdef UNICODE
-#define _t_inet_addr    inet_addr_w
-#else
-#define _t_inet_addr    inet_addr
-#endif
-
 // Check that either UNICODE_UCS2 or UNICODE_UCS4 are defined
 #if !defined(UNICODE_UCS2) && !defined(UNICODE_UCS4)
 #error Neither UNICODE_UCS2 nor UNICODE_UCS4 are defined

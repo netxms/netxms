@@ -492,51 +492,51 @@ size_t SNMP_Variable::encode(BYTE *pBuffer, size_t bufferSize)
 /**
  * Set variable from string
  */
-void SNMP_Variable::setValueFromString(UINT32 type, const TCHAR *value)
+void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value)
 {
-   UINT32 *pdwBuffer;
+   uint32_t *pdwBuffer;
    size_t length;
 
    m_type = type;
    switch(m_type)
    {
       case ASN_INTEGER:
-         m_valueLength = sizeof(LONG);
-         m_value = (BYTE *)realloc(m_value, m_valueLength);
-         *((LONG *)m_value) = _tcstol(value, NULL, 0);
+         m_valueLength = sizeof(int32_t);
+         m_value = MemRealloc(m_value, m_valueLength);
+         *reinterpret_cast<int32_t*>(m_value) = _tcstol(value, nullptr, 0);
          break;
       case ASN_COUNTER32:
       case ASN_GAUGE32:
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
-         m_valueLength = sizeof(UINT32);
-         m_value = (BYTE *)realloc(m_value, m_valueLength);
-         *((UINT32 *)m_value) = _tcstoul(value, NULL, 0);
+         m_valueLength = sizeof(uint32_t);
+         m_value = MemRealloc(m_value, m_valueLength);
+         *reinterpret_cast<uint32_t*>(m_value) = _tcstoul(value, nullptr, 0);
          break;
       case ASN_COUNTER64:
-         m_valueLength = sizeof(QWORD);
-         m_value = (BYTE *)realloc(m_value, m_valueLength);
-         *((QWORD *)m_value) = _tcstoull(value, NULL, 0);
+         m_valueLength = sizeof(uint64_t);
+         m_value = MemRealloc(m_value, m_valueLength);
+         *reinterpret_cast<uint64_t*>(m_value) = _tcstoull(value, nullptr, 0);
          break;
       case ASN_IP_ADDR:
-         m_valueLength = sizeof(UINT32);
-         m_value = (BYTE *)realloc(m_value, m_valueLength);
-         *((UINT32 *)m_value) = _t_inet_addr(value);
+         m_valueLength = sizeof(uint32_t);
+         m_value = MemRealloc(m_value, m_valueLength);
+         *reinterpret_cast<uint32_t*>(m_value) = htonl(InetAddress::parse(value).getAddressV4());
          break;
       case ASN_OBJECT_ID:
-         pdwBuffer = MemAllocArrayNoInit<UINT32>(256);
+         pdwBuffer = MemAllocArrayNoInit<uint32_t>(256);
          length = SNMPParseOID(value, pdwBuffer, 256);
          if (length > 0)
          {
-            m_valueLength = length * sizeof(UINT32);
+            m_valueLength = length * sizeof(uint32_t);
             MemFree(m_value);
             m_value = reinterpret_cast<BYTE*>(MemCopyBlock(pdwBuffer, m_valueLength));
          }
          else
          {
             // OID parse error, set to .ccitt.zeroDotZero (.0.0)
-            m_valueLength = sizeof(UINT32) * 2;
-            m_value = (BYTE *)MemRealloc(m_value, m_valueLength);
+            m_valueLength = sizeof(uint32_t) * 2;
+            m_value = MemRealloc(m_value, m_valueLength);
             memset(m_value, 0, m_valueLength);
          }
          break;
@@ -547,7 +547,7 @@ void SNMP_Variable::setValueFromString(UINT32 type, const TCHAR *value)
 #else
          m_value = reinterpret_cast<BYTE*>(MemCopyString(value));
 #endif
-         m_valueLength = (UINT32)strlen(reinterpret_cast<char*>(m_value));
+         m_valueLength = strlen(reinterpret_cast<char*>(m_value));
          break;
       default:
          break;

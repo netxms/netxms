@@ -6,12 +6,31 @@ assert(!AddrInRange("10.0.0.16", "10.0.0.2", "10.0.0.15"));
 assert(!AddrInRange("10.0.0.16", "10.0.0.17", "10.0.0.44"));
 assert(!AddrInRange("10.0.0.16", "192.168.1.1", "192.168.1.100"));
 
+//AddrInRange - IPv6
+assert(AddrInRange("2000:520:7c11:44::c6d0:11ad", "2000:520:7c11:44::", "2000:520:7c11:44::c6ff:ffff"));
+assert(AddrInRange("2000:520:7c11:44::c6d0:11ad", "2000:520:7c11:44::c6d0:11ad", "2000:520:7c11:44::c6ff:ffff"));
+assert(AddrInRange("2000:520:7c11:44::c6d0:11ad", "2000:520:7c11:44::", "2000:520:7c11:44::c6d0:11ad"));
+assert(!AddrInRange("2000:520:7c11:44::c6d0:11ad", "2000:520:7c11:44::cd00:0000", "2000:520:7c11:44::cfff:ffff"));
+
 //AddrInSubnet
 assert(AddrInSubnet("10.0.0.16", "10.0.0.0", "255.255.255.0"));
+assert(AddrInSubnet("10.0.0.16", "10.0.0.0", 24));
 assert(AddrInSubnet("192.168.1.192", "192.168.1.192", "255.255.255.192"));
+assert(AddrInSubnet("192.168.1.192", "192.168.1.192", 26));
 assert(AddrInSubnet("192.168.1.63", "192.168.1.0", "255.255.255.192"));
+assert(AddrInSubnet("192.168.1.63", "192.168.1.0", 26));
 assert(!AddrInSubnet("10.0.0.16", "192.168.1.0", "255.255.255.0"));
+assert(!AddrInSubnet("10.0.0.16", "192.168.1.0", 24));
 assert(!AddrInSubnet("192.168.1.191", "192.168.1.192", "255.255.255.192"));
+assert(!AddrInSubnet("192.168.1.191", "192.168.1.192", 26));
 assert(!AddrInSubnet("192.168.1.64", "192.168.1.0", "255.255.255.192"));
+assert(!AddrInSubnet("192.168.1.64", "192.168.1.0", 26));
+
+//AddrInSubnet - IPv6
+assert(AddrInSubnet("2000:520:7c11:44::c6d0:11ad", "2000:520:7c11:44::", "ffff:ffff:ffff:ffff::"));
+assert(AddrInSubnet("2000:520:7c11:44::c6d0:11ad", "2000:520:7c11:44::", 64));
+assert(!AddrInSubnet("2000:520:7c11:44::c6d0:11ad", "2001:520:7c11:44::", "ffff:ffff:ffff:ffff::"));
+assert(!AddrInSubnet("2000:520:7c11:44::c6d0:11ad", "2001:520:7c11:44::", 64));
+assert(AddrInSubnet("2001:520:7c11:44::c6d0:11ad", "2000::", 3));
 
 return 0;

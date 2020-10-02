@@ -29,7 +29,7 @@
 #endif
 #endif
 
-#if !defined(_WIN32) && !defined(UNDER_CE)
+#if !defined(_WIN32)
 
 #include <config.h>
 #if defined(WITH_OPENSSL)
@@ -171,7 +171,7 @@ typedef int bool;
 
 /***** Platform dependent includes and defines *****/
 
-#if defined(_WIN32) || defined(UNDER_CE)
+#if defined(_WIN32)
 
 /********** WINDOWS ********************/
 
@@ -279,14 +279,12 @@ typedef int bool;
 #endif
 #define HAVE_DECL_VA_COPY       1
 
-#ifndef UNDER_CE
 #include <sys/stat.h>
 #include <sys/utime.h>
 #include <process.h>
 #include <io.h>
 #include <fcntl.h>
 #include <direct.h>
-#endif
 
 #ifndef S_IRUSR
 #define S_IRUSR      _S_IREAD

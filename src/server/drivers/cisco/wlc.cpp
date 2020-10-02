@@ -331,7 +331,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snm
 
          var->getRawValue(info->macAddr, MAC_ADDR_LENGTH);
          TCHAR ipAddr[32];
-         info->ipAddr = ntohl(_t_inet_addr(response->getVariable(0)->getValueAsString(ipAddr, 32)));
+         info->ipAddr = InetAddress::parse(response->getVariable(0)->getValueAsString(ipAddr, 32));
          response->getVariable(3)->getValueAsString(info->ssid, MAX_OBJECT_NAME);
          info->vlan = response->getVariable(4)->getValueAsInt();
          response->getVariable(1)->getRawValue(info->bssid, MAC_ADDR_LENGTH);

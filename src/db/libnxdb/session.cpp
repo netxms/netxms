@@ -696,23 +696,24 @@ double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int iRow, int iCol
 /**
  * Get field's value as IPv4 address
  */
-UINT32 LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColumn)
+uint32_t LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int row, int column)
 {
-   TCHAR *pszVal, szBuffer[256];
-
-   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
-   return pszVal == NULL ? 0 : ntohl(_t_inet_addr(pszVal));
+   TCHAR buffer[256];
+   TCHAR *value = DBGetField(hResult, row, column, buffer, 256);
+   if (value == nullptr)
+      return 0;
+   InetAddress addr = InetAddress::parse(value);
+   return (addr.getFamily() == AF_INET) ? addr.getAddressV4() : 0;
 }
 
 /**
  * Get field's value as IP address
  */
-InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_RESULT hResult, int iRow, int iColumn)
+InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_RESULT hResult, int row, int column)
 {
-   TCHAR *pszVal, szBuffer[256];
-
-   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
-   return pszVal == NULL ? InetAddress() : InetAddress::parse(pszVal);
+   TCHAR buffer[256];
+   TCHAR *value = DBGetField(hResult, row, column, buffer, 256);
+   return (value != nullptr) ? InetAddress::parse(value) : InetAddress();
 }
 
 /**
@@ -1097,19 +1098,24 @@ double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_UNBUFFERED_RESULT hResult, int iCo
 /**
  * Get field's value as IPv4 address from unbuffered SELECT result
  */
-UINT32 LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_UNBUFFERED_RESULT hResult, int iColumn)
+uint32_t LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_UNBUFFERED_RESULT hResult, int column)
 {
    TCHAR buffer[64];
-   return (DBGetField(hResult, iColumn, buffer, 64) == NULL) ? INADDR_NONE : ntohl(_t_inet_addr(buffer));
+   TCHAR *value = DBGetField(hResult, column, buffer, 64);
+   if (value == nullptr)
+      return 0;
+   InetAddress addr = InetAddress::parse(value);
+   return (addr.getFamily() == AF_INET) ? addr.getAddressV4() : 0;
 }
 
 /**
  * Get field's value as IP address from unbuffered SELECT result
  */
-InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_UNBUFFERED_RESULT hResult, int iColumn)
+InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_UNBUFFERED_RESULT hResult, int column)
 {
    TCHAR buffer[64];
-   return (DBGetField(hResult, iColumn, buffer, 64) == NULL) ? InetAddress() : InetAddress::parse(buffer);
+   TCHAR *value = DBGetField(hResult, column, buffer, 64);
+   return (value != nullptr) ? InetAddress::parse(buffer) : InetAddress();
 }
 
 /**

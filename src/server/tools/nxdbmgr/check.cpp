@@ -192,7 +192,7 @@ static void CheckNodes()
          {
             TCHAR nodeName[MAX_OBJECT_NAME];
             DBGetField(hResult, i, 1, nodeName, MAX_OBJECT_NAME);
-            if ((DBGetFieldIPAddr(hResult, i, 1) == 0) || (!FindSubnetForNode(nodeId, nodeName)))
+            if (!FindSubnetForNode(nodeId, nodeName))
             {
                g_dbCheckErrors++;
                if (GetYesNoEx(_T("Unlinked node object %d (\"%s\"). Delete it?"), nodeId, nodeName))

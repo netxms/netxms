@@ -56,8 +56,8 @@ static bool s_showNames = false;
 static bool s_batchMode = false;
 static int s_interval = 0;
 static int s_serviceType = NETSRV_SSH;
-static WORD s_servicePort = 0, s_serviceProto = 0;
-static UINT32 s_serviceAddr = 0;
+static uint16_t s_servicePort = 0, s_serviceProto = 0;
+static InetAddress s_serviceAddr;
 static TCHAR s_serviceResponse[MAX_DB_STRING] = _T(""), s_serviceRequest[MAX_DB_STRING] = _T("");
 
 /**
@@ -129,12 +129,11 @@ static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
 /**
  * Check network service state
  */
-static int CheckService(AgentConnection *pConn, int serviceType, UINT32 dwServiceAddr,
+static int CheckService(AgentConnection *pConn, int serviceType, const InetAddress& serviceAddr,
                         WORD wProto, WORD wPort, const TCHAR *pszRequest, const TCHAR *pszResponse)
 {
-   UINT32 dwStatus, dwError;
-
-   dwError = pConn->checkNetworkService(&dwStatus, dwServiceAddr, serviceType, wPort,
+   UINT32 dwStatus;
+   uint32_t dwError = pConn->checkNetworkService(&dwStatus, serviceAddr, serviceType, wPort,
                                         wProto, pszRequest, pszResponse);
    if (dwError == ERR_SUCCESS)
    {
@@ -319,8 +318,8 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
          break;
       case 'N':   // Check service
          s_operation = CMD_CHECK_SERVICE;
-         s_serviceAddr = ntohl(_t_inet_addr(optarg));
-         if ((s_serviceAddr == INADDR_NONE) || (s_serviceAddr == INADDR_ANY))
+         s_serviceAddr = InetAddress::parse(optarg);
+         if (!s_serviceAddr.isValidUnicast())
          {
             _tprintf(_T("Invalid IP address \"%s\"\n"), optarg);
             start = FALSE;
