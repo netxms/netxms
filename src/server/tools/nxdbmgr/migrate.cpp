@@ -939,7 +939,8 @@ static bool MigrateDataTablesFromSingleTable()
  */
 static bool MigrateTableCallback(const TCHAR *table, void *context)
 {
-   if (static_cast<const StringList*>(context)->contains(table))
+   auto lists = static_cast<std::pair<const StringList*, const StringList*>*>(context);
+   if (lists->first->contains(table) || (!lists->second->isEmpty() && !lists->second->contains(table)))
    {
       WriteToTerminalEx(_T("Skipping table \x1b[1m%s\x1b[0m\n"), table);
       return true;
@@ -950,7 +951,7 @@ static bool MigrateTableCallback(const TCHAR *table, void *context)
 /**
  * Do database import or migration
  */
-static bool ImportOrMigrateDatabase(bool skipAudit, bool skipAlarms, bool skipEvent, bool skipSysLog, bool skipTrapLog, const StringList& excludedTables)
+static bool ImportOrMigrateDatabase(const StringList& excludedTables, const StringList& includedTables)
 {
    if (!ConnectToSource())
       return false;
@@ -958,36 +959,35 @@ static bool ImportOrMigrateDatabase(bool skipAudit, bool skipAlarms, bool skipEv
    bool success = false;
    if (!g_dataOnlyMigration)
    {
-      if (!ClearDatabase(!s_import))
-         goto cleanup;
+      // Do not clear destination if only explicitly listed tables are being imported/migrated
+      if (includedTables.isEmpty())
+      {
+         if (!ClearDatabase(!s_import))
+            goto cleanup;
+      }
 
       // Migrate tables
       for(int i = 0; g_tables[i] != nullptr; i++)
       {
-         if (!_tcsncmp(g_tables[i], _T("idata"), 5) ||
-             !_tcsncmp(g_tables[i], _T("tdata"), 5))
+         const TCHAR *table = g_tables[i];
+         if (!_tcsncmp(table, _T("idata"), 5) ||
+             !_tcsncmp(table, _T("tdata"), 5))
             continue;  // idata and tdata migrated separately
 
-         if ((skipAudit && !_tcscmp(g_tables[i], _T("audit_log"))) ||
-             (skipEvent && !_tcscmp(g_tables[i], _T("event_log"))) ||
-             (skipAlarms && (!_tcscmp(g_tables[i], _T("alarms")) ||
-                             !_tcscmp(g_tables[i], _T("alarm_notes")) ||
-                             !_tcscmp(g_tables[i], _T("alarm_events")))) ||
-             (skipTrapLog && !_tcscmp(g_tables[i], _T("snmp_trap_log"))) ||
-             (skipSysLog && !_tcscmp(g_tables[i], _T("syslog"))) ||
-             ((g_skipDataMigration || g_skipDataSchemaMigration) &&
-                      !_tcscmp(g_tables[i], _T("raw_dci_values"))) ||
-             excludedTables.contains(g_tables[i]))
+         if (((g_skipDataMigration || g_skipDataSchemaMigration) && !_tcscmp(table, _T("raw_dci_values"))) ||
+             excludedTables.contains(table) ||
+             (!includedTables.isEmpty() && !includedTables.contains(table)))
          {
-            WriteToTerminalEx(_T("Skipping table \x1b[1m%s\x1b[0m\n"), g_tables[i]);
+            WriteToTerminalEx(_T("Skipping table \x1b[1m%s\x1b[0m\n"), table);
             continue;
          }
 
-         if (!MigrateTable(g_tables[i]))
+         if (!MigrateTable(table))
             goto cleanup;
       }
 
-      if (!EnumerateModuleTables(MigrateTableCallback, (void *)&excludedTables))
+      std::pair<const StringList*, const StringList*> data(&excludedTables, &includedTables);
+      if (!EnumerateModuleTables(MigrateTableCallback, &data))
          goto cleanup;
    }
 
@@ -1080,8 +1080,7 @@ cleanup:
 /**
  * Migrate database
  */
-void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skipAudit, bool skipAlarms,
-         bool skipEvent, bool skipSysLog, bool skipTrapLog, const StringList& excludedTables)
+void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, const StringList& excludedTables, const StringList& includedTables)
 {
    // Load source config
 	Config config;
@@ -1094,43 +1093,41 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skip
 	TCHAR sourceConfFields[2048];
 	_sntprintf(sourceConfFields, 2048, _T("\tDriver: %s\n\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbDriver, s_dbName, s_dbServer, s_dbLogin);
 
-	TCHAR options[1024];
+	StringBuffer options;
 	if (g_dataOnlyMigration)
 	{
-	   _tcscpy(options, _T("\tData only migration"));
+	   options.append(_T("\tData only migration"));
 	}
 	else
 	{
-      _sntprintf(options, 1024,
-               _T("\tSkip audit log.............: %s\n")
-               _T("\tSkip alarm log.............: %s\n")
-               _T("\tSkip event log.............: %s\n")
-               _T("\tSkip syslog................: %s\n")
-               _T("\tSkip SNMP trap log.........: %s\n")
-               _T("\tSkip collected data........: %s\n")
-               _T("\tSkip data collection schema: %s"),
-               skipAudit ? _T("yes") : _T("no"),
-               skipAlarms ? _T("yes") : _T("no"),
-               skipEvent ? _T("yes") : _T("no"),
-               skipSysLog ? _T("yes") : _T("no"),
-               skipTrapLog ? _T("yes") : _T("no"),
-               g_skipDataMigration ? _T("yes") : _T("no"),
-               g_skipDataSchemaMigration ? _T("yes") : _T("no")
-       );
+	   options.append(_T("\tSkip collected data........: "));
+	   options.append(g_skipDataMigration ? _T("yes\n") : _T("no\n"));
+      options.append(_T("\tSkip data collection schema: "));
+      options.append(g_skipDataSchemaMigration ? _T("yes") : _T("no"));
+      if (!includedTables.isEmpty())
+      {
+         options.append(_T("\n\tMigrate only these tables..: "));
+         options.appendPreallocated(includedTables.join(_T(", ")));
+      }
+      else if (!excludedTables.isEmpty())
+      {
+         options.append(_T("\n\tSkip tables................: "));
+         options.appendPreallocated(excludedTables.join(_T(", ")));
+      }
 	}
 
-	if (!GetYesNo(_T("Source:\n%s\n\nTarget:\n%s\n\nOptions:\n%s\n\nConfirm database migration?"), sourceConfFields, destConfFields, options))
+	if (!GetYesNo(_T("Source:\n%s\n\nTarget:\n%s\n\nOptions:\n%s\n\nConfirm database migration?"), sourceConfFields, destConfFields, options.cstr()))
 	   return;
 
    DecryptPassword(s_dbLogin, s_dbPassword, s_dbPassword, MAX_PASSWORD);
-   bool success = ImportOrMigrateDatabase(skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog, excludedTables);
+   bool success = ImportOrMigrateDatabase(excludedTables, includedTables);
 	_tprintf(success ? _T("Database migration complete.\n") : _T("Database migration failed.\n"));
 }
 
 /**
  * Migrate database
  */
-void ImportDatabase(const char *file, bool skipAudit, bool skipAlarms, bool skipEvent, bool skipSysLog, bool skipTrapLog, const StringList& excludedTables)
+void ImportDatabase(const char *file, const StringList& excludedTables, const StringList& includedTables)
 {
    _tcscpy(s_dbDriver, _T("sqlite.ddr"));
 #ifdef UNICODE
@@ -1139,6 +1136,6 @@ void ImportDatabase(const char *file, bool skipAudit, bool skipAlarms, bool skip
    strlcpy(s_dbName, file, MAX_DB_NAME);
 #endif
    s_import = true;
-   bool success = ImportOrMigrateDatabase(skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog, excludedTables);
+   bool success = ImportOrMigrateDatabase(excludedTables, includedTables);
    _tprintf(success ? _T("Database import complete.\n") : _T("Database import failed.\n"));
 }
