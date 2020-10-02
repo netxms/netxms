@@ -263,7 +263,7 @@ InterfaceList *CambiumEPMPDriver::getInterfaces(SNMP_Transport *snmp, NObject *n
                         InetAddress addr = InetAddress::parse(response->getVariable(0)->getValueAsString(buffer, 256));
                         if (addr.isValid())
                         {
-                           uint32_t mask = ntohl(_t_inet_addr(response->getVariable(1)->getValueAsString(buffer, 256)));
+                           uint32_t mask = InetAddress::parse(response->getVariable(1)->getValueAsString(buffer, 256)).getAddressV4();
                            if (mask != 0)
                            {
                               addr.setMaskBits(BitsInMask(mask));

@@ -2062,9 +2062,9 @@ RoutingTable *AgentConnection::getRoutingTable()
          {
             pSlash = defaultMask;
          }
-         route.dwDestAddr = ntohl(_t_inet_addr(pBuf));
-         uint32_t dwBits = _tcstoul(pSlash, nullptr, 10);
-         route.dwDestMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
+         route.dwDestAddr = InetAddress::parse(pBuf).getAddressV4();
+         uint32_t bits = _tcstoul(pSlash, nullptr, 10);
+         route.dwDestMask = (bits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> bits));
          pBuf = pChar + 1;
       }
 
@@ -2073,7 +2073,7 @@ RoutingTable *AgentConnection::getRoutingTable()
       if (pChar != nullptr)
       {
          *pChar = 0;
-         route.dwNextHop = ntohl(_t_inet_addr(pBuf));
+         route.dwNextHop = InetAddress::parse(pBuf).getAddressV4();
          pBuf = pChar + 1;
       }
 

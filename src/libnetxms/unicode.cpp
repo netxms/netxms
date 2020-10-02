@@ -1229,16 +1229,6 @@ int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_l
 
 #endif /* !defined(_WIN32) */
 
-/**
- * UNICODE version of inet_addr()
- */
-UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr)
-{
-   char szBuffer[256];
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pszAddr, -1, szBuffer, 256, NULL, NULL);
-   return inet_addr(szBuffer);
-}
-
 #if defined(_WITH_ENCRYPTION) && WITH_OPENSSL
 
 /**

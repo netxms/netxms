@@ -458,7 +458,7 @@ public:
    MacAddress getValueAsMACAddr() const;
    TCHAR *getValueAsIPAddr(TCHAR *buffer) const;
 
-   void setValueFromString(UINT32 type, const TCHAR *value);
+   void setValueFromString(uint32_t type, const TCHAR *value);
 };
 
 /**

@@ -38,7 +38,6 @@ static TCHAR s_macAddress[16] = _T("000000000000");
 static TCHAR s_hostName[128] = _T("dummy0");
 static TCHAR s_paramConfigFile[MAX_PATH] = _T("");
 
-
 /**
  * Variables
  */
@@ -51,8 +50,6 @@ static bool s_shutdown = false;
 static bool SubagentInit(Config *config);
 static void SubagentShutdown();
 
-
-
 /**
  * Interface list
  */
@@ -60,7 +57,7 @@ static LONG H_InterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList
 {
    TCHAR buffer[256];
    _sntprintf(buffer, 256, _T("1 %s/%d 6 %s %s"), s_ipAddress,
-              BitsInMask(ntohl(_t_inet_addr(s_ipNetMask))), s_macAddress, s_ifName);
+         BitsInMask(InetAddress::parse(s_ipNetMask).getAddressV4()), s_macAddress, s_ifName);
    value->add(buffer);
    value->add(_T("255 127.0.0.1/8 24 000000000000 lo0"));
    return SYSINFO_RC_SUCCESS;
