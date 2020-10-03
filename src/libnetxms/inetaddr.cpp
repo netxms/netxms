@@ -639,13 +639,13 @@ InetAddress InetAddress::parse(const char *addrStr, const char *maskStr)
 /**
  * Create IndetAddress from struct sockaddr
  */
-InetAddress InetAddress::createFromSockaddr(struct sockaddr *s)
+InetAddress InetAddress::createFromSockaddr(const struct sockaddr *s)
 {
    if (s->sa_family == AF_INET)
-      return InetAddress(ntohl(((struct sockaddr_in *)s)->sin_addr.s_addr));
+      return InetAddress(ntohl(reinterpret_cast<const struct sockaddr_in*>(s)->sin_addr.s_addr));
 #ifdef WITH_IPV6
    if (s->sa_family == AF_INET6)
-      return InetAddress(((struct sockaddr_in6 *)s)->sin6_addr.s6_addr);
+      return InetAddress(reinterpret_cast<const struct sockaddr_in6*>(s)->sin6_addr.s6_addr);
 #endif
    return InetAddress();
 }

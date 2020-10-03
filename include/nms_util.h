@@ -1149,22 +1149,40 @@ public:
    StringBuffer& operator +=(const SharedString &str) { append(str.cstr()); return *this; }
 
    void append(const TCHAR *str) { if (str != nullptr) append(str, _tcslen(str)); }
-   void append(const TCHAR *str, size_t len);
+   void append(const TCHAR *str, size_t len) { insert(m_length, str, len); }
    void append(const TCHAR c) { append(&c, 1); }
-   void append(int32_t n, const TCHAR *format = nullptr);
-   void append(uint32_t n, const TCHAR *format = nullptr);
-   void append(int64_t n, const TCHAR *format = nullptr);
-   void append(uint64_t n, const TCHAR *format = nullptr);
-   void append(double d, const TCHAR *format = nullptr);
-   void append(const uuid& guid);
+   void append(int32_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); }
+   void append(uint32_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); }
+   void append(int64_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); }
+   void append(uint64_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); }
+   void append(double d, const TCHAR *format = nullptr) { insert(m_length, d, format); }
+   void append(const uuid& guid) { insert(m_length, guid); }
 
    void appendPreallocated(TCHAR *str) { if (str != nullptr) { append(str); MemFree(str); } }
 
-   void appendMBString(const char *str, size_t len, int nCodePage);
-   void appendWideString(const WCHAR *str, size_t len);
+   void appendMBString(const char *str, size_t len, int codePage) { insertMBString(m_length, str, len, codePage); }
+   void appendWideString(const WCHAR *str, size_t len) { insertWideString(m_length, str, len); }
 
    void appendFormattedString(const TCHAR *format, ...);
-   void appendFormattedStringV(const TCHAR *format, va_list args);
+   void appendFormattedStringV(const TCHAR *format, va_list args) { insertFormattedStringV(m_length, format, args); }
+
+   void insert(size_t index, const TCHAR *str)  { if (str != nullptr) insert(index, str, _tcslen(str)); }
+   void insert(size_t index, const TCHAR *str, size_t len);
+   void insert(size_t index, const TCHAR c) { insert(index, &c, 1); }
+   void insert(size_t index, int32_t n, const TCHAR *format = nullptr);
+   void insert(size_t index, uint32_t n, const TCHAR *format = nullptr);
+   void insert(size_t index, int64_t n, const TCHAR *format = nullptr);
+   void insert(size_t index, uint64_t n, const TCHAR *format = nullptr);
+   void insert(size_t index, double d, const TCHAR *format = nullptr);
+   void insert(size_t index, const uuid& guid);
+
+   void insertPreallocated(size_t index, TCHAR *str) { if (str != nullptr) { insert(index, str); MemFree(str); } }
+
+   void insertMBString(size_t index, const char *str, size_t len, int codePage);
+   void insertWideString(size_t index, const WCHAR *str, size_t len);
+
+   void insertFormattedString(size_t index, const TCHAR *format, ...);
+   void insertFormattedStringV(size_t index, const TCHAR *format, va_list args);
 
    void clear();
 
@@ -3209,7 +3227,7 @@ public:
    static InetAddress parse(const char *str);
    static InetAddress parse(const WCHAR *addrStr, const WCHAR *maskStr);
    static InetAddress parse(const char *addrStr, const char *maskStr);
-   static InetAddress createFromSockaddr(struct sockaddr *s);
+   static InetAddress createFromSockaddr(const struct sockaddr *s);
 
    static const InetAddress INVALID;
    static const InetAddress LOOPBACK;

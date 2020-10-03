@@ -94,6 +94,7 @@ typedef int SOCKET;
 #define WSAGetLastError() (errno)
 
 #define WSAECONNREFUSED ECONNREFUSED
+#define WSAECONNRESET   ECONNRESET
 #define WSAEINPROGRESS  EINPROGRESS
 #define WSAEINTR        EINTR
 #define WSAESHUTDOWN    ESHUTDOWN
@@ -131,6 +132,13 @@ inline void SetSocketNonBlocking(SOCKET s)
    int f = fcntl(s, F_GETFL);
    if (f != -1) 
       fcntl(s, F_SETFL, f | O_NONBLOCK);
+}
+
+inline void SetSocketBlocking(SOCKET s)
+{
+   int f = fcntl(s, F_GETFL);
+   if (f != -1) 
+      fcntl(s, F_SETFL, f & ~O_NONBLOCK);
 }
 
 inline void SetSocketNoDelay(SOCKET s)
