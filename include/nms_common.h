@@ -777,6 +777,7 @@ inline int _access(const char *pathname, int mode) { return ::access(pathname, m
 inline int _chdir(const char *path) { return ::chdir(path);  }
 inline int _close(int fd) { return ::close(fd); }
 inline int _fileno(FILE *stream) { return fileno(stream); }
+inline char *_getcwd(char *buffer, size_t size) { return ::getcwd(buffer, size); }
 inline int _isatty(int fd) { return ::isatty(fd); }
 inline off_t _lseek(int fd, off_t offset, int whence) { return ::lseek(fd, offset, whence);  }
 inline int _mkdir(const char *pathname, mode_t mode) { return ::mkdir(pathname, mode); }
@@ -797,6 +798,7 @@ inline ssize_t _write(int fd, const void *buf, size_t count) { return ::write(fd
 #define _chdir(p)          chdir(p)
 #define _close(f)          close(f)
 #define _fileno(f)         fileno(f)
+#define _getcwd(b, s)      getcwd((b), (s))
 #define _isatty(f)         isatty(f)
 #define _lseek(f, o, w)    lseek((f), (o) ,(w))
 #define _mkdir(p, m)       mkdir((p), (m))

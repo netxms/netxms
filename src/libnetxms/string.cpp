@@ -473,7 +473,7 @@ StringBuffer& StringBuffer::operator =(const SharedString &src)
 }
 
 /**
- * Add formatted string to the end of buffer
+ * Append formatted string to the end of buffer
  */
 void StringBuffer::appendFormattedString(const TCHAR *format, ...)
 {
@@ -484,9 +484,20 @@ void StringBuffer::appendFormattedString(const TCHAR *format, ...)
 }
 
 /**
- * Add formatted string to the end of buffer
+ * Insert formatted string at given position
  */
-void StringBuffer::appendFormattedStringV(const TCHAR *format, va_list args)
+void StringBuffer::insertFormattedString(size_t index, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   insertFormattedStringV(index, format, args);
+   va_end(args);
+}
+
+/**
+ * Insert formatted string at given position
+ */
+void StringBuffer::insertFormattedStringV(size_t index, const TCHAR *format, va_list args)
 {
    int len;
    TCHAR *buffer;
@@ -500,7 +511,7 @@ void StringBuffer::appendFormattedStringV(const TCHAR *format, va_list args)
    va_copy(argsCopy, args);
 
    len = (int)vscwprintf(format, args) + 1;
-   buffer = (WCHAR *)malloc(len * sizeof(WCHAR));
+   buffer = MemAllocStringW(len);
 
    vsnwprintf(buffer, len, format, argsCopy);
    va_end(argsCopy);
@@ -548,14 +559,14 @@ void StringBuffer::appendFormattedStringV(const TCHAR *format, va_list args)
 
 #endif   /* UNICODE */
 
-   append(buffer, _tcslen(buffer));
+   insert(index, buffer, _tcslen(buffer));
    free(buffer);
 }
 
 /**
  * Append string to the end of buffer
  */
-void StringBuffer::append(const TCHAR *str, size_t len)
+void StringBuffer::insert(size_t index, const TCHAR *str, size_t len)
 {
    if (len <= 0)
       return;
@@ -577,15 +588,23 @@ void StringBuffer::append(const TCHAR *str, size_t len)
          m_buffer = MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
       }
    }
-   memcpy(&m_buffer[m_length], str, len * sizeof(TCHAR));
+   if (index < m_length)
+   {
+      memmove(&m_buffer[index], &m_buffer[index + len], m_length - len);
+      memcpy(&m_buffer[index], str, len * sizeof(TCHAR));
+   }
+   else
+   {
+      memcpy(&m_buffer[m_length], str, len * sizeof(TCHAR));
+   }
    m_length += len;
    m_buffer[m_length] = 0;
 }
 
 /**
- * Append multibyte string to the end of buffer
+ * Insert multibyte string at given position
  */
-void StringBuffer::appendMBString(const char *str, size_t len, int codePage)
+void StringBuffer::insertMBString(size_t index, const char *str, size_t len, int codePage)
 {
 #ifdef UNICODE
    if (isInternalBuffer())
@@ -605,109 +624,135 @@ void StringBuffer::appendMBString(const char *str, size_t len, int codePage)
          m_buffer = MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
       }
    }
-   m_length += MultiByteToWideChar(codePage, (codePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[m_length], (int)len + 1);
+   if (index < m_length)
+   {
+      memmove(&m_buffer[index], &m_buffer[index + len], m_length - len);
+      int wchars = MultiByteToWideChar(codePage, (codePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[index], (int)len + 1);
+      if (wchars < len)
+      {
+         memmove(&m_buffer[index + len], &m_buffer[index + wchars], len - wchars);
+      }
+      m_length += wchars;
+   }
+   else
+   {
+      m_length += MultiByteToWideChar(codePage, (codePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[m_length], (int)len + 1);
+   }
    m_buffer[m_length] = 0;
 #else
-   append(str, len);
+   insert(index, str, len);
 #endif
 }
 
 /**
- * Append wide character string to the end of buffer
+ * Insert wide character string at given position
  */
-void StringBuffer::appendWideString(const WCHAR *str, size_t len)
+void StringBuffer::insertWideString(size_t index, const WCHAR *str, size_t len)
 {
 #ifdef UNICODE
-   append(str, len);
+   insert(index, str, len);
 #else
+   size_t clen = WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, nullptr, 0, nullptr, nullptr);
    if (isInternalBuffer())
    {
-      if (m_length + len >= STRING_INTERNAL_BUFFER_SIZE)
+      if (m_length + clen >= STRING_INTERNAL_BUFFER_SIZE)
       {
-         m_allocated = m_length + len + 1;
+         m_allocated = m_length + clen + 1;
          m_buffer = MemAllocString(m_allocated);
          memcpy(m_buffer, m_internalBuffer, m_length * sizeof(TCHAR));
       }
    }
    else
    {
-      if (m_length + len >= m_allocated)
+      if (m_length + clen >= m_allocated)
       {
-         m_allocated += std::max(m_allocationStep, len + 1);
+         m_allocated += std::max(m_allocationStep, clen + 1);
          m_buffer = MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
       }
    }
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, &m_buffer[m_length], len, NULL, NULL);
-   m_length += len;
+   if (index < m_length)
+   {
+      memmove(&m_buffer[index], &m_buffer[index + clen], m_length - clen);
+      int chars = WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, &m_buffer[index], clen, nullptr, nullptr);
+      if (chars < len)
+      {
+         memmove(&m_buffer[index + len], &m_buffer[index + chars], clen - chars);
+      }
+      m_length += chars;
+   }
+   else
+   {
+      m_length += WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, &m_buffer[m_length], len, nullptr, nullptr);
+   }
    m_buffer[m_length] = 0;
 #endif
 }
 
 /**
- * Append integer
+ * Insert integer
  */
-void StringBuffer::append(int32_t n, const TCHAR *format)
+void StringBuffer::insert(size_t index, int32_t n, const TCHAR *format)
 {
    TCHAR buffer[64];
    if (format != nullptr)
    {
       _sntprintf(buffer, 64, format, n);
-      append(buffer);
+      insert(index, buffer);
    }
    else
    {
-      append(_itot(n, buffer, 10));
+      insert(index, _itot(n, buffer, 10));
    }
 }
 
 /**
- * Append integer
+ * Insert integer
  */
-void StringBuffer::append(uint32_t n, const TCHAR *format)
+void StringBuffer::insert(size_t index, uint32_t n, const TCHAR *format)
 {
    TCHAR buffer[64];
    _sntprintf(buffer, 64, (format != nullptr) ? format : _T("%u"), n);
-   append(buffer);
+   insert(index, buffer);
 }
 
 /**
- * Append integer
+ * Insert integer
  */
-void StringBuffer::append(int64_t n, const TCHAR *format)
+void StringBuffer::insert(size_t index, int64_t n, const TCHAR *format)
 {
    TCHAR buffer[64];
    _sntprintf(buffer, 64, (format != nullptr) ? format : INT64_FMT, n);
-   append(buffer);
+   insert(index, buffer);
 }
 
 /**
- * Append integer
+ * Insert integer
  */
-void StringBuffer::append(uint64_t n, const TCHAR *format)
+void StringBuffer::insert(size_t index, uint64_t n, const TCHAR *format)
 {
    TCHAR buffer[64];
    _sntprintf(buffer, 64, (format != nullptr) ? format : UINT64_FMT, n);
-   append(buffer);
+   insert(index, buffer);
 }
 
 /**
- * Append double
+ * Insert double
  */
-void StringBuffer::append(double d, const TCHAR *format)
+void StringBuffer::insert(size_t index, double d, const TCHAR *format)
 {
    TCHAR buffer[64];
    _sntprintf(buffer, 64, (format != nullptr) ? format : _T("%f"), d);
-   append(buffer);
+   insert(index, buffer);
 }
 
 /**
- * Append GUID
+ * Insert GUID
  */
-void StringBuffer::append(const uuid& guid)
+void StringBuffer::insert(size_t index, const uuid& guid)
 {
    TCHAR buffer[64];
    guid.toString(buffer);
-   append(buffer, _tcslen(buffer));
+   insert(index, buffer, _tcslen(buffer));
 }
 
 /**
