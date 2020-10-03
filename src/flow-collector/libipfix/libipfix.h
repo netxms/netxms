@@ -6,11 +6,16 @@
 #include <nms_threads.h>
 #include <nxcrypto.h>
 #include <nxlog.h>
+#include <nxsocket.h>
 
 #define LIBIPFIX_DEBUG_TAG _T("ipfix")
 
 #ifdef _WIN32
 #define hstrerror strerror
+#endif
+
+#ifdef _WITH_ENCRYPTION
+#define SSLSUPPORT   1
 #endif
 
 #include "ipfix.h"

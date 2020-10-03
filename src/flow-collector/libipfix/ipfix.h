@@ -151,6 +151,13 @@ typedef struct ipfix_message
     size_t      offset;                         /* output buffer fill level */
 } ipfix_message_t;
 
+typedef struct ipfix_ssl_options {
+    char            *cafile;
+    char            *cadir;
+    char            *keyfile;     /* private key */
+    char            *certfile;    /* certificate */
+} ipfix_ssl_opts_t;
+
 typedef struct collector_node
 {
     struct collector_node *next;
@@ -228,13 +235,6 @@ void ipfix_close( ipfix_t *ifh );
 
 /** experimental
  */
-typedef struct ipfix_ssl_options {
-    char            *cafile;
-    char            *cadir;
-    char            *keyfile;     /* private key */
-    char            *certfile;    /* certificate */
-} ipfix_ssl_opts_t;
-
 int  ipfix_add_collector_ssl( ipfix_t *ifh, char *host, int port,
                               ipfix_proto_t protocol,
                               ipfix_ssl_opts_t *ssl_opts );
@@ -249,9 +249,9 @@ void ipfix_free_unknown_ftinfo( ipfix_field_t *f );
 
 /** common funcs
  */
-int  LIBIPFIX_EXPORTABLE ipfix_init( void );
-int  LIBIPFIX_EXPORTABLE ipfix_add_vendor_information_elements( ipfix_field_type_t *fields );
-void LIBIPFIX_EXPORTABLE ipfix_cleanup( void );
+int  LIBIPFIX_EXPORTABLE ipfix_init();
+int  LIBIPFIX_EXPORTABLE ipfix_add_vendor_information_elements(ipfix_field_type_t *fields);
+void LIBIPFIX_EXPORTABLE ipfix_cleanup();
 
 #ifdef __cplusplus
 }

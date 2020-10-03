@@ -22,15 +22,10 @@ $$LIC$$
 
 int  ipfix_ssl_init();
 
-void ipfix_ssl_opts_free( ipfix_ssl_opts_t *opts );
-int  ipfix_ssl_opts_new( ipfix_ssl_opts_t **opts,
-                         ipfix_ssl_opts_t *vals );
-int  ipfix_ssl_setup_client_ctx( SSL_CTX **ctx,
-                                 SSL_METHOD *method,
-                                 ipfix_ssl_opts_t *vals );
-int  ipfix_ssl_setup_server_ctx( SSL_CTX **ctx,
-                                 SSL_METHOD *method,
-                                 ipfix_ssl_opts_t *vals );
-long ipfix_ssl_post_connection_check( SSL *ssl, char *host );
+void ipfix_ssl_opts_free(ipfix_ssl_opts_t *opts);
+int  ipfix_ssl_opts_new(ipfix_ssl_opts_t **opts, ipfix_ssl_opts_t *vals);
+int  ipfix_ssl_setup_client_ctx(SSL_CTX **ctx, const SSL_METHOD *method, ipfix_ssl_opts_t *vals);
+int  ipfix_ssl_setup_server_ctx(SSL_CTX **ctx, const SSL_METHOD *method, ipfix_ssl_opts_t *vals);
+long ipfix_ssl_post_connection_check(SSL *ssl, const char *host);
 
 #endif

@@ -267,6 +267,12 @@ AC_ARG_WITH(snmp,
 	COMPONENTS="$COMPONENTS snmp"
 ])
 
+AC_ARG_WITH(flow-collector,
+[AS_HELP_STRING(--with-flow-collector,build NetFlow/IPFIX flow collector)],
+[
+	COMPONENTS="$COMPONENTS flow-collector"
+])
+
 AC_ARG_WITH(client,
 [AS_HELP_STRING(--with-client,build client library and tools)],
 [
@@ -934,6 +940,11 @@ fi
 check_substr "$COMPONENTS" "ethernetip"
 if test $? = 0; then
 	MODULES="$MODULES ethernetip"
+fi
+
+check_substr "$COMPONENTS" "flow-collector"
+if test $? = 0; then
+	MODULES="$MODULES flow-collector"
 fi
 
 check_substr "$COMPONENTS" "java"

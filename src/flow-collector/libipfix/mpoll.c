@@ -15,6 +15,10 @@ $$LIC$$
 */
 #include "libipfix.h"
 
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+
 /*------ defines ---------------------------------------------------------*/
 
 #define alloc_t(t) ((t *) malloc(sizeof(t)))
@@ -87,11 +91,11 @@ mtimer_t *_mtimer_ustart( int32_t usec,
         else last = walk;
     if (walk) 
 	 {
-        Q_INSERT_BEFORE(timers,n,walk)
+        Q_INSERT_BEFORE(timers,n,walk);
 	 }
     else 
 	 {
-        Q_INSERT_AFTER(timers,n,last)
+        Q_INSERT_AFTER(timers,n,last);
 	 }
     return n;
 }
@@ -116,11 +120,11 @@ mtimer_t *_mtimer_start( int32_t  sec,
         else last = walk;
     if (walk) 
 	 {
-        Q_INSERT_BEFORE(timers,n,walk)
+        Q_INSERT_BEFORE(timers,n,walk);
 	 }
     else 
 	 {
-        Q_INSERT_AFTER(timers,n,last)
+        Q_INSERT_AFTER(timers,n,last);
 	 }
     return n;
 }
@@ -136,7 +140,6 @@ void _mtimer_stop(mtimer_t *timer)
             return;
         }
 }
-
 
 struct timeval *_mtimer_getnext(void)
 {
@@ -224,7 +227,7 @@ int mpoll_fdadd ( SOCKET fd, int mask, pcallback_f callback, void *arg )
     else {
         /** alloc new pnode
          */
-        if ( (node=calloc( 1, sizeof(poll_node_t))) ==NULL)
+        if ( (node=MemAllocZeroed(sizeof(poll_node_t))) ==NULL)
             return -1;
         node->reuse = 0;
     }
@@ -393,9 +396,8 @@ int mpoll_loop ( int timeout )
                         break;
                 }
                 else {
-                    mlogf( 0, "INTERNAL ERROR: node %p fd=%d func=%p/%p %d\n", 
-                           node, node->fd, node->func, 
-                           node->arg, node->reuse );
+                    nxlog_debug_tag(LIBIPFIX_DEBUG_TAG, 1, _T("INTERNAL ERROR: node %p fd=%d func=%p/%p %d\n"),
+                           node, node->fd, node->func, node->arg, node->reuse );
                 }
             }
         }

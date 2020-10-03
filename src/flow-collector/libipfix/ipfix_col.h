@@ -12,10 +12,6 @@ $$LIC$$
 #ifndef IPFIX_COL_H
 #define IPFIX_COL_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define MAXTEMPLIDENT        120
 
 typedef enum {
@@ -115,9 +111,6 @@ int  ipfix_col_listen_ssl( ipfix_col_t **handle, ipfix_proto_t protocol,
 int  ipfix_col_close_ssl( ipfix_col_t *handle );
 
 
-const char LIBIPFIX_EXPORTABLE *ipfix_col_input_get_ident( ipfix_input_t *input );
+String LIBIPFIX_EXPORTABLE ipfix_col_input_get_ident(ipfix_input_t *input);
 
-#ifdef __cplusplus
-}
-#endif
 #endif
