@@ -4687,8 +4687,8 @@ AC_CONFIG_FILES([
 	src/ethernetip/Makefile
 	src/ethernetip/libethernetip/Makefile
 	src/ethernetip/nxethernetip/Makefile
-	src/flow_analyzer/Makefile
-	src/flow_analyzer/libipfix/Makefile
+	src/flow-collector/Makefile
+	src/flow-collector/libipfix/Makefile
 	src/install/Makefile
 	src/install/windows/Makefile
 	src/jansson/Makefile
