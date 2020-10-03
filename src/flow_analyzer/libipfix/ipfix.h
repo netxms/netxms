@@ -6,7 +6,7 @@ $$LIC$$
 **
 ** Copyright Fraunhofer FOKUS
 **
-** $Id: ipfix.h 96 2009-03-27 19:19:27Z csc $
+** $Id: ipfix.h 231 2011-03-29 17:02:12Z csc $
 **
 */
 #ifndef IPFIX_H
@@ -80,6 +80,8 @@ typedef struct {
 
 } ipfix_hdr_t;
 
+#define IPFIX_DEFAULT_BUFLEN  1400
+
 #define IPFIX_VERSION_NF9           0x09
 #define IPFIX_HDR_BYTES_NF9         20
 #define IPFIX_SETID_TEMPLATE_NF9    0
@@ -138,14 +140,46 @@ typedef struct ipfix_template
     int                     nfields;        /* = ndata + nscope */
     ipfix_template_field_t  *fields;
     int                     maxfields;         /* sizeof fields */
+
+    uint32_t                odid;  /* observation domain id */
 } ipfix_template_t;
+
+typedef struct ipfix_message
+{
+    char        buffer[IPFIX_DEFAULT_BUFLEN];   /* message buffer */
+    int         nrecords;                       /* no. of records in buffer */
+    size_t      offset;                         /* output buffer fill level */
+} ipfix_message_t;
+
+typedef struct collector_node
+{
+    struct collector_node *next;
+    int                   usecount;
+
+    char            *chost;       /* collector hostname */
+    int             cport;        /* collector port */
+    ipfix_proto_t   protocol;     /* used protocol (e.g. tcp) */
+    int             fd;           /* open socket */
+    int             ssl_flag;     /* ipfix over tls/ssl */
+#ifdef SSLSUPPORT
+    ipfix_ssl_opts_t *ssl_opts;
+    BIO             *bio;
+    SSL_CTX         *ctx;
+    SSL             *ssl;
+#endif
+    struct sockaddr *to;          /* collector address */
+    socklen_t       tolen;        /* collector address length */
+    time_t          lastaccess;   /* last use of this connection */
+    ipfix_message_t message;      /* used only for sctp templates */
+
+} ipfix_collector_t;
 
 typedef struct
 {
-    int              sourceid;    /* domain id of the exporting process */
-    int              version;     /* ipfix version to export */
-    void             *collectors; /* list of collectors */
-    ipfix_template_t *templates;  /* list of templates  */
+    int                sourceid;    /* domain id of the exporting process */
+    int                version;     /* ipfix version to export */
+    ipfix_collector_t *collectors;  /* list of collectors */
+    ipfix_template_t  *templates;   /* list of templates  */
 
     char        *buffer;          /* output buffer */
     int         nrecords;         /* no. of records in buffer */
@@ -158,6 +192,12 @@ typedef struct
     uint8_t    *cs_header;        /* start of current set */
 
 } ipfix_t;
+
+typedef struct {
+    int       eno;		/* IPFIX enterprize number, 0 for standard element */
+    uint16_t  ienum;		/* IPFIX information element number */
+    uint16_t  length;		/* length of this element in bytes - use 65535 for varlen elements */
+} export_fields_t;
 
 /** exporter funcs
  */
@@ -175,10 +215,14 @@ int  ipfix_add_scope_field( ipfix_t *ifh, ipfix_template_t *templ,
                             uint32_t enterprise_number,
                             uint16_t type, uint16_t length );
 void ipfix_delete_template( ipfix_t *ifh, ipfix_template_t *templ );
-
+int  ipfix_make_template( ipfix_t *handle, ipfix_template_t **templ,
+                         export_fields_t *fields, int nfields );
 int  ipfix_export( ipfix_t *ifh, ipfix_template_t *templ, ... );
 int  ipfix_export_array( ipfix_t *ifh, ipfix_template_t *templ,
                          int nfields, void **fields, uint16_t *lengths );
+int  ipfix_export_array_with_odid( ipfix_t *ifh, uint32_t, ipfix_template_t *templ,
+                         int nfields, void **fields, uint16_t *lengths );
+
 int  ipfix_export_flush( ipfix_t *ifh );
 void ipfix_close( ipfix_t *ifh );
 

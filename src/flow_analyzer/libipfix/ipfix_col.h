@@ -6,7 +6,7 @@ $$LIC$$
 **
 ** Copyright Fraunhofer FOKUS
 **
-** $Id: ipfix_col.h 96 2009-03-27 19:19:27Z csc $
+** $Id: ipfix_col.h 166 2010-02-23 10:15:04Z csc $
 **
 */
 #ifndef IPFIX_COL_H
@@ -73,12 +73,20 @@ typedef struct ipfix_col_info
     int (*export_newsource)(ipfixs_node_t*,void*);
     int (*export_newmsg)(ipfixs_node_t*,ipfix_hdr_t*,void*);
     int (*export_trecord)(ipfixs_node_t*,ipfixt_node_t*,void*);
-    int (*export_dset)(ipfixt_node_t*,uint8_t*,size_t,void*);
+    int (*export_dset)(ipfixt_node_t*,const uint8_t*,size_t,void*);
     int (*export_drecord)(ipfixs_node_t*,ipfixt_node_t*,
                           ipfix_datarecord_t*,void*);
+    int (*export_rawmsg)(ipfixs_node_t *source, const uint8_t* data, size_t len, void *arg);
     void (*export_cleanup)(void*);
     void *data;
 } ipfix_col_info_t;
+
+typedef struct ipfix_col_info_node
+{
+    struct ipfix_col_info_node *next;
+    struct ipfix_col_info      *elem;
+
+} ipfixe_node_t;
 
 typedef void* ipfix_col_t;
 
@@ -95,9 +103,11 @@ int  LIBIPFIX_EXPORTABLE ipfix_col_close( SOCKET fd );
 void LIBIPFIX_EXPORTABLE ipfix_col_cleanup( void );
 
 /* internal, experimental */
-int  ipfix_parse_hdr( uint8_t *buf, size_t buflen, ipfix_hdr_t *hdr );
+int  ipfix_parse_hdr( const uint8_t *buf, size_t buflen, ipfix_hdr_t *hdr );
+int  ipfix_parse_raw_msg( ipfixs_node_t *source, ipfixe_node_t  *g_exporter,
+                      const uint8_t *msg, size_t nbytes );
 int  ipfix_parse_msg( ipfix_input_t *input, ipfixs_node_t **sources, 
-                      uint8_t *msg, size_t nbytes );
+                      const uint8_t *msg, size_t nbytes );
 int  ipfix_get_template_ident( ipfix_template_t *t, char *buf, size_t buflen );
 int  ipfix_col_listen_ssl( ipfix_col_t **handle, ipfix_proto_t protocol, 
                            int port, int family, int maxcon,

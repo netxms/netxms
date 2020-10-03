@@ -871,7 +871,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip libnxsl libnxmb libnxlp libnxpython libnxcc db server ncdrivers agent client nxscript nxcproxy"
+	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db server ncdrivers agent client nxscript nxcproxy"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxtux"
@@ -4687,6 +4687,8 @@ AC_CONFIG_FILES([
 	src/ethernetip/Makefile
 	src/ethernetip/libethernetip/Makefile
 	src/ethernetip/nxethernetip/Makefile
+	src/flow_analyzer/Makefile
+	src/flow_analyzer/libipfix/Makefile
 	src/install/Makefile
 	src/install/windows/Makefile
 	src/jansson/Makefile

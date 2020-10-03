@@ -32,7 +32,6 @@ $$LIC$$
 /*----- defines ----------------------------------------------------------*/
 
 #define NODEBUG
-#define IPFIX_DEFAULT_BUFLEN  1400
 
 #define INSERTU16(b,l,val) \
         { uint16_t _t=htons((val)); memcpy((b),&_t,2); (l)+=2; }
@@ -53,42 +52,12 @@ typedef struct ipfixiobuf
     char               buffer[IPFIX_DEFAULT_BUFLEN+IPFIX_HDR_BYTES_NF9]; /*!!*/
 } iobuf_t;
 
-typedef struct ipfix_message
-{
-    char        buffer[IPFIX_DEFAULT_BUFLEN];   /* message buffer */
-    int         nrecords;                       /* no. of records in buffer */
-    size_t      offset;                         /* output buffer fill level */
-} ipfix_message_t;
-
 typedef struct ipfix_node
 {
     struct ipfix_node   *next;
     ipfix_t             *ifh;
 
 } ipfix_node_t;
-
-typedef struct collector_node
-{
-    struct collector_node *next;
-    int                   usecount;
-
-    char            *chost;       /* collector hostname */
-    int             cport;        /* collector port */
-    ipfix_proto_t   protocol;     /* used protocol (e.g. tcp) */
-    SOCKET          fd;           /* open socket */
-    int             ssl_flag;     /* ipfix over tls/ssl */
-#ifdef SSLSUPPORT
-    ipfix_ssl_opts_t *ssl_opts;
-    BIO             *bio;
-    SSL_CTX         *ctx;
-    SSL             *ssl;
-#endif
-    struct sockaddr *to;          /* collector address */
-    socklen_t       tolen;        /* collector address length */
-    time_t          lastaccess;   /* last use of this connection */
-    ipfix_message_t message;      /* used only for sctp templates */
-
-} ipfix_collector_t;
 
 static time_t             g_tstart = 0;
 static iobuf_t            g_iobuf[2], *g_buflist =NULL;
@@ -667,6 +636,10 @@ int ipfix_get_eno_ieid( char *field, int *eno, int *ieid )
  */
 int ipfix_init( void )
 {
+    /* check and store in global flag, 
+     * whether we are on a Small or BigEndian machine */
+    testEndianness(); 
+
     if ( g_tstart ) {
         ipfix_cleanup();
     }
@@ -810,7 +783,7 @@ int _ipfix_connect ( ipfix_collector_t *col )
     char   *server = col->chost;
     int    port    = col->cport;
     int    socktype, sockproto;
-    SOCKET    sock = -1;
+    SOCKET    sock = INVALID_SOCKET;
 #ifdef INET6
     struct addrinfo  *res, *aip;
     struct addrinfo  hints;
@@ -1087,6 +1060,18 @@ int _ipfix_connect ( ipfix_collector_t *col )
                               if (_ipfix_write_template( node->ifh, col,
                                                          tnode ) <0 )
                                   return -1;
+
+			      /* ugly hack: update sourceid in IPFIX handle right before sending */
+			      /*            but only of the current template has an odid set     */
+			      if ( tnode->odid != 0 ) {
+				  node->ifh->sourceid = tnode->odid;
+			      }
+			      /* Send each template immediately (only one template per message) */
+                              if ( _ipfix_send_message( node->ifh, col,
+							(col->protocol==IPFIX_PROTO_SCTP)?1:0,
+							&col->message ) < 0 )
+				  return -1;
+
                               break;
                           case IPFIX_PROTO_UDP:
                               tnode->tsend = 0;
@@ -1397,7 +1382,7 @@ int _ipfix_write_msghdr( ipfix_t *ifh, ipfix_message_t *msg, iobuf_t *buf )
         INSERTU16( buf->buffer+buf->buflen, buf->buflen, ifh->version );
         INSERTU16( buf->buffer+buf->buflen, buf->buflen, (uint16_t)(msg->offset + IPFIX_HDR_BYTES));
         INSERTU32( buf->buffer+buf->buflen, buf->buflen, (uint32_t)now );
-        INSERTU32( buf->buffer+buf->buflen, buf->buflen, ifh->seqno );
+        INSERTU32( buf->buffer+buf->buflen, buf->buflen, ifh->seqno - ifh->nrecords );
         INSERTU32( buf->buffer+buf->buflen, buf->buflen, ifh->sourceid );
     }
 
@@ -1745,26 +1730,19 @@ static int _ipfix_add_collector( ipfix_t *ifh, char *host, int port,
     if ( (ifh==NULL) || (host==NULL)  )
         return -1;
 
+    if ( ssl_flag ) {
 #ifndef SSLSUPPORT
-    if ( ssl_flag ) {
-//        errno = ENOTSUP;
+        errno = ENOTSUP;
         return -1;
-    }
 #else
-    if ( ssl_flag ) {
-        if ( ! openssl_is_init ) {
-            (void)SSL_library_init();
-            SSL_load_error_strings();
-            /* todo: seed prng? */
-            openssl_is_init ++;
-        }
+        ipfix_ssl_init();
         if ( (ssl_opts==NULL) || (ssl_opts->keyfile==NULL)
              || (ssl_opts->certfile==NULL) ) {
             errno = EINVAL;
             return -1;
         }
-    }
 #endif
+    }
 
     /* todo: support only one collector yet
      */
@@ -1805,14 +1783,14 @@ static int _ipfix_add_collector( ipfix_t *ifh, char *host, int port,
           if ( ssl_flag ) {
               free( col->chost );
               free( col );
-//              errno = ENOTSUP;
+              errno = ENOTSUP;
               return -1;
           }
           break;
       default:
           free( col->chost );
           free( col );
-//          errno = ENOTSUP;   /* !! ENOTSUP */
+          errno = EPROTONOSUPPORT;   /* !! ENOTSUP */
           return -1;
     }
 
@@ -2111,6 +2089,38 @@ int ipfix_get_template_array( ipfix_t          *ifh,
     ifh->templates = t;
     return 0;
 }
+
+
+/*
+ * name:        ipfix_make_template()
+ * parameters:
+ * return:      generates a new template and stores a pointer to it into the templ parameter
+ */
+
+int ipfix_make_template( ipfix_t *handle, ipfix_template_t **templ,
+                        export_fields_t *fields, int nfields )
+{
+    ipfix_template_t *t;
+    int i;
+
+    if ( ipfix_new_data_template( handle, &t, nfields ) <0 ) {
+        mlogf( 0, "ipfix_new_template() failed: %s\n", strerror(errno) );
+        return -1;
+    }
+
+    for ( i=0; i<nfields; i++ ) {
+        if ( ipfix_add_field( handle, t, fields[i].eno,
+             fields[i].ienum, fields[i].length ) <0 ) {
+            mlogf( 0, "ipfix_add_field() failed: %s\n", strerror(errno) );
+            ipfix_delete_template( handle, t );
+            return -1;
+        }
+    }
+
+    *templ = t;
+    return 0;
+}
+
 
 /*
  * name:        ipfix_free_template()
@@ -2418,6 +2428,23 @@ int ipfix_export_array( ipfix_t          *ifh,
 
     mod_lock();
     ret = _ipfix_export_array( ifh, templ, nfields, fields, lengths );
+    mod_unlock();
+
+    return ret;
+}
+
+int ipfix_export_array_with_odid( ipfix_t          *ifh,
+                        uint32_t         odid,
+                        ipfix_template_t *templ,
+                        int              nfields,
+                        void             **fields,
+                        uint16_t         *lengths )
+{
+    int ret;
+
+    ifh->sourceid = odid;
+    mod_lock();
+    ret = _ipfix_export_array( ifh,  templ, nfields, fields, lengths );
     mod_unlock();
 
     return ret;

@@ -20,7 +20,7 @@ $$LIC$$
 
 #define CIPHER_LIST "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH"
 
-extern int openssl_is_init;
+int  ipfix_ssl_init();
 
 void ipfix_ssl_opts_free( ipfix_ssl_opts_t *opts );
 int  ipfix_ssl_opts_new( ipfix_ssl_opts_t **opts,

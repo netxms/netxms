@@ -5,7 +5,7 @@ $$LIC$$
  *
  *   Copyright Fraunhofer FOKUS
  *
- *   $Date: 2009-03-27 20:19:27 +0100 (Fr, 27. Mär 2009) $
+ *   $Date: 2009-03-27 20:19:27 +0100 (Fri, 27 Mar 2009) $
  *
  *   $Revision: 96 $
  *
@@ -28,9 +28,8 @@ static const char cvsid[]="$Id: ipfix_ssl.c 96 2009-03-27 19:19:27Z csc $";
 
 /*----- globals ----------------------------------------------------------*/
 
-int openssl_is_init = 0;
-DH *dh512 = NULL;
-DH *dh1024 = NULL;
+static DH *dh512 = NULL;
+static DH *dh1024 = NULL;
 
 /*----- prototypes -------------------------------------------------------*/
 
@@ -111,6 +110,18 @@ extern DH *get_dh1024();
 #endif
 
 /*----- funcs ------------------------------------------------------------*/
+
+int ipfix_ssl_init()
+{
+  static int openssl_is_init = 0;
+  if ( ! openssl_is_init )
+  {
+      // actual OpenSSL initialization expected to be done by calling process
+      openssl_is_init ++;
+  }
+
+  return openssl_is_init;
+}
 
 void ipfix_ssl_opts_free( ipfix_ssl_opts_t *opts )
 {
@@ -195,6 +206,7 @@ long ipfix_ssl_post_connection_check(SSL *ssl, char *host)
             if (!strcmp(extstr, "subjectAltName"))
             {
                 int                  j;
+                const unsigned char  *data;
                 STACK_OF(CONF_VALUE) *val;
                 CONF_VALUE           *nval;
                 const X509V3_EXT_METHOD    *meth;
@@ -275,8 +287,7 @@ int ipfix_ssl_init_con( SSL *con )
         return -1;
     }
 
-    if ( mlog_vlevel ) 
-	 {
+    if ( 1 <= mlog_get_vlevel() ) {
         PEM_write_SSL_SESSION( mlog_fp, SSL_get_session(con));
 
         if ( SSL_get_shared_ciphers(con, buf, sizeof buf) != NULL)

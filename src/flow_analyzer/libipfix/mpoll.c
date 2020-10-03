@@ -6,7 +6,7 @@ $$LIC$$
 **
 ** Copyright Fraunhofer FOKUS
 **
-** $Date: 2008-10-14 12:40:12 +0200 (Di, 14. Okt 2008) $
+** $Date: 2008-10-14 12:40:12 +0200 (Tue, 14 Oct 2008) $
 **
 ** $Revision: 1.6 $
 **
@@ -19,27 +19,19 @@ $$LIC$$
 
 #define alloc_t(t) ((t *) malloc(sizeof(t)))
 
-#define Q_INSERT_HEAD(r,i) { (i)->next = r; (i)->prev = NULL; \
-  if (r) (r)->prev = i; r = i; }
-#define Q_INSERT_AFTER(r,i,a) { if (a) { (i)->next = (a)->next; \
+#define Q_INSERT_HEAD(r,i) ({ (i)->next = r; (i)->prev = NULL; \
+  if (r) (r)->prev = i; r = i; })
+#define Q_INSERT_AFTER(r,i,a) ({ if (a) { (i)->next = (a)->next; \
   (i)->prev = a; if ((a)->next) (a)->next->prev = i; (a)->next = i; } \
-  else { (i)->next = r; (i)->prev = NULL; if (r) (r)->prev = i; r = i; } }
-#define Q_INSERT_BEFORE(r,i,b) { if (b) { (i)->next = b; \
+  else { (i)->next = r; (i)->prev = NULL; if (r) (r)->prev = i; r = i; } })
+#define Q_INSERT_BEFORE(r,i,b) ({ if (b) { (i)->next = b; \
   (i)->prev = (b)->prev; if ((b)->prev) (b)->prev->next = i; else r = i; \
   (b)->prev = i; } else { (i)->next = r; (i)->prev = NULL; \
-  if (r) (r)->prev = i; r = i; } }
-#define Q_REMOVE(r,i) { if ((i)->next) (i)->next->prev = (i)->prev; \
-	if ((i)->prev) (i)->prev->next = (i)->next; else r = (i)->next; }
+  if (r) (r)->prev = i; r = i; } })
+#define Q_REMOVE(r,i) ({ if ((i)->next) (i)->next->prev = (i)->prev; \
+  if ((i)->prev) (i)->prev->next = (i)->next; else r = (i)->next; })
 
 /*------ stuctures -------------------------------------------------------*/
-
-typedef struct _timer 
-{
-    struct timeval expiration;
-    void           (*callback)(void *user);
-    void           *user;
-    struct _timer  *prev,*next;
-} mtimer_t;
 
 typedef struct poll_node
 {

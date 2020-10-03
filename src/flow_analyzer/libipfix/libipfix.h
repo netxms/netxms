@@ -5,35 +5,16 @@
 #include <nms_util.h>
 #include <nms_threads.h>
 #include <nxcrypto.h>
+#include <nxlog.h>
+
+#define LIBIPFIX_DEBUG_TAG _T("ipfix")
 
 #ifdef _WIN32
 #define hstrerror strerror
 #endif
 
 #include "ipfix.h"
-#include "mlog.h"
 #include "mpoll.h"
-
-
-//
-// Mutex wrappers
-//
-
-typedef void *LIBIPFIX_MUTEX;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-LIBIPFIX_MUTEX mutex_create();
-void mutex_destroy(LIBIPFIX_MUTEX mutex);
-BOOL mutex_lock(LIBIPFIX_MUTEX mutex);
-void mutex_unlock(LIBIPFIX_MUTEX mutex);
-
-#ifdef __cplusplus
-}
-#endif
-
 
 //
 // gettimeofday() for Windows
