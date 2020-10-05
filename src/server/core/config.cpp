@@ -770,6 +770,19 @@ UINT32 NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, UINT32 dwDefault)
 }
 
 /**
+ * Read unsigned long long value from configuration table
+ */
+uint64_t NXCORE_EXPORTABLE ConfigReadUInt64(const TCHAR *variable, uint64_t defaultValue)
+{
+   TCHAR szBuffer[64];
+
+   if (ConfigReadStr(variable, szBuffer, 64, _T("")))
+      return _tcstoll(szBuffer, NULL, 10);
+   else
+      return defaultValue;
+}
+
+/**
  * Read byte array (in hex form) from configuration table into integer array
  */
 bool NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *variable, int *buffer, size_t size, int defaultElementValue)
@@ -884,6 +897,17 @@ bool NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *variable, UINT32 value, boo
    TCHAR szBuffer[64];
 
    _sntprintf(szBuffer, 64, _T("%u"), value);
+   return ConfigWriteStr(variable, szBuffer, create, isVisible, needRestart);
+}
+
+/**
+ * Write unsigned long long value to configuration table
+ */
+bool NXCORE_EXPORTABLE ConfigWriteUInt64(const TCHAR *variable, uint64_t value, bool create, bool isVisible, bool needRestart)
+{
+   TCHAR szBuffer[64];
+
+   _sntprintf(szBuffer, 64, UINT64_FMT, value);
    return ConfigWriteStr(variable, szBuffer, create, isVisible, needRestart);
 }
 

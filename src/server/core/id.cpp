@@ -23,6 +23,14 @@
 #include "nxcore.h"
 
 /**
+ * External functions
+ */
+int32_t GetNextAuditId();
+uint64_t GetNextSnmpTrapId();
+uint64_t GetNextSyslogId();
+uint64_t GetNextWinEventId();
+
+/**
  * Constants
  */
 #define NUMBER_OF_GROUPS   27
@@ -319,6 +327,9 @@ bool InitIdTable()
    }
 
    // Get first available alarm id
+   id = ConfigReadULong(_T("FirstFreeAlarmId"), s_freeIdTable[IDG_ALARM]);
+   if (id > s_freeIdTable[IDG_ALARM])
+      s_freeIdTable[IDG_ALARM] = id;
    hResult = DBSelect(hdb, _T("SELECT max(alarm_id) FROM alarms"));
    if (hResult != NULL)
    {
@@ -339,6 +350,9 @@ bool InitIdTable()
    }
 
    // Get first available event identifier
+   uint64_t eventId = ConfigReadUInt64(_T("FirstFreeEventLogId"), m_freeEventId);
+   if (eventId > m_freeEventId)
+      m_freeEventId = eventId;
    hResult = DBSelect(hdb, _T("SELECT max(event_id) FROM event_log"));
    if (hResult != NULL)
    {
@@ -541,7 +555,15 @@ void SaveCurrentFreeId()
    MutexLock(s_mutexTableAccess);
    uint32_t objectId = s_freeIdTable[IDG_NETWORK_OBJECT];
    uint32_t dciId = s_freeIdTable[IDG_ITEM];
+   uint32_t alarmId = s_freeIdTable[IDG_ALARM];
+   uint64_t eventId = m_freeEventId++;
    MutexUnlock(s_mutexTableAccess);
 	ConfigWriteULong(_T("FirstFreeObjectId"), objectId, TRUE, FALSE, TRUE);
    ConfigWriteULong(_T("FirstFreeDCIId"), dciId, TRUE, FALSE, TRUE);
+   ConfigWriteULong(_T("FirstFreeAlarmId"), alarmId, TRUE, FALSE, TRUE);
+   ConfigWriteULong(_T("FirstFreeAuditId"), GetNextAuditId(), TRUE, FALSE, TRUE);
+   ConfigWriteUInt64(_T("FirstFreeEventLogId"), eventId, TRUE, FALSE, TRUE);
+   ConfigWriteUInt64(_T("FirstFreeSnmpTrapId"), GetNextSnmpTrapId(), TRUE, FALSE, TRUE);
+   ConfigWriteUInt64(_T("FirstFreeSyslogId"), GetNextSyslogId(), TRUE, FALSE, TRUE);
+   ConfigWriteUInt64(_T("FirstFreeWineventId"), GetNextWinEventId(), TRUE, FALSE, TRUE);
 }

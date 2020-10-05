@@ -133,11 +133,22 @@ static void WindowsEventWriterThread()
 }
 
 /**
+ * Get next windows event log id
+ */
+uint64_t GetNextWinEventId()
+{
+   return s_eventId++;
+}
+
+/**
  * Start Windows event log writer thread
  */
 void StartWindowsEventWriter()
 {
    // Determine first available event id
+   uint64_t id = ConfigReadUInt64(_T("FirstFreeWineventId"), s_eventId);
+   if (id > s_eventId)
+      s_eventId = id;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(id) FROM win_event_log"));
    if (hResult != nullptr)
