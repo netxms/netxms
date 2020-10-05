@@ -24,8 +24,6 @@ static const char cvsid[]="$Id: ipfix_print.c 996 2009-03-19 18:14:44Z csc $";
 static ipfix_col_info_t *g_colinfo = nullptr;
 static char             tmpbuf[1000];
 
-static void outf(FILE *fp, const char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
-
 /*----- static funcs -----------------------------------------------------*/
 
 static void outf(FILE *fp, const char *fmt, ...)
@@ -54,7 +52,7 @@ static int ipfix_print_newsource(ipfixs_node_t *s, void *arg)
    outf(fp, "#\n# new source: %s/%u\n#\n", mbIdent, s->odid);
    MemFree(mbIdent);
 #else
-    outf(fp, "#\n# new source: %s/%u\n#\n", ident.cstr(), s->odid);
+   outf(fp, "#\n# new source: %s/%u\n#\n", ident.cstr(), s->odid);
 #endif
    return 0;
 }

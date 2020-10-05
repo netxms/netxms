@@ -199,7 +199,6 @@ long ipfix_ssl_post_connection_check(SSL *ssl, const char *host)
             if (!strcmp(extstr, "subjectAltName"))
             {
                 int                  j;
-                const unsigned char  *data;
                 STACK_OF(CONF_VALUE) *val;
                 CONF_VALUE           *nval;
                 const X509V3_EXT_METHOD    *meth;
@@ -211,14 +210,14 @@ long ipfix_ssl_post_connection_check(SSL *ssl, const char *host)
 #if OPENSSL_VERSION_NUMBER >= 0x01010000L
 // FIXME: OpenSSL 1.1 implementation
 #elif (OPENSSL_VERSION_NUMBER > 0x00907000L)
-                data = ext->value->data;
+                const unsigned char *data = ext->value->data;
                 if (meth->it)
                   ext_str = ASN1_item_d2i(NULL, &data, ext->value->length,
                                           ASN1_ITEM_ptr(meth->it));
                 else
                   ext_str = meth->d2i(NULL, &data, ext->value->length);
 #else
-                data = ext->value->data;
+                const unsigned char *data = ext->value->data;
                 ext_str = meth->d2i(NULL, &data, ext->value->length);
 #endif
                 val = meth->i2v(meth, ext_str, NULL);

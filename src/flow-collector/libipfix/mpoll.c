@@ -23,17 +23,17 @@ $$LIC$$
 
 #define alloc_t(t) ((t *) malloc(sizeof(t)))
 
-#define Q_INSERT_HEAD(r,i) ({ (i)->next = r; (i)->prev = NULL; \
-  if (r) (r)->prev = i; r = i; })
-#define Q_INSERT_AFTER(r,i,a) ({ if (a) { (i)->next = (a)->next; \
+#define Q_INSERT_HEAD(r,i) do { (i)->next = r; (i)->prev = NULL; \
+  if (r) (r)->prev = i; r = i; } while(0)
+#define Q_INSERT_AFTER(r,i,a) do { if (a) { (i)->next = (a)->next; \
   (i)->prev = a; if ((a)->next) (a)->next->prev = i; (a)->next = i; } \
-  else { (i)->next = r; (i)->prev = NULL; if (r) (r)->prev = i; r = i; } })
-#define Q_INSERT_BEFORE(r,i,b) ({ if (b) { (i)->next = b; \
+  else { (i)->next = r; (i)->prev = NULL; if (r) (r)->prev = i; r = i; } } while(0)
+#define Q_INSERT_BEFORE(r,i,b) do { if (b) { (i)->next = b; \
   (i)->prev = (b)->prev; if ((b)->prev) (b)->prev->next = i; else r = i; \
   (b)->prev = i; } else { (i)->next = r; (i)->prev = NULL; \
-  if (r) (r)->prev = i; r = i; } })
-#define Q_REMOVE(r,i) ({ if ((i)->next) (i)->next->prev = (i)->prev; \
-  if ((i)->prev) (i)->prev->next = (i)->next; else r = (i)->next; })
+  if (r) (r)->prev = i; r = i; } } while(0)
+#define Q_REMOVE(r,i) do { if ((i)->next) (i)->next->prev = (i)->prev; \
+  if ((i)->prev) (i)->prev->next = (i)->next; else r = (i)->next; } while(0)
 
 /*------ stuctures -------------------------------------------------------*/
 

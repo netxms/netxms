@@ -613,8 +613,8 @@ ipfix_field_t *ipfix_create_unknown_ftinfo(int eno, int type)
    }
 
    sprintf(tmpbuf, "%u_%u", eno, type);
-   ft->name = strdup(tmpbuf);
-   ft->documentation = strdup(tmpbuf);
+   ft->name = MemCopyStringA(tmpbuf);
+   ft->documentation = MemCopyStringA(tmpbuf);
    ft->eno = eno;
    ft->ftype = type;
    ft->coding = IPFIX_CODING_BYTES;
@@ -1064,7 +1064,7 @@ int _ipfix_connect(ipfix_collector_t *col)
       switch (col->protocol)
       {
          case IPFIX_PROTO_TCP:
-            if ((col->bio = BIO_new_socket(sock, BIO_NOCLOSE)) == NULL)
+            if ((col->bio = BIO_new_socket(static_cast<int>(sock), BIO_NOCLOSE)) == nullptr)
             {
                TCHAR buffer[1024];
                nxlog_debug_tag(LIBIPFIX_DEBUG_TAG, 3, _T("BIO_new_socket() failed: %s"), GetLastSocketErrorText(buffer, 1024));
@@ -1245,13 +1245,13 @@ _ipfix_send_message(ipfix_t *ifh, ipfix_collector_t *col, int flag, ipfix_messag
       case IPFIX_PROTO_UDP:
       {
          ssize_t n = 0, nleft = (ssize_t)buf->buflen;
-         uint8_t *p = (uint8_t*)(buf->buffer);
+         const char *p = buf->buffer;
 
          while (nleft > 0)
          {
             if (col->ssl_flag == 0)
             {
-               n = sendto(col->fd, p, nleft, 0, col->to, col->tolen);
+               n = sendto(col->fd, p, static_cast<int>(nleft), 0, col->to, static_cast<int>(col->tolen));
                if (n <= 0)
                   goto errend;
             }
@@ -1361,13 +1361,13 @@ reconnect:
       case IPFIX_PROTO_UDP:
       {
          ssize_t n = 0, nleft = (ssize_t)buf->buflen;
-         uint8_t *p = (uint8_t*)(buf->buffer);
+         const char *p = buf->buffer;
 
          while (nleft > 0)
          {
             if (col->ssl_flag == 0)
             {
-               n = sendto(col->fd, p, nleft, 0, col->to, col->tolen);
+               n = sendto(col->fd, p, static_cast<int>(nleft), 0, col->to, static_cast<int>(col->tolen));
                if (n <= 0)
                   return -1;
             }
@@ -1908,14 +1908,14 @@ static int _ipfix_add_collector(ipfix_t *ifh, char *host, int port, ipfix_proto_
          {
             MemFree(col->chost);
             MemFree(col);
-            errno = ENOTSUP;
+            errno = WSAEOPNOTSUPP;
             return -1;
          }
          break;
       default:
          MemFree(col->chost);
          MemFree(col);
-         errno = EPROTONOSUPPORT; /* !! ENOTSUP */
+         errno = WSAEPROTONOSUPPORT;
          return -1;
    }
 

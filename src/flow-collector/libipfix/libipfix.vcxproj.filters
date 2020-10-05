@@ -18,25 +18,22 @@
     <ClCompile Include="gettimeofday.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ipfix.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ipfix_col.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ipfix_print.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ipfix_ssl.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="libipfix.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mlog.c">
+    <ClCompile Include="mpoll.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mpoll.c">
+    <ClCompile Include="ipfix.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ipfix_col.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ipfix_print.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ipfix_ssl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -66,6 +63,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mpoll.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\netxms-version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\nms_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\nms_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\nxsocket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

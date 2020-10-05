@@ -76,10 +76,10 @@ typedef struct ipfix_col_ssl_node
 typedef struct ipfix_col_ssl
 {
    ipfix_col_ssl_node_t *nodes;
-
-   int i, *socks, nsocks;
+   int i;
+   int nsocks;
+   SOCKET *socks;
    SSL_CTX *ctx;
-
 } ipfix_col_ssl_t;
 
 #endif
@@ -1755,7 +1755,7 @@ void process_client_ssl(int fd, int mask, void *data)
          nxlog_debug_tag(LIBIPFIX_DEBUG_TAG, 2, _T("[%s] ipfix message read error (%d != %d)"), func, nbytes, len);
          TCHAR buffer[1024];
          nxlog_debug_tag(LIBIPFIX_DEBUG_TAG, 2, _T("[%s] SSL_read() failed (%d/%d): %s"),
-                  func, nbytes, SSL_get_error(scon->ssl, nbytes), GetLastSocketErrorText(buffer, 1024));
+                  func, nbytes, SSL_get_error(scon->ssl, static_cast<int>(nbytes)), GetLastSocketErrorText(buffer, 1024));
          goto end;
       }
 
@@ -1833,7 +1833,7 @@ void accept_client_ssl_cb(int fd, int mask, void *data)
       goto err;
    }
 
-   if ((bio = BIO_new_socket(newfd, BIO_NOCLOSE)) == NULL)
+   if ((bio = BIO_new_socket(static_cast<int>(newfd), BIO_NOCLOSE)) == NULL)
    {
       nxlog_debug_tag(LIBIPFIX_DEBUG_TAG, 2, _T("[%s] BIO_new_socket() failed"), func);
       goto err;
@@ -2114,7 +2114,7 @@ int ipfix_listen(int *nfds, SOCKET **fds, ipfix_proto_t protocol, int port, int 
           break;
 #endif
       default:
-         errno = ENOTSUP;
+         errno = WSAEOPNOTSUPP;
          return -1;
    }
 
@@ -2351,7 +2351,7 @@ int ipfix_col_listen(int *nfds, SOCKET **fds, ipfix_proto_t protocol, int port, 
           break;
 #endif
       default:
-         errno = ENOTSUP;
+         errno = WSAEOPNOTSUPP;
          return -1;
    }
 
@@ -2479,11 +2479,11 @@ int ipfix_col_listen_ssl(ipfix_col_t **handle, ipfix_proto_t protocol, int port,
     errno = ENOTSUP;
     return -1;
 #else
-   SSL_CTX *ctx = nullptr;
    pcallback_f callback;
-   int i, *socks, nsocks;
+   int i, nsocks;
    ipfix_col_ssl_t *col;
-   ipfix_col_ssl_node_t *node, *nodes;
+   ipfix_col_ssl_node_t *node;
+   ipfix_col_ssl_node_t *nodes = nullptr;
    static const TCHAR *func = _T("ipfix_col_listen_ssl");
 
    ipfix_ssl_init();
@@ -2496,7 +2496,7 @@ int ipfix_col_listen_ssl(ipfix_col_t **handle, ipfix_proto_t protocol, int port,
 
    if (protocol != IPFIX_PROTO_TCP)
    {
-      errno = ENOTSUP;
+      errno = WSAEOPNOTSUPP;
       return -1;
    }
 
@@ -2512,10 +2512,12 @@ int ipfix_col_listen_ssl(ipfix_col_t **handle, ipfix_proto_t protocol, int port,
    }
 
    /* setup SSL_CTX object */
+   SSL_CTX *ctx = nullptr;
    if (ipfix_ssl_setup_server_ctx(&ctx, method, ssl_details) < 0)
-      goto err;
+      return -1;
 
    /* open socket(s) */
+   SOCKET *socks;
    if (ipfix_listen(&nsocks, &socks, protocol, port, family, maxcon) < 0)
       goto err;
 
@@ -2546,7 +2548,7 @@ int ipfix_col_listen_ssl(ipfix_col_t **handle, ipfix_proto_t protocol, int port,
             callback = accept_client_ssl_cb;
             break;
          default:
-            errno = ENOTSUP;
+            errno = WSAEOPNOTSUPP;
             return -1;
       }
 
@@ -2566,19 +2568,18 @@ int ipfix_col_listen_ssl(ipfix_col_t **handle, ipfix_proto_t protocol, int port,
    return 0;
 
 err:
-   if (ctx)
+   if (ctx != nullptr)
       SSL_CTX_free(ctx);
-   if (col)
-      free(col);
+   MemFree(col);
    /* todo: free nodes */
-   if (socks)
+   if (socks != nullptr)
    {
       for (i = 0; i < nsocks; i++)
       {
          mpoll_fdrm(socks[i]);
-         close(socks[i]);
+         closesocket(socks[i]);
       }
-      free(socks);
+      MemFree(socks);
    }
    return -1;
 #endif
@@ -2594,35 +2595,35 @@ int ipfix_col_close_ssl(ipfix_col_t *handle)
    ipfix_col_ssl_node_t *n, *node;
    ssl_conn_t *s, *scon;
 
-   if (col)
+   if (col != nullptr)
    {
-      if (col->ctx)
+      if (col->ctx != nullptr)
          SSL_CTX_free(col->ctx);
-      for (node = col->nodes; node != NULL;)
+      for (node = col->nodes; node != nullptr;)
       {
-         for (scon = node->scon; scon != NULL;)
+         for (scon = node->scon; scon != nullptr;)
          {
             if (scon->ssl)
                SSL_free(scon->ssl);
             s = scon;
             scon = scon->next;
-            free(s);
+            MemFree(s);
          }
          n = node;
          node = node->next;
-         free(n);
+         MemFree(n);
       }
-      if (col->socks)
+      if (col->socks != nullptr)
       {
          int i;
          for (i = 0; i < col->nsocks; i++)
          {
             mpoll_fdrm(col->socks[i]);
-            close(col->socks[i]);
+            closesocket(col->socks[i]);
          }
-         free(col->socks);
+         MemFree(col->socks);
       }
-      free(col);
+      MemFree(col);
    }
    return 0;
 #endif

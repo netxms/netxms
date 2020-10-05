@@ -166,7 +166,7 @@ typedef struct collector_node
     char            *chost;       /* collector hostname */
     int             cport;        /* collector port */
     ipfix_proto_t   protocol;     /* used protocol (e.g. tcp) */
-    int             fd;           /* open socket */
+    SOCKET          fd;           /* open socket */
     int             ssl_flag;     /* ipfix over tls/ssl */
 #ifdef SSLSUPPORT
     ipfix_ssl_opts_t *ssl_opts;

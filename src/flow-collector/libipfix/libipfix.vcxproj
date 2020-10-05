@@ -28,24 +28,24 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -168,15 +168,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="gettimeofday.c" />
-    <ClCompile Include="ipfix.c" />
-    <ClCompile Include="ipfix_col.c" />
-    <ClCompile Include="ipfix_print.c" />
-    <ClCompile Include="ipfix_ssl.c" />
+    <ClCompile Include="ipfix.cpp" />
+    <ClCompile Include="ipfix_col.cpp" />
+    <ClCompile Include="ipfix_print.cpp" />
+    <ClCompile Include="ipfix_ssl.cpp" />
     <ClCompile Include="libipfix.cpp" />
-    <ClCompile Include="mlog.c" />
     <ClCompile Include="mpoll.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\include\netxms-version.h" />
+    <ClInclude Include="..\..\..\include\nms_common.h" />
+    <ClInclude Include="..\..\..\include\nms_util.h" />
+    <ClInclude Include="..\..\..\include\nxsocket.h" />
     <ClInclude Include="ipfix.h" />
     <ClInclude Include="ipfix_col.h" />
     <ClInclude Include="ipfix_def.h" />
