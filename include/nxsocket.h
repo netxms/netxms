@@ -90,17 +90,19 @@ inline void SetSocketBroadcast(SOCKET s)
 // Socket compatibility
 typedef int SOCKET;
 
-#define closesocket(x) _close(x)
-#define WSAGetLastError() (errno)
+#define closesocket(x)     _close(x)
+#define WSAGetLastError()  (errno)
 
-#define WSAECONNREFUSED ECONNREFUSED
-#define WSAECONNRESET   ECONNRESET
-#define WSAEINPROGRESS  EINPROGRESS
-#define WSAEINTR        EINTR
-#define WSAESHUTDOWN    ESHUTDOWN
-#define WSAEWOULDBLOCK  EWOULDBLOCK
-#define INVALID_SOCKET  (-1)
-#define SELECT_NFDS(x)  (x)
+#define WSAECONNREFUSED    ECONNREFUSED
+#define WSAECONNRESET      ECONNRESET
+#define WSAEINPROGRESS     EINPROGRESS
+#define WSAEINTR           EINTR
+#define WSAESHUTDOWN       ESHUTDOWN
+#define WSAEWOULDBLOCK     EWOULDBLOCK
+#define WSAEPROTONOSUPPORT EPROTONOSUPPORT
+#define WSAEOPNOTSUPP      EOPNOTSUPP
+#define INVALID_SOCKET     (-1)
+#define SELECT_NFDS(x)     (x)
 
 #if !(HAVE_SOCKLEN_T) && !defined(_USE_GNU_PTH)
 typedef unsigned int socklen_t;
