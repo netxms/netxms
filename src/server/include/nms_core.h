@@ -1093,11 +1093,13 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *variable, char *buffer, si
 int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *variable, int defaultValue);
 int NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const TCHAR *variable, int defaultValue);
 UINT32 NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *variable, UINT32 defaultValue);
+uint64_t NXCORE_EXPORTABLE ConfigReadUInt64(const TCHAR *variable, uint64_t defaultValue);
 bool NXCORE_EXPORTABLE ConfigReadBoolean(const TCHAR *variable, bool defaultValue);
 bool NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *variable, int *buffer, size_t size, int defaultElementValue);
 bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *variable, const TCHAR *value, bool create, bool isVisible = true, bool needRestart = false);
 bool NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *variable, int value, bool create, bool isVisible = true, bool needRestart = false);
 bool NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *variable, UINT32 value, bool create, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteUInt64(const TCHAR *variable, uint64_t value, bool create, bool isVisible = true, bool needRestart = false);
 bool NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *variable, int *value, size_t size, bool create, bool isVisible = true, bool needRestart = false);
 TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *varariable, const TCHAR *defaultValue);
 bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *variable, const TCHAR *value, bool create);

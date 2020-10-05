@@ -392,18 +392,29 @@ void LoadTrapCfg()
 }
 
 /**
+ * Get next SMTP Trap id
+ */
+uint64_t GetNextSnmpTrapId()
+{
+   return InterlockedIncrement64(&s_trapId);
+}
+
+/**
  * Initialize trap handling
  */
 void InitTraps()
 {
    LoadTrapCfg();
 
+   uint64_t id = ConfigReadUInt64(_T("FirstFreeSmtpTrapId"), s_trapId);
+   if (id > s_trapId)
+      s_trapId = id;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(trap_id) FROM snmp_trap_log"));
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_trapId = DBGetFieldInt64(hResult, 0, 0);
+         s_trapId = MAX(DBGetFieldInt64(hResult, 0, 0), s_trapId);
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);

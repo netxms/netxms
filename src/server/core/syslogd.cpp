@@ -922,6 +922,14 @@ int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
 }
 
 /**
+ * Get next syslog id
+ */
+uint64_t GetNextSyslogId()
+{
+   return s_msgId++;
+}
+
+/**
  * Start built-in syslog server
  */
 void StartSyslogServer()
@@ -930,6 +938,9 @@ void StartSyslogServer()
    s_alwaysUseServerTime = ConfigReadBoolean(_T("SyslogIgnoreMessageTimestamp"), false);
 
    // Determine first available message id
+   uint64_t id = ConfigReadUInt64(_T("FirstFreeSyslogId"), s_msgId);
+   if (id > s_msgId)
+      s_msgId = id;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(msg_id) FROM syslog"));
    if (hResult != nullptr)

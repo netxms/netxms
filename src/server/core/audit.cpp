@@ -82,18 +82,27 @@ static void SendSyslogRecord(const TCHAR *text)
 }
 
 /**
+ * Get next audit id
+ */
+int32_t GetNextAuditId()
+{
+   return InterlockedIncrement(&s_recordId);
+}
+
+/**
  * Initalize audit log
  */
 void InitAuditLog()
 {
-	DB_RESULT hResult;
-
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM audit_log"));
+   int32_t id = ConfigReadULong(_T("FirstFreeAuditId"), s_recordId);
+   if (id > s_recordId)
+      s_recordId = id;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM audit_log"));
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_recordId = DBGetFieldULong(hResult, 0, 0) + 1;
+         s_recordId = MAX(DBGetFieldULong(hResult, 0, 0) + 1, s_recordId);
       DBFreeResult(hResult);
    }
 
