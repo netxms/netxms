@@ -27,7 +27,7 @@
  */
 int32_t GetLastAuditRecordId();
 int64_t GetLastEventId();
-uint64_t GetLastSnmpTrapId();
+int64_t GetLastSnmpTrapId();
 uint64_t GetNextSyslogId();
 uint64_t GetNextWinEventId();
 void LoadLastEventId(DB_HANDLE hdb);
@@ -542,7 +542,7 @@ void SaveCurrentFreeId()
    ConfigWriteULong(_T("FirstFreeAlarmId"), alarmId, true, false, true);
    ConfigWriteInt(_T("LastAuditRecordId"), GetLastAuditRecordId(), true, false, true);
    ConfigWriteInt64(_T("LastEventId"), GetLastEventId(), true, false, true);
-   ConfigWriteUInt64(_T("LastSNMPTrapId"), GetLastSnmpTrapId(), true, false, true);
+   ConfigWriteInt64(_T("LastSNMPTrapId"), GetLastSnmpTrapId(), true, false, true);
    ConfigWriteUInt64(_T("FirstFreeSyslogId"), GetNextSyslogId(), true, false, true);
    ConfigWriteUInt64(_T("FirstFreeWinEventId"), GetNextWinEventId(), true, false, true);
 }
