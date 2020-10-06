@@ -42,7 +42,7 @@ static char s_localHostName[256];
 /**
  * Getter for last used audit log record ID
  */
-int64_t GetLastAuditRecordId()
+int32_t GetLastAuditRecordId()
 {
    return s_recordId;
 }
