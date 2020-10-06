@@ -360,6 +360,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "westerstrand", "src\server\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libipfix", "src\flow-collector\libipfix\libipfix.vcxproj", "{2DEF303B-5FEF-4F5E-87C4-FB7895058F59}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wineventsync", "src\agent\subagents\wineventsync\wineventsync.vcxproj", "{24D093B4-8EA8-EE49-8060-6F4F9FA0457F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1390,6 +1392,14 @@ Global
 		{2DEF303B-5FEF-4F5E-87C4-FB7895058F59}.Release|Win32.Build.0 = Release|Win32
 		{2DEF303B-5FEF-4F5E-87C4-FB7895058F59}.Release|x64.ActiveCfg = Release|x64
 		{2DEF303B-5FEF-4F5E-87C4-FB7895058F59}.Release|x64.Build.0 = Release|x64
+		{24D093B4-8EA8-EE49-8060-6F4F9FA0457F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{24D093B4-8EA8-EE49-8060-6F4F9FA0457F}.Debug|Win32.Build.0 = Debug|Win32
+		{24D093B4-8EA8-EE49-8060-6F4F9FA0457F}.Debug|x64.ActiveCfg = Debug|x64
+		{24D093B4-8EA8-EE49-8060-6F4F9FA0457F}.Debug|x64.Build.0 = Debug|x64
+		{24D093B4-8EA8-EE49-8060-6F4F9FA0457F}.Release|Win32.ActiveCfg = Release|Win32
+		{24D093B4-8EA8-EE49-8060-6F4F9FA0457F}.Release|Win32.Build.0 = Release|Win32
+		{24D093B4-8EA8-EE49-8060-6F4F9FA0457F}.Release|x64.ActiveCfg = Release|x64
+		{24D093B4-8EA8-EE49-8060-6F4F9FA0457F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1546,6 +1556,7 @@ Global
 		{46B3AD90-68DA-119C-8D26-28C88AC8561C} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
 		{B797F799-E0E0-4188-8F96-E9B643BE7D84} = {53997B2A-D94C-428C-816D-938C297A1866}
 		{2DEF303B-5FEF-4F5E-87C4-FB7895058F59} = {89B3A66E-5853-4B14-A5E3-9E4C6524BE65}
+		{24D093B4-8EA8-EE49-8060-6F4F9FA0457F} = {451F583D-C2DB-4414-870C-7FA0189BE7DD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}

@@ -76,6 +76,7 @@ void ShutdownLocalDataCollector();
 
 void StartNotificationProcessor();
 void StopNotificationProcessor();
+void QueueNotificationMessage(NXCPMessage *msg);
 
 void LoadUserAgentNotifications();
 
@@ -104,17 +105,18 @@ extern TCHAR g_windowsServiceDisplayName[];
 #endif
 
 void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
-      void(*writeLog)(int, int, const TCHAR *),
-      void(*postEvent1)(UINT32, const TCHAR *, time_t, const char *, va_list),
-      void(*postEvent2)(UINT32, const TCHAR *, time_t, int, const TCHAR **),
-      bool(*enumerateSessions)(EnumerationCallbackResult(*)(AbstractCommSession *, void *), void*),
+      void (*writeLog)(int, int, const TCHAR *),
+      void (*postEvent1)(uint32_t, const TCHAR *, time_t, const char *, va_list),
+      void (*postEvent2)(uint32_t, const TCHAR *, time_t, int, const TCHAR **),
+      bool (*enumerateSessions)(EnumerationCallbackResult(*)(AbstractCommSession *, void *), void*),
       AbstractCommSession *(*findServerSession)(UINT64),
-      bool(*sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
-      bool(*pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
-      DB_HANDLE(*getLocalDatabaseHandle)(),
+      bool (*sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
+      bool (*pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
+      DB_HANDLE (*getLocalDatabaseHandle)(),
       const TCHAR *dataDirectory,
-      void(*executeAction)(const TCHAR *, const StringList *),
-      bool(*getScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *));
+      void (*executeAction)(const TCHAR *, const StringList *),
+      bool (*getScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *),
+      void (*queueNotificationMessage)(NXCPMessage*));
 
 int CreateConfig(bool forceCreate, const char *masterServers, const char *logFile, const char *fileStore,
    const char *configIncludeDir, int numSubAgents, char **subAgentList, const char *extraValues);
@@ -968,7 +970,7 @@ BOOL Initialize()
    // Initialize API for subagents
    InitSubAgentAPI(WriteSubAgentMsg, PostEvent, PostEvent, EnumerateSessions, FindServerSessionByServerId,
          SendFileToServer, PushData, GetLocalDatabaseHandle, g_szDataDirectory, ExecuteAction,
-         GetScreenInfoForUserSession);
+         GetScreenInfoForUserSession, QueueNotificationMessage);
    nxlog_debug(1, _T("Subagent API initialized"));
 
    g_executorThreadPool = ThreadPoolCreate(_T("PROCEXEC"), 1, 32);

@@ -35,7 +35,7 @@ WindowsEvent::WindowsEvent(uint32_t _nodeId, int32_t _zoneUIN, const NXCPMessage
    msg.getFieldAsString(VID_LOG_NAME, logName, 64);
    originTimestamp = msg.getFieldAsTime(VID_TIMESTAMP);
    msg.getFieldAsString(VID_EVENT_SOURCE, eventSource, 128);
-   eventSeverity = msg.getFieldAsInt32(VID_EVENT_SEVERITY);
+   eventSeverity = msg.getFieldAsInt32(VID_SEVERITY);
    eventCode = msg.getFieldAsInt32(VID_EVENT_CODE);
    message = msg.getFieldAsString(VID_MESSAGE);
    rawData = msg.getFieldAsString(VID_RAW_DATA);
@@ -83,8 +83,8 @@ static void WindowsEventWriterThread()
 
       DB_STATEMENT hStmt = DBPrepare(hdb,
             (g_dbSyntax == DB_SYNTAX_TSDB) ?
-                  _T("INSERT INTO win_event_log (id,timestamp,node_id,zone_uin,origin_timestamp,log_name,event_source,event_severity,event_code,message,raw_data) VALUES (?,to_timestamp(?),?,?,?,?,?,?,?,?,?)") :
-                  _T("INSERT INTO win_event_log (id,timestamp,node_id,zone_uin,origin_timestamp,log_name,event_source,event_severity,event_code,message,raw_data) VALUES (?,?,?,?,?,?,?,?,?,?,?)"), true);
+                  _T("INSERT INTO win_event_log (id,event_timestamp,node_id,zone_uin,origin_timestamp,log_name,event_source,event_severity,event_code,message,raw_data) VALUES (?,to_timestamp(?),?,?,?,?,?,?,?,?,?)") :
+                  _T("INSERT INTO win_event_log (id,event_timestamp,node_id,zone_uin,origin_timestamp,log_name,event_source,event_severity,event_code,message,raw_data) VALUES (?,?,?,?,?,?,?,?,?,?,?)"), true);
       if (hStmt == nullptr)
       {
          delete event;

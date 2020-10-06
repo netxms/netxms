@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -113,6 +113,7 @@ static NXCORE_LOG s_logs[] =
 	},
    { _T("WindowsEventLog"), _T("win_event_log"), _T("id"), _T("node_id"), SYSTEM_ACCESS_VIEW_SYSLOG,
       {
+         { _T("id"), _T("ID"), LC_INTEGER, 0 },
          { _T("event_timestamp"), _T("Time"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
          { _T("origin_timestamp"), _T("Origin time"), LC_TIMESTAMP, 0 },
          { _T("node_id"), _T("Source"), LC_OBJECT_ID, 0 },
@@ -122,7 +123,7 @@ static NXCORE_LOG s_logs[] =
          { _T("event_severity"), _T("Event severity"), LC_INTEGER, 0 },
          { _T("event_code"), _T("Event code"), LC_INTEGER, 0 },
          { _T("message"), _T("Message"), LC_TEXT, 0 },
-         { _T("raw_data"), _T("Raw data"), LC_JSON_DETAILS, 0 },
+         { _T("raw_data"), _T("Raw data"), LC_TEXT_DETAILS, 0 },
          { nullptr, nullptr, 0, 0 }
       }
    },

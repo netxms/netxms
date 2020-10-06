@@ -439,7 +439,7 @@ static void AddPredefinedCounters()
 /**
  * Configuration file template
  */
-static TCHAR *m_pszCounterList = NULL;
+static TCHAR *m_pszCounterList = nullptr;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("Counter"), CT_STRING_CONCAT, _T('\n'), 0, 0, 0, &m_pszCounterList },
@@ -452,11 +452,11 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
 {
-	if (m_info.parameters != NULL)
+	if (m_info.parameters != nullptr)
 		return false;	// Most likely another instance of WINPERF subagent already loaded
 
 	// Read performance counter indexes
-	TCHAR *counters = NULL;
+	TCHAR *counters = nullptr;
 	size_t countersBufferSize = 0;
    DWORD status;
 	do
@@ -512,9 +512,9 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
       }
 
 		CreateCounterIndex(counters, localCounters);
-      free(localCounters);
+      MemFree(localCounters);
 	}
-	free(counters);
+	MemFree(counters);
 
    // Init parameters list
    m_info.numParameters = sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM);

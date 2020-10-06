@@ -1385,8 +1385,7 @@ typedef struct
 #define VID_EXTPROV_CERTIFICATE     ((UINT32)713)
 #define VID_AGENT_CERT_SUBJECT      ((UINT32)714)
 #define VID_EVENT_SOURCE            ((UINT32)715)
-#define VID_EVENT_SEVERITY          ((UINT32)716)
-#define VID_RAW_DATA                ((UINT32)717)
+#define VID_RAW_DATA                ((UINT32)716)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

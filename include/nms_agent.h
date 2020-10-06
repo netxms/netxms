@@ -1080,8 +1080,9 @@ void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ..
 ;
 void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va_list args);
 
-void LIBNXAGENT_EXPORTABLE AgentPostEvent(UINT32 dwEvent, const TCHAR *eventName, time_t timestamp, const char *format, ...);
-void LIBNXAGENT_EXPORTABLE AgentPostEvent2(UINT32 dwEvent, const TCHAR *eventName, time_t timestamp, int count, const TCHAR **args);
+void LIBNXAGENT_EXPORTABLE AgentPostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const char *format, ...);
+void LIBNXAGENT_EXPORTABLE AgentPostEvent2(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, int count, const TCHAR **args);
+void LIBNXAGENT_EXPORTABLE AgentQueueNotifictionMessage(NXCPMessage *msg);
 
 bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void *), void *data);
 AbstractCommSession LIBNXAGENT_EXPORTABLE *AgentFindServerSession(UINT64 serverId);
