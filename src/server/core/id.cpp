@@ -25,10 +25,12 @@
 /**
  * External functions
  */
-int32_t GetNextAuditId();
-uint64_t GetNextSnmpTrapId();
+int32_t GetLastAuditRecordId();
+int64_t GetLastEventId();
+uint64_t GetLastSnmpTrapId();
 uint64_t GetNextSyslogId();
 uint64_t GetNextWinEventId();
+void LoadLastEventId(DB_HANDLE hdb);
 
 /**
  * Constants
@@ -59,7 +61,6 @@ static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
             0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
             0xFFFFFFFE, 0xFFFFFFFE
          };
-static uint64_t m_freeEventId = 1;
 static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
 {
    _T("Network Objects"),
@@ -349,18 +350,6 @@ bool InitIdTable()
       DBFreeResult(hResult);
    }
 
-   // Get first available event identifier
-   uint64_t eventId = ConfigReadUInt64(_T("FirstFreeEventLogId"), m_freeEventId);
-   if (eventId > m_freeEventId)
-      m_freeEventId = eventId;
-   hResult = DBSelect(hdb, _T("SELECT max(event_id) FROM event_log"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         m_freeEventId = std::max(m_freeEventId, DBGetFieldUInt64(hResult, 0, 0) + 1);
-      DBFreeResult(hResult);
-   }
-
    // Get first available package id
    hResult = DBSelect(hdb, _T("SELECT max(pkg_id) FROM agent_pkg"));
    if (hResult != NULL)
@@ -511,6 +500,8 @@ bool InitIdTable()
       DBFreeResult(hResult);
    }
 
+   LoadLastEventId(hdb);
+
    DBConnectionPoolReleaseConnection(hdb);
    return true;
 }
@@ -537,17 +528,6 @@ uint32_t CreateUniqueId(int iGroup)
 }
 
 /**
- * Create unique ID for event log record
- */
-uint64_t CreateUniqueEventId()
-{
-   MutexLock(s_mutexTableAccess);
-   uint64_t id = m_freeEventId++;
-   MutexUnlock(s_mutexTableAccess);
-   return id;
-}
-
-/**
  * Save current first free IDs
  */
 void SaveCurrentFreeId()
@@ -556,14 +536,13 @@ void SaveCurrentFreeId()
    uint32_t objectId = s_freeIdTable[IDG_NETWORK_OBJECT];
    uint32_t dciId = s_freeIdTable[IDG_ITEM];
    uint32_t alarmId = s_freeIdTable[IDG_ALARM];
-   uint64_t eventId = m_freeEventId++;
    MutexUnlock(s_mutexTableAccess);
-	ConfigWriteULong(_T("FirstFreeObjectId"), objectId, TRUE, FALSE, TRUE);
-   ConfigWriteULong(_T("FirstFreeDCIId"), dciId, TRUE, FALSE, TRUE);
-   ConfigWriteULong(_T("FirstFreeAlarmId"), alarmId, TRUE, FALSE, TRUE);
-   ConfigWriteULong(_T("FirstFreeAuditId"), GetNextAuditId(), TRUE, FALSE, TRUE);
-   ConfigWriteUInt64(_T("FirstFreeEventLogId"), eventId, TRUE, FALSE, TRUE);
-   ConfigWriteUInt64(_T("FirstFreeSnmpTrapId"), GetNextSnmpTrapId(), TRUE, FALSE, TRUE);
-   ConfigWriteUInt64(_T("FirstFreeSyslogId"), GetNextSyslogId(), TRUE, FALSE, TRUE);
-   ConfigWriteUInt64(_T("FirstFreeWineventId"), GetNextWinEventId(), TRUE, FALSE, TRUE);
+   ConfigWriteULong(_T("FirstFreeObjectId"), objectId, true, false, true);
+   ConfigWriteULong(_T("FirstFreeDCIId"), dciId, true, false, true);
+   ConfigWriteULong(_T("FirstFreeAlarmId"), alarmId, true, false, true);
+   ConfigWriteInt(_T("LastAuditRecordId"), GetLastAuditRecordId(), true, false, true);
+   ConfigWriteInt64(_T("LastEventId"), GetLastEventId(), true, false, true);
+   ConfigWriteUInt64(_T("LastSNMPTrapId"), GetLastSnmpTrapId(), true, false, true);
+   ConfigWriteUInt64(_T("FirstFreeSyslogId"), GetNextSyslogId(), true, false, true);
+   ConfigWriteUInt64(_T("FirstFreeWinEventId"), GetNextWinEventId(), true, false, true);
 }
