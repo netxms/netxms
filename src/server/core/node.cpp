@@ -1919,6 +1919,14 @@ void Node::calculateCompoundStatus(BOOL bForcedRecalc)
 }
 
 /**
+ * Delete node in background
+ */
+static void BackgroundDeleteNode(const shared_ptr<Node>& node)
+{
+   node->deleteObject();
+}
+
+/**
  * Perform status poll on node
  */
 void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
@@ -2701,7 +2709,9 @@ restart_agent_check:
       if ((unreachableDeleteDays > 0) && (m_downSince > 0) &&
           (time(nullptr) - m_downSince > unreachableDeleteDays * 24 * 3600))
       {
-         deleteObject();
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 2, _T("Delete node %s [%u] because it is unreachable for more than %d days"),
+                  m_name, m_id, static_cast<int>(unreachableDeleteDays));
+         ThreadPoolExecute(g_mainThreadPool, BackgroundDeleteNode, self());
       }
    }
 }
