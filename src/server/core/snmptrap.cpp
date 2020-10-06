@@ -406,7 +406,7 @@ void InitTraps()
 {
    LoadTrapCfg();
 
-   uint64_t id = ConfigReadUInt64(_T("FirstFreeSmtpTrapId"), s_trapId);
+   uint64_t id = ConfigReadUInt64(_T("FirstFreeSnmpTrapId"), s_trapId);
    if (id > s_trapId)
       s_trapId = id;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
