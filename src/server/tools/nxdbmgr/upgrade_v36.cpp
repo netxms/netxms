@@ -55,8 +55,7 @@ static bool H_UpgradeFromV5()
             _T("  message varchar(2000) null,")
             _T("  raw_data $SQL:TEXT null,")
             _T("PRIMARY KEY(id,event_timestamp))")));
-
-      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('win_event_log', 'timestamp', chunk_time_interval => interval '86400 seconds')")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('win_event_log', 'event_timestamp', chunk_time_interval => interval '86400 seconds')")));
    }
    else
    {
