@@ -613,84 +613,77 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldForXML(DB_RESULT hResult, int row, int col)
 /**
  * Get field's value as unsigned long
  */
-UINT32 LIBNXDB_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn)
+uint32_t LIBNXDB_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int row, int column)
 {
-   INT32 iVal;
-   UINT32 dwVal;
-   TCHAR *pszVal, szBuffer[256];
-
-   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
-   if (pszVal == NULL)
+   TCHAR buffer[256];
+   TCHAR *value = DBGetField(hResult, row, column, buffer, 256);
+   if (value == nullptr)
       return 0;
-	StrStrip(pszVal);
-	if (*pszVal == _T('-'))
+	StrStrip(value);
+	uint32_t u;
+	if (*value == _T('-'))
 	{
-		iVal = _tcstol(pszVal, NULL, 10);
-		memcpy(&dwVal, &iVal, sizeof(INT32));   // To prevent possible conversion
+		int32_t i = _tcstol(value, nullptr, 10);
+		memcpy(&u, &i, sizeof(int32_t));   // To prevent possible conversion
 	}
 	else
 	{
-		dwVal = _tcstoul(pszVal, NULL, 10);
+		u = _tcstoul(value, nullptr, 10);
 	}
-   return dwVal;
+   return u;
 }
 
 /**
  * Get field's value as unsigned 64-bit int
  */
-UINT64 LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int iRow, int iColumn)
+uint64_t LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int row, int column)
 {
-   INT64 iVal;
-   UINT64 qwVal;
-   TCHAR *pszVal, szBuffer[256];
-
-   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
-   if (pszVal == NULL)
+   TCHAR buffer[256];
+   TCHAR *value = DBGetField(hResult, row, column, buffer, 256);
+   if (value == nullptr)
       return 0;
-	StrStrip(pszVal);
-	if (*pszVal == _T('-'))
+   StrStrip(value);
+   uint64_t u;
+   if (*value == _T('-'))
 	{
-		iVal = _tcstoll(pszVal, NULL, 10);
-		memcpy(&qwVal, &iVal, sizeof(INT64));   // To prevent possible conversion
+		int64_t i = _tcstoll(value, nullptr, 10);
+		memcpy(&u, &i, sizeof(int64_t));   // To prevent possible conversion
 	}
 	else
 	{
-		qwVal = _tcstoull(pszVal, NULL, 10);
+		u = _tcstoull(value, nullptr, 10);
 	}
-   return qwVal;
+   return u;
 }
 
 /**
  * Get field's value as signed long
  */
-INT32 LIBNXDB_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn)
+int32_t LIBNXDB_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int row, int column)
 {
-   TCHAR *pszVal, szBuffer[256];
-
-   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
-   return pszVal == NULL ? 0 : _tcstol(pszVal, NULL, 10);
+   TCHAR buffer[256];
+   TCHAR *value = DBGetField(hResult, row, column, buffer, 256);
+   return (value != nullptr) ? _tcstol(value, nullptr, 10) : 0;
 }
 
 /**
  * Get field's value as signed 64-bit int
  */
-INT64 LIBNXDB_EXPORTABLE DBGetFieldInt64(DB_RESULT hResult, int iRow, int iColumn)
+int64_t LIBNXDB_EXPORTABLE DBGetFieldInt64(DB_RESULT hResult, int row, int column)
 {
-   TCHAR *pszVal, szBuffer[256];
-
-   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
-   return pszVal == NULL ? 0 : _tcstoll(pszVal, NULL, 10);
+   TCHAR buffer[256];
+   TCHAR *value = DBGetField(hResult, row, column, buffer, 256);
+   return (value != nullptr) ? _tcstoll(value, nullptr, 10) : 0;
 }
 
 /**
  * Get field's value as double
  */
-double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn)
+double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int row, int column)
 {
-   TCHAR *pszVal, szBuffer[256];
-
-   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
-   return pszVal == NULL ? 0 : _tcstod(pszVal, NULL);
+   TCHAR buffer[256];
+   TCHAR *value = DBGetField(hResult, row, column, buffer, 256);
+   return (value != nullptr) ? _tcstod(value, nullptr) : 0;
 }
 
 /**
