@@ -25,7 +25,7 @@
 /**
  * Counter for received SNMP traps
  */
-UINT64 g_snmpTraps = 0;
+uint64_t g_snmpTraps = 0;
 
 /**
  * Raw SNMP packet received from network

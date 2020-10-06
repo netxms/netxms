@@ -52,7 +52,7 @@ class ServiceEntry
 private:
    time_t m_lastRequestTime;
    StringBuffer m_responseData;
-   Mutex m_lock;
+   MUTEX m_lock;
    DocumentType m_type;
    Config m_xml;
    json_t *m_json;
@@ -66,7 +66,7 @@ private:
    uint32_t getListFromText(const TCHAR *pattern, StringList *result);
 
 public:
-   ServiceEntry() { m_lastRequestTime = 0; m_type = DocumentType::Text; m_json = nullptr; }
+   ServiceEntry();
    ~ServiceEntry();
 
    void getParams(StringList *params, NXCPMessage *response);
@@ -75,23 +75,34 @@ public:
    uint32_t updateData(const TCHAR *url, const char *userName, const char *password, WebServiceAuthType authType,
             struct curl_slist *headers, bool peerVerify, bool hostVerify, bool useTextParsing, const char *topLevelName);
 
-   void lock() { m_lock.lock(); }
-   void unlock() { m_lock.unlock(); }
+   void lock() { MutexLock(m_lock); }
+   void unlock() { MutexUnlock(m_lock); }
 };
 
 /**
  * Static data
  */
 Mutex s_serviceCacheLock;
-StringObjectMap<ServiceEntry> s_sericeCache(Ownership::True);
+StringObjectMap<ServiceEntry> s_serviceCache(Ownership::True);
+
+/**
+ * Constructor
+ */
+ServiceEntry::ServiceEntry()
+{
+   m_lastRequestTime = 0;
+   m_type = DocumentType::Text;
+   m_json = nullptr;
+   m_lock = MutexCreate();
+}
 
 /**
  * Destructor
  */
 ServiceEntry::~ServiceEntry()
 {
-   if (m_json != nullptr)
-      json_decref(m_json);
+   json_decref(m_json);
+   MutexDestroy(m_lock);
 }
 
 /**
@@ -99,13 +110,15 @@ ServiceEntry::~ServiceEntry()
  */
 void ServiceEntry::getParamsFromXML(StringList *params, NXCPMessage *response)
 {
+   if (nxlog_get_debug_level_tag(DEBUG_TAG) == 9)
+      nxlog_debug_tag(DEBUG_TAG, 9, _T("XML: %s"), m_xml.createXml().cstr());
+
    uint32_t fieldId = VID_PARAM_LIST_BASE;
    int resultCount = 0;
-   nxlog_debug_tag(DEBUG_TAG, 9, _T("XML: %s"), (const TCHAR *)m_xml.createXml());
    for (int i = 0; i < params->size(); i++)
    {
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromXML(): Get parameter \"%s\" form XML"), params->get(i));
-      const TCHAR *result = m_xml.getValue(params->get(i), nullptr);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromXML(): get parameter \"%s\""), params->get(i));
+      const TCHAR *result = m_xml.getValue(params->get(i));
       if (result != nullptr)
       {
          response->setField(fieldId++, params->get(i));
@@ -117,36 +130,30 @@ void ServiceEntry::getParamsFromXML(StringList *params, NXCPMessage *response)
 }
 
 /**
- * Create NXSL value from json_t
+ * Set NXCP message field from JSON value
  */
-static bool SetValueFromJson(json_t *json, uint32_t fieldId, NXCPMessage *response)
+static bool SetFieldFromJson(NXCPMessage *msg, uint32_t fieldId, json_t *json)
 {
    bool skip = false;
    TCHAR result[MAX_RESULT_LENGTH];
    switch(json_typeof(json))
    {
-      case JSON_OBJECT:
-         skip = true;
-         break;
-      case JSON_ARRAY:
-         skip = true;
-         break;
       case JSON_STRING:
-         response->setFieldFromUtf8String(fieldId, json_string_value(json));
+         msg->setFieldFromUtf8String(fieldId, json_string_value(json));
          break;
       case JSON_INTEGER:
-         ret_int64(result, static_cast<INT64>(json_integer_value(json)));
-         response->setField(fieldId, result);
+         ret_int64(result, static_cast<int64_t>(json_integer_value(json)));
+         msg->setField(fieldId, result);
          break;
       case JSON_REAL:
          ret_double(result, json_real_value(json));
-         response->setField(fieldId, result);
+         msg->setField(fieldId, result);
          break;
       case JSON_TRUE:
-         response->setField(fieldId, _T("true"));
+         msg->setField(fieldId, _T("true"));
          break;
       case JSON_FALSE:
-         response->setField(fieldId, _T("false"));
+         msg->setField(fieldId, _T("false"));
          break;
       default:
          skip = true;
@@ -164,7 +171,7 @@ void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
    int resultCount = 0;
    for (int i = 0; i < params->size(); i++)
    {
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromXML(): Get parameter \"%s\" form JSON"), params->get(i));
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromJSON(): get parameter \"%s\""), params->get(i));
       json_t *lastObj = m_json;
 #ifdef UNICODE
       char *copy = UTF8StringFromWideString(params->get(i));
@@ -173,23 +180,23 @@ void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
 #endif
       char *item = copy;
       char *separator = nullptr;
-      if (!strncmp(item, "/", 1))
+      if (*item == '/')
          item++;
       do
       {
          separator = strchr(item, '/');
-         if(separator != nullptr)
+         if (separator != nullptr)
             *separator = 0;
 
          lastObj = json_object_get(lastObj, item);
-         if(separator != nullptr)
-            item = separator+1;
+         if (separator != nullptr)
+            item = separator + 1;
       } while (separator != nullptr && *item != 0 && lastObj != nullptr);
       MemFree(copy);
       if (lastObj != nullptr)
       {
          response->setField(fieldId++, params->get(i));
-         if(SetValueFromJson(lastObj, fieldId, response))
+         if (SetFieldFromJson(response, fieldId, lastObj))
          {
             fieldId++;
             resultCount++;
@@ -252,6 +259,7 @@ void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
          response->setField(fieldId++, pattern);
          response->setField(fieldId++, matchedString);
          resultCount++;
+         MemFree(matchedString);
       }
    }
 
@@ -585,16 +593,16 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
 /**
  * Query web service
  */
-void QueryWebService(NXCPMessage *request, NXCPMessage *response)
+void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
 {
    TCHAR *url = request->getFieldAsString(VID_URL);
 
    s_serviceCacheLock.lock();
-   ServiceEntry *cachedEntry = s_sericeCache.get(url);
+   ServiceEntry *cachedEntry = s_serviceCache.get(url);
    if (cachedEntry == nullptr)
    {
       cachedEntry = new ServiceEntry();
-      s_sericeCache.set(url, cachedEntry);
+      s_serviceCache.set(url, cachedEntry);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("QueryWebService(): Create new cached entry for %s URL"), url);
    }
    s_serviceCacheLock.unlock();
@@ -629,7 +637,7 @@ void QueryWebService(NXCPMessage *request, NXCPMessage *response)
       }
       WebServiceAuthType authType = WebServiceAuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
       result = cachedEntry->updateData(url, login, password, authType,
-               headers, request->getFieldAsBoolean(VID_VERIFY_CERT), verifyHost, useTextParsing, topLevelName + 1);
+            headers, request->getFieldAsBoolean(VID_VERIFY_CERT), verifyHost, useTextParsing, topLevelName + 1);
 
       curl_slist_free_all(headers);
       MemFree(login);
@@ -638,6 +646,7 @@ void QueryWebService(NXCPMessage *request, NXCPMessage *response)
       nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): Cache for %s URL updated"), url);
    }
 
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
    if (result == ERR_SUCCESS)
    {
       switch (requestType)
@@ -645,22 +654,24 @@ void QueryWebService(NXCPMessage *request, NXCPMessage *response)
          case WebServiceRequestType::PARAMETER:
          {
             StringList params(request, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
-            cachedEntry->getParams(&params, response);
+            cachedEntry->getParams(&params, &response);
             break;
          }
          case WebServiceRequestType::LIST:
          {
             TCHAR path[1024];
             request->getFieldAsString(VID_PARAM_LIST_BASE, path, 1024);
-            result = cachedEntry->getList(path, response);
+            result = cachedEntry->getList(path, &response);
             break;
          }
       }
    }
    cachedEntry->unlock();
 
-   response->setField(VID_RCC, result);
+   response.setField(VID_RCC, result);
+   session->sendMessage(&response);
    MemFree(url);
+   delete request;
 }
 
 #else /* HAVE_LIBCURL */

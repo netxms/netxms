@@ -46,6 +46,11 @@ ThreadPool *g_commThreadPool = nullptr;
 ThreadPool *g_executorThreadPool = nullptr;
 
 /**
+ * Web service collector thread pool
+ */
+ThreadPool *g_webSvcThreadPool = nullptr;
+
+/**
  * Next free session ID
  */
 static VolatileCounter s_sessionId = 0;
@@ -349,17 +354,17 @@ void CommSession::readThread()
             TCHAR buffer[64];
             debugPrintf(6, _T("Received message %s (%d)"), NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
 
-            UINT32 rcc;
+            uint32_t rcc;
             switch(msg->getCode())
             {
                case CMD_REQUEST_COMPLETED:
                   m_responseQueue->put(msg);
                   break;
                case CMD_REQUEST_SESSION_KEY:
-                  if (m_pCtx == NULL)
+                  if (m_pCtx == nullptr)
                   {
                      NXCPMessage *pResponse;
-                     SetupEncryptionContext(msg, &m_pCtx, &pResponse, NULL, m_protocolVersion);
+                     SetupEncryptionContext(msg, &m_pCtx, &pResponse, nullptr, m_protocolVersion);
                      sendMessage(pResponse);
                      delete pResponse;
                      receiver.setEncryptionContext(m_pCtx);
@@ -398,6 +403,9 @@ void CommSession::readThread()
                      sendMessage(&response);
                      delete msg;
                   }
+                  break;
+               case CMD_QUERY_WEB_SERVICE:
+                  queryWebService(msg);
                   break;
                default:
                   m_processingQueue->put(msg);
@@ -587,9 +595,6 @@ void CommSession::processingThread()
                break;
             case CMD_GET_TABLE:
                getTable(request, &response);
-               break;
-            case CMD_QUERY_WEB_SERVICE:
-               QueryWebService(request, &response);
                break;
             case CMD_KEEPALIVE:
                response.setField(VID_RCC, ERR_SUCCESS);
@@ -936,12 +941,22 @@ void CommSession::getTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
    pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_RUNTIME_PARAM_NAME);
 
    Table value;
-   UINT32 dwErrorCode = GetTableValue(szParameter, &value, this);
-   pMsg->setField(VID_RCC, dwErrorCode);
-   if (dwErrorCode == ERR_SUCCESS)
+   uint32_t rcc = GetTableValue(szParameter, &value, this);
+   pMsg->setField(VID_RCC, rcc);
+   if (rcc == ERR_SUCCESS)
    {
 		value.fillMessage(*pMsg, 0, -1);	// no row limit
    }
+}
+
+/**
+ * Query web service
+ */
+void CommSession::queryWebService(NXCPMessage *request)
+{
+   TCHAR *url = request->getFieldAsString(VID_URL);
+   ThreadPoolExecuteSerialized(g_webSvcThreadPool, url, QueryWebService, request, static_cast<AbstractCommSession*>(this));
+   MemFree(url);
 }
 
 /**
