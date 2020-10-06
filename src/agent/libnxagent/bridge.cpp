@@ -26,8 +26,8 @@
  * Static data
  */
 static void (* s_fpWriteLog)(int, int, const TCHAR *) = nullptr;
-static void (* s_fpPostEvent1)(UINT32, const TCHAR *, time_t, const char *, va_list) = nullptr;
-static void (* s_fpPostEvent2)(UINT32, const TCHAR *, time_t, int, const TCHAR **) = nullptr;
+static void (* s_fpPostEvent1)(uint32_t, const TCHAR *, time_t, const char *, va_list) = nullptr;
+static void (* s_fpPostEvent2)(uint32_t, const TCHAR *, time_t, int, const TCHAR **) = nullptr;
 static AbstractCommSession *(* s_fpFindServerSession)(UINT64) = nullptr;
 static bool (* s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = nullptr;
 static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *) = nullptr;
@@ -36,14 +36,15 @@ static const TCHAR *s_dataDirectory = nullptr;
 static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = nullptr;
 static void (*s_fpExecuteAction)(const TCHAR *, const StringList *) = nullptr;
 static bool (*s_fpGetScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *) = nullptr;
+static void (*s_fpQueueNotificationMessage)(NXCPMessage *) = nullptr;
 
 /**
  * Initialize subagent API
  */
 void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void (*writeLog)(int, int, const TCHAR *),
-      void (*postEvent1)(UINT32, const TCHAR *, time_t, const char *, va_list),
-      void (*postEvent2)(UINT32, const TCHAR *, time_t, int, const TCHAR **),
+      void (*postEvent1)(uint32_t, const TCHAR *, time_t, const char *, va_list),
+      void (*postEvent2)(uint32_t, const TCHAR *, time_t, int, const TCHAR **),
       bool (*enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
       AbstractCommSession *(*findServerSession)(UINT64),
       bool (*sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
@@ -51,7 +52,8 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       DB_HANDLE (*getLocalDatabaseHandle)(),
       const TCHAR *dataDirectory,
       void (*executeAction)(const TCHAR *, const StringList *),
-      bool (*getScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *))
+      bool (*getScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *),
+      void (*queueNotificationMessage)(NXCPMessage*))
 {
    s_fpWriteLog = writeLog;
 	s_fpPostEvent1 = postEvent1;
@@ -64,6 +66,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
    s_fpGetLocalDatabaseHandle = getLocalDatabaseHandle;
    s_fpExecuteAction = executeAction;
    s_fpGetScreenInfoForUserSession = getScreenInfoForUserSession;
+   s_fpQueueNotificationMessage = queueNotificationMessage;
 }
 
 /**
@@ -135,13 +138,13 @@ void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, v
 /**
  * Send event from agent to server
  */
-void LIBNXAGENT_EXPORTABLE AgentPostEvent(UINT32 event, const TCHAR *eventName, time_t timestamp, const char *format, ...)
+void LIBNXAGENT_EXPORTABLE AgentPostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const char *format, ...)
 {
    if (s_fpPostEvent1 != nullptr)
    {
       va_list args;
       va_start(args, format);
-      s_fpPostEvent1(event, eventName, timestamp, format, args);
+      s_fpPostEvent1(eventCode, eventName, timestamp, format, args);
       va_end(args);
    }
 }
@@ -149,10 +152,10 @@ void LIBNXAGENT_EXPORTABLE AgentPostEvent(UINT32 event, const TCHAR *eventName, 
 /**
  * Send event from agent to server
  */
-void LIBNXAGENT_EXPORTABLE AgentPostEvent2(UINT32 event, const TCHAR *eventName, time_t timestamp, int count, const TCHAR **args)
+void LIBNXAGENT_EXPORTABLE AgentPostEvent2(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, int count, const TCHAR **args)
 {
    if (s_fpPostEvent2 != nullptr)
-      s_fpPostEvent2(event, eventName, timestamp, count, args);
+      s_fpPostEvent2(eventCode, eventName, timestamp, count, args);
 }
 
 /**
@@ -288,4 +291,16 @@ void LIBNXAGENT_EXPORTABLE AgentExecuteAction(const TCHAR *action, const StringL
 bool LIBNXAGENT_EXPORTABLE AgentGetScreenInfoForUserSession(uint32_t sessionId, uint32_t *width, uint32_t *height, uint32_t *bpp)
 {
    return (s_fpGetScreenInfoForUserSession != nullptr) ? s_fpGetScreenInfoForUserSession(sessionId, width, height, bpp) : false;
+}
+
+/**
+ * Add message to notification queue. Ownership will be taken by the queue and
+ * pointer to message should be considered invalid after this call.
+ */
+void LIBNXAGENT_EXPORTABLE AgentQueueNotifictionMessage(NXCPMessage *msg)
+{
+   if (s_fpQueueNotificationMessage != nullptr)
+      s_fpQueueNotificationMessage(msg);
+   else
+      delete msg;
 }

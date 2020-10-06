@@ -413,6 +413,15 @@ void StopNotificationProcessor()
 }
 
 /**
+ * Put message to notification queue. Ownership will be taken by the queue.
+ */
+void QueueNotificationMessage(NXCPMessage *msg)
+{
+   msg->setField(VID_ZONE_UIN, g_zoneUIN);
+   g_notificationProcessorQueue.put(msg);
+}
+
+/**
  * Handler for notification information parameters
  */
 LONG H_NotificationStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
