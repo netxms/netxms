@@ -39,7 +39,7 @@
 #include <sys/utsname.h>
 #endif
 
-#if HAVE_SYS_SYSCTL_H
+#if HAVE_SYS_SYSCTL_H && HAVE_SYSCTLBYNAME
 #include <sys/sysctl.h>
 #endif
 
@@ -242,13 +242,14 @@ static THREAD s_masterAgentListenerThread = INVALID_THREAD_HANDLE;
 static THREAD s_tunnelManagerThread = INVALID_THREAD_HANDLE;
 static TCHAR s_processToWaitFor[MAX_PATH] = _T("");
 static TCHAR s_dumpDir[MAX_PATH] = _T("C:\\");
-static UINT64 s_maxLogSize = 16384 * 1024;
-static UINT32 s_logHistorySize = 4;
-static UINT32 s_logRotationMode = NXLOG_ROTATION_BY_SIZE;
+static uint64_t s_maxLogSize = 16384 * 1024;
+static uint32_t s_logHistorySize = 4;
+static uint32_t s_logRotationMode = NXLOG_ROTATION_BY_SIZE;
 static TCHAR s_dailyLogFileSuffix[64] = _T("");
 static TCHAR s_executableName[MAX_PATH];
 static int s_debugLevel = NXCONFIG_UNINITIALIZED_VALUE;
 static TCHAR *s_debugTags = nullptr;
+static uint32_t s_maxWebSvcPoolSize;
 
 #if defined(_WIN32)
 static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
@@ -332,6 +333,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("SystemName"), CT_STRING, 0, 0, MAX_OBJECT_NAME, 0, g_systemName, nullptr },
    { _T("TunnelKeepaliveInterval"), CT_LONG, 0, 0, 0, 0, &g_tunnelKeepaliveInterval, nullptr },
    { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, s_processToWaitFor, nullptr },
+   { _T("WebServiceThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &s_maxWebSvcPoolSize, nullptr },
    { _T("WriteLogAsJson"), CT_BOOLEAN, 0, 0, AF_JSON_LOG, 0, &g_dwFlags, nullptr },
    { _T("ZoneId"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr }, // for backward compatibility
    { _T("ZoneUIN"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr },
@@ -976,12 +978,10 @@ BOOL Initialize()
       return FALSE;
    }
 
-   // Initialize libssl - it is not used by core agent
-   // but may be needed by some subagents. Allowing first load of libssl by
-   // subagent via dlopen() may lead to undesired side effects
+   // Initialize libssl
 #ifdef _WITH_ENCRYPTION
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-   OPENSSL_init_ssl(0, NULL);
+   OPENSSL_init_ssl(0, nullptr);
 #else
    SSL_library_init();
    SSL_load_error_strings();
@@ -1030,6 +1030,7 @@ BOOL Initialize()
 	{
       InitSessionList();
 	   g_commThreadPool = ThreadPoolCreate(_T("COMM"), 4, MAX(MIN(g_maxCommSessions * 2, 8), 256));
+	   g_webSvcThreadPool = ThreadPoolCreate(_T("WEBSVC"), 4, s_maxWebSvcPoolSize);
 	   if (g_dwFlags & AF_ENABLE_SNMP_PROXY)
 	   {
 	      g_snmpProxySocketPoller = new BackgroundSocketPoller();
@@ -1421,6 +1422,7 @@ void Shutdown()
          delete g_snmpProxySocketPoller;
       }
       ThreadPoolDestroy(g_commThreadPool);
+      ThreadPoolDestroy(g_webSvcThreadPool);
    }
    ThreadPoolDestroy(g_executorThreadPool);
 

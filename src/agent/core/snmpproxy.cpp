@@ -38,7 +38,7 @@ BackgroundSocketPoller *g_snmpProxySocketPoller = nullptr;
 static VolatileCounter64 s_serverRequests = 0;
 static VolatileCounter64 s_snmpRequests = 0;
 static VolatileCounter64 s_snmpResponses = 0;
-extern UINT64 g_snmpTraps;
+extern uint64_t g_snmpTraps;
 
 /**
  * Handler for SNMP proxy information parameters
