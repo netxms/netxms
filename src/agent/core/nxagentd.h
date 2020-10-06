@@ -343,6 +343,7 @@ private:
    void setupTcpProxy(NXCPMessage *request, NXCPMessage *response);
    UINT32 closeTcpProxy(NXCPMessage *request);
    void proxySnmpRequest(NXCPMessage *request);
+   void queryWebService(NXCPMessage *request);
    void sendMessageInBackground(NXCP_MESSAGE *msg);
    void getHostNameByAddr(NXCPMessage *request, NXCPMessage *response);
 
@@ -739,7 +740,7 @@ UINT32 GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *sess
 void GetParameterList(NXCPMessage *pMsg);
 void GetEnumList(NXCPMessage *pMsg);
 void GetTableList(NXCPMessage *pMsg);
-void QueryWebService(NXCPMessage *request, NXCPMessage *response);
+void QueryWebService(NXCPMessage *request, AbstractCommSession *session);
 void GetActionList(NXCPMessage *msg);
 bool LoadSubAgent(const TCHAR *moduleName);
 void UnloadAllSubAgents();
@@ -885,6 +886,7 @@ extern CommSession **g_pSessionList;
 extern MUTEX g_hSessionListAccess;
 extern ThreadPool *g_commThreadPool;
 extern ThreadPool *g_executorThreadPool;
+extern ThreadPool *g_webSvcThreadPool;
 extern ObjectQueue<NXCPMessage> g_notificationProcessorQueue;
 extern BackgroundSocketPoller *g_snmpProxySocketPoller;
 

@@ -487,7 +487,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR
       p->serializationQueues.set(key, q);
 
       RequestSerializationData *data = new RequestSerializationData;
-      data->key = _tcsdup(key);
+      data->key = MemCopyString(key);
       data->pool = p;
       data->queue = q;
       ThreadPoolExecute(p, ProcessSerializedRequests, data);

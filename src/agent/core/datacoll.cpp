@@ -1746,7 +1746,7 @@ static THREAD s_proxyListennerThread = INVALID_THREAD_HANDLE;
 void StartLocalDataCollector()
 {
    DB_HANDLE db = GetLocalDatabaseHandle();
-   if (db == NULL)
+   if (db == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("StartLocalDataCollector: local database unavailable"));
       return;
@@ -1777,13 +1777,13 @@ void StartLocalDataCollector()
    LoadState();
 
    g_dataCollectorPool = ThreadPoolCreate(_T("DATACOLL"), 1, g_dcMaxCollectorPoolSize);
-   s_dataCollectionSchedulerThread = ThreadCreateEx(DataCollectionScheduler, 0, NULL);
-   s_dataSenderThread = ThreadCreateEx(DataSender, 0, NULL);
-   s_databaseWriterThread = ThreadCreateEx(DatabaseWriter, 0, NULL);
-   s_reconciliationThread = ThreadCreateEx(ReconciliationThread, 0, NULL);
-   s_proxyListennerThread = ThreadCreateEx(ProxyListenerThread, 0 ,NULL);
-   ThreadPoolScheduleRelative(g_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData, NULL);
-   ThreadPoolScheduleRelative(g_dataCollectorPool, 0, ProxyConnectionChecker, NULL);
+   s_dataCollectionSchedulerThread = ThreadCreateEx(DataCollectionScheduler, 0, nullptr);
+   s_dataSenderThread = ThreadCreateEx(DataSender, 0, nullptr);
+   s_databaseWriterThread = ThreadCreateEx(DatabaseWriter, 0, nullptr);
+   s_reconciliationThread = ThreadCreateEx(ReconciliationThread, 0, nullptr);
+   s_proxyListennerThread = ThreadCreateEx(ProxyListenerThread, 0 ,nullptr);
+   ThreadPoolScheduleRelative(g_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData, nullptr);
+   ThreadPoolScheduleRelative(g_dataCollectorPool, 0, ProxyConnectionChecker, nullptr);
 
    s_dataCollectorStarted = true;
 }
