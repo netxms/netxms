@@ -55,7 +55,7 @@ WindowsEvent::~WindowsEvent()
  */
 static ObjectQueue<WindowsEvent> s_windowsEventQueue;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
-static uint64_t s_eventId = 1;
+static uint64_t s_eventId = 1;  // Next available event ID
 
 /**
  * Put new event log message to the queue
@@ -137,7 +137,7 @@ static void WindowsEventWriterThread()
  */
 uint64_t GetNextWinEventId()
 {
-   return s_eventId++;
+   return s_eventId;
 }
 
 /**
@@ -146,7 +146,7 @@ uint64_t GetNextWinEventId()
 void StartWindowsEventWriter()
 {
    // Determine first available event id
-   uint64_t id = ConfigReadUInt64(_T("FirstFreeWineventId"), s_eventId);
+   uint64_t id = ConfigReadUInt64(_T("FirstFreeWinEventId"), s_eventId);
    if (id > s_eventId)
       s_eventId = id;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();

@@ -91,7 +91,7 @@ enum NodeMatchingPolicy
 /**
  * Static data
  */
-static UINT64 s_msgId = 1;
+static uint64_t s_msgId = 1;  // Next available message ID
 static LogParser *s_parser = nullptr;
 static MUTEX s_parserLock = INVALID_MUTEX_HANDLE;
 static NodeMatchingPolicy s_nodeMatchingPolicy = SOURCE_IP_THEN_HOSTNAME;
@@ -926,7 +926,7 @@ int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
  */
 uint64_t GetNextSyslogId()
 {
-   return s_msgId++;
+   return s_msgId;
 }
 
 /**

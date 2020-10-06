@@ -739,7 +739,7 @@ bool NXCORE_EXPORTABLE ConfigReadBoolean(const TCHAR *variable, bool defaultValu
 /**
  * Read integer value from configuration table
  */
-int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *variable, int defaultValue)
+int32_t NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *variable, int32_t defaultValue)
 {
    return ConfigReadIntEx(nullptr, variable, defaultValue);
 }
@@ -747,26 +747,34 @@ int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *variable, int defaultValue)
 /**
  * Read integer value from configuration table
  */
-int NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const TCHAR *variable, int defaultValue)
+int32_t NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const TCHAR *variable, int32_t defaultValue)
 {
    TCHAR buffer[64];
    if (ConfigReadStrEx(hdb, variable, buffer, 64, nullptr))
       return _tcstol(buffer, nullptr, 0);
-   else
-      return defaultValue;
+   return defaultValue;
 }
 
 /**
  * Read unsigned long value from configuration table
  */
-UINT32 NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, UINT32 dwDefault)
+uint32_t NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, uint32_t defaultValue)
 {
-   TCHAR szBuffer[64];
+   TCHAR buffer[64];
+   if (ConfigReadStr(szVar, buffer, 64, _T("")))
+      return _tcstoul(buffer, nullptr, 0);
+   return defaultValue;
+}
 
-   if (ConfigReadStr(szVar, szBuffer, 64, _T("")))
-      return _tcstoul(szBuffer, nullptr, 0);
-   else
-      return dwDefault;
+/**
+ * Read signed long long value from configuration table
+ */
+int64_t NXCORE_EXPORTABLE ConfigReadInt64(const TCHAR *variable, int64_t defaultValue)
+{
+   TCHAR buffer[64];
+   if (ConfigReadStr(variable, buffer, 64, _T("")))
+      return _tcstoll(buffer, nullptr, 10);
+   return defaultValue;
 }
 
 /**
@@ -774,12 +782,10 @@ UINT32 NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, UINT32 dwDefault)
  */
 uint64_t NXCORE_EXPORTABLE ConfigReadUInt64(const TCHAR *variable, uint64_t defaultValue)
 {
-   TCHAR szBuffer[64];
-
-   if (ConfigReadStr(variable, szBuffer, 64, _T("")))
-      return _tcstoll(szBuffer, NULL, 10);
-   else
-      return defaultValue;
+   TCHAR buffer[64];
+   if (ConfigReadStr(variable, buffer, 64, _T("")))
+      return _tcstoull(buffer, nullptr, 10);
+   return defaultValue;
 }
 
 /**
@@ -881,23 +887,31 @@ bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *variable, const TCHAR *value,
 /**
  * Write integer value to configuration table
  */
-bool NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *variable, int value, bool create, bool isVisible, bool needRestart)
+bool NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *variable, int32_t value, bool create, bool isVisible, bool needRestart)
 {
-   TCHAR szBuffer[64];
-
-   _sntprintf(szBuffer, 64, _T("%d"), value);
-   return ConfigWriteStr(variable, szBuffer, create, isVisible, needRestart);
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, _T("%d"), value);
+   return ConfigWriteStr(variable, buffer, create, isVisible, needRestart);
 }
 
 /**
  * Write unsigned long value to configuration table
  */
-bool NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *variable, UINT32 value, bool create, bool isVisible, bool needRestart)
+bool NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *variable, uint32_t value, bool create, bool isVisible, bool needRestart)
 {
-   TCHAR szBuffer[64];
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, _T("%u"), value);
+   return ConfigWriteStr(variable, buffer, create, isVisible, needRestart);
+}
 
-   _sntprintf(szBuffer, 64, _T("%u"), value);
-   return ConfigWriteStr(variable, szBuffer, create, isVisible, needRestart);
+/**
+ * Write signed long long value to configuration table
+ */
+bool NXCORE_EXPORTABLE ConfigWriteInt64(const TCHAR *variable, int64_t value, bool create, bool isVisible, bool needRestart)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, INT64_FMT, value);
+   return ConfigWriteStr(variable, buffer, create, isVisible, needRestart);
 }
 
 /**
@@ -905,10 +919,9 @@ bool NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *variable, UINT32 value, boo
  */
 bool NXCORE_EXPORTABLE ConfigWriteUInt64(const TCHAR *variable, uint64_t value, bool create, bool isVisible, bool needRestart)
 {
-   TCHAR szBuffer[64];
-
-   _sntprintf(szBuffer, 64, UINT64_FMT, value);
-   return ConfigWriteStr(variable, szBuffer, create, isVisible, needRestart);
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, UINT64_FMT, value);
+   return ConfigWriteStr(variable, buffer, create, isVisible, needRestart);
 }
 
 /**

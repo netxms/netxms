@@ -42,7 +42,7 @@ VolatileCounter64 g_snmpTrapsReceived = 0;
  */
 static Mutex s_trapCfgLock;
 static ObjectArray<SNMPTrapConfiguration> m_trapCfgList(16, 4, Ownership::True);
-static VolatileCounter64 s_trapId = 0; // Next free trap ID
+static VolatileCounter64 s_trapId = 0; // Last used trap ID
 static uint16_t s_trapListenerPort = 162;
 
 /**
@@ -392,11 +392,11 @@ void LoadTrapCfg()
 }
 
 /**
- * Get next SMTP Trap id
+ * Get last SNMP Trap id
  */
-uint64_t GetNextSnmpTrapId()
+int64_t GetLastSnmpTrapId()
 {
-   return InterlockedIncrement64(&s_trapId);
+   return s_trapId;
 }
 
 /**
@@ -406,7 +406,7 @@ void InitTraps()
 {
    LoadTrapCfg();
 
-   uint64_t id = ConfigReadUInt64(_T("FirstFreeSnmpTrapId"), s_trapId);
+   uint64_t id = ConfigReadInt64(_T("LastSNMPTrapId"), 0);
    if (id > s_trapId)
       s_trapId = id;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -414,7 +414,7 @@ void InitTraps()
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_trapId = MAX(DBGetFieldInt64(hResult, 0, 0), s_trapId);
+         s_trapId = std::max(DBGetFieldInt64(hResult, 0, 0), static_cast<int64_t>(s_trapId));
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);

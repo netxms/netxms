@@ -31,13 +31,21 @@ char g_auditLogKey[128] = "";
 /**
  * Static data
  */
-static VolatileCounter s_recordId = 1;
+static VolatileCounter s_recordId = 0;
 static InetAddress s_auditServerAddr;
 static uint16_t s_auditServerPort;
 static int s_auditFacility;
 static int s_auditSeverity;
 static char s_auditTag[MAX_SYSLOG_TAG_LEN];
 static char s_localHostName[256];
+
+/**
+ * Getter for last used audit log record ID
+ */
+int64_t GetLastAuditRecordId()
+{
+   return s_recordId;
+}
 
 /**
  * Send syslog record to audit server
@@ -82,19 +90,11 @@ static void SendSyslogRecord(const TCHAR *text)
 }
 
 /**
- * Get next audit id
- */
-int32_t GetNextAuditId()
-{
-   return InterlockedIncrement(&s_recordId);
-}
-
-/**
  * Initalize audit log
  */
 void InitAuditLog()
 {
-   int32_t id = ConfigReadULong(_T("FirstFreeAuditId"), s_recordId);
+   int32_t id = ConfigReadInt(_T("LastAuditRecordId"), s_recordId);
    if (id > s_recordId)
       s_recordId = id;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -102,7 +102,7 @@ void InitAuditLog()
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_recordId = MAX(DBGetFieldULong(hResult, 0, 0) + 1, s_recordId);
+         s_recordId = std::max(DBGetFieldLong(hResult, 0, 0), static_cast<int32_t>(s_recordId));
       DBFreeResult(hResult);
    }
 

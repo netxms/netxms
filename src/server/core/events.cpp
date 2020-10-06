@@ -37,6 +37,36 @@ ObjectQueue<Event> g_eventQueue(4096, Ownership::True);
 EventPolicy *g_pEventPolicy = nullptr;
 
 /**
+ * Unique event ID
+ */
+static VolatileCounter64 s_eventId = 0;
+
+/**
+ * Getter for last event ID
+ */
+int64_t GetLastEventId()
+{
+   return s_eventId;
+}
+
+/**
+ * Load last event ID
+ */
+void LoadLastEventId(DB_HANDLE hdb)
+{
+   int64_t id = ConfigReadInt64(_T("LastEventId"), 0);
+   if (id > s_eventId)
+      s_eventId = id;
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(event_id) FROM event_log"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_eventId = std::max(static_cast<int64_t>(s_eventId), DBGetFieldInt64(hResult, 0, 0));
+      DBFreeResult(hResult);
+   }
+}
+
+/**
  * Static data
  */
 static SharedHashMap<UINT32, EventTemplate> s_eventTemplates;
@@ -478,7 +508,7 @@ void Event::init(const EventTemplate *eventTemplate, EventOrigin origin, time_t 
    _tcscpy(m_name, eventTemplate->getName());
    m_timestamp = time(nullptr);
    m_originTimestamp = (originTimestamp != 0) ? originTimestamp : m_timestamp;
-   m_id = CreateUniqueEventId();
+   m_id = InterlockedIncrement64(&s_eventId);
    m_rootId = 0;
    m_code = eventTemplate->getCode();
    m_severity = eventTemplate->getSeverity();
