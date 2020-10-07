@@ -926,6 +926,7 @@ class ServerCommandExec : public ProcessExecutor
 private:
    UINT32 m_requestId;
    ClientSession *m_session;
+   StringBuffer m_maskedComand;
 
    virtual void onOutput(const char *text) override;
    virtual void endOfOutput() override;
@@ -933,6 +934,8 @@ private:
 public:
    ServerCommandExec(NXCPMessage *msg, ClientSession *session);
    ~ServerCommandExec();
+
+   const TCHAR *getMaskedCommand() { return m_maskedComand; }
 };
 
 /**

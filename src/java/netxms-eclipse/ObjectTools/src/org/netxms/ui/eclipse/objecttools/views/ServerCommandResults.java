@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.objecttools.views;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -52,6 +53,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
    private long streamId = 0;
    private NXCSession session;
    private boolean isRunning = false;
+   private List<String> maskedFields;
 
    /**
     * Create actions
@@ -65,7 +67,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
          @Override
          public void run()
          {
-            executeCommand(lastCommand, lastInputValues);
+            executeCommand(lastCommand, lastInputValues, maskedFields);
          }
       };
       actionRestart.setEnabled(false);
@@ -123,7 +125,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
     * @param command
     * @param inputValues 
     */
-   public void executeCommand(final String command, final Map<String, String> inputValues)
+   public void executeCommand(final String command, final Map<String, String> inputValues, final List<String> maskedFields)
    {
       if (isRunning)
       {
@@ -137,6 +139,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
       out = console.newOutputStream();
       lastCommand = command;
       lastInputValues = inputValues;
+      this.maskedFields = maskedFields;
       ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
@@ -149,7 +152,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
          {
             try
             {
-               session.executeServerCommand(nodeId, command, inputValues, true, ServerCommandResults.this, null);
+               session.executeServerCommand(nodeId, command, inputValues, maskedFields, true, ServerCommandResults.this, null);
                out.write(Messages.get().LocalCommandResults_Terminated);
             }
             finally

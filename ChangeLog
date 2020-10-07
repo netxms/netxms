@@ -17,6 +17,7 @@
 - Support for IPv6 in NXSL functions AddrInSubnet and AddrInRange
 - nxdbmgr option to migrate log tables in background
 - Fixed issues:
+	NX-904 (Sensitive info should be hidden in Audit Log)
 	NX-1416 (NetXMS Agents shutdown does not end ExternalParametersProviders)
 	NX-1905 (Log Parser policy in Template Agent Policies does not automatically include Events in Export Configuration Tool)
 	NX-1907 (Add server configuration option to disable outdated SSL/TLS versions)
