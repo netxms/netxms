@@ -249,7 +249,7 @@ static TCHAR s_dailyLogFileSuffix[64] = _T("");
 static TCHAR s_executableName[MAX_PATH];
 static int s_debugLevel = NXCONFIG_UNINITIALIZED_VALUE;
 static TCHAR *s_debugTags = nullptr;
-static uint32_t s_maxWebSvcPoolSize;
+static uint32_t s_maxWebSvcPoolSize = 64;
 
 #if defined(_WIN32)
 static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;

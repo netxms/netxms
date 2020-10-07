@@ -111,8 +111,8 @@ struct ThreadPool
          queue(64, Ownership::False), serializationQueues(Ownership::True), schedulerQueue(16, 16, Ownership::False)
    {
       this->name = (name != nullptr) ? MemCopyString(name) : MemCopyString(_T("NONAME"));
-      this->minThreads = minThreads;
-      this->maxThreads = maxThreads;
+      this->minThreads = std::max(minThreads, 1);
+      this->maxThreads = std::max(maxThreads, this->minThreads);
       this->stackSize = stackSize;
       workerIdleTimeout = MIN_WORKER_IDLE_TIMEOUT;
       activeRequests = 0;
