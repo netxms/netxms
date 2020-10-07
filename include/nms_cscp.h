@@ -1386,6 +1386,7 @@ typedef struct
 #define VID_AGENT_CERT_SUBJECT      ((UINT32)714)
 #define VID_EVENT_SOURCE            ((UINT32)715)
 #define VID_RAW_DATA                ((UINT32)716)
+#define VID_MASKED_FIELD_SIZE       ((UINT32)717)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1614,11 +1615,13 @@ typedef struct
 
 #define VID_NOTIFICATION_DRIVER_BASE ((UINT32)0x10000000)
 
-#define VID_HEADERS_BASE             ((UINT32)0x20000000)
+#define VID_HEADERS_BASE            ((UINT32)0x20000000)
 
 #define VID_SHARED_SECRET_LIST_BASE ((UINT32)0x10000000)
 
 #define VID_WEB_SERVICE_DEF_LIST_BASE ((UINT32)0x10000000)
+
+#define VID_MASKED_FIELD_BASE       ((UINT32)0x10000000)
 
 // base value for SNMP community strings
 #define VID_COMMUNITY_STRING_LIST_BASE       ((UINT32)0x10000000)

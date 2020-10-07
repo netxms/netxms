@@ -6403,14 +6403,16 @@ public class NXCSession
     * @param alarmId     Alarm ID (used for macro expansion)
     * @param action      Action with all arguments, that will be expanded and splitted on server side
     * @param inputValues Input values provided by user for expansion
+    * @param maskedFields   input field list that should be masked (can be null)
     * @return Expanded action name
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String executeActionWithExpansion(long nodeId, long alarmId, String action, final Map<String, String> inputValues)
+   public String executeActionWithExpansion(long nodeId, long alarmId, String action, 
+         final Map<String, String> inputValues, final List<String> maskedFields)
          throws IOException, NXCException
    {
-      return executeActionWithExpansion(nodeId, alarmId, action, false, inputValues, null, null);
+      return executeActionWithExpansion(nodeId, alarmId, action, false, inputValues, maskedFields, null, null);
    }
 
    /**
@@ -6420,6 +6422,7 @@ public class NXCSession
     * @param alarmId       Alarm ID (used for macro expansion)
     * @param action        Action with all arguments, that will be expanded and splitted on server side
     * @param inputValues   Input values provided by user for expansion
+    * @param maskedFields   input field list that should be masked (can be null)
     * @param receiveOutput true if action's output has to be read
     * @param listener      listener for action's output or null
     * @param writer        writer for action's output or null
@@ -6428,7 +6431,8 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public String executeActionWithExpansion(long nodeId, long alarmId, String action, boolean receiveOutput,
-         final Map<String, String> inputValues, final TextOutputListener listener, final Writer writer)
+         final Map<String, String> inputValues, final List<String> maskedFields, final TextOutputListener listener, 
+         final Writer writer)
          throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_ACTION);
@@ -6451,6 +6455,11 @@ public class NXCSession
       else
       {
          msg.setFieldInt16(NXCPCodes.VID_INPUT_FIELD_COUNT, 0);
+      }
+
+      if (maskedFields != null && !maskedFields.isEmpty())
+      {
+         msg.setFieldsFromStringCollection(maskedFields, NXCPCodes.VID_MASKED_FIELD_BASE, NXCPCodes.VID_MASKED_FIELD_SIZE);
       }
 
       MessageHandler handler = receiveOutput ? new MessageHandler()
@@ -8380,12 +8389,13 @@ public class NXCSession
     * @param objectId    object ID
     * @param command     command
     * @param inputFields values for input fields (can be null)
+    * @param maskedFields   input field list that should be masked (can be null)
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeServerCommand(long objectId, String command, Map<String, String> inputFields) throws IOException, NXCException
+   public void executeServerCommand(long objectId, String command, Map<String, String> inputFields, List<String> maskedFields) throws IOException, NXCException
    {
-      executeServerCommand(objectId, command, inputFields, false, null, null);
+      executeServerCommand(objectId, command, inputFields, maskedFields, false, null, null);
    }
 
    /**
@@ -8394,14 +8404,15 @@ public class NXCSession
     * @param objectId      object ID
     * @param command       command
     * @param inputFields   values for input fields (can be null)
+    * @param maskedFields   input field list that should be masked (can be null)
     * @param receiveOutput true if command's output has to be read
     * @param listener      listener for command's output or null
     * @param writer        writer for command's output or null
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeServerCommand(long objectId, String command, Map<String, String> inputFields, boolean receiveOutput,
-         final TextOutputListener listener, final Writer writer) throws IOException, NXCException
+   public void executeServerCommand(long objectId, String command, Map<String, String> inputFields, List<String> maskedFields, 
+         boolean receiveOutput, final TextOutputListener listener, final Writer writer) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SERVER_COMMAND);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
@@ -8416,6 +8427,10 @@ public class NXCSession
             msg.setField(fieldId++, e.getKey());
             msg.setField(fieldId++, e.getValue());
          }
+      }
+      if (maskedFields != null && !maskedFields.isEmpty())
+      {
+         msg.setFieldsFromStringCollection(maskedFields, NXCPCodes.VID_MASKED_FIELD_BASE, NXCPCodes.VID_MASKED_FIELD_SIZE);
       }
 
       MessageHandler handler = receiveOutput ? new MessageHandler()

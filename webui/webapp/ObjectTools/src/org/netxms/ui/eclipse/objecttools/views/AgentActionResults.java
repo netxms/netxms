@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.objecttools.views;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -46,6 +47,7 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
    private String executionString;
    private long alarmId;
    private Map<String, String> inputValues;
+   private List<String> maskedFields;
    
    /**
     * Create actions
@@ -58,7 +60,7 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
          @Override
          public void run()
          {
-            executeAction(executionString, alarmId, inputValues);
+            executeAction(executionString, alarmId, inputValues, maskedFields);
          }
       };
       actionRestart.setEnabled(false);
@@ -103,7 +105,7 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
    /**
     * @param action
     */
-   public void executeAction(final String executionString, final long alarmId, final Map<String, String> inputValues)
+   public void executeAction(final String executionString, final long alarmId, final Map<String, String> inputValues, final List<String> maskedFields)
    {
       actionRestart.setEnabled(false);
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -111,6 +113,7 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
       this.alarmId = alarmId;
       this.executionString = executionString;
       this.inputValues = inputValues;
+      this.maskedFields = maskedFields;
       ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
@@ -123,7 +126,7 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
          {
             try
             {
-               session.executeActionWithExpansion(nodeId, alarmId, executionString, true, inputValues, AgentActionResults.this, null);
+               session.executeActionWithExpansion(nodeId, alarmId, executionString, true, inputValues, maskedFields, AgentActionResults.this, null);
                out.write(Messages.get(getDisplay()).LocalCommandResults_Terminated);
             }
             finally

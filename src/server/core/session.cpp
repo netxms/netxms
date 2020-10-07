@@ -7856,7 +7856,10 @@ void ClientSession::executeAction(NXCPMessage *request)
       if (object->getObjectClass() == OBJECT_NODE)
       {
          TCHAR action[MAX_PARAM_NAME];
+         TCHAR originalActionString[MAX_PARAM_NAME];
          request->getFieldAsString(VID_ACTION_NAME, action, MAX_PARAM_NAME);
+         _tcsncpy(originalActionString, action, MAX_PARAM_NAME);
+         bool expandString = request->getFieldAsBoolean(VID_EXPAND_STRING);
 
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
@@ -7864,11 +7867,12 @@ void ClientSession::executeAction(NXCPMessage *request)
             if (pConn != nullptr)
             {
                StringList *list = nullptr;
-               if (request->getFieldAsBoolean(VID_EXPAND_STRING))
+               StringMap inputFields;
+               Alarm *alarm = nullptr;
+               if (expandString)
                {
-                  StringMap inputFields;
                   inputFields.loadMessage(request, VID_INPUT_FIELD_COUNT, VID_INPUT_FIELD_BASE);
-                  Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
+                  alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
                   if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
                   {
                      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
@@ -7879,7 +7883,6 @@ void ClientSession::executeAction(NXCPMessage *request)
                   list = SplitCommandLine(object->expandText(action, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, &inputFields, nullptr));
                   _tcsncpy(action, list->get(0), MAX_PARAM_NAME);
                   list->remove(0);
-                  delete alarm;
                }
                else
                {
@@ -7909,9 +7912,20 @@ void ClientSession::executeAction(NXCPMessage *request)
                }
                debugPrintf(4, _T("executeAction: rcc=%d"), rcc);
 
+               if (expandString && request->getFieldAsInt32(VID_MASKED_FIELD_SIZE) > 0)
+               {
+                  delete list;
+                  StringList maskedList(request, VID_MASKED_FIELD_BASE, VID_MASKED_FIELD_SIZE);
+                  for (int i = 0; i < maskedList.size(); i++)
+                  {
+                     inputFields.set(maskedList.get(i), _T("******"));
+                  }
+                  list = SplitCommandLine(object->expandText(originalActionString, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, &inputFields, nullptr));
+                  list->remove(0);
+               }
+
                StringBuffer args;
                args.appendPreallocated(list->join(_T(", ")));
-               args.shrink(2);
 
                switch(rcc)
                {
@@ -7934,6 +7948,7 @@ void ClientSession::executeAction(NXCPMessage *request)
                      break;
                }
                delete list;
+               delete alarm;
             }
             else
             {
@@ -11876,7 +11891,7 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 			   ServerCommandExec *cmd = new ServerCommandExec(request, this);
 			   registerServerCommand(cmd);
 			   cmd->execute();
-			   WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, nodeId, _T("Server command executed: %s"), cmd->getCommand());
+			   WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, nodeId, _T("Server command executed: %s"), cmd->getMaskedCommand());
             msg.setField(VID_COMMAND_ID, cmd->getStreamId());
 				msg.setField(VID_RCC, RCC_SUCCESS);
 			}

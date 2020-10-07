@@ -132,6 +132,7 @@ public final class ObjectToolExecutor
          return;
       }
       
+      final List<String> maskedFields = new ArrayList<String>();
       final Map<String, String> inputValues;
       final InputField[] fields = tool.getInputFields();
       if (fields.length > 0)
@@ -146,6 +147,13 @@ public final class ObjectToolExecutor
          inputValues = readInputFields(fields);
          if (inputValues == null)
             return;  // cancelled
+         for (int i = 0; i < fields.length; i++)
+         {
+            if (fields[i].getType() == InputFieldType.PASSWORD)  
+            {
+               maskedFields.add(fields[i].getName());
+            }
+         }
       }
       else
       {
@@ -243,7 +251,7 @@ public final class ObjectToolExecutor
                      @Override
                      public void run()
                      {
-                        executeOnNode(n, tool, inputValues, tmp);
+                        executeOnNode(n, tool, inputValues, maskedFields, tmp);
                      }
                   });
                }
@@ -254,7 +262,7 @@ public final class ObjectToolExecutor
                      @Override
                      public void run()
                      {
-                        executeOnNode(n, tool, inputValues, null);
+                        executeOnNode(n, tool, inputValues, maskedFields, null);
                      }
                   });                  
                }
@@ -314,12 +322,12 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void executeOnNode(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, String expandedValue)
+   private static void executeOnNode(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields, String expandedValue)
    {
       switch(tool.getToolType())
       {
          case ObjectTool.TYPE_ACTION:
-            executeAgentAction(node, tool, inputValues);
+            executeAgentAction(node, tool, inputValues, maskedFields);
             break;
          case ObjectTool.TYPE_FILE_DOWNLOAD:
             executeFileDownload(node, tool, inputValues);
@@ -331,7 +339,7 @@ public final class ObjectToolExecutor
             executeLocalCommand(node, tool, inputValues, expandedValue);
             break;
          case ObjectTool.TYPE_SERVER_COMMAND:
-            executeServerCommand(node, tool, inputValues);
+            executeServerCommand(node, tool, inputValues, maskedFields);
             break;
          case ObjectTool.TYPE_SERVER_SCRIPT:
             executeServerScript(node, tool, inputValues);
@@ -374,7 +382,7 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void executeAgentAction(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
+   private static void executeAgentAction(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields)
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       
@@ -390,7 +398,7 @@ public final class ObjectToolExecutor
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               final String action = session.executeActionWithExpansion(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues);
+               final String action = session.executeActionWithExpansion(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, maskedFields);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -408,7 +416,7 @@ public final class ObjectToolExecutor
          try
          {
             AgentActionResults view = (AgentActionResults)window.getActivePage().showView(AgentActionResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeAction(tool.getData(), node.getAlarmId(), inputValues);
+            view.executeAction(tool.getData(), node.getAlarmId(), inputValues, maskedFields);
          }
          catch(Exception e)
          {
@@ -424,7 +432,7 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void executeServerCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
+   private static void executeServerCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields)
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
@@ -433,7 +441,7 @@ public final class ObjectToolExecutor
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.executeServerCommand(node.object.getObjectId(), tool.getData(), inputValues);
+               session.executeServerCommand(node.object.getObjectId(), tool.getData(), inputValues, maskedFields);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -457,7 +465,7 @@ public final class ObjectToolExecutor
          try
          {
             ServerCommandResults view = (ServerCommandResults)window.getActivePage().showView(ServerCommandResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeCommand(tool.getData(), inputValues);
+            view.executeCommand(tool.getData(), inputValues, maskedFields);
          }
          catch(Exception e)
          {
