@@ -3088,6 +3088,83 @@ public class NXCSession
          return objectList.get(id);
       }
    }
+   
+   
+
+   /**
+    * Find NetXMS object by it's identifier or return wait an object to wait on
+    *
+    * @param id Object identifier
+    * @return Object to wait on if object not found. If object is found it will be already set inside
+    */
+   public FutureObject findFutureObjectById(final long id)
+   {
+      final FutureObject object;
+      synchronized(objectList)
+      {
+         AbstractObject result = objectList.get(id);
+         if (result == null)
+         {
+            object = new FutureObject();   
+            addListener(new SessionListener() {               
+               @Override
+               public void notificationHandler(SessionNotification n)
+               {
+                  if (n.code == SessionNotification.OBJECT_CHANGED && n.subCode == id)
+                  {
+                     synchronized(object)
+                     {
+                        object.setObject((AbstractObject)n.object);
+                        object.notifyAll();
+                     }
+                     removeListener(this);
+                  }
+               }
+            });
+         }
+         else
+         {
+            object = new FutureObject(result);
+         }
+      }
+      return object;
+   }
+
+   /**
+    * Find NetXMS object by it's identifier and notify once found
+    *
+    * @param id Object identifier
+    * @return Object with given ID or wait object if object cannot be found
+    */
+   public void findObjectAsync(final long id, ObjectCreationListenner callback)
+   {
+      if (callback == null)
+         return;
+      
+      synchronized(objectList)
+      {
+         AbstractObject object = objectList.get(id);
+         if (object == null)
+         { 
+            addListener(new SessionListener() {
+               
+               @Override
+               public void notificationHandler(SessionNotification n)
+               {
+                  if (n.code == SessionNotification.OBJECT_CHANGED && n.subCode == id)
+                  {
+                     callback.objectCreated(findObjectById(id));
+                     removeListener(this);
+                  }
+               }
+            });
+         }
+         else
+         {
+            callback.objectCreated((AbstractObject)object);
+         }
+      }
+   }
 
    /**
     * Find NetXMS object by it's identifier with additional class checking.
@@ -5391,6 +5468,51 @@ public class NXCSession
    public long createObject(final NXCObjectCreationData data) throws IOException, NXCException
    {
       return createObject(data, null);
+   }
+
+   /**
+    * Create new NetXMS object in synchronous mode. 
+    *
+    * @param data Object creation data
+    * @return newly created AbstractObject
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public AbstractObject createObjectSync(final NXCObjectCreationData data) throws IOException, NXCException
+   {
+      long id = createObject(data, null);
+      FutureObject object = findFutureObjectById(id);
+      synchronized (object) 
+      {
+         while (!object.hasObject())
+         {
+            try
+            {
+               object.wait();
+            }
+            catch(InterruptedException e)
+            {
+            }
+         }
+      }
+
+      return object.getObject();
+   }
+
+   /**
+    * Create new NetXMS object and run callback once it's created.
+    * 
+    * @param data Object creation data
+    * @param callback callback to run on object creation
+    * @return ID of new object
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public long createObjectAsync(final NXCObjectCreationData data, ObjectCreationListenner callback) throws IOException, NXCException
+   {
+      long id = createObject(data, null);
+      findObjectAsync(id, callback); 
+      return id;
    }
 
    /**
