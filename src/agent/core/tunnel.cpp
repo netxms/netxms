@@ -40,6 +40,11 @@ bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *p
  */
 bool RegisterSession(CommSession *session);
 
+#ifdef _WIN32
+ENGINE *CreateCNGEngine();
+bool MatchWindowsStoreCertificate(PCCERT_CONTEXT, const TCHAR *id);
+#endif
+
 class Tunnel;
 
 /**
@@ -127,6 +132,8 @@ private:
    bool loadCertificate();
    bool loadCertificateFromFile();
    bool loadCertificateFromStore();
+   bool loadCertificateFromStoreWithPK();
+   bool loadCertificateFromStoreWithEngine();
 
    void recvThread();
    static THREAD_RESULT THREAD_CALL recvThreadStarter(void *arg);
@@ -395,7 +402,7 @@ bool Tunnel::sendMessage(const NXCPMessage& msg)
  */
 bool Tunnel::loadCertificate()
 {
-   return ((m_certificate != nullptr) && !_tcsicmp(m_certificate, _T("@store"))) ? loadCertificateFromStore() : loadCertificateFromFile();
+   return ((m_certificate != nullptr) && (*m_certificate == _T('@'))) ? loadCertificateFromStore() : loadCertificateFromFile();
 }
 
 /**
@@ -522,65 +529,187 @@ bool Tunnel::loadCertificateFromStore()
 {
 #ifdef _WIN32
    debugPrintf(6, _T("Loading certificate from system certificate store"));
-
-   s_mutexEngineLoad.lock();
-
-   ENGINE *e = ENGINE_by_id("capi");
-   if (e == nullptr)
-   {
-      e = ENGINE_by_id("dynamic");
-      if (e == nullptr)
-      {
-         debugPrintf(2, _T("Cannot create OpenSSL engine"));
-         s_mutexEngineLoad.unlock();
-         return false;
-      }
-
-      TCHAR engineLib[MAX_PATH];
-      GetNetXMSDirectory(nxDirLib, engineLib);
-      _tcscat(engineLib, _T("\\capi.dll"));
-#ifdef UNICODE
-      char engineLibA[MAX_PATH];
-      WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, engineLib, -1, engineLibA, MAX_PATH, nullptr, nullptr);
-      ENGINE_ctrl_cmd_string(e, "SO_PATH", engineLibA, 0);
+   if (loadCertificateFromStoreWithPK())
+      return true;
+   return loadCertificateFromStoreWithEngine();
 #else
-      ENGINE_ctrl_cmd_string(e, "SO_PATH", engineLib, 0);
+   debugPrintf(2, _T("Loading certificate from system store supported only on Windows platform"));
+   return false;
 #endif
-      ENGINE_ctrl_cmd_string(e, "ID", "capi", 0);
-      if (ENGINE_ctrl_cmd_string(e, "LOAD", nullptr, 0))
+}
+
+/**
+ * Load certificate for this tunnel from Windows store with private key
+ */
+bool Tunnel::loadCertificateFromStoreWithPK()
+{
+#ifdef _WIN32
+   HCERTSTORE hStore = CertOpenStore(CERT_STORE_PROV_SYSTEM_A, 0, 0,
+         CERT_STORE_OPEN_EXISTING_FLAG | CERT_STORE_READONLY_FLAG | CERT_SYSTEM_STORE_LOCAL_MACHINE, "MY");
+   if (hStore == nullptr)
+   {
+      TCHAR buffer[1024];
+      debugPrintf(4, _T("loadCertificateFromStoreWithPK: cannot open certificate store \"MY\" for local system(%s)"),
+            GetSystemErrorText(GetLastError(), buffer, 1024));
+      return false;
+   }
+
+   PCCERT_CONTEXT context = nullptr;
+   while ((context = CertEnumCertificatesInStore(hStore, context)) != nullptr)
+   {
+      if (MatchWindowsStoreCertificate(context, &m_certificate[1]))
       {
-         debugPrintf(6, _T("OpenSSL engine loaded (ID=%hs name=%hs)"), ENGINE_get_id(e), ENGINE_get_name(e));
-         if (ENGINE_init(e))
+         TCHAR certName[1024];
+         CertGetNameString(context, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, certName, 1024);
+         debugPrintf(5, _T("loadCertificateFromStoreWithPK: certificate %s matched"), certName);
+
+         HCRYPTPROV_OR_NCRYPT_KEY_HANDLE keyHandle = 0;
+         DWORD spec;
+         BOOL owned;
+         BOOL success = CryptAcquireCertificatePrivateKey(context, CRYPT_ACQUIRE_ONLY_NCRYPT_KEY_FLAG, nullptr, &keyHandle, &spec, &owned);
+         if (!success || (spec != CERT_NCRYPT_KEY_SPEC) || !owned)
          {
-            debugPrintf(6, _T("OpenSSL engine initialized"));
+            TCHAR buffer[1024];
+            debugPrintf(5, _T("loadCertificateFromStoreWithPK: cannot acquire private key (%s)"),
+                  GetSystemErrorText(GetLastError(), buffer, 1024));
+            if (success && owned && (spec != CERT_NCRYPT_KEY_SPEC))
+               CryptReleaseContext(keyHandle, 0);
+            continue;
+         }
+
+         DWORD blobSize = 0;
+         SECURITY_STATUS status = NCryptExportKey(keyHandle, 0, BCRYPT_RSAFULLPRIVATE_BLOB, NULL, NULL, 0, &blobSize, NCRYPT_SILENT_FLAG);
+         if (status != ERROR_SUCCESS)
+         {
+            TCHAR buffer[1024];
+            debugPrintf(5, _T("loadCertificateFromStoreWithPK: key export failed (%s)"), GetSystemErrorText(status, buffer, 1024));
+            NCryptFreeObject(keyHandle);
+            continue;
+         }
+
+         BYTE *blob = MemAllocArray<BYTE>(blobSize);
+         status = NCryptExportKey(keyHandle, 0, BCRYPT_RSAFULLPRIVATE_BLOB, NULL, blob, blobSize, &blobSize, NCRYPT_SILENT_FLAG);
+         if (status != ERROR_SUCCESS)
+         {
+            TCHAR buffer[1024];
+            debugPrintf(5, _T("loadCertificateFromStoreWithPK: key export failed (%s)"), GetSystemErrorText(status, buffer, 1024));
+            NCryptFreeObject(keyHandle);
+            MemFree(blob);
+            continue;
+         }
+         NCryptFreeObject(keyHandle);
+         BCRYPT_RSAKEY_BLOB *header = reinterpret_cast<BCRYPT_RSAKEY_BLOB*>(blob);
+         debugPrintf(7, _T("loadCertificateFromStoreWithPK: key exported (%d bits)"), header->BitLength);
+
+         BIGNUM *n = BN_bin2bn(blob + sizeof(BCRYPT_RSAKEY_BLOB) + header->cbPublicExp, header->cbModulus, nullptr);
+         BIGNUM *e = BN_bin2bn(blob + sizeof(BCRYPT_RSAKEY_BLOB), header->cbPublicExp, nullptr);
+         BIGNUM *d = BN_bin2bn(blob + sizeof(BCRYPT_RSAKEY_BLOB) +
+                  header->cbPublicExp + header->cbModulus + header->cbPrime1 * 3 + header->cbPrime2 * 2,
+               header->cbModulus, nullptr);
+         MemFree(blob);
+         if ((n == nullptr) || (e == nullptr) || (d == nullptr))
+         {
+            debugPrintf(5, _T("loadCertificateFromStoreWithPK: key component conversion failed"));
+            BN_free(n);
+            BN_free(e);
+            BN_free(d);
+            continue;
+         }
+
+         RSA *rsa = RSA_new();
+         if (!RSA_set0_key(rsa, n, e, d))
+         {
+            debugPrintf(5, _T("loadCertificateFromStoreWithPK: key component conversion failed"));
+            BN_free(n);
+            BN_free(e);
+            BN_free(d);
+            RSA_free(rsa);
+            continue;
+         }
+
+         EVP_PKEY *pkey = EVP_PKEY_new();
+         EVP_PKEY_assign_RSA(pkey, rsa);
+
+         const unsigned char *in = context->pbCertEncoded;
+         X509 *cert = d2i_X509(nullptr, &in, context->cbCertEncoded);
+         if (cert == nullptr)
+         {
+            debugPrintf(5, _T("loadCertificateFromStoreWithPK: cannot decode certificate"));
+            EVP_PKEY_free(pkey);
+            continue;
+         }
+
+         success = false;
+         if (SSL_CTX_use_certificate(m_context, cert) == 1)
+         {
+            if (SSL_CTX_use_PrivateKey(m_context, pkey) == 1)
+            {
+               debugPrintf(4, _T("Certificate and private key loaded"));
+               success = true;
+            }
+            else
+            {
+               debugPrintf(4, _T("Cannot set private key"));
+            }
          }
          else
          {
-            debugPrintf(2, _T("Cannot initialize OpenSSL engine"));
-            ENGINE_free(e);
-            s_mutexEngineLoad.lock();
-            return false;
+            debugPrintf(4, _T("Cannot set certificate"));
+         }
+
+         X509_free(cert);
+         EVP_PKEY_free(pkey);
+
+         if (success)
+         {
+            CertFreeCertificateContext(context);
+            break;
          }
       }
-      else
-      {
-         debugPrintf(2, _T("Cannot load OpenSSL engine from \"%s\""), engineLib);
-         ENGINE_free(e);
-         s_mutexEngineLoad.lock();
-         return false;
-      }
+   }
 
-      if (!ENGINE_ctrl_cmd_string(e, "store_name", "MY", 0) ||
-         !ENGINE_ctrl_cmd_string(e, "store_flags", "1", 0))
-      {
-         debugPrintf(2, _T("Cannot select certificate store"));
-         ENGINE_finish(e);
-         ENGINE_free(e);
-         s_mutexEngineLoad.lock();
-         return false;
-      }
+   CertCloseStore(hStore, 0);
 
-      ENGINE_add(e);
+   if (context == nullptr)
+   {
+      debugPrintf(5, _T("loadCertificateFromStoreWithPK: no matching certificates in store"));
+      return false;
+   }
+
+   return true;
+#else
+   return false;
+#endif
+}
+
+/**
+ * Load certificate for this tunnel from Windows store using crypto engine
+ */
+bool Tunnel::loadCertificateFromStoreWithEngine()
+{
+#ifdef _WIN32
+   debugPrintf(6, _T("Fallback to OpenSSL engine for signing (will switch to TLS 1.1)"));
+
+   s_mutexEngineLoad.lock();
+
+   ENGINE *e = CreateCNGEngine();
+   if (e == nullptr)
+   {
+      debugPrintf(2, _T("Cannot create OpenSSL engine"));
+      s_mutexEngineLoad.unlock();
+      return false;
+   }
+
+   if (ENGINE_init(e))
+   {
+      debugPrintf(6, _T("OpenSSL engine initialized"));
+   }
+   else
+   {
+      debugPrintf(2, _T("Cannot initialize OpenSSL engine"));
+      ENGINE_free(e);
+      s_mutexEngineLoad.lock();
+      return false;
    }
 
    s_mutexEngineLoad.unlock();
@@ -588,6 +717,7 @@ bool Tunnel::loadCertificateFromStore()
    if (!SSL_CTX_set_client_cert_engine(m_context, e))
    {
       debugPrintf(2, _T("Cannot select engine in SSL context"));
+      ENGINE_finish(e);
       ENGINE_free(e);
       return false;
    }
@@ -599,7 +729,6 @@ bool Tunnel::loadCertificateFromStore()
    ENGINE_free(e);
    return true;
 #else
-   debugPrintf(2, _T("Loading certificate from system store supported only on Windows platform"));
    return false;
 #endif
 }
