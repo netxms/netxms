@@ -42,7 +42,8 @@ bool RegisterSession(CommSession *session);
 
 #ifdef _WIN32
 ENGINE *CreateCNGEngine();
-bool MatchWindowsStoreCertificate(PCCERT_CONTEXT, const TCHAR *id);
+bool MatchWindowsStoreCertificate(PCCERT_CONTEXT context, const TCHAR *id);
+void SSLSetCertificateId(SSL_CTX *sslctx, const TCHAR *id);
 #endif
 
 class Tunnel;
@@ -721,6 +722,8 @@ bool Tunnel::loadCertificateFromStoreWithEngine()
       ENGINE_free(e);
       return false;
    }
+
+   SSLSetCertificateId(m_context, &m_certificate[1]);
 
    // Disable TLS 1.2+ because of this OpenSSL issue:
    // https://github.com/openssl/openssl/issues/12859
@@ -1490,7 +1493,7 @@ Tunnel *Tunnel::createFromConfig(const TCHAR *config)
    {
       *p = 0;
       certificate = p + 1;
-      p = _tcschr(certificate, _T(','));
+      p = _tcschr(certificate, _T('%'));
       if (p != nullptr)
       {
          *p = 0;
