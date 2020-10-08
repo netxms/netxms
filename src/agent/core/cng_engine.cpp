@@ -28,7 +28,6 @@
 
 static bool s_initialized = false;
 static int s_idxEngineContext = -1;
-static int s_idxMatchFunction = -1;
 static int s_idxCertificateId = -1;
 static int s_idxKeyHandle = -1;
 static RSA_METHOD *s_rsaMethod = nullptr;
@@ -263,8 +262,7 @@ static int InitEngine(ENGINE *e)
    if (!s_initialized)
    {
       s_idxEngineContext = ENGINE_get_ex_new_index(0, NULL, NULL, NULL, NULL);
-      s_idxMatchFunction = ENGINE_get_ex_new_index(0, NULL, NULL, NULL, NULL);
-      s_idxCertificateId = SSL_get_ex_new_index(0, NULL, NULL, NULL, NULL);
+      s_idxCertificateId = SSL_CTX_get_ex_new_index(0, NULL, NULL, NULL, NULL);
       s_idxKeyHandle = RSA_get_ex_new_index(0, NULL, NULL, NULL, NULL);
 
       s_rsaMethod = RSA_meth_dup(RSA_PKCS1_OpenSSL());
@@ -315,9 +313,37 @@ static int DestroyEngine(ENGINE *e)
 /**
  * Match any certificate
  */
-bool MatchWindowsStoreCertificate(PCCERT_CONTEXT, const TCHAR *id)
+bool MatchWindowsStoreCertificate(PCCERT_CONTEXT context, const TCHAR *id)
 {
-   return true;
+   if (id == nullptr)
+      return false;
+
+   if (!_tcsnicmp(id, _T("name:"), 5))
+   {
+      TCHAR value[1024];
+      CertGetNameString(context, CERT_NAME_FRIENDLY_DISPLAY_TYPE, 0, nullptr, value, 1024);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: name: \"%s\" with \"%s\""), &id[5], value);
+      return _tcsicmp(&id[5], value) == 0;
+   }
+
+   if (!_tcsnicmp(id, _T("email:"), 6))
+   {
+      TCHAR value[1024];
+      CertGetNameString(context, CERT_NAME_EMAIL_TYPE, 0, nullptr, value, 1024);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: email: \"%s\" with \"%s\""), &id[6], value);
+      return _tcsicmp(&id[6], value) == 0;
+   }
+
+   if (!_tcsnicmp(id, _T("subject:"), 8))
+   {
+      TCHAR value[1024];
+      DWORD strType = CERT_X500_NAME_STR;
+      CertGetNameString(context, CERT_NAME_RDN_TYPE, 0, &strType, value, 1024);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: subject: \"%s\" with \"%s\""), &id[8], value);
+      return _tcsicmp(&id[8], value) == 0;
+   }
+
+   return false;
 }
 
 /**
@@ -339,7 +365,7 @@ static int LoadSSLClientCert(ENGINE *e, SSL *ssl, STACK_OF(X509_NAME) *caChain, 
       return 0;
    }
 
-   const TCHAR *certificateId = static_cast<const TCHAR*>(SSL_get_ex_data(ssl, s_idxCertificateId));
+   const TCHAR *certificateId = static_cast<const TCHAR*>(SSL_CTX_get_ex_data(SSL_get_SSL_CTX(ssl), s_idxCertificateId));
 
    HCRYPTPROV_OR_NCRYPT_KEY_HANDLE keyHandle = 0;
    PCCERT_CONTEXT context = nullptr;
@@ -410,4 +436,12 @@ ENGINE *CreateCNGEngine()
    ENGINE_set_destroy_function(e, DestroyEngine);
    ENGINE_set_load_ssl_client_cert_function(e, LoadSSLClientCert);
    return e;
+}
+
+/**
+ * Set certificate matching ID for CNG engine
+ */
+void SSLSetCertificateId(SSL_CTX *sslctx, const TCHAR *id)
+{
+   SSL_CTX_set_ex_data(sslctx, s_idxCertificateId, (void*)id);
 }
