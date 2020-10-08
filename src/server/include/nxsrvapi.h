@@ -94,6 +94,7 @@
 #define DFILE_COMPILED_MIB    _T("/netxms.mib")
 #define DDIR_IMAGES           _T("/images")
 #define DDIR_FILES            _T("/files")
+#define DDIR_CRL              -T("/crl")
 
 #define SDIR_SCRIPTS          _T("/scripts")
 #define SDIR_TEMPLATES        _T("/templates")
