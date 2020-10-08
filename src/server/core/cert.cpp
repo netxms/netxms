@@ -22,6 +22,16 @@
 
 #include "nxcore.h"
 #include <nxcrypto.h>
+#include <nxstat.h>
+
+#if HAVE_LIBCURL
+
+#include <curl/curl.h>
+
+#ifndef CURL_MAX_HTTP_HEADER
+// workaround for older cURL versions
+#define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
+#endif
 
 #define DEBUG_TAG    _T("crypto.cert")
 
@@ -65,6 +75,7 @@ static inline const ASN1_TIME *X509_get0_notAfter(const X509 *x)
  * Server certificate file information
  */
 StringSet g_trustedCertificates;
+StringSet g_crlList;
 TCHAR g_serverCertificatePath[MAX_PATH] = _T("");
 TCHAR g_serverCertificateKeyPath[MAX_PATH] = _T("");
 char g_serverCertificatePassword[MAX_PASSWORD] = "";
@@ -451,6 +462,136 @@ void ReloadCertificates()
 }
 
 /**
+ * Callback for processing data received from cURL
+ */
+static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
+{
+   int *file = (int *)userdata;
+   size_t bytes = size * nmemb;
+   bytes = _write(*file, ptr, (int)bytes);
+   return bytes;
+}
+
+static void DownloadCrlFile(const TCHAR* file, const TCHAR *url)
+{
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("DownloadCrlFile(): started \"%s\" file download from \"%s\" URL"), file, url);
+
+   int fileHandle = _topen(file, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+   if (fileHandle == -1)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("DownloadCrlFile(): Failed to open \"s\" file"), file);
+      return;
+   }
+
+   CURL *curl = curl_easy_init();
+   if (curl != nullptr)
+   {
+      char errbuf[CURL_ERROR_SIZE];
+      curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &fileHandle);
+      curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
+
+#ifdef UNICODE
+      char *urlUtf8 = UTF8StringFromWideString(url);
+#else
+      char *urlUtf8 = UTF8StringFromMBString(url);
+#endif
+      if (curl_easy_setopt(curl, CURLOPT_URL, urlUtf8) == CURLE_OK)
+      {
+         if (curl_easy_perform(curl) == CURLE_OK)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("DownloadCrlFile(): File \"%s\" from URL \"%s\" successfully downloaded"), file, url);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 1, _T("DownloadCrlFile(): error making curl request: %hs"), errbuf);
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("DownloadCrlFile(): curl_easy_setopt with url failed"));
+      }
+      MemFree(urlUtf8);
+   }
+   _close(fileHandle);
+
+   NX_STAT_STRUCT fs;
+   if (CALL_STAT(file, &fs) == 0)
+   {
+      if (fs.st_size == 0)
+      {
+         _tremove(name);
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("DownloadCrlFile(): request returned empty document"));
+      }
+   }
+}
+
+/**
+ * Download Certificate Revocation List
+ */
+void DownloadCrlFiles()
+{
+   TCHAR crlFolder[MAX_PATH];
+   _tcslcpy(crlFolder, g_netxmsdDataDir, MAX_PATH);
+   _tcslcat(crlFolder, DDIR_PACKAGES, MAX_PATH);
+
+   TCHAR crlFile[MAX_PATH];
+   auto it = g_crlList.iterator();
+   while (it->hasNext())
+   {
+      const TCHAR *url = it->next();
+      _tcscpy(crlFile, crlFolder);
+      _tcslcat(crlFile, GetCleanFileName(url), MAX_PATH);
+      DownloadCrlFile(crlFile, url);
+   }
+   delete it;
+}
+
+/**
+ * Load Certificate Revocation List to certificate store
+ */
+void LoarCrl()
+{
+   if (s_trustedCertificateStore == nullptr)
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Certificate store is not initialized"));
+      return;
+   }
+
+   TCHAR crlFolder[MAX_PATH];
+   _tcslcpy(crlFolder, g_netxmsdDataDir, MAX_PATH);
+   _tcslcat(crlFolder, DDIR_PACKAGES, MAX_PATH);
+
+   s_certificateStoreLock.lock();
+   _TDIR *dir = _topendir(crlFolder);
+   if (dir != NULL)
+   {
+      struct _tdirent *d;
+      while((d = _treaddir(dir)) != NULL)
+      {
+         if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+            continue;
+
+         TCHAR fullName[MAX_PATH];
+         _tcscpy(fullName, crlFolder);
+         _tcscat(fullName, FS_PATH_SEPARATOR);
+         _tcscat(fullName, d->d_name);
+
+         FILE *f = _tfopen(fullName, _T("r"));
+         if (f == nullptr)
+         {
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot load CRL file from %s (%s)"), fullName, _tcserror(errno));
+            continue;
+         }
+         X509_CRL *cert = PEM_read_X509(f, nullptr, nullptr, nullptr);//TODO: check right way to load DER binary file
+         X509_STORE_add_crl(s_trustedCertificateStore, cert);
+      }
+   }
+   s_certificateStoreLock.unlock();
+}
+
+/**
  * Certificate stuff initialization
  */
 void InitCertificates()
@@ -466,6 +607,8 @@ void InitCertificates()
    DBConnectionPoolReleaseConnection(hdb);
 
    ReloadCertificates();
+   DownloadCrlFiles();
+   LoarCrl();
 }
 
 /**

@@ -353,6 +353,18 @@ static BOOL CheckDataDir()
 		}
 	}
 
+   // Create directory for CRL if does't exists
+   _tcscpy(szBuffer, g_netxmsdDataDir);
+   _tcscat(szBuffer, DDIR_PACKAGES);
+   if (MKDIR(szBuffer) == -1)
+   {
+      if (errno != EEXIST)
+      {
+         nxlog_write(NXLOG_ERROR, _T("Error creating data directory \"%s\" (%s)"), szBuffer, _tcserror(errno));
+         return FALSE;
+      }
+   }
+
 #undef MKDIR
 
 	return TRUE;
