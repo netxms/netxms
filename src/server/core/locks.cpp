@@ -61,47 +61,48 @@ static LOCK_INFO m_locks[NUMBER_OF_LOCKS] =
  * Lock entire database and clear all other locks
  * Will return FALSE if someone already locked database
  */
-BOOL InitLocks(InetAddress *ipAddr, TCHAR *pszInfo)
+bool LockDatabase(InetAddress *lockAddr, TCHAR *lockInfo)
 {
-   BOOL bSuccess = FALSE;
-   TCHAR szBuffer[256];
+   bool success = false;
 
-   *ipAddr = InetAddress();
-   pszInfo[0] = 0;
+   *lockAddr = InetAddress();
+   lockInfo[0] = 0;
 
    // Check current database lock status
-   ConfigReadStr(_T("DBLockStatus"), szBuffer, 256, _T("ERROR"));
-	DbgPrintf(6, _T("DBLockStatus=\"%s\""), szBuffer);
-   if (!_tcscmp(szBuffer, _T("UNLOCKED")))
+   TCHAR buffer[256];
+   ConfigReadStr(_T("DBLockStatus"), buffer, 256, _T("ERROR"));
+	nxlog_debug_tag(_T("db.lock"), 6, _T("DBLockStatus=\"%s\""), buffer);
+   if (!_tcscmp(buffer, _T("UNLOCKED")))
    {
-      GetLocalIpAddr().toString(szBuffer);
-      ConfigWriteStr(_T("DBLockStatus"), szBuffer, FALSE);
-      GetSysInfoStr(szBuffer, sizeof(szBuffer));
-      ConfigWriteStr(_T("DBLockInfo"), szBuffer, TRUE);
-      ConfigWriteULong(_T("DBLockPID"), GetCurrentProcessId(), TRUE);
+      GetLocalIpAddr().toString(buffer);
+      ConfigWriteStr(_T("DBLockStatus"), buffer, true, false);
+      GetSysInfoStr(buffer, sizeof(buffer));
+      ConfigWriteStr(_T("DBLockInfo"), buffer, true, false);
+      ConfigWriteULong(_T("DBLockPID"), GetCurrentProcessId(), true, false);
       m_hMutexLockerAccess = MutexCreate();
-      bSuccess = TRUE;
+      success = true;
    }
-   else
+   else if (_tcsncmp(buffer, _T("NXDBMGR"), 7))
    {
-      if (_tcscmp(szBuffer, _T("ERROR")))
-      {
-         *ipAddr = InetAddress::parse(szBuffer);
-         ConfigReadStr(_T("DBLockInfo"), pszInfo, 256, _T("<error>"));
-      }
+      _tcslcpy(lockInfo, buffer, 256);
+   }
+   else if (_tcscmp(buffer, _T("ERROR")))
+   {
+      *lockAddr = InetAddress::parse(buffer);
+      ConfigReadStr(_T("DBLockInfo"), lockInfo, 256, _T("<error>"));
    }
 
-   return bSuccess;
+   return success;
 }
 
 /**
  * Unlock database
  */
-void NXCORE_EXPORTABLE UnlockDB()
+void NXCORE_EXPORTABLE UnlockDatabase()
 {
-   ConfigWriteStr(_T("DBLockStatus"), _T("UNLOCKED"), FALSE);
-   ConfigWriteStr(_T("DBLockInfo"), _T(""), FALSE);
-   ConfigWriteULong(_T("DBLockPID"), 0, FALSE);
+   ConfigWriteStr(_T("DBLockStatus"), _T("UNLOCKED"), false);
+   ConfigWriteStr(_T("DBLockInfo"), _T(""), false);
+   ConfigWriteULong(_T("DBLockPID"), 0, false);
 }
 
 /**

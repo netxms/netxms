@@ -44,13 +44,9 @@
 /*** Functions ***/
 #ifndef _NETXMS_DB_SCHEMA_
 
-BOOL InitLocks(InetAddress *ipAddr, TCHAR *pszInfo);
 BOOL LockComponent(UINT32 dwId, int sessionId, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo);
 void UnlockComponent(UINT32 dwId);
 void RemoveAllSessionLocks(int sessionId);
-BOOL LockLPP(UINT32 dwPolicyId, int sessionId);
-void UnlockLPP(UINT32 dwPolicyId, int sessionId);
-void NXCORE_EXPORTABLE UnlockDB();
 
 #endif
 
