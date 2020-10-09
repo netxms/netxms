@@ -875,7 +875,7 @@ static void DrvFreeResultInternal(MYSQL_RESULT *hResult)
 /**
  * Free SELECT results - public entry point
  */
-extern "C" void __EXPORT DrvFreeResult(MARIADB_RESULT *hResult)
+extern "C" void __EXPORT DrvFreeResult(MYSQL_RESULT *hResult)
 {
    if (hResult != nullptr)
       DrvFreeResultInternal(hResult);
