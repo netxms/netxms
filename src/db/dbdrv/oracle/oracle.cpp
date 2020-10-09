@@ -227,14 +227,14 @@ static void DestroyQueryResult(ORACLE_RESULT *pResult)
 
 	nCount = pResult->nCols * pResult->nRows;
 	for(i = 0; i < nCount; i++)
-		free(pResult->pData[i]);
-	free(pResult->pData);
+		MemFree(pResult->pData[i]);
+	MemFree(pResult->pData);
 
 	for(i = 0; i < pResult->nCols; i++)
-		free(pResult->columnNames[i]);
-	free(pResult->columnNames);
+	   MemFree(pResult->columnNames[i]);
+	MemFree(pResult->columnNames);
 
-	free(pResult);
+	MemFree(pResult);
 }
 
 /**
@@ -1158,50 +1158,58 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 /**
  * Perform SELECT query
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+static ORACLE_RESULT *DrvSelectInternal(ORACLE_CONN *conn, WCHAR *query, DWORD *errorCode, WCHAR *errorText)
 {
 	ORACLE_RESULT *pResult = NULL;
 	OCIStmt *handleStmt;
 
 #if UNICODE_UCS4
 	UCS2CHAR localBuffer[1024];
-	UCS2CHAR *ucs2Query = WideStringToUCS2(pwszQuery, localBuffer, 1024);
+	UCS2CHAR *ucs2Query = WideStringToUCS2(query, localBuffer, 1024);
 #else
-	UCS2CHAR *ucs2Query = pwszQuery;
+	UCS2CHAR *ucs2Query = query;
 #endif
 
-	MutexLock(pConn->mutexQueryLock);
-	if (IsSuccess(OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
+	MutexLock(conn->mutexQueryLock);
+	if (IsSuccess(OCIStmtPrepare2(conn->handleService, &handleStmt, conn->handleError, (text *)ucs2Query,
 	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT)))
 	{
-      OCIAttrSet(handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, 0, OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
-		if (IsSuccess(OCIStmtExecute(pConn->handleService, handleStmt, pConn->handleError,
-		                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT)))
+      OCIAttrSet(handleStmt, OCI_HTYPE_STMT, &conn->prefetchLimit, 0, OCI_ATTR_PREFETCH_ROWS, conn->handleError);
+		if (IsSuccess(OCIStmtExecute(conn->handleService, handleStmt, conn->handleError,
+		                   0, 0, NULL, NULL, (conn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT)))
 		{
-			pResult = ProcessQueryResults(pConn, handleStmt, pdwError);
+			pResult = ProcessQueryResults(conn, handleStmt, errorCode);
 		}
 		else
 		{
-			SetLastError(pConn);
-			*pdwError = IsConnectionError(pConn);
+			SetLastError(conn);
+			*errorCode = IsConnectionError(conn);
 		}
-		OCIStmtRelease(handleStmt, pConn->handleError, NULL, 0, OCI_DEFAULT);
+		OCIStmtRelease(handleStmt, conn->handleError, NULL, 0, OCI_DEFAULT);
 	}
 	else
 	{
-		SetLastError(pConn);
-		*pdwError = IsConnectionError(pConn);
+		SetLastError(conn);
+		*errorCode = IsConnectionError(conn);
 	}
-	if (errorText != NULL)
+	if (errorText != nullptr)
 	{
-		wcslcpy(errorText, pConn->lastErrorText, DBDRV_MAX_ERROR_TEXT);
+		wcslcpy(errorText, conn->lastErrorText, DBDRV_MAX_ERROR_TEXT);
 	}
-	MutexUnlock(pConn->mutexQueryLock);
+	MutexUnlock(conn->mutexQueryLock);
 
 #if UNICODE_UCS4
 	FreeConvertedString(ucs2Query, localBuffer);
 #endif
 	return pResult;
+}
+
+/**
+ * Perform SELECT query - public entry point
+ */
+extern "C" DBDRV_RESULT __EXPORT DrvSelect(ORACLE_CONN *conn, WCHAR *query, DWORD *errorCode, WCHAR *errorText)
+{
+   return DrvSelectInternal(conn, query, errorCode, errorText);
 }
 
 /**
@@ -1707,20 +1715,24 @@ extern "C" DWORD __EXPORT DrvRollback(ORACLE_CONN *pConn)
 /**
  * Check if table exist
  */
-extern "C" int __EXPORT DrvIsTableExist(ORACLE_CONN *pConn, const WCHAR *name)
+extern "C" int __EXPORT DrvIsTableExist(ORACLE_CONN *conn, const WCHAR *name)
 {
    WCHAR query[256];
    swprintf(query, 256, L"SELECT count(*) FROM user_tables WHERE table_name=upper('%ls')", name);
    DWORD error;
-   WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    int rc = DBIsTableExist_Failure;
-   ORACLE_RESULT *hResult = (ORACLE_RESULT *)DrvSelect(pConn, query, &error, errorText);
-   if (hResult != NULL)
+   ORACLE_RESULT *hResult = DrvSelectInternal(conn, query, &error, nullptr);
+   if (hResult != nullptr)
    {
-      WCHAR buffer[64] = L"";
-      DrvGetField(hResult, 0, 0, buffer, 64);
-      rc = (wcstol(buffer, NULL, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
-      DrvFreeResult(hResult);
+      if ((hResult->nRows > 0) && (hResult->nCols > 0))
+      {
+         rc = (wcstol(hResult->pData[0], nullptr, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      }
+      else
+      {
+         rc = DBIsTableExist_NotFound;
+      }
+      DestroyQueryResult(hResult);
    }
    return rc;
 }
