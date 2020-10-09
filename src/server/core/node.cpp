@@ -434,6 +434,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    {
       m_snmpSecurity = new SNMP_SecurityContext(snmpAuthObject, snmpAuthPassword, snmpPrivPassword,
                static_cast<SNMP_AuthMethod>(snmpMethods & 0xFF), static_cast<SNMP_EncryptionMethod>(snmpMethods >> 8));
+      m_snmpSecurity->recalculateKeys();
    }
    else
    {
@@ -2038,6 +2039,7 @@ restart_agent_check:
             {
                lockProperties();
                m_snmpSecurity->setAuthoritativeEngine(*pTransport->getAuthoritativeEngine());
+               m_snmpSecurity->recalculateKeys();
                unlockProperties();
             }
          }
@@ -7218,9 +7220,12 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       pRequest->getFieldAsMBString(VID_SNMP_PRIV_PASSWORD, mbBuffer, 256);
       m_snmpSecurity->setPrivPassword(mbBuffer);
 
-      WORD methods = pRequest->getFieldAsUInt16(VID_SNMP_USM_METHODS);
+      uint16_t methods = pRequest->getFieldAsUInt16(VID_SNMP_USM_METHODS);
       m_snmpSecurity->setAuthMethod(static_cast<SNMP_AuthMethod>(methods & 0xFF));
       m_snmpSecurity->setPrivMethod(static_cast<SNMP_EncryptionMethod>(methods >> 8));
+
+      if (m_snmpVersion == SNMP_VERSION_3)
+         m_snmpSecurity->recalculateKeys();
    }
 
    // Change EtherNet/IP port
