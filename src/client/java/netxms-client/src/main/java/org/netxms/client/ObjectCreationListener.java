@@ -23,7 +23,7 @@ import org.netxms.client.objects.AbstractObject;
 /**
  * Interface to notify about new object creation
  */
-public interface ObjectCreationListenner
+public interface ObjectCreationListener
 {
    /**
     * This method will be called when information about new object will come
