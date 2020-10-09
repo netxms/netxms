@@ -506,8 +506,6 @@ private:
 	SNMP_AuthMethod m_authMethod;
 	SNMP_EncryptionMethod m_privMethod;
 
-	void recalculateKeys();
-
 public:
 	SNMP_SecurityContext();
 	SNMP_SecurityContext(const SNMP_SecurityContext *src);
@@ -530,6 +528,7 @@ public:
 	SNMP_EncryptionMethod getPrivMethod() const { return m_privMethod; }
 	const BYTE *getAuthKey();
 	const BYTE *getPrivKey();
+   void recalculateKeys();
 
 	json_t *toJson() const;
 
