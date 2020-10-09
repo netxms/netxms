@@ -1598,18 +1598,18 @@ ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *sessio
       m_cmd = MemCopyString(object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, inputFields, nullptr));
       MemFree(cmd);
 
-      if (request->getFieldAsInt32(VID_MASKED_FIELD_SIZE) > 0)
+      if (request->getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0)
       {
-         StringList list(request, VID_MASKED_FIELD_BASE, VID_MASKED_FIELD_SIZE);
+         StringList list(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
          for (int i = 0; i < list.size(); i++)
          {
             inputFields->set(list.get(i), _T("******"));
          }
-         m_maskedComand = object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, inputFields, nullptr);
+         m_maskedCommand = object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, inputFields, nullptr);
       }
       else
       {
-         m_maskedComand = StringBuffer(m_cmd);
+         m_maskedCommand = StringBuffer(m_cmd);
       }
       delete inputFields;
    }

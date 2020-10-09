@@ -7843,11 +7843,7 @@ static void ActionExecuteCallback(ActionCallbackEvent e, const TCHAR *text, void
  */
 void ClientSession::executeAction(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    // Get object id and check prerequisites
    shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
@@ -7881,7 +7877,7 @@ void ClientSession::executeAction(NXCPMessage *request)
                      return;
                   }
                   list = SplitCommandLine(object->expandText(action, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, &inputFields, nullptr));
-                  _tcsncpy(action, list->get(0), MAX_PARAM_NAME);
+                  _tcslcpy(action, list->get(0), MAX_PARAM_NAME);
                   list->remove(0);
                }
                else
@@ -7894,12 +7890,12 @@ void ClientSession::executeAction(NXCPMessage *request)
                   }
 
                   list = new StringList();
-                  UINT32 fieldId = VID_ACTION_ARG_BASE;
+                  uint32_t fieldId = VID_ACTION_ARG_BASE;
                   for(int i = 0; i < argc; i++)
                      list->addPreallocated(request->getFieldAsString(fieldId++));
                }
 
-               UINT32 rcc;
+               uint32_t rcc;
                bool withOutput = request->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
                if (withOutput)
                {
@@ -7912,13 +7908,13 @@ void ClientSession::executeAction(NXCPMessage *request)
                }
                debugPrintf(4, _T("executeAction: rcc=%d"), rcc);
 
-               if (expandString && request->getFieldAsInt32(VID_MASKED_FIELD_SIZE) > 0)
+               if (expandString && (request->getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0))
                {
                   delete list;
-                  StringList maskedList(request, VID_MASKED_FIELD_BASE, VID_MASKED_FIELD_SIZE);
-                  for (int i = 0; i < maskedList.size(); i++)
+                  StringList maskedFields(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
+                  for (int i = 0; i < maskedFields.size(); i++)
                   {
-                     inputFields.set(maskedList.get(i), _T("******"));
+                     inputFields.set(maskedFields.get(i), _T("******"));
                   }
                   list = SplitCommandLine(object->expandText(originalActionString, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, &inputFields, nullptr));
                   list->remove(0);
@@ -7932,7 +7928,7 @@ void ClientSession::executeAction(NXCPMessage *request)
                   case ERR_SUCCESS:
                      msg.setField(VID_RCC, RCC_SUCCESS);
                      writeAuditLog(AUDIT_OBJECTS, true, object->getId(), (args.length() > 0 ? _T("Executed agent action %s, with fields: %s") :
-                                                                                             _T("Executed agent action %s")), action, (const TCHAR*)args);
+                                                                                             _T("Executed agent action %s")), action, args.cstr());
                      break;
                   case ERR_ACCESS_DENIED:
                      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
@@ -7980,12 +7976,8 @@ void ClientSession::executeAction(NXCPMessage *request)
  */
 void ClientSession::getObjectTools(UINT32 requestId)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(requestId);
-
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
    msg.setField(VID_RCC, GetObjectToolsIntoMessage(&msg, m_dwUserId, checkSysAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS)));
-
    sendMessage(&msg);
 }
 
@@ -11891,7 +11883,7 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 			   ServerCommandExec *cmd = new ServerCommandExec(request, this);
 			   registerServerCommand(cmd);
 			   cmd->execute();
-			   WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, nodeId, _T("Server command executed: %s"), cmd->getMaskedCommand());
+			   writeAuditLog(AUDIT_OBJECTS, true, nodeId, _T("Server command executed: %s"), cmd->getMaskedCommand());
             msg.setField(VID_COMMAND_ID, cmd->getStreamId());
 				msg.setField(VID_RCC, RCC_SUCCESS);
 			}
@@ -11903,7 +11895,7 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 		else
 		{
 			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, nodeId, _T("Access denied on server command execution"));
+			writeAuditLog(AUDIT_OBJECTS, false, nodeId, _T("Access denied on server command execution"));
 		}
 	}
 	else

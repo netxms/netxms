@@ -924,9 +924,9 @@ enum ThreadPoolStat
 class ServerCommandExec : public ProcessExecutor
 {
 private:
-   UINT32 m_requestId;
+   uint32_t m_requestId;
    ClientSession *m_session;
-   StringBuffer m_maskedComand;
+   StringBuffer m_maskedCommand;
 
    virtual void onOutput(const char *text) override;
    virtual void endOfOutput() override;
@@ -935,7 +935,7 @@ public:
    ServerCommandExec(NXCPMessage *msg, ClientSession *session);
    ~ServerCommandExec();
 
-   const TCHAR *getMaskedCommand() { return m_maskedComand; }
+   const TCHAR *getMaskedCommand() { return m_maskedCommand.cstr(); }
 };
 
 /**
