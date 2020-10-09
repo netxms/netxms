@@ -82,7 +82,7 @@ bool LockDatabase(InetAddress *lockAddr, TCHAR *lockInfo)
       m_hMutexLockerAccess = MutexCreate();
       success = true;
    }
-   else if (_tcsncmp(buffer, _T("NXDBMGR"), 7))
+   else if (!_tcsncmp(buffer, _T("NXDBMGR"), 7))
    {
       _tcslcpy(lockInfo, buffer, 256);
    }

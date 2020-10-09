@@ -976,7 +976,7 @@ retry_db_lock:
 			nxlog_write_tag(NXLOG_ERROR, _T("db.lock"), _T("Database is already locked by another NetXMS server instance (IP address: %s, machine info: %s)"),
 			         (const TCHAR *)addr.toString(), buffer);
 		}
-      else if (_tcsncmp(buffer, _T("NXDBMGR"), 7))
+      else if (!_tcsncmp(buffer, _T("NXDBMGR"), 7))
       {
          nxlog_write_tag(NXLOG_ERROR, _T("db.lock"), _T("Database is already locked by database manager"));
       }
