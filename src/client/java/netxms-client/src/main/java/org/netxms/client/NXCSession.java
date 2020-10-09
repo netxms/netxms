@@ -6399,13 +6399,13 @@ public class NXCSession
    /**
     * Execute action on remote agent
     *
-    * @param nodeId      Node object ID
-    * @param alarmId     Alarm ID (used for macro expansion)
-    * @param action      Action with all arguments, that will be expanded and splitted on server side
+    * @param nodeId Node object ID
+    * @param alarmId Alarm ID (used for macro expansion)
+    * @param action Action with all arguments, that will be expanded and splitted on server side
     * @param inputValues Input values provided by user for expansion
-    * @param maskedFields   input field list that should be masked (can be null)
+    * @param maskedFields List if input fields whose content should be masked (can be null)
     * @return Expanded action name
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public String executeActionWithExpansion(long nodeId, long alarmId, String action, 
@@ -6418,16 +6418,16 @@ public class NXCSession
    /**
     * Execute action on remote agent
     *
-    * @param nodeId        Node object ID
-    * @param alarmId       Alarm ID (used for macro expansion)
-    * @param action        Action with all arguments, that will be expanded and splitted on server side
-    * @param inputValues   Input values provided by user for expansion
-    * @param maskedFields   input field list that should be masked (can be null)
+    * @param nodeId Node object ID
+    * @param alarmId Alarm ID (used for macro expansion)
+    * @param action Action with all arguments, that will be expanded and splitted on server side
+    * @param inputValues Input values provided by user for expansion
+    * @param maskedFields List if input fields whose content should be masked (can be null)
     * @param receiveOutput true if action's output has to be read
-    * @param listener      listener for action's output or null
-    * @param writer        writer for action's output or null
+    * @param listener listener for action's output or null
+    * @param writer writer for action's output or null
     * @return Expanded action name
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public String executeActionWithExpansion(long nodeId, long alarmId, String action, boolean receiveOutput,
@@ -6457,9 +6457,9 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_INPUT_FIELD_COUNT, 0);
       }
 
-      if (maskedFields != null && !maskedFields.isEmpty())
+      if ((maskedFields != null) && !maskedFields.isEmpty())
       {
-         msg.setFieldsFromStringCollection(maskedFields, NXCPCodes.VID_MASKED_FIELD_BASE, NXCPCodes.VID_MASKED_FIELD_SIZE);
+         msg.setFieldsFromStringCollection(maskedFields, NXCPCodes.VID_MASKED_FIELD_LIST_BASE, NXCPCodes.VID_NUM_MASKED_FIELDS);
       }
 
       MessageHandler handler = receiveOutput ? new MessageHandler()
@@ -8386,11 +8386,11 @@ public class NXCSession
    /**
     * Execute server command related to given object (usually defined as object tool)
     *
-    * @param objectId    object ID
-    * @param command     command
+    * @param objectId object ID
+    * @param command command
     * @param inputFields values for input fields (can be null)
-    * @param maskedFields   input field list that should be masked (can be null)
-    * @throws IOException  if socket I/O error occurs
+    * @param maskedFields List if input fields whose content should be masked (can be null)
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void executeServerCommand(long objectId, String command, Map<String, String> inputFields, List<String> maskedFields) throws IOException, NXCException
@@ -8401,14 +8401,14 @@ public class NXCSession
    /**
     * Execute server command related to given object (usually defined as object tool)
     *
-    * @param objectId      object ID
-    * @param command       command
-    * @param inputFields   values for input fields (can be null)
-    * @param maskedFields   input field list that should be masked (can be null)
+    * @param objectId object ID
+    * @param command command
+    * @param inputFields values for input fields (can be null)
+    * @param maskedFields List if input fields whose content should be masked (can be null)
     * @param receiveOutput true if command's output has to be read
-    * @param listener      listener for command's output or null
-    * @param writer        writer for command's output or null
-    * @throws IOException  if socket I/O error occurs
+    * @param listener listener for command's output or null
+    * @param writer writer for command's output or null
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void executeServerCommand(long objectId, String command, Map<String, String> inputFields, List<String> maskedFields, 
@@ -8428,9 +8428,9 @@ public class NXCSession
             msg.setField(fieldId++, e.getValue());
          }
       }
-      if (maskedFields != null && !maskedFields.isEmpty())
+      if ((maskedFields != null) && !maskedFields.isEmpty())
       {
-         msg.setFieldsFromStringCollection(maskedFields, NXCPCodes.VID_MASKED_FIELD_BASE, NXCPCodes.VID_MASKED_FIELD_SIZE);
+         msg.setFieldsFromStringCollection(maskedFields, NXCPCodes.VID_MASKED_FIELD_LIST_BASE, NXCPCodes.VID_NUM_MASKED_FIELDS);
       }
 
       MessageHandler handler = receiveOutput ? new MessageHandler()

@@ -1154,9 +1154,9 @@ public class NXCPCodes
    public static final long VID_NAME_ON_MAP = 712;
    public static final long VID_EXTPROV_CERTIFICATE = 713;
    public static final long VID_AGENT_CERT_SUBJECT = 714;
-   public static final long VID_EVENT_SOURCE = 717;
-   public static final long VID_RAW_DATA = 717;
-   public static final long VID_MASKED_FIELD_SIZE = 717;
+   public static final long VID_EVENT_SOURCE = 715;
+   public static final long VID_RAW_DATA = 716;
+   public static final long VID_NUM_MASKED_FIELDS = 717;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1267,5 +1267,5 @@ public class NXCPCodes
    public static final long VID_HEADERS_BASE = 0x20000000L;
    public static final long VID_SHARED_SECRET_LIST_BASE = 0x10000000L;
    public static final long VID_WEB_SERVICE_DEF_LIST_BASE = 0x10000000L;
-   public static final long VID_MASKED_FIELD_BASE = 0x10000000L;
+   public static final long VID_MASKED_FIELD_LIST_BASE = 0x10000000L;
 }
