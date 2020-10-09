@@ -592,16 +592,10 @@ extern "C" DWORD __EXPORT DrvQuery(MARIADB_CONN *pConn, WCHAR *pwszQuery, WCHAR 
 }
 
 /**
- * Perform SELECT query
+ * Perform SELECT query - actual implementation
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelect(MARIADB_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+static MARIADB_RESULT *DrvSelectInternal(MARIADB_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-	if (pConn == nullptr)
-	{
-		*pdwError = DBERR_INVALID_HANDLE;
-		return nullptr;
-	}
-
    MARIADB_RESULT *result = nullptr;
 
    char localBuffer[1024];
@@ -638,6 +632,19 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(MARIADB_CONN *pConn, WCHAR *pwszQuery
 	MutexUnlock(pConn->mutexQueryLock);
 	FreeConvertedString(pszQueryUTF8, localBuffer);
 	return result;
+}
+
+/**
+ * Perform SELECT query - public entry point
+ */
+extern "C" DBDRV_RESULT __EXPORT DrvSelect(MARIADB_CONN *conn, WCHAR *query, DWORD *errorCode, WCHAR *errorText)
+{
+   if (conn == nullptr)
+   {
+      *errorCode = DBERR_INVALID_HANDLE;
+      return nullptr;
+   }
+   return DrvSelectInternal(conn, query, errorCode, errorText);
 }
 
 /**
@@ -921,11 +928,8 @@ extern "C" const char __EXPORT *DrvGetColumnName(MARIADB_RESULT *hResult, int co
 /**
  * Free SELECT results
  */
-extern "C" void __EXPORT DrvFreeResult(MARIADB_RESULT *hResult)
+static void DrvFreeResultInternal(MARIADB_RESULT *hResult)
 {
-	if (hResult == nullptr)
-		return;
-
 	if (hResult->isPreparedStatement)
 	{
 		MemFree(hResult->bindings);
@@ -935,6 +939,15 @@ extern "C" void __EXPORT DrvFreeResult(MARIADB_RESULT *hResult)
 	mysql_free_result(hResult->resultSet);
 	MemFree(hResult->rows);
 	MemFree(hResult);
+}
+
+/**
+ * Free SELECT results - public entry point
+ */
+extern "C" void __EXPORT DrvFreeResult(MARIADB_RESULT *hResult)
+{
+   if (hResult != nullptr)
+      DrvFreeResultInternal(hResult);
 }
 
 /**
@@ -1328,8 +1341,11 @@ extern "C" DWORD __EXPORT DrvRollback(MARIADB_CONN *pConn)
 /**
  * Check if table exist
  */
-extern "C" int __EXPORT DrvIsTableExist(MARIADB_CONN *pConn, const WCHAR *name)
+extern "C" int __EXPORT DrvIsTableExist(MARIADB_CONN *conn, const WCHAR *name)
 {
+   if (conn == nullptr)
+      return DBIsTableExist_Failure;
+
    WCHAR query[256], lname[256];
    wcsncpy(lname, name, 256);
    wcslwr(lname);
@@ -1337,11 +1353,11 @@ extern "C" int __EXPORT DrvIsTableExist(MARIADB_CONN *pConn, const WCHAR *name)
    DWORD error;
    WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    int rc = DBIsTableExist_Failure;
-   MARIADB_RESULT *hResult = (MARIADB_RESULT *)DrvSelect(pConn, query, &error, errorText);
-   if (hResult != NULL)
+   MARIADB_RESULT *hResult = DrvSelectInternal(conn, query, &error, errorText);
+   if (hResult != nullptr)
    {
-      rc = (DrvGetNumRows(hResult) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
-      DrvFreeResult(hResult);
+      rc = (hResult->numRows > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      DrvFreeResultInternal(hResult);
    }
    return rc;
 }
