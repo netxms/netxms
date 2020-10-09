@@ -3136,7 +3136,7 @@ public class NXCSession
     * @param id Object identifier
     * @return Object with given ID or wait object if object cannot be found
     */
-   public void findObjectAsync(final long id, ObjectCreationListenner callback)
+   public void findObjectAsync(final long id, ObjectCreationListener callback)
    {
       if (callback == null)
          return;
@@ -5508,7 +5508,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public long createObjectAsync(final NXCObjectCreationData data, ObjectCreationListenner callback) throws IOException, NXCException
+   public long createObjectAsync(final NXCObjectCreationData data, ObjectCreationListener callback) throws IOException, NXCException
    {
       long id = createObject(data, null);
       findObjectAsync(id, callback); 
