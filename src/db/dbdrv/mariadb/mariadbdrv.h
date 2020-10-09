@@ -90,6 +90,7 @@ typedef struct
 	int currentRow;
 	MYSQL_BIND *bindings;
 	unsigned long *lengthFields;
+	MYSQL_ROW *rows;
 } MARIADB_RESULT;
 
 /**

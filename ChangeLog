@@ -24,6 +24,14 @@
 	NX-1911 (Separate object name for use on maps)
 
 
+*
+* 3.5-CURRENT
+*
+
+- Fixed server deadlock when unreachable node is deleted
+- Fixed issues:
+	NX-1966 (MySQL / MariaDB database access performance issues)
+
 
 *
 * 3.5.125

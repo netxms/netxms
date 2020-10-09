@@ -596,13 +596,13 @@ extern "C" DWORD __EXPORT DrvQuery(MARIADB_CONN *pConn, WCHAR *pwszQuery, WCHAR 
  */
 extern "C" DBDRV_RESULT __EXPORT DrvSelect(MARIADB_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-	if (pConn == NULL)
+	if (pConn == nullptr)
 	{
 		*pdwError = DBERR_INVALID_HANDLE;
-		return NULL;
+		return nullptr;
 	}
 
-   MARIADB_RESULT *result = NULL;
+   MARIADB_RESULT *result = nullptr;
 
    char localBuffer[1024];
    char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
@@ -613,8 +613,12 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(MARIADB_CONN *pConn, WCHAR *pwszQuery
       result->connection = pConn;
 		result->isPreparedStatement = false;
 		result->resultSet = mysql_store_result(pConn->pMySQL);
+		result->numColumns = (int)mysql_num_fields(result->resultSet);
+      result->numRows = (int)mysql_num_rows(result->resultSet);
+      result->rows = MemAllocArray<MYSQL_ROW>(result->numRows);
+      result->currentRow = -1;
 		*pdwError = DBERR_SUCCESS;
-		if (errorText != NULL)
+		if (errorText != nullptr)
 			*errorText = 0;
 	}
 	else
@@ -726,16 +730,17 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MARIADB_CONN *pConn, MARIADB_
  */
 extern "C" LONG __EXPORT DrvGetFieldLength(MARIADB_RESULT *hResult, int iRow, int iColumn)
 {
+   if ((iRow < 0) || (iRow >= hResult->numRows) ||
+       (iColumn < 0) || (iColumn >= hResult->numColumns))
+      return -1;
+
 	if (hResult->isPreparedStatement)
 	{
-		if ((iRow < 0) || (iRow >= hResult->numRows) ||
-		    (iColumn < 0) || (iColumn >= hResult->numColumns))
-			return -1;
-
 		if (hResult->currentRow != iRow)
 		{
          MutexLock(hResult->connection->mutexQueryLock);
-			mysql_stmt_data_seek(hResult->statement, iRow);
+         if (iRow != hResult->currentRow + 1)
+            mysql_stmt_data_seek(hResult->statement, iRow);
 			mysql_stmt_fetch(hResult->statement);
 			hResult->currentRow = iRow;
 	      MutexUnlock(hResult->connection->mutexQueryLock);
@@ -744,9 +749,27 @@ extern "C" LONG __EXPORT DrvGetFieldLength(MARIADB_RESULT *hResult, int iRow, in
 	}
 	else
 	{
-		mysql_data_seek(hResult->resultSet, iRow);
-		MYSQL_ROW row = mysql_fetch_row(hResult->resultSet);
-		return (row == NULL) ? (LONG)-1 : ((row[iColumn] == NULL) ? -1 : (LONG)strlen(row[iColumn]));
+	   MYSQL_ROW row;
+      if (hResult->currentRow != iRow)
+      {
+         if (hResult->rows[iRow] == nullptr)
+         {
+            if (iRow != hResult->currentRow + 1)
+               mysql_data_seek(hResult->resultSet, iRow);
+            row = mysql_fetch_row(hResult->resultSet);
+            hResult->rows[iRow] = row;
+         }
+         else
+         {
+            row = hResult->rows[iRow];
+         }
+         hResult->currentRow = iRow;
+      }
+      else
+      {
+         row = hResult->rows[iRow];
+      }
+		return (row == nullptr) ? (LONG)-1 : ((row[iColumn] == nullptr) ? -1 : (LONG)strlen(row[iColumn]));
 	}
 }
 
@@ -755,18 +778,18 @@ extern "C" LONG __EXPORT DrvGetFieldLength(MARIADB_RESULT *hResult, int iRow, in
  */
 static void *GetFieldInternal(MARIADB_RESULT *hResult, int iRow, int iColumn, void *pBuffer, int nBufSize, bool utf8)
 {
-	void *pRet = NULL;
-	
+   if ((iRow < 0) || (iRow >= hResult->numRows) ||
+       (iColumn < 0) || (iColumn >= hResult->numColumns))
+      return nullptr;
+
+	void *value = nullptr;
 	if (hResult->isPreparedStatement)
 	{
-		if ((iRow < 0) || (iRow >= hResult->numRows) ||
-		    (iColumn < 0) || (iColumn >= hResult->numColumns))
-			return NULL;
-
       MutexLock(hResult->connection->mutexQueryLock);
 		if (hResult->currentRow != iRow)
 		{
-			mysql_stmt_data_seek(hResult->statement, iRow);
+         if (iRow != hResult->currentRow + 1)
+            mysql_stmt_data_seek(hResult->statement, iRow);
 			mysql_stmt_fetch(hResult->statement);
 			hResult->currentRow = iRow;
 		}
@@ -804,18 +827,36 @@ static void *GetFieldInternal(MARIADB_RESULT *hResult, int iRow, int iColumn, vo
             else
                *((WCHAR *)pBuffer) = 0;
          }
-			pRet = pBuffer;
+			value = pBuffer;
 		}
       MutexUnlock(hResult->connection->mutexQueryLock);
 		MemFreeLocal(b.buffer);
 	}
 	else
 	{
-		mysql_data_seek(hResult->resultSet, iRow);
-		MYSQL_ROW row = mysql_fetch_row(hResult->resultSet);
-		if (row != NULL)
+      MYSQL_ROW row;
+      if (hResult->currentRow != iRow)
+      {
+         if (hResult->rows[iRow] == nullptr)
+         {
+            if (iRow != hResult->currentRow + 1)
+               mysql_data_seek(hResult->resultSet, iRow);
+            row = mysql_fetch_row(hResult->resultSet);
+            hResult->rows[iRow] = row;
+         }
+         else
+         {
+            row = hResult->rows[iRow];
+         }
+         hResult->currentRow = iRow;
+      }
+      else
+      {
+         row = hResult->rows[iRow];
+      }
+		if (row != nullptr)
 		{
-			if (row[iColumn] != NULL)
+			if (row[iColumn] != nullptr)
 			{
             if (utf8)
             {
@@ -826,11 +867,11 @@ static void *GetFieldInternal(MARIADB_RESULT *hResult, int iRow, int iColumn, vo
    				MultiByteToWideChar(CP_UTF8, 0, row[iColumn], -1, (WCHAR *)pBuffer, nBufSize);
    			   ((WCHAR *)pBuffer)[nBufSize - 1] = 0;
             }
-				pRet = pBuffer;
+				value = pBuffer;
 			}
 		}
 	}
-	return pRet;
+	return value;
 }
 
 /**
@@ -854,7 +895,7 @@ extern "C" char __EXPORT *DrvGetFieldUTF8(MARIADB_RESULT *hResult, int iRow, int
  */
 extern "C" int __EXPORT DrvGetNumRows(MARIADB_RESULT *hResult)
 {
-   return (hResult != NULL) ? (int)(hResult->isPreparedStatement ? hResult->numRows : mysql_num_rows(hResult->resultSet)) : 0;
+   return (hResult != nullptr) ? hResult->numRows : 0;
 }
 
 /**
@@ -862,7 +903,7 @@ extern "C" int __EXPORT DrvGetNumRows(MARIADB_RESULT *hResult)
  */
 extern "C" int __EXPORT DrvGetColumnCount(MARIADB_RESULT *hResult)
 {
-	return (hResult != NULL) ? (int)mysql_num_fields(hResult->resultSet) : 0;
+	return (hResult != nullptr) ? hResult->numColumns : 0;
 }
 
 /**
@@ -870,13 +911,11 @@ extern "C" int __EXPORT DrvGetColumnCount(MARIADB_RESULT *hResult)
  */
 extern "C" const char __EXPORT *DrvGetColumnName(MARIADB_RESULT *hResult, int column)
 {
-	MYSQL_FIELD *field;
+	if (hResult == nullptr)
+		return nullptr;
 
-	if (hResult == NULL)
-		return NULL;
-
-	field = mysql_fetch_field_direct(hResult->resultSet, column);
-	return (field != NULL) ? field->name : NULL;
+	MYSQL_FIELD *field = mysql_fetch_field_direct(hResult->resultSet, column);
+	return (field != nullptr) ? field->name : nullptr;
 }
 
 /**
@@ -884,7 +923,7 @@ extern "C" const char __EXPORT *DrvGetColumnName(MARIADB_RESULT *hResult, int co
  */
 extern "C" void __EXPORT DrvFreeResult(MARIADB_RESULT *hResult)
 {
-	if (hResult == NULL)
+	if (hResult == nullptr)
 		return;
 
 	if (hResult->isPreparedStatement)
@@ -894,6 +933,7 @@ extern "C" void __EXPORT DrvFreeResult(MARIADB_RESULT *hResult)
 	}
 
 	mysql_free_result(hResult->resultSet);
+	MemFree(hResult->rows);
 	MemFree(hResult);
 }
 
