@@ -29,7 +29,7 @@ DECLARE_DRIVER_HEADER("SQLITE")
  */
 static void GetErrorMessage(sqlite3 *hdb, WCHAR *errorText)
 {
-	if (errorText == NULL)
+	if (errorText == nullptr)
 		return;
 
 #if UNICODE_UCS2
@@ -335,15 +335,12 @@ retry:
 /**
  * Perform non-SELECT query
  */
-extern "C" DWORD __EXPORT DrvQuery(SQLITE_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvQuery(SQLITE_CONN *conn, WCHAR *query, WCHAR *errorText)
 {
-   DWORD dwResult;
-   char *pszQueryUTF8;
-
-   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-   dwResult = DrvQueryInternal(pConn, pszQueryUTF8, errorText);
-   free(pszQueryUTF8);
-   return dwResult;
+   char *queryUTF8 = UTF8StringFromWideString(query);
+   DWORD rc = DrvQueryInternal(conn, queryUTF8, errorText);
+   MemFree(queryUTF8);
+   return rc;
 }
 
 /**
@@ -386,37 +383,43 @@ static int SelectCallback(void *arg, int nCols, char **ppszData, char **ppszName
 /**
  * Free SELECT results
  */
-extern "C" void __EXPORT DrvFreeResult(SQLITE_RESULT *hResult)
+static void DrvFreeResultInternal(SQLITE_RESULT *hResult)
 {
-   if (hResult != nullptr)
+   if (hResult->ppszData != nullptr)
    {
-      if (hResult->ppszData != nullptr)
-      {
-         int nCount = hResult->nRows * hResult->nCols;
-         for(int i = 0; i < nCount; i++)
-            MemFree(hResult->ppszData[i]);
-         MemFree(hResult->ppszData);
+      int nCount = hResult->nRows * hResult->nCols;
+      for(int i = 0; i < nCount; i++)
+         MemFree(hResult->ppszData[i]);
+      MemFree(hResult->ppszData);
 
-         for(int i = 0; i < hResult->nCols; i++)
-            MemFree(hResult->ppszNames[i]);
-         MemFree(hResult->ppszNames);
-      }
-      MemFree(hResult);
+      for(int i = 0; i < hResult->nCols; i++)
+         MemFree(hResult->ppszNames[i]);
+      MemFree(hResult->ppszNames);
    }
+   MemFree(hResult);
 }
 
 /**
- * Perform SELECT query
+ * Free SELECT results - public entry point
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" void __EXPORT DrvFreeResult(SQLITE_RESULT *hResult)
 {
-   char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+   if (hResult != nullptr)
+      DrvFreeResultInternal(hResult);
+}
+
+/**
+ * Perform SELECT query - actual implementation
+ */
+static SQLITE_RESULT *DrvSelectInternal(SQLITE_CONN *conn, WCHAR *query, DWORD *errorCode, WCHAR *errorText)
+{
+   char *queryUTF8 = UTF8StringFromWideString(query);
 
    SQLITE_RESULT *result = MemAllocStruct<SQLITE_RESULT>();
 
-	MutexLock(hConn->mutexQueryLock);
+	MutexLock(conn->mutexQueryLock);
 retry:
-   int rc = sqlite3_exec(hConn->pdb, pszQueryUTF8, SelectCallback, result, NULL);
+   int rc = sqlite3_exec(conn->pdb, queryUTF8, SelectCallback, result, NULL);
    if ((rc == SQLITE_LOCKED) || (rc == SQLITE_LOCKED_SHAREDCACHE))
    {
       // database locked by another thread, retry in 10 milliseconds
@@ -425,15 +428,23 @@ retry:
    }
    else if (rc != SQLITE_OK)
    {
-		GetErrorMessage(hConn->pdb, errorText);
-		DrvFreeResult(result);
-		result = NULL;
+		GetErrorMessage(conn->pdb, errorText);
+		DrvFreeResultInternal(result);
+		result = nullptr;
    }
-   MutexUnlock(hConn->mutexQueryLock);
+   MutexUnlock(conn->mutexQueryLock);
 
-	MemFree(pszQueryUTF8);
-   *pdwError = (result != NULL) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
+	MemFree(queryUTF8);
+   *errorCode = (result != NULL) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
    return result;
+}
+
+/**
+ * Perform SELECT query - public entry point
+ */
+extern "C" DBDRV_RESULT __EXPORT DrvSelect(SQLITE_CONN *conn, WCHAR *query, DWORD *errorCode, WCHAR *errorText)
+{
+   return DrvSelectInternal(conn, query, errorCode, errorText);
 }
 
 /**
@@ -505,7 +516,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_s
 
 	if (*pdwError != DBERR_SUCCESS)
 	{
-		DrvFreeResult(result);
+	   DrvFreeResultInternal(result);
 		result = nullptr;
 	}
 
@@ -754,32 +765,35 @@ extern "C" void __EXPORT DrvFreeUnbufferedResult(SQLITE_UNBUFFERED_RESULT *resul
 /**
  * Begin transaction
  */
-extern "C" DWORD __EXPORT DrvBegin(SQLITE_CONN *pConn)
+extern "C" DWORD __EXPORT DrvBegin(SQLITE_CONN *conn)
 {
-   return DrvQueryInternal(pConn, "BEGIN IMMEDIATE", NULL);
+   return DrvQueryInternal(conn, "BEGIN IMMEDIATE", nullptr);
 }
 
 /**
  * Commit transaction
  */
-extern "C" DWORD __EXPORT DrvCommit(SQLITE_CONN *pConn)
+extern "C" DWORD __EXPORT DrvCommit(SQLITE_CONN *conn)
 {
-   return DrvQueryInternal(pConn, "COMMIT", NULL);
+   return DrvQueryInternal(conn, "COMMIT", nullptr);
 }
 
 /**
  * Rollback transaction
  */
-extern "C" DWORD __EXPORT DrvRollback(SQLITE_CONN *pConn)
+extern "C" DWORD __EXPORT DrvRollback(SQLITE_CONN *conn)
 {
-   return DrvQueryInternal(pConn, "ROLLBACK", NULL);
+   return DrvQueryInternal(conn, "ROLLBACK", nullptr);
 }
 
 /**
  * Check if table exist
  */
-extern "C" int __EXPORT DrvIsTableExist(SQLITE_CONN *pConn, const WCHAR *name)
+extern "C" int __EXPORT DrvIsTableExist(SQLITE_CONN *conn, const WCHAR *name)
 {
+   if (conn == nullptr)
+      return DBIsTableExist_Failure;
+
    WCHAR query[256];
 #if HAVE_SWPRINTF
    swprintf(query, 256, L"SELECT count(*) FROM sqlite_master WHERE type='table' AND upper(name)=upper('%ls')", name);
@@ -789,15 +803,19 @@ extern "C" int __EXPORT DrvIsTableExist(SQLITE_CONN *pConn, const WCHAR *name)
    wcscat(query, L"')");
 #endif
    DWORD error;
-   WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    int rc = DBIsTableExist_Failure;
-   SQLITE_RESULT *hResult = (SQLITE_RESULT *)DrvSelect(pConn, query, &error, errorText);
-   if (hResult != NULL)
+   SQLITE_RESULT *hResult = DrvSelectInternal(conn, query, &error, nullptr);
+   if (hResult != nullptr)
    {
-      WCHAR buffer[64] = L"";
-      DrvGetField(hResult, 0, 0, buffer, 64);
-      rc = (wcstol(buffer, NULL, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
-      DrvFreeResult(hResult);
+      if ((hResult->nRows > 0) && (hResult->nCols > 0))
+      {
+         rc = (strtol(hResult->ppszData[0], nullptr, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      }
+      else
+      {
+         rc = DBIsTableExist_NotFound;
+      }
+      DrvFreeResultInternal(hResult);
    }
    return rc;
 }
