@@ -21,6 +21,7 @@
 *
 
 - Fixed server deadlock when unreachable node is deleted
+- Fixed SNMPv3 performance issue
 - Fixed issues:
 	NX-1966 (MySQL / MariaDB database access performance issues)
 
