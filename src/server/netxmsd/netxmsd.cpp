@@ -486,8 +486,8 @@ int main(int argc, char* argv[])
          // Remove database lock
          if (g_flags & AF_DB_LOCKED)
          {
-            UnlockDB();
-            ShutdownDB();
+            UnlockDatabase();
+            ShutdownDatabase();
          }
          nxlog_close();
          return 3;
@@ -520,8 +520,8 @@ int main(int argc, char* argv[])
       // Remove database lock
       if (g_flags & AF_DB_LOCKED)
       {
-         UnlockDB();
-         ShutdownDB();
+         UnlockDatabase();
+         ShutdownDatabase();
       }
       nxlog_close();
       return 3;

@@ -284,7 +284,7 @@ void NXCORE_EXPORTABLE FillLicenseProblemsMessage(NXCPMessage *msg)
 /**
  * Disconnect from database (exportable function for startup module)
  */
-void NXCORE_EXPORTABLE ShutdownDB()
+void NXCORE_EXPORTABLE ShutdownDatabase()
 {
    DBConnectionPoolShutdown();
    DBUnloadDriver(g_dbDriver);
@@ -949,18 +949,18 @@ BOOL NXCORE_EXPORTABLE Initialize()
    // Initialize locks
 retry_db_lock:
    InetAddress addr;
-   if (!InitLocks(&addr, buffer))
+   if (!LockDatabase(&addr, buffer))
    {
       if (addr.isValidUnicast())     // Database already locked by another server instance
       {
          // Check for lock from crashed/terminated local process
          if (GetLocalIpAddr().equals(addr))
          {
-            UINT32 pid = ConfigReadULong(_T("DBLockPID"), 0);
+            uint32_t pid = ConfigReadULong(_T("DBLockPID"), 0);
 				if (!IsNetxmsdProcess(pid) || (pid == GetCurrentProcessId()))
 				{
-					UnlockDB();
-               nxlog_write(NXLOG_INFO, _T("Stalled database lock removed"));
+					UnlockDatabase();
+               nxlog_write_tag(NXLOG_INFO, _T("db.lock"), _T("Stalled database lock removed"));
 					goto retry_db_lock;
 				}
 			}
@@ -968,21 +968,26 @@ retry_db_lock:
 			{
 			   if (!PeerNodeIsRunning(addr))
 			   {
-               UnlockDB();
-               nxlog_write(NXLOG_INFO, _T("Stalled database lock removed"));
+               UnlockDatabase();
+               nxlog_write_tag(NXLOG_INFO, _T("db.lock"), _T("Stalled database lock removed"));
                goto retry_db_lock;
 			   }
 			}
-			nxlog_write(NXLOG_ERROR, _T("Database is already locked by another NetXMS server instance (IP address: %s, machine info: %s)"),
+			nxlog_write_tag(NXLOG_ERROR, _T("db.lock"), _T("Database is already locked by another NetXMS server instance (IP address: %s, machine info: %s)"),
 			         (const TCHAR *)addr.toString(), buffer);
 		}
+      else if (_tcsncmp(buffer, _T("NXDBMGR"), 7))
+      {
+         nxlog_write_tag(NXLOG_ERROR, _T("db.lock"), _T("Database is already locked by database manager"));
+      }
 		else
       {
-         nxlog_write(NXLOG_ERROR, _T("Error initializing component locks table"));
+         nxlog_write_tag(NXLOG_ERROR, _T("db.lock"), _T("Cannot lock database"));
       }
 		return FALSE;
 	}
 	g_flags |= AF_DB_LOCKED;
+   nxlog_debug_tag(_T("db.lock"), 1, _T("Database lock set"));
 
    // Load global configuration parameters
    ConfigPreLoad();
@@ -1351,7 +1356,7 @@ void NXCORE_EXPORTABLE Shutdown()
    SaveCurrentFreeId();
 
 	// Remove database lock
-	UnlockDB();
+	UnlockDatabase();
 
 	DBConnectionPoolShutdown();
 	DBUnloadDriver(g_dbDriver);
@@ -1394,7 +1399,7 @@ void NXCORE_EXPORTABLE FastShutdown(ShutdownReason reason)
 	DBConnectionPoolReleaseConnection(hdb);
 
 	// Remove database lock first, because we have a chance to lose DB connection
-	UnlockDB();
+	UnlockDatabase();
 
 	// Stop database writers
 	StopDBWriter();

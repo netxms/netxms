@@ -1115,11 +1115,14 @@ bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *variable, INT32 value);
 
 bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel);
 
+bool LockDatabase(InetAddress *lockAddr, TCHAR *lockInfo);
+void NXCORE_EXPORTABLE UnlockDatabase();
+
 void NXCORE_EXPORTABLE Shutdown();
 void NXCORE_EXPORTABLE FastShutdown(ShutdownReason reason);
 BOOL NXCORE_EXPORTABLE Initialize();
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
-void NXCORE_EXPORTABLE ShutdownDB();
+void NXCORE_EXPORTABLE ShutdownDatabase();
 void NXCORE_EXPORTABLE InitiateShutdown(ShutdownReason reason);
 
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);

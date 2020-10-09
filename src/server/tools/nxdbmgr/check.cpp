@@ -1146,9 +1146,9 @@ static void CheckMapLinks()
 }
 
 /**
- * Init DB lock
+ * Lock database
  */
-static bool InitLocks()
+static bool LockDatabase()
 {
    TCHAR buffer[MAX_DB_STRING], bufferInfo[MAX_DB_STRING];
    bool result = false;
@@ -1233,7 +1233,7 @@ void CheckDatabase()
    BOOL bCompleted = FALSE;
 
    // Check if database is locked
-   if (InitLocks())
+   if (LockDatabase())
    {
       DBBegin(g_dbHandle);
 
