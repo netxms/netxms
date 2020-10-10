@@ -311,6 +311,21 @@ static int DestroyEngine(ENGINE *e)
 }
 
 /**
+ * Match specific certificate name attribute
+ */
+static inline bool MatchCertificateNameAttribute(PCCERT_CONTEXT context, const TCHAR *selector, const char *attr, const TCHAR *id)
+{
+   size_t l = _tcslen(selector);
+   if (_tcsncmp(id, selector, l))
+      return false;
+
+   TCHAR value[1024];
+   CertGetNameString(context, CERT_NAME_ATTR_TYPE, 0, (void*)attr, value, 1024);
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: %s \"%s\" with \"%s\""), selector, &id[l], value);
+   return _tcsicmp(&id[l], value) == 0;
+}
+
+/**
  * Match any certificate
  */
 bool MatchWindowsStoreCertificate(PCCERT_CONTEXT context, const TCHAR *id)
@@ -343,7 +358,44 @@ bool MatchWindowsStoreCertificate(PCCERT_CONTEXT context, const TCHAR *id)
       return _tcsicmp(&id[8], value) == 0;
    }
 
-   return false;
+   if (!_tcsnicmp(id, _T("template:"), 9))
+   {
+      PCERT_EXTENSION e = CertFindExtension(szOID_CERTIFICATE_TEMPLATE, context->pCertInfo->cExtension, context->pCertInfo->rgExtension);
+      if (e == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: call to CertFindExtension failed"));
+         return false;
+      }
+
+      CRYPT_DECODE_PARA dp;
+      dp.cbSize = sizeof(dp);
+      dp.pfnAlloc = MemAlloc;
+      dp.pfnFree = MemFree;
+
+      CERT_TEMPLATE_EXT *tmpl = nullptr;
+      DWORD size = 0;
+      if (!CryptDecodeObjectEx(X509_ASN_ENCODING, szOID_CERTIFICATE_TEMPLATE, e->Value.pbData, e->Value.cbData,
+            CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_NOCOPY_FLAG | CRYPT_DECODE_SHARE_OID_STRING_FLAG, &dp, &tmpl, &size))
+      {
+         TCHAR buffer[1024];
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: call to CryptDecodeObjectEx failed (%s)"),
+            GetSystemErrorText(GetLastError(), buffer, 1024));
+         return false;
+      }
+
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("MatchWindowsStoreCertificate: subject: \"%s\" with \"%hs\""), &id[9], tmpl->pszObjId);
+      char *mbid = MBStringFromWideString(&id[9]);
+      bool success = (strcmp(mbid, tmpl->pszObjId) == 0);
+
+      MemFree(mbid);
+      MemFree(tmpl);
+      return success;
+   }
+
+   return
+      MatchCertificateNameAttribute(context, _T("cn:"), szOID_COMMON_NAME, id) ||
+      MatchCertificateNameAttribute(context, _T("org:"), szOID_ORGANIZATION_NAME, id) ||
+      MatchCertificateNameAttribute(context, _T("deviceSerial:"), szOID_DEVICE_SERIAL_NUMBER, id);
 }
 
 /**
