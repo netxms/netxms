@@ -1330,32 +1330,37 @@ retry:
          {
             method = MAP_CERTIFICATE_BY_SUBJECT;
             node = s_certificateMappings.getShared(certSubject);
-            if (node == nullptr)
-            {
-               method = MAP_CERTIFICATE_BY_PUBKEY;
+         }
+         if (node == nullptr)
+         {
+            method = MAP_CERTIFICATE_BY_TEMPLATE_ID;
+            node = s_certificateMappings.getShared(GetCertificateTemplateId(cert));
+         }
+         if (node == nullptr)
+         {
+            method = MAP_CERTIFICATE_BY_PUBKEY;
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-               EVP_PKEY *pkey = X509_get0_pubkey(cert);
+            EVP_PKEY *pkey = X509_get0_pubkey(cert);
 #else
-               EVP_PKEY *pkey = X509_get_pubkey(cert);
+            EVP_PKEY *pkey = X509_get_pubkey(cert);
 #endif
-               if (pkey != nullptr)
-               {
-                  int pkeyLen = i2d_PublicKey(pkey, nullptr);
-                  auto buffer = MemAllocArray<unsigned char>(pkeyLen + 1);
-                  auto in = buffer;
-                  i2d_PublicKey(pkey, &in);
+            if (pkey != nullptr)
+            {
+               int pkeyLen = i2d_PublicKey(pkey, nullptr);
+               auto buffer = MemAllocArray<unsigned char>(pkeyLen + 1);
+               auto in = buffer;
+               i2d_PublicKey(pkey, &in);
 
-                  TCHAR *pkeyText = MemAllocString(pkeyLen * 2 + 1);
-                  BinToStr(buffer, pkeyLen, pkeyText);
+               TCHAR *pkeyText = MemAllocString(pkeyLen * 2 + 1);
+               BinToStr(buffer, pkeyLen, pkeyText);
 
-                  node = s_certificateMappings.getShared(pkeyText);
+               node = s_certificateMappings.getShared(pkeyText);
 
-                  MemFree(pkeyText);
-                  MemFree(buffer);
+               MemFree(pkeyText);
+               MemFree(buffer);
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
-                  EVP_PKEY_free(pkey);
+               EVP_PKEY_free(pkey);
 #endif
-               }
             }
          }
 

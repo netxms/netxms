@@ -308,7 +308,7 @@ static bool CheckPublicKey(EVP_PKEY *key, const TCHAR *mappingData)
 }
 
 /**
- * Check ciertificate's CN
+ * Check certificate's CN
  */
 static bool CheckCommonName(X509 *cert, const TCHAR *cn)
 {
@@ -318,6 +318,18 @@ static bool CheckCommonName(X509 *cert, const TCHAR *cn)
 
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Certificate CN=\"%s\", user CN=\"%s\""), certCn, cn);
    return _tcsicmp(certCn, cn) == 0;
+}
+
+/**
+ * Check certificate's template ID
+ */
+static bool CheckTemplateId(X509 *cert, const TCHAR *userTemplateId)
+{
+   String certTemplateId = GetCertificateTemplateId(cert);
+   if (certTemplateId.isEmpty())
+      return false;
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Certificate templateId=\"%s\", user templateId=\"%s\""), certTemplateId.cstr(), userTemplateId);
+   return _tcscmp(certTemplateId, userTemplateId) == 0;
 }
 
 /**
@@ -393,6 +405,9 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
 			case MAP_CERTIFICATE_BY_CN:
             bValid = CheckCommonName(cert, ((mappingData != nullptr) && (*mappingData != 0)) ? mappingData : login);
 				break;
+         case MAP_CERTIFICATE_BY_TEMPLATE_ID:
+            bValid = CheckTemplateId(cert, CHECK_NULL_EX(mappingData));;
+            break;
 			default:
 			   nxlog_debug_tag(DEBUG_TAG, 3, _T("Invalid certificate mapping method %d for user %s"), mappingMethod, login);
 				bValid = false;

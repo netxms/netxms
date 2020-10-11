@@ -30,7 +30,8 @@ public enum CertificateMappingMethod
 {
    SUBJECT(0),
    PUBLIC_KEY(1),
-   COMMON_NAME(2);
+   COMMON_NAME(2),
+   TEMPLATE_ID(3);
 
    private static Logger logger = LoggerFactory.getLogger(CertificateMappingMethod.class);
    private static Map<Integer, CertificateMappingMethod> lookupTable = new HashMap<Integer, CertificateMappingMethod>();

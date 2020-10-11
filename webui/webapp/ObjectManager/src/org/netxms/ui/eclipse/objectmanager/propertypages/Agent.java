@@ -163,6 +163,7 @@ public class Agent extends PropertyPage
       certMappingMethod.add("Subject");
       certMappingMethod.add("Public key");
       certMappingMethod.add("Common name");
+      certMappingMethod.add("Template ID");
       certMappingMethod.select(node.getAgentCertificateMappingMethod().getValue());
 
       certMappingData = new LabeledText(certificateMappingGroup, SWT.NONE);
