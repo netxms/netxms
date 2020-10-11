@@ -812,9 +812,10 @@ enum SessionState
  */
 enum CertificateMappingMethod
 {
-   MAP_CERTIFICATE_BY_SUBJECT = 0,
-   MAP_CERTIFICATE_BY_PUBKEY  = 1,
-   MAP_CERTIFICATE_BY_CN      = 2
+   MAP_CERTIFICATE_BY_SUBJECT     = 0,
+   MAP_CERTIFICATE_BY_PUBKEY      = 1,
+   MAP_CERTIFICATE_BY_CN          = 2,
+   MAP_CERTIFICATE_BY_TEMPLATE_ID = 3
 };
 
 /**

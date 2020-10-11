@@ -133,6 +133,7 @@ public class Authentication extends PropertyPage
 		comboMappingMethod.add(Messages.get().Authentication_Subject);
 		comboMappingMethod.add(Messages.get().Authentication_PublicKey);
       comboMappingMethod.add(Messages.get().Authentication_CommonName);
+      comboMappingMethod.add("Template ID");
       comboMappingMethod.select(object.getCertMappingMethod().getValue());
 		gridData = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;
