@@ -24,6 +24,7 @@
 #include "libnetxms.h"
 #include <nxcrypto.h>
 #include <nxstat.h>
+#include <openssl/asn1t.h>
 
 #define DEBUG_TAG    _T("crypto.cert")
 
@@ -219,6 +220,76 @@ time_t LIBNETXMS_EXPORTABLE GetCertificateExpirationTime(const X509 *cert)
    struct tm expTime;
    ASN1_TIME_to_tm(X509_get0_notAfter(cert), &expTime);
    return timegm(&expTime);
+#endif
+}
+
+/**
+ * Certificate template extension structure as described in Microsoft documentation
+ * https://docs.microsoft.com/en-us/windows/win32/api/certenroll/nn-certenroll-ix509extensiontemplate
+ *
+ * ----------------------------------------------------------------------
+ * -- CertificateTemplate
+ * -- XCN_OID_CERTIFICATE_TEMPLATE (1.3.6.1.4.1.311.21.7)
+ * ----------------------------------------------------------------------
+ *
+ * CertificateTemplate ::= SEQUENCE
+ * {
+ * templateID              EncodedObjectID,
+ * templateMajorVersion    TemplateVersion,
+ * templateMinorVersion    TemplateVersion OPTIONAL
+ * }
+ */
+struct CERTIFICATE_TEMPLATE
+{
+   ASN1_OBJECT *templateId;
+   ASN1_INTEGER *templateMajorVersion;
+   ASN1_INTEGER *templateMinorVersion;
+};
+
+/**
+ * Define ASN.1 sequence for CERTIFICATE_TEMPLATE
+ */
+ASN1_NDEF_SEQUENCE(CERTIFICATE_TEMPLATE) =
+{
+   ASN1_SIMPLE(CERTIFICATE_TEMPLATE, templateId, ASN1_OBJECT),
+   ASN1_SIMPLE(CERTIFICATE_TEMPLATE, templateMajorVersion, ASN1_INTEGER),
+   ASN1_SIMPLE(CERTIFICATE_TEMPLATE, templateMinorVersion, ASN1_INTEGER)
+} ASN1_NDEF_SEQUENCE_END(CERTIFICATE_TEMPLATE)
+
+/**
+ * Function implementations for CERTIFICATE_TEMPLATE structure
+ */
+IMPLEMENT_ASN1_FUNCTIONS(CERTIFICATE_TEMPLATE)
+
+/**
+ * Get certificate's template ID (extension 1.3.6.1.4.1.311.21.7)
+ */
+String LIBNETXMS_EXPORTABLE GetCertificateTemplateId(const X509 *cert)
+{
+   ASN1_OBJECT *oid = OBJ_txt2obj("1.3.6.1.4.1.311.21.7", 1);
+   int index = X509_get_ext_by_OBJ(cert, oid, -1);
+   ASN1_OBJECT_free(oid);
+   if (index == -1)
+      return String();
+   X509_EXTENSION *ext = X509_get_ext(cert, index);
+   if (ext == nullptr)
+      return String();
+   ASN1_STRING *value = X509_EXTENSION_get_data(ext);
+   if (value == nullptr)
+      return String();
+   const unsigned char *bytes = ASN1_STRING_get0_data(value);
+   CERTIFICATE_TEMPLATE *t = d2i_CERTIFICATE_TEMPLATE(nullptr, &bytes, ASN1_STRING_length(value));
+   if (t == nullptr)
+      return String(_T(""));
+   char oidA[256];
+   OBJ_obj2txt(oidA, 256, t->templateId, 1);
+   CERTIFICATE_TEMPLATE_free(t);
+#ifdef UNICODE
+   WCHAR oidW[256];
+   mb_to_wchar(oidA, -1, oidW, 256);
+   return String(oidW);
+#else
+   return String(oidA);
 #endif
 }
 
