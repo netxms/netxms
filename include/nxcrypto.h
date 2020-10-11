@@ -53,6 +53,7 @@ String LIBNETXMS_EXPORTABLE GetCertificateSubjectString(X509 *cert);
 bool LIBNETXMS_EXPORTABLE GetCertificateIssuerField(X509 *cert, int nid, TCHAR *buffer, size_t size);
 String LIBNETXMS_EXPORTABLE GetCertificateIssuerString(X509 *cert);
 time_t LIBNETXMS_EXPORTABLE GetCertificateExpirationTime(const X509 *cert);
+String LIBNETXMS_EXPORTABLE GetCertificateTemplateId(const X509 *cert);
 X509_STORE LIBNETXMS_EXPORTABLE *CreateTrustedCertificatesStore(const StringSet& trustedCertificates, bool useSystemStore);
 
 #endif   /* __cplusplus */
