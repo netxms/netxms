@@ -37,6 +37,9 @@ public class LogParserRule
 
 	@Attribute(name="break", required=false)
 	private String breakProcessing = null;
+
+   @Attribute(required=false)
+   private String doNotSaveToDatabse = null;
 	
 	@Element(required=true)
 	private LogParserMatch match = new LogParserMatch();
@@ -59,12 +62,17 @@ public class LogParserRule
 	
 	@Element(required=false)
 	private Integer id = null;
-	
+
+   //source == tag
+   //tag in syslog\source for other logs
 	@Element(required = false)
 	private String source = null;
 	
 	@Element(required=false)
 	private String tag = null;
+   
+   @Element(required=false)
+   private String logName = null;
 
 	@Element(required=false)
 	private String description = null;
@@ -124,6 +132,22 @@ public class LogParserRule
 	{
 		this.breakProcessing = LogParser.booleanToString(breakProcessing);
 	}
+
+   /**
+    * @return the breakProcessing
+    */
+   public boolean isDoNotSaveToDatabse()
+   {
+      return LogParser.stringToBoolean(doNotSaveToDatabse);
+   }
+
+   /**
+    * @param breakProcessing the breakProcessing to set
+    */
+   public void setDoNotSaveToDatabse(boolean doNotSave)
+   {
+      this.doNotSaveToDatabse = LogParser.booleanToString(doNotSave);
+   }
 
 	/**
     * @return the matcher
@@ -248,6 +272,22 @@ public class LogParserRule
 	}
 
 	/**
+    * @return the logName
+    */
+   public String getLogName()
+   {
+      return logName;
+   }
+
+   /**
+    * @param logName the logName to set
+    */
+   public void setLogName(String logName)
+   {
+      this.logName = logName;
+   }
+
+   /**
 	 * @return the description
 	 */
 	public String getDescription()

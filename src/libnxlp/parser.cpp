@@ -52,7 +52,8 @@ enum ParserState
    XML_STATE_DESCRIPTION,
    XML_STATE_EXCLUSION_SCHEDULES,
    XML_STATE_EXCLUSION_SCHEDULE,
-   XML_STATE_AGENT_ACTION
+   XML_STATE_AGENT_ACTION,
+   XML_STATE_LOG_NAME
 };
 
 /**
@@ -74,6 +75,7 @@ struct LogParser_XmlParserState
    IntegerArray<INT32> keepOpenFlags;
    IntegerArray<INT32> ignoreMTimeFlags;
    IntegerArray<INT32> rescanFlags;
+   StringBuffer logName;
    StringBuffer id;
    StringBuffer level;
    StringBuffer source;
@@ -91,6 +93,7 @@ struct LogParser_XmlParserState
    bool ignoreCase;
 	bool invertedRule;
 	bool breakFlag;
+	bool doNotSaveToDBFlag;
 	int repeatCount;
 	int repeatInterval;
 	bool resetRepeat;
@@ -98,15 +101,16 @@ struct LogParser_XmlParserState
    LogParser_XmlParserState() : encodings(4, 4), preallocFlags(4, 4), detectBrokenPreallocFlags(4, 4), snapshotFlags(4, 4), keepOpenFlags(4, 4), ignoreMTimeFlags(4, 4)
 	{
       state = XML_STATE_INIT;
-      parser = NULL;
+      parser = nullptr;
       ignoreCase = true;
 	   invertedRule = false;
 	   breakFlag = false;
+	   doNotSaveToDBFlag = false;
 	   contextAction = CONTEXT_SET_AUTOMATIC;
 	   repeatCount = 0;
 	   repeatInterval = 0;
 	   resetRepeat = true;
-	   eventTag = NULL;
+	   eventTag = nullptr;
 	}
 };
 
@@ -272,7 +276,8 @@ const TCHAR *LogParser::checkContext(LogParserRule *rule)
  * Match log record
  */
 bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId,
-         UINT32 level, const TCHAR *line, StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp)
+         UINT32 level, const TCHAR *line, StringList *variables, UINT64 recordId,
+         UINT32 objectId, time_t timestamp, const TCHAR *logName, bool *saveToDatabase)
 {
 	const TCHAR *state;
 	bool matched = false;
@@ -291,7 +296,7 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 		if ((state = checkContext(rule)) != NULL)
 		{
 			bool ruleMatched = hasAttributes ?
-			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, timestamp, m_cb, m_userArg) :
+			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, timestamp, m_cb, m_userArg, logName) :
 				rule->match(line, objectId, m_cb, m_userArg);
 			if (ruleMatched)
 			{
@@ -315,6 +320,11 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 							i + 1, rule->getDescription(), rule->getContext());
 				}
 				matched = true;
+				if (saveToDatabase != nullptr && rule->isDoNotSaveToDBFlag())
+				{
+				   trace(5, _T("rule %d \"%s\" set flag not to save data to database"), i + 1, rule->getDescription());
+				   *saveToDatabase = false;
+				}
 				if (!m_processAllRules || rule->getBreakFlag())
 					break;
 			}
@@ -333,16 +343,16 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
  */
 bool LogParser::matchLine(const TCHAR *line, UINT32 objectId)
 {
-	return matchLogRecord(false, NULL, 0, 0, line, NULL, 0, objectId, 0);
+	return matchLogRecord(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, nullptr, nullptr);
 }
 
 /**
  * Match log event (text with additional attributes - source, severity, event id)
  */
 bool LogParser::matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables,
-         UINT64 recordId, UINT32 objectId, time_t timestamp)
+         UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName, bool *saveToDatabase)
 {
-	return matchLogRecord(true, source, eventId, level, line, variables, recordId, objectId, timestamp);
+	return matchLogRecord(true, source, eventId, level, line, variables, recordId, objectId, timestamp, logName, saveToDatabase);
 }
 
 /**
@@ -510,6 +520,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->source = NULL;
 		ps->level = NULL;
 		ps->agentAction = NULL;
+      ps->logName = NULL;
 #ifdef UNICODE
 		ps->ruleContext.clear();
 		const char *context = XMLGetAttr(attrs, "context");
@@ -524,6 +535,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
       ps->ruleName = XMLGetAttr(attrs, "name");
 #endif
 		ps->breakFlag = XMLGetAttrBoolean(attrs, "break", false);
+      ps->doNotSaveToDBFlag = XMLGetAttrBoolean(attrs, "doNotSaveToDatabse", false);
 		ps->state = XML_STATE_RULE;
 	}
 	else if (!strcmp(name, "agentAction"))
@@ -614,6 +626,10 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 			ps->state = XML_STATE_ERROR;
 		}
 	}
+   else if (!strcmp(name, "logName"))
+   {
+      ps->state = XML_STATE_LOG_NAME;
+   }
 	else if (!strcmp(name, "description"))
 	{
 		ps->state = XML_STATE_DESCRIPTION;
@@ -691,6 +707,8 @@ static void EndElement(void *userData, const char *name)
 		   rule->setAgentAction(ps->agentAction);
 		if (!ps->agentActionArgs.isEmpty())
 		   rule->setAgentActionArgs(new StringList(ps->agentActionArgs, _T(" ")));
+      if (!ps->logName.isEmpty())
+         rule->setLogName(ps->logName);
 		if (!ps->ruleContext.isEmpty())
 			rule->setContext(ps->ruleContext);
 		if (!ps->context.isEmpty())
@@ -729,6 +747,7 @@ static void EndElement(void *userData, const char *name)
 
 		rule->setInverted(ps->invertedRule);
 		rule->setBreakFlag(ps->breakFlag);
+      rule->setDoNotSaveToDBFlag(ps->doNotSaveToDBFlag);
 
 		MemFreeAndNull(ps->eventTag);
 
@@ -767,6 +786,10 @@ static void EndElement(void *userData, const char *name)
 	{
 		ps->state = XML_STATE_RULE;
 	}
+   else if (!strcmp(name, "logName"))
+   {
+      ps->state = XML_STATE_RULE;
+   }
    else if (!strcmp(name, "exclusionSchedules"))
    {
       ps->state = XML_STATE_PARSER;
@@ -815,6 +838,9 @@ static void CharData(void *userData, const XML_Char *s, int len)
 		case XML_STATE_DESCRIPTION:
 			ps->description.appendMBString(s, len, CP_UTF8);
 			break;
+      case XML_STATE_LOG_NAME:
+         ps->logName.appendMBString(s, len, CP_UTF8);
+         break;
 		case XML_STATE_MACRO:
 			ps->macro.appendMBString(s, len, CP_UTF8);
 			break;

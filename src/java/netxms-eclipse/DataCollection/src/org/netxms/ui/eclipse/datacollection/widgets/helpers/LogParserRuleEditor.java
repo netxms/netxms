@@ -72,6 +72,7 @@ public class LogParserRuleEditor extends DashboardComposite
 	private LabeledText severity;
 	private LabeledText facility;
 	private LabeledText tag;
+	private LabeledText logName;
 	private LabeledText activeContext;
 	private LabeledText description;
 	private LabeledText agentAction;
@@ -81,6 +82,7 @@ public class LogParserRuleEditor extends DashboardComposite
 	private Combo contextAction;
 	private Combo contextResetMode;
 	private Button checkboxBreak;
+   private Button checkboxDoNotSaveToDB;
 
 	/**
 	 * @param parent
@@ -350,6 +352,19 @@ public class LogParserRuleEditor extends DashboardComposite
 		tag.setLayoutData(gd);
 		tag.getTextControl().addModifyListener(listener);		
 		
+		if (editor.getParserType() == LogParserEditor.TYPE_WIN_EVENT)
+		{
+	      logName = new LabeledText(area, SWT.NONE);
+	      toolkit.adapt(logName);
+	      logName.setLabel("Log name");
+	      logName.setText(rule.getLogName()); //$NON-NLS-1$
+	      gd = new GridData();
+	      gd.horizontalAlignment = SWT.FILL;
+	      gd.grabExcessHorizontalSpace = true;
+	      logName.setLayoutData(gd);
+	      logName.getTextControl().addModifyListener(listener);  
+		}
+		
 		activeContext = new LabeledText(area, SWT.NONE);
 		toolkit.adapt(activeContext);
 		activeContext.setLabel(Messages.get().LogParserRuleEditor_ActiveContext);
@@ -559,27 +574,34 @@ public class LogParserRuleEditor extends DashboardComposite
 				widgetSelected(e);
 			}
 		});
+
+      if (editor.getParserType() == LogParserEditor.TYPE_POLICY)
+      {
+   		agentAction = new LabeledText(area, SWT.NONE);
+   		toolkit.adapt(agentAction);
+   		agentAction.setLabel("Execute action");
+   		agentAction.setText((rule.getAgentAction() != null) ? rule.getAgentAction().getAction() : ""); //$NON-NLS-1$
+   		gd = new GridData();
+   		gd.horizontalAlignment = SWT.FILL;
+   		gd.grabExcessHorizontalSpace = true;
+   		gd.horizontalSpan = 2;
+   		agentAction.setLayoutData(gd);
+         agentAction.getTextControl().addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               editor.fireModifyListeners();
+            }
+         });      
+      }
 		
-		agentAction = new LabeledText(area, SWT.NONE);
-		toolkit.adapt(agentAction);
-		agentAction.setLabel("Execute action");
-		agentAction.setText((rule.getAgentAction() != null) ? rule.getAgentAction().getAction() : ""); //$NON-NLS-1$
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		agentAction.setLayoutData(gd);
-      agentAction.getTextControl().addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            editor.fireModifyListeners();
-         }
-      });
-		
-		checkboxBreak = toolkit.createButton(area, "Process all", SWT.CHECK);
-		checkboxBreak.setText("Break");
+		checkboxBreak = toolkit.createButton(area, "Break", SWT.CHECK);
 		checkboxBreak.setSelection(rule.isBreakProcessing());
+		gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      checkboxBreak.setLayoutData(gd);
 		checkboxBreak.addSelectionListener(new SelectionListener() {
          
          @Override
@@ -595,6 +617,27 @@ public class LogParserRuleEditor extends DashboardComposite
          }
       });
 		
+
+      if (editor.getParserType() != LogParserEditor.TYPE_POLICY)
+      {
+   		checkboxDoNotSaveToDB = toolkit.createButton(area, "Do not save to database", SWT.CHECK);
+   		checkboxDoNotSaveToDB.setSelection(rule.isDoNotSaveToDatabse());
+   		checkboxDoNotSaveToDB.addSelectionListener(new SelectionListener() {
+            
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               editor.fireModifyListeners();            
+            }
+            
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e);
+            }
+         });
+      }
+		
 		return area;
 	}
 	
@@ -609,7 +652,13 @@ public class LogParserRuleEditor extends DashboardComposite
 		                                 checkboxReset.getSelection()));
       rule.setFacilityOrId(intOrNull(facility.getText()));
       rule.setSeverityOrLevel(intOrNull(severity.getText()));
-      rule.setTagOrSource(tag.getText());
+      rule.setTagOrSource(tag.getText());  
+      
+      if (editor.getParserType() == LogParserEditor.TYPE_WIN_EVENT)
+         rule.setLogName(logName.getText());
+      else
+         rule.setLogName("");
+      
 		rule.setContext(activeContext.getText().trim().isEmpty() ? null : activeContext.getText());
 		rule.setBreakProcessing(checkboxBreak.getSelection());
 		rule.setDescription(description.getText());
@@ -635,10 +684,21 @@ public class LogParserRuleEditor extends DashboardComposite
 			ctx.setReset(contextResetMode.getSelectionIndex());
 			rule.setContextDefinition(ctx);
 		}
-		
-		if (!agentAction.getText().trim().isEmpty())
-			rule.setAgentAction(agentAction.getText().trim());
+
+      if (editor.getParserType() == LogParserEditor.TYPE_POLICY)
+      {
+   		if (!agentAction.getText().trim().isEmpty())
+   			rule.setAgentAction(agentAction.getText().trim());
+      }
+      else
+         rule.setAgentAction("");
+      
+      if (editor.getParserType() != LogParserEditor.TYPE_POLICY)
+         rule.setDoNotSaveToDatabse(checkboxDoNotSaveToDB.getSelection());   
+      else
+         rule.setDoNotSaveToDatabse(false);
 	}
+      
 	
 	/**
 	 * Return integer object created from input string or null if input text string is empty or cannot be parsed

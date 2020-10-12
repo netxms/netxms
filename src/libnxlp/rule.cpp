@@ -52,6 +52,7 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
    m_ignoreCase = ignoreCase;
 	m_isInverted = false;
 	m_breakOnMatch = false;
+	m_doNotSaveToDatabase = false;
 	m_description = NULL;
    m_repeatInterval = repeatInterval;
 	m_repeatCount = repeatCount;
@@ -60,6 +61,7 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_checkCount = 0;
 	m_matchCount = 0;
 	m_agentAction = NULL;
+	m_logName = NULL;
 	m_agentActionArgs = new StringList();
    m_objectCounters = new HashMap<uint32_t, ObjectRuleStats>(Ownership::True);
 
@@ -110,6 +112,7 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
       m_matchArray = new IntegerArray<time_t>();
    }
    m_agentAction = MemCopyString(src->m_agentAction);
+   m_logName = MemCopyString(src->m_logName);
    m_agentActionArgs = new StringList(src->m_agentActionArgs);
    m_objectCounters = new HashMap<uint32_t, ObjectRuleStats>(Ownership::True);
    restoreCounters(src);
@@ -141,6 +144,7 @@ LogParserRule::~LogParserRule()
 	MemFree(m_context);
 	MemFree(m_contextToChange);
 	MemFree(m_agentAction);
+	MemFree(m_logName);
 	delete m_agentActionArgs;
 	delete m_matchArray;
 	delete m_objectCounters;
@@ -150,7 +154,8 @@ LogParserRule::~LogParserRule()
  * Match line
  */
 bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
-         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, LogParserCallback cb, void *context)
+         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, LogParserCallback cb, void *context,
+         const TCHAR *logName)
 {
    incCheckCount(objectId);
    if (extMode)
@@ -164,6 +169,16 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 			   return false;
 		   }
 	   }
+
+      if (m_logName != NULL)
+      {
+         m_parser->trace(6, _T("  matching file name \"%s\" against pattern \"%s\""), logName, m_logName);
+         if (!MatchString(m_logName, logName, false))
+         {
+            m_parser->trace(6, _T("  file name: no match"));
+            return false;
+         }
+      }
 
 	   if ((eventId < m_idStart) || (eventId > m_idEnd))
 	   {
@@ -240,16 +255,16 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
  */
 bool LogParserRule::match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, void *context)
 {
-   return matchInternal(false, NULL, 0, 0, line, NULL, 0, objectId, 0, cb, context);
+   return matchInternal(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, cb, context, nullptr);
 }
 
 /**
  * Match event
  */
 bool LogParserRule::matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables,
-                            UINT64 recordId, UINT32 objectId, time_t timestamp, LogParserCallback cb, void *context)
+                            UINT64 recordId, UINT32 objectId, time_t timestamp, LogParserCallback cb, void *context, const TCHAR *fileName)
 {
-   return matchInternal(true, source, eventId, level, line, variables, recordId, objectId, timestamp, cb, context);
+   return matchInternal(true, source, eventId, level, line, variables, recordId, objectId, timestamp, cb, context, fileName);
 }
 
 /**

@@ -153,24 +153,26 @@ static void WindwsEventParserCallback(UINT32 eventCode, const TCHAR *eventName, 
          const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount, time_t timestamp,
          const TCHAR *agentAction, const StringList *agentActionArgs, void *context)
 {
-   nxlog_write(NXLOG_ERROR, _T("###Callback"));
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Windows event message matched, capture group count = %d, repeat count = %d"), captureGroups->size(), repeatCount);
 
-   //TODO: do not execute if unamanged
-   StringMap pmap;
-   for(int i = 0; i < captureGroups->size(); i++)
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(objectId, OBJECT_NODE));
+   if (node == nullptr || (node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
    {
-      TCHAR name[32];
-      _sntprintf(name, 32, _T("cg%d"), i + 1);
-      pmap.set(name, captureGroups->get(i));
-   }
-   pmap.set(_T("repeatCount"), repeatCount);
+      StringMap pmap;
+      for(int i = 0; i < captureGroups->size(); i++)
+      {
+         TCHAR name[32];
+         _sntprintf(name, 32, _T("cg%d"), i + 1);
+         pmap.set(name, captureGroups->get(i));
+      }
+      pmap.set(_T("repeatCount"), repeatCount);
 
-   PostEventWithTagAndNames(eventCode, EventOrigin::WIN_EVNET, timestamp, objectId, eventTag, &pmap);
+      PostEventWithTagAndNames(eventCode, EventOrigin::WIN_EVNET, timestamp, objectId, eventTag, &pmap);
+   }
 }
 
 /**
- * Initialize parser on start on on config change
+ * Initialize parser on start on config change
  */
 void InitializeWindowsEventParser()
 {
@@ -233,12 +235,10 @@ static void WindowsEventProcessingThread()
       MutexLock(s_parserLock);
       if (s_parser != nullptr)
       {
-         s_parser->matchEvent(event->eventSource, event->eventCode, event->eventSeverity, event->message, nullptr, 0, event->nodeId, event->originTimestamp);
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("### Log name %s"), event->logName);
+         s_parser->matchEvent(event->eventSource, event->eventCode, event->eventSeverity, event->message, nullptr, 0, event->nodeId, event->originTimestamp, event->logName, &write);
       }
       MutexUnlock(s_parserLock);
-
-      // Send message to all connected clients
-      //TODO: add monitor to win event log EnumerateClientSessions(BroadcastSyslogMessage, &record);
 
       if (write)
          s_windowsEventWriterQueue.put(event);
