@@ -1,4 +1,11 @@
 *
+* 3.5.136
+*
+
+- Fixed agent crash on thread pool statistic access
+
+
+*
 * 3.5.133
 *
 
