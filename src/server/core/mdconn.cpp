@@ -24,6 +24,11 @@
 #include <socket_listener.h>
 
 /**
+ * Mobile device thread pool
+ */
+NXCORE_EXPORTABLE_VAR(ThreadPool *g_mobileThreadPool) = nullptr;
+
+/**
  * Static data
  */
 static MobileDeviceSession *s_sessionList[MAX_DEVICE_SESSIONS];
@@ -66,6 +71,9 @@ void InitMobileDeviceListeners()
 {
    memset(s_sessionList, 0, sizeof(s_sessionList));
    s_sessionListLock = RWLockCreate();
+   g_mobileThreadPool = ThreadPoolCreate(_T("MOBILE"),
+         ConfigReadInt(_T("ThreadPool.MobileDevices.BaseSize"), 4),
+         ConfigReadInt(_T("ThreadPool.MobileDevices.MaxSize"), MAX_CLIENT_SESSIONS));
 }
 
 /**
@@ -78,7 +86,7 @@ protected:
    virtual bool isStopConditionReached();
 
 public:
-   MobileDeviceListener(UINT16 port) : StreamSocketListener(port) { setName(_T("MobileDevices")); }
+   MobileDeviceListener(uint16_t port) : StreamSocketListener(port) { setName(_T("MobileDevices")); }
 };
 
 /**
@@ -113,7 +121,7 @@ ConnectionProcessingResult MobileDeviceListener::processConnection(SOCKET s, con
 void MobileDeviceListenerThread()
 {
    ThreadSetName("MDevListener");
-   UINT16 listenPort = (UINT16)ConfigReadInt(_T("MobileDeviceListenerPort"), SERVER_LISTEN_PORT_FOR_MOBILES);
+   uint16_t listenPort = static_cast<uint16_t>(ConfigReadInt(_T("MobileDeviceListenerPort"), SERVER_LISTEN_PORT_FOR_MOBILES));
    MobileDeviceListener listener(listenPort);
    listener.setListenAddress(g_szListenAddress);
    if (!listener.initialize())
@@ -133,15 +141,12 @@ void DumpMobileDeviceSessions(CONSOLE_CTX pCtx)
    static const TCHAR *pszStateName[] = { _T("init"), _T("idle"), _T("processing") };
    static const TCHAR *pszCipherName[] = { _T("NONE"), _T("AES-256"), _T("BLOWFISH"), _T("IDEA"), _T("3DES"), _T("AES-128") };
 
-   ConsolePrintf(pCtx, _T("ID  STATE                    CIPHER   USER [CLIENT]\n"));
+   ConsolePrintf(pCtx, _T("ID  CIPHER   USER [CLIENT]\n"));
    RWLockReadLock(s_sessionListLock);
    for(i = 0, iCount = 0; i < MAX_DEVICE_SESSIONS; i++)
       if (s_sessionList[i] != NULL)
       {
-         ConsolePrintf(pCtx, _T("%-3d %-24s %-8s %s [%s]\n"), i, 
-                       (s_sessionList[i]->getState() != SESSION_STATE_PROCESSING) ?
-                         pszStateName[s_sessionList[i]->getState()] :
-                         NXCPMessageCodeName(s_sessionList[i]->getCurrentCmd(), szBuffer),
+         ConsolePrintf(pCtx, _T("%-3d %-8s %s [%s]\n"), i,
 					        pszCipherName[s_sessionList[i]->getCipher() + 1],
                        s_sessionList[i]->getUserName(),
                        s_sessionList[i]->getClientInfo());

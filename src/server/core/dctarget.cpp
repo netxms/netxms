@@ -872,7 +872,7 @@ shared_ptr<NetObj> DataCollectionTarget::objectFromParameter(const TCHAR *param)
 /**
  * Get value for server's internal table parameter
  */
-DataCollectionError DataCollectionTarget::getInternalTable(const TCHAR *param, Table **result)
+DataCollectionError DataCollectionTarget::getInternalTable(const TCHAR *name, Table **result)
 {
    return DCE_NOT_SUPPORTED;
 }
@@ -880,84 +880,84 @@ DataCollectionError DataCollectionTarget::getInternalTable(const TCHAR *param, T
 /**
  * Get value for server's internal parameter
  */
-DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer)
+DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size)
 {
    DataCollectionError error = DCE_SUCCESS;
 
-   if (!_tcsicmp(param, _T("PollTime.Configuration.Average")))
+   if (!_tcsicmp(name, _T("PollTime.Configuration.Average")))
    {
-      _sntprintf(buffer, bufSize, INT64_FMT, m_configurationPollState.getTimerAverage());
+      _sntprintf(buffer, size, INT64_FMT, m_configurationPollState.getTimerAverage());
    }
-   else if (!_tcsicmp(param, _T("PollTime.Configuration.Last")))
+   else if (!_tcsicmp(name, _T("PollTime.Configuration.Last")))
    {
-      _sntprintf(buffer, bufSize, INT64_FMT, m_configurationPollState.getTimerLast());
+      _sntprintf(buffer, size, INT64_FMT, m_configurationPollState.getTimerLast());
    }
-   else if (!_tcsicmp(param, _T("PollTime.Configuration.Max")))
+   else if (!_tcsicmp(name, _T("PollTime.Configuration.Max")))
    {
-      _sntprintf(buffer, bufSize, INT64_FMT, m_configurationPollState.getTimerMax());
+      _sntprintf(buffer, size, INT64_FMT, m_configurationPollState.getTimerMax());
    }
-   else if (!_tcsicmp(param, _T("PollTime.Configuration.Min")))
+   else if (!_tcsicmp(name, _T("PollTime.Configuration.Min")))
    {
-      _sntprintf(buffer, bufSize, INT64_FMT, m_configurationPollState.getTimerMin());
+      _sntprintf(buffer, size, INT64_FMT, m_configurationPollState.getTimerMin());
    }
-   else if (!_tcsicmp(param, _T("PollTime.Instance.Average")))
+   else if (!_tcsicmp(name, _T("PollTime.Instance.Average")))
    {
-      _sntprintf(buffer, bufSize, INT64_FMT, m_instancePollState.getTimerAverage());
+      _sntprintf(buffer, size, INT64_FMT, m_instancePollState.getTimerAverage());
    }
-   else if (!_tcsicmp(param, _T("PollTime.Instance.Last")))
+   else if (!_tcsicmp(name, _T("PollTime.Instance.Last")))
    {
-      _sntprintf(buffer, bufSize, INT64_FMT, m_instancePollState.getTimerLast());
+      _sntprintf(buffer, size, INT64_FMT, m_instancePollState.getTimerLast());
    }
-   else if (!_tcsicmp(param, _T("PollTime.Instance.Max")))
+   else if (!_tcsicmp(name, _T("PollTime.Instance.Max")))
    {
-      _sntprintf(buffer, bufSize, INT64_FMT, m_instancePollState.getTimerMax());
+      _sntprintf(buffer, size, INT64_FMT, m_instancePollState.getTimerMax());
    }
-   else if (!_tcsicmp(param, _T("PollTime.Instance.Min")))
+   else if (!_tcsicmp(name, _T("PollTime.Instance.Min")))
    {
-      _sntprintf(buffer, bufSize, INT64_FMT, m_instancePollState.getTimerMin());
+      _sntprintf(buffer, size, INT64_FMT, m_instancePollState.getTimerMin());
    }
-   else if (!_tcsicmp(param, _T("PollTime.Status.Average")))
+   else if (!_tcsicmp(name, _T("PollTime.Status.Average")))
    {
-      _sntprintf(buffer, bufSize, INT64_FMT, m_statusPollState.getTimerAverage());
+      _sntprintf(buffer, size, INT64_FMT, m_statusPollState.getTimerAverage());
    }
-   else if (!_tcsicmp(param, _T("PollTime.Status.Last")))
+   else if (!_tcsicmp(name, _T("PollTime.Status.Last")))
    {
-      _sntprintf(buffer, bufSize, INT64_FMT, m_statusPollState.getTimerLast());
+      _sntprintf(buffer, size, INT64_FMT, m_statusPollState.getTimerLast());
    }
-   else if (!_tcsicmp(param, _T("PollTime.Status.Max")))
+   else if (!_tcsicmp(name, _T("PollTime.Status.Max")))
    {
-      _sntprintf(buffer, bufSize, INT64_FMT, m_statusPollState.getTimerMax());
+      _sntprintf(buffer, size, INT64_FMT, m_statusPollState.getTimerMax());
    }
-   else if (!_tcsicmp(param, _T("PollTime.Status.Min")))
+   else if (!_tcsicmp(name, _T("PollTime.Status.Min")))
    {
-      _sntprintf(buffer, bufSize, INT64_FMT, m_statusPollState.getTimerMin());
+      _sntprintf(buffer, size, INT64_FMT, m_statusPollState.getTimerMin());
    }
-   else if (!_tcsicmp(param, _T("Status")))
+   else if (!_tcsicmp(name, _T("Status")))
    {
-      _sntprintf(buffer, bufSize, _T("%d"), m_status);
+      _sntprintf(buffer, size, _T("%d"), m_status);
    }
-   else if (!_tcsicmp(param, _T("Dummy")) || MatchString(_T("Dummy(*)"), param, FALSE))
+   else if (!_tcsicmp(name, _T("Dummy")) || MatchString(_T("Dummy(*)"), name, FALSE))
    {
       _tcscpy(buffer, _T("0"));
    }
-   else if (MatchString(_T("ChildStatus(*)"), param, FALSE))
+   else if (MatchString(_T("ChildStatus(*)"), name, FALSE))
    {
-      shared_ptr<NetObj> object = objectFromParameter(param);
+      shared_ptr<NetObj> object = objectFromParameter(name);
       if (object != nullptr)
       {
-         _sntprintf(buffer, bufSize, _T("%d"), object->getStatus());
+         _sntprintf(buffer, size, _T("%d"), object->getStatus());
       }
       else
       {
          error = DCE_NOT_SUPPORTED;
       }
    }
-   else if (MatchString(_T("ConditionStatus(*)"), param, FALSE))
+   else if (MatchString(_T("ConditionStatus(*)"), name, FALSE))
    {
       TCHAR *pEnd, szArg[256];
       shared_ptr<NetObj> pObject;
 
-      AgentGetParameterArg(param, 1, szArg, 256);
+      AgentGetParameterArg(name, 1, szArg, 256);
       uint32_t dwId = _tcstoul(szArg, &pEnd, 0);
       if (*pEnd == 0)
 		{
@@ -975,7 +975,7 @@ DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *param, 
       {
 			if (pObject->isTrustedNode(m_id))
 			{
-				_sntprintf(buffer, bufSize, _T("%d"), pObject->getStatus());
+				_sntprintf(buffer, size, _T("%d"), pObject->getStatus());
 			}
 			else
 			{

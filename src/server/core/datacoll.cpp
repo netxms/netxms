@@ -65,7 +65,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
       switch(pItem->getDataSource())
       {
          case DS_INTERNAL:    // Server internal parameters (like status)
-            *error = dcTarget->getInternalMetric(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+            *error = dcTarget->getInternalMetric(pItem->getName(), pBuffer, MAX_LINE_SIZE);
             break;
          case DS_SNMP_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)

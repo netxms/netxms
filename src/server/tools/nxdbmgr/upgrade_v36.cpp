@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 36.6 to 36.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE mobile_devices ADD comm_protocol varchar(31)")));
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Upgrade from 36.5 to 36.6
  */
 static bool H_UpgradeFromV5()
@@ -149,6 +159,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 6,  36, 7,  H_UpgradeFromV6  },
    { 5,  36, 6,  H_UpgradeFromV5  },
    { 4,  36, 5,  H_UpgradeFromV4  },
    { 3,  36, 4,  H_UpgradeFromV3  },

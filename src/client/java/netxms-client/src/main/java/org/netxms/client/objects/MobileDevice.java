@@ -30,6 +30,7 @@ import org.netxms.client.NXCSession;
 public class MobileDevice extends DataCollectionTarget
 {
 	private String deviceId;
+   private String commProtocol;
 	private String vendor;
 	private String model;
 	private String serialNumber;
@@ -47,6 +48,7 @@ public class MobileDevice extends DataCollectionTarget
 	{
 		super(msg, session);
 		deviceId = msg.getFieldAsString(NXCPCodes.VID_DEVICE_ID);
+      commProtocol = msg.getFieldAsString(NXCPCodes.VID_COMM_PROTOCOL);
 		vendor = msg.getFieldAsString(NXCPCodes.VID_VENDOR);
 		model = msg.getFieldAsString(NXCPCodes.VID_MODEL);
 		serialNumber = msg.getFieldAsString(NXCPCodes.VID_SERIAL_NUMBER);
@@ -57,16 +59,16 @@ public class MobileDevice extends DataCollectionTarget
 		lastReportTime = msg.getFieldAsDate(NXCPCodes.VID_LAST_CHANGE_TIME);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
-	 */
+   /**
+    * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
+    */
 	@Override
 	public boolean isAllowedOnMap()
 	{
 		return true;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
     */
    @Override
@@ -84,8 +86,16 @@ public class MobileDevice extends DataCollectionTarget
 	}
 
 	/**
-	 * @return the vendor
-	 */
+    * @return the commProtocol
+    */
+   public String getCommProtocol()
+   {
+      return commProtocol;
+   }
+
+   /**
+    * @return the vendor
+    */
 	public final String getVendor()
 	{
 		return vendor;

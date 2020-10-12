@@ -184,13 +184,6 @@
 #define CSF_CUSTOM_LOCK_8        ((UINT32)0x80000000)
 
 /**
- * Client session states
- */
-#define SESSION_STATE_INIT       0
-#define SESSION_STATE_IDLE       1
-#define SESSION_STATE_PROCESSING 2
-
-/**
  * Certificate types
  */
 enum CertificateType
@@ -335,44 +328,34 @@ class NXCORE_EXPORTABLE MobileDeviceSession
 {
 private:
    SOCKET m_hSocket;
-   Queue *m_pSendQueue;
-   Queue *m_pMessageQueue;
    int m_id;
-   int m_state;
-   WORD m_wCurrentCmd;
-   UINT32 m_dwUserId;
-	UINT32 m_deviceObjectId;
-   NXCP_BUFFER *m_pMsgBuffer;
+   uint32_t m_userId;
+   uint32_t m_deviceObjectId;
    NXCPEncryptionContext *m_pCtx;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
-   THREAD m_hWriteThread;
-   THREAD m_hProcessingThread;
 	MUTEX m_mutexSocketWrite;
 	InetAddress m_clientAddr;
-	TCHAR m_szHostName[256]; // IP address of name of conneced host in textual form
-   TCHAR m_szUserName[MAX_SESSION_NAME];   // String in form login_name@host
-   TCHAR m_szClientInfo[96];  // Client app info string
-   UINT32 m_dwEncryptionRqId;
-   UINT32 m_dwEncryptionResult;
+	TCHAR m_hostName[256]; // IP address of name of conneced host in textual form
+   TCHAR m_userName[MAX_SESSION_NAME];   // String in form login_name@host
+   TCHAR m_clientInfo[96];  // Client app info string
+   uint32_t m_encryptionRqId;
+   uint32_t m_encryptionResult;
    CONDITION m_condEncryptionSetup;
-   UINT32 m_dwRefCount;
+   uint32_t m_refCount;
 	bool m_isAuthenticated;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL processingThreadStarter(void *);
 
    void readThread();
-   void writeThread();
-   void processingThread();
 
+   void processRequest(NXCPMessage *request);
    void setupEncryption(NXCPMessage *request);
-   void respondToKeepalive(UINT32 dwRqId);
+   void respondToKeepalive(uint32_t requestId);
    void debugPrintf(int level, const TCHAR *format, ...);
-   void sendServerInfo(UINT32 dwRqId);
-   void login(NXCPMessage *pRequest);
-   void updateDeviceInfo(NXCPMessage *pRequest);
-   void updateDeviceStatus(NXCPMessage *pRequest);
+   void sendServerInfo(uint32_t requestId);
+   void login(NXCPMessage *request);
+   void updateDeviceInfo(NXCPMessage *request);
+   void updateDeviceStatus(NXCPMessage *request);
    void pushData(NXCPMessage *request);
 
 public:
@@ -381,19 +364,16 @@ public:
 
    void run();
 
-   void postMessage(NXCPMessage *pMsg) { m_pSendQueue->put(pMsg->serialize()); }
-   void sendMessage(NXCPMessage *pMsg);
+   void sendMessage(const NXCPMessage& msg);
 
-	int getId() { return m_id; }
+	int getId() const { return m_id; }
    void setId(int id) { if (m_id == -1) m_id = id; }
-   int getState() { return m_state; }
-   const TCHAR *getUserName() { return m_szUserName; }
-   const TCHAR *getClientInfo() { return m_szClientInfo; }
-	const TCHAR *getHostName() { return m_szHostName; }
-   UINT32 getUserId() { return m_dwUserId; }
-   bool isAuthenticated() { return m_isAuthenticated; }
-   WORD getCurrentCmd() { return m_wCurrentCmd; }
-   int getCipher() { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
+   const TCHAR *getUserName() const { return m_userName; }
+   const TCHAR *getClientInfo() const { return m_clientInfo; }
+	const TCHAR *getHostName() const { return m_hostName; }
+   uint32_t getUserId() const { return m_userId; }
+   bool isAuthenticated() const { return m_isAuthenticated; }
+   int getCipher() const { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
 };
 
 /**
@@ -1546,6 +1526,7 @@ extern FileMonitoringList g_monitoringList;
 
 extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool);
 extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_clientThreadPool);
+extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_mobileThreadPool);
 
 #endif   /* MODULE_NXDBMGR_EXTENSION */
 
