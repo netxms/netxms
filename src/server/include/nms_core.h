@@ -204,6 +204,11 @@ enum CertificateOperation
 };
 
 /**
+ * "Reload CRLs" scheduled task
+ */
+#define RELOAD_CRLS_TASK_ID _T("System.ReloadCRLs")
+
+/**
  * Audit subsystems
  */
 #define AUDIT_SECURITY     _T("SECURITY")

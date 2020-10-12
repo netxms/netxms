@@ -235,6 +235,8 @@ static TCHAR *s_externalTablesConfig = nullptr;
 static TCHAR *s_externalSubAgentsList = nullptr;
 static TCHAR *s_appAgentsList = nullptr;
 static StringSet s_serverConnectionList;
+static StringSet s_crlList;
+static uint32_t s_crlReloadInterval = 14400; // 4 hours by default
 static uint32_t s_enabledCiphers = 0xFFFF;
 static THREAD s_sessionWatchdogThread = INVALID_THREAD_HANDLE;
 static THREAD s_listenerThread = INVALID_THREAD_HANDLE;
@@ -273,6 +275,8 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_32, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_dwFlags, nullptr },
    { _T("ControlServers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszControlServerList, nullptr },
    { _T("CreateCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags, nullptr },
+   { _T("CRL"), CT_STRING_SET, 0, 0, 0, 0, &s_crlList, nullptr },
+   { _T("CRLReloadInterval"), CT_LONG, 0, 0, 0, 0, &s_crlReloadInterval, nullptr },
    { _T("DataCollectionThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &g_dcMaxCollectorPoolSize, nullptr },
    { _T("DataReconciliationBlockSize"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationBlockSize, nullptr },
    { _T("DataReconciliationTimeout"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationTimeout, nullptr },
@@ -823,14 +827,16 @@ static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file,
 /**
  * Configure agent directory: construct directory name and create it if needed
  */
-static void ConfigureAgentDirectory(TCHAR *fullName, const TCHAR *suffix, const TCHAR *contentDescription)
+static void ConfigureAgentDirectory(TCHAR *generatedPath, const TCHAR *suffix, const TCHAR *contentDescription)
 {
+   TCHAR buffer[MAX_PATH];
+   TCHAR *path = (generatedPath != nullptr) ? generatedPath : buffer;
    TCHAR tail = g_szDataDirectory[_tcslen(g_szDataDirectory) - 1];
-   _sntprintf(fullName, MAX_PATH, _T("%s%s%s") FS_PATH_SEPARATOR, g_szDataDirectory,
+   _sntprintf(path, MAX_PATH, _T("%s%s%s") FS_PATH_SEPARATOR, g_szDataDirectory,
               ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
               suffix);
-   CreateFolder(fullName);
-   nxlog_debug(2, _T("%s directory: %s"), contentDescription, fullName);
+   CreateFolder(path);
+   nxlog_debug(2, _T("%s directory: %s"), contentDescription, path);
 }
 
 /**
@@ -868,6 +874,15 @@ static inline uint32_t GetLogDestinationFlag()
    if (g_dwFlags & AF_LOG_TO_STDOUT)
       return NXLOG_USE_STDOUT;
    return 0;
+}
+
+/**
+ * Reload all registered CRLs and schedule next reload
+ */
+static void ScheduledCRLReload()
+{
+   ReloadAllCRLs();
+   ThreadPoolScheduleRelative(g_commThreadPool, s_crlReloadInterval, ScheduledCRLReload);
 }
 
 /**
@@ -954,9 +969,10 @@ BOOL Initialize()
 
    nxlog_debug(2, _T("Configuration policy directory: %s"), g_szConfigPolicyDir);
 
-   ConfigureAgentDirectory(g_szLogParserDirectory, LOGPARSER_AP_FOLDER, _T("Log parser policy"));
-   ConfigureAgentDirectory(g_userAgentPolicyDirectory, USERAGENT_AP_FOLDER, _T("User agent policy"));
-   ConfigureAgentDirectory(g_certificateDirectory, CERTIFICATES_FOLDER, _T("Certificate"));
+   ConfigureAgentDirectory(g_szLogParserDirectory, SUBDIR_LOGPARSER_POLICY, _T("Log parser policy"));
+   ConfigureAgentDirectory(g_userAgentPolicyDirectory, SUBDIR_USERAGENT_POLICY, _T("User agent policy"));
+   ConfigureAgentDirectory(g_certificateDirectory, SUBDIR_CERTIFICATES, _T("Certificate"));
+   ConfigureAgentDirectory(nullptr, SUBDIR_CRL, _T("CRL"));
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -1045,15 +1061,22 @@ BOOL Initialize()
 		if (!InitParameterList())
 			return FALSE;
 
+		// Load local CRLs
+		auto it = s_crlList.iterator();
+		while(it->hasNext())
+		   AddLocalCRL(it->next());
+		delete it;
+		s_crlList.clear();
+
 		// Parse outgoing server connection (tunnel) list
       ParseTunnelList(s_serverConnectionList);
 
 		// Parse server lists
-		if (m_pszMasterServerList != NULL)
+		if (m_pszMasterServerList != nullptr)
 			ParseServerList(m_pszMasterServerList, true, true);
-		if (m_pszControlServerList != NULL)
+		if (m_pszControlServerList != nullptr)
 			ParseServerList(m_pszControlServerList, true, false);
-		if (m_pszServerList != NULL)
+		if (m_pszServerList != nullptr)
 			ParseServerList(m_pszServerList, false, false);
 
 		// Add built-in actions
@@ -1325,6 +1348,8 @@ BOOL Initialize()
       }
 
       s_tunnelManagerThread = ThreadCreateEx(TunnelManager);
+
+      ThreadPoolScheduleRelative(g_commThreadPool, s_crlReloadInterval, ScheduledCRLReload);
 	}
 
 #ifdef _WIN32
@@ -1636,7 +1661,7 @@ static int ResetIdentity()
       exitCode = 5;
    }
 
-   ConfigureAgentDirectory(g_certificateDirectory, CERTIFICATES_FOLDER, _T("Certificate"));
+   ConfigureAgentDirectory(g_certificateDirectory, SUBDIR_CERTIFICATES, _T("Certificate"));
    _TDIR *dir = _topendir(g_certificateDirectory);
    if (dir != nullptr)
    {

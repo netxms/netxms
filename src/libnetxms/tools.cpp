@@ -802,10 +802,10 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 bool LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory)
 {
    NX_STAT_STRUCT st;
-   TCHAR *previous = _tcsdup(directory);
+   TCHAR *previous = MemCopyString(directory);
    TCHAR *ptr = _tcsrchr(previous, FS_PATH_SEPARATOR_CHAR);
    bool result = false;
-   if (ptr != NULL)
+   if (ptr != nullptr)
    {
       *ptr = 0;
       if (CALL_STAT(previous, &st) != 0)

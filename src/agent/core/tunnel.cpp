@@ -822,9 +822,39 @@ static bool VerifyServerCertificate(X509 *cert)
       X509_STORE_CTX_set_verify_cb(ctx, CertVerifyCallback);
 #endif
       if (X509_verify_cert(ctx))
+      {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+         STACK_OF(X509) *chain = X509_STORE_CTX_get0_chain(ctx);
+         if (sk_X509_num(chain) > 1)
+         {
+            String dp = GetCertificateCRLDistributionPoint(cert);
+            if (!dp.isEmpty())
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("VerifyServerCertificate: certificate CRL DP: %s"), dp.cstr());
+               char *url = dp.getUTF8String();
+               AddRemoteCRL(url, true);
+               MemFree(url);
+            }
+
+            X509 *issuer = sk_X509_value(chain, 1);
+            if (!CheckCertificateRevocation(cert, issuer))
+            {
+               valid = true;
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("VerifyServerCertificate: certificate is revoked"));
+            }
+         }
+#else
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("VerifyServerCertificate: CRL check is not implemented for this OpenSSL version"));
+#endif
          valid = true;
+      }
       else
+      {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("VerifyServerCertificate: verification failed (%hs)"), X509_verify_cert_error_string(X509_STORE_CTX_get_error(ctx)));
+      }
       X509_STORE_CTX_free(ctx);
    }
    else
@@ -833,7 +863,6 @@ static bool VerifyServerCertificate(X509 *cert)
       nxlog_debug_tag(DEBUG_TAG, 3, _T("VerifyServerCertificate: X509_STORE_CTX_new() failed: %s"), _ERR_error_tstring(ERR_get_error(), buffer));
    }
    X509_STORE_free(trustedCertificateStore);
-
    return valid;
 }
 
