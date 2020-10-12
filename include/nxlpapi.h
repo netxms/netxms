@@ -138,6 +138,7 @@ private:
    bool m_ignoreCase;
 	bool m_isInverted;
 	bool m_breakOnMatch;
+	bool m_doNotSaveToDatabase;
 	TCHAR *m_description;
 	int m_repeatInterval;
 	int m_repeatCount;
@@ -146,12 +147,13 @@ private:
 	int m_checkCount;
 	int m_matchCount;
 	TCHAR *m_agentAction;
+	TCHAR *m_logName;
 	StringList *m_agentActionArgs;
 	HashMap<uint32_t, ObjectRuleStats> *m_objectCounters;
 
 	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
 	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp,
-	         LogParserCallback cb, void *context);
+	         LogParserCallback cb, void *context, const TCHAR *logName);
 	bool matchRepeatCount();
    void expandMacros(const TCHAR *regexp, StringBuffer &out);
    void incCheckCount(uint32_t objectId);
@@ -172,10 +174,12 @@ public:
 
 	bool match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, void *context);
 	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, 
-                UINT64 recordId, UINT32 objectId, time_t timestamp, LogParserCallback cb, void *context);
+                UINT64 recordId, UINT32 objectId, time_t timestamp, LogParserCallback cb, void *context, const TCHAR *fileName);
 
-	void setAgentAction(const TCHAR *agentAction) { MemFree(m_agentAction); m_agentAction = MemCopyString(agentAction); }
-	void setAgentActionArgs(StringList *args) { delete(m_agentActionArgs); m_agentActionArgs = args; }
+	void setLogName(const TCHAR *logName) { MemFree(m_logName); m_logName = MemCopyString(logName); }
+
+   void setAgentAction(const TCHAR *agentAction) { MemFree(m_agentAction); m_agentAction = MemCopyString(agentAction); }
+   void setAgentActionArgs(StringList *args) { delete(m_agentActionArgs); m_agentActionArgs = args; }
 
 	void setContext(const TCHAR *context) { MemFree(m_context); m_context = MemCopyString(context); }
 	void setContextToChange(const TCHAR *context) { MemFree(m_contextToChange); m_contextToChange = MemCopyString(context); }
@@ -186,6 +190,9 @@ public:
 
 	void setBreakFlag(bool flag) { m_breakOnMatch = flag; }
 	bool getBreakFlag() const { return m_breakOnMatch; }
+
+   void setDoNotSaveToDBFlag(bool flag) { m_doNotSaveToDatabase = flag; }
+   bool isDoNotSaveToDBFlag() const { return m_doNotSaveToDatabase; }
 
 	const TCHAR *getContext() const { return m_context; }
 	const TCHAR *getContextToChange() const { return m_contextToChange; }
@@ -258,7 +265,7 @@ private:
 
 	const TCHAR *checkContext(LogParserRule *rule);
 	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
-	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp);
+	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName, bool *saveToDatabase);
 
 	bool isExclusionPeriod();
 
@@ -330,7 +337,7 @@ public:
 
 	bool matchLine(const TCHAR *line, UINT32 objectId = 0);
 	bool matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables,
-	         UINT64 recordId, UINT32 objectId = 0, time_t timestamp = 0);
+	         UINT64 recordId, UINT32 objectId = 0, time_t timestamp = 0, const TCHAR *logName = nullptr, bool *saveToDatabase = nullptr);
 
 	int getProcessedRecordsCount() const { return m_recordsProcessed; }
 	int getMatchedRecordsCount() const { return m_recordsMatched; }

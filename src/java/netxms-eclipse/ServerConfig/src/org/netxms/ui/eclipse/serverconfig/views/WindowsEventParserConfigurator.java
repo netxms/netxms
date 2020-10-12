@@ -271,7 +271,6 @@ public class WindowsEventParserConfigurator extends ViewPart implements ISaveabl
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.setServerConfigClob("WindowsEventParser", xml); //$NON-NLS-1$
-				System.out.println(xml);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()

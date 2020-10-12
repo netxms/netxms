@@ -467,8 +467,6 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
       record.qwMsgId = s_msgId++;
       shared_ptr<Node> node = BindMsgToNode(&record, msg->sourceAddr, msg->zoneUIN, msg->nodeId);
 
-      g_syslogWriteQueue.put(MemCopyBlock(&record, sizeof(NX_SYSLOG_RECORD)));
-
       // Send message to all connected clients
       EnumerateClientSessions(BroadcastSyslogMessage, &record);
 
@@ -476,21 +474,24 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
 		nxlog_debug_tag(DEBUG_TAG, 6, _T("Syslog message: ipAddr=%s zone=%d objectId=%d tag=\"%hs\" msg=\"%hs\""),
 		            msg->sourceAddr.toString(ipAddr), msg->zoneUIN, record.dwSourceObject, record.szTag, record.szMessage);
 
+		bool writeToDatabase = true;
 		MutexLock(s_parserLock);
-		if ((record.dwSourceObject != 0) && (s_parser != nullptr) &&
-          ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES)))
+		if ((record.dwSourceObject != 0) && (s_parser != nullptr))
 		{
 #ifdef UNICODE
 			WCHAR wtag[MAX_SYSLOG_TAG_LEN];
 			WCHAR wmsg[MAX_LOG_MSG_LENGTH];
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, record.szTag, -1, wtag, MAX_SYSLOG_TAG_LEN);
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, record.szMessage, -1, wmsg, MAX_LOG_MSG_LENGTH);
-			s_parser->matchEvent(wtag, record.nFacility, 1 << record.nSeverity, wmsg, nullptr, 0, record.dwSourceObject);
+			s_parser->matchEvent(wtag, record.nFacility, 1 << record.nSeverity, wmsg, nullptr, 0, record.dwSourceObject, 0, nullptr, &writeToDatabase);
 #else
-			s_parser->matchEvent(record.szTag, record.nFacility, 1 << record.nSeverity, record.szMessage, nullptr, 0, record.dwSourceObject);
+			s_parser->matchEvent(record.szTag, record.nFacility, 1 << record.nSeverity, record.szMessage, nullptr, 0, record.dwSourceObject, 0, nullptr, &writeToDatabase);
 #endif
 		}
 		MutexUnlock(s_parserLock);
+
+		if (writeToDatabase)
+	      g_syslogWriteQueue.put(MemCopyBlock(&record, sizeof(NX_SYSLOG_RECORD)));
 
 	   if ((record.dwSourceObject == 0) && (g_flags & AF_SYSLOG_DISCOVERY))  // unknown node, discovery enabled
 	   {
@@ -548,16 +549,20 @@ static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const
 {
 	nxlog_debug_tag(DEBUG_TAG, 7, _T("Syslog message matched, capture group count = %d, repeat count = %d"), captureGroups->size(), repeatCount);
 
-	StringMap pmap;
-	for(int i = 0; i < captureGroups->size(); i++)
-	{
-	   TCHAR name[32];
-	   _sntprintf(name, 32, _T("cg%d"), i + 1);
-		pmap.set(name, captureGroups->get(i));
-	}
-   pmap.set(_T("repeatCount"), repeatCount);
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(objectId, OBJECT_NODE));
+   if (node == nullptr || (node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
+   {
+      StringMap pmap;
+      for(int i = 0; i < captureGroups->size(); i++)
+      {
+         TCHAR name[32];
+         _sntprintf(name, 32, _T("cg%d"), i + 1);
+         pmap.set(name, captureGroups->get(i));
+      }
+      pmap.set(_T("repeatCount"), repeatCount);
 
-   PostEventWithTagAndNames(eventCode, EventOrigin::SYSLOG, timestamp, objectId, eventTag, &pmap);
+      PostEventWithTagAndNames(eventCode, EventOrigin::SYSLOG, timestamp, objectId, eventTag, &pmap);
+   }
 }
 
 /**
