@@ -35,6 +35,10 @@ static inline const ASN1_TIME *X509_get0_notAfter(const X509 *x)
 {
    return X509_get_notAfter(x);
 }
+static inline const unsigned char *ASN1_STRING_get0_data(const ASN1_STRING *s)
+{
+   return s->data;
+}
 #endif
 
 /**
@@ -267,11 +271,19 @@ IMPLEMENT_ASN1_FUNCTIONS(CERTIFICATE_TEMPLATE)
 String LIBNETXMS_EXPORTABLE GetCertificateTemplateId(const X509 *cert)
 {
    ASN1_OBJECT *oid = OBJ_txt2obj("1.3.6.1.4.1.311.21.7", 1);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
    int index = X509_get_ext_by_OBJ(cert, oid, -1);
+#else
+   int index = X509_get_ext_by_OBJ(const_cast<X509*>(cert), oid, -1);
+#endif
    ASN1_OBJECT_free(oid);
    if (index == -1)
       return String();
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
    X509_EXTENSION *ext = X509_get_ext(cert, index);
+#else
+   X509_EXTENSION *ext = X509_get_ext(const_cast<X509*>(cert), index);
+#endif
    if (ext == nullptr)
       return String();
    ASN1_STRING *value = X509_EXTENSION_get_data(ext);
