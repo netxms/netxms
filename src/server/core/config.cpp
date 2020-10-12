@@ -466,6 +466,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
 	{
 		ReinitializeSyslogParser();
 	}
+   if (isCLOB && !_tcscmp(name, _T("WindowsEventParser")))
+   {
+      InitializeWindowsEventParser();
+   }
    else if (!_tcscmp(name, _T("Alarms.ResolveExpirationTime")))
    {
       UpdateAlarmExpirationTimes();

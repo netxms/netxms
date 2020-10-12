@@ -77,7 +77,11 @@ import org.netxms.ui.eclipse.widgets.TextEditor;
  * Log parser editor
  */
 public class LogParserEditor extends Composite implements IFindReplaceTarget
-{
+{   
+   public static final int TYPE_POLICY = 0;
+   public static final int TYPE_SYSLOG = 1;
+   public static final int TYPE_WIN_EVENT = 2;
+   
 	private static final int TAB_NONE = 0;
 	private static final int TAB_BUILDER = 1;
 	private static final int TAB_XML = 2;
@@ -95,7 +99,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
 	private ImageHyperlink addColumnLink;
    private ImageHyperlink addFileLink;
 	private SortableTableViewer macroList;
-	private boolean isSyslogParser;
+	private int type;
 	private FindReplaceAction actionFindReplace = null;
 	
 	/* General section */
@@ -107,13 +111,13 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
 	 * @param parent
 	 * @param style
 	 */
-	public LogParserEditor(Composite parent, int style, boolean isSyslogParser)
+	public LogParserEditor(Composite parent, int style, int type)
 	{
 		super(parent, style);
 		
 		setLayout(new FillLayout());
 		
-		this.isSyslogParser = isSyslogParser;
+		this.type = type;
 		
 		tabFolder = new CTabFolder(this, SWT.BOTTOM | SWT.FLAT | SWT.MULTI);
 		tabFolder.setUnselectedImageVisible(true);
@@ -322,7 +326,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
          }
       });  
       
-      if (!isSyslogParser)
+      if (type == TYPE_POLICY)
       {         
          fileArea = new Composite(generalArea, SWT.NONE);
          
@@ -522,7 +526,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
 	 */
 	private String buildParserXml()
 	{
-	   if (!isSyslogParser)
+	   if (type == TYPE_SYSLOG)
 	   {
 	      for(LogParserFile file : parser.getFiles())
 	         file.getEditor().save();
@@ -586,10 +590,10 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
 			selectXmlEditor();
 			return;
 		}
-		parser.setSyslogParser(isSyslogParser);
+		parser.setSyslogParser(type);
 		
 		/* general */
-		if (!isSyslogParser)
+		if (type == TYPE_POLICY)
       {
 	      for(LogParserFile file : parser.getFiles())
 	         createFileEditor(file).moveAbove(addFileLink);
@@ -781,11 +785,11 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
 	}
 
    /**
-    * @return the isSyslogParser
+    * @return parser type
     */
-   public boolean isSyslogParser()
+   public int getParserType()
    {
-      return isSyslogParser;
+      return type;
    }
    
    /**

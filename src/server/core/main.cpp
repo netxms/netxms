@@ -102,8 +102,8 @@ void StopSyslogServer();
 /**
  * Windows event log server control
  */
-void StartWindowsEventWriter();
-void StopWindowsEventWriter();
+void StartWindowsEventProcessing();
+void StopWindowsEventProcessing();
 
 /**
  * Thread functions
@@ -1180,7 +1180,7 @@ retry_db_lock:
       ThreadCreate(SNMPTrapReceiver);
 
    StartSyslogServer();
-   StartWindowsEventWriter();
+   StartWindowsEventProcessing();
 
    // Start beacon host poller
    ThreadCreate(BeaconPoller);
@@ -1314,7 +1314,7 @@ void NXCORE_EXPORTABLE Shutdown()
 
    CloseAgentTunnels();
    StopSyslogServer();
-   StopWindowsEventWriter();
+   StopWindowsEventProcessing();
 
    nxlog_debug(2, _T("Waiting for event processor to stop"));
 	g_eventQueue.put(INVALID_POINTER_VALUE);

@@ -48,7 +48,7 @@ public class LogLabelProvider implements ITableLabelProvider
 {
 	public static final String[] ALARM_STATE_TEXTS = { Messages.get().LogLabelProvider_Outstanding, Messages.get().LogLabelProvider_Acknowledged, Messages.get().LogLabelProvider_Resolved, Messages.get().LogLabelProvider_Terminated };
 	public static final String[] ALARM_HD_STATE_TEXTS = { Messages.get().LogLabelProvider_Ignored, Messages.get().LogLabelProvider_Open, Messages.get().LogLabelProvider_Closed };
-   public static final String[] EVENT_ORIGIN_TEXTS = { "System", "Agent", "Client", "Syslog", "SNMP", "Script", "Remote Server" };
+   public static final String[] EVENT_ORIGIN_TEXTS = { "System", "Agent", "Client", "Syslog", "SNMP", "Script", "Remote Server", "Windows Event" };
 	
 	private LogColumn[] columns;
 	private NXCSession session;

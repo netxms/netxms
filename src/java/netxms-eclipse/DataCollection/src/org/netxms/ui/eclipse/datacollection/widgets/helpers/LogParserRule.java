@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
+import org.netxms.ui.eclipse.datacollection.widgets.LogParserEditor;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
@@ -174,7 +175,7 @@ public class LogParserRule
 	 */
 	public void setSeverityOrLevel(Integer severity)
 	{
-      if(editor.isSyslogParser())
+      if(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)
       {
          this.severity = severity;
          this.level = null;
@@ -204,7 +205,7 @@ public class LogParserRule
 	 */
 	public void setFacilityOrId(Integer facility)
 	{
-	   if(editor.isSyslogParser())
+	   if(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)
       {
 	      this.facility = facility;
 	      this.id = null;
@@ -234,7 +235,7 @@ public class LogParserRule
 	 */
 	public void setTagOrSource(String tag)
 	{
-      if(editor.isSyslogParser())
+      if(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)
       {
          this.tag = tag != null && !tag.isEmpty() ? tag : null;
          this.source = null;
@@ -310,9 +311,9 @@ public class LogParserRule
 		this.agentAction = new LogParserAgentAction(agentAction);
 	}
 
-   public void updateFieldsCorrectly(boolean isSyslogParser)
+   public void updateFieldsCorrectly(int parserType)
    {
-      if(isSyslogParser)
+      if (parserType != LogParserEditor.TYPE_POLICY)
       {
          if(facility == null || facility == 0)
             facility = id;

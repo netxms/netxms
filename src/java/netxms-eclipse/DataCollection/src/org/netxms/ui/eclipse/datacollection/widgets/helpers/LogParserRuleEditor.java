@@ -322,8 +322,8 @@ public class LogParserRuleEditor extends DashboardComposite
 
 		severity = new LabeledText(area, SWT.NONE);
 		toolkit.adapt(severity);
-		severity.setLabel(editor.isSyslogParser() ? Messages.get().LogParserRuleEditor_Severity : "Level");
-		severity.setText(rule.getSeverityOrLevel(editor.isSyslogParser())); //$NON-NLS-1$
+		severity.setLabel(editor.getParserType() == LogParserEditor.TYPE_SYSLOG ? Messages.get().LogParserRuleEditor_Severity : "Level");
+		severity.setText(rule.getSeverityOrLevel(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -332,8 +332,8 @@ public class LogParserRuleEditor extends DashboardComposite
 		
 		facility = new LabeledText(area, SWT.NONE);
 		toolkit.adapt(facility);
-		facility.setLabel(editor.isSyslogParser() ? Messages.get().LogParserRuleEditor_Facility : "Id");
-		facility.setText(rule.getFacilityOrId(editor.isSyslogParser())); //$NON-NLS-1$
+		facility.setLabel(editor.getParserType() == LogParserEditor.TYPE_SYSLOG ? Messages.get().LogParserRuleEditor_Facility : "Id");
+		facility.setText(rule.getFacilityOrId(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -342,8 +342,8 @@ public class LogParserRuleEditor extends DashboardComposite
 
 		tag = new LabeledText(area, SWT.NONE);
 		toolkit.adapt(tag);
-		tag.setLabel(editor.isSyslogParser() ? Messages.get().LogParserRuleEditor_SyslogTag : "Source");
-		tag.setText(rule.getTagOrSource(editor.isSyslogParser())); //$NON-NLS-1$
+		tag.setLabel(editor.getParserType() == LogParserEditor.TYPE_SYSLOG ? Messages.get().LogParserRuleEditor_SyslogTag : "Source");
+		tag.setText(rule.getTagOrSource(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -379,10 +379,10 @@ public class LogParserRuleEditor extends DashboardComposite
 	 */
 	public void updateWindowsEventLogFields()
 	{
-	   if(editor.isSyslogParser())
+	   if(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)
 	      return;
 	      
-	   if(editor.isWindowsEventLogParser())
+	   if(editor.isWindowsEventLogParser() || editor.getParserType() == LogParserEditor.TYPE_WIN_EVENT)
 	   {
 	      severity.setEnabled(true);
 	      facility.setEnabled(true);
@@ -663,8 +663,8 @@ public class LogParserRuleEditor extends DashboardComposite
    /**
     * @return
     */
-   public boolean isSyslogParser()
+   public int getParserType()
    {
-      return editor.isSyslogParser();
+      return editor.getParserType();
    }
 }

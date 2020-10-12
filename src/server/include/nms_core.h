@@ -1029,7 +1029,7 @@ public:
 struct WindowsEvent
 {
    time_t timestamp;
-   uint32_t nodeId;
+   uint32_t  nodeId;
    int32_t zoneUIN;
    TCHAR logName[64];
    time_t originTimestamp;
@@ -1257,6 +1257,8 @@ void GetZoneAgentSecretList(NXCPMessage *msg, int32_t zoneUIN);
 void CreateMessageFromSyslogMsg(NXCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();
 void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value);
+
+void InitializeWindowsEventParser();
 
 void EscapeString(StringBuffer &str);
 
