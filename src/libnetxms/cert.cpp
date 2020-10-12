@@ -25,6 +25,7 @@
 #include <nxcrypto.h>
 #include <nxstat.h>
 #include <openssl/asn1t.h>
+#include <openssl/x509v3.h>
 
 #define DEBUG_TAG    _T("crypto.cert")
 
@@ -73,7 +74,7 @@ static bool GetX509NameField(X509_NAME *name, int nid, TCHAR *buffer, size_t siz
 /**
  * Get single field from certificate subject
  */
-bool LIBNETXMS_EXPORTABLE GetCertificateSubjectField(X509 *cert, int nid, TCHAR *buffer, size_t size)
+bool LIBNETXMS_EXPORTABLE GetCertificateSubjectField(const X509 *cert, int nid, TCHAR *buffer, size_t size)
 {
    X509_NAME *subject = X509_get_subject_name(cert);
    return (subject != nullptr) ? GetX509NameField(subject, nid, buffer, size) : false;
@@ -82,7 +83,7 @@ bool LIBNETXMS_EXPORTABLE GetCertificateSubjectField(X509 *cert, int nid, TCHAR 
 /**
  * Get single field from certificate issuer
  */
-bool LIBNETXMS_EXPORTABLE GetCertificateIssuerField(X509 *cert, int nid, TCHAR *buffer, size_t size)
+bool LIBNETXMS_EXPORTABLE GetCertificateIssuerField(const X509 *cert, int nid, TCHAR *buffer, size_t size)
 {
    X509_NAME *issuer = X509_get_issuer_name(cert);
    return (issuer != nullptr) ? GetX509NameField(issuer, nid, buffer, size) : false;
@@ -91,7 +92,7 @@ bool LIBNETXMS_EXPORTABLE GetCertificateIssuerField(X509 *cert, int nid, TCHAR *
 /**
  * Get CN from certificate
  */
-bool LIBNETXMS_EXPORTABLE GetCertificateCN(X509 *cert, TCHAR *buffer, size_t size)
+bool LIBNETXMS_EXPORTABLE GetCertificateCN(const X509 *cert, TCHAR *buffer, size_t size)
 {
    return GetCertificateSubjectField(cert, NID_commonName, buffer, size);
 }
@@ -99,7 +100,7 @@ bool LIBNETXMS_EXPORTABLE GetCertificateCN(X509 *cert, TCHAR *buffer, size_t siz
 /**
  * Get OU from certificate
  */
-bool LIBNETXMS_EXPORTABLE GetCertificateOU(X509 *cert, TCHAR *buffer, size_t size)
+bool LIBNETXMS_EXPORTABLE GetCertificateOU(const X509 *cert, TCHAR *buffer, size_t size)
 {
    return GetCertificateSubjectField(cert, NID_organizationalUnitName, buffer, size);
 }
@@ -107,7 +108,7 @@ bool LIBNETXMS_EXPORTABLE GetCertificateOU(X509 *cert, TCHAR *buffer, size_t siz
 /**
  * Get subject/issuer/... string (C=XX,ST=state,L=locality,O=org,OU=unit,CN=cn) from certificate
  */
-template<bool (*GetField)(X509*, int, TCHAR*, size_t)> static inline String GetCertificateNameString(X509 *cert)
+template<bool (*GetField)(const X509*, int, TCHAR*, size_t)> static inline String GetCertificateNameString(const X509 *cert)
 {
    StringBuffer text;
    TCHAR buffer[256];
@@ -157,7 +158,7 @@ template<bool (*GetField)(X509*, int, TCHAR*, size_t)> static inline String GetC
 /**
  * Get subject string (C=XX,ST=state,L=locality,O=org,OU=unit,CN=cn) from certificate
  */
-String LIBNETXMS_EXPORTABLE GetCertificateSubjectString(X509 *cert)
+String LIBNETXMS_EXPORTABLE GetCertificateSubjectString(const X509 *cert)
 {
    return GetCertificateNameString<GetCertificateSubjectField>(cert);
 }
@@ -165,7 +166,7 @@ String LIBNETXMS_EXPORTABLE GetCertificateSubjectString(X509 *cert)
 /**
  * Get issuer string (C=XX,ST=state,L=locality,O=org,OU=unit,CN=cn) from certificate
  */
-String LIBNETXMS_EXPORTABLE GetCertificateIssuerString(X509 *cert)
+String LIBNETXMS_EXPORTABLE GetCertificateIssuerString(const X509 *cert)
 {
    return GetCertificateNameString<GetCertificateIssuerField>(cert);
 }
@@ -292,7 +293,7 @@ String LIBNETXMS_EXPORTABLE GetCertificateTemplateId(const X509 *cert)
    const unsigned char *bytes = ASN1_STRING_get0_data(value);
    CERTIFICATE_TEMPLATE *t = d2i_CERTIFICATE_TEMPLATE(nullptr, &bytes, ASN1_STRING_length(value));
    if (t == nullptr)
-      return String(_T(""));
+      return String();
    char oidA[256];
    OBJ_obj2txt(oidA, 256, t->templateId, 1);
    CERTIFICATE_TEMPLATE_free(t);
@@ -303,6 +304,46 @@ String LIBNETXMS_EXPORTABLE GetCertificateTemplateId(const X509 *cert)
 #else
    return String(oidA);
 #endif
+}
+
+/**
+ * Get HTTP/HTTPS CRL distribution point from certificate
+ */
+String LIBNETXMS_EXPORTABLE GetCertificateCRLDistributionPoint(const X509 *cert)
+{
+   STACK_OF(DIST_POINT) *dps = static_cast<STACK_OF(DIST_POINT)*>(X509_get_ext_d2i(cert, NID_crl_distribution_points, nullptr, nullptr));
+   if (dps == nullptr)
+      return String();
+
+   StringBuffer result;
+   for (int i = 0; i < sk_DIST_POINT_num(dps); i++)
+   {
+      DIST_POINT *dp = sk_DIST_POINT_value(dps, i);
+      if (dp->distpoint->type == 0)
+      {
+         GENERAL_NAMES *names = dp->distpoint->name.fullname;
+         for (int j = 0; j < sk_GENERAL_NAME_num(names); j++)
+         {
+            GENERAL_NAME *n = sk_GENERAL_NAME_value(names, j);
+            if (n->type == GEN_URI)
+            {
+               ASN1_IA5STRING *uri = n->d.uniformResourceIdentifier;
+               int l = ASN1_STRING_length(uri);
+               if (l > 7)
+               {
+                  const unsigned char *data = ASN1_STRING_get0_data(uri);
+                  if (!memcmp(data, "http:", 5) || !memcmp(data, "https:", 6))
+                  {
+                     result.appendMBString(reinterpret_cast<const char*>(data), l, CP_UTF8);
+                     break;
+                  }
+               }
+            }
+         }
+      }
+   }
+   sk_DIST_POINT_free(dps);
+   return result;
 }
 
 /**

@@ -1,4 +1,4 @@
-SOURCES = bridge.cpp dfile_info.cpp hwid.cpp lora_device_data.cpp main.cpp \
+SOURCES = bridge.cpp crl.cpp dfile_info.cpp hwid.cpp lora_device_data.cpp main.cpp \
           procexec.cpp registry.cpp smbios.cpp tools.cpp ua_notification.cpp
 
 lib_LTLIBRARIES = libnxagent.la

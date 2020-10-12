@@ -238,7 +238,7 @@ static void AddLogwatchPolicyFiles()
    TCHAR policyFolder[MAX_PATH];
    _sntprintf(policyFolder, MAX_PATH, _T("%s%s%s"), dataDir,
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-              LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR);
+              SUBDIR_LOGPARSER_POLICY FS_PATH_SEPARATOR);
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("AddLogwatchPolicyFiles(): Log parser policy directory: %s"), policyFolder);
 
@@ -357,8 +357,8 @@ static void OnAgentNotify(UINT32 code, void *data)
 
    TCHAR policyFile[MAX_PATH];
    _sntprintf(policyFile, MAX_PATH, _T("%s%s%s%s.xml"), dataDir,
-      ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-      LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR, (const TCHAR *)n->guid.toString());
+         ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
+         SUBDIR_LOGPARSER_POLICY FS_PATH_SEPARATOR, (const TCHAR *)n->guid.toString());
    AddParserFromConfig(policyFile, n->guid);
 
    // Start parsing threads

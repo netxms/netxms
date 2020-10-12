@@ -302,8 +302,8 @@ void RecoverConfigPolicyDirectory()
    }
 
    if (legacyConfigPolicyDir[_tcslen(legacyConfigPolicyDir) - 1] != FS_PATH_SEPARATOR_CHAR)
-      _tcscat(legacyConfigPolicyDir, FS_PATH_SEPARATOR);
-   _tcscat(legacyConfigPolicyDir, CONFIG_AP_FOLDER);
+      _tcslcat(legacyConfigPolicyDir, FS_PATH_SEPARATOR, MAX_PATH);
+   _tcslcat(legacyConfigPolicyDir, SUBDIR_CONFIG_POLICY, MAX_PATH);
 
    if (!_tcsicmp(legacyConfigPolicyDir, g_szConfigPolicyDir))
       return;
@@ -381,8 +381,8 @@ bool LoadConfig(const TCHAR *configSection, bool firstStart)
 
       _tcslcpy(g_szConfigPolicyDir, g_szDataDirectory, MAX_PATH - 16);
       if (g_szConfigPolicyDir[_tcslen(g_szConfigPolicyDir) - 1] != FS_PATH_SEPARATOR_CHAR)
-         _tcscat(g_szConfigPolicyDir, FS_PATH_SEPARATOR);
-      _tcscat(g_szConfigPolicyDir, CONFIG_AP_FOLDER);
+         _tcslcat(g_szConfigPolicyDir, FS_PATH_SEPARATOR, MAX_PATH);
+      _tcslcat(g_szConfigPolicyDir, SUBDIR_CONFIG_POLICY, MAX_PATH);
       if (_taccess(g_szConfigPolicyDir, 0) != 0)
       {
          // Check if configuration policies stored at old location

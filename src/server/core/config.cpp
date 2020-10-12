@@ -75,6 +75,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_64, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_flags, nullptr },
    { _T("CodePage"), CT_MB_STRING, 0, 0, 256, 0, g_szCodePage, nullptr },
    { _T("CreateCrashDumps"), CT_BOOLEAN_FLAG_64, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_flags, nullptr },
+   { _T("CRL"), CT_STRING_SET, 0, 0, 0, 0, &g_crlList, nullptr },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, g_szDailyLogFileSuffix, nullptr },
    { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdDataDir, nullptr },
    { _T("DBCacheConfigurationTables"), CT_BOOLEAN_FLAG_64, 0, 0, AF_CACHE_DB_ON_STARTUP, 0, &g_flags, nullptr },
@@ -105,7 +106,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ServerCertificateKey"), CT_STRING, 0, 0, MAX_PATH, 0, g_serverCertificateKeyPath, nullptr },
    { _T("ServerCertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, g_serverCertificatePassword, nullptr },
    { _T("TrustedCertificate"), CT_STRING_SET, 0, 0, 0, 0, &g_trustedCertificates, nullptr },
-   { _T("CRL"), CT_STRING_SET, 0, 0, 0, 0, &g_crlList, nullptr },
    { _T("WriteLogAsJson"), CT_BOOLEAN_FLAG_64, 0, 0, AF_LOG_IN_JSON_FORMAT, 0, &g_flags, nullptr },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
 };

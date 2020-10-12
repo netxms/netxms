@@ -1268,6 +1268,32 @@ retry:
    if (cert != nullptr)
    {
       bool nodeFound = false;
+
+      String dp = GetCertificateCRLDistributionPoint(cert);
+      if (!dp.isEmpty())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): certificate CRL DP: %s"), request->addr.toString().cstr(), dp.cstr());
+         char *url = dp.getUTF8String();
+         AddRemoteCRL(url, true);
+         MemFree(url);
+      }
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+      STACK_OF(X509) *chain = SSL_get0_verified_chain(ssl);
+      if (sk_X509_num(chain) > 1)
+      {
+         X509 *issuer = sk_X509_value(chain, 1);
+         if (CheckCertificateRevocation(cert, issuer))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): certificate is revoked"), request->addr.toString().cstr());
+            X509_free(cert);
+            goto failure;
+         }
+      }
+#else
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): CRL check is not implemented for this OpenSSL version"), request->addr.toString().cstr());
+#endif
+
       certExpTime = GetCertificateExpirationTime(cert);
       certSubject = GetCertificateSubjectString(cert);
       certIssuer = GetCertificateIssuerString(cert);

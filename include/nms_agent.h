@@ -68,12 +68,13 @@
 #define AGENT_POLICY_LOG_PARSER  2
 
 /**
- * Agent log parser policy folder
+ * Agent data subdirectories
  */
-#define LOGPARSER_AP_FOLDER   _T("logparser_ap")
-#define USERAGENT_AP_FOLDER   _T("useragent_ap")
-#define CONFIG_AP_FOLDER      _T("config_ap")
-#define CERTIFICATES_FOLDER   _T("certificates")
+#define SUBDIR_LOGPARSER_POLICY   _T("logparser_ap")
+#define SUBDIR_USERAGENT_POLICY   _T("useragent_ap")
+#define SUBDIR_CONFIG_POLICY      _T("config_ap")
+#define SUBDIR_CERTIFICATES       _T("certificates")
+#define SUBDIR_CRL                _T("crl")
 
 /**
  * Error codes
@@ -1133,6 +1134,11 @@ bool LIBNXAGENT_EXPORTABLE GetSystemHardwareId(BYTE *hwid);
 ObjectArray<ProcessInformation> LIBNXAGENT_EXPORTABLE *GetProcessListForUserSession(DWORD sessionId);
 bool LIBNXAGENT_EXPORTABLE CheckProcessPresenseInSession(DWORD sessionId, const TCHAR *processName);
 #endif
+
+void LIBNXAGENT_EXPORTABLE AddLocalCRL(const TCHAR *fileName);
+void LIBNXAGENT_EXPORTABLE AddRemoteCRL(const char *url, bool allowDownload);
+bool LIBNXAGENT_EXPORTABLE CheckCertificateRevocation(X509 *cert, const X509 *issuer);
+void LIBNXAGENT_EXPORTABLE ReloadAllCRLs();
 
 /**
  * Wrapper for SleepAndCheckForShutdownEx (for backward compatibility)

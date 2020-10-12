@@ -83,6 +83,7 @@ void MaintenanceModeEnter(const shared_ptr<ScheduledTaskParameters>& parameters)
 void MaintenanceModeLeave(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters);
 void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameters);
+void ReloadCRLs(const shared_ptr<ScheduledTaskParameters>& parameters);
 
 void InitCountryList();
 void InitCurrencyList();
@@ -355,7 +356,7 @@ static BOOL CheckDataDir()
 
    // Create directory for CRL if does't exists
    _tcscpy(szBuffer, g_netxmsdDataDir);
-   _tcscat(szBuffer, DDIR_PACKAGES);
+   _tcscat(szBuffer, DDIR_CRL);
    if (MKDIR(szBuffer) == -1)
    {
       if (errno != EEXIST)
@@ -1020,7 +1021,7 @@ retry_db_lock:
    // Initialize cryptography
    if (!InitCryptography())
    {
-      nxlog_write(NXLOG_ERROR, _T("Failed to initialize cryptografy module"));
+      nxlog_write(NXLOG_ERROR, _T("Failed to initialize cryptography module"));
       return FALSE;
    }
 
@@ -1208,6 +1209,7 @@ retry_db_lock:
    RegisterSchedulerTaskHandler(ALARM_SUMMARY_EMAIL_TASK_ID, SendAlarmSummaryEmail, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, ProcessUnboundTunnels, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(RENEW_AGENT_CERTIFICATES_TASK_ID, RenewAgentCertificates, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(RELOAD_CRLS_TASK_ID, ReloadCRLs, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(DCT_RESET_POLL_TIMERS_TASK_ID, ResetObjectPollTimers, 0); //No access right because it will be used only by server
    InitializeTaskScheduler();
 
@@ -1220,6 +1222,9 @@ retry_db_lock:
       EnableAlarmSummaryEmails();
    else
       DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
+
+   // Schedule automatic CRL reload
+   AddUniqueRecurrentScheduledTask(RELOAD_CRLS_TASK_ID, _T("0 */4 * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
 
    // Schedule poll timers reset
    AddUniqueRecurrentScheduledTask(DCT_RESET_POLL_TIMERS_TASK_ID, _T("0 0 1 * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
