@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,14 +23,13 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.netxms.ui.eclipse.serverconfig.Messages;
-import org.netxms.ui.eclipse.serverconfig.views.SyslogParserConfigurator;
+import org.netxms.ui.eclipse.serverconfig.views.WindowsEventParserConfigurator;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
- * Open syslog configuration view
+ * Open Windows event configuration view
  */
-public class OpenSyslogParserConfig implements IWorkbenchWindowActionDelegate
+public class OpenWindowsEventParserConfig implements IWorkbenchWindowActionDelegate
 {
 	private IWorkbenchWindow window;
 	
@@ -62,11 +61,11 @@ public class OpenSyslogParserConfig implements IWorkbenchWindowActionDelegate
 		
 		try 
 		{
-			window.getActivePage().showView(SyslogParserConfigurator.ID);
+			window.getActivePage().showView(WindowsEventParserConfigurator.ID);
 		} 
 		catch (PartInitException e) 
 		{
-			MessageDialogHelper.openError(window.getShell(), Messages.get().OpenSyslogParserConfig_Error, Messages.get().OpenSyslogParserConfig_ErrorOpeningView + e.getMessage());
+			MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening view: %s", e.getMessage()));
 		}
 	}
 

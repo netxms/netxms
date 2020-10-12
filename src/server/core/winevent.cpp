@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxlpapi.h>
 
 #define DEBUG_TAG _T("winevt")
 
@@ -51,18 +52,22 @@ WindowsEvent::~WindowsEvent()
 }
 
 /**
- * Windows event log processing queue
+ * Static data
  */
-static ObjectQueue<WindowsEvent> s_windowsEventQueue;
-static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static uint64_t s_eventId = 1;  // Next available event ID
+static LogParser *s_parser = nullptr;
+static MUTEX s_parserLock = INVALID_MUTEX_HANDLE;
+static ObjectQueue<WindowsEvent> s_windowsEventProcessingQueue;
+static ObjectQueue<WindowsEvent> s_windowsEventWriterQueue;
+static THREAD s_writerThread = INVALID_THREAD_HANDLE;
+static THREAD s_processingThread = INVALID_THREAD_HANDLE;
 
 /**
  * Put new event log message to the queue
  */
 void QueueWindowsEvent(WindowsEvent *event)
 {
-   s_windowsEventQueue.put(event);
+   s_windowsEventProcessingQueue.put(event);
 }
 
 /**
@@ -77,7 +82,7 @@ static void WindowsEventWriterThread()
    while(true)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      WindowsEvent *event = s_windowsEventQueue.getOrBlock();
+      WindowsEvent *event = s_windowsEventWriterQueue.getOrBlock();
       if (event == INVALID_POINTER_VALUE)
          break;
 
@@ -118,7 +123,7 @@ static void WindowsEventWriterThread()
          if (count == maxRecords)
             break;
 
-         event = s_windowsEventQueue.getOrBlock(500);
+         event = s_windowsEventWriterQueue.getOrBlock(500);
          if ((event == nullptr) || (event == INVALID_POINTER_VALUE))
             break;
       }
@@ -141,9 +146,112 @@ uint64_t GetNextWinEventId()
 }
 
 /**
- * Start Windows event log writer thread
+ * Callback for Windows event parser
  */
-void StartWindowsEventWriter()
+static void WindwsEventParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
+         const TCHAR *line, const TCHAR *source, UINT32 facility, UINT32 severity, const StringList *captureGroups,
+         const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount, time_t timestamp,
+         const TCHAR *agentAction, const StringList *agentActionArgs, void *context)
+{
+   nxlog_write(NXLOG_ERROR, _T("###Callback"));
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Windows event message matched, capture group count = %d, repeat count = %d"), captureGroups->size(), repeatCount);
+
+   //TODO: do not execute if unamanged
+   StringMap pmap;
+   for(int i = 0; i < captureGroups->size(); i++)
+   {
+      TCHAR name[32];
+      _sntprintf(name, 32, _T("cg%d"), i + 1);
+      pmap.set(name, captureGroups->get(i));
+   }
+   pmap.set(_T("repeatCount"), repeatCount);
+
+   PostEventWithTagAndNames(eventCode, EventOrigin::WIN_EVNET, timestamp, objectId, eventTag, &pmap);
+}
+
+/**
+ * Initialize parser on start on on config change
+ */
+void InitializeWindowsEventParser()
+{
+   MutexLock(s_parserLock);
+   LogParser *prev = s_parser;
+   s_parser = nullptr;
+#ifdef UNICODE
+   char *xml;
+   WCHAR *wxml = ConfigReadCLOB(_T("WindowsEventParser"), _T("<parser></parser>"));
+   if (wxml != nullptr)
+   {
+      xml = UTF8StringFromWideString(wxml);
+      free(wxml);
+   }
+   else
+   {
+      xml = nullptr;
+   }
+#else
+   char *xml = ConfigReadCLOB("WindowsEventParser", "<parser></parser>");
+#endif
+   if (xml != nullptr)
+   {
+      TCHAR parseError[256];
+      ObjectArray<LogParser> *parsers = LogParser::createFromXml(xml, -1, parseError, 256, EventNameResolver);
+      if ((parsers != nullptr) && (parsers->size() > 0))
+      {
+         s_parser = parsers->get(0);
+         s_parser->setCallback(WindwsEventParserCallback);
+         if (prev != nullptr)
+            s_parser->restoreCounters(prev);
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Windows evnet parser successfully created from config"));
+      }
+      else
+      {
+         nxlog_write(NXLOG_ERROR, _T("Cannot initialize Windows event parser (%s)"), parseError);
+      }
+      free(xml);
+      delete parsers;
+   }
+   MutexUnlock(s_parserLock);
+   delete prev;
+}
+
+/**
+ * Windows event processing thread
+ */
+static void WindowsEventProcessingThread()
+{
+   ThreadSetName("WinEvtProcessing");
+
+   while(true)
+   {
+      WindowsEvent *event = s_windowsEventProcessingQueue.getOrBlock();
+      if (event == INVALID_POINTER_VALUE)
+         break;
+
+      bool write = true;
+
+      MutexLock(s_parserLock);
+      if (s_parser != nullptr)
+      {
+         s_parser->matchEvent(event->eventSource, event->eventCode, event->eventSeverity, event->message, nullptr, 0, event->nodeId, event->originTimestamp);
+      }
+      MutexUnlock(s_parserLock);
+
+      // Send message to all connected clients
+      //TODO: add monitor to win event log EnumerateClientSessions(BroadcastSyslogMessage, &record);
+
+      if (write)
+         s_windowsEventWriterQueue.put(event);
+      else
+         delete event;
+   }
+
+}
+
+/**
+ * Start Windows event log writer and processing threads
+ */
+void StartWindowsEventProcessing()
 {
    // Determine first available event id
    uint64_t id = ConfigReadUInt64(_T("FirstFreeWinEventId"), s_eventId);
@@ -161,15 +269,28 @@ void StartWindowsEventWriter()
    }
    DBConnectionPoolReleaseConnection(hdb);
 
+   InitLogParserLibrary();
+
+   // Create message parser
+   s_parserLock = MutexCreate();
+   InitializeWindowsEventParser();
+
    s_writerThread = ThreadCreateEx(WindowsEventWriterThread);
+   s_processingThread = ThreadCreateEx(WindowsEventProcessingThread);
 }
 
 /**
- * Stop Windows event log writer thread
+ * Stop Windows event log writer and processing threads
  */
-void StopWindowsEventWriter()
+void StopWindowsEventProcessing()
 {
-   s_windowsEventQueue.put(INVALID_POINTER_VALUE);
+   s_windowsEventProcessingQueue.put(INVALID_POINTER_VALUE);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Waiting for Windows event processing thread to stop"));
+   ThreadJoin(s_processingThread);
+
+   s_windowsEventWriterQueue.put(INVALID_POINTER_VALUE);
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Waiting for Windows event writer to stop"));
    ThreadJoin(s_writerThread);
+
+   CleanupLogParserLibrary();
 }

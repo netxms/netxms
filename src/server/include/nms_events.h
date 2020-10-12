@@ -39,7 +39,8 @@ enum class EventOrigin
    SYSLOG = 3,
    SNMP = 4,
    NXSL = 5,
-   REMOTE_SERVER = 6
+   REMOTE_SERVER = 6,
+   WIN_EVNET = 7
 };
 
 /**

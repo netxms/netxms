@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,16 +39,15 @@ import org.netxms.ui.eclipse.datacollection.widgets.LogParserEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserModifyListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
-import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
- * Syslog parser configurator
+ * Windows event parser configurator
  */
-public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
+public class WindowsEventParserConfigurator extends ViewPart implements ISaveablePart
 {
-	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.SyslogParserConfigurator"; //$NON-NLS-1$
+	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.WindowsEventParserConfigurator"; //$NON-NLS-1$
 	
 	private NXCSession session;
 	private LogParserEditor editor;
@@ -73,7 +72,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		editor = new LogParserEditor(parent, SWT.NONE, LogParserEditor.TYPE_SYSLOG);
+		editor = new LogParserEditor(parent, SWT.NONE, LogParserEditor.TYPE_WIN_EVENT);
 		editor.addModifyListener(new LogParserModifyListener() {
 			@Override
 			public void modifyParser()
@@ -101,7 +100,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 			}
 		};
 		
-		actionSave = new Action(Messages.get().SyslogParserConfigurator_Save, SharedIcons.SAVE) {
+		actionSave = new Action("Save", SharedIcons.SAVE) {
 			@Override
 			public void run()
 			{
@@ -170,12 +169,12 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 		});
 		try
 		{
-			session.setServerConfigClob("SyslogParser", content); //$NON-NLS-1$
+			session.setServerConfigClob("WindowsEventParser", content); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{
-			MessageDialogHelper.openError(getSite().getShell(), Messages.get().SyslogParserConfigurator_Error, 
-			      String.format(Messages.get().SyslogParserConfigurator_ErrorSaveConfig, e.getLocalizedMessage()));
+			MessageDialogHelper.openError(getSite().getShell(), "Error", 
+			      String.format("Cannot save Windows event parser configuration: %s", e.getLocalizedMessage()));
 		}
 	}
 
@@ -221,22 +220,22 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	{
 		if (modified)
 		{
-			if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().SyslogParserConfigurator_ConfirmRefresh, Messages.get().SyslogParserConfigurator_ConfirmRefreshText))
+			if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Confirm Refresh", "This will destroy all unsaved changes. Are you sure?"))
 				return;
 		}
 		
 		actionSave.setEnabled(false);
-		new ConsoleJob(Messages.get().SyslogParserConfigurator_LoadJobName, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Load Windows even parser configuration", this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				try
 				{
-					content = session.getServerConfigClob("SyslogParser"); //$NON-NLS-1$
+					content = session.getServerConfigClob("WindowsEventParser"); //$NON-NLS-1$
 				}
 				catch(NXCException e)
 				{
-					// If syslog parser is not configured, server will return
+					// If Windwos event parser is not configured, server will return
 					// UNKNOWN_VARIABLE error
 					if (e.getErrorCode() != RCC.UNKNOWN_VARIABLE)
 						throw e;
@@ -255,7 +254,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().SyslogParserConfigurator_LoadJobError;
+				return "Cannot load Windows event parser configuration";
 			}
 		}.start();
 	}
@@ -267,11 +266,12 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	{
 		final String xml = editor.getParserXml();
 		actionSave.setEnabled(false);
-		new ConsoleJob(Messages.get().SyslogParserConfigurator_SaveJobName, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Save Windows event parser configuration", this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.setServerConfigClob("SyslogParser", xml); //$NON-NLS-1$
+				session.setServerConfigClob("WindowsEventParser", xml); //$NON-NLS-1$
+				System.out.println(xml);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -284,7 +284,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().SyslogParserConfigurator_SaveJobError;
+				return "Cannot save Windows event parser configuration";
 			}
 		}.start();
 	}

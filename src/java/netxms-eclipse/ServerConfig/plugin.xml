@@ -77,6 +77,14 @@
             name="Notification Channel"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.serverconfig.views.WindowsEventParserConfigurator"
+            icon="icons/syslog_cfg.gif"
+            id="org.netxms.ui.eclipse.serverconfig.views.WindowsEventParserConfigurator"
+            name="Windows Evnet Parser"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -174,6 +182,12 @@
             id="org.netxms.ui.eclipse.serverconfig.commands.open_notification_channels"
             name="Notification channels">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open Windows event parser"
+            id="org.netxms.ui.eclipse.serverconfig.commands.open_windows_event"
+            name="Open Windows event parser">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -249,6 +263,16 @@
            menubarPath="config/additions"
            style="push"
            tooltip="Persistent storage">
+     </action>
+     <action
+           allowLabelUpdate="true"
+           class="org.netxms.ui.eclipse.serverconfig.actions.OpenWindowsEventParserConfig"
+           definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_windows_event"
+           icon="icons/syslog_cfg.gif"
+           id="org.netxms.ui.eclipse.serverconfig.actions.open_windows_event_config"
+           label="Windows event parser"
+           menubarPath="config/additions"
+           tooltip="Windows event parser">
      </action>
 	   </actionSet>
 	   <actionSet id="org.netxms.ui.eclipse.action_set.export_import_configuration"
