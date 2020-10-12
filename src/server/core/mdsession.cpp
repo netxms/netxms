@@ -26,20 +26,15 @@
 #include <psapi.h>
 #endif
 
-// WARNING! this hack works only for d2i_X509(); be carefull when adding new code
-#ifdef OPENSSL_CONST
-# undef OPENSSL_CONST
-#endif
-#if OPENSSL_VERSION_NUMBER >= 0x0090800fL
-# define OPENSSL_CONST const
-#else
-# define OPENSSL_CONST
-#endif
-
 /**
- * Constants
+ * Max message size
  */
 #define MAX_MSG_SIZE    65536
+
+/**
+ * Communication protocol name for mobile devices
+ */
+#define COMM_PROTO   _T("NXCP")
 
 /**
  * Externals
@@ -62,50 +57,25 @@ THREAD_RESULT THREAD_CALL MobileDeviceSession::readThreadStarter(void *pArg)
 }
 
 /**
- * Client communication write thread starter
- */
-THREAD_RESULT THREAD_CALL MobileDeviceSession::writeThreadStarter(void *pArg)
-{
-   ((MobileDeviceSession *)pArg)->writeThread();
-   return THREAD_OK;
-}
-
-/**
- * Received message processing thread starter
- */
-THREAD_RESULT THREAD_CALL MobileDeviceSession::processingThreadStarter(void *pArg)
-{
-   ((MobileDeviceSession *)pArg)->processingThread();
-   return THREAD_OK;
-}
-
-/**
  * Mobile device session class constructor
  */
 MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, const InetAddress& addr)
 {
-   m_pSendQueue = new Queue;
-   m_pMessageQueue = new Queue;
    m_hSocket = hSocket;
    m_id = -1;
-   m_state = SESSION_STATE_INIT;
-   m_pMsgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
    m_pCtx = nullptr;
-   m_hWriteThread = INVALID_THREAD_HANDLE;
-   m_hProcessingThread = INVALID_THREAD_HANDLE;
 	m_mutexSocketWrite = MutexCreate();
 	m_clientAddr = addr;
-	m_clientAddr.toString(m_szHostName);
-   _tcscpy(m_szUserName, _T("<not logged in>"));
-	_tcscpy(m_szClientInfo, _T("n/a"));
-   m_dwUserId = INVALID_INDEX;
+	m_clientAddr.toString(m_hostName);
+   _tcscpy(m_userName, _T("<not logged in>"));
+	_tcscpy(m_clientInfo, _T("n/a"));
+   m_userId = INVALID_INDEX;
 	m_deviceObjectId = 0;
-   m_dwEncryptionRqId = 0;
+   m_encryptionRqId = 0;
+   m_encryptionResult = 0;
    m_condEncryptionSetup = INVALID_CONDITION_HANDLE;
-   m_dwRefCount = 0;
+   m_refCount = 0;
 	m_isAuthenticated = false;
-	m_wCurrentCmd = 0;
-	m_dwEncryptionResult = 0;
 }
 
 /**
@@ -115,9 +85,6 @@ MobileDeviceSession::~MobileDeviceSession()
 {
    if (m_hSocket != -1)
       closesocket(m_hSocket);
-   delete m_pSendQueue;
-   delete m_pMessageQueue;
-   free(m_pMsgBuffer);
 	MutexDestroy(m_mutexSocketWrite);
 	if (m_pCtx != nullptr)
 		m_pCtx->decRefCount();
@@ -130,8 +97,6 @@ MobileDeviceSession::~MobileDeviceSession()
  */
 void MobileDeviceSession::run()
 {
-   m_hWriteThread = ThreadCreateEx(writeThreadStarter, 0, this);
-   m_hProcessingThread = ThreadCreateEx(processingThreadStarter, 0, this);
    ThreadCreate(readThreadStarter, 0, this);
 }
 
@@ -158,7 +123,7 @@ void MobileDeviceSession::debugPrintf(int level, const TCHAR *format, ...)
 void MobileDeviceSession::readThread()
 {
    SocketMessageReceiver receiver(m_hSocket, 4096, MAX_MSG_SIZE);
-   while(1)
+   while(true)
    {
       MessageReceiverResult result;
       NXCPMessage *msg = receiver.readMessage(900000, &result);
@@ -184,229 +149,146 @@ void MobileDeviceSession::readThread()
       }
 
       TCHAR szBuffer[256];
-      if ((msg->getCode() == CMD_SESSION_KEY) && (msg->getId() == m_dwEncryptionRqId))
+      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
+      if ((msg->getCode() == CMD_SESSION_KEY) && (msg->getId() == m_encryptionRqId))
       {
-	      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
-         m_dwEncryptionResult = SetupEncryptionContext(msg, &m_pCtx, nullptr, g_pServerKey, NXCP_VERSION);
+         m_encryptionResult = SetupEncryptionContext(msg, &m_pCtx, nullptr, g_pServerKey, NXCP_VERSION);
          receiver.setEncryptionContext(m_pCtx);
          ConditionSet(m_condEncryptionSetup);
-         m_dwEncryptionRqId = 0;
+         m_encryptionRqId = 0;
          delete msg;
       }
       else if (msg->getCode() == CMD_KEEPALIVE)
 		{
-	      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
 			respondToKeepalive(msg->getId());
 			delete msg;
 		}
 		else
       {
-         m_pMessageQueue->put(msg);
+		   ThreadPoolExecute(g_mobileThreadPool, this, &MobileDeviceSession::processRequest, msg);
       }
    }
 
-   // Notify other threads to exit
-   NXCP_MESSAGE *rawMsg;
-	while((rawMsg = (NXCP_MESSAGE *)m_pSendQueue->get()) != nullptr)
-		free(rawMsg);
-   m_pSendQueue->put(INVALID_POINTER_VALUE);
-
-   NXCPMessage *msg;
-	while((msg = (NXCPMessage *)m_pMessageQueue->get()) != nullptr)
-		delete msg;
-   m_pMessageQueue->put(INVALID_POINTER_VALUE);
-
-   // Wait for other threads to finish
-   ThreadJoin(m_hWriteThread);
-   ThreadJoin(m_hProcessingThread);
-
    // Waiting while reference count becomes 0
-   if (m_dwRefCount > 0)
+   if (m_refCount > 0)
    {
       debugPrintf(3, _T("Waiting for pending requests..."));
       do
       {
          ThreadSleep(1);
-      } while(m_dwRefCount > 0);
+      } while(m_refCount > 0);
    }
 
-	WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szHostName, m_id, 0, _T("Mobile device logged out (client: %s)"), m_szClientInfo);
+	WriteAuditLog(AUDIT_SECURITY, TRUE, m_userId, m_hostName, m_id, 0, _T("Mobile device logged out (client: %s)"), m_clientInfo);
    debugPrintf(3, _T("Session closed"));
-}
-
-/**
- * Network write thread
- */
-void MobileDeviceSession::writeThread()
-{
-   NXCP_MESSAGE *pRawMsg;
-   NXCP_ENCRYPTED_MESSAGE *pEnMsg;
-   TCHAR szBuffer[128];
-   BOOL bResult;
-
-   while(1)
-   {
-      pRawMsg = (NXCP_MESSAGE *)m_pSendQueue->getOrBlock();
-      if (pRawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
-         break;
-
-		if (ntohs(pRawMsg->code) != CMD_ADM_MESSAGE)
-			debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(pRawMsg->code), szBuffer));
-
-      if (m_pCtx != nullptr)
-      {
-         pEnMsg = m_pCtx->encryptMessage(pRawMsg);
-         if (pEnMsg != nullptr)
-         {
-            bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
-            free(pEnMsg);
-         }
-         else
-         {
-            bResult = FALSE;
-         }
-      }
-      else
-      {
-         bResult = (SendEx(m_hSocket, (const char *)pRawMsg, ntohl(pRawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->size));
-      }
-      free(pRawMsg);
-
-      if (!bResult)
-      {
-         closesocket(m_hSocket);
-         m_hSocket = -1;
-         break;
-      }
-   }
 }
 
 /**
  * Message processing thread
  */
-void MobileDeviceSession::processingThread()
+void MobileDeviceSession::processRequest(NXCPMessage *request)
 {
-   NXCPMessage *msg;
-   TCHAR szBuffer[128];
-   int status;
-
-   while(1)
+   uint16_t command = request->getCode();
+   if (!m_isAuthenticated &&
+       (command != CMD_LOGIN) &&
+       (command != CMD_GET_SERVER_INFO) &&
+       (command != CMD_REQUEST_ENCRYPTION))
    {
-      msg = (NXCPMessage *)m_pMessageQueue->getOrBlock();
-      if (msg == INVALID_POINTER_VALUE)    // Session termination indicator
-         break;
-
-      m_wCurrentCmd = msg->getCode();
-      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
-      if (!m_isAuthenticated &&
-          (m_wCurrentCmd != CMD_LOGIN) &&
-			 (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
-          (m_wCurrentCmd != CMD_REQUEST_ENCRYPTION))
-      {
-         delete msg;
-         continue;
-      }
-
-      m_state = SESSION_STATE_PROCESSING;
-      switch(m_wCurrentCmd)
-      {
-         case CMD_GET_SERVER_INFO:
-            sendServerInfo(msg->getId());
-            break;
-         case CMD_LOGIN:
-            login(msg);
-            break;
-         case CMD_REQUEST_ENCRYPTION:
-            setupEncryption(msg);
-            break;
-			case CMD_REPORT_DEVICE_INFO:
-				updateDeviceInfo(msg);
-				break;
-			case CMD_REPORT_DEVICE_STATUS:
-				updateDeviceStatus(msg);
-				break;
-         case CMD_PUSH_DCI_DATA:
-            pushData(msg);
-            break;
-         default:
-            // Pass message to loaded modules
-            status = NXMOD_COMMAND_IGNORED;
-            ENUMERATE_MODULES(pfMobileDeviceCommandHandler)
-				{
-               status = CURRENT_MODULE.pfMobileDeviceCommandHandler(m_wCurrentCmd, msg, this);
-               if (status != NXMOD_COMMAND_IGNORED)
-               {
-                  if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
-                  {
-                     msg = nullptr;	// Prevent deletion
-                  }
-                  break;   // Message was processed by the module
-               }
-				}
-            if (status == NXMOD_COMMAND_IGNORED)
-            {
-               NXCPMessage response;
-
-               response.setId(msg->getId());
-               response.setCode(CMD_REQUEST_COMPLETED);
-               response.setField(VID_RCC, RCC_NOT_IMPLEMENTED);
-               sendMessage(&response);
-            }
-            break;
-      }
-      delete msg;
-      m_state = m_isAuthenticated ? SESSION_STATE_IDLE : SESSION_STATE_INIT;
+      delete request;
+      return;
    }
+
+   switch(command)
+   {
+      case CMD_GET_SERVER_INFO:
+         sendServerInfo(request->getId());
+         break;
+      case CMD_LOGIN:
+         login(request);
+         break;
+      case CMD_REQUEST_ENCRYPTION:
+         setupEncryption(request);
+         break;
+      case CMD_REPORT_DEVICE_INFO:
+         updateDeviceInfo(request);
+         break;
+      case CMD_REPORT_DEVICE_STATUS:
+         updateDeviceStatus(request);
+         break;
+      case CMD_PUSH_DCI_DATA:
+         pushData(request);
+         break;
+      default:
+         // Pass message to loaded modules
+         int status = NXMOD_COMMAND_IGNORED;
+         ENUMERATE_MODULES(pfMobileDeviceCommandHandler)
+         {
+            status = CURRENT_MODULE.pfMobileDeviceCommandHandler(command, request, this);
+            if (status != NXMOD_COMMAND_IGNORED)
+            {
+               if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
+               {
+                  request = nullptr;	// Prevent deletion
+               }
+               break;   // Message was processed by the module
+            }
+         }
+         if (status == NXMOD_COMMAND_IGNORED)
+         {
+            NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+            response.setField(VID_RCC, RCC_NOT_IMPLEMENTED);
+            sendMessage(response);
+         }
+         break;
+   }
+   delete request;
 }
 
 /**
  * Respond to client's keepalive message
  */
-void MobileDeviceSession::respondToKeepalive(UINT32 dwRqId)
+void MobileDeviceSession::respondToKeepalive(uint32_t requestId)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
    msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Send message to client
  */
-void MobileDeviceSession::sendMessage(NXCPMessage *msg)
+void MobileDeviceSession::sendMessage(const NXCPMessage& msg)
 {
    TCHAR szBuffer[128];
-   BOOL bResult;
-
-	debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
-	NXCP_MESSAGE *pRawMsg = msg->serialize();
+	debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg.getCode(), szBuffer));
+	NXCP_MESSAGE *rawMsg = msg.serialize();
    if (nxlog_get_debug_level() >= 8)
    {
-      String msgDump = NXCPMessage::dump(pRawMsg, NXCP_VERSION);
+      String msgDump = NXCPMessage::dump(rawMsg, NXCP_VERSION);
       debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
    }
+
+   bool success;
    if (m_pCtx != nullptr)
    {
-      NXCP_ENCRYPTED_MESSAGE *pEnMsg = m_pCtx->encryptMessage(pRawMsg);
-      if (pEnMsg != nullptr)
+      NXCP_ENCRYPTED_MESSAGE *encryptedMsg = m_pCtx->encryptMessage(rawMsg);
+      if (encryptedMsg != nullptr)
       {
-         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
-         free(pEnMsg);
+         success = (SendEx(m_hSocket, (char *)encryptedMsg, ntohl(encryptedMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(encryptedMsg->size));
+         MemFree(encryptedMsg);
       }
       else
       {
-         bResult = FALSE;
+         success = false;
       }
    }
    else
    {
-      bResult = (SendEx(m_hSocket, (const char *)pRawMsg, ntohl(pRawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->size));
+      success = (SendEx(m_hSocket, (const char *)rawMsg, ntohl(rawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
-   free(pRawMsg);
+   MemFree(rawMsg);
 
-   if (!bResult)
+   if (!success)
    {
       closesocket(m_hSocket);
       m_hSocket = -1;
@@ -416,13 +298,9 @@ void MobileDeviceSession::sendMessage(NXCPMessage *msg)
 /**
  * Send server information to client
  */
-void MobileDeviceSession::sendServerInfo(UINT32 dwRqId)
+void MobileDeviceSession::sendServerInfo(uint32_t requestId)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
 
 	// Generate challenge for certificate authentication
 #ifdef _WITH_ENCRYPTION
@@ -439,13 +317,13 @@ void MobileDeviceSession::sendServerInfo(UINT32 dwRqId)
 	msg.setField(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
 
    // Send response
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Authenticate client
  */
-void MobileDeviceSession::login(NXCPMessage *pRequest)
+void MobileDeviceSession::login(NXCPMessage *request)
 {
    NXCPMessage msg;
    TCHAR szLogin[MAX_USER_NAME], szPassword[1024];
@@ -458,49 +336,47 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
 
    // Prepare response message
    msg.setCode(CMD_LOGIN_RESP);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
    // Get client info string
-   if (pRequest->isFieldExist(VID_CLIENT_INFO))
+   if (request->isFieldExist(VID_CLIENT_INFO))
    {
-      TCHAR szClientInfo[32], szOSInfo[32], szLibVersion[16];
-
-      pRequest->getFieldAsString(VID_CLIENT_INFO, szClientInfo, 32);
-      pRequest->getFieldAsString(VID_OS_INFO, szOSInfo, 32);
-      pRequest->getFieldAsString(VID_LIBNXCL_VERSION, szLibVersion, 16);
-      _sntprintf(m_szClientInfo, 96, _T("%s (%s; libnxcl %s)"),
-                 szClientInfo, szOSInfo, szLibVersion);
+      TCHAR clientInfo[32], osInfo[32], libVersion[16];
+      request->getFieldAsString(VID_CLIENT_INFO, clientInfo, 32);
+      request->getFieldAsString(VID_OS_INFO, osInfo, 32);
+      request->getFieldAsString(VID_LIBNXCL_VERSION, libVersion, 16);
+      _sntprintf(m_clientInfo, 96, _T("%s (%s; libnxcl %s)"), clientInfo, osInfo, libVersion);
    }
 
    if (!m_isAuthenticated)
    {
-      pRequest->getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
-		nAuthType = (int)pRequest->getFieldAsUInt16(VID_AUTH_TYPE);
+      request->getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
+		nAuthType = (int)request->getFieldAsUInt16(VID_AUTH_TYPE);
 		UINT64 userRights;
 		UINT32 graceLogins;
 		switch(nAuthType)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:
 #ifdef UNICODE
-				pRequest->getFieldAsString(VID_PASSWORD, szPassword, 256);
+				request->getFieldAsString(VID_PASSWORD, szPassword, 256);
 #else
-				pRequest->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
+				request->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
 #endif
-				dwResult = AuthenticateUser(szLogin, szPassword, 0, nullptr, nullptr, &m_dwUserId,
+				dwResult = AuthenticateUser(szLogin, szPassword, 0, nullptr, nullptr, &m_userId,
 													 &userRights, &changePasswd, &intruderLockout,
 													 &closeOtherSessions, false, &graceLogins);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
 #ifdef _WITH_ENCRYPTION
-				pCert = CertificateFromLoginMessage(pRequest);
+				pCert = CertificateFromLoginMessage(request);
 				if (pCert != nullptr)
 				{
                size_t sigLen;
-					const BYTE *signature = pRequest->getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
+					const BYTE *signature = request->getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
                if (signature != nullptr)
                {
                   dwResult = AuthenticateUser(szLogin, reinterpret_cast<const TCHAR *>(signature), sigLen,
-                     pCert, m_challenge, &m_dwUserId, &userRights,
+                     pCert, m_challenge, &m_userId, &userRights,
                      &changePasswd, &intruderLockout,
                      &closeOtherSessions, false, &graceLogins);
                }
@@ -528,49 +404,49 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
 			if (userRights & SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN)
 			{
 				TCHAR deviceId[MAX_OBJECT_NAME] = _T("");
-				pRequest->getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
+				request->getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
 				shared_ptr<MobileDevice> md = FindMobileDeviceByDeviceID(deviceId);
 				if (md != nullptr)
 				{
 					m_deviceObjectId = md->getId();
 					m_isAuthenticated = true;
-					_sntprintf(m_szUserName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_szHostName);
+					_sntprintf(m_userName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_hostName);
 					msg.setField(VID_RCC, RCC_SUCCESS);
 					msg.setField(VID_USER_SYS_RIGHTS, userRights);
-					msg.setField(VID_USER_ID, m_dwUserId);
+					msg.setField(VID_USER_ID, m_userId);
 					msg.setField(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
 					msg.setField(VID_DBCONN_STATUS, (WORD)((g_flags & AF_DB_CONNECTION_LOST) ? 0 : 1));
 					msg.setField(VID_ZONING_ENABLED, (WORD)((g_flags & AF_ENABLE_ZONING) ? 1 : 0));
-					debugPrintf(3, _T("User %s authenticated as mobile device"), m_szUserName);
-					WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szHostName, m_id, 0,
-									  _T("Mobile device logged in as user \"%s\" (client info: %s)"), szLogin, m_szClientInfo);
+					debugPrintf(3, _T("User %s authenticated as mobile device"), m_userName);
+					WriteAuditLog(AUDIT_SECURITY, true, m_userId, m_hostName, m_id, 0,
+									  _T("Mobile device logged in as user \"%s\" (client info: %s)"), szLogin, m_clientInfo);
 				}
 				else
 				{
 					debugPrintf(3, _T("Mobile device object with device ID \"%s\" not found"), deviceId);
 					msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-					WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, m_id, 0,
+					WriteAuditLog(AUDIT_SECURITY, false, m_userId, m_hostName, m_id, 0,
 									  _T("Mobile device login as user \"%s\" failed - mobile device object not found (client info: %s)"),
-									  szLogin, m_szClientInfo);
+									  szLogin, m_clientInfo);
 				}
 			}
 			else
 			{
 				msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, m_id, 0,
+				WriteAuditLog(AUDIT_SECURITY, false, m_userId, m_hostName, m_id, 0,
 								  _T("Mobile device login as user \"%s\" failed - user does not have mobile device login rights (client info: %s)"),
-								  szLogin, m_szClientInfo);
+								  szLogin, m_clientInfo);
 			}
       }
       else
       {
          msg.setField(VID_RCC, dwResult);
-			WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, m_id, 0,
+			WriteAuditLog(AUDIT_SECURITY, FALSE, m_userId, m_hostName, m_id, 0,
 			              _T("Mobile device login as user \"%s\" failed with error code %d (client info: %s)"),
-							  szLogin, dwResult, m_szClientInfo);
+							  szLogin, dwResult, m_clientInfo);
 			if (intruderLockout)
 			{
-				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, m_id, 0,
+				WriteAuditLog(AUDIT_SECURITY, FALSE, m_userId, m_hostName, m_id, 0,
 								  _T("User account \"%s\" temporary disabled due to excess count of failed authentication attempts"), szLogin);
 			}
       }
@@ -592,15 +468,15 @@ void MobileDeviceSession::setupEncryption(NXCPMessage *request)
    NXCPMessage msg;
 
 #ifdef _WITH_ENCRYPTION
-	m_dwEncryptionRqId = request->getId();
-   m_dwEncryptionResult = RCC_TIMEOUT;
+	m_encryptionRqId = request->getId();
+   m_encryptionResult = RCC_TIMEOUT;
    if (m_condEncryptionSetup == INVALID_CONDITION_HANDLE)
       m_condEncryptionSetup = ConditionCreate(FALSE);
 
    // Send request for session key
 	PrepareKeyRequestMsg(&msg, g_pServerKey, request->getFieldAsUInt16(VID_USE_X509_KEY_FORMAT) != 0);
 	msg.setId(request->getId());
-   sendMessage(&msg);
+   sendMessage(msg);
    msg.deleteAllFields();
 
    // Wait for encryption setup
@@ -609,14 +485,14 @@ void MobileDeviceSession::setupEncryption(NXCPMessage *request)
    // Send response
    msg.setCode(CMD_REQUEST_COMPLETED);
 	msg.setId(request->getId());
-   msg.setField(VID_RCC, m_dwEncryptionResult);
+   msg.setField(VID_RCC, m_encryptionResult);
 #else    /* _WITH_ENCRYPTION not defined */
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
    msg.setField(VID_RCC, RCC_NO_ENCRYPTION_SUPPORT);
 #endif
 
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
@@ -624,16 +500,20 @@ void MobileDeviceSession::setupEncryption(NXCPMessage *request)
  */
 void MobileDeviceSession::updateDeviceInfo(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
 	shared_ptr<MobileDevice> device = static_pointer_cast<MobileDevice>(FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE));
 	if (device != nullptr)
 	{
-		device->updateSystemInfo(request);
+	   MobileDeviceInfo info;
+	   info.commProtocol = COMM_PROTO;
+	   info.vendor = request->getFieldAsSharedString(VID_VENDOR);
+	   info.model = request->getFieldAsSharedString(VID_MODEL);
+	   info.serialNumber = request->getFieldAsSharedString(VID_SERIAL_NUMBER);
+	   info.osName = request->getFieldAsSharedString(VID_OS_NAME);
+	   info.osVersion = request->getFieldAsSharedString(VID_OS_VERSION);
+	   info.userId = request->getFieldAsSharedString(VID_USER_NAME);
+		device->updateSystemInfo(info);
 		msg.setField(VID_RCC, RCC_SUCCESS);
 	}
 	else
@@ -641,7 +521,7 @@ void MobileDeviceSession::updateDeviceInfo(NXCPMessage *request)
 		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
@@ -649,16 +529,29 @@ void MobileDeviceSession::updateDeviceInfo(NXCPMessage *request)
  */
 void MobileDeviceSession::updateDeviceStatus(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    shared_ptr<MobileDevice> device = static_pointer_cast<MobileDevice>(FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE));
 	if (device != nullptr)
 	{
-		device->updateStatus(request);
+	   MobileDeviceStatus status;
+      status.commProtocol = COMM_PROTO;
+
+      int type = request->getFieldType(VID_BATTERY_LEVEL);
+      if (type == NXCP_DT_INT32)
+         status.batteryLevel = request->getFieldAsInt32(VID_BATTERY_LEVEL);
+      else if (type == NXCP_DT_INT16)
+         status.batteryLevel = request->getFieldAsInt16(VID_BATTERY_LEVEL);
+      else
+         status.batteryLevel = -1;
+
+      if (request->isFieldExist(VID_GEOLOCATION_TYPE))
+         status.geoLocation = GeoLocation(*request);
+
+      if (request->isFieldExist(VID_IP_ADDRESS))
+         status.ipAddress = request->getFieldAsInetAddress(VID_IP_ADDRESS);
+
+		device->updateStatus(status);
 		msg.setField(VID_RCC, RCC_SUCCESS);
 	}
 	else
@@ -666,7 +559,7 @@ void MobileDeviceSession::updateDeviceStatus(NXCPMessage *request)
 		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
@@ -694,10 +587,7 @@ struct MobileDataPushElement
  */
 void MobileDeviceSession::pushData(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    shared_ptr<MobileDevice> device = static_pointer_cast<MobileDevice>(FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE));
 	if (device != nullptr)
@@ -708,14 +598,14 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
          ObjectArray<MobileDataPushElement> values(count, 16, Ownership::True);
 
          int i;
-         UINT32 varId = VID_PUSH_DCI_DATA_BASE;
+         uint32_t varId = VID_PUSH_DCI_DATA_BASE;
          bool ok = true;
          for(i = 0; (i < count) && ok; i++)
          {
             ok = false;
 
             // find DCI by ID or name (if ID==0)
-            UINT32 dciId = request->getFieldAsUInt32(varId++);
+            uint32_t dciId = request->getFieldAsUInt32(varId++);
             shared_ptr<DCObject> pItem;
             if (dciId != 0)
             {
@@ -797,5 +687,5 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
 		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-   sendMessage(&msg);
+   sendMessage(msg);
 }

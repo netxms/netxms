@@ -28,7 +28,7 @@
 /**
  * Client thread pool
  */
-NXCORE_EXPORTABLE_VAR(ThreadPool *g_clientThreadPool) = NULL;
+NXCORE_EXPORTABLE_VAR(ThreadPool *g_clientThreadPool) = nullptr;
 
 /**
  * Static data

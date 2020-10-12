@@ -234,6 +234,7 @@ public class GeneralInfo extends TableElement
 				else
 					addPair(Messages.get().GeneralInfo_LastReport, RegionalSettings.getDateTimeFormat().format(md.getLastReportTime()));
 				addPair(Messages.get().GeneralInfo_DeviceId, md.getDeviceId());
+            addPair("Communication protocol", md.getCommProtocol());
 				addPair(Messages.get().GeneralInfo_Vendor, md.getVendor());
 				addPair(Messages.get().GeneralInfo_Model, md.getModel());
 				addPair(Messages.get().GeneralInfo_Serial, md.getSerialNumber());

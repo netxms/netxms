@@ -24,7 +24,21 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 40.16 to 40.18
+ * Upgrade from 40.18 to 40.19
+ */
+static bool H_UpgradeFromV18()
+{
+   if (GetSchemaLevelForMajorVersion(36) < 7)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE mobile_devices ADD comm_protocol varchar(31)")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(36, 7));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(19));
+   return true;
+}
+
+/**
+ * Upgrade from 40.17 to 40.18
  */
 static bool H_UpgradeFromV17()
 {
@@ -485,6 +499,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 18, 40, 19, H_UpgradeFromV18 },
    { 17, 40, 18, H_UpgradeFromV17 },
    { 16, 40, 17, H_UpgradeFromV16 },
    { 15, 40, 16, H_UpgradeFromV15 },

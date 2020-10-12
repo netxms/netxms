@@ -806,7 +806,7 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, readInternalParameter)
    DataCollectionTarget *dct = static_cast<shared_ptr<DataCollectionTarget>*>(object->getData())->get();
 
    TCHAR value[MAX_RESULT_LENGTH];
-   DataCollectionError rc = dct->getInternalMetric(argv[0]->getValueAsCString(), MAX_RESULT_LENGTH, value);
+   DataCollectionError rc = dct->getInternalMetric(argv[0]->getValueAsCString(), value, MAX_RESULT_LENGTH);
    *result = (rc == DCE_SUCCESS) ? object->vm()->createValue(value) : object->vm()->createValue();
    return 0;
 }
@@ -1224,7 +1224,7 @@ NXSL_METHOD_DEFINITION(Node, readInternalParameter)
       return NXSL_ERR_NOT_STRING;
 
    TCHAR buffer[MAX_RESULT_LENGTH];
-   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getInternalMetric(argv[0]->getValueAsCString(), MAX_RESULT_LENGTH, buffer);
+   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getInternalMetric(argv[0]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
    return 0;
 }
@@ -2180,38 +2180,42 @@ NXSL_Value *NXSL_MobileDeviceClass::getAttr(NXSL_Object *object, const char *att
       return value;
 
    NXSL_VM *vm = object->vm();
-   auto mobDevice = SharedObjectFromData<MobileDevice>(object);
-   if (compareAttributeName(attr, "deviceId"))
+   auto mobileDevice = SharedObjectFromData<MobileDevice>(object);
+   if (compareAttributeName(attr, "commProtocol"))
    {
-		value = vm->createValue(mobDevice->getDeviceId());
+		value = vm->createValue(mobileDevice->getCommProtocol());
+   }
+   else if (compareAttributeName(attr, "deviceId"))
+   {
+      value = vm->createValue(mobileDevice->getDeviceId());
    }
    else if (compareAttributeName(attr, "vendor"))
    {
-      value = vm->createValue(mobDevice->getVendor());
+      value = vm->createValue(mobileDevice->getVendor());
    }
    else if (compareAttributeName(attr, "model"))
    {
-      value = vm->createValue(mobDevice->getModel());
+      value = vm->createValue(mobileDevice->getModel());
    }
    else if (compareAttributeName(attr, "serialNumber"))
    {
-      value = vm->createValue(mobDevice->getSerialNumber());
+      value = vm->createValue(mobileDevice->getSerialNumber());
    }
    else if (compareAttributeName(attr, "osName"))
    {
-      value = vm->createValue(mobDevice->getOsName());
+      value = vm->createValue(mobileDevice->getOsName());
    }
    else if (compareAttributeName(attr, "osVersion"))
    {
-      value = vm->createValue(mobDevice->getOsVersion());
+      value = vm->createValue(mobileDevice->getOsVersion());
    }
    else if (compareAttributeName(attr, "userId"))
    {
-      value = vm->createValue(mobDevice->getUserId());
+      value = vm->createValue(mobileDevice->getUserId());
    }
    else if (compareAttributeName(attr, "batteryLevel"))
    {
-      value = vm->createValue(mobDevice->getBatteryLevel());
+      value = vm->createValue(mobileDevice->getBatteryLevel());
    }
 
    return value;

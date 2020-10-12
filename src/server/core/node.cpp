@@ -5948,56 +5948,56 @@ double Node::getMetricFromAgentAsDouble(const TCHAR *name, double defaultValue)
 /**
  * Helper function to get metric from agent as INT32
  */
-INT32 Node::getMetricFromAgentAsInt32(const TCHAR *name, INT32 defaultValue)
+int32_t Node::getMetricFromAgentAsInt32(const TCHAR *name, int32_t defaultValue)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
    if (getMetricFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
       return defaultValue;
 
    TCHAR *eptr;
-   INT32 v = _tcstol(buffer, &eptr, 0);
+   int32_t v = _tcstol(buffer, &eptr, 0);
    return (*eptr == 0) ? v : defaultValue;
 }
 
 /**
  * Helper function to get metric from agent as UINT32
  */
-UINT32 Node::getMetricFromAgentAsUInt32(const TCHAR *name, UINT32 defaultValue)
+uint32_t Node::getMetricFromAgentAsUInt32(const TCHAR *name, uint32_t defaultValue)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
    if (getMetricFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
       return defaultValue;
 
    TCHAR *eptr;
-   UINT32 v = _tcstoul(buffer, &eptr, 0);
+   uint32_t v = _tcstoul(buffer, &eptr, 0);
    return (*eptr == 0) ? v : defaultValue;
 }
 
 /**
  * Helper function to get metric from agent as INT64
  */
-INT64 Node::getMetricFromAgentAsInt64(const TCHAR *name, INT64 defaultValue)
+int64_t Node::getMetricFromAgentAsInt64(const TCHAR *name, int64_t defaultValue)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
    if (getMetricFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
       return defaultValue;
 
    TCHAR *eptr;
-   INT64 v = _tcstoll(buffer, &eptr, 0);
+   int64_t v = _tcstoll(buffer, &eptr, 0);
    return (*eptr == 0) ? v : defaultValue;
 }
 
 /**
  * Helper function to get metric from agent as UINT64
  */
-UINT64 Node::getMetricFromAgentAsUInt64(const TCHAR *name, UINT64 defaultValue)
+uint64_t Node::getMetricFromAgentAsUInt64(const TCHAR *name, uint64_t defaultValue)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
    if (getMetricFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
       return defaultValue;
 
    TCHAR *eptr;
-   UINT64 v = _tcstoull(buffer, &eptr, 0);
+   uint64_t v = _tcstoull(buffer, &eptr, 0);
    return (*eptr == 0) ? v : defaultValue;
 }
 
@@ -6201,14 +6201,14 @@ static void DciCountCallback(NetObj *object, void *data)
 /**
  * Get value for server's internal table parameter
  */
-DataCollectionError Node::getInternalTable(const TCHAR *param, Table **result)
+DataCollectionError Node::getInternalTable(const TCHAR *name, Table **result)
 {
-   DataCollectionError rc = super::getInternalTable(param, result);
+   DataCollectionError rc = super::getInternalTable(name, result);
    if (rc != DCE_NOT_SUPPORTED)
       return rc;
    rc = DCE_SUCCESS;
 
-   if (!_tcsicmp(param, _T("Topology.SwitchForwardingDatabase")))
+   if (!_tcsicmp(name, _T("Topology.SwitchForwardingDatabase")))
    {
       ForwardingDatabase *fdb = getSwitchForwardingDatabase();
       if (fdb != nullptr)
@@ -6221,7 +6221,7 @@ DataCollectionError Node::getInternalTable(const TCHAR *param, Table **result)
          rc = isBridge() ? DCE_COLLECTION_ERROR : DCE_NOT_SUPPORTED;
       }
    }
-   else if (!_tcsicmp(param, _T("Topology.WirelessStations")))
+   else if (!_tcsicmp(name, _T("Topology.WirelessStations")))
    {
       *result = wsListAsTable();
       if (*result == nullptr)
@@ -6231,7 +6231,7 @@ DataCollectionError Node::getInternalTable(const TCHAR *param, Table **result)
    }
    else if (m_capabilities & NC_IS_LOCAL_MGMT)
    {
-      if (!_tcsicmp(param, _T("Server.EventProcessors")))
+      if (!_tcsicmp(name, _T("Server.EventProcessors")))
       {
          auto table = new Table();
          table->addColumn(_T("ID"), DCI_DT_INT, _T("ID"), true);
@@ -6311,14 +6311,14 @@ static DataCollectionError GetEventProcessorStatistic(const TCHAR *param, int ty
 /**
  * Get value for server's internal parameter
  */
-DataCollectionError Node::getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer)
+DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size)
 {
-   DataCollectionError rc = super::getInternalMetric(param, bufSize, buffer);
+   DataCollectionError rc = super::getInternalMetric(name, buffer, size);
    if (rc != DCE_NOT_SUPPORTED)
       return rc;
    rc = DCE_SUCCESS;
 
-   if (!_tcsicmp(param, _T("AgentStatus")))
+   if (!_tcsicmp(name, _T("AgentStatus")))
    {
       if (m_capabilities & NC_IS_NATIVE_AGENT)
       {
@@ -6330,52 +6330,52 @@ DataCollectionError Node::getInternalMetric(const TCHAR *param, size_t bufSize, 
          _tcscpy(buffer, _T("-1"));
       }
    }
-   else if (!_tcsicmp(_T("ICMP.PacketLoss"), param))
+   else if (!_tcsicmp(_T("ICMP.PacketLoss"), name))
    {
       rc = getIcmpStatistic(nullptr, IcmpStatFunction::LOSS, buffer);
    }
-   else if (MatchString(_T("ICMP.PacketLoss(*)"), param, FALSE))
+   else if (MatchString(_T("ICMP.PacketLoss(*)"), name, FALSE))
    {
-      rc = getIcmpStatistic(param, IcmpStatFunction::LOSS, buffer);
+      rc = getIcmpStatistic(name, IcmpStatFunction::LOSS, buffer);
    }
-   else if (!_tcsicmp(_T("ICMP.ResponseTime.Average"), param))
+   else if (!_tcsicmp(_T("ICMP.ResponseTime.Average"), name))
    {
       rc = getIcmpStatistic(nullptr, IcmpStatFunction::AVERAGE, buffer);
    }
-   else if (MatchString(_T("ICMP.ResponseTime.Average(*)"), param, FALSE))
+   else if (MatchString(_T("ICMP.ResponseTime.Average(*)"), name, FALSE))
    {
-      rc = getIcmpStatistic(param, IcmpStatFunction::AVERAGE, buffer);
+      rc = getIcmpStatistic(name, IcmpStatFunction::AVERAGE, buffer);
    }
-   else if (!_tcsicmp(_T("ICMP.ResponseTime.Last"), param))
+   else if (!_tcsicmp(_T("ICMP.ResponseTime.Last"), name))
    {
       rc = getIcmpStatistic(nullptr, IcmpStatFunction::LAST, buffer);
    }
-   else if (MatchString(_T("ICMP.ResponseTime.Last(*)"), param, FALSE))
+   else if (MatchString(_T("ICMP.ResponseTime.Last(*)"), name, FALSE))
    {
-      rc = getIcmpStatistic(param, IcmpStatFunction::LAST, buffer);
+      rc = getIcmpStatistic(name, IcmpStatFunction::LAST, buffer);
    }
-   else if (!_tcsicmp(_T("ICMP.ResponseTime.Max"), param))
+   else if (!_tcsicmp(_T("ICMP.ResponseTime.Max"), name))
    {
       rc = getIcmpStatistic(nullptr, IcmpStatFunction::MAX, buffer);
    }
-   else if (MatchString(_T("ICMP.ResponseTime.Max(*)"), param, FALSE))
+   else if (MatchString(_T("ICMP.ResponseTime.Max(*)"), name, FALSE))
    {
-      rc = getIcmpStatistic(param, IcmpStatFunction::MAX, buffer);
+      rc = getIcmpStatistic(name, IcmpStatFunction::MAX, buffer);
    }
-   else if (!_tcsicmp(_T("ICMP.ResponseTime.Min"), param))
+   else if (!_tcsicmp(_T("ICMP.ResponseTime.Min"), name))
    {
       rc = getIcmpStatistic(nullptr, IcmpStatFunction::MIN, buffer);
    }
-   else if (MatchString(_T("ICMP.ResponseTime.Min(*)"), param, FALSE))
+   else if (MatchString(_T("ICMP.ResponseTime.Min(*)"), name, FALSE))
    {
-      rc = getIcmpStatistic(param, IcmpStatFunction::MIN, buffer);
+      rc = getIcmpStatistic(name, IcmpStatFunction::MIN, buffer);
    }
-   else if (MatchString(_T("Net.IP.NextHop(*)"), param, FALSE))
+   else if (MatchString(_T("Net.IP.NextHop(*)"), name, FALSE))
    {
       if ((m_capabilities & NC_IS_NATIVE_AGENT) || (m_capabilities & NC_IS_SNMP))
       {
          TCHAR arg[256] = _T("");
-         AgentGetParameterArg(param, 1, arg, 256);
+         AgentGetParameterArg(name, 1, arg, 256);
          InetAddress destAddr = InetAddress::parse(arg);
          if (destAddr.isValidUnicast())
          {
@@ -6403,141 +6403,141 @@ DataCollectionError Node::getInternalMetric(const TCHAR *param, size_t bufSize, 
          rc = DCE_NOT_SUPPORTED;
       }
    }
-   else if (MatchString(_T("NetSvc.ResponseTime(*)"), param, FALSE))
+   else if (MatchString(_T("NetSvc.ResponseTime(*)"), name, FALSE))
    {
-      shared_ptr<NetObj> object = objectFromParameter(param);
+      shared_ptr<NetObj> object = objectFromParameter(name);
       if ((object != nullptr) && (object->getObjectClass() == OBJECT_NETWORKSERVICE))
       {
-         _sntprintf(buffer, bufSize, _T("%u"), static_cast<NetworkService*>(object.get())->getResponseTime());
+         _sntprintf(buffer, size, _T("%u"), static_cast<NetworkService*>(object.get())->getResponseTime());
       }
       else
       {
          rc = DCE_NOT_SUPPORTED;
       }
    }
-   else if (!_tcsicmp(param, _T("PollTime.RoutingTable.Average")))
+   else if (!_tcsicmp(name, _T("PollTime.RoutingTable.Average")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_routingPollState.getTimerAverage());
+      _sntprintf(buffer, size, INT64_FMT, m_routingPollState.getTimerAverage());
       unlockProperties();
    }
-   else if (!_tcsicmp(param, _T("PollTime.RoutingTable.Last")))
+   else if (!_tcsicmp(name, _T("PollTime.RoutingTable.Last")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_routingPollState.getTimerLast());
+      _sntprintf(buffer, size, INT64_FMT, m_routingPollState.getTimerLast());
       unlockProperties();
    }
-   else if (!_tcsicmp(param, _T("PollTime.RoutingTable.Max")))
+   else if (!_tcsicmp(name, _T("PollTime.RoutingTable.Max")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_routingPollState.getTimerMax());
+      _sntprintf(buffer, size, INT64_FMT, m_routingPollState.getTimerMax());
       unlockProperties();
    }
-   else if (!_tcsicmp(param, _T("PollTime.RoutingTable.Min")))
+   else if (!_tcsicmp(name, _T("PollTime.RoutingTable.Min")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_routingPollState.getTimerMin());
+      _sntprintf(buffer, size, INT64_FMT, m_routingPollState.getTimerMin());
       unlockProperties();
    }
-   else if (!_tcsicmp(param, _T("PollTime.Topology.Average")))
+   else if (!_tcsicmp(name, _T("PollTime.Topology.Average")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_topologyPollState.getTimerAverage());
+      _sntprintf(buffer, size, INT64_FMT, m_topologyPollState.getTimerAverage());
       unlockProperties();
    }
-   else if (!_tcsicmp(param, _T("PollTime.Topology.Last")))
+   else if (!_tcsicmp(name, _T("PollTime.Topology.Last")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_topologyPollState.getTimerLast());
+      _sntprintf(buffer, size, INT64_FMT, m_topologyPollState.getTimerLast());
       unlockProperties();
    }
-   else if (!_tcsicmp(param, _T("PollTime.Topology.Max")))
+   else if (!_tcsicmp(name, _T("PollTime.Topology.Max")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_topologyPollState.getTimerMax());
+      _sntprintf(buffer, size, INT64_FMT, m_topologyPollState.getTimerMax());
       unlockProperties();
    }
-   else if (!_tcsicmp(param, _T("PollTime.Topology.Min")))
+   else if (!_tcsicmp(name, _T("PollTime.Topology.Min")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_topologyPollState.getTimerMin());
+      _sntprintf(buffer, size, INT64_FMT, m_topologyPollState.getTimerMin());
       unlockProperties();
    }
-   else if (!_tcsicmp(param, _T("ReceivedSNMPTraps")))
+   else if (!_tcsicmp(name, _T("ReceivedSNMPTraps")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_snmpTrapCount);
+      _sntprintf(buffer, size, INT64_FMT, m_snmpTrapCount);
       unlockProperties();
    }
-   else if (!_tcsicmp(param, _T("ReceivedSyslogMessages")))
+   else if (!_tcsicmp(name, _T("ReceivedSyslogMessages")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_syslogMessageCount);
+      _sntprintf(buffer, size, INT64_FMT, m_syslogMessageCount);
       unlockProperties();
    }
-   else if (!_tcsicmp(param, _T("ZoneProxy.Assignments")))
+   else if (!_tcsicmp(name, _T("ZoneProxy.Assignments")))
    {
       shared_ptr<Zone> zone = FindZoneByProxyId(m_id);
       if (zone != nullptr)
       {
-         _sntprintf(buffer, bufSize, _T("%u"), zone->getProxyNodeAssignments(m_id));
+         _sntprintf(buffer, size, _T("%u"), zone->getProxyNodeAssignments(m_id));
       }
       else
       {
          rc = DCE_NOT_SUPPORTED;
       }
    }
-   else if (!_tcsicmp(param, _T("ZoneProxy.State")))
+   else if (!_tcsicmp(name, _T("ZoneProxy.State")))
    {
       shared_ptr<Zone> zone = FindZoneByProxyId(m_id);
       if (zone != nullptr)
       {
-         _sntprintf(buffer, bufSize, _T("%d"), zone->isProxyNodeAvailable(m_id) ? 1 : 0);
+         _sntprintf(buffer, size, _T("%d"), zone->isProxyNodeAvailable(m_id) ? 1 : 0);
       }
       else
       {
          rc = DCE_NOT_SUPPORTED;
       }
    }
-   else if (!_tcsicmp(param, _T("ZoneProxy.ZoneUIN")))
+   else if (!_tcsicmp(name, _T("ZoneProxy.ZoneUIN")))
    {
       shared_ptr<Zone> zone = FindZoneByProxyId(m_id);
       if (zone != nullptr)
       {
-         _sntprintf(buffer, bufSize, _T("%u"), zone->getUIN());
+         _sntprintf(buffer, size, _T("%u"), zone->getUIN());
       }
       else
       {
          rc = DCE_NOT_SUPPORTED;
       }
    }
-   else if (!_tcsicmp(param, _T("WirelessController.AdoptedAPCount")))
+   else if (!_tcsicmp(name, _T("WirelessController.AdoptedAPCount")))
    {
       if (m_capabilities & NC_IS_WIFI_CONTROLLER)
       {
-         _sntprintf(buffer, bufSize, _T("%d"), m_adoptedApCount);
+         _sntprintf(buffer, size, _T("%d"), m_adoptedApCount);
       }
       else
       {
          rc = DCE_NOT_SUPPORTED;
       }
    }
-   else if (!_tcsicmp(param, _T("WirelessController.TotalAPCount")))
+   else if (!_tcsicmp(name, _T("WirelessController.TotalAPCount")))
    {
       if (m_capabilities & NC_IS_WIFI_CONTROLLER)
       {
-         _sntprintf(buffer, bufSize, _T("%d"), m_totalApCount);
+         _sntprintf(buffer, size, _T("%d"), m_totalApCount);
       }
       else
       {
          rc = DCE_NOT_SUPPORTED;
       }
    }
-   else if (!_tcsicmp(param, _T("WirelessController.UnadoptedAPCount")))
+   else if (!_tcsicmp(name, _T("WirelessController.UnadoptedAPCount")))
    {
       if (m_capabilities & NC_IS_WIFI_CONTROLLER)
       {
-         _sntprintf(buffer, bufSize, _T("%d"), m_totalApCount - m_adoptedApCount);
+         _sntprintf(buffer, size, _T("%d"), m_totalApCount - m_adoptedApCount);
       }
       else
       {
@@ -6546,285 +6546,285 @@ DataCollectionError Node::getInternalMetric(const TCHAR *param, size_t bufSize, 
    }
    else if (m_capabilities & NC_IS_LOCAL_MGMT)
    {
-      if (!_tcsicmp(param, _T("Server.ActiveAlarms")))
+      if (!_tcsicmp(name, _T("Server.ActiveAlarms")))
       {
          ret_int(buffer, GetAlarmCount());
       }
-      else if (!_tcsicmp(param, _T("Server.AgentTunnels.Total")))
+      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Total")))
       {
          ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::ANY));
       }
-      else if (!_tcsicmp(param, _T("Server.AgentTunnels.AgentProxy")))
+      else if (!_tcsicmp(name, _T("Server.AgentTunnels.AgentProxy")))
       {
          ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::AGENT_PROXY));
       }
-      else if (!_tcsicmp(param, _T("Server.AgentTunnels.SnmpProxy")))
+      else if (!_tcsicmp(name, _T("Server.AgentTunnels.SnmpProxy")))
       {
          ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SNMP_PROXY));
       }
-      else if (!_tcsicmp(param, _T("Server.AgentTunnels.SnmpTrapProxy")))
+      else if (!_tcsicmp(name, _T("Server.AgentTunnels.SnmpTrapProxy")))
       {
          ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SNMP_TRAP_PROXY));
       }
-      else if (!_tcsicmp(param, _T("Server.AgentTunnels.SyslogProxy")))
+      else if (!_tcsicmp(name, _T("Server.AgentTunnels.SyslogProxy")))
       {
          ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SYSLOG_PROXY));
       }
-      else if (!_tcsicmp(param, _T("Server.AgentTunnels.UserAgent")))
+      else if (!_tcsicmp(name, _T("Server.AgentTunnels.UserAgent")))
       {
          ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::USER_AGENT));
       }
-      else if (!_tcsicmp(param, _T("Server.AverageDCIQueuingTime")))
+      else if (!_tcsicmp(name, _T("Server.AverageDCIQueuingTime")))
       {
-         _sntprintf(buffer, bufSize, _T("%u"), g_averageDCIQueuingTime);
+         _sntprintf(buffer, size, _T("%u"), g_averageDCIQueuingTime);
       }
-      else if (!_tcsicmp(param, _T("Server.ClientSessions.Authenticated")))
+      else if (!_tcsicmp(name, _T("Server.ClientSessions.Authenticated")))
       {
-         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, false, -1, nullptr));
+         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, false, -1, nullptr));
       }
-      else if (MatchString(_T("Server.ClientSessions.Authenticated(*)"), param, false))
-      {
-         TCHAR loginName[256];
-         AgentGetParameterArg(param, 1, loginName, 256);
-         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, false, -1, loginName));
-      }
-      else if (!_tcsicmp(param, _T("Server.ClientSessions.Desktop")))
-      {
-         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, true, CLIENT_TYPE_DESKTOP, nullptr));
-      }
-      else if (MatchString(_T("Server.ClientSessions.Desktop(*)"), param, false))
+      else if (MatchString(_T("Server.ClientSessions.Authenticated(*)"), name, false))
       {
          TCHAR loginName[256];
-         AgentGetParameterArg(param, 1, loginName, 256);
-         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, false, CLIENT_TYPE_DESKTOP, loginName));
+         AgentGetParameterArg(name, 1, loginName, 256);
+         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, false, -1, loginName));
       }
-      else if (!_tcsicmp(param, _T("Server.ClientSessions.Mobile")))
+      else if (!_tcsicmp(name, _T("Server.ClientSessions.Desktop")))
       {
-         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, true, CLIENT_TYPE_MOBILE, nullptr));
+         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, true, CLIENT_TYPE_DESKTOP, nullptr));
       }
-      else if (MatchString(_T("Server.ClientSessions.Mobile(*)"), param, false))
-      {
-         TCHAR loginName[256];
-         AgentGetParameterArg(param, 1, loginName, 256);
-         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, false, CLIENT_TYPE_MOBILE, loginName));
-      }
-      else if (!_tcsicmp(param, _T("Server.ClientSessions.Total")))
-      {
-         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, true, -1, nullptr));
-      }
-      else if (!_tcsicmp(param, _T("Server.ClientSessions.Web")))
-      {
-         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, true, CLIENT_TYPE_WEB, nullptr));
-      }
-      else if (MatchString(_T("Server.ClientSessions.Web(*)"), param, false))
+      else if (MatchString(_T("Server.ClientSessions.Desktop(*)"), name, false))
       {
          TCHAR loginName[256];
-         AgentGetParameterArg(param, 1, loginName, 256);
-         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, false, CLIENT_TYPE_WEB, loginName));
+         AgentGetParameterArg(name, 1, loginName, 256);
+         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, false, CLIENT_TYPE_DESKTOP, loginName));
       }
-      else if (!_tcsicmp(param, _T("Server.DataCollectionItems")))
+      else if (!_tcsicmp(name, _T("Server.ClientSessions.Mobile")))
+      {
+         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, true, CLIENT_TYPE_MOBILE, nullptr));
+      }
+      else if (MatchString(_T("Server.ClientSessions.Mobile(*)"), name, false))
+      {
+         TCHAR loginName[256];
+         AgentGetParameterArg(name, 1, loginName, 256);
+         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, false, CLIENT_TYPE_MOBILE, loginName));
+      }
+      else if (!_tcsicmp(name, _T("Server.ClientSessions.Total")))
+      {
+         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, true, -1, nullptr));
+      }
+      else if (!_tcsicmp(name, _T("Server.ClientSessions.Web")))
+      {
+         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, true, CLIENT_TYPE_WEB, nullptr));
+      }
+      else if (MatchString(_T("Server.ClientSessions.Web(*)"), name, false))
+      {
+         TCHAR loginName[256];
+         AgentGetParameterArg(name, 1, loginName, 256);
+         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, false, CLIENT_TYPE_WEB, loginName));
+      }
+      else if (!_tcsicmp(name, _T("Server.DataCollectionItems")))
       {
          int dciCount = 0;
          g_idxObjectById.forEach(DciCountCallback, &dciCount);
          ret_int(buffer, dciCount);
       }
-      else if (!_tcsicmp(param, _T("Server.DB.Queries.Failed")))
+      else if (!_tcsicmp(name, _T("Server.DB.Queries.Failed")))
       {
          LIBNXDB_PERF_COUNTERS counters;
          DBGetPerfCounters(&counters);
-         _sntprintf(buffer, bufSize, UINT64_FMT, counters.failedQueries);
+         _sntprintf(buffer, size, UINT64_FMT, counters.failedQueries);
       }
-      else if (!_tcsicmp(param, _T("Server.DB.Queries.LongRunning")))
+      else if (!_tcsicmp(name, _T("Server.DB.Queries.LongRunning")))
       {
          LIBNXDB_PERF_COUNTERS counters;
          DBGetPerfCounters(&counters);
-         _sntprintf(buffer, bufSize, UINT64_FMT, counters.longRunningQueries);
+         _sntprintf(buffer, size, UINT64_FMT, counters.longRunningQueries);
       }
-      else if (!_tcsicmp(param, _T("Server.DB.Queries.NonSelect")))
+      else if (!_tcsicmp(name, _T("Server.DB.Queries.NonSelect")))
       {
          LIBNXDB_PERF_COUNTERS counters;
          DBGetPerfCounters(&counters);
-         _sntprintf(buffer, bufSize, UINT64_FMT, counters.nonSelectQueries);
+         _sntprintf(buffer, size, UINT64_FMT, counters.nonSelectQueries);
       }
-      else if (!_tcsicmp(param, _T("Server.DB.Queries.Select")))
+      else if (!_tcsicmp(name, _T("Server.DB.Queries.Select")))
       {
          LIBNXDB_PERF_COUNTERS counters;
          DBGetPerfCounters(&counters);
-         _sntprintf(buffer, bufSize, UINT64_FMT, counters.selectQueries);
+         _sntprintf(buffer, size, UINT64_FMT, counters.selectQueries);
       }
-      else if (!_tcsicmp(param, _T("Server.DB.Queries.Total")))
+      else if (!_tcsicmp(name, _T("Server.DB.Queries.Total")))
       {
          LIBNXDB_PERF_COUNTERS counters;
          DBGetPerfCounters(&counters);
-         _sntprintf(buffer, bufSize, UINT64_FMT, counters.totalQueries);
+         _sntprintf(buffer, size, UINT64_FMT, counters.totalQueries);
       }
-      else if (!_tcsicmp(param, _T("Server.DBWriter.Requests.IData")))
+      else if (!_tcsicmp(name, _T("Server.DBWriter.Requests.IData")))
       {
-         _sntprintf(buffer, bufSize, UINT64_FMT, g_idataWriteRequests);
+         _sntprintf(buffer, size, UINT64_FMT, g_idataWriteRequests);
       }
-      else if (!_tcsicmp(param, _T("Server.DBWriter.Requests.Other")))
+      else if (!_tcsicmp(name, _T("Server.DBWriter.Requests.Other")))
       {
-         _sntprintf(buffer, bufSize, UINT64_FMT, g_otherWriteRequests);
+         _sntprintf(buffer, size, UINT64_FMT, g_otherWriteRequests);
       }
-      else if (!_tcsicmp(param, _T("Server.DBWriter.Requests.RawData")))
+      else if (!_tcsicmp(name, _T("Server.DBWriter.Requests.RawData")))
       {
-         _sntprintf(buffer, bufSize, UINT64_FMT, g_rawDataWriteRequests);
+         _sntprintf(buffer, size, UINT64_FMT, g_rawDataWriteRequests);
       }
-      else if (MatchString(_T("Server.EventProcessor.AverageWaitTime(*)"), param, false))
+      else if (MatchString(_T("Server.EventProcessor.AverageWaitTime(*)"), name, false))
       {
-         rc = GetEventProcessorStatistic(param, 'W', buffer);
+         rc = GetEventProcessorStatistic(name, 'W', buffer);
       }
-      else if (MatchString(_T("Server.EventProcessor.Bindings(*)"), param, false))
+      else if (MatchString(_T("Server.EventProcessor.Bindings(*)"), name, false))
       {
-         rc = GetEventProcessorStatistic(param, 'B', buffer);
+         rc = GetEventProcessorStatistic(name, 'B', buffer);
       }
-      else if (MatchString(_T("Server.EventProcessor.ProcessedEvents(*)"), param, false))
+      else if (MatchString(_T("Server.EventProcessor.ProcessedEvents(*)"), name, false))
       {
-         rc = GetEventProcessorStatistic(param, 'P', buffer);
+         rc = GetEventProcessorStatistic(name, 'P', buffer);
       }
-      else if (MatchString(_T("Server.EventProcessor.QueueSize(*)"), param, false))
+      else if (MatchString(_T("Server.EventProcessor.QueueSize(*)"), name, false))
       {
-         rc = GetEventProcessorStatistic(param, 'Q', buffer);
+         rc = GetEventProcessorStatistic(name, 'Q', buffer);
       }
-      else if (!_tcsicmp(param, _T("Server.Heap.Active")))
+      else if (!_tcsicmp(name, _T("Server.Heap.Active")))
       {
          INT64 bytes = GetActiveHeapMemory();
          if (bytes != -1)
-            _sntprintf(buffer, bufSize, UINT64_FMT, bytes);
+            _sntprintf(buffer, size, UINT64_FMT, bytes);
          else
             rc = DCE_NOT_SUPPORTED;
       }
-      else if (!_tcsicmp(param, _T("Server.Heap.Allocated")))
+      else if (!_tcsicmp(name, _T("Server.Heap.Allocated")))
       {
          INT64 bytes = GetAllocatedHeapMemory();
          if (bytes != -1)
-            _sntprintf(buffer, bufSize, UINT64_FMT, bytes);
+            _sntprintf(buffer, size, UINT64_FMT, bytes);
          else
             rc = DCE_NOT_SUPPORTED;
       }
-      else if (!_tcsicmp(param, _T("Server.Heap.Mapped")))
+      else if (!_tcsicmp(name, _T("Server.Heap.Mapped")))
       {
          INT64 bytes = GetMappedHeapMemory();
          if (bytes != -1)
-            _sntprintf(buffer, bufSize, UINT64_FMT, bytes);
+            _sntprintf(buffer, size, UINT64_FMT, bytes);
          else
             rc = DCE_NOT_SUPPORTED;
       }
-      else if (!_tcsicmp(param, _T("Server.MemoryUsage.Alarms")))
+      else if (!_tcsicmp(name, _T("Server.MemoryUsage.Alarms")))
       {
          ret_uint64(buffer, GetAlarmMemoryUsage());
       }
-      else if (!_tcsicmp(param, _T("Server.MemoryUsage.DataCollectionCache")))
+      else if (!_tcsicmp(name, _T("Server.MemoryUsage.DataCollectionCache")))
       {
          ret_uint64(buffer, GetDCICacheMemoryUsage());
       }
-      else if (!_tcsicmp(param, _T("Server.MemoryUsage.RawDataWriter")))
+      else if (!_tcsicmp(name, _T("Server.MemoryUsage.RawDataWriter")))
       {
          ret_uint64(buffer, GetRawDataWriterMemoryUsage());
       }
-      else if (!_tcsicmp(param, _T("Server.ObjectCount.Clusters")))
+      else if (!_tcsicmp(name, _T("Server.ObjectCount.Clusters")))
       {
          ret_uint(buffer, static_cast<uint32_t>(g_idxClusterById.size()));
       }
-      else if (!_tcsicmp(param, _T("Server.ObjectCount.Nodes")))
+      else if (!_tcsicmp(name, _T("Server.ObjectCount.Nodes")))
       {
          ret_uint(buffer, static_cast<uint32_t>(g_idxNodeById.size()));
       }
-      else if (!_tcsicmp(param, _T("Server.ObjectCount.Sensors")))
+      else if (!_tcsicmp(name, _T("Server.ObjectCount.Sensors")))
       {
          ret_uint(buffer, static_cast<uint32_t>(g_idxSensorById.size()));
       }
-      else if (!_tcsicmp(param, _T("Server.ObjectCount.Total")))
+      else if (!_tcsicmp(name, _T("Server.ObjectCount.Total")))
       {
          ret_uint(buffer, static_cast<uint32_t>(g_idxObjectById.size()));
       }
-      else if (MatchString(_T("Server.QueueSize.Average(*)"), param, false))
+      else if (MatchString(_T("Server.QueueSize.Average(*)"), name, false))
       {
-         rc = GetQueueStatistic(param, StatisticType::AVERAGE, buffer);
+         rc = GetQueueStatistic(name, StatisticType::AVERAGE, buffer);
       }
-      else if (MatchString(_T("Server.QueueSize.Current(*)"), param, false))
+      else if (MatchString(_T("Server.QueueSize.Current(*)"), name, false))
       {
-         rc = GetQueueStatistic(param, StatisticType::CURRENT, buffer);
+         rc = GetQueueStatistic(name, StatisticType::CURRENT, buffer);
       }
-      else if (MatchString(_T("Server.QueueSize.Max(*)"), param, false))
+      else if (MatchString(_T("Server.QueueSize.Max(*)"), name, false))
       {
-         rc = GetQueueStatistic(param, StatisticType::MAX, buffer);
+         rc = GetQueueStatistic(name, StatisticType::MAX, buffer);
       }
-      else if (MatchString(_T("Server.QueueSize.Min(*)"), param, false))
+      else if (MatchString(_T("Server.QueueSize.Min(*)"), name, false))
       {
-         rc = GetQueueStatistic(param, StatisticType::MIN, buffer);
+         rc = GetQueueStatistic(name, StatisticType::MIN, buffer);
       }
-      else if (!_tcsicmp(param, _T("Server.ReceivedSNMPTraps")))
+      else if (!_tcsicmp(name, _T("Server.ReceivedSNMPTraps")))
       {
-         _sntprintf(buffer, bufSize, UINT64_FMT, g_snmpTrapsReceived);
+         _sntprintf(buffer, size, UINT64_FMT, g_snmpTrapsReceived);
       }
-      else if (!_tcsicmp(param, _T("Server.ReceivedSyslogMessages")))
+      else if (!_tcsicmp(name, _T("Server.ReceivedSyslogMessages")))
       {
-         _sntprintf(buffer, bufSize, UINT64_FMT, g_syslogMessagesReceived);
+         _sntprintf(buffer, size, UINT64_FMT, g_syslogMessagesReceived);
       }
-      else if (!_tcsicmp(_T("Server.SyncerRunTime.Average"), param))
+      else if (!_tcsicmp(_T("Server.SyncerRunTime.Average"), name))
       {
          ret_int64(buffer, GetSyncerRunTime(StatisticType::AVERAGE));
       }
-      else if (!_tcsicmp(_T("Server.SyncerRunTime.Last"), param))
+      else if (!_tcsicmp(_T("Server.SyncerRunTime.Last"), name))
       {
          ret_int64(buffer, GetSyncerRunTime(StatisticType::CURRENT));
       }
-      else if (!_tcsicmp(_T("Server.SyncerRunTime.Max"), param))
+      else if (!_tcsicmp(_T("Server.SyncerRunTime.Max"), name))
       {
          ret_int64(buffer, GetSyncerRunTime(StatisticType::MAX));
       }
-      else if (!_tcsicmp(_T("Server.SyncerRunTime.Min"), param))
+      else if (!_tcsicmp(_T("Server.SyncerRunTime.Min"), name))
       {
          ret_int64(buffer, GetSyncerRunTime(StatisticType::MIN));
       }
-      else if (MatchString(_T("Server.ThreadPool.ActiveRequests(*)"), param, false))
+      else if (MatchString(_T("Server.ThreadPool.ActiveRequests(*)"), name, false))
       {
-         rc = GetThreadPoolStat(THREAD_POOL_ACTIVE_REQUESTS, param, buffer);
+         rc = GetThreadPoolStat(THREAD_POOL_ACTIVE_REQUESTS, name, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.CurrSize(*)"), param, false))
+      else if (MatchString(_T("Server.ThreadPool.CurrSize(*)"), name, false))
       {
-         rc = GetThreadPoolStat(THREAD_POOL_CURR_SIZE, param, buffer);
+         rc = GetThreadPoolStat(THREAD_POOL_CURR_SIZE, name, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.Load(*)"), param, false))
+      else if (MatchString(_T("Server.ThreadPool.Load(*)"), name, false))
       {
-         rc = GetThreadPoolStat(THREAD_POOL_LOAD, param, buffer);
+         rc = GetThreadPoolStat(THREAD_POOL_LOAD, name, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.LoadAverage(*)"), param, false))
+      else if (MatchString(_T("Server.ThreadPool.LoadAverage(*)"), name, false))
       {
-         rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_1, param, buffer);
+         rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_1, name, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.LoadAverage5(*)"), param, false))
+      else if (MatchString(_T("Server.ThreadPool.LoadAverage5(*)"), name, false))
       {
-         rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_5, param, buffer);
+         rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_5, name, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.LoadAverage15(*)"), param, false))
+      else if (MatchString(_T("Server.ThreadPool.LoadAverage15(*)"), name, false))
       {
-         rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_15, param, buffer);
+         rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_15, name, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.MaxSize(*)"), param, false))
+      else if (MatchString(_T("Server.ThreadPool.MaxSize(*)"), name, false))
       {
-         rc = GetThreadPoolStat(THREAD_POOL_MAX_SIZE, param, buffer);
+         rc = GetThreadPoolStat(THREAD_POOL_MAX_SIZE, name, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.MinSize(*)"), param, false))
+      else if (MatchString(_T("Server.ThreadPool.MinSize(*)"), name, false))
       {
-         rc = GetThreadPoolStat(THREAD_POOL_MIN_SIZE, param, buffer);
+         rc = GetThreadPoolStat(THREAD_POOL_MIN_SIZE, name, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.ScheduledRequests(*)"), param, false))
+      else if (MatchString(_T("Server.ThreadPool.ScheduledRequests(*)"), name, false))
       {
-         rc = GetThreadPoolStat(THREAD_POOL_SCHEDULED_REQUESTS, param, buffer);
+         rc = GetThreadPoolStat(THREAD_POOL_SCHEDULED_REQUESTS, name, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.Usage(*)"), param, false))
+      else if (MatchString(_T("Server.ThreadPool.Usage(*)"), name, false))
       {
-         rc = GetThreadPoolStat(THREAD_POOL_USAGE, param, buffer);
+         rc = GetThreadPoolStat(THREAD_POOL_USAGE, name, buffer);
       }
-      else if (!_tcsicmp(param, _T("Server.TotalEventsProcessed")))
+      else if (!_tcsicmp(name, _T("Server.TotalEventsProcessed")))
       {
-         _sntprintf(buffer, bufSize, UINT64_FMT, g_totalEventsProcessed);
+         _sntprintf(buffer, size, UINT64_FMT, g_totalEventsProcessed);
       }
-      else if (!_tcsicmp(param, _T("Server.Uptime")))
+      else if (!_tcsicmp(name, _T("Server.Uptime")))
       {
-         _sntprintf(buffer, bufSize, INT64_FMT, static_cast<int64_t>(time(nullptr) - g_serverStartTime));
+         _sntprintf(buffer, size, INT64_FMT, static_cast<int64_t>(time(nullptr) - g_serverStartTime));
       }
       else
       {
@@ -6866,28 +6866,28 @@ inline UINT32 RCCFromDCIError(DataCollectionError error)
 /**
  * Get item's value for client
  */
-UINT32 Node::getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam, TCHAR *pszBuffer, UINT32 dwBufSize)
+uint32_t Node::getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size)
 {
    DataCollectionError rc = DCE_ACCESS_DENIED;
 
    // Get data from node
-   switch(iOrigin)
+   switch(origin)
    {
       case DS_INTERNAL:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ))
-            rc = getInternalMetric(pszParam, dwBufSize, pszBuffer);
+            rc = getInternalMetric(name, buffer, size);
          break;
       case DS_NATIVE_AGENT:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_AGENT))
-            rc = getMetricFromAgent(pszParam, dwBufSize, pszBuffer);
+            rc = getMetricFromAgent(name, size, buffer);
          break;
       case DS_SNMP_AGENT:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
-            rc = getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, pszParam, dwBufSize, pszBuffer, SNMP_RAWTYPE_NONE);
+            rc = getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, name, size, buffer, SNMP_RAWTYPE_NONE);
          break;
       case DS_DEVICE_DRIVER:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
-            rc = getMetricFromDeviceDriver(pszParam, pszBuffer, dwBufSize);
+            rc = getMetricFromDeviceDriver(name, buffer, size);
          break;
       default:
          return RCC_INVALID_ARGUMENT;
@@ -6899,7 +6899,7 @@ UINT32 Node::getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam,
 /**
  * Get table for client
  */
-UINT32 Node::getTableForClient(const TCHAR *name, Table **table)
+uint32_t Node::getTableForClient(const TCHAR *name, Table **table)
 {
    return RCCFromDCIError(getTableFromAgent(name, table));
 }

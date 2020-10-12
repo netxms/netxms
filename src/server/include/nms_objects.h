@@ -2032,8 +2032,8 @@ public:
    virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments) override;
    virtual void leaveMaintenanceMode(uint32_t userId) override;
 
-   virtual DataCollectionError getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer);
-   virtual DataCollectionError getInternalTable(const TCHAR *param, Table **result);
+   virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size);
+   virtual DataCollectionError getInternalTable(const TCHAR *name, Table **result);
 
    DataCollectionError getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject);
    DataCollectionError getTableFromScript(const TCHAR *param, Table **result, DataCollectionTarget *targetObject);
@@ -2144,6 +2144,9 @@ inline bool DataCollectionTarget::lockForConfigurationPoll()
    return success;
 }
 
+/**
+ * Lock object for status poll
+ */
 inline bool DataCollectionTarget::lockForStatusPoll()
 {
    bool success = false;
@@ -2169,6 +2172,31 @@ inline bool DataCollectionTarget::lockForStatusPoll()
 }
 
 /**
+ * Mobile device system information
+ */
+struct MobileDeviceInfo
+{
+   const TCHAR *commProtocol;
+   SharedString vendor;
+   SharedString model;
+   SharedString serialNumber;
+   SharedString osName;
+   SharedString osVersion;
+   SharedString userId;
+};
+
+/**
+ * Moile device status
+ */
+struct MobileDeviceStatus
+{
+   const TCHAR *commProtocol;
+   int32_t batteryLevel;
+   GeoLocation geoLocation;
+   InetAddress ipAddress;
+};
+
+/**
  * Mobile device class
  */
 class NXCORE_EXPORTABLE MobileDevice : public DataCollectionTarget
@@ -2177,15 +2205,16 @@ private:
    typedef DataCollectionTarget super;
 
 protected:
+   TCHAR m_commProtocol[32];
 	time_t m_lastReportTime;
-	TCHAR *m_deviceId;
-	TCHAR *m_vendor;
-	TCHAR *m_model;
-	TCHAR *m_serialNumber;
-	TCHAR *m_osName;
-	TCHAR *m_osVersion;
-	TCHAR *m_userId;
-	LONG m_batteryLevel;
+	SharedString m_deviceId;
+	SharedString m_vendor;
+	SharedString m_model;
+	SharedString m_serialNumber;
+	SharedString m_osName;
+	SharedString m_osVersion;
+	SharedString m_userId;
+	int32_t m_batteryLevel;
    InetAddress m_ipAddress;
 
 	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
@@ -2210,19 +2239,20 @@ public:
 
    virtual json_t *toJson() override;
 
-	void updateSystemInfo(NXCPMessage *msg);
-	void updateStatus(NXCPMessage *msg);
+	void updateSystemInfo(const MobileDeviceInfo& deviceInfo);
+	void updateStatus(const MobileDeviceStatus& status);
 
-	const TCHAR *getDeviceId() { return CHECK_NULL_EX(m_deviceId); }
-	const TCHAR *getVendor() { return CHECK_NULL_EX(m_vendor); }
-	const TCHAR *getModel() { return CHECK_NULL_EX(m_model); }
-	const TCHAR *getSerialNumber() { return CHECK_NULL_EX(m_serialNumber); }
-	const TCHAR *getOsName() { return CHECK_NULL_EX(m_osName); }
-	const TCHAR *getOsVersion() { return CHECK_NULL_EX(m_osVersion); }
-	const TCHAR *getUserId() { return CHECK_NULL_EX(m_userId); }
-	LONG getBatteryLevel() { return m_batteryLevel; }
+	const TCHAR *getCommProtocol() const { return m_commProtocol; }
+	SharedString getDeviceId() const { return GetAttributeWithLock(m_deviceId, m_mutexProperties); }
+	SharedString getVendor() const { return GetAttributeWithLock(m_vendor, m_mutexProperties); }
+	SharedString getModel() const { return GetAttributeWithLock(m_model, m_mutexProperties); }
+	SharedString getSerialNumber() const { return GetAttributeWithLock(m_serialNumber, m_mutexProperties); }
+	SharedString getOsName() const { return GetAttributeWithLock(m_osName, m_mutexProperties); }
+	SharedString getOsVersion() const { return GetAttributeWithLock(m_osVersion, m_mutexProperties); }
+	SharedString getUserId() const { return GetAttributeWithLock(m_userId, m_mutexProperties); }
+	int32_t getBatteryLevel() const { return GetAttributeWithLock(m_batteryLevel, m_mutexProperties); }
 
-	virtual DataCollectionError getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer) override;
+	virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size) override;
 
 	virtual bool lockForStatusPoll() override { return false; }
 	virtual bool lockForConfigurationPoll() override { return false; }
@@ -3146,8 +3176,8 @@ public:
 
    bool connectToSMCLP();
 
-   virtual DataCollectionError getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer) override;
-   virtual DataCollectionError getInternalTable(const TCHAR *param, Table **result) override;
+   virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size) override;
+   virtual DataCollectionError getInternalTable(const TCHAR *name, Table **result) override;
 
    DataCollectionError getMetricFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
    DataCollectionError getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, Table **table);
@@ -3160,13 +3190,13 @@ public:
    DataCollectionError getMetricFromDeviceDriver(const TCHAR *param, TCHAR *buffer, size_t size);
 
    double getMetricFromAgentAsDouble(const TCHAR *name, double defaultValue = 0);
-   INT32 getMetricFromAgentAsInt32(const TCHAR *name, INT32 defaultValue = 0);
-   UINT32 getMetricFromAgentAsUInt32(const TCHAR *name, UINT32 defaultValue = 0);
-   INT64 getMetricFromAgentAsInt64(const TCHAR *name, INT64 defaultValue = 0);
-   UINT64 getMetricFromAgentAsUInt64(const TCHAR *name, UINT64 defaultValue = 0);
+   int32_t getMetricFromAgentAsInt32(const TCHAR *name, int32_t defaultValue = 0);
+   uint32_t getMetricFromAgentAsUInt32(const TCHAR *name, uint32_t defaultValue = 0);
+   int64_t getMetricFromAgentAsInt64(const TCHAR *name, int64_t defaultValue = 0);
+   uint64_t getMetricFromAgentAsUInt64(const TCHAR *name, uint64_t defaultValue = 0);
 
-   UINT32 getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam, TCHAR *pszBuffer, UINT32 dwBufSize);
-   UINT32 getTableForClient(const TCHAR *name, Table **table);
+   uint32_t getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size);
+   uint32_t getTableForClient(const TCHAR *name, Table **table);
 
 	virtual NXSL_Array *getParentsForNXSL(NXSL_VM *vm) override;
 	NXSL_Array *getInterfacesForNXSL(NXSL_VM *vm);

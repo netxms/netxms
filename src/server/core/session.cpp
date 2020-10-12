@@ -6657,14 +6657,12 @@ void ClientSession::queryParameter(NXCPMessage *pRequest)
    {
       if (object->getObjectClass() == OBJECT_NODE)
       {
-         UINT32 dwResult;
-         TCHAR szBuffer[256], szName[MAX_PARAM_NAME];
-
-         pRequest->getFieldAsString(VID_NAME, szName, MAX_PARAM_NAME);
-         dwResult = static_cast<Node&>(*object).getItemForClient(pRequest->getFieldAsUInt16(VID_DCI_SOURCE_TYPE), m_dwUserId, szName, szBuffer, 256);
-         msg.setField(VID_RCC, dwResult);
-         if (dwResult == RCC_SUCCESS)
-            msg.setField(VID_VALUE, szBuffer);
+         TCHAR value[256], name[MAX_PARAM_NAME];
+         pRequest->getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
+         uint32_t rcc = static_cast<Node&>(*object).getMetricForClient(pRequest->getFieldAsUInt16(VID_DCI_SOURCE_TYPE), m_dwUserId, name, value, 256);
+         msg.setField(VID_RCC, rcc);
+         if (rcc == RCC_SUCCESS)
+            msg.setField(VID_VALUE, value);
       }
       else
       {

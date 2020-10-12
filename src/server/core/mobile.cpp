@@ -26,30 +26,17 @@
  */
 MobileDevice::MobileDevice() : super()
 {
+   m_commProtocol[0] = 0;
 	m_lastReportTime = 0;
-	m_deviceId = NULL;
-	m_vendor = NULL;
-	m_model = NULL;
-	m_serialNumber = NULL;
-	m_osName = NULL;
-	m_osVersion = NULL;
-	m_userId = NULL;
 	m_batteryLevel = -1;
 }
 
 /**
  * Constructor for creating new mobile device object
  */
-MobileDevice::MobileDevice(const TCHAR *name, const TCHAR *deviceId) : super(name)
+MobileDevice::MobileDevice(const TCHAR *name, const TCHAR *deviceId) : super(name), m_deviceId(deviceId)
 {
 	m_lastReportTime = 0;
-	m_deviceId = _tcsdup(deviceId);
-	m_vendor = NULL;
-	m_model = NULL;
-	m_serialNumber = NULL;
-	m_osName = NULL;
-	m_osVersion = NULL;
-	m_userId = NULL;
 	m_batteryLevel = -1;
 }
 
@@ -58,13 +45,6 @@ MobileDevice::MobileDevice(const TCHAR *name, const TCHAR *deviceId) : super(nam
  */
 MobileDevice::~MobileDevice()
 {
-	MemFree(m_deviceId);
-	MemFree(m_vendor);
-	MemFree(m_model);
-	MemFree(m_serialNumber);
-	MemFree(m_osName);
-	MemFree(m_osVersion);
-	MemFree(m_userId);
 }
 
 /**
@@ -80,21 +60,30 @@ bool MobileDevice::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       return false;
    }
 
-	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level FROM mobile_devices WHERE id=%d"), (int)m_id);
-	DB_RESULT hResult = DBSelect(hdb, query);
-	if (hResult == NULL)
-		return false;
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level,comm_protocol FROM mobile_devices WHERE id=%?"));
+   if (hStmt == nullptr)
+      return false;
 
-	m_deviceId = DBGetField(hResult, 0, 0, NULL, 0);
-	m_vendor = DBGetField(hResult, 0, 1, NULL, 0);
-	m_model = DBGetField(hResult, 0, 2, NULL, 0);
-	m_serialNumber = DBGetField(hResult, 0, 3, NULL, 0);
-	m_osName = DBGetField(hResult, 0, 4, NULL, 0);
-	m_osVersion = DBGetField(hResult, 0, 5, NULL, 0);
-	m_userId = DBGetField(hResult, 0, 6, NULL, 0);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+	DB_RESULT hResult = DBSelectPrepared(hStmt);
+	if (hResult == nullptr)
+	{
+	   DBFreeStatement(hStmt);
+		return false;
+	}
+
+	m_deviceId = DBGetFieldAsSharedString(hResult, 0, 0);
+	m_vendor = DBGetFieldAsSharedString(hResult, 0, 1);
+	m_model = DBGetFieldAsSharedString(hResult, 0, 2);
+	m_serialNumber = DBGetFieldAsSharedString(hResult, 0, 3);
+	m_osName = DBGetFieldAsSharedString(hResult, 0, 4);
+	m_osVersion = DBGetFieldAsSharedString(hResult, 0, 5);
+	m_userId = DBGetFieldAsSharedString(hResult, 0, 6);
 	m_batteryLevel = DBGetFieldLong(hResult, 0, 7);
+	DBGetField(hResult, 0, 8, m_commProtocol, 32);
+
 	DBFreeResult(hResult);
+   DBFreeStatement(hStmt);
 
    // Load DCI and access list
    loadACLFromDB(hdb);
@@ -119,22 +108,22 @@ bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_OTHER))
    {
-      DB_STATEMENT hStmt;
-      if (IsDatabaseRecordExist(hdb, _T("mobile_devices"), _T("id"), m_id))
-         hStmt = DBPrepare(hdb, _T("UPDATE mobile_devices SET device_id=?,vendor=?,model=?,serial_number=?,os_name=?,os_version=?,user_id=?,battery_level=? WHERE id=?"));
-      else
-         hStmt = DBPrepare(hdb, _T("INSERT INTO mobile_devices (device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level,id) VALUES (?,?,?,?,?,?,?,?,?)"));
-      if (hStmt != NULL)
+      static const TCHAR *columns[] = {
+         _T("device_id") ,_T("vendor"), _T("model"), _T("serial_number"), _T("os_name"), _T("os_version"), _T("user_id"), _T("battery_level"), _T("comm_protocol"), nullptr
+      };
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("mobile_devices"), _T("id"), m_id, columns);
+      if (hStmt != nullptr)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_deviceId), DB_BIND_STATIC);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_vendor), DB_BIND_STATIC);
-         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_model), DB_BIND_STATIC);
-         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_serialNumber), DB_BIND_STATIC);
-         DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_osName), DB_BIND_STATIC);
-         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_osVersion), DB_BIND_STATIC);
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_userId), DB_BIND_STATIC);
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_deviceId, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_model, DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_osName, DB_BIND_STATIC);
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_osVersion, DB_BIND_STATIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_userId, DB_BIND_STATIC);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_batteryLevel);
-         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_commProtocol, DB_BIND_STATIC);
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
 
@@ -145,6 +134,8 @@ bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
          success = false;
       }
    }
+
+   unlockProperties();
 
    // Save data collection items
    if (success && (m_modified & MODIFY_DATA_COLLECTION))
@@ -160,8 +151,6 @@ bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
    // Save access list
    if (success)
       success = saveACLToDB(hdb);
-
-   unlockProperties();
 
    return success;
 }
@@ -184,15 +173,16 @@ void MobileDevice::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
    super::fillMessageInternal(msg, userId);
 
-	msg->setField(VID_DEVICE_ID, CHECK_NULL_EX(m_deviceId));
-	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
-	msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
-	msg->setField(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
-	msg->setField(VID_OS_NAME, CHECK_NULL_EX(m_osName));
-	msg->setField(VID_OS_VERSION, CHECK_NULL_EX(m_osVersion));
-	msg->setField(VID_USER_ID, CHECK_NULL_EX(m_userId));
-	msg->setField(VID_BATTERY_LEVEL, (UINT32)m_batteryLevel);
-	msg->setField(VID_LAST_CHANGE_TIME, (QWORD)m_lastReportTime);
+   msg->setField(VID_COMM_PROTOCOL, m_commProtocol);
+	msg->setField(VID_DEVICE_ID, m_deviceId);
+	msg->setField(VID_VENDOR, m_vendor);
+	msg->setField(VID_MODEL, m_model);
+	msg->setField(VID_SERIAL_NUMBER, m_serialNumber);
+	msg->setField(VID_OS_NAME, m_osName);
+	msg->setField(VID_OS_VERSION, m_osVersion);
+	msg->setField(VID_USER_ID, m_userId);
+	msg->setField(VID_BATTERY_LEVEL, m_batteryLevel);
+	msg->setFieldFromTime(VID_LAST_CHANGE_TIME, m_lastReportTime);
 }
 
 /**
@@ -206,29 +196,18 @@ UINT32 MobileDevice::modifyFromMessageInternal(NXCPMessage *pRequest)
 /**
  * Update system information from NXCP message
  */
-void MobileDevice::updateSystemInfo(NXCPMessage *msg)
+void MobileDevice::updateSystemInfo(const MobileDeviceInfo& deviceInfo)
 {
 	lockProperties();
 
-	m_lastReportTime = time(NULL);
-
-	free(m_vendor);
-	m_vendor = msg->getFieldAsString(VID_VENDOR);
-
-	free(m_model);
-	m_model = msg->getFieldAsString(VID_MODEL);
-
-	free(m_serialNumber);
-	m_serialNumber = msg->getFieldAsString(VID_SERIAL_NUMBER);
-
-	free(m_osName);
-	m_osName = msg->getFieldAsString(VID_OS_NAME);
-
-	free(m_osVersion);
-	m_osVersion = msg->getFieldAsString(VID_OS_VERSION);
-
-	free(m_userId);
-	m_userId = msg->getFieldAsString(VID_USER_NAME);
+	m_lastReportTime = time(nullptr);
+   _tcslcpy(m_commProtocol, deviceInfo.commProtocol, MAX_OBJECT_NAME);
+	m_vendor = deviceInfo.vendor;
+	m_model = deviceInfo.model;
+	m_serialNumber = deviceInfo.serialNumber;
+	m_osName = deviceInfo.osName;
+	m_osVersion = deviceInfo.osVersion;
+	m_userId = deviceInfo.userId;
 
 	setModified(MODIFY_OTHER);
 	unlockProperties();
@@ -237,32 +216,23 @@ void MobileDevice::updateSystemInfo(NXCPMessage *msg)
 /**
  * Update status from NXCP message
  */
-void MobileDevice::updateStatus(NXCPMessage *msg)
+void MobileDevice::updateStatus(const MobileDeviceStatus& status)
 {
 	lockProperties();
 
-	m_lastReportTime = time(NULL);
-
-   int type = msg->getFieldType(VID_BATTERY_LEVEL);
-   if (type == NXCP_DT_INT32)
-      m_batteryLevel = msg->getFieldAsInt32(VID_BATTERY_LEVEL);
-   else if (type == NXCP_DT_INT16)
-      m_batteryLevel = (int)msg->getFieldAsInt16(VID_BATTERY_LEVEL);
-	else
-      m_batteryLevel = -1;
-
-	if (msg->isFieldExist(VID_GEOLOCATION_TYPE))
+	m_lastReportTime = time(nullptr);
+	_tcslcpy(m_commProtocol, status.commProtocol, MAX_OBJECT_NAME);
+	m_batteryLevel = status.batteryLevel;
+	if (status.geoLocation.isValid())
 	{
-		m_geoLocation = GeoLocation(*msg);
+	   m_geoLocation = status.geoLocation;
 		addLocationToHistory();
    }
-
-	if (msg->isFieldExist(VID_IP_ADDRESS))
-		m_ipAddress = msg->getFieldAsInetAddress(VID_IP_ADDRESS);
+	m_ipAddress = status.ipAddress;
 
 	TCHAR temp[64];
-	DbgPrintf(5, _T("Mobile device %s [%d] updated from agent (battery=%d addr=%s loc=[%s %s])"),
-	          m_name, (int)m_id, m_batteryLevel, m_ipAddress.toString(temp),
+	DbgPrintf(5, _T("Mobile device %s [%u] status update (battery=%d addr=%s loc=[%s %s])"),
+	          m_name, m_id, m_batteryLevel, m_ipAddress.toString(temp),
 				 m_geoLocation.getLatitudeAsString(), m_geoLocation.getLongitudeAsString());
 
 	setModified(MODIFY_OTHER);
@@ -272,48 +242,52 @@ void MobileDevice::updateStatus(NXCPMessage *msg)
 /**
  * Get value for server's internal parameter
  */
-DataCollectionError MobileDevice::getInternalMetric(const TCHAR *param, size_t bufSize, TCHAR *buffer)
+DataCollectionError MobileDevice::getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size)
 {
-   DataCollectionError rc = super::getInternalMetric(param, bufSize, buffer);
+   DataCollectionError rc = super::getInternalMetric(name, buffer, size);
 	if (rc != DCE_NOT_SUPPORTED)
 		return rc;
 	rc = DCE_SUCCESS;
 
-   if (!_tcsicmp(param, _T("MobileDevice.BatteryLevel")))
+   if (!_tcsicmp(name, _T("MobileDevice.BatteryLevel")))
    {
-      _sntprintf(buffer, bufSize, _T("%d"), m_batteryLevel);
+      _sntprintf(buffer, size, _T("%d"), m_batteryLevel);
    }
-   else if (!_tcsicmp(param, _T("MobileDevice.DeviceId")))
+   else if (!_tcsicmp(name, _T("MobileDevice.CommProtocol")))
    {
-		nx_strncpy(buffer, CHECK_NULL_EX(m_deviceId), bufSize);
+      _tcslcpy(buffer, m_commProtocol, size);
    }
-   else if (!_tcsicmp(param, _T("MobileDevice.LastReportTime")))
+   else if (!_tcsicmp(name, _T("MobileDevice.DeviceId")))
    {
-		_sntprintf(buffer, bufSize, INT64_FMT, (INT64)m_lastReportTime);
+		_tcslcpy(buffer, m_deviceId, size);
    }
-   else if (!_tcsicmp(param, _T("MobileDevice.Model")))
+   else if (!_tcsicmp(name, _T("MobileDevice.LastReportTime")))
    {
-		nx_strncpy(buffer, CHECK_NULL_EX(m_model), bufSize);
+		_sntprintf(buffer, size, INT64_FMT, static_cast<int64_t>(m_lastReportTime));
    }
-   else if (!_tcsicmp(param, _T("MobileDevice.OS.Name")))
+   else if (!_tcsicmp(name, _T("MobileDevice.Model")))
    {
-		nx_strncpy(buffer, CHECK_NULL_EX(m_osName), bufSize);
+		_tcslcpy(buffer, m_model, size);
    }
-   else if (!_tcsicmp(param, _T("MobileDevice.OS.Version")))
+   else if (!_tcsicmp(name, _T("MobileDevice.OS.Name")))
    {
-		nx_strncpy(buffer, CHECK_NULL_EX(m_osVersion), bufSize);
+		_tcslcpy(buffer, m_osName, size);
    }
-   else if (!_tcsicmp(param, _T("MobileDevice.SerialNumber")))
+   else if (!_tcsicmp(name, _T("MobileDevice.OS.Version")))
    {
-		nx_strncpy(buffer, CHECK_NULL_EX(m_serialNumber), bufSize);
+		_tcslcpy(buffer, m_osVersion, size);
    }
-   else if (!_tcsicmp(param, _T("MobileDevice.Vendor")))
+   else if (!_tcsicmp(name, _T("MobileDevice.SerialNumber")))
    {
-		nx_strncpy(buffer, CHECK_NULL_EX(m_vendor), bufSize);
+		_tcslcpy(buffer, m_serialNumber, size);
    }
-   else if (!_tcsicmp(param, _T("MobileDevice.UserId")))
+   else if (!_tcsicmp(name, _T("MobileDevice.Vendor")))
    {
-		nx_strncpy(buffer, CHECK_NULL_EX(m_userId), bufSize);
+		_tcslcpy(buffer, m_vendor, size);
+   }
+   else if (!_tcsicmp(name, _T("MobileDevice.UserId")))
+   {
+		_tcslcpy(buffer, m_userId, size);
    }
    else
    {
@@ -358,6 +332,7 @@ json_t *MobileDevice::toJson()
    lockProperties();
    json_object_set_new(root, "lastReportTime", json_integer(m_lastReportTime));
    json_object_set_new(root, "deviceId", json_string_t(m_deviceId));
+   json_object_set_new(root, "commProtocol", json_string_t(m_commProtocol));
    json_object_set_new(root, "vendor", json_string_t(m_vendor));
    json_object_set_new(root, "model", json_string_t(m_model));
    json_object_set_new(root, "serialNumber", json_string_t(m_serialNumber));
