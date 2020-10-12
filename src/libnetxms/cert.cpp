@@ -175,7 +175,17 @@ String LIBNETXMS_EXPORTABLE GetCertificateIssuerString(X509 *cert)
  */
 time_t LIBNETXMS_EXPORTABLE GetCertificateExpirationTime(const X509 *cert)
 {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   struct tm expTime;
+   ASN1_TIME_to_tm(X509_get0_notAfter(cert), &expTime);
+   return timegm(&expTime);
+#elif OPENSSL_VERSION_NUMBER >= 0x10100000L
+   ASN1_TIME *epoch = ASN1_TIME_set(nullptr, static_cast<time_t>(0));
+   int days, seconds;
+   ASN1_TIME_diff(&days, &seconds, epoch, X509_get0_notAfter(cert));
+   ASN1_TIME_free(epoch);
+   return static_cast<time_t>(days) * 86400 + seconds;
+#else
    struct tm expTime;
    memset(&expTime, 0, sizeof(expTime));
 
@@ -213,16 +223,6 @@ time_t LIBNETXMS_EXPORTABLE GetCertificateExpirationTime(const X509 *cert)
    expTime.tm_min  = (s[i] - '0') * 10 + (s[i + 1] - '0');
    i += 2;
    expTime.tm_sec  = (s[i] - '0') * 10 + (s[i + 1] - '0');
-   return timegm(&expTime);
-#elif OPENSSL_VERSION_NUMBER < 0x10101000L
-   ASN1_TIME *epoch = ASN1_TIME_set(nullptr, static_cast<time_t>(0));
-   int days, seconds;
-   ASN1_TIME_diff(&days, &seconds, epoch, X509_get0_notAfter(cert));
-   ASN1_TIME_free(epoch);
-   return static_cast<time_t>(days) * 86400 + seconds;
-#else
-   struct tm expTime;
-   ASN1_TIME_to_tm(X509_get0_notAfter(cert), &expTime);
    return timegm(&expTime);
 #endif
 }
