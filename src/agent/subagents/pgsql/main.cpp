@@ -105,7 +105,10 @@ DatabaseQuery g_queries[] =
 	{ _T("REPLICATION"), MAKE_PGSQL_VERSION(10, 0, 0), 0, 0,
 		_T("SELECT CASE WHEN pg_catalog.pg_last_wal_receive_lsn() = pg_catalog.pg_last_wal_replay_lsn() THEN 0 ELSE COALESCE(EXTRACT(EPOCH FROM now() - pg_catalog.pg_last_xact_replay_timestamp())::integer, 0) END AS lag")
 	},
-	{ _T("REPLICATION"), MAKE_PGSQL_VERSION(10, 0, 0), 0, 0,
+	{ _T("REPLICATION"), MAKE_PGSQL_VERSION(13, 0, 0), 0, 0,
+		_T("SELECT pg_catalog.pg_wal_lsn_diff (flushed_lsn, pg_catalog.pg_last_wal_replay_lsn()) AS lag_bytes FROM pg_catalog.pg_stat_wal_receiver")
+	},
+	{ _T("REPLICATION"), MAKE_PGSQL_VERSION(10, 0, 0), MAKE_PGSQL_VERSION(13, 0, 0), 0,
 		_T("SELECT pg_catalog.pg_wal_lsn_diff (received_lsn, pg_catalog.pg_last_wal_replay_lsn()) AS lag_bytes FROM pg_catalog.pg_stat_wal_receiver")
 	},
 	{ _T("REPLICATION"), MAKE_PGSQL_VERSION(10, 0, 0), 0, 0,
