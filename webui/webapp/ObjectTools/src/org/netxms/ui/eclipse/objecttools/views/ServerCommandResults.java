@@ -140,6 +140,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
       out = console.newOutputStream();
       lastCommand = command;
       lastInputValues = inputValues;
+      final String terminated = Messages.get().LocalCommandResults_Terminated;
       this.maskedFields = maskedFields;
       ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
          @Override
