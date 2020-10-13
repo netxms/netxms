@@ -209,11 +209,11 @@ public class LogParserFileEditor extends DashboardComposite
 	}
 
    /**
-    * @return
+    * @return parser type
     */
-   public boolean isSyslogParser()
+   public int getParserType()
    {
-      return editor.isSyslogParser();
+      return editor.getParserType();
    }
    
    /**

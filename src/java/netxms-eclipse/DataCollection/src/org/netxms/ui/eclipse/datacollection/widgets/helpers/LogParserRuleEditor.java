@@ -621,7 +621,7 @@ public class LogParserRuleEditor extends DashboardComposite
       if (editor.getParserType() != LogParserEditor.TYPE_POLICY)
       {
    		checkboxDoNotSaveToDB = toolkit.createButton(area, "Do not save to database", SWT.CHECK);
-   		checkboxDoNotSaveToDB.setSelection(rule.isDoNotSaveToDatabse());
+   		checkboxDoNotSaveToDB.setSelection(rule.isDoNotSaveToDatabase());
    		checkboxDoNotSaveToDB.addSelectionListener(new SelectionListener() {
             
             @Override
@@ -694,11 +694,10 @@ public class LogParserRuleEditor extends DashboardComposite
          rule.setAgentAction("");
       
       if (editor.getParserType() != LogParserEditor.TYPE_POLICY)
-         rule.setDoNotSaveToDatabse(checkboxDoNotSaveToDB.getSelection());   
+         rule.setDoNotSaveToDatabase(checkboxDoNotSaveToDB.getSelection());   
       else
-         rule.setDoNotSaveToDatabse(false);
+         rule.setDoNotSaveToDatabase(false);
 	}
-      
 	
 	/**
 	 * Return integer object created from input string or null if input text string is empty or cannot be parsed
