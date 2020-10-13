@@ -345,7 +345,7 @@ time_t GetCertificateExpirationTime(const X509 *cert)
    struct tm expTime;
    ASN1_TIME_to_tm(X509_get0_notAfter(cert), &expTime);
    return timegm(&expTime);
-#elif OPENSSL_VERSION_NUMBER i>= 0x10100000L
+#elif OPENSSL_VERSION_NUMBER >= 0x10100000L
    ASN1_TIME *epoch = ASN1_TIME_set(nullptr, static_cast<time_t>(0));
    int days, seconds;
    ASN1_TIME_diff(&days, &seconds, epoch, X509_get0_notAfter(cert));
