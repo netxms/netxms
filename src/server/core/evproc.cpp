@@ -439,7 +439,7 @@ static void ParallelEventProcessor()
                else
                   weights[i] -= waitTime / 100 + 1;
 
-               uint32_t size = s_processingThreads[i].queue.size();
+               uint32_t size = static_cast<uint32_t>(s_processingThreads[i].queue.size());
                if (size == 0)
                   weights[i] += 2;
                else
@@ -567,7 +567,7 @@ StructArray<EventProcessingThreadStats> *GetEventProcessingThreadStats()
       EventProcessingThreadStats s;
       s.processedEvents = s_processingThreads[i].processedEvents;
       s.averageWaitTime = s_processingThreads[i].getAverageWaitTime();
-      s.queueSize = s_processingThreads[i].queue.size();
+      s.queueSize = static_cast<uint32_t>(s_processingThreads[i].queue.size());
       s.bindings = s_processingThreads[i].bindings;
       stats->add(&s);
    }
