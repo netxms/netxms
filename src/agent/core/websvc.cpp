@@ -643,7 +643,7 @@ void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
       MemFree(login);
       MemFree(password);
       MemFree(topLevelName);
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): Cache for %s URL updated"), url);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): Cache for URL \"%s\" updated"), url);
    }
 
    NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
@@ -679,10 +679,13 @@ void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
 /**
  * Get parameters from web service
  */
-void QueryWebService(NXCPMessage *request, NXCPMessage *response)
+void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): agent was compiled without libcurl"));
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
    response->setField(VID_RCC, ERR_NOT_IMPLEMENTED);
+   session->sendMessage(&response);
+   delete request;
 }
 
 #endif
