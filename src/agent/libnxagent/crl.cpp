@@ -256,7 +256,20 @@ void CRL::reload()
  */
 bool CRL::isCertificateRevoked(X509 *cert, const X509 *issuer)
 {
-   if ((m_content == nullptr) || (X509_CRL_verify(m_content, X509_get0_pubkey(issuer)) <= 0))
+   if (m_content == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("CRL \"%s\" is not valid"), m_fileName);
+      return false;
+   }
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   int verify = X509_CRL_verify(m_content, X509_get0_pubkey(issuer));
+#else
+   EVP_PKEY *pkey = X509_get_pubkey(const_cast<X509*>(issuer));
+   int verify = X509_CRL_verify(m_content, pkey);
+   EVP_PKEY_free(pkey);
+#endif
+   if (verify <= 0)
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("CRL \"%s\" is not valid for issuer %s"),
                m_fileName, GetCertificateSubjectString(issuer).cstr());

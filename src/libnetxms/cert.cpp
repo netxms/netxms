@@ -76,7 +76,11 @@ static bool GetX509NameField(X509_NAME *name, int nid, TCHAR *buffer, size_t siz
  */
 bool LIBNETXMS_EXPORTABLE GetCertificateSubjectField(const X509 *cert, int nid, TCHAR *buffer, size_t size)
 {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
    X509_NAME *subject = X509_get_subject_name(cert);
+#else
+   X509_NAME *subject = X509_get_subject_name(const_cast<X509*>(cert));
+#endif
    return (subject != nullptr) ? GetX509NameField(subject, nid, buffer, size) : false;
 }
 
@@ -85,7 +89,11 @@ bool LIBNETXMS_EXPORTABLE GetCertificateSubjectField(const X509 *cert, int nid, 
  */
 bool LIBNETXMS_EXPORTABLE GetCertificateIssuerField(const X509 *cert, int nid, TCHAR *buffer, size_t size)
 {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
    X509_NAME *issuer = X509_get_issuer_name(cert);
+#else
+   X509_NAME *issuer = X509_get_issuer_name(const_cast<X509*>(cert));
+#endif
    return (issuer != nullptr) ? GetX509NameField(issuer, nid, buffer, size) : false;
 }
 
@@ -311,7 +319,11 @@ String LIBNETXMS_EXPORTABLE GetCertificateTemplateId(const X509 *cert)
  */
 String LIBNETXMS_EXPORTABLE GetCertificateCRLDistributionPoint(const X509 *cert)
 {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
    STACK_OF(DIST_POINT) *dps = static_cast<STACK_OF(DIST_POINT)*>(X509_get_ext_d2i(cert, NID_crl_distribution_points, nullptr, nullptr));
+#else
+   STACK_OF(DIST_POINT) *dps = static_cast<STACK_OF(DIST_POINT)*>(X509_get_ext_d2i(const_cast<X509*>(cert), NID_crl_distribution_points, nullptr, nullptr));
+#endif
    if (dps == nullptr)
       return String();
 
