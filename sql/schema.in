@@ -245,7 +245,7 @@ CREATE TABLE mobile_devices
   os_version varchar(64) null,
   user_id varchar(64) null,
   battery_level integer not null,
-  comm_protocol varchar(31) null
+  comm_protocol varchar(31) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
