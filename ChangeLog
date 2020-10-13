@@ -16,6 +16,7 @@
 - Fixed column sorting in Web Service Definition view
 - Support for IPv6 in NXSL functions AddrInSubnet and AddrInRange
 - nxdbmgr option to migrate log tables in background
+- Windows event log synchronization and server side parsing
 - Fixed issues:
 	NX-904 (Sensitive info should be hidden in Audit Log)
 	NX-1416 (NetXMS Agents shutdown does not end ExternalParametersProviders)
@@ -25,7 +26,7 @@
 
 
 *
-* 3.5.150
+* 3.5.152
 *
 
 - Fixed agent crash on thread pool statistic access
