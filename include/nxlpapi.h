@@ -152,8 +152,8 @@ private:
 	HashMap<uint32_t, ObjectRuleStats> *m_objectCounters;
 
 	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
-	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp,
-	         LogParserCallback cb, void *context, const TCHAR *logName);
+	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName,
+	         LogParserCallback cb, void *context);
 	bool matchRepeatCount();
    void expandMacros(const TCHAR *regexp, StringBuffer &out);
    void incCheckCount(uint32_t objectId);
@@ -174,7 +174,7 @@ public:
 
 	bool match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, void *context);
 	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, 
-                UINT64 recordId, UINT32 objectId, time_t timestamp, LogParserCallback cb, void *context, const TCHAR *fileName);
+                UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *fileName, LogParserCallback cb, void *context);
 
 	void setLogName(const TCHAR *logName) { MemFree(m_logName); m_logName = MemCopyString(logName); }
 

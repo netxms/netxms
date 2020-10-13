@@ -39,7 +39,7 @@ public class LogParserRule
 	private String breakProcessing = null;
 
    @Attribute(required=false)
-   private String doNotSaveToDatabse = null;
+   private String doNotSaveToDatabase = null;
 	
 	@Element(required=true)
 	private LogParserMatch match = new LogParserMatch();
@@ -134,19 +134,19 @@ public class LogParserRule
 	}
 
    /**
-    * @return the breakProcessing
+    * @return the doNotSaveToDatabase
     */
-   public boolean isDoNotSaveToDatabse()
+   public boolean isDoNotSaveToDatabase()
    {
-      return LogParser.stringToBoolean(doNotSaveToDatabse);
+      return LogParser.stringToBoolean(doNotSaveToDatabase);
    }
 
    /**
-    * @param breakProcessing the breakProcessing to set
+    * @param doNotSave the doNotSaveToDatabase to set
     */
-   public void setDoNotSaveToDatabse(boolean doNotSave)
+   public void setDoNotSaveToDatabase(boolean doNotSave)
    {
-      this.doNotSaveToDatabse = LogParser.booleanToString(doNotSave);
+      this.doNotSaveToDatabase = LogParser.booleanToString(doNotSave);
    }
 
 	/**

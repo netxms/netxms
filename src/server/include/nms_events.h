@@ -40,7 +40,7 @@ enum class EventOrigin
    SNMP = 4,
    NXSL = 5,
    REMOTE_SERVER = 6,
-   WIN_EVNET = 7
+   WIN_EVENT = 7
 };
 
 /**

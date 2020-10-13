@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
+import org.netxms.ui.eclipse.datacollection.widgets.LogParserEditor;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
@@ -36,6 +37,9 @@ public class LogParserRule
 
 	@Attribute(name="break", required=false)
 	private String breakProcessing = null;
+
+   @Attribute(required=false)
+   private String doNotSaveToDatabase = null;
 	
 	@Element(required=true)
 	private LogParserMatch match = new LogParserMatch();
@@ -58,12 +62,17 @@ public class LogParserRule
 	
 	@Element(required=false)
 	private Integer id = null;
-	
+
+   //source == tag
+   //tag in syslog\source for other logs
 	@Element(required = false)
 	private String source = null;
 	
 	@Element(required=false)
 	private String tag = null;
+   
+   @Element(required=false)
+   private String logName = null;
 
 	@Element(required=false)
 	private String description = null;
@@ -124,6 +133,22 @@ public class LogParserRule
 		this.breakProcessing = LogParser.booleanToString(breakProcessing);
 	}
 
+   /**
+    * @return the doNotSaveToDatabase
+    */
+   public boolean isDoNotSaveToDatabase()
+   {
+      return LogParser.stringToBoolean(doNotSaveToDatabase);
+   }
+
+   /**
+    * @param doNotSave the doNotSaveToDatabase to set
+    */
+   public void setDoNotSaveToDatabase(boolean doNotSave)
+   {
+      this.doNotSaveToDatabase = LogParser.booleanToString(doNotSave);
+   }
+
 	/**
     * @return the matcher
     */
@@ -174,7 +199,7 @@ public class LogParserRule
 	 */
 	public void setSeverityOrLevel(Integer severity)
 	{
-      if(editor.isSyslogParser())
+      if(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)
       {
          this.severity = severity;
          this.level = null;
@@ -204,7 +229,7 @@ public class LogParserRule
 	 */
 	public void setFacilityOrId(Integer facility)
 	{
-	   if(editor.isSyslogParser())
+	   if(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)
       {
 	      this.facility = facility;
 	      this.id = null;
@@ -234,7 +259,7 @@ public class LogParserRule
 	 */
 	public void setTagOrSource(String tag)
 	{
-      if(editor.isSyslogParser())
+      if(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)
       {
          this.tag = tag != null && !tag.isEmpty() ? tag : null;
          this.source = null;
@@ -247,6 +272,22 @@ public class LogParserRule
 	}
 
 	/**
+    * @return the logName
+    */
+   public String getLogName()
+   {
+      return logName;
+   }
+
+   /**
+    * @param logName the logName to set
+    */
+   public void setLogName(String logName)
+   {
+      this.logName = logName;
+   }
+
+   /**
 	 * @return the description
 	 */
 	public String getDescription()
@@ -310,9 +351,9 @@ public class LogParserRule
 		this.agentAction = new LogParserAgentAction(agentAction);
 	}
 
-   public void updateFieldsCorrectly(boolean isSyslogParser)
+   public void updateFieldsCorrectly(int parserType)
    {
-      if(isSyslogParser)
+      if (parserType != LogParserEditor.TYPE_POLICY)
       {
          if(facility == null || facility == 0)
             facility = id;

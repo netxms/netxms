@@ -154,8 +154,8 @@ LogParserRule::~LogParserRule()
  * Match line
  */
 bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
-         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, LogParserCallback cb, void *context,
-         const TCHAR *logName)
+         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName, LogParserCallback cb,
+         void *context)
 {
    incCheckCount(objectId);
    if (extMode)
@@ -255,16 +255,16 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
  */
 bool LogParserRule::match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, void *context)
 {
-   return matchInternal(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, cb, context, nullptr);
+   return matchInternal(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, nullptr, cb, context);
 }
 
 /**
  * Match event
  */
 bool LogParserRule::matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables,
-                            UINT64 recordId, UINT32 objectId, time_t timestamp, LogParserCallback cb, void *context, const TCHAR *fileName)
+                            UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *fileName, LogParserCallback cb, void *context)
 {
-   return matchInternal(true, source, eventId, level, line, variables, recordId, objectId, timestamp, cb, context, fileName);
+   return matchInternal(true, source, eventId, level, line, variables, recordId, objectId, timestamp, fileName, cb, context);
 }
 
 /**

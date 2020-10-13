@@ -44,7 +44,7 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
       
       setLayout(new FillLayout());
       
-      editor = new LogParserEditor(this, SWT.NONE, false);
+      editor = new LogParserEditor(this, SWT.NONE, LogParserEditor.TYPE_POLICY);
       editor.addModifyListener(new LogParserModifyListener() {
          @Override
          public void modifyParser()

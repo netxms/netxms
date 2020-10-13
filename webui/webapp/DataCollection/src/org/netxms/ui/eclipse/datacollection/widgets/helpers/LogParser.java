@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.netxms.ui.eclipse.datacollection.widgets.LogParserEditor;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.ElementMap;
@@ -58,7 +59,7 @@ public class LogParser
 	@ElementMap(entry="macro", key="name", attribute=true, required=false)
 	private HashMap<String, String> macros = new HashMap<String, String>(0);
 	
-	private boolean isSyslogParser;
+	private int type;
 
    /**
 	 * Create log parser object from XML document
@@ -92,25 +93,25 @@ public class LogParser
 	/**
     * @return the isSyslogParser
     */
-   public boolean isSyslogParser()
+   public int getParserType()
    {
-      return isSyslogParser;
+      return type;
    }
 
    /**
-    * @param isSyslogParser the isSyslogParser to set
+    * @param parserType the type of parser: policy, syslog, win_event
     */
-   public void setSyslogParser(boolean isSyslogParser)
+   public void setSyslogParser(int parserType)
    {
-      this.isSyslogParser = isSyslogParser;
-      if(isSyslogParser)
+      type = parserType;
+      if(type != LogParserEditor.TYPE_POLICY)
       {
          file.clear();
       }
 
       for(LogParserRule rule : rules)
       {
-         rule.updateFieldsCorrectly(isSyslogParser);
+         rule.updateFieldsCorrectly(type);
       }
    }
    

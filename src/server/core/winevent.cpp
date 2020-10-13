@@ -167,7 +167,7 @@ static void WindwsEventParserCallback(UINT32 eventCode, const TCHAR *eventName, 
       }
       pmap.set(_T("repeatCount"), repeatCount);
 
-      PostEventWithTagAndNames(eventCode, EventOrigin::WIN_EVNET, timestamp, objectId, eventTag, &pmap);
+      PostEventWithTagAndNames(eventCode, EventOrigin::WIN_EVENT, timestamp, objectId, eventTag, &pmap);
    }
 }
 
@@ -185,7 +185,7 @@ void InitializeWindowsEventParser()
    if (wxml != nullptr)
    {
       xml = UTF8StringFromWideString(wxml);
-      free(wxml);
+      MemFree(wxml);
    }
    else
    {
@@ -210,7 +210,7 @@ void InitializeWindowsEventParser()
       {
          nxlog_write(NXLOG_ERROR, _T("Cannot initialize Windows event parser (%s)"), parseError);
       }
-      free(xml);
+      MemFree(xml);
       delete parsers;
    }
    MutexUnlock(s_parserLock);
@@ -222,7 +222,7 @@ void InitializeWindowsEventParser()
  */
 static void WindowsEventProcessingThread()
 {
-   ThreadSetName("WinEvtProcessing");
+   ThreadSetName("WinEvtProc");
 
    while(true)
    {

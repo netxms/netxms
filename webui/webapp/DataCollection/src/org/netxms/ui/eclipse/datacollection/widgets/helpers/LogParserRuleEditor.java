@@ -72,6 +72,7 @@ public class LogParserRuleEditor extends DashboardComposite
 	private LabeledText severity;
 	private LabeledText facility;
 	private LabeledText tag;
+	private LabeledText logName;
 	private LabeledText activeContext;
 	private LabeledText description;
 	private LabeledText agentAction;
@@ -81,6 +82,7 @@ public class LogParserRuleEditor extends DashboardComposite
 	private Combo contextAction;
 	private Combo contextResetMode;
 	private Button checkboxBreak;
+   private Button checkboxDoNotSaveToDB;
 
 	/**
 	 * @param parent
@@ -322,8 +324,8 @@ public class LogParserRuleEditor extends DashboardComposite
 
 		severity = new LabeledText(area, SWT.NONE);
 		toolkit.adapt(severity);
-		severity.setLabel(editor.isSyslogParser() ? Messages.get().LogParserRuleEditor_Severity : "Level");
-		severity.setText(rule.getSeverityOrLevel(editor.isSyslogParser())); //$NON-NLS-1$
+		severity.setLabel(editor.getParserType() == LogParserEditor.TYPE_SYSLOG ? Messages.get().LogParserRuleEditor_Severity : "Level");
+		severity.setText(rule.getSeverityOrLevel(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -332,8 +334,8 @@ public class LogParserRuleEditor extends DashboardComposite
 		
 		facility = new LabeledText(area, SWT.NONE);
 		toolkit.adapt(facility);
-		facility.setLabel(editor.isSyslogParser() ? Messages.get().LogParserRuleEditor_Facility : "Id");
-		facility.setText(rule.getFacilityOrId(editor.isSyslogParser())); //$NON-NLS-1$
+		facility.setLabel(editor.getParserType() == LogParserEditor.TYPE_SYSLOG ? Messages.get().LogParserRuleEditor_Facility : "Id");
+		facility.setText(rule.getFacilityOrId(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -342,13 +344,26 @@ public class LogParserRuleEditor extends DashboardComposite
 
 		tag = new LabeledText(area, SWT.NONE);
 		toolkit.adapt(tag);
-		tag.setLabel(editor.isSyslogParser() ? Messages.get().LogParserRuleEditor_SyslogTag : "Source");
-		tag.setText(rule.getTagOrSource(editor.isSyslogParser())); //$NON-NLS-1$
+		tag.setLabel(editor.getParserType() == LogParserEditor.TYPE_SYSLOG ? Messages.get().LogParserRuleEditor_SyslogTag : "Source");
+		tag.setText(rule.getTagOrSource(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		tag.setLayoutData(gd);
 		tag.getTextControl().addModifyListener(listener);		
+		
+		if (editor.getParserType() == LogParserEditor.TYPE_WIN_EVENT)
+		{
+	      logName = new LabeledText(area, SWT.NONE);
+	      toolkit.adapt(logName);
+	      logName.setLabel("Log name");
+	      logName.setText(rule.getLogName()); //$NON-NLS-1$
+	      gd = new GridData();
+	      gd.horizontalAlignment = SWT.FILL;
+	      gd.grabExcessHorizontalSpace = true;
+	      logName.setLayoutData(gd);
+	      logName.getTextControl().addModifyListener(listener);  
+		}
 		
 		activeContext = new LabeledText(area, SWT.NONE);
 		toolkit.adapt(activeContext);
@@ -379,10 +394,10 @@ public class LogParserRuleEditor extends DashboardComposite
 	 */
 	public void updateWindowsEventLogFields()
 	{
-	   if(editor.isSyslogParser())
+	   if(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)
 	      return;
 	      
-	   if(editor.isWindowsEventLogParser())
+	   if(editor.isWindowsEventLogParser() || editor.getParserType() == LogParserEditor.TYPE_WIN_EVENT)
 	   {
 	      severity.setEnabled(true);
 	      facility.setEnabled(true);
@@ -559,27 +574,34 @@ public class LogParserRuleEditor extends DashboardComposite
 				widgetSelected(e);
 			}
 		});
+
+      if (editor.getParserType() == LogParserEditor.TYPE_POLICY)
+      {
+   		agentAction = new LabeledText(area, SWT.NONE);
+   		toolkit.adapt(agentAction);
+   		agentAction.setLabel("Execute action");
+   		agentAction.setText((rule.getAgentAction() != null) ? rule.getAgentAction().getAction() : ""); //$NON-NLS-1$
+   		gd = new GridData();
+   		gd.horizontalAlignment = SWT.FILL;
+   		gd.grabExcessHorizontalSpace = true;
+   		gd.horizontalSpan = 2;
+   		agentAction.setLayoutData(gd);
+         agentAction.getTextControl().addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               editor.fireModifyListeners();
+            }
+         });      
+      }
 		
-		agentAction = new LabeledText(area, SWT.NONE);
-		toolkit.adapt(agentAction);
-		agentAction.setLabel("Execute action");
-		agentAction.setText((rule.getAgentAction() != null) ? rule.getAgentAction().getAction() : ""); //$NON-NLS-1$
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		agentAction.setLayoutData(gd);
-      agentAction.getTextControl().addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            editor.fireModifyListeners();
-         }
-      });
-		
-		checkboxBreak = toolkit.createButton(area, "Process all", SWT.CHECK);
-		checkboxBreak.setText("Break");
+		checkboxBreak = toolkit.createButton(area, "Break", SWT.CHECK);
 		checkboxBreak.setSelection(rule.isBreakProcessing());
+		gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      checkboxBreak.setLayoutData(gd);
 		checkboxBreak.addSelectionListener(new SelectionListener() {
          
          @Override
@@ -595,6 +617,27 @@ public class LogParserRuleEditor extends DashboardComposite
          }
       });
 		
+
+      if (editor.getParserType() != LogParserEditor.TYPE_POLICY)
+      {
+   		checkboxDoNotSaveToDB = toolkit.createButton(area, "Do not save to database", SWT.CHECK);
+   		checkboxDoNotSaveToDB.setSelection(rule.isDoNotSaveToDatabase());
+   		checkboxDoNotSaveToDB.addSelectionListener(new SelectionListener() {
+            
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               editor.fireModifyListeners();            
+            }
+            
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e);
+            }
+         });
+      }
+		
 		return area;
 	}
 	
@@ -609,7 +652,13 @@ public class LogParserRuleEditor extends DashboardComposite
 		                                 checkboxReset.getSelection()));
       rule.setFacilityOrId(intOrNull(facility.getText()));
       rule.setSeverityOrLevel(intOrNull(severity.getText()));
-      rule.setTagOrSource(tag.getText());
+      rule.setTagOrSource(tag.getText());  
+      
+      if (editor.getParserType() == LogParserEditor.TYPE_WIN_EVENT)
+         rule.setLogName(logName.getText());
+      else
+         rule.setLogName("");
+      
 		rule.setContext(activeContext.getText().trim().isEmpty() ? null : activeContext.getText());
 		rule.setBreakProcessing(checkboxBreak.getSelection());
 		rule.setDescription(description.getText());
@@ -635,9 +684,19 @@ public class LogParserRuleEditor extends DashboardComposite
 			ctx.setReset(contextResetMode.getSelectionIndex());
 			rule.setContextDefinition(ctx);
 		}
-		
-		if (!agentAction.getText().trim().isEmpty())
-			rule.setAgentAction(agentAction.getText().trim());
+
+      if (editor.getParserType() == LogParserEditor.TYPE_POLICY)
+      {
+   		if (!agentAction.getText().trim().isEmpty())
+   			rule.setAgentAction(agentAction.getText().trim());
+      }
+      else
+         rule.setAgentAction("");
+      
+      if (editor.getParserType() != LogParserEditor.TYPE_POLICY)
+         rule.setDoNotSaveToDatabase(checkboxDoNotSaveToDB.getSelection());   
+      else
+         rule.setDoNotSaveToDatabase(false);
 	}
 	
 	/**
@@ -663,8 +722,8 @@ public class LogParserRuleEditor extends DashboardComposite
    /**
     * @return
     */
-   public boolean isSyslogParser()
+   public int getParserType()
    {
-      return editor.isSyslogParser();
+      return editor.getParserType();
    }
 }

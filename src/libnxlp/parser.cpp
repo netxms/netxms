@@ -296,7 +296,7 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 		if ((state = checkContext(rule)) != NULL)
 		{
 			bool ruleMatched = hasAttributes ?
-			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, timestamp, m_cb, m_userArg, logName) :
+			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, timestamp, logName, m_cb, m_userArg) :
 				rule->match(line, objectId, m_cb, m_userArg);
 			if (ruleMatched)
 			{
@@ -535,7 +535,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
       ps->ruleName = XMLGetAttr(attrs, "name");
 #endif
 		ps->breakFlag = XMLGetAttrBoolean(attrs, "break", false);
-      ps->doNotSaveToDBFlag = XMLGetAttrBoolean(attrs, "doNotSaveToDatabse", false);
+      ps->doNotSaveToDBFlag = XMLGetAttrBoolean(attrs, "doNotSaveToDatabase", false);
 		ps->state = XML_STATE_RULE;
 	}
 	else if (!strcmp(name, "agentAction"))
