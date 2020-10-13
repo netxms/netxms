@@ -683,7 +683,7 @@ void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("QueryWebService(): agent was compiled without libcurl"));
    NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-   response->setField(VID_RCC, ERR_NOT_IMPLEMENTED);
+   response.setField(VID_RCC, ERR_NOT_IMPLEMENTED);
    session->sendMessage(&response);
    delete request;
 }
