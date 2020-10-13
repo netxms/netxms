@@ -71,6 +71,10 @@
             id="org.netxms.ui.eclipse.logviewer.commands.openWindowsEventLog"
             name="Open Windows event log">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.logviewer.commands.windowsEventLog"
+            name="Windows event log">
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -207,7 +211,7 @@
       </handler>
       <handler
             class="org.netxms.ui.eclipse.logviewer.actions.ShowObjectWindowsEventLog"
-            commandId="org.netxms.ui.eclipse.logviewer.commands.windowsEventHistory">
+            commandId="org.netxms.ui.eclipse.logviewer.commands.windowsEventLog">
       </handler>
    </extension>
    <extension
@@ -282,7 +286,7 @@
                </visibleWhen>
             </command>
             <command
-                  commandId="org.netxms.ui.eclipse.logviewer.commands.windowsEventHistory"
+                  commandId="org.netxms.ui.eclipse.logviewer.commands.windowsEventLog"
                   label="Windwos event log"
                   style="push">
                <visibleWhen

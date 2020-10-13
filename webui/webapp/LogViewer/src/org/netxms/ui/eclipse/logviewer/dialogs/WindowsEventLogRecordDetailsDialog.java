@@ -126,7 +126,7 @@ public class WindowsEventLogRecordDetailsDialog extends Dialog
       createInformationTab("General");      
       String rawData = data.getValue("raw_data");
       createTextValueTab("Details", formatXML(rawData));      
-      tabFolder.setSelection(2);
+      tabFolder.setSelection(0);
 
       return dialogArea;
    }
