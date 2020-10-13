@@ -33,7 +33,7 @@ public final class LogRecordDetailsViewerRegistry
 
    /**
     * Register default detail viewers at initialization
-    */d
+    */
    static
    {
       registry.put("AuditLog", new AuditLogRecordDetailsViewer());

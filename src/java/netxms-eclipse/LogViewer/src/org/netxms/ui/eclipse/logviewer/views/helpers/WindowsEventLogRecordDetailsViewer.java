@@ -37,7 +37,7 @@ public class WindowsEventLogRecordDetailsViewer implements LogRecordDetailsViewe
    @Override
    public void showRecordDetails(LogRecordDetails details, TableRow record, Log logHandle, IViewPart viewPart)
    {
-      WindowsEventLogRecordDetailsDialog dlg = new WindowsEventLogRecordDetailsDialog(viewPart.getSite().getShell(), details);
+      WindowsEventLogRecordDetailsDialog dlg = new WindowsEventLogRecordDetailsDialog(viewPart.getSite().getShell(), details, record, logHandle);
       dlg.open();
    }
 }
