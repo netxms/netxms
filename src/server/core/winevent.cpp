@@ -235,7 +235,6 @@ static void WindowsEventProcessingThread()
       MutexLock(s_parserLock);
       if (s_parser != nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG, 1, _T("### Log name %s"), event->logName);
          s_parser->matchEvent(event->eventSource, event->eventCode, event->eventSeverity, event->message, nullptr, 0, event->nodeId, event->originTimestamp, event->logName, &write);
       }
       MutexUnlock(s_parserLock);
