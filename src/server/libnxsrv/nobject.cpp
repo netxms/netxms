@@ -892,7 +892,6 @@ void NObject::pruneCustomAttributes()
    for(int i = 0; i < attributes->size(); i++)
    {
       KeyValuePair<CustomAttribute> *p = attributes->get(i);
-      p->value->sourceObject;
       if (p->value->isRedefined())
       {
          SharedString parentValue = getCustomAttributeFromParent(p->key);
