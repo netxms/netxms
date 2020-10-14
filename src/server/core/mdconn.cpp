@@ -41,10 +41,10 @@ static BOOL RegisterMobileDeviceSession(MobileDeviceSession *pSession)
 {
    RWLockWriteLock(s_sessionListLock);
    for(int i = 0; i < MAX_DEVICE_SESSIONS; i++)
-      if (s_sessionList[i] == NULL)
+      if (s_sessionList[i] == nullptr)
       {
          s_sessionList[i] = pSession;
-         pSession->setId(i + MAX_CLIENT_SESSIONS);
+         pSession->setId(i);
          RWLockUnlock(s_sessionListLock);
          return TRUE;
       }
@@ -60,7 +60,7 @@ static BOOL RegisterMobileDeviceSession(MobileDeviceSession *pSession)
 void UnregisterMobileDeviceSession(int id)
 {
    RWLockWriteLock(s_sessionListLock);
-   s_sessionList[id - MAX_CLIENT_SESSIONS] = NULL;
+   s_sessionList[id] = nullptr;
    RWLockUnlock(s_sessionListLock);
 }
 
@@ -73,7 +73,7 @@ void InitMobileDeviceListeners()
    s_sessionListLock = RWLockCreate();
    g_mobileThreadPool = ThreadPoolCreate(_T("MOBILE"),
          ConfigReadInt(_T("ThreadPool.MobileDevices.BaseSize"), 4),
-         ConfigReadInt(_T("ThreadPool.MobileDevices.MaxSize"), MAX_CLIENT_SESSIONS));
+         ConfigReadInt(_T("ThreadPool.MobileDevices.MaxSize"), MAX_DEVICE_SESSIONS));
 }
 
 /**

@@ -36,6 +36,7 @@ extern TCHAR g_serverCertificatePath[];
 extern TCHAR g_serverCertificateKeyPath[];
 extern char g_serverCertificatePassword[];
 extern char g_auditLogKey[];
+extern int32_t g_maxClientSessions;
 
 void UpdateAlarmExpirationTimes();
 void WakeupActiveDiscoveryThread();
@@ -97,6 +98,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, nullptr },
    { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &g_logHistorySize, nullptr },
    { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &g_logRotationMode, nullptr },
+   { _T("MaxClientSessions"), CT_LONG, 0, 0, 0, 0, &g_maxClientSessions, nullptr },
    { _T("MaxLogSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &g_maxLogSize, nullptr },
    { _T("Module"), CT_STRING_CONCAT, '\n', 0, 0, 0, &g_moduleLoadList, nullptr },
    { _T("PeerNode"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_peerNode, nullptr },
