@@ -368,7 +368,7 @@ static EnumerationCallbackResult ForceConfigurationSync(const UINT32 *nodeId, vo
 UINT32 Zone::getProxyNodeId(NetObj *object, bool backup)
 {
    ZoneProxy *proxy = nullptr;
-   HashSet<UINT32> syncSet;
+   HashSet<uint32_t> syncSet;
 
    lockProperties();
 
@@ -388,7 +388,7 @@ UINT32 Zone::getProxyNodeId(NetObj *object, bool backup)
                p->assignments--;
                syncSet.put(p->nodeId);
 
-               UINT32 otherProxy = object->getAssignedZoneProxyId(!backup);
+               uint32_t otherProxy = object->getAssignedZoneProxyId(!backup);
                if (otherProxy != 0)
                   syncSet.put(otherProxy);
             }
@@ -424,7 +424,7 @@ UINT32 Zone::getProxyNodeId(NetObj *object, bool backup)
             proxy->assignments++;
             syncSet.put(proxy->nodeId);
 
-            UINT32 otherProxy = object->getAssignedZoneProxyId(!backup);
+            uint32_t otherProxy = object->getAssignedZoneProxyId(!backup);
             if (otherProxy != 0)
                syncSet.put(otherProxy);
          }
@@ -435,7 +435,7 @@ UINT32 Zone::getProxyNodeId(NetObj *object, bool backup)
       }
    }
 
-   UINT32 id = (proxy != nullptr) ? proxy->nodeId : 0;
+   uint32_t id = (proxy != nullptr) ? proxy->nodeId : 0;
    nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 8, _T("Zone::getProxyNodeId: selected %s proxy [%u] for object %s [%u] in zone %s [uin=%u]"),
             backup ? _T("backup") : _T("primary"),
             id, (object != nullptr) ? object->getName() : _T("(null)"), (object != nullptr) ? object->getId() : 0,
