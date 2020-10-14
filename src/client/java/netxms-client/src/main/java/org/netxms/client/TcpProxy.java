@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -339,6 +339,7 @@ public class TcpProxy
             }
             System.arraycopy(data, 0, buffer, writePos, data.length);
             writePos += data.length;
+            monitor.notify();
          }
       }
       
