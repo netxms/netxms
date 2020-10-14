@@ -11606,19 +11606,20 @@ public class NXCSession
    }
 
    /**
-    * Setup new TCP proxy channel. Proxy object should be disposed with TcpProxy.close() call when no longer needed.
+    * Setup new TCP proxy channel. Proxy object should be disposed with TcpProxy.close() call when no longer needed. If zone object
+    * ID passed as proxyId then server will select most suitable proxy node from zone's proxy node list.
     *
-    * @param nodeId  proxy node ID (node that will initiate TCP connection to target)
+    * @param proxyId proxy node ID (node that will initiate TCP connection to target) or zone object ID
     * @param address target IP address
-    * @param port    target TCP port
+    * @param port target TCP port
     * @return TCP proxy object
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public TcpProxy setupTcpProxy(long nodeId, InetAddress address, int port) throws IOException, NXCException
+   public TcpProxy setupTcpProxy(long proxyId, InetAddress address, int port) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SETUP_TCP_PROXY);
-      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)proxyId);
       msg.setField(NXCPCodes.VID_IP_ADDRESS, address);
       msg.setFieldInt16(NXCPCodes.VID_PORT, port);
       sendMessage(msg);

@@ -11,6 +11,7 @@ import org.netxms.client.ProtocolVersion;
 import org.netxms.client.TcpProxy;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Zone;
 
 /**
  * Sample TCP proxy application
@@ -32,13 +33,13 @@ public class TcpProxyApp
       String[] parts = server.split(":");
       if (parts.length == 2)
       {
-	 this.server = parts[0];
-	 this.serverPort = Integer.parseInt(parts[1]);
+         this.server = parts[0];
+         this.serverPort = Integer.parseInt(parts[1]);
       }
       else
       {
          this.server = server;
-	 this.serverPort = 4701;
+         this.serverPort = 4701;
       }
       this.login = login;
       this.password = password;
@@ -61,9 +62,9 @@ public class TcpProxyApp
       print("Synchronizing objects");
       session.syncObjects();
       AbstractObject object = session.findObjectByName(node);
-      if ((object == null) || !(object instanceof Node))
-         throw new IllegalArgumentException("Node object with given name does not exist");
-      print("Found node " + node + " with ID " + object.getObjectId());
+      if ((object == null) || (!(object instanceof Node) && !(object instanceof Zone)))
+         throw new IllegalArgumentException("Node or zone object with given name does not exist");
+      print("Found " + ((object instanceof Zone) ? "zone " : "node ") + node + " with ID " + object.getObjectId());
 
       ServerSocket listener = new ServerSocket(localPort);
       print("Listening on port " + localPort);

@@ -13774,46 +13774,72 @@ void ClientSession::setupTcpProxy(NXCPMessage *request)
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SETUP_TCP_PROXY)
    {
-      shared_ptr<NetObj> node = FindObjectById(request->getFieldAsUInt32(VID_NODE_ID), OBJECT_NODE);
-      if (node != nullptr)
+      shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_NODE_ID));
+      if (object != nullptr)
       {
-         if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
-            shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*node).createAgentConnection();
-            if (conn != nullptr)
+            uint32_t rcc = RCC_SUCCESS;
+            shared_ptr<Node> node;
+            if (object->getObjectClass() == OBJECT_NODE)
             {
-               conn->setTcpProxySession(this);
-               InetAddress ipAddr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
-               UINT16 port = request->getFieldAsUInt16(VID_PORT);
-               UINT32 agentChannelId;
-               UINT32 rcc = conn->setupTcpProxy(ipAddr, port, &agentChannelId);
-               if (rcc == ERR_SUCCESS)
+               node = static_pointer_cast<Node>(object);
+            }
+            else if (object->getObjectClass() == OBJECT_ZONE)
+            {
+               node = static_pointer_cast<Node>(FindObjectById(static_cast<Zone&>(*object).getProxyNodeId(nullptr, false), OBJECT_NODE));
+               if (node == nullptr)
                {
-                  UINT32 clientChannelId = InterlockedIncrement(&m_tcpProxyChannelId);
-                  MutexLock(m_tcpProxyLock);
-                  m_tcpProxyConnections->add(new TcpProxy(conn, agentChannelId, clientChannelId, node->getId()));
-                  MutexUnlock(m_tcpProxyLock);
-                  msg.setField(VID_RCC, RCC_SUCCESS);
-                  msg.setField(VID_CHANNEL_ID, clientChannelId);
-                  writeAuditLog(AUDIT_SYSCFG, true, node->getId(), _T("Created TCP proxy to %s port %d via %s [%u] (client channel %u)"),
-                           (const TCHAR *)ipAddr.toString(), (int)port, node->getName(), node->getId(), clientChannelId);
-                  debugPrintf(3, _T("Created TCP proxy to %s port %d via %s [%d]"),
-                           (const TCHAR *)ipAddr.toString(), (int)port, node->getName(), node->getId());
-               }
-               else
-               {
-                  msg.setField(VID_RCC, AgentErrorToRCC(rcc));
+                  debugPrintf(4, _T("Requested TCP proxy for zone %s but it doesn't have available proxy nodes"), object->getName());
+                  rcc = RCC_RESOURCE_NOT_AVAILABLE;
                }
             }
             else
             {
-               msg.setField(VID_RCC, RCC_COMM_FAILURE);
+               rcc = RCC_INCOMPATIBLE_OPERATION;
+            }
+            if (rcc == RCC_SUCCESS)
+            {
+               shared_ptr<AgentConnectionEx> conn = node->createAgentConnection();
+               if (conn != nullptr)
+               {
+                  conn->setTcpProxySession(this);
+                  InetAddress ipAddr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
+                  uint16_t port = request->getFieldAsUInt16(VID_PORT);
+                  uint32_t agentChannelId;
+                  rcc = conn->setupTcpProxy(ipAddr, port, &agentChannelId);
+                  if (rcc == ERR_SUCCESS)
+                  {
+                     uint32_t clientChannelId = InterlockedIncrement(&m_tcpProxyChannelId);
+                     MutexLock(m_tcpProxyLock);
+                     m_tcpProxyConnections->add(new TcpProxy(conn, agentChannelId, clientChannelId, node->getId()));
+                     MutexUnlock(m_tcpProxyLock);
+                     msg.setField(VID_RCC, RCC_SUCCESS);
+                     msg.setField(VID_CHANNEL_ID, clientChannelId);
+                     writeAuditLog(AUDIT_SYSCFG, true, node->getId(), _T("Created TCP proxy to %s port %d via %s [%u] (client channel %u)"),
+                              (const TCHAR *)ipAddr.toString(), (int)port, node->getName(), node->getId(), clientChannelId);
+                     debugPrintf(3, _T("Created TCP proxy to %s port %d via %s [%d]"),
+                              (const TCHAR *)ipAddr.toString(), (int)port, node->getName(), node->getId());
+                  }
+                  else
+                  {
+                     msg.setField(VID_RCC, AgentErrorToRCC(rcc));
+                  }
+               }
+               else
+               {
+                  msg.setField(VID_RCC, RCC_COMM_FAILURE);
+               }
+            }
+            else
+            {
+               msg.setField(VID_RCC, rcc);
             }
          }
          else
          {
             msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-            writeAuditLog(AUDIT_SYSCFG, false, node->getId(), _T("Access denied on setting up TCP proxy"));
+            writeAuditLog(AUDIT_SYSCFG, false, object->getId(), _T("Access denied on setting up TCP proxy"));
          }
       }
       else
