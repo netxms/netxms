@@ -998,6 +998,11 @@ bool Tunnel::connectToServer()
    if (cert == NULL)
    {
       debugPrintf(4, _T("Server certificate not provided"));
+      if (m_socket != INVALID_SOCKET)
+      {
+         shutdown(m_socket, SHUT_RDWR);
+         m_socket = INVALID_SOCKET;
+      }
       MutexUnlock(m_stateLock);
       return false;
    }
@@ -1024,6 +1029,11 @@ bool Tunnel::connectToServer()
    X509_free(cert);
    if (!isValid)
    {
+      if (m_socket != INVALID_SOCKET)
+      {
+         shutdown(m_socket, SHUT_RDWR);
+         m_socket = INVALID_SOCKET;
+      }
       MutexUnlock(m_stateLock);
       return false;
    }
