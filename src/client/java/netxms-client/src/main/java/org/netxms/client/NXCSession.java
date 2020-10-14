@@ -1326,22 +1326,6 @@ public class NXCSession
       this.connUseEncryption = connUseEncryption;
    }
 
-   /* (non-Javadoc)
-    * @see java.lang.Object#finalize()
-    */
-   @Override
-   protected void finalize() throws Throwable
-   {
-      try
-      {
-         disconnect(SessionNotification.CONNECTION_BROKEN);
-      }
-      finally
-      {
-         super.finalize();
-      }
-   }
-
    /**
     * Create custom object from NXCP message. May be overridden by derived classes to create custom
     * NetXMS objects. This method called before standard object creation, so it can be used for
@@ -4940,21 +4924,21 @@ public class NXCSession
             switch(dataType)
             {
                case INT32:
-                  value = new Long(inputStream.readInt());
+                  value = Long.valueOf(inputStream.readInt());
                   break;
                case UINT32:
                case COUNTER32:
-                  value = new Long(inputStream.readUnsignedInt());
+                  value = Long.valueOf(inputStream.readUnsignedInt());
                   break;
                case INT64:
                case UINT64:
                case COUNTER64:
                   inputStream.skipBytes(4); // padding
-                  value = new Long(inputStream.readLong());
+                  value = Long.valueOf(inputStream.readLong());
                   break;
                case FLOAT:
                   inputStream.skipBytes(4); // padding
-                  value = new Double(inputStream.readDouble());
+                  value = Double.valueOf(inputStream.readDouble());
                   break;
                case STRING:
                   StringBuilder sb = new StringBuilder(256);

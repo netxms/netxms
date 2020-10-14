@@ -261,17 +261,6 @@ public class Log
    }
 
    /**
-    * @see java.lang.Object#finalize()
-    */
-   @Override
-   protected void finalize() throws Throwable
-   {
-      if (handle != -1)
-         close();
-      super.finalize();
-   }
-
-   /**
     * @see java.lang.Object#toString()
     */
    @Override
