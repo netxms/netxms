@@ -45,7 +45,7 @@ static bool SubAgentInit(Config *config)
    while (it->hasNext())
    {
       const TCHAR *log = it->next();
-      auto reader = new EventLogReader(log);
+      auto reader = new EventLogReader(log, config);
       s_readers.add(reader);
       reader->start();
    }
