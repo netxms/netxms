@@ -326,6 +326,22 @@ static inline bool MatchCertificateNameAttribute(PCCERT_CONTEXT context, const T
 }
 
 /**
+ * Wrapper for MemAlloc() to use in CRYPT_DECODE_PARA
+ */
+static LPVOID WINAPI MemAllocWrapper(size_t size)
+{
+   return MemAlloc(size);
+}
+
+/**
+ * Wrapper for MemFree() to use in CRYPT_DECODE_PARA
+ */
+static void WINAPI MemFreeWrapper(LPVOID p)
+{
+   return MemFree(p);
+}
+
+/**
  * Match any certificate
  */
 bool MatchWindowsStoreCertificate(PCCERT_CONTEXT context, const TCHAR *id)
@@ -369,8 +385,8 @@ bool MatchWindowsStoreCertificate(PCCERT_CONTEXT context, const TCHAR *id)
 
       CRYPT_DECODE_PARA dp;
       dp.cbSize = sizeof(dp);
-      dp.pfnAlloc = MemAlloc;
-      dp.pfnFree = MemFree;
+      dp.pfnAlloc = MemAllocWrapper;
+      dp.pfnFree = MemFreeWrapper;
 
       CERT_TEMPLATE_EXT *tmpl = nullptr;
       DWORD size = 0;
