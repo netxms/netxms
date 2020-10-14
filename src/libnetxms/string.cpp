@@ -628,7 +628,7 @@ void StringBuffer::insertMBString(size_t index, const char *str, size_t len, int
    {
       memmove(&m_buffer[index], &m_buffer[index + len], m_length - len);
       int wchars = MultiByteToWideChar(codePage, (codePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[index], (int)len + 1);
-      if (wchars < len)
+      if (static_cast<size_t>(wchars) < len)
       {
          memmove(&m_buffer[index + len], &m_buffer[index + wchars], len - wchars);
       }
