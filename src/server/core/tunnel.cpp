@@ -1744,6 +1744,11 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
             break;
          case BIND_NODE:
          case BIND_OR_CREATE_NODE:
+            if (t->isExtProvCertificate())
+            {
+               t->shutdown();
+               break;
+            }
             shared_ptr<Node> node = FindMatchingNode(t);
             if (node != nullptr)
             {
