@@ -32,6 +32,15 @@
 #define DEBUG_TAG _T("sa.wineventsync")
 
 /**
+ * Event range
+ */
+struct Range
+{
+   uint32_t start;
+   uint32_t end;
+};
+
+/**
  * Event log reader
  */
 class EventLogReader
@@ -42,12 +51,16 @@ private:
    TCHAR *m_name;
    EVT_HANDLE m_renderContext;
    uint32_t m_messageId;
+   StringList m_includedSources;
+   StringList m_excludedSources;
+   StructArray<Range> m_includedEvents;
+   StructArray<Range> m_excludedEvents;
 
    void run();
    static DWORD WINAPI subscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID context, EVT_HANDLE event);
 
 public:
-   EventLogReader(const TCHAR *name);
+   EventLogReader(const TCHAR *name, Config *config);
    ~EventLogReader();
 
    void start();

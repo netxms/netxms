@@ -28,14 +28,113 @@
 static VolatileCounter64 s_requestId = static_cast<int64_t>(time(nullptr)) << 24;
 
 /**
+ * Parse source configuration
+ */
+static void ParseSources(const TCHAR *name, Config *config, const TCHAR *path, bool include, StringList *list)
+{
+   ConfigEntry *e = config->getEntry(path);
+   if (e == nullptr)
+      return;
+
+   for (int i = 0; i < e->getValueCount(); i++)
+   {
+      const TCHAR *source = e->getValue(i);
+      list->add(source);
+      nxlog_debug_tag(DEBUG_TAG, 6,
+         include ?
+            _T("Explicitly including source \"%s\" into log \"%s\" synchronization") :
+            _T("Excluding source \"%s\" from log \"%s\" synchronization"),
+         source, name);
+   }
+}
+
+/**
+ * Parse event range configuration
+ */
+static void ParseEvents(const TCHAR *name, Config *config, const TCHAR *path, bool include, StructArray<Range> *list)
+{
+   ConfigEntry *e = config->getEntry(path);
+   if (e == nullptr)
+      return;
+
+   TCHAR buffer[256];
+   for (int i = 0; i < e->getValueCount(); i++)
+   {
+      _tcslcpy(buffer, e->getValue(i), 256);
+      TCHAR *p = _tcschr(buffer, _T('-'));
+      if (p != nullptr)
+      {
+         *p = 0;
+         p++;
+         Trim(buffer);
+         Trim(p);
+
+         TCHAR *eptr1, *eptr2;
+         Range range;
+         range.start = _tcstoul(buffer, &eptr1, 0);
+         range.end = _tcstoul(p, &eptr2, 0);
+         if ((*eptr1 == 0) && (*eptr2 == 0) && (range.start <= range.end))
+         {
+            list->add(&range);
+            nxlog_debug_tag(DEBUG_TAG, 6,
+               include ?
+                  _T("Explicitly including event range %u-%u into log \"%s\" synchronization") :
+                  _T("Excluding event range %u-%u from log \"%s\" synchronization"),
+               range.start, range.end, name);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Invalid event code range \"%s\" in configuration"), e->getValue(i));
+         }
+      }
+      else
+      {
+         Trim(buffer);
+
+         TCHAR *eptr;
+         uint32_t value = _tcstoul(buffer, &eptr, 0);
+         if (*eptr == 0)
+         {
+            Range range;
+            range.start = range.end = value;
+            list->add(&range);
+            nxlog_debug_tag(DEBUG_TAG, 6,
+               include ?
+                  _T("Explicitly including event %u into log \"%s\" synchronization") :
+                  _T("Excluding event %u from log \"%s\" synchronization"),
+               value, name);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Invalid event code \"%s\" in configuration"), buffer);
+         }
+      }
+   }
+}
+
+/**
  * Create new reader
  */
-EventLogReader::EventLogReader(const TCHAR *name)
+EventLogReader::EventLogReader(const TCHAR *name, Config *config)
 {
    m_thread = INVALID_THREAD_HANDLE;
    m_stopCondition = ConditionCreate(true);
    m_name = MemCopyString(name);
    m_messageId = 1;
+
+   StringBuffer path = _T("/WinEventSync/");
+   path.append(m_name);
+   path.append(_T("/IncludeSource"));
+   ParseSources(m_name, config, path, true, &m_includedSources);
+   path.shrink(13);
+   path.append(_T("ExcludeSource"));
+   ParseSources(m_name, config, path, false, &m_excludedSources);
+   path.shrink(13);
+   path.append(_T("IncludeEvent"));
+   ParseEvents(m_name, config, path, true, &m_includedEvents);
+   path.shrink(12);
+   path.append(_T("ExcludeEvent"));
+   ParseEvents(m_name, config, path, false, &m_excludedEvents);
 }
 
 /**
@@ -178,10 +277,56 @@ DWORD WINAPI EventLogReader::subscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION actio
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Unable to get publisher name from event"));
    }
 
-   // Event id
+   // Check event source against filters
+   bool explicitlyIncluded = false;
+   for (int i = 0; i < reader->m_includedSources.size(); i++)
+   {
+      if (MatchString(reader->m_includedSources.get(i), publisherName, false))
+      {
+         explicitlyIncluded = true;
+         break;
+      }
+   }
+   if (!explicitlyIncluded)
+   {
+      for (int i = 0; i < reader->m_excludedSources.size(); i++)
+      {
+         if (MatchString(reader->m_excludedSources.get(i), publisherName, false))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Event source %s filtered"), publisherName);
+            goto cleanup;
+         }
+      }
+   }
+
+   // Event ID
    uint32_t eventId = 0;
    if (values[1].Type == EvtVarTypeUInt16)
       eventId = values[1].UInt16Val;
+
+   // Check event ID against filters
+   explicitlyIncluded = false;
+   for (int i = 0; i < reader->m_includedEvents.size(); i++)
+   {
+      Range *r = reader->m_includedEvents.get(i);
+      if ((eventId >= r->start) && (eventId <= r->end))
+      {
+         explicitlyIncluded = true;
+         break;
+      }
+   }
+   if (!explicitlyIncluded)
+   {
+      for (int i = 0; i < reader->m_excludedEvents.size(); i++)
+      {
+         Range *r = reader->m_excludedEvents.get(i);
+         if ((eventId >= r->start) && (eventId <= r->end))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Event ID %u filtered"), eventId);
+            goto cleanup;
+         }
+      }
+   }
 
    // Severity level
    uint32_t level = 0;
