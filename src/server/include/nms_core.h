@@ -104,7 +104,6 @@
 #define CHECKPOINT_SNMP_PORT     260
 #define DEFAULT_AFFINITY_MASK    0xFFFFFFFF
 
-#define MAX_CLIENT_SESSIONS   128
 #define MAX_DEVICE_SESSIONS   256
 
 #define PING_TIME_TIMEOUT     10000
@@ -805,8 +804,20 @@ public:
 
    bool start();
 
-   void postMessage(NXCPMessage *msg);
-   bool sendMessage(NXCPMessage *msg);
+   void postMessage(const NXCPMessage& msg)
+   {
+      if (!isTerminated())
+         postRawMessageAndDelete(msg.serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0));
+   }
+   void postMessage(const NXCPMessage *msg)
+   {
+      postMessage(*msg);
+   }
+   bool sendMessage(const NXCPMessage& msg);
+   bool sendMessage(const NXCPMessage *msg)
+   {
+      return sendMessage(*msg);
+   }
    void sendRawMessage(NXCP_MESSAGE *msg);
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
 	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long offset, bool allowCompression = true);
@@ -1189,20 +1200,20 @@ static inline void EnumerateClientSessions(void (*handler)(ClientSession*))
    EnumerateClientSessions(EnumerateClientSessions_WrapperHandler, reinterpret_cast<void*>(handler));
 }
 
-void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
-void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, UINT32 dwCode, UINT32 dwData);
-void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(NXCPMessage *update, UINT32 graphId);
-void NotifyClientsOnPolicyUpdate(NXCPMessage *msg, const Template& object);
+void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data);
+void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, uint32_t code, uint32_t data);
+void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(const NXCPMessage& msg, uint32_t graphId);
+void NotifyClientsOnPolicyUpdate(const NXCPMessage& msg, const Template& object);
 void NotifyClientsOnPolicyDelete(uuid guid, const Template& object);
 void NotifyClientsOnDCIUpdate(const DataCollectionOwner& object, DCObject *dco);
-void NotifyClientsOnDCIDelete(const DataCollectionOwner& object, UINT32 dcoId);
-void NotifyClientsOnDCIStatusChange(const DataCollectionOwner& object, UINT32 dcoId, int status);
-void NotifyClientsOnDCIUpdate(NXCPMessage *update, const NetObj& object);
+void NotifyClientsOnDCIDelete(const DataCollectionOwner& object, uint32_t dcoId);
+void NotifyClientsOnDCIStatusChange(const DataCollectionOwner& object, uint32_t dcoId, int status);
+void NotifyClientsOnDCIUpdate(const NXCPMessage& msg, const NetObj& object);
 void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresholdId, const TCHAR *instance, ThresholdCheckResult change);
 int GetSessionCount(bool includeSystemAccount, bool includeNonAuthenticated, int typeFilter, const TCHAR *loginFilter);
-bool IsLoggedIn(UINT32 dwUserId);
+bool IsLoggedIn(uint32_t userId);
 bool NXCORE_EXPORTABLE KillClientSession(session_id_t id);
-void CloseOtherSessions(UINT32 userId, session_id_t thisSession);
+void CloseOtherSessions(uint32_t userId, session_id_t thisSession);
 
 void GetSysInfoStr(TCHAR *buffer, int nMaxSize);
 InetAddress GetLocalIpAddr();
@@ -1309,7 +1320,7 @@ void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);
 #endif   /* not _WIN32 */
 
-void DumpClientSessions(CONSOLE_CTX console);
+void DumpClientSessions(ServerConsole *console);
 void DumpMobileDeviceSessions(CONSOLE_CTX console);
 void ShowServerStats(CONSOLE_CTX console);
 void ShowQueueStats(CONSOLE_CTX console, const Queue *queue, const TCHAR *name);

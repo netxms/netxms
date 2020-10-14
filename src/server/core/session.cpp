@@ -1443,7 +1443,7 @@ void ClientSession::processRequest(NXCPMessage *request)
             {
                NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
                response.setField(VID_RCC, RCC_NOT_IMPLEMENTED);
-               sendMessage(&response);
+               sendMessage(response);
             }
          }
          break;
@@ -1457,29 +1457,26 @@ void ClientSession::processRequest(NXCPMessage *request)
  */
 void ClientSession::respondToKeepalive(UINT32 dwRqId)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, dwRqId);
    msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Send message to client
  */
-bool ClientSession::sendMessage(NXCPMessage *msg)
+bool ClientSession::sendMessage(const NXCPMessage& msg)
 {
    if (isTerminated())
       return false;
 
-	NXCP_MESSAGE *rawMsg = msg->serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0);
+	NXCP_MESSAGE *rawMsg = msg.serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0);
 
-   if ((nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 6) && (msg->getCode() != CMD_ADM_MESSAGE))
+   if ((nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 6) && (msg.getCode() != CMD_ADM_MESSAGE))
    {
       TCHAR buffer[128];
       debugPrintf(6, _T("Sending%s message %s (%d bytes)"),
-               (ntohs(rawMsg->flags) & MF_COMPRESSED) ? _T(" compressed") : _T(""), NXCPMessageCodeName(msg->getCode(), buffer), ntohl(rawMsg->size));
+               (ntohs(rawMsg->flags) & MF_COMPRESSED) ? _T(" compressed") : _T(""), NXCPMessageCodeName(msg.getCode(), buffer), ntohl(rawMsg->size));
       if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 8)
       {
          String msgDump = NXCPMessage::dump(rawMsg, NXCP_VERSION);
@@ -1494,7 +1491,7 @@ bool ClientSession::sendMessage(NXCPMessage *msg)
       if (enMsg != nullptr)
       {
          result = (SendEx(m_hSocket, (char *)enMsg, ntohl(enMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(enMsg->size));
-         free(enMsg);
+         MemFree(enMsg);
       }
       else
       {
@@ -1505,7 +1502,7 @@ bool ClientSession::sendMessage(NXCPMessage *msg)
    {
       result = (SendEx(m_hSocket, (const char *)rawMsg, ntohl(rawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
-   free(rawMsg);
+   MemFree(rawMsg);
 
    if (!result)
    {
@@ -1523,7 +1520,7 @@ void ClientSession::sendRawMessage(NXCP_MESSAGE *msg)
    if (isTerminated())
       return;
 
-   UINT16 code = htons(msg->code);
+   uint16_t code = htons(msg->code);
    if ((code != CMD_ADM_MESSAGE) && (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 6))
    {
       TCHAR buffer[128];
@@ -1570,15 +1567,6 @@ void ClientSession::sendRawMessageAndDelete(NXCP_MESSAGE *msg)
    sendRawMessage(msg);
    MemFree(msg);
    decRefCount();
-}
-
-/**
- * Send message in background
- */
-void ClientSession::postMessage(NXCPMessage *msg)
-{
-   if (!isTerminated())
-      postRawMessageAndDelete(msg->serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0));
 }
 
 /**
@@ -1748,7 +1736,7 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 	FillComponentsMessage(&msg);
 
    // Send response
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
