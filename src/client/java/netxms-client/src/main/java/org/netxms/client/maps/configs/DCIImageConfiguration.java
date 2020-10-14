@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -228,14 +228,14 @@ import org.simpleframework.xml.Serializer;
          {
             case INT32:
             case UINT32:
-               result = (new Integer(value1)).compareTo(new Integer(value2));
+               result = Integer.valueOf(value1).compareTo(Integer.valueOf(value2));
                break;
             case FLOAT:
-               result = (new Float(value1).compareTo(new Float(value2)));
+               result = Float.valueOf(value1).compareTo(Float.valueOf(value2));
                break;
             case INT64:
             case UINT64:
-               result = (new Long(value1).compareTo(new Long(value2)));
+               result = Long.valueOf(value1).compareTo(Long.valueOf(value2));
                break;
             default:
                result = value1.compareTo(value2);
@@ -248,5 +248,4 @@ import org.simpleframework.xml.Serializer;
       }
       return result;
    }
-
 }

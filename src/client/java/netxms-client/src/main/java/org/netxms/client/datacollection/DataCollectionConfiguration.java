@@ -36,7 +36,6 @@ public class DataCollectionConfiguration
    private NXCSession session;
    private long nodeId;
    private HashMap<Long, DataCollectionObject> items;
-   private boolean isOpen = false;
    private Object userData = null;
    private SessionListener listener;
    private DataCollectionConfigurationChangeListener changeListener;
@@ -127,7 +126,6 @@ public class DataCollectionConfiguration
          }
       };
       session.addListener(listener);
-      isOpen = true;
    }
    
    /**
@@ -184,7 +182,6 @@ public class DataCollectionConfiguration
       session.waitForRCC(msg.getMessageId());
       items.clear();
       session.removeListener(listener);
-      isOpen = false;
       changeListener = null;
    }
 
@@ -430,17 +427,6 @@ public class DataCollectionConfiguration
       session.sendMessage(msg);
       session.waitForRCC(msg.getMessageId());
       items.remove(itemId);
-   }
-
-   /* (non-Javadoc)
-    * @see java.lang.Object#finalize()
-    */
-   @Override
-   protected void finalize() throws Throwable
-   {
-      if (isOpen)
-         close();
-      super.finalize();
    }
 
    /**
