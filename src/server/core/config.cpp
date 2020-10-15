@@ -27,7 +27,7 @@
  * Externals
  */
 extern char g_szCodePage[];
-extern TCHAR *g_moduleLoadList;
+extern StringList g_moduleLoadList;
 extern TCHAR *g_pdsLoadList;
 extern InetAddressList g_peerNodeAddrList;
 extern StringSet g_trustedCertificates;
@@ -100,7 +100,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &g_logRotationMode, nullptr },
    { _T("MaxClientSessions"), CT_LONG, 0, 0, 0, 0, &g_maxClientSessions, nullptr },
    { _T("MaxLogSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &g_maxLogSize, nullptr },
-   { _T("Module"), CT_STRING_CONCAT, '\n', 0, 0, 0, &g_moduleLoadList, nullptr },
+   { _T("Module"), CT_STRING_LIST, 0, 0, 0, 0, &g_moduleLoadList, nullptr },
    { _T("PeerNode"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_peerNode, nullptr },
    { _T("PerfDataStorageDriver"), CT_STRING_CONCAT, '\n', 0, 0, 0, &g_pdsLoadList, nullptr },
    { _T("ProcessAffinityMask"), CT_LONG, 0, 0, 0, 0, &g_processAffinityMask, nullptr },

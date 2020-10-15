@@ -1286,10 +1286,10 @@ void NXCORE_EXPORTABLE Shutdown()
 
    // Call shutdown functions for the modules
    // CALL_ALL_MODULES cannot be used here because it checks for shutdown flag
-   for(UINT32 i = 0; i < g_dwNumModules; i++)
+   for(int i = 0; i < g_moduleList.size(); i++)
    {
-      if (g_pModuleList[i].pfShutdown != NULL)
-         g_pModuleList[i].pfShutdown();
+      if (g_moduleList.get(i)->pfShutdown != nullptr)
+         g_moduleList.get(i)->pfShutdown();
    }
 
    ThreadJoin(s_statCollectorThread);

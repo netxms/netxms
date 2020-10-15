@@ -30,9 +30,8 @@ extern Config g_serverConfig;
 /**
  * List of loaded modules
  */
-TCHAR *g_moduleLoadList = nullptr;
-UINT32 g_dwNumModules = 0;
-NXMODULE *g_pModuleList = nullptr;
+StringList g_moduleLoadList;
+StructArray<NXMODULE> g_moduleList(0, 8);
 
 /**
  * Load module
@@ -40,14 +39,14 @@ NXMODULE *g_pModuleList = nullptr;
 static bool LoadNetXMSModule(const TCHAR *name)
 {
 	bool success = false;
-   TCHAR szErrorText[256];
+   TCHAR errorText[256];
 
 #ifdef _WIN32
-   HMODULE hModule = DLOpen(name, szErrorText);
+   HMODULE hModule = DLOpen(name, errorText);
 #else
    TCHAR fullName[MAX_PATH];
 
-   if (_tcschr(name, _T('/')) == NULL)
+   if (_tcschr(name, _T('/')) == nullptr)
    {
       // Assume that module name without path given
       // Try to load it from pkglibdir
@@ -59,12 +58,12 @@ static bool LoadNetXMSModule(const TCHAR *name)
    {
       _tcslcpy(fullName, name, MAX_PATH);
    }
-   HMODULE hModule = DLOpen(fullName, szErrorText);
+   HMODULE hModule = DLOpen(fullName, errorText);
 #endif
 
    if (hModule != nullptr)
    {
-      bool (* RegisterModule)(NXMODULE *) = (bool (*)(NXMODULE *))DLGetSymbolAddr(hModule, "NXM_Register", szErrorText);
+      bool (*RegisterModule)(NXMODULE *) = (bool (*)(NXMODULE *))DLGetSymbolAddr(hModule, "NXM_Register", errorText);
       if (RegisterModule != nullptr)
       {
          NXMODULE module;
@@ -73,16 +72,13 @@ static bool LoadNetXMSModule(const TCHAR *name)
          {
             if (module.dwSize == sizeof(NXMODULE))
             {
-               if (module.pfInitialize(&g_serverConfig))
+               if ((module.pfInitialize == nullptr) || module.pfInitialize(&g_serverConfig))
                {
                   // Add module to module's list
-                  g_pModuleList = (NXMODULE *)realloc(g_pModuleList, sizeof(NXMODULE) * (g_dwNumModules + 1));
-                  memcpy(&g_pModuleList[g_dwNumModules], &module, sizeof(NXMODULE));
-                  g_pModuleList[g_dwNumModules].hModule = hModule;
-
-                  nxlog_write(NXLOG_INFO, _T("Server module %s loaded successfully"), g_pModuleList[g_dwNumModules].szName);
-                  g_dwNumModules++;
-
+                  module.hModule = hModule;
+                  module.metadata = (NXMODULE_METADATA*)DLGetSymbolAddr(hModule, "NXM_metadata", errorText);
+                  g_moduleList.add(module);
+                  nxlog_write(NXLOG_INFO, _T("Server module %s loaded successfully"), module.szName);
                   success = true;
                }
                else
@@ -111,7 +107,7 @@ static bool LoadNetXMSModule(const TCHAR *name)
    }
    else
    {
-      nxlog_write(NXLOG_ERROR, _T("Unable to load module \"%s\" (%s)"), name, szErrorText);
+      nxlog_write(NXLOG_ERROR, _T("Unable to load module \"%s\" (%s)"), name, errorText);
    }
    return success;
 }
@@ -121,42 +117,40 @@ static bool LoadNetXMSModule(const TCHAR *name)
  */
 bool LoadNetXMSModules()
 {
-   TCHAR *curr, *next, *ptr;
    bool success = true;
-
-	for(curr = g_moduleLoadList; curr != NULL; curr = next)
+	for(int i = 0; i < g_moduleLoadList.size(); i++)
    {
-		next = _tcschr(curr, _T('\n'));
-		if (next != NULL)
-		{
-			*next = 0;
-			next++;
-		}
+	   TCHAR *curr = MemCopyString(g_moduleLoadList.get(i));
 		StrStrip(curr);
 		if (*curr == 0)
+		{
+		   MemFree(curr);
 			continue;
+		}
 
 		bool mandatory = false;
 
 		// Check for "mandatory" option
-		ptr = _tcschr(curr, _T(','));
-		if (ptr != NULL)
+		TCHAR *options = _tcschr(curr, _T(','));
+		if (options != nullptr)
 		{
-			*ptr = 0;
-			ptr++;
+			*options = 0;
+			options++;
 			StrStrip(curr);
-			StrStrip(ptr);
-			mandatory = (*ptr == _T('1')) || (*ptr == _T('Y')) || (*ptr == _T('y'));
+			StrStrip(options);
+			mandatory = (*options == _T('1')) || (*options == _T('Y')) || (*options == _T('y'));
 		}
 
       if (!LoadNetXMSModule(curr))
       {
 			if (mandatory)
 			{
+            MemFree(curr);
 				success = false;
 				break;
 			}
       }
+      MemFree(curr);
    }
 	return success;
 }

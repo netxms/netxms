@@ -1112,11 +1112,15 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       else if (IsCommand(_T("MODULES"), szBuffer, 3))
       {
          ConsoleWrite(pCtx, _T("Loaded server modules:\n"));
-         for(UINT32 i = 0; i < g_dwNumModules; i++)
+         ENUMERATE_MODULES(szName)
          {
-            ConsolePrintf(pCtx, _T("   %s\n"), g_pModuleList[i].szName);
+            NXMODULE_METADATA *m = CURRENT_MODULE.metadata;
+            if (m != nullptr)
+               ConsolePrintf(pCtx, _T("   %-24s %-12s %s\n"), CURRENT_MODULE.szName, m->moduleVersion, m->vendor);
+            else
+               ConsolePrintf(pCtx, _T("   %-24s (module metadata unavailable)\n"), CURRENT_MODULE.szName);
          }
-         ConsolePrintf(pCtx, _T("%d modules loaded\n"), g_dwNumModules);
+         ConsolePrintf(pCtx, _T("%d modules loaded\n"), g_moduleList.size());
       }
       else if (IsCommand(_T("MSGWQ"), szBuffer, 2))
       {

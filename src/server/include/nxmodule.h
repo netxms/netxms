@@ -66,6 +66,24 @@ public:
 };
 
 /**
+ * Module metadata
+ */
+struct NXMODULE_METADATA
+{
+   uint32_t size;   // structure size in bytes
+   uint32_t unicode;  // unicode flag
+   char tagBegin[16];
+   char name[MAX_OBJECT_NAME];
+   char vendor[128];
+   char coreVersion[16];
+   char coreBuildTag[32];
+   char moduleVersion[16];
+   char moduleBuildTag[32];
+   char compiler[256];
+   char tagEnd[16];
+};
+
+/**
  * Module registration structure
  */
 typedef struct
@@ -107,25 +125,8 @@ typedef struct
    ObjectArray<PredictionEngine> *(*pfGetPredictionEngines)();
    NXCORE_LOG *logs;
    HMODULE hModule;
+   NXMODULE_METADATA *metadata;
 } NXMODULE;
-
-/**
- * Module metadata
- */
-struct NXMODULE_METADATA
-{
-   UINT32 size;   // structure size in bytes
-   UINT32 unicode;  // unicode flag
-   char tagBegin[16];
-   char name[MAX_OBJECT_NAME];
-   char vendor[128];
-   char coreVersion[16];
-   char coreBuildTag[32];
-   char moduleVersion[16];
-   char moduleBuildTag[32];
-   char compiler[256];
-   char tagEnd[16];
-};
 
 #ifdef UNICODE
 #define METADATA_UNICODE   1
@@ -152,20 +153,20 @@ __EXPORT_VAR(NXMODULE_METADATA NXM_metadata) = \
  * Enumerate all modules where given entry point available
  */
 #define ENUMERATE_MODULES(e) if (!(g_flags & AF_SHUTDOWN)) \
-   for(UINT32 __i = 0; __i < g_dwNumModules; __i++) \
-      if (g_pModuleList[__i]. e != nullptr)
+   for(int __i = 0; __i < g_moduleList.size(); __i++) \
+      if (g_moduleList.get(__i)-> e != nullptr)
 
 /**
  * Reference to current module in ENUMERATE_MODULES
  */
-#define CURRENT_MODULE g_pModuleList[__i]
+#define CURRENT_MODULE (*g_moduleList.get(__i))
 
 /**
  * Call module entry point for all loaded modules
  */
 #define CALL_ALL_MODULES(e, p) if (!(g_flags & AF_SHUTDOWN)) { \
-   for(UINT32 __i = 0; __i < g_dwNumModules; __i++) { \
-      if (g_pModuleList[__i]. e != nullptr) { g_pModuleList[__i]. e p; } \
+   for(int __i = 0; __i < g_moduleList.size(); __i++) { \
+      if (g_moduleList.get(__i)-> e != nullptr) { g_moduleList.get(__i)-> e p; } \
    } \
 }
 
@@ -177,8 +178,7 @@ bool LoadNetXMSModules();
 /**
  * Global variables
  */
-extern UINT32 g_dwNumModules;
-extern NXMODULE *g_pModuleList;
+extern StructArray<NXMODULE> g_moduleList;
 
 #endif   /* MODULE_NXDBMGR_EXTENSION */
 
