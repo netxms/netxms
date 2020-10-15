@@ -86,6 +86,14 @@
             name="%view.name.ServerScript"
             restorable="false">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objecttools.views.MultiNodeCommandExecutor"
+            icon="icons/console.png"
+            id="org.netxms.ui.eclipse.objecttools.views.MultiNodeCommandResults"
+            name="Command results"
+            restorable="false">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">

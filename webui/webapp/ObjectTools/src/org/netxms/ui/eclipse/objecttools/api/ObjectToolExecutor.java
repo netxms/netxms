@@ -49,6 +49,7 @@ import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.dialogs.ObjectToolInputDialog;
 import org.netxms.ui.eclipse.objecttools.views.AgentActionResults;
+import org.netxms.ui.eclipse.objecttools.views.MultiNodeCommandExecutor;
 import org.netxms.ui.eclipse.objecttools.views.ServerCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.ServerScriptResults;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
@@ -238,35 +239,51 @@ public final class ObjectToolExecutor
                }
             }
             
-            int i = 0;
-            for(final ObjectContext n : nodes)
+            int i = 0;               
+            if (nodes.size() != 1 && (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND || tool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND ||
+                  tool.getToolType() == ObjectTool.TYPE_ACTION || tool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) && ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0))
             {
-               if(tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
+               final List<String> finalExpandedText = expandedText;
+               getDisplay().syncExec(new Runnable() {
+                  
+                  @Override
+                  public void run()
+                  {
+                     executeOnNode(nodes, tool, inputValues, maskedFields, finalExpandedText);
+                  }
+               });
+            }
+            else
+            {
+               for(final ObjectContext n : nodes)
                {
-                  final String tmp = expandedText.get(i++);
-                  getDisplay().syncExec(new Runnable() {
-                     
-                     @Override
-                     public void run()
-                     {
-                        executeOnNode(n, tool, inputValues, maskedFields, tmp);
-                     }
-                  });
-               }
-               else
-               {
-                  getDisplay().syncExec(new Runnable() {
-                     
-                     @Override
-                     public void run()
-                     {
-                        executeOnNode(n, tool, inputValues, maskedFields, null);
-                     }
-                  });                  
+                  if(tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
+                  {
+                     final String tmp = expandedText.get(i++);
+                     getDisplay().syncExec(new Runnable() {
+                        
+                        @Override
+                        public void run()
+                        {
+                           executeOnNode(n, tool, inputValues, maskedFields, tmp);
+                        }
+                     });
+                  }
+                  else
+                  {
+                     getDisplay().syncExec(new Runnable() {
+                        
+                        @Override
+                        public void run()
+                        {
+                           executeOnNode(n, tool, inputValues, maskedFields, null);
+                        }
+                     });                  
+                  }
                }
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -347,6 +364,24 @@ public final class ObjectToolExecutor
          case ObjectTool.TYPE_URL:
             openURL(node, tool, inputValues, expandedValue);
             break;
+      }
+   }
+   
+
+   
+   private static void executeOnNode(Set<ObjectContext> nodes, ObjectTool tool, Map<String, String> inputValues,
+         List<String> maskedFields, List<String> expandedText)
+   {
+      final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+      try
+      {
+         MultiNodeCommandExecutor view = (MultiNodeCommandExecutor)window.getActivePage().showView(MultiNodeCommandExecutor.ID, tool.getDisplayName() + nodes.toString(), IWorkbenchPage.VIEW_ACTIVATE);
+         view.execute(tool, nodes, inputValues, maskedFields, expandedText);
+      }
+      catch(Exception e)
+      {
+         e.printStackTrace();
+         MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
       }
    }
    
