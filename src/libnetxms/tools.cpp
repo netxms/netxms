@@ -3008,10 +3008,32 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValu
 }
 
 /**
+ * Data directory override
+ */
+static TCHAR *s_dataDirectory = nullptr;
+
+/**
+ * Set NetXMS data directory (can be used if default location is overridden by process).
+ * This function is not thread safe and should be called from main thread before other
+ * threads will call GetNetXMSDirectory.
+ */
+void LIBNETXMS_EXPORTABLE SetNetXMSDataDirectory(const TCHAR *dir)
+{
+   MemFree(s_dataDirectory);
+   s_dataDirectory = MemCopyString(dir);
+}
+
+/**
  * Get NetXMS directory
  */
 void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
 {
+   if ((type == nxDirData) && (s_dataDirectory != nullptr))
+   {
+      _tcslcpy(dir, s_dataDirectory, MAX_PATH);
+      return;
+   }
+
    *dir = 0;
 
    String homeDir = GetEnvironmentVariableEx(_T("NETXMS_HOME"));

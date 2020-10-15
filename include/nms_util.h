@@ -4392,6 +4392,7 @@ INT64 LIBNETXMS_EXPORTABLE GetActiveHeapMemory();
 INT64 LIBNETXMS_EXPORTABLE GetMappedHeapMemory();
 
 void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir);
+void LIBNETXMS_EXPORTABLE SetNetXMSDataDirectory(const TCHAR *dir);
 
 TcpPingResult LIBNETXMS_EXPORTABLE TcpPing(const InetAddress& addr, UINT16 port, UINT32 timeout);
 UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress& addr, int numRetries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize, bool dontFragment);

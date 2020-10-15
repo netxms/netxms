@@ -433,7 +433,23 @@ void ReloadCertificates()
 {
    auto it = g_crlList.iterator();
    while(it->hasNext())
-      AddLocalCRL(it->next());
+   {
+      const TCHAR *location = it->next();
+      if (!_tcsncmp(location, _T("http://"), 7) || !_tcsncmp(location, _T("https://"), 8))
+      {
+#ifdef UNICODE
+         char *url = UTF8StringFromWideString(location);
+         AddRemoteCRL(url, true);
+         MemFree(url);
+#else
+         AddRemoteCRL(location, true);
+#endif
+      }
+      else
+      {
+         AddLocalCRL(location);
+      }
+   }
    delete it;
 
 	s_certificateStoreLock.lock();

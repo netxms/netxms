@@ -343,6 +343,7 @@ bool LoadConfig(const TCHAR *configSection, bool firstStart)
       if (SHGetFolderPath(nullptr, CSIDL_LOCAL_APPDATA, nullptr, SHGFP_TYPE_CURRENT, g_szDataDirectory) == S_OK)
       {
          _tcslcat(g_szDataDirectory, _T("\\nxagentd"), MAX_PATH);
+         SetNetXMSDataDirectory(g_szDataDirectory);
       }
       else
       {
@@ -363,7 +364,10 @@ bool LoadConfig(const TCHAR *configSection, bool firstStart)
    {
       const TCHAR *dir = config->getValue(_T("/%agent/DataDirectory"));
       if (dir != nullptr)
+      {
          _tcslcpy(g_szDataDirectory, dir, MAX_PATH);
+         SetNetXMSDataDirectory(g_szDataDirectory);
+      }
 
       dir = config->getValue(_T("/%agent/ConfigIncludeDir"));
       if (dir != nullptr)

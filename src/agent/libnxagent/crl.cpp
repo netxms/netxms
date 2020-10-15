@@ -169,7 +169,7 @@ CRL *CRL::createRemote(const char *url)
 #endif
 
    for(TCHAR *p = &fileName[l]; *p != 0; p++)
-      if ((*p == _T(':')) || (*p == _T('/')) || (*p == _T('\\')))
+      if ((*p == _T(':')) || (*p == _T('/')) || (*p == _T('\\')) || (*p == _T('?')) || (*p == _T('&')))
          *p = _T('_');
 
    return new CRL(url, fileName);
