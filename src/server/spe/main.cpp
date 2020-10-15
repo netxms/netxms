@@ -40,7 +40,7 @@ static ObjectArray<PredictionEngine> *GetPredictionEngines()
 /**
  * Module entry point
  */
-extern "C" bool __EXPORT NXM_Init(NXMODULE *module, Config *config)
+extern "C" bool __EXPORT NXM_Register(NXMODULE *module, Config *config)
 {
    module->dwSize = sizeof(NXMODULE);
    _tcscpy(module->szName, _T("SPE"));
