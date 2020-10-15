@@ -378,7 +378,7 @@ static void LoadGlobalConfig()
 {
    if (MetaDataReadInt32(_T("SingeTablePerfData"), 0))
    {
-      nxlog_debug(1, _T("Using single table for performance data storage"));
+      nxlog_debug_tag(_T("dc"), 1, _T("Using single table for performance data storage"));
       g_flags |= AF_SINGLE_TABLE_PERF_DATA;
    }
 
@@ -396,7 +396,7 @@ static void LoadGlobalConfig()
    g_defaultAgentCacheMode = (INT16)ConfigReadInt(_T("DefaultAgentCacheMode"), AGENT_CACHE_OFF);
    if ((g_defaultAgentCacheMode != AGENT_CACHE_ON) && (g_defaultAgentCacheMode != AGENT_CACHE_OFF))
    {
-      nxlog_debug(1, _T("Invalid value %d of DefaultAgentCacheMode: reset to %d (OFF)"), g_defaultAgentCacheMode, AGENT_CACHE_OFF);
+      nxlog_debug_tag(_T("dc"), 1, _T("Invalid value %d of DefaultAgentCacheMode: reset to %d (OFF)"), g_defaultAgentCacheMode, AGENT_CACHE_OFF);
       ConfigWriteInt(_T("DefaultAgentCacheMode"), AGENT_CACHE_OFF, true, true, true);
       g_defaultAgentCacheMode = AGENT_CACHE_OFF;
    }
@@ -431,12 +431,12 @@ static void LoadGlobalConfig()
    if (ConfigReadBoolean(_T("NXSL.EnableContainerFunctions"), true))
    {
       g_flags |= AF_ENABLE_NXSL_CONTAINER_FUNCTIONS;
-      nxlog_debug(3, _T("NXSL container management functions enabled"));
+      nxlog_debug_tag(_T("nxsl"), 3, _T("NXSL container management functions enabled"));
    }
    if (ConfigReadBoolean(_T("NXSL.EnableFileIOFunctions"), false))
    {
       g_flags |= AF_ENABLE_NXSL_FILE_IO_FUNCTIONS;
-      nxlog_debug(3, _T("NXSL file I/O functions enabled"));
+      nxlog_debug_tag(_T("nxsl"), 3, _T("NXSL file I/O functions enabled"));
    }
    if (ConfigReadBoolean(_T("UseFQDNForNodeNames"), true))
       g_flags |= AF_USE_FQDN_FOR_NODE_NAMES;
@@ -488,11 +488,12 @@ static void LoadGlobalConfig()
    if (g_netxmsdDataDir[0] == 0)
    {
       GetNetXMSDirectory(nxDirData, g_netxmsdDataDir);
-      DbgPrintf(1, _T("Data directory set to %s"), g_netxmsdDataDir);
+      nxlog_debug_tag(_T("core"), 1, _T("Data directory set to %s"), g_netxmsdDataDir);
    }
    else
    {
-      DbgPrintf(1, _T("Using data directory %s"), g_netxmsdDataDir);
+      nxlog_debug_tag(_T("core"), 1, _T("Using data directory %s"), g_netxmsdDataDir);
+      SetNetXMSDataDirectory(g_netxmsdDataDir);
    }
 
    g_icmpPingTimeout = ConfigReadInt(_T("IcmpPingTimeout"), 1500);
@@ -516,10 +517,10 @@ static bool InitCryptography()
 #ifdef _WITH_ENCRYPTION
    if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 0x7F)))
       return false;
-   nxlog_debug(4, _T("Supported ciphers: %s"), (const TCHAR *)NXCPGetSupportedCiphersAsText());
+   nxlog_debug_tag(_T("crypto"), 4, _T("Supported ciphers: %s"), NXCPGetSupportedCiphersAsText().cstr());
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-   OPENSSL_init_ssl(0, NULL);
+   OPENSSL_init_ssl(0, nullptr);
 #else
    SSL_library_init();
    SSL_load_error_strings();
@@ -528,11 +529,11 @@ static bool InitCryptography()
    bool success = false;
    if (LoadServerCertificate(&g_pServerKey))
    {
-      nxlog_debug(1, _T("Server certificate loaded"));
+      nxlog_debug_tag(_T("crypto"), 1, _T("Server certificate loaded"));
    }
-   if (g_pServerKey != NULL)
+   if (g_pServerKey != nullptr)
    {
-      nxlog_debug(1, _T("Using server certificate key"));
+      nxlog_debug_tag(_T("crypto"), 1, _T("Using server certificate key"));
       success = true;
    }
    else
@@ -543,7 +544,7 @@ static bool InitCryptography()
       g_pServerKey = LoadRSAKeys(szKeyFile);
       if (g_pServerKey == NULL)
       {
-         nxlog_debug(1, _T("Generating RSA key pair..."));
+         nxlog_debug_tag(_T("crypto"), 1, _T("Generating RSA key pair..."));
          g_pServerKey = RSAGenerateKey(NETXMS_RSA_KEYLEN);
          if (g_pServerKey != NULL)
          {
@@ -570,12 +571,12 @@ static bool InitCryptography()
             }
             else
             {
-               nxlog_debug(0, _T("Failed to open %s for writing"), szKeyFile);
+               nxlog_write_tag(NXLOG_ERROR, _T("crypto"), _T("Failed to open key file %s for writing"), szKeyFile);
             }
          }
          else
          {
-            nxlog_debug(0, _T("Failed to generate RSA key"));
+            nxlog_write_tag(NXLOG_ERROR, _T("crypto"), _T("Failed to generate RSA key"));
          }
       }
       else

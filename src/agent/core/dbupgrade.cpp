@@ -389,7 +389,7 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
 
    CHK_EXEC(Query(_T("DELETE FROM metadata WHERE attribute='DataCollectionSchemaVersion'")));
 
-   //Policy upgrade procedure
+   // Policy upgrade procedure
    TCHAR createPolicyTable[] = _T("CREATE TABLE agent_policy (")
                               _T("  guid varchar(36) not null,")
                               _T("  type integer not null,")
@@ -411,7 +411,7 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
    Config *registry = new Config;
    registry->setTopLevelTag(_T("registry"));
    TCHAR regPath[MAX_PATH];
-   nx_strncpy(regPath, g_szDataDirectory, MAX_PATH - _tcslen(_T("registry.dat")) - 1);
+   _tcslcpy(regPath, g_szDataDirectory, MAX_PATH - _tcslen(_T("registry.dat")) - 1);
    if (regPath[_tcslen(regPath) - 1] != FS_PATH_SEPARATOR_CHAR)
    {
      _tcscat(regPath, FS_PATH_SEPARATOR);
