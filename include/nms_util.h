@@ -3286,23 +3286,28 @@ class LIBNETXMS_EXPORTABLE SocketConnection
 
 protected:
 	SOCKET m_socket;
-	char m_data[4096];
-	size_t m_dataPos;
+	char m_data[4096];   // cached data
+	size_t m_dataSize;   // size of cached data
+	size_t m_dataReadPos;
 
    SocketConnection();
 
+   virtual ssize_t readFromSocket(void *buffer, size_t size, uint32_t timeout);
+
 public:
+   SocketConnection(SOCKET s);
 	virtual ~SocketConnection();
 
 	bool connectTCP(const TCHAR *hostName, uint16_t port, uint32_t timeout);
 	bool connectTCP(const InetAddress& ip, uint16_t port, uint32_t timeout);
 	void disconnect();
 
-   virtual ssize_t read(void *buffer, size_t size, uint32_t timeout = INFINITE);
-
+   ssize_t read(void *buffer, size_t size, uint32_t timeout = INFINITE);
+   bool readFully(void *buffer, size_t size, uint32_t timeout = INFINITE);
+   bool skip(size_t size, uint32_t timeout = INFINITE);
 	bool canRead(uint32_t timeout);
-	bool waitForText(const char *text, uint32_t timeout);
-	bool readFully(void *buffer, size_t size, uint32_t timeout = INFINITE);
+	bool waitForText(const char *text, uint32_t timeout) { return waitForData(text, strlen(text), timeout); }
+   bool waitForData(const void *data, size_t size, uint32_t timeout);
 
    ssize_t write(const void *buffer, size_t size);
 	bool writeLine(const char *line);
@@ -3320,6 +3325,8 @@ class LIBNETXMS_EXPORTABLE TelnetConnection : public SocketConnection
 protected:
    TelnetConnection() : SocketConnection() { }
 
+   virtual ssize_t readFromSocket(void *buffer, size_t size, uint32_t timeout) override;
+
    bool connect(const TCHAR *hostName, uint16_t port, uint32_t timeout);
    bool connect(const InetAddress& ip, uint16_t port, uint32_t timeout);
 
@@ -3327,7 +3334,6 @@ public:
 	static TelnetConnection *createConnection(const TCHAR *hostName, uint16_t port, uint32_t timeout);
    static TelnetConnection *createConnection(const InetAddress& ip, uint16_t port, uint32_t timeout);
 
-   virtual ssize_t read(void *buffer, size_t size, uint32_t timeout = INFINITE) override;
    ssize_t readLine(char *buffer, size_t size, uint32_t timeout = INFINITE);
 };
 
