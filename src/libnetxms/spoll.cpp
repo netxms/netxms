@@ -92,11 +92,11 @@ int SocketPoller::poll(UINT32 timeout)
       int rc;
       do
       {
-         INT64 startTime = GetCurrentTimeMs();
+         int64_t startTime = GetCurrentTimeMs();
          rc = ::poll(m_sockets, m_count, timeout);
          if ((rc != -1) || (errno != EINTR))
             break;
-         UINT32 elapsed = (UINT32)(GetCurrentTimeMs() - startTime);
+         uint32_t elapsed = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
          timeout -= std::min(timeout, elapsed);
       } while(timeout > 0);
       return rc;
@@ -105,9 +105,9 @@ int SocketPoller::poll(UINT32 timeout)
    if (timeout == INFINITE)
    {
 #ifdef _WIN32
-      return select(0, m_write ? NULL : &m_sockets, m_write ? &m_sockets : NULL, NULL, NULL);
+      return select(0, m_write ? nullptr : &m_sockets, m_write ? &m_sockets : nullptr, nullptr, nullptr);
 #else
-      return select(SELECT_NFDS(m_maxfd + 1), m_write ? NULL : &m_sockets, m_write ? &m_sockets : NULL, NULL, NULL);
+      return select(SELECT_NFDS(m_maxfd + 1), m_write ? nullptr : &m_sockets, m_write ? &m_sockets : nullptr, nullptr, nullptr);
 #endif
    }
    else
@@ -116,18 +116,18 @@ int SocketPoller::poll(UINT32 timeout)
 #ifdef _WIN32
       tv.tv_sec = timeout / 1000;
       tv.tv_usec = (timeout % 1000) * 1000;
-      return select(0, m_write ? NULL : &m_sockets, m_write ? &m_sockets : NULL, NULL, (timeout != INFINITE) ? &tv : NULL);
+      return select(0, m_write ? nullptr : &m_sockets, m_write ? &m_sockets : nullptr, nullptr, (timeout != INFINITE) ? &tv : nullptr);
 #else
       int rc;
       do
       {
          tv.tv_sec = timeout / 1000;
          tv.tv_usec = (timeout % 1000) * 1000;
-         INT64 startTime = GetCurrentTimeMs();
-         rc = select(m_maxfd + 1, m_write ? NULL : &m_sockets, m_write ? &m_sockets : NULL, NULL, &tv);
+         int64_t startTime = GetCurrentTimeMs();
+         rc = select(m_maxfd + 1, m_write ? nullptr : &m_sockets, m_write ? &m_sockets : nullptr, nullptr, &tv);
          if ((rc != -1) || (errno != EINTR))
             break;
-         UINT32 elapsed = (UINT32)(GetCurrentTimeMs() - startTime);
+         uint32_t elapsed = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
          timeout -= std::min(timeout, elapsed);
       } while(timeout > 0);
       return rc;

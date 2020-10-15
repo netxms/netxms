@@ -4769,6 +4769,7 @@ AC_CONFIG_FILES([
 	src/server/include/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
+	src/server/ntcb/Makefile
 	src/server/pdsdrv/Makefile
 	src/server/pdsdrv/influxdb/Makefile
 	src/server/pdsdrv/rrdtool/Makefile

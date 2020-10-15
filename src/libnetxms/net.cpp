@@ -52,9 +52,21 @@ SocketConnection *SocketConnection::createTCPConnection(const TCHAR *hostName, u
  */
 SocketConnection::SocketConnection()
 {
-	m_dataPos = 0;
-	m_data[0] = 0;
+   memset(m_data, 0, sizeof(m_data));
+	m_dataSize = 0;
+	m_dataReadPos = 0;
 	m_socket = INVALID_SOCKET;
+}
+
+/**
+ * Create connection object for existing socket
+ */
+SocketConnection::SocketConnection(SOCKET s)
+{
+   memset(m_data, 0, sizeof(m_data));
+   m_dataSize = 0;
+   m_dataReadPos = 0;
+   m_socket = s;
 }
 
 /**
@@ -101,6 +113,9 @@ bool SocketConnection::connectTCP(const InetAddress& ip, uint16_t port, uint32_t
  */
 bool SocketConnection::canRead(uint32_t timeout)
 {
+   if (m_dataSize > 0)
+      return true;
+
    SocketPoller p;
    p.add(m_socket);
    return p.poll(timeout) > 0;
@@ -109,9 +124,47 @@ bool SocketConnection::canRead(uint32_t timeout)
 /**
  * Read data from socket
  */
+ssize_t SocketConnection::readFromSocket(void *buffer, size_t size, uint32_t timeout)
+{
+   return RecvEx(m_socket, buffer, size, 0, timeout);
+}
+
+/**
+ * Read data from internal buffer or socket
+ */
 ssize_t SocketConnection::read(void *buffer, size_t size, uint32_t timeout)
 {
-	return RecvEx(m_socket, buffer, size, 0, timeout);
+   if (m_dataSize > 0)
+   {
+      ssize_t bytes = std::min(m_dataSize, size);
+      memcpy(buffer, &m_data[m_dataReadPos], bytes);
+      m_dataSize -= bytes;
+      if (m_dataSize > 0)
+         m_dataReadPos += bytes;
+      else
+         m_dataReadPos = 0;
+      return bytes;
+   }
+
+   if (size >= sizeof(m_data))
+      return readFromSocket(buffer, size, timeout);
+
+	ssize_t bytes = readFromSocket(m_data, sizeof(m_data), timeout);
+	if (bytes <= 0)
+	   return bytes;
+
+	if (bytes <= size)
+	{
+	   memcpy(buffer, m_data, bytes);
+	}
+	else
+	{
+      memcpy(buffer, m_data, size);
+      m_dataReadPos = size;
+      m_dataSize = bytes - size;
+      bytes = size;
+	}
+	return bytes;
 }
 
 /**
@@ -122,11 +175,26 @@ bool SocketConnection::readFully(void *buffer, size_t size, uint32_t timeout)
    BYTE *p = static_cast<BYTE*>(buffer);
    while(size > 0)
    {
-      ssize_t bytes = RecvEx(m_socket, p, size, 0, timeout);
+      ssize_t bytes = read(p, size, timeout);
       if (bytes <= 0)
          return false;
       size -= bytes;
       p += bytes;
+   }
+   return true;
+}
+
+/**
+ * Skip given number of bytes
+ */
+bool SocketConnection::skip(size_t bytes, uint32_t timeout)
+{
+   char buffer[1024];
+   while(bytes > 0)
+   {
+      if (!readFully(buffer, std::min(bytes, static_cast<size_t>(1024)), timeout))
+         return false;
+      bytes -= std::min(bytes, static_cast<size_t>(1024));
    }
    return true;
 }
@@ -160,48 +228,66 @@ void SocketConnection::disconnect()
 }
 
 /**
- * Wait for specific text in input stream. All data up to given text are discarded.
+ * Wait for specific pattern in input stream. All data up to given pattern is discarded.
  */
-bool SocketConnection::waitForText(const char *text, uint32_t timeout)
+bool SocketConnection::waitForData(const void *pattern, size_t patternSize, uint32_t timeout)
 {
-	size_t textLen = strlen(text);
-	size_t bufLen = strlen(m_data);
+   if (m_dataSize >= patternSize)
+   {
+      void *p = memmem(&m_data[m_dataReadPos], m_dataSize, pattern, patternSize);
+      if (p != nullptr)
+      {
+         size_t index = static_cast<size_t>(static_cast<char*>(p) - m_data);
+         size_t consumedBytes = index - m_dataReadPos + patternSize;
+         m_dataSize -= consumedBytes;
+         if (m_dataSize > 0)
+            m_dataReadPos += consumedBytes;
+         else
+            m_dataReadPos = 0;
+         return true;
+      }
 
-	char *p = strstr(m_data, text);
-	if (p != nullptr)
-	{
-		size_t index = static_cast<size_t>(p - m_data);
-		m_dataPos = bufLen - (index + textLen);
-		memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos + 1);
-		return true;
-	}
+      // Discard all bytes in buffer except last size-1 bytes
+      if (m_dataSize > patternSize - 1)
+      {
+         m_dataReadPos += (m_dataSize - patternSize - 1);
+         m_dataSize = patternSize - 1;
+      }
+   }
 
-	m_dataPos = std::min(bufLen, textLen - 1);
-	memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos + 1);
+   if ((m_dataSize > 0) && (m_dataReadPos > 0))
+   {
+      memmove(m_data, &m_data[m_dataReadPos], m_dataSize);
+      m_dataReadPos = 0;
+   }
 
 	while (true)
 	{
-		if (!canRead(timeout))
-			return false;
-
-      ssize_t size = read(&m_data[m_dataPos], 4095 - m_dataPos);
-      if ((size <= 0) && (WSAGetLastError() != WSAEWOULDBLOCK) && (WSAGetLastError() != WSAEINPROGRESS))
+      ssize_t bytes = RecvEx(m_socket, &m_data[m_dataSize], sizeof(m_data) - m_dataSize, 0, timeout);
+      if (bytes <= 0)
+      {
+         if ((WSAGetLastError() == WSAEWOULDBLOCK) || (WSAGetLastError() == WSAEINPROGRESS))
+            continue;
          return false;
+      }
 
-		m_data[size + m_dataPos] = 0;
-		bufLen = strlen(m_data);
+      m_dataSize += bytes;
+      if (m_dataSize < patternSize)
+         continue;
 
-		p = strstr(m_data, text);
+		void *p = memmem(m_data, m_dataSize, pattern, patternSize);
 		if (p != nullptr)
 		{
-			size_t index = static_cast<size_t>(p - m_data);
-			m_dataPos = bufLen - (index + textLen);
-			memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos + 1);
-			return true;
+         size_t index = static_cast<size_t>(static_cast<char*>(p) - m_data);
+         size_t consumedBytes = index + patternSize;
+         m_dataSize -= consumedBytes;
+         if (m_dataSize > 0)
+            m_dataReadPos = consumedBytes;
+         return true;
 		}
 
-		m_dataPos = std::min(bufLen, textLen - 1);
-		memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos);
+		memmove(m_data, &m_data[m_dataSize - patternSize - 1], patternSize - 1);
+      m_dataSize = patternSize - 1;
 	}
 }
 
@@ -249,7 +335,7 @@ bool TelnetConnection::connect(const InetAddress& ip, uint16_t port, uint32_t ti
 /**
  * Read data from socket
  */
-ssize_t TelnetConnection::read(void *buffer, size_t size, uint32_t timeout)
+ssize_t TelnetConnection::readFromSocket(void *buffer, size_t size, uint32_t timeout)
 {
 retry:
    ssize_t bytesRead = RecvEx(m_socket, buffer, size, 0, timeout);
@@ -322,15 +408,16 @@ ssize_t TelnetConnection::readLine(char *buffer, size_t size, uint32_t timeout)
 {
    ssize_t numOfChars = 0;
    ssize_t bytesRead = 0;
-   while (true) {
+   while (true)
+   {
       bytesRead = read(buffer + numOfChars, 1, timeout);
-      if (bytesRead <= 0) {
+      if (bytesRead <= 0)
          break;
-      }
 
       if (buffer[numOfChars] == 0x0d || buffer[numOfChars] == 0x0a)
       {
-         if (numOfChars == 0) {
+         if (numOfChars == 0)
+         {
             // ignore leading new line characters
          }
          else
