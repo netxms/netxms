@@ -1596,7 +1596,6 @@ ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *sessio
 
       TCHAR *cmd = request->getFieldAsString(VID_COMMAND);
       m_cmd = MemCopyString(object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, inputFields, nullptr));
-      MemFree(cmd);
 
       if (request->getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0)
       {
@@ -1612,6 +1611,7 @@ ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *sessio
          m_maskedCommand = StringBuffer(m_cmd);
       }
       delete inputFields;
+      MemFree(cmd);
    }
 
    m_sendOutput = request->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
