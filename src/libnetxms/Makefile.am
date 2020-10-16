@@ -5,8 +5,8 @@ libnetxms_la_SOURCES = \
 	cc_utf8.cpp cch.cpp cert.cpp config.cpp crypto.cpp debug_tag_tree.cpp \
 	diff.cpp dirw_unix.c geolocation.cpp getopt.c getoptw.c dload.cpp hash.cpp \
 	hashmapbase.cpp hashsetbase.cpp ice.c icmp.cpp icmp6.cpp iconv.cpp inet_pton.c \
-	inetaddr.cpp log.cpp lz4.c main.cpp macaddr.cpp md5.cpp mempool.cpp message.cpp \
-	msgrecv.cpp msgwq.cpp net.cpp nxcp.cpp npipe.cpp npipe_unix.cpp \
+	inetaddr.cpp log.cpp lz4.c main.cpp macaddr.cpp md5.cpp memmem.c mempool.cpp \
+	message.cpp msgrecv.cpp msgwq.cpp net.cpp nxcp.cpp npipe.cpp npipe_unix.cpp \
 	pa.cpp procexec.cpp qsort.c queue.cpp rbuffer.cpp rwlock.cpp scandir.c serial.cpp \
 	sha1.cpp sha2.cpp socket_listener.cpp spoll.cpp streamcomp.cpp \
 	string.cpp stringlist.cpp strlcat.c strlcpy.c strmap.cpp \

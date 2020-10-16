@@ -4119,6 +4119,10 @@ int LIBNETXMS_EXPORTABLE wcscasecmp(const wchar_t *s1, const wchar_t *s2);
 int LIBNETXMS_EXPORTABLE wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
 #endif
 
+#if !HAVE_MEMMEM
+void LIBNETXMS_EXPORTABLE *memmem(const void *h0, size_t k, const void *n0, size_t l);
+#endif
+
 #if !defined(_WIN32) && (!HAVE_WCSFTIME || !WORKING_WCSFTIME)
 size_t LIBNETXMS_EXPORTABLE nx_wcsftime(WCHAR *buffer, size_t bufsize, const WCHAR *format, const struct tm *t);
 #undef wcsftime
