@@ -2743,7 +2743,7 @@ AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 
-AC_CHECK_FUNCS([gettimeofday memmove memset bcopy strchr strcspn strdup])
+AC_CHECK_FUNCS([gettimeofday memmove memset memmem bcopy strchr strcspn strdup])
 AC_CHECK_FUNCS([strrchr strlwr strtok_r strtol strtoul strtoll strtoull])
 AC_CHECK_FUNCS([strlcpy strlcat setlocale strerror strerror_r toupper])
 AC_CHECK_FUNCS([tolower if_nametoindex daemon mmap scandir uname poll])
