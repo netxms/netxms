@@ -32,6 +32,53 @@
 #define DEBUG_TAG_NTCB  _T("ntcb")
 
 /**
+ * Telemetry data types
+ */
+enum class TelemetryDataType
+{
+   U64,    // uint64_t
+   U32,    // uint32_t
+   U16,    // uint16_t
+   U8,     // uint8_t, unsigned char
+   I64,    // int64_t
+   I32,    // int32_t
+   I16,    // int16_t
+   I8,     // int8_t, char
+   F32,    // float
+   F64,    // double,
+   STRUCT  // structure
+};
+
+/**
+ * Received telemetry value
+ */
+union TelemetryValue
+{
+   uint64_t u64;
+   uint32_t u32;
+   uint16_t u16;
+   uint8_t u8;
+   int64_t i64;
+   int32_t i32;
+   int16_t i16;
+   int8_t i8;
+   float f32;
+   double f64;
+   BYTE raw[8];
+};
+
+/**
+ * Telemetry field definition
+ */
+struct TelemetryField
+{
+   size_t size;
+   TelemetryDataType dataType;
+   const TCHAR *name;  // Parameter name if value can be pushed directly or nullptr
+   void (*handler)(TelemetryDataType, TelemetryValue, shared_ptr<MobileDevice>);   // Custom handler or nullptr
+};
+
+/**
  * NTCB device session
  */
 class NTCBDeviceSession
@@ -46,6 +93,7 @@ private:
    int m_flexStructVersion;
    int m_flexFieldCount;
    uint8_t m_flexFieldMask[32];
+   shared_ptr<MobileDevice> m_device;
 
    void readThread();
    void processNTCBMessage(const void *data, size_t size);
@@ -65,5 +113,7 @@ public:
 
    bool start();
 };
+
+extern uint32_t g_ntcbSocketTimeout;
 
 #endif

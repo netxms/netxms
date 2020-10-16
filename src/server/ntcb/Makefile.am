@@ -1,7 +1,7 @@
 MODULE = ntcb
 
 pkglib_LTLIBRARIES = ntcb.la
-ntcb_la_SOURCES = main.cpp session.cpp
+ntcb_la_SOURCES = main.cpp session.cpp telemetry.cpp
 ntcb_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 ntcb_la_LDFLAGS = -module -avoid-version
 ntcb_la_LIBADD = ../../libnetxms/libnetxms.la ../libnxsrv/libnxsrv.la ../core/libnxcore.la

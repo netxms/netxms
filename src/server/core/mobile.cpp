@@ -36,6 +36,7 @@ MobileDevice::MobileDevice() : super()
  */
 MobileDevice::MobileDevice(const TCHAR *name, const TCHAR *deviceId) : super(name), m_deviceId(deviceId)
 {
+   m_commProtocol[0] = 0;
 	m_lastReportTime = 0;
 	m_batteryLevel = -1;
 }
