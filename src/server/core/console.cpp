@@ -1116,7 +1116,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             NXMODULE_METADATA *m = CURRENT_MODULE.metadata;
             if (m != nullptr)
-               ConsolePrintf(pCtx, _T("   %-24s %-12s %s\n"), CURRENT_MODULE.szName, m->moduleVersion, m->vendor);
+               ConsolePrintf(pCtx, _T("   %-24s %-12hs %hs\n"), CURRENT_MODULE.szName, m->moduleVersion, m->vendor);
             else
                ConsolePrintf(pCtx, _T("   %-24s (module metadata unavailable)\n"), CURRENT_MODULE.szName);
          }

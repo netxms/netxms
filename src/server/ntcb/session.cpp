@@ -24,7 +24,10 @@
 
 #define DEBUG_TAG_NTCB_SESSION   DEBUG_TAG_NTCB _T(".session")
 
-static uint32_t g_ntcbSocketTimeout = 60000;
+/**
+ * Socket timeout for NTCB
+ */
+uint32_t g_ntcbSocketTimeout = 60000;
 
 static uint32_t s_sessionId = 0;
 
@@ -205,7 +208,7 @@ void NTCBDeviceSession::readThread()
          m_ntcbReceiverId = header.receiverId;
 
 #if WORDS_BIGENDIAN
-         // Fixme: swap header fields
+         // Fixme: swap header fields?
 #endif
 
          void *data;
@@ -241,6 +244,11 @@ void NTCBDeviceSession::readThread()
       }
       else if (preamble == '~') // FLEX message
       {
+         if (m_device == nullptr)
+         {
+            debugPrintf(4, _T("FLEX message from unregistered device"));
+            break;
+         }
          processFLEXMessage();
       }
    }
@@ -265,12 +273,24 @@ void NTCBDeviceSession::processNTCBMessage(const void *data, size_t size)
    if ((size > 4) && !memcmp(data, "*>S:", 4))
    {
       // Handshake - device ID
-      char deviceId[32];
+      TCHAR deviceId[32];
       size_t deviceIdLen = std::min(size - 4, static_cast<size_t>(31));
-      memcpy(deviceId, static_cast<const char*>(data) + 4, deviceIdLen);
+      for(size_t i = 0; i < deviceIdLen; i++)
+         deviceId[i] = *(static_cast<const char*>(data) + 4 + i);
       deviceId[deviceIdLen] = 0;
-      debugPrintf(4, _T("Handshake from device %hs"), deviceId);
-      sendNTCBMessage("*<S", 3);
+      debugPrintf(4, _T("Handshake from device %s"), deviceId);
+
+      m_device = FindMobileDeviceByDeviceID(deviceId);
+      if (m_device != nullptr)
+      {
+         debugPrintf(4, _T("Found mobile device object %s [%u]"), m_device->getName(), m_device->getId());
+         sendNTCBMessage("*<S", 3);
+      }
+      else
+      {
+         debugPrintf(4, _T("Cannot find mobile device object with ID %s"), deviceId);
+         m_socket.disconnect();
+      }
    }
    else if ((size > 9) && !memcmp(data, "*>FLEX", 6))
    {
@@ -425,12 +445,4 @@ void NTCBDeviceSession::processExtraordinaryTelemetry()
    memcpy(&response[2], &eventIndex, 4);
    response[6] = crc8(response, 6);
    m_socket.write(response, 7);
-}
-
-/**
- * Read single FLEX telemetry record
- */
-bool NTCBDeviceSession::readTelemetryRecord()
-{
-   return true;
 }
