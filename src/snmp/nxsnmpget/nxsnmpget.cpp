@@ -113,15 +113,23 @@ int GetData(int argc, TCHAR *argv[])
                {
                   _tprintf(_T("No such instance: %s\n"), (const TCHAR *)var->getName().toString());
                }
+               else if (var->getType() == ASN_OPAQUE)
+               {
+                  SNMP_Variable *subvar = var->decodeOpaque();
+                  bool convert = true;
+                  TCHAR typeName[256];
+                  subvar->getValueAsPrintableString(szBuffer, 1024, &convert);
+                  _tprintf(_T("%s [OPAQUE]: [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
+                        convert ? _T("Hex-STRING") : SNMPDataTypeName(subvar->getType(), typeName, 256), szBuffer);
+                  delete subvar;
+               }
                else
                {
 						bool convert = true;
 						TCHAR typeName[256];
-
 						var->getValueAsPrintableString(szBuffer, 1024, &convert);
 						_tprintf(_T("%s [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
-						         convert ? _T("Hex-STRING") : SNMPDataTypeName(var->getType(), typeName, 256),
-                           szBuffer);
+						      convert ? _T("Hex-STRING") : SNMPDataTypeName(var->getType(), typeName, 256), szBuffer);
                }
             }
             delete response;

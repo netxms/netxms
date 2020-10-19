@@ -49,7 +49,7 @@ SNMP_Variable::SNMP_Variable(const TCHAR *name)
  */
 SNMP_Variable::SNMP_Variable(const UINT32 *name, size_t nameLen) : m_name(name, nameLen)
 {
-   m_value = NULL;
+   m_value = nullptr;
    m_type = ASN_NULL;
    m_valueLength = 0;
 }
@@ -59,7 +59,7 @@ SNMP_Variable::SNMP_Variable(const UINT32 *name, size_t nameLen) : m_name(name, 
  */
 SNMP_Variable::SNMP_Variable(const SNMP_ObjectId &name) : m_name(name)
 {
-   m_value = NULL;
+   m_value = nullptr;
    m_type = ASN_NULL;
    m_valueLength = 0;
 }
@@ -70,7 +70,7 @@ SNMP_Variable::SNMP_Variable(const SNMP_ObjectId &name) : m_name(name)
 SNMP_Variable::SNMP_Variable(const SNMP_Variable *src)
 {
    m_valueLength = src->m_valueLength;
-   m_value = (src->m_value != NULL) ? MemCopyBlock(src->m_value, src->m_valueLength) : NULL;
+   m_value = (src->m_value != nullptr) ? MemCopyBlock(src->m_value, src->m_valueLength) : nullptr;
    m_type = src->m_type;
    m_name = src->m_name;
 }
@@ -80,25 +80,24 @@ SNMP_Variable::SNMP_Variable(const SNMP_Variable *src)
  */
 SNMP_Variable::~SNMP_Variable()
 {
-   free(m_value);
+   MemFree(m_value);
 }
 
 /**
- * Parse variable record in PDU
+ * Decode variable record in PDU
  */
-bool SNMP_Variable::parse(const BYTE *data, size_t varLength)
+bool SNMP_Variable::decode(const BYTE *data, size_t varLength)
 {
-   const BYTE *pbCurrPos;
-   UINT32 type;
-   size_t length, dwIdLength;
-   bool bResult = false;
-
    // Object ID
+   uint32_t type;
+   size_t length, dwIdLength;
+   const BYTE *pbCurrPos;
    if (!BER_DecodeIdentifier(data, varLength, &type, &length, &pbCurrPos, &dwIdLength))
       return false;
    if (type != ASN_OBJECT_ID)
       return false;
 
+   bool success = false;
    SNMP_OID oid;
    memset(&oid, 0, sizeof(SNMP_OID));
    if (BER_DecodeContent(type, pbCurrPos, length, (BYTE *)&oid))
@@ -106,54 +105,74 @@ bool SNMP_Variable::parse(const BYTE *data, size_t varLength)
       m_name.setValue(oid.value, (size_t)oid.length);
       varLength -= length + dwIdLength;
       pbCurrPos += length;
-      bResult = TRUE;
+      success = true;
    }
    MemFree(oid.value);
 
-   if (bResult)
-   {
-      bResult = FALSE;
-      if (BER_DecodeIdentifier(pbCurrPos, varLength, &m_type, &length, &pbCurrPos, &dwIdLength))
-      {
-         switch(m_type)
-         {
-            case ASN_OBJECT_ID:
-               memset(&oid, 0, sizeof(SNMP_OID));
-               if (BER_DecodeContent(m_type, pbCurrPos, length, (BYTE *)&oid))
-               {
-                  m_valueLength = oid.length * sizeof(uint32_t);
-                  m_value = (BYTE *)oid.value;
-                  bResult = true;
-               }
-               else
-               {
-                  MemFree(oid.value);
-               }
-               break;
-            case ASN_INTEGER:
-            case ASN_COUNTER32:
-            case ASN_GAUGE32:
-            case ASN_TIMETICKS:
-            case ASN_UINTEGER32:
-               m_valueLength = sizeof(uint32_t);
-               m_value = (BYTE *)MemAlloc(8);
-               bResult = BER_DecodeContent(m_type, pbCurrPos, length, m_value);
-               break;
-		      case ASN_COUNTER64:
-               m_valueLength = sizeof(uint64_t);
-               m_value = (BYTE *)MemAlloc(16);
-               bResult = BER_DecodeContent(m_type, pbCurrPos, length, m_value);
-               break;
-            default:
-               m_valueLength = length;
-               m_value = MemCopyBlock(pbCurrPos, length);
-               bResult = TRUE;
-               break;
-         }
-      }
-   }
+   if (success)
+      success = decodeContent(pbCurrPos, varLength - length - dwIdLength, false);
 
-   return bResult;
+   return success;
+}
+
+/**
+ * Decode varbind content
+ */
+bool SNMP_Variable::decodeContent(const BYTE *data, size_t dataLength, bool enclosedInOpaque)
+{
+   const BYTE *pbCurrPos;
+   size_t length, dwIdLength;
+   if (!BER_DecodeIdentifier(data, dataLength, &m_type, &length, &pbCurrPos, &dwIdLength))
+      return false;
+
+   if (enclosedInOpaque && (m_type >= ASN_OPAQUE_TAG2))
+      m_type -= ASN_OPAQUE_TAG2;
+
+   bool success = false;
+   switch(m_type)
+   {
+      case ASN_OBJECT_ID:
+         SNMP_OID oid;
+         memset(&oid, 0, sizeof(SNMP_OID));
+         if (BER_DecodeContent(m_type, pbCurrPos, length, reinterpret_cast<BYTE*>(&oid)))
+         {
+            m_valueLength = oid.length * sizeof(uint32_t);
+            m_value = reinterpret_cast<BYTE*>(oid.value);
+            success = true;
+         }
+         else
+         {
+            MemFree(oid.value);
+         }
+         break;
+      case ASN_INTEGER:
+      case ASN_COUNTER32:
+      case ASN_GAUGE32:
+      case ASN_TIMETICKS:
+      case ASN_UINTEGER32:
+         m_valueLength = sizeof(uint32_t);
+         m_value = (BYTE *)MemAlloc(8);
+         success = BER_DecodeContent(m_type, pbCurrPos, length, m_value);
+         break;
+      case ASN_COUNTER64:
+      case ASN_INTEGER64:
+      case ASN_UINTEGER64:
+         m_valueLength = sizeof(uint64_t);
+         m_value = (BYTE *)MemAlloc(16);
+         success = BER_DecodeContent(m_type, pbCurrPos, length, m_value);
+         break;
+      case ASN_FLOAT:
+         m_valueLength = sizeof(float);
+         m_value = (BYTE *)MemAlloc(16);
+         success = BER_DecodeContent(m_type, pbCurrPos, length, m_value);
+         break;
+      default:
+         m_valueLength = length;
+         m_value = MemCopyBlock(pbCurrPos, length);
+         success = true;
+         break;
+   }
+   return success;
 }
 
 /**
@@ -164,7 +183,16 @@ bool SNMP_Variable::isInteger() const
    return (m_type == ASN_INTEGER) || (m_type == ASN_COUNTER32) ||
       (m_type == ASN_GAUGE32) || (m_type == ASN_TIMETICKS) ||
       (m_type == ASN_UINTEGER32) || (m_type == ASN_IP_ADDR) ||
-      (m_type == ASN_COUNTER64);
+      (m_type == ASN_COUNTER64) || (m_type == ASN_INTEGER64) ||
+      (m_type == ASN_UINTEGER64);
+}
+
+/**
+* Check if value can be represented as floating point number
+*/
+bool SNMP_Variable::isFloat() const
+{
+   return isInteger() || (m_type == ASN_DOUBLE) || (m_type == ASN_FLOAT);
 }
 
 /**
@@ -172,7 +200,7 @@ bool SNMP_Variable::isInteger() const
 */
 bool SNMP_Variable::isString() const
 {
-   return isInteger() || (m_type == ASN_OCTET_STRING) || (m_type == ASN_OBJECT_ID);
+   return isFloat() || (m_type == ASN_OCTET_STRING) || (m_type == ASN_OBJECT_ID);
 }
 
 /**
@@ -189,10 +217,8 @@ size_t SNMP_Variable::getRawValue(BYTE *buffer, size_t bufSize) const
 /**
  * Get value as unsigned integer
  */
-UINT32 SNMP_Variable::getValueAsUInt() const
+uint32_t SNMP_Variable::getValueAsUInt() const
 {
-   UINT32 dwValue;
-
    switch(m_type)
    {
       case ASN_INTEGER:
@@ -201,26 +227,25 @@ UINT32 SNMP_Variable::getValueAsUInt() const
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
       case ASN_IP_ADDR:
-         dwValue = *((UINT32 *)m_value);
-         break;
+         return *reinterpret_cast<uint32_t*>(m_value);
       case ASN_COUNTER64:
-         dwValue = (UINT32)(*((UINT64 *)m_value));
-         break;
+      case ASN_INTEGER64:
+      case ASN_UINTEGER64:
+         return static_cast<uint32_t>(*reinterpret_cast<uint64_t*>(m_value));
+      case ASN_FLOAT:
+         return static_cast<uint32_t>(*reinterpret_cast<float*>(m_value));
+      case ASN_DOUBLE:
+         return static_cast<uint32_t>(*reinterpret_cast<double*>(m_value));
       default:
-         dwValue = 0;
-         break;
+         return 0;
    }
-
-   return dwValue;
 }
 
 /**
  * Get value as signed integer
  */
-INT32 SNMP_Variable::getValueAsInt() const
+int32_t SNMP_Variable::getValueAsInt() const
 {
-   LONG iValue;
-
    switch(m_type)
    {
       case ASN_INTEGER:
@@ -229,26 +254,25 @@ INT32 SNMP_Variable::getValueAsInt() const
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
       case ASN_IP_ADDR:
-         iValue = *((LONG *)m_value);
-         break;
+         return *reinterpret_cast<int32_t*>(m_value);
       case ASN_COUNTER64:
-         iValue = (LONG)(*((QWORD *)m_value));
-         break;
+      case ASN_INTEGER64:
+      case ASN_UINTEGER64:
+         return static_cast<int32_t>(*reinterpret_cast<int64_t*>(m_value));
+      case ASN_FLOAT:
+         return static_cast<int32_t>(*reinterpret_cast<float*>(m_value));
+      case ASN_DOUBLE:
+         return static_cast<int32_t>(*reinterpret_cast<double*>(m_value));
       default:
-         iValue = 0;
-         break;
+         return 0;
    }
-
-   return iValue;
 }
 
 /**
  * Get value as 64 bit unsigned integer
  */
-UINT64 SNMP_Variable::getValueAsUInt64() const
+uint64_t SNMP_Variable::getValueAsUInt64() const
 {
-   UINT64 value;
-
    switch(m_type)
    {
       case ASN_INTEGER:
@@ -257,17 +281,74 @@ UINT64 SNMP_Variable::getValueAsUInt64() const
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
       case ASN_IP_ADDR:
-         value = *((UINT32 *)m_value);
-         break;
+         return *reinterpret_cast<uint32_t*>(m_value);
       case ASN_COUNTER64:
-         value = *((UINT64 *)m_value);
-         break;
+      case ASN_INTEGER64:
+      case ASN_UINTEGER64:
+         return *reinterpret_cast<uint64_t*>(m_value);
+      case ASN_FLOAT:
+         return static_cast<uint64_t>(*reinterpret_cast<float*>(m_value));
+      case ASN_DOUBLE:
+         return static_cast<uint64_t>(*reinterpret_cast<double*>(m_value));
       default:
-         value = 0;
-         break;
+         return 0;
    }
+}
 
-   return value;
+/**
+ * Get value as 64 bit signed integer
+ */
+int64_t SNMP_Variable::getValueAsInt64() const
+{
+   switch(m_type)
+   {
+      case ASN_INTEGER:
+      case ASN_COUNTER32:
+      case ASN_GAUGE32:
+      case ASN_TIMETICKS:
+         return *reinterpret_cast<int32_t*>(m_value);
+      case ASN_IP_ADDR:
+      case ASN_UINTEGER32:
+         return *reinterpret_cast<uint32_t*>(m_value);
+      case ASN_COUNTER64:
+      case ASN_INTEGER64:
+      case ASN_UINTEGER64:
+         return *reinterpret_cast<int64_t*>(m_value);
+      case ASN_FLOAT:
+         return static_cast<int64_t>(*reinterpret_cast<float*>(m_value));
+      case ASN_DOUBLE:
+         return static_cast<int64_t>(*reinterpret_cast<double*>(m_value));
+      default:
+         return 0;
+   }
+}
+
+/**
+ * Get value as double precision floating point number
+ */
+double SNMP_Variable::getValueAsDouble() const
+{
+   switch(m_type)
+   {
+      case ASN_INTEGER:
+      case ASN_COUNTER32:
+      case ASN_GAUGE32:
+      case ASN_TIMETICKS:
+         return *reinterpret_cast<int32_t*>(m_value);
+      case ASN_IP_ADDR:
+      case ASN_UINTEGER32:
+         return *reinterpret_cast<uint32_t*>(m_value);
+      case ASN_COUNTER64:
+      case ASN_INTEGER64:
+      case ASN_UINTEGER64:
+         return *reinterpret_cast<int64_t*>(m_value);
+      case ASN_FLOAT:
+         return *reinterpret_cast<float*>(m_value);
+      case ASN_DOUBLE:
+         return *reinterpret_cast<double*>(m_value);
+      default:
+         return 0;
+   }
 }
 
 /**
@@ -276,33 +357,44 @@ UINT64 SNMP_Variable::getValueAsUInt64() const
  */
 TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize) const
 {
-   size_t length;
+   if ((buffer == nullptr) || (bufferSize == 0))
+      return nullptr;
 
-   if ((buffer == NULL) || (bufferSize == 0))
-      return NULL;
+   size_t length;
+   SNMP_Variable *v;
 
    switch(m_type)
    {
       case ASN_INTEGER:
-         _sntprintf(buffer, bufferSize, _T("%d"), *((LONG *)m_value));
+         _sntprintf(buffer, bufferSize, _T("%d"), *reinterpret_cast<int32_t*>(m_value));
          break;
       case ASN_COUNTER32:
       case ASN_GAUGE32:
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
-         _sntprintf(buffer, bufferSize, _T("%u"), *((UINT32 *)m_value));
+         _sntprintf(buffer, bufferSize, _T("%u"), *reinterpret_cast<uint32_t*>(m_value));
+         break;
+      case ASN_INTEGER64:
+         _sntprintf(buffer, bufferSize, INT64_FMT, *reinterpret_cast<int64_t*>(m_value));
          break;
       case ASN_COUNTER64:
-         _sntprintf(buffer, bufferSize, UINT64_FMT, *((QWORD *)m_value));
+      case ASN_UINTEGER64:
+         _sntprintf(buffer, bufferSize, UINT64_FMT, *reinterpret_cast<uint64_t*>(m_value));
+         break;
+      case ASN_FLOAT:
+         _sntprintf(buffer, bufferSize, _T("%f"), *reinterpret_cast<float*>(m_value));
+         break;
+      case ASN_DOUBLE:
+         _sntprintf(buffer, bufferSize, _T("%f"), *reinterpret_cast<double*>(m_value));
          break;
       case ASN_IP_ADDR:
          if (bufferSize >= 16)
-            IpToStr(ntohl(*((UINT32 *)m_value)), buffer);
+            IpToStr(ntohl(*reinterpret_cast<uint32_t*>(m_value)), buffer);
          else
             buffer[0] = 0;
          break;
       case ASN_OBJECT_ID:
-         SNMPConvertOIDToText(m_valueLength / sizeof(UINT32), (UINT32 *)m_value, buffer, bufferSize);
+         SNMPConvertOIDToText(m_valueLength / sizeof(uint32_t), reinterpret_cast<uint32_t*>(m_value), buffer, bufferSize);
          break;
       case ASN_OCTET_STRING:
          length = std::min(bufferSize - 1, m_valueLength);
@@ -329,6 +421,18 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize) const
          }
          buffer[length] = 0;
          break;
+      case ASN_OPAQUE:
+         v = decodeOpaque();
+         if (v != nullptr)
+         {
+            v->getValueAsString(buffer, bufferSize);
+            delete v;
+         }
+         else
+         {
+            buffer[0] = 0;
+         }
+         break;
       default:
          buffer[0] = 0;
          break;
@@ -342,12 +446,12 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize) const
  */
 TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex) const
 {
+   if ((buffer == nullptr) || (bufferSize == 0))
+      return nullptr;
+
    size_t length;
 	bool convertToHexAllowed = *convertToHex;
 	*convertToHex = false;
-
-   if ((buffer == NULL) || (bufferSize == 0))
-      return NULL;
 
    if (m_type == ASN_OCTET_STRING)
 	{
@@ -357,7 +461,7 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
          bool conversionNeeded = false;
          if (convertToHexAllowed)
          {
-            for(UINT32 i = 0; i < length; i++)
+            for(size_t i = 0; i < length; i++)
                if ((m_value[i] < 0x1F) && (m_value[i] != 0x0D) && (m_value[i] != 0x0A))
                {
                   if ((i == length - 1) && (m_value[i] == 0))
@@ -471,11 +575,26 @@ TCHAR *SNMP_Variable::getValueAsIPAddr(TCHAR *buffer) const
 }
 
 /**
+ * Decode opaque value
+ */
+SNMP_Variable *SNMP_Variable::decodeOpaque() const
+{
+   // Length should be at least 4 to accommodate 2 byte tag and inner length
+   if ((m_type != ASN_OPAQUE) || (m_valueLength < 3) || (*m_value != ASN_OPAQUE_TAG1))
+      return nullptr;
+
+   SNMP_Variable *v = new SNMP_Variable(m_name);
+   if (!v->decodeContent(m_value + 1, m_valueLength - 1, true))
+      delete_and_null(v);
+   return v;
+}
+
+/**
  * Encode variable using BER
  * Normally buffer provided should be at least m_valueLength + (name_length * 4) + 12 bytes
  * Return value is number of bytes actually used in buffer
  */
-size_t SNMP_Variable::encode(BYTE *pBuffer, size_t bufferSize)
+size_t SNMP_Variable::encode(BYTE *pBuffer, size_t bufferSize) const
 {
    size_t bytes, dwWorkBufSize;
    BYTE *pWorkBuf;
