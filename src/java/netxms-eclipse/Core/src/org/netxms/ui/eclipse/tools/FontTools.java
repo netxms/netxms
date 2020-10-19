@@ -38,7 +38,6 @@ public class FontTools
    private static Set<String> availableFonts = null;
    private static Map<String, Font> fontCache = new HashMap<String, Font>();  
    
-   
    /**
     * Find first available font from given list
     * 

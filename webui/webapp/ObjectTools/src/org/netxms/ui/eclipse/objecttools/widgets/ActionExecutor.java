@@ -21,9 +21,7 @@ package org.netxms.ui.eclipse.objecttools.widgets;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
@@ -38,7 +36,6 @@ import org.netxms.ui.eclipse.widgets.TextConsole.IOConsoleOutputStream;
 
 /**
  * Action executor widget to run an action and display it's result 
- *
  */
 public class ActionExecutor extends AbstractObjectToolExecutor implements TextOutputListener
 {
@@ -55,13 +52,15 @@ public class ActionExecutor extends AbstractObjectToolExecutor implements TextOu
     * @param parent parent control
     * @param viewPart parent view
     * @param ctx execution context
+    * @param actionSet action set
     * @param tool object tool to execute
     * @param inputValues input values provided by user
     * @param maskedFields list of the fields that should be masked
     */
-   public ActionExecutor(Composite parent, ViewPart viewPart, ObjectContext ctx, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
+   public ActionExecutor(Composite parent, ViewPart viewPart, ObjectContext ctx, ActionSet actionSet, ObjectTool tool,
+         Map<String, String> inputValues, List<String> maskedFields)
    {
-      super(parent, SWT.NONE, viewPart);
+      super(parent, viewPart, ctx, actionSet);
       alarmId = ctx.getAlarmId();
       nodeId = ctx.object.getObjectId();
       this.executionString = tool.getData();
@@ -69,11 +68,14 @@ public class ActionExecutor extends AbstractObjectToolExecutor implements TextOu
       this.maskedFields = maskedFields;
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#execute()
+    */
    @Override
    public void execute()
    {
-      enableRestartAction(false);
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      setRunning(true);
+      final NXCSession session = ConsoleSharedData.getSession();
       out = console.newOutputStream();
       ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
          @Override
@@ -104,7 +106,7 @@ public class ActionExecutor extends AbstractObjectToolExecutor implements TextOu
                @Override
                public void run()
                {
-                  enableRestartAction(true);
+                  setRunning(false);
                }
             });
          }
@@ -115,8 +117,7 @@ public class ActionExecutor extends AbstractObjectToolExecutor implements TextOu
 
    }
 
-
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
     */
    @Override
@@ -132,7 +133,7 @@ public class ActionExecutor extends AbstractObjectToolExecutor implements TextOu
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override
@@ -152,14 +153,19 @@ public class ActionExecutor extends AbstractObjectToolExecutor implements TextOu
       super.dispose();
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#setStreamId(long)
+    */
    @Override
    public void setStreamId(long streamId)
    {      
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onError()
+    */
    @Override
    public void onError()
    {
    }
-
 }

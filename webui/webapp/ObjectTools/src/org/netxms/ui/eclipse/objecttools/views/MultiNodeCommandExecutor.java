@@ -19,34 +19,44 @@
 package org.netxms.ui.eclipse.objecttools.views;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.objects.ObjectContext;
+import org.netxms.ui.eclipse.objecttools.Activator;
+import org.netxms.ui.eclipse.objecttools.Messages;
+import org.netxms.ui.eclipse.objecttools.views.helpers.ExecutorListLabelProvider;
 import org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor;
 import org.netxms.ui.eclipse.objecttools.widgets.ActionExecutor;
 import org.netxms.ui.eclipse.objecttools.widgets.ServerCommandExecutor;
 import org.netxms.ui.eclipse.objecttools.widgets.ServerScriptExecutor;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.objecttools.widgets.helpers.ExecutorStateChangeListener;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -54,97 +64,190 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class MultiNodeCommandExecutor extends ViewPart
 {
-   public static final String ID = "org.netxms.ui.eclipse.objecttools.views.MultiNodeCommandResults"; //$NON-NLS-1$
-   
+   public static final String ID = "org.netxms.ui.eclipse.objecttools.views.MultiNodeCommandExecutor"; //$NON-NLS-1$
+
+   private SashForm splitter;
    private SortableTableViewer viewer;
    private Composite resultArea;
-   private HashMap<Long, AbstractObjectToolExecutor> resultMap;
-   private AbstractNode curentlySelected = null;
-   
-   	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   private List<AbstractObjectToolExecutor> executors = new ArrayList<AbstractObjectToolExecutor>();
+   private AbstractObjectToolExecutor currentExecutor = null;
+   private AbstractObjectToolExecutor.ActionSet actions;
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{      
-      GridLayout layout = new GridLayout();
-      layout.verticalSpacing = WidgetHelper.INNER_SPACING;
-      layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
-      layout.marginTop = 0;
-      layout.marginBottom = 0;
-      layout.marginWidth = 0;
-      layout.marginHeight = 0;
-      parent.setLayout(layout);
+      parent.setLayout(new FillLayout());
       
-		//Create table with all nodes 
-      final String[] names = { "Name" };
-      final int[] widths = { 200 };
-      viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER);
+      splitter = new SashForm(parent, SWT.VERTICAL);
+
+      Composite topPart = new Composite(splitter, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      topPart.setLayout(layout);
+
+      final String[] names = { "Name", "Status" };
+      final int[] widths = { 600, 200 };
+      viewer = new SortableTableViewer(topPart, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new LabelProvider() {
-         @Override
-         public String getText(Object element)
-         {
-            return ((AbstractNode)element).getObjectName();
-         }
-      });
+      viewer.setLabelProvider(new ExecutorListLabelProvider());
       viewer.setComparator(new ViewerComparator() {
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
-            AbstractNode s1 = (AbstractNode)e1;
-            AbstractNode s2 = (AbstractNode)e2;
-            int result = s1.getObjectName().compareToIgnoreCase(s2.getObjectName());
+            AbstractObjectToolExecutor s1 = (AbstractObjectToolExecutor)e1;
+            AbstractObjectToolExecutor s2 = (AbstractObjectToolExecutor)e2;
+            int result = s1.getObject().getObjectName().compareToIgnoreCase(s2.getObject().getObjectName());
             return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
          }
       });
-      
-      GridData gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.verticalAlignment = SWT.FILL;
-      gd.grabExcessVerticalSpace = true;
-      viewer.getControl().setLayoutData(gd);
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-         
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-            if (selection == null)
-               return;
-
-            AbstractNode element = (AbstractNode)selection.getFirstElement();    
-
-            if (curentlySelected != null)
-               resultMap.get(curentlySelected.getObjectId()).hide();
-
-            resultMap.get(element.getObjectId()).show();
-            curentlySelected = element;
+            onSelectionChange();
          }
       });
-      
+      viewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.verticalAlignment = SWT.FILL;
-      gd.grabExcessVerticalSpace = true;
-      resultArea = new Composite(parent, SWT.NONE); //this composite will contain resulting bar and test
-      resultArea.setLayoutData(gd);
-      
+      new Label(topPart, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
+
+      Composite bottomPart = new Composite(splitter, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      bottomPart.setLayout(layout);
+
+      new Label(bottomPart, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
+
+      resultArea = new Composite(bottomPart, SWT.NONE); // this composite will contain resulting bar and test
+      resultArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      resultArea.addControlListener(new ControlAdapter() {
+         @Override
+         public void controlResized(ControlEvent e)
+         {
+            Rectangle clientArea = resultArea.getClientArea();
+            for(Control c : resultArea.getChildren())
+               c.setSize(clientArea.width, clientArea.height);
+         }
+      });
+
+      createActions();
 		activateContext();
 	}
+
+   /**
+    * Create actions
+    */
+   protected void createActions()
+   {
+      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+
+      actions = new AbstractObjectToolExecutor.ActionSet();
+
+      actions.actionClear = new Action(Messages.get().LocalCommandResults_ClearConsole, SharedIcons.CLEAR_LOG) {
+         @Override
+         public void run()
+         {
+            if (currentExecutor != null)
+               currentExecutor.clearOutput();
+         }
+      };
+      actions.actionClear.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.clear_output"); //$NON-NLS-1$
+      handlerService.activateHandler(actions.actionClear.getActionDefinitionId(), new ActionHandler(actions.actionClear));
+
+      actions.actionScrollLock = new Action(Messages.get().LocalCommandResults_ScrollLock, Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            if (currentExecutor != null)
+               currentExecutor.setAutoScroll(!actions.actionScrollLock.isChecked());
+         }
+      };
+      actions.actionScrollLock.setImageDescriptor(Activator.getImageDescriptor("icons/scroll_lock.gif")); //$NON-NLS-1$
+      actions.actionScrollLock.setChecked(false);
+      actions.actionScrollLock.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.scroll_lock"); //$NON-NLS-1$
+      handlerService.activateHandler(actions.actionScrollLock.getActionDefinitionId(), new ActionHandler(actions.actionScrollLock));
+
+      actions.actionCopy = new Action(Messages.get().LocalCommandResults_Copy) {
+         @Override
+         public void run()
+         {
+            if (currentExecutor != null)
+               currentExecutor.copyOutput();
+         }
+      };
+      actions.actionCopy.setEnabled(false);
+      actions.actionCopy.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.copy"); //$NON-NLS-1$
+      handlerService.activateHandler(actions.actionCopy.getActionDefinitionId(), new ActionHandler(actions.actionCopy));
+
+      actions.actionSelectAll = new Action(Messages.get().LocalCommandResults_SelectAll) {
+         @Override
+         public void run()
+         {
+            if (currentExecutor != null)
+               currentExecutor.selectAll();
+         }
+      };
+      actions.actionSelectAll.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.select_all"); //$NON-NLS-1$
+      handlerService.activateHandler(actions.actionSelectAll.getActionDefinitionId(), new ActionHandler(actions.actionSelectAll));
+
+      actions.actionRestart = new Action(Messages.get().LocalCommandResults_Restart, SharedIcons.RESTART) {
+         @Override
+         public void run()
+         {
+            if (currentExecutor != null)
+               currentExecutor.execute();
+         }
+      };
+      actions.actionRestart.setEnabled(false);
+
+      actions.actionTerminate = new Action(Messages.get().LocalCommandResults_Terminate, SharedIcons.TERMINATE) {
+         @Override
+         public void run()
+         {
+            if (currentExecutor != null)
+               currentExecutor.terminate();
+         }
+      };
+      actions.actionTerminate.setEnabled(false);
+      actions.actionTerminate.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.terminate_process"); //$NON-NLS-1$
+      handlerService.activateHandler(actions.actionTerminate.getActionDefinitionId(), new ActionHandler(actions.actionTerminate));
+   }
+
+   /**
+    * Handler for viewer selection change
+    */
+   private void onSelectionChange()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection == null)
+         return;
+
+      AbstractObjectToolExecutor executor = (AbstractObjectToolExecutor)selection.getFirstElement();
+      if (currentExecutor != executor)
+      {
+         if (currentExecutor != null)
+            currentExecutor.hide();
+         currentExecutor = executor;
+         if (currentExecutor != null)
+            currentExecutor.show();
+      }
+   }
 
 	/**
 	 * Activate context
@@ -171,40 +274,44 @@ public class MultiNodeCommandExecutor extends ViewPart
          List<String> expandedText)
    {
       setPartName(tool.getDisplayName()); //$NON-NLS-1$
+      executors.clear();
       
-      List<AbstractNode> nodeList = new ArrayList<AbstractNode>();   
-      resultMap = new HashMap<Long, AbstractObjectToolExecutor>();
-
-      int i = 0;
       for(final ObjectContext ctx : nodes)
       {
-         AbstractObjectToolExecutor result = null;
+         final AbstractObjectToolExecutor executor;
          switch(tool.getToolType())
          {
             case ObjectTool.TYPE_ACTION:
-               result = new ActionExecutor(resultArea, this, ctx, tool, inputValues, maskedFields);
+               executor = new ActionExecutor(resultArea, this, ctx, actions, tool, inputValues, maskedFields);
                break;
-               /*
-            case ObjectTool.TYPE_LOCAL_COMMAND:
-               final String tmp = expandedText.get(i++);
-               result = new LocalCommandExecutor(resultArea, this, tmp);
-               break;
-               */
             case ObjectTool.TYPE_SERVER_COMMAND:
-               result = new ServerCommandExecutor(resultArea, this, ctx.object, tool, inputValues, maskedFields);
+               executor = new ServerCommandExecutor(resultArea, this, ctx, actions, tool, inputValues, maskedFields);
                break;
             case ObjectTool.TYPE_SERVER_SCRIPT:
-               result = new ServerScriptExecutor(resultArea, this, ctx, tool, inputValues);
+               executor = new ServerScriptExecutor(resultArea, this, ctx, actions, tool, inputValues);
+               break;
+            default:
+               executor = null;
                break;
          }
-         nodeList.add(ctx.object);
-         result.execute();
-         resultMap.put(ctx.object.getObjectId(), result);
+         executor.addStateChangeListener(new ExecutorStateChangeListener() {
+            @Override
+            public void runningStateChanged(boolean running)
+            {
+               viewer.update(executor, null);
+            }
+         });
+         executors.add(executor);
+         executor.execute();
       }
-      viewer.setInput(nodeList);  
-      viewer.setSelection(new StructuredSelection(nodeList.get(0)), true);      
+      viewer.setInput(executors.toArray());
+      viewer.getTable().setSelection(0);
+      onSelectionChange();
    }
 
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
    @Override
    public void setFocus()
    {

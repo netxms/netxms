@@ -20,9 +20,7 @@ package org.netxms.ui.eclipse.objecttools.widgets;
 
 import java.io.IOException;
 import java.util.Map;
-
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
@@ -52,22 +50,26 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor implements 
     * @param resultArea parent composite for result
     * @param viewPart parent view
     * @param ctx execution context
+    * @param actionSet action set
     * @param tool object tool to execute
     * @param inputValues input values for execution
     */
-   public ServerScriptExecutor(Composite resultArea, ViewPart viewPart, ObjectContext ctx, ObjectTool tool, Map<String, String> inputValues)
+   public ServerScriptExecutor(Composite resultArea, ViewPart viewPart, ObjectContext ctx, ActionSet actionSet, ObjectTool tool, Map<String, String> inputValues)
    {
-      super(resultArea, SWT.NONE, viewPart); 
+      super(resultArea, viewPart, ctx, actionSet);
       script = tool.getData();
       alarmId = ctx.alarm != null ? ctx.alarm.getId() : 0;
       nodeId = ctx.object.getObjectId();
       this.inputValues = inputValues;
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#execute()
+    */
    @Override
    public void execute()
    {
-      enableRestartAction(false);
+      setRunning(true);
       final NXCSession session = ConsoleSharedData.getSession();
       out = console.newOutputStream();
       ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
@@ -101,7 +103,7 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor implements 
                @Override
                public void run()
                {
-                  enableRestartAction(true);
+                  setRunning(false);
                }
             });
          }
@@ -111,8 +113,7 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor implements 
       job.start();
    }
 
-
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
     */
    @Override
@@ -128,8 +129,8 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor implements 
       }
    }
 
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+   /**
+    * @see org.eclipse.swt.widgets.Widget#dispose()
     */
    @Override
    public void dispose()
@@ -148,11 +149,17 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor implements 
       super.dispose();
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#setStreamId(long)
+    */
    @Override
    public void setStreamId(long streamId)
    {
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onError()
+    */
    @Override
    public void onError()
    {

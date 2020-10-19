@@ -31,6 +31,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.netxms.ui.eclipse.widgets.ansi.AnsiCommands;
 import org.netxms.ui.eclipse.widgets.ansi.AnsiConsoleAttributes;
 import org.netxms.ui.eclipse.widgets.ansi.AnsiConsoleColorPalette;
@@ -318,6 +319,16 @@ public class TextConsole extends Composite implements LineStyleListener
       }
       ranges.add(range);
       lastRangeEnd = lastRangeEnd + range.length;
+   }
+   
+   /**
+    * Get control for this console
+    * 
+    * @return control for this console
+    */
+   public Control getConsoleControl()
+   {
+      return console.getControl();
    }
    
    /**
