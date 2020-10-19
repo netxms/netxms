@@ -171,9 +171,9 @@ enum SNMP_ErrorCode
    SNMP_PDU_ERR_INCONSISTENT_NAME    = 18
 };
 
-//
-// ASN.1 identifier types
-//
+/**
+ * ASN.1 identifier types
+ */
 #define ASN_INTEGER                 0x02
 #define ASN_BIT_STRING              0x03
 #define ASN_OCTET_STRING            0x04
@@ -188,6 +188,10 @@ enum SNMP_ErrorCode
 #define ASN_NSAP_ADDR               0x45
 #define ASN_COUNTER64               0x46
 #define ASN_UINTEGER32              0x47
+#define ASN_FLOAT                   0x48
+#define ASN_DOUBLE                  0x49
+#define ASN_INTEGER64               0x4A
+#define ASN_UINTEGER64              0x4B
 #define ASN_NO_SUCH_OBJECT          0x80
 #define ASN_NO_SUCH_INSTANCE        0x81
 #define ASN_END_OF_MIBVIEW          0x82
@@ -200,6 +204,17 @@ enum SNMP_ErrorCode
 #define ASN_INFORM_REQUEST_PDU      0xA6
 #define ASN_TRAP_V2_PDU             0xA7
 #define ASN_REPORT_PDU              0xA8
+
+/**
+ * ASN.1 identifier for opaque field
+ */
+#define ASN_OPAQUE_TAG1             0x9F  /* First byte: 0x80 | 0x1F */
+#define ASN_OPAQUE_TAG2             0x30  /* Base value for second byte */
+#define ASN_OPAQUE_COUNTER64        (ASN_OPAQUE_TAG2 + ASN_COUNTER64)
+#define ASN_OPAQUE_DOUBLE           (ASN_OPAQUE_TAG2 + ASN_DOUBLE)
+#define ASN_OPAQUE_FLOAT            (ASN_OPAQUE_TAG2 + ASN_FLOAT)
+#define ASN_OPAQUE_INTEGER64        (ASN_OPAQUE_TAG2 + ASN_INTEGER64)
+#define ASN_OPAQUE_UINTEGER64       (ASN_OPAQUE_TAG2 + ASN_UINTEGER64)
 
 /**
  * Security models
@@ -430,6 +445,8 @@ private:
    size_t m_valueLength;
    BYTE *m_value;
 
+   bool decodeContent(const BYTE *data, size_t dataLength, bool enclosedInOpaque);
+
 public:
    SNMP_Variable();
    SNMP_Variable(const TCHAR *name);
@@ -438,25 +455,30 @@ public:
    SNMP_Variable(const SNMP_Variable *src);
    ~SNMP_Variable();
 
-   bool parse(const BYTE *data, size_t varLength);
-   size_t encode(BYTE *buffer, size_t bufferSize);
+   bool decode(const BYTE *data, size_t varLength);
+   size_t encode(BYTE *buffer, size_t bufferSize) const;
 
    const SNMP_ObjectId& getName() const { return m_name; }
    UINT32 getType() const { return m_type; }
    bool isInteger() const;
+   bool isFloat() const;
    bool isString() const;
    size_t getValueLength() const { return m_valueLength; }
    const BYTE *getValue() const { return m_value; }
 
 	size_t getRawValue(BYTE *buffer, size_t bufSize) const;
-   INT32 getValueAsInt() const;
-   UINT32 getValueAsUInt() const;
-   UINT64 getValueAsUInt64() const;
+   int32_t getValueAsInt() const;
+   uint32_t getValueAsUInt() const;
+   int64_t getValueAsInt64() const;
+   uint64_t getValueAsUInt64() const;
+   double getValueAsDouble() const;
    TCHAR *getValueAsString(TCHAR *buffer, size_t bufferSize) const;
    TCHAR *getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex) const;
    SNMP_ObjectId getValueAsObjectId() const;
    MacAddress getValueAsMACAddr() const;
    TCHAR *getValueAsIPAddr(TCHAR *buffer) const;
+
+   SNMP_Variable *decodeOpaque() const;
 
    void setValueFromString(uint32_t type, const TCHAR *value);
 };

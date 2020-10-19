@@ -162,15 +162,14 @@ SNMP_PDU::~SNMP_PDU()
 /**
  * Parse single variable binding
  */
-bool SNMP_PDU::parseVariable(const BYTE *pData, size_t varLength)
+bool SNMP_PDU::parseVariable(const BYTE *data, size_t varLength)
 {
-   SNMP_Variable *var;
-   bool success = true;
-
-   var = new SNMP_Variable;
-   if (var->parse(pData, varLength))
+   bool success;
+   auto var = new SNMP_Variable;
+   if (var->decode(data, varLength))
    {
       bindVariable(var);
+      success = true;
    }
    else
    {

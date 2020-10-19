@@ -51,6 +51,8 @@
 #define ntohq(x) (x)
 #define htond(x) (x)
 #define ntohd(x) (x)
+#define htonf(x) (x)
+#define ntohf(x) (x)
 #define SwapUCS2String(x)
 #else
 #if HAVE_HTONLL
@@ -65,6 +67,8 @@
 #endif
 #define htond(x) bswap_double(x)
 #define ntohd(x) bswap_double(x)
+#define htonf(x) bswap_float(x)
+#define ntohf(x) bswap_float(x)
 #define SwapUCS2String(x) bswap_array_16((UINT16 *)(x), -1)
 #endif
 
@@ -107,6 +111,16 @@ inline double bswap_double(double val)
    BYTE *sptr = (BYTE *)&val;
    BYTE *dptr = (BYTE *)&result + 7;
    for(int i = 0; i < 8; i++, sptr++, dptr--)
+      *dptr = *sptr;
+   return result;
+}
+
+inline float bswap_float(float val)
+{
+   float result;
+   BYTE *sptr = (BYTE *)&val;
+   BYTE *dptr = (BYTE *)&result + 3;
+   for(int i = 0; i < 4; i++, sptr++, dptr--)
       *dptr = *sptr;
    return result;
 }

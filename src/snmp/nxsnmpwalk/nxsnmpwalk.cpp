@@ -48,11 +48,29 @@ static uint32_t m_timeout = 3000;
 static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *context)
 {
    TCHAR buffer[1024], typeName[256];
-   bool convert = true;
-   var->getValueAsPrintableString(buffer, 1024, &convert);
-   _tprintf(_T("%s [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
-            convert ? _T("Hex-STRING") : SNMPDataTypeName(var->getType(), typeName, 256),
-            buffer);
+   if (var->getType() == ASN_OPAQUE)
+   {
+      SNMP_Variable *subvar = var->decodeOpaque();
+      if (subvar != nullptr)
+      {
+         bool convert = true;
+         subvar->getValueAsPrintableString(buffer, 1024, &convert);
+         _tprintf(_T("%s [OPAQUE]: [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
+               convert ? _T("Hex-STRING") : SNMPDataTypeName(subvar->getType(), typeName, 256), buffer);
+         delete subvar;
+      }
+      else
+      {
+         _tprintf(_T("%s [OPAQUE]:\n"), (const TCHAR *)var->getName().toString());
+      }
+   }
+   else
+   {
+      bool convert = true;
+      var->getValueAsPrintableString(buffer, 1024, &convert);
+      _tprintf(_T("%s [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
+            convert ? _T("Hex-STRING") : SNMPDataTypeName(var->getType(), typeName, 256), buffer);
+   }
    return SNMP_ERR_SUCCESS;
 }
 

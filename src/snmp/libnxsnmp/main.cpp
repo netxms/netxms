@@ -159,9 +159,12 @@ static CodeLookupElement s_typeList[] =
    { ASN_BIT_STRING, _T("BIT STRING") },
    { ASN_COUNTER32, _T("COUNTER32") },
    { ASN_COUNTER64, _T("COUNTER64") },
+   { ASN_DOUBLE, _T("DOUBLE") },
+   { ASN_FLOAT, _T("FLOAT") },
    { ASN_GAUGE32, _T("GAUGE32") },
    { ASN_INTEGER, _T("INTEGER") },
    { ASN_INTEGER, _T("INT") },
+   { ASN_INTEGER64, _T("INTEGER64") },
    { ASN_IP_ADDR, _T("IP ADDRESS") },
    { ASN_IP_ADDR, _T("IPADDR") },
    { ASN_NSAP_ADDR, _T("NSAP ADDRESS") },
@@ -175,6 +178,7 @@ static CodeLookupElement s_typeList[] =
    { ASN_TIMETICKS, _T("TIMETICKS") },
    { ASN_UINTEGER32, _T("UINTEGER32") },
    { ASN_UINTEGER32, _T("UINT32") },
+   { ASN_UINTEGER64, _T("UINTEGER64") },
    { 0, nullptr }
 };
 

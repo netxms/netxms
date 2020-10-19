@@ -57,6 +57,10 @@ public class SnmpConstants
 		asnType.put(0x45, "NSAP ADDRESS");
 		asnType.put(0x46, "COUNTER64");
 		asnType.put(0x47, "UINTEGER32");
+      asnType.put(0x48, "FLOAT");
+      asnType.put(0x49, "DOUBLE");
+      asnType.put(0x4A, "INTEGER64");
+      asnType.put(0x4B, "UINTEGER64");
 	}
 
 	/**

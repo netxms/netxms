@@ -112,6 +112,8 @@ bool BER_DecodeContent(uint32_t type, const BYTE *data, size_t length, BYTE *buf
          }
          break;
       case ASN_COUNTER64:
+      case ASN_INTEGER64:
+      case ASN_UINTEGER64:
          if ((length >= 1) && (length <= 9))
          {
             // Pre-fill buffer with 1's for negative values and 0's for positive
@@ -132,11 +134,37 @@ bool BER_DecodeContent(uint32_t type, const BYTE *data, size_t length, BYTE *buf
                length--;
             }
             value = ntohq(value);
-            memcpy(buffer, &value, sizeof(QWORD));
+            memcpy(buffer, &value, sizeof(uint64_t));
          }
          else
          {
             bResult = false;  // We didn't expect more than 64 bit integers
+         }
+         break;
+      case ASN_FLOAT:
+         if (length == 4)
+         {
+            // use memcpy to temporary buffer to avoid memory alignment problem
+            float t;
+            memcpy(&t, data, 4);
+            *reinterpret_cast<float*>(buffer) = ntohf(t);
+         }
+         else
+         {
+            bResult = false;  // Wrong length
+         }
+         break;
+      case ASN_DOUBLE:
+         if (length == 8)
+         {
+            // use memcpy to temporary buffer to avoid memory alignment problem
+            double t;
+            memcpy(&t, data, 8);
+            *reinterpret_cast<double*>(buffer) = ntohd(t);
+         }
+         else
+         {
+            bResult = false;  // Wrong length
          }
          break;
       case ASN_OBJECT_ID:
@@ -185,11 +213,13 @@ bool BER_DecodeContent(uint32_t type, const BYTE *data, size_t length, BYTE *buf
 /**
  * Encode content
  */
-static size_t EncodeContent(UINT32 type, const BYTE *data, size_t dataLength, BYTE *pResult)
+static size_t EncodeContent(uint32_t type, const BYTE *data, size_t dataLength, BYTE *pResult)
 {
    size_t nBytes = 0;
-   UINT32 dwTemp;
-   QWORD qwTemp;
+   uint32_t tempInt32;
+   uint64_t tempInt64;
+   float tempFloat;
+   double tempDouble;
    BYTE *pTemp, sign;
    size_t oidLength;
 
@@ -198,8 +228,8 @@ static size_t EncodeContent(UINT32 type, const BYTE *data, size_t dataLength, BY
       case ASN_NULL:
          break;
       case ASN_INTEGER:
-         dwTemp = htonl(*((UINT32 *)data));
-         pTemp = (BYTE *)&dwTemp;
+         tempInt32 = htonl(*((uint32_t *)data));
+         pTemp = (BYTE *)&tempInt32;
          sign = (*pTemp & 0x80) ? 0xFF : 0;
          for(nBytes = 4; (*pTemp == sign) && (nBytes > 1); pTemp++, nBytes--);
          if ((*pTemp & 0x80) != (sign & 0x80))
@@ -217,8 +247,8 @@ static size_t EncodeContent(UINT32 type, const BYTE *data, size_t dataLength, BY
       case ASN_GAUGE32:
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
-         dwTemp = htonl(*((UINT32 *)data));
-         pTemp = (BYTE *)&dwTemp;
+         tempInt32 = htonl(*((uint32_t *)data));
+         pTemp = (BYTE *)&tempInt32;
          for(nBytes = 4; (*pTemp == 0) && (nBytes > 1); pTemp++, nBytes--);
          if (*pTemp & 0x80)
          {
@@ -231,9 +261,26 @@ static size_t EncodeContent(UINT32 type, const BYTE *data, size_t dataLength, BY
             memcpy(pResult, pTemp, nBytes);
          }
          break;
+      case ASN_INTEGER64:
+         tempInt64 = htonq(*((uint64_t *)data));
+         pTemp = (BYTE *)&tempInt32;
+         sign = (*pTemp & 0x80) ? 0xFF : 0;
+         for(nBytes = 8; (*pTemp == sign) && (nBytes > 1); pTemp++, nBytes--);
+         if ((*pTemp & 0x80) != (sign & 0x80))
+         {
+            memcpy(&pResult[1], pTemp, nBytes);
+            pResult[0] = sign;
+            nBytes++;
+         }
+         else
+         {
+            memcpy(pResult, pTemp, nBytes);
+         }
+         break;
       case ASN_COUNTER64:
-         qwTemp = htonq(*((QWORD *)data));
-         pTemp = (BYTE *)&qwTemp;
+      case ASN_UINTEGER64:
+         tempInt64 = htonq(*((uint64_t *)data));
+         pTemp = (BYTE *)&tempInt64;
          for(nBytes = 8; (*pTemp == 0) && (nBytes > 1); pTemp++, nBytes--);
          if (*pTemp & 0x80)
          {
@@ -246,8 +293,18 @@ static size_t EncodeContent(UINT32 type, const BYTE *data, size_t dataLength, BY
             memcpy(pResult, pTemp, nBytes);
          }
          break;
+      case ASN_FLOAT:
+         nBytes = 4;
+         tempFloat = htonf(*reinterpret_cast<const float*>(data));
+         memcpy(pResult, &tempFloat, nBytes);
+         break;
+      case ASN_DOUBLE:
+         nBytes = 8;
+         tempDouble = htond(*reinterpret_cast<const double*>(data));
+         memcpy(pResult, &tempDouble, nBytes);
+         break;
       case ASN_OBJECT_ID:
-         oidLength = dataLength / sizeof(UINT32);
+         oidLength = dataLength / sizeof(uint32_t);
          if (oidLength > 1)
          {
             BYTE *pbCurrPos = pResult;
@@ -290,7 +347,7 @@ static size_t EncodeContent(UINT32 type, const BYTE *data, size_t dataLength, BY
          }
 			else if (oidLength == 1)
 			{
-				*pResult = (BYTE)(*((UINT32 *)data)) * 40;
+				*pResult = (BYTE)(*((uint32_t *)data)) * 40;
 				nBytes++;
 			}
          break;
@@ -308,7 +365,7 @@ static size_t EncodeContent(UINT32 type, const BYTE *data, size_t dataLength, BY
  * Return value is size of encoded identifier and content in buffer
  * or 0 if there are not enough place in buffer or type is unknown
  */
-size_t BER_Encode(UINT32 type, const BYTE *data, size_t dataLength, BYTE *buffer, size_t bufferSize)
+size_t BER_Encode(uint32_t type, const BYTE *data, size_t dataLength, BYTE *buffer, size_t bufferSize)
 {
    if (bufferSize < 2)
       return 0;
@@ -335,13 +392,13 @@ size_t BER_Encode(UINT32 type, const BYTE *data, size_t dataLength, BYTE *buffer
       LONG nHdrBytes;
       int i;
 
-      *((UINT32 *)bLength) = htonl((UINT32)nDataBytes);
+      *((uint32_t *)bLength) = htonl((uint32_t)nDataBytes);
       for(i = 0, nHdrBytes = 4; (bLength[i] == 0) && (nHdrBytes > 1); i++, nHdrBytes--);
       if (i > 0)
          memmove(bLength, &bLength[i], nHdrBytes);
 
       // Check for available buffer size
-      if (bufferSize < (UINT32)nHdrBytes + bytes + 1)
+      if (bufferSize < (uint32_t)nHdrBytes + bytes + 1)
       {
          SNMP_MemFree(pEncodedData, dataLength);
          return 0;

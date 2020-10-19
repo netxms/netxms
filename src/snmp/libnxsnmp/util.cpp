@@ -167,8 +167,8 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                   switch(pVar->getType())
                   {
                      case ASN_INTEGER:
-                        if (bufferSize >= sizeof(uint32_t))
-                           *((INT32 *)pValue) = pVar->getValueAsInt();
+                        if (bufferSize >= sizeof(int32_t))
+                           *((int32_t *)pValue) = pVar->getValueAsInt();
                         break;
                      case ASN_COUNTER32:
                      case ASN_GAUGE32:
@@ -177,15 +177,29 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                         if (bufferSize >= sizeof(uint32_t))
                            *((UINT32 *)pValue) = pVar->getValueAsUInt();
                         break;
+                     case ASN_INTEGER64:
+                        if (bufferSize >= sizeof(int64_t))
+                           *((int64_t *)pValue) = pVar->getValueAsInt64();
+                        else if (bufferSize >= sizeof(int32_t))
+                           *((int32_t *)pValue) = pVar->getValueAsInt();
+                        break;
                      case ASN_COUNTER64:
+                     case ASN_UINTEGER64:
                         if (bufferSize >= sizeof(uint64_t))
-                           *((UINT64 *)pValue) = pVar->getValueAsUInt64();
+                           *((uint64_t *)pValue) = pVar->getValueAsUInt64();
                         else if (bufferSize >= sizeof(uint32_t))
-                           *((UINT32 *)pValue) = pVar->getValueAsUInt();
+                           *((uint32_t *)pValue) = pVar->getValueAsUInt();
+                        break;
+                     case ASN_FLOAT:
+                     case ASN_DOUBLE:
+                        if (bufferSize >= sizeof(double))
+                           *((double *)pValue) = pVar->getValueAsDouble();
+                        else if (bufferSize >= sizeof(float))
+                           *((float *)pValue) = static_cast<float>(pVar->getValueAsDouble());
                         break;
                      case ASN_IP_ADDR:
                         if (bufferSize >= sizeof(uint32_t))
-                           *((UINT32 *)pValue) = ntohl(pVar->getValueAsUInt());
+                           *((uint32_t *)pValue) = ntohl(pVar->getValueAsUInt());
                         break;
                      case ASN_OCTET_STRING:
                         pVar->getValueAsString((TCHAR *)pValue, bufferSize / sizeof(TCHAR));
