@@ -23,19 +23,11 @@ import java.io.InputStream;
 import java.util.Arrays;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.commands.ActionHandler;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.ui.console.IOConsoleOutputStream;
-import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
 
@@ -45,11 +37,9 @@ import org.netxms.ui.eclipse.objecttools.Messages;
 public class LocalCommandExecutor extends AbstractObjectToolExecutor
 {
    private Process process;
-   private boolean running = false;
+   private boolean processRunning = false;
    private String command;
    private Object mutex = new Object();
-   private Action actionTerminate;
-   private ToolItem terminateItem;
 
    /**
     * Constructor 
@@ -58,82 +48,21 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
     * @param view parent view
     * @param command command to execute
     */
-   public LocalCommandExecutor(Composite resultArea, ViewPart view, String command)
+   public LocalCommandExecutor(Composite resultArea, ViewPart view, ObjectContext objectContext, ActionSet actionSet, String command)
    {
-      super(resultArea, SWT.NONE, view);
+      super(resultArea, view, objectContext, actionSet);
       this.command = command;
    }
    
-   @Override
-   protected void createActions(ViewPart viewPart)
-   {
-      super.createActions(viewPart);
-      
-      final IHandlerService handlerService = (IHandlerService)viewPart.getSite().getService(IHandlerService.class);
-      
-      actionTerminate = new Action(Messages.get().LocalCommandResults_Terminate, SharedIcons.TERMINATE) {
-         @Override
-         public void run()
-         {
-            synchronized(mutex)
-            {
-               if (running)
-               {
-                  process.destroy();
-               }
-            }
-         }
-      };
-      actionTerminate.setEnabled(false);
-      actionTerminate.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.terminate_process"); //$NON-NLS-1$
-      handlerService.activateHandler(actionTerminate.getActionDefinitionId(), new ActionHandler(actionTerminate));
-   }
-   
-   @Override
-   protected void fillContextMenu(final IMenuManager manager)
-   {
-      manager.add(actionTerminate);
-      super.fillContextMenu(manager);      
-   }
-   
    /**
-    * If terminate action and item shoud be enabled
-    * 
-    * @param enabled
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#execute()
     */
-   private void enableTerminate(boolean enabled)
-   {
-      actionTerminate.setEnabled(enabled);
-      terminateItem.setEnabled(enabled);
-   }
-   
-   /**
-    * Create toolbar items
-    */
-   @Override
-   protected void createToolbarItems()
-   {
-      super.createToolbarItems();
-      
-      terminateItem = new ToolItem(toolBar, SWT.PUSH);
-      terminateItem.setText(Messages.get().LocalCommandResults_Terminate);
-      terminateItem.setToolTipText("Terminate execution");
-      terminateItem.setImage(SharedIcons.IMG_TERMINATE);
-      terminateItem.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            actionTerminate.run();
-         }
-      });
-   }
-
    @Override
    public void execute()
    {
       synchronized(mutex)
       {
-         if (running)
+         if (processRunning)
          {
             process.destroy();
             try
@@ -144,9 +73,8 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
             {
             }
          }
-         running = true;
-         enableTerminate(true);
-         enableRestartAction(false);
+         processRunning = true;
+         setRunning(true);
       }
       
       final IOConsoleOutputStream out = console.newOutputStream();
@@ -201,7 +129,7 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
          {
             synchronized(mutex)
             {
-               running = false;
+               processRunning = false;
                process = null;
                mutex.notifyAll();
             }
@@ -212,8 +140,7 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
                {
                   synchronized(mutex)
                   {
-                     enableTerminate(running);
-                     enableRestartAction(!running);
+                     setRunning(processRunning);
                   }
                }
             });
@@ -225,7 +152,31 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
 
    }
 
-   /* (non-Javadoc)
+   /**
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#terminate()
+    */
+   @Override
+   public void terminate()
+   {
+      synchronized(mutex)
+      {
+         if (processRunning)
+         {
+            process.destroy();
+         }
+      }
+   }
+
+   /**
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#isTerminateSupported()
+    */
+   @Override
+   protected boolean isTerminateSupported()
+   {
+      return true;
+   }
+
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override
@@ -233,12 +184,11 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
    {
       synchronized(mutex)
       {
-         if (running)
+         if (processRunning)
          {
             process.destroy();
          }
       }
       super.dispose();
    }
-
 }

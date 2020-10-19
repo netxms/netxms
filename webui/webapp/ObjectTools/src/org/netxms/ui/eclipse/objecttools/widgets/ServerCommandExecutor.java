@@ -21,25 +21,16 @@ package org.netxms.ui.eclipse.objecttools.widgets;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.ToolItem;
-import org.eclipse.ui.ISaveablePart2;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectTool;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -48,18 +39,14 @@ import org.netxms.ui.eclipse.widgets.TextConsole.IOConsoleOutputStream;
 /**
  * Server command executor and output provider widget
  */
-public class ServerCommandExecutor extends AbstractObjectToolExecutor implements TextOutputListener, ISaveablePart2
+public class ServerCommandExecutor extends AbstractObjectToolExecutor implements TextOutputListener
 {
    private IOConsoleOutputStream out;
    private String lastCommand = null;
-   private Action actionStop;
    private Map<String, String> lastInputValues = null;
    private long streamId = 0;
-   private long nodeId;
    private NXCSession session;
-   private boolean isRunning = false;
    private List<String> maskedFields;
-   private ToolItem stopItem;
 
    /**
     * Constructor
@@ -71,90 +58,38 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
     * @param inputValues input values provided by user
     * @param maskedFields list of input values that should be mased
     */
-   public ServerCommandExecutor(Composite resultArea, ViewPart viewPart, AbstractNode object,
-         ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields) 
+   public ServerCommandExecutor(Composite resultArea, ViewPart viewPart, ObjectContext context, ActionSet actionSet,
+         ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
    { 
-      super(resultArea, SWT.NONE, viewPart);
+      super(resultArea, viewPart, context, actionSet);
       this.lastInputValues = inputValues;
       this.maskedFields = maskedFields;
       lastCommand = tool.getData();
-      nodeId = object.getObjectId();
       session = ConsoleSharedData.getSession();
    }
-   
-   @Override
-   protected void createActions(ViewPart viewPart)
-   {
-      super.createActions(viewPart);
-      
-      actionStop = new Action("Stop", SharedIcons.TERMINATE) {
-         @Override
-         public void run()
-         {
-            stopCommand();
-         }
-      };
-      actionStop.setEnabled(false);
-   }
-   
-   @Override
-   protected void fillContextMenu(final IMenuManager manager)
-   {
-      manager.add(actionStop);
-      super.fillContextMenu(manager);      
-   }
-   
-   /**
-    * Create toolbar items
-    */
-   @Override
-   protected void createToolbarItems()
-   {
-      super.createToolbarItems();
-      
-      stopItem = new ToolItem(toolBar, SWT.PUSH);
-      stopItem.setText("Stop");
-      stopItem.setToolTipText("Stop execution");
-      stopItem.setImage(SharedIcons.IMG_TERMINATE);
-      stopItem.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            actionStop.run();
-         }
-      });
-   }
-   
-   /**
-    * Is stop action should be enabed
-    * 
-    * @param enabled true to enable
-    */
-   private void enableStopAction(boolean enabled)
-   {
-      actionStop.setEnabled(enabled);
-      stopItem.setEnabled(enabled);      
-   }
 
+   /**
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#execute()
+    */
    @Override
    public void execute()
    {
-      if (isRunning)
+      if (isRunning())
       {
          MessageDialog.openError(Display.getCurrent().getActiveShell(), "Error", "Command already running!");
          return;
       }
       
-      isRunning = true;
-      enableRestartAction(false);
-      enableStopAction(true);
+      setRunning(true);
       out = console.newOutputStream();
       final String terminated = Messages.get().LocalCommandResults_Terminated;
-      ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob(
+            String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, objectContext.object.getObjectName()), null,
+            Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
          {
-            return String.format(Messages.get().ObjectToolsDynamicMenu_CannotExecuteOnNode, session.getObjectName(nodeId));
+            return String.format(Messages.get().ObjectToolsDynamicMenu_CannotExecuteOnNode, objectContext.object.getObjectName());
          }
 
          @Override
@@ -162,7 +97,8 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
          {
             try
             {
-               session.executeServerCommand(nodeId, lastCommand, lastInputValues, maskedFields, true, ServerCommandExecutor.this, null);
+               session.executeServerCommand(objectContext.object.getObjectId(), lastCommand, lastInputValues, maskedFields, true,
+                     ServerCommandExecutor.this, null);
                out.write(terminated);
             }
             finally
@@ -182,9 +118,7 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
                @Override
                public void run()
                {
-                  enableRestartAction(true);
-                  enableStopAction(false);
-                  isRunning = false;
+                  setRunning(false);
                }
             });
          }
@@ -195,13 +129,15 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
    }
 
    /**
-    * Stops running server command
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#terminate()
     */
-   private void stopCommand()
+   @Override
+   public void terminate()
    {
       if (streamId > 0)
       {
-         ConsoleJob job = new ConsoleJob("Stop server command for node: " + session.getObjectName(nodeId), null, Activator.PLUGIN_ID, null) {
+         ConsoleJob job = new ConsoleJob(String.format("Stop server command for node %s", objectContext.object.getObjectName()),
+               null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
@@ -215,8 +151,7 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
                   @Override
                   public void run()
                   {
-                     enableRestartAction(false);
-                     enableStopAction(true);
+                     setRunning(false);
                   }
                });
             }
@@ -224,14 +159,23 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
             @Override
             protected String getErrorMessage()
             {
-               return "Failed to stop server command for node: " + session.getObjectName(nodeId);
+               return String.format("Failed to stop server command for node %s", objectContext.object.getObjectName());
             }
          };
          job.start();
       }
    }
 
-   /* (non-Javadoc)
+   /**
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#isTerminateSupported()
+    */
+   @Override
+   protected boolean isTerminateSupported()
+   {
+      return true;
+   }
+
+   /**
     * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
     */
    @Override
@@ -247,16 +191,7 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
       }
    }
 
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      super.dispose();
-   }
-
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.TextOutputListener#setStreamId(long)
     */
    @Override
@@ -265,62 +200,11 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
       this.streamId = streamId;
    }
 
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+   /**
+    * @see org.netxms.client.TextOutputListener#onError()
     */
-   @Override
-   public void doSave(IProgressMonitor monitor)
-   {
-      stopCommand();
-   }
-
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.ISaveablePart#doSaveAs()
-    */
-   @Override
-   public void doSaveAs()
-   {
-   }
-
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.ISaveablePart#isDirty()
-    */
-   @Override
-   public boolean isDirty()
-   {
-      return isRunning;
-   }
-
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
-    */
-   @Override
-   public boolean isSaveAsAllowed()
-   {
-      return false;
-   }
-
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
-    */
-   @Override
-   public boolean isSaveOnCloseNeeded()
-   {
-      return isRunning;
-   }
-
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.ISaveablePart2#promptToSaveOnClose()
-    */
-   @Override
-   public int promptToSaveOnClose()
-   {
-      return MessageDialog.openConfirm(Display.getCurrent().getActiveShell(), "Stop command", "Do you wish to stop the command \"" + lastCommand + "\"? ") ? 0 : 2;
-   }
-
    @Override
    public void onError()
    {
    }
-
 }

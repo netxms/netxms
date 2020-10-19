@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.widgets;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.console.IOConsole;
 import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.console.TextConsoleViewer;
@@ -112,5 +113,15 @@ public class TextConsole extends Composite
    public IOConsoleOutputStream newOutputStream()
    {
       return console.newOutputStream();
+   }
+
+   /**
+    * Get console viewer's control.
+    * 
+    * @return console viewer's control
+    */
+   public Control getConsoleControl()
+   {
+      return viewer.getControl();
    }
 }
