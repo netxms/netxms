@@ -266,7 +266,10 @@ public class Columns extends PreferencePage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		objectTool.setColumns(columns);
+      if (isControlCreated())
+      {
+         objectTool.setColumns(columns);
+      }
 	}
 	
 	/* (non-Javadoc)
@@ -284,9 +287,12 @@ public class Columns extends PreferencePage
 	@Override
 	public boolean performOk()
 	{
-		applyChanges(false);
-		WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ColumnsPropertyPage"); //$NON-NLS-1$
-		return true;
+      if (isControlCreated())
+      {
+   		applyChanges(false);
+   		WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ColumnsPropertyPage"); //$NON-NLS-1$
+      }
+      return true;
 	}
 
 	/* (non-Javadoc)
@@ -295,7 +301,10 @@ public class Columns extends PreferencePage
 	@Override
 	public boolean performCancel()
 	{
-		WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ColumnsPropertyPage"); //$NON-NLS-1$
-		return super.performCancel();
+      if (isControlCreated())
+      {
+   		WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ColumnsPropertyPage"); //$NON-NLS-1$
+      }
+      return super.performCancel();
 	}
 }

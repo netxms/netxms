@@ -405,7 +405,10 @@ public class InputFields extends PreferencePage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		objectTool.setInputFields(fields);
+      if (isControlCreated())
+      {
+         objectTool.setInputFields(fields);
+      }
 	}
 	
 	/* (non-Javadoc)
@@ -423,8 +426,11 @@ public class InputFields extends PreferencePage
 	@Override
 	public boolean performOk()
 	{
-		applyChanges(false);
-		WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InputFieldsPropertyPage"); //$NON-NLS-1$
+      if (isControlCreated())
+      {
+   		applyChanges(false);
+   		WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InputFieldsPropertyPage"); //$NON-NLS-1$
+      }
 		return true;
 	}
 
@@ -434,7 +440,10 @@ public class InputFields extends PreferencePage
 	@Override
 	public boolean performCancel()
 	{
-		WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InputFieldsPropertyPage"); //$NON-NLS-1$
+      if (isControlCreated())
+      {
+         WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InputFieldsPropertyPage"); //$NON-NLS-1$
+      }
 		return super.performCancel();
 	}
 }

@@ -74,7 +74,6 @@ public class General extends PreferencePage
 	private Label iconLabel;
 	private Image icon;
 	
-	
 	/**
 	 * Constructor
 	 * 
@@ -496,6 +495,11 @@ public class General extends PreferencePage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
+      if (!isControlCreated())
+      {
+         return;
+      }
+	   
 		objectTool.setName(textName.getText());
 		objectTool.setDescription(textDescription.getText());
 
