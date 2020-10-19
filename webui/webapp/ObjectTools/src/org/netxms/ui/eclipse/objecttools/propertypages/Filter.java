@@ -259,6 +259,11 @@ public class Filter extends PreferencePage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
+      if (!isControlCreated())
+      {
+         return;
+      }
+      
 		if (checkAgent.getSelection())
 		   setFlag(ObjectMenuFilter.REQUIRES_AGENT);
 		else

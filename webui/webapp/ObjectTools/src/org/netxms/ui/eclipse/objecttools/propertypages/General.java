@@ -493,6 +493,11 @@ public class General extends PreferencePage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
+      if (!isControlCreated())
+      {
+         return;
+      }
+	   
 		objectTool.setName(textName.getText());
 		objectTool.setDescription(textDescription.getText());
 

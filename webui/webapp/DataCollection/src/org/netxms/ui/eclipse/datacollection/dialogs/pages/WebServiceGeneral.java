@@ -210,32 +210,35 @@ public class WebServiceGeneral extends PreferencePage
    @Override
    public boolean performOk()
    {
-      String svcName = name.getText().trim();
-      if (svcName.isEmpty())
+      if (isControlCreated())
       {
-         MessageDialogHelper.openWarning(getShell(), "Warning", "Web service name cannot be empty!");
-         return false;
+         String svcName = name.getText().trim();
+         if (svcName.isEmpty())
+         {
+            MessageDialogHelper.openWarning(getShell(), "Warning", "Web service name cannot be empty!");
+            return false;
+         }
+   
+         if (svcName.contains(":") || svcName.contains("/") || svcName.contains(",") || svcName.contains("(") || svcName.contains(")")
+               || svcName.contains("{") || svcName.contains("}") || svcName.contains("'") || svcName.contains("\""))
+         {
+            MessageDialogHelper.openWarning(getShell(), "Warning",
+                  "Web service name cannot contain following characters: / , : ' \" ( ) { }");
+            return false;
+         }
+   
+         definition.setName(svcName);
+         definition.setUrl(url.getText().trim());
+         definition.setVerifyCertificate(checkVerifyCert.getSelection());
+         definition.setVerifyHost(checkVerifyHost.getSelection());
+         definition.setParseAsText(checkTextParsing.getSelection());
+         definition.setAuthenticationType(WebServiceAuthType.getByValue(authType.getSelectionIndex()));
+         definition.setLogin(login.getText().trim());
+         definition.setPassword(password.getText());
+         definition.setCacheRetentionTime(retentionTime.getSelection());
+         definition.setRequestTimeout(timeout.getSelection());
+         definition.setDescription(description.getText());
       }
-
-      if (svcName.contains(":") || svcName.contains("/") || svcName.contains(",") || svcName.contains("(") || svcName.contains(")")
-            || svcName.contains("{") || svcName.contains("}") || svcName.contains("'") || svcName.contains("\""))
-      {
-         MessageDialogHelper.openWarning(getShell(), "Warning",
-               "Web service name cannot contain following characters: / , : ' \" ( ) { }");
-         return false;
-      }
-
-      definition.setName(svcName);
-      definition.setUrl(url.getText().trim());
-      definition.setVerifyCertificate(checkVerifyCert.getSelection());
-      definition.setVerifyHost(checkVerifyHost.getSelection());
-      definition.setParseAsText(checkTextParsing.getSelection());
-      definition.setAuthenticationType(WebServiceAuthType.getByValue(authType.getSelectionIndex()));
-      definition.setLogin(login.getText().trim());
-      definition.setPassword(password.getText());
-      definition.setCacheRetentionTime(retentionTime.getSelection());
-      definition.setRequestTimeout(timeout.getSelection());
-      definition.setDescription(description.getText());
       return super.performOk();
    }
 }

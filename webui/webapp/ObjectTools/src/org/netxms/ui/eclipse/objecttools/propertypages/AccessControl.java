@@ -244,10 +244,13 @@ public class AccessControl extends PreferencePage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		List<Long> list = new ArrayList<Long>(acl.size());
-		for(AbstractUserObject o : acl)
-			list.add(o.getId());
-		objectTool.setAccessList(list);
+	   if (isControlCreated())
+	   {
+   		List<Long> list = new ArrayList<Long>(acl.size());
+   		for(AbstractUserObject o : acl)
+   			list.add(o.getId());
+   		objectTool.setAccessList(list);
+	   }
 	}
 	
 	/* (non-Javadoc)
