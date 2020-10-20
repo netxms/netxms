@@ -69,6 +69,11 @@ public:
 
 	GeoLocation& operator =(const GeoLocation &src);
 
+	void setType(int type) { m_type = type; }
+	void setTimestamp(time_t timestamp) { m_timestamp = timestamp; }
+	void setLatitude(double lat) { m_lat = lat; }
+   void setLongitude(double lon) { m_lon = lon; }
+
 	int getType() const { return m_type; }
 	double getLatitude() const { return m_lat; }
 	double getLongitude() const { return m_lon; }

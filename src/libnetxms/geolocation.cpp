@@ -253,7 +253,7 @@ double GeoLocation::parse(const TCHAR *str, bool isLat, bool *isValid)
 	*isValid = false;
 
 	// Prepare input string
-	TCHAR *in = _tcsdup(str);
+	TCHAR *in = MemCopyString(str);
 	StrStrip(in);
 
 	// Check if string given is just double value
@@ -336,7 +336,7 @@ finish_parsing:
 	}
 
 cleanup:
-	free(in);
+	MemFree(in);
 	return value;
 }
 

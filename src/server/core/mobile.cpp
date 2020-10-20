@@ -67,7 +67,7 @@ bool MobileDevice::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       return false;
    }
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level,comm_protocol,speed,direction,altitude FROM mobile_devices WHERE id=%?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level,comm_protocol,speed,direction,altitude FROM mobile_devices WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
