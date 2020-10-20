@@ -24,6 +24,29 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.19 to 40.20
+ */
+static bool H_UpgradeFromV19()
+{
+   if (GetSchemaLevelForMajorVersion(36) < 8)
+   {
+      static const TCHAR *batch =
+            _T("ALTER TABLE mobile_devices ADD speed varchar(20)\n")
+            _T("ALTER TABLE mobile_devices ADD direction integer\n")
+            _T("ALTER TABLE mobile_devices ADD altitude integer\n")
+            _T("UPDATE mobile_devices SET speed='-1',direction=-1,altitude=0\n")
+            _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("mobile_devices"), _T("speed")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("mobile_devices"), _T("direction")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("mobile_devices"), _T("altitude")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(36, 8));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(20));
+   return true;
+}
+
+/**
  * Upgrade from 40.18 to 40.19
  */
 static bool H_UpgradeFromV18()
@@ -499,6 +522,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 19, 40, 20, H_UpgradeFromV19 },
    { 18, 40, 19, H_UpgradeFromV18 },
    { 17, 40, 18, H_UpgradeFromV17 },
    { 16, 40, 17, H_UpgradeFromV16 },

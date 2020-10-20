@@ -1157,6 +1157,8 @@ public class NXCPCodes
    public static final long VID_EVENT_SOURCE = 715;
    public static final long VID_RAW_DATA = 716;
    public static final long VID_NUM_MASKED_FIELDS = 717;
+   public static final long VID_DIRECTION = 718;
+   public static final long VID_ALTITUDE = 719;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -1387,6 +1387,8 @@ typedef struct
 #define VID_EVENT_SOURCE            ((UINT32)715)
 #define VID_RAW_DATA                ((UINT32)716)
 #define VID_NUM_MASKED_FIELDS       ((UINT32)717)
+#define VID_DIRECTION               ((UINT32)718)
+#define VID_ALTITUDE                ((UINT32)719)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -64,7 +64,7 @@ public:
 	GeoLocation(int type, double lat, double lon, int accuracy = 0, time_t timestamp = 0);
 	GeoLocation(int type, const TCHAR *lat, const TCHAR *lon, int accuracy = 0, time_t timestamp = 0);
 	GeoLocation(const GeoLocation &src);
-	GeoLocation(NXCPMessage &msg);
+	GeoLocation(const NXCPMessage &msg);
 	~GeoLocation();
 
 	GeoLocation& operator =(const GeoLocation &src);

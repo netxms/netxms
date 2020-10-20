@@ -312,7 +312,18 @@ public class GeneralInfo extends TableElement
 				break;
 		}
 		if (object.getGeolocation().getType() != GeoLocation.UNSET)
+      {
 			addPair(Messages.get().GeneralInfo_Location, object.getGeolocation().toString());
+         if (object instanceof MobileDevice)
+         {
+            MobileDevice md = (MobileDevice)object;
+            if (md.getSpeed() >= 0)
+               addPair(Messages.get().GeneralInfo_Speed, Double.toString(md.getSpeed()) + " km/h");
+            if (md.getDirection() >= 0)
+               addPair("Direction", Integer.toString(md.getDirection()) + "\u00b0");
+            addPair("Altitude", Integer.toString(md.getAltitude()) + " m");
+         }
+      }
 		if (!object.getPostalAddress().isEmpty())
          addPair(Messages.get().GeneralInfo_PostalAddress, object.getPostalAddress().getAddressLine());
 	}

@@ -551,7 +551,7 @@ public class NXCPMessage
 		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsReal() : 0;
 	}
-	
+
    /**
     * Get field as 16 bit integer
     * 

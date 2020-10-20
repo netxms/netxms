@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,10 @@ public class MobileDevice extends DataCollectionTarget
 	private String osName;
 	private String osVersion;
 	private String userId;
-	private int batteryLevel;
+	private short batteryLevel;
+	private float speed;
+	private short direction;
+	private int altitude;
 	private Date lastReportTime;
 	
 	/**
@@ -55,7 +58,10 @@ public class MobileDevice extends DataCollectionTarget
 		osName = msg.getFieldAsString(NXCPCodes.VID_OS_NAME);
 		osVersion = msg.getFieldAsString(NXCPCodes.VID_OS_VERSION);
 		userId = msg.getFieldAsString(NXCPCodes.VID_USER_ID);
-		batteryLevel = msg.getFieldAsInt32(NXCPCodes.VID_BATTERY_LEVEL);
+		batteryLevel = msg.getFieldAsInt16(NXCPCodes.VID_BATTERY_LEVEL);
+		speed = msg.getFieldAsDouble(NXCPCodes.VID_SPEED).floatValue();
+      direction = msg.getFieldAsInt16(NXCPCodes.VID_DIRECTION);
+      altitude = msg.getFieldAsInt32(NXCPCodes.VID_ALTITUDE);
 		lastReportTime = msg.getFieldAsDate(NXCPCodes.VID_LAST_CHANGE_TIME);
 	}
 
@@ -144,12 +150,42 @@ public class MobileDevice extends DataCollectionTarget
 	/**
 	 * @return the batteryLevel
 	 */
-	public final int getBatteryLevel()
+	public final short getBatteryLevel()
 	{
 		return batteryLevel;
 	}
 
-	/* (non-Javadoc)
+	/**
+	 * Get last reported speed of the device. Will return -1 if speed is not known.
+	 *
+	 * @return last reported speed of the device or -1
+	 */
+	public float getSpeed()
+   {
+      return speed;
+   }
+
+   /**
+    * Get last reported direction of the device (in range 0..360). Will return -1 if direction is not known.
+    *
+    * @return last reported direction of the device or -1
+    */
+   public short getDirection()
+   {
+      return direction;
+   }
+
+   /**
+    * Get last reported altitude of the device
+    *
+    * @return last reported altitude of the device
+    */
+   public int getAltitude()
+   {
+      return altitude;
+   }
+
+   /**
 	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
 	 */
 	@Override
@@ -166,8 +202,7 @@ public class MobileDevice extends DataCollectionTarget
 		return lastReportTime;
 	}
 
-
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#getStrings()
     */
    @Override

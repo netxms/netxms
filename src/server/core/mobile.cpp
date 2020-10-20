@@ -29,6 +29,9 @@ MobileDevice::MobileDevice() : super()
    m_commProtocol[0] = 0;
 	m_lastReportTime = 0;
 	m_batteryLevel = -1;
+	m_speed = -1;
+	m_direction = -1;
+	m_altitude = 0;
 }
 
 /**
@@ -39,6 +42,9 @@ MobileDevice::MobileDevice(const TCHAR *name, const TCHAR *deviceId) : super(nam
    m_commProtocol[0] = 0;
 	m_lastReportTime = 0;
 	m_batteryLevel = -1;
+   m_speed = -1;
+   m_direction = -1;
+   m_altitude = 0;
 }
 
 /**
@@ -61,7 +67,7 @@ bool MobileDevice::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       return false;
    }
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level,comm_protocol FROM mobile_devices WHERE id=%?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level,comm_protocol,speed,direction,altitude FROM mobile_devices WHERE id=%?"));
    if (hStmt == nullptr)
       return false;
 
@@ -80,8 +86,11 @@ bool MobileDevice::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	m_osName = DBGetFieldAsSharedString(hResult, 0, 4);
 	m_osVersion = DBGetFieldAsSharedString(hResult, 0, 5);
 	m_userId = DBGetFieldAsSharedString(hResult, 0, 6);
-	m_batteryLevel = DBGetFieldLong(hResult, 0, 7);
+	m_batteryLevel = static_cast<int8_t>(DBGetFieldLong(hResult, 0, 7));
 	DBGetField(hResult, 0, 8, m_commProtocol, 32);
+   m_speed = static_cast<float>(DBGetFieldDouble(hResult, 0, 9));
+   m_direction = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 10));
+   m_altitude = DBGetFieldLong(hResult, 0, 11);
 
 	DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -110,7 +119,8 @@ bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
    if (success && (m_modified & MODIFY_OTHER))
    {
       static const TCHAR *columns[] = {
-         _T("device_id") ,_T("vendor"), _T("model"), _T("serial_number"), _T("os_name"), _T("os_version"), _T("user_id"), _T("battery_level"), _T("comm_protocol"), nullptr
+         _T("device_id") ,_T("vendor"), _T("model"), _T("serial_number"), _T("os_name"), _T("os_version"), _T("user_id"), _T("battery_level"),
+         _T("comm_protocol"), _T("speed"), _T("direction"), _T("altitude"), nullptr
       };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("mobile_devices"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
@@ -124,7 +134,10 @@ bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_userId, DB_BIND_STATIC);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_batteryLevel);
          DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_commProtocol, DB_BIND_STATIC);
-         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 10, DB_SQLTYPE_DOUBLE, m_speed);
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_direction);
+         DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_altitude);
+         DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
 
@@ -182,8 +195,11 @@ void MobileDevice::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 	msg->setField(VID_OS_NAME, m_osName);
 	msg->setField(VID_OS_VERSION, m_osVersion);
 	msg->setField(VID_USER_ID, m_userId);
-	msg->setField(VID_BATTERY_LEVEL, m_batteryLevel);
+	msg->setField(VID_BATTERY_LEVEL, static_cast<int16_t>(m_batteryLevel));
 	msg->setFieldFromTime(VID_LAST_CHANGE_TIME, m_lastReportTime);
+   msg->setField(VID_SPEED, m_speed);
+   msg->setField(VID_DIRECTION, m_direction);
+   msg->setField(VID_ALTITUDE, m_altitude);
 }
 
 /**
@@ -224,9 +240,12 @@ void MobileDevice::updateStatus(const MobileDeviceStatus& status)
 	m_lastReportTime = time(nullptr);
 	_tcslcpy(m_commProtocol, status.commProtocol, MAX_OBJECT_NAME);
 	m_batteryLevel = status.batteryLevel;
+   m_speed = status.speed;
+   m_direction = status.direction;
 	if (status.geoLocation.isValid())
 	{
 	   m_geoLocation = status.geoLocation;
+	   m_altitude = status.altitude;
 		addLocationToHistory();
    }
 	m_ipAddress = status.ipAddress;
@@ -250,9 +269,13 @@ DataCollectionError MobileDevice::getInternalMetric(const TCHAR *name, TCHAR *bu
 		return rc;
 	rc = DCE_SUCCESS;
 
-   if (!_tcsicmp(name, _T("MobileDevice.BatteryLevel")))
+   if (!_tcsicmp(name, _T("MobileDevice.Altitude")))
    {
-      _sntprintf(buffer, size, _T("%d"), m_batteryLevel);
+      _sntprintf(buffer, size, _T("%d"), m_altitude);
+   }
+   else if (!_tcsicmp(name, _T("MobileDevice.BatteryLevel")))
+   {
+      _sntprintf(buffer, size, _T("%d"), static_cast<int32_t>(m_batteryLevel));
    }
    else if (!_tcsicmp(name, _T("MobileDevice.CommProtocol")))
    {
@@ -261,6 +284,10 @@ DataCollectionError MobileDevice::getInternalMetric(const TCHAR *name, TCHAR *bu
    else if (!_tcsicmp(name, _T("MobileDevice.DeviceId")))
    {
 		_tcslcpy(buffer, m_deviceId, size);
+   }
+   else if (!_tcsicmp(name, _T("MobileDevice.Direction")))
+   {
+      _sntprintf(buffer, size, _T("%d"), static_cast<int32_t>(m_direction));
    }
    else if (!_tcsicmp(name, _T("MobileDevice.LastReportTime")))
    {
@@ -281,6 +308,10 @@ DataCollectionError MobileDevice::getInternalMetric(const TCHAR *name, TCHAR *bu
    else if (!_tcsicmp(name, _T("MobileDevice.SerialNumber")))
    {
 		_tcslcpy(buffer, m_serialNumber, size);
+   }
+   else if (!_tcsicmp(name, _T("MobileDevice.Speed")))
+   {
+      _sntprintf(buffer, size, _T("%f"), m_speed);
    }
    else if (!_tcsicmp(name, _T("MobileDevice.Vendor")))
    {
@@ -331,17 +362,20 @@ json_t *MobileDevice::toJson()
    json_t *root = super::toJson();
 
    lockProperties();
-   json_object_set_new(root, "lastReportTime", json_integer(m_lastReportTime));
-   json_object_set_new(root, "deviceId", json_string_t(m_deviceId));
+   json_object_set_new(root, "altitude", json_integer(m_altitude));
+   json_object_set_new(root, "batteryLevel", json_integer(m_batteryLevel));
    json_object_set_new(root, "commProtocol", json_string_t(m_commProtocol));
-   json_object_set_new(root, "vendor", json_string_t(m_vendor));
+   json_object_set_new(root, "deviceId", json_string_t(m_deviceId));
+   json_object_set_new(root, "direction", json_integer(m_direction));
+   json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
+   json_object_set_new(root, "lastReportTime", json_integer(m_lastReportTime));
    json_object_set_new(root, "model", json_string_t(m_model));
-   json_object_set_new(root, "serialNumber", json_string_t(m_serialNumber));
    json_object_set_new(root, "osName", json_string_t(m_osName));
    json_object_set_new(root, "osVersion", json_string_t(m_osVersion));
+   json_object_set_new(root, "serialNumber", json_string_t(m_serialNumber));
+   json_object_set_new(root, "speed", json_real(m_speed));
    json_object_set_new(root, "userId", json_string_t(m_userId));
-   json_object_set_new(root, "batteryLevel", json_integer(m_batteryLevel));
-   json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
+   json_object_set_new(root, "vendor", json_string_t(m_vendor));
    unlockProperties();
 
    return root;
