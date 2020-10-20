@@ -892,7 +892,7 @@ void NetObj::onObjectDelete(UINT32 objectId)
          setModified(MODIFY_COMMON_PROPERTIES);
       }
    }
-   unlockProperties();
+   unlockProperties();;
 }
 
 /**

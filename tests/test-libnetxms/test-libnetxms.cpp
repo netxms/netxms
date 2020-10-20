@@ -27,6 +27,7 @@ void TestProcessExecutor(const char *procname);
 void TestProcessExecutorWorker();
 void TestStringConversion();
 void TestSubProcess(const char *procname);
+void TestGeoLocation();
 NXCPMessage *TestSubProcessRequestHandler(UINT16 command, const void *data, size_t dataSize);
 
 /**
@@ -1798,5 +1799,6 @@ int main(int argc, char *argv[])
    TestSubProcess(argv[0]);
    TestThreadPool();
    TestThreadCountAndMaxWaitTime();
+   TestGeoLocation();
    return 0;
 }
