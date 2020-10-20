@@ -539,17 +539,24 @@ void MobileDeviceSession::updateDeviceStatus(NXCPMessage *request)
 
       int type = request->getFieldType(VID_BATTERY_LEVEL);
       if (type == NXCP_DT_INT32)
-         status.batteryLevel = request->getFieldAsInt32(VID_BATTERY_LEVEL);
+         status.batteryLevel = static_cast<int8_t>(request->getFieldAsInt32(VID_BATTERY_LEVEL));
       else if (type == NXCP_DT_INT16)
-         status.batteryLevel = request->getFieldAsInt16(VID_BATTERY_LEVEL);
-      else
-         status.batteryLevel = -1;
+         status.batteryLevel = static_cast<int8_t>(request->getFieldAsInt16(VID_BATTERY_LEVEL));
 
       if (request->isFieldExist(VID_GEOLOCATION_TYPE))
          status.geoLocation = GeoLocation(*request);
 
       if (request->isFieldExist(VID_IP_ADDRESS))
          status.ipAddress = request->getFieldAsInetAddress(VID_IP_ADDRESS);
+
+      if (request->isFieldExist(VID_SPEED))
+         status.speed = static_cast<float>(request->getFieldAsDouble(VID_SPEED));
+
+      if (request->isFieldExist(VID_ALTITUDE))
+         status.altitude = request->getFieldAsInt32(VID_ALTITUDE);
+
+      if (request->isFieldExist(VID_DIRECTION))
+         status.direction = request->getFieldAsInt16(VID_DIRECTION);
 
 		device->updateStatus(status);
 		msg.setField(VID_RCC, RCC_SUCCESS);

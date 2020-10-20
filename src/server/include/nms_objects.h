@@ -2191,9 +2191,21 @@ struct MobileDeviceInfo
 struct MobileDeviceStatus
 {
    const TCHAR *commProtocol;
-   int32_t batteryLevel;
    GeoLocation geoLocation;
+   int32_t altitude;
+   float speed;
+   int16_t direction;
+   int8_t batteryLevel;
    InetAddress ipAddress;
+
+   MobileDeviceStatus()
+   {
+      commProtocol = _T("UNKNOWN");
+      altitude = 0;
+      speed = -1;
+      direction = -1;
+      batteryLevel = -1;
+   }
 };
 
 /**
@@ -2214,8 +2226,11 @@ protected:
 	SharedString m_osName;
 	SharedString m_osVersion;
 	SharedString m_userId;
-	int32_t m_batteryLevel;
+	int8_t m_batteryLevel;
    InetAddress m_ipAddress;
+   int32_t m_altitude;
+   float m_speed;
+   int16_t m_direction;
 
 	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
@@ -2243,6 +2258,7 @@ public:
 	void updateStatus(const MobileDeviceStatus& status);
 
 	const TCHAR *getCommProtocol() const { return m_commProtocol; }
+	time_t getLastReportTime() const { return GetAttributeWithLock(m_lastReportTime, m_mutexProperties); }
 	SharedString getDeviceId() const { return GetAttributeWithLock(m_deviceId, m_mutexProperties); }
 	SharedString getVendor() const { return GetAttributeWithLock(m_vendor, m_mutexProperties); }
 	SharedString getModel() const { return GetAttributeWithLock(m_model, m_mutexProperties); }
@@ -2250,7 +2266,10 @@ public:
 	SharedString getOsName() const { return GetAttributeWithLock(m_osName, m_mutexProperties); }
 	SharedString getOsVersion() const { return GetAttributeWithLock(m_osVersion, m_mutexProperties); }
 	SharedString getUserId() const { return GetAttributeWithLock(m_userId, m_mutexProperties); }
-	int32_t getBatteryLevel() const { return GetAttributeWithLock(m_batteryLevel, m_mutexProperties); }
+	int8_t getBatteryLevel() const { return GetAttributeWithLock(m_batteryLevel, m_mutexProperties); }
+   int16_t getDirection() const { return GetAttributeWithLock(m_direction, m_mutexProperties); }
+   float getSpeed() const { return GetAttributeWithLock(m_speed, m_mutexProperties); }
+   int32_t getAltitude() const { return GetAttributeWithLock(m_altitude, m_mutexProperties); }
 
 	virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size) override;
 

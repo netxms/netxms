@@ -24,6 +24,25 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 36.7 to 36.8
+ */
+static bool H_UpgradeFromV7()
+{
+   static const TCHAR *batch =
+         _T("ALTER TABLE mobile_devices ADD speed varchar(20)\n")
+         _T("ALTER TABLE mobile_devices ADD direction integer\n")
+         _T("ALTER TABLE mobile_devices ADD altitude integer\n")
+         _T("UPDATE mobile_devices SET speed='-1',direction=-1,altitude=0\n")
+         _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("mobile_devices"), _T("speed")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("mobile_devices"), _T("direction")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("mobile_devices"), _T("altitude")));
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 36.6 to 36.7
  */
 static bool H_UpgradeFromV6()
@@ -159,6 +178,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 7,  36, 8,  H_UpgradeFromV7  },
    { 6,  36, 7,  H_UpgradeFromV6  },
    { 5,  36, 6,  H_UpgradeFromV5  },
    { 4,  36, 5,  H_UpgradeFromV4  },

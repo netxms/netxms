@@ -246,6 +246,9 @@ CREATE TABLE mobile_devices
   user_id varchar(64) null,
   battery_level integer not null,
   comm_protocol varchar(31) null,
+  speed varchar(20) not null,
+  direction integer not null,
+  altitude integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

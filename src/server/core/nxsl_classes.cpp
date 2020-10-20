@@ -2181,25 +2181,33 @@ NXSL_Value *NXSL_MobileDeviceClass::getAttr(NXSL_Object *object, const char *att
 
    NXSL_VM *vm = object->vm();
    auto mobileDevice = SharedObjectFromData<MobileDevice>(object);
-   if (compareAttributeName(attr, "commProtocol"))
+   if (compareAttributeName(attr, "altitude"))
    {
-		value = vm->createValue(mobileDevice->getCommProtocol());
+		value = vm->createValue(mobileDevice->getAltitude());
+   }
+   else if (compareAttributeName(attr, "batteryLevel"))
+   {
+      value = vm->createValue(mobileDevice->getBatteryLevel());
+   }
+   else if (compareAttributeName(attr, "commProtocol"))
+   {
+      value = vm->createValue(mobileDevice->getCommProtocol());
    }
    else if (compareAttributeName(attr, "deviceId"))
    {
       value = vm->createValue(mobileDevice->getDeviceId());
    }
-   else if (compareAttributeName(attr, "vendor"))
+   else if (compareAttributeName(attr, "direction"))
    {
-      value = vm->createValue(mobileDevice->getVendor());
+      value = vm->createValue(mobileDevice->getDirection());
+   }
+   else if (compareAttributeName(attr, "lastReportTime"))
+   {
+      value = vm->createValue(mobileDevice->getLastReportTime());
    }
    else if (compareAttributeName(attr, "model"))
    {
       value = vm->createValue(mobileDevice->getModel());
-   }
-   else if (compareAttributeName(attr, "serialNumber"))
-   {
-      value = vm->createValue(mobileDevice->getSerialNumber());
    }
    else if (compareAttributeName(attr, "osName"))
    {
@@ -2209,13 +2217,21 @@ NXSL_Value *NXSL_MobileDeviceClass::getAttr(NXSL_Object *object, const char *att
    {
       value = vm->createValue(mobileDevice->getOsVersion());
    }
+   else if (compareAttributeName(attr, "serialNumber"))
+   {
+      value = vm->createValue(mobileDevice->getSerialNumber());
+   }
+   else if (compareAttributeName(attr, "speed"))
+   {
+      value = vm->createValue(mobileDevice->getSpeed());
+   }
    else if (compareAttributeName(attr, "userId"))
    {
       value = vm->createValue(mobileDevice->getUserId());
    }
-   else if (compareAttributeName(attr, "batteryLevel"))
+   else if (compareAttributeName(attr, "vendor"))
    {
-      value = vm->createValue(mobileDevice->getBatteryLevel());
+      value = vm->createValue(mobileDevice->getVendor());
    }
 
    return value;

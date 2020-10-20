@@ -95,7 +95,7 @@ GeoLocation::GeoLocation(const GeoLocation &src)
 /**
  * Create geolocation object from data in NXCP message
  */
-GeoLocation::GeoLocation(NXCPMessage &msg)
+GeoLocation::GeoLocation(const NXCPMessage &msg)
 {
    m_type = (int)msg.getFieldAsUInt16(VID_GEOLOCATION_TYPE);
 
