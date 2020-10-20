@@ -23,6 +23,7 @@
 #include "libnetxms.h"
 #include <geolocation.h>
 #include <math.h>
+#include <limits>
 
 static const double ROUND_OFF = 0.00000001;
 
@@ -468,4 +469,39 @@ int GeoLocation::calculateDistance(GeoLocation &location) const
 
    double distance = R * c;
    return (int)(distance+0.5);
+}
+
+
+const double epsilon = std::numeric_limits<float>().epsilon();
+const std::numeric_limits<double> DOUBLE;
+const double MIN = DOUBLE.min();
+const double MAX = DOUBLE.max();
+
+static bool intersects(const GeoLocation *a, const GeoLocation *b, const GeoLocation *p)
+{
+   if (a->getLongitude() > b->getLongitude())
+      return intersects( b, a, p);
+   if (p->getLongitude() == a->getLongitude() || p->getLongitude() == b->getLongitude())
+   {
+      GeoLocation newP(p->getType(), p->getLatitude(), p->getLongitude() + epsilon);
+      return intersects(a, b, &newP);
+   }
+   if (p->getLongitude() > b->getLongitude() || p->getLongitude() < a->getLongitude() || p->getLatitude() > std::max(a->getLatitude(), b->getLatitude()))
+      return false;
+   if (p->getLatitude() < std::min(a->getLatitude(), b->getLatitude()))
+      return true;
+   auto blue = abs(a->getLatitude() - p->getLatitude()) > MIN ? (p->getLongitude() - a->getLongitude()) / (p->getLatitude() - a->getLatitude()) : MAX;
+   auto red = abs(a->getLatitude() - b->getLatitude()) > MIN ? (b->getLongitude() - a->getLongitude()) / (b->getLatitude() - a->getLatitude()) : MAX;
+   return blue >= red;
+}
+
+bool GeoLocation::isInPolygon(const ObjectArray<GeoLocation> &polygon) const
+{
+   int intersections = 0;
+   for (int i = 0; i < polygon.size(); i++)
+   {
+      if (intersects(polygon.get(i), polygon.get((i+1)%polygon.size()), this))
+         intersections++;
+   }
+   return (intersections % 2 != 0);
 }
