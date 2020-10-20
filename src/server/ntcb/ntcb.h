@@ -64,7 +64,7 @@ union TelemetryValue
    int8_t i8;
    float f32;
    double f64;
-   BYTE raw[8];
+   BYTE raw[48];
 };
 
 /**
@@ -75,7 +75,7 @@ struct TelemetryField
    size_t size;
    TelemetryDataType dataType;
    const TCHAR *name;  // Parameter name if value can be pushed directly or nullptr
-   void (*handler)(TelemetryDataType, TelemetryValue, shared_ptr<MobileDevice>);   // Custom handler or nullptr
+   void (*handler)(TelemetryDataType, const TelemetryValue&, StringMap *pushValues);   // Custom handler or nullptr
 };
 
 /**
@@ -105,13 +105,31 @@ private:
 
    void sendNTCBMessage(const void *data, size_t size);
 
-   void debugPrintf(int level, const TCHAR *format, ...);
-
 public:
    NTCBDeviceSession(SOCKET s, const InetAddress& addr);
    ~NTCBDeviceSession();
 
    bool start();
+
+   void debugPrintf(int level, const TCHAR *format, ...);
+};
+
+/**
+ * Telemetry record
+ */
+class TelemetryRecord
+{
+private:
+   time_t m_timestamp;
+   MobileDeviceStatus m_deviceStatus;
+   shared_ptr<MobileDevice> m_device;
+   StringMap m_pushList;
+
+public:
+   TelemetryRecord(const shared_ptr<MobileDevice>& device);
+
+   void processField(NTCBDeviceSession *session, int fieldIndex, const TelemetryField *field, const TelemetryValue& value);
+   void updateDevice();
 };
 
 extern uint32_t g_ntcbSocketTimeout;
