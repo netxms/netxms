@@ -23,6 +23,94 @@
 #include "ntcb.h"
 
 /**
+ * Parser for field 4
+ */
+static void FP_4(TelemetryDataType dataType, const TelemetryValue& value, StringMap *pushValues)
+{
+   pushValues->set(_T("NTCB.DeviceStatus.TestMode"), value.testBit8(0));
+   pushValues->set(_T("NTCB.DeviceStatus.AlarmNotification"), value.testBit8(1));
+   pushValues->set(_T("NTCB.DeviceStatus.Alarm"), value.testBit8(2));
+   pushValues->set(_T("NTCB.DeviceStatus.Mode"), static_cast<int32_t>((value.u8 >> 3) & 0x03));
+   pushValues->set(_T("NTCB.DeviceStatus.Evacuation"), value.testBit8(5));
+   pushValues->set(_T("NTCB.DeviceStatus.PowerSavingMode"), value.testBit8(6));
+   pushValues->set(_T("NTCB.DeviceStatus.Accelerometer.Calibration"), value.testBit8(7));
+}
+
+/**
+ * Parser for field 5
+ */
+static void FP_5(TelemetryDataType dataType, const TelemetryValue& value, StringMap *pushValues)
+{
+   pushValues->set(_T("NTCB.DeviceStatus.GSM.Status"), value.testBit8(0));
+   pushValues->set(_T("NTCB.DeviceStatus.USB.Status"), value.testBit8(1));
+   pushValues->set(_T("NTCB.DeviceStatus.NavReceiver"), value.testBit8(2));
+   pushValues->set(_T("NTCB.DeviceStatus.ClockSync"), value.testBit8(3));
+   pushValues->set(_T("NTCB.DeviceStatus.GSM.ActiveSIM"), value.testBit8(4) + 1);
+   pushValues->set(_T("NTCB.DeviceStatus.GSM.Registration"), value.testBit8(5));
+   pushValues->set(_T("NTCB.DeviceStatus.GSM.Roaming"), value.testBit8(6));
+   pushValues->set(_T("NTCB.DeviceStatus.EngineStatus"), value.testBit8(7));
+}
+
+/**
+ * Parser for field 6
+ */
+static void FP_6(TelemetryDataType dataType, const TelemetryValue& value, StringMap *pushValues)
+{
+   pushValues->set(_T("NTCB.DeviceStatus.GSM.Interference"), static_cast<int32_t>(value.u8 & 0x03));
+   pushValues->set(_T("NTCB.DeviceStatus.GNSS.Interference"), value.testBit8(2));
+   pushValues->set(_T("NTCB.DeviceStatus.GNSS.ApproximationMode"), value.testBit8(3));
+   pushValues->set(_T("NTCB.DeviceStatus.Accelerometer.Status"), value.testBit8(4));
+   pushValues->set(_T("NTCB.DeviceStatus.Bluetooth.Status"), value.testBit8(5));
+   pushValues->set(_T("NTCB.DeviceStatus.WiFi.Status"), value.testBit8(6));
+}
+
+/**
+ * Parser for field 7
+ * 0: -113 Дб/м или меньше
+ * 1: -111 Дб/м
+ * 2..30: -109..-53 Дб/м
+ * 31: -51 Дб/м или больше
+ * 99: нет сигнала сотовой сети.
+ */
+static void FP_7(TelemetryDataType dataType, const TelemetryValue& value, StringMap *pushValues)
+{
+   pushValues->set(_T("NTCB.DeviceStatus.GSM.SignalLevel"), (value.u8 <= 31) ? static_cast<int32_t>(value.u8) * 2 - 113 : 0);
+}
+
+/**
+ * Parser for field 8
+ */
+static void FP_8(TelemetryDataType dataType, const TelemetryValue& value, StringMap *pushValues)
+{
+   pushValues->set(_T("NTCB.DeviceStatus.GPS.Status"), value.testBit8(0));
+   pushValues->set(_T("NTCB.DeviceStatus.GPS.ValidCoordinates"), value.testBit8(1));
+   pushValues->set(_T("NTCB.DeviceStatus.GPS.Satellites"), static_cast<uint32_t>(value.u8 >> 2));
+}
+
+/**
+ * Parser for field 53
+ * Если разряд 15 равен единице 0-100 в % (точность до 1%)
+ * Если разряд 15 равен нулю 0-32766 в 0,1 литра (0-3276,6 литра)
+ *    32767 (0x7FFF) – параметр не считывается
+ * Actual data from emulator is reversed - current code uses what is received from emulator
+ */
+static void FP_53(TelemetryDataType dataType, const TelemetryValue& value, StringMap *pushValues)
+{
+   if ((value.u16 & 0x7FFF) == 0x7FFF)
+      return;
+   if (value.u16 & 0x8000)
+   {
+      TCHAR buffer[32];
+      _sntprintf(buffer, 32, _T("%d.%d"), static_cast<int32_t>(value.u16 & 0x7FFF) / 10, static_cast<int32_t>(value.u16 & 0x7FFF) % 10);
+      pushValues->set(_T("NTCB.CAN.FuelAmount"), buffer);
+   }
+   else
+   {
+      pushValues->set(_T("NTCB.CAN.FuelLevel"), value.u16);
+   }
+}
+
+/**
  * FLEX telemetry fields
  */
 static struct TelemetryField s_telemetryFields[255] =
@@ -30,11 +118,11 @@ static struct TelemetryField s_telemetryFields[255] =
    { 4, TelemetryDataType::U32, nullptr, nullptr },   // 1: Сквозной номер записи в энергонезависимой памяти
    { 2, TelemetryDataType::U16, nullptr, nullptr },   // 2: Код события, соответствующий данной записи
    { 4, TelemetryDataType::U32, nullptr, nullptr },   // 3: Время события
-   { 1, TelemetryDataType::U8, nullptr, nullptr },    // 4: Статус устройства
-   { 1, TelemetryDataType::U8, nullptr, nullptr },    // 5: Статус функциональных модулей 1
-   { 1, TelemetryDataType::U8, nullptr, nullptr },    // 6: Статус функциональных модулей 2
-   { 1, TelemetryDataType::U8, nullptr, nullptr },    // 7: Уровень GSM
-   { 1, TelemetryDataType::U8, nullptr, nullptr },    // 8: Состояние навигационного датчика GPS/ГЛОНАСС
+   { 1, TelemetryDataType::U8, nullptr, FP_4 },    // 4: Статус устройства
+   { 1, TelemetryDataType::U8, nullptr, FP_5 },    // 5: Статус функциональных модулей 1
+   { 1, TelemetryDataType::U8, nullptr, FP_6 },    // 6: Статус функциональных модулей 2
+   { 1, TelemetryDataType::U8, nullptr, FP_7 },    // 7: Уровень GSM
+   { 1, TelemetryDataType::U8, nullptr, FP_8 },    // 8: Состояние навигационного датчика GPS/ГЛОНАСС
    { 4, TelemetryDataType::U32, nullptr, nullptr },   // 9: Время последних валидных координат (до произошедшего события)
    { 4, TelemetryDataType::I32, nullptr, nullptr },   // 10: Последняя валидная широта
    { 4, TelemetryDataType::I32, nullptr, nullptr },   // 11: Последняя валидная долгота
@@ -79,16 +167,16 @@ static struct TelemetryField s_telemetryFields[255] =
    { 1, TelemetryDataType::I8, _T("NTCB.Temperature6"), nullptr },    // 50: Температура с цифрового датчика 6 (в градусах Цельсия)
    { 1, TelemetryDataType::I8, _T("NTCB.Temperature7"), nullptr },    // 51: Температура с цифрового датчика 7 (в градусах Цельсия)
    { 1, TelemetryDataType::I8, _T("NTCB.Temperature8"), nullptr },    // 52: Температура с цифрового датчика 8 (в градусах Цельсия)
-   { 2, TelemetryDataType::U16, nullptr, nullptr },   // 53: CAN Уровень топлива в баке
+   { 2, TelemetryDataType::U16, nullptr, FP_53 },   // 53: CAN Уровень топлива в баке
    { 4, TelemetryDataType::F32, _T("NTCB.CAN.FuelConsumption"), nullptr },   // 54: CAN Полный расход топлива
    { 2, TelemetryDataType::U16, _T("NTCB.CAN.EngineRPM"), nullptr },   // 55: CAN Обороты двигателя
-   { 1, TelemetryDataType::I8, nullptr, nullptr },    // 56: CAN Температура охлаждающей жидкости (двигателя)
-   { 4, TelemetryDataType::F32, nullptr, nullptr },   // 57: CAN Полный пробег ТС
-   { 2, TelemetryDataType::U16, nullptr, nullptr },   // 58: CAN Нагрузка на ось 1
-   { 2, TelemetryDataType::U16, nullptr, nullptr },   // 59: CAN Нагрузка на ось 2
-   { 2, TelemetryDataType::U16, nullptr, nullptr },   // 60: CAN Нагрузка на ось 3
-   { 2, TelemetryDataType::U16, nullptr, nullptr },   // 61: CAN Нагрузка на ось 4
-   { 2, TelemetryDataType::U16, nullptr, nullptr },   // 62: CAN Нагрузка на ось 5
+   { 1, TelemetryDataType::I8, _T("NTCB.CAN.CoolantTemperature"), nullptr },    // 56: CAN Температура охлаждающей жидкости (двигателя)
+   { 4, TelemetryDataType::F32, _T("NTCB.CAN.Mileage"), nullptr },   // 57: CAN Полный пробег ТС
+   { 2, TelemetryDataType::U16, _T("NTCB.CAN.Axis1Load"), nullptr },   // 58: CAN Нагрузка на ось 1
+   { 2, TelemetryDataType::U16, _T("NTCB.CAN.Axis2Load"), nullptr },   // 59: CAN Нагрузка на ось 2
+   { 2, TelemetryDataType::U16, _T("NTCB.CAN.Axis3Load"), nullptr },   // 60: CAN Нагрузка на ось 3
+   { 2, TelemetryDataType::U16, _T("NTCB.CAN.Axis4Load"), nullptr },   // 61: CAN Нагрузка на ось 4
+   { 2, TelemetryDataType::U16, _T("NTCB.CAN.Axis5Load"), nullptr },   // 62: CAN Нагрузка на ось 5
    { 1, TelemetryDataType::U8, nullptr, nullptr },    // 63: CAN Положение педали газа
    { 1, TelemetryDataType::U8, nullptr, nullptr },    // 64: CAN Положение педали тормоза
    { 1, TelemetryDataType::U8, nullptr, nullptr },    // 65: CAN Нагрузка на двигатель
