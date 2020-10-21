@@ -25,11 +25,14 @@
 #define DEBUG_TAG_NTCB_SESSION   DEBUG_TAG_NTCB _T(".session")
 
 /**
+ * Unregister session
+ */
+void UnregisterNTCBDeviceSession(session_id_t id);
+
+/**
  * Socket timeout for NTCB
  */
 uint32_t g_ntcbSocketTimeout = 60000;
-
-static uint32_t s_sessionId = 0;
 
 /**
  * Table for CRC8 calculation
@@ -113,7 +116,7 @@ struct NTCB_HEADER
  */
 NTCBDeviceSession::NTCBDeviceSession(SOCKET s, const InetAddress& addr) : m_socket(s), m_address(addr)
 {
-   m_id = s_sessionId++;
+   m_id = -1;
    m_ntcbReceiverId = 0;
    m_ntcbSenderId = 0;
    m_flexProtoVersion = 0;
@@ -146,6 +149,14 @@ void NTCBDeviceSession::debugPrintf(int level, const TCHAR *format, ...)
 bool NTCBDeviceSession::start()
 {
    return ThreadCreate(this, &NTCBDeviceSession::readThread);
+}
+
+/**
+ * Terminate session
+ */
+void NTCBDeviceSession::terminate()
+{
+   m_socket.disconnect();
 }
 
 /**
@@ -255,6 +266,10 @@ void NTCBDeviceSession::readThread()
 
    m_socket.disconnect();
    debugPrintf(3, _T("Read thread stopped"));
+
+   // The following call can potentially destroy session object
+   // so no access to the object should be performed after this point
+   UnregisterNTCBDeviceSession(m_id);
 }
 
 /**

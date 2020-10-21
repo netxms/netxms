@@ -88,7 +88,7 @@ struct TelemetryField
 class NTCBDeviceSession
 {
 private:
-   uint32_t m_id;
+   session_id_t m_id;
    SocketConnection m_socket;
    InetAddress m_address;
    uint32_t m_ntcbSenderId;
@@ -113,7 +113,13 @@ public:
    NTCBDeviceSession(SOCKET s, const InetAddress& addr);
    ~NTCBDeviceSession();
 
+   void setId(session_id_t id) { m_id = id; }
    bool start();
+   void terminate();
+
+   session_id_t getId() const { return m_id; }
+   const InetAddress& getAddress() const { return m_address; }
+   shared_ptr<MobileDevice> getDevice() const { return m_device; }
 
    void debugPrintf(int level, const TCHAR *format, ...);
 };
