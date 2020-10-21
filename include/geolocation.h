@@ -87,7 +87,7 @@ public:
 	bool equals(const GeoLocation &location) const;
 	bool sameLocation(double lat, double lon, int oldAccuracy) const;
 	int calculateDistance(GeoLocation &location) const;
-	bool isInPolygon(const ObjectArray<GeoLocation> &polygon) const;
+	bool isWithinArea(const ObjectArray<GeoLocation> &area) const;
 
 	void fillMessage(NXCPMessage &msg) const;
 

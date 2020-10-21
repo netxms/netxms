@@ -2203,7 +2203,7 @@ NXSL_Value *NXSL_MobileDeviceClass::getAttr(NXSL_Object *object, const char *att
    }
    else if (compareAttributeName(attr, "lastReportTime"))
    {
-      value = vm->createValue(mobileDevice->getLastReportTime());
+      value = vm->createValue(static_cast<int64_t>(mobileDevice->getLastReportTime()));
    }
    else if (compareAttributeName(attr, "model"))
    {
