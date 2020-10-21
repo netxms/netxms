@@ -18,12 +18,13 @@
  */
 package org.netxms.websvc;
 
+import java.util.List;
+import java.util.Map;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.Map;
 
 /**
  * Object tool execution thread
@@ -34,6 +35,7 @@ public class ObjectToolExecutor extends Thread
    private ObjectToolDetails details;
    private long objectId;
    private Map<String, String> inputFields;
+   private List<String> maskedFields;
    private ObjectToolOutputListener listener;
    private NXCSession session;
    private boolean generateOutput;
@@ -48,11 +50,12 @@ public class ObjectToolExecutor extends Thread
     * @param session
     */
    public ObjectToolExecutor(ObjectToolDetails details, long objectId, Map<String, String> inputFields,
-         ObjectToolOutputListener listener, NXCSession session)
+         List<String> maskedFields, ObjectToolOutputListener listener, NXCSession session)
    {
       this.details = details;
       this.objectId = objectId;
       this.inputFields = inputFields;
+      this.maskedFields = maskedFields;
       this.listener = listener;
       this.session = session;
       generateOutput = (details.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0;
@@ -68,11 +71,12 @@ public class ObjectToolExecutor extends Thread
     * @param inputFields
     * @param session
     */
-   public ObjectToolExecutor(ObjectToolDetails details, long objectId, Map<String, String> inputFields, NXCSession session)
+   public ObjectToolExecutor(ObjectToolDetails details, long objectId, Map<String, String> inputFields, List<String> maskedFields, NXCSession session)
    {
       this.details = details;
       this.objectId = objectId;
       this.inputFields = inputFields;
+      this.maskedFields = maskedFields;
       this.listener = null;
       this.session = session;
       generateOutput = (details.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0;
@@ -121,7 +125,7 @@ public class ObjectToolExecutor extends Thread
    {
       try
       {
-         session.executeActionWithExpansion(objectId, 0, details.getData(), generateOutput, inputFields, listener, null);
+         session.executeActionWithExpansion(objectId, 0, details.getData(), generateOutput, inputFields, maskedFields, listener, null);
       }
       catch(Exception e)
       {
@@ -136,7 +140,7 @@ public class ObjectToolExecutor extends Thread
    {
       try
       {
-         session.executeServerCommand(objectId, details.getData(), inputFields, generateOutput, listener, null);
+         session.executeServerCommand(objectId, details.getData(), inputFields, maskedFields, generateOutput, listener, null);
       }
       catch(Exception e)
       {
