@@ -42,6 +42,9 @@
     <ClCompile Include="queue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="geolocation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\testtools.h">
