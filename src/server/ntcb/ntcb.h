@@ -65,6 +65,10 @@ union TelemetryValue
    float f32;
    double f64;
    BYTE raw[48];
+
+   int32_t testBit8(int bit) const { return (u8 & (1 << bit)) ? 1 : 0; }
+   int32_t testBit16(int bit) const { return (u16 & (1 << bit)) ? 1 : 0; }
+   int32_t testBit32(int bit) const { return (u32 & (1 << bit)) ? 1 : 0; }
 };
 
 /**
@@ -75,7 +79,7 @@ struct TelemetryField
    size_t size;
    TelemetryDataType dataType;
    const TCHAR *name;  // Parameter name if value can be pushed directly or nullptr
-   void (*handler)(TelemetryDataType, const TelemetryValue&, StringMap *pushValues);   // Custom handler or nullptr
+   void (*handler)(TelemetryDataType, const TelemetryValue&, StringMap*);   // Custom handler or nullptr
 };
 
 /**

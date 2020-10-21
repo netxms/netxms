@@ -226,7 +226,7 @@ void MobileDevice::updateSystemInfo(const MobileDeviceInfo& deviceInfo)
 	m_osVersion = deviceInfo.osVersion;
 	m_userId = deviceInfo.userId;
 
-	setModified(MODIFY_OTHER);
+	setModified(MODIFY_OTHER | MODIFY_COMMON_PROPERTIES);
 	unlockProperties();
 }
 
@@ -247,8 +247,13 @@ void MobileDevice::updateStatus(const MobileDeviceStatus& status)
 	   m_geoLocation = status.geoLocation;
 	   m_altitude = status.altitude;
 		addLocationToHistory();
+	   setModified(MODIFY_COMMON_PROPERTIES);
    }
-	m_ipAddress = status.ipAddress;
+	if (!m_ipAddress.equals(status.ipAddress))
+	{
+	   m_ipAddress = status.ipAddress;
+      setModified(MODIFY_COMMON_PROPERTIES);
+	}
 
 	TCHAR temp[64];
 	DbgPrintf(5, _T("Mobile device %s [%u] status update (battery=%d addr=%s loc=[%s %s])"),
