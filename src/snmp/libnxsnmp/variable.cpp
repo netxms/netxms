@@ -341,7 +341,7 @@ double SNMP_Variable::getValueAsDouble() const
       case ASN_COUNTER64:
       case ASN_INTEGER64:
       case ASN_UINTEGER64:
-         return *reinterpret_cast<int64_t*>(m_value);
+         return static_cast<double>(*reinterpret_cast<int64_t*>(m_value));
       case ASN_FLOAT:
          return *reinterpret_cast<float*>(m_value);
       case ASN_DOUBLE:
