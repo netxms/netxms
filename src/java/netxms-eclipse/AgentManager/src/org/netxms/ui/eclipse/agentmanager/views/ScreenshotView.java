@@ -90,9 +90,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
    private boolean autoRefresh;
    private long lastRequestTime;
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -116,9 +114,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
       autoRefresh = false;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -431,9 +427,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
       }
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
@@ -481,21 +475,25 @@ public class ScreenshotView extends ViewPart implements IPartListener
       manager.add(actionRefresh);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override
    public void dispose()
    {
+      getSite().getPage().removePartListener(this);
       if (image != null)
          image.dispose();
       super.dispose();
    }
 
+   /**
+    * @see org.eclipse.ui.IPartListener#partActivated(org.eclipse.ui.IWorkbenchPart)
+    */
    @Override
    public void partActivated(IWorkbenchPart part)
    {
-      if(autoRefresh && getSite().getPage().isPartVisible(ScreenshotView.this))
+      if (autoRefresh && getSite().getPage().isPartVisible(ScreenshotView.this))
       {
          refresh();
       }
@@ -507,6 +505,10 @@ public class ScreenshotView extends ViewPart implements IPartListener
    @Override
    public void partBroughtToTop(IWorkbenchPart part)
    {
+      if (autoRefresh && getSite().getPage().isPartVisible(ScreenshotView.this))
+      {
+         refresh();
+      }
    }
 
    /**
@@ -515,7 +517,6 @@ public class ScreenshotView extends ViewPart implements IPartListener
    @Override
    public void partClosed(IWorkbenchPart part)
    {
-      dispose();
    }
 
    /**
