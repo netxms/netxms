@@ -19,6 +19,7 @@
 
 package org.netxms.websvc.handlers;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -115,6 +116,7 @@ public class ObjectTools extends AbstractObjectHandler
       {
          JSONObject toolData = json.getJSONObject("toolData");
          Map<String, String> fields = new HashMap<String, String>();
+         List<String> maskedFields = new ArrayList<String>();
 
          int id = toolData.getInt("id");
          if (toolData.optJSONArray("inputFields") != null)
@@ -129,6 +131,15 @@ public class ObjectTools extends AbstractObjectHandler
                   fields.put(pair[1], pair[0]);
             }
          }
+         if (toolData.optJSONArray("maskedInputFields") != null)
+         {
+            JSONArray inputFields = toolData.getJSONArray("maskedInputFields");
+
+            for(int n = 0; n < inputFields.length(); n++)
+            {
+               maskedFields.add(inputFields.getString(n));
+            }
+         }
 
          ObjectToolDetails details = session.getObjectToolDetails(id);
          if (((details.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0))
@@ -136,7 +147,7 @@ public class ObjectTools extends AbstractObjectHandler
             ObjectToolOutputListener listener = new ObjectToolOutputListener();
             UUID uuid = UUID.randomUUID();
             ObjectToolOutputHandler.addListener(uuid, listener);
-            new ObjectToolExecutor(details, object.getObjectId(), fields, listener, session);
+            new ObjectToolExecutor(details, object.getObjectId(), fields, maskedFields, listener, session);
 
             JSONObject response = new JSONObject();
             response.put("UUID", uuid);
