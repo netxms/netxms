@@ -25,8 +25,6 @@
 #include <math.h>
 #include <cfloat>
 
-static const double ROUND_OFF = 0.00000001;
-
 #ifdef UNICODE
 #define DEGREE_SIGN_CHR L'\x00B0'
 #define DEGREE_SIGN_STR L"\x00B0"
@@ -196,7 +194,7 @@ json_t *GeoLocation::toJson() const
  */
 int GeoLocation::getIntegerDegree(double pos)
 {
-	return (int)(fabs(pos) + ROUND_OFF);
+	return (int)(fabs(pos) + DBL_EPSILON);
 }
 
 /**
@@ -204,7 +202,7 @@ int GeoLocation::getIntegerDegree(double pos)
  */
 int GeoLocation::getIntegerMinutes(double pos)
 {
-	double d = fabs(pos) + ROUND_OFF;
+	double d = fabs(pos) + DBL_EPSILON;
 	return (int)((d - (double)((int)d)) * 60.0);
 }
 
@@ -213,7 +211,7 @@ int GeoLocation::getIntegerMinutes(double pos)
  */
 double GeoLocation::getDecimalSeconds(double pos)
 {
-	double d = fabs(pos) * 60.0 + ROUND_OFF;
+	double d = fabs(pos) * 60.0 + DBL_EPSILON;
 	return (d - (double)((int)d)) * 60.0;
 }
 
@@ -476,23 +474,23 @@ int GeoLocation::calculateDistance(GeoLocation &location) const
  */
 static bool CheckIntersection(const GeoLocation& a, const GeoLocation& b, const GeoLocation& p)
 {
-   if (a.getLongitude() > b.getLongitude())
+   if (a.getLatitude() > b.getLatitude())
       return CheckIntersection(b, a, p);
 
-   if ((p.getLongitude() == a.getLongitude()) || (p.getLongitude() == b.getLongitude()))
+   if ((p.getLatitude() == a.getLatitude()) || (p.getLatitude() == b.getLatitude()))
    {
-      GeoLocation newP(p.getType(), p.getLatitude(), p.getLongitude() + DBL_EPSILON);
+      GeoLocation newP(p.getType(), p.getLatitude() + DBL_EPSILON, p.getLongitude());
       return CheckIntersection(a, b, newP);
    }
 
-   if ((p.getLongitude() > b.getLongitude()) || (p.getLongitude() < a.getLongitude()) || (p.getLatitude() > std::max(a.getLatitude(), b.getLatitude())))
+   if ((p.getLatitude() > b.getLatitude()) || (p.getLatitude() < a.getLatitude()) || (p.getLongitude() > std::max(a.getLongitude(), b.getLongitude())))
       return false;
 
-   if (p.getLatitude() < std::min(a.getLatitude(), b.getLatitude()))
+   if (p.getLongitude() < std::min(a.getLongitude(), b.getLongitude()))
       return true;
 
-   auto blue = abs(a.getLatitude() - p.getLatitude()) > DBL_MIN ? (p.getLongitude() - a.getLongitude()) / (p.getLatitude() - a.getLatitude()) : DBL_MAX;
-   auto red = abs(a.getLatitude() - b.getLatitude()) > DBL_MIN ? (b.getLongitude() - a.getLongitude()) / (b.getLatitude() - a.getLatitude()) : DBL_MAX;
+   auto blue = fabs(a.getLongitude() - p.getLongitude()) > DBL_MIN ? (p.getLatitude() - a.getLatitude()) / (p.getLongitude() - a.getLongitude()) : DBL_MAX;
+   auto red = fabs(a.getLongitude() - b.getLongitude()) > DBL_MIN ? (b.getLatitude() - a.getLatitude()) / (b.getLongitude() - a.getLongitude()) : DBL_MAX;
    return blue >= red;
 }
 
