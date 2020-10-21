@@ -472,10 +472,10 @@ int GeoLocation::calculateDistance(GeoLocation &location) const
 }
 
 
-const double epsilon = std::numeric_limits<float>().epsilon();
-const std::numeric_limits<double> DOUBLE;
-const double MIN = DOUBLE.min();
-const double MAX = DOUBLE.max();
+static const double epsilon = std::numeric_limits<float>().epsilon();
+static const std::numeric_limits<double> DOUBLE_NUMERIC;
+static const double MIN = DOUBLE_NUMERIC.min();
+static const double MAX = DOUBLE_NUMERIC.max();
 
 static bool intersects(const GeoLocation *a, const GeoLocation *b, const GeoLocation *p)
 {
