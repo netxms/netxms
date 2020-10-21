@@ -1121,6 +1121,8 @@ static void DeleteExpiredTasks()
       }
    }
    s_oneTimeScheduleLock.unlock();
+
+   ThreadPoolScheduleRelative(g_schedulerThreadPool, 3600000, DeleteExpiredTasks); //Run every hour
 }
 
 /**
