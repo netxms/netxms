@@ -56,7 +56,6 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
-import org.netxms.ui.eclipse.serverconfig.dialogs.RerunTimeDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.ScheduledTaskEditor;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ScheduleTableEntryComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ScheduleTableEntryLabelProvider;
@@ -260,7 +259,7 @@ public class ScheduledTaskView extends ViewPart
          @Override
          public void run()
          {
-            editTask();
+            editTask(false);
          }
       };
       actionEdit.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.edit_task"); //$NON-NLS-1$
@@ -298,44 +297,11 @@ public class ScheduledTaskView extends ViewPart
          @Override
          public void run()
          {
-            rescheduleTask();
+            editTask(true);
          }
       };
       actionReschedule.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.reschedule_task"); //$NON-NLS-1$
       handlerService.activateHandler(actionReschedule.getActionDefinitionId(), new ActionHandler(actionReschedule));
-   }
-
-   /**
-    * Reschedule task
-    */
-   protected void rescheduleTask()
-   {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();      
-      if (selection.size() != 1)
-         return;
-      
-      final ScheduledTask origin = (ScheduledTask)selection.toList().get(0);
-      
-      final RerunTimeDialog dialog = new RerunTimeDialog(getSite().getShell(), origin.getExecutionTime());
-      
-      if (dialog.open() != Window.OK)
-         return;
-      
-      new ConsoleJob("Reschedule task", null, Activator.PLUGIN_ID, null) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            origin.setExecutionTime(dialog.getRerunDate());
-            origin.setFlags(origin.getFlags() & ~ScheduledTask.EXECUTED);
-            session.updateScheduledTask(origin);            
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return "Cannot reschedule tasks";
-         }
-      }.start();   
    }
 
    /**
@@ -372,13 +338,17 @@ public class ScheduledTaskView extends ViewPart
    /**
     * Edit selected task
     */
-   protected void editTask()
+   protected void editTask(boolean reschedule)
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();      
       if (selection.size() != 1)
          return;
       
       final ScheduledTask origin = (ScheduledTask)selection.toList().get(0);
+      if (reschedule)
+      {
+         origin.setId(0);
+      }
       
       new ConsoleJob("Update scheduled task", null, Activator.PLUGIN_ID, null) {
          private ScheduledTask task = null;
@@ -399,7 +369,12 @@ public class ScheduledTaskView extends ViewPart
                }
             });
             if (task != null)
-               session.updateScheduledTask(task);
+            {
+               if(reschedule)
+                  session.addScheduledTask(task);
+               else
+                  session.updateScheduledTask(task);                  
+            }
          }
 
          @Override
@@ -541,10 +516,15 @@ public class ScheduledTaskView extends ViewPart
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.size() == 1) 
       {         
-         mgr.add(actionEdit);
          ScheduledTask origin = (ScheduledTask)selection.toList().get(0);
          if (origin.getSchedule().isEmpty())
+         {
             mgr.add(actionReschedule);
+         }
+         else
+         {
+            mgr.add(actionEdit);            
+         }
       }
 
       boolean containDisabled = false;
