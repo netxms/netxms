@@ -8,12 +8,16 @@
 - Fixed column sorting in Web Service Definition view
 - Support for IPv6 in NXSL functions AddrInSubnet and AddrInRange
 - nxdbmgr option to migrate log tables in background
-- Windows event log synchronization and server side parsing
+- Windows event log synchronization, server side parsing and sgent side filter
+- Added option not to save to database Windows event log and syslog filtered by server parser
 - Maximum number of client sessions can be configured
 - Added support for SNMP data types FLOAT, DOUBLE, INTEGER64, UINTEGER64
 - Correct decoding of values inside OPAQUE SNMP varbinds
+- Added view for object tools with output executed on multiple nodes
+- Added syn methos and method with callback for object creation in Java API
 - Fixed issues:
 	NX-904 (Sensitive info should be hidden in Audit Log)
+	NX-1294 (Completed Scheduled Task Re-scheduling)
 	NX-1416 (NetXMS Agents shutdown does not end ExternalParametersProviders)
 	NX-1905 (Log Parser policy in Template Agent Policies does not automatically include Events in Export Configuration Tool)
 	NX-1907 (Add server configuration option to disable outdated SSL/TLS versions)
