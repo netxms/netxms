@@ -23,6 +23,7 @@
 - Correct decoding of values inside OPAQUE SNMP varbinds
 - Added view for object tools with output executed on multiple nodes
 - Added syn methos and method with callback for object creation in Java API
+- Fixed nxdbmgr crash on import
 - Fixed issues:
 	NX-904 (Sensitive info should be hidden in Audit Log)
 	NX-1294 (Completed Scheduled Task Re-scheduling)
