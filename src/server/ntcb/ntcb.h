@@ -79,7 +79,8 @@ struct TelemetryField
    size_t size;
    TelemetryDataType dataType;
    const TCHAR *name;  // Parameter name if value can be pushed directly or nullptr
-   void (*handler)(TelemetryDataType, const TelemetryValue&, StringMap*);   // Custom handler or nullptr
+   void (*handler)(TelemetryDataType, const TelemetryValue&, const void *options, StringMap*);   // Custom handler or nullptr
+   const void *options; // Options for custom handler
 };
 
 /**
