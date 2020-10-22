@@ -673,10 +673,13 @@ retry:
 /**
  * Get field length from unbuffered query result
  */
-extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(SQLITE_UNBUFFERED_RESULT *result, int iColumn)
+extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(SQLITE_UNBUFFERED_RESULT *result, int column)
 {
-   if ((iColumn >= 0) && (iColumn < result->numColumns))
-      return (LONG)strlen((char *)sqlite3_column_text(result->stmt, iColumn));
+   if ((column >= 0) && (column < result->numColumns))
+   {
+      auto v = reinterpret_cast<const char*>(sqlite3_column_text(result->stmt, column));
+      return static_cast<LONG>((v != nullptr) ? strlen(v) : 0);
+   }
    return 0;
 }
 
