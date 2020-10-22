@@ -332,6 +332,38 @@ static void FP_126(TelemetryDataType dataType, const TelemetryValue& value, cons
 }
 
 /**
+ * Parser for field 140
+ */
+static void FP_140(TelemetryDataType dataType, const TelemetryValue& value, const void *options, StringMap *pushValues)
+{
+   TCHAR data[32];
+   _sntprintf(data, 32, _T("%0.02f"), static_cast<double>(value.u8) / 4);
+   pushValues->set(_T("NTCB.InternalTiltSensor.Angle"), data);
+}
+
+/**
+ * Parser for field 141
+ */
+static void FP_141(TelemetryDataType dataType, const TelemetryValue& value, const void *options, StringMap *pushValues)
+{
+   pushValues->set(_T("NTCB.InternalTiltSensor.Pitch"), static_cast<int32_t>(value.i8));
+
+   TCHAR data[32];
+   _sntprintf(data, 32, _T("%0.1f"), static_cast<double>(*reinterpret_cast<const int8_t*>(&value.raw[1])) * 1.5);
+   pushValues->set(_T("NTCB.InternalTiltSensor.Roll"), data);
+}
+
+/**
+ * Parser for field 142
+ */
+static void FP_142(TelemetryDataType dataType, const TelemetryValue& value, const void *options, StringMap *pushValues)
+{
+   pushValues->set(_T("NTCB.ExternalTiltSensor.X"), static_cast<int32_t>(value.raw[0]));
+   pushValues->set(_T("NTCB.ExternalTiltSensor.Y"), static_cast<int32_t>(value.raw[1]));
+   pushValues->set(_T("NTCB.ExternalTiltSensor.Z"), static_cast<int32_t>(value.raw[2]));
+}
+
+/**
  * Parser for fields 163-166
  * От −273,15 до +1638,35 с шагом 0,05 °C, 0x8000 – нет данных
  */
@@ -616,9 +648,9 @@ static struct TelemetryField s_telemetryFields[255] =
    { 2, TelemetryDataType::U16, _T("NTCB.AnalogFuelLevelSensor7.Frequency"), nullptr, nullptr },     // 137: Частота на аналогово-частотном датчике 7
    { 2, TelemetryDataType::U16, _T("NTCB.AnalogFuelLevelSensor8.Frequency"), nullptr, nullptr },     // 138: Частота на аналогово-частотном датчике 8
    { 1, TelemetryDataType::U8, nullptr, nullptr, nullptr },      // 139: Состояние виртуальных датчиков акселерометра
-   { 1, TelemetryDataType::U8, nullptr, nullptr, nullptr },      // 140: Внутренний датчик угла наклона.Угол наклона относительно местной вертикали
-   { 2, TelemetryDataType::I8, nullptr, nullptr, nullptr },      // 141: Внутренний датчик наклона. Углы наклона относительно отвесной линии
-   { 3, TelemetryDataType::U8, nullptr, nullptr, nullptr },      // 142: Внешний датчик угла наклона. Отклонения по осям
+   { 1, TelemetryDataType::U8, nullptr, FP_140, nullptr },      // 140: Внутренний датчик угла наклона.Угол наклона относительно местной вертикали
+   { 2, TelemetryDataType::I8, nullptr, FP_141, nullptr },      // 141: Внутренний датчик наклона. Углы наклона относительно отвесной линии
+   { 3, TelemetryDataType::U8, nullptr, FP_142, nullptr },      // 142: Внешний датчик угла наклона. Отклонения по осям
    { 2, TelemetryDataType::I16, nullptr, nullptr, nullptr },     // 143: EcoDriving. Максимальное значение вертикального ускорения за период
    { 1, TelemetryDataType::U8, nullptr, nullptr, nullptr },      // 144: EcoDriving. Максимальное значение скорости за период
    { 1, TelemetryDataType::U8, nullptr, nullptr, nullptr },      // 145: EcoDriving. Состояние порогов скорости
