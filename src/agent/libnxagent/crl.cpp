@@ -36,6 +36,25 @@
 
 #endif
 
+#if OPENSSL_VERSION_NUMBER < 0x10000000L
+static int X509_CRL_get0_by_cert(X509_CRL *crl, X509_REVOKED **ret, X509 *x)
+{
+   ASN1_INTEGER *serial = X509_get_serialNumber(x);
+   STACK_OF(X509_REVOKED) *revoked = X509_CRL_get_REVOKED(crl);
+   int count = sk_X509_REVOKED_num(revoked);
+   for(int i = 0; i < count; i++)
+   {
+      X509_REVOKED *r = sk_X509_REVOKED_value(revoked, i);
+      if (ASN1_INTEGER_cmp(serial, r->serialNumber) == 0)
+      {
+         *ret = r;
+         return 1;
+      }
+   }
+   return 0;
+}
+#endif
+
 /**
  * Callback for processing data received from cURL
  */
