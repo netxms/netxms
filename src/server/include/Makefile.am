@@ -34,6 +34,7 @@ serverinclude_HEADERS = \
 	nxcore_schedule.h \
 	nxcore_ps.h \
 	nxcore_smclp.h \
+	nxcore_syslog.h \
 	nxcore_websvc.h \
 	nxcore_winperf.h \
 	nxdbmgr_tools.h \

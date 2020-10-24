@@ -27,6 +27,7 @@
 #include <entity_mib.h>
 #include <nxcore_websvc.h>
 #include <nxcore_logs.h>
+#include <nxcore_syslog.h>
 #include <nxcore_ps.h>
 #include <nms_pkg.h>
 
@@ -8464,16 +8465,16 @@ void ClientSession::KillSession(NXCPMessage *pRequest)
 /**
  * Handler for new syslog messages
  */
-void ClientSession::onSyslogMessage(NX_SYSLOG_RECORD *pRec)
+void ClientSession::onSyslogMessage(const SyslogMessage *sm)
 {
    if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SYSLOG) && (m_systemAccessRights & SYSTEM_ACCESS_VIEW_SYSLOG))
    {
-      shared_ptr<NetObj> object = FindObjectById(pRec->dwSourceObject);
-      // If can't find object - just send to all events, if object found send to thous who have rights
-      if (object == nullptr || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+      shared_ptr<Node> node = sm->getNode();
+      // If can't find object - just send to all sessions, if object found send to those who have rights
+      if ((node == nullptr) || node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
          NXCPMessage msg(CMD_SYSLOG_RECORDS, 0);
-         CreateMessageFromSyslogMsg(&msg, pRec);
+         sm->fillNXCPMessage(&msg);
          postMessage(&msg);
       }
    }

@@ -24,11 +24,34 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 36.8 to 40.0
+ * Upgrade from 36.9 to 40.0
+ */
+static bool H_UpgradeFromV9()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 36.8 to 36.9
  */
 static bool H_UpgradeFromV8()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   static const TCHAR *batch =
+         _T("UPDATE config SET var_name='Syslog.IgnoreMessageTimestamp' WHERE var_name='SyslogIgnoreMessageTimestamp'\n")
+         _T("UPDATE config SET var_name='Syslog.ListenPort' WHERE var_name='SyslogListenPort'\n")
+         _T("UPDATE config_values SET var_name='Syslog.ListenPort' WHERE var_name='SyslogListenPort'\n")
+         _T("UPDATE config SET var_name='Syslog.NodeMatchingPolicy' WHERE var_name='SyslogNodeMatchingPolicy'\n")
+         _T("UPDATE config_values SET var_name='Syslog.NodeMatchingPolicy' WHERE var_name='SyslogNodeMatchingPolicy'\n")
+         _T("UPDATE config SET var_name='Syslog.RetentionTime' WHERE var_name='SyslogRetentionTime'\n")
+         _T("UPDATE config SET var_name='Syslog.EnableListener' WHERE var_name='EnableSyslogReceiver'\n")
+         _T("UPDATE config SET description='Retention time in days for stored syslog messages. All messages older than specified will be deleted by housekeeping process.' WHERE var_name='Syslog.RetentionTime'\n")
+         _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(CreateConfigParam(_T("Syslog.EnableStorage"), _T("1"),
+            _T("Enable/disable local storage of received syslog messages in NetXMS database."),
+            nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(9));
    return true;
 }
 
@@ -187,7 +210,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 8,  40, 0,  H_UpgradeFromV8  },
+   { 9,  40, 0,  H_UpgradeFromV9  },
+   { 8,  36, 9,  H_UpgradeFromV8  },
    { 7,  36, 8,  H_UpgradeFromV7  },
    { 6,  36, 7,  H_UpgradeFromV6  },
    { 5,  36, 6,  H_UpgradeFromV5  },

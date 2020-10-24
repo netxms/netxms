@@ -31,6 +31,7 @@
 	NX-1905 (Log Parser policy in Template Agent Policies does not automatically include Events in Export Configuration Tool)
 	NX-1907 (Add server configuration option to disable outdated SSL/TLS versions)
 	NX-1911 (Separate object name for use on maps)
+	NX-1931 ("Do not store" option for syslog)
 
 
 *
