@@ -27,7 +27,7 @@
  * Externals
  */
 void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq);
-void QueueProxiedSyslogMessage(const InetAddress &addr, int32_t zoneUIN, UINT32 nodeId, time_t timestamp, const char *msg, int msgLen);
+void QueueProxiedSyslogMessage(const InetAddress &addr, int32_t zoneUIN, uint32_t nodeId, time_t timestamp, const char *msg, int msgLen);
 void QueueWindowsEvent(WindowsEvent *event);
 
 /**

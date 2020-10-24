@@ -333,10 +333,10 @@ static void HouseKeeper()
 			   break;
 		}
 
-		// Remove outdated syslog records
-		retentionTime = ConfigReadULong(_T("SyslogRetentionTime"), 90);
-		if (retentionTime > 0)
-		{
+      // Remove outdated syslog records
+      retentionTime = ConfigReadULong(_T("Syslog.RetentionTime"), 90);
+      if (retentionTime > 0)
+      {
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing syslog (retention time %d days)"), retentionTime);
 			retentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];

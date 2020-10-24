@@ -49,21 +49,4 @@
 #define NX_LPPF_WINDOWS_EVENT_LOG      0x0001
 #define NX_LPPF_REPORT_UNMATCHED       0x0002
 
-/**
- * Syslog message structure
- */
-typedef struct
-{
-   uint64_t qwMsgId;       // NetXMS internal message ID
-   time_t tmTimeStamp;
-   int32_t nFacility;
-   int32_t nSeverity;
-   uint32_t dwSourceObject;
-   int32_t zoneUIN;
-   char szHostName[MAX_SYSLOG_HOSTNAME_LEN];
-   char szTag[MAX_SYSLOG_TAG_LEN];
-   char szMessage[MAX_LOG_MSG_LENGTH];
-} NX_SYSLOG_RECORD;
-
-
 #endif

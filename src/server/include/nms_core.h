@@ -454,6 +454,11 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #endif
 
 /**
+ * Forward declaration for syslog message class
+ */
+class SyslogMessage;
+
+/**
  * Client (user) session
  */
 class NXCORE_EXPORTABLE ClientSession
@@ -869,7 +874,7 @@ public:
    void updateSystemAccessRights();
 
    void onNewEvent(Event *pEvent);
-   void onSyslogMessage(NX_SYSLOG_RECORD *pRec);
+   void onSyslogMessage(const SyslogMessage *sm);
    void onNewSNMPTrap(NXCPMessage *pMsg);
    void onObjectChange(const shared_ptr<NetObj>& object);
    void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
@@ -1269,7 +1274,6 @@ void GetZoneSnmpPortList(NXCPMessage *msg, int32_t zoneUIN);
 void GetFullAgentSecretList(NXCPMessage *msg);
 void GetZoneAgentSecretList(NXCPMessage *msg, int32_t zoneUIN);
 
-void CreateMessageFromSyslogMsg(NXCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();
 void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value);
 

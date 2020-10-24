@@ -21,7 +21,7 @@
 **/
 
 #include "nxcore.h"
-#include <nxlog.h>
+#include <nxcore_syslog.h>
 #include <nxlpapi.h>
 
 #define DEBUG_TAG _T("syslog")
@@ -32,47 +32,27 @@
 #define MAX_SYSLOG_MSG_LEN    1024
 
 /**
- * Queued syslog message structure
+ * Fill NXCP message with syslog message data
  */
-class QueuedSyslogMessage
+void SyslogMessage::fillNXCPMessage(NXCPMessage *msg) const
 {
-public:
-   InetAddress sourceAddr;
-   time_t timestamp;
-   int32_t zoneUIN;
-   UINT32 nodeId;
-   char *message;
-   int messageLength;
-
-   QueuedSyslogMessage(const InetAddress& addr, const char *msg, int msgLen) : sourceAddr(addr)
-   {
-      message = MemCopyBlock(msg, msgLen + 1);
-      messageLength = msgLen;
-      timestamp = time(nullptr);
-      zoneUIN = 0;
-      nodeId = 0;
-   }
-
-   QueuedSyslogMessage(const InetAddress& addr, time_t t, UINT32 zuin, UINT32 nid, const char *msg, int msgLen) : sourceAddr(addr)
-   {
-      message = MemCopyBlock(msg, msgLen + 1);
-      messageLength = msgLen;
-      timestamp = t;
-      zoneUIN = zuin;
-      nodeId = nid;
-   }
-
-   ~QueuedSyslogMessage()
-   {
-      free(message);
-   }
-};
+   uint32_t fieldId = VID_SYSLOG_MSG_BASE;
+   msg->setField(VID_NUM_RECORDS, static_cast<uint32_t>(1));
+   msg->setField(fieldId++, m_id);
+   msg->setFieldFromTime(fieldId++, m_timestamp);
+   msg->setField(fieldId++, m_facility);
+   msg->setField(fieldId++, m_severity);
+   msg->setField(fieldId++, m_nodeId);
+   msg->setFieldFromMBString(fieldId++, m_hostName);
+   msg->setFieldFromMBString(fieldId++, m_tag);
+   msg->setFieldFromMBString(fieldId++, m_message);
+}
 
 /**
  * Queues
  */
-Queue g_syslogProcessingQueue(1024, Ownership::False);
-Queue g_syslogWriteQueue(1024, Ownership::False);
+ObjectQueue<SyslogMessage> g_syslogProcessingQueue(1024, Ownership::False);
+ObjectQueue<SyslogMessage> g_syslogWriteQueue(1024, Ownership::False);
 
 /**
  * Total number of received syslog messages
@@ -100,11 +80,12 @@ static THREAD s_processingThread = INVALID_THREAD_HANDLE;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static bool s_running = true;
 static bool s_alwaysUseServerTime = false;
+static bool s_enableStorage = true;
 
 /**
  * Parse timestamp field
  */
-static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptmTime)
+static bool ParseTimeStamp(char **ppStart, size_t nMsgSize, size_t *pnPos, time_t *ptmTime)
 {
    static char psMonth[12][5] = { "Jan ", "Feb ", "Mar ", "Apr ",
                                   "May ", "Jun ", "Jul ", "Aug ",
@@ -115,7 +96,7 @@ static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptm
    int i;
 
    if (nMsgSize - *pnPos < 16)
-      return FALSE;  // Timestamp cannot be shorter than 16 bytes
+      return false;  // Timestamp cannot be shorter than 16 bytes
 
    // Prepare local time structure
    t = time(nullptr);
@@ -133,7 +114,7 @@ static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptm
          break;
       }
    if (i == 12)
-      return FALSE;
+      return false;
    pCurr += 4;
 
    // Day of week
@@ -144,7 +125,7 @@ static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptm
    else
    {
       if (*pCurr != ' ')
-         return FALSE;  // Invalid day of month
+         return false;  // Invalid day of month
       timestamp.tm_mday = 0;
    }
    pCurr++;
@@ -154,11 +135,11 @@ static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptm
    }
    else
    {
-      return FALSE;  // Invalid day of month
+      return false;  // Invalid day of month
    }
    pCurr++;
    if (*pCurr != ' ')
-      return FALSE;
+      return false;
    pCurr++;
 
    // HH:MM:SS
@@ -166,7 +147,7 @@ static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptm
    szBuffer[8] = 0;
    if (sscanf(szBuffer, "%02d:%02d:%02d", &timestamp.tm_hour,
               &timestamp.tm_min, &timestamp.tm_sec) != 3)
-      return FALSE;  // Invalid time format
+      return false;  // Invalid time format
    pCurr += 8;
 
 	// Check for Cisco variant - HH:MM:SS.nnn
@@ -182,104 +163,101 @@ static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptm
 	}
 
    if (*pCurr != ' ')
-      return FALSE;  // Space should follow timestamp
+      return false;  // Space should follow timestamp
    pCurr++;
 
    // Convert to system time
    *ptmTime = mktime(&timestamp);
    if (*ptmTime == ((time_t)-1))
-      return FALSE;
+      return false;
 
    // Adjust current position
    *pnPos += (int)(pCurr - *ppStart);
    *ppStart = pCurr;
-   return TRUE;
+   return true;
 }
 
 /**
  * Parse syslog message
  */
-static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, time_t receiverTime, NX_SYSLOG_RECORD *pRec)
+bool SyslogMessage::parse()
 {
-   int i, nLen, nPos = 0;
-   char *pCurr = psMsg;
-
-   memset(pRec, 0, sizeof(NX_SYSLOG_RECORD));
-
+   size_t currPos = 0;
+   char *currPtr = m_rawData;
    // Parse PRI part
-   if (*psMsg == '<')
+   if (*m_rawData == '<')
    {
       int nPri = 0, nCount = 0;
+      for(currPtr++, currPos++; isdigit(*currPtr) && (currPos < m_rawDataLen); currPtr++, currPos++, nCount++)
+         nPri = nPri * 10 + (*currPtr - '0');
+      if (currPos >= m_rawDataLen)
+         return false;  // Unexpected end of message
 
-      for(pCurr++, nPos++; isdigit(*pCurr) && (nPos < nMsgLen); pCurr++, nPos++, nCount++)
-         nPri = nPri * 10 + (*pCurr - '0');
-      if (nPos >= nMsgLen)
-         return FALSE;  // Unexpected end of message
-
-      if ((*pCurr == '>') && (nCount > 0) && (nCount <4))
+      if ((*currPtr == '>') && (nCount > 0) && (nCount <4))
       {
-         pRec->nFacility = nPri / 8;
-         pRec->nSeverity = nPri % 8;
-         pCurr++;
-         nPos++;
+         m_facility = nPri / 8;
+         m_severity = nPri % 8;
+         currPtr++;
+         currPos++;
       }
       else
       {
-         return FALSE;  // Invalid message
+         return false;  // Invalid message
       }
-   }
-   else
-   {
-      // Set default PRI of 13
-      pRec->nFacility = 1;
-      pRec->nSeverity = SYSLOG_SEVERITY_NOTICE;
    }
 
    // Parse HEADER part
-   if (ParseTimeStamp(&pCurr, nMsgLen, &nPos, &pRec->tmTimeStamp))
+   time_t msgTimestamp;
+   if (ParseTimeStamp(&currPtr, m_rawDataLen, &currPos, &msgTimestamp))
    {
       // Use server time if configured
       // We still had to parse timestamp to get correct start position for MSG part
-      if (s_alwaysUseServerTime)
+      if (!s_alwaysUseServerTime)
       {
-         pRec->tmTimeStamp = receiverTime;
+         m_timestamp = msgTimestamp;
       }
 
       // Hostname
-      for(i = 0; (*pCurr >= 33) && (*pCurr <= 126) && (i < MAX_SYSLOG_HOSTNAME_LEN - 1) && (nPos < nMsgLen); i++, nPos++, pCurr++)
-         pRec->szHostName[i] = *pCurr;
-      if ((nPos >= nMsgLen) || (*pCurr != ' '))
+      int i;
+      for(i = 0; (*currPtr >= 33) && (*currPtr <= 126) && (i < MAX_SYSLOG_HOSTNAME_LEN - 1) && (currPos < m_rawDataLen); i++, currPos++, currPtr++)
+         m_hostName[i] = *currPtr;
+      if ((currPos >= m_rawDataLen) || (*currPtr != ' '))
       {
          // Not a valid hostname, assuming to be a part of message
-         pCurr -= i;
-         nPos -= i;
-         pRec->szHostName[0] = 0;
+         currPtr -= i;
+         currPos -= i;
+         m_hostName[0] = 0;
       }
       else
       {
-         pCurr++;
-         nPos++;
+         m_hostName[i] = 0;
+         currPtr++;
+         currPos++;
       }
-   }
-   else
-   {
-      pRec->tmTimeStamp = receiverTime;
    }
 
    // Parse MSG part
-   for(i = 0; isalnum(*pCurr) && (i < MAX_SYSLOG_TAG_LEN) && (nPos < nMsgLen); i++, nPos++, pCurr++)
-      pRec->szTag[i] = *pCurr;
-   if ((i == MAX_SYSLOG_TAG_LEN) || (nPos >= nMsgLen))
+   int i;
+   for(i = 0; isalnum(*currPtr) && (i < MAX_SYSLOG_TAG_LEN) && (currPos < m_rawDataLen); i++, currPos++, currPtr++)
+      m_tag[i] = *currPtr;
+   if ((i == MAX_SYSLOG_TAG_LEN) || (currPos >= m_rawDataLen))
    {
       // Too long tag, assuming that it's a part of message
-      pRec->szTag[0] = 0;
+      m_tag[0] = 0;
    }
-   pCurr -= i;
-   nPos -= i;
-   nLen = std::min(nMsgLen - nPos, MAX_LOG_MSG_LENGTH);
-   memcpy(pRec->szMessage, pCurr, nLen);
+   else
+   {
+      m_tag[i] = 0;
+   }
+   currPtr -= i;
+   currPos -= i;
 
-   return TRUE;
+   size_t msgLen = m_rawDataLen - currPos;
+   m_message = MemAllocStringA(msgLen + 1);
+   memcpy(m_message, currPtr, msgLen);
+   m_message[msgLen] = 0;
+
+   return true;
 }
 
 /**
@@ -315,85 +293,82 @@ static shared_ptr<Node> FindNodeByHostname(const char *hostName, int32_t zoneUIN
  * Bind syslog message to NetXMS node object
  * sourceAddr is an IP address from which we receive message
  */
-static shared_ptr<Node> BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr, int32_t zoneUIN, uint32_t nodeId)
+bool SyslogMessage::bindToNode()
 {
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("BindMsgToNode: addr=%s zoneUIN=%d"), (const TCHAR *)sourceAddr.toString(), zoneUIN);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("SyslogRecord::bindToNode(): addr=%s zoneUIN=%d"), m_sourceAddress.toString().cstr(), m_zoneUIN);
 
-   shared_ptr<Node> node;
-   if (nodeId != 0)
+   if (m_nodeId != 0)
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("BindMsgToNode: node ID explicitly set to %d"), nodeId);
-      node = static_pointer_cast<Node>(FindObjectById(nodeId, OBJECT_NODE));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SyslogRecord::bindToNode(): node ID explicitly set to %u"), m_nodeId);
+      m_node = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
    }
-   else if (sourceAddr.isLoopback() && (zoneUIN == 0))
+   else if (m_sourceAddress.isLoopback() && (m_zoneUIN == 0))
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("BindMsgToNode: source is loopback in default zone, binding to management node (ID %d)"), g_dwMgmtNode);
-      node = static_pointer_cast<Node>(FindObjectById(g_dwMgmtNode, OBJECT_NODE));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SyslogRecord::bindToNode(): source is loopback in default zone, binding to management node (ID %u)"), g_dwMgmtNode);
+      m_node = static_pointer_cast<Node>(FindObjectById(g_dwMgmtNode, OBJECT_NODE));
    }
    else if (s_nodeMatchingPolicy == SOURCE_IP_THEN_HOSTNAME)
    {
-      node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, sourceAddr);
-      if (node == nullptr)
+      m_node = FindNodeByIP(m_zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, m_sourceAddress);
+      if (m_node == nullptr)
       {
-         node = FindNodeByHostname(pRec->szHostName, zoneUIN);
+         m_node = FindNodeByHostname(m_hostName, m_zoneUIN);
       }
    }
    else
    {
-      node = FindNodeByHostname(pRec->szHostName, zoneUIN);
-      if (node == nullptr)
+      m_node = FindNodeByHostname(m_hostName, m_zoneUIN);
+      if (m_node == nullptr)
       {
-         node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, sourceAddr);
+         m_node = FindNodeByIP(m_zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, m_sourceAddress);
       }
    }
 
-	if (node != nullptr)
+	if (m_node != nullptr)
    {
-	   node->incSyslogMessageCount();
-      pRec->dwSourceObject = node->getId();
-      pRec->zoneUIN = zoneUIN;
-      if (pRec->szHostName[0] == 0)
+	   m_node->incSyslogMessageCount();
+	   m_nodeId = m_node->getId();
+      m_zoneUIN = m_node->getZoneUIN();
+      if (m_hostName[0] == 0)
 		{
 #ifdef UNICODE
-			WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, node->getName(), -1, pRec->szHostName, MAX_SYSLOG_HOSTNAME_LEN, nullptr, nullptr);
-			pRec->szHostName[MAX_SYSLOG_HOSTNAME_LEN - 1] = 0;
+			wchar_to_mb(m_node->getName(), -1, m_hostName, MAX_SYSLOG_HOSTNAME_LEN);
+			m_hostName[MAX_SYSLOG_HOSTNAME_LEN - 1] = 0;
 #else
-         strlcpy(pRec->szHostName, node->getName(), MAX_SYSLOG_HOSTNAME_LEN);
+         strlcpy(m_hostName, node->getName(), MAX_SYSLOG_HOSTNAME_LEN);
 #endif
 		}
    }
-   else
+   else if (m_hostName[0] == 0)
    {
-      if (pRec->szHostName[0] == 0)
-      {
-         sourceAddr.toStringA(pRec->szHostName);
-      }
+      m_sourceAddress.toStringA(m_hostName);
+      m_nodeId = 0;
    }
 
-   return node;
+   return m_node != nullptr;
 }
 
 /**
  * Handler for EnumerateSessions()
  */
-static void BroadcastSyslogMessage(ClientSession *pSession, void *pArg)
+static void BroadcastSyslogMessage(ClientSession *session, SyslogMessage *msg)
 {
-   if (pSession->isAuthenticated())
-      pSession->onSyslogMessage((NX_SYSLOG_RECORD *)pArg);
+   if (session->isAuthenticated())
+      session->onSyslogMessage(msg);
 }
 
 /**
  * Syslog writer thread
  */
-static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
+static void SyslogWriterThread()
 {
    ThreadSetName("SyslogWriter");
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Syslog writer thread started"));
    int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    while(true)
    {
-      NX_SYSLOG_RECORD *r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.getOrBlock();
-      if (r == INVALID_POINTER_VALUE)
+      SyslogMessage *msg = g_syslogWriteQueue.getOrBlock();
+      if (msg == INVALID_POINTER_VALUE)
          break;
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -404,7 +379,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
                         _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,zone_uin,hostname,msg_tag,msg_text) VALUES (?,?,?,?,?,?,?,?,?)"), true);
       if (hStmt == nullptr)
       {
-         MemFree(r);
+         delete msg;
          DBConnectionPoolReleaseConnection(hdb);
          continue;
       }
@@ -413,114 +388,115 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
       DBBegin(hdb);
       while(true)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, r->qwMsgId);
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)r->tmTimeStamp);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, r->nFacility);
-         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, r->nSeverity);
-         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, r->dwSourceObject);
-         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, r->zoneUIN);
+         DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, msg->getId());
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(msg->getTimestamp()));
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, msg->getFacility());
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, msg->getSeverity());
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, msg->getNodeId());
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, msg->getZoneUIN());
 #ifdef UNICODE
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, WideStringFromMBString(r->szHostName), DB_BIND_DYNAMIC);
-         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, WideStringFromMBString(r->szTag), DB_BIND_DYNAMIC);
-         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, WideStringFromMBString(r->szMessage), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, WideStringFromMBString(msg->getHostName()), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, WideStringFromMBString(msg->getTag()), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, WideStringFromMBString(msg->getMessage()), DB_BIND_DYNAMIC);
 #else
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, r->szHostName, DB_BIND_STATIC);
-         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, r->szTag, DB_BIND_STATIC);
-         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, r->szMessage, DB_BIND_STATIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, msg->getHostName(), DB_BIND_STATIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, msg->getTag(), DB_BIND_STATIC);
+         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, msg->getMessage(), DB_BIND_STATIC);
 #endif
 
          if (!DBExecute(hStmt))
          {
-            MemFree(r);
+            delete msg;
             break;
          }
-         MemFree(r);
+         delete msg;
          count++;
          if (count == maxRecords)
             break;
-         r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.get();
-         if ((r == nullptr) || (r == INVALID_POINTER_VALUE))
+         msg = g_syslogWriteQueue.get();
+         if ((msg == nullptr) || (msg == INVALID_POINTER_VALUE))
             break;
       }
       DBCommit(hdb);
       DBFreeStatement(hStmt);
       DBConnectionPoolReleaseConnection(hdb);
-      if (r == INVALID_POINTER_VALUE)
+      if (msg == INVALID_POINTER_VALUE)
          break;
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Syslog writer thread stopped"));
-   return THREAD_OK;
 }
 
 /**
  * Process syslog message
  */
-static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
+static void ProcessSyslogMessage(SyslogMessage *msg)
 {
-   NX_SYSLOG_RECORD record;
-
-	nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessSyslogMessage: Raw syslog message to process:\n%hs"), msg->message);
-   if (ParseSyslogMessage(msg->message, msg->messageLength, msg->timestamp, &record))
+	nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessSyslogMessage: Raw syslog message to process:\n%hs"), msg->getRawData());
+   if (msg->parse())
    {
       InterlockedIncrement64(&g_syslogMessagesReceived);
 
-      record.qwMsgId = s_msgId++;
-      shared_ptr<Node> node = BindMsgToNode(&record, msg->sourceAddr, msg->zoneUIN, msg->nodeId);
+      msg->setId(s_msgId++);
+      msg->bindToNode();
 
       // Send message to all connected clients
-      EnumerateClientSessions(BroadcastSyslogMessage, &record);
+      EnumerateClientSessions(BroadcastSyslogMessage, msg);
 
 		TCHAR ipAddr[64];
 		nxlog_debug_tag(DEBUG_TAG, 6, _T("Syslog message: ipAddr=%s zone=%d objectId=%d tag=\"%hs\" msg=\"%hs\""),
-		            msg->sourceAddr.toString(ipAddr), msg->zoneUIN, record.dwSourceObject, record.szTag, record.szMessage);
+		            msg->getSourceAddress().toString(ipAddr), msg->getZoneUIN(), msg->getNodeId(), msg->getTag(), msg->getMessage());
 
 		bool writeToDatabase = true;
 		MutexLock(s_parserLock);
-		if ((record.dwSourceObject != 0) && (s_parser != nullptr))
+		if ((msg->getNodeId() != 0) && (s_parser != nullptr))
 		{
 #ifdef UNICODE
 			WCHAR wtag[MAX_SYSLOG_TAG_LEN];
 			WCHAR wmsg[MAX_LOG_MSG_LENGTH];
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, record.szTag, -1, wtag, MAX_SYSLOG_TAG_LEN);
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, record.szMessage, -1, wmsg, MAX_LOG_MSG_LENGTH);
-			s_parser->matchEvent(wtag, record.nFacility, 1 << record.nSeverity, wmsg, nullptr, 0, record.dwSourceObject, 0, nullptr, &writeToDatabase);
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, msg->getTag(), -1, wtag, MAX_SYSLOG_TAG_LEN);
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, msg->getMessage(), -1, wmsg, MAX_LOG_MSG_LENGTH);
+			s_parser->matchEvent(wtag, msg->getFacility(), 1 << msg->getSeverity(), wmsg, nullptr, 0,
+			         msg->getNodeId(), 0, nullptr, &writeToDatabase);
 #else
-			s_parser->matchEvent(record.szTag, record.nFacility, 1 << record.nSeverity, record.szMessage, nullptr, 0, record.dwSourceObject, 0, nullptr, &writeToDatabase);
+			s_parser->matchEvent(msg->getTag(), msg->getFacility(), 1 << msg->getSeverity(), msg->getMessage(),
+			         nullptr, 0, msg->getNodeId(), 0, nullptr, &writeToDatabase);
 #endif
 		}
 		MutexUnlock(s_parserLock);
 
-		if (writeToDatabase)
-	      g_syslogWriteQueue.put(MemCopyBlock(&record, sizeof(NX_SYSLOG_RECORD)));
-
-	   if ((record.dwSourceObject == 0) && (g_flags & AF_SYSLOG_DISCOVERY))  // unknown node, discovery enabled
+	   if ((msg->getNodeId() == 0) && (g_flags & AF_SYSLOG_DISCOVERY))  // unknown node, discovery enabled
 	   {
-	      nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessSyslogMessage: source not matched to node, adding new IP address %s for discovery"), msg->sourceAddr.toString(ipAddr));
-	      CheckPotentialNode(msg->sourceAddr, msg->zoneUIN, DA_SRC_SYSLOG, 0);
+	      nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessSyslogMessage: source not matched to node, adding new IP address %s for discovery"),
+	               msg->getSourceAddress().toString(ipAddr));
+	      CheckPotentialNode(msg->getSourceAddress(), msg->getZoneUIN(), DA_SRC_SYSLOG, 0);
 	   }
+
+	   if (writeToDatabase && s_enableStorage)
+         g_syslogWriteQueue.put(msg);
+	   else
+	      delete msg;
    }
 	else
 	{
 		nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessSyslogMessage: Cannot parse syslog message"));
+		delete msg;
 	}
 }
 
 /**
  * Syslog processing thread
  */
-static THREAD_RESULT THREAD_CALL SyslogProcessingThread(void *pArg)
+static void SyslogProcessingThread()
 {
    ThreadSetName("SyslogProcessor");
    while(true)
    {
-      QueuedSyslogMessage *msg = (QueuedSyslogMessage *)g_syslogProcessingQueue.getOrBlock();
+      SyslogMessage *msg = g_syslogProcessingQueue.getOrBlock();
       if (msg == INVALID_POINTER_VALUE)
          break;
 
       ProcessSyslogMessage(msg);
-      delete msg;
    }
-   return THREAD_OK;
 }
 
 /**
@@ -528,15 +504,15 @@ static THREAD_RESULT THREAD_CALL SyslogProcessingThread(void *pArg)
  */
 static void QueueSyslogMessage(char *msg, int msgLen, const InetAddress& sourceAddr)
 {
-   g_syslogProcessingQueue.put(new QueuedSyslogMessage(sourceAddr, msg, msgLen));
+   g_syslogProcessingQueue.put(new SyslogMessage(sourceAddr, msg, msgLen));
 }
 
 /**
  * Queue proxied syslog message for processing
  */
-void QueueProxiedSyslogMessage(const InetAddress &addr, int32_t zoneUIN, UINT32 nodeId, time_t timestamp, const char *msg, int msgLen)
+void QueueProxiedSyslogMessage(const InetAddress &addr, int32_t zoneUIN, uint32_t nodeId, time_t timestamp, const char *msg, int msgLen)
 {
-   g_syslogProcessingQueue.put(new QueuedSyslogMessage(addr, timestamp, zoneUIN, nodeId, msg, msgLen));
+   g_syslogProcessingQueue.put(new SyslogMessage(addr, timestamp, zoneUIN, nodeId, msg, msgLen));
 }
 
 /**
@@ -614,7 +590,7 @@ static void CreateParserFromConfig()
 /**
  * Syslog messages receiver thread
  */
-static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
+static void SyslogReceiver()
 {
    ThreadSetName("SyslogReceiver");
 
@@ -631,7 +607,7 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
    {
       TCHAR buffer[1024];
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create socket for syslog receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
-      return THREAD_OK;
+      return;
    }
 
 	SetSocketExclusiveAddrUse(hSocket);
@@ -653,7 +629,7 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
 #endif
 
    // Get listen port number
-   int port = ConfigReadInt(_T("SyslogListenPort"), 514);
+   int port = ConfigReadInt(_T("Syslog.ListenPort"), 514);
    if ((port < 1) || (port > 65535))
    {
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Invalid syslog listen port number %d, using default"), port);
@@ -737,7 +713,7 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
    if (bindFailures == 2)
    {
       nxlog_debug_tag(DEBUG_TAG, 1, _T("Syslog receiver aborted - cannot bind at least one socket"));
-      return THREAD_OK;
+      return;
    }
 
    if (hSocket != INVALID_SOCKET)
@@ -806,25 +782,6 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
 #endif
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Syslog receiver thread stopped"));
-   return THREAD_OK;
-}
-
-/**
- * Create NXCP message from NX_SYSLOG_RECORD structure
- */
-void CreateMessageFromSyslogMsg(NXCPMessage *pMsg, NX_SYSLOG_RECORD *pRec)
-{
-   UINT32 dwId = VID_SYSLOG_MSG_BASE;
-
-   pMsg->setField(VID_NUM_RECORDS, (UINT32)1);
-   pMsg->setField(dwId++, pRec->qwMsgId);
-   pMsg->setField(dwId++, (UINT32)pRec->tmTimeStamp);
-   pMsg->setField(dwId++, (WORD)pRec->nFacility);
-   pMsg->setField(dwId++, (WORD)pRec->nSeverity);
-   pMsg->setField(dwId++, pRec->dwSourceObject);
-   pMsg->setFieldFromMBString(dwId++, pRec->szHostName);
-   pMsg->setFieldFromMBString(dwId++, pRec->szTag);
-   pMsg->setFieldFromMBString(dwId++, pRec->szMessage);
 }
 
 /**
@@ -842,7 +799,12 @@ void ReinitializeSyslogParser()
  */
 void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value)
 {
-   if (!_tcscmp(name, _T("SyslogIgnoreMessageTimestamp")))
+   if (!_tcscmp(name, _T("Syslog.EnableStorage")))
+   {
+      s_enableStorage = _tcstol(value, nullptr, 0) ? true : false;
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Local syslog storage is %s"), s_enableStorage ? _T("enabled") : _T("disabled"));
+   }
+   else if (!_tcscmp(name, _T("Syslog.IgnoreMessageTimestamp")))
    {
       s_alwaysUseServerTime = _tcstol(value, nullptr, 0) ? true : false;
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Ignore message timestamp option set to %s"), s_alwaysUseServerTime ? _T("ON") : _T("OFF"));
@@ -939,8 +901,9 @@ uint64_t GetNextSyslogId()
  */
 void StartSyslogServer()
 {
-   s_nodeMatchingPolicy = (NodeMatchingPolicy)ConfigReadInt(_T("SyslogNodeMatchingPolicy"), SOURCE_IP_THEN_HOSTNAME);
-   s_alwaysUseServerTime = ConfigReadBoolean(_T("SyslogIgnoreMessageTimestamp"), false);
+   s_nodeMatchingPolicy = (NodeMatchingPolicy)ConfigReadInt(_T("Syslog.NodeMatchingPolicy"), SOURCE_IP_THEN_HOSTNAME);
+   s_alwaysUseServerTime = ConfigReadBoolean(_T("Syslog.IgnoreMessageTimestamp"), false);
+   s_enableStorage = ConfigReadBoolean(_T("Syslog.EnableStorage"), false);
 
    // Determine first available message id
    uint64_t id = ConfigReadUInt64(_T("FirstFreeSyslogId"), s_msgId);
@@ -965,11 +928,11 @@ void StartSyslogServer()
    CreateParserFromConfig();
 
    // Start processing thread
-   s_processingThread = ThreadCreateEx(SyslogProcessingThread, 0, nullptr);
-   s_writerThread = ThreadCreateEx(SyslogWriterThread, 0, nullptr);
+   s_processingThread = ThreadCreateEx(SyslogProcessingThread);
+   s_writerThread = ThreadCreateEx(SyslogWriterThread);
 
-   if (ConfigReadBoolean(_T("EnableSyslogReceiver"), false))
-      s_receiverThread = ThreadCreateEx(SyslogReceiver, 0, nullptr);
+   if (ConfigReadBoolean(_T("Syslog.EnableListener"), false))
+      s_receiverThread = ThreadCreateEx(SyslogReceiver);
 }
 
 /**
