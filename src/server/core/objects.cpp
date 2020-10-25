@@ -73,7 +73,7 @@ static THREAD s_applyTemplateThread = INVALID_THREAD_HANDLE;
 /**
  * Thread which apply template updates
  */
-static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
+static void ApplyTemplateThread()
 {
    ThreadSetName("ApplyTemplates");
 	DbgPrintf(1, _T("Apply template thread started"));
@@ -121,7 +121,6 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
    }
 
 	DbgPrintf(1, _T("Apply template thread stopped"));
-   return THREAD_OK;
 }
 
 /**
@@ -171,7 +170,7 @@ static void UpdateMapCallback(NetObj *object, void *data)
 /**
  * Map update thread
  */
-static THREAD_RESULT THREAD_CALL MapUpdateThread(void *pArg)
+static void MapUpdateThread()
 {
    ThreadSetName("MapUpdate");
 	nxlog_debug_tag(_T("obj.netmap"), 2, _T("Map update thread started"));
@@ -182,7 +181,6 @@ static THREAD_RESULT THREAD_CALL MapUpdateThread(void *pArg)
 		nxlog_debug_tag(_T("obj.netmap"), 6, _T("Map update completed"));
 	}
 	nxlog_debug_tag(_T("obj.netmap"), 2, _T("Map update thread stopped"));
-	return THREAD_OK;
 }
 
 /**
@@ -2126,10 +2124,10 @@ BOOL LoadObjects()
    }
 
    // Start map update thread
-   s_mapUpdateThread = ThreadCreateEx(MapUpdateThread, 0, nullptr);
+   s_mapUpdateThread = ThreadCreateEx(MapUpdateThread);
 
    // Start template update applying thread
-   s_applyTemplateThread = ThreadCreateEx(ApplyTemplateThread, 0, nullptr);
+   s_applyTemplateThread = ThreadCreateEx(ApplyTemplateThread);
 
    if (cachedb != nullptr)
       DBCloseInMemoryDatabase(cachedb);

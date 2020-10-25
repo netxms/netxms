@@ -65,7 +65,7 @@ static const char *s_classNameA[]=
 NetObj::NetObj() : NObject()
 {
    m_mutexProperties = MutexCreateFast();
-   m_mutexACL = MutexCreate();
+   m_mutexACL = MutexCreateFast();
    m_status = STATUS_UNKNOWN;
    m_savedStatus = STATUS_UNKNOWN;
    m_comments = nullptr;
@@ -92,7 +92,7 @@ NetObj::NetObj() : NObject()
       m_statusThresholds[i] = 80 - i * 20;
    }
 	m_submapId = 0;
-   m_moduleData = NULL;
+   m_moduleData = nullptr;
    m_postalAddress = new PostalAddress();
    m_dashboards = new IntegerArray<UINT32>();
    m_urls = new ObjectArray<ObjectUrl>(4, 4, Ownership::True);
@@ -102,9 +102,10 @@ NetObj::NetObj() : NObject()
    m_stateBeforeMaintenance = 0;
    m_runtimeFlags = 0;
    m_flags = 0;
-   m_responsibleUsers = NULL;
+   m_responsibleUsers = nullptr;
    m_rwlockResponsibleUsers = RWLockCreate();
    m_creationTime = 0;
+   m_categoryId = 0;
 }
 
 /**
@@ -293,8 +294,8 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
          _T("SELECT name,status,is_deleted,inherit_access_rights,last_modified,status_calc_alg,")
          _T("status_prop_alg,status_fixed_val,status_shift,status_translation,status_single_threshold,")
          _T("status_thresholds,comments,is_system,location_type,latitude,longitude,location_accuracy,")
-         _T("location_timestamp,guid,image,submap_id,country,city,street_address,postcode,maint_event_id,")
-         _T("state_before_maint,maint_initiator,state,flags,creation_time,alias,name_on_map ")
+         _T("location_timestamp,guid,map_image,submap_id,country,city,street_address,postcode,maint_event_id,")
+         _T("state_before_maint,maint_initiator,state,flags,creation_time,alias,name_on_map,category ")
          _T("FROM object_properties WHERE object_id=?"));
 	if (hStmt != nullptr)
 	{
@@ -334,7 +335,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 				}
 
 				m_guid = DBGetFieldGUID(hResult, 0, 19);
-				m_image = DBGetFieldGUID(hResult, 0, 20);
+				m_mapImage = DBGetFieldGUID(hResult, 0, 20);
 				m_submapId = DBGetFieldULong(hResult, 0, 21);
 
             TCHAR country[64], city[64], streetAddress[256], postcode[32];
@@ -355,6 +356,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
             m_creationTime = static_cast<time_t>(DBGetFieldULong(hResult, 0, 31));
             m_alias = DBGetFieldAsSharedString(hResult, 0, 32);
             m_nameOnMap = DBGetFieldAsSharedString(hResult, 0, 33);
+            m_categoryId = DBGetFieldULong(hResult, 0, 34);
 
 				success = true;
 			}
@@ -548,9 +550,9 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
       _T("name"), _T("status"), _T("is_deleted"), _T("inherit_access_rights"), _T("last_modified"), _T("status_calc_alg"),
       _T("status_prop_alg"), _T("status_fixed_val"), _T("status_shift"), _T("status_translation"), _T("status_single_threshold"),
       _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
-      _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("image"), _T("submap_id"), _T("country"), _T("city"),
+      _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("submap_id"), _T("country"), _T("city"),
       _T("street_address"), _T("postcode"), _T("maint_event_id"), _T("state_before_maint"), _T("state"), _T("flags"),
-      _T("creation_time"), _T("maint_initiator"), _T("alias"), _T("name_on_map"), nullptr
+      _T("creation_time"), _T("maint_initiator"), _T("alias"), _T("name_on_map"), _T("category"), nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
@@ -586,7 +588,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getAccuracy());
 	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
 	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_guid);
-	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_image);
+	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_mapImage);
 	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_submapId);
 	DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_postalAddress->getCountry(), DB_BIND_STATIC);
 	DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress->getCity(), DB_BIND_STATIC);
@@ -600,7 +602,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
    DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_maintenanceInitiator);
    DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
    DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_nameOnMap, DB_BIND_STATIC);
-	DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, m_categoryId);
+	DBBind(hStmt, 36, DB_SQLTYPE_INTEGER, m_id);
 
    success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -1178,8 +1181,9 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_STATUS_THRESHOLD_3, (WORD)m_statusThresholds[2]);
    pMsg->setField(VID_STATUS_THRESHOLD_4, (WORD)m_statusThresholds[3]);
    pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
-	pMsg->setField(VID_IMAGE, m_image);
+	pMsg->setField(VID_IMAGE, m_mapImage);
 	pMsg->setField(VID_DRILL_DOWN_OBJECT_ID, m_submapId);
+   pMsg->setField(VID_CATEGORY_ID, m_categoryId);
 	pMsg->setFieldFromTime(VID_CREATION_TIME, m_creationTime);
 	if ((m_trustedNodes != NULL) && (m_trustedNodes->size() > 0))
 	{
@@ -1354,7 +1358,11 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
 
 	// Change image
 	if (pRequest->isFieldExist(VID_IMAGE))
-		m_image = pRequest->getFieldAsGUID(VID_IMAGE);
+		m_mapImage = pRequest->getFieldAsGUID(VID_IMAGE);
+
+	// Object category
+	if (pRequest->isFieldExist(VID_CATEGORY_ID))
+	   m_categoryId = pRequest->getFieldAsUInt32(VID_CATEGORY_ID);
 
    // Change object's ACL
    if (pRequest->isFieldExist(VID_ACL_SIZE))
@@ -2442,7 +2450,7 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "isSystem", json_boolean(m_isSystem));
    json_object_set_new(root, "maintenanceEventId", json_integer(m_maintenanceEventId));
    json_object_set_new(root, "maintenanceInitiator", json_integer(m_maintenanceInitiator));
-   json_object_set_new(root, "image", m_image.toJson());
+   json_object_set_new(root, "mapImage", m_mapImage.toJson());
    json_object_set_new(root, "geoLocation", m_geoLocation.toJson());
    json_object_set_new(root, "postalAddress", m_postalAddress->toJson());
    json_object_set_new(root, "submapId", json_integer(m_submapId));
@@ -2452,6 +2460,7 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "inheritAccessRights", json_boolean(m_inheritAccessRights));
    json_object_set_new(root, "trustedNodes", (m_trustedNodes != NULL) ? m_trustedNodes->toJson() : json_array());
    json_object_set_new(root, "creationTime", json_integer(m_creationTime));
+   json_object_set_new(root, "categoryId", json_integer(m_categoryId));
 
    json_t *customAttributes = json_array();
    forEachCustomAttribute(CustomAttributeToJson, customAttributes);

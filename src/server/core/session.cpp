@@ -1397,6 +1397,15 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_WEB_SERVICE:
          deleteWebService(request);
          break;
+      case CMD_GET_OBJECT_CATEGORIES:
+         getObjectCategories(request);
+         break;
+      case CMD_MODIFY_OBJECT_CATEGORY:
+         modifyObjectCategory(request);
+         break;
+      case CMD_DELETE_OBJECT_CATEGORY:
+         deleteObjectCategory(request);
+         break;
 #ifdef WITH_ZMQ
       case CMD_ZMQ_SUBSCRIBE_EVENT:
          zmqManageSubscription(request, zmq::EVENT, true);
@@ -1956,7 +1965,7 @@ void ClientSession::updateSystemAccessRights()
    if (!(m_dwFlags & CSF_AUTHENTICATED))
       return;
 
-   UINT64 systemAccessRights = GetEffectiveSystemRights(m_dwUserId);
+   uint64_t systemAccessRights = GetEffectiveSystemRights(m_dwUserId);
    if (systemAccessRights != m_systemAccessRights)
    {
       debugPrintf(3, _T("System access rights updated (") UINT64X_FMT(_T("016")) _T(" -> ")  UINT64X_FMT(_T("016")) _T(")"), m_systemAccessRights, systemAccessRights);
@@ -1974,13 +1983,7 @@ void ClientSession::updateSystemAccessRights()
 */
 void ClientSession::getAlarmCategories(UINT32 requestId)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(requestId);
-
-   // Check access rights
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
       GetAlarmCategories(&msg);
@@ -1996,25 +1999,19 @@ void ClientSession::getAlarmCategories(UINT32 requestId)
 /**
 * Update alarm category
 */
-void ClientSession::modifyAlarmCategory(NXCPMessage *pRequest)
+void ClientSession::modifyAlarmCategory(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
-   // Check access rights
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
-      UINT32 id = 0;
-      msg.setField(VID_RCC, UpdateAlarmCategory(pRequest, &id));
+      uint32_t id = 0;
+      msg.setField(VID_RCC, UpdateAlarmCategory(request, &id));
       msg.setField(VID_CATEGORY_ID, id);
    }
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-
-   // Send response
    sendMessage(&msg);
 }
 
@@ -2023,14 +2020,10 @@ void ClientSession::modifyAlarmCategory(NXCPMessage *pRequest)
 */
 void ClientSession::deleteAlarmCategory(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
-
-   // Check access rights
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
-      UINT32 categoryId = request->getFieldAsInt32(VID_CATEGORY_ID);
+      uint32_t categoryId = request->getFieldAsInt32(VID_CATEGORY_ID);
       if (!g_pEventPolicy->isCategoryInUse(categoryId))
       {
          msg.setField(VID_RCC, DeleteAlarmCategory(categoryId));
@@ -2044,8 +2037,6 @@ void ClientSession::deleteAlarmCategory(NXCPMessage *request)
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-
-   // Send response
    sendMessage(&msg);
 }
 
@@ -14854,6 +14845,70 @@ void ClientSession::deleteWebService(NXCPMessage *request)
    else
    {
       WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on deleting web service definition"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(&response);
+}
+
+/**
+ * Get configured object categories
+ */
+void ClientSession::getObjectCategories(NXCPMessage *request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   ObjectCategoriesToMessage(&response);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(&response);
+}
+
+/**
+ * Modify object category
+ */
+void ClientSession::modifyObjectCategory(NXCPMessage *request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_OBJECT_CATEGORIES)
+   {
+      uint32_t categoryId;
+      uint32_t rcc = ModifyObjectCategory(*request, &categoryId);
+      if (rcc == RCC_SUCCESS)
+      {
+         response.setField(VID_CATEGORY_ID, categoryId);
+         shared_ptr<ObjectCategory> category = GetObjectCategory(categoryId);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Object category \"%s\" [%u] modified"),
+                  (category != nullptr) ? category->getName() : _T("<unknown>"), categoryId);
+      }
+      response.setField(VID_RCC, rcc);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on changing object category"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(&response);
+}
+
+/**
+ * Delete object category
+ */
+void ClientSession::deleteObjectCategory(NXCPMessage *request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_OBJECT_CATEGORIES)
+   {
+      uint32_t id = request->getFieldAsUInt32(VID_CATEGORY_ID);
+      uint32_t rcc = DeleteObjectCategory(id, request->getFieldAsBoolean(VID_FORCE_DELETE));
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Object category [%u] deleted"), id);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting object category"));
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 

@@ -170,7 +170,7 @@ CREATE TABLE object_properties
   longitude varchar(20),
   location_accuracy integer not null,
   location_timestamp integer not null,
-  image varchar(36) not null,
+  map_image varchar(36) not null,
   submap_id integer not null,
   name_on_map varchar(63) null,
   country varchar(63) null,
@@ -181,7 +181,20 @@ CREATE TABLE object_properties
   maint_event_id SQL_INT64 not null,
   maint_initiator integer not null,
   creation_time integer not null,
+  category integer not null,
   PRIMARY KEY(object_id)
+) TABLE_TYPE;
+
+/**
+ * Object categories
+ */
+CREATE TABLE object_categories
+(
+  id integer not null,
+  name varchar(63) not null,
+  icon varchar(36) null,
+  map_image varchar(36) null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /**

@@ -430,7 +430,7 @@ bool EventNameResolver(const TCHAR *name, UINT32 *code)
 /**
  * Create object URL from NXCP message
  */
-ObjectUrl::ObjectUrl(NXCPMessage *msg, UINT32 baseId)
+ObjectUrl::ObjectUrl(NXCPMessage *msg, uint32_t baseId)
 {
    m_id = msg->getFieldAsUInt32(baseId);
    m_url = msg->getFieldAsString(baseId + 1);
@@ -459,7 +459,7 @@ ObjectUrl::~ObjectUrl()
 /**
  * Fill NXCP message
  */
-void ObjectUrl::fillMessage(NXCPMessage *msg, UINT32 baseId)
+void ObjectUrl::fillMessage(NXCPMessage *msg, uint32_t baseId)
 {
    msg->setField(baseId, m_id);
    msg->setField(baseId + 1, m_url);

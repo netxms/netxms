@@ -24,6 +24,55 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.21 to 40.22
+ */
+static bool H_UpgradeFromV21()
+{
+   if (GetSchemaLevelForMajorVersion(36) < 10)
+   {
+      static const TCHAR *batch =
+            _T("ALTER TABLE object_properties ADD category integer\n")
+            _T("UPDATE object_properties SET category=0\n")
+            _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("category")));
+      CHK_EXEC(DBRenameColumn(g_dbHandle, _T("object_properties"), _T("image"), _T("map_image")));
+
+      CHK_EXEC(CreateTable(
+            _T("CREATE TABLE object_categories (")
+            _T("   id integer not null,")
+            _T("   name varchar(63) not null,")
+            _T("   icon varchar(36) null,")
+            _T("   map_image varchar(36) null,")
+            _T("   PRIMARY KEY(id))")));
+
+      // Update access rights for predefined "Admins" group
+      DB_RESULT hResult = SQLSelect(_T("SELECT system_access FROM user_groups WHERE id=1073741825"));
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            uint64_t access = DBGetFieldUInt64(hResult, 0, 0);
+            access |= SYSTEM_ACCESS_OBJECT_CATEGORIES;
+            TCHAR query[256];
+            _sntprintf(query, 256, _T("UPDATE user_groups SET system_access=") UINT64_FMT _T(" WHERE id=1073741825"), access);
+            CHK_EXEC(SQLQuery(query));
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         if (!g_ignoreErrors)
+            return false;
+      }
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(36, 10));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(22));
+   return true;
+}
+
+/**
  * Upgrade from 40.20 to 40.21
  */
 static bool H_UpgradeFromV20()
@@ -549,6 +598,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 21, 40, 22, H_UpgradeFromV21 },
    { 20, 40, 21, H_UpgradeFromV20 },
    { 19, 40, 20, H_UpgradeFromV19 },
    { 18, 40, 19, H_UpgradeFromV18 },

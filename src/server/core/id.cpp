@@ -35,32 +35,32 @@ void LoadLastEventId(DB_HANDLE hdb);
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   27
+#define NUMBER_OF_GROUPS   28
 
 /**
  * Static data
  */
 static MUTEX s_mutexTableAccess;
 static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
-         {
-            100, FIRST_USER_EVENT_ID, 1, 1,
-            1, 1, 1, 1,
-            0x40000001, 1, 1, 1,
-            1, 10000, 10000, 1,
-            1, 1, 1, 1,
-            1, 1, 1, 1,
-            1, 1
-         };
+   {
+      100, FIRST_USER_EVENT_ID, 1, 1,
+      1, 1, 1, 1,
+      0x40000001, 1, 1, 1,
+      1, 10000, 10000, 1,
+      1, 1, 1, 1,
+      1, 1, 1, 1,
+      1, 1, 1
+   };
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
-         {
-            0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF,
-            0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x3FFFFFFF,
-            0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-            0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-            0xFFFFFFFE, 0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-            0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-            0xFFFFFFFE, 0xFFFFFFFE
-         };
+   {
+      0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF,
+      0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x3FFFFFFF,
+      0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+      0xFFFFFFFE, 0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
+   };
 static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
 {
    _T("Network Objects"),
@@ -84,11 +84,12 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
    _T("Mapping Tables"),
    _T("DCI Summary Tables"),
    _T("Scheduled Tasks"),
-   _T("Alarm categories"),
+   _T("Alarm Categories"),
    _T("User Agent Messages"),
    _T("Passive Rack Elements"),
    _T("Physical Links"),
-   _T("Web Service Definitions")
+   _T("Web Service Definitions"),
+   _T("Object Categories")
 };
 
 /**
@@ -98,7 +99,7 @@ bool InitIdTable()
 {
    DB_RESULT hResult;
 
-   s_mutexTableAccess = MutexCreate();
+   s_mutexTableAccess = MutexCreateFast();
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -496,6 +497,16 @@ bool InitIdTable()
    {
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_WEBSVC_DEFINITION] = std::max(s_freeIdTable[IDG_WEBSVC_DEFINITION],
+                                                      DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available web service definition id
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM object_categories"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_OBJECT_CATEGORIES] = std::max(s_freeIdTable[IDG_OBJECT_CATEGORIES],
                                                       DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }

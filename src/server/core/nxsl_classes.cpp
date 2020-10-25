@@ -250,6 +250,30 @@ NXSL_METHOD_DEFINITION(NetObj, setAlias)
 }
 
 /**
+ * setCategory(idOrName)
+ */
+NXSL_METHOD_DEFINITION(NetObj, setCategory)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   shared_ptr<ObjectCategory> category =
+            argv[0]->isInteger() ?
+                     GetObjectCategory(argv[0]->getValueAsUInt32()) :
+                     FindObjectCategoryByName(argv[0]->getValueAsCString());
+   if (category != nullptr)
+   {
+      static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setCategoryId(category->getId());
+      *result = vm->createValue(true);
+   }
+   else
+   {
+      *result = vm->createValue(false);
+   }
+   return 0;
+}
+
+/**
  * setComments(text)
  */
 NXSL_METHOD_DEFINITION(NetObj, setComments)
@@ -341,7 +365,7 @@ NXSL_METHOD_DEFINITION(NetObj, setMapImage)
       DBConnectionPoolReleaseConnection(hdb);
    }
 
-   *result = vm->createValue(success ? 1 : 0);
+   *result = vm->createValue(success);
    return 0;
 }
 
@@ -527,6 +551,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(NetObj, manage, 0);
    NXSL_REGISTER_METHOD(NetObj, rename, 1);
    NXSL_REGISTER_METHOD(NetObj, setAlias, 1);
+   NXSL_REGISTER_METHOD(NetObj, setCategory, 1);
    NXSL_REGISTER_METHOD(NetObj, setComments, 1);
    NXSL_REGISTER_METHOD(NetObj, setCustomAttribute, -1);
    NXSL_REGISTER_METHOD(NetObj, setGeoLocation, 1);
@@ -588,6 +613,22 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    else if (compareAttributeName(attr, "backupZoneProxyId"))
    {
       value = vm->createValue(object->getAssignedZoneProxyId(true));
+   }
+   else if (compareAttributeName(attr, "category"))
+   {
+      if (object->getCategoryId() != 0)
+      {
+         shared_ptr<ObjectCategory> category = GetObjectCategory(object->getCategoryId());
+         value = (category != nullptr) ? vm->createValue(category->getName()) : vm->createValue();
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (compareAttributeName(attr, "categoryId"))
+   {
+      value = vm->createValue(object->getCategoryId());
    }
    else if (compareAttributeName(attr, "children"))
    {
@@ -2430,11 +2471,11 @@ NXSL_Value *NXSL_ContainerClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (compareAttributeName(attr, "isAutoBindEnabled"))
    {
-      value = vm->createValue(container->isAutoBindEnabled() ? 1 : 0);
+      value = vm->createValue(container->isAutoBindEnabled());
    }
    else if (compareAttributeName(attr, "isAutoUnbindEnabled"))
    {
-      value = vm->createValue(container->isAutoUnbindEnabled() ? 1 : 0);
+      value = vm->createValue(container->isAutoUnbindEnabled());
    }
    return value;
 }
@@ -2539,11 +2580,11 @@ NXSL_Value *NXSL_TemplateClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (compareAttributeName(attr, "isAutoApplyEnabled"))
    {
-      value = vm->createValue(tmpl->isAutoBindEnabled() ? 1 : 0);
+      value = vm->createValue(tmpl->isAutoBindEnabled());
    }
    else if (compareAttributeName(attr, "isAutoRemoveEnabled"))
    {
-      value = vm->createValue(tmpl->isAutoUnbindEnabled() ? 1 : 0);
+      value = vm->createValue(tmpl->isAutoUnbindEnabled());
    }
    else if (compareAttributeName(attr, "version"))
    {
@@ -3367,7 +3408,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (compareAttributeName(attr, "hasActiveThreshold"))
    {
-      value = vm->createValue(dci->hasActiveThreshold() ? 1 : 0);
+      value = vm->createValue(dci->hasActiveThreshold());
    }
    else if (compareAttributeName(attr, "id"))
    {

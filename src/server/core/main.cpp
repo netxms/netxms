@@ -1102,6 +1102,7 @@ retry_db_lock:
    // Initialize objects infrastructure and load objects from database
    LoadNetworkDeviceDrivers();
    ObjectsInit();
+   LoadObjectCategories();
    if (!LoadObjects())
       return FALSE;
    nxlog_debug(1, _T("Objects loaded and initialized"));
