@@ -335,9 +335,9 @@ bool SyslogMessage::bindToNode()
 			wchar_to_mb(m_node->getName(), -1, m_hostName, MAX_SYSLOG_HOSTNAME_LEN);
 			m_hostName[MAX_SYSLOG_HOSTNAME_LEN - 1] = 0;
 #else
-         strlcpy(m_hostName, node->getName(), MAX_SYSLOG_HOSTNAME_LEN);
+         strlcpy(m_hostName, m_node->getName(), MAX_SYSLOG_HOSTNAME_LEN);
 #endif
-		}
+      }
    }
    else if (m_hostName[0] == 0)
    {
