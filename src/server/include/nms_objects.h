@@ -837,22 +837,45 @@ public:
 class NXCORE_EXPORTABLE ObjectUrl
 {
 private:
-   UINT32 m_id;
+   uint32_t m_id;
    TCHAR *m_url;
    TCHAR *m_description;
 
 public:
-   ObjectUrl(NXCPMessage *msg, UINT32 baseId);
+   ObjectUrl(NXCPMessage *msg, uint32_t baseId);
    ObjectUrl(DB_RESULT hResult, int row);
    ~ObjectUrl();
 
-   void fillMessage(NXCPMessage *msg, UINT32 baseId);
+   void fillMessage(NXCPMessage *msg, uint32_t baseId);
 
-   UINT32 getId() const { return m_id; }
+   uint32_t getId() const { return m_id; }
    const TCHAR *getUrl() const { return m_url; }
    const TCHAR *getDescription() const { return m_description; }
 
    json_t *toJson() const;
+};
+
+/**
+ * Object category
+ */
+class ObjectCategory
+{
+private:
+   uint32_t m_id;
+   TCHAR m_name[MAX_OBJECT_NAME];
+   uuid m_mapImage;
+   uuid m_icon;
+
+public:
+   ObjectCategory(const NXCPMessage& msg);
+   ObjectCategory(DB_RESULT hResult, int row);
+
+   uint32_t getId() const { return m_id; }
+   const TCHAR *getName() const { return m_name; }
+   const uuid& getMapImage() const { return m_mapImage; }
+   const uuid& getIcon() const { return m_icon; }
+
+   void fillMessage(NXCPMessage *msg, uint32_t baseId);
 };
 
 /**
@@ -898,12 +921,13 @@ protected:
    bool m_isDeleteInitiated;
    bool m_isHidden;
 	bool m_isSystem;
-	uuid m_image;
+	uuid m_mapImage;
+   uint32_t m_submapId;          // Map object which should be open on drill-down request
+   uint32_t m_categoryId;
    MUTEX m_mutexProperties;         // Object data access mutex
 	GeoLocation m_geoLocation;
    PostalAddress *m_postalAddress;
    ClientSession *m_pollRequestor;
-   uint32_t m_submapId;				// Map object which should be open on drill-down request
 	IntegerArray<UINT32> *m_dashboards; // Dashboards associated with this object
 	ObjectArray<ObjectUrl> *m_urls;  // URLs associated with this object
 	uint32_t m_primaryZoneProxyId;     // ID of assigned primary zone proxy node
@@ -990,14 +1014,17 @@ public:
 	SharedString getComments() const { return GetAttributeWithLock(m_comments, m_mutexProperties); }
    SharedString getNameOnMap() const { return GetAttributeWithLock(m_nameOnMap, m_mutexProperties); }
 
+   uint32_t getCategoryId() const { return m_categoryId; }
+   void setCategoryId(uint32_t id) { m_categoryId = id; setModified(MODIFY_COMMON_PROPERTIES); }
+
 	const GeoLocation& getGeoLocation() const { return m_geoLocation; }
 	void setGeoLocation(const GeoLocation& geoLocation);
 
    const PostalAddress *getPostalAddress() const { return m_postalAddress; }
    void setPostalAddress(PostalAddress * addr) { lockProperties(); delete m_postalAddress; m_postalAddress = addr; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 
-   const uuid& getMapImage() const { return m_image; }
-   void setMapImage(const uuid& image) { lockProperties(); m_image = image; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
+   const uuid& getMapImage() const { return m_mapImage; }
+   void setMapImage(const uuid& image) { lockProperties(); m_mapImage = image; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 
    bool isModified() const { return m_modified != 0; }
    bool isModified(uint32_t bit) const { return (m_modified & bit) != 0; }
@@ -4435,6 +4462,13 @@ UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, 
 
 void DeleteObjectFromPhysicalLinks(UINT32 id);
 void DeletePatchPanelFromPhysicalLinks(UINT32 rackId, UINT32 patchPanelId);
+
+shared_ptr<ObjectCategory> NXCORE_EXPORTABLE GetObjectCategory(uint32_t id);
+shared_ptr<ObjectCategory> NXCORE_EXPORTABLE FindObjectCategoryByName(const TCHAR *name);
+uint32_t ModifyObjectCategory(const NXCPMessage& msg, uint32_t *categoryId);
+uint32_t DeleteObjectCategory(uint32_t id, bool forceDelete);
+void ObjectCategoriesToMessage(NXCPMessage *msg);
+void LoadObjectCategories();
 
 /**
  * Global variables

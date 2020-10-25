@@ -446,9 +446,9 @@ typedef struct
 #define CMD_SAVE_GRAPH		   		      0x00C6
 #define CMD_DELETE_GRAPH				      0x00C7
 #define CMD_GET_PERFTAB_DCI_LIST          0x00C8
-//#define CMD_ADD_CA_CERTIFICATE		      0x00C9
-//#define CMD_DELETE_CERTIFICATE		      0x00CA
-//#define CMD_GET_CERT_LIST				      0x00CB
+#define CMD_GET_OBJECT_CATEGORIES         0x00C9
+#define CMD_MODIFY_OBJECT_CATEGORY        0x00CA
+#define CMD_DELETE_OBJECT_CATEGORY        0x00CB
 #define CMD_WINDOWS_EVENT      		      0x00CC
 #define CMD_QUERY_L2_TOPOLOGY			      0x00CD
 #define CMD_AUDIT_RECORD                  0x00CE
@@ -1389,6 +1389,8 @@ typedef struct
 #define VID_NUM_MASKED_FIELDS       ((UINT32)717)
 #define VID_DIRECTION               ((UINT32)718)
 #define VID_ALTITUDE                ((UINT32)719)
+#define VID_FORCE_DELETE            ((UINT32)720)
+#define VID_ICON                    ((UINT32)721)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

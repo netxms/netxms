@@ -26,7 +26,7 @@ libnxcore_la_SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addr
 			netinfo.cpp netmap.cpp netmap_element.cpp netmap_link.cpp \
 			netmap_objlist.cpp netobj.cpp netsrv.cpp network_cred.cpp \
 			node.cpp nodelink.cpp notification_channel.cpp np.cpp npe.cpp nxsl_classes.cpp \
-			nxslext.cpp objects.cpp objtools.cpp package.cpp \
+			nxslext.cpp object_categories.cpp objects.cpp objtools.cpp package.cpp \
 			pds.cpp physical_link.cpp poll.cpp ps.cpp rack.cpp \
 			radius.cpp reporting.cpp rootobj.cpp schedule.cpp script.cpp \
 			sensor.cpp server_stats.cpp session.cpp slmcheck.cpp smclp.cpp \

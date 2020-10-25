@@ -144,6 +144,7 @@
 #define IDG_RACK_ELEMENT      23
 #define IDG_PHYSICAL_LINK     24
 #define IDG_WEBSVC_DEFINITION 25
+#define IDG_OBJECT_CATEGORIES 26
 
 /**
  * Exit codes for console commands
@@ -784,6 +785,9 @@ private:
    void getWebServices(NXCPMessage *request);
    void modifyWebService(NXCPMessage *request);
    void deleteWebService(NXCPMessage *request);
+   void getObjectCategories(NXCPMessage *request);
+   void modifyObjectCategory(NXCPMessage *request);
+   void deleteObjectCategory(NXCPMessage *request);
    void updateSharedSecretList(NXCPMessage *request);
    void updateSNMPPortList(NXCPMessage *pRequest);
 #ifdef WITH_ZMQ
