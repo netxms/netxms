@@ -117,15 +117,16 @@ UINT32 AgentActionExecutor::findAgentAction()
             case AGENT_ACTION_SHELLEXEC:
                rcc = ERR_PROCESSING;
                substituteArgs();
+               DebugPrintf(4, _T("Executing external action %s of type %d"), m_cmd, m_pActionList[i].iType);
                break;
             case AGENT_ACTION_SUBAGENT:
+               DebugPrintf(4, _T("Executing internal action %s"), m_pActionList[i].szName);
                rcc = m_pActionList[i].handler.sa.fpHandler(m_cmd, m_args, m_pActionList[i].handler.sa.pArg, m_session);
                break;
             default:
                rcc = ERR_NOT_IMPLEMENTED;
                break;
          }
-         DebugPrintf(4, _T("Executing action %s of type %d"), m_cmd, m_pActionList[i].iType);
          break;
       }
    }
