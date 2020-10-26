@@ -153,7 +153,7 @@ bool GenericSocketListener::initialize()
 #endif
 
    // Bind socket
-   TCHAR buffer[64];
+   TCHAR buffer[256];
    int bindFailures = 0;
    if (m_allowV4)
    {
