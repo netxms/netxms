@@ -64,9 +64,36 @@ static ObjectArray<ServerRegistration> s_serverSyncStatus(16, 16, Ownership::Tru
 static Mutex s_serverSyncStatusLock;
 
 /**
- * Process notifications
+ * Process notifications - external subagent
  */
-static void NotificationProcessor()
+static void ExtSubagentLoaderNotificationProcessor()
+{
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification processor started"));
+   while(true)
+   {
+      NXCPMessage *msg = g_notificationProcessorQueue.getOrBlock();
+      if (msg == INVALID_POINTER_VALUE)
+         break;
+
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("NotificationProcessor: sending message to master agent"));
+      if (!SendMessageToMasterAgent(msg))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("NotificationProcessor: failed to send message to master agent"));
+         if (g_notificationProcessorQueue.size() < 10000)
+         {
+            g_notificationProcessorQueue.insert(msg);
+            msg = nullptr; // Prevent destruction
+         }
+      }
+      delete msg;
+   }
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification processor stopped"));
+}
+
+/**
+ * Process notifications - master agent
+ */
+static void MasterNotificationProcessor()
 {
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification processor started"));
    while(true)
@@ -77,75 +104,65 @@ static void NotificationProcessor()
 
       nxlog_debug_tag(DEBUG_TAG, 6, _T("NotificationProcessor: new message received"));
 
-      if (g_dwFlags & AF_SUBAGENT_LOADER)
+      DB_STATEMENT hStmt = nullptr;
+
+      s_serverSyncStatusLock.lock();
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("NotificationProcessor: Server count: %d"), s_serverSyncStatus.size());
+      for(int i = 0; i < s_serverSyncStatus.size(); i++)
       {
-         nxlog_debug_tag(DEBUG_TAG, 8, _T("NotificationProcessor: sending message to master agent"));
-         if (!SendMessageToMasterAgent(msg))
+         bool sent = false;
+         ServerRegistration *server = s_serverSyncStatus.get(i);
+         if (server->status == SyncStatus::ONLINE)
          {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("NotificationProcessor: failed to send message to master agent"));
-         }
-      }
-      else
-      {
-         DB_STATEMENT hStmt = nullptr;
-
-         s_serverSyncStatusLock.lock();
-         nxlog_debug_tag(DEBUG_TAG, 8, _T("NotificationProcessor: Server count: %d"), s_serverSyncStatus.size());
-         for(int i = 0; i < s_serverSyncStatus.size(); i++)
-         {
-            bool sent = false;
-            ServerRegistration *server = s_serverSyncStatus.get(i);
-            if (server->status == SyncStatus::ONLINE)
+            MutexLock(g_hSessionListAccess);
+            for(uint32_t j = 0; j < g_maxCommSessions; j++)
             {
-               MutexLock(g_hSessionListAccess);
-               for(uint32_t j = 0; j < g_maxCommSessions; j++)
+               CommSession *session = g_pSessionList[j];
+               if (session != nullptr)
                {
-                  CommSession *session = g_pSessionList[j];
-                  if (session != nullptr)
+                  if ((session->getServerId() == server->serverId) && session->canAcceptTraps())
                   {
-                     if ((session->getServerId() == server->serverId) && session->canAcceptTraps())
-                     {
-                        sent = session->sendMessage(msg);
-                        break;
-                     }
-                  }
-               }
-               MutexUnlock(g_hSessionListAccess);
-            }
-
-            if (!sent)
-            {
-               DB_HANDLE hdb = GetLocalDatabaseHandle();
-               if (hdb != nullptr)
-               {
-                  if (hStmt == nullptr)
-                  {
-                     hStmt = DBPrepare(hdb, _T("INSERT INTO notification_data (server_id,id,serialized_data) VALUES (?,?,?)"), true);
-                  }
-                  if (hStmt != nullptr)
-                  {
-                     NXCP_MESSAGE *rawMessage = msg->serialize(true);
-                     char *base64Encoded = nullptr;
-                     base64_encode_alloc(reinterpret_cast<char*>(rawMessage), ntohl(rawMessage->size), &base64Encoded);
-                     MemFree(rawMessage);
-
-                     DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, server->serverId);
-                     DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, server->recordId++);
-                     DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, base64Encoded, DB_BIND_DYNAMIC);
-                     DBExecute(hStmt);
-                     server->status = SyncStatus::SYNCHRONIZING;
-                     nxlog_debug_tag(DEBUG_TAG, 6, _T("NotificationSender: Notification message saved to database"));
+                     sent = session->sendMessage(msg);
+                     break;
                   }
                }
             }
-            else
+            MutexUnlock(g_hSessionListAccess);
+         }
+
+         if (!sent)
+         {
+            DB_HANDLE hdb = GetLocalDatabaseHandle();
+            if (hdb != nullptr)
             {
-               nxlog_debug_tag(DEBUG_TAG, 8, _T("NotificationSender: Notification message successfully forwarded to server"));
+               if (hStmt == nullptr)
+               {
+                  hStmt = DBPrepare(hdb, _T("INSERT INTO notification_data (server_id,id,serialized_data) VALUES (?,?,?)"), true);
+               }
+               if (hStmt != nullptr)
+               {
+                  NXCP_MESSAGE *rawMessage = msg->serialize(true);
+                  char *base64Encoded = nullptr;
+                  base64_encode_alloc(reinterpret_cast<char*>(rawMessage), ntohl(rawMessage->size), &base64Encoded);
+                  MemFree(rawMessage);
+
+                  DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, server->serverId);
+                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, server->recordId++);
+                  DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, base64Encoded, DB_BIND_DYNAMIC);
+                  DBExecute(hStmt);
+                  server->status = SyncStatus::SYNCHRONIZING;
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("NotificationSender: Notification message saved to database"));
+               }
             }
          }
-         s_serverSyncStatusLock.unlock();
-         DBFreeStatement(hStmt);
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("NotificationSender: Notification message successfully forwarded to server"));
+         }
       }
+      s_serverSyncStatusLock.unlock();
+      DBFreeStatement(hStmt);
+
       delete msg;
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification processor stopped"));
@@ -378,28 +395,35 @@ void RegisterSessionForNotifications(CommSession *session)
  */
 void StartNotificationProcessor()
 {
-   DB_HANDLE hdb = GetLocalDatabaseHandle();
-   if(hdb != nullptr)
+   if (g_dwFlags & AF_SUBAGENT_LOADER)
    {
-      DB_RESULT result = DBSelect(hdb, _T("SELECT server_id,coalesce((SELECT max(id) FROM notification_data d WHERE d.server_id=s.server_id),0) AS notification_id FROM notification_servers s"));
-      if (result != nullptr)
-      {
-         int count = DBGetNumRows(result);
-         for(int i = 0; i < count; i++)
-         {
-            auto s = new ServerRegistration();
-            s->serverId = DBGetFieldUInt64(result, i, 0);
-            s->recordId = DBGetFieldLong(result, i, 1) + 1;
-            s->status = SyncStatus::SYNCHRONIZING;
-            s_serverSyncStatus.add(s);
-         }
-         DBFreeResult(result);
-      }
+      s_notificationProcessorThread = ThreadCreateEx(ExtSubagentLoaderNotificationProcessor);
    }
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("StartNotificationProcessor: Loaded %d servers"), s_serverSyncStatus.size());
+   else
+   {
+      DB_HANDLE hdb = GetLocalDatabaseHandle();
+      if(hdb != nullptr)
+      {
+         DB_RESULT result = DBSelect(hdb, _T("SELECT server_id,coalesce((SELECT max(id) FROM notification_data d WHERE d.server_id=s.server_id),0) AS notification_id FROM notification_servers s"));
+         if (result != nullptr)
+         {
+            int count = DBGetNumRows(result);
+            for(int i = 0; i < count; i++)
+            {
+               auto s = new ServerRegistration();
+               s->serverId = DBGetFieldUInt64(result, i, 0);
+               s->recordId = DBGetFieldLong(result, i, 1) + 1;
+               s->status = SyncStatus::SYNCHRONIZING;
+               s_serverSyncStatus.add(s);
+            }
+            DBFreeResult(result);
+         }
+      }
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("StartNotificationProcessor: Loaded %d servers"), s_serverSyncStatus.size());
 
-   s_notificationProcessorThread = ThreadCreateEx(NotificationProcessor, 0);
-   ThreadPoolExecute(g_commThreadPool, NotificationHousekeeper);
+      s_notificationProcessorThread = ThreadCreateEx(MasterNotificationProcessor);
+      ThreadPoolExecute(g_commThreadPool, NotificationHousekeeper);
+   }
 }
 
 /**
