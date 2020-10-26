@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,13 +32,13 @@ static ObjectArray<ExternalSubagent> s_subagents;
  */
 ExternalSubagent::ExternalSubagent(const TCHAR *name, const TCHAR *user)
 {
-	_tcslcpy(m_name, name, MAX_SUBAGENT_NAME);
-	_tcslcpy(m_user, user, MAX_ESA_USER_NAME);
-	m_connected = false;
-	m_listener = NULL;
-	m_pipe = NULL;
-	m_msgQueue = new MsgWaitQueue();
-	m_requestId = 1;
+   _tcslcpy(m_name, name, MAX_SUBAGENT_NAME);
+   _tcslcpy(m_user, user, MAX_ESA_USER_NAME);
+   m_connected = false;
+   m_listener = nullptr;
+   m_pipe = nullptr;
+   m_msgQueue = new MsgWaitQueue();
+   m_requestId = 1;
 }
 
 /**
@@ -46,8 +46,8 @@ ExternalSubagent::ExternalSubagent(const TCHAR *name, const TCHAR *user)
  */
 ExternalSubagent::~ExternalSubagent()
 {
-	delete m_msgQueue;
-	delete m_listener;
+   delete m_msgQueue;
+   delete m_listener;
 }
 
 /**
@@ -76,7 +76,8 @@ void ExternalSubagent::startListener()
  */
 void ExternalSubagent::stopListener()
 {
-   m_listener->stop();
+   if (m_listener != nullptr)
+      m_listener->stop();
 }
 
 /*
@@ -98,7 +99,7 @@ bool ExternalSubagent::sendMessage(const NXCPMessage *msg)
  */
 NXCPMessage *ExternalSubagent::waitForMessage(WORD code, UINT32 id)
 {
-	return m_msgQueue->waitForMessage(code, id, 5000);	// 5 sec timeout
+   return m_msgQueue->waitForMessage(code, id, 5000);	// 5 sec timeout
 }
 
 /**
@@ -592,14 +593,14 @@ UINT32 ExternalSubagent::getList(const TCHAR *name, StringList *value)
  */
 UINT32 ExternalSubagent::executeAction(const TCHAR *name, const StringList *args, AbstractCommSession *session, UINT32 requestId, bool sendOutput)
 {
-	NXCPMessage msg(CMD_EXECUTE_ACTION, m_requestId++);
-	msg.setField(VID_ACTION_NAME, name);
+   NXCPMessage msg(CMD_EXECUTE_ACTION, m_requestId++);
+   msg.setField(VID_ACTION_NAME, name);
    args->fillMessage(&msg, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
    msg.setField(VID_REQUEST_ID, requestId);
    msg.setField(VID_RECEIVE_OUTPUT, sendOutput);
    session->prepareProxySessionSetupMsg(&msg);
 
-   UINT32 rcc;
+   uint32_t rcc;
 	if (sendMessage(&msg))
 	{
 		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
@@ -833,17 +834,17 @@ UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value)
  */
 UINT32 ExecuteActionByExtSubagent(const TCHAR *name, const StringList *args, AbstractCommSession *session, UINT32 requestId, bool sendOutput)
 {
-	UINT32 rc = ERR_UNKNOWN_PARAMETER;
-	for(int i = 0; i < s_subagents.size(); i++)
-	{
-		if (s_subagents.get(i)->isConnected())
-		{
-			rc = s_subagents.get(i)->executeAction(name, args, session, requestId, sendOutput);
-			if (rc != ERR_UNKNOWN_PARAMETER)
-				break;
-		}
-	}
-	return rc;
+   uint32_t rc = ERR_UNKNOWN_PARAMETER;
+   for(int i = 0; i < s_subagents.size(); i++)
+   {
+      if (s_subagents.get(i)->isConnected())
+      {
+         rc = s_subagents.get(i)->executeAction(name, args, session, requestId, sendOutput);
+         if (rc != ERR_UNKNOWN_PARAMETER)
+            break;
+      }
+   }
+   return rc;
 }
 
 /**
@@ -851,14 +852,14 @@ UINT32 ExecuteActionByExtSubagent(const TCHAR *name, const StringList *args, Abs
  */
 void ShutdownExtSubagents(bool restart)
 {
-	for(int i = 0; i < s_subagents.size(); i++)
-	{
-		if (s_subagents.get(i)->isConnected())
-		{
+   for(int i = 0; i < s_subagents.size(); i++)
+   {
+      if (s_subagents.get(i)->isConnected())
+      {
          nxlog_debug(1, _T("Sending SHUTDOWN command to external subagent %s"), s_subagents.get(i)->getName());
          s_subagents.get(i)->shutdown(restart);
-		}
-	}
+      }
+   }
 }
 
 /**
