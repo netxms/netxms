@@ -689,6 +689,14 @@ static LONG H_RestartAgent(const TCHAR *action, const StringList *args, const TC
 }
 
 /**
+ * Handler for Agent.RotateLog action
+ */
+static LONG H_RotateLog(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
+{
+   return nxlog_rotate() ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+}
+
+/**
  * Handler for System.Execute action
  */
 static LONG H_SystemExecute(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
@@ -1052,6 +1060,7 @@ BOOL Initialize()
 
 		// Add built-in actions
 		AddAction(_T("Agent.Restart"), AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, _T("CORE"), _T("Restart agent"));
+      AddAction(_T("Agent.RotateLog"), AGENT_ACTION_SUBAGENT, NULL, H_RotateLog, _T("CORE"), _T("Rotate agent log"));
       if (g_config->getValueAsBoolean(_T("/CORE/EnableArbitraryCommandExecution"), false))
       {
          nxlog_write(NXLOG_INFO, _T("Arbitrary command execution enabled"));
