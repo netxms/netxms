@@ -14,6 +14,7 @@ crypto.*	Encryption functions
 crypto.cert	Certificate related messages
 
 dc.*		Data collection
+dc.agent.cache	Agent side cache
 
 db.*		Database related
 db.drv.*	Database drivers related

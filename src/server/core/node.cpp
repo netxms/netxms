@@ -25,8 +25,9 @@
 #include <entity_mib.h>
 #include <ethernet_ip.h>
 
-#define DEBUG_TAG_CONF_POLL         _T("poll.conf")
 #define DEBUG_TAG_AGENT             _T("node.agent")
+#define DEBUG_TAG_CONF_POLL         _T("poll.conf")
+#define DEBUG_TAG_DC_AGENT_CACHE    _T("dc.agent.cache")
 #define DEBUG_TAG_STATUS_POLL       _T("poll.status")
 #define DEBUG_TAG_ICMP_POLL         _T("poll.icmp")
 #define DEBUG_TAG_ROUTES_POLL       _T("poll.routes")
@@ -10012,7 +10013,7 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
       msg.setField(VID_NUM_NODES, 0);
    }
 
-   UINT32 rcc;
+   uint32_t rcc;
    NXCPMessage *response = conn->customRequest(&msg);
    if (response != nullptr)
    {
@@ -10026,12 +10027,12 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
 
    if (rcc == ERR_SUCCESS)
    {
-      DbgPrintf(4, _T("SyncDataCollection: node %s [%d] synchronized"), m_name, (int)m_id);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 4, _T("Node::syncDataCollectionWithAgent: node %s [%d] synchronized"), m_name, (int)m_id);
       m_state &= ~NSF_CACHE_MODE_NOT_SUPPORTED;
    }
    else
    {
-      DbgPrintf(4, _T("SyncDataCollection: node %s [%d] not synchronized (%s)"), m_name, (int)m_id, AgentErrorCodeToText(rcc));
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 4, _T("Node::syncDataCollectionWithAgent: node %s [%d] not synchronized (%s)"), m_name, (int)m_id, AgentErrorCodeToText(rcc));
       if ((rcc == ERR_UNKNOWN_COMMAND) || (rcc == ERR_NOT_IMPLEMENTED))
       {
          m_state |= NSF_CACHE_MODE_NOT_SUPPORTED;
@@ -10050,7 +10051,7 @@ void Node::clearDataCollectionConfigFromAgent(AgentConnectionEx *conn)
    NXCPMessage *response = conn->customRequest(&msg);
    if (response != nullptr)
    {
-      DbgPrintf(4, _T("ClearDataCollectionConfigFromAgent: DCI configuration successfully removed from node %s [%d]"), m_name, (int)m_id);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 4, _T("Node::clearDataCollectionConfigFromAgent: DCI configuration successfully removed from node %s [%d]"), m_name, (int)m_id);
       delete response;
    }
 }
@@ -10078,7 +10079,7 @@ void Node::onDataCollectionChangeAsyncCallback()
    {
       // data collection configuration update already scheduled
       InterlockedDecrement(&m_pendingDataConfigurationSync);
-      nxlog_debug(5, _T("Node::onDataCollectionChangeAsyncCallback(%s [%u]): configuration upload already scheduled"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 7, _T("Node::onDataCollectionChangeAsyncCallback(%s [%u]): configuration upload already scheduled"), m_name, m_id);
    }
 }
 
@@ -10091,7 +10092,7 @@ void Node::onDataCollectionChange()
 
    if (m_capabilities & NC_IS_NATIVE_AGENT)
    {
-      DbgPrintf(5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync"), m_name, m_id);
       ThreadPoolExecute(g_mainThreadPool, self(), &Node::onDataCollectionChangeAsyncCallback);
    }
 
@@ -10101,8 +10102,8 @@ void Node::onDataCollectionChange()
       shared_ptr<Node> snmpProxy = static_pointer_cast<Node>(FindObjectById(snmpProxyId, OBJECT_NODE));
       if (snmpProxy != nullptr)
       {
-         DbgPrintf(5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync for SNMP proxy %s [%d]"),
-                   m_name, m_id, snmpProxy->getName(), snmpProxy->getId());
+         nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync for SNMP proxy %s [%d]"),
+               m_name, m_id, snmpProxy->getName(), snmpProxy->getId());
          ThreadPoolExecute(g_mainThreadPool, snmpProxy, &Node::onDataCollectionChangeAsyncCallback);
       }
    }
@@ -10113,8 +10114,8 @@ void Node::onDataCollectionChange()
       shared_ptr<Node> snmpProxy = static_pointer_cast<Node>(FindObjectById(snmpProxyId, OBJECT_NODE));
       if (snmpProxy != nullptr)
       {
-         DbgPrintf(5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync for backup SNMP proxy %s [%d]"),
-                   m_name, m_id, snmpProxy->getName(), snmpProxy->getId());
+         nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync for backup SNMP proxy %s [%d]"),
+               m_name, m_id, snmpProxy->getName(), snmpProxy->getId());
          ThreadPoolExecute(g_mainThreadPool, snmpProxy, &Node::onDataCollectionChangeAsyncCallback);
       }
    }
