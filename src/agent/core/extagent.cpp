@@ -76,7 +76,8 @@ void ExternalSubagent::startListener()
  */
 void ExternalSubagent::stopListener()
 {
-   m_listener->stop();
+   if (m_listener != NULL)
+      m_listener->stop();
 }
 
 /*
