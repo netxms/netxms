@@ -264,6 +264,22 @@ NXSL_Value::NXSL_Value(double dValue)
 }
 
 /**
+ * Create "boolean" value
+ */
+NXSL_Value::NXSL_Value(bool bValue)
+{
+   m_dataType = NXSL_DT_INT32;
+   m_stringPtr = nullptr;
+   m_length = 0;
+#ifdef UNICODE
+   m_mbString = nullptr;
+#endif
+   m_stringIsValid = FALSE;
+   m_value.int32 = bValue ? 1 : 0;
+   m_name = nullptr;
+}
+
+/**
  * Create "string" value
  */
 NXSL_Value::NXSL_Value(const TCHAR *value)
@@ -332,34 +348,34 @@ NXSL_Value::NXSL_Value(const char *value)
 /**
  * Create "string" value from non null-terminated string
  */
-NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
+NXSL_Value::NXSL_Value(const TCHAR *value, size_t len)
 {
    m_dataType = NXSL_DT_STRING;
-   m_length = dwLen;
+   m_length = static_cast<uint32_t>(len);
    if (m_length < NXSL_SHORT_STRING_LENGTH)
    {
       if (value != nullptr)
       {
-         memcpy(m_stringValue, value, dwLen * sizeof(TCHAR));
-         m_stringValue[dwLen] = 0;
+         memcpy(m_stringValue, value, len * sizeof(TCHAR));
+         m_stringValue[len] = 0;
       }
       else
       {
-         memset(m_stringValue, 0, (dwLen + 1) * sizeof(TCHAR));
+         memset(m_stringValue, 0, (len + 1) * sizeof(TCHAR));
       }
       m_stringPtr = nullptr;
    }
    else
    {
-      m_stringPtr = (TCHAR *)MemAlloc((dwLen + 1) * sizeof(TCHAR));
+      m_stringPtr = MemAllocString(len + 1);
       if (value != nullptr)
       {
-         memcpy(m_stringPtr, value, dwLen * sizeof(TCHAR));
-         m_stringPtr[dwLen] = 0;
+         memcpy(m_stringPtr, value, len * sizeof(TCHAR));
+         m_stringPtr[len] = 0;
       }
       else
       {
-         memset(m_stringPtr, 0, (dwLen + 1) * sizeof(TCHAR));
+         memset(m_stringPtr, 0, (len + 1) * sizeof(TCHAR));
       }
    }
 #ifdef UNICODE

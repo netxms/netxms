@@ -528,8 +528,9 @@ protected:
    NXSL_Value(uint32_t uValue);
    NXSL_Value(uint64_t uValue);
    NXSL_Value(double dValue);
+   NXSL_Value(bool bValue);
    NXSL_Value(const TCHAR *value);
-   NXSL_Value(const TCHAR *value, UINT32 len);
+   NXSL_Value(const TCHAR *value, size_t len);
 #ifdef UNICODE
    NXSL_Value(const char *value);
 #endif
@@ -628,13 +629,14 @@ public:
    NXSL_Value *createValue(NXSL_Array *array) { return new(m_values->allocate()) NXSL_Value(array); }
    NXSL_Value *createValue(NXSL_Iterator *iterator) { return new(m_values->allocate()) NXSL_Value(iterator); }
    NXSL_Value *createValue(NXSL_HashMap *hashMap) { return new(m_values->allocate()) NXSL_Value(hashMap); }
-   NXSL_Value *createValue(INT32 n) { return new(m_values->allocate()) NXSL_Value(n); }
-   NXSL_Value *createValue(UINT32 n) { return new(m_values->allocate()) NXSL_Value(n); }
-   NXSL_Value *createValue(INT64 n) { return new(m_values->allocate()) NXSL_Value(n); }
-   NXSL_Value *createValue(UINT64 n) { return new(m_values->allocate()) NXSL_Value(n); }
+   NXSL_Value *createValue(int32_t n) { return new(m_values->allocate()) NXSL_Value(n); }
+   NXSL_Value *createValue(uint32_t n) { return new(m_values->allocate()) NXSL_Value(n); }
+   NXSL_Value *createValue(int64_t n) { return new(m_values->allocate()) NXSL_Value(n); }
+   NXSL_Value *createValue(uint64_t n) { return new(m_values->allocate()) NXSL_Value(n); }
    NXSL_Value *createValue(double d) { return new(m_values->allocate()) NXSL_Value(d); }
+   NXSL_Value *createValue(bool b) { return new(m_values->allocate()) NXSL_Value(b); }
    NXSL_Value *createValue(const TCHAR *s) { return new(m_values->allocate()) NXSL_Value(s); }
-   NXSL_Value *createValue(const TCHAR *s, UINT32 l) { return new(m_values->allocate()) NXSL_Value(s, l); }
+   NXSL_Value *createValue(const TCHAR *s, size_t l) { return new(m_values->allocate()) NXSL_Value(s, l); }
 #ifdef UNICODE
    NXSL_Value *createValue(const char *s) { return new(m_values->allocate()) NXSL_Value(s); }
 #endif
