@@ -44,12 +44,16 @@ import org.netxms.client.log.LogRecordDetails;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.StyledText;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Dialog for displaying windows event log record details
  */
 public class WindowsEventLogRecordDetailsDialog extends Dialog
 {
+   private static final Logger logger = LoggerFactory.getLogger(WindowsEventLogRecordDetailsDialog.class);
+   
    private LogRecordDetails data;
    private CTabFolder tabFolder;
    private TableRow record;
@@ -145,7 +149,9 @@ public class WindowsEventLogRecordDetailsDialog extends Dialog
          transformer.transform(new StreamSource(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8))), xmlOutput);
          result = xmlOutput.getWriter().toString();
      } catch (Exception e) {
-        throw new RuntimeException(e);
+        logger.warn("Cannot format XML", e);
+        logger.debug("Source XML: " + text);
+        result = text;
      }
      return result;
    }
