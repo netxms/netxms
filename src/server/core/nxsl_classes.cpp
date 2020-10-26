@@ -1208,7 +1208,7 @@ NXSL_METHOD_DEFINITION(Node, readAgentParameter)
       return NXSL_ERR_NOT_STRING;
 
    TCHAR buffer[MAX_RESULT_LENGTH];
-   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromAgent(argv[0]->getValueAsCString(), MAX_RESULT_LENGTH, buffer);
+   uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromAgent(argv[0]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
    return 0;
 }

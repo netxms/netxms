@@ -392,7 +392,7 @@ InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *host
          {
             TCHAR query[256], buffer[128];
             _sntprintf(query, 256, _T("Net.Resolver.AddressByName(%s)"), hostname);
-            if (static_cast<Node&>(*proxy).getMetricFromAgent(query, 128, buffer) == ERR_SUCCESS)
+            if (static_cast<Node&>(*proxy).getMetricFromAgent(query, buffer, 128) == ERR_SUCCESS)
             {
                ipAddr = InetAddress::parse(buffer);
             }

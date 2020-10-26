@@ -302,6 +302,7 @@
     <ClCompile Include="nxslext.cpp" />
     <ClCompile Include="nxsl_classes.cpp" />
     <ClCompile Include="objects.cpp" />
+    <ClCompile Include="object_categories.cpp" />
     <ClCompile Include="objtools.cpp" />
     <ClCompile Include="package.cpp" />
     <ClCompile Include="pds.cpp" />

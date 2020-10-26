@@ -23,6 +23,7 @@
 #include "winnt_subagent.h"
 #include <wuapi.h>
 #include <netfw.h>
+#include <VersionHelpers.h>
 
 /**
  * Handler for System.ServiceState parameter
@@ -634,7 +635,10 @@ LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
 
    OSVERSIONINFO versionInfo;
    versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+#pragma warning(push)
+#pragma warning(disable : 4996)
    GetVersionEx(&versionInfo);
+#pragma warning(pop)
 
    TCHAR osVersion[256];
    if (!GetWindowsVersionString(osVersion, 256))
@@ -734,8 +738,11 @@ LONG H_SystemVersionInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
 {
    OSVERSIONINFOEX versionInfo;
    versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+#pragma warning(push)
+#pragma warning(disable : 4996)
    if (!GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&versionInfo)))
       return SYSINFO_RC_ERROR;
+#pragma warning(pop)
 
    switch(*arg)
    {
@@ -845,11 +852,7 @@ LONG H_SystemProductInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
    {
       if (!_tcscmp(arg, _T("DigitalProductId")))
       {
-         OSVERSIONINFO v;
-         memset(&v, 0, sizeof(OSVERSIONINFO));
-         v.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-         GetVersionEx(&v);
-         if ((v.dwMajorVersion > 6) || ((v.dwMajorVersion == 6) && (v.dwMinorVersion >= 2)))
+         if (IsWindows8OrGreater())
             DecodeProductKeyWin8(buffer, value);
          else
             DecodeProductKeyWin7(buffer, value);

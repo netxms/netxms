@@ -38,8 +38,8 @@
 /**
  * Externals
  */
-extern Queue g_syslogProcessingQueue;
-extern Queue g_syslogWriteQueue;
+extern ObjectQueue<SyslogMessage> g_syslogProcessingQueue;
+extern ObjectQueue<SyslogMessage> g_syslogWriteQueue;
 extern ThreadPool *g_dataCollectorThreadPool;
 extern ThreadPool *g_pollerThreadPool;
 extern ThreadPool *g_schedulerThreadPool;

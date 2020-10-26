@@ -1391,7 +1391,7 @@ static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **result
 		return NXSL_ERR_BAD_CLASS;
 
 	TCHAR buffer[MAX_RESULT_LENGTH];
-	UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromAgent(argv[1]->getValueAsCString(), MAX_RESULT_LENGTH, buffer);
+	UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromAgent(argv[1]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
 	*result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
 	return 0;
 }
