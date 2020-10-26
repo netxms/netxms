@@ -39,6 +39,7 @@ ExternalSubagent::ExternalSubagent(const TCHAR *name, const TCHAR *user)
 	m_pipe = NULL;
 	m_msgQueue = new MsgWaitQueue();
 	m_requestId = 1;
+   m_listenerStartDelay = 10000;
 }
 
 /**
@@ -68,7 +69,15 @@ void ExternalSubagent::startListener()
    m_listener = NamedPipeListener::create(name, RequestHandler, this,
             (m_user[0] != 0) && _tcscmp(m_user, _T("*")) ? m_user : NULL);
    if (m_listener != NULL)
+   {
       m_listener->start();
+   }
+   else
+   {
+      ThreadPoolScheduleRelative(g_commThreadPool, m_listenerStartDelay, this, &ExternalSubagent::startListener);
+      if (m_listenerStartDelay < 300000)
+         m_listenerStartDelay += m_listenerStartDelay / 2;
+   }
 }
 
 /**
@@ -97,7 +106,7 @@ bool ExternalSubagent::sendMessage(const NXCPMessage *msg)
 /**
  * Wait for specific message to arrive
  */
-NXCPMessage *ExternalSubagent::waitForMessage(WORD code, UINT32 id)
+NXCPMessage *ExternalSubagent::waitForMessage(WORD code, uint32_t id)
 {
 	return m_msgQueue->waitForMessage(code, id, 5000);	// 5 sec timeout
 }
@@ -490,10 +499,10 @@ void ExternalSubagent::listActions(StringList *list)
 /**
  * Get parameter value from external subagent
  */
-UINT32 ExternalSubagent::getParameter(const TCHAR *name, TCHAR *buffer)
+uint32_t ExternalSubagent::getParameter(const TCHAR *name, TCHAR *buffer)
 {
 	NXCPMessage msg;
-	UINT32 rcc;
+   uint32_t rcc;
 
 	msg.setCode(CMD_GET_PARAMETER);
 	msg.setId(m_requestId++);
@@ -501,7 +510,7 @@ UINT32 ExternalSubagent::getParameter(const TCHAR *name, TCHAR *buffer)
 	if (sendMessage(&msg))
 	{
 		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
-		if (response != NULL)
+		if (response != nullptr)
 		{
 			rcc = response->getFieldAsUInt32(VID_RCC);
 			if (rcc == ERR_SUCCESS)
@@ -523,10 +532,10 @@ UINT32 ExternalSubagent::getParameter(const TCHAR *name, TCHAR *buffer)
 /**
  * Get table value from external subagent
  */
-UINT32 ExternalSubagent::getTable(const TCHAR *name, Table *value)
+uint32_t ExternalSubagent::getTable(const TCHAR *name, Table *value)
 {
 	NXCPMessage msg;
-	UINT32 rcc;
+   uint32_t rcc;
 
 	msg.setCode(CMD_GET_TABLE);
 	msg.setId(m_requestId++);
@@ -556,10 +565,10 @@ UINT32 ExternalSubagent::getTable(const TCHAR *name, Table *value)
 /**
  * Get list value from external subagent
  */
-UINT32 ExternalSubagent::getList(const TCHAR *name, StringList *value)
+uint32_t ExternalSubagent::getList(const TCHAR *name, StringList *value)
 {
 	NXCPMessage msg;
-	UINT32 rcc;
+   uint32_t rcc;
 
 	msg.setCode(CMD_GET_LIST);
 	msg.setId(m_requestId++);
@@ -593,7 +602,7 @@ UINT32 ExternalSubagent::getList(const TCHAR *name, StringList *value)
 /**
  * Execute action by remote subagent
  */
-UINT32 ExternalSubagent::executeAction(const TCHAR *name, const StringList *args, AbstractCommSession *session, UINT32 requestId, bool sendOutput)
+uint32_t ExternalSubagent::executeAction(const TCHAR *name, const StringList *args, AbstractCommSession *session, uint32_t requestId, bool sendOutput)
 {
 	NXCPMessage msg(CMD_EXECUTE_ACTION, m_requestId++);
 	msg.setField(VID_ACTION_NAME, name);
