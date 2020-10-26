@@ -3225,15 +3225,15 @@ public:
    virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size) override;
    virtual DataCollectionError getInternalTable(const TCHAR *name, Table **result) override;
 
-   DataCollectionError getMetricFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
+   DataCollectionError getMetricFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *name, TCHAR *buffer, size_t size, int interpretRawValue);
    DataCollectionError getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, Table **table);
    DataCollectionError getListFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, StringList **list);
    DataCollectionError getOIDSuffixListFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, StringMap **values);
-   DataCollectionError getMetricFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
+   DataCollectionError getMetricFromAgent(const TCHAR *name, TCHAR *buffer, size_t size);
    DataCollectionError getTableFromAgent(const TCHAR *name, Table **table);
    DataCollectionError getListFromAgent(const TCHAR *name, StringList **list);
-   DataCollectionError getMetricFromSMCLP(const TCHAR *param, TCHAR *buffer, size_t size);
-   DataCollectionError getMetricFromDeviceDriver(const TCHAR *param, TCHAR *buffer, size_t size);
+   DataCollectionError getMetricFromSMCLP(const TCHAR *name, TCHAR *buffer, size_t size);
+   DataCollectionError getMetricFromDeviceDriver(const TCHAR *name, TCHAR *buffer, size_t size);
 
    double getMetricFromAgentAsDouble(const TCHAR *name, double defaultValue = 0);
    int32_t getMetricFromAgentAsInt32(const TCHAR *name, int32_t defaultValue = 0);

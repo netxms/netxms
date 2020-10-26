@@ -48,7 +48,7 @@ extern ThreadPool *g_pollerThreadPool;
 /**
  * Unbind agent tunnel from node
  */
-UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
+uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);
 
 /**
  * Software package management functions
@@ -2552,12 +2552,12 @@ restart_agent_check:
    if (!(m_state & DCSF_UNREACHABLE))
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
-      if (getMetricFromAgent(_T("System.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("System.Uptime"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
       {
          m_bootTime = time(nullptr) - _tcstol(buffer, nullptr, 0);
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): boot time set to %u from agent"), m_name, m_id, (UINT32)m_bootTime);
       }
-      else if (getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.3.0"), MAX_RESULT_LENGTH, buffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
+      else if (getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.3.0"), buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
       {
          m_bootTime = time(nullptr) - _tcstol(buffer, nullptr, 0) / 100;   // sysUpTime is in hundredths of a second
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): boot time set to %u from SNMP"), m_name, m_id, (UINT32)m_bootTime);
@@ -2576,7 +2576,7 @@ restart_agent_check:
    if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
-      if (getMetricFromAgent(_T("Agent.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Agent.Uptime"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
       {
          time_t oldAgentuptime = m_agentUpTime;
          m_agentUpTime = _tcstol(buffer, nullptr, 0);
@@ -2602,7 +2602,7 @@ restart_agent_check:
    if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
-      if (getMetricFromAgent(_T("GPS.LocationData"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("GPS.LocationData"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
       {
          GeoLocation loc = GeoLocation::parseAgentData(buffer);
          if (loc.getType() != GL_UNSET)
@@ -2621,7 +2621,7 @@ restart_agent_check:
    if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
-      if (getMetricFromAgent(_T("Agent.LogFile.Status"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Agent.LogFile.Status"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
       {
          UINT32 status = _tcstol(buffer, nullptr, 0);
          if (status != 0)
@@ -2632,7 +2632,7 @@ restart_agent_check:
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get agent log status"), m_name, m_id);
       }
 
-      if (getMetricFromAgent(_T("Agent.LocalDatabase.Status"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Agent.LocalDatabase.Status"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
       {
          UINT32 status = _tcstol(buffer, nullptr, 0);
          const TCHAR *statusDescription[3]= {
@@ -2653,7 +2653,7 @@ restart_agent_check:
    if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
-      if (getMetricFromAgent(_T("Agent.IsUserAgentInstalled"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Agent.IsUserAgentInstalled"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
       {
          UINT32 status = _tcstol(buffer, nullptr, 0);
          if (status != 0)
@@ -3146,7 +3146,7 @@ static int ReadBaseboardInformation(Node *node, ObjectArray<HardwareComponent> *
    int readCount = 0;
    for(int i = 0; i < 4; i++)
    {
-      if (node->getMetricFromAgent(metrics[i], 256, &buffer[i * 256]) == ERR_SUCCESS)
+      if (node->getMetricFromAgent(metrics[i], &buffer[i * 256], 256) == ERR_SUCCESS)
          readCount++;
    }
 
@@ -3235,15 +3235,15 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestI
    bool success = false;
    if (m_capabilities & NC_IS_NATIVE_AGENT)
    {
-      if (getMetricFromAgent(_T("Hardware.System.Manufacturer"), 128, hwInfo.vendor) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Hardware.System.Manufacturer"), hwInfo.vendor, sizeof(hwInfo.vendor) / sizeof(TCHAR)) == DCE_SUCCESS)
          success = true;
-      if (getMetricFromAgent(_T("Hardware.System.Product"), 128, hwInfo.productName) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Hardware.System.Product"), hwInfo.productName, sizeof(hwInfo.productName) / sizeof(TCHAR)) == DCE_SUCCESS)
          success = true;
-      if (getMetricFromAgent(_T("Hardware.System.ProductCode"), 32, hwInfo.productCode) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Hardware.System.ProductCode"), hwInfo.productCode, sizeof(hwInfo.productCode) / sizeof(TCHAR)) == DCE_SUCCESS)
          success = true;
-      if (getMetricFromAgent(_T("Hardware.System.Version"), 16, hwInfo.productVersion) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Hardware.System.Version"), hwInfo.productVersion, sizeof(hwInfo.productVersion) / sizeof(TCHAR)) == DCE_SUCCESS)
          success = true;
-      if (getMetricFromAgent(_T("Hardware.System.SerialNumber"), 32, hwInfo.serialNumber) == DCE_SUCCESS)
+      if (getMetricFromAgent(_T("Hardware.System.SerialNumber"), hwInfo.serialNumber, sizeof(hwInfo.serialNumber) / sizeof(TCHAR)) == DCE_SUCCESS)
          success = true;
    }
 
@@ -5603,70 +5603,68 @@ inline DataCollectionError DCErrorFromSNMPError(UINT32 snmpError)
 /**
  * Get DCI value via SNMP
  */
-DataCollectionError Node::getMetricFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue)
+DataCollectionError Node::getMetricFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *name, TCHAR *buffer, size_t size, int interpretRawValue)
 {
-   UINT32 dwResult;
-
    if ((((m_state & NSF_SNMP_UNREACHABLE) || !(m_capabilities & NC_IS_SNMP)) && (port == 0)) ||
        (m_state & DCSF_UNREACHABLE) ||
        (m_flags & NF_DISABLE_SNMP))
    {
-      dwResult = SNMP_ERR_COMM;
+      DbgPrintf(7, _T("Node(%s)->getMetricFromSNMP(%s): snmpResult=%d"), m_name, name, SNMP_ERR_COMM);
+      return DCErrorFromSNMPError(SNMP_ERR_COMM);
    }
-   else
+
+   uint32_t snmpResult;
+   SNMP_Transport *snmp = createSnmpTransport(port, version);
+   if (snmp != nullptr)
    {
-      SNMP_Transport *snmp = createSnmpTransport(port, version);
-      if (snmp != nullptr)
+      if (interpretRawValue == SNMP_RAWTYPE_NONE)
       {
-         if (interpretRawValue == SNMP_RAWTYPE_NONE)
-         {
-            dwResult = SnmpGetEx(snmp, param, nullptr, 0, buffer, bufSize * sizeof(TCHAR), SG_PSTRING_RESULT, nullptr);
-         }
-         else
-         {
-            BYTE rawValue[1024];
-            memset(rawValue, 0, 1024);
-            dwResult = SnmpGetEx(snmp, param, nullptr, 0, rawValue, 1024, SG_RAW_RESULT, nullptr);
-            if (dwResult == SNMP_ERR_SUCCESS)
-            {
-               switch(interpretRawValue)
-               {
-                  case SNMP_RAWTYPE_INT32:
-                     _sntprintf(buffer, bufSize, _T("%d"), ntohl(*((LONG *)rawValue)));
-                     break;
-                  case SNMP_RAWTYPE_UINT32:
-                     _sntprintf(buffer, bufSize, _T("%u"), ntohl(*((UINT32 *)rawValue)));
-                     break;
-                  case SNMP_RAWTYPE_INT64:
-                     _sntprintf(buffer, bufSize, INT64_FMT, (INT64)ntohq(*((INT64 *)rawValue)));
-                     break;
-                  case SNMP_RAWTYPE_UINT64:
-                     _sntprintf(buffer, bufSize, UINT64_FMT, ntohq(*((QWORD *)rawValue)));
-                     break;
-                  case SNMP_RAWTYPE_DOUBLE:
-                     _sntprintf(buffer, bufSize, _T("%f"), ntohd(*((double *)rawValue)));
-                     break;
-                  case SNMP_RAWTYPE_IP_ADDR:
-                     IpToStr(ntohl(*((UINT32 *)rawValue)), buffer);
-                     break;
-                  case SNMP_RAWTYPE_MAC_ADDR:
-                     MACToStr(rawValue, buffer);
-                     break;
-                  default:
-                     buffer[0] = 0;
-                     break;
-               }
-            }
-         }
-         delete snmp;
+         snmpResult = SnmpGetEx(snmp, name, nullptr, 0, buffer, size * sizeof(TCHAR), SG_PSTRING_RESULT, nullptr);
       }
       else
       {
-         dwResult = SNMP_ERR_COMM;
+         BYTE rawValue[1024];
+         memset(rawValue, 0, 1024);
+         snmpResult = SnmpGetEx(snmp, name, nullptr, 0, rawValue, 1024, SG_RAW_RESULT, nullptr);
+         if (snmpResult == SNMP_ERR_SUCCESS)
+         {
+            switch(interpretRawValue)
+            {
+               case SNMP_RAWTYPE_INT32:
+                  _sntprintf(buffer, size, _T("%d"), ntohl(*((LONG *)rawValue)));
+                  break;
+               case SNMP_RAWTYPE_UINT32:
+                  _sntprintf(buffer, size, _T("%u"), ntohl(*((UINT32 *)rawValue)));
+                  break;
+               case SNMP_RAWTYPE_INT64:
+                  _sntprintf(buffer, size, INT64_FMT, (INT64)ntohq(*((INT64 *)rawValue)));
+                  break;
+               case SNMP_RAWTYPE_UINT64:
+                  _sntprintf(buffer, size, UINT64_FMT, ntohq(*((QWORD *)rawValue)));
+                  break;
+               case SNMP_RAWTYPE_DOUBLE:
+                  _sntprintf(buffer, size, _T("%f"), ntohd(*((double *)rawValue)));
+                  break;
+               case SNMP_RAWTYPE_IP_ADDR:
+                  IpToStr(ntohl(*reinterpret_cast<uint32_t*>(rawValue)), buffer);
+                  break;
+               case SNMP_RAWTYPE_MAC_ADDR:
+                  MACToStr(rawValue, buffer);
+                  break;
+               default:
+                  buffer[0] = 0;
+                  break;
+            }
+         }
       }
+      delete snmp;
    }
-   DbgPrintf(7, _T("Node(%s)->getMetricFromSNMP(%s): dwResult=%d"), m_name, param, dwResult);
-   return DCErrorFromSNMPError(dwResult);
+   else
+   {
+      snmpResult = SNMP_ERR_COMM;
+   }
+   DbgPrintf(7, _T("Node(%s)->getMetricFromSNMP(%s): snmpResult=%u"), m_name, name, snmpResult);
+   return DCErrorFromSNMPError(snmpResult);
 }
 
 /**
@@ -5878,7 +5876,7 @@ DataCollectionError Node::getOIDSuffixListFromSNMP(UINT16 port, SNMP_Version ver
 /**
  * Get item's value via native agent
  */
-DataCollectionError Node::getMetricFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
+DataCollectionError Node::getMetricFromAgent(const TCHAR *name, TCHAR *buffer, size_t size)
 {
    if ((m_state & NSF_AGENT_UNREACHABLE) ||
        (m_state & DCSF_UNREACHABLE) ||
@@ -5886,7 +5884,7 @@ DataCollectionError Node::getMetricFromAgent(const TCHAR *szParam, UINT32 dwBufS
        !(m_capabilities & NC_IS_NATIVE_AGENT))
       return DCE_COMM_ERROR;
 
-   UINT32 dwError = ERR_NOT_CONNECTED;
+   uint32_t agentError = ERR_NOT_CONNECTED;
    DataCollectionError rc = DCE_COMM_ERROR;
    int retry = 3;
 
@@ -5897,8 +5895,8 @@ DataCollectionError Node::getMetricFromAgent(const TCHAR *szParam, UINT32 dwBufS
    // Get parameter from agent
    while(retry-- > 0)
    {
-      dwError = conn->getParameter(szParam, szBuffer, dwBufSize);
-      switch(dwError)
+      agentError = conn->getParameter(name, buffer, size);
+      switch(agentError)
       {
          case ERR_SUCCESS:
             rc = DCE_SUCCESS;
@@ -5927,7 +5925,7 @@ DataCollectionError Node::getMetricFromAgent(const TCHAR *szParam, UINT32 dwBufS
    }
 
 end_loop:
-   nxlog_debug(7, _T("Node(%s)->getMetricFromAgent(%s): dwError=%d dwResult=%d"), m_name, szParam, dwError, rc);
+   nxlog_debug(7, _T("Node(%s)->getMetricFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, agentError, rc);
    return rc;
 }
 
@@ -5937,7 +5935,7 @@ end_loop:
 double Node::getMetricFromAgentAsDouble(const TCHAR *name, double defaultValue)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
-   if (getMetricFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+   if (getMetricFromAgent(name, buffer, MAX_RESULT_LENGTH) != DCE_SUCCESS)
       return defaultValue;
 
    TCHAR *eptr;
@@ -5951,7 +5949,7 @@ double Node::getMetricFromAgentAsDouble(const TCHAR *name, double defaultValue)
 int32_t Node::getMetricFromAgentAsInt32(const TCHAR *name, int32_t defaultValue)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
-   if (getMetricFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+   if (getMetricFromAgent(name, buffer, MAX_RESULT_LENGTH) != DCE_SUCCESS)
       return defaultValue;
 
    TCHAR *eptr;
@@ -5965,7 +5963,7 @@ int32_t Node::getMetricFromAgentAsInt32(const TCHAR *name, int32_t defaultValue)
 uint32_t Node::getMetricFromAgentAsUInt32(const TCHAR *name, uint32_t defaultValue)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
-   if (getMetricFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+   if (getMetricFromAgent(name, buffer, MAX_RESULT_LENGTH) != DCE_SUCCESS)
       return defaultValue;
 
    TCHAR *eptr;
@@ -5979,7 +5977,7 @@ uint32_t Node::getMetricFromAgentAsUInt32(const TCHAR *name, uint32_t defaultVal
 int64_t Node::getMetricFromAgentAsInt64(const TCHAR *name, int64_t defaultValue)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
-   if (getMetricFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+   if (getMetricFromAgent(name, buffer, MAX_RESULT_LENGTH) != DCE_SUCCESS)
       return defaultValue;
 
    TCHAR *eptr;
@@ -5993,7 +5991,7 @@ int64_t Node::getMetricFromAgentAsInt64(const TCHAR *name, int64_t defaultValue)
 uint64_t Node::getMetricFromAgentAsUInt64(const TCHAR *name, uint64_t defaultValue)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
-   if (getMetricFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+   if (getMetricFromAgent(name, buffer, MAX_RESULT_LENGTH) != DCE_SUCCESS)
       return defaultValue;
 
    TCHAR *eptr;
@@ -6879,11 +6877,11 @@ uint32_t Node::getMetricForClient(int origin, uint32_t userId, const TCHAR *name
          break;
       case DS_NATIVE_AGENT:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_AGENT))
-            rc = getMetricFromAgent(name, size, buffer);
+            rc = getMetricFromAgent(name, buffer, size);
          break;
       case DS_SNMP_AGENT:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
-            rc = getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, name, size, buffer, SNMP_RAWTYPE_NONE);
+            rc = getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, name, buffer, size, SNMP_RAWTYPE_NONE);
          break;
       case DS_DEVICE_DRIVER:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
@@ -7443,7 +7441,7 @@ void Node::getInterfaceStatusFromAgent(UINT32 index, InterfaceAdminState *adminS
 
    // Get administrative status
    _sntprintf(szParam, 128, _T("Net.Interface.AdminStatus(%u)"), index);
-   if (getMetricFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
+   if (getMetricFromAgent(szParam, szBuffer, 32) == DCE_SUCCESS)
    {
       *adminState = (InterfaceAdminState)_tcstol(szBuffer, nullptr, 0);
 
@@ -7458,7 +7456,7 @@ void Node::getInterfaceStatusFromAgent(UINT32 index, InterfaceAdminState *adminS
             break;
          case IF_ADMIN_STATE_UP:     // Interface administratively up, check link state
             _sntprintf(szParam, 128, _T("Net.Interface.Link(%u)"), index);
-            if (getMetricFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
+            if (getMetricFromAgent(szParam, szBuffer, 32) == DCE_SUCCESS)
             {
                UINT32 dwLinkState = _tcstoul(szBuffer, nullptr, 0);
                *operState = (dwLinkState == 0) ? IF_OPER_STATE_DOWN : IF_OPER_STATE_UP;
@@ -8534,7 +8532,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
       if (!(bSuccess || useOnlyDNS))
       {
          DbgPrintf(4, _T("Resolving name for node %d [%s] via agent"), m_id, m_name);
-         if (getMetricFromAgent(_T("System.Hostname"), 256, szBuffer) == DCE_SUCCESS)
+         if (getMetricFromAgent(_T("System.Hostname"), szBuffer, 256) == DCE_SUCCESS)
          {
             StrStrip(szBuffer);
             if (szBuffer[0] != 0)
@@ -8549,7 +8547,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
       if (!(bSuccess || useOnlyDNS))
       {
          DbgPrintf(4, _T("Resolving name for node %d [%s] via SNMP"), m_id, m_name);
-         if (getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.5.0"), 256, szBuffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
+         if (getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.5.0"), szBuffer, 256, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
          {
             StrStrip(szBuffer);
             if (szBuffer[0] != 0)

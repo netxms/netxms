@@ -27,16 +27,16 @@
  * Externals
  */
 extern ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
-extern Queue g_syslogProcessingQueue;
-extern Queue g_syslogWriteQueue;
+extern ObjectQueue<SyslogMessage> g_syslogProcessingQueue;
+extern ObjectQueue<SyslogMessage> g_syslogWriteQueue;
 extern ThreadPool *g_pollerThreadPool;
 extern ThreadPool *g_schedulerThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
 
 void ShowPredictionEngines(CONSOLE_CTX console);
 void ShowAgentTunnels(CONSOLE_CTX console);
-UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId);
-UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
+uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId);
+uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);
 int64_t GetEventLogWriterQueueSize();
 int64_t GetEventProcessorQueueSize();
 void DiscoveryPoller(PollerInfo *poller);
@@ -1570,10 +1570,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       if (IsCommand(_T("BIND"), szBuffer, 1))
       {
          pArg = ExtractWord(pArg, szBuffer);
-         UINT32 tunnelId = _tcstoul(szBuffer, nullptr, 0);
+         uint32_t tunnelId = _tcstoul(szBuffer, nullptr, 0);
 
          ExtractWord(pArg, szBuffer);
-         UINT32 nodeId = _tcstoul(szBuffer, nullptr, 0);
+         uint32_t nodeId = _tcstoul(szBuffer, nullptr, 0);
 
          if ((tunnelId != 0) && (nodeId != 0))
          {

@@ -70,8 +70,8 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
          case DS_SNMP_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 			   {
-				   *error = static_cast<Node*>(dcTarget)->getMetricFromSNMP(pItem->getSnmpPort(), pItem->getSnmpVersion(), pItem->getName(), MAX_LINE_SIZE,
-					   pBuffer, pItem->isInterpretSnmpRawValue() ? (int)pItem->getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
+				   *error = static_cast<Node*>(dcTarget)->getMetricFromSNMP(pItem->getSnmpPort(), pItem->getSnmpVersion(), pItem->getName(), 
+                     pBuffer, MAX_LINE_SIZE, pItem->isInterpretSnmpRawValue() ? (int)pItem->getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
 			   }
 			   else
 			   {
@@ -86,7 +86,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
             break;
          case DS_NATIVE_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
-	            *error = ((Node *)dcTarget)->getMetricFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+	            *error = ((Node *)dcTarget)->getMetricFromAgent(pItem->getName(), pBuffer, MAX_LINE_SIZE);
 			   else if (dcTarget->getObjectClass() == OBJECT_SENSOR)
                *error = ((Sensor *)dcTarget)->getMetricFromAgent(pItem->getName(), pBuffer, MAX_LINE_SIZE);
 			   else
@@ -97,7 +97,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
 			   {
 				   TCHAR name[MAX_PARAM_NAME];
 				   _sntprintf(name, MAX_PARAM_NAME, _T("PDH.CounterValue(\"%s\",%d)"), (const TCHAR *)EscapeStringForAgent(pItem->getName()), pItem->getSampleCount());
-	            *error = ((Node *)dcTarget)->getMetricFromAgent(name, MAX_LINE_SIZE, pBuffer);
+	            *error = ((Node *)dcTarget)->getMetricFromAgent(name, pBuffer, MAX_LINE_SIZE);
 			   }
 			   else
 			   {
@@ -116,7 +116,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
                              (const TCHAR *)EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshLogin()),
                              (const TCHAR *)EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshPassword()),
                              (const TCHAR *)EscapeStringForAgent(pItem->getName()));
-                  *error = proxy->getMetricFromAgent(name, MAX_LINE_SIZE, pBuffer);
+                  *error = proxy->getMetricFromAgent(name, pBuffer, MAX_LINE_SIZE);
                }
                else
                {

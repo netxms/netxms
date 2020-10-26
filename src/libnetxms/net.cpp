@@ -153,7 +153,7 @@ ssize_t SocketConnection::read(void *buffer, size_t size, uint32_t timeout)
 	if (bytes <= 0)
 	   return bytes;
 
-	if (bytes <= size)
+	if (bytes <= static_cast<ssize_t>(size))
 	{
 	   memcpy(buffer, m_data, bytes);
 	}
