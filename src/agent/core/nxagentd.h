@@ -203,11 +203,11 @@ private:
 	NamedPipe *m_pipe;
 	bool m_connected;
 	MsgWaitQueue *m_msgQueue;
-	UINT32 m_requestId;
+	uint32_t m_requestId;
+   uint32_t m_listenerStartDelay;
 
 	bool sendMessage(const NXCPMessage *msg);
-	NXCPMessage *waitForMessage(WORD code, UINT32 id);
-	UINT32 waitForRCC(UINT32 id);
+	NXCPMessage *waitForMessage(WORD code, uint32_t id);
 	NETXMS_SUBAGENT_PARAM *getSupportedParameters(UINT32 *count);
 	NETXMS_SUBAGENT_LIST *getSupportedLists(UINT32 *count);
 	NETXMS_SUBAGENT_TABLE *getSupportedTables(UINT32 *count);
@@ -225,10 +225,10 @@ public:
 	const TCHAR *getName() { return m_name; }
 	const TCHAR *getUserName() { return m_user; }
 
-	UINT32 getParameter(const TCHAR *name, TCHAR *buffer);
-	UINT32 getTable(const TCHAR *name, Table *value);
-	UINT32 getList(const TCHAR *name, StringList *value);
-	UINT32 executeAction(const TCHAR *name, const StringList *args, AbstractCommSession *session, UINT32 requestId, bool sendOutput);
+   uint32_t getParameter(const TCHAR *name, TCHAR *buffer);
+   uint32_t getTable(const TCHAR *name, Table *value);
+   uint32_t getList(const TCHAR *name, StringList *value);
+   uint32_t executeAction(const TCHAR *name, const StringList *args, AbstractCommSession *session, uint32_t requestId, bool sendOutput);
 	void listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listParameters(StringList *list);
 	void listLists(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
