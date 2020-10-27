@@ -28,7 +28,6 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -519,9 +518,9 @@ public class AlarmCategoryList extends Composite implements SessionListener
     * 
     * @return
     */
-   public ISelection getSelection()
+   public IStructuredSelection getSelection()
    {
-      return viewer.getSelection();
+      return viewer.getStructuredSelection();
    }
 
    /**
@@ -534,7 +533,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
       return viewer;
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.SessionListener#notificationHandler(org.netxms.client.SessionNotification)
     */
    @Override
@@ -574,7 +573,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.widgets.Widget#dispose()
     */
    @Override

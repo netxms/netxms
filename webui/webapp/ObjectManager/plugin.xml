@@ -869,6 +869,14 @@
             name="%view.name.NodePoll"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.objectmanager.views.ObjectCategoryManager"
+            icon="icons/object_categories.gif"
+            id="org.netxms.ui.eclipse.objectmanager.views.ObjectCategoryManager"
+            name="Object Categories"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -1218,6 +1226,16 @@
             id="org.netxms.ui.eclipse.objectmanager.commands.clear_output"
             name="Clear output">
       </command>
+      <command
+            description="Toggle Filter"
+            id="org.netxms.ui.eclipse.objectmanager.commands.showFilter"
+            name="Toggle Filter">
+      </command>
+      <command
+            description="Manage object categories"
+            id="org.netxms.ui.eclipse.objectmanager.commands.open_object_categories_editor"
+            name="Object categories">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -1253,6 +1271,11 @@
             name="Node Poll"
             parentId="org.eclipse.ui.contexts.window">
       </context>
+      <context
+            id="org.netxms.ui.eclipse.objectmanager.context.ObjectCategoryManager"
+            name="Object Category Manager"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -1268,6 +1291,29 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+L">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objectmanager.commands.showFilter"
+            contextId="org.netxms.ui.eclipse.objectmanager.context.ObjectCategoryManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.object_categories"
+            label="Object categories"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.OpenObjectCategoryManager"
+               definitionId="org.netxms.ui.eclipse.objectmanager.commands.open_object_categories_editor"
+               icon="icons/object_categories.gif"
+               id="org.netxms.ui.eclipse.objectmanager.actions.open_category_editor"
+               label="Object categories"
+               menubarPath="config/additions"
+               style="push">
+         </action>
+      </actionSet>
    </extension>
 
 </plugin>

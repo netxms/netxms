@@ -147,6 +147,7 @@ uint32_t ModifyObjectCategory(const NXCPMessage& msg, uint32_t *categoryId)
    if (!success)
       return RCC_DB_FAILURE;
 
+   s_objectCategories.put(category->getId(), category);
    *categoryId = category->getId();
 
    NXCPMessage notificationMessage(CMD_OBJECT_CATEGORY_UPDATE, 0);

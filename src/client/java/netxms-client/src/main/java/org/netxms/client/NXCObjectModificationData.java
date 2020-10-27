@@ -78,7 +78,7 @@ public class NXCObjectModificationData
    public static final int MAP_LAYOUT             = 19;
    public static final int MAP_BACKGROUND         = 20;
    public static final int MAP_CONTENT            = 21;
-   public static final int MAP_IMAGE                  = 22;
+   public static final int MAP_IMAGE              = 22;
    public static final int ICMP_PROXY             = 23;
    public static final int COLUMN_COUNT           = 24;
    public static final int DASHBOARD_ELEMENTS     = 25;
@@ -146,6 +146,7 @@ public class NXCObjectModificationData
    public static final int ALIAS                  = 87;
    public static final int NAME_ON_MAP            = 88;
    public static final int CERT_MAPPING           = 89;
+   public static final int CATEGORY_ID            = 90;
 
    private Set<Integer> fieldSet;
    private long objectId;
@@ -262,6 +263,7 @@ public class NXCObjectModificationData
    private long etherNetIPProxy;
    private CertificateMappingMethod certificateMappingMethod;
    private String certificateMappingData;
+   private int categoryId;
 
    /**
     * Constructor for creating modification data for given object
@@ -2220,5 +2222,26 @@ public class NXCObjectModificationData
    public String getCertificateMappingData()
    {
       return certificateMappingData;
+   }
+
+   /**
+    * Get category ID.
+    * 
+    * @return category ID
+    */
+   public int getCategoryId()
+   {
+      return categoryId;
+   }
+
+   /**
+    * Set category ID.
+    *
+    * @param categoryId new category ID
+    */
+   public void setCategoryId(int categoryId)
+   {
+      this.categoryId = categoryId;
+      fieldSet.add(CATEGORY_ID);
    }
 }

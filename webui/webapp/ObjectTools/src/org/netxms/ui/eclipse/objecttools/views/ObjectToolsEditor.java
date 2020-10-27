@@ -117,38 +117,43 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	private Action actionEnable;
 	private Action actionShowFilter;
 	
-	private Composite objectToolsArea;
+	private Composite content;
 	private FilterText filterText;
 	private ObjectToolsFilter filter;
 	private boolean initShowFilter = true;
 
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
    public void init(IViewSite site) throws PartInitException
    {
       super.init(site);
-      
-      IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      initShowFilter = safeCast(settings.get("ObjectTools.showFilter"), settings.getBoolean("ObjectTools.showFilter"), initShowFilter);
-   }
-	
-	/**
-    * @param b
-    * @param defval
-    * @return
-    */
-   private static boolean safeCast(String s, boolean b, boolean defval)
-   {
-      return (s != null) ? b : defval;
+      initShowFilter = getBooleanSetting("ObjectTools.showFilter", initShowFilter);
+      session = ConsoleSharedData.getSession();
    }
 
-   /* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * Get boolean value from settings.
+    * 
+    * @param name parameter name
+    * @param defval default value
+    * @return value from settings or default
+    */
+   private static boolean getBooleanSetting(String name, boolean defval)
+   {
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      if (settings.get(name) == null)
+         return defval;
+      return settings.getBoolean(name);
+   }
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		session = ConsoleSharedData.getSession();
-
 		// Initiate loading of required plugins if they was not loaded yet
 		try
 		{
@@ -158,12 +163,13 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		{
 		}
 		
-		// Create interface area
-		objectToolsArea = new Composite(parent, SWT.BORDER);
+      // Create content area
+      content = new Composite(parent, SWT.NONE);
 		FormLayout formLayout = new FormLayout();
-		objectToolsArea.setLayout(formLayout);
+		content.setLayout(formLayout);
+
 		// Create filter
-		filterText = new FilterText(objectToolsArea, SWT.NONE);
+		filterText = new FilterText(content, SWT.NONE);
 		filterText.addModifyListener(new ModifyListener() {
 		   @Override
 		   public void modifyText(ModifyEvent e)
@@ -182,7 +188,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		
 		final String[] columnNames = { Messages.get().ObjectToolsEditor_ColId, Messages.get().ObjectToolsEditor_ColName, Messages.get().ObjectToolsEditor_ColType, Messages.get().ObjectToolsEditor_ColDescr };
 		final int[] columnWidths = { 90, 200, 100, 200 };
-		viewer = new SortableTableViewer(objectToolsArea, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+		viewer = new SortableTableViewer(content, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ObjectToolsLabelProvider());
@@ -276,7 +282,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
       filterText.setVisible(initShowFilter);
       FormData fd = (FormData)viewer.getTable().getLayoutData();
       fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
-      objectToolsArea.layout();
+      content.layout();
       if (enable)
       {
          filterText.setFocus();

@@ -183,7 +183,7 @@ bool AbstractIndexBase::put(UINT64 key, void *object)
    }
 
    bool replace = false;
-	void *oldObject = NULL;
+	void *oldObject = nullptr;
 
 	MutexLock(m_writerLock);
 

@@ -58,7 +58,7 @@ public class ObjectCategory
       id = msg.getFieldAsInt32(baseId);
       name = msg.getFieldAsString(baseId + 1);
       icon = msg.getFieldAsUUID(baseId + 2);
-      mapImage = msg.getFieldAsUUID(baseId + 2);
+      mapImage = msg.getFieldAsUUID(baseId + 3);
    }
 
    /**

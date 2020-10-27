@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -31,8 +32,10 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
+import org.netxms.ui.eclipse.objectmanager.widgets.ObjectCategorySelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.AbstractSelector;
 
 /**
  * "General" property page for NetMS objects 
@@ -41,10 +44,12 @@ public class General extends PropertyPage
 {
    private Text name;
    private Text alias;
+   private ObjectCategorySelector categorySelector;
 	private String initialName;
    private String initialAlias;
+   private int initialCategory;
 	private AbstractObject object;
-	
+
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
@@ -54,8 +59,6 @@ public class General extends PropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 
 		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
-		if (object == null)	// Paranoid check
-			return dialogArea;
 
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -64,7 +67,6 @@ public class General extends PropertyPage
       dialogArea.setLayout(layout);
       
       // Object ID
-
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT,
             Messages.get().General_ObjectID, Long.toString(object.getObjectId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
       
@@ -80,6 +82,13 @@ public class General extends PropertyPage
       // Object alias
       initialAlias = object.getAlias();
       alias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Alias", initialAlias, WidgetHelper.DEFAULT_LAYOUT_DATA);
+
+      // Category selector
+      initialCategory = object.getCategoryId();
+      categorySelector = new ObjectCategorySelector(dialogArea, SWT.NONE, AbstractSelector.SHOW_CLEAR_BUTTON);
+      categorySelector.setLabel("Category");
+      categorySelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      categorySelector.setCategoryId(initialCategory);
 
 		return dialogArea;
 	}
@@ -103,7 +112,8 @@ public class General extends PropertyPage
 	{
       final String newName = name.getText();
       final String newAlias = alias.getText();
-      if (newName.equals(initialName) && newAlias.equals(initialAlias))
+      final int newCategory = categorySelector.getCategoryId();
+      if (newName.equals(initialName) && newAlias.equals(initialAlias) && (newCategory == initialCategory))
          return; // nothing to change
 
 		if (isApply)
@@ -113,6 +123,7 @@ public class General extends PropertyPage
 		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
 		data.setName(newName);
       data.setAlias(newAlias);
+      data.setCategoryId(newCategory);
 		new ConsoleJob(Messages.get().General_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -137,6 +148,7 @@ public class General extends PropertyPage
 						{
 							initialName = newName;
                      initialAlias = newAlias;
+                     initialCategory = newCategory;
 							General.this.setValid(true);
 						}
 					});

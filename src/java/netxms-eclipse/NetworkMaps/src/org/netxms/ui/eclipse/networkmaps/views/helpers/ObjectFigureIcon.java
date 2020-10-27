@@ -144,14 +144,14 @@ public class ObjectFigureIcon extends ObjectFigure
 
 			rect = new Rectangle(getBounds());
 		}
-			
+
 		// Object image
 		Image image = labelProvider.getImage(element);
 		if (image != null)
 		{
 			gc.drawImage(image, rect.x + imageOffset, rect.y + IMAGE_MARGIN_Y);
 		}
-		
+
 		// Status image
 		if (labelProvider.isShowStatusIcons())
 		{
