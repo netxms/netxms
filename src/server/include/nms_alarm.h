@@ -145,26 +145,26 @@ public:
 class AlarmCategory
 {
 private:
-   UINT32 m_id;
+   uint32_t m_id;
    TCHAR *m_name;
    TCHAR *m_description;
-   IntegerArray<UINT32> m_acl;
+   IntegerArray<uint32_t> m_acl;
 
 public:
-   AlarmCategory(UINT32 id);
-   AlarmCategory(DB_RESULT hResult, int row, IntegerArray<UINT32> *aclCache);
-   AlarmCategory(UINT32 id, const TCHAR *name, const TCHAR *description);
-   AlarmCategory(AlarmCategory* obj);
+   AlarmCategory(uint32_t id);
+   AlarmCategory(DB_RESULT hResult, int row, IntegerArray<uint32_t> *aclCache);
+   AlarmCategory(uint32_t id, const TCHAR *name, const TCHAR *description);
+   AlarmCategory(const AlarmCategory& src);
    ~AlarmCategory();
 
-   UINT32 getId() const { return m_id; }
+   uint32_t getId() const { return m_id; }
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDescription() const { return m_description; }
 
-   bool checkAccess(UINT32 userId);
+   bool checkAccess(uint32_t userId);
 
-   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
-   void modifyFromMessage(const NXCPMessage *msg);
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+   void modifyFromMessage(const NXCPMessage& msg);
    void updateDescription(const TCHAR *description) { MemFree(m_description); m_description = MemCopyString(description); }
    bool saveToDatabase() const;
 };
@@ -248,13 +248,13 @@ uint32_t UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session);
  * Alarm category functions
  */
 void GetAlarmCategories(NXCPMessage *msg);
-uint32_t UpdateAlarmCategory(const NXCPMessage *request, uint32_t *returnId);
+uint32_t UpdateAlarmCategory(const NXCPMessage& request, uint32_t *returnId);
 uint32_t DeleteAlarmCategory(uint32_t id);
 bool CheckAlarmCategoryAccess(uint32_t userId, uint32_t categoryId);
 void LoadAlarmCategories();
 AlarmCategory *GetAlarmCategory(uint32_t id);
-uint32_t GetAndUpdateAlarmCategoryByName(const TCHAR *name, const TCHAR *description);
-uint32_t CreateNewAlarmCategoryFromImport(const TCHAR *name, const TCHAR *description);
+uint32_t UpdateAlarmCategoryDescription(const TCHAR *name, const TCHAR *description);
+uint32_t CreateAlarmCategory(const TCHAR *name, const TCHAR *description);
 
 /**
  * Alarm summary emails

@@ -135,15 +135,6 @@ void InitAuditLog()
 }
 
 /**
- * Handler for EnumerateSessions()
- */
-static void SendNewRecord(ClientSession *session, void *arg)
-{
-   if (session->isAuthenticated() && session->isSubscribedTo(NXC_CHANNEL_AUDIT_LOG))
-      session->postMessage((NXCPMessage *)arg);
-}
-
-/**
  * Write audit record
  */
 void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, uint32_t userId,
@@ -306,7 +297,7 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
    msg.setField(VID_SESSION_ID, sessionId);
 	msg.setField(VID_OBJECT_ID, objectId);
 	msg.setField(VID_MESSAGE, text);
-	EnumerateClientSessions(SendNewRecord, &msg);
+	NotifyClientSessions(&msg, NXC_CHANNEL_AUDIT_LOG);
 
 	if (s_auditServerAddr.isValidUnicast())
 	{

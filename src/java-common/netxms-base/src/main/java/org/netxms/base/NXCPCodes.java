@@ -428,6 +428,7 @@ public class NXCPCodes
    public static final int CMD_UPDATE_SNMP_PORT_LIST = 0x019B;
    public static final int CMD_GET_LOG_RECORD_DETAILS = 0x019C;
    public static final int CMD_GET_DCI_LAST_VALUE = 0x019D;
+   public static final int CMD_OBJECT_CATEGORY_UPDATE = 0x019E;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

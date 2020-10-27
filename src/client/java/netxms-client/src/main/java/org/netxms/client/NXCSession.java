@@ -142,12 +142,14 @@ import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.MutableObjectCategory;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.NetworkService;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.NodeLink;
+import org.netxms.client.objects.ObjectCategory;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceCheck;
@@ -347,6 +349,7 @@ public class NXCSession
    private Map<Long, AbstractObject> objectList = new HashMap<Long, AbstractObject>();
    private Map<UUID, AbstractObject> objectListGUID = new HashMap<UUID, AbstractObject>();
    private Map<Integer, Zone> zoneList = new HashMap<Integer, Zone>();
+   private Map<Integer, ObjectCategory> objectCategories = new HashMap<Integer, ObjectCategory>();
    private boolean objectsSynchronized = false;
 
    // Users
@@ -510,6 +513,9 @@ public class NXCSession
                      break;
                   case NXCPCodes.CMD_OBJECT_LIST_END:
                      completeSync(syncObjects);
+                     break;
+                  case NXCPCodes.CMD_OBJECT_CATEGORY_UPDATE:
+                     processObjectCategoryUpdate(msg);
                      break;
                   case NXCPCodes.CMD_USER_DATA:
                      final User user = new User(msg);
@@ -820,6 +826,12 @@ public class NXCSession
             case SessionNotification.CONNECTION_BROKEN:
                backgroundDisconnect(code);
                return;  // backgroundDisconnect will send disconnect notification
+            case SessionNotification.OBJECT_CATEGORY_DELETED:
+               synchronized(objectCategories)
+               {
+                  objectCategories.remove((int)data);
+               }
+               break;
          }
 
          sendNotification(new SessionNotification(code, data));
@@ -998,12 +1010,27 @@ public class NXCSession
        *
        * @param msg notification message
        */
-      public void processImageLibraryUpdate(NXCPMessage msg)
+      private void processImageLibraryUpdate(NXCPMessage msg)
       {
          final UUID imageGuid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
          final int flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
          sendNotification(new SessionNotification(SessionNotification.IMAGE_LIBRARY_CHANGED,
                flags == 0 ? SessionNotification.IMAGE_UPDATED : SessionNotification.IMAGE_DELETED, imageGuid));
+      }
+
+      /**
+       * Process object category update
+       *
+       * @param msg notification message
+       */
+      private void processObjectCategoryUpdate(NXCPMessage msg)
+      {
+         ObjectCategory category = new ObjectCategory(msg, NXCPCodes.VID_ELEMENT_LIST_BASE);
+         synchronized(objectCategories)
+         {
+            objectCategories.put(category.getId(), category);
+         }
+         sendNotification(new SessionNotification(SessionNotification.OBJECT_CATEGORY_UPDATED, category.getId(), category));
       }
 
       /**
@@ -2841,13 +2868,94 @@ public class NXCSession
    }
 
    /**
+    * Synchronize object categories
+    *
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void syncObjectCategories() throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OBJECT_CATEGORIES);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      synchronized(objectCategories)
+      {
+         objectCategories.clear();
+         int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+         long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+         for(int i = 0; i < count; i++, fieldId += 10)
+         {
+            ObjectCategory category = new ObjectCategory(response, fieldId);
+            objectCategories.put(category.getId(), category);
+         }
+      }
+   }
+
+   /**
+    * Get object category by ID
+    *
+    * @param categoryId object category ID
+    * @return object category or null
+    */
+   public ObjectCategory getObjectCategory(int categoryId)
+   {
+      synchronized(objectCategories)
+      {
+         return objectCategories.get(categoryId);
+      }
+   }
+
+   /**
+    * Get all object categories.
+    *
+    * @return all object categories
+    */
+   public List<ObjectCategory> getObjectCategories()
+   {
+      synchronized(objectCategories)
+      {
+         return new ArrayList<ObjectCategory>(objectCategories.values());
+      }
+   }
+
+   /**
+    * Modify object category.
+    *
+    * @param category updated category object
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void modifyObjectCategory(MutableObjectCategory category) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_OBJECT_CATEGORY);
+      category.fillMessage(msg);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Delete object category
+    *
+    * @param categoryId category ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteObjectCategory(int categoryId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_OBJECT_CATEGORY);
+      msg.setFieldInt32(NXCPCodes.VID_CATEGORY_ID, categoryId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Synchronizes NetXMS objects between server and client. After successful
     * sync, subscribe client to object change notifications.
     *
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public synchronized void syncObjects() throws IOException, NXCException
+   public void syncObjects() throws IOException, NXCException
    {
       syncObjects(true);
    }
@@ -2860,14 +2968,18 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public synchronized void syncObjects(boolean syncNodeComponents) throws IOException, NXCException
+   public void syncObjects(boolean syncNodeComponents) throws IOException, NXCException
    {
+      syncObjectCategories();
+
       syncObjects.acquireUninterruptibly();
+
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OBJECTS);
       msg.setField(NXCPCodes.VID_SYNC_COMMENTS, true);
       msg.setField(NXCPCodes.VID_SYNC_NODE_COMPONENTS, syncNodeComponents);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+
       waitForSync(syncObjects, commandTimeout * 10);
       objectsSynchronized = objectsSynchronized || syncNodeComponents;
       sendNotification(new SessionNotification(SessionNotification.OBJECT_SYNC_COMPLETED));
@@ -5742,27 +5854,27 @@ public class NXCSession
          msg.setFieldInt32(NXCPCodes.VID_BACKGROUND_COLOR, data.getMapBackgroundColor());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.IMAGE))
+      if (data.isFieldSet(NXCObjectModificationData.MAP_IMAGE))
       {
-         msg.setField(NXCPCodes.VID_IMAGE, data.getImage());
+         msg.setField(NXCPCodes.VID_IMAGE, data.getMapImage());
       }
 
       if (data.isFieldSet(NXCObjectModificationData.MAP_CONTENT))
       {
          msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, data.getMapElements().size());
-         long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+         long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
          for(NetworkMapElement e : data.getMapElements())
          {
-            e.fillMessage(msg, varId);
-            varId += 100;
+            e.fillMessage(msg, fieldId);
+            fieldId += 100;
          }
 
          msg.setFieldInt32(NXCPCodes.VID_NUM_LINKS, data.getMapLinks().size());
-         varId = NXCPCodes.VID_LINK_LIST_BASE;
+         fieldId = NXCPCodes.VID_LINK_LIST_BASE;
          for(NetworkMapLink l : data.getMapLinks())
          {
-            l.fillMessage(msg, varId);
-            varId += 20;
+            l.fillMessage(msg, fieldId);
+            fieldId += 20;
          }
       }
 
@@ -5774,11 +5886,11 @@ public class NXCSession
       if (data.isFieldSet(NXCObjectModificationData.DASHBOARD_ELEMENTS))
       {
          msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, data.getDashboardElements().size());
-         long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+         long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
          for(DashboardElement e : data.getDashboardElements())
          {
-            e.fillMessage(msg, varId);
-            varId += 10;
+            e.fillMessage(msg, fieldId);
+            fieldId += 10;
          }
       }
 

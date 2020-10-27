@@ -655,6 +655,7 @@ typedef struct
 #define CMD_UPDATE_SNMP_PORT_LIST         0x019B
 #define CMD_GET_LOG_RECORD_DETAILS        0x019C
 #define CMD_GET_DCI_LAST_VALUE            0x019D
+#define CMD_OBJECT_CATEGORY_UPDATE        0x019E
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

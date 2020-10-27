@@ -90,14 +90,6 @@ public:
 };
 
 /**
- * Callback for session enumeration
- */
-static void NotifyUserSessions(ClientSession *session, void *arg)
-{
-   session->sendMessage((NXCPMessage *)arg);
-}
-
-/**
  * Custom handler for reporting server messages
  */
 bool RSConnector::onMessage(NXCPMessage *msg)
@@ -105,7 +97,7 @@ bool RSConnector::onMessage(NXCPMessage *msg)
    switch(msg->getCode())
    {
       case CMD_RS_NOTIFY:
-         EnumerateClientSessions(NotifyUserSessions, msg);
+         NotifyClientSessions(*msg, nullptr);
          return true;
       case CMD_CREATE_OBJECT_ACCESS_SNAPSHOT:
          createObjectAccessSnapshot(msg);

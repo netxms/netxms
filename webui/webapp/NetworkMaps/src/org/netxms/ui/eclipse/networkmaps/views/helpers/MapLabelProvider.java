@@ -204,8 +204,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			if (object != null)
 			{
 				// First, check if object has custom map image set
-				final UUID objectImageGuid = object.getImage();
-				if (objectImageGuid != null && !objectImageGuid.equals(NXCommon.EMPTY_GUID))
+				final UUID objectImageGuid = object.getMapImage();
+            if ((objectImageGuid != null) && !objectImageGuid.equals(NXCommon.EMPTY_GUID))
 				{
 					return ImageProvider.getInstance().getImage(objectImageGuid);
 				}

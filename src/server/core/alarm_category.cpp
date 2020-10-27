@@ -25,17 +25,17 @@
 /**
  * Create new category
  */
-AlarmCategory::AlarmCategory(UINT32 id)
+AlarmCategory::AlarmCategory(uint32_t id)
 {
    m_id = id;
-   m_name = NULL;
-   m_description = NULL;
+   m_name = nullptr;
+   m_description = nullptr;
 }
 
 /**
  * Create category from DB record
  */
-AlarmCategory::AlarmCategory(DB_RESULT hResult, int row, IntegerArray<UINT32> *aclCache)
+AlarmCategory::AlarmCategory(DB_RESULT hResult, int row, IntegerArray<uint32_t> *aclCache)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
    m_name = DBGetField(hResult, row, 1, NULL, 0);
@@ -54,7 +54,7 @@ AlarmCategory::AlarmCategory(DB_RESULT hResult, int row, IntegerArray<UINT32> *a
 /**
  * Create new category
  */
-AlarmCategory::AlarmCategory(UINT32 id, const TCHAR *name, const TCHAR *description)
+AlarmCategory::AlarmCategory(uint32_t id, const TCHAR *name, const TCHAR *description)
 {
    m_id = id;
    m_name = MemCopyString(name);
@@ -64,11 +64,11 @@ AlarmCategory::AlarmCategory(UINT32 id, const TCHAR *name, const TCHAR *descript
 /**
  * Copy constructor
  */
-AlarmCategory::AlarmCategory(AlarmCategory* obj)
+AlarmCategory::AlarmCategory(const AlarmCategory& src)
 {
-   m_id = obj->m_id;
-   m_name = MemCopyString(obj->m_name);
-   m_description = MemCopyString(obj->m_description);
+   m_id = src.m_id;
+   m_name = MemCopyString(src.m_name);
+   m_description = MemCopyString(src.m_description);
 }
 
 /**
@@ -83,7 +83,7 @@ AlarmCategory::~AlarmCategory()
 /**
  * Fill message with alarm category data
  */
-void AlarmCategory::fillMessage(NXCPMessage *msg, UINT32 baseId) const
+void AlarmCategory::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
    msg->setField(baseId, m_id);
    msg->setField(baseId + 1, m_name);
@@ -94,15 +94,11 @@ void AlarmCategory::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 /**
  * Modify category from NXCP message
  */
-void AlarmCategory::modifyFromMessage(const NXCPMessage *msg)
+void AlarmCategory::modifyFromMessage(const NXCPMessage& msg)
 {
-   MemFree(m_name);
-   m_name = msg->getFieldAsString(VID_NAME);
-
-   MemFree(m_description);
-   m_description = msg->getFieldAsString(VID_DESCRIPTION);
-
-   msg->getFieldAsInt32Array(VID_ALARM_CATEGORY_ACL, &m_acl);
+   msg.getFieldAsString(VID_NAME, &m_name);
+   msg.getFieldAsString(VID_DESCRIPTION, &m_description);
+   msg.getFieldAsInt32Array(VID_ALARM_CATEGORY_ACL, &m_acl);
 }
 
 /**
@@ -120,7 +116,7 @@ bool AlarmCategory::saveToDatabase() const
          hStmt = DBPrepare(hdb, _T("UPDATE alarm_categories SET name=?,descr=? WHERE id=?"));
       else
          hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_categories (name,descr,id) VALUES (?,?,?)"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
@@ -132,7 +128,7 @@ bool AlarmCategory::saveToDatabase() const
       if (success)
       {
          hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_category_acl WHERE category_id=?"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             success = DBExecute(hStmt);
@@ -147,7 +143,7 @@ bool AlarmCategory::saveToDatabase() const
       if (success)
       {
          hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_category_acl (category_id,user_id) VALUES (?,?)"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             for(int i = 0; (i < m_acl.size()) && success; i++)
@@ -169,7 +165,10 @@ bool AlarmCategory::saveToDatabase() const
    return success;
 }
 
-bool AlarmCategory::checkAccess(UINT32 userId)
+/**
+ * Check user access
+ */
+bool AlarmCategory::checkAccess(uint32_t userId)
 {
    for(int i = 0; i < m_acl.size(); i++)
    {
@@ -182,17 +181,8 @@ bool AlarmCategory::checkAccess(UINT32 userId)
 /**
  * Alarm categories
  */
-static HashMap<UINT32, AlarmCategory> s_categories(Ownership::True);
+static HashMap<uint32_t, AlarmCategory> s_categories(Ownership::True);
 static RWLock s_lock;
-
-/**
- * Callback for sending alarm category configuration change notifications
- */
-static void SendAlarmCategoryDBChangeNotification(ClientSession *session, NXCPMessage *msg)
-{
-   if (session->isAuthenticated())
-      session->postMessage(msg);
-}
 
 /**
  * Get alarm categories from database
@@ -216,14 +206,14 @@ void GetAlarmCategories(NXCPMessage *msg)
 /**
 * Update alarm category database
 */
-uint32_t UpdateAlarmCategory(const NXCPMessage *request, uint32_t *returnId)
+uint32_t UpdateAlarmCategory(const NXCPMessage& request, uint32_t *returnId)
 {
    TCHAR name[64];
-   request->getFieldAsString(VID_NAME, name, 64);
+   request.getFieldAsString(VID_NAME, name, 64);
    if (name[0] == 0)
       return RCC_CATEGORY_NAME_EMPTY;
 
-   uint32_t id = request->getFieldAsUInt32(VID_CATEGORY_ID);
+   uint32_t id = request.getFieldAsUInt32(VID_CATEGORY_ID);
 
    AlarmCategory *category;
    s_lock.writeLock();
@@ -244,16 +234,16 @@ uint32_t UpdateAlarmCategory(const NXCPMessage *request, uint32_t *returnId)
    }
    *returnId = id;
    category->modifyFromMessage(request);
-   UINT32 rcc = category->saveToDatabase() ? RCC_SUCCESS : RCC_DB_FAILURE;
+   uint32_t rcc = category->saveToDatabase() ? RCC_SUCCESS : RCC_DB_FAILURE;
 
    // Notify client for DB change
    if (rcc == RCC_SUCCESS)
    {
       NXCPMessage msg;
       msg.setCode(CMD_ALARM_CATEGORY_UPDATE);
-      msg.setField(VID_NOTIFICATION_CODE, (UINT16)NX_NOTIFY_ALARM_CATEGORY_UPDATE);
+      msg.setField(VID_NOTIFICATION_CODE, static_cast<uint16_t>(NX_NOTIFY_ALARM_CATEGORY_UPDATED));
       category->fillMessage(&msg, VID_ELEMENT_LIST_BASE);
-      EnumerateClientSessions(SendAlarmCategoryDBChangeNotification, &msg);
+      NotifyClientSessions(msg, nullptr);
    }
 
    s_lock.unlock();
@@ -313,9 +303,9 @@ uint32_t DeleteAlarmCategory(uint32_t id)
 
                NXCPMessage nmsg;
                nmsg.setCode(CMD_ALARM_CATEGORY_UPDATE);
-               nmsg.setField(VID_NOTIFICATION_CODE, (UINT16)NX_NOTIFY_ALARM_CATEGORY_DELETE);
+               nmsg.setField(VID_NOTIFICATION_CODE, static_cast<uint16_t>(NX_NOTIFY_ALARM_CATEGORY_DELETED));
                nmsg.setField(VID_ELEMENT_LIST_BASE, id);
-               EnumerateClientSessions(SendAlarmCategoryDBChangeNotification, &nmsg);
+               NotifyClientSessions(nmsg, nullptr);
             }
          }
          else
@@ -357,9 +347,9 @@ void LoadAlarmCategories()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   IntegerArray<UINT32> aclCache(256, 256);
+   IntegerArray<uint32_t> aclCache(256, 256);
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT category_id,user_id FROM alarm_category_acl ORDER BY category_id"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -371,7 +361,7 @@ void LoadAlarmCategories()
    }
 
    hResult = DBSelect(hdb, _T("SELECT id,name,descr FROM alarm_categories"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int numRows = DBGetNumRows(hResult);
       s_lock.writeLock();
@@ -387,15 +377,22 @@ void LoadAlarmCategories()
    DBConnectionPoolReleaseConnection(hdb);
 }
 
+/**
+ * Get alarm category by ID
+ */
 AlarmCategory *GetAlarmCategory(uint32_t id)
 {
    s_lock.readLock();
-   AlarmCategory *alarmCategory = new AlarmCategory(s_categories.get(id));
+   AlarmCategory *alarmCategory = new AlarmCategory(*s_categories.get(id));
    s_lock.unlock();
    return alarmCategory;
 }
 
-uint32_t GetAndUpdateAlarmCategoryByName(const TCHAR *name, const TCHAR *description)
+/**
+ * Update description for alarm category with given name. On success
+ * returns ID of updated category, and 0 on failure.
+ */
+uint32_t UpdateAlarmCategoryDescription(const TCHAR *name, const TCHAR *description)
 {
    uint32_t id = 0;
    s_lock.readLock();
@@ -403,7 +400,7 @@ uint32_t GetAndUpdateAlarmCategoryByName(const TCHAR *name, const TCHAR *descrip
    while(it->hasNext())
    {
      AlarmCategory *c = it->next();
-     if(!_tcscmp(c->getName(), name))
+     if (!_tcscmp(c->getName(), name))
      {
         c->updateDescription(description);
         id = c->getId();
@@ -415,21 +412,24 @@ uint32_t GetAndUpdateAlarmCategoryByName(const TCHAR *name, const TCHAR *descrip
    return id;
 }
 
-uint32_t CreateNewAlarmCategoryFromImport(const TCHAR *name, const TCHAR *description)
+/**
+ * Create new alarm category
+ */
+uint32_t CreateAlarmCategory(const TCHAR *name, const TCHAR *description)
 {
-   UINT32 id = CreateUniqueId(IDG_ALARM_CATEGORY);
+   uint32_t id = CreateUniqueId(IDG_ALARM_CATEGORY);
    AlarmCategory *category = new AlarmCategory(id, name, description);
 
    s_lock.writeLock();
    s_categories.set(id, category);
    category->saveToDatabase();
 
-   //Notify clients
+   // Notify clients
    NXCPMessage msg;
    msg.setCode(CMD_ALARM_CATEGORY_UPDATE);
-   msg.setField(VID_NOTIFICATION_CODE, (UINT16)NX_NOTIFY_ALARM_CATEGORY_UPDATE);
+   msg.setField(VID_NOTIFICATION_CODE, static_cast<uint16_t>(NX_NOTIFY_ALARM_CATEGORY_UPDATED));
    category->fillMessage(&msg, VID_ELEMENT_LIST_BASE);
-   EnumerateClientSessions(SendAlarmCategoryDBChangeNotification, &msg);
+   NotifyClientSessions(msg, nullptr);
 
    s_lock.unlock();
    return id;

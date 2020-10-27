@@ -441,6 +441,25 @@ void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresh
 }
 
 /**
+ * Send notification message to all active user sessions with given subscription
+ */
+void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, const TCHAR *channel)
+{
+   RWLockReadLock(s_sessionListLock);
+   auto it = s_sessions.iterator();
+   while(it->hasNext())
+   {
+      ClientSession *session = it->next();
+      if (session->isAuthenticated() && !session->isTerminated() && ((channel == nullptr) || session->isSubscribedTo(channel)))
+      {
+         session->postMessage(msg);
+      }
+   }
+   delete it;
+   RWLockUnlock(s_sessionListLock);
+}
+
+/**
  * Send notification to all active user sessions
  */
 void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data)

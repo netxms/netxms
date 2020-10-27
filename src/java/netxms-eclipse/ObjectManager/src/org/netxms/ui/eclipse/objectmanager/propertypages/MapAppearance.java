@@ -84,7 +84,7 @@ public class MapAppearance extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       image.setLayoutData(gd);
-      image.setImageGuid(object.getImage(), false);
+      image.setImageGuid(object.getMapImage(), false);
       
       // Submap
       if (!(object instanceof NetworkMap))
@@ -114,7 +114,7 @@ public class MapAppearance extends PropertyPage
 		
 		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
       data.setNameOnMap(nameOnMap.getText().trim());
-      data.setImage(image.getImageGuid());
+      data.setMapImage(image.getImageGuid());
 		if (drillDownObject != null)
 			data.setDrillDownObjectId(drillDownObject.getObjectId());
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();

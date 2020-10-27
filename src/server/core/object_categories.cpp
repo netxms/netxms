@@ -111,6 +111,8 @@ uint32_t DeleteObjectCategory(uint32_t id, bool forceDelete)
       return RCC_DB_FAILURE;
 
    s_objectCategories.remove(id);
+
+   NotifyClientSessions(NX_NOTIFY_OBJECT_CATEGORY_DELETED, id);
    return RCC_SUCCESS;
 }
 
@@ -146,6 +148,11 @@ uint32_t ModifyObjectCategory(const NXCPMessage& msg, uint32_t *categoryId)
       return RCC_DB_FAILURE;
 
    *categoryId = category->getId();
+
+   NXCPMessage notificationMessage(CMD_OBJECT_CATEGORY_UPDATE, 0);
+   category->fillMessage(&notificationMessage, VID_ELEMENT_LIST_BASE);
+   NotifyClientSessions(notificationMessage, NXC_CHANNEL_OBJECTS);
+
    return RCC_SUCCESS;
 }
 

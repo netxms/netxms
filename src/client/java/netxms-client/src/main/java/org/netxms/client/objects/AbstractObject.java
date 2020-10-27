@@ -129,6 +129,7 @@ public abstract class AbstractObject
    protected String alias;
    protected String nameOnMap;
 	protected int objectClass;
+   protected int categoryId;
 	protected ObjectStatus status = ObjectStatus.UNKNOWN;
 	protected boolean isDeleted = false;
 	protected boolean inMaintenanceMode = false;
@@ -138,7 +139,7 @@ public abstract class AbstractObject
 	protected String comments;
 	protected GeoLocation geolocation;
 	protected PostalAddress postalAddress;
-	protected UUID image;
+	protected UUID mapImage;
 	protected long drillDownObjectId;
 	protected final HashSet<Long> trustedNodes = new HashSet<Long>(0);
 	protected boolean inheritAccessRights = true;
@@ -178,7 +179,6 @@ public abstract class AbstractObject
 		comments = "";
 		geolocation = new GeoLocation(false);
 		postalAddress = new PostalAddress();
-		image = NXCommon.EMPTY_GUID;
 
 		statusCalculationMethod = CALCULATE_DEFAULT;
 		statusPropagationMethod = PROPAGATE_DEFAULT;
@@ -224,10 +224,8 @@ public abstract class AbstractObject
 		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 		geolocation = new GeoLocation(msg);
 		postalAddress = new PostalAddress(msg);
-		image = msg.getFieldAsUUID(NXCPCodes.VID_IMAGE);
+		mapImage = msg.getFieldAsUUID(NXCPCodes.VID_IMAGE);
 		drillDownObjectId = msg.getFieldAsInt64(NXCPCodes.VID_DRILL_DOWN_OBJECT_ID);
-		if (image == null)
-			image = NXCommon.EMPTY_GUID;
 		creationTime = msg.getFieldAsDate(NXCPCodes.VID_CREATION_TIME);
 		
 		statusCalculationMethod = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_CALCULATION_ALG);
@@ -335,7 +333,7 @@ public abstract class AbstractObject
 	 */
 	public boolean isDefaultImage()
 	{
-		return image.equals(NXCommon.EMPTY_GUID);
+      return (mapImage == null) || mapImage.equals(NXCommon.EMPTY_GUID);
 	}
 	
 	/**
@@ -463,18 +461,41 @@ public abstract class AbstractObject
    }
 
 	/**
-	 * Get object status.
-	 * 
-	 * @return object status
-	 */
+    * Get object category ID (0 if category is not set).
+    *
+    * @return object category ID or 0 if category is not set
+    */
+   public int getCategoryId()
+   {
+      return categoryId;
+   }
+
+   /**
+    * Get object category. This method will return null if category is not set for this object or if categories were not
+    * synchronized by calling NXCSession methods syncObjects or syncObjectCategories.
+    *
+    * @return object category or null if category not set or cannot be retrieved
+    */
+   public ObjectCategory getCategory()
+   {
+      return (categoryId != 0) ? session.getObjectCategory(categoryId) : null;
+   }
+
+   /**
+    * Get object status.
+    * 
+    * @return object status
+    */
 	public ObjectStatus getStatus()
 	{
 		return status;
 	}
 
 	/**
-	 * @return the isDeleted
-	 */
+    * Check if this object has "deleted" flag set.
+    *
+    * @return true if this object has "deleted" flag set
+    */
 	public boolean isDeleted()
 	{
 		return isDeleted;
@@ -491,11 +512,11 @@ public abstract class AbstractObject
 	}
 
 	/**
-	 * Check if given object is direct or indirect parent
-	 * 
-	 * @param objectId ID of object to check
-	 * @return true if given object is direct or indirect parent of this object
-	 */
+    * Check if given object is direct or indirect parent for this object.
+    *
+    * @param objectId ID of object to check
+    * @return true if given object is direct or indirect parent of this object
+    */
 	public boolean isChildOf(final long objectId)
 	{
 	   if (parents.contains(objectId))
@@ -588,8 +609,10 @@ public abstract class AbstractObject
    }
 
 	/**
-	 * @return List of parent objects
-	 */
+    * Get list of all parent objects as array.
+    *
+    * @return Array of parent objects
+    */
 	public AbstractObject[] getParentsAsArray()
 	{
 		final Set<AbstractObject> list = new HashSet<AbstractObject>(parents.size());
@@ -624,10 +647,10 @@ public abstract class AbstractObject
 	}
 
 	/**
-	 * Return identifiers of all child objects
-	 * 
-	 * @return list of children
-	 */
+    * Return identifiers of all child objects.
+    * 
+    * @return array of children identifiers
+    */
 	public long[] getChildIdList()
 	{
 		long[] list = new long[children.size()];
@@ -652,10 +675,11 @@ public abstract class AbstractObject
 	}
 	
 	/**
-	 * Internal worker function for getAllChilds
-	 * @param classFilter class filter
-	 * @param set result set
-	 */
+    * Internal worker function for getAllChilds.
+    *
+    * @param classFilter class filter
+    * @param set result set
+    */
 	private void getAllChildrenInternal(int[] classFilter, Set<AbstractObject> set)
 	{
 		for (Long child : children)
@@ -924,12 +948,38 @@ public abstract class AbstractObject
 	}
 
 	/**
-	 * @return the image
-	 */
-	public UUID getImage()
+    * Get UUID of this objects's map image. Will return null if map image is not set.
+    *
+    * @return UUID of this objects's map image or null
+    */
+	public UUID getMapImage()
 	{
-		return image;
+      if ((mapImage != null) && !mapImage.equals(NXCommon.EMPTY_GUID))
+         return mapImage;
+      if (categoryId != 0)
+      {
+         ObjectCategory category = session.getObjectCategory(categoryId);
+         if (category != null)
+            return category.getMapImage();
+      }
+      return null;
 	}
+
+   /**
+    * Get UUID of UI icon for this object. Will return null if category or object specific icon is not set.
+    *
+    * @return UUID of UI icon or null
+    */
+   public UUID getIcon()
+   {
+      if (categoryId != 0)
+      {
+         ObjectCategory category = session.getObjectCategory(categoryId);
+         if (category != null)
+            return category.getIcon();
+      }
+      return null;
+   }
 
 	/**
 	 * @return the submapId
@@ -1089,8 +1139,8 @@ public abstract class AbstractObject
    /**
     * Add string to string set
     * 
-    * @param strings
-    * @param s
+    * @param strings set of strings
+    * @param s string to add
     */
    protected static void addString(Set<String> strings, String s)
    {
@@ -1135,7 +1185,9 @@ public abstract class AbstractObject
    }
 
    /**
-    * @return the creationTime
+    * Get object's creation time.
+    *
+    * @return object's creation time
     */
    public Date getCreationTime()
    {
