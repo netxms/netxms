@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2016-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@ import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -43,31 +43,36 @@ import org.netxms.client.events.AlarmCategory;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmCategoryList;
 
+/**
+ * Dialog for selecting alarm category
+ */
 public class AlarmCategorySelectionDialog extends Dialog
 {
-   public static final String JOB_FAMILY = "AlarmCategorySelectorJob"; //$NON-NLS-1$
    private static final String TABLE_CONFIG_PREFIX = "AlarmCategorySelectionDialog"; //$NON-NLS-1$
 
    private AlarmCategoryList alarmCategoryList;
    private IDialogSettings settings;
    private AlarmCategory selectedEvents[];
 
+   /**
+    * Create new dialog
+    *
+    * @param parentShell parent shell
+    */
    public AlarmCategorySelectionDialog(Shell parentShell)
    {
       super(parentShell);
       setShellStyle(getShellStyle() | SWT.RESIZE);
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Select category");
+      newShell.setText("Select Category");
       settings = Activator.getDefault().getDialogSettings();
       try
       {
@@ -78,9 +83,7 @@ public class AlarmCategorySelectionDialog extends Dialog
       }
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -109,29 +112,27 @@ public class AlarmCategorySelectionDialog extends Dialog
       return dialogArea;
    }
 
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
+    */
    protected void createButtonsForButtonBar(Composite parent)
    {
       // Change parent layout data to fill the whole bar
       parent.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-      Button newButton = createButton(parent, IDialogConstants.NO_ID, "New category...", false);
+      Button newButton = createButton(parent, IDialogConstants.NO_ID, "New...", false);
       newButton.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, true, false));
-      newButton.addMouseListener(new MouseListener() {
-
+      newButton.addSelectionListener(new SelectionListener() {
          @Override
-         public void mouseUp(MouseEvent e)
+         public void widgetSelected(SelectionEvent e)
          {
             alarmCategoryList.createCategory();
          }
 
          @Override
-         public void mouseDown(MouseEvent e)
+         public void widgetDefaultSelected(SelectionEvent e)
          {
-         }
-
-         @Override
-         public void mouseDoubleClick(MouseEvent e)
-         {
+            widgetSelected(e);
          }
       });
 
@@ -144,10 +145,12 @@ public class AlarmCategorySelectionDialog extends Dialog
       layout.numColumns++;
       layout.makeColumnsEqualWidth = false;
 
-      createButton(parent, IDialogConstants.CANCEL_ID, "Cancel", true);
-      createButton(parent, IDialogConstants.OK_ID, "OK", true);
+      super.createButtonsForButtonBar(parent);
    }
 
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
+    */
    @Override
    protected void cancelPressed()
    {
@@ -155,11 +158,14 @@ public class AlarmCategorySelectionDialog extends Dialog
       super.cancelPressed();
    }
 
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
    @SuppressWarnings("unchecked")
    @Override
    protected void okPressed()
    {
-      final IStructuredSelection selection = (IStructuredSelection)alarmCategoryList.getSelection();
+      final IStructuredSelection selection = alarmCategoryList.getSelection();
       final List<AlarmCategory> list = selection.toList();
       selectedEvents = list.toArray(new AlarmCategory[list.size()]);
       saveSettings();
@@ -172,7 +178,6 @@ public class AlarmCategorySelectionDialog extends Dialog
    private void saveSettings()
    {
       Point size = getShell().getSize();
-
       settings.put(TABLE_CONFIG_PREFIX + ".cx", size.x); //$NON-NLS-1$
       settings.put(TABLE_CONFIG_PREFIX + ".cy", size.y); //$NON-NLS-1$
       settings.put(TABLE_CONFIG_PREFIX + ".Filter", alarmCategoryList.getFilterText()); //$NON-NLS-1$
@@ -187,5 +192,4 @@ public class AlarmCategorySelectionDialog extends Dialog
    {
       return selectedEvents;
    }
-
 }

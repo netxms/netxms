@@ -2922,15 +2922,17 @@ public class NXCSession
     * Modify object category.
     *
     * @param category updated category object
+    * @return ID of category object
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void modifyObjectCategory(MutableObjectCategory category) throws IOException, NXCException
+   public int modifyObjectCategory(MutableObjectCategory category) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_OBJECT_CATEGORY);
       category.fillMessage(msg);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsInt32(NXCPCodes.VID_CATEGORY_ID);
    }
 
    /**
@@ -6276,6 +6278,11 @@ public class NXCSession
       {
          msg.setFieldInt16(NXCPCodes.VID_CERT_MAPPING_METHOD, data.getCertificateMappingMethod().getValue());
          msg.setField(NXCPCodes.VID_CERT_MAPPING_DATA, data.getCertificateMappingData());
+      }
+
+      if (data.isFieldSet(NXCObjectModificationData.CATEGORY_ID))
+      {
+         msg.setFieldInt32(NXCPCodes.VID_CATEGORY_ID, data.getCategoryId());
       }
 
       modifyCustomObject(data, userData, msg);

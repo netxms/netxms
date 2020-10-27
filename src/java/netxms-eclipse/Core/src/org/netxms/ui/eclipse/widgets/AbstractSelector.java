@@ -341,10 +341,10 @@ public class AbstractSelector extends Composite
 	}
 
 	/**
-	 * Set selector's image
-	 * 
-	 * @param newText
-	 */
+    * Set selector's image
+    * 
+    * @param image new image (can be null)
+    */
 	protected void setImage(final Image image)
 	{
 		if (!(text instanceof CLabel))
@@ -376,10 +376,10 @@ public class AbstractSelector extends Composite
 	}
 
 	/**
-	 * Get selector's text
-	 * 
-	 * @return Selector's text
-	 */
+    * Get selector's image
+    * 
+    * @return Selector's image
+    */
 	protected Image getImage()
 	{
 		if (text instanceof CLabel)
@@ -387,9 +387,9 @@ public class AbstractSelector extends Composite
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
+    */
 	@Override
 	public void setEnabled(boolean enabled)
 	{

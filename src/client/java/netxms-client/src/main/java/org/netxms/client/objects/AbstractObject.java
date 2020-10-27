@@ -215,6 +215,7 @@ public abstract class AbstractObject
       alias = msg.getFieldAsString(NXCPCodes.VID_ALIAS);
       nameOnMap = msg.getFieldAsString(NXCPCodes.VID_NAME_ON_MAP);
 		objectClass = msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_CLASS);
+      categoryId = msg.getFieldAsInt32(NXCPCodes.VID_CATEGORY_ID);
 		isDeleted = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED);
 		status = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_STATUS));
 		inMaintenanceMode = msg.getFieldAsBoolean(NXCPCodes.VID_MAINTENANCE_MODE);

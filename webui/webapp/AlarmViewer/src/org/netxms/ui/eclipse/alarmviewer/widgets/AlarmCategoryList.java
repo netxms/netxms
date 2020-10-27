@@ -28,12 +28,15 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -51,11 +54,13 @@ import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.editors.AlarmCategoryEditor;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.AlarmCategoryLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmCategoryListComparator;
+import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmCategoryListFilter;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -69,6 +74,10 @@ public class AlarmCategoryList extends Composite implements SessionListener
    public static final int COLUMN_NAME = 1;
    public static final int COLUMN_DESCRIPTION = 2;
 
+   private boolean initShowfilter = true;
+   private AlarmCategoryListFilter filter;
+   private FilterText filterText;
+   private Action actionShowFilter;
    private Action actionAddCategory;
    private Action actionEditCategory;
    private Action actionDeleteCategory;
@@ -108,6 +117,24 @@ public class AlarmCategoryList extends Composite implements SessionListener
       FormLayout formLayout = new FormLayout();
       setLayout(formLayout);
 
+      // Create filter area
+      filterText = new FilterText(this, SWT.NONE, null, showCloseButton);
+      filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+      filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+            actionShowFilter.setChecked(false);
+         }
+      });
+
       final IDialogSettings ds = Activator.getDefault().getDialogSettings();
 
       // Setup table columns
@@ -118,6 +145,9 @@ public class AlarmCategoryList extends Composite implements SessionListener
       viewer.setLabelProvider(new AlarmCategoryLabelProvider());
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setComparator(new AlarmCategoryListComparator());
+      filter = new AlarmCategoryListFilter();
+      viewer.addFilter(filter);
+
       WidgetHelper.restoreTableViewerSettings(viewer, ds, configPrefix);
 
       addListener(SWT.Resize, new Listener() {
@@ -125,6 +155,15 @@ public class AlarmCategoryList extends Composite implements SessionListener
          public void handleEvent(Event e)
          {
             viewer.getControl().setBounds(AlarmCategoryList.this.getClientArea());
+         }
+      });
+
+      viewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveTableViewerSettings(viewer, ds, configPrefix);
+            ds.put(configPrefix + "initShowfilter", initShowfilter);
          }
       });
 
@@ -139,16 +178,44 @@ public class AlarmCategoryList extends Composite implements SessionListener
       // Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(filterText);
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       viewer.getControl().setLayoutData(fd);
 
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
+
+      // Get filter settings
+      initShowfilter = safeCast(ds.get(configPrefix + "initShowfilter"), ds.getBoolean(configPrefix + "initShowfilter"),
+            initShowfilter);
+
+      // Set initial focus to filter input line
+      if (initShowfilter)
+         filterText.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
+
       createActions();
       createPopupMenu();
+      filterText.setCloseAction(actionShowFilter);
 
       refreshView();
       session.addListener(this);
+   }
+
+   /**
+    * @param settings String
+    * @param settings Boolean
+    * @param defval
+    * @return
+    */
+   private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
    }
 
    /**
@@ -191,6 +258,63 @@ public class AlarmCategoryList extends Composite implements SessionListener
             return "Cannot open alarm category list";
          }
       }.start();
+   }
+
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   public void enableFilter(boolean enable)
+   {
+      initShowfilter = enable;
+      filterText.setVisible(initShowfilter);
+      FormData fd = (FormData)viewer.getControl().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      layout();
+      if (enable)
+         filterText.setFocus();
+      else
+         setFilter(""); //$NON-NLS-1$
+   }
+
+   /**
+    * @return the initShowfilter
+    */
+   public boolean isinitShowfilter()
+   {
+      return initShowfilter;
+   }
+
+   /**
+    * Set filter text
+    * 
+    * @param text New filter text
+    */
+   public void setFilter(final String text)
+   {
+      filterText.setText(text);
+      onFilterModify();
+   }
+
+   /**
+    * Get filter text
+    * 
+    * @return Current filter text
+    */
+   public String getFilterText()
+   {
+      return filterText.getText();
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   private void onFilterModify()
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      viewer.refresh(false);
    }
 
    /**
@@ -244,6 +368,23 @@ public class AlarmCategoryList extends Composite implements SessionListener
       actionDeleteCategory.setText("Delete category");
       actionDeleteCategory.setImageDescriptor(SharedIcons.DELETE_OBJECT);
       actionDeleteCategory.setEnabled(false);
+
+      actionShowFilter = new Action() {
+         /*
+          * (non-Javadoc)
+          * 
+          * @see org.eclipse.jface.action.Action#run()
+          */
+         @Override
+         public void run()
+         {
+            enableFilter(actionShowFilter.isChecked());
+         }
+      };
+      actionShowFilter.setText("Show filter");
+      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
+      actionShowFilter.setChecked(initShowfilter);
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.alarmviewer.commands.show_filter_alarm_category"); //$NON-NLS-1$
    }
 
    /**
@@ -284,6 +425,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
       manager.add(actionDeleteCategory);
       manager.add(actionEditCategory);
       manager.add(new Separator());
+      manager.add(actionShowFilter);
    }
 
    /**
@@ -340,6 +482,14 @@ public class AlarmCategoryList extends Composite implements SessionListener
    }
 
    /**
+    * @return Show filter action
+    */
+   public Action getShowFilterAction()
+   {
+      return actionShowFilter;
+   }
+
+   /**
     * @return Add category action
     */
    public Action getAddCategoryAction()
@@ -368,9 +518,9 @@ public class AlarmCategoryList extends Composite implements SessionListener
     * 
     * @return
     */
-   public ISelection getSelection()
+   public IStructuredSelection getSelection()
    {
-      return viewer.getSelection();
+      return viewer.getStructuredSelection();
    }
 
    /**
@@ -383,7 +533,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
       return viewer;
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.SessionListener#notificationHandler(org.netxms.client.SessionNotification)
     */
    @Override
@@ -423,7 +573,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.widgets.Widget#dispose()
     */
    @Override
