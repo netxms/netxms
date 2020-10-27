@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class ImageSelector extends AbstractSelector implements ImageUpdateListener
 {
-	private UUID imageGuid = NXCommon.EMPTY_GUID;
+   private UUID imageGuid = null;
 	
 	/**
 	 * @param parent
@@ -75,27 +75,27 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 			{
 				setText(Messages.get().ImageSelector_Default);
 				setImage(null);
-				imageGuid = NXCommon.EMPTY_GUID;
+            imageGuid = null;
 			}
 			getParent().layout();
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
+    */
 	@Override
 	protected void clearButtonHandler()
 	{
 		setText(Messages.get().ImageSelector_Default);
 		setImage(null);
-		imageGuid = NXCommon.EMPTY_GUID;
+      imageGuid = null;
 		getParent().layout();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
+    */
 	@Override
 	protected String getSelectionButtonToolTip()
 	{
@@ -119,7 +119,7 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 	public void setImageGuid(UUID imageGuid, boolean redoLayout)
 	{
 		this.imageGuid = imageGuid;
-		if (imageGuid.equals(NXCommon.EMPTY_GUID))
+      if ((imageGuid == null) || imageGuid.equals(NXCommon.EMPTY_GUID))
 		{
 			setText(Messages.get().ImageSelector_Default);
 			setImage(null);
@@ -143,16 +143,15 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 			getParent().layout();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener#imageUpdated(java.util.UUID)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener#imageUpdated(java.util.UUID)
+    */
 	@Override
 	public void imageUpdated(UUID guid)
 	{
 		if (guid.equals(imageGuid))
 		{
 		   getDisplay().asyncExec(new Runnable() {
-            
             @Override
             public void run()
             {

@@ -118,7 +118,7 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
     */
    private boolean applyChanges(final boolean isApply)
    {
-      if(dci.getDciId() == 0)
+      if (dci.getDciId() == 0)
       {
          MessageDialogHelper.openError(getShell(), Messages.get().GeneralDCIImagePropertyPage_Error, Messages.get().GeneralDCIImagePropertyPage_DciNotSelected);
          return false;
@@ -126,7 +126,7 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
       
       selectedImage = image.getImageGuid();
       
-      if(selectedImage ==null || selectedImage == NXCommon.EMPTY_GUID)
+      if ((selectedImage == null) || selectedImage.equals(NXCommon.EMPTY_GUID))
       {
          MessageDialogHelper.openError(getShell(), Messages.get().GeneralDCIImagePropertyPage_Error, Messages.get().GeneralDCIImagePropertyPage_DefImageNotSelected);
          return false;
@@ -150,7 +150,7 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
       return true;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
    @Override
@@ -159,7 +159,7 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
       return applyChanges(false);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performApply()
     */
    @Override

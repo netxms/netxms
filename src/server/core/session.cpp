@@ -966,13 +966,13 @@ void ClientSession::processRequest(NXCPMessage *request)
          deleteScript(request);
          break;
       case CMD_GET_SESSION_LIST:
-         SendSessionList(request->getId());
+         getSessionList(request->getId());
          break;
       case CMD_KILL_SESSION:
-         KillSession(request);
+         killSession(request);
          break;
       case CMD_START_SNMP_WALK:
-         StartSnmpWalk(request);
+         startSnmpWalk(request);
          break;
       case CMD_RESOLVE_DCI_NAMES:
          resolveDCINames(request);
@@ -8037,28 +8037,18 @@ void ClientSession::deleteObjectTool(NXCPMessage *pRequest)
 /**
  * Change Object Tool status (enabled/disabled)
  */
-void ClientSession::changeObjectToolStatus(NXCPMessage *pRequest)
+void ClientSession::changeObjectToolStatus(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   UINT32 toolID, enable;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
-   // Check user rights
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
-      toolID = pRequest->getFieldAsUInt32(VID_TOOL_ID);
-      enable = pRequest->getFieldAsUInt32(VID_STATE);
-      msg.setField(VID_RCC, ChangeObjectToolStatus(toolID, enable == 0 ? false : true));
+      uint32_t toolID = request->getFieldAsUInt32(VID_TOOL_ID);
+      msg.setField(VID_RCC, ChangeObjectToolStatus(toolID, request->getFieldAsBoolean(VID_STATE)));
    }
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-
-   // Send response
    sendMessage(&msg);
 }
 
@@ -8067,13 +8057,7 @@ void ClientSession::changeObjectToolStatus(NXCPMessage *pRequest)
  */
 void ClientSession::generateObjectToolId(UINT32 dwRqId)
 {
-   NXCPMessage msg;
-
-   // Prepare reply message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
-
-   // Check access rights
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, dwRqId);
    if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS))
    {
       msg.setField(VID_TOOL_ID, CreateUniqueId(IDG_OBJECT_TOOL));
@@ -8082,8 +8066,6 @@ void ClientSession::generateObjectToolId(UINT32 dwRqId)
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-
-   // Send response
    sendMessage(&msg);
 }
 
@@ -8395,30 +8377,25 @@ void ClientSession::deleteScript(NXCPMessage *request)
 /**
  * Copy session data to message
  */
-static void CopySessionData(ClientSession *pSession, void *pArg)
+static void CopySessionData(ClientSession *pSession, NXCPMessage *msg)
 {
-   UINT32 dwId, dwIndex;
+   uint32_t index = msg->getFieldAsUInt32(VID_NUM_SESSIONS);
+   msg->setField(VID_NUM_SESSIONS, index + 1);
 
-   dwIndex = ((NXCPMessage *)pArg)->getFieldAsUInt32(VID_NUM_SESSIONS);
-   ((NXCPMessage *)pArg)->setField(VID_NUM_SESSIONS, dwIndex + 1);
-
-   dwId = VID_SESSION_DATA_BASE + dwIndex * 100;
-   ((NXCPMessage *)pArg)->setField(dwId++, (UINT32)pSession->getId());
-   ((NXCPMessage *)pArg)->setField(dwId++, (WORD)pSession->getCipher());
-   ((NXCPMessage *)pArg)->setField(dwId++, (TCHAR *)pSession->getSessionName());
-   ((NXCPMessage *)pArg)->setField(dwId++, (TCHAR *)pSession->getClientInfo());
-   ((NXCPMessage *)pArg)->setField(dwId++, (TCHAR *)pSession->getLoginName());
+   uint32_t fieldId = VID_SESSION_DATA_BASE + index * 100;
+   msg->setField(fieldId++, (UINT32)pSession->getId());
+   msg->setField(fieldId++, (WORD)pSession->getCipher());
+   msg->setField(fieldId++, (TCHAR *)pSession->getSessionName());
+   msg->setField(fieldId++, (TCHAR *)pSession->getClientInfo());
+   msg->setField(fieldId++, (TCHAR *)pSession->getLoginName());
 }
 
 /**
  * Send list of connected client sessions
  */
-void ClientSession::SendSessionList(UINT32 dwRqId)
+void ClientSession::getSessionList(uint32_t requestId)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SESSIONS)
    {
       msg.setField(VID_NUM_SESSIONS, (UINT32)0);
@@ -8432,19 +8409,17 @@ void ClientSession::SendSessionList(UINT32 dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Forcibly terminate client's session
-//
-
-void ClientSession::KillSession(NXCPMessage *pRequest)
+/**
+ * Forcibly terminate client's session
+ */
+void ClientSession::killSession(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SESSIONS)
    {
+      session_id_t id = request->getFieldAsInt32(VID_SESSION_ID);
+      bool success = KillClientSession(id);
+      msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_SESSION_HANDLE);
    }
    else
    {
@@ -8517,8 +8492,8 @@ struct SNMP_WalkerThreadArgs
 struct SNMP_WalkerContext
 {
    NXCPMessage *pMsg;
-   UINT32 dwId;
-   UINT32 dwNumVars;
+   uint32_t dwId;
+   uint32_t dwNumVars;
    ClientSession *pSession;
 };
 
@@ -8569,11 +8544,11 @@ static void SNMP_WalkerThread(SNMP_WalkerThreadArgs *args)
 /**
  * Start SNMP walk
  */
-void ClientSession::StartSnmpWalk(NXCPMessage *pRequest)
+void ClientSession::startSnmpWalk(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   shared_ptr<NetObj> object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
       if (object->getObjectClass() == OBJECT_NODE)
@@ -8584,8 +8559,8 @@ void ClientSession::StartSnmpWalk(NXCPMessage *pRequest)
 
             InterlockedIncrement(&m_refCount);
 
-            SNMP_WalkerThreadArgs *args = new SNMP_WalkerThreadArgs(this, pRequest->getId(), static_pointer_cast<Node>(object));
-            args->baseOID = pRequest->getFieldAsString(VID_SNMP_OID);
+            SNMP_WalkerThreadArgs *args = new SNMP_WalkerThreadArgs(this, request->getId(), static_pointer_cast<Node>(object));
+            args->baseOID = request->getFieldAsString(VID_SNMP_OID);
             ThreadPoolExecute(g_clientThreadPool, SNMP_WalkerThread, args);
          }
          else
@@ -11558,7 +11533,7 @@ void ClientSession::onLibraryImageChange(const uuid& guid, bool removed)
    NXCPMessage msg(CMD_IMAGE_LIBRARY_UPDATE, 0);
    msg.setField(VID_GUID, guid);
    msg.setField(VID_FLAGS, (UINT32)(removed ? 1 : 0));
-   postMessage(&msg);
+   postMessage(msg);
 }
 
 /**
@@ -11566,12 +11541,7 @@ void ClientSession::onLibraryImageChange(const uuid& guid, bool removed)
  */
 void ClientSession::updateLibraryImage(NXCPMessage *request)
 {
-	NXCPMessage msg;
-	UINT32 rcc = RCC_SUCCESS;
-
-	msg.setId(request->getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
-
+	NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (!checkSysAccessRights(SYSTEM_ACCESS_MANAGE_IMAGE_LIB))
    {
 	   msg.setField(VID_RCC, RCC_ACCESS_DENIED);
@@ -11579,29 +11549,17 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
       return;
    }
 
-	uuid_t guid;
-	_uuid_clear(guid);
-
-	msg.setId(request->getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
-
    TCHAR name[MAX_OBJECT_NAME] = _T("");
 	TCHAR category[MAX_OBJECT_NAME] = _T("");
 	TCHAR mimetype[MAX_DB_STRING] = _T("");
 	TCHAR absFileName[MAX_PATH] = _T("");
 
-	if (request->isFieldExist(VID_GUID))
-	{
-		request->getFieldAsBinary(VID_GUID, guid, UUID_LENGTH);
-	}
-
-	if (_uuid_is_null(guid))
-	{
-		_uuid_generate(guid);
-	}
+	uuid guid = request->getFieldAsGUID(VID_GUID);
+	if (guid.isNull())
+	   guid = uuid::generate();
 
 	TCHAR guidText[64];
-	_uuid_to_string(guid, guidText);
+	guid.toString(guidText);
 
 	request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 	request->getFieldAsString(VID_CATEGORY, category, MAX_OBJECT_NAME);
@@ -11619,78 +11577,76 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-	if (rcc == RCC_SUCCESS)
-	{
-		TCHAR query[MAX_DB_STRING];
-		_sntprintf(query, MAX_DB_STRING, _T("SELECT protected FROM images WHERE guid = '%s'"), guidText);
-		DB_RESULT result = DBSelect(hdb, query);
-		if (result != nullptr)
-		{
-			int count = DBGetNumRows(result);
-			TCHAR query[MAX_DB_STRING] = {0};
-			if (count > 0)
-			{
-				BOOL isProtected = DBGetFieldLong(result, 0, 0) != 0; // protected
+	uint32_t rcc = RCC_SUCCESS;
+   TCHAR query[MAX_DB_STRING];
+   _sntprintf(query, MAX_DB_STRING, _T("SELECT protected FROM images WHERE guid = '%s'"), guidText);
+   DB_RESULT result = DBSelect(hdb, query);
+   if (result != nullptr)
+   {
+      int count = DBGetNumRows(result);
+      TCHAR query[MAX_DB_STRING] = {0};
+      if (count > 0)
+      {
+         BOOL isProtected = DBGetFieldLong(result, 0, 0) != 0; // protected
 
-				if (!isProtected)
-				{
-					_sntprintf(query, MAX_DB_STRING, _T("UPDATE images SET name = %s, category = %s, mimetype = %s WHERE guid = '%s'"),
-							(const TCHAR *)DBPrepareString(hdb, name),
-							(const TCHAR *)DBPrepareString(hdb, category),
-							(const TCHAR *)DBPrepareString(hdb, mimetype, 32),
-							guidText);
-				}
-				else
-				{
-					rcc = RCC_INVALID_REQUEST;
-				}
-			}
-			else
-			{
-				// not found in DB, create
-				_sntprintf(query, MAX_DB_STRING, _T("INSERT INTO images (guid, name, category, mimetype, protected) VALUES ('%s', %s, %s, %s, 0)"),
-						guidText,
-						(const TCHAR *)DBPrepareString(hdb, name),
-						(const TCHAR *)DBPrepareString(hdb, category),
-						(const TCHAR *)DBPrepareString(hdb, mimetype, 32));
-			}
+         if (!isProtected)
+         {
+            _sntprintf(query, MAX_DB_STRING, _T("UPDATE images SET name = %s, category = %s, mimetype = %s WHERE guid = '%s'"),
+                  (const TCHAR *)DBPrepareString(hdb, name),
+                  (const TCHAR *)DBPrepareString(hdb, category),
+                  (const TCHAR *)DBPrepareString(hdb, mimetype, 32),
+                  guidText);
+         }
+         else
+         {
+            rcc = RCC_INVALID_REQUEST;
+         }
+      }
+      else
+      {
+         // not found in DB, create
+         _sntprintf(query, MAX_DB_STRING, _T("INSERT INTO images (guid, name, category, mimetype, protected) VALUES ('%s', %s, %s, %s, 0)"),
+               guidText,
+               (const TCHAR *)DBPrepareString(hdb, name),
+               (const TCHAR *)DBPrepareString(hdb, category),
+               (const TCHAR *)DBPrepareString(hdb, mimetype, 32));
+      }
 
-			if (query[0] != 0)
-			{
-				if (DBQuery(hdb, query))
-				{
-					// DB up to date, update file)
-					_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
-					DbgPrintf(5, _T("updateLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
+      if (query[0] != 0)
+      {
+         if (DBQuery(hdb, query))
+         {
+            // DB up to date, update file)
+            _sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
+            debugPrintf(5, _T("updateLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
 
-               ServerDownloadFileInfo *dInfo = new ServerDownloadFileInfo(absFileName, CMD_MODIFY_IMAGE);
-               if (dInfo->open())
-               {
-                  dInfo->setImageGuid(guid);
-                  m_downloadFileMap->set(request->getId(), dInfo);
-               }
-               else
-               {
-                  rcc = RCC_IO_ERROR;
-               }
-				}
-				else
-				{
-					rcc = RCC_DB_FAILURE;
-				}
-			}
+            ServerDownloadFileInfo *dInfo = new ServerDownloadFileInfo(absFileName, CMD_MODIFY_IMAGE);
+            if (dInfo->open())
+            {
+               dInfo->setImageGuid(guid);
+               m_downloadFileMap->set(request->getId(), dInfo);
+            }
+            else
+            {
+               rcc = RCC_IO_ERROR;
+            }
+         }
+         else
+         {
+            rcc = RCC_DB_FAILURE;
+         }
+      }
 
-			DBFreeResult(result);
-		}
-		else
-		{
-			rcc = RCC_DB_FAILURE;
-		}
-	}
+      DBFreeResult(result);
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
 
 	if (rcc == RCC_SUCCESS)
 	{
-		msg.setField(VID_GUID, guid, UUID_LENGTH);
+		msg.setField(VID_GUID, guid);
 	}
 
    DBConnectionPoolReleaseConnection(hdb);
@@ -11703,13 +11659,7 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
  */
 void ClientSession::deleteLibraryImage(NXCPMessage *request)
 {
-	NXCPMessage msg;
-	UINT32 rcc = RCC_SUCCESS;
-	TCHAR guidText[64];
-	TCHAR query[MAX_DB_STRING];
-
-	msg.setId(request->getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
+	NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    if (!checkSysAccessRights(SYSTEM_ACCESS_MANAGE_IMAGE_LIB))
    {
@@ -11719,11 +11669,14 @@ void ClientSession::deleteLibraryImage(NXCPMessage *request)
    }
 
 	uuid guid = request->getFieldAsGUID(VID_GUID);
+   TCHAR guidText[64];
 	guid.toString(guidText);
 	debugPrintf(5, _T("deleteLibraryImage: guid=%s"), guidText);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
+   uint32_t rcc = RCC_SUCCESS;
+   TCHAR query[MAX_DB_STRING];
 	_sntprintf(query, MAX_DB_STRING, _T("SELECT protected FROM images WHERE guid = '%s'"), guidText);
 	DB_RESULT hResult = DBSelect(hdb, query);
 	if (hResult != nullptr)

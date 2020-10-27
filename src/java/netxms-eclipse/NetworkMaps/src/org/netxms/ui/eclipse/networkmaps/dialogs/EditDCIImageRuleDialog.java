@@ -118,7 +118,6 @@ public class EditDCIImageRuleDialog extends Dialog
       }
       
       image.addModifyListener(new ModifyListener() {
-         
          @Override
          public void modifyText(ModifyEvent e)
          {
@@ -147,14 +146,14 @@ public class EditDCIImageRuleDialog extends Dialog
 	protected void okPressed()
 	{
 	   selectedImage = image.getImageGuid();
-	   if(selectedImage == null || selectedImage == NXCommon.EMPTY_GUID)
+      if ((selectedImage == null) || selectedImage.equals(NXCommon.EMPTY_GUID))
       {
          MessageDialogHelper.openError(getShell(), Messages.get().EditDCIImageRuleDialog_Error, Messages.get().EditDCIImageRuleDialog_ImageShouldBeSelected);
          return;
       }
 	   
 	   String compareValue = value.getText();
-	   if(compareValue == null || compareValue.isEmpty())
+      if ((compareValue == null) || compareValue.isEmpty())
       {
          MessageDialogHelper.openError(getShell(), Messages.get().EditDCIImageRuleDialog_Error, Messages.get().EditDCIImageRuleDialog_ValueShouldNotBeEmpty);
          return;

@@ -78,7 +78,7 @@ public class NXCObjectModificationData
    public static final int MAP_LAYOUT             = 19;
    public static final int MAP_BACKGROUND         = 20;
    public static final int MAP_CONTENT            = 21;
-   public static final int IMAGE                  = 22;
+   public static final int MAP_IMAGE                  = 22;
    public static final int ICMP_PROXY             = 23;
    public static final int COLUMN_COUNT           = 24;
    public static final int DASHBOARD_ELEMENTS     = 25;
@@ -179,7 +179,7 @@ public class NXCObjectModificationData
    private GeoLocation mapBackgroundLocation;
    private int mapBackgroundZoom;
    private int mapBackgroundColor;
-   private UUID image;
+   private UUID mapImage;
    private Collection<NetworkMapElement> mapElements;
    private Collection<NetworkMapLink> mapLinks;
    private int columnCount;
@@ -781,20 +781,24 @@ public class NXCObjectModificationData
    }
 
    /**
-    * @return the image
+    * Get map image.
+    *
+    * @return map image
     */
-   public UUID getImage()
+   public UUID getMapImage()
    {
-      return image;
+      return mapImage;
    }
 
    /**
-    * @param image the image to set
+    * Set new map image
+    *
+    * @param image new map image
     */
-   public void setImage(UUID image)
+   public void setMapImage(UUID image)
    {
-      this.image = image;
-      fieldSet.add(IMAGE);
+      mapImage = image;
+      fieldSet.add(MAP_IMAGE);
    }
 
    /**

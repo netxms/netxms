@@ -639,10 +639,10 @@ private:
    void updateScript(NXCPMessage *pRequest);
    void renameScript(NXCPMessage *pRequest);
    void deleteScript(NXCPMessage *pRequest);
-   void SendSessionList(UINT32 dwRqId);
-   void KillSession(NXCPMessage *pRequest);
-   void StartSnmpWalk(NXCPMessage *pRequest);
-   void resolveDCINames(NXCPMessage *pRequest);
+   void getSessionList(uint32_t requestId);
+   void killSession(NXCPMessage *request);
+   void startSnmpWalk(NXCPMessage *request);
+   void resolveDCINames(NXCPMessage *request);
    uint32_t resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR *ppszName);
    void sendConfigForAgent(NXCPMessage *pRequest);
    void getAgentConfigurationList(uint32_t requestId);
@@ -1210,6 +1210,7 @@ static inline void EnumerateClientSessions(void (*handler)(ClientSession*))
 }
 
 void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data);
+void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, const TCHAR *channel);
 void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, uint32_t code, uint32_t data);
 void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(const NXCPMessage& msg, uint32_t graphId);
 void NotifyClientsOnPolicyUpdate(const NXCPMessage& msg, const Template& object);

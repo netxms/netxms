@@ -111,14 +111,14 @@ EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
 
             if ((name != nullptr) && (*name != 0))
             {
-               UINT32 id = GetAndUpdateAlarmCategoryByName(name, description);
-               if(id > 0)
+               uint32_t id = UpdateAlarmCategoryDescription(name, CHECK_NULL_EX(description));
+               if (id > 0)
                {
                   m_alarmCategoryList.add(id);
                }
                else
                {
-                  m_alarmCategoryList.add(CreateNewAlarmCategoryFromImport(name, CHECK_NULL_EX(description)));
+                  m_alarmCategoryList.add(CreateAlarmCategory(name, CHECK_NULL_EX(description)));
                }
             }
          }

@@ -456,10 +456,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_SNMP_PORT_LIST"),
       _T("CMD_UPDATE_SNMP_PORT_LIST"),
       _T("CMD_GET_LOG_RECORD_DETAILS"),
-      _T("CMD_GET_DCI_LAST_VALUE")
+      _T("CMD_GET_DCI_LAST_VALUE"),
+      _T("CMD_OBJECT_CATEGORY_UPDATE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_DCI_LAST_VALUE))
+   if ((code >= CMD_LOGIN) && (code <= CMD_OBJECT_CATEGORY_UPDATE))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

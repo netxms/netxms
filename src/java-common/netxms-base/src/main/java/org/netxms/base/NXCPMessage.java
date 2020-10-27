@@ -436,7 +436,7 @@ public class NXCPMessage
    {
       setField(new NXCPMessageField(fieldId, value));
    }
-	
+
 	/**
     * Set field of BINARY type to GUID value (byte array of length 16).
     * 
@@ -445,7 +445,7 @@ public class NXCPMessage
     */
 	public void setField(final long fieldId, final UUID value)
 	{
-		setField(new NXCPMessageField(fieldId, value));
+      setField(new NXCPMessageField(fieldId, (value != null) ? value : NXCommon.EMPTY_GUID));
 	}
 
 	/**

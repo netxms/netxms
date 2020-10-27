@@ -118,7 +118,6 @@ public class EditDCIImageRuleDialog extends Dialog
       }
       
       image.addModifyListener(new ModifyListener() {
-         
          @Override
          public void modifyText(ModifyEvent e)
          {

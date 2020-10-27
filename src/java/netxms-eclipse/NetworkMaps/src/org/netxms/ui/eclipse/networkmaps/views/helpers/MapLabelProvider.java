@@ -159,7 +159,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgUnknown = Activator.getImageDescriptor("icons/objects/unknown.png").createImage(); //$NON-NLS-1$
 		imgResCluster = Activator.getImageDescriptor("icons/resources/cluster_res.png").createImage(); //$NON-NLS-1$
 
-		final Display display = viewer.getControl().getDisplay();	
+		final Display display = viewer.getControl().getDisplay();
 		fontLabel = new Font(display, "Verdana", 7, SWT.NORMAL); //$NON-NLS-1$
 		fontTitle = new Font(display, "Verdana", 10, SWT.NORMAL); //$NON-NLS-1$
 
@@ -202,8 +202,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			if (object != null)
 			{
 				// First, check if object has custom map image set
-				final UUID objectImageGuid = object.getImage();
-				if (objectImageGuid != null && !objectImageGuid.equals(NXCommon.EMPTY_GUID))
+				final UUID objectImageGuid = object.getMapImage();
+            if ((objectImageGuid != null) && !objectImageGuid.equals(NXCommon.EMPTY_GUID))
 				{
 					return ImageProvider.getInstance().getImage(objectImageGuid);
 				}

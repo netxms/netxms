@@ -85,7 +85,9 @@ public class SessionNotification
    public static final int USM_CONFIG_CHANGED = 1045;
    public static final int PORTS_CONFIG_CHANGED = 1046;
    public static final int SECRET_CONFIG_CHANGED = 1047;
-	
+   public static final int OBJECT_CATEGORY_UPDATED = 1048;
+   public static final int OBJECT_CATEGORY_DELETED = 1049;
+
 	public static final int CUSTOM_MESSAGE = 2000;
    public static final int OBJECT_SYNC_COMPLETED = 2001;
    public static final int USER_DISCONNECT = 2002;
