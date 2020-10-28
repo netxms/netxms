@@ -140,7 +140,6 @@ public class ImageProvider
 					@Override
 					protected String getErrorMessage()
 					{
-						// TODO Auto-generated method stub
 						return null;
 					}
 				}.start();
