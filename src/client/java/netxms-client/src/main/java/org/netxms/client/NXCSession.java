@@ -2936,16 +2936,19 @@ public class NXCSession
    }
 
    /**
-    * Delete object category
+    * Delete object category. This method will fail if category is in use (set to at least one object) unless <b>forceDelete</b>
+    * parameter set to <b>true</b>.
     *
     * @param categoryId category ID
+    * @param forceDelete force deletion flag - if set to true category will be deleted even if in use
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void deleteObjectCategory(int categoryId) throws IOException, NXCException
+   public void deleteObjectCategory(int categoryId, boolean forceDelete) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_OBJECT_CATEGORY);
       msg.setFieldInt32(NXCPCodes.VID_CATEGORY_ID, categoryId);
+      msg.setField(NXCPCodes.VID_FORCE_DELETE, forceDelete);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
