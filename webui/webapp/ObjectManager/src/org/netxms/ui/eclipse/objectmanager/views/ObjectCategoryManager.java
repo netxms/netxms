@@ -54,9 +54,11 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.MutableObjectCategory;
 import org.netxms.client.objects.ObjectCategory;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -531,9 +533,32 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             monitor.beginTask("Delete object categories", idList.length);
-            for(int id : idList)
+            for(final int id : idList)
             {
-               session.deleteObjectCategory(id);
+               try
+               {
+                  session.deleteObjectCategory(id, false);
+               }
+               catch(NXCException e)
+               {
+                  if (e.getErrorCode() != RCC.CATEGORY_IN_USE)
+                     throw e;
+
+                  final boolean[] retry = new boolean[1];
+                  getDisplay().syncExec(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        ObjectCategory c = session.getObjectCategory(id);
+                        retry[0] = MessageDialogHelper.openQuestion(getSite().getShell(), "Confirm Delete",
+                              String.format("Object category \"%s\" is in use. ARe you sure you want to delete it?", c.getName()));
+                     }
+                  });
+                  if (retry[0])
+                  {
+                     session.deleteObjectCategory(id, true);
+                  }
+               }
                monitor.worked(1);
             }
             monitor.done();
