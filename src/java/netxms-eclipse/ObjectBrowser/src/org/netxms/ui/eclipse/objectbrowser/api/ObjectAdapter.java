@@ -19,13 +19,16 @@
 package org.netxms.ui.eclipse.objectbrowser.api;
 
 import java.util.Iterator;
+import java.util.UUID;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.UnknownObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -34,24 +37,32 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ObjectAdapter implements IWorkbenchAdapter
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.model.IWorkbenchAdapter#getChildren(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.ui.model.IWorkbenchAdapter#getChildren(java.lang.Object)
+    */
 	@Override
 	public Object[] getChildren(Object o)
 	{
 		return ((AbstractObject)o).getChildrenAsArray();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.model.IWorkbenchAdapter#getImageDescriptor(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.ui.model.IWorkbenchAdapter#getImageDescriptor(java.lang.Object)
+    */
 	@Override
 	public ImageDescriptor getImageDescriptor(Object object)
 	{
 		if (object instanceof UnknownObject)
 			return SharedIcons.UNKNOWN_OBJECT;
-		
+
+      UUID iconId = ((AbstractObject)object).getIcon();
+      if (iconId != null)
+      {
+         Image icon = ImageProvider.getInstance().getImage(iconId);
+         if (icon != null)
+            return ImageDescriptor.createFromImage(icon);
+      }
+
 		switch(((AbstractObject)object).getObjectClass())
 		{
          case AbstractObject.OBJECT_ACCESSPOINT:
