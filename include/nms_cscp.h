@@ -1392,6 +1392,7 @@ typedef struct
 #define VID_ALTITUDE                ((UINT32)719)
 #define VID_FORCE_DELETE            ((UINT32)720)
 #define VID_ICON                    ((UINT32)721)
+#define VID_WEB_SERVICE_DEF_LIST    ((UINT32)722)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

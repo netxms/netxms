@@ -8291,7 +8291,7 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_NUM_ACTIONS, actions.length);
       msg.setField(NXCPCodes.VID_ACTION_LIST, actions);
       msg.setFieldInt32(NXCPCodes.VID_WEB_SERVICE_DEF_COUNT, webService.length);
-      msg.setField(NXCPCodes.VID_WEB_SERVICE_DEF_LIST_BASE, webService);
+      msg.setField(NXCPCodes.VID_WEB_SERVICE_DEF_LIST, webService);
 
       msg.setFieldInt32(NXCPCodes.VID_NUM_RULES, rules.length);
       long varId = NXCPCodes.VID_RULE_LIST_BASE;

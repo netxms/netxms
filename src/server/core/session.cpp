@@ -9593,7 +9593,7 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
          xml.append(_T("\t<webServiceDefinitions>\n"));
          count = pRequest->getFieldAsUInt32(VID_WEB_SERVICE_DEF_COUNT);
          pdwList = MemAllocArray<UINT32>(count);
-         pRequest->getFieldAsInt32Array(VID_WEB_SERVICE_DEF_LIST_BASE, count, pdwList);
+         pRequest->getFieldAsInt32Array(VID_WEB_SERVICE_DEF_LIST, count, pdwList);
          CreateWebServiceDefinitionExportRecord(xml, count, pdwList);
          MemFree(pdwList);
          xml.append(_T("\t</webServiceDefinitions>\n"));

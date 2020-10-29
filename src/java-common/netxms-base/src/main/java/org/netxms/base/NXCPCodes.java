@@ -1162,6 +1162,7 @@ public class NXCPCodes
    public static final long VID_ALTITUDE = 719;
    public static final long VID_FORCE_DELETE = 720;
    public static final long VID_ICON = 721;
+   public static final long VID_WEB_SERVICE_DEF_LIST = 722;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
