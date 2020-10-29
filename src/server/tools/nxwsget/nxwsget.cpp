@@ -33,8 +33,8 @@ NETXMS_EXECUTABLE_HEADER(nxwsget)
 /**
  * Static fields
  */
-static UINT32 s_interval = 0;
-static UINT32 s_retentionTime = 60;
+static uint32_t s_interval = 0;
+static uint32_t s_retentionTime = 60;
 static TCHAR s_login[MAX_CRED_LEN] = _T("");
 static TCHAR s_password[MAX_CRED_LEN] = _T("");
 static WebServiceAuthType s_authType = WebServiceAuthType::NONE;
@@ -58,16 +58,15 @@ static EnumerationCallbackResult PrintParameterResults(const TCHAR *key, const v
  */
 static int QueryWebService(AgentConnection *pConn, const TCHAR *url, const StringList& parameters)
 {
-   UINT32 rcc = ERR_SUCCESS;
+   uint32_t rcc = ERR_SUCCESS;
    switch (s_requestType)
    {
       case WebServiceRequestType::PARAMETER:
       {
          StringMap results;
-         rcc = pConn->queryWebServiceParameters(url, s_retentionTime,
+         rcc = pConn->queryWebServiceParameters(url, (pConn->getCommandTimeout() - 500) / 1000, s_retentionTime,
                   (s_login[0] == 0) ? NULL: s_login, (s_password[0] == 0) ? NULL: s_password,
                   s_authType, s_headers, parameters, s_verifyCert, s_verifyHost, s_parseAsPlainText, &results);
-
          if (rcc == ERR_SUCCESS)
          {
             results.forEach(PrintParameterResults, NULL);
@@ -76,17 +75,14 @@ static int QueryWebService(AgentConnection *pConn, const TCHAR *url, const Strin
       }
       case WebServiceRequestType::LIST:
       {
-
          StringList results;
-         rcc = pConn->queryWebServiceList(url, s_retentionTime,
+         rcc = pConn->queryWebServiceList(url, (pConn->getCommandTimeout() - 500) / 1000, s_retentionTime,
                   (s_login[0] == 0) ? NULL: s_login, (s_password[0] == 0) ? NULL: s_password,
                   s_authType, s_headers, parameters.get(0), s_verifyCert, s_verifyHost, s_parseAsPlainText, &results);
-
          if (rcc == ERR_SUCCESS)
          {
             for (int i = 0; i < results.size(); i++)
                WriteToTerminalEx(_T("%s\n"), results.get(i));
-
          }
          break;
       }

@@ -177,12 +177,12 @@ uint32_t WebServiceDefinition::query(DataCollectionTarget *object, WebServiceReq
    pathList.add(path);
 
    StringMap resultSet;
-   UINT32 rcc = conn->queryWebService(requestType, url, m_cacheRetentionTime, m_login, m_password, m_authType, headers, pathList,
-         isVerifyCertificate(), isVerifyHost(), isTextParsingUsed(), (requestType == WebServiceRequestType::PARAMETER) ? &resultSet : result);
+   uint32_t rcc = conn->queryWebService(requestType, url, m_requestTimeout, m_cacheRetentionTime, m_login, m_password, m_authType, headers, pathList,
+         isVerifyCertificate(), isVerifyHost(), isForcePlainTextParser(), (requestType == WebServiceRequestType::PARAMETER) ? &resultSet : result);
    if ((rcc == ERR_SUCCESS) && (requestType == WebServiceRequestType::PARAMETER))
    {
       const TCHAR *value = resultSet.get(path);
-      if (value != NULL)
+      if (value != nullptr)
          ret_string(static_cast<TCHAR*>(result), value);
       else
          rcc = ERR_UNKNOWN_PARAMETER;

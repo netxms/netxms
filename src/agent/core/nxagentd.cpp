@@ -95,6 +95,8 @@ void UpdateUserAgentsEnvironment();
 
 void ParseTunnelList(const StringSet& tunnels);
 
+void StartWebServiceHousekeeper();
+
 #if !defined(_WIN32)
 void InitStaticSubagents();
 #endif
@@ -213,6 +215,7 @@ UINT16 g_sessionAgentPort = 28180;
 UINT16 g_sessionAgentPort = 0;
 #endif
 UINT32 g_dwIdleTimeout = 120;   // Session idle timeout
+uint32_t g_webSvcCacheExpirationTime = 600;  // 10 minutes by default
 
 #if !defined(_WIN32)
 TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxagentd.pid");
@@ -342,6 +345,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("TunnelKeepaliveInterval"), CT_LONG, 0, 0, 0, 0, &g_tunnelKeepaliveInterval, nullptr },
    { _T("VerifyServerCertificate"), CT_BOOLEAN_FLAG_32, 0, 0, AF_CHECK_SERVER_CERTIFICATE, 0, &g_dwFlags, nullptr },
    { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, s_processToWaitFor, nullptr },
+   { _T("WebServiceCacheExpirationTime"), CT_LONG, 0, 0, 0, 0, &g_webSvcCacheExpirationTime, nullptr },
    { _T("WebServiceThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &s_maxWebSvcPoolSize, nullptr },
    { _T("WriteLogAsJson"), CT_BOOLEAN_FLAG_32, 0, 0, AF_JSON_LOG, 0, &g_dwFlags, nullptr },
    { _T("ZoneId"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr }, // for backward compatibility
@@ -1399,6 +1403,8 @@ BOOL Initialize()
 
 	   // Update policy inventory according to files that exist on file system
       UpdatePolicyInventory();
+
+      StartWebServiceHousekeeper();
 
 #ifdef _WIN32
       if (g_config->getValueAsBoolean(_T("/CORE/AutoStartUserAgent"), false))

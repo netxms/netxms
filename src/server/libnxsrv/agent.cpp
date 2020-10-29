@@ -1024,37 +1024,38 @@ uint32_t AgentConnection::getParameter(const TCHAR *param, TCHAR *buffer, size_t
  * For list first element form parameters list will be used. If parameters list is empty
  * "/" will be used for XML and JSON types and "(*)" will be used for text type.
  */
-uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, const TCHAR *url, uint32_t retentionTime,
-         const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers,
-         const StringList& pathList, bool verifyCert, bool verifyHost, bool useTextParsing, void *results)
+uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, const TCHAR *url, uint32_t requestTimeout,
+         uint32_t retentionTime, const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers,
+         const StringList& pathList, bool verifyCert, bool verifyHost, bool forcePlainTextParser, void *results)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
    NXCPMessage msg(m_nProtocolVersion);
-   UINT32 dwRqId = generateRequestId();
+   uint32_t requestId = generateRequestId();
    msg.setCode(CMD_QUERY_WEB_SERVICE);
-   msg.setId(dwRqId);
+   msg.setId(requestId);
    msg.setField(VID_URL, url);
+   msg.setField(VID_TIMEOUT, requestTimeout);
    msg.setField(VID_RETENTION_TIME, retentionTime);
    msg.setField(VID_LOGIN_NAME, login);
    msg.setField(VID_PASSWORD, password);
-   msg.setField(VID_AUTH_TYPE, (INT16)authType);
+   msg.setField(VID_AUTH_TYPE, static_cast<uint16_t>(authType));
    msg.setField(VID_VERIFY_CERT, verifyCert);
    msg.setField(VID_VERIFY_HOST, verifyHost);
-   msg.setField(VID_USE_TEXT_PARSING, useTextParsing);
+   msg.setField(VID_FORCE_PLAIN_TEXT_PARSER, forcePlainTextParser);
    headers.fillMessage(&msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
    msg.setField(VID_REQUEST_TYPE, static_cast<uint16_t>(requestType));
    pathList.fillMessage(&msg, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
 
-   UINT32 dwRetCode;
+   uint32_t rcc;
    if (sendMessage(&msg))
    {
-      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
       if (response != nullptr)
       {
-         dwRetCode = response->getFieldAsUInt32(VID_RCC);
-         if (dwRetCode == ERR_SUCCESS)
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
          {
             if ((requestType == WebServiceRequestType::PARAMETER) && response->isFieldExist(VID_NUM_PARAMETERS))
             {
@@ -1066,7 +1067,7 @@ uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, con
             }
             else
             {
-               dwRetCode = ERR_MALFORMED_RESPONSE;
+               rcc = ERR_MALFORMED_RESPONSE;
                debugPrintf(4, _T("Malformed response to CMD_QUERY_WEB_SERVICE"));
             }
          }
@@ -1074,14 +1075,14 @@ uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, con
       }
       else
       {
-         dwRetCode = ERR_REQUEST_TIMEOUT;
+         rcc = ERR_REQUEST_TIMEOUT;
       }
    }
    else
    {
-      dwRetCode = ERR_CONNECTION_BROKEN;
+      rcc = ERR_CONNECTION_BROKEN;
    }
-   return dwRetCode;
+   return rcc;
 }
 
 /**
@@ -1089,21 +1090,23 @@ uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, con
  * For list first element form parameters list will be used. If parameters list is empty:
  * "/" will be used for XML and JSOn types and "(*)" will be used for text type.
  */
-uint32_t AgentConnection::queryWebServiceList(const TCHAR *url, uint32_t retentionTime, const TCHAR *login, const TCHAR *password,
-         WebServiceAuthType authType, const StringMap& headers, const TCHAR *path, bool verifyCert, bool verifyHost, bool useTextParsing, StringList *results)
+uint32_t AgentConnection::queryWebServiceList(const TCHAR *url, uint32_t requestTimeout, uint32_t retentionTime, const TCHAR *login, const TCHAR *password,
+         WebServiceAuthType authType, const StringMap& headers, const TCHAR *path, bool verifyCert, bool verifyHost, bool forcePlainTextParser, StringList *results)
 {
    StringList pathList;
    pathList.add(path);
-   return queryWebService(WebServiceRequestType::LIST, url, retentionTime, login, password, authType, headers, pathList, verifyCert, verifyHost, useTextParsing, results);
+   return queryWebService(WebServiceRequestType::LIST, url, requestTimeout, retentionTime, login, password, authType, headers,
+            pathList, verifyCert, verifyHost, forcePlainTextParser, results);
 }
 
 /**
  * Query web service for parameters
  */
-uint32_t AgentConnection::queryWebServiceParameters(const TCHAR *url, uint32_t retentionTime, const TCHAR *login, const TCHAR *password,
-         WebServiceAuthType authType, const StringMap& headers, const StringList& pathList, bool verifyCert, bool verifyHost, bool useTextParsing, StringMap *results)
+uint32_t AgentConnection::queryWebServiceParameters(const TCHAR *url, uint32_t requestTimeout, uint32_t retentionTime, const TCHAR *login, const TCHAR *password,
+         WebServiceAuthType authType, const StringMap& headers, const StringList& pathList, bool verifyCert, bool verifyHost, bool forcePlainTextParser, StringMap *results)
 {
-   return queryWebService(WebServiceRequestType::PARAMETER, url, retentionTime, login, password, authType, headers, pathList, verifyCert, verifyHost, useTextParsing, results);
+   return queryWebService(WebServiceRequestType::PARAMETER, url, requestTimeout, retentionTime, login, password, authType, headers,
+            pathList, verifyCert, verifyHost, forcePlainTextParser, results);
 }
 
 /**

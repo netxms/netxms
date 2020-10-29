@@ -74,7 +74,7 @@ SNMPTableColumnDefinition::SNMPTableColumnDefinition(NXCPMessage *msg, UINT32 ba
 
    if (msg->isFieldExist(baseId + 2))
    {
-      UINT32 oid[256];
+      uint32_t oid[256];
       size_t len = msg->getFieldAsInt32Array(baseId + 2, 256, oid);
       if (len > 0)
       {
