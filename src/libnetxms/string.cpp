@@ -295,27 +295,27 @@ bool String::endsWith(const TCHAR *s) const
 /**
  * Split string
  */
-StringList *String::split(const TCHAR *separator) const
+StringList *String::split(TCHAR *str, size_t len, const TCHAR *separator)
 {
    StringList *result = new StringList();
 
    size_t slen = _tcslen(separator);
    if (slen == 0)
    {
-      result->add(CHECK_NULL(m_buffer));
+      result->add(CHECK_NULL(str));
       return result;
    }
-   if (m_length < slen)
+   if (len < slen)
    {
       result->add(_T(""));
       return result;
    }
 
-   TCHAR *curr = m_buffer;
+   TCHAR *curr = str;
    while(true)
    {
       TCHAR *next = _tcsstr(curr, separator);
-      if (next == NULL)
+      if (next == nullptr)
       {
          result->add(curr);
          break;

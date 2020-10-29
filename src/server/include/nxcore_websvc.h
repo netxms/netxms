@@ -26,9 +26,9 @@
 /**
  * Web service flags
  */
-#define WS_FLAG_VERIFY_CERTIFICATE  1
-#define WS_FLAG_VERIFY_HOST         2
-#define WS_FLAG_USE_TEXT_PARSING    4
+#define WSF_VERIFY_CERTIFICATE      0x0001
+#define WSF_VERIFY_HOST             0x0002
+#define WSF_FORCE_PLAIN_TEXT_PARSER 0x0004
 
 /**
  * Web service definition
@@ -72,9 +72,9 @@ public:
    uint32_t getCacheRetentionTime() const { return m_cacheRetentionTime; }
    uint32_t getRequestTimeout() const { return m_requestTimeout; }
    const StringMap& getHeaders() const { return m_headers; }
-   bool isVerifyCertificate() const { return (m_flags & WS_FLAG_VERIFY_CERTIFICATE) > 0; }
-   bool isVerifyHost() const { return (m_flags & WS_FLAG_VERIFY_HOST) > 0; }
-   bool isTextParsingUsed() const { return (m_flags & WS_FLAG_USE_TEXT_PARSING) > 0; }
+   bool isVerifyCertificate() const { return (m_flags & WSF_VERIFY_CERTIFICATE) != 0; }
+   bool isVerifyHost() const { return (m_flags & WSF_VERIFY_HOST) != 0; }
+   bool isForcePlainTextParser() const { return (m_flags & WSF_FORCE_PLAIN_TEXT_PARSER) != 0; }
    uint32_t getFlags() const { return m_flags; }
 };
 

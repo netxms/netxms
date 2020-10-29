@@ -1048,9 +1048,10 @@ public:
 	String left(size_t len) const { return substring(0, static_cast<ssize_t>(len)); }
    String right(size_t len) const { return substring((m_length > len) ? m_length - len : 0, static_cast<ssize_t>(len)); }
 
-   StringList *split(const TCHAR *separator) const;
+   ssize_t find(const TCHAR *str, size_t start = 0) const;
 
-	ssize_t find(const TCHAR *str, size_t start = 0) const;
+   StringList *split(const TCHAR *separator) const { return String::split(m_buffer, m_length, separator); }
+   static StringList *split(TCHAR *str, size_t len, const TCHAR *separator);
 };
 
 /**
