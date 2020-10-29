@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1054,11 +1054,11 @@ size_t NXCPMessage::getFieldAsBinary(UINT32 fieldId, BYTE *pBuffer, size_t buffe
 {
    size_t size;
    void *value = get(fieldId, NXCP_DT_BINARY);
-   if (value != NULL)
+   if (value != nullptr)
    {
-      size = *((UINT32 *)value);
-      if (pBuffer != NULL)
-         memcpy(pBuffer, (BYTE *)value + 4, std::min(bufferSize, size));
+      size = *static_cast<uint32_t*>(value);
+      if (pBuffer != nullptr)
+         memcpy(pBuffer, static_cast<BYTE*>(value) + 4, std::min(bufferSize, size));
    }
    else
    {
@@ -1322,12 +1322,14 @@ void NXCPMessage::setFieldFromInt32Array(uint32_t fieldId, const IntegerArray<ui
 }
 
 /**
- * get binary field as an array of 32 bit unsigned integers
+ * Get binary field as an array of 32 bit unsigned integers. Returns number of elements copied into buffer.
  */
 size_t NXCPMessage::getFieldAsInt32Array(uint32_t fieldId, size_t numElements, uint32_t *buffer) const
 {
    size_t size = getFieldAsBinary(fieldId, reinterpret_cast<BYTE*>(buffer), numElements * sizeof(uint32_t));
    size /= sizeof(uint32_t);   // Convert bytes to elements
+   if (size > numElements)
+      size = numElements;
    for(size_t i = 0; i < size; i++)
       buffer[i] = ntohl(buffer[i]);
    return size;
