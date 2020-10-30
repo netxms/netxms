@@ -25,19 +25,18 @@
 /**
  * Check that given node is inside at least one container or cluster
  */
-static bool NodeInContainer(DWORD id)
+static bool NodeInContainer(uint32_t id)
 {
-	TCHAR query[256];
-	DB_RESULT hResult;
-	bool result = false;
+   bool result = false;
 
-	_sntprintf(query, 256, _T("SELECT container_id FROM container_members WHERE object_id=%d"), id);
-	hResult = SQLSelect(query);
-	if (hResult != NULL)
-	{
-		result = (DBGetNumRows(hResult) > 0);
-		DBFreeResult(hResult);
-	}
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT container_id FROM container_members WHERE object_id=%d"), id);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult != nullptr)
+   {
+      result = (DBGetNumRows(hResult) > 0);
+      DBFreeResult(hResult);
+   }
 
 	if (!result)
 	{
@@ -50,7 +49,7 @@ static bool NodeInContainer(DWORD id)
 		}
 	}
 
-	return result;
+   return result;
 }
 
 /**
@@ -122,7 +121,7 @@ static void CheckMissingObjectProperties(const TCHAR *table, const TCHAR *classN
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("SELECT o.id FROM %s o LEFT OUTER JOIN object_properties p ON p.object_id = o.id WHERE p.name IS NULL"), table);
    DB_RESULT hResult = SQLSelect(query);
-   if (hResult == NULL)
+   if (hResult == nullptr)
       return;
 
    int count = DBGetNumRows(hResult);
@@ -139,16 +138,19 @@ static void CheckMissingObjectProperties(const TCHAR *table, const TCHAR *classN
 
          TCHAR guidText[128];
          _sntprintf(query, 1024,
-                    _T("INSERT INTO object_properties (object_id,guid,name,")
-                    _T("status,is_deleted,is_system,inherit_access_rights,")
-                    _T("last_modified,status_calc_alg,status_prop_alg,")
-                    _T("status_fixed_val,status_shift,status_translation,")
-                    _T("status_single_threshold,status_thresholds,location_type,")
-                    _T("latitude,longitude,location_accuracy,location_timestamp,")
-                    _T("image,submap_id,state_before_maint,maint_event_id,flags,state) VALUES ")
-                    _T("(%d,'%s','lost_%s_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
-                    _T("'0.000000','0.000000',0,0,'00000000-0000-0000-0000-000000000000',0,'0',0,0,0)"),
-                    (int)id, _uuid_to_string(guid, guidText), className, (int)id, TIME_T_FCAST(time(NULL)));
+               _T("INSERT INTO object_properties (object_id,guid,name,")
+               _T("status,is_deleted,is_system,inherit_access_rights,")
+               _T("last_modified,status_calc_alg,status_prop_alg,")
+               _T("status_fixed_val,status_shift,status_translation,")
+               _T("status_single_threshold,status_thresholds,location_type,")
+               _T("latitude,longitude,location_accuracy,location_timestamp,")
+               _T("map_image,submap_id,state_before_maint,maint_event_id,flags,")
+               _T("state,category,creation_time,maint_initiator) VALUES ")
+               _T("(%u,'%s','lost_%s_%u',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
+               _T("'0.000000','0.000000',0,0,'00000000-0000-0000-0000-000000000000',0,'0',0,0,")
+               _T("0,0,") TIME_T_FMT _T(",0)"),
+               id, _uuid_to_string(guid, guidText), className, id,
+               TIME_T_FCAST(time(nullptr)), TIME_T_FCAST(time(nullptr)));
          if (SQLQuery(query))
             g_dbCheckFixes++;
       }
