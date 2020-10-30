@@ -159,8 +159,11 @@ void SNMP_SecurityContext::setContextNameA(const char *name)
  */
 void SNMP_SecurityContext::setSecurityModel(SNMP_SecurityModel model)
 {
-   m_securityModel = model;
-   m_validKeys = false;
+   if (m_securityModel != model)
+   {
+      m_securityModel = model;
+      m_validKeys = false;
+   }
 }
 
 /**
@@ -168,8 +171,8 @@ void SNMP_SecurityContext::setSecurityModel(SNMP_SecurityModel model)
  */
 void SNMP_SecurityContext::setAuthName(const char *name)
 {
-	MemFree(m_authName);
-	m_authName = MemCopyStringA(CHECK_NULL_EX_A(name));
+   MemFree(m_authName);
+   m_authName = MemCopyStringA(CHECK_NULL_EX_A(name));
 }
 
 /**
@@ -197,12 +200,43 @@ void SNMP_SecurityContext::setPrivPassword(const char *password)
 }
 
 /**
+ * Set authentication method
+ */
+void SNMP_SecurityContext::setAuthMethod(SNMP_AuthMethod method)
+{
+   if (m_authMethod == method)
+      return;
+   m_authMethod = method;
+   m_validKeys = false;
+}
+
+/**
+ * Set privacy method
+ */
+void SNMP_SecurityContext::setPrivMethod(SNMP_EncryptionMethod method)
+{
+   if (m_privMethod == method)
+      return;
+   m_privMethod = method;
+   m_validKeys = false;
+}
+
+/**
  * Set authoritative engine ID
  */
 void SNMP_SecurityContext::setAuthoritativeEngine(const SNMP_Engine &engine)
 {
-	m_authoritativeEngine = engine;
-   m_validKeys = false;
+   if (m_authoritativeEngine.equals(engine))
+   {
+      // Do not invalidate keys if engine ID was not changed and only update boot count and time
+      m_authoritativeEngine.setBoots(engine.getBoots());
+      m_authoritativeEngine.setTime(engine.getTime());
+   }
+   else
+   {
+      m_authoritativeEngine = engine;
+      m_validKeys = false;
+   }
 }
 
 /**
@@ -243,7 +277,7 @@ static inline void GenerateUserKey(const char *password, const SNMP_Engine& auth
  */
 void SNMP_SecurityContext::recalculateKeys()
 {
-   if (m_securityModel != SNMP_SECURITY_MODEL_USM)
+   if ((m_securityModel != SNMP_SECURITY_MODEL_USM) || m_validKeys)
       return;  // no need to recalculate keys
 
 	const char *authPassword = (m_authPassword != nullptr) ? m_authPassword : "";

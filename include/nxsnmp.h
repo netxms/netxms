@@ -441,7 +441,7 @@ class LIBNXSNMP_EXPORTABLE SNMP_Variable
 {
 private:
    SNMP_ObjectId m_name;
-   UINT32 m_type;
+   uint32_t m_type;
    size_t m_valueLength;
    BYTE *m_value;
 
@@ -459,7 +459,7 @@ public:
    size_t encode(BYTE *buffer, size_t bufferSize) const;
 
    const SNMP_ObjectId& getName() const { return m_name; }
-   UINT32 getType() const { return m_type; }
+   uint32_t getType() const { return m_type; }
    bool isInteger() const;
    bool isFloat() const;
    bool isString() const;
@@ -506,8 +506,12 @@ public:
 	int getBoots() const { return m_engineBoots; }
 	int getTime() const { return m_engineTime; }
 
+	bool equals(const SNMP_Engine& e) const { return (m_idLen == e.m_idLen) && !memcmp(m_id, e.m_id, m_idLen); }
+
 	void setBoots(int boots) { m_engineBoots = boots; }
 	void setTime(int engineTime) { m_engineTime = engineTime; }
+
+	String toString() const;
 };
 
 /**
@@ -559,8 +563,8 @@ public:
    void setUser(const char *user) { setAuthName(user); }
    void setAuthPassword(const char *password);
    void setPrivPassword(const char *password);
-   void setAuthMethod(SNMP_AuthMethod method) { m_authMethod = method; m_validKeys = false; }
-   void setPrivMethod(SNMP_EncryptionMethod method) { m_privMethod = method; m_validKeys = false; }
+   void setAuthMethod(SNMP_AuthMethod method);
+   void setPrivMethod(SNMP_EncryptionMethod method);
    void setSecurityModel(SNMP_SecurityModel model);
    void setContextName(const TCHAR *name);
 #ifdef UNICODE

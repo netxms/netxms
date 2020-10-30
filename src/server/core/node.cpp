@@ -384,7 +384,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("rack_image_rear,agent_id,agent_cert_subject,hypervisor_type,hypervisor_info,icmp_poll_mode,")
       _T("chassis_placement_config,vendor,product_code,product_name,product_version,serial_number,cip_device_type,")
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
-      _T("agent_cert_mapping_data FROM nodes WHERE id=?"));
+      _T("agent_cert_mapping_data,snmp_engine_id FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -425,16 +425,24 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_snmpPort = static_cast<uint16_t>(DBGetFieldLong(hResult, 0, 16));
 
    // SNMP authentication parameters
-   char snmpAuthObject[256], snmpAuthPassword[256], snmpPrivPassword[256];
+   char snmpAuthObject[256], snmpAuthPassword[256], snmpPrivPassword[256], snmpEngineId[256];
    DBGetFieldA(hResult, 0, 17, snmpAuthObject, 256);
    DBGetFieldA(hResult, 0, 18, snmpAuthPassword, 256);
    DBGetFieldA(hResult, 0, 19, snmpPrivPassword, 256);
    int snmpMethods = DBGetFieldLong(hResult, 0, 20);
+   DBGetFieldA(hResult, 0, 72, snmpEngineId, 256);
    delete m_snmpSecurity;
    if (m_snmpVersion == SNMP_VERSION_3)
    {
       m_snmpSecurity = new SNMP_SecurityContext(snmpAuthObject, snmpAuthPassword, snmpPrivPassword,
                static_cast<SNMP_AuthMethod>(snmpMethods & 0xFF), static_cast<SNMP_EncryptionMethod>(snmpMethods >> 8));
+      if (snmpEngineId[0] != 0)
+      {
+         BYTE engineId[128];
+         size_t engineIdLen = StrToBinA(snmpEngineId, engineId, 128);
+         if (engineIdLen > 0)
+            m_snmpSecurity->setAuthoritativeEngine(SNMP_Engine(engineId, engineIdLen, 0, 0));
+      }
       m_snmpSecurity->recalculateKeys();
    }
    else
@@ -867,7 +875,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("agent_cert_subject"), _T("hypervisor_type"), _T("hypervisor_info"), _T("icmp_poll_mode"), _T("chassis_placement_config"),
          _T("vendor"), _T("product_code"), _T("product_name"), _T("product_version"), _T("serial_number"), _T("cip_device_type"),
          _T("cip_status"), _T("cip_state"), _T("eip_proxy"), _T("eip_port"), _T("hardware_id"), _T("cip_vendor_code"),
-         _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"),
+         _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"), _T("snmp_engine_id"),
          nullptr
       };
 
@@ -986,7 +994,15 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 70, DB_SQLTYPE_INTEGER, m_cipVendorCode);
          DBBind(hStmt, 71, DB_SQLTYPE_VARCHAR, agentCertMappingMethod, DB_BIND_STATIC);
          DBBind(hStmt, 72, DB_SQLTYPE_VARCHAR, m_agentCertMappingData, DB_BIND_STATIC);
-         DBBind(hStmt, 73, DB_SQLTYPE_INTEGER, m_id);
+         if (m_snmpSecurity != nullptr)
+         {
+            DBBind(hStmt, 73, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthoritativeEngine().toString(), DB_BIND_TRANSIENT);
+         }
+         else
+         {
+            DBBind(hStmt, 73, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+         }
+         DBBind(hStmt, 74, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -1142,7 +1158,7 @@ bool Node::saveRuntimeData(DB_HANDLE hdb)
    if ((m_lastAgentCommTime == NEVER) && (m_syslogMessageCount == 0) && (m_snmpTrapCount == 0))
       return true;
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE nodes SET last_agent_comm_time=?,syslog_msg_count=?,snmp_trap_count=? WHERE id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE nodes SET last_agent_comm_time=?,syslog_msg_count=?,snmp_trap_count=?,snmp_engine_id=? WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -1150,7 +1166,11 @@ bool Node::saveRuntimeData(DB_HANDLE hdb)
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_lastAgentCommTime);
    DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, m_syslogMessageCount);
    DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, m_snmpTrapCount);
-   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
+   if (m_snmpSecurity != nullptr)
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthoritativeEngine().toString(), DB_BIND_TRANSIENT);
+   else
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_id);
    unlockProperties();
 
    bool success = DBExecute(hStmt);

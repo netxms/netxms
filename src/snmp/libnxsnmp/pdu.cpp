@@ -793,7 +793,7 @@ bool SNMP_PDU::parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext
 			if (!parseV3SecurityUsm(pbCurrPos, dwLength, rawData))
 				return false;
 
-			if (engineIdAutoupdate && (m_authoritativeEngine.getIdLen() > 0) && (securityContext != NULL))
+			if (engineIdAutoupdate && (m_authoritativeEngine.getIdLen() > 0) && (securityContext != nullptr))
 			{
 				securityContext->setAuthoritativeEngine(m_authoritativeEngine);
 			}

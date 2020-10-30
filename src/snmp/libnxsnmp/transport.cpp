@@ -78,7 +78,8 @@ void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
 	delete m_securityContext;
 	m_securityContext = ctx;
    delete m_authoritativeEngine;
-   m_authoritativeEngine = ((m_securityContext != NULL) && (m_securityContext->getAuthoritativeEngine().getIdLen() > 0)) ? new SNMP_Engine(&m_securityContext->getAuthoritativeEngine()) : NULL;
+   m_authoritativeEngine = ((m_securityContext != nullptr) && (m_securityContext->getAuthoritativeEngine().getIdLen() > 0)) ?
+            new SNMP_Engine(&m_securityContext->getAuthoritativeEngine()) : nullptr;
    delete_and_null(m_contextEngine);
 }
 
@@ -87,19 +88,19 @@ void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
  */
 uint32_t SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, uint32_t timeout, int numRetries)
 {
-   if ((request == NULL) || (response == NULL) || (numRetries <= 0))
+   if ((request == nullptr) || (response == nullptr) || (numRetries <= 0))
       return SNMP_ERR_PARAM;
 
-   *response = NULL;
+   *response = nullptr;
 
 	// Create dummy context
-	if (m_securityContext == NULL)
+	if (m_securityContext == nullptr)
 		m_securityContext = new SNMP_SecurityContext();
 
 	// Update SNMP V3 request with cached context engine id
 	if (request->getVersion() == SNMP_VERSION_3)
 	{
-		if ((request->getContextEngineIdLength() == 0) && (m_contextEngine != NULL))
+		if ((request->getContextEngineIdLength() == 0) && (m_contextEngine != nullptr))
 		{
 			request->setContextEngineId(m_contextEngine->getId(), m_contextEngine->getIdLen());
 		}
@@ -129,21 +130,21 @@ retry_wait:
       int bytes = readMessage(response, remainingWaitTime);
       if (bytes > 0)
       {
-         if (*response != NULL)
+         if (*response != nullptr)
          {
             if (request->getVersion() == SNMP_VERSION_3)
             {
                if ((*response)->getMessageId() == request->getMessageId())
                {
                   // Cache authoritative engine ID
-                  if ((m_authoritativeEngine == NULL) && ((*response)->getAuthoritativeEngine().getIdLen() != 0))
+                  if ((m_authoritativeEngine == nullptr) && ((*response)->getAuthoritativeEngine().getIdLen() != 0))
                   {
                      m_authoritativeEngine = new SNMP_Engine((*response)->getAuthoritativeEngine());
                      m_securityContext->setAuthoritativeEngine(*m_authoritativeEngine);
                   }
 
                   // Cache context engine ID
-                  if (((m_contextEngine == NULL) || (m_contextEngine->getIdLen() == 0)) && ((*response)->getContextEngineIdLength() != 0))
+                  if (((m_contextEngine == nullptr) || (m_contextEngine->getIdLen() == 0)) && ((*response)->getContextEngineIdLength() != 0))
                   {
                      delete m_contextEngine;
                      m_contextEngine = new SNMP_Engine((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
@@ -193,7 +194,7 @@ retry_wait:
                      else if (rc == SNMP_ERR_TIME_WINDOW)
                      {
                         // Update cached authoritative engine with new boots and time
-                        assert(m_authoritativeEngine != NULL);
+                        assert(m_authoritativeEngine != nullptr);
                         if ((timeSyncRetries > 0) &&
                             (((*response)->getAuthoritativeEngine().getBoots() != m_authoritativeEngine->getBoots()) ||
                              ((*response)->getAuthoritativeEngine().getTime() != m_authoritativeEngine->getTime())))
