@@ -382,6 +382,6 @@ bool LIBNXAGENT_EXPORTABLE GetSystemHardwareId(BYTE *hwid)
       success = true;
    }
 
-   SHA1Finish(&ctx, hwid);
+   SHA1Final(&ctx, hwid);
    return success;
 }
