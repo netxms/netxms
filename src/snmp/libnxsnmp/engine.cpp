@@ -72,3 +72,13 @@ SNMP_Engine::SNMP_Engine(const SNMP_Engine& src)
 SNMP_Engine::~SNMP_Engine()
 {
 }
+
+/**
+ * Convert to string
+ */
+String SNMP_Engine::toString() const
+{
+   TCHAR buffer[1024];
+   BinToStr(m_id, m_idLen, buffer);
+   return String(buffer);
+}

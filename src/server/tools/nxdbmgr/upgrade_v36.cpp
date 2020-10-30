@@ -24,6 +24,17 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 36.10 to 36.11
+ */
+static bool H_UpgradeFromV10()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD snmp_engine_id varchar(255)")));
+   CHK_EXEC(SetSchemaLevelForMajorVersion(36, 11));
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 36.9 to 36.10
  */
 static bool H_UpgradeFromV9()
@@ -246,6 +257,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 10, 36, 11, H_UpgradeFromV10 },
    { 9,  36, 10, H_UpgradeFromV9  },
    { 8,  36, 9,  H_UpgradeFromV8  },
    { 7,  36, 8,  H_UpgradeFromV7  },

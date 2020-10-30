@@ -360,6 +360,7 @@ CREATE TABLE nodes
   usm_priv_password varchar(127) null,
   usm_methods integer not null,
   snmp_oid varchar(255) null,
+  snmp_engine_id varchar(255) null,
   secret varchar(88) null,
   agent_port integer not null,
   status_poll_type integer not null,
