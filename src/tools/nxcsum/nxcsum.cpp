@@ -88,11 +88,11 @@ static bool PrintHash(const char *fileName, size_t digestSize, void (*init)(Hash
 
 #define HashInit(t) t##Init
 #define HashUpdate(t) t##Update
-#define HashFinish(t) t##Finish
+#define HashFinal(t) t##Final
 #define HashSize(t) t##_DIGEST_SIZE
 
 #define CallPrintHash(f, t) \
-   PrintHash(f, HashSize(t), (void (*)(HashState*))HashInit(t), (void (*)(HashState*, BYTE*, size_t))HashUpdate(t), (void (*)(HashState*, BYTE*))HashFinish(t));
+   PrintHash(f, HashSize(t), (void (*)(HashState*))HashInit(t), (void (*)(HashState*, BYTE*, size_t))HashUpdate(t), (void (*)(HashState*, BYTE*))HashFinal(t));
 
 /**
  * main

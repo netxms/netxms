@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -26,6 +26,11 @@
 #include "sha1.h"
 #include "sha2.h"
 
+#ifdef _WITH_ENCRYPTION
+#include <openssl/md5.h>
+#include <openssl/sha.h>
+#endif
+
 #if defined(_WIN32) && !defined(UNDER_CE)
 # include <io.h>
 #endif
@@ -38,7 +43,7 @@
 /**
  * Table for CRC calculation
  */
-static DWORD crctab[256]=
+static uint32_t crctab[256]=
 {
 	0x00000000, 
 	0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f, 
@@ -139,7 +144,11 @@ bool LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *fileName, uint32_t *re
  */
 void LIBNETXMS_EXPORTABLE MD5Init(MD5_STATE *state)
 {
-   I_md5_init((md5_state_t *)state);
+#ifdef _WITH_ENCRYPTION
+   MD5_Init(reinterpret_cast<MD5_CTX*>(state));
+#else
+   I_md5_init(reinterpret_cast<md5_state_t*>(state));
+#endif
 }
 
 /**
@@ -147,15 +156,23 @@ void LIBNETXMS_EXPORTABLE MD5Init(MD5_STATE *state)
  */
 void LIBNETXMS_EXPORTABLE MD5Update(MD5_STATE *state, const void *data, size_t size)
 {
-   I_md5_append((md5_state_t *)state, (const md5_byte_t *)data, static_cast<unsigned int>(size));
+#ifdef _WITH_ENCRYPTION
+   MD5_Update(reinterpret_cast<MD5_CTX*>(state), data, static_cast<unsigned int>(size));
+#else
+   I_md5_append(reinterpret_cast<md5_state_t*>(state), static_cast<const md5_byte_t*>(data), static_cast<unsigned int>(size));
+#endif
 }
 
 /**
  * Finish MD5 calculation
  */
-void LIBNETXMS_EXPORTABLE MD5Finish(MD5_STATE *state, BYTE *hash)
+void LIBNETXMS_EXPORTABLE MD5Final(MD5_STATE *state, BYTE *hash)
 {
-   I_md5_finish((md5_state_t *)state, (md5_byte_t *)hash);
+#ifdef _WITH_ENCRYPTION
+   MD5_Final(hash, reinterpret_cast<MD5_CTX*>(state));
+#else
+   I_md5_finish(reinterpret_cast<md5_state_t*>(state), reinterpret_cast<md5_byte_t*>(hash));
+#endif
 }
 
 /**
@@ -163,10 +180,14 @@ void LIBNETXMS_EXPORTABLE MD5Finish(MD5_STATE *state, BYTE *hash)
  */
 void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const void *data, size_t size, BYTE *hash)
 {
+#ifdef _WITH_ENCRYPTION
+   MD5(static_cast<const unsigned char*>(data), size, hash);
+#else
 	md5_state_t state;
 	I_md5_init(&state);
 	I_md5_append(&state, (const md5_byte_t *)data, static_cast<unsigned int>(size));
 	I_md5_finish(&state, (md5_byte_t *)hash);
+#endif
 }
 
 /**
@@ -174,7 +195,11 @@ void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const void *data, size_t size, BYTE *
  */
 void LIBNETXMS_EXPORTABLE SHA1Init(SHA1_STATE *state)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA1_Init(reinterpret_cast<SHA_CTX*>(state));
+#else
    I_SHA1Init(reinterpret_cast<SHA1_CTX*>(state));
+#endif
 }
 
 /**
@@ -182,15 +207,23 @@ void LIBNETXMS_EXPORTABLE SHA1Init(SHA1_STATE *state)
  */
 void LIBNETXMS_EXPORTABLE SHA1Update(SHA1_STATE *state, const void *data, size_t size)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA1_Update(reinterpret_cast<SHA_CTX*>(state), data, static_cast<unsigned int>(size));
+#else
    I_SHA1Update(reinterpret_cast<SHA1_CTX*>(state), static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
+#endif
 }
 
 /**
  * Finish SHA1 calculation
  */
-void LIBNETXMS_EXPORTABLE SHA1Finish(SHA1_STATE *state, BYTE *hash)
+void LIBNETXMS_EXPORTABLE SHA1Final(SHA1_STATE *state, BYTE *hash)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA1_Final(hash, reinterpret_cast<SHA_CTX*>(state));
+#else
    I_SHA1Final(reinterpret_cast<SHA1_CTX*>(state), hash);
+#endif
 }
 
 /**
@@ -198,10 +231,14 @@ void LIBNETXMS_EXPORTABLE SHA1Finish(SHA1_STATE *state, BYTE *hash)
  */
 void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(const void *data, size_t size, BYTE *hash)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA1(static_cast<const unsigned char*>(data), size, hash);
+#else
    SHA1_CTX context;
    I_SHA1Init(&context);
    I_SHA1Update(&context, static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
    I_SHA1Final(&context, hash);
+#endif
 }
 
 /**
@@ -209,7 +246,11 @@ void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(const void *data, size_t size, BYTE 
  */
 void LIBNETXMS_EXPORTABLE SHA224Init(SHA224_STATE *state)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA224_Init(reinterpret_cast<SHA256_CTX*>(state));
+#else
    I_sha224_init(reinterpret_cast<sha224_ctx*>(state));
+#endif
 }
 
 /**
@@ -217,26 +258,38 @@ void LIBNETXMS_EXPORTABLE SHA224Init(SHA224_STATE *state)
  */
 void LIBNETXMS_EXPORTABLE SHA224Update(SHA224_STATE *state, const void *data, size_t size)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA224_Update(reinterpret_cast<SHA256_CTX*>(state), data, static_cast<unsigned int>(size));
+#else
    I_sha224_update(reinterpret_cast<sha224_ctx*>(state), static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
+#endif
 }
 
 /**
  * Finish SHA256 calculation
  */
-void LIBNETXMS_EXPORTABLE SHA224Finish(SHA224_STATE *state, BYTE *hash)
+void LIBNETXMS_EXPORTABLE SHA224Final(SHA224_STATE *state, BYTE *hash)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA224_Final(hash, reinterpret_cast<SHA256_CTX*>(state));
+#else
    I_sha224_final(reinterpret_cast<sha224_ctx*>(state), hash);
+#endif
 }
 
 /**
  * Calculate SHA2-224 hash for array of bytes
  */
-void LIBNETXMS_EXPORTABLE CalculateSHA224Hash(const void *data, size_t len, BYTE *hash)
+void LIBNETXMS_EXPORTABLE CalculateSHA224Hash(const void *data, size_t size, BYTE *hash)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA224(static_cast<const unsigned char*>(data), size, hash);
+#else
    sha224_ctx ctx;
    I_sha224_init(&ctx);
-   I_sha224_update(&ctx, static_cast<const unsigned char*>(data), static_cast<unsigned int>(len));
+   I_sha224_update(&ctx, static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
    I_sha224_final(&ctx, hash);
+#endif
 }
 
 /**
@@ -244,7 +297,11 @@ void LIBNETXMS_EXPORTABLE CalculateSHA224Hash(const void *data, size_t len, BYTE
  */
 void LIBNETXMS_EXPORTABLE SHA256Init(SHA256_STATE *state)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA256_Init(reinterpret_cast<SHA256_CTX*>(state));
+#else
    I_sha256_init(reinterpret_cast<sha256_ctx*>(state));
+#endif
 }
 
 /**
@@ -252,27 +309,39 @@ void LIBNETXMS_EXPORTABLE SHA256Init(SHA256_STATE *state)
  */
 void LIBNETXMS_EXPORTABLE SHA256Update(SHA256_STATE *state, const void *data, size_t size)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA256_Update(reinterpret_cast<SHA256_CTX*>(state), data, static_cast<unsigned int>(size));
+#else
    I_sha256_update(reinterpret_cast<sha256_ctx*>(state), static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
+#endif
 }
 
 /**
  * Finish SHA256 calculation
  */
-void LIBNETXMS_EXPORTABLE SHA256Finish(SHA256_STATE *state, BYTE *hash)
+void LIBNETXMS_EXPORTABLE SHA256Final(SHA256_STATE *state, BYTE *hash)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA256_Final(hash, reinterpret_cast<SHA256_CTX*>(state));
+#else
    I_sha256_final(reinterpret_cast<sha256_ctx*>(state), hash);
+#endif
 }
 
 
 /**
  * Calculate SHA2-256 hash for array of bytes
  */
-void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const void *data, size_t len, BYTE *hash)
+void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const void *data, size_t size, BYTE *hash)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA256(static_cast<const unsigned char*>(data), size, hash);
+#else
    sha256_ctx ctx;
    I_sha256_init(&ctx);
-   I_sha256_update(&ctx, static_cast<const unsigned char*>(data), static_cast<unsigned int>(len));
+   I_sha256_update(&ctx, static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
    I_sha256_final(&ctx, hash);
+#endif
 }
 
 /**
@@ -280,7 +349,11 @@ void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const void *data, size_t len, BYTE
  */
 void LIBNETXMS_EXPORTABLE SHA384Init(SHA384_STATE *state)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA384_Init(reinterpret_cast<SHA512_CTX*>(state));
+#else
    I_sha384_init(reinterpret_cast<sha384_ctx*>(state));
+#endif
 }
 
 /**
@@ -288,26 +361,38 @@ void LIBNETXMS_EXPORTABLE SHA384Init(SHA384_STATE *state)
  */
 void LIBNETXMS_EXPORTABLE SHA384Update(SHA384_STATE *state, const void *data, size_t size)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA384_Update(reinterpret_cast<SHA512_CTX*>(state), data, static_cast<unsigned int>(size));
+#else
    I_sha384_update(reinterpret_cast<sha384_ctx*>(state), static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
+#endif
 }
 
 /**
  * Finish SHA384 calculation
  */
-void LIBNETXMS_EXPORTABLE SHA384Finish(SHA384_STATE *state, BYTE *hash)
+void LIBNETXMS_EXPORTABLE SHA384Final(SHA384_STATE *state, BYTE *hash)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA384_Final(hash, reinterpret_cast<SHA512_CTX*>(state));
+#else
    I_sha384_final(reinterpret_cast<sha384_ctx*>(state), hash);
+#endif
 }
 
 /**
  * Calculate SHA2-384 hash for array of bytes
  */
-void LIBNETXMS_EXPORTABLE CalculateSHA384Hash(const void *data, size_t len, BYTE *hash)
+void LIBNETXMS_EXPORTABLE CalculateSHA384Hash(const void *data, size_t size, BYTE *hash)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA384(static_cast<const unsigned char*>(data), size, hash);
+#else
    sha384_ctx ctx;
    I_sha384_init(&ctx);
-   I_sha384_update(&ctx, static_cast<const unsigned char*>(data), static_cast<unsigned int>(len));
+   I_sha384_update(&ctx, static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
    I_sha384_final(&ctx, hash);
+#endif
 }
 
 /**
@@ -315,7 +400,11 @@ void LIBNETXMS_EXPORTABLE CalculateSHA384Hash(const void *data, size_t len, BYTE
  */
 void LIBNETXMS_EXPORTABLE SHA512Init(SHA512_STATE *state)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA512_Init(reinterpret_cast<SHA512_CTX*>(state));
+#else
    I_sha512_init(reinterpret_cast<sha512_ctx*>(state));
+#endif
 }
 
 /**
@@ -323,32 +412,44 @@ void LIBNETXMS_EXPORTABLE SHA512Init(SHA512_STATE *state)
  */
 void LIBNETXMS_EXPORTABLE SHA512Update(SHA512_STATE *state, const void *data, size_t size)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA512_Update(reinterpret_cast<SHA512_CTX*>(state), data, static_cast<unsigned int>(size));
+#else
    I_sha512_update(reinterpret_cast<sha512_ctx*>(state), static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
+#endif
 }
 
 /**
  * Finish SHA512 calculation
  */
-void LIBNETXMS_EXPORTABLE SHA512Finish(SHA512_STATE *state, BYTE *hash)
+void LIBNETXMS_EXPORTABLE SHA512Final(SHA512_STATE *state, BYTE *hash)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA512_Final(hash, reinterpret_cast<SHA512_CTX*>(state));
+#else
    I_sha512_final(reinterpret_cast<sha512_ctx*>(state), hash);
+#endif
 }
 
 /**
  * Calculate SHA2-512 hash for array of bytes
  */
-void LIBNETXMS_EXPORTABLE CalculateSHA512Hash(const void *data, size_t len, BYTE *hash)
+void LIBNETXMS_EXPORTABLE CalculateSHA512Hash(const void *data, size_t size, BYTE *hash)
 {
+#ifdef _WITH_ENCRYPTION
+   SHA512(static_cast<const unsigned char*>(data), size, hash);
+#else
    sha512_ctx ctx;
    I_sha512_init(&ctx);
-   I_sha512_update(&ctx, static_cast<const unsigned char*>(data), static_cast<unsigned int>(len));
+   I_sha512_update(&ctx, static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
    I_sha512_final(&ctx, hash);
+#endif
 }
 
 /**
  * Calculate hash for repeated pattern in virtual buffer using provided hash function
  */
-template<typename C, void (*__Init)(C*), void (*__Update)(C*, const unsigned char*, unsigned int), void (*__Final)(C*, unsigned char*), size_t __blockSize>
+template<typename C, void (*__Init)(C*), void (*__Update)(C*, const void*, size_t), void (*__Final)(C*, BYTE*), size_t __blockSize>
 static inline void HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
    C context;
@@ -380,7 +481,7 @@ static inline void HashForPattern(const void *data, size_t patternSize, size_t f
  */
 void LIBNETXMS_EXPORTABLE MD5HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
-   HashForPattern<md5_state_t, I_md5_init, I_md5_append, I_md5_finish, 64>(data, patternSize, fullSize, hash);
+   HashForPattern<MD5_STATE, MD5Init, MD5Update, MD5Final, 64>(data, patternSize, fullSize, hash);
 }
 
 /**
@@ -388,7 +489,7 @@ void LIBNETXMS_EXPORTABLE MD5HashForPattern(const void *data, size_t patternSize
  */
 void LIBNETXMS_EXPORTABLE SHA1HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
-   HashForPattern<SHA1_CTX, I_SHA1Init, I_SHA1Update, I_SHA1Final, 64>(data, patternSize, fullSize, hash);
+   HashForPattern<SHA1_STATE, SHA1Init, SHA1Update, SHA1Final, 64>(data, patternSize, fullSize, hash);
 }
 
 /**
@@ -396,7 +497,7 @@ void LIBNETXMS_EXPORTABLE SHA1HashForPattern(const void *data, size_t patternSiz
  */
 void LIBNETXMS_EXPORTABLE SHA224HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
-   HashForPattern<sha224_ctx, I_sha224_init, I_sha224_update, I_sha224_final, SHA224_BLOCK_SIZE>(data, patternSize, fullSize, hash);
+   HashForPattern<SHA224_STATE, SHA224Init, SHA224Update, SHA224Final, SHA224_BLOCK_SIZE>(data, patternSize, fullSize, hash);
 }
 
 /**
@@ -404,7 +505,7 @@ void LIBNETXMS_EXPORTABLE SHA224HashForPattern(const void *data, size_t patternS
  */
 void LIBNETXMS_EXPORTABLE SHA256HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
-   HashForPattern<sha256_ctx, I_sha256_init, I_sha256_update, I_sha256_final, SHA256_BLOCK_SIZE>(data, patternSize, fullSize, hash);
+   HashForPattern<SHA256_STATE, SHA256Init, SHA256Update, SHA256Final, SHA256_BLOCK_SIZE>(data, patternSize, fullSize, hash);
 }
 
 /**
@@ -412,7 +513,7 @@ void LIBNETXMS_EXPORTABLE SHA256HashForPattern(const void *data, size_t patternS
  */
 void LIBNETXMS_EXPORTABLE SHA384HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
-   HashForPattern<sha384_ctx, I_sha384_init, I_sha384_update, I_sha384_final, SHA384_BLOCK_SIZE>(data, patternSize, fullSize, hash);
+   HashForPattern<SHA384_STATE, SHA384Init, SHA384Update, SHA384Final, SHA384_BLOCK_SIZE>(data, patternSize, fullSize, hash);
 }
 
 /**
@@ -420,13 +521,13 @@ void LIBNETXMS_EXPORTABLE SHA384HashForPattern(const void *data, size_t patternS
  */
 void LIBNETXMS_EXPORTABLE SHA512HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
-   HashForPattern<sha512_ctx, I_sha512_init, I_sha512_update, I_sha512_final, SHA512_BLOCK_SIZE>(data, patternSize, fullSize, hash);
+   HashForPattern<SHA512_STATE, SHA512Init, SHA512Update, SHA512Final, SHA512_BLOCK_SIZE>(data, patternSize, fullSize, hash);
 }
 
 /**
  * Calculate hash for given file with provided hash function
  */
-template<typename C, void (*__Init)(C*), void (*__Update)(C*, const unsigned char*, unsigned int), void (*__Final)(C*, unsigned char*)>
+template<typename C, void (*__Init)(C*), void (*__Update)(C*, const void*, size_t), void (*__Final)(C*, BYTE*)>
 static inline bool CalculateFileHash(const TCHAR *fileName, BYTE *hash)
 {
    bool success = false;
@@ -457,7 +558,7 @@ static inline bool CalculateFileHash(const TCHAR *fileName, BYTE *hash)
  */
 bool LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *fileName, BYTE *hash)
 {
-   return CalculateFileHash<md5_state_t, I_md5_init, I_md5_append, I_md5_finish>(fileName, hash);
+   return CalculateFileHash<MD5_STATE, MD5Init, MD5Update, MD5Final>(fileName, hash);
 }
 
 /**
@@ -465,7 +566,7 @@ bool LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *fileName, BYTE *hash
  */
 bool LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *fileName, BYTE *hash)
 {
-   return CalculateFileHash<SHA1_CTX, I_SHA1Init, I_SHA1Update, I_SHA1Final>(fileName, hash);
+   return CalculateFileHash<SHA1_STATE, SHA1Init, SHA1Update, SHA1Final>(fileName, hash);
 }
 
 /**
@@ -473,7 +574,7 @@ bool LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *fileName, BYTE *has
  */
 bool LIBNETXMS_EXPORTABLE CalculateFileSHA224Hash(const TCHAR *fileName, BYTE *hash)
 {
-   return CalculateFileHash<sha224_ctx, I_sha224_init, I_sha224_update, I_sha224_final>(fileName, hash);
+   return CalculateFileHash<SHA224_STATE, SHA224Init, SHA224Update, SHA224Final>(fileName, hash);
 }
 
 /**
@@ -481,7 +582,7 @@ bool LIBNETXMS_EXPORTABLE CalculateFileSHA224Hash(const TCHAR *fileName, BYTE *h
  */
 bool LIBNETXMS_EXPORTABLE CalculateFileSHA256Hash(const TCHAR *fileName, BYTE *hash)
 {
-   return CalculateFileHash<sha256_ctx, I_sha256_init, I_sha256_update, I_sha256_final>(fileName, hash);
+   return CalculateFileHash<SHA256_STATE, SHA256Init, SHA256Update, SHA256Final>(fileName, hash);
 }
 
 /**
@@ -489,7 +590,7 @@ bool LIBNETXMS_EXPORTABLE CalculateFileSHA256Hash(const TCHAR *fileName, BYTE *h
  */
 bool LIBNETXMS_EXPORTABLE CalculateFileSHA384Hash(const TCHAR *fileName, BYTE *hash)
 {
-   return CalculateFileHash<sha384_ctx, I_sha384_init, I_sha384_update, I_sha384_final>(fileName, hash);
+   return CalculateFileHash<SHA384_STATE, SHA384Init, SHA384Update, SHA384Final>(fileName, hash);
 }
 
 /**
@@ -497,5 +598,5 @@ bool LIBNETXMS_EXPORTABLE CalculateFileSHA384Hash(const TCHAR *fileName, BYTE *h
  */
 bool LIBNETXMS_EXPORTABLE CalculateFileSHA512Hash(const TCHAR *fileName, BYTE *hash)
 {
-   return CalculateFileHash<sha512_ctx, I_sha512_init, I_sha512_update, I_sha512_final>(fileName, hash);
+   return CalculateFileHash<SHA512_STATE, SHA512Init, SHA512Update, SHA512Final>(fileName, hash);
 }
