@@ -6,6 +6,8 @@
 	"ConditionWait",
 	"__1cNConditionWait6FpnSnetxms_condition_t_I_b_",
         "SleepAndCheckForShutdown",
+	"ThreadSleep",
+	"ThreadSleepMs",
 	"poll",
 	"select",
 	"accept",
