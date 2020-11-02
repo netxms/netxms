@@ -218,13 +218,13 @@ NXSL_LibraryScript::NXSL_LibraryScript()
 /**
  * Create NXSL Script
  */
-NXSL_LibraryScript::NXSL_LibraryScript(UINT32 id, uuid guid, const TCHAR *name, TCHAR *source)
+NXSL_LibraryScript::NXSL_LibraryScript(uint32_t id, uuid guid, const TCHAR *name, TCHAR *source)
 {
    m_id = id;
    m_guid = guid;
    _tcslcpy(m_name, name, 1024);
    m_source = source;
-   m_program = NXSLCompile(m_source, m_error, 1024, NULL);
+   m_program = NXSLCompile(m_source, m_error, 1024, nullptr);
 }
 
 /**

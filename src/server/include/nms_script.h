@@ -268,6 +268,7 @@ public:
    virtual void trace(int level, const TCHAR *text) override;
 
    virtual void configureVM(NXSL_VM *vm) override;
+   virtual NXSL_Value *getConstantValue(const NXSL_Identifier& name, NXSL_ValueManager *vm) override;
 
    void setConsole(CONSOLE_CTX console) { m_console = console; }
 };

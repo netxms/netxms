@@ -381,11 +381,19 @@ void NXSL_Environment::print(NXSL_Value *value)
  */
 void NXSL_Environment::configureVM(NXSL_VM *vm)
 {
-   vm->addConstant("NXSL::BuildTag", vm->createValue(NETXMS_BUILD_TAG));
-   vm->addConstant("NXSL::Version", vm->createValue(NETXMS_VERSION_STRING));
+}
+
+/**
+ * Get constant value known to this environment
+ */
+NXSL_Value *NXSL_Environment::getConstantValue(const NXSL_Identifier& name, NXSL_ValueManager *vm)
+{
+   NXSL_ENV_CONSTANT("NXSL::BuildTag", NETXMS_BUILD_TAG);
 #if WORDS_BIGENDIAN
-   vm->addConstant("NXSL::SystemIsBigEndian", vm->createValue(1));
+   NXSL_ENV_CONSTANT("NXSL::SystemIsBigEndian", 1);
 #else
-   vm->addConstant("NXSL::SystemIsBigEndian", vm->createValue(0));
+   NXSL_ENV_CONSTANT("NXSL::SystemIsBigEndian", 0);
 #endif
+   NXSL_ENV_CONSTANT("NXSL::Version", NETXMS_VERSION_STRING);
+   return nullptr;
 }

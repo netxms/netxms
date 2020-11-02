@@ -81,7 +81,7 @@ struct NXSL_VariablePtr
  */
 NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, NXSL_VariableSystemType type) : NXSL_RuntimeObject(vm)
 {
-   m_variables = NULL;
+   m_variables = nullptr;
 	m_type = type;
 	m_restorePointCount = 0;
 }
@@ -91,7 +91,7 @@ NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, NXSL_VariableSystemType ty
  */
 NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, const NXSL_VariableSystem *src) : NXSL_RuntimeObject(vm)
 {
-   m_variables = NULL;
+   m_variables = nullptr;
    m_type = src->m_type;
    m_restorePointCount = 0;
 
@@ -135,7 +135,7 @@ void NXSL_VariableSystem::merge(NXSL_VariableSystem *src, bool overwrite)
    HASH_ITER(hh, src->m_variables, var, tmp)
    {
       NXSL_Variable *targetVar = find(var->v.getName());
-      if (targetVar == NULL)
+      if (targetVar == nullptr)
       {
          create(var->v.getName(), m_vm->createValue(var->v.getValue()));
       }
@@ -162,9 +162,9 @@ static EnumerationCallbackResult AddVariableCallback(const void *key, void *valu
 /**
  * Add all values from given map
  */
-void NXSL_VariableSystem::addAll(NXSL_ValueHashMap<NXSL_Identifier> *src)
+void NXSL_VariableSystem::addAll(const NXSL_ValueHashMap<NXSL_Identifier>& src)
 {
-   src->forEach(AddVariableCallback, this);
+   src.forEach(AddVariableCallback, this);
 }
 
 /**
@@ -174,7 +174,7 @@ NXSL_Variable *NXSL_VariableSystem::find(const NXSL_Identifier& name)
 {
    NXSL_VariablePtr *var;
    HASH_FIND(hh, m_variables, name.value, name.length, var);
-   return (var != NULL) ? &var->v : NULL;
+   return (var != nullptr) ? &var->v : nullptr;
 }
 
 /**
@@ -183,7 +183,7 @@ NXSL_Variable *NXSL_VariableSystem::find(const NXSL_Identifier& name)
 NXSL_Variable *NXSL_VariableSystem::create(const NXSL_Identifier& name, NXSL_Value *value)
 {
    NXSL_VariablePtr *var = MemAllocStruct<NXSL_VariablePtr>();
-   NXSL_Variable *v = new (&var->v) NXSL_Variable(m_vm, name, (value != NULL) ? value : m_vm->createValue(), isConstant());
+   NXSL_Variable *v = new (&var->v) NXSL_Variable(m_vm, name, (value != nullptr) ? value : m_vm->createValue(), isConstant());
    HASH_ADD_KEYPTR(hh, m_variables, v->m_name.value, v->m_name.length, var);
    return v;
 }
@@ -191,7 +191,7 @@ NXSL_Variable *NXSL_VariableSystem::create(const NXSL_Identifier& name, NXSL_Val
 /**
  * Create restore point for variable reference
  */
-bool NXSL_VariableSystem::createVariableReferenceRestorePoint(UINT32 addr, NXSL_Identifier *identifier)
+bool NXSL_VariableSystem::createVariableReferenceRestorePoint(uint32_t addr, NXSL_Identifier *identifier)
 {
    if (m_restorePointCount >= MAX_VREF_RESTORE_POINTS)
       return false;
@@ -215,7 +215,7 @@ void NXSL_VariableSystem::restoreVariableReferences(ObjectArray<NXSL_Instruction
 /**
  * Dump all variables
  */
-void NXSL_VariableSystem::dump(FILE *fp)
+void NXSL_VariableSystem::dump(FILE *fp) const
 {
    NXSL_VariablePtr *var, *tmp;
    HASH_ITER(hh, m_variables, var, tmp)

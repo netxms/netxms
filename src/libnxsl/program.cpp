@@ -62,13 +62,10 @@ static const char *s_nxslCommandMnemonic[] =
 /**
  * Constructor
  */
-NXSL_Program::NXSL_Program() : NXSL_ValueManager()
+NXSL_Program::NXSL_Program() : NXSL_ValueManager(), m_instructionSet(256, 256, Ownership::True), m_constants(this, Ownership::True),
+         m_functions(64, 64, Ownership::True), m_requiredModules(0, 16, Ownership::True)
 {
-   m_instructionSet = new ObjectArray<NXSL_Instruction>(256, 256, Ownership::True);
-   m_constants = new NXSL_ValueHashMap<NXSL_Identifier>(this, Ownership::True);
-   m_functions = new ObjectArray<NXSL_Function>(16, 16, Ownership::True);
-   m_requiredModules = new ObjectArray<NXSL_ModuleImport>(4, 4, Ownership::True);
-   m_expressionVariables = NULL;
+   m_expressionVariables = nullptr;
 }
 
 /**
@@ -76,10 +73,6 @@ NXSL_Program::NXSL_Program() : NXSL_ValueManager()
  */
 NXSL_Program::~NXSL_Program()
 {
-   delete m_instructionSet;
-   delete m_constants;
-   delete m_functions;
-   delete m_requiredModules;
    delete m_expressionVariables;
 }
 
@@ -90,9 +83,9 @@ NXSL_Program::~NXSL_Program()
 bool NXSL_Program::addConstant(const NXSL_Identifier& name, NXSL_Value *value)
 {
    bool success = false;
-   if (!m_constants->contains(name))
+   if (!m_constants.contains(name))
    {
-      m_constants->set(name, value);
+      m_constants.set(name, value);
       success = true;
    }
    return success;
@@ -129,7 +122,7 @@ void NXSL_Program::disableExpressionVariables(int line)
 void NXSL_Program::registerExpressionVariable(const NXSL_Identifier& identifier)
 {
    if (m_expressionVariables != nullptr)
-      m_expressionVariables->add(new NXSL_IdentifierLocation(identifier, m_instructionSet->size()));
+      m_expressionVariables->add(new NXSL_IdentifierLocation(identifier, m_instructionSet.size()));
 }
 
 /**
@@ -174,14 +167,14 @@ void NXSL_Program::addPushVariableInstruction(const NXSL_Identifier& name, int l
  */
 void NXSL_Program::resolveLastJump(int opcode, int offset)
 {
-   for(int i = m_instructionSet->size(); i > 0;)
+   for(int i = m_instructionSet.size(); i > 0;)
    {
       i--;
-      NXSL_Instruction *instr = m_instructionSet->get(i);
+      NXSL_Instruction *instr = m_instructionSet.get(i);
       if ((instr->m_opCode == opcode) &&
           (instr->m_operand.m_addr == INVALID_ADDRESS))
       {
-         instr->m_operand.m_addr = m_instructionSet->size() + offset;
+         instr->m_operand.m_addr = m_instructionSet.size() + offset;
          break;
       }
    }
@@ -192,11 +185,11 @@ void NXSL_Program::resolveLastJump(int opcode, int offset)
  */
 void NXSL_Program::createJumpAt(uint32_t opAddr, uint32_t jumpAddr)
 {
-	if (opAddr >= (uint32_t)m_instructionSet->size())
+	if (opAddr >= (uint32_t)m_instructionSet.size())
 		return;
 
-	int nLine = m_instructionSet->get(opAddr)->m_sourceLine;
-   m_instructionSet->set(opAddr, new NXSL_Instruction(this, nLine, OPCODE_JMP, jumpAddr));
+	int nLine = m_instructionSet.get(opAddr)->m_sourceLine;
+   m_instructionSet.set(opAddr, new NXSL_Instruction(this, nLine, OPCODE_JMP, jumpAddr));
 }
 
 /**
@@ -207,16 +200,16 @@ void NXSL_Program::createJumpAt(uint32_t opAddr, uint32_t jumpAddr)
 bool NXSL_Program::addFunction(const NXSL_Identifier& name, uint32_t addr, char *errorText)
 {
    // Check for duplicate function names
-   for(int i = 0; i < m_functions->size(); i++)
-      if (name.equals(m_functions->get(i)->m_name))
+   for(int i = 0; i < m_functions.size(); i++)
+      if (name.equals(m_functions.get(i)->m_name))
       {
          sprintf(errorText, "Duplicate function name: \"%s\"", name.value);
          return false;
       }
    NXSL_Function *f = new NXSL_Function;
 	f->m_name = name;
-   f->m_addr = (addr == INVALID_ADDRESS) ? m_instructionSet->size() : addr;
-   m_functions->add(f);
+   f->m_addr = (addr == INVALID_ADDRESS) ? m_instructionSet.size() : addr;
+   m_functions.add(f);
    return true;
 }
 
@@ -247,14 +240,14 @@ void NXSL_Program::addRequiredModule(const char *name, int lineNumber, bool remo
    }
 
    // Check if module already added
-   for(int i = 0; i < m_requiredModules->size(); i++)
-      if (!_tcscmp(m_requiredModules->get(i)->name, mname))
+   for(int i = 0; i < m_requiredModules.size(); i++)
+      if (!_tcscmp(m_requiredModules.get(i)->name, mname))
          return;
 
    NXSL_ModuleImport *module = new NXSL_ModuleImport();
    _tcslcpy(module->name, mname, MAX_PATH);
    module->lineNumber = lineNumber;
-   m_requiredModules->add(module);
+   m_requiredModules.add(module);
 }
 
 /**
@@ -262,14 +255,14 @@ void NXSL_Program::addRequiredModule(const char *name, int lineNumber, bool remo
  */
 void NXSL_Program::resolveFunctions()
 {
-   for(int i = 0; i < m_instructionSet->size(); i++)
+   for(int i = 0; i < m_instructionSet.size(); i++)
    {
-      NXSL_Instruction *instr = m_instructionSet->get(i);
+      NXSL_Instruction *instr = m_instructionSet.get(i);
       if (instr->m_opCode == OPCODE_CALL_EXTERNAL)
       {
-         for(int j = 0; j < m_functions->size(); j++)
+         for(int j = 0; j < m_functions.size(); j++)
          {
-            NXSL_Function *f = m_functions->get(j);
+            NXSL_Function *f = m_functions.get(j);
             if (instr->m_operand.m_identifier->equals(f->m_name))
             {
                delete instr->m_operand.m_identifier;
@@ -285,11 +278,11 @@ void NXSL_Program::resolveFunctions()
 /**
  * Dump program to file (as text)
  */
-void NXSL_Program::dump(FILE *fp, const ObjectArray<NXSL_Instruction> *instructionSet)
+void NXSL_Program::dump(FILE *fp, const ObjectArray<NXSL_Instruction>& instructionSet)
 {
-   for(int i = 0; i < instructionSet->size(); i++)
+   for(int i = 0; i < instructionSet.size(); i++)
    {
-      const NXSL_Instruction *instr = instructionSet->get(i);
+      const NXSL_Instruction *instr = instructionSet.get(i);
       _ftprintf(fp, _T("%04X  %04X  %-6hs  "), i, instr->m_opCode, s_nxslCommandMnemonic[instr->m_opCode]);
       switch(instr->m_opCode)
       {
@@ -381,7 +374,7 @@ void NXSL_Program::dump(FILE *fp, const ObjectArray<NXSL_Instruction> *instructi
  */
 uint32_t NXSL_Program::getFinalJumpDestination(uint32_t addr, int srcJump)
 {
-   NXSL_Instruction *instr = m_instructionSet->get(addr);
+   NXSL_Instruction *instr = m_instructionSet.get(addr);
 	if ((instr->m_opCode == OPCODE_JMP) || (instr->m_opCode == srcJump))
 		return getFinalJumpDestination(instr->m_operand.m_addr, srcJump);
 	return addr;
@@ -395,11 +388,11 @@ void NXSL_Program::optimize()
 	int i;
 
 	// Convert push constant followed by NEG to single push constant
-	for(i = 0; (m_instructionSet->size() > 1) && (i < m_instructionSet->size() - 1); i++)
+	for(i = 0; (m_instructionSet.size() > 1) && (i < m_instructionSet.size() - 1); i++)
 	{
-      NXSL_Instruction *instr = m_instructionSet->get(i);
+      NXSL_Instruction *instr = m_instructionSet.get(i);
 		if ((instr->m_opCode == OPCODE_PUSH_CONSTANT) &&
-		    (m_instructionSet->get(i + 1)->m_opCode == OPCODE_NEG) &&
+		    (m_instructionSet.get(i + 1)->m_opCode == OPCODE_NEG) &&
 			 instr->m_operand.m_constant->isNumeric() &&
 			 !instr->m_operand.m_constant->isUnsigned())
 		{
@@ -409,32 +402,32 @@ void NXSL_Program::optimize()
 	}
 
 	// Convert jumps to address beyond code end to NRETs
-	for(i = 0; i < m_instructionSet->size(); i++)
+	for(i = 0; i < m_instructionSet.size(); i++)
 	{
-      NXSL_Instruction *instr = m_instructionSet->get(i);
-		if ((instr->m_opCode == OPCODE_JMP) && (instr->m_operand.m_addr >= (UINT32)m_instructionSet->size()))
+      NXSL_Instruction *instr = m_instructionSet.get(i);
+		if ((instr->m_opCode == OPCODE_JMP) && (instr->m_operand.m_addr >= (UINT32)m_instructionSet.size()))
 		{
 			instr->m_opCode = OPCODE_RET_NULL;
 		}
 	}
 
 	// Fix destination address for JZP/JNZP jumps
-	for(i = 0; i < m_instructionSet->size(); i++)
+	for(i = 0; i < m_instructionSet.size(); i++)
 	{
-      NXSL_Instruction *instr = m_instructionSet->get(i);
+      NXSL_Instruction *instr = m_instructionSet.get(i);
 		if (((instr->m_opCode == OPCODE_JZ_PEEK) &&
-			  (m_instructionSet->get(instr->m_operand.m_addr)->m_opCode == OPCODE_JNZ_PEEK)) ||
+			  (m_instructionSet.get(instr->m_operand.m_addr)->m_opCode == OPCODE_JNZ_PEEK)) ||
 		    ((instr->m_opCode == OPCODE_JNZ_PEEK) &&
-			  (m_instructionSet->get(instr->m_operand.m_addr)->m_opCode == OPCODE_JZ_PEEK)))
+			  (m_instructionSet.get(instr->m_operand.m_addr)->m_opCode == OPCODE_JZ_PEEK)))
 		{
 			instr->m_operand.m_addr++;
 		}
 	}
 
 	// Convert jump chains to single jump
-	for(i = 0; i < m_instructionSet->size(); i++)
+	for(i = 0; i < m_instructionSet.size(); i++)
 	{
-      NXSL_Instruction *instr = m_instructionSet->get(i);
+      NXSL_Instruction *instr = m_instructionSet.get(i);
 		if ((instr->m_opCode == OPCODE_JMP) ||
 			 (instr->m_opCode == OPCODE_JZ) ||
 			 (instr->m_opCode == OPCODE_JNZ))
@@ -449,9 +442,9 @@ void NXSL_Program::optimize()
 	}
 
 	// Remove jumps to next instruction
-	for(i = 0; i < m_instructionSet->size(); i++)
+	for(i = 0; i < m_instructionSet.size(); i++)
 	{
-      NXSL_Instruction *instr = m_instructionSet->get(i);
+      NXSL_Instruction *instr = m_instructionSet.get(i);
 		if (((instr->m_opCode == OPCODE_JMP) ||
 			  (instr->m_opCode == OPCODE_JZ_PEEK) ||
 			  (instr->m_opCode == OPCODE_JNZ_PEEK)) &&
@@ -471,17 +464,17 @@ void NXSL_Program::optimize()
  */
 void NXSL_Program::removeInstructions(uint32_t start, int count)
 {
-	if ((count <= 0) || (start + (uint32_t)count >= (uint32_t)m_instructionSet->size()))
+	if ((count <= 0) || (start + (uint32_t)count >= (uint32_t)m_instructionSet.size()))
 		return;
 
    int i;
 	for(i = 0; i < count; i++)
-      m_instructionSet->remove(start);
+      m_instructionSet.remove(start);
 
 	// Change jump destination addresses
-	for(i = 0; i < m_instructionSet->size(); i++)
+	for(i = 0; i < m_instructionSet.size(); i++)
 	{
-      NXSL_Instruction *instr = m_instructionSet->get(i);
+      NXSL_Instruction *instr = m_instructionSet.get(i);
 		if (((instr->m_opCode == OPCODE_JMP) ||
 		     (instr->m_opCode == OPCODE_JZ) ||
 		     (instr->m_opCode == OPCODE_JNZ) ||
@@ -500,9 +493,9 @@ void NXSL_Program::removeInstructions(uint32_t start, int count)
 	}
 
 	// Update function table
-   for(i = 0; i < m_functions->size(); i++)
+   for(i = 0; i < m_functions.size(); i++)
    {
-      NXSL_Function *f = m_functions->get(i);
+      NXSL_Function *f = m_functions.get(i);
       if (f->m_addr > start)
       {
          f->m_addr -= count;
@@ -513,7 +506,7 @@ void NXSL_Program::removeInstructions(uint32_t start, int count)
 /**
  * Serialize compiled script
  */
-void NXSL_Program::serialize(ByteStream& s)
+void NXSL_Program::serialize(ByteStream& s) const
 {
    StringList strings;
    ObjectRefArray<NXSL_Value> constants(64, 64);
@@ -527,9 +520,9 @@ void NXSL_Program::serialize(ByteStream& s)
    // Serialize instructions
    header.codeSectionOffset = htonl((UINT32)s.pos());
    int i;
-   for(i = 0; i < m_instructionSet->size(); i++)
+   for(i = 0; i < m_instructionSet.size(); i++)
    {
-      NXSL_Instruction *instr = m_instructionSet->get(i);
+      NXSL_Instruction *instr = m_instructionSet.get(i);
       s.write(instr->m_opCode);
       s.write(instr->m_stackItems);
       s.write(instr->m_sourceLine);
@@ -595,18 +588,18 @@ void NXSL_Program::serialize(ByteStream& s)
 
    // write required modules list
    header.moduleSectionOffset = htonl((UINT32)s.pos());
-   for(i = 0; i < m_requiredModules->size(); i++)
+   for(i = 0; i < m_requiredModules.size(); i++)
    {
-      NXSL_ModuleImport *module = m_requiredModules->get(i);
+      NXSL_ModuleImport *module = m_requiredModules.get(i);
       s.writeString(module->name);
       s.write((INT32)module->lineNumber);
    }
 
    // write function list
    header.functionSectionOffset = htonl((UINT32)s.pos());
-   for(i = 0; i < m_functions->size(); i++)
+   for(i = 0; i < m_functions.size(); i++)
    {
-      NXSL_Function *f = m_functions->get(i);
+      NXSL_Function *f = m_functions.get(i);
       s.writeStringUtf8(f->m_name.value);
       s.write(f->m_addr);
    }
@@ -689,7 +682,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
                const TCHAR *str = strings.get(idx);
                if (str == NULL)
                {
-                  _sntprintf(errMsg, errMsgSize, _T("Binary file read error (instruction %04X)"), p->m_instructionSet->size());
+                  _sntprintf(errMsg, errMsgSize, _T("Binary file read error (instruction %04X)"), p->m_instructionSet.size());
                   delete instr;
                   goto failure;
                }
@@ -703,7 +696,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
                NXSL_Value *v = constants.get(idx);
                if (v == NULL)
                {
-                  _sntprintf(errMsg, errMsgSize, _T("Binary file read error (instruction %04X)"), p->m_instructionSet->size());
+                  _sntprintf(errMsg, errMsgSize, _T("Binary file read error (instruction %04X)"), p->m_instructionSet.size());
                   delete instr;
                   goto failure;
                }
@@ -713,7 +706,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
          default:
             break;
       }
-      p->m_instructionSet->add(instr);
+      p->m_instructionSet.add(instr);
    }
 
    // Load module list
@@ -732,7 +725,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
       MemFree(name);
       module->lineNumber = s.readInt32();
 
-      p->m_requiredModules->add(module);
+      p->m_requiredModules.add(module);
    }
 
    // Load function list
@@ -745,7 +738,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
          _tcslcpy(errMsg, _T("Binary file read error (functions section)"), errMsgSize);
          goto failure;
       }
-      p->m_functions->add(new NXSL_Function(name, s.readUInt32()));
+      p->m_functions.add(new NXSL_Function(name, s.readUInt32()));
       MemFree(name);
    }
 
@@ -768,7 +761,7 @@ failure:
 StringList *NXSL_Program::getRequiredModules() const
 {
    StringList *modules = new StringList();
-   for(int i = 0; i < m_requiredModules->size(); i++)
-      modules->add(m_requiredModules->get(i)->name);
+   for(int i = 0; i < m_requiredModules.size(); i++)
+      modules->add(m_requiredModules.get(i)->name);
    return modules;
 }
