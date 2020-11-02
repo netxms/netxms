@@ -24,6 +24,72 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.23 to 40.24
+ */
+static bool H_UpgradeFromV23()
+{
+   if (GetSchemaLevelForMajorVersion(36) < 12)
+   {
+      static const TCHAR *batch =
+            _T("UPDATE event_cfg SET event_name='SYS_SNMP_TRAP_FLOOD_DETECTED' WHERE event_code=109\n")
+            _T("UPDATE event_cfg SET event_name='SYS_SNMP_TRAP_FLOOD_ENDED' WHERE event_code=110\n")
+            _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+
+      CHK_EXEC(CreateEventTemplate(EVENT_GEOLOCATION_CHANGED, _T("SYS_GEOLOCATION_CHANGED"),
+               SEVERITY_NORMAL, EF_LOG, _T("2c2f40d4-91d3-441e-92d4-62a32e98a341"),
+               _T("Device geolocation changed to %3 %4 (was %7 %8)"),
+               _T("Generated when device geolocation change is detected.\r\n")
+               _T("Parameters:\r\n")
+               _T("   1) Latitude of new location in degrees\r\n")
+               _T("   2) Longitude of new location in degrees\r\n")
+               _T("   3) Latitude of new location in textual form\r\n")
+               _T("   4) Longitude of new location in textual form\r\n")
+               _T("   5) Latitude of previous location in degrees\r\n")
+               _T("   6) Longitude of previous location in degrees\r\n")
+               _T("   7) Latitude of previous location in textual form\r\n")
+               _T("   8) Longitude of previous location in textual form")
+               ));
+
+      CHK_EXEC(CreateEventTemplate(EVENT_GEOLOCATION_INSIDE_RESTRICTED_AREA, _T("SYS_GEOLOCATION_INSIDE_RESTRICTED_AREA"),
+               SEVERITY_WARNING, EF_LOG, _T("94d7a94b-a289-4cbe-8a83-a9c52b36c650"),
+               _T("Device geolocation %3 %4 is within restricted area %5"),
+               _T("Generated when new device geolocation is within restricted area.\r\n")
+               _T("Parameters:\r\n")
+               _T("   1) Latitude of new location in degrees\r\n")
+               _T("   2) Longitude of new location in degrees\r\n")
+               _T("   3) Latitude of new location in textual form\r\n")
+               _T("   4) Longitude of new location in textual form\r\n")
+               _T("   5) Area name\r\n")
+               _T("   6) Area ID")
+               ));
+
+      CHK_EXEC(CreateEventTemplate(EVENT_GEOLOCATION_OUTSIDE_ALLOWED_AREA, _T("SYS_GEOLOCATION_OUTSIDE_ALLOWED_AREA"),
+               SEVERITY_WARNING, EF_LOG, _T("24dcb315-a5cc-41f5-a813-b0a5f8c31e7d"),
+               _T("Device geolocation %3 %4 is outside allowed area"),
+               _T("Generated when new device geolocation is within restricted area.\r\n")
+               _T("Parameters:\r\n")
+               _T("   1) Latitude of new location in degrees\r\n")
+               _T("   2) Longitude of new location in degrees\r\n")
+               _T("   3) Latitude of new location in textual form\r\n")
+               _T("   4) Longitude of new location in textual form")
+               ));
+
+      CHK_EXEC(CreateTable(
+            _T("CREATE TABLE geo_areas (")
+            _T("   id integer not null,")
+            _T("   name varchar(127) not null,")
+            _T("   comments $SQL:TEXT null,")
+            _T("   configuration $SQL:TEXT null,")
+            _T("   PRIMARY KEY(id))")));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(36, 12));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(24));
+   return true;
+}
+
+/**
  * Upgrade from 40.22 to 40.23
  */
 static bool H_UpgradeFromV22()
@@ -612,6 +678,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 23, 40, 24, H_UpgradeFromV23 },
    { 22, 40, 23, H_UpgradeFromV22 },
    { 21, 40, 22, H_UpgradeFromV21 },
    { 20, 40, 21, H_UpgradeFromV20 },

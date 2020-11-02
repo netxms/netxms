@@ -2296,9 +2296,9 @@ CREATE TABLE dci_delete_list
    PRIMARY KEY (node_id,dci_id)
 ) TABLE_TYPE;
 
-/*
-** Stored Windows event log messages
-*/
+/**
+ * Stored Windows event log messages
+ */
 CREATE TABLE win_event_log (
    id SQL_INT64 not null,
 #ifdef DB_TSDB
@@ -2329,3 +2329,14 @@ CREATE INDEX idx_win_event_log_node ON win_event_log(node_id);
 SELECT create_hypertable('win_event_log', 'event_timestamp', chunk_time_interval => interval '86400 seconds');
 #endif
 
+/**
+ * Geographical areas
+ */
+CREATE TABLE geo_areas
+(
+   id integer not null,
+   name varchar(127) not null,
+   comments SQL_TEXT null,
+   configuration SQL_TEXT null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
