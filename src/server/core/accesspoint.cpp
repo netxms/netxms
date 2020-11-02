@@ -129,13 +129,13 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
 {
+   bool success = super::saveToDatabase(hdb);
+
    // Lock object's access
    lockProperties();
 
-   bool success = saveCommonProperties(hdb);
-
    if (success)
-      success = super::saveToDatabase(hdb);
+      success = saveCommonProperties(hdb);
 
    if (success && (m_modified & MODIFY_OTHER))
    {

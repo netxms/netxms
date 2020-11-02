@@ -175,44 +175,44 @@ UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *request)
    return super::modifyFromMessageInternal(request);
 }
 
-
-
+/**
+ * Create object from database data
+ */
 bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
    TCHAR query[512];
-   _sntprintf(query, 512, _T("SELECT config_poll_timestamp,instance_poll_timestamp FROM dc_targets WHERE id=%d"), m_id);
+   _sntprintf(query, 512, _T("SELECT config_poll_timestamp,instance_poll_timestamp FROM dc_targets WHERE id=%u"), m_id);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult == nullptr)
       return false;
 
-   m_configurationPollState.setLastComplited(DBGetFieldLong(hResult, 0, 0));
-   m_instancePollState.setLastComplited(DBGetFieldLong(hResult, 0, 1));
+   m_configurationPollState.setLastCompleted(DBGetFieldLong(hResult, 0, 0));
+   m_instancePollState.setLastCompleted(DBGetFieldLong(hResult, 0, 1));
+
    DBFreeResult(hResult);
 
-   if (static_cast<UINT32>(time(nullptr) - m_configurationPollState.getLastCompleted()) < g_configurationPollingInterval)
-      m_runtimeFlags = ODF_CONFIGURATION_POLL_PASSED;
+   if (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) < g_configurationPollingInterval)
+      m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
 
    return true;
 }
 
+/**
+ * Save object to database
+ */
 bool DataCollectionTarget::saveToDatabase(DB_HANDLE hdb)
 {
    bool success = true;
    if (m_modified & MODIFY_DC_TARGET)
    {
-      DB_STATEMENT hStmt;
-      bool isNew = !(IsDatabaseRecordExist(hdb, _T("dc_targets"), _T("id"), m_id));
-      if (isNew)
-         hStmt = DBPrepare(hdb, _T("INSERT INTO dc_targets (config_poll_timestamp,instance_poll_timestamp,id) VALUES (?,?,?)"));
-      else
-         hStmt = DBPrepare(hdb, _T("UPDATE dc_targets SET config_poll_timestamp=?,instance_poll_timestamp=? WHERE id=?"));
+      static const TCHAR *columns[] = { _T("config_poll_timestamp"), _T("instance_poll_timestamp"), nullptr };
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("dc_targets"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, static_cast<uint32_t>(m_configurationPollState.getLastCompleted()));
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_configurationPollState.getLastCompleted()));
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_instancePollState.getLastCompleted()));
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
-
          DBFreeStatement(hStmt);
       }
       else
