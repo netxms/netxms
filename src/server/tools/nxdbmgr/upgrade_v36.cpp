@@ -24,11 +24,27 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 36.12 to 40.0
+ * Upgrade from 36.13 to 40.0
+ */
+static bool H_UpgradeFromV13()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 36.12 to 36.13
  */
 static bool H_UpgradeFromV12()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE dc_targets (")
+         _T("  id integer not null,")
+         _T("  config_poll_timestamp integer not null,")
+         _T("  instance_poll_timestamp integer not null,")
+         _T("PRIMARY KEY(id))")));
+
+   CHK_EXEC(SetMinorSchemaVersion(13));
    return true;
 }
 
@@ -100,7 +116,6 @@ static bool H_UpgradeFromV11()
 static bool H_UpgradeFromV10()
 {
    CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD snmp_engine_id varchar(255)")));
-   CHK_EXEC(SetSchemaLevelForMajorVersion(36, 11));
    CHK_EXEC(SetMinorSchemaVersion(11));
    return true;
 }
@@ -172,6 +187,7 @@ static bool H_UpgradeFromV8()
    CHK_EXEC(SetMinorSchemaVersion(9));
    return true;
 }
+
 
 /**
  * Upgrade from 36.7 to 36.8
@@ -328,7 +344,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 12, 40, 0,  H_UpgradeFromV12 },
+   { 13, 40, 0,  H_UpgradeFromV13 },
+   { 12, 36, 13, H_UpgradeFromV12 },
    { 11, 36, 12, H_UpgradeFromV11 },
    { 10, 36, 11, H_UpgradeFromV10 },
    { 9,  36, 10, H_UpgradeFromV9  },

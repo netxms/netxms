@@ -23,6 +23,27 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+
+
+/**
+ * Upgrade from 40.24 to 40.25
+ */
+static bool H_UpgradeFromV24()
+{
+   if (GetSchemaLevelForMajorVersion(36) < 13)
+   {
+      CHK_EXEC(CreateTable(
+            _T("CREATE TABLE dc_targets (")
+            _T("  id integer not null,")
+            _T("  config_poll_timestamp integer not null,")
+            _T("  instance_poll_timestamp integer not null,")
+            _T("PRIMARY KEY(id))")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(36, 13));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(25));
+   return true;
+}
+
 /**
  * Upgrade from 40.23 to 40.24
  */
@@ -678,6 +699,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 24, 40, 25, H_UpgradeFromV24 },
    { 23, 40, 24, H_UpgradeFromV23 },
    { 22, 40, 23, H_UpgradeFromV22 },
    { 21, 40, 22, H_UpgradeFromV21 },

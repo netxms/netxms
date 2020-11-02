@@ -199,6 +199,10 @@ bool Chassis::saveToDatabase(DB_HANDLE hdb)
 {
    lockProperties();
    bool success = saveCommonProperties(hdb);
+
+   if (success)
+      success = super::saveToDatabase(hdb);
+
    if (success)
    {
       DB_STATEMENT hStmt;
@@ -266,7 +270,8 @@ bool Chassis::deleteFromDatabase(DB_HANDLE hdb)
 bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
    m_id = id;
-   if (!loadCommonProperties(hdb))
+
+   if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, id))
    {
       nxlog_debug(2, _T("Cannot load common properties for chassis object %d"), id);
       return false;

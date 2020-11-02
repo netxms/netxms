@@ -111,6 +111,9 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
    }
 
    if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM dc_targets WHERE id=?"));
+
+   if (success)
       success = super::deleteFromDatabase(hdb);
 
    return success;
@@ -170,6 +173,54 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, UINT32 us
 UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *request)
 {
    return super::modifyFromMessageInternal(request);
+}
+
+
+
+bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+{
+   TCHAR query[512];
+   _sntprintf(query, 512, _T("SELECT config_poll_timestamp,instance_poll_timestamp FROM dc_targets WHERE id=%d"), m_id);
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult == nullptr)
+      return false;
+
+   m_configurationPollState.setLastComplited(DBGetFieldLong(hResult, 0, 0));
+   m_instancePollState.setLastComplited(DBGetFieldLong(hResult, 0, 1));
+   DBFreeResult(hResult);
+
+   if (static_cast<UINT32>(time(nullptr) - m_configurationPollState.getLastCompleted()) < g_configurationPollingInterval)
+      m_runtimeFlags = ODF_CONFIGURATION_POLL_PASSED;
+
+   return true;
+}
+
+bool DataCollectionTarget::saveToDatabase(DB_HANDLE hdb)
+{
+   bool success = true;
+   if (m_modified & MODIFY_DC_TARGET)
+   {
+      DB_STATEMENT hStmt;
+      bool isNew = !(IsDatabaseRecordExist(hdb, _T("dc_targets"), _T("id"), m_id));
+      if (isNew)
+         hStmt = DBPrepare(hdb, _T("INSERT INTO dc_targets (config_poll_timestamp,instance_poll_timestamp,id) VALUES (?,?,?)"));
+      else
+         hStmt = DBPrepare(hdb, _T("UPDATE dc_targets SET config_poll_timestamp=?,instance_poll_timestamp=? WHERE id=?"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_configurationPollState.getLastCompleted());
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_instancePollState.getLastCompleted());
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+         success = DBExecute(hStmt);
+
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+   return success;
 }
 
 /**
