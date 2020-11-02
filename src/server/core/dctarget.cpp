@@ -208,8 +208,8 @@ bool DataCollectionTarget::saveToDatabase(DB_HANDLE hdb)
          hStmt = DBPrepare(hdb, _T("UPDATE dc_targets SET config_poll_timestamp=?,instance_poll_timestamp=? WHERE id=?"));
       if (hStmt != nullptr)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_configurationPollState.getLastCompleted());
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_instancePollState.getLastCompleted());
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, static_cast<uint32_t>(m_configurationPollState.getLastCompleted()));
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_instancePollState.getLastCompleted()));
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
 
