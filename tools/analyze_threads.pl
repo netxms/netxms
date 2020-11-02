@@ -8,6 +8,8 @@
 	"pthread_cond_reltimedwait_np",
 	"pthread_cond_wait",
         "SleepAndCheckForShutdown",
+	"ThreadSleep",
+	"ThreadSleepMs",
 	"poll",
 	"select",
 	"accept",

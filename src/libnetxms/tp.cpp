@@ -116,12 +116,12 @@ struct ThreadPool
       this->stackSize = stackSize;
       workerIdleTimeout = MIN_WORKER_IDLE_TIMEOUT;
       activeRequests = 0;
-      mutex = MutexCreate();
+      mutex = MutexCreateFast();
       maintThread = INVALID_THREAD_HANDLE;
       maintThreadWakeup = ConditionCreate(false);
       serializationQueues.setIgnoreCase(false);
-      serializationLock = MutexCreate();
-      schedulerLock = MutexCreate();
+      serializationLock = MutexCreateFast();
+      schedulerLock = MutexCreateFast();
       shutdownMode = false;
       memset(loadAverage, 0, sizeof(loadAverage));
       averageWaitTime = 0;
@@ -439,9 +439,9 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunct
  */
 struct RequestSerializationData
 {
-   TCHAR *key;
    ThreadPool *pool;
-   Queue *queue;
+   SerializationQueue *queue;
+   TCHAR key[1];  // Actual length is determined at runtime
 };
 
 /**
@@ -451,23 +451,29 @@ static void ProcessSerializedRequests(RequestSerializationData *data)
 {
    while(true)
    {
-      MutexLock(data->pool->serializationLock);
       WorkRequest *rq = static_cast<WorkRequest*>(data->queue->get());
       if (rq == nullptr)
       {
-         data->pool->serializationQueues.remove(data->key);
+         // Because this thread normally does not hold serialization lock,
+         // new serialized task may have been placed into queue between
+         // get and lock calls. To avoid loosing it re-check queue again
+         // with serialization lock being held.
+         MutexLock(data->pool->serializationLock);
+         rq = static_cast<WorkRequest*>(data->queue->get());
+         if (rq == nullptr)
+         {
+            data->pool->serializationQueues.remove(data->key);
+            MutexUnlock(data->pool->serializationLock);
+            break;
+         }
          MutexUnlock(data->pool->serializationLock);
-         break;
       }
-      SerializationQueue *q = data->pool->serializationQueues.get(data->key);
-      q->updateMaxWaitTime(static_cast<uint32_t>(GetCurrentTimeMs() - rq->queueTime));
-      MutexUnlock(data->pool->serializationLock);
+      data->queue->updateMaxWaitTime(static_cast<uint32_t>(GetCurrentTimeMs() - rq->queueTime));
 
       rq->func(rq->arg);
       data->pool->workRequestMemoryPool.destroy(rq);
    }
-   MemFree(data->key);
-   delete data;
+   MemFree(data);
 }
 
 /**
@@ -478,31 +484,31 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR
    if (p->shutdownMode)
       return;
 
+   WorkRequest *rq = p->workRequestMemoryPool.create();
+   rq->func = f;
+   rq->arg = arg;
+   rq->queueTime = GetCurrentTimeMs();
+
    MutexLock(p->serializationLock);
-   
    SerializationQueue *q = p->serializationQueues.get(key);
    if (q == nullptr)
    {
       q = new SerializationQueue(64);
       p->serializationQueues.set(key, q);
+      q->put(rq);
 
-      RequestSerializationData *data = new RequestSerializationData;
-      data->key = MemCopyString(key);
+      size_t keyLen = _tcslen(key);
+      auto data = static_cast<RequestSerializationData*>(MemAlloc(keyLen * sizeof(TCHAR) + sizeof(RequestSerializationData)));
       data->pool = p;
       data->queue = q;
+      memcpy(data->key, key, (keyLen + 1) * sizeof(TCHAR));
       ThreadPoolExecute(p, ProcessSerializedRequests, data);
    }
    else
    {
+      q->put(rq);
       InterlockedIncrement64(&p->taskExecutionCount);
    }
-
-   WorkRequest *rq = p->workRequestMemoryPool.create();
-   rq->func = f;
-   rq->arg = arg;
-   rq->queueTime = GetCurrentTimeMs();
-   q->put(rq);
-
    MutexUnlock(p->serializationLock);
 }
 
@@ -622,7 +628,7 @@ int LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestCount(ThreadPool *p, cons
 {
    MutexLock(p->serializationLock);
    SerializationQueue *q = p->serializationQueues.get(key);
-   int count = (q != NULL) ? static_cast<int>(q->size()) : 0;
+   int count = (q != nullptr) ? static_cast<int>(q->size()) : 0;
    MutexUnlock(p->serializationLock);
    return count;
 }
@@ -634,7 +640,7 @@ uint32_t LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestMaxWaitTime(ThreadPo
 {
    MutexLock(p->serializationLock);
    SerializationQueue *q = p->serializationQueues.get(key);
-   uint32_t waitTime = (q != NULL) ? q->getMaxWaitTime() : 0;
+   uint32_t waitTime = (q != nullptr) ? q->getMaxWaitTime() : 0;
    MutexUnlock(p->serializationLock);
    return waitTime;
 }
