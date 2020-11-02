@@ -1433,6 +1433,7 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("raw_dci_values"), _T("item_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dc_tables"), _T("item_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dc_table_columns"), _T("table_id,column_name"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("dc_targets"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dct_column_names"), _T("column_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dct_thresholds"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dct_threshold_conditions"), _T("threshold_id,group_id,sequence_number"), _T("*")) &&

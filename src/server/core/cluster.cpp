@@ -70,7 +70,8 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	int i, nRows;
 
    m_id = dwId;
-   if (!loadCommonProperties(hdb))
+
+   if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, dwId))
    {
       nxlog_debug(2, _T("Cannot load common properties for cluster object %d"), dwId);
       return false;
@@ -193,11 +194,16 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
 {
    lockProperties();
    bool success = saveCommonProperties(hdb);
+
+   if (success)
+      success = super::saveToDatabase(hdb);
+
    if (!success)
    {
       unlockProperties();
       return false;
    }
+
 
    DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("clusters"), _T("id"), m_id))

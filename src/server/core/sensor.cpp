@@ -190,7 +190,7 @@ bool Sensor::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
    m_id = id;
 
-   if (!loadCommonProperties(hdb))
+   if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, id))
    {
       nxlog_debug(2, _T("Cannot load common properties for sensor object %d"), id);
       return false;
@@ -240,6 +240,9 @@ bool Sensor::saveToDatabase(DB_HANDLE hdb)
    lockProperties();
 
    bool success = saveCommonProperties(hdb);
+
+   if (success)
+      success = super::saveToDatabase(hdb);
 
    if (success && (m_modified & MODIFY_SENSOR_PROPERTIES))
    {

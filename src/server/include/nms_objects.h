@@ -770,6 +770,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_HARDWARE_INVENTORY   0x004000
 #define MODIFY_COMPONENTS           0x008000
 #define MODIFY_ICMP_POLL_SETTINGS   0x010000
+#define MODIFY_DC_TARGET            0x020000
 #define MODIFY_ALL                  0xFFFFFF
 
 /**
@@ -1831,6 +1832,9 @@ void ResetObjectPollTimers(const shared_ptr<ScheduledTaskParameters>& parameters
 
 #define pollerUnlock() \
    __pollState->complete(GetCurrentTimeMs() - __pollStartTime); \
+   lockProperties();\
+   setModified(MODIFY_DC_TARGET);\
+   unlockProperties();\
    _pollerUnlock();
 
 /**
@@ -1913,6 +1917,16 @@ public:
       m_lastCompleted = time(nullptr);
       m_timer->update(elapsed);
       InterlockedDecrement(&m_pollerCount);
+      MutexUnlock(m_lock);
+   }
+
+   /**
+    * Set last completed time read from database
+    */
+   void setLastComplited(time_t lastCompleted)
+   {
+      MutexLock(m_lock);
+      m_lastCompleted = lastCompleted;
       MutexUnlock(m_lock);
    }
 
@@ -2050,7 +2064,9 @@ public:
 
    shared_ptr<DataCollectionTarget> self() const { return static_pointer_cast<DataCollectionTarget>(NObject::self()); }
 
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
    virtual bool setMgmtStatus(bool isManaged) override;
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;

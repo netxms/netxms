@@ -61,7 +61,7 @@ bool MobileDevice::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    m_id = dwId;
 
-   if (!loadCommonProperties(hdb))
+   if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, dwId))
    {
       DbgPrintf(2, _T("Cannot load common properties for mobile device object %d"), dwId);
       return false;
@@ -115,6 +115,9 @@ bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
    lockProperties();
 
    bool success = saveCommonProperties(hdb);
+
+   if (success)
+      success = super::saveToDatabase(hdb);
 
    if (success && (m_modified & MODIFY_OTHER))
    {

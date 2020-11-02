@@ -367,7 +367,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    m_id = dwId;
 
-   if (!loadCommonProperties(hdb))
+   if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, dwId))
    {
       DbgPrintf(2, _T("Cannot load common properties for node object %d"), dwId);
       return false;
@@ -858,6 +858,9 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
    lockProperties();
 
    bool success = saveCommonProperties(hdb);
+
+   if (success)
+      success = super::saveToDatabase(hdb);
 
    if (success && (m_modified & MODIFY_NODE_PROPERTIES))
    {
