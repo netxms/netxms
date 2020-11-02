@@ -237,12 +237,14 @@ bool Sensor::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
  */
 bool Sensor::saveToDatabase(DB_HANDLE hdb)
 {
+   bool success = super::saveToDatabase(hdb);
+
    lockProperties();
 
-   bool success = saveCommonProperties(hdb);
+   if (success)
+      success = saveCommonProperties(hdb);
 
    if (success)
-      success = super::saveToDatabase(hdb);
 
    if (success && (m_modified & MODIFY_SENSOR_PROPERTIES))
    {

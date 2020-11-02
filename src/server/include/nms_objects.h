@@ -1911,7 +1911,7 @@ public:
    /**
     * Notify about poller completion
     */
-   void complete(INT64 elapsed)
+   void complete(int64_t elapsed)
    {
       MutexLock(m_lock);
       m_lastCompleted = time(nullptr);
@@ -1921,13 +1921,11 @@ public:
    }
 
    /**
-    * Set last completed time read from database
+    * Set last completed time (intended only for reading from database)
     */
-   void setLastComplited(time_t lastCompleted)
+   void setLastCompleted(time_t lastCompleted)
    {
-      MutexLock(m_lock);
       m_lastCompleted = lastCompleted;
-      MutexUnlock(m_lock);
    }
 
    /**
@@ -1954,10 +1952,10 @@ public:
    /**
     * Get timer average value
     */
-   INT64 getTimerAverage()
+   int64_t getTimerAverage()
    {
       MutexLock(m_lock);
-      INT64 v = static_cast<INT64>(m_timer->getAverage());
+      int64_t v = static_cast<int64_t>(m_timer->getAverage());
       MutexUnlock(m_lock);
       return v;
    }
@@ -1965,10 +1963,10 @@ public:
    /**
     * Get timer minimum value
     */
-   INT64 getTimerMin()
+   int64_t getTimerMin()
    {
       MutexLock(m_lock);
-      INT64 v = m_timer->getMin();
+      int64_t v = m_timer->getMin();
       MutexUnlock(m_lock);
       return v;
    }
@@ -1976,10 +1974,10 @@ public:
    /**
     * Get timer maximum value
     */
-   INT64 getTimerMax()
+   int64_t getTimerMax()
    {
       MutexLock(m_lock);
-      INT64 v = m_timer->getMax();
+      int64_t v = m_timer->getMax();
       MutexUnlock(m_lock);
       return v;
    }
@@ -1987,10 +1985,10 @@ public:
    /**
     * Get last timer value
     */
-   INT64 getTimerLast()
+   int64_t getTimerLast()
    {
       MutexLock(m_lock);
-      INT64 v = m_timer->getCurrent();
+      int64_t v = m_timer->getCurrent();
       MutexUnlock(m_lock);
       return v;
    }

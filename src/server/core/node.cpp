@@ -854,13 +854,13 @@ static EnumerationCallbackResult SaveIcmpStatCollector(const TCHAR *target, cons
  */
 bool Node::saveToDatabase(DB_HANDLE hdb)
 {
+   bool success = super::saveToDatabase(hdb);
+
    // Lock object's access
    lockProperties();
 
-   bool success = saveCommonProperties(hdb);
-
    if (success)
-      success = super::saveToDatabase(hdb);
+      success = saveCommonProperties(hdb);
 
    if (success && (m_modified & MODIFY_NODE_PROPERTIES))
    {

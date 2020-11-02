@@ -192,11 +192,12 @@ bool Cluster::showThresholdSummary() const
  */
 bool Cluster::saveToDatabase(DB_HANDLE hdb)
 {
+   bool success = super::saveToDatabase(hdb);
+
    lockProperties();
-   bool success = saveCommonProperties(hdb);
 
    if (success)
-      success = super::saveToDatabase(hdb);
+      success = saveCommonProperties(hdb);
 
    if (!success)
    {
