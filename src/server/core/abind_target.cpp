@@ -217,7 +217,7 @@ AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<DataCollectionTar
    filter->setGlobalVariable("$template", m_this->createNXSLObject(filter));
    if (filter->run())
    {
-      NXSL_Value *value = filter->getResult();
+      const NXSL_Value *value = filter->getResult();
       if (!value->isNull())
          result = value->isTrue() ? AutoBindDecision_Bind : AutoBindDecision_Unbind;
    }
