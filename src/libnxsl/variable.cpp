@@ -22,6 +22,12 @@
 **/
 
 #include "libnxsl.h"
+
+#undef uthash_malloc
+#define uthash_malloc(sz) m_pool.allocate(sz)
+#undef uthash_free
+#define uthash_free(ptr,sz) do { } while(0)
+
 #include <uthash.h>
 
 /**
@@ -79,7 +85,7 @@ struct NXSL_VariablePtr
 /**
  * Create new variable system
  */
-NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, NXSL_VariableSystemType type) : NXSL_RuntimeObject(vm)
+NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, NXSL_VariableSystemType type) : NXSL_RuntimeObject(vm), m_pool(4096)
 {
    m_variables = nullptr;
 	m_type = type;
@@ -89,7 +95,7 @@ NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, NXSL_VariableSystemType ty
 /**
  * Clone existing variable system
  */
-NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, const NXSL_VariableSystem *src) : NXSL_RuntimeObject(vm)
+NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, const NXSL_VariableSystem *src) : NXSL_RuntimeObject(vm), m_pool(4096)
 {
    m_variables = nullptr;
    m_type = src->m_type;
@@ -122,7 +128,6 @@ void NXSL_VariableSystem::clear()
    {
       HASH_DEL(m_variables, var);
       var->v.~NXSL_Variable();
-      MemFree(var);
    }
 }
 
@@ -182,7 +187,7 @@ NXSL_Variable *NXSL_VariableSystem::find(const NXSL_Identifier& name)
  */
 NXSL_Variable *NXSL_VariableSystem::create(const NXSL_Identifier& name, NXSL_Value *value)
 {
-   NXSL_VariablePtr *var = MemAllocStruct<NXSL_VariablePtr>();
+   NXSL_VariablePtr *var = static_cast<NXSL_VariablePtr*>(m_pool.allocate(sizeof(NXSL_VariablePtr)));
    NXSL_Variable *v = new (&var->v) NXSL_Variable(m_vm, name, (value != nullptr) ? value : m_vm->createValue(), isConstant());
    HASH_ADD_KEYPTR(hh, m_variables, v->m_name.value, v->m_name.length, var);
    return v;
