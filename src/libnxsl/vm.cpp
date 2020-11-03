@@ -82,6 +82,32 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
 };
 
 /**
+ * Position number to variable name in form $<position>
+ */
+static inline void PositionToVarName(int n, char *varName)
+{
+   varName[0] = '$';
+   if (n < 10)
+   {
+      varName[1] = n + '0';
+      varName[2] = 0;
+   }
+   else if (n < 100)
+   {
+      varName[1] = n / 10 + '0';
+      varName[2] = n % 10 + '0';
+      varName[3] = 0;
+   }
+   else
+   {
+      varName[1] = n / 100 + '0';
+      varName[2] = (n % 100) / 10 + '0';
+      varName[3] = n % 10 + '0';
+      varName[4] = 0;
+   }
+}
+
+/**
  * Get error message for given error code
  */
 static const TCHAR *GetErrorMessage(int error)
@@ -313,7 +339,7 @@ bool NXSL_VM::run(const ObjectRefArray<NXSL_Value>& args, NXSL_VariableSystem **
    {
       argsArray->set(i + 1, createValue(args.get(i)));
       char name[32];
-      snprintf(name, 32, "$%d", i + 1);
+      PositionToVarName(i + 1, name);
       m_localVariables->create(name, args.get(i));
    }
    setGlobalVariable("$ARGS", createValue(argsArray));
@@ -1356,11 +1382,11 @@ void NXSL_VM::execute()
          }
          break;
       case OPCODE_BIND:
-         snprintf(varName, MAX_IDENTIFIER_LENGTH, "$%d", m_nBindPos++);
+         PositionToVarName(m_nBindPos++, varName);
          pVar = m_localVariables->find(varName);
-         pValue = (pVar != NULL) ? createValue(pVar->getValue()) : createValue();
+         pValue = (pVar != nullptr) ? createValue(pVar->getValue()) : createValue();
          pVar = m_localVariables->find(*cp->m_operand.m_identifier);
-         if (pVar == NULL)
+         if (pVar == nullptr)
             m_localVariables->create(*cp->m_operand.m_identifier, pValue);
          else
             pVar->setValue(pValue);
@@ -2490,12 +2516,12 @@ void NXSL_VM::callFunction(int nArgCount)
          if (pValue != nullptr)
          {
             char varName[MAX_IDENTIFIER_LENGTH];
-            snprintf(varName, MAX_IDENTIFIER_LENGTH, "$%d", i);
+            PositionToVarName(i, varName);
             m_localVariables->create(varName, pValue);
 				if (pValue->getName() != nullptr)
 				{
 					// Named parameter
-					snprintf(varName, MAX_IDENTIFIER_LENGTH, "$%s", pValue->getName());
+				   strlcpy(&varName[1], pValue->getName(), MAX_IDENTIFIER_LENGTH - 1);
 	            m_localVariables->create(varName, createValue(pValue));
 				}
          }
@@ -2532,7 +2558,7 @@ uint32_t NXSL_VM::getFunctionAddress(const NXSL_Identifier& name)
 UINT32 NXSL_VM::callSelector(const NXSL_Identifier& name, int numElements)
 {
    const NXSL_ExtSelector *selector = m_env->findSelector(name);
-   if (selector == NULL)
+   if (selector == nullptr)
    {
       error(NXSL_ERR_NO_SELECTOR);
       return 0;
@@ -2540,7 +2566,7 @@ UINT32 NXSL_VM::callSelector(const NXSL_Identifier& name, int numElements)
 
    int err, selection = -1;
    uint32_t addr = 0;
-   NXSL_Value *options = NULL;
+   NXSL_Value *options = nullptr;
    uint32_t *addrList = static_cast<uint32_t*>(MemAllocLocal(sizeof(uint32_t) * numElements));
    NXSL_Value **valueList = static_cast<NXSL_Value**>(MemAllocLocal(sizeof(NXSL_Value *) * numElements));
    memset(valueList, 0, sizeof(NXSL_Value *) * numElements);
@@ -2638,7 +2664,7 @@ NXSL_Value *NXSL_VM::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL b
          for(i = 0; i < cgcount; i++)
          {
             char varName[16];
-            snprintf(varName, 16, "$%d", i);
+            PositionToVarName(i, varName);
             NXSL_Variable *var = m_localVariables->find(varName);
 
             int start = pmatch[i * 2];

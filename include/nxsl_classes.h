@@ -901,6 +901,7 @@ enum class NXSL_VariableSystemType
 class LIBNXSL_EXPORTABLE NXSL_VariableSystem : public NXSL_RuntimeObject
 {
 protected:
+   MemoryPool m_pool;
    NXSL_VariablePtr *m_variables;
    NXSL_VariableSystemType m_type;
    int m_restorePointCount;
