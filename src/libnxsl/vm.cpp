@@ -1027,10 +1027,10 @@ void NXSL_VM::execute()
 		case OPCODE_INCP_ELEMENT:	// Increment array or map  element and get; stack should contain: array index (top)
 		case OPCODE_DECP_ELEMENT:	// Decrement array or map  element and get; stack should contain: array index (top)
 			pValue = m_dataStack->pop();
-			if (pValue != NULL)
+			if (pValue != nullptr)
 			{
 				NXSL_Value *container = m_dataStack->pop();
-				if (container != NULL)
+				if (container != nullptr)
 				{
 					if (container->isArray())
 					{
@@ -1395,8 +1395,10 @@ void NXSL_VM::execute()
          pValue = m_dataStack->pop();
          if (pValue != nullptr)
          {
-            pValue->convert(NXSL_DT_STRING);
-				m_env->print(pValue);
+            if (pValue->convert(NXSL_DT_STRING))
+               m_env->print(pValue);
+            else
+               error(NXSL_ERR_TYPE_CAST);
             destroyValue(pValue);
          }
          else
@@ -1883,7 +1885,7 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
 
       if (opcode == OPCODE_INCP_ELEMENT)
       {
-         if ((element != NULL) && element->isNumeric())
+         if ((element != nullptr) && element->isNumeric())
          {
             element->increment();
          }
@@ -1894,7 +1896,7 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
       }
       else if (opcode == OPCODE_DECP_ELEMENT)
       {
-         if ((element != NULL) && element->isNumeric())
+         if ((element != nullptr) && element->isNumeric())
          {
             element->decrement();
          }
@@ -1904,11 +1906,11 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
          }
       }
 
-      m_dataStack->push((element != NULL) ? createValue(element) : createValue());
+      m_dataStack->push((element != nullptr) ? createValue(element) : createValue());
 
       if (opcode == OPCODE_INC_ELEMENT)
       {
-         if ((element != NULL) && element->isNumeric())
+         if ((element != nullptr) && element->isNumeric())
          {
             element->increment();
          }
@@ -1919,7 +1921,7 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
       }
       else if (opcode == OPCODE_DEC_ELEMENT)
       {
-         if ((element != NULL) && element->isNumeric())
+         if ((element != nullptr) && element->isNumeric())
          {
             element->decrement();
          }
@@ -2229,10 +2231,16 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                   break;
                case OPCODE_CONCAT:
                   pRes = pVal1;
-                  pVal1 = NULL;
-                  pRes->convert(NXSL_DT_STRING);
-                  pszText2 = pVal2->getValueAsString(&dwLen2);
-                  pRes->concatenate(pszText2, dwLen2);
+                  pVal1 = nullptr;
+                  if (pRes->convert(NXSL_DT_STRING))
+                  {
+                     pszText2 = pVal2->getValueAsString(&dwLen2);
+                     pRes->concatenate(pszText2, dwLen2);
+                  }
+                  else
+                  {
+                     error(NXSL_ERR_TYPE_CAST);
+                  }
                   break;
                case OPCODE_LIKE:
                case OPCODE_ILIKE:

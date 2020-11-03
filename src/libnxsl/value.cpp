@@ -382,13 +382,17 @@ NXSL_Value::~NXSL_Value()
 /**
  * Dispose value - prepare for destructor call or value replacement
  */
-void NXSL_Value::dispose()
+void NXSL_Value::dispose(bool disposeString)
 {
-   MemFree(m_stringPtr);
+   if (disposeString)
+   {
+      MemFree(m_stringPtr);
 #ifdef UNICODE
-   MemFree(m_mbString);
+      MemFree(m_mbString);
 #endif
-   m_stringIsValid = FALSE;
+      m_stringIsValid = FALSE;
+   }
+
    switch(m_dataType)
    {
       case NXSL_DT_OBJECT:
@@ -536,8 +540,35 @@ void NXSL_Value::updateString()
 /**
  * Convert to another data type
  */
-bool NXSL_Value::convert(int nDataType)
+bool NXSL_Value::convert(int targetDataType)
 {
+   if (m_dataType == targetDataType)
+      return true;
+
+	if (targetDataType == NXSL_DT_STRING)
+   {
+	   if (isString())
+	      return true;
+
+      if (m_dataType == NXSL_DT_NULL)
+      {
+         // Next call to updateString() will create empty string value
+         m_dataType = NXSL_DT_STRING;
+         invalidateString();
+         return true;
+      }
+
+	   if ((m_dataType == NXSL_DT_ARRAY) || (m_dataType == NXSL_DT_OBJECT) || (m_dataType == NXSL_DT_ITERATOR) || (m_dataType == NXSL_DT_HASHMAP))
+	   {
+	      // Call to updateString() will create string representation of object/array/etc.
+	      // and dispose(false) will destroy object value leaving string representation intact
+	      updateString();
+	      dispose(false);
+         m_dataType = NXSL_DT_STRING;
+         return true;
+	   }
+   }
+
    int32_t nInt32;
    uint32_t uInt32;
    int64_t nInt64;
@@ -545,58 +576,26 @@ bool NXSL_Value::convert(int nDataType)
    double dReal;
    bool bRet = true;
 
-   if (m_dataType == nDataType)
-      return true;
-
-	if ((nDataType == NXSL_DT_STRING) && isString())
-		return true;
-
-   if ((nDataType == NXSL_DT_STRING) && isArray())
-   {
-      StringBuffer sb;
-      m_value.arrayHandle->getObject()->toString(&sb, _T(", "), true);
-      m_value.arrayHandle->decRefCount();
-      if (m_value.arrayHandle->isUnused())
-         delete m_value.arrayHandle;
-      m_dataType = NXSL_DT_STRING;
-      m_length = (UINT32)sb.length();
-      if (m_length < NXSL_SHORT_STRING_LENGTH)
-      {
-         _tcscpy(m_stringValue, sb.cstr());
-         m_stringPtr = nullptr;
-      }
-      else
-      {
-         m_stringPtr = MemCopyString(sb.cstr());
-      }
-#ifdef UNICODE
-      m_mbString = nullptr;
-#endif
-      m_stringIsValid = TRUE;
-      updateNumber();
-      return true;
-   }
-
-   switch(nDataType)
+   switch(targetDataType)
    {
       case NXSL_DT_INT32:
          nInt32 = getValueAsIntegerType<int32_t>();
-         m_dataType = nDataType;
+         m_dataType = targetDataType;
          m_value.int32 = nInt32;
          break;
       case NXSL_DT_UINT32:
          uInt32 = getValueAsIntegerType<uint32_t>();
-         m_dataType = nDataType;
+         m_dataType = targetDataType;
          m_value.uint32 = uInt32;
          break;
       case NXSL_DT_INT64:
          nInt64 = getValueAsIntegerType<int64_t>();
-         m_dataType = nDataType;
+         m_dataType = targetDataType;
          m_value.int64 = nInt64;
          break;
       case NXSL_DT_UINT64:
          uInt64 = getValueAsIntegerType<uint64_t>();
-         m_dataType = nDataType;
+         m_dataType = targetDataType;
          m_value.uint64 = uInt64;
          break;
       case NXSL_DT_REAL:
@@ -613,19 +612,10 @@ bool NXSL_Value::convert(int nDataType)
          else
          {
             dReal = getValueAsReal();
-            m_dataType = nDataType;
+            m_dataType = targetDataType;
             m_value.real = dReal;
          }
          break;
-		case NXSL_DT_STRING:
-			if (m_dataType == NXSL_DT_NULL)
-			{
-				m_dataType = NXSL_DT_STRING;
-				bRet = true;
-				// String value will be invalidated on exit, and next
-				// call to updateString() will create empty string value
-			}
-			break;
       default:
          bRet = false;
          break;
