@@ -91,7 +91,7 @@ struct LIBNXSL_EXPORTABLE NXSL_Identifier
    NXSL_Identifier(const WCHAR *s)
    {
       memset(value, 0, sizeof(value));
-      WideCharToMultiByte(CP_UTF8, 0, s, -1, value, MAX_IDENTIFIER_LENGTH - 1, NULL, NULL);
+      wchar_to_utf8(s, -1, value, MAX_IDENTIFIER_LENGTH - 1);
       length = (BYTE)strlen(value);
    }
 #endif
@@ -101,6 +101,17 @@ struct LIBNXSL_EXPORTABLE NXSL_Identifier
       memset(value, 0, sizeof(value));
       strncpy(value, s.v, MAX_IDENTIFIER_LENGTH - 1);
       length = (BYTE)strlen(value);
+   }
+
+   NXSL_Identifier(const NXSL_Identifier& src)
+   {
+      memcpy(this, &src, sizeof(NXSL_Identifier));
+   }
+
+   NXSL_Identifier& operator=(const NXSL_Identifier& src)
+   {
+      memcpy(this, &src, sizeof(NXSL_Identifier));
+      return *this;
    }
 
    bool equals(const NXSL_Identifier& i) const
@@ -617,30 +628,40 @@ public:
 class LIBNXSL_EXPORTABLE NXSL_ValueManager
 {
 protected:
-   ObjectMemoryPool<NXSL_Value> *m_values;
+   ObjectMemoryPool<NXSL_Value> m_values;
+   ObjectMemoryPool<NXSL_Identifier> m_identifiers;
 
 public:
-   NXSL_ValueManager();
-   virtual ~NXSL_ValueManager();
+   NXSL_ValueManager() : m_values(256), m_identifiers(64) { }
+   virtual ~NXSL_ValueManager() { }
 
-   NXSL_Value *createValue() { return new(m_values->allocate()) NXSL_Value(); }
-   NXSL_Value *createValue(const NXSL_Value *src) { return new(m_values->allocate()) NXSL_Value(src); }
-   NXSL_Value *createValue(NXSL_Object *object) { return new(m_values->allocate()) NXSL_Value(object); }
-   NXSL_Value *createValue(NXSL_Array *array) { return new(m_values->allocate()) NXSL_Value(array); }
-   NXSL_Value *createValue(NXSL_Iterator *iterator) { return new(m_values->allocate()) NXSL_Value(iterator); }
-   NXSL_Value *createValue(NXSL_HashMap *hashMap) { return new(m_values->allocate()) NXSL_Value(hashMap); }
-   NXSL_Value *createValue(int32_t n) { return new(m_values->allocate()) NXSL_Value(n); }
-   NXSL_Value *createValue(uint32_t n) { return new(m_values->allocate()) NXSL_Value(n); }
-   NXSL_Value *createValue(int64_t n) { return new(m_values->allocate()) NXSL_Value(n); }
-   NXSL_Value *createValue(uint64_t n) { return new(m_values->allocate()) NXSL_Value(n); }
-   NXSL_Value *createValue(double d) { return new(m_values->allocate()) NXSL_Value(d); }
-   NXSL_Value *createValue(bool b) { return new(m_values->allocate()) NXSL_Value(b); }
-   NXSL_Value *createValue(const TCHAR *s) { return new(m_values->allocate()) NXSL_Value(s); }
-   NXSL_Value *createValue(const TCHAR *s, size_t l) { return new(m_values->allocate()) NXSL_Value(s, l); }
+   NXSL_Value *createValue() { return new(m_values.allocate()) NXSL_Value(); }
+   NXSL_Value *createValue(const NXSL_Value *src) { return new(m_values.allocate()) NXSL_Value(src); }
+   NXSL_Value *createValue(NXSL_Object *object) { return new(m_values.allocate()) NXSL_Value(object); }
+   NXSL_Value *createValue(NXSL_Array *array) { return new(m_values.allocate()) NXSL_Value(array); }
+   NXSL_Value *createValue(NXSL_Iterator *iterator) { return new(m_values.allocate()) NXSL_Value(iterator); }
+   NXSL_Value *createValue(NXSL_HashMap *hashMap) { return new(m_values.allocate()) NXSL_Value(hashMap); }
+   NXSL_Value *createValue(int32_t n) { return new(m_values.allocate()) NXSL_Value(n); }
+   NXSL_Value *createValue(uint32_t n) { return new(m_values.allocate()) NXSL_Value(n); }
+   NXSL_Value *createValue(int64_t n) { return new(m_values.allocate()) NXSL_Value(n); }
+   NXSL_Value *createValue(uint64_t n) { return new(m_values.allocate()) NXSL_Value(n); }
+   NXSL_Value *createValue(double d) { return new(m_values.allocate()) NXSL_Value(d); }
+   NXSL_Value *createValue(bool b) { return new(m_values.allocate()) NXSL_Value(b); }
+   NXSL_Value *createValue(const TCHAR *s) { return new(m_values.allocate()) NXSL_Value(s); }
+   NXSL_Value *createValue(const TCHAR *s, size_t l) { return new(m_values.allocate()) NXSL_Value(s, l); }
 #ifdef UNICODE
-   NXSL_Value *createValue(const char *s) { return new(m_values->allocate()) NXSL_Value(s); }
+   NXSL_Value *createValue(const char *s) { return new(m_values.allocate()) NXSL_Value(s); }
 #endif
-   void destroyValue(NXSL_Value *v) { m_values->destroy(v); }
+   void destroyValue(NXSL_Value *v) { m_values.destroy(v); }
+
+   NXSL_Identifier *createIdentifier() { return new(m_identifiers.allocate()) NXSL_Identifier(); }
+   NXSL_Identifier *createIdentifier(const char *s) { return new(m_identifiers.allocate()) NXSL_Identifier(s); }
+#ifdef UNICODE
+   NXSL_Identifier *createIdentifier(const WCHAR *s) { return new(m_identifiers.allocate()) NXSL_Identifier(s); }
+#endif
+   NXSL_Identifier *createIdentifier(const identifier_t& s) { return new(m_identifiers.allocate()) NXSL_Identifier(s); }
+   NXSL_Identifier *createIdentifier(const NXSL_Identifier& src) { return new(m_identifiers.allocate()) NXSL_Identifier(src); }
+   void destroyIdentifier(NXSL_Identifier *i) { m_identifiers.destroy(i); }
 };
 
 /**
@@ -838,27 +859,27 @@ class LIBNXSL_EXPORTABLE NXSL_Instruction
 
 protected:
    NXSL_ValueManager *m_vm;
-   INT16 m_opCode;
-   INT16 m_stackItems;
+   int16_t m_opCode;
+   int16_t m_stackItems;
    union
    {
       NXSL_Value *m_constant;
       NXSL_Identifier *m_identifier;
       NXSL_Variable *m_variable;
       const NXSL_ExtFunction *m_function;
-      UINT32 m_addr;
+      uint32_t m_addr;
    } m_operand;
-   UINT32 m_addr2;   // Second address
-   INT32 m_sourceLine;
+   uint32_t m_addr2;   // Second address
+   int32_t m_sourceLine;
 
 public:
-   NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode);
-   NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, NXSL_Value *value);
-   NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, const NXSL_Identifier& identifier);
-   NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, const NXSL_Identifier& identifier, INT16 stackItems, UINT32 addr2 = INVALID_ADDRESS);
-   NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, UINT32 addr);
-   NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, INT16 stackItems);
-   NXSL_Instruction(NXSL_ValueManager *vm, NXSL_Instruction *src);
+   NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode);
+   NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, NXSL_Value *value);
+   NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, const NXSL_Identifier& identifier);
+   NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, const NXSL_Identifier& identifier, int16_t stackItems, uint32_t addr2 = INVALID_ADDRESS);
+   NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, uint32_t addr);
+   NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, int16_t stackItems);
+   NXSL_Instruction(NXSL_ValueManager *vm, const NXSL_Instruction *src);
    ~NXSL_Instruction();
 
    OperandType getOperandType();
@@ -931,7 +952,7 @@ public:
 struct NXSL_Module
 {
    TCHAR m_name[MAX_PATH];
-   UINT32 m_codeStart;
+   uint32_t m_codeStart;
    int m_codeSize;
    int m_functionStart;
    int m_numFunctions;
@@ -943,11 +964,10 @@ struct NXSL_Module
 struct NXSL_IdentifierLocation
 {
    NXSL_Identifier m_identifier;
-   UINT32 m_addr;
+   uint32_t m_addr;
 
-   NXSL_IdentifierLocation(const NXSL_Identifier& identifier, UINT32 addr)
+   NXSL_IdentifierLocation(const NXSL_Identifier& identifier, uint32_t addr) : m_identifier(identifier)
    {
-      m_identifier = identifier;
       m_addr = addr;
    }
 };

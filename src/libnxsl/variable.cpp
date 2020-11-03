@@ -115,7 +115,7 @@ NXSL_VariableSystem::~NXSL_VariableSystem()
 {
    clear();
    for(int i = 0; i < m_restorePointCount; i++)
-      delete m_restorePoints[i].identifier;
+      m_vm->destroyIdentifier(m_restorePoints[i].identifier);
 }
 
 /**
