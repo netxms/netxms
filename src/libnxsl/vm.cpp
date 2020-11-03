@@ -1254,7 +1254,7 @@ void NXSL_VM::execute()
          {
             // convert to direct call using pointer
             cp->m_opCode = OPCODE_CALL_EXTPTR;
-            delete cp->m_operand.m_identifier;
+            destroyIdentifier(cp->m_operand.m_identifier);
             cp->m_operand.m_function = pFunc;
 
             if (callExternalFunction(pFunc, cp->m_stackItems))
@@ -1267,7 +1267,7 @@ void NXSL_VM::execute()
             {
                // convert to CALL
                cp->m_opCode = OPCODE_CALL;
-               delete cp->m_operand.m_identifier;
+               destroyIdentifier(cp->m_operand.m_identifier);
                cp->m_operand.m_addr = addr;
 
                dwNext = addr;
@@ -2400,12 +2400,12 @@ void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
    for(int i = 0; i < module->m_instructionSet.size(); i++)
       m_instructionSet.add(new NXSL_Instruction(this, module->m_instructionSet.get(i)));
    relocateCode(start, module->m_instructionSet.size(), start);
-   
+
    // Add function names from module
    int fnstart = m_functions.size();
    char fname[MAX_IDENTIFIER_LENGTH];
 #ifdef UNICODE
-   WideCharToMultiByte(CP_UTF8, 0, importInfo->name, -1, fname, MAX_IDENTIFIER_LENGTH - 1, nullptr, nullptr);
+   wchar_to_utf8(importInfo->name, -1, fname, MAX_IDENTIFIER_LENGTH - 1);
    fname[MAX_IDENTIFIER_LENGTH - 1] = 0;
 #else
    strlcpy(fname, importInfo->name, MAX_IDENTIFIER_LENGTH);

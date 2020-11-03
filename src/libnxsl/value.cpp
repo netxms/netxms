@@ -24,22 +24,6 @@
 #include "libnxsl.h"
 
 /**
- * Value manager constructor
- */
-NXSL_ValueManager::NXSL_ValueManager()
-{
-   m_values = new ObjectMemoryPool<NXSL_Value>(256);
-}
-
-/**
- * Value manager destructor
- */
-NXSL_ValueManager::~NXSL_ValueManager()
-{
-   delete m_values;
-}
-
-/**
  * Create "null" value
  */
 NXSL_Value::NXSL_Value()

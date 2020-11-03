@@ -265,7 +265,7 @@ void NXSL_Program::resolveFunctions()
             NXSL_Function *f = m_functions.get(j);
             if (instr->m_operand.m_identifier->equals(f->m_name))
             {
-               delete instr->m_operand.m_identifier;
+               destroyIdentifier(instr->m_operand.m_identifier);
                instr->m_operand.m_addr = f->m_addr;
                instr->m_opCode = OPCODE_CALL;
                break;

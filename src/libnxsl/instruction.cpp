@@ -26,7 +26,7 @@
 /**
  * Create instruction without operand
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode)
 {
    m_vm = vm;
    m_opCode = opCode;
@@ -38,7 +38,7 @@ NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode
 /**
  * Create instruction with constant operand
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, NXSL_Value *value)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, NXSL_Value *value)
 {
    m_vm = vm;
    m_opCode = opCode;
@@ -51,12 +51,12 @@ NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode
 /**
  * Create instruction with identifier operand.
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, const NXSL_Identifier& identifier)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, const NXSL_Identifier& identifier)
 {
    m_vm = vm;
    m_opCode = opCode;
    m_sourceLine = line;
-   m_operand.m_identifier = new NXSL_Identifier(identifier);
+   m_operand.m_identifier = vm->createIdentifier(identifier);
    m_stackItems = 0;
    m_addr2 = INVALID_ADDRESS;
 }
@@ -64,12 +64,12 @@ NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode
 /**
  * Create instruction with identifier operand, specific stack item count, and secondary address.
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, const NXSL_Identifier& identifier, INT16 stackItems, UINT32 addr2)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, const NXSL_Identifier& identifier, int16_t stackItems, uint32_t addr2)
 {
    m_vm = vm;
    m_opCode = opCode;
    m_sourceLine = line;
-   m_operand.m_identifier = new NXSL_Identifier(identifier);
+   m_operand.m_identifier = vm->createIdentifier(identifier);
    m_stackItems = stackItems;
    m_addr2 = addr2;
 }
@@ -77,7 +77,7 @@ NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode
 /**
  * Create instruction with address operand
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, UINT32 addr)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, uint32_t addr)
 {
    m_vm = vm;
    m_opCode = opCode;
@@ -90,7 +90,7 @@ NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode
 /**
  * Create instruction without operand and non-zero stack item count
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, INT16 stackItems)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, int16_t stackItems)
 {
    m_vm = vm;
    m_opCode = opCode;
@@ -102,7 +102,7 @@ NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode
 /**
  * Copy constructor
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, NXSL_Instruction *src)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, const NXSL_Instruction *src)
 {
    m_vm = vm;
    m_opCode = src->m_opCode;
@@ -114,7 +114,7 @@ NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, NXSL_Instruction *src)
          m_operand.m_constant = m_vm->createValue(src->m_operand.m_constant);
          break;
       case OP_TYPE_IDENTIFIER:
-         m_operand.m_identifier = new NXSL_Identifier(*src->m_operand.m_identifier);
+         m_operand.m_identifier = vm->createIdentifier(*src->m_operand.m_identifier);
          break;
       default:
          m_operand.m_addr = src->m_operand.m_addr;
@@ -131,7 +131,7 @@ NXSL_Instruction::~NXSL_Instruction()
    switch(getOperandType())
    {
       case OP_TYPE_IDENTIFIER:
-         delete m_operand.m_identifier;
+         m_vm->destroyIdentifier(m_operand.m_identifier);
          break;
       case OP_TYPE_CONST:
          m_vm->destroyValue(m_operand.m_constant);
