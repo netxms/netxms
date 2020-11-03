@@ -526,7 +526,7 @@ protected:
 #endif
       m_stringIsValid = FALSE;
    }
-   void dispose();
+   void dispose(bool disposeString = true);
 
    NXSL_Value();
    NXSL_Value(const NXSL_Value *src);
@@ -553,7 +553,7 @@ public:
 	void setName(const char *name) { MemFree(m_name); m_name = MemCopyStringA(name); }
 	const char *getName() const { return m_name; }
 
-   bool convert(int nDataType);
+   bool convert(int targetDataType);
    int getDataType() const { return m_dataType; }
 
    bool isNull() const { return (m_dataType == NXSL_DT_NULL); }
