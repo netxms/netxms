@@ -455,6 +455,7 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 
                free(pdwUsers);
                free(pdwRights);
+               MemFree(pACL);
             }
             else
             {
