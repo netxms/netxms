@@ -564,6 +564,43 @@ LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstr
 }
 
 /**
+ * Parse data for external table
+ */
+void ParseExternalTableData(const ExternalTableDefinition& td, const StringList& data, Table *table)
+{
+   int numColumns = 0;
+   TCHAR **columns = SplitString(data.get(0), td.separator, &numColumns);
+   for(int n = 0; n < numColumns; n++)
+   {
+      bool instanceColumn = false;
+      for(int i = 0; i < td.instanceColumnCount; i++)
+         if (!_tcsicmp(td.instanceColumns[i], columns[n]))
+         {
+            instanceColumn = true;
+            break;
+         }
+      table->addColumn(columns[n], DCI_DT_INT, columns[n], instanceColumn);
+      MemFree(columns[n]);
+   }
+   MemFree(columns);
+
+   for(int i = 1; i < data.size(); i++)
+   {
+      table->addRow();
+      int count = 0;
+      TCHAR **values = SplitString(data.get(i), td.separator, &count);
+      for(int n = 0; n < count; n++)
+      {
+         if (n < numColumns)
+            table->setPreallocated(n, values[n]);
+         else
+            MemFree(values[n]);
+      }
+      MemFree(values);
+   }
+}
+
+/**
  * Handler function for external (user-defined) tables
  */
 LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
@@ -576,36 +613,7 @@ LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
    {
       if (output.size() > 0)
       {
-         int numColumns = 0;
-         TCHAR **columns = SplitString(output.get(0), td->separator, &numColumns);
-         for(int n = 0; n < numColumns; n++)
-         {
-            bool instanceColumn = false;
-            for(int i = 0; i < td->instanceColumnCount; i++)
-               if (!_tcsicmp(td->instanceColumns[i], columns[n]))
-               {
-                  instanceColumn = true;
-                  break;
-               }
-            value->addColumn(columns[n], DCI_DT_INT, columns[n], instanceColumn);
-            MemFree(columns[n]);
-         }
-         MemFree(columns);
-
-         for(int i = 1; i < output.size(); i++)
-         {
-            value->addRow();
-            int count = 0;
-            TCHAR **data = SplitString(output.get(i), td->separator, &count);
-            for(int n = 0; n < count; n++)
-            {
-               if (n < numColumns)
-                  value->setPreallocated(n, data[n]);
-               else
-                  MemFree(data[n]);
-            }
-            MemFree(data);
-         }
+         ParseExternalTableData(*td, output, value);
       }
       else
       {

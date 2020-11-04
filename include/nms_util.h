@@ -1652,13 +1652,13 @@ public:
 
    int size() const;
    bool isEmpty() const { return size() == 0; }
-   bool contains(const TCHAR *key) const { return (key != NULL) ? (find(key, _tcslen(key) * sizeof(TCHAR)) != NULL) : false; }
-   bool contains(const TCHAR *key, size_t len) const { return (key != NULL) ? (find(key, len * sizeof(TCHAR)) != NULL) : false; }
+   bool contains(const TCHAR *key) const { return (key != nullptr) ? (find(key, _tcslen(key) * sizeof(TCHAR)) != nullptr) : false; }
+   bool contains(const TCHAR *key, size_t len) const { return (key != nullptr) ? (find(key, len * sizeof(TCHAR)) != nullptr) : false; }
 
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *userData) const;
    const void *findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData) const;
 
-   StructArray<KeyValuePair<void>> *toArray(bool (*filter)(const TCHAR *, const void *, void *) = NULL, void *userData = NULL) const;
+   StructArray<KeyValuePair<void>> *toArray(bool (*filter)(const TCHAR *, const void *, void *) = nullptr, void *userData = nullptr) const;
    StringList *keys() const;
 
    void setContext(void *context) { m_context = context; }
@@ -1682,7 +1682,7 @@ public:
 
 	StringMap& operator =(const StringMap &src);
 
-	void set(const TCHAR *key, const TCHAR *value) { if (key != NULL) setObject((TCHAR *)key, MemCopyString(value), false); }
+	void set(const TCHAR *key, const TCHAR *value) { if (key != nullptr) setObject((TCHAR *)key, MemCopyString(value), false); }
 	void setPreallocated(TCHAR *key, TCHAR *value) { setObject(key, value, true); }
    void set(const TCHAR *key, INT32 value);
 	void set(const TCHAR *key, UINT32 value);
@@ -1690,7 +1690,7 @@ public:
    void set(const TCHAR *key, UINT64 value);
    TCHAR *unlink(const TCHAR *key) { return (TCHAR *)StringMapBase::unlink(key); }
 
-   void addAll(const StringMap *src, bool (*filter)(const TCHAR *, const TCHAR *, void *) = NULL, void *context = NULL);
+   void addAll(const StringMap *src, bool (*filter)(const TCHAR *, const TCHAR *, void *) = nullptr, void *context = nullptr);
    template<typename C>
    void addAll(const StringMap *src, bool (*filter)(const TCHAR *, const TCHAR *, C *), C *context)
    {

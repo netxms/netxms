@@ -245,6 +245,7 @@ struct PolicyChangeNotification
 #define DCIDESC_AGENT_SYSLOGPROXY_ISENABLED          _T("Check if syslog proxy is enabled")
 #define DCIDESC_AGENT_SYSLOGPROXY_RECEIVEDMSGS       _T("Number of syslog messages received by agent")
 #define DCIDESC_AGENT_THREADPOOL_ACTIVEREQUESTS      _T("Agent thread pool {instance}: active requests")
+#define DCIDESC_AGENT_THREADPOOL_AVERAGEWAITTIME     _T("Agent thread pool {instance}: average wait time")
 #define DCIDESC_AGENT_THREADPOOL_CURRSIZE            _T("Agent thread pool {instance}: current size")
 #define DCIDESC_AGENT_THREADPOOL_LOAD                _T("Agent thread pool {instance}: current load")
 #define DCIDESC_AGENT_THREADPOOL_LOADAVG             _T("Agent thread pool {instance}: load average (1 minute)")
@@ -924,7 +925,7 @@ protected:
    virtual void endOfOutput() override;
 
 public:
-   KeyValueOutputProcessExecutor(const TCHAR *command);
+   KeyValueOutputProcessExecutor(const TCHAR *command, bool shellExec = true);
 
    virtual bool execute() override { m_data.clear(); return ProcessExecutor::execute(); }
 
@@ -932,6 +933,27 @@ public:
 
    TCHAR getSeparator() const { return m_separator; }
    void setSeparator(TCHAR s) { m_separator = s; }
+};
+
+/**
+ * Process executor that collect process output line by line
+ */
+class LIBNXAGENT_EXPORTABLE LineOutputProcessExecutor : public ProcessExecutor
+{
+private:
+   StringList m_data;
+   StringBuffer m_buffer;
+
+protected:
+   virtual void onOutput(const char *text) override;
+   virtual void endOfOutput() override;
+
+public:
+   LineOutputProcessExecutor(const TCHAR *command, bool shellExec = true);
+
+   virtual bool execute() override { m_data.clear(); return ProcessExecutor::execute(); }
+
+   const StringList& getData() const { return m_data; }
 };
 
 /**

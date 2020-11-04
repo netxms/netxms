@@ -563,6 +563,9 @@ LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
       case THREAD_POOL_ACTIVE_REQUESTS:
          ret_int(value, info.activeRequests);
          break;
+      case THREAD_POOL_AVG_WAIT_TIME:
+         ret_int(value, info.averageWaitTime);
+         break;
       case THREAD_POOL_CURR_SIZE:
          ret_int(value, info.curThreads);
          break;

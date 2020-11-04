@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -23,16 +23,16 @@
 #include "libnxagent.h"
 
 /**
- * Create new parameter executor object
+ * Create new key-value executor object
  */
-KeyValueOutputProcessExecutor::KeyValueOutputProcessExecutor(const TCHAR *command) : ProcessExecutor(command)
+KeyValueOutputProcessExecutor::KeyValueOutputProcessExecutor(const TCHAR *command, bool shellExec) : ProcessExecutor(command, shellExec)
 {
    m_sendOutput = true;
    m_separator = _T('=');
 }
 
 /**
- * Parameter executor output handler
+ * Key-value executor output handler
  */
 void KeyValueOutputProcessExecutor::onOutput(const char *text)
 {
@@ -42,13 +42,13 @@ void KeyValueOutputProcessExecutor::onOutput(const char *text)
 #else
    buffer = _tcsdup(text);
 #endif
-   TCHAR *newLinePtr = NULL, *lineStartPtr = buffer, *eqPtr = NULL;
+   TCHAR *newLinePtr = nullptr, *lineStartPtr = buffer, *eqPtr = nullptr;
    do
    {
       newLinePtr = _tcschr(lineStartPtr, _T('\r'));
-      if (newLinePtr == NULL)
+      if (newLinePtr == nullptr)
          newLinePtr = _tcschr(lineStartPtr, _T('\n'));
-      if (newLinePtr != NULL)
+      if (newLinePtr != nullptr)
       {
          *newLinePtr = 0;
          m_buffer.append(lineStartPtr);
@@ -107,6 +107,72 @@ void KeyValueOutputProcessExecutor::endOfOutput()
          Trim(ptr);
          m_data.set(m_buffer.getBuffer(), ptr);
       }
+      m_buffer.clear();
+   }
+}
+
+/**
+ * Create new line output executor object
+ */
+LineOutputProcessExecutor::LineOutputProcessExecutor(const TCHAR *command, bool shellExec) : ProcessExecutor(command, shellExec)
+{
+   m_sendOutput = true;
+}
+
+/**
+ * Line output executor output handler
+ */
+void LineOutputProcessExecutor::onOutput(const char *text)
+{
+   TCHAR *buffer;
+#ifdef UNICODE
+   buffer = WideStringFromMBStringSysLocale(text);
+#else
+   buffer = _tcsdup(text);
+#endif
+   TCHAR *newLinePtr = nullptr, *lineStartPtr = buffer;
+   do
+   {
+      newLinePtr = _tcschr(lineStartPtr, _T('\r'));
+      if (newLinePtr == nullptr)
+      {
+         newLinePtr = _tcschr(lineStartPtr, _T('\n'));
+      }
+      else
+      {
+         if (*(newLinePtr + 1) == '\n')
+         {
+            *newLinePtr = 0;
+            newLinePtr++;
+         }
+      }
+      if (newLinePtr != nullptr)
+      {
+         *newLinePtr = 0;
+         m_buffer.append(lineStartPtr);
+      }
+      else
+      {
+         m_buffer.append(lineStartPtr);
+         break;
+      }
+
+      m_data.add(m_buffer);
+      m_buffer.clear();
+      lineStartPtr = newLinePtr + 1;
+   } while (*lineStartPtr != 0);
+
+   MemFree(buffer);
+}
+
+/**
+ * End of output callback
+ */
+void LineOutputProcessExecutor::endOfOutput()
+{
+   if (m_buffer.length() > 0)
+   {
+      m_data.add(m_buffer);
       m_buffer.clear();
    }
 }

@@ -128,7 +128,8 @@ enum ThreadPoolStat
    THREAD_POOL_USAGE,
    THREAD_POOL_LOADAVG_1,
    THREAD_POOL_LOADAVG_5,
-   THREAD_POOL_LOADAVG_15
+   THREAD_POOL_LOADAVG_15,
+   THREAD_POOL_AVG_WAIT_TIME
 };
 
 /**
@@ -162,6 +163,22 @@ struct ExternalTableDefinition
    TCHAR separator;
    int instanceColumnCount;
    TCHAR **instanceColumns;
+
+   ExternalTableDefinition()
+   {
+      cmdLine = nullptr;
+      separator = 0;
+      instanceColumnCount = 0;
+      instanceColumns = nullptr;
+   }
+
+   ~ExternalTableDefinition()
+   {
+      MemFree(cmdLine);
+      for(int i = 0; i < instanceColumnCount; i++)
+         MemFree(instanceColumns[i]);
+      MemFree(instanceColumns);
+   }
 };
 
 /**
@@ -733,7 +750,7 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
               const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description,
               int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns);
 bool AddExternalParameter(TCHAR *config, bool shellExec, bool isList);
-bool AddExternalTable(TCHAR *config, bool shellExec);
+bool AddExternalTable(TCHAR *config);
 UINT32 GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session);
 UINT32 GetListValue(const TCHAR *param, StringList *value, AbstractCommSession *session);
 UINT32 GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *session);
@@ -755,10 +772,15 @@ UINT32 ExecuteShellCommand(TCHAR *pszCommand, const StringList *pArgs);
 
 void StartExternalParameterProviders();
 void StopExternalParameterProviders();
+int GetExternalDataProviderCount();
 bool AddParametersProvider(const TCHAR *line);
 LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer);
-void ListParametersFromExtProviders(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
+void ListParametersFromExtProviders(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
 void ListParametersFromExtProviders(StringList *list);
+void AddTableProvider(const TCHAR *name, ExternalTableDefinition *definition, uint32_t pollingInterval, const TCHAR *description);
+LONG GetTableValueFromExtProvider(const TCHAR *name, Table *table);
+void ListTablesFromExtProviders(NXCPMessage *msg, uint32_t *baseId, uint32_t *count);
+void ListTablesFromExtProviders(StringList *list);
 
 bool AddExternalSubagent(const TCHAR *config);
 void StopExternalSubagentConnectors();

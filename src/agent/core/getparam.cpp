@@ -206,6 +206,7 @@ static LONG H_TableList(const TCHAR *cmd, const TCHAR *arg, StringList *value, A
 
    for(i = 0; i < m_iNumTables; i++)
 		value->add(m_pTableList[i].name);
+   ListTablesFromExtProviders(value);
 	ListTablesFromExtSubagents(value);
    return SYSINFO_RC_SUCCESS;
 }
@@ -433,6 +434,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.SyslogProxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_SYSLOG_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_SYSLOGPROXY_ISENABLED },
    { _T("Agent.SyslogProxy.ReceivedMessages"), H_SyslogStats, _T("R"), DCI_DT_COUNTER64, DCIDESC_AGENT_SYSLOGPROXY_RECEIVEDMSGS },
    { _T("Agent.ThreadPool.ActiveRequests(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_ACTIVE_REQUESTS, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_ACTIVEREQUESTS },
+   { _T("Agent.ThreadPool.AverageWaitTime(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_AVG_WAIT_TIME, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_AVERAGEWAITTIME },
    { _T("Agent.ThreadPool.CurrSize(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_CURR_SIZE, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_CURRSIZE },
    { _T("Agent.ThreadPool.Load(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_LOAD, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_LOAD },
    { _T("Agent.ThreadPool.LoadAverage(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_LOADAVG_1, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_LOADAVG },
@@ -707,16 +709,16 @@ bool AddExternalParameter(TCHAR *config, bool shellExec, bool isList)
 /**
  * Add external table
  */
-bool AddExternalTable(TCHAR *config, bool shellExec)
+bool AddExternalTable(TCHAR *config)
 {
    TCHAR *options = _tcschr(config, _T(':'));
-   if (options == NULL)
+   if (options == nullptr)
       return false;
    *options = 0;
    options++;
 
    TCHAR *cmdLine = _tcschr(options, _T(':'));
-   if (cmdLine == NULL)
+   if (cmdLine == nullptr)
       return false;
    *cmdLine = 0;
    cmdLine++;
@@ -757,13 +759,21 @@ bool AddExternalTable(TCHAR *config, bool shellExec)
       }
    }
 
-   ExternalTableDefinition *td = new ExternalTableDefinition;
+   ExternalTableDefinition *td = new ExternalTableDefinition();
    td->separator = separator[0];
-   td->cmdLine = (TCHAR *)malloc((_tcslen(cmdLine) + 2) * sizeof(TCHAR));
-   td->cmdLine[0] = shellExec ? _T('S') : _T('E');
+   td->cmdLine = MemAllocString(_tcslen(cmdLine) + 2);
+   td->cmdLine[0] = ExtractNamedOptionValueAsBool(options, _T("shellExec"), true) ? _T('S') : _T('E');
    _tcscpy(&td->cmdLine[1], cmdLine);
    td->instanceColumns = SplitString(instanceColumns, _T(','), &td->instanceColumnCount);
-   AddTable(config, H_ExternalTable, (const TCHAR *)td, instanceColumns, description, 0, NULL);
+   if (ExtractNamedOptionValueAsBool(options, _T("backgroundPolling"), false))
+   {
+      uint32_t pollingInterval = ExtractNamedOptionValueAsUInt(options, _T("pollingInterval"), 60);
+      AddTableProvider(config, td, pollingInterval, description);
+   }
+   else
+   {
+      AddTable(config, H_ExternalTable, reinterpret_cast<const TCHAR*>(td), instanceColumns, description, 0, nullptr);
+   }
    return true;
 }
 
@@ -974,8 +984,29 @@ UINT32 GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *sess
       }
 	}
 
-	if (i == m_iNumTables)
+   if (i == m_iNumTables)
    {
+      session->debugPrintf(7, _T("GetTableValue(): requesting table from external data providers"));
+      rc = GetTableValueFromExtProvider(param, value);
+      if (rc == SYSINFO_RC_SUCCESS)
+      {
+         dwErrorCode = ERR_SUCCESS;
+         m_dwProcessedRequests++;
+      }
+      else if (rc == SYSINFO_RC_ERROR)
+      {
+         dwErrorCode = ERR_INTERNAL_ERROR;
+         m_dwFailedRequests++;
+      }
+      else
+      {
+         dwErrorCode = ERR_UNKNOWN_PARAMETER;
+      }
+   }
+
+	if ((dwErrorCode == ERR_UNKNOWN_PARAMETER) && (i == m_iNumTables))
+   {
+      session->debugPrintf(7, _T("GetTableValue(): requesting table from external subagents"));
 		dwErrorCode = GetTableValueFromExtSubagent(param, value);
 		if (dwErrorCode == ERR_SUCCESS)
 		{
@@ -999,88 +1030,86 @@ UINT32 GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *sess
 /**
  * Put complete list of supported parameters into NXCP message
  */
-void GetParameterList(NXCPMessage *pMsg)
+void GetParameterList(NXCPMessage *msg)
 {
    int i;
-   UINT32 dwId, count;
+   uint32_t fieldId, count;
 
 	// Parameters
-   for(i = 0, count = 0, dwId = VID_PARAM_LIST_BASE; i < m_iNumParams; i++)
+   for(i = 0, count = 0, fieldId = VID_PARAM_LIST_BASE; i < m_iNumParams; i++)
    {
 		if (m_pParamList[i].dataType != DCI_DT_DEPRECATED)
 		{
-			pMsg->setField(dwId++, m_pParamList[i].name);
-			pMsg->setField(dwId++, m_pParamList[i].description);
-			pMsg->setField(dwId++, (WORD)m_pParamList[i].dataType);
+			msg->setField(fieldId++, m_pParamList[i].name);
+			msg->setField(fieldId++, m_pParamList[i].description);
+			msg->setField(fieldId++, (WORD)m_pParamList[i].dataType);
 			count++;
 		}
    }
-	ListParametersFromExtProviders(pMsg, &dwId, &count);
-	ListParametersFromExtSubagents(pMsg, &dwId, &count);
-   pMsg->setField(VID_NUM_PARAMETERS, count);
+	ListParametersFromExtProviders(msg, &fieldId, &count);
+	ListParametersFromExtSubagents(msg, &fieldId, &count);
+   msg->setField(VID_NUM_PARAMETERS, count);
 
 	// Push parameters
-   pMsg->setField(VID_NUM_PUSH_PARAMETERS, (UINT32)m_iNumPushParams);
-   for(i = 0, dwId = VID_PUSHPARAM_LIST_BASE; i < m_iNumPushParams; i++)
+   msg->setField(VID_NUM_PUSH_PARAMETERS, (UINT32)m_iNumPushParams);
+   for(i = 0, fieldId = VID_PUSHPARAM_LIST_BASE; i < m_iNumPushParams; i++)
    {
-      pMsg->setField(dwId++, m_pPushParamList[i].name);
-      pMsg->setField(dwId++, m_pPushParamList[i].description);
-      pMsg->setField(dwId++, (WORD)m_pPushParamList[i].dataType);
+      msg->setField(fieldId++, m_pPushParamList[i].name);
+      msg->setField(fieldId++, m_pPushParamList[i].description);
+      msg->setField(fieldId++, (WORD)m_pPushParamList[i].dataType);
    }
 
 	// Lists
-   pMsg->setField(VID_NUM_ENUMS, (UINT32)m_iNumEnums);
-   for(i = 0, dwId = VID_ENUM_LIST_BASE; i < m_iNumEnums; i++)
+   msg->setField(VID_NUM_ENUMS, (UINT32)m_iNumEnums);
+   for(i = 0, fieldId = VID_ENUM_LIST_BASE; i < m_iNumEnums; i++)
    {
-      pMsg->setField(dwId++, m_pEnumList[i].name);
+      msg->setField(fieldId++, m_pEnumList[i].name);
    }
-	ListListsFromExtSubagents(pMsg, &dwId, &count);
+	ListListsFromExtSubagents(msg, &fieldId, &count);
 
 	// Tables
-   pMsg->setField(VID_NUM_TABLES, (UINT32)m_iNumTables);
-   for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
+   msg->setField(VID_NUM_TABLES, (UINT32)m_iNumTables);
+   for(i = 0, fieldId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
    {
-      pMsg->setField(dwId++, m_pTableList[i].name);
-		pMsg->setField(dwId++, m_pTableList[i].instanceColumns);
-		pMsg->setField(dwId++, m_pTableList[i].description);
+      msg->setField(fieldId++, m_pTableList[i].name);
+		msg->setField(fieldId++, m_pTableList[i].instanceColumns);
+		msg->setField(fieldId++, m_pTableList[i].description);
    }
-	ListTablesFromExtSubagents(pMsg, &dwId, &count);
+   ListTablesFromExtProviders(msg, &fieldId, &count);
+	ListTablesFromExtSubagents(msg, &fieldId, &count);
 }
 
 /**
  * Put list of supported tables into NXCP message
  */
-void GetTableList(NXCPMessage *pMsg)
+void GetTableList(NXCPMessage *msg)
 {
-   int i;
-   UINT32 dwId;
-
-   for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
+   uint32_t fieldId = VID_TABLE_LIST_BASE;
+   for(int i = 0; i < m_iNumTables; i++)
    {
-      pMsg->setField(dwId++, m_pTableList[i].name);
-		pMsg->setField(dwId++, m_pTableList[i].instanceColumns);
-		pMsg->setField(dwId++, m_pTableList[i].description);
+      msg->setField(fieldId++, m_pTableList[i].name);
+		msg->setField(fieldId++, m_pTableList[i].instanceColumns);
+		msg->setField(fieldId++, m_pTableList[i].description);
    }
 
-   UINT32 count = (UINT32)m_iNumTables;
-	ListTablesFromExtSubagents(pMsg, &dwId, &count);
-   pMsg->setField(VID_NUM_TABLES, count);
+   uint32_t count = static_cast<uint32_t>(m_iNumTables);
+   ListTablesFromExtProviders(msg, &fieldId, &count);
+	ListTablesFromExtSubagents(msg, &fieldId, &count);
+   msg->setField(VID_NUM_TABLES, count);
 }
 
 /**
  * Put list of supported lists (enums) into NXCP message
  */
-void GetEnumList(NXCPMessage *pMsg)
+void GetEnumList(NXCPMessage *msg)
 {
-   int i;
-   UINT32 dwId;
-
-   for(i = 0, dwId = VID_ENUM_LIST_BASE; i < m_iNumEnums; i++)
+   uint32_t fieldId = VID_ENUM_LIST_BASE;
+   for(int i = 0; i < m_iNumEnums; i++)
    {
-      pMsg->setField(dwId++, m_pEnumList[i].name);
+      msg->setField(fieldId++, m_pEnumList[i].name);
    }
 
-   UINT32 count = (UINT32)m_iNumEnums;
-	ListListsFromExtSubagents(pMsg, &dwId, &count);
-   pMsg->setField(VID_NUM_ENUMS, count);
+   uint32_t count = static_cast<uint32_t>(m_iNumEnums);
+	ListListsFromExtSubagents(msg, &fieldId, &count);
+   msg->setField(VID_NUM_ENUMS, count);
 }

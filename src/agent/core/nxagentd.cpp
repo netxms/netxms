@@ -1003,8 +1003,6 @@ BOOL Initialize()
          GetScreenInfoForUserSession, QueueNotificationMessage);
    nxlog_debug(1, _T("Subagent API initialized"));
 
-   g_executorThreadPool = ThreadPoolCreate(_T("PROCEXEC"), 1, 32);
-
    if (!InitCryptoLib(s_enabledCiphers))
    {
       nxlog_write(NXLOG_ERROR, _T("Failed to initialize cryptografy module"));
@@ -1142,7 +1140,7 @@ BOOL Initialize()
 	}
 
 	// Load other subagents
-   if (m_pszSubagentList != NULL)
+   if (m_pszSubagentList != nullptr)
    {
       for(pItem = pEnd = m_pszSubagentList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
@@ -1213,12 +1211,12 @@ BOOL Initialize()
    }
 
    // Parse external lists
-   if (s_externalListsConfig != NULL)
+   if (s_externalListsConfig != nullptr)
    {
-      for(pItem = pEnd = s_externalListsConfig; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = s_externalListsConfig; pEnd != nullptr && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = _tcschr(pItem, _T('\n'));
-         if (pEnd != NULL)
+         if (pEnd != nullptr)
             *pEnd = 0;
          Trim(pItem);
          if (!AddExternalParameter(pItem, FALSE, TRUE))
@@ -1228,27 +1226,27 @@ BOOL Initialize()
    }
 
    // Parse external tables
-   if (s_externalTablesConfig != NULL)
+   if (s_externalTablesConfig != nullptr)
    {
-      for(pItem = pEnd = s_externalTablesConfig; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = s_externalTablesConfig; pEnd != nullptr && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = _tcschr(pItem, _T('\n'));
-         if (pEnd != NULL)
+         if (pEnd != nullptr)
             *pEnd = 0;
          Trim(pItem);
-         if (!AddExternalTable(pItem, false))
+         if (!AddExternalTable(pItem))
             nxlog_write(NXLOG_WARNING, _T("Unable to add external table \"%s\""), pItem);
       }
       MemFree(s_externalTablesConfig);
    }
 
    // Parse external parameters providers list
-   if (s_externalParameterProvidersConfig != NULL)
+   if (s_externalParameterProvidersConfig != nullptr)
    {
-      for(pItem = pEnd = s_externalParameterProvidersConfig; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = s_externalParameterProvidersConfig; pEnd != nullptr && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = _tcschr(pItem, _T('\n'));
-         if (pEnd != NULL)
+         if (pEnd != nullptr)
             *pEnd = 0;
          Trim(pItem);
          if (!AddParametersProvider(pItem))
@@ -1330,6 +1328,7 @@ BOOL Initialize()
       }
    }
 
+   g_executorThreadPool = ThreadPoolCreate(_T("PROCEXEC"), std::max((GetExternalDataProviderCount() + 1) / 2, 1), std::max(GetExternalDataProviderCount() * 2, 16));
    StartExternalParameterProviders();
 
    // Agent start time
