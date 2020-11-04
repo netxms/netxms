@@ -411,6 +411,11 @@ public class DataSources extends PreferencePage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
+      if (!isControlCreated())
+      {
+         return;
+      }
+	   
 		config.setDciList(dciList.toArray(new ChartDciConfig[dciList.size()]));
 		if (saveToDatabase && isApply)
 		{
