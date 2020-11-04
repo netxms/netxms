@@ -637,9 +637,9 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
    private boolean showGraphPropertyPages(GraphSettings settings)
    {
       PreferenceManager pm = new PreferenceManager();    
-      pm.addToRoot(new PreferenceNode("graph", new Graph(settings)));
-      pm.addToRoot(new PreferenceNode("general", new General(settings)));
-      pm.addToRoot(new PreferenceNode("source", new DataSources(settings)));
+      pm.addToRoot(new PreferenceNode("graph", new Graph(settings, true)));
+      pm.addToRoot(new PreferenceNode("general", new General(settings, true)));
+      pm.addToRoot(new PreferenceNode("source", new DataSources(settings, true)));
       
       PreferenceDialog dlg = new PreferenceDialog(getViewSite().getShell(), pm) {
          @Override

@@ -84,16 +84,18 @@ public class TemplateDataSources extends PreferencePage
 	private Button downButton;
 	private List<ChartDciConfig> dciList = null;
 	private ColorCache colorCache;
+	private boolean saveToDatabase;
    
    
    /**
     * Constructor
     * @param settings
     */
-   public TemplateDataSources(GraphSettings settings)
+   public TemplateDataSources(GraphSettings settings, boolean saveToDatabase)
    {
       super("Template Data Source");
-      config = settings;     
+      config = settings; 
+      this.saveToDatabase = saveToDatabase;
    }
 	
 	/* (non-Javadoc)
@@ -442,8 +444,13 @@ public class TemplateDataSources extends PreferencePage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
+      if (!isControlCreated())
+      {
+         return;
+      }
+      
 		config.setDciList(dciList.toArray(new ChartDciConfig[dciList.size()]));
-		if ((config instanceof GraphSettings) && isApply)
+		if (saveToDatabase && isApply)
 		{
 			setValid(false);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
