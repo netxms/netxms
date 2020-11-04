@@ -89,7 +89,7 @@ public:
 class LIBNETXMS_EXPORTABLE ProcessExecutor
 {
 private:
-   UINT32 m_streamId;
+   uint32_t m_streamId;
    THREAD m_outputThread;
 #ifdef _WIN32
    HANDLE m_phandle;
@@ -124,7 +124,7 @@ public:
    ProcessExecutor(const TCHAR *cmd, bool shellExec = true);
    virtual ~ProcessExecutor();
 
-   UINT32 getStreamId() const { return m_streamId; }
+   uint32_t getStreamId() const { return m_streamId; }
    const TCHAR *getCommand() const { return m_cmd; }
    pid_t getProcessId() const;
 #ifdef _WIN32

@@ -28,6 +28,8 @@
 - New built-in agent action Agent.RotateLog
 - Performance optimization of SNMPv3 processing
 - NXSL performance optimization
+- Improved handling of external parameter providers in agent
+- Added background polling option for external tables in agent
 - Fixed issues:
 	NX-904 (Sensitive info should be hidden in Audit Log)
 	NX-1294 (Completed Scheduled Task Re-scheduling)
