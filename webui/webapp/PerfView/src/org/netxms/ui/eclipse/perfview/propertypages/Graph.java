@@ -64,15 +64,17 @@ public class Graph extends PreferencePage
 	private SortableTableViewer userList;
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(2);
 	private HashMap<Long, AccessListElement> acl;
+	private boolean saveToDatabase;
 
 	/**
 	 * Constructor
 	 * @param settings
 	 */
-	public Graph(GraphSettings settings)
+	public Graph(GraphSettings settings, boolean saveToDatabase)
 	{
       super(settings.isTemplate() ? "Template Graph" : "Predefined Graph");
       this.settings = settings;	   
+      this.saveToDatabase = saveToDatabase;
 	}
 	
 	/* (non-Javadoc)
@@ -312,10 +314,15 @@ public class Graph extends PreferencePage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
+	   if (!isControlCreated())
+      {
+	      return;
+      }
+	      
 	   settings.setName(name.getText());
 	   settings.getAccessList().clear();
 	   settings.getAccessList().addAll(acl.values());
-		if (isApply)
+		if (isApply && saveToDatabase)
 		{
 			setValid(false);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();

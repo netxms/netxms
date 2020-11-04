@@ -69,15 +69,17 @@ public class General extends PreferencePage
 	private Spinner refreshIntervalSpinner;
 	private TimePeriodSelector timeSelector;
 	private YAxisRangeEditor yAxisRange;
+   private boolean saveToDatabase;
 
    /**
     * Constructor
     * @param settings
     */
-   public General(GraphSettings settings)
+   public General(GraphSettings settings, boolean saveToDatabase)
    {
       super("General");
       config = settings;     
+      this.saveToDatabase = saveToDatabase;
    }
 	
    /**
@@ -362,7 +364,7 @@ public class General extends PreferencePage
 		config.setMaxYScaleValue(yAxisRange.getMaxY());
       config.setModifyYBase(yAxisRange.modifyYBase());
 		
-		if ((config instanceof GraphSettings) && isApply)
+		if (saveToDatabase && isApply)
 		{
 			setValid(false);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -394,8 +396,8 @@ public class General extends PreferencePage
 	 */
 	@Override
 	protected void performApply()
-	{
-      if (yAxisRange.validate(true))
+	{      
+      if (isControlCreated() && yAxisRange.validate(true))
          applyChanges(true);
 	}
 
@@ -405,6 +407,9 @@ public class General extends PreferencePage
 	@Override
 	public boolean performOk()
 	{
+	   if (!isControlCreated())
+	      return true;
+	   
 	   if (!yAxisRange.validate(true))
 	      return false;
 	   

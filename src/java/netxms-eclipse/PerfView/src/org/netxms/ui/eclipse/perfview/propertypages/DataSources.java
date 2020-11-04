@@ -84,16 +84,18 @@ public class DataSources extends PreferencePage
 	private List<ChartDciConfig> dciList = null;
 	private ColorCache colorCache;
 	private boolean graphIsTemplate = false;
+	private boolean saveToDatabase;
    
    
    /**
     * Constructor
     * @param settings
     */
-   public DataSources(GraphSettings settings)
+   public DataSources(GraphSettings settings, boolean saveToDatabase)
    {
       super("Data Source");
       config = settings;     
+      this.saveToDatabase = saveToDatabase;
    }
 	
 	/* (non-Javadoc)
@@ -102,7 +104,6 @@ public class DataSources extends PreferencePage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		
 		if(config instanceof GraphSettings)
 		   graphIsTemplate = ((GraphSettings)config).isTemplate();
 		Composite dialogArea = new Composite(parent, SWT.NONE);
@@ -411,7 +412,7 @@ public class DataSources extends PreferencePage
 	protected void applyChanges(final boolean isApply)
 	{
 		config.setDciList(dciList.toArray(new ChartDciConfig[dciList.size()]));
-		if ((config instanceof GraphSettings) && isApply)
+		if (saveToDatabase && isApply)
 		{
 			setValid(false);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();

@@ -579,11 +579,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          @Override
          public void run()
          {
-            if (showGraphPropertyPages(settings))
-            {
-               configureGraphFromSettings();
-               refreshMenuSelection();
-            }
+            showGraphPropertyPages(settings);
+            configureGraphFromSettings(); //Always refresh graph (last action was cancel, but before was few apply actions)
+            refreshMenuSelection();
          }
       };
 
@@ -947,6 +945,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
       settings.setTimeTo(new Date(System.currentTimeMillis()));
       getDataFromServer();
+      configureGraphFromSettings();
+      refreshMenuSelection();
    }
 
    /*
@@ -1215,9 +1215,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private boolean showGraphPropertyPages(final GraphSettings settings)
    {
       PreferenceManager pm = new PreferenceManager();    
-      pm.addToRoot(new PreferenceNode("graph", new Graph(settings)));
-      pm.addToRoot(new PreferenceNode("general", new General(settings)));
-      pm.addToRoot(new PreferenceNode("source", new DataSources(settings)));
+      pm.addToRoot(new PreferenceNode("graph", new Graph(settings, false)));
+      pm.addToRoot(new PreferenceNode("general", new General(settings, false)));
+      pm.addToRoot(new PreferenceNode("source", new DataSources(settings, false)));
       
       PreferenceDialog dlg = new PreferenceDialog(getViewSite().getShell(), pm) {
          @Override

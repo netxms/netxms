@@ -518,10 +518,10 @@ public class TemplateGraphView extends ViewPart implements SessionListener
    private boolean showGraphPropertyPages(final GraphSettings settings)
    {
       PreferenceManager pm = new PreferenceManager();    
-      pm.addToRoot(new PreferenceNode("graph", new Graph(settings)));
-      pm.addToRoot(new PreferenceNode("general", new General(settings)));
+      pm.addToRoot(new PreferenceNode("graph", new Graph(settings, true)));
+      pm.addToRoot(new PreferenceNode("general", new General(settings, true)));
       pm.addToRoot(new PreferenceNode("filter", new Filter(settings)));
-      pm.addToRoot(new PreferenceNode("template", new TemplateDataSources(settings)));
+      pm.addToRoot(new PreferenceNode("template", new TemplateDataSources(settings, true)));
       
       PreferenceDialog dlg = new PreferenceDialog(getViewSite().getShell(), pm) {
          @Override
