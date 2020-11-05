@@ -59,17 +59,20 @@ public class SummaryTableItemComparator extends ViewerComparator
 		switch(format)
 		{
 			case INT32:
-				result = safeParseInt(value1) - safeParseInt(value2);
-				break;
 			case UINT32:
-         case COUNTER32:
+			case COUNTER32:
 			case INT64:
 			case UINT64:
 			case COUNTER64:
-				result = Long.signum(safeParseLong(value1) - safeParseLong(value2));
-				break;
 			case FLOAT:
-				result = (int)Math.signum(safeParseDouble(value1) - safeParseDouble(value2));
+				try
+				{
+					result = (int)Math.signum(Double.parseDouble(value1) - Double.parseDouble(value2));
+				}
+				catch(NumberFormatException e)
+				{
+					result = value1.compareToIgnoreCase(value2);
+				}
 				break;
 			default:
 				result = value1.compareToIgnoreCase(value2);
@@ -84,53 +87,5 @@ public class SummaryTableItemComparator extends ViewerComparator
       if (((value == null) || value.isEmpty()) && (r.getBaseRow() != -1))
         return table.getCellValue(r.getBaseRow(), column);
       return value;
-	}
-	
-	/**
-	 * @param s
-	 * @return
-	 */
-	private static int safeParseInt(String s)
-	{
-		try
-		{
-			return Integer.parseInt(s);
-		}
-		catch(NumberFormatException e)
-		{
-			return 0;
-		}
-	}
-
-	/**
-	 * @param s
-	 * @return
-	 */
-	private static long safeParseLong(String s)
-	{
-		try
-		{
-			return Long.parseLong(s);
-		}
-		catch(NumberFormatException e)
-		{
-			return 0;
-		}
-	}
-
-	/**
-	 * @param s
-	 * @return
-	 */
-	private static double safeParseDouble(String s)
-	{
-		try
-		{
-			return Double.parseDouble(s);
-		}
-		catch(NumberFormatException e)
-		{
-			return 0;
-		}
 	}
 }
