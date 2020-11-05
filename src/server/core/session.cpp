@@ -397,11 +397,8 @@ void ClientSession::readThread()
                   else
                   {
 							debugPrintf(6, _T("I/O error"));
-                     // I/O error
-                     NXCPMessage response;
 
-                     response.setCode(CMD_REQUEST_COMPLETED);
-                     response.setId(msg->getId());
+                     NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId());
                      response.setField(VID_RCC, RCC_IO_ERROR);
                      sendMessage(&response);
 
@@ -14862,6 +14859,70 @@ void ClientSession::deleteObjectCategory(NXCPMessage *request)
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting object category"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(&response);
+}
+
+/**
+ * Get configured geo areas
+ */
+void ClientSession::getGeoAreas(NXCPMessage *request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   GeoAreasToMessage(&response);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(&response);
+}
+
+/**
+ * Modify geo area
+ */
+void ClientSession::modifyGeoArea(NXCPMessage *request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_GEO_AREAS)
+   {
+      uint32_t areaId;
+      uint32_t rcc = ModifyGeoArea(*request, &areaId);
+      if (rcc == RCC_SUCCESS)
+      {
+         response.setField(VID_AREA_ID, areaId);
+         shared_ptr<GeoArea> area = GetGeoArea(areaId);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Geo area \"%s\" [%u] modified"),
+                  (area != nullptr) ? area->getName() : _T("<unknown>"), areaId);
+      }
+      response.setField(VID_RCC, rcc);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on changing geo area"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(&response);
+}
+
+/**
+ * Delete geo area
+ */
+void ClientSession::deleteGeoArea(NXCPMessage *request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_GEO_AREAS)
+   {
+      uint32_t id = request->getFieldAsUInt32(VID_AREA_ID);
+      uint32_t rcc = DeleteGeoArea(id, request->getFieldAsBoolean(VID_FORCE_DELETE));
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Geo area [%u] deleted"), id);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting geo area"));
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 

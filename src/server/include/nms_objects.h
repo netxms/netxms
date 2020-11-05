@@ -97,6 +97,32 @@ class AgentTunnel;
 class GenericAgentPolicy;
 
 /**
+ * Geo area
+ */
+class NXCORE_EXPORTABLE GeoArea
+{
+private:
+   uint32_t m_id;
+   TCHAR m_name[128];
+   TCHAR *m_comments;
+   ObjectArray<GeoLocation> m_border;
+
+public:
+   GeoArea(const NXCPMessage& msg);
+   GeoArea(DB_RESULT hResult, int row);
+   ~GeoArea();
+
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+
+   bool containsLocation(const GeoLocation& location) const { return location.isWithinArea(m_border); }
+
+   uint32_t getId() const { return m_id; }
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getComments() const { return m_comments; }
+   StringBuffer getBorderAsString() const;
+};
+
+/**
  * Extended agent connection
  */
 class NXCORE_EXPORTABLE AgentConnectionEx : public AgentConnection
@@ -1995,6 +2021,16 @@ public:
 };
 
 /**
+ * Geolocation control mode for objects
+ */
+enum GeoLocationControlMode
+{
+   GEOLOCATION_NO_CONTROL = 0,
+   GEOLOCATION_RESTRICTED_AREAS = 1,
+   GEOLOCATION_ALLOWED_AREAS = 2
+};
+
+/**
  * Common base class for all objects capable of collecting data
  */
 class NXCORE_EXPORTABLE DataCollectionTarget : public DataCollectionOwner
@@ -2003,9 +2039,11 @@ private:
    typedef DataCollectionOwner super;
 
 protected:
-   IntegerArray<UINT32> *m_deletedItems;
-   IntegerArray<UINT32> *m_deletedTables;
-   StringMap *m_scriptErrorReports;
+   IntegerArray<uint32_t> m_deletedItems;
+   IntegerArray<uint32_t> m_deletedTables;
+   StringMap m_scriptErrorReports;
+   GeoLocationControlMode m_geoLocationControlMode;
+   IntegerArray<uint32_t> m_geoAreas;
    PollState m_statusPollState;
    PollState m_configurationPollState;
    PollState m_instancePollState;
@@ -2029,6 +2067,8 @@ protected:
    bool updateInstances(DCObject *root, StringObjectMap<InstanceDiscoveryData> *instances, UINT32 requestId);
 
    void updateDataCollectionTimeIntervals();
+
+   void updateGeoLocation(const GeoLocation& geoLocation);
 
    void _pollerLock() { MutexLock(m_hPollerMutex); }
    void _pollerUnlock() { MutexUnlock(m_hPollerMutex); }
@@ -2137,7 +2177,7 @@ public:
 
    virtual void resetPollTimers();
 
-   UINT64 getCacheMemoryUsage();
+   uint64_t getCacheMemoryUsage();
 };
 
 /**
@@ -4483,6 +4523,12 @@ uint32_t ModifyObjectCategory(const NXCPMessage& msg, uint32_t *categoryId);
 uint32_t DeleteObjectCategory(uint32_t id, bool forceDelete);
 void ObjectCategoriesToMessage(NXCPMessage *msg);
 void LoadObjectCategories();
+
+shared_ptr<GeoArea> NXCORE_EXPORTABLE GetGeoArea(uint32_t id);
+uint32_t ModifyGeoArea(const NXCPMessage& msg, uint32_t *areaId);
+uint32_t DeleteGeoArea(uint32_t id, bool forceDelete);
+void GeoAreasToMessage(NXCPMessage *msg);
+void LoadGeoAreas();
 
 /**
  * Global variables

@@ -232,11 +232,12 @@
 #define NF_DISABLE_PERF_COUNT     0x10000000
 
 /**
- * Data Collection flags first half of int
+ * Data Collection Target flags (lower bits of flags field)
  */
 #define DCF_DISABLE_STATUS_POLL    0x00000001
 #define DCF_DISABLE_CONF_POLL      0x00000002
 #define DCF_DISABLE_DATA_COLLECT   0x00000004
+#define DCF_LOCATION_CHANGE_EVENT  0x00000008
 
 /**
  * Common object runtime flags (can be used by all NetObj derived classes)
@@ -499,6 +500,8 @@ enum SessionState
 #define NX_NOTIFY_SECRET_CONFIG_CHANGED      47
 #define NX_NOTIFY_OBJECT_CATEGORY_UPDATED    48
 #define NX_NOTIFY_OBJECT_CATEGORY_DELETED    49
+#define NX_NOTIFY_GEO_AREA_UPDATED           50
+#define NX_NOTIFY_GEO_AREA_DELETED           51
 
 /**
  * Request completion codes
@@ -642,6 +645,9 @@ enum SessionState
 #define RCC_INVALID_WEB_SERVICE_ID     ((uint32_t)136)
 #define RCC_NO_SUCH_RECORD             ((uint32_t)137)
 #define RCC_RECORD_DETAILS_UNAVAILABLE ((uint32_t)138)
+#define RCC_INVALID_GEO_AREA_ID        ((uint32_t)139)
+#define RCC_GEO_AREA_NAME_EMPTY        ((uint32_t)140)
+#define RCC_GEO_AREA_IN_USE            ((uint32_t)141)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -745,6 +751,7 @@ enum SessionState
 #define SYSTEM_ACCESS_UA_NOTIFICATIONS        _ULL(0x040000000000)
 #define SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS _ULL(0x080000000000)
 #define SYSTEM_ACCESS_OBJECT_CATEGORIES       _ULL(0x100000000000)
+#define SYSTEM_ACCESS_MANAGE_GEO_AREAS        _ULL(0x200000000000)
 
 #define SYSTEM_ACCESS_FULL                    _ULL(0x1FFFFFFFFFFF)
 
@@ -1082,6 +1089,7 @@ enum AggregationFunction
 #define NXC_CHANNEL_AUDIT_LOG       _T("Core.Audit")
 #define NXC_CHANNEL_DC_THRESHOLDS   _T("Core.DC.Thresholds")
 #define NXC_CHANNEL_EVENTS          _T("Core.Events")
+#define NXC_CHANNEL_GEO_AREAS       _T("Core.GeoAreas")
 #define NXC_CHANNEL_OBJECTS         _T("Core.Objects")
 #define NXC_CHANNEL_SNMP_TRAPS      _T("Core.SNMP.Traps")
 #define NXC_CHANNEL_SYSLOG          _T("Core.Syslog")

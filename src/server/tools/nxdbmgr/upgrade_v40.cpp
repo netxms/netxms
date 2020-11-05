@@ -23,7 +23,25 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
-
+/**
+ * Upgrade from 40.25 to 40.26
+ */
+static bool H_UpgradeFromV25()
+{
+   if (GetSchemaLevelForMajorVersion(36) < 14)
+   {
+      static const TCHAR *batch =
+            _T("ALTER TABLE dc_targets ADD geolocation_ctrl_mode integer\n")
+            _T("ALTER TABLE dc_targets ADD geo_areas varchar(2000)\n")
+            _T("UPDATE dc_targets SET geolocation_ctrl_mode=0\n")
+            _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dc_targets"), _T("geolocation_ctrl_mode")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(36, 14));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(26));
+   return true;
+}
 
 /**
  * Upgrade from 40.24 to 40.25
@@ -699,6 +717,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 25, 40, 26, H_UpgradeFromV25 },
    { 24, 40, 25, H_UpgradeFromV24 },
    { 23, 40, 24, H_UpgradeFromV23 },
    { 22, 40, 23, H_UpgradeFromV22 },

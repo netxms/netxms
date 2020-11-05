@@ -49,7 +49,7 @@ Array::Array(int initial, int grow, Ownership owner, void (*objectDestructor)(vo
    m_elementSize = sizeof(void *);
    m_data = (m_allocated > 0) ? (void **)MemAlloc(m_elementSize * m_allocated) : nullptr;
    m_objectOwner = (owner == Ownership::True);
-   m_objectDestructor = (objectDestructor != NULL) ? objectDestructor : DefaultObjectDestructor;
+   m_objectDestructor = (objectDestructor != nullptr) ? objectDestructor : DefaultObjectDestructor;
    m_storePointers = true;
    m_context = nullptr;
 }

@@ -2349,6 +2349,7 @@ CREATE TABLE dc_targets
    id integer not null,
    config_poll_timestamp integer not null,
    instance_poll_timestamp integer not null,
+   geolocation_ctrl_mode integer not null,
+   geo_areas varchar(2000) null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
-

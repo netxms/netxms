@@ -446,6 +446,11 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
                _sntprintf(buffer, 16, _T("0x%08X"), va_arg(args, uint32_t));
 					m_parameters.add(buffer);
                break;
+            case 'f':
+               buffer = MemAllocString(32);
+               _sntprintf(buffer, 32, _T("%f"), va_arg(args, double));
+               m_parameters.add(buffer);
+               break;
             case 'a':   // IPv4 address
                buffer = MemAllocString(16);
                IpToStr(va_arg(args, UINT32), buffer);
@@ -960,6 +965,7 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eve
  *        G - uuid object (GUID)
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
+ *        f - floating point number (double)
  */
 bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const char *format, ...)
 {
@@ -992,6 +998,7 @@ bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, EventOrigin origin, time_t or
  *        G - uuid object (GUID)
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
+ *        f - floating point number (double)
  */
 bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const StringList& parameters)
 {
@@ -1025,6 +1032,7 @@ bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, EventOrigin origin, time_t or
  *        G - uuid object (GUID)
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
+ *        f - floating point number (double)
  */
 bool NXCORE_EXPORTABLE PostSystemEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {
@@ -1056,6 +1064,7 @@ bool NXCORE_EXPORTABLE PostSystemEvent(UINT32 eventCode, UINT32 sourceId, const 
  *        G - uuid object (GUID)
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
+ *        f - floating point number (double)
  */
 bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, const char *format, ...)
 {
@@ -1088,6 +1097,7 @@ bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dc
  *        G - uuid object (GUID)
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
+ *        f - floating point number (double)
  */
 UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const char *format, ...)
 {
@@ -1119,6 +1129,7 @@ UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, EventOrigin origin, time_t
  *        G - uuid object (GUID)
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
+ *        f - floating point number (double)
  */
 UINT64 NXCORE_EXPORTABLE PostSystemEvent2(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {
