@@ -168,11 +168,11 @@ GeoLocation& GeoLocation::operator =(const GeoLocation &src)
  */
 void GeoLocation::fillMessage(NXCPMessage &msg) const
 {
-	msg.setField(VID_GEOLOCATION_TYPE, (UINT16)m_type);
+	msg.setField(VID_GEOLOCATION_TYPE, static_cast<uint16_t>(m_type));
 	msg.setField(VID_LATITUDE, m_lat);
 	msg.setField(VID_LONGITUDE, m_lon);
-	msg.setField(VID_ACCURACY, (UINT16)m_accuracy);
-	msg.setField(VID_GEOLOCATION_TIMESTAMP, (UINT64)m_timestamp);
+	msg.setField(VID_ACCURACY, static_cast<uint16_t>(m_accuracy));
+	msg.setFieldFromTime(VID_GEOLOCATION_TIMESTAMP, m_timestamp);
 }
 
 /**

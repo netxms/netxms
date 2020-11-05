@@ -2119,7 +2119,7 @@ bool NetObj::isDataCollectionTarget() const
 ModuleData *NetObj::getModuleData(const TCHAR *module)
 {
    lockProperties();
-   ModuleData *data = (m_moduleData != NULL) ? m_moduleData->get(module) : NULL;
+   ModuleData *data = (m_moduleData != nullptr) ? m_moduleData->get(module) : nullptr;
    unlockProperties();
    return data;
 }
@@ -2130,7 +2130,7 @@ ModuleData *NetObj::getModuleData(const TCHAR *module)
 void NetObj::setModuleData(const TCHAR *module, ModuleData *data)
 {
    lockProperties();
-   if (m_moduleData == NULL)
+   if (m_moduleData == nullptr)
       m_moduleData = new StringObjectMap<ModuleData>(Ownership::True);
    m_moduleData->set(module, data);
    unlockProperties();
@@ -2145,8 +2145,8 @@ void NetObj::addLocationToHistory()
    bool isSamePlace;
    double latitude = 0;
    double longitude = 0;
-   UINT32 accuracy = 0;
-   UINT32 startTimestamp = 0;
+   uint32_t accuracy = 0;
+   uint32_t startTimestamp = 0;
    DB_RESULT hResult;
    if (!isLocationTableExists(hdb))
    {
@@ -2178,11 +2178,11 @@ void NetObj::addLocationToHistory()
 	_sntprintf(preparedQuery, 256, query, m_id);
 	DB_STATEMENT hStmt = DBPrepare(hdb, preparedQuery);
 
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
 		goto onFail;
 
    hResult = DBSelectPrepared(hStmt);
-   if (hResult == NULL)
+   if (hResult == nullptr)
 		goto onFail;
    if (DBGetNumRows(hResult) > 0)
    {
@@ -2202,7 +2202,7 @@ void NetObj::addLocationToHistory()
    if (isSamePlace)
    {
       TCHAR query[256];
-      _sntprintf(query, 255, _T("UPDATE gps_history_%d SET end_timestamp = ? WHERE start_timestamp =? "), m_id);
+      _sntprintf(query, 256, _T("UPDATE gps_history_%u SET end_timestamp=? WHERE start_timestamp=?"), m_id);
       hStmt = DBPrepare(hdb, query);
       if (hStmt == NULL)
          goto onFail;
@@ -2212,7 +2212,7 @@ void NetObj::addLocationToHistory()
    else
    {
       TCHAR query[256];
-      _sntprintf(query, 255, _T("INSERT INTO gps_history_%d (latitude,longitude,")
+      _sntprintf(query, 256, _T("INSERT INTO gps_history_%u (latitude,longitude,")
                        _T("accuracy,start_timestamp,end_timestamp) VALUES (?,?,?,?,?)"), m_id);
       hStmt = DBPrepare(hdb, query);
       if (hStmt == NULL)
@@ -2240,7 +2240,7 @@ void NetObj::addLocationToHistory()
    return;
 
 onFail:
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
       DBFreeStatement(hStmt);
    DbgPrintf(4, _T("NetObj::addLocationToHistory(%s [%d]): Failed to add location to history"), m_name, m_id);
    DBConnectionPoolReleaseConnection(hdb);
@@ -2253,7 +2253,7 @@ onFail:
 bool NetObj::isLocationTableExists(DB_HANDLE hdb)
 {
    TCHAR table[256];
-   _sntprintf(table, 256, _T("gps_history_%d"), m_id);
+   _sntprintf(table, 256, _T("gps_history_%u"), m_id);
    int rc = DBIsTableExist(hdb, table);
    if (rc == DBIsTableExist_Failure)
    {
@@ -2270,10 +2270,7 @@ bool NetObj::createLocationHistoryTable(DB_HANDLE hdb)
    TCHAR szQuery[256], szQueryTemplate[256];
    MetaDataReadStr(_T("LocationHistory"), szQueryTemplate, 255, _T(""));
    _sntprintf(szQuery, 256, szQueryTemplate, m_id);
-   if (!DBQuery(hdb, szQuery))
-		return false;
-
-   return true;
+   return DBQuery(hdb, szQuery);
 }
 
 /**

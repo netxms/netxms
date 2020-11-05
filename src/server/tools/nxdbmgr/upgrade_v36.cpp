@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 36.13 to 36.14
+ */
+static bool H_UpgradeFromV13()
+{
+   static const TCHAR *batch =
+         _T("ALTER TABLE dc_targets ADD geolocation_ctrl_mode integer\n")
+         _T("ALTER TABLE dc_targets ADD geo_areas varchar(2000)\n")
+         _T("UPDATE dc_targets SET geolocation_ctrl_mode=0\n")
+         _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dc_targets"), _T("geolocation_ctrl_mode")));
+   CHK_EXEC(SetMinorSchemaVersion(14));
+   return true;
+}
+
+/**
  * Upgrade from 36.12 to 36.13
  */
 static bool H_UpgradeFromV12()
@@ -34,7 +50,6 @@ static bool H_UpgradeFromV12()
          _T("  config_poll_timestamp integer not null,")
          _T("  instance_poll_timestamp integer not null,")
          _T("PRIMARY KEY(id))")));
-
    CHK_EXEC(SetMinorSchemaVersion(13));
    return true;
 }
@@ -335,6 +350,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 13, 36, 14, H_UpgradeFromV13 },
    { 12, 36, 13, H_UpgradeFromV12 },
    { 11, 36, 12, H_UpgradeFromV11 },
    { 10, 36, 11, H_UpgradeFromV10 },

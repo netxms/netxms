@@ -59,26 +59,24 @@ extern ThreadPool *g_pollerThreadPool;
  * Default constructor
  */
 DataCollectionTarget::DataCollectionTarget() : super(), m_statusPollState(_T("status")),
-         m_configurationPollState(_T("configuration")), m_instancePollState(_T("instance"))
+         m_configurationPollState(_T("configuration")), m_instancePollState(_T("instance")),
+         m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16)
 {
-   m_deletedItems = new IntegerArray<UINT32>(32, 32);
-   m_deletedTables = new IntegerArray<UINT32>(32, 32);
-   m_scriptErrorReports = new StringMap();
    m_hPollerMutex = MutexCreate();
    m_proxyLoadFactor = 0;
+   m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
 }
 
 /**
  * Constructor for creating new data collection capable objects
  */
 DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : super(name), m_statusPollState(_T("status")),
-         m_configurationPollState(_T("configuration")), m_instancePollState(_T("instance"))
+         m_configurationPollState(_T("configuration")), m_instancePollState(_T("instance")),
+         m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16)
 {
-   m_deletedItems = new IntegerArray<UINT32>(32, 32);
-   m_deletedTables = new IntegerArray<UINT32>(32, 32);
-   m_scriptErrorReports = new StringMap();
    m_hPollerMutex = MutexCreate();
    m_proxyLoadFactor = 0;
+   m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
 }
 
 /**
@@ -86,9 +84,6 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : super(name), m_s
  */
 DataCollectionTarget::~DataCollectionTarget()
 {
-   delete m_deletedItems;
-   delete m_deletedTables;
-   delete m_scriptErrorReports;
    MutexDestroy(m_hPollerMutex);
 }
 
@@ -125,6 +120,8 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
    super::fillMessageInternal(msg, userId);
+   msg->setField(VID_GEOLOCATION_CTRL_MODE, static_cast<int16_t>(m_geoLocationControlMode));
+   msg->setFieldFromInt32Array(VID_GEO_AREAS, m_geoAreas);
 }
 
 /**
@@ -172,6 +169,12 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, UINT32 us
  */
 UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *request)
 {
+   if (request->isFieldExist(VID_GEOLOCATION_CTRL_MODE))
+      m_geoLocationControlMode = static_cast<GeoLocationControlMode>(request->getFieldAsInt16(VID_GEOLOCATION_CTRL_MODE));
+
+   if (request->isFieldExist(VID_GEO_AREAS))
+      request->getFieldAsInt32Array(VID_GEO_AREAS, &m_geoAreas);
+
    return super::modifyFromMessageInternal(request);
 }
 
@@ -181,13 +184,37 @@ UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *request)
 bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
    TCHAR query[512];
-   _sntprintf(query, 512, _T("SELECT config_poll_timestamp,instance_poll_timestamp FROM dc_targets WHERE id=%u"), m_id);
+   _sntprintf(query, 512, _T("SELECT config_poll_timestamp,instance_poll_timestamp,geolocation_ctrl_mode,geo_areas FROM dc_targets WHERE id=%u"), m_id);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult == nullptr)
       return false;
 
    m_configurationPollState.setLastCompleted(DBGetFieldLong(hResult, 0, 0));
    m_instancePollState.setLastCompleted(DBGetFieldLong(hResult, 0, 1));
+   m_geoLocationControlMode = static_cast<GeoLocationControlMode>(DBGetFieldLong(hResult, 0, 2));
+
+   TCHAR areas[2000];
+   DBGetField(hResult, 0, 3, areas, 2000);
+   Trim(areas);
+   if (*areas != 0)
+   {
+      TCHAR *curr = areas;
+      while(true)
+      {
+         TCHAR *next = _tcschr(curr, _T(','));
+         if (next != nullptr)
+            *next = 0;
+
+         TCHAR *eptr;
+         uint32_t id = _tcstoul(curr, &eptr, 10);
+         if ((id != 0) && (*eptr == 0))
+            m_geoAreas.add(id);
+
+         if (next == nullptr)
+            break;
+         curr = next + 1;
+      }
+   }
 
    DBFreeResult(hResult);
 
@@ -205,13 +232,23 @@ bool DataCollectionTarget::saveToDatabase(DB_HANDLE hdb)
    bool success = true;
    if (m_modified & MODIFY_DC_TARGET)
    {
-      static const TCHAR *columns[] = { _T("config_poll_timestamp"), _T("instance_poll_timestamp"), nullptr };
+      static const TCHAR *columns[] = { _T("config_poll_timestamp"), _T("instance_poll_timestamp"), _T("geolocation_ctrl_mode"), _T("geo_areas"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("dc_targets"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
+         StringBuffer areas;
+         for(int i = 0; i < m_geoAreas.size(); i++)
+         {
+            areas.append(m_geoAreas.get(i));
+            areas.append(_T(','));
+         }
+         areas.shrink();
+
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_configurationPollState.getLastCompleted()));
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_instancePollState.getLastCompleted()));
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_geoLocationControlMode));
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, areas, DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -233,7 +270,7 @@ void DataCollectionTarget::updateDciCache()
 	{
 		if (m_dcObjects->get(i)->getType() == DCO_TYPE_ITEM)
 		{
-			((DCItem *)m_dcObjects->get(i))->updateCacheSize();
+			static_cast<DCItem*>(m_dcObjects->get(i))->updateCacheSize();
 		}
 	}
 	unlockDciAccess();
@@ -383,25 +420,25 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
    }
 
    lockProperties();
-   for(int i = 0; i < m_deletedItems->size(); i++)
+   for(int i = 0; i < m_deletedItems.size(); i++)
    {
       if (itemCount > 0)
          queryItems.append(_T(" OR "));
       queryItems.append(_T("item_id="));
-      queryItems.append(m_deletedItems->get(i));
+      queryItems.append(m_deletedItems.get(i));
       itemCount++;
    }
-   m_deletedItems->clear();
+   m_deletedItems.clear();
 
-   for(int i = 0; i < m_deletedTables->size(); i++)
+   for(int i = 0; i < m_deletedTables.size(); i++)
    {
       if (tableCount > 0)
          queryTables.append(_T(" OR "));
       queryTables.append(_T("item_id="));
-      queryTables.append(m_deletedItems->get(i));
+      queryTables.append(m_deletedItems.get(i));
       tableCount++;
    }
-   m_deletedTables->clear();
+   m_deletedTables.clear();
    setModified(MODIFY_DATA_COLLECTION, false);  //To update cleanup lists in database
    unlockProperties();
 
@@ -453,7 +490,7 @@ void DataCollectionTarget::queuePredictionEngineTraining()
 void DataCollectionTarget::scheduleItemDataCleanup(UINT32 dciId)
 {
    lockProperties();
-   m_deletedItems->add(dciId);
+   m_deletedItems.add(dciId);
    unlockProperties();
 }
 
@@ -463,7 +500,7 @@ void DataCollectionTarget::scheduleItemDataCleanup(UINT32 dciId)
 void DataCollectionTarget::scheduleTableDataCleanup(UINT32 dciId)
 {
    lockProperties();
-   m_deletedTables->add(dciId);
+   m_deletedTables.add(dciId);
    unlockProperties();
 }
 
@@ -474,24 +511,24 @@ bool DataCollectionTarget::saveDCIListForCleanup(DB_HANDLE hdb)
 {
    bool success = executeQueryOnObject(hdb, _T("DELETE FROM dci_delete_list WHERE node_id=?"));
 
-   if (success && (!m_deletedItems->isEmpty() || !m_deletedTables->isEmpty()))
+   if (success && (!m_deletedItems.isEmpty() || !m_deletedTables.isEmpty()))
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dci_delete_list (node_id,dci_id,type) VALUES (?,?,?)"), (m_deletedItems->size() + m_deletedTables->size()) > 1);
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dci_delete_list (node_id,dci_id,type) VALUES (?,?,?)"), (m_deletedItems.size() + m_deletedTables.size()) > 1);
       if (hStmt == nullptr)
          return false;
 
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
       DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, _T("i"), 1);
-      for(int i = 0; i < m_deletedItems->size() && success; i++)
+      for(int i = 0; i < m_deletedItems.size() && success; i++)
       {
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_deletedItems->get(i));
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_deletedItems.get(i));
          success = DBExecute(hStmt);
       }
 
       DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, _T("t"), 1);
-      for(int i = 0; i < m_deletedTables->size() && success; i++)
+      for(int i = 0; i < m_deletedTables.size() && success; i++)
       {
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_deletedTables->get(i));
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_deletedTables.get(i));
          success = DBExecute(hStmt);
       }
       DBFreeStatement(hStmt);
@@ -516,7 +553,7 @@ void DataCollectionTarget::loadDCIListForCleanup(DB_HANDLE hdb)
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)
          {
-            m_deletedItems->add(DBGetFieldULong(hResult, i, 0));
+            m_deletedItems.add(DBGetFieldULong(hResult, i, 0));
          }
          DBFreeResult(hResult);
       }
@@ -533,7 +570,7 @@ void DataCollectionTarget::loadDCIListForCleanup(DB_HANDLE hdb)
       {
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)
-            m_deletedTables->add(DBGetFieldULong(hResult, i, 0));
+            m_deletedTables.add(DBGetFieldULong(hResult, i, 0));
          DBFreeResult(hResult);
       }
       DBFreeStatement(hStmt);
@@ -1086,11 +1123,11 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
       {
          nxlog_debug(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
          time_t now = time(nullptr);
-         time_t lastReport = static_cast<time_t>(m_scriptErrorReports->getInt64(param, 0));
+         time_t lastReport = static_cast<time_t>(m_scriptErrorReports.getInt64(param, 0));
          if (lastReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
          {
             PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
-            m_scriptErrorReports->set(param, static_cast<UINT64>(now));
+            m_scriptErrorReports.set(param, static_cast<uint64_t>(now));
          }
          delete_and_null(vm);
       }
@@ -2466,9 +2503,9 @@ NXSL_Array *DataCollectionTarget::getTemplatesForNXSL(NXSL_VM *vm)
 /**
  * Get cache memory usage
  */
-UINT64 DataCollectionTarget::getCacheMemoryUsage()
+uint64_t DataCollectionTarget::getCacheMemoryUsage()
 {
-   UINT64 cacheSize = 0;
+   uint64_t cacheSize = 0;
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
@@ -2499,4 +2536,52 @@ uint32_t DataCollectionTarget::getEffectiveWebServiceProxy()
       }
    }
    return (webServiceProxy != 0) ? webServiceProxy : g_dwMgmtNode;
+}
+
+/**
+ * Update geolocation for device
+ */
+void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
+{
+   if ((m_flags & DCF_LOCATION_CHANGE_EVENT) && m_geoLocation.isValid() && geoLocation.isValid() && !m_geoLocation.equals(geoLocation))
+   {
+      PostSystemEvent(EVENT_GEOLOCATION_CHANGED, m_id, "ffssffss", geoLocation.getLatitude(), geoLocation.getLongitude(),
+            geoLocation.getLatitudeAsString(), geoLocation.getLongitudeAsString(), m_geoLocation.getLatitude(), m_geoLocation.getLongitude(),
+            m_geoLocation.getLatitudeAsString(), m_geoLocation.getLongitudeAsString());
+   }
+   m_geoLocation = geoLocation;
+   addLocationToHistory();
+   setModified(MODIFY_COMMON_PROPERTIES);
+
+   if (m_geoLocationControlMode == GEOLOCATION_RESTRICTED_AREAS)
+   {
+      for(int i = 0; i < m_geoAreas.size(); i++)
+      {
+         shared_ptr<GeoArea> area = GetGeoArea(m_geoAreas.get(i));
+         if ((area != nullptr) && area->containsLocation(geoLocation))
+         {
+            PostSystemEvent(EVENT_GEOLOCATION_INSIDE_RESTRICTED_AREA, m_id, "ffsssd", geoLocation.getLatitude(), geoLocation.getLongitude(),
+                  geoLocation.getLatitudeAsString(), geoLocation.getLongitudeAsString(), area->getName(), area->getId());
+            break;
+         }
+      }
+   }
+   else if (m_geoLocationControlMode == GEOLOCATION_ALLOWED_AREAS)
+   {
+      bool insideArea = false;
+      for(int i = 0; i < m_geoAreas.size(); i++)
+      {
+         shared_ptr<GeoArea> area = GetGeoArea(m_geoAreas.get(i));
+         if ((area != nullptr) && area->containsLocation(geoLocation))
+         {
+            insideArea = true;
+            break;
+         }
+      }
+      if (!insideArea)
+      {
+         PostSystemEvent(EVENT_GEOLOCATION_OUTSIDE_ALLOWED_AREA, m_id, "ffss", geoLocation.getLatitude(), geoLocation.getLongitude(),
+               geoLocation.getLatitudeAsString(), geoLocation.getLongitudeAsString());
+      }
+   }
 }

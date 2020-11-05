@@ -247,10 +247,8 @@ void MobileDevice::updateStatus(const MobileDeviceStatus& status)
    m_direction = status.direction;
 	if (status.geoLocation.isValid())
 	{
-	   m_geoLocation = status.geoLocation;
-	   m_altitude = status.altitude;
-		addLocationToHistory();
-	   setModified(MODIFY_COMMON_PROPERTIES);
+      m_altitude = status.altitude;
+	   updateGeoLocation(status.geoLocation);
    }
 	if (!m_ipAddress.equals(status.ipAddress))
 	{

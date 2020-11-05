@@ -656,6 +656,10 @@ typedef struct
 #define CMD_GET_LOG_RECORD_DETAILS        0x019C
 #define CMD_GET_DCI_LAST_VALUE            0x019D
 #define CMD_OBJECT_CATEGORY_UPDATE        0x019E
+#define CMD_GET_GEO_AREAS                 0x019F
+#define CMD_MODIFY_GEO_AREA               0x0200
+#define CMD_DELETE_GEO_AREA               0x0201
+#define CMD_GEO_AREA_UPDATE               0x0202
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1393,6 +1397,9 @@ typedef struct
 #define VID_FORCE_DELETE            ((UINT32)720)
 #define VID_ICON                    ((UINT32)721)
 #define VID_WEB_SERVICE_DEF_LIST    ((UINT32)722)
+#define VID_AREA_ID                 ((UINT32)723)
+#define VID_GEOLOCATION_CTRL_MODE   ((UINT32)724)
+#define VID_GEO_AREAS               ((UINT32)725)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -788,6 +788,9 @@ private:
    void getObjectCategories(NXCPMessage *request);
    void modifyObjectCategory(NXCPMessage *request);
    void deleteObjectCategory(NXCPMessage *request);
+   void getGeoAreas(NXCPMessage *request);
+   void modifyGeoArea(NXCPMessage *request);
+   void deleteGeoArea(NXCPMessage *request);
    void updateSharedSecretList(NXCPMessage *request);
    void updateSNMPPortList(NXCPMessage *pRequest);
 #ifdef WITH_ZMQ
