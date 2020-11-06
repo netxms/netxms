@@ -157,6 +157,7 @@ public class LoginJob implements IRunnableWithProgress
 
          monitor.setTaskName(Messages.get().LoginJob_subscribe);
          session.subscribe(NXCSession.CHANNEL_ALARMS);
+         session.subscribe(NXCSession.CHANNEL_GEO_AREAS);
          monitor.worked(1);
 
          ConsoleSharedData.setSession(session);

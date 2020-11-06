@@ -1100,6 +1100,7 @@ retry_db_lock:
    LoadNotificationChannels();
 
    // Initialize objects infrastructure and load objects from database
+   LoadGeoAreas();
    LoadNetworkDeviceDrivers();
    ObjectsInit();
    LoadObjectCategories();

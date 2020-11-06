@@ -1403,6 +1403,15 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_OBJECT_CATEGORY:
          deleteObjectCategory(request);
          break;
+      case CMD_GET_GEO_AREAS:
+         getGeoAreas(request);
+         break;
+      case CMD_MODIFY_GEO_AREA:
+         modifyGeoArea(request);
+         break;
+      case CMD_DELETE_GEO_AREA:
+         deleteGeoArea(request);
+         break;
 #ifdef WITH_ZMQ
       case CMD_ZMQ_SUBSCRIBE_EVENT:
          zmqManageSubscription(request, zmq::EVENT, true);

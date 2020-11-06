@@ -429,6 +429,10 @@ public class NXCPCodes
    public static final int CMD_GET_LOG_RECORD_DETAILS = 0x019C;
    public static final int CMD_GET_DCI_LAST_VALUE = 0x019D;
    public static final int CMD_OBJECT_CATEGORY_UPDATE = 0x019E;
+   public static final int CMD_GET_GEO_AREAS = 0x019F;
+   public static final int CMD_MODIFY_GEO_AREA = 0x01A0;
+   public static final int CMD_DELETE_GEO_AREA = 0x01A1;
+   public static final int CMD_GEO_AREA_UPDATE = 0x01A2;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1163,6 +1167,9 @@ public class NXCPCodes
    public static final long VID_FORCE_DELETE = 720;
    public static final long VID_ICON = 721;
    public static final long VID_WEB_SERVICE_DEF_LIST = 722;
+   public static final long VID_AREA_ID = 723;
+   public static final long VID_GEOLOCATION_CTRL_MODE = 724;
+   public static final long VID_GEO_AREAS = 725;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -16,9 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectmanager.views;
+package org.netxms.ui.eclipse.osm.views;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -54,21 +55,20 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.GeoArea;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
-import org.netxms.client.objects.MutableObjectCategory;
-import org.netxms.client.objects.ObjectCategory;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objectmanager.Activator;
-import org.netxms.ui.eclipse.objectmanager.dialogs.ObjectCategoryEditDialog;
-import org.netxms.ui.eclipse.objectmanager.views.helpers.ObjectCategoryComparator;
-import org.netxms.ui.eclipse.objectmanager.views.helpers.ObjectCategoryFilter;
-import org.netxms.ui.eclipse.objectmanager.views.helpers.ObjectCategoryLabelProvider;
+import org.netxms.ui.eclipse.osm.Activator;
+import org.netxms.ui.eclipse.osm.dialogs.GeoAreaEditDialog;
+import org.netxms.ui.eclipse.osm.views.helpers.GeoAreaComparator;
+import org.netxms.ui.eclipse.osm.views.helpers.GeoAreaFilter;
+import org.netxms.ui.eclipse.osm.views.helpers.GeoAreaLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -79,24 +79,23 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  * Object category manager
  *
  */
-public class ObjectCategoryManager extends ViewPart implements SessionListener
+public class GeoAreaManager extends ViewPart implements SessionListener
 {
-   public static final String ID = "org.netxms.ui.eclipse.objectmanager.views.ObjectCategoryManager";
+   public static final String ID = "org.netxms.ui.eclipse.osm.views.GeoAreaManager";
 
    public static final int COL_ID = 0;
    public static final int COL_NAME = 1;
-   public static final int COL_ICON = 2;
-   public static final int COL_MAP_IMAGE = 3;
+   public static final int COL_COMMENTS = 2;
 
-   private static final String TABLE_CONFIG_PREFIX = "ObjectCategoryManager";
+   private static final String TABLE_CONFIG_PREFIX = "GeoAreaManager";
 
-   private Map<Integer, ObjectCategory> categories = new HashMap<Integer, ObjectCategory>();
+   private Map<Integer, GeoArea> areas = new HashMap<Integer, GeoArea>();
    private Display display;
    private SortableTableViewer viewer;
    private NXCSession session;
    private Composite content;
    private FilterText filterText;
-   private ObjectCategoryFilter filter;
+   private GeoAreaFilter filter;
    private boolean initShowFilter = true;
    private Action actionRefresh;
    private Action actionNew;
@@ -161,14 +160,14 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
          }
       });
 
-      final String[] names = { "ID", "Name", "Icon", "Map image" };
-      final int[] widths = { 100, 500, 200, 200 };
+      final String[] names = { "ID", "Name", "Comments" };
+      final int[] widths = { 100, 400, 800 };
       viewer = new SortableTableViewer(content, names, widths, 1, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
       WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new ObjectCategoryLabelProvider());
-      viewer.setComparator(new ObjectCategoryComparator());
-      filter = new ObjectCategoryFilter();
+      viewer.setLabelProvider(new GeoAreaLabelProvider());
+      viewer.setComparator(new GeoAreaComparator());
+      filter = new GeoAreaFilter();
       viewer.addFilter(filter);
 
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -245,25 +244,25 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
    @Override
    public void notificationHandler(final SessionNotification n)
    {
-      if (n.getCode() == SessionNotification.OBJECT_CATEGORY_UPDATED)
+      if (n.getCode() == SessionNotification.GEO_AREA_UPDATED)
       {
          display.asyncExec(new Runnable() {
             @Override
             public void run()
             {
-               ObjectCategory category = (ObjectCategory)n.getObject();
-               categories.put(category.getId(), category);
+               GeoArea area = (GeoArea)n.getObject();
+               areas.put(area.getId(), area);
                viewer.refresh(true);
             }
          });
       }
-      else if (n.getCode() == SessionNotification.OBJECT_CATEGORY_DELETED)
+      else if (n.getCode() == SessionNotification.GEO_AREA_DELETED)
       {
          display.asyncExec(new Runnable() {
             @Override
             public void run()
             {
-               categories.remove((int)n.getSubCode());
+               areas.remove((int)n.getSubCode());
                viewer.refresh();
             }
          });
@@ -278,7 +277,7 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
       IContextService contextService = (IContextService)getSite().getService(IContextService.class);
       if (contextService != null)
       {
-         contextService.activateContext("org.netxms.ui.eclipse.objectmanager.context.ObjectCategoryManager"); //$NON-NLS-1$
+         contextService.activateContext("org.netxms.ui.eclipse.osm.context.GeoAreaManager"); //$NON-NLS-1$
       }
    }
 
@@ -331,7 +330,7 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
          }
       };
       actionShowFilter.setChecked(initShowFilter);
-      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.objectmanager.commands.showFilter"); //$NON-NLS-1$
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.osm.commands.showFilter"); //$NON-NLS-1$
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 
       actionRefresh = new RefreshAction() {
@@ -346,7 +345,7 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
          @Override
          public void run()
          {
-            createCategory();
+            createArea();
          }
       };
       actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
@@ -355,7 +354,7 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
          @Override
          public void run()
          {
-            editCategory();
+            editArea();
          }
       };
       actionEdit.setImageDescriptor(SharedIcons.EDIT);
@@ -364,7 +363,7 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
          @Override
          public void run()
          {
-            deleteCategories();
+            deleteAreas();
          }
       };
       actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
@@ -446,58 +445,57 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
    }
 
    /**
-    * Create new category
+    * Create new area
     */
-   private void createCategory()
+   private void createArea()
    {
-      ObjectCategoryEditDialog dlg = new ObjectCategoryEditDialog(getSite().getShell(), null);
+      GeoAreaEditDialog dlg = new GeoAreaEditDialog(getSite().getShell(), null);
       if (dlg.open() == Window.OK)
       {
-         updateCategory(dlg.getCategory());
+         updateArea(dlg.getArea());
       }
    }
 
    /**
     * Edit selected category
     */
-   private void editCategory()
+   private void editArea()
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
 
-      ObjectCategoryEditDialog dlg = new ObjectCategoryEditDialog(getSite().getShell(),
-            new MutableObjectCategory((ObjectCategory)selection.getFirstElement()));
+      GeoAreaEditDialog dlg = new GeoAreaEditDialog(getSite().getShell(), (GeoArea)selection.getFirstElement());
       if (dlg.open() == Window.OK)
       {
-         updateCategory(dlg.getCategory());
+         updateArea(dlg.getArea());
       }
    }
 
    /**
-    * Update category on server
+    * Update geo area on server
     *
-    * @param category category object
+    * @param area geo area object
     */
-   private void updateCategory(final MutableObjectCategory category)
+   private void updateArea(final GeoArea area)
    {
-      new ConsoleJob("Modify object category", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Modify geographical area", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final int id = session.modifyObjectCategory(category);
+            final int id = session.modifyGeoArea(area);
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  ObjectCategory newCategory = categories.get(id);
-                  if (newCategory == null)
+                  GeoArea newArea = areas.get(id);
+                  if (newArea == null)
                   {
-                     newCategory = new ObjectCategory(category);
-                     categories.put(id, newCategory);
+                     newArea = new GeoArea(area);
+                     areas.put(id, newArea);
                   }
                   viewer.refresh();
-                  viewer.setSelection(new StructuredSelection(newCategory));
+                  viewer.setSelection(new StructuredSelection(newArea));
                }
             });
          }
@@ -511,37 +509,37 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
    }
 
    /**
-    * Delete selected categories
+    * Delete selected areas
     */
-   private void deleteCategories()
+   private void deleteAreas()
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
 
-      if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Object Categories",
-            "Selected object categories will be deleted. Are you sure?"))
+      if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Geographical Areas",
+            "Selected geographical areas will be deleted. Are you sure?"))
          return;
 
       final int[] idList = new int[selection.size()];
       int index = 0;
       for(Object o : selection.toList())
-         idList[index++] = ((ObjectCategory)o).getId();
+         idList[index++] = ((GeoArea)o).getId();
 
-      new ConsoleJob("Delete object categories", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Delete geographical areas", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            monitor.beginTask("Delete object categories", idList.length);
+            monitor.beginTask("Delete geographical areas", idList.length);
             for(final int id : idList)
             {
                try
                {
-                  session.deleteObjectCategory(id, false);
+                  session.deleteGeoArea(id, false);
                }
                catch(NXCException e)
                {
-                  if (e.getErrorCode() != RCC.CATEGORY_IN_USE)
+                  if (e.getErrorCode() != RCC.GEO_AREA_IN_USE)
                      throw e;
 
                   final boolean[] retry = new boolean[1];
@@ -549,14 +547,15 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
                      @Override
                      public void run()
                      {
-                        ObjectCategory c = session.getObjectCategory(id);
+                        GeoArea a = areas.get(id);
                         retry[0] = MessageDialogHelper.openQuestion(getSite().getShell(), "Confirm Delete",
-                              String.format("Object category \"%s\" is in use. Are you sure you want to delete it?", c.getName()));
+                              String.format("Geographical area \"%s\" is in use. Are you sure you want to delete it?",
+                                    (a != null) ? a.getName() : "[" + id + "]"));
                      }
                   });
                   if (retry[0])
                   {
-                     session.deleteObjectCategory(id, true);
+                     session.deleteGeoArea(id, true);
                   }
                }
                monitor.worked(1);
@@ -567,7 +566,7 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot delete object category";
+            return "Cannot delete geographical area";
          }
       }.start();
    }
@@ -577,9 +576,28 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
     */
    private void refresh()
    {
-      categories.clear();
-      for(ObjectCategory c : session.getObjectCategories())
-         categories.put(c.getId(), c);
-      viewer.setInput(categories.values());
+      new ConsoleJob("Read configured geographical areas", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final List<GeoArea> serverAreaList = session.getGeoAreas();
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  areas.clear();
+                  for(GeoArea a : serverAreaList)
+                     areas.put(a.getId(), a);
+                  viewer.setInput(areas.values());
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot get configured geographical areas";
+         }
+      }.start();
    }
 }

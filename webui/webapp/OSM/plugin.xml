@@ -27,6 +27,14 @@
             id="org.netxms.ui.eclipse.osm.views.HistoryView"
             name="%view.name.GeolocationHistory">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.osm.views.GeoAreaManager"
+            icon="icons/area_manager.png"
+            id="org.netxms.ui.eclipse.osm.views.GeoAreaManager"
+            name="Geographical Areas"
+            restorable="true">
+      </view>
    </extension>
 
    <extension

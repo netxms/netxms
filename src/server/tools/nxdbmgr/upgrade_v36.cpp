@@ -44,6 +44,27 @@ static bool H_UpgradeFromV13()
          _T("<END>");
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dc_targets"), _T("geolocation_ctrl_mode")));
+
+   // Update access rights for predefined "Admins" group
+   DB_RESULT hResult = SQLSelect(_T("SELECT system_access FROM user_groups WHERE id=1073741825"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         uint64_t access = DBGetFieldUInt64(hResult, 0, 0);
+         access |= SYSTEM_ACCESS_MANAGE_GEO_AREAS;
+         TCHAR query[256];
+         _sntprintf(query, 256, _T("UPDATE user_groups SET system_access=") UINT64_FMT _T(" WHERE id=1073741825"), access);
+         CHK_EXEC(SQLQuery(query));
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_ignoreErrors)
+         return false;
+   }
+
    CHK_EXEC(SetMinorSchemaVersion(14));
    return true;
 }

@@ -215,6 +215,7 @@ public class NXCSession
    public static final String CHANNEL_ALARMS = "Core.Alarms";
    public static final String CHANNEL_AUDIT_LOG = "Core.Audit";
    public static final String CHANNEL_DC_THRESHOLDS = "Core.DC.Thresholds";
+   public static final String CHANNEL_GEO_AREAS = "Core.GeoAreas";
    public static final String CHANNEL_EVENTS = "Core.Events";
    public static final String CHANNEL_OBJECTS = "Core.Objects";
    public static final String CHANNEL_SNMP_TRAPS = "Core.SNMP.Traps";
@@ -516,6 +517,9 @@ public class NXCSession
                      break;
                   case NXCPCodes.CMD_OBJECT_CATEGORY_UPDATE:
                      processObjectCategoryUpdate(msg);
+                     break;
+                  case NXCPCodes.CMD_GEO_AREA_UPDATE:
+                     processGeoAreaUpdate(msg);
                      break;
                   case NXCPCodes.CMD_USER_DATA:
                      final User user = new User(msg);
@@ -1031,6 +1035,17 @@ public class NXCSession
             objectCategories.put(category.getId(), category);
          }
          sendNotification(new SessionNotification(SessionNotification.OBJECT_CATEGORY_UPDATED, category.getId(), category));
+      }
+
+      /**
+       * Process geographical area update
+       *
+       * @param msg notification message
+       */
+      private void processGeoAreaUpdate(NXCPMessage msg)
+      {
+         GeoArea area = new GeoArea(msg, NXCPCodes.VID_ELEMENT_LIST_BASE);
+         sendNotification(new SessionNotification(SessionNotification.GEO_AREA_UPDATED, area.getId(), area));
       }
 
       /**
@@ -12352,6 +12367,61 @@ public class NXCSession
          msg.setFieldInt16(baseId++, port);
       }
       msg.setFieldInt32(NXCPCodes.VID_ZONE_SNMP_PORT_COUNT, ports.size());
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get configured geographical areas
+    *
+    * @return list of configured geographical areas
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<GeoArea> getGeoAreas() throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_GEO_AREAS);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<GeoArea> areas = new ArrayList<GeoArea>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++, fieldId += 4096)
+         areas.add(new GeoArea(response, fieldId));
+      return areas;
+   }
+
+   /**
+    * Modify geographical area.
+    *
+    * @param area updated geographical area object
+    * @return ID of geographical area object
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public int modifyGeoArea(GeoArea area) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_GEO_AREA);
+      area.fillMessage(msg);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsInt32(NXCPCodes.VID_AREA_ID);
+   }
+
+   /**
+    * Delete geographical area. This method will fail if area is in use (set to at least one object) unless <b>forceDelete</b>
+    * parameter set to <b>true</b>.
+    *
+    * @param areaId area ID
+    * @param forceDelete force deletion flag - if set to true area will be deleted even if in use
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteGeoArea(int areaId, boolean forceDelete) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_GEO_AREA);
+      msg.setFieldInt32(NXCPCodes.VID_AREA_ID, areaId);
+      msg.setField(NXCPCodes.VID_FORCE_DELETE, forceDelete);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

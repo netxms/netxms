@@ -132,6 +132,9 @@ public final class RCC extends CommonRCC
    public static final int INVALID_WEB_SERVICE_ID = 136;
    public static final int NO_SUCH_RECORD = 137;
    public static final int RECORD_DETAILS_UNAVAILABLE = 138;
+   public static final int INVALID_GEO_AREA_ID = 139;
+   public static final int GEO_AREA_NAME_EMPTY = 140;
+   public static final int GEO_AREA_IN_USE = 141;
 
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

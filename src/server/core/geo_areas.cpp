@@ -28,6 +28,8 @@
 GeoArea::GeoArea(const NXCPMessage& msg) : m_border(64, 64, Ownership::True)
 {
    m_id = msg.getFieldAsUInt32(VID_AREA_ID);
+   if (m_id == 0)
+      m_id = CreateUniqueId(IDG_GEO_AREAS);
    msg.getFieldAsString(VID_NAME, m_name, 128);
    m_comments = msg.getFieldAsString(VID_COMMENTS);
 
@@ -101,7 +103,7 @@ void GeoArea::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 
    // Allow up to 2000 points
    int32_t count = std::min(m_border.size(), 2000);
-   msg->setField(baseId + 3, count);
+   msg->setField(baseId + 3, static_cast<int16_t>(count));
    uint32_t fieldId = baseId + 10;
    for(int i = 0; i < count; i++)
    {
@@ -262,5 +264,5 @@ void GeoAreasToMessage(NXCPMessage *msg)
 {
    std::pair<NXCPMessage*, uint32_t> context(msg, VID_ELEMENT_LIST_BASE);
    s_geoAreas.forEach(FillMessage, &context);
-   msg->setField(VID_NUM_ELEMENTS, (context.second - VID_ELEMENT_LIST_BASE) / 10);
+   msg->setField(VID_NUM_ELEMENTS, (context.second - VID_ELEMENT_LIST_BASE) / 4096);
 }
