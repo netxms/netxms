@@ -87,6 +87,8 @@ public class SessionNotification
    public static final int SECRET_CONFIG_CHANGED = 1047;
    public static final int OBJECT_CATEGORY_UPDATED = 1048;
    public static final int OBJECT_CATEGORY_DELETED = 1049;
+   public static final int GEO_AREA_UPDATED = 1050;
+   public static final int GEO_AREA_DELETED = 1051;
 
 	public static final int CUSTOM_MESSAGE = 2000;
    public static final int OBJECT_SYNC_COMPLETED = 2001;

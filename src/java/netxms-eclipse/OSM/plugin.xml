@@ -27,6 +27,14 @@
             id="org.netxms.ui.eclipse.osm.views.HistoryView"
             name="%view.name.GeolocationHistory">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.osm.views.GeoAreaManager"
+            icon="icons/area_manager.png"
+            id="org.netxms.ui.eclipse.osm.views.GeoAreaManager"
+            name="Geographical Areas"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -124,6 +132,15 @@
             id="org.netxms.ui.eclipse.worldmap.commands.show_filter"
             name="Toggle world map filter">
       </command>
+      <command
+            description="Open area manager"
+            id="org.netxms.ui.eclipse.osm.commands.open_area_manager"
+            name="Open area manager">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.osm.commands.showFilter"
+            name="Show filter">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -142,6 +159,21 @@
                tooltip="%action.tooltip.WorldMap">
          </action>
       </actionSet>
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.open_area_manager"
+            label="Geographical Areas"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.osm.actions.OpenAreaManager"
+               definitionId="org.netxms.ui.eclipse.osm.commands.open_area_manager"
+               icon="icons/area_manager.png"
+               id="org.netxms.ui.eclipse.osm.actions.open_area_manager"
+               label="Geographical Areas"
+               menubarPath="config/additions"
+               style="push"
+               toolbarPath="config/additions">
+         </action>
+      </actionSet>
    </extension>
    <extension
          point="org.netxms.ui.eclipse.loginlisteners">
@@ -157,12 +189,23 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F2">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.osm.commands.showFilter"
+            contextId="org.netxms.ui.eclipse.osm.context.GeoAreaManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
       <context
             id="org.netxms.ui.eclipse.osm.context.Geolocation"
             name="Geolocation"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+      <context
+            id="org.netxms.ui.eclipse.osm.context.GeoAreaManager"
+            name="Area Manager"
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>

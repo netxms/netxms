@@ -145,6 +145,7 @@
 #define IDG_PHYSICAL_LINK     24
 #define IDG_WEBSVC_DEFINITION 25
 #define IDG_OBJECT_CATEGORIES 26
+#define IDG_GEO_AREAS         27
 
 /**
  * Exit codes for console commands

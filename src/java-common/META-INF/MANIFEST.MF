@@ -6,7 +6,8 @@ Bundle-Version: 3.6.0
 Bundle-Activator: org.netxms.ui.base.Activator
 Bundle-Vendor: Raden Solutions
 Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",
- org.apache.commons.codec;bundle-version="1.9.0"
+ org.apache.commons.codec;bundle-version="1.9.0",
+ org.slf4j.api;bundle-version="1.7.10"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: .,

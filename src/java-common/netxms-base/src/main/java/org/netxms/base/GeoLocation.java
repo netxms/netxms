@@ -255,17 +255,6 @@ public class GeoLocation
 		
 		StringBuilder sb = new StringBuilder();
 
-		// Encode hemisphere
-		if (isLat)
-		{
-			sb.append((pos < 0) ? 'S' : 'N');
-		}
-		else
-		{
-			sb.append((pos < 0) ? 'W' : 'E');
-		}
-		sb.append(' ');
-		
 		NumberFormat nf = NumberFormat.getIntegerInstance();
 		nf.setMinimumIntegerDigits(2);
 		sb.append(nf.format(getIntegerDegree(pos)));
@@ -278,14 +267,24 @@ public class GeoLocation
 		nf.setMinimumFractionDigits(3);
 		nf.setMaximumFractionDigits(3);
 		sb.append(nf.format(getDecimalSeconds(pos)));
-		sb.append('"');
+      sb.append("\" ");
 		
+      // Encode hemisphere
+      if (isLat)
+      {
+         sb.append((pos < 0) ? 'S' : 'N');
+      }
+      else
+      {
+         sb.append((pos < 0) ? 'W' : 'E');
+      }
+      
 		return sb.toString();
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
+   /**
+    * @see java.lang.Object#toString()
+    */
 	@Override
 	public String toString()
 	{
@@ -370,7 +369,7 @@ public class GeoLocation
 			else
 				throw new GeoLocationFormatException();
 			int sign = ((ch == 'N') || (ch == 'E')) ? 1 : -1;
-			
+
 			try
 			{
 				double deg = Double.parseDouble(m.group(2).replace(',', '.'));
@@ -409,6 +408,47 @@ public class GeoLocation
 		double _lon = parse(lon, false);
 		return new GeoLocation(_lat, _lon);
 	}
+
+   /**
+    * Parse geolocation string where latitude and longitude placed together and separated by space(s). Latitude and longitude must
+    * be given either as numeric values or in DMS form.
+    * 
+    * @param s geolocation string
+    * @return geolocation object
+    * @throws GeoLocationFormatException if the string does not contain a parsable geolocation
+    */
+   public static GeoLocation parseGeoLocation(String s) throws GeoLocationFormatException
+   {
+      String[] parts = s.trim().split(" ");
+      if (parts.length < 2)
+         throw new GeoLocationFormatException();
+      if (parts.length == 2)
+      {
+         // Try to parse as pair of double numbers
+         try
+         {
+            double lat = Double.parseDouble(parts[0]);
+            double lon = Double.parseDouble(parts[1]);
+            if ((lat < -180.0) || (lat > 180.0) || (lon < -180.0) || (lon > 180.0))
+               throw new GeoLocationFormatException();
+            return new GeoLocation(lat, lon);
+         }
+         catch(NumberFormatException e)
+         {
+         }
+      }
+
+      Pattern p = Pattern.compile("([NS]*\\s*[0-9]+(?:[.,][0-9]+)*\u00b0?\\s*(?:[0-9]+(?:[.,][0-9]+)*)?\\'?\\s*(?:[0-9]+(?:[.,][0-9]+)*)?\\\"?\\s*[NS]*)\\s([EW]*\\s*[0-9]+(?:[.,][0-9]+)*\u00b0?\\s*(?:[0-9]+(?:[.,][0-9]+)*)?\\'?\\s*(?:[0-9]+(?:[.,][0-9]+)*)?\\\"?\\s*[EW]*)");
+      Matcher m = p.matcher(s.trim());
+      if (m.matches())
+      {
+         return parseGeoLocation(m.group(1), m.group(2));
+      }
+      else
+      {
+         throw new GeoLocationFormatException();
+      }
+   }
 
    /**
     * Get end timestamp

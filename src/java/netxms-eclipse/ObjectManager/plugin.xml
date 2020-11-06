@@ -1311,7 +1311,8 @@
                id="org.netxms.ui.eclipse.objectmanager.actions.open_category_editor"
                label="Object categories"
                menubarPath="config/additions"
-               style="push">
+               style="push"
+               toolbarPath="config/additions">
          </action>
       </actionSet>
    </extension>

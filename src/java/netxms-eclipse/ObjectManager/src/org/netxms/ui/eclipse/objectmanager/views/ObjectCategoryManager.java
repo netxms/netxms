@@ -551,7 +551,7 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
                      {
                         ObjectCategory c = session.getObjectCategory(id);
                         retry[0] = MessageDialogHelper.openQuestion(getSite().getShell(), "Confirm Delete",
-                              String.format("Object category \"%s\" is in use. ARe you sure you want to delete it?", c.getName()));
+                              String.format("Object category \"%s\" is in use. Are you sure you want to delete it?", c.getName()));
                      }
                   });
                   if (retry[0])

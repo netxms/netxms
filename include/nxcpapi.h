@@ -78,12 +78,12 @@ private:
 
    NXCPMessage(const NXCP_MESSAGE *msg, int version);
 
-   void *set(UINT32 fieldId, BYTE type, const void *value, bool isSigned = false, size_t size = 0, bool isUtf8 = false);
-   void *get(UINT32 fieldId, BYTE requiredType, BYTE *fieldType = NULL) const;
-   NXCP_MESSAGE_FIELD *find(UINT32 fieldId) const;
+   void *set(uint32_t fieldId, BYTE type, const void *value, bool isSigned = false, size_t size = 0, bool isUtf8 = false);
+   void *get(uint32_t fieldId, BYTE requiredType, BYTE *fieldType = NULL) const;
+   NXCP_MESSAGE_FIELD *find(uint32_t fieldId) const;
    bool isValid() { return m_version != -1; }
 
-   TCHAR *getFieldAsString(UINT32 fieldId, MemoryPool *pool, TCHAR *buffer, size_t bufferSize) const;
+   TCHAR *getFieldAsString(uint32_t fieldId, MemoryPool *pool, TCHAR *buffer, size_t bufferSize) const;
 
 public:
    NXCPMessage(int version = NXCP_VERSION);
@@ -117,21 +117,21 @@ public:
    bool isFieldExist(uint32_t fieldId) const { return find(fieldId) != nullptr; }
    int getFieldType(uint32_t fieldId) const;
 
-   void setField(UINT32 fieldId, INT16 value) { set(fieldId, NXCP_DT_INT16, &value, true); }
-   void setField(UINT32 fieldId, UINT16 value) { set(fieldId, NXCP_DT_INT16, &value, false); }
-   void setField(UINT32 fieldId, INT32 value) { set(fieldId, NXCP_DT_INT32, &value, true); }
-   void setField(UINT32 fieldId, UINT32 value) { set(fieldId, NXCP_DT_INT32, &value, false); }
-   void setField(UINT32 fieldId, INT64 value) { set(fieldId, NXCP_DT_INT64, &value, true); }
-   void setField(UINT32 fieldId, UINT64 value) { set(fieldId, NXCP_DT_INT64, &value, false); }
-   void setField(UINT32 fieldId, double value) { set(fieldId, NXCP_DT_FLOAT, &value); }
-   void setField(UINT32 fieldId, bool value) { INT16 v = value ? 1 : 0; set(fieldId, NXCP_DT_INT16, &v, true); }
-   void setField(UINT32 fieldId, const SharedString& value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value.cstr()); }
-   void setField(UINT32 fieldId, const String& value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value.cstr()); }
-   void setField(UINT32 fieldId, const TCHAR *value) { if (value != nullptr) set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value); }
-   void setField(UINT32 fieldId, const BYTE *value, size_t size) { set(fieldId, NXCP_DT_BINARY, value, false, size); }
-   void setField(UINT32 fieldId, const InetAddress& value) { set(fieldId, NXCP_DT_INETADDR, &value); }
-   void setField(UINT32 fieldId, const uuid& value) { set(fieldId, NXCP_DT_BINARY, value.getValue(), false, UUID_LENGTH); }
-   void setField(UINT32 fieldId, const MacAddress& value) { set(fieldId, NXCP_DT_BINARY, value.value(), false, value.length()); }
+   void setField(uint32_t fieldId, int16_t value) { set(fieldId, NXCP_DT_INT16, &value, true); }
+   void setField(uint32_t fieldId, uint16_t value) { set(fieldId, NXCP_DT_INT16, &value, false); }
+   void setField(uint32_t fieldId, int32_t value) { set(fieldId, NXCP_DT_INT32, &value, true); }
+   void setField(uint32_t fieldId, uint32_t value) { set(fieldId, NXCP_DT_INT32, &value, false); }
+   void setField(uint32_t fieldId, int64_t value) { set(fieldId, NXCP_DT_INT64, &value, true); }
+   void setField(uint32_t fieldId, uint64_t value) { set(fieldId, NXCP_DT_INT64, &value, false); }
+   void setField(uint32_t fieldId, double value) { set(fieldId, NXCP_DT_FLOAT, &value); }
+   void setField(uint32_t fieldId, bool value) { INT16 v = value ? 1 : 0; set(fieldId, NXCP_DT_INT16, &v, true); }
+   void setField(uint32_t fieldId, const SharedString& value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value.cstr()); }
+   void setField(uint32_t fieldId, const String& value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value.cstr()); }
+   void setField(uint32_t fieldId, const TCHAR *value) { if (value != nullptr) set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value); }
+   void setField(uint32_t fieldId, const BYTE *value, size_t size) { set(fieldId, NXCP_DT_BINARY, value, false, size); }
+   void setField(uint32_t fieldId, const InetAddress& value) { set(fieldId, NXCP_DT_INETADDR, &value); }
+   void setField(uint32_t fieldId, const uuid& value) { set(fieldId, NXCP_DT_BINARY, value.getValue(), false, UUID_LENGTH); }
+   void setField(uint32_t fieldId, const MacAddress& value) { set(fieldId, NXCP_DT_BINARY, value.value(), false, value.length()); }
 #ifdef UNICODE
    void setFieldFromMBString(uint32_t fieldId, const char *value);
 #else
@@ -146,28 +146,28 @@ public:
    void setFieldFromInt32Array(uint32_t fieldId, const HashSet<uint32_t> *data)  { if (data != nullptr) { setFieldFromInt32Array(fieldId, *data); } else { set(fieldId, NXCP_DT_BINARY, NULL, false, 0); } };
    bool setFieldFromFile(uint32_t fieldId, const TCHAR *fileName);
 
-   INT16 getFieldAsInt16(UINT32 fieldId) const;
-   UINT16 getFieldAsUInt16(UINT32 fieldId) const;
-   INT32 getFieldAsInt32(UINT32 fieldId) const;
-   UINT32 getFieldAsUInt32(UINT32 fieldId) const;
-   INT64 getFieldAsInt64(UINT32 fieldId) const;
-   UINT64 getFieldAsUInt64(UINT32 fieldId) const;
-   double getFieldAsDouble(UINT32 fieldId) const;
-   bool getFieldAsBoolean(UINT32 fieldId) const;
-   time_t getFieldAsTime(UINT32 fieldId) const;
+   int16_t getFieldAsInt16(uint32_t fieldId) const;
+   uint16_t getFieldAsUInt16(uint32_t fieldId) const;
+   int32_t getFieldAsInt32(uint32_t fieldId) const;
+   uint32_t getFieldAsUInt32(uint32_t fieldId) const;
+   int64_t getFieldAsInt64(uint32_t fieldId) const;
+   uint64_t getFieldAsUInt64(uint32_t fieldId) const;
+   double getFieldAsDouble(uint32_t fieldId) const;
+   bool getFieldAsBoolean(uint32_t fieldId) const;
+   time_t getFieldAsTime(uint32_t fieldId) const;
    size_t getFieldAsInt32Array(uint32_t fieldId, size_t numElements, uint32_t *buffer) const;
    size_t getFieldAsInt32Array(uint32_t fieldId, IntegerArray<uint32_t> *data) const;
-   const BYTE *getBinaryFieldPtr(UINT32 fieldId, size_t *size) const;
-   TCHAR *getFieldAsString(UINT32 fieldId, MemoryPool *pool) const { return getFieldAsString(fieldId, pool, nullptr, 0); }
-   TCHAR *getFieldAsString(UINT32 fieldId, TCHAR *buffer = nullptr, size_t bufferSize = 0) const { return getFieldAsString(fieldId, nullptr, buffer, bufferSize); }
-   TCHAR *getFieldAsString(UINT32 fieldId, TCHAR **buffer) const { MemFree(*buffer); *buffer = getFieldAsString(fieldId, nullptr, nullptr, 0); return *buffer; }
-	char *getFieldAsMBString(UINT32 fieldId, char *buffer = nullptr, size_t bufferSize = 0) const;
-	char *getFieldAsUtf8String(UINT32 fieldId, char *buffer = nullptr, size_t bufferSize = 0) const;
-   SharedString getFieldAsSharedString(UINT32 fieldId, size_t maxSize = 0) const;
-   size_t getFieldAsBinary(UINT32 fieldId, BYTE *buffer, size_t bufferSize) const;
-   InetAddress getFieldAsInetAddress(UINT32 fieldId) const;
-   MacAddress getFieldAsMacAddress(UINT32 fieldId) const;
-   uuid getFieldAsGUID(UINT32 fieldId) const;
+   const BYTE *getBinaryFieldPtr(uint32_t fieldId, size_t *size) const;
+   TCHAR *getFieldAsString(uint32_t fieldId, MemoryPool *pool) const { return getFieldAsString(fieldId, pool, nullptr, 0); }
+   TCHAR *getFieldAsString(uint32_t fieldId, TCHAR *buffer = nullptr, size_t bufferSize = 0) const { return getFieldAsString(fieldId, nullptr, buffer, bufferSize); }
+   TCHAR *getFieldAsString(uint32_t fieldId, TCHAR **buffer) const { MemFree(*buffer); *buffer = getFieldAsString(fieldId, nullptr, nullptr, 0); return *buffer; }
+	char *getFieldAsMBString(uint32_t fieldId, char *buffer = nullptr, size_t bufferSize = 0) const;
+	char *getFieldAsUtf8String(uint32_t fieldId, char *buffer = nullptr, size_t bufferSize = 0) const;
+   SharedString getFieldAsSharedString(uint32_t fieldId, size_t maxSize = 0) const;
+   size_t getFieldAsBinary(uint32_t fieldId, BYTE *buffer, size_t bufferSize) const;
+   InetAddress getFieldAsInetAddress(uint32_t fieldId) const;
+   MacAddress getFieldAsMacAddress(uint32_t fieldId) const;
+   uuid getFieldAsGUID(uint32_t fieldId) const;
 
    void deleteAllFields();
 

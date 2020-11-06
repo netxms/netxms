@@ -657,9 +657,9 @@ typedef struct
 #define CMD_GET_DCI_LAST_VALUE            0x019D
 #define CMD_OBJECT_CATEGORY_UPDATE        0x019E
 #define CMD_GET_GEO_AREAS                 0x019F
-#define CMD_MODIFY_GEO_AREA               0x0200
-#define CMD_DELETE_GEO_AREA               0x0201
-#define CMD_GEO_AREA_UPDATE               0x0202
+#define CMD_MODIFY_GEO_AREA               0x01A0
+#define CMD_DELETE_GEO_AREA               0x01A1
+#define CMD_GEO_AREA_UPDATE               0x01A2
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
