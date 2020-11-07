@@ -26,6 +26,11 @@
             <url>http://download.eclipse.org/eclipse/updates/4.15</url>
             <layout>p2</layout>
         </repository>
+        <repository>
+            <id>eclipse-2020-03</id>
+            <url>http://download.eclipse.org/releases/2020-03</url>
+            <layout>p2</layout>
+        </repository>
      </repositories>
    </profile>
    <profile>
@@ -40,6 +45,11 @@
             <id>rap-3.6</id>
             <url>http://download.eclipse.org/rt/rap/3.6</url>
             <layout>p2</layout>
+        </repository>
+        <repository>
+            <id>orbit latest</id>
+            <layout>p2</layout>
+            <url>http://download.eclipse.org/tools/orbit/downloads/drops/R20170919201930/repository/</url>
         </repository>
      </repositories>
    </profile>
