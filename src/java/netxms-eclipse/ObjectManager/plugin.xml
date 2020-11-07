@@ -444,6 +444,17 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              category="org.netxms.ui.eclipse.objectmanager.propertypages.Location"
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.LocationControl"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.LocationControl"
+              name="Location Control">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.DataCollectionTarget">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension

@@ -37,6 +37,7 @@ import org.netxms.base.PostalAddress;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.AgentCompressionMode;
 import org.netxms.client.constants.CertificateMappingMethod;
+import org.netxms.client.constants.GeoLocationControlMode;
 import org.netxms.client.constants.IcmpStatCollectionMode;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RackOrientation;
@@ -147,6 +148,8 @@ public class NXCObjectModificationData
    public static final int NAME_ON_MAP            = 88;
    public static final int CERT_MAPPING           = 89;
    public static final int CATEGORY_ID            = 90;
+   public static final int GEO_AREAS              = 91;
+   public static final int GEOLOCATION_CTRL_MODE  = 92;
 
    private Set<Integer> fieldSet;
    private long objectId;
@@ -264,6 +267,8 @@ public class NXCObjectModificationData
    private CertificateMappingMethod certificateMappingMethod;
    private String certificateMappingData;
    private int categoryId;
+   private GeoLocationControlMode geoLocationControlMode;
+   private long[] geoAreas;
 
    /**
     * Constructor for creating modification data for given object
@@ -2243,5 +2248,47 @@ public class NXCObjectModificationData
    {
       this.categoryId = categoryId;
       fieldSet.add(CATEGORY_ID);
+   }
+
+   /**
+    * Get geolocation control mode
+    * 
+    * @return geolocation control mode
+    */
+   public GeoLocationControlMode getGeoLocationControlMode()
+   {
+      return geoLocationControlMode;
+   }
+
+   /**
+    * Set geolocation control mode
+    *
+    * @param geoLocationControlMode new geolocation control mode
+    */
+   public void setGeoLocationControlMode(GeoLocationControlMode geoLocationControlMode)
+   {
+      this.geoLocationControlMode = geoLocationControlMode;
+      fieldSet.add(GEOLOCATION_CTRL_MODE);
+   }
+
+   /**
+    * Get geo areas for object
+    *
+    * @return geo areas for object
+    */
+   public long[] getGeoAreas()
+   {
+      return geoAreas;
+   }
+
+   /**
+    * Set geo areas for object
+    *
+    * @param geoAreas new geo areas for object
+    */
+   public void setGeoAreas(long[] geoAreas)
+   {
+      this.geoAreas = geoAreas;
+      fieldSet.add(GEO_AREAS);
    }
 }

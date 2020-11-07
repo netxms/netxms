@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.GeoLocationControlMode;
 import org.netxms.client.datacollection.DciValue;
 
 /**
@@ -33,33 +34,36 @@ public class DataCollectionTarget extends GenericObject
    public static final int DCF_DISABLE_STATUS_POLL    = 0x00000001;
    public static final int DCF_DISABLE_CONF_POLL      = 0x00000002;
    public static final int DCF_DISABLE_DATA_COLLECT   = 0x00000004;
-   
+   public static final int DCF_LOCATION_CHANGE_EVENT  = 0x00000008;
 
    public static final int DCSF_UNREACHABLE          = 0x000000001;
    public static final int DCSF_NETWORK_PATH_PROBLEM = 0x000000002;
-   
-   
+
    protected List<DciValue> overviewDciData;
    protected List<DciValue> tooltipDciData;
+   protected GeoLocationControlMode geoLocationControlMode;
+   protected long[] geoAreas;
 
    /**
     * Create new object.
     * 
-    * @param id
-    * @param session
+    * @param id object ID
+    * @param session client session where this object was received
     */
    public DataCollectionTarget(long id, NXCSession session)
    {
       super(id, session);
       overviewDciData = new ArrayList<DciValue>(0);
       tooltipDciData = new ArrayList<DciValue>(0);
+      geoLocationControlMode = GeoLocationControlMode.NO_CONTROL;
+      geoAreas = new long[0];
    }
 
    /**
     * Create object from NXCP message.
     * 
-    * @param msg
-    * @param session
+    * @param msg NXCP message
+    * @param session client session where this object was received
     */
    public DataCollectionTarget(NXCPMessage msg, NXCSession session)
    {
@@ -82,6 +86,9 @@ public class DataCollectionTarget extends GenericObject
          tooltipDciData.add(DciValue.createFromMessage(objectId, msg, fieldId));
          fieldId += 50;
       }
+
+      geoLocationControlMode = GeoLocationControlMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_GEOLOCATION_CTRL_MODE));
+      geoAreas = msg.getFieldAsUInt32Array(NXCPCodes.VID_GEO_AREAS);
    }
 
    /**
@@ -98,5 +105,25 @@ public class DataCollectionTarget extends GenericObject
    public List<DciValue> getTooltipDciData()
    {
       return tooltipDciData;
+   }
+
+   /**
+    * Get geolocation control mode
+    *
+    * @return geolocation control mode
+    */
+   public GeoLocationControlMode getGeoLocationControlMode()
+   {
+      return geoLocationControlMode;
+   }
+
+   /**
+    * Get geo areas configured for that object
+    *
+    * @return list of geo area IDs
+    */
+   public long[] getGeoAreas()
+   {
+      return geoAreas;
    }
 }
