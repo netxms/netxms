@@ -332,7 +332,6 @@ json_t *Sensor::toJson()
    json_t *root = super::toJson();
 
    lockProperties();
-   json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "macAddr", json_string_t(m_macAddress.toString(MacAddressNotation::FLAT_STRING)));
    json_object_set_new(root, "deviceClass", json_integer(m_deviceClass));
    json_object_set_new(root, "vendor", json_string_t(m_vendor));
@@ -354,7 +353,6 @@ json_t *Sensor::toJson()
 void Sensor::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
    super::fillMessageInternal(msg, userId);
-   msg->setField(VID_SENSOR_FLAGS, m_flags);
 	msg->setField(VID_MAC_ADDR, m_macAddress);
    msg->setField(VID_DEVICE_CLASS, m_deviceClass);
 	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));

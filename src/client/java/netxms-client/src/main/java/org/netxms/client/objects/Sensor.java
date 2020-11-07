@@ -69,7 +69,6 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
 
    private static final Logger logger = LoggerFactory.getLogger(Sensor.class);
 
-   private int flags;
    protected MacAddress macAddress;
 	private int deviceClass;
 	private String vendor;
@@ -96,7 +95,6 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
 	public Sensor(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		flags = msg.getFieldAsInt32(NXCPCodes.VID_SENSOR_FLAGS);
 		macAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_MAC_ADDR));
 	   deviceClass  = msg.getFieldAsInt32(NXCPCodes.VID_DEVICE_CLASS);
 	   vendor = msg.getFieldAsString(NXCPCodes.VID_VENDOR);

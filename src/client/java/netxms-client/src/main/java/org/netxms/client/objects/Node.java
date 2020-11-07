@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,18 +48,18 @@ public class Node extends AbstractNode
 		super(msg, session);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
-	 */
+   /**
+    * @see org.netxms.client.objects.GenericObject#getObjectClassName()
+    */
 	@Override
 	public String getObjectClassName()
 	{
 		return "Node";
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
-	 */
+   /**
+    * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
+    */
 	@Override
 	public boolean isAllowedOnMap()
 	{

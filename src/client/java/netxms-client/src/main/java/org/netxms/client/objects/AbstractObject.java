@@ -130,6 +130,7 @@ public abstract class AbstractObject
    protected String nameOnMap;
 	protected int objectClass;
    protected int categoryId;
+   protected int flags;
 	protected ObjectStatus status = ObjectStatus.UNKNOWN;
 	protected boolean isDeleted = false;
 	protected boolean inMaintenanceMode = false;
@@ -216,6 +217,7 @@ public abstract class AbstractObject
       nameOnMap = msg.getFieldAsString(NXCPCodes.VID_NAME_ON_MAP);
 		objectClass = msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_CLASS);
       categoryId = msg.getFieldAsInt32(NXCPCodes.VID_CATEGORY_ID);
+      flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		isDeleted = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED);
 		status = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_STATUS));
 		inMaintenanceMode = msg.getFieldAsBoolean(NXCPCodes.VID_MAINTENANCE_MODE);

@@ -105,7 +105,6 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 
 	protected InetAddressEx primaryIP;
 	protected String primaryName;
-	protected int flags;
 	protected int stateFlags;
 	protected int capabilities;
 	protected NodeType nodeType;
@@ -208,7 +207,6 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
 
 		primaryIP = msg.getFieldAsInetAddressEx(NXCPCodes.VID_IP_ADDRESS);
 		primaryName = msg.getFieldAsString(NXCPCodes.VID_PRIMARY_NAME);
-		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		stateFlags = msg.getFieldAsInt32(NXCPCodes.VID_STATE_FLAGS);
 		capabilities = msg.getFieldAsInt32(NXCPCodes.VID_CAPABILITIES);
 		nodeType = NodeType.getByValue(msg.getFieldAsInt16(NXCPCodes.VID_NODE_TYPE));
