@@ -35,7 +35,6 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
 	private List<InetAddressEx> syncNetworks = new ArrayList<InetAddressEx>(1);
 	private List<ClusterResource> resources = new ArrayList<ClusterResource>();
 	private int zoneId;
-	private int flags;
 	
 	/**
 	 * @param msg
@@ -45,7 +44,6 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
 	{
 		super(msg, session);
 		
-      flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		clusterType = msg.getFieldAsInt32(NXCPCodes.VID_CLUSTER_TYPE);
 		zoneId = msg.getFieldAsInt32(NXCPCodes.VID_ZONE_UIN);
 		

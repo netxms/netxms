@@ -126,4 +126,14 @@ public class DataCollectionTarget extends GenericObject
    {
       return geoAreas;
    }
+
+   /**
+    * Check if generation of location change event is turned on
+    * 
+    * @return true if location change event should be generated for this object
+    */
+   public boolean isLocationChageEventGenerated()
+   {
+      return (flags & DCF_LOCATION_CHANGE_EVENT) != 0;
+   }
 }
