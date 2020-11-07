@@ -6303,6 +6303,16 @@ public class NXCSession
          msg.setFieldInt32(NXCPCodes.VID_CATEGORY_ID, data.getCategoryId());
       }
 
+      if (data.isFieldSet(NXCObjectModificationData.GEOLOCATION_CTRL_MODE))
+      {
+         msg.setFieldInt16(NXCPCodes.VID_GEOLOCATION_CTRL_MODE, data.getGeoLocationControlMode().getValue());
+      }
+
+      if (data.isFieldSet(NXCObjectModificationData.GEO_AREAS))
+      {
+         msg.setField(NXCPCodes.VID_GEO_AREAS, data.getGeoAreas());
+      }
+
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);

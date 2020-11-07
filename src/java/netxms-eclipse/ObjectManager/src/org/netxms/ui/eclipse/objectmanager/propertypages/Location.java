@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,9 +59,9 @@ public class Location extends PropertyPage
    private LabeledText streetAddress;
    private LabeledText postcode;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -154,7 +154,7 @@ public class Location extends PropertyPage
       postcode.setLabel(Messages.get().Location_Postcode);
       postcode.setText(object.getPostalAddress().postcode);
       postcode.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-      
+
 		return dialogArea;
 	}
 
