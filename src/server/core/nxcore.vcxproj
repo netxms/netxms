@@ -250,6 +250,7 @@
     <ClCompile Include="evproc.cpp" />
     <ClCompile Include="fdb.cpp" />
     <ClCompile Include="filemonitoring.cpp" />
+    <ClCompile Include="geo_areas.cpp" />
     <ClCompile Include="graph.cpp" />
     <ClCompile Include="hash_index.cpp" />
     <ClCompile Include="hdlink.cpp" />

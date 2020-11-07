@@ -96,6 +96,10 @@ void NXCORE_EXPORTABLE ObjectTransactionEnd();
 class AgentTunnel;
 class GenericAgentPolicy;
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE ObjectArray<GeoLocation>;
+#endif
+
 /**
  * Geo area
  */
@@ -2029,6 +2033,10 @@ enum GeoLocationControlMode
    GEOLOCATION_RESTRICTED_AREAS = 1,
    GEOLOCATION_ALLOWED_AREAS = 2
 };
+
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE IntegerArray<uint32_t>;
+#endif
 
 /**
  * Common base class for all objects capable of collecting data

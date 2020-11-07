@@ -622,6 +622,11 @@ public:
    static NXSL_Value *load(NXSL_ValueManager *vm, ByteStream& s);
 };
 
+#ifdef _WIN32
+template class LIBNXSL_EXPORTABLE ObjectMemoryPool<NXSL_Value>;
+template class LIBNXSL_EXPORTABLE ObjectMemoryPool<NXSL_Identifier>;
+#endif
+
 /**
  * Value management functionality
  */
@@ -679,7 +684,7 @@ public:
 
    NXSL_Value *get(const K& key) { return (NXSL_Value*)_get(&key); }
    void set(const K& key, NXSL_Value *value) { _set(&key, (void *)value); }
-   void remove(const K& key) { _remove(&key); }
+   void remove(const K& key) { _remove(&key, true); }
    bool contains(const K& key) { return _contains(&key); }
 
    Iterator<NXSL_Value> *iterator() { return new Iterator<NXSL_Value>(new HashMapIterator(this)); }
@@ -972,6 +977,13 @@ struct NXSL_IdentifierLocation
    }
 };
 
+#ifdef _WIN32
+template class LIBNXSL_EXPORTABLE ObjectArray<NXSL_Instruction>;
+template class LIBNXSL_EXPORTABLE ObjectArray<NXSL_Function>;
+template class LIBNXSL_EXPORTABLE ObjectArray<NXSL_ModuleImport>;
+template class LIBNXSL_EXPORTABLE NXSL_ValueHashMap<NXSL_Identifier>;
+#endif
+
 /**
  * Compiled NXSL program
  */
@@ -1130,6 +1142,10 @@ public:
    virtual void write(const TCHAR *name, NXSL_Value *value) override;
    virtual NXSL_Value *read(const TCHAR *name, NXSL_ValueManager *vm) override;
 };
+
+#ifdef _WIN32
+template class LIBNXSL_EXPORTABLE ObjectArray<NXSL_Module>;
+#endif
 
 /**
  * NXSL virtual machine
