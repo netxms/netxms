@@ -18,9 +18,14 @@
  */
 package org.netxms.ui.eclipse.osm.views;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -37,17 +42,21 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
@@ -55,6 +64,8 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.base.GeoLocation;
+import org.netxms.base.KMLParser;
 import org.netxms.client.GeoArea;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -69,6 +80,7 @@ import org.netxms.ui.eclipse.osm.dialogs.GeoAreaEditDialog;
 import org.netxms.ui.eclipse.osm.views.helpers.GeoAreaComparator;
 import org.netxms.ui.eclipse.osm.views.helpers.GeoAreaFilter;
 import org.netxms.ui.eclipse.osm.views.helpers.GeoAreaLabelProvider;
+import org.netxms.ui.eclipse.osm.widgets.GeoAreaViewer;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -91,16 +103,21 @@ public class GeoAreaManager extends ViewPart implements SessionListener
 
    private Map<Integer, GeoArea> areas = new HashMap<Integer, GeoArea>();
    private Display display;
+   private SashForm splitter;
    private SortableTableViewer viewer;
    private NXCSession session;
    private Composite content;
    private FilterText filterText;
    private GeoAreaFilter filter;
+   private Composite details;
+   private TableViewer coordinateListViewer;
+   private GeoAreaViewer mapViewer;
    private boolean initShowFilter = true;
    private Action actionRefresh;
    private Action actionNew;
    private Action actionEdit;
    private Action actionDelete;
+   private Action actionImport;
    private Action actionShowFilter;
 
    /**
@@ -137,8 +154,10 @@ public class GeoAreaManager extends ViewPart implements SessionListener
    {
       display = parent.getDisplay();
 
+      splitter = new SashForm(parent, SWT.HORIZONTAL);
+
       // Create content area
-      content = new Composite(parent, SWT.NONE);
+      content = new Composite(splitter, SWT.NONE);
       FormLayout formLayout = new FormLayout();
       content.setLayout(formLayout);
 
@@ -179,6 +198,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
             {
                actionEdit.setEnabled(selection.size() == 1);
                actionDelete.setEnabled(selection.size() > 0);
+               updateAreaDetails((GeoArea)selection.getFirstElement());
             }
          }
       });
@@ -210,6 +230,17 @@ public class GeoAreaManager extends ViewPart implements SessionListener
       fd.top = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       filterText.setLayoutData(fd);
+
+      details = new Composite(splitter, SWT.NONE);
+      details.setLayout(new FillLayout(SWT.VERTICAL));
+
+      coordinateListViewer = new TableViewer(details);
+      coordinateListViewer.setContentProvider(new ArrayContentProvider());
+      
+      mapViewer = new GeoAreaViewer(details, SWT.BORDER);
+      mapViewer.enableMapControls(false);
+
+      splitter.setWeights(new int[] { 60, 40 });
 
       getSite().setSelectionProvider(viewer);
 
@@ -341,32 +372,37 @@ public class GeoAreaManager extends ViewPart implements SessionListener
          }
       };
 
-      actionNew = new Action("New...") {
+      actionNew = new Action("New...", SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
             createArea();
          }
       };
-      actionNew.setImageDescriptor(SharedIcons.ADD_OBJECT);
 
-      actionEdit = new Action("&Edit...") {
+      actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
          @Override
          public void run()
          {
             editArea();
          }
       };
-      actionEdit.setImageDescriptor(SharedIcons.EDIT);
 
-      actionDelete = new Action("&Delete") {
+      actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
             deleteAreas();
          }
       };
-      actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
+
+      actionImport = new Action("&Import...", Activator.getImageDescriptor("icons/import.gif")) {
+         @Override
+         public void run()
+         {
+            importAreas();
+         }
+      };
    }
 
    /**
@@ -387,6 +423,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
    private void fillLocalPullDown(IMenuManager manager)
    {
       manager.add(actionNew);
+      manager.add(actionImport);
       manager.add(actionEdit);
       manager.add(actionDelete);
       manager.add(new Separator());
@@ -403,6 +440,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
    private void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionNew);
+      manager.add(actionImport);
       manager.add(actionEdit);
       manager.add(actionDelete);
       manager.add(new Separator());
@@ -440,6 +478,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
    protected void fillContextMenu(final IMenuManager mgr)
    {
       mgr.add(actionNew);
+      mgr.add(actionImport);
       mgr.add(actionEdit);
       mgr.add(actionDelete);
    }
@@ -597,6 +636,102 @@ public class GeoAreaManager extends ViewPart implements SessionListener
          protected String getErrorMessage()
          {
             return "Cannot get configured geographical areas";
+         }
+      }.start();
+   }
+
+   /**
+    * Update details view for selected area
+    */
+   private void updateAreaDetails(GeoArea area)
+   {
+      if (area != null)
+         coordinateListViewer.setInput(area.getBorder());
+      else
+         coordinateListViewer.setInput(new Object[0]);
+      mapViewer.setArea(area);
+   }
+
+   /**
+    * Import areas from KML file
+    */
+   private void importAreas()
+   {
+      FileDialog dlg = new FileDialog(getSite().getShell(), SWT.OPEN);
+      dlg.setFilterExtensions(new String[] { "*.kml", "*.*" });
+      String fileName = dlg.open();
+      if (fileName == null)
+         return;
+      
+      final File file = new File(fileName);
+      new ConsoleJob("Import areas from file", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final Map<String, List<GeoLocation>> importedAreas = KMLParser.importPolygons(file);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  validateImportedAreas(importedAreas);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot read import file";
+         }
+      }.start();
+   }
+
+   /**
+    * Validate imported areas and create on server on success
+    *
+    * @param areas imported areas
+    */
+   private void validateImportedAreas(final Map<String, List<GeoLocation>> importedAreas)
+   {
+      final Set<String> skipSet = new HashSet<String>();
+      final List<GeoArea> replaceList = new ArrayList<GeoArea>();
+      for(String n : importedAreas.keySet())
+      {
+         for(GeoArea a : areas.values())
+         {
+            if (a.getName().equalsIgnoreCase(n))
+            {
+               if (MessageDialogHelper.openQuestion(getSite().getShell(), "Override Geographical Area",
+                     String.format("Geographical area with name \"%s\" already exist. Do you want to override it's content?", a.getName())))
+               {
+                  replaceList.add(new GeoArea(a.getId(), a.getName(), a.getComments(), importedAreas.get(n)));
+               }
+               skipSet.add(n);
+            }
+         }
+      }
+
+      for(String n : skipSet)
+         importedAreas.remove(n);
+
+      new ConsoleJob("Import geographical area", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            for(GeoArea a : replaceList)
+               session.modifyGeoArea(a);
+            
+            for(Entry<String, List<GeoLocation>> e : importedAreas.entrySet())
+            {
+               GeoArea a = new GeoArea(0, e.getKey(), "Imported from KML", e.getValue());
+               session.modifyGeoArea(a);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot update geographical area on server";
          }
       }.start();
    }

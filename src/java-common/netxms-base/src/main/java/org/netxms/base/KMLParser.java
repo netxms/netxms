@@ -112,14 +112,14 @@ public final class KMLParser
             NodeList nameElement = ((Element)nNode).getElementsByTagName("name");
             String name = "Unknown";
             if (nameElement.getLength() >= 1)
-               name = ((Element)nameElement.item(0)).getTextContent();
+               name = ((Element)nameElement.item(0)).getTextContent().trim();
 
             NodeList coordinatesElement = ((Element)polygon.item(0)).getElementsByTagName("coordinates");
             String coodinates = "";
             if (coordinatesElement.getLength() >= 1)
                coodinates = ((Element)coordinatesElement.item(0)).getTextContent();
 
-            List<GeoLocation> geoLoc = new ArrayList<GeoLocation>();
+            List<GeoLocation> border = new ArrayList<GeoLocation>();
 
             String[] lines = coodinates.split("\\r?\\n");
             for(String line : lines)
@@ -129,17 +129,17 @@ public final class KMLParser
                {
                   try
                   {
-                     geoLoc.add(new GeoLocation(Double.parseDouble(items[0]), Double.parseDouble(items[1])));
+                     border.add(new GeoLocation(Double.parseDouble(items[1]), Double.parseDouble(items[0])));
                   }
                   catch(NumberFormatException e)
                   {
-                     e.printStackTrace();
+                     logger.debug("Error parsing polygon vertex in KML file");
                   }
                }
             }
 
-            if (geoLoc.size() > 0)
-               map.put(name, geoLoc);
+            if (border.size() > 0)
+               map.put(name, border);
          }
       }
       return map;

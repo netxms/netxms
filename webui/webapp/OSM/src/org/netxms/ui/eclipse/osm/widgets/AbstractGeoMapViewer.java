@@ -94,7 +94,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
    protected ColorCache colorCache;
 	protected ILabelProvider labelProvider;
    protected Area coverage = new Area(0, 0, 0, 0);
-   protected MapAccessor accessor;
+   protected MapAccessor accessor = new MapAccessor(0.0, 0.0, 4);
    protected IViewPart viewPart = null;
    protected Point currentPoint;
 
@@ -111,6 +111,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	private Image imageZoomOut;
 	private Rectangle zoomControlRect = null;
    private Font mapTitleFont;
+   private boolean enableControls = true;
    private RAPDragTracker tracker;
 	
 	/**
@@ -214,6 +215,17 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       GeoLocationCache.getInstance().addListener(this);
 	}
 		
+   /**
+    * Enable/disable map controls (zoom, scroll, etc.)
+    *
+    * @param enable true to enable
+    */
+   public void enableMapControls(boolean enable)
+   {
+      enableControls = enable;
+      redraw();
+   }
+
 	/**
 	 * Add zoom level change listener
 	 * 
@@ -382,7 +394,8 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       {
          for(int j = 0; j < tiles[i].length; j++)
          {
-            gc.drawImage(tiles[i][j].getImage(), x, y);
+            if (!tiles[i][j].getImage().isDisposed())
+               gc.drawImage(tiles[i][j].getImage(), x, y);
             x += 256;
             if (x >= size.x)
             {
@@ -393,10 +406,9 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       }
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
-	 */
+   /**
+    * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
+    */
 	@Override
 	public void paintControl(PaintEvent e)
 	{
@@ -470,29 +482,32 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		}
 		
 		// Draw zoom control
-		gc.setFont(JFaceResources.getHeaderFont());
-		text = Integer.toString(accessor.getZoom());
-		textSize = gc.textExtent(text);
-		
-      rect = getClientArea();
-      rect.x = 10;
-      rect.y = 10;
-      rect.width = 80;
-      rect.height = 47 + textSize.y;
+		if (enableControls)
+		{
+   		gc.setFont(JFaceResources.getHeaderFont());
+   		text = Integer.toString(accessor.getZoom());
+   		textSize = gc.textExtent(text);
+   		
+         rect = getClientArea();
+         rect.x = 10;
+         rect.y = 10;
+         rect.width = 80;
+         rect.height = 47 + textSize.y;
+   
+         gc.setBackground(INFO_BLOCK_BACKGROUND);
+         gc.setForeground(INFO_BLOCK_TEXT);
+         gc.setAlpha(128);
+         gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+         gc.setAlpha(255);
+         
+         gc.drawText(text, rect.x + rect.width / 2 - textSize.x / 2, rect.y + 5, true);
+         gc.drawImage(imageZoomIn, rect.x + 5, rect.y + rect.height - 37);
+         gc.drawImage(imageZoomOut, rect.x + 42, rect.y + rect.height - 37);
 
-      gc.setBackground(INFO_BLOCK_BACKGROUND);
-      gc.setForeground(INFO_BLOCK_TEXT);
-      gc.setAlpha(128);
-      gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-      gc.setAlpha(255);
-      
-      gc.drawText(text, rect.x + rect.width / 2 - textSize.x / 2, rect.y + 5, true);
-      gc.drawImage(imageZoomIn, rect.x + 5, rect.y + rect.height - 37);
-      gc.drawImage(imageZoomOut, rect.x + 42, rect.y + rect.height - 37);
-      
-      zoomControlRect = rect;
+         zoomControlRect = rect;
+		}      
 	}
-	
+
 	/**
 	 * Draw content over map
 	 * 
@@ -530,12 +545,15 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	 */
 	protected abstract void onCacheChange(final AbstractObject object, final GeoLocation prevLocation);
 	
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
 	 */
 	@Override
 	public void mouseDoubleClick(MouseEvent e)
 	{
+      if (!enableControls)
+         return;
+
       int zoom = accessor.getZoom();
       if (zoom < MapAccessor.MAX_MAP_ZOOM)
       {
@@ -552,12 +570,15 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       }
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
-	 */
+   /**
+    * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
+    */
 	@Override
 	public void mouseDown(MouseEvent e)
 	{
+      if (!enableControls)
+         return;
+
 		if (e.button == 1) // left button, ignore if map is currently loading
 		{
 		   if (zoomControlRect.contains(e.x, e.y))
@@ -601,9 +622,9 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		currentPoint = new Point(e.x, e.y);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
-	 */
+   /**
+    * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
+    */
 	@Override
 	public void mouseUp(MouseEvent e)
 	{
@@ -667,9 +688,9 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.events.MouseMoveListener#mouseMove(org.eclipse.swt.events.MouseEvent)
-	 */
+   /**
+    * @see org.eclipse.swt.events.MouseMoveListener#mouseMove(org.eclipse.swt.events.MouseEvent)
+    */
 	@Override
 	public void mouseMove(MouseEvent e)
 	{

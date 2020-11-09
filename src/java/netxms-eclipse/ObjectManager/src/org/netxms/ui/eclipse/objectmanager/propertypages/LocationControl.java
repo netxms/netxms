@@ -18,20 +18,28 @@
  */
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowData;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -39,10 +47,14 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.GeoArea;
+import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.GeoLocationControlMode;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
+import org.netxms.ui.eclipse.osm.dialogs.GeoAreaSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -57,6 +69,11 @@ public class LocationControl extends PropertyPage
    private Button checkGenerateEvent;
    private Combo locationControlMode;
    private TableViewer areaListViewer;
+   private Button addButton;
+   private Button deleteButton;
+   private boolean initialGenerateEventSelection;
+   private GeoLocationControlMode initialLocationControlMode;
+   private boolean isAreaListModified = false;
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -65,6 +82,8 @@ public class LocationControl extends PropertyPage
    protected Control createContents(Composite parent)
    {
       object = (DataCollectionTarget)getElement().getAdapter(DataCollectionTarget.class);
+      initialGenerateEventSelection = object.isLocationChageEventGenerated();
+      initialLocationControlMode = object.getGeoLocationControlMode();
       for(long id : object.getGeoAreas())
          geoAreas.add((int)id);
 
@@ -107,17 +126,89 @@ public class LocationControl extends PropertyPage
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
-            return ((GeoArea)e1).getName().compareToIgnoreCase(((GeoArea)e2).getName());
+            GeoArea area1 = geoAreaCache.get((Integer)e1);
+            GeoArea area2 = geoAreaCache.get((Integer)e2);
+            String n1 = (area1 != null) ? area1.getName() : ("[" + e1 + "]");
+            String n2 = (area2 != null) ? area2.getName() : ("[" + e2 + "]");
+            return n1.compareToIgnoreCase(n2);
          }
       });
       areaListViewer.setLabelProvider(new LabelProvider() {
          @Override
          public String getText(Object element)
          {
-            return ((GeoArea)element).getName();
+            GeoArea area = geoAreaCache.get((Integer)element);
+            return (area != null) ? area.getName() : ("[" + element + "]");
          }
       });
       areaListViewer.setInput(geoAreas);
+
+      Composite buttons = new Composite(dialogArea, SWT.NONE);
+      RowLayout buttonLayout = new RowLayout();
+      buttonLayout.type = SWT.HORIZONTAL;
+      buttonLayout.pack = false;
+      buttonLayout.marginWidth = 0;
+      buttons.setLayout(buttonLayout);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      buttons.setLayoutData(gd);
+
+      addButton = new Button(buttons, SWT.PUSH);
+      addButton.setText(Messages.get().TrustedNodes_Add);
+      addButton.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            GeoAreaSelectionDialog dlg = new GeoAreaSelectionDialog(getShell(), new ArrayList<GeoArea>(geoAreaCache.values()));
+            if (dlg.open() != Window.OK)
+               return;
+            int areaId = dlg.getAreaId();
+            if (geoAreas.contains(areaId))
+               return;
+            geoAreas.add(areaId);
+            areaListViewer.refresh();
+            isAreaListModified = true;
+         }
+      });
+      RowData rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      addButton.setLayoutData(rd);
+
+      deleteButton = new Button(buttons, SWT.PUSH);
+      deleteButton.setText(Messages.get().TrustedNodes_Delete);
+      deleteButton.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+
+         @SuppressWarnings("unchecked")
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            IStructuredSelection selection = areaListViewer.getStructuredSelection();
+            Iterator<Integer> it = selection.iterator();
+            if (it.hasNext())
+            {
+               while(it.hasNext())
+               {
+                  geoAreas.remove(it.next());
+               }
+               areaListViewer.refresh();
+               isAreaListModified = true;
+            }
+         }
+      });
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      deleteButton.setLayoutData(rd);
 
       final NXCSession session = ConsoleSharedData.getSession();
       ConsoleJob job = new ConsoleJob("Read configured geographical areas", null, Activator.PLUGIN_ID, null) {
@@ -146,5 +237,100 @@ public class LocationControl extends PropertyPage
       job.start();
 
       return dialogArea;
+   }
+
+   /**
+    * Apply changes
+    * 
+    * @param isApply true if update operation caused by "Apply" button
+    */
+   protected boolean applyChanges(final boolean isApply)
+   {
+      if ((checkGenerateEvent.getSelection() == initialGenerateEventSelection) &&
+          (GeoLocationControlMode.getByValue(locationControlMode.getSelectionIndex()) == initialLocationControlMode) &&
+          !isAreaListModified)
+         return true;   // No changes
+      
+      final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
+      md.setGeoLocationControlMode(GeoLocationControlMode.getByValue(locationControlMode.getSelectionIndex()));
+      md.setObjectFlags(checkGenerateEvent.getSelection() ? DataCollectionTarget.DCF_LOCATION_CHANGE_EVENT : 0, DataCollectionTarget.DCF_LOCATION_CHANGE_EVENT);
+      long[] areas = new long[geoAreas.size()];
+      int index = 0;
+      for(Integer id : geoAreas)
+         areas[index++] = id;
+      md.setGeoAreas(areas);
+
+      if (isApply)
+         setValid(false);
+
+      final NXCSession session = ConsoleSharedData.getSession();
+      new ConsoleJob(String.format(Messages.get().Location_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyObject(md);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().Location_JobError;
+         }
+
+         @Override
+         protected void jobFinalize()
+         {
+            if (isApply)
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     isAreaListModified = false;
+                     initialGenerateEventSelection = checkGenerateEvent.getSelection();
+                     initialLocationControlMode = md.getGeoLocationControlMode();
+                     LocationControl.this.setValid(true);
+                  }
+               });
+            }
+         }
+      }.start();
+
+      return true;
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
+   @Override
+   public boolean performOk()
+   {
+      return applyChanges(false);
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
+   @Override
+   protected void performApply()
+   {
+      applyChanges(true);
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
+   @Override
+   protected void performDefaults()
+   {
+      super.performDefaults();
+      checkGenerateEvent.setSelection(false);
+      locationControlMode.select(GeoLocationControlMode.NO_CONTROL.getValue());
+      if (!geoAreas.isEmpty())
+      {
+         geoAreas.clear();
+         areaListViewer.refresh();
+         isAreaListModified = true;
+      }
    }
 }

@@ -108,6 +108,37 @@ public class GeoArea
    }
 
    /**
+    * Get bounding box for this area. First element of resulting array will contain north-west corner and second element -
+    * south-east corner.
+    * 
+    * @return bounding box for this area (north-west and south-east corners)
+    */
+   public GeoLocation[] getBoundingBox()
+   {
+      if (border.isEmpty())
+         return new GeoLocation[] { new GeoLocation(0.0, 0.0), new GeoLocation(0.0, 0.0) };
+
+      double north, south, east, west;
+      north = south = border.get(0).getLatitude();
+      east = west = border.get(0).getLongitude();
+      for(int i = 1; i < border.size(); i++)
+      {
+         GeoLocation l = border.get(i);
+
+         if (l.getLatitude() < south)
+            south = l.getLatitude();
+         else if (l.getLatitude() > north)
+            north = l.getLatitude();
+
+         if (l.getLongitude() < west)
+            west = l.getLongitude();
+         else if (l.getLongitude() > east)
+            east = l.getLongitude();
+      }
+      return new GeoLocation[] { new GeoLocation(north, west), new GeoLocation(south, east) };
+   }
+
+   /**
     * @return the id
     */
    public int getId()
