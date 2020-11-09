@@ -660,7 +660,7 @@ uint32_t AgentTunnel::bind(uint32_t nodeId, uint32_t userId)
       NXCPMessage msg(CMD_RESET_TUNNEL, InterlockedIncrement(&m_requestId));
       sendMessage(&msg);
    }
-   return AgentErrorToRCC(rcc);
+   return rcc;
 }
 
 /**
@@ -714,7 +714,7 @@ uint32_t AgentTunnel::initiateCertificateRequest(const uuid& nodeGuid, uint32_t 
    }
    else
    {
-      debugPrintf(4, _T("Certificate cannot be issued: agent error %d (%s)"), rcc, AgentErrorCodeToText(rcc));
+      debugPrintf(4, _T("Certificate cannot be issued: agent error %u (%s)"), rcc, AgentErrorCodeToText(rcc));
       m_bindRequestId = 0;
    }
    return AgentErrorToRCC(rcc);
@@ -808,7 +808,7 @@ AgentTunnelCommChannel *AgentTunnel::createChannel()
       return nullptr;
    }
 
-   UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
    if (rcc != ERR_SUCCESS)
    {
       delete response;
@@ -1260,6 +1260,12 @@ retry:
          if (poller.poll(REQUEST_TIMEOUT) > 0)
             goto retry;
          nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): TLS handshake failed (timeout)"), debugPrefix);
+      }
+      else if (sslErr == SSL_ERROR_SYSCALL)
+      {
+         TCHAR buffer[256];
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): TLS handshake failed (SSL_ERROR_SYSCALL: %s)"),
+                  debugPrefix, GetLastSocketErrorText(buffer, 256));
       }
       else
       {
