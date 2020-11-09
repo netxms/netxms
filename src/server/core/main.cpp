@@ -921,10 +921,10 @@ BOOL NXCORE_EXPORTABLE Initialize()
       g_flags &= ~AF_CACHE_DB_ON_STARTUP;
 	}
 
-	int baseSize = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPoolBaseSize"), 10);
-	int maxSize = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPoolMaxSize"), 30);
-	int cooldownTime = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPoolCooldownTime"), 300);
-	int ttl = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPoolMaxLifetime"), 14400);
+	int baseSize = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPool.BaseSize"), 10);
+	int maxSize = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPool.MaxSize"), 30);
+	int cooldownTime = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPool.CooldownTime"), 300);
+	int ttl = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPool.MaxLifetime"), 14400);
 
    DBDisconnect(hdbBootstrap);
 
