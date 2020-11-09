@@ -313,14 +313,13 @@ StringBuffer NObject::dbgGetParentList() const
 /**
  * Calculate custom attribute flag change based on state change and flag value
  */
-static uint32_t CalculateFlagChange(uint32_t flags, StateChange change, uint32_t flag)
+static inline uint32_t CalculateFlagChange(uint32_t flags, StateChange change, uint32_t flag)
 {
    if (change == StateChange::IGNORE)
       return flags;
-   else if (change == StateChange::CLEAR)
-      return flags &= ~flag;
-   else
-      return flags |= flag;
+   if (change == StateChange::CLEAR)
+      return flags & ~flag;
+   return flags | flag;
 }
 
 /**

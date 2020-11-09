@@ -583,7 +583,6 @@ void LogParserPolicy::getEventList(HashSet<uint32_t> *eventList) const
          LogParser *parser = parsers->get(i);
          parser->getEventList(eventList);
          delete parser;
-         ConstIterator<const uint32_t> *it = eventList->constIterator();
       }
       delete parsers;
    }

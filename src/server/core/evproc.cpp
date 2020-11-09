@@ -412,7 +412,7 @@ static void ParallelEventProcessor()
             continue;
          }
 
-         time_t now = event->getTimestamp(); // Get current time from event, it should be (almost) current
+         now = event->getTimestamp(); // Get current time from event, it should be (almost) current
 
          StringBuffer key = event->expandText(queueSelector, nullptr);
 #ifdef UNICODE
