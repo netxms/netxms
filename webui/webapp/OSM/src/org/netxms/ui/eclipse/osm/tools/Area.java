@@ -113,9 +113,21 @@ public class Area
 		return (x >= xLow) && (x <= xHigh) && (y >= yLow) && (y <= yHigh);
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
+   /**
+    * Check if given point is inside area.
+    * 
+    * @param x
+    * @param y
+    * @return true if given point is inside area
+    */
+   public boolean contains(GeoLocation p)
+   {
+      return contains(p.getLatitude(), p.getLongitude());
+   }
+
+   /**
+    * @see java.lang.Object#toString()
+    */
 	@Override
 	public String toString()
 	{
