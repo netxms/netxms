@@ -140,7 +140,7 @@ void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId)
  */
 static void CleanAlarmHistory(DB_HANDLE hdb)
 {
-   time_t retentionTime = ConfigReadULong(_T("AlarmHistoryRetentionTime"), 180);
+   time_t retentionTime = ConfigReadULong(_T("Alarms.HistoryRetentionTime"), 180);
 	if (retentionTime == 0)
 		return;
 

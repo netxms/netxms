@@ -205,7 +205,7 @@ enum class TunnelCapabilityFilter
 /**
  * Get tunnel type by type
  */
-int GetTunnelCount(TunnelCapabilityFilter filter);
+int GetTunnelCount(TunnelCapabilityFilter filter, bool boundTunnels);
 
 /**
  * Update agent certificate mapping index for externally provisioned certificates

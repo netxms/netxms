@@ -6572,29 +6572,33 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       {
          ret_int(buffer, GetAlarmCount());
       }
-      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Total")))
+      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Bound.AgentProxy")))
       {
-         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::ANY));
+         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::AGENT_PROXY, true));
       }
-      else if (!_tcsicmp(name, _T("Server.AgentTunnels.AgentProxy")))
+      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Bound.SnmpProxy")))
       {
-         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::AGENT_PROXY));
+         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SNMP_PROXY, true));
       }
-      else if (!_tcsicmp(name, _T("Server.AgentTunnels.SnmpProxy")))
+      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Bound.SnmpTrapProxy")))
       {
-         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SNMP_PROXY));
+         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SNMP_TRAP_PROXY, true));
       }
-      else if (!_tcsicmp(name, _T("Server.AgentTunnels.SnmpTrapProxy")))
+      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Bound.SyslogProxy")))
       {
-         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SNMP_TRAP_PROXY));
+         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SYSLOG_PROXY, true));
       }
-      else if (!_tcsicmp(name, _T("Server.AgentTunnels.SyslogProxy")))
+      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Bound.Total")))
       {
-         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::SYSLOG_PROXY));
+         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::ANY, true));
       }
-      else if (!_tcsicmp(name, _T("Server.AgentTunnels.UserAgent")))
+      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Bound.UserAgent")))
       {
-         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::USER_AGENT));
+         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::USER_AGENT, true));
+      }
+      else if (!_tcsicmp(name, _T("Server.AgentTunnels.Unbound.Total")))
+      {
+         ret_int(buffer, GetTunnelCount(TunnelCapabilityFilter::ANY, false));
       }
       else if (!_tcsicmp(name, _T("Server.AverageDCIQueuingTime")))
       {
