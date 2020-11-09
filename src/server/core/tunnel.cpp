@@ -700,7 +700,11 @@ uint32_t AgentTunnel::initiateCertificateRequest(const uuid& nodeGuid, uint32_t 
 
    NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
    if (response == nullptr)
+   {
+      debugPrintf(4, _T("Certificate cannot be issued: request timeout"));
+      m_bindRequestId = 0;
       return RCC_TIMEOUT;
+   }
 
    uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
    delete response;
@@ -711,6 +715,7 @@ uint32_t AgentTunnel::initiateCertificateRequest(const uuid& nodeGuid, uint32_t 
    else
    {
       debugPrintf(4, _T("Certificate cannot be issued: agent error %d (%s)"), rcc, AgentErrorCodeToText(rcc));
+      m_bindRequestId = 0;
    }
    return AgentErrorToRCC(rcc);
 }
@@ -1677,7 +1682,7 @@ static void FinishNodeCreation(const shared_ptr<Node>& node)
 
    if (!node->getTunnelId().isNull())
    {
-      node->setMgmtStatus(TRUE);
+      node->setMgmtStatus(true);
       node->forceConfigurationPoll();
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Node creation completed (%s [%d])"), node->getName(), node->getId());
    }
@@ -1752,14 +1757,18 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
             shared_ptr<Node> node = FindMatchingNode(t);
             if (node != nullptr)
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("Binding tunnel from %s (%s) to existing node %s [%d]"),
-                        t->getDisplayName(), (const TCHAR *)t->getAddress().toString(), node->getName(), node->getId());
-               BindAgentTunnel(t->getId(), node->getId(), 0);
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Binding tunnel %u from %s (%s) to existing node %s [%d]"),
+                        t->getId(), t->getDisplayName(), (const TCHAR *)t->getAddress().toString(), node->getName(), node->getId());
+               uint32_t rcc = BindAgentTunnel(t->getId(), node->getId(), 0);
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Bind tunnel %u to existing node %s [%d]: RCC = %u"),
+                        t->getId(), node->getName(), node->getId(), rcc);
+               if (rcc != RCC_SUCCESS)
+                  t->shutdown();
             }
             else if (action == BIND_OR_CREATE_NODE)
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("Creating new node for tunnel from %s (%s)"),
-                        t->getDisplayName(), (const TCHAR *)t->getAddress().toString());
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Creating new node for tunnel %u from %s (%s)"),
+                        t->getId(), t->getDisplayName(), (const TCHAR *)t->getAddress().toString());
 
                NewNodeData nd(InetAddress::NONE);  // use 0.0.0.0 to avoid direct communications by default
                _tcslcpy(nd.name, t->getSystemName(), MAX_OBJECT_NAME);
@@ -1784,10 +1793,22 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
                      node->addParent(g_infrastructureServiceRoot);
                   }
 
-                  if (BindAgentTunnel(t->getId(), node->getId(), 0) == RCC_SUCCESS)
+                  uint32_t rcc = BindAgentTunnel(t->getId(), node->getId(), 0);
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Bind tunnel %u to new node %s [%d]: RCC = %u"),
+                           t->getId(), node->getName(), node->getId(), rcc);
+                  if (rcc == RCC_SUCCESS)
                   {
                      ThreadPoolScheduleRelative(g_mainThreadPool, 60000, FinishNodeCreation, node);
                   }
+                  else
+                  {
+                     t->shutdown();
+                  }
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot create new node for tunnel %u"), t->getId());
+                  t->shutdown();
                }
             }
             break;
@@ -1844,20 +1865,20 @@ void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameter
 /**
  * Get number of bound agent tunnels matching given filter
  */
-int GetTunnelCount(TunnelCapabilityFilter filter)
+int GetTunnelCount(TunnelCapabilityFilter filter, bool boundTunnels)
 {
    int count = 0;
 
    if (filter == TunnelCapabilityFilter::ANY)
    {
       s_tunnelListLock.lock();
-      count = s_boundTunnels.size();
+      count = boundTunnels ? s_boundTunnels.size() : s_unboundTunnels.size();
       s_tunnelListLock.unlock();
    }
    else
    {
       s_tunnelListLock.lock();
-      Iterator<AgentTunnel> *it = s_boundTunnels.iterator();
+      Iterator<AgentTunnel> *it = boundTunnels ? s_boundTunnels.iterator() : s_unboundTunnels.iterator();
       while (it->hasNext())
       {
          AgentTunnel *t = it->next();

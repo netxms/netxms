@@ -24,6 +24,52 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 36.14 to 36.15
+ */
+static bool H_UpgradeFromV14()
+{
+   static const TCHAR *batch =
+         _T("UPDATE config SET var_name='Alarms.HistoryRetentionTime',units='days' WHERE var_name='AlarmHistoryRetentionTime'\n")
+         _T("UPDATE config SET var_name='DBConnectionPool.CooldownTime',description='Inactivity time (in seconds) after which database connection will be closed.' WHERE var_name='DBConnectionPoolCooldownTime'\n")
+         _T("UPDATE config SET var_name='DBConnectionPool.MaxLifetime',description='Maximum lifetime (in seconds) for a database connection.' WHERE var_name='DBConnectionPoolMaxLifetime'\n")
+         _T("UPDATE config SET var_name='DBConnectionPool.BaseSize' WHERE var_name='DBConnectionPoolBaseSize'\n")
+         _T("UPDATE config SET var_name='DBConnectionPool.MaxSize' WHERE var_name='DBConnectionPoolMaxSize'\n")
+         _T("UPDATE config SET description='Name of discovery filter script from script library.' WHERE var_name='DiscoveryFilter'\n")
+         _T("UPDATE config SET description='Discovery filter settings.' WHERE var_name='DiscoveryFilterFlags'\n")
+         _T("UPDATE config SET description='Enable/disable reporting server.' WHERE var_name='EnableReportingServer'\n")
+         _T("UPDATE config SET description='Enable/disable ability to acknowledge an alarm for a specific time.' WHERE var_name='EnableTimedAlarmAck'\n")
+         _T("UPDATE config SET description='Enable/disable TAB and new line characters replacement by escape sequence in \"execute command on management server\" actions.' WHERE var_name='EscapeLocalCommands'\n")
+         _T("UPDATE config SET description='Retention time in days for the records in event log. All records older than specified will be deleted by housekeeping process.' WHERE var_name='EventLogRetentionTime'\n")
+         _T("UPDATE config SET description='Value for status propagation if StatusPropagationAlgorithm server configuration parameter is set to 2 (Fixed).' WHERE var_name='FixedStatusValue'\n")
+         _T("UPDATE config SET description='Helpdesk driver name. If set to none, then no helpdesk driver is in use.' WHERE var_name='HelpDeskLink'\n")
+         _T("UPDATE config SET description='Number of incorrect password attempts after which a user account is temporarily locked.' WHERE var_name='IntruderLockoutThreshold'\n")
+         _T("UPDATE config SET description='Duration of user account temporarily lockout (in minutes) if allowed number of incorrect password attempts was exceeded.' WHERE var_name='IntruderLockoutTime'\n")
+         _T("UPDATE config SET description='Jira issue type' WHERE var_name='JiraIssueType'\n")
+         _T("UPDATE config SET description='Jira project component' WHERE var_name='JiraProjectComponent'\n")
+         _T("UPDATE config SET description='Unique identifier for LDAP group object. If not set, LDAP users are identified by DN.' WHERE var_name='LDAP.GroupUniqueId'\n")
+         _T("UPDATE config SET description='Unique identifier for LDAP user object. If not set, LDAP users are identified by DN.' WHERE var_name='LDAP.UserUniqueId'\n")
+         _T("UPDATE config SET description='Listener port for connections from mobile agent.' WHERE var_name='MobileDeviceListenerPort'\n")
+         _T("UPDATE config SET description='Time (in seconds) to wait for output of a local command object tool.' WHERE var_name='ServerCommandOutputTimeout'\n")
+         _T("UPDATE config SET description='Default algorithm for calculation object status from it''s DCIs, alarms and child objects.' WHERE var_name='StatusCalculationAlgorithm'\n")
+         _T("UPDATE config SET description='Status shift value for Relative propagation algorithm.' WHERE var_name='StatusShift'\n")
+         _T("UPDATE config SET description='Threshold value for Single threshold status calculation algorithm.' WHERE var_name='StatusSingleThreshold'\n")
+         _T("UPDATE config SET description='Threshold values for Multiple thresholds status calculation algorithm.' WHERE var_name='StatusThresholds'\n")
+         _T("UPDATE config SET description='Values for Translated status propagation algorithm.' WHERE var_name='StatusTranslation'\n")
+         _T("UPDATE config_values SET var_description='IP, then hostname' WHERE var_name='Syslog.NodeMatchingPolicy' AND var_value='0'\n")
+         _T("DELETE FROM config_values WHERE var_name='StatusPropagationAlgorithm' AND var_value='0'\n")
+         _T("UPDATE config SET data_type='C' WHERE var_name='StatusCalculationAlgorithm'\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('StatusCalculationAlgorithm','1','Most critical')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('StatusCalculationAlgorithm','2','Single threshold')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('StatusCalculationAlgorithm','3','Multiple thresholds')\n")
+         _T("UPDATE config_values SET var_name='Objects.Interfaces.DefaultExpectedState' WHERE var_name='DefaultInterfaceExpectedState'\n")
+         _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(CreateConfigParam(_T("NXSL.EnableContainerFunctions"), _T("1"), _T("Enable/disable server-side NXSL functions for containers (such as CreateContainer, BindObject, etc.)."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade from 36.13 to 36.14
  */
 static bool H_UpgradeFromV13()
@@ -371,6 +417,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 14, 36, 15, H_UpgradeFromV14 },
    { 13, 36, 14, H_UpgradeFromV13 },
    { 12, 36, 13, H_UpgradeFromV12 },
    { 11, 36, 12, H_UpgradeFromV11 },
