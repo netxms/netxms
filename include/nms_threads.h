@@ -1139,7 +1139,7 @@ inline bool ConditionWait(CONDITION cond, UINT32 dwTimeOut)
 /**
  * Get ID of current process
  */
-static inline UINT32 GetCurrentProcessId()
+static inline uint32_t GetCurrentProcessId()
 {
    return getpid();
 }
@@ -1147,17 +1147,17 @@ static inline UINT32 GetCurrentProcessId()
 /**
  *  Get ID of current thread
  */
-static inline UINT32 GetCurrentThreadId()
+static inline uint32_t GetCurrentThreadId()
 {
 #if HAVE_GETTID_SYSCALL
-   return (UINT32)syscall(SYS_gettid);
+   return (uint32_t)syscall(SYS_gettid);
 #elif HAVE_PTHREAD_GETTHREADID_NP
-   return (UINT32)pthread_getthreadid_np();
+   return (uint32_t)pthread_getthreadid_np();
 #elif HAVE_PTHREAD_THREADID_NP
    uint64_t id;
-   if (pthread_threadid_np(NULL, &id) != 0)
+   if (pthread_threadid_np(nullptr, &id) != 0)
       return 0;
-   return (UINT32)id;
+   return (uint32_t)id;
 #else
    return 0;
 #endif

@@ -320,7 +320,9 @@ enum MessageReceiverResult
    MSGRECV_TIMEOUT = 2,
    MSGRECV_COMM_FAILURE = 3,
    MSGRECV_DECRYPTION_FAILURE = 4,
-   MSGRECV_PROTOCOL_ERROR = 5
+   MSGRECV_PROTOCOL_ERROR = 5,
+   MSGRECV_WANT_READ = 6,
+   MSGRECV_WANT_WRITE = 7
 };
 
 /**
@@ -341,7 +343,7 @@ private:
    NXCPMessage *getMessageFromBuffer(bool *protocolError);
 
 protected:
-   virtual ssize_t readBytes(BYTE *buffer, size_t size, UINT32 timeout) = 0;
+   virtual ssize_t readBytes(BYTE *buffer, size_t size, uint32_t timeout) = 0;
 
 public:
    AbstractMessageReceiver(size_t initialSize, size_t maxSize);
@@ -351,7 +353,7 @@ public:
 
    void setEncryptionContext(NXCPEncryptionContext *ctx) { m_encryptionContext = ctx; }
 
-   NXCPMessage *readMessage(UINT32 timeout, MessageReceiverResult *result);
+   NXCPMessage *readMessage(uint32_t timeout, MessageReceiverResult *result);
    NXCP_MESSAGE *getRawMessageBuffer() { return (NXCP_MESSAGE *)m_buffer; }
 
    static const TCHAR *resultToText(MessageReceiverResult result);
@@ -369,7 +371,7 @@ private:
 #endif
 
 protected:
-   virtual ssize_t readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
+   virtual ssize_t readBytes(BYTE *buffer, size_t size, uint32_t timeout) override;
 
 public:
    SocketMessageReceiver(SOCKET socket, size_t initialSize, size_t maxSize);
@@ -387,7 +389,7 @@ private:
    AbstractCommChannel *m_channel;
 
 protected:
-   virtual ssize_t readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
+   virtual ssize_t readBytes(BYTE *buffer, size_t size, uint32_t timeout) override;
 
 public:
    CommChannelMessageReceiver(AbstractCommChannel *channel, size_t initialSize, size_t maxSize);
@@ -412,7 +414,7 @@ private:
 #endif
 
 protected:
-   virtual ssize_t readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
+   virtual ssize_t readBytes(BYTE *buffer, size_t size, uint32_t timeout) override;
 
 public:
    TlsMessageReceiver(SOCKET socket, SSL *ssl, MUTEX mutex, size_t initialSize, size_t maxSize);
@@ -438,7 +440,7 @@ private:
 #endif
 
 protected:
-   virtual ssize_t readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
+   virtual ssize_t readBytes(BYTE *buffer, size_t size, uint32_t timeout) override;
 
 public:
    PipeMessageReceiver(HPIPE hpipe, size_t initialSize, size_t maxSize);

@@ -124,17 +124,32 @@ static EnumerationCallbackResult CancelFileTransfer(const uint32_t& key, ServerD
 }
 
 /**
- * Client communication read thread starter
+ * Socket poller callback
  */
-void ClientSession::readThreadStarter(ClientSession *session)
+void ClientSession::socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, ClientSession *session)
 {
-   ThreadSetName("SessionReader");
-   session->readThread();
+   if (pollResult == BackgroundSocketPollResult::SUCCESS)
+   {
+      if (session->readSocket())
+      {
+         session->m_socketPoller->poller.poll(hSocket, 900000, socketPollerCallback, session);
+         return;
+      }
+   }
+   else
+   {
+      session->debugPrintf(5, _T("Socket poll error (%d)"), static_cast<int>(pollResult));
+   }
+   ThreadPoolExecute(g_clientThreadPool, terminate, session);
+}
 
-   // When ClientSession::ReadThread exits, all other session
-   // threads are already stopped, so we can safely destroy
-   // session object
-   UnregisterClientSession(session->getId());
+/**
+ * Terminate session
+ */
+void ClientSession::terminate(ClientSession *session)
+{
+   session->finalize();
+   UnregisterClientSession(session->m_id);
    delete session;
 }
 
@@ -143,15 +158,17 @@ void ClientSession::readThreadStarter(ClientSession *session)
  */
 ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
 {
-   m_hSocket = hSocket;
    m_id = -1;
+   m_hSocket = hSocket;
+   m_socketPoller = nullptr;
+   m_messageReceiver = nullptr;
    m_pCtx = nullptr;
 	m_mutexSocketWrite = MutexCreate();
    m_mutexSendAlarms = MutexCreate();
    m_mutexSendActions = MutexCreate();
    m_mutexSendAuditLog = MutexCreate();
    m_mutexPollerInit = MutexCreate();
-   m_subscriptionLock = MutexCreate();
+   m_subscriptionLock = MutexCreateFast();
    m_subscriptions = new StringObjectMap<UINT32>(Ownership::True);
    m_dwFlags = 0;
 	m_clientType = CLIENT_TYPE_DESKTOP;
@@ -167,8 +184,8 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_dwNumRecordsToUpload = 0;
    m_dwRecordsUploaded = 0;
    m_refCount = 0;
-   m_dwEncryptionRqId = 0;
-   m_dwEncryptionResult = 0;
+   m_encryptionRqId = 0;
+   m_encryptionResult = 0;
    m_condEncryptionSetup = INVALID_CONDITION_HANDLE;
 	m_console = nullptr;
    m_loginTime = time(nullptr);
@@ -189,6 +206,9 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
  */
 ClientSession::~ClientSession()
 {
+   if (m_socketPoller != nullptr)
+      InterlockedDecrement(&m_socketPoller->usageCount);
+   delete m_messageReceiver;
    if (m_hSocket != -1)
       closesocket(m_hSocket);
 	MutexDestroy(m_mutexSocketWrite);
@@ -231,7 +251,11 @@ ClientSession::~ClientSession()
  */
 bool ClientSession::start()
 {
-   return ThreadCreate(readThreadStarter, this);
+   if (m_socketPoller == nullptr)
+      return false;
+   m_messageReceiver = new SocketMessageReceiver(m_hSocket, 4096, MAX_MSG_SIZE);
+   m_socketPoller->poller.poll(m_hSocket, 900000, socketPollerCallback, this);
+   return true;
 }
 
 /**
@@ -330,213 +354,139 @@ static EnumerationCallbackResult CloseDataCollectionConfiguration(const uint32_t
 }
 
 /**
- * Read thread
+ * Read from socket (called from socket poller callback)
  */
-void ClientSession::readThread()
+bool ClientSession::readSocket()
 {
-   debugPrintf(3, _T("Read thread started"));
-   SocketMessageReceiver receiver(m_hSocket, 4096, MAX_MSG_SIZE);
-   while(true)
+   MessageReceiverResult result;
+   NXCPMessage *msg = m_messageReceiver->readMessage(0, &result);
+
+   if ((result == MSGRECV_WANT_READ) || (result == MSGRECV_WANT_WRITE))
+      return true;
+
+   // Check for decryption error
+   if (result == MSGRECV_DECRYPTION_FAILURE)
    {
-      MessageReceiverResult result;
-      NXCPMessage *msg = receiver.readMessage(900000, &result);
+      debugPrintf(4, _T("readSocket: Unable to decrypt received message"));
+      return true;
+   }
 
-      // Check for decryption error
-      if (result == MSGRECV_DECRYPTION_FAILURE)
+   // Receive error
+   if (msg == nullptr)
+   {
+      if (result == MSGRECV_CLOSED)
+         debugPrintf(5, _T("readSocket: connection closed"));
+      else
+         debugPrintf(5, _T("readSocket: message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
+      return false;
+   }
+
+   if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 8)
+   {
+      String msgDump = NXCPMessage::dump(m_messageReceiver->getRawMessageBuffer(), NXCP_VERSION);
+      debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+   }
+
+   // Special handling for raw messages
+   if (msg->isBinary())
+   {
+      TCHAR buffer[256];
+      debugPrintf(6, _T("Received raw message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+
+      if ((msg->getCode() == CMD_FILE_DATA) || (msg->getCode() == CMD_ABORT_FILE_TRANSFER))
       {
-         debugPrintf(4, _T("readThread: Unable to decrypt received message"));
-         continue;
+         incRefCount();
+         ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::processFileTransferMessage, msg);
+         msg = nullptr;
       }
-
-      // Receive error
-      if (msg == nullptr)
+      else if (msg->getCode() == CMD_TCP_PROXY_DATA)
       {
-         if (result == MSGRECV_CLOSED)
-            debugPrintf(5, _T("readThread: connection closed"));
-         else
-            debugPrintf(5, _T("readThread: message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
-         break;
+         shared_ptr<AgentConnectionEx> conn;
+         uint32_t agentChannelId = 0;
+         MutexLock(m_tcpProxyLock);
+         for(int i = 0; i < m_tcpProxyConnections->size(); i++)
+         {
+            TcpProxy *p = m_tcpProxyConnections->get(i);
+            if (p->clientChannelId == msg->getId())
+            {
+               conn = p->agentConnection;
+               agentChannelId = p->agentChannelId;
+               break;
+            }
+         }
+         MutexUnlock(m_tcpProxyLock);
+         if (conn != nullptr)
+         {
+            size_t size = msg->getBinaryDataSize();
+            size_t msgSize = size + NXCP_HEADER_SIZE;
+            if (msgSize % 8 != 0)
+               msgSize += 8 - msgSize % 8;
+            NXCP_MESSAGE *fwmsg = static_cast<NXCP_MESSAGE*>(MemAlloc(msgSize));
+            fwmsg->code = htons(CMD_TCP_PROXY_DATA);
+            fwmsg->flags = htons(MF_BINARY);
+            fwmsg->id = htonl(agentChannelId);
+            fwmsg->numFields = htonl(static_cast<UINT32>(size));
+            fwmsg->size = htonl(static_cast<UINT32>(msgSize));
+            memcpy(fwmsg->fields, msg->getBinaryData(), size);
+            conn->postRawMessage(fwmsg);
+         }
       }
-
-      if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 8)
-      {
-         String msgDump = NXCPMessage::dump(receiver.getRawMessageBuffer(), NXCP_VERSION);
-         debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
-      }
-
-      // Special handling for raw messages
-      if (msg->isBinary())
+      delete msg;
+   }
+   else
+   {
+      if ((msg->getCode() == CMD_SESSION_KEY) && (msg->getId() == m_encryptionRqId))
       {
          TCHAR buffer[256];
-         debugPrintf(6, _T("Received raw message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
-
-         if ((msg->getCode() == CMD_FILE_DATA) ||
-             (msg->getCode() == CMD_ABORT_FILE_TRANSFER))
-         {
-            ServerDownloadFileInfo *dInfo = m_downloadFileMap->get(msg->getId());
-            if (dInfo != nullptr)
-            {
-               if (msg->getCode() == CMD_FILE_DATA)
-               {
-                  if (dInfo->write(msg->getBinaryData(), msg->getBinaryDataSize(), msg->isCompressedStream()))
-                  {
-                     if (msg->isEndOfFile())
-                     {
-								debugPrintf(6, _T("Got end of file marker"));
-                        NXCPMessage response;
-
-                        response.setCode(CMD_REQUEST_COMPLETED);
-                        response.setId(msg->getId());
-                        response.setField(VID_RCC, RCC_SUCCESS);
-                        sendMessage(&response);
-
-                        dInfo->close(true);
-                        m_downloadFileMap->remove(msg->getId());
-                     }
-                  }
-                  else
-                  {
-							debugPrintf(6, _T("I/O error"));
-
-                     NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId());
-                     response.setField(VID_RCC, RCC_IO_ERROR);
-                     sendMessage(&response);
-
-                     dInfo->close(false);
-                     m_downloadFileMap->remove(msg->getId());
-                  }
-               }
-               else
-               {
-                  // Abort current file transfer because of client's problem
-                  dInfo->close(false);
-                  m_downloadFileMap->remove(msg->getId());
-               }
-            }
-            else
-            {
-               shared_ptr<AgentConnection> conn = m_agentConnections.get(msg->getId());
-               if (conn != nullptr)
-               {
-                  if (msg->getCode() == CMD_FILE_DATA)
-                  {
-                     if (conn->sendMessage(msg))  //send raw message
-                     {
-                        if (msg->isEndOfFile())
-                        {
-                           debugPrintf(6, _T("Got end of file marker for request ID %u"), msg->getId());
-                           incRefCount();
-                           ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::finalizeFileTransferToAgent, conn, msg->getId());
-                           m_agentConnections.remove(msg->getId());
-                        }
-                     }
-                     else
-                     {
-                        debugPrintf(6, _T("Error while sending file to agent (request ID %u)"), msg->getId());
-                        m_agentConnections.remove(msg->getId());
-
-                        NXCPMessage response;
-                        response.setCode(CMD_REQUEST_COMPLETED);
-                        response.setId(msg->getId());
-                        response.setField(VID_RCC, RCC_COMM_FAILURE);
-                        sendMessage(&response);
-                     }
-                  }
-                  else
-                  {
-                     // Resend abort message
-                     conn->sendMessage(msg);
-                     m_agentConnections.remove(msg->getId());
-                  }
-               }
-               else
-               {
-                  debugPrintf(4, _T("Out of state message (ID: %d)"), msg->getId());
-               }
-            }
-         }
-         else if (msg->getCode() == CMD_TCP_PROXY_DATA)
-         {
-            shared_ptr<AgentConnectionEx> conn;
-            uint32_t agentChannelId = 0;
-            MutexLock(m_tcpProxyLock);
-            for(int i = 0; i < m_tcpProxyConnections->size(); i++)
-            {
-               TcpProxy *p = m_tcpProxyConnections->get(i);
-               if (p->clientChannelId == msg->getId())
-               {
-                  conn = p->agentConnection;
-                  agentChannelId = p->agentChannelId;
-                  break;
-               }
-            }
-            MutexUnlock(m_tcpProxyLock);
-            if (conn != nullptr)
-            {
-               size_t size = msg->getBinaryDataSize();
-               size_t msgSize = size + NXCP_HEADER_SIZE;
-               if (msgSize % 8 != 0)
-                  msgSize += 8 - msgSize % 8;
-               NXCP_MESSAGE *fwmsg = (NXCP_MESSAGE *)MemAlloc(msgSize);
-               fwmsg->code = htons(CMD_TCP_PROXY_DATA);
-               fwmsg->flags = htons(MF_BINARY);
-               fwmsg->id = htonl(agentChannelId);
-               fwmsg->numFields = htonl(static_cast<UINT32>(size));
-               fwmsg->size = htonl(static_cast<UINT32>(msgSize));
-               memcpy(fwmsg->fields, msg->getBinaryData(), size);
-               conn->postRawMessage(fwmsg);
-            }
-         }
+         debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+         m_encryptionResult = SetupEncryptionContext(msg, &m_pCtx, nullptr, g_pServerKey, NXCP_VERSION);
+         m_messageReceiver->setEncryptionContext(m_pCtx);
+         ConditionSet(m_condEncryptionSetup);
+         m_encryptionRqId = 0;
          delete msg;
+      }
+      else if (msg->getCode() == CMD_KEEPALIVE)
+      {
+         TCHAR buffer[256];
+         debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+         respondToKeepalive(msg->getId());
+         delete msg;
+      }
+      else if ((msg->getCode() == CMD_EPP_RECORD) || (msg->getCode() == CMD_OPEN_EPP) || (msg->getCode() == CMD_SAVE_EPP) || (msg->getCode() == CMD_CLOSE_EPP))
+      {
+         incRefCount();
+         TCHAR key[64];
+         _sntprintf(key, 64, _T("EPP_%d"), m_id);
+         switch(msg->getCode())
+         {
+            case CMD_EPP_RECORD:
+               ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::processEventProcessingPolicyRecord, msg);
+               break;
+            case CMD_OPEN_EPP:
+               ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::openEventProcessingPolicy, msg);
+               break;
+            case CMD_SAVE_EPP:
+               ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::saveEventProcessingPolicy, msg);
+               break;
+            case CMD_CLOSE_EPP:
+               ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::closeEventProcessingPolicy, msg);
+               break;
+         }
       }
       else
       {
-         if ((msg->getCode() == CMD_SESSION_KEY) && (msg->getId() == m_dwEncryptionRqId))
-         {
-            TCHAR buffer[256];
-		      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
-            m_dwEncryptionResult = SetupEncryptionContext(msg, &m_pCtx, nullptr, g_pServerKey, NXCP_VERSION);
-            receiver.setEncryptionContext(m_pCtx);
-            ConditionSet(m_condEncryptionSetup);
-            m_dwEncryptionRqId = 0;
-            delete msg;
-         }
-         else if (msg->getCode() == CMD_KEEPALIVE)
-			{
-            TCHAR buffer[256];
-		      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
-				respondToKeepalive(msg->getId());
-				delete msg;
-			}
-         else if ((msg->getCode() == CMD_EPP_RECORD) || (msg->getCode() == CMD_OPEN_EPP) || (msg->getCode() == CMD_SAVE_EPP) || (msg->getCode() == CMD_CLOSE_EPP))
-         {
-            incRefCount();
-            TCHAR key[64];
-            _sntprintf(key, 64, _T("EPP_%d"), m_id);
-            switch(msg->getCode())
-            {
-               case CMD_EPP_RECORD:
-                  ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::processEventProcessingPolicyRecord, msg);
-                  break;
-               case CMD_OPEN_EPP:
-                  ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::openEventProcessingPolicy, msg);
-                  break;
-               case CMD_SAVE_EPP:
-                  ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::saveEventProcessingPolicy, msg);
-                  break;
-               case CMD_CLOSE_EPP:
-                  ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::closeEventProcessingPolicy, msg);
-                  break;
-            }
-         }
-			else
-         {
-			   incRefCount();
-			   ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::processRequest, msg);
-         }
+         incRefCount();
+         ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::processRequest, msg);
       }
    }
+   return true;
+}
 
+/**
+ * Finalize session termination
+ */
+void ClientSession::finalize()
+{
    // Mark as terminated (sendMessage calls will not work after that point)
    m_dwFlags |= CSF_TERMINATED;
 
@@ -561,7 +511,7 @@ void ClientSession::readThread()
    if (m_dwFlags & CSF_AUTHENTICATED)
    {
       CALL_ALL_MODULES(pfClientSessionClose, (this));
-	   WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("User logged out (client: %s)"), m_clientInfo);
+      WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("User logged out (client: %s)"), m_clientInfo);
    }
    debugPrintf(3, _T("Session closed"));
 }
@@ -578,6 +528,94 @@ void ClientSession::finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn
    NXCPMessage response(CMD_REQUEST_COMPLETED, requestId);
    response.setField(VID_RCC, AgentErrorToRCC(rcc));
    sendMessage(&response);
+   decRefCount();
+}
+
+/**
+ * Process file transfer message
+ */
+void ClientSession::processFileTransferMessage(NXCPMessage *msg)
+{
+   ServerDownloadFileInfo *dInfo = m_downloadFileMap->get(msg->getId());
+   if (dInfo != nullptr)
+   {
+      if (msg->getCode() == CMD_FILE_DATA)
+      {
+         if (dInfo->write(msg->getBinaryData(), msg->getBinaryDataSize(), msg->isCompressedStream()))
+         {
+            if (msg->isEndOfFile())
+            {
+               debugPrintf(6, _T("Got end of file marker"));
+               NXCPMessage response;
+
+               response.setCode(CMD_REQUEST_COMPLETED);
+               response.setId(msg->getId());
+               response.setField(VID_RCC, RCC_SUCCESS);
+               sendMessage(&response);
+
+               dInfo->close(true);
+               m_downloadFileMap->remove(msg->getId());
+            }
+         }
+         else
+         {
+            debugPrintf(6, _T("I/O error"));
+
+            NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId());
+            response.setField(VID_RCC, RCC_IO_ERROR);
+            sendMessage(&response);
+
+            dInfo->close(false);
+            m_downloadFileMap->remove(msg->getId());
+         }
+      }
+      else
+      {
+         // Abort current file transfer because of client's problem
+         dInfo->close(false);
+         m_downloadFileMap->remove(msg->getId());
+      }
+   }
+   else
+   {
+      shared_ptr<AgentConnection> conn = m_agentConnections.get(msg->getId());
+      if (conn != nullptr)
+      {
+         if (msg->getCode() == CMD_FILE_DATA)
+         {
+            if (conn->sendMessage(msg))  //send raw message
+            {
+               if (msg->isEndOfFile())
+               {
+                  debugPrintf(6, _T("Got end of file marker for request ID %u"), msg->getId());
+                  incRefCount();
+                  ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::finalizeFileTransferToAgent, conn, msg->getId());
+                  m_agentConnections.remove(msg->getId());
+               }
+            }
+            else
+            {
+               debugPrintf(6, _T("Error while sending file to agent (request ID %u)"), msg->getId());
+               m_agentConnections.remove(msg->getId());
+
+               NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId());
+               response.setField(VID_RCC, RCC_COMM_FAILURE);
+               sendMessage(&response);
+            }
+         }
+         else
+         {
+            // Resend abort message
+            conn->sendMessage(msg);
+            m_agentConnections.remove(msg->getId());
+         }
+      }
+      else
+      {
+         debugPrintf(4, _T("Out of state message (ID: %d)"), msg->getId());
+      }
+   }
+   delete msg;
    decRefCount();
 }
 
@@ -1475,7 +1513,7 @@ void ClientSession::respondToKeepalive(UINT32 dwRqId)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, dwRqId);
    msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(msg);
+   postMessage(msg);
 }
 
 /**
@@ -7616,8 +7654,8 @@ void ClientSession::setupEncryption(NXCPMessage *request)
    NXCPMessage msg;
 
 #ifdef _WITH_ENCRYPTION
-	m_dwEncryptionRqId = request->getId();
-   m_dwEncryptionResult = RCC_TIMEOUT;
+	m_encryptionRqId = request->getId();
+   m_encryptionResult = RCC_TIMEOUT;
    if (m_condEncryptionSetup == INVALID_CONDITION_HANDLE)
       m_condEncryptionSetup = ConditionCreate(FALSE);
 
@@ -7633,7 +7671,7 @@ void ClientSession::setupEncryption(NXCPMessage *request)
    // Send response
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   msg.setField(VID_RCC, m_dwEncryptionResult);
+   msg.setField(VID_RCC, m_encryptionResult);
 #else    /* _WITH_ENCRYPTION not defined */
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());

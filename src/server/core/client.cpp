@@ -26,6 +26,11 @@
 #define DEBUG_TAG _T("client.session")
 
 /**
+ * Background poller size limit
+ */
+uint32_t g_maxClientSessionsPerPoller = 256;
+
+/**
  * Client thread pool
  */
 NXCORE_EXPORTABLE_VAR(ThreadPool *g_clientThreadPool) = nullptr;
@@ -42,6 +47,7 @@ static HashMap<session_id_t, ClientSession> s_sessions;
 static RWLOCK s_sessionListLock = RWLockCreate();
 static session_id_t *s_freeList = nullptr;
 static size_t s_freePos = 0;
+static ObjectArray<BackgroundSocketPollerHandle> s_pollers(8, 8, Ownership::True);
 
 /**
  * Register new session in list
@@ -52,6 +58,26 @@ static bool RegisterClientSession(ClientSession *session)
    RWLockWriteLock(s_sessionListLock);
    if (s_freePos < g_maxClientSessions)
    {
+      // Select socket poller
+      BackgroundSocketPollerHandle *sp = nullptr;
+      for(int i = 0; i < s_pollers.size(); i++)
+      {
+         BackgroundSocketPollerHandle *p = s_pollers.get(i);
+         if (InterlockedIncrement(&p->usageCount) < g_maxClientSessionsPerPoller)
+         {
+            sp = p;
+            break;
+         }
+         InterlockedDecrement(&p->usageCount);
+      }
+      if (sp == nullptr)
+      {
+         sp = new BackgroundSocketPollerHandle();
+         sp->usageCount = 1;
+         s_pollers.add(sp);
+      }
+      session->setSocketPoller(sp);
+
       session->setId(s_freeList[s_freePos++]);
       s_sessions.set(session->getId(), session);
       success = true;
@@ -131,6 +157,10 @@ static void ClientSessionManager()
  */
 void InitClientListeners()
 {
+   g_maxClientSessionsPerPoller = ConfigReadULong(_T("ClientConnector.MaxSessionsPerPoller"), g_maxClientSessionsPerPoller);
+   if (g_maxClientSessionsPerPoller > FD_SETSIZE / 2)
+      g_maxClientSessionsPerPoller = FD_SETSIZE / 2;
+
    s_freeList = MemAllocArrayNoInit<session_id_t>(g_maxClientSessions);
    for(int i = 0; i < g_maxClientSessions; i++)
       s_freeList[i] = i;
@@ -175,7 +205,7 @@ ConnectionProcessingResult ClientListener::processConnection(SOCKET s, const Ine
    {
       if (!session->start())
       {
-         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot create client session service thread"));
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot start client session"));
          UnregisterClientSession(session->getId());
          delete session;
       }
@@ -201,6 +231,21 @@ void ClientListenerThread()
 
    listener.mainLoop();
    listener.shutdown();
+
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Terminating client sessions that are still active..."));
+   RWLockReadLock(s_sessionListLock);
+   auto it = s_sessions.iterator();
+   while(it->hasNext())
+   {
+      it->next()->kill();
+   }
+   delete it;
+   RWLockUnlock(s_sessionListLock);
+
+   while(GetSessionCount(true, true, -1, nullptr) > 0)
+      ThreadSleepMs(100);
+
+   s_pollers.clear();
 }
 
 /**

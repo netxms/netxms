@@ -318,6 +318,20 @@ public:
 };
 
 /**
+ * Handle for background socket poller to track poller usage
+ */
+struct BackgroundSocketPollerHandle
+{
+   BackgroundSocketPoller poller;
+   VolatileCounter usageCount;
+
+   BackgroundSocketPollerHandle()
+   {
+      usageCount = 0;
+   }
+};
+
+/**
  * Data update structure for client sessions
  */
 typedef struct
@@ -466,8 +480,10 @@ class SyslogMessage;
 class NXCORE_EXPORTABLE ClientSession
 {
 private:
-   SOCKET m_hSocket;
    session_id_t m_id;
+   SOCKET m_hSocket;
+   BackgroundSocketPollerHandle *m_socketPoller;
+   SocketMessageReceiver *m_messageReceiver;
    uint32_t m_dwUserId;
    uint64_t m_systemAccessRights; // User's system access rights
    uint32_t m_dwFlags;            // Session flags
@@ -493,8 +509,8 @@ private:
    EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
    SynchronizedHashMap<uint32_t, ServerDownloadFileInfo> *m_downloadFileMap;
    VolatileCounter m_refCount;
-   UINT32 m_dwEncryptionRqId;
-   UINT32 m_dwEncryptionResult;
+   uint32_t m_encryptionRqId;
+   uint32_t m_encryptionResult;
    CONDITION m_condEncryptionSetup;
 	ClientSessionConsole *m_console;			// Server console context
 	StringList m_soundFileTypes;
@@ -509,14 +525,17 @@ private:
    MUTEX m_pendingObjectNotificationsLock;
    UINT32 m_objectNotificationDelay;
 
-   static void readThreadStarter(ClientSession *session);
+   static void socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, ClientSession *session);
+   static void terminate(ClientSession *session);
    static EnumerationCallbackResult checkFileTransfer(const uint32_t &key, ServerDownloadFileInfo *fileTransfer,
       std::pair<ClientSession*, IntegerArray<uint32_t>*> *context);
 
-   void readThread();
+   bool readSocket();
+   void finalize();
    void pollerThread(shared_ptr<DataCollectionTarget> object, int pollType, uint32_t requestId);
 
    void processRequest(NXCPMessage *request);
+   void processFileTransferMessage(NXCPMessage *msg);
 
    void postRawMessageAndDelete(NXCP_MESSAGE *msg);
    void sendRawMessageAndDelete(NXCP_MESSAGE *msg);
@@ -841,6 +860,8 @@ public:
 
    session_id_t getId() const { return m_id; }
    void setId(session_id_t id) { if (m_id == -1) m_id = id; }
+
+   void setSocketPoller(BackgroundSocketPollerHandle *p) { m_socketPoller = p; }
 
    const TCHAR *getLoginName() const { return m_loginName; }
    const TCHAR *getSessionName() const { return m_sessionName; }
