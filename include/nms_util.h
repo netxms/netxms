@@ -3384,11 +3384,6 @@ public:
 };
 
 /**
- * Max number of polled sockets
- */
-#define SOCKET_POLLER_MAX_SOCKETS    16
-
-/**
  * Socket poller
  */
 class LIBNETXMS_EXPORTABLE SocketPoller
@@ -3399,7 +3394,7 @@ private:
    bool m_write;
    int m_count;
 #if HAVE_POLL
-   struct pollfd m_sockets[SOCKET_POLLER_MAX_SOCKETS];
+   struct pollfd m_sockets[FD_SETSIZE];
 #else
    fd_set m_sockets;
 #ifndef _WIN32
@@ -3412,7 +3407,7 @@ public:
    ~SocketPoller();
 
    bool add(SOCKET s);
-   int poll(UINT32 timeout);
+   int poll(uint32_t timeout);
    bool isSet(SOCKET s);
    void reset();
 };
@@ -3455,6 +3450,7 @@ class LIBNETXMS_EXPORTABLE BackgroundSocketPoller
 private:
    SynchronizedObjectMemoryPool<BackgroundSocketPollRequest> m_memoryPool;
    THREAD m_workerThread;
+   uint32_t m_workerThreadId;
    SOCKET m_controlSockets[2];
    MUTEX m_mutex;
    BackgroundSocketPollRequest *m_head;

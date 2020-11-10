@@ -3,7 +3,7 @@ exec='netxmsd'
 if [ "x$1" != "x" ]; then
 	exec="$1"
 fi
-pid=`ps -ax | grep netxmsd | grep -v grep | grep -v capture_netxmsd_threads | awk '{ print $1; }'`
+pid=`ps -ax | grep netxmsd | grep -v grep | grep -v capture_netxmsd_threads | grep -v netxmsd-asan | awk '{ print $1; }'`
 ts=`date +%Y%m%d-%H%M%S`
 cmdfile="/tmp/capture_netxmsd_threads.gdb"
 echo "set height 0" > $cmdfile

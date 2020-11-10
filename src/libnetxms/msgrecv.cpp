@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -34,9 +34,9 @@ AbstractMessageReceiver::AbstractMessageReceiver(size_t initialSize, size_t maxS
    m_maxSize = maxSize;
    m_dataSize = 0;
    m_bytesToSkip = 0;
-   m_buffer = (BYTE *)MemAlloc(initialSize);
-   m_decryptionBuffer = NULL;
-   m_encryptionContext = NULL;
+   m_buffer = MemAllocArrayNoInit<BYTE>(initialSize);
+   m_decryptionBuffer = nullptr;
+   m_encryptionContext = nullptr;
 }
 
 /**
@@ -53,7 +53,7 @@ AbstractMessageReceiver::~AbstractMessageReceiver()
  */
 NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
 {
-   NXCPMessage *msg = NULL;
+   NXCPMessage *msg = nullptr;
 
    if (m_dataSize >= NXCP_HEADER_SIZE)
    {
@@ -65,16 +65,16 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
       }
       else if (msgSize <= m_dataSize)
       {
-         if (ntohs(((NXCP_MESSAGE *)m_buffer)->code) == CMD_ENCRYPTED_MESSAGE)
+         if (ntohs(reinterpret_cast<NXCP_MESSAGE*>(m_buffer)->code) == CMD_ENCRYPTED_MESSAGE)
          {
-            if ((m_encryptionContext != NULL) && (m_encryptionContext != PROXY_ENCRYPTION_CTX))
+            if ((m_encryptionContext != nullptr) && (m_encryptionContext != PROXY_ENCRYPTION_CTX))
             {
-               if (m_decryptionBuffer == NULL)
-                  m_decryptionBuffer = (BYTE *)MemAlloc(m_size);
-               if (m_encryptionContext->decryptMessage((NXCP_ENCRYPTED_MESSAGE *)m_buffer, m_decryptionBuffer))
+               if (m_decryptionBuffer == nullptr)
+                  m_decryptionBuffer = MemAllocArrayNoInit<BYTE>(m_size);
+               if (m_encryptionContext->decryptMessage(reinterpret_cast<NXCP_ENCRYPTED_MESSAGE*>(m_buffer), m_decryptionBuffer))
                {
                   msg = NXCPMessage::deserialize(reinterpret_cast<NXCP_MESSAGE*>(m_buffer));
-                  if (msg == NULL)
+                  if (msg == nullptr)
                      *protocolError = true;  // message deserialization error
                }
             }
@@ -82,7 +82,7 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
          else
          {
             msg = NXCPMessage::deserialize(reinterpret_cast<NXCP_MESSAGE*>(m_buffer));
-            if (msg == NULL)
+            if (msg == nullptr)
                *protocolError = true;  // message deserialization error
          }
          m_dataSize -= msgSize;
@@ -96,7 +96,7 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
          if (msgSize <= m_maxSize)
          {
             m_size = msgSize;
-            m_buffer = (BYTE *)MemRealloc(m_buffer, m_size);
+            m_buffer = MemRealloc(m_buffer, m_size);
             MemFreeAndNull(m_decryptionBuffer);
          }
          else if (msgSize > (size_t)0x3FFFFFFF)
@@ -118,7 +118,7 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
 /**
  * Read message from communication channel
  */
-NXCPMessage *AbstractMessageReceiver::readMessage(UINT32 timeout, MessageReceiverResult *result)
+NXCPMessage *AbstractMessageReceiver::readMessage(uint32_t timeout, MessageReceiverResult *result)
 {
    NXCPMessage *msg;
    bool protocolError = false;
@@ -138,7 +138,16 @@ NXCPMessage *AbstractMessageReceiver::readMessage(UINT32 timeout, MessageReceive
       ssize_t bytes = readBytes(&m_buffer[m_dataSize], m_size - m_dataSize, timeout);
       if (bytes <= 0)
       {
-         *result = (bytes == 0) ? MSGRECV_CLOSED : ((bytes == -2) ? MSGRECV_TIMEOUT : MSGRECV_COMM_FAILURE);
+         if (bytes == 0)
+            *result = MSGRECV_CLOSED;
+         else if (bytes == -4)
+            *result = MSGRECV_WANT_READ;
+         else if (bytes == -3)
+            *result = MSGRECV_WANT_WRITE;
+         else if (bytes == -2)
+            *result = MSGRECV_TIMEOUT;
+         else
+            *result = MSGRECV_COMM_FAILURE;
          break;
       }
       if (m_bytesToSkip > 0)
@@ -209,8 +218,19 @@ SocketMessageReceiver::~SocketMessageReceiver()
 /**
  * Read bytes from socket
  */
-ssize_t SocketMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
+ssize_t SocketMessageReceiver::readBytes(BYTE *buffer, size_t size, uint32_t timeout)
 {
+   if (timeout == 0)
+   {
+#ifdef _WIN32
+      int rc = _recv(m_socket, buffer, size, 0);
+#else
+      int rc = recv(m_socket, buffer, size, 0);
+#endif
+      if (rc >= 0)
+         return rc;
+      return ((WSAGetLastError() == WSAEWOULDBLOCK) || (WSAGetLastError() == WSAEINPROGRESS)) ? -4 : -1;
+   }
 #ifdef _WIN32
    return RecvEx(m_socket, buffer, size, 0, timeout);
 #else
@@ -253,7 +273,7 @@ CommChannelMessageReceiver::~CommChannelMessageReceiver()
 /**
  * Read bytes from communication channel
  */
-ssize_t CommChannelMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
+ssize_t CommChannelMessageReceiver::readBytes(BYTE *buffer, size_t size, uint32_t timeout)
 {
    return m_channel->recv(buffer, size, timeout);
 }
@@ -301,7 +321,7 @@ TlsMessageReceiver::~TlsMessageReceiver()
 /**
  * Read bytes from TLS connection
  */
-ssize_t TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
+ssize_t TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, uint32_t timeout)
 {
    bool doRead = true;
    bool needWrite = false;
@@ -408,7 +428,7 @@ PipeMessageReceiver::~PipeMessageReceiver()
 /**
  * Read bytes from socket
  */
-ssize_t PipeMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
+ssize_t PipeMessageReceiver::readBytes(BYTE *buffer, size_t size, uint32_t timeout)
 {
 #ifdef _WIN32
 	OVERLAPPED ov;

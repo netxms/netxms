@@ -30,9 +30,7 @@ SocketPoller::SocketPoller(bool write)
 {
    m_write = write;
    m_count = 0;
-#if HAVE_POLL
-   memset(m_sockets, 0, sizeof(m_sockets));
-#else
+#if !HAVE_POLL
    FD_ZERO(&m_sockets);
 #ifndef _WIN32
    m_maxfd = 0;
@@ -52,7 +50,7 @@ SocketPoller::~SocketPoller()
  */
 bool SocketPoller::add(SOCKET s)
 {
-   if ((s == INVALID_SOCKET) || (m_count == SOCKET_POLLER_MAX_SOCKETS))
+   if ((s == INVALID_SOCKET) || (m_count == FD_SETSIZE))
       return false;
 
 #if HAVE_POLL
@@ -77,7 +75,7 @@ bool SocketPoller::add(SOCKET s)
 /**
  * Poll sockets
  */
-int SocketPoller::poll(UINT32 timeout)
+int SocketPoller::poll(uint32_t timeout)
 {
    if (m_count == 0)
       return -1;
@@ -142,10 +140,10 @@ int SocketPoller::poll(UINT32 timeout)
 bool SocketPoller::isSet(SOCKET s)
 {
 #if HAVE_POLL
-   for(int i = 0; i < SOCKET_POLLER_MAX_SOCKETS; i++)
+   for(int i = 0; i < m_count; i++)
    {
       if (s == m_sockets[i].fd)
-         return m_sockets[i].revents & (m_write ? POLLOUT : POLLIN);
+         return (m_sockets[i].revents & ((m_write ? POLLOUT : POLLIN) | POLLERR | POLLHUP)) != 0;
    }
    return false;
 #else
@@ -159,9 +157,7 @@ bool SocketPoller::isSet(SOCKET s)
 void SocketPoller::reset()
 {
    m_count = 0;
-#if HAVE_POLL
-   memset(m_sockets, 0, sizeof(m_sockets));
-#else
+#if !HAVE_POLL
    FD_ZERO(&m_sockets);
 #ifndef _WIN32
    m_maxfd = 0;
@@ -206,6 +202,7 @@ BackgroundSocketPoller::BackgroundSocketPoller()
    }
 #endif
 
+   m_workerThreadId = 0;
    m_workerThread = ThreadCreateEx(this, &BackgroundSocketPoller::workerThread);
 }
 
@@ -261,6 +258,7 @@ void BackgroundSocketPoller::notifyWorkerThread(char command)
  */
 void BackgroundSocketPoller::workerThread()
 {
+   m_workerThreadId = GetCurrentThreadId();
    SocketPoller sp;
    while(true)
    {
