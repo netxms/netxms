@@ -1642,10 +1642,10 @@ static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
       return NXSL_ERR_BAD_CLASS;
 
-   UINT32 len = MAX_USER_AGENT_MESSAGE_SIZE;
+   uint32_t len = MAX_USER_AGENT_MESSAGE_SIZE;
    const TCHAR *message = argv[1]->getValueAsString(&len);
-   IntegerArray<UINT32> *idList = new IntegerArray<UINT32>(16,16);
-   idList->add(static_cast<shared_ptr<NetObj>*>(object->getData())->get()->getId());
+   IntegerArray<uint32_t> idList(16,16);
+   idList.add(static_cast<shared_ptr<NetObj>*>(object->getData())->get()->getId());
    time_t startTime = (time_t)argv[2]->getValueAsUInt64();
    time_t endTime = (time_t)argv[3]->getValueAsUInt64();
 

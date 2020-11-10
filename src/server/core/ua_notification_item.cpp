@@ -99,7 +99,7 @@ void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node)
 /**
  * Create new user agent notification
  */
-UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime, bool onStartup, uint32_t userId)
+UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<uint32_t>& objects, time_t startTime, time_t endTime, bool onStartup, uint32_t userId)
 {
    g_userAgentNotificationListMutex.lock();
    UserAgentNotificationItem *uan = new UserAgentNotificationItem(message, objects, startTime, endTime, onStartup, userId);

@@ -4520,7 +4520,7 @@ void ShowPollers(ServerConsole *console);
 void InitUserAgentNotifications();
 void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb,UINT32 retentionTime);
 void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node);
-UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime, bool onStartup, uint32_t userId);
+UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<uint32_t>& objects, time_t startTime, time_t endTime, bool onStartup, uint32_t userId);
 
 void DeleteObjectFromPhysicalLinks(UINT32 id);
 void DeletePatchPanelFromPhysicalLinks(UINT32 rackId, UINT32 patchPanelId);
