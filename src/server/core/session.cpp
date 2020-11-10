@@ -13948,6 +13948,7 @@ void ClientSession::expandMacros(NXCPMessage *request)
       {
          msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
          sendMessage(&msg);
+         MemFree(textToExpand);
          return;
       }
       Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(inFieldId++));
@@ -13956,6 +13957,7 @@ void ClientSession::expandMacros(NXCPMessage *request)
       {
          msg.setField(VID_RCC, RCC_ACCESS_DENIED);
          sendMessage(&msg);
+         MemFree(textToExpand);
          delete alarm;
          return;
       }
@@ -14330,7 +14332,7 @@ void ClientSession::addUserAgentNotification(NXCPMessage *request)
       {
          TCHAR tmp[MAX_USER_AGENT_MESSAGE_SIZE];
          UserAgentNotificationItem *uan = CreateNewUserAgentNotification(request->getFieldAsString(VID_UA_NOTIFICATION_BASE, tmp, MAX_USER_AGENT_MESSAGE_SIZE),
-               &objectList, request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 2), request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 3),
+               objectList, request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 2), request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 3),
                request->getFieldAsBoolean(VID_UA_NOTIFICATION_BASE + 4), m_dwUserId);
          json_t *objData = uan->toJson();
          WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, uan->getId(), nullptr, objData,
