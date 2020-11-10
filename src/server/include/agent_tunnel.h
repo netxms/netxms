@@ -87,6 +87,9 @@ protected:
    uuid m_guid;
    InetAddress m_address;
    SOCKET m_socket;
+   BackgroundSocketPollerHandle *m_socketPoller;
+   TlsMessageReceiver *m_messageReceiver;
+   TCHAR m_threadPoolKey[12];
    SSL_CTX *m_context;
    SSL *m_ssl;
    MUTEX m_sslLock;
@@ -108,7 +111,7 @@ protected:
    TCHAR *m_agentVersion;
    TCHAR *m_agentBuildTag;
    uuid m_agentId;
-   UINT32 m_bindRequestId;
+   uint32_t m_bindRequestId;
    uuid m_bindGuid;
    uint32_t m_bindUserId;
    bool m_userAgentInstalled;
@@ -122,8 +125,10 @@ protected:
    
    virtual ~AgentTunnel();
 
-   void recvThread();
-   static void recvThreadStarter(AgentTunnel *tunnel);
+   bool readSocket();
+   void finalize();
+   void processMessage(NXCPMessage *msg);
+   static void socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, AgentTunnel *tunnel);
    
    int sslWrite(const void *data, size_t size);
    bool sendMessage(NXCPMessage *msg);
@@ -137,7 +142,8 @@ protected:
 
 public:
    AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId, int32_t zoneUIN,
-            const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime);
+            const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime,
+            BackgroundSocketPollerHandle *socketPoller);
    
    void start();
    void shutdown();
@@ -166,6 +172,14 @@ public:
    time_t getCertificateExpirationTime() const { return m_certificateExpirationTime; }
    AgentTunnelState getState() const { return m_state; }
    time_t getStartTime() const { return m_startTime; }
+
+   int getChannelCount()
+   {
+      MutexLock(m_channelLock);
+      int c = m_channels.size();
+      MutexUnlock(m_channelLock);
+      return c;
+   }
 
    bool isAgentProxy() const { return m_agentProxy; }
    bool isSnmpProxy() const { return m_snmpProxy; }

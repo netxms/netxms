@@ -1159,7 +1159,7 @@ static inline uint32_t GetCurrentThreadId()
       return 0;
    return (uint32_t)id;
 #else
-   return 0;
+#error GetCurrentThreadId not implemented for this platform
 #endif
 }
 

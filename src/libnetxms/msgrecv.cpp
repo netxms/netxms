@@ -340,7 +340,7 @@ ssize_t TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, uint32_t timeou
 #endif
          int rc = sp.poll(timeout);
          if (rc <= 0)
-            return (rc == 0) ? -2 : -1;   // -2 for timeout
+            return (rc == 0) ? ((timeout == 0) ? (needWrite ? -3 : -4) : -2) : -1;   // -2 for timeout
 #ifndef _WIN32
          if (!needWrite && (m_controlPipe[0] != -1) && sp.isSet(m_controlPipe[0]))
          {

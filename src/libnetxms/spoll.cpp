@@ -235,7 +235,10 @@ void BackgroundSocketPoller::poll(SOCKET socket, uint32_t timeout, void (*callba
    m_head->next = request;
    MutexUnlock(m_mutex);
 
-   notifyWorkerThread();
+   // No need for notification if poll() called from worker thread itself
+   // (likely that means re-insert from poll completion callback)
+   if (GetCurrentThreadId() != m_workerThreadId)
+      notifyWorkerThread();
 }
 
 /**

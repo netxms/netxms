@@ -63,6 +63,13 @@ static ObjectRefArray<AgentTunnel> s_unboundTunnels(16, 16);
 static Mutex s_tunnelListLock;
 
 /**
+ * Socket pollers
+ */
+static ObjectArray<BackgroundSocketPollerHandle> s_pollers(64, 64, Ownership::True);
+static uint32_t s_maxTunnelsPerPoller = 256;
+static Mutex s_pollerListLock;
+
+/**
  * Execute tunnel establishing hook script in the separate thread
  */
 static void ExecuteScriptInBackground(NXSL_VM *vm)
@@ -250,22 +257,22 @@ void ShowAgentTunnels(CONSOLE_CTX console)
 
    ConsolePrintf(console,
             _T("\n\x1b[1mBOUND TUNNELS\x1b[0m\n")
-            _T("ID   | Node ID | EP  | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
-            _T("-----+---------+-----+--------------------------+--------------------------+--------------------------+------------------+---------------+--------------------------\n"));
+            _T(" ID  | Node ID | EP  | Chan. | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
+            _T("-----+---------+-----+-------+--------------------------+--------------------------+--------------------------+------------------+---------------+--------------------------\n"));
    Iterator<AgentTunnel> *it = s_boundTunnels.iterator();
    while(it->hasNext())
    {
       AgentTunnel *t = it->next();
       TCHAR ipAddrBuffer[64];
-      ConsolePrintf(console, _T("%4d | %7u | %-3s | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->getNodeId(),
-               t->isExtProvCertificate() ? _T("YES") : _T("NO"), t->getAddress().toString(ipAddrBuffer), t->getSystemName(),
+      ConsolePrintf(console, _T("%4d | %7u | %-3s | %5d | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->getNodeId(),
+               t->isExtProvCertificate() ? _T("YES") : _T("NO"), t->getChannelCount(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(),
                t->getHostname(), t->getPlatformName(), t->getAgentVersion(), t->getAgentBuildTag());
    }
    delete it;
 
    ConsolePrintf(console,
             _T("\n\x1b[1mUNBOUND TUNNELS\x1b[0m\n")
-            _T("ID   | EP  | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
+            _T(" ID  | EP  | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
             _T("-----+-----+--------------------------+--------------------------+--------------------------+------------------+---------------+------------------------------------\n"));
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
@@ -288,11 +295,14 @@ static VolatileCounter s_nextTunnelId = 0;
  */
 AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr,
          uint32_t nodeId, int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer,
-         time_t certificateExpirationTime) : RefCountObject(), m_channels(Ownership::True)
+         time_t certificateExpirationTime, BackgroundSocketPollerHandle *socketPoller) : RefCountObject(), m_channels(Ownership::True)
 {
    m_id = InterlockedIncrement(&s_nextTunnelId);
    m_address = addr;
    m_socket = sock;
+   m_socketPoller = socketPoller;
+   m_messageReceiver = nullptr;
+   _sntprintf(m_threadPoolKey, 12, _T("TN%u"), m_id);
    m_context = context;
    m_ssl = ssl;
    m_sslLock = MutexCreate();
@@ -342,6 +352,8 @@ AgentTunnel::~AgentTunnel()
    MemFree(m_certificateIssuer);
    MemFree(m_certificateSubject);
    MutexDestroy(m_channelLock);
+   delete m_messageReceiver;
+   InterlockedDecrement(&m_socketPoller->usageCount);
    debugPrintf(4, _T("Tunnel destroyed"));
 }
 
@@ -357,72 +369,93 @@ void AgentTunnel::debugPrintf(int level, const TCHAR *format, ...)
 }
 
 /**
- * Tunnel receiver thread
+ * Read data from socket
  */
-void AgentTunnel::recvThread()
+bool AgentTunnel::readSocket()
 {
-   TlsMessageReceiver receiver(m_socket, m_ssl, m_sslLock, 4096, MAX_MSG_SIZE);
-   while(true)
+   MessageReceiverResult result;
+   NXCPMessage *msg = m_messageReceiver->readMessage(0, &result);
+   if ((result == MSGRECV_WANT_READ) || (result == MSGRECV_WANT_WRITE))
+      return true;
+
+   if (result != MSGRECV_SUCCESS)
    {
-      MessageReceiverResult result;
-      NXCPMessage *msg = receiver.readMessage(60000, &result);
-      if (result != MSGRECV_SUCCESS)
+      if (result == MSGRECV_CLOSED)
+         debugPrintf(4, _T("Tunnel closed by peer"));
+      else
+         debugPrintf(4, _T("Communication error (%s)"), AbstractMessageReceiver::resultToText(result));
+      return false;
+   }
+
+   if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 6)
+   {
+      TCHAR buffer[64];
+      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+   }
+
+   if (msg->getCode() == CMD_CHANNEL_DATA)
+   {
+      if (msg->isBinary())
       {
-         if (result == MSGRECV_CLOSED)
-            debugPrintf(4, _T("Tunnel closed by peer"));
+         MutexLock(m_channelLock);
+         AgentTunnelCommChannel *channel = m_channels.get(msg->getId());
+         MutexUnlock(m_channelLock);
+         if (channel != nullptr)
+         {
+            channel->putData(msg->getBinaryData(), msg->getBinaryDataSize());
+            channel->decRefCount();
+         }
          else
-            debugPrintf(4, _T("Communication error (%s)"), AbstractMessageReceiver::resultToText(result));
-         break;
-      }
-
-      if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 6)
-      {
-         TCHAR buffer[64];
-         debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
-      }
-
-      switch(msg->getCode())
-      {
-         case CMD_KEEPALIVE:
-            {
-               NXCPMessage response(CMD_KEEPALIVE, msg->getId());
-               sendMessage(&response);
-            }
-            break;
-         case CMD_SETUP_AGENT_TUNNEL:
-            setup(msg);
-            break;
-         case CMD_REQUEST_CERTIFICATE:
-            processCertificateRequest(msg);
-            break;
-         case CMD_CHANNEL_DATA:
-            if (msg->isBinary())
-            {
-               MutexLock(m_channelLock);
-               AgentTunnelCommChannel *channel = m_channels.get(msg->getId());
-               MutexUnlock(m_channelLock);
-               if (channel != nullptr)
-               {
-                  channel->putData(msg->getBinaryData(), msg->getBinaryDataSize());
-                  channel->decRefCount();
-               }
-               else
-               {
-                  debugPrintf(6, _T("Received channel data for non-existing channel %u"), msg->getId());
-               }
-            }
-            break;
-         case CMD_CLOSE_CHANNEL:    // channel close notification
-            processChannelClose(msg->getFieldAsUInt32(VID_CHANNEL_ID));
-            break;
-         default:
-            m_queue.put(msg);
-            msg = nullptr; // prevent message deletion
-            break;
+         {
+            debugPrintf(6, _T("Received channel data for non-existing channel %u"), msg->getId());
+         }
       }
       delete msg;
    }
+   else
+   {
+      incRefCount();
+      ThreadPoolExecuteSerialized(g_mainThreadPool, m_threadPoolKey, this, &AgentTunnel::processMessage, msg);
+   }
+   return true;
+}
 
+/**
+ * Process incoming message
+ */
+void AgentTunnel::processMessage(NXCPMessage *msg)
+{
+   switch(msg->getCode())
+   {
+      case CMD_KEEPALIVE:
+         {
+            NXCPMessage response(CMD_KEEPALIVE, msg->getId());
+            sendMessage(&response);
+         }
+         break;
+      case CMD_SETUP_AGENT_TUNNEL:
+         setup(msg);
+         break;
+      case CMD_REQUEST_CERTIFICATE:
+         processCertificateRequest(msg);
+         break;
+      case CMD_CLOSE_CHANNEL:    // channel close notification
+         processChannelClose(msg->getFieldAsUInt32(VID_CHANNEL_ID));
+         break;
+      default:
+         m_queue.put(msg);
+         msg = nullptr; // prevent message deletion
+         break;
+   }
+   delete msg;
+   decRefCount();
+}
+
+/**
+ * Finalize tunnel closure
+ */
+void AgentTunnel::finalize()
+{
    UnregisterTunnel(this);
    m_state = AGENT_TUNNEL_SHUTDOWN;
 
@@ -435,17 +468,28 @@ void AgentTunnel::recvThread()
    m_channels.clear();
    MutexUnlock(m_channelLock);
 
-   debugPrintf(4, _T("Receiver thread stopped"));
+   debugPrintf(4, _T("Tunnel closure completed"));
+   decRefCount();
 }
 
 /**
- * Tunnel receiver thread starter
+ * Socket poller callback
  */
-void AgentTunnel::recvThreadStarter(AgentTunnel *tunnel)
+void AgentTunnel::socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, AgentTunnel *tunnel)
 {
-   ThreadSetName("TunnelReceiver");
-   tunnel->recvThread();
-   tunnel->decRefCount();
+   if (pollResult == BackgroundSocketPollResult::SUCCESS)
+   {
+      if (tunnel->readSocket())
+      {
+         tunnel->m_socketPoller->poller.poll(hSocket, 60000, socketPollerCallback, tunnel);
+         return;
+      }
+   }
+   else
+   {
+      tunnel->debugPrintf(5, _T("Socket poll error (%d)"), static_cast<int>(pollResult));
+   }
+   ThreadPoolExecute(g_mainThreadPool, tunnel, &AgentTunnel::finalize);
 }
 
 /**
@@ -513,7 +557,8 @@ void AgentTunnel::start()
 {
    debugPrintf(4, _T("Tunnel started"));
    incRefCount();
-   ThreadCreate(AgentTunnel::recvThreadStarter, this);
+   m_messageReceiver = new TlsMessageReceiver(m_socket, m_ssl, m_sslLock, 4096, MAX_MSG_SIZE);
+   m_socketPoller->poller.poll(m_socket, 60000, socketPollerCallback, this);
 }
 
 /**
@@ -1183,6 +1228,7 @@ static void SetupTunnel(ConnectionRequest *request)
 {
    SSL_CTX *context = nullptr;
    SSL *ssl = nullptr;
+   BackgroundSocketPollerHandle *sp = nullptr;
    AgentTunnel *tunnel = nullptr;
    int rc;
    uint32_t nodeId = 0;
@@ -1426,8 +1472,31 @@ retry:
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Agent certificate not provided"), request->addr.toString().cstr());
    }
 
+   // Select socket poller
+   s_pollerListLock.lock();
+   for(int i = 0; i < s_pollers.size(); i++)
+   {
+      BackgroundSocketPollerHandle *p = s_pollers.get(i);
+      if (InterlockedIncrement(&p->usageCount) < s_maxTunnelsPerPoller)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): assigned to poller #%d"), request->addr.toString().cstr(), i);
+         sp = p;
+         break;
+      }
+      InterlockedDecrement(&p->usageCount);
+   }
+   if (sp == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): assigned to poller #%d"), request->addr.toString().cstr(), s_pollers.size());
+      sp = new BackgroundSocketPollerHandle();
+      sp->usageCount = 1;
+      s_pollers.add(sp);
+   }
+   s_pollerListLock.unlock();
+
    tunnel = new AgentTunnel(context, ssl, request->sock, request->addr, nodeId, zoneUIN,
-         !certSubject.isEmpty() ? certSubject.cstr() : nullptr, !certIssuer.isEmpty() ? certIssuer.cstr() : nullptr, certExpTime);
+         !certSubject.isEmpty() ? certSubject.cstr() : nullptr, !certIssuer.isEmpty() ? certIssuer.cstr() : nullptr,
+         certExpTime, sp);
    RegisterTunnel(tunnel);
    tunnel->start();
    tunnel->decRefCount();
@@ -1489,6 +1558,11 @@ ConnectionProcessingResult TunnelListener::processConnection(SOCKET s, const Ine
 void TunnelListenerThread()
 {
    ThreadSetName("TunnelListener");
+
+   s_maxTunnelsPerPoller = ConfigReadULong(_T("AgentTunnels.MaxTunnelsPerPoller"), s_maxTunnelsPerPoller);
+   if (s_maxTunnelsPerPoller > FD_SETSIZE / 2)
+      s_maxTunnelsPerPoller = FD_SETSIZE / 2;
+
    s_tunnelListenerLock.lock();
    uint16_t listenPort = static_cast<uint16_t>(ConfigReadULong(_T("AgentTunnels.ListenPort"), 4703));
    TunnelListener listener(listenPort);
@@ -1538,6 +1612,10 @@ void CloseAgentTunnels()
          wait = false;
       s_tunnelListLock.unlock();
    }
+
+   s_pollerListLock.lock();
+   s_pollers.clear();
+   s_pollerListLock.unlock();
 
    nxlog_debug_tag(DEBUG_TAG, 2, _T("All agent tunnels unregistered"));
 }
