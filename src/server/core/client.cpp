@@ -26,11 +26,6 @@
 #define DEBUG_TAG _T("client.session")
 
 /**
- * Background poller size limit
- */
-uint32_t g_maxClientSessionsPerPoller = 256;
-
-/**
  * Client thread pool
  */
 NXCORE_EXPORTABLE_VAR(ThreadPool *g_clientThreadPool) = nullptr;
@@ -48,6 +43,7 @@ static RWLOCK s_sessionListLock = RWLockCreate();
 static session_id_t *s_freeList = nullptr;
 static size_t s_freePos = 0;
 static ObjectArray<BackgroundSocketPollerHandle> s_pollers(8, 8, Ownership::True);
+static uint32_t s_maxClientSessionsPerPoller = 256;
 
 /**
  * Register new session in list
@@ -63,7 +59,7 @@ static bool RegisterClientSession(ClientSession *session)
       for(int i = 0; i < s_pollers.size(); i++)
       {
          BackgroundSocketPollerHandle *p = s_pollers.get(i);
-         if (InterlockedIncrement(&p->usageCount) < g_maxClientSessionsPerPoller)
+         if (InterlockedIncrement(&p->usageCount) < s_maxClientSessionsPerPoller)
          {
             sp = p;
             break;
@@ -157,9 +153,9 @@ static void ClientSessionManager()
  */
 void InitClientListeners()
 {
-   g_maxClientSessionsPerPoller = ConfigReadULong(_T("ClientConnector.MaxSessionsPerPoller"), g_maxClientSessionsPerPoller);
-   if (g_maxClientSessionsPerPoller > FD_SETSIZE / 2)
-      g_maxClientSessionsPerPoller = FD_SETSIZE / 2;
+   s_maxClientSessionsPerPoller = ConfigReadULong(_T("ClientConnector.MaxSessionsPerPoller"), s_maxClientSessionsPerPoller);
+   if (s_maxClientSessionsPerPoller > FD_SETSIZE / 2)
+      s_maxClientSessionsPerPoller = FD_SETSIZE / 2;
 
    s_freeList = MemAllocArrayNoInit<session_id_t>(g_maxClientSessions);
    for(int i = 0; i < g_maxClientSessions; i++)
