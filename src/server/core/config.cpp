@@ -68,10 +68,16 @@ static TCHAR *s_debugTags = nullptr;
 static TCHAR s_peerNode[MAX_DB_STRING];
 
 /**
+ * Default thared stack size
+ */
+static uint64_t s_defaultThreadStackSize = 1024 * 1024;  // 1MB by default
+
+/**
  * Config file template
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
+   { _T("AgentConnectorThreadStackSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &g_agentConnectorThreadStackSize, nullptr },
    { _T("AuditLogKey"), CT_MB_STRING, 0, 0, 128, 0, g_auditLogKey, nullptr },
    { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_64, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_flags, nullptr },
    { _T("CodePage"), CT_MB_STRING, 0, 0, 256, 0, g_szCodePage, nullptr },
@@ -90,6 +96,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer, nullptr },
    { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
    { _T("DebugTags"), CT_STRING_CONCAT, ',', 0, 0, 0, &s_debugTags, nullptr },
+   { _T("DefaultThreadStackSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &s_defaultThreadStackSize, nullptr },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, nullptr },
    { _T("EnableServerConsole"), CT_BOOLEAN_FLAG_64, 0, 0, AF_ENABLE_LOCAL_CONSOLE, 0, &g_flags, nullptr },
    { _T("FullCrashDumps"), CT_BOOLEAN_FLAG_64, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, nullptr },
@@ -249,6 +256,9 @@ stop_search:
       }
       delete environment;
    }
+
+   if (bSuccess)
+      ThreadSetDefaultStackSize(static_cast<int>(s_defaultThreadStackSize));
 
    return bSuccess;
 }

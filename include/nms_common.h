@@ -94,8 +94,10 @@
 /******* export attribute for libnetxms symbols *******/
 #ifdef LIBNETXMS_EXPORTS
 #define LIBNETXMS_EXPORTABLE __EXPORT
+#define LIBNETXMS_EXPORTABLE_VAR(v) __EXPORT_VAR(v)
 #else
 #define LIBNETXMS_EXPORTABLE __IMPORT
+#define LIBNETXMS_EXPORTABLE_VAR(v) __IMPORT_VAR(v)
 #endif
 
 /**

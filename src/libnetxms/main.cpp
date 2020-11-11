@@ -28,6 +28,19 @@
 #endif
 
 /**
+ * Default thread stack size
+ */
+LIBNETXMS_EXPORTABLE_VAR(int g_defaultThreadStackSize) = 1024 * 1024;  // 1MB by default
+
+/**
+ * Set default thread stack size
+ */
+void LIBNETXMS_EXPORTABLE ThreadSetDefaultStackSize(int size)
+{
+   g_defaultThreadStackSize = size;
+}
+
+/**
  * libcurl initialization flag
  */
 static int s_curlInitialized = 0;
