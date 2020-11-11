@@ -396,7 +396,9 @@ bool ClientSession::readSocket()
       if ((msg->getCode() == CMD_FILE_DATA) || (msg->getCode() == CMD_ABORT_FILE_TRANSFER))
       {
          incRefCount();
-         ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::processFileTransferMessage, msg);
+         TCHAR key[32];
+         _sntprintf(key, 32, _T("FT_%d"), m_id);
+         ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::processFileTransferMessage, msg);
          msg = nullptr;
       }
       else if (msg->getCode() == CMD_TCP_PROXY_DATA)
