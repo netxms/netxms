@@ -42,6 +42,11 @@
 LIBNXSRV_EXPORTABLE_VAR(ThreadPool *g_agentConnectionThreadPool) = nullptr;
 
 /**
+ * Agent connector stack size
+ */
+LIBNXSRV_EXPORTABLE_VAR(uint64_t g_agentConnectorThreadStackSize) = 0;  // 0 = use system default
+
+/**
  * Unique connection ID
  */
 static VolatileCounter s_connectionId = 0;
@@ -645,7 +650,7 @@ bool AgentConnection::connect(RSA *serverKey, uint32_t *error, uint32_t *socketE
    // Start receiver thread
    lock();
    m_receiver = make_shared<AgentConnectionReceiver>(self());
-   if (!ThreadCreate(m_receiver, &AgentConnectionReceiver::run))
+   if (!ThreadCreate(m_receiver, &AgentConnectionReceiver::run, static_cast<int>(g_agentConnectorThreadStackSize)))
    {
       unlock();
       debugPrintf(3, _T("Cannot start receiver thread"));

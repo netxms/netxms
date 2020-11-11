@@ -439,7 +439,7 @@ int main(int argc, char* argv[])
    if (s_debugLevel == NXCONFIG_UNINITIALIZED_VALUE)
       s_debugLevel = 0;
    nxlog_set_debug_level(s_debugLevel);
-   free(s_debugTags);
+   MemFree(s_debugTags);
 
 	// Set exception handler
 #ifdef _WIN32

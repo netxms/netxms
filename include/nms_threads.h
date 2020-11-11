@@ -27,6 +27,8 @@
 
 #define NMS_THREADS_H_INCLUDED
 
+extern LIBNETXMS_EXPORTABLE_VAR(int g_defaultThreadStackSize);
+
 #if defined(_WIN32)
 
 #ifndef UNDER_CE
@@ -127,14 +129,10 @@ inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *arg
    HANDLE hThread;
    THREAD_ID dwThreadId;
 
-#ifdef UNDER_CE
-	hThread = CreateThread(NULL, (UINT32)stack_size, start_address, args, 0, &dwThreadId);
-#else
 	THREAD_START_DATA *data = (THREAD_START_DATA *)MemAlloc(sizeof(THREAD_START_DATA));
 	data->start_address = start_address;
 	data->args = args;
-   hThread = (HANDLE)_beginthreadex(NULL, stack_size, SEHThreadStarter, data, 0, &dwThreadId);
-#endif
+   hThread = (HANDLE)_beginthreadex(NULL, (stack_size != 0) ? stack_size : g_defaultThreadStackSize, SEHThreadStarter, data, 0, &dwThreadId);
    if (hThread != NULL)
       CloseHandle(hThread);
    return (hThread != NULL);
@@ -145,19 +143,13 @@ inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void 
    THREAD thread;
 
 	thread = (THREAD)MemAlloc(sizeof(struct netxms_thread_t));
-#ifdef UNDER_CE
-	thread->handle = CreateThread(NULL, (UINT32)stack_size, start_address, args, 0, &thread->id);
-	if (thread->handle == NULL)
-	{
-#else
 	THREAD_START_DATA *data = (THREAD_START_DATA *)MemAlloc(sizeof(THREAD_START_DATA));
 	data->start_address = start_address;
 	data->args = args;
-   thread->handle = (HANDLE)_beginthreadex(NULL, stack_size, SEHThreadStarter, data, 0, &thread->id);
+   thread->handle = (HANDLE)_beginthreadex(NULL, (stack_size != 0) ? stack_size : g_defaultThreadStackSize, SEHThreadStarter, data, 0, &thread->id);
 	if ((thread->handle == (HANDLE)-1) || (thread->handle == 0))
 	{
 		MemFree(data);
-#endif
 		MemFree(thread);
 		thread = INVALID_THREAD_HANDLE;
 	}
@@ -793,19 +785,11 @@ inline void ThreadSleepMs(UINT32 dwMilliseconds)
 
 inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void *args)
 {
-   THREAD id;
-
-	if (stack_size <= 0)
-	{
-		// TODO: Find out minimal stack size
-		stack_size = 1024 * 1024; // 1MB
-		// set stack size to 1mb (it's windows default - and application works,
-		// we need to investigate more on this)
-	}
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
-	pthread_attr_setstacksize(&attr, stack_size);
+	pthread_attr_setstacksize(&attr, (stack_size != 0) ? stack_size : g_defaultThreadStackSize);
 
+   THREAD id;
    if (pthread_create(&id, &attr, start_address, args) != 0)
    {
 		id = INVALID_THREAD_HANDLE;
@@ -1964,6 +1948,46 @@ template <typename T, typename B, typename R1, typename R2, typename R3> inline 
 {
    ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_3<B, R1, R2, R3>, new __ThreadPoolExecute_WrapperData_3<B, R1, R2, R3>(object, f, arg1, arg2, arg3));
 }
+
+/**
+ * Wrapper data for ThreadPoolExecute (three arguments)
+ */
+template <typename R1, typename R2, typename R3> class __ThreadPoolExecute_WrapperData_3F
+{
+public:
+   void (*m_func)(R1, R2, R3);
+   R1 m_arg1;
+   R2 m_arg2;
+   R3 m_arg3;
+
+   __ThreadPoolExecute_WrapperData_3F(void (*func)(R1, R2, R3), R1 arg1, R2 arg2, R3 arg3) : m_arg1(arg1), m_arg2(arg2), m_arg3(arg3)
+   {
+      m_func = func;
+   }
+};
+
+/**
+ * Wrapper for ThreadPoolExecute (three arguments)
+ */
+template <typename R1, typename R2, typename R3> void __ThreadPoolExecute_Wrapper_3F(void *arg)
+{
+   auto wd = static_cast<__ThreadPoolExecute_WrapperData_3F<R1, R2, R3>*>(arg);
+   wd->m_func(wd->m_arg1, wd->m_arg2, wd->m_arg3);
+   delete wd;
+}
+
+/**
+ * Execute task as soon as possible (use function with three arguments)
+ */
+template <typename R1, typename R2, typename R3> inline void ThreadPoolExecute(ThreadPool *p, void (*f)(R1, R2, R3), R1 arg1, R2 arg2, R3 arg3)
+{
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_3F<R1, R2, R3>, new __ThreadPoolExecute_WrapperData_3F<R1, R2, R3>(f, arg1, arg2, arg3));
+}
+
+/**
+ * Set default thread stack size
+ */
+void LIBNETXMS_EXPORTABLE ThreadSetDefaultStackSize(int size);
 
 /**
  * Wrappers for mutex
