@@ -1379,11 +1379,11 @@ ssize_t LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int 
       else
       {
 #ifdef _WIN32
-         rc = recv(hSocket, (char *)data, (int)len, flags);
+         rc = recv(hSocket, static_cast<char*>(data), static_cast<int>(len), flags);
 #else
          do
          {
-            rc = recv(hSocket, (char *)data, len, flags);
+            rc = recv(hSocket, static_cast<char*>(data), len, flags);
          } while((rc == -1) && (errno == EINTR));
 #endif
       }
