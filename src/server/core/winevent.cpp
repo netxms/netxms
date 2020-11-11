@@ -52,13 +52,17 @@ WindowsEvent::~WindowsEvent()
 }
 
 /**
+ * Processing queues
+ */
+ObjectQueue<WindowsEvent> g_windowsEventProcessingQueue;
+ObjectQueue<WindowsEvent> g_windowsEventWriterQueue;
+
+/**
  * Static data
  */
 static uint64_t s_eventId = 1;  // Next available event ID
 static LogParser *s_parser = nullptr;
 static MUTEX s_parserLock = INVALID_MUTEX_HANDLE;
-static ObjectQueue<WindowsEvent> s_windowsEventProcessingQueue;
-static ObjectQueue<WindowsEvent> s_windowsEventWriterQueue;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static THREAD s_processingThread = INVALID_THREAD_HANDLE;
 
@@ -67,7 +71,7 @@ static THREAD s_processingThread = INVALID_THREAD_HANDLE;
  */
 void QueueWindowsEvent(WindowsEvent *event)
 {
-   s_windowsEventProcessingQueue.put(event);
+   g_windowsEventProcessingQueue.put(event);
 }
 
 /**
@@ -81,7 +85,7 @@ static void WindowsEventWriterThread()
 
    while(true)
    {
-      WindowsEvent *event = s_windowsEventWriterQueue.getOrBlock();
+      WindowsEvent *event = g_windowsEventWriterQueue.getOrBlock();
       if (event == INVALID_POINTER_VALUE)
          break;
 
@@ -123,7 +127,7 @@ static void WindowsEventWriterThread()
          if (count == maxRecords)
             break;
 
-         event = s_windowsEventWriterQueue.getOrBlock(500);
+         event = g_windowsEventWriterQueue.getOrBlock(500);
          if ((event == nullptr) || (event == INVALID_POINTER_VALUE))
             break;
       }
@@ -159,7 +163,7 @@ static void WindowsEventWriterThread_PGSQL()
 
    while(true)
    {
-      WindowsEvent *event = s_windowsEventWriterQueue.getOrBlock();
+      WindowsEvent *event = g_windowsEventWriterQueue.getOrBlock();
       if (event == INVALID_POINTER_VALUE)
          break;
 
@@ -226,7 +230,7 @@ static void WindowsEventWriterThread_PGSQL()
          if (countTxn >= maxRecordsPerTxn)
             break;
 
-         event = s_windowsEventWriterQueue.getOrBlock(500);
+         event = g_windowsEventWriterQueue.getOrBlock(500);
          if ((event == nullptr) || (event == INVALID_POINTER_VALUE))
             break;
       }
@@ -334,7 +338,7 @@ static void WindowsEventProcessingThread()
 
    while(true)
    {
-      WindowsEvent *event = s_windowsEventProcessingQueue.getOrBlock();
+      WindowsEvent *event = g_windowsEventProcessingQueue.getOrBlock();
       if (event == INVALID_POINTER_VALUE)
          break;
 
@@ -348,7 +352,7 @@ static void WindowsEventProcessingThread()
       MutexUnlock(s_parserLock);
 
       if (write)
-         s_windowsEventWriterQueue.put(event);
+         g_windowsEventWriterQueue.put(event);
       else
          delete event;
    }
@@ -391,11 +395,11 @@ void StartWindowsEventProcessing()
  */
 void StopWindowsEventProcessing()
 {
-   s_windowsEventProcessingQueue.put(INVALID_POINTER_VALUE);
+   g_windowsEventProcessingQueue.put(INVALID_POINTER_VALUE);
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Waiting for Windows event processing thread to stop"));
    ThreadJoin(s_processingThread);
 
-   s_windowsEventWriterQueue.put(INVALID_POINTER_VALUE);
+   g_windowsEventWriterQueue.put(INVALID_POINTER_VALUE);
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Waiting for Windows event writer to stop"));
    ThreadJoin(s_writerThread);
 
