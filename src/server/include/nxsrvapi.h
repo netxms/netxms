@@ -1102,6 +1102,7 @@ UINT32 LIBNXSRV_EXPORTABLE AgentErrorToRCC(UINT32 err);
 #define DbgPrintf nxlog_debug
 
 void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
+void LIBNXSRV_EXPORTABLE DisableAgentConnections();
 
 const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code);
 
@@ -1110,7 +1111,6 @@ const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code);
  */
 extern LIBNXSRV_EXPORTABLE_VAR(UINT64 g_flags);
 extern LIBNXSRV_EXPORTABLE_VAR(ThreadPool *g_agentConnectionThreadPool);
-extern LIBNXSRV_EXPORTABLE_VAR(uint64_t g_agentConnectorThreadStackSize);
 
 /**
  * Helper finctions for checking server flags

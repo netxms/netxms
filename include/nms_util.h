@@ -3472,6 +3472,48 @@ public:
 };
 
 /**
+ * Handle for background socket poller to track poller usage
+ */
+struct BackgroundSocketPollerHandle
+{
+   BackgroundSocketPoller poller;
+   VolatileCounter usageCount;
+
+   BackgroundSocketPollerHandle()
+   {
+      usageCount = 0;
+   }
+};
+
+/**
+ * Abstract communication channel (forward declaration for poll wrapper)
+ */
+class AbstractCommChannel;
+
+/**
+ * Wrapper data for background poller with shared pointer to context
+ */
+template<typename C> struct AbstractCommChannel_PollWrapperData
+{
+   shared_ptr<C> context;
+   void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, const shared_ptr<C>&);
+
+   AbstractCommChannel_PollWrapperData(void (*_callback)(BackgroundSocketPollResult, AbstractCommChannel*, const shared_ptr<C>&), const shared_ptr<C>& _context) : context(_context)
+   {
+      callback = _callback;
+   }
+};
+
+/**
+ * Wrapper for background poller with shared pointer to context
+ */
+template<typename C> void AbstractCommChannel_PollWrapperCallback(BackgroundSocketPollResult result, AbstractCommChannel *channel, AbstractCommChannel_PollWrapperData<C> *context)
+{
+   context->callback(result, channel, context->context);
+   delete context;
+}
+
+/**
  * Abstract communication channel
  */
 class LIBNETXMS_EXPORTABLE AbstractCommChannel : public RefCountObject
@@ -3489,6 +3531,16 @@ public:
    virtual int poll(UINT32 timeout, bool write = false) = 0;
    virtual int shutdown() = 0;
    virtual void close() = 0;
+
+   virtual void backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context) = 0;
+   template<typename C> void backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, C*), C *context)
+   {
+      backgroundPoll(timeout, reinterpret_cast<void (*)(BackgroundSocketPollResult, AbstractCommChannel*, void*)>(callback), reinterpret_cast<void*>(context));
+   }
+   template<typename C> void backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, const shared_ptr<C>&), const shared_ptr<C>& context)
+   {
+      backgroundPoll(timeout, AbstractCommChannel_PollWrapperCallback, new AbstractCommChannel_PollWrapperData<C>(callback, context));
+   }
 };
 
 /**
@@ -3504,16 +3556,18 @@ private:
 #ifndef _WIN32
    int m_controlPipe[2];
 #endif
+   BackgroundSocketPollerHandle *m_socketPoller;
 
 protected:
    virtual ~SocketCommChannel();
 
 public:
-   SocketCommChannel(SOCKET socket, Ownership owner = Ownership::True);
+   SocketCommChannel(SOCKET socket, BackgroundSocketPollerHandle *socketPoller = nullptr, Ownership owner = Ownership::True);
 
    virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
    virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;
    virtual int poll(UINT32 timeout, bool write = false) override;
+   virtual void backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context) override;
    virtual int shutdown() override;
    virtual void close() override;
 };

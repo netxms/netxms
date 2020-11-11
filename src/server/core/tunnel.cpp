@@ -68,7 +68,7 @@ static VolatileCounter s_activeSetupCalls = 0;  // Number of tunnel setup calls 
  */
 static ObjectArray<BackgroundSocketPollerHandle> s_pollers(64, 64, Ownership::True);
 static uint32_t s_maxTunnelsPerPoller = 256;
-static Mutex s_pollerListLock;
+static Mutex s_pollerListLock(true);
 
 /**
  * Execute tunnel establishing hook script in the separate thread
@@ -968,6 +968,8 @@ AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id) :
    pthread_mutex_init(&m_bufferLock, nullptr);
    pthread_cond_init(&m_dataCondition, nullptr);
 #endif
+   memset(m_pollers, 0, sizeof(m_pollers));
+   m_pollerCount = 0;
 }
 
 /**
@@ -1007,6 +1009,16 @@ ssize_t AgentTunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
 #endif
    if (m_buffer.isEmpty())
    {
+      if (timeout == 0)
+      {
+#ifdef _WIN32
+         LeaveCriticalSection(&m_bufferLock);
+#else
+         pthread_mutex_unlock(&m_bufferLock);
+#endif
+         return -4;  // WANT READ
+      }
+
 #ifdef _WIN32
       // SleepConditionVariableCS is subject to spurious wakeups so we need a loop here
       BOOL signalled = FALSE;
@@ -1123,6 +1135,40 @@ int AgentTunnelCommChannel::poll(UINT32 timeout, bool write)
 }
 
 /**
+ * Start background poll
+ */
+void AgentTunnelCommChannel::backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context)
+{
+#ifdef _WIN32
+   EnterCriticalSection(&m_bufferLock);
+#else
+   pthread_mutex_lock(&m_bufferLock);
+#endif
+   if (m_buffer.isEmpty())
+   {
+      if (m_pollerCount < 16)
+      {
+         m_pollers[m_pollerCount].callback = callback;
+         m_pollers[m_pollerCount].context = context;
+         m_pollerCount++;
+      }
+      else
+      {
+         ThreadPoolExecute(g_agentConnectionThreadPool, callback, BackgroundSocketPollResult::FAILURE, static_cast<AbstractCommChannel*>(this), context);
+      }
+   }
+   else
+   {
+      ThreadPoolExecute(g_agentConnectionThreadPool, callback, BackgroundSocketPollResult::SUCCESS, static_cast<AbstractCommChannel*>(this), context);
+   }
+#ifdef _WIN32
+   LeaveCriticalSection(&m_bufferLock);
+#else
+   pthread_mutex_unlock(&m_bufferLock);
+#endif
+}
+
+/**
  * Shutdown channel
  */
 int AgentTunnelCommChannel::shutdown()
@@ -1161,6 +1207,12 @@ void AgentTunnelCommChannel::putData(const BYTE *data, size_t size)
    pthread_mutex_lock(&m_bufferLock);
 #endif
    m_buffer.write(data, size);
+   if (m_pollerCount > 0)
+   {
+      for(int i = 0; i < m_pollerCount; i++)
+         ThreadPoolExecute(g_agentConnectionThreadPool, m_pollers[i].callback, BackgroundSocketPollResult::SUCCESS, static_cast<AbstractCommChannel*>(this), m_pollers[i].context);
+      m_pollerCount = 0;
+   }
 #ifdef _WIN32
    WakeAllConditionVariable(&m_dataCondition);
    LeaveCriticalSection(&m_bufferLock);

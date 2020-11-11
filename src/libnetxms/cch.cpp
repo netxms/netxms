@@ -40,7 +40,7 @@ AbstractCommChannel::~AbstractCommChannel()
 /**
  * Socket communication channel constructor
  */
-SocketCommChannel::SocketCommChannel(SOCKET socket, Ownership owner) : AbstractCommChannel()
+SocketCommChannel::SocketCommChannel(SOCKET socket, BackgroundSocketPollerHandle *socketPoller, Ownership owner) : AbstractCommChannel()
 {
    m_socket = socket;
    m_owner = (owner == Ownership::True);
@@ -51,6 +51,7 @@ SocketCommChannel::SocketCommChannel(SOCKET socket, Ownership owner) : AbstractC
       m_controlPipe[1] = -1;
    }
 #endif
+   m_socketPoller = socketPoller;
 }
 
 /**
@@ -66,6 +67,8 @@ SocketCommChannel::~SocketCommChannel()
    if (m_controlPipe[1] != -1)
       _close(m_controlPipe[1]);
 #endif
+   if (m_socketPoller != nullptr)
+      InterlockedDecrement(&m_socketPoller->usageCount);
 }
 
 /**
@@ -81,6 +84,17 @@ ssize_t SocketCommChannel::send(const void *data, size_t size, MUTEX mutex)
  */
 ssize_t SocketCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
 {
+   if (timeout == 0)
+   {
+#ifdef _WIN32
+      int rc = ::recv(m_socket, reinterpret_cast<char*>(buffer), static_cast<int>(size), 0);
+#else
+      int rc = ::recv(m_socket, reinterpret_cast<char*>(buffer), size, 0);
+#endif
+      if (rc >= 0)
+         return rc;
+      return ((WSAGetLastError() == WSAEWOULDBLOCK) || (WSAGetLastError() == WSAEINPROGRESS)) ? -4 : -1;
+   }
 #ifdef _WIN32
    return RecvEx(m_socket, buffer, size, 0, timeout);
 #else
@@ -123,5 +137,43 @@ void SocketCommChannel::close()
    {
       closesocket(m_socket);
       m_socket = INVALID_SOCKET;
+   }
+}
+
+/**
+ * Wrapper context for background socket poll
+ */
+struct BackgroundPollContext
+{
+   SocketCommChannel *channel;
+   void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*);
+   void *context;
+};
+
+/**
+ * Wrapper callback for background socket poll
+ */
+static void BackgroundPollWrapper(BackgroundSocketPollResult pollResult, SOCKET hSocket, BackgroundPollContext *context)
+{
+   context->callback(pollResult, context->channel, context->context);
+   MemFree(context);
+}
+
+/**
+ * Start background poll
+ */
+void SocketCommChannel::backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context)
+{
+   if (m_socketPoller != nullptr)
+   {
+      auto wrapperContext = MemAllocStruct<BackgroundPollContext>();
+      wrapperContext->channel = this;
+      wrapperContext->callback = callback;
+      wrapperContext->context = context;
+      m_socketPoller->poller.poll(m_socket, timeout, BackgroundPollWrapper, wrapperContext);
+   }
+   else
+   {
+      callback(BackgroundSocketPollResult::FAILURE, this, context);
    }
 }

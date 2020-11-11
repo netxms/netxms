@@ -81,6 +81,7 @@ public:
    virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
    virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;
    virtual int poll(UINT32 timeout, bool write = false) override;
+   virtual void backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context) override;
    virtual int shutdown() override;
    virtual void close() override;
 
@@ -1725,6 +1726,13 @@ int TunnelCommChannel::poll(UINT32 timeout, bool write)
    pthread_mutex_unlock(&m_bufferLock);
    return (rc == 0) ? 1 : 0;
 #endif
+}
+
+/**
+ * Background poll (dummy implementation)
+ */
+void TunnelCommChannel::backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context)
+{
 }
 
 /**
