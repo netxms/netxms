@@ -195,8 +195,8 @@ TCHAR *FileDownloadTask::buildServerFileName(uint32_t nodeId, const TCHAR *remot
 /**
  * Send message callback
  */
-void FileDownloadTask::fileResendCallback(NXCP_MESSAGE *msg, void *arg)
+void FileDownloadTask::fileResendCallback(NXCPMessage *msg, void *arg)
 {
-   msg->id = htonl(static_cast<FileDownloadTask*>(arg)->m_requestId);
-   static_cast<FileDownloadTask*>(arg)->m_session->sendRawMessage(msg);
+   msg->setId(static_cast<FileDownloadTask*>(arg)->m_requestId);
+   static_cast<FileDownloadTask*>(arg)->m_session->sendMessage(msg);
 }

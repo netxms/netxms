@@ -1058,7 +1058,7 @@ private:
    bool m_monitor;
    bool m_allowExpansion;
 
-   static void fileResendCallback(NXCP_MESSAGE *msg, void *arg);
+   static void fileResendCallback(NXCPMessage *msg, void *arg);
    static TCHAR *buildServerFileName(uint32_t nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);
 
 public:

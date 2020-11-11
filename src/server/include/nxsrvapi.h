@@ -839,21 +839,21 @@ private:
 	UINT32 m_dwDownloadRequestId;
 	CONDITION m_condFileDownload;
 	bool m_fileDownloadSucceeded;
-	void (*m_downloadProgressCallback)(size_t, void *);
+	void (*m_downloadProgressCallback)(size_t, void*);
 	void *m_downloadProgressCallbackArg;
 	bool m_deleteFileOnDownloadFailure;
-	void (*m_sendToClientMessageCallback)(NXCP_MESSAGE *, void *);
+	void (*m_sendToClientMessageCallback)(NXCPMessage*, void*);
 	bool m_fileUploadInProgress;
 	bool m_allowCompression;
 	VolatileCounter m_bulkDataProcessing;
 
    void receiverThread();
 
-   UINT32 setupEncryption(RSA *pServerKey);
-   UINT32 authenticate(BOOL bProxyData);
-   UINT32 setupProxyConnection();
-   UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append,
-            void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(NXCP_MESSAGE *, void *), void *cbArg);
+   uint32_t setupEncryption(RSA *pServerKey);
+   uint32_t authenticate(BOOL bProxyData);
+   uint32_t setupProxyConnection();
+   uint32_t prepareFileDownload(const TCHAR *fileName, uint32_t rqId, bool append,
+         void (*downloadProgressCallback)(size_t, void*), void (*fileResendCallback)(NXCPMessage*, void*), void *cbArg);
 
    void processCollectedDataCallback(NXCPMessage *msg);
    void onDataPushCallback(NXCPMessage *msg);
@@ -941,18 +941,18 @@ public:
    uint32_t queryWebServiceList(const TCHAR *url, uint32_t requestTimeout, uint32_t retentionTime, const TCHAR *login,
             const TCHAR *password, WebServiceAuthType authType, const StringMap& headers, const TCHAR *path, bool verifyCert,
             bool verifyHost, bool forcePlainTextParser, StringList *results);
-   UINT32 nop();
-   UINT32 setServerCapabilities();
-   UINT32 setServerId(UINT64 serverId);
+   uint32_t nop();
+   uint32_t setServerCapabilities();
+   uint32_t setServerId(uint64_t serverId);
    UINT32 execAction(const TCHAR *action, const StringList &list, bool withOutput = false,
-            void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = NULL, void *cbData = NULL);
-   UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, bool allowPathExpansion = false,
-            void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL,
+            void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = nullptr, void *cbData = nullptr);
+   UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
+            void (* progressCallback)(INT64, void *) = nullptr, void *cbArg = nullptr,
             NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
    UINT32 getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **info);
    UINT32 startUpgrade(const TCHAR *pszPkgName);
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType, WORD wPort = 0,
-                              WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
+                              WORD wProto = 0, const TCHAR *pszRequest = nullptr, const TCHAR *pszResponse = nullptr, UINT32 *responseTime = nullptr);
    UINT32 getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);
    uint32_t readConfigFile(TCHAR **content, size_t *size);
    uint32_t writeConfigFile(const TCHAR *content);
@@ -966,9 +966,9 @@ public:
    UINT32 closeTcpProxy(UINT32 channelId);
 
    uint32_t generateRequestId() { return (uint32_t)InterlockedIncrement(&m_requestId); }
-	NXCPMessage *customRequest(NXCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false,
-	         void (*downloadProgressCallback)(size_t, void *) = NULL,
-	         void (*fileResendCallback)(NXCP_MESSAGE *, void *) = NULL, void *cbArg = NULL);
+	NXCPMessage *customRequest(NXCPMessage *request, const TCHAR *recvFile = nullptr, bool append = false,
+	         void (*downloadProgressCallback)(size_t, void*) = nullptr,
+	         void (*fileResendCallback)(NXCPMessage*, void*) = nullptr, void *cbArg = nullptr);
 
    void setConnectionTimeout(uint32_t timeout) { m_connectionTimeout = MAX(timeout, 1000); }
 	uint32_t getConnectionTimeout() const { return m_connectionTimeout; }
