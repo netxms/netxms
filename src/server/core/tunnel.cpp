@@ -61,6 +61,7 @@ static Mutex s_certificateMappingsLock;
 static RefCountHashMap<uint32_t, AgentTunnel> s_boundTunnels(Ownership::True);
 static ObjectRefArray<AgentTunnel> s_unboundTunnels(16, 16);
 static Mutex s_tunnelListLock;
+static VolatileCounter s_activeSetupCalls = 0;  // Number of tunnel setup calls currently running
 
 /**
  * Socket pollers
@@ -415,7 +416,7 @@ bool AgentTunnel::readSocket()
    else
    {
       incRefCount();
-      ThreadPoolExecuteSerialized(g_mainThreadPool, m_threadPoolKey, this, &AgentTunnel::processMessage, msg);
+      ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, m_threadPoolKey, this, &AgentTunnel::processMessage, msg);
    }
    return true;
 }
@@ -489,7 +490,7 @@ void AgentTunnel::socketPollerCallback(BackgroundSocketPollResult pollResult, SO
    {
       tunnel->debugPrintf(5, _T("Socket poll error (%d)"), static_cast<int>(pollResult));
    }
-   ThreadPoolExecute(g_mainThreadPool, tunnel, &AgentTunnel::finalize);
+   ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, tunnel->m_threadPoolKey, tunnel, &AgentTunnel::finalize);
 }
 
 /**
@@ -1502,6 +1503,7 @@ retry:
    tunnel->decRefCount();
 
    delete request;
+   InterlockedDecrement(&s_activeSetupCalls);
    return;
 
 failure:
@@ -1512,6 +1514,7 @@ failure:
    shutdown(request->sock, SHUT_RDWR);
    closesocket(request->sock);
    delete request;
+   InterlockedDecrement(&s_activeSetupCalls);
 }
 
 /**
@@ -1545,10 +1548,17 @@ bool TunnelListener::isStopConditionReached()
  */
 ConnectionProcessingResult TunnelListener::processConnection(SOCKET s, const InetAddress& peer)
 {
+   if (InterlockedIncrement(&s_activeSetupCalls) > 64)
+   {
+      InterlockedDecrement(&s_activeSetupCalls);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Rejecting incoming connection because too many tunnel setup calls already running"));
+      return CPR_COMPLETED;
+   }
+
    ConnectionRequest *request = new ConnectionRequest();
    request->sock = s;
    request->addr = peer;
-   ThreadPoolExecute(g_mainThreadPool, SetupTunnel, request);
+   ThreadPoolExecute(g_agentConnectionThreadPool, SetupTunnel, request);
    return CPR_BACKGROUND;
 }
 
