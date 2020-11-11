@@ -510,6 +510,10 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
 
    int maxRecordsPerTxn = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    int maxRecordsPerStmt = ConfigReadInt(_T("DBWriter.MaxRecordsPerStatement"), 100);
+   if (maxRecordsPerTxn < maxRecordsPerStmt)
+      maxRecordsPerTxn = maxRecordsPerStmt;
+   else if (maxRecordsPerTxn % maxRecordsPerStmt != 0)
+      maxRecordsPerTxn = (maxRecordsPerTxn / maxRecordsPerStmt + 1) * maxRecordsPerStmt;
 
    StringBuffer query;
    query.setAllocationStep(65536);
@@ -571,7 +575,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
                break;
 
             rq = writer->queue->getOrBlock(500);
-            if ((rq == NULL) || (rq == INVALID_POINTER_VALUE))
+            if ((rq == nullptr) || (rq == INVALID_POINTER_VALUE))
                break;
          }
          if (countStmt > 0)

@@ -81,11 +81,11 @@ static void WindowsEventWriterThread()
 
    while(true)
    {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       WindowsEvent *event = s_windowsEventWriterQueue.getOrBlock();
       if (event == INVALID_POINTER_VALUE)
          break;
 
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DB_STATEMENT hStmt = DBPrepare(hdb,
             (g_dbSyntax == DB_SYNTAX_TSDB) ?
                   _T("INSERT INTO win_event_log (id,event_timestamp,node_id,zone_uin,origin_timestamp,log_name,event_source,event_severity,event_code,message,raw_data) VALUES (?,to_timestamp(?),?,?,?,?,?,?,?,?,?)") :
@@ -129,6 +129,114 @@ static void WindowsEventWriterThread()
       }
       DBCommit(hdb);
       DBFreeStatement(hStmt);
+      DBConnectionPoolReleaseConnection(hdb);
+      if (event == INVALID_POINTER_VALUE)
+         break;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Windows event writer stopped"));
+}
+
+/**
+ * Windows event writer thread - PostgreSQL version
+ */
+static void WindowsEventWriterThread_PGSQL()
+{
+   ThreadSetName("WinEvtWriter");
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Windows event writer started"));
+
+   int maxRecordsPerTxn = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
+   int maxRecordsPerStmt = ConfigReadInt(_T("DBWriter.MaxRecordsPerStatement"), 100);
+   if (maxRecordsPerTxn < maxRecordsPerStmt)
+      maxRecordsPerTxn = maxRecordsPerStmt;
+   else if (maxRecordsPerTxn % maxRecordsPerStmt != 0)
+      maxRecordsPerTxn = (maxRecordsPerTxn / maxRecordsPerStmt + 1) * maxRecordsPerStmt;
+   bool convertTimestamp = (g_dbSyntax == DB_SYNTAX_TSDB);
+
+   StringBuffer query;
+   query.setAllocationStep(65536);
+   const TCHAR *queryBase = _T("INSERT INTO win_event_log (id,event_timestamp,node_id,zone_uin,origin_timestamp,log_name,event_source,event_severity,event_code,message,raw_data) VALUES ");
+
+   while(true)
+   {
+      WindowsEvent *event = s_windowsEventWriterQueue.getOrBlock();
+      if (event == INVALID_POINTER_VALUE)
+         break;
+
+      query = queryBase;
+      int countTxn = 0, countStmt = 0;
+
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      if (!DBBegin(hdb))
+      {
+         delete event;
+         DBConnectionPoolReleaseConnection(hdb);
+         continue;
+      }
+
+      while(true)
+      {
+         query.append(_T('('));
+         query.append(s_eventId++);
+         if (convertTimestamp)
+         {
+            query.append(_T(",to_timestamp("));
+            query.append(static_cast<int64_t>(event->timestamp));
+            query.append(_T("),"));
+         }
+         else
+         {
+            query.append(_T(','));
+            query.append(static_cast<int64_t>(event->timestamp));
+            query.append(_T(','));
+         }
+         query.append(event->nodeId);
+         query.append(_T(','));
+         query.append(event->zoneUIN);
+         query.append(_T(','));
+         query.append(static_cast<int64_t>(event->originTimestamp));
+         query.append(_T(','));
+         query.append(DBPrepareString(hdb, event->logName, 63));
+         query.append(_T(','));
+         query.append(DBPrepareString(hdb, event->eventSource, 127));
+         query.append(_T(','));
+         query.append(event->eventSeverity);
+         query.append(_T(','));
+         query.append(event->eventCode);
+         query.append(_T(','));
+         query.append(DBPrepareString(hdb, event->message, MAX_EVENT_MSG_LENGTH));
+         query.append(_T(','));
+         query.append(DBPrepareString(hdb, event->rawData));
+         query.append(_T("),"));
+         delete event;
+
+         countTxn++;
+         countStmt++;
+
+         if (countStmt >= maxRecordsPerStmt)
+         {
+            countStmt = 0;
+            query.shrink();   // Remove trailing , from last block
+            query.append(_T(" ON CONFLICT DO NOTHING"));
+            if (!DBQuery(hdb, query))
+               break;
+            query = queryBase;
+         }
+
+         if (countTxn >= maxRecordsPerTxn)
+            break;
+
+         event = s_windowsEventWriterQueue.getOrBlock(500);
+         if ((event == nullptr) || (event == INVALID_POINTER_VALUE))
+            break;
+      }
+      if (countStmt > 0)
+      {
+         query.shrink();   // Remove trailing , from last block
+         query.append(_T(" ON CONFLICT DO NOTHING"));
+         DBQuery(hdb, query);
+      }
+      DBCommit(hdb);
       DBConnectionPoolReleaseConnection(hdb);
       if (event == INVALID_POINTER_VALUE)
          break;
@@ -274,7 +382,7 @@ void StartWindowsEventProcessing()
    s_parserLock = MutexCreate();
    InitializeWindowsEventParser();
 
-   s_writerThread = ThreadCreateEx(WindowsEventWriterThread);
+   s_writerThread = ThreadCreateEx((g_dbSyntax == DB_SYNTAX_PGSQL) || (g_dbSyntax == DB_SYNTAX_TSDB) ? WindowsEventWriterThread_PGSQL :  WindowsEventWriterThread);
    s_processingThread = ThreadCreateEx(WindowsEventProcessingThread);
 }
 
