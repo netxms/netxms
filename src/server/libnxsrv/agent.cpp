@@ -26,7 +26,7 @@
 #include <nxstat.h>
 
 #ifndef _WIN32
-#define _tell(f) lseek(f,0,SEEK_CUR)
+#define _tell(f) lseek((f),0,SEEK_CUR)
 #endif
 
 #define DEBUG_TAG    _T("agent.conn")
@@ -81,11 +81,13 @@ private:
 
 public:
    NXCPEncryptionContext *m_encryptionContext;
+   CommChannelMessageReceiver *m_messageReceiver;
 
    AgentConnectionReceiver(const shared_ptr<AgentConnection>& connection) : m_connection(connection)
    {
       m_debugId = connection->m_debugId;
       m_channel = connection->m_channel;
+      m_messageReceiver = new CommChannelMessageReceiver(m_channel, 4096, MAX_MSG_SIZE);
       m_channel->incRefCount();
       m_encryptionContext = nullptr;
       m_recvTimeout = connection->m_recvTimeout; // 7 minutes
@@ -96,6 +98,7 @@ public:
    {
       debugPrintf(7, _T("AgentConnectionReceiver destructor called (this=%p)"), this);
 
+      delete m_messageReceiver;
       if (m_encryptionContext != nullptr)
          m_encryptionContext->decRefCount();
       if (m_channel != nullptr)
@@ -128,59 +131,14 @@ void AgentConnectionReceiver::run()
 {
    ThreadSetName("AgentReceiver");
 
-   UINT32 msgBufferSize = 1024;
-
-   // Initialize raw message receiving function
-   NXCP_BUFFER *msgBuffer = (NXCP_BUFFER *)MemAlloc(sizeof(NXCP_BUFFER));
-   NXCPInitBuffer(msgBuffer);
-
-   // Allocate space for raw message
-   NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)MemAlloc(msgBufferSize);
-#ifdef _WITH_ENCRYPTION
-   BYTE *decryptionBuffer = (BYTE *)MemAlloc(msgBufferSize);
-#else
-   BYTE *decryptionBuffer = nullptr;
-#endif
-
    while(true)
    {
-      // Shrink buffer after receiving large message
-      if (msgBufferSize > 131072)
-      {
-         msgBufferSize = 131072;
-         rawMsg = MemRealloc(rawMsg, msgBufferSize);
-         if (decryptionBuffer != nullptr)
-            decryptionBuffer = MemRealloc(decryptionBuffer, msgBufferSize);
-      }
-
       // Receive raw message
-      ssize_t rc = RecvNXCPMessageEx(m_channel, &rawMsg, msgBuffer, &msgBufferSize, &m_encryptionContext,
-            (decryptionBuffer != nullptr) ? &decryptionBuffer : nullptr, m_recvTimeout, MAX_MSG_SIZE);
-      if (rc <= 0)
-      {
-         if ((rc != 0) && (WSAGetLastError() != WSAESHUTDOWN))
-            debugPrintf(6, _T("RecvNXCPMessage() failed: error=%d, socket_error=%d"), rc, WSAGetLastError());
-         else
-            debugPrintf(6, _T("Communication channel shutdown"));
-         break;
-      }
+      MessageReceiverResult result;
+      NXCPMessage *msg = m_messageReceiver->readMessage(m_recvTimeout, &result);
 
-      if (IsShutdownInProgress())
-      {
-         debugPrintf(6, _T("Process shutdown"));
-         break;
-      }
-
-      // Check if we get too large message
-      if (rc == 1)
-      {
-         TCHAR buffer[64];
-         debugPrintf(6, _T("Received too large message %s (%d bytes)"), NXCPMessageCodeName(ntohs(rawMsg->code), buffer), ntohl(rawMsg->size));
-         continue;
-      }
-
-      // Check if we are unable to decrypt message
-      if (rc == 2)
+      // Check for decryption error
+      if (result == MSGRECV_DECRYPTION_FAILURE)
       {
          debugPrintf(6, _T("Unable to decrypt received message"));
          continue;
@@ -191,7 +149,7 @@ void AgentConnectionReceiver::run()
          break;   // Parent connection was destroyed
 
       // Check for timeout
-      if (rc == 3)
+      if (result == MSGRECV_TIMEOUT)
       {
          if (connection->m_fileUploadInProgress)
             continue;   // Receive timeout may occur when uploading large files via slow links
@@ -199,35 +157,37 @@ void AgentConnectionReceiver::run()
          break;
       }
 
-      // Check that actual received packet size is equal to encoded in packet
-      if ((int)ntohl(rawMsg->size) != rc)
+      // Receive error
+      if (msg == nullptr)
       {
-         debugPrintf(6, _T("RecvMsg: Bad packet length [size=%d ActualSize=%d]"), ntohl(rawMsg->size), rc);
-         continue;   // Bad packet, wait for next
+         if (result == MSGRECV_CLOSED)
+            debugPrintf(6, _T("Communication channel shutdown"));
+         else
+            debugPrintf(6, _T("Message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
+         break;
       }
 
-      if (ntohs(rawMsg->flags) & MF_BINARY)
+      if (IsShutdownInProgress())
       {
-         // Convert message header to host format
-         rawMsg->id = ntohl(rawMsg->id);
-         rawMsg->code = ntohs(rawMsg->code);
-         rawMsg->numFields = ntohl(rawMsg->numFields);
+         debugPrintf(6, _T("Process shutdown"));
+         break;
+      }
+
+      if (msg->isBinary())
+      {
          if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_debugId) >= 6)
          {
             TCHAR buffer[64];
             debugPrintf(6, _T("Received raw message %s (%d) from agent at %s"),
-               NXCPMessageCodeName(rawMsg->code, buffer), rawMsg->id, (const TCHAR *)connection->m_addr.toString());
+               NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(), connection->m_addr.toString().cstr());
          }
 
-         if ((rawMsg->code == CMD_FILE_DATA) && (rawMsg->id == connection->m_dwDownloadRequestId))
+         if ((msg->getCode() == CMD_FILE_DATA) && (msg->getId() == connection->m_dwDownloadRequestId))
          {
             if (connection->m_sendToClientMessageCallback != nullptr)
             {
-               rawMsg->code = ntohs(rawMsg->code);
-               rawMsg->numFields = ntohl(rawMsg->numFields);
-               connection->m_sendToClientMessageCallback(rawMsg, connection->m_downloadProgressCallbackArg);
-
-               if (ntohs(rawMsg->flags) & MF_END_OF_FILE)
+               connection->m_sendToClientMessageCallback(msg, connection->m_downloadProgressCallbackArg);
+               if (msg->isEndOfFile())
                {
                   connection->m_sendToClientMessageCallback = nullptr;
                   connection->onFileDownload(true);
@@ -236,7 +196,7 @@ void AgentConnectionReceiver::run()
                {
                   if (connection->m_downloadProgressCallback != nullptr)
                   {
-                     connection->m_downloadProgressCallback(rawMsg->size - (NXCP_HEADER_SIZE + 8), connection->m_downloadProgressCallbackArg);
+                     connection->m_downloadProgressCallback(msg->getBinaryDataSize(), connection->m_downloadProgressCallbackArg);
                   }
                }
             }
@@ -244,21 +204,17 @@ void AgentConnectionReceiver::run()
             {
                if (connection->m_hCurrFile != -1)
                {
-                  if (_write(connection->m_hCurrFile, rawMsg->fields, rawMsg->numFields) == (int)rawMsg->numFields)
+                  if (_write(connection->m_hCurrFile, msg->getBinaryData(), msg->getBinaryDataSize()) == (int)msg->getBinaryDataSize())
                   {
-                     if (ntohs(rawMsg->flags) & MF_END_OF_FILE)
+                     if (msg->isEndOfFile())
                      {
                         _close(connection->m_hCurrFile);
                         connection->m_hCurrFile = -1;
-
                         connection->onFileDownload(true);
                      }
-                     else
+                     else if (connection->m_downloadProgressCallback != nullptr)
                      {
-                        if (connection->m_downloadProgressCallback != nullptr)
-                        {
-                           connection->m_downloadProgressCallback(_tell(connection->m_hCurrFile), connection->m_downloadProgressCallbackArg);
-                        }
+                        connection->m_downloadProgressCallback(_tell(connection->m_hCurrFile), connection->m_downloadProgressCallbackArg);
                      }
                   }
                }
@@ -267,20 +223,16 @@ void AgentConnectionReceiver::run()
                   // I/O error
                   _close(connection->m_hCurrFile);
                   connection->m_hCurrFile = -1;
-
                   connection->onFileDownload(false);
                }
             }
          }
-         else if ((rawMsg->code == CMD_ABORT_FILE_TRANSFER) && (rawMsg->id == connection->m_dwDownloadRequestId))
+         else if ((msg->getCode() == CMD_ABORT_FILE_TRANSFER) && (msg->getId() == connection->m_dwDownloadRequestId))
          {
             if (connection->m_sendToClientMessageCallback != nullptr)
             {
-               rawMsg->code = ntohs(rawMsg->code);
-               rawMsg->numFields = ntohl(rawMsg->numFields);
-               connection->m_sendToClientMessageCallback(rawMsg, connection->m_downloadProgressCallbackArg);
+               connection->m_sendToClientMessageCallback(msg, connection->m_downloadProgressCallbackArg);
                connection->m_sendToClientMessageCallback = nullptr;
-
                connection->onFileDownload(false);
             }
             else
@@ -288,138 +240,124 @@ void AgentConnectionReceiver::run()
                //error on agent side
                _close(connection->m_hCurrFile);
                connection->m_hCurrFile = -1;
-
                connection->onFileDownload(false);
             }
          }
-         else if (rawMsg->code == CMD_TCP_PROXY_DATA)
+         else if (msg->getCode() == CMD_TCP_PROXY_DATA)
          {
-            connection->processTcpProxyData(rawMsg->id, rawMsg->fields, rawMsg->numFields);
+            connection->processTcpProxyData(msg->getId(), msg->getBinaryData(), msg->getBinaryDataSize());
          }
+         delete msg;
       }
-      else if (ntohs(rawMsg->flags) & MF_CONTROL)
+      else if (msg->isControl())
       {
-         // Convert message header to host format
-         rawMsg->id = ntohl(rawMsg->id);
-         rawMsg->code = ntohs(rawMsg->code);
-         rawMsg->flags = ntohs(rawMsg->flags);
-         rawMsg->numFields = ntohl(rawMsg->numFields);
          if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_debugId) >= 6)
          {
             TCHAR buffer[64];
             debugPrintf(6, _T("Received control message %s from agent at %s"),
-               NXCPMessageCodeName(rawMsg->code, buffer), (const TCHAR *)connection->m_addr.toString());
+               NXCPMessageCodeName(msg->getCode(), buffer), connection->m_addr.toString().cstr());
          }
-         connection->m_pMsgWaitQueue->put(MemCopyBlock(rawMsg, ntohl(rawMsg->size)));
+         connection->m_pMsgWaitQueue->put(msg);
       }
       else
       {
-         // Create message object from raw message
-         NXCPMessage *msg = NXCPMessage::deserialize(rawMsg, connection->m_nProtocolVersion);
-         if (msg != nullptr)
+         if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_debugId) >= 6)
          {
-            if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_debugId) >= 6)
-            {
-               TCHAR buffer[64];
-               debugPrintf(6, _T("Received message %s (%d) from agent at %s"),
-                  NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(), (const TCHAR *)connection->m_addr.toString());
-            }
-            switch(msg->getCode())
-            {
-               case CMD_REQUEST_COMPLETED:
-               case CMD_SESSION_KEY:
-                  connection->m_pMsgWaitQueue->put(msg);
-                  break;
-               case CMD_TRAP:
-                  if (g_agentConnectionThreadPool != nullptr)
-                  {
-                     TCHAR key[64];
-                     _sntprintf(key, 64, _T("EventProc_%p"), this);
-                     ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onTrapCallback, msg);
-                  }
-                  else
-                  {
-                     delete msg;
-                  }
-                  break;
-               case CMD_SYSLOG_RECORDS:
-                  if (g_agentConnectionThreadPool != nullptr)
-                  {
-                     TCHAR key[64];
-                     _sntprintf(key, 64, _T("Syslog_%p"), this);
-                     ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onSyslogMessageCallback, msg);
-                  }
-                  else
-                  {
-                     delete msg;
-                  }
-                  break;
-               case CMD_WINDOWS_EVENT:
-                  if (g_agentConnectionThreadPool != nullptr)
-                  {
-                     TCHAR key[64];
-                     _sntprintf(key, 64, _T("WinEvent_%p"), this);
-                     ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onWindowsEventCallback, msg);
-                  }
-                  else
-                  {
-                     delete msg;
-                  }
-                  break;
-               case CMD_PUSH_DCI_DATA:
-                  if (g_agentConnectionThreadPool != nullptr)
-                  {
-                     ThreadPoolExecute(g_agentConnectionThreadPool, connection, &AgentConnection::onDataPushCallback, msg);
-                  }
-                  else
-                  {
-                     delete msg;
-                  }
-                  break;
-               case CMD_DCI_DATA:
-                  if (g_agentConnectionThreadPool != nullptr)
-                  {
-                     ThreadPoolExecute(g_agentConnectionThreadPool, connection, &AgentConnection::processCollectedDataCallback, msg);
-                  }
-                  else
-                  {
-                     NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), connection->m_nProtocolVersion);
-                     response.setField(VID_RCC, ERR_INTERNAL_ERROR);
-                     connection->sendMessage(&response);
-                     delete msg;
-                  }
-                  break;
-               case CMD_FILE_MONITORING:
-                  connection->onFileMonitoringData(msg);
-                  delete msg;
-                  break;
-               case CMD_SNMP_TRAP:
-                  if (g_agentConnectionThreadPool != nullptr)
-                  {
-                     TCHAR key[64];
-                     _sntprintf(key, 64, _T("SNMPTrap_%p"), this);
-                     ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onSnmpTrapCallback, msg);
-                  }
-                  else
-                  {
-                     delete msg;
-                  }
-                  break;
-               case CMD_CLOSE_TCP_PROXY:
-                  connection->processTcpProxyData(msg->getFieldAsUInt32(VID_CHANNEL_ID), nullptr, 0);
-                  delete msg;
-                  break;
-               default:
-                  if (connection->processCustomMessage(msg))
-                     delete msg;
-                  else
-                     connection->m_pMsgWaitQueue->put(msg);
-                  break;
-            }
+            TCHAR buffer[64];
+            debugPrintf(6, _T("Received message %s (%d) from agent at %s"),
+               NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(), (const TCHAR *)connection->m_addr.toString());
          }
-         else
+         switch(msg->getCode())
          {
-            debugPrintf(6, _T("RecvMsg: message deserialization error"));
+            case CMD_REQUEST_COMPLETED:
+            case CMD_SESSION_KEY:
+               connection->m_pMsgWaitQueue->put(msg);
+               break;
+            case CMD_TRAP:
+               if (g_agentConnectionThreadPool != nullptr)
+               {
+                  TCHAR key[64];
+                  _sntprintf(key, 64, _T("EventProc_%p"), this);
+                  ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onTrapCallback, msg);
+               }
+               else
+               {
+                  delete msg;
+               }
+               break;
+            case CMD_SYSLOG_RECORDS:
+               if (g_agentConnectionThreadPool != nullptr)
+               {
+                  TCHAR key[64];
+                  _sntprintf(key, 64, _T("Syslog_%p"), this);
+                  ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onSyslogMessageCallback, msg);
+               }
+               else
+               {
+                  delete msg;
+               }
+               break;
+            case CMD_WINDOWS_EVENT:
+               if (g_agentConnectionThreadPool != nullptr)
+               {
+                  TCHAR key[64];
+                  _sntprintf(key, 64, _T("WinEvent_%p"), this);
+                  ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onWindowsEventCallback, msg);
+               }
+               else
+               {
+                  delete msg;
+               }
+               break;
+            case CMD_PUSH_DCI_DATA:
+               if (g_agentConnectionThreadPool != nullptr)
+               {
+                  ThreadPoolExecute(g_agentConnectionThreadPool, connection, &AgentConnection::onDataPushCallback, msg);
+               }
+               else
+               {
+                  delete msg;
+               }
+               break;
+            case CMD_DCI_DATA:
+               if (g_agentConnectionThreadPool != nullptr)
+               {
+                  ThreadPoolExecute(g_agentConnectionThreadPool, connection, &AgentConnection::processCollectedDataCallback, msg);
+               }
+               else
+               {
+                  NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), connection->m_nProtocolVersion);
+                  response.setField(VID_RCC, ERR_INTERNAL_ERROR);
+                  connection->sendMessage(&response);
+                  delete msg;
+               }
+               break;
+            case CMD_FILE_MONITORING:
+               connection->onFileMonitoringData(msg);
+               delete msg;
+               break;
+            case CMD_SNMP_TRAP:
+               if (g_agentConnectionThreadPool != nullptr)
+               {
+                  TCHAR key[64];
+                  _sntprintf(key, 64, _T("SNMPTrap_%p"), this);
+                  ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onSnmpTrapCallback, msg);
+               }
+               else
+               {
+                  delete msg;
+               }
+               break;
+            case CMD_CLOSE_TCP_PROXY:
+               connection->processTcpProxyData(msg->getFieldAsUInt32(VID_CHANNEL_ID), nullptr, 0);
+               delete msg;
+               break;
+            default:
+               if (connection->processCustomMessage(msg))
+                  delete msg;
+               else
+                  connection->m_pMsgWaitQueue->put(msg);
+               break;
          }
       }
    }
@@ -448,12 +386,6 @@ void AgentConnectionReceiver::run()
       connection->m_isConnected = false;
       connection->unlock();
    }
-
-   MemFree(rawMsg);
-   MemFree(msgBuffer);
-#ifdef _WITH_ENCRYPTION
-   MemFree(decryptionBuffer);
-#endif
 
    debugPrintf(6, _T("Receiver thread stopped"));
 }
@@ -1172,19 +1104,17 @@ ArpCache *AgentConnection::getArpCache()
 /**
  * Send dummy command to agent (can be used for keepalive)
  */
-UINT32 AgentConnection::nop()
+uint32_t AgentConnection::nop()
 {
    if (!m_isConnected)
       return ERR_CONNECTION_BROKEN;
 
    NXCPMessage msg(m_nProtocolVersion);
-   UINT32 dwRqId;
-
-   dwRqId = generateRequestId();
+   uint32_t requestId = generateRequestId();
    msg.setCode(CMD_KEEPALIVE);
-   msg.setId(dwRqId);
+   msg.setId(requestId);
    if (sendMessage(&msg))
-      return waitForRCC(dwRqId, m_commandTimeout);
+      return waitForRCC(requestId, m_commandTimeout);
    else
       return ERR_CONNECTION_BROKEN;
 }
@@ -1192,29 +1122,29 @@ UINT32 AgentConnection::nop()
 /**
  * inform agent about server capabilities
  */
-UINT32 AgentConnection::setServerCapabilities()
+uint32_t AgentConnection::setServerCapabilities()
 {
    NXCPMessage msg(m_nProtocolVersion);
-   UINT32 dwRqId = generateRequestId();
+   uint32_t requestId = generateRequestId();
    msg.setCode(CMD_SET_SERVER_CAPABILITIES);
    msg.setField(VID_ENABLED, (INT16)1);   // Enables IPv6 on pre-2.0 agents
    msg.setField(VID_IPV6_SUPPORT, (INT16)1);
    msg.setField(VID_BULK_RECONCILIATION, (INT16)1);
    msg.setField(VID_ENABLE_COMPRESSION, (INT16)(m_allowCompression ? 1 : 0));
-   msg.setId(dwRqId);
+   msg.setId(requestId);
    if (!sendMessage(&msg))
       return ERR_CONNECTION_BROKEN;
 
-   NXCPMessage *response = m_pMsgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
+   NXCPMessage *response = m_pMsgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
    if (response == nullptr)
       return ERR_REQUEST_TIMEOUT;
 
-   UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
    if (rcc == ERR_SUCCESS)
    {
       if (response->isFieldExist(VID_FLAGS))
       {
-         UINT16 flags = response->getFieldAsUInt16(VID_FLAGS);
+         uint16_t flags = response->getFieldAsUInt16(VID_FLAGS);
          if (flags & 0x01)
             m_controlServer = true;
          if (flags & 0x02)
@@ -1234,15 +1164,15 @@ UINT32 AgentConnection::setServerCapabilities()
 /**
  * Set server ID
  */
-UINT32 AgentConnection::setServerId(UINT64 serverId)
+uint32_t AgentConnection::setServerId(uint64_t serverId)
 {
    NXCPMessage msg(m_nProtocolVersion);
-   UINT32 dwRqId = generateRequestId();
+   uint32_t requestId = generateRequestId();
    msg.setCode(CMD_SET_SERVER_ID);
    msg.setField(VID_SERVER_ID, serverId);
-   msg.setId(dwRqId);
+   msg.setId(requestId);
    if (sendMessage(&msg))
-      return waitForRCC(dwRqId, m_commandTimeout);
+      return waitForRCC(requestId, m_commandTimeout);
    else
       return ERR_CONNECTION_BROKEN;
 }
@@ -1555,7 +1485,7 @@ uint32_t AgentConnection::getTable(const TCHAR *pszParam, Table **table)
 /**
  * Authenticate to agent
  */
-UINT32 AgentConnection::authenticate(BOOL bProxyData)
+uint32_t AgentConnection::authenticate(BOOL bProxyData)
 {
    const char *secret = bProxyData ? m_proxySecret : m_secret;
    if (*secret == 0)
@@ -1880,53 +1810,53 @@ UINT32 AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinit
 /**
  * Setup encryption
  */
-UINT32 AgentConnection::setupEncryption(RSA *pServerKey)
+uint32_t AgentConnection::setupEncryption(RSA *pServerKey)
 {
 #ifdef _WITH_ENCRYPTION
-   NXCPMessage msg(m_nProtocolVersion), *pResp;
-   UINT32 dwRqId, dwError, dwResult;
-
-   dwRqId = generateRequestId();
-
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(m_nProtocolVersion);
+   msg.setId(requestId);
    PrepareKeyRequestMsg(&msg, pServerKey, false);
-   msg.setId(dwRqId);
+
+   uint32_t result;
    if (sendMessage(&msg))
    {
-      pResp = waitForMessage(CMD_SESSION_KEY, dwRqId, m_commandTimeout);
-      if (pResp != nullptr)
+      NXCPMessage *response = waitForMessage(CMD_SESSION_KEY, requestId, m_commandTimeout);
+      if (response != nullptr)
       {
-         dwResult = SetupEncryptionContext(pResp, &m_receiver->m_encryptionContext, nullptr, pServerKey, m_nProtocolVersion);
-         switch(dwResult)
+         uint32_t rcc = SetupEncryptionContext(response, &m_receiver->m_encryptionContext, nullptr, pServerKey, m_nProtocolVersion);
+         switch(rcc)
          {
             case RCC_SUCCESS:
-               dwError = ERR_SUCCESS;
+               m_receiver->m_messageReceiver->setEncryptionContext(m_receiver->m_encryptionContext);
+               result = ERR_SUCCESS;
                break;
             case RCC_NO_CIPHERS:
-               dwError = ERR_NO_CIPHERS;
+               result = ERR_NO_CIPHERS;
                break;
             case RCC_INVALID_PUBLIC_KEY:
-               dwError = ERR_INVALID_PUBLIC_KEY;
+               result = ERR_INVALID_PUBLIC_KEY;
                break;
             case RCC_INVALID_SESSION_KEY:
-               dwError = ERR_INVALID_SESSION_KEY;
+               result = ERR_INVALID_SESSION_KEY;
                break;
             default:
-               dwError = ERR_INTERNAL_ERROR;
+               result = ERR_INTERNAL_ERROR;
                break;
          }
-			delete pResp;
+			delete response;
       }
       else
       {
-         dwError = ERR_REQUEST_TIMEOUT;
+         result = ERR_REQUEST_TIMEOUT;
       }
    }
    else
    {
-      dwError = ERR_CONNECTION_BROKEN;
+      result = ERR_CONNECTION_BROKEN;
    }
 
-   return dwError;
+   return result;
 #else
    return ERR_NOT_IMPLEMENTED;
 #endif
@@ -2127,19 +2057,17 @@ void AgentConnection::setProxy(const InetAddress& addr, uint16_t port, const TCH
 /**
  * Setup proxy connection
  */
-UINT32 AgentConnection::setupProxyConnection()
+uint32_t AgentConnection::setupProxyConnection()
 {
    NXCPMessage msg(m_nProtocolVersion);
-   UINT32 dwRqId;
-
-   dwRqId = generateRequestId();
+   uint32_t requestId = generateRequestId();
    msg.setCode(CMD_SETUP_PROXY_CONNECTION);
-   msg.setId(dwRqId);
+   msg.setId(requestId);
    msg.setField(VID_IP_ADDRESS, m_addr.getAddressV4());  // For compatibility with agents < 2.2.7
    msg.setField(VID_DESTINATION_ADDRESS, m_addr);
    msg.setField(VID_AGENT_PORT, m_port);
    if (sendMessage(&msg))
-      return waitForRCC(dwRqId, 60000);   // Wait 60 seconds for remote connect
+      return waitForRCC(requestId, 60000);   // Wait 60 seconds for remote connect
    else
       return ERR_CONNECTION_BROKEN;
 }
@@ -2261,63 +2189,59 @@ TCHAR *AgentConnection::getHostByAddr(const InetAddress& ipAddr, TCHAR *buffer, 
 /**
  * Send custom request to agent
  */
-NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *recvFile, bool append,
-         void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(NXCP_MESSAGE *, void *), void *cbArg)
+NXCPMessage *AgentConnection::customRequest(NXCPMessage *request, const TCHAR *recvFile, bool append,
+         void (*downloadProgressCallback)(size_t, void*), void (*fileResendCallback)(NXCPMessage*, void*), void *cbArg)
 {
-   UINT32 dwRqId, rcc;
 	NXCPMessage *msg = nullptr;
 
-   dwRqId = generateRequestId();
-   pRequest->setId(dwRqId);
+   uint32_t requestId = generateRequestId();
+   request->setId(requestId);
 	if (recvFile != nullptr)
 	{
-		rcc = prepareFileDownload(recvFile, dwRqId, append, downloadProgressCallback, fileResendCallback, cbArg);
+	   uint32_t rcc = prepareFileDownload(recvFile, requestId, append, downloadProgressCallback, fileResendCallback, cbArg);
 		if (rcc != ERR_SUCCESS)
 		{
 			// Create fake response message
 			msg = new NXCPMessage;
 			msg->setCode(CMD_REQUEST_COMPLETED);
-			msg->setId(dwRqId);
+			msg->setId(requestId);
 			msg->setField(VID_RCC, rcc);
 		}
 	}
 
-	if (msg == nullptr)
-	{
-		if (sendMessage(pRequest))
-		{
-			msg = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
-			if ((msg != nullptr) && (recvFile != nullptr))
-			{
-				if (msg->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
-				{
-					if (ConditionWait(m_condFileDownload, 1800000))	 // 30 min timeout
-					{
-						if (!m_fileDownloadSucceeded)
-						{
-							msg->setField(VID_RCC, ERR_IO_FAILURE);
-							if (m_deleteFileOnDownloadFailure)
-								_tremove(recvFile);
-						}
-					}
-					else
-					{
-						msg->setField(VID_RCC, ERR_REQUEST_TIMEOUT);
-					}
-				}
-				else
-				{
-               if (fileResendCallback != nullptr)
+	if ((msg == nullptr) && sendMessage(request))
+   {
+      msg = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+      if ((msg != nullptr) && (recvFile != nullptr))
+      {
+         if (msg->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
+         {
+            if (ConditionWait(m_condFileDownload, 1800000))	 // 30 min timeout
+            {
+               if (!m_fileDownloadSucceeded)
                {
-                  _close(m_hCurrFile);
-                  m_hCurrFile = -1;
-                  _tremove(recvFile);
+                  msg->setField(VID_RCC, ERR_IO_FAILURE);
+                  if (m_deleteFileOnDownloadFailure)
+                     _tremove(recvFile);
                }
-				}
-			}
+            }
+            else
+            {
+               msg->setField(VID_RCC, ERR_REQUEST_TIMEOUT);
+            }
+         }
+         else
+         {
+            if (fileResendCallback != nullptr)
+            {
+               _close(m_hCurrFile);
+               m_hCurrFile = -1;
+               _tremove(recvFile);
+            }
+         }
+      }
 
-		}
-	}
+   }
 
 	return msg;
 }
@@ -2354,8 +2278,8 @@ uint32_t AgentConnection::cancelFileDownload()
 /**
  * Prepare for file download
  */
-UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *),
-                                             void (* fileResendCallback)(NXCP_MESSAGE *, void *), void *cbArg)
+uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rqId, bool append,
+         void (*downloadProgressCallback)(size_t, void*), void (*fileResendCallback)(NXCPMessage*, void*), void *cbArg)
 {
    if (fileResendCallback == nullptr)
    {
