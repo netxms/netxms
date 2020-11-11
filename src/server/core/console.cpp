@@ -29,6 +29,8 @@
 extern ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
 extern ObjectQueue<SyslogMessage> g_syslogProcessingQueue;
 extern ObjectQueue<SyslogMessage> g_syslogWriteQueue;
+extern ObjectQueue<WindowsEvent> g_windowsEventProcessingQueue;
+extern ObjectQueue<WindowsEvent> g_windowsEventWriterQueue;
 extern ThreadPool *g_pollerThreadPool;
 extern ThreadPool *g_schedulerThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
@@ -1151,7 +1153,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          ShowThreadPoolPendingQueue(pCtx, g_dataCollectorThreadPool, _T("Data collector"));
          ShowQueueStats(pCtx, &g_dciCacheLoaderQueue, _T("DCI cache loader"));
-         ShowQueueStats(pCtx, &g_templateUpdateQueue, _T("Template updates"));
+         ShowQueueStats(pCtx, &g_templateUpdateQueue, _T("Template updater"));
          ShowQueueStats(pCtx, &g_dbWriterQueue, _T("Database writer"));
          ShowQueueStats(pCtx, GetIDataWriterQueueSize(), _T("Database writer (IData)"));
          ShowQueueStats(pCtx, GetRawDataWriterQueueSize(), _T("Database writer (raw DCI values)"));
@@ -1159,9 +1161,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ShowQueueStats(pCtx, GetEventLogWriterQueueSize(), _T("Event log writer"));
          ShowThreadPoolPendingQueue(pCtx, g_pollerThreadPool, _T("Poller"));
          ShowQueueStats(pCtx, GetDiscoveryPollerQueueSize(), _T("Node discovery poller"));
-         ShowQueueStats(pCtx, &g_syslogProcessingQueue, _T("Syslog processing"));
+         ShowQueueStats(pCtx, &g_syslogProcessingQueue, _T("Syslog processor"));
          ShowQueueStats(pCtx, &g_syslogWriteQueue, _T("Syslog writer"));
          ShowThreadPoolPendingQueue(pCtx, g_schedulerThreadPool, _T("Scheduler"));
+         ShowQueueStats(pCtx, &g_windowsEventProcessingQueue, _T("Windows event processor"));
+         ShowQueueStats(pCtx, &g_windowsEventWriterQueue, _T("Windows event writer"));
          ConsolePrintf(pCtx, _T("\n"));
       }
       else if (IsCommand(_T("ROUTING-TABLE"), szBuffer, 1))

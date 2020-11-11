@@ -40,6 +40,8 @@
  */
 extern ObjectQueue<SyslogMessage> g_syslogProcessingQueue;
 extern ObjectQueue<SyslogMessage> g_syslogWriteQueue;
+extern ObjectQueue<WindowsEvent> g_windowsEventProcessingQueue;
+extern ObjectQueue<WindowsEvent> g_windowsEventWriterQueue;
 extern ThreadPool *g_dataCollectorThreadPool;
 extern ThreadPool *g_pollerThreadPool;
 extern ThreadPool *g_schedulerThreadPool;
@@ -132,6 +134,8 @@ void ServerStatCollector()
    AddQueueToCollector(_T("SyslogProcessor"), &g_syslogProcessingQueue);
    AddQueueToCollector(_T("SyslogWriter"), &g_syslogWriteQueue);
    AddQueueToCollector(_T("TemplateUpdater"), &g_templateUpdateQueue);
+   AddQueueToCollector(_T("WindowsEventProcessor"), &g_windowsEventProcessingQueue);
+   AddQueueToCollector(_T("WindowsEventWriter"), &g_windowsEventWriterQueue);
    s_queuesLock.unlock();
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Server statistic collector thread started"));
