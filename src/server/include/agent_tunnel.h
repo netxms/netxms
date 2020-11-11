@@ -38,7 +38,7 @@ class AgentTunnelCommChannel : public AbstractCommChannel
 {
 private:
    AgentTunnel *m_tunnel;
-   UINT32 m_id;
+   uint32_t m_id;
    bool m_active;
    RingBuffer m_buffer;
 #ifdef _WIN32
@@ -48,6 +48,12 @@ private:
    pthread_mutex_t m_bufferLock;
    pthread_cond_t m_dataCondition;
 #endif
+   struct
+   {
+      void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*);
+      void *context;
+   } m_pollers[16];
+   int m_pollerCount;
 
 protected:
    virtual ~AgentTunnelCommChannel();
@@ -58,6 +64,7 @@ public:
    virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
    virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;
    virtual int poll(UINT32 timeout, bool write = false) override;
+   virtual void backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context) override;
    virtual int shutdown() override;
    virtual void close() override;
 

@@ -48,7 +48,7 @@ public class AgentTunnel
    private boolean snmpTrapProxy;
    private boolean userAgentInstalled;
    private boolean syslogProxy;
-   
+
    /**
     * Create from NXCP message
     * 
@@ -77,7 +77,7 @@ public class AgentTunnel
       hardwareId = msg.getFieldAsBinary(baseId + 17);
       syslogProxy = msg.getFieldAsBoolean(baseId + 18);
    }
-   
+
    /**
     * Check if tunnel is bound
     * 

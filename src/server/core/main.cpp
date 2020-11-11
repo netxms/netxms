@@ -1368,6 +1368,8 @@ void NXCORE_EXPORTABLE Shutdown()
    ShutdownNotificationChannels();
    nxlog_debug(1, _T("Event processing stopped"));
 
+   DisableAgentConnections();
+
    ThreadPoolDestroy(g_clientThreadPool);
    ThreadPoolDestroy(g_agentConnectionThreadPool);
    ThreadPoolDestroy(g_mainThreadPool);

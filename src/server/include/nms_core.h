@@ -318,20 +318,6 @@ public:
 };
 
 /**
- * Handle for background socket poller to track poller usage
- */
-struct BackgroundSocketPollerHandle
-{
-   BackgroundSocketPoller poller;
-   VolatileCounter usageCount;
-
-   BackgroundSocketPollerHandle()
-   {
-      usageCount = 0;
-   }
-};
-
-/**
  * Data update structure for client sessions
  */
 typedef struct

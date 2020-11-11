@@ -673,7 +673,7 @@ decrypt_message:
 ssize_t LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuffer, NXCP_BUFFER *nxcpBuffer,
       UINT32 *bufferSize, NXCPEncryptionContext **ppCtx, BYTE **decryptionBuffer, UINT32 dwTimeout, UINT32 maxMsgSize)
 {
-   SocketCommChannel *channel = new SocketCommChannel(hSocket, Ownership::False);
+   SocketCommChannel *channel = new SocketCommChannel(hSocket, nullptr, Ownership::False);
    ssize_t result = RecvNXCPMessageEx(channel, msgBuffer, nxcpBuffer, bufferSize, ppCtx, decryptionBuffer, dwTimeout, maxMsgSize);
    channel->decRefCount();
    return result;
@@ -772,7 +772,7 @@ NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, 
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, const TCHAR *fileName, NXCPEncryptionContext *ectx, off_t offset,
          void (* progressCallback)(int64_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
 {
-   SocketCommChannel *ch = new SocketCommChannel(hSocket, Ownership::False);
+   SocketCommChannel *ch = new SocketCommChannel(hSocket, nullptr, Ownership::False);
    bool result = SendFileOverNXCP(ch, requestId, fileName, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag);
    ch->decRefCount();
    return result;
@@ -807,7 +807,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, std::istream *stream, NXCPEncryptionContext *ectx, off_t offset,
          void (* progressCallback)(int64_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
 {
-   SocketCommChannel *ch = new SocketCommChannel(hSocket, Ownership::False);
+   SocketCommChannel *ch = new SocketCommChannel(hSocket, nullptr, Ownership::False);
    bool result = SendFileOverNXCP(ch, requestId, stream, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag);
    ch->decRefCount();
    return result;
@@ -1006,7 +1006,7 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channe
  */
 bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET s, int *pnVersion, MUTEX mutex)
 {
-   SocketCommChannel *channel = new SocketCommChannel(s, Ownership::False);
+   SocketCommChannel *channel = new SocketCommChannel(s, nullptr, Ownership::False);
    bool success = NXCPGetPeerProtocolVersion(channel, pnVersion, mutex);
    channel->decRefCount();
    return success;

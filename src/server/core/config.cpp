@@ -77,7 +77,6 @@ static uint64_t s_defaultThreadStackSize = 1024 * 1024;  // 1MB by default
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("AgentConnectorThreadStackSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &g_agentConnectorThreadStackSize, nullptr },
    { _T("AuditLogKey"), CT_MB_STRING, 0, 0, 128, 0, g_auditLogKey, nullptr },
    { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_64, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_flags, nullptr },
    { _T("CodePage"), CT_MB_STRING, 0, 0, 256, 0, g_szCodePage, nullptr },
