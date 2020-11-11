@@ -363,12 +363,12 @@ DWORD WINAPI EventLogReader::subscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION actio
    time_t timestamp;
    if (values[4].Type == EvtVarTypeFileTime)
    {
-      timestamp = FileTimeToUnixTime(values[5].FileTimeVal);
+      timestamp = FileTimeToUnixTime(values[4].FileTimeVal);
    }
    else if (values[4].Type == EvtVarTypeSysTime)
    {
       FILETIME ft;
-      SystemTimeToFileTime(values[5].SysTimeVal, &ft);
+      SystemTimeToFileTime(values[4].SysTimeVal, &ft);
       timestamp = FileTimeToUnixTime(ft);
    }
    else
