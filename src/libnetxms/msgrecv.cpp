@@ -223,9 +223,9 @@ ssize_t SocketMessageReceiver::readBytes(BYTE *buffer, size_t size, uint32_t tim
    if (timeout == 0)
    {
 #ifdef _WIN32
-      int rc = _recv(m_socket, buffer, size, 0);
+      int rc = recv(m_socket, reinterpret_cast<char*>(buffer), static_cast<int>(size), 0);
 #else
-      int rc = recv(m_socket, buffer, size, 0);
+      int rc = recv(m_socket, reinterpret_cast<char*>(buffer), size, 0);
 #endif
       if (rc >= 0)
          return rc;
