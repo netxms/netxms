@@ -350,7 +350,7 @@ static void HouseKeeper()
 		}
 
       // Remove outdated windows event log records
-      retentionTime = ConfigReadULong(_T("WinEventLogRetentionTime"), 90);
+      retentionTime = ConfigReadULong(_T("WindowsEvents.LogRetentionTime"), 90);
       if (retentionTime > 0)
       {
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing windows event log (retention time %d days)"), retentionTime);

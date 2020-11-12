@@ -622,6 +622,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       OnSyslogConfigurationChange(name, value);
    }
+   else if (!_tcsncmp(name, _T("WindowsEvents."), 14))
+   {
+      OnWindowsEventsConfigurationChange(name, value);
+   }
 }
 
 /**

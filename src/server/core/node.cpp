@@ -37,8 +37,9 @@
 /**
  * Performance counters
  */
-extern VolatileCounter64 g_syslogMessagesReceived;
 extern VolatileCounter64 g_snmpTrapsReceived;
+extern VolatileCounter64 g_syslogMessagesReceived;
+extern VolatileCounter64 g_windowsEventsReceived;
 extern uint32_t g_averageDCIQueuingTime;
 
 /**
@@ -6787,6 +6788,10 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       else if (!_tcsicmp(name, _T("Server.ReceivedSyslogMessages")))
       {
          _sntprintf(buffer, size, UINT64_FMT, g_syslogMessagesReceived);
+      }
+      else if (!_tcsicmp(name, _T("Server.ReceivedWindowsEvents")))
+      {
+         _sntprintf(buffer, size, UINT64_FMT, g_windowsEventsReceived);
       }
       else if (!_tcsicmp(_T("Server.SyncerRunTime.Average"), name))
       {
