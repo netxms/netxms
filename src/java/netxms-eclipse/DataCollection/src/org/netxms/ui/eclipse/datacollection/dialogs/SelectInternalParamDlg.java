@@ -117,8 +117,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		   list.add(new AgentParameter("PollTime.Topology.Last", "Poll time (topology): last", DataType.UINT64)); //$NON-NLS-1$
 		   list.add(new AgentParameter("PollTime.Topology.Max", "Poll time (topology): max", DataType.UINT64)); //$NON-NLS-1$
 		   list.add(new AgentParameter("PollTime.Topology.Min", "Poll time (topology): min", DataType.UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("ReceivedSNMPTraps", "Total SNMP traps received", DataType.UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("ReceivedSyslogMessages", "Total syslog messages received", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("ReceivedSNMPTraps", "Total SNMP traps received from this node", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("ReceivedSyslogMessages", "Total syslog messages received from this node", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("ZoneProxy.Assignments", "Zone proxy: number of assignments", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("ZoneProxy.State", "Zone proxy: state", DataType.INT32)); //$NON-NLS-1$
          list.add(new AgentParameter("ZoneProxy.ZoneUIN", "Zone proxy: UIN of parent zone", DataType.UINT32)); //$NON-NLS-1$
@@ -178,6 +178,7 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("Server.QueueSize.Min(*)", "Server queue {instance}: min size", DataType.INT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ReceivedSNMPTraps", "SNMP traps received since server start", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ReceivedSyslogMessages", "Syslog messages received since server start", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ReceivedWindowsEvents", "Windows events received since server start", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.SyncerRunTime.Average", "Syncer run time: average", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.SyncerRunTime.Last", "Syncer run time: last", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.SyncerRunTime.Max", "Syncer run time: max", DataType.UINT32)); //$NON-NLS-1$

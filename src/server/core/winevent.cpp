@@ -58,6 +58,11 @@ ObjectQueue<WindowsEvent> g_windowsEventProcessingQueue;
 ObjectQueue<WindowsEvent> g_windowsEventWriterQueue;
 
 /**
+ * Total number of received Windows events
+ */
+VolatileCounter64 g_windowsEventsReceived = 0;
+
+/**
  * Static data
  */
 static uint64_t s_eventId = 1;  // Next available event ID
@@ -65,6 +70,7 @@ static LogParser *s_parser = nullptr;
 static MUTEX s_parserLock = INVALID_MUTEX_HANDLE;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static THREAD s_processingThread = INVALID_THREAD_HANDLE;
+static bool s_enableStorage = true;
 
 /**
  * Put new event log message to the queue
@@ -342,16 +348,18 @@ static void WindowsEventProcessingThread()
       if (event == INVALID_POINTER_VALUE)
          break;
 
-      bool write = true;
+      InterlockedIncrement64(&g_windowsEventsReceived);
+
+      bool writeToDatabase = true;
 
       MutexLock(s_parserLock);
       if (s_parser != nullptr)
       {
-         s_parser->matchEvent(event->eventSource, event->eventCode, event->eventSeverity, event->message, nullptr, 0, event->nodeId, event->originTimestamp, event->logName, &write);
+         s_parser->matchEvent(event->eventSource, event->eventCode, event->eventSeverity, event->message, nullptr, 0, event->nodeId, event->originTimestamp, event->logName, &writeToDatabase);
       }
       MutexUnlock(s_parserLock);
 
-      if (write)
+      if (writeToDatabase && s_enableStorage)
          g_windowsEventWriterQueue.put(event);
       else
          delete event;
@@ -360,10 +368,24 @@ static void WindowsEventProcessingThread()
 }
 
 /**
+ * Handler for Windows events related configuration changes
+ */
+void OnWindowsEventsConfigurationChange(const TCHAR *name, const TCHAR *value)
+{
+   if (!_tcscmp(name, _T("WindowsEvents.EnableStorage")))
+   {
+      s_enableStorage = _tcstol(value, nullptr, 0) ? true : false;
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Local Windows events storage is %s"), s_enableStorage ? _T("enabled") : _T("disabled"));
+   }
+}
+
+/**
  * Start Windows event log writer and processing threads
  */
 void StartWindowsEventProcessing()
 {
+   s_enableStorage = ConfigReadBoolean(_T("WindowsEvents.EnableStorage"), false);
+
    // Determine first available event id
    uint64_t id = ConfigReadUInt64(_T("FirstFreeWinEventId"), s_eventId);
    if (id > s_eventId)

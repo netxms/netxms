@@ -24,11 +24,22 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 36.15 to 40.0
+ * Upgrade from 36.16 to 40.0
+ */
+static bool H_UpgradeFromV16()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 36.15 to 36.16
  */
 static bool H_UpgradeFromV15()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='WindowsEvents.LogRetentionTime',description='Retention time in days for records in Windows event log. All records older than specified will be deleted by housekeeping process.' WHERE var_name='WinEventLogRetentionTime'")));
+   CHK_EXEC(CreateConfigParam(_T("WindowsEvents.EnableStorage"), _T("1"), _T("Enable/disable local storage of received Windows events in NetXMS database."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(16));
    return true;
 }
 
@@ -426,7 +437,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 15, 40, 0,  H_UpgradeFromV15 },
+   { 16, 40, 0,  H_UpgradeFromV16 },
+   { 15, 36, 16, H_UpgradeFromV15 },
    { 14, 36, 15, H_UpgradeFromV14 },
    { 13, 36, 14, H_UpgradeFromV13 },
    { 12, 36, 13, H_UpgradeFromV12 },

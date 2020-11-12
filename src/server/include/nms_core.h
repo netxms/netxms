@@ -1290,6 +1290,7 @@ void ReinitializeSyslogParser();
 void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value);
 
 void InitializeWindowsEventParser();
+void OnWindowsEventsConfigurationChange(const TCHAR *name, const TCHAR *value);
 
 void EscapeString(StringBuffer &str);
 
