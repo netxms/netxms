@@ -303,7 +303,7 @@ bool LogHandle::queryInternal(int64_t *rowCount, uint32_t userId)
 		}
 	}
 
-	query += m_filter->buildOrderClause();
+	query.append(m_filter->buildOrderClause());
 
 	// Limit record count
 	switch(g_dbSyntax)
@@ -311,6 +311,7 @@ bool LogHandle::queryInternal(int64_t *rowCount, uint32_t userId)
 		case DB_SYNTAX_MYSQL:
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_SQLITE:
+      case DB_SYNTAX_TSDB:
 			query.appendFormattedString(_T(" LIMIT %u"), m_rowCountLimit);
 			break;
 		case DB_SYNTAX_ORACLE:
