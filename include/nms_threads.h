@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1142,7 +1142,7 @@ static inline uint32_t GetCurrentThreadId()
    if (pthread_threadid_np(nullptr, &id) != 0)
       return 0;
    return (uint32_t)id;
-#elif defined(_AIX)
+#elif defined(_AIX) || defined(__sun)
    return (uint32_t)pthread_self();
 #else
 #error GetCurrentThreadId not implemented for this platform
