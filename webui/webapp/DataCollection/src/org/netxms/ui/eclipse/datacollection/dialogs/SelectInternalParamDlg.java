@@ -176,14 +176,15 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("Server.QueueSize.Current(*)", "Server queue {instance}: current size", DataType.INT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.QueueSize.Max(*)", "Server queue {instance}: max size", DataType.INT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.QueueSize.Min(*)", "Server queue {instance}: min size", DataType.INT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ReceivedSNMPTraps", "SNMP traps received since server start", DataType.UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ReceivedSyslogMessages", "Syslog messages received since server start", DataType.UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ReceivedWindowsEvents", "Windows events received since server start", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ReceivedSNMPTraps", "SNMP traps received since server start", DataType.COUNTER64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ReceivedSyslogMessages", "Syslog messages received since server start", DataType.COUNTER64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ReceivedWindowsEvents", "Windows events received since server start", DataType.COUNTER64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.SyncerRunTime.Average", "Syncer run time: average", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.SyncerRunTime.Last", "Syncer run time: last", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.SyncerRunTime.Max", "Syncer run time: max", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.SyncerRunTime.Min", "Syncer run time: min", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.ActiveRequests(*)", "Thread pool {instance}: active requests", DataType.INT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.AverageWaitTime(*)", "Thread pool {instance}: average wait time", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.CurrSize(*)", "Thread pool {instance}: current size", DataType.INT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.Load(*)", "Thread pool {instance}: current load", DataType.INT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.LoadAverage(*)", "Thread pool {instance}: load average (1 minute)", DataType.FLOAT)); //$NON-NLS-1$
@@ -193,8 +194,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("Server.ThreadPool.MinSize(*)", "Thread pool {instance}: minimum size", DataType.INT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.ScheduledRequests(*)", "Thread pool {instance}: scheduled requests", DataType.INT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.Usage(*)", "Thread pool {instance}: usage", DataType.INT32)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.TotalEventsProcessed", Messages.get().SelectInternalParamDlg_DCI_TotalEventsProcessed, DataType.UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.Uptime", "Server uptime", DataType.INT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.TotalEventsProcessed", Messages.get().SelectInternalParamDlg_DCI_TotalEventsProcessed, DataType.COUNTER64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.Uptime", "Server uptime", DataType.UINT32)); //$NON-NLS-1$
 		}
 
 		if ((object instanceof Template) || (object instanceof MobileDevice))

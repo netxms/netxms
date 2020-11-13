@@ -181,6 +181,9 @@ DataCollectionError GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, T
       case THREAD_POOL_USAGE:
          ret_int(value, info.usage);
          break;
+      case THREAD_POOL_AVERAGE_WAIT_TIME:
+         ret_uint(value, info.averageWaitTime);
+         break;
       default:
          return DCE_NOT_SUPPORTED;
    }

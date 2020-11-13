@@ -26,6 +26,7 @@
 - Added syn methos and method with callback for object creation in Java API
 - Fixed nxdbmgr crash on import
 - New built-in agent action Agent.RotateLog
+- Server performance optimization for handling large number of agent connections
 - Performance optimization of SNMPv3 processing
 - NXSL performance optimization
 - Improved handling of external parameter providers in agent

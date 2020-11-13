@@ -6813,6 +6813,10 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       {
          rc = GetThreadPoolStat(THREAD_POOL_ACTIVE_REQUESTS, name, buffer);
       }
+      else if (MatchString(_T("Server.ThreadPool.AverageWaitTime(*)"), name, false))
+      {
+         rc = GetThreadPoolStat(THREAD_POOL_AVERAGE_WAIT_TIME, name, buffer);
+      }
       else if (MatchString(_T("Server.ThreadPool.CurrSize(*)"), name, false))
       {
          rc = GetThreadPoolStat(THREAD_POOL_CURR_SIZE, name, buffer);
