@@ -3539,7 +3539,7 @@ public:
    }
    template<typename C> void backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, const shared_ptr<C>&), const shared_ptr<C>& context)
    {
-      backgroundPoll(timeout, AbstractCommChannel_PollWrapperCallback, new AbstractCommChannel_PollWrapperData<C>(callback, context));
+      backgroundPoll(timeout, AbstractCommChannel_PollWrapperCallback<C>, new AbstractCommChannel_PollWrapperData<C>(callback, context));
    }
 };
 
