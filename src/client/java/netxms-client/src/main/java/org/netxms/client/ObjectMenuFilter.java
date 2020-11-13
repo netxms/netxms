@@ -144,7 +144,7 @@ public class ObjectMenuFilter
          if (!match)
             return false;  //Not correct type of OS
       }
-	    
+
 	   if ((flags & REQUIRES_TEMPLATE_MATCH) != 0)
       {
          boolean match = false;
@@ -154,7 +154,7 @@ public class ObjectMenuFilter
          {
             for(int i = 0; i < substrings.length; i++)
             {
-               if (Pattern.matches(substrings[i], parent.getObjectName()))
+               if (Pattern.matches(substrings[i].trim(), parent.getObjectName().trim()))
                {
                   match = true;
                   break;
@@ -166,7 +166,7 @@ public class ObjectMenuFilter
          if (!match)
             return false;  // Does not belong to those templates
       }
-      
+
       if ((flags & REQUIRES_CUSTOM_ATTRIBUTE_MATCH) != 0)
       {
          boolean match = false;
@@ -175,7 +175,7 @@ public class ObjectMenuFilter
          {
             for(int i = 0; i < substrings.length; i++)
             {
-               if (Pattern.matches(substrings[i], attr))
+               if (Pattern.matches(substrings[i].trim(), attr.trim()))
                {
                   match = true;
                   break;
