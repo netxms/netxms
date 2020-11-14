@@ -230,6 +230,7 @@ SubProcessExecutor::~SubProcessExecutor()
  */
 bool SubProcessExecutor::execute()
 {
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("About to start sub-process %s with command %s"), m_name, m_cmd);
    if (!ProcessExecutor::execute())
       return false;
 

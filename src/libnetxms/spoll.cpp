@@ -50,7 +50,7 @@ SocketPoller::~SocketPoller()
  */
 bool SocketPoller::add(SOCKET s)
 {
-   if ((s == INVALID_SOCKET) || (m_count == FD_SETSIZE))
+   if ((s == INVALID_SOCKET) || (m_count == SOCKET_POLLER_MAX_SOCKETS))
       return false;
 
 #if HAVE_POLL
