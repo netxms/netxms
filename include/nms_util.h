@@ -3383,6 +3383,12 @@ public:
    void setPostCode(const TCHAR *postcode) { MemFree(m_postcode); m_postcode = MemCopyString(postcode); }
 };
 
+#if defined(FD_SETSIZE) && (FD_SETSIZE <= 1024)
+#define SOCKET_POLLER_MAX_SOCKETS FD_SETSIZE
+#else
+#define SOCKET_POLLER_MAX_SOCKETS 1024
+#endif
+
 /**
  * Socket poller
  */
@@ -3394,7 +3400,7 @@ private:
    bool m_write;
    int m_count;
 #if HAVE_POLL
-   struct pollfd m_sockets[FD_SETSIZE];
+   struct pollfd m_sockets[SOCKET_POLLER_MAX_SOCKETS];
 #else
    fd_set m_sockets;
 #ifndef _WIN32

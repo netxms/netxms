@@ -83,10 +83,10 @@ NXCPMessage *TestSubProcessRequestHandler(UINT16 command, const void *data, size
 /**
  * Test sub-process
  */
-void TestSubProcess(const char *procname)
+void TestSubProcess(const char *procname, bool debug)
 {
    TCHAR cmdLine[MAX_PATH];
-   _sntprintf(cmdLine, MAX_PATH, _T("%hs @subproc"), procname);
+   _sntprintf(cmdLine, MAX_PATH, _T("%hs @subproc%s"), procname, debug ? _T(" -debug") : _T(""));
 
    StartTest(_T("Sub-process executor - create"));
    SubProcessExecutor e(_T("TEST"), cmdLine);

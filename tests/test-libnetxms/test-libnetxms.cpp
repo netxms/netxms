@@ -26,7 +26,7 @@ void TestThreadCountAndMaxWaitTime();
 void TestProcessExecutor(const char *procname);
 void TestProcessExecutorWorker();
 void TestStringConversion();
-void TestSubProcess(const char *procname);
+void TestSubProcess(const char *procname, bool debug);
 void TestGeoLocation();
 NXCPMessage *TestSubProcessRequestHandler(UINT16 command, const void *data, size_t dataSize);
 
@@ -1737,6 +1737,8 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
  */
 int main(int argc, char *argv[])
 {
+   bool debug = false;
+
    InitNetXMSProcess(true);
    if (argc > 1)
    {
@@ -1747,12 +1749,18 @@ int main(int argc, char *argv[])
       }
       else if (!strcmp(argv[1], "@subproc"))
       {
+         if ((argc > 2) && !strcmp(argv[2], "-debug"))
+         {
+            nxlog_open(_T("subprocess.log"), 0);
+            nxlog_set_debug_level(9);
+         }
          SubProcessMain(argc, argv, TestSubProcessRequestHandler);
          return 0;
       }
       else if (!strcmp(argv[1], "-debug"))
       {
          nxlog_set_debug_writer(DebugWriter);
+         debug = true;
       }
    }
 
@@ -1795,10 +1803,15 @@ int main(int argc, char *argv[])
    TestRingBuffer();
    TestDebugLevel();
    TestDebugTags();
+   TestGeoLocation();
+
+   if (debug)
+      nxlog_set_debug_level(9);
+
    TestProcessExecutor(argv[0]);
-   TestSubProcess(argv[0]);
+   TestSubProcess(argv[0], debug);
    TestThreadPool();
    TestThreadCountAndMaxWaitTime();
-   TestGeoLocation();
+
    return 0;
 }
