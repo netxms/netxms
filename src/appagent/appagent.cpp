@@ -216,7 +216,10 @@ void APPAGENT_EXPORTABLE AppAgentStart()
    _sntprintf(name, 64, _T("appagent.%s"), s_config.name);
    s_listener = NamedPipeListener::create(name, ProcessRequest, NULL, s_config.userId);
    if (s_listener != NULL)
+   {
       s_listener->start();
+      AppAgentWriteLog(1, _T("Application agent %s started"), s_config.name);
+   }
 }
 
 /**
