@@ -16,6 +16,7 @@
 - Added option to validate server certificate on agent
 - Fixed column sorting in Web Service Definition view
 - Support for IPv6 in NXSL functions AddrInSubnet and AddrInRange
+- New NXSL function GetServerQueueNames
 - nxdbmgr option to migrate log tables in background
 - Windows event log synchronization, server side parsing and sgent side filter
 - Added option not to save to database Windows event log and syslog filtered by server parser
@@ -31,6 +32,7 @@
 - NXSL performance optimization
 - Improved handling of external parameter providers in agent
 - Added background polling option for external tables in agent
+- Fixed screenshot issues on Windows 10 with DPI scaling
 - Fixed errors on graph properties modification
 - Fixed sorting in summary table when one column has different data types
 - Fixed issues:

@@ -60,7 +60,7 @@ static Mutex s_queuesLock;
  */
 inline void AddQueueToCollector(const TCHAR *name, Queue *queue)
 {
-   if (queue != NULL)
+   if (queue != nullptr)
    {
       Gauge64 *gauge = new GaugeQueueLength(name, queue, QUEUE_STATS_COLLECTION_INTERVAL, QUEUE_STATS_AVERAGE_PERIOD);
       s_queues.set(name, gauge);
@@ -76,7 +76,7 @@ inline void AddQueueToCollector(const TCHAR *name, Queue *queue)
  */
 inline void AddQueueToCollector(const TCHAR *name, ThreadPool *pool)
 {
-   if (pool != NULL)
+   if (pool != nullptr)
    {
       Gauge64 *gauge = new GaugeThreadPoolRequests(name, pool, QUEUE_STATS_COLLECTION_INTERVAL, QUEUE_STATS_AVERAGE_PERIOD);
       s_queues.set(name, gauge);
@@ -160,7 +160,7 @@ DataCollectionError GetQueueStatistic(const TCHAR *parameter, StatisticType type
    s_queuesLock.lock();
 
    Gauge64 *stat = s_queues.get(name);
-   if (stat == NULL)
+   if (stat == nullptr)
    {
       s_queuesLock.unlock();
       return DCE_NO_SUCH_INSTANCE;
@@ -194,7 +194,7 @@ DataCollectionError GetQueueStatistic(const TCHAR *parameter, StatisticType type
 /**
  * DCI cache memory usage calculation callback
  */
-static void GetCacheMemoryUsage(NetObj *object, UINT64 *size)
+static void GetCacheMemoryUsage(NetObj *object, uint64_t *size)
 {
    if (object->isDataCollectionTarget())
       *size += static_cast<DataCollectionTarget*>(object)->getCacheMemoryUsage();
@@ -203,9 +203,22 @@ static void GetCacheMemoryUsage(NetObj *object, UINT64 *size)
 /**
  * Get amount of memory used by DCI cache
  */
-UINT64 GetDCICacheMemoryUsage()
+uint64_t GetDCICacheMemoryUsage()
 {
-   UINT64 dciCache = 0;
+   uint64_t dciCache = 0;
    g_idxObjectById.forEach(GetCacheMemoryUsage, &dciCache);
    return dciCache;
+}
+
+/**
+ * NXSL function GetServerQueueNames
+ */
+int F_GetServerQueueNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   s_queuesLock.lock();
+   StringList *names = s_queues.keys();
+   s_queuesLock.unlock();
+   *result = vm->createValue(new NXSL_Array(vm, *names));
+   delete names;
+   return 0;
 }

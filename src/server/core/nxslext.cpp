@@ -37,6 +37,8 @@ int F_FindAlarmByKeyRegex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
 int F_GetSyslogRuleCheckCount(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
+int F_GetServerQueueNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+
 /**
  * Get node's custom attribute
  * First argument is a node object, and second is an attribute name
@@ -1812,6 +1814,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "GetObjectParents", F_GetObjectParents, 1 },
    { "GetServerNode", F_GetServerNode, -1 },
    { "GetServerNodeId", F_GetServerNodeId, 0 },
+   { "GetServerQueueNames", F_GetServerQueueNames, 0 },
    { "GetSyslogRuleCheckCount", F_GetSyslogRuleCheckCount, -1 },
    { "GetSyslogRuleMatchCount", F_GetSyslogRuleMatchCount, -1 },
 	{ "FindAlarmById", F_FindAlarmById, 1 },
