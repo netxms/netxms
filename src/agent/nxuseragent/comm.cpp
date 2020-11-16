@@ -266,6 +266,14 @@ static bool s_stop = false;
 static THREAD_RESULT THREAD_CALL CommThread(void *arg)
 {
    nxlog_debug(1, _T("Communication thread started"));
+
+   // Change DPI awareness for this thread (required for corect screenshots)
+   auto __SetThreadDpiAwarenessContext = reinterpret_cast<DPI_AWARENESS_CONTEXT (*)(DPI_AWARENESS_CONTEXT)>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetThreadDpiAwarenessContext"));
+   if (__SetThreadDpiAwarenessContext != nullptr)
+      __SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
+   else
+      nxlog_write(NXLOG_WARNING, _T("SetThreadDpiAwarenessContext is not available"));
+
    while(!s_stop)
    {
       if (!ConnectToMasterAgent())
