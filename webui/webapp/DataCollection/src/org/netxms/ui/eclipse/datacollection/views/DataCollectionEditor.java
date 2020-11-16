@@ -19,8 +19,10 @@
 package org.netxms.ui.eclipse.datacollection.views;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -67,10 +69,7 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.DataCollectionTarget;
-import org.netxms.client.objects.MobileDevice;
-import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -889,38 +888,40 @@ public class DataCollectionEditor extends ViewPart
 		if (dlg.open() != Window.OK)
 			return;
 
+      final Set<AbstractObject> targets = new HashSet<AbstractObject>();
+      for(AbstractObject o : dlg.getSelectedObjects())
+         if ((o instanceof DataCollectionTarget) || (o instanceof Template))
+            targets.add(o);
+      if (targets.isEmpty())
+      {
+         MessageDialogHelper.openWarning(getSite().getShell(), "Warning", "Target selection is invalid or empty!");
+         return;
+      }
+
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		Iterator<?> it = selection.iterator();
 		final long[] dciList = new long[selection.size()];
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
 			dciList[i] = ((DataCollectionObject)it.next()).getId();
-		
+
 		new ConsoleJob(Messages.get().DataCollectionEditor_CopyJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				for(AbstractObject o : dlg.getSelectedObjects(AbstractNode.class))
-					dciConfig.copyObjects(o.getObjectId(), dciList);
-				for(AbstractObject o : dlg.getSelectedObjects(Template.class))
-					dciConfig.copyObjects(o.getObjectId(), dciList);
-				for(AbstractObject o : dlg.getSelectedObjects(Cluster.class))
-					dciConfig.copyObjects(o.getObjectId(), dciList);
-				for(AbstractObject o : dlg.getSelectedObjects(MobileDevice.class))
-					dciConfig.copyObjects(o.getObjectId(), dciList);
-            for(AbstractObject o : dlg.getSelectedObjects(Sensor.class))
+            for(AbstractObject o : targets)
                dciConfig.copyObjects(o.getObjectId(), dciList);
-				if (doMove)
-				{
-					for(long id : dciList)
-						dciConfig.deleteObject(id);
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							viewer.setInput(dciConfig.getItems());
-						}
-					});
-				}
+            if (doMove)
+            {
+               for(long id : dciList)
+                  dciConfig.deleteObject(id);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     viewer.setInput(dciConfig.getItems());
+                  }
+               });
+            }
 			}
 
 			@Override
