@@ -470,11 +470,19 @@ int main(int argc, char *argv[])
       return 1;
    }
 
-   auto __SetProcessDPIAware = reinterpret_cast<BOOL (*)()>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetProcessDPIAware"));
-   if (__SetProcessDPIAware != nullptr)
-      __SetProcessDPIAware();
+   auto __SetProcessDpiAwarenessContext = reinterpret_cast<BOOL (*)(DPI_AWARENESS_CONTEXT)>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetProcessDpiAwarenessContext"));
+   if (__SetProcessDpiAwarenessContext != nullptr)
+   {
+      __SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
+   }
    else
-      _tprintf(_T("SetProcessDPIAware is not available\n"));
+   {
+      auto __SetProcessDPIAware = reinterpret_cast<BOOL(*)()>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetProcessDPIAware"));
+      if (__SetProcessDPIAware != nullptr)
+         __SetProcessDPIAware();
+      else
+         _tprintf(_T("Neither SetProcessDpiAwarenessContext nor SetProcessDPIAware are available\n"));
+   }
 
    ThreadCreate(EventHandler);
 
