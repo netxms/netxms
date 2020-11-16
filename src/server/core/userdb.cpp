@@ -58,14 +58,6 @@ static RWLOCK s_userDatabaseLock = RWLockCreate();
 static THREAD s_statusUpdateThread = INVALID_THREAD_HANDLE;
 
 /**
- * Compare user names
- */
-inline bool UserNameEquals(const TCHAR *n1, const TCHAR *n2)
-{
-   return (g_flags & AF_CASE_INSENSITIVE_LOGINS) ? (_tcsicmp(n1, n2) == 0) : (_tcscmp(n1, n2) == 0);
-}
-
-/**
  * Add user database object
  */
 inline void AddDatabaseObject(UserDatabaseObject *object)

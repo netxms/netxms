@@ -2052,6 +2052,7 @@ protected:
    StringMap m_scriptErrorReports;
    GeoLocationControlMode m_geoLocationControlMode;
    IntegerArray<uint32_t> m_geoAreas;
+   bool m_geoLocationRestrictionsViolated;
    PollState m_statusPollState;
    PollState m_configurationPollState;
    PollState m_instancePollState;

@@ -65,6 +65,7 @@ DataCollectionTarget::DataCollectionTarget() : super(), m_statusPollState(_T("st
    m_hPollerMutex = MutexCreate();
    m_proxyLoadFactor = 0;
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
+   m_geoLocationRestrictionsViolated = false;
 }
 
 /**
@@ -77,6 +78,7 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : super(name), m_s
    m_hPollerMutex = MutexCreate();
    m_proxyLoadFactor = 0;
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
+   m_geoLocationRestrictionsViolated = false;
 }
 
 /**
@@ -2549,21 +2551,40 @@ void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
             geoLocation.getLatitudeAsString(), geoLocation.getLongitudeAsString(), m_geoLocation.getLatitude(), m_geoLocation.getLongitude(),
             m_geoLocation.getLatitudeAsString(), m_geoLocation.getLongitudeAsString());
    }
+   lockProperties();
    m_geoLocation = geoLocation;
+   unlockProperties();
    addLocationToHistory();
    setModified(MODIFY_COMMON_PROPERTIES);
 
+   nxlog_debug_tag(_T("obj.geoloc"), 4, _T("Location for device %s [%u] to %s %s)"),
+            m_name, m_id, geoLocation.getLatitude(), geoLocation.getLongitude());
+
    if (m_geoLocationControlMode == GEOLOCATION_RESTRICTED_AREAS)
    {
+      bool insideArea = false;
       for(int i = 0; i < m_geoAreas.size(); i++)
       {
          shared_ptr<GeoArea> area = GetGeoArea(m_geoAreas.get(i));
          if ((area != nullptr) && area->containsLocation(geoLocation))
          {
-            PostSystemEvent(EVENT_GEOLOCATION_INSIDE_RESTRICTED_AREA, m_id, "ffsssd", geoLocation.getLatitude(), geoLocation.getLongitude(),
-                  geoLocation.getLatitudeAsString(), geoLocation.getLongitudeAsString(), area->getName(), area->getId());
+            bool insideArea = true;
+            if (!m_geoLocationRestrictionsViolated)
+            {
+               nxlog_debug_tag(_T("obj.geoloc"), 4, _T("Device %s [%u] is within restricted area %s [%u] (current coordinates %s %s)"),
+                        m_name, m_id, area->getName(), area->getId(), geoLocation.getLatitude(), geoLocation.getLongitude());
+               PostSystemEvent(EVENT_GEOLOCATION_INSIDE_RESTRICTED_AREA, m_id, "ffsssd", geoLocation.getLatitude(), geoLocation.getLongitude(),
+                     geoLocation.getLatitudeAsString(), geoLocation.getLongitudeAsString(), area->getName(), area->getId());
+               m_geoLocationRestrictionsViolated = true;
+            }
             break;
          }
+      }
+      if (!insideArea && m_geoLocationRestrictionsViolated)
+      {
+         nxlog_debug_tag(_T("obj.geoloc"), 4, _T("Device %s [%u] is outside restricted area (current coordinates %s %s)"),
+                  m_name, m_id, geoLocation.getLatitude(), geoLocation.getLongitude());
+         m_geoLocationRestrictionsViolated = false;
       }
    }
    else if (m_geoLocationControlMode == GEOLOCATION_ALLOWED_AREAS)
@@ -2578,10 +2599,19 @@ void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
             break;
          }
       }
-      if (!insideArea)
+      if (!insideArea && !m_geoLocationRestrictionsViolated)
       {
+         nxlog_debug_tag(_T("obj.geoloc"), 4, _T("Device %s [%u] is outside allowed area (current coordinates %s %s)"),
+                  m_name, m_id, geoLocation.getLatitude(), geoLocation.getLongitude());
          PostSystemEvent(EVENT_GEOLOCATION_OUTSIDE_ALLOWED_AREA, m_id, "ffss", geoLocation.getLatitude(), geoLocation.getLongitude(),
                geoLocation.getLatitudeAsString(), geoLocation.getLongitudeAsString());
+         m_geoLocationRestrictionsViolated = true;
+      }
+      else if (insideArea && m_geoLocationRestrictionsViolated)
+      {
+         nxlog_debug_tag(_T("obj.geoloc"), 4, _T("Device %s [%u] is inside allowed area (current coordinates %s %s)"),
+                  m_name, m_id, geoLocation.getLatitude(), geoLocation.getLongitude());
+         m_geoLocationRestrictionsViolated = false;
       }
    }
 }
