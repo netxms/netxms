@@ -42,6 +42,7 @@
 	NX-1911 (Separate object name for use on maps)
 	NX-1931 ("Do not store" option for syslog)
 	NX-1933 (Update descriptions and units for server configuration variables)
+	NX-1951 (Moving a DCI to container deletes the DCI)
 	NX-1962 (Save time of last configuration poll across server restart)
 
 
