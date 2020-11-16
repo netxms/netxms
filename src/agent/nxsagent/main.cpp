@@ -356,7 +356,7 @@ static LRESULT CALLBACK EventHandlerWndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
 /**
  * Event handling thread
  */
-static THREAD_RESULT THREAD_CALL EventHandler(void *arg)
+static void EventHandler()
 {
    HINSTANCE hInstance = (HINSTANCE)GetModuleHandle(NULL);
 
@@ -369,14 +369,14 @@ static THREAD_RESULT THREAD_CALL EventHandler(void *arg)
 	if (RegisterClass(&wc) == 0)
    {
       _tprintf(_T("Call to RegisterClass() failed\n"));
-      return THREAD_OK;
+      return;
    }
 
 	HWND hWnd = CreateWindow(_T("NetXMS_SessionAgent_Wnd"), _T("NetXMS Session Agent"), 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, hInstance, NULL);
 	if (hWnd == NULL)
 	{
-      _tprintf(_T("Cannot create window: %s"), GetSystemErrorText(GetLastError(), NULL, 0));
-		return THREAD_OK;
+      _tprintf(_T("Cannot create window: %s"), GetSystemErrorText(GetLastError(), nullptr, 0));
+		return;
 	}
 
    WTSRegisterSessionNotification(hWnd, NOTIFY_FOR_THIS_SESSION);
@@ -387,8 +387,6 @@ static THREAD_RESULT THREAD_CALL EventHandler(void *arg)
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-
-   return THREAD_OK;
 }
 
 /**
@@ -472,13 +470,13 @@ int main(int argc, char *argv[])
       return 1;
    }
 
-   BOOL (*__SetProcessDPIAware)() = reinterpret_cast<BOOL(*)()>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetProcessDPIAware"));
-   if (__SetProcessDPIAware != NULL)
+   auto __SetProcessDPIAware = reinterpret_cast<BOOL (*)()>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetProcessDPIAware"));
+   if (__SetProcessDPIAware != nullptr)
       __SetProcessDPIAware();
    else
-      _tprintf(_T("SetProcessDPIAware not available\n"));
+      _tprintf(_T("SetProcessDPIAware is not available\n"));
 
-   ThreadCreate(EventHandler, 0, NULL);
+   ThreadCreate(EventHandler);
 
    if (s_hideConsole)
    {
