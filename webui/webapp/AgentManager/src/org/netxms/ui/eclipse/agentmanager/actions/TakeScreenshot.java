@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -39,18 +41,28 @@ public class TakeScreenshot implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
 	private AbstractObject node;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
+
+   /**
+    * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+    */
 	@Override
 	public void run(IAction action)
 	{	
-	   if(window != null)
+      if (window != null)
       {
    	   try
          {
-            window.getActivePage().showView(ScreenshotView.ID, Long.toString(node.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
+   	      boolean existing = false;
+            IViewReference viewReference = window.getActivePage().findViewReference(ScreenshotView.ID, Long.toString(node.getObjectId()));
+            if (viewReference != null)
+            {
+               existing = (viewReference.getView(true) != null);
+            }
+            IViewPart view = window.getActivePage().showView(ScreenshotView.ID, Long.toString(node.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
+            if (existing)
+            {
+               ((ScreenshotView)view).refresh();
+            }
          }
          catch(PartInitException e)
          {
@@ -58,10 +70,10 @@ public class TakeScreenshot implements IObjectActionDelegate
          }
       }
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
-	 */
+
+   /**
+    * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+    */
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
@@ -87,9 +99,9 @@ public class TakeScreenshot implements IObjectActionDelegate
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
-	 */
+   /**
+    * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+    */
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
