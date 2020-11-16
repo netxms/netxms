@@ -10902,3 +10902,27 @@ DataCollectionError Node::getIcmpStatistic(const TCHAR *param, IcmpStatFunction 
    unlockProperties();
    return rc;
 }
+
+/**
+ * Get values for virtual attributes
+ */
+bool Node::getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocated) const
+{
+   if (!_tcscmp(name, _T("ssh.login")))
+   {
+      lockProperties();
+      *value = MemCopyString(m_sshLogin);
+      *isAllocated = true;
+      unlockProperties();
+      return true;
+   }
+   if (!_tcscmp(name, _T("ssh.password")))
+   {
+      lockProperties();
+      *value = MemCopyString(m_sshPassword);
+      *isAllocated = true;
+      unlockProperties();
+      return true;
+   }
+   return false;
+}

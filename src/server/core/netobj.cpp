@@ -2746,7 +2746,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                         defaultValue++;
                         StrStrip(buffer);
                         TCHAR *v = getCustomAttributeCopy(buffer);
-                        if (v != NULL)
+                        if (v != nullptr)
                            output.appendPreallocated(v);
                         else
                            output.append(defaultValue);
