@@ -1039,6 +1039,168 @@
 					<instanceDiscoveryData></instanceDiscoveryData>
 					<instanceFilter></instanceFilter>
 				</dci>
+				<dci id="2252">
+					<guid>400d5697-678f-42ac-b951-aa0c430c7511</guid>
+					<name>Server.QueueSize.Average(WindowsEventProcessor)</name>
+					<description>Server QueueSize WindowsEventProcessor: Average</description>
+					<dataType>5</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>1</retentionType>
+					<retention>0</retention>
+					<instance>WindowsEventProcessor</instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="2253">
+					<guid>717f9681-bfc4-4ced-9f6b-beebd878521c</guid>
+					<name>Server.QueueSize.Current(WindowsEventProcessor)</name>
+					<description>Server QueueSize WindowsEventProcessor: Current</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>1</retentionType>
+					<retention>0</retention>
+					<instance>WindowsEventProcessor</instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="2254">
+					<guid>e69bf630-31f6-41a1-8f3a-3e7fc001e617</guid>
+					<name>Server.QueueSize.Max(WindowsEventProcessor)</name>
+					<description>Server QueueSize WindowsEventProcessor: Max</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>1</retentionType>
+					<retention>0</retention>
+					<instance>WindowsEventProcessor</instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="2255">
+					<guid>c9c3f267-e29c-4a9f-9a54-10c0e2502278</guid>
+					<name>Server.QueueSize.Average(WindowsEventWriter)</name>
+					<description>Server QueueSize WindowsEventWriter: Average</description>
+					<dataType>5</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>1</retentionType>
+					<retention>0</retention>
+					<instance>WindowsEventWriter</instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="2256">
+					<guid>7e2ee9ef-cf53-4967-8ecd-8d196d22399c</guid>
+					<name>Server.QueueSize.Current(WindowsEventWriter)</name>
+					<description>Server QueueSize WindowsEventWriter: Current</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>1</retentionType>
+					<retention>0</retention>
+					<instance>WindowsEventWriter</instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="2257">
+					<guid>8ba9b7a7-5acc-4ee0-8de5-880c1619b524</guid>
+					<name>Server.QueueSize.Max(WindowsEventWriter)</name>
+					<description>Server QueueSize WindowsEventWriter: Max</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>1</retentionType>
+					<retention>0</retention>
+					<instance>WindowsEventWriter</instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
@@ -1793,6 +1955,33 @@
 					<instanceDiscoveryData>InstanceDiscovery::ServerThreadPools</instanceDiscoveryData>
 					<instanceFilter></instanceFilter>
 				</dci>
+				<dci id="2199">
+					<guid>42b5bdce-2eaa-4ba0-b0f7-4818873eaab2</guid>
+					<name>Server.ThreadPool.AverageWaitTime({instance})</name>
+					<description>Server thread pool {instance}: average wait time (ms)</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<instance>AGENT</instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>5</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>InstanceDiscovery::ServerThreadPools</instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>				
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
