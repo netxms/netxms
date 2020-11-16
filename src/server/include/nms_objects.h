@@ -3036,6 +3036,8 @@ protected:
 
    virtual StringMap *getInstanceList(DCObject *dco) override;
 
+   virtual bool getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocated) const override;
+
    void agentLock() { MutexLock(m_hAgentAccessMutex); }
    void agentUnlock() { MutexUnlock(m_hAgentAccessMutex); }
 

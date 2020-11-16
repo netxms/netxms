@@ -653,23 +653,44 @@ void NObject::deletePopulatedCustomAttribute(const TCHAR *name)
 }
 
 /**
+ * Get named object attribute. Allows subclasses to create virtual custom attributes - those not set directly
+ * in custom attribute list but provided by class implementation. Returns true if attribute was retrieved.
+ * Parameter isAllocated will be set to true if returned value should be freed by MemFree().
+ * Returns true if attribute was retrieved. Default implementation always returns false.
+ */
+bool NObject::getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocated) const
+{
+   return false;
+}
+
+/**
  * Get custom attribute into buffer
  */
 TCHAR *NObject::getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size) const
 {
-   TCHAR *result;
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(name);
    if (attr != nullptr)
    {
       _tcslcpy(buffer, attr->value, size);
+      unlockCustomAttributes();
+      return buffer;
+   }
+   unlockCustomAttributes();
+
+   TCHAR *value, *result;
+   bool isAllocated;
+   if (getObjectAttribute(name, &value, &isAllocated))
+   {
+      _tcslcpy(buffer, value, size);
+      if (isAllocated)
+         MemFree(value);
       result = buffer;
    }
    else
    {
       result = nullptr;
    }
-   unlockCustomAttributes();
    return result;
 }
 
@@ -680,9 +701,24 @@ SharedString NObject::getCustomAttribute(const TCHAR *name) const
 {
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(name);
-   SharedString result = (attr != nullptr) ? attr->value : SharedString();
+   if (attr != nullptr)
+   {
+      unlockCustomAttributes();
+      return SharedString(attr->value);
+   }
    unlockCustomAttributes();
-   return result;
+
+   TCHAR *value;
+   bool isAllocated;
+   if (getObjectAttribute(name, &value, &isAllocated))
+   {
+      SharedString result(value);
+      if (isAllocated)
+         MemFree(value);
+      return result;
+   }
+
+   return SharedString();
 }
 
 /**
@@ -692,9 +728,20 @@ TCHAR *NObject::getCustomAttributeCopy(const TCHAR *name) const
 {
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(name);
-   TCHAR *result = (attr != nullptr) ? MemCopyString(attr->value) : nullptr;
+   if (attr != nullptr)
+   {
+      TCHAR *result = MemCopyString(attr->value);
+      unlockCustomAttributes();
+      return result;
+   }
    unlockCustomAttributes();
-   return result;
+
+   TCHAR *value;
+   bool isAllocated;
+   if (getObjectAttribute(name, &value, &isAllocated))
+      return isAllocated ? value : MemCopyString(value);
+
+   return nullptr;
 }
 
 /**

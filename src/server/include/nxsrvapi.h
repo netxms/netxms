@@ -578,6 +578,7 @@ protected:
    void unlockChildList() const { RWLockUnlock(m_rwlockChildList); }
 
    virtual void onCustomAttributeChange();
+   virtual bool getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocated) const;
 
 public:
    NObject();
