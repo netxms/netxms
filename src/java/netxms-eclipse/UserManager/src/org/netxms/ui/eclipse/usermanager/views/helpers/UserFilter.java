@@ -32,7 +32,7 @@ public final class UserFilter extends ViewerFilter
          String authMethod = "";
          try
          {
-            authMethod = labelProvider.AUTH_METHOD[((User)user).getAuthMethod()];
+            authMethod = labelProvider.AUTH_METHOD[((User)user).getAuthMethod().getValue()];
          }
          catch(ArrayIndexOutOfBoundsException e)
          {

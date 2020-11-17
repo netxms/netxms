@@ -65,8 +65,8 @@ public class UserComparator extends ViewerComparator
 		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
          case UserManagementView.COLUMN_AUTH_METHOD:
-            int m1 = (e1 instanceof User) ? ((User)e1).getAuthMethod() : -1;
-            int m2 = (e2 instanceof User) ? ((User)e2).getAuthMethod() : -1;
+            int m1 = (e1 instanceof User) ? ((User)e1).getAuthMethod().getValue() : -1;
+            int m2 = (e2 instanceof User) ? ((User)e2).getAuthMethod().getValue() : -1;
             result = m1 - m2;
             break;
          case UserManagementView.COLUMN_DESCRIPTION:

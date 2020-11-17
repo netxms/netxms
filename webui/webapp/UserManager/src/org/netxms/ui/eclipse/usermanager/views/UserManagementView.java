@@ -59,6 +59,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.UserAuthenticationMethod;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -111,13 +112,11 @@ public class UserManagementView extends ViewPart
    private Action actionShowFilter;
 	private RefreshAction actionRefresh;
 	private Composite mainArea;
-   
    private UserFilter filter;
    private FilterText filterText;
    private IDialogSettings settings;
 
-   
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -127,10 +126,10 @@ public class UserManagementView extends ViewPart
       session = ConsoleSharedData.getSession();
       settings = Activator.getDefault().getDialogSettings();
    }
-   
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -502,7 +501,7 @@ public class UserManagementView extends ViewPart
 	 */
 	protected void fillContextMenu(final IMenuManager mgr)
 	{
-	   final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+      final IStructuredSelection selection = viewer.getStructuredSelection();
 
       mgr.add(actionAddUser);
       mgr.add(actionAddGroup);
@@ -527,10 +526,11 @@ public class UserManagementView extends ViewPart
       if (containLDAP)
          mgr.add(actionDetachUserFromLDAP);
       
-		final Object firstElement = selection.getFirstElement();
-		if (firstElement instanceof User && ! containLDAP)
+      if ((selection.size() == 1) && (selection.getFirstElement() instanceof User))
 		{
-			mgr.add(actionChangePassword);
+         UserAuthenticationMethod method = ((User)selection.getFirstElement()).getAuthMethod();
+         if ((method == UserAuthenticationMethod.LOCAL) || (method == UserAuthenticationMethod.CERTIFICATE_OR_LOCAL))
+            mgr.add(actionChangePassword);
 		}
 
 		mgr.add(actionDeleteUser);

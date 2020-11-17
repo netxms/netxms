@@ -3888,7 +3888,7 @@ NXSL_Value *NXSL_UserDBObjectClass::getAttr(NXSL_Object *object, const char *att
    }
    else if (compareAttributeName(attr, "ldapDomain"))
    {
-      value = vm->createValue(dbObject->getDn());
+      value = vm->createValue(dbObject->getDN());
    }
    else if (compareAttributeName(attr, "ldapId"))
    {
@@ -3923,7 +3923,7 @@ NXSL_Value *NXSL_UserClass::getAttr(NXSL_Object *object, const char *attr)
    User *user = static_cast<User*>(object->getData());
    if (compareAttributeName(attr, "authMethod"))
    {
-      value = vm->createValue(user->getAuthMethod());
+      value = vm->createValue(static_cast<int32_t>(user->getAuthMethod()));
    }
    else if (compareAttributeName(attr, "certMappingData"))
    {

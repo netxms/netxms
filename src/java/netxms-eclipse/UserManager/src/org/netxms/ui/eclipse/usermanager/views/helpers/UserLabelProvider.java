@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,9 +39,10 @@ public class UserLabelProvider extends DecoratingLabelProvider implements ITable
       Messages.get().UserLabelProvider_RADIUS, 
       Messages.get().UserLabelProvider_Certificate, 
       Messages.get().UserLabelProvider_CertificateOrPassword, 
-      Messages.get().UserLabelProvider_CertificateOrRADIUS 
+      Messages.get().UserLabelProvider_CertificateOrRADIUS,
+      Messages.get().UserLabelProvider_LDAP
    };
-   
+
    /**
     * Constructor
     */
@@ -49,10 +50,10 @@ public class UserLabelProvider extends DecoratingLabelProvider implements ITable
    {
       super(new WorkbenchLabelProvider(), PlatformUI.getWorkbench().getDecoratorManager().getLabelDecorator());
    }
-   
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
@@ -72,7 +73,7 @@ public class UserLabelProvider extends DecoratingLabelProvider implements ITable
                return ""; //$NON-NLS-1$
             try
             {
-               return AUTH_METHOD[((User)element).getAuthMethod()];
+               return AUTH_METHOD[((User)element).getAuthMethod().getValue()];
             }
             catch(ArrayIndexOutOfBoundsException e)
             {

@@ -23,20 +23,14 @@ import java.util.Date;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.CertificateMappingMethod;
+import org.netxms.client.constants.UserAuthenticationMethod;
 
 /**
  * NetXMS user object
  */
 public class User extends AbstractUserObject
 {
-	// Authentication methods
-	public static final int AUTH_NETXMS_PASSWORD = 0;
-	public static final int AUTH_RADIUS = 1;
-	public static final int AUTH_CERTIFICATE = 2;
-	public static final int AUTH_CERTIFICATE_OR_PASSWORD = 3;
-	public static final int AUTH_CERTIFICATE_OR_RADIUS = 4;
-	
-	private int authMethod;
+   private UserAuthenticationMethod authMethod;
    private CertificateMappingMethod certMappingMethod;
 	private String certMappingData;
 	private String fullName;
@@ -91,7 +85,7 @@ public class User extends AbstractUserObject
 	public User(final NXCPMessage msg)
 	{
 		super(msg, USERDB_TYPE_USER);
-		authMethod = msg.getFieldAsInt32(NXCPCodes.VID_AUTH_METHOD);
+      authMethod = UserAuthenticationMethod.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_AUTH_METHOD));
 		fullName = msg.getFieldAsString(NXCPCodes.VID_USER_FULL_NAME);
       certMappingMethod = CertificateMappingMethod.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_CERT_MAPPING_METHOD));
 		certMappingData = msg.getFieldAsString(NXCPCodes.VID_CERT_MAPPING_DATA);
@@ -114,7 +108,7 @@ public class User extends AbstractUserObject
 	public void fillMessage(final NXCPMessage msg)
 	{
 		super.fillMessage(msg);
-		msg.setFieldInt16(NXCPCodes.VID_AUTH_METHOD, authMethod);
+      msg.setFieldInt16(NXCPCodes.VID_AUTH_METHOD, authMethod.getValue());
 		msg.setField(NXCPCodes.VID_USER_FULL_NAME, fullName);
       msg.setFieldInt16(NXCPCodes.VID_CERT_MAPPING_METHOD, certMappingMethod.getValue());
 		msg.setField(NXCPCodes.VID_CERT_MAPPING_DATA, certMappingData);
@@ -127,17 +121,21 @@ public class User extends AbstractUserObject
 	}
 
 	/**
-	 * @return the authMethod
-	 */
-	public int getAuthMethod()
+    * Get authentication method for this user.
+    *
+    * @return authentication method
+    */
+   public UserAuthenticationMethod getAuthMethod()
 	{
 		return authMethod;
 	}
 
 	/**
-	 * @param authMethod the authMethod to set
-	 */
-	public void setAuthMethod(int authMethod)
+    * Set authentication method for this user.
+    *
+    * @param authMethod new authentication method
+    */
+   public void setAuthMethod(UserAuthenticationMethod authMethod)
 	{
 		this.authMethod = authMethod;
 	}

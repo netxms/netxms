@@ -65,8 +65,8 @@ public class UserComparator extends ViewerComparator
 		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
          case UserManagementView.COLUMN_AUTH_METHOD:
-            int m1 = (e1 instanceof User) ? ((User)e1).getAuthMethod() : -1;
-            int m2 = (e2 instanceof User) ? ((User)e2).getAuthMethod() : -1;
+            int m1 = (e1 instanceof User) ? ((User)e1).getAuthMethod().getValue() : -1;
+            int m2 = (e2 instanceof User) ? ((User)e2).getAuthMethod().getValue() : -1;
             result = m1 - m2;
             break;
          case UserManagementView.COLUMN_DESCRIPTION:
@@ -92,14 +92,14 @@ public class UserComparator extends ViewerComparator
 			case UserManagementView.COLUMN_TYPE:
 				result = compareTypes(e1, e2);
 				break;
-         case UserManagementView.COLUMN_LAST_LOGIN:
-            int l1 = (e1 instanceof User) ? ((User)e1).getLastLogin().getSeconds() : -1;
-            int l2 = (e2 instanceof User) ? ((User)e2).getLastLogin().getSeconds() : -1;
-            result = l1 - l2;
-            break;
-         case UserManagementView.COLUMN_CREATED:
-            result = Long.signum(((AbstractUserObject)e1).getCreationTime().getSeconds() - ((AbstractUserObject)e2).getCreationTime().getSeconds());
-            break;
+			case UserManagementView.COLUMN_LAST_LOGIN:
+			   int l1 = (e1 instanceof User) ? ((User)e1).getLastLogin().getSeconds() : -1;
+			   int l2 = (e2 instanceof User) ? ((User)e2).getLastLogin().getSeconds() : -1;
+			   result = l1 - l2;
+		      break;
+			case UserManagementView.COLUMN_CREATED:
+			   result = Long.signum(((AbstractUserObject)e1).getCreationTime().getSeconds() - ((AbstractUserObject)e2).getCreationTime().getSeconds());
+			   break;
 			default:
 				result = 0;
 				break;

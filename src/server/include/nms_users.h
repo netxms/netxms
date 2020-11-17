@@ -177,14 +177,37 @@ public:
 /**
  * Authentication methods
  */
-enum UserAuthMethod
+enum class UserAuthenticationMethod
 {
-   AUTH_NETXMS_PASSWORD = 0,
-   AUTH_RADIUS          = 1,
-   AUTH_CERTIFICATE     = 2,
-   AUTH_CERT_OR_PASSWD  = 3,
-   AUTH_CERT_OR_RADIUS  = 4
+   LOCAL                 = 0,
+   RADIUS                = 1,
+   CERTIFICATE           = 2,
+   CERTIFICATE_OR_LOCAL  = 3,
+   CERTIFICATE_OR_RADIUS = 4,
+   LDAP                  = 5
 };
+
+/**
+ * Authentication method from integer
+ */
+static inline UserAuthenticationMethod UserAuthenticationMethodFromInt(int value)
+{
+   switch(value)
+   {
+      case 1:
+         return UserAuthenticationMethod::RADIUS;
+      case 2:
+         return UserAuthenticationMethod::CERTIFICATE;
+      case 3:
+         return UserAuthenticationMethod::CERTIFICATE_OR_LOCAL;
+      case 4:
+         return UserAuthenticationMethod::CERTIFICATE_OR_RADIUS;
+      case 5:
+         return UserAuthenticationMethod::LDAP;
+      default:
+         return UserAuthenticationMethod::LOCAL;
+   }
+}
 
 /**
  * Generic user database object
@@ -192,12 +215,12 @@ enum UserAuthMethod
 class NXCORE_EXPORTABLE UserDatabaseObject
 {
 protected:
-	UINT32 m_id;
+	uint32_t m_id;
    uuid m_guid;
 	TCHAR m_name[MAX_USER_NAME];
 	TCHAR m_description[MAX_USER_DESCR];
-	UINT64 m_systemRights;
-	UINT32 m_flags;
+	uint64_t m_systemRights;
+	uint32_t m_flags;
 	StringMap m_attributes;		// Custom attributes
    TCHAR *m_ldapDn;
    TCHAR *m_ldapId;
@@ -210,7 +233,7 @@ public:
 	UserDatabaseObject();
 	UserDatabaseObject(const UserDatabaseObject *src);
 	UserDatabaseObject(DB_HANDLE hdb, DB_RESULT hResult, int row);
-	UserDatabaseObject(UINT32 id, const TCHAR *name);
+	UserDatabaseObject(uint32_t id, const TCHAR *name);
 	virtual ~UserDatabaseObject();
 
 	virtual bool saveToDatabase(DB_HANDLE hdb);
@@ -221,20 +244,20 @@ public:
 
 	virtual json_t *toJson() const;
 
-	UINT32 getId() const { return m_id; }
+	uint32_t getId() const { return m_id; }
 	const TCHAR *getName() const { return m_name; }
 	const TCHAR *getDescription() const { return m_description; }
-	UINT64 getSystemRights() const { return m_systemRights; }
-	UINT32 getFlags() const { return m_flags; }
+	uint64_t getSystemRights() const { return m_systemRights; }
+	uint32_t getFlags() const { return m_flags; }
    TCHAR *getGuidAsText(TCHAR *buffer) const { return m_guid.toString(buffer); }
-   const TCHAR *getDn() const { return m_ldapDn; }
+   const TCHAR *getDN() const { return m_ldapDn; }
    const TCHAR *getLdapId() const { return m_ldapId; }
 
    bool isGroup() const { return (m_id & GROUP_FLAG) != 0; }
-	bool isDeleted() const { return (m_flags & UF_DELETED) ? true : false; }
-	bool isDisabled() const { return (m_flags & UF_DISABLED) ? true : false; }
-	bool isModified() const { return (m_flags & UF_MODIFIED) ? true : false; }
-	bool isLDAPUser() const { return (m_flags & UF_LDAP_USER) ? true : false; }
+	bool isDeleted() const { return (m_flags & UF_DELETED) != 0; }
+	bool isDisabled() const { return (m_flags & UF_DISABLED) != 0; }
+	bool isModified() const { return (m_flags & UF_MODIFIED) != 0; }
+	bool isLDAPUser() const { return (m_flags & UF_LDAP_USER) != 0; }
 
 	void setDeleted() { m_flags |= UF_DELETED; }
 	void enable();
@@ -242,13 +265,14 @@ public:
 	void setFlags(UINT32 flags) { m_flags = flags; }
 	void removeSyncException();
 
-	const TCHAR *getAttribute(const TCHAR *name) { return m_attributes.get(name); }
-	UINT32 getAttributeAsULong(const TCHAR *name);
+	const TCHAR *getAttribute(const TCHAR *name) const { return m_attributes.get(name); }
+	uint32_t getAttributeAsUInt32(const TCHAR *name) const;
 	void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.set(name, value); m_flags |= UF_MODIFIED; }
+
 	void setName(const TCHAR *name);
 	void setDescription(const TCHAR *description);
 
-	void setDn(const TCHAR *dn);
+	void setDN(const TCHAR *dn);
 	void setLdapId(const TCHAR *id);
    void detachLdapUser();
 
@@ -295,7 +319,7 @@ protected:
 	TCHAR m_fullName[MAX_USER_FULLNAME];
    PasswordHash m_password;
    int m_graceLogins;
-   int m_authMethod;
+   UserAuthenticationMethod m_authMethod;
    CertificateMappingMethod m_certMappingMethod;
 	TCHAR *m_certMappingData;
 	time_t m_disabledUntil;
@@ -309,7 +333,7 @@ public:
 	User();
 	User(const User *src);
 	User(DB_HANDLE hdb, DB_RESULT hResult, int row);
-	User(UINT32 id, const TCHAR *name);
+	User(uint32_t id, const TCHAR *name, UserAuthenticationMethod authMethod = UserAuthenticationMethod::LOCAL);
 	virtual ~User();
 
 	virtual bool saveToDatabase(DB_HANDLE hdb);
@@ -322,7 +346,7 @@ public:
 
 	const TCHAR *getFullName() const { return m_fullName; }
 	int getGraceLogins() const { return m_graceLogins; }
-	int getAuthMethod() const { return m_authMethod; }
+	UserAuthenticationMethod getAuthMethod() const { return m_authMethod; }
 	CertificateMappingMethod getCertMappingMethod() const { return m_certMappingMethod; }
 	time_t getLastLoginTime() const { return m_lastLogin; }
 	time_t getPasswordChangeTime() const { return m_lastPasswordChange; }
@@ -425,20 +449,20 @@ void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId);
 void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object);
 void SendUserDBUpdate(int code, UINT32 id);
 uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen, void *pCert,
-         BYTE *pChallenge, UINT32 *pdwId, UINT64 *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
+         BYTE *pChallenge, uint32_t *pdwId, uint64_t *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
          bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins);
 bool AuthenticateUserForXMPPCommands(const char *xmppId);
 bool AuthenticateUserForXMPPSubscription(const char *xmppId);
 
-UINT32 NXCORE_EXPORTABLE ValidateUserPassword(UINT32 userId, const TCHAR *login, const TCHAR *password, bool *isValid);
-UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
+uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const TCHAR *login, const TCHAR *password, bool *isValid);
+uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
 uint64_t NXCORE_EXPORTABLE GetEffectiveSystemRights(uint32_t userId);
 bool CheckUserMembershipInternal(UINT32 userId, UINT32 groupId, IntegerArray<UINT32> *searchPath);
 bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId);
 UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id);
 UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *id);
 uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **oldData, json_t **newData);
-uint32_t NXCORE_EXPORTABLE DetachLdapUser(uint32_t id);
+uint32_t NXCORE_EXPORTABLE DetachLDAPUser(uint32_t id);
 Iterator<UserDatabaseObject> NXCORE_EXPORTABLE *OpenUserDatabase();
 void NXCORE_EXPORTABLE CloseUserDatabase(Iterator<UserDatabaseObject> *it);
 const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name);
