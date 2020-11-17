@@ -278,12 +278,12 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 }
 
 /**
- * Find object
- * First argument: object id or name
+ * Generic "find object" functions implementation
+ * First argument: search criteria
  * Second argument (optional): current node object or null
  * Returns generic object or null if requested object was not found or access to it was denied
  */
-static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_FindObjectImpl(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm, const TCHAR *fname, shared_ptr<NetObj> (*finder)(NXSL_Value *))
 {
 	if ((argc !=1) && (argc != 2))
 		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -294,16 +294,7 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	if (argc == 2 && (!argv[1]->isNull() && !argv[1]->isObject()))
 		return NXSL_ERR_NOT_OBJECT;
 
-   shared_ptr<NetObj> object;
-	if (argv[0]->isInteger())
-	{
-		object = FindObjectById(argv[0]->getValueAsUInt32());
-	}
-	else
-	{
-		object = FindObjectByName(argv[0]->getValueAsCString(), -1);
-	}
-
+   shared_ptr<NetObj> object = finder(argv[0]);
 	if (object != nullptr)
 	{
 		if (g_flags & AF_CHECK_TRUSTED_NODES)
@@ -319,30 +310,148 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 			}
 			if ((currNode != nullptr) && (object->isTrustedNode(currNode->getId())))
 			{
-				*ppResult = object->createNXSLObject(vm);
+				*result = object->createNXSLObject(vm);
 			}
 			else
 			{
 				// No access, return null
-				*ppResult = vm->createValue();
-				DbgPrintf(4, _T("NXSL::FindObject('%s', %s [%d]): access denied for node %s [%d]"),
-				          argv[0]->getValueAsCString(),
-				          (currNode != nullptr) ? currNode->getName() : _T("null"), (currNode != nullptr) ? currNode->getId() : 0,
-							 object->getName(), object->getId());
+				*result = vm->createValue();
+				nxlog_debug_tag(_T("nxsl.objects"), 4, _T("%s('%s', %s [%d]): object %s [%d] found but trusted node check failed"),
+                   fname, argv[0]->getValueAsCString(),
+                   (currNode != nullptr) ? currNode->getName() : _T("null"), (currNode != nullptr) ? currNode->getId() : 0,
+                   object->getName(), object->getId());
 			}
 		}
 		else
 		{
-			*ppResult = object->createNXSLObject(vm);;
+			*result = object->createNXSLObject(vm);;
 		}
 	}
 	else
 	{
 		// Object not found, return null
-		*ppResult = vm->createValue();
+		*result = vm->createValue();
 	}
 
 	return 0;
+}
+
+/**
+ * Finder for F_FindObjectImpl: find by object name or ID
+ */
+static shared_ptr<NetObj> FindObjectByNameOrId(NXSL_Value *v)
+{
+   return v->isInteger() ? FindObjectById(v->getValueAsUInt32()) : FindObjectByName(v->getValueAsCString(), -1);
+}
+
+/**
+ * Find object by name or ID
+ * First argument: object id or name
+ * Second argument (optional): current node object or null
+ * Returns generic object or null if requested object was not found or access to it was denied
+ */
+static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   return F_FindObjectImpl(argc, argv, result, vm, _T("FindObject"), FindObjectByNameOrId);
+}
+
+/**
+ * Finder for F_FindObjectImpl: find object by GUID
+ */
+static shared_ptr<NetObj> FindObjectByGUID(NXSL_Value *v)
+{
+   uuid id = uuid::parse(v->getValueAsCString());
+   return !id.isNull() ? FindObjectByGUID(id) : shared_ptr<NetObj>();
+}
+
+/**
+ * Find object by GUID
+ * First argument: object id or name
+ * Second argument (optional): current node object or null
+ * Returns generic object or null if requested object was not found or access to it was denied
+ */
+static int F_FindObjectByGUID(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   return F_FindObjectImpl(argc, argv, result, vm, _T("FindObjectByGUID"), FindObjectByGUID);
+}
+
+/**
+ * Finder for F_FindObjectImpl: find node by IP address
+ */
+static shared_ptr<NetObj> FindNodeByIPAddress(NXSL_Value *v)
+{
+   InetAddress addr = InetAddress::parse(v->getValueAsCString());
+   return addr.isValidUnicast() ? FindNodeByIP(0, true, addr) : shared_ptr<NetObj>();
+}
+
+/**
+ * Find node by IP address
+ * First argument: object id or name
+ * Second argument (optional): current node object or null
+ * Returns generic object or null if requested object was not found or access to it was denied
+ */
+static int F_FindNodeByIPAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   return F_FindObjectImpl(argc, argv, result, vm, _T("FindNodeByIPAddress"), FindNodeByIPAddress);
+}
+
+/**
+ * Finder for F_FindObjectImpl: find node by MAC address
+ */
+static shared_ptr<NetObj> FindNodeByMACAddress(NXSL_Value *v)
+{
+   MacAddress addr = MacAddress::parse(v->getValueAsCString());
+   return addr.isValid() ? FindNodeByMAC(addr) : shared_ptr<NetObj>();
+}
+
+/**
+ * Find node by MAC address
+ * First argument: object id or name
+ * Second argument (optional): current node object or null
+ * Returns generic object or null if requested object was not found or access to it was denied
+ */
+static int F_FindNodeByMACAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   return F_FindObjectImpl(argc, argv, result, vm, _T("FindNodeByMACAddress"), FindNodeByMACAddress);
+}
+
+/**
+ * Finder for F_FindObjectImpl: find node by agent ID
+ */
+static shared_ptr<NetObj> FindNodeByAgentId(NXSL_Value *v)
+{
+   uuid id = uuid::parse(v->getValueAsCString());
+   return !id.isNull() ? FindNodeByAgentId(id) : shared_ptr<NetObj>();
+}
+
+/**
+ * Find node by agent ID
+ * First argument: object id or name
+ * Second argument (optional): current node object or null
+ * Returns generic object or null if requested object was not found or access to it was denied
+ */
+static int F_FindNodeByAgentId(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   return F_FindObjectImpl(argc, argv, result, vm, _T("FindNodeByAgentId"), FindNodeByAgentId);
+}
+
+/**
+ * Finder for F_FindObjectImpl: find node by SNMP sysName
+ */
+static shared_ptr<NetObj> FindNodeBySysName(NXSL_Value *v)
+{
+   return FindNodeBySysName(v->getValueAsCString());
+}
+
+/**
+ * Find node by SNMP sysName
+ * First argument: object id or name
+ * Second argument (optional): current node object or null
+ * Returns generic object or null if requested object was not found or access to it was denied
+ */
+static int F_FindNodeBySysName(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   return F_FindObjectImpl(argc, argv, result, vm, _T("FindNodeBySysName"), FindNodeBySysName);
 }
 
 /**
@@ -1790,8 +1899,13 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ "FindAlarmById", F_FindAlarmById, 1 },
 	{ "FindAlarmByKey", F_FindAlarmByKey, 1 },
    { "FindAlarmByKeyRegex", F_FindAlarmByKeyRegex, 1 },
+   { "FindNodeByAgentId", F_FindNodeByAgentId, -1 },
+   { "FindNodeByIPAddress", F_FindNodeByIPAddress, -1 },
+   { "FindNodeByMACAddress", F_FindNodeByMACAddress, -1 },
+   { "FindNodeBySysName", F_FindNodeBySysName, -1 },
 	{ "FindNodeObject", F_FindNodeObject, 2 },
 	{ "FindObject", F_FindObject, -1 },
+   { "FindObjectByGUID", F_FindObjectByGUID, -1 },
    { "LeaveMaintenance", F_LeaveMaintenance, 1 },
    { "LoadEvent", F_LoadEvent, 1 },
    { "ManageObject", F_ManageObject, 1 },
