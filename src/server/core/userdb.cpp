@@ -731,7 +731,7 @@ static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked
  * @param id user database object ID
  * @return RCC ready to be sent to client
  */
-UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id)
+uint32_t NXCORE_EXPORTABLE DeleteUserDatabaseObject(uint32_t id)
 {
    return DeleteUserDatabaseObjectInternal(id, false);
 }
@@ -739,9 +739,9 @@ UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id)
 /**
  * Create new user or group
  */
-UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *id)
+uint32_t NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, uint32_t *id)
 {
-   UINT32 dwResult = RCC_SUCCESS;
+   uint32_t rcc = RCC_SUCCESS;
 
    RWLockWriteLock(s_userDatabaseLock);
 
@@ -749,10 +749,10 @@ UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *
    UserDatabaseObject *object = isGroup ? (UserDatabaseObject *)s_groups.get(name) : (UserDatabaseObject *)s_users.get(name);
    if (object != nullptr)
    {
-      dwResult = RCC_OBJECT_ALREADY_EXISTS;
+      rcc = RCC_OBJECT_ALREADY_EXISTS;
    }
 
-   if (dwResult == RCC_SUCCESS)
+   if (rcc == RCC_SUCCESS)
    {
       if (isGroup)
       {
@@ -768,7 +768,7 @@ UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *
    }
 
    RWLockUnlock(s_userDatabaseLock);
-   return dwResult;
+   return rcc;
 }
 
 /**
@@ -956,10 +956,16 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Entry *ldapObject)
          userName = GenerateUniqueName(ldapObject->m_loginName, userId, userNameBuffer);
       }
 
-      User *user = new User(userId, userName, UserAuthenticationMethod::LDAP);
+      int method = ConfigReadInt(_T("LDAP.NewUserAuthMethod"), static_cast<int>(UserAuthenticationMethod::LDAP));
+      if ((method < 0) || (method > 5))
+         method = static_cast<int>(UserAuthenticationMethod::LDAP);
+      User *user = new User(userId, userName, UserAuthenticationMethodFromInt(method));
       user->setFullName(ldapObject->m_fullName);
       user->setDescription(ldapObject->m_description);
-      user->setFlags(UF_MODIFIED | UF_LDAP_USER);
+      if ((method == static_cast<int>(UserAuthenticationMethod::LOCAL)) || (method == static_cast<int>(UserAuthenticationMethod::CERTIFICATE_OR_LOCAL)))
+         user->setFlags(UF_MODIFIED | UF_LDAP_USER | UF_CHANGE_PASSWORD);
+      else
+         user->setFlags(UF_MODIFIED | UF_LDAP_USER);
       user->setDN(dn);
       if (ldapObject->m_id != nullptr)
          user->setLdapId(ldapObject->m_id);
