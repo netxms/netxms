@@ -24,11 +24,32 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 36.16 to 40.0
+ * Upgrade from 36.17 to 40.0
+ */
+static bool H_UpgradeFromV17()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 36.16 to 36.17
  */
 static bool H_UpgradeFromV16()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(CreateConfigParam(_T("LDAP.NewUserAuthMethod"), _T("5"), _T("Authentication method to be set for user objects created by LDAP synchronization process."), nullptr, 'C', true, false, false, false));
+
+   static const TCHAR *batch =
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','0','Local password')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','1','RADIUS password')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','2','Certificate')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','3','Certificate or local password')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','4','Certificate or RADIUS password')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','5','LDAP password')\n")
+         _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(17));
    return true;
 }
 
@@ -437,7 +458,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 16, 40, 0,  H_UpgradeFromV16 },
+   { 17, 40, 0,  H_UpgradeFromV17 },
+   { 16, 36, 17, H_UpgradeFromV16 },
    { 15, 36, 16, H_UpgradeFromV15 },
    { 14, 36, 15, H_UpgradeFromV14 },
    { 13, 36, 14, H_UpgradeFromV13 },

@@ -459,8 +459,8 @@ uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword
 uint64_t NXCORE_EXPORTABLE GetEffectiveSystemRights(uint32_t userId);
 bool CheckUserMembershipInternal(UINT32 userId, UINT32 groupId, IntegerArray<UINT32> *searchPath);
 bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId);
-UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id);
-UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *id);
+uint32_t NXCORE_EXPORTABLE DeleteUserDatabaseObject(uint32_t id);
+uint32_t NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, uint32_t *id);
 uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **oldData, json_t **newData);
 uint32_t NXCORE_EXPORTABLE DetachLDAPUser(uint32_t id);
 Iterator<UserDatabaseObject> NXCORE_EXPORTABLE *OpenUserDatabase();

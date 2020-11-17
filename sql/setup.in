@@ -136,6 +136,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('LDAP.GroupUniqueId','','',1,0,'S','Unique identifier for LDAP group object. If not set, LDAP users are identified by DN.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('LDAP.MappingDescription','','',1,0,'S','The name of an attribute whose value will be used as a user''s description.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('LDAP.MappingFullName','displayName','displayName',1,0,'S','The name of an attribute whose value will be used as a user''s full name.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('LDAP.NewUserAuthMethod','5','5',1,0,'C','Authentication method to be set for user objects created by LDAP synchronization process.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('LDAP.PageSize','1000','1000',1,0,'I','The maximum amount of records that can be returned in one search page.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('LDAP.SearchBase','','',1,0,'S','The DN of the entry at which to start the search.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('LDAP.SearchFilter','','',1,0,'S','A string representation of the filter to apply in the search.','');
@@ -308,6 +309,12 @@ INSERT INTO config_values (var_name,var_value,var_description) VALUES ('UseInter
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('UseInterfaceAliases','3','Concatenate name and alias');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.NodeMatchingPolicy','0','IP, then hostname');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.NodeMatchingPolicy','1','Hostname, then IP');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','0','Local password');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','1','RADIUS password');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','2','Certificate');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','3','Certificate or local password');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','4','Certificate or RADIUS password');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','5','LDAP password');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.UserDeleteAction','0','Delete user');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.UserDeleteAction','1','Disable user');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkDiscovery.Type','0','Disabled');
