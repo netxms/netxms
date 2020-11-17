@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.CertificateMappingMethod;
+import org.netxms.client.constants.UserAuthenticationMethod;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -65,9 +66,9 @@ public class Authentication extends PropertyPage
 		session = ConsoleSharedData.getSession();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -116,12 +117,13 @@ public class Authentication extends PropertyPage
 		Label label = new Label(groupMethod, SWT.NONE);
 		label.setText(Messages.get().Authentication_AuthMethod_Label);
 		comboAuthMethod = new Combo(groupMethod, SWT.DROP_DOWN | SWT.READ_ONLY);
-		comboAuthMethod.add(Messages.get().Authentication_Password);
+      comboAuthMethod.add(Messages.get().Authentication_Local);
 		comboAuthMethod.add(Messages.get().Authentication_RADIUS);
 		comboAuthMethod.add(Messages.get().Authentication_Certificate);
-		comboAuthMethod.add(Messages.get().Authentication_CertificateOrPassword);
+      comboAuthMethod.add(Messages.get().Authentication_CertificateOrLocal);
 		comboAuthMethod.add(Messages.get().Authentication_CertificateOrRADIUS);
-		comboAuthMethod.select(object.getAuthMethod());
+      comboAuthMethod.add(Messages.get().Authentication_LDAP);
+      comboAuthMethod.select(object.getAuthMethod().getValue());
 		gridData = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.grabExcessHorizontalSpace = true;
@@ -148,17 +150,6 @@ public class Authentication extends PropertyPage
       textMappingData = WidgetHelper.createLabeledText(groupMethod, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().Authentication_MappingData,
                                                        object.getCertMappingData(), gridData);
       
-      if((object.getFlags() & AbstractUserObject.LDAP_USER) != 0)
-      {
-         checkChangePassword.setEnabled(false);
-         checkFixedPassword.setEnabled(false);
-         comboAuthMethod.setEnabled(false);
-         comboAuthMethod.add(Messages.get().Authentication_LDAPPassword);
-         comboAuthMethod.select(5);
-         comboMappingMethod.setEnabled(false);
-         textMappingData.setEnabled(false);
-      }
-		
 		return dialogArea;
 	}
 	
@@ -183,7 +174,7 @@ public class Authentication extends PropertyPage
 		object.setFlags(flags);
 		
 		// Authentication
-		object.setAuthMethod(comboAuthMethod.getSelectionIndex());
+      object.setAuthMethod(UserAuthenticationMethod.getByValue(comboAuthMethod.getSelectionIndex()));
       object.setCertMappingMethod(CertificateMappingMethod.getByValue(comboMappingMethod.getSelectionIndex()));
 		object.setCertMappingData(textMappingData.getText());
 		

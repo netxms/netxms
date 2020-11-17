@@ -3147,14 +3147,14 @@ void ClientSession::detachLdapUser(NXCPMessage *pRequest)
    }
    else
    {
-      UINT32 result = DetachLdapUser(id);
-      if (result == RCC_SUCCESS)
+      uint32_t rcc = DetachLDAPUser(id);
+      if (rcc == RCC_SUCCESS)
       {
          TCHAR name[MAX_DB_STRING];
          writeAuditLog(AUDIT_SECURITY, true, 0,
             _T("%s %s detached from LDAP account"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), ResolveUserId(id, name, true));
       }
-      msg.setField(VID_RCC, result);
+      msg.setField(VID_RCC, rcc);
    }
 
    // Send response

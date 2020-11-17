@@ -28,20 +28,19 @@
  */
 static int CompareUserId(const void *e1, const void *e2)
 {
-   UINT32 id1 = *((UINT32 *)e1);
-   UINT32 id2 = *((UINT32 *)e2);
-
+   uint32_t id1 = *static_cast<const uint32_t*>(e1);
+   uint32_t id2 = *static_cast<const uint32_t*>(e2);
    return (id1 < id2) ? -1 : ((id1 > id2) ? 1 : 0);
 }
 
 /**
  * Generate hash for password
  */
-static void CalculatePasswordHash(const TCHAR *password, PasswordHashType type, PasswordHash *ph, const BYTE *salt = NULL)
+static void CalculatePasswordHash(const TCHAR *password, PasswordHashType type, PasswordHash *ph, const BYTE *salt = nullptr)
 {
 #ifdef UNICODE
 	char mbPassword[1024];
-	WideCharToMultiByte(CP_UTF8, 0, password, -1, mbPassword, 1024, NULL, NULL);
+	wchar_to_utf8(password, -1, mbPassword, 1024);
 	mbPassword[1023] = 0;
 #else
    const char *mbPassword = password;
@@ -54,14 +53,14 @@ static void CalculatePasswordHash(const TCHAR *password, PasswordHashType type, 
    switch(type)
    {
       case PWD_HASH_SHA1:
-      	CalculateSHA1Hash((BYTE *)mbPassword, strlen(mbPassword), ph->hash);
+      	CalculateSHA1Hash(mbPassword, strlen(mbPassword), ph->hash);
          break;
       case PWD_HASH_SHA256:
-         if (salt != NULL)
+         if (salt != nullptr)
             memcpy(buffer, salt, PASSWORD_SALT_LENGTH);
          else
             GenerateRandomBytes(buffer, PASSWORD_SALT_LENGTH);
-         strcpy((char *)&buffer[PASSWORD_SALT_LENGTH], mbPassword);
+         strcpy(reinterpret_cast<char*>(&buffer[PASSWORD_SALT_LENGTH]), mbPassword);
       	CalculateSHA256Hash(buffer, strlen(mbPassword) + PASSWORD_SALT_LENGTH, ph->hash);
          memcpy(ph->salt, buffer, PASSWORD_SALT_LENGTH);
          break;
@@ -87,8 +86,8 @@ UserDatabaseObject::UserDatabaseObject(DB_HANDLE hdb, DB_RESULT hResult, int row
 	m_flags = DBGetFieldULong(hResult, row, 3);
 	DBGetField(hResult, row, 4, m_description, MAX_USER_DESCR);
 	m_guid = DBGetFieldGUID(hResult, row, 5);
-	m_ldapDn = DBGetField(hResult, row, 6, NULL, 0);
-	m_ldapId = DBGetField(hResult, row, 7, NULL, 0);
+	m_ldapDn = DBGetField(hResult, row, 6, nullptr, 0);
+	m_ldapId = DBGetField(hResult, row, 7, nullptr, 0);
 	m_created = (time_t)DBGetFieldULong(hResult, row, 8);
 }
 
@@ -100,28 +99,28 @@ UserDatabaseObject::UserDatabaseObject()
    m_id = 0;
    m_guid = uuid::generate();
    m_name[0] = 0;
-   m_ldapDn = NULL;
-   m_ldapId = NULL;
+   m_ldapDn = nullptr;
+   m_ldapId = nullptr;
 	m_systemRights = 0;
 	m_description[0] = 0;
 	m_flags = 0;
-	m_created = time(NULL);
+	m_created = time(nullptr);
 }
 
 /**
  * Constructor for generic object - create new object with given id and name
  */
-UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
+UserDatabaseObject::UserDatabaseObject(uint32_t id, const TCHAR *name)
 {
 	m_id = id;
    m_guid = uuid::generate();
-	nx_strncpy(m_name, name, MAX_USER_NAME);
+	_tcslcpy(m_name, name, MAX_USER_NAME);
 	m_systemRights = 0;
 	m_description[0] = 0;
 	m_flags = UF_MODIFIED;
-	m_ldapDn = NULL;
-	m_ldapId = NULL;
-   m_created = time(NULL);
+	m_ldapDn = nullptr;
+	m_ldapId = nullptr;
+   m_created = time(nullptr);
 }
 
 /**
@@ -173,13 +172,13 @@ void UserDatabaseObject::fillMessage(NXCPMessage *msg)
 {
    msg->setField(VID_USER_ID, m_id);
    msg->setField(VID_USER_NAME, m_name);
-   msg->setField(VID_USER_FLAGS, (WORD)m_flags);
+   msg->setField(VID_USER_FLAGS, static_cast<uint16_t>(m_flags));
    msg->setField(VID_USER_SYS_RIGHTS, m_systemRights);
    msg->setField(VID_USER_DESCRIPTION, m_description);
    msg->setField(VID_GUID, m_guid);
    msg->setField(VID_LDAP_DN, m_ldapDn);
    msg->setField(VID_LDAP_ID, m_ldapId);
-   msg->setField(VID_CREATION_TIME, (UINT32)m_created);
+   msg->setFieldFromTime(VID_CREATION_TIME, m_created);
    m_attributes.fillMessage(msg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
 }
 
@@ -241,7 +240,7 @@ void UserDatabaseObject::modifyFromMessage(NXCPMessage *msg)
 void UserDatabaseObject::detachLdapUser()
 {
    m_flags &= ~UF_LDAP_USER;
-   setDn(NULL);
+   setDN(nullptr);
 	m_flags |= UF_MODIFIED;
 }
 
@@ -311,55 +310,68 @@ bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
 }
 
 /**
- * Get custom attribute as UINT32
+ * Get custom attribute as 32 bit unsigned integer
  */
-UINT32 UserDatabaseObject::getAttributeAsULong(const TCHAR *name)
+uint32_t UserDatabaseObject::getAttributeAsUInt32(const TCHAR *name) const
 {
 	const TCHAR *value = getAttribute(name);
-	return (value != NULL) ? _tcstoul(value, NULL, 0) : 0;
+	return (value != nullptr) ? _tcstoul(value, nullptr, 0) : 0;
 }
 
+/**
+ * Set description
+ */
 void UserDatabaseObject::setDescription(const TCHAR *description)
 {
    if (_tcscmp(CHECK_NULL_EX(m_description), CHECK_NULL_EX(description)))
    {
-      nx_strncpy(m_description, CHECK_NULL_EX(description), MAX_USER_DESCR);
+      _tcslcpy(m_description, CHECK_NULL_EX(description), MAX_USER_DESCR);
       m_flags |= UF_MODIFIED;
    }
 }
 
+/**
+ * Set name
+ */
 void UserDatabaseObject::setName(const TCHAR *name)
 {
    if (_tcscmp(CHECK_NULL_EX(m_name), CHECK_NULL_EX(name)))
    {
-      nx_strncpy(m_name, CHECK_NULL_EX(name), MAX_USER_NAME);
+      _tcslcpy(m_name, CHECK_NULL_EX(name), MAX_USER_NAME);
       m_flags |= UF_MODIFIED;
    }
 }
 
-void UserDatabaseObject::setDn(const TCHAR *dn)
+/**
+ * Set object's DN
+ */
+void UserDatabaseObject::setDN(const TCHAR *dn)
 {
-   if(dn == NULL)
+   if ((dn == nullptr) || ((m_ldapDn != nullptr) && !_tcscmp(m_ldapDn, dn)))
       return;
-   if(m_ldapDn != NULL && !_tcscmp(m_ldapDn, dn))
-      return;
-   free(m_ldapDn);
+   MemFree(m_ldapDn);
    m_ldapDn = MemCopyString(dn);
    m_flags |= UF_MODIFIED;
 }
 
+/**
+ * Set object's LDAP ID
+ */
 void UserDatabaseObject::setLdapId(const TCHAR *id)
 {
-   if(m_ldapId != NULL && !_tcscmp(m_ldapId, id))
+   if ((m_ldapId != nullptr) && !_tcscmp(m_ldapId, id))
       return;
-   free(m_ldapId);
+   MemFree(m_ldapId);
    m_ldapId = MemCopyString(id);
    m_flags |= UF_MODIFIED;
 }
 
+/**
+ * Remove LDAP synchronization exception
+ */
 void UserDatabaseObject::removeSyncException()
 {
-   if((m_flags & UF_SYNC_EXCEPTION)> 0)
+   if ((m_flags & UF_SYNC_EXCEPTION)> 0)
    {
       m_flags &= ~UF_SYNC_EXCEPTION;
       m_flags |= UF_MODIFIED;
@@ -400,7 +412,7 @@ json_t *UserDatabaseObject::toJson() const
    json_object_set_new(root, "attributes", m_attributes.toJson());
    json_object_set_new(root, "ldapDn", json_string_t(m_ldapDn));
    json_object_set_new(root, "ldapId", json_string_t(m_ldapId));
-   json_object_set_new(root, "created", json_integer((UINT32)m_created));
+   json_object_set_new(root, "created", json_integer(m_created));
    return root;
 }
 
@@ -409,9 +421,9 @@ json_t *UserDatabaseObject::toJson() const
  */
 NXSL_Value *UserDatabaseObject::getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const
 {
-   NXSL_Value *value = NULL;
+   NXSL_Value *value = nullptr;
    const TCHAR *av = m_attributes.get(name);
-   if (av != NULL)
+   if (av != nullptr)
       value = vm->createValue(av);
    return value;
 }
@@ -488,7 +500,7 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
 
 	DBGetField(hResult, row, 10, m_fullName, MAX_USER_FULLNAME);
 	m_graceLogins = DBGetFieldLong(hResult, row, 11);
-	m_authMethod = DBGetFieldLong(hResult, row, 12);
+	m_authMethod = UserAuthenticationMethodFromInt(DBGetFieldLong(hResult, row, 12));
 	m_certMappingMethod = static_cast<CertificateMappingMethod>(DBGetFieldLong(hResult, row, 13));
 	m_certMappingData = DBGetField(hResult, row, 14, NULL, 0);
 	m_authFailures = DBGetFieldLong(hResult, row, 15);
@@ -518,7 +530,7 @@ User::User() : UserDatabaseObject()
 	_tcscpy(m_description, _T("Built-in system account"));
 	CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
 	m_graceLogins = ConfigReadInt(_T("GraceLoginCount"), 5);
-	m_authMethod = AUTH_NETXMS_PASSWORD;
+	m_authMethod = UserAuthenticationMethod::LOCAL;
 	m_certMappingMethod = MAP_CERTIFICATE_BY_CN;
 	m_certMappingData = nullptr;
 	m_authFailures = 0;
@@ -532,11 +544,11 @@ User::User() : UserDatabaseObject()
 /**
  * Constructor for user object - new user
  */
-User::User(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
+User::User(uint32_t id, const TCHAR *name, UserAuthenticationMethod authMethod) : UserDatabaseObject(id, name)
 {
 	m_fullName[0] = 0;
 	m_graceLogins = ConfigReadInt(_T("GraceLoginCount"), 5);
-	m_authMethod = AUTH_NETXMS_PASSWORD;
+	m_authMethod = authMethod;
 	m_certMappingMethod = MAP_CERTIFICATE_BY_CN;
 	m_certMappingData = nullptr;
 	CalculatePasswordHash(_T(""), PWD_HASH_SHA256, &m_password);
@@ -629,7 +641,7 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
    DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_graceLogins);
    DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_guid);
-   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_authMethod);
+   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_authMethod));
    DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_certMappingMethod);
    DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_certMappingData, DB_BIND_STATIC);
    DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_authFailures);
@@ -732,14 +744,14 @@ void User::fillMessage(NXCPMessage *msg)
 	UserDatabaseObject::fillMessage(msg);
 
    msg->setField(VID_USER_FULL_NAME, m_fullName);
-   msg->setField(VID_AUTH_METHOD, (WORD)m_authMethod);
-	msg->setField(VID_CERT_MAPPING_METHOD, (WORD)m_certMappingMethod);
+   msg->setField(VID_AUTH_METHOD, static_cast<uint16_t>(m_authMethod));
+	msg->setField(VID_CERT_MAPPING_METHOD, static_cast<uint16_t>(m_certMappingMethod));
 	msg->setField(VID_CERT_MAPPING_DATA, CHECK_NULL_EX(m_certMappingData));
-	msg->setField(VID_LAST_LOGIN, (UINT32)m_lastLogin);
-	msg->setField(VID_LAST_PASSWORD_CHANGE, (UINT32)m_lastPasswordChange);
-	msg->setField(VID_MIN_PASSWORD_LENGTH, (WORD)m_minPasswordLength);
-	msg->setField(VID_DISABLED_UNTIL, (UINT32)m_disabledUntil);
-	msg->setField(VID_AUTH_FAILURES, (UINT32)m_authFailures);
+	msg->setFieldFromTime(VID_LAST_LOGIN, m_lastLogin);
+	msg->setFieldFromTime(VID_LAST_PASSWORD_CHANGE, m_lastPasswordChange);
+	msg->setField(VID_MIN_PASSWORD_LENGTH, static_cast<uint16_t>(m_minPasswordLength));
+	msg->setFieldFromTime(VID_DISABLED_UNTIL, m_disabledUntil);
+	msg->setField(VID_AUTH_FAILURES, m_authFailures);
    msg->setField(VID_XMPP_ID, m_xmppId);
 
    FillGroupMembershipInfo(msg, m_id);
@@ -752,12 +764,12 @@ void User::modifyFromMessage(NXCPMessage *msg)
 {
 	UserDatabaseObject::modifyFromMessage(msg);
 
-	UINT32 fields = msg->getFieldAsUInt32(VID_FIELDS);
+	uint32_t fields = msg->getFieldAsUInt32(VID_FIELDS);
 
 	if (fields & USER_MODIFY_FULL_NAME)
 		msg->getFieldAsString(VID_USER_FULL_NAME, m_fullName, MAX_USER_FULLNAME);
 	if (fields & USER_MODIFY_AUTH_METHOD)
-	   m_authMethod = msg->getFieldAsUInt16(VID_AUTH_METHOD);
+	   m_authMethod = UserAuthenticationMethodFromInt(msg->getFieldAsUInt16(VID_AUTH_METHOD));
 	if (fields & USER_MODIFY_PASSWD_LENGTH)
 	   m_minPasswordLength = msg->getFieldAsUInt16(VID_MIN_PASSWORD_LENGTH);
 	if (fields & USER_MODIFY_TEMP_DISABLE)
@@ -823,7 +835,7 @@ void User::setFullName(const TCHAR *fullName)
 {
    if (_tcscmp(CHECK_NULL_EX(m_fullName), CHECK_NULL_EX(fullName)))
    {
-      nx_strncpy(m_fullName, CHECK_NULL_EX(fullName), MAX_USER_FULLNAME);
+      _tcslcpy(m_fullName, CHECK_NULL_EX(fullName), MAX_USER_FULLNAME);
       m_flags |= UF_MODIFIED;
    }
 }
@@ -836,7 +848,7 @@ json_t *User::toJson() const
    json_t *root = UserDatabaseObject::toJson();
    json_object_set_new(root, "fullName", json_string_t(m_fullName));
    json_object_set_new(root, "graceLogins", json_integer(m_graceLogins));
-   json_object_set_new(root, "authMethod", json_integer(m_authMethod));
+   json_object_set_new(root, "authMethod", json_integer(static_cast<int>(m_authMethod)));
    json_object_set_new(root, "certMappingMethod", json_integer(m_certMappingMethod));
    json_object_set_new(root, "certMappingData", json_string_t(m_certMappingData));
    json_object_set_new(root, "disabledUntil", json_integer(m_disabledUntil));

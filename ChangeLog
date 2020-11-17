@@ -32,6 +32,7 @@
 - NXSL performance optimization
 - Improved handling of external parameter providers in agent
 - Added background polling option for external tables in agent
+- Authentication method for LDAP users can be changed
 - Fixed screenshot issues on Windows 10 with DPI scaling
 - Fixed errors on graph properties modification
 - Fixed sorting in summary table when one column has different data types

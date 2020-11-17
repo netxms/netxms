@@ -291,7 +291,7 @@ void LDAPConnection::syncUsers()
 {
    getAllSyncParameters();
    initLDAP();
-   UINT32 rcc = loginLDAP();
+   uint32_t rcc = loginLDAP();
    if (rcc != RCC_SUCCESS)
    {
       nxlog_debug_tag(LDAP_DEBUG_TAG, 6, _T("LDAPConnection::syncUsers(): login failed (error %u)"), rcc);
@@ -315,16 +315,16 @@ void LDAPConnection::syncUsers()
    size_t size = ldap_strlen(tmp);
    int rc = LDAP_SUCCESS;
 
-   while (separator != NULL)
+   while (separator != nullptr)
    {
       while (true)
       {
          separator = ldap_strchr(separator, ';');
-         if(separator != NULL)
+         if (separator != nullptr)
          {
             if ((separator - tmp) > 0)
             {
-               if(separator[-1] != '\\')
+               if (separator[-1] != '\\')
                {
                   separator[0] = 0;
                }
@@ -959,14 +959,14 @@ void LDAPConnection::closeLDAPConnection()
  */
 LDAPConnection::LDAPConnection()
 {
-   m_ldapConn = NULL;
+   m_ldapConn = nullptr;
    m_action = 1;
    m_secure = 0;
    m_pageSize = 1000;
-   m_userIdEntryList = NULL;
-   m_userDnEntryList = NULL;
-   m_groupIdEntryList = NULL;
-   m_groupDnEntryList = NULL;
+   m_userIdEntryList = nullptr;
+   m_userDnEntryList = nullptr;
+   m_groupIdEntryList = nullptr;
+   m_groupDnEntryList = nullptr;
 }
 
 /**
@@ -1029,7 +1029,7 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
 void LDAPSyncThread()
 {
    ThreadSetName("LDAPSync");
-   UINT32 syncInterval = ConfigReadInt(_T("LDAP.SyncInterval"), 0);
+   uint32_t syncInterval = ConfigReadInt(_T("LDAP.SyncInterval"), 0);
    if (syncInterval == 0)
    {
       nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPSyncThread: sync thread will not start because LDAP sync is disabled"));

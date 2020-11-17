@@ -60,22 +60,22 @@ static THREAD s_statusUpdateThread = INVALID_THREAD_HANDLE;
 /**
  * Add user database object
  */
-inline void AddDatabaseObject(UserDatabaseObject *object)
+static inline void AddDatabaseObject(UserDatabaseObject *object)
 {
    s_userDatabase.set(object->getId(), object);
    if (object->isGroup())
-      s_groups.set(object->getName(), (Group *)object);
+      s_groups.set(object->getName(), static_cast<Group*>(object));
    else
-      s_users.set(object->getName(), (User *)object);
+      s_users.set(object->getName(), static_cast<User*>(object));
    if (object->isLDAPUser())
    {
-      s_ldapNames.set(object->getDn(), object);
-      if(object->getLdapId() != NULL)
+      s_ldapNames.set(object->getDN(), object);
+      if(object->getLdapId() != nullptr)
       {
          if (object->isGroup())
-            s_ldapGroupId.set(object->getLdapId(), (Group *)object);
+            s_ldapGroupId.set(object->getLdapId(), static_cast<Group*>(object));
          else
-            s_ldapUserId.set(object->getLdapId(), (User *)object);
+            s_ldapUserId.set(object->getLdapId(), static_cast<User*>(object));
       }
    }
 }
@@ -83,7 +83,7 @@ inline void AddDatabaseObject(UserDatabaseObject *object)
 /**
  * Remove user database object
  */
-inline void RemoveDatabaseObject(UserDatabaseObject *object)
+static inline void RemoveDatabaseObject(UserDatabaseObject *object)
 {
    if (object->isGroup())
       s_groups.remove(object->getName());
@@ -91,8 +91,8 @@ inline void RemoveDatabaseObject(UserDatabaseObject *object)
       s_users.remove(object->getName());
    if (object->isLDAPUser())
    {
-      s_ldapNames.remove(object->getDn());
-      if(object->getLdapId() != NULL)
+      s_ldapNames.remove(object->getDN());
+      if(object->getLdapId() != nullptr)
       {
          if (object->isGroup())
             s_ldapGroupId.remove(object->getLdapId());
@@ -105,11 +105,11 @@ inline void RemoveDatabaseObject(UserDatabaseObject *object)
 /**
  * Get effective system rights for user
  */
-static UINT64 GetEffectiveSystemRights(User *user)
+static uint64_t GetEffectiveSystemRights(User *user)
 {
-   UINT64 systemRights = user->getSystemRights();
+   uint64_t systemRights = user->getSystemRights();
+   IntegerArray<uint32_t> searchPath(32, 32);
    Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
-   IntegerArray<UINT32> *searchPath = new IntegerArray<UINT32>(16, 16);
    while(it->hasNext())
    {
       UserDatabaseObject *object = it->next();
@@ -117,26 +117,25 @@ static UINT64 GetEffectiveSystemRights(User *user)
          continue;
 
       // The previous search path is checked to avoid performing a deep membership search again
-      if (object->isGroup() && searchPath->contains(static_cast<Group*>(object)->getId()))
+      if (object->isGroup() && searchPath.contains(static_cast<Group*>(object)->getId()))
       {
          systemRights |= static_cast<Group*>(object)->getSystemRights();
          continue;
       }
       else
       {
-         searchPath->clear();
+         searchPath.clear();
       }
 
-      if (object->isGroup() && (static_cast<Group*>(object)->isMember(user->getId(), searchPath)))
+      if (object->isGroup() && (static_cast<Group*>(object)->isMember(user->getId(), &searchPath)))
       {
          systemRights |= static_cast<Group*>(object)->getSystemRights();
       }
       else
       {
-         searchPath->clear();
+         searchPath.clear();
       }
    }
-   delete searchPath;
    delete it;
    return systemRights;
 }
@@ -149,7 +148,7 @@ uint64_t NXCORE_EXPORTABLE GetEffectiveSystemRights(uint32_t userId)
    uint64_t systemRights = 0;
    RWLockReadLock(s_userDatabaseLock);
    UserDatabaseObject *user = s_userDatabase.get(userId);
-   if ((user != NULL) && !user->isGroup())
+   if ((user != nullptr) && !user->isGroup())
    {
       systemRights = GetEffectiveSystemRights(static_cast<User*>(user));
    }
@@ -342,7 +341,7 @@ void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId)
  * count ignored for SSO logins.
  */
 uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen, void *pCert,
-         BYTE *pChallenge, UINT32 *pdwId, UINT64 *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
+         BYTE *pChallenge, uint32_t *pdwId, uint64_t *pdwSystemRights, bool *pbChangePasswd, bool *pbIntruderLockout,
          bool *closeOtherSessions, bool ssoAuth, uint32_t *graceLogins)
 {
    RWLockReadLock(s_userDatabaseLock);
@@ -362,40 +361,26 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
    *closeOtherSessions = false;
    *pdwId = user->getId(); // always set user ID for caller so audit log will contain correct user ID on failures as well
 
-   if (user->isLDAPUser())
-   {
-      if (user->isDisabled())
-      {
-         rcc = RCC_ACCOUNT_DISABLED;
-         goto result;
-      }
-      LDAPConnection conn;
-      rcc = conn.ldapUserLogin(user->getDn(), password);
-      if (rcc == RCC_SUCCESS)
-         passwordValid = true;
-      goto result;
-   }
-
    // Determine authentication method to use
+   UserAuthenticationMethod authMethod = user->getAuthMethod();
    if (!ssoAuth)
    {
-      int method = user->getAuthMethod();
-      if ((method == AUTH_CERT_OR_PASSWD) || (method == AUTH_CERT_OR_RADIUS))
+      if ((authMethod == UserAuthenticationMethod::CERTIFICATE_OR_LOCAL) || (authMethod == UserAuthenticationMethod::CERTIFICATE_OR_RADIUS))
       {
          if (sigLen > 0)
          {
             // certificate auth
-            method = AUTH_CERTIFICATE;
+            authMethod = UserAuthenticationMethod::CERTIFICATE;
          }
          else
          {
-            method = (method == AUTH_CERT_OR_PASSWD) ? AUTH_NETXMS_PASSWORD : AUTH_RADIUS;
+            authMethod = (authMethod == UserAuthenticationMethod::CERTIFICATE_OR_LOCAL) ? UserAuthenticationMethod::LOCAL : UserAuthenticationMethod::RADIUS;
          }
       }
 
-      switch(method)
+      switch(authMethod)
       {
-         case AUTH_NETXMS_PASSWORD:
+         case UserAuthenticationMethod::LOCAL:
             if (sigLen == 0)
             {
                passwordValid = user->validatePassword(password);
@@ -406,7 +391,7 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
                passwordValid = false;
             }
             break;
-         case AUTH_RADIUS:
+         case UserAuthenticationMethod::RADIUS:
             if (sigLen == 0)
             {
                passwordValid = RadiusAuth(login, password);
@@ -417,7 +402,7 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
                passwordValid = false;
             }
             break;
-         case AUTH_CERTIFICATE:
+         case UserAuthenticationMethod::CERTIFICATE:
             if ((sigLen != 0) && (pCert != nullptr))
             {
 #ifdef _WITH_ENCRYPTION
@@ -431,6 +416,21 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
             else
             {
                // We got password instead of certificate
+               passwordValid = false;
+            }
+            break;
+         case UserAuthenticationMethod::LDAP:
+            if (user->isLDAPUser())
+            {
+               LDAPConnection conn;
+               rcc = conn.ldapUserLogin(user->getDN(), password);
+               if (rcc == RCC_SUCCESS)
+                  passwordValid = true;
+            }
+            else
+            {
+               // Attempt for LDAP authentication for non-LDAP user
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("LDAP authentication request for local user \"%s\""), user->getName());
                passwordValid = false;
             }
             break;
@@ -463,7 +463,7 @@ result:
          user->resetAuthFailures();
          if (!ssoAuth)
          {
-            if (user->getFlags() & UF_CHANGE_PASSWORD)
+            if ((authMethod == UserAuthenticationMethod::LOCAL) && (user->getFlags() & UF_CHANGE_PASSWORD))
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Password for user \"%s\" need to be changed"), user->getName());
                if (user->getId() != 0)	// Do not check grace logins for built-in system user
@@ -484,10 +484,10 @@ result:
             {
                // Check if password was expired
                int passwordExpirationTime = ConfigReadInt(_T("PasswordExpiration"), 0);
-               if ((user->getAuthMethod() == AUTH_NETXMS_PASSWORD) &&
+               if ((authMethod == UserAuthenticationMethod::LOCAL) &&
                    (passwordExpirationTime > 0) &&
                    ((user->getFlags() & UF_PASSWORD_NEVER_EXPIRES) == 0) &&
-                   (time(NULL) > user->getPasswordChangeTime() + passwordExpirationTime * 86400))
+                   (time(nullptr) > user->getPasswordChangeTime() + passwordExpirationTime * 86400))
                {
                   nxlog_debug_tag(DEBUG_TAG, 4, _T("Password for user \"%s\" has expired"), user->getName());
                   if (user->getId() != 0)	// Do not check grace logins for built-in system user
@@ -865,11 +865,10 @@ inline bool GroupNameIsUnique(const TCHAR *name, Group *group)
 /**
  * Generates unique name for LDAP user
  */
-static TCHAR *GenerateUniqueName(const TCHAR *oldName, uint32_t id)
+static inline TCHAR *GenerateUniqueName(const TCHAR *ldapName, uint32_t userId, TCHAR *buffer)
 {
-   TCHAR *name = MemAllocString(256);
-   _sntprintf(name, 256, _T("%s_LDAP%u"), oldName, id);
-   return name;
+   _sntprintf(buffer, MAX_USER_NAME, _T("%s_LDAP%u"), ldapName, userId);
+   return buffer;
 }
 
 /**
@@ -895,53 +894,47 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Entry *ldapObject)
    {
       _sntprintf(description, MAX_USER_DESCR, _T("Got user with DN=%s but found existing group %s with same DN"), dn, object->getName());
       object->getGuidAsText(guid);
-      PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
+      PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDN(), object->getName(), description);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): %s"), description);
       conflict = true;
    }
 
-   if ((object != NULL) && !conflict)
+   if ((object != nullptr) && !conflict)
    {
-      User *user = (User *)object;
+      User *user = static_cast<User*>(object);
       if (!user->isDeleted())
       {
          user->removeSyncException();
-         if (!UserNameIsUnique(ldapObject->m_loginName, user))
+         if (UserNameIsUnique(ldapObject->m_loginName, user))
          {
-            TCHAR *userName = GenerateUniqueName(ldapObject->m_loginName, user->getId());
-            if(_tcscmp(user->getName(), userName))
+            user->setName(ldapObject->m_loginName);
+         }
+         else
+         {
+            TCHAR userName[MAX_USER_NAME];
+            GenerateUniqueName(ldapObject->m_loginName, user->getId(), userName);
+            if (_tcscmp(user->getName(), userName))
             {
                user->setName(userName);
                _sntprintf(description, 1024, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), ldapObject->m_loginName, userName);
                object->getGuidAsText(guid);
-               PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
+               PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDN(), object->getName(), description);
                nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): %s"), description);
             }
-            user->setFullName(ldapObject->m_fullName);
-            user->setDescription(ldapObject->m_description);
-            if(_tcscmp(user->getDn(), dn))
-            {
-               s_ldapNames.remove(user->getDn());
-               user->setDn(dn);
-               s_ldapNames.set(dn, user);
-            }
-            MemFree(userName);
          }
-         else
+
+         user->setFullName(ldapObject->m_fullName);
+         user->setDescription(ldapObject->m_description);
+         if (_tcscmp(user->getDN(), dn))
          {
-            user->setName(ldapObject->m_loginName);
-            user->setFullName(ldapObject->m_fullName);
-            user->setDescription(ldapObject->m_description);
-            if(_tcscmp(user->getDn(), dn))
-            {
-               s_ldapNames.remove(user->getDn());
-               user->setDn(dn);
-               s_ldapNames.set(dn, user);
-            }
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): User updated: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
+            s_ldapNames.remove(user->getDN());
+            user->setDN(dn);
+            s_ldapNames.set(dn, user);
          }
+
          if (user->isModified())
          {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): User updated: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
             SendUserDBUpdate(USER_DB_MODIFY, user->getId(), user);
          }
       }
@@ -950,39 +943,38 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Entry *ldapObject)
 
    if (!userModified && !conflict)
    {
-      if (UserNameIsUnique(ldapObject->m_loginName, NULL))
+      uint32_t userId = CreateUniqueId(IDG_USER);
+      TCHAR userNameBuffer[MAX_USER_NAME];
+      const TCHAR *userName;
+      bool uniqueName = UserNameIsUnique(ldapObject->m_loginName, nullptr);
+      if (uniqueName)
       {
-         User *user = new User(CreateUniqueId(IDG_USER), ldapObject->m_loginName);
-         user->setFullName(ldapObject->m_fullName);
-         user->setDescription(ldapObject->m_description);
-         user->setFlags(UF_MODIFIED | UF_LDAP_USER);
-         user->setDn(dn);
-         if(ldapObject->m_id != NULL)
-            user->setLdapId(ldapObject->m_id);
-         AddDatabaseObject(user);
-         SendUserDBUpdate(USER_DB_CREATE, user->getId(), user);
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
+         userName = ldapObject->m_loginName;
       }
       else
       {
-         UINT32 userId = CreateUniqueId(IDG_USER);
-         TCHAR *userName = GenerateUniqueName(ldapObject->m_loginName, userId);
-         _sntprintf(description, MAX_USER_DESCR, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), ldapObject->m_loginName, userName);
-         nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPUser(): %s"), description);
-         User *user = new User(userId, userName);
-         user->setFullName(ldapObject->m_fullName);
-         user->setDescription(ldapObject->m_description);
-         user->setFlags(UF_MODIFIED | UF_LDAP_USER);
-         user->setDn(dn);
-         if(ldapObject->m_id != NULL)
-            user->setLdapId(ldapObject->m_id);
-         AddDatabaseObject(user);
-         SendUserDBUpdate(USER_DB_CREATE, user->getId(), user);
-         user->getGuidAsText(guid);
-         PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", user->getId(), guid, user->getDn(), user->getName(), description);
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, userName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
-         MemFree(userName);
+         userName = GenerateUniqueName(ldapObject->m_loginName, userId, userNameBuffer);
       }
+
+      User *user = new User(userId, userName, UserAuthenticationMethod::LDAP);
+      user->setFullName(ldapObject->m_fullName);
+      user->setDescription(ldapObject->m_description);
+      user->setFlags(UF_MODIFIED | UF_LDAP_USER);
+      user->setDN(dn);
+      if (ldapObject->m_id != nullptr)
+         user->setLdapId(ldapObject->m_id);
+
+      AddDatabaseObject(user);
+      SendUserDBUpdate(USER_DB_CREATE, user->getId(), user);
+
+      if (!uniqueName)
+      {
+         _sntprintf(description, 1024, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), ldapObject->m_loginName, userName);
+         nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPUser(): %s"), description);
+         user->getGuidAsText(guid);
+         PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", user->getId(), guid, user->getDN(), user->getName(), description);
+      }
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, userName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
    }
    RWLockUnlock(s_userDatabaseLock);
 }
@@ -1003,16 +995,16 @@ void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Entry> *entryListDn, StringOb
 
       if (isUser ? ((object->getId() & GROUP_FLAG) == 0) : ((object->getId() & GROUP_FLAG) != 0))
 		{
-         if (((object->getLdapId() == nullptr) || !entryListId->contains(object->getLdapId())) && !entryListDn->contains(object->getDn()))
+         if (((object->getLdapId() == nullptr) || !entryListId->contains(object->getLdapId())) && !entryListDn->contains(object->getDN()))
          {
             if (m_action == USER_DELETE)
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was removed from user database"), isUser ? _T("user") : _T("group"), object->getDn());
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was removed from user database"), isUser ? _T("user") : _T("group"), object->getDN());
                DeleteUserDatabaseObjectInternal(object->getId(), true);
             }
             else if (m_action == USER_DISABLE)
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was disabled"), isUser ? _T("user") : _T("group"), object->getDn());
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was disabled"), isUser ? _T("user") : _T("group"), object->getDN());
                object->disable();
                object->setDescription(_T("LDAP entry was deleted."));
             }
@@ -1029,10 +1021,10 @@ void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Entry> *entryListDn, StringOb
  */
 void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Entry *ldapObject)
 {
-   // Check existing user/group with same DN
-   UserDatabaseObject *object = NULL;
    RWLockWriteLock(s_userDatabaseLock);
 
+   // Check existing user/group with same DN
+   UserDatabaseObject *object;
    if (ldapObject->m_id != nullptr)
       object = s_ldapGroupId.get(ldapObject->m_id);
    else
@@ -1040,26 +1032,26 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Entry *ldapObject)
 
    if ((object != nullptr) && !object->isGroup())
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Ignore LDAP object: %s"), dn);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Ignore LDAP object %s"), dn);
       RWLockUnlock(s_userDatabaseLock);
       return;
    }
 
    if (object == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Unable to find LDAP object: %s"), dn);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Unable to find LDAP object %s"), dn);
       RWLockUnlock(s_userDatabaseLock);
       return;
    }
 
    Group *group = static_cast<Group*>(object);
 
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Sync for LDAP group: %s"), dn);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Sync LDAP group %s"), dn);
 
    const StringSet& newMembers = ldapObject->m_memberList;
    const IntegerArray<uint32_t>& oldMembers = group->getMembers();
 
-   /**
+   /*
     * Go through existing group member list checking each LDAP user/group by DN
     * with new gotten group member list and removing LDAP users/groups not existing in last list.
     */
@@ -1069,15 +1061,15 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Entry *ldapObject)
       if ((user == nullptr) || !user->isLDAPUser())
          continue;
 
-      if (!newMembers.contains(user->getDn()))
+      if (!newMembers.contains(user->getDN()))
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers: Remove from %s group deleted user: %s"), group->getDn(), user->getDn());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers: Remove LDAP user %s from LDAP group %s"), user->getDN(), group->getDN());
          group->deleteUser(user->getId());   // oldMembers is a reference to actual member list, Group::deleteUser will update it
          i--;
       }
    }
 
-   /**
+   /*
     * Go through newly received group member list checking each LDAP user/group by DN
     * with existing group member list and adding users/groups not existing in last list.
     */
@@ -1091,11 +1083,12 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Entry *ldapObject)
 
       if (!group->isMember(user->getId()))
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers: LDAP user %s added to LDAP group %s"), user->getDn(), group->getDn());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers: LDAP user %s added to LDAP group %s"), user->getDN(), group->getDN());
          group->addUser(user->getId());
       }
    }
    delete it;
+
    RWLockUnlock(s_userDatabaseLock);
 }
 
@@ -1122,7 +1115,7 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Entry *ldapObject) //no full na
    {
       _sntprintf(description, MAX_USER_DESCR, _T("Got group with DN=%s but found existing user %s with same DN"), dn, object->getName());
       object->getGuidAsText(guid);
-      PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
+      PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDN(), object->getName(), description);
       nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPGroup(): %s"), description);
       conflict = true;
    }
@@ -1133,40 +1126,35 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Entry *ldapObject) //no full na
       if (!group->isDeleted())
       {
          group->removeSyncException();
-         if (!GroupNameIsUnique(ldapObject->m_loginName, group))
+         if (GroupNameIsUnique(ldapObject->m_loginName, group))
          {
-            TCHAR *groupName = GenerateUniqueName(ldapObject->m_loginName, group->getId());
-            if(_tcscmp(group->getName(), groupName))
+            group->setName(ldapObject->m_loginName);
+         }
+         else
+         {
+            TCHAR groupName[MAX_USER_NAME];
+            GenerateUniqueName(ldapObject->m_loginName, group->getId(), groupName);
+            if (_tcscmp(group->getName(), groupName))
             {
                group->setName(groupName);
                _sntprintf(description, MAX_USER_DESCR, _T("Group with name \"%s\" already exists. Unique group name have been generated: \"%s\""), ldapObject->m_loginName, groupName);
                object->getGuidAsText(guid);
-               PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
+               PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDN(), object->getName(), description);
                nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPGroup(): %s"),description);
             }
-            group->setDescription(ldapObject->m_description);
-            if(_tcscmp(group->getDn(), dn))
-            {
-               s_ldapNames.remove(group->getDn());
-               group->setDn(dn);
-               s_ldapNames.set(dn, group);
-            }
-            MemFree(groupName);
          }
-         else
+
+         group->setDescription(ldapObject->m_description);
+         if (_tcscmp(group->getDN(), dn))
          {
-            group->setName(ldapObject->m_loginName);
-            group->setDescription(ldapObject->m_description);
-            if(_tcscmp(group->getDn(), dn))
-            {
-               s_ldapNames.remove(group->getDn());
-               group->setDn(dn);
-               s_ldapNames.set(dn, group);
-            }
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPGroup(): Group updated: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
+            s_ldapNames.remove(group->getDN());
+            group->setDN(dn);
+            s_ldapNames.set(dn, group);
          }
+
          if (group->isModified())
          {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPGroup(): Group updated: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
             SendUserDBUpdate(USER_DB_MODIFY, group->getId(), group);
          }
       }
@@ -1175,37 +1163,37 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Entry *ldapObject) //no full na
 
    if (!groupModified)
    {
-      if (GroupNameIsUnique(ldapObject->m_loginName, NULL))
+      uint32_t groupId = CreateUniqueId(IDG_USER_GROUP);
+      TCHAR groupNameBuffer[MAX_USER_NAME];
+      const TCHAR *groupName;
+      bool uniqueName = GroupNameIsUnique(ldapObject->m_loginName, nullptr);
+      if (uniqueName)
       {
-         Group *group = new Group(CreateUniqueId(IDG_USER_GROUP), ldapObject->m_loginName);
-         group->setDescription(ldapObject->m_description);
-         group->setFlags(UF_MODIFIED | UF_LDAP_USER);
-         group->setDn(dn);
-         if(ldapObject->m_id != NULL)
-            group->setLdapId(ldapObject->m_id);
-         SendUserDBUpdate(USER_DB_CREATE, group->getId(), group);
-         AddDatabaseObject(group);
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
+         groupName = ldapObject->m_loginName;
       }
       else
       {
-         UINT32 id = CreateUniqueId(IDG_USER_GROUP);
-         TCHAR *groupName = GenerateUniqueName(ldapObject->m_loginName, id);
+         groupName = GenerateUniqueName(ldapObject->m_loginName, groupId, groupNameBuffer);
+      }
+
+      Group *group = new Group(groupId, groupName);
+      group->setDescription(ldapObject->m_description);
+      group->setFlags(UF_MODIFIED | UF_LDAP_USER);
+      group->setDN(dn);
+      if (ldapObject->m_id != nullptr)
+         group->setLdapId(ldapObject->m_id);
+
+      if (!uniqueName)
+      {
          _sntprintf(description, MAX_USER_DESCR, _T("Group with name \"%s\" already exists. Unique group name have been generated: \"%s\""), ldapObject->m_loginName, groupName);
          nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPGroup(): %s"),description);
-         Group *group = new Group(id, groupName);
-         group->setDescription(ldapObject->m_description);
-         group->setFlags(UF_MODIFIED | UF_LDAP_USER);
-         group->setDn(dn);
-         if(ldapObject->m_id != NULL)
-            group->setLdapId(ldapObject->m_id);
-         SendUserDBUpdate(USER_DB_CREATE, group->getId(), group);
-         AddDatabaseObject(group);
          group->getGuidAsText(guid);
-         PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", group->getId(), guid, group->getDn(), group->getName(), description);
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
-         MemFree(groupName);
+         PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", group->getId(), guid, group->getDN(), group->getName(), description);
       }
+
+      SendUserDBUpdate(USER_DB_CREATE, group->getId(), group);
+      AddDatabaseObject(group);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
    }
    RWLockUnlock(s_userDatabaseLock);
 }
@@ -1240,23 +1228,23 @@ void DumpUsers(CONSOLE_CTX pCtx)
 /**
  * Modify user database object
  */
-UINT32 NXCORE_EXPORTABLE DetachLdapUser(UINT32 id)
+uint32_t NXCORE_EXPORTABLE DetachLDAPUser(uint32_t id)
 {
-   UINT32 dwResult = RCC_INVALID_USER_ID;
+   uint32_t rcc = RCC_INVALID_USER_ID;
 
    RWLockWriteLock(s_userDatabaseLock);
 
    UserDatabaseObject *object = s_userDatabase.get(id);
-   if (object != NULL)
+   if (object != nullptr)
    {
-      s_ldapNames.remove(object->getDn());
+      s_ldapNames.remove(object->getDN());
       object->detachLdapUser();
       SendUserDBUpdate(USER_DB_MODIFY, id, object);
-      dwResult = RCC_SUCCESS;
+      rcc = RCC_SUCCESS;
    }
 
    RWLockUnlock(s_userDatabaseLock);
-   return dwResult;
+   return rcc;
 }
 
 /**
@@ -1266,7 +1254,7 @@ UINT32 NXCORE_EXPORTABLE DetachLdapUser(UINT32 id)
 void SendUserDBUpdate(int code, UINT32 id)
 {
    UserDatabaseObject *object = s_userDatabase.get(id);
-   if (object != NULL)
+   if (object != nullptr)
    {
       SendUserDBUpdate(code, id, object);
    }
@@ -1346,7 +1334,7 @@ static bool CheckPasswordComplexity(const TCHAR *password)
  * Set user's password
  * For non-UNICODE build, passwords must be UTF-8 encoded
  */
-UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword)
+uint32_t NXCORE_EXPORTABLE SetUserPassword(uint32_t id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword)
 {
 	if (id & GROUP_FLAG)
 		return RCC_INVALID_USER_ID;
@@ -1354,19 +1342,19 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
    RWLockWriteLock(s_userDatabaseLock);
 
    // Find user
-   User *user = (User *)s_userDatabase.get(id);
-   if (user == NULL)
+   User *user = static_cast<User*>(s_userDatabase.get(id));
+   if (user == nullptr)
    {
       RWLockUnlock(s_userDatabaseLock);
       return RCC_INVALID_USER_ID;
    }
 
-   UINT32 dwResult = RCC_INVALID_USER_ID;
+   uint32_t rcc = RCC_INVALID_USER_ID;
    if (changeOwnPassword)
    {
       if (!user->canChangePassword() || !user->validatePassword(oldPassword))
       {
-         dwResult = RCC_ACCESS_DENIED;
+         rcc = RCC_ACCESS_DENIED;
          goto finish;
       }
 
@@ -1374,14 +1362,14 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
       int minLength = (user->getMinMasswordLength() == -1) ? ConfigReadInt(_T("MinPasswordLength"), 0) : user->getMinMasswordLength();
       if ((int)_tcslen(newPassword) < minLength)
       {
-         dwResult = RCC_WEAK_PASSWORD;
+         rcc = RCC_WEAK_PASSWORD;
          goto finish;
       }
 
       // Check password complexity
       if (!CheckPasswordComplexity(newPassword))
       {
-         dwResult = RCC_WEAK_PASSWORD;
+         rcc = RCC_WEAK_PASSWORD;
          goto finish;
       }
 
@@ -1425,12 +1413,12 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
                StrToBin(&ph[i * SHA1_DIGEST_SIZE * 2], hash, SHA1_DIGEST_SIZE);
                if (!memcmp(hash, newPasswdHash, SHA1_DIGEST_SIZE))
                {
-                  dwResult = RCC_REUSED_PASSWORD;
+                  rcc = RCC_REUSED_PASSWORD;
                   goto finish;
                }
             }
 
-            if (dwResult != RCC_REUSED_PASSWORD)
+            if (rcc != RCC_REUSED_PASSWORD)
             {
                if (phLen == passwordHistoryLength)
                {
@@ -1448,12 +1436,12 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
             }
 
             MemFree(ph);
-            if (dwResult == RCC_REUSED_PASSWORD)
+            if (rcc == RCC_REUSED_PASSWORD)
                goto finish;
          }
          else
          {
-            dwResult = RCC_DB_FAILURE;
+            rcc = RCC_DB_FAILURE;
             goto finish;
          }
          DBConnectionPoolReleaseConnection(hdb);
@@ -1462,66 +1450,62 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
       user->updatePasswordChangeTime();
    }
    user->setPassword(newPassword, changeOwnPassword);
-   dwResult = RCC_SUCCESS;
+   rcc = RCC_SUCCESS;
 
 finish:
    RWLockUnlock(s_userDatabaseLock);
-   return dwResult;
+   return rcc;
 }
 
 /**
  * Validate user's password
  */
-UINT32 NXCORE_EXPORTABLE ValidateUserPassword(UINT32 userId, const TCHAR *login, const TCHAR *password, bool *isValid)
+uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const TCHAR *login, const TCHAR *password, bool *isValid)
 {
 	if (userId & GROUP_FLAG)
 		return RCC_INVALID_USER_ID;
 
-   UINT32 rcc = RCC_INVALID_USER_ID;
+	uint32_t rcc = RCC_INVALID_USER_ID;
    RWLockReadLock(s_userDatabaseLock);
 
    // Find user
-   User *user = (User *)s_userDatabase.get(userId);
-   if (user != NULL)
+   User *user = static_cast<User*>(s_userDatabase.get(userId));
+   if (user != nullptr)
    {
       rcc = RCC_SUCCESS;
-      if (user->isLDAPUser())
+      switch(user->getAuthMethod())
       {
-         if (user->isDisabled())
-         {
-            rcc = RCC_ACCOUNT_DISABLED;
-         }
-         else
-         {
-            LDAPConnection conn;
-            rcc = conn.ldapUserLogin(user->getDn(), password);
-            if (rcc == RCC_SUCCESS)
+         case UserAuthenticationMethod::LOCAL:
+         case UserAuthenticationMethod::CERTIFICATE_OR_LOCAL:
+            *isValid = user->validatePassword(password);
+            break;
+         case UserAuthenticationMethod::RADIUS:
+         case UserAuthenticationMethod::CERTIFICATE_OR_RADIUS:
+            *isValid = RadiusAuth(login, password);
+            break;
+         case UserAuthenticationMethod::LDAP:
+            if (user->isLDAPUser())
             {
-               *isValid = true;
+               LDAPConnection conn;
+               rcc = conn.ldapUserLogin(user->getDN(), password);
+               if (rcc == RCC_SUCCESS)
+               {
+                  *isValid = true;
+               }
+               else if (rcc == RCC_ACCESS_DENIED)
+               {
+                  *isValid = false;
+                  rcc = RCC_SUCCESS;
+               }
             }
-            else if (rcc == RCC_ACCESS_DENIED)
+            else
             {
                *isValid = false;
-               rcc = RCC_SUCCESS;
             }
-         }
-      }
-      else
-      {
-         switch(user->getAuthMethod())
-         {
-            case AUTH_NETXMS_PASSWORD:
-            case AUTH_CERT_OR_PASSWD:
-   			   *isValid = user->validatePassword(password);
-               break;
-            case AUTH_RADIUS:
-            case AUTH_CERT_OR_RADIUS:
-               *isValid = RadiusAuth(login, password);
-               break;
-            default:
-               rcc = RCC_UNSUPPORTED_AUTH_METHOD;
-               break;
-         }
+            break;
+         default:
+            rcc = RCC_UNSUPPORTED_AUTH_METHOD;
+            break;
       }
    }
 
