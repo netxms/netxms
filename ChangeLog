@@ -17,6 +17,7 @@
 - Fixed column sorting in Web Service Definition view
 - Support for IPv6 in NXSL functions AddrInSubnet and AddrInRange
 - New NXSL function GetServerQueueNames
+- New NXSL functions for object search: FindObjectByGUID, FindNodeByAgentId, FindNodeByIPAddress, FindNodeByMACAddress, FindNodeBySysName
 - nxdbmgr option to migrate log tables in background
 - Windows event log synchronization, server side parsing and sgent side filter
 - Added option not to save to database Windows event log and syslog filtered by server parser
