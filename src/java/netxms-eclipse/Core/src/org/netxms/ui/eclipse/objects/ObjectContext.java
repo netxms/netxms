@@ -25,7 +25,7 @@ public class ObjectContext extends ObjectContextBase
     * @param inputValues
     * @return
     */
-   public String substituteMacrosForMultiNodes(String s, Map<String, String> inputValues)
+   public String substituteMacrosForMultipleNodes(String s, Map<String, String> inputValues)
    {
       StringBuilder sb = new StringBuilder();
       
