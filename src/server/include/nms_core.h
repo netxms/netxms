@@ -803,7 +803,8 @@ private:
    void modifyGeoArea(NXCPMessage *request);
    void deleteGeoArea(NXCPMessage *request);
    void updateSharedSecretList(NXCPMessage *request);
-   void updateSNMPPortList(NXCPMessage *pRequest);
+   void updateSNMPPortList(NXCPMessage *request);
+   void findProxyForNode(NXCPMessage *request);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);

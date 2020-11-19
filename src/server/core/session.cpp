@@ -1452,6 +1452,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_GEO_AREA:
          deleteGeoArea(request);
          break;
+      case CMD_FIND_PROXY_FOR_NODE:
+         findProxyForNode(request);
+         break;
 #ifdef WITH_ZMQ
       case CMD_ZMQ_SUBSCRIBE_EVENT:
          zmqManageSubscription(request, zmq::EVENT, true);
@@ -13853,10 +13856,10 @@ void ClientSession::closeTcpProxy(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   UINT32 clientChannelId = request->getFieldAsUInt32(VID_CHANNEL_ID);
+   uint32_t clientChannelId = request->getFieldAsUInt32(VID_CHANNEL_ID);
 
    shared_ptr<AgentConnectionEx> conn;
-   UINT32 agentChannelId, nodeId;
+   uint32_t agentChannelId, nodeId;
    MutexLock(m_tcpProxyLock);
    for(int i = 0; i < m_tcpProxyConnections->size(); i++)
    {
@@ -13940,8 +13943,8 @@ void ClientSession::expandMacros(NXCPMessage *request)
    inputFields.loadMessage(request, VID_INPUT_FIELD_COUNT, VID_INPUT_FIELD_BASE);
 
    int fieldCount = request->getFieldAsUInt32(VID_STRING_COUNT);
-   UINT32 inFieldId = VID_EXPAND_STRING_BASE;
-   UINT32 outFieldId = VID_EXPAND_STRING_BASE;
+   uint32_t inFieldId = VID_EXPAND_STRING_BASE;
+   uint32_t outFieldId = VID_EXPAND_STRING_BASE;
    for(int i = 0; i < fieldCount; i++, inFieldId += 2, outFieldId++)
    {
       TCHAR *textToExpand = request->getFieldAsString(inFieldId++);
@@ -15047,17 +15050,12 @@ void ClientSession::updateSharedSecretList(NXCPMessage *pRequest)
 /**
  * Update SNMP port list
  */
-void ClientSession::updateSNMPPortList(NXCPMessage *pRequest)
+void ClientSession::updateSNMPPortList(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   UINT32 rcc = RCC_SUCCESS;
-
-   msg.setId(pRequest->getId());
-   msg.setCode(CMD_REQUEST_COMPLETED);
-
+   uint32_t rcc = RCC_SUCCESS;
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
-      int32_t zoneUIN = pRequest->getFieldAsInt32(VID_ZONE_UIN);
+      int32_t zoneUIN = request->getFieldAsInt32(VID_ZONE_UIN);
       shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
       if (zoneUIN == -1 || zone != nullptr)
       {
@@ -15069,12 +15067,12 @@ void ClientSession::updateSNMPPortList(NXCPMessage *pRequest)
             DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_ports (id,port,zone) VALUES(?,?,?)"), true);
             if (hStmt != nullptr)
             {
-               int count = pRequest->getFieldAsUInt32(VID_ZONE_SNMP_PORT_COUNT);
+               int count = request->getFieldAsUInt32(VID_ZONE_SNMP_PORT_COUNT);
                DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, zoneUIN);
                for(int i = 0; i < count; i++)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
-                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, pRequest->getFieldAsUInt16(baseId++));
+                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, request->getFieldAsUInt16(baseId++));
                   if (!DBExecute(hStmt))
                   {
                      rcc = RCC_DB_FAILURE;
@@ -15084,7 +15082,9 @@ void ClientSession::updateSNMPPortList(NXCPMessage *pRequest)
                DBFreeStatement(hStmt);
             }
             else
+            {
                rcc = RCC_DB_FAILURE;
+            }
 
             if (rcc == RCC_SUCCESS)
             {
@@ -15092,24 +15092,61 @@ void ClientSession::updateSNMPPortList(NXCPMessage *pRequest)
                NotifyClientSessions(NX_NOTIFY_PORTS_CONFIG_CHANGED, zoneUIN);
             }
             else
+            {
                DBRollback(hdb);
+            }
          }
          else
+         {
             rcc = RCC_DB_FAILURE;
+         }
          DBConnectionPoolReleaseConnection(hdb);
       }
       else
+      {
          rcc = RCC_INVALID_ZONE_ID;
+      }
    }
    else
+   {
       rcc = RCC_ACCESS_DENIED;
+   }
 
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    msg.setField(VID_RCC, rcc);
    sendMessage(&msg);
 }
 
+/**
+ * Find proxy for node
+ */
+void ClientSession::findProxyForNode(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(request->getFieldAsUInt32(VID_NODE_ID), OBJECT_NODE));
+   if (node != nullptr)
+   {
+      if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         msg.setField(VID_AGENT_PROXY, node->getEffectiveAgentProxy());
+         msg.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(&msg);
+}
 
 #ifdef WITH_ZMQ
+
 /**
  * Manage subscription for ZMQ forwarder
  */
