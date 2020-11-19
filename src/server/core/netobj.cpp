@@ -259,10 +259,10 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
       success = DeleteObjectAlarms(m_id, hdb);
    }
 
-   if (success && isLocationTableExists(hdb))
+   if (success && isGeoLocationHistoryTableExists(hdb))
    {
       TCHAR query[256];
-      _sntprintf(query, 256, _T("DROP TABLE gps_history_%d"), m_id);
+      _sntprintf(query, 256, _T("DROP TABLE gps_history_%u"), m_id);
       success = DBQuery(hdb, query);
    }
 
@@ -1391,7 +1391,9 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
 	if (pRequest->isFieldExist(VID_GEOLOCATION_TYPE))
 	{
 		m_geoLocation = GeoLocation(*pRequest);
-		addLocationToHistory();
+		TCHAR key[32];
+		_sntprintf(key, 32, _T("GLupd-%u"), m_id);
+		ThreadPoolExecuteSerialized(g_mainThreadPool, key, self(), &NetObj::updateGeoLocationHistory, m_geoLocation);
 	}
 
 	if (pRequest->isFieldExist(VID_DRILL_DOWN_OBJECT_ID))
@@ -2139,39 +2141,41 @@ void NetObj::setModuleData(const TCHAR *module, ModuleData *data)
 /**
  * Add new location entry
  */
-void NetObj::addLocationToHistory()
+void NetObj::updateGeoLocationHistory(GeoLocation location)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (!isGeoLocationHistoryTableExists(hdb))
+   {
+      nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 4, _T("NetObj::updateGeoLocationHistory: Geolocation history table will be created for object %s [%d]"), m_name, m_id);
+      if (!createGeoLocationHistoryTable(hdb))
+      {
+         nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 4, _T("NetObj::updateGeoLocationHistory: Error creating geolocation history table for object %s [%d]"), m_name, m_id);
+         DBConnectionPoolReleaseConnection(hdb);
+         return;
+      }
+   }
+
    bool isSamePlace;
    double latitude = 0;
    double longitude = 0;
    uint32_t accuracy = 0;
    uint32_t startTimestamp = 0;
    DB_RESULT hResult;
-   if (!isLocationTableExists(hdb))
-   {
-      DbgPrintf(4, _T("NetObj::addLocationToHistory: Geolocation history table will be created for object %s [%d]"), m_name, m_id);
-      if (!createLocationHistoryTable(hdb))
-      {
-         DbgPrintf(4, _T("NetObj::addLocationToHistory: Error creating geolocation history table for object %s [%d]"), m_name, m_id);
-         DBConnectionPoolReleaseConnection(hdb);
-         return;
-      }
-   }
+
 	const TCHAR *query;
 	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_ORACLE:
-			query = _T("SELECT * FROM (SELECT latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC) WHERE ROWNUM<=1");
+			query = _T("SELECT * FROM (SELECT latitude,longitude,accuracy,start_timestamp FROM gps_history_%u ORDER BY start_timestamp DESC) WHERE ROWNUM<=1");
 			break;
 		case DB_SYNTAX_MSSQL:
-			query = _T("SELECT TOP 1 latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC");
+			query = _T("SELECT TOP 1 latitude,longitude,accuracy,start_timestamp FROM gps_history_%u ORDER BY start_timestamp DESC");
 			break;
 		case DB_SYNTAX_DB2:
-			query = _T("SELECT latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC FETCH FIRST 200 ROWS ONLY");
+			query = _T("SELECT latitude,longitude,accuracy,start_timestamp FROM gps_history_%u ORDER BY start_timestamp DESC FETCH FIRST 200 ROWS ONLY");
 			break;
 		default:
-			query = _T("SELECT latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC LIMIT 1");
+			query = _T("SELECT latitude,longitude,accuracy,start_timestamp FROM gps_history_%u ORDER BY start_timestamp DESC LIMIT 1");
 			break;
 	}
    TCHAR preparedQuery[256];
@@ -2190,7 +2194,7 @@ void NetObj::addLocationToHistory()
       longitude = DBGetFieldDouble(hResult, 0, 1);
       accuracy = DBGetFieldLong(hResult, 0, 2);
       startTimestamp = DBGetFieldULong(hResult, 0, 3);
-      isSamePlace = m_geoLocation.sameLocation(latitude, longitude, accuracy);
+      isSamePlace = location.sameLocation(latitude, longitude, accuracy);
    }
    else
    {
@@ -2215,7 +2219,7 @@ void NetObj::addLocationToHistory()
       _sntprintf(query, 256, _T("INSERT INTO gps_history_%u (latitude,longitude,")
                        _T("accuracy,start_timestamp,end_timestamp) VALUES (?,?,?,?,?)"), m_id);
       hStmt = DBPrepare(hdb, query);
-      if (hStmt == NULL)
+      if (hStmt == nullptr)
          goto onFail;
 
       TCHAR lat[32], lon[32];
@@ -2224,16 +2228,16 @@ void NetObj::addLocationToHistory()
 
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getAccuracy());
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_geoLocation.getAccuracy());
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_geoLocation.getTimestamp()));
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_geoLocation.getTimestamp()));
 	}
 
    if (!DBExecute(hStmt))
    {
-      DbgPrintf(1, _T("NetObj::addLocationToHistory: Failed to add location to history. New: lat %f, lon %f, ac %d, t %d. Old: lat %f, lon %f, ac %d, t %d."),
-                m_geoLocation.getLatitude(), m_geoLocation.getLongitude(), m_geoLocation.getAccuracy(), (UINT32)m_geoLocation.getTimestamp(),
-                latitude, longitude, accuracy, startTimestamp);
+      nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 1, _T("NetObj::updateGeoLocationHistory(%s [%d]): Failed to add location to history (new = [%f, %f, %u, %u] old = [%f, %f, %u, %u])"),
+            m_name, m_id, m_geoLocation.getLatitude(), m_geoLocation.getLongitude(), m_geoLocation.getAccuracy(),
+            static_cast<uint32_t>(m_geoLocation.getTimestamp()), latitude, longitude, accuracy, startTimestamp);
    }
    DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
@@ -2242,7 +2246,7 @@ void NetObj::addLocationToHistory()
 onFail:
    if (hStmt != nullptr)
       DBFreeStatement(hStmt);
-   DbgPrintf(4, _T("NetObj::addLocationToHistory(%s [%d]): Failed to add location to history"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 4, _T("NetObj::updateGeoLocationHistory(%s [%d]): Failed to add location to history"), m_name, m_id);
    DBConnectionPoolReleaseConnection(hdb);
    return;
 }
@@ -2250,14 +2254,14 @@ onFail:
 /**
  * Check if given data table exist
  */
-bool NetObj::isLocationTableExists(DB_HANDLE hdb)
+bool NetObj::isGeoLocationHistoryTableExists(DB_HANDLE hdb) const
 {
    TCHAR table[256];
    _sntprintf(table, 256, _T("gps_history_%u"), m_id);
    int rc = DBIsTableExist(hdb, table);
    if (rc == DBIsTableExist_Failure)
    {
-      _tprintf(_T("WARNING: call to DBIsTableExist(\"%s\") failed\n"), table);
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_GEOLOCATION, _T("Call to DBIsTableExist(\"%s\") failed"), table);
    }
    return rc != DBIsTableExist_NotFound;
 }
@@ -2265,12 +2269,12 @@ bool NetObj::isLocationTableExists(DB_HANDLE hdb)
 /**
  * Create table for storing geolocation history for this object
  */
-bool NetObj::createLocationHistoryTable(DB_HANDLE hdb)
+bool NetObj::createGeoLocationHistoryTable(DB_HANDLE hdb)
 {
-   TCHAR szQuery[256], szQueryTemplate[256];
-   MetaDataReadStr(_T("LocationHistory"), szQueryTemplate, 255, _T(""));
-   _sntprintf(szQuery, 256, szQueryTemplate, m_id);
-   return DBQuery(hdb, szQuery);
+   TCHAR query[256], queryTemplate[256];
+   MetaDataReadStr(_T("LocationHistory"), queryTemplate, 256, _T(""));
+   _sntprintf(query, 256, queryTemplate, m_id);
+   return DBQuery(hdb, query);
 }
 
 /**
