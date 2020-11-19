@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,10 +30,13 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.handlers.IHandlerService;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Results of local command execution
@@ -42,13 +45,14 @@ public class LocalCommandResults extends AbstractCommandResults
 {
 	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.LocalCommandResults"; //$NON-NLS-1$
 
+   private NXCSession session = ConsoleSharedData.getSession();
 	private Process process;
 	private boolean running = false;
 	private String lastCommand = null;
 	private Object mutex = new Object();
 	private Action actionTerminate;
 	private Action actionRestart;
-	
+
 	/**
 	 * Create actions
 	 */
@@ -161,7 +165,56 @@ public class LocalCommandResults extends AbstractCommandResults
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				process = Runtime.getRuntime().exec(command);
+            if (command.startsWith("#{"))
+            {
+               int index = command.indexOf('}');
+               if (index == -1)
+               {
+                  out.write("Malformed command line (missing closing bracket for #{)");
+                  out.close();
+                  return;
+               }
+
+               // Expect proxy configuration in form
+               // proxy:remoteAddress:remotePort:localPort
+               // Can use "auto" as proxy name to find suitable proxy node automatically
+               String[] proxyConfig = command.substring(2, index).split(":");
+               if (proxyConfig.length != 4)
+               {
+                  out.write("Malformed command line (proxy configuration should be in form proxy:remoteAddress:remotePort:localPort)");
+                  out.close();
+                  return;
+               }
+
+               long proxyId;
+               if (proxyConfig[0].equals("auto"))
+               {
+                  proxyId = session.findProxyForNode(nodeId);
+                  if (proxyId == 0)
+                  {
+                     out.write("Cannot find suitable proxy");
+                     out.close();
+                     return;
+                  }
+               }
+               else
+               {
+                  AbstractObject object = session.findObjectByName(proxyConfig[0]);
+                  if (object == null)
+                  {
+                     out.write("Cannot find proxy " + proxyConfig[0]);
+                     out.close();
+                     return;
+                  }
+                  proxyId = object.getObjectId();
+               }
+
+               process = Runtime.getRuntime().exec(command.substring(index + 1).trim());
+            }
+            else
+            {
+               process = Runtime.getRuntime().exec(command);
+            }
 				InputStream in = process.getInputStream();
 				try
 				{

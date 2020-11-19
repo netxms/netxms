@@ -12435,4 +12435,21 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
+
+   /**
+    * Find suitable proxy for given node.
+    *
+    * @param nodeId node object ID
+    * @return proxy node object ID or 0 if proxy cannot be found
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public long findProxyForNode(long nodeId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_FIND_PROXY_FOR_NODE);
+      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
+   }
 }
