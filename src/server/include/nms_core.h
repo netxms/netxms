@@ -108,6 +108,11 @@
 
 #define PING_TIME_TIMEOUT     10000
 
+#define DEBUG_TAG_AGENT             _T("node.agent")
+#define DEBUG_TAG_CONF_POLL         _T("poll.conf")
+#define DEBUG_TAG_GEOLOCATION       _T("geolocation")
+#define DEBUG_TAG_STATUS_POLL       _T("poll.status")
+
 /**
  * Prefixes for poller messages
  */

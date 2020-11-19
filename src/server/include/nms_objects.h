@@ -1010,9 +1010,8 @@ protected:
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *msg);
    virtual UINT32 modifyFromMessageInternalStage2(NXCPMessage *msg);
 
-   void addLocationToHistory();
-   bool isLocationTableExists(DB_HANDLE hdb);
-   bool createLocationHistoryTable(DB_HANDLE hdb);
+   bool isGeoLocationHistoryTableExists(DB_HANDLE hdb) const;
+   bool createGeoLocationHistoryTable(DB_HANDLE hdb);
 
    void getAllResponsibleUsersInternal(IntegerArray<UINT32> *list);
 
@@ -1162,6 +1161,8 @@ public:
 
    StringBuffer expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci,
             const TCHAR *userName, const TCHAR *objectName, const StringMap *inputFields, const StringList *args);
+
+   void updateGeoLocationHistory(GeoLocation location);
 
    IntegerArray<UINT32> *getAllResponsibleUsers();
 

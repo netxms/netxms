@@ -25,10 +25,7 @@
 #include <entity_mib.h>
 #include <ethernet_ip.h>
 
-#define DEBUG_TAG_AGENT             _T("node.agent")
-#define DEBUG_TAG_CONF_POLL         _T("poll.conf")
 #define DEBUG_TAG_DC_AGENT_CACHE    _T("dc.agent.cache")
-#define DEBUG_TAG_STATUS_POLL       _T("poll.status")
 #define DEBUG_TAG_ICMP_POLL         _T("poll.icmp")
 #define DEBUG_TAG_ROUTES_POLL       _T("poll.routes")
 #define DEBUG_TAG_TOPOLOGY_POLL     _T("poll.topology")
