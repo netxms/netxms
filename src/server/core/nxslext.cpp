@@ -381,7 +381,7 @@ static int F_FindObjectByGUID(int argc, NXSL_Value **argv, NXSL_Value **result, 
 static shared_ptr<NetObj> FindNodeByIPAddress(NXSL_Value *v)
 {
    InetAddress addr = InetAddress::parse(v->getValueAsCString());
-   return addr.isValidUnicast() ? FindNodeByIP(0, true, addr) : shared_ptr<NetObj>();
+   return addr.isValidUnicast() ? FindNodeByIP(0, true, addr) : shared_ptr<Node>();
 }
 
 /**
@@ -401,7 +401,7 @@ static int F_FindNodeByIPAddress(int argc, NXSL_Value **argv, NXSL_Value **resul
 static shared_ptr<NetObj> FindNodeByMACAddress(NXSL_Value *v)
 {
    MacAddress addr = MacAddress::parse(v->getValueAsCString());
-   return addr.isValid() ? FindNodeByMAC(addr) : shared_ptr<NetObj>();
+   return addr.isValid() ? FindNodeByMAC(addr) : shared_ptr<Node>();
 }
 
 /**
@@ -421,7 +421,7 @@ static int F_FindNodeByMACAddress(int argc, NXSL_Value **argv, NXSL_Value **resu
 static shared_ptr<NetObj> FindNodeByAgentId(NXSL_Value *v)
 {
    uuid id = uuid::parse(v->getValueAsCString());
-   return !id.isNull() ? FindNodeByAgentId(id) : shared_ptr<NetObj>();
+   return !id.isNull() ? FindNodeByAgentId(id) : shared_ptr<Node>();
 }
 
 /**
