@@ -34,8 +34,6 @@
 #define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
 #endif
 
-#endif
-
 #if OPENSSL_VERSION_NUMBER < 0x10000000L
 static int X509_CRL_get0_by_cert(X509_CRL *crl, X509_REVOKED **ret, X509 *x)
 {
@@ -135,6 +133,19 @@ static bool DownloadFile(const TCHAR *file, const char *url)
 
    return success;
 }
+
+#else   /* HAVE_LIBCURL */
+
+/**
+ * Download from from remote location - dummy implementation
+ */
+static bool DownloadFile(const TCHAR *file, const char *url)
+{
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("DownloadFile(): agent was built without cURL support"));
+   return false;
+}
+
+#endif  /* HAVE_LIBCURL */
 
 /**
  * CRL descriptor
