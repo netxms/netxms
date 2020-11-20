@@ -11,13 +11,13 @@
 - New NXSL function GetServerQueueNames
 - New NXSL functions for object search: FindObjectByGUID, FindNodeByAgentId, FindNodeByIPAddress, FindNodeByMACAddress, FindNodeBySysName
 - nxdbmgr option to migrate log tables in background
-- Windows event log synchronization, server side parsing and sgent side filter
+- Windows event log synchronization, server side parsing and agent side filtering
 - Added option not to save to database Windows event log and syslog filtered by server parser
 - Maximum number of client sessions can be configured
 - Added support for SNMP data types FLOAT, DOUBLE, INTEGER64, UINTEGER64
 - Correct decoding of values inside OPAQUE SNMP varbinds
 - Added view for object tools with output executed on multiple nodes
-- Added syn methos and method with callback for object creation in Java API
+- Added synchronous methods and completion callbacks for object creation in Java API
 - Fixed nxdbmgr crash on import
 - New built-in agent action Agent.RotateLog
 - Server performance optimization for handling large number of agent connections
@@ -26,6 +26,8 @@
 - Improved handling of external parameter providers in agent
 - Added background polling option for external tables in agent
 - Authentication method for LDAP users can be changed
+- Support for mobile devices with NTCB/FLEX protocol
+- Geolocation control for nodes, sensors, and mobile devices
 - Fixed screenshot issues on Windows 10 with DPI scaling
 - Fixed errors on graph properties modification
 - Fixed sorting in summary table when one column has different data types
