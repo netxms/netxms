@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.charts.api;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.modules.charts.widgets.BarGaugeWidget;
 import org.netxms.nxmc.modules.charts.widgets.CurrentValueWidget;
+import org.netxms.nxmc.modules.charts.widgets.DataComparisonBirtChart;
 import org.netxms.nxmc.modules.charts.widgets.DialChartWidget;
 import org.netxms.nxmc.modules.charts.widgets.LineChart;
 
@@ -50,7 +51,7 @@ public class ChartFactory
 	 */
 	public static DataComparisonChart createBarChart(Composite parent, int style)
 	{
-		return new DataComparisonBirtChart(parent, style, DataComparisonChart.BAR_CHART);
+      return new DataComparisonBirtChart(parent, style, DataComparisonChart.BAR_CHART);
 	}
 
 	/**
@@ -62,7 +63,7 @@ public class ChartFactory
 	 */
 	public static DataComparisonChart createTubeChart(Composite parent, int style)
 	{
-		return new DataComparisonBirtChart(parent, style, DataComparisonChart.TUBE_CHART);
+      return new DataComparisonBirtChart(parent, style, DataComparisonChart.TUBE_CHART);
 	}
 
 	/**
@@ -74,7 +75,7 @@ public class ChartFactory
 	 */
 	public static DataComparisonChart createPieChart(Composite parent, int style)
 	{
-		return new DataComparisonBirtChart(parent, style, DataComparisonChart.PIE_CHART);
+      return new DataComparisonBirtChart(parent, style, DataComparisonChart.PIE_CHART);
 	}
 
 	/**

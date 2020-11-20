@@ -57,7 +57,7 @@ public final class ObjectToolExecutor
    private ObjectToolExecutor()
    {
    }
-   
+
    /**
     * Check if tool is allowed for execution on at least one node from set
     * 
@@ -83,7 +83,7 @@ public final class ObjectToolExecutor
          return false;
       }
    }
-   
+
    /**
     * Check if given tool is applicable for at least one nodes in set
     * 
@@ -98,7 +98,7 @@ public final class ObjectToolExecutor
             return true;
       return false;
    }
-   
+
    /**
     * Execute object tool on node set
     * 
@@ -120,7 +120,8 @@ public final class ObjectToolExecutor
       {
          return;
       }
-      
+
+      final List<String> maskedFields = new ArrayList<String>();
       final Map<String, String> inputValues;
       final InputField[] fields = tool.getInputFields();
       if (fields.length > 0)
@@ -135,6 +136,13 @@ public final class ObjectToolExecutor
          inputValues = readInputFields(fields);
          if (inputValues == null)
             return;  // cancelled
+         for(int i = 0; i < fields.length; i++)
+         {
+            if (fields[i].getType() == InputFieldType.PASSWORD)
+            {
+               maskedFields.add(fields[i].getName());
+            }
+         }
       }
       else
       {
@@ -146,7 +154,7 @@ public final class ObjectToolExecutor
          protected void run(IProgressMonitor monitor) throws Exception
          {      
             List<String> expandedText = null;
-            
+
             if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
             {
                String message = tool.getConfirmationText();
@@ -155,7 +163,7 @@ public final class ObjectToolExecutor
                   // Expand message and action for 1 node, otherwise expansion occurs after confirmation
                   List<String> textToExpand = new ArrayList<String>();
                   textToExpand.add(tool.getConfirmationText());
-                  if (tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
+                  if ((tool.getToolType() == ObjectTool.TYPE_URL) || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND))
                   {
                      textToExpand.add(tool.getData());
                   }
@@ -166,27 +174,27 @@ public final class ObjectToolExecutor
                else
                {
                   ObjectContext node = nodes.iterator().next();
-                  message = node.substituteMacrosForMultiNodes(message, inputValues);
+                  message = node.substituteMacrosForMultipleNodes(message, inputValues);
                }
-               
+
                ConfirmationRunnable runnable = new ConfirmationRunnable(message);
                getDisplay().syncExec(runnable);
                if (!runnable.isConfirmed())
                   return;
 
-               if (tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
+               if ((tool.getToolType() == ObjectTool.TYPE_URL) || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND))
                {
                   expandedText = session.substituteMacros(nodes.toArray(new ObjectContext[nodes.size()]), tool.getData(), inputValues);
                }
             }
             else
             {
-               if (tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
+               if ((tool.getToolType() == ObjectTool.TYPE_URL) || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND))
                {
                   expandedText = session.substituteMacros(nodes.toArray(new ObjectContext[nodes.size()]), tool.getData(), inputValues);
                }
             }
-            
+
             // Check if password validation needed
             boolean validationNeeded = false;
             for(int i = 0; i < fields.length; i++)
@@ -195,7 +203,7 @@ public final class ObjectToolExecutor
                   validationNeeded = true;
                   break;
                }
-            
+
             if (validationNeeded)
             {
                for(int i = 0; i < fields.length; i++)
@@ -219,36 +227,49 @@ public final class ObjectToolExecutor
                   }
                }
             }
-            
-            int i = 0;
-            for(final ObjectContext n : nodes)
+
+            int i = 0;               
+            if (nodes.size() != 1 && (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND || tool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND ||
+                  tool.getToolType() == ObjectTool.TYPE_ACTION || tool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) && ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0))
             {
-               if(tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
+               final List<String> finalExpandedText = expandedText;
+               getDisplay().syncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     executeOnMultipleNodes(nodes, tool, inputValues, maskedFields, finalExpandedText);
+                  }
+               });
+            }
+            else
+            {
+               for(final ObjectContext n : nodes)
                {
-                  final String tmp = expandedText.get(i++);
-                  getDisplay().syncExec(new Runnable() {
-                     
-                     @Override
-                     public void run()
-                     {
-                        executeOnNode(n, tool, inputValues, tmp);
-                     }
-                  });
-               }
-               else
-               {
-                  getDisplay().syncExec(new Runnable() {
-                     
-                     @Override
-                     public void run()
-                     {
-                        executeOnNode(n, tool, inputValues, null);
-                     }
-                  });                  
+                  if (tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
+                  {
+                     final String tmp = expandedText.get(i++);
+                     getDisplay().syncExec(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           executeOnNode(n, tool, inputValues, maskedFields, tmp);
+                        }
+                     });
+                  }
+                  else
+                  {
+                     getDisplay().syncExec(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           executeOnNode(n, tool, inputValues, maskedFields, null);
+                        }
+                     });                  
+                  }
                }
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -297,16 +318,19 @@ public final class ObjectToolExecutor
    /**
     * Execute object tool on single node
     * 
-    * @param node
-    * @param tool
-    * @param inputValues 
+    * @param node node to execute at
+    * @param tool object tool
+    * @param inputValues input values
+    * @param maskedFields list of input fields to be masked
+    * @param expandedToolData expanded tool data
     */
-   private static void executeOnNode(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, String expandedValue)
+   private static void executeOnNode(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues,
+         List<String> maskedFields, String expandedToolData)
    {
       switch(tool.getToolType())
       {
          case ObjectTool.TYPE_ACTION:
-            executeAgentAction(node, tool, inputValues);
+            executeAgentAction(node, tool, inputValues, maskedFields);
             break;
          case ObjectTool.TYPE_FILE_DOWNLOAD:
             executeFileDownload(node, tool, inputValues);
@@ -315,10 +339,10 @@ public final class ObjectToolExecutor
             executeInternalTool(node, tool);
             break;
          case ObjectTool.TYPE_LOCAL_COMMAND:
-            executeLocalCommand(node, tool, inputValues, expandedValue);
+            executeLocalCommand(node, tool, inputValues, expandedToolData);
             break;
          case ObjectTool.TYPE_SERVER_COMMAND:
-            executeServerCommand(node, tool, inputValues);
+            executeServerCommand(node, tool, inputValues, maskedFields);
             break;
          case ObjectTool.TYPE_SERVER_SCRIPT:
             executeServerScript(node, tool, inputValues);
@@ -329,11 +353,38 @@ public final class ObjectToolExecutor
             executeTableTool(node, tool);
             break;
          case ObjectTool.TYPE_URL:
-            openURL(node, tool, inputValues, expandedValue);
+            openURL(node, tool, inputValues, expandedToolData);
             break;
       }
    }
-   
+
+   /**
+    * Execute object tool on set of nodes
+    *
+    * @param nodes set of nodes
+    * @param tool tool to execute
+    * @param inputValues input values
+    * @param maskedFields list of input fields to be masked
+    * @param expandedToolData expanded tool data
+    */
+   private static void executeOnMultipleNodes(Set<ObjectContext> nodes, ObjectTool tool, Map<String, String> inputValues,
+         List<String> maskedFields, List<String> expandedToolData)
+   {
+      /*
+      final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+      try
+      {
+         MultiNodeCommandExecutor view = (MultiNodeCommandExecutor)window.getActivePage().showView(MultiNodeCommandExecutor.ID, tool.getDisplayName() + nodes.toString(), IWorkbenchPage.VIEW_ACTIVATE);
+         view.execute(tool, nodes, inputValues, maskedFields, expandedToolData);
+      }
+      catch(Exception e)
+      {
+         e.printStackTrace();
+         MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
+      }
+      */
+   }
+
    /**
     * Execute table tool
     * 
@@ -363,7 +414,7 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void executeAgentAction(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
+   private static void executeAgentAction(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields)
    {
       final NXCSession session = Registry.getSession();
 
@@ -379,7 +430,7 @@ public final class ObjectToolExecutor
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
-               final String action = session.executeActionWithExpansion(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues);
+               final String action = session.executeActionWithExpansion(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, maskedFields);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -399,7 +450,7 @@ public final class ObjectToolExecutor
          try
          {
             AgentActionResults view = (AgentActionResults)window.getActivePage().showView(AgentActionResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeAction(tool.getData(), node.getAlarmId(), inputValues);
+            view.executeAction(tool.getData(), node.getAlarmId(), inputValues, maskedFields);
          }
          catch(Exception e)
          {
@@ -416,7 +467,7 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void executeServerCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
+   private static void executeServerCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields)
    {
       final NXCSession session = Registry.getSession();
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
@@ -425,7 +476,7 @@ public final class ObjectToolExecutor
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
-               session.executeServerCommand(node.object.getObjectId(), tool.getData(), inputValues);
+               session.executeServerCommand(node.object.getObjectId(), tool.getData(), inputValues, maskedFields);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -451,7 +502,7 @@ public final class ObjectToolExecutor
          try
          {
             ServerCommandResults view = (ServerCommandResults)window.getActivePage().showView(ServerCommandResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeCommand(tool.getData(), inputValues);
+            view.executeCommand(tool.getData(), inputValues, maskedFields);
          }
          catch(Exception e)
          {
@@ -515,9 +566,10 @@ public final class ObjectToolExecutor
    /**
     * Execute local command
     * 
-    * @param node
-    * @param tool
-    * @param inputValues 
+    * @param node node to execute at
+    * @param tool object tool
+    * @param inputValues input values
+    * @param command command to execute
     */
    private static void executeLocalCommand(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, String command)
    {      

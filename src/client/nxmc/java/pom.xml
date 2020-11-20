@@ -113,6 +113,36 @@
             <version>0.9.8</version>
             <scope>${lib.scope}</scope>
         </dependency>
+	<dependency>
+            <groupId>org.eclipse.birt</groupId>
+            <artifactId>birt-core</artifactId>
+            <version>4.8.0</version>
+            <scope>${lib.scope}</scope>
+        </dependency>
+	<dependency>
+            <groupId>org.eclipse.birt</groupId>
+            <artifactId>birt-chart-engine</artifactId>
+            <version>4.8.0</version>
+            <scope>${lib.scope}</scope>
+        </dependency>
+	<dependency>
+            <groupId>org.eclipse.birt</groupId>
+            <artifactId>birt-chart-device-swt</artifactId>
+            <version>4.8.0</version>
+            <scope>${lib.scope}</scope>
+        </dependency>
+	<dependency>
+            <groupId>org.eclipse.emf</groupId>
+            <artifactId>emf-common</artifactId>
+            <version>2.14.0</version>
+            <scope>${lib.scope}</scope>
+        </dependency>
+	<dependency>
+            <groupId>org.eclipse.emf</groupId>
+            <artifactId>emf-ecore</artifactId>
+            <version>2.14.0</version>
+            <scope>${lib.scope}</scope>
+        </dependency>
     </dependencies>
 
     <build>

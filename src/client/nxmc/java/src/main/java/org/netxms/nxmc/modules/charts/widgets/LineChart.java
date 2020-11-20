@@ -150,7 +150,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		// Setup legend
 		ILegend legend = getLegend();
 		legend.setPosition(swtPositionFromInternal(legendPosition));
-      legend.setFont(Activator.getDefault().getChartFont());
+      // FIXME: legend.setFont(Activator.getDefault().getChartFont());
 		legend.setForeground(getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
 
 		// Default time range
@@ -166,12 +166,12 @@ public class LineChart extends Chart implements HistoricalDataChart
 		xTick.setForeground(getColorFromPreferences("Chart.Axis.X.Color")); //$NON-NLS-1$
       DateFormat format = DateFormatFactory.getShortTimeFormat();
 		xTick.setFormat(format);
-		xTick.setFont(Activator.getDefault().getChartFont());
+      // FIXME: xTick.setFont(Activator.getDefault().getChartFont());
 
 		final IAxis yAxis = axisSet.getYAxis(0);
 		yAxis.getTitle().setVisible(false);
 		yAxis.getTick().setForeground(getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
-		yAxis.getTick().setFont(Activator.getDefault().getChartFont());
+      // FIXME: yAxis.getTick().setFont(Activator.getDefault().getChartFont());
 
 		// Setup grid
 		xAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.X.Style")); //$NON-NLS-1$
