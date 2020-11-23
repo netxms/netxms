@@ -404,12 +404,12 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
          if (g_dbSyntax == DB_SYNTAX_TSDB)
          {
             _sntprintf(query, 256,
-                     _T("SELECT idata_value FROM idata_sc_%s WHERE node_id=? AND item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?) ORDER BY idata_timestamp DESC"),
+                     _T("SELECT idata_value FROM idata_sc_%s WHERE item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?) ORDER BY idata_timestamp DESC"),
                      DCObject::getStorageClassName(dci->getStorageClass()));
          }
          else
          {
-            _tcscpy(query, _T("SELECT idata_value FROM idata WHERE node_id=? AND item_id=? AND idata_timestamp BETWEEN ? AND ? ORDER BY idata_timestamp DESC"));
+            _tcscpy(query, _T("SELECT idata_value FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? ORDER BY idata_timestamp DESC"));
          }
       }
       else
@@ -418,16 +418,13 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
       }
 
       DB_STATEMENT hStmt = DBPrepare(hdb, query);
-		if (hStmt != NULL)
+		if (hStmt != nullptr)
 		{
-		   int index = 1;
-	      if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-	         DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, node->getId());
-			DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
-			DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt32());
-			DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, argv[3]->getValueAsInt32());
+			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
+			DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt32());
+			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, argv[3]->getValueAsInt32());
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
-			if (hResult != NULL)
+			if (hResult != nullptr)
 			{
             NXSL_Array *result = new NXSL_Array(vm);
             int count = DBGetNumRows(hResult);
