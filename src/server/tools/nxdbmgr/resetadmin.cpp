@@ -36,7 +36,10 @@ void ResetSystemAccount()
 		return;
    }
 
-   SQLQuery(_T("UPDATE users SET password='3A445C0072CD69D9030CC6644020E5C4576051B1', flags=8, grace_logins=5, auth_method=0, auth_failures=0, disabled_until=0 WHERE id=0"));
+	TCHAR query[256];
+	_sntprintf(query, 256, _T("UPDATE users SET password='3A445C0072CD69D9030CC6644020E5C4576051B1', flags=8, grace_logins=5, auth_method=0, auth_failures=0, disabled_until=0, last_login=%u WHERE id=0"),
+	         static_cast<unsigned int>(time(nullptr)));
+   SQLQuery(query);
 
 	_tprintf(_T("All done.\n"));
 }
