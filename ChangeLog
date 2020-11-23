@@ -13,6 +13,8 @@
 - Fixed bug causing random client and agent timeouts
 - Fixed bug in database upgrade procedure
 - Fixed bug in nxdbmgr reset-system-account
+- Fixed issues:
+	NX-1977 (NXSL GetDCIValues() does not work on TimeScaleDB)
 
 
 *
