@@ -262,7 +262,7 @@ public:
 	void setDeleted() { m_flags |= UF_DELETED; }
 	void enable();
 	void disable();
-	void setFlags(UINT32 flags) { m_flags = flags; }
+	void setFlags(uint32_t flags) { m_flags = flags; }
 	void removeSyncException();
 
 	const TCHAR *getAttribute(const TCHAR *name) const { return m_attributes.get(name); }

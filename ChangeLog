@@ -10,6 +10,7 @@
 * 3.6-CURRENT
 *
 
+- Fixed bug in database upgrade procedure
 - Fixed bug in nxdbmgr reset-system-account
 
 
