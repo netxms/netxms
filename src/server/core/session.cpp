@@ -4300,18 +4300,18 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
          switch(static_cast<DCTable*>(dci.get())->getColumnDataType(dataColumn))
          {
             case DCI_DT_INT:
-               value = (row != -1) ? t->getAsInt(row, column) : (INT32)0;
+               value = (row != -1) ? t->getAsInt(row, column) : (int32_t)0;
                break;
             case DCI_DT_UINT:
             case DCI_DT_COUNTER32:
-               value = (row != -1) ? t->getAsUInt(row, column) : (UINT32)0;
+               value = (row != -1) ? t->getAsUInt(row, column) : (uint32_t)0;
                break;
             case DCI_DT_INT64:
-               value = (row != -1) ? t->getAsInt64(row, column) : (INT64)0;
+               value = (row != -1) ? t->getAsInt64(row, column) : (int64_t)0;
                break;
             case DCI_DT_UINT64:
             case DCI_DT_COUNTER64:
-               value = (row != -1) ? t->getAsUInt64(row, column) : (UINT64)0;
+               value = (row != -1) ? t->getAsUInt64(row, column) : (uint64_t)0;
                break;
             case DCI_DT_FLOAT:
                value = (row != -1) ? t->getAsDouble(row, column) : (double)0;
@@ -4473,7 +4473,7 @@ read_from_db:
 			   if (rows == allocated)
 			   {
 			      allocated += 8192;
-		         pData = (DCI_DATA_HEADER *)realloc(pData, allocated * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
+		         pData = MemRealloc(pData, allocated * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
 		         pCurr = (DCI_DATA_ROW *)(((char *)pData + s_rowSize[dataType] * rows) + sizeof(DCI_DATA_HEADER));
 			   }
             rows++;
@@ -4590,7 +4590,7 @@ read_from_db:
 #ifdef UNICODE_UCS4
 		                     ucs4_to_ucs2(CHECK_NULL_EX(table->getAsString(row, col)), -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
 #else
-		                     nx_strncpy(pCurr->value.string, CHECK_NULL_EX(table->getAsString(row, col)), MAX_DCI_STRING_VALUE);
+		                     wcslcpy(pCurr->value.string, CHECK_NULL_EX(table->getAsString(row, col)), MAX_DCI_STRING_VALUE);
 #endif
 #else
 		                     mb_to_ucs2(CHECK_NULL_EX(table->getAsString(row, col)), -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
@@ -4613,9 +4613,9 @@ read_from_db:
 				CreateRawNXCPMessage(CMD_DCI_DATA, request->getId(), 0,
 											pData, rows * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
 											nullptr, isCompressionEnabled());
-			free(pData);
+			MemFree(pData);
 			sendRawMessage(msg);
-			free(msg);
+			MemFree(msg);
 			success = true;
 		}
 		else
