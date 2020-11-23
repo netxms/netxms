@@ -40,6 +40,26 @@ static bool H_UpgradeFromV16()
          _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,flags FROM users"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         if (DBGetFieldULong(hResult, i, 1) & UF_LDAP_USER)
+         {
+            TCHAR query[256];
+            _sntprintf(query, 256, _T("UPDATE users SET auth_method=5 WHERE id=%u"), DBGetFieldULong(hResult, i, 0));
+            CHK_EXEC(SQLQuery(query));
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
    CHK_EXEC(SetMinorSchemaVersion(17));
    return true;
 }
