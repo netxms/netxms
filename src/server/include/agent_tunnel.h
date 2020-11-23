@@ -133,6 +133,7 @@ protected:
    virtual ~AgentTunnel();
 
    bool readSocket();
+   MessageReceiverResult readMessage(bool allowSocketRead);
    void finalize();
    void processMessage(NXCPMessage *msg);
    static void socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, AgentTunnel *tunnel);

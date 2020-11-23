@@ -99,6 +99,7 @@ private:
    static void channelPollerCallback(BackgroundSocketPollResult pollResult, AbstractCommChannel *channel, const shared_ptr<AgentConnectionReceiver>& receiver);
 
    bool readChannel();
+   MessageReceiverResult readMessage(bool allowChannelRead);
    void finalize();
 
 public:
@@ -187,34 +188,45 @@ void AgentConnectionReceiver::start()
 }
 
 /**
- * Read message from channel
+ * Read messages from channel
  */
 bool AgentConnectionReceiver::readChannel()
 {
+   MessageReceiverResult result = readMessage(true);
+   while(result == MSGRECV_SUCCESS)
+      result = readMessage(false);
+   return (result == MSGRECV_WANT_READ) || (result == MSGRECV_WANT_WRITE);
+}
+
+/**
+ * Read single message from channel
+ */
+MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead)
+{
    // Receive raw message
    MessageReceiverResult result;
-   NXCPMessage *msg = m_messageReceiver->readMessage(0, &result);
+   NXCPMessage *msg = m_messageReceiver->readMessage(0, &result, allowChannelRead);
    if ((result == MSGRECV_WANT_READ) || (result == MSGRECV_WANT_WRITE))
-      return true;
+      return result;
 
    // Check for decryption error
    if (result == MSGRECV_DECRYPTION_FAILURE)
    {
       debugPrintf(6, _T("Unable to decrypt received message"));
-      return true;
+      return result;
    }
 
    shared_ptr<AgentConnection> connection = m_connection.lock();
    if (connection == nullptr)
-      return false;   // Parent connection was destroyed
+      return MSGRECV_COMM_FAILURE;   // Parent connection was destroyed
 
    // Check for timeout
    if (result == MSGRECV_TIMEOUT)
    {
       if (connection->m_fileUploadInProgress)
-         return true;   // Receive timeout may occur when uploading large files via slow links
+         return MSGRECV_WANT_READ;   // Receive timeout may occur when uploading large files via slow links
       debugPrintf(6, _T("Timed out waiting for message"));
-      return false;
+      return MSGRECV_TIMEOUT;
    }
 
    // Receive error
@@ -224,13 +236,13 @@ bool AgentConnectionReceiver::readChannel()
          debugPrintf(6, _T("Communication channel shutdown"));
       else
          debugPrintf(6, _T("Message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
-      return false;
+      return result;
    }
 
    if (IsShutdownInProgress())
    {
       debugPrintf(6, _T("Process shutdown"));
-      return false;
+      return MSGRECV_COMM_FAILURE;
    }
 
    if (msg->isBinary())
@@ -420,7 +432,7 @@ bool AgentConnectionReceiver::readChannel()
             break;
       }
    }
-   return true;
+   return MSGRECV_SUCCESS;
 }
 
 /**

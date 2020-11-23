@@ -353,7 +353,7 @@ public:
 
    void setEncryptionContext(NXCPEncryptionContext *ctx) { m_encryptionContext = ctx; }
 
-   NXCPMessage *readMessage(uint32_t timeout, MessageReceiverResult *result);
+   NXCPMessage *readMessage(uint32_t timeout, MessageReceiverResult *result, bool allowReadBytes = true);
    NXCP_MESSAGE *getRawMessageBuffer() { return (NXCP_MESSAGE *)m_buffer; }
 
    static const TCHAR *resultToText(MessageReceiverResult result);

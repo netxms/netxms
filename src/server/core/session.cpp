@@ -358,17 +358,27 @@ static EnumerationCallbackResult CloseDataCollectionConfiguration(const uint32_t
  */
 bool ClientSession::readSocket()
 {
+   MessageReceiverResult result = readMessage(true);
+   while(result == MSGRECV_SUCCESS)
+      result = readMessage(false);
+   return (result == MSGRECV_WANT_READ) || (result == MSGRECV_WANT_WRITE);
+}
+
+/**
+ * Read single message from socket (called from socket poller callback)
+ */
+MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
+{
    MessageReceiverResult result;
-   NXCPMessage *msg = m_messageReceiver->readMessage(0, &result);
+   NXCPMessage *msg = m_messageReceiver->readMessage(0, &result, allowSocketRead);
 
    if ((result == MSGRECV_WANT_READ) || (result == MSGRECV_WANT_WRITE))
-      return true;
+      return result;
 
-   // Check for decryption error
    if (result == MSGRECV_DECRYPTION_FAILURE)
    {
       debugPrintf(4, _T("readSocket: Unable to decrypt received message"));
-      return true;
+      return result;
    }
 
    // Receive error
@@ -378,7 +388,7 @@ bool ClientSession::readSocket()
          debugPrintf(5, _T("readSocket: connection closed"));
       else
          debugPrintf(5, _T("readSocket: message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
-      return false;
+      return result;
    }
 
    if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 8)
@@ -439,8 +449,7 @@ bool ClientSession::readSocket()
    {
       if ((msg->getCode() == CMD_SESSION_KEY) && (msg->getId() == m_encryptionRqId))
       {
-         TCHAR buffer[256];
-         debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+         debugPrintf(6, _T("Received message CMD_SESSION_KEY"));
          m_encryptionResult = SetupEncryptionContext(msg, &m_pCtx, nullptr, g_pServerKey, NXCP_VERSION);
          m_messageReceiver->setEncryptionContext(m_pCtx);
          ConditionSet(m_condEncryptionSetup);
@@ -449,13 +458,15 @@ bool ClientSession::readSocket()
       }
       else if (msg->getCode() == CMD_KEEPALIVE)
       {
-         TCHAR buffer[256];
-         debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+         debugPrintf(6, _T("Received message CMD_KEEPALIVE"));
          respondToKeepalive(msg->getId());
          delete msg;
       }
       else if ((msg->getCode() == CMD_EPP_RECORD) || (msg->getCode() == CMD_OPEN_EPP) || (msg->getCode() == CMD_SAVE_EPP) || (msg->getCode() == CMD_CLOSE_EPP))
       {
+         TCHAR buffer[64];
+         debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+
          incRefCount();
          TCHAR key[64];
          _sntprintf(key, 64, _T("EPP_%d"), m_id);
@@ -481,7 +492,7 @@ bool ClientSession::readSocket()
          ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::processRequest, msg);
       }
    }
-   return true;
+   return MSGRECV_SUCCESS;
 }
 
 /**
