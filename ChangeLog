@@ -7,6 +7,13 @@
 
 
 *
+* 3.6-CURRENT
+*
+
+- Fixed bug in nxdbmgr reset-system-account
+
+
+*
 * 3.6.252
 *
 
