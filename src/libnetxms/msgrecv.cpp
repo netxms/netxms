@@ -118,14 +118,14 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
 /**
  * Read message from communication channel
  */
-NXCPMessage *AbstractMessageReceiver::readMessage(uint32_t timeout, MessageReceiverResult *result)
+NXCPMessage *AbstractMessageReceiver::readMessage(uint32_t timeout, MessageReceiverResult *result, bool allowReadBytes)
 {
    NXCPMessage *msg;
    bool protocolError = false;
    while(true)
    {
       msg = getMessageFromBuffer(&protocolError);
-      if (msg != NULL)
+      if (msg != nullptr)
       {
          *result = MSGRECV_SUCCESS;
          break;
@@ -133,6 +133,11 @@ NXCPMessage *AbstractMessageReceiver::readMessage(uint32_t timeout, MessageRecei
       if (protocolError)
       {
          *result = MSGRECV_PROTOCOL_ERROR;
+         break;
+      }
+      if (!allowReadBytes)
+      {
+         *result = MSGRECV_WANT_READ;
          break;
       }
       ssize_t bytes = readBytes(&m_buffer[m_dataSize], m_size - m_dataSize, timeout);

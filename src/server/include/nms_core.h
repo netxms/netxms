@@ -522,6 +522,7 @@ private:
       std::pair<ClientSession*, IntegerArray<uint32_t>*> *context);
 
    bool readSocket();
+   MessageReceiverResult readMessage(bool allowSocketRead);
    void finalize();
    void pollerThread(shared_ptr<DataCollectionTarget> object, int pollType, uint32_t requestId);
 

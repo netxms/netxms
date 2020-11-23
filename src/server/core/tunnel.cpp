@@ -374,10 +374,21 @@ void AgentTunnel::debugPrintf(int level, const TCHAR *format, ...)
  */
 bool AgentTunnel::readSocket()
 {
+   MessageReceiverResult result = readMessage(true);
+   while(result == MSGRECV_SUCCESS)
+      result = readMessage(false);
+   return (result == MSGRECV_WANT_READ) || (result == MSGRECV_WANT_WRITE);
+}
+
+/**
+ * Read single message from socket
+ */
+MessageReceiverResult AgentTunnel::readMessage(bool allowSocketRead)
+{
    MessageReceiverResult result;
-   NXCPMessage *msg = m_messageReceiver->readMessage(0, &result);
+   NXCPMessage *msg = m_messageReceiver->readMessage(0, &result, allowSocketRead);
    if ((result == MSGRECV_WANT_READ) || (result == MSGRECV_WANT_WRITE))
-      return true;
+      return result;
 
    if (result != MSGRECV_SUCCESS)
    {
@@ -385,7 +396,7 @@ bool AgentTunnel::readSocket()
          debugPrintf(4, _T("Tunnel closed by peer"));
       else
          debugPrintf(4, _T("Communication error (%s)"), AbstractMessageReceiver::resultToText(result));
-      return false;
+      return result;
    }
 
    if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 6)
@@ -418,7 +429,7 @@ bool AgentTunnel::readSocket()
       incRefCount();
       ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, m_threadPoolKey, this, &AgentTunnel::processMessage, msg);
    }
-   return true;
+   return MSGRECV_SUCCESS;
 }
 
 /**
