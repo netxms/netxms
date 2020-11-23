@@ -711,7 +711,6 @@ AC_ARG_WITH(pcre,
 [AS_HELP_STRING(--with-pcre,specify PCRE location)],
 [
 	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno"; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 		LDFLAGS="$LDFLAGS -L${withval}/lib"
 		CPPFLAGS="$CPPFLAGS -I${withval}/include"
 	fi
@@ -3706,11 +3705,11 @@ if test "x$DIST_BUILD" != "xyes"; then
 					AC_MSG_ERROR([Cannot find pcre.h - check your PCRE installation])
 				])
 		])
-	AC_CHECK_LIB(pcre, pcre_compile,, [AC_MSG_ERROR(libpcre is requred)])
+	AC_CHECK_LIB(pcre, pcre_compile, [PCRE_LIBS="-lpcre"], [AC_MSG_ERROR(libpcre is requred)])
 	if test $ac_cv_sizeof_wchar_t -eq 2; then
-		AC_CHECK_LIB(pcre16, pcre16_compile,, [AC_MSG_ERROR(libpcre16 is requred)])
+		AC_CHECK_LIB(pcre16, pcre16_compile, [PCRE_LIBS="$PCRE_LIBS -lpcre16"], [AC_MSG_ERROR(libpcre16 is requred)])
 	else
-		AC_CHECK_LIB(pcre32, pcre32_compile,, [AC_MSG_ERROR(libpcre32 is requred)])
+		AC_CHECK_LIB(pcre32, pcre32_compile, [PCRE_LIBS="$PCRE_LIBS -lpcre32"], [AC_MSG_ERROR(libpcre32 is requred)])
 	fi
 fi
 
@@ -4403,6 +4402,7 @@ else
 fi
 
 LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $PTHREAD_LDFLAGS $LDFLAGS_SUFFIX"
+LIBS="$LIBS $PCRE_LIBS"
 
 if test "x${ENABLE_WERROR}" = "xyes"; then
 	CPPFLAGS="$CPPFLAGS -Werror"
