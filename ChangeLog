@@ -1,4 +1,11 @@
 *
+* 3.6.264
+*
+
+- Fixed bug in agent connection setup via proxy
+
+
+*
 * 3.6.262
 *
 
