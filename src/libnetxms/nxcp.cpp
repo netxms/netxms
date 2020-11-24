@@ -980,8 +980,8 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channe
       NXCP_BUFFER *pBuffer = MemAllocStruct<NXCP_BUFFER>();
       NXCPInitBuffer(pBuffer);
 
-      NXCPEncryptionContext *pDummyCtx = NULL;
-      ssize_t nSize = RecvNXCPMessage(channel, &msg, pBuffer, NXCP_HEADER_SIZE, &pDummyCtx, NULL, 30000);
+      NXCPEncryptionContext *dummyContext = nullptr;
+      ssize_t nSize = RecvNXCPMessage(channel, &msg, pBuffer, NXCP_HEADER_SIZE, &dummyContext, nullptr, 30000);
       if ((nSize == NXCP_HEADER_SIZE) &&
           (ntohs(msg.code) == CMD_NXCP_CAPS) &&
           (ntohs(msg.flags) & MF_CONTROL))

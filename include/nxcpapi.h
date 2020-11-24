@@ -72,6 +72,7 @@ private:
    uint32_t m_id;
    MessageField *m_fields; // Message fields
    int m_version;          // Protocol version
+   uint32_t m_controlData; // Data for control message
    BYTE *m_data;           // binary data
    size_t m_dataSize;      // binary data size
    MemoryPool m_pool;
@@ -110,6 +111,9 @@ public:
    bool isBinary() const { return (m_flags & MF_BINARY) ? true : false; }
    bool isControl() const { return (m_flags & MF_CONTROL) ? true : false; }
    bool isCompressedStream() const { return ((m_flags & (MF_COMPRESSED | MF_STREAM)) == (MF_COMPRESSED | MF_STREAM)) ? true : false; }
+
+   uint32_t getControlData() const { return m_controlData; }
+   void setControlData(uint32_t data) { m_controlData = data; }
 
    const BYTE *getBinaryData() const { return m_data; }
    size_t getBinaryDataSize() const { return m_dataSize; }
@@ -340,7 +344,7 @@ private:
    size_t m_dataSize;
    ssize_t m_bytesToSkip;
 
-   NXCPMessage *getMessageFromBuffer(bool *protocolError);
+   NXCPMessage *getMessageFromBuffer(bool *protocolError, bool *decryptionError);
 
 protected:
    virtual ssize_t readBytes(BYTE *buffer, size_t size, uint32_t timeout) = 0;

@@ -335,7 +335,7 @@ void CommSession::readThread()
 
             if (msg->getCode() == CMD_GET_NXCP_CAPS)
             {
-               UINT32 peerNXCPVersion = msg->getEncodedProtocolVersion(); // Before NXCP version 5 encoded version will be 0, assume version 4
+               uint32_t peerNXCPVersion = msg->getEncodedProtocolVersion(); // Before NXCP version 5 encoded version will be 0, assume version 4
                m_protocolVersion = (peerNXCPVersion == 0) ? 4 : MIN(peerNXCPVersion, NXCP_VERSION);
                debugPrintf(4, _T("Using protocol version %d"), m_protocolVersion);
 
