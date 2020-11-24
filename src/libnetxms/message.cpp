@@ -54,36 +54,35 @@ static void ZLibFree(voidpf pool, voidpf address)
  */
 static size_t CalculateFieldSize(const NXCP_MESSAGE_FIELD *field, bool networkByteOrder)
 {
-   size_t nSize;
-
+   size_t size;
    switch(field->type)
    {
       case NXCP_DT_INT32:
-         nSize = 12;
+         size = 12;
          break;
       case NXCP_DT_INT64:
       case NXCP_DT_FLOAT:
-         nSize = 16;
+         size = 16;
          break;
       case NXCP_DT_INT16:
-         nSize = 8;
+         size = 8;
          break;
       case NXCP_DT_INETADDR:
-         nSize = 32;
+         size = 32;
          break;
       case NXCP_DT_STRING:
       case NXCP_DT_UTF8_STRING:
       case NXCP_DT_BINARY:
          if (networkByteOrder)
-            nSize = ntohl(field->df_string.length) + 12;
+            size = ntohl(field->df_string.length) + 12;
          else
-            nSize = field->df_string.length + 12;
+            size = field->df_string.length + 12;
          break;
       default:
-         nSize = 8;
+         size = 8;
          break;
    }
-   return nSize;
+   return size;
 }
 
 /**
@@ -100,7 +99,7 @@ struct MessageField
 /**
  * Create new hash entry with given field size
  */
-inline MessageField *CreateMessageField(MemoryPool& pool, size_t fieldSize)
+static inline MessageField *CreateMessageField(MemoryPool& pool, size_t fieldSize)
 {
    size_t entrySize = sizeof(MessageField) - sizeof(NXCP_MESSAGE_FIELD) + fieldSize;
    MessageField *entry = static_cast<MessageField*>(pool.allocate(entrySize));
@@ -116,11 +115,12 @@ NXCPMessage::NXCPMessage(int version) : m_pool(NXCP_DEFAULT_SIZE_HINT)
 {
    m_code = 0;
    m_id = 0;
-   m_fields = NULL;
+   m_fields = nullptr;
    m_flags = 0;
    m_version = version;
-   m_data = NULL;
+   m_data = nullptr;
    m_dataSize = 0;
+   m_controlData = 0;
 }
 
 /**
@@ -130,11 +130,12 @@ NXCPMessage::NXCPMessage(UINT16 code, UINT32 id, int version) : m_pool(NXCP_DEFA
 {
    m_code = code;
    m_id = id;
-   m_fields = NULL;
+   m_fields = nullptr;
    m_flags = 0;
    m_version = version;
-   m_data = NULL;
+   m_data = nullptr;
    m_dataSize = 0;
+   m_controlData = 0;
 }
 
 /**
@@ -146,7 +147,8 @@ NXCPMessage::NXCPMessage(NXCPMessage *msg) : m_pool(msg->m_pool.regionSize())
    m_id = msg->m_id;
    m_flags = msg->m_flags;
    m_version = msg->m_version;
-   m_fields = NULL;
+   m_controlData = msg->m_controlData;
+   m_fields = nullptr;
 
    if (m_flags & MF_BINARY)
    {
@@ -155,7 +157,7 @@ NXCPMessage::NXCPMessage(NXCPMessage *msg) : m_pool(msg->m_pool.regionSize())
    }
    else
    {
-      m_data = NULL;
+      m_data = nullptr;
       m_dataSize = 0;
 
       MessageField *entry, *tmp;
@@ -178,7 +180,7 @@ NXCPMessage *NXCPMessage::deserialize(const NXCP_MESSAGE *rawMsg, int version)
    if (msg->isValid())
       return msg;
    delete msg;
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -201,7 +203,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
    m_flags = ntohs(msg->flags);
    m_code = ntohs(msg->code);
    m_id = ntohl(msg->id);
-   m_fields = NULL;
+   m_fields = nullptr;
 
    int v = getEncodedProtocolVersion();
    m_version = (v != 0) ? v : version; // Use encoded version if present
@@ -209,6 +211,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
    // Parse data fields
    if (m_flags & MF_BINARY)
    {
+      m_controlData = 0;
       m_dataSize = (size_t)ntohl(msg->numFields);
       if ((m_flags & MF_COMPRESSED) && !(m_flags & MF_STREAM) && (m_version >= 4))
       {
@@ -250,10 +253,15 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
          m_data = m_pool.copyMemoryBlock(reinterpret_cast<const BYTE*>(msg->fields), m_dataSize);
       }
    }
+   else if (m_flags & MF_CONTROL)
+   {
+      m_controlData = ntohl(msg->numFields);
+   }
    else
    {
-      m_data = NULL;
+      m_data = nullptr;
       m_dataSize = 0;
+      m_controlData = 0;
 
       BYTE *msgData;
       size_t msgDataSize;

@@ -213,7 +213,7 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
    if (result == MSGRECV_DECRYPTION_FAILURE)
    {
       debugPrintf(6, _T("Unable to decrypt received message"));
-      return result;
+      return MSGRECV_SUCCESS; // continue reading
    }
 
    shared_ptr<AgentConnection> connection = m_connection.lock();
@@ -779,14 +779,17 @@ setup_encryption:
 	   msg.numFields = 0;
 	   msg.size = htonl(NXCP_HEADER_SIZE);
 	   msg.code = htons(CMD_GET_NXCP_CAPS);
-	   msg.flags = htons(MF_CONTROL);
+	   msg.flags = htons(MF_CONTROL | MF_NXCP_VERSION(NXCP_VERSION));
 	   if (m_channel->send(&msg, NXCP_HEADER_SIZE, m_mutexSocketWrite) == NXCP_HEADER_SIZE)
 	   {
-	      NXCP_MESSAGE *rsp = m_pMsgWaitQueue->waitForRawMessage(CMD_NXCP_CAPS, 0, m_commandTimeout);
+	      NXCPMessage *rsp = m_pMsgWaitQueue->waitForMessage(CMD_NXCP_CAPS, 0, m_commandTimeout);
 	      if (rsp != nullptr)
 	      {
-	         m_nProtocolVersion = rsp->numFields >> 24;
-	         MemFree(rsp);
+	         if (rsp->isControl())
+	            m_nProtocolVersion = rsp->getControlData() >> 24;
+	         else
+	            m_nProtocolVersion = 1; // assume that peer doesn't understand CMD_GET_NXCP_CAPS message
+	         delete rsp;
 	      }
 	      else
 	      {

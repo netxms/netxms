@@ -51,7 +51,7 @@ AbstractMessageReceiver::~AbstractMessageReceiver()
 /**
  * Get message from buffer
  */
-NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
+NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError, bool *decryptionError)
 {
    NXCPMessage *msg = nullptr;
 
@@ -76,6 +76,11 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
                   msg = NXCPMessage::deserialize(reinterpret_cast<NXCP_MESSAGE*>(m_buffer));
                   if (msg == nullptr)
                      *protocolError = true;  // message deserialization error
+               }
+               else
+               {
+                  *protocolError = true;
+                  *decryptionError = true;
                }
             }
          }
@@ -103,7 +108,7 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
          {
             // too large value in message size field, assuming garbage on input
             *protocolError = true;
-         }
+        }
          else
          {
             m_bytesToSkip = msgSize - m_dataSize;
@@ -121,10 +126,10 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
 NXCPMessage *AbstractMessageReceiver::readMessage(uint32_t timeout, MessageReceiverResult *result, bool allowReadBytes)
 {
    NXCPMessage *msg;
-   bool protocolError = false;
+   bool protocolError = false, decryptionError = false;
    while(true)
    {
-      msg = getMessageFromBuffer(&protocolError);
+      msg = getMessageFromBuffer(&protocolError, &decryptionError);
       if (msg != nullptr)
       {
          *result = MSGRECV_SUCCESS;
@@ -132,7 +137,7 @@ NXCPMessage *AbstractMessageReceiver::readMessage(uint32_t timeout, MessageRecei
       }
       if (protocolError)
       {
-         *result = MSGRECV_PROTOCOL_ERROR;
+         *result = decryptionError ? MSGRECV_DECRYPTION_FAILURE : MSGRECV_PROTOCOL_ERROR;
          break;
       }
       if (!allowReadBytes)

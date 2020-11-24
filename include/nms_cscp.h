@@ -91,41 +91,41 @@
  */
 typedef struct
 {
-   UINT32 fieldId;  // Field identifier
-   BYTE type;       // Data type
-   BYTE flags;      // flags (may by type-dependent)
-   UINT16 int16;
+   uint32_t fieldId;  // Field identifier
+   uint8_t type;       // Data type
+   uint8_t flags;      // flags (may by type-dependent)
+   uint16_t int16;
    union
    {
-      INT32 int32;
-      INT64 int64;
-      UINT32 uint32;
-      UINT64 uint64;
+      int32_t int32;
+      int64_t int64;
+      uint32_t uint32;
+      uint64_t uint64;
       double real;
       struct
       {
-         UINT32 length;
-         UINT16 value[1]; // actual size depends on length value
+         uint32_t length;
+         uint16_t value[1]; // actual size depends on length value
       } string;
       struct
       {
-         UINT32 length;
+         uint32_t length;
          char value[1]; // actual size depends on length value
       } utf8string;
       struct
       {
-         UINT32 length;
+         uint32_t length;
          BYTE value[1]; // actual size depends on length value
       } binary;
       struct
       {
          union
          {
-            UINT32 v4;
+            uint32_t v4;
             BYTE v6[16];
          } addr;
-         BYTE family;
-         BYTE maskBits;
+         uint8_t family;
+         uint8_t maskBits;
          BYTE padding[6];
       } inetaddr;
    } data;
@@ -147,11 +147,11 @@ typedef struct
  */
 typedef struct
 {
-   UINT16 code;      // Message (command) code
-   UINT16 flags;     // Message flags
-   UINT32 size;      // Message size (including header) in bytes
-   UINT32 id;        // Unique message identifier
-   UINT32 numFields; // Number of fields in message
+   uint16_t code;      // Message (command) code
+   uint16_t flags;     // Message flags
+   uint32_t size;      // Message size (including header) in bytes
+   uint32_t id;        // Unique message identifier
+   uint32_t numFields; // Number of fields in message
    NXCP_MESSAGE_FIELD fields[1];    // Data fields - actual length depends on value in numFields
 } NXCP_MESSAGE;
 
@@ -160,8 +160,8 @@ typedef struct
  */
 typedef struct
 {
-   UINT32 dwChecksum;
-   UINT32 dwReserved; // Align to 8-byte boundary
+   uint32_t dwChecksum;
+   uint32_t dwReserved; // Align to 8-byte boundary
 } NXCP_ENCRYPTED_PAYLOAD_HEADER;
 
 /**
@@ -169,10 +169,10 @@ typedef struct
  */
 typedef struct
 {
-   WORD code;       // Should be CMD_ENCRYPTED_MESSAGE
+   uint16_t code;       // Should be CMD_ENCRYPTED_MESSAGE
    BYTE padding;    // Number of bytes added to the end of message
    BYTE reserved;
-   UINT32 size;    // Size of encrypted message (including encryption header and padding)
+   uint32_t size;    // Size of encrypted message (including encryption header and padding)
    BYTE data[1];     // Encrypted payload
 } NXCP_ENCRYPTED_MESSAGE;
 
@@ -181,10 +181,10 @@ typedef struct
  */
 typedef struct
 {
-   UINT32 dciId;
-   UINT32 numRows;
-   UINT32 dataType;
-   UINT32 padding;
+   uint32_t dciId;
+   uint32_t numRows;
+   uint32_t dataType;
+   uint32_t padding;
 } DCI_DATA_HEADER;
 
 /**
@@ -192,17 +192,17 @@ typedef struct
  */
 typedef struct
 {
-   UINT32 timeStamp;
+   uint32_t timeStamp;
    union
    {
-      UINT32 int32;
+      uint32_t int32;
       UCS2CHAR string[MAX_DCI_STRING_VALUE];
       struct
       {
-         UINT32 padding;
+         uint32_t padding;
          union
          {
-            UINT64 int64;
+            uint64_t int64;
             double real;
          } v64;
       } ext;
