@@ -2,11 +2,9 @@ package org.netxms.certificate.subject;
 
 import org.junit.Before;
 import org.junit.Test;
+import junit.framework.TestCase;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
-
-public class SubjectParserTest
+public class SubjectParserTest extends TestCase
 {
    private final String subjectString = "cN=Rage Cage, O=YMCA, st=Kentucky, c=US";
    private Subject subj;
@@ -21,31 +19,27 @@ public class SubjectParserTest
    public void testParseSubject_testCN() throws Exception
    {
       String cn = subj.getCommonName();
-
-      assertThat(cn, equalTo("Rage Cage"));
+      assertTrue(cn.equals("Rage Cage"));
    }
 
    @Test
    public void testParseSubject_testO() throws Exception
    {
       String o = subj.getOrganization();
-
-      assertThat(o, equalTo("YMCA"));
+      assertTrue(o.equals("YMCA"));
    }
 
    @Test
    public void testParseSubject_testST() throws Exception
    {
       String st = subj.getState();
-
-      assertThat(st, equalTo("Kentucky"));
+      assertTrue(st.equals("Kentucky"));
    }
 
    @Test
    public void testParseSubject_testC() throws Exception
    {
       String c = subj.getCountry();
-
-      assertThat(c, equalTo("US"));
+      assertTrue(c.equals("US"));
    }
 }
