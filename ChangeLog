@@ -1,4 +1,11 @@
 *
+* 3.6.269
+*
+
+- Fixed memory leak in server
+
+
+*
 * 3.6.264
 *
 
