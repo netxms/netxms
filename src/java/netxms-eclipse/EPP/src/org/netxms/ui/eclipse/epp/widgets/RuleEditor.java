@@ -121,7 +121,7 @@ public class RuleEditor extends Composite
       this.ruleNumber = rule.getRuleNumber();
       this.editor = editor;
 
-      session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
       labelProvider = new WorkbenchLabelProvider();
 
       setBackground(ThemeEngine.getBackgroundColor("RuleEditor.Border.Rule"));
@@ -228,7 +228,6 @@ public class RuleEditor extends Composite
       source.setTransfer(new Transfer[] { LocalSelectionTransfer.getTransfer() });
       // add a drop listener
       source.addDragListener(new RuleDragSourceListener(this));
-
    }
 
    /**
@@ -241,7 +240,6 @@ public class RuleEditor extends Composite
       target.setTransfer(new Transfer[] { LocalSelectionTransfer.getTransfer() });
       // add a drop listener
       target.addDropListener(new RuleDropTargetListener());
-
    }
 
    /**
@@ -950,13 +948,11 @@ public class RuleEditor extends Composite
    @SuppressWarnings("rawtypes")
    private static PropertyDialog createDialogOn(Shell shell, final String propertyPageId, Object element, String name)
    {
+      if (element == null)
+         return null;
+
       PropertyPageManager pageManager = new PropertyPageManager();
       String title = "";//$NON-NLS-1$
-
-      if (element == null)
-      {
-         return null;
-      }
 
       // load pages for the selection
       // fill the manager with contributions from the matching contributors
