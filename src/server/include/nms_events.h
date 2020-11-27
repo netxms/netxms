@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ enum class EventOrigin
    SNMP = 4,
    NXSL = 5,
    REMOTE_SERVER = 6,
-   WIN_EVENT = 7
+   WINDOWS_EVENT = 7
 };
 
 /**
@@ -50,11 +50,11 @@ class EventTemplate
 {
 private:
    uuid m_guid;
-   UINT32 m_code;
+   uint32_t m_code;
    TCHAR m_name[MAX_EVENT_NAME];
    TCHAR *m_tags;
    int m_severity;
-   UINT32 m_flags;
+   uint32_t m_flags;
    TCHAR *m_messageTemplate;
    TCHAR *m_description;
 
@@ -64,16 +64,16 @@ public:
    ~EventTemplate();
 
    const uuid& getGuid() const { return m_guid; }
-   UINT32 getCode() const { return m_code; }
+   uint32_t getCode() const { return m_code; }
    const TCHAR *getName() const { return m_name; }
    int getSeverity() const { return m_severity; }
-   UINT32 getFlags() const { return m_flags; }
+   uint32_t getFlags() const { return m_flags; }
    const TCHAR *getMessageTemplate() const { return m_messageTemplate; }
    const TCHAR *getDescription() const { return m_description; }
    const TCHAR *getTags() const { return m_tags; }
 
    void modifyFromMessage(NXCPMessage *msg);
-   void fillMessage(NXCPMessage *msg, UINT32 base) const;
+   void fillMessage(NXCPMessage *msg, uint32_t base) const;
    bool saveToDatabase() const;
 
    json_t *toJson() const;
@@ -111,15 +111,15 @@ private:
 	int64_t m_queueTime;
 	EventQueueBinding *m_queueBinding;
 
-	void init(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, UINT32 dciId, const TCHAR *tag);
+	void init(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, uint32_t dciId);
 
 public:
    Event();
    Event(const Event *src);
-   Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, UINT32 sourceId,
-            UINT32 dciId, const TCHAR *tag, const char *format, const TCHAR **names, va_list args);
-   Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, UINT32 sourceId,
-            UINT32 dciId, const TCHAR *tag, StringMap *args);
+   Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId,
+            uint32_t dciId, const char *format, const TCHAR **names, va_list args);
+   Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId,
+            uint32_t dciId, const StringMap& args);
    ~Event();
 
    uint64_t getId() const { return m_id; }
@@ -232,12 +232,12 @@ public:
  */
 struct ActionExecutionConfiguration
 {
-   UINT32 actionId;
-   UINT32 timerDelay;
+   uint32_t actionId;
+   uint32_t timerDelay;
    TCHAR *timerKey;
    TCHAR *blockingTimerKey;
 
-   ActionExecutionConfiguration(UINT32 i, UINT32 d, TCHAR *k, TCHAR *bk)
+   ActionExecutionConfiguration(uint32_t i, uint32_t d, TCHAR *k, TCHAR *bk)
    {
       actionId = i;
       timerDelay = d;
@@ -340,8 +340,8 @@ public:
    void removeRuleCategory (UINT32 categoryId);
    json_t *toJson() const;
 
-   bool isActionInUse(UINT32 actionId) const;
-   bool isCategoryInUse(UINT32 categoryId) const;
+   bool isActionInUse(uint32_t actionId) const;
+   bool isCategoryInUse(uint32_t categoryId) const;
 };
 
 /**
@@ -361,10 +361,10 @@ struct EventProcessingThreadStats
 bool InitEventSubsystem();
 void ShutdownEventSubsystem();
 void ReloadEvents();
-UINT32 UpdateEventTemplate(NXCPMessage *request, NXCPMessage *response, json_t **oldValue, json_t **newValue);
-UINT32 DeleteEventTemplate(UINT32 eventCode);
+uint32_t UpdateEventTemplate(NXCPMessage *request, NXCPMessage *response, json_t **oldValue, json_t **newValue);
+uint32_t DeleteEventTemplate(uint32_t eventCode);
 void GetEventConfiguration(NXCPMessage *msg);
-void CreateEventTemplateExportRecord(StringBuffer &str, UINT32 eventCode);
+void CreateEventTemplateExportRecord(StringBuffer &str, uint32_t eventCode);
 
 void CorrelateEvent(Event *event);
 Event *LoadEventFromDatabase(uint64_t eventId);
@@ -372,31 +372,32 @@ Event *FindEventInLoggerQueue(uint64_t eventId);
 StructArray<EventProcessingThreadStats> *GetEventProcessingThreadStats();
 
 bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer);
-UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);
-shared_ptr<EventTemplate> FindEventTemplateByCode(UINT32 code);
+uint32_t NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, uint32_t defaultValue = 0);
+shared_ptr<EventTemplate> FindEventTemplateByCode(uint32_t code);
 shared_ptr<EventTemplate> FindEventTemplateByName(const TCHAR *name);
 
-bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const char *format, ...);
-bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const StringList& parameters);
-bool NXCORE_EXPORTABLE PostSystemEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
-bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, const char *format, ...);
-UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const char *format, ...);
-UINT64 NXCORE_EXPORTABLE PostSystemEvent2(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
-bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const char *format, const TCHAR **names, ...);
-bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, StringMap *parameters);
-bool NXCORE_EXPORTABLE PostSystemEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...);
-bool NXCORE_EXPORTABLE PostSystemEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters);
-bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, const char *format, const TCHAR **names, ...);
-bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, StringMap *parameters);
-bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const TCHAR *tag, const char *format, const TCHAR **names, ...);
-bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const TCHAR *tag, StringMap *parameters);
-bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const TCHAR *tag, const char *format, ...);
-bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const TCHAR *tag, const StringList& parameters);
-bool NXCORE_EXPORTABLE PostEventEx(ObjectQueue<Event> *queue, UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const char *format, ...);
-bool NXCORE_EXPORTABLE PostSystemEventEx(ObjectQueue<Event> *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...);
+bool NXCORE_EXPORTABLE PostEvent(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const char *format, ...);
+bool NXCORE_EXPORTABLE PostEvent(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const StringList& parameters);
+bool NXCORE_EXPORTABLE PostSystemEvent(uint32_t eventCode, uint32_t sourceId, const char *format, ...);
+bool NXCORE_EXPORTABLE PostDciEvent(uint32_t eventCode, uint32_t sourceId, uint32_t dciId, const char *format, ...);
+UINT64 NXCORE_EXPORTABLE PostEvent2(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const char *format, ...);
+UINT64 NXCORE_EXPORTABLE PostSystemEvent2(uint32_t eventCode, uint32_t sourceId, const char *format, ...);
+bool NXCORE_EXPORTABLE PostEventWithNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const char *format, const TCHAR **names, ...);
+bool NXCORE_EXPORTABLE PostEventWithNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, StringMap *parameters);
+bool NXCORE_EXPORTABLE PostSystemEventWithNames(uint32_t eventCode, uint32_t sourceId, const char *format, const TCHAR **names, ...);
+bool NXCORE_EXPORTABLE PostSystemEventWithNames(uint32_t eventCode, uint32_t sourceId, StringMap *parameters);
+bool NXCORE_EXPORTABLE PostDciEventWithNames(uint32_t eventCode, uint32_t sourceId, uint32_t dciId, const char *format, const TCHAR **names, ...);
+bool NXCORE_EXPORTABLE PostDciEventWithNames(uint32_t eventCode, uint32_t sourceId, uint32_t dciId, StringMap *parameters);
+bool NXCORE_EXPORTABLE PostEventWithTagAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, const char *format, const TCHAR **names, ...);
+bool NXCORE_EXPORTABLE PostEventWithTagAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, StringMap *parameters);
+bool NXCORE_EXPORTABLE PostEventWithTagsAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const StringSet *tags, const StringMap *parameters);
+bool NXCORE_EXPORTABLE PostEventWithTag(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, const char *format, ...);
+bool NXCORE_EXPORTABLE PostEventWithTag(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, const StringList& parameters);
+bool NXCORE_EXPORTABLE PostEventEx(ObjectQueue<Event> *queue, uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const char *format, ...);
+bool NXCORE_EXPORTABLE PostSystemEventEx(ObjectQueue<Event> *queue, uint32_t eventCode, uint32_t sourceId, const char *format, ...);
 void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue);
-bool NXCORE_EXPORTABLE TransformAndPostEvent(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const TCHAR *tag, StringMap *parameters, NXSL_VM *vm);
-bool NXCORE_EXPORTABLE TransformAndPostSystemEvent(UINT32 eventCode, UINT32 sourceId, const TCHAR *tag, StringMap *parameters, NXSL_VM *vm);
+bool NXCORE_EXPORTABLE TransformAndPostEvent(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, StringMap *parameters, NXSL_VM *vm);
+bool NXCORE_EXPORTABLE TransformAndPostSystemEvent(uint32_t eventCode, uint32_t sourceId, const TCHAR *tag, StringMap *parameters, NXSL_VM *vm);
 
 const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
 

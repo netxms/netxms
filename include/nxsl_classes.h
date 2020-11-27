@@ -337,6 +337,9 @@ public:
    int getMaxIndex() const { return (m_size > 0) ? m_data[m_size - 1].index : 0; }
 
    StringList *toStringList() const;
+   void toStringList(StringList *list) const;
+   StringSet *toStringSet() const;
+   void toStringSet(StringSet *set) const;
    void toString(StringBuffer *stringBuffer, const TCHAR *separator, bool withBrackets) const;
 
    NXSL_Value *get(int index) const;
@@ -391,6 +394,7 @@ public:
    NXSL_Value *getValues() const;
 
    StringMap *toStringMap() const;
+   void toStringMap(StringMap *map) const;
 
 	int size() const { return m_values->size(); }
 };

@@ -1231,7 +1231,7 @@ void EventPolicy::replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList)
 /**
  * Check if given action is used in policy
  */
-bool EventPolicy::isActionInUse(UINT32 actionId) const
+bool EventPolicy::isActionInUse(uint32_t actionId) const
 {
    bool bResult = false;
 
@@ -1251,7 +1251,7 @@ bool EventPolicy::isActionInUse(UINT32 actionId) const
 /**
  * Check if given category is used in policy
  */
-bool EventPolicy::isCategoryInUse(UINT32 categoryId) const
+bool EventPolicy::isCategoryInUse(uint32_t categoryId) const
 {
    bool bResult = false;
 
