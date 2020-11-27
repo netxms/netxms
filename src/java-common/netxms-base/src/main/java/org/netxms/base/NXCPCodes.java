@@ -1171,6 +1171,7 @@ public class NXCPCodes
    public static final long VID_AREA_ID = 723;
    public static final long VID_GEOLOCATION_CTRL_MODE = 724;
    public static final long VID_GEO_AREAS = 725;
+   public static final long VID_ORIGIN_TIMESTAMP = 726;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

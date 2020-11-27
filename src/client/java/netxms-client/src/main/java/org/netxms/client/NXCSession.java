@@ -7898,20 +7898,21 @@ public class NXCSession
    }
 
    /**
-    * Send event to server. Event can be identified either by event code or event name. If event name
-    * is given, event code will be ignored.
+    * Send event to server. Event can be identified either by event code or event name. If event name is given, event code will be
+    * ignored.
     * <p>
     * Node: sending events by name supported by server version 1.1.8 and higher.
     *
-    * @param eventCode  event code. Ignored if event name is not null.
-    * @param eventName  event name. Must be set to null if event identified by code.
-    * @param objectId   Object ID to send event on behalf of. If set to 0, server will determine object ID by client IP address.
+    * @param eventCode event code. Ignored if event name is not null.
+    * @param eventName event name. Must be set to null if event identified by code.
+    * @param objectId Object ID to send event on behalf of. If set to 0, server will determine object ID by client IP address.
     * @param parameters event's parameters
-    * @param userTag    event's user tag
-    * @throws IOException  if socket I/O error occurs
+    * @param userTag event's user tag
+    * @param originTimestamp origin timestamp or null
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void sendEvent(long eventCode, String eventName, long objectId, String[] parameters, String userTag)
+   public void sendEvent(long eventCode, String eventName, long objectId, String[] parameters, String userTag, Date originTimestamp)
          throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_TRAP);
@@ -7920,6 +7921,8 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_EVENT_NAME, eventName);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setField(NXCPCodes.VID_USER_TAG, (userTag != null) ? userTag : "");
+      if (originTimestamp != null)
+         msg.setField(NXCPCodes.VID_ORIGIN_TIMESTAMP, originTimestamp);
       msg.setFieldInt16(NXCPCodes.VID_NUM_ARGS, parameters.length);
       long varId = NXCPCodes.VID_EVENT_ARG_BASE;
       for(int i = 0; i < parameters.length; i++)
@@ -7940,7 +7943,7 @@ public class NXCSession
     */
    public void sendEvent(long eventCode, String[] parameters) throws IOException, NXCException
    {
-      sendEvent(eventCode, null, 0, parameters, null);
+      sendEvent(eventCode, null, 0, parameters, null, null);
    }
 
    /**
@@ -7953,7 +7956,7 @@ public class NXCSession
     */
    public void sendEvent(String eventName, String[] parameters) throws IOException, NXCException
    {
-      sendEvent(0, eventName, 0, parameters, null);
+      sendEvent(0, eventName, 0, parameters, null, null);
    }
 
    /**

@@ -6582,15 +6582,12 @@ void ClientSession::onTrap(NXCPMessage *pRequest)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
 
-   TCHAR szUserTag[MAX_USERTAG_LENGTH] = _T("");
-   BOOL bSuccess;
-
    // Find event's source object
-   UINT32 dwObjectId = pRequest->getFieldAsUInt32(VID_OBJECT_ID);
+   uint32_t objectId = pRequest->getFieldAsUInt32(VID_OBJECT_ID);
    shared_ptr<NetObj> object;
-   if (dwObjectId != 0)
+   if (objectId != 0)
 	{
-      object = FindObjectById(dwObjectId);  // Object is specified explicitely
+      object = FindObjectById(objectId);  // Object is specified explicitely
 	}
    else   // Client is the source
 	{
@@ -6603,22 +6600,24 @@ void ClientSession::onTrap(NXCPMessage *pRequest)
 			object = FindNodeByIP(0, m_clientAddr);
       }
 	}
+
    if (object != nullptr)
    {
       // User should have SEND_EVENTS access right to object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_SEND_EVENTS))
       {
-         UINT32 dwEventCode = pRequest->getFieldAsUInt32(VID_EVENT_CODE);
-			if ((dwEventCode == 0) && pRequest->isFieldExist(VID_EVENT_NAME))
+         uint32_t eventCode = pRequest->getFieldAsUInt32(VID_EVENT_CODE);
+			if ((eventCode == 0) && pRequest->isFieldExist(VID_EVENT_NAME))
 			{
 				TCHAR eventName[256];
 				pRequest->getFieldAsString(VID_EVENT_NAME, eventName, 256);
-				dwEventCode = EventCodeFromName(eventName, 0);
+				eventCode = EventCodeFromName(eventName, 0);
 			}
-			pRequest->getFieldAsString(VID_USER_TAG, szUserTag, MAX_USERTAG_LENGTH);
+		   TCHAR userTag[MAX_USERTAG_LENGTH] = _T("");
+			pRequest->getFieldAsString(VID_USER_TAG, userTag, MAX_USERTAG_LENGTH);
 			StringList parameters(pRequest, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
-         bSuccess = PostEventWithTag(dwEventCode, EventOrigin::CLIENT, 0, object->getId(), szUserTag, parameters);
-         msg.setField(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_EVENT_CODE);
+         bool success = PostEventWithTag(eventCode, EventOrigin::CLIENT, pRequest->getFieldAsTime(VID_ORIGIN_TIMESTAMP), object->getId(), userTag, parameters);
+         msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_EVENT_CODE);
       }
       else
       {
@@ -6630,7 +6629,6 @@ void ClientSession::onTrap(NXCPMessage *pRequest)
       msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
    sendMessage(&msg);
 }
 
