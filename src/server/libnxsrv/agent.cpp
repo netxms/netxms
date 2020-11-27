@@ -260,64 +260,31 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
 
       if ((msg->getCode() == CMD_FILE_DATA) && (msg->getId() == connection->m_dwDownloadRequestId))
       {
-         if (connection->m_sendToClientMessageCallback != nullptr)
+         if (g_agentConnectionThreadPool != nullptr)
          {
-            connection->m_sendToClientMessageCallback(msg, connection->m_downloadProgressCallbackArg);
-            if (msg->isEndOfFile())
-            {
-               connection->m_sendToClientMessageCallback = nullptr;
-               connection->onFileDownload(true);
-            }
-            else
-            {
-               if (connection->m_downloadProgressCallback != nullptr)
-               {
-                  connection->m_downloadProgressCallback(msg->getBinaryDataSize(), connection->m_downloadProgressCallbackArg);
-               }
-            }
+            TCHAR key[64];
+            _sntprintf(key, 64, _T("FileTransfer_%p"), this);
+            ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::processFileData, msg);
          }
          else
          {
-            if (connection->m_hCurrFile != -1)
-            {
-               if (_write(connection->m_hCurrFile, msg->getBinaryData(), msg->getBinaryDataSize()) == (int)msg->getBinaryDataSize())
-               {
-                  if (msg->isEndOfFile())
-                  {
-                     _close(connection->m_hCurrFile);
-                     connection->m_hCurrFile = -1;
-                     connection->onFileDownload(true);
-                  }
-                  else if (connection->m_downloadProgressCallback != nullptr)
-                  {
-                     connection->m_downloadProgressCallback(_tell(connection->m_hCurrFile), connection->m_downloadProgressCallbackArg);
-                  }
-               }
-            }
-            else
-            {
-               // I/O error
-               _close(connection->m_hCurrFile);
-               connection->m_hCurrFile = -1;
-               connection->onFileDownload(false);
-            }
+            connection->processFileData(msg);
          }
+         msg = nullptr; // Prevent delete
       }
       else if ((msg->getCode() == CMD_ABORT_FILE_TRANSFER) && (msg->getId() == connection->m_dwDownloadRequestId))
       {
-         if (connection->m_sendToClientMessageCallback != nullptr)
+         if (g_agentConnectionThreadPool != nullptr)
          {
-            connection->m_sendToClientMessageCallback(msg, connection->m_downloadProgressCallbackArg);
-            connection->m_sendToClientMessageCallback = nullptr;
-            connection->onFileDownload(false);
+            TCHAR key[64];
+            _sntprintf(key, 64, _T("FileTransfer_%p"), this);
+            ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::processFileTransferAbort, msg);
          }
          else
          {
-            //error on agent side
-            _close(connection->m_hCurrFile);
-            connection->m_hCurrFile = -1;
-            connection->onFileDownload(false);
+            connection->processFileTransferAbort(msg);
          }
+         msg = nullptr; // Prevent delete
       }
       else if (msg->getCode() == CMD_TCP_PROXY_DATA)
       {
@@ -2437,6 +2404,75 @@ uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rq
 }
 
 /**
+ * Process incoming file data
+ */
+void AgentConnection::processFileData(NXCPMessage *msg)
+{
+   if (m_sendToClientMessageCallback != nullptr)
+   {
+      m_sendToClientMessageCallback(msg, m_downloadProgressCallbackArg);
+      if (msg->isEndOfFile())
+      {
+         m_sendToClientMessageCallback = nullptr;
+         onFileDownload(true);
+      }
+      else
+      {
+         if (m_downloadProgressCallback != nullptr)
+         {
+            m_downloadProgressCallback(msg->getBinaryDataSize(), m_downloadProgressCallbackArg);
+         }
+      }
+   }
+   else
+   {
+      if (m_hCurrFile != -1)
+      {
+         if (_write(m_hCurrFile, msg->getBinaryData(), msg->getBinaryDataSize()) == (int)msg->getBinaryDataSize())
+         {
+            if (msg->isEndOfFile())
+            {
+               _close(m_hCurrFile);
+               m_hCurrFile = -1;
+               onFileDownload(true);
+            }
+            else if (m_downloadProgressCallback != nullptr)
+            {
+               m_downloadProgressCallback(_tell(m_hCurrFile), m_downloadProgressCallbackArg);
+            }
+         }
+      }
+      else
+      {
+         // I/O error
+         _close(m_hCurrFile);
+         m_hCurrFile = -1;
+         onFileDownload(false);
+      }
+   }
+   delete msg;
+}
+
+/**
+ * Process file transfer abort request
+ */
+void AgentConnection::processFileTransferAbort(NXCPMessage *msg)
+{
+   if (m_sendToClientMessageCallback != nullptr)
+   {
+      m_sendToClientMessageCallback(msg, m_downloadProgressCallbackArg);
+      m_sendToClientMessageCallback = nullptr;
+   }
+   else
+   {
+      _close(m_hCurrFile);
+      m_hCurrFile = -1;
+   }
+   onFileDownload(false);
+   delete msg;
+}
+
+/**
  * File upload completion handler
  */
 void AgentConnection::onFileDownload(bool success)
@@ -2630,7 +2666,7 @@ UINT32 AgentConnection::closeTcpProxy(UINT32 channelId)
 /**
  * Process data received from TCP proxy
  */
-void AgentConnection::processTcpProxyData(UINT32 channelId, const void *data, size_t size)
+void AgentConnection::processTcpProxyData(uint32_t channelId, const void *data, size_t size)
 {
 }
 

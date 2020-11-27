@@ -1184,11 +1184,24 @@ void AgentTunnelCommChannel::backgroundPoll(uint32_t timeout, void (*callback)(B
  */
 int AgentTunnelCommChannel::shutdown()
 {
+#ifdef _WIN32
+   EnterCriticalSection(&m_bufferLock);
+#else
+   pthread_mutex_lock(&m_bufferLock);
+#endif
    m_active = false;
+   if (m_pollerCount > 0)
+   {
+      for(int i = 0; i < m_pollerCount; i++)
+         ThreadPoolExecute(g_agentConnectionThreadPool, m_pollers[i].callback, BackgroundSocketPollResult::SHUTDOWN, static_cast<AbstractCommChannel*>(this), m_pollers[i].context);
+      m_pollerCount = 0;
+   }
 #ifdef _WIN32
    WakeAllConditionVariable(&m_dataCondition);
+   LeaveCriticalSection(&m_bufferLock);
 #else
    pthread_cond_broadcast(&m_dataCondition);
+   pthread_mutex_unlock(&m_bufferLock);
 #endif
    return 0;
 }
@@ -1198,12 +1211,7 @@ int AgentTunnelCommChannel::shutdown()
  */
 void AgentTunnelCommChannel::close()
 {
-   m_active = false;
-#ifdef _WIN32
-   WakeAllConditionVariable(&m_dataCondition);
-#else
-   pthread_cond_broadcast(&m_dataCondition);
-#endif
+   shutdown();
    m_tunnel->closeChannel(this);
 }
 

@@ -858,7 +858,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
          target = node;
       }
 
-      UINT32 dciId = request->getFieldAsUInt32(fieldId);
+      uint32_t dciId = request->getFieldAsUInt32(fieldId);
       shared_ptr<DCObject> dcObject = target->getDCObjectById(dciId, 0);
       if (dcObject == nullptr)
       {
@@ -878,7 +878,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
       }
 
       void *value = request->getFieldAsString(fieldId + 5);
-      UINT32 statusCode = request->getFieldAsUInt32(fieldId + 6);
+      uint32_t statusCode = request->getFieldAsUInt32(fieldId + 6);
       debugPrintf(7, _T("AgentConnectionEx::processBulkCollectedData: processing DCI %s [%d] (type=%d) (status=%d) on object %s [%d] (element %d)"),
                   dcObject->getName().cstr(), dciId, type, statusCode, target->getName(), target->getId(), i);
       time_t t = request->getFieldAsTime(fieldId + 4);
@@ -927,7 +927,7 @@ void AgentConnectionEx::setTcpProxySession(ClientSession *session)
 /**
  * Process TCP proxy message
  */
-void AgentConnectionEx::processTcpProxyData(UINT32 channelId, const void *data, size_t size)
+void AgentConnectionEx::processTcpProxyData(uint32_t channelId, const void *data, size_t size)
 {
    if (m_tcpProxySession != nullptr)
       m_tcpProxySession->processTcpProxyData(this, channelId, data, size);
