@@ -855,6 +855,8 @@ private:
    uint32_t setupProxyConnection();
    uint32_t prepareFileDownload(const TCHAR *fileName, uint32_t rqId, bool append,
          void (*downloadProgressCallback)(size_t, void*), void (*fileResendCallback)(NXCPMessage*, void*), void *cbArg);
+   void processFileData(NXCPMessage *msg);
+   void processFileTransferAbort(NXCPMessage *msg);
 
    void processCollectedDataCallback(NXCPMessage *msg);
    void onDataPushCallback(NXCPMessage *msg);
@@ -876,7 +878,7 @@ protected:
    virtual UINT32 processCollectedData(NXCPMessage *msg);
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *pMsg);
-   virtual void processTcpProxyData(UINT32 channelId, const void *data, size_t size);
+   virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size);
 
    const InetAddress& getIpAddr() const { return m_addr; }
 
