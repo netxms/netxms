@@ -1401,6 +1401,7 @@ typedef struct
 #define VID_AREA_ID                 ((UINT32)723)
 #define VID_GEOLOCATION_CTRL_MODE   ((UINT32)724)
 #define VID_GEO_AREAS               ((UINT32)725)
+#define VID_ORIGIN_TIMESTAMP        ((UINT32)726)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
