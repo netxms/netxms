@@ -10672,7 +10672,7 @@ struct IcmpPollTarget
  */
 void Node::icmpPoll(PollerInfo *poller)
 {
-   INT64 startTime = GetCurrentTimeMs();
+   int64_t startTime = GetCurrentTimeMs();
 
    // Prepare poll list
    StructArray<IcmpPollTarget> targets;
@@ -10703,7 +10703,7 @@ void Node::icmpPoll(PollerInfo *poller)
 
    shared_ptr<Node> proxyNode;
    shared_ptr<AgentConnection> conn;
-   UINT32 icmpProxy = getEffectiveIcmpProxy();
+   uint32_t icmpProxy = getEffectiveIcmpProxy();
    if (icmpProxy != 0)
    {
       nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("Node::icmpPoll(%s [%u]): ping via proxy [%u]"), m_name, m_id, icmpProxy);

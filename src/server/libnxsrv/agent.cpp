@@ -218,7 +218,10 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
 
    shared_ptr<AgentConnection> connection = m_connection.lock();
    if (connection == nullptr)
+   {
+      delete msg;
       return MSGRECV_COMM_FAILURE;   // Parent connection was destroyed
+   }
 
    // Check for timeout
    if (result == MSGRECV_TIMEOUT)
@@ -242,6 +245,7 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
    if (IsShutdownInProgress())
    {
       debugPrintf(6, _T("Process shutdown"));
+      delete msg;
       return MSGRECV_COMM_FAILURE;
    }
 
