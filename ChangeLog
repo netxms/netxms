@@ -7,6 +7,14 @@
 
 
 *
+* 3.6-CURRENT
+*
+
+- New NXSL function PostEventEx
+- Origin timestamp can be set when event is being sent via Java API
+
+
+*
 * 3.6.269
 *
 

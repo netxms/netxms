@@ -285,7 +285,7 @@ static void WindwsEventParserCallback(UINT32 eventCode, const TCHAR *eventName, 
       }
       pmap.set(_T("repeatCount"), repeatCount);
 
-      PostEventWithTagAndNames(eventCode, EventOrigin::WIN_EVENT, timestamp, objectId, eventTag, &pmap);
+      PostEventWithTagAndNames(eventCode, EventOrigin::WINDOWS_EVENT, timestamp, objectId, eventTag, &pmap);
    }
 }
 

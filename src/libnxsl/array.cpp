@@ -28,9 +28,9 @@
  */
 NXSL_Array::NXSL_Array(NXSL_ValueManager *vm) : NXSL_HandleCountObject(vm)
 {
-	m_size = 0;
-	m_allocated = 0;
-	m_data = nullptr;
+   m_size = 0;
+   m_allocated = 0;
+   m_data = nullptr;
 }
 
 /**
@@ -105,9 +105,9 @@ NXSL_Array::NXSL_Array(NXSL_ValueManager *vm, const StringSet& values) : NXSL_Ha
  */
 NXSL_Array::~NXSL_Array()
 {
-	for(int i = 0; i < m_size; i++)
-		m_vm->destroyValue(m_data[i].value);
-	MemFree(m_data);
+   for(int i = 0; i < m_size; i++)
+      m_vm->destroyValue(m_data[i].value);
+   MemFree(m_data);
 }
 
 /**
@@ -115,7 +115,7 @@ NXSL_Array::~NXSL_Array()
  */
 static int CompareElements(const void *p1, const void *p2)
 {
-	return COMPARE_NUMBERS(static_cast<const NXSL_ArrayElement*>(p1)->index, static_cast<const NXSL_ArrayElement*>(p2)->index);
+   return COMPARE_NUMBERS(static_cast<const NXSL_ArrayElement*>(p1)->index, static_cast<const NXSL_ArrayElement*>(p2)->index);
 }
 
 /**
@@ -123,10 +123,10 @@ static int CompareElements(const void *p1, const void *p2)
  */
 NXSL_Value *NXSL_Array::get(int index) const
 {
-	NXSL_ArrayElement key;
-	key.index = index;
-	NXSL_ArrayElement *element = static_cast<NXSL_ArrayElement*>(bsearch(&key, m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements));
-	return (element != nullptr) ? element->value : nullptr;
+   NXSL_ArrayElement key;
+   key.index = index;
+   NXSL_ArrayElement *element = static_cast<NXSL_ArrayElement*>(bsearch(&key, m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements));
+   return (element != nullptr) ? element->value : nullptr;
 }
 
 /**
@@ -134,9 +134,9 @@ NXSL_Value *NXSL_Array::get(int index) const
  */
 NXSL_Value *NXSL_Array::getByPosition(int position) const
 {
-	if ((position < 0) || (position >= m_size))
-		return nullptr;
-	return m_data[position].value;
+   if ((position < 0) || (position >= m_size))
+      return nullptr;
+   return m_data[position].value;
 }
 
 /**
@@ -144,12 +144,39 @@ NXSL_Value *NXSL_Array::getByPosition(int position) const
  */
 StringList *NXSL_Array::toStringList() const
 {
-   StringList *list = new StringList();
+   auto list = new StringList();
    for(int i = 0; i < m_size; i++)
-   {
       list->add(m_data[i].value->getValueAsCString());
-   }
    return list;
+}
+
+/**
+ * Get all elements as string list
+ */
+void NXSL_Array::toStringList(StringList *list) const
+{
+   for(int i = 0; i < m_size; i++)
+      list->add(m_data[i].value->getValueAsCString());
+}
+
+/**
+ * Get all elements as string set
+ */
+StringSet *NXSL_Array::toStringSet() const
+{
+   auto set = new StringSet();
+   for(int i = 0; i < m_size; i++)
+      set->add(m_data[i].value->getValueAsCString());
+   return set;
+}
+
+/**
+ * Get all elements as string set
+ */
+void NXSL_Array::toStringSet(StringSet *set) const
+{
+   for(int i = 0; i < m_size; i++)
+      set->add(m_data[i].value->getValueAsCString());
 }
 
 /**

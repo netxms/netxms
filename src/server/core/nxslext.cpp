@@ -649,7 +649,7 @@ static int F_SetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResul
  *     tag - user tag (optional)
  *     ... - optional parameters, will be passed as %1, %2, etc.
  */
-static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (argc < 2)
 		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -668,7 +668,7 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	UINT32 eventCode = 0;
+	uint32_t eventCode = 0;
 	if (argv[1]->isInteger())
 	{
 		eventCode = argv[1]->getValueAsUInt32();
@@ -678,7 +678,7 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 		eventCode = EventCodeFromName(argv[1]->getValueAsCString(), 0);
 	}
 
-	BOOL success;
+	bool success;
 	if (eventCode > 0)
 	{
 		// User tag
@@ -691,29 +691,130 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 		}
 
 		// Post event
-		char format[] = "ssssssssssssssssssssssssssssssss";
-		const TCHAR *plist[32];
-		int eargc = 0;
-		for(int i = 3; (i < argc) && (eargc < 32); i++)
-			plist[eargc++] = argv[i]->getValueAsCString();
-		format[eargc] = 0;
-		success = PostEventWithTag(eventCode, EventOrigin::NXSL, 0, node->getId(), userTag, format,
-		                           plist[0], plist[1], plist[2], plist[3],
-		                           plist[4], plist[5], plist[6], plist[7],
-		                           plist[8], plist[9], plist[10], plist[11],
-		                           plist[12], plist[13], plist[14], plist[15],
-		                           plist[16], plist[17], plist[18], plist[19],
-		                           plist[20], plist[21], plist[22], plist[23],
-		                           plist[24], plist[25], plist[26], plist[27],
-		                           plist[28], plist[29], plist[30], plist[31]);
+		StringList parameters;
+		for(int i = 3; i < argc; i++)
+			parameters.add(argv[i]->getValueAsCString());
+		success = PostEventWithTag(eventCode, EventOrigin::NXSL, 0, node->getId(), userTag, parameters);
 	}
 	else
 	{
-		success = FALSE;
+		success = false;
 	}
 
-	*ppResult = vm->createValue((LONG)success);
+	*result = vm->createValue(success);
 	return 0;
+}
+
+/**
+ * Post event (extended version)
+ * Syntax:
+ *    PostEventEx(node, event, parameters, tags, originTimestamp, origin)
+ * where:
+ *     node - node object to send event on behalf of
+ *     event - event code or name
+ *     parameters - event parameters (as array or hash map), will be passed as %1, %2, etc. (optional)
+ *     tags - event tags (optional)
+ *     originTimestamp - origin timestamp (optional, system timestamp will be used if omitted)
+ *     origin - origin (optional, "SYSTEM" will be used if omitted)
+ */
+static int F_PostEventEx(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (argc < 2)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   // Validate first argument
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   NXSL_Object *object = argv[0]->getValueAsObject();
+   if (!object->getClass()->instanceOf(g_nxslNodeClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+
+   // Event code
+   if (!argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   uint32_t eventCode = 0;
+   if (argv[1]->isInteger())
+   {
+      eventCode = argv[1]->getValueAsUInt32();
+   }
+   else
+   {
+      eventCode = EventCodeFromName(argv[1]->getValueAsCString(), 0);
+   }
+
+   bool success;
+   if (eventCode > 0)
+   {
+      success = true;
+
+      // Parameters
+      StringMap parameters;
+      if ((argc > 2) && !argv[2]->isNull())
+      {
+         if (argv[2]->isArray())
+         {
+            NXSL_Array *value = argv[2]->getValueAsArray();
+            for(int i = 0; i < value->size(); i++)
+            {
+               TCHAR name[64];
+               _sntprintf(name, 64, _T("Parameter%d"), i + 1);
+               parameters.set(name, value->getByPosition(i)->getValueAsCString());
+            }
+         }
+         else if (argv[2]->isHashMap())
+         {
+            argv[2]->getValueAsHashMap()->toStringMap(&parameters);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+
+      // Tags
+      StringSet tags;
+      if ((argc > 3) && !argv[3]->isNull())
+      {
+         if (argv[3]->isArray())
+         {
+            argv[3]->getValueAsArray()->toStringSet(&tags);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+
+      // Origin timestamp
+      time_t originTimestamp = 0;
+      if ((argc > 4) && argv[4]->isInteger())
+      {
+         originTimestamp = static_cast<time_t>(argv[4]->getValueAsUInt64());
+      }
+
+      // Origin
+      EventOrigin eventOrigin = EventOrigin::NXSL;
+      if ((argc > 5) && argv[5]->isInteger())
+      {
+         int value = argv[5]->getValueAsInt32();
+         if ((value >= 0) && (value <= 7))
+            eventOrigin = static_cast<EventOrigin>(value);
+      }
+
+      if (success)
+         success = PostEventWithTagsAndNames(eventCode, eventOrigin, originTimestamp, node->getId(), &tags, &parameters);
+   }
+   else
+   {
+      success = false;
+   }
+
+   *result = vm->createValue(success);
+   return 0;
 }
 
 /**
@@ -1940,6 +2041,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "LoadEvent", F_LoadEvent, 1 },
    { "ManageObject", F_ManageObject, 1 },
 	{ "PostEvent", F_PostEvent, -1 },
+   { "PostEventEx", F_PostEventEx, -1 },
 	{ "RenameObject", F_RenameObject, 2 },
 	{ "SendMail", F_SendMail, -1 },
 	{ "SendNotification", F_SendNotification, 4 },
@@ -2073,6 +2175,16 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
    NXSL_ENV_CONSTANT("DataSource::SSH", DS_SSH);
    NXSL_ENV_CONSTANT("DataSource::WEB_SERVICE", DS_WEB_SERVICE);
    NXSL_ENV_CONSTANT("DataSource::WINPERF", DS_WINPERF);
+
+   // Event origin
+   NXSL_ENV_CONSTANT("EventOrigin::AGENT", static_cast<int32_t>(EventOrigin::AGENT));
+   NXSL_ENV_CONSTANT("EventOrigin::CLIENT", static_cast<int32_t>(EventOrigin::CLIENT));
+   NXSL_ENV_CONSTANT("EventOrigin::NXSL", static_cast<int32_t>(EventOrigin::NXSL));
+   NXSL_ENV_CONSTANT("EventOrigin::REMOTE_SERVER", static_cast<int32_t>(EventOrigin::REMOTE_SERVER));
+   NXSL_ENV_CONSTANT("EventOrigin::SNMP", static_cast<int32_t>(EventOrigin::SNMP));
+   NXSL_ENV_CONSTANT("EventOrigin::SYSLOG", static_cast<int32_t>(EventOrigin::SYSLOG));
+   NXSL_ENV_CONSTANT("EventOrigin::SYSTEM", static_cast<int32_t>(EventOrigin::SYSTEM));
+   NXSL_ENV_CONSTANT("EventOrigin::WINDOWS_EVENT", static_cast<int32_t>(EventOrigin::WINDOWS_EVENT));
 
    // Node state flags
    NXSL_ENV_CONSTANT("NodeState::Unreachable", DCSF_UNREACHABLE);

@@ -1992,7 +1992,7 @@ public:
    void remove(const TCHAR *str);
    void clear();
 
-   bool isEmpty() const { return m_data == NULL; }
+   bool isEmpty() const { return m_data == nullptr; }
    int size() const;
    bool contains(const TCHAR *str) const;
    bool equals(const StringSet *s) const;
@@ -2005,7 +2005,11 @@ public:
    void splitAndAdd(const TCHAR *src, const TCHAR *separator);
    void addAllPreallocated(TCHAR **strings, int count);
 
-   void forEach(bool (*cb)(const TCHAR *, void *), void *userData) const;
+   void forEach(bool (*cb)(const TCHAR*, void*), void *context) const;
+   template<typename C> void forEach(bool (*cb)(const TCHAR*, C*), C *context) const
+   {
+      forEach(reinterpret_cast<bool (*)(const TCHAR*, void*)>(cb), context);
+   }
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) const;
    void addAllFromMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);

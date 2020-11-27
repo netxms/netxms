@@ -101,6 +101,15 @@ NXSL_Value *NXSL_HashMap::getValues() const
 StringMap *NXSL_HashMap::toStringMap() const
 {
    StringMap *map = new StringMap();
+   toStringMap(map);
+   return map;
+}
+
+/**
+ * Get hash map as string map
+ */
+void NXSL_HashMap::toStringMap(StringMap *map) const
+{
    StructArray<KeyValuePair<void>> *values = m_values->toArray();
    for(int i = 0; i < values->size(); i++)
    {
@@ -110,5 +119,4 @@ StringMap *NXSL_HashMap::toStringMap() const
          map->set(p->key, s);
    }
    delete values;
-   return map;
 }
