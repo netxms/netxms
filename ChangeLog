@@ -1,9 +1,10 @@
 *
-* 3.6-CURRENT
+* 3.6.273
 *
 
 - New NXSL function PostEventEx
 - Origin timestamp can be set when event is being sent via Java API
+- Fixed server memory leak and high CPU usage when using "server command" type object tools
 
 
 *
