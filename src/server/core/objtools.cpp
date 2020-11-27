@@ -1571,7 +1571,7 @@ cleanup:
 /**
  * Command execution data constructor
  */
-ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *session) : ProcessExecutor(nullptr)
+ServerCommandExecutor::ServerCommandExecutor(NXCPMessage *request, ClientSession *session) : ProcessExecutor(nullptr)
 {
    shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
@@ -1631,7 +1631,7 @@ ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *sessio
 /**
  * Command execution data destructor
  */
-ServerCommandExec::~ServerCommandExec()
+ServerCommandExecutor::~ServerCommandExecutor()
 {
    if (m_session != nullptr)
       m_session->decRefCount();
@@ -1640,11 +1640,9 @@ ServerCommandExec::~ServerCommandExec()
 /**
  * Send output to console
  */
-void ServerCommandExec::onOutput(const char *text)
+void ServerCommandExecutor::onOutput(const char *text)
 {
-   NXCPMessage msg;
-   msg.setId(m_requestId);
-   msg.setCode(CMD_COMMAND_OUTPUT);
+   NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId);
 #ifdef UNICODE
    TCHAR *buffer = WideStringFromMBStringSysLocale(text);
    msg.setField(VID_MESSAGE, buffer);
@@ -1659,11 +1657,10 @@ void ServerCommandExec::onOutput(const char *text)
 /**
  * Send message to make console stop listening to output
  */
-void ServerCommandExec::endOfOutput()
+void ServerCommandExecutor::endOfOutput()
 {
-   NXCPMessage msg;
-   msg.setId(m_requestId);
-   msg.setCode(CMD_COMMAND_OUTPUT);
+   NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId);
    msg.setEndOfSequence();
    m_session->sendMessage(&msg);
+   m_session->unregisterServerCommand(static_cast<uint32_t>(getProcessId()));
 }

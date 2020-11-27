@@ -508,13 +508,13 @@ private:
 	SharedPointerIndex<AgentConnection> m_agentConnections;
 	StringObjectMap<UINT32> *m_subscriptions;
 	MUTEX m_subscriptionLock;
-	HashMap<UINT32, ProcessExecutor> *m_serverCommands;
+	SynchronizedSharedHashMap<pid_t, ProcessExecutor> *m_serverCommands;
 	ObjectArray<TcpProxy> *m_tcpProxyConnections;
 	MUTEX m_tcpProxyLock;
 	VolatileCounter m_tcpProxyChannelId;
-	HashSet<UINT32> *m_pendingObjectNotifications;
+	HashSet<uint32_t> *m_pendingObjectNotifications;
    MUTEX m_pendingObjectNotificationsLock;
-   UINT32 m_objectNotificationDelay;
+   uint32_t m_objectNotificationDelay;
 
    static void socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, ClientSession *session);
    static void terminate(ClientSession *session);
@@ -811,8 +811,6 @@ private:
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);
 #endif
 
-   void registerServerCommand(ProcessExecutor *command) { m_serverCommands->set(command->getStreamId(), command); }
-
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
    void sendObjectUpdate(shared_ptr<NetObj> object);
@@ -874,7 +872,7 @@ public:
    bool isSubscribedTo(const TCHAR *channel) const;
    bool isDataCollectionConfigurationOpen(uint32_t objectId) const { return m_openDataCollectionConfigurations.contains(objectId); }
 
-	bool checkSysAccessRights(UINT64 requiredAccess) const
+	bool checkSysAccessRights(uint64_t requiredAccess) const
    {
       return (m_dwUserId == 0) ? true :
          ((requiredAccess & m_systemAccessRights) == requiredAccess);
@@ -903,6 +901,8 @@ public:
    void onActionDBUpdate(UINT32 dwCode, const Action *action);
    void onLibraryImageChange(const uuid& guid, bool removed = false);
    void processTcpProxyData(AgentConnectionEx *conn, UINT32 agentChannelId, const void *data, size_t size);
+
+   void unregisterServerCommand(pid_t taskId);
 };
 
 /**
@@ -913,15 +913,6 @@ struct GRAPH_ACL_ENTRY
    UINT32 dwGraphId;
    UINT32 dwUserId;
    UINT32 dwAccess;
-};
-
-/**
- * Information about graph with name existence and it's ID.
- */
-struct GRAPH_ACL_AND_ID
-{
-   UINT32 graphId;
-   UINT32 status;
 };
 
 /**
@@ -945,7 +936,7 @@ enum ThreadPoolStat
 /**
  * Server command execution data
  */
-class ServerCommandExec : public ProcessExecutor
+class ServerCommandExecutor : public ProcessExecutor
 {
 private:
    uint32_t m_requestId;
@@ -956,10 +947,10 @@ private:
    virtual void endOfOutput() override;
 
 public:
-   ServerCommandExec(NXCPMessage *msg, ClientSession *session);
-   ~ServerCommandExec();
+   ServerCommandExecutor(NXCPMessage *msg, ClientSession *session);
+   ~ServerCommandExecutor();
 
-   const TCHAR *getMaskedCommand() { return m_maskedCommand.cstr(); }
+   const TCHAR *getMaskedCommand() const { return m_maskedCommand.cstr(); }
 };
 
 /**
@@ -1361,7 +1352,6 @@ GRAPH_ACL_ENTRY *LoadGraphACL(DB_HANDLE hdb, UINT32 graphId, int *pnACLSize);
 GRAPH_ACL_ENTRY *LoadAllGraphACL(DB_HANDLE hdb, int *pnACLSize);
 BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT32 graphUserId, UINT32 graphDesiredAccess);
 UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId);
-GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName);
 void FillGraphListMsg(NXCPMessage *msg, UINT32 userId, bool templageGraphs, UINT32 graphId = 0);
 void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg);
 UINT32 DeleteGraph(UINT32 graphId, UINT32 userId);

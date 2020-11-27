@@ -28,11 +28,6 @@
 #include <sys/wait.h>
 #endif
 
-/**
- * Next free stream ID
- */
-static VolatileCounter s_nextStreamId = 0;
-
 #ifdef _WIN32
 
 /**
@@ -104,7 +99,6 @@ ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec)
    m_pipe[1] = -1;
 #endif
    m_cmd = MemCopyString(cmd);
-   m_streamId = InterlockedIncrement(&s_nextStreamId);
    m_shellExec = shellExec;
    m_sendOutput = false;
    m_outputThread = INVALID_THREAD_HANDLE;
@@ -364,7 +358,7 @@ bool ProcessExecutor::execute()
  */
 THREAD_RESULT THREAD_CALL ProcessExecutor::waitForProcess(void *arg)
 {
-   waitpid(static_cast<ProcessExecutor*>(arg)->m_pid, NULL, 0);
+   waitpid(static_cast<ProcessExecutor*>(arg)->m_pid, nullptr, 0);
    static_cast<ProcessExecutor*>(arg)->m_running = false;
    return THREAD_OK;
 }
@@ -483,7 +477,7 @@ do_wait:
    static_cast<ProcessExecutor*>(arg)->endOfOutput();
 
 #ifndef _WIN32
-   waitpid(static_cast<ProcessExecutor*>(arg)->m_pid, NULL, 0);
+   waitpid(static_cast<ProcessExecutor*>(arg)->m_pid, nullptr, 0);
    static_cast<ProcessExecutor*>(arg)->m_running = false;
 #endif
 

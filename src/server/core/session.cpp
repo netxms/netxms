@@ -191,12 +191,12 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_loginTime = time(nullptr);
    m_soundFileTypes.add(_T("wav"));
    _tcscpy(m_language, _T("en"));
-   m_serverCommands = new HashMap<UINT32, ProcessExecutor>(Ownership::True);
+   m_serverCommands = new SynchronizedSharedHashMap<pid_t, ProcessExecutor>();
    m_downloadFileMap = new SynchronizedHashMap<uint32_t, ServerDownloadFileInfo>(Ownership::True);
    m_tcpProxyConnections = new ObjectArray<TcpProxy>(0, 16, Ownership::True);
    m_tcpProxyLock = MutexCreate();
    m_tcpProxyChannelId = 0;
-   m_pendingObjectNotifications = new HashSet<UINT32>();
+   m_pendingObjectNotifications = new HashSet<uint32_t>();
    m_pendingObjectNotificationsLock = MutexCreate();
    m_objectNotificationDelay = 200;
 }
@@ -11861,7 +11861,7 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 	msg.setId(request->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	UINT32 nodeId = request->getFieldAsUInt32(VID_OBJECT_ID);
+	uint32_t nodeId = request->getFieldAsUInt32(VID_OBJECT_ID);
 	shared_ptr<NetObj> object = FindObjectById(nodeId);
 	if (object != nullptr)
 	{
@@ -11869,12 +11869,20 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
-			   ServerCommandExec *cmd = new ServerCommandExec(request, this);
-			   registerServerCommand(cmd);
-			   cmd->execute();
-			   writeAuditLog(AUDIT_OBJECTS, true, nodeId, _T("Server command executed: %s"), cmd->getMaskedCommand());
-            msg.setField(VID_COMMAND_ID, cmd->getStreamId());
-				msg.setField(VID_RCC, RCC_SUCCESS);
+			   shared_ptr<ServerCommandExecutor> cmd = make_shared<ServerCommandExecutor>(request, this);
+			   if (cmd->execute())
+			   {
+			      pid_t taskId = cmd->getProcessId();
+			      debugPrintf(5, _T("Started process executor %u for command %s"), static_cast<uint32_t>(taskId), cmd->getMaskedCommand());
+			      m_serverCommands->set(taskId, cmd);
+               writeAuditLog(AUDIT_OBJECTS, true, nodeId, _T("Server command executed: %s"), cmd->getMaskedCommand());
+               msg.setField(VID_COMMAND_ID, static_cast<uint64_t>(taskId));
+               msg.setField(VID_RCC, RCC_SUCCESS);
+			   }
+			   else
+			   {
+               msg.setField(VID_RCC, RCC_SUCCESS);
+			   }
 			}
 			else
 			{
@@ -11900,12 +11908,9 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
  */
 void ClientSession::stopServerCommand(NXCPMessage *request)
 {
-   NXCPMessage msg;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   msg.setId(request->getId());
-   msg.setCode(CMD_REQUEST_COMPLETED);
-
-   ProcessExecutor *cmd = m_serverCommands->get(request->getFieldAsUInt32(VID_COMMAND_ID));
+   shared_ptr<ProcessExecutor> cmd = m_serverCommands->getShared(static_cast<pid_t>(request->getFieldAsUInt64(VID_COMMAND_ID)));
    if (cmd != nullptr)
    {
       cmd->stop();
@@ -11916,6 +11921,28 @@ void ClientSession::stopServerCommand(NXCPMessage *request)
    {
       msg.setField(VID_RCC, RCC_INVALID_REQUEST);
       sendMessage(&msg);
+   }
+}
+
+/**
+ * Wait for process executor completion
+ */
+static void WaitForExecutorCompletion(const shared_ptr<ProcessExecutor>& executor)
+{
+   executor->waitForCompletion(INFINITE);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Process executor %u completed"), static_cast<uint32_t>(executor->getProcessId()));
+}
+
+/**
+ * Unregister server command (expected to be called from executor itself)
+ */
+void ClientSession::unregisterServerCommand(pid_t taskId)
+{
+   shared_ptr<ProcessExecutor> executor = m_serverCommands->getShared(taskId);
+   if (executor != nullptr)
+   {
+      m_serverCommands->remove(taskId);
+      ThreadPoolExecuteSerialized(g_clientThreadPool, _T("UnregisterCmd"), WaitForExecutorCompletion, executor);
    }
 }
 

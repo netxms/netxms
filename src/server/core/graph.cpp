@@ -168,17 +168,16 @@ UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
 /**
  * Check if graph name already exist
  */
-GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName, UINT32 flags)
+static std::pair<uint32_t, uint32_t> IsGraphNameExists(const TCHAR *graphName, UINT32 flags)
 {
    DB_RESULT hResult;
-   GRAPH_ACL_AND_ID result;
-   result.graphId = 0;
+   std::pair<uint32_t, uint32_t> result(0, 0);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Check existence and access rights
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT graph_id FROM graphs WHERE name=? AND flags=?")); // check unique only thought same type of graph
-   if(hStmt != NULL)
+   if(hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, graphName, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, flags);
@@ -187,24 +186,24 @@ GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName, UINT32 flags)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            result.graphId = DBGetFieldULong(hResult, 0, 0);
-            result.status = RCC_OBJECT_ALREADY_EXISTS;
+            result.first = DBGetFieldULong(hResult, 0, 0);
+            result.second = RCC_OBJECT_ALREADY_EXISTS;
          }
          else
          {
-            result.status = RCC_SUCCESS;
+            result.second = RCC_SUCCESS;
          }
          DBFreeResult(hResult);
       }
       else
       {
-         result.status = RCC_DB_FAILURE;
+         result.second = RCC_DB_FAILURE;
       }
       DBFreeStatement(hStmt);
    }
    else
    {
-      result.status = RCC_DB_FAILURE;
+      result.second = RCC_DB_FAILURE;
    }
 
    DBConnectionPoolReleaseConnection(hdb);
@@ -314,22 +313,22 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 	bool isNew, sucess;
 	UINT32 id, graphUserId, graphAccess, accessRightStatus, flags;
 	TCHAR *name, *config, *filters;
-	TCHAR szQuery[16384], dwGraphName[255];
+	TCHAR szQuery[16384], graphName[256];
 	int i, nACLSize;
 
-   UINT32 graphId = pRequest->getFieldAsUInt32(VID_GRAPH_ID);
-	pRequest->getFieldAsString(VID_NAME,dwGraphName,255);
+   uint32_t graphId = pRequest->getFieldAsUInt32(VID_GRAPH_ID);
+	pRequest->getFieldAsString(VID_NAME, graphName, 256);
 	bool overwrite = pRequest->getFieldAsBoolean(VID_OVERWRITE);
 
-   GRAPH_ACL_AND_ID nameUniq = IsGraphNameExists(dwGraphName, pRequest->getFieldAsUInt32(VID_FLAGS));
-   if (nameUniq.graphId == graphId)
+   std::pair<uint32_t, uint32_t> nameCheckResult = IsGraphNameExists(graphName, pRequest->getFieldAsUInt32(VID_FLAGS));
+   if (nameCheckResult.first == graphId)
    {
-      nameUniq.status = RCC_SUCCESS;
+      nameCheckResult.second = RCC_SUCCESS;
    }
 
 	if (graphId == 0)
 	{
-		graphId = nameUniq.graphId ? nameUniq.graphId : CreateUniqueId(IDG_GRAPH);
+		graphId = (nameCheckResult.first != 0) ? nameCheckResult.first : CreateUniqueId(IDG_GRAPH);
 		isNew = true;
 		accessRightStatus = RCC_SUCCESS;
 	}
@@ -339,19 +338,19 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 		isNew = false;
 	}
 
-   if (accessRightStatus == RCC_SUCCESS && (nameUniq.status == RCC_SUCCESS || overwrite))
+   if (accessRightStatus == RCC_SUCCESS && (nameCheckResult.second == RCC_SUCCESS || overwrite))
    {
       sucess = true;
-      if (nameUniq.status != RCC_SUCCESS)
+      if (nameCheckResult.second != RCC_SUCCESS)
       {
          isNew = false;
-         graphId = nameUniq.graphId;
+         graphId = nameCheckResult.first;
       }
    }
    else
    {
       sucess = false;
-      msg->setField(VID_RCC, accessRightStatus ? accessRightStatus : nameUniq.status);
+      msg->setField(VID_RCC, accessRightStatus ? accessRightStatus : nameCheckResult.second);
    }
 
 	// Create/update graph
@@ -441,8 +440,8 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
             GRAPH_ACL_ENTRY *pACL = LoadGraphACL(hdb, graphId, &nACLSize);
             if ((pACL != NULL) && (nACLSize > 0))
             {
-               UINT32 *pdwUsers = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
-               UINT32 *pdwRights = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
+               uint32_t *pdwUsers = MemAllocArrayNoInit<uint32_t>(nACLSize);
+               uint32_t *pdwRights = MemAllocArrayNoInit<uint32_t>(nACLSize);
                // ACL for graph
                for(int j = 0; j < nACLSize; j++)
                {
@@ -453,8 +452,8 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
                update.setFieldFromInt32Array(dwId++, nACLSize, pdwUsers);
                update.setFieldFromInt32Array(dwId++, nACLSize, pdwRights);
 
-               free(pdwUsers);
-               free(pdwRights);
+               MemFree(pdwUsers);
+               MemFree(pdwRights);
                MemFree(pACL);
             }
             else
@@ -471,9 +470,9 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 			{
 				DBRollback(hdb);
 			}
-			free(name);
-			free(config);
-			free(filters);
+			MemFree(name);
+			MemFree(config);
+			MemFree(filters);
 		}
 		else
 		{
