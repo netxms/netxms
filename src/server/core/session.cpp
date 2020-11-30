@@ -8012,52 +8012,43 @@ void ClientSession::getObjectToolDetails(NXCPMessage *request)
 /**
  * Update object tool
  */
-void ClientSession::updateObjectTool(NXCPMessage *pRequest)
+void ClientSession::updateObjectTool(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
-   // Check user rights
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
-      msg.setField(VID_RCC, UpdateObjectToolFromMessage(pRequest));
+      uint32_t rcc = UpdateObjectToolFromMessage(request);
+      msg.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Object tool [%u] updated"), request->getFieldAsUInt32(VID_TOOL_ID));
    }
    else
    {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on updating object tool [%u]"), request->getFieldAsUInt32(VID_TOOL_ID));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-
-   // Send response
    sendMessage(&msg);
 }
 
 /**
  * Delete object tool
  */
-void ClientSession::deleteObjectTool(NXCPMessage *pRequest)
+void ClientSession::deleteObjectTool(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   UINT32 dwToolId;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
-   // Check user rights
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   uint32_t toolId = request->getFieldAsUInt32(VID_TOOL_ID);
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
-      dwToolId = pRequest->getFieldAsUInt32(VID_TOOL_ID);
-      msg.setField(VID_RCC, DeleteObjectToolFromDB(dwToolId));
+      uint32_t rcc = DeleteObjectToolFromDB(toolId);
+      msg.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Object tool [%u] deleted"), toolId);
    }
    else
    {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting object tool [%u]"), toolId);
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-
-   // Send response
    sendMessage(&msg);
 }
 
@@ -8092,15 +8083,9 @@ void ClientSession::changeObjectToolStatus(NXCPMessage *pRequest)
 /**
  * Generate ID for new object tool
  */
-void ClientSession::generateObjectToolId(UINT32 dwRqId)
+void ClientSession::generateObjectToolId(uint32_t requestId)
 {
-   NXCPMessage msg;
-
-   // Prepare reply message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
-
-   // Check access rights
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
    if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS))
    {
       msg.setField(VID_TOOL_ID, CreateUniqueId(IDG_OBJECT_TOOL));
@@ -8109,8 +8094,6 @@ void ClientSession::generateObjectToolId(UINT32 dwRqId)
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-
-   // Send response
    sendMessage(&msg);
 }
 

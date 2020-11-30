@@ -68,7 +68,7 @@ public class Filter extends PreferencePage
       noDefaultAndApplyButton();
       this.action = action;
    }     
-	
+
    /**
     * Constructor
     * 
@@ -81,10 +81,10 @@ public class Filter extends PreferencePage
       objectTool = toolDetails;
       action = (ObjectAction)objectTool;
    }	
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{	   
@@ -305,17 +305,19 @@ public class Filter extends PreferencePage
       
       setFilter(textCustomAttributes.getText().trim(), ObjectMenuFilter.REQUIRES_CUSTOM_ATTRIBUTE_MATCH);    
 	}
-	
+
+   /**
+    * Set filter text
+    *
+    * @param filterText
+    * @param filterType
+    */
 	private void setFilter(String filterText, int filterType)
 	{
-	   if(objectTool != null)
-      {
+      if (objectTool != null)
          objectTool.setFilter(filterText, filterType);
-      }
       else
-      {
          filter.setFilter(filterText, filterType);
-      }
 	}
 	
 	/**
@@ -326,13 +328,9 @@ public class Filter extends PreferencePage
 	private void setFlag(int flag)
 	{
       if (objectTool != null)
-      {
          objectTool.setFilterFlags(objectTool.getMenuFilter().flags | flag);
-      }
       else
-      {
          filter.flags = filter.flags | flag;
-      }
 	}
 	
 	/**
@@ -343,28 +341,23 @@ public class Filter extends PreferencePage
 	private void clearFlag(int flag)
    {
       if (objectTool != null)
-      {
          objectTool.setFilterFlags(objectTool.getMenuFilter().flags & ~flag);
-      }
       else
-      {
          filter.flags = filter.flags & ~flag;
-      }
    }
 	
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
