@@ -96,7 +96,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class ObjectToolsEditor extends ViewPart implements SessionListener
 {
-	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor"; //$NON-NLS-1$
+   public static final String ID = "org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor"; //$NON-NLS-1$
 
 	private static final String TABLE_CONFIG_PREFIX = "ObjectToolsEditor"; //$NON-NLS-1$
 	
@@ -633,7 +633,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			}
 		}.schedule();
 	}
-	
+
    /**
     * Disable selected object tools
     */
@@ -700,51 +700,51 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
       }.start();
    }
 
-	 /**
-	  * Clone object tool 
-	  */
-    private void cloneTool()
-    {
-       final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-       if (selection.isEmpty())
-          return;
-       
-       final CreateObjectDialog dlg = new CreateObjectDialog(getSite().getShell(), Messages.get().ObjectToolsEditor_ObjectTool);
-       if (dlg.open() == Window.OK)
-       {
-          new ConsoleJob(Messages.get().ObjectToolsEditor_CloneObjectTool, this, Activator.PLUGIN_ID) {
-             @Override
-             protected void runInternal(IProgressMonitor monitor) throws Exception
-             {
-                final long toolId = session.generateObjectToolId();
-                ObjectTool objTool = (ObjectTool)selection.toArray()[0];
-                ObjectToolDetails details = session.getObjectToolDetails(objTool.getId());
-                details.setId(toolId);
-                details.setName(dlg.getObjectName());
-                session.modifyObjectTool(details);
-             }
+   /**
+    * Clone object tool
+    */
+   private void cloneTool()
+   {
+      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.isEmpty())
+         return;
 
-             @Override
-             protected String getErrorMessage()
-             {
-                return Messages.get().ObjectToolsEditor_CloneError;
-             }
-          }.start();
-       }
-    }
+      final CreateObjectDialog dlg = new CreateObjectDialog(getSite().getShell(), Messages.get().ObjectToolsEditor_ObjectTool);
+      if (dlg.open() == Window.OK)
+      {
+         new ConsoleJob(Messages.get().ObjectToolsEditor_CloneObjectTool, this, Activator.PLUGIN_ID) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               final long toolId = session.generateObjectToolId();
+               ObjectTool objTool = (ObjectTool)selection.toArray()[0];
+               ObjectToolDetails details = session.getObjectToolDetails(objTool.getId());
+               details.setId(toolId);
+               details.setName(dlg.getObjectName());
+               session.modifyObjectTool(details);
+            }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
-	@Override
-	public void setFocus()
-	{
-		viewer.getControl().setFocus();
-	}
+            @Override
+            protected String getErrorMessage()
+            {
+               return Messages.get().ObjectToolsEditor_CloneError;
+            }
+         }.start();
+      }
+   }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
+   @Override
+   public void setFocus()
+   {
+      viewer.getControl().setFocus();
+   }
+
+   /**
+    * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
+    */
 	@Override
 	public void notificationHandler(final SessionNotification n)
 	{
@@ -767,9 +767,9 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{
