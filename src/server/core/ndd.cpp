@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG             _T("ndd")
 #define MAX_DEVICE_DRIVERS		1024
 
 /**
@@ -59,44 +60,44 @@ static void LoadDriver(const TCHAR *file, const StringList &blacklist)
 				      if (!blacklist.containsIgnoreCase(drv->getName()))
 				      {
                      s_drivers[s_numDrivers++] = drv;
-                     nxlog_write(NXLOG_INFO, _T("Network device driver %s loaded successfully"), drv->getName());
+                     nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Network device driver %s loaded successfully"), drv->getName());
                      accepted++;
 				      }
 				      else
 				      {
-                     nxlog_write(NXLOG_INFO, _T("Network device driver %s blacklisted"), drv->getName());
+                     nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Network device driver %s blacklisted"), drv->getName());
                      delete drv;
 				      }
 				   }
 				   delete drivers;
 				   if (accepted == 0)
 				   {
-	               nxlog_write(NXLOG_INFO, _T("No drivers accepted from module \"%s\""), file);
+	               nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("No drivers accepted from module \"%s\""), file);
 	               DLClose(hModule);
 				   }
 				}
 				else
 				{
-					nxlog_write(NXLOG_ERROR, _T("Initialization of network device driver \"%s\" failed"), file);
+					nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Initialization of network device driver \"%s\" failed"), file);
 					DLClose(hModule);
 				}
          }
          else
          {
-            nxlog_write(NXLOG_ERROR, _T("Network device driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)"),
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Network device driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)"),
                      file, *apiVersion, NDDRV_API_VERSION);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write(NXLOG_ERROR, _T("Unable to find entry point in network device driver \"%s\""), file);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to find entry point in network device driver \"%s\""), file);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(NXLOG_ERROR, _T("Unable to load module \"%s\" (%s)"), file, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to load module \"%s\" (%s)"), file, errorText);
    }
 }
 
@@ -116,7 +117,7 @@ void LoadNetworkDeviceDrivers()
    StringList blacklist;
 	blacklist.splitAndAdd(buffer, _T(","));
 
-	DbgPrintf(1, _T("Loading network device drivers from %s"), path);
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("Loading network device drivers from %s"), path);
 #ifdef _WIN32
 	SetDllDirectory(path);
 #endif
@@ -142,7 +143,7 @@ void LoadNetworkDeviceDrivers()
 #ifdef _WIN32
 	SetDllDirectory(nullptr);
 #endif
-	DbgPrintf(1, _T("%d network device drivers loaded"), s_numDrivers);
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("%d network device drivers loaded"), s_numDrivers);
 }
 
 /**
@@ -199,7 +200,7 @@ NetworkDeviceDriver *FindDriverForNode(const TCHAR *name, const TCHAR *snmpObjec
 			selection[selected].priority = pri;
 			selection[selected].driver = s_drivers[i];
 			selected++;
-			DbgPrintf(6, _T("FindDriverForNode(%s): found potential device driver %s with priority %d"),
+			nxlog_debug_tag(DEBUG_TAG, 6, _T("FindDriverForNode(%s): found potential device driver %s with priority %d"),
 			          name, s_drivers[i]->getName(), pri);
 		}
 	}
@@ -215,12 +216,12 @@ NetworkDeviceDriver *FindDriverForNode(const TCHAR *name, const TCHAR *snmpObjec
 	}
 
    // Manual driver selection
-   if (defaultDriver != NULL)
+   if (defaultDriver != nullptr)
    {
       NetworkDeviceDriver *driver = FindDriverByName(defaultDriver);
-      if (driver != NULL)
+      if (driver != nullptr)
       {
-         DbgPrintf(6, _T("FindDriverForNode(%s): device driver %s selected manually"), name, driver->getName());
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("FindDriverForNode(%s): device driver %s selected manually"), name, driver->getName());
          return driver;
       }
    }
@@ -236,7 +237,7 @@ void AddDriverSpecificOids(StringList *list)
 	for(int i = 0; i < s_numDrivers; i++)
 	{
       const TCHAR *oid = s_drivers[i]->getCustomTestOID();
-      if (oid != NULL)
+      if (oid != nullptr)
          list->add(oid);
 	}
 }
@@ -250,7 +251,7 @@ void AddDriverSpecificOids(StringList *list)
  */
 NetworkDeviceDriver *FindDriverByName(const TCHAR *name)
 {
-	if ((name == NULL) || (name[0] == 0))
+	if ((name == nullptr) || (name[0] == 0))
 		return s_defaultDriver;
 
 	for(int i = 0; i < s_numDrivers; i++)
