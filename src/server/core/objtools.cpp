@@ -793,7 +793,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
    const BYTE *imageData = pMsg->getBinaryFieldPtr(VID_IMAGE_DATA, &size);
    if (size > 0)
    {
-      TCHAR *imageHexData = (TCHAR *)malloc((size * 2 + 1) * sizeof(TCHAR));
+      TCHAR *imageHexData = MemAllocString(size * 2 + 1);
       BinToStr(imageData, size, imageHexData);
       DBBind(hStmt, 10, DB_SQLTYPE_TEXT, imageHexData, DB_BIND_DYNAMIC);
    }
@@ -852,27 +852,26 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
 
    if ((nType == TOOL_TYPE_SNMP_TABLE) || (nType == TOOL_TYPE_AGENT_LIST))
    {
-      UINT32 dwId, dwNumColumns;
-
-      dwNumColumns = pMsg->getFieldAsUInt16(VID_NUM_COLUMNS);
-      if (dwNumColumns > 0)
+      uint32_t numColumns = pMsg->getFieldAsUInt16(VID_NUM_COLUMNS);
+      if (numColumns > 0)
       {
          hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_table_columns (tool_id,")
                                 _T("col_number,col_name,col_oid,col_format,col_substr) ")
-                                _T("VALUES (?,?,?,?,?,?)"), dwNumColumns > 1);
+                                _T("VALUES (?,?,?,?,?,?)"), numColumns > 1);
          if (hStmt == nullptr)
             return ReturnDBFailure(hdb, hStmt);
 
-         for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < dwNumColumns; i++)
+         uint32_t fieldId;
+         for(i = 0, fieldId = VID_COLUMN_INFO_BASE; i < numColumns; i++)
          {
-            pMsg->getFieldAsString(dwId++, buffer, MAX_DB_STRING);
+            pMsg->getFieldAsString(fieldId++, buffer, MAX_DB_STRING);
 
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i);
             DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_STATIC);
-            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(dwId++), DB_BIND_DYNAMIC);
-            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt16(dwId++));
-            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt16(dwId++));
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
+            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt16(fieldId++));
+            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt16(fieldId++));
 
             if (!DBExecute(hStmt))
                return ReturnDBFailure(hdb, hStmt);
@@ -890,7 +889,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
       return ReturnDBFailure(hdb, hStmt);
    DBFreeStatement(hStmt);
 
-   UINT32 numFields = pMsg->getFieldAsUInt16(VID_NUM_FIELDS);
+   uint32_t numFields = pMsg->getFieldAsUInt16(VID_NUM_FIELDS);
    if (numFields > 0)
    {
       hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_input_fields (tool_id,name,input_type,display_name,config,sequence_num) VALUES (?,?,?,?,?,?)"), numFields > 1);
@@ -898,7 +897,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
          return ReturnDBFailure(hdb, hStmt);
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
 
-      UINT32 fieldId = VID_FIELD_LIST_BASE;
+      uint32_t fieldId = VID_FIELD_LIST_BASE;
       for(i = 0; i < numFields; i++)
       {
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
@@ -1469,11 +1468,15 @@ UINT32 GetObjectToolDetailsIntoMessage(UINT32 toolId, NXCPMessage *msg)
 
    data = DBGetField(hResult, 0, 2, nullptr, 0);
    msg->setField(VID_TOOL_DATA, data);
-   free(data);
+   MemFree(data);
 
    msg->setField(VID_DESCRIPTION, DBGetField(hResult, 0, 3, buffer, MAX_DB_STRING));
    msg->setField(VID_FLAGS, DBGetFieldULong(hResult, 0, 4));
-   msg->setField(VID_TOOL_FILTER, DBGetField(hResult, 0, 5, buffer, MAX_DB_STRING));
+
+   data = DBGetField(hResult, 0, 5, nullptr, 0);
+   msg->setField(VID_TOOL_FILTER, data);
+   MemFree(data);
+
    msg->setField(VID_CONFIRMATION_TEXT, DBGetField(hResult, 0, 6, buffer, MAX_DB_STRING));
    msg->setField(VID_COMMAND_NAME, DBGetField(hResult, 0, 7, buffer, MAX_DB_STRING));
    msg->setField(VID_COMMAND_SHORT_NAME, DBGetField(hResult, 0, 8, buffer, MAX_DB_STRING));

@@ -639,10 +639,10 @@ private:
    void executeAction(NXCPMessage *pRequest);
    void getObjectTools(UINT32 requestId);
    void getObjectToolDetails(NXCPMessage *request);
-   void updateObjectTool(NXCPMessage *pRequest);
-   void deleteObjectTool(NXCPMessage *pRequest);
-   void changeObjectToolStatus(NXCPMessage *pRequest);
-   void generateObjectToolId(UINT32 dwRqId);
+   void updateObjectTool(NXCPMessage *request);
+   void deleteObjectTool(NXCPMessage *request);
+   void changeObjectToolStatus(NXCPMessage *request);
+   void generateObjectToolId(uint32_t requestId);
    void execTableTool(NXCPMessage *pRequest);
    void changeSubscription(NXCPMessage *pRequest);
    void sendServerStats(UINT32 dwRqId);
