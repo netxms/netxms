@@ -77,9 +77,9 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		setPartName(Messages.get().AgentConfigEditorView_PartName + ((object != null) ? object.getObjectName() : Long.toString(nodeId)));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -183,9 +183,9 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		manager.add(actionRefresh);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+    */
 	@Override
 	public void doSave(IProgressMonitor monitor)
 	{
@@ -205,44 +205,44 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSaveAs()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSaveAs()
+    */
 	@Override
 	public void doSaveAs()
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isDirty()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isDirty()
+    */
 	@Override
 	public boolean isDirty()
 	{
 		return dirty || modified;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
+    */
 	@Override
 	public boolean isSaveAsAllowed()
 	{
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
+    */
 	@Override
 	public boolean isSaveOnCloseNeeded()
 	{
 		return modified;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart2#promptToSaveOnClose()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart2#promptToSaveOnClose()
+    */
 	@Override
 	public int promptToSaveOnClose()
 	{
@@ -251,4 +251,17 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		saveAndApply = (rc == SaveConfigDialog.SAVE_AND_APPLY_ID);
 		return (rc == IDialogConstants.CANCEL_ID) ? CANCEL : ((rc == SaveConfigDialog.DISCARD_ID) ? NO : YES);
 	}
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      dirty = false;
+      modified = false;
+      firePropertyChange(PROP_DIRTY);
+
+      super.dispose();
+   }
 }

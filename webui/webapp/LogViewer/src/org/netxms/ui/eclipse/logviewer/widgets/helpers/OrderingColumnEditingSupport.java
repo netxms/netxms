@@ -60,16 +60,16 @@ public class OrderingColumnEditingSupport extends EditingSupport
 		return editor;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.viewers.EditingSupport#getValue(java.lang.Object)
 	 */
 	@Override
 	protected Object getValue(Object element)
 	{
-		return new Boolean(((OrderingColumn)element).isDescending());
+		return Boolean.valueOf(((OrderingColumn)element).isDescending());
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.viewers.EditingSupport#setValue(java.lang.Object, java.lang.Object)
 	 */
 	@Override

@@ -106,7 +106,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       refresh();
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -123,6 +123,18 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       contributeToActionBars();      
 
       session.addListener(this);
+   }
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      modified = false;
+      firePropertyChange(PROP_DIRTY);
+
+      super.dispose();
    }
 
    /**
@@ -395,7 +407,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       }.start();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
@@ -432,7 +444,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       return modified;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.ISaveablePart2#promptToSaveOnClose()
     */
    @Override

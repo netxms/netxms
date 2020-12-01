@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -272,7 +272,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
       stopCommand();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.ISaveablePart#doSaveAs()
     */
    @Override
@@ -280,7 +280,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
    {
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.ISaveablePart#isDirty()
     */
    @Override
@@ -289,7 +289,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
       return isRunning;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
     */
    @Override
@@ -298,7 +298,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
       return false;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
     */
    @Override
@@ -307,15 +307,18 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
       return isRunning;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.ISaveablePart2#promptToSaveOnClose()
     */
    @Override
    public int promptToSaveOnClose()
    {
-      return MessageDialog.openConfirm(Display.getCurrent().getActiveShell(), "Stop command", "Do you wish to stop the command \"" + lastCommand + "\"? ") ? 0 : 2;
+      return MessageDialog.openConfirm(Display.getCurrent().getActiveShell(), "Stop command", "Do you wish to stop the command \"" + lastCommand + "\"? ") ? YES : CANCEL;
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onError()
+    */
    @Override
    public void onError()
    {

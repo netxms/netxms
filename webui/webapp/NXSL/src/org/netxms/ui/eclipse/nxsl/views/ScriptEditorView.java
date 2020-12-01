@@ -85,9 +85,9 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 		   showLineNumbers = settings.getBoolean("ScriptEditor.showLineNumbers"); //$NON-NLS-1$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -129,9 +129,9 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
       }
    }
 
-   /* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
@@ -379,9 +379,9 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+    */
 	@Override
 	public void doSave(IProgressMonitor monitor)
 	{
@@ -397,42 +397,42 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSaveAs()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSaveAs()
+    */
 	@Override
 	public void doSaveAs()
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isDirty()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isDirty()
+    */
 	@Override
 	public boolean isDirty()
 	{
 		return modified;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
+    */
 	@Override
 	public boolean isSaveAsAllowed()
 	{
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
+    */
 	@Override
 	public boolean isSaveOnCloseNeeded()
 	{
 		return modified;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override
@@ -440,6 +440,10 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
    {
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
       settings.put("ScriptEditor.showLineNumbers", showLineNumbers); //$NON-NLS-1$
+
+      modified = false;
+      firePropertyChange(PROP_DIRTY);
+
       super.dispose();
    }
 }
