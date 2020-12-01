@@ -3058,7 +3058,7 @@ protected:
    bool setAgentProxy(AgentConnectionEx *conn);
    bool isAgentCompressionAllowed();
 
-   UINT32 getInterfaceCount(Interface **ppInterface);
+   uint32_t getInterfaceCount(Interface **lastInterface);
    void deleteInterface(Interface *iface);
 
    void checkInterfaceNames(InterfaceList *pIfList);
@@ -3084,10 +3084,10 @@ protected:
 
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
 
-   bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
-   bool deleteDuplicateInterfaces(UINT32 rqid);
+   bool updateInterfaceConfiguration(uint32_t requestId, int maskBits);
+   bool deleteDuplicateInterfaces(uint32_t requestId);
    void executeInterfaceUpdateHook(Interface *iface);
-   void updatePhysicalContainerBinding(UINT32 containerId);
+   void updatePhysicalContainerBinding(uint32_t containerId);
    DuplicateCheckResult checkForDuplicates(shared_ptr<Node> *duplicate, TCHAR *reason, size_t size);
    bool isDuplicateOf(Node *node, TCHAR *reason, size_t size);
    void reconcileWithDuplicateNode(Node *node);

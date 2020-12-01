@@ -4998,7 +4998,7 @@ void Node::executeInterfaceUpdateHook(Interface *iface)
  * Delete duplicate interfaces
  * (find and delete multiple interfaces with same ifIndex value created by version prior to 2.0-M3)
  */
-bool Node::deleteDuplicateInterfaces(UINT32 rqid)
+bool Node::deleteDuplicateInterfaces(uint32_t requestId)
 {
    ObjectArray<Interface> deleteList;
 
@@ -5031,7 +5031,7 @@ bool Node::deleteDuplicateInterfaces(UINT32 rqid)
    for(int i = 0; i < deleteList.size(); i++)
    {
       Interface *iface = deleteList.get(i);
-      sendPollerMsg(rqid, POLLER_WARNING _T("   Duplicate interface \"%s\" deleted\r\n"), iface->getName());
+      sendPollerMsg(requestId, POLLER_WARNING _T("   Duplicate interface \"%s\" deleted\r\n"), iface->getName());
       deleteInterface(iface);
    }
 
@@ -5041,14 +5041,14 @@ bool Node::deleteDuplicateInterfaces(UINT32 rqid)
 /**
  * Update interface configuration
  */
-bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
+bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
 {
-   sendPollerMsg(rqid, _T("Checking interface configuration...\r\n"));
+   sendPollerMsg(requestId, _T("Checking interface configuration...\r\n"));
 
-   bool hasChanges = deleteDuplicateInterfaces(rqid);
+   bool hasChanges = deleteDuplicateInterfaces(requestId);
 
    InterfaceList *ifList = getInterfaceList();
-   if (ifList != nullptr)
+   if ((ifList != nullptr) && (ifList->size() > 0))
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): got %d interfaces"), m_name, m_id, ifList->size());
 
@@ -5092,7 +5092,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
          for(int j = 0; j < deleteList.size(); j++)
          {
             Interface *iface = deleteList.get(j);
-            sendPollerMsg(rqid, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), iface->getName());
+            sendPollerMsg(requestId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), iface->getName());
             const InetAddress& addr = iface->getFirstIpAddress();
             PostSystemEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", iface->getIfIndex(), iface->getName(), &addr, addr.getMaskBits());
             deleteInterface(iface);
@@ -5192,14 +5192,14 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                            PostSystemEvent(EVENT_IF_MASK_CHANGED, m_id, "dsAddd", pInterface->getId(), pInterface->getName(),
                                      &addr, addr.getMaskBits(), pInterface->getIfIndex(), ifAddr.getMaskBits());
                            pInterface->setNetMask(addr);
-                           sendPollerMsg(rqid, POLLER_INFO _T("   IP network mask changed to /%d on interface \"%s\" address %s\r\n"),
+                           sendPollerMsg(requestId, POLLER_INFO _T("   IP network mask changed to /%d on interface \"%s\" address %s\r\n"),
                               addr.getMaskBits(), pInterface->getName(), (const TCHAR *)ifAddr.toString());
                            interfaceUpdated = true;
                         }
                      }
                      else
                      {
-                        sendPollerMsg(rqid, POLLER_WARNING _T("   IP address %s removed from interface \"%s\"\r\n"),
+                        sendPollerMsg(requestId, POLLER_WARNING _T("   IP address %s removed from interface \"%s\"\r\n"),
                            (const TCHAR *)ifAddr.toString(), pInterface->getName());
                         PostSystemEvent(EVENT_IF_IPADDR_DELETED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
                                   &ifAddr, ifAddr.getMaskBits(), pInterface->getIfIndex());
@@ -5217,7 +5217,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                         pInterface->addIpAddress(addr);
                         PostSystemEvent(EVENT_IF_IPADDR_ADDED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
                                   &addr, addr.getMaskBits(), pInterface->getIfIndex());
-                        sendPollerMsg(rqid, POLLER_INFO _T("   IP address %s added to interface \"%s\"\r\n"),
+                        sendPollerMsg(requestId, POLLER_INFO _T("   IP address %s added to interface \"%s\"\r\n"),
                            (const TCHAR *)addr.toString(), pInterface->getName());
                         interfaceUpdated = true;
                      }
@@ -5236,14 +5236,14 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
          if (isNewInterface)
          {
             // New interface
-            sendPollerMsg(rqid, POLLER_INFO _T("   Found new interface \"%s\"\r\n"), ifInfo->name);
+            sendPollerMsg(requestId, POLLER_INFO _T("   Found new interface \"%s\"\r\n"), ifInfo->name);
             if (createNewInterface(ifInfo, false, false) != nullptr)
             {
                hasChanges = true;
             }
             else
             {
-               sendPollerMsg(rqid, POLLER_WARNING _T("   Creation of interface object \"%s\" blocked by filter\r\n"), ifInfo->name);
+               sendPollerMsg(requestId, POLLER_WARNING _T("   Creation of interface object \"%s\" blocked by filter\r\n"), ifInfo->name);
             }
          }
       }
@@ -5278,9 +5278,9 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
          }
       }
    }
-   else if (!(m_flags & NF_EXTERNAL_GATEWAY))    /* pIfList == nullptr */
+   else if (!(m_flags & NF_EXTERNAL_GATEWAY))    /* pIfList == nullptr or empty */
    {
-      sendPollerMsg(rqid, POLLER_ERROR _T("Unable to get interface list from node\r\n"));
+      sendPollerMsg(requestId, POLLER_ERROR _T("Unable to get interface list from node\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): Unable to get interface list from node"), m_name, m_id);
 
       // Delete all existing interfaces in case of forced capability recheck
@@ -5298,7 +5298,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
          for(int j = 0; j < deleteList.size(); j++)
          {
             auto iface = deleteList.get(j);
-            sendPollerMsg(rqid, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), iface->getName());
+            sendPollerMsg(requestId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), iface->getName());
             const InetAddress& addr = iface->getIpAddressList()->getFirstUnicastAddress();
             PostSystemEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", iface->getIfIndex(), iface->getName(), &addr, addr.getMaskBits());
             deleteInterface(iface);
@@ -5307,16 +5307,26 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
 
       // Check if we have pseudo-interface object
       MacAddress macAddr(MacAddress::ZERO);
-      Interface *pInterface;
-      UINT32 dwCount = getInterfaceCount(&pInterface);
-      if (dwCount == 1)
+      Interface *iface;
+      uint32_t ifaceCount = getInterfaceCount(&iface);
+      if ((ifList != nullptr) && ((ifaceCount > 1) || ((ifaceCount == 1) && !iface->isFake())))
       {
-         if (pInterface->isFake())
+         // Node has interfaces from previous polls but do not report them anymore
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): clearing interface list"), m_name, m_id);
+         SharedObjectArray<NetObj> *ifaces = getChildren(OBJECT_INTERFACE);
+         for(int i = 0; i < ifaces->size(); i++)
+            deleteInterface(static_cast<Interface*>(ifaces->get(i)));
+         ifaceCount = 0;
+         iface = nullptr;
+      }
+      if (ifaceCount == 1)
+      {
+         if (iface->isFake())
          {
             // Check if primary IP is different from interface's IP
-            if (!pInterface->getIpAddressList()->hasAddress(m_ipAddress))
+            if (!iface->getIpAddressList()->hasAddress(m_ipAddress))
             {
-               deleteInterface(pInterface);
+               deleteInterface(iface);
                if (m_ipAddress.isValidUnicast())
                {
                   shared_ptr<Subnet> pSubnet = FindSubnetForNode(m_zoneUIN, m_ipAddress);
@@ -5340,22 +5350,22 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                             m_name, m_id, pSubnet->getName(), pSubnet->getId());
                   macAddr = pSubnet->findMacAddress(m_ipAddress);
                }
-               if (macAddr.isValid() && !macAddr.equals(pInterface->getMacAddr()))
+               if (macAddr.isValid() && !macAddr.equals(iface->getMacAddr()))
                {
                   TCHAR szOldMac[32], szNewMac[32];
-                  pInterface->getMacAddr().toString(szOldMac);
+                  iface->getMacAddr().toString(szOldMac);
                   macAddr.toString(szNewMac);
                   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): MAC change for unknown interface: %s to %s"),
                             m_name, m_id, szOldMac, szNewMac);
                   PostSystemEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
-                            pInterface->getId(), pInterface->getIfIndex(),
-                            pInterface->getName(), szOldMac, szNewMac);
-                  pInterface->setMacAddr(macAddr, true);
+                            iface->getId(), iface->getIfIndex(),
+                            iface->getName(), szOldMac, szNewMac);
+                  iface->setMacAddr(macAddr, true);
                }
             }
          }
       }
-      else if (dwCount == 0)
+      else if (ifaceCount == 0)
       {
          // No interfaces at all, create pseudo-interface
          if (m_ipAddress.isValidUnicast())
@@ -5376,13 +5386,13 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
             createNewInterface(ifaceAddr, macAddr, true);
          }
       }
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): pIfList == nullptr, dwCount = %u"), m_name, m_id, dwCount);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): pIfList == nullptr, dwCount = %u"), m_name, m_id, ifaceCount);
    }
 
    delete ifList;
    checkSubnetBinding();
 
-   sendPollerMsg(rqid, _T("Interface configuration check finished\r\n"));
+   sendPollerMsg(requestId, _T("Interface configuration check finished\r\n"));
    return hasChanges;
 }
 
@@ -7962,17 +7972,17 @@ void Node::clearFileUpdateConnection()
 /**
  * Get number of interface objects and pointer to the last one
  */
-UINT32 Node::getInterfaceCount(Interface **ppInterface)
+uint32_t Node::getInterfaceCount(Interface **lastInterface)
 {
    readLockChildList();
-   UINT32 count = 0;
+   uint32_t count = 0;
    for(int i = 0; i < getChildList().size(); i++)
    {
       NetObj *curr = getChildList().get(i);
       if (curr->getObjectClass() == OBJECT_INTERFACE)
       {
          count++;
-         *ppInterface = static_cast<Interface*>(curr);
+         *lastInterface = static_cast<Interface*>(curr);
       }
    }
    unlockChildList();
@@ -10165,7 +10175,7 @@ void Node::forceSyncDataCollectionConfig()
 /**
  * Update physical container (rack or chassis) binding
  */
-void Node::updatePhysicalContainerBinding(UINT32 containerId)
+void Node::updatePhysicalContainerBinding(uint32_t containerId)
 {
    bool containerFound = false;
    SharedObjectArray<NetObj> deleteList;
