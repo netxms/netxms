@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ public class DashboardLayout extends Layout
          i--;
       return numColumns - i - 1;
    }
-   
+
    /**
     * Create logical grid
     */
@@ -94,8 +94,14 @@ public class DashboardLayout extends Layout
             }
             else
             {
-               currentColumn++;
                freeSpace = 0;
+               currentColumn = j + 1;
+               if (currentColumn == numColumns)
+               {
+                  currentColumn = 0;
+                  currentRow++;
+                  j = -1; // restart loop
+               }
             }
          }
 
@@ -124,8 +130,8 @@ public class DashboardLayout extends Layout
          }
       }
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.swt.widgets.Layout#computeSize(org.eclipse.swt.widgets.Composite, int, int, boolean)
     */
    @Override
@@ -165,7 +171,7 @@ public class DashboardLayout extends Layout
       return size;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.widgets.Layout#layout(org.eclipse.swt.widgets.Composite, boolean)
     */
    @Override
@@ -266,7 +272,7 @@ public class DashboardLayout extends Layout
          c.setLocation(p.x * (columnWidth + horizontalSpacing) + marginWidth, rowStart[p.y]);
       }
    }
-   
+
    /**
     * Get layout data for control
     * 
