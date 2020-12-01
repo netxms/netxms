@@ -1,7 +1,7 @@
 @ECHO OFF
 
 SET SUBAGENT_POM_FILES=src/agent/subagents/bind9/pom.xml;src/agent/subagents/jmx/pom.xml;src/agent/subagents/ubntlw/pom.xml
-SET POM_FILES=src/java-common/netxms-base/pom.xml;src/libnxjava/java/pom.xml;src/client/java/netxms-client/pom.xml;src/client/nxapisrv/java/pom.xml;src/client/nxshell/java/pom.xml;src/client/nxtcpproxy/pom.xml;src/agent/subagents/java/java/pom.xml;src/mobile-agent/java;src/java/nxreporting/pom.xml;test/integration/pom.xml
+SET POM_FILES=src/java-common/netxms-base/pom.xml;src/libnxjava/java/pom.xml;src/client/java/netxms-client/pom.xml;src/client/nxapisrv/java/pom.xml;src/client/nxshell/java/pom.xml;src/client/nxtcpproxy/pom.xml;src/agent/subagents/java/java/pom.xml;src/mobile-agent/java;src/java/nxreporting/pom.xml;tests/integration/pom.xml
 
 cd build
 updatetag.pl
