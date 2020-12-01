@@ -689,18 +689,26 @@ void Event::prepareMessage(NXCPMessage *msg) const
 StringBuffer Event::getTagsAsList() const
 {
    StringBuffer list;
-   if (!m_tags.isEmpty())
-   {
-      ConstIterator<const TCHAR> *it = m_tags.constIterator();
-      while(it->hasNext())
-      {
-         if (!list.isEmpty())
-            list.append(_T(','));
-         list.append(it->next());
-      }
-      delete it;
-   }
+   getTagsAsList(&list);
    return list;
+}
+
+/**
+ * Get all tags as list
+ */
+void Event::getTagsAsList(StringBuffer *sb) const
+{
+   if (m_tags.isEmpty())
+      return;
+
+   ConstIterator<const TCHAR> *it = m_tags.constIterator();
+   sb->append(it->next());
+   while(it->hasNext())
+   {
+      sb->append(_T(','));
+      sb->append(it->next());
+   }
+   delete it;
 }
 
 /**

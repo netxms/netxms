@@ -6615,6 +6615,7 @@ void ClientSession::onTrap(NXCPMessage *pRequest)
 			}
 		   TCHAR userTag[MAX_USERTAG_LENGTH] = _T("");
 			pRequest->getFieldAsString(VID_USER_TAG, userTag, MAX_USERTAG_LENGTH);
+			StrStrip(userTag);
 			StringList parameters(pRequest, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
          bool success = PostEventWithTag(eventCode, EventOrigin::CLIENT, pRequest->getFieldAsTime(VID_ORIGIN_TIMESTAMP), object->getId(), userTag, parameters);
          msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_EVENT_CODE);

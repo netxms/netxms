@@ -310,8 +310,8 @@ String StringSet::join(const TCHAR *separator)
 StringSetConstIterator::StringSetConstIterator(const StringSet *stringSet)
 {
    m_stringSet = stringSet;
-   m_curr = NULL;
-   m_next = NULL;
+   m_curr = nullptr;
+   m_next = nullptr;
 }
 
 /**
@@ -319,10 +319,10 @@ StringSetConstIterator::StringSetConstIterator(const StringSet *stringSet)
  */
 bool StringSetConstIterator::hasNext()
 {
-   if (m_stringSet->m_data == NULL)
+   if (m_stringSet->m_data == nullptr)
       return false;
 
-   return (m_curr != NULL) ? (m_next != NULL) : true;
+   return (m_curr != nullptr) ? (m_next != nullptr) : true;
 }
 
 /**
@@ -330,17 +330,17 @@ bool StringSetConstIterator::hasNext()
  */
 void *StringSetConstIterator::next()
 {
-   if (m_stringSet->m_data == NULL)
-      return NULL;
+   if (m_stringSet->m_data == nullptr)
+      return nullptr;
 
-   if (m_curr == NULL)  // iteration not started
+   if (m_curr == nullptr)  // iteration not started
    {
       m_curr = m_stringSet->m_data;
    }
    else
    {
-      if (m_next == NULL)
-         return NULL;
+      if (m_next == nullptr)
+         return nullptr;
       m_curr = m_next;
    }
    m_next = static_cast<StringSetEntry*>(m_curr->hh.next);
@@ -353,8 +353,8 @@ void *StringSetConstIterator::next()
 StringSetIterator::StringSetIterator(StringSet *stringSet)
 {
    m_stringSet = stringSet;
-   m_curr = NULL;
-   m_next = NULL;
+   m_curr = nullptr;
+   m_next = nullptr;
 }
 
 /**
@@ -362,10 +362,10 @@ StringSetIterator::StringSetIterator(StringSet *stringSet)
  */
 bool StringSetIterator::hasNext()
 {
-   if (m_stringSet->m_data == NULL)
+   if (m_stringSet->m_data == nullptr)
       return false;
 
-   return (m_curr != NULL) ? (m_next != NULL) : true;
+   return (m_curr != nullptr) ? (m_next != nullptr) : true;
 }
 
 /**
@@ -373,17 +373,17 @@ bool StringSetIterator::hasNext()
  */
 void *StringSetIterator::next()
 {
-   if (m_stringSet->m_data == NULL)
-      return NULL;
+   if (m_stringSet->m_data == nullptr)
+      return nullptr;
 
-   if (m_curr == NULL)  // iteration not started
+   if (m_curr == nullptr)  // iteration not started
    {
       m_curr = m_stringSet->m_data;
    }
    else
    {
-      if (m_next == NULL)
-         return NULL;
+      if (m_next == nullptr)
+         return nullptr;
       m_curr = m_next;
    }
    m_next = static_cast<StringSetEntry*>(m_curr->hh.next);
