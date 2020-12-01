@@ -16,8 +16,9 @@
 	NX-1943 (Dashboard element in 2nd column does not spans correctly)
 	NX-1944 (Add macro that will return all tags of event in concatenated form)
 	NX-1969 (Create default interface if node replies via SNMP, but provides empty interface list)
-	NX-1978 ( Cleanup configuration and status poll textual output)
+	NX-1978 (Cleanup configuration and status poll textual output)
 	NX-1980 (Object Tools input field display name to wrap or input dialog to resize)
+	NX-1981 (Unable to create new DCI when filter is not empty in Data Collection Configuration)
 
 
 *

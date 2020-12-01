@@ -39,7 +39,6 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -202,10 +201,10 @@ public class DataCollectionEditor extends ViewPart
 	   String v = settings.get(name);
       return (v != null) ? Boolean.valueOf(v) : defval;
    }
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -772,9 +771,9 @@ public class DataCollectionEditor extends ViewPart
 	private void createItem()
 	{
       DataCollectionItem dci = new DataCollectionItem(dciConfig, 0);
-      if((object instanceof AbstractNode) && !((AbstractNode)object).hasAgent())
+      if ((object instanceof AbstractNode) && !((AbstractNode)object).hasAgent())
       {
-         if(((AbstractNode)object).hasSnmpAgent())
+         if (((AbstractNode)object).hasSnmpAgent())
          {
             dci.setOrigin(DataOrigin.SNMP);
          }
@@ -783,9 +782,9 @@ public class DataCollectionEditor extends ViewPart
             dci.setOrigin(DataOrigin.INTERNAL);
          }
       }
-      viewer.add(dci);
-      viewer.setSelection(new StructuredSelection(dci), true);
-      actionEdit.run();
+      ExtendedPropertyDialog dlg = ExtendedPropertyDialog.createDialogOn(getSite().getShell(), null, dci, ""); //$NON-NLS-1$
+      dlg.createAllPages();
+      dlg.open();
 	}
 	
 	/**
@@ -805,17 +804,17 @@ public class DataCollectionEditor extends ViewPart
             dci.setOrigin(DataOrigin.INTERNAL);
          }
       }
-      viewer.add(dci);
-		viewer.setSelection(new StructuredSelection(dci), true);
-		actionEdit.run();
+      ExtendedPropertyDialog dlg = ExtendedPropertyDialog.createDialogOn(getSite().getShell(), null, dci, ""); //$NON-NLS-1$
+      dlg.createAllPages();
+      dlg.open();
 	}
-	
+
 	/**
 	 * Edit selected object
 	 */
 	private void editSelectedObject()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.size() != 1)
 			return;
 		
@@ -836,14 +835,10 @@ public class DataCollectionEditor extends ViewPart
 		{
          ExtendedPropertyDialog dlg = ExtendedPropertyDialog.createDialogOn(getSite().getShell(), null, dco, ""); //$NON-NLS-1$
          dlg.createAllPages();
-         int result = dlg.open();
-         if (((DataCollectionObject)selection.getFirstElement()).isNewItem() && result != SWT.OK)
-         {
-            viewer.remove(selection.getFirstElement());
-         }
+         dlg.open();
 		}
 	}
-	
+
 	/**
 	 * Duplicate selected item(s)
 	 */
