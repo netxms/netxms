@@ -2528,6 +2528,7 @@ restart_agent_check:
                         reasonNames[static_cast<int32_t>(patchCheckResult.reason)], patchCheckResult.rootCauseNodeId,
                         GetObjectName(patchCheckResult.rootCauseNodeId, _T("")), patchCheckResult.rootCauseInterfaceId,
                         GetObjectName(patchCheckResult.rootCauseInterfaceId, _T("")), description);
+               sendPollerMsg(rqId, POLLER_WARNING _T("Detected network path problem (%s)\r\n"), description);
             }
             else
             {
@@ -3666,7 +3667,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          else
          {
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name cannot be interpreted as valid IP address"), m_name, m_id);
-            sendPollerMsg(rqId, _T("Node name cannot be interpreted as valid IP address\r\n"));
+            sendPollerMsg(rqId, _T("Node name %s, no need to resolve to host name\r\n"), addr.isValidUnicast() ? _T("is a valid IP address but cannot be found in interface configuration") : _T("cannot be interpreted as valid IP address"));
          }
       }
       else if (g_flags & AF_SYNC_NODE_NAMES_WITH_DNS)
@@ -4015,7 +4016,10 @@ bool Node::confPollAgent(UINT32 rqId)
 {
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent Flags={%08X} StateFlags={%08X} RuntimeFlags={%08X}"), m_name, m_flags, m_state, m_runtimeFlags);
    if (((m_capabilities & NC_IS_NATIVE_AGENT) && (m_state & NSF_AGENT_UNREACHABLE)) || (m_flags & NF_DISABLE_NXCP))
+   {
+      sendPollerMsg(rqId, _T("   NetXMS agent polling is %s\r\n"), (m_flags & NF_DISABLE_NXCP) ? _T("disabled") : _T("not possible"));
       return false;
+   }
 
    bool hasChanges = false;
 
@@ -4180,7 +4184,7 @@ bool Node::confPollAgent(UINT32 rqId)
          if ((m_sysDescription == nullptr) || _tcscmp(m_sysDescription, buffer))
          {
             free(m_sysDescription);
-            m_sysDescription = _tcsdup(buffer);
+            m_sysDescription = MemCopyString(buffer);
             hasChanges = true;
             sendPollerMsg(rqId, _T("   System description changed to %s\r\n"), m_sysDescription);
          }
@@ -4198,7 +4202,7 @@ bool Node::confPollAgent(UINT32 rqId)
 
       ObjectArray<AgentParameterDefinition> *plist;
       ObjectArray<AgentTableDefinition> *tlist;
-      UINT32 rcc = pAgentConn->getSupportedParameters(&plist, &tlist);
+      uint32_t rcc = pAgentConn->getSupportedParameters(&plist, &tlist);
       if (rcc == ERR_SUCCESS)
       {
          lockProperties();
@@ -4292,7 +4296,7 @@ bool Node::confPollAgent(UINT32 rqId)
    else
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (%s)"), m_name, AgentErrorCodeToText(rcc));
-      sendPollerMsg(rqId, POLLER_ERROR _T("   Cannot connect to NetXMS agent (%s)\r\n"), AgentErrorCodeToText(rcc));
+      sendPollerMsg(rqId, _T("   Cannot connect to NetXMS agent (%s)\r\n"), AgentErrorCodeToText(rcc));
    }
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_name);
    return hasChanges;
@@ -4305,7 +4309,10 @@ bool Node::confPollEthernetIP(uint32_t requestId)
 {
    if (((m_capabilities & NC_IS_ETHERNET_IP) && (m_state & NSF_ETHERNET_IP_UNREACHABLE)) ||
        !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_ETHERNET_IP))
+   {
+      sendPollerMsg(requestId, _T("   EtherNet/IP polling is %s\r\n"), (m_flags & NF_DISABLE_ETHERNET_IP) ? _T("disabled") : _T("not possible"));
       return false;
+   }
 
    bool hasChanges = false;
 
@@ -4411,7 +4418,7 @@ bool Node::confPollEthernetIP(uint32_t requestId)
    {
       String reason = status.failureReason();
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for EtherNet/IP - failed to get device identity (%s)"), m_name, reason.cstr());
-      sendPollerMsg(requestId, POLLER_ERROR _T("   Cannot get device identity via EtherNet/IP (%s)\r\n"), reason.cstr());
+      sendPollerMsg(requestId, _T("   Cannot establish EtherNet/IP connection or get device identity (%s)\r\n"), reason.cstr());
    }
 
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): check for EtherNet/IP completed"), m_name);
@@ -4434,7 +4441,10 @@ bool Node::confPollSnmp(uint32_t rqId)
 {
    if (((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE)) ||
        !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_SNMP))
+   {
+      sendPollerMsg(rqId, _T("   SNMP polling is %s\r\n"), (m_flags & NF_DISABLE_SNMP) ? _T("disabled") : _T("not possible"));
       return false;
+   }
 
    bool hasChanges = false;
 
@@ -4456,6 +4466,7 @@ bool Node::confPollSnmp(uint32_t rqId)
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is not responding to SNMP using current settings"), m_name);
       if (m_flags & NF_SNMP_SETTINGS_LOCKED)
       {
+         sendPollerMsg(rqId, _T("   Node is not responding to SNMP using current settings and SNMP settings are locked\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): SNMP settings are locked, skip SnmpCheckCommSettings()"), m_name);
          return false;
       }
@@ -4465,6 +4476,7 @@ bool Node::confPollSnmp(uint32_t rqId)
                &m_snmpVersion, m_snmpPort, m_snmpSecurity, oids, m_zoneUIN);
    if (pTransport == nullptr)
    {
+      sendPollerMsg(rqId, _T("   No response from SNMP agent\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): unable to create SNMP transport"), m_name);
       return false;
    }
@@ -4527,6 +4539,10 @@ bool Node::confPollSnmp(uint32_t rqId)
       m_driver = driver;
       sendPollerMsg(rqId, _T("   New network device driver selected: %s\r\n"), m_driver->getName());
    }
+   else
+   {
+      sendPollerMsg(rqId, _T("   Use previously selected network device driver %s\r\n"), m_driver->getName());
+   }
    unlockProperties();
 
    // Allow driver to gather additional info
@@ -4551,12 +4567,15 @@ bool Node::confPollSnmp(uint32_t rqId)
       ObjectArray<AgentParameterDefinition> *metrics = m_driver->getAvailableMetrics(pTransport, this, m_driverData);
       if (metrics != nullptr)
       {
+         sendPollerMsg(rqId, _T("   %d metrics provided by network device driver\r\n"), metrics->size());
          lockProperties();
          delete m_driverParameters;
          m_driverParameters = metrics;
          unlockProperties();
       }
    }
+
+   sendPollerMsg(rqId, _T("   Collecting system information from SNMP agent...\r\n"));
 
    // Get sysName, sysContact, sysLocation
    if (querySnmpSysProperty(pTransport, _T(".1.3.6.1.2.1.1.5.0"), _T("name"), rqId, &m_sysName))

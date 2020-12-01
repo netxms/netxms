@@ -6487,7 +6487,7 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
 
             NXCPMessage msg(CMD_POLLING_INFO, pRequest->getId());
             msg.setField(VID_RCC, RCC_OPERATION_IN_PROGRESS);
-            msg.setField(VID_POLLER_MESSAGE, _T("Poll request accepted\r\n"));
+            msg.setField(VID_POLLER_MESSAGE, _T("Poll request accepted, waiting for outstanding polling requests to complete...\r\n"));
             sendMessage(&msg);
 
             response.setField(VID_RCC, RCC_SUCCESS);
