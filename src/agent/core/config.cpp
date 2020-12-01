@@ -159,99 +159,119 @@ BOOL DownloadConfig(TCHAR *pszServer)
 int CreateConfig(bool forceCreate, const char *masterServers, const char *logFile, const char *fileStore,
       const char *configIncludeDir, int numSubAgents, char **subAgentList, const char *extraValues)
 {
-   FILE *fp;
-   time_t currTime;
-   int i;
-
    if ((_taccess(g_szConfigFile, 0) == 0) && !forceCreate)
       return 0;  // File already exist, we shouldn't overwrite it
 
-   fp = _tfopen(g_szConfigFile, _T("w"));
-   if (fp != nullptr)
-   {
-      currTime = time(nullptr);
-      _ftprintf(fp, _T("#\n# NetXMS agent configuration file\n# Created by agent installer at %s#\n\n"),
-         _tctime(&currTime));
-      if (*masterServers == _T('~'))
-      {
-         // Setup agent-server tunnel(s)
-         _ftprintf(fp, _T("MasterServers = %hs\n"), &masterServers[1]);
-         const char *curr = &masterServers[1];
-         while (true)
-         {
-            const char *next = strchr(curr, ',');
-            if (next == nullptr)
-            {
-               _ftprintf(fp, _T("ServerConnection = %hs\n"), curr);
-               break;
-            }
-            size_t len = next - curr;
-            char temp[256];
-            strlcpy(temp, curr, std::min(len + 1, sizeof(temp)));
-            StrStripA(temp);
-            if (temp[0] != 0)
-               _ftprintf(fp, _T("ServerConnection = %hs\n"), temp);
-            curr = next + 1;
-         }
-      }
-      else
-      {
-         _ftprintf(fp, _T("MasterServers = %hs\n"), masterServers);
-      }
-      _ftprintf(fp, _T("ConfigIncludeDir = %hs\nLogFile = %hs\nFileStore = %hs\n"), configIncludeDir, logFile, fileStore);
+   FILE *fp = _tfopen(g_szConfigFile, _T("w"));
+   if (fp == nullptr)
+      return 2;   // Open error
 
-      Array extSubAgents;
-      for (i = 0; i < numSubAgents; i++)
+   time_t currTime = time(nullptr);
+   _ftprintf(fp, _T("#\n# NetXMS agent configuration file\n# Created by agent installer at %s#\n\n"), _tctime(&currTime));
+   if (*masterServers == _T('~'))
+   {
+      // Setup agent-server tunnel(s)
+      const char *curr = &masterServers[1];
+      while (true)
       {
-         if (!strnicmp(subAgentList[i], "EXT:", 4))
+         const char *options = strchr(curr, ',');
+         const char *next = strchr(curr, ';');
+
+         char address[256];
+         if ((options != nullptr)  && ((next == nullptr) || (options < next)))
          {
-            extSubAgents.add(subAgentList[i] + 4);
+            size_t len = options - curr;
+            strlcpy(address, curr, std::min(len + 1, sizeof(address)));
+         }
+         else if (next != nullptr)
+         {
+            size_t len = next - curr;
+            strlcpy(address, curr, std::min(len + 1, sizeof(address)));
          }
          else
          {
-            _ftprintf(fp, _T("SubAgent = %hs\n"), subAgentList[i]);
+            strlcpy(address, curr, sizeof(address));
          }
-      }
+         StrStripA(address);
 
-      for (i = 0; i < extSubAgents.size(); i++)
-      {
-         char section[MAX_PATH];
-         strlcpy(section, (const char *)extSubAgents.get(i), MAX_PATH);
-         char *eptr = strrchr(section, '.');
-         if (eptr != nullptr)
-            *eptr = 0;
-         strupr(section);
-         _ftprintf(fp, _T("\n[EXT:%hs]\n"), section);
-         _ftprintf(fp, _T("SubAgent = %hs\n"), (const char *)extSubAgents.get(i));
-      }
-
-      if (extraValues != nullptr)
-      {
-         char *temp = MemCopyStringA(extraValues);
-         char *curr = temp;
-         while (*curr == '~')
-            curr++;
-
-         char *next;
-         do
+         if (next == nullptr)
          {
-            next = strstr(curr, "~~");
-            if (next != nullptr)
-               *next = 0;
-            StrStripA(curr);
-            if ((*curr == '[') || (*curr == '*') || (strchr(curr, '=') != nullptr))
-            {
-               _ftprintf(fp, _T("%hs\n"), curr);
-            }
-            curr = next + 2;
-         } while (next != nullptr);
-
-         MemFree(temp);
+            _ftprintf(fp, _T("ServerConnection = %hs\nMasterServers = %hs\n"), curr, address);
+            break;
+         }
+         size_t len = next - curr;
+         char temp[1024];
+         strlcpy(temp, curr, std::min(len + 1, sizeof(temp)));
+         StrStripA(temp);
+         if (temp[0] != 0)
+            _ftprintf(fp, _T("ServerConnection = %hs\nMasterServers = %hs\n"), temp, address);
+         curr = next + 1;
       }
-
-      fclose(fp);
    }
-   return (fp != nullptr) ? 0 : 2;
+   else
+   {
+      // Replace ; with , in master server
+      // ; are allowed as separators for for compatibility with tunnel mode
+      char temp[4096];
+      strlcpy(temp, masterServers, sizeof(temp));
+      for (char *p = temp; *p != 0; p++)
+         if (*p == ';')
+            *p = ',';
+      _ftprintf(fp, _T("MasterServers = %hs\n"), temp);
+   }
+   _ftprintf(fp, _T("ConfigIncludeDir = %hs\nLogFile = %hs\nFileStore = %hs\n"), configIncludeDir, logFile, fileStore);
+
+   Array extSubAgents;
+   for (int i = 0; i < numSubAgents; i++)
+   {
+      if (!strnicmp(subAgentList[i], "EXT:", 4))
+      {
+         extSubAgents.add(subAgentList[i] + 4);
+      }
+      else
+      {
+         _ftprintf(fp, _T("SubAgent = %hs\n"), subAgentList[i]);
+      }
+   }
+
+   for (int i = 0; i < extSubAgents.size(); i++)
+   {
+      char section[MAX_PATH];
+      strlcpy(section, (const char *)extSubAgents.get(i), MAX_PATH);
+      char *eptr = strrchr(section, '.');
+      if (eptr != nullptr)
+         *eptr = 0;
+      strupr(section);
+      _ftprintf(fp, _T("\n[EXT:%hs]\n"), section);
+      _ftprintf(fp, _T("SubAgent = %hs\n"), (const char *)extSubAgents.get(i));
+   }
+
+   if (extraValues != nullptr)
+   {
+      char *temp = MemCopyStringA(extraValues);
+      char *curr = temp;
+      while (*curr == '~')
+         curr++;
+
+      char *next;
+      do
+      {
+         next = strstr(curr, "~~");
+         if (next != nullptr)
+            *next = 0;
+         StrStripA(curr);
+         if ((*curr == '[') || (*curr == '*') || (strchr(curr, '=') != nullptr))
+         {
+            _ftprintf(fp, _T("%hs\n"), curr);
+         }
+         curr = next + 2;
+      } while (next != nullptr);
+
+      MemFree(temp);
+   }
+
+   fclose(fp);
+   return 0;
 }
 
 #ifdef _WIN32

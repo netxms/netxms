@@ -2340,9 +2340,8 @@ int main(int argc, char *argv[])
 			exitCode = WatchdogMain(dwMainPID, _tcscmp(configSection, DEFAULT_CONFIG_SECTION) ? configSection : NULL);
 			break;
       case Command::CREATE_CONFIG:
-         exitCode = CreateConfig(forceCreateConfig, CHECK_NULL_A(argv[optind]), CHECK_NULL_A(argv[optind + 1]),
-                                  CHECK_NULL_A(argv[optind + 2]), CHECK_NULL_A(argv[optind + 3]),
-			                         argc - optind - 4, &argv[optind + 4], extraConfigValues);
+         exitCode = CreateConfig(forceCreateConfig, CHECK_NULL_A(argv[optind]), CHECK_NULL_A(argv[optind + 1]), 
+               CHECK_NULL_A(argv[optind + 2]), CHECK_NULL_A(argv[optind + 3]), argc - optind - 4, &argv[optind + 4], extraConfigValues);
          break;
       case Command::SHUTDOWN_EXT_AGENTS:
          InitiateExternalProcessShutdown(restartExternalProcesses);
