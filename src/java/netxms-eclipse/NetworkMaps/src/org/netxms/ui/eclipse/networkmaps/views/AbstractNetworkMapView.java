@@ -1621,7 +1621,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
    {
       if (fileName == null)
       {
-         FileDialog dlg = new FileDialog(getSite().getShell());
+         FileDialog dlg = new FileDialog(getSite().getShell(), SWT.SAVE);
          dlg.setFilterExtensions(new String[] { ".png" });
          dlg.setOverwrite(true);
          fileName = dlg.open();
