@@ -47,6 +47,17 @@ public class LabeledText extends LabeledControl
 		super(parent, style, textStyle);
 	}
 	
+   /**
+    * @param parent
+    * @param style
+    * @param textStyle
+    * @param widthHint
+    */
+   public LabeledText(Composite parent, int style, int textStyle, int widthHint)
+   {
+      super(parent, style, textStyle, widthHint);
+   }
+
 	/**
     * @see org.netxms.ui.eclipse.widgets.LabeledControl#createControl(int)
     */
@@ -111,7 +122,7 @@ public class LabeledText extends LabeledControl
 	{
 		return ((Text)control).getText();
 	}
-	
+
 	/**
 	 * Get text control
 	 * 

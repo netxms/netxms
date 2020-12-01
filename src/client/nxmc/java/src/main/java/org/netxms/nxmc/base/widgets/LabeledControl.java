@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ public abstract class LabeledControl extends Composite
 {
 	protected Label label;
 	protected Control control;
+   protected int controlWidthHint;
 	
 	/**
 	 * @param parent
@@ -42,20 +43,34 @@ public abstract class LabeledControl extends Composite
 	public LabeledControl(Composite parent, int style)
 	{
 		super(parent, style);
+      controlWidthHint = SWT.DEFAULT;
 		createContent(getDefaultControlStyle());
 	}
 
 	/**
 	 * @param parent
 	 * @param style
-	 * @param textStyle
+	 * @param controlStyle
 	 */
-	public LabeledControl(Composite parent, int style, int textStyle)
+	public LabeledControl(Composite parent, int style, int controlStyle)
 	{
 		super(parent, style);
-		createContent(textStyle);
+      controlWidthHint = SWT.DEFAULT;
+		createContent(controlStyle);
 	}
 	
+   /**
+    * @param parent
+    * @param style
+    * @param controlStyle
+    */
+   public LabeledControl(Composite parent, int style, int controlStyle, int controlWidthHint)
+   {
+      super(parent, style);
+      this.controlWidthHint = controlWidthHint;
+      createContent(controlStyle);
+   }
+
    /**
     * Create enclosed control
     * 
@@ -73,7 +88,7 @@ public abstract class LabeledControl extends Composite
    {
       return SWT.BORDER;
    }
-   
+
    /**
     * Should return true if extra vertical space is needed by control
     * 
@@ -84,7 +99,7 @@ public abstract class LabeledControl extends Composite
    {
       return false;
    }
-   
+
 	/**
 	 * Do widget creation.
 	 * 
@@ -118,9 +133,10 @@ public abstract class LabeledControl extends Composite
 		{
 			gd.verticalAlignment = SWT.TOP;
 		}
+      gd.widthHint = controlWidthHint;
 		control.setLayoutData(gd);
 	}
-	
+
 	/**
 	 * Set label
 	 * 

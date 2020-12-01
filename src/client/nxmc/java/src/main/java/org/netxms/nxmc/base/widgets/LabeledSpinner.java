@@ -46,6 +46,17 @@ public class LabeledSpinner extends LabeledControl
 		super(parent, style, spinnerStyle);
 	}
 	
+   /**
+    * @param parent
+    * @param style
+    * @param spinnerStyle
+    * @param widthHint
+    */
+   public LabeledSpinner(Composite parent, int style, int spinnerStyle, int widthHint)
+   {
+      super(parent, style, spinnerStyle, widthHint);
+   }
+
 	/**
     * @see org.netxms.ui.eclipse.widgets.LabeledControl#createControl(int)
     */
@@ -54,7 +65,7 @@ public class LabeledSpinner extends LabeledControl
    {
       return new Spinner(this, controlStyle);
    }
-	
+
    /**
     * @see org.netxms.ui.eclipse.widgets.LabeledControl#setText(java.lang.String)
     */
