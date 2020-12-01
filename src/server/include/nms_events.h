@@ -133,6 +133,7 @@ public:
 	const TCHAR *getName() const { return m_name; }
    const TCHAR *getMessage() const { return m_messageText; }
    StringBuffer getTagsAsList() const;
+   void getTagsAsList(StringBuffer *sb) const;
    time_t getTimestamp() const { return m_timestamp; }
    time_t getOriginTimestamp() const { return m_originTimestamp; }
    const Array *getParameterList() const { return &m_parameters; }
@@ -156,7 +157,7 @@ public:
    void setMessage(const TCHAR *text) { MemFree(m_messageText); m_messageText = MemCopyString(text); }
 
    bool hasTag(const TCHAR *tag) const { return m_tags.contains(tag); }
-   void addTag(const TCHAR *tag) { m_tags.add(tag); }
+   void addTag(const TCHAR *tag) { if (*tag != 0) m_tags.add(tag); }
    void removeTag(const TCHAR *tag) { m_tags.remove(tag); }
 
    int getParametersCount() const { return m_parameters.size(); }

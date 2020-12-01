@@ -2508,7 +2508,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
    char entryPoint[MAX_IDENTIFIER_LENGTH];
    int i;
 
-   DbgPrintf(8, _T("NetObj::expandText(sourceObject=%u template='%s' alarm=%u event=") UINT64_FMT _T(")"),
+   nxlog_debug_tag(_T("obj.macro"), 8, _T("NetObj::expandText(sourceObject=%u template='%s' alarm=%u event=") UINT64_FMT _T(")"),
              m_id, CHECK_NULL(textTemplate), (alarm == nullptr) ? 0 : alarm->getAlarmId() , (event == nullptr) ? 0 : event->getId());
 
    StringBuffer output;
@@ -2538,7 +2538,13 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   }
                   break;
                case 'c':   // Event code
-                  output.append((event != NULL) ? event->getCode() : 0);
+                  output.append((event != nullptr) ? event->getCode() : 0);
+                  break;
+               case 'E':   // Concatenated event tags
+                  if (event != nullptr)
+                  {
+                     event->getTagsAsList(&output);
+                  }
                   break;
                case 'g':   // Source object's GUID
                   output.append(m_guid);
