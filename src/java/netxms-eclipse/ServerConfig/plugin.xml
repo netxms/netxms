@@ -82,7 +82,7 @@
             class="org.netxms.ui.eclipse.serverconfig.views.WindowsEventParserConfigurator"
             icon="icons/syslog_cfg.gif"
             id="org.netxms.ui.eclipse.serverconfig.views.WindowsEventParserConfigurator"
-            name="Windows Evnet Parser"
+            name="Windows Event Parser"
             restorable="true">
       </view>
    </extension>
