@@ -47,6 +47,17 @@ public class LabeledSpinner extends LabeledControl
 		super(parent, style, spinnerStyle);
 	}
 	
+   /**
+    * @param parent
+    * @param style
+    * @param spinnerStyle
+    * @param widthHint
+    */
+   public LabeledSpinner(Composite parent, int style, int spinnerStyle, int widthHint)
+   {
+      super(parent, style, spinnerStyle, widthHint);
+   }
+
 	/**
 	 * @param parent
 	 * @param style
@@ -58,18 +69,30 @@ public class LabeledSpinner extends LabeledControl
 		super(parent, style, spinnerStyle, toolkit);
 	}
 	
-	/* (non-Javadoc)
+   /**
+    * @param parent
+    * @param style
+    * @param spinnerStyle
+    * @param widthHint
+    * @param toolkit
+    */
+   public LabeledSpinner(Composite parent, int style, int spinnerStyle, int widthHint, FormToolkit toolkit)
+   {
+      super(parent, style, spinnerStyle, widthHint, toolkit);
+   }
+
+   /**
     * @see org.netxms.ui.eclipse.widgets.LabeledControl#createControl(int)
-	 */
+    */
    @Override
    protected Control createControl(int controlStyle)
-	{
+   {
       return new Spinner(this, controlStyle);
-	}
-	
-	/* (non-Javadoc)
+   }
+
+   /**
     * @see org.netxms.ui.eclipse.widgets.LabeledControl#setText(java.lang.String)
-	 */
+    */
    @Override
    public void setText(String newText)
    {
@@ -78,20 +101,20 @@ public class LabeledSpinner extends LabeledControl
          ((Spinner)control).setSelection(Integer.parseInt(newText));
       }
       catch(NumberFormatException e)
-	{
+      {
       }
-	}
-	
-   /* (non-Javadoc)
+   }
+
+   /**
     * @see org.netxms.ui.eclipse.widgets.LabeledControl#getText()
-	 */
+    */
    @Override
    public String getText()
-	{
+   {
       return ((Spinner)control).getText();
-	}
-	
-	/**
+   }
+
+   /**
 	 * Set spinner range
 	 * 
 	 * @param minValue
@@ -131,5 +154,5 @@ public class LabeledSpinner extends LabeledControl
 	public Spinner getSpinnerControl()
 	{
 		return (Spinner)control;
-   }
+	}
 }

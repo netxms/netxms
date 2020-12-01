@@ -48,6 +48,17 @@ public class LabeledText extends LabeledControl
 		super(parent, style, textStyle);
 	}
 	
+   /**
+    * @param parent
+    * @param style
+    * @param textStyle
+    * @param widthHint
+    */
+   public LabeledText(Composite parent, int style, int textStyle, int widthHint)
+   {
+      super(parent, style, textStyle, widthHint);
+   }
+
 	/**
 	 * @param parent
 	 * @param style
@@ -59,7 +70,19 @@ public class LabeledText extends LabeledControl
 		super(parent, style, textStyle, toolkit);
 	}
 	
-	/* (non-Javadoc)
+   /**
+    * @param parent
+    * @param style
+    * @param textStyle
+    * @param widthHint
+    * @param toolkit
+    */
+   public LabeledText(Composite parent, int style, int textStyle, int widthHint, FormToolkit toolkit)
+   {
+      super(parent, style, textStyle, widthHint, toolkit);
+   }
+
+   /**
     * @see org.netxms.ui.eclipse.widgets.LabeledControl#createControl(int)
     */
    @Override
@@ -68,7 +91,7 @@ public class LabeledText extends LabeledControl
       return (toolkit != null) ? toolkit.createText(this, "", controlStyle) : new Text(this, controlStyle); //$NON-NLS-1$;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.widgets.LabeledControl#getDefaultControlStyle()
     */
    @Override
@@ -77,7 +100,7 @@ public class LabeledText extends LabeledControl
       return SWT.BORDER | SWT.SINGLE;
    }
 	
-	/* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.widgets.LabeledControl#isExtraVerticalSpaceNeeded(int)
     */
    @Override
@@ -106,7 +129,7 @@ public class LabeledText extends LabeledControl
       return ((Text)control).getEditable();
    }
 	
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.widgets.LabeledControl#setText(java.lang.String)
     */
    @Override
@@ -115,7 +138,7 @@ public class LabeledText extends LabeledControl
       ((Text)control).setText((newText != null) ? newText : ""); //$NON-NLS-1$
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.widgets.LabeledControl#getText()
     */
    @Override
@@ -123,7 +146,7 @@ public class LabeledText extends LabeledControl
 	{
 		return ((Text)control).getText();
 	}
-	
+
 	/**
 	 * Get text control
 	 * 
