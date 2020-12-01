@@ -143,7 +143,7 @@ public final class ObjectToolExecutor
                return f1.getSequence() - f2.getSequence();
             }
          });
-         inputValues = readInputFields(fields);
+         inputValues = readInputFields(tool.getDisplayName(), fields);
          if (inputValues == null)
             return;  // cancelled
          for (int i = 0; i < fields.length; i++)
@@ -318,9 +318,9 @@ public final class ObjectToolExecutor
     * @param fields
     * @return
     */
-   private static Map<String, String> readInputFields(InputField[] fields)
+   private static Map<String, String> readInputFields(String title, InputField[] fields)
    {
-      ObjectToolInputDialog dlg = new ObjectToolInputDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), fields);
+      ObjectToolInputDialog dlg = new ObjectToolInputDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), title, fields);
       if (dlg.open() != Window.OK)
          return null;
       return dlg.getValues();

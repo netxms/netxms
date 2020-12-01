@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ public abstract class LabeledControl extends Composite
 {
 	protected Label label;
 	protected Control control;
+   protected int controlWidthHint;
 	protected FormToolkit toolkit;
 	
 	/**
@@ -46,6 +47,7 @@ public abstract class LabeledControl extends Composite
 	public LabeledControl(Composite parent, int style)
 	{
 		super(parent, style);
+      controlWidthHint = SWT.DEFAULT;
 		toolkit = null;
 		createContent(getDefaultControlStyle());
 	}
@@ -53,29 +55,59 @@ public abstract class LabeledControl extends Composite
 	/**
 	 * @param parent
 	 * @param style
-	 * @param textStyle
+	 * @param controlStyle
 	 */
-	public LabeledControl(Composite parent, int style, int textStyle)
+	public LabeledControl(Composite parent, int style, int controlStyle)
 	{
 		super(parent, style);
+      controlWidthHint = SWT.DEFAULT;
 		toolkit = null;
-		createContent(textStyle);
+		createContent(controlStyle);
 	}
 	
+   /**
+    * @param parent
+    * @param style
+    * @param controlStyle
+    */
+   public LabeledControl(Composite parent, int style, int controlStyle, int controlWidthHint)
+   {
+      super(parent, style);
+      this.controlWidthHint = controlWidthHint;
+      toolkit = null;
+      createContent(controlStyle);
+   }
+
 	/**
 	 * @param parent
 	 * @param style
-	 * @param textStyle
+	 * @param controlStyle
 	 * @param toolkit
 	 */
-	public LabeledControl(Composite parent, int style, int textStyle, FormToolkit toolkit)
+	public LabeledControl(Composite parent, int style, int controlStyle, FormToolkit toolkit)
 	{
 		super(parent, style);
+      controlWidthHint = SWT.DEFAULT;
 		this.toolkit = toolkit;
-		createContent(textStyle);
+		createContent(controlStyle);
       toolkit.adapt(this);
 	}
 	
+   /**
+    * @param parent
+    * @param style
+    * @param controlStyle
+    * @param toolkit
+    */
+   public LabeledControl(Composite parent, int style, int controlStyle, int controlWidthHint, FormToolkit toolkit)
+   {
+      super(parent, style);
+      this.controlWidthHint = controlWidthHint;
+      this.toolkit = toolkit;
+      createContent(controlStyle);
+      toolkit.adapt(this);
+   }
+
    /**
     * Create enclosed control
     * 
@@ -93,7 +125,7 @@ public abstract class LabeledControl extends Composite
    {
       return SWT.BORDER;
    }
-   
+
    /**
     * Should return true if extra vertical space is needed by control
     * 
@@ -104,7 +136,7 @@ public abstract class LabeledControl extends Composite
    {
       return false;
    }
-   
+
 	/**
 	 * Do widget creation.
 	 * 
@@ -138,6 +170,7 @@ public abstract class LabeledControl extends Composite
 		{
 			gd.verticalAlignment = SWT.TOP;
 		}
+      gd.widthHint = controlWidthHint;
 		control.setLayoutData(gd);
 		
 		// Fix for RAP focus problem
@@ -154,7 +187,7 @@ public abstract class LabeledControl extends Composite
          }
       });
 	}
-	
+
 	/**
 	 * Set label
 	 * 
@@ -209,9 +242,9 @@ public abstract class LabeledControl extends Composite
 		return control;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
+    */
 	@Override
 	public void setEnabled(boolean enabled)
 	{
@@ -220,16 +253,16 @@ public abstract class LabeledControl extends Composite
 		label.setEnabled(enabled);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#setFocus()
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Composite#setFocus()
+    */
 	@Override
 	public boolean setFocus()
 	{
 		return control.setFocus();
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.widgets.Control#setBackground(org.eclipse.swt.graphics.Color)
     */
    @Override
@@ -239,7 +272,7 @@ public abstract class LabeledControl extends Composite
       label.setBackground(color);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.widgets.Widget#toString()
     */
    @Override

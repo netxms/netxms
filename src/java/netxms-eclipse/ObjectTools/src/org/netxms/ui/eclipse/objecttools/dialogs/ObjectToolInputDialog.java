@@ -38,6 +38,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class ObjectToolInputDialog extends Dialog
 {
+   private String title;
    private InputField[] fields;
    private LabeledControl[] controls;
    private Map<String, String> values;
@@ -46,27 +47,38 @@ public class ObjectToolInputDialog extends Dialog
     * @param parentShell
     * @param fields
     */
-   public ObjectToolInputDialog(Shell parentShell, InputField[] fields)
+   public ObjectToolInputDialog(Shell parentShell, String title, InputField[] fields)
    {
       super(parentShell);
+      this.title = title;
       this.fields = fields;
       this.controls = new LabeledControl[fields.length];
    }
-   
-   /* (non-Javadoc)
+
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
+   @Override
+   protected void configureShell(Shell newShell)
+   {
+      super.configureShell(newShell);
+      newShell.setText(title);
+   }
+
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected Control createDialogArea(Composite parent)
    {
       Composite dialogArea = (Composite)super.createDialogArea(parent);
-      
+
       GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       dialogArea.setLayout(layout);
-      
+
       for(int i = 0; i < fields.length; i++)
       {
          LabeledControl c;
@@ -76,10 +88,10 @@ public class ObjectToolInputDialog extends Dialog
                c = new LabeledSpinner(dialogArea, SWT.NONE);
                break;
             case PASSWORD:
-               c = new LabeledText(dialogArea, SWT.NONE, SWT.PASSWORD);
+               c = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.PASSWORD, 300);
                break;
             default:
-               c = new LabeledText(dialogArea, SWT.NONE);
+               c = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER, 300);
                break;
          }
          c.setLabel(fields[i].getDisplayName());
@@ -87,9 +99,8 @@ public class ObjectToolInputDialog extends Dialog
          GridData gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
-         gd.widthHint = 300;
          c.setLayoutData(gd);
-         
+
          controls[i] = c;
       }
 

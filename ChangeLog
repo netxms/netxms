@@ -7,6 +7,16 @@
 
 
 *
+* 3.6-CURRENT
+*
+
+- Fixed bug in object tool filter configuration
+- Fixed bug in map image save
+- Fixed issues:
+	NX-1980 (Object Tools input field display name to wrap or input dialog to resize)
+
+
+*
 * 3.6.273
 *
 
