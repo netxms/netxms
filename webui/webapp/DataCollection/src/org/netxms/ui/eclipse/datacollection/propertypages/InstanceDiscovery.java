@@ -199,6 +199,7 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 			case DataCollectionObject.IDM_AGENT_LIST:
 				return Messages.get().InstanceDiscovery_ListName;
 			case DataCollectionObject.IDM_AGENT_TABLE:
+         case DataCollectionObject.IDM_INTERNAL_TABLE:
 				return Messages.get().InstanceDiscovery_TableName;
 			case DataCollectionObject.IDM_SNMP_WALK_VALUES:
 			case DataCollectionObject.IDM_SNMP_WALK_OIDS:
