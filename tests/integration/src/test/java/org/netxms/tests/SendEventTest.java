@@ -39,7 +39,7 @@ public class SendEventTest extends AbstractSessionTest
 		{
 			if (o instanceof Node)
 			{
-				session.sendEvent(0, "SYS_SCRIPT_ERROR", o.getObjectId(), new String[] { "test1", "test2", "0" }, "TAG");
+            session.sendEvent(0, "SYS_SCRIPT_ERROR", o.getObjectId(), new String[] { "test1", "test2", "0" }, "TAG", null);
 				break;
 			}
 		}
