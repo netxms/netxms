@@ -13,6 +13,7 @@
 - Fixed bug in object tool filter configuration
 - Fixed bug in map image save
 - Fixed issues:
+	NX-1943 (Dashboard element in 2nd column does not spans correctly)
 	NX-1980 (Object Tools input field display name to wrap or input dialog to resize)
 
 
