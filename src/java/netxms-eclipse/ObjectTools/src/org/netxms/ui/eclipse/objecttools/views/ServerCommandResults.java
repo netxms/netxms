@@ -264,7 +264,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
       stopCommand();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.ISaveablePart#doSaveAs()
     */
    @Override
@@ -272,7 +272,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
    {
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.ISaveablePart#isDirty()
     */
    @Override
@@ -281,7 +281,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
       return isRunning;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
     */
    @Override
@@ -290,7 +290,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
       return false;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
     */
    @Override
@@ -299,15 +299,18 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
       return isRunning;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.ISaveablePart2#promptToSaveOnClose()
     */
    @Override
    public int promptToSaveOnClose()
    {
-      return MessageDialog.openConfirm(Display.getCurrent().getActiveShell(), "Stop command", "Do you wish to stop the command \"" + lastCommand + "\"? ") ? 0 : 2;
+      return MessageDialog.openConfirm(Display.getCurrent().getActiveShell(), "Stop command", "Do you wish to stop the command \"" + lastCommand + "\"? ") ? YES : CANCEL;
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onError()
+    */
    @Override
    public void onError()
    {

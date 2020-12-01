@@ -103,9 +103,9 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		session = ConsoleSharedData.getSession();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -414,10 +414,22 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		viewer.setInput(mappingTable.getData().toArray());
 		setModified(true);
 	}
-	
+
 	/**
-	 * Cell modifier class
-	 */
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      modified = false;
+      firePropertyChange(PROP_DIRTY);
+
+      super.dispose();
+   }
+
+   /**
+    * Cell modifier class
+    */
 	private class CellModifier implements ICellModifier
 	{
 		@Override

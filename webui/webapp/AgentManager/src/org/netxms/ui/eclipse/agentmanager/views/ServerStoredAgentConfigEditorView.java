@@ -611,9 +611,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       manager.add(actionRefresh);
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
     */
    @Override
@@ -667,9 +665,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       }.start();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart#doSaveAs()
     */
    @Override
@@ -677,9 +673,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
    {
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart#isDirty()
     */
    @Override
@@ -688,9 +682,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       return modified;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
     */
    @Override
@@ -699,9 +691,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       return false;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
     */
    @Override
@@ -710,9 +700,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       return modified;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart2#promptToSaveOnClose()
     */
    @Override
@@ -774,5 +762,17 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
             return Messages.get().ServerStoredAgentConfigEditorView_JobError_GetList;
          }
       }.start();
+   }
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      modified = false;
+      firePropertyChange(PROP_DIRTY);
+
+      super.dispose();
    }
 }

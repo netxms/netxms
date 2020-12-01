@@ -13,6 +13,7 @@
 - Fixed bug in object tool filter configuration
 - Fixed bug in map image save
 - Fixed issues:
+	NX-1906 ("Save Resources" keeps on showing when closing the console)
 	NX-1943 (Dashboard element in 2nd column does not spans correctly)
 	NX-1944 (Add macro that will return all tags of event in concatenated form)
 	NX-1969 (Create default interface if node replies via SNMP, but provides empty interface list)

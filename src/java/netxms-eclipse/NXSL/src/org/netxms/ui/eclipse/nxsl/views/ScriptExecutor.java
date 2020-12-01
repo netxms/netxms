@@ -78,6 +78,8 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
 
    private NXCSession session;
    private boolean modified = false;
+   private boolean saveOnClose = false;
+   private boolean doSaveAs = false;
    private long objectId;
 
    private Form form;
@@ -95,9 +97,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    private List<Script> library;
    private int previousSelection = -1;
 
-   private boolean allowSaveAs = false;
-   
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -111,7 +111,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       setPartName(String.format(Messages.get().ScriptExecutor_PartName, session.getObjectName(objectId)));
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -262,7 +262,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
@@ -331,17 +331,16 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          {
             if (modified)
             {
-               if(saveIfRequired(false))
+               if (saveIfRequired(false))
                   return;
             }
-            
             updateScriptList(null);
             getScriptContent();
             output.clear();
          }
       };
       actionReload.setText(Messages.get().ScriptExecutor_Reload);
-      
+
       actionExecute = new Action(Messages.get().ScriptExecutor_Execute, SharedIcons.EXECUTE) {
          @Override
          public void run()
@@ -383,17 +382,20 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    /**
     * Create new script
     */
-   private void createNewScript(final boolean saveOnSelectionChange)
+   private boolean createNewScript(final boolean saveOnSelectionChange)
    {
       final CreateScriptDialog dlg = new CreateScriptDialog(getSite().getShell(), null);
-      if (dlg.open() == Window.OK)
-      {
-         final String scriptSource = scriptEditor.getText();
-         new ConsoleJob(Messages.get().ScriptExecutor_JobName_Create, this, Activator.PLUGIN_ID, null) {
-            @Override
-            protected void runInternal(IProgressMonitor monitor) throws Exception
+      if (dlg.open() != Window.OK)
+         return false;
+
+      final String scriptSource = scriptEditor.getText();
+      new ConsoleJob(Messages.get().ScriptExecutor_JobName_Create, this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyScript(0, dlg.getName(), scriptSource);
+            if (!saveOnClose)
             {
-               session.modifyScript(0, dlg.getName(), scriptSource);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -410,14 +412,15 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
                   }
                });
             }
+         }
 
-            @Override
-            protected String getErrorMessage()
-            {
-               return Messages.get().ScriptExecutor_JobError_Create;
-            }
-         }.start();
-      }
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().ScriptExecutor_JobError_Create;
+         }
+      }.start();
+      return true;
    }
 
    /**
@@ -635,14 +638,18 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       manager.add(actionReload);
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
     */
    @Override
    public void doSave(IProgressMonitor monitor)
    {
+      if (saveOnClose && (!modified || doSaveAs))
+      {
+         clearDirtyFlags();
+         return;
+      }
+
       try
       {
          Script s = library.get(scriptCombo.getSelectionIndex());
@@ -656,9 +663,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       clearDirtyFlags();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart#doSaveAs()
     */
    @Override
@@ -667,9 +672,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       createNewScript(false);
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart#isDirty()
     */
    @Override
@@ -678,20 +681,16 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       return modified;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
     */
    @Override
    public boolean isSaveAsAllowed()
    {
-      return allowSaveAs;
+      return true;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
     */
    @Override
@@ -700,9 +699,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       return modified;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart2#promptToSaveOnClose()
     */
    @Override
@@ -710,12 +707,21 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    {
       SaveScriptDialog dlg = new SaveScriptDialog(getSite().getShell(), actionSave.isEnabled());
       int rc = dlg.open();
-      modified = (rc != SaveScriptDialog.SAVE_ID);
-      allowSaveAs = (rc == SaveScriptDialog.SAVE_AS_ID);
-      return (rc == IDialogConstants.CANCEL_ID) ? CANCEL : ((rc == SaveScriptDialog.DISCARD_ID) ? NO : YES);
+      if (rc == IDialogConstants.CANCEL_ID)
+         return CANCEL;
+
+      saveOnClose = true;
+      if (rc == SaveScriptDialog.SAVE_AS_ID)
+      {
+         if (!createNewScript(false))
+            return CANCEL;
+      }
+      modified = (rc != SaveScriptDialog.DISCARD_ID); // Clear modification flag if "Discard" was selected
+      doSaveAs = (rc == SaveScriptDialog.SAVE_AS_ID);
+      return YES;    // Always return "YES" to prevent "Save resource" popup on exit
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
     */
    @Override
@@ -733,11 +739,17 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       }
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#setStreamId(long)
+    */
    @Override
    public void setStreamId(long streamId)
    {
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onError()
+    */
    @Override
    public void onError()
    {
