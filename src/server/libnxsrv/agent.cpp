@@ -1603,7 +1603,7 @@ UINT32 AgentConnection::execAction(const TCHAR *action, const StringList &list,
    msg.setCode(CMD_ACTION);
    msg.setId(dwRqId);
    msg.setField(VID_ACTION_NAME, action);
-   msg.setField(VID_RECEIVE_OUTPUT, (UINT16)(withOutput ? 1 : 0));
+   msg.setField(VID_RECEIVE_OUTPUT, withOutput);
    msg.setField(VID_NUM_ARGS, (UINT32)list.size());
    for(i = 0; i < list.size(); i++)
       msg.setField(VID_ACTION_ARG_BASE + i, list.get(i));

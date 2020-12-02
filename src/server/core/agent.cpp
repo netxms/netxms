@@ -362,7 +362,7 @@ static void CancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
 }
 
 /**
- * Recieve file monitoring information and resend to all required user sessions
+ * Receive file monitoring information and resend to all required user sessions
  */
 void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
 {
