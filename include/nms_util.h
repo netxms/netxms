@@ -3430,7 +3430,8 @@ enum class BackgroundSocketPollResult
    SUCCESS = 0,
    TIMEOUT = 1,
    FAILURE = 2,
-   SHUTDOWN = 3
+   SHUTDOWN = 3,
+   CANCELLED = 4
 };
 
 /**
@@ -3444,6 +3445,7 @@ struct BackgroundSocketPollRequest
    void *context;
    int64_t queueTime;
    uint32_t timeout;
+   bool cancelled;
 };
 
 #ifdef _WIN32
@@ -3477,6 +3479,7 @@ public:
    {
       poll(socket, timeout, reinterpret_cast<void (*)(BackgroundSocketPollResult, SOCKET, void*)>(callback), context);
    }
+   void cancel(SOCKET socket);
 
    bool isValid() const { return (m_controlSockets[0] != INVALID_SOCKET) && (m_workerThread != INVALID_THREAD_HANDLE); }
 };

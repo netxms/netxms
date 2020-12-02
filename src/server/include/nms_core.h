@@ -169,25 +169,18 @@
 /**
  * Client session flags
  */
-#define CSF_TERMINATED           ((UINT32)0x00000001)
-#define CSF_EPP_LOCKED           ((UINT32)0x00000002)
-#define CSF_USER_DB_LOCKED       ((UINT32)0x00000008)
-#define CSF_EPP_UPLOAD           ((UINT32)0x00000010)
-#define CSF_CONSOLE_OPEN         ((UINT32)0x00000020)
-#define CSF_AUTHENTICATED        ((UINT32)0x00000080)
-#define CSF_COMPRESSION_ENABLED  ((UINT32)0x00000100)
-#define CSF_RECEIVING_MAP_DATA   ((UINT32)0x00000200)
-#define CSF_SYNC_OBJECT_COMMENTS ((UINT32)0x00000400)
-#define CSF_OBJECT_SYNC_FINISHED ((UINT32)0x00000800)
-#define CSF_OBJECTS_OUT_OF_SYNC  ((UINT32)0x00001000)
-#define CSF_CUSTOM_LOCK_1        ((UINT32)0x01000000)
-#define CSF_CUSTOM_LOCK_2        ((UINT32)0x02000000)
-#define CSF_CUSTOM_LOCK_3        ((UINT32)0x04000000)
-#define CSF_CUSTOM_LOCK_4        ((UINT32)0x08000000)
-#define CSF_CUSTOM_LOCK_5        ((UINT32)0x10000000)
-#define CSF_CUSTOM_LOCK_6        ((UINT32)0x20000000)
-#define CSF_CUSTOM_LOCK_7        ((UINT32)0x40000000)
-#define CSF_CUSTOM_LOCK_8        ((UINT32)0x80000000)
+#define CSF_TERMINATED           ((uint32_t)0x00000001)
+#define CSF_EPP_LOCKED           ((uint32_t)0x00000002)
+#define CSF_USER_DB_LOCKED       ((uint32_t)0x00000008)
+#define CSF_EPP_UPLOAD           ((uint32_t)0x00000010)
+#define CSF_CONSOLE_OPEN         ((uint32_t)0x00000020)
+#define CSF_AUTHENTICATED        ((uint32_t)0x00000080)
+#define CSF_COMPRESSION_ENABLED  ((uint32_t)0x00000100)
+#define CSF_RECEIVING_MAP_DATA   ((uint32_t)0x00000200)
+#define CSF_SYNC_OBJECT_COMMENTS ((uint32_t)0x00000400)
+#define CSF_OBJECT_SYNC_FINISHED ((uint32_t)0x00000800)
+#define CSF_OBJECTS_OUT_OF_SYNC  ((uint32_t)0x00001000)
+#define CSF_TERMINATE_REQUESTED  ((uint32_t)0x00002000)
 
 /**
  * Certificate types
@@ -338,7 +331,7 @@ typedef struct
 class NXCORE_EXPORTABLE MobileDeviceSession
 {
 private:
-   SOCKET m_hSocket;
+   SOCKET m_socket;
    int m_id;
    uint32_t m_userId;
    uint32_t m_deviceObjectId;
@@ -353,7 +346,7 @@ private:
    uint32_t m_encryptionResult;
    CONDITION m_condEncryptionSetup;
    uint32_t m_refCount;
-	bool m_isAuthenticated;
+	bool m_authenticated;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
 
@@ -383,7 +376,7 @@ public:
    const TCHAR *getClientInfo() const { return m_clientInfo; }
 	const TCHAR *getHostName() const { return m_hostName; }
    uint32_t getUserId() const { return m_userId; }
-   bool isAuthenticated() const { return m_isAuthenticated; }
+   bool isAuthenticated() const { return m_authenticated; }
    int getCipher() const { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
 };
 
@@ -472,13 +465,13 @@ class NXCORE_EXPORTABLE ClientSession
 {
 private:
    session_id_t m_id;
-   SOCKET m_hSocket;
+   SOCKET m_socket;
    BackgroundSocketPollerHandle *m_socketPoller;
    SocketMessageReceiver *m_messageReceiver;
    uint32_t m_dwUserId;
    uint64_t m_systemAccessRights; // User's system access rights
-   uint32_t m_dwFlags;            // Session flags
-	int m_clientType;				  // Client system type - desktop, web, mobile, etc.
+   VolatileCounter m_flags;       // Session flags
+	int m_clientType;              // Client system type - desktop, web, mobile, etc.
    NXCPEncryptionContext *m_pCtx;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
 	MUTEX m_mutexSocketWrite;
@@ -830,7 +823,7 @@ public:
    void postMessage(const NXCPMessage& msg)
    {
       if (!isTerminated())
-         postRawMessageAndDelete(msg.serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0));
+         postRawMessageAndDelete(msg.serialize((m_flags & CSF_COMPRESSION_ENABLED) != 0));
    }
    void postMessage(const NXCPMessage *msg)
    {
@@ -842,8 +835,8 @@ public:
       return sendMessage(*msg);
    }
    void sendRawMessage(NXCP_MESSAGE *msg);
-   void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
-	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long offset, bool allowCompression = true);
+   void sendPollerMsg(uint32_t requestIf, const TCHAR *text);
+	bool sendFile(const TCHAR *file, uint32_t requestId, long offset, bool allowCompression = true);
 
    void writeAuditLog(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *format, ...);
    void writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...);
@@ -861,11 +854,11 @@ public:
    const TCHAR *getWebServerAddress() const { return m_webServerAddress; }
    uint32_t getUserId() const { return m_dwUserId; }
    uint64_t getSystemRights() const { return m_systemAccessRights; }
-   uint32_t getFlags() const { return m_dwFlags; }
-   bool isAuthenticated() const { return (m_dwFlags & CSF_AUTHENTICATED) ? true : false; }
-   bool isTerminated() const { return (m_dwFlags & CSF_TERMINATED) ? true : false; }
-   bool isConsoleOpen() const { return (m_dwFlags & CSF_CONSOLE_OPEN) ? true : false; }
-   bool isCompressionEnabled() const { return (m_dwFlags & CSF_COMPRESSION_ENABLED) ? true : false; }
+   uint32_t getFlags() const { return static_cast<uint32_t>(m_flags); }
+   bool isAuthenticated() const { return (m_flags & CSF_AUTHENTICATED) ? true : false; }
+   bool isTerminated() const { return (m_flags & CSF_TERMINATED) ? true : false; }
+   bool isConsoleOpen() const { return (m_flags & CSF_CONSOLE_OPEN) ? true : false; }
+   bool isCompressionEnabled() const { return (m_flags & CSF_COMPRESSION_ENABLED) ? true : false; }
    int getCipher() const { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
 	int getClientType() const { return m_clientType; }
    time_t getLoginTime() const { return m_loginTime; }
@@ -878,17 +871,9 @@ public:
          ((requiredAccess & m_systemAccessRights) == requiredAccess);
    }
 
-   void setCustomLock(uint32_t bit, bool value)
-   {
-      if (value)
-         m_dwFlags |= (bit & 0xFF000000);
-      else
-         m_dwFlags &= ~(bit & 0xFF000000);
-   }
-
    void runHousekeeper();
 
-   void kill();
+   void terminate();
    void notify(uint32_t code, uint32_t data = 0);
 
    void updateSystemAccessRights();
