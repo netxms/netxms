@@ -229,6 +229,7 @@ void BackgroundSocketPoller::poll(SOCKET socket, uint32_t timeout, void (*callba
    request->callback = callback;
    request->context = context;
    request->queueTime = GetCurrentTimeMs();
+   request->cancelled = false;
 
    MutexLock(m_mutex);
    request->next = m_head->next;
@@ -238,6 +239,29 @@ void BackgroundSocketPoller::poll(SOCKET socket, uint32_t timeout, void (*callba
    // No need for notification if poll() called from worker thread itself
    // (likely that means re-insert from poll completion callback)
    if (GetCurrentThreadId() != m_workerThreadId)
+      notifyWorkerThread();
+}
+
+/**
+ * Cancel socket poll. Registered callback will be called with CANCELLED status.
+ */
+void BackgroundSocketPoller::cancel(SOCKET socket)
+{
+   MutexLock(m_mutex);
+   auto r = m_head->next;
+   for(; r != nullptr; r = r->next)
+   {
+      if (r->socket == socket)
+      {
+         r->cancelled = true;
+         break;
+      }
+   }
+   MutexUnlock(m_mutex);
+
+   // No need for notification if poll() called from worker thread itself
+   // (likely that means cancellation from poll completion callback)
+   if ((r != nullptr) && (GetCurrentThreadId() != m_workerThreadId))
       notifyWorkerThread();
 }
 
@@ -276,7 +300,7 @@ void BackgroundSocketPoller::workerThread()
       for(auto r = m_head->next, p = m_head; r != nullptr; p = r, r = r->next)
       {
          uint32_t waitTime = static_cast<uint32_t>(now - r->queueTime);
-         if (waitTime < r->timeout)
+         if ((waitTime < r->timeout) && !r->cancelled)
          {
             uint32_t t = r->timeout - waitTime;
             if (t < timeout)
@@ -296,7 +320,7 @@ void BackgroundSocketPoller::workerThread()
       for(auto r = processedRequests; r != nullptr;)
       {
          auto n = r->next;
-         r->callback(BackgroundSocketPollResult::TIMEOUT, r->socket, r->context);
+         r->callback(r->cancelled ? BackgroundSocketPollResult::CANCELLED : BackgroundSocketPollResult::TIMEOUT, r->socket, r->context);
          m_memoryPool.free(r);
          r = n;
       }
@@ -319,7 +343,7 @@ void BackgroundSocketPoller::workerThread()
          MutexLock(m_mutex);
          for(auto r = m_head->next, p = m_head; r != nullptr; p = r, r = r->next)
          {
-            if (sp.isSet(r->socket))
+            if (r->cancelled || sp.isSet(r->socket))
             {
                p->next = r->next;
                r->next = processedRequests;
@@ -332,7 +356,7 @@ void BackgroundSocketPoller::workerThread()
          for(auto r = processedRequests; r != nullptr;)
          {
             auto n = r->next;
-            r->callback(BackgroundSocketPollResult::SUCCESS, r->socket, r->context);
+            r->callback(r->cancelled ? BackgroundSocketPollResult::CANCELLED : BackgroundSocketPollResult::SUCCESS, r->socket, r->context);
             m_memoryPool.free(r);
             r = n;
          }

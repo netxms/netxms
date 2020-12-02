@@ -128,17 +128,20 @@ static EnumerationCallbackResult CancelFileTransfer(const uint32_t& key, ServerD
  */
 void ClientSession::socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, ClientSession *session)
 {
-   if (pollResult == BackgroundSocketPollResult::SUCCESS)
+   if (!(session->m_flags & CSF_TERMINATE_REQUESTED))
    {
-      if (session->readSocket())
+      if (pollResult == BackgroundSocketPollResult::SUCCESS)
       {
-         session->m_socketPoller->poller.poll(hSocket, 900000, socketPollerCallback, session);
-         return;
+         if (session->readSocket() && !(session->m_flags & CSF_TERMINATE_REQUESTED))
+         {
+            session->m_socketPoller->poller.poll(hSocket, 900000, socketPollerCallback, session);
+            return;
+         }
       }
-   }
-   else
-   {
-      session->debugPrintf(5, _T("Socket poll error (%d)"), static_cast<int>(pollResult));
+      else
+      {
+         session->debugPrintf(5, _T("Socket poll error (%d)"), static_cast<int>(pollResult));
+      }
    }
    ThreadPoolExecute(g_clientThreadPool, terminate, session);
 }
@@ -159,7 +162,7 @@ void ClientSession::terminate(ClientSession *session)
 ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
 {
    m_id = -1;
-   m_hSocket = hSocket;
+   m_socket = hSocket;
    m_socketPoller = nullptr;
    m_messageReceiver = nullptr;
    m_pCtx = nullptr;
@@ -170,7 +173,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_mutexPollerInit = MutexCreate();
    m_subscriptionLock = MutexCreateFast();
    m_subscriptions = new StringObjectMap<UINT32>(Ownership::True);
-   m_dwFlags = 0;
+   m_flags = 0;
 	m_clientType = CLIENT_TYPE_DESKTOP;
 	m_clientAddr = addr;
 	m_clientAddr.toString(m_workstation);
@@ -209,8 +212,12 @@ ClientSession::~ClientSession()
    if (m_socketPoller != nullptr)
       InterlockedDecrement(&m_socketPoller->usageCount);
    delete m_messageReceiver;
-   if (m_hSocket != -1)
-      closesocket(m_hSocket);
+   if (m_socket != INVALID_SOCKET)
+   {
+      shutdown(m_socket, SHUT_RDWR);
+      closesocket(m_socket);
+      debugPrintf(6, _T("Socket closed"));
+   }
 	MutexDestroy(m_mutexSocketWrite);
    MutexDestroy(m_mutexSendAlarms);
    MutexDestroy(m_mutexSendActions);
@@ -220,7 +227,7 @@ ClientSession::~ClientSession()
    delete m_subscriptions;
    if (m_ppEPPRuleList != nullptr)
    {
-      if (m_dwFlags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
+      if (m_flags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
       {
          for(UINT32 i = 0; i < m_dwRecordsUploaded; i++)
             delete m_ppEPPRuleList[i];
@@ -244,6 +251,8 @@ ClientSession::~ClientSession()
    MutexDestroy(m_tcpProxyLock);
    delete m_pendingObjectNotifications;
    MutexDestroy(m_pendingObjectNotificationsLock);
+
+   debugPrintf(5, _T("Session object destroyed"));
 }
 
 /**
@@ -253,8 +262,8 @@ bool ClientSession::start()
 {
    if (m_socketPoller == nullptr)
       return false;
-   m_messageReceiver = new SocketMessageReceiver(m_hSocket, 4096, MAX_MSG_SIZE);
-   m_socketPoller->poller.poll(m_hSocket, 900000, socketPollerCallback, this);
+   m_messageReceiver = new SocketMessageReceiver(m_socket, 4096, MAX_MSG_SIZE);
+   m_socketPoller->poller.poll(m_socket, 900000, socketPollerCallback, this);
    return true;
 }
 
@@ -501,7 +510,7 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
 void ClientSession::finalize()
 {
    // Mark as terminated (sendMessage calls will not work after that point)
-   m_dwFlags |= CSF_TERMINATED;
+   InterlockedOr(&m_flags, CSF_TERMINATED);
 
    // remove all pending file transfers from reporting server
    RemovePendingFileTransferRequests(this);
@@ -521,7 +530,7 @@ void ClientSession::finalize()
 
    CloseAllLogsForSession(m_id);
 
-   if (m_dwFlags & CSF_AUTHENTICATED)
+   if (m_flags & CSF_AUTHENTICATED)
    {
       CALL_ALL_MODULES(pfClientSessionClose, (this));
       WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("User logged out (client: %s)"), m_clientInfo);
@@ -641,7 +650,7 @@ void ClientSession::processRequest(NXCPMessage *request)
 
    TCHAR buffer[128];
    debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(code, buffer));
-   if (!(m_dwFlags & CSF_AUTHENTICATED) &&
+   if (!(m_flags & CSF_AUTHENTICATED) &&
        (code != CMD_LOGIN) &&
        (code != CMD_GET_SERVER_INFO) &&
        (code != CMD_REQUEST_ENCRYPTION) &&
@@ -1540,7 +1549,7 @@ bool ClientSession::sendMessage(const NXCPMessage& msg)
    if (isTerminated())
       return false;
 
-	NXCP_MESSAGE *rawMsg = msg.serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0);
+	NXCP_MESSAGE *rawMsg = msg.serialize((m_flags & CSF_COMPRESSION_ENABLED) != 0);
 
    if ((nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 6) && (msg.getCode() != CMD_ADM_MESSAGE))
    {
@@ -1560,7 +1569,7 @@ bool ClientSession::sendMessage(const NXCPMessage& msg)
       NXCP_ENCRYPTED_MESSAGE *enMsg = m_pCtx->encryptMessage(rawMsg);
       if (enMsg != nullptr)
       {
-         result = (SendEx(m_hSocket, (char *)enMsg, ntohl(enMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(enMsg->size));
+         result = (SendEx(m_socket, (char *)enMsg, ntohl(enMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(enMsg->size));
          MemFree(enMsg);
       }
       else
@@ -1570,14 +1579,14 @@ bool ClientSession::sendMessage(const NXCPMessage& msg)
    }
    else
    {
-      result = (SendEx(m_hSocket, (const char *)rawMsg, ntohl(rawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
+      result = (SendEx(m_socket, (const char *)rawMsg, ntohl(rawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
    MemFree(rawMsg);
 
    if (!result)
    {
-      closesocket(m_hSocket);
-      m_hSocket = -1;
+      InterlockedOr(&m_flags, CSF_TERMINATE_REQUESTED);
+      m_socketPoller->poller.cancel(m_socket);
    }
    return result;
 }
@@ -1606,11 +1615,11 @@ void ClientSession::sendRawMessage(NXCP_MESSAGE *msg)
    bool result;
    if (m_pCtx != nullptr)
    {
-      NXCP_ENCRYPTED_MESSAGE *enMsg = m_pCtx->encryptMessage(msg);
-      if (enMsg != nullptr)
+      NXCP_ENCRYPTED_MESSAGE *emsg = m_pCtx->encryptMessage(msg);
+      if (emsg != nullptr)
       {
-         result = (SendEx(m_hSocket, (char *)enMsg, ntohl(enMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(enMsg->size));
-         free(enMsg);
+         result = (SendEx(m_socket, (char *)emsg, ntohl(emsg->size), 0, m_mutexSocketWrite) == (int)ntohl(emsg->size));
+         MemFree(emsg);
       }
       else
       {
@@ -1619,13 +1628,13 @@ void ClientSession::sendRawMessage(NXCP_MESSAGE *msg)
    }
    else
    {
-      result = (SendEx(m_hSocket, (const char *)msg, ntohl(msg->size), 0, m_mutexSocketWrite) == (int)ntohl(msg->size));
+      result = (SendEx(m_socket, (const char *)msg, ntohl(msg->size), 0, m_mutexSocketWrite) == (int)ntohl(msg->size));
    }
 
    if (!result)
    {
-      closesocket(m_hSocket);
-      m_hSocket = -1;
+      InterlockedOr(&m_flags, CSF_TERMINATE_REQUESTED);
+      m_socketPoller->poller.cancel(m_socket);
    }
 }
 
@@ -1653,10 +1662,10 @@ void ClientSession::postRawMessageAndDelete(NXCP_MESSAGE *msg)
 /**
  * Send file to client
  */
-BOOL ClientSession::sendFile(const TCHAR *file, UINT32 dwRqId, long ofset, bool allowCompression)
+bool ClientSession::sendFile(const TCHAR *file, uint32_t requestId, long ofset, bool allowCompression)
 {
-   return !isTerminated() ? SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx,
-            ofset, nullptr, nullptr, m_mutexSocketWrite, isCompressionEnabled() && allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE) : FALSE;
+   return !isTerminated() ? SendFileOverNXCP(m_socket, requestId, file, m_pCtx,
+            ofset, nullptr, nullptr, m_mutexSocketWrite, isCompressionEnabled() && allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE) : false;
 }
 
 /**
@@ -1857,7 +1866,7 @@ void ClientSession::login(NXCPMessage *pRequest)
       pRequest->getFieldAsString(VID_LANGUAGE, m_language, 8);
    }
 
-   if (!(m_dwFlags & CSF_AUTHENTICATED))
+   if (!(m_flags & CSF_AUTHENTICATED))
    {
       uint32_t graceLogins = 0;
       bool closeOtherSessions = false;
@@ -1940,7 +1949,7 @@ void ClientSession::login(NXCPMessage *pRequest)
 
       if (rcc == RCC_SUCCESS)
       {
-         m_dwFlags |= CSF_AUTHENTICATED;
+         InterlockedOr(&m_flags, CSF_AUTHENTICATED);
          _tcslcpy(m_loginName, szLogin, MAX_USER_NAME);
          _sntprintf(m_sessionName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_workstation);
          m_loginTime = time(nullptr);
@@ -1967,7 +1976,7 @@ void ClientSession::login(NXCPMessage *pRequest)
          if (pRequest->getFieldAsBoolean(VID_ENABLE_COMPRESSION))
          {
             debugPrintf(3, _T("Protocol level compression is supported by client"));
-            m_dwFlags |= CSF_COMPRESSION_ENABLED;
+            InterlockedOr(&m_flags, CSF_COMPRESSION_ENABLED);
             msg.setField(VID_ENABLE_COMPRESSION, true);
          }
          else
@@ -2022,7 +2031,7 @@ void ClientSession::login(NXCPMessage *pRequest)
  */
 void ClientSession::updateSystemAccessRights()
 {
-   if (!(m_dwFlags & CSF_AUTHENTICATED))
+   if (!(m_flags & CSF_AUTHENTICATED))
       return;
 
    uint64_t systemAccessRights = GetEffectiveSystemRights(m_dwUserId);
@@ -2249,9 +2258,9 @@ void ClientSession::getObjects(NXCPMessage *request)
 
    // Change "sync comments" flag
    if (request->getFieldAsBoolean(VID_SYNC_COMMENTS))
-      m_dwFlags |= CSF_SYNC_OBJECT_COMMENTS;
+      InterlockedOr(&m_flags, CSF_SYNC_OBJECT_COMMENTS);
    else
-      m_dwFlags &= ~CSF_SYNC_OBJECT_COMMENTS;
+      InterlockedAnd(&m_flags, ~CSF_SYNC_OBJECT_COMMENTS);
 
    // Set sync components flag
    bool syncNodeComponents = false;
@@ -2277,7 +2286,7 @@ void ClientSession::getObjects(NXCPMessage *request)
 	   }
 
       object->fillMessage(&msg, m_dwUserId);
-      if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
+      if (m_flags & CSF_SYNC_OBJECT_COMMENTS)
          object->commentsToMessage(&msg);
       if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
@@ -2295,7 +2304,7 @@ void ClientSession::getObjects(NXCPMessage *request)
    msg.setCode(CMD_OBJECT_LIST_END);
    sendMessage(&msg);
 
-   m_dwFlags |= CSF_OBJECT_SYNC_FINISHED;
+   InterlockedOr(&m_flags, CSF_OBJECT_SYNC_FINISHED);
 }
 
 /**
@@ -2314,30 +2323,29 @@ void ClientSession::getSelectedObjects(NXCPMessage *request)
 
    // Change "sync comments" flag
    if (request->getFieldAsBoolean(VID_SYNC_COMMENTS))
-      m_dwFlags |= CSF_SYNC_OBJECT_COMMENTS;
+      InterlockedOr(&m_flags, CSF_SYNC_OBJECT_COMMENTS);
    else
-      m_dwFlags &= ~CSF_SYNC_OBJECT_COMMENTS;
+      InterlockedAnd(&m_flags, ~CSF_SYNC_OBJECT_COMMENTS);
 
-   UINT32 dwTimeStamp = request->getFieldAsUInt32(VID_TIMESTAMP);
-	UINT32 numObjects = request->getFieldAsUInt32(VID_NUM_OBJECTS);
-	UINT32 *objects = MemAllocArray<UINT32>(numObjects);
-	request->getFieldAsInt32Array(VID_OBJECT_LIST, numObjects, objects);
-	UINT32 options = request->getFieldAsUInt16(VID_FLAGS);
+   time_t timestamp = request->getFieldAsTime(VID_TIMESTAMP);
+	IntegerArray<uint32_t> objects;
+	request->getFieldAsInt32Array(VID_OBJECT_LIST, &objects);
+	uint32_t options = request->getFieldAsUInt16(VID_FLAGS);
 
    // Prepare message
 	msg.setCode((options & OBJECT_SYNC_SEND_UPDATES) ? CMD_OBJECT_UPDATE : CMD_OBJECT);
 
    // Send objects, one per message
-   for(UINT32 i = 0; i < numObjects; i++)
+   for(int i = 0; i < objects.size(); i++)
 	{
-		shared_ptr<NetObj> object = FindObjectById(objects[i]);
+		shared_ptr<NetObj> object = FindObjectById(objects.get(i));
       if ((object != nullptr) &&
 		    object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
-          (object->getTimeStamp() >= dwTimeStamp) &&
+          (object->getTimeStamp() >= timestamp) &&
           !object->isHidden() && !object->isSystem())
       {
          object->fillMessage(&msg, m_dwUserId);
-         if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
+         if (m_flags & CSF_SYNC_OBJECT_COMMENTS)
             object->commentsToMessage(&msg);
          if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
@@ -2351,8 +2359,7 @@ void ClientSession::getSelectedObjects(NXCPMessage *request)
       }
 	}
 
-   m_dwFlags |= CSF_OBJECT_SYNC_FINISHED;
-	free(objects);
+   InterlockedOr(&m_flags, CSF_OBJECT_SYNC_FINISHED);
 
 	if (options & OBJECT_SYNC_DUAL_CONFIRM)
 	{
@@ -2750,15 +2757,13 @@ void ClientSession::getConfigCLOB(NXCPMessage *pRequest)
 }
 
 /**
- * Close session
+ * Force terminate session
  */
-void ClientSession::kill()
+void ClientSession::terminate()
 {
    notify(NX_NOTIFY_SESSION_KILLED);
-
-   // We shutdown socket connection, which will cause
-   // read thread to stop, and other threads will follow
-   shutdown(m_hSocket, SHUT_RDWR);
+   InterlockedOr(&m_flags, CSF_TERMINATE_REQUESTED);
+   m_socketPoller->poller.cancel(m_socket);
 }
 
 /**
@@ -2808,7 +2813,7 @@ void ClientSession::sendObjectUpdate(shared_ptr<NetObj> object)
    if (!object->isDeleted())
    {
       object->fillMessage(&msg, m_dwUserId);
-      if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
+      if (m_flags & CSF_SYNC_OBJECT_COMMENTS)
          object->commentsToMessage(&msg);
       if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
@@ -2845,9 +2850,9 @@ void ClientSession::scheduleObjectUpdate(shared_ptr<NetObj> object)
       MutexLock(m_pendingObjectNotificationsLock);
       m_pendingObjectNotifications->remove(object->getId());
       MutexUnlock(m_pendingObjectNotificationsLock);
-      if ((m_dwFlags & CSF_OBJECTS_OUT_OF_SYNC) == 0)
+      if ((m_flags & CSF_OBJECTS_OUT_OF_SYNC) == 0)
       {
-         m_dwFlags |= CSF_OBJECTS_OUT_OF_SYNC;
+         InterlockedOr(&m_flags, CSF_OBJECTS_OUT_OF_SYNC);
          notify(NX_NOTIFY_OBJECTS_OUT_OF_SYNC);
       }
       decRefCount();
@@ -2859,7 +2864,7 @@ void ClientSession::scheduleObjectUpdate(shared_ptr<NetObj> object)
  */
 void ClientSession::onObjectChange(const shared_ptr<NetObj>& object)
 {
-   if (((m_dwFlags & CSF_OBJECT_SYNC_FINISHED) > 0) && isAuthenticated() &&
+   if (((m_flags & CSF_OBJECT_SYNC_FINISHED) > 0) && isAuthenticated() &&
          isSubscribedTo(NXC_CHANNEL_OBJECTS) &&
       (object->isDeleted() || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
    {
@@ -3061,7 +3066,7 @@ void ClientSession::createUser(NXCPMessage *pRequest)
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   else if (!(m_dwFlags & CSF_USER_DB_LOCKED))
+   else if (!(m_flags & CSF_USER_DB_LOCKED))
    {
       // User database have to be locked before any
       // changes to user database can be made
@@ -3110,7 +3115,7 @@ void ClientSession::updateUser(NXCPMessage *pRequest)
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   else if (!(m_dwFlags & CSF_USER_DB_LOCKED))
+   else if (!(m_flags & CSF_USER_DB_LOCKED))
    {
       // User database have to be locked before any
       // changes to user database can be made
@@ -3153,7 +3158,7 @@ void ClientSession::detachLdapUser(NXCPMessage *pRequest)
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   else if (!(m_dwFlags & CSF_USER_DB_LOCKED))
+   else if (!(m_flags & CSF_USER_DB_LOCKED))
    {
       // User database have to be locked before any
       // changes to user database can be made
@@ -3197,7 +3202,7 @@ void ClientSession::deleteUser(NXCPMessage *pRequest)
       ResolveUserId(dwUserId, name, true);
       writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on delete %s %s [%d]"), (dwUserId & GROUP_FLAG) ? _T("group") : _T("user"), name, dwUserId);
    }
-   else if (!(m_dwFlags & CSF_USER_DB_LOCKED))
+   else if (!(m_flags & CSF_USER_DB_LOCKED))
    {
       // User database have to be locked before any
       // changes to user database can be made
@@ -3261,16 +3266,16 @@ void ClientSession::lockUserDB(UINT32 dwRqId, BOOL bLock)
          }
          else
          {
-            m_dwFlags |= CSF_USER_DB_LOCKED;
+            InterlockedOr(&m_flags, CSF_USER_DB_LOCKED);
             msg.setField(VID_RCC, RCC_SUCCESS);
          }
       }
       else
       {
-         if (m_dwFlags & CSF_USER_DB_LOCKED)
+         if (m_flags & CSF_USER_DB_LOCKED)
          {
             UnlockComponent(CID_USER_DB);
-            m_dwFlags &= ~CSF_USER_DB_LOCKED;
+            InterlockedAnd(&m_flags, ~CSF_USER_DB_LOCKED);
          }
          msg.setField(VID_RCC, RCC_SUCCESS);
       }
@@ -4980,7 +4985,7 @@ void ClientSession::openEventProcessingPolicy(NXCPMessage *request)
       {
          if (!readOnly)
          {
-            m_dwFlags |= CSF_EPP_LOCKED;
+            InterlockedOr(&m_flags, CSF_EPP_LOCKED);
          }
          msg.setField(VID_RCC, RCC_SUCCESS);
          msg.setField(VID_NUM_RULES, g_pEventPolicy->getNumRules());
@@ -5019,18 +5024,18 @@ void ClientSession::closeEventProcessingPolicy(NXCPMessage *request)
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
    {
-      if (m_dwFlags & CSF_EPP_LOCKED)
+      if (m_flags & CSF_EPP_LOCKED)
       {
          if (m_ppEPPRuleList != nullptr)
          {
-            if (m_dwFlags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
+            if (m_flags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
             {
                for(UINT32 i = 0; i < m_dwRecordsUploaded; i++)
                   delete m_ppEPPRuleList[i];
             }
             MemFreeAndNull(m_ppEPPRuleList);
          }
-         m_dwFlags &= ~(CSF_EPP_LOCKED | CSF_EPP_UPLOAD);
+         InterlockedAnd(&m_flags, ~(CSF_EPP_LOCKED | CSF_EPP_UPLOAD));
          UnlockComponent(CID_EPP);
       }
       msg.setField(VID_RCC, RCC_SUCCESS);
@@ -5064,7 +5069,7 @@ void ClientSession::saveEventProcessingPolicy(NXCPMessage *request)
 
    if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
    {
-      if (m_dwFlags & CSF_EPP_LOCKED)
+      if (m_flags & CSF_EPP_LOCKED)
       {
          msg.setField(VID_RCC, RCC_SUCCESS);
          m_dwNumRecordsToUpload = request->getFieldAsUInt32(VID_NUM_RULES);
@@ -5083,7 +5088,7 @@ void ClientSession::saveEventProcessingPolicy(NXCPMessage *request)
          }
          else
          {
-            m_dwFlags |= CSF_EPP_UPLOAD;
+            InterlockedOr(&m_flags, CSF_EPP_UPLOAD);
             m_ppEPPRuleList = MemAllocArray<EPRule*>(m_dwNumRecordsToUpload);
          }
          debugPrintf(5, _T("Accepted EPP upload request for %d rules"), m_dwNumRecordsToUpload);
@@ -5115,7 +5120,7 @@ void ClientSession::saveEventProcessingPolicy(NXCPMessage *request)
  */
 void ClientSession::processEventProcessingPolicyRecord(NXCPMessage *request)
 {
-   if (!(m_dwFlags & CSF_EPP_LOCKED) || !(m_dwFlags & CSF_EPP_UPLOAD))
+   if (!(m_flags & CSF_EPP_LOCKED) || !(m_flags & CSF_EPP_UPLOAD))
    {
       NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
       msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
@@ -5143,7 +5148,7 @@ void ClientSession::processEventProcessingPolicyRecord(NXCPMessage *request)
             msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_DB_FAILURE);
             sendMessage(&msg);
 
-            m_dwFlags &= ~CSF_EPP_UPLOAD;
+            InterlockedAnd(&m_flags, ~CSF_EPP_UPLOAD);
 
             writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldVersion, newVersion, _T("Event processing policy updated"));
             json_decref(oldVersion);
@@ -6419,7 +6424,7 @@ void ClientSession::onActionDBUpdate(UINT32 dwCode, const Action *action)
       if (dwCode != NX_NOTIFY_ACTION_DELETED)
          action->fillMessage(&msg);
       ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::sendActionDBUpdateMessage,
-               msg.serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0));
+               msg.serialize((m_flags & CSF_COMPRESSION_ENABLED) != 0));
    }
 }
 
@@ -6515,11 +6520,11 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
 /**
  * Send message from poller to client
  */
-void ClientSession::sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg)
+void ClientSession::sendPollerMsg(uint32_t requestId, const TCHAR *text)
 {
-   NXCPMessage msg(CMD_POLLING_INFO, dwRqId);
+   NXCPMessage msg(CMD_POLLING_INFO, requestId);
    msg.setField(VID_RCC, RCC_OPERATION_IN_PROGRESS);
-   msg.setField(VID_POLLER_MESSAGE, pszMsg);
+   msg.setField(VID_POLLER_MESSAGE, text);
    sendMessage(&msg);
 }
 
@@ -9689,7 +9694,7 @@ void ClientSession::importConfiguration(NXCPMessage *pRequest)
             // Lock all required components
             if (LockComponent(CID_EPP, m_id, m_sessionName, nullptr, szLockInfo))
             {
-               m_dwFlags |= CSF_EPP_LOCKED;
+               InterlockedOr(&m_flags, CSF_EPP_LOCKED);
 
                // Validate and import configuration
                dwFlags = pRequest->getFieldAsUInt32(VID_FLAGS);
@@ -9704,7 +9709,7 @@ void ClientSession::importConfiguration(NXCPMessage *pRequest)
                }
 
 					UnlockComponent(CID_EPP);
-               m_dwFlags &= ~CSF_EPP_LOCKED;
+					InterlockedAnd(&m_flags, ~CSF_EPP_LOCKED);
             }
             else
             {
@@ -10316,7 +10321,7 @@ void ClientSession::getServerFile(NXCPMessage *request)
 		if (_taccess(fname, 0) == 0)
 		{
 			debugPrintf(5, _T("getServerFile: Sending file %s"), fname);
-			if (SendFileOverNXCP(m_hSocket, request->getId(), fname, m_pCtx, 0, nullptr, nullptr, m_mutexSocketWrite))
+			if (SendFileOverNXCP(m_socket, request->getId(), fname, m_pCtx, 0, nullptr, nullptr, m_mutexSocketWrite))
 			{
 				debugPrintf(5, _T("getServerFile: File %s was successfully sent"), fname);
 		      msg.setField(VID_RCC, RCC_SUCCESS);
@@ -12102,9 +12107,9 @@ void ClientSession::openConsole(UINT32 rqId)
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE)
 	{
-      if (!(m_dwFlags & CSF_CONSOLE_OPEN))
+      if (!(m_flags & CSF_CONSOLE_OPEN))
       {
-         m_dwFlags |= CSF_CONSOLE_OPEN;
+         InterlockedOr(&m_flags, CSF_CONSOLE_OPEN);
          m_console = new ClientSessionConsole(this);
       }
       msg.setField(VID_RCC, RCC_SUCCESS);
@@ -12129,9 +12134,9 @@ void ClientSession::closeConsole(UINT32 rqId)
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE)
 	{
-		if (m_dwFlags & CSF_CONSOLE_OPEN)
+		if (m_flags & CSF_CONSOLE_OPEN)
 		{
-			m_dwFlags &= ~CSF_CONSOLE_OPEN;
+		   InterlockedAnd(&m_flags, ~CSF_CONSOLE_OPEN);
 			delete_and_null(m_console);
 			msg.setField(VID_RCC, RCC_SUCCESS);
 		}
@@ -12158,7 +12163,7 @@ void ClientSession::processConsoleCommand(NXCPMessage *request)
 	msg.setCode(CMD_REQUEST_COMPLETED);
 	msg.setId(request->getId());
 
-	if ((m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE) && (m_dwFlags & CSF_CONSOLE_OPEN))
+	if ((m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE) && (m_flags & CSF_CONSOLE_OPEN))
 	{
 		TCHAR command[256];
 		request->getFieldAsString(VID_COMMAND, command, 256);

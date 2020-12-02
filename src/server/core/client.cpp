@@ -233,7 +233,7 @@ void ClientListenerThread()
    auto it = s_sessions.iterator();
    while(it->hasNext())
    {
-      it->next()->kill();
+      it->next()->terminate();
    }
    delete it;
    RWLockUnlock(s_sessionListLock);
@@ -283,7 +283,7 @@ bool NXCORE_EXPORTABLE KillClientSession(session_id_t id)
    ClientSession *session = s_sessions.get(id);
    if (session != nullptr)
    {
-      session->kill();
+      session->terminate();
       success = true;
    }
    RWLockUnlock(s_sessionListLock);
@@ -591,7 +591,7 @@ void CloseOtherSessions(uint32_t userId, session_id_t thisSession)
       if ((session->getUserId() == userId) && (session->getId() != thisSession))
       {
          nxlog_debug(4, _T("CloseOtherSessions(%u,%u): disconnecting session %u"), userId, thisSession, session->getId());
-         session->kill();
+         session->terminate();
       }
    }
    delete it;

@@ -61,7 +61,7 @@ THREAD_RESULT THREAD_CALL MobileDeviceSession::readThreadStarter(void *pArg)
  */
 MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, const InetAddress& addr)
 {
-   m_hSocket = hSocket;
+   m_socket = hSocket;
    m_id = -1;
    m_pCtx = nullptr;
 	m_mutexSocketWrite = MutexCreate();
@@ -75,7 +75,7 @@ MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, const InetAddress& addr
    m_encryptionResult = 0;
    m_condEncryptionSetup = INVALID_CONDITION_HANDLE;
    m_refCount = 0;
-	m_isAuthenticated = false;
+	m_authenticated = false;
 }
 
 /**
@@ -83,8 +83,8 @@ MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, const InetAddress& addr
  */
 MobileDeviceSession::~MobileDeviceSession()
 {
-   if (m_hSocket != -1)
-      closesocket(m_hSocket);
+   if (m_socket != INVALID_SOCKET)
+      closesocket(m_socket);
 	MutexDestroy(m_mutexSocketWrite);
 	if (m_pCtx != nullptr)
 		m_pCtx->decRefCount();
@@ -122,7 +122,7 @@ void MobileDeviceSession::debugPrintf(int level, const TCHAR *format, ...)
  */
 void MobileDeviceSession::readThread()
 {
-   SocketMessageReceiver receiver(m_hSocket, 4096, MAX_MSG_SIZE);
+   SocketMessageReceiver receiver(m_socket, 4096, MAX_MSG_SIZE);
    while(true)
    {
       MessageReceiverResult result;
@@ -189,7 +189,7 @@ void MobileDeviceSession::readThread()
 void MobileDeviceSession::processRequest(NXCPMessage *request)
 {
    uint16_t command = request->getCode();
-   if (!m_isAuthenticated &&
+   if (!m_authenticated &&
        (command != CMD_LOGIN) &&
        (command != CMD_GET_SERVER_INFO) &&
        (command != CMD_REQUEST_ENCRYPTION))
@@ -274,7 +274,7 @@ void MobileDeviceSession::sendMessage(const NXCPMessage& msg)
       NXCP_ENCRYPTED_MESSAGE *encryptedMsg = m_pCtx->encryptMessage(rawMsg);
       if (encryptedMsg != nullptr)
       {
-         success = (SendEx(m_hSocket, (char *)encryptedMsg, ntohl(encryptedMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(encryptedMsg->size));
+         success = (SendEx(m_socket, (char *)encryptedMsg, ntohl(encryptedMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(encryptedMsg->size));
          MemFree(encryptedMsg);
       }
       else
@@ -284,14 +284,14 @@ void MobileDeviceSession::sendMessage(const NXCPMessage& msg)
    }
    else
    {
-      success = (SendEx(m_hSocket, (const char *)rawMsg, ntohl(rawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
+      success = (SendEx(m_socket, (const char *)rawMsg, ntohl(rawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
    MemFree(rawMsg);
 
    if (!success)
    {
-      closesocket(m_hSocket);
-      m_hSocket = -1;
+      closesocket(m_socket);
+      m_socket = INVALID_SOCKET;
    }
 }
 
@@ -348,7 +348,7 @@ void MobileDeviceSession::login(NXCPMessage *request)
       _sntprintf(m_clientInfo, 96, _T("%s (%s; libnxcl %s)"), clientInfo, osInfo, libVersion);
    }
 
-   if (!m_isAuthenticated)
+   if (!m_authenticated)
    {
       request->getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
 		nAuthType = (int)request->getFieldAsUInt16(VID_AUTH_TYPE);
@@ -409,7 +409,7 @@ void MobileDeviceSession::login(NXCPMessage *request)
 				if (md != nullptr)
 				{
 					m_deviceObjectId = md->getId();
-					m_isAuthenticated = true;
+					m_authenticated = true;
 					_sntprintf(m_userName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_hostName);
 					msg.setField(VID_RCC, RCC_SUCCESS);
 					msg.setField(VID_USER_SYS_RIGHTS, userRights);
