@@ -27,6 +27,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.tools.ColorCache;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * Composite with lightweight border (Windows 7 style)
@@ -49,10 +50,18 @@ public class DashboardComposite extends Canvas implements PaintListener
 		super(parent, style & ~SWT.BORDER);
 		
 		colors = new ColorCache(this);
-		borderOuterColor = colors.create(171, 173, 179);
-		borderInnerColor = colors.create(255, 255, 255);
-		backgroundColor = colors.create(255, 255, 255);
-		
+      if (ColorConverter.isDarkColor(getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB()))
+      {
+         borderOuterColor = colors.create(171, 173, 179);
+         borderInnerColor = colors.create(53, 53, 53);
+      }
+      else
+      {
+         borderOuterColor = colors.create(171, 173, 179);
+         borderInnerColor = colors.create(255, 255, 255);
+      }
+      backgroundColor = getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND);
+
 		hasBorder = ((style & SWT.BORDER) != 0);
 		addPaintListener(this);
 		setBackground(backgroundColor);

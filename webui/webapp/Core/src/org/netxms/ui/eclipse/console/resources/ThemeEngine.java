@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.netxms.ui.eclipse.tools.ColorCache;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.FontCache;
 
 /**
@@ -87,7 +88,7 @@ public class ThemeEngine
             fonts.dispose();
 			}
 		});
-      loadDefaultTheme();
+      loadDefaultTheme(display);
 	}
 	
    /**
@@ -104,7 +105,7 @@ public class ThemeEngine
             return e.background;
       return Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB();
    }
-   
+
    /**
     * Get background color definition in text form (as string in format "red,green,blue")
     * 
@@ -205,41 +206,81 @@ public class ThemeEngine
    /**
     * Load default theme
     */
-   private void loadDefaultTheme()
+   private void loadDefaultTheme(Display display)
    {
+      boolean darkOSTheme = ColorConverter.isDarkColor(display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB());
+
       elements.clear();
-      elements.put(".", new ThemeElement(null, null, null, 0));
-      elements.put("Card.Title", new ThemeElement(new RGB(153, 180, 209), new RGB(0, 0, 0)));
-      elements.put("Dashboard", new ThemeElement(new RGB(240, 240, 240), null));
-      elements.put("GeoMap.Title", new ThemeElement(null, new RGB(0, 0, 0)));
-      elements.put("List.Error", new ThemeElement(null, new RGB(255, 0, 0)));
-      elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
-      elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
-      elements.put("MessageBar", new ThemeElement(new RGB(255, 252, 192), new RGB(0, 0, 0)));
-      elements.put("MibExplorer.Header", new ThemeElement(new RGB(153, 180, 209), new RGB(255, 255, 255)));
-      elements.put("ObjectTab.Header", new ThemeElement(new RGB(153, 180, 209), new RGB(255, 255, 255)));
-      elements.put("Rack", new ThemeElement(new RGB(255, 255, 255), new RGB(0, 0, 0)));
-      elements.put("Rack.Border", new ThemeElement(new RGB(92, 92, 92), new RGB(92, 92, 92)));
-      elements.put("Rack.EmptySpace", new ThemeElement(new RGB(224, 224, 224), null));
-      elements.put("RuleEditor", new ThemeElement(new RGB(255, 255, 255), new RGB(0, 0, 0)));
-      elements.put("RuleEditor.Title.Disabled", new ThemeElement(new RGB(202, 227, 206), null));
-      elements.put("RuleEditor.Title.Normal", new ThemeElement(new RGB(225, 233, 241), null));
-      elements.put("RuleEditor.Title.Selected", new ThemeElement(new RGB(245, 249, 104), null));
-      elements.put("RuleEditor.Border.Action", new ThemeElement(new RGB(186, 176, 201), null));
-      elements.put("RuleEditor.Border.Condition", new ThemeElement(new RGB(198, 214, 172), null));
-      elements.put("RuleEditor.Border.Rule", new ThemeElement(new RGB(153, 180, 209), null));
-      elements.put("ServiceAvailability.Legend", new ThemeElement(null, new RGB(0, 0, 0)));
-      elements.put("Status.Normal", new ThemeElement(null, new RGB(0, 192, 0)));
-      elements.put("Status.Warning", new ThemeElement(null, new RGB(0, 255, 255)));
-      elements.put("Status.Minor", new ThemeElement(null, new RGB(231, 226, 0)));
-      elements.put("Status.Major", new ThemeElement(null, new RGB(255, 128, 0)));
-      elements.put("Status.Critical", new ThemeElement(null, new RGB(192, 0, 0)));
-      elements.put("Status.Unknown", new ThemeElement(null, new RGB(0, 0, 128)));
-      elements.put("Status.Unmanaged", new ThemeElement(null, new RGB(192, 192, 192)));
-      elements.put("Status.Disabled", new ThemeElement(null, new RGB(128, 64, 0)));
-      elements.put("Status.Testing", new ThemeElement(null, new RGB(255, 128, 255)));
-      elements.put("StatusMap.Text", new ThemeElement(null, new RGB(0, 0, 0)));
-      elements.put("TextInput.Error", new ThemeElement(new RGB(255, 0, 0), null));
+      if (darkOSTheme)
+      {
+         elements.put(".", new ThemeElement(null, null, null, 0));
+         elements.put("Card.Title", new ThemeElement(new RGB(53, 80, 9), new RGB(240, 240, 240)));
+         elements.put("Dashboard", new ThemeElement(new RGB(53, 53, 53), null));
+         elements.put("GeoMap.Title", new ThemeElement(null, new RGB(0, 0, 0)));
+         elements.put("List.Error", new ThemeElement(null, new RGB(255, 0, 0)));
+         elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
+         elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
+         elements.put("MessageBar", new ThemeElement(new RGB(255, 252, 192), new RGB(0, 0, 0)));
+         elements.put("MibExplorer.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
+         elements.put("ObjectTab.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
+         elements.put("Rack", new ThemeElement(new RGB(255, 255, 255), new RGB(0, 0, 0)));
+         elements.put("Rack.Border", new ThemeElement(new RGB(92, 92, 92), new RGB(92, 92, 92)));
+         elements.put("Rack.EmptySpace", new ThemeElement(new RGB(224, 224, 224), null));
+         elements.put("RuleEditor", new ThemeElement(new RGB(255, 255, 255), new RGB(0, 0, 0)));
+         elements.put("RuleEditor.Title.Disabled", new ThemeElement(new RGB(202, 227, 206), null));
+         elements.put("RuleEditor.Title.Normal", new ThemeElement(new RGB(225, 233, 241), null));
+         elements.put("RuleEditor.Title.Selected", new ThemeElement(new RGB(245, 249, 104), null));
+         elements.put("RuleEditor.Border.Action", new ThemeElement(new RGB(186, 176, 201), null));
+         elements.put("RuleEditor.Border.Condition", new ThemeElement(new RGB(198, 214, 172), null));
+         elements.put("RuleEditor.Border.Rule", new ThemeElement(new RGB(153, 180, 209), null));
+         elements.put("ServiceAvailability.Legend", new ThemeElement(null, new RGB(0, 0, 0)));
+         elements.put("Status.Normal", new ThemeElement(null, new RGB(0, 192, 0)));
+         elements.put("Status.Warning", new ThemeElement(null, new RGB(0, 255, 255)));
+         elements.put("Status.Minor", new ThemeElement(null, new RGB(231, 226, 0)));
+         elements.put("Status.Major", new ThemeElement(null, new RGB(255, 128, 0)));
+         elements.put("Status.Critical", new ThemeElement(null, new RGB(192, 0, 0)));
+         elements.put("Status.Unknown", new ThemeElement(null, new RGB(0, 0, 128)));
+         elements.put("Status.Unmanaged", new ThemeElement(null, new RGB(192, 192, 192)));
+         elements.put("Status.Disabled", new ThemeElement(null, new RGB(128, 64, 0)));
+         elements.put("Status.Testing", new ThemeElement(null, new RGB(255, 128, 255)));
+         elements.put("StatusMap.Text", new ThemeElement(null, new RGB(0, 0, 0)));
+         elements.put("TextInput.Error", new ThemeElement(new RGB(255, 0, 0), null));
+      }
+      else
+      {
+         elements.put(".", new ThemeElement(null, null, null, 0));
+         elements.put("Card.Title", new ThemeElement(new RGB(153, 180, 209), new RGB(0, 0, 0)));
+         elements.put("Dashboard", new ThemeElement(new RGB(240, 240, 240), null));
+         elements.put("GeoMap.Title", new ThemeElement(null, new RGB(0, 0, 0)));
+         elements.put("List.Error", new ThemeElement(null, new RGB(255, 0, 0)));
+         elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
+         elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
+         elements.put("MessageBar", new ThemeElement(new RGB(255, 252, 192), new RGB(0, 0, 0)));
+         elements.put("MibExplorer.Header", new ThemeElement(new RGB(153, 180, 209), new RGB(255, 255, 255)));
+         elements.put("ObjectTab.Header", new ThemeElement(new RGB(153, 180, 209), new RGB(255, 255, 255)));
+         elements.put("Rack", new ThemeElement(new RGB(255, 255, 255), new RGB(0, 0, 0)));
+         elements.put("Rack.Border", new ThemeElement(new RGB(92, 92, 92), new RGB(92, 92, 92)));
+         elements.put("Rack.EmptySpace", new ThemeElement(new RGB(224, 224, 224), null));
+         elements.put("RuleEditor", new ThemeElement(new RGB(255, 255, 255), new RGB(0, 0, 0)));
+         elements.put("RuleEditor.Title.Disabled", new ThemeElement(new RGB(202, 227, 206), null));
+         elements.put("RuleEditor.Title.Normal", new ThemeElement(new RGB(225, 233, 241), null));
+         elements.put("RuleEditor.Title.Selected", new ThemeElement(new RGB(245, 249, 104), null));
+         elements.put("RuleEditor.Border.Action", new ThemeElement(new RGB(186, 176, 201), null));
+         elements.put("RuleEditor.Border.Condition", new ThemeElement(new RGB(198, 214, 172), null));
+         elements.put("RuleEditor.Border.Rule", new ThemeElement(new RGB(153, 180, 209), null));
+         elements.put("ServiceAvailability.Legend", new ThemeElement(null, new RGB(0, 0, 0)));
+         elements.put("Status.Normal", new ThemeElement(null, new RGB(0, 192, 0)));
+         elements.put("Status.Warning", new ThemeElement(null, new RGB(0, 255, 255)));
+         elements.put("Status.Minor", new ThemeElement(null, new RGB(231, 226, 0)));
+         elements.put("Status.Major", new ThemeElement(null, new RGB(255, 128, 0)));
+         elements.put("Status.Critical", new ThemeElement(null, new RGB(192, 0, 0)));
+         elements.put("Status.Unknown", new ThemeElement(null, new RGB(0, 0, 128)));
+         elements.put("Status.Unmanaged", new ThemeElement(null, new RGB(192, 192, 192)));
+         elements.put("Status.Disabled", new ThemeElement(null, new RGB(128, 64, 0)));
+         elements.put("Status.Testing", new ThemeElement(null, new RGB(255, 128, 255)));
+         elements.put("StatusMap.Text", new ThemeElement(null, new RGB(0, 0, 0)));
+         elements.put("TextInput.Error", new ThemeElement(new RGB(255, 0, 0), null));
+      }
    }
 
    /**
