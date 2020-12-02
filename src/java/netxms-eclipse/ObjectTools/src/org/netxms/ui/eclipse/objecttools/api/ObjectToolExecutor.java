@@ -695,7 +695,6 @@ public final class ObjectToolExecutor
     */
    private static void openURL(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, String url)
    {
-      
       final String sid = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()); //$NON-NLS-1$
       final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
       try
