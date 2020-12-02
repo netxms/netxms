@@ -7839,18 +7839,11 @@ class ActionExecutionData
 {
 public:
    ClientSession *m_session;
-   NXCPMessage *m_msg;
+   NXCPMessage m_msg;
 
-   ActionExecutionData(ClientSession *session, UINT32 requestId)
+   ActionExecutionData(ClientSession *session, uint32_t requestId) : m_msg(CMD_COMMAND_OUTPUT, requestId)
    {
       m_session = session;
-      m_msg = new NXCPMessage;
-      m_msg->setId(requestId);
-   }
-
-   ~ActionExecutionData()
-   {
-      delete m_msg;
    }
 };
 
@@ -7859,22 +7852,22 @@ public:
  */
 static void ActionExecuteCallback(ActionCallbackEvent e, const TCHAR *text, void *arg)
 {
-   ActionExecutionData *data = (ActionExecutionData *)arg;
+   ActionExecutionData *data = static_cast<ActionExecutionData*>(arg);
    switch(e)
    {
       case ACE_CONNECTED:
-         data->m_msg->setCode(CMD_REQUEST_COMPLETED);
-         data->m_msg->setField(VID_RCC, RCC_SUCCESS);
+         data->m_msg.setCode(CMD_REQUEST_COMPLETED);
+         data->m_msg.setField(VID_RCC, RCC_SUCCESS);
          break;
       case ACE_DISCONNECTED:
-         data->m_msg->deleteAllFields();
-         data->m_msg->setCode(CMD_COMMAND_OUTPUT);
-         data->m_msg->setEndOfSequence();
+         data->m_msg.deleteAllFields();
+         data->m_msg.setCode(CMD_COMMAND_OUTPUT);
+         data->m_msg.setEndOfSequence();
          break;
       case ACE_DATA:
-         data->m_msg->deleteAllFields();
-         data->m_msg->setCode(CMD_COMMAND_OUTPUT);
-         data->m_msg->setField(VID_MESSAGE, text);
+         data->m_msg.deleteAllFields();
+         data->m_msg.setCode(CMD_COMMAND_OUTPUT);
+         data->m_msg.setField(VID_MESSAGE, text);
          break;
    }
    data->m_session->sendMessage(data->m_msg);
