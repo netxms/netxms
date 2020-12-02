@@ -597,7 +597,7 @@ bool EPRule::processEvent(Event *event) const
    nxlog_debug_tag(DEBUG_TAG, 6, _T("Event ") UINT64_FMT _T(" match EPP rule %d"), event->getId(), (int)m_id + 1);
 
    // Generate alarm if requested
-   UINT32 alarmId = 0;
+   uint32_t alarmId = 0;
    if (m_flags & RF_GENERATE_ALARM)
       alarmId = generateAlarm(event);
 
@@ -651,7 +651,7 @@ bool EPRule::processEvent(Event *event) const
          {
             if (DeleteScheduledTaskByKey(key))
             {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("Delayed action execution with key \"%s\" cancelled"), (const TCHAR *)key);
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("Delayed action execution with key \"%s\" cancelled"), key.cstr());
             }
          }
       }

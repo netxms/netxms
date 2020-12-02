@@ -965,7 +965,7 @@ UINT32 Interface::modifyFromMessageInternal(NXCPMessage *request)
  */
 void Interface::setExpectedStateInternal(int state)
 {
-   static UINT32 eventCode[] = { EVENT_IF_EXPECTED_STATE_UP, EVENT_IF_EXPECTED_STATE_DOWN, EVENT_IF_EXPECTED_STATE_IGNORE };
+   static const uint32_t eventCode[] = { EVENT_IF_EXPECTED_STATE_UP, EVENT_IF_EXPECTED_STATE_DOWN, EVENT_IF_EXPECTED_STATE_IGNORE };
 
 	int curr = (m_flags & IF_EXPECTED_STATE_MASK) >> 28;
 	if (curr != state)
@@ -974,7 +974,13 @@ void Interface::setExpectedStateInternal(int state)
       m_flags |= (UINT32)state << 28;
       setModified(MODIFY_COMMON_PROPERTIES);
       if (state != IF_EXPECTED_STATE_AUTO)
-         PostSystemEvent(eventCode[state], getParentNodeId(), "ds", m_index, m_name);
+      {
+         // Node ID can be 0 when interface object is just created and not attached to node object yet
+         // Expected state change event is meaningless in that case
+         uint32_t nodeId = getParentNodeId();
+         if (nodeId != 0)
+            PostSystemEvent(eventCode[state], nodeId, "ds", m_index, m_name);
+      }
 	}
 }
 
