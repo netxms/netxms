@@ -2600,6 +2600,18 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                case 'T':   // Event's timestamp as number of seconds since epoch
                   output.append(static_cast<int64_t>((event != nullptr) ? event->getTimestamp() : time(nullptr)));
                   break;
+               case 'u':   // IP address in URL compatible form ([addr] for IPv6, addr for IPv4)
+                  if (getPrimaryIpAddress().getFamily() == AF_INET6)
+                  {
+                     output.append(_T('['));
+                     output.append(getPrimaryIpAddress().toString(buffer));
+                     output.append(_T(']'));
+                  }
+                  else
+                  {
+                     output.append(getPrimaryIpAddress().toString(buffer));
+                  }
+                  break;
                case 'U':   // User name
                   output.append(userName);
                   break;

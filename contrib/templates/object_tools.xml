@@ -96,7 +96,7 @@
 			<name>&amp;Connect-&gt;Open &amp;web browser</name>
 			<guid>fa403c91-28d6-2b49-a96b-fd4d688c5862</guid>
 			<type>4</type>
-			<data>http://%a</data>
+			<data>http://%u</data>
 			<description>Open embedded web browser to node</description>
 			<flags>0</flags>
 			<filter></filter>
@@ -109,7 +109,7 @@
 			<name>&amp;Connect-&gt;Open &amp;web browser (HTTPS)</name>
 			<guid>a4d9c827-916b-2640-b6e2-d5bf512c39d7</guid>
 			<type>4</type>
-			<data>https://%a</data>
+			<data>https://%u</data>
 			<description>Open embedded web browser to node using HTTPS</description>
 			<flags>0</flags>
 			<filter></filter>
