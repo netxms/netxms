@@ -408,13 +408,10 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
    private Integer calculateOptimalFontsie(AbstractObject obj, int lvl, int objCount, GC gc)
    {
       String text = obj.getObjectName();
-      int sectorHeight = (int)((Math.tan(Math.toRadians(leafObjectSize*objCount/2)))*((diameter * lvl) / 2)*2)-PADDING_VERTICAL*2;
-      if(sectorHeight < 0)
+      int sectorHeight = (int)((Math.tan(Math.toRadians(leafObjectSize * objCount / 2))) * ((diameter * lvl) / 2) * 2) - PADDING_VERTICAL * 2;
+      if (sectorHeight < 0)
          sectorHeight = 1286;
-
-      final int font = WidgetHelper.getBestFittingFontMultiline(gc, valueFonts, text, diameter/2 - PADDING_HORIZONTAL*2, sectorHeight, 3); //$NON-NLS-1$
-
-      return new Integer(font);
+      return WidgetHelper.getBestFittingFontMultiline(gc, valueFonts, text, diameter / 2 - PADDING_HORIZONTAL * 2, sectorHeight, 3); // $NON-NLS-1$
    }
    
    /**
@@ -467,10 +464,10 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
       
       
       //calculate optimal font size
-      fontSize = new ArrayList<Integer>(Collections.nCopies(maxLvl+1, new Integer(100))); 
+      fontSize = new ArrayList<Integer>(Collections.nCopies(maxLvl + 1, Integer.valueOf(100)));
       //font calculation for general container      
-      final int squareSide = (int)(diameter/Math.sqrt(2)); 
-      fontSize.set(0, new Integer(WidgetHelper.getBestFittingFontMultiline(gc, valueFonts, rootObject.getObjectName(), squareSide, squareSide, 3)));
+      final int squareSide = (int)(diameter / Math.sqrt(2));
+      fontSize.set(0, Integer.valueOf(WidgetHelper.getBestFittingFontMultiline(gc, valueFonts, rootObject.getObjectName(), squareSide, squareSide, 3)));
       //font calculation for sectors
       calculateLayerFontSize(rootObject, 1, gc);
       Integer prevLVL = 100;

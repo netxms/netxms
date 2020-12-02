@@ -14,6 +14,7 @@
 - Fixed bug in map image save
 - Fixed handling of tunnel options in Windows agent installer unattended mode
 - Fixed issues:
+	NX-1520 (Object Details - Overview tab in desktop client is unusable when using dark gtk3 theme)
 	NX-1881 (Unable to open web browser from object tools for nodes have IPv6 address returned from DNS)
 	NX-1906 ("Save Resources" keeps on showing when closing the console)
 	NX-1943 (Dashboard element in 2nd column does not spans correctly)

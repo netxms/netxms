@@ -19,11 +19,13 @@
 package org.netxms.ui.eclipse.widgets;
 
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.tools.ColorCache;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * Composite with lightweight border (Windows 7 style)
@@ -44,8 +46,16 @@ public class DashboardComposite extends Canvas
 		super(parent, style);
 		setData(RWT.CUSTOM_VARIANT, "DashboardComposite");
 		colors = new ColorCache(this);
-		borderOuterColor = colors.create(171, 173, 179);
-		borderInnerColor = colors.create(255, 255, 255);
+      if (ColorConverter.isDarkColor(getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB()))
+      {
+         borderOuterColor = colors.create(171, 173, 179);
+         borderInnerColor = colors.create(53, 53, 53);
+      }
+      else
+      {
+         borderOuterColor = colors.create(171, 173, 179);
+         borderInnerColor = colors.create(255, 255, 255);
+      }
 	}
 
    /**

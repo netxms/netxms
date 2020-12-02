@@ -95,7 +95,7 @@ public class SortableTreeViewer extends TreeViewer
 			c.setText(names[i]);
 			if (widths != null)
 				c.setWidth(widths[i]);
-			c.setData("ID", new Integer(i)); //$NON-NLS-1$
+         c.setData("ID", Integer.valueOf(i)); //$NON-NLS-1$
 			c.addSelectionListener(sortingListener);
 			columns.add(c);
 		}
