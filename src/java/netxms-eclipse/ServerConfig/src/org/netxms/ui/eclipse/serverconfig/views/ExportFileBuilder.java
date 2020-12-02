@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -132,7 +132,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private Map<Long, EventTemplate> events = new HashMap<Long, EventTemplate>();
 	private Map<Long, Template> templates = new HashMap<Long, Template>();
 	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
-	private Map<Integer, EventProcessingPolicyRule> rules = new HashMap<Integer, EventProcessingPolicyRule>();
+   private Map<UUID, EventProcessingPolicyRule> rules = new HashMap<UUID, EventProcessingPolicyRule>();
 	private Map<Long, Script> scripts = new HashMap<Long, Script>();
 	private Map<Long, ObjectTool> tools = new HashMap<Long, ObjectTool>();
    private Map<Integer, DciSummaryTableDescriptor> summaryTables = new HashMap<Integer, DciSummaryTableDescriptor>();
@@ -143,9 +143,9 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private List<EventProcessingPolicyRule> rulesCache = null;
 	private String exportFileName = null;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -927,9 +927,9 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
       manager.add(actionPublish);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
@@ -974,7 +974,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          }
       }.start();
 	}
-	
+
 	/**
 	 * Publish configuration - stage 2
 	 * 
@@ -1180,66 +1180,68 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
       });
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSaveAs()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSaveAs()
+    */
 	@Override
 	public void doSaveAs()
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isDirty()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isDirty()
+    */
 	@Override
 	public boolean isDirty()
 	{
 		return modified;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
+    */
 	@Override
 	public boolean isSaveAsAllowed()
 	{
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
+    */
 	@Override
 	public boolean isSaveOnCloseNeeded()
 	{
 		return modified;
 	}
-	
+
 	/**
 	 * @param o
 	 * @return
 	 */
 	private static Object keyFromObject(Object o)
 	{
+      if (o instanceof DciSummaryTableDescriptor)
+         return ((DciSummaryTableDescriptor)o).getId();
+      if (o instanceof EventProcessingPolicyRule)
+         return ((EventProcessingPolicyRule)o).getGuid();
+      if (o instanceof EventTemplate)
+         return ((EventTemplate)o).getCode();
+      if (o instanceof ObjectTool)
+         return ((ObjectTool)o).getId();
+      if (o instanceof Script)
+         return ((Script)o).getId();
+      if (o instanceof ServerAction)
+         return ((ServerAction)o).getId();
+      if (o instanceof SnmpTrap)
+         return ((SnmpTrap)o).getId();
 	   if (o instanceof Template)
 	      return ((Template)o).getObjectId();
-	   if (o instanceof EventTemplate)
-	      return ((EventTemplate)o).getCode();
-	   if (o instanceof SnmpTrap)
-	      return ((SnmpTrap)o).getId();
-	   if (o instanceof Script)
-	      return ((Script)o).getId();
-	   if (o instanceof ObjectTool)
-	      return ((ObjectTool)o).getId();
-	   if (o instanceof EventProcessingPolicyRule)
-	      return ((EventProcessingPolicyRule)o).getGuid();
-	   if (o instanceof DciSummaryTableDescriptor)
-	      return ((DciSummaryTableDescriptor)o).getId();
       if (o instanceof WebServiceDefinition)
          return ((WebServiceDefinition)o).getId();
-	   return 0L;
+      return null;
 	}
-	
+
 	/**
 	 * Remove objects from list
 	 * 
@@ -1248,7 +1250,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	 */
 	private void removeObjects(TableViewer viewer, Map<?, ?> objects)
 	{
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() > 0)
       {
          for(Object o : selection.toList())
@@ -1257,7 +1259,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          setModified();
       }
 	}
-	
+
 	/**
 	 * Add events to list
 	 */
@@ -1390,7 +1392,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			final Set<Long> eventCodes = new HashSet<Long>();
 			for(EventProcessingPolicyRule r : dlg.getSelectedRules())
 			{
-				rules.put(r.getRuleNumber(), r);
+            rules.put(r.getGuid(), r);
 				for(Long e : r.getEvents())
 				{
 					if (e >= 100000)
@@ -1487,7 +1489,18 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          setModified();
       }
    }
-   
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      modified = false;
+      firePropertyChange(PROP_DIRTY);
+      super.dispose();
+   }
+
    /**
     * Export completion handler
     */
