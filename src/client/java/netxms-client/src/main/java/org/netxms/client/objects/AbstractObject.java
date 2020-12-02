@@ -618,7 +618,7 @@ public abstract class AbstractObject
     */
 	public AbstractObject[] getParentsAsArray()
 	{
-		final Set<AbstractObject> list = new HashSet<AbstractObject>(parents.size());
+      final List<AbstractObject> list = new ArrayList<AbstractObject>(parents.size());
 		for (Long parent : parents)
 		{
 			AbstractObject obj = session.findObjectById(parent);
@@ -637,7 +637,7 @@ public abstract class AbstractObject
 	 */
 	public AbstractObject[] getChildrenAsArray()
 	{
-		final Set<AbstractObject> list = new HashSet<AbstractObject>(children.size());
+      final List<AbstractObject> list = new ArrayList<AbstractObject>(children.size());
 		for(Long id : children)
 		{
 			AbstractObject obj = session.findObjectById(id);
@@ -698,6 +698,16 @@ public abstract class AbstractObject
 			}
 		}
 	}
+
+   /**
+    * Get number of child objects
+    *
+    * @return
+    */
+   public int getChildCount()
+   {
+      return children.size();
+   }
 
 	/**
 	 * Match class filter
@@ -860,7 +870,7 @@ public abstract class AbstractObject
 				return true;
 		return false;
 	}
-	
+
 	/**
 	 * If this method returns true object is allowed to be on custom network map.
 	 * Default implementation always returns false.

@@ -53,26 +53,21 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 		
 	}
 
-	/* (non-Javadoc)
+   /**
 	 * @see org.eclipse.jface.viewers.TreeNodeContentProvider#getChildren(java.lang.Object)
 	 */
 	@Override
 	public Object[] getChildren(Object parentElement)
-	{	         
-      if(!objectFullSync)
-      {
-         AbstractObject object = (AbstractObject)parentElement;
-         if(object instanceof Node && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
-         {            
-            return new AbstractObject[] { loadingObject };
-         }
-      }
-		return ((AbstractObject)parentElement).getChildrenAsArray();
+	{
+      AbstractObject object = (AbstractObject)parentElement;
+      if (!objectFullSync && (object instanceof Node) && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
+         return new AbstractObject[] { loadingObject };
+      return object.getChildrenAsArray();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.TreeNodeContentProvider#getElements(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.TreeNodeContentProvider#getElements(java.lang.Object)
+    */
 	@Override
 	public Object[] getElements(Object inputElement)
 	{
@@ -83,9 +78,9 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 		return new AbstractObject[0];
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.TreeNodeContentProvider#getParent(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.TreeNodeContentProvider#getParent(java.lang.Object)
+    */
 	@Override
 	public Object getParent(Object element)
 	{
@@ -96,7 +91,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 		return it.hasNext() ? session.findObjectById(it.next()) : null;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.viewers.TreeNodeContentProvider#hasChildren(java.lang.Object)
 	 */
 	@Override
@@ -105,7 +100,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 		return (element instanceof Node) ? ((AbstractObject)element).hasChildren() : ((AbstractObject)element).hasAccessibleChildren();
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.viewers.TreeNodeContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
 	@Override
