@@ -119,10 +119,10 @@ void LIBNXDBMGR_EXPORTABLE EndStage()
 /**
  * Prepare and execute SQL query with single binding - object ID.
  */
-bool LIBNXDBMGR_EXPORTABLE DBMgrExecuteQueryOnObject(UINT32 objectId, const TCHAR *query)
+bool LIBNXDBMGR_EXPORTABLE DBMgrExecuteQueryOnObject(uint32_t objectId, const TCHAR *query)
 {
    DB_STATEMENT hStmt = DBPrepare(g_dbHandle, query);
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
    bool success = DBExecute(hStmt) ? true : false;
@@ -133,26 +133,28 @@ bool LIBNXDBMGR_EXPORTABLE DBMgrExecuteQueryOnObject(UINT32 objectId, const TCHA
 /**
  * Get object name from object_properties table
  */
-TCHAR LIBNXDBMGR_EXPORTABLE *DBMgrGetObjectName(UINT32 objectId, TCHAR *buffer)
+TCHAR LIBNXDBMGR_EXPORTABLE *DBMgrGetObjectName(uint32_t objectId, TCHAR *buffer, bool useIdIfMissing)
 {
+   bool success = false;
    TCHAR query[256];
-   _sntprintf(query, 256, _T("SELECT name FROM object_properties WHERE object_id=%d"), objectId);
+   _sntprintf(query, 256, _T("SELECT name FROM object_properties WHERE object_id=%u"), objectId);
    DB_RESULT hResult = SQLSelect(query);
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
       {
          DBGetField(hResult, 0, 0, buffer, MAX_OBJECT_NAME);
+         success = true;
       }
-      else
+      else if (useIdIfMissing)
       {
          _sntprintf(buffer, MAX_OBJECT_NAME, _T("[%u]"), objectId);
       }
       DBFreeResult(hResult);
    }
-   else
+   else if (useIdIfMissing)
    {
       _sntprintf(buffer, MAX_OBJECT_NAME, _T("[%u]"), objectId);
    }
-   return buffer;
+   return (success || useIdIfMissing) ? buffer : nullptr;
 }
