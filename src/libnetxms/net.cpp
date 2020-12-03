@@ -200,6 +200,48 @@ bool SocketConnection::skip(size_t bytes, uint32_t timeout)
 }
 
 /**
+ * Skip bytes with given value (stops at first other byte)
+ */
+bool SocketConnection::skipBytes(BYTE value, uint32_t timeout)
+{
+   if (m_dataSize > 0)
+   {
+      BYTE *p = reinterpret_cast<BYTE*>(&m_data[m_dataReadPos]);
+      while((*p == value) && (m_dataSize > 0))
+      {
+         m_dataSize--;
+         m_dataReadPos++;
+         p++;
+      }
+      if (m_dataSize > 0)
+         return true;   // Still some data in buffer
+   }
+
+   while (m_dataSize == 0)
+   {
+      ssize_t bytes = RecvEx(m_socket, m_data, sizeof(m_data), 0, timeout);
+      if (bytes <= 0)
+      {
+         if ((bytes == -1) && ((WSAGetLastError() == WSAEWOULDBLOCK) || (WSAGetLastError() == WSAEINPROGRESS)))
+            continue;
+         return false;
+      }
+
+      m_dataSize = bytes;
+      m_dataReadPos = 0;
+
+      BYTE *p = reinterpret_cast<BYTE*>(m_data);
+      while((*p == value) && (m_dataSize > 0))
+      {
+         m_dataSize--;
+         m_dataReadPos++;
+         p++;
+      }
+   }
+   return true;
+}
+
+/**
  * Write data to socket
  */
 ssize_t SocketConnection::write(const void *buffer, size_t size)
@@ -266,7 +308,7 @@ bool SocketConnection::waitForData(const void *pattern, size_t patternSize, uint
       ssize_t bytes = RecvEx(m_socket, &m_data[m_dataSize], sizeof(m_data) - m_dataSize, 0, timeout);
       if (bytes <= 0)
       {
-         if ((WSAGetLastError() == WSAEWOULDBLOCK) || (WSAGetLastError() == WSAEINPROGRESS))
+         if ((bytes == -1) && ((WSAGetLastError() == WSAEWOULDBLOCK) || (WSAGetLastError() == WSAEINPROGRESS)))
             continue;
          return false;
       }

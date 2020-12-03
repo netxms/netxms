@@ -3324,6 +3324,7 @@ public:
    ssize_t read(void *buffer, size_t size, uint32_t timeout = INFINITE);
    bool readFully(void *buffer, size_t size, uint32_t timeout = INFINITE);
    bool skip(size_t size, uint32_t timeout = INFINITE);
+   bool skipBytes(BYTE value, uint32_t timeout = INFINITE);
 	bool canRead(uint32_t timeout);
 	bool waitForText(const char *text, uint32_t timeout) { return waitForData(text, strlen(text), timeout); }
    bool waitForData(const void *data, size_t size, uint32_t timeout);
