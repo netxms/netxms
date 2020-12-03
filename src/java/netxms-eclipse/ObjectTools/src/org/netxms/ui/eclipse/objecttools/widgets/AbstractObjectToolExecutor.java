@@ -82,7 +82,7 @@ public abstract class AbstractObjectToolExecutor extends Composite
       setVisible(false);
 
       FontData fd = getFont().getFontData()[0];
-      fd.style |= SWT.BOLD;
+      fd.setStyle(fd.getStyle() | SWT.BOLD);
       headerFont = new Font(getDisplay(), fd);
       addDisposeListener(new DisposeListener() {
          @Override
