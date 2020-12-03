@@ -200,7 +200,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_tcpProxyLock = MutexCreate();
    m_tcpProxyChannelId = 0;
    m_pendingObjectNotifications = new HashSet<uint32_t>();
-   m_pendingObjectNotificationsLock = MutexCreate();
+   m_pendingObjectNotificationsLock = MutexCreateFast();
    m_objectNotificationDelay = 200;
 }
 
@@ -2789,25 +2789,23 @@ void ClientSession::onNewEvent(Event *pEvent)
  */
 void ClientSession::sendObjectUpdate(shared_ptr<NetObj> object)
 {
-   StringBuffer key(_T("ObjectUpdate"));
+   StringBuffer key(_T("ObjectUpdate_"));
    key.append(m_id);
-   UINT32 waitTime = ThreadPoolGetSerializedRequestMaxWaitTime(g_clientThreadPool, key);
+   uint32_t waitTime = ThreadPoolGetSerializedRequestMaxWaitTime(g_clientThreadPool, key);
 
    MutexLock(m_pendingObjectNotificationsLock);
    m_pendingObjectNotifications->remove(object->getId());
-
    if ((waitTime > m_objectNotificationDelay * 2) && (m_objectNotificationDelay < 1600))
    {
       m_objectNotificationDelay *= 2;
    }
-
    if ((waitTime < m_objectNotificationDelay / 2) && (m_objectNotificationDelay > 200))
    {
       m_objectNotificationDelay /= 2;
    }
-
    MutexUnlock(m_pendingObjectNotificationsLock);
-   debugPrintf(5, _T("Sending update for object %s [%d]"), object->getName(), object->getId());
+
+   debugPrintf(5, _T("Sending update for object %s [%u]"), object->getName(), object->getId());
 
    NXCPMessage msg(CMD_OBJECT_UPDATE, 0);
    if (!object->isDeleted())
