@@ -102,9 +102,9 @@ void LIBNXDBMGR_EXPORTABLE SetStageWorkTotal(int workTotal);
 void LIBNXDBMGR_EXPORTABLE UpdateStageProgress(int installment);
 void LIBNXDBMGR_EXPORTABLE EndStage();
 
-bool LIBNXDBMGR_EXPORTABLE DBMgrExecuteQueryOnObject(UINT32 objectId, const TCHAR *query);
+bool LIBNXDBMGR_EXPORTABLE DBMgrExecuteQueryOnObject(uint32_t objectId, const TCHAR *query);
 
-TCHAR LIBNXDBMGR_EXPORTABLE *DBMgrGetObjectName(UINT32 objectId, TCHAR *buffer);
+TCHAR LIBNXDBMGR_EXPORTABLE *DBMgrGetObjectName(uint32_t objectId, TCHAR *buffer, bool useIdIfMissing = true);
 
 
 // Global variables
