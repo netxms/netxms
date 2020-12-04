@@ -126,7 +126,7 @@ public class ObjectList extends Composite
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(true));
+            ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createNodeSelectionFilter(true));
             if (dlg.open() == Window.OK)
             {
                for (AbstractObject o :dlg.getSelectedObjects(classFilter))

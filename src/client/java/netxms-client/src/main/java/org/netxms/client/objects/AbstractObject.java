@@ -1206,4 +1206,14 @@ public abstract class AbstractObject
    {
       return creationTime;
    }
+
+   /**
+    * Check if children of this object are synchronized
+    *
+    * @return true if children of this object are synchronized
+    */
+   public boolean areChildrenSynchronized()
+   {
+      return session.areChildrenSynchronized(objectId);
+   }
 }

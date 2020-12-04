@@ -3159,12 +3159,10 @@ public class NXCSession
     */
    public boolean areChildrenSynchronized(long id)
    {
-      boolean isSynchronized;
       synchronized(synchronizedObjectSet)
       {
-         isSynchronized = synchronizedObjectSet.contains(id);
+         return synchronizedObjectSet.contains(id);
       }
-      return isSynchronized;
    }
 
    /**

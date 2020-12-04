@@ -48,7 +48,6 @@ public class ObjectSelectionDialog extends Dialog
 {
 	private NXCSession session;
 	private ObjectTree objectTree;
-	private long[] rootObjects;
 	private long[] selectedObjects;
 	private Set<Integer> classFilter;
 	private boolean multiSelection;
@@ -206,14 +205,12 @@ public class ObjectSelectionDialog extends Dialog
     * Create object selection dialog.
     * 
     * @param parentShell parent shell
-    * @param rootObjects list of root objects (set to null to show entire object tree)
     * @param classFilter set of allowed object classes (set to null to show all classes)
     */
-   public ObjectSelectionDialog(Shell parentShell, long[] rootObjects, Set<Integer> classFilter)
+   public ObjectSelectionDialog(Shell parentShell, Set<Integer> classFilter)
    {
       super(parentShell);
       setShellStyle(getShellStyle() | SWT.RESIZE);
-      this.rootObjects = rootObjects;
       this.classFilter = classFilter;
       multiSelection = true;
       session = (NXCSession)ConsoleSharedData.getSession();
@@ -224,15 +221,13 @@ public class ObjectSelectionDialog extends Dialog
 	 * Create object selection dialog.
 	 * 
 	 * @param parentShell parent shell
-	 * @param rootObjects list of root objects (set to null to show entire object tree)
 	 * @param classFilter set of allowed object classes (set to null to show all classes)
 	 * @param currentObject object list selected for move (the same object can't be selected as a move terget)
 	 */
-	public ObjectSelectionDialog(Shell parentShell, long[] rootObjects, Set<Integer> classFilter, List<Object> currentObject)
+   public ObjectSelectionDialog(Shell parentShell, Set<Integer> classFilter, List<Object> currentObject)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
-		this.rootObjects = rootObjects;
 		this.classFilter = classFilter;
 		multiSelection = true;
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -277,7 +272,7 @@ public class ObjectSelectionDialog extends Dialog
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
 
-		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, rootObjects, classFilter, showFilterToolTip, showFilterCloseButton);
+		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, classFilter, showFilterToolTip, showFilterCloseButton);
 
 		String text = settings.get("SelectObject.Filter"); //$NON-NLS-1$
 		if (text != null)

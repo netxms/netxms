@@ -534,7 +534,7 @@ public class TableColumns extends DCIPropertyPageDialog
 	   AbstractObject object = ConsoleSharedData.getSession().findObjectById(dci.getNodeId());
 	   if ((editor.getSourceNode() == 0) && ((object instanceof Template) || (object instanceof Cluster)))
 	   {
-	      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(false));
+         ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
 	      if (dlg.open() != Window.OK)
 	         return;
 	      object = dlg.getSelectedObjects().get(0);

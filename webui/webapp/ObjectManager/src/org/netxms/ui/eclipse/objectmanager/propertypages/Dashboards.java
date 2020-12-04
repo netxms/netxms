@@ -122,7 +122,7 @@ public class Dashboards extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createDashboardSelectionFilter());
+				ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createDashboardSelectionFilter());
 				dlg.showFilterToolTip(false);
 				if (dlg.open() == Window.OK)
 				{

@@ -1276,7 +1276,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	 */
 	private void addTemplates()
 	{
-		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createTemplateSelectionFilter());
+		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), ObjectSelectionDialog.createTemplateSelectionFilter());
 		dlg.enableMultiSelection(true);
 		dlg.showFilterToolTip(false);
 		if (dlg.open() == Window.OK)

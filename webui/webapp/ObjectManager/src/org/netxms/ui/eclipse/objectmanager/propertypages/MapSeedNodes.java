@@ -122,14 +122,10 @@ public class MapSeedNodes extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
       addButton.addSelectionListener(new SelectionListener() {
-         
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.SelectionListener#widgetSelected(org.eclipse.swt.events.SelectionEvent)
-          */
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(false));
+            final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
             dlg.enableMultiSelection(true);
             if (dlg.open() == Window.OK)
             {
@@ -143,9 +139,6 @@ public class MapSeedNodes extends PropertyPage
             }
          }
          
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.SelectionListener#widgetDefaultSelected(org.eclipse.swt.events.SelectionEvent)
-          */
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {

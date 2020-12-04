@@ -384,7 +384,7 @@ public class PolicyListView extends ViewPart implements SessionListener
 
    protected void copyItems(boolean doMove)
    {
-      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createTemplateSelectionFilter());
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), ObjectSelectionDialog.createTemplateSelectionFilter());
       if (dlg.open() != Window.OK)
          return;
 

@@ -182,7 +182,7 @@ public class ChildObjectListDialog extends Dialog
 		objectList.setContentProvider(new ArrayContentProvider());
 		objectList.setLabelProvider(new WorkbenchLabelProvider());
 		objectList.setComparator(new ViewerComparator());
-		filter = new ObjectFilter(null, sourceObjects, classFilter);
+      filter = new ObjectFilter(sourceObjects, classFilter);
 		objectList.addFilter(filter);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

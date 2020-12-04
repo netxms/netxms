@@ -194,15 +194,7 @@ public class ObjectBrowser extends ViewPart
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		// Read custom root objects
-		long[] rootObjects = null;
-		Object value = ConsoleSharedData.getProperty("ObjectBrowser.rootObjects"); //$NON-NLS-1$
-		if ((value != null) && (value instanceof long[]))
-		{
-			rootObjects = (long[])value;
-		}
-		
-		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, rootObjects, null, true, true);
+      objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, null, true, true);
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
@@ -738,7 +730,7 @@ public class ObjectBrowser extends ViewPart
 				break;
 		}
 		
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, filter, currentObject);
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), filter, currentObject);
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{

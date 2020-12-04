@@ -373,7 +373,7 @@ public class PackageManager extends ViewPart
 			return;
 		final PackageInfo pkg = (PackageInfo)selection.getFirstElement();
 		
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(false));
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
 		dlg.enableMultiSelection(true);
 		if (dlg.open() != Window.OK)
 			return;

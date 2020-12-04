@@ -52,13 +52,13 @@ public class ObjectSelector extends AbstractSelector
 		objectClassSet.add(Node.class);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
+    */
 	@Override
 	protected void selectionButtonHandler()
 	{
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, classFilter);
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), classFilter);
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{

@@ -46,33 +46,33 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class DashboardNavigator extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardNavigator"; //$NON-NLS-1$
-	
+
 	private NXCSession session = null;
 	private SessionListener sessionListener = null;
 	private ObjectTree objectTree;
 	private Action actionRefresh;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
-		final Set<Integer> classFilter = new HashSet<Integer>(2);
+      final Set<Integer> classFilter = new HashSet<Integer>(2);
       classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
 		classFilter.add(AbstractObject.OBJECT_DASHBOARD);
-		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE, getRootObjects(classFilter), classFilter, false, true);
+      objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE, classFilter, false, true);
 		objectTree.enableFilter(false);
 		objectTree.getTreeViewer().expandToLevel(2);
-		
+
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
 
 		getSite().setSelectionProvider(objectTree.getTreeViewer());
-		
+
 		sessionListener = new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
@@ -91,20 +91,7 @@ public class DashboardNavigator extends ViewPart
 		};
 		session.addListener(sessionListener);
 	}
-	
-	/**
-	 * @param classFilter
-	 * @return
-	 */
-	private long[] getRootObjects(Set<Integer> classFilter)
-	{
-		AbstractObject[] objects = session.getTopLevelObjects(classFilter);
-		long[] ids = new long[objects.length];
-		for(int i = 0; i < objects.length; i++)
-			ids[i] = objects[i].getObjectId();
-		return ids;
-	}
-	
+
 	/**
 	 * Create actions
 	 */
@@ -183,30 +170,27 @@ public class DashboardNavigator extends ViewPart
 		ObjectContextMenu.fill(manager, getSite(), objectTree.getTreeViewer());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
 		objectTree.setFocus();
 	}
-	
+
 	/**
 	 * Refresh dashboard tree
 	 */
 	private void refresh()
 	{
-		final Set<Integer> classFilter = new HashSet<Integer>(2);
-      classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
-      classFilter.add(AbstractObject.OBJECT_DASHBOARD);
-		objectTree.setRootObjects(getRootObjects(classFilter));
+      objectTree.refresh();
 		objectTree.getTreeViewer().expandToLevel(2);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{

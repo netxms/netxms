@@ -60,7 +60,7 @@ public class ShowIPRouteTo implements IObjectActionDelegate
 	   if (node == null)
 	      return;
 	   
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(window.getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(false));
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(window.getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
 		if (dlg.open() != Window.OK)
 			return;
 		

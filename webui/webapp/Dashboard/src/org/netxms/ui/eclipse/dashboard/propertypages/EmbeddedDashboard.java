@@ -337,7 +337,7 @@ public class EmbeddedDashboard extends PropertyPage
 	 */
 	protected void addDashboard()
 	{
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createDashboardSelectionFilter());
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createDashboardSelectionFilter());
 		if (dlg.open() == Window.OK)
 		{
 			dashboardObjects.addAll(Arrays.asList(dlg.getSelectedObjects(Dashboard.class)));

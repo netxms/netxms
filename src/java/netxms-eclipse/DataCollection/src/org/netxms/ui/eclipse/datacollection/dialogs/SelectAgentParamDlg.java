@@ -181,8 +181,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
       // Opens Object Selection Dialog if object is not chosen
       if (queryObject instanceof Template)
       {
-         final ObjectSelectionDialog sDlg = new ObjectSelectionDialog(getShell(), null,
-               ObjectSelectionDialog.createNodeSelectionFilter(false));
+         final ObjectSelectionDialog sDlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
          sDlg.enableMultiSelection(false);
          
          if (sDlg.open() == Window.OK)
