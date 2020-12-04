@@ -1858,14 +1858,12 @@ void ResetObjectPollTimers(const shared_ptr<ScheduledTaskParameters>& parameters
 
 #define pollerLock(name) \
    _pollerLock(); \
-   UINT64 __pollStartTime = GetCurrentTimeMs(); \
+   uint64_t __pollStartTime = GetCurrentTimeMs(); \
    PollState *__pollState = &m_ ##name##PollState; \
 
 #define pollerUnlock() \
    __pollState->complete(GetCurrentTimeMs() - __pollStartTime); \
-   lockProperties();\
-   setModified(MODIFY_DC_TARGET);\
-   unlockProperties();\
+   setModified(MODIFY_DC_TARGET, false);\
    _pollerUnlock();
 
 /**
