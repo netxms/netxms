@@ -1736,14 +1736,7 @@ public:
       setModified(MODIFY_INTERFACE_PROPERTIES);
       unlockProperties();
    }
-   void addVlan(uint32_t id);
-   void clearVlanList()
-   {
-      lockProperties();
-      if (m_vlans != nullptr)
-         m_vlans->clear();
-      unlockProperties();
-   }
+   void updateVlans(IntegerArray<uint32_t> *vlans);
 
 	void updateZoneUIN();
 

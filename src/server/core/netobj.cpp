@@ -1297,7 +1297,7 @@ void NetObj::setModified(uint32_t flags, bool notify)
    // Send event to all connected clients
    if (notify && !m_isHidden && !m_isSystem)
    {
-      nxlog_debug_tag(_T("obj.notify"), 7, _T("Sending object change notification (flags=0x%08X)"), flags);
+      nxlog_debug_tag(_T("obj.notify"), 7, _T("Sending object change notification for %s [%u] (flags=0x%08X)"), m_name, m_id, flags);
       EnumerateClientSessions(BroadcastObjectChange, this);
    }
 }
