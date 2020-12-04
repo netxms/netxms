@@ -464,7 +464,7 @@ public class TunnelManager extends ViewPart
       if (tunnel.isBound())
          return;
       
-      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(false));
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
       if (dlg.open() != Window.OK)
          return;      
       final long nodeId = dlg.getSelectedObjects().get(0).getObjectId();

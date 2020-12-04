@@ -107,8 +107,8 @@ public class ObjectTree extends Composite
     * @param parent
     * @param style
     */
-   public ObjectTree(Composite parent, int style, int options, long[] rootObjects, Set<Integer> classFilter,
-         boolean showFilterToolTip, boolean showFilterCloseButton)
+   public ObjectTree(Composite parent, int style, int options,
+         Set<Integer> classFilter, boolean showFilterToolTip, boolean showFilterCloseButton)
    {
       super(parent, style);
 
@@ -157,11 +157,11 @@ public class ObjectTree extends Composite
       objectTree = new ObjectTreeViewer(this, SWT.VIRTUAL | (((options & MULTI) == MULTI) ? SWT.MULTI : SWT.SINGLE)
             | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0), objectsFullySync);
       objectTree.setUseHashlookup(true);
-      contentProvider = new ObjectTreeContentProvider(rootObjects, objectsFullySync);
+      contentProvider = new ObjectTreeContentProvider(objectsFullySync, classFilter);
       objectTree.setContentProvider(contentProvider);
       objectTree.setLabelProvider(WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
       objectTree.setComparator(new ObjectTreeComparator());
-      filter = new ObjectFilter(rootObjects, null, classFilter);
+      filter = new ObjectFilter(null, classFilter);
       objectTree.addFilter(filter);
       objectTree.setInput(session);
 
@@ -272,7 +272,12 @@ public class ObjectTree extends Composite
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            if ((n.getCode() == SessionNotification.OBJECT_CHANGED) || (n.getCode() == SessionNotification.OBJECT_DELETED))
+            if (n.getCode() == SessionNotification.OBJECT_DELETED)
+            {
+               refreshTimer.execute();
+            }
+            else if ((n.getCode() == SessionNotification.OBJECT_CHANGED) &&
+                ((classFilter == null) || classFilter.contains(((AbstractObject)n.getObject()).getObjectClass())))
             {
                refreshTimer.execute();
             }
@@ -670,16 +675,6 @@ public class ObjectTree extends Composite
    private void updateStatusIndicator()
    {
       statusIndicator.refresh(objectTree);
-   }
-
-   /**
-    * @param rootObjects
-    */
-   public void setRootObjects(long[] rootObjects)
-   {
-      ((ObjectTreeContentProvider)objectTree.getContentProvider()).setRootObjects(rootObjects);
-      filter.setRootObjects(rootObjects);
-      refresh();
    }
 
    /**

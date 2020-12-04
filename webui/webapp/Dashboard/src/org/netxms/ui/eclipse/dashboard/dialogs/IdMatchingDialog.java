@@ -221,7 +221,7 @@ public class IdMatchingDialog extends Dialog
 				classFilter = null;
 				break;
 		}
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, classFilter);
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), classFilter);
 		dlg.showFilterToolTip(showFilterToolTip);
 		if (dlg.open() == Window.OK)
 		{

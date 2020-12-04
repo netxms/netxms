@@ -879,7 +879,7 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void copyItems(final boolean doMove)
 	{
-		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeAndTemplateSelectionFilter(true));
+		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), ObjectSelectionDialog.createNodeAndTemplateSelectionFilter(true));
 		if (dlg.open() != Window.OK)
 			return;
 
@@ -932,22 +932,22 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void convertToTemplate()
 	{
-		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createTemplateSelectionFilter());
+		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), ObjectSelectionDialog.createTemplateSelectionFilter());
 		dlg.showFilterToolTip(false);
 		if (dlg.open() != Window.OK)
 			return;
-		
+
 		AbstractObject[] objects = dlg.getSelectedObjects(Template.class);
 		if (objects.length == 0)
 			return;
 		final Template template = (Template)objects[0];
-		
+
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		Iterator<?> it = selection.iterator();
 		final long[] dciList = new long[selection.size()];
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
 			dciList[i] = ((DataCollectionObject)it.next()).getId();
-		
+
 		new ConsoleJob(Messages.get().DataCollectionEditor_ConvertJob_TitlePrefix + object.getObjectName() + Messages.get().DataCollectionEditor_ConvertJob_TitleSuffix, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception

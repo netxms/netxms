@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
 
 import java.util.Iterator;
+import java.util.Set;
 import org.eclipse.jface.viewers.TreeNodeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.NXCSession;
@@ -32,7 +33,7 @@ import org.netxms.client.objects.Node;
 public class ObjectTreeContentProvider extends TreeNodeContentProvider
 {
 	private NXCSession session = null;
-	private long[] rootObjects = null;
+   private Set<Integer> classFilter;
 	private AbstractObject loadingObject;
 	private boolean objectFullSync = false;
 	
@@ -40,17 +41,12 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	 * @param rootObjects
 	 * @param objectFullSync 
 	 */
-	public ObjectTreeContentProvider(long[] rootObjects, boolean objectFullSync)
+   public ObjectTreeContentProvider(boolean objectFullSync, Set<Integer> classFilter)
 	{
 		super();
+      this.classFilter = classFilter;
 		this.objectFullSync = objectFullSync;
-		if (rootObjects != null)
-		{
-			this.rootObjects = new long[rootObjects.length];
-			System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
-		}
 		loadingObject = new LoadingObject(-1, session);
-		
 	}
 
    /**
@@ -60,7 +56,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	public Object[] getChildren(Object parentElement)
 	{
       AbstractObject object = (AbstractObject)parentElement;
-      if (!objectFullSync && (object instanceof Node) && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
+      if (!objectFullSync && (object instanceof Node) && object.hasChildren() && !object.areChildrenSynchronized())
          return new AbstractObject[] { loadingObject };
       return object.getChildrenAsArray();
 	}
@@ -73,7 +69,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	{
 		if (session != null)
 		{
-			return (rootObjects != null) ? session.findMultipleObjects(rootObjects, false).toArray() : session.getTopLevelObjects();
+         return session.getTopLevelObjects(classFilter);
 		}
 		return new AbstractObject[0];
 	}
@@ -107,21 +103,5 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 	{
 		session = (NXCSession)newInput;
-	}
-
-	/**
-	 * @param rootObjects the rootObjects to set
-	 */
-	public void setRootObjects(long[] rootObjects)
-	{
-		if (rootObjects != null)
-		{
-			this.rootObjects = new long[rootObjects.length];
-			System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
-		}
-		else
-		{
-			this.rootObjects = null;
-		}
 	}
 }

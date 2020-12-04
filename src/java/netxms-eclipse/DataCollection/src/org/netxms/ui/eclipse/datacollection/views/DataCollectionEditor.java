@@ -879,7 +879,7 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void copyItems(final boolean doMove)
 	{
-		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createNodeAndTemplateSelectionFilter(true));
+		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), ObjectSelectionDialog.createNodeAndTemplateSelectionFilter(true));
 		if (dlg.open() != Window.OK)
 			return;
 
@@ -932,7 +932,7 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void convertToTemplate()
 	{
-		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createTemplateSelectionFilter());
+		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), ObjectSelectionDialog.createTemplateSelectionFilter());
 		dlg.showFilterToolTip(false);
 		if (dlg.open() != Window.OK)
 			return;

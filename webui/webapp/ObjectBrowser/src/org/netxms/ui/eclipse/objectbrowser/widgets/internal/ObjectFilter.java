@@ -57,7 +57,6 @@ public class ObjectFilter extends ViewerFilter
 	private Map<Long, AbstractObject> objectList = null;
 	private AbstractObject lastMatch = null;
 	private List<AbstractObject> sourceObjects = null;
-	private long[] rootObjects = null;
 	private Set<Integer> classFilter = null;
 	private boolean usePatternMatching = false;
 	private int mode = NAME;
@@ -65,13 +64,8 @@ public class ObjectFilter extends ViewerFilter
 	/**
 	 * Constructor
 	 */
-	public ObjectFilter(long[] rootObjects, AbstractObject[] sourceObjects, Set<Integer> classFilter)
+   public ObjectFilter(AbstractObject[] sourceObjects, Set<Integer> classFilter)
 	{
-		if (rootObjects != null)
-		{
-			this.rootObjects = new long[rootObjects.length];
-			System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
-		}
 		this.sourceObjects = (sourceObjects != null) ? Arrays.asList(sourceObjects) : null;
 		this.classFilter = classFilter;
 	}
@@ -257,8 +251,7 @@ public class ObjectFilter extends ViewerFilter
 				List<AbstractObject> fullList = (sourceObjects != null) ? sourceObjects : ConsoleSharedData.getSession().getAllObjects();
 				objectList = new HashMap<Long, AbstractObject>();
 				for(AbstractObject o : fullList)
-					if (matchFilterString(o) &&
-					    ((rootObjects == null) || o.isChildOf(rootObjects)))
+               if (matchFilterString(o))
 					{
 						objectList.put(o.getObjectId(), o);
 						lastMatch = o;
@@ -303,10 +296,7 @@ public class ObjectFilter extends ViewerFilter
 		for(AbstractObject object : parents)
 		{
 			if (object != null)
-			{
-				if ((rootObjects == null) || object.isChildOf(rootObjects))
-					return object;
-			}
+            return object;
 		}
 		return null;
 	}
@@ -358,20 +348,4 @@ public class ObjectFilter extends ViewerFilter
    {
       this.hideSubInterfaces = hideSubInterfaces;
    }
-
-   /**
-	 * @param rootObjects the rootObjects to set
-	 */
-	public void setRootObjects(long[] rootObjects)
-	{
-		if (rootObjects != null)
-		{
-			this.rootObjects = new long[rootObjects.length];
-			System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
-		}
-		else
-		{
-			this.rootObjects = null;
-		}
-	}
 }

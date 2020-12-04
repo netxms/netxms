@@ -59,7 +59,7 @@ public class AddClusterNode implements IObjectActionDelegate
 	 */
 	public void run(IAction action)
 	{
-		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, null, ObjectSelectionDialog.createNodeSelectionFilter(false));
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, ObjectSelectionDialog.createNodeSelectionFilter(false));
 		dlg.open();
 		if (dlg.getReturnCode() == Window.OK)
 		{
