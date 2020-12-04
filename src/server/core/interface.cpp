@@ -241,7 +241,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	DBFreeStatement(hStmt);
 
 	// Read VLANs
-   hStmt = DBPrepare(hdb, _T("SELECT vlan_id FROM interface_vlan_list WHERE iface_id = ?"));
+   hStmt = DBPrepare(hdb, _T("SELECT vlan_id FROM interface_vlan_list WHERE iface_id=? ORDER BY vlan_id"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -263,7 +263,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    }
 
    // Read IP addresses
-   hStmt = DBPrepare(hdb, _T("SELECT ip_addr,ip_netmask FROM interface_address_list WHERE iface_id = ?"));
+   hStmt = DBPrepare(hdb, _T("SELECT ip_addr,ip_netmask FROM interface_address_list WHERE iface_id=?"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -381,7 +381,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
       // Save VLAN list
       if (success)
       {
-         success = executeQueryOnObject(hdb, _T("DELETE FROM interface_vlan_list WHERE iface_id = ?"));
+         success = executeQueryOnObject(hdb, _T("DELETE FROM interface_vlan_list WHERE iface_id=?"));
       }
 
       if (success && (m_vlans != nullptr) && !m_vlans->isEmpty())
@@ -694,8 +694,8 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 	lockProperties();
 	if ((m_status != oldStatus) || (adminState != (int)m_adminState) || (operState != (int)m_operState))
 	{
-		m_adminState = (WORD)adminState;
-		m_operState = (WORD)operState;
+		m_adminState = static_cast<int16_t>(adminState);
+		m_operState = static_cast<int16_t>(operState);
 		setModified(MODIFY_INTERFACE_PROPERTIES);
 	}
 	unlockProperties();
@@ -895,8 +895,8 @@ void Interface::paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *nod
 	if (modified)
 	{
 		lockProperties();
-		m_dot1xPaeAuthState = (WORD)paeState;
-		m_dot1xBackendAuthState = (WORD)backendState;
+		m_dot1xPaeAuthState = static_cast<int16_t>(paeState);
+		m_dot1xBackendAuthState = static_cast<int16_t>(backendState);
 		setModified(MODIFY_INTERFACE_PROPERTIES);
 		unlockProperties();
 	}
@@ -1297,19 +1297,23 @@ void Interface::setPhysicalLocation(const InterfacePhysicalLocation& location)
 }
 
 /**
- * Add VLAN
+ * Update VLAN list. Interface object will take ownership of provided VLAN list.
  */
-void Interface::addVlan(uint32_t id)
+void Interface::updateVlans(IntegerArray<uint32_t> *vlans)
 {
    lockProperties();
-   if (m_vlans == nullptr)
+   if (((m_vlans == nullptr) && (vlans != nullptr)) ||
+       ((m_vlans != nullptr) && (vlans == nullptr)) ||
+       ((m_vlans != nullptr) && (vlans != nullptr) && !m_vlans->equals(*vlans)))
    {
-      m_vlans = new IntegerArray<uint32_t>();
-   }
-   if (!m_vlans->contains(id))
-   {
-      m_vlans->add(id);
+      delete m_vlans;
+      m_vlans = vlans;
       setModified(MODIFY_INTERFACE_PROPERTIES);
+   }
+   else
+   {
+      // No changes
+      delete vlans;
    }
    unlockProperties();
 }

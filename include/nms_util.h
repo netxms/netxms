@@ -1461,6 +1461,16 @@ public:
    T *getBuffer() const { return (T*)__getBuffer(); }
 
    json_t *toJson() const { json_t *a = json_array(); for(int i = 0; i < size(); i++) json_array_append_new(a, json_integer(get(i))); return a; }
+
+   bool equals(const IntegerArray<T>& other) const
+   {
+      if (other.size() != size())
+         return false;
+      for(int i = 0; i < size(); i++)
+         if (get(i) != other.get(i))
+            return false;
+      return true;
+   }
 };
 
 /**

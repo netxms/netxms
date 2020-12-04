@@ -8847,20 +8847,6 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
          VlanList *vlanList = m_driver->getVlans(snmp, this, m_driverData);
          delete snmp;
 
-         if (vlanList != nullptr)
-         {
-            readLockChildList();
-            for(int i = 0; i < getChildList().size(); i++)
-            {
-               NetObj *object = getChildList().get(i);
-               if (object->getObjectClass() == OBJECT_INTERFACE)
-               {
-                  static_cast<Interface*>(object)->clearVlanList();
-               }
-            }
-            unlockChildList();
-         }
-
          MutexLock(m_mutexTopoAccess);
          if (vlanList != nullptr)
          {
@@ -8878,7 +8864,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
          MutexUnlock(m_mutexTopoAccess);
 
          lockProperties();
-         UINT32 oldCaps = m_capabilities;
+         uint32_t oldCaps = m_capabilities;
          if (vlanList != nullptr)
             m_capabilities |= NC_HAS_VLANS;
          else
@@ -9209,10 +9195,20 @@ void Node::addExistingConnections(LinkLayerNeighbors *nbs)
 }
 
 /**
+ * Comparator for sorting VLAN list
+ */
+static int VlanIdComparator(const void *e1, const void *e2)
+{
+   return (*static_cast<const uint32_t*>(e1) < *static_cast<const uint32_t*>(e2)) ? -1 :
+            ((*static_cast<const uint32_t*>(e1) == *static_cast<const uint32_t*>(e2)) ? 0 : 1);
+}
+
+/**
  * Resolve port indexes in VLAN list
  */
 void Node::resolveVlanPorts(VlanList *vlanList)
 {
+   HashMap<uint32_t, IntegerArray<uint32_t>> vlansByIface(Ownership::False);
    for(int i = 0; i < vlanList->size(); i++)
    {
       VlanInfo *vlan = vlanList->get(i);
@@ -9235,10 +9231,30 @@ void Node::resolveVlanPorts(VlanList *vlanList)
          if (iface != nullptr)
          {
             vlan->resolvePort(j, iface->getPhysicalLocation(), iface->getIfIndex(), iface->getId());
-            iface->addVlan(vlan->getVlanId());
+            IntegerArray<uint32_t> *vlans = vlansByIface.get(iface->getId());
+            if (vlans == nullptr)
+            {
+               vlans = new IntegerArray<uint32_t>(16, 16);
+               vlansByIface.set(iface->getId(), vlans);
+            }
+            vlans->add(vlan->getVlanId());
          }
       }
    }
+
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+      NetObj *o = getChildList().get(i);
+      if (o->getObjectClass() == OBJECT_INTERFACE)
+      {
+         IntegerArray<uint32_t> *vlans = vlansByIface.get(o->getId());
+         if (vlans != nullptr)
+            vlans->sort(VlanIdComparator);
+         static_cast<Interface*>(o)->updateVlans(vlans);
+      }
+   }
+   unlockChildList();
 }
 
 /**
