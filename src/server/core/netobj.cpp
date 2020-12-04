@@ -1285,7 +1285,6 @@ static void BroadcastObjectChange(ClientSession *session, NetObj *object)
 
 /**
  * Mark object as modified and put on client's notification queue
- * We assume that object is locked at the time of function call
  */
 void NetObj::setModified(uint32_t flags, bool notify)
 {
@@ -1297,7 +1296,10 @@ void NetObj::setModified(uint32_t flags, bool notify)
 
    // Send event to all connected clients
    if (notify && !m_isHidden && !m_isSystem)
+   {
+      nxlog_debug_tag(_T("obj.notify"), 7, _T("Sending object change notification (flags=0x%08X)"), flags);
       EnumerateClientSessions(BroadcastObjectChange, this);
+   }
 }
 
 /**
