@@ -561,7 +561,7 @@ static void BindNormal(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, 
 	      convertedString = UCS2StringFromUCS4String(static_cast<WCHAR*>(buffer));
          textLen = static_cast<ub4>(ucs2_strlen(convertedString));
 #else
-         textLen = static_cast<ub4>(ucs2_strlen(buffer));
+         textLen = static_cast<ub4>(wcslen(static_cast<WCHAR*>(buffer)));
 #endif
 	   }
 	   if (textLen > 2000)
