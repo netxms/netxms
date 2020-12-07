@@ -653,8 +653,8 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
       // Replace existing handler and arg
       m_pTableList[i].handler = handler;
       m_pTableList[i].arg = arg;
-      _tcslcpy(m_pTableList[m_iNumTables].instanceColumns, instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
-		_tcslcpy(m_pTableList[m_iNumTables].description, description, MAX_DB_STRING);
+      _tcslcpy(m_pTableList[i].instanceColumns, instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
+		_tcslcpy(m_pTableList[i].description, description, MAX_DB_STRING);
       m_pTableList[i].numColumns = numColumns;
       m_pTableList[i].columns = columns;
    }
