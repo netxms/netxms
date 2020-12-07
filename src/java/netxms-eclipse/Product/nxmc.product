@@ -50,6 +50,8 @@ Copyright (c) 2003-2020 Raden Solutions
 
    <plugins>
       <plugin id="com.ibm.icu"/>
+      <plugin id="com.sun.jna"/>
+      <plugin id="com.sun.jna.platform"/>
       <plugin id="javax.annotation"/>
       <plugin id="javax.inject"/>
       <plugin id="javax.servlet"/>
@@ -222,6 +224,15 @@ Copyright (c) 2003-2020 Raden Solutions
       <plugin id="org.eclipse.core.variables.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.core.variables.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.core.variables.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.debug.core"/>
+      <plugin id="org.eclipse.debug.core.nl_ar" fragment="true"/>
+      <plugin id="org.eclipse.debug.core.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.debug.core.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.debug.core.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.debug.core.nl_fr" fragment="true"/>
+      <plugin id="org.eclipse.debug.core.nl_pt" fragment="true"/>
+      <plugin id="org.eclipse.debug.core.nl_pt_BR" fragment="true"/>
+      <plugin id="org.eclipse.debug.core.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.draw2d"/>
       <plugin id="org.eclipse.e4.core.commands"/>
       <plugin id="org.eclipse.e4.core.contexts"/>
@@ -465,6 +476,7 @@ Copyright (c) 2003-2020 Raden Solutions
       <plugin id="org.eclipse.jface.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.jface.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.jface.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.jface.notifications"/>
       <plugin id="org.eclipse.jface.text"/>
       <plugin id="org.eclipse.jface.text.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.jface.text.nl_cs" fragment="true"/>
@@ -596,6 +608,15 @@ Copyright (c) 2003-2020 Raden Solutions
       <plugin id="org.eclipse.ui.workbench.texteditor.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.ui.workbench.texteditor.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.ui.workbench.texteditor.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.urischeme"/>
+      <plugin id="org.eclipse.urischeme.nl_ar" fragment="true"/>
+      <plugin id="org.eclipse.urischeme.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.urischeme.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.urischeme.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.urischeme.nl_fr" fragment="true"/>
+      <plugin id="org.eclipse.urischeme.nl_pt" fragment="true"/>
+      <plugin id="org.eclipse.urischeme.nl_pt_BR" fragment="true"/>
+      <plugin id="org.eclipse.urischeme.nl_ru" fragment="true"/>
       <plugin id="org.mozilla.javascript"/>
       <plugin id="org.netxms.gef4.zest.core"/>
       <plugin id="org.netxms.gef4.zest.jface"/>
