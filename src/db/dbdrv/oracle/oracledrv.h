@@ -43,15 +43,17 @@
 #include <dbdrv.h>
 #include <oci.h>
 
+#define DEBUG_TAG _T("db.drv.oracle")
+
 /**
  * Fetch buffer
  */
-struct ORACLE_FETCH_BUFFER
+struct OracleFetchBuffer
 {
-	UCS2CHAR *pData;
+	UCS2CHAR *data;
    OCILobLocator *lobLocator;
-	ub2 nLength;
-	ub2 nCode;
+	ub2 length;
+	ub2 code;
 	sb2 isNull;
 };
 
@@ -69,6 +71,59 @@ struct ORACLE_CONN
 	sb4 lastErrorCode;
 	WCHAR lastErrorText[DBDRV_MAX_ERROR_TEXT];
    ub4 prefetchLimit;
+};
+
+/**
+ * Bind data
+ */
+struct OracleBind
+{
+   OCIBind *handle;
+   void *data;
+   OCILobLocator *lobLocator;
+   OCIError *errorHandle;
+   OCISvcCtx *serviceContext;
+   OCINumber number;
+
+   OracleBind(OCISvcCtx *_serviceContext, OCIError *_errorHandle)
+   {
+      handle = nullptr;
+      data = nullptr;
+      lobLocator = nullptr;
+      serviceContext = _serviceContext;
+      errorHandle = _errorHandle;
+   }
+
+   ~OracleBind()
+   {
+      freeTemporaryLob();
+      MemFree(data);
+   }
+
+   bool createTemporaryLob(OCIEnv *envHandle)
+   {
+      if (OCIDescriptorAlloc(envHandle, (void **)&lobLocator, OCI_DTYPE_LOB, 0, nullptr) != OCI_SUCCESS)
+         return false;
+      if (OCILobCreateTemporary(serviceContext, errorHandle, lobLocator,
+               OCI_DEFAULT, OCI_DEFAULT, OCI_TEMP_CLOB, FALSE, OCI_DURATION_SESSION) != OCI_SUCCESS)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("OracleBind::createTemporaryLob(): cannot create temporary LOB locator"));
+         OCIDescriptorFree(lobLocator, OCI_DTYPE_LOB);
+         lobLocator = nullptr;
+         return false;
+      }
+      return true;
+   }
+
+   void freeTemporaryLob()
+   {
+      if (lobLocator != nullptr)
+      {
+         OCILobFreeTemporary(serviceContext, errorHandle, lobLocator);
+         OCIDescriptorFree(lobLocator, OCI_DTYPE_LOB);
+         lobLocator = nullptr;
+      }
+   }
 };
 
 /**
@@ -106,9 +161,8 @@ struct ORACLE_STATEMENT
 	ORACLE_CONN *connection;
 	OCIStmt *handleStmt;
 	OCIError *handleError;
-	Array *bindings;
+	ObjectArray<OracleBind> *bindings;
    ObjectArray<OracleBatchBind> *batchBindings;
-	Array *buffers;
    bool batchMode;
    int batchSize;
 };
@@ -124,11 +178,14 @@ struct ORACLE_RESULT
 	char **columnNames;
 };
 
+/**
+ * Unbuffered result set
+ */
 struct ORACLE_UNBUFFERED_RESULT
 {
    ORACLE_CONN *connection;
    OCIStmt *handleStmt;
-   ORACLE_FETCH_BUFFER *pBuffers;
+   OracleFetchBuffer *pBuffers;
    int nCols;
    char **columnNames;
 };
