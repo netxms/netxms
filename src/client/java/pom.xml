@@ -22,13 +22,13 @@
      <id>console</id>
      <repositories>
         <repository>
-            <id>eclipse-4.15</id>
-            <url>http://download.eclipse.org/eclipse/updates/4.15</url>
+            <id>eclipse-4.17</id>
+            <url>http://download.eclipse.org/eclipse/updates/4.17</url>
             <layout>p2</layout>
         </repository>
         <repository>
-            <id>eclipse-2020-03</id>
-            <url>http://download.eclipse.org/releases/2020-03</url>
+            <id>eclipse-2020-09</id>
+            <url>http://download.eclipse.org/releases/2020-09</url>
             <layout>p2</layout>
         </repository> 
      </repositories>
@@ -38,12 +38,12 @@
      <repositories>
         <repository>
             <id>eclipse</id>
-            <url>http://download.eclipse.org/releases/photon</url>
+            <url>http://download.eclipse.org/releases/2020-09</url>
             <layout>p2</layout>
         </repository>
         <repository>  
-            <id>rap-3.6</id>
-            <url>http://download.eclipse.org/rt/rap/3.6</url>
+            <id>rap-3.14</id>
+            <url>http://download.eclipse.org/rt/rap/3.14</url>
             <layout>p2</layout>
         </repository>
         <repository>

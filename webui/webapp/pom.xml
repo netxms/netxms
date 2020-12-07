@@ -57,6 +57,11 @@
     </properties>
 
     <repositories>     
+        <repository>  
+            <id>rap-3.14</id>
+            <url>http://download.eclipse.org/rt/rap/3.14</url>
+            <layout>p2</layout>
+        </repository>   
         <repository>
           <id>orbit latest</id>
           <layout>p2</layout>
@@ -64,7 +69,7 @@
         </repository>
         <repository>
             <id>Babel Language Pack</id>
-            <url>http://archive.eclipse.org/technology/babel/update-site/R0.17.1/2019-12</url>
+            <url>http://archive.eclipse.org/technology/babel/update-site/R0.18.1/2020-09</url>
             <layout>p2</layout>
         </repository> 
         <repository>
@@ -72,11 +77,6 @@
             <url>http://download.eclipse.org/releases/2019-06</url>
             <layout>p2</layout>
         </repository>
-        <repository>  
-            <id>rap-3.12</id>
-            <url>http://download.eclipse.org/rt/rap/3.12</url>
-            <layout>p2</layout>
-        </repository>   
         <repository>
             <id>zest</id>
             <url>http://www.netxms.org/eclipse/zest-rap</url>
