@@ -168,6 +168,8 @@
 #define EVENT_GEOLOCATION_CHANGED                   111
 #define EVENT_GEOLOCATION_INSIDE_RESTRICTED_AREA    112
 #define EVENT_GEOLOCATION_OUTSIDE_ALLOWED_AREA      113
+#define EVENT_CLUSTER_AUTOADD                       114
+#define EVENT_CLUSTER_AUTOREMOVE                    115
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

@@ -22,11 +22,12 @@ import java.util.Set;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.interfaces.AutoBindObject;
 
 /**
  * Container object
  */
-public class Container extends GenericObject
+public class Container extends GenericObject implements AutoBindObject
 {	
 	private int flags;
    private boolean autoBind;

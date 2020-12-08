@@ -2080,6 +2080,7 @@ protected:
 
    void applyUserTemplates();
    void updateContainerMembership();
+   void updateClusterMembership();
 
    DataCollectionError queryWebService(const TCHAR *param, WebServiceRequestType queryType, TCHAR *buffer, size_t bufSize, StringList *list);
 
@@ -2432,7 +2433,7 @@ public:
 /**
  * Cluster class
  */
-class NXCORE_EXPORTABLE Cluster : public DataCollectionTarget
+class NXCORE_EXPORTABLE Cluster : public DataCollectionTarget, public AutoBindTarget
 {
 private:
    typedef DataCollectionTarget super;

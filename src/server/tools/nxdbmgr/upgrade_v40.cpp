@@ -24,6 +24,37 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.29 to 40.30
+ */
+static bool H_UpgradeFromV29()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_CLUSTER_AUTOADD, _T("SYS_CLUSTER_AUTOADD"),
+            SEVERITY_NORMAL, EF_LOG, _T("308fce5f-69ec-450a-a42b-d1e5178512a5"),
+            _T("Node %2 automatically added to cluster %4"),
+            _T("Generated when node added to cluster object by autoadd rule.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Node ID\r\n")
+            _T("   2) Node name\r\n")
+            _T("   3) Cluster ID\r\n")
+            _T("   4) Cluster name")
+            ));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_CLUSTER_AUTOREMOVE, _T("SYS_CLUSTER_AUTOREMOVE"),
+            SEVERITY_NORMAL, EF_LOG, _T("f2cdb47a-ae37-43d7-851d-f8f85e1e9f0c"),
+            _T("Node %2 automatically removed from cluster %4"),
+            _T("Generated when node removed from cluster object by autoadd rule.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Node ID\r\n")
+            _T("   2) Node name\r\n")
+            _T("   3) Cluster ID\r\n")
+            _T("   4) Cluster name")
+            ));
+
+   CHK_EXEC(SetMinorSchemaVersion(30));
+   return true;
+}
+
+/**
  * Upgrade from 40.28 to 40.29
  */
 static bool H_UpgradeFromV28()
@@ -850,6 +881,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 29, 40, 30, H_UpgradeFromV29 },
    { 28, 40, 29, H_UpgradeFromV28 },
    { 27, 40, 28, H_UpgradeFromV27 },
    { 26, 40, 27, H_UpgradeFromV26 },

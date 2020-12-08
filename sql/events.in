@@ -1377,6 +1377,30 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   3) Latitude of new location in textual form' CONCAT CRLF CONCAT
       '   4) Longitude of new location in textual form'
    );
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_CLUSTER_AUTOADD, 'SYS_CLUSTER_AUTOADD', '308fce5f-69ec-450a-a42b-d1e5178512a5',
+      EVENT_SEVERITY_NORMAL, 1,
+      'Node %2 automatically added to cluster %4',
+      'Generated when node added to cluster object by autoadd rule.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Node ID' CONCAT CRLF CONCAT
+      '   2) Node name' CONCAT CRLF CONCAT
+      '   3) Cluster ID' CONCAT CRLF CONCAT
+      '   4) Cluster name'
+   );
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_CLUSTER_AUTOREMOVE, 'SYS_CLUSTER_AUTOREMOVE', 'f2cdb47a-ae37-43d7-851d-f8f85e1e9f0c',
+      EVENT_SEVERITY_NORMAL, 1,
+      'Node %2 automatically removed from cluster %4',
+      'Generated when node removed from cluster object by autoadd rule.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Node ID' CONCAT CRLF CONCAT
+      '   2) Node name' CONCAT CRLF CONCAT
+      '   3) Cluster ID' CONCAT CRLF CONCAT
+      '   4) Cluster name'
+   );
 
 /*
 ** SNMP traps
