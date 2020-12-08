@@ -51,7 +51,7 @@ static TCHAR s_dbLogin[MAX_DB_LOGIN] = _T("netxms");
 static TCHAR s_dbPassword[MAX_PASSWORD] = _T("");
 static TCHAR s_dbName[MAX_DB_NAME] = _T("netxms_db");
 static TCHAR s_dbSchema[MAX_DB_NAME] = _T("");
-static TCHAR *s_moduleLoadList = NULL;
+static TCHAR *s_moduleLoadList = nullptr;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("CodePage"), CT_MB_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },
@@ -63,10 +63,10 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
-   { _T("Module"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_moduleLoadList, NULL },
-   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   { _T("Module"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_moduleLoadList, nullptr },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
-static DB_DRIVER s_driver = NULL;
+static DB_DRIVER s_driver = nullptr;
 
 /**
  * Query tracer callback

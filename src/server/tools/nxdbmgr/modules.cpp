@@ -110,7 +110,7 @@ bool LoadServerModules(TCHAR *moduleLoadList)
    TCHAR *curr, *next, *ptr;
    bool success = true;
 
-   for(curr = moduleLoadList; curr != nullptr; curr = nullptr)
+   for(curr = moduleLoadList; curr != nullptr; curr = next)
    {
       next = _tcschr(curr, _T('\n'));
       if (next != nullptr)
