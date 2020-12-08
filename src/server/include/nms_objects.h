@@ -2432,7 +2432,7 @@ public:
 /**
  * Cluster class
  */
-class NXCORE_EXPORTABLE Cluster : public DataCollectionTarget
+class NXCORE_EXPORTABLE Cluster : public DataCollectionTarget, public AutoBindTarget
 {
 private:
    typedef DataCollectionTarget super;
@@ -2487,6 +2487,8 @@ public:
    UINT32 collectAggregatedData(DCTable *table, Table **result);
 
    NXSL_Array *getNodesForNXSL(NXSL_VM *vm);
+   void addNode(shared_ptr<Node> node);
+   void removeNode(shared_ptr<Node> node);
 };
 
 #ifdef _WIN32
@@ -3090,6 +3092,8 @@ protected:
    void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology);
    void buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, UINT32 seedNode, bool agentConnectionOnly, bool checkAllProxies);
    bool checkProxyAndLink(NetworkMapObjectList *topology, UINT32 seedNode, UINT32 proxyId, UINT32 linkType, const TCHAR *linkName, bool checkAllProxies);
+
+   void updateClusterMembership();
 
 public:
    Node();

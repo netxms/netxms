@@ -69,6 +69,16 @@
              </instanceof>
           </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.AutoBind"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.AutoBindCluster"
+              name="Automatic Add Rules">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Cluster">
+              </instanceof>
+           </enabledWhen>
+        </page>
 
         <page
            id="org.netxms.ui.eclipse.objectmanager.propertypages.Communication#10"

@@ -28,7 +28,7 @@
 /**
  * Cluster class default constructor
  */
-Cluster::Cluster() : super()
+Cluster::Cluster() : super(), AutoBindTarget(this)
 {
 	m_dwClusterType = 0;
    m_syncNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);
@@ -40,7 +40,7 @@ Cluster::Cluster() : super()
 /**
  * Cluster class new object constructor
  */
-Cluster::Cluster(const TCHAR *pszName, int32_t zoneUIN) : super(pszName)
+Cluster::Cluster(const TCHAR *pszName, int32_t zoneUIN) : super(pszName),  AutoBindTarget(this)
 {
 	m_dwClusterType = 0;
    m_syncNetworks = new ObjectArray<InetAddress>(8, 8, Ownership::True);
@@ -170,6 +170,9 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 				bResult = false;
 			}
 		}
+
+	   if (bResult)
+	      bResult = AutoBindTarget::loadFromDatabase(hdb, m_id);
 	}
    else
    {
@@ -359,6 +362,9 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
 		}
    }
 
+   if (success && (m_modified & MODIFY_OTHER))
+      success = AutoBindTarget::saveToDatabase(hdb);
+
    return success;
 }
 
@@ -375,6 +381,8 @@ bool Cluster::deleteFromDatabase(DB_HANDLE hdb)
          success = executeQueryOnObject(hdb, _T("DELETE FROM cluster_members WHERE cluster_id=?"));
       if (success)
          success = executeQueryOnObject(hdb, _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=?"));
+      if (success)
+         success = AutoBindTarget::deleteFromDatabase(hdb);
    }
    return success;
 }
@@ -402,6 +410,7 @@ void Cluster::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 		pMsg->setField(dwId++, m_pResourceList[i].ipAddr);
 		pMsg->setField(dwId++, m_pResourceList[i].dwCurrOwner);
 	}
+   AutoBindTarget::fillMessage(pMsg);
 }
 
 /**
@@ -469,6 +478,8 @@ UINT32 Cluster::modifyFromMessageInternal(NXCPMessage *pRequest)
 		}
 		m_dwNumResources = dwCount;
 	}
+
+   AutoBindTarget::modifyFromMessage(pRequest);
 
    return super::modifyFromMessageInternal(pRequest);
 }
@@ -942,6 +953,7 @@ NXSL_Array *Cluster::getNodesForNXSL(NXSL_VM *vm)
 json_t *Cluster::toJson()
 {
    json_t *root = super::toJson();
+   AutoBindTarget::toJson(root);
 
    lockProperties();
    json_object_set_new(root, "clusterType", json_integer(m_dwClusterType));
@@ -962,4 +974,24 @@ json_t *Cluster::toJson()
    unlockProperties();
 
    return root;
+}
+
+/**
+ * ADd node to the cluster
+ */
+void Cluster::addNode(shared_ptr<Node> node)
+{
+   applyToTarget(node);
+   node->setRecheckCapsFlag();
+   node->forceConfigurationPoll();
+}
+
+/**
+ * Remove node form cluster
+ */
+void Cluster::removeNode(shared_ptr<Node> node)
+{
+   queueRemoveFromTarget(node->getId(), TRUE);
+   node->setRecheckCapsFlag();
+   node->forceConfigurationPoll();
 }

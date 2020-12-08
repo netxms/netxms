@@ -20,21 +20,26 @@ package org.netxms.client.objects;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.objects.interfaces.AutoBindObject;
 
 /**
  * Cluster object
  */
-public class Cluster extends DataCollectionTarget implements ZoneMember, PollingTarget
+public class Cluster extends DataCollectionTarget implements ZoneMember, PollingTarget, AutoBindObject
 {
 	private int clusterType;
 	private List<InetAddressEx> syncNetworks = new ArrayList<InetAddressEx>(1);
 	private List<ClusterResource> resources = new ArrayList<ClusterResource>();
 	private int zoneId;
+   private boolean autoBind;
+   private boolean autoUnbind;
+   private String autoBindFilter;
 	
 	/**
 	 * @param msg
@@ -60,6 +65,10 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
 		{
 			resources.add(new ClusterResource(msg, fieldId));
 		}
+		
+      autoBindFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
+      autoBind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOBIND_FLAG);
+      autoUnbind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOUNBIND_FLAG);
 	}
 
 	/* (non-Javadoc)
@@ -199,5 +208,41 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
    public boolean canUseEtherNetIP()
    {
       return false;
+   }
+
+   /**
+    * @return true if automatic bind is enabled
+    */
+   public boolean isAutoBindEnabled()
+   {
+      return autoBind;
+   }
+
+   /**
+    * @return true if automatic unbind is enabled
+    */
+   public boolean isAutoUnbindEnabled()
+   {
+      return autoUnbind;
+   }
+
+   /**
+    * @return Filter script for automatic bind
+    */
+   public String getAutoBindFilter()
+   {
+      return autoBindFilter;
+   }
+
+
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.AbstractObject#getStrings()
+    */
+   @Override
+   public Set<String> getStrings()
+   {
+      Set<String> strings = super.getStrings();
+      addString(strings, autoBindFilter);
+      return strings;
    }
 }

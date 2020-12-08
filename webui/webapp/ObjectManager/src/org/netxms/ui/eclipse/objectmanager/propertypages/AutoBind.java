@@ -31,7 +31,10 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.GenericObject;
+import org.netxms.client.objects.interfaces.AutoBindObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -44,7 +47,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class AutoBind extends PropertyPage
 {
-	private Container object;
+	private AutoBindObject object;
 	private Button checkboxEnableBind;
 	private Button checkboxEnableUnbind;
 	private ScriptEditor filterSource;
@@ -60,7 +63,7 @@ public class AutoBind extends PropertyPage
 	{
       Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (Container)getElement().getAdapter(Container.class);
+		object = (AutoBindObject)getElement().getAdapter(AutoBindObject.class);
 		if (object == null)	// Paranoid check
 			return dialogArea;
 
@@ -76,7 +79,10 @@ public class AutoBind extends PropertyPage
 
       // Enable/disable check box
       checkboxEnableBind = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableBind.setText(Messages.get().AutoBind_AutoBind);
+      if (object instanceof Cluster)
+         checkboxEnableBind.setText("Automatically add nodes selected by filter to this cluster");
+      else if (object instanceof Container)
+         checkboxEnableBind.setText(Messages.get().AutoBind_AutoBind);
       checkboxEnableBind.setSelection(object.isAutoBindEnabled());
       checkboxEnableBind.addSelectionListener(new SelectionListener() {
 			@Override
@@ -103,7 +109,10 @@ public class AutoBind extends PropertyPage
       });
       
       checkboxEnableUnbind = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableUnbind.setText(Messages.get().AutoBind_AUtoUnbind);
+      if (object instanceof Cluster)
+         checkboxEnableUnbind.setText("Automatically remove nodes from this cluster when they no longer passes filter");
+      else if (object instanceof Container)
+         checkboxEnableUnbind.setText(Messages.get().AutoBind_AUtoUnbind);
       checkboxEnableUnbind.setSelection(object.isAutoUnbindEnabled());
       checkboxEnableUnbind.setEnabled(object.isAutoBindEnabled());
 
@@ -149,7 +158,7 @@ public class AutoBind extends PropertyPage
 			setValid(false);
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
+		final NXCObjectModificationData md = new NXCObjectModificationData(((GenericObject)object).getObjectId());
 		md.setAutoBindFilter(filterSource.getText());
       md.setAutoBindFlags(apply, remove);
 		

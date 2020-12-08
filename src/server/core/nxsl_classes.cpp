@@ -2366,6 +2366,55 @@ NXSL_METHOD_DEFINITION(Cluster, getResourceOwner)
 }
 
 /**
+ * Cluster::add(object)
+ */
+NXSL_METHOD_DEFINITION(Cluster, add)
+{
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   NXSL_Object *nxslChild = argv[0]->getValueAsObject();
+   if (!nxslChild->getClass()->instanceOf(g_nxslNetObjClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   shared_ptr<NetObj> child = *static_cast<shared_ptr<NetObj>*>(nxslChild->getData());
+   if (child->getObjectClass() != OBJECT_NODE)
+      return NXSL_ERR_BAD_CLASS;
+
+   shared_ptr<Cluster> thisObject = *static_cast<shared_ptr<Cluster>*>(object->getData());
+   thisObject->addNode(static_pointer_cast<Node>(child));
+
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * Cluster::removeFrom(object)
+ */
+NXSL_METHOD_DEFINITION(Cluster, remove)
+{
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   NXSL_Object *nxslChild = argv[0]->getValueAsObject();
+   if (!nxslChild->getClass()->instanceOf(g_nxslNetObjClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   shared_ptr<NetObj> child = *static_cast<shared_ptr<NetObj>*>(nxslChild->getData());
+   if (child->getObjectClass() != OBJECT_NODE)
+      return NXSL_ERR_BAD_CLASS;
+
+   shared_ptr<Cluster> thisObject = *static_cast<shared_ptr<Cluster>*>(object->getData());
+   thisObject->deleteChild(*child);
+   child->deleteParent(*thisObject);
+   thisObject->removeNode(static_pointer_cast<Node>(child));
+
+   *result = vm->createValue();
+   return 0;
+}
+
+
+/**
  * NXSL class "Cluster" constructor
  */
 NXSL_ClusterClass::NXSL_ClusterClass() : NXSL_DCTargetClass()
@@ -2373,6 +2422,8 @@ NXSL_ClusterClass::NXSL_ClusterClass() : NXSL_DCTargetClass()
    setName(_T("Cluster"));
 
    NXSL_REGISTER_METHOD(Cluster, getResourceOwner, 1);
+   NXSL_REGISTER_METHOD(Cluster, add, 1);
+   NXSL_REGISTER_METHOD(Cluster, remove, 1);
 }
 
 /**
