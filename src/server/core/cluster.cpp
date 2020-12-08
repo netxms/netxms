@@ -975,3 +975,23 @@ json_t *Cluster::toJson()
 
    return root;
 }
+
+/**
+ * ADd node to the cluster
+ */
+void Cluster::addNode(shared_ptr<Node> node)
+{
+   applyToTarget(node);
+   node->setRecheckCapsFlag();
+   node->forceConfigurationPoll();
+}
+
+/**
+ * Remove node form cluster
+ */
+void Cluster::removeNode(shared_ptr<Node> node)
+{
+   queueRemoveFromTarget(node->getId(), TRUE);
+   node->setRecheckCapsFlag();
+   node->forceConfigurationPoll();
+}

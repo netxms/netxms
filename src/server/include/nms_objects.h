@@ -2488,6 +2488,8 @@ public:
    UINT32 collectAggregatedData(DCTable *table, Table **result);
 
    NXSL_Array *getNodesForNXSL(NXSL_VM *vm);
+   void addNode(shared_ptr<Node> node);
+   void removeNode(shared_ptr<Node> node);
 };
 
 #ifdef _WIN32

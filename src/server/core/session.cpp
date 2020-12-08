@@ -5561,9 +5561,7 @@ void ClientSession::addClusterNode(NXCPMessage *request)
 				if (cluster->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) &&
 					 node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
 				{
-					static_cast<Cluster&>(*cluster).applyToTarget(static_pointer_cast<Node>(node));
-					static_cast<Node&>(*node).setRecheckCapsFlag();
-					static_cast<Node&>(*node).forceConfigurationPoll();
+					static_cast<Cluster&>(*cluster).addNode(static_pointer_cast<Node>(node));
 
 					msg.setField(VID_RCC, RCC_SUCCESS);
 					WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, cluster->getId(),
@@ -5655,9 +5653,7 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
                }
                else if ((pParent->getObjectClass() == OBJECT_CLUSTER) && (pChild->getObjectClass() == OBJECT_NODE))
                {
-                  static_cast<Cluster&>(*pParent).queueRemoveFromTarget(pChild->getId(), TRUE);
-                  static_cast<Node&>(*pChild).setRecheckCapsFlag();
-                  static_cast<Node&>(*pChild).forceConfigurationPoll();
+                  static_pointer_cast<Cluster>(pParent)->removeNode(static_pointer_cast<Node>(pChild));
                }
 					else if ((pParent->getObjectClass() == OBJECT_BUSINESSSERVICEROOT) || (pParent->getObjectClass() == OBJECT_BUSINESSSERVICE))
 					{
