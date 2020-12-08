@@ -10969,3 +10969,52 @@ bool Node::getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocate
    }
    return false;
 }
+
+/**
+ * Filter for selecting clusters from objects
+ */
+static bool ClusterSelectionFilter(NetObj *object, void *userData)
+{
+   return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() && ((Cluster *)object)->isAutoBindEnabled();
+}
+
+/**
+ * Update cluster membership
+ */
+void Node::updateClusterMembership()
+{
+   if (IsShutdownInProgress())
+      return;
+
+   SharedObjectArray<NetObj> *clusters = g_idxObjectById.getObjects(ClusterSelectionFilter);
+   for(int i = 0; i < clusters->size(); i++)
+   {
+      Cluster *pCluster = (Cluster *)clusters->get(i);
+      AutoBindDecision decision = pCluster->isApplicable(self());
+      if (decision == AutoBindDecision_Bind)
+      {
+         if (!pCluster->isDirectChild(m_id))
+         {
+            DbgPrintf(4, _T("DataCollectionTarget::updateClusterMembership(): binding object %d \"%s\" to cluster %d \"%s\""),
+                      m_id, m_name, pCluster->getId(), pCluster->getName());
+            pCluster->addChild(self());
+            addParent(pCluster->self());
+            PostSystemEvent(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode, "isis", m_id, m_name, pCluster->getId(), pCluster->getName());
+            pCluster->calculateCompoundStatus();
+         }
+      }
+      else if (decision == AutoBindDecision_Unbind)
+      {
+         if (pCluster->isAutoUnbindEnabled() && pCluster->isDirectChild(m_id))
+         {
+            DbgPrintf(4, _T("DataCollectionTarget::updateClusterMembership(): removing object %d \"%s\" from cluster %d \"%s\""),
+                      m_id, m_name, pCluster->getId(), pCluster->getName());
+            pCluster->deleteChild(*this);
+            deleteParent(*pCluster);
+            PostSystemEvent(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, pCluster->getId(), pCluster->getName());
+            pCluster->calculateCompoundStatus();
+         }
+      }
+   }
+   delete clusters;
+}

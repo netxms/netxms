@@ -2080,7 +2080,6 @@ protected:
 
    void applyUserTemplates();
    void updateContainerMembership();
-   void updateClusterMembership();
 
    DataCollectionError queryWebService(const TCHAR *param, WebServiceRequestType queryType, TCHAR *buffer, size_t bufSize, StringList *list);
 
@@ -3093,6 +3092,8 @@ protected:
    void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology);
    void buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, UINT32 seedNode, bool agentConnectionOnly, bool checkAllProxies);
    bool checkProxyAndLink(NetworkMapObjectList *topology, UINT32 seedNode, UINT32 proxyId, UINT32 linkType, const TCHAR *linkName, bool checkAllProxies);
+
+   void updateClusterMembership();
 
 public:
    Node();
