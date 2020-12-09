@@ -2,6 +2,8 @@
 # Sample configuration file for NetXMS agent
 #
 
+[CORE]
+
 #
 # Servers
 #
