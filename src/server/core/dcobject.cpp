@@ -227,7 +227,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_description = config->getSubEntryValue(_T("description"), 0, m_name);
    m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, nullptr);
    m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
-   m_flags = (UINT16)config->getSubEntryValueAsInt(_T("flags"));
+   m_flags = config->getSubEntryValueAsInt(_T("flags"));
    m_pollingIntervalSrc = MemCopyString(config->getSubEntryValue(_T("interval"), 0, _T("0")));
    if (config->findEntry(_T("scheduleType")) != nullptr)
    {
@@ -788,7 +788,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
    m_name = msg.getFieldAsSharedString(VID_NAME, MAX_ITEM_NAME);
    m_description = msg.getFieldAsSharedString(VID_DESCRIPTION, MAX_DB_STRING);
    m_systemTag = msg.getFieldAsSharedString(VID_SYSTEM_TAG, MAX_DB_STRING);
-	m_flags = msg.getFieldAsUInt16(VID_FLAGS);
+	m_flags = msg.getFieldAsUInt32(VID_FLAGS);
    m_source = (BYTE)msg.getFieldAsUInt16(VID_DCI_SOURCE_TYPE);
    setStatus(msg.getFieldAsUInt16(VID_DCI_STATUS), true);
 	m_dwResourceId = msg.getFieldAsUInt32(VID_RESOURCE_ID);
@@ -1142,7 +1142,7 @@ INT16 DCObject::getAgentCacheMode()
    if ((m_source == DS_SNMP_AGENT) && (node->getEffectiveSnmpProxy() == 0))
       return AGENT_CACHE_OFF;
 
-   INT16 mode = DCF_GET_CACHE_MODE(m_flags);
+   uint32_t mode = DCF_GET_CACHE_MODE(m_flags);
    if (mode != AGENT_CACHE_DEFAULT)
       return mode;
    return node->getAgentCacheMode();
@@ -1159,7 +1159,7 @@ void DCObject::updateFromImport(ConfigEntry *config)
    m_description = config->getSubEntryValue(_T("description"), 0, m_name);
    m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, nullptr);
    m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
-   m_flags = (UINT16)config->getSubEntryValueAsInt(_T("flags"));
+   m_flags = config->getSubEntryValueAsInt(_T("flags"));
    const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
    MemFree(m_pszPerfTabSettings);
    m_pszPerfTabSettings = MemCopyString(perfTabSettings);

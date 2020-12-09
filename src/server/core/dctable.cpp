@@ -164,7 +164,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<Dat
    m_dwTemplateItemId = DBGetFieldULong(hResult, row, 2);
 	m_name = DBGetField(hResult, row, 3, readBuffer, 4096);
    m_description = DBGetField(hResult, row, 4, readBuffer, 4096);
-   m_flags = (WORD)DBGetFieldLong(hResult, row, 5);
+   m_flags = DBGetFieldLong(hResult, row, 5);
    m_source = (BYTE)DBGetFieldLong(hResult, row, 6);
 	m_snmpPort = static_cast<UINT16>(DBGetFieldLong(hResult, row, 7));
    m_pollingInterval = DBGetFieldLong(hResult, row, 8);
@@ -606,7 +606,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
 	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, MAX_ITEM_NAME - 1);
 	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, MAX_DB_STRING - 1);
-	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (UINT32)m_flags);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_source);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (UINT32)m_snmpPort);
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_pollingInterval);

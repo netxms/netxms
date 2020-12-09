@@ -113,7 +113,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
    m_ppValueCache = nullptr;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
-   m_flags = (WORD)DBGetFieldLong(hResult, row, 13);
+   m_flags = DBGetFieldLong(hResult, row, 13);
 	m_dwResourceId = DBGetFieldULong(hResult, row, 14);
 	m_sourceNode = DBGetFieldULong(hResult, row, 15);
 	m_nBaseUnits = DBGetFieldLong(hResult, row, 16);
@@ -340,7 +340,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, MAX_DB_STRING - 1);
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_instance, DB_BIND_STATIC, MAX_INSTANCE_LEN - 1);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
-	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (UINT32)m_flags);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dwResourceId);
 	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_sourceNode);
 	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (INT32)m_nBaseUnits);
@@ -1875,7 +1875,7 @@ void DCItem::createExportRecord(StringBuffer &xml)
                           (const TCHAR *)EscapeStringForXML2(m_retentionTimeSrc),
                           (const TCHAR *)EscapeStringForXML2(m_instance),
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
-								  (int)m_deltaCalculation, (int)m_flags,
+								  (int)m_deltaCalculation, m_flags,
 								  (int)m_snmpRawValueType, (int)m_snmpPort, (int)m_snmpVersion,
 								  (int)m_instanceDiscoveryMethod, m_instanceRetentionTime,
 								  (const TCHAR *)EscapeStringForXML2(m_comments),

@@ -22,6 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -42,6 +43,7 @@ public class OtherOptions extends DCIPropertyPageDialog
 	private Button checkShowInOverview;
    private Button checkCalculateStatus;
    private Button checkHideOnLastValues;
+   private Combo useMultipliers;
    private ObjectSelector relatedObject;
 
 	/* (non-Javadoc)
@@ -74,6 +76,12 @@ public class OtherOptions extends DCIPropertyPageDialog
       checkHideOnLastValues = new Button(dialogArea, SWT.CHECK);
       checkHideOnLastValues.setText("Hide value on \"Last Values\" page");
       checkHideOnLastValues.setSelection(dci.isHideOnLastValuesView());      
+      
+      useMultipliers = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Use multipliers", new GridData());
+      useMultipliers.add("Default");
+      useMultipliers.add("Yes");
+      useMultipliers.add("No");
+      useMultipliers.select(dci.getMultipliersSelection());
 
       relatedObject = new ObjectSelector(dialogArea, SWT.NONE, true);
       relatedObject.setLabel("Related object");
@@ -98,6 +106,7 @@ public class OtherOptions extends DCIPropertyPageDialog
 		dci.setShowInObjectOverview(checkShowInOverview.getSelection());
       dci.setUsedForNodeStatusCalculation(checkCalculateStatus.getSelection());
       dci.setHideOnLastValuesView(checkHideOnLastValues.getSelection());
+      dci.setMultiplierSelection(useMultipliers.getSelectionIndex());
       dci.setRelatedObject(relatedObject.getObjectId());
 		editor.modify();
 	}
@@ -132,6 +141,7 @@ public class OtherOptions extends DCIPropertyPageDialog
 		checkShowInOverview.setSelection(false);
 		checkCalculateStatus.setSelection(false);
 		checkHideOnLastValues.setSelection(false);
+		useMultipliers.select(0);
 		relatedObject.setObjectId(0);
 	}
 }

@@ -853,16 +853,18 @@ enum HistoricalDataType
 /**
  * DCI flags
  */
-#define DCF_ALL_THRESHOLDS          ((uint16_t)0x0002)
-#define DCF_RAW_VALUE_OCTET_STRING  ((uint16_t)0x0004)
-#define DCF_SHOW_ON_OBJECT_TOOLTIP  ((uint16_t)0x0008)
-#define DCF_AGGREGATE_FUNCTION_MASK ((uint16_t)0x0070)
-#define DCF_AGGREGATE_ON_CLUSTER    ((uint16_t)0x0080)
-#define DCF_TRANSFORM_AGGREGATED    ((uint16_t)0x0100)
-#define DCF_CALCULATE_NODE_STATUS   ((uint16_t)0x0400)
-#define DCF_SHOW_IN_OBJECT_OVERVIEW ((uint16_t)0x0800)
-#define DCF_CACHE_MODE_MASK         ((uint16_t)0x3000)
-#define DCF_AGGREGATE_WITH_ERRORS   ((uint16_t)0x4000)
+#define DCF_ALL_THRESHOLDS           ((uint32_t)0x00002)
+#define DCF_RAW_VALUE_OCTET_STRING   ((uint32_t)0x00004)
+#define DCF_SHOW_ON_OBJECT_TOOLTIP   ((uint32_t)0x00008)
+#define DCF_AGGREGATE_FUNCTION_MASK  ((uint32_t)0x00070)
+#define DCF_AGGREGATE_ON_CLUSTER     ((uint32_t)0x00080)
+#define DCF_TRANSFORM_AGGREGATED     ((uint32_t)0x00100)
+#define DCF_CALCULATE_NODE_STATUS    ((uint32_t)0x00400)
+#define DCF_SHOW_IN_OBJECT_OVERVIEW  ((uint32_t)0x00800)
+#define DCF_CACHE_MODE_MASK          ((uint32_t)0x03000)
+#define DCF_AGGREGATE_WITH_ERRORS    ((uint32_t)0x04000)
+#define DCF_HIDE_ON_LAST_VALUES_PAGE ((uint32_t)0x08000)
+#define DCF_MULTIPLIERS_MASK         ((uint32_t)0x30000)
 
 /**
  * Get cluster aggregation function from DCI flags

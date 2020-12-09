@@ -29,6 +29,10 @@ import org.netxms.client.constants.Severity;
  */
 public abstract class DciValue
 {
+   final public static int MULTIPLIERS_DEFAULT = 0;
+   final public static int MULTIPLIERS_YES = 1;
+   final public static int MULTIPLIERS_NO = 2;
+   
 	protected long id;					// DCI id
 	protected long nodeId;				// related node object id
 	private long templateDciId;	// related template DCI ID
@@ -236,6 +240,15 @@ public abstract class DciValue
    public int getFlags()
    {
       return flags;
+   }
+   
+   /**
+    * Get multipliers selection
+    */
+   public int getMultipliersSelection()
+   {
+      System.out.println(flags);
+      return (int)((flags & DataCollectionItem.DCF_MULTIPLIERS_MASK) >> 16);
    }
 
    /**

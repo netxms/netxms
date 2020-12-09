@@ -94,8 +94,14 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 				if (showErrors && ((DciValue)element).getErrorCount() > 0)
 					return Messages.get().LastValuesLabelProvider_Error;
 				if (((DciValue)element).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
-					return Messages.get().LastValuesLabelProvider_Table;
-				return useMultipliers ? ((DciValue)element).format("%*s") : ((DciValue)element).getValue();
+					return Messages.get().LastValuesLabelProvider_Table;				
+				int selection = ((DciValue)element).getMultipliersSelection();
+				if (selection == DciValue.MULTIPLIERS_DEFAULT)
+				   return useMultipliers ? ((DciValue)element).format("%*s") : ((DciValue)element).getValue();
+				else if (selection == DciValue.MULTIPLIERS_YES)
+				   return ((DciValue)element).format("%*s");
+				else
+               return ((DciValue)element).getValue();				   
 			case LastValuesWidget.COLUMN_TIMESTAMP:
 				if (((DciValue)element).getTimestamp().getTime() <= 1000)
 					return null;
