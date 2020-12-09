@@ -61,7 +61,7 @@ Var
   cbDownloadConfig, cbSetupTunnel: TNewCheckBox;
   SubagentSelectionPage: TInputOptionWizardPage;
   serverName, sbECS, sbFileMgr, sbLogWatch, sbMQTT, sbNetSvc, sbPing, sbPortCheck, sbSSH,
-    sbWinPerf, sbWMI, sbUPS, sbDownloadConfig, sbSetupTunnel, extraConfigValues: String;
+    sbWinEventSync, sbWinPerf, sbWMI, sbUPS, sbDownloadConfig, sbSetupTunnel, extraConfigValues: String;
   backupFileSuffix: String;
   logFile: String;
   fileSTore: String;
@@ -160,6 +160,7 @@ Begin
   sbPing := 'FALSE';
   sbPortCheck := 'FALSE';
   sbSSH := 'FALSE';
+  sbWinEventSync := 'FALSE';
   sbWinPerf := 'TRUE';
   sbWMI := 'FALSE';
   sbUPS := 'FALSE';
@@ -216,6 +217,8 @@ Begin
         sbPortCheck := 'TRUE';
       If param = 'SSH' Then
         sbSSH := 'TRUE';
+      If param = 'WINEVENTSYNC' Then
+        sbWinEventSync := 'TRUE';
       If param = 'WINPERF' Then
         sbWinPerf := 'TRUE';
       If param = 'WMI' Then
@@ -243,6 +246,8 @@ Begin
         sbPortCheck := 'FALSE';
       If param = 'SSH' Then
         sbSSH := 'FALSE';
+      If param = 'WINEVENTSYNC' Then
+        sbWinEventSync := 'FALSE';
       If param = 'WINPERF' Then
         sbWinPerf := 'FALSE';
       If param = 'WMI' Then
@@ -323,6 +328,7 @@ Begin
   SubagentSelectionPage.Add('Network Service Checker Subagent - netsvc.nsm');
   SubagentSelectionPage.Add('Port Checker Subagent - portcheck.nsm');
   SubagentSelectionPage.Add('SSH Subagent - ssh.nsm');
+  SubagentSelectionPage.Add('Windows Event Log Synchronization Subagent - wineventsync.nsm');
   SubagentSelectionPage.Add('Windows Performance Subagent - winperf.nsm');
   SubagentSelectionPage.Add('WMI Subagent - wmi.nsm');
   SubagentSelectionPage.Add('UPS Monitoring Subagent - ups.nsm');
@@ -334,9 +340,10 @@ Begin
   SubagentSelectionPage.Values[5] := StrToBool(GetPreviousData('Subagent_NETSVC', sbNetSvc));
   SubagentSelectionPage.Values[6] := StrToBool(GetPreviousData('Subagent_PORTCHECK', sbPortCheck));
   SubagentSelectionPage.Values[7] := StrToBool(GetPreviousData('Subagent_SSH', sbSSH));
-  SubagentSelectionPage.Values[8] := StrToBool(GetPreviousData('Subagent_WINPERF', sbWinPerf));
-  SubagentSelectionPage.Values[9] := StrToBool(GetPreviousData('Subagent_WMI', sbWMI));
-  SubagentSelectionPage.Values[10] := StrToBool(GetPreviousData('Subagent_UPS', sbUPS));
+  SubagentSelectionPage.Values[8] := StrToBool(GetPreviousData('Subagent_WINEVENTSYNC', sbWinEventSync));
+  SubagentSelectionPage.Values[9] := StrToBool(GetPreviousData('Subagent_WINPERF', sbWinPerf));
+  SubagentSelectionPage.Values[10] := StrToBool(GetPreviousData('Subagent_WMI', sbWMI));
+  SubagentSelectionPage.Values[11] := StrToBool(GetPreviousData('Subagent_UPS', sbUPS));
 End;
 
 Procedure RegisterPreviousData(PreviousDataKey: Integer);
@@ -352,9 +359,10 @@ Begin
   SetPreviousData(PreviousDataKey, 'Subagent_NETSVC', BoolToStr(SubagentSelectionPage.Values[5]));
   SetPreviousData(PreviousDataKey, 'Subagent_PORTCHECK', BoolToStr(SubagentSelectionPage.Values[6]));
   SetPreviousData(PreviousDataKey, 'Subagent_SSH', BoolToStr(SubagentSelectionPage.Values[7]));
-  SetPreviousData(PreviousDataKey, 'Subagent_WINPERF', BoolToStr(SubagentSelectionPage.Values[8]));
-  SetPreviousData(PreviousDataKey, 'Subagent_WMI', BoolToStr(SubagentSelectionPage.Values[9]));
-  SetPreviousData(PreviousDataKey, 'Subagent_UPS', BoolToStr(SubagentSelectionPage.Values[10]));
+  SetPreviousData(PreviousDataKey, 'Subagent_WINEVENTSYNC', BoolToStr(SubagentSelectionPage.Values[8]));
+  SetPreviousData(PreviousDataKey, 'Subagent_WINPERF', BoolToStr(SubagentSelectionPage.Values[9]));
+  SetPreviousData(PreviousDataKey, 'Subagent_WMI', BoolToStr(SubagentSelectionPage.Values[10]));
+  SetPreviousData(PreviousDataKey, 'Subagent_UPS', BoolToStr(SubagentSelectionPage.Values[11]));
 End;
 
 Function GetMasterServer(Param: String): String;
@@ -385,10 +393,12 @@ Begin
   If SubagentSelectionPage.Values[7] Then
     Result := Result + 'ssh.nsm ';
   If SubagentSelectionPage.Values[8] Then
-    Result := Result + 'winperf.nsm ';
+    Result := Result + 'wineventsync.nsm ';
   If SubagentSelectionPage.Values[9] Then
-    Result := Result + 'wmi.nsm ';
+    Result := Result + 'winperf.nsm ';
   If SubagentSelectionPage.Values[10] Then
+    Result := Result + 'wmi.nsm ';
+  If SubagentSelectionPage.Values[11] Then
     Result := Result + 'ups.nsm ';
 End;
 
