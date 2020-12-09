@@ -435,6 +435,8 @@ void AgentConnectionReceiver::finalize()
       debugPrintf(6, _T("Closing communication channel"));
       connection->m_isConnected = false;
       connection->unlock();
+
+      connection->onDisconnect();
    }
 
    debugPrintf(6, _T("Receiver cleanup completed"));
@@ -846,6 +848,13 @@ void AgentConnection::disconnect()
    m_isConnected = false;
    unlock();
    debugPrintf(6, _T("Disconnect completed"));
+}
+
+/**
+ * Disconnect handler. Default implementation does nothing.
+ */
+void AgentConnection::onDisconnect()
+{
 }
 
 /**
