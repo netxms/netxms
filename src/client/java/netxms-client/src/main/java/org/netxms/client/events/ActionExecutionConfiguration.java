@@ -151,7 +151,9 @@ public class ActionExecutionConfiguration
    }
 
    /**
-    * @return the blockTimerKey
+    * Get blocking timer key.
+    *
+    * @return blocking timer key or empty string if not set
     */
    public String getBlockingTimerKey()
    {
@@ -159,7 +161,9 @@ public class ActionExecutionConfiguration
    }
 
    /**
-    * @param blockTimerKey the blockTimerKey to set
+    * Set blocking timer key
+    *
+    * @param blockingTimerKey blocking timer key
     */
    public void setBlockingTimerKey(String blockingTimerKey)
    {
