@@ -474,8 +474,8 @@ void DCItem::checkThresholds(ItemValue &value)
             {
    				// Check if we need to re-sent threshold violation event
 	            time_t now = time(nullptr);
-               UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();
-				   if (thresholdDeactivated || ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now)))
+	            time_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
+				   if (thresholdDeactivated || ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval <= now)))
 				   {
                   PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisds",
                         s_paramNamesReach, m_name.cstr(), m_description.cstr(), thresholdValue.getString(),
