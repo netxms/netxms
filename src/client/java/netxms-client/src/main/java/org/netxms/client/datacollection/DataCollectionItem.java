@@ -19,7 +19,6 @@
 package org.netxms.client.datacollection;
 
 import java.util.ArrayList;
-
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.DataType;
@@ -30,12 +29,13 @@ import org.netxms.client.constants.DataType;
 public class DataCollectionItem extends DataCollectionObject
 {
 	// DCI specific flags
-	public static final int DCF_ALL_THRESHOLDS          = 0x0002;
-	public static final int DCF_RAW_VALUE_OCTET_STRING  = 0x0004;
-	public static final int DCF_SHOW_ON_OBJECT_TOOLTIP  = 0x0008;
-	public static final int DCF_AGGREGATE_FUNCTION_MASK = 0x0070;
-   public static final int DCF_CALCULATE_NODE_STATUS   = 0x0400;
-   public static final int DCF_SHOW_IN_OBJECT_OVERVIEW = 0x0800;
+	public static final int DCF_ALL_THRESHOLDS          = 0x00002;
+	public static final int DCF_RAW_VALUE_OCTET_STRING  = 0x00004;
+	public static final int DCF_SHOW_ON_OBJECT_TOOLTIP  = 0x00008;
+	public static final int DCF_AGGREGATE_FUNCTION_MASK = 0x00070;
+   public static final int DCF_CALCULATE_NODE_STATUS   = 0x00400;
+   public static final int DCF_SHOW_IN_OBJECT_OVERVIEW = 0x00800;
+   public static final int DCF_MULTIPLIERS_MASK        = 0x30000;
 	
 	// Aggregation functions
 	public static final int DCF_FUNCTION_SUM = 0;
@@ -311,7 +311,7 @@ public class DataCollectionItem extends DataCollectionObject
 	 */
 	public int getAggregationFunction()
 	{
-		return (flags & DCF_AGGREGATE_FUNCTION_MASK) >> 4;
+		return (int)((flags & DCF_AGGREGATE_FUNCTION_MASK) >> 4);
 	}
 
 	/**
@@ -445,5 +445,22 @@ public class DataCollectionItem extends DataCollectionObject
    public void setPredictionEngine(String predictionEngine)
    {
       this.predictionEngine = predictionEngine;
+   }
+   
+   /**
+    * Get multipliers selection
+    */
+   public int getMultipliersSelection()
+   {
+      return (int)((flags & DCF_MULTIPLIERS_MASK) >> 16);
+   }
+
+   /**
+    * Set multiplier selection
+    * @param selection
+    */
+   public void setMultiplierSelection(int selection)
+   {
+      flags = (flags & ~DCF_MULTIPLIERS_MASK) | ((selection & 0x03) << 16);
    }
 }

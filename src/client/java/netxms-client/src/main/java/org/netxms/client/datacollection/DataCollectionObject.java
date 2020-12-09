@@ -45,11 +45,11 @@ public abstract class DataCollectionObject
 	public static final int NOT_SUPPORTED = 2;
 	
 	// common data collection flags
-	public static final int DCF_AGGREGATE_ON_CLUSTER     = 0x0080;
-   public static final int DCF_TRANSFORM_AGGREGATED     = 0x0100;
-   public static final int DCF_CACHE_MODE_MASK          = 0x3000;
-   public static final int DCF_AGGREGATE_WITH_ERRORS    = 0x4000;
-   public static final int DCF_HIDE_ON_LAST_VALUES_PAGE = 0x8000;
+	public static final int DCF_AGGREGATE_ON_CLUSTER     = 0x00080;
+   public static final int DCF_TRANSFORM_AGGREGATED     = 0x00100;
+   public static final int DCF_CACHE_MODE_MASK          = 0x03000;
+   public static final int DCF_AGGREGATE_WITH_ERRORS    = 0x04000;
+   public static final int DCF_HIDE_ON_LAST_VALUES_PAGE = 0x08000;
 
    // Instance discovery methods
    public static final int IDM_NONE = 0;
@@ -86,7 +86,7 @@ public abstract class DataCollectionObject
 	protected String retentionTime;
    protected DataOrigin origin;
 	protected int status;
-	protected int flags;
+	protected long flags;
 	protected String transformationScript;
 	protected String name;
 	protected String description;
@@ -283,7 +283,7 @@ public abstract class DataCollectionObject
 		msg.setField(NXCPCodes.VID_NAME, name);
 		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
 		msg.setField(NXCPCodes.VID_SYSTEM_TAG, systemTag);
-		msg.setFieldInt16(NXCPCodes.VID_FLAGS, flags);
+		msg.setFieldInt32(NXCPCodes.VID_FLAGS, (int)flags);
 		msg.setField(NXCPCodes.VID_TRANSFORMATION_SCRIPT, transformationScript);
 		msg.setFieldInt32(NXCPCodes.VID_RESOURCE_ID, (int)resourceId);
 		msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int)sourceNode);
@@ -664,7 +664,7 @@ public abstract class DataCollectionObject
    /**
     * @return the flags
     */
-	public int getFlags()
+	public long getFlags()
 	{
 		return flags;
 	}
@@ -784,7 +784,7 @@ public abstract class DataCollectionObject
     */
    public AgentCacheMode getCacheMode()
    {
-      return AgentCacheMode.getByValue((flags & DCF_CACHE_MODE_MASK) >> 12);
+      return AgentCacheMode.getByValue((int)((flags & DCF_CACHE_MODE_MASK) >> 12));
    }
 
    public void setCacheMode(AgentCacheMode mode)
