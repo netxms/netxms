@@ -3245,10 +3245,9 @@ public class NXCSession
    }
 
    /**
-    * Find NetXMS object by it's identifier and notify once found
+    * Find NetXMS object by it's identifier and execute provided callback once found
     *
     * @param id Object identifier
-    * @return Object with given ID or wait object if object cannot be found
     */
    public void findObjectAsync(final long id, ObjectCreationListener callback)
    {
@@ -7221,7 +7220,7 @@ public class NXCSession
    /**
     * Modify data collection object without opening data collection configuration.
     *
-    * @param dco dcObject collection object
+    * @param dcObject dcObject collection object
     * @return Identifier assigned to newly created object
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
