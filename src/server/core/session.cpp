@@ -13629,7 +13629,7 @@ void ClientSession::getScheduledTasks(NXCPMessage *request)
 void ClientSession::addScheduledTask(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   UINT32 result = CreateScheduledTaskFromMsg(request, m_dwUserId, m_systemAccessRights);
+   uint32_t result = CreateScheduledTaskFromMsg(request, m_dwUserId, m_systemAccessRights);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
@@ -13640,7 +13640,7 @@ void ClientSession::addScheduledTask(NXCPMessage *request)
 void ClientSession::updateScheduledTask(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   UINT32 result = UpdateScheduledTaskFromMsg(request, m_dwUserId, m_systemAccessRights);
+   uint32_t result = UpdateScheduledTaskFromMsg(request, m_dwUserId, m_systemAccessRights);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
@@ -13651,7 +13651,7 @@ void ClientSession::updateScheduledTask(NXCPMessage *request)
 void ClientSession::removeScheduledTask(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   UINT32 result = DeleteScheduledTask(request->getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_systemAccessRights);
+   uint32_t result = DeleteScheduledTask(request->getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_systemAccessRights);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
