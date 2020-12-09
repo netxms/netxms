@@ -221,7 +221,7 @@
             locationURI="popup:org.eclipse.ui.popup.any?after=eventsAndLogs">
          <menu
                id="org.netxms.ui.LogSubmenu"
-               label="&amp;Logs">
+               label="%menu.label.Logs">
             <command
                   commandId="org.netxms.ui.eclipse.logviewer.commands.eventHistory"
                   label="%command.name.EventLog"
@@ -287,7 +287,7 @@
             </command>
             <command
                   commandId="org.netxms.ui.eclipse.logviewer.commands.windowsEventLog"
-                  label="Windwos event log"
+                  label="Windows event log"
                   style="push">
                <visibleWhen
                      checkEnabled="false">
