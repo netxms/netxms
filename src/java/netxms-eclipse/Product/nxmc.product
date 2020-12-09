@@ -67,7 +67,6 @@ Copyright (c) 2003-2020 Raden Solutions
       <plugin id="org.apache.commons.logging"/>
       <plugin id="org.apache.felix.gogo.runtime"/>
       <plugin id="org.apache.felix.scr"/>
-      <plugin id="org.apache.log4j"/>
       <plugin id="org.apache.xmlgraphics"/>
       <plugin id="org.eclipse.ant.core"/>
       <plugin id="org.eclipse.ant.core.nl_ar" fragment="true"/>
@@ -634,6 +633,7 @@ Copyright (c) 2003-2020 Raden Solutions
       <plugin id="org.netxms.ui.eclipse.eventmanager"/>
       <plugin id="org.netxms.ui.eclipse.filemanager"/>
       <plugin id="org.netxms.ui.eclipse.imagelibrary"/>
+      <plugin id="org.netxms.ui.eclipse.logger" fragment="true"/>
       <plugin id="org.netxms.ui.eclipse.logviewer"/>
       <plugin id="org.netxms.ui.eclipse.networkmaps"/>
       <plugin id="org.netxms.ui.eclipse.nxsl"/>
@@ -654,6 +654,7 @@ Copyright (c) 2003-2020 Raden Solutions
       <plugin id="org.netxms.ui.eclipse.switchmanager"/>
       <plugin id="org.netxms.ui.eclipse.topology"/>
       <plugin id="org.netxms.ui.eclipse.usermanager"/>
+      <plugin id="org.slf4j.api"/>
       <plugin id="org.swtchart"/>
       <plugin id="org.w3c.css.sac"/>
       <plugin id="org.w3c.dom.events"/>
