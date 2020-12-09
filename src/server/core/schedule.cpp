@@ -885,17 +885,17 @@ bool NXCORE_EXPORTABLE IsScheduledTaskRunning(uint32_t taskId)
  */
 void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights)
 {
-   int scheduleCount = 0;
-   int base = VID_SCHEDULE_LIST_BASE;
+   uint32_t scheduleCount = 0;
+   uint32_t fieldId = VID_SCHEDULE_LIST_BASE;
 
    s_oneTimeScheduleLock.lock();
    for(int i = 0; i < s_oneTimeSchedules.size(); i++)
    {
       if (s_oneTimeSchedules.get(i)->canAccess(userId, systemRights))
       {
-         s_oneTimeSchedules.get(i)->fillMessage(msg, base);
+         s_oneTimeSchedules.get(i)->fillMessage(msg, fieldId);
          scheduleCount++;
-         base += 100;
+         fieldId += 100;
       }
    }
    s_oneTimeScheduleLock.unlock();
@@ -905,9 +905,9 @@ void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights)
    {
       if (s_cronSchedules.get(i)->canAccess(userId, systemRights))
       {
-         s_cronSchedules.get(i)->fillMessage(msg, base);
+         s_cronSchedules.get(i)->fillMessage(msg, fieldId);
          scheduleCount++;
-         base += 100;
+         fieldId += 100;
       }
    }
    s_cronScheduleLock.unlock();
@@ -920,21 +920,21 @@ void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights)
  */
 void GetSchedulerTaskHandlers(NXCPMessage *msg, uint64_t accessRights)
 {
-   uint32_t base = VID_CALLBACK_BASE;
-   int count = 0;
+   uint32_t fieldId = VID_CALLBACK_BASE;
+   uint32_t count = 0;
 
    StringList *keyList = s_callbacks.keys();
    for(int i = 0; i < keyList->size(); i++)
    {
-      if(accessRights & s_callbacks.get(keyList->get(i))->m_accessRight)
+      if (accessRights & s_callbacks.get(keyList->get(i))->m_accessRight)
       {
-         msg->setField(base, keyList->get(i));
+         msg->setField(fieldId, keyList->get(i));
          count++;
-         base++;
+         fieldId++;
       }
    }
    delete keyList;
-   msg->setField(VID_CALLBACK_COUNT, (uint32_t)count);
+   msg->setField(VID_CALLBACK_COUNT, count);
 }
 
 /**
@@ -943,21 +943,46 @@ void GetSchedulerTaskHandlers(NXCPMessage *msg, uint64_t accessRights)
 uint32_t CreateScheduledTaskFromMsg(NXCPMessage *request, uint32_t owner, uint64_t systemAccessRights)
 {
    TCHAR *taskHandler = request->getFieldAsString(VID_TASK_HANDLER);
+   SchedulerCallback *callback = s_callbacks.get(taskHandler);
+   if ((callback != nullptr) && ((callback->m_accessRight == 0) || ((callback->m_accessRight & systemAccessRights) != callback->m_accessRight)))
+   {
+      // Access rights set to 0 for system task handlers that could not be scheduled by user
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Attempt to create scheduled task with handler %s by user [%u] failed because of insufficient rights"), taskHandler, owner);
+      MemFree(taskHandler);
+      return RCC_ACCESS_DENIED;
+   }
+
+   uint32_t objectId = request->getFieldAsInt32(VID_OBJECT_ID);
+   if (!_tcsncmp(taskHandler, _T("Maintenance."), 12))   // Do additional check on maintenance enter/leave
+   {
+      shared_ptr<NetObj> object = FindObjectById(objectId);
+      if (object == nullptr)
+      {
+         MemFree(taskHandler);
+         return RCC_INVALID_OBJECT_ID;
+      }
+      if (!object->checkAccessRights(owner, OBJECT_ACCESS_MAINTENANCE))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Attempt to create scheduled task with handler %s by user [%u] failed because of insufficient rights on object"), taskHandler, owner);
+         MemFree(taskHandler);
+         return RCC_ACCESS_DENIED;
+      }
+   }
+
    TCHAR *persistentData = request->getFieldAsString(VID_PARAMETER);
    TCHAR *comments = request->getFieldAsString(VID_COMMENTS);
    TCHAR *key = request->getFieldAsString(VID_TASK_KEY);
-   uint32_t objectId = request->getFieldAsInt32(VID_OBJECT_ID);
    uint32_t rcc;
    if (request->isFieldExist(VID_SCHEDULE))
    {
       TCHAR *schedule = request->getFieldAsString(VID_SCHEDULE);
-      rcc = AddRecurrentScheduledTask(taskHandler, schedule, persistentData, NULL, owner, objectId, systemAccessRights, comments, key);
+      rcc = AddRecurrentScheduledTask(taskHandler, schedule, persistentData, nullptr, owner, objectId, systemAccessRights, comments, key);
       MemFree(schedule);
    }
    else
    {
       rcc = AddOneTimeScheduledTask(taskHandler, request->getFieldAsTime(VID_EXECUTION_TIME),
-               persistentData, NULL, owner, objectId, systemAccessRights, comments, key);
+               persistentData, nullptr, owner, objectId, systemAccessRights, comments, key);
    }
    MemFree(taskHandler);
    MemFree(persistentData);
@@ -1034,7 +1059,7 @@ static void AdHocScheduler()
                      task->getId(), static_cast<int64_t>(task->getScheduledExecutionTime()));
 
             SchedulerCallback *callback = s_callbacks.get(task->getTaskHandlerId());
-            if (callback == NULL)
+            if (callback == nullptr)
             {
                nxlog_debug_tag(DEBUG_TAG, 3, _T("AdHocScheduler: task handler \"%s\" not registered"), task->getTaskHandlerId().cstr());
                callback = &s_missingTaskHandler;

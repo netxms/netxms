@@ -22,21 +22,17 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("obj.maint")
+
 /**
  * Execute scheduled maintenance task
  */
 static void ScheduledMaintenance(const shared_ptr<ScheduledTaskParameters>& parameters, bool enter)
 {
-   if (parameters->m_objectId == 0)
-   {
-      DbgPrintf(4, _T("MaintenanceJob: object ID is 0"));
-      return;
-   }
-
    shared_ptr<NetObj> object = FindObjectById(parameters->m_objectId);
    if (object != nullptr)
    {
-      if (object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
+      if (object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_MAINTENANCE))
       {
          if (enter)
          {
@@ -49,12 +45,12 @@ static void ScheduledMaintenance(const shared_ptr<ScheduledTaskParameters>& para
       }
       else
       {
-         DbgPrintf(4, _T("MaintenanceJob: Access to node %s denied"), object->getName());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ScheduledMaintenance: Access to object %s [%u] denied"), object->getName(), object->getId());
       }
    }
    else
    {
-      DbgPrintf(4, _T("MaintenanceJob: object %d not found"), parameters->m_objectId);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ScheduledMaintenance: object [%u] not found"), parameters->m_objectId);
    }
 }
 
