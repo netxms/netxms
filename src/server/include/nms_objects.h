@@ -3225,7 +3225,7 @@ public:
    void changeIPAddress(const InetAddress& ipAddr);
    void changeZone(UINT32 newZone);
    void setTunnelId(const uuid& tunnelId, const TCHAR *certSubject);
-   void setFileUpdateConnection(const shared_ptr<AgentConnection>& connection);
+   bool setFileUpdateConnection(const shared_ptr<AgentConnection>& connection);
    void clearFileUpdateConnection();
    void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);
    void forceSyncDataCollectionConfig();

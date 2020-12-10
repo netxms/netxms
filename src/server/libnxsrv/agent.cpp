@@ -485,9 +485,10 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_nProtocolVersion = NXCP_VERSION;
 	m_hCurrFile = -1;
    m_deleteFileOnDownloadFailure = true;
-	m_condFileDownload = ConditionCreate(TRUE);
+	m_condFileDownload = ConditionCreate(true);
    m_fileDownloadSucceeded = false;
 	m_fileUploadInProgress = false;
+   m_fileUpdateConnection = false;
    m_sendToClientMessageCallback = nullptr;
    m_dwDownloadRequestId = 0;
    m_downloadProgressCallback = nullptr;
@@ -495,7 +496,6 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_bulkDataProcessing = 0;
    m_controlServer = false;
    m_masterServer = false;
-   m_isFileUpdates = false;
 }
 
 /**
@@ -2183,7 +2183,7 @@ UINT32 AgentConnection::enableTraps()
 /**
  * Enable trap receiving on connection
  */
-UINT32 AgentConnection::enableFileUpdates()
+uint32_t AgentConnection::enableFileUpdates()
 {
    NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId;
@@ -2191,15 +2191,13 @@ UINT32 AgentConnection::enableFileUpdates()
    dwRqId = generateRequestId();
    msg.setCode(CMD_ENABLE_FILE_UPDATES);
    msg.setId(dwRqId);
-   if (sendMessage(&msg))
-   {
-      uint32_t rcc = waitForRCC(dwRqId, m_commandTimeout);
-      if (rcc == ERR_SUCCESS)
-         m_isFileUpdates = true;
-      return rcc;
-   }
-   else
+   if (!sendMessage(&msg))
       return ERR_CONNECTION_BROKEN;
+
+   uint32_t rcc = waitForRCC(dwRqId, m_commandTimeout);
+   if (rcc == ERR_SUCCESS)
+      m_fileUpdateConnection = true;
+   return rcc;
 }
 
 /**

@@ -52,12 +52,8 @@ void FileMonitoringList::addFile(MONITORED_FILE *file, Node *node, const shared_
    lock();
    file->session->incRefCount();
    m_monitoredFiles.add(file);
-   if (!node->hasFileUpdateConnection())
-   {
-      conn->enableFileUpdates();
-      node->setFileUpdateConnection(conn);
-   }
-   nxlog_debug(5, _T("File tracker registered: node=%s [%d], file=\"%s\""), node->getName(), node->getId(), file->fileName);
+   node->setFileUpdateConnection(conn);
+   nxlog_debug(5, _T("File tracker registered: node=%s [%u], file=\"%s\""), node->getName(), node->getId(), file->fileName);
    unlock();
 }
 
@@ -75,7 +71,8 @@ bool FileMonitoringList::isDuplicate(MONITORED_FILE *file)
          && curr->nodeID == file->nodeID
          && curr->session->getUserId() == file->session->getUserId())
       {
-         result=true;
+         result = true;
+         break;
       }
    }
    unlock();
@@ -125,14 +122,19 @@ bool FileMonitoringList::removeFile(MONITORED_FILE *file)
          i--;
       }
    }
+   unlock();
 
-   if (deleted && nodeConnectionCount == 1)
+   if (deleted)
    {
       shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(file->nodeID, OBJECT_NODE));
       if (node != nullptr)
-         node->clearFileUpdateConnection();
+      {
+         nxlog_debug(5, _T("File tracker unregistered: node=%s [%u], file=\"%s\""), node->getName(), node->getId(), file->fileName);
+         if (nodeConnectionCount == 1)
+            node->clearFileUpdateConnection();
+      }
    }
-   unlock();
+
    return deleted;
 }
 
@@ -144,14 +146,21 @@ void FileMonitoringList::removeDisconnectedNode(uint32_t nodeId)
    lock();
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
-      MONITORED_FILE *m_monitoredFile = m_monitoredFiles.get(i);
-      if (m_monitoredFile->nodeID == nodeId)
+      MONITORED_FILE *file = m_monitoredFiles.get(i);
+      if (file->nodeID == nodeId)
       {
          NotifyClientSessions(NX_NOTIFY_FILE_MONITORING_FAILED, nodeId);
-         m_monitoredFile->session->decRefCount();
+         file->session->decRefCount();
          m_monitoredFiles.remove(i);
          i--;
       }
    }
    unlock();
+
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(nodeId, OBJECT_NODE));
+   if (node != nullptr)
+   {
+      node->clearFileUpdateConnection();
+      nxlog_debug(5, _T("All file trackers for node %s [%u] unregistered"), node->getName(), node->getId());
+   }
 }
