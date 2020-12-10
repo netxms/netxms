@@ -33,12 +33,16 @@ import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.jobs.ConsoleJobCallingServerJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Dynamic file viewer - follows file changes
  */
 public class DynamicFileViewer extends BaseFileViewer
 {
+   private static Logger logger = LoggerFactory.getLogger(DynamicFileViewer.class);
+   
    protected ConsoleJob monitoringJob = null;
    protected ConsoleJob restartJob = null;
    protected String fileId = null;
@@ -138,7 +142,14 @@ public class DynamicFileViewer extends BaseFileViewer
                   });
                }
             }
-            session.cancelFileMonitoring(nodeId, fileId);
+            try
+            {
+               session.cancelFileMonitoring(nodeId, fileId);
+            }
+            catch(Exception e)
+            {
+               logger.warn(String.format("Cannot cancel file monitoring node id: %d, file id: %s", nodeId, fileId), e);
+            }
          }
          
          @Override
