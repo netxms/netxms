@@ -18,9 +18,9 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:https://git.netxms.org/public/netxms.git</connection>
-        <developerConnection>scm:git:ssh://git.netxms.org/public/netxms.git</developerConnection>
-        <url>http://git.netxms.org/public/netxms.git/shortlog/refs/heads/develop</url>
+        <connection>scm:git:https://github.com/netxms/netxms.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:netxms/netxms.git</developerConnection>
+        <url>https://github.com/netxms/netxms</url>
     </scm>
     <developers>
         <developer>
