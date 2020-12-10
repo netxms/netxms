@@ -4139,7 +4139,7 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$PYTHON_SUPPORT" = "xyes"; then
-	PYTHON_VERSIONS="3.6m 3.6 3.5m 3.5 3m 3"
+	PYTHON_VERSIONS="3.8 3.7 3.6m 3.6 3.5m 3.5 3m 3"
 
 	OLD_CPPFLAGS="$CPPFLAGS"
 	OLD_LDFLAGS="$LDFLAGS"
@@ -4160,9 +4160,12 @@ if test "x$PYTHON_SUPPORT" = "xyes"; then
 	done
 
 	if test "x$PYTHON_VERSION" != "x"; then
+		if $PY_CONFIG --help | grep embed >/dev/null; then
+			PY_EMBED="--embed"
+		fi
 		PYTHON_CPPFLAGS=`$PY_CONFIG --includes`
 		PYTHON_LDFLAGS=`$PY_CONFIG --ldflags`
-		PYTHON_LIBS=`$PY_CONFIG --libs`
+		PYTHON_LIBS=`$PY_CONFIG --libs $PY_EMBED`
 
 		CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
 		LDFLAGS="$LDFLAGS $PYTHON_LDFLAGS"
