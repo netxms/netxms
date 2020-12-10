@@ -140,7 +140,7 @@ static EnumerationCallbackResult SendFileUpdateCallback(AbstractCommSession *ses
 {
    if (((SendFileUpdateCallbackData *)data)->ip.equals(session->getServerAddress()) && session->canAcceptFileUpdates())
    {
-      session->sendMessage(((SendFileUpdateCallbackData *)data)->pMsg);
+      session->postMessage(((SendFileUpdateCallbackData *)data)->pMsg);
       return _STOP;
    }
    return _CONTINUE;
@@ -162,13 +162,13 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
 
    int threadSleepTime = 1;
 
-   bool follow = true;
    NX_STAT_STRUCT st;
    NX_FSTAT(hFile, &st);
    flData->setOffset((long)st.st_size);
    ThreadSleep(threadSleepTime);
+   char *content = static_cast<char*>(MemAlloc(65536));
 
-   while (follow)
+   while (true)
    {
       NX_FSTAT(hFile, &st);
       ssize_t newOffset = static_cast<ssize_t>(st.st_size);
@@ -177,9 +177,9 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
          size_t readSize = newOffset - flData->getOffset();
          for(size_t i = readSize; i > 0; i -= readSize)
          {
-            if (readSize > 65536)
+            if (readSize > 65535)
             {
-               readSize = 65536;
+               readSize = 65535;
                newOffset = flData->getOffset() + readSize;
             }
             NXCPMessage msg;
@@ -192,7 +192,6 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
 #else
             _lseek(hFile, flData->getOffset(), SEEK_SET);
 #endif
-            char *content = static_cast<char*>(MemAlloc(readSize + 1));
             readSize = _read(hFile, content, static_cast<int>(readSize));
             for(size_t j = 0; j < readSize; j++)
                if (content[j] == 0)
@@ -209,19 +208,20 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
             bool sent = AgentEnumerateSessions(SendFileUpdateCallback, &data);
             if (!sent)
             {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("SendFileUpdatesOverNXCP: Removing %s file (ID=%s) that is not possible to send."), flData->getFile(), flData->getFileId());
                g_monitorFileList.remove(flData->getFileId());
+               break;
             }
-
-            MemFree(content);
          }
       }
 
-      ThreadSleep(threadSleepTime);
       if (!g_monitorFileList.contains(flData->getFileId()))
       {
-         follow = false;
+         break;
       }
+      ThreadSleep(threadSleepTime);
    }
+   MemFree(content);
    delete flData;
    _close(hFile);
    return THREAD_OK;

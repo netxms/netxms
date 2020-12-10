@@ -495,6 +495,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_bulkDataProcessing = 0;
    m_controlServer = false;
    m_masterServer = false;
+   m_isFileUpdates = false;
 }
 
 /**
@@ -2192,7 +2193,10 @@ UINT32 AgentConnection::enableFileUpdates()
    msg.setId(dwRqId);
    if (sendMessage(&msg))
    {
-      return waitForRCC(dwRqId, m_commandTimeout);
+      uint32_t rcc = waitForRCC(dwRqId, m_commandTimeout);
+      if (rcc == ERR_SUCCESS)
+         m_isFileUpdates = true;
+      return rcc;
    }
    else
       return ERR_CONNECTION_BROKEN;

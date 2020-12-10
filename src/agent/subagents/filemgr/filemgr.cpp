@@ -1054,6 +1054,12 @@ static void CH_GetFileSetDetails(NXCPMessage *request, NXCPMessage *response, Ab
  */
 static void CH_GetFile(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
+   if (request->getFieldAsBoolean(VID_FILE_FOLLOW) && !session->isMasterServer())
+   {
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+      return;
+   }
+
    TCHAR fileName[MAX_PATH];
    request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
    ConvertPathToHost(fileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());

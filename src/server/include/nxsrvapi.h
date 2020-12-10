@@ -847,6 +847,7 @@ private:
 	bool m_fileUploadInProgress;
 	bool m_allowCompression;
 	VolatileCounter m_bulkDataProcessing;
+	bool m_isFileUpdates;
 
    void receiverThread();
 
@@ -880,6 +881,8 @@ protected:
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *pMsg);
    virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size);
+   bool isFileUpdatesConnection() { return m_isFileUpdates; }
+   void setFileUpdatesConnection(bool isFileUpdate) { m_isFileUpdates = isFileUpdate; }
 
    const InetAddress& getIpAddr() const { return m_addr; }
 
