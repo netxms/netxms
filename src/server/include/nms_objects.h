@@ -144,6 +144,7 @@ protected:
    virtual void onDataPush(NXCPMessage *msg) override;
    virtual void onFileMonitoringData(NXCPMessage *msg) override;
    virtual void onSnmpTrap(NXCPMessage *pMsg) override;
+   virtual void onDisconnect() override;
    virtual UINT32 processCollectedData(NXCPMessage *msg) override;
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response) override;
    virtual bool processCustomMessage(NXCPMessage *msg) override;

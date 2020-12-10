@@ -932,3 +932,13 @@ void AgentConnectionEx::processTcpProxyData(uint32_t channelId, const void *data
    if (m_tcpProxySession != nullptr)
       m_tcpProxySession->processTcpProxyData(this, channelId, data, size);
 }
+
+void AgentConnectionEx::onDisconnect()
+{
+   if (isFileUpdatesConnection())
+   {
+      //cancel file monitoring locally(on agent it is canceled if agent have fallen)
+      g_monitoringList.removeDisconnectedNode(m_nodeId);
+      setFileUpdatesConnection(false);
+   }
+}

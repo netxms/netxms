@@ -2184,8 +2184,6 @@ restart_agent_check:
                m_state |= NSF_AGENT_UNREACHABLE;
                PostSystemEventEx(eventQueue, EVENT_AGENT_FAIL, m_id, nullptr);
                m_failTimeAgent = now;
-               //cancel file monitoring locally(on agent it is canceled if agent have fallen)
-               g_monitoringList.removeDisconnectedNode(m_id);
                m_pollCountAgent = 0;
             }
          }
