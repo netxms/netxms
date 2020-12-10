@@ -132,10 +132,30 @@ Begin
     Result := FALSE;
 End;
 
+Procedure LoadPreviousData;
+Begin
+  serverName := GetPreviousData('MasterServer', serverName);
+  sbDownloadConfig := GetPreviousData('DownloadConfig', sbDownloadConfig);
+  sbSetupTunnel := GetPreviousData('SetupTunnel', sbSetupTunnel);
+  sbECS := GetPreviousData('Subagent_ECS', sbECS);
+  sbFileMgr := GetPreviousData('Subagent_FILEMGR', sbFileMgr);
+  sbPing := GetPreviousData('Subagent_PING', sbPing);
+  sbLogWatch := GetPreviousData('Subagent_LOGWATCH', sbLogWatch);
+  sbMQTT := GetPreviousData('Subagent_MQTT', sbMQTT);
+  sbNetSvc := GetPreviousData('Subagent_NETSVC', sbNetSvc);
+  sbPortCheck := GetPreviousData('Subagent_PORTCHECK', sbPortCheck);
+  sbSSH := GetPreviousData('Subagent_SSH', sbSSH);
+  sbWinEventSync := GetPreviousData('Subagent_WINEVENTSYNC', sbWinEventSync);
+  sbWinPerf := GetPreviousData('Subagent_WINPERF', sbWinPerf);
+  sbWMI := GetPreviousData('Subagent_WMI', sbWMI);
+  sbUPS := GetPreviousData('Subagent_UPS', sbUPS);
+End;
+
 Function InitializeSetup(): Boolean;
 Var
   i, nCount : Integer;
   param : String;
+  ignorePrevData : Boolean;
 Begin
   // Common suffix for backup files
   backupFileSuffix := '.bak.' + GetDateTimeString('yyyymmddhhnnss', #0, #0);
@@ -150,7 +170,7 @@ Begin
     Result := TRUE;
   End;
   
-  // Empty values for installation data
+  // Initial values for installation data
   serverName := '';
   sbECS := 'FALSE';
   sbFileMgr := 'FALSE';
@@ -171,6 +191,19 @@ Begin
   fileStore := '';
   configIncludeDir := '';
   forceCreateConfig := FALSE;
+  ignorePrevData := FALSE;
+
+  // Check for /IGNOREPREVIOUSDATA option
+  nCount := ParamCount;
+  For i := 1 To nCount Do Begin
+    param := ParamStr(i);
+    If param = '/IGNOREPREVIOUSDATA' Then Begin
+      ignorePrevData := TRUE;
+    End;
+  End;
+
+  If Not ignorePrevData Then
+    LoadPreviousData;
   
   // Parse command line parameters
   nCount := ParamCount;
@@ -298,7 +331,7 @@ Begin
   editServerName := TNewEdit.Create(ServerSelectionPage);
   editServerName.Top := static.Top + static.Height + ScaleY(8);
   editServerName.Width := ServerSelectionPage.SurfaceWidth - ScaleX(8);
-  editServerName.Text := GetPreviousData('MasterServer', serverName);
+  editServerName.Text := serverName;
   editServerName.Parent := ServerSelectionPage.Surface;
 
   cbDownloadConfig := TNewCheckBox.Create(ServerSelectionPage);
@@ -306,7 +339,7 @@ Begin
   cbDownloadConfig.Width := ServerSelectionPage.SurfaceWidth;
   cbDownloadConfig.Height := ScaleY(17);
   cbDownloadConfig.Caption := 'Download configuration file from management server on startup';
-  cbDownloadConfig.Checked := StrToBool(GetPreviousData('DownloadConfig', sbDownloadConfig));
+  cbDownloadConfig.Checked := StrToBool(sbDownloadConfig);
   cbDownloadConfig.Parent := ServerSelectionPage.Surface;
 
   cbSetupTunnel := TNewCheckBox.Create(ServerSelectionPage);
@@ -314,7 +347,7 @@ Begin
   cbSetupTunnel.Width := ServerSelectionPage.SurfaceWidth;
   cbSetupTunnel.Height := ScaleY(17);
   cbSetupTunnel.Caption := 'Setup tunnel to master server';
-  cbSetupTunnel.Checked := StrToBool(GetPreviousData('SetupTunnel', sbSetupTunnel));
+  cbSetupTunnel.Checked := StrToBool(sbSetupTunnel);
   cbSetupTunnel.Parent := ServerSelectionPage.Surface;
 
   SubagentSelectionPage := CreateInputOptionPage(ServerSelectionPage.Id,
@@ -332,18 +365,18 @@ Begin
   SubagentSelectionPage.Add('Windows Performance Subagent - winperf.nsm');
   SubagentSelectionPage.Add('WMI Subagent - wmi.nsm');
   SubagentSelectionPage.Add('UPS Monitoring Subagent - ups.nsm');
-  SubagentSelectionPage.Values[0] := StrToBool(GetPreviousData('Subagent_ECS', sbECS));
-  SubagentSelectionPage.Values[1] := StrToBool(GetPreviousData('Subagent_FILEMGR', sbFileMgr));
-  SubagentSelectionPage.Values[2] := StrToBool(GetPreviousData('Subagent_PING', sbPing));
-  SubagentSelectionPage.Values[3] := StrToBool(GetPreviousData('Subagent_LOGWATCH', sbLogWatch));
-  SubagentSelectionPage.Values[4] := StrToBool(GetPreviousData('Subagent_MQTT', sbMQTT));
-  SubagentSelectionPage.Values[5] := StrToBool(GetPreviousData('Subagent_NETSVC', sbNetSvc));
-  SubagentSelectionPage.Values[6] := StrToBool(GetPreviousData('Subagent_PORTCHECK', sbPortCheck));
-  SubagentSelectionPage.Values[7] := StrToBool(GetPreviousData('Subagent_SSH', sbSSH));
-  SubagentSelectionPage.Values[8] := StrToBool(GetPreviousData('Subagent_WINEVENTSYNC', sbWinEventSync));
-  SubagentSelectionPage.Values[9] := StrToBool(GetPreviousData('Subagent_WINPERF', sbWinPerf));
-  SubagentSelectionPage.Values[10] := StrToBool(GetPreviousData('Subagent_WMI', sbWMI));
-  SubagentSelectionPage.Values[11] := StrToBool(GetPreviousData('Subagent_UPS', sbUPS));
+  SubagentSelectionPage.Values[0] := StrToBool(sbECS);
+  SubagentSelectionPage.Values[1] := StrToBool(sbFileMgr);
+  SubagentSelectionPage.Values[2] := StrToBool(sbPing);
+  SubagentSelectionPage.Values[3] := StrToBool(sbLogWatch);
+  SubagentSelectionPage.Values[4] := StrToBool(sbMQTT);
+  SubagentSelectionPage.Values[5] := StrToBool(sbNetSvc);
+  SubagentSelectionPage.Values[6] := StrToBool(sbPortCheck);
+  SubagentSelectionPage.Values[7] := StrToBool(sbSSH);
+  SubagentSelectionPage.Values[8] := StrToBool(sbWinEventSync);
+  SubagentSelectionPage.Values[9] := StrToBool(sbWinPerf);
+  SubagentSelectionPage.Values[10] := StrToBool(sbWMI);
+  SubagentSelectionPage.Values[11] := StrToBool(sbUPS);
 End;
 
 Procedure RegisterPreviousData(PreviousDataKey: Integer);
