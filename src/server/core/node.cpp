@@ -7968,12 +7968,23 @@ void Node::changeZone(UINT32 newZoneUIN)
 /**
  * Set connection for file update messages
  */
-void Node::setFileUpdateConnection(const shared_ptr<AgentConnection>& connection)
+bool Node::setFileUpdateConnection(const shared_ptr<AgentConnection>& connection)
 {
-   nxlog_debug(6, _T("Changing file tracking connection for node %s [%d]"), m_name, m_id);
+   bool changed = false;
    lockProperties();
-   m_fileUpdateConnection = connection;
+   if (m_fileUpdateConnection == nullptr)
+   {
+      m_fileUpdateConnection = connection;
+      changed = true;
+   }
    unlockProperties();
+
+   if (changed)
+   {
+      connection->enableFileUpdates();
+      nxlog_debug(6, _T("Set file tracking connection for node %s [%d]"), m_name, m_id);
+   }
+   return changed;
 }
 
 /**
@@ -7981,10 +7992,10 @@ void Node::setFileUpdateConnection(const shared_ptr<AgentConnection>& connection
  */
 void Node::clearFileUpdateConnection()
 {
-   nxlog_debug(6, _T("Changing file tracking connection for node %s [%d]"), m_name, m_id);
    lockProperties();
    m_fileUpdateConnection.reset();
    unlockProperties();
+   nxlog_debug(6, _T("Cleared file tracking connection for node %s [%d]"), m_name, m_id);
 }
 
 /**

@@ -845,9 +845,9 @@ private:
 	bool m_deleteFileOnDownloadFailure;
 	void (*m_sendToClientMessageCallback)(NXCPMessage*, void*);
 	bool m_fileUploadInProgress;
+	bool m_fileUpdateConnection;
 	bool m_allowCompression;
 	VolatileCounter m_bulkDataProcessing;
-	bool m_isFileUpdates;
 
    void receiverThread();
 
@@ -881,8 +881,6 @@ protected:
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *pMsg);
    virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size);
-   bool isFileUpdatesConnection() { return m_isFileUpdates; }
-   void setFileUpdatesConnection(bool isFileUpdate) { m_isFileUpdates = isFileUpdate; }
 
    const InetAddress& getIpAddr() const { return m_addr; }
 
@@ -926,6 +924,7 @@ public:
 	bool isControlServer() const { return m_controlServer; }
 	bool isMasterServer() const { return m_masterServer; }
 	bool isCompressionAllowed() const { return m_allowCompression && (m_nProtocolVersion >= 4); }
+	bool isFileUpdateConnection() const { return m_fileUpdateConnection; }
 
    bool sendMessage(NXCPMessage *msg);
    bool sendRawMessage(NXCP_MESSAGE *msg);
@@ -964,7 +963,7 @@ public:
    uint32_t readConfigFile(TCHAR **content, size_t *size);
    uint32_t writeConfigFile(const TCHAR *content);
    UINT32 enableTraps();
-   UINT32 enableFileUpdates();
+   uint32_t enableFileUpdates();
 	UINT32 getPolicyInventory(AgentPolicyInfo **info);
 	UINT32 uninstallPolicy(const uuid& guid);
    UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
