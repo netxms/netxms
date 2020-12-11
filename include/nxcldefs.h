@@ -502,6 +502,7 @@ enum SessionState
 #define NX_NOTIFY_OBJECT_CATEGORY_DELETED    49
 #define NX_NOTIFY_GEO_AREA_UPDATED           50
 #define NX_NOTIFY_GEO_AREA_DELETED           51
+#define NX_NOTIFY_OBJECTS_IN_SYNC            52
 
 /**
  * Request completion codes

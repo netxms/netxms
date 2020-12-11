@@ -507,6 +507,7 @@ private:
 	VolatileCounter m_tcpProxyChannelId;
 	HashSet<uint32_t> *m_pendingObjectNotifications;
    MUTEX m_pendingObjectNotificationsLock;
+   bool m_objectNotificationScheduled;
    uint32_t m_objectNotificationDelay;
 
    static void socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, ClientSession *session);
@@ -806,8 +807,7 @@ private:
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
-   void sendObjectUpdate(shared_ptr<NetObj> object);
-   void scheduleObjectUpdate(shared_ptr<NetObj> object);
+   void sendObjectUpdates();
 
    void finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId);
 
