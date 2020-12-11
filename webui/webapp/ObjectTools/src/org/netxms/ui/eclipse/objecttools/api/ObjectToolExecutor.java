@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
@@ -381,7 +382,7 @@ public final class ObjectToolExecutor
       final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
       try
       {
-         MultiNodeCommandExecutor view = (MultiNodeCommandExecutor)window.getActivePage().showView(MultiNodeCommandExecutor.ID, tool.getDisplayName() + nodes.toString(), IWorkbenchPage.VIEW_ACTIVATE);
+         MultiNodeCommandExecutor view = (MultiNodeCommandExecutor)window.getActivePage().showView(MultiNodeCommandExecutor.ID, UUID.randomUUID().toString(), IWorkbenchPage.VIEW_ACTIVATE);
          view.execute(tool, nodes, inputValues, maskedFields, expandedToolData);
       }
       catch(Exception e)
