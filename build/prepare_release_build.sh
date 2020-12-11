@@ -6,6 +6,13 @@ if [ ! -r configure.ac ]; then
 	exit 1
 fi
 
+OS=`uname -s`
+if [ "$OS" = "SunOS" ]; then
+        SED="gsed -r"
+else
+        SED="sed -r"
+fi
+
 set -e
 
 ### Configuration
@@ -29,10 +36,10 @@ fi
 
 ./build/update_plugin_versions.py . $VERSION
 
-cat src/java/netxms-eclipse/Core/plugin.xml | sed -E "s,^(.*;Version) [0-9.]+(&#x0A.*)\$,\\1 $VERSION\\2," > ./plugin.xml
+cat src/java/netxms-eclipse/Core/plugin.xml | $SED "s,^(.*;Version) [0-9.]+(&#x0A.*)\$,\\1 $VERSION\\2," > ./plugin.xml
 mv ./plugin.xml src/java/netxms-eclipse/Core/plugin.xml
 
-cat src/java/netxms-eclipse/Product/nxmc.product | sed -E "s,^Version [0-9.]+\$,Version $VERSION," > nxmc.product
+cat src/java/netxms-eclipse/Product/nxmc.product | $SED "s,^Version [0-9.]+\$,Version $VERSION," > nxmc.product
 mv ./nxmc.product src/java/netxms-eclipse/Product/nxmc.product
 
 sed -i -e "s,org.netxms:netxms-client:3.4-SNAPSHOT,org.netxms:netxms-client:$VERSION,g" android/agent/app/build.gradle
