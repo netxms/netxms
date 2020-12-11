@@ -8,9 +8,9 @@ fi
 
 OS=`uname -s`
 if [ "$OS" = "SunOS" ]; then
-        SED="gsed -r"
+        SED="gsed"
 else
-        SED="sed -r"
+        SED="sed"
 fi
 
 set -e
@@ -36,16 +36,16 @@ fi
 
 ./build/update_plugin_versions.py . $VERSION
 
-cat src/java/netxms-eclipse/Core/plugin.xml | $SED "s,^(.*;Version) [0-9.]+(&#x0A.*)\$,\\1 $VERSION\\2," > ./plugin.xml
+cat src/java/netxms-eclipse/Core/plugin.xml | $SED -r "s,^(.*;Version) [0-9.]+(&#x0A.*)\$,\\1 $VERSION\\2," > ./plugin.xml
 mv ./plugin.xml src/java/netxms-eclipse/Core/plugin.xml
 
-cat src/java/netxms-eclipse/Product/nxmc.product | $SED "s,^Version [0-9.]+\$,Version $VERSION," > nxmc.product
+cat src/java/netxms-eclipse/Product/nxmc.product | $SED -r "s,^Version [0-9.]+\$,Version $VERSION," > nxmc.product
 mv ./nxmc.product src/java/netxms-eclipse/Product/nxmc.product
 
-sed -i -e "s,org.netxms:netxms-client:[0-9].[0-9]-SNAPSHOT,org.netxms:netxms-client:$VERSION,g" android/agent/app/build.gradle
-sed -i -e "s,org.netxms:netxms-mobile-agent:[0-9].[0-9]-SNAPSHOT,org.netxms:netxms-mobile-agent:$VERSION,g" android/agent/app/build.gradle
-sed -i -e "s,org.netxms:netxms-client:[0-9].[0-9]-SNAPSHOT,org.netxms:netxms-client:$VERSION,g" android/console/app/build.gradle
-sed -i -e "s,org.netxms:netxms-base:[0-9].[0-9]-SNAPSHOT,org.netxms:netxms-base:$VERSION,g" android/console/app/build.gradle
+$SED -i -e "s,org.netxms:netxms-client:[0-9].[0-9]-SNAPSHOT,org.netxms:netxms-client:$VERSION,g" android/agent/app/build.gradle
+$SED -i -e "s,org.netxms:netxms-mobile-agent:[0-9].[0-9]-SNAPSHOT,org.netxms:netxms-mobile-agent:$VERSION,g" android/agent/app/build.gradle
+$SED -i -e "s,org.netxms:netxms-client:[0-9].[0-9]-SNAPSHOT,org.netxms:netxms-client:$VERSION,g" android/console/app/build.gradle
+$SED -i -e "s,org.netxms:netxms-base:[0-9].[0-9]-SNAPSHOT,org.netxms:netxms-base:$VERSION,g" android/console/app/build.gradle
 
 if [ -x ./private/branding/build/prepare_release_build_hook.sh ]; then
 	./private/branding/build/prepare_release_build_hook.sh
