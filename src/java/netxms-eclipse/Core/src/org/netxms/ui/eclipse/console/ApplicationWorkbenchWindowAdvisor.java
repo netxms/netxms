@@ -157,6 +157,16 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
                      }
                   });
                   break;
+               case SessionNotification.OBJECTS_IN_SYNC:
+                  activator.getWorkbench().getDisplay().asyncExec(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        StatusLineContributionItem objecSyncStatus = (StatusLineContributionItem)activator.getStatusLine().find("ObjectSyncStatus");
+                        objecSyncStatus.setText("");
+                     }
+                  });
+                  break;
             }
          }
       });

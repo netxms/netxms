@@ -201,6 +201,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_tcpProxyChannelId = 0;
    m_pendingObjectNotifications = new HashSet<uint32_t>();
    m_pendingObjectNotificationsLock = MutexCreateFast();
+   m_objectNotificationScheduled = false;
    m_objectNotificationDelay = 200;
 }
 
@@ -2785,76 +2786,77 @@ void ClientSession::onNewEvent(Event *pEvent)
 }
 
 /**
- * Send object update (executed in thread pool)
+ * Send pending object updates
  */
-void ClientSession::sendObjectUpdate(shared_ptr<NetObj> object)
+void ClientSession::sendObjectUpdates()
 {
-   StringBuffer key(_T("ObjectUpdate_"));
-   key.append(m_id);
-   uint32_t waitTime = ThreadPoolGetSerializedRequestMaxWaitTime(g_clientThreadPool, key);
+   uint32_t idList[500];
+   int count = 0;
 
    MutexLock(m_pendingObjectNotificationsLock);
-   m_pendingObjectNotifications->remove(object->getId());
-   if ((waitTime > m_objectNotificationDelay * 2) && (m_objectNotificationDelay < 1600))
+   auto it = m_pendingObjectNotifications->iterator();
+   while(it->hasNext() && (count < 500))
    {
-      m_objectNotificationDelay *= 2;
+      idList[count++] = *it->next();
+      it->remove();
    }
-   if ((waitTime < m_objectNotificationDelay / 2) && (m_objectNotificationDelay > 200))
-   {
-      m_objectNotificationDelay /= 2;
-   }
+   delete it;
    MutexUnlock(m_pendingObjectNotificationsLock);
 
-   debugPrintf(5, _T("Sending update for object %s [%u]"), object->getName(), object->getId());
-
    NXCPMessage msg(CMD_OBJECT_UPDATE, 0);
-   if (!object->isDeleted())
+   for(int i = 0; i < count; i++)
    {
-      object->fillMessage(&msg, m_dwUserId);
-      if (m_flags & CSF_SYNC_OBJECT_COMMENTS)
-         object->commentsToMessage(&msg);
-      if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      msg.deleteAllFields();
+      shared_ptr<NetObj> object = FindObjectById(idList[i]);
+      if ((object != nullptr) && !object->isDeleted())
       {
-         // mask passwords
-         msg.setField(VID_SHARED_SECRET, _T("********"));
-         msg.setField(VID_SNMP_AUTH_PASSWORD, _T("********"));
-         msg.setField(VID_SNMP_PRIV_PASSWORD, _T("********"));
+         object->fillMessage(&msg, m_dwUserId);
+         if (m_flags & CSF_SYNC_OBJECT_COMMENTS)
+            object->commentsToMessage(&msg);
+         if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         {
+            // mask passwords
+            msg.setField(VID_SHARED_SECRET, _T("********"));
+            msg.setField(VID_SNMP_AUTH_PASSWORD, _T("********"));
+            msg.setField(VID_SNMP_PRIV_PASSWORD, _T("********"));
+         }
       }
+      else
+      {
+         msg.setField(VID_OBJECT_ID, idList[i]);
+         msg.setField(VID_IS_DELETED, true);
+      }
+      sendMessage(msg);
    }
-   else
-   {
-      msg.setField(VID_OBJECT_ID, object->getId());
-      msg.setField(VID_IS_DELETED, (UINT16)1);
-   }
-   sendMessage(&msg);
-   decRefCount();
-}
 
-/**
- * Schedule object update (executed in thread pool relative schedule)
- */
-void ClientSession::scheduleObjectUpdate(shared_ptr<NetObj> object)
-{
-   TCHAR key[64];
-   _sntprintf(key, 64, _T("ObjectUpdate_%d"), m_id);
-   if (ThreadPoolGetSerializedRequestCount(g_clientThreadPool, key) < 500)
+   if (count == 500)
    {
-      debugPrintf(5, _T("Scheduling update for object %s [%d]"), object->getName(), object->getId());
-      ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::sendObjectUpdate, object);
-   }
-   else
-   {
-      debugPrintf(5, _T("Drop update for object %s [%d]"), object->getName(), object->getId());
-      MutexLock(m_pendingObjectNotificationsLock);
-      m_pendingObjectNotifications->remove(object->getId());
-      MutexUnlock(m_pendingObjectNotificationsLock);
       if ((m_flags & CSF_OBJECTS_OUT_OF_SYNC) == 0)
       {
          InterlockedOr(&m_flags, CSF_OBJECTS_OUT_OF_SYNC);
          notify(NX_NOTIFY_OBJECTS_OUT_OF_SYNC);
       }
+   }
+   else
+   {
+      if ((m_flags & CSF_OBJECTS_OUT_OF_SYNC) != 0)
+      {
+         InterlockedAnd(&m_flags, CSF_OBJECTS_OUT_OF_SYNC);
+         notify(NX_NOTIFY_OBJECTS_IN_SYNC);
+      }
+   }
+
+   MutexLock(m_pendingObjectNotificationsLock);
+   if (m_pendingObjectNotifications->size() > 0)
+   {
+      ThreadPoolScheduleRelative(g_clientThreadPool, (count == 500) ? m_objectNotificationDelay * 2 : m_objectNotificationDelay, this, &ClientSession::sendObjectUpdates);
+   }
+   else
+   {
+      m_objectNotificationScheduled = false;
       decRefCount();
    }
+   MutexUnlock(m_pendingObjectNotificationsLock);
 }
 
 /**
@@ -2862,16 +2864,16 @@ void ClientSession::scheduleObjectUpdate(shared_ptr<NetObj> object)
  */
 void ClientSession::onObjectChange(const shared_ptr<NetObj>& object)
 {
-   if (((m_flags & CSF_OBJECT_SYNC_FINISHED) > 0) && isAuthenticated() &&
-         isSubscribedTo(NXC_CHANNEL_OBJECTS) &&
+   if (((m_flags & CSF_OBJECT_SYNC_FINISHED) > 0) && isAuthenticated() && isSubscribedTo(NXC_CHANNEL_OBJECTS) &&
       (object->isDeleted() || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
    {
       MutexLock(m_pendingObjectNotificationsLock);
-      if (!m_pendingObjectNotifications->contains(object->getId()))
+      m_pendingObjectNotifications->put(object->getId());
+      if (!m_objectNotificationScheduled)
       {
-         m_pendingObjectNotifications->put(object->getId());
+         m_objectNotificationScheduled = true;
          incRefCount();
-         ThreadPoolScheduleRelative(g_clientThreadPool, m_objectNotificationDelay, this, &ClientSession::scheduleObjectUpdate, object);
+         ThreadPoolScheduleRelative(g_clientThreadPool, m_objectNotificationDelay, this, &ClientSession::sendObjectUpdates);
       }
       MutexUnlock(m_pendingObjectNotificationsLock);
    }
