@@ -22,7 +22,10 @@ VERSION=`cat build/netxms-build-tag.properties | grep NETXMS_VERSION | cut -d = 
 for pom in $POM_FILES; do
 	mvn -f $pom versions:set -DnewVersion=$VERSION
 done
-atlas-mvn -f src/java/netxms-jira-connector/pom.xml versions:set -DnewVersion=$VERSION
+
+if [ "x$SKIP_JIRA_CONNECTOR" != "xyes" ]; then
+	atlas-mvn -f src/java/netxms-jira-connector/pom.xml versions:set -DnewVersion=$VERSION
+fi
 
 ./build/update_plugin_versions.py . $VERSION
 
