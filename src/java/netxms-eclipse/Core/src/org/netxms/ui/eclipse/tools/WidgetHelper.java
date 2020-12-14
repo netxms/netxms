@@ -79,7 +79,17 @@ public class WidgetHelper
 	private static final Pattern patternAllDotsAtEnd = Pattern.compile("[.]*$");
 	private static final Pattern patternCharsAndNumbersAtEnd = Pattern.compile("[a-zA-Z0-9]*$");
 	private static final Pattern patternCharsAndNumbersAtStart = Pattern.compile("^[a-zA-Z0-9]*");
-		
+
+   /**
+    * Get character(s) to represent new line in text.
+    *
+    * @return character(s) to represent new line in text
+    */
+   public static String getNewLineCharacters()
+	{
+      return Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n";
+	}
+
 	/**
     * Create pair of label and input field, with label above
 	 * 
@@ -995,7 +1005,7 @@ public class WidgetHelper
       gc.dispose();
       return e;
    }
-   
+
    /**
     *  Get column index by column ID
     *  

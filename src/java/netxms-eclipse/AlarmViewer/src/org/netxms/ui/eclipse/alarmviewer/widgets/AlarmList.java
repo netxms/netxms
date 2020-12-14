@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -455,7 +454,7 @@ public class AlarmList extends CompositeWithMessageBar
 				TreeItem[] selection = alarmViewer.getTree().getSelection();
 				if (selection.length > 0)
 				{
-					final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
+               final String newLine = WidgetHelper.getNewLineCharacters();
 					StringBuilder sb = new StringBuilder();
 					for(int i = 0; i < selection.length; i++)
 					{
@@ -481,7 +480,7 @@ public class AlarmList extends CompositeWithMessageBar
 				TreeItem[] selection = alarmViewer.getTree().getSelection();
 				if (selection.length > 0)
 				{
-					final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
+               final String newLine = WidgetHelper.getNewLineCharacters();
 					StringBuilder sb = new StringBuilder();
 					for(int i = 0; i < selection.length; i++)
 					{

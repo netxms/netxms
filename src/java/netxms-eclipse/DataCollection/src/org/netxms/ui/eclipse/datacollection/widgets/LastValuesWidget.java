@@ -774,7 +774,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	   if (selection.isEmpty())
 	      return;
 	   
-	   final String nl = System.getProperty("line.separator"); //$NON-NLS-1$
+      final String nl = WidgetHelper.getNewLineCharacters();
 	   StringBuilder sb = new StringBuilder();
 	   for(Object o : selection.toList())
 	   {

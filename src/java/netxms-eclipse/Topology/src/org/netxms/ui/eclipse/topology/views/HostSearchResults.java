@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.topology.views;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -412,7 +411,7 @@ public class HostSearchResults extends ViewPart
 		final TableItem[] selection = viewer.getTable().getSelection();
 		if (selection.length > 0)
 		{
-			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
+         final String newLine = WidgetHelper.getNewLineCharacters();
 			final StringBuilder sb = new StringBuilder();
 			for(int i = 0; i < selection.length; i++)
 			{

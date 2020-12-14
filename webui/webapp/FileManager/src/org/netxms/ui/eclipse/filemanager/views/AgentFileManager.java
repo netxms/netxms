@@ -194,7 +194,6 @@ public class AgentFileManager extends ViewPart
       });
       
       String os = ((Node)session.findObjectById(objectId)).getSystemDescription(); //$NON-NLS-1$
-
       if (os.contains("Windows")) //if OS is windows don't show group and access rights columns //$NON-NLS-1$
       {
          final String[] columnNames = { Messages.get().AgentFileManager_ColName, Messages.get().AgentFileManager_ColType, Messages.get().AgentFileManager_ColSize, Messages.get().AgentFileManager_ColDate, Messages.get().AgentFileManager_ColOwner };
@@ -1350,16 +1349,8 @@ public class AgentFileManager extends ViewPart
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.size() != 1)
          return;
-      
-      String filePath = ((AgentFile)selection.getFirstElement()).getFilePath();
-      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-      if( executor != null ) 
-      {
-         StringBuilder js = new StringBuilder();
-         filePath = filePath.replace("\\", "\\\\");
-         js.append("copyTextToClipboard(\'" + filePath + "\');"); // Substring is made to remove first "/"
-         executor.execute(js.toString());
-      }
+
+      WidgetHelper.copyToClipboard(((AgentFile)selection.getFirstElement()).getFilePath());
    }
 
    /*

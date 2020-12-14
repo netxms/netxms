@@ -559,7 +559,7 @@ public class SeriesSet implements ISeriesSet
          {
             break;
          }
-         stackSeries[i] = new BigDecimal(new Double(stackSeries[i]).toString()).add(new BigDecimal(new Double(ySeries[i]).toString())).doubleValue();
+         stackSeries[i] = new BigDecimal(Double.valueOf(stackSeries[i]).toString()).add(new BigDecimal(Double.valueOf(ySeries[i]).toString())).doubleValue();
       }
       double[] copiedStackSeries = new double[stackSeries.length];
       System.arraycopy(stackSeries, 0, copiedStackSeries, 0, stackSeries.length);

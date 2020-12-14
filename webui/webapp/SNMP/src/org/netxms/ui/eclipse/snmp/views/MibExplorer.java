@@ -109,7 +109,13 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private List<SnmpValue> walkData = new ArrayList<SnmpValue>();
 	private Action actionRefresh;
 	private Action actionWalk;
+	private Action actionCopyObjectName;
 	private Action actionSetNode;
+	private Action actionCopy;
+	private Action actionCopyName;
+   private Action actionCopySymbolicName;
+	private Action actionCopyType;
+	private Action actionCopyValue;
 	private Action actionSelect;
 	private Action actionExportToCsv;
 	private Action actionShowFilter;
@@ -368,8 +374,74 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 				}
 			}
 		};
+
+		actionCopyObjectName = new Action(Messages.get().MibExplorer_CopyName) {
+			@Override
+			public void run()
+			{
+				final MibObject object = mibBrowser.getSelection();
+				if (object != null)
+					WidgetHelper.copyToClipboard(object.getName());
+			}
+		};
+
+		actionCopy = new Action(Messages.get().MibExplorer_CopyToClipboard) {
+			@Override
+			public void run()
+			{
+				TableItem[] selection = viewer.getTable().getSelection();
+				if (selection.length > 0)
+				{
+               final String newLine = WidgetHelper.getNewLineCharacters();
+					StringBuilder sb = new StringBuilder();
+					for(int i = 0; i < selection.length; i++)
+					{
+						if (i > 0)
+							sb.append(newLine);
+						sb.append(selection[i].getText(0));
+						sb.append(" ["); //$NON-NLS-1$
+						sb.append(selection[i].getText(2));
+						sb.append("] = "); //$NON-NLS-1$
+						sb.append(selection[i].getText(3));
+					}
+					WidgetHelper.copyToClipboard(sb.toString());
+				}
+			}
+		};
+
+		actionCopyName = new Action(Messages.get().MibExplorer_CopyName) {
+			@Override
+			public void run()
+			{
+				copyColumnToClipboard(0);
+			}
+		};
+
+      actionCopySymbolicName = new Action(Messages.get().MibExplorer_CopySymbolicName) {
+         @Override
+         public void run()
+         {
+            copyColumnToClipboard(1);
+         }
+      };
+
+		actionCopyType = new Action(Messages.get().MibExplorer_CopyType) {
+			@Override
+			public void run()
+			{
+				copyColumnToClipboard(2);
+			}
+		};
+
+		actionCopyValue = new Action(Messages.get().MibExplorer_CopyValue) {
+			@Override
+			public void run()
+			{
+				copyColumnToClipboard(3);
+			}
+		};
 		
-		actionSelect = new Action("Select in MIB tree") {
+		actionSelect = new Action(Messages.get().MibExplorer_SelectInTree) {
 			@Override
 			public void run()
 			{
@@ -407,6 +479,28 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			{
 				mibBrowser.setSelection(o);
 			}
+		}
+	}
+	
+	/**
+	 * Copy values in given column and selected rows to clipboard
+	 * 
+	 * @param column column index
+	 */
+	private void copyColumnToClipboard(int column)
+	{
+		final TableItem[] selection = viewer.getTable().getSelection();
+		if (selection.length > 0)
+		{
+         final String newLine = WidgetHelper.getNewLineCharacters();
+			final StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < selection.length; i++)
+			{
+				if (i > 0)
+					sb.append(newLine);
+				sb.append(selection[i].getText(column));
+			}
+			WidgetHelper.copyToClipboard(sb.toString());
 		}
 	}
 	
@@ -474,6 +568,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	{
 		manager.add(actionWalk);
 		manager.add(new Separator());
+		manager.add(actionCopyObjectName);
+		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -513,6 +609,11 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		if (viewer.getSelection().isEmpty())
 			return;
 		
+		manager.add(actionCopy);
+		manager.add(actionCopyName);
+      manager.add(actionCopySymbolicName);
+		manager.add(actionCopyType);
+		manager.add(actionCopyValue);
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(actionSelect);

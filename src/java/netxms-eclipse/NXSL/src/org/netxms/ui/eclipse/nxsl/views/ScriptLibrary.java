@@ -472,7 +472,7 @@ public class ScriptLibrary extends ViewPart
 	 */
 	private void copyNameToClipboard()
 	{
-	   IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
 	   WidgetHelper.copyToClipboard(((Script)selection.getFirstElement()).getName());
 	}
 }

@@ -47,6 +47,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -100,6 +101,7 @@ public class LogViewer extends ViewPart
    private Action actionClearFilter;
    private Action actionShowFilter;
    private Action actionGetMoreData;
+   private Action actionCopyToClipboard;
    private Action actionExportToCsv;
    private Action actionExportAllToCsv;
    private Action actionShowDetails;
@@ -381,6 +383,7 @@ public class LogViewer extends ViewPart
          mgr.add(actionShowDetails);
          mgr.add(new Separator());
       }
+		mgr.add(actionCopyToClipboard);
 		mgr.add(actionExportToCsv);
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
@@ -441,6 +444,16 @@ public class LogViewer extends ViewPart
 		actionShowFilter.setChecked(true);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.logviewer.commands.show_filter"); //$NON-NLS-1$
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
+		
+		actionCopyToClipboard = new Action(Messages.get().LogViewer_ActionCopy, SharedIcons.COPY) {
+			@Override
+			public void run()
+			{
+				copySelectionToClipboard();
+			}
+		};
+      actionCopyToClipboard.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.copy"); //$NON-NLS-1$
+		handlerService.activateHandler(actionCopyToClipboard.getActionDefinitionId(), new ActionHandler(actionCopyToClipboard));
 		
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
@@ -636,6 +649,31 @@ public class LogViewer extends ViewPart
 		viewer.getTable().getParent().layout();
 		if (show)
 			filterBuilder.setFocus();
+	}
+	
+	/**
+	 * Copy selection in the list to clipboard
+	 */
+	private void copySelectionToClipboard()
+	{
+		TableItem[] selection = viewer.getTable().getSelection();
+		if (selection.length > 0)
+		{
+			StringBuilder sb = new StringBuilder();
+         final String newLine = WidgetHelper.getNewLineCharacters();
+			for(int i = 0; i < selection.length; i++)
+			{
+				if (i > 0)
+					sb.append(newLine);
+				sb.append(selection[i].getText(0));
+				for(int j = 1; j < viewer.getTable().getColumnCount(); j++)
+				{
+					sb.append('\t');
+					sb.append(selection[i].getText(j));
+				}
+			}
+			WidgetHelper.copyToClipboard(sb.toString());
+		}
 	}
 	
 	/**

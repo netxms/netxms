@@ -58,6 +58,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.api.DciOpenHandler;
@@ -104,6 +105,8 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	private Action actionShowUnsupported;
    private Action actionShowHidden;
 	private Action actionExportToCsv;
+	private Action actionCopyToClipboard;
+	private Action actionCopyDciName;
 	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
 
 	
@@ -328,6 +331,22 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		actionShowDisabled.setChecked(isShowDisabled());
 		
 		actionExportToCsv = new ExportToCsvAction(viewPart, dataViewer, true);
+		
+		actionCopyToClipboard = new Action(Messages.get().LastValuesWidget_CopyToClipboard, SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            copySelection();
+         }
+      };
+      
+      actionCopyDciName = new Action("Copy DCI Name", SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            copySelectionDciName();
+         }
+      };
 	}
 	
 	/**
@@ -365,6 +384,8 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	{
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
       manager.add(new Separator());
+		manager.add(actionCopyToClipboard);
+		manager.add(actionCopyDciName);
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(GroupMarkers.MB_SECONDARY));
@@ -742,5 +763,50 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	{
 		DciOpenHandler handler;
 		int priority;
+	}
+	
+	/**
+	 * Copy selection to clipboard
+	 */
+	private void copySelection()
+	{
+	   IStructuredSelection selection = (IStructuredSelection)dataViewer.getSelection();
+	   if (selection.isEmpty())
+	      return;
+	   
+      final String nl = WidgetHelper.getNewLineCharacters();
+	   StringBuilder sb = new StringBuilder();
+	   for(Object o : selection.toList())
+	   {
+	      if (sb.length() > 0)
+	         sb.append(nl);
+	      DciValue v = (DciValue)o;
+	      sb.append(v.getDescription());
+	      sb.append(" = "); //$NON-NLS-1$
+	      sb.append(v.getValue());
+	   }
+	   if (selection.size() > 1)
+	      sb.append(nl);
+	   WidgetHelper.copyToClipboard(sb.toString());
+	}
+	
+	/**
+	 * Copy DCI name of selection
+	 */
+	private void copySelectionDciName()
+	{
+	   IStructuredSelection selection = (IStructuredSelection)dataViewer.getSelection();
+      if (selection.isEmpty())
+         return;
+      
+      StringBuilder dciName = new StringBuilder();
+      for(Object o : selection.toList())
+      {
+         if (dciName.length() > 0)
+            dciName.append(' ');
+         DciValue v = (DciValue)o;
+         dciName.append(v.getName());
+      }
+      WidgetHelper.copyToClipboard(dciName.toString());
 	}
 }

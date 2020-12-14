@@ -32,6 +32,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -65,6 +66,10 @@ public class ComponentsTab extends ObjectTab
 	
 	private TreeViewer viewer;
 	private ComponentTreeLabelProvider labelProvider;
+	private Action actionCopy;
+	private Action actionCopyName;
+	private Action actionCopyModel;
+	private Action actionCopySerial;
 	private Action actionCollapseAll;
 	private Action actionExpandAll;
 
@@ -140,13 +145,11 @@ public class ComponentsTab extends ObjectTab
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		/*
 		manager.add(actionCopy);
 		manager.add(actionCopyName);
 		manager.add(actionCopyModel);
 		manager.add(actionCopySerial);
 		manager.add(new Separator());
-		*/
 		manager.add(actionCollapseAll);
 		manager.add(actionExpandAll);
 		manager.add(new Separator());
@@ -158,6 +161,38 @@ public class ComponentsTab extends ObjectTab
 	 */
 	private void createActions()
 	{
+		actionCopy = new Action(Messages.get().ComponentsTab_ActionCopy, SharedIcons.COPY) {
+			@Override
+			public void run()
+			{
+				copySelectionToClipboard(-1);
+			}
+		};
+
+		actionCopyName = new Action(Messages.get().ComponentsTab_ActionCopyName) {
+			@Override
+			public void run()
+			{
+				copySelectionToClipboard(COLUMN_NAME);
+			}
+		};
+
+		actionCopyModel = new Action(Messages.get().ComponentsTab_ActionCopyModel) {
+			@Override
+			public void run()
+			{
+				copySelectionToClipboard(COLUMN_MODEL);
+			}
+		};
+
+		actionCopySerial = new Action(Messages.get().ComponentsTab_ActionCopySerial) {
+			@Override
+			public void run()
+			{
+				copySelectionToClipboard(COLUMN_SERIAL);
+			}
+		};
+
 		actionCollapseAll = new Action(Messages.get().ComponentsTab_ActionCollapseAll, SharedIcons.COLLAPSE_ALL) {
 			@Override
 			public void run()
@@ -173,6 +208,38 @@ public class ComponentsTab extends ObjectTab
 				viewer.expandAll();
 			}
 		};
+	}
+	
+	/**
+	 * Copy selected lines to clipboard
+	 */
+	private void copySelectionToClipboard(int column)
+	{
+		TreeItem[] selection = viewer.getTree().getSelection();
+		if (selection.length > 0)
+		{
+         final String newLine = WidgetHelper.getNewLineCharacters();
+			StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < selection.length; i++)
+			{
+				if (i > 0)
+					sb.append(newLine);
+				if (column == -1)
+				{
+					sb.append(selection[i].getText(0));
+					for(int j = 1; j < viewer.getTree().getColumnCount(); j++)
+					{
+						sb.append("\t"); //$NON-NLS-1$
+						sb.append(selection[i].getText(j));
+					}
+				}
+				else
+				{
+					sb.append(selection[i].getText(column));
+				}
+			}
+			WidgetHelper.copyToClipboard(sb.toString());
+		}
 	}
 
 	/* (non-Javadoc)
