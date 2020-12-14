@@ -3920,13 +3920,6 @@ BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName);
 /* deprecated */ void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr, const TCHAR *pszReplace);
 const TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(const TCHAR *pszFileName);
 void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize);
-BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *fileName, size_t *fileSize);
-#ifdef UNICODE
-BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *fileName, size_t *fileSize);
-#else
-#define LoadFileA LoadFile
-#endif
-char LIBNETXMS_EXPORTABLE *LoadFileAsUTF8String(const TCHAR *fileName);
 
 uint32_t LIBNETXMS_EXPORTABLE CalculateCRC32(const BYTE *data, size_t size, uint32_t crc);
 bool LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *fileName, uint32_t *result);
@@ -4523,6 +4516,26 @@ TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
 String LIBNETXMS_EXPORTABLE FormatTimestamp(time_t t);
 
 String LIBNETXMS_EXPORTABLE GetEnvironmentVariableEx(const TCHAR *var);
+
+/**
+ * Status for SaveFile function
+ */
+enum class SaveFileStatus
+{
+   SUCCESS = 0,
+   OPEN_ERROR = 1,
+   WRITE_ERROR = 2,
+   RENAME_ERROR = 3
+};
+
+SaveFileStatus LIBNETXMS_EXPORTABLE SaveFile(const TCHAR *fileName, const void *data, size_t size, bool binary = true, bool removeCR = false);
+BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *fileName, size_t *fileSize);
+#ifdef UNICODE
+BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *fileName, size_t *fileSize);
+#else
+#define LoadFileA LoadFile
+#endif
+char LIBNETXMS_EXPORTABLE *LoadFileAsUTF8String(const TCHAR *fileName);
 
 #endif
 

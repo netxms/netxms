@@ -26,14 +26,16 @@
  * Externals
  */
 void UnregisterSession(UINT32 index, UINT32 id);
-UINT32 DeployPolicy(CommSession *session, NXCPMessage *request);
-UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request);
-UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg);
+uint32_t DeployPolicy(CommSession *session, NXCPMessage *request);
+uint32_t UninstallPolicy(CommSession *session, NXCPMessage *request);
+uint32_t GetPolicyInventory(CommSession *session, NXCPMessage *msg);
 void ClearDataCollectionConfiguration();
 UINT32 AddUserAgentNotification(UINT64 serverId, NXCPMessage *request);
 UINT32 RemoveUserAgentNotification(UINT64 serverId, NXCPMessage *request);
 UINT32 UpdateUserAgentNotifications(UINT64 serverId, NXCPMessage *request);
 void RegisterSessionForNotifications(CommSession *session);
+
+extern VolatileCounter g_authenticationFailures;
 
 /**
  * Communication request processing thread pool
@@ -810,6 +812,7 @@ static inline void LogAuthFailure(const InetAddress& serverAddr, const TCHAR *me
 {
    TCHAR buffer[64];
    nxlog_write(NXLOG_WARNING, _T("Authentication failed for peer %s (method = %s)"), serverAddr.toString(buffer), method);
+   InterlockedIncrement(&g_authenticationFailures);
 }
 
 /**
@@ -1077,50 +1080,40 @@ void CommSession::getConfig(NXCPMessage *pMsg)
 /**
  * Update agent's configuration file
  */
-void CommSession::updateConfig(NXCPMessage *pRequest, NXCPMessage *pMsg)
+void CommSession::updateConfig(NXCPMessage *request, NXCPMessage *response)
 {
    if (m_masterServer)
    {
-      if (pRequest->isFieldExist(VID_CONFIG_FILE))
+      size_t size;
+      const BYTE *config = request->getBinaryFieldPtr(VID_CONFIG_FILE, &size);
+      if (config != nullptr)
       {
-         size_t size = pRequest->getFieldAsBinary(VID_CONFIG_FILE, NULL, 0);
-         BYTE *pConfig = (BYTE *)malloc(size);
-         pRequest->getFieldAsBinary(VID_CONFIG_FILE, pConfig, size);
-         int hFile = _topen(g_szConfigFile, O_CREAT | O_TRUNC | O_WRONLY, 0644);
-         if (hFile != -1)
+         SaveFileStatus status = SaveFile(g_szConfigFile, config, size, false, true);
+         if (status == SaveFileStatus::SUCCESS)
          {
-            if (size > 0)
-            {
-               for(UINT32 i = 0; i < size - 1; i++)
-                  if (pConfig[i] == 0x0D)
-                  {
-                     size--;
-                     memmove(&pConfig[i], &pConfig[i + 1], size - i);
-							i--;
-                  }
-            }
-            if (_write(hFile, pConfig, static_cast<unsigned int>(size)) == size)
-               pMsg->setField(VID_RCC, ERR_SUCCESS);
-            else
-               pMsg->setField(VID_RCC, ERR_IO_FAILURE);
-            _close(hFile);
+            response->setField(VID_RCC, ERR_SUCCESS);
+            g_restartPending = true;
+            debugPrintf(2, _T("CommSession::updateConfig(): agent configuration file replaced"));
+         }
+         else if ((status == SaveFileStatus::OPEN_ERROR) || (status == SaveFileStatus::RENAME_ERROR))
+         {
+            debugPrintf(2, _T("CommSession::updateConfig(): cannot opening file \"%s\" for writing (%s)"), g_szConfigFile, _tcserror(errno));
+            response->setField(VID_RCC, ERR_FILE_OPEN_ERROR);
          }
          else
          {
-				debugPrintf(2, _T("CommSession::updateConfig(): Error opening file \"%s\" for writing (%s)"),
-                        g_szConfigFile, _tcserror(errno));
-            pMsg->setField(VID_RCC, ERR_FILE_OPEN_ERROR);
+            debugPrintf(2, _T("CommSession::updateConfig(): error writing file (%s)"), _tcserror(errno));
+            response->setField(VID_RCC, ERR_IO_FAILURE);
          }
-         free(pConfig);
       }
       else
       {
-         pMsg->setField(VID_RCC, ERR_MALFORMED_COMMAND);
+         response->setField(VID_RCC, ERR_MALFORMED_COMMAND);
       }
    }
    else
    {
-      pMsg->setField(VID_RCC, ERR_ACCESS_DENIED);
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
 }
 
