@@ -86,10 +86,16 @@ static bool CreatePipeEx(LPHANDLE lpReadPipe, LPHANDLE lpWritePipe, bool asyncRe
 #endif /* _WIN32 */
 
 /**
+ * Next free executor ID
+ */
+static VolatileCounter s_executorId = 0;
+
+/**
  * Create new process executor object for given command line
  */
 ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec)
 {
+   m_id = InterlockedIncrement(&s_executorId);
 #ifdef _WIN32
    m_phandle = INVALID_HANDLE_VALUE;
    m_pipe = INVALID_HANDLE_VALUE;
