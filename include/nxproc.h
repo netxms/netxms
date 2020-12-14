@@ -99,6 +99,7 @@ private:
 #endif
    bool m_started;
    bool m_running;
+   uint32_t m_id;
 
 protected:
    TCHAR *m_cmd;
@@ -124,6 +125,7 @@ public:
    virtual ~ProcessExecutor();
 
    const TCHAR *getCommand() const { return m_cmd; }
+   uint32_t getId() const { return m_id; }
    pid_t getProcessId() const;
 #ifdef _WIN32
    HANDLE getProcessHandle() const { return m_phandle; }
