@@ -403,7 +403,7 @@ public class NXCSession
          this.messageId = messageId;
       }
 
-      /* (non-Javadoc)
+      /**
        * @see java.lang.Object#hashCode()
        */
       @Override
@@ -416,7 +416,7 @@ public class NXCSession
          return result;
       }
 
-      /* (non-Javadoc)
+      /**
        * @see java.lang.Object#equals(java.lang.Object)
        */
       @Override
@@ -1182,8 +1182,7 @@ public class NXCSession
                   MessageHandler h = e.getValue();
                   if (currTime - h.getLastMessageTimestamp() > h.getMessageWaitTimeout())
                   {
-                     h.setTimeout();
-                     h.setComplete();
+                     h.setExpired();
                      it.remove();
                   }
                }
@@ -6712,8 +6711,7 @@ public class NXCSession
          msg.setFieldsFromStringCollection(maskedFields, NXCPCodes.VID_MASKED_FIELD_LIST_BASE, NXCPCodes.VID_NUM_MASKED_FIELDS);
       }
 
-      MessageHandler handler = receiveOutput ? new MessageHandler()
-      {
+      MessageHandler handler = receiveOutput ? new MessageHandler() {
          @Override
          public boolean processMessage(NXCPMessage m)
          {
@@ -6746,17 +6744,8 @@ public class NXCSession
 
       if (receiveOutput)
       {
-         synchronized(handler)
-         {
-            try
-            {
-               handler.wait();
-            }
-            catch(InterruptedException e)
-            {
-            }
-         }
-         if (handler.isTimeout())
+         handler.waitForCompletion();
+         if (handler.isExpired())
             throw new NXCException(RCC.TIMEOUT);
       }
       return result.getFieldAsString(NXCPCodes.VID_ACTION_NAME);
@@ -6808,8 +6797,7 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_NUM_ARGS, 0);
       }
 
-      MessageHandler handler = receiveOutput ? new MessageHandler()
-      {
+      MessageHandler handler = receiveOutput ? new MessageHandler() {
          @Override
          public boolean processMessage(NXCPMessage m)
          {
@@ -6842,17 +6830,8 @@ public class NXCSession
 
       if (receiveOutput)
       {
-         synchronized(handler)
-         {
-            try
-            {
-               handler.wait();
-            }
-            catch(InterruptedException e)
-            {
-            }
-         }
-         if (handler.isTimeout())
+         handler.waitForCompletion();
+         if (handler.isExpired())
             throw new NXCException(RCC.TIMEOUT);
       }
    }
@@ -7344,20 +7323,8 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
       if (listener != null)
       {
-         synchronized(handler)
-         {
-            if (!handler.isComplete())
-            {
-               try
-               {
-                  handler.wait();
-               }
-               catch(InterruptedException e)
-               {
-               }
-            }
-         }
-         if (handler.isTimeout())
+         handler.waitForCompletion();
+         if (handler.isExpired())
             throw new NXCException(RCC.TIMEOUT);
       }
    }
@@ -8686,8 +8653,7 @@ public class NXCSession
          msg.setFieldsFromStringCollection(maskedFields, NXCPCodes.VID_MASKED_FIELD_LIST_BASE, NXCPCodes.VID_NUM_MASKED_FIELDS);
       }
 
-      MessageHandler handler = receiveOutput ? new MessageHandler()
-      {
+      MessageHandler handler = receiveOutput ? new MessageHandler() {
          @Override
          public boolean processMessage(NXCPMessage m)
          {
@@ -8728,17 +8694,8 @@ public class NXCSession
          if (listener != null)
             listener.setStreamId(response.getFieldAsInt64(NXCPCodes.VID_COMMAND_ID));
 
-         synchronized(handler)
-         {
-            try
-            {
-               handler.wait();
-            }
-            catch(InterruptedException e)
-            {
-            }
-         }
-         if (handler.isTimeout())
+         handler.waitForCompletion();
+         if (handler.isExpired())
             throw new NXCException(RCC.TIMEOUT);
       }
    }
@@ -9403,8 +9360,7 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setFieldInt16(NXCPCodes.VID_POLL_TYPE, pollType.getValue());
 
-      MessageHandler handler = new MessageHandler()
-      {
+      MessageHandler handler = new MessageHandler() {
          @Override
          public boolean processMessage(NXCPMessage m)
          {
@@ -9435,17 +9391,8 @@ public class NXCSession
          throw e;
       }
 
-      synchronized(handler)
-      {
-         try
-         {
-            handler.wait();
-         }
-         catch(InterruptedException e)
-         {
-         }
-      }
-      if (handler.isTimeout())
+      handler.waitForCompletion();
+      if (handler.isExpired())
          throw new NXCException(RCC.TIMEOUT);
    }
 
