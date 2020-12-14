@@ -740,20 +740,17 @@ void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 
 BOOL DownloadConfig(TCHAR *pszServer);
 
-BOOL InitParameterList();
-
-void AddParameter(const TCHAR *szName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *), const TCHAR *pArg,
-                  int iDataType, const TCHAR *pszDescription);
+void AddParameter(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *),
+         const TCHAR *arg, int dataType, const TCHAR *description);
 void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description);
-void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg);
-void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *),
-              const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description,
-              int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns);
+void AddList(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg);
+void AddTable(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *),
+         const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description, int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns);
 bool AddExternalParameter(TCHAR *config, bool shellExec, bool isList);
 bool AddExternalTable(TCHAR *config);
-UINT32 GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session);
-UINT32 GetListValue(const TCHAR *param, StringList *value, AbstractCommSession *session);
-UINT32 GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *session);
+uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session);
+uint32_t GetListValue(const TCHAR *param, StringList *value, AbstractCommSession *session);
+uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *session);
 void GetParameterList(NXCPMessage *pMsg);
 void GetEnumList(NXCPMessage *pMsg);
 void GetTableList(NXCPMessage *pMsg);
@@ -899,6 +896,7 @@ extern uint32_t g_tunnelKeepaliveInterval;
 extern uint16_t g_syslogListenPort;
 extern StringSet g_trustedRootCertificates;
 extern shared_ptr_store<Config> g_config;
+extern bool g_restartPending;
 
 extern UINT32 g_acceptErrors;
 extern UINT32 g_acceptedConnections;

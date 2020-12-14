@@ -216,6 +216,7 @@ UINT16 g_sessionAgentPort = 0;
 #endif
 UINT32 g_dwIdleTimeout = 120;   // Session idle timeout
 uint32_t g_webSvcCacheExpirationTime = 600;  // 10 minutes by default
+bool g_restartPending = false;   // Restart pending flag
 
 #if !defined(_WIN32)
 TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxagentd.pid");
@@ -1066,10 +1067,6 @@ BOOL Initialize()
 	   {
 	      g_snmpProxySocketPoller = new BackgroundSocketPoller();
 	   }
-
-		// Initialize built-in parameters
-		if (!InitParameterList())
-			return FALSE;
 
 		// Load local CRLs
 		auto it = s_crlList.iterator();

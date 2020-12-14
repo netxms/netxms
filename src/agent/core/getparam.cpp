@@ -73,21 +73,16 @@ LONG H_PhysicalDiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue, Abstr
 #endif
 
 /**
- * Static data
+ * Authentication failure count
  */
-static NETXMS_SUBAGENT_PARAM *m_pParamList = NULL;
-static int m_iNumParams = 0;
-static NETXMS_SUBAGENT_PUSHPARAM *m_pPushParamList = NULL;
-static int m_iNumPushParams = 0;
-static NETXMS_SUBAGENT_LIST *m_pEnumList = NULL;
-static int m_iNumEnums = 0;
-static NETXMS_SUBAGENT_TABLE *m_pTableList = NULL;
-static int m_iNumTables = 0;
-static UINT32 m_dwTimedOutRequests = 0;
-static UINT32 m_dwAuthenticationFailures = 0;
-static UINT32 m_dwProcessedRequests = 0;
-static UINT32 m_dwFailedRequests = 0;
-static UINT32 m_dwUnsupportedRequests = 0;
+VolatileCounter g_authenticationFailures = 0;
+
+/**
+ * Request processing counters
+ */
+static VolatileCounter s_processedRequests = 0;
+static VolatileCounter s_failedRequests = 0;
+static VolatileCounter s_unsupportedRequests = 0;
 
 /**
  * Handler for parameters which always returns string constant
@@ -103,7 +98,7 @@ static LONG H_StringConstant(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, A
  */
 static LONG H_UIntPtr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   ret_uint(value, *((UINT32 *)arg));
+   ret_uint(value, *reinterpret_cast<const uint32_t*>(arg));
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -122,6 +117,15 @@ static LONG H_AgentID(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
 static LONG H_IsUserAgentInstalled(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    ret_int(value, IsUserAgentInstalled());
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Agent.IsRestartPending parameter
+ */
+static LONG H_IsAgentRestartPending(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   ret_int(value, g_restartPending ? 1 : 0);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -158,65 +162,11 @@ static LONG H_SupportedCiphers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pV
 }
 
 /**
- * Handler for parameters list
- */
-static LONG H_ParamList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
-{
-   int i;
-
-   for(i = 0; i < m_iNumParams; i++)
-		if (m_pParamList[i].dataType != DCI_DT_DEPRECATED)
-			value->add(m_pParamList[i].name);
-	ListParametersFromExtProviders(value);
-	ListParametersFromExtSubagents(value);
-   return SYSINFO_RC_SUCCESS;
-}
-
-/**
- * Handler for push parameters list
- */
-static LONG H_PushParamList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
-{
-   int i;
-
-   for(i = 0; i < m_iNumPushParams; i++)
-		value->add(m_pPushParamList[i].name);
-   return SYSINFO_RC_SUCCESS;
-}
-
-/**
- * Handler for enums list
- */
-static LONG H_EnumList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
-{
-   int i;
-
-   for(i = 0; i < m_iNumEnums; i++)
-		value->add(m_pEnumList[i].name);
-	ListListsFromExtSubagents(value);
-   return SYSINFO_RC_SUCCESS;
-}
-
-/**
- * Handler for table list
- */
-static LONG H_TableList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
-{
-   int i;
-
-   for(i = 0; i < m_iNumTables; i++)
-		value->add(m_pTableList[i].name);
-   ListTablesFromExtProviders(value);
-	ListTablesFromExtSubagents(value);
-   return SYSINFO_RC_SUCCESS;
-}
-
-/**
  * Handler for component statuses based on failure flags
  */
 static LONG H_ComponentStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   UINT32 result = 0;
+   uint32_t result = 0;
    switch(*pArg)
    {
       case 'D':
@@ -264,7 +214,7 @@ static LONG H_LocalDatabaseCounters(const TCHAR *pszParam, const TCHAR *pArg, TC
  */
 static LONG H_FlagValue(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   UINT32 flag = CAST_FROM_POINTER(arg, UINT32);
+   uint32_t flag = CAST_FROM_POINTER(arg, uint32_t);
    ret_int(value, (g_dwFlags & flag) ? 1 : 0);
    return SYSINFO_RC_SUCCESS;
 }
@@ -375,9 +325,17 @@ static LONG H_SystemHardwareId(const TCHAR *param, const TCHAR *arg, TCHAR *valu
 }
 
 /**
+ * Forward declarations for handlers
+ */
+static LONG H_MetricList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+static LONG H_PushMetricList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+static LONG H_ListOfLists(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+static LONG H_TableList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+
+/**
  * Standard agent's parameters
  */
-static NETXMS_SUBAGENT_PARAM m_stdParams[] =
+static NETXMS_SUBAGENT_PARAM s_standardParams[] =
 {
 #ifdef _WIN32
    { _T("PhysicalDisk.Firmware(*)"), H_PhysicalDiskInfo, _T("F"), DCI_DT_STRING, DCIDESC_PHYSICALDISK_FIRMWARE },
@@ -386,40 +344,41 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("PhysicalDisk.SmartAttr(*)"), H_PhysicalDiskInfo, _T("A"), DCI_DT_STRING, DCIDESC_PHYSICALDISK_SMARTATTR },
    { _T("PhysicalDisk.SmartStatus(*)"), H_PhysicalDiskInfo, _T("S"), DCI_DT_INT, DCIDESC_PHYSICALDISK_SMARTSTATUS },
    { _T("PhysicalDisk.Temperature(*)"), H_PhysicalDiskInfo, _T("T"), DCI_DT_INT, DCIDESC_PHYSICALDISK_TEMPERATURE },
-   { _T("System.IsVirtual"), H_SystemIsVirtual, NULL, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
+   { _T("System.IsVirtual"), H_SystemIsVirtual, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
 #endif
 
 #if HAVE_GET_CPUID
-   { _T("System.IsVirtual"), H_SystemIsVirtual, NULL, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
+   { _T("System.IsVirtual"), H_SystemIsVirtual, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
 #endif
 
    { _T("Agent.AcceptedConnections"), H_UIntPtr, (TCHAR *)&g_acceptedConnections, DCI_DT_COUNTER32, DCIDESC_AGENT_ACCEPTEDCONNECTIONS },
    { _T("Agent.AcceptErrors"), H_UIntPtr, (TCHAR *)&g_acceptErrors, DCI_DT_COUNTER32, DCIDESC_AGENT_ACCEPTERRORS },
-   { _T("Agent.ActiveConnections"), H_ActiveConnections, NULL, DCI_DT_UINT, DCIDESC_AGENT_ACTIVECONNECTIONS },
-   { _T("Agent.AuthenticationFailures"), H_UIntPtr, (TCHAR *)&m_dwAuthenticationFailures, DCI_DT_COUNTER32, DCIDESC_AGENT_AUTHENTICATIONFAILURES },
+   { _T("Agent.ActiveConnections"), H_ActiveConnections, nullptr, DCI_DT_UINT, DCIDESC_AGENT_ACTIVECONNECTIONS },
+   { _T("Agent.AuthenticationFailures"), H_UIntPtr, (TCHAR *)&g_authenticationFailures, DCI_DT_COUNTER32, DCIDESC_AGENT_AUTHENTICATIONFAILURES },
    { _T("Agent.ConfigurationServer"), H_StringConstant, g_szConfigServer, DCI_DT_STRING, DCIDESC_AGENT_CONFIG_SERVER },
-   { _T("Agent.DataCollectorQueueSize"), H_DataCollectorQueueSize, NULL, DCI_DT_UINT, DCIDESC_AGENT_DATACOLLQUEUESIZE },
+   { _T("Agent.DataCollectorQueueSize"), H_DataCollectorQueueSize, nullptr, DCI_DT_UINT, DCIDESC_AGENT_DATACOLLQUEUESIZE },
    { _T("Agent.Events.Generated"), H_AgentEventSender, _T("G"), DCI_DT_COUNTER64, DCIDESC_AGENT_EVENTS_GENERATED },
    { _T("Agent.Events.LastTimestamp"), H_AgentEventSender, _T("T"), DCI_DT_UINT64, DCIDESC_AGENT_EVENTS_LAST_TIMESTAMP },
-   { _T("Agent.FailedRequests"), H_UIntPtr, (TCHAR *)&m_dwFailedRequests, DCI_DT_COUNTER32, DCIDESC_AGENT_FAILEDREQUESTS },
-   { _T("Agent.Heap.Active"), H_AgentHeapActive, NULL, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_ACTIVE },
-   { _T("Agent.Heap.Allocated"), H_AgentHeapAllocated, NULL, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_ALLOCATED },
-   { _T("Agent.Heap.Mapped"), H_AgentHeapMapped, NULL, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_MAPPED },
-   { _T("Agent.ID"), H_AgentID, NULL, DCI_DT_STRING, DCIDESC_AGENT_ID },
-   { _T("Agent.IsExternalSubagentConnected(*)"), H_IsExtSubagentConnected, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_EXT_SUBAGENT_CONNECTED },
-   { _T("Agent.IsSubagentLoaded(*)"), H_IsSubagentLoaded, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_SUBAGENT_LOADED },
-   { _T("Agent.IsUserAgentInstalled"), H_IsUserAgentInstalled, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_USERAGENT_INSTALLED },
+   { _T("Agent.FailedRequests"), H_UIntPtr, (TCHAR *)&s_failedRequests, DCI_DT_COUNTER32, DCIDESC_AGENT_FAILEDREQUESTS },
+   { _T("Agent.Heap.Active"), H_AgentHeapActive, nullptr, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_ACTIVE },
+   { _T("Agent.Heap.Allocated"), H_AgentHeapAllocated, nullptr, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_ALLOCATED },
+   { _T("Agent.Heap.Mapped"), H_AgentHeapMapped, nullptr, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_MAPPED },
+   { _T("Agent.ID"), H_AgentID, nullptr, DCI_DT_STRING, DCIDESC_AGENT_ID },
+   { _T("Agent.IsExternalSubagentConnected(*)"), H_IsExtSubagentConnected, nullptr, DCI_DT_INT, DCIDESC_AGENT_IS_EXT_SUBAGENT_CONNECTED },
+   { _T("Agent.IsRestartPending"), H_IsAgentRestartPending, nullptr, DCI_DT_INT, DCIDESC_AGENT_IS_RESTART_PENDING },
+   { _T("Agent.IsSubagentLoaded(*)"), H_IsSubagentLoaded, nullptr, DCI_DT_INT, DCIDESC_AGENT_IS_SUBAGENT_LOADED },
+   { _T("Agent.IsUserAgentInstalled"), H_IsUserAgentInstalled, nullptr, DCI_DT_INT, DCIDESC_AGENT_IS_USERAGENT_INSTALLED },
    { _T("Agent.LocalDatabase.FailedQueries"), H_LocalDatabaseCounters, _T("F"), DCI_DT_COUNTER64, DCIDESC_AGENT_LOCALDB_FAILED_QUERIES },
    { _T("Agent.LocalDatabase.LongRunningQueries"), H_LocalDatabaseCounters, _T("L"), DCI_DT_COUNTER64, DCIDESC_AGENT_LOCALDB_SLOW_QUERIES },
    { _T("Agent.LocalDatabase.Status"), H_ComponentStatus, _T("D"), DCI_DT_UINT, DCIDESC_AGENT_LOCALDB_STATUS },
    { _T("Agent.LocalDatabase.TotalQueries"), H_LocalDatabaseCounters, _T("T"), DCI_DT_COUNTER64, DCIDESC_AGENT_LOCALDB_TOTAL_QUERIES },
    { _T("Agent.LogFile.Status"), H_ComponentStatus, _T("L"), DCI_DT_UINT, DCIDESC_AGENT_LOG_STATUS },
    { _T("Agent.NotificationProcessor.QueueSize"), H_NotificationStats, nullptr, DCI_DT_UINT, DCIDESC_AGENT_NOTIFICATIONPROC_QUEUESIZE },
-   { _T("Agent.ProcessedRequests"), H_UIntPtr, (TCHAR *)&m_dwProcessedRequests, DCI_DT_COUNTER32, DCIDESC_AGENT_PROCESSEDREQUESTS },
+   { _T("Agent.ProcessedRequests"), H_UIntPtr, (TCHAR *)&s_processedRequests, DCI_DT_COUNTER32, DCIDESC_AGENT_PROCESSEDREQUESTS },
    { _T("Agent.Proxy.ActiveSessions"), H_AgentProxyStats, _T("A"), DCI_DT_UINT, DCIDESC_AGENT_PROXY_ACTIVESESSIONS },
    { _T("Agent.Proxy.ConnectionRequests"), H_AgentProxyStats, _T("C"), DCI_DT_COUNTER64, DCIDESC_AGENT_PROXY_CONNECTIONREQUESTS },
    { _T("Agent.Proxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_PROXY_ISENABLED },
-   { _T("Agent.PushValue(*)"), H_PushValue, NULL, DCI_DT_STRING, DCIDESC_AGENT_PUSH_VALUE },
+   { _T("Agent.PushValue(*)"), H_PushValue, nullptr, DCI_DT_STRING, DCIDESC_AGENT_PUSH_VALUE },
    { _T("Agent.Registrar"), H_StringConstant, g_szRegistrar, DCI_DT_STRING, DCIDESC_AGENT_REGISTRAR },
    { _T("Agent.RejectedConnections"), H_UIntPtr, (TCHAR *)&g_rejectedConnections, DCI_DT_COUNTER32, DCIDESC_AGENT_REJECTEDCONNECTIONS },
    { _T("Agent.SessionAgentCount"), H_SessionAgentCount, _T("*"), DCI_DT_UINT, DCIDESC_AGENT_SESSION_AGENTS_COUNT },
@@ -430,7 +389,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.SNMP.ServerRequests"), H_SNMPProxyStats, _T("S"), DCI_DT_COUNTER64, DCIDESC_AGENT_SNMP_SERVERREQUESTS },
    { _T("Agent.SNMP.Traps"), H_SNMPProxyStats, _T("T"), DCI_DT_COUNTER64, DCIDESC_AGENT_SNMP_TRAPS },
    { _T("Agent.SourcePackageSupport"), H_StringConstant, _T("0"), DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
-   { _T("Agent.SupportedCiphers"), H_SupportedCiphers, NULL, DCI_DT_STRING, DCIDESC_AGENT_SUPPORTEDCIPHERS },
+   { _T("Agent.SupportedCiphers"), H_SupportedCiphers, nullptr, DCI_DT_STRING, DCIDESC_AGENT_SUPPORTEDCIPHERS },
    { _T("Agent.SyslogProxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_SYSLOG_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_SYSLOGPROXY_ISENABLED },
    { _T("Agent.SyslogProxy.ReceivedMessages"), H_SyslogStats, _T("R"), DCI_DT_COUNTER64, DCIDESC_AGENT_SYSLOGPROXY_RECEIVEDMSGS },
    { _T("Agent.ThreadPool.ActiveRequests(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_ACTIVE_REQUESTS, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_ACTIVEREQUESTS },
@@ -444,28 +403,27 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.ThreadPool.MinSize(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_MIN_SIZE, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_MINSIZE },
    { _T("Agent.ThreadPool.ScheduledRequests(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_SCHEDULED_REQUESTS, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_SCHEDULEDREQUESTS },
    { _T("Agent.ThreadPool.Usage(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_USAGE, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_USAGE },
-   { _T("Agent.TimedOutRequests"), H_UIntPtr, (TCHAR *)&m_dwTimedOutRequests, DCI_DT_COUNTER32, DCIDESC_AGENT_TIMEDOUTREQUESTS },
-   { _T("Agent.UnsupportedRequests"), H_UIntPtr, (TCHAR *)&m_dwUnsupportedRequests, DCI_DT_COUNTER32, DCIDESC_AGENT_UNSUPPORTEDREQUESTS },
-   { _T("Agent.Uptime"), H_AgentUptime, NULL, DCI_DT_UINT, DCIDESC_AGENT_UPTIME },
+   { _T("Agent.UnsupportedRequests"), H_UIntPtr, (TCHAR *)&s_unsupportedRequests, DCI_DT_COUNTER32, DCIDESC_AGENT_UNSUPPORTEDREQUESTS },
+   { _T("Agent.Uptime"), H_AgentUptime, nullptr, DCI_DT_UINT, DCIDESC_AGENT_UPTIME },
    { _T("Agent.UserAgentCount"), H_SessionAgentCount, _T("U"), DCI_DT_UINT, DCIDESC_AGENT_USER_AGENTS_COUNT },
    { _T("Agent.Version"), H_StringConstant, NETXMS_VERSION_STRING, DCI_DT_STRING, DCIDESC_AGENT_VERSION },
    { _T("File.Count(*)"), H_DirInfo, (TCHAR *)DIRINFO_FILE_COUNT, DCI_DT_UINT, DCIDESC_FILE_COUNT },
    { _T("File.FolderCount(*)"), H_DirInfo, (TCHAR *)DIRINFO_FOLDER_COUNT, DCI_DT_UINT, DCIDESC_FILE_FOLDERCOUNT },
-   { _T("File.Hash.CRC32(*)"), H_CRC32, NULL, DCI_DT_UINT, DCIDESC_FILE_HASH_CRC32 },
-   { _T("File.Hash.MD5(*)"), H_MD5Hash, NULL, DCI_DT_STRING, DCIDESC_FILE_HASH_MD5 },
-   { _T("File.Hash.SHA1(*)"), H_SHA1Hash, NULL, DCI_DT_STRING, DCIDESC_FILE_HASH_SHA1 },
+   { _T("File.Hash.CRC32(*)"), H_CRC32, nullptr, DCI_DT_UINT, DCIDESC_FILE_HASH_CRC32 },
+   { _T("File.Hash.MD5(*)"), H_MD5Hash, nullptr, DCI_DT_STRING, DCIDESC_FILE_HASH_MD5 },
+   { _T("File.Hash.SHA1(*)"), H_SHA1Hash, nullptr, DCI_DT_STRING, DCIDESC_FILE_HASH_SHA1 },
    { _T("File.Size(*)"), H_DirInfo, (TCHAR *)DIRINFO_FILE_SIZE, DCI_DT_UINT64, DCIDESC_FILE_SIZE },
    { _T("File.LineCount(*)"), H_LineCount, (TCHAR *)DIRINFO_FILE_LINE_COUNT, DCI_DT_UINT64, _T("File line count {instance}") },
    { _T("File.Time.Access(*)"), H_FileTime, (TCHAR *)FILETIME_ATIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_ACCESS },
    { _T("File.Time.Change(*)"), H_FileTime, (TCHAR *)FILETIME_CTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_CHANGE },
    { _T("File.Time.Modify(*)"), H_FileTime, (TCHAR *)FILETIME_MTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_MODIFY },
-   { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByName, NULL, DCI_DT_STRING, DCIDESC_NET_RESOLVER_ADDRBYNAME },
-   { _T("Net.Resolver.NameByAddress(*)"), H_ResolverNameByAddr, NULL, DCI_DT_STRING, DCIDESC_NET_RESOLVER_NAMEBYADDR },
-   { _T("System.CurrentTime"), H_SystemTime, NULL, DCI_DT_INT64, DCIDESC_SYSTEM_CURRENTTIME },
+   { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByName, nullptr, DCI_DT_STRING, DCIDESC_NET_RESOLVER_ADDRBYNAME },
+   { _T("Net.Resolver.NameByAddress(*)"), H_ResolverNameByAddr, nullptr, DCI_DT_STRING, DCIDESC_NET_RESOLVER_NAMEBYADDR },
+   { _T("System.CurrentTime"), H_SystemTime, nullptr, DCI_DT_INT64, DCIDESC_SYSTEM_CURRENTTIME },
    { _T("System.FQDN"), H_HostName, _T("FQDN"), DCI_DT_STRING, DCIDESC_SYSTEM_FQDN },
-   { _T("System.HardwareId"), H_SystemHardwareId, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HARDWAREID },
-   { _T("System.Hostname"), H_HostName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
-   { _T("System.PlatformName"), H_PlatformName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME },
+   { _T("System.HardwareId"), H_SystemHardwareId, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_HARDWAREID },
+   { _T("System.Hostname"), H_HostName, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
+   { _T("System.PlatformName"), H_PlatformName, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME },
 
    // Deprecated parameters
    { _T("Agent.GeneratedTraps"), H_AgentEventSender, _T("G"), DCI_DT_COUNTER64, DCIDESC_DEPRECATED },
@@ -476,165 +434,189 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
 /**
  * Standard agent's lists
  */
-static NETXMS_SUBAGENT_LIST m_stdLists[] =
+static NETXMS_SUBAGENT_LIST s_standardLists[] =
 {
-   { _T("Agent.ActionList"), H_ActionList, NULL },
-   { _T("Agent.PushValues"), H_PushValues, NULL },
-   { _T("Agent.SubAgentList"), H_SubAgentList, NULL },
-   { _T("Agent.SupportedLists"), H_EnumList, NULL },
-   { _T("Agent.SupportedParameters"), H_ParamList, NULL },
-   { _T("Agent.SupportedPushParameters"), H_PushParamList, NULL },
-   { _T("Agent.SupportedTables"), H_TableList, NULL },
-   { _T("Agent.ThreadPools"), H_ThreadPoolList, NULL },
-   { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByNameList, NULL },
+   { _T("Agent.ActionList"), H_ActionList, nullptr },
+   { _T("Agent.PushValues"), H_PushValues, nullptr },
+   { _T("Agent.SubAgentList"), H_SubAgentList, nullptr },
+   { _T("Agent.SupportedLists"), H_ListOfLists, nullptr },
+   { _T("Agent.SupportedParameters"), H_MetricList, nullptr },
+   { _T("Agent.SupportedPushParameters"), H_PushMetricList, nullptr },
+   { _T("Agent.SupportedTables"), H_TableList, nullptr },
+   { _T("Agent.ThreadPools"), H_ThreadPoolList, nullptr },
+   { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByNameList, nullptr },
 };
 
 /**
  * Standard agent's tables
  */
-static NETXMS_SUBAGENT_TABLE m_stdTables[] =
+static NETXMS_SUBAGENT_TABLE s_standardTables[] =
 {
-   { _T("Agent.SessionAgents"), H_SessionAgents, NULL, _T("SESSION_ID"), DCTDESC_AGENT_SESSION_AGENTS },
-   { _T("Agent.SubAgents"), H_SubAgentTable, NULL, _T("NAME"), DCTDESC_AGENT_SUBAGENTS },
-   { _T("Agent.ZoneConfigurations"), H_ZoneConfigurations, NULL, _T("SERVER_ID"), DCTDESC_AGENT_ZONE_CONFIGURATIONS },
-   { _T("Agent.ZoneProxies"), H_ZoneProxies, NULL, _T("SERVER_ID,PROXY_ID"), DCTDESC_AGENT_ZONE_PROXIES }
+   { _T("Agent.SessionAgents"), H_SessionAgents, nullptr, _T("SESSION_ID"), DCTDESC_AGENT_SESSION_AGENTS },
+   { _T("Agent.SubAgents"), H_SubAgentTable, nullptr, _T("NAME"), DCTDESC_AGENT_SUBAGENTS },
+   { _T("Agent.ZoneConfigurations"), H_ZoneConfigurations, nullptr, _T("SERVER_ID"), DCTDESC_AGENT_ZONE_CONFIGURATIONS },
+   { _T("Agent.ZoneProxies"), H_ZoneProxies, nullptr, _T("SERVER_ID,PROXY_ID"), DCTDESC_AGENT_ZONE_PROXIES }
 };
 
 /**
- * Initialize dynamic parameters list from default static list
+ * Provided metrics
  */
-BOOL InitParameterList()
+static StructArray<NETXMS_SUBAGENT_PARAM> s_metrics(s_standardParams, sizeof(s_standardParams) / sizeof(NETXMS_SUBAGENT_PARAM), 64);
+static StructArray<NETXMS_SUBAGENT_PUSHPARAM> s_pushMetrics(0, 64);
+static StructArray<NETXMS_SUBAGENT_LIST> s_lists(s_standardLists, sizeof(s_standardLists) / sizeof(NETXMS_SUBAGENT_LIST), 16);
+static StructArray<NETXMS_SUBAGENT_TABLE> s_tables(s_standardTables, sizeof(s_standardTables) / sizeof(NETXMS_SUBAGENT_TABLE), 16);
+
+/**
+ * Handler for metrics list
+ */
+static LONG H_MetricList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   if ((m_pParamList != NULL) || (m_pEnumList != NULL) || (m_pTableList != NULL))
-      return FALSE;
+   for(int i = 0; i < s_metrics.size(); i++)
+   {
+      const NETXMS_SUBAGENT_PARAM *p = s_metrics.get(i);
+      if (p->dataType != DCI_DT_DEPRECATED)
+         value->add(p->name);
+   }
+   ListParametersFromExtProviders(value);
+   ListParametersFromExtSubagents(value);
+   return SYSINFO_RC_SUCCESS;
+}
 
-   m_iNumParams = sizeof(m_stdParams) / sizeof(NETXMS_SUBAGENT_PARAM);
-	if (m_iNumParams > 0)
-	{
-		m_pParamList = (NETXMS_SUBAGENT_PARAM *)malloc(sizeof(NETXMS_SUBAGENT_PARAM) * m_iNumParams);
-		if (m_pParamList == NULL)
-			return FALSE;
-		memcpy(m_pParamList, m_stdParams, sizeof(NETXMS_SUBAGENT_PARAM) * m_iNumParams);
-	}
+/**
+ * Handler for push metrics list
+ */
+static LONG H_PushMetricList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for(int i = 0; i < s_pushMetrics.size(); i++)
+      value->add(s_pushMetrics.get(i)->name);
+   return SYSINFO_RC_SUCCESS;
+}
 
-   m_iNumEnums = sizeof(m_stdLists) / sizeof(NETXMS_SUBAGENT_LIST);
-	if (m_iNumEnums > 0)
-	{
-		m_pEnumList = (NETXMS_SUBAGENT_LIST *)malloc(sizeof(NETXMS_SUBAGENT_LIST) * m_iNumEnums);
-		if (m_pEnumList == NULL)
-			return FALSE;
-		memcpy(m_pEnumList, m_stdLists, sizeof(NETXMS_SUBAGENT_LIST) * m_iNumEnums);
-	}
+/**
+ * Handler for list of lists
+ */
+static LONG H_ListOfLists(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for(int i = 0; i < s_lists.size(); i++)
+      value->add(s_lists.get(i)->name);
+   ListListsFromExtSubagents(value);
+   return SYSINFO_RC_SUCCESS;
+}
 
-   m_iNumTables = sizeof(m_stdTables) / sizeof(NETXMS_SUBAGENT_TABLE);
-	if (m_iNumTables > 0)
-	{
-		m_pTableList = (NETXMS_SUBAGENT_TABLE *)malloc(sizeof(NETXMS_SUBAGENT_TABLE) * m_iNumTables);
-		if (m_pTableList == NULL)
-			return FALSE;
-		memcpy(m_pTableList, m_stdTables, sizeof(NETXMS_SUBAGENT_TABLE) * m_iNumTables);
-	}
-
-   return TRUE;
+/**
+ * Handler for table list
+ */
+static LONG H_TableList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for(int i = 0; i < s_tables.size(); i++)
+      value->add(s_tables.get(i)->name);
+   ListTablesFromExtProviders(value);
+   ListTablesFromExtSubagents(value);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
  * Add push parameter to list
- * by LWX
  */
 void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
 {
-   int i;
-
    // Search for existing parameter
-   for(i = 0; i < m_iNumPushParams; i++)
-      if (!_tcsicmp(m_pPushParamList[i].name, name))
+   NETXMS_SUBAGENT_PUSHPARAM *p = nullptr;
+   for(int i = 0; i < s_pushMetrics.size(); i++)
+      if (!_tcsicmp(s_pushMetrics.get(i)->name, name))
+      {
+         p = s_pushMetrics.get(i);
          break;
-   if (i < m_iNumPushParams)
+      }
+   if (p != nullptr)
    {
       // Replace existing attributes
-      m_pPushParamList[i].dataType = dataType;
-      nx_strncpy(m_pPushParamList[i].description, description, MAX_DB_STRING);
+      p->dataType = dataType;
+      _tcslcpy(p->description, description, MAX_DB_STRING);
    }
    else
    {
       // Add new parameter
-      m_pPushParamList = (NETXMS_SUBAGENT_PUSHPARAM *)realloc(m_pPushParamList, sizeof(NETXMS_SUBAGENT_PUSHPARAM) * (m_iNumPushParams + 1));
-      _tcslcpy(m_pPushParamList[m_iNumPushParams].name, name, MAX_PARAM_NAME - 1);
-      m_pPushParamList[m_iNumPushParams].dataType = dataType;
-      _tcslcpy(m_pPushParamList[m_iNumPushParams].description, description, MAX_DB_STRING);
-      m_iNumPushParams++;
+      NETXMS_SUBAGENT_PUSHPARAM np;
+      _tcslcpy(np.name, name, MAX_PARAM_NAME);
+      np.dataType = dataType;
+      _tcslcpy(np.description, description, MAX_DB_STRING);
+      s_pushMetrics.add(np);
    }
 }
 
 /**
  * Add parameter to list
  */
-void AddParameter(const TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *), const TCHAR *pArg,
-                  int iDataType, const TCHAR *pszDescription)
+void AddParameter(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *),
+         const TCHAR *arg, int dataType, const TCHAR *description)
 {
-   int i;
-
    // Search for existing parameter
-   for(i = 0; i < m_iNumParams; i++)
-      if (!_tcsicmp(m_pParamList[i].name, pszName))
+   NETXMS_SUBAGENT_PARAM *p = nullptr;
+   for(int i = 0; i < s_metrics.size(); i++)
+      if (!_tcsicmp(s_metrics.get(i)->name, name))
+      {
+         p = s_metrics.get(i);
          break;
-   if (i < m_iNumParams)
+      }
+   if (p != nullptr)
    {
       // Replace existing handler and attributes
-      m_pParamList[i].handler = fpHandler;
-      m_pParamList[i].dataType = iDataType;
-      nx_strncpy(m_pParamList[i].description, pszDescription, MAX_DB_STRING);
+      p->handler = handler;
+      p->dataType = dataType;
+      _tcslcpy(p->description, description, MAX_DB_STRING);
 
       // If we are replacing System.PlatformName, add pointer to
       // platform suffix as argument, otherwise, use supplied pArg
-      if (!_tcscmp(pszName, _T("System.PlatformName")))
+      if (!_tcscmp(name, _T("System.PlatformName")))
       {
-         m_pParamList[i].arg = g_szPlatformSuffix; // to be TCHAR
+         p->arg = g_szPlatformSuffix; // to be TCHAR
       }
       else
       {
-         m_pParamList[i].arg = pArg;
+         p->arg = arg;
       }
    }
    else
    {
       // Add new parameter
-      m_pParamList = (NETXMS_SUBAGENT_PARAM *)realloc(m_pParamList, sizeof(NETXMS_SUBAGENT_PARAM) * (m_iNumParams + 1));
-      nx_strncpy(m_pParamList[m_iNumParams].name, pszName, MAX_PARAM_NAME - 1);
-      m_pParamList[m_iNumParams].handler = fpHandler;
-      m_pParamList[m_iNumParams].arg = pArg;
-      m_pParamList[m_iNumParams].dataType = iDataType;
-      nx_strncpy(m_pParamList[m_iNumParams].description, pszDescription, MAX_DB_STRING);
-      m_iNumParams++;
+      NETXMS_SUBAGENT_PARAM np;
+      _tcslcpy(np.name, name, MAX_PARAM_NAME - 1);
+      np.handler = handler;
+      np.arg = arg;
+      np.dataType = dataType;
+      _tcslcpy(np.description, description, MAX_DB_STRING);
+      s_metrics.add(np);
    }
 }
 
 /**
  * Add list
  */
-void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg)
+void AddList(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg)
 {
-   int i;
-
    // Search for existing enum
-   for(i = 0; i < m_iNumEnums; i++)
-      if (!_tcsicmp(m_pEnumList[i].name, name))
+   NETXMS_SUBAGENT_LIST *p = nullptr;
+   for(int i = 0; i < s_lists.size(); i++)
+      if (!_tcsicmp(s_lists.get(i)->name, name))
+      {
+         p = s_lists.get(i);
          break;
-   if (i < m_iNumEnums)
+      }
+   if (p != nullptr)
    {
       // Replace existing handler and arg
-      m_pEnumList[i].handler = handler;
-      m_pEnumList[i].arg = arg;
+      p->handler = handler;
+      p->arg = arg;
    }
    else
    {
       // Add new enum
-      m_pEnumList = (NETXMS_SUBAGENT_LIST *)realloc(m_pEnumList, sizeof(NETXMS_SUBAGENT_LIST) * (m_iNumEnums + 1));
-      _tcslcpy(m_pEnumList[m_iNumEnums].name, name, MAX_PARAM_NAME - 1);
-      m_pEnumList[m_iNumEnums].handler = handler;
-      m_pEnumList[m_iNumEnums].arg = arg;
-      m_iNumEnums++;
+      NETXMS_SUBAGENT_LIST np;
+      _tcslcpy(np.name, name, MAX_PARAM_NAME - 1);
+      np.handler = handler;
+      np.arg = arg;
+      s_lists.add(np);
    }
 }
 
@@ -642,36 +624,38 @@ void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, S
  * Add table
  */
 void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *), const TCHAR *arg,
-				  const TCHAR *instanceColumns, const TCHAR *description, int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns)
+         const TCHAR *instanceColumns, const TCHAR *description, int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns)
 {
-   int i;
-
    // Search for existing table
-   for(i = 0; i < m_iNumTables; i++)
-      if (!_tcsicmp(m_pTableList[i].name, name))
+   NETXMS_SUBAGENT_TABLE *p = nullptr;
+   for(int i = 0; i < s_tables.size(); i++)
+      if (!_tcsicmp(s_tables.get(i)->name, name))
+      {
+         p = s_tables.get(i);
          break;
-   if (i < m_iNumTables)
+      }
+   if (p != nullptr)
    {
       // Replace existing handler and arg
-      m_pTableList[i].handler = handler;
-      m_pTableList[i].arg = arg;
-      _tcslcpy(m_pTableList[i].instanceColumns, instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
-		_tcslcpy(m_pTableList[i].description, description, MAX_DB_STRING);
-      m_pTableList[i].numColumns = numColumns;
-      m_pTableList[i].columns = columns;
+      p->handler = handler;
+      p->arg = arg;
+      _tcslcpy(p->instanceColumns, instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
+		_tcslcpy(p->description, description, MAX_DB_STRING);
+      p->numColumns = numColumns;
+      p->columns = columns;
    }
    else
    {
       // Add new table
-      m_pTableList = (NETXMS_SUBAGENT_TABLE *)realloc(m_pTableList, sizeof(NETXMS_SUBAGENT_TABLE) * (m_iNumTables + 1));
-      _tcslcpy(m_pTableList[m_iNumTables].name, name, MAX_PARAM_NAME);
-      m_pTableList[m_iNumTables].handler = handler;
-      m_pTableList[m_iNumTables].arg = arg;
-      _tcslcpy(m_pTableList[m_iNumTables].instanceColumns, instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
-		_tcslcpy(m_pTableList[m_iNumTables].description, description, MAX_DB_STRING);
-      m_pTableList[m_iNumTables].numColumns = numColumns;
-      m_pTableList[m_iNumTables].columns = columns;
-      m_iNumTables++;
+      NETXMS_SUBAGENT_TABLE np;
+      _tcslcpy(np.name, name, MAX_PARAM_NAME);
+      np.handler = handler;
+      np.arg = arg;
+      _tcslcpy(np.instanceColumns, instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
+		_tcslcpy(np.description, description, MAX_DB_STRING);
+      np.numColumns = numColumns;
+      np.columns = columns;
+      s_tables.add(np);
       nxlog_debug(7, _T("Table %s added (%d predefined columns, instance columns \"%s\")"), name, numColumns, instanceColumns);
    }
 }
@@ -682,7 +666,7 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
 bool AddExternalParameter(TCHAR *config, bool shellExec, bool isList)
 {
    TCHAR *cmdLine = _tcschr(config, _T(':'));
-   if (cmdLine == NULL)
+   if (cmdLine == nullptr)
       return false;
 
    *cmdLine = 0;
@@ -692,7 +676,7 @@ bool AddExternalParameter(TCHAR *config, bool shellExec, bool isList)
    if ((*config == 0) || (*cmdLine == 0))
       return false;
 
-	TCHAR *arg = (TCHAR *)malloc((_tcslen(cmdLine) + 2) * sizeof(TCHAR));
+	TCHAR *arg = MemAllocString(_tcslen(cmdLine) + 2);
 	arg[0] = shellExec ? _T('S') : _T('E');
 	_tcscpy(&arg[1], cmdLine);
    if (isList)
@@ -754,7 +738,7 @@ bool AddExternalTable(TCHAR *config)
             separator[0] = _T('\t');
             break;
          case 'u':
-            separator[0] = (TCHAR)_tcstoul(&separator[2], NULL, 10);
+            separator[0] = (TCHAR)_tcstoul(&separator[2], nullptr, 10);
             break;
       }
    }
@@ -780,52 +764,53 @@ bool AddExternalTable(TCHAR *config)
 /**
  * Get parameter's value
  */
-UINT32 GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session)
+uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session)
 {
    int i, rc;
-   UINT32 dwErrorCode;
+   uint32_t dwErrorCode;
 
-   session->debugPrintf(5, _T("Requesting parameter \"%s\""), param);
-   for(i = 0; i < m_iNumParams; i++)
+   session->debugPrintf(5, _T("Requesting metric \"%s\""), param);
+   for(i = 0; i < s_metrics.size(); i++)
 	{
-      if (MatchString(m_pParamList[i].name, param, FALSE))
+      NETXMS_SUBAGENT_PARAM *p = s_metrics.get(i);
+      if (MatchString(p->name, param, FALSE))
       {
-         rc = m_pParamList[i].handler(param, m_pParamList[i].arg, value, session);
+         rc = p->handler(param, p->arg, value, session);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
                dwErrorCode = ERR_SUCCESS;
-               m_dwProcessedRequests++;
+               InterlockedIncrement(&s_processedRequests);
                break;
             case SYSINFO_RC_ERROR:
                dwErrorCode = ERR_INTERNAL_ERROR;
-               m_dwFailedRequests++;
+               InterlockedIncrement(&s_failedRequests);
                break;
             case SYSINFO_RC_NO_SUCH_INSTANCE:
                dwErrorCode = ERR_NO_SUCH_INSTANCE;
-               m_dwFailedRequests++;
+               InterlockedIncrement(&s_failedRequests);
                break;
             case SYSINFO_RC_UNSUPPORTED:
                dwErrorCode = ERR_UNKNOWN_PARAMETER;
-               m_dwUnsupportedRequests++;
+               InterlockedIncrement(&s_unsupportedRequests);
                break;
             default:
                nxlog_write(NXLOG_ERROR, _T("Internal error: unexpected return code %d in GetParameterValue(\"%s\")"), rc, param);
                dwErrorCode = ERR_INTERNAL_ERROR;
-               m_dwFailedRequests++;
+               InterlockedIncrement(&s_failedRequests);
                break;
          }
          break;
       }
 	}
 
-   if (i == m_iNumParams)
+   if (i == s_metrics.size())
    {
 		rc = GetParameterValueFromExtProvider(param, value);
 		if (rc == SYSINFO_RC_SUCCESS)
 		{
          dwErrorCode = ERR_SUCCESS;
-         m_dwProcessedRequests++;
+         InterlockedIncrement(&s_processedRequests);
 		}
 		else
 		{
@@ -833,33 +818,33 @@ UINT32 GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *
 		}
    }
 
-   if ((dwErrorCode == ERR_UNKNOWN_PARAMETER) && (i == m_iNumParams))
+   if ((dwErrorCode == ERR_UNKNOWN_PARAMETER) && (i == s_metrics.size()))
    {
 		dwErrorCode = GetParameterValueFromAppAgent(param, value);
 		if (dwErrorCode == ERR_SUCCESS)
 		{
-         m_dwProcessedRequests++;
+         InterlockedIncrement(&s_processedRequests);
 		}
 		else if (dwErrorCode != ERR_UNKNOWN_PARAMETER)
 		{
-         m_dwFailedRequests++;
+         InterlockedIncrement(&s_failedRequests);
 		}
    }
 
-   if ((dwErrorCode == ERR_UNKNOWN_PARAMETER) && (i == m_iNumParams))
+   if ((dwErrorCode == ERR_UNKNOWN_PARAMETER) && (i == s_metrics.size()))
    {
 		dwErrorCode = GetParameterValueFromExtSubagent(param, value);
 		if (dwErrorCode == ERR_SUCCESS)
 		{
-         m_dwProcessedRequests++;
+         InterlockedIncrement(&s_processedRequests);
 		}
 		else if (dwErrorCode == ERR_UNKNOWN_PARAMETER)
 		{
-			m_dwUnsupportedRequests++;
+         InterlockedIncrement(&s_unsupportedRequests);
 		}
 		else
 		{
-         m_dwFailedRequests++;
+         InterlockedIncrement(&s_failedRequests);
 		}
    }
 
@@ -871,59 +856,60 @@ UINT32 GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *
 /**
  * Get list's value
  */
-UINT32 GetListValue(const TCHAR *param, StringList *value, AbstractCommSession *session)
+uint32_t GetListValue(const TCHAR *param, StringList *value, AbstractCommSession *session)
 {
    int i, rc;
-   UINT32 dwErrorCode;
+   uint32_t dwErrorCode;
 
    session->debugPrintf(5, _T("Requesting list \"%s\""), param);
-   for(i = 0; i < m_iNumEnums; i++)
+   for(i = 0; i < s_lists.size(); i++)
 	{
-      if (MatchString(m_pEnumList[i].name, param, FALSE))
+      NETXMS_SUBAGENT_LIST *list = s_lists.get(i);
+      if (MatchString(list->name, param, FALSE))
       {
-         rc = m_pEnumList[i].handler(param, m_pEnumList[i].arg, value, session);
+         rc = list->handler(param, list->arg, value, session);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
                dwErrorCode = ERR_SUCCESS;
-               m_dwProcessedRequests++;
+               InterlockedIncrement(&s_processedRequests);
                break;
             case SYSINFO_RC_ERROR:
                dwErrorCode = ERR_INTERNAL_ERROR;
-               m_dwFailedRequests++;
+               InterlockedIncrement(&s_failedRequests);
                break;
             case SYSINFO_RC_NO_SUCH_INSTANCE:
                dwErrorCode = ERR_NO_SUCH_INSTANCE;
-               m_dwFailedRequests++;
+               InterlockedIncrement(&s_failedRequests);
                break;
             case SYSINFO_RC_UNSUPPORTED:
                dwErrorCode = ERR_UNKNOWN_PARAMETER;
-               m_dwUnsupportedRequests++;
+               InterlockedIncrement(&s_unsupportedRequests);
                break;
             default:
                nxlog_write(NXLOG_ERROR, _T("Internal error: unexpected return code %d in GetListValue(\"%s\")"), rc, param);
                dwErrorCode = ERR_INTERNAL_ERROR;
-               m_dwFailedRequests++;
+               InterlockedIncrement(&s_failedRequests);
                break;
          }
          break;
       }
 	}
 
-	if (i == m_iNumEnums)
+	if (i == s_lists.size())
    {
 		dwErrorCode = GetListValueFromExtSubagent(param, value);
 		if (dwErrorCode == ERR_SUCCESS)
 		{
-         m_dwProcessedRequests++;
+         InterlockedIncrement(&s_processedRequests);
 		}
 		else if (dwErrorCode == ERR_UNKNOWN_PARAMETER)
 		{
-			m_dwUnsupportedRequests++;
+         InterlockedIncrement(&s_unsupportedRequests);
 		}
 		else
 		{
-         m_dwFailedRequests++;
+         InterlockedIncrement(&s_failedRequests);
 		}
    }
 
@@ -935,68 +921,69 @@ UINT32 GetListValue(const TCHAR *param, StringList *value, AbstractCommSession *
 /**
  * Get table's value
  */
-UINT32 GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *session)
+uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *session)
 {
    int i, rc;
-   UINT32 dwErrorCode;
+   uint32_t dwErrorCode;
 
    session->debugPrintf(5, _T("Requesting table \"%s\""), param);
-   for(i = 0; i < m_iNumTables; i++)
+   for(i = 0; i < s_tables.size(); i++)
 	{
-      if (MatchString(m_pTableList[i].name, param, FALSE))
+      NETXMS_SUBAGENT_TABLE *t = s_tables.get(i);
+      if (MatchString(t->name, param, FALSE))
       {
          // pre-fill table columns if specified in table definition
-         if (m_pTableList[i].numColumns > 0)
+         if (t->numColumns > 0)
          {
-            for(int c = 0; c < m_pTableList[i].numColumns; c++)
+            for(int c = 0; c < t->numColumns; c++)
             {
-               NETXMS_SUBAGENT_TABLE_COLUMN *col = &m_pTableList[i].columns[c];
+               NETXMS_SUBAGENT_TABLE_COLUMN *col = &t->columns[c];
                value->addColumn(col->name, col->dataType, col->displayName, col->isInstance);
             }
          }
 
-         rc = m_pTableList[i].handler(param, m_pTableList[i].arg, value, session);
+         rc = t->handler(param, t->arg, value, session);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
                dwErrorCode = ERR_SUCCESS;
-               m_dwProcessedRequests++;
+               InterlockedIncrement(&s_processedRequests);
                break;
             case SYSINFO_RC_ERROR:
                dwErrorCode = ERR_INTERNAL_ERROR;
-               m_dwFailedRequests++;
+               InterlockedIncrement(&s_failedRequests);
                break;
             case SYSINFO_RC_NO_SUCH_INSTANCE:
                dwErrorCode = ERR_NO_SUCH_INSTANCE;
-               m_dwFailedRequests++;
+               InterlockedIncrement(&s_failedRequests);
                break;
             case SYSINFO_RC_UNSUPPORTED:
                dwErrorCode = ERR_UNKNOWN_PARAMETER;
-               m_dwUnsupportedRequests++;
+               InterlockedIncrement(&s_unsupportedRequests);
                break;
             default:
                nxlog_write(NXLOG_ERROR, _T("Internal error: unexpected return code %d in GetTableValue(\"%s\")"), rc, param);
                dwErrorCode = ERR_INTERNAL_ERROR;
-               m_dwFailedRequests++;
+               InterlockedIncrement(&s_failedRequests);
                break;
          }
          break;
       }
 	}
 
-   if (i == m_iNumTables)
+   if (i == s_tables.size())
    {
       session->debugPrintf(7, _T("GetTableValue(): requesting table from external data providers"));
       rc = GetTableValueFromExtProvider(param, value);
       if (rc == SYSINFO_RC_SUCCESS)
       {
          dwErrorCode = ERR_SUCCESS;
-         m_dwProcessedRequests++;
+         InterlockedIncrement(&s_processedRequests);
       }
       else if (rc == SYSINFO_RC_ERROR)
       {
          dwErrorCode = ERR_INTERNAL_ERROR;
-         m_dwFailedRequests++;
+         InterlockedIncrement(&s_failedRequests);
       }
       else
       {
@@ -1004,21 +991,21 @@ UINT32 GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *sess
       }
    }
 
-	if ((dwErrorCode == ERR_UNKNOWN_PARAMETER) && (i == m_iNumTables))
+	if ((dwErrorCode == ERR_UNKNOWN_PARAMETER) && (i == s_tables.size()))
    {
       session->debugPrintf(7, _T("GetTableValue(): requesting table from external subagents"));
 		dwErrorCode = GetTableValueFromExtSubagent(param, value);
 		if (dwErrorCode == ERR_SUCCESS)
 		{
-         m_dwProcessedRequests++;
+         InterlockedIncrement(&s_processedRequests);
 		}
 		else if (dwErrorCode == ERR_UNKNOWN_PARAMETER)
 		{
-			m_dwUnsupportedRequests++;
+         InterlockedIncrement(&s_unsupportedRequests);
 		}
 		else
 		{
-         m_dwFailedRequests++;
+         InterlockedIncrement(&s_failedRequests);
 		}
    }
 
@@ -1036,13 +1023,14 @@ void GetParameterList(NXCPMessage *msg)
    uint32_t fieldId, count;
 
 	// Parameters
-   for(i = 0, count = 0, fieldId = VID_PARAM_LIST_BASE; i < m_iNumParams; i++)
+   for(i = 0, count = 0, fieldId = VID_PARAM_LIST_BASE; i < s_metrics.size(); i++)
    {
-		if (m_pParamList[i].dataType != DCI_DT_DEPRECATED)
+      NETXMS_SUBAGENT_PARAM *p = s_metrics.get(i);
+		if (p->dataType != DCI_DT_DEPRECATED)
 		{
-			msg->setField(fieldId++, m_pParamList[i].name);
-			msg->setField(fieldId++, m_pParamList[i].description);
-			msg->setField(fieldId++, (WORD)m_pParamList[i].dataType);
+			msg->setField(fieldId++, p->name);
+			msg->setField(fieldId++, p->description);
+			msg->setField(fieldId++, static_cast<uint16_t>(p->dataType));
 			count++;
 		}
    }
@@ -1051,32 +1039,36 @@ void GetParameterList(NXCPMessage *msg)
    msg->setField(VID_NUM_PARAMETERS, count);
 
 	// Push parameters
-   msg->setField(VID_NUM_PUSH_PARAMETERS, (UINT32)m_iNumPushParams);
-   for(i = 0, fieldId = VID_PUSHPARAM_LIST_BASE; i < m_iNumPushParams; i++)
+   msg->setField(VID_NUM_PUSH_PARAMETERS, static_cast<uint32_t>(s_pushMetrics.size()));
+   for(i = 0, fieldId = VID_PUSHPARAM_LIST_BASE; i < s_pushMetrics.size(); i++)
    {
-      msg->setField(fieldId++, m_pPushParamList[i].name);
-      msg->setField(fieldId++, m_pPushParamList[i].description);
-      msg->setField(fieldId++, (WORD)m_pPushParamList[i].dataType);
+      NETXMS_SUBAGENT_PUSHPARAM *p = s_pushMetrics.get(i);
+      msg->setField(fieldId++, p->name);
+      msg->setField(fieldId++, p->description);
+      msg->setField(fieldId++, static_cast<uint16_t>(p->dataType));
    }
 
 	// Lists
-   msg->setField(VID_NUM_ENUMS, (UINT32)m_iNumEnums);
-   for(i = 0, fieldId = VID_ENUM_LIST_BASE; i < m_iNumEnums; i++)
+   count = static_cast<uint32_t>(s_lists.size());
+   for(i = 0, fieldId = VID_ENUM_LIST_BASE; i < s_lists.size(); i++)
    {
-      msg->setField(fieldId++, m_pEnumList[i].name);
+      msg->setField(fieldId++, s_lists.get(i)->name);
    }
 	ListListsFromExtSubagents(msg, &fieldId, &count);
+   msg->setField(VID_NUM_ENUMS, count);
 
 	// Tables
-   msg->setField(VID_NUM_TABLES, (UINT32)m_iNumTables);
-   for(i = 0, fieldId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
+   count = static_cast<uint32_t>(s_tables.size());
+   for(i = 0, fieldId = VID_TABLE_LIST_BASE; i < s_tables.size(); i++)
    {
-      msg->setField(fieldId++, m_pTableList[i].name);
-		msg->setField(fieldId++, m_pTableList[i].instanceColumns);
-		msg->setField(fieldId++, m_pTableList[i].description);
+      NETXMS_SUBAGENT_TABLE *t = s_tables.get(i);
+      msg->setField(fieldId++, t->name);
+		msg->setField(fieldId++, t->instanceColumns);
+		msg->setField(fieldId++, t->description);
    }
    ListTablesFromExtProviders(msg, &fieldId, &count);
 	ListTablesFromExtSubagents(msg, &fieldId, &count);
+   msg->setField(VID_NUM_TABLES, count);
 }
 
 /**
@@ -1085,14 +1077,15 @@ void GetParameterList(NXCPMessage *msg)
 void GetTableList(NXCPMessage *msg)
 {
    uint32_t fieldId = VID_TABLE_LIST_BASE;
-   for(int i = 0; i < m_iNumTables; i++)
+   for(int i = 0; i < s_tables.size(); i++)
    {
-      msg->setField(fieldId++, m_pTableList[i].name);
-		msg->setField(fieldId++, m_pTableList[i].instanceColumns);
-		msg->setField(fieldId++, m_pTableList[i].description);
+      NETXMS_SUBAGENT_TABLE *t = s_tables.get(i);
+      msg->setField(fieldId++, t->name);
+		msg->setField(fieldId++, t->instanceColumns);
+		msg->setField(fieldId++, t->description);
    }
 
-   uint32_t count = static_cast<uint32_t>(m_iNumTables);
+   uint32_t count = static_cast<uint32_t>(s_tables.size());
    ListTablesFromExtProviders(msg, &fieldId, &count);
 	ListTablesFromExtSubagents(msg, &fieldId, &count);
    msg->setField(VID_NUM_TABLES, count);
@@ -1104,12 +1097,12 @@ void GetTableList(NXCPMessage *msg)
 void GetEnumList(NXCPMessage *msg)
 {
    uint32_t fieldId = VID_ENUM_LIST_BASE;
-   for(int i = 0; i < m_iNumEnums; i++)
+   for(int i = 0; i < s_lists.size(); i++)
    {
-      msg->setField(fieldId++, m_pEnumList[i].name);
+      msg->setField(fieldId++, s_lists.get(i)->name);
    }
 
-   uint32_t count = static_cast<uint32_t>(m_iNumEnums);
+   uint32_t count = static_cast<uint32_t>(s_lists.size());
 	ListListsFromExtSubagents(msg, &fieldId, &count);
    msg->setField(VID_NUM_ENUMS, count);
 }

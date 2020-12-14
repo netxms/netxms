@@ -219,6 +219,7 @@ struct PolicyChangeNotification
 #define DCIDESC_AGENT_HEAP_MAPPED                    _T("Agent: mapped heap memory")
 #define DCIDESC_AGENT_ID                             _T("Agent identifier")
 #define DCIDESC_AGENT_IS_EXT_SUBAGENT_CONNECTED      _T("Check if external subagent {instance} is connected")
+#define DCIDESC_AGENT_IS_RESTART_PENDING             _T("Check if agent restart is pending")
 #define DCIDESC_AGENT_IS_SUBAGENT_LOADED             _T("Check if subagent {instance} is loaded")
 #define DCIDESC_AGENT_IS_USERAGENT_INSTALLED         _T("Check if user support application is installed")
 #define DCIDESC_AGENT_LOCALDB_FAILED_QUERIES         _T("Agent local database: failed queries")

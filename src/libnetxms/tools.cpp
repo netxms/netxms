@@ -2448,6 +2448,71 @@ char LIBNETXMS_EXPORTABLE *LoadFileAsUTF8String(const TCHAR *fileName)
    return reinterpret_cast<char*>(buffer);
 }
 
+/**
+ * Save file atomically (do not replace existing file until all data is written)
+ */
+SaveFileStatus LIBNETXMS_EXPORTABLE SaveFile(const TCHAR *fileName, const void *data, size_t size, bool binary, bool removeCR)
+{
+   TCHAR tempFileName[MAX_PATH];
+   _tcslcpy(tempFileName, fileName, MAX_PATH - 6);
+   _tcslcat(tempFileName, _T(".part"), MAX_PATH);
+   int hFile = _topen(tempFileName, O_CREAT | O_TRUNC | O_WRONLY | (binary ? O_BINARY : 0), 0644);
+   if (hFile == -1)
+      return SaveFileStatus::OPEN_ERROR;
+
+   SaveFileStatus status = SaveFileStatus::SUCCESS;
+   if (size > 0)
+   {
+      if (removeCR)
+      {
+         const BYTE *curr = static_cast<const BYTE*>(data);
+         size_t pos = 0;
+         while(pos < size)
+         {
+            auto next = curr;
+            while((*next != 0x0D) && (pos < size))
+            {
+               *next++;
+               pos++;
+            }
+            int blockSize = static_cast<int>(next - curr);
+            if (_write(hFile, curr, blockSize) != blockSize)
+            {
+               status = SaveFileStatus::WRITE_ERROR;
+               break;
+            }
+            while((*next != 0x0D) && (pos < size))
+            {
+               *next++;
+               pos++;
+            }
+            curr = next;
+         }
+      }
+      else
+      {
+         if (_write(hFile, data, static_cast<unsigned int>(size)) != size)
+            status = SaveFileStatus::WRITE_ERROR;
+      }
+   }
+   _close(hFile);
+
+   if (status == SaveFileStatus::SUCCESS)
+   {
+      if (_trename(tempFileName, fileName) != 0)
+      {
+         status = SaveFileStatus::RENAME_ERROR;
+         _tremove(tempFileName);
+      }
+   }
+   else
+   {
+      _tremove(tempFileName);
+   }
+
+   return status;
+}
+
 #ifdef _WIN32
 
 /**
