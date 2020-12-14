@@ -11883,18 +11883,19 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
 			   shared_ptr<ServerCommandExecutor> cmd = make_shared<ServerCommandExecutor>(request, this);
+            uint32_t taskId = cmd->getId();
+			   m_serverCommands->set(taskId, cmd);
 			   if (cmd->execute())
 			   {
-			      pid_t taskId = cmd->getProcessId();
-			      debugPrintf(5, _T("Started process executor %u for command %s"), static_cast<uint32_t>(taskId), cmd->getMaskedCommand());
-			      m_serverCommands->set(taskId, cmd);
+			      debugPrintf(5, _T("Started process executor %u for command %s, node id %d"), taskId, cmd->getMaskedCommand(), nodeId);
                writeAuditLog(AUDIT_OBJECTS, true, nodeId, _T("Server command executed: %s"), cmd->getMaskedCommand());
-               msg.setField(VID_COMMAND_ID, static_cast<uint64_t>(taskId));
+               msg.setField(VID_COMMAND_ID, taskId);
                msg.setField(VID_RCC, RCC_SUCCESS);
 			   }
 			   else
 			   {
-               msg.setField(VID_RCC, RCC_SUCCESS);
+	            m_serverCommands->remove(taskId);
+               msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
 			   }
 			}
 			else
@@ -11943,7 +11944,7 @@ void ClientSession::stopServerCommand(NXCPMessage *request)
 static void WaitForExecutorCompletion(const shared_ptr<ProcessExecutor>& executor)
 {
    executor->waitForCompletion(INFINITE);
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Process executor %u completed"), static_cast<uint32_t>(executor->getProcessId()));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Process executor %u completed"), executor->getId());
 }
 
 /**
