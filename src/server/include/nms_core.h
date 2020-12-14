@@ -509,6 +509,7 @@ private:
    MUTEX m_pendingObjectNotificationsLock;
    bool m_objectNotificationScheduled;
    uint32_t m_objectNotificationDelay;
+   size_t m_objectNotificationBatchSize;
 
    static void socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, ClientSession *session);
    static void terminate(ClientSession *session);

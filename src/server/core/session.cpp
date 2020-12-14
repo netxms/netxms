@@ -202,6 +202,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_pendingObjectNotifications = new HashSet<uint32_t>();
    m_pendingObjectNotificationsLock = MutexCreateFast();
    m_objectNotificationScheduled = false;
+   m_objectNotificationBatchSize = 500;
    m_objectNotificationDelay = 200;
 }
 
@@ -2790,12 +2791,18 @@ void ClientSession::onNewEvent(Event *pEvent)
  */
 void ClientSession::sendObjectUpdates()
 {
-   uint32_t idList[500];
-   int count = 0;
+   if (m_flags & (CSF_TERMINATE_REQUESTED | CSF_TERMINATED) != 0)
+   {
+      decRefCount();
+      return;
+   }
+
+   uint32_t *idList = reinterpret_cast<uint32_t*>(alloca(m_objectNotificationBatchSize * sizeof(uint32_t)));
+   size_t count = 0;
 
    MutexLock(m_pendingObjectNotificationsLock);
    auto it = m_pendingObjectNotifications->iterator();
-   while(it->hasNext() && (count < 500))
+   while(it->hasNext() && (count < m_objectNotificationBatchSize))
    {
       idList[count++] = *it->next();
       it->remove();
@@ -2803,8 +2810,10 @@ void ClientSession::sendObjectUpdates()
    delete it;
    MutexUnlock(m_pendingObjectNotificationsLock);
 
+   int64_t startTime = GetCurrentTimeMs();
+
    NXCPMessage msg(CMD_OBJECT_UPDATE, 0);
-   for(int i = 0; i < count; i++)
+   for(size_t i = 0; i < count; i++)
    {
       msg.deleteAllFields();
       shared_ptr<NetObj> object = FindObjectById(idList[i]);
@@ -2829,7 +2838,25 @@ void ClientSession::sendObjectUpdates()
       sendMessage(msg);
    }
 
-   if (count == 500)
+   uint32_t elapsedTime = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
+   if ((elapsedTime > 500) && ((m_objectNotificationBatchSize > 100) || (m_objectNotificationDelay < 1000)))
+   {
+      if (m_objectNotificationBatchSize > 100)
+         m_objectNotificationBatchSize -= 100;
+      if (m_objectNotificationDelay < 1000)
+         m_objectNotificationDelay += 100;
+      debugPrintf(4, _T("Object notification settings changed: batchSize=%u delay=%u"), static_cast<uint32_t>(m_objectNotificationBatchSize), m_objectNotificationDelay);
+   }
+   else if ((elapsedTime < 500) && ((m_objectNotificationBatchSize < 1000) || (m_objectNotificationDelay > 200)))
+   {
+      if (m_objectNotificationBatchSize < 1000)
+         m_objectNotificationBatchSize += 1000;
+      if (m_objectNotificationDelay > 200)
+         m_objectNotificationDelay -= 100;
+      debugPrintf(4, _T("Object notification settings changed: batchSize=%u delay=%u"), static_cast<uint32_t>(m_objectNotificationBatchSize), m_objectNotificationDelay);
+   }
+
+   if (count == m_objectNotificationBatchSize)
    {
       if ((m_flags & CSF_OBJECTS_OUT_OF_SYNC) == 0)
       {
@@ -2847,9 +2874,9 @@ void ClientSession::sendObjectUpdates()
    }
 
    MutexLock(m_pendingObjectNotificationsLock);
-   if (m_pendingObjectNotifications->size() > 0)
+   if ((m_pendingObjectNotifications->size() > 0) && (m_flags & (CSF_TERMINATE_REQUESTED | CSF_TERMINATED) == 0))
    {
-      ThreadPoolScheduleRelative(g_clientThreadPool, (count == 500) ? m_objectNotificationDelay * 2 : m_objectNotificationDelay, this, &ClientSession::sendObjectUpdates);
+      ThreadPoolScheduleRelative(g_clientThreadPool, m_objectNotificationDelay, this, &ClientSession::sendObjectUpdates);
    }
    else
    {
