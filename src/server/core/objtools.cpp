@@ -1665,5 +1665,5 @@ void ServerCommandExecutor::endOfOutput()
    NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId);
    msg.setEndOfSequence();
    m_session->sendMessage(&msg);
-   m_session->unregisterServerCommand(static_cast<uint32_t>(getProcessId()));
+   m_session->unregisterServerCommand(getId());
 }
