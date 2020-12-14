@@ -18,6 +18,7 @@
  */
 package org.netxms.client;
 
+import java.util.concurrent.CountDownLatch;
 import org.netxms.base.NXCPMessage;
 
 /**
@@ -25,8 +26,8 @@ import org.netxms.base.NXCPMessage;
  */
 public abstract class MessageHandler
 {
-   private boolean complete = false;
-   private boolean timeout = false;
+   private CountDownLatch latch = new CountDownLatch(1);
+   private boolean expired = false;
    private long lastMessageTimestamp = System.currentTimeMillis();
    private int messageWaitTimeout = 60000;
    
@@ -35,13 +36,9 @@ public abstract class MessageHandler
     */
    protected void setComplete()
    {
-      complete = true;
-      synchronized(this)
-      {
-         notifyAll();
-      }
+      latch.countDown();
    }
-   
+
    /**
     * Get completion flag
     * 
@@ -49,9 +46,29 @@ public abstract class MessageHandler
     */
    public boolean isComplete()
    {
-      return complete;
+      return latch.getCount() == 0;
    }
-   
+
+   /**
+    * Wait for handler completion
+    */
+   public void waitForCompletion()
+   {
+      boolean done = false;
+      do
+      {
+         try
+         {
+            latch.await();
+            done = true;
+         }
+         catch(InterruptedException e)
+         {
+         }
+      }
+      while(!done);
+   }
+
    /**
     * @return the lastMessageTimestamp
     */
@@ -69,16 +86,22 @@ public abstract class MessageHandler
    }
 
    /**
-    * @return the timeout
+    * Check if handler is expired.
+    *
+    * @return true if handler is expired
     */
-   public boolean isTimeout()
+   public boolean isExpired()
    {
-      return timeout;
+      return expired;
    }
 
-   protected void setTimeout()
+   /**
+    * Set handler as expired (also sets completion flag)
+    */
+   protected void setExpired()
    {
-      timeout = true;
+      expired = true;
+      setComplete();
    }
 
    /**
