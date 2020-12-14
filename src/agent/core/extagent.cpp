@@ -600,11 +600,11 @@ uint32_t ExternalSubagent::getList(const TCHAR *name, StringList *value)
 /**
  * Execute action by remote subagent
  */
-uint32_t ExternalSubagent::executeAction(const TCHAR *name, const StringList *args, AbstractCommSession *session, uint32_t requestId, bool sendOutput)
+uint32_t ExternalSubagent::executeAction(const TCHAR *name, const StringList& args, AbstractCommSession *session, uint32_t requestId, bool sendOutput)
 {
    NXCPMessage msg(CMD_EXECUTE_ACTION, m_requestId++);
    msg.setField(VID_ACTION_NAME, name);
-   args->fillMessage(&msg, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
+   args.fillMessage(&msg, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
    msg.setField(VID_REQUEST_ID, requestId);
    msg.setField(VID_RECEIVE_OUTPUT, sendOutput);
    session->prepareProxySessionSetupMsg(&msg);
@@ -613,7 +613,7 @@ uint32_t ExternalSubagent::executeAction(const TCHAR *name, const StringList *ar
 	if (sendMessage(&msg))
 	{
 		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
-		if (response != NULL)
+		if (response != nullptr)
 		{
 			rcc = response->getFieldAsUInt32(VID_RCC);
 			delete response;
@@ -841,7 +841,7 @@ UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value)
  *
  * @return agent error code
  */
-UINT32 ExecuteActionByExtSubagent(const TCHAR *name, const StringList *args, AbstractCommSession *session, UINT32 requestId, bool sendOutput)
+uint32_t ExecuteActionByExtSubagent(const TCHAR *name, const StringList& args, AbstractCommSession *session, uint32_t requestId, bool sendOutput)
 {
    uint32_t rc = ERR_UNKNOWN_PARAMETER;
    for(int i = 0; i < s_subagents.size(); i++)

@@ -1125,7 +1125,7 @@ const TCHAR LIBNXAGENT_EXPORTABLE *AgentGetDataDirectory();
 
 DB_HANDLE LIBNXAGENT_EXPORTABLE AgentGetLocalDatabaseHandle();
 
-void LIBNXAGENT_EXPORTABLE AgentExecuteAction(const TCHAR *action, const StringList *args);
+void LIBNXAGENT_EXPORTABLE AgentExecuteAction(const TCHAR *action, const StringList& args);
 
 bool LIBNXAGENT_EXPORTABLE AgentGetScreenInfoForUserSession(uint32_t sessionId, uint32_t *width, uint32_t *height, uint32_t *bpp);
 

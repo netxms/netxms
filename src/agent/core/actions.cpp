@@ -22,154 +22,270 @@
 
 #include "nxagentd.h"
 
-
-//
-// Static data
-//
-
-static ACTION *m_pActionList = NULL;
-static UINT32 m_dwNumActions = 0;
+#define DEBUG_TAG _T("actions")
 
 /**
- * Agent command executor default constructor
+ * External action executor
  */
-AgentActionExecutor::AgentActionExecutor() : ProcessExecutor(NULL)
+class ExternalActionExecutor : public ProcessExecutor
 {
-   m_requestId = 0;
-   m_session = NULL;
-   m_args = NULL;
-}
+private:
+   uint32_t m_requestId;
+   AbstractCommSession *m_session;
+
+protected:
+   virtual void onOutput(const char *text) override;
+   virtual void endOfOutput() override;
+
+public:
+   ExternalActionExecutor(const TCHAR *command, const StringList& args, AbstractCommSession *session,
+            uint32_t requestId, bool sendOutput, bool shellExec);
+   virtual ~ExternalActionExecutor();
+};
 
 /**
- * Agent command executor destructor
+ * Configured actions
  */
-AgentActionExecutor::~AgentActionExecutor()
-{
-   delete(m_args);
-   if (m_session != NULL)
-      m_session->decRefCount();
-}
+static StructArray<ACTION> s_actions(0, 16);
 
 /**
- * Agent action executor creator
+ * Find action by name
  */
-AgentActionExecutor *AgentActionExecutor::createAgentExecutor(const TCHAR *cmd, const StringList *args)
+static ACTION *FindAction(const TCHAR *name)
 {
-   AgentActionExecutor *executor = new AgentActionExecutor();
-   executor->m_cmd = MemCopyString(cmd);
-   executor->m_args = new StringList(args);
-   executor->m_session = new VirtualSession(0);
-
-   UINT32 rcc = executor->findAgentAction();
-
-   if (rcc == ERR_SUCCESS)
+   for(int i = 0; i < s_actions.size(); i++)
    {
-      delete(executor);
-      return NULL;
+      if (!_tcsicmp(s_actions.get(i)->szName, name))
+         return s_actions.get(i);
    }
-
-   return executor;
+   return nullptr;
 }
 
 /**
- * Agent action executor creator
+ * Add action
  */
-AgentActionExecutor *AgentActionExecutor::createAgentExecutor(NXCPMessage *request, AbstractCommSession *session, UINT32 *rcc)
+bool AddAction(const TCHAR *name, int type, const TCHAR *arg,
+         LONG (*handler)(const TCHAR*, const StringList*, const TCHAR*, AbstractCommSession*),
+         const TCHAR *subAgent, const TCHAR *description)
 {
-   AgentActionExecutor *executor = new AgentActionExecutor();
-   executor->m_sendOutput = request->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
-   executor->m_requestId = request->getId();
-   executor->m_session = session;
-   executor->m_session->incRefCount();
-   executor->m_cmd = request->getFieldAsString(VID_ACTION_NAME);
-
-   UINT32 count = request->getFieldAsUInt32(VID_NUM_ARGS);
-   if (count > 0)
+   ACTION *action = FindAction(name);
+   if (action != nullptr)
    {
-      executor->m_args = new StringList();
-      UINT32 fieldId = VID_ACTION_ARG_BASE;
-      for(UINT32 i = 0; i < count; i++)
-         executor->m_args->addPreallocated(request->getFieldAsString(fieldId++));
-   }
-   *rcc = executor->findAgentAction();
-
-   if (*rcc == ERR_SUCCESS)
-   {
-      delete executor;
-      return NULL;
-   }
-
-   return executor;
-}
-
-UINT32 AgentActionExecutor::findAgentAction()
-{
-   UINT32 rcc = ERR_UNKNOWN_PARAMETER;
-   for(UINT32 i = 0; i < m_dwNumActions; i++)
-   {
-      if (!_tcsicmp(m_pActionList[i].szName, m_cmd))
+      // Update existing entry in action list
+      _tcslcpy(action->szDescription, description, MAX_DB_STRING);
+      if ((action->iType == AGENT_ACTION_EXEC) || (action->iType == AGENT_ACTION_SHELLEXEC))
+         MemFree(action->handler.pszCmdLine);
+      action->iType = type;
+      switch(type)
       {
-         MemFree(m_cmd);
-         m_cmd = MemCopyString(m_pActionList[i].handler.pszCmdLine);
-         switch(m_pActionList[i].iType)
-         {
-            case AGENT_ACTION_EXEC:
-            case AGENT_ACTION_SHELLEXEC:
-               rcc = ERR_PROCESSING;
-               substituteArgs();
-               DebugPrintf(4, _T("Executing external action %s of type %d"), m_cmd, m_pActionList[i].iType);
-               break;
-            case AGENT_ACTION_SUBAGENT:
-               DebugPrintf(4, _T("Executing internal action %s"), m_pActionList[i].szName);
-               rcc = m_pActionList[i].handler.sa.fpHandler(m_cmd, m_args, m_pActionList[i].handler.sa.pArg, m_session);
-               break;
-            default:
-               rcc = ERR_NOT_IMPLEMENTED;
-               break;
-         }
-         break;
+         case AGENT_ACTION_EXEC:
+         case AGENT_ACTION_SHELLEXEC:
+            action->handler.pszCmdLine = MemCopyString(arg);
+            break;
+         case AGENT_ACTION_SUBAGENT:
+            action->handler.sa.fpHandler = handler;
+            action->handler.sa.pArg = arg;
+            _tcslcpy(action->handler.sa.szSubagentName, subAgent,MAX_PATH);
+            break;
+         default:
+            break;
       }
    }
-
-   if (rcc == ERR_UNKNOWN_PARAMETER)
-      rcc = ExecuteActionByExtSubagent(m_cmd, m_args, m_session, 0, false);
-
-   return rcc;
+   else
+   {
+      // Create new entry in action list
+      ACTION newAction;
+      _tcslcpy(newAction.szName, name, MAX_PARAM_NAME);
+      newAction.iType = type;
+      _tcslcpy(newAction.szDescription, description, MAX_DB_STRING);
+      switch(type)
+      {
+         case AGENT_ACTION_EXEC:
+         case AGENT_ACTION_SHELLEXEC:
+            newAction.handler.pszCmdLine = _tcsdup(arg);
+            break;
+         case AGENT_ACTION_SUBAGENT:
+            newAction.handler.sa.fpHandler = handler;
+            newAction.handler.sa.pArg = arg;
+            _tcslcpy(newAction.handler.sa.szSubagentName, subAgent,MAX_PATH);
+            break;
+         default:
+            break;
+      }
+      s_actions.add(newAction);
+   }
+   return true;
 }
 
-void AgentActionExecutor::stopAction(AgentActionExecutor *executor)
+/**
+ * Add action from config record
+ * Accepts string of format <action_name>:<command_line>
+ */
+bool AddActionFromConfig(TCHAR *config, bool shellExec)
+{
+   TCHAR *cmdLine = _tcschr(config, _T(':'));
+   if (cmdLine == nullptr)
+      return false;
+   *cmdLine = 0;
+   cmdLine++;
+   StrStrip(config);
+   StrStrip(cmdLine);
+   return AddAction(config, shellExec ? AGENT_ACTION_SHELLEXEC : AGENT_ACTION_EXEC, cmdLine, nullptr, nullptr, _T(""));
+}
+
+/**
+ * List of available actions
+ */
+LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   TCHAR buffer[1024];
+   for(int i = 0; i < s_actions.size(); i++)
+   {
+      ACTION *action = s_actions.get(i);
+      _sntprintf(buffer, 1024, _T("%s %d \"%s\""), action->szName, action->iType,
+            (action->iType == AGENT_ACTION_SUBAGENT) ? action->handler.sa.szSubagentName : action->handler.pszCmdLine);
+      value->add(buffer);
+   }
+   ListActionsFromExtSubagents(value);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Put list of supported actions into NXCP message
+ */
+void GetActionList(NXCPMessage *msg)
+{
+   uint32_t fieldId = VID_ACTION_LIST_BASE;
+   for(int i = 0; i < s_actions.size(); i++)
+   {
+      ACTION *action = s_actions.get(i);
+      msg->setField(fieldId++, action->szName);
+      msg->setField(fieldId++, action->szDescription);
+      msg->setField(fieldId++, static_cast<int16_t>(action->iType));
+      msg->setField(fieldId++, (action->iType == AGENT_ACTION_SUBAGENT) ? action->handler.sa.szSubagentName : action->handler.pszCmdLine);
+   }
+
+   uint32_t count = static_cast<uint32_t>(s_actions.size());
+   ListActionsFromExtSubagents(msg, &fieldId, &count);
+   msg->setField(VID_NUM_ACTIONS, count);
+}
+
+/**
+ * Delete executor after completion or timeout
+ */
+static void ExecutorCleanup(ExternalActionExecutor *executor)
 {
    if (executor->isRunning())
    {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Force terminate external action %s"), executor->getCommand());
       executor->stop();
-      DebugPrintf(6, _T("Agent action: %s timed out"), executor->getCommand());
    }
-   delete(executor);
+   delete executor;
 }
 
 /**
- * Substitute agent action arguments
+ * Execute action
  */
-void AgentActionExecutor::substituteArgs()
+static uint32_t ExecuteAction(const TCHAR *name, const StringList& args, AbstractCommSession *session, uint32_t requestId, bool sendOutput)
 {
-   if (m_args != NULL && m_args->size() > 0)
+   ACTION *action = FindAction(name);
+   if (action == nullptr)
+      return ExecuteActionByExtSubagent(name, args, session, requestId, sendOutput);
+
+   uint32_t rcc;
+   if (action->iType == AGENT_ACTION_SUBAGENT)
    {
-      StringBuffer cmd(m_cmd);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing internal action %s"), name);
+      rcc = action->handler.sa.fpHandler(name, &args, action->handler.sa.pArg, session);
+   }
+   else if ((action->iType == AGENT_ACTION_EXEC) || (action->iType == AGENT_ACTION_SHELLEXEC))
+   {
+      ExternalActionExecutor *executor = new ExternalActionExecutor(action->handler.pszCmdLine, args, session, requestId, sendOutput, action->iType == AGENT_ACTION_SHELLEXEC);
+      if (executor->execute())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Execution of external action %s (%s) started"), name, executor->getCommand());
+         ThreadPoolScheduleRelative(g_executorThreadPool, g_execTimeout, ExecutorCleanup, executor);
+         rcc = ERR_SUCCESS;
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Execution of external action %s (%s) failed"), name, executor->getCommand());
+         delete executor;
+         rcc = ERR_EXEC_FAILED;
+      }
+   }
+   else
+   {
+      rcc = ERR_NOT_IMPLEMENTED;
+   }
+   return rcc;
+}
+
+/**
+ * Execute action (external interface)
+ */
+void ExecuteAction(const NXCPMessage& request, NXCPMessage *response, AbstractCommSession *session)
+{
+   TCHAR name[MAX_PARAM_NAME];
+   request.getFieldAsString(VID_ACTION_NAME, name, MAX_PARAM_NAME);
+   StringList args(request, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
+   uint32_t rcc = ExecuteAction(name, args, session, request.getId(), request.getFieldAsBoolean(VID_RECEIVE_OUTPUT));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteAction(%s): requestId=%u, RCC=%u"), name, request.getId(), rcc);
+   response->setField(VID_RCC, rcc);
+}
+
+/**
+ * Execute action (internal interface)
+ */
+void ExecuteAction(const TCHAR *name, const StringList& args)
+{
+   VirtualSession *session = new VirtualSession(0);
+   uint32_t rcc = ExecuteAction(name, args, session, 0, false);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteAction(%s): RCC=%u"), name, rcc);
+   session->decRefCount();
+}
+
+/**
+ * External action executor constructor
+ */
+ExternalActionExecutor::ExternalActionExecutor(const TCHAR *command, const StringList& args, AbstractCommSession *session,
+         uint32_t requestId, bool sendOutput, bool shellExec) : ProcessExecutor(nullptr, shellExec)
+{
+   m_sendOutput = sendOutput;
+   m_requestId = requestId;
+   m_session = session;
+   m_session->incRefCount();
+
+   if (!args.isEmpty())
+   {
+      StringBuffer sb(command);
       TCHAR macro[3];
-      for(int i = 0; i < m_args->size() && i <= 9; i++)
+      for(int i = 0; (i < args.size()) && (i <= 9); i++)
       {
          _sntprintf(macro, 3, _T("$%d"), i + 1);
-         cmd.replace(macro, m_args->get(i));
+         sb.replace(macro, args.get(i));
       }
       MemFree(m_cmd);
-      m_cmd = MemCopyString(cmd);
+      m_cmd = MemCopyString(sb);
    }
+   else
+   {
+      m_cmd = MemCopyString(command);
+   }
+}
+
+/**
+ * External action executor destructor
+ */
+ExternalActionExecutor::~ExternalActionExecutor()
+{
+   m_session->decRefCount();
 }
 
 /**
  * Send output to console
  */
-void AgentActionExecutor::onOutput(const char *text)
+void ExternalActionExecutor::onOutput(const char *text)
 {
    NXCPMessage msg(m_session->getProtocolVersion());
    msg.setId(m_requestId);
@@ -188,156 +304,11 @@ void AgentActionExecutor::onOutput(const char *text)
 /**
  * Send message to make console stop listening to output
  */
-void AgentActionExecutor::endOfOutput()
+void ExternalActionExecutor::endOfOutput()
 {
    NXCPMessage msg(m_session->getProtocolVersion());
    msg.setId(m_requestId);
    msg.setCode(CMD_COMMAND_OUTPUT);
    msg.setEndOfSequence();
    m_session->sendMessage(&msg);
-}
-
-/**
- * Add action
- */
-BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
-               LONG (*fpHandler)(const TCHAR *, const StringList *, const TCHAR *, AbstractCommSession *),
-               const TCHAR *pszSubAgent, const TCHAR *pszDescription)
-{
-   UINT32 i;
-
-   // Check if action with given name already registered
-   for(i = 0; i < m_dwNumActions; i++)
-      if (!_tcsicmp(m_pActionList[i].szName, pszName))
-         break;
-
-   if (i == m_dwNumActions)
-   {
-      // Create new entry in action list
-      m_dwNumActions++;
-      m_pActionList = (ACTION *)realloc(m_pActionList, sizeof(ACTION) * m_dwNumActions);
-      _tcslcpy(m_pActionList[i].szName, pszName, MAX_PARAM_NAME);
-      m_pActionList[i].iType = iType;
-      nx_strncpy(m_pActionList[i].szDescription, pszDescription, MAX_DB_STRING);
-      switch(iType)
-      {
-         case AGENT_ACTION_EXEC:
-         case AGENT_ACTION_SHELLEXEC:
-            m_pActionList[i].handler.pszCmdLine = _tcsdup(pArg);
-            break;
-         case AGENT_ACTION_SUBAGENT:
-            m_pActionList[i].handler.sa.fpHandler = fpHandler;
-            m_pActionList[i].handler.sa.pArg = pArg;
-            _tcslcpy(m_pActionList[i].handler.sa.szSubagentName, pszSubAgent,MAX_PATH);
-            break;
-         default:
-            break;
-      }
-   }
-   else
-   {
-      // Update existing entry in action list
-      _tcslcpy(m_pActionList[i].szDescription, pszDescription, MAX_DB_STRING);
-      if ((m_pActionList[i].iType == AGENT_ACTION_EXEC) || (m_pActionList[i].iType == AGENT_ACTION_SHELLEXEC))
-         MemFree(m_pActionList[i].handler.pszCmdLine);
-      m_pActionList[i].iType = iType;
-      switch(iType)
-      {
-         case AGENT_ACTION_EXEC:
-         case AGENT_ACTION_SHELLEXEC:
-            m_pActionList[i].handler.pszCmdLine = _tcsdup(pArg);
-            break;
-         case AGENT_ACTION_SUBAGENT:
-            m_pActionList[i].handler.sa.fpHandler = fpHandler;
-            m_pActionList[i].handler.sa.pArg = pArg;
-            _tcslcpy(m_pActionList[i].handler.sa.szSubagentName, pszSubAgent,MAX_PATH);
-            break;
-         default:
-            break;
-      }
-   }
-   return TRUE;
-}
-
-/**
- * Add action from config record
- * Accepts string of format <action_name>:<command_line>
- */
-BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec) //to be TCHAR
-{
-   TCHAR *pCmdLine;
-
-   pCmdLine = _tcschr(pszLine, _T(':'));
-   if (pCmdLine == NULL)
-      return FALSE;
-   *pCmdLine = 0;
-   pCmdLine++;
-   StrStrip(pszLine);
-   StrStrip(pCmdLine);
-   return AddAction(pszLine, bShellExec ? AGENT_ACTION_SHELLEXEC : AGENT_ACTION_EXEC, pCmdLine, NULL, NULL, _T(""));
-}
-
-/**
- * Action executor data
- */
-class ActionExecutorData
-{
-public:
-   TCHAR *m_cmdLine;
-   StringList *m_args;
-   AbstractCommSession *m_session;
-   UINT32 m_requestId;
-
-   ActionExecutorData(const TCHAR *cmd, StringList *args, AbstractCommSession *session, UINT32 requestId)
-   {
-      m_cmdLine = _tcsdup(cmd);
-      m_args = args;
-      m_session = session;
-      m_session->incRefCount();
-      m_requestId = requestId;
-   }
-
-   ~ActionExecutorData()
-   {
-      m_session->decRefCount();
-      free(m_cmdLine);
-      delete m_args;
-   }
-};
-
-/**
- * List of available actions
- */
-LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
-{
-   TCHAR szBuffer[1024];
-   for(UINT32 i = 0; i < m_dwNumActions; i++)
-   {
-      _sntprintf(szBuffer, 1024, _T("%s %d \"%s\""), m_pActionList[i].szName, m_pActionList[i].iType,
-                 m_pActionList[i].iType == AGENT_ACTION_SUBAGENT ?
-                    m_pActionList[i].handler.sa.szSubagentName :    
-                    m_pActionList[i].handler.pszCmdLine);
-		value->add(szBuffer);
-   }
-   ListActionsFromExtSubagents(value);
-   return SYSINFO_RC_SUCCESS;
-}
-
-/**
- * Put list of supported actions into NXCP message
- */
-void GetActionList(NXCPMessage *msg)
-{
-   UINT32 fieldId = VID_ACTION_LIST_BASE;
-   for(UINT32 i = 0; i < m_dwNumActions; i++)
-   {
-      msg->setField(fieldId++, m_pActionList[i].szName);
-      msg->setField(fieldId++, m_pActionList[i].szDescription);
-      msg->setField(fieldId++, (INT16)m_pActionList[i].iType);
-      msg->setField(fieldId++, (m_pActionList[i].iType == AGENT_ACTION_SUBAGENT) ? m_pActionList[i].handler.sa.szSubagentName : m_pActionList[i].handler.pszCmdLine);
-   }
-
-   UINT32 count = m_dwNumActions;
-	ListActionsFromExtSubagents(msg, &fieldId, &count);
-   msg->setField(VID_NUM_ACTIONS, count);
 }

@@ -49,7 +49,7 @@ public class ObjectFilter extends ViewerFilter
 	private static final int IP_ADDRESS = 3;
 	private static final int OBJECT_ID = 4;
 	private static final int ZONE = 5;
-	
+
 	private String filterString = null;
 	private boolean hideUnmanaged = false;
 	private boolean hideTemplateChecks = false;
@@ -60,7 +60,7 @@ public class ObjectFilter extends ViewerFilter
 	private Set<Integer> classFilter = null;
 	private boolean usePatternMatching = false;
 	private int mode = NAME;
-	
+
 	/**
 	 * Constructor
 	 */
@@ -69,7 +69,7 @@ public class ObjectFilter extends ViewerFilter
 		this.sourceObjects = (sourceObjects != null) ? Arrays.asList(sourceObjects) : null;
 		this.classFilter = classFilter;
 	}
-	
+
 	/**
 	 * Match given value to current filter string
 	 * 
@@ -80,7 +80,7 @@ public class ObjectFilter extends ViewerFilter
 	{
 		if ((mode == NONE) || (filterString == null))
 			return true;
-		
+
 		switch(mode)
 		{
          case COMMENTS:
@@ -135,13 +135,12 @@ public class ObjectFilter extends ViewerFilter
 			      }
 			   }
 		}
-		
 		return false;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
@@ -150,16 +149,16 @@ public class ObjectFilter extends ViewerFilter
 			if (!classFilter.contains(((AbstractObject)element).getObjectClass()))
 				return false;
 		}
-		
+
 		if (hideUnmanaged && (((AbstractObject)element).getStatus() == ObjectStatus.UNMANAGED))
 			return false;
-		
+
 		if (hideTemplateChecks && (element instanceof ServiceCheck) && ((ServiceCheck)element).isTemplate())
 			return false;
-		
+
       if (hideSubInterfaces && (element instanceof Interface) && (((Interface)element).getParentInterfaceId() != 0))
          return false;
-      
+
 		if (objectList == null)
 			return true;
 
@@ -179,7 +178,7 @@ public class ObjectFilter extends ViewerFilter
 		}
 		return pass;
 	}
-	
+
 	/**
 	 * Set filter string
 	 * 
@@ -238,7 +237,7 @@ public class ObjectFilter extends ViewerFilter
 		}
 		updateObjectList(fullSearch);
 	}
-	
+
 	/**
 	 * Update list of matching objects
 	 */
@@ -286,7 +285,7 @@ public class ObjectFilter extends ViewerFilter
 	{
 		return lastMatch;
 	}
-	
+
 	/**
 	 * Get parent for given object
 	 */

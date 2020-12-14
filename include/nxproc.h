@@ -136,7 +136,7 @@ public:
 
    bool isStarted() const { return m_started; }
    bool isRunning();
-   bool waitForCompletion(UINT32 timeout);
+   bool waitForCompletion(uint32_t timeout);
 };
 
 /**

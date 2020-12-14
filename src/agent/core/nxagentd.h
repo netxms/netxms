@@ -248,7 +248,7 @@ public:
    uint32_t getParameter(const TCHAR *name, TCHAR *buffer);
    uint32_t getTable(const TCHAR *name, Table *value);
    uint32_t getList(const TCHAR *name, StringList *value);
-   uint32_t executeAction(const TCHAR *name, const StringList *args, AbstractCommSession *session, uint32_t requestId, bool sendOutput);
+   uint32_t executeAction(const TCHAR *name, const StringList& args, AbstractCommSession *session, uint32_t requestId, bool sendOutput);
 	void listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listParameters(StringList *list);
 	void listLists(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
@@ -760,10 +760,9 @@ bool LoadSubAgent(const TCHAR *moduleName);
 void UnloadAllSubAgents();
 bool ProcessCommandBySubAgent(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
 void NotifySubAgents(UINT32 code, void *data);
-BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
-               LONG (*fpHandler)(const TCHAR *, const StringList *, const TCHAR *, AbstractCommSession *session),
-               const TCHAR *pszSubAgent, const TCHAR *pszDescription);
-BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec);
+bool AddAction(const TCHAR *name, int type, const TCHAR *arg, LONG (*handler)(const TCHAR*, const StringList*, const TCHAR*, AbstractCommSession *session),
+         const TCHAR *subAgent, const TCHAR *description);
+bool AddActionFromConfig(TCHAR *config, bool shellExec);
 UINT32 ExecuteCommand(TCHAR *pszCommand, const StringList *pArgs, pid_t *pid);
 UINT32 ExecuteShellCommand(TCHAR *pszCommand, const StringList *pArgs);
 
@@ -784,7 +783,7 @@ void StopExternalSubagentConnectors();
 UINT32 GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer);
 UINT32 GetTableValueFromExtSubagent(const TCHAR *name, Table *value);
 UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value);
-UINT32 ExecuteActionByExtSubagent(const TCHAR *name, const StringList *args, AbstractCommSession *session, UINT32 requestId, bool sendOutput);
+uint32_t ExecuteActionByExtSubagent(const TCHAR *name, const StringList& args, AbstractCommSession *session, uint32_t requestId, bool sendOutput);
 void ListParametersFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListParametersFromExtSubagents(StringList *list);
 void ListListsFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
@@ -797,8 +796,8 @@ bool SendMessageToMasterAgent(NXCPMessage *msg);
 bool SendRawMessageToMasterAgent(NXCP_MESSAGE *msg);
 void ShutdownExtSubagents(bool restart);
 void RestartExtSubagents();
-void ExecuteAction(const TCHAR *cmd, const StringList *args);
-void ExecuteAction(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
+void ExecuteAction(const TCHAR *name, const StringList& args);
+void ExecuteAction(const NXCPMessage& request, NXCPMessage *response, AbstractCommSession *session);
 
 void RegisterApplicationAgent(const TCHAR *name);
 UINT32 GetParameterValueFromAppAgent(const TCHAR *name, TCHAR *buffer);
@@ -913,33 +912,5 @@ extern BackgroundSocketPoller *g_snmpProxySocketPoller;
 #ifdef _WIN32
 extern TCHAR g_windowsEventSourceName[];
 #endif   /* _WIN32 */
-
-/**
- * Agent action executor
- */
-class AgentActionExecutor : public ProcessExecutor
-{
-private:
-   UINT32 m_requestId;
-   AbstractCommSession *m_session;
-   StringList *m_args;
-
-   AgentActionExecutor();
-
-   virtual void onOutput(const char *text) override;
-   virtual void endOfOutput() override;
-
-   void substituteArgs();
-   UINT32 findAgentAction();
-
-public:
-   AgentActionExecutor(const TCHAR *cmd, const StringList *args);
-   virtual ~AgentActionExecutor();
-
-   static void stopAction(AgentActionExecutor *executor);
-
-   static AgentActionExecutor *createAgentExecutor(NXCPMessage *request, AbstractCommSession *session, UINT32 *rcc);
-   static AgentActionExecutor *createAgentExecutor(const TCHAR *cmd, const StringList *args);
-};
 
 #endif   /* _nxagentd_h_ */

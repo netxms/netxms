@@ -85,33 +85,6 @@ static void H_GetList(NXCPMessage *pRequest, NXCPMessage *pMsg)
 }
 
 /**
- * Execute action
- */
-void ExecuteAction(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
-{
-   UINT32 rcc = ERR_UNKNOWN_PARAMETER;
-   AgentActionExecutor *executor = AgentActionExecutor::createAgentExecutor(request, session, &rcc);
-   DebugPrintf(6, _T("Creating AgentActionExecutor instance"));
-   if (executor != NULL)
-   {
-      rcc = (executor->execute() ? ERR_SUCCESS : ERR_EXEC_FAILED);
-      if (rcc == ERR_SUCCESS)
-         ThreadPoolScheduleRelative(g_executorThreadPool, g_execTimeout, AgentActionExecutor::stopAction, executor);
-   }
-   else
-      DebugPrintf(6, _T("AgentActionExecutor instance creation failed"));
-
-   response->setField(VID_RCC, rcc);
-}
-
-void ExecuteAction(const TCHAR *cmd, const StringList *args)
-{
-   AgentActionExecutor *executor = AgentActionExecutor::createAgentExecutor(cmd, args);
-   if (executor != NULL && executor->execute())
-      ThreadPoolScheduleRelative(g_executorThreadPool, g_execTimeout, AgentActionExecutor::stopAction, executor);
-}
-
-/**
  * Pipe to master agent
  */
 static NamedPipe *s_pipe = nullptr;

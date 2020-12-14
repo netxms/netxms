@@ -36,7 +36,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
    private Set<Integer> classFilter;
 	private AbstractObject loadingObject;
 	private boolean objectFullSync = false;
-	
+
 	/**
 	 * @param rootObjects
 	 * @param objectFullSync 
