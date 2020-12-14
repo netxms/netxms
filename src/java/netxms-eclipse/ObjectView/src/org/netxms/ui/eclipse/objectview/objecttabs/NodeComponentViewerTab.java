@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.objectview.objecttabs;
 
 import org.eclipse.core.commands.Command;
 import org.eclipse.core.commands.State;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -305,7 +304,7 @@ public abstract class NodeComponentViewerTab extends NodeComponentTab
       final TableItem[] selection = viewer.getTable().getSelection();
       if (selection.length > 0)
       {
-         final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
+         final String newLine = WidgetHelper.getNewLineCharacters();
          final StringBuilder sb = new StringBuilder();
          for(int i = 0; i < selection.length; i++)
          {

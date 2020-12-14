@@ -24,6 +24,7 @@ public class Messages extends NLS
 	public String LoginListener_JobTitle;
 	public String MibExplorer_CopyName;
 	public String MibExplorer_CopyToClipboard;
+	public String MibExplorer_CopySymbolicName;
 	public String MibExplorer_CopyType;
 	public String MibExplorer_CopyValue;
 	public String MibExplorer_OID;

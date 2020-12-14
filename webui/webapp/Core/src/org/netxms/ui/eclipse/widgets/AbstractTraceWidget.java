@@ -41,12 +41,14 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.views.helpers.AbstractTraceViewFilter;
 
@@ -150,8 +152,18 @@ public abstract class AbstractTraceWidget extends Composite
       actionPause.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.pause_trace"); //$NON-NLS-1$
 		final ActionHandler pauseHandler = new ActionHandler(actionPause);
 		handlerService.activateHandler(actionPause.getActionDefinitionId(), pauseHandler);
-	}
 		
+      actionCopy = new Action(Messages.get().AbstractTraceView_CopyToClipboard, SharedIcons.COPY) {
+			@Override
+			public void run()
+			{
+				copySelectionToClipboard();
+			}
+      };
+      actionCopy.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.copy"); //$NON-NLS-1$
+		handlerService.activateHandler(actionCopy.getActionDefinitionId(), new ActionHandler(actionCopy));
+	}
+
 	/**
 	 * Create viewer's popup menu
 	 */
@@ -392,6 +404,31 @@ public abstract class AbstractTraceWidget extends Composite
 		getDisplay().asyncExec(runnable);
 	}
 	
+	/**
+	 * Copy selection in the list to clipboard
+	 */
+	private void copySelectionToClipboard()
+	{
+		TableItem[] selection = viewer.getTable().getSelection();
+		if (selection.length > 0)
+		{
+			StringBuilder sb = new StringBuilder();
+         final String newLine = WidgetHelper.getNewLineCharacters();
+			for(int i = 0; i < selection.length; i++)
+			{
+				if (i > 0)
+					sb.append(newLine);
+				sb.append(selection[i].getText(0));
+				for(int j = 1; j < viewer.getTable().getColumnCount(); j++)
+				{
+					sb.append('\t');
+					sb.append(selection[i].getText(j));
+				}
+			}
+			WidgetHelper.copyToClipboard(sb.toString());
+		}
+	}
+
 	/**
 	 * @return the actionPause
 	 */

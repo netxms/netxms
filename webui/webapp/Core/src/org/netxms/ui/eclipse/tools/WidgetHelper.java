@@ -27,11 +27,12 @@ import java.util.regex.Pattern;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.viewers.ColumnViewer;
-import org.eclipse.rap.rwt.RWT;
-import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.rap.rwt.scripting.ClientListener;
 import org.eclipse.rap.rwt.widgets.WidgetUtil;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
@@ -79,7 +80,17 @@ public class WidgetHelper
 	private static final Pattern patternAllDotsAtEnd = Pattern.compile("[.]*$");
 	private static final Pattern patternCharsAndNumbersAtEnd = Pattern.compile("[a-zA-Z0-9]*$");
 	private static final Pattern patternCharsAndNumbersAtStart = Pattern.compile("^[a-zA-Z0-9]*");
-		
+
+   /**
+    * Get character(s) to represent new line in text.
+    *
+    * @return character(s) to represent new line in text
+    */
+   public static String getNewLineCharacters()
+	{
+      return "\r\n";
+	}
+
 	/**
     * Create pair of label and input field, with label above
 	 * 
@@ -576,13 +587,10 @@ public class WidgetHelper
 	 */
 	public static void copyToClipboard(final String text)
 	{
-	   JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-      if (executor != null) 
-      {
-         StringBuilder js = new StringBuilder();
-         js.append("copyTextToClipboard(\'" + text + "\');"); //$NON-NLS-1$
-         executor.execute(js.toString());
-      }
+		final Clipboard cb = new Clipboard(Display.getCurrent());
+      Transfer transfer = TextTransfer.getInstance();
+      cb.setContents(new Object[] { (text != null) ? text : "" }, new Transfer[] { transfer }); //$NON-NLS-1$
+      cb.dispose();
    }
    
    /**
@@ -867,6 +875,52 @@ public class WidgetHelper
       Point e = gc.textExtent(text);
       gc.dispose();
       return e;
+   }
+
+   /**
+    *  Get column index by column ID
+    *  
+    * @param table table control
+    * @param id the id index to be found by
+    * @return index of the column
+    */
+   public static int getColumnIndexById(Table table, int id)
+   {
+      int index = -1;
+      TableColumn[] columns = table.getColumns();
+      for(int i = 0; i < columns.length; i++)
+      {
+         if (!columns[i].isDisposed() && ((Integer)columns[i].getData("ID") == id)) //$NON-NLS-1$
+         {
+            index = i;
+            break;
+         }
+      }
+      
+      return index;
+   }
+
+   /**
+    *  Get column index by column ID
+    *  
+    * @param tree tree control
+    * @param id the id index to be found by
+    * @return index of the column
+    */
+   public static int getColumnIndexById(Tree tree, int id)
+   {
+      int index = -1;
+      TreeColumn[] columns = tree.getColumns();
+      for(int i = 0; i < columns.length; i++)
+      {
+         if (!columns[i].isDisposed() && ((Integer)columns[i].getData("ID") == id)) //$NON-NLS-1$
+         {
+            index = i;
+            break;
+         }
+      }
+      
+      return index;
    }
 
    /**

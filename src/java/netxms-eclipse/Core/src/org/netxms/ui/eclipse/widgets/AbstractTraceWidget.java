@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.widgets;
 
 import java.util.LinkedList;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -414,7 +413,7 @@ public abstract class AbstractTraceWidget extends Composite
 		if (selection.length > 0)
 		{
 			StringBuilder sb = new StringBuilder();
-			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
+         final String newLine = WidgetHelper.getNewLineCharacters();
 			for(int i = 0; i < selection.length; i++)
 			{
 				if (i > 0)
@@ -437,7 +436,7 @@ public abstract class AbstractTraceWidget extends Composite
 	{
 		return actionPause;
 	}
-	
+
 	/**
 	 * @return the actionCopy
 	 */

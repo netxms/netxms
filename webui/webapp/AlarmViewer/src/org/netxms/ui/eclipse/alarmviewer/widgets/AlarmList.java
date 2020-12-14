@@ -57,6 +57,7 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
@@ -129,6 +130,8 @@ public class AlarmList extends CompositeWithMessageBar
    private boolean needInitialRefresh = false;
    private boolean filterRunning = false;
    private boolean filterRunPending = false;
+	private Action actionCopy;
+	private Action actionCopyMessage;
    private Action actionComments;
    private Action actionAcknowledge;
    private Action actionResolve;
@@ -378,6 +381,53 @@ public class AlarmList extends CompositeWithMessageBar
     */
    private void createActions()
    {
+      actionCopy = new Action(Messages.get().AlarmList_CopyToClipboard) {
+			@Override
+			public void run()
+			{
+				TreeItem[] selection = alarmViewer.getTree().getSelection();
+				if (selection.length > 0)
+				{
+               final String newLine = WidgetHelper.getNewLineCharacters();
+					StringBuilder sb = new StringBuilder();
+					for(int i = 0; i < selection.length; i++)
+					{
+						if (i > 0)
+							sb.append(newLine);
+						sb.append('[');
+						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTree(), COLUMN_SEVERITY)));
+						sb.append("]\t"); //$NON-NLS-1$
+						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTree(), COLUMN_SOURCE)));
+						sb.append('\t');
+						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTree(), COLUMN_MESSAGE)));
+					}
+					WidgetHelper.copyToClipboard(sb.toString());
+				}
+			}
+		};
+      actionCopy.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Copy"); //$NON-NLS-1$
+
+		actionCopyMessage = new Action(Messages.get().AlarmList_CopyMsgToClipboard) {
+			@Override
+			public void run()
+			{
+				TreeItem[] selection = alarmViewer.getTree().getSelection();
+				if (selection.length > 0)
+				{
+               final String newLine = WidgetHelper.getNewLineCharacters();
+					StringBuilder sb = new StringBuilder();
+					for(int i = 0; i < selection.length; i++)
+					{
+						if (i > 0)
+							sb.append(newLine);
+						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTree(), COLUMN_MESSAGE)));
+					}
+					WidgetHelper.copyToClipboard(sb.toString());
+				}
+			}
+		};
+		actionCopyMessage.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.CopyMessage"); //$NON-NLS-1$
+
       actionComments = new Action(Messages.get().AlarmList_Comments, Activator.getImageDescriptor("icons/comments.png")) { //$NON-NLS-1$
          @Override
          public void run()
@@ -674,6 +724,8 @@ public class AlarmList extends CompositeWithMessageBar
 			manager.add(new Separator());
 		}
 
+      manager.add(actionCopy);
+      manager.add(actionCopyMessage);
       manager.add(actionExportToCsv);
 
       if (selection.size() == 1)

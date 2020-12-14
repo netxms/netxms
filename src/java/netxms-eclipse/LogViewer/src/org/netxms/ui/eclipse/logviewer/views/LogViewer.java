@@ -660,7 +660,7 @@ public class LogViewer extends ViewPart
 		if (selection.length > 0)
 		{
 			StringBuilder sb = new StringBuilder();
-			final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
+         final String newLine = WidgetHelper.getNewLineCharacters();
 			for(int i = 0; i < selection.length; i++)
 			{
 				if (i > 0)

@@ -436,7 +436,7 @@ public class AxisTickLabels implements PaintListener
 		if (!axis.isHorizontalAxis())
 			chart.setCachedTickStep(tickStep.doubleValue());
 		
-		final BigDecimal MIN = new BigDecimal(new Double(min).toString());
+      final BigDecimal MIN = new BigDecimal(Double.valueOf(min).toString());
 		BigDecimal firstPosition;
 
 		/* if (min % tickStep <= 0) */
@@ -454,7 +454,7 @@ public class AxisTickLabels implements PaintListener
 		// the unit time starts from 1:00
 		if (axis.isDateEnabled())
 		{
-			BigDecimal zeroOclock = firstPosition.subtract(new BigDecimal(new Double(3600000).toString()));
+         BigDecimal zeroOclock = firstPosition.subtract(new BigDecimal(Double.valueOf(3600000).toString()));
 			if (MIN.compareTo(zeroOclock) == -1)
 			{
 				firstPosition = zeroOclock;
@@ -709,11 +709,11 @@ public class AxisTickLabels implements PaintListener
 		BigDecimal value;
 		if (exponent > 0)
 		{
-			value = new BigDecimal(new Double(base).toString()).pow(exponent);
+         value = new BigDecimal(Double.valueOf(base).toString()).pow(exponent);
 		}
 		else
 		{
-			value = BigDecimal.ONE.divide(new BigDecimal(new Double(base).toString()).pow(-exponent));
+         value = BigDecimal.ONE.divide(new BigDecimal(Double.valueOf(base).toString()).pow(-exponent));
 		}
 		return value;
 	}
@@ -771,12 +771,12 @@ public class AxisTickLabels implements PaintListener
 		else if (mantissa > 3.5)
 		{
 			// gridStep = 5.0 * 10 ** exponent
-			gridStep = new BigDecimal(new Double(5).toString()).multiply(pow(10, exponent));
+         gridStep = new BigDecimal(Double.valueOf(5).toString()).multiply(pow(10, exponent));
 		}
 		else if (mantissa > 1.5)
 		{
 			// gridStep = 2.0 * 10 ** exponent
-			gridStep = new BigDecimal(new Double(2).toString()).multiply(pow(10, exponent));
+         gridStep = new BigDecimal(Double.valueOf(2).toString()).multiply(pow(10, exponent));
 		}
 		else
 		{
