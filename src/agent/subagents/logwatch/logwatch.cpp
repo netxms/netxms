@@ -158,7 +158,7 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
    if (eventTag != NULL)
       list[i++] = eventTag;
 
-   if (source != NULL)
+   if (source != nullptr)
    {
       list[i++] = source;
       list[i++] = eventIdText;
@@ -167,14 +167,14 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
    }
    list[i++] = repeatCountText;
 
-   if (variables != NULL)
+   if (variables != nullptr)
    {
       for(int j = 0; j < variables->size(); j++)
          list[i++] = variables->get(j);
    }
 
-   if (agentAction != NULL)
-      AgentExecuteAction(agentAction, agentActionArgs);
+   if (agentAction != nullptr)
+      AgentExecuteAction(agentAction, *agentActionArgs);
 
    AgentPostEvent2(eventCode, eventName, timestamp, count, list);
    MemFree(list);

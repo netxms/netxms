@@ -116,7 +116,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       bool (*pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
       DB_HANDLE (*getLocalDatabaseHandle)(),
       const TCHAR *dataDirectory,
-      void (*executeAction)(const TCHAR *, const StringList *),
+      void (*executeAction)(const TCHAR*, const StringList&),
       bool (*getScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *),
       void (*queueNotificationMessage)(NXCPMessage*));
 

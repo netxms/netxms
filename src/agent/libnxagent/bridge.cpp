@@ -34,7 +34,7 @@ static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long, bool, Volatile
 static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32, time_t) = nullptr;
 static const TCHAR *s_dataDirectory = nullptr;
 static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = nullptr;
-static void (*s_fpExecuteAction)(const TCHAR *, const StringList *) = nullptr;
+static void (*s_fpExecuteAction)(const TCHAR*, const StringList&) = nullptr;
 static bool (*s_fpGetScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *) = nullptr;
 static void (*s_fpQueueNotificationMessage)(NXCPMessage *) = nullptr;
 
@@ -51,7 +51,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       bool (*pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
       DB_HANDLE (*getLocalDatabaseHandle)(),
       const TCHAR *dataDirectory,
-      void (*executeAction)(const TCHAR *, const StringList *),
+      void (*executeAction)(const TCHAR*, const StringList&),
       bool (*getScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *),
       void (*queueNotificationMessage)(NXCPMessage*))
 {
@@ -279,7 +279,7 @@ DB_HANDLE LIBNXAGENT_EXPORTABLE AgentGetLocalDatabaseHandle()
  *
  * @param agent action or command
  */
-void LIBNXAGENT_EXPORTABLE AgentExecuteAction(const TCHAR *action, const StringList *args)
+void LIBNXAGENT_EXPORTABLE AgentExecuteAction(const TCHAR *action, const StringList& args)
 {
    if (s_fpExecuteAction != nullptr)
       s_fpExecuteAction(action, args);

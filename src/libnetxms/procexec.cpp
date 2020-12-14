@@ -502,7 +502,7 @@ void ProcessExecutor::stop()
    if (m_pid != 0)
       kill(-m_pid, SIGKILL);  // kill all processes in group
 #endif
-   m_running = false;
+   waitForCompletion(INFINITE);
    m_started = false;
 }
 
@@ -530,26 +530,18 @@ bool ProcessExecutor::isRunning()
 
 #ifdef _WIN32
    DWORD exitCode;
-   if (GetExitCodeProcess(m_phandle, &exitCode))
-   {
-      if (exitCode != STILL_ACTIVE)
-         m_running = false;
-   }
-   else
-   {
-      m_running = false;
-   }
+   if (!GetExitCodeProcess(m_phandle, &exitCode))
+      return false;
+   return exitCode == STILL_ACTIVE;
 #else
-   if (kill(m_pid, 0) != 0)
-      m_running = false;
+   return kill(m_pid, 0) == 0;
 #endif
-   return m_running;
 }
 
 /**
  * Wait for process completion
  */
-bool ProcessExecutor::waitForCompletion(UINT32 timeout)
+bool ProcessExecutor::waitForCompletion(uint32_t timeout)
 {
    if (!m_running)
       return true;
@@ -557,10 +549,10 @@ bool ProcessExecutor::waitForCompletion(UINT32 timeout)
 #ifdef _WIN32
    return WaitForSingleObject(m_phandle, timeout) == WAIT_OBJECT_0;
 #else
-   while(isRunning() && (timeout > 0))
+   while(m_running && (timeout > 0))
    {
       ThreadSleepMs(50);
-      timeout -= std::min(timeout, (UINT32)50);
+      timeout -= std::min(timeout, (uint32_t)50);
    }
    return !m_running;
 #endif
