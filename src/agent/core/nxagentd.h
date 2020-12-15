@@ -148,13 +148,6 @@ enum ThreadPoolStat
 #define FILETIME_CTIME           3
 
 /**
- * Action types
- */
-#define AGENT_ACTION_EXEC        1
-#define AGENT_ACTION_SUBAGENT    2
-#define AGENT_ACTION_SHELLEXEC	3
-
-/**
  * External table definition
  */
 struct ExternalTableDefinition
@@ -186,19 +179,19 @@ struct ExternalTableDefinition
  */
 struct ACTION
 {
-   TCHAR szName[MAX_PARAM_NAME];
-   int iType;
+   TCHAR name[MAX_PARAM_NAME];
+   bool isExternal;
    union
    {
-      TCHAR *pszCmdLine;
+      TCHAR *cmdLine;
       struct __subagentAction
       {
-         LONG (*fpHandler)(const TCHAR *, const StringList *, const TCHAR *, AbstractCommSession *);
-         const TCHAR *pArg;
-         TCHAR szSubagentName[MAX_PATH];
+         LONG (*handler)(const TCHAR *, const StringList *, const TCHAR *, AbstractCommSession *);
+         const TCHAR *arg;
+         const TCHAR *subagentName;
       } sa;
    } handler;
-   TCHAR szDescription[MAX_DB_STRING];
+   TCHAR description[MAX_DB_STRING];
 };
 
 /**
@@ -210,6 +203,8 @@ struct SUBAGENT
    NETXMS_SUBAGENT_INFO *pInfo;  // Information provided by subagent
    TCHAR szName[MAX_PATH];        // Name of the module  // to TCHAR by LWX
 };
+
+struct ActionList;
 
 /**
  * External subagent information
@@ -231,7 +226,7 @@ private:
 	NETXMS_SUBAGENT_PARAM *getSupportedParameters(UINT32 *count);
 	NETXMS_SUBAGENT_LIST *getSupportedLists(UINT32 *count);
 	NETXMS_SUBAGENT_TABLE *getSupportedTables(UINT32 *count);
-	ACTION *getSupportedActions(UINT32 *count);
+	ActionList *getSupportedActions();
 
 public:
 	ExternalSubagent(const TCHAR *name, const TCHAR *user);
@@ -760,9 +755,9 @@ bool LoadSubAgent(const TCHAR *moduleName);
 void UnloadAllSubAgents();
 bool ProcessCommandBySubAgent(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
 void NotifySubAgents(UINT32 code, void *data);
-bool AddAction(const TCHAR *name, int type, const TCHAR *arg, LONG (*handler)(const TCHAR*, const StringList*, const TCHAR*, AbstractCommSession *session),
+bool AddAction(const TCHAR *name, bool isExternal, const TCHAR *arg, LONG (*handler)(const TCHAR*, const StringList*, const TCHAR*, AbstractCommSession *session),
          const TCHAR *subAgent, const TCHAR *description);
-bool AddActionFromConfig(TCHAR *config, bool shellExec);
+bool AddActionFromConfig(const TCHAR *config);
 UINT32 ExecuteCommand(TCHAR *pszCommand, const StringList *pArgs, pid_t *pid);
 UINT32 ExecuteShellCommand(TCHAR *pszCommand, const StringList *pArgs);
 

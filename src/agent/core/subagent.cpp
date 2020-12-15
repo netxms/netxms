@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -92,7 +92,7 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegi
 					// Add actions provided by this subagent to common list
 					for(i = 0; i < (int)pInfo->numActions; i++)
 						AddAction(pInfo->actions[i].name,
-									 AGENT_ACTION_SUBAGENT,
+									 false,
 									 pInfo->actions[i].arg,
 									 pInfo->actions[i].handler,
 									 pInfo->name,
