@@ -37,6 +37,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.widgets.LogParserEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserModifyListener;
+import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserType;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.Messages;
@@ -73,7 +74,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		editor = new LogParserEditor(parent, SWT.NONE, LogParserEditor.TYPE_SYSLOG);
+		editor = new LogParserEditor(parent, SWT.NONE, LogParserType.SYSLOG);
 		editor.addModifyListener(new LogParserModifyListener() {
 			@Override
 			public void modifyParser()

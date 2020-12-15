@@ -211,7 +211,7 @@ public class LogParserFileEditor extends DashboardComposite
    /**
     * @return parser type
     */
-   public int getParserType()
+   public LogParserType getParserType()
    {
       return editor.getParserType();
    }
