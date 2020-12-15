@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.AgentPolicy;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserModifyListener;
+import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserType;
 
 /**
  * Generic policy editor widget
@@ -44,7 +45,7 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
       
       setLayout(new FillLayout());
       
-      editor = new LogParserEditor(this, SWT.NONE, LogParserEditor.TYPE_POLICY);
+      editor = new LogParserEditor(this, SWT.NONE, LogParserType.POLICY);
       editor.addModifyListener(new LogParserModifyListener() {
          @Override
          public void modifyParser()

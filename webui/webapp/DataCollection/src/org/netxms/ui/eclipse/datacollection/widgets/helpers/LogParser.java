@@ -37,10 +37,7 @@ import org.simpleframework.xml.core.Persister;
  */
 @Root(name="parser", strict=false)
 public class LogParser
-{
-   public static int PARSER_SYSLOG = 0;
-   public static int PARSER_OTHER = 1;
-   
+{   
 	@Attribute(required=false)
 	private String processALL = null;
 	
@@ -59,7 +56,7 @@ public class LogParser
 	@ElementMap(entry="macro", key="name", attribute=true, required=false)
 	private HashMap<String, String> macros = new HashMap<String, String>(0);
 	
-	private int type;
+	private LogParserType type;
 
    /**
 	 * Create log parser object from XML document
@@ -93,7 +90,7 @@ public class LogParser
 	/**
     * @return the isSyslogParser
     */
-   public int getParserType()
+   public LogParserType getParserType()
    {
       return type;
    }
@@ -101,10 +98,10 @@ public class LogParser
    /**
     * @param parserType the type of parser: policy, syslog, win_event
     */
-   public void setSyslogParser(int parserType)
+   public void setSyslogParser(LogParserType parserType)
    {
       type = parserType;
-      if(type != LogParserEditor.TYPE_POLICY)
+      if(type != LogParserType.POLICY)
       {
          file.clear();
       }

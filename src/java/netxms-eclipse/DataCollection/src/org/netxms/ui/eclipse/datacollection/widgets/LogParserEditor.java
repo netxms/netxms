@@ -65,6 +65,7 @@ import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserFileEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserModifyListener;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserRule;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserRuleEditor;
+import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserType;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.MacroListLabelProvider;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
@@ -77,11 +78,7 @@ import org.netxms.ui.eclipse.widgets.TextEditor;
  * Log parser editor
  */
 public class LogParserEditor extends Composite implements IFindReplaceTarget
-{   
-   public static final int TYPE_POLICY = 0;
-   public static final int TYPE_SYSLOG = 1;
-   public static final int TYPE_WIN_EVENT = 2;
-   
+{      
 	private static final int TAB_NONE = 0;
 	private static final int TAB_BUILDER = 1;
 	private static final int TAB_XML = 2;
@@ -99,7 +96,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
 	private ImageHyperlink addColumnLink;
    private ImageHyperlink addFileLink;
 	private SortableTableViewer macroList;
-	private int type;
+	private LogParserType type;
 	private FindReplaceAction actionFindReplace = null;
 	
 	/* General section */
@@ -111,7 +108,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
 	 * @param parent
 	 * @param style
 	 */
-	public LogParserEditor(Composite parent, int style, int type)
+	public LogParserEditor(Composite parent, int style, LogParserType type)
 	{
 		super(parent, style);
 		
@@ -326,7 +323,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
          }
       });  
       
-      if (type == TYPE_POLICY)
+      if (type == LogParserType.POLICY)
       {         
          fileArea = new Composite(generalArea, SWT.NONE);
          
@@ -526,7 +523,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
 	 */
 	private String buildParserXml()
 	{
-	   if (type == TYPE_SYSLOG)
+	   if (type == LogParserType.POLICY)
 	   {
 	      for(LogParserFile file : parser.getFiles())
 	         file.getEditor().save();
@@ -593,7 +590,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
 		parser.setSyslogParser(type);
 		
 		/* general */
-		if (type == TYPE_POLICY)
+		if (type == LogParserType.POLICY)
       {
 	      for(LogParserFile file : parser.getFiles())
 	         createFileEditor(file).moveAbove(addFileLink);
@@ -787,7 +784,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
    /**
     * @return parser type
     */
-   public int getParserType()
+   public LogParserType getParserType()
    {
       return type;
    }

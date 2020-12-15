@@ -199,7 +199,7 @@ public class LogParserRule
 	 */
 	public void setSeverityOrLevel(Integer severity)
 	{
-      if(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)
+      if(editor.getParserType() == LogParserType.SYSLOG)
       {
          this.severity = severity;
          this.level = null;
@@ -229,7 +229,7 @@ public class LogParserRule
 	 */
 	public void setFacilityOrId(Integer facility)
 	{
-	   if(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)
+	   if(editor.getParserType() == LogParserType.SYSLOG)
       {
 	      this.facility = facility;
 	      this.id = null;
@@ -259,7 +259,7 @@ public class LogParserRule
 	 */
 	public void setTagOrSource(String tag)
 	{
-      if(editor.getParserType() == LogParserEditor.TYPE_SYSLOG)
+      if(editor.getParserType() == LogParserType.SYSLOG)
       {
          this.tag = tag != null && !tag.isEmpty() ? tag : null;
          this.source = null;
@@ -351,9 +351,9 @@ public class LogParserRule
 		this.agentAction = new LogParserAgentAction(agentAction);
 	}
 
-   public void updateFieldsCorrectly(int parserType)
+   public void updateFieldsCorrectly(LogParserType parserType)
    {
-      if (parserType != LogParserEditor.TYPE_POLICY)
+      if (parserType != LogParserType.POLICY)
       {
          if(facility == null || facility == 0)
             facility = id;
