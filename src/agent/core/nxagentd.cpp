@@ -226,8 +226,7 @@ TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxagentd.pid");
 /**
  * Static variables
  */
-static TCHAR *m_pszActionList = nullptr;
-static TCHAR *m_pszShellActionList = nullptr;
+static StringList *s_actionList = new StringList();
 static TCHAR *m_pszServerList = nullptr;
 static TCHAR *m_pszControlServerList = nullptr;
 static TCHAR *m_pszMasterServerList = nullptr;
@@ -274,8 +273,8 @@ static pid_t s_pid;
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("Action"), CT_STRING_CONCAT, '\n', 0, 0, 0, &m_pszActionList, nullptr },
-   { _T("ActionShellExec"), CT_STRING_CONCAT, '\n', 0, 0, 0, &m_pszShellActionList, nullptr },
+   { _T("Action"), CT_STRING_LIST, 0, 0, 0, 0, s_actionList, nullptr },
+   { _T("ActionShellExec"), CT_STRING_LIST, 0, 0, 0, 0, s_actionList, nullptr },
    { _T("AppAgent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_appAgentsList, nullptr },
    { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_32, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_dwFlags, nullptr },
    { _T("ControlServers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszControlServerList, nullptr },
@@ -1104,14 +1103,14 @@ BOOL Initialize()
 			ParseServerList(m_pszServerList, false, false);
 
 		// Add built-in actions
-		AddAction(_T("Agent.Restart"), AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, _T("CORE"), _T("Restart agent"));
-      AddAction(_T("Agent.RotateLog"), AGENT_ACTION_SUBAGENT, NULL, H_RotateLog, _T("CORE"), _T("Rotate agent log"));
+		AddAction(_T("Agent.Restart"), false, nullptr, H_RestartAgent, _T("CORE"), _T("Restart agent"));
+      AddAction(_T("Agent.RotateLog"), false, nullptr, H_RotateLog, _T("CORE"), _T("Rotate agent log"));
       if (config->getValueAsBoolean(_T("/CORE/EnableArbitraryCommandExecution"), false))
       {
          nxlog_write(NXLOG_INFO, _T("Arbitrary command execution enabled"));
-         AddAction(_T("System.Execute"), AGENT_ACTION_SUBAGENT, NULL, H_SystemExecute, _T("CORE"), _T("Execute system command"));
+         AddAction(_T("System.Execute"), false, nullptr, H_SystemExecute, _T("CORE"), _T("Execute system command"));
 #ifdef _WIN32
-         AddAction(_T("System.ExecuteInAllSessions"), AGENT_ACTION_SUBAGENT, NULL, H_SystemExecuteInAllSessions, _T("CORE"), _T("Execute system command in all sessions"));
+         AddAction(_T("System.ExecuteInAllSessions"), false, nullptr, H_SystemExecuteInAllSessions, _T("CORE"), _T("Execute system command in all sessions"));
 #endif
       }
       else
@@ -1152,33 +1151,13 @@ BOOL Initialize()
    }
 
    // Parse action list
-   if (m_pszActionList != NULL)
+   for(int i = 0; i < s_actionList->size(); i++)
    {
-      for(pItem = pEnd = m_pszActionList; pEnd != NULL && (*pItem != 0); pItem = pEnd + 1)
-      {
-         pEnd = _tcschr(pItem, _T('\n'));
-         if (pEnd != NULL)
-            *pEnd = 0;
-         Trim(pItem);
-         if (!AddActionFromConfig(pItem, FALSE))
-            nxlog_write(NXLOG_WARNING, _T("Unable to add action \"%s\""), pItem);
-      }
-      MemFree(m_pszActionList);
+      const TCHAR *action = s_actionList->get(i);
+      if (!AddActionFromConfig(action))
+         nxlog_write(NXLOG_WARNING, _T("Unable to add action \"%s\""), action);
    }
-   if (m_pszShellActionList != NULL)
-   {
-      for(pItem = pEnd = m_pszShellActionList; pEnd != NULL && (*pItem != 0); pItem = pEnd + 1)
-      {
-         pEnd = _tcschr(pItem, _T('\n'));
-
-         if (pEnd != NULL)
-            *pEnd = 0;
-         Trim(pItem);
-         if (!AddActionFromConfig(pItem, TRUE))
-            nxlog_write(NXLOG_WARNING, _T("Unable to add action \"%s\""), pItem);
-      }
-      MemFree(m_pszShellActionList);
-   }
+   delete s_actionList;
 
    // Parse external parameters list
    if (s_externalParametersConfig != NULL)

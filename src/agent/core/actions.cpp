@@ -38,8 +38,7 @@ protected:
    virtual void endOfOutput() override;
 
 public:
-   ExternalActionExecutor(const TCHAR *command, const StringList& args, AbstractCommSession *session,
-            uint32_t requestId, bool sendOutput, bool shellExec);
+   ExternalActionExecutor(const TCHAR *command, const StringList& args, AbstractCommSession *session, uint32_t requestId, bool sendOutput);
    virtual ~ExternalActionExecutor();
 };
 
@@ -55,7 +54,7 @@ static ACTION *FindAction(const TCHAR *name)
 {
    for(int i = 0; i < s_actions.size(); i++)
    {
-      if (!_tcsicmp(s_actions.get(i)->szName, name))
+      if (!_tcsicmp(s_actions.get(i)->name, name))
          return s_actions.get(i);
    }
    return nullptr;
@@ -64,7 +63,7 @@ static ACTION *FindAction(const TCHAR *name)
 /**
  * Add action
  */
-bool AddAction(const TCHAR *name, int type, const TCHAR *arg,
+bool AddAction(const TCHAR *name, bool isExternal, const TCHAR *arg,
          LONG (*handler)(const TCHAR*, const StringList*, const TCHAR*, AbstractCommSession*),
          const TCHAR *subAgent, const TCHAR *description)
 {
@@ -72,45 +71,37 @@ bool AddAction(const TCHAR *name, int type, const TCHAR *arg,
    if (action != nullptr)
    {
       // Update existing entry in action list
-      _tcslcpy(action->szDescription, description, MAX_DB_STRING);
-      if ((action->iType == AGENT_ACTION_EXEC) || (action->iType == AGENT_ACTION_SHELLEXEC))
-         MemFree(action->handler.pszCmdLine);
-      action->iType = type;
-      switch(type)
+      _tcslcpy(action->description, description, MAX_DB_STRING);
+      if (action->isExternal)
+         MemFree(action->handler.cmdLine);
+      action->isExternal = isExternal;
+      if (isExternal)
       {
-         case AGENT_ACTION_EXEC:
-         case AGENT_ACTION_SHELLEXEC:
-            action->handler.pszCmdLine = MemCopyString(arg);
-            break;
-         case AGENT_ACTION_SUBAGENT:
-            action->handler.sa.fpHandler = handler;
-            action->handler.sa.pArg = arg;
-            _tcslcpy(action->handler.sa.szSubagentName, subAgent,MAX_PATH);
-            break;
-         default:
-            break;
+         action->handler.cmdLine = MemCopyString(arg);
+      }
+      else
+      {
+         action->handler.sa.handler = handler;
+         action->handler.sa.arg = arg;
+         action->handler.sa.subagentName = subAgent;
       }
    }
    else
    {
       // Create new entry in action list
       ACTION newAction;
-      _tcslcpy(newAction.szName, name, MAX_PARAM_NAME);
-      newAction.iType = type;
-      _tcslcpy(newAction.szDescription, description, MAX_DB_STRING);
-      switch(type)
+      _tcslcpy(newAction.name, name, MAX_PARAM_NAME);
+      newAction.isExternal = isExternal;
+      _tcslcpy(newAction.description, description, MAX_DB_STRING);
+      if (isExternal)
       {
-         case AGENT_ACTION_EXEC:
-         case AGENT_ACTION_SHELLEXEC:
-            newAction.handler.pszCmdLine = _tcsdup(arg);
-            break;
-         case AGENT_ACTION_SUBAGENT:
-            newAction.handler.sa.fpHandler = handler;
-            newAction.handler.sa.pArg = arg;
-            _tcslcpy(newAction.handler.sa.szSubagentName, subAgent,MAX_PATH);
-            break;
-         default:
-            break;
+         newAction.handler.cmdLine = MemCopyString(arg);
+      }
+      else
+      {
+         newAction.handler.sa.handler = handler;
+         newAction.handler.sa.arg = arg;
+         newAction.handler.sa.subagentName = subAgent;
       }
       s_actions.add(newAction);
    }
@@ -121,16 +112,21 @@ bool AddAction(const TCHAR *name, int type, const TCHAR *arg,
  * Add action from config record
  * Accepts string of format <action_name>:<command_line>
  */
-bool AddActionFromConfig(TCHAR *config, bool shellExec)
+bool AddActionFromConfig(const TCHAR *config)
 {
-   TCHAR *cmdLine = _tcschr(config, _T(':'));
-   if (cmdLine == nullptr)
+   StringBuffer sb(config);
+   ssize_t index = sb.find(_T(":"));
+   if (index == String::npos)
       return false;
-   *cmdLine = 0;
-   cmdLine++;
-   StrStrip(config);
+
+   TCHAR *name = sb.substring(0, index, nullptr);
+   TCHAR *cmdLine = sb.substring(index + 1, -1, nullptr);
+   StrStrip(name);
    StrStrip(cmdLine);
-   return AddAction(config, shellExec ? AGENT_ACTION_SHELLEXEC : AGENT_ACTION_EXEC, cmdLine, nullptr, nullptr, _T(""));
+   bool result = AddAction(name, true, cmdLine, nullptr, nullptr, _T(""));
+   MemFree(name);
+   MemFree(cmdLine);
+   return result;
 }
 
 /**
@@ -142,8 +138,8 @@ LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstrac
    for(int i = 0; i < s_actions.size(); i++)
    {
       ACTION *action = s_actions.get(i);
-      _sntprintf(buffer, 1024, _T("%s %d \"%s\""), action->szName, action->iType,
-            (action->iType == AGENT_ACTION_SUBAGENT) ? action->handler.sa.szSubagentName : action->handler.pszCmdLine);
+      _sntprintf(buffer, 1024, _T("%s %s \"%s\""), action->name, action->isExternal ? _T("external") : _T("internal"),
+            action->isExternal ? action->handler.cmdLine : action->handler.sa.subagentName);
       value->add(buffer);
    }
    ListActionsFromExtSubagents(value);
@@ -159,10 +155,10 @@ void GetActionList(NXCPMessage *msg)
    for(int i = 0; i < s_actions.size(); i++)
    {
       ACTION *action = s_actions.get(i);
-      msg->setField(fieldId++, action->szName);
-      msg->setField(fieldId++, action->szDescription);
-      msg->setField(fieldId++, static_cast<int16_t>(action->iType));
-      msg->setField(fieldId++, (action->iType == AGENT_ACTION_SUBAGENT) ? action->handler.sa.szSubagentName : action->handler.pszCmdLine);
+      msg->setField(fieldId++, action->name);
+      msg->setField(fieldId++, action->description);
+      msg->setField(fieldId++, action->isExternal);
+      msg->setField(fieldId++, action->isExternal ? action->handler.cmdLine : action->handler.sa.subagentName);
    }
 
    uint32_t count = static_cast<uint32_t>(s_actions.size());
@@ -193,14 +189,9 @@ static uint32_t ExecuteAction(const TCHAR *name, const StringList& args, Abstrac
       return ExecuteActionByExtSubagent(name, args, session, requestId, sendOutput);
 
    uint32_t rcc;
-   if (action->iType == AGENT_ACTION_SUBAGENT)
+   if (action->isExternal)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing internal action %s"), name);
-      rcc = action->handler.sa.fpHandler(name, &args, action->handler.sa.pArg, session);
-   }
-   else if ((action->iType == AGENT_ACTION_EXEC) || (action->iType == AGENT_ACTION_SHELLEXEC))
-   {
-      ExternalActionExecutor *executor = new ExternalActionExecutor(action->handler.pszCmdLine, args, session, requestId, sendOutput, action->iType == AGENT_ACTION_SHELLEXEC);
+      ExternalActionExecutor *executor = new ExternalActionExecutor(action->handler.cmdLine, args, session, requestId, sendOutput);
       if (executor->execute())
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Execution of external action %s (%s) started"), name, executor->getCommand());
@@ -216,7 +207,8 @@ static uint32_t ExecuteAction(const TCHAR *name, const StringList& args, Abstrac
    }
    else
    {
-      rcc = ERR_NOT_IMPLEMENTED;
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing internal action %s"), name);
+      rcc = action->handler.sa.handler(name, &args, action->handler.sa.arg, session);
    }
    return rcc;
 }
@@ -249,7 +241,7 @@ void ExecuteAction(const TCHAR *name, const StringList& args)
  * External action executor constructor
  */
 ExternalActionExecutor::ExternalActionExecutor(const TCHAR *command, const StringList& args, AbstractCommSession *session,
-         uint32_t requestId, bool sendOutput, bool shellExec) : ProcessExecutor(nullptr, shellExec)
+         uint32_t requestId, bool sendOutput) : ProcessExecutor(nullptr, true)
 {
    m_sendOutput = sendOutput;
    m_requestId = requestId;

@@ -23,6 +23,30 @@
 #include "nxagentd.h"
 
 /**
+ * Action list
+ */
+struct ActionList
+{
+   size_t count;
+   ACTION *actions;
+   TCHAR **strings;
+
+   ActionList(uint32_t _count)
+   {
+      count = _count;
+      actions = MemAllocArray<ACTION>(_count);
+      strings = MemAllocArray<TCHAR*>(_count);
+   }
+   ~ActionList()
+   {
+      for(size_t i = 0; i < count; i++)
+         MemFree(strings[i]);
+      MemFree(strings);
+      MemFree(actions);
+   }
+};
+
+/**
  *Static data
  */
 static ObjectArray<ExternalSubagent> s_subagents;
@@ -117,7 +141,7 @@ NXCPMessage *ExternalSubagent::waitForMessage(WORD code, uint32_t id)
 static void ForwardSessionMessage(NXCPMessage *msg)
 {
    AbstractCommSession *session = FindServerSessionById(msg->getId());
-   if (session != NULL)
+   if (session != nullptr)
    {
       session->postRawMessage(reinterpret_cast<const NXCP_MESSAGE*>(msg->getBinaryData()));
       session->decRefCount();
@@ -204,14 +228,14 @@ void ExternalSubagent::restart()
 NETXMS_SUBAGENT_PARAM *ExternalSubagent::getSupportedParameters(UINT32 *count)
 {
 	NXCPMessage msg;
-	NETXMS_SUBAGENT_PARAM *result = NULL;
+	NETXMS_SUBAGENT_PARAM *result = nullptr;
 
 	msg.setCode(CMD_GET_PARAMETER_LIST);
 	msg.setId(m_requestId++);
 	if (sendMessage(&msg))
 	{
 		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
-		if (response != NULL)
+		if (response != nullptr)
 		{
 			if (response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
 			{
@@ -237,14 +261,14 @@ NETXMS_SUBAGENT_PARAM *ExternalSubagent::getSupportedParameters(UINT32 *count)
 NETXMS_SUBAGENT_LIST *ExternalSubagent::getSupportedLists(UINT32 *count)
 {
 	NXCPMessage msg;
-	NETXMS_SUBAGENT_LIST *result = NULL;
+	NETXMS_SUBAGENT_LIST *result = nullptr;
 
 	msg.setCode(CMD_GET_ENUM_LIST);
 	msg.setId(m_requestId++);
 	if (sendMessage(&msg))
 	{
 		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
-		if (response != NULL)
+		if (response != nullptr)
 		{
 			if (response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
 			{
@@ -268,14 +292,14 @@ NETXMS_SUBAGENT_LIST *ExternalSubagent::getSupportedLists(UINT32 *count)
 NETXMS_SUBAGENT_TABLE *ExternalSubagent::getSupportedTables(UINT32 *count)
 {
 	NXCPMessage msg;
-	NETXMS_SUBAGENT_TABLE *result = NULL;
+	NETXMS_SUBAGENT_TABLE *result = nullptr;
 
 	msg.setCode(CMD_GET_TABLE_LIST);
 	msg.setId(m_requestId++);
 	if (sendMessage(&msg))
 	{
 		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
-		if (response != NULL)
+		if (response != nullptr)
 		{
 			if (response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
 			{
@@ -298,35 +322,36 @@ NETXMS_SUBAGENT_TABLE *ExternalSubagent::getSupportedTables(UINT32 *count)
 /**
  * Get list of supported tables
  */
-ACTION *ExternalSubagent::getSupportedActions(UINT32 *count)
+ActionList *ExternalSubagent::getSupportedActions()
 {
 	NXCPMessage msg;
-	ACTION *result = NULL;
+	ActionList *result = nullptr;
 
 	msg.setCode(CMD_GET_ACTION_LIST);
 	msg.setId(m_requestId++);
 	if (sendMessage(&msg))
 	{
 		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
-		if (response != NULL)
+		if (response != nullptr)
 		{
 			if (response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
 			{
-				*count = response->getFieldAsUInt32(VID_NUM_ACTIONS);
-				result = (ACTION *)calloc(*count, sizeof(ACTION));
-				UINT32 varId = VID_ACTION_LIST_BASE;
-				for(UINT32 i = 0; i < *count; i++)
+				uint32_t count = response->getFieldAsUInt32(VID_NUM_ACTIONS);
+				result = new ActionList(count);
+				uint32_t varId = VID_ACTION_LIST_BASE;
+				for(uint32_t i = 0; i < count; i++)
 				{
-               response->getFieldAsString(varId++, result[i].szName, MAX_PARAM_NAME);
-               response->getFieldAsString(varId++, result[i].szDescription, MAX_DB_STRING);
-               result[i].iType = response->getFieldAsInt16(varId++);
-               if (result[i].iType == AGENT_ACTION_SUBAGENT)
+               response->getFieldAsString(varId++, result->actions[i].name, MAX_PARAM_NAME);
+               response->getFieldAsString(varId++, result->actions[i].description, MAX_DB_STRING);
+               result->actions[i].isExternal = response->getFieldAsBoolean(varId++);
+               result->strings[i] = response->getFieldAsString(varId++);
+               if (result->actions[i].isExternal)
                {
-                  response->getFieldAsString(varId++, result[i].handler.sa.szSubagentName, MAX_PATH);
+                  result->actions[i].handler.cmdLine = result->strings[i];
                }
                else
                {
-                  result[i].handler.pszCmdLine = response->getFieldAsString(varId++);
+                  result->actions[i].handler.sa.subagentName = result->strings[i];
                }
 				}
 			}
@@ -343,7 +368,7 @@ void ExternalSubagent::listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *
 {
 	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_PARAM *list = getSupportedParameters(&paramCount);
-	if (list != NULL)
+	if (list != nullptr)
 	{
 		UINT32 id = *baseId;
 
@@ -366,7 +391,7 @@ void ExternalSubagent::listParameters(StringList *list)
 {
 	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_PARAM *plist = getSupportedParameters(&paramCount);
-	if (plist != NULL)
+	if (plist != nullptr)
 	{
 		for(UINT32 i = 0; i < paramCount; i++)
 			list->add(plist[i].name);
@@ -381,7 +406,7 @@ void ExternalSubagent::listLists(NXCPMessage *msg, UINT32 *baseId, UINT32 *count
 {
 	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_LIST *list = getSupportedLists(&paramCount);
-	if (list != NULL)
+	if (list != nullptr)
 	{
 		UINT32 id = *baseId;
 
@@ -402,7 +427,7 @@ void ExternalSubagent::listLists(StringList *list)
 {
 	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_LIST *plist = getSupportedLists(&paramCount);
-	if (plist != NULL)
+	if (plist != nullptr)
 	{
 		for(UINT32 i = 0; i < paramCount; i++)
 			list->add(plist[i].name);
@@ -417,7 +442,7 @@ void ExternalSubagent::listTables(NXCPMessage *msg, UINT32 *baseId, UINT32 *coun
 {
 	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_TABLE *list = getSupportedTables(&paramCount);
-	if (list != NULL)
+	if (list != nullptr)
 	{
 		UINT32 id = *baseId;
 
@@ -440,7 +465,7 @@ void ExternalSubagent::listTables(StringList *list)
 {
 	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_TABLE *plist = getSupportedTables(&paramCount);
-	if (plist != NULL)
+	if (plist != nullptr)
 	{
 		for(UINT32 i = 0; i < paramCount; i++)
 			list->add(plist[i].name);
@@ -453,22 +478,21 @@ void ExternalSubagent::listTables(StringList *list)
  */
 void ExternalSubagent::listActions(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
-	UINT32 actionCount = 0;
-	ACTION *list = getSupportedActions(&actionCount);
-	if (list != NULL)
+	ActionList *list = getSupportedActions();
+	if (list != nullptr)
 	{
-		UINT32 id = *baseId;
-
-		for(UINT32 i = 0; i < actionCount; i++)
+		uint32_t id = *baseId;
+		for(size_t i = 0; i < list->count; i++)
 		{
-         msg->setField(id++, list[i].szName);
-         msg->setField(id++, list[i].szDescription);
-         msg->setField(id++, (INT16)list[i].iType);
-         msg->setField(id++, (list[i].iType == AGENT_ACTION_SUBAGENT) ? list[i].handler.sa.szSubagentName : list[i].handler.pszCmdLine);
+		   ACTION *a = &list->actions[i];
+         msg->setField(id++, a->name);
+         msg->setField(id++, a->description);
+         msg->setField(id++, a->isExternal);
+         msg->setField(id++, a->isExternal ? a->handler.cmdLine : a->handler.sa.subagentName);
 		}
 		*baseId = id;
-		*count += actionCount;
-		free(list);
+		*count += list->count;
+		delete list;
 	}
 }
 
@@ -477,20 +501,18 @@ void ExternalSubagent::listActions(NXCPMessage *msg, UINT32 *baseId, UINT32 *cou
  */
 void ExternalSubagent::listActions(StringList *list)
 {
-	UINT32 actionCount = 0;
-	ACTION *plist = getSupportedActions(&actionCount);
-	if (plist != NULL)
+	ActionList *actions = getSupportedActions();
+	if (actions != nullptr)
 	{
       TCHAR buffer[1024];
-		for(UINT32 i = 0; i < actionCount; i++)
+		for(size_t i = 0; i < actions->count; i++)
       {
-         _sntprintf(buffer, 1024, _T("%s %d \"%s\""), plist[i].szName, plist[i].iType,
-                    plist[i].iType == AGENT_ACTION_SUBAGENT ?
-                       plist[i].handler.sa.szSubagentName :    
-                       plist[i].handler.pszCmdLine);
+		   ACTION *a = &actions->actions[i];
+         _sntprintf(buffer, 1024, _T("%s %s \"%s\""), a->name, a->isExternal ? _T("external") : _T("internal"),
+                  a->isExternal ? a->handler.cmdLine : a->handler.sa.subagentName);
 			list->add(buffer);
       }
-		free(plist);
+		delete actions;
 	}
 }
 
@@ -541,7 +563,7 @@ uint32_t ExternalSubagent::getTable(const TCHAR *name, Table *value)
 	if (sendMessage(&msg))
 	{
 		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
-		if (response != NULL)
+		if (response != nullptr)
 		{
 			rcc = response->getFieldAsUInt32(VID_RCC);
 			if (rcc == ERR_SUCCESS)
@@ -574,7 +596,7 @@ uint32_t ExternalSubagent::getList(const TCHAR *name, StringList *value)
 	if (sendMessage(&msg))
 	{
 		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
-		if (response != NULL)
+		if (response != nullptr)
 		{
 			rcc = response->getFieldAsUInt32(VID_RCC);
 			if (rcc == ERR_SUCCESS)
@@ -642,7 +664,7 @@ bool AddExternalSubagent(const TCHAR *config)
 
 	nx_strncpy(buffer, config, 1024);
 	TCHAR *ptr = _tcschr(buffer, _T(':'));
-	if (ptr != NULL)
+	if (ptr != nullptr)
 	{
 		*ptr = 0;
 		ptr++;
