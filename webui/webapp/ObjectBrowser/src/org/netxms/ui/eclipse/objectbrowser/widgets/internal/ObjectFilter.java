@@ -287,20 +287,6 @@ public class ObjectFilter extends ViewerFilter
 	}
 
 	/**
-	 * Get parent for given object
-	 */
-	public AbstractObject getParent(final AbstractObject childObject)
-	{
-		AbstractObject[] parents = childObject.getParentsAsArray();
-		for(AbstractObject object : parents)
-		{
-			if (object != null)
-            return object;
-		}
-		return null;
-	}
-
-	/**
 	 * @return the hideUnmanaged
 	 */
 	public boolean isHideUnmanaged()

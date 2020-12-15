@@ -62,7 +62,15 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Chassis;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DashboardGroup;
+import org.netxms.client.objects.EntireNetwork;
+import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
 import org.netxms.ui.eclipse.objectbrowser.api.SubtreeType;
@@ -491,9 +499,7 @@ public class ObjectTree extends Composite
       objectTree.setInput(session);
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
     */
    @Override
@@ -514,15 +520,53 @@ public class ObjectTree extends Composite
       AbstractObject obj = filter.getLastMatch();
       if (obj != null)
       {
-         objectTree.setSelection(new StructuredSelection(obj), true);
-         AbstractObject parent = filter.getParent(obj);
+         AbstractObject parent = getParent(obj);
          if (parent != null)
             objectTree.expandToLevel(parent, 1);
+         objectTree.setSelection(new StructuredSelection(obj), true);
          objectTree.reveal(obj);
          if (statusIndicatorEnabled)
             updateStatusIndicator();
       }
       objectTree.refresh(false);
+   }
+
+   /**
+    * Get priority of given parent object
+    *
+    * @param object parent object
+    * @return priority (0 or higher)
+    */
+   static int getParentPriority(AbstractObject object)
+   {
+      if ((object instanceof ServiceRoot) || (object instanceof EntireNetwork))
+         return 3;
+      if ((object instanceof Container) || (object instanceof Cluster) ||
+          (object instanceof Chassis) || (object instanceof Rack))
+         return 2;
+      if ((object instanceof Zone) || (object instanceof Subnet))
+         return 1;
+      return 0;
+   }
+
+   /**
+    * Get parent for given object prioritizing different sub-trees.
+    */
+   private AbstractObject getParent(final AbstractObject childObject)
+   {
+      AbstractObject[] parents = childObject.getParentsAsArray();
+      AbstractObject parent = null;
+      int parentPriority = -1;
+      for(AbstractObject p : parents)
+      {
+         int pp = getParentPriority(p);
+         if (pp > parentPriority)
+         {
+            parentPriority = pp;
+            parent = p;
+         }
+      }
+      return parent;
    }
 
    /**
