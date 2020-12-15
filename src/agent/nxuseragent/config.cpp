@@ -1,4 +1,5 @@
 #include "nxuseragent.h"
+#include <netxms-version.h>
 
 /**
  * "Close on deactivate" flag

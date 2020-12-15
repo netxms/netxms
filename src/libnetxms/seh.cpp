@@ -21,6 +21,7 @@
 **/
 
 #include "libnetxms.h"
+#include <netxms-version.h>
 #include <dbghelp.h>
 #include "StackWalker.h"
 

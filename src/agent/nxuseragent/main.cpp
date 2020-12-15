@@ -1,4 +1,5 @@
 #include "nxuseragent.h"
+#include <netxms-version.h>
 #include <Psapi.h>
 
 NETXMS_EXECUTABLE_HEADER(nxuseragent)

@@ -23,6 +23,7 @@
 #include "nxcproxy.h"
 #include <nxconfig.h>
 #include <netxms_getopt.h>
+#include <netxms-version.h>
 
 #if defined(_WIN32)
 #include <conio.h>
