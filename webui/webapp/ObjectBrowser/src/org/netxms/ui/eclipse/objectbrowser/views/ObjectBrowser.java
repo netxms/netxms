@@ -644,27 +644,27 @@ public class ObjectBrowser extends ViewPart
 	   settings.put("ObjectBrowser.showFilter", objectTree.isFilterEnabled());
 		super.dispose();
 	}
-	
-	/**
-	 * Check if current selection is valid for moving object
-	 * 
-	 * @return true if current selection is valid for moving object
-	 */
-	public boolean isValidSelectionForMove(SubtreeType subtree)
-	{
-		TreeItem[] selection = objectTree.getTreeControl().getSelection();
-		if(selection.length < 1)
-		   return false;
-		
+
+   /**
+    * Check if current selection is valid for moving object
+    * 
+    * @return true if current selection is valid for moving object
+    */
+   public boolean isValidSelectionForMove(SubtreeType subtree)
+   {
+      TreeItem[] selection = objectTree.getTreeControl().getSelection();
+      if (selection.length < 1)
+         return false;
+
 	   for(int i = 0; i < selection.length; i++)
 	   {
-	      if(!isValidObjectForMove(selection, i, subtree) || 
-	            ((AbstractObject)selection[0].getParentItem().getData()).getObjectId() != ((AbstractObject)selection[i].getParentItem().getData()).getObjectId())	   
+	      if (!isValidObjectForMove(selection, i, subtree) ||
+	          ((AbstractObject)selection[0].getParentItem().getData()).getObjectId() != ((AbstractObject)selection[i].getParentItem().getData()).getObjectId())
 	         return false;
 	   }
-	   return true;		
-	}
-	
+	   return true;
+   }
+
 	/**
     * Check if given selection object is valid for move
     * 
