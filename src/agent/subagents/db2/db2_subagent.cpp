@@ -18,6 +18,7 @@
  */
 
 #include "db2_subagent.h"
+#include <netxms-version.h>
 
 static DB_DRIVER s_driver = NULL;
 static CONDITION s_condShutdown = NULL;

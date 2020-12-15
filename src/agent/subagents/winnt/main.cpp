@@ -22,6 +22,7 @@
 
 #include "winnt_subagent.h"
 #include "lm.h"
+#include <netxms-version.h>
 
 #include "../../smbios/windows.cpp"
 

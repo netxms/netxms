@@ -21,7 +21,7 @@
 **/
 
 #include "ping3.h"
-
+#include <netxms-version.h>
 
 /**
  * Driver name
@@ -38,7 +38,7 @@ static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
  */
 const TCHAR *Ping3Driver::getName()
 {
-	return s_driverName;
+   return s_driverName;
 }
 
 /**
@@ -46,7 +46,7 @@ const TCHAR *Ping3Driver::getName()
  */
 const TCHAR *Ping3Driver::getVersion()
 {
-	return s_driverVersion;
+   return s_driverVersion;
 }
 
 /**

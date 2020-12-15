@@ -21,13 +21,14 @@
  */
 
 #include "rittal.h"
+#include <netxms-version.h>
 
 /**
  * Get driver name
  */
 const TCHAR *RittalDriver::getName()
 {
-	return _T("RITTAL");
+   return _T("RITTAL");
 }
 
 /**
@@ -35,7 +36,7 @@ const TCHAR *RittalDriver::getName()
  */
 const TCHAR *RittalDriver::getVersion()
 {
-	return NETXMS_BUILD_TAG;
+   return NETXMS_VERSION_STRING;
 }
 
 /**
@@ -45,7 +46,7 @@ const TCHAR *RittalDriver::getVersion()
  */
 int RittalDriver::isPotentialDevice(const TCHAR *oid)
 {
-	return !_tcscmp(oid, _T(".1.3.6.1.4.1.2606.7")) ? 254 : 0;
+   return !_tcscmp(oid, _T(".1.3.6.1.4.1.2606.7")) ? 254 : 0;
 }
 
 /**

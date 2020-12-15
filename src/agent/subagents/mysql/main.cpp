@@ -19,6 +19,7 @@
  **/
 
 #include "mysql_subagent.h"
+#include <netxms-version.h>
 
 #define DEBUG_TAG _T("mysql")
 

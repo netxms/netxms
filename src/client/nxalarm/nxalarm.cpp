@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** nxalarm - manage alarms from command line
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 
 #include "nxalarm.h"
 #include <netxms_getopt.h>
+#include <netxms-version.h>
 
 NETXMS_EXECUTABLE_HEADER(nxalarm)
 

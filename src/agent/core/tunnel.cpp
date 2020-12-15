@@ -23,6 +23,7 @@
 #include "nxagentd.h"
 #include <openssl/engine.h>
 #include <nxstat.h>
+#include <netxms-version.h>
 
 #define DEBUG_TAG _T("tunnel")
 

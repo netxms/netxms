@@ -4,6 +4,7 @@
 #include <nms_agent.h>
 #include <nxcldefs.h>
 #include <nxcpapi.h>
+#include <netxms-version.h>
 
 #ifdef _WIN32
 #define PORTCHECK_EXPORTABLE __declspec(dllexport) __cdecl

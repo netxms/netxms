@@ -21,6 +21,7 @@
 **/
 
 #include "ssh_subagent.h"
+#include <netxms-version.h>
 #include <libssh/callbacks.h>
 
 /**

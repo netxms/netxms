@@ -25,6 +25,7 @@
 #define _moxa_h_
 
 #include <nddrv.h>
+#include <netxms-version.h>
 
 /**
  * Driver for EDR devices

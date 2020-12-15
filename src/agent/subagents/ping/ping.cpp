@@ -21,6 +21,7 @@
 **/
 
 #include "ping.h"
+#include <netxms-version.h>
 
 /**
  * Static data

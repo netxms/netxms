@@ -7,6 +7,7 @@
 #include <nxcpapi.h>
 #include <nxproc.h>
 #include <testtools.h>
+#include <netxms-version.h>
 
 NETXMS_EXECUTABLE_HEADER(test-libnetxms)
 

@@ -22,6 +22,7 @@
 
 #include "libnxsrv.h"
 #include <netxms_getopt.h>
+#include <netxms-version.h>
 
 /**
  * Debug writer

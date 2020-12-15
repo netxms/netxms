@@ -24,6 +24,7 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 #include <nxsrvapi.h>
+#include <netxms-version.h>
 
 NETXMS_EXECUTABLE_HEADER(nxwsget)
 

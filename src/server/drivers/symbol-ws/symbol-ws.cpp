@@ -21,6 +21,7 @@
 **/
 
 #include "symbol-ws.h"
+#include <netxms-version.h>
 
 /**
  * Driver name

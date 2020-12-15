@@ -2,6 +2,7 @@
 #include <nms_util.h>
 #include <nxdbapi.h>
 #include <testtools.h>
+#include <netxms-version.h>
 
 NETXMS_EXECUTABLE_HEADER(test-libnxdb)
 

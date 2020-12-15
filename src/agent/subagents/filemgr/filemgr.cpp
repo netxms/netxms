@@ -19,6 +19,7 @@
  **/
 
 #include "filemgr.h"
+#include <netxms-version.h>
 
 #ifdef _WIN32
 #include <accctrl.h>

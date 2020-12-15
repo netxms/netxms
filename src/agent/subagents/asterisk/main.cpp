@@ -21,6 +21,7 @@
 **/
 
 #include "asterisk.h"
+#include <netxms-version.h>
 
 /******* Externals *******/
 LONG H_ChannelList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);

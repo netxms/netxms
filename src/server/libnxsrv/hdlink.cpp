@@ -21,6 +21,7 @@
 
 #include "libnxsrv.h"
 #include <hdlink.h>
+#include <netxms-version.h>
 
 /**
  * Server entry points for alarm resolve and close

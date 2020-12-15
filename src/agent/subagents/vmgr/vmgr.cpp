@@ -19,6 +19,7 @@
  **/
 
 #include "vmgr.h"
+#include <netxms-version.h>
 
 /**
  * General VM connection list

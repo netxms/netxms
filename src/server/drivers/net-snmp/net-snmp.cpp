@@ -21,6 +21,7 @@
  */
 
 #include "net-snmp.h"
+#include <netxms-version.h>
 
 #define DEBUG_TAG _T("ndd.net-snmp")
 
@@ -39,7 +40,7 @@ static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
  */
 const TCHAR *NetSnmpDriver::getName()
 {
-	return s_driverName;
+   return s_driverName;
 }
 
 /**
@@ -47,7 +48,7 @@ const TCHAR *NetSnmpDriver::getName()
  */
 const TCHAR *NetSnmpDriver::getVersion()
 {
-	return s_driverVersion;
+   return s_driverVersion;
 }
 
 /**

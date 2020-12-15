@@ -22,6 +22,7 @@
 **/
 
 #include "libnxsl.h"
+#include <netxms-version.h>
 
 /**
  * Externals

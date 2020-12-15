@@ -22,6 +22,7 @@
 
 #include <nms_agent.h>
 #include <geolocation.h>
+#include <netxms-version.h>
 #include <math.h>
 #include "nmea.h"
 

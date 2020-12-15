@@ -21,6 +21,7 @@
 **/
 
 #include "ntcb.h"
+#include <netxms-version.h>
 #include <socket_listener.h>
 
 /**

@@ -25,6 +25,7 @@
 #define _hpe_h_
 
 #include <nddrv.h>
+#include <netxms-version.h>
 
 /**
  * Driver for H3C (now HP A-series) switches

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** nxnotify - send notification via NetXMS server
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 
 #include "nxnotify.h"
 #include <netxms_getopt.h>
+#include <netxms-version.h>
 
 NETXMS_EXECUTABLE_HEADER(nxnotify)
 

@@ -21,7 +21,7 @@
 **/
 
 #include "tb.h"
-
+#include <netxms-version.h>
 
 /**
  * Driver name

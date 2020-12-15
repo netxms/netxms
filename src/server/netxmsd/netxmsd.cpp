@@ -23,6 +23,7 @@
 
 #include "netxmsd.h"
 #include <netxms_getopt.h>
+#include <netxms-version.h>
 
 #ifdef _WIN32
 #include <dbghelp.h>

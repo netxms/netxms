@@ -21,6 +21,7 @@
 **/
 
 #include "ubnt.h"
+#include <netxms-version.h>
 
 /**
  * Driver name

@@ -16,12 +16,13 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: upgrade.cpp
+** File: upgrade.cpp
 ** Agent self-upgrade module
 **
 **/
 
 #include "nxagentd.h"
+#include <netxms-version.h>
 
 /**
  * Upgrade agent from given package file

@@ -29,6 +29,7 @@
 **/
 
 #include "qtech-olt.h"
+#include <netxms-version.h>
 
 /**
  * Driver name

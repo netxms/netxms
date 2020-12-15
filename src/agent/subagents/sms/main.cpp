@@ -21,6 +21,7 @@
 **/
 
 #include "sms.h"
+#include <netxms-version.h>
 
 /**
  * Model of attacjed modem

@@ -21,6 +21,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <netxms-version.h>
 
 #include "net.h"
 #include "system.h"

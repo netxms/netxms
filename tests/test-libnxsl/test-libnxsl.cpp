@@ -2,6 +2,7 @@
 #include <nms_util.h>
 #include <nxsl.h>
 #include <testtools.h>
+#include <netxms-version.h>
 
 static TCHAR *s_testScriptDirectory = nullptr;
 

@@ -23,6 +23,7 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 #include <nxsrvapi.h>
+#include <netxms-version.h>
 
 #ifndef _WIN32
 #include <netdb.h>

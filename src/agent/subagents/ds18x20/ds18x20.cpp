@@ -21,6 +21,7 @@
 **/
 
 #include "ds18x20.h"
+#include <netxms-version.h>
 
 /**
  * Static data

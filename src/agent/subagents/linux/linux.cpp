@@ -21,6 +21,8 @@
 **/
 
 #include "linux_subagent.h"
+#include <netxms-version.h>
+
 #if HAVE_SYS_REBOOT_H
 #include <sys/reboot.h>
 #endif

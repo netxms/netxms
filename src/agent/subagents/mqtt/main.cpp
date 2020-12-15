@@ -18,6 +18,7 @@
  **
  **/
 #include "mqtt_subagent.h"
+#include <netxms-version.h>
 
 /**
  * Registered brokers

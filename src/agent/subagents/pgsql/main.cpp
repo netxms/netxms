@@ -20,6 +20,7 @@
  **/
 
 #include "pgsql_subagent.h"
+#include <netxms-version.h>
 
 /**
  * Driver handle

@@ -23,6 +23,7 @@
 
 #include "nxlptest.h"
 #include <netxms_getopt.h>
+#include <netxms-version.h>
 
 #ifndef _WIN32
 #include <signal.h>

@@ -20,6 +20,7 @@
 **/
 
 #include "asterisk.h"
+#include <netxms-version.h>
 #include <eXosip2/eXosip.h>
 
 /**

@@ -22,6 +22,7 @@
 
 #include <nms_common.h>
 #include <nms_util.h>
+#include <netxms-version.h>
 #include <netxms_getopt.h>
 #include <ethernet_ip.h>
 

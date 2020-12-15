@@ -21,6 +21,7 @@
 **/
 
 #include "winperf.h"
+#include <netxms-version.h>
 
 /**
  * Constants

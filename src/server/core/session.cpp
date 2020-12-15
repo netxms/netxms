@@ -30,6 +30,7 @@
 #include <nxcore_syslog.h>
 #include <nxcore_ps.h>
 #include <nms_pkg.h>
+#include <netxms-version.h>
 
 #ifdef _WIN32
 #include <psapi.h>
