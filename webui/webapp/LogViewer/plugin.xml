@@ -181,7 +181,7 @@
             sequence="M3+Shift+T">
       </key>
       <key
-            commandId="org.netxms.ui.eclipse.logviewer.commands.openWindowsEventLog"
+            commandId="org.netxms.ui.eclipse.logviewer.commands.windowsEventLog"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M3+Shift+W">
