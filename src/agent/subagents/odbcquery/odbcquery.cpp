@@ -21,6 +21,7 @@
 **/
 
 #include "odbcquery.h"
+#include <netxms-version.h>
 
 #ifdef _WIN32
 #define ODBCQUERY_EXPORTABLE __declspec(dllexport) __cdecl

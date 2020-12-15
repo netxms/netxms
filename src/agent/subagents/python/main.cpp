@@ -19,6 +19,7 @@
  **/
 
 #include "python_subagent.h"
+#include <netxms-version.h>
 
 /**
  * Plugin registry

@@ -23,6 +23,7 @@
 
 #include <ncdrv.h>
 #include <nms_util.h>
+#include <netxms-version.h>
 #include <curl/curl.h>
 #include <jansson.h>
 

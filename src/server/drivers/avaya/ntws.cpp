@@ -19,6 +19,7 @@
 **/
 
 #include "avaya.h"
+#include <netxms-version.h>
 #include <math.h>
 
 /**
@@ -34,7 +35,7 @@ const TCHAR *NtwsDriver::getName()
  */
 const TCHAR *NtwsDriver::getVersion()
 {
-   return NETXMS_BUILD_TAG;
+   return NETXMS_VERSION_STRING;
 }
 
 /**

@@ -22,6 +22,7 @@
 
 #include "nxagentd.h"
 #include <nxstat.h>
+#include <netxms-version.h>
 
 #ifdef _WIN32
 #include <shlobj.h>

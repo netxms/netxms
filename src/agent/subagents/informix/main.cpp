@@ -4,6 +4,7 @@
 **/
 
 #include "informix_subagent.h"
+#include <netxms-version.h>
 
 CONDITION g_shutdownCondition;
 MUTEX g_paramAccessMutex;

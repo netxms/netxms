@@ -20,6 +20,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <netxms-version.h>
 #include <nxstat.h>
 
 #ifdef _WIN32

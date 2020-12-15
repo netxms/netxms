@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <pdsdrv.h>
+#include <netxms-version.h>
 
 #define MAX_PDS_DRIVERS		8
 

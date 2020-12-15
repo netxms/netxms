@@ -21,6 +21,7 @@
 **/
 
 #include "cisco.h"
+#include <netxms-version.h>
 
 #define DEBUG_TAG DEBUG_TAG_CISCO _T(".wlc")
 

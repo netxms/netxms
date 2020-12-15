@@ -20,10 +20,7 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nms_agent.h>
-
-#include <string.h>
-#include <strings.h>
-#include <stdlib.h>
+#include <netxms-version.h>
 #include <sensors/sensors.h>
 #include <sensors/error.h>
 

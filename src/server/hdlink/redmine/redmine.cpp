@@ -22,6 +22,7 @@
 
 #include "redmine.h"
 #include <jansson.h>
+#include <netxms-version.h>
 
 // workaround for older cURL versions
 #ifndef CURL_MAX_HTTP_HEADER

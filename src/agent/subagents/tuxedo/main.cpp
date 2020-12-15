@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014-2019 Raden Solutions
+** Copyright (C) 2014-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 **/
 
 #include "tuxedo_subagent.h"
+#include <netxms-version.h>
 
 #ifndef _WIN32
 #include <sys/utsname.h>

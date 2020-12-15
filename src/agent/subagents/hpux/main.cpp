@@ -20,6 +20,7 @@
 **/
 
 #include "hpux.h"
+#include <netxms-version.h>
 
 /**
  * Detect support for source packages

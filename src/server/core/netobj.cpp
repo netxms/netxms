@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <netxms-version.h>
 
 #define DEBUG_TAG_OBJECT_RELATIONS  _T("obj.relations")
 #define DEBUG_TAG_OBJECT_LIFECYCLE  _T("obj.lifecycle")

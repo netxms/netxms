@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** Subagent for MongoDB monitoring
- ** Copyright (C) 2009-2018 Raden Solutions
+ ** Copyright (C) 2009-2020 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -19,6 +19,7 @@
  **/
 
 #include "mongodb_subagent.h"
+#include <netxms-version.h>
 
 /**
  * Database instances

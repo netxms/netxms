@@ -21,6 +21,7 @@
 **/
 
 #include "spe.h"
+#include <netxms-version.h>
 
 #define DEBUG_TAG _T("npe.tsre")
 

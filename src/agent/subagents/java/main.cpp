@@ -23,6 +23,7 @@
 
 #include "java_subagent.h"
 #include "SubAgent.h"
+#include <netxms-version.h>
 
 /**
  * Java subagent instance

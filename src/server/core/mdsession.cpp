@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <netxms-version.h>
 
 #ifdef _WIN32
 #include <psapi.h>

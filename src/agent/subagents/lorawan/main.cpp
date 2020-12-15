@@ -19,6 +19,7 @@
  **/
 
 #include "lorawan.h"
+#include <netxms-version.h>
 
 /**
  * MQTT connection settings

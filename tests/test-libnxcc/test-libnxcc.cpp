@@ -2,6 +2,7 @@
 #include <nms_util.h>
 #include <nxcc.h>
 #include <testtools.h>
+#include <netxms-version.h>
 
 NETXMS_EXECUTABLE_HEADER(test-libnxcc)
 

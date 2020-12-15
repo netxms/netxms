@@ -21,13 +21,14 @@
 **/
 
 #include "juniper.h"
+#include <netxms-version.h>
 
 /**
  * Get driver name
  */
 const TCHAR *NetscreenDriver::getName()
 {
-	return _T("NETSCREEN");
+   return _T("NETSCREEN");
 }
 
 /**
@@ -35,7 +36,7 @@ const TCHAR *NetscreenDriver::getName()
  */
 const TCHAR *NetscreenDriver::getVersion()
 {
-	return NETXMS_BUILD_TAG;
+   return NETXMS_VERSION_STRING;
 }
 
 /**
@@ -45,7 +46,7 @@ const TCHAR *NetscreenDriver::getVersion()
  */
 int NetscreenDriver::isPotentialDevice(const TCHAR *oid)
 {
-	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.3224.1"), 19) == 0) ? 254 : 0;
+   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.3224.1"), 19) == 0) ? 254 : 0;
 }
 
 /**
@@ -56,7 +57,7 @@ int NetscreenDriver::isPotentialDevice(const TCHAR *oid)
  */
 bool NetscreenDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
-	return true;
+   return true;
 }
 
 /**

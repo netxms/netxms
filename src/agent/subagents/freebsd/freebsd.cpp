@@ -20,6 +20,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <netxms-version.h>
 #include "freebsd_subagent.h"
 
 #include "../../smbios/freebsd.cpp"

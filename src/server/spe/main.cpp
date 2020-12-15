@@ -21,6 +21,7 @@
 **/
 
 #include "spe.h"
+#include <netxms-version.h>
 
 /**
  * Module metadata

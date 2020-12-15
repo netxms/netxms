@@ -25,6 +25,7 @@
 #define _huawei_h_
 
 #include <nddrv.h>
+#include <netxms-version.h>
 
 /**
  * Driver for Optix devices

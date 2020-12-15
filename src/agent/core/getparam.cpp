@@ -21,6 +21,7 @@
 **/
 
 #include "nxagentd.h"
+#include <netxms-version.h>
 
 #if defined(_WIN32)
 #include <intrin.h>

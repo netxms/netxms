@@ -21,6 +21,7 @@
 **/
 
 #include "mikrotik.h"
+#include <netxms-version.h>
 
 #define DEBUG_TAG _T("ndd.mikrotik")
 
@@ -39,7 +40,7 @@ static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
  */
 const TCHAR *MikrotikDriver::getName()
 {
-	return s_driverName;
+   return s_driverName;
 }
 
 /**
@@ -47,7 +48,7 @@ const TCHAR *MikrotikDriver::getName()
  */
 const TCHAR *MikrotikDriver::getVersion()
 {
-	return s_driverVersion;
+   return s_driverVersion;
 }
 
 /**

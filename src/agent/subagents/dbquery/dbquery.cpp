@@ -21,7 +21,7 @@
 **/
 
 #include "dbquery.h"
-
+#include <netxms-version.h>
 
 /**
  * Global variables

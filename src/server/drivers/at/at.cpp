@@ -21,7 +21,7 @@
 **/
 
 #include "at.h"
-
+#include <netxms-version.h>
 
 /**
  * Driver name

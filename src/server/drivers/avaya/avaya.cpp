@@ -22,13 +22,14 @@
 **/
 
 #include "avaya.h"
+#include <netxms-version.h>
 
 /**
  * Get driver version
  */
 const TCHAR *AvayaERSDriver::getVersion()
 {
-   return NETXMS_BUILD_TAG;
+   return NETXMS_VERSION_STRING;
 }
 
 /**
@@ -39,7 +40,7 @@ const TCHAR *AvayaERSDriver::getVersion()
  */
 UINT32 AvayaERSDriver::getSlotSize(NObject *node)
 {
-	return 64;
+   return 64;
 }
 
 /**

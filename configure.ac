@@ -295,12 +295,6 @@ AC_ARG_WITH(static-agent,
 	FORCE_INTERNAL_ZLIB="yes"
 ])
 
-AC_ARG_WITH(ipso-agent,
-[AS_HELP_STRING(--with-ipso-agent,build statically linked IPSO agent)],
-[
-	COMPONENTS="$COMPONENTS ipso-agent"
-])
-
 AC_ARG_WITH(sdk,
 [AS_HELP_STRING(--with-sdk,build and install files necessary for extension development)],
 [
@@ -872,7 +866,7 @@ AC_ARG_WITH(dist,
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip libnxsl libnxmb libnxlp libnxpython libnxcc db server ncdrivers agent client nxscript nxcproxy"
 	TOOLS="nxlptest"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxtux"
 	NCDRV_DIRS="anysms kannel msteams mymobile nexmo nxagent slack smseagle telegram text2reach websms"
    HDLINK_DIRS="jira redmine"
@@ -1057,24 +1051,6 @@ if test $? = 0; then
 			# unknown
 			;;
 	esac
-fi
-
-check_substr "$COMPONENTS" "ipso-agent"
-if test $? = 0; then
-	if test "x$COMPONENTS" != "x ipso-agent"; then
-		AC_MSG_ERROR(IPSO agent and other components are mutually exclusive.)
-	fi
-	STATIC_BUILD="yes"
-	BUILD_STATIC_AGENT="yes"
-	DISABLE_ICONV="yes"
-	USE_PTH="yes"
-	MODULES="$MODULES appagent libnxlp db agent"
-	TOOLS="$TOOLS nxlptest"
-	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -DSQLITE_THREADSAFE=0 -I/usr/local/include"
-	LDFLAGS="$LDFLAGS -all-static"
-	STATIC_SUBAGENT_LIST="ecs ipso logwatch ping portcheck ups"
-	SUBAGENT_DIRS="$SUBAGENT_DIRS ipso"
-	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/ipso/ipso.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
 fi
 
 check_substr "$COMPONENTS" "agent"
@@ -4625,7 +4601,6 @@ AC_CONFIG_FILES([
 	src/agent/subagents/gps/Makefile
 	src/agent/subagents/hpux/Makefile
 	src/agent/subagents/informix/Makefile
-	src/agent/subagents/ipso/Makefile
 	src/agent/subagents/java/Makefile
 	src/agent/subagents/java/java/Makefile
 	src/agent/subagents/jmx/Makefile

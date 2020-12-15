@@ -23,6 +23,7 @@
 
 #include "nxadm.h"
 #include <netxms_getopt.h>
+#include <netxms-version.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
 #include <readline/readline.h>

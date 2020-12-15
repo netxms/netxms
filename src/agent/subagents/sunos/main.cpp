@@ -21,6 +21,7 @@
 **/
 
 #include "sunos_subagent.h"
+#include <netxms-version.h>
 #include <sys/systeminfo.h>
 
 #if HAVE_ZONE_H

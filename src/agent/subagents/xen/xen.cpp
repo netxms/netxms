@@ -1,6 +1,6 @@
 /*
 ** NetXMS XEN hypervisor subagent
-** Copyright (C) 2017 Raden Solutions
+** Copyright (C) 2017-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 **/
 
 #include "xen.h"
+#include <netxms-version.h>
 
 /**
  * Handlers

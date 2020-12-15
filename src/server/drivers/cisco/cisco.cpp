@@ -22,6 +22,7 @@
 **/
 
 #include "cisco.h"
+#include <netxms-version.h>
 
 /**
  * Get driver version

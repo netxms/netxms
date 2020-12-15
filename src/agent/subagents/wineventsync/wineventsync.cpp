@@ -21,6 +21,7 @@
 **/
 
 #include "wineventsync.h"
+#include <netxms-version.h>
 
 static ObjectArray<EventLogReader> s_readers(0, 16, Ownership::True);
 static StringSet s_eventLogs;

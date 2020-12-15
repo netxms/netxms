@@ -22,6 +22,7 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 #include <netxms-regex.h>
+#include <netxms-version.h>
 
 #include <curl/curl.h>
 

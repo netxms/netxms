@@ -21,13 +21,14 @@
 **/
 
 #include "juniper.h"
+#include <netxms-version.h>
 
 /**
  * Get driver name
  */
 const TCHAR *JuniperDriver::getName()
 {
-	return _T("JUNIPER");
+   return _T("JUNIPER");
 }
 
 /**
@@ -35,7 +36,7 @@ const TCHAR *JuniperDriver::getName()
  */
 const TCHAR *JuniperDriver::getVersion()
 {
-	return NETXMS_BUILD_TAG;
+   return NETXMS_VERSION_STRING;
 }
 
 /**
@@ -45,7 +46,7 @@ const TCHAR *JuniperDriver::getVersion()
  */
 int JuniperDriver::isPotentialDevice(const TCHAR *oid)
 {
-	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.2636.1."), 20) == 0) ? 255 : 0;
+   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.2636.1."), 20) == 0) ? 255 : 0;
 }
 
 /**

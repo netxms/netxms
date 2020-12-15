@@ -22,6 +22,7 @@
 **/
 
 #include "libnxclient.h"
+#include <netxms-version.h>
 
 /**
  * Max NXCP message size

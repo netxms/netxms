@@ -28,6 +28,7 @@
 #include <nxcore_websvc.h>
 #include <nxcore_logs.h>
 #include <nxcore_ps.h>
+#include <netxms-version.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
 #include <readline/readline.h>

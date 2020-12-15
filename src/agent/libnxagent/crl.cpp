@@ -21,6 +21,7 @@
 **/
 
 #include "libnxagent.h"
+#include <netxms-version.h>
 #include <nxstat.h>
 
 #define DEBUG_TAG _T("crypto.crl")

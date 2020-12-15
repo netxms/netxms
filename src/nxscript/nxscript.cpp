@@ -25,6 +25,7 @@
 
 #include "nxscript.h"
 #include <netxms_getopt.h>
+#include <netxms-version.h>
 
 NETXMS_EXECUTABLE_HEADER(nxscript)
 

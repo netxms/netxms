@@ -83,8 +83,6 @@
 #include <limits.h>
 #include <assert.h>
 
-#include <netxms-version.h>
-
 #if HAVE_WIDEC_H
 #include <widec.h>
 #endif /* HAVE_WIDEC */

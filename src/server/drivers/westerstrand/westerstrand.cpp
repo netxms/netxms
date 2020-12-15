@@ -21,6 +21,7 @@
 **/
 
 #include "westerstrand.h"
+#include <netxms-version.h>
 
 #define DEBUG_TAG _T("ndd.westerstrand")
 

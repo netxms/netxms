@@ -19,11 +19,12 @@
  **/
 
 #include "oracle_subagent.h"
+#include <netxms-version.h>
 
 /**
  * Driver handle
  */
-DB_DRIVER g_oracleDriver = NULL;
+DB_DRIVER g_oracleDriver = nullptr;
 
 /**
  * Polling queries
