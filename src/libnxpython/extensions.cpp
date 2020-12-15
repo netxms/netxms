@@ -21,6 +21,7 @@
 **/
 
 #include "libnxpython.h"
+#include <netxms-version.h>
 
 /**
  * Method netxms.trace()

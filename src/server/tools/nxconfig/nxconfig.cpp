@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "nxconfig.h"
+#include <netxms-version.h>
 
 #include "MainFrm.h"
 #include "ConfigWizard.h"

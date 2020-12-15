@@ -1,4 +1,5 @@
 #include "nxuseragent.h"
+#include <netxms-version.h>
 
 #define APP_WINDOW_CLASS_NAME   _T("NetXMS_UA_AppWindow")
 

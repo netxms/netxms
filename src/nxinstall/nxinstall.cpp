@@ -23,6 +23,7 @@
 
 #include "nxinstall.h"
 #include <netxms_getopt.h>
+#include <netxms-version.h>
 
 NETXMS_EXECUTABLE_HEADER(nxinstall)
 
