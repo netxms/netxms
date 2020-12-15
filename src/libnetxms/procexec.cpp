@@ -323,11 +323,16 @@ bool ProcessExecutor::execute()
                   p--;
                }
             }
-            argv[index] = NULL;
+            argv[index] = nullptr;
 
             execv(argv[0], argv);
          }
-         exit(127);
+
+         // exec failed
+         char errorMessage[1024];
+         snprintf(errorMessage, 1024, "Cannot start process (%s)\n", strerror(errno));
+         write(1, errorMessage, strlen(errorMessage));
+         _exit(127);
          break;
       default: // parent
          close(m_pipe[1]);
