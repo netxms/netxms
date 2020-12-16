@@ -14168,7 +14168,6 @@ static void ApplyPolicyChanges(const shared_ptr<NetObj>& templateObject)
 void ClientSession::onPolicyEditorClose(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-
    shared_ptr<NetObj> templateObject = FindObjectById(request->getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
    if(templateObject != nullptr)
    {
@@ -14176,8 +14175,9 @@ void ClientSession::onPolicyEditorClose(NXCPMessage *request)
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
+   {
       msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-
+   }
    sendMessage(&msg);
 }
 

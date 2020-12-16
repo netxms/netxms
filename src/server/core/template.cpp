@@ -648,7 +648,7 @@ uuid Template::updatePolicyFromMessage(const NXCPMessage& request)
 
    unlockProperties();
 
-   if(updated)
+   if (updated)
    {
       msg.setField(VID_TEMPLATE_ID, m_id);
       NotifyClientsOnPolicyUpdate(&msg, *this);
