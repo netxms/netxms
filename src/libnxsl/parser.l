@@ -51,6 +51,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"abort"    return T_ABORT;
 <INITIAL>"and"      return T_AND;
 <INITIAL>"array"    return T_ARRAY;
+<INITIAL>"boolean"  return T_TYPE_BOOLEAN;
 <INITIAL>"break"    return T_BREAK;
 <INITIAL>"case"     return T_CASE;
 <INITIAL>"catch"    return T_CATCH;

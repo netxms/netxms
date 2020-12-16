@@ -14,6 +14,7 @@ nxsltest_DATA = \
 	addr.nxsl \
 	arrays.nxsl \
 	base64.nxsl \
+	boolean.nxsl \
 	control.nxsl \
 	gethost.nxsl \
 	globals.nxsl \

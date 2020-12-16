@@ -1,0 +1,40 @@
+x = true;
+assert(x);
+assert(typeof(x) == "boolean");
+y = not x;
+assert(not y);
+assert(typeof(y) == "boolean");
+
+a = 11;
+b = 22;
+assert(typeof(b - a == 11) == "boolean");
+assert(typeof((b - a) && 1) == "boolean");
+assert((b - a) && 1);
+
+a = null;
+v = x && a;
+assert(typeof(v) == "boolean");
+assert(not v);
+
+a = %(1, 2, 3);
+v = x && a;
+assert(typeof(v) == "boolean");
+assert(v);
+
+v = boolean(a);
+assert(typeof(v) == "boolean");
+assert(v);
+
+assert(string(v) == "true");
+assert(string(!v) == "false");
+
+assert(int32(true) == 1);
+assert(int32(false) == 0);
+
+a = true;
+b = false;
+assert(a != b);
+assert(a == !b);
+assert(a == boolean(42));
+
+return 0;

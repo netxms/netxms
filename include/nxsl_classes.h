@@ -46,11 +46,12 @@ enum NXSL_DataTypes
    NXSL_DT_ITERATOR   = 3,
    NXSL_DT_HASHMAP    = 4,
    NXSL_DT_STRING     = 5,
-   NXSL_DT_REAL       = 6,
-   NXSL_DT_INT32      = 7,
-   NXSL_DT_INT64      = 8,
-   NXSL_DT_UINT32     = 9,
-   NXSL_DT_UINT64     = 10
+   NXSL_DT_BOOLEAN    = 6,
+   NXSL_DT_REAL       = 7,
+   NXSL_DT_INT32      = 8,
+   NXSL_DT_INT64      = 9,
+   NXSL_DT_UINT32     = 10,
+   NXSL_DT_UINT64     = 11
 };
 
 /**
@@ -510,6 +511,7 @@ protected:
    {
       switch(m_dataType)
       {
+         case NXSL_DT_BOOLEAN: return (T)(m_value.int32 ? 1 : 0);
          case NXSL_DT_INT32: return (T)m_value.int32;
          case NXSL_DT_UINT32: return (T)m_value.uint32;
          case NXSL_DT_INT64: return (T)m_value.int64;
@@ -552,6 +554,7 @@ protected:
    ~NXSL_Value();
 
 public:
+   void set(bool value);
    void set(int32_t value);
 
 	void setName(const char *name) { MemFree(m_name); m_name = MemCopyStringA(name); }
@@ -567,11 +570,11 @@ public:
    bool isHashMap() const { return (m_dataType == NXSL_DT_HASHMAP); }
    bool isIterator() const { return (m_dataType == NXSL_DT_ITERATOR); }
    bool isString() const { return (m_dataType >= NXSL_DT_STRING); }
-   bool isNumeric() const { return (m_dataType > NXSL_DT_STRING); }
+   bool isNumeric() const { return (m_dataType >= NXSL_DT_REAL); }
    bool isReal() const { return (m_dataType == NXSL_DT_REAL); }
    bool isInteger() const { return (m_dataType > NXSL_DT_REAL); }
    bool isUnsigned() const { return (m_dataType >= NXSL_DT_UINT32); }
-   bool isBoolean() const { return isNumeric() || isNull() || isArray() || isObject(); }
+   bool isBoolean() const { return (m_dataType == NXSL_DT_BOOLEAN) || isNumeric() || isNull() || isArray() || isObject(); }
    bool isFalse() const;
    bool isTrue() const;
 
