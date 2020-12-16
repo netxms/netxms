@@ -115,6 +115,7 @@ int main(int argc, char *argv[])
    RunTestScript(_T("addr.nxsl"));
    RunTestScript(_T("arrays.nxsl"));
    RunTestScript(_T("base64.nxsl"));
+   RunTestScript(_T("boolean.nxsl"));
    RunTestScript(_T("control.nxsl"));
    RunTestScript(_T("gethost.nxsl"));
    RunTestScript(_T("globals.nxsl"));

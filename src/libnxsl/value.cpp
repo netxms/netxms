@@ -252,7 +252,7 @@ NXSL_Value::NXSL_Value(double dValue)
  */
 NXSL_Value::NXSL_Value(bool bValue)
 {
-   m_dataType = NXSL_DT_INT32;
+   m_dataType = NXSL_DT_BOOLEAN;
    m_stringPtr = nullptr;
    m_length = 0;
 #ifdef UNICODE
@@ -427,6 +427,16 @@ void NXSL_Value::set(int32_t value)
 }
 
 /**
+ * Set value to "boolean"
+ */
+void NXSL_Value::set(bool value)
+{
+   dispose();
+   m_dataType = NXSL_DT_BOOLEAN;
+   m_value.int32 = value ? 1 : 0;
+}
+
+/**
  * Update numeric value after string change
  */
 void NXSL_Value::updateNumber()
@@ -489,49 +499,52 @@ void NXSL_Value::updateString()
    }
    else
    {
-      TCHAR szBuffer[64];
+      TCHAR buffer[64];
       switch(m_dataType)
       {
+         case NXSL_DT_BOOLEAN:
+            _tcscpy(buffer, m_value.int32 ? _T("true") : _T("false"));
+            break;
          case NXSL_DT_INT32:
-            _sntprintf(szBuffer, 64, _T("%d"), m_value.int32);
+            _sntprintf(buffer, 64, _T("%d"), m_value.int32);
             break;
          case NXSL_DT_UINT32:
-            _sntprintf(szBuffer, 64, _T("%u"), m_value.uint32);
+            _sntprintf(buffer, 64, _T("%u"), m_value.uint32);
             break;
          case NXSL_DT_INT64:
-            _sntprintf(szBuffer, 64, INT64_FMT, m_value.int64);
+            _sntprintf(buffer, 64, INT64_FMT, m_value.int64);
             break;
          case NXSL_DT_UINT64:
-            _sntprintf(szBuffer, 64, UINT64_FMT, m_value.uint64);
+            _sntprintf(buffer, 64, UINT64_FMT, m_value.uint64);
             break;
          case NXSL_DT_REAL:
-            _sntprintf(szBuffer, 64, _T("%f"), m_value.real);
+            _sntprintf(buffer, 64, _T("%f"), m_value.real);
             break;
          case NXSL_DT_NULL:
-            _tcscpy(szBuffer, _T(""));
+            _tcscpy(buffer, _T(""));
             break;
          case NXSL_DT_OBJECT:
-            _sntprintf(szBuffer, 64, _T("%s@%p"), m_value.object->getClass()->getName(), m_value.object);
+            _sntprintf(buffer, 64, _T("%s@%p"), m_value.object->getClass()->getName(), m_value.object);
             break;
          case NXSL_DT_HASHMAP:
-            _sntprintf(szBuffer, 64, _T("[M@%p]"), m_value.hashMapHandle->getObject());
+            _sntprintf(buffer, 64, _T("[M@%p]"), m_value.hashMapHandle->getObject());
             break;
          case NXSL_DT_ITERATOR:
-            _sntprintf(szBuffer, 64, _T("[I@%p]"), m_value.iterator);
+            _sntprintf(buffer, 64, _T("[I@%p]"), m_value.iterator);
             break;
          default:
-            szBuffer[0] = 0;
+            buffer[0] = 0;
             break;
       }
-      m_length = (UINT32)_tcslen(szBuffer);
+      m_length = static_cast<uint32_t>(_tcslen(buffer));
       if (m_length < NXSL_SHORT_STRING_LENGTH)
       {
-         _tcscpy(m_stringValue, szBuffer);
+         _tcscpy(m_stringValue, buffer);
          m_stringPtr = nullptr;
       }
       else
       {
-         m_stringPtr = _tcsdup(szBuffer);
+         m_stringPtr = MemCopyString(buffer);
       }
    }
    m_stringIsValid = TRUE;
@@ -567,6 +580,15 @@ bool NXSL_Value::convert(int targetDataType)
          m_dataType = NXSL_DT_STRING;
          return true;
 	   }
+   }
+
+   if (targetDataType == NXSL_DT_BOOLEAN)
+   {
+      bool value = isTrue();
+      dispose(true);
+      m_dataType = NXSL_DT_BOOLEAN;
+      m_value.int32 = value ? 1 : 0;
+      return true;
    }
 
    int32_t nInt32;
@@ -808,6 +830,9 @@ void NXSL_Value::negate()
    {
       switch(m_dataType)
       {
+         case NXSL_DT_BOOLEAN:
+            m_value.int32 = m_value.int32 ? 0 : 1;
+            break;
          case NXSL_DT_INT32:
             m_value.int32 = -m_value.int32;
             break;
@@ -868,6 +893,7 @@ bool NXSL_Value::isFalse() const
    bool result;
    switch(m_dataType)
    {
+      case NXSL_DT_BOOLEAN:
       case NXSL_DT_INT32:
          result = (m_value.int32 == 0);
          break;
@@ -901,6 +927,7 @@ bool NXSL_Value::isTrue() const
    bool result;
    switch(m_dataType)
    {
+      case NXSL_DT_BOOLEAN:
       case NXSL_DT_INT32:
          result = (m_value.int32 != 0);
          break;
@@ -1365,6 +1392,8 @@ bool NXSL_Value::equals(const NXSL_Value *v) const
          if (m_value.hashMapHandle->getObject()->size() == 0)
             return true;
          return false;
+      case NXSL_DT_BOOLEAN:
+         return (v->m_value.int32 && m_value.int32) || (!v->m_value.int32 && !m_value.int32);
       case NXSL_DT_INT32:
          return v->m_value.int32 == m_value.int32;
       case NXSL_DT_INT64:
@@ -1417,6 +1446,7 @@ void NXSL_Value::serialize(ByteStream &s) const
             // TODO: hashmap serialize
          }
          break;
+      case NXSL_DT_BOOLEAN:
       case NXSL_DT_INT32:
          s.write(m_value.int32);
          break;
@@ -1473,6 +1503,7 @@ NXSL_Value *NXSL_Value::load(NXSL_ValueManager *vm, ByteStream &s)
             }
          }
          break;
+      case NXSL_DT_BOOLEAN:
       case NXSL_DT_INT32:
          v->m_value.int32 = s.readInt32();
          break;

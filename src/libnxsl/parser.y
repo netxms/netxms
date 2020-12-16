@@ -67,6 +67,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_SWITCH
 %token T_TRUE
 %token T_TRY
+%token T_TYPE_BOOLEAN
 %token T_TYPE_INT32
 %token T_TYPE_INT64
 %token T_TYPE_REAL
@@ -723,7 +724,7 @@ Operand:
 TypeCast:
 	BuiltinType '(' Expression ')'
 {
-	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_CAST, (INT16)$1));
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_CAST, static_cast<int16_t>($1)));
 }
 ;
 
@@ -775,7 +776,11 @@ HashMapElement:
 }
 
 BuiltinType:
-	T_TYPE_INT32
+	T_TYPE_BOOLEAN
+{
+	$$ = NXSL_DT_BOOLEAN;
+}
+|	T_TYPE_INT32
 {
 	$$ = NXSL_DT_INT32;
 }
@@ -1303,11 +1308,11 @@ Constant:
 }
 |	T_TRUE
 {
-	$$ = pScript->createValue((LONG)1);
+	$$ = pScript->createValue(true);
 }
 |	T_FALSE
 {
-	$$ = pScript->createValue((LONG)0);
+	$$ = pScript->createValue(false);
 }
 |	T_NULL
 {
