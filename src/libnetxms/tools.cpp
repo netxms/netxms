@@ -2499,7 +2499,11 @@ SaveFileStatus LIBNETXMS_EXPORTABLE SaveFile(const TCHAR *fileName, const void *
 
    if (status == SaveFileStatus::SUCCESS)
    {
+#ifdef _WIN32
+      if (!MoveFileEx(tempFileName, fileName, MOVEFILE_REPLACE_EXISTING))
+#else
       if (_trename(tempFileName, fileName) != 0)
+#endif
       {
          status = SaveFileStatus::RENAME_ERROR;
          _tremove(tempFileName);
