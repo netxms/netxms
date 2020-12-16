@@ -108,6 +108,7 @@ ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec)
    m_shellExec = shellExec;
    m_sendOutput = false;
    m_outputThread = INVALID_THREAD_HANDLE;
+   m_completed = ConditionCreate(true);
    m_started = false;
    m_running = false;
 }
@@ -123,6 +124,7 @@ ProcessExecutor::~ProcessExecutor()
 #ifdef _WIN32
    CloseHandle(m_phandle);
 #endif
+   ConditionDestroy(m_completed);
 }
 
 #ifdef _WIN32
@@ -179,6 +181,7 @@ bool ProcessExecutor::execute()
       ThreadJoin(m_outputThread);
       m_outputThread = INVALID_THREAD_HANDLE;
    }
+   ConditionReset(m_completed);
 
    bool success = false;
 
@@ -186,7 +189,7 @@ bool ProcessExecutor::execute()
 
 	SECURITY_ATTRIBUTES sa;
 	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-	sa.lpSecurityDescriptor = NULL;
+	sa.lpSecurityDescriptor = nullptr;
 	sa.bInheritHandle = TRUE;
 
    HANDLE stdoutRead, stdoutWrite;
@@ -371,6 +374,7 @@ THREAD_RESULT THREAD_CALL ProcessExecutor::waitForProcess(void *arg)
 {
    waitpid(static_cast<ProcessExecutor*>(arg)->m_pid, nullptr, 0);
    static_cast<ProcessExecutor*>(arg)->m_running = false;
+   ConditionSet(static_cast<ProcessExecutor*>(arg)->m_completed);
    return THREAD_OK;
 }
 
@@ -486,12 +490,11 @@ do_wait:
 #endif
 
    static_cast<ProcessExecutor*>(arg)->endOfOutput();
-
 #ifndef _WIN32
    waitpid(static_cast<ProcessExecutor*>(arg)->m_pid, nullptr, 0);
-   static_cast<ProcessExecutor*>(arg)->m_running = false;
 #endif
-
+   static_cast<ProcessExecutor*>(arg)->m_running = false;
+   ConditionSet(static_cast<ProcessExecutor*>(arg)->m_completed);
    return THREAD_OK;
 }
 
@@ -552,14 +555,11 @@ bool ProcessExecutor::waitForCompletion(uint32_t timeout)
       return true;
 
 #ifdef _WIN32
+   if (m_sendOutput)
+      return ConditionWait(m_completed, timeout);
    return WaitForSingleObject(m_phandle, timeout) == WAIT_OBJECT_0;
 #else
-   while(m_running && (timeout > 0))
-   {
-      ThreadSleepMs(50);
-      timeout -= std::min(timeout, (uint32_t)50);
-   }
-   return !m_running;
+   return ConditionWait(m_completed, timeout);
 #endif
 }
 

@@ -177,6 +177,7 @@ static void ExecutorCleanup(ExternalActionExecutor *executor)
       executor->stop();
    }
    delete executor;
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("ExecutorCleanup call completed"));
 }
 
 /**
@@ -298,6 +299,7 @@ void ExternalActionExecutor::onOutput(const char *text)
  */
 void ExternalActionExecutor::endOfOutput()
 {
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ExternalActionExecutor: end of output for command %s"), m_cmd);
    NXCPMessage msg(m_session->getProtocolVersion());
    msg.setId(m_requestId);
    msg.setCode(CMD_COMMAND_OUTPUT);
