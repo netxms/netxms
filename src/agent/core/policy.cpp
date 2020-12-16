@@ -43,7 +43,6 @@ static void UpdateEnvironment(CommSession *session)
       delete entrySet;
    }
 
-   //reload config
    if (LoadConfig(oldConfig->getAlias(_T("agent")), false))
    {
       StringList newEnvList;
@@ -189,7 +188,7 @@ static const String GetPolicyType(const uuid& guid)
          DB_RESULT hResult = DBSelectPrepared(hStmt);
          if (hResult != nullptr)
          {
-            if(DBGetNumRows(hResult) > 0)
+            if (DBGetNumRows(hResult) > 0)
             {
                type.appendPreallocated(DBGetField(hResult, 0, 0, nullptr, 0));
             }
@@ -216,9 +215,13 @@ static uint32_t DeployPolicy(AbstractCommSession *session, const uuid& guid, NXC
    const BYTE *data = msg->getBinaryFieldPtr(VID_CONFIG_FILE_DATA, &size);
    if (data != nullptr)
    {
-      uint32_t fcrc = 0;
-      if (CalculateFileCRC32(policyFileName, &fcrc))
-         *sameFileContent = (CalculateCRC32(data, size, 0) == fcrc);
+      BYTE hashA[MD5_DIGEST_SIZE];
+      if (CalculateFileMD5Hash(policyFileName, hashA))
+      {
+         BYTE hashB[MD5_DIGEST_SIZE];
+         CalculateMD5Hash(data, size, hashB);
+         *sameFileContent = (memcmp(hashA, hashB, MD5_DIGEST_SIZE) == 0);
+      }
 
       if (*sameFileContent)
       {
