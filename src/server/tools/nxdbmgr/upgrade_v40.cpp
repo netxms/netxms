@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.30 to 40.31
+ */
+static bool H_UpgradeFromV30()
+{
+   if (GetSchemaLevelForMajorVersion(37) < 2)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='DataCollection.InstanceRetentionTime',default_value='7',need_server_restart=0 WHERE var_name='InstanceRetentionTime'")));
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET var_value='7' WHERE var_name='DataCollection.InstanceRetentionTime' AND var_value='0'")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(37, 2));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(31));
+   return true;
+}
+
+/**
  * Upgrade from 40.29 to 40.30
  */
 static bool H_UpgradeFromV29()
@@ -884,6 +899,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 30, 40, 31, H_UpgradeFromV30 },
    { 29, 40, 30, H_UpgradeFromV29 },
    { 28, 40, 29, H_UpgradeFromV28 },
    { 27, 40, 28, H_UpgradeFromV27 },

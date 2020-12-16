@@ -163,7 +163,7 @@ time_t g_serverStartTime = 0;
 uint32_t g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
 uint32_t g_thresholdRepeatInterval = 0;	// Disabled by default
 uint32_t g_requiredPolls = 1;
-int32_t g_instanceRetentionTime = 0; // Default instance retention time
+int32_t g_instanceRetentionTime = 7; // Default instance retention time (in days)
 uint32_t g_snmpTrapStormCountThreshold = 0;
 uint32_t g_snmpTrapStormDurationThreshold = 15;
 DB_DRIVER g_dbDriver = nullptr;
@@ -503,7 +503,7 @@ static void LoadGlobalConfig()
    g_thresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
    g_requiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
    g_offlineDataRelevanceTime = ConfigReadInt(_T("OfflineDataRelevanceTime"), 86400);
-   g_instanceRetentionTime = ConfigReadInt(_T("InstanceRetentionTime"), 0); // Config values are in days
+   g_instanceRetentionTime = ConfigReadInt(_T("DataCollection.InstanceRetentionTime"), 7); // Config values are in days
    g_snmpTrapStormCountThreshold = ConfigReadInt(_T("SNMP.Traps.RateLimit.Threshold"), 0);
    g_snmpTrapStormDurationThreshold = ConfigReadInt(_T("SNMP.Traps.RateLimit.Duration"), 15);
 

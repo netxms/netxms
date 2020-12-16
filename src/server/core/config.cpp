@@ -502,6 +502,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
       else
          g_flags &= ~AF_CHECK_TRUSTED_NODES;
    }
+   else if (!_tcscmp(name, _T("DataCollection.InstanceRetentionTime")))
+   {
+      g_instanceRetentionTime = _tcstol(value, nullptr, 0);
+   }
    else if (!_tcscmp(name, _T("DBWriter.HouseKeeperInterlock")))
    {
       switch(_tcstol(value, nullptr, 0))
@@ -552,7 +556,7 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("ICMP.PollingInterval")))
    {
       TCHAR *eptr;
-      UINT32 i = _tcstoul(value, &eptr, 0);
+      uint32_t i = _tcstoul(value, &eptr, 0);
       g_icmpPollingInterval = (i > 0) && (*eptr == 0) ? i : 60;
    }
    else if (!_tcscmp(name, _T("NetworkDiscovery.ActiveDiscovery.Interval")) ||
