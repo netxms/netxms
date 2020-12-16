@@ -2639,20 +2639,20 @@ cleanup:
 /**
  * Match regular expression
  */
-NXSL_Value *NXSL_VM::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase)
+NXSL_Value *NXSL_VM::matchRegexp(NXSL_Value *value, NXSL_Value *regexp, bool ignoreCase)
 {
    NXSL_Value *result;
 
-   const TCHAR *re = pRegexp->getValueAsCString();
+   const TCHAR *re = regexp->getValueAsCString();
    const char *eptr;
    int eoffset;
-	PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(re), bIgnoreCase ? PCRE_COMMON_FLAGS | PCRE_CASELESS : PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
+	PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(re), ignoreCase ? PCRE_COMMON_FLAGS | PCRE_CASELESS : PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
    if (preg != nullptr)
    {
       int pmatch[MAX_REGEXP_CGROUPS * 3];
       UINT32 valueLen;
-		const TCHAR *value = pValue->getValueAsString(&valueLen);
-		int cgcount = _pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(value), valueLen, 0, 0, pmatch, MAX_REGEXP_CGROUPS * 3);
+		const TCHAR *v = value->getValueAsString(&valueLen);
+		int cgcount = _pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(v), valueLen, 0, 0, pmatch, MAX_REGEXP_CGROUPS * 3);
       if (cgcount >= 0)
       {
          if (cgcount == 0)
@@ -2671,10 +2671,10 @@ NXSL_Value *NXSL_VM::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL b
             {
                int end = pmatch[i * 2 + 1];
                if (var == nullptr)
-                  m_localVariables->create(varName, createValue(pValue->getValueAsCString() + start, end - start));
+                  m_localVariables->create(varName, createValue(value->getValueAsCString() + start, end - start));
                else
-                  var->setValue(createValue(pValue->getValueAsCString() + start, end - start));
-               cgroups->append(createValue(pValue->getValueAsCString() + start, end - start));
+                  var->setValue(createValue(value->getValueAsCString() + start, end - start));
+               cgroups->append(createValue(value->getValueAsCString() + start, end - start));
             }
             else
             {
@@ -2688,7 +2688,7 @@ NXSL_Value *NXSL_VM::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL b
       }
       else
       {
-         result = createValue();
+         result = createValue(false);  // No match
       }
       _pcre_free_t(preg);
    }
