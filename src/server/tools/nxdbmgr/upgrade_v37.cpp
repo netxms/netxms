@@ -24,6 +24,17 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 37.1 to 37.2
+ */
+static bool H_UpgradeFromV1()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='DataCollection.InstanceRetentionTime',default_value='7',need_server_restart=0 WHERE var_name='InstanceRetentionTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_value='7' WHERE var_name='DataCollection.InstanceRetentionTime' AND var_value='0'")));
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 37.0 to 37.1
  */
 static bool H_UpgradeFromV0()
@@ -64,6 +75,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 1,  37, 2,  H_UpgradeFromV1  },
    { 0,  37, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }
 };
