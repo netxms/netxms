@@ -215,8 +215,10 @@
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
+					<scheduleType>1</scheduleType>
+					<interval>%{PollingInterval.FileSystemSpace:600}</interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<instance></instance>
 					<systemTag></systemTag>
 					<delta>0</delta>
@@ -229,7 +231,7 @@
 						<threshold id="1">
 							<function>0</function>
 							<condition>0</condition>
-							<value>1</value>
+							<value>%{Threshold.FileSystemNoFreeSpace:3}</value>
 							<activationEvent>FS_NO_FREE_SPACE</activationEvent>
 							<deactivationEvent>SYS_THRESHOLD_REARMED</deactivationEvent>
 							<sampleCount>1</sampleCount>
@@ -239,7 +241,7 @@
 						<threshold id="2">
 							<function>0</function>
 							<condition>0</condition>
-							<value>20</value>
+							<value>%{Threshold.FileSystemLowFreeSpace:15}</value>
 							<activationEvent>FS_LOW_FREE_SPACE</activationEvent>
 							<deactivationEvent>SYS_THRESHOLD_REARMED</deactivationEvent>
 							<sampleCount>1</sampleCount>
@@ -258,8 +260,10 @@
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
+					<scheduleType>1</scheduleType>
+					<interval>%{PollingInterval.FileSystemSpace:600}</interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<instance></instance>
 					<systemTag></systemTag>
 					<delta>0</delta>
