@@ -71,14 +71,14 @@ public class ObjectOverview extends ObjectTab
 				objectChanged(getObject());
 			}
 		});
-		
+
 		viewArea = new Composite(scroller, SWT.NONE);
       viewArea.setBackground(ThemeEngine.getBackgroundColor("Dashboard"));
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		viewArea.setLayout(layout);
 		scroller.setContent(viewArea);
-		
+
 		leftColumn = new Composite(viewArea, SWT.NONE);
 		leftColumn.setLayout(createColumnLayout());
 		leftColumn.setBackground(viewArea.getBackground());
@@ -87,7 +87,7 @@ public class ObjectOverview extends ObjectTab
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		leftColumn.setLayoutData(gd);
-		
+
 		rightColumn = new Composite(viewArea, SWT.NONE);
 		rightColumn.setLayout(createColumnLayout());
 		rightColumn.setBackground(viewArea.getBackground());
