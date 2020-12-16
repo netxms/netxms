@@ -35,7 +35,7 @@ int NXSL_Iterator::createIterator(NXSL_VM *vm, NXSL_Stack *stack)
 	int rc = 0;
 
 	NXSL_Value *value = (NXSL_Value *)stack->pop();
-	if (value->isArray() || value->isNull())
+	if (value->isArray() || value->isNull() || ((value->getDataType() == NXSL_DT_BOOLEAN) && value->isFalse()))
 	{
 		NXSL_Array *array = value->isArray() ? value->getValueAsArray() : new NXSL_Array(vm);
 		array->incHandleCount();
