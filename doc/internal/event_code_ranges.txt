@@ -3,6 +3,7 @@
 4000 - 4999	Predefined threshold violation events
 5000 - 5999     ATM monitoring (generic events)
 5500 - 5999     XFS subagent
+8000 - 8999     Raden/IST
 80000 - 80999   VEDAS
 88000 - 88999   FIS/IST
 89900 - 89999   AVS (ATM Video Surveillance) subsystem

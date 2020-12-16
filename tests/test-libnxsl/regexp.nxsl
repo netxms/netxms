@@ -21,6 +21,7 @@ assert(s imatch regexp);
 
 s = "hello, world!";
 assert(!(s imatch regexp));
+assert(typeof(s ~= regexp) == "boolean");
 
 regexp = "(Msg:(([0-9]+)(A|B)|(S[0-9]+)) (.*))";
 s = "MSG:42B message text";

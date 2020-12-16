@@ -1210,10 +1210,10 @@ protected:
    bool setHashMapElement(NXSL_Value *hashMap, NXSL_Value *key, NXSL_Value *value);
    void getHashMapAttribute(NXSL_HashMap *m, const char *attribute, bool safe);
    void error(int errorCode, int sourceLine = -1);
-   NXSL_Value *matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase);
+   NXSL_Value *matchRegexp(NXSL_Value *value, NXSL_Value *regexp, bool ignoreCase);
 
-   NXSL_Variable *findVariable(const NXSL_Identifier& name, NXSL_VariableSystem **vs = NULL);
-   NXSL_Variable *findOrCreateVariable(const NXSL_Identifier& name, NXSL_VariableSystem **vs = NULL);
+   NXSL_Variable *findVariable(const NXSL_Identifier& name, NXSL_VariableSystem **vs = nullptr);
+   NXSL_Variable *findOrCreateVariable(const NXSL_Identifier& name, NXSL_VariableSystem **vs = nullptr);
 	NXSL_Variable *createVariable(const NXSL_Identifier& name);
 	bool isDefinedConstant(const NXSL_Identifier& name);
 
@@ -1221,7 +1221,7 @@ protected:
    uint32_t getFunctionAddress(const NXSL_Identifier& name);
 
 public:
-   NXSL_VM(NXSL_Environment *env = NULL, NXSL_Storage *storage = NULL);
+   NXSL_VM(NXSL_Environment *env = nullptr, NXSL_Storage *storage = nullptr);
    virtual ~NXSL_VM();
 
    void loadModule(NXSL_Program *module, const NXSL_ModuleImport *importInfo);
