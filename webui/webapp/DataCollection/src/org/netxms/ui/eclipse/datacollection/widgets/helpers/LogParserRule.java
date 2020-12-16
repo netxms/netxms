@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
-import org.netxms.ui.eclipse.datacollection.widgets.LogParserEditor;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
