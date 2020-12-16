@@ -419,11 +419,11 @@ uint32_t GetPolicyInventory(CommSession *session, NXCPMessage *msg)
                msg->setField(varId++, DBGetField(hResult, row, 1, type, 32));
                TCHAR *text = DBGetField(hResult, row, 2, nullptr, 0);
                msg->setField(varId++, CHECK_NULL_EX(text));
-               free(text);
+               MemFree(text);
                msg->setField(varId++, DBGetFieldInt64(hResult, row, 3));
                msg->setField(varId++, DBGetFieldULong(hResult, row, 4));
                TCHAR hashAsText[33];
-               if(DBGetField(hResult, row, 5, hashAsText, 33) != nullptr)
+               if (DBGetField(hResult, row, 5, hashAsText, 33) != nullptr)
                {
                   BYTE hash[MD5_DIGEST_SIZE];
                   StrToBin(hashAsText, hash, MD5_DIGEST_SIZE);
@@ -433,7 +433,7 @@ uint32_t GetPolicyInventory(CommSession *session, NXCPMessage *msg)
          }
          else
          {
-            msg->setField(VID_NUM_ELEMENTS, (UINT32)0);
+            msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(0));
          }
          DBFreeResult(hResult);
          msg->setField(VID_NEW_POLICY_TYPE, true);
