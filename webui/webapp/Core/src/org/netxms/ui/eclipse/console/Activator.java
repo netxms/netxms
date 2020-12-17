@@ -115,6 +115,14 @@ public class Activator extends AbstractUIPlugin
 	 */
 	public static void log(int status, String msg, Throwable t)
 	{
-		getDefault().getLog().log(new Status(status, PLUGIN_ID, Status.OK, msg, t));
+	   // Sometimes logger code may throw null pointer exception due to bug in RAP platform code.
+	   try
+	   {
+	      getDefault().getLog().log(new Status(status, PLUGIN_ID, Status.OK, msg, t));
+	   }
+	   catch(Exception e)
+	   {
+	      e.printStackTrace();
+	   }
 	}
 }
