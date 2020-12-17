@@ -652,7 +652,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
 
    writeLockDciAccess();	// write lock
 
-   nxlog_debug(5, _T("Applying DCO \"%s\" to target \"%s\""), dcObject->getName().cstr(), m_name);
+   nxlog_debug_tag(_T("obj.dc"), 5, _T("Applying data collection object \"%s\" to target \"%s\""), dcObject->getName().cstr(), m_name);
 
    // Check if that template item exists
 	int i;
@@ -674,6 +674,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
       // Update existing item unless it is disabled
       DCObject *curr = m_dcObjects->get(i);
       curr->updateFromTemplate(dcObject);
+      NotifyClientsOnDCIUpdate(*this, curr);
       if (curr->getInstanceDiscoveryMethod() != IDM_NONE)
       {
          updateInstanceDiscoveryItems(curr);
@@ -683,11 +684,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
    unlockDciAccess();
 
 	if (bResult)
-	{
-		lockProperties();
 		setModified(MODIFY_DATA_COLLECTION, false);
-		unlockProperties();
-	}
    return bResult;
 }
 

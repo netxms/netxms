@@ -534,6 +534,7 @@ void DataCollectionOwner::updateInstanceDiscoveryItems(DCObject *dci)
       if ((object->getTemplateId() == m_id) && (object->getTemplateItemId() == dci->getId()))
       {
          object->updateFromTemplate(dci);
+         NotifyClientsOnDCIUpdate(*this, object);
       }
 	}
 }
