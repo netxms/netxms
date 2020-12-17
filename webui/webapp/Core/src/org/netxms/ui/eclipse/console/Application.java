@@ -38,15 +38,17 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class Application implements IApplication
 {
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
 	 */
 	public Object start(IApplicationContext context) throws Exception
 	{
+      Activator.logInfo("Application startup");
+
 		String lang = getParameter("lang"); //$NON-NLS-1$
 		if (lang != null)
 			RWT.setLocale(new Locale(lang));
-		
+
 		final AppPropertiesLoader properties = new AppPropertiesLoader();
 		int timeout = properties.getPropertyAsInteger("sessionTimeout", 600);
 
