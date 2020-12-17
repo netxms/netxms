@@ -247,7 +247,6 @@ public abstract class DciValue
     */
    public int getMultipliersSelection()
    {
-      System.out.println(flags);
       return (int)((flags & DataCollectionItem.DCF_MULTIPLIERS_MASK) >> 16);
    }
 
