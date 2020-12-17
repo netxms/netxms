@@ -66,7 +66,7 @@ Var
   logFile: String;
   fileSTore: String;
   configIncludeDir: String;
-  forceCreateConfig: Boolean;
+  forceCreateConfig, reinstallService: Boolean;
 
 #include "..\..\install\windows\firewall.iss"
 
@@ -86,23 +86,37 @@ Var
   strExecName : String;
   iResult, iRetryCount : Integer;
 Begin
+  Log('Stopping agent service');
+  FileCopy(ExpandConstant('{tmp}\nxreload.exe'), ExpandConstant('{app}\bin\nxreload.exe'), False);
+
   strExecName := ExpandConstant('{app}\bin\nxagentd.exe');
   If FileExists(strExecName) Then
   Begin
-    Log('Stopping agent service');
-    FileCopy(ExpandConstant('{tmp}\nxreload.exe'), ExpandConstant('{app}\bin\nxreload.exe'), False);
     ExecAndLog(strExecName, '-k', ExpandConstant('{app}\bin'));
     ExecAndLog(strExecName, '-S', ExpandConstant('{app}\bin'));
-    ExecAndLog('taskkill.exe', '/IM nxsagent.exe /F', ExpandConstant('{app}\bin'));
-    ExecAndLog('taskkill.exe', '/IM nxuseragent.exe /F', ExpandConstant('{app}\bin'));
+  End Else Begin
+    ExecAndLog(ExpandConstant('{sys}\sc.exe'), 'stop NetXMSAgentdW32', ExpandConstant('{tmp}'));
+  End;
 
-    iRetryCount := 12;
-    iResult := ExecAndLog('taskkill.exe', '/IM nxagentd.exe /F', ExpandConstant('{app}\bin'));
-    While (iResult = 1) And (iRetryCount > 0) Do
+  ExecAndLog('taskkill.exe', '/IM nxsagent.exe /F', ExpandConstant('{tmp}'));
+  ExecAndLog('taskkill.exe', '/IM nxuseragent.exe /F', ExpandConstant('{tmp}'));
+
+  iRetryCount := 12;
+  iResult := ExecAndLog('taskkill.exe', '/IM nxagentd.exe /F', ExpandConstant('{tmp}'));
+  While (iResult = 1) And (iRetryCount > 0) Do
+  Begin
+    Sleep(5000);
+    iResult := ExecAndLog('taskkill.exe', '/IM nxagentd.exe /F', ExpandConstant('{tmp}'));
+    iRetryCount := iRetryCount - 1;
+  End;
+
+  If reinstallService Then
+  Begin
+    If FileExists(strExecName) Then
     Begin
-      Sleep(5000);
-      iResult := ExecAndLog('taskkill.exe', '/IM nxagentd.exe /F', ExpandConstant('{app}\bin'));
-      iRetryCount := iRetryCount - 1;
+      ExecAndLog(strExecName, '-R', ExpandConstant('{app}\bin'));
+    End Else Begin
+      ExecAndLog(ExpandConstant('{sys}\sc.exe'), 'delete NetXMSAgentdW32', ExpandConstant('{tmp}'));
     End;
   End;
 End;
@@ -191,6 +205,7 @@ Begin
   fileStore := '';
   configIncludeDir := '';
   forceCreateConfig := FALSE;
+  reinstallService := FALSE;
   ignorePrevData := FALSE;
 
   // Check for /IGNOREPREVIOUSDATA option
@@ -291,6 +306,10 @@ Begin
 
     If param = '/FORCECREATECONFIG' Then Begin
       forceCreateConfig := TRUE;
+    End;
+
+    If param = '/REINSTALLSERVICE' Then Begin
+      reinstallService := TRUE;
     End;
 
     If Pos('/LOGFILE=', param) = 1 Then Begin
