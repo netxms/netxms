@@ -138,15 +138,15 @@ public class DataCollectionEditor extends ViewPart
 	private boolean hideModificationWarnings;
 	private DataCollectionConfigurationChangeListener changeListener;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
 		
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 		AbstractObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
 		settings = Activator.getDefault().getDialogSettings();
 		object = ((obj != null) && ((obj instanceof DataCollectionTarget) || (obj instanceof Template))) ? obj : null;

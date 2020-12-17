@@ -3516,7 +3516,7 @@ void ClientSession::setPassword(NXCPMessage *request)
 		else
 			oldPassword[0] = 0;
 
-      UINT32 rcc = SetUserPassword(userId, newPassword, oldPassword, userId == m_dwUserId);
+      uint32_t rcc = SetUserPassword(userId, newPassword, oldPassword, userId == m_dwUserId);
       msg.setField(VID_RCC, rcc);
 
       if (rcc == RCC_SUCCESS)

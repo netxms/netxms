@@ -76,14 +76,14 @@ static THREAD s_applyTemplateThread = INVALID_THREAD_HANDLE;
 static void ApplyTemplateThread()
 {
    ThreadSetName("ApplyTemplates");
-	DbgPrintf(1, _T("Apply template thread started"));
+   nxlog_debug_tag(_T("obj.dc"), 1, _T("Apply template thread started"));
    while(!IsShutdownInProgress())
    {
       TemplateUpdateTask *task = g_templateUpdateQueue.getOrBlock();
       if (task == INVALID_POINTER_VALUE)
          break;
 
-		DbgPrintf(5, _T("ApplyTemplateThread: template=%d(%s) updateType=%d target=%d removeDci=%s"),
+      nxlog_debug_tag(_T("obj.dc"), 5, _T("ApplyTemplateThread: template=%d(%s) updateType=%d target=%d removeDci=%s"),
 		         task->source->getId(), task->source->getName(), task->updateType, task->targetId, task->removeDCI ? _T("true") : _T("false"));
       BOOL bSuccess = FALSE;
       shared_ptr<NetObj> dcTarget = FindObjectById(task->targetId);
@@ -109,18 +109,18 @@ static void ApplyTemplateThread()
 
       if (bSuccess)
       {
-			DbgPrintf(8, _T("ApplyTemplateThread: success"));
+         nxlog_debug_tag(_T("obj.dc"), 8, _T("ApplyTemplateThread: success"));
          delete task;
       }
       else
       {
-			DbgPrintf(8, _T("ApplyTemplateThread: failed"));
+         nxlog_debug_tag(_T("obj.dc"), 8, _T("ApplyTemplateThread: failed"));
          g_templateUpdateQueue.put(task);    // Requeue
          ThreadSleepMs(500);
       }
    }
 
-	DbgPrintf(1, _T("Apply template thread stopped"));
+   nxlog_debug_tag(_T("obj.dc"), 1, _T("Apply template thread stopped"));
 }
 
 /**

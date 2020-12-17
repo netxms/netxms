@@ -102,14 +102,17 @@ public class DataCollectionConfiguration
             if (n.getCode() == SessionNotification.DCI_UPDATE)
             {
                final DataCollectionObject dco = (DataCollectionObject)n.getObject();
-               updateItemFromNotification(dco);
+               items.put(dco.getId(),
+                     (dco instanceof DataCollectionItem)
+                           ? new DataCollectionItem(DataCollectionConfiguration.this, (DataCollectionItem)dco)
+                           : new DataCollectionTable(DataCollectionConfiguration.this, (DataCollectionTable)dco));
                if (DataCollectionConfiguration.this.changeListener != null)
                   DataCollectionConfiguration.this.changeListener.onUpdate(dco);
             }
             else if (n.getCode() == SessionNotification.DCI_DELETE)
             {
                final long id = (Long)n.getObject();
-               removeItemFromNotification(id);
+               items.remove(id);
                if (DataCollectionConfiguration.this.changeListener != null)
                   DataCollectionConfiguration.this.changeListener.onDelete(id);
             }
@@ -204,32 +207,6 @@ public class DataCollectionConfiguration
    public DataCollectionObject findItem(long id)
    {
       return items.get(id);
-   }
-
-   /**
-    * Remove data collection item from the list by ID from notification
-    *
-    * @param id DCI ID
-    */
-   private void removeItemFromNotification(long id)
-   {
-      items.remove(id);
-   }
-
-   /**
-    * TODO
-    *
-    * @param dco
-    */
-   private void updateItemFromNotification(DataCollectionObject dco)
-   {
-      DataCollectionObject newDco = null;
-      if (dco instanceof DataCollectionItem)
-         newDco = new DataCollectionItem(this, (DataCollectionItem)dco);
-      else if (dco instanceof DataCollectionTable)
-         newDco = new DataCollectionTable(this, (DataCollectionTable)dco);
-
-      items.put(newDco.getId(), newDco);
    }
 
    /**

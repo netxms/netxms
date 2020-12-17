@@ -138,15 +138,15 @@ public class DataCollectionEditor extends ViewPart
 	private boolean hideModificationWarnings;
 	private DataCollectionConfigurationChangeListener changeListener;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
 		
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 		AbstractObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
 		settings = Activator.getDefault().getDialogSettings();
 		object = ((obj != null) && ((obj instanceof DataCollectionTarget) || (obj instanceof Template))) ? obj : null;
@@ -936,18 +936,18 @@ public class DataCollectionEditor extends ViewPart
 		dlg.showFilterToolTip(false);
 		if (dlg.open() != Window.OK)
 			return;
-		
+
 		AbstractObject[] objects = dlg.getSelectedObjects(Template.class);
 		if (objects.length == 0)
 			return;
 		final Template template = (Template)objects[0];
-		
+
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		Iterator<?> it = selection.iterator();
 		final long[] dciList = new long[selection.size()];
 		for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
 			dciList[i] = ((DataCollectionObject)it.next()).getId();
-		
+
 		new ConsoleJob(Messages.get().DataCollectionEditor_ConvertJob_TitlePrefix + object.getObjectName() + Messages.get().DataCollectionEditor_ConvertJob_TitleSuffix, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
