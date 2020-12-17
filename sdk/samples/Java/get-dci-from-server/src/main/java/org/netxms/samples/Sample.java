@@ -1,13 +1,13 @@
 package org.netxms.samples;
 
-import org.netxms.api.client.NXCException;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 
 import java.io.IOException;
 
 public class Sample {
-    private static final long NODE_ID = 11L;
+    private static final long NODE_ID = 160L;
     private static final String SERVER = "127.0.0.1";
     private static final String LOGIN = "admin";
     private static final String PASSWORD = "netxms";
@@ -22,5 +22,4 @@ public class Sample {
         }
         session.disconnect();
     }
-
 }

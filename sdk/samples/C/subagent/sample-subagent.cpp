@@ -23,131 +23,122 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 
-
-//
-// Hanlder functions
-//
-
-static LONG H_Version(const char *parameter, const char *arguments, char *value)
+/**
+ * Parameter hanlder functions
+ */
+static LONG H_Version(const TCHAR *parameter, const TCHAR *arguments, TCHAR *value, AbstractCommSession *session)
 {
 	ret_uint(value, 0x01000000);
 	return SYSINFO_RC_SUCCESS;
 }
 
-static LONG H_Echo(const char *parameter, const char *arguments, char *value)
+static LONG H_Echo(const TCHAR *parameter, const TCHAR *arguments, TCHAR *value, AbstractCommSession *session)
 {
-	char tmp[256];
+	TCHAR tmp[256];
 	AgentGetParameterArg(parameter, 1, tmp, 255);
 	ret_string(value, tmp);
 	return SYSINFO_RC_SUCCESS;
 }
 
-static LONG H_Random(const char *parameter, const char *arguments, char *value)
+static LONG H_Random(const TCHAR *parameter, const TCHAR *arguments, TCHAR *value, AbstractCommSession *session)
 {
-	srand((unsigned int)time(NULL));
 	ret_int(value, rand() % 21 - 10);
 	return SYSINFO_RC_SUCCESS;
 }
 
-static LONG H_Enum(const char *parameter, const char *arguments, StringList *value)
+/**
+ * List handler
+ */
+static LONG H_List(const TCHAR *parameter, const TCHAR *arguments, StringList *value, AbstractCommSession *session)
 {
-	int i;
-	char tmp[256];
-
-	for(i = 0; i < 10; i++)
+	TCHAR tmp[256];
+	for(int i = 0; i < 10; i++)
 	{
-		sprintf(tmp, "Value %d", i);
+		_sntprintf(tmp, 256, _T("Value %d"), i);
 		value->add(tmp);
 	}
 	return SYSINFO_RC_SUCCESS;
 }
 
-//
-// Action handler functions
-//
-static LONG H_ActionSample(const TCHAR *action, StringList *argumentsList, const TCHAR *data)
+/**
+ * Action handler functions
+ */
+static LONG H_ActionSample(const TCHAR *action, const StringList *argumentsList, const TCHAR *data, AbstractCommSession *session)
 {
+   nxlog_write(NXLOG_INFO, _T("Sample action executed"));
 	return ERR_SUCCESS;
 }
 
-//
-// Called by master agent to initialize subagent
-//
-
-static BOOL SubAgentInit(Config *config)
+/**
+ * Called by master agent to initialize subagent
+ */
+static bool SubAgentInit(Config *config)
 {
 	/* you can perform any initialization tasks here */
-	AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Sample subagent initialized"));
-	return TRUE;
+   srand((unsigned int)time(NULL));
+   nxlog_write(NXLOG_INFO, _T("Sample subagent initialized"));
+	return true;
 }
 
-
-//
-// Called by master agent at unload
-//
-
+/**
+ * Called by master agent at unload
+ */
 static void SubAgentShutdown()
 {
 	/* you can perform necessary shutdown tasks here */
-	AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Sample subagent unloaded"));
+	nxlog_write(NXLOG_INFO, _T("Sample subagent unloaded"));
 }
 
-
-//
-// Subagent information
-//
-
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ "Sample.Version",				H_Version,				NULL,
-		DCI_DT_STRING, "Sample subagent version" },
-	{ "Sample.Echo(*)",				H_Echo,					NULL,
-		DCI_DT_STRING, "Echoes string back" },
-	{ "Sample.Random",					H_Random,				NULL,
-		DCI_DT_INT,    "Generates random number in range -10 .. 10" }
+	{ _T("Sample.Version"),				H_Version,				NULL,
+		DCI_DT_STRING, _T("Sample subagent version") },
+	{ _T("Sample.Echo(*)"),				H_Echo,					NULL,
+		DCI_DT_STRING, _T("Echoes string back") },
+	{ _T("Sample.Random"),					H_Random,				NULL,
+		DCI_DT_INT,    _T("Generates random number in range -10 .. 10") }
 };
-static NETXMS_SUBAGENT_LIST m_enums[] =
+static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-	{ "Sample.List", H_Enum, NULL }
+	{ _T("Sample.List"), H_List, NULL }
 };
 static NETXMS_SUBAGENT_ACTION m_actions[] =
 {
-	{ "Sample.Action",					H_ActionSample, NULL, "Sample action" },
+	{ _T("Sample.Action"), H_ActionSample, NULL, _T("Sample action") },
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("SAMPLE"), _T("1.0.0"),
-	SubAgentInit, SubAgentShutdown, NULL,
+	SubAgentInit, SubAgentShutdown, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
-	m_enums,
+	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+	m_lists,
 	0, NULL,	// tables
 	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
 	m_actions,
 	0, NULL	// push parameters
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(SAMPLE)
 {
 	*ppInfo = &m_info;
 	return TRUE;
 }
 
-
-//
-// DLL entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
