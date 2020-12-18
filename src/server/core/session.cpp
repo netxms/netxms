@@ -788,6 +788,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_COPY_DCI:
          copyDCI(request);
          break;
+      case CMD_BULK_DCI_UPDATE:
+         bulkDCIUpdate(request);
+         break;
       case CMD_APPLY_TEMPLATE:
          applyTemplate(request);
          break;
@@ -4116,6 +4119,43 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
       }
    }
    else  // No object(s) with given ID
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+
+void ClientSession::bulkDCIUpdate(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   // Get node id and check object class and access rights
+   shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
+      {
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         {
+            if (static_cast<DataCollectionOwner&>(*object).bulkUpdate(request))
+               msg.setField(VID_RCC, RCC_SUCCESS);
+            else
+               msg.setField(VID_RCC, RCC_INVALID_DCI_ID);
+         }
+         else  // User doesn't have MODIFY rights on object
+         {
+            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else     // Object is not a node
+      {
+         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else  // No object with given ID
    {
       msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }

@@ -462,10 +462,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_MODIFY_GEO_AREA"),
       _T("CMD_DELETE_GEO_AREA"),
       _T("CMD_GEO_AREA_UPDATE"),
-      _T("CMD_FIND_PROXY_FOR_NODE")
+      _T("CMD_FIND_PROXY_FOR_NODE"),
+      _T("CMD_BULK_DCI_UPDATE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_FIND_PROXY_FOR_NODE))
+   if ((code >= CMD_LOGIN) && (code <= CMD_BULK_DCI_UPDATE))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

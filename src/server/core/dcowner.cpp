@@ -558,6 +558,70 @@ bool DataCollectionOwner::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, 
 }
 
 /**
+ * Data for group of DCIs
+ */
+bool DataCollectionOwner::bulkUpdate(NXCPMessage *request)
+{
+   bool success = true;
+   UINT32 dwNumItems, *pdwItemList;
+   dwNumItems = request->getFieldAsUInt32(VID_NUM_ITEMS);
+   pdwItemList = MemAllocArray<UINT32>(dwNumItems);
+   request->getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+
+   uint32_t pollingScheduleType = -1;
+   uint32_t retentionType = -1;
+
+   if (request->isFieldExist(VID_POLLING_SCHEDULE_TYPE))
+      pollingScheduleType = request->getFieldAsUInt32(VID_POLLING_SCHEDULE_TYPE);
+   if (request->isFieldExist(VID_RETENTION_TYPE))
+      retentionType = request->getFieldAsUInt32(VID_RETENTION_TYPE);
+
+   TCHAR *pollingIntervalSrc = request->getFieldAsString(VID_POLLING_INTERVAL);
+   TCHAR *retentionTimeSrc = request->getFieldAsString(VID_RETENTION_TIME);
+
+   bool areChanges = (pollingIntervalSrc != nullptr) || (retentionTimeSrc != nullptr) || (pollingScheduleType != -1) ||
+         (retentionType != -1);
+
+   if (areChanges)
+   {
+      readLockDciAccess();
+      for(UINT32 i = 0; i < dwNumItems; i++)
+      {
+         int j;
+         for(j = 0; j < m_dcObjects->size(); j++)
+         {
+            if (m_dcObjects->get(j)->getId() == pdwItemList[i])
+            {
+               if (pollingIntervalSrc != nullptr)
+                  m_dcObjects->get(j)->setPollingInterval(pollingIntervalSrc);
+               if (retentionTimeSrc != nullptr)
+                  m_dcObjects->get(j)->setRetention(retentionTimeSrc);
+               if (pollingScheduleType != -1)
+                  m_dcObjects->get(j)->setPollingIntervalType((BYTE)pollingScheduleType);
+               if (retentionType != -1)
+                  m_dcObjects->get(j)->setRetentionType((BYTE)retentionType);
+               NotifyClientsOnDCIUpdate(*this, m_dcObjects->get(j));
+               break;
+            }
+         }
+         if (j == m_dcObjects->size())
+            success = false;     // Invalid DCI ID provided
+      }
+      unlockDciAccess();
+   }
+
+   if (success)
+   {
+      lockProperties();
+      setModified(MODIFY_DATA_COLLECTION);
+      unlockProperties();
+   }
+
+   MemFree(pdwItemList);
+   return success;
+}
+
+/**
  * Unlock data collection items list
  */
 void DataCollectionOwner::applyDCIChanges(bool forcedChange)

@@ -61,6 +61,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.datacollection.BulkUpdateElement;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionConfigurationChangeListener;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -77,6 +78,8 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
+import org.netxms.ui.eclipse.datacollection.dialogs.BulkUpdateDialog;
+import org.netxms.ui.eclipse.datacollection.dialogs.helpers.BulkUpdateElementUI;
 import org.netxms.ui.eclipse.datacollection.views.helpers.DciComparator;
 import org.netxms.ui.eclipse.datacollection.views.helpers.DciFilter;
 import org.netxms.ui.eclipse.datacollection.views.helpers.DciLabelProvider;
@@ -135,6 +138,7 @@ public class DataCollectionEditor extends ViewPart
 	private RefreshAction actionRefresh;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
+	private Action actionBulkUpdate;
 	private boolean hideModificationWarnings;
 	private DataCollectionConfigurationChangeListener changeListener;
 
@@ -244,6 +248,7 @@ public class DataCollectionEditor extends ViewPart
 					actionMove.setEnabled(selection.size() > 0);
 					actionConvert.setEnabled(selection.size() > 0);
 					actionDuplicate.setEnabled(selection.size() > 0);
+               actionBulkUpdate.setEnabled(selection.size() > 0);
 					
 					Iterator<?> it = selection.iterator();
 					boolean canActivate = false;
@@ -400,6 +405,7 @@ public class DataCollectionEditor extends ViewPart
 		manager.add(actionCreateItem);
 		manager.add(actionCreateTable);
 		manager.add(actionEdit);
+		manager.add(actionBulkUpdate);
 		manager.add(actionDelete);
 		manager.add(actionCopy);
 		manager.add(actionMove);
@@ -442,6 +448,7 @@ public class DataCollectionEditor extends ViewPart
 		manager.add(actionCreateItem);
 		manager.add(actionCreateTable);
 		manager.add(actionEdit);
+		manager.add(actionBulkUpdate);
 		manager.add(actionDelete);
 		manager.add(actionCopy);
 		manager.add(actionMove);
@@ -499,6 +506,14 @@ public class DataCollectionEditor extends ViewPart
 		actionEdit.setText(Messages.get().DataCollectionEditor_Edit);
 		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png")); //$NON-NLS-1$
 		actionEdit.setEnabled(false);
+		
+		actionBulkUpdate = new Action("Bulk update") {
+         @Override
+         public void run()
+         {
+            openBulkUpdateDialog();
+         }
+		};
 
 		actionDelete = new Action(Messages.get().DataCollectionEditor_Delete, Activator.getImageDescriptor("icons/delete.png")) { //$NON-NLS-1$
 			@Override
@@ -926,8 +941,59 @@ public class DataCollectionEditor extends ViewPart
 			}
 		}.start();
 	}
-
+	
 	/**
+	 * Open bulk update dialog
+	 */
+	private void openBulkUpdateDialog()
+	{      
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      Iterator<?> it = selection.iterator();
+      final long[] dciList = new long[selection.size()];
+      boolean isCustomRetention = true;
+      boolean isCustomInterval = true;      
+      for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
+      {
+         DataCollectionObject dco = (DataCollectionObject)it.next();
+         dciList[i] = dco.getId();
+         if (dco.getRetentionType() != DataCollectionObject.RETENTION_CUSTOM)
+            isCustomRetention = false;
+         if (dco.getPollingScheduleType() != DataCollectionObject.POLLING_SCHEDULE_CUSTOM)
+            isCustomInterval = false;
+      }      
+
+      BulkUpdateDialog dlg = new BulkUpdateDialog(getSite().getShell(), isCustomRetention, isCustomInterval); //$NON-NLS-1$
+      if (dlg.open() != Window.OK)
+         return;      
+      
+      final List<BulkUpdateElementUI> elements = dlg.getBulkUpdateElements();
+      
+      boolean changed = false;
+      for (BulkUpdateElementUI e : elements)
+      {
+         if (e.isModified())
+            changed = true;
+      }
+      
+      if (!changed)
+         return;
+
+      new ConsoleJob("Bulk DCI update", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            dciConfig.bulkUpdateDCIs(dciList, elements.toArray(new BulkUpdateElement[elements.size()]));
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Failed to bulk update DCIs";
+         }
+      }.start();
+	}
+
+   /**
 	 * Convert selected item(s) to template items
 	 */
 	private void convertToTemplate()

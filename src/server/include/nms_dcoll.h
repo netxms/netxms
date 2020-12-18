@@ -427,6 +427,10 @@ public:
    time_t getInstanceGracePeriodStart() const { return m_instanceGracePeriodStart; }
    void setInstanceGracePeriodStart(time_t t) { m_instanceGracePeriodStart = t; }
    void setRelatedObject(uint32_t relatedObject) { m_relatedObject = relatedObject; }
+   void setPollingIntervalType(BYTE pollingScheduleType);
+   void setPollingInterval(TCHAR *schedule);
+   void setRetentionType(BYTE retentionType);
+   void setRetention(TCHAR *schedule);
 
 	static int m_defaultRetentionTime;
 	static int m_defaultPollingInterval;
