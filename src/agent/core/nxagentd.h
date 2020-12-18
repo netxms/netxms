@@ -759,7 +759,6 @@ bool AddAction(const TCHAR *name, bool isExternal, const TCHAR *arg, LONG (*hand
          const TCHAR *subAgent, const TCHAR *description);
 bool AddActionFromConfig(const TCHAR *config);
 UINT32 ExecuteCommand(TCHAR *pszCommand, const StringList *pArgs, pid_t *pid);
-UINT32 ExecuteShellCommand(TCHAR *pszCommand, const StringList *pArgs);
 
 void StartExternalParameterProviders();
 void StopExternalParameterProviders();
