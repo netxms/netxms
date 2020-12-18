@@ -291,7 +291,8 @@ uint32_t DeployPolicy(CommSession *session, NXCPMessage *request)
       if ((size != 0) && (rcc == ERR_SUCCESS))
       {
          CheckEnvSectionAndReload(session, content, size);
-         g_restartPending = !sameFileContent;
+         if (!sameFileContent)
+            g_restartPending = true;
       }
    }
    else if (!_tcscmp(type, _T("LogParserConfig")))
