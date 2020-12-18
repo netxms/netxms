@@ -19,7 +19,6 @@ package org.netxms.client.datacollection;
 
 import java.io.IOException;
 import java.util.HashMap;
-
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCException;
@@ -404,6 +403,28 @@ public class DataCollectionConfiguration
       session.sendMessage(msg);
       session.waitForRCC(msg.getMessageId());
       items.remove(itemId);
+   }
+   
+   /**
+    * 
+    * @param items
+    * @param bulkUpdateElements
+    * @throws IOException
+    * @throws NXCException
+    */
+   public void bulkUpdateDCIs(long[] items, BulkUpdateElement[] bulkUpdateElements) throws IOException, NXCException
+   {
+      NXCPMessage msg = session.newMessage(NXCPCodes.CMD_BULK_DCI_UPDATE);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      
+      for (int i = 0; i < bulkUpdateElements.length; i++)
+         bulkUpdateElements[i].setField(msg);
+      
+      msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, items.length);
+      msg.setField(NXCPCodes.VID_ITEM_LIST, items);
+      session.sendMessage(msg);
+      session.waitForRCC(msg.getMessageId());
+      
    }
 
    /**

@@ -567,6 +567,7 @@ private:
    void closeNodeDCIList(NXCPMessage *pRequest);
    void modifyNodeDCI(NXCPMessage *pRequest);
    void copyDCI(NXCPMessage *pRequest);
+   void bulkDCIUpdate(NXCPMessage *request);
    void applyTemplate(NXCPMessage *pRequest);
    void getCollectedData(NXCPMessage *pRequest);
    void getTableCollectedData(NXCPMessage *pRequest);

@@ -555,6 +555,57 @@ void DCObject::setStatus(int status, bool generateEvent)
    m_status = (BYTE)status;
 }
 
+/**
+ * Update polling interval type
+ */
+void DCObject::setPollingIntervalType(BYTE pollingScheduleType)
+{
+   lock();
+   m_pollingScheduleType = pollingScheduleType;
+   if (m_pollingScheduleType != DC_POLLING_SCHEDULE_CUSTOM)
+      MemFreeAndNull(m_pollingIntervalSrc);
+   unlock();
+}
+
+
+/**
+ * Update polling interval
+ */
+void DCObject::setPollingInterval(TCHAR *schedule)
+{
+   lock();
+   MemFree(m_pollingIntervalSrc);
+   m_pollingIntervalSrc = schedule;
+   updateTimeIntervalsInternal();
+   unlock();
+
+}
+
+/**
+ * Update retention type
+ */
+void DCObject::setRetentionType(BYTE retentionType)
+{
+   lock();
+   m_retentionType = retentionType;
+   if (m_retentionType != DC_RETENTION_CUSTOM)
+      MemFreeAndNull(m_retentionTimeSrc);
+   unlock();
+}
+
+/**
+ * Update retention time
+ */
+void DCObject::setRetention(TCHAR *schedule)
+{
+   lock();
+   MemFree(m_retentionTimeSrc);
+   m_retentionTimeSrc = schedule;
+   updateTimeIntervalsInternal();
+   unlock();
+
+}
+
 String DCObject::expandSchedule(const TCHAR *schedule)
 {
    StringBuffer expandedSchedule;
@@ -804,7 +855,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
    else
       MemFreeAndNull(m_pollingIntervalSrc);
    m_retentionType = static_cast<BYTE>(msg.getFieldAsUInt16(VID_RETENTION_TYPE));
-   if (m_retentionType == DC_POLLING_SCHEDULE_CUSTOM)
+   if (m_retentionType == DC_RETENTION_CUSTOM)
       msg.getFieldAsString(VID_RETENTION_TIME, &m_retentionTimeSrc);
    else
       MemFreeAndNull(m_retentionTimeSrc);

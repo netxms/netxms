@@ -661,6 +661,7 @@ typedef struct
 #define CMD_DELETE_GEO_AREA               0x01A1
 #define CMD_GEO_AREA_UPDATE               0x01A2
 #define CMD_FIND_PROXY_FOR_NODE           0x01A3
+#define CMD_BULK_DCI_UPDATE               0x01A4
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

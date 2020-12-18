@@ -434,6 +434,7 @@ public class NXCPCodes
    public static final int CMD_DELETE_GEO_AREA = 0x01A1;
    public static final int CMD_GEO_AREA_UPDATE = 0x01A2;
    public static final int CMD_FIND_PROXY_FOR_NODE = 0x01A3;
+   public static final int CMD_BULK_DCI_UPDATE = 0x01A4;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
