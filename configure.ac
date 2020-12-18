@@ -2041,7 +2041,7 @@ else
 #include <pthread.h>
 	])
 	AC_CHECK_FUNCS([pthread_mutex_timedlock pthread_cond_reltimedwait_np])
-	AC_CHECK_FUNCS([pthread_setname_np pthread_threadid_np pthread_getthreadid_np])
+	AC_CHECK_FUNCS([pthread_setname_np pthread_threadid_np pthread_getthreadid_np pthread_getlwpid_np])
 
 	# Check if pthread_setname_np accepts two arguments
 	if test "$ac_cv_func_pthread_setname_np" = "yes"; then
