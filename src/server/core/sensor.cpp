@@ -238,14 +238,6 @@ bool Sensor::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 bool Sensor::saveToDatabase(DB_HANDLE hdb)
 {
    bool success = super::saveToDatabase(hdb);
-
-   lockProperties();
-
-   if (success)
-      success = saveCommonProperties(hdb);
-
-   if (success)
-
    if (success && (m_modified & MODIFY_SENSOR_PROPERTIES))
    {
       DB_STATEMENT hStmt;
@@ -256,6 +248,7 @@ bool Sensor::saveToDatabase(DB_HANDLE hdb)
          hStmt = DBPrepare(hdb, _T("UPDATE sensors SET mac_address=?,device_class=?,vendor=?,communication_protocol=?,xml_config=?,serial_number=?,device_address=?,meta_type=?,description=?,last_connection_time=?,frame_count=?,signal_strenght=?,signal_noise=?,frequency=?,proxy_node=? WHERE id=?"));
       if (hStmt != nullptr)
       {
+         lockProperties();
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_macAddress);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_deviceClass);
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
@@ -278,30 +271,13 @@ bool Sensor::saveToDatabase(DB_HANDLE hdb)
          success = DBExecute(hStmt);
 
          DBFreeStatement(hStmt);
+         unlockProperties();
       }
       else
       {
          success = false;
       }
 	}
-
-   // Save data collection items
-   if (success && (m_modified & MODIFY_DATA_COLLECTION))
-   {
-		readLockDciAccess();
-      for(int i = 0; (i < m_dcObjects->size()) && success; i++)
-         success = m_dcObjects->get(i)->saveToDatabase(hdb);
-		unlockDciAccess();
-      if (success)
-         success = saveDCIListForCleanup(hdb);
-   }
-
-   unlockProperties();
-
-   // Save access list
-   if (success)
-      saveACLToDB(hdb);
-
    return success;
 }
 

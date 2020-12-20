@@ -108,7 +108,7 @@ void Action::saveToDatabase() const
             _T("is_disabled"), _T("rcpt_addr"), _T("email_subject"), _T("action_data"),
             _T("channel_name"), nullptr };
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("actions"), _T("action_id"), id, columns);
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);

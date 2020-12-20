@@ -127,16 +127,14 @@ bool VPNConnector::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 bool VPNConnector::saveToDatabase(DB_HANDLE hdb)
 {
-   // Lock object's access
-   lockProperties();
-
-   bool success = saveCommonProperties(hdb);
-
+   bool success = super::saveToDatabase(hdb);
    if (success && (m_modified & MODIFY_OTHER))
    {
       // Determine owning node's ID
       shared_ptr<Node> pNode = getParentNode();
       UINT32 dwNodeId = (pNode != nullptr) ? pNode->getId() : 0;
+
+      lockProperties();
 
       // Form and execute INSERT or UPDATE query
       TCHAR szQuery[1024];
@@ -170,14 +168,9 @@ bool VPNConnector::saveToDatabase(DB_HANDLE hdb)
                     (int)m_id, addr->toString(buffer), addr->getMaskBits());
          success = DBQuery(hdb, szQuery);
       }
+
+      unlockProperties();
    }
-
-   // Save access list
-   if (success)
-      success = saveACLToDB(hdb);
-
-   unlockProperties();
-
    return success;
 }
 

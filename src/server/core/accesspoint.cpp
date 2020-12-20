@@ -132,11 +132,6 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
    bool success = super::saveToDatabase(hdb);
 
    // Lock object's access
-   lockProperties();
-
-   if (success)
-      success = saveCommonProperties(hdb);
-
    if (success && (m_modified & MODIFY_OTHER))
    {
       DB_STATEMENT hStmt;
@@ -146,6 +141,7 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
          hStmt = DBPrepare(hdb, _T("INSERT INTO access_points (mac_address,vendor,model,serial_number,node_id,ap_state,ap_index,id) VALUES (?,?,?,?,?,?,?,?)"));
       if (hStmt != nullptr)
       {
+         lockProperties();
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_macAddr);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_model, DB_BIND_STATIC);
@@ -154,32 +150,15 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_apState);
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_index);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
-
          success = DBExecute(hStmt);
-
          DBFreeStatement(hStmt);
+         unlockProperties();
       }
       else
       {
          success = false;
       }
    }
-
-   // Save data collection items
-   if (success && (m_modified & MODIFY_DATA_COLLECTION))
-   {
-		readLockDciAccess();
-      for(int i = 0; (i < m_dcObjects->size()) && success; i++)
-         success = m_dcObjects->get(i)->saveToDatabase(hdb);
-		unlockDciAccess();
-      if (success)
-         success = saveDCIListForCleanup(hdb);
-   }
-
-   // Save access list
-   if (success)
-      success = saveACLToDB(hdb);
-   unlockProperties();
 
    return success;
 }

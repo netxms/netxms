@@ -107,61 +107,58 @@ bool Dashboard::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 bool Dashboard::saveToDatabase(DB_HANDLE hdb)
 {
-	lockProperties();
-
-	// Check for object's existence in database
-   DB_STATEMENT hStmt;
-	if (IsDatabaseRecordExist(hdb, _T("dashboards"), _T("id"), m_id))
+   bool success = super::saveToDatabase(hdb);
+   if (success && (m_modified & MODIFY_OTHER))
    {
-      hStmt = DBPrepare(hdb, _T("UPDATE dashboards SET num_columns=?,options=? WHERE id=?"));
+      DB_STATEMENT hStmt;
+      if (IsDatabaseRecordExist(hdb, _T("dashboards"), _T("id"), m_id))
+         hStmt = DBPrepare(hdb, _T("UPDATE dashboards SET num_columns=?,options=? WHERE id=?"));
+      else
+         hStmt = DBPrepare(hdb, _T("INSERT INTO dashboards (num_columns,options,id) VALUES (?,?,?)"));
+      if (hStmt != nullptr)
+      {
+         lockProperties();
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_numColumns);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_options);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+         unlockProperties();
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+
+      if (success)
+      {
+         success = executeQueryOnObject(hdb, _T("DELETE FROM dashboard_elements WHERE dashboard_id=?"));
+         lockProperties();
+         if (success && !m_elements->isEmpty())
+         {
+            hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_elements (dashboard_id,element_id,element_type,element_data,layout_data) VALUES (?,?,?,?,?)"));
+            if (hStmt != nullptr)
+            {
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+               for(int i = 0; success && (i < m_elements->size()); i++)
+               {
+                  DashboardElement *element = m_elements->get(i);
+                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i);
+                  DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, element->m_type);
+                  DBBind(hStmt, 4, DB_SQLTYPE_TEXT, element->m_data, DB_BIND_STATIC);
+                  DBBind(hStmt, 5, DB_SQLTYPE_TEXT, element->m_layout, DB_BIND_STATIC);
+                  success = DBExecute(hStmt);
+               }
+            }
+            else
+            {
+               success = false;
+            }
+         }
+         unlockProperties();
+      }
    }
-   else
-   {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO dashboards (num_columns,options,id) VALUES (?,?,?)"));
-   }
-   if (hStmt == NULL)
-      goto fail;
-
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_numColumns);
-   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_options);
-   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
-   if (!DBExecute(hStmt))
-		goto fail;
-   DBFreeStatement(hStmt);
-
-   // Save elements
-   hStmt = DBPrepare(hdb, _T("DELETE FROM dashboard_elements WHERE dashboard_id=?"));
-   if (hStmt == NULL)
-		goto fail;
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-   if (!DBExecute(hStmt))
-		goto fail;
-   DBFreeStatement(hStmt);
-
-   hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_elements (dashboard_id,element_id,element_type,element_data,layout_data) VALUES (?,?,?,?,?)"));
-   if (hStmt == NULL)
-		goto fail;
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-   for(int i = 0; i < m_elements->size(); i++)
-   {
-		DashboardElement *element = m_elements->get(i);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)i);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)element->m_type);
-      DBBind(hStmt, 4, DB_SQLTYPE_TEXT, element->m_data, DB_BIND_STATIC);
-      DBBind(hStmt, 5, DB_SQLTYPE_TEXT, element->m_layout, DB_BIND_STATIC);
-      if (!DBExecute(hStmt))
-			goto fail;
-   }
-
-   DBFreeStatement(hStmt);
-	unlockProperties();
-	return super::saveToDatabase(hdb);
-
-fail:
-   if (hStmt != NULL)
-      DBFreeStatement(hStmt);
-	unlockProperties();
-	return false;
+   return success;
 }
 
 /**

@@ -76,9 +76,7 @@ NetworkService::~NetworkService()
  */
 bool NetworkService::saveToDatabase(DB_HANDLE hdb)
 {
-   lockProperties();
-
-   bool success = saveCommonProperties(hdb);
+   bool success = super::saveToDatabase(hdb);
 
    if (success && (m_modified & MODIFY_OTHER))
    {
@@ -100,11 +98,11 @@ bool NetworkService::saveToDatabase(DB_HANDLE hdb)
       }
       if (hStmt != nullptr)
       {
-         TCHAR szIpAddr[64];
+         lockProperties();
 
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_hostNode.lock()->getId());
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_serviceType);
-         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(szIpAddr), DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_ipAddress);
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_proto);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_port);
          DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_request, DB_BIND_STATIC);
@@ -116,6 +114,8 @@ bool NetworkService::saveToDatabase(DB_HANDLE hdb)
          success = DBExecute(hStmt);
 
          DBFreeStatement(hStmt);
+
+         unlockProperties();
       }
       else
       {
@@ -123,11 +123,6 @@ bool NetworkService::saveToDatabase(DB_HANDLE hdb)
       }
    }
 
-   // Save access list
-   if (success)
-      success = saveACLToDB(hdb);
-
-   unlockProperties();
    return success;
 }
 

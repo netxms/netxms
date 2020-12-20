@@ -201,10 +201,7 @@ bool SlmCheck::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
  */
 bool SlmCheck::saveToDatabase(DB_HANDLE hdb)
 {
-	lockProperties();
-
-	bool success = saveCommonProperties(hdb);
-
+   bool success = super::saveToDatabase(hdb);
 	if (success && (m_modified & MODIFY_OTHER))
 	{
       DB_STATEMENT hStmt;
@@ -217,8 +214,9 @@ bool SlmCheck::saveToDatabase(DB_HANDLE hdb)
          hStmt = DBPrepare(hdb, _T("INSERT INTO slm_checks (type,content,threshold_id,reason,is_template,template_id,current_ticket,id) VALUES (?,?,?,?,?,?,?,?)"));
       }
 
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
+         lockProperties();
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)m_type);
          DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_script, DB_BIND_STATIC);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_threshold ? m_threshold->getId() : 0);
@@ -227,20 +225,15 @@ bool SlmCheck::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_templateId);
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_currentTicketId);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
-
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
+         unlockProperties();
       }
       else
       {
          success = false;
       }
 	}
-
-   if (success)
-      success = saveACLToDB(hdb);
-
-	unlockProperties();
 	return success;
 }
 

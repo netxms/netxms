@@ -112,13 +112,6 @@ bool MobileDevice::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
 {
    bool success = super::saveToDatabase(hdb);
-
-   // Lock object's access
-   lockProperties();
-
-   if (success)
-      success = saveCommonProperties(hdb);
-
    if (success && (m_modified & MODIFY_OTHER))
    {
       static const TCHAR *columns[] = {
@@ -128,6 +121,8 @@ bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("mobile_devices"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
+         lockProperties();
+
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_deviceId, DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_model, DB_BIND_STATIC);
@@ -144,6 +139,8 @@ bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
 
          success = DBExecute(hStmt);
 
+         unlockProperties();
+
          DBFreeStatement(hStmt);
       }
       else
@@ -151,24 +148,6 @@ bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
          success = false;
       }
    }
-
-   unlockProperties();
-
-   // Save data collection items
-   if (success && (m_modified & MODIFY_DATA_COLLECTION))
-   {
-		readLockDciAccess();
-      for(int i = 0; (i < m_dcObjects->size()) && success; i++)
-         success = m_dcObjects->get(i)->saveToDatabase(hdb);
-      if (success)
-         success = saveDCIListForCleanup(hdb);
-		unlockDciAccess();
-   }
-
-   // Save access list
-   if (success)
-      success = saveACLToDB(hdb);
-
    return success;
 }
 

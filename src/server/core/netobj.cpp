@@ -174,11 +174,221 @@ void NetObj::linkObjects()
 }
 
 /**
+ * Callback for saving custom attribute in database
+ */
+static EnumerationCallbackResult SaveAttributeCallback(const TCHAR *key, const CustomAttribute *value, DB_STATEMENT hStmt)
+{
+   if ((value->sourceObject != 0) && !(value->flags & CAF_REDEFINED)) // do not save inherited attributes
+      return _CONTINUE;
+
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, value->value, DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, value->flags);
+   return DBExecute(hStmt) ? _CONTINUE : _STOP;
+}
+
+/**
  * Save object to database
  */
 bool NetObj::saveToDatabase(DB_HANDLE hdb)
 {
-   return false;     // Abstract objects cannot be saved to database
+   // Save custom attributes
+   bool success = true;
+   if (m_modified & MODIFY_CUSTOM_ATTRIBUTES)
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM object_custom_attributes WHERE object_id=?"));
+      if (success)
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value,flags) VALUES (?,?,?,?)"), true);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            success = (forEachCustomAttribute(SaveAttributeCallback, hStmt) == _CONTINUE);
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+   }
+
+   if (success)
+      success = saveACLToDB(hdb);
+
+   if (!success)
+      return false;
+
+   if (!(m_modified & MODIFY_COMMON_PROPERTIES))
+      return saveModuleData(hdb);
+
+   static const TCHAR *columns[] = {
+      _T("name"), _T("status"), _T("is_deleted"), _T("inherit_access_rights"), _T("last_modified"), _T("status_calc_alg"),
+      _T("status_prop_alg"), _T("status_fixed_val"), _T("status_shift"), _T("status_translation"), _T("status_single_threshold"),
+      _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
+      _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("submap_id"), _T("country"), _T("city"),
+      _T("street_address"), _T("postcode"), _T("maint_event_id"), _T("state_before_maint"), _T("state"), _T("flags"),
+      _T("creation_time"), _T("maint_initiator"), _T("alias"), _T("name_on_map"), _T("category"), nullptr
+   };
+
+   DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
+   if (hStmt == nullptr)
+      return false;
+
+   lockProperties();
+
+   TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32];
+   for(int i = 0, j = 0; i < 4; i++, j += 2)
+   {
+      _sntprintf(&szTranslation[j], 16 - j, _T("%02X"), (BYTE)m_statusTranslation[i]);
+      _sntprintf(&szThresholds[j], 16 - j, _T("%02X"), (BYTE)m_statusThresholds[i]);
+   }
+   _sntprintf(lat, 32, _T("%f"), m_geoLocation.getLatitude());
+   _sntprintf(lon, 32, _T("%f"), m_geoLocation.getLongitude());
+
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_status);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(m_isDeleted ? 1 : 0));
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)(m_inheritAccessRights ? 1 : 0));
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_statusCalcAlg);
+   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_statusPropAlg);
+   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_fixedStatus);
+   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_statusShift);
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, szTranslation, DB_BIND_STATIC);
+   DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_statusSingleThreshold);
+   DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, szThresholds, DB_BIND_STATIC);
+   DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_comments, DB_BIND_STATIC);
+   DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (LONG)(m_isSystem ? 1 : 0));
+   DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getType());
+   DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
+   DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
+   DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getAccuracy());
+   DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
+   DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_guid);
+   DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_mapImage);
+   DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_submapId);
+   DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_postalAddress->getCountry(), DB_BIND_STATIC);
+   DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress->getCity(), DB_BIND_STATIC);
+   DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress->getStreetAddress(), DB_BIND_STATIC);
+   DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress->getPostCode(), DB_BIND_STATIC);
+   DBBind(hStmt, 27, DB_SQLTYPE_BIGINT, m_maintenanceEventId);
+   DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_stateBeforeMaintenance);
+   DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_state);
+   DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_flags);
+   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)m_creationTime);
+   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_maintenanceInitiator);
+   DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
+   DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_nameOnMap, DB_BIND_STATIC);
+   DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, m_categoryId);
+   DBBind(hStmt, 36, DB_SQLTYPE_INTEGER, m_id);
+
+   success = DBExecute(hStmt);
+   DBFreeStatement(hStmt);
+
+   // Save dashboard associations
+   if (success)
+   {
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dashboard_associations WHERE object_id=?"));
+      if (success && !m_dashboards->isEmpty())
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_associations (object_id,dashboard_id) VALUES (?,?)"), true);
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_dashboards->size()) && success; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dashboards->get(i));
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+   }
+
+   // Save URL associations
+   if (success)
+   {
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_urls WHERE object_id=?"));
+      if (success && !m_urls->isEmpty())
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO object_urls (object_id,url_id,url,description) VALUES (?,?,?,?)"), true);
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_urls->size()) && success; i++)
+            {
+               const ObjectUrl *url = m_urls->get(i);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, url->getId());
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, url->getUrl(), DB_BIND_STATIC);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, url->getDescription(), DB_BIND_STATIC);
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+   }
+
+   unlockProperties();
+
+   if (success)
+      success = saveTrustedNodes(hdb);
+
+   // Save responsible users
+   if (success)
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM responsible_users WHERE object_id=?"));
+      lockResponsibleUsersList(false);
+      if (success && (m_responsibleUsers != nullptr) && !m_responsibleUsers->isEmpty())
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO responsible_users (object_id,user_id) VALUES (?,?)"), m_responsibleUsers->size() > 1);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_responsibleUsers->size()) && success; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_responsibleUsers->get(i));
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      unlockResponsibleUsersList();
+   }
+
+   return success ? saveModuleData(hdb) : false;
+}
+
+/**
+ * Callback for saving module data in database
+ */
+static EnumerationCallbackResult SaveModuleDataCallback(const TCHAR *key, const ModuleData *value, std::pair<uint32_t, DB_HANDLE> *context)
+{
+   return const_cast<ModuleData*>(value)->saveToDatabase(context->second, context->first) ? _CONTINUE : _STOP;
+}
+
+/**
+ * Save module data to database
+ */
+bool NetObj::saveModuleData(DB_HANDLE hdb)
+{
+   if (!(m_modified & MODIFY_MODULE_DATA) || (m_moduleData == nullptr))
+      return true;
+
+   std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
+   return m_moduleData->forEach(SaveModuleDataCallback, &context) == _CONTINUE;
 }
 
 /**
@@ -480,216 +690,6 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 		nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("NetObj::loadCommonProperties() failed for object %s [%ld] class=%d"), m_name, (long)m_id, getObjectClass());
 
    return success;
-}
-
-/**
- * Callback for saving custom attribute in database
- */
-static EnumerationCallbackResult SaveAttributeCallback(const TCHAR *key, const CustomAttribute *value, DB_STATEMENT hStmt)
-{
-   if ((value->sourceObject != 0) && !(value->flags & CAF_REDEFINED)) // do not save inherited attributes
-      return _CONTINUE;
-
-   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
-   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, value->value, DB_BIND_STATIC);
-   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, value->flags);
-   return DBExecute(hStmt) ? _CONTINUE : _STOP;
-}
-
-/**
- * Callback for saving module data in database
- */
-static EnumerationCallbackResult SaveModuleDataCallback(const TCHAR *key, const ModuleData *value, std::pair<uint32_t, DB_HANDLE> *context)
-{
-   return const_cast<ModuleData*>(value)->saveToDatabase(context->second, context->first) ? _CONTINUE : _STOP;
-}
-
-/**
- * Save module data to database
- */
-bool NetObj::saveModuleData(DB_HANDLE hdb)
-{
-   if (!(m_modified & MODIFY_MODULE_DATA) || (m_moduleData == nullptr))
-      return true;
-
-   std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
-   return m_moduleData->forEach(SaveModuleDataCallback, &context) == _CONTINUE;
-}
-
-/**
- * Save common object properties to database
- */
-bool NetObj::saveCommonProperties(DB_HANDLE hdb)
-{
-   // Save custom attributes
-   bool success = true;
-   if (m_modified & MODIFY_CUSTOM_ATTRIBUTES)
-   {
-      success = executeQueryOnObject(hdb, _T("DELETE FROM object_custom_attributes WHERE object_id=?"));
-      if (success && getCustomAttributeSize() != 0)
-      {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value,flags) VALUES (?,?,?,?)"), true);
-         if (hStmt != NULL)
-         {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            success = (forEachCustomAttribute(SaveAttributeCallback, hStmt) == _CONTINUE);
-            DBFreeStatement(hStmt);
-         }
-         else
-         {
-            success = false;
-         }
-      }
-      if (!success)
-         return false;
-   }
-
-   if (!(m_modified & MODIFY_COMMON_PROPERTIES))
-      return saveModuleData(hdb);
-
-   static const TCHAR *columns[] = {
-      _T("name"), _T("status"), _T("is_deleted"), _T("inherit_access_rights"), _T("last_modified"), _T("status_calc_alg"),
-      _T("status_prop_alg"), _T("status_fixed_val"), _T("status_shift"), _T("status_translation"), _T("status_single_threshold"),
-      _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
-      _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("submap_id"), _T("country"), _T("city"),
-      _T("street_address"), _T("postcode"), _T("maint_event_id"), _T("state_before_maint"), _T("state"), _T("flags"),
-      _T("creation_time"), _T("maint_initiator"), _T("alias"), _T("name_on_map"), _T("category"), nullptr
-   };
-
-	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
-	if (hStmt == nullptr)
-		return false;
-
-   TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32];
-   for(int i = 0, j = 0; i < 4; i++, j += 2)
-   {
-      _sntprintf(&szTranslation[j], 16 - j, _T("%02X"), (BYTE)m_statusTranslation[i]);
-      _sntprintf(&szThresholds[j], 16 - j, _T("%02X"), (BYTE)m_statusThresholds[i]);
-   }
-	_sntprintf(lat, 32, _T("%f"), m_geoLocation.getLatitude());
-	_sntprintf(lon, 32, _T("%f"), m_geoLocation.getLongitude());
-
-	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_status);
-   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(m_isDeleted ? 1 : 0));
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)(m_inheritAccessRights ? 1 : 0));
-	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
-	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_statusCalcAlg);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_statusPropAlg);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_fixedStatus);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_statusShift);
-	DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, szTranslation, DB_BIND_STATIC);
-	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_statusSingleThreshold);
-	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, szThresholds, DB_BIND_STATIC);
-	DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_comments, DB_BIND_STATIC);
-   DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (LONG)(m_isSystem ? 1 : 0));
-	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getType());
-	DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
-	DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
-	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getAccuracy());
-	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
-	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_guid);
-	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_mapImage);
-	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_submapId);
-	DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_postalAddress->getCountry(), DB_BIND_STATIC);
-	DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress->getCity(), DB_BIND_STATIC);
-	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress->getStreetAddress(), DB_BIND_STATIC);
-	DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress->getPostCode(), DB_BIND_STATIC);
-   DBBind(hStmt, 27, DB_SQLTYPE_BIGINT, m_maintenanceEventId);
-   DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_stateBeforeMaintenance);
-	DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_state);
-	DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_flags);
-	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)m_creationTime);
-   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_maintenanceInitiator);
-   DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
-   DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_nameOnMap, DB_BIND_STATIC);
-   DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, m_categoryId);
-	DBBind(hStmt, 36, DB_SQLTYPE_INTEGER, m_id);
-
-   success = DBExecute(hStmt);
-	DBFreeStatement(hStmt);
-
-   // Save dashboard associations
-   if (success)
-   {
-      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dashboard_associations WHERE object_id=?"));
-      if (success && !m_dashboards->isEmpty())
-      {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_associations (object_id,dashboard_id) VALUES (?,?)"), true);
-         if (hStmt != NULL)
-         {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; (i < m_dashboards->size()) && success; i++)
-            {
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dashboards->get(i));
-               success = DBExecute(hStmt);
-            }
-            DBFreeStatement(hStmt);
-         }
-         else
-         {
-            success = false;
-         }
-      }
-   }
-
-   // Save URL associations
-   if (success)
-   {
-      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_urls WHERE object_id=?"));
-      if (success && !m_urls->isEmpty())
-      {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO object_urls (object_id,url_id,url,description) VALUES (?,?,?,?)"), true);
-         if (hStmt != NULL)
-         {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; (i < m_urls->size()) && success; i++)
-            {
-               const ObjectUrl *url = m_urls->get(i);
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, url->getId());
-               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, url->getUrl(), DB_BIND_STATIC);
-               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, url->getDescription(), DB_BIND_STATIC);
-               success = DBExecute(hStmt);
-            }
-            DBFreeStatement(hStmt);
-         }
-         else
-         {
-            success = false;
-         }
-      }
-   }
-
-	if (success)
-		success = saveTrustedNodes(hdb);
-
-	// Save responsible users
-	if (success)
-	{
-	   success = executeQueryOnObject(hdb, _T("DELETE FROM responsible_users WHERE object_id=?"));
-      lockResponsibleUsersList(false);
-	   if (success && (m_responsibleUsers != NULL) && !m_responsibleUsers->isEmpty())
-	   {
-	      hStmt = DBPrepare(hdb, _T("INSERT INTO responsible_users (object_id,user_id) VALUES (?,?)"), m_responsibleUsers->size() > 1);
-	      if (hStmt != NULL)
-	      {
-	         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-	         for(int i = 0; (i < m_responsibleUsers->size()) && success; i++)
-	         {
-	            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_responsibleUsers->get(i));
-	            success = DBExecute(hStmt);
-	         }
-	         DBFreeStatement(hStmt);
-	      }
-	      else
-	      {
-	         success = false;
-	      }
-	   }
-      unlockResponsibleUsersList();
-	}
-
-   return success ? saveModuleData(hdb) : false;
 }
 
 /**
@@ -1844,6 +1844,7 @@ bool NetObj::loadTrustedNodes(DB_HANDLE hdb)
 bool NetObj::saveTrustedNodes(DB_HANDLE hdb)
 {
    bool success = executeQueryOnObject(hdb, _T("DELETE FROM trusted_nodes WHERE source_object_id=?"));
+   lockProperties();
 	if (success && (m_trustedNodes != nullptr) && (m_trustedNodes->size() > 0))
 	{
 	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO trusted_nodes (source_object_id,target_node_id) VALUES (?,?)"), m_trustedNodes->size() > 1);
@@ -1862,6 +1863,7 @@ bool NetObj::saveTrustedNodes(DB_HANDLE hdb)
 	      success = false;
 	   }
 	}
+   unlockProperties();
 	return success;
 }
 
@@ -1875,7 +1877,7 @@ bool NetObj::isTrustedNode(uint32_t id) const
       return true;
 
    lockProperties();
-   bool rc = (m_trustedNodes != NULL) ? m_trustedNodes->contains(id) : false;
+   bool rc = (m_trustedNodes != nullptr) ? m_trustedNodes->contains(id) : false;
    unlockProperties();
 	return rc;
 }

@@ -172,25 +172,23 @@ bool AbstractContainer::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 bool AbstractContainer::saveToDatabase(DB_HANDLE hdb)
 {
-   // Lock object's access
-   lockProperties();
-
-   bool success = saveCommonProperties(hdb);
+   bool success = super::saveToDatabase(hdb);
 
    if (success && (m_modified & MODIFY_OTHER))
    {
       static const TCHAR *columns[] = { _T("object_class"), NULL };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_containers"), _T("id"), m_id, columns);
-      if (hStmt == NULL)
+      if (hStmt != nullptr)
       {
-         unlockProperties();
-         return false;
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)getObjectClass());
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
       }
-
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)getObjectClass());
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-      success = DBExecute(hStmt);
-      DBFreeStatement(hStmt);
+      else
+      {
+         success = false;
+      }
    }
 
    if (success && (m_modified & MODIFY_RELATIONS))
@@ -218,11 +216,6 @@ bool AbstractContainer::saveToDatabase(DB_HANDLE hdb)
       unlockChildList();
    }
 
-   // Save access list
-   if (success)
-      success = saveACLToDB(hdb);
-
-   unlockProperties();
    return success;
 }
 

@@ -148,9 +148,8 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 bool Zone::saveToDatabase(DB_HANDLE hdb)
 {
-   lockProperties();
+   bool success = super::saveToDatabase(hdb);
 
-   bool success = saveCommonProperties(hdb);
    if (success && (m_modified & MODIFY_OTHER))
    {
       DB_STATEMENT hStmt;
@@ -178,9 +177,10 @@ bool Zone::saveToDatabase(DB_HANDLE hdb)
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM zone_proxies WHERE object_id=?"));
 
-   if (success)
+   lockProperties();
+   if (success && !m_proxyNodes->isEmpty())
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO zone_proxies (object_id,proxy_node) VALUES (?,?)"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO zone_proxies (object_id,proxy_node) VALUES (?,?)"), m_proxyNodes->size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);         
@@ -196,11 +196,8 @@ bool Zone::saveToDatabase(DB_HANDLE hdb)
          success = false;
       }
    }
-
-   if (success)
-      success = saveACLToDB(hdb);
-
    unlockProperties();
+
    return success;
 }
 

@@ -314,19 +314,10 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 bool Interface::saveToDatabase(DB_HANDLE hdb)
 {
-   lockProperties();
-
-   if (!saveCommonProperties(hdb))
-	{
-		unlockProperties();
-		return false;
-	}
-
-   // Determine owning node's ID
-   bool success;
-   if (m_modified & MODIFY_INTERFACE_PROPERTIES)
+   bool success = super::saveToDatabase(hdb);
+   if (success && (m_modified & MODIFY_INTERFACE_PROPERTIES))
    {
-      UINT32 nodeId = getParentNodeId();
+      uint32_t nodeId = getParentNodeId();
 
       static const TCHAR *columns[] = {
          _T("node_id"), _T("if_type"), _T("if_index"), _T("mac_addr"), _T("required_polls"), _T("bridge_port"),
@@ -337,112 +328,112 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("interfaces"), _T("id"), m_id, columns);
-      if (hStmt == nullptr)
+      if (hStmt != nullptr)
       {
-         unlockProperties();
-         return false;
-      }
+         lockProperties();
 
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, nodeId);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_type);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_index);
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_macAddr);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_requiredPollCount);
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_bridgePortNumber);
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_physicalLocation.chassis);
-      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_physicalLocation.module);
-      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_physicalLocation.pic);
-      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_physicalLocation.port);
-      DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_peerNodeId);
-      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_peerInterfaceId);
-      DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
-      DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_adminState));
-      DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_operState));
-      DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_dot1xPaeAuthState));
-      DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_dot1xBackendAuthState));
-      DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_peerDiscoveryProtocol));
-      DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_mtu);
-      DBBind(hStmt, 20, DB_SQLTYPE_BIGINT, m_speed);
-      DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_parentInterfaceId);
-      if (m_ifTableSuffixLen > 0)
-      {
-         TCHAR buffer[128];
-         DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, SNMPConvertOIDToText(m_ifTableSuffixLen, m_ifTableSuffix, buffer, 128), DB_BIND_TRANSIENT);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, nodeId);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_type);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_index);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_macAddr);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_requiredPollCount);
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_bridgePortNumber);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_physicalLocation.chassis);
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_physicalLocation.module);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_physicalLocation.pic);
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_physicalLocation.port);
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_peerNodeId);
+         DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_peerInterfaceId);
+         DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+         DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_adminState));
+         DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_operState));
+         DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_dot1xPaeAuthState));
+         DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_dot1xBackendAuthState));
+         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_peerDiscoveryProtocol));
+         DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_mtu);
+         DBBind(hStmt, 20, DB_SQLTYPE_BIGINT, m_speed);
+         DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_parentInterfaceId);
+         if (m_ifTableSuffixLen > 0)
+         {
+            TCHAR buffer[128];
+            DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, SNMPConvertOIDToText(m_ifTableSuffixLen, m_ifTableSuffix, buffer, 128), DB_BIND_TRANSIENT);
+         }
+         else
+         {
+            DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+         }
+         DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
+
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+
+         unlockProperties();
       }
       else
       {
-         DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+         success = false;
       }
-      DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
-
-      success = DBExecute(hStmt);
-      DBFreeStatement(hStmt);
 
       // Save VLAN list
       if (success)
       {
          success = executeQueryOnObject(hdb, _T("DELETE FROM interface_vlan_list WHERE iface_id=?"));
-      }
-
-      if (success && (m_vlans != nullptr) && !m_vlans->isEmpty())
-      {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO interface_vlan_list (iface_id,vlan_id) VALUES (?,?)"), m_vlans->size() > 1);
-         if (hStmt != nullptr)
+         lockProperties();
+         if (success && (m_vlans != nullptr) && !m_vlans->isEmpty())
          {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; (i < m_vlans->size()) && success; i++)
+            hStmt = DBPrepare(hdb, _T("INSERT INTO interface_vlan_list (iface_id,vlan_id) VALUES (?,?)"), m_vlans->size() > 1);
+            if (hStmt != nullptr)
             {
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_vlans->get(i));
-               success = DBExecute(hStmt);
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+               for(int i = 0; (i < m_vlans->size()) && success; i++)
+               {
+                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_vlans->get(i));
+                  success = DBExecute(hStmt);
+               }
+               DBFreeStatement(hStmt);
             }
-            DBFreeStatement(hStmt);
+            else
+            {
+               success = false;
+            }
          }
-         else
-         {
-            success = false;
-         }
+         unlockProperties();
       }
 
       // Save IP addresses
       if (success)
       {
          success = executeQueryOnObject(hdb, _T("DELETE FROM interface_address_list WHERE iface_id = ?"));
-      }
-
-      if (success && (m_ipAddressList.size() > 0))
-      {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO interface_address_list (iface_id,ip_addr,ip_netmask) VALUES (?,?,?)"), m_ipAddressList.size() > 1);
-         if (hStmt != nullptr)
+         lockProperties();
+         if (success && (m_ipAddressList.size() > 0))
          {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            const ObjectArray<InetAddress> *list = m_ipAddressList.getList();
-            for(int i = 0; (i < list->size()) && success; i++)
+            hStmt = DBPrepare(hdb, _T("INSERT INTO interface_address_list (iface_id,ip_addr,ip_netmask) VALUES (?,?,?)"), m_ipAddressList.size() > 1);
+            if (hStmt != nullptr)
             {
-               InetAddress *a = list->get(i);
-               TCHAR buffer[64];
-               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, a->toString(buffer), DB_BIND_STATIC);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, a->getMaskBits());
-               success = DBExecute(hStmt);
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+               const ObjectArray<InetAddress> *list = m_ipAddressList.getList();
+               for(int i = 0; (i < list->size()) && success; i++)
+               {
+                  InetAddress *a = list->get(i);
+                  TCHAR buffer[64];
+                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, a->toString(buffer), DB_BIND_STATIC);
+                  DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, a->getMaskBits());
+                  success = DBExecute(hStmt);
+               }
+               DBFreeStatement(hStmt);
             }
-            DBFreeStatement(hStmt);
+            else
+            {
+               success = false;
+            }
          }
-         else
-         {
-            success = false;
-         }
+         unlockProperties();
       }
    }
    else
    {
       success = true;
    }
-
-   unlockProperties();
-
-   // Save access list
-	if (success)
-		success = saveACLToDB(hdb);
-
    return success;
 }
 
