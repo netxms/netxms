@@ -928,6 +928,10 @@ private:
 
 	void getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly) const;
 
+	bool saveTrustedNodes(DB_HANDLE hdb);
+   bool saveACLToDB(DB_HANDLE hdb);
+   bool saveModuleData(DB_HANDLE hdb);
+
 protected:
    time_t m_timestamp;           // Last change time stamp
    SharedString m_alias;         // Object's alias
@@ -995,12 +999,8 @@ protected:
    void setModified(uint32_t flags, bool notify = true);                  // Used to mark object as modified
 
    bool loadACLFromDB(DB_HANDLE hdb);
-   bool saveACLToDB(DB_HANDLE hdb);
    bool loadCommonProperties(DB_HANDLE hdb);
-   bool saveCommonProperties(DB_HANDLE hdb);
-   bool saveModuleData(DB_HANDLE hdb);
    bool loadTrustedNodes(DB_HANDLE hdb);
-	bool saveTrustedNodes(DB_HANDLE hdb);
    bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query) { return ExecuteQueryOnObject(hdb, m_id, query); }
 
    virtual void prepareForDeletion();

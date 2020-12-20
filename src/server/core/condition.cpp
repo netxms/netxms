@@ -143,10 +143,7 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
 {
-   lockProperties();
-
-   bool success = saveCommonProperties(hdb);
-
+   bool success = super::saveToDatabase(hdb);
    if (success && (m_modified & MODIFY_OTHER))
    {
       static const TCHAR *columns[] = { _T("activation_event"), _T("deactivation_event"),
@@ -154,6 +151,8 @@ bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("conditions"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
+         lockProperties();
+
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_activationEventCode);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_deactivationEventCode);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_sourceObject);
@@ -163,6 +162,8 @@ bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
+
+         unlockProperties();
       }
       else
       {
@@ -172,6 +173,7 @@ bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
       if (success)
          success = executeQueryOnObject(hdb, _T("DELETE FROM cond_dci_map WHERE condition_id=?"));
 
+      lockProperties();
       if (success && (m_dciCount > 0))
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO cond_dci_map (condition_id,sequence_number,dci_id,node_id,dci_func,num_polls) VALUES (?,?,?,?,?,?)"));
@@ -194,13 +196,8 @@ bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
             success = false;
          }
       }
+      unlockProperties();
    }
-
-   // Save access list
-   if (success)
-      success = saveACLToDB(hdb);
-
-   unlockProperties();
    return success;
 }
 

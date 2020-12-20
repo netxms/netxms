@@ -854,12 +854,6 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
 {
    bool success = super::saveToDatabase(hdb);
 
-   // Lock object's access
-   lockProperties();
-
-   if (success)
-      success = saveCommonProperties(hdb);
-
    if (success && (m_modified & MODIFY_NODE_PROPERTIES))
    {
       static const TCHAR *columns[] = {
@@ -883,6 +877,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("nodes"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
+         lockProperties();
+
          int snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
          TCHAR ipAddr[64], baseAddress[16], cacheMode[16], compressionMode[16], hardwareId[HARDWARE_ID_LENGTH * 2 + 1];
 
@@ -1007,6 +1003,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
+
+         unlockProperties();
       }
       else
       {
@@ -1014,13 +1012,10 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       }
    }
 
-   // Save access list
-   if (success)
-      success = saveACLToDB(hdb);
-
    if (success && (m_modified & MODIFY_COMPONENTS))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM node_components WHERE node_id=?"));
+      lockProperties();
       if (success && (m_components != nullptr))
       {
          const Component *root = m_components->getRoot();
@@ -1039,11 +1034,13 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
             }
          }
       }
+      unlockProperties();
    }
 
    if (success && (m_modified & MODIFY_SOFTWARE_INVENTORY))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM software_inventory WHERE node_id=?"));
+      lockProperties();
       if ((m_softwarePackages != nullptr) && !m_softwarePackages->isEmpty())
       {
          DB_STATEMENT hStmt = DBPrepare(hdb,
@@ -1061,11 +1058,13 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
             success = false;
          }
       }
+      unlockProperties();
    }
 
    if (success && (m_modified & MODIFY_HARDWARE_INVENTORY))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM hardware_inventory WHERE node_id=?"));
+      lockProperties();
       if (success && (m_hardwareComponents != nullptr) && !m_hardwareComponents->isEmpty())
       {
          DB_STATEMENT hStmt = DBPrepare(hdb,
@@ -1079,19 +1078,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
             DBFreeStatement(hStmt);
          }
       }
-   }
-
-   unlockProperties();
-
-   // Save data collection items
-   if (success && (m_modified & MODIFY_DATA_COLLECTION))
-   {
-      readLockDciAccess();
-      for(int i = 0; success && (i < m_dcObjects->size()); i++)
-         success = m_dcObjects->get(i)->saveToDatabase(hdb);
-      unlockDciAccess();
-      if (success)
-         success = saveDCIListForCleanup(hdb);
+      unlockProperties();
    }
 
    // Save ICMP pollers

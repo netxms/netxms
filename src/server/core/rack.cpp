@@ -124,18 +124,22 @@ bool Rack::saveToDatabase(DB_HANDLE hdb)
 	{
 		hStmt = DBPrepare(hdb, _T("INSERT INTO racks (height,top_bottom_num,id) VALUES (?,?,?)"));
 	}
-	if (hStmt == NULL)
+	if (hStmt == nullptr)
 		return false;
 
+	lockProperties();
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)m_height);
 	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_topBottomNumbering ? _T("1") : _T("0"), DB_BIND_STATIC);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
-	BOOL success = DBExecute(hStmt);
+	bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 	if (success)
-      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM rack_passive_elements WHERE rack_id=?"));
-	for(int i = 0; i < m_passiveElements->size() && success; i++)
-	   success = m_passiveElements->get(i)->saveToDatabase(hdb, m_id);
+	{
+      success = executeQueryOnObject(hdb, _T("DELETE FROM rack_passive_elements WHERE rack_id=?"));
+      for(int i = 0; i < m_passiveElements->size() && success; i++)
+         success = m_passiveElements->get(i)->saveToDatabase(hdb, m_id);
+	}
+	unlockProperties();
 	return success;
 }
 

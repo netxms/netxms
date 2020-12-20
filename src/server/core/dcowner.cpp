@@ -99,15 +99,7 @@ bool DataCollectionOwner::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
  */
 bool DataCollectionOwner::saveToDatabase(DB_HANDLE hdb)
 {
-   lockProperties();
-
-   bool success = saveCommonProperties(hdb);
-
-   // Save access list
-   if (success)
-      success = saveACLToDB(hdb);
-
-   unlockProperties();
+   bool success = super::saveToDatabase(hdb);
 
    // Save data collection items
 	if (success && (m_modified & MODIFY_DATA_COLLECTION))

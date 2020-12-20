@@ -197,59 +197,18 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
 {
    bool success = super::saveToDatabase(hdb);
 
-   lockProperties();
-
-   if (success)
-      success = saveCommonProperties(hdb);
-
-   if (!success)
+   if (success && (m_modified & MODIFY_OTHER))
    {
-      unlockProperties();
-      return false;
-   }
-
-
-   DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("clusters"), _T("id"), m_id))
-      hStmt = DBPrepare(hdb, _T("UPDATE clusters SET cluster_type=?,zone_guid=? WHERE id=?"));
-	else
-      hStmt = DBPrepare(hdb, _T("INSERT INTO clusters (cluster_type,zone_guid,id) VALUES (?,?,?)"));
-   if (hStmt != NULL)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwClusterType);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_zoneUIN);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
-      success = DBExecute(hStmt);
-      DBFreeStatement(hStmt);
-   }
-   else
-   {
-      success = false;
-   }
-
-   if (success)
-   {
-      success = saveACLToDB(hdb);
-   }
-   unlockProperties();
-
-   if (success && (m_modified & MODIFY_DATA_COLLECTION))
-   {
-		readLockDciAccess();
-      for(int i = 0; (i < m_dcObjects->size()) && success; i++)
-         success = m_dcObjects->get(i)->saveToDatabase(hdb);
-		unlockDciAccess();
-      if (success)
-         success = saveDCIListForCleanup(hdb);
-   }
-
-   if (success)
-   {
-		// Save cluster members list
-      hStmt = DBPrepare(hdb, _T("DELETE FROM cluster_members WHERE cluster_id=?"));
-      if (hStmt != NULL)
+      DB_STATEMENT hStmt;
+      if (IsDatabaseRecordExist(hdb, _T("clusters"), _T("id"), m_id))
+         hStmt = DBPrepare(hdb, _T("UPDATE clusters SET cluster_type=?,zone_guid=? WHERE id=?"));
+      else
+         hStmt = DBPrepare(hdb, _T("INSERT INTO clusters (cluster_type,zone_guid,id) VALUES (?,?,?)"));
+      if (hStmt != nullptr)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwClusterType);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_zoneUIN);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -257,11 +216,16 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
       {
          success = false;
       }
+   }
 
+   if (success && (m_modified & MODIFY_RELATIONS))
+   {
+		// Save cluster members list
+      success = executeQueryOnObject(hdb, _T("DELETE FROM cluster_members WHERE cluster_id=?"));
       if (success)
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO cluster_members (cluster_id,node_id) VALUES (?,?)"));
-         if (hStmt != NULL)
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO cluster_members (cluster_id,node_id) VALUES (?,?)"));
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             readLockChildList();
@@ -283,25 +247,14 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
 		}
    }
 
-   if (success)
+   if (success && (m_modified & MODIFY_OTHER))
    {
 		// Save sync net list
-      hStmt = DBPrepare(hdb, _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=?"));
-      if (hStmt != NULL)
-      {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         success = DBExecute(hStmt);
-         DBFreeStatement(hStmt);
-      }
-      else
-      {
-         success = false;
-      }
-
+      success = executeQueryOnObject(hdb, _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=?"));
       if (success)
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO cluster_sync_subnets (cluster_id,subnet_addr,subnet_mask) VALUES (?,?,?)"));
-         if (hStmt != NULL)
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO cluster_sync_subnets (cluster_id,subnet_addr,subnet_mask) VALUES (?,?,?)"));
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             lockProperties();
@@ -325,26 +278,15 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
    if (success && (m_modified & MODIFY_CLUSTER_RESOURCES))
    {
 		// Save resource list
-      hStmt = DBPrepare(hdb, _T("DELETE FROM cluster_resources WHERE cluster_id=?"));
-      if (hStmt != NULL)
-      {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         success = DBExecute(hStmt);
-         DBFreeStatement(hStmt);
-      }
-      else
-      {
-         success = false;
-      }
-
+      success = executeQueryOnObject(hdb, _T("DELETE FROM cluster_resources WHERE cluster_id=?"));
       if (success)
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO cluster_resources (cluster_id,resource_id,resource_name,ip_addr,current_owner) VALUES (?,?,?,?,?)"));
-         if (hStmt != NULL)
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO cluster_resources (cluster_id,resource_id,resource_name,ip_addr,current_owner) VALUES (?,?,?,?,?)"));
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             lockProperties();
-				for(UINT32 i = 0; (i < m_dwNumResources) && success; i++)
+				for(uint32_t i = 0; (i < m_dwNumResources) && success; i++)
 				{
                DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_pResourceList[i].dwId);
 		         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_pResourceList[i].szName, DB_BIND_STATIC);

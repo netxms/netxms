@@ -231,19 +231,22 @@ bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
  */
 bool DataCollectionTarget::saveToDatabase(DB_HANDLE hdb)
 {
-   bool success = true;
-   if (m_modified & MODIFY_DC_TARGET)
+   bool success = super::saveToDatabase(hdb);
+
+   if (success && (m_modified & MODIFY_DC_TARGET))
    {
       static const TCHAR *columns[] = { _T("config_poll_timestamp"), _T("instance_poll_timestamp"), _T("geolocation_ctrl_mode"), _T("geo_areas"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("dc_targets"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
          StringBuffer areas;
+         lockProperties();
          for(int i = 0; i < m_geoAreas.size(); i++)
          {
             areas.append(m_geoAreas.get(i));
             areas.append(_T(','));
          }
+         unlockProperties();
          areas.shrink();
 
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_configurationPollState.getLastCompleted()));
@@ -259,6 +262,10 @@ bool DataCollectionTarget::saveToDatabase(DB_HANDLE hdb)
          success = false;
       }
    }
+
+   if ((success) && (m_modified & MODIFY_DATA_COLLECTION))
+      success = saveDCIListForCleanup(hdb);
+
    return success;
 }
 
@@ -513,6 +520,7 @@ bool DataCollectionTarget::saveDCIListForCleanup(DB_HANDLE hdb)
 {
    bool success = executeQueryOnObject(hdb, _T("DELETE FROM dci_delete_list WHERE node_id=?"));
 
+   lockProperties();
    if (success && (!m_deletedItems.isEmpty() || !m_deletedTables.isEmpty()))
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dci_delete_list (node_id,dci_id,type) VALUES (?,?,?)"), (m_deletedItems.size() + m_deletedTables.size()) > 1);
@@ -535,6 +543,7 @@ bool DataCollectionTarget::saveDCIListForCleanup(DB_HANDLE hdb)
       }
       DBFreeStatement(hStmt);
    }
+   unlockProperties();
 
    return success;
 }

@@ -75,15 +75,7 @@ void UniversalRoot::linkObjects()
  */
 bool UniversalRoot::saveToDatabase(DB_HANDLE hdb)
 {
-   lockProperties();
-
-   bool success = saveCommonProperties(hdb);
-
-   // Save access list
-   if (success)
-      success = saveACLToDB(hdb);
-
-   unlockProperties();
+   bool success = super::saveToDatabase(hdb);
 
    // Update members list
    if (success && (m_modified & MODIFY_RELATIONS))
@@ -110,7 +102,6 @@ bool UniversalRoot::saveToDatabase(DB_HANDLE hdb)
       }
       unlockChildList();
    }
-
    return success;
 }
 

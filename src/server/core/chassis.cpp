@@ -198,13 +198,7 @@ UINT32 Chassis::modifyFromMessageInternal(NXCPMessage *request)
 bool Chassis::saveToDatabase(DB_HANDLE hdb)
 {
    bool success = super::saveToDatabase(hdb);
-
-   lockProperties();
-
-   if (success)
-      success = saveCommonProperties(hdb);
-
-   if (success)
+   if (success && (m_modified & MODIFY_OTHER))
    {
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("chassis"), _T("id"), m_id))
@@ -217,6 +211,7 @@ bool Chassis::saveToDatabase(DB_HANDLE hdb)
                                 _T("VALUES (?,?,?,?,?,?,?,?)"));
       if (hStmt != nullptr)
       {
+         lockProperties();
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_controllerId);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_rackId);
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_rackImageFront);
@@ -227,27 +222,12 @@ bool Chassis::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
+         unlockProperties();
       }
       else
       {
          success = false;
       }
-   }
-   unlockProperties();
-
-   if (success)
-   {
-      readLockDciAccess();
-      for(int i = 0; (i < m_dcObjects->size()) && success; i++)
-         success = m_dcObjects->get(i)->saveToDatabase(hdb);
-      unlockDciAccess();
-      if (success)
-         success = saveDCIListForCleanup(hdb);
-   }
-
-   if (success)
-   {
-      success = saveACLToDB(hdb);
    }
    return success;
 }

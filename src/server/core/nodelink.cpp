@@ -103,9 +103,9 @@ bool NodeLink::saveToDatabase(DB_HANDLE hdb)
 {
    if (m_modified & MODIFY_OTHER)
    {
-      static const TCHAR *columns[] = { _T("node_id"), NULL };
+      static const TCHAR *columns[] = { _T("node_id"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("node_links"), _T("nodelink_id"), m_id, columns);
-      if (hStmt == NULL)
+      if (hStmt == nullptr)
          return false;
 
       lockProperties();

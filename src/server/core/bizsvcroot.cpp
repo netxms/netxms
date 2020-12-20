@@ -45,32 +45,7 @@ BusinessServiceRoot::~BusinessServiceRoot()
  */
 bool BusinessServiceRoot::saveToDatabase(DB_HANDLE hdb)
 {
-   lockProperties();
-
-   bool success = saveCommonProperties(hdb);
-   if (success)
-   {
-      // Update members list
-      success = executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
-      readLockChildList();
-      if (success && !getChildList().isEmpty())
-      {
-         TCHAR szQuery[1024];
-         for(int i = 0; (i < getChildList().size()) && success; i++)
-         {
-            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"),
-                     m_id, getChildList().get(i)->getId());
-            success = DBQuery(hdb, szQuery);
-         }
-      }
-      unlockChildList();
-   }
-
-   if (success)
-      success = saveACLToDB(hdb);
-
-   unlockProperties();
-   return success;
+   return super::saveToDatabase(hdb);
 }
 
 /**

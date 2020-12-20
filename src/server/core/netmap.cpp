@@ -245,9 +245,8 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
 {
-	lockProperties();
+   bool success = super::saveToDatabase(hdb);
 
-	bool success = saveCommonProperties(hdb);
    if (success && (m_modified & MODIFY_OTHER))
    {
       DB_STATEMENT hStmt;
@@ -261,6 +260,8 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       }
       if (hStmt != nullptr)
       {
+         lockProperties();
+
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_mapType);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)m_layout);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)m_discoveryRadius);
@@ -277,6 +278,8 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
+
+         unlockProperties();
       }
       else
       {
@@ -284,15 +287,13 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       }
    }
 
-   if (success)
-	   success = saveACLToDB(hdb);
-
    // Save elements
    if (success && (m_modified & MODIFY_MAP_CONTENT))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_elements WHERE map_id=?"));
 
-      if (success && (m_elements->size() > 0))
+      lockProperties();
+      if (success && !m_elements->isEmpty())
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_elements (map_id,element_id,element_type,element_data,flags) VALUES (?,?,?,?,?)"));
          if (hStmt != nullptr)
@@ -320,12 +321,14 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
             success = false;
          }
       }
+      unlockProperties();
 
       // Save links
       if (success)
          success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_links WHERE map_id=?"));
 
-      if (success && (m_links->size() > 0))
+      lockProperties();
+      if (success && !m_links->isEmpty())
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags) VALUES (?,?,?,?,?,?,?,?,?)"));
          if (hStmt != nullptr)
@@ -351,6 +354,7 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
             success = false;
          }
       }
+      unlockProperties();
    }
 
 	// Save seed nodes
@@ -358,6 +362,7 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_seed_nodes WHERE map_id=?"));
 
+      lockProperties();
       if (success && (m_seedObjects->size() > 0))
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_seed_nodes (map_id,seed_node_id) VALUES (?,?)"));
@@ -376,9 +381,9 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
             success = false;
          }
       }
+      unlockProperties();
    }
 
-   unlockProperties();
 	return success;
 }
 

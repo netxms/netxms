@@ -92,46 +92,53 @@ bool Subnet::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 bool Subnet::saveToDatabase(DB_HANDLE hdb)
 {
-   TCHAR szQuery[1024], szIpAddr[64];
-
-   // Lock object's access
-   lockProperties();
-
-   bool success = saveCommonProperties(hdb);
+   bool success = super::saveToDatabase(hdb);
 
    if (success && (m_modified & MODIFY_OTHER))
    {
-      // Form and execute INSERT or UPDATE query
-      if (IsDatabaseRecordExist(hdb, _T("subnets"), _T("id"), m_id))
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
-                    _T("UPDATE subnets SET ip_addr='%s',ip_netmask=%d,zone_guid=%d,synthetic_mask=%d WHERE id=%d"),
-                    m_ipAddress.toString(szIpAddr), m_ipAddress.getMaskBits(), m_zoneUIN, m_bSyntheticMask ? 1 : 0, m_id);
+      static const TCHAR *columns[] = { _T("ip_addr"), _T("ip_netmask"), _T("zone_guid"), _T("synthetic_mask"), nullptr };
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("subnets"), _T("id"), m_id, columns);
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_ipAddress.getMaskBits());
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_zoneUIN);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_bSyntheticMask ? 1 : 0));
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_id);
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
       else
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
-                    _T("INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid,synthetic_mask) VALUES (%d,'%s',%d,%d,%d)"),
-                    m_id, m_ipAddress.toString(szIpAddr), m_ipAddress.getMaskBits(), m_zoneUIN, m_bSyntheticMask ? 1 : 0);
-      success = DBQuery(hdb, szQuery);
+      {
+         success = false;
+      }
    }
 
    // Update node to subnet mapping
    if (success && (m_modified & MODIFY_RELATIONS))
    {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM nsmap WHERE subnet_id=%d"), m_id);
-      DBQuery(hdb, szQuery);
+      success = executeQueryOnObject(hdb, _T("DELETE FROM nsmap WHERE subnet_id=?"));
       readLockChildList();
-      for(int i = 0; success && (i < getChildList().size()); i++)
+      if (success && !getChildList().isEmpty())
       {
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), m_id, getChildList().get(i)->getId());
-         success = DBQuery(hdb, szQuery);
+         DB_STATEMENT hStmt = DBPrepare(hdb,  _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (?,?)"), getChildList().size() > 1);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; success && (i < getChildList().size()); i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, getChildList().get(i)->getId());
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
       }
       unlockChildList();
    }
-
-   // Save access list
-   if (success)
-      success = saveACLToDB(hdb);
-
-   unlockProperties();
 
    return success;
 }
