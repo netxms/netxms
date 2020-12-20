@@ -973,9 +973,10 @@ protected:
    bool m_inheritAccessRights;
    MUTEX m_mutexACL;
 
-   IntegerArray<UINT32> *m_trustedNodes;
+   IntegerArray<uint32_t> *m_trustedNodes;
 
    StringObjectMap<ModuleData> *m_moduleData;
+   MUTEX m_moduleDataLock;
 
    IntegerArray<UINT32> *m_responsibleUsers;
    RWLOCK m_rwlockResponsibleUsers;

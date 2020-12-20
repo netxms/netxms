@@ -94,6 +94,7 @@ NetObj::NetObj() : NObject()
    }
 	m_submapId = 0;
    m_moduleData = nullptr;
+   m_moduleDataLock = MutexCreateFast();
    m_postalAddress = new PostalAddress();
    m_dashboards = new IntegerArray<UINT32>();
    m_urls = new ObjectArray<ObjectUrl>(4, 4, Ownership::True);
@@ -119,6 +120,7 @@ NetObj::~NetObj()
    delete m_accessList;
 	delete m_trustedNodes;
    delete m_moduleData;
+   MutexDestroy(m_moduleDataLock);
    delete m_postalAddress;
    delete m_dashboards;
    delete m_urls;
@@ -384,11 +386,18 @@ static EnumerationCallbackResult SaveModuleDataCallback(const TCHAR *key, const 
  */
 bool NetObj::saveModuleData(DB_HANDLE hdb)
 {
-   if (!(m_modified & MODIFY_MODULE_DATA) || (m_moduleData == nullptr))
+   if (!(m_modified & MODIFY_MODULE_DATA))
       return true;
 
-   std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
-   return m_moduleData->forEach(SaveModuleDataCallback, &context) == _CONTINUE;
+   bool success = true;
+   MutexLock(m_moduleDataLock);
+   if (m_moduleData != nullptr)
+   {
+      std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
+      success = (m_moduleData->forEach(SaveModuleDataCallback, &context) == _CONTINUE);
+   }
+   MutexUnlock(m_moduleDataLock);
+   return success;
 }
 
 /**
@@ -426,12 +435,14 @@ bool NetObj::saveRuntimeData(DB_HANDLE hdb)
       success = true;
    }
 
-   // Save module data
+   // Save module runtime data
+   MutexLock(m_moduleDataLock);
    if (success && (m_moduleData != nullptr))
    {
       std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
       success = (m_moduleData->forEach(SaveModuleRuntimeDataCallback, &context) == _CONTINUE);
    }
+   MutexUnlock(m_moduleDataLock);
 
    return success;
 }
@@ -1186,7 +1197,7 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 	pMsg->setField(VID_DRILL_DOWN_OBJECT_ID, m_submapId);
    pMsg->setField(VID_CATEGORY_ID, m_categoryId);
 	pMsg->setFieldFromTime(VID_CREATION_TIME, m_creationTime);
-	if ((m_trustedNodes != NULL) && (m_trustedNodes->size() > 0))
+	if ((m_trustedNodes != nullptr) && !m_trustedNodes->isEmpty())
 	{
 	   pMsg->setField(VID_NUM_TRUSTED_NODES, m_trustedNodes->size());
 		pMsg->setFieldFromInt32Array(VID_TRUSTED_NODES, m_trustedNodes);
@@ -1197,7 +1208,7 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 	}
    pMsg->setFieldFromInt32Array(VID_DASHBOARDS, m_dashboards);
 
-   UINT32 base = VID_CUSTOM_ATTRIBUTES_BASE;
+   uint32_t base = VID_CUSTOM_ATTRIBUTES_BASE;
    std::pair<NXCPMessage *, UINT32 *> data(pMsg, &base);
    forEachCustomAttribute(CustomAttributeFillMessage, &data);
    pMsg->setField(VID_NUM_CUSTOM_ATTRIBUTES, getCustomAttributeSize());
@@ -1219,17 +1230,6 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
       pMsg->setField(fieldId++, url->getDescription());
       fieldId += 7;
    }
-
-   if (m_moduleData != nullptr)
-   {
-      pMsg->setField(VID_MODULE_DATA_COUNT, (UINT16)m_moduleData->size());
-      std::pair<uint32_t, NXCPMessage*> context(VID_MODULE_DATA_BASE, pMsg);
-      m_moduleData->forEach(SendModuleDataCallback, &context);
-   }
-   else
-   {
-      pMsg->setField(VID_MODULE_DATA_COUNT, (UINT16)0);
-   }
 }
 
 /**
@@ -1240,6 +1240,18 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
  */
 void NetObj::fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId)
 {
+   MutexLock(m_moduleDataLock);
+   if (m_moduleData != nullptr)
+   {
+      pMsg->setField(VID_MODULE_DATA_COUNT, (UINT16)m_moduleData->size());
+      std::pair<uint32_t, NXCPMessage*> context(VID_MODULE_DATA_BASE, pMsg);
+      m_moduleData->forEach(SendModuleDataCallback, &context);
+   }
+   else
+   {
+      pMsg->setField(VID_MODULE_DATA_COUNT, (UINT16)0);
+   }
+   MutexUnlock(m_moduleDataLock);
 }
 
 /**
@@ -1383,8 +1395,8 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
 	// Change trusted nodes list
    if (pRequest->isFieldExist(VID_NUM_TRUSTED_NODES))
    {
-      if (m_trustedNodes == NULL)
-         m_trustedNodes = new IntegerArray<UINT32>();
+      if (m_trustedNodes == nullptr)
+         m_trustedNodes = new IntegerArray<uint32_t>();
       else
          m_trustedNodes->clear();
 		pRequest->getFieldAsInt32Array(VID_TRUSTED_NODES, m_trustedNodes);
@@ -1827,7 +1839,7 @@ bool NetObj::loadTrustedNodes(DB_HANDLE hdb)
 		int count = DBGetNumRows(hResult);
 		if (count > 0)
 		{
-		   m_trustedNodes = new IntegerArray<UINT32>(count);
+		   m_trustedNodes = new IntegerArray<uint32_t>(count);
 			for(int i = 0; i < count; i++)
 			{
 				m_trustedNodes->add(DBGetFieldULong(hResult, i, 0));
@@ -1845,7 +1857,7 @@ bool NetObj::saveTrustedNodes(DB_HANDLE hdb)
 {
    bool success = executeQueryOnObject(hdb, _T("DELETE FROM trusted_nodes WHERE source_object_id=?"));
    lockProperties();
-	if (success && (m_trustedNodes != nullptr) && (m_trustedNodes->size() > 0))
+	if (success && (m_trustedNodes != nullptr) && !m_trustedNodes->isEmpty())
 	{
 	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO trusted_nodes (source_object_id,target_node_id) VALUES (?,?)"), m_trustedNodes->size() > 1);
 	   if (hStmt != nullptr)
@@ -2125,9 +2137,9 @@ bool NetObj::isDataCollectionTarget() const
  */
 ModuleData *NetObj::getModuleData(const TCHAR *module)
 {
-   lockProperties();
+   MutexLock(m_moduleDataLock);
    ModuleData *data = (m_moduleData != nullptr) ? m_moduleData->get(module) : nullptr;
-   unlockProperties();
+   MutexUnlock(m_moduleDataLock);
    return data;
 }
 
@@ -2136,11 +2148,11 @@ ModuleData *NetObj::getModuleData(const TCHAR *module)
  */
 void NetObj::setModuleData(const TCHAR *module, ModuleData *data)
 {
-   lockProperties();
+   MutexLock(m_moduleDataLock);
    if (m_moduleData == nullptr)
       m_moduleData = new StringObjectMap<ModuleData>(Ownership::True);
    m_moduleData->set(module, data);
-   unlockProperties();
+   MutexUnlock(m_moduleDataLock);
 }
 
 /**
@@ -2464,7 +2476,7 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "urls", json_object_array(m_urls));
    json_object_set_new(root, "accessList", m_accessList->toJson());
    json_object_set_new(root, "inheritAccessRights", json_boolean(m_inheritAccessRights));
-   json_object_set_new(root, "trustedNodes", (m_trustedNodes != NULL) ? m_trustedNodes->toJson() : json_array());
+   json_object_set_new(root, "trustedNodes", (m_trustedNodes != nullptr) ? m_trustedNodes->toJson() : json_array());
    json_object_set_new(root, "creationTime", json_integer(m_creationTime));
    json_object_set_new(root, "categoryId", json_integer(m_categoryId));
 
