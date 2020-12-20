@@ -77,12 +77,11 @@ public class Application implements IApplication
 		return PlatformUI.createAndRunWorkbench(display, advisor);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.equinox.app.IApplication#stop()
 	 */
 	public void stop()
 	{
-		// Do nothing
 	}
 	
 	/**
