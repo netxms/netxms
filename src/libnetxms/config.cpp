@@ -1425,13 +1425,12 @@ static void StartElement(void *userData, const char *name, const char **attrs)
       {
          TCHAR entryName[MAX_PATH];
 
-         uint32_t id = XMLGetAttrUINT32(attrs, "id", 0);
+         uint32_t id = XMLGetAttrUInt32(attrs, "id", 0);
 #ifdef UNICODE
          if (id != 0)
          {
             WCHAR wname[MAX_PATH];
-
-            MultiByteToWideChar(CP_UTF8, 0, name, -1, wname, MAX_PATH);
+            utf8_to_wchar(name, -1, wname, MAX_PATH);
             wname[MAX_PATH - 1] = 0;
 #ifdef _WIN32
             _snwprintf(entryName, MAX_PATH, L"%s#%u", wname, (unsigned int)id);
@@ -1441,7 +1440,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
          }
          else
          {
-            MultiByteToWideChar(CP_UTF8, 0, name, -1, entryName, MAX_PATH);
+            utf8_to_wchar(name, -1, entryName, MAX_PATH);
             entryName[MAX_PATH - 1] = 0;
          }
 #else
@@ -1474,9 +1473,9 @@ static void StartElement(void *userData, const char *name, const char **attrs)
             for(int i = 0; attrs[i] != nullptr; i += 2)
             {
 #ifdef UNICODE
-               e->setAttributePreallocated(WideStringFromMBString(attrs[i]), WideStringFromMBString(attrs[i + 1]));
+               e->setAttributePreallocated(WideStringFromUTF8String(attrs[i]), WideStringFromUTF8String(attrs[i + 1]));
 #else
-               e->setAttribute(attrs[i], attrs[i + 1]);
+               e->setAttributePreallocated(MBStringFromUTF8String(attrs[i]), MBStringFromUTF8String(attrs[i + 1]));
 #endif
             }
          }

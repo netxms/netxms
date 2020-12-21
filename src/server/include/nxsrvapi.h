@@ -717,16 +717,16 @@ private:
    int m_dataType;
 
 public:
-   AgentParameterDefinition(NXCPMessage *msg, UINT32 baseId);
-   AgentParameterDefinition(AgentParameterDefinition *src);
+   AgentParameterDefinition(const NXCPMessage *msg, uint32_t baseId);
+   AgentParameterDefinition(const AgentParameterDefinition *src);
    AgentParameterDefinition(const TCHAR *name, const TCHAR *description, int dataType);
    ~AgentParameterDefinition();
 
-   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
+   uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 
-   const TCHAR *getName() { return m_name; }
-   const TCHAR *getDescription() { return m_description; }
-   int getDataType() { return m_dataType; }
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getDescription() const { return m_description; }
+   int getDataType() const { return m_dataType; }
 };
 
 /**
@@ -737,9 +737,9 @@ struct AgentTableColumnDefinition
    TCHAR m_name[MAX_COLUMN_NAME];
    int m_dataType;
 
-   AgentTableColumnDefinition(AgentTableColumnDefinition *src)
+   AgentTableColumnDefinition(const AgentTableColumnDefinition *src)
    {
-      nx_strncpy(m_name, src->m_name, MAX_COLUMN_NAME);
+      _tcslcpy(m_name, src->m_name, MAX_COLUMN_NAME);
       m_dataType = src->m_dataType;
    }
 };
@@ -756,14 +756,14 @@ private:
    ObjectArray<AgentTableColumnDefinition> *m_columns;
 
 public:
-   AgentTableDefinition(NXCPMessage *msg, UINT32 baseId);
-   AgentTableDefinition(AgentTableDefinition *src);
+   AgentTableDefinition(const NXCPMessage *msg, uint32_t baseId);
+   AgentTableDefinition(const AgentTableDefinition *src);
    ~AgentTableDefinition();
 
-   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
+   uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 
-   const TCHAR *getName() { return m_name; }
-   const TCHAR *getDescription() { return m_description; }
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getDescription() const { return m_description; }
 };
 
 /**
@@ -773,19 +773,19 @@ class LIBNXSRV_EXPORTABLE RemoteFileInfo
 {
 private:
    TCHAR *m_name;
-   UINT64 m_size;
+   uint64_t m_size;
    time_t m_mtime;
    BYTE m_hash[MD5_DIGEST_SIZE];
-   UINT32 m_status;
+   uint32_t m_status;
 
 public:
-   RemoteFileInfo(NXCPMessage *msg, UINT32 baseId, const TCHAR *name);
+   RemoteFileInfo(NXCPMessage *msg, uint32_t baseId, const TCHAR *name);
    ~RemoteFileInfo();
 
    const TCHAR *name() const { return m_name; }
-   UINT32 status() const { return m_status; }
+   uint32_t status() const { return m_status; }
    bool isValid() const { return m_status == ERR_SUCCESS; }
-   UINT64 size() const { return m_size; }
+   uint64_t size() const { return m_size; }
    time_t modificationTime() const { return m_mtime; }
    const BYTE *hash() const { return m_hash; }
 };
@@ -955,7 +955,7 @@ public:
    UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
             void (* progressCallback)(INT64, void *) = nullptr, void *cbArg = nullptr,
             NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
-   UINT32 getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **info);
+   uint32_t getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **info);
    UINT32 startUpgrade(const TCHAR *pszPkgName);
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, const TCHAR *pszRequest = nullptr, const TCHAR *pszResponse = nullptr, UINT32 *responseTime = nullptr);

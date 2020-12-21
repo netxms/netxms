@@ -1863,9 +1863,9 @@ UINT32 AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinit
 			DbgPrintf(6, _T("AgentConnection::getSupportedParameters(): RCC=%d"), dwResult);
          if (dwResult == ERR_SUCCESS)
          {
-            UINT32 count = pResponse->getFieldAsUInt32(VID_NUM_PARAMETERS);
+            uint32_t count = pResponse->getFieldAsUInt32(VID_NUM_PARAMETERS);
             ObjectArray<AgentParameterDefinition> *plist = new ObjectArray<AgentParameterDefinition>(count, 16, Ownership::True);
-            for(UINT32 i = 0, id = VID_PARAM_LIST_BASE; i < count; i++)
+            for(uint32_t i = 0, id = VID_PARAM_LIST_BASE; i < count; i++)
             {
                plist->add(new AgentParameterDefinition(pResponse, id));
                id += 3;
@@ -1875,7 +1875,7 @@ UINT32 AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinit
 
             count = pResponse->getFieldAsUInt32(VID_NUM_TABLES);
             ObjectArray<AgentTableDefinition> *tlist = new ObjectArray<AgentTableDefinition>(count, 16, Ownership::True);
-            for(UINT32 i = 0, id = VID_TABLE_LIST_BASE; i < count; i++)
+            for(uint32_t i = 0, id = VID_TABLE_LIST_BASE; i < count; i++)
             {
                tlist->add(new AgentTableDefinition(pResponse, id));
                id += 3;
@@ -2684,14 +2684,14 @@ void AgentConnection::processTcpProxyData(uint32_t channelId, const void *data, 
 /**
  * Get file set information
  */
-UINT32 AgentConnection::getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **fileSetInfo)
+uint32_t AgentConnection::getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **fileSetInfo)
 {
    *fileSetInfo = nullptr;
-   UINT32 requestId = generateRequestId();
+   uint32_t requestId = generateRequestId();
    NXCPMessage msg(CMD_GET_FILE_SET_DETAILS, requestId, m_nProtocolVersion);
    msg.setField(VID_ALLOW_PATH_EXPANSION, allowPathExpansion);
    fileSet.fillMessage(&msg, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
-   UINT32 rcc;
+   uint32_t rcc;
    if (sendMessage(&msg))
    {
       NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
@@ -2734,7 +2734,7 @@ UINT32 AgentConnection::getFileSetInfo(const StringList &fileSet, bool allowPath
 /**
  * Create new agent parameter definition from NXCP message
  */
-AgentParameterDefinition::AgentParameterDefinition(NXCPMessage *msg, UINT32 baseId)
+AgentParameterDefinition::AgentParameterDefinition(const NXCPMessage *msg, uint32_t baseId)
 {
    m_name = msg->getFieldAsString(baseId);
    m_description = msg->getFieldAsString(baseId + 1);
@@ -2744,7 +2744,7 @@ AgentParameterDefinition::AgentParameterDefinition(NXCPMessage *msg, UINT32 base
 /**
  * Create new agent parameter definition from another definition object
  */
-AgentParameterDefinition::AgentParameterDefinition(AgentParameterDefinition *src)
+AgentParameterDefinition::AgentParameterDefinition(const AgentParameterDefinition *src)
 {
    m_name = MemCopyString(src->m_name);
    m_description = MemCopyString(src->m_description);
@@ -2773,18 +2773,18 @@ AgentParameterDefinition::~AgentParameterDefinition()
 /**
  * Fill NXCP message
  */
-UINT32 AgentParameterDefinition::fillMessage(NXCPMessage *msg, UINT32 baseId)
+uint32_t AgentParameterDefinition::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
    msg->setField(baseId, m_name);
    msg->setField(baseId + 1, m_description);
-   msg->setField(baseId + 2, (WORD)m_dataType);
+   msg->setField(baseId + 2, static_cast<uint16_t>(m_dataType));
    return 3;
 }
 
 /**
  * Create new agent table definition from NXCP message
  */
-AgentTableDefinition::AgentTableDefinition(NXCPMessage *msg, UINT32 baseId)
+AgentTableDefinition::AgentTableDefinition(const NXCPMessage *msg, uint32_t baseId)
 {
    m_name = msg->getFieldAsString(baseId);
    m_description = msg->getFieldAsString(baseId + 2);
@@ -2806,7 +2806,7 @@ AgentTableDefinition::AgentTableDefinition(NXCPMessage *msg, UINT32 baseId)
 /**
  * Create new agent table definition from another definition object
  */
-AgentTableDefinition::AgentTableDefinition(AgentTableDefinition *src)
+AgentTableDefinition::AgentTableDefinition(const AgentTableDefinition *src)
 {
    m_name = MemCopyString(src->m_name);
    m_description = MemCopyString(src->m_description);
@@ -2831,7 +2831,7 @@ AgentTableDefinition::~AgentTableDefinition()
 /**
  * Fill NXCP message
  */
-UINT32 AgentTableDefinition::fillMessage(NXCPMessage *msg, UINT32 baseId)
+uint32_t AgentTableDefinition::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
    msg->setField(baseId + 1, m_name);
    msg->setField(baseId + 2, m_description);
@@ -2840,21 +2840,21 @@ UINT32 AgentTableDefinition::fillMessage(NXCPMessage *msg, UINT32 baseId)
    msg->setField(baseId + 3, instanceColumns);
    free(instanceColumns);
 
-   UINT32 varId = baseId + 4;
+   uint32_t fieldId = baseId + 4;
    for(int i = 0; i < m_columns->size(); i++)
    {
-      msg->setField(varId++, m_columns->get(i)->m_name);
-      msg->setField(varId++, (WORD)m_columns->get(i)->m_dataType);
+      msg->setField(fieldId++, m_columns->get(i)->m_name);
+      msg->setField(fieldId++, (WORD)m_columns->get(i)->m_dataType);
    }
 
-   msg->setField(baseId, varId - baseId);
-   return varId - baseId;
+   msg->setField(baseId, fieldId - baseId);
+   return fieldId - baseId;
 }
 
 /**
  * Create remote file info object
  */
-RemoteFileInfo::RemoteFileInfo(NXCPMessage *msg, UINT32 baseId, const TCHAR *name)
+RemoteFileInfo::RemoteFileInfo(NXCPMessage *msg, uint32_t baseId, const TCHAR *name)
 {
    m_name = MemCopyString(name);
    m_status = msg->getFieldAsUInt32(baseId);

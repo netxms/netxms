@@ -103,40 +103,42 @@ String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *str, int length)
  */
 const char LIBNETXMS_EXPORTABLE *XMLGetAttr(const char **attrs, const char *name)
 {
-	for(int i = 0; attrs[i] != NULL; i += 2)
+	for(int i = 0; attrs[i] != nullptr; i += 2)
 	{
 		if (!stricmp(attrs[i], name))
 			return attrs[i + 1];
 	}
-	return NULL;
+	return nullptr;
 }
 
+/**
+ * Get attribute for XML tag as integer
+ */
 int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int defVal)
 {
-	const char *value;
-
-	value = XMLGetAttr(attrs, name);
-	return (value != NULL) ? strtol(value, NULL, 0) : defVal;
+	const char *value = XMLGetAttr(attrs, name);
+	return (value != nullptr) ? strtol(value, nullptr, 0) : defVal;
 }
 
-UINT32 LIBNETXMS_EXPORTABLE XMLGetAttrUINT32(const char **attrs, const char *name, UINT32 defVal)
+/**
+ * Get attribute for XML tag as unsigned integer
+ */
+uint32_t LIBNETXMS_EXPORTABLE XMLGetAttrUInt32(const char **attrs, const char *name, UINT32 defVal)
 {
-	const char *value;
-
-	value = XMLGetAttr(attrs, name);
-	return (value != NULL) ? strtoul(value, NULL, 0) : defVal;
+	const char *value = XMLGetAttr(attrs, name);
+	return (value != nullptr) ? strtoul(value, nullptr, 0) : defVal;
 }
 
+/**
+ * Get attribute for XML tag as boolean value
+ */
 bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, bool defVal)
 {
-	const char *value;
-	int ival;
-	char *eptr;
-
-	value = XMLGetAttr(attrs, name);
-	if (value != NULL)
+	const char *value = XMLGetAttr(attrs, name);
+	if (value != nullptr)
 	{
-		ival = strtol(value, &eptr, 0);
+	   char *eptr;
+		int ival = strtol(value, &eptr, 0);
 		if (*eptr == 0)
 			return (ival != 0) ? true : false;
 		return !stricmp(value, "yes") || !stricmp(value, "true");

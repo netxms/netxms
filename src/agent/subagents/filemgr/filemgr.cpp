@@ -1011,7 +1011,7 @@ static void CH_GetFileSetDetails(NXCPMessage *request, NXCPMessage *response, Ab
 {
    bool allowPathExpansion = request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION);
    StringList files(request, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
-   UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < files.size(); i++)
    {
       TCHAR fileName[MAX_PATH];
@@ -1025,8 +1025,8 @@ static void CH_GetFileSetDetails(NXCPMessage *request, NXCPMessage *response, Ab
          if (CALL_STAT(fullPath, &fs) == 0)
          {
             response->setField(fieldId++, ERR_SUCCESS);
-            response->setField(fieldId++, static_cast<UINT64>(fs.st_size));
-            response->setField(fieldId++, static_cast<UINT64>(fs.st_mtime));
+            response->setField(fieldId++, static_cast<uint64_t>(fs.st_size));
+            response->setField(fieldId++, static_cast<uint64_t>(fs.st_mtime));
             BYTE hash[MD5_DIGEST_SIZE];
             if (!CalculateFileMD5Hash(fullPath, hash))
                memset(hash, 0, MD5_DIGEST_SIZE);
