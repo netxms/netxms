@@ -4494,7 +4494,7 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length);
 String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *str, int length = -1);
 const char LIBNETXMS_EXPORTABLE *XMLGetAttr(const char **attrs, const char *name);
 int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int defVal);
-UINT32 LIBNETXMS_EXPORTABLE XMLGetAttrUINT32(const char **attrs, const char *name, UINT32 defVal);
+UINT32 LIBNETXMS_EXPORTABLE XMLGetAttrUInt32(const char **attrs, const char *name, UINT32 defVal);
 bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, bool defVal);
 
 String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s);
