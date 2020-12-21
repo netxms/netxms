@@ -1474,9 +1474,9 @@ static void StartElement(void *userData, const char *name, const char **attrs)
             for(int i = 0; attrs[i] != nullptr; i += 2)
             {
 #ifdef UNICODE
-               e->setAttributePreallocated(WideStringFromMBString(attrs[i]), WideStringFromMBString(attrs[i + 1]));
+               e->setAttributePreallocated(WideStringFromUTF8String(attrs[i]), WideStringFromUTF8String(attrs[i + 1]));
 #else
-               e->setAttribute(attrs[i], attrs[i + 1]);
+               e->setAttribute(MBStringFromUTF8String(attrs[i]), MBStringFromUTF8String(attrs[i + 1]));
 #endif
             }
          }
