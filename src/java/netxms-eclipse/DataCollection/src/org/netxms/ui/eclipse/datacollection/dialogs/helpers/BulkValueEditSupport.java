@@ -46,10 +46,13 @@ public class BulkValueEditSupport extends EditingSupport
       this.viewer = viewer;
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.EditingSupport#getCellEditor(java.lang.Object)
+    */
    @Override
    protected CellEditor getCellEditor(Object element)
    {
-      BulkUpdateElementUI el = (BulkUpdateElementUI)element;
+      BulkDciUpdateElementUI el = (BulkDciUpdateElementUI)element;
       CellEditor editor = null;
       if (el.isText())
       {
@@ -59,24 +62,29 @@ public class BulkValueEditSupport extends EditingSupport
       {
          editor = new ComboBoxCellEditor(viewer.getTable(), el.getPossibleValues(), SWT.READ_ONLY);
       }
-      
+
       if (el.getVerifyListener() != null)
          ((Text)editor.getControl()).addVerifyListener(el.getVerifyListener());
-      
+
       return editor;
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.EditingSupport#canEdit(java.lang.Object)
+    */
    @Override
    protected boolean canEdit(Object element)
    {
-      return ((BulkUpdateElementUI)element).isEditable();
+      return ((BulkDciUpdateElementUI)element).isEditable();
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.EditingSupport#getValue(java.lang.Object)
+    */
    @Override
    protected Object getValue(Object element)
    {
-      BulkUpdateElementUI el = (BulkUpdateElementUI)element;
-
+      BulkDciUpdateElementUI el = (BulkDciUpdateElementUI)element;
       if (el.isText())
       {
          return el.getTextValue();
@@ -87,12 +95,14 @@ public class BulkValueEditSupport extends EditingSupport
       }
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.EditingSupport#setValue(java.lang.Object, java.lang.Object)
+    */
    @Override
    protected void setValue(Object element, Object value)
    {
-      BulkUpdateElementUI el = (BulkUpdateElementUI)element;
+      BulkDciUpdateElementUI el = (BulkDciUpdateElementUI)element;
       el.setValue(el.isText() ? value : ((Integer)value) - 1);
       getViewer().update(el, null);
    }
-
 }

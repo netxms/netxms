@@ -18,6 +18,7 @@
 package org.netxms.client.datacollection;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -33,7 +34,7 @@ import org.netxms.client.constants.RCC;
 public class DataCollectionConfiguration
 {
    private NXCSession session;
-   private long nodeId;
+   private long ownerId;
    private HashMap<Long, DataCollectionObject> items;
    private Object userData = null;
    private SessionListener listener;
@@ -43,12 +44,12 @@ public class DataCollectionConfiguration
     * Create empty data collection configuration.
     *
     * @param session The NXCSession
-    * @param nodeId  The node ID
+    * @param ownerId ID of the owning object
     */
-   public DataCollectionConfiguration(final NXCSession session, final long nodeId)
+   public DataCollectionConfiguration(final NXCSession session, final long ownerId)
    {
       this.session = session;
-      this.nodeId = nodeId;
+      this.ownerId = ownerId;
       items = new HashMap<Long, DataCollectionObject>(0);
    }
 
@@ -62,7 +63,7 @@ public class DataCollectionConfiguration
    public void open(DataCollectionConfigurationChangeListener changeListener) throws IOException, NXCException
    {
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_GET_NODE_DCI_LIST);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
       session.sendMessage(msg);
       session.waitForRCC(msg.getMessageId());
       this.changeListener = changeListener;
@@ -95,7 +96,7 @@ public class DataCollectionConfiguration
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            if (n.getSubCode() != nodeId)
+            if (n.getSubCode() != ownerId)
                return;
 
             if (n.getCode() == SessionNotification.DCI_UPDATE)
@@ -139,7 +140,7 @@ public class DataCollectionConfiguration
    public void refreshDataCollectionList() throws IOException, NXCException
    {
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_GET_NODE_DCI_LIST);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
       msg.setField(NXCPCodes.VID_IS_REFRESH, true);
       session.sendMessage(msg);
       session.waitForRCC(msg.getMessageId());
@@ -179,7 +180,7 @@ public class DataCollectionConfiguration
    public void close() throws IOException, NXCException
    {
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_UNLOCK_NODE_DCI_LIST);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
       session.sendMessage(msg);
       session.waitForRCC(msg.getMessageId());
       items.clear();
@@ -299,7 +300,7 @@ public class DataCollectionConfiguration
    public long modifyObject(DataCollectionObject dco) throws IOException, NXCException
    {
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_MODIFY_NODE_DCI);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
       if (dco != null)
          dco.fillMessage(msg);
       session.sendMessage(msg);
@@ -318,7 +319,7 @@ public class DataCollectionConfiguration
    private void copyObjectsInternal(long destNodeId, long[] items, boolean move) throws IOException, NXCException
    {
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_COPY_DCI);
-      msg.setFieldInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, (int)ownerId);
       msg.setFieldInt32(NXCPCodes.VID_DESTINATION_OBJECT_ID, (int)destNodeId);
       msg.setFieldInt16(NXCPCodes.VID_MOVE_FLAG, move ? 1 : 0);
       msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, items.length);
@@ -363,7 +364,7 @@ public class DataCollectionConfiguration
    public void clearCollectedData(long itemId) throws IOException, NXCException
    {
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_CLEAR_DCI_DATA);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)itemId);
       session.sendMessage(msg);
       session.waitForRCC(msg.getMessageId());
@@ -380,7 +381,7 @@ public class DataCollectionConfiguration
    public void setObjectStatus(long[] items, int status) throws IOException, NXCException
    {
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_SET_DCI_STATUS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
       msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status);
       msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, items.length);
       msg.setField(NXCPCodes.VID_ITEM_LIST, items);
@@ -398,41 +399,42 @@ public class DataCollectionConfiguration
    public void deleteObject(long itemId) throws IOException, NXCException
    {
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_DELETE_NODE_DCI);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)itemId);
       session.sendMessage(msg);
       session.waitForRCC(msg.getMessageId());
       items.remove(itemId);
    }
-   
+
    /**
     * 
-    * @param items
-    * @param bulkUpdateElements
-    * @throws IOException
-    * @throws NXCException
+    * @param idList List of data collection object identifiers
+    * @param fields collection of fields to be updated
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void bulkUpdateDCIs(long[] items, BulkUpdateElement[] bulkUpdateElements) throws IOException, NXCException
+   public void bulkUpdateDCIs(Collection<Long> idList, Collection<? extends BulkDciUpdateElement> fields)
+         throws IOException, NXCException
    {
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_BULK_DCI_UPDATE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-      
-      for (int i = 0; i < bulkUpdateElements.length; i++)
-         bulkUpdateElements[i].setField(msg);
-      
-      msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, items.length);
-      msg.setField(NXCPCodes.VID_ITEM_LIST, items);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
+
+      for(BulkDciUpdateElement e : fields)
+         e.setField(msg);
+
+      msg.setField(NXCPCodes.VID_ITEM_LIST, idList);
       session.sendMessage(msg);
       session.waitForRCC(msg.getMessageId());
-      
    }
 
    /**
-    * @return the nodeId
+    * Get ID of data collection owner object
+    *
+    * @return ID of data collection owner object
     */
-   public long getNodeId()
+   public long getOwnerId()
    {
-      return nodeId;
+      return ownerId;
    }
 
    /**

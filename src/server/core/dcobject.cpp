@@ -556,7 +556,7 @@ void DCObject::setStatus(int status, bool generateEvent)
 }
 
 /**
- * Update polling interval type
+ * Update polling schedule type
  */
 void DCObject::setPollingIntervalType(BYTE pollingScheduleType)
 {
@@ -567,15 +567,14 @@ void DCObject::setPollingIntervalType(BYTE pollingScheduleType)
    unlock();
 }
 
-
 /**
  * Update polling interval
  */
-void DCObject::setPollingInterval(TCHAR *schedule)
+void DCObject::setPollingInterval(const TCHAR *schedule)
 {
    lock();
    MemFree(m_pollingIntervalSrc);
-   m_pollingIntervalSrc = schedule;
+   m_pollingIntervalSrc = MemCopyString(schedule);
    updateTimeIntervalsInternal();
    unlock();
 
@@ -596,16 +595,19 @@ void DCObject::setRetentionType(BYTE retentionType)
 /**
  * Update retention time
  */
-void DCObject::setRetention(TCHAR *schedule)
+void DCObject::setRetention(const TCHAR *retention)
 {
    lock();
    MemFree(m_retentionTimeSrc);
-   m_retentionTimeSrc = schedule;
+   m_retentionTimeSrc = MemCopyString(retention);
    updateTimeIntervalsInternal();
    unlock();
 
 }
 
+/**
+ * Expand custom schedule string
+ */
 String DCObject::expandSchedule(const TCHAR *schedule)
 {
    StringBuffer expandedSchedule;

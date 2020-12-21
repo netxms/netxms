@@ -4127,7 +4127,9 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
+/**
+ * Perform bulk update of DCI set
+ */
 void ClientSession::bulkDCIUpdate(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
@@ -4140,14 +4142,14 @@ void ClientSession::bulkDCIUpdate(NXCPMessage *request)
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
-            if (static_cast<DataCollectionOwner&>(*object).bulkUpdate(request))
-               msg.setField(VID_RCC, RCC_SUCCESS);
-            else
-               msg.setField(VID_RCC, RCC_INVALID_DCI_ID);
+            msg.setField(VID_NUM_ITEMS, static_cast<DataCollectionOwner&>(*object).updateMultipleDCObjects(*request));
+            msg.setField(VID_RCC, RCC_SUCCESS);
+            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Successful bulk DCI update"));
          }
          else  // User doesn't have MODIFY rights on object
          {
             msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on DCI bulk update"));
          }
       }
       else     // Object is not a node

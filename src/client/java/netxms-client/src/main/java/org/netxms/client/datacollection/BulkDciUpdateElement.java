@@ -21,21 +21,28 @@ package org.netxms.client.datacollection;
 import org.netxms.base.NXCPMessage;
 
 /**
- * Class that contains information about edited element
+ * Information for bulk DCI update
  */
-public class BulkUpdateElement
+public class BulkDciUpdateElement
 {
-   protected Object value;
    private long fieldId;
+   protected Object value;
    
-   public BulkUpdateElement(long fieldId)
+   /**
+    * Create new update element for given field
+    *
+    * @param fieldId field ID
+    */
+   public BulkDciUpdateElement(long fieldId)
    {
       this.fieldId = fieldId;
       value = null;
    }
    
    /**
-    * @param value2 the value to set
+    * Set field value
+    *
+    * @param value new field value
     */
    public void setValue(Object value)
    {
@@ -43,19 +50,20 @@ public class BulkUpdateElement
    }
 
    /**
-    * Returns if filed is modified
+    * Returns if field has to be modified
     * 
-    * @return true if field is modified
+    * @return true if field has to be modified
     */
    public boolean isModified()
    {
-      return value != null && !(value instanceof String && ((String)value).isEmpty()) && !(value instanceof Integer && ((Integer)value) == -1);
+      return (value != null) && !(value instanceof String && ((String)value).isEmpty())
+            && !(value instanceof Integer && ((Integer)value) == -1);
    }
 
    /**
     * Set updated field to message
     * 
-    * @param msg NXCPMessage to update information on server
+    * @param msg NXCP message to update information on server
     */
    public void setField(NXCPMessage msg)
    {
@@ -71,6 +79,4 @@ public class BulkUpdateElement
          msg.setFieldInt32(fieldId, (Integer)value);         
       }
    }
-   
-   
 }

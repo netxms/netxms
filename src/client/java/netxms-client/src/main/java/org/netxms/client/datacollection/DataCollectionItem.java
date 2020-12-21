@@ -126,7 +126,7 @@ public class DataCollectionItem extends DataCollectionObject
     */
    public DataCollectionItem(DataCollectionConfiguration owner, long id)
    {
-      this(owner, owner.getNodeId(), id);
+      this(owner, owner.getOwnerId(), id);
    }
 
    /**
