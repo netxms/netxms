@@ -115,7 +115,7 @@ public abstract class DataCollectionObject
 	{
 		this.owner = owner;
 		id = msg.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
-		nodeId = (owner != null) ? owner.getNodeId() : msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID);
+		nodeId = (owner != null) ? owner.getOwnerId() : msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID);
 		templateId = msg.getFieldAsInt64(NXCPCodes.VID_TEMPLATE_ID);
 		resourceId = msg.getFieldAsInt64(NXCPCodes.VID_RESOURCE_ID);
 		sourceNode = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
@@ -204,7 +204,7 @@ public abstract class DataCollectionObject
     */
    protected DataCollectionObject(final DataCollectionConfiguration owner, long id)
    {
-      this(owner, owner.getNodeId(), id);
+      this(owner, owner.getOwnerId(), id);
    }
 
    /**
@@ -236,7 +236,7 @@ public abstract class DataCollectionObject
    {
 	   this.owner = owner;
 	   id = src.id;
-      nodeId = (owner != null) ? owner.getNodeId() : src.nodeId;
+      nodeId = (owner != null) ? owner.getOwnerId() : src.nodeId;
 	   templateId = src.templateId;
 	   resourceId = src.resourceId;
 	   sourceNode = src.sourceNode;

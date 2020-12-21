@@ -21,52 +21,65 @@ package org.netxms.ui.eclipse.datacollection.dialogs.helpers;
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.constants.ObjectStatus;
-import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.eclipse.swt.widgets.Display;
 
+/**
+ * Label provider for bulk DCI update dialog
+ */
 public class BulkUpdateLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
    @Override
    public Image getColumnImage(Object element, int columnIndex)
    {
       return null;
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
    @Override
    public String getColumnText(Object element, int columnIndex)
    {
-      BulkUpdateElementUI el = (BulkUpdateElementUI)element;
+      BulkDciUpdateElementUI el = (BulkDciUpdateElementUI)element;
       switch(columnIndex)
       {
          case 0:
             return el.getName();
          case 1:
-            if(el.isText())
+            if (el.isText())
                return el.getTextValue().isEmpty() ? "No change" : el.getTextValue();
-            else 
-               return el.getPossibleValues()[el.getSelectionValue() + 1]; 
+            return el.getPossibleValues()[el.getSelectionValue() + 1];
          default:
             return null;
       }
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getForeground(java.lang.Object, int)
+    */
    @Override
    public Color getForeground(Object element, int columnIndex)
    {
+      if (columnIndex == 0)
+         return null;
+      BulkDciUpdateElementUI el = (BulkDciUpdateElementUI)element;
+      if (!el.isModified())
+         return Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND);
       return null;
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getBackground(java.lang.Object, int)
+    */
    @Override
    public Color getBackground(Object element, int columnIndex)
    {
-      BulkUpdateElementUI el = (BulkUpdateElementUI)element;
-      if(!el.isModified())
-         return StatusDisplayInfo.getStatusColor(ObjectStatus.UNMANAGED);
-      
       return null;
    }
-
 }

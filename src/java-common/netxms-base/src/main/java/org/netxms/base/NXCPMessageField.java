@@ -26,7 +26,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.Set;
+import java.util.Collection;
 import java.util.UUID;
 
 /**
@@ -228,13 +228,13 @@ public class NXCPMessageField
 	}
 
    /**
-    * Create binary field from set of long integers. Each element will be converted to network byte order and then array will be
-    * serialized as array of bytes.
+    * Create binary field from collection of long integers. Each element will be converted to network byte order and then array will
+    * be serialized as array of bytes.
     * 
     * @param fieldId field ID
     * @param value value to be encoded
     */
-   public NXCPMessageField(final long fieldId, final Set<Long> value)
+   public NXCPMessageField(final long fieldId, final Collection<Long> value)
    {
       id = fieldId;
       type = TYPE_BINARY;

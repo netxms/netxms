@@ -19,18 +19,18 @@
 package org.netxms.ui.eclipse.datacollection.dialogs.helpers;
 
 import org.eclipse.swt.events.VerifyListener;
-import org.netxms.client.datacollection.BulkUpdateElement;
+import org.netxms.client.datacollection.BulkDciUpdateElement;
 
 /**
- * Class that contains information about edited element
+ * Information about changed field for buld DCI updates
  */
-public class BulkUpdateElementUI extends BulkUpdateElement
+public class BulkDciUpdateElementUI extends BulkDciUpdateElement
 {
    private String name;
    private String[] possibleValues;
-   private VerifyListener listener;
-   private IsEditable callback;
-   
+   private VerifyListener verifyListener;
+   private EditModeSelector callback;
+
    /**
     * Constructor for bulk update element 
     * 
@@ -38,12 +38,12 @@ public class BulkUpdateElementUI extends BulkUpdateElement
     * @param fieldId filed id in NXCPMessage
     * @param possibleValues possible values for drop-down
     */
-   public BulkUpdateElementUI(String name, long fieldId, String[] possibleValues)
+   public BulkDciUpdateElementUI(String name, long fieldId, String[] possibleValues)
    {
       super(fieldId);
       this.name = name;
       this.possibleValues = possibleValues;
-      this.listener = null;
+      this.verifyListener = null;
    }
    
    /**
@@ -54,12 +54,12 @@ public class BulkUpdateElementUI extends BulkUpdateElement
     * @param possibleValues possible values for drop-down
     * @param callback callback that returns if field is editable (field is always editable if not provided)
     */
-   public BulkUpdateElementUI(String name, long fieldId, String[] possibleValues, IsEditable callback)
+   public BulkDciUpdateElementUI(String name, long fieldId, String[] possibleValues, EditModeSelector callback)
    {
       super(fieldId);
       this.name = name;
       this.possibleValues = possibleValues;
-      this.listener = null;
+      this.verifyListener = null;
       this.callback = callback;
    }
    
@@ -69,17 +69,17 @@ public class BulkUpdateElementUI extends BulkUpdateElement
     * @param name field name
     * @param fieldId filed id in NXCPMessage
     * @param possibleValues possible values for drop-down
-    * @param listener field validation listener (should be used for number only fields)
+    * @param verifyListener field validation listener (should be used for number only fields)
     */
-   public BulkUpdateElementUI(String name, long fieldId, String[] possibleValues, VerifyListener listener)
+   public BulkDciUpdateElementUI(String name, long fieldId, String[] possibleValues, VerifyListener verifyListener)
    {
       super(fieldId);
       this.name = name;
       this.possibleValues = possibleValues;
-      this.listener = listener;
+      this.verifyListener = verifyListener;
       callback = null;
    }
-   
+
    /**
     * @return the value
     */
@@ -90,7 +90,7 @@ public class BulkUpdateElementUI extends BulkUpdateElement
       else
          return "";
    }
-   
+
    /**
     * @return the value
     */
@@ -101,7 +101,7 @@ public class BulkUpdateElementUI extends BulkUpdateElement
       else
          return -1;
    }
-   
+
    /**
     * @return the name
     */
@@ -134,7 +134,7 @@ public class BulkUpdateElementUI extends BulkUpdateElement
     */
    public VerifyListener getVerifyListener()
    {
-      return listener;
+      return verifyListener;
    }   
    
    /**
@@ -148,12 +148,12 @@ public class BulkUpdateElementUI extends BulkUpdateElement
          return callback.isEditable();
       return true;
    }
-   
+
    /**
-    * Callback class definition to validate if field is editable
+    * Callback interface used for choosing if field is editable or not
     */
-   public static abstract class IsEditable
+   public static interface EditModeSelector
    {
-      public abstract boolean isEditable(); 
+      public boolean isEditable();
    }
 }

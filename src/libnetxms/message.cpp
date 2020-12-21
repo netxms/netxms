@@ -822,11 +822,11 @@ SharedString NXCPMessage::getFieldAsSharedString(uint32_t fieldId, size_t maxSiz
 {
    if (maxSize > 0)
    {
-      TCHAR *buffer = (TCHAR *)alloca(maxSize * sizeof(TCHAR));
-      getFieldAsString(fieldId, NULL, buffer, maxSize);
+      TCHAR *buffer = static_cast<TCHAR*>(MemAllocLocal(maxSize * sizeof(TCHAR)));
+      getFieldAsString(fieldId, nullptr, buffer, maxSize);
       return SharedString(buffer);
    }
-   return SharedString(getFieldAsString(fieldId, NULL, NULL, 0), Ownership::True);
+   return SharedString(getFieldAsString(fieldId, nullptr, nullptr, 0), Ownership::True);
 }
 
 /**

@@ -94,7 +94,7 @@ public class DataCollectionTable extends DataCollectionObject
     */
    public DataCollectionTable(DataCollectionConfiguration owner, long id)
    {
-      this(owner, owner.getNodeId(), id);
+      this(owner, owner.getOwnerId(), id);
    }
 
    /**

@@ -558,67 +558,56 @@ bool DataCollectionOwner::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, 
 }
 
 /**
- * Data for group of DCIs
+ * Update multiple data collection objects. Returns number of updated DCIs.
  */
-bool DataCollectionOwner::bulkUpdate(NXCPMessage *request)
+int DataCollectionOwner::updateMultipleDCObjects(const NXCPMessage& request)
 {
-   bool success = true;
-   UINT32 dwNumItems, *pdwItemList;
-   dwNumItems = request->getFieldAsUInt32(VID_NUM_ITEMS);
-   pdwItemList = MemAllocArray<UINT32>(dwNumItems);
-   request->getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+   IntegerArray<uint32_t> idList;
+   request.getFieldAsInt32Array(VID_ITEM_LIST, &idList);
+   if (idList.isEmpty())
+      return 0;
 
-   uint32_t pollingScheduleType = -1;
-   uint32_t retentionType = -1;
+   int32_t pollingScheduleType = -1;
+   if (request.isFieldExist(VID_POLLING_SCHEDULE_TYPE))
+      pollingScheduleType = request.getFieldAsInt32(VID_POLLING_SCHEDULE_TYPE);
 
-   if (request->isFieldExist(VID_POLLING_SCHEDULE_TYPE))
-      pollingScheduleType = request->getFieldAsUInt32(VID_POLLING_SCHEDULE_TYPE);
-   if (request->isFieldExist(VID_RETENTION_TYPE))
-      retentionType = request->getFieldAsUInt32(VID_RETENTION_TYPE);
+   int32_t retentionType = -1;
+   if (request.isFieldExist(VID_RETENTION_TYPE))
+      retentionType = request.getFieldAsInt32(VID_RETENTION_TYPE);
 
-   TCHAR *pollingIntervalSrc = request->getFieldAsString(VID_POLLING_INTERVAL);
-   TCHAR *retentionTimeSrc = request->getFieldAsString(VID_RETENTION_TIME);
+   SharedString pollingIntervalSrc = request.getFieldAsSharedString(VID_POLLING_INTERVAL);
+   SharedString retentionTimeSrc = request.getFieldAsSharedString(VID_RETENTION_TIME);
 
-   bool areChanges = (pollingIntervalSrc != nullptr) || (retentionTimeSrc != nullptr) || (pollingScheduleType != -1) ||
-         (retentionType != -1);
-
-   if (areChanges)
+   int count = 0;
+   readLockDciAccess();
+   for(int i = 0; i < idList.size(); i++)
    {
-      readLockDciAccess();
-      for(UINT32 i = 0; i < dwNumItems; i++)
+      int j;
+      for(j = 0; j < m_dcObjects->size(); j++)
       {
-         int j;
-         for(j = 0; j < m_dcObjects->size(); j++)
+         DCObject *dci = m_dcObjects->get(j);
+         if (dci->getId() == idList.get(i))
          {
-            if (m_dcObjects->get(j)->getId() == pdwItemList[i])
-            {
-               if (pollingIntervalSrc != nullptr)
-                  m_dcObjects->get(j)->setPollingInterval(pollingIntervalSrc);
-               if (retentionTimeSrc != nullptr)
-                  m_dcObjects->get(j)->setRetention(retentionTimeSrc);
-               if (pollingScheduleType != -1)
-                  m_dcObjects->get(j)->setPollingIntervalType((BYTE)pollingScheduleType);
-               if (retentionType != -1)
-                  m_dcObjects->get(j)->setRetentionType((BYTE)retentionType);
-               NotifyClientsOnDCIUpdate(*this, m_dcObjects->get(j));
-               break;
-            }
+            if (!pollingIntervalSrc.isNull())
+               dci->setPollingInterval(pollingIntervalSrc);
+            if (!retentionTimeSrc.isNull())
+               dci->setRetention(retentionTimeSrc);
+            if (pollingScheduleType != -1)
+               dci->setPollingIntervalType(static_cast<BYTE>(pollingScheduleType));
+            if (retentionType != -1)
+               dci->setRetentionType(static_cast<BYTE>(retentionType));
+            NotifyClientsOnDCIUpdate(*this, dci);
+            count++;
+            break;
          }
-         if (j == m_dcObjects->size())
-            success = false;     // Invalid DCI ID provided
       }
-      unlockDciAccess();
    }
+   unlockDciAccess();
 
-   if (success)
-   {
-      lockProperties();
+   if (count > 0)
       setModified(MODIFY_DATA_COLLECTION);
-      unlockProperties();
-   }
 
-   MemFree(pdwItemList);
-   return success;
+   return count;
 }
 
 /**

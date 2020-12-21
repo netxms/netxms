@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.UUID;
 import java.util.zip.CRC32;
 import com.jcraft.jzlib.Deflater;
@@ -370,13 +369,13 @@ public class NXCPMessage
 	}
 
    /**
-    * Set binary field from set of long integers. Each element will be converted to network byte order and then array will be
+    * Set binary field from collection of long integers. Each element will be converted to network byte order and then array will be
     * serialized as array of bytes.
     * 
     * @param fieldId field ID
     * @param value value to be encoded
     */
-   public void setField(final long fieldId, final Set<Long> value)
+   public void setField(final long fieldId, final Collection<Long> value)
    {
       setField(new NXCPMessageField(fieldId, value));
    }
