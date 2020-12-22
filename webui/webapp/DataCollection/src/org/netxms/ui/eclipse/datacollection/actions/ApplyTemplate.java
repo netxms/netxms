@@ -65,10 +65,11 @@ public class ApplyTemplate implements IObjectActionDelegate
 	   if ((parentId == null) || (parentId.isEmpty()))
 	      return;
 	   
-      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, ObjectSelectionDialog.createNodeSelectionFilter(true));
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell,
+            ObjectSelectionDialog.createDataCollectionTargetSelectionFilter());
 		if (dlg.open() == Window.OK)
 		{
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         final NXCSession session = ConsoleSharedData.getSession();
 			new ConsoleJob(Messages.get().ApplyTemplate_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()

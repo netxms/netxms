@@ -2366,7 +2366,8 @@ bool IsValidParentClass(int childClass, int parentClass)
 			break;
       case OBJECT_SERVICEROOT:
       case OBJECT_CONTAINER:
-         if ((childClass == OBJECT_CHASSIS) ||
+         if ((childClass == OBJECT_ACCESSPOINT) ||
+             (childClass == OBJECT_CHASSIS) ||
              (childClass == OBJECT_CLUSTER) ||
              (childClass == OBJECT_CONDITION) ||
              (childClass == OBJECT_CONTAINER) ||
@@ -2378,8 +2379,12 @@ bool IsValidParentClass(int childClass, int parentClass)
             return true;
          break;
       case OBJECT_CHASSIS:
-      case OBJECT_RACK:
          if (childClass == OBJECT_NODE)
+            return true;
+         break;
+      case OBJECT_RACK:
+         if ((childClass == OBJECT_CHASSIS) ||
+             (childClass == OBJECT_NODE))
             return true;
          break;
       case OBJECT_TEMPLATEROOT:
@@ -2389,8 +2394,10 @@ bool IsValidParentClass(int childClass, int parentClass)
             return true;
          break;
       case OBJECT_TEMPLATE:
-         if ((childClass == OBJECT_NODE) ||
+         if ((childClass == OBJECT_ACCESSPOINT) ||
+             (childClass == OBJECT_CHASSIS) ||
              (childClass == OBJECT_CLUSTER) ||
+             (childClass == OBJECT_NODE) ||
              (childClass == OBJECT_MOBILEDEVICE) ||
              (childClass == OBJECT_SENSOR))
             return true;
@@ -2409,9 +2416,10 @@ bool IsValidParentClass(int childClass, int parentClass)
             return true;
          break;
       case OBJECT_NODE:
-         if ((childClass == OBJECT_NETWORKSERVICE) ||
-             (childClass == OBJECT_VPNCONNECTOR) ||
-				 (childClass == OBJECT_INTERFACE))
+         if ((childClass == OBJECT_ACCESSPOINT) ||
+             (childClass == OBJECT_INTERFACE) ||
+             (childClass == OBJECT_NETWORKSERVICE) ||
+             (childClass == OBJECT_VPNCONNECTOR))
             return true;
          break;
       case OBJECT_CLUSTER:

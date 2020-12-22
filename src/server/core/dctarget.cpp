@@ -1966,7 +1966,7 @@ void DataCollectionTarget::applyUserTemplates()
       {
          if (!pTemplate->isDirectChild(m_id))
          {
-            DbgPrintf(4, _T("DataCollectionTarget::applyUserTemplates(): applying template %d \"%s\" to object %d \"%s\""),
+            nxlog_debug_tag(_T("obj.dc"), 4, _T("DataCollectionTarget::applyUserTemplates(): applying template %d \"%s\" to object %d \"%s\""),
                       pTemplate->getId(), pTemplate->getName(), m_id, m_name);
             pTemplate->applyToTarget(self());
             PostSystemEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
@@ -1976,7 +1976,7 @@ void DataCollectionTarget::applyUserTemplates()
       {
          if (pTemplate->isAutoUnbindEnabled() && pTemplate->isDirectChild(m_id))
          {
-            DbgPrintf(4, _T("DataCollectionTarget::applyUserTemplates(): removing template %d \"%s\" from object %d \"%s\""),
+            nxlog_debug_tag(_T("obj.dc"), 4, _T("DataCollectionTarget::applyUserTemplates(): removing template %d \"%s\" from object %d \"%s\""),
                       pTemplate->getId(), pTemplate->getName(), m_id, m_name);
             pTemplate->deleteChild(*this);
             deleteParent(*pTemplate);

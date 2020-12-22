@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2020 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,7 +61,6 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.RCC;
-import org.netxms.client.datacollection.BulkUpdateElement;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionConfigurationChangeListener;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -79,7 +78,7 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.dialogs.BulkUpdateDialog;
-import org.netxms.ui.eclipse.datacollection.dialogs.helpers.BulkUpdateElementUI;
+import org.netxms.ui.eclipse.datacollection.dialogs.helpers.BulkDciUpdateElementUI;
 import org.netxms.ui.eclipse.datacollection.views.helpers.DciComparator;
 import org.netxms.ui.eclipse.datacollection.views.helpers.DciFilter;
 import org.netxms.ui.eclipse.datacollection.views.helpers.DciLabelProvider;
@@ -95,7 +94,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Data collection configuration view
- * 
  */
 public class DataCollectionEditor extends ViewPart
 {
@@ -507,7 +505,7 @@ public class DataCollectionEditor extends ViewPart
 		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png")); //$NON-NLS-1$
 		actionEdit.setEnabled(false);
 		
-		actionBulkUpdate = new Action("Bulk update") {
+      actionBulkUpdate = new Action("Bulk update...") {
          @Override
          public void run()
          {
@@ -869,7 +867,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				dciConfig.copyObjects(dciConfig.getNodeId(), dciList);
+				dciConfig.copyObjects(dciConfig.getOwnerId(), dciList);
 				dciConfig.close();
 				dciConfig.open(changeListener);
 				runInUIThread(new Runnable() {
@@ -894,7 +892,8 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void copyItems(final boolean doMove)
 	{
-		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), ObjectSelectionDialog.createNodeAndTemplateSelectionFilter(true));
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(),
+            ObjectSelectionDialog.createDataCollectionOwnerSelectionFilter());
 		if (dlg.open() != Window.OK)
 			return;
 
@@ -947,34 +946,35 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void openBulkUpdateDialog()
 	{      
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      Iterator<?> it = selection.iterator();
-      final long[] dciList = new long[selection.size()];
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      final Set<Long> dciList = new HashSet<Long>(selection.size());
+
       boolean isCustomRetention = true;
       boolean isCustomInterval = true;      
-      for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
+      Iterator<?> it = selection.iterator();
+      while(it.hasNext())
       {
          DataCollectionObject dco = (DataCollectionObject)it.next();
-         dciList[i] = dco.getId();
+         dciList.add(dco.getId());
          if (dco.getRetentionType() != DataCollectionObject.RETENTION_CUSTOM)
             isCustomRetention = false;
          if (dco.getPollingScheduleType() != DataCollectionObject.POLLING_SCHEDULE_CUSTOM)
             isCustomInterval = false;
       }      
 
-      BulkUpdateDialog dlg = new BulkUpdateDialog(getSite().getShell(), isCustomRetention, isCustomInterval); //$NON-NLS-1$
+      BulkUpdateDialog dlg = new BulkUpdateDialog(getSite().getShell(), isCustomRetention, isCustomInterval);
       if (dlg.open() != Window.OK)
          return;      
-      
-      final List<BulkUpdateElementUI> elements = dlg.getBulkUpdateElements();
+
+      final List<BulkDciUpdateElementUI> elements = dlg.getBulkUpdateElements();
       
       boolean changed = false;
-      for (BulkUpdateElementUI e : elements)
+      for (BulkDciUpdateElementUI e : elements)
       {
          if (e.isModified())
             changed = true;
       }
-      
+
       if (!changed)
          return;
 
@@ -982,7 +982,7 @@ public class DataCollectionEditor extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            dciConfig.bulkUpdateDCIs(dciList, elements.toArray(new BulkUpdateElement[elements.size()]));
+            dciConfig.bulkUpdateDCIs(dciList, elements);
          }
 
          @Override
@@ -1023,7 +1023,7 @@ public class DataCollectionEditor extends ViewPart
 				boolean needApply = true;
 				for(long id : template.getChildIdList())
 				{
-					if (id == dciConfig.getNodeId())
+					if (id == dciConfig.getOwnerId())
 					{
 						needApply = false;
 						break;
@@ -1045,7 +1045,7 @@ public class DataCollectionEditor extends ViewPart
 					{
 						try
 						{
-							session.applyTemplate(template.getObjectId(), dciConfig.getNodeId());
+							session.applyTemplate(template.getObjectId(), dciConfig.getOwnerId());
 							success = true;
 						}
 						catch(NXCException e)

@@ -233,7 +233,8 @@ public class WorldMap extends AbstractGeolocationView
 	 */
 	private void placeObject()
 	{
-		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), ObjectSelectionDialog.createNodeSelectionFilter(true));
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(),
+            ObjectSelectionDialog.createDataCollectionTargetSelectionFilter());
 		if (dlg.open() == Window.OK)
 		{
 			final NXCObjectModificationData md = new NXCObjectModificationData(dlg.getSelectedObjects().get(0).getObjectId());
