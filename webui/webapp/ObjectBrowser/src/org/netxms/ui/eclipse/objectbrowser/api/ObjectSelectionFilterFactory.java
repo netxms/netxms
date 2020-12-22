@@ -69,7 +69,7 @@ public class ObjectSelectionFilterFactory
     */
    public Set<Integer> createNodeSelectionFilter(boolean allowMobileDevices)
    {
-      HashSet<Integer> classFilter = new HashSet<Integer>(7);
+      HashSet<Integer> classFilter = new HashSet<Integer>(11);
       classFilter.add(AbstractObject.OBJECT_NETWORK);
       classFilter.add(AbstractObject.OBJECT_ZONE);
       classFilter.add(AbstractObject.OBJECT_SUBNET);
@@ -182,27 +182,50 @@ public class ObjectSelectionFilterFactory
    }
 
    /**
-    * Create filter for node selection - it allows node objects and possible parents - subnets and containers.
+    * Create filter for data collection owner selection.
     * 
-    * @return Class filter for node selection
+    * @return Class filter for data collection owner selection
     */
-   public Set<Integer> createNodeAndTemplateSelectionFilter(boolean allowMobileDevices)
+   public Set<Integer> createDataCollectionOwnerSelectionFilter()
    {
-      HashSet<Integer> classFilter = new HashSet<Integer>(9);
+      HashSet<Integer> classFilter = new HashSet<Integer>(14);
       classFilter.add(AbstractObject.OBJECT_NETWORK);
+      classFilter.add(AbstractObject.OBJECT_ZONE);
       classFilter.add(AbstractObject.OBJECT_SUBNET);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_CLUSTER);
+      classFilter.add(AbstractObject.OBJECT_CHASSIS);
+      classFilter.add(AbstractObject.OBJECT_RACK);
       classFilter.add(AbstractObject.OBJECT_NODE);
+      classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
+      classFilter.add(AbstractObject.OBJECT_SENSOR);
       classFilter.add(AbstractObject.OBJECT_TEMPLATEROOT);
       classFilter.add(AbstractObject.OBJECT_TEMPLATEGROUP);
       classFilter.add(AbstractObject.OBJECT_TEMPLATE);
-      if (allowMobileDevices)
-      {
-         classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
-         classFilter.add(AbstractObject.OBJECT_SENSOR);
-      }
+      return classFilter;
+   }
+
+   /**
+    * Create filter for data collection targets selection.
+    * 
+    * @return Class filter for data collection targets selection
+    */
+   public Set<Integer> createDataCollectionTargetSelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(12);
+      classFilter.add(AbstractObject.OBJECT_NETWORK);
+      classFilter.add(AbstractObject.OBJECT_ZONE);
+      classFilter.add(AbstractObject.OBJECT_SUBNET);
+      classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_CONTAINER);
+      classFilter.add(AbstractObject.OBJECT_RACK);
+      classFilter.add(AbstractObject.OBJECT_CHASSIS);
+      classFilter.add(AbstractObject.OBJECT_CLUSTER);
+      classFilter.add(AbstractObject.OBJECT_NODE);
+      classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
+      classFilter.add(AbstractObject.OBJECT_SENSOR);
+      classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
       return classFilter;
    }
 

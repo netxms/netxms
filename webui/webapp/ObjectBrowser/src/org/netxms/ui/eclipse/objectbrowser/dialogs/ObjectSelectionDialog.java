@@ -139,15 +139,24 @@ public class ObjectSelectionDialog extends Dialog
    }
 
 	/**
-	 * Create filter for node selection - it allows node objects and possible
-	 * parents - subnets and containers.
-	 * 
-	 * @return Class filter for node selection
-	 */
-	public static Set<Integer> createNodeAndTemplateSelectionFilter(boolean allowMobileDevices)
+    * Create filter for data collection owner selection.
+    * 
+    * @return Class filter for data collection owner selection
+    */
+   public static Set<Integer> createDataCollectionOwnerSelectionFilter()
 	{
-		return ObjectSelectionFilterFactory.getInstance().createNodeAndTemplateSelectionFilter(allowMobileDevices);
+      return ObjectSelectionFilterFactory.getInstance().createDataCollectionOwnerSelectionFilter();
 	}
+
+   /**
+    * Create filter for data collection targets selection.
+    * 
+    * @return Class filter for data collection targets selection
+    */
+   public static Set<Integer> createDataCollectionTargetSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createDataCollectionTargetSelectionFilter();
+   }
 
 	/**
 	 * Create filter for node selection - it allows node objects and possible
@@ -190,7 +199,6 @@ public class ObjectSelectionDialog extends Dialog
       return ObjectSelectionFilterFactory.getInstance().createRackSelectionFilter();
    }
 
-   
    /**
     * Create filter for rack and chassis selection
     * 
@@ -234,11 +242,9 @@ public class ObjectSelectionDialog extends Dialog
 		this.currentObject = currentObject;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -255,13 +261,9 @@ public class ObjectSelectionDialog extends Dialog
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets
-	 * .Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -288,9 +290,9 @@ public class ObjectSelectionDialog extends Dialog
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
+    */
 	@Override
 	protected void cancelPressed()
 	{
@@ -298,9 +300,9 @@ public class ObjectSelectionDialog extends Dialog
 		super.cancelPressed();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{

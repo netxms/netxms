@@ -2276,7 +2276,7 @@ restart_agent_check:
    lockProperties();
    if (m_pollerNode != 0)
    {
-      UINT32 id = m_pollerNode;
+      uint32_t id = m_pollerNode;
       unlockProperties();
       pollerNode = static_pointer_cast<Node>(FindObjectById(id, OBJECT_NODE));
    }
@@ -3735,6 +3735,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
       POLL_CANCELLATION_CHECKPOINT();
 
+      poller->setStatus(_T("autobind"));
       applyUserTemplates();
       updateContainerMembership();
       updateClusterMembership();

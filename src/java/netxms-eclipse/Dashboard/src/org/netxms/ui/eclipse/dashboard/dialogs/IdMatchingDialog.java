@@ -94,9 +94,9 @@ public class IdMatchingDialog extends Dialog
 		newShell.setText(Messages.get().IdMatchingDialog_Title);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -199,9 +199,13 @@ public class IdMatchingDialog extends Dialog
 		Set<Integer> classFilter;
 		switch(data.objectClass)
 		{
-			case AbstractObject.OBJECT_NODE:
+         case AbstractObject.OBJECT_ACCESSPOINT:
+         case AbstractObject.OBJECT_CHASSIS:
          case AbstractObject.OBJECT_CLUSTER:
-				classFilter = ObjectSelectionDialog.createNodeSelectionFilter(false);
+         case AbstractObject.OBJECT_MOBILEDEVICE:
+			case AbstractObject.OBJECT_NODE:
+         case AbstractObject.OBJECT_SENSOR:
+            classFilter = ObjectSelectionDialog.createDataCollectionTargetSelectionFilter();
 				showFilterToolTip = true;
 				break;
 			case AbstractObject.OBJECT_CONTAINER:
@@ -240,7 +244,7 @@ public class IdMatchingDialog extends Dialog
 			}
 		}
 	}
-	
+
 	/**
 	 * Update mapping for all DCIs of given node after node mapping change
 	 * 

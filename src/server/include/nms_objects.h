@@ -2386,6 +2386,8 @@ protected:
 	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+
 public:
    AccessPoint();
    AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& macAddr);
@@ -2428,7 +2430,6 @@ public:
    void updateState(AccessPointState state);
 
    virtual bool lockForStatusPoll() override { return false; }
-   virtual bool lockForConfigurationPoll() override { return false; }
    virtual bool lockForInstancePoll() override { return false; }
 };
 

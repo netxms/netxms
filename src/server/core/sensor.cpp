@@ -553,6 +553,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
 
    if (m_commProtocol == COMM_LORAWAN)
    {
+      poller->setStatus(_T("lorawan"));
       if (!(m_state & SSF_PROVISIONED))
       {
          if (registerLoraDevice(this) && (m_state & SSF_PROVISIONED))
@@ -573,6 +574,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
       }
    }
 
+   poller->setStatus(_T("autobind"));
    applyUserTemplates();
    updateContainerMembership();
 

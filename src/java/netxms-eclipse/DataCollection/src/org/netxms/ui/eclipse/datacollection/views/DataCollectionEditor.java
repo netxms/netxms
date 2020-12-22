@@ -892,7 +892,8 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void copyItems(final boolean doMove)
 	{
-		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), ObjectSelectionDialog.createNodeAndTemplateSelectionFilter(true));
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(),
+            ObjectSelectionDialog.createDataCollectionOwnerSelectionFilter());
 		if (dlg.open() != Window.OK)
 			return;
 

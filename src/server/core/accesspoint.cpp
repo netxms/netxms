@@ -516,6 +516,51 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 }
 
 /**
+ * Perform configuration poll on this data collection target. Default implementation do nothing.
+ */
+void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
+{
+   lockProperties();
+   if (m_isDeleteInitiated || IsShutdownInProgress())
+   {
+      m_configurationPollState.complete(0);
+      unlockProperties();
+      return;
+   }
+   unlockProperties();
+
+   poller->setStatus(_T("wait for lock"));
+   pollerLock(configuration);
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
+   m_pollRequestor = session;
+   nxlog_debug(5, _T("Starting configuration poll for access point %s (ID: %d), m_flags: %d"), m_name, m_id, m_flags);
+
+   poller->setStatus(_T("autobind"));
+   applyUserTemplates();
+   updateContainerMembership();
+
+   // Execute hook script
+   poller->setStatus(_T("hook"));
+   executeHookScript(_T("ConfigurationPoll"));
+
+   sendPollerMsg(rqId, _T("Finished configuration poll for access point %s\r\n"), m_name);
+
+   lockProperties();
+   m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
+   m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
+   unlockProperties();
+
+   pollerUnlock();
+   nxlog_debug(5, _T("Finished configuration poll for access point %s (ID: %d)"), m_name, m_id);
+}
+
+/**
  * Create NXSL object for this object
  */
 NXSL_Value *AccessPoint::createNXSLObject(NXSL_VM *vm) const

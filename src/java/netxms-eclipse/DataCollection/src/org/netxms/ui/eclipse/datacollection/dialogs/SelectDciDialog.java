@@ -77,9 +77,9 @@ public class SelectDciDialog extends Dialog
 		this.fixedNode = fixedNode;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -98,9 +98,9 @@ public class SelectDciDialog extends Dialog
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected void createButtonsForButtonBar(Composite parent)
 	{
@@ -126,9 +126,9 @@ public class SelectDciDialog extends Dialog
 		super.createButtonsForButtonBar(parent);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -141,7 +141,8 @@ public class SelectDciDialog extends Dialog
 		{
 			splitter = new SashForm(dialogArea, SWT.HORIZONTAL);
 			
-			objectTree = new ObjectTree(splitter, SWT.BORDER, ObjectTree.NONE, ObjectSelectionDialog.createNodeSelectionFilter(true), true, false);
+         objectTree = new ObjectTree(splitter, SWT.BORDER, ObjectTree.NONE,
+               ObjectSelectionDialog.createDataCollectionTargetSelectionFilter(), true, false);
 			String text = settings.get("SelectDciDialog.Filter"); //$NON-NLS-1$
 			if (text != null)
 				objectTree.setFilter(text);
@@ -233,9 +234,9 @@ public class SelectDciDialog extends Dialog
 		super.cancelPressed();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
