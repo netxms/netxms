@@ -85,6 +85,11 @@
 #undef HAVE_DECL_GETOPT_LONG
 #define HAVE_DECL_GETOPT_LONG 1
 
+#else
+
+#undef HAVE_GETOPT_LONG
+#define HAVE_GETOPT_LONG 1
+
 #endif
 
 #if !REPLACE_GETOPT && HAVE_GETOPT_H

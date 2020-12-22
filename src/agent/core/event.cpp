@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@
 /**
  * Static data
  */
-static UINT64 s_generatedEventsCount = 0;
-static UINT64 s_eventIdBase = static_cast<UINT64>(time(NULL)) << 32;
+static uint64_t s_generatedEventsCount = 0;
+static uint64_t s_eventIdBase = static_cast<uint64_t>(time(nullptr)) << 32;
 static VolatileCounter s_eventIdCounter = 0;
 static time_t s_lastEventTimestamp = 0;
 
@@ -52,7 +52,7 @@ void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, int
    }
 
    NXCPMessage *msg = new NXCPMessage(CMD_TRAP, 0, 4); // Use version 4
-	msg->setField(VID_TRAP_ID, s_eventIdBase | static_cast<uint64_t>(InterlockedIncrement(&s_eventIdCounter)));
+   msg->setField(VID_TRAP_ID, s_eventIdBase | static_cast<uint64_t>(InterlockedIncrement(&s_eventIdCounter)));
    msg->setField(VID_EVENT_CODE, eventCode);
 	if (eventName != nullptr)
 		msg->setField(VID_EVENT_NAME, eventName);
@@ -165,8 +165,50 @@ void ForwardEvent(NXCPMessage *msg)
 {
 	msg->setField(VID_TRAP_ID, s_eventIdBase | (UINT64)InterlockedIncrement(&s_eventIdCounter));
 	s_generatedEventsCount++;
-	s_lastEventTimestamp = time(NULL);
+	s_lastEventTimestamp = time(nullptr);
 	g_notificationProcessorQueue.put(msg);
+}
+
+/**
+ * Process push request
+ */
+static void ProcessEventSendRequest(NamedPipe *pipe, void *arg)
+{
+   TCHAR buffer[256];
+
+   nxlog_debug(5, _T("ProcessEventSendRequest: connection established"));
+   PipeMessageReceiver receiver(pipe->handle(), 8192, 1048576);  // 8K initial, 1M max
+   while(true)
+   {
+      MessageReceiverResult result;
+      NXCPMessage *msg = receiver.readMessage(5000, &result);
+      if (msg == nullptr)
+         break;
+      AgentWriteDebugLog(6, _T("ProcessEventSendRequest: received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+      if (msg->getCode() == CMD_TRAP)
+         ForwardEvent(msg);
+      else
+         delete msg;
+   }
+   AgentWriteDebugLog(5, _T("ProcessEventSendRequest: connection by user %s closed"), pipe->user());
+}
+
+/**
+ * Pipe listener for event connector
+ */
+static NamedPipeListener *s_listener;
+
+/**
+ * Start event connector
+ */
+void StartEventConnector()
+{
+   shared_ptr<Config> config = g_config;
+   const TCHAR *user = config->getValue(_T("/%agent/EventUser"), _T("*"));
+   s_listener = NamedPipeListener::create(_T("nxagentd.events"), ProcessEventSendRequest, nullptr,
+            (user != nullptr) && (user[0] != 0) && _tcscmp(user, _T("*")) ? user : nullptr);
+   if (s_listener != nullptr)
+      s_listener->start();
 }
 
 /**

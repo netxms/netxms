@@ -25,7 +25,7 @@
 /**
  * Request ID
  */
-static UINT64 s_requestIdHigh = (UINT64)time(NULL) << 32;
+static uint64_t s_requestIdHigh = (uint64_t)time(NULL) << 32;
 static VolatileCounter s_requestIdLow = 0;
 
 /**
@@ -87,7 +87,7 @@ static Mutex s_localCacheLock;
 /**
  * Store pushed data locally
  */
-static void StoreLocalData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_t timestamp)
+static void StoreLocalData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, time_t timestamp)
 {
    nxlog_debug(6, _T("StoreLocalData: \"%s\" = \"%s\""), parameter, value);
    s_localCacheLock.lock();
@@ -144,17 +144,11 @@ static NamedPipeListener *s_listener;
  */
 void StartPushConnector()
 {
-   if (!(g_dwFlags & AF_ENABLE_PUSH_CONNECTOR))
-   {
-      nxlog_write(NXLOG_INFO, _T("Push connector is disabled"));
-      return;
-   }
-
    shared_ptr<Config> config = g_config;
    const TCHAR *user = config->getValue(_T("/%agent/PushUser"), _T("*"));
-   s_listener = NamedPipeListener::create(_T("nxagentd.push"), ProcessPushRequest, NULL,
-            (user != NULL) && (user[0] != 0) && _tcscmp(user, _T("*")) ? user : NULL);
-   if (s_listener != NULL)
+   s_listener = NamedPipeListener::create(_T("nxagentd.push"), ProcessPushRequest, nullptr,
+            (user != nullptr) && (user[0] != 0) && _tcscmp(user, _T("*")) ? user : nullptr);
+   if (s_listener != nullptr)
       s_listener->start();
 }
 

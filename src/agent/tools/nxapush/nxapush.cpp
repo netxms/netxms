@@ -32,7 +32,7 @@ NETXMS_EXECUTABLE_HEADER(nxapush)
 /**
  * Pipe handle
  */
-static NamedPipe *s_pipe = NULL;
+static NamedPipe *s_pipe = nullptr;
 
 /**
  * Data to send
@@ -43,7 +43,7 @@ static StringMap *s_data = new StringMap;
  * options
  */
 static int s_optVerbose = 1;
-static UINT32 s_optObjectId = 0;
+static uint32_t s_optObjectId = 0;
 static time_t s_timestamp = 0;
 static bool s_localCache = false;
 static bool s_statsiteFormat = false;
@@ -53,20 +53,20 @@ static bool s_statsiteFormat = false;
  */
 static bool AddValueStatSite(TCHAR *input)
 {
-   bool ret = FALSE;
+   bool ret = false;
    TCHAR *p = input;
-   TCHAR *value = NULL;
-   TCHAR *timestamp = NULL;
+   TCHAR *value = nullptr;
+   TCHAR *timestamp = nullptr;
 
    for(; *p != 0; p++)
    {
       if (*p == _T('|'))
       {
-         if (value == NULL)
+         if (value == nullptr)
          {
             value = p;
          }
-         else if (timestamp == NULL)
+         else if (timestamp == nullptr)
          {
             timestamp = p;
          }
@@ -78,15 +78,15 @@ static bool AddValueStatSite(TCHAR *input)
       }
    }
 
-   if (timestamp != NULL)
+   if (timestamp != nullptr)
    {
       *timestamp++ = 0;
    }
-   if (value != NULL)
+   if (value != nullptr)
    {
       *value++ = 0;
       s_data->set(input, value);
-      ret = TRUE;
+      ret = true;
    }
 
    return ret;
@@ -99,11 +99,11 @@ static bool AddValueNative(TCHAR *pair)
 {
 	bool ret = false;
 	TCHAR *p = pair;
-	TCHAR *value = NULL;
+	TCHAR *value = nullptr;
 
 	for(; *p != 0; p++)
 	{
-		if (*p == _T('=') && value == NULL)
+		if (*p == _T('=') && value == nullptr)
 		{
 			value = p;
 		}
@@ -114,7 +114,7 @@ static bool AddValueNative(TCHAR *pair)
 		}
 	}
 
-	if (value != NULL)
+	if (value != nullptr)
 	{
 		*value++ = 0;
 		s_data->set(pair, value);
@@ -135,20 +135,20 @@ inline bool AddValue(TCHAR *input)
 /**
  * Initialize and connect to the agent
  */
-static BOOL Startup()
+static bool Startup()
 {
    s_pipe = NamedPipe::connect(_T("nxagentd.push"));
-   if (s_pipe == NULL)
+   if (s_pipe == nullptr)
    {
       if (s_optVerbose > 1)
          _tprintf(_T("ERROR: named pipe connection failed\n"));
-      return FALSE;
+      return false;
    }
 
 	if (s_optVerbose > 2)
 		_tprintf(_T("Connected to NetXMS agent\n"));
 
-	return TRUE;
+	return true;
 }
 
 /**
@@ -186,19 +186,19 @@ static bool Teardown()
 /**
  * Command line options
  */
-#if HAVE_DECL_GETOPT_LONG
+#if HAVE_GETOPT_LONG
 static struct option longOptions[] =
 {
-	{ (char *)"help",           no_argument,       NULL,        'h'},
-   { (char *)"local-cache",    no_argument,       NULL,        'l'},
-	{ (char *)"object",         required_argument, NULL,        'o'},
-	{ (char *)"quiet",          no_argument,       NULL,        'q'},
-   { (char *)"statsite",       no_argument,       NULL,        's'},
-	{ (char *)"timestamp-unix", required_argument, NULL,        't'},
-	{ (char *)"timestamp-text", required_argument, NULL,        'T'},
-	{ (char *)"verbose",        no_argument,       NULL,        'v'},
-	{ (char *)"version",        no_argument,       NULL,        'V'},
-	{ NULL, 0, NULL, 0}
+	{ (char *)"help",           no_argument,       nullptr,        'h'},
+   { (char *)"local-cache",    no_argument,       nullptr,        'l'},
+	{ (char *)"object",         required_argument, nullptr,        'o'},
+	{ (char *)"quiet",          no_argument,       nullptr,        'q'},
+   { (char *)"statsite",       no_argument,       nullptr,        's'},
+	{ (char *)"timestamp-unix", required_argument, nullptr,        't'},
+	{ (char *)"timestamp-text", required_argument, nullptr,        'T'},
+	{ (char *)"verbose",        no_argument,       nullptr,        'v'},
+	{ (char *)"version",        no_argument,       nullptr,        'V'},
+	{ nullptr, 0, nullptr, 0}
 };
 #endif
 
@@ -259,7 +259,7 @@ _T("      nxapush @file\n")
  */
 static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
-   if (tag != NULL)
+   if (tag != nullptr)
       _tprintf(_T("<%s> "), tag);
    _vtprintf(format, args);
    _fputtc(_T('\n'), stdout);
@@ -270,15 +270,13 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
  */
 int main(int argc, char *argv[])
 {
-	int ret = 0;
-	int c;
-
 	InitNetXMSProcess(true);
    nxlog_set_debug_writer(DebugWriter);
 
 	opterr = 0;
-#if HAVE_DECL_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, SHORT_OPTIONS, longOptions, NULL)) != -1)
+	int c;
+#if HAVE_GETOPT_LONG
+	while ((c = getopt_long(argc, argv, SHORT_OPTIONS, longOptions, nullptr)) != -1)
 #else
 	while ((c = getopt(argc, argv, SHORT_OPTIONS)) != -1)
 #endif
@@ -293,7 +291,7 @@ int main(int argc, char *argv[])
             s_localCache = true;
             break;
 		   case 'o': // object ID
-			   s_optObjectId = strtoul(optarg, NULL, 0);
+			   s_optObjectId = strtoul(optarg, nullptr, 0);
 			   break;
 		   case 'q': // quiet
 			   s_optVerbose = 0;
@@ -302,7 +300,7 @@ int main(int argc, char *argv[])
             s_statsiteFormat = true;
             break;
 		   case 't': // timestamp as UNIX time
-			   s_timestamp = (time_t)strtoull(optarg, NULL, 0);
+			   s_timestamp = (time_t)strtoull(optarg, nullptr, 0);
 			   break;
 		   case 'T': // timestamp as YYYYMMDDhhmmss
 			   s_timestamp = ParseDateTimeA(optarg, 0);
@@ -331,80 +329,82 @@ int main(int argc, char *argv[])
 			_tprintf(_T("Try `%hs -h' for more information.\n"), argv[0]);
 #endif
 		}
-		exit(1);
+		return 1;
 	}
 
    nxlog_set_debug_level(s_optVerbose);
 
 	// Parse
-	if (optind < argc)
-	{
-		while (optind < argc)
-		{
-			char *p = argv[optind];
+   while (optind < argc)
+   {
+      char *p = argv[optind];
 
-			if (((*p == '@') && (strchr(p, '=') == NULL)) || (*p == '-'))
-			{
-				FILE *fileHandle = stdin;
+      if (((*p == '@') && (strchr(p, '=') == nullptr)) || (*p == '-'))
+      {
+         FILE *fileHandle = stdin;
 
-				if (*p != '-')
-				{
-					fileHandle = fopen(p + 1, "r");
-				}
+         if (*p != '-')
+         {
+            fileHandle = fopen(p + 1, "r");
+         }
 
-				if (fileHandle != NULL)
-				{
-					char buffer[1024];
+         if (fileHandle != nullptr)
+         {
+            char buffer[1024];
 
-					while(fgets(buffer, sizeof(buffer), fileHandle) != NULL)
-					{
+            while(fgets(buffer, sizeof(buffer), fileHandle) != nullptr)
+            {
 #ifdef UNICODE
-						WCHAR *wvalue = WideStringFromMBStringSysLocale(buffer);
-						AddValue(wvalue);
-						MemFree(wvalue);
+               WCHAR *wvalue = WideStringFromMBStringSysLocale(buffer);
+               AddValue(wvalue);
+               MemFree(wvalue);
 #else
-						AddValue(buffer);
+               AddValue(buffer);
 #endif
-					}
+            }
 
-					if (fileHandle != stdin)
-					{
-						fclose(fileHandle);
-					}
-				}
-				else
-				{
-					if (s_optVerbose > 0)
-					{
-						_tprintf(_T("Cannot open \"%hs\": %hs\n"), p + 1, strerror(errno));
-					}
-				}
-			}
-			else
-			{
+            if (fileHandle != stdin)
+            {
+               fclose(fileHandle);
+            }
+         }
+         else
+         {
+            if (s_optVerbose > 0)
+            {
+               _tprintf(_T("Cannot open \"%hs\": %hs\n"), p + 1, strerror(errno));
+            }
+         }
+      }
+      else
+      {
 #ifdef UNICODE
-				WCHAR *wvalue = WideStringFromMBStringSysLocale(argv[optind]);
-				AddValue(wvalue);
-				MemFree(wvalue);
+         WCHAR *wvalue = WideStringFromMBStringSysLocale(argv[optind]);
+         AddValue(wvalue);
+         MemFree(wvalue);
 #else
-				AddValue(argv[optind]);
+         AddValue(argv[optind]);
 #endif
-			}
+      }
 
-			optind++;
-		}
-	}
+      optind++;
+   }
 
+   int ret = 0;
 	if (s_data->size() > 0)
 	{
 		if (s_optVerbose > 1)
 			_tprintf(_T("%d data pair%s to send\n"), s_data->size(), (s_data->size() == 1) ? _T("") : _T("s"));
 		if (Startup())
 		{
-			if (Send() != TRUE)
+			if (!Send())
 			{
 				ret = 3;
 			}
+		}
+		else
+		{
+		   ret = 2;
 		}
 	}
 	else
@@ -412,7 +412,7 @@ int main(int argc, char *argv[])
 		if (s_optVerbose > 0)
 		{
 			_tprintf(_T("No valid pairs found; nothing to send\n"));
-			ret = 2;
+			ret = 1;
 		}
 	}
 	Teardown();
