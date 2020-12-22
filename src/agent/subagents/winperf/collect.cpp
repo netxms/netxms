@@ -81,7 +81,7 @@ void WinPerfCounterSet::collectorThread()
 	// Outer loop - rebuild query after set changes
 	while(true)
 	{
-		AgentWriteDebugLog(2, _T("WINPERF: %s waiting for set change"), szFName);
+		nxlog_debug_tag(WINPERF_DEBUG_TAG, 2, _T("%s waiting for set change"), szFName);
 
 		HANDLE handles[2];
       handles[0] = g_winperfShutdownCondition;
@@ -94,7 +94,7 @@ void WinPerfCounterSet::collectorThread()
 
 		ResetEvent(m_changeCondition);
 
-		AgentWriteDebugLog(2, _T("WINPERF: %s: set changed"), szFName);
+		nxlog_debug_tag(WINPERF_DEBUG_TAG, 2, _T("%s: set changed"), szFName);
 		if ((rc = PdhOpenQuery(NULL, 0, &hQuery)) != ERROR_SUCCESS)
 		{
 			ReportPdhError(szFName, _T("PdhOpenQuery"), rc);
@@ -110,30 +110,29 @@ void WinPerfCounterSet::collectorThread()
 			if ((rc = PdhAddCounter(hQuery, counter->pszName, 0, &counter->handle)) != ERROR_SUCCESS)
 			{
 				TCHAR szBuffer[1024];
-
-				AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("WINPERF: %s: Unable to add counter \"%s\" to query (%s)"), 
-				              szFName, counter->pszName, GetPdhErrorText(rc, szBuffer, 1024));
-				counter->handle = NULL;
+				nxlog_write_tag(NXLOG_WARNING, WINPERF_DEBUG_TAG, _T("%s: Unable to add counter \"%s\" to query (%s)"), 
+                  szFName, counter->pszName, GetPdhErrorText(rc, szBuffer, 1024));
+				counter->handle = nullptr;
 			}
 			else
 			{
-            AgentWriteDebugLog(4, _T("WINPERF: %s: Counter \"%s\" added to query"), szFName, counter->pszName);
+            nxlog_debug_tag(WINPERF_DEBUG_TAG, 4, _T("%s: Counter \"%s\" added to query"), szFName, counter->pszName);
 				dwOKCounters++;
 			}
 		}
 		MutexUnlock(m_mutex);
 
-			// Check if we was able to add at least one counter
-		if (dwOKCounters == 0)
-		{
+      // Check if we was able to add at least one counter
+      if (dwOKCounters == 0)
+      {
 			PdhCloseQuery(hQuery);
-			AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("WINPERF: Failed to add any counter to query for counter set %c"), m_class);
+			nxlog_write_tag(NXLOG_WARNING, WINPERF_DEBUG_TAG, _T("Failed to add any counter to query for counter set %c"), m_class);
 			continue;
 		}
 
 		// Collection loop (until shutdown or set change)
-		AgentWriteDebugLog(2, _T("WINPERF: %s entered data collection loop"), szFName);
-		while(1)
+		nxlog_debug_tag(WINPERF_DEBUG_TAG, 2, _T("%s entered data collection loop"), szFName);
+		while(true)
 		{
 			HANDLE handles[2];
          handles[0] = g_winperfShutdownCondition;
@@ -190,21 +189,12 @@ void WinPerfCounterSet::collectorThread()
 			}
 		}
 
-		AgentWriteDebugLog(2, _T("WINPERF: %s: data collection stopped"), szFName);
+		nxlog_debug_tag(WINPERF_DEBUG_TAG, 2, _T("%s: data collection stopped"), szFName);
 		PdhCloseQuery(hQuery);
 	}
 
 stop:
-	AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("WINPERF: Collector thread for counter set %c terminated"), m_class);
-}
-
-/**
- * Starter for collector thread
- */
-THREAD_RESULT THREAD_CALL WinPerfCounterSet::collectorThreadStarter(void *arg)
-{
-	static_cast<WinPerfCounterSet*>(arg)->collectorThread();
-	return THREAD_OK;
+   nxlog_write_tag(NXLOG_INFO, WINPERF_DEBUG_TAG, _T("Collector thread for counter set %c terminated"), m_class);
 }
 
 /**
@@ -212,7 +202,7 @@ THREAD_RESULT THREAD_CALL WinPerfCounterSet::collectorThreadStarter(void *arg)
  */
 void WinPerfCounterSet::startCollectorThread()
 {
-	m_collectorThread = ThreadCreateEx(collectorThreadStarter, 0, this);
+	m_collectorThread = ThreadCreateEx(this, &WinPerfCounterSet::collectorThread);
 }
 
 /**
@@ -252,7 +242,7 @@ int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName)
 			*ppszNewName = MemAllocString(_tcslen(pszName) * 4);
 			if (TranslateCounterName(pszName, *ppszNewName))
 			{
-				AgentWriteDebugLog(2, _T("WINPERF: Counter translated: %s ==> %s"), pszName, *ppszNewName);
+				nxlog_debug_tag(WINPERF_DEBUG_TAG, 2, _T("Counter translated: %s ==> %s"), pszName, *ppszNewName);
 				rc = PdhAddCounter(hQuery, *ppszNewName, 0, &hCounter);
 				if (rc != ERROR_SUCCESS)
 				{
