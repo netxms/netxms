@@ -1136,9 +1136,9 @@ void Group::modifyFromMessage(NXCPMessage *msg)
 	{
       auto members = m_members;
 		int count = msg->getFieldAsInt32(VID_NUM_MEMBERS);
+      m_members = new IntegerArray<uint32_t>(count);
 		if (count > 0)
 		{
-			m_members = new IntegerArray<uint32_t>(count);
 			uint32_t varId = VID_GROUP_MEMBER_BASE;
 			for(int i = 0; i < count; i++, varId++)
          {
@@ -1163,8 +1163,6 @@ void Group::modifyFromMessage(NXCPMessage *msg)
 		}
 		else
 		{
-         m_members->clear();
-
          // notify change for all old members
 			for(int i = 0; i < members->size(); i++)
             SendUserDBUpdate(USER_DB_MODIFY, members->get(i));
