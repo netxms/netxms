@@ -1126,7 +1126,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
         ((owner->getObjectClass() == OBJECT_CLUSTER) && isAggregateOnCluster())) &&
        (m_instanceDiscoveryMethod == IDM_NONE))
    {
-      UINT32 requiredSize = 1;
+      uint32_t requiredSize = 1;
 
       // Calculate required cache size
       for(int i = 0; i < getThresholdCount(); i++)

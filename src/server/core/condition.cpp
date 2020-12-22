@@ -25,12 +25,10 @@
 /**
  * Default constructor
  */
-ConditionObject::ConditionObject() : super()
+ConditionObject::ConditionObject() : super(), m_dciList(0, 8)
 {
    m_scriptSource = nullptr;
    m_script = nullptr;
-   m_dciList = nullptr;
-   m_dciCount = 0;
    m_sourceObject = 0;
    m_activeStatus = STATUS_MAJOR;
    m_inactiveStatus = STATUS_NORMAL;
@@ -44,12 +42,10 @@ ConditionObject::ConditionObject() : super()
 /**
  * Constructor for new objects
  */
-ConditionObject::ConditionObject(bool hidden) : super()
+ConditionObject::ConditionObject(bool hidden) : super(), m_dciList(0, 8)
 {
    m_scriptSource = nullptr;
    m_script = nullptr;
-   m_dciList = nullptr;
-   m_dciCount = 0;
    m_sourceObject = 0;
    m_activeStatus = STATUS_MAJOR;
    m_inactiveStatus = STATUS_NORMAL;
@@ -67,8 +63,7 @@ ConditionObject::ConditionObject(bool hidden) : super()
  */
 ConditionObject::~ConditionObject()
 {
-   free(m_dciList);
-   free(m_scriptSource);
+   MemFree(m_scriptSource);
    delete m_script;
 }
 
@@ -110,28 +105,25 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBFreeResult(hResult);
 
    // Compile script
-   m_script = NXSLCompileAndCreateVM(m_scriptSource, szQuery, 512, new NXSL_ServerEnv());
+   m_script = NXSLCompile(m_scriptSource, szQuery, 512, nullptr);
    if (m_script == nullptr)
       nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for condition object %s [%u] (%s)"), m_name, m_id, szQuery);
 
    // Load DCI map
-   _sntprintf(szQuery, 512, _T("SELECT dci_id,node_id,dci_func,num_polls ")
-                            _T("FROM cond_dci_map WHERE condition_id=%d ORDER BY sequence_number"), dwId);
+   _sntprintf(szQuery, 512, _T("SELECT dci_id,node_id,dci_func,num_polls FROM cond_dci_map WHERE condition_id=%u ORDER BY sequence_number"), dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult == nullptr)
       return false;     // Query failed
 
-   m_dciCount = DBGetNumRows(hResult);
-   if (m_dciCount > 0)
+   int dciCount = DBGetNumRows(hResult);
+   for(int i = 0; i < dciCount; i++)
    {
-      m_dciList = (INPUT_DCI *)malloc(sizeof(INPUT_DCI) * m_dciCount);
-      for(int i = 0; i < m_dciCount; i++)
-      {
-         m_dciList[i].id = DBGetFieldULong(hResult, i, 0);
-         m_dciList[i].nodeId = DBGetFieldULong(hResult, i, 1);
-         m_dciList[i].function = DBGetFieldLong(hResult, i, 2);
-         m_dciList[i].polls = DBGetFieldLong(hResult, i, 3);
-      }
+      INPUT_DCI dci;
+      dci.id = DBGetFieldULong(hResult, i, 0);
+      dci.nodeId = DBGetFieldULong(hResult, i, 1);
+      dci.function = DBGetFieldLong(hResult, i, 2);
+      dci.polls = DBGetFieldLong(hResult, i, 3);
+      m_dciList.add(dci);
    }
    DBFreeResult(hResult);
 
@@ -174,19 +166,20 @@ bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
          success = executeQueryOnObject(hdb, _T("DELETE FROM cond_dci_map WHERE condition_id=?"));
 
       lockProperties();
-      if (success && (m_dciCount > 0))
+      if (success && !m_dciList.isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO cond_dci_map (condition_id,sequence_number,dci_id,node_id,dci_func,num_polls) VALUES (?,?,?,?,?,?)"));
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO cond_dci_map (condition_id,sequence_number,dci_id,node_id,dci_func,num_polls) VALUES (?,?,?,?,?,?)"), m_dciList.size() > 1);
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; (i < m_dciCount) && success; i++)
+            for(int i = 0; (i < m_dciList.size()) && success; i++)
             {
                DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_dciList[i].id);
-               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_dciList[i].nodeId);
-               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_dciList[i].function);
-               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_dciList[i].polls);
+               INPUT_DCI *dci = m_dciList.get(i);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, dci->id);
+               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, dci->nodeId);
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, dci->function);
+               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, dci->polls);
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);
@@ -227,16 +220,17 @@ void ConditionObject::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_SOURCE_OBJECT, m_sourceObject);
    pMsg->setField(VID_ACTIVE_STATUS, (WORD)m_activeStatus);
    pMsg->setField(VID_INACTIVE_STATUS, (WORD)m_inactiveStatus);
-   pMsg->setField(VID_NUM_ITEMS, m_dciCount);
-   UINT32 dwId = VID_DCI_LIST_BASE;
-   for(int i = 0; (i < m_dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
+   pMsg->setField(VID_NUM_ITEMS, m_dciList.size());
+   uint32_t fieldId = VID_DCI_LIST_BASE;
+   for(int i = 0; (i < m_dciList.size()) && (fieldId < (VID_DCI_LIST_LAST + 1)); i++)
    {
-      pMsg->setField(dwId++, m_dciList[i].id);
-      pMsg->setField(dwId++, m_dciList[i].nodeId);
-      pMsg->setField(dwId++, (WORD)m_dciList[i].function);
-      pMsg->setField(dwId++, (WORD)m_dciList[i].polls);
-      pMsg->setField(dwId++, (WORD)GetDCObjectType(m_dciList[i].nodeId, m_dciList[i].id));
-      dwId += 5;
+      INPUT_DCI *dci = m_dciList.get(i);
+      pMsg->setField(fieldId++, dci->id);
+      pMsg->setField(fieldId++, dci->nodeId);
+      pMsg->setField(fieldId++, static_cast<uint16_t>(dci->function));
+      pMsg->setField(fieldId++, static_cast<uint16_t>(dci->polls));
+      pMsg->setField(fieldId++, static_cast<uint16_t>(GetDCObjectType(dci->nodeId, dci->id)));
+      fieldId += 5;
    }
 }
 
@@ -253,7 +247,7 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
       MemFree(m_scriptSource);
       delete m_script;
       m_scriptSource = pRequest->getFieldAsString(VID_SCRIPT);
-      m_script = NXSLCompileAndCreateVM(m_scriptSource, szError, 1024, new NXSL_ServerEnv());
+      m_script = NXSLCompile(m_scriptSource, szError, 1024, nullptr);
       if (m_script == nullptr)
          nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for condition object %s [%u] (%s)"), m_name, m_id, szError);
    }
@@ -281,34 +275,28 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
    // Change DCI list
    if (pRequest->isFieldExist(VID_NUM_ITEMS))
    {
-      free(m_dciList);
-      m_dciCount = pRequest->getFieldAsUInt32(VID_NUM_ITEMS);
-      if (m_dciCount > 0)
+      m_dciList.clear();
+      int dciCount = pRequest->getFieldAsInt32(VID_NUM_ITEMS);
+      uint32_t dwId = VID_DCI_LIST_BASE;
+      for(int i = 0; (i < dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
       {
-         m_dciList = (INPUT_DCI *)malloc(sizeof(INPUT_DCI) * m_dciCount);
-         UINT32 dwId = VID_DCI_LIST_BASE;
-         for(int i = 0; (i < m_dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
-         {
-            m_dciList[i].id = pRequest->getFieldAsUInt32(dwId++);
-            m_dciList[i].nodeId = pRequest->getFieldAsUInt32(dwId++);
-            m_dciList[i].function = pRequest->getFieldAsUInt16(dwId++);
-            m_dciList[i].polls = pRequest->getFieldAsUInt16(dwId++);
-            dwId += 6;
-         }
-
-         // Update cache size of DCIs
-         for(int i = 0; i < m_dciCount; i++)
-         {
-            shared_ptr<NetObj> object = FindObjectById(m_dciList[i].nodeId);
-            if ((object != nullptr) && object->isDataCollectionTarget())
-            {
-               static_cast<DataCollectionTarget*>(object.get())->updateDCItemCacheSize(m_dciList[i].id, m_id);
-            }
-         }
+         INPUT_DCI dci;
+         dci.id = pRequest->getFieldAsUInt32(dwId++);
+         dci.nodeId = pRequest->getFieldAsUInt32(dwId++);
+         dci.function = pRequest->getFieldAsUInt16(dwId++);
+         dci.polls = pRequest->getFieldAsUInt16(dwId++);
+         m_dciList.add(dci);
+         dwId += 6;
       }
-      else
+
+      // Update cache size of DCIs
+      for(int i = 0; i < m_dciList.size(); i++)
       {
-         m_dciList = nullptr;
+         shared_ptr<NetObj> object = FindObjectById(m_dciList.get(i)->nodeId);
+         if ((object != nullptr) && object->isDataCollectionTarget())
+         {
+            ThreadPoolExecute(g_mainThreadPool, static_pointer_cast<DataCollectionTarget>(object), &DataCollectionTarget::updateDCItemCacheSize, m_dciList.get(i)->id, m_id);
+         }
       }
    }
 
@@ -320,7 +308,7 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
  */
 void ConditionObject::lockForPoll()
 {
-   m_queuedForPolling = TRUE;
+   m_queuedForPolling = true;
 }
 
 /**
@@ -331,7 +319,7 @@ void ConditionObject::doPoll(PollerInfo *poller)
    poller->startExecution();
    check();
    lockProperties();
-   m_queuedForPolling = FALSE;
+   m_queuedForPolling = false;
    m_lastPoll = time(nullptr);
    unlockProperties();
    delete poller;
@@ -348,49 +336,57 @@ void ConditionObject::check()
    if ((m_script == nullptr) || (m_status == STATUS_UNMANAGED) || IsShutdownInProgress())
       return;
 
+   // Make copy of DCI list to avoid deadlock accessing nodes and DCIs on nodes
+   // while holding lock on condition object properties
    lockProperties();
-   ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * m_dciCount);
-   memset(ppValueList, 0, sizeof(NXSL_Value *) * m_dciCount);
-   for(int i = 0; i < m_dciCount; i++)
+   StructArray<INPUT_DCI> dciList(&m_dciList);
+   ScriptVMHandle vm = CreateServerScriptVM(m_script, self());
+   unlockProperties();
+
+   if (!vm.isValid())
    {
-      shared_ptr<NetObj> pObject = FindObjectById(m_dciList[i].nodeId, OBJECT_NODE);
-      if (pObject != nullptr)
+      nxlog_debug(6, _T("Cannot create VM for evaluation script for condition %s [%u]"), m_name, m_id);
+      return;
+   }
+
+   ObjectRefArray<NXSL_Value> valueList(dciList.size(), 16);
+   for(int i = 0; i < dciList.size(); i++)
+   {
+      INPUT_DCI *dci = dciList.get(i);
+      NXSL_Value *value = nullptr;
+      shared_ptr<NetObj> pObject = FindObjectById(dci->nodeId);
+      if ((pObject != nullptr) && pObject->isDataCollectionTarget())
       {
-         shared_ptr<DCObject> pItem = static_cast<Node*>(pObject.get())->getDCObjectById(m_dciList[i].id, 0);
+         shared_ptr<DCObject> pItem = static_cast<DataCollectionTarget&>(*pObject).getDCObjectById(dci->id, 0);
          if (pItem != nullptr)
          {
             if (pItem->getType() == DCO_TYPE_ITEM)
             {
-               ppValueList[i] = static_cast<DCItem*>(pItem.get())->getValueForNXSL(m_script, m_dciList[i].function, m_dciList[i].polls);
+               value = static_cast<DCItem&>(*pItem).getValueForNXSL(vm, dci->function, dci->polls);
             }
             else if (pItem->getType() == DCO_TYPE_TABLE)
             {
-               Table *t = static_cast<DCTable*>(pItem.get())->getLastValue();
+               Table *t = static_cast<DCTable&>(*pItem).getLastValue();
                if (t != nullptr)
                {
-                  ppValueList[i] = m_script->createValue(new NXSL_Object(m_script, &g_nxslTableClass, t));
+                  value = vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, t));
                }
             }
          }
       }
-      if (ppValueList[i] == nullptr)
-         ppValueList[i] = m_script->createValue();
+      valueList.add((value != nullptr) ? value : vm->createValue());
    }
-   int numValues = m_dciCount;
-   unlockProperties();
 
 	// Create array from values
-	NXSL_Array *array = new NXSL_Array(m_script);
-	for(int i = 0; i < numValues; i++)
-	{
-		array->set(i + 1, m_script->createValue(ppValueList[i]));
-	}
-   m_script->setGlobalVariable("$values", m_script->createValue(array));
+	NXSL_Array *array = new NXSL_Array(vm);
+	for(int i = 0; i < valueList.size(); i++)
+		array->set(i + 1, vm->createValue(valueList.get(i)));
+   vm->setGlobalVariable("$values", vm->createValue(array));
 
-   DbgPrintf(6, _T("Running evaluation script for condition %d \"%s\""), m_id, m_name);
-   if (m_script->run(numValues, ppValueList))
+   nxlog_debug(6, _T("Running evaluation script for condition %s [%u]"), m_name, m_id);
+   if (vm->run(valueList))
    {
-      pValue = m_script->getResult();
+      pValue = vm->getResult();
       if (pValue->isFalse())
       {
          if (m_isActive)
@@ -398,7 +394,7 @@ void ConditionObject::check()
             // Deactivate condition
             lockProperties();
             m_status = m_inactiveStatus;
-            m_isActive = FALSE;
+            m_isActive = false;
             setModified(MODIFY_RUNTIME);
             unlockProperties();
 
@@ -411,8 +407,7 @@ void ConditionObject::check()
          }
          else
          {
-            DbgPrintf(6, _T("Condition %d \"%s\" still inactive"),
-                      m_id, m_name);
+            DbgPrintf(6, _T("Condition %d \"%s\" still inactive"), m_id, m_name);
             lockProperties();
             if (m_status != m_inactiveStatus)
             {
@@ -429,7 +424,7 @@ void ConditionObject::check()
             // Activate condition
             lockProperties();
             m_status = m_activeStatus;
-            m_isActive = TRUE;
+            m_isActive = true;
             setModified(MODIFY_RUNTIME);
             unlockProperties();
 
@@ -437,13 +432,11 @@ void ConditionObject::check()
                       (m_sourceObject == 0) ? g_dwMgmtNode : m_sourceObject,
                       "dsdd", m_id, m_name, iOldStatus, m_status);
 
-            DbgPrintf(6, _T("Condition %d \"%s\" activated"),
-                      m_id, m_name);
+            DbgPrintf(6, _T("Condition %d \"%s\" activated"), m_id, m_name);
          }
          else
          {
-            DbgPrintf(6, _T("Condition %d \"%s\" still active"),
-                      m_id, m_name);
+            DbgPrintf(6, _T("Condition %d \"%s\" still active"), m_id, m_name);
             lockProperties();
             if (m_status != m_activeStatus)
             {
@@ -456,7 +449,7 @@ void ConditionObject::check()
    }
    else
    {
-      nxlog_write(NXLOG_ERROR, _T("Failed to execute evaluation script for condition object %s [%u] (%s)"), m_name, m_id, m_script->getErrorText());
+      nxlog_write(NXLOG_ERROR, _T("Failed to execute evaluation script for condition object %s [%u] (%s)"), m_name, m_id, vm->getErrorText());
 
       lockProperties();
       if (m_status != STATUS_UNKNOWN)
@@ -466,7 +459,8 @@ void ConditionObject::check()
       }
       unlockProperties();
    }
-   MemFree(ppValueList);
+
+   vm.destroy();
 
    // Cause parent object(s) to recalculate it's status
    if (iOldStatus != m_status)
@@ -487,11 +481,12 @@ int ConditionObject::getCacheSizeForDCI(UINT32 itemId, bool noLock)
 
    if (!noLock)
       lockProperties();
-   for(int i = 0; i < m_dciCount; i++)
+   for(int i = 0; i < m_dciList.size(); i++)
    {
-      if (m_dciList[i].id == itemId)
+      INPUT_DCI *dci = m_dciList.get(i);
+      if (dci->id == itemId)
       {
-         switch(m_dciList[i].function)
+         switch(dci->function)
          {
             case F_LAST:
                nSize = 1;
@@ -500,7 +495,7 @@ int ConditionObject::getCacheSizeForDCI(UINT32 itemId, bool noLock)
                nSize = 2;
                break;
             default:
-               nSize = m_dciList[i].polls;
+               nSize = dci->polls;
                break;
          }
          break;
@@ -521,14 +516,15 @@ json_t *ConditionObject::toJson()
    lockProperties();
 
    json_t *inputs = json_array();
-   for(int i = 0; i < m_dciCount; i++)
+   for(int i = 0; i < m_dciList.size(); i++)
    {
-      json_t *dci = json_object();
-      json_object_set_new(dci, "id", json_integer(m_dciList[i].id));
-      json_object_set_new(dci, "nodeId", json_integer(m_dciList[i].nodeId));
-      json_object_set_new(dci, "function", json_integer(m_dciList[i].function));
-      json_object_set_new(dci, "polls", json_integer(m_dciList[i].polls));
-      json_array_append_new(inputs, dci);
+      INPUT_DCI *dci = m_dciList.get(i);
+      json_t *dciJson = json_object();
+      json_object_set_new(dciJson, "id", json_integer(dci->id));
+      json_object_set_new(dciJson, "nodeId", json_integer(dci->nodeId));
+      json_object_set_new(dciJson, "function", json_integer(dci->function));
+      json_object_set_new(dciJson, "polls", json_integer(dci->polls));
+      json_array_append_new(inputs, dciJson);
    }
    json_object_set_new(root, "inputs", inputs);
    json_object_set_new(root, "script", json_string_t(m_scriptSource));
