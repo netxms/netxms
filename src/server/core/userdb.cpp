@@ -784,7 +784,7 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **o
    RWLockWriteLock(s_userDatabaseLock);
 
    UserDatabaseObject *object = s_userDatabase.get(id);
-   if (object != NULL)
+   if (object != nullptr)
    {
       TCHAR name[MAX_USER_NAME], prevName[MAX_USER_NAME];
 
