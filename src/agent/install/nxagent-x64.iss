@@ -75,6 +75,7 @@ Source: "..\subagents\java\java\target\netxms-agent.jar"; DestDir: "{app}\lib"; 
 Source: "..\subagents\jmx\target\jmx.jar"; DestDir: "{app}\lib"; Flags: ignoreversion
 Source: "..\subagents\ubntlw\target\ubntlw.jar"; DestDir: "{app}\lib"; Flags: ignoreversion
 ; Command-line tools
+Source: "..\..\..\x64\release\nxaevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\nxappget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\nxapush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\nxcsum.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce

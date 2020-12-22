@@ -362,6 +362,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "westerstrand", "src\server\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wineventsync", "src\agent\subagents\wineventsync\wineventsync.vcxproj", "{24D093B4-8EA8-EE49-8060-6F4F9FA0457F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxaevent", "src\agent\tools\nxaevent\nxaevent.vcxproj", "{F73BDD90-C0F0-119C-9004-B87473BB0421}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1394,6 +1396,14 @@ Global
 		{24D093B4-8EA8-EE49-8060-6F4F9FA0457F}.Release|Win32.Build.0 = Release|Win32
 		{24D093B4-8EA8-EE49-8060-6F4F9FA0457F}.Release|x64.ActiveCfg = Release|x64
 		{24D093B4-8EA8-EE49-8060-6F4F9FA0457F}.Release|x64.Build.0 = Release|x64
+		{F73BDD90-C0F0-119C-9004-B87473BB0421}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F73BDD90-C0F0-119C-9004-B87473BB0421}.Debug|Win32.Build.0 = Debug|Win32
+		{F73BDD90-C0F0-119C-9004-B87473BB0421}.Debug|x64.ActiveCfg = Debug|x64
+		{F73BDD90-C0F0-119C-9004-B87473BB0421}.Debug|x64.Build.0 = Debug|x64
+		{F73BDD90-C0F0-119C-9004-B87473BB0421}.Release|Win32.ActiveCfg = Release|Win32
+		{F73BDD90-C0F0-119C-9004-B87473BB0421}.Release|Win32.Build.0 = Release|Win32
+		{F73BDD90-C0F0-119C-9004-B87473BB0421}.Release|x64.ActiveCfg = Release|x64
+		{F73BDD90-C0F0-119C-9004-B87473BB0421}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1551,6 +1561,7 @@ Global
 		{12D50869-B637-4772-B86C-A45A99B18B14} = {53997B2A-D94C-428C-816D-938C297A1866}
 		{B797F799-E0E0-4188-8F96-E9B643BE7D84} = {53997B2A-D94C-428C-816D-938C297A1866}
 		{24D093B4-8EA8-EE49-8060-6F4F9FA0457F} = {451F583D-C2DB-4414-870C-7FA0189BE7DD}
+		{F73BDD90-C0F0-119C-9004-B87473BB0421} = {896A7CDA-423A-460A-83E2-6ED37DAE187C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}
