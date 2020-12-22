@@ -1227,8 +1227,8 @@ typedef struct
  */
 typedef struct
 {
-   UINT32 id;
-   UINT32 nodeId;
+   uint32_t id;
+   uint32_t nodeId;
    int function;    // Average, last, diff
    int polls;       // Number of polls used for average
 } INPUT_DCI;
@@ -1238,10 +1238,10 @@ typedef struct
  */
 typedef struct
 {
-	UINT32 dwId;
+   uint32_t dwId;
 	TCHAR szName[MAX_DB_STRING];
 	InetAddress ipAddr;
-	UINT32 dwCurrOwner;
+	uint32_t dwCurrOwner;
 } CLUSTER_RESOURCE;
 
 #endif	/* __cplusplus */

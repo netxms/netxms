@@ -3923,6 +3923,10 @@ public:
    void loadFromDatabase(DB_HANDLE hdb);
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE StructArray<INPUT_DCI>;
+#endif
+
 /**
  * Condition
  */
@@ -3932,13 +3936,12 @@ protected:
    typedef NetObj super;
 
 protected:
-   int m_dciCount;
-   INPUT_DCI *m_dciList;
+   StructArray<INPUT_DCI> m_dciList;
    TCHAR *m_scriptSource;
-   NXSL_VM *m_script;
-   UINT32 m_activationEventCode;
-   UINT32 m_deactivationEventCode;
-   UINT32 m_sourceObject;
+   NXSL_Program *m_script;
+   uint32_t m_activationEventCode;
+   uint32_t m_deactivationEventCode;
+   uint32_t m_sourceObject;
    int m_activeStatus;
    int m_inactiveStatus;
    bool m_isActive;
@@ -3971,7 +3974,7 @@ public:
    {
       return ((m_status != STATUS_UNMANAGED) &&
               (!m_queuedForPolling) && (!m_isDeleted) &&
-              ((UINT32)time(nullptr) - (UINT32)m_lastPoll > g_conditionPollingInterval));
+              (static_cast<uint32_t>(time(nullptr) - m_lastPoll) > g_conditionPollingInterval));
    }
 
    int getCacheSizeForDCI(UINT32 itemId, bool noLock);
