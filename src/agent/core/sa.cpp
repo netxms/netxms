@@ -486,7 +486,7 @@ void SessionAgentConnector::removeUserAgentNotification(const ServerObjectKey& i
 /**
  * Session agent listener thread
  */
-static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
+static void SessionAgentListener()
 {
    SOCKET hSocket, hClientSocket;
    struct sockaddr_in servAddr;
@@ -501,7 +501,7 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
       TCHAR buffer[1024];
       nxlog_write(NXLOG_ERROR, _T("Unable to open socket (%s)"), GetLastSocketErrorText(buffer, 1024));
       nxlog_debug(1, _T("Session agent connector terminated (socket error)"));
-      return THREAD_OK;
+      return;
    }
 
 	SetSocketExclusiveAddrUse(hSocket);
@@ -523,7 +523,7 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
       TCHAR buffer[1024];
       nxlog_write(NXLOG_ERROR, _T("Unable to bind socket (%s)"), GetLastSocketErrorText(buffer, 1024));
       nxlog_debug(1, _T("Session agent connector terminated (socket error)"));
-      return THREAD_OK;
+      return;
    }
 
    // Set up queue
@@ -591,13 +591,12 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
 
    closesocket(hSocket);
    DebugPrintf(1, _T("Session agent connector thread terminated"));
-   return THREAD_OK;
 }
 
 /**
  * Session agent listener thread
  */
-static THREAD_RESULT THREAD_CALL SessionAgentWatchdog(void *arg)
+static void SessionAgentWatchdog()
 {
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
@@ -617,7 +616,6 @@ static THREAD_RESULT THREAD_CALL SessionAgentWatchdog(void *arg)
 
       ThreadSleep(30);
    }
-   return THREAD_OK;
 }
 
 /**
@@ -627,8 +625,8 @@ void StartSessionAgentConnector()
 {
    if (g_sessionAgentPort != 0)
    {
-	   ThreadCreate(SessionAgentListener, 0, NULL);
-	   ThreadCreate(SessionAgentWatchdog, 0, NULL);
+	   ThreadCreate(SessionAgentListener);
+	   ThreadCreate(SessionAgentWatchdog);
    }
    else
    {

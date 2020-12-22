@@ -4634,6 +4634,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/wmi/Makefile
 	src/agent/subagents/xen/Makefile
 	src/agent/tools/Makefile
+	src/agent/tools/nxaevent/Makefile
 	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile
 	src/agent/tools/nxhwid/Makefile

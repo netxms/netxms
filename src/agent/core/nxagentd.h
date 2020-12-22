@@ -77,37 +77,24 @@
 #define MAX_AGENT_MSG_SIZE (16 * 1024 * 1024)   // 16MB
 
 #define AF_DAEMON                   0x00000001
-#define AF_USE_SYSLOG               0x00000002
 #define AF_SUBAGENT_LOADER          0x00000004
 #define AF_REQUIRE_AUTH             0x00000008
-#define AF_LOG_UNRESOLVED_SYMBOLS   0x00000010
-#define AF_ENABLE_ACTIONS           0x00000020
-#define AF_REQUIRE_ENCRYPTION       0x00000040
-#define AF_HIDE_WINDOW              0x00000080
-#define AF_ENABLE_AUTOLOAD          0x00000100
-#define AF_ENABLE_PROXY             0x00000200
-#define AF_CENTRAL_CONFIG           0x00000400
-#define AF_ENABLE_SNMP_PROXY        0x00000800
-#define AF_SHUTDOWN                 0x00001000
-#define AF_INTERACTIVE_SERVICE      0x00002000
-#define AF_REGISTER                 0x00004000
-#define AF_ENABLE_WATCHDOG          0x00008000
-#define AF_CATCH_EXCEPTIONS         0x00010000
-#define AF_WRITE_FULL_DUMP          0x00020000
-#define AF_ENABLE_CONTROL_CONNECTOR 0x00040000
-#define AF_DISABLE_IPV4             0x00080000
-#define AF_DISABLE_IPV6             0x00100000
-#define AF_ENABLE_SNMP_TRAP_PROXY   0x00200000
-#define AF_BACKGROUND_LOG_WRITER    0x00400000
-#define AF_ENABLE_SYSLOG_PROXY      0x00800000
-#define AF_ENABLE_TCP_PROXY         0x01000000
-#define AF_ENABLE_PUSH_CONNECTOR    0x02000000
-#define AF_USE_SYSTEMD_JOURNAL      0x04000000
-#define AF_SYSTEMD_DAEMON           0x08000000
-#define AF_JSON_LOG                 0x10000000
-#define AF_LOG_TO_STDOUT            0x20000000
-#define AF_ENABLE_SSL_TRACE         0x40000000
-#define AF_CHECK_SERVER_CERTIFICATE 0x80000000
+#define AF_ENABLE_ACTIONS           0x00000010
+#define AF_REQUIRE_ENCRYPTION       0x00000020
+#define AF_HIDE_WINDOW              0x00000040
+#define AF_ENABLE_PROXY             0x00000080
+#define AF_CENTRAL_CONFIG           0x00000100
+#define AF_ENABLE_SNMP_PROXY        0x00000200
+#define AF_SHUTDOWN                 0x00000400
+#define AF_INTERACTIVE_SERVICE      0x00000800
+#define AF_DISABLE_IPV4             0x00001000
+#define AF_DISABLE_IPV6             0x00002000
+#define AF_ENABLE_SNMP_TRAP_PROXY   0x00004000
+#define AF_ENABLE_SYSLOG_PROXY      0x00008000
+#define AF_ENABLE_TCP_PROXY         0x00010000
+#define AF_SYSTEMD_DAEMON           0x00020000
+#define AF_ENABLE_SSL_TRACE         0x00040000
+#define AF_CHECK_SERVER_CERTIFICATE 0x00080000
 
 // Flags for component failures
 #define FAIL_OPEN_LOG               0x00000001
@@ -804,6 +791,7 @@ void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, int
 void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const char *format, ...);
 void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const char *format, va_list args);
 void ForwardEvent(NXCPMessage *msg);
+void StartEventConnector();
 
 void StartPushConnector();
 bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_t timestamp);

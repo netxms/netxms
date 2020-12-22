@@ -59,6 +59,24 @@
 NETXMS_EXECUTABLE_HEADER(nxagentd)
 
 /**
+ * Startup flags
+ */
+#define SF_LOG_UNRESOLVED_SYMBOLS   0x00000001
+#define SF_REGISTER                 0x00000002
+#define SF_ENABLE_WATCHDOG          0x00000004
+#define SF_ENABLE_AUTOLOAD          0x00000008
+#define SF_CATCH_EXCEPTIONS         0x00000010
+#define SF_WRITE_FULL_DUMP          0x00000020
+#define SF_BACKGROUND_LOG_WRITER    0x00000040
+#define SF_USE_SYSTEMD_JOURNAL      0x00000080
+#define SF_JSON_LOG                 0x00000100
+#define SF_LOG_TO_STDOUT            0x00000200
+#define SF_USE_SYSLOG               0x00000400
+#define SF_ENABLE_CONTROL_CONNECTOR 0x00000800
+#define SF_ENABLE_PUSH_CONNECTOR    0x00001000
+#define SF_ENABLE_EVENT_CONNECTOR   0x00002000
+
+/**
  * Externals
  */
 void ListenerThread();
@@ -166,11 +184,7 @@ enum class Command
  * Global variables
  */
 uuid g_agentId;
-#ifdef _WIN32
-UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD | AF_WRITE_FULL_DUMP | AF_ENABLE_PUSH_CONNECTOR | AF_ENABLE_CONTROL_CONNECTOR | AF_REQUIRE_ENCRYPTION;
-#else
-UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD | AF_ENABLE_PUSH_CONNECTOR | AF_REQUIRE_ENCRYPTION;
-#endif
+UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_REQUIRE_ENCRYPTION;
 UINT32 g_failFlags = 0;
 TCHAR g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
 TCHAR g_szSharedSecret[MAX_SECRET_LENGTH] = _T("admin");
@@ -226,6 +240,11 @@ TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxagentd.pid");
 /**
  * Static variables
  */
+#ifdef _WIN32
+static uint32_t s_startupFlags = SF_ENABLE_AUTOLOAD | SF_WRITE_FULL_DUMP | SF_ENABLE_CONTROL_CONNECTOR | SF_ENABLE_PUSH_CONNECTOR | SF_ENABLE_EVENT_CONNECTOR;
+#else
+static uint32_t s_startupFlags = SF_ENABLE_AUTOLOAD | SF_ENABLE_PUSH_CONNECTOR | SF_ENABLE_EVENT_CONNECTOR;
+#endif
 static StringList *s_actionList = new StringList();
 static TCHAR *m_pszServerList = nullptr;
 static TCHAR *m_pszControlServerList = nullptr;
@@ -276,9 +295,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("Action"), CT_STRING_LIST, 0, 0, 0, 0, s_actionList, nullptr },
    { _T("ActionShellExec"), CT_STRING_LIST, 0, 0, 0, 0, s_actionList, nullptr },
    { _T("AppAgent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_appAgentsList, nullptr },
-   { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_32, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_dwFlags, nullptr },
+   { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_32, 0, 0, SF_BACKGROUND_LOG_WRITER, 0, &s_startupFlags, nullptr },
    { _T("ControlServers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszControlServerList, nullptr },
-   { _T("CreateCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags, nullptr },
+   { _T("CreateCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, SF_CATCH_EXCEPTIONS, 0, &s_startupFlags, nullptr },
    { _T("CRL"), CT_STRING_SET, 0, 0, 0, 0, &s_crlList, nullptr },
    { _T("CRLReloadInterval"), CT_LONG, 0, 0, 0, 0, &s_crlReloadInterval, nullptr },
    { _T("DataCollectionThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &g_dcMaxCollectorPoolSize, nullptr },
@@ -294,16 +313,17 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, s_dumpDir, nullptr },
    { _T("EnableActions"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags, nullptr },
    { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &s_enabledCiphers, nullptr },
-   { _T("EnableControlConnector"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_CONTROL_CONNECTOR, 0, &g_dwFlags, nullptr },
+   { _T("EnableControlConnector"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_CONTROL_CONNECTOR, 0, &s_startupFlags, nullptr },
+   { _T("EnableEventConnector"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_EVENT_CONNECTOR, 0, &s_startupFlags, nullptr },
    { _T("EnableProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags, nullptr },
-   { _T("EnablePushConnector"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_PUSH_CONNECTOR, 0, &g_dwFlags, nullptr },
+   { _T("EnablePushConnector"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_PUSH_CONNECTOR, 0, &s_startupFlags, nullptr },
    { _T("EnableSNMPProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags, nullptr },
    { _T("EnableSNMPTrapProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_SNMP_TRAP_PROXY, 0, &g_dwFlags, nullptr },
    { _T("EnableSSLTrace"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_SSL_TRACE, 0, &g_dwFlags, nullptr },
    { _T("EnableSyslogProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_SYSLOG_PROXY, 0, &g_dwFlags, nullptr },
-   { _T("EnableSubagentAutoload"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags, nullptr },
+   { _T("EnableSubagentAutoload"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_AUTOLOAD, 0, &s_startupFlags, nullptr },
    { _T("EnableTCPProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_TCP_PROXY, 0, &g_dwFlags, nullptr },
-   { _T("EnableWatchdog"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags, nullptr },
+   { _T("EnableWatchdog"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_WATCHDOG, 0, &s_startupFlags, nullptr },
    { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, nullptr },
    { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_execTimeout, nullptr },
    { _T("ExternalList"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalListsConfig, nullptr },
@@ -315,13 +335,13 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ExternalSubagent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalSubAgentsList, nullptr },
    { _T("ExternalTable"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalTablesConfig, nullptr },
    { _T("FileStore"), CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore, nullptr },
-   { _T("FullCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags, nullptr },
+   { _T("FullCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, SF_WRITE_FULL_DUMP, 0, &s_startupFlags, nullptr },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, nullptr },
    { _T("ListenPort"), CT_WORD, 0, 0, 0, 0, &g_wListenPort, nullptr },
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, nullptr },
    { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &s_logHistorySize, nullptr },
    { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &s_logRotationMode, nullptr },
-   { _T("LogUnresolvedSymbols"), CT_BOOLEAN_FLAG_32, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags, nullptr },
+   { _T("LogUnresolvedSymbols"), CT_BOOLEAN_FLAG_32, 0, 0, SF_LOG_UNRESOLVED_SYMBOLS, 0, &s_startupFlags, nullptr },
    { _T("LongRunningQueryThreshold"), CT_LONG, 0, 0, 0, 0, &g_longRunningQueryThreshold, nullptr },
    { _T("MasterServers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszMasterServerList, nullptr },
    { _T("MaxLogSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &s_maxLogSize, nullptr },
@@ -348,7 +368,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, s_processToWaitFor, nullptr },
    { _T("WebServiceCacheExpirationTime"), CT_LONG, 0, 0, 0, 0, &g_webSvcCacheExpirationTime, nullptr },
    { _T("WebServiceThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &s_maxWebSvcPoolSize, nullptr },
-   { _T("WriteLogAsJson"), CT_BOOLEAN_FLAG_32, 0, 0, AF_JSON_LOG, 0, &g_dwFlags, nullptr },
+   { _T("WriteLogAsJson"), CT_BOOLEAN_FLAG_32, 0, 0, SF_JSON_LOG, 0, &s_startupFlags, nullptr },
    { _T("ZoneId"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr }, // for backward compatibility
    { _T("ZoneUIN"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
@@ -456,7 +476,7 @@ ServerInfo::~ServerInfo()
  */
 void ServerInfo::resolve(bool forceResolve)
 {
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
    time_t age = now - m_lastResolveTime;
    if ((age >= 3600) || ((age > 300) && !m_address.isValid()) || forceResolve)
    {
@@ -486,11 +506,11 @@ bool ServerInfo::match(const InetAddress &addr, bool forceResolve)
 static HWND GetConsoleHWND()
 {
    DWORD cpid = GetCurrentProcessId();
-	HWND hWnd = NULL;
+	HWND hWnd = nullptr;
    while(true)
    {
-	   hWnd = FindWindowEx(NULL, hWnd, _T("ConsoleWindowClass"), NULL);
-      if (hWnd == NULL)
+	   hWnd = FindWindowEx(nullptr, hWnd, _T("ConsoleWindowClass"), nullptr);
+      if (hWnd == nullptr)
          break;
 
    	DWORD wpid;
@@ -507,10 +527,8 @@ static HWND GetConsoleHWND()
  */
 static FARPROC GetProcAddressAndLog(HMODULE hModule, LPCSTR procName)
 {
-   FARPROC ptr;
-
-   ptr = GetProcAddress(hModule, procName);
-   if ((ptr == NULL) && (g_dwFlags & AF_LOG_UNRESOLVED_SYMBOLS))
+   FARPROC ptr = GetProcAddress(hModule, procName);
+   if ((ptr == NULL) && (s_startupFlags & SF_LOG_UNRESOLVED_SYMBOLS))
       nxlog_write(NXLOG_WARNING, _T("Unable to resolve symbol \"%s\""), procName);
    return ptr;
 }
@@ -587,7 +605,7 @@ static StringBuffer BuildRestartCommandLine(bool withWaitPid)
    if (withWaitPid)
    {
       command.append(_T(" -X "));
-      command.append((g_dwFlags & AF_DAEMON) ? 0 : static_cast<UINT32>(GetCurrentProcessId()));
+      command.append((g_dwFlags & AF_DAEMON) ? 0 : static_cast<uint32_t>(GetCurrentProcessId()));
    }
 #else
    if (withWaitPid)
@@ -880,11 +898,11 @@ static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
  */
 static inline uint32_t GetLogDestinationFlag()
 {
-   if (g_dwFlags & AF_USE_SYSLOG)
+   if (s_startupFlags & SF_USE_SYSLOG)
       return NXLOG_USE_SYSLOG;
-   if (g_dwFlags & AF_USE_SYSTEMD_JOURNAL)
+   if (s_startupFlags & SF_USE_SYSTEMD_JOURNAL)
       return NXLOG_USE_SYSTEMD;
-   if (g_dwFlags & AF_LOG_TO_STDOUT)
+   if (s_startupFlags & SF_LOG_TO_STDOUT)
       return NXLOG_USE_STDOUT;
    return 0;
 }
@@ -909,22 +927,22 @@ BOOL Initialize()
       s_debugLevel = 0;
 
    // Open log file
-   if (!nxlog_open((g_dwFlags & AF_USE_SYSLOG) ? NXAGENTD_SYSLOG_NAME : g_szLogFile,
+   if (!nxlog_open((s_startupFlags & SF_USE_SYSLOG) ? NXAGENTD_SYSLOG_NAME : g_szLogFile,
                    GetLogDestinationFlag() |
-	                ((g_dwFlags & AF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
+	                ((s_startupFlags & SF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
                    ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT) |
-                   ((g_dwFlags & AF_JSON_LOG) ? NXLOG_JSON_FORMAT : 0)))
+                   ((s_startupFlags & SF_JSON_LOG) ? NXLOG_JSON_FORMAT : 0)))
 	{
 	   s_debugLevel = 1;
 	   g_failFlags |= FAIL_OPEN_LOG;
       nxlog_open(NXAGENTD_SYSLOG_NAME, NXLOG_USE_SYSLOG |
-	               ((g_dwFlags & AF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
+	               ((s_startupFlags & SF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
                   ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT));
 		_ftprintf(stderr, _T("ERROR: Cannot open log file \"%s\", logs will be written to syslog with debug level 1\n"), g_szLogFile);
 	}
 	else
    {
-      if (!(g_dwFlags & (AF_USE_SYSLOG | AF_USE_SYSTEMD_JOURNAL)))
+      if (!(s_startupFlags & (SF_USE_SYSLOG | SF_USE_SYSTEMD_JOURNAL)))
       {
          if (!nxlog_set_rotation_policy((int)s_logRotationMode, s_maxLogSize, (int)s_logHistorySize, s_dailyLogFileSuffix))
             if (!(g_dwFlags & AF_DAEMON))
@@ -1122,7 +1140,7 @@ BOOL Initialize()
 #if !defined(_WIN32)
 		InitStaticSubagents();
 #endif
-		if (g_dwFlags & AF_ENABLE_AUTOLOAD)
+		if (s_startupFlags & SF_ENABLE_AUTOLOAD)
 		{
 		   LoadPlatformSubagent();
 		}
@@ -1340,14 +1358,33 @@ BOOL Initialize()
       {
          nxlog_write(NXLOG_INFO, _T("TCP listener is disabled"));
       }
-		StartPushConnector();
       StartSessionAgentConnector();
-      if (g_dwFlags & AF_ENABLE_CONTROL_CONNECTOR)
+      if (s_startupFlags & SF_ENABLE_PUSH_CONNECTOR)
+      {
+         StartPushConnector();
+      }
+      else
+      {
+         nxlog_write(NXLOG_INFO, _T("Push connector is disabled"));
+      }
+      if (s_startupFlags & SF_ENABLE_EVENT_CONNECTOR)
+      {
+         StartEventConnector();
+      }
+      else
+      {
+         nxlog_write(NXLOG_INFO, _T("Event connector is disabled"));
+      }
+      if (s_startupFlags & SF_ENABLE_CONTROL_CONNECTOR)
 	   {
          StartControlConnector();
       }
+      else
+      {
+         nxlog_write(NXLOG_INFO, _T("Control connector is disabled"));
+      }
 
-   	if (g_dwFlags & AF_REGISTER)
+   	if (s_startupFlags & SF_REGISTER)
       {
          RegisterOnServer(g_szRegistrar, g_zoneUIN);
       }
@@ -1363,7 +1400,7 @@ BOOL Initialize()
    ThreadSleep(1);
 
 	// Start watchdog process
-   if (g_dwFlags & AF_ENABLE_WATCHDOG)
+   if (s_startupFlags & SF_ENABLE_WATCHDOG)
       StartWatchdog();
 
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
@@ -1420,7 +1457,7 @@ BOOL Initialize()
 void Shutdown()
 {
 	DebugPrintf(2, _T("Shutdown() called"));
-	if (g_dwFlags & AF_ENABLE_WATCHDOG)
+	if (s_startupFlags & SF_ENABLE_WATCHDOG)
 		StopWatchdog();
 
    g_dwFlags |= AF_SHUTDOWN;
@@ -1880,7 +1917,7 @@ int main(int argc, char *argv[])
 #endif
             break;
          case 'r':
-            g_dwFlags |= AF_REGISTER;
+            s_startupFlags |= SF_REGISTER;
 #ifdef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szRegistrar, MAX_DB_STRING);
 				g_szRegistrar[MAX_DB_STRING - 1] = 0;
@@ -2156,22 +2193,22 @@ int main(int argc, char *argv[])
 					if ((!_tcsicmp(g_szLogFile, _T("{syslog}"))) ||
 						 (!_tcsicmp(g_szLogFile, _T("{eventlog}"))))
 					{
-						g_dwFlags |= AF_USE_SYSLOG;
-                  g_dwFlags &= ~(AF_USE_SYSTEMD_JOURNAL | AF_LOG_TO_STDOUT);
+					   s_startupFlags |= SF_USE_SYSLOG;
+					   s_startupFlags &= ~(SF_USE_SYSTEMD_JOURNAL | SF_LOG_TO_STDOUT);
 					}
 					else if (!_tcsicmp(g_szLogFile, _T("{systemd}")))
 					{
-                  g_dwFlags |= AF_USE_SYSTEMD_JOURNAL;
-                  g_dwFlags &= ~(AF_USE_SYSLOG | AF_LOG_TO_STDOUT);
+					   s_startupFlags |= SF_USE_SYSTEMD_JOURNAL;
+					   s_startupFlags &= ~(SF_USE_SYSLOG | SF_LOG_TO_STDOUT);
 					}
                else if (!_tcsicmp(g_szLogFile, _T("{stdout}")))
                {
-                  g_dwFlags |= AF_LOG_TO_STDOUT;
-                  g_dwFlags &= ~(AF_USE_SYSLOG | AF_USE_SYSTEMD_JOURNAL);
+                  s_startupFlags |= SF_LOG_TO_STDOUT;
+                  s_startupFlags &= ~(SF_USE_SYSLOG | SF_USE_SYSTEMD_JOURNAL);
                }
                else
                {
-                  g_dwFlags &= ~(AF_USE_SYSLOG | AF_USE_SYSTEMD_JOURNAL | AF_LOG_TO_STDOUT);
+                  s_startupFlags &= ~(SF_USE_SYSLOG | SF_USE_SYSTEMD_JOURNAL | SF_LOG_TO_STDOUT);
                }
 #ifdef _WIN32
                UpdateEnvironment();
