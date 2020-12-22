@@ -2185,9 +2185,9 @@ int main(int argc, char *argv[])
 
 					// Set exception handler
 #ifdef _WIN32
-					if (g_dwFlags & AF_CATCH_EXCEPTIONS)
+					if (s_startupFlags & SF_CATCH_EXCEPTIONS)
 						SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, s_dumpDir,
-												  _T("nxagentd"), g_dwFlags & AF_WRITE_FULL_DUMP, !(g_dwFlags & AF_DAEMON));
+												  _T("nxagentd"), s_startupFlags & SF_WRITE_FULL_DUMP, !(g_dwFlags & AF_DAEMON));
 					__try {
 #endif
 					if ((!_tcsicmp(g_szLogFile, _T("{syslog}"))) ||
