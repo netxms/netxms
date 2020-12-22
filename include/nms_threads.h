@@ -1920,6 +1920,57 @@ template <typename T, typename B, typename R1, typename R2> inline void ThreadPo
 }
 
 /**
+ * Wrapper data for ThreadPoolExecute (two arguments) using smart pointer to object
+ */
+template <typename T, typename R1, typename R2> class __ThreadPoolExecute_SharedPtr_WrapperData_2
+{
+public:
+   shared_ptr<T> m_object;
+   void (T::*m_func)(R1, R2);
+   R1 m_arg1;
+   R2 m_arg2;
+
+   __ThreadPoolExecute_SharedPtr_WrapperData_2(const shared_ptr<T>& object, void (T::*func)(R1, R2), R1 arg1, R2 arg2) : m_object(object), m_arg1(arg1), m_arg2(arg2)
+   {
+      m_func = func;
+   }
+};
+
+/**
+ * Wrapper for ThreadPoolExecute (two arguments) using smart pointer to object
+ */
+template <typename T, typename R1, typename R2> void __ThreadPoolExecute_SharedPtr_Wrapper_2(void *arg)
+{
+   auto wd = static_cast<__ThreadPoolExecute_SharedPtr_WrapperData_2<T, R1, R2> *>(arg);
+   ((*wd->m_object.get()).*(wd->m_func))(wd->m_arg1, wd->m_arg2);
+   delete wd;
+}
+
+/**
+ * Execute task as soon as possible (use class member with two arguments) using smart pointer to object
+ */
+template <typename T, typename B, typename R1, typename R2> inline void ThreadPoolExecute(ThreadPool *p, const shared_ptr<T>& object, void (B::*f)(R1, R2), R1 arg1, R2 arg2)
+{
+   ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_SharedPtr_WrapperData_2<B, R1, R2>(object, f, arg1, arg2));
+}
+
+/**
+ * Execute serialized task as soon as possible (use class member with two arguments) using smart pointer to object
+ */
+template <typename T, typename B, typename R1, typename R2> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, const shared_ptr<T>& object, void (B::*f)(R1, R2), R1 arg1, R2 arg2)
+{
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_SharedPtr_WrapperData_2<B, R1, R2>(object, f, arg1, arg2));
+}
+
+/**
+ * Execute task with delay (use class member with two arguments) using smart pointer to object
+ */
+template <typename T, typename B, typename R1, typename R2> inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, const shared_ptr<T>& object, void (B::*f)(R1, R2), R1 arg1, R2 arg2)
+{
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_SharedPtr_WrapperData_2<B, R1, R2>(object, f, arg1, arg2));
+}
+
+/**
  * Wrapper data for ThreadPoolExecute (three arguments)
  */
 template <typename T, typename R1, typename R2, typename R3> class __ThreadPoolExecute_WrapperData_3
