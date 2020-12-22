@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.NXCPCodes;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.dialogs.helpers.BulkUpdateElementUI;
+import org.netxms.ui.eclipse.datacollection.dialogs.helpers.BulkDciUpdateElementUI;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.BulkUpdateLabelProvider;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.BulkValueEditSupport;
 
@@ -41,7 +41,8 @@ import org.netxms.ui.eclipse.datacollection.dialogs.helpers.BulkValueEditSupport
 public class BulkUpdateDialog extends Dialog
 {
    private TableViewer tableViewer;
-   private List<BulkUpdateElementUI> element;
+   private List<BulkDciUpdateElementUI> elements;
+
    /**
     * Bulk update dialog constructor
     * 
@@ -52,33 +53,33 @@ public class BulkUpdateDialog extends Dialog
    public BulkUpdateDialog(Shell parentShell, boolean isCustomRetention, boolean isCustomInterval)
    {      
       super(parentShell);
-      element = new ArrayList<BulkUpdateElementUI>();
+
+      elements = new ArrayList<BulkDciUpdateElementUI>();
+
       String[] pollingModes = {"No change", Messages.get().General_FixedIntervalsDefault, Messages.get().General_FixedIntervalsCustom, Messages.get().General_CustomSchedule};
-      BulkUpdateElementUI pollingMode = new BulkUpdateElementUI("Polling mode", NXCPCodes.VID_POLLING_SCHEDULE_TYPE, pollingModes);
-      element.add(pollingMode);
-      element.add(new BulkUpdateElementUI("Polling interval (seconds)", NXCPCodes.VID_POLLING_INTERVAL, null, new BulkUpdateElementUI.IsEditable() {
+      BulkDciUpdateElementUI pollingMode = new BulkDciUpdateElementUI("Polling mode", NXCPCodes.VID_POLLING_SCHEDULE_TYPE, pollingModes);
+      elements.add(pollingMode);
+      elements.add(new BulkDciUpdateElementUI("Polling interval (seconds)", NXCPCodes.VID_POLLING_INTERVAL, null, new BulkDciUpdateElementUI.EditModeSelector() {
          @Override
          public boolean isEditable()
          {
             return (isCustomInterval && pollingMode.getSelectionValue() == -1) || (pollingMode.getSelectionValue() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM);
          }
       }));
-      
+
       String[] retentionTypes = {"No change", Messages.get().General_UseDefaultRetention, Messages.get().General_UseCustomRetention, Messages.get().General_NoStorage};
-      BulkUpdateElementUI retentionType = new BulkUpdateElementUI("Retention mode", NXCPCodes.VID_RETENTION_TYPE, retentionTypes);
-      element.add(retentionType);
-      element.add(new BulkUpdateElementUI("Retention time (days)", NXCPCodes.VID_RETENTION_TIME, null, new BulkUpdateElementUI.IsEditable() {
+      BulkDciUpdateElementUI retentionType = new BulkDciUpdateElementUI("Retention mode", NXCPCodes.VID_RETENTION_TYPE, retentionTypes);
+      elements.add(retentionType);
+      elements.add(new BulkDciUpdateElementUI("Retention time (days)", NXCPCodes.VID_RETENTION_TIME, null, new BulkDciUpdateElementUI.EditModeSelector() {
          @Override
          public boolean isEditable()
          {
             return (isCustomRetention && retentionType.getSelectionValue() == -1) || (retentionType.getSelectionValue() == DataCollectionObject.RETENTION_CUSTOM);
          }
       }));
-      
-      
    }
 
-   /* (non-Javadoc)s
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -88,33 +89,30 @@ public class BulkUpdateDialog extends Dialog
 
       int style = SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.HIDE_SELECTION;      
 
-      String[] columnNames = new String[] { "Name", "Value" };
+      String[] columnNames = new String[] { "Attribute", "Value" };
       tableViewer = new TableViewer(parent, style);
       
       tableViewer.setColumnProperties(columnNames);  
-      
 
       TableViewerColumn column = new TableViewerColumn(tableViewer, SWT.LEFT);
-      column.getColumn().setText("Name");
+      column.getColumn().setText("Attribute");
       column.getColumn().setWidth(300);
-      
 
       column = new TableViewerColumn(tableViewer, SWT.LEFT);
       column.getColumn().setText("Value");
       column.getColumn().setWidth(400);
       column.setEditingSupport(new BulkValueEditSupport(tableViewer));  
-      
 
       tableViewer.getTable().setLinesVisible(true);
       tableViewer.getTable().setHeaderVisible(true);
       tableViewer.setContentProvider(new ArrayContentProvider());
       tableViewer.setLabelProvider(new BulkUpdateLabelProvider());
-      tableViewer.setInput(element.toArray());
+      tableViewer.setInput(elements.toArray());
       
       return dialogArea;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
@@ -124,7 +122,7 @@ public class BulkUpdateDialog extends Dialog
       newShell.setText("Bulk DCI update");
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
    @Override
@@ -132,14 +130,14 @@ public class BulkUpdateDialog extends Dialog
    {
       super.okPressed();
    }
-   
+
    /**
     * Get bulk update elements
     * 
     * @return list of bulk update elements
     */
-   public List<BulkUpdateElementUI> getBulkUpdateElements()
+   public List<BulkDciUpdateElementUI> getBulkUpdateElements()
    {
-      return element;
+      return elements;
    }
 }
