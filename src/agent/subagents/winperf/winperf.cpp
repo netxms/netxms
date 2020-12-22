@@ -138,7 +138,7 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 					counter = AddCounter(szCounter, 0, samples, COUNTER_TYPE_AUTO);
 					if (counter != NULL)
 					{
-						AgentWriteDebugLog(5, _T("WINPERF: new automatic counter created: \"%s\""), buffer);
+						nxlog_debug_tag(WINPERF_DEBUG_TAG, 5, _T("New automatic counter created: \"%s\""), buffer);
 						s_autoCounters->set(buffer, counter);
 					}
 				}
@@ -166,10 +166,10 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 			TCHAR *newName = (TCHAR *)malloc(_tcslen(szCounter) * sizeof(TCHAR) * 4);
 			if (TranslateCounterName(szCounter, newName))
 			{
-				AgentWriteDebugLog(2, _T("WINPERF: Counter translated: %s ==> %s"), szCounter, newName);
+				nxlog_debug_tag(WINPERF_DEBUG_TAG, 2, _T("Counter translated: %s ==> %s"), szCounter, newName);
 				rc = PdhAddCounter(hQuery, newName, 0, &hCounter);
 			}
-			free(newName);
+			MemFree(newName);
 		}
 	   if (rc != ERROR_SUCCESS)
 		{
@@ -320,11 +320,11 @@ static LONG H_CounterAlias(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVal
 static LONG H_FreeMemoryPct(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
-   LONG rc = H_PdhCounterValue(NULL, pArg, buffer, session);
+   LONG rc = H_PdhCounterValue(nullptr, pArg, buffer, session);
    if (rc != SYSINFO_RC_SUCCESS)
       return rc;
 
-   UINT64 free = _tcstoull(buffer, NULL, 10);
+   uint64_t free = _tcstoull(buffer, nullptr, 10);
 
    MEMORYSTATUSEX mse;
    mse.dwLength = sizeof(MEMORYSTATUSEX);
@@ -340,7 +340,7 @@ static LONG H_FreeMemoryPct(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVa
  */
 static bool SubAgentInit(Config *config)
 {
-   g_winperfShutdownCondition = CreateEvent(NULL, TRUE, FALSE, NULL);
+   g_winperfShutdownCondition = CreateEvent(nullptr, TRUE, FALSE, nullptr);
    StartCollectorThreads();
    return true;
 }
@@ -358,38 +358,38 @@ static void SubAgentShutdown()
 /**
  * Supported parameters
  */
-static NETXMS_SUBAGENT_PARAM m_parameters[] =
+static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
-   { _T("PDH.CounterValue(*)"), H_PdhCounterValue, NULL, DCI_DT_INT, _T("") },
-   { _T("PDH.Version"), H_PdhVersion, NULL, DCI_DT_UINT, _T("Version of PDH.DLL") },
+   { _T("PDH.CounterValue(*)"), H_PdhCounterValue, nullptr, DCI_DT_INT, _T("") },
+   { _T("PDH.Version"), H_PdhVersion, nullptr, DCI_DT_UINT, _T("Version of PDH.DLL") },
 	{ _T("System.ThreadCount"), H_CounterAlias, _T("\\System\\Threads"), DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
-   { _T("WinPerf.Features"), H_WinPerfFeatures, NULL, DCI_DT_UINT, _T("Features supported by this WinPerf version") },
+   { _T("WinPerf.Features"), H_WinPerfFeatures, nullptr, DCI_DT_UINT, _T("Features supported by this WinPerf version") },
 };
 
 /**
  * Supported lists
  */
-static NETXMS_SUBAGENT_LIST m_lists[] =
+static NETXMS_SUBAGENT_LIST s_lists[] =
 {
    { _T("PDH.ObjectCounters(*)"), H_PdhObjectItems, _T("C") },
    { _T("PDH.ObjectInstances(*)"), H_PdhObjectItems, _T("I") },
-   { _T("PDH.Objects"), H_PdhObjects, NULL }
+   { _T("PDH.Objects"), H_PdhObjects, nullptr }
 };
 
 /**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("WinPerf"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, NULL, NULL,     // handlers
-   0, NULL,             // parameters
-   sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
-   m_lists,
-   0, NULL,	// tables
-   0, NULL,	// actions
-   0, NULL	// push parameters
+   SubAgentInit, SubAgentShutdown, nullptr, nullptr,     // handlers
+   0, nullptr,             // parameters
+   sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+   s_lists,
+   0, nullptr,	// tables
+   0, nullptr,	// actions
+   0, nullptr	// push parameters
 };
 
 /**
@@ -399,24 +399,24 @@ BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR 
 {
    DWORD i;
 
-   for(i = 0; i < m_info.numParameters; i++)
-      if (!_tcsicmp(pszName, m_info.parameters[i].name))
+   for(i = 0; i < s_info.numParameters; i++)
+      if (!_tcsicmp(pszName, s_info.parameters[i].name))
          break;
 
-   if (i == m_info.numParameters)
+   if (i == s_info.numParameters)
    {
       // Extend list
-      m_info.numParameters++;
-      m_info.parameters =
-         (NETXMS_SUBAGENT_PARAM *)realloc(m_info.parameters,
-                  sizeof(NETXMS_SUBAGENT_PARAM) * m_info.numParameters);
+      s_info.numParameters++;
+      s_info.parameters =
+         (NETXMS_SUBAGENT_PARAM *)realloc(s_info.parameters,
+                  sizeof(NETXMS_SUBAGENT_PARAM) * s_info.numParameters);
    }
 
-   nx_strncpy(m_info.parameters[i].name, pszName, MAX_PARAM_NAME);
-   m_info.parameters[i].handler = fpHandler;
-   m_info.parameters[i].arg = pArg;
-   m_info.parameters[i].dataType = iDataType;
-   nx_strncpy(m_info.parameters[i].description, pszDescription, MAX_DB_STRING);
+   nx_strncpy(s_info.parameters[i].name, pszName, MAX_PARAM_NAME);
+   s_info.parameters[i].handler = fpHandler;
+   s_info.parameters[i].arg = pArg;
+   s_info.parameters[i].dataType = iDataType;
+   nx_strncpy(s_info.parameters[i].description, pszDescription, MAX_DB_STRING);
 
    return TRUE;
 }
@@ -440,10 +440,10 @@ static void AddPredefinedCounters()
 /**
  * Configuration file template
  */
-static TCHAR *m_pszCounterList = nullptr;
-static NX_CFG_TEMPLATE m_cfgTemplate[] =
+static TCHAR *s_counterList = nullptr;
+static NX_CFG_TEMPLATE s_cfgTemplate[] =
 {
-   { _T("Counter"), CT_STRING_CONCAT, _T('\n'), 0, 0, 0, &m_pszCounterList },
+   { _T("Counter"), CT_STRING_CONCAT, _T('\n'), 0, 0, 0, &s_counterList },
    { _T("EnableDefaultCounters"), CT_BOOLEAN_FLAG_32, 0, 0, WPF_ENABLE_DEFAULT_COUNTERS, 0, &m_dwFlags },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
@@ -453,7 +453,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
 {
-	if (m_info.parameters != nullptr)
+	if (s_info.parameters != nullptr)
 		return false;	// Most likely another instance of WINPERF subagent already loaded
 
 	// Read performance counter indexes
@@ -470,7 +470,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
 	} while(status == ERROR_MORE_DATA);
    if ((status != ERROR_SUCCESS) || (counters[0] == 0))
    {
-      AgentWriteDebugLog(1, _T("WinPerf: failed to read counters from HKEY_PERFORMANCE_DATA"));
+      nxlog_debug_tag(WINPERF_DEBUG_TAG, 1, _T("Failed to read counters from HKEY_PERFORMANCE_DATA"));
 
       HKEY hKey;
       status = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009"), 0, KEY_READ, &hKey);
@@ -518,18 +518,18 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
 	MemFree(counters);
 
    // Init parameters list
-   m_info.numParameters = sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM);
-   m_info.parameters = MemCopyBlock(m_parameters, sizeof(m_parameters));
+   s_info.numParameters = sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM);
+   s_info.parameters = MemCopyBlock(s_parameters, sizeof(s_parameters));
 
 	// Check counter names for H_CounterAlias
    TCHAR *newName;
-	for(UINT32 i = 0; i < m_info.numParameters; i++)
+	for(UINT32 i = 0; i < s_info.numParameters; i++)
 	{
-		if (m_info.parameters[i].handler == H_CounterAlias)
+		if (s_info.parameters[i].handler == H_CounterAlias)
 		{
-			CheckCounter(m_info.parameters[i].arg, &newName);
+			CheckCounter(s_info.parameters[i].arg, &newName);
 			if (newName != NULL)
-				m_info.parameters[i].arg = newName;
+				s_info.parameters[i].arg = newName;
 		}
 	}
 
@@ -541,37 +541,37 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
    TCHAR value[MAX_RESULT_LENGTH];
    if (H_PdhCounterValue(NULL, counter, value, NULL) == SYSINFO_RC_SUCCESS)
    {
-      AgentWriteDebugLog(4, _T("WinPerf: \"\\Memory\\Free & Zero Page List Bytes\" is supported"));
+      nxlog_debug_tag(WINPERF_DEBUG_TAG, 4, _T("\"\\Memory\\Free & Zero Page List Bytes\" is supported"));
       AddParameter(_T("System.Memory.Physical.Free"), H_CounterAlias, (TCHAR *)counter, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE);
       AddParameter(_T("System.Memory.Physical.FreePerc"), H_FreeMemoryPct, (TCHAR *)counter, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT);
    }
    else
    {
-      AgentWriteDebugLog(4, _T("WinPerf: \"\\Memory\\Free & Zero Page List Bytes\" is not supported"));
+      nxlog_debug_tag(WINPERF_DEBUG_TAG, 4, _T("\"\\Memory\\Free & Zero Page List Bytes\" is not supported"));
       MemFree(newName);
    }
 
    // Load configuration
-	bool success = config->parseTemplate(_T("WinPerf"), m_cfgTemplate);
+	bool success = config->parseTemplate(_T("WinPerf"), s_cfgTemplate);
 	if (success)
    {
-      TCHAR *pItem, *pEnd;
-
       // Parse counter list
-      if (m_pszCounterList != NULL)
+      if (s_counterList != nullptr)
       {
-         for(pItem = m_pszCounterList; *pItem != 0; pItem = pEnd + 1)
+         TCHAR *curr, *next;
+         for(curr = s_counterList; *curr != 0; curr = next + 1)
          {
-            pEnd = _tcschr(pItem, _T('\n'));
-            if (pEnd != NULL)
-               *pEnd = 0;
-            StrStrip(pItem);
-            if (!AddCounterFromConfig(pItem))
-               AgentWriteLog(EVENTLOG_WARNING_TYPE,
-                               _T("Unable to add counter from configuration file. ")
-                               _T("Original configuration record: %s"), pItem);
+            next = _tcschr(curr, _T('\n'));
+            if (next != nullptr)
+               *next = 0;
+            StrStrip(curr);
+            if (!AddCounterFromConfig(curr))
+            {
+               nxlog_write_tag(NXLOG_WARNING, WINPERF_DEBUG_TAG,
+                     _T("Unable to add counter from configuration file. Original configuration record: %s"), curr);
+            }
          }
-         MemFree(m_pszCounterList);
+         MemFree(s_counterList);
       }
 
       if (m_dwFlags & WPF_ENABLE_DEFAULT_COUNTERS)
@@ -579,9 +579,9 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
    }
    else
    {
-      MemFree(m_pszCounterList);
+      MemFree(s_counterList);
    }
-   *ppInfo = &m_info;
+   *ppInfo = &s_info;
    return success;
 }
 

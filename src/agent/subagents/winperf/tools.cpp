@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,6 @@ static StructArray<COUNTER_INDEX> m_counterIndexes;
 TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize)
 {
    TCHAR *pszMsg;
-
    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
                      FORMAT_MESSAGE_FROM_HMODULE | 
                      FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -47,7 +46,7 @@ TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize)
                      (LPTSTR)&pszMsg, 0, NULL)>0)
    {
       TranslateStr(pszMsg, _T("\r\n"), _T(""));
-      nx_strncpy(pszBuffer, pszMsg, iBufferSize);
+      _tcslcpy(pszBuffer, pszMsg, iBufferSize);
       LocalFree(pszMsg);
    }
    else
@@ -65,10 +64,9 @@ void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError)
    if (dwError == PDH_NO_DATA)
       return;
 
-   TCHAR szBuffer[1024];
-
-   AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("%s: PDH Error %08X in call to %s (%s)"), 
-                   pszFunction, dwError, pszPdhCall, GetPdhErrorText(dwError, szBuffer, 1024));
+   TCHAR buffer[1024];
+   nxlog_write_tag(NXLOG_WARNING, WINPERF_DEBUG_TAG, _T("%s: PDH Error %08X in call to %s (%s)"), 
+         pszFunction, dwError, pszPdhCall, GetPdhErrorText(dwError, buffer, 1024));
 }
 
 /**
@@ -86,7 +84,7 @@ void CreateCounterIndex(TCHAR *englishCounters, TCHAR *localCounters)
       ci.localName = NULL;
       m_counterIndexes.add(&ci);
 	}
-   AgentWriteDebugLog(2, _T("WinPerf: %d counter indexes read"), m_counterIndexes.size());
+   nxlog_debug_tag(WINPERF_DEBUG_TAG, 2, _T("%d counter indexes read"), m_counterIndexes.size());
 
    int translations = 0;
 	for(TCHAR *curr = localCounters; *curr != 0; )
@@ -105,8 +103,7 @@ void CreateCounterIndex(TCHAR *englishCounters, TCHAR *localCounters)
       }
 		curr += _tcslen(curr) + 1;
 	}
-   AgentWriteDebugLog(2, _T("WinPerf: %d counter translations read"), translations);
-
+   nxlog_debug_tag(WINPERF_DEBUG_TAG, 2, _T("%d counter translations read"), translations);
 }
 
 /**
@@ -201,7 +198,7 @@ BOOL TranslateCounterName(const TCHAR *pszName, TCHAR *pszOut)
 	pCurr = pNext;
 
 	// Translate counter name
-	nx_strncpy(szTemp, pCurr, MAX_ELEMENT_LENGTH);
+   _tcslcpy(szTemp, pCurr, MAX_ELEMENT_LENGTH);
 	bs2 = TranslateElement(szTemp);
 	_tcscat(pszOut, szTemp);
 

@@ -29,12 +29,7 @@
 #include <pdh.h>
 #include <pdhmsg.h>
 
-#ifdef _DEBUG
-#define DEBUG_SUFFIX    "-debug"
-#else
-#define DEBUG_SUFFIX    ""
-#endif
-
+#define WINPERF_DEBUG_TAG  _T("sa.winperf")
 
 //
 // Counter types
@@ -79,7 +74,6 @@ private:
    THREAD m_collectorThread;
 
 	void collectorThread();
-	static THREAD_RESULT THREAD_CALL collectorThreadStarter(void *);
 
 public:
 	WinPerfCounterSet(DWORD interval, TCHAR cls);
