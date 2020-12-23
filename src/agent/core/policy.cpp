@@ -340,7 +340,7 @@ uint32_t DeployPolicy(CommSession *session, NXCPMessage *request)
 /**
  * Remove configuration file
  */
-static uint32_t RemovePolicy(UINT32 session, const uuid& guid, TCHAR *dir)
+static uint32_t RemovePolicy(uint32_t session, const uuid& guid, TCHAR *dir)
 {
    TCHAR path[MAX_PATH], name[64];
    uint32_t rcc;
@@ -373,6 +373,8 @@ uint32_t UninstallPolicy(CommSession *session, NXCPMessage *request)
    if (!_tcscmp(type, _T("AgentConfig")))
    {
       rcc = RemovePolicy(session->getIndex(), guid, g_szConfigPolicyDir);
+      if (rcc == RCC_SUCCESS)
+         g_restartPending = true;
    }
    else if (!_tcscmp(type, _T("LogParserConfig")))
    {
