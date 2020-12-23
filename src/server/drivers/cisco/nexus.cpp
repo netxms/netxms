@@ -108,7 +108,7 @@ static UINT32 HandlerIPAddressList(SNMP_Variable *var, SNMP_Transport *transport
 /**
  * Extract integer from capture group
  */
-static UINT32 IntegerFromCGroup(const TCHAR *text, int *cgroups, int cgindex)
+static uint32_t IntegerFromCGroup(const TCHAR *text, int *cgroups, int cgindex)
 {
    TCHAR buffer[32];
    int len = cgroups[cgindex * 2 + 1] - cgroups[cgindex * 2];
@@ -234,7 +234,7 @@ static UINT32 HandlerVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, vo
    VlanList *vlanList = static_cast<VlanList*>(arg);
 
    SNMP_ObjectId oid = var->getName();
-   UINT32 ifIndex = oid.getLastElement();
+   uint32_t ifIndex = oid.getLastElement();
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
    if (var->getValueAsInt() == 3)
@@ -278,6 +278,16 @@ static UINT32 HandlerVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, vo
 }
 
 /**
+ * Handler for VLAN ports enumeration
+ */
+static UINT32 HandlerVlanTrunkPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+   auto context = static_cast<std::pair<VlanList*, int>*>(arg);
+   AddPortToVLANs(var, context->second, context->first);
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
  * Get list of VLANs on given node
  *
  * @param snmp SNMP transport
@@ -288,6 +298,7 @@ static UINT32 HandlerVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, vo
 VlanList *CiscoNexusDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    VlanList *list = new VlanList();
+   std::pair<VlanList*, int> context(list, 0);  // Context for vlanTrunkPortVlansEnabled*
 
    // vtpVlanName
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.3.1.1.4"), HandlerVlanList, list) != SNMP_ERR_SUCCESS)
@@ -295,6 +306,25 @@ VlanList *CiscoNexusDriver::getVlans(SNMP_Transport *snmp, NObject *node, Driver
 
    // vmVlanType
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.68.1.2.2.1.1"), HandlerVlanPorts, list) != SNMP_ERR_SUCCESS)
+      goto failure;
+
+   // vlanTrunkPortVlansEnabled
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.4"), HandlerVlanTrunkPorts, &context) != SNMP_ERR_SUCCESS)
+      goto failure;
+
+   // vlanTrunkPortVlansEnabled2k
+   context.second = 1024;
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.17"), HandlerVlanTrunkPorts, &context) != SNMP_ERR_SUCCESS)
+      goto failure;
+
+   // vlanTrunkPortVlansEnabled3k
+   context.second = 2048;
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.18"), HandlerVlanTrunkPorts, &context) != SNMP_ERR_SUCCESS)
+      goto failure;
+
+   // vlanTrunkPortVlansEnabled4k
+   context.second = 3072;
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.19"), HandlerVlanTrunkPorts, &context) != SNMP_ERR_SUCCESS)
       goto failure;
 
    return list;
