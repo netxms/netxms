@@ -1974,17 +1974,27 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
 
    checkTrapShouldBeProcessed();
 
-   UINT32 oldCapabilities = m_capabilities;
-   UINT32 oldState = m_state;
-
    ObjectQueue<Event> *eventQueue = new ObjectQueue<Event>(64, Ownership::True);     // Delayed event queue
    poller->setStatus(_T("wait for lock"));
    pollerLock(status);
 
    POLL_CANCELLATION_CHECKPOINT_EX(delete eventQueue);
 
+   uint32_t oldCapabilities = m_capabilities;
+   uint32_t oldState = m_state;
+
    poller->setStatus(_T("preparing"));
    m_pollRequestor = pSession;
+
+   if (m_status == STATUS_UNMANAGED)
+   {
+      sendPollerMsg(rqId, POLLER_WARNING _T("Node %s is unmanaged, status poll aborted\r\n"), m_name);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node %s [%u] is unmanaged, status poll aborted"), m_name, m_id);
+      delete eventQueue;
+      pollerUnlock();
+      return;
+   }
+
    sendPollerMsg(rqId, _T("Starting status poll for node %s\r\n"), m_name);
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Starting status poll for node %s (ID: %d)"), m_name, m_id);
 
@@ -3518,15 +3528,24 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    }
    unlockProperties();
 
-   uint32_t oldCapabilities = m_capabilities;
-   uint32_t modified = 0;
-
    poller->setStatus(_T("wait for lock"));
    pollerLock(configuration);
 
    POLL_CANCELLATION_CHECKPOINT();
 
    m_pollRequestor = session;
+
+   if (m_status == STATUS_UNMANAGED)
+   {
+      sendPollerMsg(rqId, POLLER_WARNING _T("Node %s is unmanaged, configuration poll aborted\r\n"), m_name);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node %s [%u] is unmanaged, configuration poll aborted"), m_name, m_id);
+      pollerUnlock();
+      return;
+   }
+
+   uint32_t oldCapabilities = m_capabilities;
+   uint32_t modified = 0;
+
    sendPollerMsg(rqId, _T("Starting configuration poll for node %s\r\n"), m_name);
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Starting configuration poll for node %s (ID: %d)"), m_name, m_id);
 
@@ -8833,6 +8852,15 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
    POLL_CANCELLATION_CHECKPOINT();
 
    m_pollRequestor = pSession;
+
+   if (m_status == STATUS_UNMANAGED)
+   {
+      sendPollerMsg(rqId, POLLER_WARNING _T("Node %s is unmanaged, topology poll aborted\r\n"), m_name);
+      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Node %s [%u] is unmanaged, topology poll aborted"), m_name, m_id);
+      pollerUnlock();
+      return;
+   }
+
    sendPollerMsg(rqId, _T("Starting topology poll for node %s\r\n"), m_name);
    nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Started topology poll for node %s [%d]"), m_name, m_id);
 
@@ -9548,6 +9576,15 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
    }
 
    m_pollRequestor = pSession;
+
+   if (m_status == STATUS_UNMANAGED)
+   {
+      sendPollerMsg(rqId, POLLER_WARNING _T("Node %s is unmanaged, interface names poll aborted\r\n"), m_name);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node %s [%u] is unmanaged, interface names poll aborted"), m_name, m_id);
+      _pollerUnlock();
+      return;
+   }
+
    sendPollerMsg(rqId, _T("Starting interface names poll for node %s\r\n"), m_name);
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Starting interface names poll for node %s (ID: %d)"), m_name, m_id);
 

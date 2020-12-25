@@ -2150,6 +2150,15 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
    }
 
    m_pollRequestor = session;
+
+   if (m_status == STATUS_UNMANAGED)
+   {
+      sendPollerMsg(requestId, POLLER_WARNING _T("%s %s is unmanaged, instance discovery  poll aborted\r\n"), getObjectClassName(), m_name);
+      nxlog_debug(5, _T("%s %s [%u] is unmanaged, instance discovery poll aborted"), getObjectClassName(), m_name, m_id);
+      pollerUnlock();
+      return;
+   }
+
    sendPollerMsg(requestId, _T("Starting instance discovery poll for %s %s\r\n"), getObjectClassName(), m_name);
    DbgPrintf(4, _T("Starting instance discovery poll for %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
 
