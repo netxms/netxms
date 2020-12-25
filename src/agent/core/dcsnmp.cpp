@@ -33,18 +33,18 @@ static Mutex s_snmpTargetsLock;
 /**
  * Create SNMP target from NXCP message
  */
-SNMPTarget::SNMPTarget(uint64_t serverId, NXCPMessage *msg, uint32_t baseId)
+SNMPTarget::SNMPTarget(uint64_t serverId, const NXCPMessage& msg, uint32_t baseId)
 {
-   m_guid = msg->getFieldAsGUID(baseId);
+   m_guid = msg.getFieldAsGUID(baseId);
    m_serverId = serverId;
-   m_ipAddress = msg->getFieldAsInetAddress(baseId + 1);
-   m_snmpVersion = static_cast<SNMP_Version>(msg->getFieldAsInt16(baseId + 2));
-   m_port = msg->getFieldAsUInt16(baseId + 3);
-   m_authType = static_cast<SNMP_AuthMethod>(msg->getFieldAsInt16(baseId + 4));
-   m_encType = static_cast<SNMP_EncryptionMethod>(msg->getFieldAsInt16(baseId + 5));
-   m_authName = msg->getFieldAsUtf8String(baseId + 6);
-   m_authPassword = msg->getFieldAsUtf8String(baseId + 7);
-   m_encPassword = msg->getFieldAsUtf8String(baseId + 8);
+   m_ipAddress = msg.getFieldAsInetAddress(baseId + 1);
+   m_snmpVersion = static_cast<SNMP_Version>(msg.getFieldAsInt16(baseId + 2));
+   m_port = msg.getFieldAsUInt16(baseId + 3);
+   m_authType = static_cast<SNMP_AuthMethod>(msg.getFieldAsInt16(baseId + 4));
+   m_encType = static_cast<SNMP_EncryptionMethod>(msg.getFieldAsInt16(baseId + 5));
+   m_authName = msg.getFieldAsUtf8String(baseId + 6);
+   m_authPassword = msg.getFieldAsUtf8String(baseId + 7);
+   m_encPassword = msg.getFieldAsUtf8String(baseId + 8);
    m_transport = nullptr;
 }
 

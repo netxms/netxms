@@ -25,7 +25,7 @@
 /**
  * Externals
  */
-void UnregisterSession(UINT32 index, UINT32 id);
+void UnregisterSession(uint32_t index, uint32_t id);
 uint32_t DeployPolicy(CommSession *session, NXCPMessage *request);
 uint32_t UninstallPolicy(CommSession *session, NXCPMessage *request);
 uint32_t GetPolicyInventory(CommSession *session, NXCPMessage *msg);
@@ -91,33 +91,6 @@ THREAD_RESULT THREAD_CALL CommSession::readThreadStarter(void *arg)
    UnregisterSession(static_cast<CommSession*>(arg)->getIndex(), static_cast<CommSession*>(arg)->getId());
    static_cast<CommSession *>(arg)->debugPrintf(6, _T("Receiver thread stopped"));
    static_cast<CommSession *>(arg)->decRefCount();
-   return THREAD_OK;
-}
-
-/**
- * Received message processing thread
- */
-THREAD_RESULT THREAD_CALL CommSession::processingThreadStarter(void *arg)
-{
-   static_cast<CommSession *>(arg)->processingThread();
-   return THREAD_OK;
-}
-
-/**
- * Proxy read thread
- */
-THREAD_RESULT THREAD_CALL CommSession::proxyReadThreadStarter(void *arg)
-{
-   static_cast<CommSession *>(arg)->proxyReadThread();
-   return THREAD_OK;
-}
-
-/**
- * TCP proxy read thread
- */
-THREAD_RESULT THREAD_CALL CommSession::tcpProxyReadThreadStarter(void *arg)
-{
-   static_cast<CommSession *>(arg)->tcpProxyReadThread();
    return THREAD_OK;
 }
 
@@ -210,7 +183,7 @@ void CommSession::debugPrintf(int level, const TCHAR *format, ...)
  */
 void CommSession::run()
 {
-   m_processingThread = ThreadCreateEx(processingThreadStarter, 0, this);
+   m_processingThread = ThreadCreateEx(this, &CommSession::processingThread);
    ThreadCreate(readThreadStarter, 0, this);
 }
 
@@ -720,7 +693,7 @@ void CommSession::processingThread()
             case CMD_DATA_COLLECTION_CONFIG:
                if (m_serverId != 0)
                {
-                  ConfigureDataCollection(m_serverId, request);
+                  ConfigureDataCollection(m_serverId, *request);
                   m_acceptData = true;
                   response.setField(VID_RCC, ERR_SUCCESS);
                }
@@ -1165,7 +1138,7 @@ UINT32 CommSession::setupProxyConnection(NXCPMessage *request)
    NXCPEncryptionContext *pSavedCtx = m_pCtx;
    m_pCtx = PROXY_ENCRYPTION_CTX;
    m_proxyConnection = true;
-   m_proxyReadThread = ThreadCreateEx(proxyReadThreadStarter, 0, this);
+   m_proxyReadThread = ThreadCreateEx(this, &CommSession::proxyReadThread);
 
    // Send confirmation message
    // We cannot use sendMessage() because encryption context already overridden
@@ -1237,6 +1210,9 @@ NXCPMessage *CommSession::doRequestEx(NXCPMessage *msg, UINT32 timeout)
    return m_responseQueue->waitForMessage(CMD_REQUEST_COMPLETED, msg->getId(), timeout);
 }
 
+/**
+ * Wait for specific message
+ */
 NXCPMessage *CommSession::waitForMessage(UINT16 code, UINT32 id, UINT32 timeout)
 {
    return m_responseQueue->waitForMessage(code, id, timeout);
@@ -1245,9 +1221,9 @@ NXCPMessage *CommSession::waitForMessage(UINT16 code, UINT32 id, UINT32 timeout)
 /**
  * Generate new request ID
  */
-UINT32 CommSession::generateRequestId()
+uint32_t CommSession::generateRequestId()
 {
-   return (UINT32)InterlockedIncrement(&m_requestId);
+   return static_cast<uint32_t>(InterlockedIncrement(&m_requestId));
 }
 
 /**
@@ -1255,7 +1231,7 @@ UINT32 CommSession::generateRequestId()
  */
 void CommSession::setupTcpProxy(NXCPMessage *request, NXCPMessage *response)
 {
-   UINT32 rcc = ERR_CONNECT_FAILED;
+   uint32_t rcc = ERR_CONNECT_FAILED;
    InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
    UINT16 port = request->getFieldAsUInt16(VID_PORT);
    SOCKET s = ConnectToHost(addr, port, 5000);
@@ -1266,7 +1242,7 @@ void CommSession::setupTcpProxy(NXCPMessage *request, NXCPMessage *response)
       MutexLock(m_tcpProxyLock);
       m_tcpProxies.add(proxy);
       if (m_tcpProxyReadThread == INVALID_THREAD_HANDLE)
-         m_tcpProxyReadThread = ThreadCreateEx(CommSession::tcpProxyReadThreadStarter, 0, this);
+         m_tcpProxyReadThread = ThreadCreateEx(this, &CommSession::tcpProxyReadThread);
       MutexUnlock(m_tcpProxyLock);
       debugPrintf(5, _T("TCP proxy %d created (destination address %s port %d)"),
                proxy->getId(), (const TCHAR *)addr.toString(), (int)port);
@@ -1283,10 +1259,10 @@ void CommSession::setupTcpProxy(NXCPMessage *request, NXCPMessage *response)
 /**
  * Close TCP proxy
  */
-UINT32 CommSession::closeTcpProxy(NXCPMessage *request)
+uint32_t CommSession::closeTcpProxy(NXCPMessage *request)
 {
-   UINT32 rcc = ERR_INVALID_OBJECT;
-   UINT32 id = request->getFieldAsUInt32(VID_CHANNEL_ID);
+   uint32_t rcc = ERR_INVALID_OBJECT;
+   uint32_t id = request->getFieldAsUInt32(VID_CHANNEL_ID);
    MutexLock(m_tcpProxyLock);
    for(int i = 0; i < m_tcpProxies.size(); i++)
    {

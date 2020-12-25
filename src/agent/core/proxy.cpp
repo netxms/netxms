@@ -279,7 +279,7 @@ void DataCollectionProxy::checkConnection()
 /**
  * Thread checks if used in DCI proxy node is connected
  */
-void ProxyConnectionChecker(void *arg)
+void ProxyConnectionChecker()
 {
    bool reschedule = false;
    g_proxyListMutex.lock();
@@ -298,7 +298,7 @@ void ProxyConnectionChecker(void *arg)
 
    s_proxyConnectionCheckScheduled = reschedule;
    if (reschedule)
-      ThreadPoolScheduleRelative(g_dataCollectorPool, 5000, ProxyConnectionChecker, NULL);
+      ThreadPoolScheduleRelative(g_dataCollectorPool, 5000, ProxyConnectionChecker);
 
    g_proxyListMutex.unlock();
 }
@@ -306,7 +306,7 @@ void ProxyConnectionChecker(void *arg)
 /**
  * Update proxy list on data collection configuration update
  */
-void UpdateProxyConfiguration(UINT64 serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone)
+void UpdateProxyConfiguration(uint64_t serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone)
 {
    g_proxyListMutex.lock();
    Iterator<DataCollectionProxy> *it = proxyList->iterator();
@@ -339,8 +339,8 @@ void UpdateProxyConfiguration(UINT64 serverId, HashMap<ServerObjectKey, DataColl
       }
    }
    delete it;
-   if(!s_proxyConnectionCheckScheduled)
-      ThreadPoolScheduleRelative(g_dataCollectorPool, 0, ProxyConnectionChecker, NULL);
+   if (!s_proxyConnectionCheckScheduled)
+      ThreadPoolScheduleRelative(g_dataCollectorPool, 0, ProxyConnectionChecker);
 
    ZoneConfiguration *oldZone = g_proxyserverConfList->get(serverId);
    if (oldZone == NULL)
@@ -432,16 +432,15 @@ ConnectionProcessingResult ProxyConnectionListener::processDatagram(SOCKET s)
 /**
  * Listener thread
  */
-THREAD_RESULT THREAD_CALL ProxyListenerThread(void *arg)
+void ProxyListenerThread()
 {
    ThreadSetName("ProxyHbLsnr");
    ProxyConnectionListener listener(LISTEN_PORT, (g_dwFlags & AF_DISABLE_IPV4) == 0, (g_dwFlags & AF_DISABLE_IPV6) == 0);
    if (!listener.initialize())
-      return THREAD_OK;
+      return;
 
    listener.mainLoop();
    listener.shutdown();
-   return THREAD_OK;
 }
 
 /**

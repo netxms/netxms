@@ -274,14 +274,14 @@ public:
  */
 struct PendingRequest
 {
-   UINT32 id;
-   INT64 expirationTime;
+   uint32_t id;
+   int64_t expirationTime;
    bool completed;
 
-   PendingRequest(NXCPMessage *msg, UINT32 timeout)
+   PendingRequest(NXCPMessage *msg, uint32_t timeout)
    {
       id = msg->getId();
-      expirationTime = GetCurrentTimeMs() + (INT64)timeout;
+      expirationTime = GetCurrentTimeMs() + static_cast<int64_t>(timeout);
       completed = false;
    }
 };
@@ -294,8 +294,8 @@ class TcpProxy;
 class CommSession : public AbstractCommSession
 {
 private:
-   UINT32 m_id;
-   UINT32 m_index;
+   uint32_t m_id;
+   uint32_t m_index;
    TCHAR m_key[32];  // key for serialized background tasks
    AbstractCommChannel *m_channel;
    int m_protocolVersion;
@@ -303,7 +303,7 @@ private:
    THREAD m_processingThread;
    THREAD m_proxyReadThread;
    THREAD m_tcpProxyReadThread;
-   UINT64 m_serverId;
+   uint64_t m_serverId;
    InetAddress m_serverAddr;        // IP address of connected host
    bool m_disconnected;
    bool m_authenticated;
@@ -340,7 +340,7 @@ private:
    UINT32 upgrade(NXCPMessage *request);
    UINT32 setupProxyConnection(NXCPMessage *pRequest);
    void setupTcpProxy(NXCPMessage *request, NXCPMessage *response);
-   UINT32 closeTcpProxy(NXCPMessage *request);
+   uint32_t closeTcpProxy(NXCPMessage *request);
    void proxySnmpRequest(NXCPMessage *request);
    void queryWebService(NXCPMessage *request);
    void sendMessageInBackground(NXCP_MESSAGE *msg);
@@ -352,9 +352,6 @@ private:
    void tcpProxyReadThread();
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL processingThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL proxyReadThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL tcpProxyReadThreadStarter(void *);
 
 public:
    CommSession(AbstractCommChannel *channel, const InetAddress &serverAddr, bool masterServer, bool controlServer);
@@ -371,12 +368,12 @@ public:
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) override;
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) override;
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override;
-   virtual UINT32 generateRequestId() override;
+   virtual uint32_t generateRequestId() override;
    virtual int getProtocolVersion() override { return m_protocolVersion; }
 
-   virtual UINT32 getId() override { return m_id; };
+   virtual uint32_t getId() override { return m_id; };
 
-   virtual UINT64 getServerId() override { return m_serverId; }
+   virtual uint64_t getServerId() override { return m_serverId; }
 	virtual const InetAddress& getServerAddress() override { return m_serverAddr; }
 
    virtual bool isMasterServer() override { return m_masterServer; }
@@ -393,11 +390,11 @@ public:
 
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override;
 
-   UINT32 getIndex() { return m_index; }
-   void setIndex(UINT32 index) { if (m_index == INVALID_INDEX) m_index = index; }
+   uint32_t getIndex() { return m_index; }
+   void setIndex(uint32_t index) { if (m_index == INVALID_INDEX) m_index = index; }
 
    time_t getTimeStamp() { return m_ts; }
-	void updateTimeStamp() { m_ts = time(NULL); }
+	void updateTimeStamp() { m_ts = time(nullptr); }
 };
 
 /**
@@ -406,16 +403,16 @@ public:
 class VirtualSession : public AbstractCommSession
 {
 private:
-   UINT32 m_id;
-   UINT64 m_serverId;
+   uint32_t m_id;
+   uint64_t m_serverId;
 
 public:
-   VirtualSession(UINT64 serverId);
+   VirtualSession(uint64_t serverId);
    virtual ~VirtualSession();
 
-   virtual UINT32 getId() override { return m_id; }
+   virtual uint32_t getId() override { return m_id; }
 
-   virtual UINT64 getServerId() override { return m_serverId; };
+   virtual uint64_t getServerId() override { return m_serverId; };
    virtual const InetAddress& getServerAddress() override { return InetAddress::LOOPBACK; }
 
    virtual bool isMasterServer() override { return false; }
@@ -434,7 +431,7 @@ public:
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) override { return RCC_NOT_IMPLEMENTED; }
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) override { return NULL; }
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override { return NULL; }
-   virtual UINT32 generateRequestId() override { return 0; }
+   virtual uint32_t generateRequestId() override { return 0; }
    virtual int getProtocolVersion() override { return NXCP_VERSION; }
    virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) override { return ERR_INTERNAL_ERROR; }
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
@@ -447,8 +444,8 @@ public:
 class ProxySession : public AbstractCommSession
 {
 private:
-   UINT32 m_id;
-   UINT64 m_serverId;
+   uint32_t m_id;
+   uint64_t m_serverId;
    InetAddress m_serverAddress;
    bool m_masterServer;
    bool m_controlServer;
@@ -461,9 +458,9 @@ public:
    ProxySession(NXCPMessage *msg);
    virtual ~ProxySession();
 
-   virtual UINT32 getId() override { return m_id; }
+   virtual uint32_t getId() override { return m_id; }
 
-   virtual UINT64 getServerId() override { return m_serverId; };
+   virtual uint64_t getServerId() override { return m_serverId; };
    virtual const InetAddress& getServerAddress() override { return m_serverAddress; }
 
    virtual bool isMasterServer() override { return m_masterServer; }
@@ -482,7 +479,7 @@ public:
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) override { return RCC_NOT_IMPLEMENTED; }
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) override { return NULL; }
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override { return NULL; }
-   virtual UINT32 generateRequestId() override { return 0; }
+   virtual uint32_t generateRequestId() override { return 0; }
    virtual int getProtocolVersion() override { return NXCP_VERSION; }
    virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) override { return ERR_INTERNAL_ERROR; }
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
@@ -572,7 +569,7 @@ private:
    SNMP_Transport *m_transport;
 
 public:
-   SNMPTarget(uint64_t serverId, NXCPMessage *msg, uint32_t baseId);
+   SNMPTarget(uint64_t serverId, const NXCPMessage& msg, uint32_t baseId);
    SNMPTarget(DB_RESULT hResult, int row);
    ~SNMPTarget();
 
@@ -588,7 +585,7 @@ public:
 class TcpProxy
 {
 private:
-   UINT32 m_id;
+   uint32_t m_id;
    CommSession *m_session;
    SOCKET m_socket;
 
@@ -596,7 +593,7 @@ public:
    TcpProxy(CommSession *session, SOCKET s);
    ~TcpProxy();
 
-   UINT32 getId() const { return m_id; }
+   uint32_t getId() const { return m_id; }
    SOCKET getSocket() const { return m_socket; }
 
    bool readSocket();
@@ -693,7 +690,7 @@ private:
    uint16_t m_flags;
 
 public:
-   SNMPTableColumnDefinition(NXCPMessage *msg, UINT32 baseId);
+   SNMPTableColumnDefinition(const NXCPMessage& msg, uint32_t baseId);
    SNMPTableColumnDefinition(DB_RESULT hResult, int row);
    SNMPTableColumnDefinition(const SNMPTableColumnDefinition *src);
    ~SNMPTableColumnDefinition();
@@ -808,7 +805,7 @@ bool GetScreenInfoForUserSession(uint32_t sessionId, uint32_t *width, uint32_t *
 
 uint32_t GenerateMessageId();
 
-void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg);
+void ConfigureDataCollection(uint64_t serverId, const NXCPMessage& request);
 
 bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void* ), void *data);
 AbstractCommSession *FindServerSessionById(UINT32 id);
