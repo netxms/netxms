@@ -681,7 +681,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
    {
       if ((m_status != ITEM_STATUS_DISABLED) &&
           isCacheLoaded() && (m_source != DS_PUSH_AGENT) &&
-          matchClusterResource() && hasValue() && (getAgentCacheMode() == AGENT_CACHE_OFF))
+          matchClusterResource() && hasValue()) // Ignore agent cache mode for forced polls and always request data as if cache is off
       {
          unlock();
          return true;
