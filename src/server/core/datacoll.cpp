@@ -363,19 +363,19 @@ static void QueueItems(NetObj *object, uint32_t *watchdogId)
  * Item poller thread: check nodes' items and put into the
  * data collector queue when data polling required
  */
-static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
+static void ItemPoller()
 {
    ThreadSetName("ItemPoller");
 
    uint32_t watchdogId = WatchdogAddThread(_T("Item Poller"), 10);
-   GaugeData<UINT32> queuingTime(ITEM_POLLING_INTERVAL, 300);
+   GaugeData<uint32_t> queuingTime(ITEM_POLLING_INTERVAL, 300);
 
    while(!IsShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(ITEM_POLLING_INTERVAL))
          break;      // Shutdown has arrived
       WatchdogNotify(watchdogId);
-		DbgPrintf(8, _T("ItemPoller: wakeup"));
+      nxlog_debug_tag(_T("obj.dc.poller"), 8, _T("ItemPoller: wakeup"));
 
       INT64 startTime = GetCurrentTimeMs();
 		g_idxNodeById.forEach(QueueItems, &watchdogId);
@@ -384,17 +384,16 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
       g_idxChassisById.forEach(QueueItems, &watchdogId);
 		g_idxSensorById.forEach(QueueItems, &watchdogId);
 
-		queuingTime.update(static_cast<UINT32>(GetCurrentTimeMs() - startTime));
-		g_averageDCIQueuingTime = static_cast<UINT32>(queuingTime.getAverage());
+		queuingTime.update(static_cast<uint32_t>(GetCurrentTimeMs() - startTime));
+		g_averageDCIQueuingTime = static_cast<uint32_t>(queuingTime.getAverage());
    }
-   DbgPrintf(1, _T("Item poller thread terminated"));
-   return THREAD_OK;
+   nxlog_debug_tag(_T("obj.dc.poller"), 1, _T("Item poller thread terminated"));
 }
 
 /**
  * DCI cache loader
  */
-THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
+static void CacheLoader()
 {
    ThreadSetName("CacheLoader");
    nxlog_debug_tag(_T("obj.dc.cache"), 2, _T("DCI cache loader thread started"));
@@ -417,7 +416,6 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
       }
    }
    nxlog_debug_tag(_T("obj.dc.cache"), 2, _T("DCI cache loader thread stopped"));
-   return THREAD_OK;
 }
 
 /**
@@ -436,8 +434,8 @@ void InitDataCollector()
             ConfigReadInt(_T("ThreadPool.DataCollector.MaxSize"), 250),
             256 * 1024);
 
-   s_itemPollerThread = ThreadCreateEx(ItemPoller, 0, nullptr);
-   s_cacheLoaderThread = ThreadCreateEx(CacheLoader, 0, nullptr);
+   s_itemPollerThread = ThreadCreateEx(ItemPoller);
+   s_cacheLoaderThread = ThreadCreateEx(CacheLoader);
 }
 
 /**
