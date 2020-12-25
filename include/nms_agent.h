@@ -707,9 +707,9 @@ public:
 class AbstractCommSession : public RefCountObject
 {
 public:
-   virtual UINT32 getId() = 0;
+   virtual uint32_t getId() = 0;
 
-   virtual UINT64 getServerId() = 0;
+   virtual uint64_t getServerId() = 0;
    virtual const InetAddress& getServerAddress() = 0;
 
    virtual bool isMasterServer() = 0;
@@ -728,7 +728,7 @@ public:
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) = 0;
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) = 0;
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) = 0;
-   virtual UINT32 generateRequestId() = 0;
+   virtual uint32_t generateRequestId() = 0;
    virtual int getProtocolVersion() = 0;
    virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId, time_t fileModTime = 0) = 0;
    virtual void debugPrintf(int level, const TCHAR *format, ...) = 0;

@@ -39,9 +39,9 @@ uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, c
          const ObjectArray<SNMPTableColumnDefinition> &columns, Table *value);
 
 void LoadProxyConfiguration();
-void UpdateProxyConfiguration(UINT64 serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone);
-void ProxyConnectionChecker(void *arg);
-THREAD_RESULT THREAD_CALL ProxyListenerThread(void *arg);
+void UpdateProxyConfiguration(uint64_t serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone);
+void ProxyConnectionChecker();
+void ProxyListenerThread();
 
 extern HashMap<ServerObjectKey, DataCollectionProxy> g_proxyList;
 extern Mutex g_proxyListMutex;
@@ -66,16 +66,16 @@ static bool s_pollTimeChanged = false;
 /**
  * Create column object from NXCP message
  */
-SNMPTableColumnDefinition::SNMPTableColumnDefinition(NXCPMessage *msg, UINT32 baseId)
+SNMPTableColumnDefinition::SNMPTableColumnDefinition(const NXCPMessage& msg, uint32_t baseId)
 {
-   msg->getFieldAsString(baseId, m_name, MAX_COLUMN_NAME);
-   m_flags = msg->getFieldAsUInt16(baseId + 1);
-   m_displayName = msg->getFieldAsString(baseId + 3);
+   msg.getFieldAsString(baseId, m_name, MAX_COLUMN_NAME);
+   m_flags = msg.getFieldAsUInt16(baseId + 1);
+   m_displayName = msg.getFieldAsString(baseId + 3);
 
-   if (msg->isFieldExist(baseId + 2))
+   if (msg.isFieldExist(baseId + 2))
    {
       uint32_t oid[256];
-      size_t len = msg->getFieldAsInt32Array(baseId + 2, 256, oid);
+      size_t len = msg.getFieldAsInt32Array(baseId + 2, 256, oid);
       if (len > 0)
       {
          m_snmpOid = new SNMP_ObjectId(oid, len);
@@ -189,7 +189,7 @@ private:
    time_t m_tLastCheck;
 
 public:
-   DataCollectionItem(uint64_t serverId, NXCPMessage *msg, uint32_t baseId, uint32_t extBaseId, bool hasExtraData);
+   DataCollectionItem(uint64_t serverId, const NXCPMessage& msg, uint32_t baseId, uint32_t extBaseId, bool hasExtraData);
    DataCollectionItem(DB_RESULT hResult, int row);
    DataCollectionItem(const DataCollectionItem *item);
    virtual ~DataCollectionItem();
@@ -285,28 +285,28 @@ static bool UsesSeconds(const TCHAR *schedule)
 /**
  * Create data collection item from NXCP mesage
  */
-DataCollectionItem::DataCollectionItem(uint64_t serverId, NXCPMessage *msg, UINT32 baseId, uint32_t extBaseId, bool hasExtraData) : RefCountObject()
+DataCollectionItem::DataCollectionItem(uint64_t serverId, const NXCPMessage& msg, UINT32 baseId, uint32_t extBaseId, bool hasExtraData) : RefCountObject()
 {
    m_serverId = serverId;
-   m_id = msg->getFieldAsInt32(baseId);
-   m_type = static_cast<uint8_t>(msg->getFieldAsUInt16(baseId + 1));
-   m_origin = static_cast<uint8_t>(msg->getFieldAsUInt16(baseId + 2));
-   m_name = msg->getFieldAsString(baseId + 3);
-   m_pollingInterval = msg->getFieldAsInt32(baseId + 4);
-   m_lastPollTime = msg->getFieldAsTime(baseId + 5);
-   m_snmpTargetGuid = msg->getFieldAsGUID(baseId + 6);
-   m_snmpPort = msg->getFieldAsUInt16(baseId + 7);
-   m_snmpRawValueType = static_cast<uint8_t>(msg->getFieldAsUInt16(baseId + 8));
-   m_backupProxyId = msg->getFieldAsInt32(baseId + 9);
+   m_id = msg.getFieldAsInt32(baseId);
+   m_type = static_cast<uint8_t>(msg.getFieldAsUInt16(baseId + 1));
+   m_origin = static_cast<uint8_t>(msg.getFieldAsUInt16(baseId + 2));
+   m_name = msg.getFieldAsString(baseId + 3);
+   m_pollingInterval = msg.getFieldAsInt32(baseId + 4);
+   m_lastPollTime = msg.getFieldAsTime(baseId + 5);
+   m_snmpTargetGuid = msg.getFieldAsGUID(baseId + 6);
+   m_snmpPort = msg.getFieldAsUInt16(baseId + 7);
+   m_snmpRawValueType = static_cast<uint8_t>(msg.getFieldAsUInt16(baseId + 8));
+   m_backupProxyId = msg.getFieldAsInt32(baseId + 9);
    m_busy = 0;
    m_tLastCheck = 0;
 
    if (hasExtraData && (m_origin == DS_SNMP_AGENT))
    {
-      m_snmpVersion = SNMP_VersionFromInt(msg->getFieldAsInt16(extBaseId));
+      m_snmpVersion = SNMP_VersionFromInt(msg.getFieldAsInt16(extBaseId));
       if (m_type == DCO_TYPE_TABLE)
       {
-         int count = msg->getFieldAsInt32(extBaseId + 9);
+         int count = msg.getFieldAsInt32(extBaseId + 9);
          uint32_t fieldId = extBaseId + 10;
          m_tableColumns = new ObjectArray<SNMPTableColumnDefinition>(count, 16, Ownership::True);
          for(int i = 0; i < count; i++)
@@ -327,16 +327,15 @@ DataCollectionItem::DataCollectionItem(uint64_t serverId, NXCPMessage *msg, UINT
    }
    extBaseId += 1000;
 
-   int32_t size = msg->getFieldAsInt32(extBaseId++);
+   int32_t size = msg.getFieldAsInt32(extBaseId++);
    if (size > 0)
    {
       m_scheduleType = ScheduleType::MINUTES;
       for(int i = 0; i < size; i++)
       {
-         TCHAR *tmp = msg->getFieldAsString(extBaseId++);
-         if(UsesSeconds(tmp))
+         TCHAR *tmp = msg.getFieldAsString(extBaseId++);
+         if (UsesSeconds(tmp))
             m_scheduleType = ScheduleType::SECONDS;
-
          m_schedules.addPreallocated(tmp);
       }
    }
@@ -355,7 +354,7 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_id = DBGetFieldULong(hResult, row, 1);
    m_type = static_cast<uint8_t>(DBGetFieldULong(hResult, row, 2));
    m_origin = static_cast<uint8_t>(DBGetFieldULong(hResult, row, 3));
-   m_name = DBGetField(hResult, row, 4, NULL, 0);
+   m_name = DBGetField(hResult, row, 4, nullptr, 0);
    m_pollingInterval = DBGetFieldULong(hResult, row, 5);
    m_lastPollTime = static_cast<time_t>(DBGetFieldULong(hResult, row, 6));
    m_snmpPort = DBGetFieldULong(hResult, row, 7);
@@ -417,7 +416,7 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
         int count = DBGetNumRows(hResult);
         for(int i = 0; i < count; i++)
         {
-           m_schedules.addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+           m_schedules.addPreallocated(DBGetField(hResult, i, 0, nullptr, 0));
         }
       }
    }
@@ -758,12 +757,12 @@ public:
       switch(m_type)
       {
          case DCO_TYPE_ITEM:
-            m_value.item = DBGetField(hResult, row, 7, NULL, 0);
+            m_value.item = DBGetField(hResult, row, 7, nullptr, 0);
             break;
          case DCO_TYPE_LIST:
             {
                m_value.list = new StringList();
-               TCHAR *text = DBGetField(hResult, row, 7, NULL, 0);
+               TCHAR *text = DBGetField(hResult, row, 7, nullptr, 0);
                if (text != nullptr)
                {
                   m_value.list->splitAndAdd(text, _T("\n"));
@@ -773,7 +772,7 @@ public:
             break;
          case DCO_TYPE_TABLE:
             {
-               char *xml = DBGetFieldUTF8(hResult, row, 7, NULL, 0);
+               char *xml = DBGetFieldUTF8(hResult, row, 7, nullptr, 0);
                if (xml != nullptr)
                {
                   m_value.table = Table::createFromXML(xml);
@@ -865,7 +864,7 @@ bool DataElement::sendToServer(bool reconciliation)
       return true;
 
    CommSession *session = (CommSession *)FindServerSession(SessionComparator_Sender, &m_serverId);
-   if (session == NULL)
+   if (session == nullptr)
       return false;
 
    NXCPMessage msg(CMD_DCI_DATA, session->generateRequestId(), session->getProtocolVersion());
@@ -924,7 +923,7 @@ struct ServerSyncStatus
    {
       serverId = sid;
       queueSize = 0;
-      lastSync = time(NULL);
+      lastSync = time(nullptr);
    }
 };
 
@@ -942,7 +941,7 @@ static ObjectQueue<DataElement> s_databaseWriterQueue;
 /**
  * Database writer
  */
-static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
+static void DatabaseWriter()
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Database writer thread started"));
@@ -954,15 +953,15 @@ static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
          break;
 
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dc_queue (server_id,dci_id,dci_type,dci_origin,status_code,snmp_target_guid,timestamp,value) VALUES (?,?,?,?,?,?,?,?)"));
-      if (hStmt == NULL)
+      if (hStmt == nullptr)
       {
          delete e;
          continue;
       }
 
-      UINT32 count = 0;
+      uint32_t count = 0;
       DBBegin(hdb);
-      while((e != NULL) && (e != INVALID_POINTER_VALUE))
+      while((e != nullptr) && (e != INVALID_POINTER_VALUE))
       {
          e->saveToDatabase(hStmt);
          delete e;
@@ -985,7 +984,6 @@ static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
    }
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Database writer thread stopped"));
-   return THREAD_OK;
 }
 
 /**
@@ -1002,7 +1000,7 @@ static bool SessionComparator_Reconciliation(AbstractCommSession *session, void 
    if ((session->getServerId() == 0) || !session->canAcceptData())
       return false;
    ServerSyncStatus *s = s_serverSyncStatus.get(session->getServerId());
-   if ((s != NULL) && (s->queueSize > 0))
+   if ((s != nullptr) && (s->queueSize > 0))
    {
       return true;
    }
@@ -1012,10 +1010,10 @@ static bool SessionComparator_Reconciliation(AbstractCommSession *session, void 
 /**
  * Data reconciliation thread
  */
-static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
+static void ReconciliationThread()
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
-   UINT32 sleepTime = 30000;
+   uint32_t sleepTime = 30000;
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Data reconciliation thread started (block size %d, timeout %d ms)"), g_dcReconciliationBlockSize, g_dcReconciliationTimeout);
 
    bool vacuumNeeded = false;
@@ -1023,9 +1021,9 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
    {
       // Check if there is something to sync
       s_serverSyncStatusLock.lock();
-      CommSession *session = static_cast<CommSession*>(FindServerSession(SessionComparator_Reconciliation, NULL));
+      CommSession *session = static_cast<CommSession*>(FindServerSession(SessionComparator_Reconciliation, nullptr));
       s_serverSyncStatusLock.unlock();
-      if (session == NULL)
+      if (session == nullptr)
       {
          // Save last poll times when reconciliation thread is idle
          s_itemLock.lock();
@@ -1062,7 +1060,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
 
       TCHAR sqlError[DBDRV_MAX_ERROR_TEXT];
       DB_RESULT hResult = DBSelectEx(hdb, query, sqlError);
-      if (hResult == NULL)
+      if (hResult == nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: database query failed: %s"), sqlError);
          sleepTime = 30000;
@@ -1086,12 +1084,12 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
             {
                s_serverSyncStatusLock.lock();
                ServerSyncStatus *status = s_serverSyncStatus.get(e->getServerId());
-               if (status != NULL)
+               if (status != nullptr)
                {
                   if (e->sendToServer(true))
                   {
                      status->queueSize--;
-                     status->lastSync = time(NULL);
+                     status->lastSync = time(nullptr);
                      deleteList.add(e);
                   }
                   else
@@ -1130,7 +1128,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                do
                {
                   NXCPMessage *response = session->waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), g_dcReconciliationTimeout);
-                  if (response != NULL)
+                  if (response != nullptr)
                   {
                      rcc = response->getFieldAsUInt32(VID_RCC);
                      if (rcc == ERR_SUCCESS)
@@ -1156,7 +1154,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                               delete e;
                            }
                         }
-                        serverSyncStatus->lastSync = time(NULL);
+                        serverSyncStatus->lastSync = time(nullptr);
 
                         s_serverSyncStatusLock.unlock();
                      }
@@ -1186,7 +1184,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
          if (deleteList.size() > 0)
          {
             DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM dc_queue WHERE server_id=? AND dci_id=? AND timestamp=?"), true);
-            if (hStmt != NULL)
+            if (hStmt != nullptr)
             {
                DBBegin(hdb);
                for(int i = 0; i < deleteList.size(); i++)
@@ -1211,7 +1209,6 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
    }
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Data reconciliation thread stopped"));
-   return THREAD_OK;
 }
 
 /**
@@ -1222,7 +1219,7 @@ static Queue s_dataSenderQueue;
 /**
  * Data sender
  */
-static THREAD_RESULT THREAD_CALL DataSender(void *arg)
+static void DataSender()
 {
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Data sender thread started"));
    while(true)
@@ -1233,7 +1230,7 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
 
       s_serverSyncStatusLock.lock();
       ServerSyncStatus *status = s_serverSyncStatus.get(e->getServerId());
-      if (status == NULL)
+      if (status == nullptr)
       {
          status = new ServerSyncStatus(e->getServerId());
          s_serverSyncStatus.set(e->getServerId(), status);
@@ -1245,21 +1242,20 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
          {
             status->queueSize++;
             s_databaseWriterQueue.put(e);
-            e = NULL;
+            e = nullptr;
          }
       }
       else
       {
          status->queueSize++;
          s_databaseWriterQueue.put(e);
-         e = NULL;
+         e = nullptr;
       }
       s_serverSyncStatusLock.unlock();
 
       delete e;
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Data sender thread stopped"));
-   return THREAD_OK;
 }
 
 /**
@@ -1269,7 +1265,7 @@ static DataElement *CollectDataFromAgent(DataCollectionItem *dci)
 {
    VirtualSession session(dci->getServerId());
 
-   DataElement *e = NULL;
+   DataElement *e = nullptr;
    uint32_t status;
    if (dci->getType() == DCO_TYPE_ITEM)
    {
@@ -1340,7 +1336,7 @@ static void LocalDataCollectionCallback(DataCollectionItem *dci)
       nxlog_debug_tag(DEBUG_TAG, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
    }
 
-   dci->setLastPollTime(time(NULL));
+   dci->setLastPollTime(time(nullptr));
    dci->finishDataCollection();
 }
 
@@ -1359,7 +1355,7 @@ static void SnmpDataCollectionCallback(DataCollectionItem *dci)
       nxlog_debug_tag(DEBUG_TAG, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
    }
 
-   dci->setLastPollTime(time(NULL));
+   dci->setLastPollTime(time(nullptr));
    dci->finishDataCollection();
 }
 
@@ -1371,9 +1367,9 @@ ThreadPool *g_dataCollectorPool = nullptr;
 /**
  * Single data collection scheduler run - schedule data collection if needed and calculate sleep time
  */
-static UINT32 DataCollectionSchedulerRun()
+static uint32_t DataCollectionSchedulerRun()
 {
-   UINT32 sleepTime = 60;
+   uint32_t sleepTime = 60;
 
    s_itemLock.lock();
    time_t now = time(nullptr);
@@ -1381,7 +1377,7 @@ static UINT32 DataCollectionSchedulerRun()
    while(it->hasNext())
    {
       DataCollectionItem *dci = it->next();
-      UINT32 timeToPoll = dci->getTimeToNextPoll(now);
+      uint32_t timeToPoll = dci->getTimeToNextPoll(now);
       if (timeToPoll == 0)
       {
          bool schedule;
@@ -1393,7 +1389,7 @@ static UINT32 DataCollectionSchedulerRun()
          {
             g_proxyListMutex.lock();
             DataCollectionProxy *proxy = g_proxyList.get(ServerObjectKey(dci->getServerId(), dci->getBackupProxyId()));
-            schedule = ((proxy != NULL) && !proxy->isConnected());
+            schedule = ((proxy != nullptr) && !proxy->isConnected());
             g_proxyListMutex.unlock();
          }
 
@@ -1415,7 +1411,7 @@ static UINT32 DataCollectionSchedulerRun()
             else
             {
                nxlog_debug_tag(DEBUG_TAG, 7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
-               dci->setLastPollTime(time(NULL));
+               dci->setLastPollTime(time(nullptr));
             }
          }
 
@@ -1432,11 +1428,11 @@ static UINT32 DataCollectionSchedulerRun()
 /**
  * Data collection scheduler thread
  */
-static THREAD_RESULT THREAD_CALL DataCollectionScheduler(void *arg)
+static void DataCollectionScheduler()
 {
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Data collection scheduler thread started"));
 
-   UINT32 sleepTime = DataCollectionSchedulerRun();
+   uint32_t sleepTime = DataCollectionSchedulerRun();
    while(!AgentSleepAndCheckForShutdown(sleepTime * 1000))
    {
       sleepTime = DataCollectionSchedulerRun();
@@ -1445,13 +1441,12 @@ static THREAD_RESULT THREAD_CALL DataCollectionScheduler(void *arg)
 
    ThreadPoolDestroy(g_dataCollectorPool);
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Data collection scheduler thread stopped"));
-   return THREAD_OK;
 }
 
 /**
  * Configure data collection
  */
-void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
+void ConfigureDataCollection(uint64_t serverId, const NXCPMessage& request)
 {
    s_itemLock.lock();
    if (!s_dataCollectorStarted)
@@ -1464,14 +1459,14 @@ void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
 
    DB_HANDLE hdb = GetLocalDatabaseHandle();
 
-   int count = msg->getFieldAsInt32(VID_NUM_NODES);
+   int count = request.getFieldAsInt32(VID_NUM_NODES);
    if (count > 0)
    {
       DBBegin(hdb);
       uint32_t fieldId = VID_NODE_INFO_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         shared_ptr<SNMPTarget> target = make_shared<SNMPTarget>(serverId, msg, fieldId);
+         shared_ptr<SNMPTarget> target = make_shared<SNMPTarget>(serverId, request, fieldId);
          UpdateSnmpTarget(target);
          target->saveToDatabase(hdb);
          fieldId += 50;
@@ -1482,15 +1477,15 @@ void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
 
    // Read proxy list
    HashMap<ServerObjectKey, DataCollectionProxy> *proxyList = new HashMap<ServerObjectKey, DataCollectionProxy>(Ownership::True);
-   count = msg->getFieldAsInt32(VID_ZONE_PROXY_COUNT);
+   count = request.getFieldAsInt32(VID_ZONE_PROXY_COUNT);
    if (count > 0)
    {
       uint32_t fieldId = VID_ZONE_PROXY_BASE;
       for(int i = 0; i < count; i++)
       {
-         uint32_t proxyId = msg->getFieldAsInt32(fieldId);
+         uint32_t proxyId = request.getFieldAsInt32(fieldId);
          proxyList->set(ServerObjectKey(serverId, proxyId),
-               new DataCollectionProxy(serverId, proxyId, msg->getFieldAsInetAddress(fieldId + 1)));
+               new DataCollectionProxy(serverId, proxyId, request.getFieldAsInetAddress(fieldId + 1)));
          fieldId += 10;
       }
    }
@@ -1498,13 +1493,13 @@ void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
 
    // Read data collection items
    HashMap<ServerObjectKey, DataCollectionItem> config(Ownership::True);
-   bool hasExtraData = msg->getFieldAsBoolean(VID_EXTENDED_DCI_DATA);
-   count = msg->getFieldAsInt32(VID_NUM_ELEMENTS);
+   bool hasExtraData = request.getFieldAsBoolean(VID_EXTENDED_DCI_DATA);
+   count = request.getFieldAsInt32(VID_NUM_ELEMENTS);
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    uint32_t extFieldId = VID_EXTRA_DCI_INFO_BASE;
    for(int i = 0; i < count; i++)
    {
-      DataCollectionItem *dci = new DataCollectionItem(serverId, msg, fieldId, extFieldId, hasExtraData);
+      DataCollectionItem *dci = new DataCollectionItem(serverId, request, fieldId, extFieldId, hasExtraData);
       config.set(dci->getKey(), dci);
       fieldId += 10;
       extFieldId += 1100;
@@ -1598,12 +1593,12 @@ void ConfigureDataCollection(uint64_t serverId, NXCPMessage *msg)
 
    s_itemLock.unlock();
 
-   if (msg->isFieldExist(VID_THIS_PROXY_ID))
+   if (request.isFieldExist(VID_THIS_PROXY_ID))
    {
       // FIXME: delete configuration if not set?
       BYTE sharedSecret[ZONE_PROXY_KEY_LENGTH];
-      msg->getFieldAsBinary(VID_SHARED_SECRET, sharedSecret, ZONE_PROXY_KEY_LENGTH);
-      ZoneConfiguration cfg(serverId, msg->getFieldAsUInt32(VID_THIS_PROXY_ID), msg->getFieldAsUInt32(VID_ZONE_UIN), sharedSecret);
+      request.getFieldAsBinary(VID_SHARED_SECRET, sharedSecret, ZONE_PROXY_KEY_LENGTH);
+      ZoneConfiguration cfg(serverId, request.getFieldAsUInt32(VID_THIS_PROXY_ID), request.getFieldAsUInt32(VID_ZONE_UIN), sharedSecret);
       UpdateProxyConfiguration(serverId, proxyList, &cfg);
    }
    delete proxyList;
@@ -1618,7 +1613,7 @@ static void LoadState()
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type,backup_proxy_id,snmp_version,schedule_type FROM dc_config"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -1630,7 +1625,7 @@ static void LoadState()
    }
 
    hResult = DBSelect(hdb, _T("SELECT guid,server_id,ip_address,snmp_version,port,auth_type,enc_type,auth_name,auth_pass,enc_pass FROM dc_snmp_targets"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -1641,7 +1636,7 @@ static void LoadState()
    }
 
    hResult = DBSelect(hdb, _T("SELECT server_id,count(*),coalesce(min(timestamp),0) FROM dc_queue GROUP BY server_id"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -1673,7 +1668,7 @@ static void ClearStalledOfflineData(void *arg)
    IntegerArray<UINT64> deleteList;
 
    s_serverSyncStatusLock.lock();
-   time_t expirationTime = time(NULL) - g_dcOfflineExpirationTime * 86400;
+   time_t expirationTime = time(nullptr) - g_dcOfflineExpirationTime * 86400;
    Iterator<ServerSyncStatus> *it = s_serverSyncStatus.iterator();
    while(it->hasNext())
    {
@@ -1728,7 +1723,7 @@ static void ClearStalledOfflineData(void *arg)
       }
    }
 
-   ThreadPoolScheduleRelative(g_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData, NULL);
+   ThreadPoolScheduleRelative(g_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData, nullptr);
 }
 
 /**
@@ -1777,13 +1772,13 @@ void StartLocalDataCollector()
    LoadState();
 
    g_dataCollectorPool = ThreadPoolCreate(_T("DATACOLL"), 1, g_dcMaxCollectorPoolSize);
-   s_dataCollectionSchedulerThread = ThreadCreateEx(DataCollectionScheduler, 0, nullptr);
-   s_dataSenderThread = ThreadCreateEx(DataSender, 0, nullptr);
-   s_databaseWriterThread = ThreadCreateEx(DatabaseWriter, 0, nullptr);
-   s_reconciliationThread = ThreadCreateEx(ReconciliationThread, 0, nullptr);
-   s_proxyListennerThread = ThreadCreateEx(ProxyListenerThread, 0 ,nullptr);
+   s_dataCollectionSchedulerThread = ThreadCreateEx(DataCollectionScheduler);
+   s_dataSenderThread = ThreadCreateEx(DataSender);
+   s_databaseWriterThread = ThreadCreateEx(DatabaseWriter);
+   s_reconciliationThread = ThreadCreateEx(ReconciliationThread);
+   s_proxyListennerThread = ThreadCreateEx(ProxyListenerThread);
    ThreadPoolScheduleRelative(g_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData, nullptr);
-   ThreadPoolScheduleRelative(g_dataCollectorPool, 0, ProxyConnectionChecker, nullptr);
+   ThreadPoolScheduleRelative(g_dataCollectorPool, 1000, ProxyConnectionChecker);
 
    s_dataCollectorStarted = true;
 }

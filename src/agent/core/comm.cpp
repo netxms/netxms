@@ -104,7 +104,7 @@ bool RegisterSession(CommSession *session)
 {
    MutexLock(g_hSessionListAccess);
    for(UINT32 i = 0; i < g_maxCommSessions; i++)
-      if (g_pSessionList[i] == NULL)
+      if (g_pSessionList[i] == nullptr)
       {
          g_pSessionList[i] = session;
          session->setIndex(i);
@@ -122,13 +122,13 @@ bool RegisterSession(CommSession *session)
 /**
  * Unregister session
  */
-void UnregisterSession(UINT32 index, UINT32 id)
+void UnregisterSession(uint32_t index, uint32_t id)
 {
    MutexLock(g_hSessionListAccess);
-   if ((g_pSessionList[index] != NULL) && (g_pSessionList[index]->getId() == id))
+   if ((g_pSessionList[index] != nullptr) && (g_pSessionList[index]->getId() == id))
    {
       g_pSessionList[index]->debugPrintf(4, _T("Session unregistered"));
-      g_pSessionList[index] = NULL;
+      g_pSessionList[index] = nullptr;
    }
    MutexUnlock(g_hSessionListAccess);
 }
@@ -145,7 +145,7 @@ bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSessio
    MutexLock(g_hSessionListAccess);
    for(UINT32 i = 0; i < g_maxCommSessions; i++)
    {
-      if (g_pSessionList[i] == NULL)
+      if (g_pSessionList[i] == nullptr)
          continue;
 
       if (callback(g_pSessionList[i], data) == _STOP)
