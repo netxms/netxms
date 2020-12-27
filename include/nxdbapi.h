@@ -91,7 +91,7 @@ struct PoolConnectionInfo
    bool resetOnRelease;
    time_t lastAccessTime;
    time_t connectTime;
-   UINT32 usageCount;
+   uint32_t usageCount;
    char srcFile[128];
    int srcLine;
 };
@@ -101,11 +101,11 @@ struct PoolConnectionInfo
  */
 struct LIBNXDB_PERF_COUNTERS
 {
-   UINT64 selectQueries;
-   UINT64 nonSelectQueries;
-   UINT64 totalQueries;
-   UINT64 longRunningQueries;
-   UINT64 failedQueries;
+   uint64_t selectQueries;
+   uint64_t nonSelectQueries;
+   uint64_t totalQueries;
+   uint64_t longRunningQueries;
+   uint64_t failedQueries;
 };
 
 /**
@@ -113,11 +113,12 @@ struct LIBNXDB_PERF_COUNTERS
  */
 bool LIBNXDB_EXPORTABLE DBInit();
 DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *initParameters,
-														bool dumpSQL, void (* fpEventHandler)(DWORD, const WCHAR *, const WCHAR *, bool, void *),
-														void *userArg);
+         void (*eventHandler)(uint32_t, const WCHAR *, const WCHAR *, bool, void *), void *context);
 void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver);
 const char LIBNXDB_EXPORTABLE *DBGetDriverName(DB_DRIVER driver);
 void LIBNXDB_EXPORTABLE DBSetDefaultPrefetchLimit(DB_DRIVER driver, int limit);
+void LIBNXDB_EXPORTABLE DBEnableQueryTrace(bool enabled);
+bool LIBNXDB_EXPORTABLE DBIsQueryTraceEnabled();
 
 DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
                                        const TCHAR *login, const TCHAR *password, const TCHAR *schema, TCHAR *errorText);

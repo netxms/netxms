@@ -33,14 +33,14 @@ static MUTEX s_dbConnectionsLock = MutexCreate();
  */
 DBConnection::DBConnection()
 {
-   m_id = NULL;
-	m_driver = NULL;
-	m_server = NULL;
-	m_dbName = NULL;
-	m_login = NULL;
-	m_password = NULL;
-	m_hDriver = NULL;
-	m_hdb = NULL;
+   m_id = nullptr;
+	m_driver = nullptr;
+	m_server = nullptr;
+	m_dbName = nullptr;
+	m_login = nullptr;
+	m_password = nullptr;
+	m_hDriver = nullptr;
+	m_hdb = nullptr;
 }
 
 /**
@@ -54,9 +54,9 @@ DBConnection::~DBConnection()
    free(m_dbName);
    free(m_login);
    free(m_password);
-   if (m_hdb != NULL)
+   if (m_hdb != nullptr)
       DBDisconnect(m_hdb);
-   if (m_hDriver != NULL)
+   if (m_hDriver != nullptr)
       DBUnloadDriver(m_hDriver);
 }
 
@@ -67,7 +67,7 @@ static TCHAR *ReadAttribute(const TCHAR *config, const TCHAR *attribute)
 {
    TCHAR buffer[256];
    if (!ExtractNamedOptionValue(config, attribute, buffer, 256))
-      return NULL;
+      return nullptr;
    return _tcsdup(buffer);
 }
 
@@ -84,23 +84,23 @@ DBConnection *DBConnection::createFromConfig(const TCHAR *config)
    conn->m_login = ReadAttribute(config, _T("login"));
    conn->m_password = ReadAttribute(config, _T("password"));
 
-   if(conn->m_password == NULL)
+   if(conn->m_password == nullptr)
       conn->m_password = ReadAttribute(config, _T("encryptedPassword"));
 
-   if (conn->m_password != NULL)
+   if (conn->m_password != nullptr)
       DecryptPassword(CHECK_NULL_EX(conn->m_login), conn->m_password, conn->m_password, _tcslen(conn->m_password));
 
-   if ((conn->m_id == NULL) || (conn->m_driver == NULL))
+   if ((conn->m_id == nullptr) || (conn->m_driver == nullptr))
    {
       delete conn;
-      return NULL;
+      return nullptr;
    }
 
-   conn->m_hDriver = DBLoadDriver(conn->m_driver, _T(""), false, NULL, NULL);
-   if (conn->m_hDriver == NULL)
+   conn->m_hDriver = DBLoadDriver(conn->m_driver, _T(""), nullptr, nullptr);
+   if (conn->m_hDriver == nullptr)
    {
       delete conn;
-      return NULL;
+      return nullptr;
    }
 
    conn->connect();
@@ -112,12 +112,12 @@ DBConnection *DBConnection::createFromConfig(const TCHAR *config)
  */
 bool DBConnection::connect()
 {
-   if (m_hdb != NULL)
+   if (m_hdb != nullptr)
       DBDisconnect(m_hdb);
 
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   m_hdb = DBConnect(m_hDriver, m_server, m_dbName, m_login, m_password, NULL, errorText);
-   if (m_hdb != NULL)
+   m_hdb = DBConnect(m_hDriver, m_server, m_dbName, m_login, m_password, nullptr, errorText);
+   if (m_hdb != nullptr)
    {
       AgentWriteLog(NXLOG_INFO, _T("DBQUERY: connected to database %s"), m_id);
    }
@@ -125,7 +125,7 @@ bool DBConnection::connect()
    {
       AgentWriteLog(NXLOG_WARNING, _T("DBQUERY: cannot connect to database %s (%s)"), m_id, errorText);
    }
-   return m_hdb != NULL;
+   return m_hdb != nullptr;
 }
 
 /**
@@ -134,7 +134,7 @@ bool DBConnection::connect()
 bool AddDatabaseFromConfig(const TCHAR *db)
 {
    DBConnection *conn = DBConnection::createFromConfig(db);
-   if (conn == NULL)
+   if (conn == nullptr)
       return false;
 
    MutexLock(s_dbConnectionsLock);
@@ -158,13 +158,13 @@ void ShutdownConnections()
  */
 DB_HANDLE GetConnectionHandle(const TCHAR *dbid)
 {
-   DB_HANDLE hdb = NULL;
+   DB_HANDLE hdb = nullptr;
    MutexLock(s_dbConnectionsLock);
    for(int i = 0; i < s_dbConnections.size(); i++)
       if (!_tcsicmp(dbid, s_dbConnections.get(i)->getId()))
       {
          hdb = s_dbConnections.get(i)->getHandle();
-         if (hdb == NULL)
+         if (hdb == nullptr)
          {
             // Try to (re)connect to database
             s_dbConnections.get(i)->connect();

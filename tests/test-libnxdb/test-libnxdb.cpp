@@ -32,7 +32,7 @@ static void CommonTests(const TCHAR *prefix, const TCHAR *driver, const TCHAR *s
    /*** open database ***/
    StartTest(prefix, _T("open database"));
 
-   DB_DRIVER drv = DBLoadDriver(driver, _T(""), false, NULL, NULL);
+   DB_DRIVER drv = DBLoadDriver(driver, _T(""), NULL, NULL);
    AssertNotNull(drv);
 
    TCHAR buffer[DBDRV_MAX_ERROR_TEXT];

@@ -479,7 +479,7 @@ static NX_CFG_TEMPLATE s_configTemplate[] =
 static bool SubAgentInit(Config *config)
 {
 	// Init db driver
-	g_pgsqlDriver = DBLoadDriver(_T("pgsql.ddr"), nullptr, false, nullptr, nullptr);
+	g_pgsqlDriver = DBLoadDriver(_T("pgsql.ddr"), nullptr, nullptr, nullptr);
 	if (g_pgsqlDriver == nullptr)
 	{
 		nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Failed to load PostgreSQL database driver"));

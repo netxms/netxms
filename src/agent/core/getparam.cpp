@@ -306,7 +306,7 @@ static LONG H_AgentHeapAllocated(const TCHAR *param, const TCHAR *arg, TCHAR *va
  */
 static LONG H_AgentHeapMapped(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   INT64 bytes = GetMappedHeapMemory();
+   int64_t bytes = GetMappedHeapMemory();
    if (bytes == -1)
       return SYSINFO_RC_UNSUPPORTED;
    ret_int64(value, bytes);

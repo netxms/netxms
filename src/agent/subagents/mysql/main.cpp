@@ -113,7 +113,7 @@ static bool SubAgentInit(Config *config)
 {
    int i;
 
-	g_mysqlDriver = DBLoadDriver(_T("mysql.ddr"), NULL, TRUE, NULL, NULL);
+	g_mysqlDriver = DBLoadDriver(_T("mysql.ddr"), NULL, NULL, NULL);
 	if (g_mysqlDriver == NULL)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("MYSQL: failed to load database driver"));

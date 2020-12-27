@@ -590,15 +590,15 @@ stop_search:
       return 3;
    }
 
-	s_driver = DBLoadDriver(s_dbDriver, s_dbDrvParams, false, NULL, NULL);
-	if (s_driver == NULL)
+	s_driver = DBLoadDriver(s_dbDriver, s_dbDrvParams, nullptr, nullptr);
+	if (s_driver == nullptr)
    {
       _tprintf(_T("Unable to load and initialize database driver \"%s\"\n"), s_dbDriver);
       return 3;
    }
 
    g_dbHandle = ConnectToDatabase();
-   if (g_dbHandle == NULL)
+   if (g_dbHandle == nullptr)
    {
       DBUnloadDriver(s_driver);
       return 4;

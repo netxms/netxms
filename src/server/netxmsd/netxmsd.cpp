@@ -44,7 +44,7 @@ BOOL g_bCheckDB = FALSE;
  * Debug level
  */
 static int s_debugLevel = NXCONFIG_UNINITIALIZED_VALUE;
-static TCHAR *s_debugTags = NULL;
+static TCHAR *s_debugTags = nullptr;
 
 /**
  * Help text
@@ -60,15 +60,15 @@ static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T
                            _T("   -h          : Display help and exit\n")
 #ifdef _WIN32
                            _T("   -I          : Install Windows service\n")
-                           _T("   -L <user>   : Login name for service account.\n")
+                           _T("   -L <user>   : Login name for service account\n")
 #endif
-                           _T("   -l          : Get log file location.\n")
+                           _T("   -l          : Show log file location\n")
 #ifdef _WIN32
                            _T("   -m          : Ignore service start command if service is configured for manual start\n")
                            _T("   -M          : Create service with manual start\n")
-                           _T("   -P <passwd> : Password for service account.\n")
+                           _T("   -P <passwd> : Password for service account\n")
 #else
-                           _T("   -p <file>   : Path to pid file (default: /var/run/netxmsd.pid).\n")
+                           _T("   -p <file>   : Path to pid file (default: /var/run/netxmsd.pid)\n")
 #endif
                            _T("   -q          : Disable interactive console\n")
 #ifdef _WIN32
@@ -80,6 +80,7 @@ static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T
                            _T("   -S          : Run as systemd daemon\n")
 #endif
 #endif
+                           _T("   -T          : Enable SQL query trace\n")
                            _T("   -v          : Display version and exit\n")
                            _T("\n");
 
@@ -181,9 +182,9 @@ static void CreateMiniDump(DWORD pid)
 #endif
 
 #ifdef _WIN32
-#define VALID_OPTIONS   "c:CdD:ehIlL:mMP:qRsSv"
+#define VALID_OPTIONS   "c:CdD:ehIlL:mMP:qRsSTv"
 #else
-#define VALID_OPTIONS   "c:CdD:ehlp:qSv"
+#define VALID_OPTIONS   "c:CdD:ehlp:qSTv"
 #endif
 
 /**
@@ -212,6 +213,9 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 		{ (char *)"debug", 1, NULL, 'D' },
 		{ (char *)"help", 0, NULL, 'h' },
 		{ (char *)"quiet", 1, NULL, 'q' },
+      { (char *)"show-log-location", 0, NULL, 'l' },
+      { (char *)"trace-sql", 0, NULL, 'T' },
+      { (char *)"version", 0, NULL, 'v' },
 #ifdef _WIN32
 		{ (char *)"check-service", 0, NULL, '!' },
 		{ (char *)"dump", 1, NULL, '~' },
@@ -255,10 +259,10 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 				return FALSE;
 			case 'c':
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigFile, MAX_PATH);
+				MultiByteToWideCharSysLocale(optarg, g_szConfigFile, MAX_PATH);
 				g_szConfigFile[MAX_PATH - 1] = 0;
 #else
-				nx_strncpy(g_szConfigFile, optarg, MAX_PATH);
+				strlcpy(g_szConfigFile, optarg, MAX_PATH);
 #endif
 				break;
 			case 'C':	// Check config
@@ -289,7 +293,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, login, 256);
 				login[255] = 0;
 #else
-				nx_strncpy(login, optarg, 256);
+				strlcpy(login, optarg, 256);
 #endif
 				useLogin = TRUE;
 				break;
@@ -310,7 +314,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, password, 256);
 				password[255] = 0;
 #else
-				nx_strncpy(password, optarg, 256);
+				strlcpy(password, optarg, 256);
 #endif
 				break;
 			case 'I':	// Install service
@@ -345,7 +349,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 #else /* _WIN32 */
          case 'p':   // PID file
 #ifdef UNICODE
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szPIDFile, MAX_PATH);
+            MultiByteToWideCharSysLocale(optarg, g_szPIDFile, MAX_PATH);
             g_szPIDFile[MAX_PATH - 1] = 0;
 #else
             strlcpy(g_szPIDFile, optarg, MAX_PATH);
@@ -355,6 +359,10 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 				g_flags |= AF_DAEMON | AF_SYSTEMD_DAEMON;
 				break;
 #endif   /* _WIN32 */
+         case 'T':
+            DBEnableQueryTrace(true);
+            nxlog_set_debug_level_tag(_T("db.query"), 9);
+            break;
          default:
    			break;
    	}

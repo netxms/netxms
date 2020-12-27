@@ -42,14 +42,17 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegi
       if (pInfo->magic == NETXMS_SUBAGENT_INFO_MAGIC)
       {
          // Check if subagent with given name already loaded
-         int i;
-         for(i = 0; i < s_subAgents.size(); i++)
+         SUBAGENT *sa = nullptr;
+         for(int i = 0; i < s_subAgents.size(); i++)
             if (!_tcsicmp(s_subAgents.get(i)->pInfo->name, pInfo->name))
+            {
+               sa = s_subAgents.get(i);
                break;
-         if (i == s_subAgents.size())
+            }
+         if (sa == nullptr)
          {
 				// Initialize subagent
-				bool initOK = (pInfo->init != NULL) ? pInfo->init(config.get()) : true;
+				bool initOK = (pInfo->init != nullptr) ? pInfo->init(config.get()) : true;
 				if (initOK)
 				{
 					// Add subagent to subagent's list
@@ -60,7 +63,7 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegi
 					s_subAgents.add(&s);
 
 					// Add parameters provided by this subagent to common list
-					for(i = 0; i < (int)pInfo->numParameters; i++)
+					for(size_t i = 0; i < pInfo->numParameters; i++)
 						AddParameter(pInfo->parameters[i].name,
 										 pInfo->parameters[i].handler,
 										 pInfo->parameters[i].arg,
@@ -68,19 +71,19 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegi
 										 pInfo->parameters[i].description);
 
 					// Add push parameters provided by this subagent to common list
-					for(i = 0; i < (int)pInfo->numPushParameters; i++)
+					for(size_t i = 0; i < pInfo->numPushParameters; i++)
 						AddPushParameter(pInfo->pushParameters[i].name,
 						                 pInfo->pushParameters[i].dataType,
 					                    pInfo->pushParameters[i].description);
 
 					// Add lists provided by this subagent to common list
-					for(i = 0; i < (int)pInfo->numLists; i++)
+					for(size_t i = 0; i < pInfo->numLists; i++)
 						AddList(pInfo->lists[i].name,
 								  pInfo->lists[i].handler,
 								  pInfo->lists[i].arg);
 
 					// Add tables provided by this subagent to common list
-					for(i = 0; i < (int)pInfo->numTables; i++)
+					for(size_t i = 0; i < pInfo->numTables; i++)
 						AddTable(pInfo->tables[i].name,
 								   pInfo->tables[i].handler,
 								   pInfo->tables[i].arg,
@@ -90,7 +93,7 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegi
                            pInfo->tables[i].columns);
 
 					// Add actions provided by this subagent to common list
-					for(i = 0; i < (int)pInfo->numActions; i++)
+					for(size_t i = 0; i < pInfo->numActions; i++)
 						AddAction(pInfo->actions[i].name,
 									 false,
 									 pInfo->actions[i].arg,
@@ -109,7 +112,7 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegi
          }
          else
          {
-            nxlog_write(NXLOG_WARNING, _T("Subagent \"%s\" already loaded from module \"%s\""), pInfo->name, s_subAgents.get(i)->szName);
+            nxlog_write(NXLOG_WARNING, _T("Subagent \"%s\" already loaded from module \"%s\""), pInfo->name, sa->szName);
             DLClose(hModule);
          }
       }

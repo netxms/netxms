@@ -25,7 +25,7 @@
 /**
  * Long-running query threshold
  */
-UINT32 g_sqlQueryExecTimeThreshold = 0xFFFFFFFF;
+uint32_t g_sqlQueryExecTimeThreshold = 0xFFFFFFFF;
 
 /**
  * Loaded drivers
@@ -65,11 +65,10 @@ bool LIBNXDB_EXPORTABLE DBInit()
  * @return driver handle on success, NULL on failure
  */
 DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *initParameters,
-														bool dumpSQL, void (* fpEventHandler)(DWORD, const WCHAR *, const WCHAR *, bool, void *),
-														void *userArg)
+         void (*eventHandler)(uint32_t, const WCHAR *, const WCHAR *, bool, void *), void *context)
 {
    static DWORD dwVersionZero = 0;
-   bool (* fpDrvInit)(const char *);
+   bool (*fpDrvInit)(const char *);
    DWORD *pdwAPIVersion;
    TCHAR szErrorText[256];
 	const char *driverName;
@@ -80,12 +79,9 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 
 	MutexLock(s_driverListLock);
 
-	driver = (DB_DRIVER)malloc(sizeof(db_driver_t));
-	memset(driver, 0, sizeof(db_driver_t));
-
-   driver->m_dumpSql = dumpSQL;
-   driver->m_fpEventHandler = fpEventHandler;
-	driver->m_userArg = userArg;
+	driver = MemAllocStruct<db_driver_t>();
+   driver->m_fpEventHandler = eventHandler;
+	driver->m_context = context;
 
    // Load driver's module
 #ifdef _WIN32

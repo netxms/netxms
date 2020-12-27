@@ -320,9 +320,9 @@ static bool SyntaxReader(DB_HANDLE hdb, TCHAR *syntaxId)
 bool OpenLocalDatabase()
 {
 #ifdef _STATIC_AGENT
-   s_driver = DBLoadDriver(_T(":self:"), _T(""), nxlog_get_debug_level() == 9, nullptr, nullptr);
+   s_driver = DBLoadDriver(_T(":self:"), _T(""), nullptr, nullptr);
 #else
-   s_driver = DBLoadDriver(_T("sqlite.ddr"), _T(""), nxlog_get_debug_level() == 9, nullptr, nullptr);
+   s_driver = DBLoadDriver(_T("sqlite.ddr"), _T(""), nullptr, nullptr);
 #endif
    if (s_driver == nullptr)
    {

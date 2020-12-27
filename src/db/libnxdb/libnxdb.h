@@ -44,12 +44,11 @@ struct db_driver_t
 {
 	const char *m_name;
 	int m_refCount;
-	bool m_dumpSql;
 	int m_reconnect;
    int m_defaultPrefetchLimit;
 	MUTEX m_mutexReconnect;
 	HMODULE m_handle;
-	void *m_userArg;
+	void *m_context;
 	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *, const char *, WCHAR *);
 	void (* m_fpDrvDisconnect)(DBDRV_CONNECTION);
 	bool (* m_fpDrvSetPrefetchLimit)(DBDRV_CONNECTION, int);
@@ -78,7 +77,7 @@ struct db_driver_t
 	DWORD (* m_fpDrvCommit)(DBDRV_CONNECTION);
 	DWORD (* m_fpDrvRollback)(DBDRV_CONNECTION);
 	void (* m_fpDrvUnload)();
-	void (* m_fpEventHandler)(DWORD, const WCHAR *, const WCHAR *, bool, void *);
+	void (* m_fpEventHandler)(uint32_t, const WCHAR *, const WCHAR *, bool, void *);
 	int (* m_fpDrvGetColumnCount)(DBDRV_RESULT);
 	const char* (* m_fpDrvGetColumnName)(DBDRV_RESULT, int);
 	int (* m_fpDrvGetColumnCountUnbuffered)(DBDRV_UNBUFFERED_RESULT);
@@ -106,7 +105,6 @@ struct db_handle_t
 {
    DBDRV_CONNECTION m_connection;
 	DB_DRIVER m_driver;
-	bool m_dumpSql;
 	bool m_reconnectEnabled;
    MUTEX m_mutexTransLock;      // Transaction lock
    int m_transactionLevel;
@@ -142,6 +140,6 @@ struct db_unbuffered_result_t
 /**
  * Global variables
  */
-extern UINT32 g_sqlQueryExecTimeThreshold;
+extern uint32_t g_sqlQueryExecTimeThreshold;
 
 #endif   /* _libnxsrv_h_ */
