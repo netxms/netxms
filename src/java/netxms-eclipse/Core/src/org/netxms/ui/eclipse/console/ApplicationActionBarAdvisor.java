@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,6 +62,7 @@ import org.netxms.base.VersionInfo;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.views.BrowserView;
 
 /**
  * Action bar advisor for management console
@@ -71,7 +72,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 {
 	private IWorkbenchAction actionExit;
 	private IWorkbenchAction actionAbout;
-	private Action actionAboutCustom;
+   private Action actionAboutCustom;
+   private Action actionOpenManual;
 	private IWorkbenchAction actionShowPreferences;
 	private IWorkbenchAction actionCustomizePerspective;
 	private IWorkbenchAction actionSavePerspective;
@@ -137,6 +139,25 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 			}
 		};
 		
+      actionOpenManual = new Action("Open Administrator &Guide") {
+         @Override
+         public void run()
+         {
+            final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+            try
+            {
+               BrowserView view = (BrowserView)window.getActivePage().showView(BrowserView.ID, "AdminGuide", IWorkbenchPage.VIEW_ACTIVATE);
+               view.setFixedTitle("Administrator Guide");
+               view.openUrl("https://netxms.org/documentation/adminguide/");
+            }
+            catch(PartInitException e)
+            {
+               MessageDialogHelper.openError(window.getShell(), "Error",
+                     String.format("Cannot open browser view (%s)", e.getLocalizedMessage()));
+            }
+         }
+      };
+
 		actionShowPreferences = ActionFactory.PREFERENCES.create(window);
 		register(actionShowPreferences);
 
@@ -391,7 +412,9 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		navMenu.add(actionPrevView);
 
 		// Help
+      helpMenu.add(actionOpenManual);
 		helpMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+      helpMenu.add(new Separator());
 		helpMenu.add((BrandingManager.getInstance().getAboutDialog(null) != null) ? actionAboutCustom : actionAbout);
 	}
 	

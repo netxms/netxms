@@ -32,6 +32,8 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarContributionItem;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.UrlLauncher;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -60,6 +62,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 {
 	private IWorkbenchAction actionExit;
 	private Action actionAbout;
+   private Action actionOpenManual;
 	private IWorkbenchAction actionShowPreferences;
 	private IWorkbenchAction actionCustomizePerspective;
 	private IWorkbenchAction actionSavePerspective;
@@ -112,6 +115,15 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 			}
 		};
 		
+      actionOpenManual = new Action("Open Administrator &Guide") {
+         @Override
+         public void run()
+         {
+            final UrlLauncher launcher = RWT.getClient().getService(UrlLauncher.class);
+            launcher.openURL("https://netxms.org/documentation/adminguide/");
+         }
+      };
+
 		actionShowPreferences = ActionFactory.PREFERENCES.create(window);
 		register(actionShowPreferences);
 
@@ -286,7 +298,9 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		navMenu.add(actionPrevView);
 
 		// Help
+      helpMenu.add(actionOpenManual);
 		helpMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+      helpMenu.add(new Separator());
 		helpMenu.add(actionAbout);
 	}
 	

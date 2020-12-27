@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objecttools.views;
+package org.netxms.ui.eclipse.views;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,28 +29,61 @@ import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IMemento;
+import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.objecttools.Activator;
-import org.netxms.ui.eclipse.objecttools.Messages;
 
 /**
  * Web browser view
  */
 public class BrowserView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.BrowserView"; //$NON-NLS-1$
-	
+   public static final String ID = "org.netxms.ui.eclipse.views.BrowserView"; //$NON-NLS-1$
+
+   private String title = null;
+   private String initialUrl = null;
 	private Browser browser;
 	private Action actionBack;
 	private Action actionForward;
 	private Action actionStop;
 	private Action actionReload;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
+    */
+   @Override
+   public void init(IViewSite site, IMemento memento) throws PartInitException
+   {
+      initialUrl = memento.getString("URL");
+      if ((initialUrl != null) && initialUrl.isEmpty())
+         initialUrl = null;
+
+      title = memento.getString("Title");
+      if ((title != null) && title.isEmpty())
+         title = null;
+
+      super.init(site, memento);
+   }
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
+    */
+   @Override
+   public void saveState(IMemento memento)
+   {
+      super.saveState(memento);
+      memento.putString("URL", browser.getUrl());
+      memento.putString("Title", (title != null) ? title : "");
+   }
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -59,22 +92,29 @@ public class BrowserView extends ViewPart
 			@Override
 			public void changing(LocationEvent event)
 			{
-				setPartName(String.format(Messages.get().BrowserView_PartName_Changing, event.location));
+            if (title == null)
+               setPartName(String.format(Messages.get().BrowserView_PartName_Changing, event.location));
 				actionStop.setEnabled(true);
 			}
 			
 			@Override
 			public void changed(LocationEvent event)
 			{
-				setPartName(String.format(Messages.get().BrowserView_PartName_Changed, getTitle(browser.getText(), event.location)));
+            if (title == null)
+               setPartName(String.format(Messages.get().BrowserView_PartName_Changed, getTitle(browser.getText(), event.location)));
 				actionStop.setEnabled(false);
 			}
 		});
 		
 		createActions();
 		contributeToActionBars();
+
+      if (title != null)
+         setPartName(title);
+      if (initialUrl != null)
+         openUrl(initialUrl);
 	}
-	
+
 	/**
 	 * Create actions
 	 */
@@ -151,15 +191,26 @@ public class BrowserView extends ViewPart
 		manager.add(actionReload);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
 		if (!browser.isDisposed())
 			browser.setFocus();
 	}
+
+   /**
+    * Set fixed title for browser part
+    * 
+    * @param title title to be shown
+    */
+   public void setFixedTitle(String title)
+   {
+      this.title = title;
+      setPartName(title);
+   }
 
 	/**
 	 * @param url

@@ -48,6 +48,14 @@
             id="org.netxms.ui.eclipse.viewcategory.tools"
             name="%category.tools">
       </category>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.views.BrowserView"
+            icon="icons/browser.png"
+            id="org.netxms.ui.eclipse.views.BrowserView"
+            name="%view.name.WebBrowser"
+            restorable="true">
+      </view>
    </extension>
 
    <extension

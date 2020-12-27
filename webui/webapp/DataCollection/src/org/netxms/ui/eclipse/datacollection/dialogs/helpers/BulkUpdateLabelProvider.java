@@ -70,7 +70,7 @@ public class BulkUpdateLabelProvider extends LabelProvider implements ITableLabe
          return null;
       BulkDciUpdateElementUI el = (BulkDciUpdateElementUI)element;
       if (!el.isModified())
-         return Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND);
+         return Display.getCurrent().getSystemColor(SWT.COLOR_TITLE_INACTIVE_FOREGROUND);
       return null;
    }
 
