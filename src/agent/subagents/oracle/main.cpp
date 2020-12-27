@@ -347,7 +347,7 @@ static bool SubAgentInit(Config *config)
    int i;
 
 	// Init db driver
-   g_oracleDriver = DBLoadDriver(_T("oracle.ddr"), NULL, TRUE, NULL, NULL);
+   g_oracleDriver = DBLoadDriver(_T("oracle.ddr"), NULL, NULL, NULL);
 	if (g_oracleDriver == NULL)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load database driver"), MYNAMESTR);

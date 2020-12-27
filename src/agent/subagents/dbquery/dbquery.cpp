@@ -34,7 +34,7 @@ CONDITION g_condShutdown;
 static bool SubAgentInit(Config *config)
 {
 	// Create shutdown condition and start poller threads
-   g_condShutdown = ConditionCreate(TRUE);
+   g_condShutdown = ConditionCreate(true);
    StartPollingThreads();
    return true;
 }
@@ -49,7 +49,7 @@ static void SubAgentShutdown();
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("DB.Query(*)"), H_DirectQuery, NULL, DCI_DT_STRING, _T("Direct database query result") },
+   { _T("DB.Query(*)"), H_DirectQuery, nullptr, DCI_DT_STRING, _T("Direct database query result") },
    { _T("DB.QueryResult(*)"), H_PollResult, _T("R"), DCI_DT_STRING, _T("Database query result") },
    { _T("DB.QueryStatus(*)"), H_PollResult, _T("S"), DCI_DT_UINT, _T("Database query status") },
    { _T("DB.QueryStatusText(*)"), H_PollResult, _T("T"), DCI_DT_STRING, _T("Database query status as text") }
@@ -60,8 +60,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
-   { _T("DB.Query(*)"), H_DirectQueryTable, NULL, _T(""), _T("Direct database query result") },
-   { _T("DB.QueryResult(*)"), H_PollResultTable, NULL, _T(""), _T("Database query result") }
+   { _T("DB.Query(*)"), H_DirectQueryTable, nullptr, _T(""), _T("Direct database query result") },
+   { _T("DB.QueryResult(*)"), H_PollResultTable, nullptr, _T(""), _T("Database query result") }
 };
 
 /**
@@ -71,12 +71,12 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("DBQUERY"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, NULL, NULL,
-	0,	NULL, // parameters
-	0, NULL,	// lists
-	0,	NULL, // tables
-   0, NULL,	// actions
-	0, NULL	// push parameters
+   SubAgentInit, SubAgentShutdown, nullptr, nullptr,
+	0,	nullptr, // parameters
+	0, nullptr,	// lists
+	0,	nullptr, // tables
+   0, nullptr,	// actions
+	0, nullptr	// push parameters
 };
 
 /**
@@ -84,11 +84,12 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 static void SubAgentShutdown()
 {
-   free(m_info.parameters);
-   free(m_info.tables);
+   MemFree(m_info.parameters);
+   MemFree(m_info.tables);
    ConditionSet(g_condShutdown);
    StopPollingThreads();
    ShutdownConnections();
+   ConditionDestroy(g_condShutdown);
 }
 
 static void AddDCIParam(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Query *query, bool parameterRequired)
@@ -102,7 +103,7 @@ static void AddDCIParam(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Query *q
    param->handler = H_DirectQueryConfigurable;
    param->arg = query->getName();
    param->dataType = DCI_DT_STRING;
-   if(query->getDescription() != NULL)
+   if(query->getDescription() != nullptr)
    {
       _tcscpy(param->description, query->getDescription());
    }
@@ -126,7 +127,7 @@ static void AddDCIParamTable(StructArray<NETXMS_SUBAGENT_TABLE> *parametersTable
    param->handler = H_DirectQueryConfigurableTable;
    param->arg = query->getName();
    _tcscpy(param->instanceColumns, _T(""));
-   if(query->getDescription() != NULL)
+   if(query->getDescription() != nullptr)
    {
       _tcscpy(param->description, query->getDescription());
    }
@@ -144,7 +145,7 @@ static void AddParameters(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Struct
 {
    // Add database connections
 	ConfigEntry *databases = config->getEntry(_T("/DBQuery/Database"));
-   if (databases != NULL)
+   if (databases != nullptr)
    {
       for(int i = 0; i < databases->getValueCount(); i++)
 		{
@@ -159,7 +160,7 @@ static void AddParameters(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Struct
 
 	// Add queries
 	ConfigEntry *queries = config->getEntry(_T("/DBQuery/Query"));
-	if (queries != NULL)
+	if (queries != nullptr)
 	{
 		for(int i = 0; i < queries->getValueCount(); i++)
 		{
@@ -180,7 +181,7 @@ static void AddParameters(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Struct
 
    // Add configurable queries
 	ConfigEntry *configurableQueries = config->getEntry(_T("/DBQuery/ConfigurableQuery"));
-	if (configurableQueries != NULL)
+	if (configurableQueries != nullptr)
 	{
 		for(int i = 0; i < configurableQueries->getValueCount(); i++)
 		{
@@ -205,9 +206,9 @@ static void AddParameters(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Struct
  */
 DECLARE_SUBAGENT_ENTRY_POINT(DBQUERY)
 {
-   StructArray<NETXMS_SUBAGENT_PARAM> *parameters = NULL;
+   StructArray<NETXMS_SUBAGENT_PARAM> *parameters = nullptr;
    parameters = new StructArray<NETXMS_SUBAGENT_PARAM>(m_parameters, sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM));
-   StructArray<NETXMS_SUBAGENT_TABLE> *parametersTable = NULL;
+   StructArray<NETXMS_SUBAGENT_TABLE> *parametersTable = nullptr;
    parametersTable = new StructArray<NETXMS_SUBAGENT_TABLE>(m_tables, sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE));
 
    AddParameters(parameters, parametersTable, config);

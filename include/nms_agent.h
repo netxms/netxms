@@ -804,7 +804,7 @@ struct NETXMS_SUBAGENT_ACTION
    TCHAR description[MAX_DB_STRING];
 };
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20180707)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((uint32_t)0x20201227)
 
 class NXCPMessage;
 
@@ -813,22 +813,22 @@ class NXCPMessage;
  */
 struct NETXMS_SUBAGENT_INFO
 {
-   UINT32 magic;    // Magic number to check if subagent uses correct version of this structure
+   uint32_t magic;    // Magic number to check if subagent uses correct version of this structure
    TCHAR name[MAX_SUBAGENT_NAME];
    TCHAR version[32];
    bool (*init)(Config *);   // Called to initialize subagent. Can be NULL.
    void (*shutdown)();       // Called at subagent unload. Can be NULL.
-   bool (*commandHandler)(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
-   void (*notify)(UINT32 code, void *data);  // Generic notification interface
-   UINT32 numParameters;
+   bool (*commandHandler)(uint32_t command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
+   void (*notify)(uint32_t code, void *data);  // Generic notification interface
+   size_t numParameters;
    NETXMS_SUBAGENT_PARAM *parameters;
-   UINT32 numLists;
+   size_t numLists;
    NETXMS_SUBAGENT_LIST *lists;
-   UINT32 numTables;
+   size_t numTables;
    NETXMS_SUBAGENT_TABLE *tables;
-   UINT32 numActions;
+   size_t numActions;
    NETXMS_SUBAGENT_ACTION *actions;
-   UINT32 numPushParameters;
+   size_t numPushParameters;
    NETXMS_SUBAGENT_PUSHPARAM *pushParameters;
 };
 

@@ -126,15 +126,15 @@ bool IsTimestampColumn(const TCHAR *table, const char *name)
  */
 static bool ConnectToSource()
 {
-	s_driver = DBLoadDriver(s_dbDriver, s_dbDrvParams, false, nullptr, nullptr);
-	if (s_driver == nullptr)
+   s_driver = DBLoadDriver(s_dbDriver, s_dbDrvParams, nullptr, nullptr);
+   if (s_driver == nullptr)
    {
 	   WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Unable to load and initialize database driver \"%s\"\n"), s_dbDriver);
       return false;
    }
    WriteToTerminalEx(_T("Database driver \x1b[1m%s\x1b[0m loaded\n"), s_dbDriver);
 
-	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    s_hdbSource = DBConnect(s_driver, s_dbServer, s_dbName, s_dbLogin, s_dbPassword, s_dbSchema, errorText);
    if (s_hdbSource == nullptr)
    {
@@ -195,11 +195,11 @@ static bool ConnectToSource()
  */
 static bool MigrateTable(const TCHAR *table)
 {
-	WriteToTerminalEx(_T("%s table \x1b[1m%s\x1b[0m\n"), s_import ? _T("Importing") : _T("Migrating"), table);
+   WriteToTerminalEx(_T("%s table \x1b[1m%s\x1b[0m\n"), s_import ? _T("Importing") : _T("Migrating"), table);
 
-	if (!DBBegin(g_dbHandle))
-	{
-		_tprintf(_T("ERROR: unable to start transaction in target database\n"));
+   if (!DBBegin(g_dbHandle))
+   {
+      _tprintf(_T("ERROR: unable to start transaction in target database\n"));
       return false;
    }
 
@@ -209,7 +209,7 @@ static bool MigrateTable(const TCHAR *table)
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
    if (hResult == nullptr)
    {
-		_tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
+      _tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
       DBRollback(g_dbHandle);
       return false;
    }
@@ -254,7 +254,7 @@ static bool MigrateTable(const TCHAR *table)
       int rows = 0, totalRows = 0;
       while(DBFetch(hResult))
       {
-			for(int i = 0; i < columnCount; i++)
+         for(int i = 0; i < columnCount; i++)
          {
 			   TCHAR *value = DBGetField(hResult, i, nullptr, 0);
 			   if ((value == nullptr) || (*value == 0))

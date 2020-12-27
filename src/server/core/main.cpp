@@ -674,12 +674,12 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
 /**
  * Database event handler
  */
-static void DBEventHandler(DWORD dwEvent, const WCHAR *pszArg1, const WCHAR *pszArg2, bool connLost, void *userArg)
+static void DBEventHandler(uint32_t event, const WCHAR *arg1, const WCHAR *arg2, bool connLost, void *context)
 {
 	if (!(g_flags & AF_SERVER_INITIALIZED))
 		return;     // Don't try to do anything if server is not ready yet
 
-	switch(dwEvent)
+	switch(event)
 	{
 		case DBEVENT_CONNECTION_LOST:
 			PostSystemEvent(EVENT_DB_CONNECTION_LOST, g_dwMgmtNode, NULL);
@@ -692,7 +692,7 @@ static void DBEventHandler(DWORD dwEvent, const WCHAR *pszArg1, const WCHAR *psz
 			NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, TRUE);
 			break;
 		case DBEVENT_QUERY_FAILED:
-			PostSystemEvent(EVENT_DB_QUERY_FAILED, g_dwMgmtNode, "uud", pszArg1, pszArg2, connLost ? 1 : 0);
+			PostSystemEvent(EVENT_DB_QUERY_FAILED, g_dwMgmtNode, "uud", arg1, arg2, connLost ? 1 : 0);
 			break;
 		default:
 			break;
@@ -839,8 +839,8 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	// Initialize database driver and connect to database
 	if (!DBInit())
 		return FALSE;
-	g_dbDriver = DBLoadDriver(g_szDbDriver, g_szDbDrvParams, (nxlog_get_debug_level() >= 9), DBEventHandler, NULL);
-	if (g_dbDriver == NULL)
+	g_dbDriver = DBLoadDriver(g_szDbDriver, g_szDbDrvParams, DBEventHandler, nullptr);
+	if (g_dbDriver == nullptr)
 		return FALSE;
 
    // Start local administrative interface listener if required

@@ -11,7 +11,7 @@ void TestOracleBatch(const TCHAR *server, const TCHAR *login, const TCHAR *passw
    /*** connect ***/
    StartTest(_T("Oracle: connect to database"));
 
-   DB_DRIVER drv = DBLoadDriver(_T("oracle.ddr"), _T(""), false, NULL, NULL);
+   DB_DRIVER drv = DBLoadDriver(_T("oracle.ddr"), _T(""), NULL, NULL);
    AssertNotNull(drv);
 
    TCHAR buffer[DBDRV_MAX_ERROR_TEXT];

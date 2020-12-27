@@ -271,6 +271,32 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             ConsolePrintf(pCtx, _T("   %-20s = %d\n"), t->tag, t->level);
          }
          delete tags;
+
+         ConsolePrintf(pCtx, _T("   SQL query trace      = %s\n"), DBIsQueryTraceEnabled() ? _T("ON") : _T("OFF"));
+      }
+      else if (!_tcsicmp(list->get(0), _T("SQL")))
+      {
+         if (list->size() > 1)
+         {
+            if (!_tcsicmp(list->get(1), _T("ON")))
+            {
+               DBEnableQueryTrace(true);
+               nxlog_set_debug_level_tag(_T("db.query"), 9);
+            }
+            else if (!_tcsicmp(list->get(1), _T("OFF")))
+            {
+               DBEnableQueryTrace(false);
+               nxlog_set_debug_level_tag(_T("db.query"), -1);
+            }
+            else
+            {
+               ConsoleWrite(pCtx, _T("ERROR: Invalid SQL query trace mode (valid modes are ON and OFF)\n\n"));
+            }
+         }
+         else
+         {
+            ConsolePrintf(pCtx, _T("SQL query trace is %s\n"), DBIsQueryTraceEnabled() ? _T("ON") : _T("OFF"));
+         }
       }
       else
       {
@@ -1621,6 +1647,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   debug [<level>|off]               - Set debug level (valid range is 0..9)\n")
             _T("   debug [<debug tag> <level>|off|default]\n")
             _T("                                     - Set debug level for a particular debug tag\n")
+            _T("   debug sql [on|off]                - Turn SQL query trace on or off\n")
             _T("   down                              - Shutdown NetXMS server\n")
             _T("   exec <script> [<params>]          - Executes NXSL script from script library\n")
             _T("   exit                              - Exit from remote session\n")

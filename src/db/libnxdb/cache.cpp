@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2008-2019 Raden Solutions
+** Copyright (C) 2008-2020 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -30,13 +30,13 @@
  */
 DB_HANDLE LIBNXDB_EXPORTABLE DBOpenInMemoryDatabase()
 {
-   DB_DRIVER drv = DBLoadDriver(_T("sqlite.ddr"), NULL, false, NULL, NULL);
-   if (drv == NULL)
-      return NULL;
+   DB_DRIVER drv = DBLoadDriver(_T("sqlite.ddr"), nullptr, nullptr, nullptr);
+   if (drv == nullptr)
+      return nullptr;
 
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   DB_HANDLE hdb = DBConnect(drv, NULL, _T(":memory:"), NULL, NULL, NULL, errorText);
-   if (hdb == NULL)
+   DB_HANDLE hdb = DBConnect(drv, nullptr, _T(":memory:"), nullptr, nullptr, nullptr, errorText);
+   if (hdb == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Cannot open in-memory database: %s"), errorText);
       DBUnloadDriver(drv);
@@ -67,7 +67,7 @@ bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, cons
 
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(sourceDB, query, errorText);
-   if (hResult == NULL)
+   if (hResult == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot read table %s for caching: %s"), table, errorText);
       return false;
@@ -98,9 +98,9 @@ bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, cons
       }
       createStatement.append(name);
       bool isInteger = false;
-      if (intColumns != NULL)
+      if (intColumns != nullptr)
       {
-         for(int c = 0; intColumns[c] != NULL; c++)
+         for(int c = 0; intColumns[c] != nullptr; c++)
          {
             if (!_tcsicmp(intColumns[c], name))
             {
@@ -112,7 +112,7 @@ bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, cons
       createStatement.append(isInteger ? _T(" integer") : _T(" varchar"));
       insertStatement.append(name);
    }
-   if (indexColumn != NULL)
+   if (indexColumn != nullptr)
    {
       createStatement.append(_T(", PRIMARY KEY("));
       createStatement.append(indexColumn);
@@ -137,7 +137,7 @@ bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, cons
    insertStatement.append(_T(')'));
 
    DB_STATEMENT hInsertStmt = DBPrepareEx(cacheDB, insertStatement, true, errorText);
-   if (hInsertStmt == NULL)
+   if (hInsertStmt == nullptr)
    {
       DBFreeResult(hResult);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot prepare insert statement for table %s in cache database: %s"), table, errorText);
@@ -149,7 +149,7 @@ bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, cons
    while(DBFetch(hResult))
    {
       for(int i = 0; i < numColumns; i++)
-         DBBind(hInsertStmt, i + 1, DB_SQLTYPE_VARCHAR, DBGetField(hResult, i, NULL, 0), DB_BIND_DYNAMIC);
+         DBBind(hInsertStmt, i + 1, DB_SQLTYPE_VARCHAR, DBGetField(hResult, i, nullptr, 0), DB_BIND_DYNAMIC);
       if (!DBExecuteEx(hInsertStmt, errorText))
       {
          DBRollback(cacheDB);

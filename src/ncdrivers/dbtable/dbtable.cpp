@@ -90,7 +90,7 @@ DBTableDriver *DBTableDriver::createFromConfig(Config *config)
 
 	if (config->parseTemplate(_T("DbTable"), configTemplate))
 	{
-		d->m_driver = DBLoadDriver(d->m_dbDriver, NULL, TRUE, NULL, NULL);
+		d->m_driver = DBLoadDriver(d->m_dbDriver, NULL, NULL, NULL);
 		if (d->m_driver == NULL)
 		{
 			nxlog_debug_tag(DEBUG_TAG, 1, _T("Unable to load and initialize database driver \"%s\""), d->m_dbDriver);
