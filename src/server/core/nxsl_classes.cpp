@@ -1543,87 +1543,87 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (compareAttributeName(attr, "isAgent"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_NATIVE_AGENT) ? 1 : 0));
+      value = vm->createValue(node->isNativeAgent());
    }
    else if (compareAttributeName(attr, "isBridge"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_BRIDGE) ? 1 : 0));
+      value = vm->createValue(node->isBridge());
    }
    else if (compareAttributeName(attr, "isCDP"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_CDP) ? 1 : 0));
+      value = vm->createValue((node->getCapabilities() & NC_IS_CDP) != 0);
    }
    else if (compareAttributeName(attr, "isEtherNetIP"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_ETHERNET_IP) ? 1 : 0));
+      value = vm->createValue(node->isEthernetIPSupported());
    }
    else if (compareAttributeName(attr, "isInMaintenanceMode"))
    {
-      value = vm->createValue((LONG)(node->isInMaintenanceMode() ? 1 : 0));
+      value = vm->createValue(node->isInMaintenanceMode());
    }
    else if (compareAttributeName(attr, "isLLDP"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_LLDP) ? 1 : 0));
+      value = vm->createValue((node->getCapabilities() & NC_IS_LLDP) != 0);
    }
 	else if (compareAttributeName(attr, "isLocalMgmt") || compareAttributeName(attr, "isLocalManagement"))
 	{
-		value = vm->createValue((LONG)((node->isLocalManagement()) ? 1 : 0));
+		value = vm->createValue(node->isLocalManagement());
 	}
    else if (compareAttributeName(attr, "isModbusTCP"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_MODBUS_TCP) ? 1 : 0));
+      value = vm->createValue(node->isModbusTCPSupported());
    }
    else if (compareAttributeName(attr, "isOSPF"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_OSPF) ? 1 : 0));
+      value = vm->createValue((node->getCapabilities() & NC_IS_OSPF) != 0);
    }
    else if (compareAttributeName(attr, "isPAE") || compareAttributeName(attr, "is802_1x"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_8021X) ? 1 : 0));
+      value = vm->createValue((node->getCapabilities() & NC_IS_8021X) != 0);
    }
    else if (compareAttributeName(attr, "isPrinter"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_PRINTER) ? 1 : 0));
+      value = vm->createValue((node->getCapabilities() & NC_IS_PRINTER) != 0);
    }
    else if (compareAttributeName(attr, "isProfiNet"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_PROFINET) ? 1 : 0));
+      value = vm->createValue(node->isProfiNetSupported());
    }
    else if (compareAttributeName(attr, "isRemotelyManaged") || compareAttributeName(attr, "isExternalGateway"))
    {
-      value = vm->createValue((LONG)((node->getFlags() & NF_EXTERNAL_GATEWAY) ? 1 : 0));
+      value = vm->createValue((node->getFlags() & NF_EXTERNAL_GATEWAY) != 0);
    }
    else if (compareAttributeName(attr, "isRouter"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_ROUTER) ? 1 : 0));
+      value = vm->createValue(node->isRouter());
    }
    else if (compareAttributeName(attr, "isSMCLP"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_SMCLP) ? 1 : 0));
+      value = vm->createValue((node->getCapabilities() & NC_IS_SMCLP) != 0);
    }
    else if (compareAttributeName(attr, "isSNMP"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_SNMP) ? 1 : 0));
+      value = vm->createValue(node->isSNMPSupported());
    }
    else if (compareAttributeName(attr, "isSONMP") || compareAttributeName(attr, "isNDP"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_NDP) ? 1 : 0));
+      value = vm->createValue((node->getCapabilities() & NC_IS_NDP) != 0);
    }
    else if (compareAttributeName(attr, "isSTP"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_STP) ? 1 : 0));
+      value = vm->createValue((node->getCapabilities() & NC_IS_STP) != 0);
    }
    else if (compareAttributeName(attr, "isVirtual"))
    {
-      value = vm->createValue((LONG)(node->isVirtual() ? 1 : 0));
+      value = vm->createValue(node->isVirtual());
    }
    else if (compareAttributeName(attr, "isVRRP"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_IS_VRRP) ? 1 : 0);
+      value = vm->createValue((node->getCapabilities() & NC_IS_VRRP) != 0);
    }
    else if (compareAttributeName(attr, "lastAgentCommTime"))
    {
-      value = vm->createValue((INT64)node->getLastAgentCommTime());
+      value = vm->createValue(static_cast<int64_t>(node->getLastAgentCommTime()));
    }
    else if (compareAttributeName(attr, "nodeSubType"))
    {
