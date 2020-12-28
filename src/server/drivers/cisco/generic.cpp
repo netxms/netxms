@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Driver for other Cisco devices
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2020 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -21,6 +21,7 @@
 **/
 
 #include "cisco.h"
+#include <netxms-regex.h>
 
 /**
  * Get driver name
@@ -49,4 +50,79 @@ int GenericCiscoDriver::isPotentialDevice(const TCHAR *oid)
 bool GenericCiscoDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
    return SnmpWalkCount(snmp, _T(".1.3.6.1.4.1.9.9.46.1.3.1.1.4")) > 0;
+}
+
+/**
+ * Extract integer from capture group
+ */
+static uint32_t IntegerFromCGroup(const TCHAR *text, int *cgroups, int cgindex)
+{
+   TCHAR buffer[32];
+   int len = cgroups[cgindex * 2 + 1] - cgroups[cgindex * 2];
+   if (len > 31)
+      len = 31;
+   memcpy(buffer, &text[cgroups[cgindex * 2]], len * sizeof(TCHAR));
+   buffer[len] = 0;
+   return _tcstoul(buffer, nullptr, 10);
+}
+
+/**
+ * Get list of interfaces for given node
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @param useAliases policy for interface alias usage
+ * @param useIfXTable if true, usage of ifXTable is allowed
+ */
+InterfaceList *GenericCiscoDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+{
+   // Get interface list from standard MIB
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
+   if (ifList == nullptr)
+      return nullptr;
+
+   const char *eptr;
+   int eoffset;
+   PCRE *reBase = _pcre_compile_t(
+         reinterpret_cast<const PCRE_TCHAR*>(_T("^(Se|Serial|Et|Ethernet|Fa|FastEthernet|Gi|GigabitEthernet|Te|TenGigabitEthernet|Fo|FortyGigabitEthernet)([0-9]+)/([0-9]+)$")),
+         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+   if (reBase == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_CISCO, 5, _T("GenericCiscoDriver::getInterfaces: cannot compile base regexp: %hs at offset %d"), eptr, eoffset);
+      return ifList;
+   }
+   PCRE *reFex = _pcre_compile_t(
+         reinterpret_cast<const PCRE_TCHAR*>(_T("^(Se|Serial|Et|Ethernet|Fa|FastEthernet|Gi|GigabitEthernet|Te|TenGigabitEthernet|Fo|FortyGigabitEthernet)([0-9]+)/([0-9]+)/([0-9]+)$")),
+         PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+   if (reFex == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_CISCO, 5, _T("GenericCiscoDriver::getInterfaces: cannot compile FEX regexp: %hs at offset %d"), eptr, eoffset);
+      _pcre_free_t(reBase);
+      return ifList;
+   }
+
+   int pmatch[30];
+   for(int i = 0; i < ifList->size(); i++)
+   {
+      InterfaceInfo *iface = ifList->get(i);
+      if (_pcre_exec_t(reBase, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
+      {
+         iface->isPhysicalPort = true;
+         iface->location.chassis = 1;
+         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 2);
+         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 3);
+      }
+      else if (_pcre_exec_t(reFex, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
+      {
+         iface->isPhysicalPort = true;
+         iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 2);
+         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 3);
+         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 4);
+      }
+   }
+
+   _pcre_free_t(reBase);
+   _pcre_free_t(reFex);
+   return ifList;
 }
