@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,9 +49,9 @@ public class MibBrowser extends Composite
 	public MibBrowser(Composite parent, int style)
 	{
 		super(parent, style);
-		
+
 		setLayout(new FillLayout());
-		
+
 		mibTree = new TreeViewer(this, SWT.NONE);
 		mibTree.setContentProvider(new MibTreeContentProvider());
 		mibTree.setLabelProvider(new MibTreeLabelProvider());
@@ -66,10 +66,10 @@ public class MibBrowser extends Composite
 	 */
 	public MibObject getSelection()
 	{
-		IStructuredSelection selection = (IStructuredSelection)mibTree.getSelection();
+      IStructuredSelection selection = mibTree.getStructuredSelection();
 		return (MibObject)selection.getFirstElement();
 	}
-	
+
 	/**
 	 * Add tree selection listener.
 	 * 
@@ -86,6 +86,9 @@ public class MibBrowser extends Composite
 	 */
 	public void setSelection(MibObject object)
 	{
+      IStructuredSelection selection = mibTree.getStructuredSelection();
+      if ((selection.size() == 1) && object.equals(selection.getFirstElement()))
+         return; // Same object already selected
 		mibTree.setSelection(new StructuredSelection(object), true);
 	}
 

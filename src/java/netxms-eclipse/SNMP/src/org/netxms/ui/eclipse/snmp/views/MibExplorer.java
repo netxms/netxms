@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -119,15 +119,15 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private Action actionSelect;
 	private Action actionExportToCsv;
 	private Action actionShowFilter;
-	
+
 	private Composite resultArea;
 	private FilterText filterText;
 	private SnmpWalkFilter filter;
 	private boolean initShowFilter = true;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
+    */
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException
 	{
@@ -169,9 +169,10 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
    {
       return (s != null) ? b : defval;
    }
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -206,9 +207,9 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 				details.setObject(object);
 			}
 		});
-		
+
 		details = new MibObjectDetails(mibViewSplitter, SWT.BORDER, true, mibBrowser);
-		
+
 		// Create result area
 		resultArea = new Composite(splitter, SWT.BORDER);
 		FormLayout formLayout = new FormLayout();

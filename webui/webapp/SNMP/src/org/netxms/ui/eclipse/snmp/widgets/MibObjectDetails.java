@@ -147,7 +147,7 @@ public class MibObjectDetails extends Composite
 			updateObjectId = true;
 		}
 	}
-	
+
 	/**
 	 * Set MIB object to show
 	 * 
