@@ -13,7 +13,7 @@ DB_DRIVER g_driverHandle = NULL;
 DatabaseInfo g_dbInfo[MAX_DATABASES];
 DatabaseData g_dbData[MAX_DATABASES];
 
-THREAD_RESULT THREAD_CALL queryThread(void *arg);
+static void QueryThread(int dbIndex);
 
 DBParameterGroup g_paramGroup[] = {
 	{
@@ -104,11 +104,9 @@ LONG H_DatabaseParameter(const TCHAR *parameter, const TCHAR *argument, TCHAR *v
 	return ret;
 }
 
-
-//
-// Subagent initialization
-//
-
+/**
+ * Subagent initialization
+ */
 static bool SubAgentInit(Config *config)
 {
 	bool result = true;
@@ -122,12 +120,12 @@ static bool SubAgentInit(Config *config)
       { _T("DBLogin"),           CT_STRING, 0, 0, MAX_USERNAME,  0, info.username },
       { _T("DBPassword"),        CT_STRING, 0, 0, MAX_PASSWORD,  0, info.password },
       { _T("DBPasswordEncrypted"), CT_STRING, 0, 0, MAX_PASSWORD, 0, info.password },
-      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
    };
 
 	// Init db driver
-	g_driverHandle = DBLoadDriver(_T("informix.ddr"), NULL, TRUE, NULL, NULL);
-	if (g_driverHandle == NULL)
+	g_driverHandle = DBLoadDriver(_T("informix.ddr"), nullptr, nullptr, nullptr);
+	if (g_driverHandle == nullptr)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load db driver"), MYNAMESTR);
 		result = false;
@@ -135,7 +133,7 @@ static bool SubAgentInit(Config *config)
 
 	if (result)
 	{
-		g_shutdownCondition = ConditionCreate(TRUE);
+		g_shutdownCondition = ConditionCreate(true);
 	}
 
 	// Load configuration from "informix" section to allow simple configuration
@@ -203,17 +201,15 @@ static bool SubAgentInit(Config *config)
 	// Run query thread for each database configured
 	for (i = 0; result && i <= g_dbCount; i++)
 	{
-		g_dbInfo[i].queryThreadHandle = ThreadCreateEx(queryThread, 0, CAST_TO_POINTER(i, void *));
+		g_dbInfo[i].queryThreadHandle = ThreadCreateEx(QueryThread, i);
 	}
 
 	return result;
 }
 
-
-//
-// Shutdown handler
-//
-
+/**
+ * Shutdown handler
+ */
 static void SubAgentShutdown()
 {
 	AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: shutting down"), MYNAMESTR);
@@ -226,26 +222,23 @@ static void SubAgentShutdown()
 	ConditionDestroy(g_shutdownCondition);
 }
 
-//
-// Figure out Informix DBMS version
-//
-
+/**
+ * Figure out Informix DBMS version
+ */
 static int getInformixVersion(DB_HANDLE handle)
 {
 	return 1100;
 }
 
-//
-// Thread for SQL queries
-//
-
-THREAD_RESULT THREAD_CALL queryThread(void *arg)
+/**
+ * Thread for SQL queries
+ */
+static void QueryThread(int dbIndex)
 {
-	int dbIndex = CAST_FROM_POINTER(arg, int);
 	DatabaseInfo& db = g_dbInfo[dbIndex];
 	const DWORD pollInterval = 60 * 1000L;	// 1 minute
 	int waitTimeout;
-	QWORD startTimeMs;
+	int64_t startTimeMs;
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 
 	while(true)
@@ -278,17 +271,15 @@ THREAD_RESULT THREAD_CALL queryThread(void *arg)
 		}
 
 		// Try to reconnect every 30 secs
-		if (ConditionWait(g_shutdownCondition, DWORD(30 * 1000)))
+		if (ConditionWait(g_shutdownCondition, 30000))
 			break;
 	}
 
 finish:
-	if (db.connected && db.handle != NULL)
+	if (db.connected && db.handle != nullptr)
 	{
 		DBDisconnect(db.handle);
 	}
-
-	return THREAD_OK;
 }
 
 
@@ -349,11 +340,9 @@ bool getParametersFromDB( int dbIndex )
 	return ret;
 }
 
-//
-// Subagent information
-//
-
-
+/**
+ * Parameters
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("Informix.Session.Count"), H_DatabaseParameter, _T("S"), DCI_DT_INT, _T("Informix/Sessions: Number of sessions opened") },
@@ -374,44 +363,35 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Informix.Dbspace.Pages.FreePerc(*)"), H_DatabaseParameter, _T("M"), DCI_DT_INT, _T("Informix/Dbspaces: Percentage of free space in dbspace") },
 };
 
-/*
-static NETXMS_SUBAGENT_ENUM m_enums[] =
-{
-};
-*/
-
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("INFORMIX"), NETXMS_VERSION_STRING,
-	SubAgentInit, SubAgentShutdown, NULL, NULL,
+	SubAgentInit, SubAgentShutdown, nullptr, nullptr,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), m_parameters,
-	0,	NULL,
-	/*sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-	m_enums,*/
-	0,	NULL
+	0, nullptr,
+   0, nullptr,
+   0, nullptr,
+   0, nullptr
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(INFORMIX)
 {
 	*ppInfo = &m_info;
 	return true;
 }
 
-
-//
-// DLL entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)

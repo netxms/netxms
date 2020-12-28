@@ -474,7 +474,7 @@ static DWORD __stdcall WorkerThread(void *pArg)
       bResult = DBInit();
 		if (bResult)
 		{
-			pc->m_dbDriver = DBLoadDriver(pc->m_szDBDriver, _T(""), false, NULL, NULL);
+			pc->m_dbDriver = DBLoadDriver(pc->m_szDBDriver, _T(""), NULL, NULL);
 			if (pc->m_dbDriver == NULL)
 				bResult = FALSE;
 		}
