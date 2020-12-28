@@ -70,7 +70,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transp
    {
       SNMP_Version v = transport->getSnmpVersion();
       transport->setSnmpVersion(version);
-      UINT32 rc = SnmpGetEx(transport, szOidStr, oidBinary, dwOidLen, pValue, bufferSize, dwFlags, NULL);
+      uint32_t rc = SnmpGetEx(transport, szOidStr, oidBinary, dwOidLen, pValue, bufferSize, dwFlags, NULL);
       transport->setSnmpVersion(v);
       return rc;
    }
