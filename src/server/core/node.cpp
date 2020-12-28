@@ -4946,19 +4946,30 @@ bool Node::querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TC
  */
 void Node::checkBridgeMib(SNMP_Transport *pTransport)
 {
-   TCHAR szBuffer[4096];
-   if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.17.1.1.0"), nullptr, 0, szBuffer, sizeof(szBuffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+   // Older Cisco Nexus software (7.x probably) does not return base bridge address but still
+   // support some parts of bridge MIB. We do mark such devices as isBridge to allow more correct
+   // L2 topology maps and device visualization.
+   BYTE baseBridgeAddress[64];
+   memset(baseBridgeAddress, 0, sizeof(baseBridgeAddress));
+   uint32_t portCount = 0;
+   if ((SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.17.1.1.0"), nullptr, 0, baseBridgeAddress, sizeof(baseBridgeAddress), SG_RAW_RESULT) == SNMP_ERR_SUCCESS) ||
+       (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.17.1.2.0"), nullptr, 0, &portCount, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS))
    {
       lockProperties();
       m_capabilities |= NC_IS_BRIDGE;
-      memcpy(m_baseBridgeAddress, szBuffer, 6);
+      memcpy(m_baseBridgeAddress, baseBridgeAddress, 6);
       unlockProperties();
 
       // Check for Spanning Tree (IEEE 802.1d) MIB support
-      if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.17.2.1.0"), 3))
+      uint32_t stpVersion;
+      if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.17.2.1.0"), nullptr, 0, &stpVersion, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
       {
+         // Cisco Nexus devices may return 1 (unknown) instead of 3 (ieee8021d)
          lockProperties();
-         m_capabilities |= NC_IS_STP;
+         if ((stpVersion == 3) || (stpVersion == 1))
+            m_capabilities |= NC_IS_STP;
+         else
+            m_capabilities &= ~NC_IS_STP;
          unlockProperties();
       }
       else
@@ -8335,10 +8346,9 @@ void Node::prepareForDeletion()
  */
 BOOL Node::checkSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID, int nValue)
 {
-   UINT32 dwTemp;
-
-   if (SnmpGet(m_snmpVersion, pTransport, pszOID, nullptr, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
-      return (int)dwTemp == nValue;
+   uint32_t buffer;
+   if (SnmpGet(m_snmpVersion, pTransport, pszOID, nullptr, 0, &buffer, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
+      return static_cast<int>(buffer) == nValue;
    return FALSE;
 }
 
