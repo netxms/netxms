@@ -524,7 +524,7 @@ static bool DB2Init(Config *config)
 {
    AgentWriteDebugLog(5, _T("%s: initializing"), SUBAGENT_NAME);
 
-   s_driver = DBLoadDriver(_T("db2.ddr"), NULL, TRUE, NULL, NULL);
+   s_driver = DBLoadDriver(_T("db2.ddr"), NULL, NULL, NULL);
    if (s_driver == NULL)
    {
       AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load the database driver"), SUBAGENT_NAME);
