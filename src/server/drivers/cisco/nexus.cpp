@@ -116,7 +116,7 @@ static uint32_t IntegerFromCGroup(const TCHAR *text, int *cgroups, int cgindex)
       len = 31;
    memcpy(buffer, &text[cgroups[cgindex * 2]], len * sizeof(TCHAR));
    buffer[len] = 0;
-   return _tcstoul(buffer, NULL, 10);
+   return _tcstoul(buffer, nullptr, 10);
 }
 
 /**
@@ -124,6 +124,9 @@ static uint32_t IntegerFromCGroup(const TCHAR *text, int *cgroups, int cgindex)
  *
  * @param snmp SNMP transport
  * @param node Node
+ * @param driverData driver data
+ * @param useAliases policy for interface alias usage
+ * @param useIfXTable if true, usage of ifXTable is allowed
  */
 InterfaceList *CiscoNexusDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
@@ -137,13 +140,13 @@ InterfaceList *CiscoNexusDriver::getInterfaces(SNMP_Transport *snmp, NObject *no
 
    const char *eptr;
    int eoffset;
-   PCRE *reBase = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^(Ethernet|fc)([0-9]+)/([0-9]+)$")), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
+   PCRE *reBase = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^(Ethernet|fc)([0-9]+)/([0-9]+)$")), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
    if (reBase == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_CISCO, 5, _T("CiscoNexusDriver::getInterfaces: cannot compile base regexp: %hs at offset %d"), eptr, eoffset);
       return ifList;
    }
-   PCRE *reFex = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^(Ethernet|fc)([0-9]+)/([0-9]+)/([0-9]+)$")), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
+   PCRE *reFex = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^(Ethernet|fc)([0-9]+)/([0-9]+)/([0-9]+)$")), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
    if (reFex == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_CISCO, 5, _T("CiscoNexusDriver::getInterfaces: cannot compile FEX regexp: %hs at offset %d"), eptr, eoffset);
@@ -155,14 +158,14 @@ InterfaceList *CiscoNexusDriver::getInterfaces(SNMP_Transport *snmp, NObject *no
    for(int i = 0; i < ifList->size(); i++)
    {
       InterfaceInfo *iface = ifList->get(i);
-      if (_pcre_exec_t(reBase, NULL, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
+      if (_pcre_exec_t(reBase, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
       {
          iface->isPhysicalPort = true;
          iface->location.chassis = 1;
          iface->location.module = IntegerFromCGroup(iface->name, pmatch, 2);
          iface->location.port = IntegerFromCGroup(iface->name, pmatch, 3);
       }
-      else if (_pcre_exec_t(reFex, NULL, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
+      else if (_pcre_exec_t(reFex, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
       {
          iface->isPhysicalPort = true;
          iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 2);
