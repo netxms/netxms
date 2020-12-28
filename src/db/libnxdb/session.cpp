@@ -1621,7 +1621,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 #else
 			WCHAR *query = WideStringFromMBString(hStmt->m_query);
 			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
-			memFree(query);
+			MemFree(query);
 #endif
 		}
 		s_perfFailedQueries++;
