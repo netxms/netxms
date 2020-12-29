@@ -67,18 +67,18 @@ public:
  */
 TCHAR *NCDriverServerStorageManager::get(const TCHAR *key)
 {
-   TCHAR *value = NULL;
+   TCHAR *value = nullptr;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT entry_value FROM nc_persistent_storage WHERE channel_name=? AND entry_name=?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) > 0)
-            value = DBGetField(hResult, 0, 0, NULL, 0);
+            value = DBGetField(hResult, 0, 0, nullptr, 0);
          DBFreeResult(hResult);
       }
       DBFreeStatement(hStmt);
@@ -99,14 +99,14 @@ StringMap *NCDriverServerStorageManager::getAll()
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)
          {
-            TCHAR *key = DBGetField(hResult, i, 0, NULL, 0);
-            TCHAR *value = DBGetField(hResult, i, 1, NULL, 0);
-            if ((key != NULL) && (value != NULL))
+            TCHAR *key = DBGetField(hResult, i, 0, nullptr, 0);
+            TCHAR *value = DBGetField(hResult, i, 1, nullptr, 0);
+            if ((key != nullptr) && (value != nullptr))
             {
                values->setPreallocated(key, value);
             }
@@ -131,13 +131,13 @@ void NCDriverServerStorageManager::set(const TCHAR *key, const TCHAR *value)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT entry_name FROM nc_persistent_storage WHERE channel_name=? AND entry_name=?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       bool update = false;
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          update = (DBGetNumRows(hResult) > 0);
          DBFreeResult(hResult);
@@ -148,7 +148,7 @@ void NCDriverServerStorageManager::set(const TCHAR *key, const TCHAR *value)
                update ?
                         _T("UPDATE nc_persistent_storage SET entry_value=? WHERE channel_name=? AND entry_name=?") :
                         _T("INSERT INTO nc_persistent_storage (entry_value,channel_name,entry_name) VALUES (?,?,?)"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
@@ -167,7 +167,7 @@ void NCDriverServerStorageManager::clear(const TCHAR *key)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM nc_persistent_storage WHERE channel_name=? AND entry_name=?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_channelName, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
@@ -202,15 +202,20 @@ private:
    TCHAR m_driverName[MAX_OBJECT_NAME];
    char *m_configuration;
    const NCConfigurationTemplate *m_confTemplate;
-   TCHAR *m_errorMessage;
+   TCHAR m_errorMessage[MAX_NC_ERROR_MESSAGE];
    NCDriverServerStorageManager *m_storageManager;
    NCSendStatus m_lastStatus;
 
    void setError(const TCHAR *message)
    {
       m_lastStatus = NCSendStatus::FAILED;
-      MemFree(m_errorMessage);
-      m_errorMessage = MemCopyString(message);
+      _tcslcpy(m_errorMessage, message, MAX_NC_ERROR_MESSAGE);
+   }
+
+   void clearError()
+   {
+      m_lastStatus = NCSendStatus::SUCCESS;
+      m_errorMessage[0] = 0;
    }
 
    static THREAD_RESULT THREAD_CALL sendNotificationThread(void *arg);
@@ -221,7 +226,7 @@ public:
    ~NotificationChannel();
 
    void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body);
-   void fillMessage(NXCPMessage *msg, UINT32 base);
+   void fillMessage(NXCPMessage *msg, uint32_t base);
    const TCHAR *getName() const { return m_name; }
 
    void update(const TCHAR *description, const TCHAR *driverName, const char *config);
@@ -279,7 +284,7 @@ NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorage
    m_configuration = config;
    m_senderThread = ThreadCreateEx(NotificationChannel::sendNotificationThread, 0, this);
    m_driverLock = MutexCreate();
-   m_errorMessage = MemCopyString(errorMessage);
+   _tcslcpy(m_errorMessage, errorMessage, MAX_NC_ERROR_MESSAGE);
    m_lastStatus = NCSendStatus::UNKNOWN;
 }
 
@@ -294,7 +299,6 @@ NotificationChannel::~NotificationChannel()
    delete m_driver;
    delete m_storageManager;
    MemFree(m_configuration);
-   MemFree(m_errorMessage);
 }
 
 /**
@@ -314,7 +318,7 @@ THREAD_RESULT THREAD_CALL NotificationChannel::sendNotificationThread(void *arg)
       {
          if (nc->m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody()))
          {
-            nc->m_lastStatus = NCSendStatus::SUCCESS;
+            nc->clearError();
          }
          else
          {
@@ -352,8 +356,8 @@ void NotificationChannel::fillMessage(NXCPMessage *msg, UINT32 base)
    msg->setField(base + 1, m_description);
    msg->setField(base + 2, m_driverName);
    msg->setFieldFromMBString(base + 3, m_configuration);
-   msg->setField(base + 4, m_driver != NULL);
-   if (m_confTemplate != NULL)
+   msg->setField(base + 4, m_driver != nullptr);
+   if (m_confTemplate != nullptr)
    {
       msg->setField(base + 5, m_confTemplate->needSubject);
       msg->setField(base + 6, m_confTemplate->needRecipient);
@@ -364,7 +368,7 @@ void NotificationChannel::fillMessage(NXCPMessage *msg, UINT32 base)
       msg->setField(base + 6, true);
    }
    msg->setField(base + 7, m_errorMessage);
-   msg->setField(base + 8, static_cast<INT16>(m_lastStatus));
+   msg->setField(base + 8, static_cast<int16_t>(m_lastStatus));
 }
 
 /**
@@ -377,15 +381,15 @@ void NotificationChannel::update(const TCHAR *description, const TCHAR *driverNa
    if (_tcscmp(m_driverName, driverName) || strcmp(m_configuration, config))
    {
       NCDriverDescriptor *dd = s_driverList.get(driverName);
-      NCDriver *driver = NULL;
-      const NCConfigurationTemplate *confTemplate = NULL;
-      if (dd != NULL)
+      NCDriver *driver = nullptr;
+      const NCConfigurationTemplate *confTemplate = nullptr;
+      if (dd != nullptr)
       {
          Config cfg;
-         if (cfg.loadConfigFromMemory(config, (int)strlen(config), driverName, NULL, true, false))
+         if (cfg.loadConfigFromMemory(config, (int)strlen(config), driverName, nullptr, true, false))
          {
             driver = dd->instanceFactory(&cfg, m_storageManager);
-            if (driver != NULL)
+            if (driver != nullptr)
             {
                confTemplate = dd->confTemplate;
             }
@@ -428,7 +432,7 @@ void NotificationChannel::saveToDatabase()
       hStmt = DBPrepare(hdb,
                _T("INSERT INTO notification_channels (driver_name,description,configuration,name) VALUES (?,?,?,?)"));
    }
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_driverName, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
@@ -452,14 +456,14 @@ static void DeleteNotificationChannelInternal(TCHAR *name)
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM notification_channels WHERE name=?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, nc->getName(), DB_BIND_STATIC);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
    hStmt = DBPrepare(hdb, _T("DELETE FROM nc_persistent_storage WHERE channel_name=?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, nc->getName(), DB_BIND_STATIC);
       DBExecute(hStmt);
@@ -503,17 +507,17 @@ bool IsNotificationChannelExists(const TCHAR *name)
 static NotificationChannel *CreateNotificationChannel(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration)
 {
    NCDriverDescriptor *dd = s_driverList.get(driverName);
-   NCDriver *driver = NULL;
+   NCDriver *driver = nullptr;
    NCDriverServerStorageManager *storageManager = new NCDriverServerStorageManager(name);
-   const NCConfigurationTemplate *confTemplate = NULL;
+   const NCConfigurationTemplate *confTemplate = nullptr;
    StringBuffer errorMessage;
-   if (dd != NULL)
+   if (dd != nullptr)
    {
       Config config;
       if (config.loadConfigFromMemory(configuration, strlen(configuration), driverName, NULL, true, false))
       {
          driver = dd->instanceFactory(&config, storageManager);
-         if (driver != NULL)
+         if (driver != nullptr)
          {
             confTemplate = dd->confTemplate;
          }
@@ -562,7 +566,7 @@ void UpdateNotificationChannel(const TCHAR *name, const TCHAR *description, cons
 {
    s_channelListLock.lock();
    NotificationChannel *nc = s_channelList.get(name);
-   if(nc != NULL)
+   if(nc != nullptr)
       nc->update(description, driverName, configuration);
    s_channelListLock.unlock();
 }
@@ -579,7 +583,7 @@ static void RenameNotificationChannelInDB(std::pair<TCHAR *, TCHAR *> *names)
    DBBegin(hdb);
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE notification_channels SET name=? WHERE name=?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, names->second, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, names->first, DB_BIND_STATIC);
@@ -587,10 +591,10 @@ static void RenameNotificationChannelInDB(std::pair<TCHAR *, TCHAR *> *names)
       DBFreeStatement(hStmt);
    }
 
-   if(success)
+   if (success)
    {
       hStmt = DBPrepare(hdb, _T("UPDATE actions SET channel_name=? WHERE channel_name=? AND action_type=3"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, names->second, DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, names->first, DB_BIND_STATIC);
@@ -625,7 +629,7 @@ void RenameNotificationChannel(TCHAR *name, TCHAR *newName)
 {
    s_channelListLock.lock();
    NotificationChannel *nc = s_channelList.unlink(name);
-   if (nc != NULL)
+   if (nc != nullptr)
    {
       nc->updateName(newName);
       s_channelList.set(newName, nc);
@@ -647,7 +651,7 @@ void RenameNotificationChannel(TCHAR *name, TCHAR *newName)
 void GetNotificationChannels(NXCPMessage *msg)
 {
    s_channelListLock.lock();
-   UINT32 base = VID_NOTIFICATION_CHANNEL_BASE;
+   uint32_t base = VID_NOTIFICATION_CHANNEL_BASE;
    Iterator<std::pair<const TCHAR*, NotificationChannel*>> *it = s_channelList.iterator();
    msg->setField(VID_CHANNEL_COUNT, s_channelList.size());
    while(it->hasNext())
@@ -777,15 +781,15 @@ void LoadNotificationChannelDrivers()
    SetDllDirectory(path);
 #endif
    _TDIR *dir = _topendir(path);
-   if (dir != NULL)
+   if (dir != nullptr)
    {
       _tcscat(path, FS_PATH_SEPARATOR);
       int insPos = (int)_tcslen(path);
 
       struct _tdirent *f;
-      while((f = _treaddir(dir)) != NULL)
+      while((f = _treaddir(dir)) != nullptr)
       {
-         if (MatchString(_T("*.ncd"), f->d_name, FALSE))
+         if (MatchString(_T("*.ncd"), f->d_name, false))
          {
             _tcscpy(&path[insPos], f->d_name);
             LoadDriver(path);
@@ -807,7 +811,7 @@ void LoadNotificationChannels()
    int numberOfAddedDrivers = 0;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT result = DBSelect(hdb, _T("SELECT name,driver_name,description,configuration FROM notification_channels"));
-   if (result != NULL)
+   if (result != nullptr)
    {
       int numRows = DBGetNumRows(result);
       for (int i = 0; i < numRows; i++)
@@ -818,7 +822,7 @@ void LoadNotificationChannels()
          DBGetField(result, i, 0, name, MAX_OBJECT_NAME);
          DBGetField(result, i, 1, driverName, MAX_OBJECT_NAME);
          DBGetField(result, i, 2, description, MAX_NC_DESCRIPTION);
-         char *configuration = DBGetFieldA(result, i, 3, NULL, 0);
+         char *configuration = DBGetFieldA(result, i, 3, nullptr, 0);
          NotificationChannel *nc = CreateNotificationChannel(name, description, driverName, configuration);
          s_channelListLock.lock();
          s_channelList.set(name, nc);
@@ -834,7 +838,7 @@ void LoadNotificationChannels()
 }
 
 /**
- * Shitdown all notification channels
+ * Shutdown all notification channels
  */
 void ShutdownNotificationChannels()
 {

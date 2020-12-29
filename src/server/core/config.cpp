@@ -589,6 +589,13 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
       else
          g_flags &= ~AF_ENABLE_NXSL_CONTAINER_FUNCTIONS;
    }
+   else if (!_tcscmp(name, _T("Objects.Interfaces.Enable8021xStatusPoll")))
+   {
+      if (_tcstol(value, nullptr, 0))
+         g_flags |= AF_ENABLE_8021X_STATUS_POLL;
+      else
+         g_flags &= ~AF_ENABLE_8021X_STATUS_POLL;
+   }
    else if (!_tcscmp(name, _T("SNMP.Traps.AllowVarbindsConversion")))
    {
       if (_tcstol(value, nullptr, 0))

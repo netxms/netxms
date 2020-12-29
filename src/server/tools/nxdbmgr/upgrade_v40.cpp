@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.31 to 40.32
+ */
+static bool H_UpgradeFromV31()
+{
+   if (GetSchemaLevelForMajorVersion(37) < 3)
+   {
+      CHK_EXEC(CreateConfigParam(_T("Objects.Interfaces.Enable8021xStatusPoll"), _T("1"), _T("Globally enable or disable checking of 802.1x port state during status poll."), nullptr, 'B', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(37, 3));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(32));
+   return true;
+}
+
+/**
  * Upgrade from 40.30 to 40.31
  */
 static bool H_UpgradeFromV30()
@@ -899,6 +913,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 31, 40, 32, H_UpgradeFromV31 },
    { 30, 40, 31, H_UpgradeFromV30 },
    { 29, 40, 30, H_UpgradeFromV29 },
    { 28, 40, 29, H_UpgradeFromV28 },

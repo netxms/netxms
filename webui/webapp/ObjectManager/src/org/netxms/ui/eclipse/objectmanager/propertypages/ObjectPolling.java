@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ public class ObjectPolling extends PropertyPage
    private LabeledSpinner pollCount;
 	private List<Button> flagButtons = new ArrayList<Button>();
 	private List<Integer> flagValues = new ArrayList<Integer>();
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
@@ -137,6 +137,8 @@ public class ObjectPolling extends PropertyPage
       if (object.canUseEtherNetIP())
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_ETHERNET_IP, Messages.get().NodePolling_OptDisableEtherNetIP);
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_STATUS_POLL, Messages.get().NodePolling_OptDisableStatusPoll);
+      if (object.canHaveInterfaces())
+         addFlag(optionsGroup, AbstractNode.NF_DISABLE_8021X_STATUS_POLL, "Disable &802.1x port state checking during status poll");
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_CONF_POLL, Messages.get().NodePolling_OptDisableConfigPoll);
       if (object.canHaveInterfaces())
       {
@@ -149,7 +151,7 @@ public class ObjectPolling extends PropertyPage
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_PERF_COUNT, "Disable reading of Windows performance counters metadata");
 
 		/* use ifXTable */
-		if(object.canHaveInterfaces())
+      if (object.canHaveInterfaces())
 		{
    		Group ifXTableGroup = new Group(dialogArea, SWT.NONE);
    		ifXTableGroup.setText(Messages.get().NodePolling_GroupIfXTable);

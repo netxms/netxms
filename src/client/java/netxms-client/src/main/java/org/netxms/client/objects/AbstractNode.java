@@ -78,19 +78,20 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    public static final int NC_IS_PROFINET            = 0x02000000;
 
 	// Node flags
-   public static final int NF_EXTERNAL_GATEWAY       = 0x00010000;
-	public static final int NF_DISABLE_DISCOVERY_POLL = 0x00020000;
-	public static final int NF_DISABLE_TOPOLOGY_POLL  = 0x00040000;
-	public static final int NF_DISABLE_SNMP           = 0x00080000;
-	public static final int NF_DISABLE_NXCP           = 0x00100000;
-	public static final int NF_DISABLE_ICMP           = 0x00200000;
-	public static final int NF_FORCE_ENCRYPTION       = 0x00400000;
-   public static final int NF_DISABLE_ROUTE_POLL     = 0x00800000;
-   public static final int NF_AGENT_OVER_TUNNEL_ONLY = 0x01000000;
-   public static final int NF_SNMP_SETTINGS_LOCKED   = 0x02000000;
-   public static final int NF_PING_PRIMARY_IP        = 0x04000000;
-   public static final int NF_DISABLE_ETHERNET_IP    = 0x08000000;
-   public static final int NF_DISABLE_PERF_COUNT     = 0x10000000;
+   public static final int NF_EXTERNAL_GATEWAY          = 0x00010000;
+	public static final int NF_DISABLE_DISCOVERY_POLL    = 0x00020000;
+	public static final int NF_DISABLE_TOPOLOGY_POLL     = 0x00040000;
+	public static final int NF_DISABLE_SNMP              = 0x00080000;
+	public static final int NF_DISABLE_NXCP              = 0x00100000;
+	public static final int NF_DISABLE_ICMP              = 0x00200000;
+	public static final int NF_FORCE_ENCRYPTION          = 0x00400000;
+   public static final int NF_DISABLE_ROUTE_POLL        = 0x00800000;
+   public static final int NF_AGENT_OVER_TUNNEL_ONLY    = 0x01000000;
+   public static final int NF_SNMP_SETTINGS_LOCKED      = 0x02000000;
+   public static final int NF_PING_PRIMARY_IP           = 0x04000000;
+   public static final int NF_DISABLE_ETHERNET_IP       = 0x08000000;
+   public static final int NF_DISABLE_PERF_COUNT        = 0x10000000;
+   public static final int NF_DISABLE_8021X_STATUS_POLL = 0x20000000;
 
 	// Node state flags
 	public static final int NSF_AGENT_UNREACHABLE  = 0x00010000;

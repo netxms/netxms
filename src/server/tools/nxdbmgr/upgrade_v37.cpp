@@ -24,11 +24,21 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 37.2 to 40.0
+ * Upgrade from 37.3 to 40.0
+ */
+static bool H_UpgradeFromV3()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 37.2 to 37.3
  */
 static bool H_UpgradeFromV2()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(CreateConfigParam(_T("Objects.Interfaces.Enable8021xStatusPoll"), _T("1"), _T("Globally enable or disable checking of 802.1x port state during status poll."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(3));
    return true;
 }
 
@@ -84,7 +94,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 2,  40, 0,  H_UpgradeFromV2  },
+   { 3,  40, 0,  H_UpgradeFromV3  },
+   { 2,  37, 3,  H_UpgradeFromV2  },
    { 1,  37, 2,  H_UpgradeFromV1  },
    { 0,  37, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }
