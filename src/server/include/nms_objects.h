@@ -1577,7 +1577,7 @@ protected:
    IntegerArray<uint32_t> *m_vlans;
 
    void icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
-	void paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *node);
+	void paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *node);
 
 protected:
    virtual void onObjectDelete(UINT32 objectId) override;
@@ -3169,6 +3169,11 @@ public:
    {
       return (m_icmpStatCollectionMode == IcmpStatCollectionMode::DEFAULT) ?
                ((g_flags & AF_COLLECT_ICMP_STATISTICS) != 0) : (m_icmpStatCollectionMode == IcmpStatCollectionMode::ON);
+   }
+
+   bool is8021xPollingEnabled() const
+   {
+      return ((g_flags & AF_ENABLE_8021X_STATUS_POLL) != 0) && ((m_flags & NF_DISABLE_8021X_STATUS_POLL) == 0);
    }
 
    const uuid& getAgentId() const { return m_agentId; }

@@ -61,6 +61,7 @@
 #define MAX_POLICY_CONFIG_NAME      64
 #define MAX_INT32                   0x7FFFFFFF
 #define MAX_NC_DESCRIPTION          256
+#define MAX_NC_ERROR_MESSAGE        1024
 
 /**
  * NetXMS agent authentication methods
@@ -217,27 +218,28 @@
 /**
  * Node flags
  */
-#define NF_EXTERNAL_GATEWAY       0x00010000
-#define NF_DISABLE_DISCOVERY_POLL 0x00020000
-#define NF_DISABLE_TOPOLOGY_POLL  0x00040000
-#define NF_DISABLE_SNMP           0x00080000
-#define NF_DISABLE_NXCP           0x00100000
-#define NF_DISABLE_ICMP           0x00200000
-#define NF_FORCE_ENCRYPTION       0x00400000
-#define NF_DISABLE_ROUTE_POLL     0x00800000
-#define NF_AGENT_OVER_TUNNEL_ONLY 0x01000000
-#define NF_SNMP_SETTINGS_LOCKED   0x02000000
-#define NF_PING_PRIMARY_IP        0x04000000
-#define NF_DISABLE_ETHERNET_IP    0x08000000
-#define NF_DISABLE_PERF_COUNT     0x10000000
+#define NF_EXTERNAL_GATEWAY            0x00010000
+#define NF_DISABLE_DISCOVERY_POLL      0x00020000
+#define NF_DISABLE_TOPOLOGY_POLL       0x00040000
+#define NF_DISABLE_SNMP                0x00080000
+#define NF_DISABLE_NXCP                0x00100000
+#define NF_DISABLE_ICMP                0x00200000
+#define NF_FORCE_ENCRYPTION            0x00400000
+#define NF_DISABLE_ROUTE_POLL          0x00800000
+#define NF_AGENT_OVER_TUNNEL_ONLY      0x01000000
+#define NF_SNMP_SETTINGS_LOCKED        0x02000000
+#define NF_PING_PRIMARY_IP             0x04000000
+#define NF_DISABLE_ETHERNET_IP         0x08000000
+#define NF_DISABLE_PERF_COUNT          0x10000000
+#define NF_DISABLE_8021X_STATUS_POLL   0x20000000
 
 /**
  * Data Collection Target flags (lower bits of flags field)
  */
-#define DCF_DISABLE_STATUS_POLL    0x00000001
-#define DCF_DISABLE_CONF_POLL      0x00000002
-#define DCF_DISABLE_DATA_COLLECT   0x00000004
-#define DCF_LOCATION_CHANGE_EVENT  0x00000008
+#define DCF_DISABLE_STATUS_POLL        0x00000001
+#define DCF_DISABLE_CONF_POLL          0x00000002
+#define DCF_DISABLE_DATA_COLLECT       0x00000004
+#define DCF_LOCATION_CHANGE_EVENT      0x00000008
 
 /**
  * Common object runtime flags (can be used by all NetObj derived classes)

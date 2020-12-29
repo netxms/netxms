@@ -518,7 +518,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
       {
 			// Interface doesn't have an IP address, so we can't ping it
 			sendPollerMsg(rqId, POLLER_WARNING _T("      Interface status cannot be determined\r\n"));
-			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): cannot use ping for status check"), m_id, m_name);
+			nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): cannot use ping for status check"), m_id, m_name);
       }
       else
       {
@@ -539,7 +539,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 				case IF_OPER_STATE_UP:
 		         if (expectedState == IF_EXPECTED_STATE_AUTO)
 		         {
-		            DbgPrintf(5, _T("Interface::StatusPoll(%d,%s): auto expected state changed to UP"), m_id, m_name);
+		            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Interface::StatusPoll(%d,%s): auto expected state changed to UP"), m_id, m_name);
 		            expectedState = IF_EXPECTED_STATE_UP;
 		            setExpectedState(expectedState);
 		         }
@@ -548,7 +548,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 				case IF_OPER_STATE_DOWN:
                if (expectedState == IF_EXPECTED_STATE_AUTO)
                {
-                  DbgPrintf(5, _T("Interface::StatusPoll(%d,%s): auto expected state changed to DOWN"), m_id, m_name);
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Interface::StatusPoll(%d,%s): auto expected state changed to DOWN"), m_id, m_name);
                   expectedState = IF_EXPECTED_STATE_DOWN;
                   setExpectedState(expectedState);
                }
@@ -571,7 +571,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 		case IF_ADMIN_STATE_DOWN:
          if (expectedState == IF_EXPECTED_STATE_AUTO)
          {
-            DbgPrintf(5, _T("Interface::StatusPoll(%d,%s): auto expected state changed to DOWN"), m_id, m_name);
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Interface::StatusPoll(%d,%s): auto expected state changed to DOWN"), m_id, m_name);
             expectedState = IF_EXPECTED_STATE_DOWN;
             setExpectedState(expectedState);
          }
@@ -586,9 +586,9 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 	}
 
 	// Check 802.1x state
-	if ((pNode->getCapabilities() & NC_IS_8021X) && isPhysicalPort() && (snmpTransport != nullptr))
+	if ((pNode->getCapabilities() & NC_IS_8021X) && isPhysicalPort() && (snmpTransport != nullptr) && pNode->is8021xPollingEnabled())
 	{
-		DbgPrintf(5, _T("StatusPoll(%s): Checking 802.1x state for interface %s"), pNode->getName(), m_name);
+		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s): Checking 802.1x state for interface %s"), pNode->getName(), m_name);
 		paeStatusPoll(rqId, snmpTransport, pNode.get());
 		if ((m_dot1xPaeAuthState == PAE_STATE_FORCE_UNAUTH) && (newStatus < STATUS_MAJOR))
 			newStatus = STATUS_MAJOR;
@@ -598,7 +598,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 	if ((newStatus == STATUS_CRITICAL) && (pNode->getState() & DCSF_NETWORK_PATH_PROBLEM))
 	{
 		newStatus = STATUS_UNKNOWN;
-		DbgPrintf(6, _T("StatusPoll(%s): Status for interface %s reset to UNKNOWN"), pNode->getName(), m_name);
+		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): Status for interface %s reset to UNKNOWN"), pNode->getName(), m_name);
 	}
 
 	if (newStatus == m_pendingStatus)
@@ -624,10 +624,10 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 	int requiredPolls = (m_requiredPollCount > 0) ? m_requiredPollCount :
 	                    ((pNode->getRequiredPollCount() > 0) ? pNode->getRequiredPollCount() : g_requiredPolls);
 	sendPollerMsg(rqId, _T("      Interface is %s for %d poll%s (%d poll%s required for status change)\r\n"),
-	              GetStatusAsText(newStatus, true), m_statusPollCount, (m_statusPollCount == 1) ? _T("") : _T("s"),
-	              requiredPolls, (requiredPolls == 1) ? _T("") : _T("s"));
-	DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): newStatus=%d oldStatus=%d pollCount=%d requiredPolls=%d"),
-	          m_id, m_name, newStatus, oldStatus, m_statusPollCount, requiredPolls);
+	      GetStatusAsText(newStatus, true), m_statusPollCount, (m_statusPollCount == 1) ? _T("") : _T("s"),
+	      requiredPolls, (requiredPolls == 1) ? _T("") : _T("s"));
+	nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): newStatus=%d oldStatus=%d pollCount=%d requiredPolls=%d"),
+	      m_id, m_name, newStatus, oldStatus, m_statusPollCount, requiredPolls);
 
    if ((operState != m_confirmedOperState) && (m_operStatePollCount >= requiredPolls))
    {
@@ -663,7 +663,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 			EVENT_INTERFACE_TESTING   // Testing
 		};
 
-		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): status changed from %d to %d"), m_id, m_name, m_status, newStatus);
+		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): status changed from %d to %d"), m_id, m_name, m_status, newStatus);
 		m_status = newStatus;
 		m_pendingStatus = -1;	// Invalidate pending status
       if (!m_isSystem)
@@ -715,11 +715,11 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 	if (icmpProxy != 0)
 	{
 		sendPollerMsg(rqId, _T("      Starting ICMP ping via proxy\r\n"));
-		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): ping via proxy [%u]"), m_id, m_name, icmpProxy);
+		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): ping via proxy [%u]"), m_id, m_name, icmpProxy);
 		shared_ptr<Node> proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(icmpProxy));
 		if ((proxyNode != nullptr) && proxyNode->isNativeAgent() && !proxyNode->isDown())
 		{
-			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): proxy node found: %s"), m_id, m_name, proxyNode->getName());
+		   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): proxy node found: %s"), m_id, m_name, proxyNode->getName());
 			shared_ptr<AgentConnection> conn = proxyNode->createAgentConnection();
 			if (conn != nullptr)
 			{
@@ -734,7 +734,7 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 				      _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), a->toString(buffer));
 				      if (conn->getParameter(parameter, buffer, 64) == ERR_SUCCESS)
 				      {
-					      DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): proxy response: \"%s\""), m_id, m_name, buffer);
+				         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): proxy response: \"%s\""), m_id, m_name, buffer);
 					      TCHAR *eptr;
 					      value = _tcstol(buffer, &eptr, 10);
                      if (*eptr != 0)
@@ -745,7 +745,7 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
                }
             }
 
-            DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): response time %d"), m_id, m_name, (int)value);
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): response time %d"), m_id, m_name, (int)value);
 				if (value >= 0)
 				{
 					if (value < 10000)
@@ -762,13 +762,13 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 			}
 			else
 			{
-				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): cannot connect to agent on proxy node"), m_id, m_name);
+			   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): cannot connect to agent on proxy node"), m_id, m_name);
 				sendPollerMsg(rqId, POLLER_ERROR _T("      Unable to establish connection with proxy node\r\n"));
 			}
 		}
 		else
 		{
-			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): proxy node not available"), m_id, m_name);
+		   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): proxy node not available"), m_id, m_name);
 			sendPollerMsg(rqId, POLLER_ERROR _T("      ICMP proxy not available\r\n"));
 		}
 	}
@@ -776,13 +776,13 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 	{
 		sendPollerMsg(rqId, _T("      Starting ICMP ping\r\n"));
       const ObjectArray<InetAddress> *list = m_ipAddressList.getList();
-      UINT32 dwPingStatus = ICMP_TIMEOUT;
+      uint32_t dwPingStatus = ICMP_TIMEOUT;
       for(int i = 0; (i < list->size()) && (dwPingStatus != ICMP_SUCCESS); i++)
       {
          const InetAddress *a = list->get(i);
          if (a->isValidUnicast() && ((cluster == nullptr) || !cluster->isSyncAddr(*a)))
          {
-		      DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d)"),
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d)"),
                m_id, m_name, (const TCHAR *)a->toString(), g_icmpPingTimeout, g_icmpPingSize);
 		      dwPingStatus = IcmpPing(*a, 3, g_icmpPingTimeout, nullptr, g_icmpPingSize, false);
          }
@@ -797,14 +797,14 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 			*adminState = IF_ADMIN_STATE_UNKNOWN;
 			*operState = IF_OPER_STATE_DOWN;
 		}
-		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): ping result %d, adminState=%d, operState=%d"), m_id, m_name, dwPingStatus, *adminState, *operState);
+		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): ping result %d, adminState=%d, operState=%d"), m_id, m_name, dwPingStatus, *adminState, *operState);
 	}
 }
 
 /**
  * PAE (802.1x) status poll
  */
-void Interface::paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *node)
+void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *node)
 {
 	static const TCHAR *paeStateText[] =
 	{
@@ -838,24 +838,24 @@ void Interface::paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *nod
    sendPollerMsg(rqId, _T("      Checking port 802.1x status...\r\n"));
 
 	TCHAR oid[256];
-	INT32 paeState = PAE_STATE_UNKNOWN, backendState = BACKEND_STATE_UNKNOWN;
+	int32_t paeState = PAE_STATE_UNKNOWN, backendState = BACKEND_STATE_UNKNOWN;
 	bool modified = false;
 
 	_sntprintf(oid, 256, _T(".1.0.8802.1.1.1.1.2.1.1.1.%d"), m_index);
-	SnmpGet(pTransport->getSnmpVersion(), pTransport, oid, nullptr, 0, &paeState, sizeof(INT32), 0);
+	SnmpGet(transport->getSnmpVersion(), transport, oid, nullptr, 0, &paeState, sizeof(int32_t), 0);
 
 	_sntprintf(oid, 256, _T(".1.0.8802.1.1.1.1.2.1.1.2.%d"), m_index);
-	SnmpGet(pTransport->getSnmpVersion(), pTransport, oid, nullptr, 0, &backendState, sizeof(INT32), 0);
+	SnmpGet(transport->getSnmpVersion(), transport, oid, nullptr, 0, &backendState, sizeof(int32_t), 0);
 
 	if (m_dot1xPaeAuthState != (WORD)paeState)
 	{
 	   sendPollerMsg(rqId, _T("      Port PAE state changed to %s\r\n"), PAE_STATE_TEXT(paeState));
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Interface::paeStatusPoll(%s [%u]): Port PAE state changed to %s"), m_name, m_id, PAE_STATE_TEXT(paeState));
 		modified = true;
       if (!m_isSystem)
       {
 		   PostSystemEvent(EVENT_8021X_PAE_STATE_CHANGED, node->getId(), "dsdsds", paeState, PAE_STATE_TEXT(paeState),
-		             (UINT32)m_dot1xPaeAuthState, PAE_STATE_TEXT(m_dot1xPaeAuthState), m_id, m_name);
-
+		         static_cast<uint32_t>(m_dot1xPaeAuthState), PAE_STATE_TEXT(m_dot1xPaeAuthState), m_id, m_name);
 		   if (paeState == PAE_STATE_FORCE_UNAUTH)
 		   {
 			   PostSystemEvent(EVENT_8021X_PAE_FORCE_UNAUTH, node->getId(), "ds", m_id, m_name);
@@ -863,9 +863,11 @@ void Interface::paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *nod
       }
 	}
 
-	if (m_dot1xBackendAuthState != (WORD)backendState)
+	if (m_dot1xBackendAuthState != static_cast<int16_t>(backendState))
 	{
 	   sendPollerMsg(rqId, _T("      Port backend state changed to %s\r\n"), BACKEND_STATE_TEXT(backendState));
+	   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Interface::paeStatusPoll(%s [%u]): Port backend state changed to %s"),
+	         m_name, m_id, BACKEND_STATE_TEXT(backendState));
 		modified = true;
       if (!m_isSystem)
       {

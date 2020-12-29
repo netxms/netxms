@@ -419,6 +419,8 @@ static void LoadGlobalConfig()
       g_flags |= AF_SNMP_TRAP_DISCOVERY;
    if (ConfigReadBoolean(_T("UseSyslogForDiscovery"), false))
       g_flags |= AF_SYSLOG_DISCOVERY;
+   if (ConfigReadBoolean(_T("Objects.Interfaces.Enable8021xStatusPoll"), true))
+      g_flags |= AF_ENABLE_8021X_STATUS_POLL;
    if (ConfigReadBoolean(_T("Objects.Nodes.ResolveNames"), true))
       g_flags |= AF_RESOLVE_NODE_NAMES;
    if (ConfigReadBoolean(_T("Objects.Nodes.SyncNamesWithDNS"), false))
