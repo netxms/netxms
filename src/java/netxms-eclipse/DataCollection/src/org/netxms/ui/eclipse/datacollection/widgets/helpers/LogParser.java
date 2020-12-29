@@ -39,22 +39,22 @@ public class LogParser
 {   
 	@Attribute(required=false)
 	private String processALL = null;
-	
+
 	@Attribute(required=false)
 	private Integer trace = null;	
-   
+
    @Attribute(required=false)
    private String name = null;
-	
-   @ElementList(required=false, entry="file", inline=true)
-	private ArrayList<LogParserFile> file = new ArrayList<LogParserFile>(0);
-   
-	@ElementList(required=false)
-	private ArrayList<LogParserRule> rules = new ArrayList<LogParserRule>(0);
-	
-	@ElementMap(entry="macro", key="name", attribute=true, required=false)
-	private HashMap<String, String> macros = new HashMap<String, String>(0);
-	
+
+   @ElementMap(entry = "macro", key = "name", attribute = true, required = false)
+   private HashMap<String, String> macros = new HashMap<String, String>(0);
+
+   @ElementList(required = false, entry = "file", inline = true)
+   private ArrayList<LogParserFile> file = new ArrayList<LogParserFile>(0);
+
+   @ElementList(required = false)
+   private ArrayList<LogParserRule> rules = new ArrayList<LogParserRule>(0);
+
 	private LogParserType type;
 
    /**
@@ -100,14 +100,14 @@ public class LogParser
    public void setSyslogParser(LogParserType parserType)
    {
       type = parserType;
-      if(type != LogParserType.POLICY)
+      if (type != LogParserType.POLICY)
       {
          file.clear();
       }
 
       for(LogParserRule rule : rules)
       {
-         rule.updateFieldsCorrectly(type);
+         rule.fixFieldsForType(type);
       }
    }
    

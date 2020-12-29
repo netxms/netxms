@@ -283,7 +283,7 @@ public class LogParserRule
     */
    public void setLogName(String logName)
    {
-      this.logName = logName;
+      this.logName = ((logName == null) || logName.trim().isEmpty()) ? null : description;
    }
 
    /**
@@ -299,7 +299,7 @@ public class LogParserRule
 	 */
 	public void setDescription(String description)
 	{
-		this.description = description == null || description.trim().isEmpty() ? null : description;
+      this.description = ((description == null) || description.trim().isEmpty()) ? null : description;
 	}
 
 	/**
@@ -350,26 +350,36 @@ public class LogParserRule
 		this.agentAction = new LogParserAgentAction(agentAction);
 	}
 
-   public void updateFieldsCorrectly(LogParserType parserType)
+   /**
+    * Fix possible inconsistencies in field values according to parser type
+    *
+    * @param parserType
+    */
+   public void fixFieldsForType(LogParserType parserType)
    {
-      if (parserType != LogParserType.POLICY)
+      if (parserType == LogParserType.SYSLOG)
       {
-         if(facility == null || facility == 0)
+         if (facility == null || facility == 0)
             facility = id;
-         if(tag == null || tag.isEmpty())
+         if (tag == null || tag.isEmpty())
             tag = source;
-         if(severity == null || severity == 0)
-            severity = level;         
+         if (severity == null || severity == 0)
+            severity = level;
+         id = null;
+         source = null;
+         level = null;
       }
       else
       {
-         if(id == null || id == 0)
+         if (id == null || id == 0)
             id = facility;
-         if(source == null || source.isEmpty())
+         if (source == null || source.isEmpty())
             source = tag;
-         if(level == null || level == 0)
-            level = severity;          
+         if (level == null || level == 0)
+            level = severity;
+         facility = null;
+         tag = null;
+         severity = null;
       }
-      
    }
 }
