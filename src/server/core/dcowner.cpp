@@ -32,6 +32,7 @@ DataCollectionOwner::DataCollectionOwner() : super()
    m_status = STATUS_NORMAL;
    m_dciAccessLock = RWLockCreate();
    m_dciListModified = false;
+   m_instanceDiscoveryChanges = false;
 }
 
 /**
@@ -45,6 +46,7 @@ DataCollectionOwner::DataCollectionOwner(const TCHAR *name, const uuid& guid) : 
    m_isHidden = true;
    m_dciAccessLock = RWLockCreate();
    m_dciListModified = false;
+   m_instanceDiscoveryChanges = false;
    setCreationTime();
 
    if (!guid.isNull())
@@ -355,6 +357,8 @@ bool DataCollectionOwner::addDCObject(DCObject *object, bool alreadyLocked, bool
       if (object->getStatus() != ITEM_STATUS_DISABLED)
          object->setStatus(ITEM_STATUS_ACTIVE, false);
       object->clearBusyFlag();
+      if (object->getInstanceDiscoveryMethod() != IDM_NONE)
+         m_instanceDiscoveryChanges = true;
       success = true;
    }
 
@@ -363,9 +367,7 @@ bool DataCollectionOwner::addDCObject(DCObject *object, bool alreadyLocked, bool
 
 	if (success)
 	{
-		lockProperties();
       setModified(MODIFY_DATA_COLLECTION);
-		unlockProperties();
 		if (notify)
 		   NotifyClientsOnDCIUpdate(*this, object);
 	}
@@ -488,7 +490,10 @@ bool DataCollectionOwner::updateDCObject(uint32_t dcObjectId, const NXCPMessage&
                object->updateFromMessage(msg);
 
             if (object->getInstanceDiscoveryMethod() != IDM_NONE)
+            {
                updateInstanceDiscoveryItems(object);
+               m_instanceDiscoveryChanges = true;
+            }
 
             success = true;
          }
@@ -624,10 +629,16 @@ void DataCollectionOwner::applyDCIChanges(bool forcedChange)
       callChangeHook = true;
    }
    m_dciListModified = false;
+
+   bool callInstanceChangeHook = m_instanceDiscoveryChanges;
+   m_instanceDiscoveryChanges = false;
    unlockProperties();
 
    if (callChangeHook)
       onDataCollectionChange();
+
+   if (callInstanceChangeHook)
+      onInstanceDiscoveryChange();
 }
 
 /**

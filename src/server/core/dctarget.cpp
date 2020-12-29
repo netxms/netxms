@@ -66,6 +66,7 @@ DataCollectionTarget::DataCollectionTarget() : super(), m_statusPollState(_T("st
    m_proxyLoadFactor = 0;
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
    m_geoLocationRestrictionsViolated = false;
+   m_instanceDiscoveryPending = false;
 }
 
 /**
@@ -79,6 +80,7 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : super(name), m_s
    m_proxyLoadFactor = 0;
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
    m_geoLocationRestrictionsViolated = false;
+   m_instanceDiscoveryPending = false;
 }
 
 /**
@@ -2458,6 +2460,18 @@ void DataCollectionTarget::onDataCollectionChange()
 {
    super::onDataCollectionChange();
    calculateProxyLoad();
+}
+
+/**
+ * Hook for instance discovery configuration change
+ */
+void DataCollectionTarget::onInstanceDiscoveryChange()
+{
+   super::onInstanceDiscoveryChange();
+   nxlog_debug_tag(_T("obj.dc"), 5, _T("Instance discovery configuration change for %s [%u]"), m_name, m_id);
+   lockProperties();
+   m_instanceDiscoveryPending = true;
+   unlockProperties();
 }
 
 /**

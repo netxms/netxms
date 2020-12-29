@@ -34,8 +34,8 @@ IcmpStatCollector::IcmpStatCollector(int period)
    m_maxResponseTime = 0;
    m_avgResponseTime = 0;
    m_packetLoss = 0;
-   m_rawResponseTimes = MemAllocArrayNoInit<UINT16>(period);
-   memset(m_rawResponseTimes, 0xFF, period * sizeof(UINT16));
+   m_rawResponseTimes = MemAllocArrayNoInit<uint16_t>(period);
+   memset(m_rawResponseTimes, 0xFF, period * sizeof(uint16_t));
    m_writePos = 0;
    m_bufferSize = period;
 }
@@ -58,7 +58,7 @@ void IcmpStatCollector::recalculate()
 
    int sampleCount = 0;
    int responseCount = 0;
-   UINT64 totalTime = 0;
+   uint64_t totalTime = 0;
    for(int i = 0; i < m_bufferSize; i++)
    {
       if (m_rawResponseTimes[i] == 0xFFFF)
@@ -84,7 +84,7 @@ void IcmpStatCollector::recalculate()
 
    if (responseCount > 0)
    {
-      m_avgResponseTime = static_cast<UINT32>(totalTime / responseCount);
+      m_avgResponseTime = static_cast<uint32_t>(totalTime / responseCount);
       m_packetLoss = (sampleCount - responseCount) * 100 / sampleCount;
    }
    else
@@ -97,7 +97,7 @@ void IcmpStatCollector::recalculate()
 /**
  * Update collector
  */
-void IcmpStatCollector::update(UINT32 responseTime)
+void IcmpStatCollector::update(uint32_t responseTime)
 {
    if (responseTime == 10000)
    {
@@ -121,12 +121,12 @@ void IcmpStatCollector::resize(int period)
    if (m_bufferSize == period)
       return;
 
-   UINT16 *responseTimes = MemAllocArrayNoInit<UINT16>(period);
+   uint16_t *responseTimes = MemAllocArrayNoInit<uint16_t>(period);
    if (period > m_bufferSize)
    {
-      memcpy(responseTimes, &m_rawResponseTimes[m_writePos], (m_bufferSize - m_writePos) * sizeof(UINT16));
-      memcpy(&responseTimes[m_bufferSize - m_writePos], m_rawResponseTimes, m_writePos * sizeof(UINT16));
-      memset(&responseTimes[m_bufferSize], 0xFF, (period - m_bufferSize) * sizeof(UINT16));
+      memcpy(responseTimes, &m_rawResponseTimes[m_writePos], (m_bufferSize - m_writePos) * sizeof(uint16_t));
+      memcpy(&responseTimes[m_bufferSize - m_writePos], m_rawResponseTimes, m_writePos * sizeof(uint16_t));
+      memset(&responseTimes[m_bufferSize], 0xFF, (period - m_bufferSize) * sizeof(uint16_t));
       m_writePos = m_bufferSize;
    }
    else
@@ -151,17 +151,17 @@ void IcmpStatCollector::resize(int period)
 /**
  * Save to database
  */
-bool IcmpStatCollector::saveToDatabase(DB_HANDLE hdb, UINT32 objectId, const TCHAR *target) const
+bool IcmpStatCollector::saveToDatabase(DB_HANDLE hdb, uint32_t objectId, const TCHAR *target) const
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT sample_count FROM icmp_statistics WHERE object_id=? AND poll_target=?"));
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, target, DB_BIND_STATIC);
 
    DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult == NULL)
+   if (hResult == nullptr)
    {
       DBFreeStatement(hStmt);
       return false;
@@ -174,7 +174,7 @@ bool IcmpStatCollector::saveToDatabase(DB_HANDLE hdb, UINT32 objectId, const TCH
    hStmt = recordExists ?
             DBPrepare(hdb, _T("UPDATE icmp_statistics SET min_response_time=?,max_response_time=?,avg_response_time=?,last_response_time=?,sample_count=?,raw_response_times=? WHERE object_id=? AND poll_target=?")) :
             DBPrepare(hdb, _T("INSERT INTO icmp_statistics (min_response_time,max_response_time,avg_response_time,last_response_time,sample_count,raw_response_times,object_id,poll_target) VALUES (?,?,?,?,?,?,?,?)"));
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_minResponseTime);
@@ -211,26 +211,26 @@ bool IcmpStatCollector::saveToDatabase(DB_HANDLE hdb, UINT32 objectId, const TCH
 /**
  * Create collector from database record
  */
-IcmpStatCollector *IcmpStatCollector::loadFromDatabase(DB_HANDLE hdb, UINT32 objectId, const TCHAR *target, int period)
+IcmpStatCollector *IcmpStatCollector::loadFromDatabase(DB_HANDLE hdb, uint32_t objectId, const TCHAR *target, int period)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT min_response_time,max_response_time,avg_response_time,last_response_time,sample_count,raw_response_times FROM icmp_statistics WHERE object_id=? AND poll_target=?"));
-   if (hStmt == NULL)
-      return NULL;
+   if (hStmt == nullptr)
+      return nullptr;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, target, DB_BIND_STATIC);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult == NULL)
+   if (hResult == nullptr)
    {
       DBFreeStatement(hStmt);
-      return NULL;
+      return nullptr;
    }
 
    if (DBGetNumRows(hResult) == 0)
    {
       DBFreeResult(hResult);
       DBFreeStatement(hStmt);
-      return NULL;
+      return nullptr;
    }
 
    IcmpStatCollector *collector = new IcmpStatCollector(period);
@@ -242,8 +242,8 @@ IcmpStatCollector *IcmpStatCollector::loadFromDatabase(DB_HANDLE hdb, UINT32 obj
    int sampleCount = DBGetFieldLong(hResult, 0, 4);
    if (sampleCount > 0)
    {
-      TCHAR *data = DBGetField(hResult, 0, 5, NULL, 0);
-      if ((data != NULL) && (_tcslen(data) == sampleCount * 3))
+      TCHAR *data = DBGetField(hResult, 0, 5, nullptr, 0);
+      if ((data != nullptr) && (_tcslen(data) == sampleCount * 3))
       {
          int pos = 0;
          if (sampleCount > period)
@@ -256,7 +256,7 @@ IcmpStatCollector *IcmpStatCollector::loadFromDatabase(DB_HANDLE hdb, UINT32 obj
             TCHAR value[4];
             memcpy(value, &data[pos], 3 * sizeof(TCHAR));
             value[3] = 0;
-            collector->m_rawResponseTimes[i] = static_cast<UINT16>(_tcstoul(value, NULL, 16));
+            collector->m_rawResponseTimes[i] = static_cast<uint16_t>(_tcstoul(value, nullptr, 16));
          }
          if (sampleCount < collector->m_bufferSize)
             collector->m_writePos = sampleCount;

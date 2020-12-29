@@ -1255,12 +1255,12 @@ public:
 class NXCORE_EXPORTABLE IcmpStatCollector
 {
 private:
-   UINT32 m_lastResponseTime;
-   UINT32 m_minResponseTime;
-   UINT32 m_maxResponseTime;
-   UINT32 m_avgResponseTime;
-   UINT32 m_packetLoss;
-   UINT16 *m_rawResponseTimes;
+   uint32_t m_lastResponseTime;
+   uint32_t m_minResponseTime;
+   uint32_t m_maxResponseTime;
+   uint32_t m_avgResponseTime;
+   uint32_t m_packetLoss;
+   uint16_t *m_rawResponseTimes;
    int m_writePos;
    int m_bufferSize;
 
@@ -1270,18 +1270,18 @@ public:
    IcmpStatCollector(int period);
    ~IcmpStatCollector();
 
-   UINT32 last() const { return m_lastResponseTime; }
-   UINT32 average() const { return m_avgResponseTime; }
-   UINT32 min() const { return m_minResponseTime; }
-   UINT32 max() const { return m_maxResponseTime; }
-   UINT32 packetLoss() const { return m_packetLoss; }
+   uint32_t last() const { return m_lastResponseTime; }
+   uint32_t average() const { return m_avgResponseTime; }
+   uint32_t min() const { return m_minResponseTime; }
+   uint32_t max() const { return m_maxResponseTime; }
+   uint32_t packetLoss() const { return m_packetLoss; }
 
-   void update(UINT32 responseTime);
+   void update(uint32_t responseTime);
    void resize(int period);
 
-   bool saveToDatabase(DB_HANDLE hdb, UINT32 objectId, const TCHAR *target) const;
+   bool saveToDatabase(DB_HANDLE hdb, uint32_t objectId, const TCHAR *target) const;
 
-   static IcmpStatCollector *loadFromDatabase(DB_HANDLE hdb, UINT32 objectId, const TCHAR *target, int period);
+   static IcmpStatCollector *loadFromDatabase(DB_HANDLE hdb, uint32_t objectId, const TCHAR *target, int period);
 };
 
 /**
@@ -1295,6 +1295,7 @@ private:
 protected:
 	SharedObjectArray<DCObject> *m_dcObjects;
    bool m_dciListModified;
+   bool m_instanceDiscoveryChanges;
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 	RWLOCK m_dciAccessLock;
 
@@ -1305,6 +1306,7 @@ protected:
 
    virtual void onDataCollectionLoad() { }
    virtual void onDataCollectionChange() { }
+   virtual void onInstanceDiscoveryChange() { }
 
    void loadItemsFromDB(DB_HANDLE hdb);
    void destroyItems();
@@ -1345,7 +1347,7 @@ public:
    shared_ptr<DCObject> getDCObjectByDescription(const TCHAR *description, uint32_t userId) const;
    SharedObjectArray<DCObject> *getDCObjectsByRegex(const TCHAR *regex, bool searchName, UINT32 userId) const;
    NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR *name, const TCHAR *description, UINT32 userId) const;
-   void setDCIModificationFlag() { m_dciListModified = true; }
+   void setDCIModificationFlag() { lockProperties(); m_dciListModified = true; unlockProperties(); }
    void sendItemsToClient(ClientSession *pSession, UINT32 dwRqId) const;
    virtual HashSet<uint32_t> *getRelatedEventsList() const;
    StringSet *getDCIScriptList() const;
@@ -2048,6 +2050,7 @@ protected:
    GeoLocationControlMode m_geoLocationControlMode;
    IntegerArray<uint32_t> m_geoAreas;
    bool m_geoLocationRestrictionsViolated;
+   bool m_instanceDiscoveryPending;
    PollState m_statusPollState;
    PollState m_configurationPollState;
    PollState m_instancePollState;
@@ -2060,6 +2063,7 @@ protected:
 
    virtual void onDataCollectionLoad() override;
    virtual void onDataCollectionChange() override;
+   virtual void onInstanceDiscoveryChange() override;
 	virtual bool isDataCollectionDisabled();
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
@@ -2195,9 +2199,10 @@ inline bool DataCollectionTarget::lockForInstancePoll()
        (m_status != STATUS_UNMANAGED) &&
 	    (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<UINT32>(time(nullptr) - m_instancePollState.getLastCompleted()) > g_instancePollingInterval))
+       (m_instanceDiscoveryPending || (static_cast<UINT32>(time(nullptr) - m_instancePollState.getLastCompleted()) > g_instancePollingInterval)))
    {
       success = m_instancePollState.schedule();
+      m_instanceDiscoveryPending = false;
    }
    unlockProperties();
    return success;
