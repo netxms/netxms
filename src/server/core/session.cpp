@@ -3906,6 +3906,7 @@ void ClientSession::clearDCIData(NXCPMessage *request)
 					debugPrintf(4, _T("ClearDCIData: DCI %d at node %d"), dciId, object->getId());
 	            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Collected data for DCI \"%s\" [%d] on object \"%s\" [%d] cleared"),
 	                     dci->getDescription().cstr(), dci->getId(), object->getName(), object->getId());
+               notify(NX_NOTIFY_FORCE_DCI_POLL, object->getId());
 				}
 				else
 				{

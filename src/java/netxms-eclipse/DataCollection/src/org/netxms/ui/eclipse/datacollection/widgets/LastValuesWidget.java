@@ -109,7 +109,6 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	private Action actionCopyDciName;
 	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
 
-	
 	/**
 	 * Create "last values" widget
 	 * 
