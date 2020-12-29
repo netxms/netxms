@@ -10219,7 +10219,7 @@ void Node::onDataCollectionChange()
       ThreadPoolExecute(g_mainThreadPool, self(), &Node::onDataCollectionChangeAsyncCallback);
    }
 
-   UINT32 snmpProxyId = getEffectiveSnmpProxy(false);
+   uint32_t snmpProxyId = getEffectiveSnmpProxy(false);
    if (snmpProxyId != 0)
    {
       shared_ptr<Node> snmpProxy = static_pointer_cast<Node>(FindObjectById(snmpProxyId, OBJECT_NODE));
