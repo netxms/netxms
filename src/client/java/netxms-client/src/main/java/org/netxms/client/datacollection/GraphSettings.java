@@ -49,15 +49,16 @@ public class GraphSettings extends ChartConfig implements ObjectAction
    public static final int TIME_UNIT_HOUR = 1;
    public static final int TIME_UNIT_DAY = 2;
 
-   public static final int GF_AUTO_UPDATE     = 0x000001;
-   public static final int GF_AUTO_SCALE      = 0x000100;
-   public static final int GF_SHOW_GRID       = 0x000200;
-   public static final int GF_SHOW_LEGEND     = 0x000400;
-   public static final int GF_SHOW_RULER      = 0x000800;
-   public static final int GF_SHOW_HOST_NAMES = 0x001000;
-   public static final int GF_LOG_SCALE       = 0x002000;
-   public static final int GF_SHOW_TOOLTIPS   = 0x004000;
-   public static final int GF_ENABLE_ZOOM     = 0x008000;
+   public static final int GF_AUTO_UPDATE         = 0x000001;
+   public static final int GF_AUTO_SCALE          = 0x000100;
+   public static final int GF_SHOW_GRID           = 0x000200;
+   public static final int GF_SHOW_LEGEND         = 0x000400;
+   public static final int GF_SHOW_RULER          = 0x000800;
+   public static final int GF_SHOW_HOST_NAMES     = 0x001000;
+   public static final int GF_LOG_SCALE           = 0x002000;
+   public static final int GF_SHOW_TOOLTIPS       = 0x004000;
+   public static final int GF_ENABLE_ZOOM         = 0x008000;
+   public static final int GF_DISABLE_MULTIPLIERS = 0x010000;
 
    public static final int POSITION_LEFT = 1;
    public static final int POSITION_RIGHT = 2;

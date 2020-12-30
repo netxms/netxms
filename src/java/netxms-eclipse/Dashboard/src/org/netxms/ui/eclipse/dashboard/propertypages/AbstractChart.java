@@ -60,6 +60,7 @@ public class AbstractChart extends PropertyPage
 	private Button checkTranslucent;
 	private Button checkTransposed;
    private Button checkLogScale;
+   private Button checkUseMultipliers;
    private Button checkStacked;
    private Button checkAreaChart;
    private Button checkInteractive;
@@ -125,6 +126,14 @@ public class AbstractChart extends PropertyPage
 
       if (config instanceof LineChartConfig)
       {
+         checkUseMultipliers = new Button(optionsGroup, SWT.CHECK);
+         checkUseMultipliers.setText("Use &multipliers");
+         checkUseMultipliers.setSelection(((LineChartConfig)config).isUseMultipliers());
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         checkUseMultipliers.setLayoutData(gd);
+
          checkExtendedLegend = new Button(optionsGroup, SWT.CHECK);
          checkExtendedLegend.setText(Messages.get().AbstractChart_ExtendedLegend);
          checkExtendedLegend.setSelection(((LineChartConfig)config).isExtendedLegend());
@@ -296,9 +305,9 @@ public class AbstractChart extends PropertyPage
 		return 0;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -337,6 +346,7 @@ public class AbstractChart extends PropertyPage
 			((LineChartConfig)config).setShowGrid(checkShowGrid.getSelection());
          ((LineChartConfig)config).setExtendedLegend(checkExtendedLegend.getSelection());
          ((LineChartConfig)config).setLogScaleEnabled(checkLogScale.getSelection());
+         ((LineChartConfig)config).setUseMultipliers(checkUseMultipliers.getSelection());
          ((LineChartConfig)config).setStacked(checkStacked.getSelection());
          ((LineChartConfig)config).setArea(checkAreaChart.getSelection());
          ((LineChartConfig)config).setInteractive(checkInteractive.getSelection());

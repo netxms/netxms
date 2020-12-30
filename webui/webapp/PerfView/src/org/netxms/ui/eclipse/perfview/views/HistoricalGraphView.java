@@ -149,7 +149,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          }
       });
 
-      session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 
       settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
       settings.setTimeTo(new Date(System.currentTimeMillis()));
@@ -261,9 +261,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       }
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
     */
    @Override

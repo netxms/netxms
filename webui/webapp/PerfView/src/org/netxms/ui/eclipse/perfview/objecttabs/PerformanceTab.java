@@ -100,9 +100,9 @@ public class PerformanceTab extends ObjectTab
 		});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
+    */
 	@Override
 	public void objectChanged(final AbstractObject object)
 	{
@@ -159,7 +159,7 @@ public class PerformanceTab extends ObjectTab
 		job.setSystem(true);
 		job.schedule();
 	}
-	
+
 	/**
 	 * Update tab with received DCIs
 	 * 
@@ -176,7 +176,7 @@ public class PerformanceTab extends ObjectTab
 		for(PerfTabGraph chart : charts.values())
 			chart.dispose();
 		charts.clear();
-		
+
 		List<PerfTabGraphSettings> settings = new ArrayList<PerfTabGraphSettings>(items.length);
 		for(int i = 0; i < items.length; i++)
 		{
@@ -256,17 +256,17 @@ public class PerformanceTab extends ObjectTab
 		Rectangle r = scroller.getClientArea();
 		scroller.setMinSize(chartArea.computeSize(r.width, SWT.DEFAULT));
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
-	 */
+
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
+    */
 	@Override
 	public boolean showForObject(AbstractObject object)
 	{
 		return (object instanceof AbstractNode || object instanceof Cluster || object instanceof MobileDevice || object instanceof Sensor);
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
     */
    @Override

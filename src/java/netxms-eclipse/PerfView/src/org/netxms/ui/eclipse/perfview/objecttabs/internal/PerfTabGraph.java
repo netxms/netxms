@@ -115,6 +115,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		chart.setLegendVisible(settings.isShowLegendAlways());
 		chart.setExtendedLegend(settings.isExtendedLegend());
 		chart.setLogScaleEnabled(settings.isLogScaleEnabled());
+      chart.setUseMultipliers(settings.isUseMultipliers());
 		chart.setStacked(settings.isStacked());
       
       final Date from = new Date(System.currentTimeMillis() - settings.getTimeRangeMillis());

@@ -44,6 +44,9 @@ public class LineChartConfig extends AbstractChartConfig
    private boolean logScaleEnabled = false;
 
    @Element(required = false)
+   private boolean useMultipliers = true;
+
+   @Element(required = false)
    private boolean stacked = false;
    
    @Element(required = false)
@@ -174,6 +177,22 @@ public class LineChartConfig extends AbstractChartConfig
    public void setLogScaleEnabled(boolean logScaleEnabled)
    {
       this.logScaleEnabled = logScaleEnabled;
+   }
+
+   /**
+    * @return the useMultipliers
+    */
+   public boolean isUseMultipliers()
+   {
+      return useMultipliers;
+   }
+
+   /**
+    * @param useMultipliers the useMultipliers to set
+    */
+   public void setUseMultipliers(boolean useMultipliers)
+   {
+      this.useMultipliers = useMultipliers;
    }
 
    /**
