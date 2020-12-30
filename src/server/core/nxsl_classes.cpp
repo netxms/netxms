@@ -956,25 +956,25 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
 /**
  * Generic implementation for flag changing methods
  */
-static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result, UINT32 flag, bool invert)
+static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result, uint32_t flag, bool invert)
 {
-   if (!arg->isInteger())
-      return NXSL_ERR_NOT_INTEGER;
+   if (!arg->isBoolean())
+      return NXSL_ERR_NOT_BOOLEAN;
 
-   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   NetObj *nobject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
    if (arg->isTrue())
    {
       if (invert)
-         node->clearFlag(flag);
+         nobject->clearFlag(flag);
       else
-         node->setFlag(flag);
+         nobject->setFlag(flag);
    }
    else
    {
       if (invert)
-         node->setFlag(flag);
+         nobject->setFlag(flag);
       else
-         node->clearFlag(flag);
+         nobject->clearFlag(flag);
    }
 
    *result = object->vm()->createValue();
@@ -1222,7 +1222,7 @@ NXSL_METHOD_DEFINITION(Node, readAgentList)
       return NXSL_ERR_NOT_STRING;
 
    StringList *list;
-   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getListFromAgent(argv[0]->getValueAsCString(), &list);
+   uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getListFromAgent(argv[0]->getValueAsCString(), &list);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
    delete list;
    return 0;
@@ -1237,7 +1237,7 @@ NXSL_METHOD_DEFINITION(Node, readAgentTable)
       return NXSL_ERR_NOT_STRING;
 
    Table *table;
-   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getTableFromAgent(argv[0]->getValueAsCString(), &table);
+   uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getTableFromAgent(argv[0]->getValueAsCString(), &table);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, table)) : vm->createValue();
    return 0;
 }
@@ -1251,7 +1251,7 @@ NXSL_METHOD_DEFINITION(Node, readDriverParameter)
       return NXSL_ERR_NOT_STRING;
 
    TCHAR buffer[MAX_RESULT_LENGTH];
-   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromDeviceDriver(argv[0]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
+   uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromDeviceDriver(argv[0]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
    return 0;
 }
@@ -1265,7 +1265,7 @@ NXSL_METHOD_DEFINITION(Node, readInternalParameter)
       return NXSL_ERR_NOT_STRING;
 
    TCHAR buffer[MAX_RESULT_LENGTH];
-   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getInternalMetric(argv[0]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
+   uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getInternalMetric(argv[0]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
    return 0;
 }
@@ -1279,7 +1279,7 @@ NXSL_METHOD_DEFINITION(Node, readInternalTable)
       return NXSL_ERR_NOT_STRING;
 
    Table *table;
-   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getInternalTable(argv[0]->getValueAsCString(), &table);
+   uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getInternalTable(argv[0]->getValueAsCString(), &table);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, table)) : vm->createValue();
    return 0;
 }
@@ -1293,7 +1293,7 @@ NXSL_METHOD_DEFINITION(Node, readWebServiceParameter)
       return NXSL_ERR_NOT_STRING;
 
    TCHAR buffer[MAX_RESULT_LENGTH];
-   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromWebService(argv[0]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
+   uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromWebService(argv[0]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
    return 0;
 }
@@ -1307,9 +1307,26 @@ NXSL_METHOD_DEFINITION(Node, readWebServiceList)
       return NXSL_ERR_NOT_STRING;
 
    StringList *list;
-   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getListFromWebService(argv[0]->getValueAsCString(), &list);
+   uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getListFromWebService(argv[0]->getValueAsCString(), &list);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
    delete list;
+   return 0;
+}
+
+/**
+ * Node::setIfXTableUsageMode(mode) method
+ */
+NXSL_METHOD_DEFINITION(Node, setIfXTableUsageMode)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_STRING;
+
+   int mode = argv[0]->getValueAsInt32();
+   if ((mode != IFXTABLE_DISABLED) && (mode != IFXTABLE_ENABLED))
+      mode = IFXTABLE_DEFAULT;
+
+   static_cast<shared_ptr<Node>*>(object->getData())->get()->setIfXtableUsageMode(mode);
+   *result = vm->createValue();
    return 0;
 }
 
@@ -1345,6 +1362,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, readInternalTable, 1);
    NXSL_REGISTER_METHOD(Node, readWebServiceList, 1);
    NXSL_REGISTER_METHOD(Node, readWebServiceParameter, 1);
+   NXSL_REGISTER_METHOD(Node, setIfXTableUsageMode, 1);
 }
 
 /**
@@ -1818,6 +1836,30 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
 }
 
 /**
+ * Interface::enableAgentStatusPolling(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Interface, enableAgentStatusPolling)
+{
+   return ChangeFlagMethod(object, argv[0], result, IF_DISABLE_AGENT_STATUS_POLL, true);
+}
+
+/**
+ * Interface::enableICMPStatusPolling(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Interface, enableICMPStatusPolling)
+{
+   return ChangeFlagMethod(object, argv[0], result, IF_DISABLE_ICMP_STATUS_POLL, true);
+}
+
+/**
+ * Interface::enableSNMPStatusPolling(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Interface, enableSNMPStatusPolling)
+{
+   return ChangeFlagMethod(object, argv[0], result, IF_DISABLE_SNMP_STATUS_POLL, true);
+}
+
+/**
  * Interface::setExcludeFromTopology(enabled) method
  */
 NXSL_METHOD_DEFINITION(Interface, setExcludeFromTopology)
@@ -1882,6 +1924,9 @@ NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_NetObjClass()
 {
    setName(_T("Interface"));
 
+   NXSL_REGISTER_METHOD(Interface, enableAgentStatusPolling, 1);
+   NXSL_REGISTER_METHOD(Interface, enableICMPStatusPolling, 1);
+   NXSL_REGISTER_METHOD(Interface, enableSNMPStatusPolling, 1);
    NXSL_REGISTER_METHOD(Interface, setExcludeFromTopology, 1);
    NXSL_REGISTER_METHOD(Interface, setExpectedState, 1);
    NXSL_REGISTER_METHOD(Interface, setIncludeInIcmpPoll, 1);

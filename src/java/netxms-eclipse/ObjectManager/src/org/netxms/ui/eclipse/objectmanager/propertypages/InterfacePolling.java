@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -44,17 +46,16 @@ public class InterfacePolling extends PropertyPage
 {
 	private Spinner pollCount;
 	private Combo expectedState;
-	private Button checkExcludeFromTopology;
-   private Button checkIncludeInIcmpPoll;
 	private Interface object;
 	private int currentPollCount;
 	private int currentExpectedState;
-	private boolean currentExcludeFlag;
-   private boolean currentIncludeFlag;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   private int currentFlags;
+   private List<Button> flagButtons = new ArrayList<Button>();
+   private List<Integer> flagValues = new ArrayList<Integer>();
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -63,11 +64,6 @@ public class InterfacePolling extends PropertyPage
 		object = (Interface)getElement().getAdapter(Interface.class);
 		if (object == null)	// Paranoid check
 			return dialogArea;
-		
-		currentPollCount = object.getRequiredPollCount();
-		currentExpectedState = object.getExpectedState();
-		currentExcludeFlag = object.isExcludedFromTopology();
-		currentIncludeFlag = object.isIncludedInIcmpPoll();
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -84,17 +80,17 @@ public class InterfacePolling extends PropertyPage
       expectedState.add(Messages.get().InterfacePolling_StateDOWN);
       expectedState.add(Messages.get().InterfacePolling_StateIGNORE);
       expectedState.select(object.getExpectedState());
+
+      addFlag(dialogArea, Interface.IF_EXCLUDE_FROM_TOPOLOGY, Messages.get().InterfacePolling_ExcludeFromTopology);
+      addFlag(dialogArea, Interface.IF_INCLUDE_IN_ICMP_POLL, "&Collect ICMP response statistic for this interface");
+      addFlag(dialogArea, Interface.IF_DISABLE_AGENT_STATUS_POLL, "Disable status polling with NetXMS &agent");
+      addFlag(dialogArea, Interface.IF_DISABLE_SNMP_STATUS_POLL, "Disable status polling with &SNMP");
+      addFlag(dialogArea, Interface.IF_DISABLE_ICMP_STATUS_POLL, "Disable status polling with &ICMP");
       
-      checkExcludeFromTopology = new Button(dialogArea, SWT.CHECK);
-      checkExcludeFromTopology.setText(Messages.get().InterfacePolling_ExcludeFromTopology);
-      checkExcludeFromTopology.setSelection(object.isExcludedFromTopology());
-      checkExcludeFromTopology.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
-      
-      checkIncludeInIcmpPoll = new Button(dialogArea, SWT.CHECK);
-      checkIncludeInIcmpPoll.setText("Collect ICMP response statistic for this interface");
-      checkIncludeInIcmpPoll.setSelection(object.isIncludedInIcmpPoll());
-      checkIncludeInIcmpPoll.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
-      
+      currentPollCount = object.getRequiredPollCount();
+      currentExpectedState = object.getExpectedState();
+      currentFlags = object.getFlags() & collectFlagsMask();
+
 		return dialogArea;
 	}
 	
@@ -105,10 +101,12 @@ public class InterfacePolling extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
+      int flags = collectFlags();
+      int flagMask = collectFlagsMask();
+
 		if ((expectedState.getSelectionIndex() == currentExpectedState) && 
 			 (pollCount.getSelection() == currentPollCount) &&
-			 (checkExcludeFromTopology.getSelection() == currentExcludeFlag) &&
-			 (checkIncludeInIcmpPoll.getSelection() == currentIncludeFlag))
+            (flags == currentFlags))
 			return;	// nothing to change 
 		
 		if (isApply)
@@ -118,10 +116,7 @@ public class InterfacePolling extends PropertyPage
 		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
 		data.setExpectedState(expectedState.getSelectionIndex());
 		data.setRequiredPolls(pollCount.getSelection());
-		data.setObjectFlags(
-		      (checkExcludeFromTopology.getSelection() ? Interface.IF_EXCLUDE_FROM_TOPOLOGY : 0) |
-		      (checkIncludeInIcmpPoll.getSelection() ? Interface.IF_INCLUDE_IN_ICMP_POLL : 0),
-		      Interface.IF_EXCLUDE_FROM_TOPOLOGY | Interface.IF_INCLUDE_IN_ICMP_POLL);
+      data.setObjectFlags(flags, flagMask);
 		new ConsoleJob(Messages.get().InterfacePolling_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -146,7 +141,7 @@ public class InterfacePolling extends PropertyPage
 						{
 							currentExpectedState = data.getExpectedState();
 							currentPollCount = data.getRequiredPolls();
-							currentExcludeFlag = ((data.getObjectFlags() & Interface.IF_EXCLUDE_FROM_TOPOLOGY) != 0);
+                     currentFlags = collectFlags();
 							InterfacePolling.this.setValid(true);
 						}
 					});
@@ -155,9 +150,9 @@ public class InterfacePolling extends PropertyPage
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -165,12 +160,67 @@ public class InterfacePolling extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		applyChanges(true);
 	}
+
+   /**
+    * Add checkbox for flag
+    * 
+    * @param value
+    * @param name
+    */
+   private void addFlag(Composite parent, int value, String name)
+   {
+      final Button button = new Button(parent, SWT.CHECK);
+      button.setText(name);
+      GridData gd = new GridData();
+      gd.horizontalSpan = 2;
+      button.setLayoutData(gd);
+      button.setSelection((object.getFlags() & value) != 0);
+      flagButtons.add(button);
+      flagValues.add(value);
+   }
+
+   /**
+    * Collect new node flags from checkboxes
+    * 
+    * @return new node flags
+    */
+   private int collectFlags()
+   {
+      int flags = object.getFlags();
+      for(int i = 0; i < flagButtons.size(); i++)
+      {
+         if (flagButtons.get(i).getSelection())
+         {
+            flags |= flagValues.get(i);
+         }
+         else
+         {
+            flags &= ~flagValues.get(i);
+         }
+      }
+      return flags;
+   }
+
+   /**
+    * Collect mask for flags being modified
+    * 
+    * @return
+    */
+   private int collectFlagsMask()
+   {
+      int mask = 0;
+      for(int i = 0; i < flagButtons.size(); i++)
+      {
+         mask |= flagValues.get(i);
+      }
+      return mask;
+   }
 }
