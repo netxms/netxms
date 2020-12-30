@@ -1611,14 +1611,12 @@ bool DeleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb)
 /**
  * Send all alarms to client
  */
-void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
+void SendAlarmsToClient(uint32_t requestId, ClientSession *session)
 {
-   DWORD dwUserId = pSession->getUserId();
+   uint32_t userId = session->getUserId();
 
    // Prepare message
-   NXCPMessage msg;
-   msg.setCode(CMD_ALARM_DATA);
-   msg.setId(dwRqId);
+   NXCPMessage msg(CMD_ALARM_DATA, requestId);
 
    ObjectArray<Alarm> *alarms = GetAlarms();
    for(int i = 0; i < alarms->size(); i++)
@@ -1626,11 +1624,11 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
       Alarm *alarm = alarms->get(i);
       shared_ptr<NetObj> object = FindObjectById(alarm->getSourceObject());
       if ((object != nullptr) &&
-          object->checkAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS) &&
-          alarm->checkCategoryAccess(pSession))
+          object->checkAccessRights(userId, OBJECT_ACCESS_READ_ALARMS) &&
+          alarm->checkCategoryAccess(session))
       {
          alarm->fillMessage(&msg);
-         pSession->sendMessage(&msg);
+         session->sendMessage(msg);
          msg.deleteAllFields();
       }
    }
@@ -1638,7 +1636,7 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
 
    // Send end-of-list indicator
    msg.setField(VID_ALARM_ID, (uint32_t)0);
-   pSession->sendMessage(&msg);
+   session->sendMessage(msg);
 }
 
 /**

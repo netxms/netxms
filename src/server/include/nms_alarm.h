@@ -196,7 +196,7 @@ public:
 bool InitAlarmManager();
 void ShutdownAlarmManager();
 
-void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession);
+void SendAlarmsToClient(uint32_t requestId, ClientSession *session);
 void DeleteAlarmNotes(DB_HANDLE hdb, UINT32 alarmId);
 void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId);
 
