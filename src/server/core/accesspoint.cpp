@@ -427,7 +427,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
       DbgPrintf(6, _T("AccessPoint::statusPoll(%s [%d]): unable to get AP state from driver"), m_name, m_id);
       sendPollerMsg(rqId, POLLER_WARNING _T("      Unable to get AP state from controller\r\n"));
 
-		UINT32 icmpProxy = 0;
+		uint32_t icmpProxy = 0;
 
       if (IsZoningEnabled() && (controller->getZoneUIN() != 0))
 		{
@@ -542,8 +542,10 @@ void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, 
    nxlog_debug(5, _T("Starting configuration poll for access point %s (ID: %d), m_flags: %d"), m_name, m_id, m_flags);
 
    poller->setStatus(_T("autobind"));
-   applyUserTemplates();
-   updateContainerMembership();
+   if (ConfigReadBoolean(_T("Objects.AccessPoints.TemplateAutoApply"), false))
+      applyUserTemplates();
+   if (ConfigReadBoolean(_T("Objects.AccessPoints.ContainerAutoBind"), false))
+      updateContainerMembership();
 
    // Execute hook script
    poller->setStatus(_T("hook"));

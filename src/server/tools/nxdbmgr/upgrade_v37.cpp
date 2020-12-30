@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 37.3 to 37.4
+ */
+static bool H_UpgradeFromV3()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Objects.Clusters.ContainerAutoBind' WHERE var_name='ClusterContainerAutoBind'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Objects.Clusters.TemplateAutoApply' WHERE var_name='ClusterTemplateAutoApply'")));
+   CHK_EXEC(CreateConfigParam(_T("Objects.AccessPoints.ContainerAutoBind"), _T("0"), _T("Enable/disable container auto binding for access points."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Objects.AccessPoints.TemplateAutoApply"), _T("0"), _T("Enable/disable template auto apply for access points."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Objects.MobileDevices.ContainerAutoBind"), _T("0"), _T("Enable/disable container auto binding for mobile devices."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Objects.MobileDevices.TemplateAutoApply"), _T("0"), _T("Enable/disable template auto apply for mobile devices."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Objects.Sensors.ContainerAutoBind"), _T("0"), _T("Enable/disable container auto binding for sensors."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Objects.Sensors.TemplateAutoApply"), _T("0"), _T("Enable/disable template auto apply for sensors."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 37.2 to 37.3
  */
 static bool H_UpgradeFromV2()
@@ -85,6 +102,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 3,  37, 4,  H_UpgradeFromV3  },
    { 2,  37, 3,  H_UpgradeFromV2  },
    { 1,  37, 2,  H_UpgradeFromV1  },
    { 0,  37, 1,  H_UpgradeFromV0  },
