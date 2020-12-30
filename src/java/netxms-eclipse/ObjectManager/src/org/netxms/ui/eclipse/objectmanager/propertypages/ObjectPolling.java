@@ -179,7 +179,7 @@ public class ObjectPolling extends PropertyPage
 		}
 
       /* agent cache */      
-      if(object.canHaveAgent())      
+      if (object.canHaveAgent())
       {
          Group agentCacheGroup = new Group(dialogArea, SWT.NONE);
          agentCacheGroup.setText(Messages.get().NodePolling_AgentCacheMode);

@@ -1745,7 +1745,7 @@ public:
 
 	void updateZoneUIN();
 
-   void statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy);
+   void statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, uint32_t nodeIcmpProxy);
 
    uint32_t wakeUp();
 	void setExpectedState(int state) { lockProperties(); setExpectedStateInternal(state); unlockProperties(); }
@@ -3006,9 +3006,9 @@ protected:
    uint32_t m_snmpTrapStormActualDuration;
    TCHAR m_sshLogin[MAX_SSH_LOGIN_LEN];
 	TCHAR m_sshPassword[MAX_SSH_PASSWORD_LEN];
-	UINT32 m_sshProxy;
-	UINT32 m_portNumberingScheme;
-	UINT32 m_portRowCount;
+	uint32_t m_sshProxy;
+	uint32_t m_portNumberingScheme;
+	uint32_t m_portRowCount;
 	RackOrientation m_rackOrientation;
    IcmpStatCollectionMode m_icmpStatCollectionMode;
    StringObjectMap<IcmpStatCollector> *m_icmpStatCollectors;
@@ -3156,7 +3156,21 @@ public:
    void setLocalMgmtFlag() { setCapabilities(NC_IS_LOCAL_MGMT); }
    void clearLocalMgmtFlag() { clearCapabilities(NC_IS_LOCAL_MGMT); }
 
-   void setType(NodeType type, const TCHAR *subType) { lockProperties(); m_type = type; _tcslcpy(m_subType, subType, MAX_NODE_SUBTYPE_LENGTH); unlockProperties(); }
+   void setType(NodeType type, const TCHAR *subType)
+   {
+      lockProperties();
+      m_type = type;
+      _tcslcpy(m_subType, subType, MAX_NODE_SUBTYPE_LENGTH);
+      unlockProperties();
+   }
+
+   void setIfXtableUsageMode(int mode)
+   {
+      lockProperties();
+      m_nUseIfXTable = mode;
+      setModified(MODIFY_NODE_PROPERTIES);
+      unlockProperties();
+   }
 
    bool isSNMPSupported() const { return m_capabilities & NC_IS_SNMP ? true : false; }
    bool isNativeAgent() const { return m_capabilities & NC_IS_NATIVE_AGENT ? true : false; }

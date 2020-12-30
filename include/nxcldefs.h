@@ -303,15 +303,25 @@
 /**
  * Interface flags
  */
-#define IF_SYNTHETIC_MASK        0x00000001
-#define IF_PHYSICAL_PORT         0x00000002
-#define IF_EXCLUDE_FROM_TOPOLOGY 0x00000004
-#define IF_LOOPBACK              0x00000008
-#define IF_CREATED_MANUALLY      0x00000010
-#define IF_PEER_REFLECTION       0x00000020  /* topology information obtained by reflection */
-#define IF_INCLUDE_IN_ICMP_POLL  0x00000040  /* interface should be included into node ICMP poll */
-#define IF_EXPECTED_STATE_MASK   0x30000000	/* 2-bit field holding expected interface state */
-#define IF_USER_FLAGS_MASK       (IF_EXCLUDE_FROM_TOPOLOGY | IF_INCLUDE_IN_ICMP_POLL)    /* flags that can be changed by user */
+#define IF_SYNTHETIC_MASK              0x00000001
+#define IF_PHYSICAL_PORT               0x00000002
+#define IF_EXCLUDE_FROM_TOPOLOGY       0x00000004
+#define IF_LOOPBACK                    0x00000008
+#define IF_CREATED_MANUALLY            0x00000010
+#define IF_PEER_REFLECTION             0x00000020  /* topology information obtained by reflection */
+#define IF_INCLUDE_IN_ICMP_POLL        0x00000040  /* interface should be included into node ICMP poll */
+#define IF_DISABLE_SNMP_STATUS_POLL    0x00000080  /* do not use SNMP for reading interface status */
+#define IF_DISABLE_ICMP_STATUS_POLL    0x00000100  /* do not use ICMP for reading interface status */
+#define IF_DISABLE_AGENT_STATUS_POLL   0x00000200  /* do not use NetXMS agent for reading interface status */
+#define IF_EXPECTED_STATE_MASK         0x30000000	/* 2-bit field holding expected interface state */
+#define IF_USER_FLAGS_MASK             /* flags that can be changed by user */ \
+         ( \
+            IF_EXCLUDE_FROM_TOPOLOGY | \
+            IF_INCLUDE_IN_ICMP_POLL | \
+            IF_DISABLE_SNMP_STATUS_POLL | \
+            IF_DISABLE_ICMP_STATUS_POLL | \
+            IF_DISABLE_AGENT_STATUS_POLL \
+         )
 
 /**
  * Expected interface states

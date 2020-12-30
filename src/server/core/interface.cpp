@@ -455,14 +455,14 @@ bool Interface::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Perform status poll on interface
  */
-void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy)
+void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, uint32_t nodeIcmpProxy)
 {
    if (IsShutdownInProgress())
       return;
 
    m_pollRequestor = session;
-   shared_ptr<Node> pNode = getParentNode();
-   if (pNode == nullptr)
+   shared_ptr<Node> node = getParentNode();
+   if (node == nullptr)
    {
       m_status = STATUS_UNKNOWN;
       return;     // Cannot find parent node, which is VERY strange
@@ -473,19 +473,19 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 
 	InterfaceAdminState adminState = IF_ADMIN_STATE_UNKNOWN;
 	InterfaceOperState operState = IF_OPER_STATE_UNKNOWN;
-   BOOL bNeedPoll = TRUE;
+   bool needPoll = true;
 
    // Poll interface using different methods
-   if ((pNode->getCapabilities() & NC_IS_NATIVE_AGENT) &&
-       (!(pNode->getFlags() & NF_DISABLE_NXCP)) && (!(pNode->getState() & NSF_AGENT_UNREACHABLE)))
+   if (!(m_flags & IF_DISABLE_AGENT_STATUS_POLL) && (node->getCapabilities() & NC_IS_NATIVE_AGENT) &&
+       (!(node->getFlags() & NF_DISABLE_NXCP)) && (!(node->getState() & NSF_AGENT_UNREACHABLE)))
    {
       sendPollerMsg(rqId, _T("      Retrieving interface status from NetXMS agent\r\n"));
-      pNode->getInterfaceStatusFromAgent(m_index, &adminState, &operState);
+      node->getInterfaceStatusFromAgent(m_index, &adminState, &operState);
 		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new state from NetXMS agent: adinState=%d operState=%d"), m_id, m_name, adminState, operState);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
 			sendPollerMsg(rqId, POLLER_INFO _T("      Interface status retrieved from NetXMS agent\r\n"));
-         bNeedPoll = FALSE;
+         needPoll = false;
 		}
 		else
 		{
@@ -493,17 +493,17 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 		}
    }
 
-   if (bNeedPoll && (pNode->getCapabilities() & NC_IS_SNMP) &&
-       (!(pNode->getFlags() & NF_DISABLE_SNMP)) && (!(pNode->getState() & NSF_SNMP_UNREACHABLE)) &&
+   if (needPoll && !(m_flags & IF_DISABLE_SNMP_STATUS_POLL) && (node->getCapabilities() & NC_IS_SNMP) &&
+       (!(node->getFlags() & NF_DISABLE_SNMP)) && (!(node->getState() & NSF_SNMP_UNREACHABLE)) &&
 		 (snmpTransport != nullptr))
    {
       sendPollerMsg(rqId, _T("      Retrieving interface status from SNMP agent\r\n"));
-      pNode->getInterfaceStatusFromSNMP(snmpTransport, m_index, m_ifTableSuffixLen, m_ifTableSuffix, &adminState, &operState);
+      node->getInterfaceStatusFromSNMP(snmpTransport, m_index, m_ifTableSuffixLen, m_ifTableSuffix, &adminState, &operState);
 		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new state from SNMP: adminState=%d operState=%d"), m_id, m_name, adminState, operState);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
 			sendPollerMsg(rqId, POLLER_INFO _T("      Interface status retrieved from SNMP agent\r\n"));
-         bNeedPoll = FALSE;
+         needPoll = false;
 		}
 		else
 		{
@@ -511,10 +511,10 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 		}
    }
 
-   if (bNeedPoll)
+   if (needPoll && !(m_flags & IF_DISABLE_ICMP_STATUS_POLL))
    {
 		// Ping cannot be used for cluster sync interfaces
-      if ((pNode->getFlags() & NF_DISABLE_ICMP) || isLoopback() || !m_ipAddressList.hasValidUnicastAddress())
+      if ((node->getFlags() & NF_DISABLE_ICMP) || isLoopback() || !m_ipAddressList.hasValidUnicastAddress())
       {
 			// Interface doesn't have an IP address, so we can't ping it
 			sendPollerMsg(rqId, POLLER_WARNING _T("      Interface status cannot be determined\r\n"));
@@ -586,19 +586,19 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 	}
 
 	// Check 802.1x state
-	if ((pNode->getCapabilities() & NC_IS_8021X) && isPhysicalPort() && (snmpTransport != nullptr) && pNode->is8021xPollingEnabled())
+	if ((node->getCapabilities() & NC_IS_8021X) && isPhysicalPort() && (snmpTransport != nullptr) && node->is8021xPollingEnabled())
 	{
-		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s): Checking 802.1x state for interface %s"), pNode->getName(), m_name);
-		paeStatusPoll(rqId, snmpTransport, pNode.get());
+		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s): Checking 802.1x state for interface %s"), node->getName(), m_name);
+		paeStatusPoll(rqId, snmpTransport, node.get());
 		if ((m_dot1xPaeAuthState == PAE_STATE_FORCE_UNAUTH) && (newStatus < STATUS_MAJOR))
 			newStatus = STATUS_MAJOR;
 	}
 
 	// Reset status to unknown if node has known network connectivity problems
-	if ((newStatus == STATUS_CRITICAL) && (pNode->getState() & DCSF_NETWORK_PATH_PROBLEM))
+	if ((newStatus == STATUS_CRITICAL) && (node->getState() & DCSF_NETWORK_PATH_PROBLEM))
 	{
 		newStatus = STATUS_UNKNOWN;
-		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): Status for interface %s reset to UNKNOWN"), pNode->getName(), m_name);
+		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): Status for interface %s reset to UNKNOWN"), node->getName(), m_name);
 	}
 
 	if (newStatus == m_pendingStatus)
@@ -622,7 +622,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 	}
 
 	int requiredPolls = (m_requiredPollCount > 0) ? m_requiredPollCount :
-	                    ((pNode->getRequiredPollCount() > 0) ? pNode->getRequiredPollCount() : g_requiredPolls);
+	                    ((node->getRequiredPollCount() > 0) ? node->getRequiredPollCount() : g_requiredPolls);
 	sendPollerMsg(rqId, _T("      Interface is %s for %d poll%s (%d poll%s required for status change)\r\n"),
 	      GetStatusAsText(newStatus, true), m_statusPollCount, (m_statusPollCount == 1) ? _T("") : _T("s"),
 	      requiredPolls, (requiredPolls == 1) ? _T("") : _T("s"));
@@ -638,7 +638,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 
    if ((newStatus != oldStatus) && (m_statusPollCount >= requiredPolls) && (expectedState != IF_EXPECTED_STATE_IGNORE))
    {
-		static UINT32 statusToEvent[] =
+		static uint32_t statusToEvent[] =
 		{
 			EVENT_INTERFACE_UP,       // Normal
 			EVENT_INTERFACE_UP,       // Warning
@@ -650,7 +650,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 			EVENT_INTERFACE_DISABLED, // Disabled
 			EVENT_INTERFACE_TESTING   // Testing
 		};
-		static UINT32 statusToEventInverted[] =
+		static uint32_t statusToEventInverted[] =
 		{
 			EVENT_INTERFACE_EXPECTED_DOWN, // Normal
 			EVENT_INTERFACE_EXPECTED_DOWN, // Warning
@@ -672,7 +672,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
          const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
 		   PostSystemEventEx(eventQueue,
 		               (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status],
-                     pNode->getId(), "dsAdd", m_id, m_name, &addr, addr.getMaskBits(), m_index);
+                     node->getId(), "dsAdd", m_id, m_name, &addr, addr.getMaskBits(), m_index);
       }
    }
 	else if (expectedState == IF_EXPECTED_STATE_IGNORE)

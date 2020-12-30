@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,20 +39,23 @@ import org.netxms.client.snmp.SnmpObjectId;
 public class Interface extends GenericObject implements ZoneMember
 {
 	// Interface flags
-	public static final int IF_SYNTHETIC_MASK         = 0x00000001;
-	public static final int IF_PHYSICAL_PORT          = 0x00000002;
-	public static final int IF_EXCLUDE_FROM_TOPOLOGY  = 0x00000004;
-	public static final int IF_LOOPBACK               = 0x00000008;
-	public static final int IF_CREATED_MANUALLY       = 0x00000010;
-   public static final int IF_PEER_REFLECTION        = 0x00000020;
-   public static final int IF_INCLUDE_IN_ICMP_POLL   = 0x00000040;
-	public static final int IF_EXPECTED_STATE_MASK    = 0x30000000;
-	
+	public static final int IF_SYNTHETIC_MASK            = 0x00000001;
+	public static final int IF_PHYSICAL_PORT             = 0x00000002;
+	public static final int IF_EXCLUDE_FROM_TOPOLOGY     = 0x00000004;
+	public static final int IF_LOOPBACK                  = 0x00000008;
+	public static final int IF_CREATED_MANUALLY          = 0x00000010;
+   public static final int IF_PEER_REFLECTION           = 0x00000020;
+   public static final int IF_INCLUDE_IN_ICMP_POLL      = 0x00000040;
+   public static final int IF_DISABLE_SNMP_STATUS_POLL  = 0x00000080;
+   public static final int IF_DISABLE_ICMP_STATUS_POLL  = 0x00000100;
+   public static final int IF_DISABLE_AGENT_STATUS_POLL = 0x00000200;
+	public static final int IF_EXPECTED_STATE_MASK       = 0x30000000;
+
 	public static final int ADMIN_STATE_UNKNOWN      = 0;
 	public static final int ADMIN_STATE_UP           = 1;
 	public static final int ADMIN_STATE_DOWN         = 2;
 	public static final int ADMIN_STATE_TESTING      = 3;
-	
+
 	public static final int OPER_STATE_UNKNOWN       = 0;
 	public static final int OPER_STATE_UP            = 1;
 	public static final int OPER_STATE_DOWN          = 2;
@@ -63,7 +66,7 @@ public class Interface extends GenericObject implements ZoneMember
    public static final int EXPECTED_STATE_UP        = 0;
    public static final int EXPECTED_STATE_DOWN      = 1;
    public static final int EXPECTED_STATE_IGNORE    = 2;
-	
+
 	public static final int PAE_STATE_UNKNOWN        = 0;
 	public static final int PAE_STATE_INITIALIZE     = 1;
 	public static final int PAE_STATE_DISCONNECTED   = 2;
@@ -85,7 +88,7 @@ public class Interface extends GenericObject implements ZoneMember
 	public static final int BACKEND_STATE_IDLE       = 6;
 	public static final int BACKEND_STATE_INITIALIZE = 7;
 	public static final int BACKEND_STATE_IGNORE     = 8;
-	
+
 	private static final String[] stateText =
 		{
 			"UNKNOWN",
@@ -121,9 +124,9 @@ public class Interface extends GenericObject implements ZoneMember
 			"INITIALIZE",
 			"IGNORE"
 		};
-	
+
 	private static final Map<Integer, String> ifTypeNames;
-	
+
 	static
 	{
 	   ifTypeNames = new HashMap<Integer, String>();
@@ -425,7 +428,7 @@ public class Interface extends GenericObject implements ZoneMember
 	private SnmpObjectId ifTableSuffix;
    private long parentInterfaceId;
    private long[] vlans;
-	
+
 	/**
 	 * @param msg
 	 */
@@ -802,6 +805,36 @@ public class Interface extends GenericObject implements ZoneMember
    public boolean isIncludedInIcmpPoll()
    {
       return (flags & IF_INCLUDE_IN_ICMP_POLL) != 0;
+   }
+
+   /**
+    * Check if using ICMP for status polling is disabled for this interface.
+    * 
+    * @return true if using ICMP for status polling is disabled for this interface
+    */
+   public boolean isIcmpStatusPollDisabled()
+   {
+      return (flags & IF_DISABLE_ICMP_STATUS_POLL) != 0;
+   }
+
+   /**
+    * Check if using SNMP for status polling is disabled for this interface.
+    * 
+    * @return true if using SNMP for status polling is disabled for this interface
+    */
+   public boolean isSnmpStatusPollDisabled()
+   {
+      return (flags & IF_DISABLE_SNMP_STATUS_POLL) != 0;
+   }
+
+   /**
+    * Check if using NetXMS agent for status polling is disabled for this interface.
+    * 
+    * @return true if using NetXMS agent for status polling is disabled for this interface
+    */
+   public boolean isAgentStatusPollDisabled()
+   {
+      return (flags & IF_DISABLE_AGENT_STATUS_POLL) != 0;
    }
 
    /**
