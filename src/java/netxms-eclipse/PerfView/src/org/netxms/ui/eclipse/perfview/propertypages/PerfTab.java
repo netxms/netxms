@@ -51,6 +51,7 @@ public class PerfTab extends DCIPropertyPageDialog
    private Button checkStacked;
    private Button checkShowLegendAlways;
    private Button checkExtendedLegend;
+   private Button checkUseMultipliers;
    private Button checkInvertValues;
 	private LabeledText title;
 	private LabeledText name;
@@ -217,6 +218,13 @@ public class PerfTab extends DCIPropertyPageDialog
       gd.horizontalSpan = layout.numColumns;
       checkExtendedLegend.setLayoutData(gd);
 
+      checkUseMultipliers = new Button(optionsGroup, SWT.CHECK);
+      checkUseMultipliers.setText("Use &multipliers");
+      checkUseMultipliers.setSelection(settings.isUseMultipliers());
+      gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
+      checkUseMultipliers.setLayoutData(gd);
+
       checkInvertValues = new Button(optionsGroup, SWT.CHECK);
       checkInvertValues.setText("&Inverted values");
       checkInvertValues.setSelection(settings.isInvertedValues());
@@ -255,6 +263,7 @@ public class PerfTab extends DCIPropertyPageDialog
 		settings.setStacked(checkStacked.getSelection());
       settings.setShowLegendAlways(checkShowLegendAlways.getSelection());
       settings.setExtendedLegend(checkExtendedLegend.getSelection());
+      settings.setUseMultipliers(checkUseMultipliers.getSelection());
       settings.setInvertedValues(checkInvertValues.getSelection());
 		
 		settings.setAutoScale(yAxisRange.isAuto());

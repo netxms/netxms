@@ -53,6 +53,9 @@ public class PerfTabGraphSettings
    private boolean extendedLegend = true;
    
    @Element(required = false)
+   private boolean useMultipliers = true;
+
+   @Element(required = false)
    private double minYScaleValue = 0;
    
    @Element(required = false)
@@ -482,7 +485,23 @@ public class PerfTabGraphSettings
    {
       this.extendedLegend = extendedLegend;
    }
-   
+
+   /**
+    * @return the useMultipliers
+    */
+   public boolean isUseMultipliers()
+   {
+      return useMultipliers;
+   }
+
+   /**
+    * @param useMultipliers the useMultipliers to set
+    */
+   public void setUseMultipliers(boolean useMultipliers)
+   {
+      this.useMultipliers = useMultipliers;
+   }
+
    /**
     * Set modify Y base
     * 

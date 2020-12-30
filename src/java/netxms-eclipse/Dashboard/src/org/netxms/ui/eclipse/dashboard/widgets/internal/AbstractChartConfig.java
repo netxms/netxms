@@ -64,9 +64,9 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
    @Element(required = false)
    private boolean modifyYBase = false;
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
+    */
 	@Override
 	public Set<Long> getObjects()
 	{
@@ -76,9 +76,9 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 		return objects;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getDataCollectionItems()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getDataCollectionItems()
+    */
 	@Override
 	public Map<Long, Long> getDataCollectionItems()
 	{
@@ -88,9 +88,9 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 		return items;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapDataCollectionItems(java.util.Map)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapDataCollectionItems(java.util.Map)
+    */
 	@Override
 	public void remapDataCollectionItems(Map<Long, DciIdMatchingData> remapData)
 	{
@@ -265,7 +265,7 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
    {
       this.autoScale = autoScale;
    }
-   
+
    /**
     * Set modify Y base
     * 

@@ -112,6 +112,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 		chart.setStacked(config.isStacked());
 		chart.setLineWidth(config.getLineWidth());
 		chart.setTranslucent(config.isTranslucent());
+      chart.setUseMultipliers(config.isUseMultipliers());
 		if (!config.isAutoScale())
 		   chart.setYAxisRange(config.getMinYScaleValue(), config.getMaxYScaleValue());
       else
