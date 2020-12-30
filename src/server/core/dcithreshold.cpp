@@ -316,7 +316,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    }
    else if (m_function == F_SCRIPT)
    {
-      if (m_script != NULL)
+      if ((m_script != nullptr) && !m_script->isEmpty())
       {
          NXSL_VM *vm = CreateServerScriptVM(m_script, target, dci->createDescriptor());
          if (vm != NULL)

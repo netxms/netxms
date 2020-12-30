@@ -480,7 +480,7 @@ static void GenerateTrapEvent(const shared_ptr<Node>& node, UINT32 dwIndex, SNMP
    parameters.set(_T("sourcePort"), sourcePort);
 
    NXSL_VM *vm;
-   if (trapCfg->getScript() != nullptr)
+   if ((trapCfg->getScript() != nullptr) && !trapCfg->getScript()->isEmpty())
    {
       vm = CreateServerScriptVM(trapCfg->getScript(), node);
       if (vm != nullptr)

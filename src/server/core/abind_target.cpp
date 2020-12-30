@@ -197,7 +197,7 @@ AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<DataCollectionTar
 
    NXSL_VM *filter = nullptr;
    internalLock();
-   if (m_autoBindFlag && (m_bindFilter != nullptr))
+   if (m_autoBindFlag && (m_bindFilter != nullptr) && !m_bindFilter->isEmpty())
    {
       filter = CreateServerScriptVM(m_bindFilter, target);
       if (filter == nullptr)

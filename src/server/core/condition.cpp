@@ -345,7 +345,8 @@ void ConditionObject::check()
 
    if (!vm.isValid())
    {
-      nxlog_debug(6, _T("Cannot create VM for evaluation script for condition %s [%u]"), m_name, m_id);
+      if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
+         nxlog_debug(6, _T("Cannot create VM for evaluation script for condition %s [%u]"), m_name, m_id);
       return;
    }
 
