@@ -2795,7 +2795,7 @@ void ClientSession::onNewEvent(Event *pEvent)
  */
 void ClientSession::sendObjectUpdates()
 {
-   if (m_flags & (CSF_TERMINATE_REQUESTED | CSF_TERMINATED) != 0)
+   if ((m_flags & (CSF_TERMINATE_REQUESTED | CSF_TERMINATED)) != 0)
    {
       decRefCount();
       return;
@@ -2878,7 +2878,7 @@ void ClientSession::sendObjectUpdates()
    }
 
    MutexLock(m_pendingObjectNotificationsLock);
-   if ((m_pendingObjectNotifications->size() > 0) && (m_flags & (CSF_TERMINATE_REQUESTED | CSF_TERMINATED) == 0))
+   if ((m_pendingObjectNotifications->size() > 0) && ((m_flags & (CSF_TERMINATE_REQUESTED | CSF_TERMINATED)) == 0))
    {
       ThreadPoolScheduleRelative(g_clientThreadPool, m_objectNotificationDelay, this, &ClientSession::sendObjectUpdates);
    }

@@ -446,7 +446,6 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
       passwordValid = true;
    }
 
-result:
    delete user;   // delete copy
    RWLockWriteLock(s_userDatabaseLock);
    user = s_users.get(login);
