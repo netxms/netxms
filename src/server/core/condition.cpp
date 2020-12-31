@@ -330,15 +330,13 @@ void ConditionObject::doPoll(PollerInfo *poller)
  */
 void ConditionObject::check()
 {
-   NXSL_Value **ppValueList, *pValue;
-   int iOldStatus = m_status;
-
    if ((m_script == nullptr) || (m_status == STATUS_UNMANAGED) || IsShutdownInProgress())
       return;
 
    // Make copy of DCI list to avoid deadlock accessing nodes and DCIs on nodes
    // while holding lock on condition object properties
    lockProperties();
+   int iOldStatus = m_status;
    StructArray<INPUT_DCI> dciList(&m_dciList);
    ScriptVMHandle vm = CreateServerScriptVM(m_script, self());
    unlockProperties();
@@ -378,7 +376,7 @@ void ConditionObject::check()
       valueList.add((value != nullptr) ? value : vm->createValue());
    }
 
-	// Create array from values
+   // Create array from values
 	NXSL_Array *array = new NXSL_Array(vm);
 	for(int i = 0; i < valueList.size(); i++)
 		array->set(i + 1, vm->createValue(valueList.get(i)));
@@ -387,7 +385,7 @@ void ConditionObject::check()
    nxlog_debug(6, _T("Running evaluation script for condition %s [%u]"), m_name, m_id);
    if (vm->run(valueList))
    {
-      pValue = vm->getResult();
+      NXSL_Value *pValue = vm->getResult();
       if (pValue->isFalse())
       {
          if (m_isActive)

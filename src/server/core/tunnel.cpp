@@ -1549,7 +1549,7 @@ retry:
    for(int i = 0; i < s_pollers.size(); i++)
    {
       BackgroundSocketPollerHandle *p = s_pollers.get(i);
-      if (InterlockedIncrement(&p->usageCount) < s_maxTunnelsPerPoller)
+      if (static_cast<uint32_t>(InterlockedIncrement(&p->usageCount)) < s_maxTunnelsPerPoller)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): assigned to poller #%d"), request->addr.toString().cstr(), i);
          sp = p;

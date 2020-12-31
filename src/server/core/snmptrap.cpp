@@ -406,7 +406,7 @@ void InitTraps()
 {
    LoadTrapCfg();
 
-   uint64_t id = ConfigReadInt64(_T("LastSNMPTrapId"), 0);
+   int64_t id = ConfigReadInt64(_T("LastSNMPTrapId"), 0);
    if (id > s_trapId)
       s_trapId = id;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
