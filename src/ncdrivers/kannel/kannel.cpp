@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for Kannel gateway
-** Copyright (C) 2014-2019 Raden Solutions
+** Copyright (C) 2014-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -25,22 +25,7 @@
 #include <nms_util.h>
 #include <curl/curl.h>
 
-#ifndef CURL_MAX_HTTP_HEADER
-// workaround for older cURL versions
-#define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
-#endif
-
 #define DEBUG_TAG _T("ncd.kannel")
-
-/**
- * Request data for cURL call
- */
-struct RequestData
-{
-   size_t size;
-   size_t allocated;
-   char *data;
-};
 
 /**
  * Kannel driver class
@@ -57,7 +42,6 @@ public:
    KannelDriver(Config *config);
    virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
 };
-
 
 /**
  * Init driver
@@ -77,7 +61,7 @@ KannelDriver::KannelDriver(Config *config)
       { _T("Login"), CT_MB_STRING, 0, 0, sizeof(m_login), 0, m_login },
       { _T("Password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },
       { _T("Port"), CT_LONG, 0, 0, 0, 0,	&m_port },
-      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
    };
 
 	config->parseTemplate(_T("Kannel"), configTemplate);
@@ -86,23 +70,9 @@ KannelDriver::KannelDriver(Config *config)
 /**
  * Callback for processing data received from cURL
  */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
+static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
 {
-   RequestData *data = (RequestData *)userdata;
-   if ((data->allocated - data->size) < (size * nmemb))
-   {
-      char *newData = (char *)realloc(data->data, data->allocated + CURL_MAX_HTTP_HEADER);
-      if (newData == NULL)
-      {
-         return 0;
-      }
-      data->data = newData;
-      data->allocated += CURL_MAX_HTTP_HEADER;
-   }
-
-   memcpy(data->data + data->size, ptr, size * nmemb);
-   data->size += size * nmemb;
-
+   static_cast<ByteStream*>(context)->write(ptr, size * nmemb);
    return size * nmemb;
 }
 
@@ -127,22 +97,21 @@ bool KannelDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
 
-      RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-      memset(data, 0, sizeof(RequestData));
+      ByteStream *data = new ByteStream();
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, data);
 
       bool intlPrefix = (recipient[0] == _T('+'));
 #ifdef UNICODE
-      char *mbphone = MBStringFromWideString(intlPrefix ? &recipient[1] : recipient);
-      char *mbmsg = MBStringFromWideString(body);
-      char *phone = curl_easy_escape(curl, mbphone, 0);
-      char *msg = curl_easy_escape(curl, mbmsg, 0);
-      free(mbphone);
-      free(mbmsg);
+      char *utf8phone = UTF8StringFromWideString(intlPrefix ? &recipient[1] : recipient);
+      char *utf8msg = UTF8StringFromWideString(body);
 #else
-      char *phone = curl_easy_escape(curl, intlPrefix ? &recipient[1] : recipient, 0);
-      char *msg = curl_easy_escape(curl, body, 0);
+      char *utf8phone = UTF8StringFromMBString(intlPrefix ? &recipient[1] : recipient);
+      char *utf8msg = UTF8StringFromMBString(body);
 #endif
+      char *phone = curl_easy_escape(curl, utf8phone, 0);
+      char *msg = curl_easy_escape(curl, utf8msg, 0);
+      MemFree(utf8phone);
+      MemFree(utf8msg);
 
       char url[4096];
       snprintf(url, 4096, "http://%s:%d/cgi-bin/sendsms?username=%s&password=%s&to=%s%s&text=%s",
@@ -156,9 +125,7 @@ bool KannelDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
       {
          if (curl_easy_perform(curl) == CURLE_OK)
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("%d bytes received"), data->size);
-            if (data->allocated > 0)
-               data->data[data->size] = 0;
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("%d bytes received"), static_cast<int>(data->size()));
 
             long response = 500;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
@@ -177,8 +144,7 @@ bool KannelDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
       {
       	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
       }
-      MemFree(data->data);
-      free(data);
+      delete data;
       curl_easy_cleanup(curl);
    }
    else
@@ -192,12 +158,12 @@ bool KannelDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
 /**
  * Driver entry point
  */
-DECLARE_NCD_ENTRY_POINT(Kannel, NULL)
+DECLARE_NCD_ENTRY_POINT(Kannel, nullptr)
 {
    if (!InitializeLibCURL())
    {
       nxlog_debug_tag(DEBUG_TAG, 1, _T("cURL initialization failed"));
-      return NULL;
+      return nullptr;
    }
    return new KannelDriver(config);
 }
