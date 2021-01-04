@@ -403,11 +403,11 @@ private:
 	int m_allocated;
 	int m_numPorts;	// Number of ports in VLAN
 	VlanPortInfo *m_ports;	// member ports (slot/port pairs or ifIndex)
-	UINT32 m_nodeId;
+	uint32_t m_nodeId;
 
 public:
 	VlanInfo(int vlanId, int prm);
-	VlanInfo(const VlanInfo *src, UINT32 nodeId);
+	VlanInfo(const VlanInfo *src, uint32_t nodeId);
 	~VlanInfo();
 
 	int getVlanId() const { return m_vlanId; }
@@ -418,11 +418,11 @@ public:
 	UINT32 getNodeId() const { return m_nodeId; }
 
 	void add(const InterfacePhysicalLocation& location);
-	void add(UINT32 chassis, UINT32 module, UINT32 pic, UINT32 port) { add(InterfacePhysicalLocation(chassis, module, pic, port)); }
-	void add(UINT32 portId);
+	void add(uint32_t chassis, uint32_t module, uint32_t pic, uint32_t port) { add(InterfacePhysicalLocation(chassis, module, pic, port)); }
+	void add(uint32_t portId);
 	void setName(const TCHAR *name);
 
-	void resolvePort(int index, const InterfacePhysicalLocation& location, UINT32 ifIndex, UINT32 id);
+	void resolvePort(int index, const InterfacePhysicalLocation& location, uint32_t ifIndex, uint32_t id);
 };
 
 /**
@@ -441,11 +441,11 @@ public:
 	~VlanList();
 
 	void add(VlanInfo *vlan);
-	void addMemberPort(int vlanId, UINT32 portId);
+	void addMemberPort(int vlanId, uint32_t portId);
    void addMemberPort(int vlanId, const InterfacePhysicalLocation& location);
 
 	int size() { return m_size; }
-	VlanInfo *get(int index) { return ((index >= 0) && (index < m_size)) ? m_vlans[index] : NULL; }
+	VlanInfo *get(int index) { return ((index >= 0) && (index < m_size)) ? m_vlans[index] : nullptr; }
 	VlanInfo *findById(int id);
 	VlanInfo *findByName(const TCHAR *name);
 
