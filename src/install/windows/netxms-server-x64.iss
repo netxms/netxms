@@ -445,7 +445,7 @@ End;
 Function ShouldSkipPage(PageID: Integer): Boolean;
 Begin
   If PageID = HttpdSettingsPage.ID Then
-    Result := not IsComponentSelected('websrv')
+    Result := not WizardIsComponentSelected('websrv')
   Else
     Result := False;
 End;
