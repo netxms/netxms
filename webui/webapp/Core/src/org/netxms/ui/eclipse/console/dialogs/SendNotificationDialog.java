@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,15 +44,15 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class SendNotificationDialog extends Dialog
 {
-	private String phoneNumber;
+	private String recipient;
    private String subject;
    private String message;
    private String channelName;   
    private Combo channelNameCombo;
-	private LabeledText numberField;
+	private LabeledText recipientField;
    private LabeledText subjectField;
 	private LabeledText messageField;
-   private List<NotificationChannel> ncList = null;
+   private List<NotificationChannel> channels = null;
 	
 	/**
 	 * @param parentShell
@@ -60,22 +60,22 @@ public class SendNotificationDialog extends Dialog
 	public SendNotificationDialog(Shell parentShell)
 	{
 		super(parentShell);
-		phoneNumber = Activator.getDefault().getDialogSettings().get("SendNotification.PhoneNumber"); //$NON-NLS-1$
+		recipient = Activator.getDefault().getDialogSettings().get("SendNotification.PhoneNumber"); //$NON-NLS-1$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Send notification");
+      newShell.setText("Send Notification");
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -85,19 +85,17 @@ public class SendNotificationDialog extends Dialog
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
-		
 
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       channelNameCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Channel name", gd);
       channelNameCombo.addSelectionListener(new SelectionListener() {
-         
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            numberField.setEnabled(ncList.get(channelNameCombo.getSelectionIndex()).getConfigurationTemplate().needRecipient);
-            subjectField.setEnabled(ncList.get(channelNameCombo.getSelectionIndex()).getConfigurationTemplate().needSubject);
+            recipientField.setEnabled(channels.get(channelNameCombo.getSelectionIndex()).getConfigurationTemplate().needRecipient);
+            subjectField.setEnabled(channels.get(channelNameCombo.getSelectionIndex()).getConfigurationTemplate().needSubject);
          }
          
          @Override
@@ -107,14 +105,14 @@ public class SendNotificationDialog extends Dialog
          }
       });
 		
-		numberField = new LabeledText(dialogArea, SWT.NONE);
-		numberField.setLabel("Recipient");
-		numberField.setText(phoneNumber);
+		recipientField = new LabeledText(dialogArea, SWT.NONE);
+		recipientField.setLabel("Recipient");
+		recipientField.setText(recipient);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 300;
-		numberField.setLayoutData(gd);
+		recipientField.setLayoutData(gd);
 		
 		subjectField = new LabeledText(dialogArea, SWT.NONE);
 		subjectField.setLabel("Subject");
@@ -130,16 +128,16 @@ public class SendNotificationDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		messageField.setLayoutData(gd);
 		
-		if ((phoneNumber != null) && !phoneNumber.isEmpty())
+		if ((recipient != null) && !recipient.isEmpty())
 			messageField.getTextControl().setFocus();		
 
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      new ConsoleJob("Get server actions", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Get list of notification channels", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            ncList = session.getNotificationChannels();
-            ncList.sort(new Comparator<NotificationChannel>() {
+            channels = session.getNotificationChannels();
+            channels.sort(new Comparator<NotificationChannel>() {
 
                @Override
                public int compare(NotificationChannel o1, NotificationChannel o2)
@@ -152,7 +150,7 @@ public class SendNotificationDialog extends Dialog
                @Override
                public void run()
                {
-                  updateNCSlector();
+                  updateChannelSelector();
                }
             });
          }
@@ -166,52 +164,58 @@ public class SendNotificationDialog extends Dialog
 		
 		return dialogArea;
 	}
-	
+
 	/**
 	 * Update notification channel selector
 	 */
-	private void updateNCSlector()
+   private void updateChannelSelector()
 	{
       channelNameCombo.removeAll();
-      for(int i = 0; i < ncList.size(); i++)
+      for(int i = 0; i < channels.size(); i++)
       {
-         NotificationChannel nc = ncList.get(i);
+         NotificationChannel nc = channels.get(i);
          channelNameCombo.add(nc.getName());
       }	   
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
-		phoneNumber = numberField.getText().trim();
+		recipient = recipientField.getText().trim();
 		subject = subjectField.getText();
       message = messageField.getText();
       channelName = channelNameCombo.getItem(channelNameCombo.getSelectionIndex());
-		Activator.getDefault().getDialogSettings().put("SendNotification.PhoneNumber", phoneNumber); //$NON-NLS-1$
+		Activator.getDefault().getDialogSettings().put("SendNotification.PhoneNumber", recipient); //$NON-NLS-1$
 		super.okPressed();
 	}
 
 	/**
-	 * @return the phoneNumber
-	 */
-	public String getPhoneNumber()
+    * Get recipient address.
+    *
+    * @return recipient address
+    */
+	public String getRecipient()
 	{
-		return phoneNumber;
+		return recipient;
 	}
 
 	/**
-	 * @return the message
-	 */
+    * Get message text.
+    *
+    * @return message text
+    */
 	public String getMessage()
 	{
 		return message;
 	}
 
    /**
-    * @return the subject
+    * Get subject.
+    *
+    * @return subject
     */
    public String getSubject()
    {
@@ -219,7 +223,9 @@ public class SendNotificationDialog extends Dialog
    }
 
    /**
-    * @return the channelName
+    * Get channel name.
+    *
+    * @return channel name
     */
    public String getChannelName()
    {

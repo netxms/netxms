@@ -72,9 +72,10 @@
       <view
             allowMultiple="false"
             category="org.netxms.ui.eclipse.viewcategory.config"
-            class="org.netxms.ui.eclipse.serverconfig.views.NotificationChannelView"
-            id="org.netxms.ui.eclipse.serverconfig.views.NotificationChannelView"
-            name="Notification Channel"
+            class="org.netxms.ui.eclipse.serverconfig.views.NotificationChannels"
+            icon="icons/nchannels.png"
+            id="org.netxms.ui.eclipse.serverconfig.views.NotificationChannels"
+            name="Notification Channels"
             restorable="true">
       </view>
       <view
@@ -258,6 +259,7 @@
      <action
            class="org.netxms.ui.eclipse.serverconfig.actions.OpenNotificationChannelList"
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_notification_channels"
+           icon="icons/nchannels.png"
            id="org.netxms.ui.eclipse.serverconfig.actions.open_notification_channels"
            label="Notification channels"
            menubarPath="config/additions"

@@ -24,7 +24,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
 import org.netxms.ui.eclipse.serverconfig.Messages;
-import org.netxms.ui.eclipse.serverconfig.views.NotificationChannelView;
+import org.netxms.ui.eclipse.serverconfig.views.NotificationChannels;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
@@ -61,7 +61,7 @@ public class OpenNotificationChannelList implements IWorkbenchWindowActionDelega
 		{	
 			try 
 			{
-				window.getActivePage().showView(NotificationChannelView.ID);
+				window.getActivePage().showView(NotificationChannels.ID);
 			} 
 			catch (PartInitException e) 
 			{

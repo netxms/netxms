@@ -62,9 +62,9 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * List of notification channels
  */
-public class NotificationChannelView extends ViewPart
+public class NotificationChannels extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.NotificationChannelView"; //$NON-NLS-1$
+   public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.NotificationChannels"; //$NON-NLS-1$
 
 	// Columns
 	public static final int COLUMN_NAME = 0;
