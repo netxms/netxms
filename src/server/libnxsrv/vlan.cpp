@@ -62,10 +62,10 @@ void VlanList::add(VlanInfo *vlan)
  * @param vlanId VLAN ID
  * @param portId port's 32bit identifier (usually ifIndex or slot/port pair)
  */
-void VlanList::addMemberPort(int vlanId, UINT32 portId)
+void VlanList::addMemberPort(int vlanId, uint32_t portId)
 {
 	VlanInfo *vlan = findById(vlanId);
-	if (vlan != NULL)
+	if (vlan != nullptr)
 	{
 		vlan->add(portId);
 	}
@@ -80,7 +80,7 @@ void VlanList::addMemberPort(int vlanId, UINT32 portId)
 void VlanList::addMemberPort(int vlanId, const InterfacePhysicalLocation& location)
 {
    VlanInfo *vlan = findById(vlanId);
-   if (vlan != NULL)
+   if (vlan != nullptr)
    {
       vlan->add(location);
    }
@@ -96,7 +96,7 @@ VlanInfo *VlanList::findById(int id)
 	for(int i = 0; i < m_size; i++)
 		if (m_vlans[i]->getVlanId() == id)
 			return m_vlans[i];
-	return NULL;
+	return nullptr;
 }
 
 /**
@@ -109,7 +109,7 @@ VlanInfo *VlanList::findByName(const TCHAR *name)
 	for(int i = 0; i < m_size; i++)
 		if (!_tcsicmp(m_vlans[i]->getName(), name))
 			return m_vlans[i];
-	return NULL;
+	return nullptr;
 }
 
 /**
@@ -154,7 +154,7 @@ VlanInfo::VlanInfo(int vlanId, int prm)
 /**
  * VlanInfo constructor for creating independent object
  */
-VlanInfo::VlanInfo(const VlanInfo *src, UINT32 nodeId)
+VlanInfo::VlanInfo(const VlanInfo *src, uint32_t nodeId)
 {
    m_vlanId = src->m_vlanId;
    m_portRefMode = src->m_portRefMode;
@@ -177,8 +177,11 @@ VlanInfo::~VlanInfo()
 /**
  * Add port identified by single 32bit ID (usually ifIndex)
  */
-void VlanInfo::add(UINT32 portId)
+void VlanInfo::add(uint32_t portId)
 {
+   for(int i = 0; i < m_numPorts; i++)
+      if (m_ports[i].portId == portId)
+         return;  // Already added
 	if (m_numPorts == m_allocated)
 	{
 		m_allocated += 64;
@@ -194,6 +197,9 @@ void VlanInfo::add(UINT32 portId)
  */
 void VlanInfo::add(const InterfacePhysicalLocation& location)
 {
+   for(int i = 0; i < m_numPorts; i++)
+      if (m_ports[i].location.equals(location))
+         return;  // Already added
    if (m_numPorts == m_allocated)
    {
       m_allocated += 64;
@@ -224,7 +230,7 @@ void VlanInfo::setName(const TCHAR *name)
  * @param ifIndex interface index
  * @param id interface object ID
  */
-void VlanInfo::resolvePort(int index, const InterfacePhysicalLocation& location, UINT32 ifIndex, UINT32 id)
+void VlanInfo::resolvePort(int index, const InterfacePhysicalLocation& location, uint32_t ifIndex, uint32_t id)
 {
 	if ((index >= 0) && (index < m_numPorts))
 	{
