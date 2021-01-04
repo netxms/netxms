@@ -22,7 +22,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.NotificationChannel;
-import org.netxms.ui.eclipse.serverconfig.views.NotificationChannelView;
+import org.netxms.ui.eclipse.serverconfig.views.NotificationChannels;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -42,19 +42,19 @@ public class NotificationChannelListComparator extends ViewerComparator
 		NotificationChannel nc2 = (NotificationChannel)e2;
 		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
-			case NotificationChannelView.COLUMN_NAME:
+			case NotificationChannels.COLUMN_NAME:
 				result = nc1.getName().compareToIgnoreCase(nc2.getName());
 				break;
-         case NotificationChannelView.COLUMN_DRIVER:
+         case NotificationChannels.COLUMN_DRIVER:
             result = nc1.getDriverName().compareToIgnoreCase(nc2.getDriverName());
             break;
-			case NotificationChannelView.COLUMN_DESCRIPTION:
+			case NotificationChannels.COLUMN_DESCRIPTION:
 				result = nc1.getDescription().compareToIgnoreCase(nc2.getDescription());
 				break;
-         case NotificationChannelView.COLUMN_LAST_STATUS:
+         case NotificationChannels.COLUMN_LAST_STATUS:
             result = nc1.getLastStatusAsString().compareToIgnoreCase(nc2.getLastStatusAsString());
             break;
-         case NotificationChannelView.COLUMN_ERROR_MESSAGE:
+         case NotificationChannels.COLUMN_ERROR_MESSAGE:
             result = nc1.getErrorMessage().compareToIgnoreCase(nc2.getErrorMessage());
             break;
 			default:

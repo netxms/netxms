@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,27 +37,27 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public class SendNotification implements IWorkbenchWindowActionDelegate
 {
 	private IWorkbenchWindow window;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#dispose()
-	 */
+
+   /**
+    * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#dispose()
+    */
 	@Override
 	public void dispose()
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#init(org.eclipse.ui.IWorkbenchWindow)
-	 */
+   /**
+    * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#init(org.eclipse.ui.IWorkbenchWindow)
+    */
 	@Override
 	public void init(IWorkbenchWindow window)
 	{
 		this.window = window;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+    */
 	@Override
 	public void run(IAction action)
 	{
@@ -69,32 +69,32 @@ public class SendNotification implements IWorkbenchWindowActionDelegate
 			return;
 		
 		final NXCSession session = ConsoleSharedData.getSession();
-		new ConsoleJob("Send notification to" + dlg.getPhoneNumber(), window.getActivePage().getActivePart(), Activator.PLUGIN_ID, null) {
+		new ConsoleJob("Send notification to" + dlg.getRecipient(), window.getActivePage().getActivePart(), Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.sendNotification(dlg.getChannelName(), dlg.getPhoneNumber(), dlg.getSubject(), dlg.getMessage());
+				session.sendNotification(dlg.getChannelName(), dlg.getRecipient(), dlg.getSubject(), dlg.getMessage());
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						final String message =  "Notification to " + dlg.getPhoneNumber() + " sent sucessfully";
-						MessageDialogHelper.openInformation(window.getShell(), "Send notification", message);
+                  final String message = String.format("Notification to %s has been enqueued", dlg.getRecipient());
+                  MessageDialogHelper.openInformation(window.getShell(), "Send Notification", message);
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Cannot send notification to " + dlg.getPhoneNumber();
+            return String.format("Cannot send notification to %s", dlg.getRecipient());
 			}
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+    */
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{

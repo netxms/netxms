@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NotificationChannel;
 import org.netxms.ui.eclipse.serverconfig.Activator;
-import org.netxms.ui.eclipse.serverconfig.views.NotificationChannelView;
+import org.netxms.ui.eclipse.serverconfig.views.NotificationChannels;
 
 /**
  * Label provider for notification channel elements
@@ -45,7 +45,7 @@ public class NotificationChannelLabelProvider extends LabelProvider implements I
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-	   if(columnIndex == NotificationChannelView.COLUMN_NAME)
+	   if(columnIndex == NotificationChannels.COLUMN_NAME)
 	      if(((NotificationChannel)element).isActive())
             return imageActive; 	      
 	      else
@@ -62,15 +62,15 @@ public class NotificationChannelLabelProvider extends LabelProvider implements I
 	{
 		switch(columnIndex)
 		{
-			case NotificationChannelView.COLUMN_NAME:
+			case NotificationChannels.COLUMN_NAME:
 				return ((NotificationChannel)element).getName();
-			case NotificationChannelView.COLUMN_DESCRIPTION:
+			case NotificationChannels.COLUMN_DESCRIPTION:
 				return ((NotificationChannel)element).getDescription();
-			case NotificationChannelView.COLUMN_DRIVER:
+			case NotificationChannels.COLUMN_DRIVER:
 				return ((NotificationChannel)element).getDriverName();
-         case NotificationChannelView.COLUMN_LAST_STATUS:
+         case NotificationChannels.COLUMN_LAST_STATUS:
             return ((NotificationChannel)element).getLastStatusAsString();
-         case NotificationChannelView.COLUMN_ERROR_MESSAGE:
+         case NotificationChannels.COLUMN_ERROR_MESSAGE:
             return ((NotificationChannel)element).getErrorMessage();
 		}
 		return null;

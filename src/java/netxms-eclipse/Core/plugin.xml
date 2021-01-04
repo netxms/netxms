@@ -209,6 +209,7 @@
          <action
                class="org.netxms.ui.eclipse.console.actions.SendNotification"
                definitionId="org.netxms.ui.eclipse.console.commands.send_notification"
+               icon="icons/send_notification.png"
                id="org.netxms.ui.eclipse.console.actions.send_notification"
                label="Send notification"
                menubarPath="tools/additions">
