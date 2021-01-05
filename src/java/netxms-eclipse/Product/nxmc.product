@@ -9,7 +9,7 @@
          NetXMS Management Console
 
 Version 4.0.0
-Copyright (c) 2003-2020 Raden Solutions
+Copyright (c) 2003-2021 Raden Solutions
       </text>
    </aboutInfo>
 
@@ -19,7 +19,7 @@ Copyright (c) 2003-2020 Raden Solutions
    <launcherArgs>
       <programArgs>-data @user.home/.nxmc/data -nl en
       </programArgs>
-      <vmArgs>-Xms128m -Xmx1024m
+      <vmArgs>-Xms128m -Xmx1024m -Dosgi.configuration.area=@user.home/.nxmc/eclipse
       </vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts
       </vmArgsMac>
@@ -40,6 +40,7 @@ Copyright (c) 2003-2020 Raden Solutions
          <bmp/>
       </win>
    </launcher>
+
 
    <vm>
    </vm>
