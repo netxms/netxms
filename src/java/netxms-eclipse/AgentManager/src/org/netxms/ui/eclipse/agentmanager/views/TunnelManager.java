@@ -413,6 +413,7 @@ public class TunnelManager extends ViewPart
       cd.setZoneUIN(dlg.getZoneUIN());
       cd.setSshLogin(dlg.getSshLogin());
       cd.setSshPassword(dlg.getSshPassword());
+      cd.setSshPort(dlg.getSshPort());
 
       final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob("Create new node and bind tunnel", this, Activator.PLUGIN_ID, null) {

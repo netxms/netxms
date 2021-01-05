@@ -401,6 +401,7 @@ CREATE TABLE nodes
   hypervisor_info varchar(255) null,
   ssh_login varchar(63) null,
   ssh_password varchar(63) null,
+  ssh_port integer not null,
   ssh_proxy integer not null,
   port_rows integer not null,
   port_numbering_scheme integer not null,

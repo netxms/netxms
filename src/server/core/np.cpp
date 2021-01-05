@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -83,6 +83,7 @@ NewNodeData::NewNodeData(const InetAddress& ipAddr)
    sshProxyId = 0;
    sshLogin[0] = 0;
    sshPassword[0] = 0;
+   sshPort = SSH_PORT;
    zoneUIN = 0;
    doConfPoll = false;
    origin = NODE_ORIGIN_MANUAL;
@@ -108,6 +109,7 @@ NewNodeData::NewNodeData(const NXCPMessage *msg, const InetAddress& ipAddr)
    sshProxyId = msg->getFieldAsUInt32(VID_SSH_PROXY);
    msg->getFieldAsString(VID_SSH_LOGIN, sshLogin, MAX_SSH_LOGIN_LEN);
    msg->getFieldAsString(VID_SSH_PASSWORD, sshPassword, MAX_SSH_PASSWORD_LEN);
+   sshPort = msg->getFieldAsUInt16(VID_SSH_PORT);
    zoneUIN = msg->getFieldAsUInt32(VID_ZONE_UIN);
    doConfPoll = false;
    origin = NODE_ORIGIN_MANUAL;

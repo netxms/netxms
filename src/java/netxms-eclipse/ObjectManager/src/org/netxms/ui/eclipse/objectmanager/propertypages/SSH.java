@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -44,6 +45,7 @@ public class SSH extends PropertyPage
    private ObjectSelector sshProxy;
    private LabeledText sshLogin;
    private LabeledText sshPassword;
+   private LabeledText sshPort;
 
    /* (non-Javadoc)
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -71,6 +73,11 @@ public class SSH extends PropertyPage
       sshPassword.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       sshPassword.setText(node.getSshPassword());
       
+      sshPort = new LabeledText(dialogArea, SWT.NONE);
+      sshPort.setLabel("Port");
+      sshPort.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      sshPort.setText(Integer.toString(node.getSshPort()));
+      
       sshProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       sshProxy.setLabel(Messages.get().Communication_Proxy);
       sshProxy.setEmptySelectionName("<default>");
@@ -91,6 +98,18 @@ public class SSH extends PropertyPage
       
       if (isApply)
          setValid(false);
+
+      try
+      {
+         md.setSshPort(Integer.parseInt(sshPort.getText(), 10));
+      }
+      catch(NumberFormatException e)
+      {
+         MessageDialog.openWarning(getShell(), Messages.get().Communication_Warning, "Please enter valid SSH port number");
+         if (isApply)
+            setValid(true);
+         return false;
+      }
       
       md.setSshProxy(sshProxy.getObjectId());
       md.setSshLogin(sshLogin.getText().trim());
@@ -156,5 +175,6 @@ public class SSH extends PropertyPage
       sshProxy.setObjectId(0);
       sshLogin.setText("netxms");
       sshPassword.setText("");
+      sshPort.setText("22");
    }
 }

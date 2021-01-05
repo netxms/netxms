@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -756,6 +756,7 @@ struct NXCORE_EXPORTABLE NewNodeData
    uint32_t sshProxyId;
    TCHAR sshLogin[MAX_SSH_LOGIN_LEN];
    TCHAR sshPassword[MAX_SSH_PASSWORD_LEN];
+   uint16_t sshPort;
    shared_ptr<Cluster> cluster;
    int32_t zoneUIN;
    bool doConfPoll;
@@ -3006,6 +3007,7 @@ protected:
    uint32_t m_snmpTrapStormActualDuration;
    TCHAR m_sshLogin[MAX_SSH_LOGIN_LEN];
 	TCHAR m_sshPassword[MAX_SSH_PASSWORD_LEN];
+	uint16_t m_sshPort;
 	uint32_t m_sshProxy;
 	uint32_t m_portNumberingScheme;
 	uint32_t m_portRowCount;
@@ -3222,6 +3224,7 @@ public:
    uint32_t getIcmpProxy() const { return m_icmpProxy; }
    const TCHAR *getSshLogin() const { return m_sshLogin; }
    const TCHAR *getSshPassword() const { return m_sshPassword; }
+   const uint16_t getSshPort() const { return m_sshPort; }
    uint32_t getSshProxy() const { return m_sshProxy; }
    time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
    SharedString getPrimaryHostName() const { return GetAttributeWithLock(m_primaryHostName, m_mutexProperties); }

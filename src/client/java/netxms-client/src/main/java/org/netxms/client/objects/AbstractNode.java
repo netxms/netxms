@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -160,6 +160,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    protected RackOrientation rackOrientation;
    protected String sshLogin;
    protected String sshPassword;
+   protected int sshPort;
    protected long sshProxyId;
    protected int portRowCount;
    protected int portNumberingScheme;
@@ -260,6 +261,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
       rackHeight = msg.getFieldAsInt16(NXCPCodes.VID_RACK_HEIGHT);
       sshLogin = msg.getFieldAsString(NXCPCodes.VID_SSH_LOGIN);
       sshPassword = msg.getFieldAsString(NXCPCodes.VID_SSH_PASSWORD);
+      sshPort = msg.getFieldAsInt32(NXCPCodes.VID_SSH_PORT);
       sshProxyId = msg.getFieldAsInt64(NXCPCodes.VID_SSH_PROXY);
       portRowCount = msg.getFieldAsInt16(NXCPCodes.VID_PORT_ROW_COUNT);
       portNumberingScheme = msg.getFieldAsInt16(NXCPCodes.VID_PORT_NUMBERING_SCHEME);
@@ -913,6 +915,14 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    public String getSshPassword()
    {
       return sshPassword;
+   }
+
+   /**
+    * @return the sshPort
+    */
+   public int getSshPort()
+   {
+      return sshPort;
    }
 
    /**

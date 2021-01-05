@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -60,6 +60,7 @@
 #define MAX_INSTANCE_COLUMNS     8
 #define ZONE_PROXY_KEY_LENGTH    16
 #define HARDWARE_ID_LENGTH       SHA1_DIGEST_SIZE
+#define SSH_PORT                 22
 
 /**
  * Agent policy types
