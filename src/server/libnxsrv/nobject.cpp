@@ -897,7 +897,20 @@ NXSL_Value *NObject::getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) c
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes->get(name);
    if (attr != nullptr)
+   {
       value = vm->createValue(attr->value);
+   }
+   else
+   {
+      TCHAR *v;
+      bool isAllocated;
+      if (getObjectAttribute(name, &v, &isAllocated))
+      {
+         value = vm->createValue(v);
+         if (isAllocated)
+            MemFree(v);
+      }
+   }
    unlockCustomAttributes();
    return value;
 }
