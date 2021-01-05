@@ -642,7 +642,7 @@ static inline void ExecuteInAllSessionsLogError(const TCHAR *function, const TCH
 bool ExecuteInSession(WTS_SESSION_INFO *session, TCHAR *command, bool allSessions)
 {
    const TCHAR *function = allSessions ? _T("ExecuteInAllSessions") : _T("ExecuteInSession");
-   nxlog_debug_tag(WTS_DEBUG_TAG, 7, _T("%s: attepting to execute command in session #%u (%s)"),
+   nxlog_debug_tag(WTS_DEBUG_TAG, 7, _T("%s: attempting to execute command in session #%u (%s)"),
          function, session->SessionId, session->pWinStationName);
  
    bool success = false;

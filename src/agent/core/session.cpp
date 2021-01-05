@@ -1061,6 +1061,7 @@ void CommSession::updateConfig(NXCPMessage *request, NXCPMessage *response)
       const BYTE *config = request->getBinaryFieldPtr(VID_CONFIG_FILE, &size);
       if (config != nullptr)
       {
+         debugPrintf(5, _T("CommSession::updateConfig(): writing %u bytes to %s"), static_cast<uint32_t>(size), g_szConfigFile);
          SaveFileStatus status = SaveFile(g_szConfigFile, config, size, false, true);
          if (status == SaveFileStatus::SUCCESS)
          {
@@ -1081,11 +1082,13 @@ void CommSession::updateConfig(NXCPMessage *request, NXCPMessage *response)
       }
       else
       {
+         debugPrintf(2, _T("CommSession::updateConfig(): file content not provided in request"));
          response->setField(VID_RCC, ERR_MALFORMED_COMMAND);
       }
    }
    else
    {
+      debugPrintf(2, _T("CommSession::updateConfig(): access denied"));
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
 }

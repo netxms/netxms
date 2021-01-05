@@ -2481,7 +2481,7 @@ SaveFileStatus LIBNETXMS_EXPORTABLE SaveFile(const TCHAR *fileName, const void *
                status = SaveFileStatus::WRITE_ERROR;
                break;
             }
-            while((*next != 0x0D) && (pos < size))
+            while((*next == 0x0D) && (pos < size))
             {
                *next++;
                pos++;
