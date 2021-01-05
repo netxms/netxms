@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1098,8 +1098,8 @@ NXSL_METHOD_DEFINITION(Node, executeSSHCommand)
       if (proxyNode != nullptr)
       {
          TCHAR command[MAX_PARAM_NAME], ipAddr[64];
-         _sntprintf(command, MAX_PARAM_NAME, _T("SSH.Command(%s,\"%s\",\"%s\",\"%s\")"),
-                    node->getIpAddress().toString(ipAddr),
+         _sntprintf(command, MAX_PARAM_NAME, _T("SSH.Command(%s:%d,\"%s\",\"%s\",\"%s\")"),
+                    node->getIpAddress().toString(ipAddr), node->getSshPort(),
                     (const TCHAR *)EscapeStringForAgent(node->getSshLogin()),
                     (const TCHAR *)EscapeStringForAgent(node->getSshPassword()),
                     (const TCHAR *)EscapeStringForAgent(argv[0]->getValueAsCString()));

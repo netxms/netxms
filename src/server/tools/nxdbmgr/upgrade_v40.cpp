@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2020 Raden Solutions
+** Copyright (C) 2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,24 @@
 
 #include "nxdbmgr.h"
 #include <nxevent.h>
+
+
+/**
+ * Upgrade from 40.33 to 40.34
+ */
+static bool H_UpgradeFromV33()
+{
+
+   static const TCHAR *batch =
+         _T("ALTER TABLE nodes ADD ssh_port integer\n")
+         _T("UPDATE nodes SET ssh_port=22\n")
+         _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("ssh_port")));
+
+   CHK_EXEC(SetMinorSchemaVersion(34));
+   return true;
+}
 
 /**
  * Upgrade from 40.32 to 40.33
@@ -934,6 +952,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 33, 40, 34, H_UpgradeFromV33 },
    { 32, 40, 33, H_UpgradeFromV32 },
    { 31, 40, 32, H_UpgradeFromV31 },
    { 30, 40, 31, H_UpgradeFromV30 },

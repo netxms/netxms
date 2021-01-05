@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -5514,6 +5514,7 @@ public class NXCSession
             msg.setFieldInt16(NXCPCodes.VID_AGENT_PORT, data.getAgentPort());
             msg.setFieldInt16(NXCPCodes.VID_SNMP_PORT, data.getSnmpPort());
             msg.setFieldInt16(NXCPCodes.VID_ETHERNET_IP_PORT, data.getEtherNetIpPort());
+            msg.setFieldInt16(NXCPCodes.VID_SSH_PORT, data.getSshPort());
             msg.setFieldInt32(NXCPCodes.VID_CREATION_FLAGS, data.getCreationFlags());
             msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int)data.getAgentProxyId());
             msg.setFieldInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxyId());
@@ -6186,6 +6187,11 @@ public class NXCSession
       if (data.isFieldSet(NXCObjectModificationData.SSH_PASSWORD))
       {
          msg.setField(NXCPCodes.VID_SSH_PASSWORD, data.getSshPassword());
+      }
+
+      if (data.isFieldSet(NXCObjectModificationData.SSH_PORT))
+      {
+         msg.setFieldInt16(NXCPCodes.VID_SSH_PORT, data.getSshPort());
       }
 
       if (data.isFieldSet(NXCObjectModificationData.ZONE_PROXY_LIST))

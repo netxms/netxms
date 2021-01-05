@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1403,6 +1403,7 @@ typedef struct
 #define VID_GEOLOCATION_CTRL_MODE   ((UINT32)724)
 #define VID_GEO_AREAS               ((UINT32)725)
 #define VID_ORIGIN_TIMESTAMP        ((UINT32)726)
+#define VID_SSH_PORT                ((UINT32)727)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -150,6 +150,7 @@ public class NXCObjectModificationData
    public static final int CATEGORY_ID            = 90;
    public static final int GEO_AREAS              = 91;
    public static final int GEOLOCATION_CTRL_MODE  = 92;
+   public static final int SSH_PORT               = 93;
 
    private Set<Integer> fieldSet;
    private long objectId;
@@ -243,6 +244,7 @@ public class NXCObjectModificationData
    private long sshProxy;
    private String sshLogin;
    private String sshPassword;
+   private int sshPort;
    private Long[] zoneProxies;
    private List<ObjectUrl> urls;
    private List<Long> seedObjectIds;
@@ -1817,6 +1819,17 @@ public class NXCObjectModificationData
    {
       this.sshPassword = sshPassword;
       fieldSet.add(SSH_PASSWORD);
+   }
+
+   public int getSshPort()
+   {
+      return sshPort;
+   }
+
+   public void setSshPort(int sshPort)
+   {
+      this.sshPort = sshPort;
+      fieldSet.add(SSH_PORT);
    }
 
    /**

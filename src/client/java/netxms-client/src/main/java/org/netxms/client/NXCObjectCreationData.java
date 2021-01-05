@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ public class NXCObjectCreationData
 	private int agentPort;
 	private int snmpPort;
    private int etherNetIpPort;
+   private int sshPort;
 	private InetAddressEx ipAddress;
 	private long agentProxyId;
 	private long snmpProxyId;
@@ -123,6 +124,7 @@ public class NXCObjectCreationData
       agentPort = 4700;
       snmpPort = 161;
       etherNetIpPort = 44818;
+      sshPort = 22;
 		comments = null;
 		creationFlags = 0;
 		agentProxyId = 0;
@@ -1000,5 +1002,21 @@ public class NXCObjectCreationData
    public void setEtherNetIpProxyId(long etherNetIpProxyId)
    {
       this.etherNetIpProxyId = etherNetIpProxyId;
+   }
+
+   /**
+    * @return the sshPort
+    */
+   public int getSshPort()
+   {
+      return sshPort;
+   }
+
+   /**
+    * @param sshPort the sshPort to set
+    */
+   public void setSshPort(int sshPort)
+   {
+      this.sshPort = sshPort;
    }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,6 +55,7 @@ public class CreateNodeDialog extends Dialog
 	private Spinner agentPortField;
 	private Spinner snmpPortField;
    private Spinner etherNetIpPortField;
+   private Spinner sshPortField;
 	private LabeledText sshLoginField;
    private LabeledText sshPasswordField;
 	private Button checkUnmanaged;
@@ -86,6 +87,7 @@ public class CreateNodeDialog extends Dialog
 	private int agentPort = 4700;
 	private int snmpPort = 161;
    private int etherNetIpPort = 44818;
+   private int sshPort = 22;
 	private String sshLogin = "";
 	private String sshPassword; 
 	private boolean showAgain = false;
@@ -110,6 +112,7 @@ public class CreateNodeDialog extends Dialog
 		   snmpPort = prev.snmpPort;
 		   sshLogin = prev.sshLogin;
 		   sshPassword = prev.sshPassword;
+		   sshPort = prev.sshPort;
          showAgain = prev.showAgain;
 		}
 	}
@@ -181,8 +184,9 @@ public class CreateNodeDialog extends Dialog
 		
       etherNetIpPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "EtherNet/IP Port", 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
       etherNetIpPortField.setSelection(etherNetIpPort);
-
-      new Composite(dialogArea, SWT.NONE); // placeholder for alignment
+      
+      sshPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "SSH Port", 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      sshPortField.setSelection(sshPort);
 
 		sshLoginField = new LabeledText(dialogArea, SWT.NONE);
 		sshLoginField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -380,6 +384,7 @@ public class CreateNodeDialog extends Dialog
 		agentPort = agentPortField.getSelection();
 		snmpPort = snmpPortField.getSelection();
       etherNetIpPort = etherNetIpPortField.getSelection();
+      sshPort = sshPortField.getSelection();
 
 		sshLogin = sshLoginField.getText().trim();
 		sshPassword = sshPasswordField.getText();
@@ -451,6 +456,14 @@ public class CreateNodeDialog extends Dialog
    public long getEtherNetIpProxy()
    {
       return etherNetIpProxy;
+   }
+
+   /**
+    * @return the sshPort
+    */
+   public int getSshPort()
+   {
+      return sshPort;
    }
 
    /**
