@@ -280,6 +280,17 @@ int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **a
       insert(argv[0]->getValueAsInt32(), m_vm->createValue(argv[1]));
       *result = m_vm->createValue();
    }
+   else if (!strcmp(name.value, "join"))
+   {
+      if (argc != 1)
+         return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+      if (!argv[0]->isArray())
+         return NXSL_ERR_NOT_ARRAY;
+      NXSL_Array *a = argv[0]->getValueAsArray();
+      for(int i = 0; i < a->size(); i++)
+         append(m_vm->createValue(a->getByPosition(i)));
+      *result = m_vm->createValue(getMaxIndex());
+   }
    else if (!strcmp(name.value, "pop"))
    {
       if (argc != 0)
