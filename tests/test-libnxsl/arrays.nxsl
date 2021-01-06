@@ -57,9 +57,18 @@ for(n : a5)
 
 a6 = %(1, 2, 3);
 a7 = %(4, 5, 6);
-a6->join(a7);
+a6->appendAll(a7);
 assert(a6->size == 6);
 for(i = 0; i < 6; i++)
 	assert(a6[i] == i + 1);
+
+a8 = %(1, 2, 3);
+a9 = %(4, 5, 6);
+a8->insertAll(0, a9);
+assert(a8->size == 6);
+for(i = 0; i < 3; i++)
+	assert(a8[i] == i + 4);
+for(i = 3; i < 6; i++)
+	assert(a8[i] == i - 2);
 
 return 0;
