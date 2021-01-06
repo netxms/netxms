@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2021 Raden Solutions
+** Copyright (C) 2020-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,14 +29,12 @@
  */
 static bool H_UpgradeFromV33()
 {
-
    static const TCHAR *batch =
          _T("ALTER TABLE nodes ADD ssh_port integer\n")
          _T("UPDATE nodes SET ssh_port=22\n")
          _T("<END>");
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("ssh_port")));
-
    CHK_EXEC(SetMinorSchemaVersion(34));
    return true;
 }

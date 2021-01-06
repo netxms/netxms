@@ -2995,9 +2995,9 @@ protected:
    ObjectArray<HardwareComponent> *m_hardwareComponents;  // installed hardware components
 	ObjectArray<WinPerfObject> *m_winPerfObjects;  // Windows performance objects
 	shared_ptr<AgentConnection> m_fileUpdateConnection;
-	INT16 m_rackHeight;
-	INT16 m_rackPosition;
-	UINT32 m_physicalContainer;
+	int16_t m_rackHeight;
+	int16_t m_rackPosition;
+	uint32_t m_physicalContainer;
 	uuid m_rackImageFront;
    uuid m_rackImageRear;
 	int64_t m_syslogMessageCount;
@@ -3224,7 +3224,7 @@ public:
    uint32_t getIcmpProxy() const { return m_icmpProxy; }
    const TCHAR *getSshLogin() const { return m_sshLogin; }
    const TCHAR *getSshPassword() const { return m_sshPassword; }
-   const uint16_t getSshPort() const { return m_sshPort; }
+   uint16_t getSshPort() const { return m_sshPort; }
    uint32_t getSshProxy() const { return m_sshProxy; }
    time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
    SharedString getPrimaryHostName() const { return GetAttributeWithLock(m_primaryHostName, m_mutexProperties); }

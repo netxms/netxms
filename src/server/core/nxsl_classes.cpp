@@ -1091,20 +1091,20 @@ NXSL_METHOD_DEFINITION(Node, executeSSHCommand)
       return NXSL_ERR_NOT_STRING;
 
    Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
-   UINT32 proxyId = node->getEffectiveSshProxy();
+   uint32_t proxyId = node->getEffectiveSshProxy();
    if (proxyId != 0)
    {
       shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
       if (proxyNode != nullptr)
       {
          TCHAR command[MAX_PARAM_NAME], ipAddr[64];
-         _sntprintf(command, MAX_PARAM_NAME, _T("SSH.Command(%s:%d,\"%s\",\"%s\",\"%s\")"),
-                    node->getIpAddress().toString(ipAddr), node->getSshPort(),
-                    (const TCHAR *)EscapeStringForAgent(node->getSshLogin()),
-                    (const TCHAR *)EscapeStringForAgent(node->getSshPassword()),
-                    (const TCHAR *)EscapeStringForAgent(argv[0]->getValueAsCString()));
+         _sntprintf(command, MAX_PARAM_NAME, _T("SSH.Command(%s:%u,\"%s\",\"%s\",\"%s\")"),
+                    node->getIpAddress().toString(ipAddr), static_cast<uint32_t>(node->getSshPort()),
+                    EscapeStringForAgent(node->getSshLogin()).cstr(),
+                    EscapeStringForAgent(node->getSshPassword()).cstr(),
+                    EscapeStringForAgent(argv[0]->getValueAsCString()).cstr());
          StringList *list;
-         UINT32 rcc = proxyNode->getListFromAgent(command, &list);
+         uint32_t rcc = proxyNode->getListFromAgent(command, &list);
          *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
          delete list;
       }
