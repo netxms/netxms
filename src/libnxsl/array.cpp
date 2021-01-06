@@ -269,6 +269,19 @@ int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **a
       append(m_vm->createValue(argv[0]));
       *result = m_vm->createValue(getMaxIndex());
    }
+   else if (!strcmp(name.value, "appendAll"))
+   {
+      if (argc != 1)
+         return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+      if (!argv[0]->isArray())
+         return NXSL_ERR_NOT_ARRAY;
+
+      NXSL_Array *a = argv[0]->getValueAsArray();
+      for(int i = 0; i < a->size(); i++)
+         append(m_vm->createValue(a->getByPosition(i)));
+      *result = m_vm->createValue(getMaxIndex());
+   }
    else if (!strcmp(name.value, "insert"))
    {
       if (argc != 2)
@@ -280,15 +293,21 @@ int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **a
       insert(argv[0]->getValueAsInt32(), m_vm->createValue(argv[1]));
       *result = m_vm->createValue();
    }
-   else if (!strcmp(name.value, "join"))
+   else if (!strcmp(name.value, "insertAll"))
    {
-      if (argc != 1)
+      if (argc != 2)
          return NXSL_ERR_INVALID_ARGUMENT_COUNT;
-      if (!argv[0]->isArray())
+
+      if (!argv[0]->isInteger())
+         return NXSL_ERR_NOT_INTEGER;
+
+      if (!argv[1]->isArray())
          return NXSL_ERR_NOT_ARRAY;
-      NXSL_Array *a = argv[0]->getValueAsArray();
+
+      int index = argv[0]->getValueAsInt32();
+      NXSL_Array *a = argv[1]->getValueAsArray();
       for(int i = 0; i < a->size(); i++)
-         append(m_vm->createValue(a->getByPosition(i)));
+         insert(index++, m_vm->createValue(a->getByPosition(i)));
       *result = m_vm->createValue(getMaxIndex());
    }
    else if (!strcmp(name.value, "pop"))
