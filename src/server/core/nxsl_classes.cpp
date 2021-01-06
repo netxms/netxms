@@ -1091,7 +1091,7 @@ NXSL_METHOD_DEFINITION(Node, executeSSHCommand)
       return NXSL_ERR_NOT_STRING;
 
    Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
-   UINT32 proxyId = node->getEffectiveSshProxy();
+   uint32_t proxyId = node->getEffectiveSshProxy();
    if (proxyId != 0)
    {
       shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
@@ -1105,7 +1105,7 @@ NXSL_METHOD_DEFINITION(Node, executeSSHCommand)
                     EscapeStringForAgent(argv[0]->getValueAsCString()).cstr(),
                     node->getSshKeyId());
          StringList *list;
-         UINT32 rcc = proxyNode->getListFromAgent(command, &list);
+         uint32_t rcc = proxyNode->getListFromAgent(command, &list);
          *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
          delete list;
       }

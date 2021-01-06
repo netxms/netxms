@@ -2996,9 +2996,9 @@ protected:
    ObjectArray<HardwareComponent> *m_hardwareComponents;  // installed hardware components
 	ObjectArray<WinPerfObject> *m_winPerfObjects;  // Windows performance objects
 	shared_ptr<AgentConnection> m_fileUpdateConnection;
-	INT16 m_rackHeight;
-	INT16 m_rackPosition;
-	UINT32 m_physicalContainer;
+	int16_t m_rackHeight;
+	int16_t m_rackPosition;
+	uint32_t m_physicalContainer;
 	uuid m_rackImageFront;
    uuid m_rackImageRear;
 	int64_t m_syslogMessageCount;
