@@ -46,14 +46,14 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ObjectSelectionDialog extends Dialog
 {
-	private NXCSession session;
+   private NXCSession session = ConsoleSharedData.getSession();
 	private ObjectTree objectTree;
 	private long[] selectedObjects;
 	private Set<Integer> classFilter;
 	private boolean multiSelection;
 	private boolean showFilterToolTip = true;
 	private boolean showFilterCloseButton = false;
-	List<Object> currentObject;
+   private List<AbstractObject> blockedObjects;
 	private String title = Messages.get().ObjectSelectionDialog_Title;
 
 	/**
@@ -201,20 +201,25 @@ public class ObjectSelectionDialog extends Dialog
       return ObjectSelectionFilterFactory.getInstance().createRackOrChassisSelectionFilter();
    }
 	
+   /**
+    * Create object selection dialog without class filtering.
+    * 
+    * @param parentShell parent shell
+    */
+   public ObjectSelectionDialog(Shell parentShell)
+   {
+      this(parentShell, null, null);
+   }
+
 	/**
-    * Create object selection dialog.
+    * Create object selection dialog with optional class filtering.
     * 
     * @param parentShell parent shell
     * @param classFilter set of allowed object classes (set to null to show all classes)
     */
    public ObjectSelectionDialog(Shell parentShell, Set<Integer> classFilter)
    {
-      super(parentShell);
-      setShellStyle(getShellStyle() | SWT.RESIZE);
-      this.classFilter = classFilter;
-      multiSelection = true;
-      session = (NXCSession)ConsoleSharedData.getSession();
-      this.currentObject = new ArrayList<Object>();
+      this(parentShell, classFilter, null);
    }
 
 	/**
@@ -224,14 +229,13 @@ public class ObjectSelectionDialog extends Dialog
 	 * @param classFilter set of allowed object classes (set to null to show all classes)
 	 * @param currentObject object list selected for move (the same object can't be selected as a move terget)
 	 */
-   public ObjectSelectionDialog(Shell parentShell, Set<Integer> classFilter, List<Object> currentObject)
+   public ObjectSelectionDialog(Shell parentShell, Set<Integer> classFilter, List<AbstractObject> blockedObjects)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 		this.classFilter = classFilter;
 		multiSelection = true;
-		session = (NXCSession)ConsoleSharedData.getSession();
-		this.currentObject = currentObject;
+      this.blockedObjects = blockedObjects;
 	}
 
 	/*
@@ -316,16 +320,20 @@ public class ObjectSelectionDialog extends Dialog
 			long objectId = objectTree.getFirstSelectedObject();
 			if (objectId != 0)
 			{
+            if (blockedObjects != null)
+            {
+               for(int i = 0; i < blockedObjects.size(); i++)
+               {
+                  if (blockedObjects.get(i).getObjectId() == objectId)
+                  {
+                     MessageDialogHelper.openWarning(getShell(), Messages.get().ObjectSelectionDialog_Warning,
+                           Messages.get().ObjectSelectionDialog_SameObjecsAstargetAndSourceWarning);
+                     return;
+                  }
+               }
+            }
 				selectedObjects = new long[1];
 				selectedObjects[0] = objectId;
-				for (int i = 0; i < currentObject.size(); i++)
-				{
-				   if(((AbstractObject)currentObject.get(i)).getObjectId() == objectId)
-				   {
-				      MessageDialogHelper.openWarning(getShell(), Messages.get().ObjectSelectionDialog_Warning, Messages.get().ObjectSelectionDialog_SameObjecsAstargetAndSourceWarning);
-		            return;
-				   }
-				}
 			}
 			else
 			{
