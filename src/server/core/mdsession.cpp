@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -64,7 +64,6 @@ MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, const InetAddress& addr
 {
    m_socket = hSocket;
    m_id = -1;
-   m_pCtx = nullptr;
 	m_mutexSocketWrite = MutexCreate();
 	m_clientAddr = addr;
 	m_clientAddr.toString(m_hostName);
@@ -87,10 +86,7 @@ MobileDeviceSession::~MobileDeviceSession()
    if (m_socket != INVALID_SOCKET)
       closesocket(m_socket);
 	MutexDestroy(m_mutexSocketWrite);
-	if (m_pCtx != nullptr)
-		m_pCtx->decRefCount();
-   if (m_condEncryptionSetup != INVALID_CONDITION_HANDLE)
-      ConditionDestroy(m_condEncryptionSetup);
+   ConditionDestroy(m_condEncryptionSetup);
 }
 
 /**
@@ -153,8 +149,10 @@ void MobileDeviceSession::readThread()
       debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
       if ((msg->getCode() == CMD_SESSION_KEY) && (msg->getId() == m_encryptionRqId))
       {
-         m_encryptionResult = SetupEncryptionContext(msg, &m_pCtx, nullptr, g_pServerKey, NXCP_VERSION);
-         receiver.setEncryptionContext(m_pCtx);
+         NXCPEncryptionContext *encryptionContext = nullptr;
+         m_encryptionResult = SetupEncryptionContext(msg, &encryptionContext, nullptr, g_pServerKey, NXCP_VERSION);
+         m_encryptionContext = shared_ptr<NXCPEncryptionContext>(encryptionContext);
+         receiver.setEncryptionContext(m_encryptionContext);
          ConditionSet(m_condEncryptionSetup);
          m_encryptionRqId = 0;
          delete msg;
@@ -270,9 +268,9 @@ void MobileDeviceSession::sendMessage(const NXCPMessage& msg)
    }
 
    bool success;
-   if (m_pCtx != nullptr)
+   if (m_encryptionContext != nullptr)
    {
-      NXCP_ENCRYPTED_MESSAGE *encryptedMsg = m_pCtx->encryptMessage(rawMsg);
+      NXCP_ENCRYPTED_MESSAGE *encryptedMsg = m_encryptionContext->encryptMessage(rawMsg);
       if (encryptedMsg != nullptr)
       {
          success = (SendEx(m_socket, (char *)encryptedMsg, ntohl(encryptedMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(encryptedMsg->size));

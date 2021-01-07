@@ -235,7 +235,7 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
          continue;
       }
       NXCPEncryptionContext *ctx = NXCPEncryptionContext::create(cipherBit);
-      if (ctx != NULL)
+      if (ctx != nullptr)
       {
          delete ctx;
          nxlog_debug_tag(DEBUG_TAG, 1, _T("   %s enabled"), s_cipherNames[i]);
@@ -283,7 +283,7 @@ String LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphersAsText()
 {
    StringBuffer s;
 #ifdef _WITH_ENCRYPTION
-   UINT32 cipherBit = 1;
+   uint32_t cipherBit = 1;
    for(int i = 0; i < NETXMS_MAX_CIPHERS; i++, cipherBit = cipherBit << 1)
    {
       if ((s_supportedCiphers & cipherBit) == 0)
@@ -291,7 +291,7 @@ String LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphersAsText()
          continue;
       }
       NXCPEncryptionContext *ctx = NXCPEncryptionContext::create(cipherBit);
-      if (ctx != NULL)
+      if (ctx != nullptr)
       {
          delete ctx;
          if (s.length() > 0)
@@ -612,7 +612,7 @@ NXCPEncryptionContext::NXCPEncryptionContext()
  */
 NXCPEncryptionContext::~NXCPEncryptionContext()
 {
-   free(m_sessionKey);
+   MemFree(m_sessionKey);
 #ifdef _WITH_ENCRYPTION
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
    EVP_CIPHER_CTX_free(m_encryptor);
@@ -620,8 +620,8 @@ NXCPEncryptionContext::~NXCPEncryptionContext()
 #else
    EVP_CIPHER_CTX_cleanup(m_encryptor);
    EVP_CIPHER_CTX_cleanup(m_decryptor);
-   free(m_encryptor);
-   free(m_decryptor);
+   MemFree(m_encryptor);
+   MemFree(m_decryptor);
 #endif
    MutexDestroy(m_encryptorLock);
 #endif
@@ -637,12 +637,12 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA *priv
    int nSize;
 	NXCPEncryptionContext *ctx = new NXCPEncryptionContext;
 
-   int cipher = (int)msg->getFieldAsUInt16(VID_CIPHER);
+   int cipher = msg->getFieldAsInt16(VID_CIPHER);
    if (ctx->initCipher(cipher))
    {
-      if (ctx->m_keyLength == (int)msg->getFieldAsUInt16(VID_KEY_LENGTH))
+      if (ctx->m_keyLength == msg->getFieldAsInt16(VID_KEY_LENGTH))
       {
-         ctx->m_sessionKey = (BYTE *)malloc(ctx->m_keyLength);
+         ctx->m_sessionKey = MemAllocArrayNoInit<BYTE>(ctx->m_keyLength);
 
          // Decrypt session key
          int keySize = (int)msg->getFieldAsBinary(VID_SESSION_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
@@ -697,12 +697,12 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA *priv
 bool NXCPEncryptionContext::initCipher(int cipher)
 {
 #ifdef _WITH_ENCRYPTION
-   if (s_ciphers[cipher] == NULL)
+   if (s_ciphers[cipher] == nullptr)
       return false;   // Unsupported cipher
 
-   if (!EVP_EncryptInit_ex(m_encryptor, s_ciphers[cipher](), NULL, NULL, NULL))
+   if (!EVP_EncryptInit_ex(m_encryptor, s_ciphers[cipher](), nullptr, nullptr, nullptr))
       return false;
-   if (!EVP_DecryptInit_ex(m_decryptor, s_ciphers[cipher](), NULL, NULL, NULL))
+   if (!EVP_DecryptInit_ex(m_decryptor, s_ciphers[cipher](), nullptr, nullptr, nullptr))
       return false;
 
    switch(cipher)
@@ -747,7 +747,7 @@ bool NXCPEncryptionContext::initCipher(int cipher)
 /**
  * Create encryption context from CMD_REQUEST_SESSION_KEY NXCP message
  */
-NXCPEncryptionContext *NXCPEncryptionContext::create(UINT32 ciphers)
+NXCPEncryptionContext *NXCPEncryptionContext::create(uint32_t ciphers)
 {
 	NXCPEncryptionContext *ctx = new NXCPEncryptionContext;
 
@@ -792,7 +792,7 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(UINT32 ciphers)
    }
 
    // Generate key
-   ctx->m_sessionKey = (BYTE *)malloc(ctx->m_keyLength);
+   ctx->m_sessionKey = MemAllocArrayNoInit<BYTE>(ctx->m_keyLength);
    RAND_bytes(ctx->m_sessionKey, ctx->m_keyLength);
    RAND_bytes(ctx->m_iv, EVP_MAX_IV_LENGTH);
 #endif
@@ -811,10 +811,10 @@ NXCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(NXCP_MESSAGE *msg)
 #ifdef _WITH_ENCRYPTION
    MutexLock(m_encryptorLock);
 
-   if (!EVP_EncryptInit_ex(m_encryptor, NULL, NULL, m_sessionKey, m_iv))
+   if (!EVP_EncryptInit_ex(m_encryptor, nullptr, nullptr, m_sessionKey, m_iv))
    {
       MutexUnlock(m_encryptorLock);
-      return NULL;
+      return nullptr;
    }
 
    UINT32 msgSize = ntohl(msg->size);
@@ -850,7 +850,7 @@ NXCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(NXCP_MESSAGE *msg)
 
    return emsg;
 #else    /* _WITH_ENCRYPTION */
-   return NULL;
+   return nullptr;
 #endif
 }
 
@@ -870,10 +870,10 @@ bool NXCPEncryptionContext::decryptMessage(NXCP_ENCRYPTED_MESSAGE *msg, BYTE *de
    EVP_DecryptFinal(m_decryptor, decryptionBuffer + dataSize, &dataSize);
 
    NXCP_MESSAGE *clearMsg = (NXCP_MESSAGE *)(decryptionBuffer + NXCP_EH_ENCRYPTED_BYTES);
-   UINT32 msgSize = ntohl(clearMsg->size);
+   uint32_t msgSize = ntohl(clearMsg->size);
    if (msgSize > msg->size)
       return false;  // Message decrypted incorrectly, because it can't be larger than encrypted
-   UINT32 crc32 = CalculateCRC32((BYTE *)clearMsg, msgSize, 0);
+   uint32_t crc32 = CalculateCRC32((BYTE *)clearMsg, msgSize, 0);
    if (crc32 != ntohl(((NXCP_ENCRYPTED_PAYLOAD_HEADER *)decryptionBuffer)->dwChecksum))
       return false;  // Bad checksum
 
@@ -892,7 +892,7 @@ void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size)
 #ifdef _WITH_ENCRYPTION
    RAND_bytes(buffer, (int)size);
 #else
-   srand((unsigned int)time(NULL));
+   srand((unsigned int)time(nullptr));
    for(size_t i = 0; i < size; i++)
       buffer[i] = (BYTE)(rand() % 256);
 #endif

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -56,8 +56,7 @@ NXCSession::NXCSession()
    m_connected = false;
    m_disconnected = false;
    m_hSocket = INVALID_SOCKET;
-   m_msgWaitQueue = NULL;
-   m_encryptionContext = NULL;
+   m_msgWaitQueue = nullptr;
    m_receiverThread = INVALID_THREAD_HANDLE;
    m_serverVersion[0] = 0;
    m_serverTimeZone[0] = 0;
@@ -67,7 +66,7 @@ NXCSession::NXCSession()
    m_protocolVersions = new IntegerArray<UINT32>(8, 8);
    m_passwordChangeNeeded = false;
 	m_compressionEnabled = false;
-	m_receiver = NULL;
+	m_receiver = nullptr;
 }
 
 /**
@@ -80,8 +79,6 @@ NXCSession::~NXCSession()
    MutexDestroy(m_dataLock);
    MutexDestroy(m_msgSendLock);
    delete m_protocolVersions;
-   if (m_encryptionContext != NULL)
-      m_encryptionContext->decRefCount();
 }
 
 /**
@@ -367,25 +364,25 @@ bool NXCSession::sendMessage(NXCPMessage *msg)
    bool result;
    NXCP_MESSAGE *rawMsg = msg->serialize(m_compressionEnabled);
 	MutexLock(m_msgSendLock);
-   if (m_encryptionContext != NULL)
+   if (m_encryptionContext != nullptr)
    {
       NXCP_ENCRYPTED_MESSAGE *emsg = m_encryptionContext->encryptMessage(rawMsg);
-      if (emsg != NULL)
+      if (emsg != nullptr)
       {
-         result = (SendEx(m_hSocket, (char *)emsg, ntohl(emsg->size), 0, NULL) == (int)ntohl(emsg->size));
-         free(emsg);
+         result = (SendEx(m_hSocket, (char *)emsg, ntohl(emsg->size), 0, nullptr) == (int)ntohl(emsg->size));
+         MemFree(emsg);
       }
       else
       {
-         result = FALSE;
+         result = false;
       }
    }
    else
    {
-      result = (SendEx(m_hSocket, (char *)rawMsg, ntohl(rawMsg->size), 0, NULL) == (int)ntohl(rawMsg->size));
+      result = (SendEx(m_hSocket, (char *)rawMsg, ntohl(rawMsg->size), 0, nullptr) == (int)ntohl(rawMsg->size));
    }
 	MutexUnlock(m_msgSendLock);
-   free(rawMsg);
+   MemFree(rawMsg);
    return result;
 }
 
@@ -395,7 +392,7 @@ bool NXCSession::sendMessage(NXCPMessage *msg)
 NXCPMessage *NXCSession::waitForMessage(UINT16 code, UINT32 id, UINT32 timeout)
 {
    if (!m_connected)
-      return NULL;
+      return nullptr;
 
    return m_msgWaitQueue->waitForMessage(code, id, (timeout == 0) ? m_commandTimeout : timeout);
 }
@@ -458,8 +455,10 @@ void NXCSession::receiverThread()
             if (m_encryptionContext == NULL)
             {
                NXCPMessage *response;
+               NXCPEncryptionContext *encryptionContext = nullptr;
                MutexLock(m_dataLock);
-               SetupEncryptionContext(msg, &m_encryptionContext, &response, NULL, NXCP_VERSION);
+               SetupEncryptionContext(msg, &encryptionContext, &response, nullptr, NXCP_VERSION);
+               m_encryptionContext = shared_ptr<NXCPEncryptionContext>(encryptionContext);
                m_receiver->setEncryptionContext(m_encryptionContext);
                MutexUnlock(m_dataLock);
                sendMessage(response);

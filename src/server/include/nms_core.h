@@ -335,7 +335,7 @@ private:
    int m_id;
    uint32_t m_userId;
    uint32_t m_deviceObjectId;
-   NXCPEncryptionContext *m_pCtx;
+   shared_ptr<NXCPEncryptionContext> m_encryptionContext;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
 	MUTEX m_mutexSocketWrite;
 	InetAddress m_clientAddr;
@@ -377,7 +377,7 @@ public:
 	const TCHAR *getHostName() const { return m_hostName; }
    uint32_t getUserId() const { return m_userId; }
    bool isAuthenticated() const { return m_authenticated; }
-   int getCipher() const { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
+   int getCipher() const { return (m_encryptionContext == nullptr) ? -1 : m_encryptionContext->getCipher(); }
 };
 
 /**
@@ -472,7 +472,7 @@ private:
    uint64_t m_systemAccessRights; // User's system access rights
    VolatileCounter m_flags;       // Session flags
 	int m_clientType;              // Client system type - desktop, web, mobile, etc.
-   NXCPEncryptionContext *m_pCtx;
+   shared_ptr<NXCPEncryptionContext> m_encryptionContext;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
 	MUTEX m_mutexSocketWrite;
    MUTEX m_mutexSendAlarms;
@@ -861,7 +861,7 @@ public:
    bool isTerminated() const { return (m_flags & CSF_TERMINATED) ? true : false; }
    bool isConsoleOpen() const { return (m_flags & CSF_CONSOLE_OPEN) ? true : false; }
    bool isCompressionEnabled() const { return (m_flags & CSF_COMPRESSION_ENABLED) ? true : false; }
-   int getCipher() const { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
+   int getCipher() const { return (m_encryptionContext == nullptr) ? -1 : m_encryptionContext->getCipher(); }
 	int getClientType() const { return m_clientType; }
    time_t getLoginTime() const { return m_loginTime; }
    bool isSubscribedTo(const TCHAR *channel) const;

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,71 +52,52 @@ static ISC_SERVICE m_serviceList[] =
 /**
  * Request processing thread
  */
-static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
+static void ProcessingThread(ISCSession *session)
 {
-	ISCSession *session = (ISCSession *)arg;
    SOCKET sock = session->GetSocket();
    int i, serviceIndex, state = ISC_STATE_INIT;
-   NXCP_MESSAGE *pRawMsg, *pRawMsgOut;
-   NXCP_BUFFER *pRecvBuffer;
    NXCPMessage *pRequest, response;
    UINT32 serviceId;
 	TCHAR buffer[256], dbgPrefix[128];
 	WORD flags;
-	static NXCPEncryptionContext *pDummyCtx = NULL;
 
 	_sntprintf(dbgPrefix, 128, _T("ISC<%s>:"), IpToStr(session->GetPeerAddress(), buffer));
 
-   pRawMsg = (NXCP_MESSAGE *)malloc(MAX_MSG_SIZE);
-   pRecvBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
-   NXCPInitBuffer(pRecvBuffer);
-
-   while(1)
+	SocketMessageReceiver receiver(sock, 4096, MAX_MSG_SIZE);
+   while(true)
    {
-      ssize_t err = RecvNXCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
-      if (err <= 0)
+      MessageReceiverResult result;
+      pRequest = receiver.readMessage(300000, &result);
+      if ((result == MSGRECV_CLOSED) || (result == MSGRECV_COMM_FAILURE) || (result == MSGRECV_TIMEOUT) || (result == MSGRECV_PROTOCOL_ERROR))
 		{
-			if (err == -1)
-         	DbgPrintf(5, _T("%s RecvNXCPMessage() failed: syserr=%s"), dbgPrefix, strerror(WSAGetLastError()));
+			if (result != MSGRECV_CLOSED)
+         	DbgPrintf(5, _T("%s message read failed: %s"), dbgPrefix, AbstractMessageReceiver::resultToText(result));
 			else
          	DbgPrintf(5, _T("%s connection closed"), dbgPrefix);
          break;   // Communication error or closed connection
 		}
 
-      if (err == 1)
-         continue;   // Too big message
+      if (pRequest == nullptr)
+         continue;   // Ignore other errors
 
-      flags = ntohs(pRawMsg->flags);
-      if (flags & MF_CONTROL)
+      if (pRequest->isControl())
       {
-         // Convert message header to host format
-         pRawMsg->id = ntohl(pRawMsg->id);
-         pRawMsg->code = ntohs(pRawMsg->code);
-         pRawMsg->numFields = ntohl(pRawMsg->numFields);
-         DbgPrintf(5, _T("%s received control message %s"), dbgPrefix, NXCPMessageCodeName(pRawMsg->code, buffer));
-
-         if (pRawMsg->code == CMD_GET_NXCP_CAPS)
+         DbgPrintf(5, _T("%s received control message %s"), dbgPrefix, NXCPMessageCodeName(pRequest->getCode(), buffer));
+         if (pRequest->getCode() == CMD_GET_NXCP_CAPS)
          {
-            pRawMsgOut = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE);
-            pRawMsgOut->id = htonl(pRawMsg->id);
-            pRawMsgOut->code = htons((WORD)CMD_NXCP_CAPS);
+            NXCP_MESSAGE *pRawMsgOut = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE);
+            pRawMsgOut->id = htonl(pRequest->getId());
+            pRawMsgOut->code = htons((uint16_t)CMD_NXCP_CAPS);
             pRawMsgOut->flags = htons(MF_CONTROL);
             pRawMsgOut->numFields = htonl(NXCP_VERSION << 24);
             pRawMsgOut->size = htonl(NXCP_HEADER_SIZE);
-				if (SendEx(sock, pRawMsgOut, NXCP_HEADER_SIZE, 0, NULL) != NXCP_HEADER_SIZE)
-					DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));
-				free(pRawMsgOut);
+				if (SendEx(sock, pRawMsgOut, NXCP_HEADER_SIZE, 0, nullptr) != NXCP_HEADER_SIZE)
+					DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, GetLastSocketErrorText(buffer, 256));
+				MemFree(pRawMsgOut);
          }
       }
 		else
 		{
-			pRequest = NXCPMessage::deserialize(pRawMsg);
-			if (pRequest == NULL)
-			{
-	         DbgPrintf(5, _T("%s message deserialization error"), dbgPrefix);
-			   continue;
-			}
-
 			DbgPrintf(5, _T("%s message %s received"), dbgPrefix, NXCPMessageCodeName(pRequest->getCode(), buffer));
 			if (pRequest->getCode() == CMD_KEEPALIVE)
 			{
@@ -176,15 +157,15 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 			
 			response.setId(pRequest->getId());
 			response.setCode(CMD_REQUEST_COMPLETED);
-			pRawMsgOut = response.serialize();
+			NXCP_MESSAGE *pRawMsgOut = response.serialize();
 			DbgPrintf(5, _T("%s sending message %s"), dbgPrefix, NXCPMessageCodeName(response.getCode(), buffer));
 			if (SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->size), 0, NULL) != (int)ntohl(pRawMsgOut->size))
 				DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));
       
 			response.deleteAllFields();
-			free(pRawMsgOut);
-			delete pRequest;
+			MemFree(pRawMsgOut);
 		}
+      delete pRequest;
    }
 
 	// Close_session
@@ -194,10 +175,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 
    shutdown(sock, 2);
    closesocket(sock);
-   free(pRawMsg);
-   free(pRecvBuffer);
-	delete (ISCSession *)arg;
-   return THREAD_OK;
+	delete session;
 }
 
 /**
@@ -280,7 +258,7 @@ void ISCListener()
 			// Create new session structure and threads
 			DbgPrintf(3, _T("New ISC connection from %s"), IpToStr(ntohl(servAddr.sin_addr.s_addr), buffer));
 			session = new ISCSession(sockClient, &servAddr);
-			ThreadCreate(ProcessingThread, 0, session);
+			ThreadCreate(ProcessingThread, session);
 		}
    }
 

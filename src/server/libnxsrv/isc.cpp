@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -78,10 +78,10 @@ ISC::ISC()
    m_addr = InetAddress::LOOPBACK;
    m_port = NETXMS_ISC_PORT;
    m_socket = -1;
+   m_messageReceiver = nullptr;
    m_msgWaitQueue = new MsgWaitQueue;
    m_requestId = 1;
    m_hReceiverThread = INVALID_THREAD_HANDLE;
-   m_ctx = NULL;
    m_recvTimeout = 420000;  // 7 minutes
 	m_commandTimeout = 10000;	// 10 seconds
    m_mutexDataLock = MutexCreate();
@@ -92,16 +92,16 @@ ISC::ISC()
 /**
  * Create ISC connector for give IP address and port
  */
-ISC::ISC(const InetAddress& addr, WORD port)
+ISC::ISC(const InetAddress& addr, uint16_t port)
 {
 	m_flags = 0;
    m_addr = addr;
    m_port = port;
    m_socket = -1;
+   m_messageReceiver = nullptr;
    m_msgWaitQueue = new MsgWaitQueue;
    m_requestId = 1;
    m_hReceiverThread = INVALID_THREAD_HANDLE;
-   m_ctx = NULL;
    m_recvTimeout = 420000;  // 7 minutes
 	m_commandTimeout = 10000;	// 10 seconds
    m_mutexDataLock = MutexCreate();
@@ -130,8 +130,7 @@ ISC::~ISC()
 	unlock();
 
    delete m_msgWaitQueue;
-	if (m_ctx != NULL)
-		m_ctx->decRefCount();
+   delete m_messageReceiver;
 
    MutexDestroy(m_mutexDataLock);
 	MutexDestroy(m_socketLock);
@@ -144,7 +143,6 @@ ISC::~ISC()
 void ISC::printMessage(const TCHAR *format, ...)
 {
    va_list args;
-
    va_start(args, format);
    _vtprintf(format, args);
    va_end(args);
@@ -156,95 +154,37 @@ void ISC::printMessage(const TCHAR *format, ...)
  */
 void ISC::receiverThread()
 {
-   NXCPMessage *pMsg;
-   NXCP_MESSAGE *pRawMsg;
-   NXCP_BUFFER *pMsgBuffer;
-   BYTE *pDecryptionBuffer = NULL;
    ssize_t err;
    TCHAR szBuffer[128], szIpAddr[16];
 	SOCKET nSocket;
 
-   // Initialize raw message receiving function
-   pMsgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
-   NXCPInitBuffer(pMsgBuffer);
-
-   // Allocate space for raw message
-   pRawMsg = (NXCP_MESSAGE *)malloc(RECEIVER_BUFFER_SIZE);
-#ifdef _WITH_ENCRYPTION
-   pDecryptionBuffer = (BYTE *)malloc(RECEIVER_BUFFER_SIZE);
-#endif
+	lock();
+	m_messageReceiver = new SocketMessageReceiver(nSocket, 4096, RECEIVER_BUFFER_SIZE);
+	unlock();
 
    // Message receiving loop
-   while(1)
+   while(true)
    {
-      // Receive raw message
-      lock();
-		nSocket = m_socket;
-		unlock();
-      if ((err = RecvNXCPMessage(nSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE, &m_ctx, pDecryptionBuffer, m_recvTimeout)) <= 0)
+      MessageReceiverResult result;
+      NXCPMessage *pMsg = m_messageReceiver->readMessage(m_recvTimeout, &result);
+      if ((result == MSGRECV_CLOSED) || (result == MSGRECV_TIMEOUT) || (result == MSGRECV_COMM_FAILURE))
 		{
-			printMessage(_T("ISC::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), err, WSAGetLastError());
+			printMessage(_T("ISC::ReceiverThread(): message read error (%s)"), AbstractMessageReceiver::resultToText(result));
          break;
 		}
 
-      // Check if we get too large message
-      if (err == 1)
-      {
-         printMessage(_T("Received too large message %s (%d bytes)"), 
-                  NXCPMessageCodeName(ntohs(pRawMsg->code), szBuffer),
-                  ntohl(pRawMsg->size));
-         continue;
-      }
+      if (pMsg == nullptr)
+         continue;   // Ignore other problems and try to read next message
 
-      // Check if we are unable to decrypt message
-      if (err == 2)
+      if (onMessage(pMsg))
       {
-         printMessage(_T("Unable to decrypt received message"));
-         continue;
+         // message was consumed by handler
+         delete pMsg;
       }
-
-      // Check for timeout
-      if (err == 3)
+      else
       {
-         printMessage(_T("Timed out waiting for message"));
-         break;
+         m_msgWaitQueue->put(pMsg);
       }
-
-      // Check that actual received packet size is equal to encoded in packet
-      if ((int)ntohl(pRawMsg->size) != err)
-      {
-         printMessage(_T("RecvMsg: Bad packet length [size=%d ActualSize=%d]"), ntohl(pRawMsg->size), err);
-         continue;   // Bad packet, wait for next
-      }
-
-		if (ntohs(pRawMsg->flags) & MF_BINARY)
-		{
-         // Convert message header to host format
-         DbgPrintf(6, _T("ISC: Received raw message %s from peer at %s"),
-            NXCPMessageCodeName(ntohs(pRawMsg->code), szBuffer), m_addr.toString(szIpAddr));
-         onBinaryMessage(pRawMsg);
-		}
-		else
-		{
-			// Create message object from raw message
-			pMsg = NXCPMessage::deserialize(pRawMsg, m_protocolVersion);
-			if (pMsg != NULL)
-			{
-            if (onMessage(pMsg))
-            {
-               // message was consumed by handler
-               delete pMsg;
-            }
-            else
-            {
-               m_msgWaitQueue->put(pMsg);
-            }
-			}
-			else
-			{
-	         printMessage(_T("RecvMsg: message deserialization error"));
-			}
-		}
    }
 
    // Close socket and mark connection as disconnected
@@ -253,19 +193,10 @@ void ISC::receiverThread()
       shutdown(m_socket, SHUT_RDWR);
    closesocket(m_socket);
    m_socket = -1;
-	if (m_ctx != NULL)
-	{
-		m_ctx->decRefCount();;
-		m_ctx = NULL;
-	}
-   m_flags &= ~ISCF_IS_CONNECTED;;
+   m_ctx.reset();
+   delete_and_null(m_messageReceiver);
+   m_flags &= ~ISCF_IS_CONNECTED;
    unlock();
-
-   free(pRawMsg);
-   free(pMsgBuffer);
-#ifdef _WITH_ENCRYPTION
-   free(pDecryptionBuffer);
-#endif
 }
 
 /**
@@ -390,13 +321,7 @@ connect_cleanup:
          closesocket(m_socket);
          m_socket = -1;
       }
-
-		if (m_ctx != NULL)
-		{
-			m_ctx->decRefCount();
-			m_ctx = NULL;
-		}
-
+      m_ctx.reset();
       unlock();
    }
 
@@ -441,7 +366,7 @@ BOOL ISC::sendMessage(NXCPMessage *pMsg)
       if (pEnMsg != NULL)
       {
          bResult = (SendEx(m_socket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, m_socketLock) == (int)ntohl(pEnMsg->size));
-         free(pEnMsg);
+         MemFree(pEnMsg);
       }
       else
       {
@@ -452,7 +377,7 @@ BOOL ISC::sendMessage(NXCPMessage *pMsg)
    {
       bResult = (SendEx(m_socket, (char *)pRawMsg, ntohl(pRawMsg->size), 0, m_socketLock) == (int)ntohl(pRawMsg->size));
    }
-   free(pRawMsg);
+   MemFree(pRawMsg);
    return bResult;
 }
 
@@ -493,12 +418,18 @@ UINT32 ISC::setupEncryption(RSA *pServerKey)
    if (sendMessage(&msg))
    {
       pResp = waitForMessage(CMD_SESSION_KEY, dwRqId, m_commandTimeout);
-      if (pResp != NULL)
+      if (pResp != nullptr)
       {
-         dwResult = SetupEncryptionContext(pResp, &m_ctx, NULL, pServerKey, m_protocolVersion);
+         NXCPEncryptionContext *ctx = nullptr;
+         dwResult = SetupEncryptionContext(pResp, &ctx, nullptr, pServerKey, m_protocolVersion);
          switch(dwResult)
          {
             case RCC_SUCCESS:
+               lock();
+               m_ctx = shared_ptr<NXCPEncryptionContext>(ctx);
+               if (m_messageReceiver != nullptr)
+                  m_messageReceiver->setEncryptionContext(m_ctx);
+               unlock();
                dwError = ISC_ERR_SUCCESS;
                break;
             case RCC_NO_CIPHERS:
@@ -538,9 +469,7 @@ UINT32 ISC::setupEncryption(RSA *pServerKey)
 UINT32 ISC::nop()
 {
    NXCPMessage msg(m_protocolVersion);
-   UINT32 dwRqId;
-
-   dwRqId = (UINT32)InterlockedIncrement(&m_requestId);
+   uint32_t dwRqId = (UINT32)InterlockedIncrement(&m_requestId);
    msg.setCode(CMD_KEEPALIVE);
    msg.setId(dwRqId);
    if (sendMessage(&msg))
@@ -555,9 +484,7 @@ UINT32 ISC::nop()
 UINT32 ISC::connectToService(UINT32 service)
 {
    NXCPMessage msg(m_protocolVersion);
-   UINT32 dwRqId;
-
-   dwRqId = (UINT32)InterlockedIncrement(&m_requestId);
+   UINT32 dwRqId = (UINT32)InterlockedIncrement(&m_requestId);
    msg.setCode(CMD_ISC_CONNECT_TO_SERVICE);
    msg.setId(dwRqId);
 	msg.setField(VID_SERVICE_ID, service);
@@ -568,15 +495,8 @@ UINT32 ISC::connectToService(UINT32 service)
 }
 
 /**
- * Binary message handler. Default implementation do nothing.
- */
-void ISC::onBinaryMessage(NXCP_MESSAGE *rawMsg)
-{
-}
-
-/**
  * Incoming message handler. Default implementation do nothing and return false.
- * Should return true if message was consumed and shou8ld not be put into wait queue
+ * Should return true if message was consumed and should not be put into wait queue
  */
 bool ISC::onMessage(NXCPMessage *msg)
 {
