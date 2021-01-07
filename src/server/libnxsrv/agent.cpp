@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -103,7 +103,7 @@ private:
    void finalize();
 
 public:
-   NXCPEncryptionContext *m_encryptionContext;
+   shared_ptr<NXCPEncryptionContext> m_encryptionContext;
    CommChannelMessageReceiver *m_messageReceiver;
 
    static shared_ptr<AgentConnectionReceiver> create(const shared_ptr<AgentConnection>& connection)
@@ -119,7 +119,6 @@ public:
       m_channel = connection->m_channel;
       m_messageReceiver = new CommChannelMessageReceiver(m_channel, 4096, MAX_MSG_SIZE);
       m_channel->incRefCount();
-      m_encryptionContext = nullptr;
       m_recvTimeout = connection->m_recvTimeout; // 7 minutes
       _sntprintf(m_threadPoolKey, 16, _T("RECV-%u"), m_debugId);
       m_attached = true;
@@ -130,8 +129,6 @@ public:
       debugPrintf(7, _T("AgentConnectionReceiver destructor called (this=%p)"), this);
 
       delete m_messageReceiver;
-      if (m_encryptionContext != nullptr)
-         m_encryptionContext->decRefCount();
       if (m_channel != nullptr)
          m_channel->decRefCount();
    }
@@ -609,6 +606,17 @@ AbstractCommChannel *AgentConnection::acquireChannel()
 }
 
 /**
+ * Acquire encryption context
+ */
+shared_ptr<NXCPEncryptionContext> AgentConnection::acquireEncryptionContext()
+{
+   lock();
+   shared_ptr<NXCPEncryptionContext> ctx = m_receiver->m_encryptionContext;
+   unlock();
+   return ctx;
+}
+
+/**
  * Connect to agent
  */
 bool AgentConnection::connect(RSA *serverKey, uint32_t *error, uint32_t *socketError, uint64_t serverId)
@@ -738,11 +746,7 @@ setup_encryption:
       if (dwError != ERR_SUCCESS)
          goto connect_cleanup;
 		lock();
-		if (m_receiver->m_encryptionContext != nullptr)
-		{
-		   m_receiver->m_encryptionContext->decRefCount();
-		   m_receiver->m_encryptionContext = nullptr;
-		}
+		m_receiver->m_encryptionContext.reset();
 		unlock();
 
 		debugPrintf(6, _T("Proxy connection established"));
@@ -1305,20 +1309,19 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
 
    bool success;
    NXCP_MESSAGE *rawMsg = pMsg->serialize(m_allowCompression);
-	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
-   if (pCtx != nullptr)
+	shared_ptr<NXCPEncryptionContext> encryptionContext = acquireEncryptionContext();
+   if (encryptionContext != nullptr)
    {
-      NXCP_ENCRYPTED_MESSAGE *pEnMsg = pCtx->encryptMessage(rawMsg);
-      if (pEnMsg != nullptr)
+      NXCP_ENCRYPTED_MESSAGE *encryptedMsg = encryptionContext->encryptMessage(rawMsg);
+      if (encryptedMsg != nullptr)
       {
-         success = (channel->send(pEnMsg, ntohl(pEnMsg->size), m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
-         MemFree(pEnMsg);
+         success = (channel->send(encryptedMsg, ntohl(encryptedMsg->size), m_mutexSocketWrite) == (int)ntohl(encryptedMsg->size));
+         MemFree(encryptedMsg);
       }
       else
       {
          success = false;
       }
-		pCtx->decRefCount();
    }
    else
    {
@@ -1340,10 +1343,10 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
 
    bool success;
    NXCP_MESSAGE *rawMsg = pMsg;
-	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
-   if (pCtx != nullptr)
+	shared_ptr<NXCPEncryptionContext> encryptionContext = acquireEncryptionContext();
+   if (encryptionContext != nullptr)
    {
-      NXCP_ENCRYPTED_MESSAGE *pEnMsg = pCtx->encryptMessage(rawMsg);
+      NXCP_ENCRYPTED_MESSAGE *pEnMsg = encryptionContext->encryptMessage(rawMsg);
       if (pEnMsg != nullptr)
       {
          success = (channel->send(pEnMsg, ntohl(pEnMsg->size), m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
@@ -1353,7 +1356,6 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
       {
          success = false;
       }
-		pCtx->decRefCount();
    }
    else
    {
@@ -1726,14 +1728,12 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
          debugPrintf(5, _T("Sending file \"%s\" to agent %s compression"),
                   localFile, (compMethod == NXCP_STREAM_COMPRESSION_NONE) ? _T("without") : _T("with"));
          m_fileUploadInProgress = true;
-         NXCPEncryptionContext *ctx = acquireEncryptionContext();
-         if (SendFileOverNXCP(channel, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
+         shared_ptr<NXCPEncryptionContext> ctx = acquireEncryptionContext();
+         if (SendFileOverNXCP(channel, dwRqId, localFile, ctx.get(), 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
             dwResult = waitForRCC(dwRqId, m_commandTimeout);
          else
             dwResult = ERR_IO_FAILURE;
          m_fileUploadInProgress = false;
-         if (ctx != nullptr)
-            ctx->decRefCount();
          channel->decRefCount();
       }
       else
@@ -1915,10 +1915,12 @@ uint32_t AgentConnection::setupEncryption(RSA *pServerKey)
       NXCPMessage *response = waitForMessage(CMD_SESSION_KEY, requestId, m_commandTimeout);
       if (response != nullptr)
       {
-         uint32_t rcc = SetupEncryptionContext(response, &m_receiver->m_encryptionContext, nullptr, pServerKey, m_nProtocolVersion);
+         NXCPEncryptionContext *encryptionContext = nullptr;
+         uint32_t rcc = SetupEncryptionContext(response, &encryptionContext, nullptr, pServerKey, m_nProtocolVersion);
          switch(rcc)
          {
             case RCC_SUCCESS:
+               m_receiver->m_encryptionContext = shared_ptr<NXCPEncryptionContext>(encryptionContext);
                m_receiver->m_messageReceiver->setEncryptionContext(m_receiver->m_encryptionContext);
                result = ERR_SUCCESS;
                break;
@@ -2552,19 +2554,6 @@ UINT32 AgentConnection::uninstallPolicy(const uuid& guid)
 }
 
 /**
- * Acquire encryption context
- */
-NXCPEncryptionContext *AgentConnection::acquireEncryptionContext()
-{
-	lock();
-	NXCPEncryptionContext *ctx = (m_receiver != nullptr) ? m_receiver->m_encryptionContext : nullptr;
-	if (ctx != nullptr)
-		ctx->incRefCount();
-	unlock();
-	return ctx;
-}
-
-/**
  * Callback for processing collected data on separate thread
  */
 void AgentConnection::processCollectedDataCallback(NXCPMessage *msg)
@@ -2586,7 +2575,7 @@ void AgentConnection::processCollectedDataCallback(NXCPMessage *msg)
    }
    else
    {
-      UINT32 rcc = processCollectedData(msg);
+      uint32_t rcc = processCollectedData(msg);
       response.setField(VID_RCC, rcc);
    }
 

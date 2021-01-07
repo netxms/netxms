@@ -166,7 +166,6 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_socket = hSocket;
    m_socketPoller = nullptr;
    m_messageReceiver = nullptr;
-   m_pCtx = nullptr;
 	m_mutexSocketWrite = MutexCreate();
    m_mutexSendAlarms = MutexCreate();
    m_mutexSendActions = MutexCreate();
@@ -237,10 +236,7 @@ ClientSession::~ClientSession()
       }
       MemFree(m_ppEPPRuleList);
    }
-	if (m_pCtx != nullptr)
-		m_pCtx->decRefCount();
-   if (m_condEncryptionSetup != INVALID_CONDITION_HANDLE)
-      ConditionDestroy(m_condEncryptionSetup);
+   ConditionDestroy(m_condEncryptionSetup);
 
 	delete m_console;
 
@@ -462,8 +458,10 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
       if ((msg->getCode() == CMD_SESSION_KEY) && (msg->getId() == m_encryptionRqId))
       {
          debugPrintf(6, _T("Received message CMD_SESSION_KEY"));
-         m_encryptionResult = SetupEncryptionContext(msg, &m_pCtx, nullptr, g_pServerKey, NXCP_VERSION);
-         m_messageReceiver->setEncryptionContext(m_pCtx);
+         NXCPEncryptionContext *encryptionContext = nullptr;
+         m_encryptionResult = SetupEncryptionContext(msg, &encryptionContext, nullptr, g_pServerKey, NXCP_VERSION);
+         m_encryptionContext = shared_ptr<NXCPEncryptionContext>(encryptionContext);
+         m_messageReceiver->setEncryptionContext(m_encryptionContext);
          ConditionSet(m_condEncryptionSetup);
          m_encryptionRqId = 0;
          delete msg;
@@ -1570,9 +1568,9 @@ bool ClientSession::sendMessage(const NXCPMessage& msg)
    }
 
    bool result;
-   if (m_pCtx != nullptr)
+   if (m_encryptionContext != nullptr)
    {
-      NXCP_ENCRYPTED_MESSAGE *enMsg = m_pCtx->encryptMessage(rawMsg);
+      NXCP_ENCRYPTED_MESSAGE *enMsg = m_encryptionContext->encryptMessage(rawMsg);
       if (enMsg != nullptr)
       {
          result = (SendEx(m_socket, (char *)enMsg, ntohl(enMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(enMsg->size));
@@ -1619,9 +1617,9 @@ void ClientSession::sendRawMessage(NXCP_MESSAGE *msg)
    }
 
    bool result;
-   if (m_pCtx != nullptr)
+   if (m_encryptionContext != nullptr)
    {
-      NXCP_ENCRYPTED_MESSAGE *emsg = m_pCtx->encryptMessage(msg);
+      NXCP_ENCRYPTED_MESSAGE *emsg = m_encryptionContext->encryptMessage(msg);
       if (emsg != nullptr)
       {
          result = (SendEx(m_socket, (char *)emsg, ntohl(emsg->size), 0, m_mutexSocketWrite) == (int)ntohl(emsg->size));
@@ -1670,7 +1668,7 @@ void ClientSession::postRawMessageAndDelete(NXCP_MESSAGE *msg)
  */
 bool ClientSession::sendFile(const TCHAR *file, uint32_t requestId, long ofset, bool allowCompression)
 {
-   return !isTerminated() ? SendFileOverNXCP(m_socket, requestId, file, m_pCtx,
+   return !isTerminated() ? SendFileOverNXCP(m_socket, requestId, file, m_encryptionContext.get(),
             ofset, nullptr, nullptr, m_mutexSocketWrite, isCompressionEnabled() && allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE) : false;
 }
 
@@ -10383,7 +10381,7 @@ void ClientSession::getServerFile(NXCPMessage *request)
 		if (_taccess(fname, 0) == 0)
 		{
 			debugPrintf(5, _T("getServerFile: Sending file %s"), fname);
-			if (SendFileOverNXCP(m_socket, request->getId(), fname, m_pCtx, 0, nullptr, nullptr, m_mutexSocketWrite))
+			if (SendFileOverNXCP(m_socket, request->getId(), fname, m_encryptionContext.get(), 0, nullptr, nullptr, m_mutexSocketWrite))
 			{
 				debugPrintf(5, _T("getServerFile: File %s was successfully sent"), fname);
 		      msg.setField(VID_RCC, RCC_SUCCESS);

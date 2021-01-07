@@ -317,7 +317,7 @@ private:
    bool m_bulkReconciliationSupported;
    HashMap<uint32_t, DownloadFileInfo> m_downloadFileMap;
    bool m_allowCompression;   // allow compression for structured messages
-	NXCPEncryptionContext *m_pCtx;
+	shared_ptr<NXCPEncryptionContext> m_encryptionContext;
    time_t m_ts;               // Last activity timestamp
    SOCKET m_hProxySocket;     // Socket for proxy connection
 	MUTEX m_socketWriteMutex;
@@ -495,7 +495,6 @@ private:
    uint32_t m_id;
    SOCKET m_socket;
    MUTEX m_mutex;
-   NXCP_BUFFER m_msgBuffer;
    MsgWaitQueue m_msgQueue;
    uint32_t m_sessionId;
    TCHAR *m_sessionName;
@@ -508,7 +507,7 @@ private:
 
    void readThread();
    bool sendMessage(const NXCPMessage *msg);
-   UINT32 nextRequestId() { return InterlockedIncrement(&m_requestId); }
+   uint32_t nextRequestId() { return InterlockedIncrement(&m_requestId); }
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
 
@@ -717,7 +716,7 @@ void DebugPrintf(int level, const TCHAR *format, ...);
 
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 
-BOOL DownloadConfig(TCHAR *pszServer);
+bool DownloadConfig(const TCHAR *server);
 
 void AddParameter(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *),
          const TCHAR *arg, int dataType, const TCHAR *description);

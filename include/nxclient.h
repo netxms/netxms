@@ -260,7 +260,7 @@ protected:
    VolatileCounter m_msgId;
    SOCKET m_hSocket;
    MsgWaitQueue *m_msgWaitQueue;
-   NXCPEncryptionContext *m_encryptionContext;
+   shared_ptr<NXCPEncryptionContext> m_encryptionContext;
    UINT32 m_commandTimeout;
    bool m_compressionEnabled;
 

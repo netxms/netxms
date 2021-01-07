@@ -36,11 +36,6 @@
 #define NXCP_ENCRYPTION_HEADER_SIZE    16
 #define NXCP_EH_UNENCRYPTED_BYTES      8
 #define NXCP_EH_ENCRYPTED_BYTES        (NXCP_ENCRYPTION_HEADER_SIZE - NXCP_EH_UNENCRYPTED_BYTES)
-#ifdef __64BIT__
-#define PROXY_ENCRYPTION_CTX           ((NXCPEncryptionContext *)_ULL(0xFFFFFFFFFFFFFFFF))
-#else
-#define PROXY_ENCRYPTION_CTX           ((NXCPEncryptionContext *)0xFFFFFFFF)
-#endif
 
 #ifndef EVP_MAX_IV_LENGTH
 #define EVP_MAX_IV_LENGTH              16

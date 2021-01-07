@@ -509,199 +509,6 @@ void LIBNETXMS_EXPORTABLE NXCPUnregisterMessageNameResolver(NXCPMessageNameResol
 }
 
 /**
- * Init NXCP receiver buffer
- */
-void LIBNETXMS_EXPORTABLE NXCPInitBuffer(NXCP_BUFFER *nxcpBuffer)
-{
-   nxcpBuffer->bufferSize = 0;
-   nxcpBuffer->bufferPos = 0;
-}
-
-/**
- * Receive raw CSCP message from network
- * If pMsg is NULL, temporary buffer will be re-initialized
- * Returns message size on success or:
- *   0 if connection is closed
- *  <0 on socket errors
- *   1 if message is too large to fit in buffer (normal messages is at least 16
- *     bytes long, so we never get length of 1 for valid message)
- *     In this case, only message header will be copied into buffer
- *   2 Message decryption failed
- *   3 Receive timeout
- */
-ssize_t LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(AbstractCommChannel *channel, NXCP_MESSAGE **msgBuffer,
-      NXCP_BUFFER *nxcpBuffer, UINT32 *bufferSize, NXCPEncryptionContext **ppCtx, BYTE **decryptionBuffer,
-      UINT32 dwTimeout, UINT32 maxMsgSize)
-{
-   UINT32 dwMsgSize = 0, dwBytesRead = 0, dwBytesToCopy;
-   ssize_t iErr;
-   BOOL bSkipMsg = FALSE;
-
-   // Initialize buffer if requested
-   if (msgBuffer == NULL)
-   {
-      nxcpBuffer->bufferSize = 0;
-      nxcpBuffer->bufferPos = 0;
-      return 0;
-   }
-
-   // Check if we have something in buffer
-   if (nxcpBuffer->bufferSize > 0)
-   {
-      // Handle the case when entire message header have not been read into the buffer
-      if (nxcpBuffer->bufferSize < NXCP_HEADER_SIZE)
-      {
-         // Most likely we are at the buffer end, so move content
-         // to the beginning
-         memmove(nxcpBuffer->buffer, &nxcpBuffer->buffer[nxcpBuffer->bufferPos], nxcpBuffer->bufferSize);
-         nxcpBuffer->bufferPos = 0;
-
-         // Receive new portion of data from the network
-         // and append it to existing data in buffer
-			iErr = channel->recv(&nxcpBuffer->buffer[nxcpBuffer->bufferSize],
-                       NXCP_TEMP_BUF_SIZE - nxcpBuffer->bufferSize, dwTimeout);
-         if (iErr <= 0)
-            return (iErr == -2) ? 3 : iErr;
-         nxcpBuffer->bufferSize += (UINT32)iErr;
-      }
-
-      // Get message size from message header and copy available
-      // message bytes from buffer
-      dwMsgSize = ntohl(((NXCP_MESSAGE *)(&nxcpBuffer->buffer[nxcpBuffer->bufferPos]))->size);
-      if (dwMsgSize > *bufferSize)
-      {
-			if ((*bufferSize >= maxMsgSize) || (dwMsgSize > maxMsgSize))
-			{
-				bSkipMsg = TRUE;  // Message is too large, will skip it
-				memcpy(*msgBuffer, &nxcpBuffer->buffer[nxcpBuffer->bufferPos], NXCP_HEADER_SIZE);
-			}
-			else
-			{
-				// Increase buffer
-				*bufferSize = dwMsgSize;
-				*msgBuffer = (NXCP_MESSAGE *)realloc(*msgBuffer, *bufferSize);
-				if (decryptionBuffer != NULL)
-					*decryptionBuffer = (BYTE *)realloc(*decryptionBuffer, *bufferSize);
-			}
-      }
-      dwBytesRead = std::min(dwMsgSize, (UINT32)nxcpBuffer->bufferSize);
-      if (!bSkipMsg)
-         memcpy(*msgBuffer, &nxcpBuffer->buffer[nxcpBuffer->bufferPos], dwBytesRead);
-      nxcpBuffer->bufferSize -= dwBytesRead;
-      nxcpBuffer->bufferPos = (nxcpBuffer->bufferSize > 0) ? (nxcpBuffer->bufferPos + dwBytesRead) : 0;
-      if (dwBytesRead == dwMsgSize)
-         goto decrypt_message;
-   }
-
-   // Receive rest of message from the network
-	// Buffer is empty now
-	nxcpBuffer->bufferSize = 0;
-	nxcpBuffer->bufferPos = 0;
-   do
-   {
-		iErr = channel->recv(&nxcpBuffer->buffer[nxcpBuffer->bufferSize],
-		                     NXCP_TEMP_BUF_SIZE - nxcpBuffer->bufferSize, dwTimeout);
-      if (iErr <= 0)
-         return (iErr == -2) ? 3 : iErr;
-
-		if (dwBytesRead == 0) // New message?
-      {
-			if ((iErr + nxcpBuffer->bufferSize) < NXCP_HEADER_SIZE)
-			{
-				// Header not received completely
-				nxcpBuffer->bufferSize += iErr;
-				continue;
-			}
-			iErr += nxcpBuffer->bufferSize;
-			nxcpBuffer->bufferSize = 0;
-
-         dwMsgSize = ntohl(((NXCP_MESSAGE *)(nxcpBuffer->buffer))->size);
-         if (dwMsgSize > *bufferSize)
-         {
-				if ((*bufferSize >= maxMsgSize) || (dwMsgSize > maxMsgSize))
-				{
-					bSkipMsg = TRUE;  // Message is too large, will skip it
-	            memcpy(*msgBuffer, nxcpBuffer->buffer, NXCP_HEADER_SIZE);
-				}
-				else
-				{
-					// Increase buffer
-					*bufferSize = dwMsgSize;
-					*msgBuffer = (NXCP_MESSAGE *)realloc(*msgBuffer, *bufferSize);
-					if (decryptionBuffer != NULL)
-						*decryptionBuffer = (BYTE *)realloc(*decryptionBuffer, *bufferSize);
-				}
-         }
-      }
-      dwBytesToCopy = std::min((UINT32)iErr, dwMsgSize - dwBytesRead);
-      if (!bSkipMsg)
-         memcpy(((char *)(*msgBuffer)) + dwBytesRead, nxcpBuffer->buffer, dwBytesToCopy);
-      dwBytesRead += dwBytesToCopy;
-   }
-	while((dwBytesRead < dwMsgSize) || (dwBytesRead < NXCP_HEADER_SIZE));
-
-   // Check if we have something left in buffer
-   if (dwBytesToCopy < (UINT32)iErr)
-   {
-      nxcpBuffer->bufferPos = dwBytesToCopy;
-      nxcpBuffer->bufferSize = (UINT32)iErr - dwBytesToCopy;
-   }
-
-   // Check for encrypted message
-decrypt_message:
-   if ((!bSkipMsg) && (ntohs((*msgBuffer)->code) == CMD_ENCRYPTED_MESSAGE))
-   {
-      if ((*ppCtx != NULL) && (*ppCtx != PROXY_ENCRYPTION_CTX))
-      {
-         if ((*ppCtx)->decryptMessage((NXCP_ENCRYPTED_MESSAGE *)(*msgBuffer), *decryptionBuffer))
-         {
-            dwMsgSize = ntohl((*msgBuffer)->size);
-         }
-         else
-         {
-            dwMsgSize = 2;    // Decryption failed
-         }
-      }
-      else
-      {
-         if (*ppCtx != PROXY_ENCRYPTION_CTX)
-            dwMsgSize = 2;
-      }
-   }
-
-   return bSkipMsg ? 1 : (int)dwMsgSize;
-}
-
-ssize_t LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuffer, NXCP_BUFFER *nxcpBuffer,
-      UINT32 *bufferSize, NXCPEncryptionContext **ppCtx, BYTE **decryptionBuffer, UINT32 dwTimeout, UINT32 maxMsgSize)
-{
-   SocketCommChannel *channel = new SocketCommChannel(hSocket, nullptr, Ownership::False);
-   ssize_t result = RecvNXCPMessageEx(channel, msgBuffer, nxcpBuffer, bufferSize, ppCtx, decryptionBuffer, dwTimeout, maxMsgSize);
-   channel->decRefCount();
-   return result;
-}
-
-ssize_t LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, NXCP_MESSAGE *msgBuffer, NXCP_BUFFER *nxcpBuffer,
-      UINT32 bufferSize, NXCPEncryptionContext **ppCtx, BYTE *decryptionBuffer, UINT32 dwTimeout)
-{
-	NXCP_MESSAGE *mb = msgBuffer;
-	UINT32 bs = bufferSize;
-	BYTE *db = decryptionBuffer;
-	return RecvNXCPMessageEx(hSocket, (msgBuffer != NULL) ? &mb : NULL, nxcpBuffer, &bs, ppCtx,
-	                         (decryptionBuffer != NULL) ? &db : NULL, dwTimeout, bufferSize);
-}
-
-ssize_t LIBNETXMS_EXPORTABLE RecvNXCPMessage(AbstractCommChannel *channel, NXCP_MESSAGE *msgBuffer, NXCP_BUFFER *nxcpBuffer,
-      UINT32 bufferSize, NXCPEncryptionContext **ppCtx, BYTE *decryptionBuffer, UINT32 dwTimeout)
-{
-   NXCP_MESSAGE *mb = msgBuffer;
-   UINT32 bs = bufferSize;
-   BYTE *db = decryptionBuffer;
-   return RecvNXCPMessageEx(channel, (msgBuffer != NULL) ? &mb : NULL, nxcpBuffer, &bs, ppCtx,
-                            (decryptionBuffer != NULL) ? &db : NULL, dwTimeout, bufferSize);
-}
-
-/**
  * Create NXCP message with raw data (MF_BINARY flag)
  * If buffer is NULL, new buffer is allocated with malloc()
  * Buffer should be at least dataSize + NXCP_HEADER_SIZE + 8 bytes.
@@ -710,7 +517,7 @@ NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, 
                                                         const void *data, size_t dataSize,
                                                         NXCP_MESSAGE *buffer, bool allowCompression)
 {
-   NXCP_MESSAGE *msg = (buffer == NULL) ? static_cast<NXCP_MESSAGE*>(MemAlloc(dataSize + NXCP_HEADER_SIZE + 8)) : buffer;
+   NXCP_MESSAGE *msg = (buffer == nullptr) ? static_cast<NXCP_MESSAGE*>(MemAlloc(dataSize + NXCP_HEADER_SIZE + 8)) : buffer;
 
    // Message should be aligned to 8 bytes boundary
    size_t padding = (8 - ((dataSize + NXCP_HEADER_SIZE) % 8)) & 7;
@@ -978,19 +785,15 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channe
    msg.flags = htons(MF_CONTROL | MF_NXCP_VERSION(NXCP_VERSION));
    if (channel->send(&msg, NXCP_HEADER_SIZE, mutex) == NXCP_HEADER_SIZE)
    {
-      NXCP_BUFFER *pBuffer = MemAllocStruct<NXCP_BUFFER>();
-      NXCPInitBuffer(pBuffer);
-
-      NXCPEncryptionContext *dummyContext = nullptr;
-      ssize_t nSize = RecvNXCPMessage(channel, &msg, pBuffer, NXCP_HEADER_SIZE, &dummyContext, nullptr, 30000);
-      if ((nSize == NXCP_HEADER_SIZE) &&
-          (ntohs(msg.code) == CMD_NXCP_CAPS) &&
-          (ntohs(msg.flags) & MF_CONTROL))
+      CommChannelMessageReceiver receiver(channel, 1024, 32768);
+      MessageReceiverResult result;
+      NXCPMessage *response = receiver.readMessage(10000, &result);
+      if ((response != nullptr) && (response->getCode() == CMD_NXCP_CAPS) && response->isControl())
       {
          success = true;
-         *pnVersion = ntohl(msg.numFields) >> 24;
+         *pnVersion = response->getControlData() >> 24;
       }
-      else if ((nSize == 1) || (nSize == 3) || (nSize >= NXCP_HEADER_SIZE))
+      else if ((result == MSGRECV_TIMEOUT) || (result == MSGRECV_PROTOCOL_ERROR))
       {
          // We don't receive any answer or receive invalid answer -
          // assume that peer doesn't understand CMD_GET_NXCP_CAPS message
@@ -998,7 +801,7 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channe
          success = true;
          *pnVersion = 1;
       }
-      MemFree(pBuffer);
+      delete response;
    }
    return success;
 }

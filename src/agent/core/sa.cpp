@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -190,91 +190,65 @@ bool SessionAgentConnector::sendMessage(const NXCPMessage *msg)
  */
 void SessionAgentConnector::readThread()
 {
-   NXCPEncryptionContext *dummyCtx = nullptr;
-   NXCPInitBuffer(&m_msgBuffer);
-   UINT32 rawMsgSize = 65536;
-   NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)malloc(rawMsgSize);
-   while(1)
+   SocketMessageReceiver receiver(m_socket, 32768, 4 * 1024 * 1024);
+   while(true)
    {
-      ssize_t err = RecvNXCPMessageEx(m_socket, &rawMsg, &m_msgBuffer, &rawMsgSize, &dummyCtx, nullptr, 300000, 4 * 1024 * 1024);
-      if (err <= 0)
+      MessageReceiverResult result;
+      NXCPMessage *msg = receiver.readMessage(300000, &result);
+      if ((result == MSGRECV_CLOSED) || (result == MSGRECV_COMM_FAILURE))
          break;
 
-      // Check if message is too large
-      if (err == 1)
-         continue;
-
-      // Check for decryption failure
-      if (err == 2)
-         continue;
-
       // Check for timeout
-      if (err == 3)
+      if (result == MSGRECV_TIMEOUT)
       {
          DebugPrintf(5, _T("Session agent connector %d stopped by timeout"), m_id);
          break;
       }
 
-      // Check that actual received packet size is equal to encoded in packet
-      if ((int)ntohl(rawMsg->size) != err)
-      {
-         DebugPrintf(5, _T("SA-%d: actual message size doesn't match wSize value (%d,%d)"), m_id, err, ntohl(rawMsg->size));
-         continue;   // Bad packet, wait for next
-      }
+      if (msg == nullptr)
+         continue;   // For other errors, wait for next message
 
       if (nxlog_get_debug_level() >= 8)
       {
+         NXCP_MESSAGE *rawMsg = msg->serialize(false);
          String msgDump = NXCPMessage::dump(rawMsg, NXCP_VERSION);
-         DebugPrintf(8, _T("SA-%d: Message dump:\n%s"), m_id, (const TCHAR *)msgDump);
+         nxlog_debug(8, _T("SA-%d: Message dump:\n%s"), m_id, (const TCHAR *)msgDump);
+         MemFree(rawMsg);
       }
 
-      uint16_t flags = ntohs(rawMsg->flags);
-      if (!(flags & MF_BINARY))
+      if (msg->getCode() == CMD_LOGIN)
       {
-         // Create message object from raw message
-         NXCPMessage *msg = NXCPMessage::deserialize(rawMsg);
-         if (msg != nullptr)
+         m_processId = msg->getFieldAsUInt32(VID_PROCESS_ID);
+         m_sessionId = msg->getFieldAsUInt32(VID_SESSION_ID);
+         m_sessionState = msg->getFieldAsInt16(VID_SESSION_STATE);
+         m_userAgent = msg->getFieldAsBoolean(VID_USERAGENT);
+         msg->getFieldAsString(VID_NAME, &m_sessionName);
+         msg->getFieldAsString(VID_USER_NAME, &m_userName);
+         msg->getFieldAsString(VID_CLIENT_INFO, &m_clientName);
+
+         delete msg;
+         DebugPrintf(5, _T("Session agent connector %d: login as %s@%s [%d] (%s client)"),
+            m_id, getUserName(), getSessionName(), m_sessionId, m_userAgent ? _T("extended") : _T("basic"));
+
+         RegisterSessionAgent(this);
+
+         if (m_userAgent)
          {
-            if (msg->getCode() == CMD_LOGIN)
-            {
-               m_processId = msg->getFieldAsUInt32(VID_PROCESS_ID);
-               m_sessionId = msg->getFieldAsUInt32(VID_SESSION_ID);
-               m_sessionState = msg->getFieldAsInt16(VID_SESSION_STATE);
-               m_userAgent = msg->getFieldAsBoolean(VID_USERAGENT);
-               msg->getFieldAsString(VID_NAME, &m_sessionName);
-               msg->getFieldAsString(VID_USER_NAME, &m_userName);
-               msg->getFieldAsString(VID_CLIENT_INFO, &m_clientName);
+            updateUserAgentEnvironment();
+            updateUserAgentConfig();
 
-               delete msg;
-               DebugPrintf(5, _T("Session agent connector %d: login as %s@%s [%d] (%s client)"), 
-                  m_id, getUserName(), getSessionName(), m_sessionId, m_userAgent ? _T("extended") : _T("basic"));
-
-               RegisterSessionAgent(this);
-
-               if (m_userAgent)
-               {
-                  updateUserAgentEnvironment();
-                  updateUserAgentConfig();
-
-                  s_userAgentNotificationsLock.lock();
-                  updateUserAgentNotifications();
-                  s_userAgentNotificationsLock.unlock();
-               }
-            }
-            else
-            {
-               m_msgQueue.put(msg);
-            }
+            s_userAgentNotificationsLock.lock();
+            updateUserAgentNotifications();
+            s_userAgentNotificationsLock.unlock();
          }
-         else
-         {
-            DebugPrintf(5, _T("SA-%d: message deserialization error"), m_id);
-         }
+      }
+      else
+      {
+         m_msgQueue.put(msg);
       }
    }
-   MemFree(rawMsg);
 
-   DebugPrintf(5, _T("Session agent connector %d stopped"), m_id);
+   nxlog_debug(5, _T("Session agent connector %d stopped"), m_id);
 }
 
 /**
@@ -282,15 +256,12 @@ void SessionAgentConnector::readThread()
  */
 bool SessionAgentConnector::testConnection()
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_KEEPALIVE);
-   msg.setId(nextRequestId());
+   NXCPMessage msg(CMD_KEEPALIVE, nextRequestId());
    if (!sendMessage(&msg))
       return false;
 
    NXCPMessage *response = m_msgQueue.waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), 5000);
-   if (response == NULL)
+   if (response == nullptr)
       return false;
 
    delete response;
@@ -302,9 +273,7 @@ bool SessionAgentConnector::testConnection()
  */
 void SessionAgentConnector::shutdown(bool restart)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_SHUTDOWN);
-   msg.setId(nextRequestId());
+   NXCPMessage msg(CMD_SHUTDOWN, nextRequestId());
    msg.setField(VID_RESTART, restart);
    sendMessage(&msg);
 }
@@ -314,10 +283,7 @@ void SessionAgentConnector::shutdown(bool restart)
  */
 void SessionAgentConnector::takeScreenshot(NXCPMessage *masterResponse)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_TAKE_SCREENSHOT);
-   msg.setId(nextRequestId());
+   NXCPMessage msg(CMD_TAKE_SCREENSHOT, nextRequestId());
    if (!sendMessage(&msg))
    {
       masterResponse->setField(VID_RCC, ERR_CONNECTION_BROKEN);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,50 +44,28 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 #define MAX_MSG_SIZE    262144
 
 /**
- * Save config to file
- */
-static BOOL SaveConfig(TCHAR *pszConfig)
-{
-   FILE *fp;
-   BOOL bRet = FALSE;
-
-   fp = _tfopen(g_szConfigFile, _T("w"));
-   if (fp != nullptr)
-   {
-      bRet = (_fputts(pszConfig, fp) >= 0);
-      fclose(fp);
-   }
-   return bRet;
-}
-
-/**
  * Download agent's config from management server
  */
-BOOL DownloadConfig(TCHAR *pszServer)
+bool DownloadConfig(const TCHAR *server)
 {
-   BOOL bRet = FALSE;
-   TCHAR szBuffer[MAX_RESULT_LENGTH], *pszConfig;
-   NXCP_MESSAGE *pRawMsg;
-   NXCP_BUFFER *pBuffer;
-   NXCPEncryptionContext *pDummyCtx = nullptr;
-
 #ifdef _WIN32
    WSADATA wsaData;
 
    if (WSAStartup(0x0202, &wsaData) != 0)
    {
       _tprintf(_T("ERROR: Unable to initialize Windows Sockets\n"));
-      return FALSE;
+      return false;
    }
 #endif
 
-   InetAddress addr = InetAddress::resolveHostName(pszServer);
+   InetAddress addr = InetAddress::resolveHostName(server);
    if (!addr.isValidUnicast())
    {
       _tprintf(_T("ERROR: Unable to resolve name of management server\n"));
-      return FALSE;
+      return false;
    }
 
+   bool success = false;
    SOCKET hSocket = CreateSocket(addr.getFamily(), SOCK_STREAM, 0);
    if (hSocket != INVALID_SOCKET)
    {
@@ -95,55 +73,70 @@ BOOL DownloadConfig(TCHAR *pszServer)
       addr.fillSockAddr(&sa, 4701);
       if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) != -1)
       {
+         TCHAR buffer[MAX_RESULT_LENGTH];
+
          // Prepare request
          NXCPMessage msg(2);  // Server version is not known, use protocol version 2
          msg.setCode(CMD_GET_MY_CONFIG);
          msg.setId(1);
-         if (H_PlatformName(nullptr, nullptr, szBuffer, nullptr) != SYSINFO_RC_SUCCESS)
-            _tcscpy(szBuffer, _T("error"));
-         msg.setField(VID_PLATFORM_NAME, szBuffer);
+         if (H_PlatformName(nullptr, nullptr, buffer, nullptr) != SYSINFO_RC_SUCCESS)
+            _tcscpy(buffer, _T("error"));
+         msg.setField(VID_PLATFORM_NAME, buffer);
          msg.setField(VID_VERSION_MAJOR, (WORD)NETXMS_VERSION_MAJOR);
          msg.setField(VID_VERSION_MINOR, (WORD)NETXMS_VERSION_MINOR);
          msg.setField(VID_VERSION_RELEASE, (WORD)NETXMS_VERSION_BUILD);
          msg.setField(VID_VERSION, NETXMS_VERSION_STRING);
 
          // Send request
-         pRawMsg = msg.serialize();
+         NXCP_MESSAGE *pRawMsg = msg.serialize();
          ssize_t nLen = ntohl(pRawMsg->size);
          if (SendEx(hSocket, pRawMsg, nLen, 0, nullptr) == nLen)
          {
-            pRawMsg = (NXCP_MESSAGE *)MemRealloc(pRawMsg, MAX_MSG_SIZE);
-            pBuffer = MemAllocStruct<NXCP_BUFFER>();
-            NXCPInitBuffer(pBuffer);
-
-            nLen = RecvNXCPMessage(hSocket, pRawMsg, pBuffer, MAX_MSG_SIZE,
-                                   &pDummyCtx, nullptr, 30000);
-            if (nLen >= 16)
+            SocketMessageReceiver receiver(hSocket, 4096, MAX_MSG_SIZE);
+            MessageReceiverResult result;
+            NXCPMessage *response = receiver.readMessage(30000, &result);
+            if (response != nullptr)
             {
-               NXCPMessage *pResponse = NXCPMessage::deserialize(pRawMsg);
-               if (pResponse != nullptr)
+               if ((response->getCode() == CMD_REQUEST_COMPLETED) &&
+                   (response->getId() == 1) &&
+                   (response->getFieldAsUInt32(VID_RCC) == 0))
                {
-                  if ((pResponse->getCode() == CMD_REQUEST_COMPLETED) &&
-                      (pResponse->getId() == 1) &&
-                      (pResponse->getFieldAsUInt32(VID_RCC) == 0))
+                  char *config = response->getFieldAsUtf8String(VID_CONFIG_FILE);
+                  if (config != nullptr)
                   {
-                     pszConfig = pResponse->getFieldAsString(VID_CONFIG_FILE);
-                     if (pszConfig != nullptr)
+                     SaveFileStatus status = SaveFile(g_szConfigFile, config, strlen(config), false, true);
+                     if (status == SaveFileStatus::SUCCESS)
                      {
-                        bRet = SaveConfig(pszConfig);
-                        MemFree(pszConfig);
+                        _tprintf(_T("INFO: Configuration file downloaded from management server\n"));
+                        success = true;
                      }
+                     else if ((status == SaveFileStatus::OPEN_ERROR) || (status == SaveFileStatus::RENAME_ERROR))
+                     {
+                        _tprintf(_T("ERROR: Error opening file %s for writing (%s)"), g_szConfigFile, _tcserror(errno));
+                     }
+                     else
+                     {
+                        _tprintf(_T("ERROR: Error writing configuration file (%s)"), _tcserror(errno));
+                     }
+                     MemFree(config);
                   }
-                  delete pResponse;
                }
+               else
+               {
+                  _tprintf(_T("ERROR: Invalid response from management server\n"));
+               }
+               delete response;
             }
-            MemFree(pBuffer);
+            else
+            {
+               _tprintf(_T("ERROR: No response from management server\n"));
+            }
          }
          MemFree(pRawMsg);
       }
       else
       {
-         printf("ERROR: Cannot connect to management server\n");
+         _tprintf(_T("ERROR: Cannot connect to management server\n"));
       }
       closesocket(hSocket);
    }
@@ -151,7 +144,7 @@ BOOL DownloadConfig(TCHAR *pszServer)
 #ifdef _WIN32
    WSACleanup();
 #endif
-   return bRet;
+   return success;
 }
 
 /**

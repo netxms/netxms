@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,12 +38,8 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
  */
 BOOL RegisterOnServer(const TCHAR *pszServer, int32_t zoneUIN)
 {
-   SOCKET hSocket;
    BOOL bRet = FALSE;
    TCHAR szBuffer[MAX_RESULT_LENGTH];
-   NXCP_MESSAGE *pRawMsg;
-   NXCP_BUFFER *pBuffer;
-   NXCPEncryptionContext *pDummyCtx = NULL;
    ssize_t nLen;
 
    InetAddress addr = InetAddress::resolveHostName(pszServer);
@@ -53,7 +49,7 @@ BOOL RegisterOnServer(const TCHAR *pszServer, int32_t zoneUIN)
       return FALSE;
    }
 
-   hSocket = CreateSocket(addr.getFamily(), SOCK_STREAM, 0);
+   SOCKET hSocket = CreateSocket(addr.getFamily(), SOCK_STREAM, 0);
    if (hSocket != INVALID_SOCKET)
    {
       SockAddrBuffer sa;
@@ -71,33 +67,25 @@ BOOL RegisterOnServer(const TCHAR *pszServer, int32_t zoneUIN)
          msg.setField(VID_ZONE_UIN, zoneUIN);
 
          // Send request
-         pRawMsg = msg.serialize();
+         NXCP_MESSAGE *pRawMsg = msg.serialize();
          nLen = ntohl(pRawMsg->size);
          if (SendEx(hSocket, pRawMsg, nLen, 0, NULL) == nLen)
          {
-            pRawMsg = (NXCP_MESSAGE *)realloc(pRawMsg, MAX_MSG_SIZE);
-            pBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
-            NXCPInitBuffer(pBuffer);
-
-            nLen = RecvNXCPMessage(hSocket, pRawMsg, pBuffer, MAX_MSG_SIZE,
-                                   &pDummyCtx, NULL, 30000);
-            if (nLen >= 16)
+            SocketMessageReceiver receiver(hSocket, 4096, MAX_MSG_SIZE);
+            MessageReceiverResult result;
+            NXCPMessage *response = receiver.readMessage(30000, &result);
+            if (response != nullptr)
             {
-               NXCPMessage *pResponse = NXCPMessage::deserialize(pRawMsg);
-               if (pResponse != NULL)
+               if ((response->getCode() == CMD_REQUEST_COMPLETED) &&
+                   (response->getId() == 2) &&
+                   (response->getFieldAsUInt32(VID_RCC) == 0))
                {
-                  if ((pResponse->getCode() == CMD_REQUEST_COMPLETED) &&
-                      (pResponse->getId() == 2) &&
-                      (pResponse->getFieldAsUInt32(VID_RCC) == 0))
-                  {
-                     bRet = TRUE;
-                  }
-                  delete pResponse;
+                  bRet = TRUE;
                }
+               delete response;
             }
-            free(pBuffer);
          }
-         free(pRawMsg);
+         MemFree(pRawMsg);
 
 			if (bRet)
 			{

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2020 Reden Solutions
+** Copyright (C) 2003-2021 Reden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -889,7 +889,7 @@ protected:
 
    void lock() { MutexLock(m_mutexDataLock); }
    void unlock() { MutexUnlock(m_mutexDataLock); }
-	NXCPEncryptionContext *acquireEncryptionContext();
+	shared_ptr<NXCPEncryptionContext> acquireEncryptionContext();
    AbstractCommChannel *acquireChannel();
 
 #ifdef _WIN32
@@ -1033,19 +1033,20 @@ public:
 class LIBNXSRV_EXPORTABLE ISC
 {
 private:
-	UINT32 m_flags;
+	uint32_t m_flags;
    InetAddress m_addr;
-	WORD m_port;
+	uint16_t m_port;
    SOCKET m_socket;
    int m_protocolVersion;
+   SocketMessageReceiver *m_messageReceiver;
 	VolatileCounter m_requestId;
-	UINT32 m_recvTimeout;
+	uint32_t m_recvTimeout;
    MsgWaitQueue *m_msgWaitQueue;
    MUTEX m_mutexDataLock;
 	MUTEX m_socketLock;
    THREAD m_hReceiverThread;
-   NXCPEncryptionContext *m_ctx;
-	UINT32 m_commandTimeout;
+   shared_ptr<NXCPEncryptionContext> m_ctx;
+   uint32_t m_commandTimeout;
 
    void receiverThread();
    static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *);
@@ -1058,12 +1059,11 @@ protected:
    void unlock() { MutexUnlock(m_mutexDataLock); }
 
    virtual void printMessage(const TCHAR *format, ...);
-   virtual void onBinaryMessage(NXCP_MESSAGE *rawMsg);
    virtual bool onMessage(NXCPMessage *msg);
 
 public:
    ISC();
-   ISC(const InetAddress& addr, WORD port = NETXMS_ISC_PORT);
+   ISC(const InetAddress& addr, uint16_t port = NETXMS_ISC_PORT);
    virtual ~ISC();
 
    UINT32 connect(UINT32 service, RSA *serverKey = NULL, BOOL requireEncryption = FALSE);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -124,7 +124,6 @@ CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &server
    m_bulkReconciliationSupported = false;
    m_disconnected = false;
    m_allowCompression = false;
-   m_pCtx = nullptr;
    m_ts = time(nullptr);
    m_socketWriteMutex = MutexCreate();
    m_responseQueue = new MsgWaitQueue();
@@ -158,8 +157,6 @@ CommSession::~CommSession()
    m_disconnected = true;
 
    delete m_processingQueue;
-	if ((m_pCtx != NULL) && (m_pCtx != PROXY_ENCRYPTION_CTX))
-		m_pCtx->decRefCount();
 	MutexDestroy(m_socketWriteMutex);
    delete m_responseQueue;
    MutexDestroy(m_tcpProxyLock);
@@ -320,7 +317,7 @@ void CommSession::readThread()
                response->flags = htons(MF_CONTROL | MF_NXCP_VERSION(m_protocolVersion));
                response->numFields = htonl(m_protocolVersion << 24);
                response->size = htonl(NXCP_HEADER_SIZE);
-               sendRawMessage(response, m_pCtx);
+               sendRawMessage(response, m_encryptionContext.get());
             }
             delete msg;
          }
@@ -336,13 +333,15 @@ void CommSession::readThread()
                   m_responseQueue->put(msg);
                   break;
                case CMD_REQUEST_SESSION_KEY:
-                  if (m_pCtx == nullptr)
+                  if (m_encryptionContext == nullptr)
                   {
-                     NXCPMessage *pResponse;
-                     SetupEncryptionContext(msg, &m_pCtx, &pResponse, nullptr, m_protocolVersion);
-                     sendMessage(pResponse);
-                     delete pResponse;
-                     receiver.setEncryptionContext(m_pCtx);
+                     NXCPEncryptionContext *encryptionContext = nullptr;
+                     NXCPMessage *response = nullptr;
+                     SetupEncryptionContext(msg, &encryptionContext, &response, nullptr, m_protocolVersion);
+                     m_encryptionContext = shared_ptr<NXCPEncryptionContext>(encryptionContext);
+                     sendMessage(response);
+                     delete response;
+                     receiver.setEncryptionContext(m_encryptionContext);
                   }
                   delete msg;
                   break;
@@ -449,7 +448,7 @@ bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
       }
    }
 
-   if ((ctx != NULL) && (ctx != PROXY_ENCRYPTION_CTX))
+   if (ctx != nullptr)
    {
       NXCP_ENCRYPTED_MESSAGE *enMsg = ctx->encryptMessage(msg);
       if (enMsg != NULL)
@@ -487,7 +486,7 @@ bool CommSession::sendMessage(const NXCPMessage *msg)
    if (m_disconnected)
       return false;
 
-   return sendRawMessage(msg->serialize(m_allowCompression), m_pCtx);
+   return sendRawMessage(msg->serialize(m_allowCompression), m_encryptionContext.get());
 }
 
 /**
@@ -495,7 +494,7 @@ bool CommSession::sendMessage(const NXCPMessage *msg)
  */
 bool CommSession::sendRawMessage(const NXCP_MESSAGE *msg)
 {
-   return sendRawMessage(MemCopyBlock(msg, ntohl(msg->size)), m_pCtx);
+   return sendRawMessage(MemCopyBlock(msg, ntohl(msg->size)), m_encryptionContext.get());
 }
 
 /**
@@ -525,7 +524,7 @@ void CommSession::postRawMessage(const NXCP_MESSAGE *msg)
  */
 void CommSession::sendMessageInBackground(NXCP_MESSAGE *msg)
 {
-   sendRawMessage(msg, m_pCtx);
+   sendRawMessage(msg, m_encryptionContext.get());
    decRefCount();
 }
 
@@ -550,7 +549,7 @@ void CommSession::processingThread()
 			debugPrintf(6, _T("Authentication required"));
 			response.setField(VID_RCC, ERR_AUTH_REQUIRED);
       }
-      else if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && (m_pCtx == NULL))
+      else if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && (m_encryptionContext == nullptr))
       {
 			debugPrintf(6, _T("Encryption required"));
 			response.setField(VID_RCC, ERR_ENCRYPTION_REQUIRED);
@@ -1005,7 +1004,7 @@ bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset, boo
 {
    if (m_disconnected)
       return false;
-	return SendFileOverNXCP(m_channel, requestId, file, m_pCtx, offset, SendFileProgressCallback, this, m_socketWriteMutex, 
+	return SendFileOverNXCP(m_channel, requestId, file, m_encryptionContext.get(), offset, SendFileProgressCallback, this, m_socketWriteMutex,
             allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE, cancellationFlag);
 }
 
@@ -1138,8 +1137,8 @@ UINT32 CommSession::setupProxyConnection(NXCPMessage *request)
    }
 
    // Finish proxy connection setup
-   NXCPEncryptionContext *pSavedCtx = m_pCtx;
-   m_pCtx = PROXY_ENCRYPTION_CTX;
+   shared_ptr<NXCPEncryptionContext> savedCtx = m_encryptionContext;
+   m_encryptionContext.reset();
    m_proxyConnection = true;
    m_proxyReadThread = ThreadCreateEx(this, &CommSession::proxyReadThread);
 
@@ -1148,11 +1147,9 @@ UINT32 CommSession::setupProxyConnection(NXCPMessage *request)
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    msg.setField(VID_RCC, RCC_SUCCESS);
    NXCP_MESSAGE *pRawMsg = msg.serialize();
-   sendRawMessage(pRawMsg, pSavedCtx);
-   if (pSavedCtx != NULL)
-      pSavedCtx->decRefCount();
+   sendRawMessage(pRawMsg, savedCtx.get());
 
-   debugPrintf(5, _T("Established proxy connection to %s:%d"), (const TCHAR *)addr.toString(), port);
+   debugPrintf(5, _T("Established proxy connection to %s:%d"), addr.toString().cstr(), port);
    return ERR_SUCCESS;
 }
 
