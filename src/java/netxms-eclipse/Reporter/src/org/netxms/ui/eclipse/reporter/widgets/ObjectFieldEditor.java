@@ -124,7 +124,7 @@ public class ObjectFieldEditor extends FieldEditor
 	 */
 	private void selectObject()
 	{
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, null);
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell());
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{

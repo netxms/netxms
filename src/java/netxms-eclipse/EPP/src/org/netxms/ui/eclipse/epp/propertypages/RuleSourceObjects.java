@@ -171,7 +171,7 @@ public class RuleSourceObjects extends PropertyPage
 	 */
 	private void addSourceObject()
 	{
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, null);
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell());
 		dlg.enableMultiSelection(true);
 		if (dlg.open() == Window.OK)
 		{

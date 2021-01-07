@@ -640,7 +640,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	 */
 	private void addObjectToMap()
 	{
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, null);
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell());
 		if (dlg.open() != Window.OK)
 			return;
 
