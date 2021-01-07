@@ -696,17 +696,17 @@ public class ObjectBrowser extends ViewPart
 	{
 		if (!isValidSelectionForMove(subtree))
 			return;
-		
-		List<Object> currentObject = new ArrayList<Object>();
-		List<Object> parentObject = new ArrayList<Object>();
-		
+
+      List<AbstractObject> selectedObjects = new ArrayList<AbstractObject>();
+      List<AbstractObject> parentObjects = new ArrayList<AbstractObject>();
+
 		TreeItem[] selection = objectTree.getTreeControl().getSelection();
 		for (int i = 0; i < selection.length; i++)
 		{
-   		currentObject.add(selection[i].getData());
-   		parentObject.add(selection[i].getParentItem().getData());
+         selectedObjects.add((AbstractObject)selection[i].getData());
+         parentObjects.add((AbstractObject)selection[i].getParentItem().getData());
 		}
-		
+
 		Set<Integer> filter;
 		switch(subtree)
 		{
@@ -730,14 +730,14 @@ public class ObjectBrowser extends ViewPart
 				break;
 		}
 		
-      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), filter, currentObject);
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), filter, selectedObjects);
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
 	      final AbstractObject target = dlg.getSelectedObjects().get(0);
 	      for (int i = 0; i < selection.length; i++)
 	      {
-	         performObjectMove(target, parentObject.get(i), currentObject.get(i), true);
+	         performObjectMove(target, parentObjects.get(i), selectedObjects.get(i), true);
 	      }
 		}
 	}

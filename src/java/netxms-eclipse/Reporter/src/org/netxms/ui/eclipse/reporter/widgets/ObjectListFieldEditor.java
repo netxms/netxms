@@ -122,7 +122,7 @@ public class ObjectListFieldEditor extends FieldEditor
 	 */
 	private void addObjects()
 	{
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, null);
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell());
 		if (dlg.open() == Window.OK)
 		{
 			for(AbstractObject o : dlg.getSelectedObjects())
