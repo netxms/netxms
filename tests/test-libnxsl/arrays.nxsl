@@ -71,4 +71,12 @@ for(i = 0; i < 3; i++)
 for(i = 3; i < 6; i++)
 	assert(a8[i] == i - 2);
 
+a10 = %(1, 2, 3);
+a10->appendAll(a10);
+assert(a10->size == 6);
+for(i = 0; i < 3; i++)
+	assert(a10[i] == i + 1);
+for(i = 3; i < 6; i++)
+	assert(a10[i] == i - 2);
+
 return 0;
