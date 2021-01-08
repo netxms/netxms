@@ -66,7 +66,7 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError, 
       {
          if (ntohs(reinterpret_cast<NXCP_MESSAGE*>(m_buffer)->code) == CMD_ENCRYPTED_MESSAGE)
          {
-            if (m_encryptionContext != nullptr)
+            if (m_encryptionContext)  // cannot use != nullptr because HP-UX compiler does not understand it
             {
                if (m_decryptionBuffer == nullptr)
                   m_decryptionBuffer = MemAllocArrayNoInit<BYTE>(m_size);

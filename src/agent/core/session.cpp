@@ -333,7 +333,7 @@ void CommSession::readThread()
                   m_responseQueue->put(msg);
                   break;
                case CMD_REQUEST_SESSION_KEY:
-                  if (m_encryptionContext == nullptr)
+                  if (!m_encryptionContext)  // cannot use != nullptr because HP-UX compiler does not understand it
                   {
                      NXCPEncryptionContext *encryptionContext = nullptr;
                      NXCPMessage *response = nullptr;
@@ -549,7 +549,7 @@ void CommSession::processingThread()
 			debugPrintf(6, _T("Authentication required"));
 			response.setField(VID_RCC, ERR_AUTH_REQUIRED);
       }
-      else if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && (m_encryptionContext == nullptr))
+      else if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && !m_encryptionContext)  // cannot use != nullptr because HP-UX compiler does not understand it
       {
 			debugPrintf(6, _T("Encryption required"));
 			response.setField(VID_RCC, ERR_ENCRYPTION_REQUIRED);
