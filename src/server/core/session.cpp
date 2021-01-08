@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -12219,10 +12219,7 @@ void ClientSession::closeConsole(UINT32 rqId)
  */
 void ClientSession::processConsoleCommand(NXCPMessage *request)
 {
-	NXCPMessage msg;
-
-	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
+	NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
 	if ((m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE) && (m_flags & CSF_CONSOLE_OPEN))
 	{
@@ -12232,7 +12229,7 @@ void ClientSession::processConsoleCommand(NXCPMessage *request)
       switch(rc)
       {
          case CMD_EXIT_SHUTDOWN:
-            InitiateShutdown(ShutdownReason::FROM_REMOTE_CONSOLE);
+            ThreadCreate(InitiateShutdown, ShutdownReason::FROM_REMOTE_CONSOLE);
             break;
          case CMD_EXIT_CLOSE_SESSION:
 				msg.setEndOfSequence();
