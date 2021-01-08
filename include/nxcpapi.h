@@ -114,6 +114,9 @@ public:
    void setField(uint32_t fieldId, uint16_t value) { set(fieldId, NXCP_DT_INT16, &value, false); }
    void setField(uint32_t fieldId, int32_t value) { set(fieldId, NXCP_DT_INT32, &value, true); }
    void setField(uint32_t fieldId, uint32_t value) { set(fieldId, NXCP_DT_INT32, &value, false); }
+#ifdef _WIN32
+   void setField(uint32_t fieldId, DWORD value) { set(fieldId, NXCP_DT_INT32, &value, false); }
+#endif
    void setField(uint32_t fieldId, int64_t value) { set(fieldId, NXCP_DT_INT64, &value, true); }
    void setField(uint32_t fieldId, uint64_t value) { set(fieldId, NXCP_DT_INT64, &value, false); }
    void setField(uint32_t fieldId, double value) { set(fieldId, NXCP_DT_FLOAT, &value); }
@@ -317,6 +320,10 @@ enum MessageReceiverResult
    MSGRECV_WANT_READ = 6,
    MSGRECV_WANT_WRITE = 7
 };
+
+#ifdef _WIN32
+template class LIBNETXMS_EXPORTABLE shared_ptr<NXCPEncryptionContext>;
+#endif
 
 /**
  * Message receiver - abstract base class

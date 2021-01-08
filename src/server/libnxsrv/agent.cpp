@@ -574,7 +574,7 @@ AbstractCommChannel *AgentConnection::createChannel()
    for(int i = 0; i < s_pollers.size(); i++)
    {
       BackgroundSocketPollerHandle *p = s_pollers.get(i);
-      if (InterlockedIncrement(&p->usageCount) < s_maxConnectionsPerPoller)
+      if (static_cast<uint32_t>(InterlockedIncrement(&p->usageCount)) < s_maxConnectionsPerPoller)
       {
          sp = p;
          break;
@@ -2441,7 +2441,7 @@ void AgentConnection::processFileData(NXCPMessage *msg)
    {
       if (m_hCurrFile != -1)
       {
-         if (_write(m_hCurrFile, msg->getBinaryData(), msg->getBinaryDataSize()) == (int)msg->getBinaryDataSize())
+         if (_write(m_hCurrFile, msg->getBinaryData(), static_cast<int>(msg->getBinaryDataSize())) == static_cast<int>(msg->getBinaryDataSize()))
          {
             if (msg->isEndOfFile())
             {

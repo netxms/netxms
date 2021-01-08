@@ -11024,7 +11024,7 @@ bool Node::getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocate
    {
       lockProperties();
       TCHAR *port = MemAllocString(8);
-      _sntprintf(port, 8, _T("%d"), port);
+      _sntprintf(port, 8, _T("%d"), m_sshPort);
       *value = port;
       *isAllocated = true;
       unlockProperties();

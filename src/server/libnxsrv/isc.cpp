@@ -154,12 +154,8 @@ void ISC::printMessage(const TCHAR *format, ...)
  */
 void ISC::receiverThread()
 {
-   ssize_t err;
-   TCHAR szBuffer[128], szIpAddr[16];
-	SOCKET nSocket;
-
 	lock();
-	m_messageReceiver = new SocketMessageReceiver(nSocket, 4096, RECEIVER_BUFFER_SIZE);
+	m_messageReceiver = new SocketMessageReceiver(m_socket, 4096, RECEIVER_BUFFER_SIZE);
 	unlock();
 
    // Message receiving loop
@@ -189,8 +185,7 @@ void ISC::receiverThread()
 
    // Close socket and mark connection as disconnected
    lock();
-   if (err == 0)
-      shutdown(m_socket, SHUT_RDWR);
+   shutdown(m_socket, SHUT_RDWR);
    closesocket(m_socket);
    m_socket = -1;
    m_ctx.reset();
