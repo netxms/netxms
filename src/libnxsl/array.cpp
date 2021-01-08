@@ -278,7 +278,8 @@ int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **a
          return NXSL_ERR_NOT_ARRAY;
 
       NXSL_Array *a = argv[0]->getValueAsArray();
-      for(int i = 0; i < a->size(); i++)
+      int size = a->size();
+      for(int i = 0; i < size; i++)
          append(m_vm->createValue(a->getByPosition(i)));
       *result = m_vm->createValue(getMaxIndex());
    }
@@ -306,7 +307,8 @@ int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **a
 
       int index = argv[0]->getValueAsInt32();
       NXSL_Array *a = argv[1]->getValueAsArray();
-      for(int i = 0; i < a->size(); i++)
+      int size = a->size();
+      for(int i = 0; i < size; i++)
          insert(index++, m_vm->createValue(a->getByPosition(i)));
       *result = m_vm->createValue(getMaxIndex());
    }
