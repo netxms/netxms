@@ -11003,7 +11003,7 @@ bool Node::getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocate
       unlockProperties();
       return true;
    }
-   if (!_tcscmp(name, _T("ssh.password")))
+   else if (!_tcscmp(name, _T("ssh.password")))
    {
       lockProperties();
       *value = MemCopyString(m_sshPassword);

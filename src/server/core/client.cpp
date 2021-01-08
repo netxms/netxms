@@ -59,7 +59,7 @@ static bool RegisterClientSession(ClientSession *session)
       for(int i = 0; i < s_pollers.size(); i++)
       {
          BackgroundSocketPollerHandle *p = s_pollers.get(i);
-         if (InterlockedIncrement(&p->usageCount) < s_maxClientSessionsPerPoller)
+         if (static_cast<uint32_t>(InterlockedIncrement(&p->usageCount)) < s_maxClientSessionsPerPoller)
          {
             sp = p;
             break;

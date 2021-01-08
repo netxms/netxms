@@ -46,11 +46,6 @@ static SOCKET s_socket = INVALID_SOCKET;
 static MUTEX s_socketLock = MutexCreate();
 
 /**
- * Protocol buffer
- */
-static NXCP_BUFFER s_msgBuffer;
-
-/**
  * "Hide console" flag
  */
 static bool s_hideConsole = false;
@@ -106,17 +101,16 @@ static bool SendMsg(NXCPMessage *msg)
  */
 static void Login()
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_LOGIN);
+   NXCPMessage msg(CMD_LOGIN, 0);
 
    DWORD sid;
    ProcessIdToSessionId(GetCurrentProcessId(), &sid);
-   msg.setField(VID_SESSION_ID, (uint32_t)sid);
-   msg.setField(VID_PROCESS_ID, (uint32_t)GetCurrentProcessId());
+   msg.setField(VID_SESSION_ID, sid);
+   msg.setField(VID_PROCESS_ID, GetCurrentProcessId());
 
    DWORD size;
    WTS_CONNECTSTATE_CLASS *state;
-   INT16 sessionState = USER_SESSION_OTHER;
+   int16_t sessionState = USER_SESSION_OTHER;
    if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sid, WTSConnectState, (LPTSTR *)&state, &size))
    {
       switch(*state)
@@ -246,10 +240,7 @@ static void GetScreenInfo(NXCPMessage *msg)
  */
 static void ProcessRequest(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    switch(request->getCode())
    {
@@ -278,57 +269,26 @@ static void ProcessRequest(NXCPMessage *request)
  */
 static void ProcessMessages()
 {
-   NXCPEncryptionContext *dummyCtx = nullptr;
-   NXCPInitBuffer(&s_msgBuffer);
-   UINT32 rawMsgSize = 65536;
-   NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)MemAlloc(rawMsgSize);
+   SocketMessageReceiver receiver(s_socket, 8192, 4 * 1024 * 1024);
    while(true)
    {
-      ssize_t err = RecvNXCPMessageEx(s_socket, &rawMsg, &s_msgBuffer, &rawMsgSize, &dummyCtx, nullptr, 900000, 4 * 1024 * 1024);
-      if (err <= 0)
-         break;
+      MessageReceiverResult result;
+      NXCPMessage *msg = receiver.readMessage(900000, &result);
 
-      // Check if message is too large
-      if (err == 1)
-         continue;
-
-      // Check for decryption failure
-      if (err == 2)
-         continue;
-
-      // Check for timeout
-      if (err == 3)
+      if ((result == MSGRECV_CLOSED) || (result == MSGRECV_COMM_FAILURE) || (result == MSGRECV_TIMEOUT))
       {
-         _tprintf(_T("Socket read timeout\n"));
+         _tprintf(_T("Error receiving message (%s)\n"), AbstractMessageReceiver::resultToText(result));
          break;
       }
 
-      // Check that actual received packet size is equal to encoded in packet
-      if (static_cast<ssize_t>(ntohl(rawMsg->size)) != err)
-      {
-         _tprintf(_T("Actual message size doesn't match size value in header (%u != %u)\n"),
-            static_cast<uint32_t>(err), ntohl(rawMsg->size));
-         continue;   // Bad packet, wait for next
-      }
+      if (msg == nullptr)
+         continue;   // Ignore other errors
 
-      uint16_t flags = ntohs(rawMsg->flags);
-      if (!(flags & MF_BINARY))
-      {
-         NXCPMessage *msg = NXCPMessage::deserialize(rawMsg);
-         if (msg != nullptr)
-         {
-            TCHAR msgCodeName[256];
-            _tprintf(_T("Received message %s\n"), NXCPMessageCodeName(msg->getCode(), msgCodeName));
-            ProcessRequest(msg);
-            delete msg;
-         }
-         else
-         {
-            _tprintf(_T("Message deserialization error\n"));
-         }
-      }
+      TCHAR msgCodeName[256];
+      _tprintf(_T("Received message %s\n"), NXCPMessageCodeName(msg->getCode(), msgCodeName));
+      ProcessRequest(msg);
+      delete msg;
    }
-   MemFree(rawMsg);
 }
 
 #ifdef _WIN32

@@ -59,7 +59,6 @@ static void ProcessingThread(ISCSession *session)
    NXCPMessage *pRequest, response;
    UINT32 serviceId;
 	TCHAR buffer[256], dbgPrefix[128];
-	WORD flags;
 
 	_sntprintf(dbgPrefix, 128, _T("ISC<%s>:"), IpToStr(session->GetPeerAddress(), buffer));
 
