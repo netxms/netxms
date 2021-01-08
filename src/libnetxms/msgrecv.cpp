@@ -36,7 +36,6 @@ AbstractMessageReceiver::AbstractMessageReceiver(size_t initialSize, size_t maxS
    m_bytesToSkip = 0;
    m_buffer = MemAllocArrayNoInit<BYTE>(initialSize);
    m_decryptionBuffer = nullptr;
-   m_encryptionContext = nullptr;
 }
 
 /**
