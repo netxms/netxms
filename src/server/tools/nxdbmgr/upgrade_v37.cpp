@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2020 Raden Solutions
+** Copyright (C) 2020-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,32 @@
 
 #include "nxdbmgr.h"
 #include <nxevent.h>
+
+/**
+ * Upgrade from 37.5 to 37.6
+ */
+static bool H_UpgradeFromV5()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE users ADD email varchar(127)")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE users ADD phone_number varchar(63)")));
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
+ * Upgrade from 37.4 to 37.5
+ */
+static bool H_UpgradeFromV4()
+{
+   static const TCHAR *batch =
+         _T("ALTER TABLE nodes ADD ssh_port integer\n")
+         _T("UPDATE nodes SET ssh_port=22\n")
+         _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("ssh_port")));
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
 
 /**
  * Upgrade from 37.3 to 37.4
@@ -102,6 +128,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 5,  37, 6,  H_UpgradeFromV5  },
+   { 4,  37, 5,  H_UpgradeFromV4  },
    { 3,  37, 4,  H_UpgradeFromV3  },
    { 2,  37, 3,  H_UpgradeFromV2  },
    { 1,  37, 2,  H_UpgradeFromV1  },

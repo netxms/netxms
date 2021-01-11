@@ -84,6 +84,8 @@ CREATE TABLE users
   last_login integer not null,
   password_history SQL_TEXT null,
   xmpp_id varchar(127) null,
+  email varchar(127) null,
+  phone_number varchar(63) null,
   ldap_dn SQL_TEXT null,
   ldap_unique_id varchar(64) null,
   created integer not null,

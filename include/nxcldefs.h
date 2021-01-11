@@ -829,6 +829,8 @@ enum SessionState
 #define USER_MODIFY_CUSTOM_ATTRIBUTES  0x00000400
 #define USER_MODIFY_XMPP_ID            0x00000800
 #define USER_MODIFY_GROUP_MEMBERSHIP   0x00001000
+#define USER_MODIFY_EMAIL              0x00002000
+#define USER_MODIFY_PHONE_NUMBER       0x00004000
 
 /**
  * Certificate mapping methods

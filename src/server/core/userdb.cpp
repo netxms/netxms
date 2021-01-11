@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -234,7 +234,7 @@ bool LoadUsers()
 							 _T("ldap_unique_id,created,password,full_name,grace_logins,auth_method,")
 							 _T("cert_mapping_method,cert_mapping_data,auth_failures,")
 							 _T("last_passwd_change,min_passwd_length,disabled_until,")
-							 _T("last_login,xmpp_id FROM users"));
+							 _T("last_login,xmpp_id,email,phone_number FROM users"));
    if (hResult == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
