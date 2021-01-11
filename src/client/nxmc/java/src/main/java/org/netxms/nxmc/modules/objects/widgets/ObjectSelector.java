@@ -59,7 +59,7 @@ public class ObjectSelector extends AbstractSelector
 	@Override
 	protected void selectionButtonHandler()
 	{
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, classFilter);
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), classFilter);
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
@@ -80,9 +80,9 @@ public class ObjectSelector extends AbstractSelector
 		}
 	}
 
-   /**
-    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
-    */
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
+	 */
 	@Override
 	protected void clearButtonHandler()
 	{

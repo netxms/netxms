@@ -56,6 +56,14 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Chassis;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.EntireNetwork;
+import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.FilterText;
@@ -98,8 +106,8 @@ public class ObjectTree extends Composite
     * @param parent
     * @param style
     */
-   public ObjectTree(Composite parent, int style, int options, long[] rootObjects, Set<Integer> classFilter,
-         boolean showFilterToolTip, boolean showFilterCloseButton)
+   public ObjectTree(Composite parent, int style, int options,
+         Set<Integer> classFilter, boolean showFilterToolTip, boolean showFilterCloseButton)
    {
       super(parent, style);
 
@@ -148,11 +156,11 @@ public class ObjectTree extends Composite
       objectTree = new ObjectTreeViewer(this, SWT.VIRTUAL | (((options & MULTI) == MULTI) ? SWT.MULTI : SWT.SINGLE)
             | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0), objectsFullySync);
       objectTree.setUseHashlookup(true);
-      contentProvider = new ObjectTreeContentProvider(rootObjects, objectsFullySync);
+      contentProvider = new ObjectTreeContentProvider(objectsFullySync, classFilter);
       objectTree.setContentProvider(contentProvider);
       objectTree.setLabelProvider(new DecoratingObjectLabelProvider());
       objectTree.setComparator(new ObjectTreeComparator());
-      filter = new ObjectFilter(rootObjects, null, classFilter);
+      filter = new ObjectFilter(null, classFilter);
       objectTree.addFilter(filter);
       objectTree.setInput(session);
 
@@ -263,7 +271,12 @@ public class ObjectTree extends Composite
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            if ((n.getCode() == SessionNotification.OBJECT_CHANGED) || (n.getCode() == SessionNotification.OBJECT_DELETED))
+            if (n.getCode() == SessionNotification.OBJECT_DELETED)
+            {
+               refreshTimer.execute();
+            }
+            else if ((n.getCode() == SessionNotification.OBJECT_CHANGED) &&
+                ((classFilter == null) || classFilter.contains(((AbstractObject)n.getObject()).getObjectClass())))
             {
                refreshTimer.execute();
             }
@@ -498,15 +511,53 @@ public class ObjectTree extends Composite
       AbstractObject obj = filter.getLastMatch();
       if (obj != null)
       {
-         objectTree.setSelection(new StructuredSelection(obj), true);
-         AbstractObject parent = filter.getParent(obj);
+         AbstractObject parent = getParent(obj);
          if (parent != null)
             objectTree.expandToLevel(parent, 1);
+         objectTree.setSelection(new StructuredSelection(obj), true);
          objectTree.reveal(obj);
          if (statusIndicatorEnabled)
             updateStatusIndicator();
       }
       objectTree.refresh(false);
+   }
+
+   /**
+    * Get priority of given parent object
+    *
+    * @param object parent object
+    * @return priority (0 or higher)
+    */
+   static int getParentPriority(AbstractObject object)
+   {
+      if ((object instanceof ServiceRoot) || (object instanceof EntireNetwork))
+         return 3;
+      if ((object instanceof Container) || (object instanceof Cluster) ||
+          (object instanceof Chassis) || (object instanceof Rack))
+         return 2;
+      if ((object instanceof Zone) || (object instanceof Subnet))
+         return 1;
+      return 0;
+   }
+
+   /**
+    * Get parent for given object prioritizing different sub-trees.
+    */
+   private AbstractObject getParent(final AbstractObject childObject)
+   {
+      AbstractObject[] parents = childObject.getParentsAsArray();
+      AbstractObject parent = null;
+      int parentPriority = -1;
+      for(AbstractObject p : parents)
+      {
+         int pp = getParentPriority(p);
+         if (pp > parentPriority)
+         {
+            parentPriority = pp;
+            parent = p;
+         }
+      }
+      return parent;
    }
 
    /**
@@ -659,16 +710,6 @@ public class ObjectTree extends Composite
    private void updateStatusIndicator()
    {
       statusIndicator.refresh(objectTree);
-   }
-
-   /**
-    * @param rootObjects
-    */
-   public void setRootObjects(long[] rootObjects)
-   {
-      ((ObjectTreeContentProvider)objectTree.getContentProvider()).setRootObjects(rootObjects);
-      filter.setRootObjects(rootObjects);
-      refresh();
    }
 
    /**

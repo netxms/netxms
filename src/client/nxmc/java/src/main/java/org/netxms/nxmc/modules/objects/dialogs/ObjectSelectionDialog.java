@@ -49,13 +49,12 @@ public class ObjectSelectionDialog extends Dialog
    private I18n i18n = LocalizationHelper.getI18n(ObjectSelectionDialog.class);
 	private NXCSession session;
 	private ObjectTree objectTree;
-	private long[] rootObjects;
 	private long[] selectedObjects;
 	private Set<Integer> classFilter;
 	private boolean multiSelection;
 	private boolean showFilterToolTip = true;
 	private boolean showFilterCloseButton = false;
-   private List<Object> currentObject;
+   private List<AbstractObject> blockedObjects;
    private String title = i18n.tr("Select Object");
 
 	/**
@@ -141,15 +140,24 @@ public class ObjectSelectionDialog extends Dialog
    }
 
 	/**
-	 * Create filter for node selection - it allows node objects and possible
-	 * parents - subnets and containers.
-	 * 
-	 * @return Class filter for node selection
-	 */
-	public static Set<Integer> createNodeAndTemplateSelectionFilter(boolean allowMobileDevices)
+    * Create filter for data collection owner selection.
+    * 
+    * @return Class filter for data collection owner selection
+    */
+   public static Set<Integer> createDataCollectionOwnerSelectionFilter()
 	{
-		return ObjectSelectionFilterFactory.getInstance().createNodeAndTemplateSelectionFilter(allowMobileDevices);
+      return ObjectSelectionFilterFactory.getInstance().createDataCollectionOwnerSelectionFilter();
 	}
+
+   /**
+    * Create filter for data collection targets selection.
+    * 
+    * @return Class filter for data collection targets selection
+    */
+   public static Set<Integer> createDataCollectionTargetSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createDataCollectionTargetSelectionFilter();
+   }
 
 	/**
 	 * Create filter for node selection - it allows node objects and possible
@@ -201,42 +209,43 @@ public class ObjectSelectionDialog extends Dialog
    {
       return ObjectSelectionFilterFactory.getInstance().createRackOrChassisSelectionFilter();
    }
-
-	/**
-    * Create object selection dialog.
+	
+   /**
+    * Create object selection dialog without class filtering.
     * 
     * @param parentShell parent shell
-    * @param rootObjects list of root objects (set to null to show entire object tree)
+    */
+   public ObjectSelectionDialog(Shell parentShell)
+   {
+      this(parentShell, null, null);
+   }
+
+	/**
+    * Create object selection dialog with optional class filtering.
+    * 
+    * @param parentShell parent shell
     * @param classFilter set of allowed object classes (set to null to show all classes)
     */
-   public ObjectSelectionDialog(Shell parentShell, long[] rootObjects, Set<Integer> classFilter)
+   public ObjectSelectionDialog(Shell parentShell, Set<Integer> classFilter)
    {
-      super(parentShell);
-      setShellStyle(getShellStyle() | SWT.RESIZE);
-      this.rootObjects = rootObjects;
-      this.classFilter = classFilter;
-      multiSelection = true;
-      session = Registry.getSession();
-      this.currentObject = new ArrayList<Object>();
+      this(parentShell, classFilter, null);
    }
 
 	/**
 	 * Create object selection dialog.
 	 * 
 	 * @param parentShell parent shell
-	 * @param rootObjects list of root objects (set to null to show entire object tree)
 	 * @param classFilter set of allowed object classes (set to null to show all classes)
 	 * @param currentObject object list selected for move (the same object can't be selected as a move terget)
 	 */
-	public ObjectSelectionDialog(Shell parentShell, long[] rootObjects, Set<Integer> classFilter, List<Object> currentObject)
+   public ObjectSelectionDialog(Shell parentShell, Set<Integer> classFilter, List<AbstractObject> blockedObjects)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
-		this.rootObjects = rootObjects;
 		this.classFilter = classFilter;
 		multiSelection = true;
       session = Registry.getSession();
-		this.currentObject = currentObject;
+      this.blockedObjects = blockedObjects;
 	}
 
    /**
@@ -264,7 +273,7 @@ public class ObjectSelectionDialog extends Dialog
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
 
-		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, rootObjects, classFilter, showFilterToolTip, showFilterCloseButton);
+		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, classFilter, showFilterToolTip, showFilterCloseButton);
 
       String text = settings.getAsString("ObjectSelectionDialog.Filter");
 		if (text != null)
@@ -308,16 +317,20 @@ public class ObjectSelectionDialog extends Dialog
 			long objectId = objectTree.getFirstSelectedObject();
 			if (objectId != 0)
 			{
+            if (blockedObjects != null)
+            {
+               for(int i = 0; i < blockedObjects.size(); i++)
+               {
+                  if (blockedObjects.get(i).getObjectId() == objectId)
+                  {
+                     MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"),
+                           i18n.tr("Same object was selected as move source and move target."));
+                     return;
+                  }
+               }
+            }
 				selectedObjects = new long[1];
 				selectedObjects[0] = objectId;
-				for (int i = 0; i < currentObject.size(); i++)
-				{
-               if (((AbstractObject)currentObject.get(i)).getObjectId() == objectId)
-				   {
-                  MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Same object was selected as move source and move target."));
-		            return;
-				   }
-				}
 			}
 			else
 			{

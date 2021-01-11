@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
@@ -62,32 +64,69 @@ public class ObjectBrowser extends NavigationView
    @Override
    protected void createContent(Composite parent)
    {
-      objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, calculateRootObjects(), null, true, true);
+      objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, calculateClassFilter(), true, true);
 
       Menu menu = new ObjectContextMenuManager(this, objectTree.getSelectionProvider()).createContextMenu(objectTree.getTreeControl());
       objectTree.getTreeControl().setMenu(menu);
    }
 
    /**
-    * Calculate root objects based on subtree type.
+    * Calculate class filter based on subtree type.
     *
     * @return root objects
     */
-   private long[] calculateRootObjects()
+   private Set<Integer> calculateClassFilter()
    {
-      // TODO: handle situation when root object inaccessible to current user
+      Set<Integer> classFilter = new HashSet<Integer>();
       switch(subtreeType)
       {
          case INFRASTRUCTURE:
-            return new long[] { AbstractObject.SERVICEROOT };
+            classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+            classFilter.add(AbstractObject.OBJECT_CONTAINER);
+            classFilter.add(AbstractObject.OBJECT_CLUSTER);
+            classFilter.add(AbstractObject.OBJECT_CHASSIS);
+            classFilter.add(AbstractObject.OBJECT_RACK);
+            classFilter.add(AbstractObject.OBJECT_NODE);
+            classFilter.add(AbstractObject.OBJECT_INTERFACE);
+            classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
+            classFilter.add(AbstractObject.OBJECT_VPNCONNECTOR);
+            classFilter.add(AbstractObject.OBJECT_NETWORKSERVICE);
+            classFilter.add(AbstractObject.OBJECT_CONDITION);
+            classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
+            classFilter.add(AbstractObject.OBJECT_SENSOR);
+            break;
          case MAPS:
-            return new long[] { AbstractObject.NETWORKMAPROOT };
+            classFilter.add(AbstractObject.OBJECT_NETWORKMAP);
+            classFilter.add(AbstractObject.OBJECT_NETWORKMAPGROUP);
+            classFilter.add(AbstractObject.OBJECT_NETWORKMAPROOT);
+            break;
          case NETWORK:
-            return new long[] { AbstractObject.NETWORK };
+            classFilter.add(AbstractObject.OBJECT_NETWORK);
+            classFilter.add(AbstractObject.OBJECT_ZONE);
+            classFilter.add(AbstractObject.OBJECT_SUBNET);
+            classFilter.add(AbstractObject.OBJECT_NODE);
+            classFilter.add(AbstractObject.OBJECT_INTERFACE);
+            classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
+            classFilter.add(AbstractObject.OBJECT_VPNCONNECTOR);
+            classFilter.add(AbstractObject.OBJECT_NETWORKSERVICE);
+            break;
          case TEMPLATES:
-            return new long[] { AbstractObject.TEMPLATEROOT };
-         default:
-            return new long[0];
+            classFilter.add(AbstractObject.OBJECT_TEMPLATE);
+            classFilter.add(AbstractObject.OBJECT_TEMPLATEGROUP);
+            classFilter.add(AbstractObject.OBJECT_TEMPLATEROOT);
+            break;
+         case DASHBOARDS:
+            classFilter.add(AbstractObject.OBJECT_DASHBOARD);
+            classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
+            classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
+            break;
+         case BUSINESS_SERVICES:
+            classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICE);
+            classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEROOT);
+            classFilter.add(AbstractObject.OBJECT_NODELINK);
+            classFilter.add(AbstractObject.OBJECT_SLMCHECK);
+            break;
       }
+      return classFilter;
    }
 }

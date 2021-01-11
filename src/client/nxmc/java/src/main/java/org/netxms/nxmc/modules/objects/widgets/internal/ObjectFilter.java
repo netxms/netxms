@@ -49,7 +49,7 @@ public class ObjectFilter extends ViewerFilter
 	private static final int IP_ADDRESS = 3;
 	private static final int OBJECT_ID = 4;
 	private static final int ZONE = 5;
-	
+
 	private String filterString = null;
 	private boolean hideUnmanaged = false;
 	private boolean hideTemplateChecks = false;
@@ -57,25 +57,19 @@ public class ObjectFilter extends ViewerFilter
 	private Map<Long, AbstractObject> objectList = null;
 	private AbstractObject lastMatch = null;
 	private List<AbstractObject> sourceObjects = null;
-	private long[] rootObjects = null;
 	private Set<Integer> classFilter = null;
 	private boolean usePatternMatching = false;
 	private int mode = NAME;
-	
+
 	/**
 	 * Constructor
 	 */
-	public ObjectFilter(long[] rootObjects, AbstractObject[] sourceObjects, Set<Integer> classFilter)
+   public ObjectFilter(AbstractObject[] sourceObjects, Set<Integer> classFilter)
 	{
-		if (rootObjects != null)
-		{
-			this.rootObjects = new long[rootObjects.length];
-			System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
-		}
 		this.sourceObjects = (sourceObjects != null) ? Arrays.asList(sourceObjects) : null;
 		this.classFilter = classFilter;
 	}
-	
+
 	/**
 	 * Match given value to current filter string
 	 * 
@@ -86,7 +80,7 @@ public class ObjectFilter extends ViewerFilter
 	{
 		if ((mode == NONE) || (filterString == null))
 			return true;
-		
+
 		switch(mode)
 		{
          case COMMENTS:
@@ -119,7 +113,7 @@ public class ObjectFilter extends ViewerFilter
             }
 			   return false;
          case NAME:
-            return usePatternMatching ? Glob.matchIgnoreCase(filterString, object.getObjectName()) : object.getObjectName().toLowerCase().contains(filterString);
+            return usePatternMatching ? Glob.matchIgnoreCase(filterString, object.getNameWithAlias()) : object.getNameWithAlias().toLowerCase().contains(filterString);
 			case OBJECT_ID:
 			   if (object instanceof AbstractObject)
 			   {
@@ -141,10 +135,9 @@ public class ObjectFilter extends ViewerFilter
 			      }
 			   }
 		}
-		
 		return false;
 	}
-	
+
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
@@ -156,16 +149,16 @@ public class ObjectFilter extends ViewerFilter
 			if (!classFilter.contains(((AbstractObject)element).getObjectClass()))
 				return false;
 		}
-		
+
 		if (hideUnmanaged && (((AbstractObject)element).getStatus() == ObjectStatus.UNMANAGED))
 			return false;
-		
+
 		if (hideTemplateChecks && (element instanceof ServiceCheck) && ((ServiceCheck)element).isTemplate())
 			return false;
-		
+
       if (hideSubInterfaces && (element instanceof Interface) && (((Interface)element).getParentInterfaceId() != 0))
          return false;
-      
+
 		if (objectList == null)
 			return true;
 
@@ -185,7 +178,7 @@ public class ObjectFilter extends ViewerFilter
 		}
 		return pass;
 	}
-	
+
 	/**
 	 * Set filter string
 	 * 
@@ -244,7 +237,7 @@ public class ObjectFilter extends ViewerFilter
 		}
 		updateObjectList(fullSearch);
 	}
-	
+
 	/**
 	 * Update list of matching objects
 	 */
@@ -257,8 +250,7 @@ public class ObjectFilter extends ViewerFilter
             List<AbstractObject> fullList = (sourceObjects != null) ? sourceObjects : Registry.getSession().getAllObjects();
 				objectList = new HashMap<Long, AbstractObject>();
 				for(AbstractObject o : fullList)
-					if (matchFilterString(o) &&
-					    ((rootObjects == null) || o.isChildOf(rootObjects)))
+               if (matchFilterString(o))
 					{
 						objectList.put(o.getObjectId(), o);
 						lastMatch = o;
@@ -292,23 +284,6 @@ public class ObjectFilter extends ViewerFilter
 	public final AbstractObject getLastMatch()
 	{
 		return lastMatch;
-	}
-	
-	/**
-	 * Get parent for given object
-	 */
-	public AbstractObject getParent(final AbstractObject childObject)
-	{
-		AbstractObject[] parents = childObject.getParentsAsArray();
-		for(AbstractObject object : parents)
-		{
-			if (object != null)
-			{
-				if ((rootObjects == null) || object.isChildOf(rootObjects))
-					return object;
-			}
-		}
-		return null;
 	}
 
 	/**
@@ -358,20 +333,4 @@ public class ObjectFilter extends ViewerFilter
    {
       this.hideSubInterfaces = hideSubInterfaces;
    }
-
-   /**
-	 * @param rootObjects the rootObjects to set
-	 */
-	public void setRootObjects(long[] rootObjects)
-	{
-		if (rootObjects != null)
-		{
-			this.rootObjects = new long[rootObjects.length];
-			System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
-		}
-		else
-		{
-			this.rootObjects = null;
-		}
-	}
 }
