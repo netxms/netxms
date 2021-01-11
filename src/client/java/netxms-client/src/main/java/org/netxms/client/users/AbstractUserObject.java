@@ -37,7 +37,7 @@ public abstract class AbstractUserObject
    // Type strings
    public static final String USERDB_TYPE_USER = "user";
    public static final String USERDB_TYPE_GROUP = "group";
-   
+
 	// Object flags
 	public static final int MODIFIED = 0x0001;
 	public static final int DELETED = 0x0002;
@@ -49,7 +49,7 @@ public abstract class AbstractUserObject
    public static final int LDAP_USER = 0x0080;
    public static final int SYNC_EXCEPTION = 0x0100;
    public static final int CLOSE_OTHER_SESSIONS = 0x0200;
-	
+
    // User object fields
    public static final int MODIFY_LOGIN_NAME        = 0x00000001;
    public static final int MODIFY_DESCRIPTION       = 0x00000002;
@@ -64,7 +64,9 @@ public abstract class AbstractUserObject
    public static final int MODIFY_CUSTOM_ATTRIBUTES = 0x00000400;
    public static final int MODIFY_XMPP_ID           = 0x00000800;
    public static final int MODIFY_GROUP_MEMBERSHIP  = 0x00001000;
-   
+   public static final int MODIFY_EMAIL             = 0x00002000;
+   public static final int MODIFY_PHONE_NUMBER      = 0x00004000;
+
    protected String type;  // "user" or "group", used by REST API
 	protected long id;
 	protected String name;

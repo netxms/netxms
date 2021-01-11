@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -327,7 +327,9 @@ protected:
 	time_t m_lastLogin;
 	int m_minPasswordLength;
 	int m_authFailures;
-   TCHAR m_xmppId[MAX_XMPP_ID_LEN];
+   TCHAR *m_xmppId;
+   TCHAR *m_phoneNumber;
+   TCHAR *m_email;
 
 public:
 	User();
@@ -355,7 +357,9 @@ public:
 	bool canChangePassword()const  { return (m_flags & UF_CANNOT_CHANGE_PASSWORD) == 0; }
 	int getMinMasswordLength() const { return m_minPasswordLength; }
 	time_t getReEnableTime() const { return m_disabledUntil; }
-   const TCHAR *getXmppId() const { return m_xmppId; }
+   const TCHAR *getXmppId() const { return CHECK_NULL_EX(m_xmppId); }
+   const TCHAR *getPhoneNumber() const { return CHECK_NULL_EX(m_phoneNumber); }
+   const TCHAR *getEmail() const { return CHECK_NULL_EX(m_email); }
 
 	bool validatePassword(const TCHAR *password);
 	void decreaseGraceLogins() { if (m_graceLogins > 0) m_graceLogins--; m_flags |= UF_MODIFIED; }

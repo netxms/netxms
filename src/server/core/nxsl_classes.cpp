@@ -3982,13 +3982,17 @@ NXSL_Value *NXSL_UserDBObjectClass::getAttr(NXSL_Object *object, const char *att
    {
       value = vm->createValue(dbObject->isLDAPUser());
    }
-   else if (compareAttributeName(attr, "ldapDomain"))
+   else if (compareAttributeName(attr, "ldapDN"))
    {
       value = vm->createValue(dbObject->getDN());
    }
    else if (compareAttributeName(attr, "ldapId"))
    {
       value = vm->createValue(dbObject->getLdapId());
+   }
+   else if (compareAttributeName(attr, "name"))
+   {
+      value = vm->createValue(dbObject->getName());
    }
    else if (compareAttributeName(attr, "systemRights"))
    {
@@ -4033,6 +4037,10 @@ NXSL_Value *NXSL_UserClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue(static_cast<UINT32>(user->getReEnableTime()));
    }
+   else if (compareAttributeName(attr, "email"))
+   {
+      value = vm->createValue(user->getEmail());
+   }
    else if (compareAttributeName(attr, "fullName"))
    {
       value = vm->createValue(user->getFullName());
@@ -4044,6 +4052,10 @@ NXSL_Value *NXSL_UserClass::getAttr(NXSL_Object *object, const char *attr)
    else if (compareAttributeName(attr, "lastLogin"))
    {
       value = vm->createValue(static_cast<UINT32>(user->getLastLoginTime()));
+   }
+   else if (compareAttributeName(attr, "phoneNumber"))
+   {
+      value = vm->createValue(user->getPhoneNumber());
    }
    else if (compareAttributeName(attr, "xmppId"))
    {

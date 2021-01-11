@@ -40,6 +40,8 @@ public class User extends AbstractUserObject
 	private Date disabledUntil = null;
 	private int authFailures;
 	private String xmppId;
+   private String email;
+   private String phoneNumber;
    private long[] groups;
 
 	/**
@@ -52,6 +54,8 @@ public class User extends AbstractUserObject
 		super(name, USERDB_TYPE_USER);
 		fullName = "";
 		xmppId = "";
+      email = "";
+      phoneNumber = "";
 		groups = new long[0];
 	}
 	
@@ -74,6 +78,8 @@ public class User extends AbstractUserObject
 		this.disabledUntil = src.disabledUntil;
 		this.authFailures = src.authFailures;
 		this.xmppId = src.xmppId;
+      this.email = src.email;
+      this.phoneNumber = src.phoneNumber;
 		this.groups = Arrays.copyOf(src.groups, src.groups.length);
 	}
 	
@@ -95,6 +101,8 @@ public class User extends AbstractUserObject
 		disabledUntil = msg.getFieldAsDate(NXCPCodes.VID_DISABLED_UNTIL);
 		authFailures = msg.getFieldAsInt32(NXCPCodes.VID_AUTH_FAILURES);
 		xmppId = msg.getFieldAsString(NXCPCodes.VID_XMPP_ID);
+      email = msg.getFieldAsString(NXCPCodes.VID_EMAIL);
+      phoneNumber = msg.getFieldAsString(NXCPCodes.VID_PHONE_NUMBER);
 		groups = msg.getFieldAsUInt32Array(NXCPCodes.VID_GROUPS);
 		if (groups == null)
 		   groups = new long[0];
@@ -115,6 +123,8 @@ public class User extends AbstractUserObject
 		msg.setFieldInt16(NXCPCodes.VID_MIN_PASSWORD_LENGTH, minPasswordLength);
 		msg.setFieldInt32(NXCPCodes.VID_DISABLED_UNTIL, (disabledUntil != null) ? (int)(disabledUntil.getTime() / 1000) : 0);
 		msg.setField(NXCPCodes.VID_XMPP_ID, xmppId);
+      msg.setField(NXCPCodes.VID_EMAIL, email);
+      msg.setField(NXCPCodes.VID_PHONE_NUMBER, phoneNumber);
 		msg.setFieldInt32(NXCPCodes.VID_NUM_GROUPS, groups.length);
 		if (groups.length > 0)
 		   msg.setField(NXCPCodes.VID_GROUPS, groups);
@@ -271,6 +281,38 @@ public class User extends AbstractUserObject
    public void setXmppId(String xmppId)
    {
       this.xmppId = xmppId;
+   }
+
+   /**
+    * @return the email
+    */
+   public String getEmail()
+   {
+      return email;
+   }
+
+   /**
+    * @param email the email to set
+    */
+   public void setEmail(String email)
+   {
+      this.email = email;
+   }
+
+   /**
+    * @return the phoneNumber
+    */
+   public String getPhoneNumber()
+   {
+      return phoneNumber;
+   }
+
+   /**
+    * @param phoneNumber the phoneNumber to set
+    */
+   public void setPhoneNumber(String phoneNumber)
+   {
+      this.phoneNumber = phoneNumber;
    }
 
    /**

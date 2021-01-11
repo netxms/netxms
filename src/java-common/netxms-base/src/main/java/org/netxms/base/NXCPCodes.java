@@ -1174,6 +1174,8 @@ public class NXCPCodes
    public static final long VID_GEO_AREAS = 725;
    public static final long VID_ORIGIN_TIMESTAMP = 726;
    public static final long VID_SSH_PORT = 727;
+   public static final long VID_EMAIL = 728;
+   public static final long VID_PHONE_NUMBER = 729;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

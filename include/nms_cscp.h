@@ -1399,6 +1399,8 @@ typedef struct
 #define VID_GEO_AREAS               ((UINT32)725)
 #define VID_ORIGIN_TIMESTAMP        ((UINT32)726)
 #define VID_SSH_PORT                ((UINT32)727)
+#define VID_EMAIL                   ((UINT32)728)
+#define VID_PHONE_NUMBER            ((UINT32)729)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

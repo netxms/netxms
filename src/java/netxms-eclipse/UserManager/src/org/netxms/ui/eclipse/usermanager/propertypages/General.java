@@ -43,10 +43,14 @@ public class General extends PropertyPage
 	private Text textFullName;
 	private Text textDescription;
 	private Text textXmppId;
+   private Text textEmail;
+   private Text textPhoneNumber;
 	private String initialName;
 	private String initialFullName;
 	private String initialDescription;
    private String initialXmppId;
+   private String initialEmail;
+   private String initialPhoneNumber;
 	private AbstractUserObject object;
 	private NXCSession session;
 	
@@ -59,9 +63,9 @@ public class General extends PropertyPage
 		session = ConsoleSharedData.getSession();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -82,12 +86,18 @@ public class General extends PropertyPage
       textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().General_LoginName,
       		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
-		// Full name
       if (object instanceof User)
       {
 	      initialFullName = new String(((User)object).getFullName());
 	      textFullName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().General_FullName,
 	      		                                        initialFullName, WidgetHelper.DEFAULT_LAYOUT_DATA);
+
+         initialEmail = new String(((User)object).getEmail());
+         textEmail = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Email", initialEmail, WidgetHelper.DEFAULT_LAYOUT_DATA);
+
+         initialPhoneNumber = new String(((User)object).getPhoneNumber());
+         textPhoneNumber = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Phone number",
+               initialPhoneNumber, WidgetHelper.DEFAULT_LAYOUT_DATA);
 
          initialXmppId = new String(((User)object).getXmppId());
          textXmppId = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().General_XMPPID,
@@ -97,6 +107,8 @@ public class General extends PropertyPage
       {
       	initialFullName = ""; //$NON-NLS-1$
       	initialXmppId = ""; //$NON-NLS-1$
+         initialEmail = ""; //$NON-NLS-1$
+         initialPhoneNumber = ""; //$NON-NLS-1$
       }
       
 		// Description
@@ -117,11 +129,15 @@ public class General extends PropertyPage
 		final String newName = new String(textName.getText());
 		final String newDescription = new String(textDescription.getText());
 		final String newFullName = (object instanceof User) ? textFullName.getText() : ""; //$NON-NLS-1$
+      final String newEmail = (object instanceof User) ? textEmail.getText() : ""; //$NON-NLS-1$
+      final String newPhoneNumber = (object instanceof User) ? textPhoneNumber.getText() : ""; //$NON-NLS-1$
       final String newXmppId = (object instanceof User) ? textXmppId.getText() : ""; //$NON-NLS-1$
 		
 		if (newName.equals(initialName) && 
 		    newDescription.equals(initialDescription) &&
 		    newFullName.equals(initialFullName) &&
+          newEmail.equals(initialEmail) &&
+          newPhoneNumber.equals(initialPhoneNumber) &&
 		    newXmppId.equals(initialXmppId))
 			return;		// Nothing to apply
 		
@@ -135,7 +151,9 @@ public class General extends PropertyPage
 				initialName = newName;
 				initialFullName = newFullName;
 				initialDescription = newDescription;
-				initialXmppId = newXmppId;
+            initialEmail = newEmail;
+            initialPhoneNumber = newPhoneNumber;
+            initialXmppId = newXmppId;
 				
 				int fields = AbstractUserObject.MODIFY_LOGIN_NAME | AbstractUserObject.MODIFY_DESCRIPTION;
 				object.setName(newName);
@@ -143,12 +161,15 @@ public class General extends PropertyPage
 				if (object instanceof User)
 				{
 					((User)object).setFullName(newFullName);
+               ((User)object).setEmail(newEmail);
+               ((User)object).setPhoneNumber(newPhoneNumber);
                ((User)object).setXmppId(newXmppId);
-					fields |= AbstractUserObject.MODIFY_FULL_NAME | AbstractUserObject.MODIFY_XMPP_ID;
+               fields |= AbstractUserObject.MODIFY_FULL_NAME | AbstractUserObject.MODIFY_EMAIL |
+                     AbstractUserObject.MODIFY_PHONE_NUMBER | AbstractUserObject.MODIFY_XMPP_ID;
 				}
 				session.modifyUserDBObject(object, fields);
 			}
-			
+
 			@Override
 			protected void jobFinalize()
 			{
@@ -172,9 +193,9 @@ public class General extends PropertyPage
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -182,9 +203,9 @@ public class General extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
