@@ -178,7 +178,7 @@ public class ObjectSelectionDialog extends Dialog
 	{
 		return ObjectSelectionFilterFactory.getInstance().createBusinessServiceSelectionFilter();
 	}
-	
+
 	/**
 	 * Create filter for dashboard and network map selection
 	 * 
@@ -188,7 +188,7 @@ public class ObjectSelectionDialog extends Dialog
 	{
 	   return ObjectSelectionFilterFactory.getInstance().createDashboardAndNetworkMapSelectionFilter();
 	}
-	
+
 	/**
     * Create filter for rack selection
     * 
@@ -439,6 +439,7 @@ public class ObjectSelectionDialog extends Dialog
 	
 	/**
     * Show or hide filter tooltip`s close button
+    *
     * @param showFilterCloseButton
     */
 	public void showFilterCloseButton(boolean showFilterCloseButton)
@@ -446,6 +447,11 @@ public class ObjectSelectionDialog extends Dialog
 	   this.showFilterCloseButton = showFilterCloseButton;
 	}
 	
+   /**
+    * Set title
+    *
+    * @param title new title
+    */
 	public void setTitle(String title)
 	{
 	   this.title = title;
