@@ -29,7 +29,7 @@
  * Version constants 
  */
 #define NETXMS_VERSION_MAJOR        3
-#define NETXMS_VERSION_MINOR        7
+#define NETXMS_VERSION_MINOR        8
 
 #ifdef UNICODE
 #define IS_UNICODE_BUILD_STRING     _T(" (UNICODE)")
