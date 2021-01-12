@@ -16,17 +16,17 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.tools;
+package org.netxms.nxmc.modules.charts.api;
 
 /**
- * Additional visibility validator for ViewRefreshController
+ * Generic owner of historical chart
  */
-public interface VisibilityValidator
+public interface HistoricalChartOwner
 {
    /**
-    * Should return true if element is visible and should be updated
+    * Get owned chart object
     * 
-    * @return
+    * @return current chart object
     */
-   public boolean isVisible();
+   public HistoricalDataChart getChart();
 }

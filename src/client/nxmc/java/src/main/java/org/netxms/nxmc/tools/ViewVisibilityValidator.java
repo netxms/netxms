@@ -18,15 +18,31 @@
  */
 package org.netxms.nxmc.tools;
 
+import org.netxms.nxmc.base.views.View;
+
 /**
- * Additional visibility validator for ViewRefreshController
+ * Visibility validator that translates "visible" state of given view
  */
-public interface VisibilityValidator
+public class ViewVisibilityValidator implements VisibilityValidator
 {
+   private View view;
+
    /**
-    * Should return true if element is visible and should be updated
-    * 
-    * @return
+    * Create validator based on given view.
+    *
+    * @param view view to monitor
     */
-   public boolean isVisible();
+   public ViewVisibilityValidator(View view)
+   {
+      this.view = view;
+   }
+
+   /**
+    * @see org.netxms.nxmc.tools.VisibilityValidator#isVisible()
+    */
+   @Override
+   public boolean isVisible()
+   {
+      return view.isVisible();
+   }
 }
