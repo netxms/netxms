@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 #vim: ts=4 sw=4 expandtab
 
 import sys
