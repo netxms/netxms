@@ -27,11 +27,11 @@
  */
 struct FileRequest
 {
-   UINT32 originalRequestId;
-   UINT32 serverRequestId;
+   uint32_t originalRequestId;
+   uint32_t serverRequestId;
    ClientSession *session;
 
-   FileRequest(UINT32 _originalRequestId, UINT32 _serverRequestId, ClientSession *_session)
+   FileRequest(uint32_t _originalRequestId, uint32_t _serverRequestId, ClientSession *_session)
    {
       originalRequestId = _originalRequestId;
       serverRequestId = _serverRequestId;
@@ -72,11 +72,12 @@ private:
    void createObjectAccessSnapshot(NXCPMessage *request);
 
 protected:
-   virtual void onBinaryMessage(NXCP_MESSAGE *rawMsg);
-   virtual bool onMessage(NXCPMessage *msg);
+   virtual bool onMessage(NXCPMessage *msg) override;
+
+   void processFileTransfer(NXCPMessage *msg);
 
 public:
-   RSConnector(const InetAddress& addr, WORD port) : ISC(addr, port)
+   RSConnector(const InetAddress& addr, uint16_t port) : ISC(addr, port)
    {
    }
 
@@ -102,27 +103,28 @@ bool RSConnector::onMessage(NXCPMessage *msg)
       case CMD_CREATE_OBJECT_ACCESS_SNAPSHOT:
          createObjectAccessSnapshot(msg);
          return true;
+      case CMD_FILE_DATA:
+      case CMD_ABORT_FILE_TRANSFER:
+         processFileTransfer(msg);
+         break;
    }
    return false;
 }
 
 /**
- * Custom handler for binary messages
+ * Process file transfer messages
  */
-void RSConnector::onBinaryMessage(NXCP_MESSAGE *rawMsg)
+void RSConnector::processFileTransfer(NXCPMessage *msg)
 {
-   if ((ntohs(rawMsg->code) != CMD_FILE_DATA) && (ntohs(rawMsg->code) != CMD_ABORT_FILE_TRANSFER))
-      return;
-
    MutexLock(s_fileRequestLock);
    for(int i = 0; i < s_fileRequests.size(); i++)
    {
       FileRequest *f = s_fileRequests.get(i);
-      if (f->serverRequestId == ntohl(rawMsg->id))
+      if (f->serverRequestId == msg->getId())
       {
-         rawMsg->id = htonl(f->originalRequestId);
-         f->session->sendRawMessage(rawMsg);
-         if ((ntohs(rawMsg->flags) & MF_END_OF_FILE) || (ntohs(rawMsg->code) == CMD_ABORT_FILE_TRANSFER))
+         msg->setId(f->originalRequestId);
+         f->session->sendMessage(msg);
+         if (msg->isEndOfFile() || (msg->getCode() == CMD_ABORT_FILE_TRANSFER))
          {
             s_fileRequests.remove(i);
          }
