@@ -135,44 +135,51 @@ int NXCORE_EXPORTABLE GetJobCount(uint32_t objectId, const TCHAR *type)
 /**
  * Implementation for job status changing operations: cancel, hold, unhold
  */
-static UINT32 ChangeJobStatus(UINT32 userId, NXCPMessage *msg, int operation)
+static uint32_t ChangeJobStatus(uint32_t userId, NXCPMessage *msg, int operation)
 {
-	UINT32 rcc = RCC_INVALID_JOB_ID;
-	UINT32 jobId = msg->getFieldAsUInt32(VID_JOB_ID);
+	uint32_t rcc = RCC_INVALID_JOB_ID;
+	uint32_t jobId = msg->getFieldAsUInt32(VID_JOB_ID);
    ServerJobQueue *queue = s_jobQueueIndex.get(jobId);
-   if (queue->findJob(jobId) != nullptr)
+   if (queue != nullptr)
    {
-      shared_ptr<NetObj> object = FindObjectById(queue->getObjectId());
-      if ((object != nullptr) && object->checkAccessRights(userId, OBJECT_ACCESS_CONTROL))
+      if (queue->findJob(jobId) != nullptr)
       {
-         switch(operation)
+         shared_ptr<NetObj> object = FindObjectById(queue->getObjectId());
+         if ((object != nullptr) && object->checkAccessRights(userId, OBJECT_ACCESS_CONTROL))
          {
-            case CANCEL_JOB:
-               rcc = queue->cancel(jobId) ? RCC_SUCCESS : RCC_JOB_CANCEL_FAILED;
-               break;
-            case HOLD_JOB:
-               rcc = queue->hold(jobId) ? RCC_SUCCESS : RCC_JOB_HOLD_FAILED;
-               break;
-            case UNHOLD_JOB:
-               rcc = queue->unhold(jobId) ? RCC_SUCCESS : RCC_JOB_UNHOLD_FAILED;
-               break;
-            default:
-               rcc = RCC_INTERNAL_ERROR;
-               break;
+            switch(operation)
+            {
+               case CANCEL_JOB:
+                  rcc = queue->cancel(jobId) ? RCC_SUCCESS : RCC_JOB_CANCEL_FAILED;
+                  break;
+               case HOLD_JOB:
+                  rcc = queue->hold(jobId) ? RCC_SUCCESS : RCC_JOB_HOLD_FAILED;
+                  break;
+               case UNHOLD_JOB:
+                  rcc = queue->unhold(jobId) ? RCC_SUCCESS : RCC_JOB_UNHOLD_FAILED;
+                  break;
+               default:
+                  rcc = RCC_INTERNAL_ERROR;
+                  break;
+            }
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Processed job status change request (userId=%u, operation=%d, jobId=%u, rcc=%u)"),
+                     userId, operation, jobId, rcc);
          }
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Processed job status change request (userId=%u, operation=%d, jobId=%u, rcc=%u)"),
-                  userId, operation, jobId, rcc);
+         else
+         {
+            rcc = RCC_ACCESS_DENIED;
+         }
       }
       else
       {
-         rcc = RCC_ACCESS_DENIED;
+         // Remove stalled record in job_id -> node mapping
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Removing stalled job to queue mapping for job ID %u"), jobId);
+         s_jobQueueIndex.remove(jobId);
       }
    }
    else
    {
-      // Remove stalled record in job_id -> node mapping
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Removing stalled job to queue mapping for job ID %u"), jobId);
-      s_jobQueueIndex.remove(jobId);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Status change request for unknown job ID %u"), jobId);
    }
 	return rcc;
 }
