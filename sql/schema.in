@@ -2356,3 +2356,46 @@ CREATE TABLE dc_targets
    geo_areas varchar(2000) null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+/**
+ * Report execution results
+ */
+CREATE TABLE report_results
+(
+   id integer not null,
+#if defined(DB_POSTGRESQL) || defined(DB_TSDB)
+   executiontime timestamp without time zone null,
+#elif defined(DB_ORACLE)
+   executiontime timestamp null,
+#else
+   executiontime datetime null,
+#endif
+   jobid char(36) null,
+   reportid char(36) null,
+   userid integer null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Notifications for reports
+ */
+CREATE TABLE report_notifications
+(
+   id integer not null,
+   attach_format_code integer null,
+   jobid char(36) null,
+   mail varchar(255) null,
+   report_name varchar(255) null,
+   PRIMARY KEY(id)
+);
+
+/**
+ * Sequence for Hibernate
+ */
+#if defined(DB_ORACLE)
+CREATE SEQUENCE HIBERNATE_SEQUENCE INCREMENT BY 1 MINVALUE 1 MAXVALUE 9999999999999999999999999999 CACHE 20 NOCYCLE;
+#elif defined(DB_MSSQL)
+CREATE SEQUENCE HIBERNATE_SEQUENCE INCREMENT BY 1 MINVALUE 1 CACHE 20;
+#else
+CREATE SEQUENCE HIBERNATE_SEQUENCE INCREMENT BY 1 MINVALUE 1;
+#endif

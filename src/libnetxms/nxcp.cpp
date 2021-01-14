@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -463,12 +463,33 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_DELETE_GEO_AREA"),
       _T("CMD_GEO_AREA_UPDATE"),
       _T("CMD_FIND_PROXY_FOR_NODE"),
-      _T("CMD_BULK_DCI_UPDATE")
+      _T("CMD_BULK_DCI_UPDATE"),
+      _T("CMD_GET_SCHEDULED_REPORTS"),
+      _T("CMD_REGISTER_SCHEDULED_REPORT"),
+      _T("CMD_CANCEL_SCHEDULED_REPORT")
+   };
+   static const TCHAR *reportingMessageNames[] =
+   {
+      _T("CMD_RS_LIST_REPORTS"),
+      _T("CMD_RS_GET_REPORT_DEFINITION"),
+      _T("CMD_RS_EXECUTE_REPORT"),
+      _T("CMD_RS_LIST_RESULTS"),
+      _T("CMD_RS_RENDER_RESULT"),
+      _T("CMD_RS_DELETE_RESULT"),
+      _T("0x1106"),  // unused
+      _T("0x1107"),  // unused
+      _T("CMD_RS_NOTIFY"),
+      _T("CMD_RS_ADD_REPORT_NOTIFY"),
+      _T("CMD_RS_SEND_MAIL_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_BULK_DCI_UPDATE))
+   if ((code >= CMD_LOGIN) && (code <= CMD_CANCEL_SCHEDULED_REPORT))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
+   }
+   else if ((code >= CMD_RS_LIST_REPORTS) && (code <= CMD_RS_SEND_MAIL_NOTIFY))
+   {
+      _tcscpy(buffer, reportingMessageNames[code - CMD_RS_LIST_REPORTS]);
    }
    else
    {
