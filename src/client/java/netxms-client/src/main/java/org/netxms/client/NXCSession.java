@@ -10781,7 +10781,7 @@ public class NXCSession
     */
    public UUID executeReport(UUID reportId, Map<String, String> parameters) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_SCHEDULE_EXECUTION);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_EXECUTE_REPORT);
       msg.setField(NXCPCodes.VID_REPORT_DEFINITION, reportId);
       msg.setFieldInt32(NXCPCodes.VID_NUM_PARAMETERS, parameters.size());
       long varId = NXCPCodes.VID_PARAM_LIST_BASE;
@@ -10875,7 +10875,7 @@ public class NXCSession
     */
    public void scheduleReport(ReportingJob job, Map<String, String> parameters) throws NXCException, IOException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_SCHEDULE_EXECUTION);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_REGISTER_SCHEDULED_REPORT);
       msg.setField(NXCPCodes.VID_REPORT_DEFINITION, job.getReportId());
       msg.setField(NXCPCodes.VID_RS_JOB_ID, job.getJobId());
       msg.setFieldInt32(NXCPCodes.VID_RS_JOB_TYPE, job.getType());
@@ -10920,7 +10920,7 @@ public class NXCSession
     */
    public List<ReportingJob> listScheduledJobs(UUID reportId) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_LIST_SCHEDULES);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SCHEDULED_REPORTS);
       msg.setField(NXCPCodes.VID_REPORT_DEFINITION, reportId);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -10946,7 +10946,7 @@ public class NXCSession
     */
    public void deleteReportSchedule(UUID reportId, UUID jobId) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_DELETE_SCHEDULE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CANCEL_SCHEDULED_REPORT);
       msg.setField(NXCPCodes.VID_REPORT_DEFINITION, reportId);
       msg.setField(NXCPCodes.VID_JOB_ID, jobId);
       sendMessage(msg);

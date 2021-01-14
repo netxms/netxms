@@ -435,16 +435,17 @@ public class NXCPCodes
    public static final int CMD_GEO_AREA_UPDATE = 0x01A2;
    public static final int CMD_FIND_PROXY_FOR_NODE = 0x01A3;
    public static final int CMD_BULK_DCI_UPDATE = 0x01A4;
+   public static final int CMD_GET_SCHEDULED_REPORTS = 0x01A5;
+   public static final int CMD_REGISTER_SCHEDULED_REPORT = 0x01A6;
+   public static final int CMD_CANCEL_SCHEDULED_REPORT = 0x01A7;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
 	public static final int CMD_RS_GET_REPORT_DEFINITION = 0x1101;
-	public static final int CMD_RS_SCHEDULE_EXECUTION = 0x1102;
+   public static final int CMD_RS_EXECUTE_REPORT = 0x1102;
 	public static final int CMD_RS_LIST_RESULTS = 0x1103;
 	public static final int CMD_RS_RENDER_RESULT = 0x1104;
 	public static final int CMD_RS_DELETE_RESULT = 0x1105;
-	public static final int CMD_RS_LIST_SCHEDULES = 0x1106;
-	public static final int CMD_RS_DELETE_SCHEDULE = 0x1107;
 	public static final int CMD_RS_NOTIFY = 0x1108;
 	public static final int CMD_RS_ADD_REPORT_NOTIFY = 0x1109;
 	public static final int CMD_RS_SEND_MAIL_NOTIFY = 0x1110;

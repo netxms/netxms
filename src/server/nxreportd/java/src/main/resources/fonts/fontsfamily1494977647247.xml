@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fontFamilies>
+	<fontFamily name="DejaVu LGC Sans">
+		<normal><![CDATA[fonts/DejaVuLGCSans/DejaVuLGCSans.ttf]]></normal>
+		<bold><![CDATA[fonts/DejaVuLGCSans/DejaVuLGCSans-Bold.ttf]]></bold>
+		<pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+		<pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+		<exportFonts/>
+	</fontFamily>
+</fontFamilies>

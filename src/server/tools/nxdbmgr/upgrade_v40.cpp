@@ -24,6 +24,111 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.35 to 40.36
+ */
+static bool H_UpgradeFromV35()
+{
+   if (GetSchemaLevelForMajorVersion(38) < 1)
+   {
+      static const TCHAR *quartzTables[] = {
+         _T("qrtz_fired_triggers"),
+         _T("qrtz_paused_trigger_grps"),
+         _T("qrtz_scheduler_state"),
+         _T("qrtz_locks"),
+         _T("qrtz_simple_triggers"),
+         _T("qrtz_cron_triggers"),
+         _T("qrtz_simprop_triggers"),
+         _T("qrtz_blob_triggers"),
+         _T("qrtz_triggers"),
+         _T("qrtz_job_details"),
+         _T("qrtz_calendars"),
+         nullptr
+      };
+      for(int i = 0; quartzTables[i] != nullptr; i++)
+      {
+         if (DBIsTableExist(g_dbHandle, quartzTables[i]))
+         {
+            TCHAR query[256];
+            _sntprintf(query, 256, _T("DROP TABLE %s"), quartzTables[i]);
+            CHK_EXEC(SQLQuery(query));
+         }
+      }
+
+      bool doCreateSequence = true;
+      if (DBIsTableExist(g_dbHandle, _T("reporting_results")))
+      {
+         CHK_EXEC(DBRenameTable(g_dbHandle, _T("reporting_results"), _T("report_results")));
+         doCreateSequence = false;  // Assume that Hibernate sequence already exist
+      }
+      else
+      {
+         const TCHAR *dtType;
+         switch(g_dbSyntax)
+         {
+            case DB_SYNTAX_ORACLE:
+               dtType = _T("timestamp");
+               break;
+            case DB_SYNTAX_PGSQL:
+            case DB_SYNTAX_TSDB:
+               dtType = _T("timestamp without time zone");
+               break;
+            default:
+               dtType = _T("datetime");
+               break;
+         }
+
+         TCHAR query[1024];
+         _sntprintf(query, 1024,
+            _T("CREATE TABLE report_results (")
+            _T("   id integer not null,")
+            _T("   executiontime %s null,")
+            _T("   jobid char(36) null,")
+            _T("   reportid char(36) null,")
+            _T("   userid integer null,")
+            _T("   PRIMARY KEY(id))"), dtType);
+         CHK_EXEC(CreateTable(query));
+      }
+
+      if (DBIsTableExist(g_dbHandle, _T("report_notification")))
+      {
+         CHK_EXEC(DBRenameTable(g_dbHandle, _T("report_notification"), _T("report_notifications")));
+         doCreateSequence = false;  // Assume that Hibernate sequence already exist
+      }
+      else
+      {
+         CHK_EXEC(CreateTable(
+            _T("CREATE TABLE report_notifications (")
+            _T("   id integer not null,")
+            _T("   attach_format_code integer null,")
+            _T("   jobid char(36) null,")
+            _T("   mail varchar(255) null,")
+            _T("   report_name varchar(255) null,")
+            _T("   PRIMARY KEY(id))")));
+      }
+
+      if (doCreateSequence)
+      {
+         if (g_dbSyntax == DB_SYNTAX_ORACLE)
+         {
+            CHK_EXEC(SQLQuery(_T("CREATE SEQUENCE HIBERNATE_SEQUENCE INCREMENT BY 1 MINVALUE 1 MAXVALUE 9999999999999999999999999999 CACHE 20 NOCYCLE")));
+         }
+         else if (g_dbSyntax == DB_SYNTAX_MSSQL)
+         {
+            CHK_EXEC(SQLQuery(_T("CREATE SEQUENCE HIBERNATE_SEQUENCE INCREMENT BY 1 MINVALUE 1 CACHE 20")));
+         }
+         else
+         {
+            CHK_EXEC(SQLQuery(_T("CREATE SEQUENCE HIBERNATE_SEQUENCE INCREMENT BY 1 MINVALUE 1")));
+         }
+      }
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(38, 1));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(36));
+   return true;
+}
+
+/**
  * Upgrade from 40.34 to 40.35
  */
 static bool H_UpgradeFromV34()
@@ -968,6 +1073,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 35, 40, 36, H_UpgradeFromV35 },
    { 34, 40, 35, H_UpgradeFromV34 },
    { 33, 40, 34, H_UpgradeFromV33 },
    { 32, 40, 33, H_UpgradeFromV32 },
