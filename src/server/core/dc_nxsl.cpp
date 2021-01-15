@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -140,7 +140,7 @@ static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Valu
       else if (dci->getType() == DCO_TYPE_TABLE)
       {
          Table *t = static_cast<DCTable*>(dci.get())->getLastValue();
-         *ppResult = (t != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, t)) : vm->createValue();
+         *ppResult = (t != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, t)) : vm->createValue();
       }
       else
       {

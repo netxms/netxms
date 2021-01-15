@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
    if (m_cacheSize > 0)
    {
       m_ppValueCache = MemAllocArray<ItemValue*>(m_cacheSize);
-      for(UINT32 i = 0; i < m_cacheSize; i++)
+      for(uint32_t i = 0; i < m_cacheSize; i++)
          m_ppValueCache[i] = new ItemValue(src->m_ppValueCache[i]);
    }
    else
@@ -1490,6 +1490,9 @@ NXSL_Value *DCItem::getRawValueForNXSL(NXSL_VM *vm)
  */
 NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls)
 {
+   if (!m_bCacheLoaded)
+      reloadCache(false);
+
    NXSL_Value *pValue;
 
 	lock();
