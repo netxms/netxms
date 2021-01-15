@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -85,6 +85,7 @@ void MaintenanceModeLeave(const shared_ptr<ScheduledTaskParameters>& parameters)
 void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters);
 void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ReloadCRLs(const shared_ptr<ScheduledTaskParameters>& parameters);
+void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters);
 
 void InitCountryList();
 void InitCurrencyList();
@@ -130,9 +131,9 @@ void LDAPSyncThread();
  */
 NXCORE_EXPORTABLE_VAR(TCHAR g_szConfigFile[MAX_PATH]) = _T("{search}");
 NXCORE_EXPORTABLE_VAR(TCHAR g_szLogFile[MAX_PATH]) = DEFAULT_LOG_FILE;
-UINT32 g_logRotationMode = NXLOG_ROTATION_BY_SIZE;
-UINT64 g_maxLogSize = 16384 * 1024;
-UINT32 g_logHistorySize = 4;
+uint32_t g_logRotationMode = NXLOG_ROTATION_BY_SIZE;
+uint64_t g_maxLogSize = 16384 * 1024;
+uint32_t g_logHistorySize = 4;
 TCHAR g_szDailyLogFileSuffix[64] = _T("");
 NXCORE_EXPORTABLE_VAR(TCHAR g_szDumpDir[MAX_PATH]) = DEFAULT_DUMP_DIR;
 char g_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
@@ -140,14 +141,14 @@ NXCORE_EXPORTABLE_VAR(TCHAR g_szListenAddress[MAX_PATH]) = _T("*");
 #ifndef _WIN32
 NXCORE_EXPORTABLE_VAR(TCHAR g_szPIDFile[MAX_PATH]) = _T("/var/run/netxmsd.pid");
 #endif
-UINT32 g_discoveryPollingInterval;
-UINT32 g_statusPollingInterval;
-UINT32 g_configurationPollingInterval;
-UINT32 g_routingTableUpdateInterval;
-UINT32 g_topologyPollingInterval;
-UINT32 g_conditionPollingInterval;
-UINT32 g_instancePollingInterval;
-UINT32 g_icmpPollingInterval;
+uint32_t g_discoveryPollingInterval;
+uint32_t g_statusPollingInterval;
+uint32_t g_configurationPollingInterval;
+uint32_t g_routingTableUpdateInterval;
+uint32_t g_topologyPollingInterval;
+uint32_t g_conditionPollingInterval;
+uint32_t g_instancePollingInterval;
+uint32_t g_icmpPollingInterval;
 uint32_t g_icmpPingSize;
 uint32_t g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
 uint32_t g_auditFlags;
@@ -168,7 +169,7 @@ uint32_t g_snmpTrapStormCountThreshold = 0;
 uint32_t g_snmpTrapStormDurationThreshold = 15;
 DB_DRIVER g_dbDriver = nullptr;
 NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool) = nullptr;
-INT16 g_defaultAgentCacheMode = AGENT_CACHE_OFF;
+int16_t g_defaultAgentCacheMode = AGENT_CACHE_OFF;
 InetAddressList g_peerNodeAddrList;
 Condition g_dbPasswordReady(true);
 
@@ -853,16 +854,16 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	GetDatabasePassword();
 
 	// Connect to database
-	DB_HANDLE hdbBootstrap = NULL;
+	DB_HANDLE hdbBootstrap = nullptr;
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 	for(int i = 0; ; i++)
 	{
 	   hdbBootstrap = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
-		if ((hdbBootstrap != NULL) || (i == 5))
+		if ((hdbBootstrap != nullptr) || (i == 5))
 			break;
 		ThreadSleep(5);
 	}
-	if (hdbBootstrap == NULL)
+	if (hdbBootstrap == nullptr)
 	{
 		nxlog_write(NXLOG_ERROR, _T("Unable to establish connection with database (%s)"), errorText);
 		return FALSE;
@@ -1217,6 +1218,7 @@ retry_db_lock:
    RegisterSchedulerTaskHandler(RENEW_AGENT_CERTIFICATES_TASK_ID, RenewAgentCertificates, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(RELOAD_CRLS_TASK_ID, ReloadCRLs, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(DCT_RESET_POLL_TIMERS_TASK_ID, ResetObjectPollTimers, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(EXECUTE_REPORT_TASK_ID, ExecuteReport, SYSTEM_ACCESS_REPORTING_SERVER);
    InitializeTaskScheduler();
 
    // Schedule unbound agent tunnel processing and automatic agent certificate renewal

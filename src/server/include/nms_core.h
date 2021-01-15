@@ -208,6 +208,11 @@ enum CertificateOperation
 #define RELOAD_CRLS_TASK_ID _T("System.ReloadCRLs")
 
 /**
+ * "Execute report" scheduled task
+ */
+#define EXECUTE_REPORT_TASK_ID _T("Report.Execute")
+
+/**
  * Audit subsystems
  */
 #define AUDIT_SECURITY     _T("SECURITY")
@@ -1499,9 +1504,9 @@ ObjectArray<ObjectsDistance> *FindNearestObjects(uint32_t currObjectId, int maxD
  */
 extern NXCORE_EXPORTABLE_VAR(TCHAR g_szConfigFile[]);
 extern NXCORE_EXPORTABLE_VAR(TCHAR g_szLogFile[]);
-extern UINT32 g_logRotationMode;
-extern UINT64 g_maxLogSize;
-extern UINT32 g_logHistorySize;
+extern uint32_t g_logRotationMode;
+extern uint64_t g_maxLogSize;
+extern uint32_t g_logHistorySize;
 extern TCHAR g_szDailyLogFileSuffix[64];
 extern NXCORE_EXPORTABLE_VAR(TCHAR g_szDumpDir[]);
 extern NXCORE_EXPORTABLE_VAR(TCHAR g_szListenAddress[]);

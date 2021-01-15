@@ -370,7 +370,7 @@ public class CommunicationManager
       final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
       if (reportId != null)
       {
-         final Map<String, String> parameters = getParametersFromRequest(request);
+         final Map<String, String> parameters = request.getStringMapFromFields(NXCPCodes.VID_PARAM_LIST_BASE, NXCPCodes.VID_NUM_PARAMETERS);
          final UUID jobId = getOrCreateJobId(request);
          final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
          requestObjectAccessSnapshotUpdate(userId);
@@ -402,26 +402,6 @@ public class CommunicationManager
    {
       UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_RS_JOB_ID);
       return (jobId != null) ? jobId : UUID.randomUUID();
-   }
-
-   /**
-    * Get report parameters from request message
-    * 
-    * @param request request message
-    * @return parameters
-    */
-   private static Map<String, String> getParametersFromRequest(NXCPMessage request)
-   {
-      final HashMap<String, String> map = new HashMap<String, String>();
-      final int count = request.getFieldAsInt32(NXCPCodes.VID_NUM_PARAMETERS);
-      long id = NXCPCodes.VID_PARAM_LIST_BASE;
-      for(int i = 0; i < count; i++)
-      {
-         String key = request.getFieldAsString(id++);
-         String value = request.getFieldAsString(id++);
-         map.put(key, value);
-      }
-      return map;
    }
 
    /**

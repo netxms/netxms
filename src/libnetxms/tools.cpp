@@ -1947,14 +1947,13 @@ bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolA(const char *optString, 
 /**
  * Extract named option value as integer (UNICODE version)
  */
-INT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntW(const WCHAR *optString, const WCHAR *option, INT32 defVal)
+int32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntW(const WCHAR *optString, const WCHAR *option, int32_t defVal)
 {
-	WCHAR buffer[256], *eptr;
-	INT32 val;
-
+	WCHAR buffer[256];
 	if (ExtractNamedOptionValueW(optString, option, buffer, 256))
 	{
-		val = wcstol(buffer, &eptr, 0);
+	   WCHAR *eptr;
+	   int32_t val = wcstol(buffer, &eptr, 0);
 		if (*eptr == 0)
 			return val;
 	}
@@ -1964,14 +1963,13 @@ INT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntW(const WCHAR *optString,
 /**
  * Extract named option value as integer (multibyte version)
  */
-INT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntA(const char *optString, const char *option, INT32 defVal)
+int32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntA(const char *optString, const char *option, int32_t defVal)
 {
-	char buffer[256], *eptr;
-	INT32 val;
-
+	char buffer[256];
 	if (ExtractNamedOptionValueA(optString, option, buffer, 256))
 	{
-		val = strtol(buffer, &eptr, 0);
+	   char *eptr;
+	   int32_t val = strtol(buffer, &eptr, 0);
 		if (*eptr == 0)
 			return val;
 	}
@@ -1981,14 +1979,13 @@ INT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntA(const char *optString, 
 /**
  * Extract named option value as unsigned integer (UNICODE version)
  */
-UINT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntW(const WCHAR *optString, const WCHAR *option, UINT32 defVal)
+uint32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntW(const WCHAR *optString, const WCHAR *option, uint32_t defVal)
 {
-   WCHAR buffer[256], *eptr;
-   UINT32 val;
-
+   WCHAR buffer[256];
    if (ExtractNamedOptionValueW(optString, option, buffer, 256))
    {
-      val = wcstoul(buffer, &eptr, 0);
+      WCHAR *eptr;
+      uint32_t val = wcstoul(buffer, &eptr, 0);
       if (*eptr == 0)
          return val;
    }
@@ -1998,14 +1995,13 @@ UINT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntW(const WCHAR *optStrin
 /**
  * Extract named option value as unsigned integer (multibyte version)
  */
-UINT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntA(const char *optString, const char *option, UINT32 defVal)
+uint32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntA(const char *optString, const char *option, uint32_t defVal)
 {
-   char buffer[256], *eptr;
-   UINT32 val;
-
+   char buffer[256];
    if (ExtractNamedOptionValueA(optString, option, buffer, 256))
    {
-      val = strtoul(buffer, &eptr, 0);
+      char *eptr;
+      uint32_t val = strtoul(buffer, &eptr, 0);
       if (*eptr == 0)
          return val;
    }
@@ -2015,14 +2011,13 @@ UINT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntA(const char *optString
 /**
  * Extract named option value as 64 bit unsigned integer (UNICODE version)
  */
-UINT64 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64W(const WCHAR *optString, const WCHAR *option, UINT64 defVal)
+uint64_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64W(const WCHAR *optString, const WCHAR *option, uint64_t defVal)
 {
-   WCHAR buffer[256], *eptr;
-   UINT64 val;
-
+   WCHAR buffer[256];
    if (ExtractNamedOptionValueW(optString, option, buffer, 256))
    {
-      val = wcstoull(buffer, &eptr, 0);
+      WCHAR *eptr;
+      uint64_t val = wcstoull(buffer, &eptr, 0);
       if (*eptr == 0)
          return val;
    }
@@ -2032,16 +2027,53 @@ UINT64 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64W(const WCHAR *optStr
 /**
  * Extract named option value as 64 bit unsigned integer (multibyte version)
  */
-UINT64 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64A(const char *optString, const char *option, UINT64 defVal)
+uint64_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64A(const char *optString, const char *option, uint64_t defVal)
 {
-   char buffer[256], *eptr;
-   UINT64 val;
-
+   char buffer[256];
    if (ExtractNamedOptionValueA(optString, option, buffer, 256))
    {
-      val = strtoull(buffer, &eptr, 0);
+      char *eptr;
+      uint64_t val = strtoull(buffer, &eptr, 0);
       if (*eptr == 0)
          return val;
+   }
+   return defVal;
+}
+
+/**
+ * Extract named option value as GUID (UNICODE version)
+ */
+uuid LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsGUIDW(const WCHAR *optString, const WCHAR *option, const uuid& defVal)
+{
+   WCHAR buffer[256];
+   if (ExtractNamedOptionValueW(optString, option, buffer, 256))
+   {
+#ifdef UNICODE
+      return uuid::parse(buffer);
+#else
+      char mbbuffer[256];
+      wchar_to_mb(buffer, -1, mbbuffer, 256);
+      return uuid::parse(mbbuffer);
+#endif
+   }
+   return defVal;
+}
+
+/**
+ * Extract named option value as GUID (multibyte version)
+ */
+uuid LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsGUIDA(const char *optString, const char *option, const uuid& defVal)
+{
+   char buffer[256];
+   if (ExtractNamedOptionValueA(optString, option, buffer, 256))
+   {
+#ifdef UNICODE
+      WCHAR wcbuffer[256];
+      mb_to_wchar(buffer, -1, wcbuffer, 256);
+      return uuid::parse(wcbuffer);
+#else
+      return uuid::parse(buffer);
+#endif
    }
    return defVal;
 }
