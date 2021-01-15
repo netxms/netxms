@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ public class AddAddressListElementDialog extends Dialog
 	private ObjectSelector proxySelector;
 	private InetAddressListElement element;
 	private boolean enableProxySelection;
-	
+
 	/**
 	 * @param parentShell
 	 * @param inetAddressListElement 
@@ -68,9 +68,9 @@ public class AddAddressListElementDialog extends Dialog
 		element = inetAddressListElement;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -78,9 +78,9 @@ public class AddAddressListElementDialog extends Dialog
 		newShell.setText(Messages.get().AddAddressListElementDialog_Title);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -101,6 +101,8 @@ public class AddAddressListElementDialog extends Dialog
 			{
 				textAddr1.setLabel(Messages.get().AddAddressListElementDialog_NetAddr);
 				textAddr2.setLabel(Messages.get().AddAddressListElementDialog_NetMask);
+            if (textAddr2.getText().equals("0.0.0.0"))
+               textAddr2.setText("0");
 			}
 			
 			@Override
@@ -109,7 +111,7 @@ public class AddAddressListElementDialog extends Dialog
 				widgetSelected(e);
 			}
 		});
-		
+
 		radioRange = new Button(dialogArea, SWT.RADIO);
 		radioRange.setText(Messages.get().AddAddressListElementDialog_AddrRange);
 		radioRange.addSelectionListener(new SelectionListener() {
@@ -118,6 +120,8 @@ public class AddAddressListElementDialog extends Dialog
 			{
 				textAddr1.setLabel(Messages.get().AddAddressListElementDialog_StartAddr);
 				textAddr2.setLabel(Messages.get().AddAddressListElementDialog_EndAddr);
+            if (textAddr2.getText().equals("0"))
+               textAddr2.setText("0.0.0.0");
 			}
 			
 			@Override
@@ -126,7 +130,7 @@ public class AddAddressListElementDialog extends Dialog
 				widgetSelected(e);
 			}
 		});
-		
+
 		textAddr1 = new LabeledText(dialogArea, SWT.NONE);
 		textAddr1.setLabel(Messages.get().AddAddressListElementDialog_NetAddr);
 		textAddr1.setText("0.0.0.0"); //$NON-NLS-1$
@@ -135,7 +139,7 @@ public class AddAddressListElementDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 300;
 		textAddr1.setLayoutData(gd);
-		
+
 		textAddr2 = new LabeledText(dialogArea, SWT.NONE);
 		textAddr2.setLabel(Messages.get().AddAddressListElementDialog_NetMask);
 		textAddr2.setText("0"); //$NON-NLS-1$
@@ -164,7 +168,7 @@ public class AddAddressListElementDialog extends Dialog
          gd.grabExcessHorizontalSpace = true;
          proxySelector.setLayoutData(gd);
 		}
-		
+
       comments = new LabeledText(dialogArea, SWT.NONE);
       comments.setLabel("Comments");
       comments.getTextControl().setTextLimit(255);
@@ -172,11 +176,16 @@ public class AddAddressListElementDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       comments.setLayoutData(gd);
-      
+
       if (element != null)
       {
          radioSubnet.setSelection(element.isSubnet());
          radioRange.setSelection(!element.isSubnet());
+         if (!element.isSubnet())
+         {
+            textAddr1.setLabel(Messages.get().AddAddressListElementDialog_StartAddr);
+            textAddr2.setLabel(Messages.get().AddAddressListElementDialog_EndAddr);
+         }
          textAddr1.setText(element.getBaseAddress().getHostAddress());
          textAddr2.setText(element.isSubnet() ? Integer.toString(element.getMaskBits()) : element.getEndAddress().getHostAddress());
          if (enableProxySelection)
@@ -193,9 +202,9 @@ public class AddAddressListElementDialog extends Dialog
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
