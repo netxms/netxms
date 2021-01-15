@@ -4003,32 +4003,6 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpenEx(const TCHAR *libName, bool global, TCHAR *
 void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
 void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *symbol, TCHAR *errorText);
 
-bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const WCHAR *option, WCHAR *buffer, int bufSize);
-bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolW(const WCHAR *optString, const WCHAR *option, bool defVal);
-INT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntW(const WCHAR *optString, const WCHAR *option, INT32 defVal);
-UINT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntW(const WCHAR *optString, const WCHAR *option, UINT32 defVal);
-UINT64 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64W(const WCHAR *optString, const WCHAR *option, UINT64 defVal);
-
-bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueA(const char *optString, const char *option, char *buffer, int bufSize);
-bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolA(const char *optString, const char *option, bool defVal);
-INT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntA(const char *optString, const char *option, INT32 defVal);
-UINT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntA(const char *optString, const char *option, UINT32 defVal);
-UINT64 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64A(const char *optString, const char *option, UINT64 defVal);
-
-#ifdef UNICODE
-#define ExtractNamedOptionValue ExtractNamedOptionValueW
-#define ExtractNamedOptionValueAsBool ExtractNamedOptionValueAsBoolW
-#define ExtractNamedOptionValueAsInt ExtractNamedOptionValueAsIntW
-#define ExtractNamedOptionValueAsUInt ExtractNamedOptionValueAsUIntW
-#define ExtractNamedOptionValueAsUInt64 ExtractNamedOptionValueAsUInt64W
-#else
-#define ExtractNamedOptionValue ExtractNamedOptionValueA
-#define ExtractNamedOptionValueAsBool ExtractNamedOptionValueAsBoolA
-#define ExtractNamedOptionValueAsInt ExtractNamedOptionValueAsIntA
-#define ExtractNamedOptionValueAsUInt ExtractNamedOptionValueAsUIntA
-#define ExtractNamedOptionValueAsUInt64 ExtractNamedOptionValueAsUInt64A
-#endif
-
 #ifdef _WIN32
 TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 error, TCHAR *buffer, size_t size);
 bool LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, size_t size);
@@ -4516,6 +4490,36 @@ TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
 String LIBNETXMS_EXPORTABLE FormatTimestamp(time_t t);
 
 String LIBNETXMS_EXPORTABLE GetEnvironmentVariableEx(const TCHAR *var);
+
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const WCHAR *option, WCHAR *buffer, int bufSize);
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolW(const WCHAR *optString, const WCHAR *option, bool defVal);
+int32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntW(const WCHAR *optString, const WCHAR *option, int32_t defVal);
+uint32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntW(const WCHAR *optString, const WCHAR *option, uint32_t defVal);
+uint64_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64W(const WCHAR *optString, const WCHAR *option, uint64_t defVal);
+uuid LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsGUIDW(const WCHAR *optString, const WCHAR *option, const uuid& defVal);
+
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueA(const char *optString, const char *option, char *buffer, int bufSize);
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolA(const char *optString, const char *option, bool defVal);
+int32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntA(const char *optString, const char *option, int32_t defVal);
+uint32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntA(const char *optString, const char *option, uint32_t defVal);
+uint64_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64A(const char *optString, const char *option, uint64_t defVal);
+uuid LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsGUIDA(const char *optString, const char *option, const uuid& defVal);
+
+#ifdef UNICODE
+#define ExtractNamedOptionValue ExtractNamedOptionValueW
+#define ExtractNamedOptionValueAsBool ExtractNamedOptionValueAsBoolW
+#define ExtractNamedOptionValueAsInt ExtractNamedOptionValueAsIntW
+#define ExtractNamedOptionValueAsUInt ExtractNamedOptionValueAsUIntW
+#define ExtractNamedOptionValueAsUInt64 ExtractNamedOptionValueAsUInt64W
+#define ExtractNamedOptionValueAsGUID ExtractNamedOptionValueAsGUIDW
+#else
+#define ExtractNamedOptionValue ExtractNamedOptionValueA
+#define ExtractNamedOptionValueAsBool ExtractNamedOptionValueAsBoolA
+#define ExtractNamedOptionValueAsInt ExtractNamedOptionValueAsIntA
+#define ExtractNamedOptionValueAsUInt ExtractNamedOptionValueAsUIntA
+#define ExtractNamedOptionValueAsUInt64 ExtractNamedOptionValueAsUInt64A
+#define ExtractNamedOptionValueAsGUID ExtractNamedOptionValueAsGUIDA
+#endif
 
 /**
  * Status for SaveFile function

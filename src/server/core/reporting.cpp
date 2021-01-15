@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("reporting")
+
 /**
  * File request information
  */
@@ -85,7 +87,7 @@ public:
    {
       va_list args;
       va_start(args, format);
-      nxlog_debug2(7, format, args);
+      nxlog_debug_tag2(DEBUG_TAG, 6, format, args);
       va_end(args);
    }
 };
@@ -126,6 +128,7 @@ void RSConnector::processFileTransfer(NXCPMessage *msg)
          f->session->sendMessage(msg);
          if (msg->isEndOfFile() || (msg->getCode() == CMD_ABORT_FILE_TRANSFER))
          {
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("File request with ID %d removed from list"), f->originalRequestId);
             s_fileRequests.remove(i);
          }
          break;
@@ -148,7 +151,7 @@ void RSConnector::createObjectAccessSnapshot(NXCPMessage *request)
 /**
  * Reporting server connector instance
  */
-static RSConnector *m_connector = NULL;
+static RSConnector *m_connector = nullptr;
 
 /**
  * Reporting server connection manager
@@ -157,9 +160,9 @@ void ReportingServerConnector()
 {
 	TCHAR hostname[256];
 	ConfigReadStr(_T("ReportingServerHostname"), hostname, 256, _T("localhost"));
-   WORD port = (WORD)ConfigReadInt(_T("ReportingServerPort"), 4710);
+   uint16_t port = static_cast<uint16_t>(ConfigReadInt(_T("ReportingServerPort"), 4710));
 
-	DbgPrintf(1, _T("Reporting Server connector started (%s:%d)"), hostname, port);
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("Reporting Server connector started (%s:%d)"), hostname, port);
 
    // Keep connection open
    m_connector = new RSConnector(InetAddress::resolveHostName(hostname), port);
@@ -169,7 +172,7 @@ void ReportingServerConnector()
       {
          if (m_connector->connect(0) == ISC_ERR_SUCCESS)
          {
-            DbgPrintf(2, _T("Connection to Reporting Server restored"));
+            nxlog_debug_tag(DEBUG_TAG, 2, _T("Connection to Reporting Server restored"));
          }
       }
 	}
@@ -177,7 +180,7 @@ void ReportingServerConnector()
 	delete m_connector;
    m_connector = NULL;
 
-	DbgPrintf(1, _T("Reporting Server connector stopped"));
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("Reporting Server connector stopped"));
 }
 
 /**
@@ -185,11 +188,11 @@ void ReportingServerConnector()
  */
 NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession *session)
 {
-   if (m_connector == NULL || !m_connector->connected())
-      return NULL;
+   if ((m_connector == nullptr) || !m_connector->connected())
+      return nullptr;
 
-   UINT32 originalId = request->getId();
-   UINT32 rqId = m_connector->generateMessageId();
+   uint32_t originalId = request->getId();
+   uint32_t rqId = m_connector->generateMessageId();
    request->setId(rqId);
    request->setField(VID_USER_ID, session->getUserId());
 
@@ -201,16 +204,78 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
       MutexUnlock(s_fileRequestLock);
    }
 
-   NXCPMessage *reply = NULL;
+   NXCPMessage *reply = nullptr;
    if (m_connector->sendMessage(request))
    {
       reply = m_connector->waitForMessage(CMD_REQUEST_COMPLETED, request->getId(), 600000);
    }
 
-   if (reply != NULL)
+   if (reply != nullptr)
    {
       reply->setId(originalId);
    }
 
    return reply;
+}
+
+/**
+ * Scheduled task for report execution
+ */
+void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters)
+{
+   uuid reportId = ExtractNamedOptionValueAsGUID(parameters->m_persistentData, _T("reportId"), uuid::NULL_UUID);
+   TCHAR reportIdText[64];
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Scheduled report execution (report ID %s)"), reportId.toString(reportIdText));
+
+   if ((m_connector == nullptr) || !m_connector->connected())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute report %s (no connection with reporting server)"), reportIdText);
+      return;
+   }
+
+   StringMap reportParameters;
+   TCHAR name[64], value[1024];
+   for(int i = 0; ; i++)
+   {
+      _sntprintf(name, 64, _T("p%d"), i);
+      if (!ExtractNamedOptionValue(parameters->m_persistentData, name, value, 1024))
+         break;
+      TCHAR *s = _tcschr(value, _T(':'));
+      if (s != nullptr)
+      {
+         *s = 0;
+         s++;
+         reportParameters.set(value, s);
+      }
+   }
+
+   NXCPMessage request(CMD_RS_EXECUTE_REPORT, m_connector->generateMessageId());
+   request.setField(VID_REPORT_DEFINITION, reportId);
+   request.setField(VID_USER_ID, parameters->m_userId);
+   reportParameters.fillMessage(&request, VID_NUM_PARAMETERS, VID_PARAM_LIST_BASE);
+   if (m_connector->sendMessage(&request))
+   {
+      NXCPMessage *response = m_connector->waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), 5000);
+      if (response != nullptr)
+      {
+         uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == RCC_SUCCESS)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Report %s execution started (job ID %s)"), reportIdText, response->getFieldAsGUID(VID_JOB_ID).toString().cstr());
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute report %s (reporting server error %u)"), reportIdText, rcc);
+         }
+         delete response;
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute report %s (request timeout)"), reportIdText);
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute report %s (communication failure)"), reportIdText);
+   }
 }

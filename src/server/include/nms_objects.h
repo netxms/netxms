@@ -44,15 +44,15 @@ class ComponentTree;
 /**
  * Global variables used by inline methods
  */
-extern UINT32 g_discoveryPollingInterval;
-extern UINT32 g_statusPollingInterval;
-extern UINT32 g_configurationPollingInterval;
-extern UINT32 g_routingTableUpdateInterval;
-extern UINT32 g_topologyPollingInterval;
-extern UINT32 g_conditionPollingInterval;
-extern UINT32 g_instancePollingInterval;
-extern UINT32 g_icmpPollingInterval;
-extern INT16 g_defaultAgentCacheMode;
+extern uint32_t g_discoveryPollingInterval;
+extern uint32_t g_statusPollingInterval;
+extern uint32_t g_configurationPollingInterval;
+extern uint32_t g_routingTableUpdateInterval;
+extern uint32_t g_topologyPollingInterval;
+extern uint32_t g_conditionPollingInterval;
+extern uint32_t g_instancePollingInterval;
+extern uint32_t g_icmpPollingInterval;
+extern int16_t g_defaultAgentCacheMode;
 
 /**
  * Utility functions used by inline methods
