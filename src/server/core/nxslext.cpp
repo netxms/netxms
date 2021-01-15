@@ -1515,9 +1515,9 @@ static int F_AgentExecuteAction(int argc, NXSL_Value **argv, NXSL_Value **ppResu
       StringList list;
       for(int i = 2; (i < argc) && (i < 128); i++)
          list.add(argv[i]->getValueAsCString());
-      UINT32 rcc = conn->execAction(argv[1]->getValueAsCString(), list, false, nullptr, nullptr);
-      *ppResult = vm->createValue((rcc == ERR_SUCCESS) ? 1 : 0);
-      nxlog_debug(5, _T("NXSL: F_AgentExecuteAction: action %s on node %s [%d]: RCC=%d"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      uint32_t rcc = conn->execAction(argv[1]->getValueAsCString(), list, false, nullptr, nullptr);
+      *ppResult = vm->createValue(rcc == ERR_SUCCESS);
+      nxlog_debug(5, _T("NXSL: F_AgentExecuteAction: action %s on node %s [%d]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
@@ -1569,9 +1569,9 @@ static int F_AgentExecuteActionWithOutput(int argc, NXSL_Value **argv, NXSL_Valu
       for(int i = 2; (i < argc) && (i < 128); i++)
          list.add(argv[i]->getValueAsCString());
       StringBuffer output;
-      UINT32 rcc = conn->execAction(argv[1]->getValueAsCString(), list, true, ActionOutputHandler, &output);
+      uint32_t rcc = conn->execAction(argv[1]->getValueAsCString(), list, true, ActionOutputHandler, &output);
       *ppResult = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
-      nxlog_debug(5, _T("NXSL: F_AgentExecuteActionWithOutput: action %s on node %s [%d]: RCC=%d"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      nxlog_debug(5, _T("NXSL: F_AgentExecuteActionWithOutput: action %s on node %s [%d]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
