@@ -657,9 +657,7 @@ typedef struct
 #define CMD_GEO_AREA_UPDATE               0x01A2
 #define CMD_FIND_PROXY_FOR_NODE           0x01A3
 #define CMD_BULK_DCI_UPDATE               0x01A4
-#define CMD_GET_SCHEDULED_REPORTS         0x01A5
-#define CMD_REGISTER_SCHEDULED_REPORT     0x01A6
-#define CMD_CANCEL_SCHEDULED_REPORT       0x01A7
+#define CMD_GET_SCHEDULED_REPORTING_TASKS 0x01A5
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -667,9 +665,7 @@ typedef struct
 #define CMD_RS_LIST_RESULTS               0x1103
 #define CMD_RS_RENDER_RESULT              0x1104
 #define CMD_RS_DELETE_RESULT              0x1105
-#define CMD_RS_NOTIFY                     0x1108
-#define CMD_RS_ADD_REPORT_NOTIFY          0x1109
-#define CMD_RS_SEND_MAIL_NOTIFY           0x1110
+#define CMD_RS_NOTIFY                     0x1106
 
 /**
  * Variable identifiers
@@ -1403,6 +1399,7 @@ typedef struct
 #define VID_SSH_PORT                ((UINT32)727)
 #define VID_EMAIL                   ((UINT32)728)
 #define VID_PHONE_NUMBER            ((UINT32)729)
+#define VID_EXECUTION_PARAMETERS    ((UINT32)730)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

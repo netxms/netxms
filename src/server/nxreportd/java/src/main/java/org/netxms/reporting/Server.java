@@ -17,10 +17,8 @@ import org.apache.commons.daemon.DaemonInitException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.netxms.reporting.model.Notification;
 import org.netxms.reporting.model.ReportResult;
 import org.netxms.reporting.services.CommunicationManager;
-import org.netxms.reporting.services.NotificationManager;
 import org.netxms.reporting.services.ReportManager;
 import org.netxms.reporting.tools.SmtpSender;
 import org.slf4j.Logger;
@@ -39,7 +37,6 @@ public final class Server implements Daemon
    private Thread listenerThread;
    private SessionFactory sessionFactory;
    private CommunicationManager communicationManager;
-   private NotificationManager notificationManager;
    private ReportManager reportManager;
    private Properties configuration;
    private ThreadPoolExecutor threadPool;
@@ -102,12 +99,10 @@ public final class Server implements Daemon
       settings.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
       Configuration hbConfiguration = new Configuration();
       hbConfiguration.setProperties(settings);
-      hbConfiguration.addAnnotatedClass(Notification.class);
       hbConfiguration.addAnnotatedClass(ReportResult.class);
       sessionFactory = hbConfiguration.buildSessionFactory();
 
       communicationManager = new CommunicationManager(this);
-      notificationManager = new NotificationManager(this);
       reportManager = new ReportManager(this);
       smtpSender = new SmtpSender(this);
 
@@ -174,7 +169,6 @@ public final class Server implements Daemon
       }
       reportManager = null;
       communicationManager = null;
-      notificationManager = null;
       smtpSender = null;
       threadPool = null;
    }
@@ -263,14 +257,6 @@ public final class Server implements Daemon
    public CommunicationManager getCommunicationManager()
    {
       return communicationManager;
-   }
-
-   /**
-    * @return the notificationManager
-    */
-   public NotificationManager getNotificationManager()
-   {
-      return notificationManager;
    }
 
    /**

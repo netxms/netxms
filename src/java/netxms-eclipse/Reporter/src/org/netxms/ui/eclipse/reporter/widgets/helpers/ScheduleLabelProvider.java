@@ -18,17 +18,15 @@
  */
 package org.netxms.ui.eclipse.reporter.widgets.helpers;
 
-import java.text.SimpleDateFormat;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.NXCSession;
+import org.netxms.client.ScheduledTask;
 import org.netxms.client.reporting.ReportingJob;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.console.UserRefreshRunnable;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
-import org.netxms.ui.eclipse.reporter.Messages;
 import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -37,7 +35,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ScheduleLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   private String[] dayOfWeek = { "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
    private TableViewer viewer;
    
    /**
@@ -48,7 +45,7 @@ public class ScheduleLabelProvider extends LabelProvider implements ITableLabelP
       this.viewer = viewer;
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
    @Override
@@ -57,63 +54,24 @@ public class ScheduleLabelProvider extends LabelProvider implements ITableLabelP
       return null;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
     */
    @Override
    public String getColumnText(Object element, int columnIndex)
    {
-      final ReportingJob job = (ReportingJob)element;
+      final ScheduledTask task = ((ReportingJob)element).getTask();
       switch(columnIndex)
       {
-         case ReportExecutionForm.SCHEDULE_START_TIME:
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm"); //$NON-NLS-1$
-            String HHmm = timeFormat.format(job.getStartTime().getTime() / 1000);
-
-            switch(job.getType())
-            {
-               case ReportingJob.TYPE_ONCE:
-                  return RegionalSettings.getDateTimeFormat().format(job.getStartTime().getTime() / 1000);
-               case ReportingJob.TYPE_DAILY:
-                  return HHmm;
-               case ReportingJob.TYPE_MONTHLY:
-                  String result = ""; //$NON-NLS-1$
-                  for(int i = 0; i < 31; i++)
-                  {
-                     if (((job.getDaysOfMonth() >> i) & 0x01) != 0)
-                        result = String.valueOf(31 - i) + (result.length() > 0 ? "," : "") + result; //$NON-NLS-1$ //$NON-NLS-2$
-                  }
-                  return HHmm + " - " + result; //$NON-NLS-1$
-               case ReportingJob.TYPE_WEEKLY:
-                  String result1 = ""; //$NON-NLS-1$
-                  for(int i = 0; i < 7; i++)
-                  {
-                     if (((job.getDaysOfWeek() >> i) & 0x01) != 0)
-                        result1 = dayOfWeek[7 - (i + 1)] + (result1.length() > 0 ? "," : "") + result1; //$NON-NLS-1$ //$NON-NLS-2$
-                  }
-                  return HHmm + " - " + result1; //$NON-NLS-1$
-               default:
-                  return Messages.get().ScheduleLabelProvider_Error;
-            }
-         case ReportExecutionForm.SCHEDULE_TYPE:
-            switch(job.getType())
-            {
-               case ReportingJob.TYPE_ONCE:
-                  return Messages.get().ScheduleLabelProvider_Once;
-               case ReportingJob.TYPE_DAILY:
-                  return Messages.get().ScheduleLabelProvider_Daily;
-               case ReportingJob.TYPE_MONTHLY:
-                  return Messages.get().ScheduleLabelProvider_Monthly;
-               case ReportingJob.TYPE_WEEKLY:
-                  return Messages.get().ScheduleLabelProvider_Weekly;
-               default:
-                  return Messages.get().ScheduleLabelProvider_Error;
-            }
+         case ReportExecutionForm.SCHEDULED_EXECUTION_TIME:
+            return task.getSchedule().isEmpty() ? RegionalSettings.getDateTimeFormat().format(task.getExecutionTime()) : task.getSchedule();
          case ReportExecutionForm.SCHEDULE_OWNER:
-            AbstractUserObject user = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(job.getUserId(), new UserRefreshRunnable(viewer, element));
-            return (user != null) ? user.getName() : ("[" + job.getUserId() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-         case ReportExecutionForm.SCHEDULE_COMMENTS:
-            return job.getComments();
+            AbstractUserObject user = ConsoleSharedData.getSession().findUserDBObjectById(task.getOwner(), new UserRefreshRunnable(viewer, element));
+            return (user != null) ? user.getName() : ("[" + task.getOwner() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+         case ReportExecutionForm.LAST_EXECUTION_TIME:
+            return (task.getLastExecutionTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(task.getLastExecutionTime());
+         case ReportExecutionForm.STATUS:
+            return task.getStatus();
       }
 
       return "<INTERNAL ERROR>"; //$NON-NLS-1$

@@ -883,7 +883,7 @@ bool NXCORE_EXPORTABLE IsScheduledTaskRunning(uint32_t taskId)
 /**
  * Fills message with scheduled tasks list
  */
-void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights)
+void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights, bool (*filter)(const ScheduledTask *task, void *context), void *context)
 {
    uint32_t scheduleCount = 0;
    uint32_t fieldId = VID_SCHEDULE_LIST_BASE;
@@ -891,9 +891,10 @@ void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights)
    s_oneTimeScheduleLock.lock();
    for(int i = 0; i < s_oneTimeSchedules.size(); i++)
    {
-      if (s_oneTimeSchedules.get(i)->canAccess(userId, systemRights))
+      ScheduledTask *task = s_oneTimeSchedules.get(i);
+      if (task->canAccess(userId, systemRights) && ((filter == nullptr) || filter(task, context)))
       {
-         s_oneTimeSchedules.get(i)->fillMessage(msg, fieldId);
+         task->fillMessage(msg, fieldId);
          scheduleCount++;
          fieldId += 100;
       }
@@ -903,9 +904,10 @@ void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights)
    s_cronScheduleLock.lock();
    for(int i = 0; i < s_cronSchedules.size(); i++)
    {
-      if (s_cronSchedules.get(i)->canAccess(userId, systemRights))
+      ScheduledTask *task = s_cronSchedules.get(i);
+      if (task->canAccess(userId, systemRights) && ((filter == nullptr) || filter(task, context)))
       {
-         s_cronSchedules.get(i)->fillMessage(msg, fieldId);
+         task->fillMessage(msg, fieldId);
          scheduleCount++;
          fieldId += 100;
       }

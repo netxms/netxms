@@ -759,6 +759,7 @@ private:
    void cleanAgentDciConfiguration(NXCPMessage *request);
    void getSchedulerTaskHandlers(NXCPMessage *request);
    void getScheduledTasks(NXCPMessage *request);
+   void getScheduledReportingTasks(NXCPMessage *request);
    void addScheduledTask(NXCPMessage *request);
    void updateScheduledTask(NXCPMessage *request);
    void removeScheduledTask(NXCPMessage *request);

@@ -17,7 +17,7 @@ public class ScheduledTask
    private int flags;
    private long owner;
    private long objectId;
-   
+
    final static public int DISABLED = 1;
    final static public int EXECUTED = 2;
    final static public int RUNNING = 4;
@@ -41,7 +41,7 @@ public class ScheduledTask
       objectId = 0;
       comments = "";
    }
-   
+
    /**
     * Create task object from NXCP message
     * 
@@ -62,7 +62,7 @@ public class ScheduledTask
       comments = msg.getFieldAsString(base + 9);
       key = msg.getFieldAsString(base + 10);
    }
-   
+
    /**
     * Create new scheduled task object
     * 

@@ -464,9 +464,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GEO_AREA_UPDATE"),
       _T("CMD_FIND_PROXY_FOR_NODE"),
       _T("CMD_BULK_DCI_UPDATE"),
-      _T("CMD_GET_SCHEDULED_REPORTS"),
-      _T("CMD_REGISTER_SCHEDULED_REPORT"),
-      _T("CMD_CANCEL_SCHEDULED_REPORT")
+      _T("CMD_GET_SCHEDULED_REPORTING_TASKS")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -476,18 +474,14 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_LIST_RESULTS"),
       _T("CMD_RS_RENDER_RESULT"),
       _T("CMD_RS_DELETE_RESULT"),
-      _T("0x1106"),  // unused
-      _T("0x1107"),  // unused
-      _T("CMD_RS_NOTIFY"),
-      _T("CMD_RS_ADD_REPORT_NOTIFY"),
-      _T("CMD_RS_SEND_MAIL_NOTIFY")
+      _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_CANCEL_SCHEDULED_REPORT))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_SCHEDULED_REPORTING_TASKS))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }
-   else if ((code >= CMD_RS_LIST_REPORTS) && (code <= CMD_RS_SEND_MAIL_NOTIFY))
+   else if ((code >= CMD_RS_LIST_REPORTS) && (code <= CMD_RS_NOTIFY))
    {
       _tcscpy(buffer, reportingMessageNames[code - CMD_RS_LIST_REPORTS]);
    }

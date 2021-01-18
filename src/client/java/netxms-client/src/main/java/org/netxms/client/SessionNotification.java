@@ -96,7 +96,6 @@ public class SessionNotification
    public static final int USER_DISCONNECT = 2002;
 	
    // Reporting server notification
-   public static final int RS_SCHEDULES_MODIFIED = 3000;
    public static final int RS_RESULTS_MODIFIED = 3001;
 
 	// Subcodes for user database changes

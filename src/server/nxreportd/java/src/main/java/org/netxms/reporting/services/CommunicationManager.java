@@ -9,10 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 import org.netxms.base.CommonRCC;
 import org.netxms.base.NXCPCodes;
@@ -22,8 +20,8 @@ import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.reporting.ReportRenderFormat;
+import org.netxms.client.reporting.ReportingJobConfiguration;
 import org.netxms.reporting.Server;
-import org.netxms.reporting.model.Notification;
 import org.netxms.reporting.model.ReportDefinition;
 import org.netxms.reporting.model.ReportResult;
 import org.slf4j.Logger;
@@ -37,6 +35,8 @@ public class CommunicationManager
    private static final int FILE_BUFFER_SIZE = 128 * 1024; // 128k
 
    private static Logger logger = LoggerFactory.getLogger(CommunicationManager.class);
+
+   private final Object mutex = new Object();
 
    private Server server;
    private Socket socket;
@@ -55,72 +55,78 @@ public class CommunicationManager
    /**
     * Start communication session
     */
-   public synchronized void start(Socket socket)
+   public void start(Socket socket)
    {
-      if (this.socket != null)
+      synchronized(mutex)
       {
-         try
+         if (this.socket != null)
          {
-            this.socket.close();
+            try
+            {
+               this.socket.close();
+            }
+            catch(IOException e)
+            {
+               logger.error("Error closing existing socket", e);
+            }
          }
-         catch(IOException e)
+         if (receiverThread != null)
          {
-            logger.error("Error closing existing socket", e);
+            try
+            {
+               receiverThread.join();
+            }
+            catch(InterruptedException e)
+            {
+               logger.error("Interrupted while waiting for receiver thread", e);
+            }
          }
+         this.socket = socket;
+         receiverThread = new Thread(new Runnable() {
+            @Override
+            public void run()
+            {
+               logger.info("Communication manager started");
+               receiverThread();
+               logger.info("Communication manager stopped");
+            }
+         }, "Network Receiver");
+         receiverThread.start();
       }
-      if (receiverThread != null)
-      {
-         try
-         {
-            receiverThread.join();
-         }
-         catch(InterruptedException e)
-         {
-            logger.error("Interrupted while waiting for receiver thread", e);
-         }
-      }
-      this.socket = socket;
-      receiverThread = new Thread(new Runnable() {
-         @Override
-         public void run()
-         {
-            logger.info("Communication manager started");
-            receiverThread();
-            logger.info("Communication manager stopped");
-         }
-      }, "Network Receiver");
-      receiverThread.run();
    }
 
    /**
     * Shutdown communication session
     */
-   public synchronized void shutdown()
+   public void shutdown()
    {
-      if (socket != null)
+      synchronized(mutex)
       {
-         try
+         if (socket != null)
          {
-            socket.close();
+            try
+            {
+               socket.close();
+            }
+            catch(IOException e)
+            {
+               logger.error("Error closing existing socket", e);
+            }
          }
-         catch(IOException e)
+         if (receiverThread != null)
          {
-            logger.error("Error closing existing socket", e);
+            try
+            {
+               receiverThread.join();
+            }
+            catch(InterruptedException e)
+            {
+               logger.warn("Unexpected exception during comm session shutdown", e);
+            }
+            receiverThread = null;
          }
+         socket = null;
       }
-      if (receiverThread != null)
-      {
-         try
-         {
-            receiverThread.join();
-         }
-         catch(InterruptedException e)
-         {
-            logger.warn("Unexpected exception during comm session shutdown", e);
-         }
-         receiverThread = null;
-      }
-      socket = null;
    }
 
    /**
@@ -129,11 +135,14 @@ public class CommunicationManager
     * @param message message to send
     * @return true on success
     */
-   public synchronized boolean sendMessage(NXCPMessage message)
+   public boolean sendMessage(NXCPMessage message)
    {
       try
       {
-         socket.getOutputStream().write(message.createNXCPMessage(false));
+         synchronized(mutex)
+         {
+            socket.getOutputStream().write(message.createNXCPMessage(false));
+         }
          return true;
       }
       catch(IOException e)
@@ -150,7 +159,7 @@ public class CommunicationManager
     * @param inputStream input stream for file
     * @throws IOException
     */
-   public synchronized void sendFileStream(final long requestId, final InputStream inputStream) throws IOException
+   public void sendFileStream(final long requestId, final InputStream inputStream) throws IOException
    {
       NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_FILE_DATA, requestId);
       msg.setBinaryMessage(true);
@@ -194,7 +203,7 @@ public class CommunicationManager
          try
          {
             Socket s;
-            synchronized(this)
+            synchronized(mutex)
             {
                if (socket == null)
                   break;
@@ -205,14 +214,14 @@ public class CommunicationManager
             {
                if (message.getMessageCode() != NXCPCodes.CMD_KEEPALIVE)
                {
-                  logger.debug("Request: " + message.toString());
+                  logger.debug("RECV: " + message.toString());
                }
                final MessageProcessingResult result = processMessage(message);
                if (result.response != null)
                {
                   if (message.getMessageCode() != NXCPCodes.CMD_KEEPALIVE)
                   {
-                     logger.debug("Reply: " + result.response.toString());
+                     logger.debug("SEND: " + result.response.toString());
                   }
                   sendMessage(result.response);
                   if (result.file != null)
@@ -238,10 +247,13 @@ public class CommunicationManager
          catch(IOException e)
          {
             logger.info("Communication error", e);
+            break;
          }
          catch(NXCPException e)
          {
-            logger.info("Invalid message received", e);
+            logger.info("Protocol error", e);
+            if (e.getErrorCode() == NXCPException.SESSION_CLOSED)
+               break;
          }
       }
    }
@@ -284,9 +296,6 @@ public class CommunicationManager
             break;
          case NXCPCodes.CMD_RS_DELETE_RESULT:
             deleteResult(message, reply);
-            break;
-         case NXCPCodes.CMD_RS_ADD_REPORT_NOTIFY:
-            reportNotify(message, reply);
             break;
          default:
             reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.NOT_IMPLEMENTED);
@@ -366,30 +375,30 @@ public class CommunicationManager
     */
    private void executeReport(NXCPMessage request, NXCPMessage response)
    {
-      int retCode;
-      final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
-      if (reportId != null)
+      final ReportingJobConfiguration jobConfiguration;
+      try
       {
-         final Map<String, String> parameters = request.getStringMapFromFields(NXCPCodes.VID_PARAM_LIST_BASE, NXCPCodes.VID_NUM_PARAMETERS);
-         final UUID jobId = getOrCreateJobId(request);
-         final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
-         requestObjectAccessSnapshotUpdate(userId);
-         server.executeBackgroundTask(new Runnable() {
-            @Override
-            public void run()
-            {
-               server.getReportManager().execute(userId, reportId, jobId, parameters, Locale.US);
-            }
-         });
-         response.setField(NXCPCodes.VID_JOB_ID, jobId);
-         sendNotify(SessionNotification.RS_RESULTS_MODIFIED, 0);
-         retCode = CommonRCC.SUCCESS;
+         jobConfiguration = ReportingJobConfiguration.createFromXml(request.getFieldAsString(NXCPCodes.VID_EXECUTION_PARAMETERS));
       }
-      else
+      catch(Exception e)
       {
-         retCode = CommonRCC.INVALID_ARGUMENT;
+         logger.error("Cannot parse report execution parameters", e);
+         response.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.INVALID_ARGUMENT);
+         return;
       }
-      response.setFieldInt32(NXCPCodes.VID_RCC, retCode);
+
+      final UUID jobId = getOrCreateJobId(request);
+      final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
+      requestObjectAccessSnapshotUpdate(userId);
+      server.executeBackgroundTask(new Runnable() {
+         @Override
+         public void run()
+         {
+            server.getReportManager().execute(userId, jobId, jobConfiguration, Locale.US);
+         }
+      });
+      response.setField(NXCPCodes.VID_JOB_ID, jobId);
+      response.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
    }
 
    /**
@@ -409,7 +418,7 @@ public class CommunicationManager
     *
     * @param request request message
     * @param response response message
-    * @return rendered document
+    * @return rendered document or null on failure
     */
    private File renderResult(NXCPMessage request, NXCPMessage response)
    {
@@ -417,12 +426,17 @@ public class CommunicationManager
       final UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_JOB_ID);
       final int formatCode = request.getFieldAsInt32(NXCPCodes.VID_RENDER_FORMAT);
       final ReportRenderFormat format = ReportRenderFormat.valueOf(formatCode);
-
-      response.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
-      sendNotify(SessionNotification.RS_RESULTS_MODIFIED, 0);
-      return server.getReportManager().renderResult(reportId, jobId, format);
+      File file = server.getReportManager().renderResult(reportId, jobId, format);
+      response.setFieldInt32(NXCPCodes.VID_RCC, (file != null) ? CommonRCC.SUCCESS : CommonRCC.IO_ERROR);
+      return file;
    }
 
+   /**
+    * Delete report execution result.
+    *
+    * @param request request message
+    * @param reply response message
+    */
    private void deleteResult(NXCPMessage request, NXCPMessage reply)
    {
       final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
@@ -430,36 +444,18 @@ public class CommunicationManager
 
       server.getReportManager().deleteResult(reportId, jobId);
       reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
-      sendNotify(SessionNotification.RS_RESULTS_MODIFIED, 0);
-   }
-
-   /**
-    * Add notification when job is done then send a notice to mail
-    */
-   private void reportNotify(NXCPMessage request, NXCPMessage reply)
-   {
-      final UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_RS_JOB_ID);
-      final int attachFormatCode = request.getFieldAsInt32(NXCPCodes.VID_RENDER_FORMAT);
-      String reportName = request.getFieldAsString(NXCPCodes.VID_RS_REPORT_NAME);
-      final int count = request.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
-      long index = NXCPCodes.VID_ITEM_LIST;
-      for(int i = 0; i < count; i++)
-      {
-         String mail = request.getFieldAsString(index + i);
-         if (mail != null && jobId != null)
-            server.getNotificationManager().save(new Notification(jobId, mail, attachFormatCode, reportName));
-      }
-      reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+      sendNotification(SessionNotification.RS_RESULTS_MODIFIED, 0);
    }
 
    /**
     * Send notification message
     */
-   public void sendNotify(int code, int data)
+   public void sendNotification(int code, int data)
    {
       NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_RS_NOTIFY);
       msg.setFieldInt32(NXCPCodes.VID_NOTIFICATION_CODE, code);
       msg.setFieldInt32(NXCPCodes.VID_NOTIFICATION_DATA, data);
+      logger.debug("SEND: " + msg.toString());
       sendMessage(msg);
    }
 
@@ -473,6 +469,7 @@ public class CommunicationManager
       NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_CREATE_OBJECT_ACCESS_SNAPSHOT);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_CLASS, AbstractObject.OBJECT_NODE);
       msg.setFieldInt32(NXCPCodes.VID_USER_ID, userId);
+      logger.debug("SEND: " + msg.toString());
       sendMessage(msg);
    }
 

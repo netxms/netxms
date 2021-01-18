@@ -83,7 +83,7 @@ public:
    {
    }
 
-   virtual void printMessage(const TCHAR *format, ...)
+   virtual void printMessage(const TCHAR *format, ...) override
    {
       va_list args;
       va_start(args, format);
@@ -97,6 +97,12 @@ public:
  */
 bool RSConnector::onMessage(NXCPMessage *msg)
 {
+   if (msg->getCode() == CMD_REQUEST_COMPLETED)
+      return false;
+
+   TCHAR buffer[128];
+   printMessage(_T("Processing message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+
    switch(msg->getCode())
    {
       case CMD_RS_NOTIFY:
@@ -108,7 +114,7 @@ bool RSConnector::onMessage(NXCPMessage *msg)
       case CMD_FILE_DATA:
       case CMD_ABORT_FILE_TRANSFER:
          processFileTransfer(msg);
-         break;
+         return true;
    }
    return false;
 }
@@ -223,36 +229,15 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
  */
 void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
-   uuid reportId = ExtractNamedOptionValueAsGUID(parameters->m_persistentData, _T("reportId"), uuid::NULL_UUID);
-   TCHAR reportIdText[64];
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("Scheduled report execution (report ID %s)"), reportId.toString(reportIdText));
-
    if ((m_connector == nullptr) || !m_connector->connected())
    {
-      nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute report %s (no connection with reporting server)"), reportIdText);
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute scheduled report \"%s\" (no connection with reporting server)"), parameters->m_comments);
       return;
    }
 
-   StringMap reportParameters;
-   TCHAR name[64], value[1024];
-   for(int i = 0; ; i++)
-   {
-      _sntprintf(name, 64, _T("p%d"), i);
-      if (!ExtractNamedOptionValue(parameters->m_persistentData, name, value, 1024))
-         break;
-      TCHAR *s = _tcschr(value, _T(':'));
-      if (s != nullptr)
-      {
-         *s = 0;
-         s++;
-         reportParameters.set(value, s);
-      }
-   }
-
    NXCPMessage request(CMD_RS_EXECUTE_REPORT, m_connector->generateMessageId());
-   request.setField(VID_REPORT_DEFINITION, reportId);
    request.setField(VID_USER_ID, parameters->m_userId);
-   reportParameters.fillMessage(&request, VID_NUM_PARAMETERS, VID_PARAM_LIST_BASE);
+   request.setField(VID_EXECUTION_PARAMETERS, parameters->m_persistentData);
    if (m_connector->sendMessage(&request))
    {
       NXCPMessage *response = m_connector->waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), 5000);
@@ -261,21 +246,22 @@ void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters)
          uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
          if (rcc == RCC_SUCCESS)
          {
-            nxlog_debug_tag(DEBUG_TAG, 3, _T("Report %s execution started (job ID %s)"), reportIdText, response->getFieldAsGUID(VID_JOB_ID).toString().cstr());
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Scheduled report \"%s\" execution started (job ID %s)"),
+                     parameters->m_comments, response->getFieldAsGUID(VID_JOB_ID).toString().cstr());
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute report %s (reporting server error %u)"), reportIdText, rcc);
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute report \"%s\" (reporting server error %u)"), parameters->m_comments, rcc);
          }
          delete response;
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute report %s (request timeout)"), reportIdText);
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute report \"%s\" (request timeout)"), parameters->m_comments);
       }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute report %s (communication failure)"), reportIdText);
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute report \"%s\" (communication failure)"), parameters->m_comments);
    }
 }

@@ -154,6 +154,13 @@ public:
       unlock();
       return key;
    }
+   String getPersistentData() const
+   {
+      lock();
+      String data = m_parameters->m_persistentData;
+      unlock();
+      return data;
+   }
    time_t getScheduledExecutionTime() const { return m_scheduledExecutionTime; }
    time_t getLastExecutionTime() const { return m_lastExecutionTime; }
    uint32_t getOwner() const
@@ -237,7 +244,7 @@ int NXCORE_EXPORTABLE CountScheduledTasksByKey(const TCHAR *taskKey);
 bool NXCORE_EXPORTABLE IsScheduledTaskRunning(uint32_t taskId);
 ScheduledTask *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId);
 void GetSchedulerTaskHandlers(NXCPMessage *msg, uint64_t accessRights);
-void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights);
+void GetScheduledTasks(NXCPMessage *msg, uint32_t userId, uint64_t systemRights, bool (*filter)(const ScheduledTask *task, void *context) = nullptr, void *context = nullptr);
 uint32_t UpdateScheduledTaskFromMsg(NXCPMessage *request, uint32_t owner, uint64_t systemAccessRights);
 uint32_t CreateScheduledTaskFromMsg(NXCPMessage *request, uint32_t owner, uint64_t systemAccessRights);
 
