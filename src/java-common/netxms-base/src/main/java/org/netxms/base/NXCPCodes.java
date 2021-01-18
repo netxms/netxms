@@ -435,9 +435,7 @@ public class NXCPCodes
    public static final int CMD_GEO_AREA_UPDATE = 0x01A2;
    public static final int CMD_FIND_PROXY_FOR_NODE = 0x01A3;
    public static final int CMD_BULK_DCI_UPDATE = 0x01A4;
-   public static final int CMD_GET_SCHEDULED_REPORTS = 0x01A5;
-   public static final int CMD_REGISTER_SCHEDULED_REPORT = 0x01A6;
-   public static final int CMD_CANCEL_SCHEDULED_REPORT = 0x01A7;
+   public static final int CMD_GET_SCHEDULED_REPORTING_TASKS = 0x01A5;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -446,9 +444,7 @@ public class NXCPCodes
 	public static final int CMD_RS_LIST_RESULTS = 0x1103;
 	public static final int CMD_RS_RENDER_RESULT = 0x1104;
 	public static final int CMD_RS_DELETE_RESULT = 0x1105;
-	public static final int CMD_RS_NOTIFY = 0x1108;
-	public static final int CMD_RS_ADD_REPORT_NOTIFY = 0x1109;
-	public static final int CMD_RS_SEND_MAIL_NOTIFY = 0x1110;
+   public static final int CMD_RS_NOTIFY = 0x1106;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME = 1;
@@ -1177,6 +1173,7 @@ public class NXCPCodes
    public static final long VID_SSH_PORT = 727;
    public static final long VID_EMAIL = 728;
    public static final long VID_PHONE_NUMBER = 729;
+   public static final long VID_EXECUTION_PARAMETERS = 730;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

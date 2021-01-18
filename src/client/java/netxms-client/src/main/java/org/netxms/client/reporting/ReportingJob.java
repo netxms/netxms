@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,75 +18,85 @@
  */
 package org.netxms.client.reporting;
 
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.netxms.base.NXCPMessage;
+import org.netxms.base.NXCommon;
+import org.netxms.client.NXCException;
+import org.netxms.client.ScheduledTask;
+import org.netxms.client.constants.RCC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Reporting job
  */
 public class ReportingJob
 {
-	static public final int TYPE_ONCE = 0;
-	static public final int TYPE_DAILY = 1;
-	static public final int TYPE_WEEKLY = 2;
-	static public final int TYPE_MONTHLY = 3;
+   private static final Logger logger = LoggerFactory.getLogger(ReportingJob.class);
 
-	private UUID reportId;
-	private UUID jobId;
-	private int daysOfWeek;
-	private int daysOfMonth;
-	private int userId;
-	private int type = TYPE_ONCE;
-	private Date startTime;
-	private String reportName;
-	private String comments;
-	private boolean notifyOnCompletion = false;
-	private ReportRenderFormat renderFormat = ReportRenderFormat.NONE;
-	private List<String> emailRecipients= new ArrayList<String>(0);
+   private ReportingJobConfiguration configuration;
+   private ScheduledTask task;
 
 	/**
-	 * Create reportingJob
-	 * 
-	 * @param report report definition object
-	 */
+    * Create reporting job
+    * 
+    * @param report report definition object
+    */
 	public ReportingJob(ReportDefinition report)
 	{
-		jobId = UUID.randomUUID();
-		reportId = report.getId();
-		reportName = report.getName();
-		startTime = new Date();
-		daysOfWeek = 0;
-		daysOfMonth = 0;
-		type = TYPE_ONCE;
+      configuration = new ReportingJobConfiguration(report.getId());
+      task = new ScheduledTask();
+      task.setTaskHandlerId("Report.Execute");
+      task.setComments(report.getName());
 	}
 
 	/**
-	 * Create reportingJob object from NXCP message
-	 * 
-	 * @param msg
-	 * @param varId base field id
-	 */
+    * Create reporting job object from NXCP message
+    * 
+    * @param msg
+    * @param varId base field id
+    */
 	public ReportingJob(NXCPMessage msg, long varId)
 	{
-		jobId = msg.getFieldAsUUID(varId);
-		reportId = msg.getFieldAsUUID(varId + 1);
-		userId = msg.getFieldAsInt32(varId + 2);
-		startTime = msg.getFieldAsDate(varId + 3);
-		daysOfWeek = msg.getFieldAsInt32(varId + 4);
-		daysOfMonth = msg.getFieldAsInt32(varId + 5);
-		type = msg.getFieldAsInt32(varId + 6);
-		comments = msg.getFieldAsString(varId + 7);
+      task = new ScheduledTask(msg, varId);
+      try
+      {
+         configuration = ReportingJobConfiguration.createFromXml(task.getParameters());
+      }
+      catch(Exception e)
+      {
+         logger.error("Cannot deserialize reporting job parameters", e);
+         configuration = new ReportingJobConfiguration(NXCommon.EMPTY_GUID);
+      }
 	}
+
+   /**
+    * Fill NXCP message with job data. Will serialize execution parameters and update underlying scheduled task.
+    * 
+    * @param msg NXCP message
+    * @throws NXCException if execution parameters serialization fails
+    */
+   public void fillMessage(NXCPMessage msg) throws NXCException
+   {
+      try
+      {
+         task.setParameters(configuration.createXml());
+         task.fillMessage(msg);
+      }
+      catch(Exception e)
+      {
+         throw new NXCException(RCC.INTERNAL_ERROR, e);
+      }
+   }
 
 	/**
     * @return the renderFormat
     */
    public ReportRenderFormat getRenderFormat()
    {
-      return renderFormat;
+      return configuration.renderFormat;
    }
 
    /**
@@ -94,7 +104,7 @@ public class ReportingJob
     */
    public void setRenderFormat(ReportRenderFormat renderFormat)
    {
-      this.renderFormat = renderFormat;
+      configuration.renderFormat = renderFormat;
    }
 
    /**
@@ -102,7 +112,7 @@ public class ReportingJob
     */
    public List<String> getEmailRecipients()
    {
-      return emailRecipients;
+      return configuration.emailRecipients;
    }
 
    /**
@@ -110,7 +120,7 @@ public class ReportingJob
     */
    public void setEmailRecipients(List<String> emailRecipients)
    {
-      this.emailRecipients = emailRecipients;
+      configuration.emailRecipients = emailRecipients;
    }
 
    /**
@@ -120,135 +130,7 @@ public class ReportingJob
 	 */
 	public UUID getReportId()
 	{
-		return reportId;
-	}
-
-	/**
-    * @return the reportName
-    */
-   public String getReportName()
-   {
-      return reportName;
-   }
-
-   /**
-	 * Get job ID
-	 * 
-	 * @return job ID
-	 */
-	public UUID getJobId()
-	{
-		return jobId;
-	}
-
-	/**
-	 * Get days of week bit mask
-	 * 
-	 * @return days of week bit mask
-	 */
-	public int getDaysOfWeek()
-	{
-		return daysOfWeek;
-	}
-
-	/**
-	 * Set days of week bit mask
-	 * 
-	 * @param daysOfWeek new days of week bit mask
-	 */
-	public void setDaysOfWeek(int daysOfWeek)
-	{
-		this.daysOfWeek = daysOfWeek;
-	}
-
-	/**
-	 * Get days of month bit mask
-	 * 
-	 * @return days of month bit mask
-	 */
-	public int getDaysOfMonth()
-	{
-		return daysOfMonth;
-	}
-
-	/**
-	 * Set days of month bit mask
-	 * 
-	 * @param daysOfMonth new days of month bit mask
-	 */
-	public void setDaysOfMonth(int daysOfMonth)
-	{
-		this.daysOfMonth = daysOfMonth;
-	}
-
-	/**
-	 * Get user ID
-	 * 
-	 * @return user ID
-	 */
-	public int getUserId()
-	{
-		return userId;
-	}
-
-	/**
-	 * Get job type
-	 * 
-	 * @return job type
-	 */
-	public int getType()
-	{
-		return type;
-	}
-
-	/**
-	 * Set job type
-	 * 
-	 * @param type new job type
-	 */
-	public void setType(int type)
-	{
-		this.type = type;
-	}
-
-	/**
-	 * Get job start time
-	 * 
-	 * @return job start time
-	 */
-	public Date getStartTime()
-	{
-		return startTime;
-	}
-
-	/**
-	 * Set job start time
-	 * 
-	 * @param startTime job start time
-	 */
-	public void setStartTime(Date startTime)
-	{
-		this.startTime = startTime;
-	}
-
-	/**
-	 * Get comments
-	 * 
-	 * @return comments
-	 */
-	public String getComments()
-	{
-		return comments == null ? "" : comments;
-	}
-
-	/**
-	 * Set comments
-	 * 
-	 * @param comments comments
-	 */
-	public void setComments(String comments)
-	{
-		this.comments = comments;
+      return configuration.reportId;
 	}
 
 	/**
@@ -258,7 +140,7 @@ public class ReportingJob
     */
    public boolean isNotifyOnCompletion()
    {
-      return notifyOnCompletion;
+      return configuration.notifyOnCompletion;
    }
 
    /**
@@ -268,16 +150,60 @@ public class ReportingJob
     */
    public void setNotifyOnCompletion(boolean notifyOnCompletion)
    {
-      this.notifyOnCompletion = notifyOnCompletion;
+      configuration.notifyOnCompletion = notifyOnCompletion;
    }
 
-   /* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString()
-	{
-		return "ReportingJob [reportId=" + reportId + ", jobId=" + jobId + ", daysOfWeek=" + daysOfWeek + ", daysOfMonth="
-				+ daysOfMonth + ", userId=" + userId + ", type=" + type + ", startTime=" + startTime + ", comments=" + comments + "]";
-	}
+   /**
+    * Get all reporting job execution parameters. Any changes to returned map will be reflected in job object.
+    * 
+    * @return all reporting job execution parameters
+    */
+   public Map<String, String> getExecutionParameters()
+   {
+      return configuration.executionParameters;
+   }
+
+   /**
+    * Get value of single reporting job execution parameter.
+    *
+    * @param name parameter name
+    * @return parameter value or null
+    */
+   public String getExecutionParameter(String name)
+   {
+      return configuration.executionParameters.get(name);
+   }
+
+   /**
+    * Set reporting job execution parameter.
+    *
+    * @param name parameter name
+    * @param value parameter value
+    */
+   public void setExecutionParameter(String name, String value)
+   {
+      configuration.executionParameters.put(name, value);
+   }
+
+   /**
+    * Prepare underlying scheduled task for create or update API call.
+    *
+    * @return underlying scheduled task
+    * @throws Exception if task parameter serialization fails
+    */
+   public ScheduledTask prepareTask() throws Exception
+   {
+      task.setParameters(configuration.createXml());
+      return task;
+   }
+
+   /**
+    * Get underlying scheduled task
+    *
+    * @return underlying scheduled task
+    */
+   public ScheduledTask getTask()
+   {
+      return task;
+   }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,10 +26,12 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -56,15 +58,14 @@ public class ScheduledTaskEditor extends Dialog
    public ScheduledTaskEditor(Shell shell, ScheduledTask task, List<String> scheduleType)
    {
       super(shell);
-      if(task != null)
+      if (task != null)
          scheduledTask = task;
       else
          scheduledTask = new ScheduledTask();
-      
       this.scheduleTypeList = scheduleType;
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
@@ -74,8 +75,7 @@ public class ScheduledTaskEditor extends Dialog
       newShell.setText("Edit Scheduled Task");
    }
 
-
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -87,7 +87,6 @@ public class ScheduledTaskEditor extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       dialogArea.setLayout(layout);  
-      
 
       scheduleType = new Combo(dialogArea, SWT.READ_ONLY);
       for(String type : scheduleTypeList)
@@ -110,8 +109,7 @@ public class ScheduledTaskEditor extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       selector.setLayoutData(gd);
-      if(scheduledTask.getObjectId() != 0)
-         selector.setObjectId(scheduledTask.getObjectId());
+      selector.setObjectId(scheduledTask.getObjectId());
       
       textParameters = new LabeledText(dialogArea, SWT.NONE);
       textParameters.setLabel("Parameters");
@@ -134,7 +132,7 @@ public class ScheduledTaskEditor extends Dialog
       gd.verticalAlignment = SWT.FILL;
       textComments.setLayoutData(gd);
       
-      if((scheduledTask.getFlags() & ScheduledTask.SYSTEM) != 0)
+      if ((scheduledTask.getFlags() & ScheduledTask.SYSTEM) != 0)
       {
          scheduleType.add(scheduledTask.getTaskHandlerId());
          scheduleType.select(scheduleTypeList.size());
@@ -142,14 +140,21 @@ public class ScheduledTaskEditor extends Dialog
          selector.setEnabled(false);
          textParameters.setEnabled(false);
       }
-      
-      scheduleSelector = new ScheduleSelector(dialogArea, SWT.NONE);
+
+      Group scheduleGroup = new Group(dialogArea, SWT.NONE);
+      scheduleGroup.setText(Messages.get().ScheduleSelector_Schedule);
+      scheduleGroup.setLayout(new GridLayout());
+
+      scheduleSelector = new ScheduleSelector(scheduleGroup, SWT.NONE);
       scheduleSelector.setSchedule(scheduledTask);
-      
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+
       return dialogArea;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
    @Override
@@ -159,8 +164,8 @@ public class ScheduledTaskEditor extends Dialog
       scheduledTask.setSchedule(task.getSchedule());
       scheduledTask.setExecutionTime(task.getExecutionTime());
       scheduledTask.setComments(textComments.getText());
-      
-      if((scheduledTask.getFlags() & ScheduledTask.SYSTEM) == 0)
+
+      if ((scheduledTask.getFlags() & ScheduledTask.SYSTEM) == 0)
       {
          scheduledTask.setTaskHandlerId(scheduleTypeList.get(scheduleType.getSelectionIndex()));
          scheduledTask.setParameters(textParameters.getText());
@@ -168,7 +173,7 @@ public class ScheduledTaskEditor extends Dialog
       }
       super.okPressed();
    }
-   
+
    /**
     * Get scheduled task
     * 

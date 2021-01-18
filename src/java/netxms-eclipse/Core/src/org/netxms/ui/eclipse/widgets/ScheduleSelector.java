@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,18 +22,13 @@ import java.util.Date;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.ScheduledTask;
 import org.netxms.ui.eclipse.console.Messages;
-import org.netxms.ui.eclipse.tools.WidgetFactory;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Date/time selection widget
@@ -42,7 +37,6 @@ public class ScheduleSelector extends Composite
 {
    private Button radioOneTimeSchedule;
    private Button radioCronSchedule;
-   private Group scheduleGroup;
    private DateTimeSelector execDateSelector;
    private Text textSchedule; 
 	
@@ -53,20 +47,15 @@ public class ScheduleSelector extends Composite
 	public ScheduleSelector(Composite parent, int style)
 	{
 		super(parent, style);
-      
-      setLayout(new FillLayout());
-		
-		scheduleGroup = new Group(parent, SWT.NONE);
-		scheduleGroup.setText(Messages.get().ScheduleSelector_Schedule);
-      
+
 		GridLayout layout = new GridLayout();
-      layout.marginWidth = WidgetHelper.OUTER_SPACING;
-      layout.marginHeight = WidgetHelper.OUTER_SPACING;
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
       layout.horizontalSpacing = 16;
       layout.makeColumnsEqualWidth = false;
       layout.numColumns = 2;
-      scheduleGroup.setLayout(layout);
-      
+      setLayout(layout);
+
       final SelectionListener listener = new SelectionListener() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -82,28 +71,20 @@ public class ScheduleSelector extends Composite
          }
       };
 
-      radioOneTimeSchedule = new Button(scheduleGroup, SWT.RADIO);
+      radioOneTimeSchedule = new Button(this, SWT.RADIO);
       radioOneTimeSchedule.setText(Messages.get().ScheduleSelector_OneTimeExecution);
       radioOneTimeSchedule.setSelection(true);
       radioOneTimeSchedule.addSelectionListener(listener);
       
-      final WidgetFactory factory = new WidgetFactory() {
-         @Override
-         public Control createControl(Composite parent, int style)
-         {
-            return new DateTimeSelector(parent, style);
-         }
-      };
-      
-      execDateSelector = (DateTimeSelector)WidgetHelper.createLabeledControl(scheduleGroup, SWT.NONE, factory, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+      execDateSelector = new DateTimeSelector(this, SWT.NONE);
       execDateSelector.setValue(new Date());
       
-      radioCronSchedule = new Button(scheduleGroup, SWT.RADIO);
+      radioCronSchedule = new Button(this, SWT.RADIO);
       radioCronSchedule.setText(Messages.get().ScheduleSelector_CronSchedule);
       radioCronSchedule.setSelection(false);
       radioCronSchedule.addSelectionListener(listener);
       
-      textSchedule = new Text(scheduleGroup, SWT.BORDER);
+      textSchedule = new Text(this, SWT.BORDER);
       textSchedule.setTextLimit(255);
       textSchedule.setText(""); //$NON-NLS-1$
       GridData gd = new GridData();
@@ -112,9 +93,9 @@ public class ScheduleSelector extends Composite
       textSchedule.setLayoutData(gd);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
+    */
 	@Override
 	public void setEnabled(boolean enabled)
 	{
@@ -133,25 +114,24 @@ public class ScheduleSelector extends Composite
 	   }
 	}
 
-
-   /* (non-Javadoc)
-    * @see org.eclipse.swt.widgets.Control#setVisible(boolean)
+   /**
+    * Get configured schedule as dummy task
+    *
+    * @return configured schedule as dummy task
     */
-   @Override
-   public void setVisible(boolean visible)
-   {
-      super.setVisible(visible);
-      scheduleGroup.setVisible(visible);
-   }
-
    public ScheduledTask getSchedule()
    {
       return new ScheduledTask("Upload.File", radioCronSchedule.getSelection() ? textSchedule.getText() : "","", "", execDateSelector.getValue(), 0, 0); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
    }
 
+   /**
+    * Set schedule configuration from task object.
+    *
+    * @param scheduledTask task object to get schedule configuration from
+    */
    public void setSchedule(ScheduledTask scheduledTask)
    {
-      if(scheduledTask.getSchedule().isEmpty())
+      if (scheduledTask.getSchedule().isEmpty())
       {
          radioOneTimeSchedule.setSelection(true);
          textSchedule.setEnabled(false); 

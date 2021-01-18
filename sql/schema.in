@@ -2377,19 +2377,6 @@ CREATE TABLE report_results
 ) TABLE_TYPE;
 
 /**
- * Notifications for reports
- */
-CREATE TABLE report_notifications
-(
-   id integer not null,
-   attach_format_code integer null,
-   jobid char(36) null,
-   mail varchar(255) null,
-   report_name varchar(255) null,
-   PRIMARY KEY(id)
-);
-
-/**
  * Sequence for Hibernate
  */
 #if defined(DB_ORACLE)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,21 @@
  */
 package org.netxms.ui.eclipse.reporter.views;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.reporting.ReportDefinition;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.reporter.Activator;
 import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
 
 /**
@@ -39,12 +45,13 @@ public class ReportView extends ViewPart
 	private ReportExecutionForm executionForm;
 	private ISelectionListener selectionListener;
 	private ISelectionService selectionService;
-
 	private Composite parentComposite;
+   private Action actionExecute;
+   private Action actionScheduleExecution;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -63,11 +70,70 @@ public class ReportView extends ViewPart
 			}
 		};
 		selectionService.addSelectionListener(selectionListener);
+
+      createActions();
+      contributeToActionBars();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * Create actions
+    */
+   private void createActions()
+   {
+      actionExecute = new Action("&Execute now", SharedIcons.EXECUTE) {
+         @Override
+         public void run()
+         {
+            if ((executionForm != null) && !executionForm.isDisposed())
+               executionForm.executeReport();
+         }
+      };
+
+      actionScheduleExecution = new Action("&Schedule execution", Activator.getImageDescriptor("icons/schedule.png")) {
+         @Override
+         public void run()
+         {
+            if ((executionForm != null) && !executionForm.isDisposed())
+               executionForm.scheduleExecution();
+         }
+      };
+   }
+
+   /**
+    * Contribute actions to action bar
+    */
+   private void contributeToActionBars()
+   {
+      IActionBars bars = getViewSite().getActionBars();
+      fillLocalPullDown(bars.getMenuManager());
+      fillLocalToolBar(bars.getToolBarManager());
+   }
+
+   /**
+    * Fill local pull-down menu
+    * 
+    * @param manager Menu manager for pull-down menu
+    */
+   protected void fillLocalPullDown(IMenuManager manager)
+   {
+      manager.add(actionExecute);
+      manager.add(actionScheduleExecution);
+   }
+
+   /**
+    * Fill local tool bar
+    * 
+    * @param manager Menu manager for local toolbar
+    */
+   protected void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionExecute);
+      manager.add(actionScheduleExecution);
+   }
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -78,9 +144,9 @@ public class ReportView extends ViewPart
 		super.dispose();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{

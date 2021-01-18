@@ -1,0 +1,16 @@
+netxms.server.hostname
+netxms.server.port
+netxms.server.login
+netxms.server.password
+
+netxms.db.driver
+netxms.db.server
+netxms.db.name
+netxms.db.login
+netxms.db.password
+
+smtp.server
+smtp.fromAddr
+
+workspace
+

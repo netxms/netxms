@@ -27,7 +27,7 @@
  */
 static bool H_UpgradeFromV0()
 {
-   static const TCHAR *quartzTables[] = {
+   static const TCHAR *deprecatedTables[] = {
       _T("qrtz_fired_triggers"),
       _T("qrtz_paused_trigger_grps"),
       _T("qrtz_scheduler_state"),
@@ -39,23 +39,22 @@ static bool H_UpgradeFromV0()
       _T("qrtz_triggers"),
       _T("qrtz_job_details"),
       _T("qrtz_calendars"),
+      _T("report_notification"),
       nullptr
    };
-   for(int i = 0; quartzTables[i] != nullptr; i++)
+   for(int i = 0; deprecatedTables[i] != nullptr; i++)
    {
-      if (DBIsTableExist(g_dbHandle, quartzTables[i]))
+      if (DBIsTableExist(g_dbHandle, deprecatedTables[i]))
       {
          TCHAR query[256];
-         _sntprintf(query, 256, _T("DROP TABLE %s"), quartzTables[i]);
+         _sntprintf(query, 256, _T("DROP TABLE %s"), deprecatedTables[i]);
          CHK_EXEC(SQLQuery(query));
       }
    }
 
-   bool doCreateSequence = true;
    if (DBIsTableExist(g_dbHandle, _T("reporting_results")))
    {
       CHK_EXEC(DBRenameTable(g_dbHandle, _T("reporting_results"), _T("report_results")));
-      doCreateSequence = false;  // Assume that Hibernate sequence already exist
    }
    else
    {
@@ -84,27 +83,7 @@ static bool H_UpgradeFromV0()
          _T("   userid integer null,")
          _T("   PRIMARY KEY(id))"), dtType);
       CHK_EXEC(CreateTable(query));
-   }
 
-   if (DBIsTableExist(g_dbHandle, _T("report_notification")))
-   {
-      CHK_EXEC(DBRenameTable(g_dbHandle, _T("report_notification"), _T("report_notifications")));
-      doCreateSequence = false;  // Assume that Hibernate sequence already exist
-   }
-   else
-   {
-      CHK_EXEC(CreateTable(
-         _T("CREATE TABLE report_notifications (")
-         _T("   id integer not null,")
-         _T("   attach_format_code integer null,")
-         _T("   jobid char(36) null,")
-         _T("   mail varchar(255) null,")
-         _T("   report_name varchar(255) null,")
-         _T("   PRIMARY KEY(id))")));
-   }
-
-   if (doCreateSequence)
-   {
       if (g_dbSyntax == DB_SYNTAX_ORACLE)
       {
          CHK_EXEC(SQLQuery(_T("CREATE SEQUENCE HIBERNATE_SEQUENCE INCREMENT BY 1 MINVALUE 1 MAXVALUE 9999999999999999999999999999 CACHE 20 NOCYCLE")));

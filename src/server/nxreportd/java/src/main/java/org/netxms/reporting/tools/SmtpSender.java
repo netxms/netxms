@@ -47,20 +47,21 @@ public final class SmtpSender
    /**
     * Send email.
     * 
-    * @param to recipient address
+    * @param recipient recipient address
     * @param subject mail subject
     * @param body mail body
     * @param fileName name of attached file or null
     * @param file file to attach or null
     */
-   public void sendMail(String to, String subject, String body, String fileName, File file)
+   public void sendMail(String recipient, String subject, String body, String fileName, File file)
    {
+      logger.info("Sending notification email to " + recipient);
       try
       {
          Session session = Session.getDefaultInstance(properties);
          MimeMessage message = new MimeMessage(session);
          message.setFrom(new InternetAddress(server.getConfigurationProperty("smtp.fromAddr", "reporting@localhost")));
-         message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+         message.addRecipient(Message.RecipientType.TO, new InternetAddress(recipient));
          message.setSubject(subject);
          if ((fileName != null) && (file != null))
          {

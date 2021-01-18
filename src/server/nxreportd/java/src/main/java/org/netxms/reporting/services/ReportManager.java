@@ -34,8 +34,8 @@ import org.hibernate.Transaction;
 import org.hibernate.jdbc.Work;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.reporting.ReportRenderFormat;
+import org.netxms.client.reporting.ReportingJobConfiguration;
 import org.netxms.reporting.Server;
-import org.netxms.reporting.model.Notification;
 import org.netxms.reporting.model.ReportDefinition;
 import org.netxms.reporting.model.ReportParameter;
 import org.netxms.reporting.model.ReportResult;
@@ -70,7 +70,7 @@ public class ReportManager
    private static final String MAIN_REPORT_COMPILED = "main" + FILE_SUFIX_COMPILED;
    private static final String FILE_SUFIX_FILLED = ".jrprint";
 
-   private static final Logger log = LoggerFactory.getLogger(ReportManager.class);
+   private static final Logger logger = LoggerFactory.getLogger(ReportManager.class);
 
    private String workspace;
    private Server server;
@@ -177,7 +177,7 @@ public class ReportManager
       }
       catch(JRException e)
       {
-         log.error("Cannot load compiled report from " + reportFile, e);
+         logger.error("Cannot load compiled report from " + reportFile, e);
       }
       return jasperReport;
    }
@@ -188,7 +188,7 @@ public class ReportManager
    public void deploy()
    {
       File definitionsDirectory = getDefinitionsDirectory();
-      log.info("Deploying *.jar/*.zip in " + definitionsDirectory.getAbsolutePath());
+      logger.info("Deploying *.jar/*.zip in " + definitionsDirectory.getAbsolutePath());
       String[] files = definitionsDirectory.list(new FilenameFilter() {
          @Override
          public boolean accept(File dir, String name)
@@ -201,7 +201,7 @@ public class ReportManager
       {
          for(String archiveName : files)
          {
-            log.debug("Deploying " + archiveName);
+            logger.debug("Deploying " + archiveName);
             try
             {
                String deployedName = archiveName.split("\\.(?=[^\\.]+$)")[0];
@@ -210,7 +210,7 @@ public class ReportManager
                UUID bundleId = unpackJar(destination, new File(definitionsDirectory, archiveName));
                reportMap.put(bundleId, deployedName);
                compileReport(destination);
-               log.info("Report " + bundleId + " deployed as \"" + deployedName + "\" in " + destination.getAbsolutePath());
+               logger.info("Report " + bundleId + " deployed as \"" + deployedName + "\" in " + destination.getAbsolutePath());
             }
             catch(IOException e)
             {
@@ -220,7 +220,7 @@ public class ReportManager
       }
       else
       {
-         log.info("No files found");
+         logger.info("No files found");
       }
    }
 
@@ -272,7 +272,7 @@ public class ReportManager
                File destDir = new File(destination, jarEntry.getName());
                if (!destDir.mkdirs())
                {
-                  log.error("Can't create directory " + destDir.getAbsolutePath());
+                  logger.error("Can't create directory " + destDir.getAbsolutePath());
                }
             }
          }
@@ -350,7 +350,7 @@ public class ReportManager
          }
          catch(JRException e)
          {
-            log.error("Cannot compile report " + file.getAbsoluteFile(), e);
+            logger.error("Cannot compile report " + file.getAbsoluteFile(), e);
          }
       }
    }
@@ -407,28 +407,27 @@ public class ReportManager
     * Execute report.
     *
     * @param userId user ID
-    * @param reportId report GUID
     * @param jobId job GUID
-    * @param parameters report parameters
+    * @param jobConfiguration reporting job configuration
     * @param locale locale for translation
     * @return true on success and false otherwise
     */
-   public boolean execute(int userId, UUID reportId, UUID jobId, final Map<String, String> parameters, Locale locale)
+   public boolean execute(int userId, UUID jobId, ReportingJobConfiguration jobConfiguration, Locale locale)
    {
-      final JasperReport report = loadReport(reportId);
+      final JasperReport report = loadReport(jobConfiguration.reportId);
       if (report == null)
       {
-         log.error("Cannot load report with UUID=" + reportId);
+         logger.error("Cannot load report with UUID=" + jobConfiguration.reportId);
          return false;
       }
 
       boolean ret = false;
-      final File reportDirectory = getReportDirectory(reportId);
+      final File reportDirectory = getReportDirectory(jobConfiguration.reportId);
 
       final ResourceBundle translations = loadReportTranslation(reportDirectory, locale);
 
       // fill report parameters
-      final HashMap<String, Object> localParameters = new HashMap<String, Object>(parameters);
+      final HashMap<String, Object> localParameters = new HashMap<String, Object>(jobConfiguration.executionParameters);
       localParameters.put(JRParameter.REPORT_LOCALE, locale);
       localParameters.put(JRParameter.REPORT_RESOURCE_BUNDLE, translations);
       String subrepoDirectory = reportDirectory.getPath() + File.separatorChar;
@@ -437,12 +436,12 @@ public class ReportManager
 
       localParameters.put(JRParameter.REPORT_CLASS_LOADER, new URLClassLoader(new URL[] {}, getClass().getClassLoader()));
 
-      prepareParameters(parameters, report, localParameters);
+      prepareParameters(jobConfiguration.executionParameters, report, localParameters);
 
       ThreadLocalReportInfo.setReportLocation(subrepoDirectory);
       ThreadLocalReportInfo.setServer(server);
 
-      final File outputDirectory = getOutputDirectory(reportId);
+      final File outputDirectory = getOutputDirectory(jobConfiguration.reportId);
       final String outputFile = new File(outputDirectory, jobId.toString() + ".jrprint").getPath();
       try
       {
@@ -474,18 +473,14 @@ public class ReportManager
             throw e;
          }
          transaction.commit();
-         reportResultManager.saveResult(new ReportResult(new Date(), reportId, jobId, userId));
-
+         reportResultManager.saveResult(new ReportResult(new Date(), jobConfiguration.reportId, jobId, userId));
+         sendMailNotifications(jobConfiguration.reportId, report.getName(), jobId, jobConfiguration.renderFormat, jobConfiguration.emailRecipients);
+         server.getCommunicationManager().sendNotification(SessionNotification.RS_RESULTS_MODIFIED, 0);
          ret = true;
-
-         List<Notification> notify = server.getNotificationManager().load(jobId);
-         sendMailNotification(notify);
-
-         server.getCommunicationManager().sendNotify(SessionNotification.RS_RESULTS_MODIFIED, 0);
       }
       catch(Exception e)
       {
-         log.error("Error executing report " + reportId + " " + report.getName(), e);
+         logger.error("Error executing report " + jobConfiguration.reportId + " " + report.getName(), e);
       }
       return ret;
    }
@@ -660,7 +655,7 @@ public class ReportManager
          catch(NumberFormatException e)
          {
             // TODO: handle
-            log.error("Invalid ID in comma separated list: " + input);
+            logger.error("Invalid ID in comma separated list: " + input);
          }
       }
       return ret;
@@ -740,7 +735,7 @@ public class ReportManager
       }
       catch(Exception e)
       {
-         log.error("Failed to render report", e);
+         logger.error("Failed to render report", e);
          outputFile.delete();
          outputFile = null;
       }
@@ -857,7 +852,7 @@ public class ReportManager
       }
       catch(Exception e)
       {
-         log.error("Cannot load language bundle for report", e);
+         logger.error("Cannot load language bundle for report", e);
          // on error create empty bundle
          labels = new ListResourceBundle() {
             @Override
@@ -872,45 +867,41 @@ public class ReportManager
 
    /**
     * Send an email notification
+    *
+    * @param reportId report ID
+    * @param reportName report nane
+    * @param jobId job ID
+    * @param renderFormat requested render format
+    * @param recipients list of mail recipients
     */
-   private void sendMailNotification(List<Notification> notify)
+   private void sendMailNotifications(UUID reportId, String reportName, UUID jobId, ReportRenderFormat renderFormat, List<String> recipients)
    {
+      if (recipients.isEmpty())
+      {
+         logger.info("Notification recipients list is empty");
+         return;
+      }
+
       DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
       Date today = Calendar.getInstance().getTime();
       String reportDate = df.format(today);
 
-      for(Notification notification : notify)
+      String text = String.format("Report \"%s\" successfully generated on %s and can be accessed using management console.", reportName, reportDate);
+
+      String fileName = null;
+      File renderResult = null;
+      if (renderFormat != ReportRenderFormat.NONE)
       {
-         String text = String.format("Report \"%s\" successfully generated on %s and can be accessed using management console.",
-               notification.getReportName(), reportDate);
-
-         String fileName = null;
-         File renderResult = null;
-         if (notification.getAttachFormatCode() != 0)
-         {
-            ReportRenderFormat formatCode = ReportRenderFormat.valueOf(notification.getAttachFormatCode());
-            UUID jobId = notification.getJobId();
-            UUID reportId = reportResultManager.findReportId(jobId);
-            if (reportId != null)
-            {
-               renderResult = renderResult(reportId, jobId, formatCode);
-               String time = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
-               fileName = String.format("%s %s.%s", notification.getReportName(), time,
-                     formatCode == ReportRenderFormat.PDF ? "pdf" : "xls");
-               text += "\n\nPlease find attached copy of the report.";
-            }
-            else
-            {
-               log.error("Cannot find report by guid");
-            }
-         }
-         text += "\n\nThis message is generated automatically by NetXMS.";
-
-         if (renderResult != null)
-         {
-            server.getSmtpSender().sendMail(notification.getMail(), "New report is available", text, fileName, renderResult);
-            renderResult.delete();
-         }
+         renderResult = renderResult(reportId, jobId, renderFormat);
+         String time = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
+         fileName = String.format("%s %s.%s", reportName, time, renderFormat == ReportRenderFormat.PDF ? "pdf" : "xls");
+         text += "\n\nPlease find attached copy of the report.";
       }
+      text += "\n\nThis message is generated automatically by NetXMS.";
+
+      for(String r : recipients)
+         server.getSmtpSender().sendMail(r, "New report is available", text, fileName, renderResult);
+      if (renderResult != null)
+         renderResult.delete();
    }
 }

@@ -1479,6 +1479,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_FIND_PROXY_FOR_NODE:
          findProxyForNode(request);
          break;
+      case CMD_GET_SCHEDULED_REPORTING_TASKS:
+         getScheduledReportingTasks(request);
+         break;
 #ifdef WITH_ZMQ
       case CMD_ZMQ_SUBSCRIBE_EVENT:
          zmqManageSubscription(request, zmq::EVENT, true);
@@ -12955,6 +12958,7 @@ void ClientSession::forwardToReportingServer(NXCPMessage *request)
       TCHAR buffer[256];
 	   debugPrintf(7, _T("RS: Forwarding message %s"), NXCPMessageCodeName(request->getCode(), buffer));
 
+      request->setField(VID_USER_ID, m_dwUserId);
 	   request->setField(VID_USER_NAME, m_loginName);
 	   msg = ForwardMessageToReportingServer(request, this);
 	   if (msg == nullptr)
@@ -13724,6 +13728,40 @@ void ClientSession::removeScheduledTask(NXCPMessage *request)
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    uint32_t result = DeleteScheduledTask(request->getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_systemAccessRights);
    msg.setField(VID_RCC, result);
+   sendMessage(&msg);
+}
+
+/**
+ * Filter by report ID for schedule task enumeration
+ */
+static bool ReportingScheduledTaskFilter(const ScheduledTask *task, void *context)
+{
+   if (_tcscmp(task->getTaskHandlerId(), EXECUTE_REPORT_TASK_ID))
+      return false;
+
+   String data = task->getPersistentData();
+   ssize_t indexStart = data.find(_T("<reportId>"));
+   if (indexStart == String::npos)
+      return false;
+
+   ssize_t indexEnd = data.find(_T("</reportId>"), indexStart + 10);
+   if (indexEnd == String::npos)
+      return false;
+
+   uuid reportId = uuid::parse(data.substring(indexStart + 10, indexEnd - indexStart - 10));
+   return reportId.equals(*static_cast<uuid*>(context));
+}
+
+/**
+ *
+ * Get list of scheduled executions for given report
+ */
+void ClientSession::getScheduledReportingTasks(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   uuid reportId = request->getFieldAsGUID(VID_REPORT_DEFINITION);
+   GetScheduledTasks(&msg, m_dwUserId, m_systemAccessRights, ReportingScheduledTaskFilter, &reportId);
+   msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
 

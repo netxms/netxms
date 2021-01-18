@@ -173,6 +173,7 @@ import org.netxms.client.reporting.ReportDefinition;
 import org.netxms.client.reporting.ReportRenderFormat;
 import org.netxms.client.reporting.ReportResult;
 import org.netxms.client.reporting.ReportingJob;
+import org.netxms.client.reporting.ReportingJobConfiguration;
 import org.netxms.client.server.AgentFile;
 import org.netxms.client.server.ServerConsoleListener;
 import org.netxms.client.server.ServerFile;
@@ -10773,22 +10774,22 @@ public class NXCSession
    /**
     * Execute a report
     *
-    * @param reportId   The report UUID
-    * @param parameters The parameters to set
+    * @param jobConfiguration The parameters to set
     * @return the UUID of the report
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public UUID executeReport(UUID reportId, Map<String, String> parameters) throws NXCException, IOException
+   public UUID executeReport(ReportingJobConfiguration jobConfiguration) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_EXECUTE_REPORT);
-      msg.setField(NXCPCodes.VID_REPORT_DEFINITION, reportId);
-      msg.setFieldInt32(NXCPCodes.VID_NUM_PARAMETERS, parameters.size());
-      long varId = NXCPCodes.VID_PARAM_LIST_BASE;
-      for(Entry<String, String> e : parameters.entrySet())
+      msg.setField(NXCPCodes.VID_REPORT_DEFINITION, jobConfiguration.reportId);
+      try
       {
-         msg.setField(varId++, e.getKey());
-         msg.setField(varId++, e.getValue());
+         msg.setField(NXCPCodes.VID_EXECUTION_PARAMETERS, jobConfiguration.createXml());
+      }
+      catch(Exception e)
+      {
+         throw new NXCException(RCC.INTERNAL_ERROR, e);
       }
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -10803,7 +10804,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<ReportResult> listReportResults(UUID reportId) throws NXCException, IOException
+   public List<ReportResult> getReportResults(UUID reportId) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_LIST_RESULTS);
       msg.setField(NXCPCodes.VID_REPORT_DEFINITION, reportId);
@@ -10866,51 +10867,6 @@ public class NXCSession
    }
 
    /**
-    * Schedule a report
-    *
-    * @param job        The ReportingJob
-    * @param parameters The parameters to set
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void scheduleReport(ReportingJob job, Map<String, String> parameters) throws NXCException, IOException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_REGISTER_SCHEDULED_REPORT);
-      msg.setField(NXCPCodes.VID_REPORT_DEFINITION, job.getReportId());
-      msg.setField(NXCPCodes.VID_RS_JOB_ID, job.getJobId());
-      msg.setFieldInt32(NXCPCodes.VID_RS_JOB_TYPE, job.getType());
-      msg.setFieldInt64(NXCPCodes.VID_TIMESTAMP, job.getStartTime().getTime());
-      msg.setFieldInt32(NXCPCodes.VID_DAY_OF_WEEK, job.getDaysOfWeek());
-      msg.setFieldInt32(NXCPCodes.VID_DAY_OF_MONTH, job.getDaysOfMonth());
-      msg.setField(NXCPCodes.VID_COMMENTS, job.getComments());
-
-      msg.setFieldInt32(NXCPCodes.VID_NUM_PARAMETERS, parameters.size());
-      long varId = NXCPCodes.VID_PARAM_LIST_BASE;
-      for(Entry<String, String> e : parameters.entrySet())
-      {
-         msg.setField(varId++, e.getKey());
-         msg.setField(varId++, e.getValue());
-      }
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-
-      // FIXME: combine into one message
-      if (job.isNotifyOnCompletion())
-      {
-         msg = newMessage(NXCPCodes.CMD_RS_ADD_REPORT_NOTIFY);
-         msg.setField(NXCPCodes.VID_RS_JOB_ID, job.getJobId());
-         msg.setFieldInt32(NXCPCodes.VID_RENDER_FORMAT, job.getRenderFormat().getCode());
-         msg.setField(NXCPCodes.VID_RS_REPORT_NAME, job.getReportName());
-         msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, job.getEmailRecipients().size());
-         varId = NXCPCodes.VID_ITEM_LIST;
-         for(String s : job.getEmailRecipients())
-            msg.setField(varId++, s);
-         sendMessage(msg);
-         waitForRCC(msg.getMessageId());
-      }
-   }
-
-   /**
     * List scheduled jobs
     *
     * @param reportId The report UUID
@@ -10918,39 +10874,22 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<ReportingJob> listScheduledJobs(UUID reportId) throws NXCException, IOException
+   public List<ReportingJob> getScheduledReportingJobs(UUID reportId) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SCHEDULED_REPORTS);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SCHEDULED_REPORTING_TASKS);
       msg.setField(NXCPCodes.VID_REPORT_DEFINITION, reportId);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
 
-      List<ReportingJob> result = new ArrayList<ReportingJob>();
-      long varId = NXCPCodes.VID_ROW_DATA_BASE;
-      int num = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
-      for(int i = 0; i < num; i++)
+      long fieldId = NXCPCodes.VID_SCHEDULE_LIST_BASE;
+      int count = response.getFieldAsInt32(NXCPCodes.VID_SCHEDULE_COUNT);
+      List<ReportingJob> result = new ArrayList<ReportingJob>(count);
+      for(int i = 0; i < count; i++)
       {
-         result.add(new ReportingJob(response, varId));
-         varId += 20;
+         result.add(new ReportingJob(response, fieldId));
+         fieldId += 100;
       }
       return result;
-   }
-
-   /**
-    * Delete report schedule
-    *
-    * @param reportId The report UUID
-    * @param jobId    The job UUID
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void deleteReportSchedule(UUID reportId, UUID jobId) throws NXCException, IOException
-   {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CANCEL_SCHEDULED_REPORT);
-      msg.setField(NXCPCodes.VID_REPORT_DEFINITION, reportId);
-      msg.setField(NXCPCodes.VID_JOB_ID, jobId);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
    }
 
    /**
@@ -10964,7 +10903,7 @@ public class NXCSession
    }
 
    /**
-    * Sign a challange
+    * Sign a challenge
     *
     * @param signature user's signature
     * @param challenge challenge string received from server
