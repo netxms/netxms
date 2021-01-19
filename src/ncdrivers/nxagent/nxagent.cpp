@@ -116,7 +116,7 @@ bool NXAgentDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
             StringList list;
             list.add(recipient);
             list.add(body);
-            UINT32 rcc = conn->execAction(_T("SMS.Send"), list);
+            uint32_t rcc = conn->executeCommand(_T("SMS.Send"), list);
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Agent action execution result: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
             if (rcc == ERR_SUCCESS)
                bSuccess = true;

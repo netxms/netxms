@@ -184,18 +184,21 @@ void CleanupActions()
 }
 
 /**
- * Execute remote action
+ * Execute remote action. Target can be given as IP address, host name,
+ * object name in form @name, or object ID in form #id
  */
 static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
 {
    shared_ptr<AgentConnection> conn;
-   if (pszTarget[0] == '@')
+   if ((pszTarget[0] == '@') || (pszTarget[0] == '#'))
    {
-      //Resolve name of node to connection to it. Name should be in @name format.
-      shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByName(&pszTarget[1], OBJECT_NODE));
+      // Resolve object name or ID.
+      shared_ptr<Node> node = (pszTarget[0] == '@') ?
+            static_pointer_cast<Node>(FindObjectByName(&pszTarget[1], OBJECT_NODE)) :
+            static_pointer_cast<Node>(FindObjectById(_tcstoul(&pszTarget[1], nullptr, 0), OBJECT_NODE));
       if (node == nullptr)
          return false;
-      conn = node->createAgentConnection();
+      conn = node->getAgentConnection();
       if (conn == nullptr)
          return false;
    }
@@ -206,8 +209,8 @@ static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
       if (!addr.isValid())
          return false;
 
-      shared_ptr<Node> node = FindNodeByIP(0, addr.getAddressV4());	/* TODO: add possibility to specify action target by object id */
-      if (node != NULL)
+      shared_ptr<Node> node = FindNodeByIP(0, addr);
+      if (node != nullptr)
       {
          conn = node->createAgentConnection();
          if (conn == nullptr)
@@ -224,13 +227,10 @@ static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
    }
 
    StringList *args = SplitCommandLine(pszAction);
-   TCHAR *command = MemCopyString(args->get(0));
+   String command(args->get(0));
    args->remove(0);
    uint32_t rcc = conn->executeCommand(command, *args);
    delete args;
-   MemFree(command);
-
-   conn->disconnect();
 
    return rcc == ERR_SUCCESS;
 }
