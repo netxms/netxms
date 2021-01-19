@@ -19,6 +19,8 @@ public final class Startup
     */
    public static void main(String[] args)
    {
+      Thread.currentThread().setName("Main Thread");
+
       Server server = new Server();
       try
       {
