@@ -188,15 +188,15 @@ void CleanupActions()
  */
 static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
 {
-   shared_ptr<AgentConnection> pConn;
+   shared_ptr<AgentConnection> conn;
    if (pszTarget[0] == '@')
    {
       //Resolve name of node to connection to it. Name should be in @name format.
       shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByName(&pszTarget[1], OBJECT_NODE));
       if (node == nullptr)
          return false;
-      pConn = node->createAgentConnection();
-      if (pConn == nullptr)
+      conn = node->createAgentConnection();
+      if (conn == nullptr)
          return false;
    }
    else
@@ -209,27 +209,29 @@ static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
       shared_ptr<Node> node = FindNodeByIP(0, addr.getAddressV4());	/* TODO: add possibility to specify action target by object id */
       if (node != NULL)
       {
-         pConn = node->createAgentConnection();
-         if (pConn == nullptr)
+         conn = node->createAgentConnection();
+         if (conn == nullptr)
             return false;
       }
       else
       {
          // Target node is not in our database, try default communication settings
-         pConn = AgentConnection::create(addr, AGENT_LISTEN_PORT, nullptr);
-         pConn->setCommandTimeout(g_agentCommandTimeout);
-         if (!pConn->connect(g_pServerKey))
+         conn = AgentConnection::create(addr, AGENT_LISTEN_PORT, nullptr);
+         conn->setCommandTimeout(g_agentCommandTimeout);
+         if (!conn->connect(g_pServerKey))
             return false;
       }
    }
 
-   StringList *list = SplitCommandLine(pszAction);
-	TCHAR *pTmp = MemCopyString(pszAction);
+   StringList *args = SplitCommandLine(pszAction);
+   TCHAR *command = MemCopyString(args->get(0));
+   args->remove(0);
+   uint32_t rcc = conn->executeCommand(command, *args);
+   delete args;
+   MemFree(command);
 
-   UINT32 rcc = pConn->execAction(pTmp, list);
-   delete list;
-   pConn->disconnect();
-   MemFree(pTmp);
+   conn->disconnect();
+
    return rcc == ERR_SUCCESS;
 }
 
