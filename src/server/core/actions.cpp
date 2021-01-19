@@ -223,13 +223,13 @@ static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
       }
    }
 
-   StringList *list = SplitCommandLine(pszAction);
-	TCHAR *pTmp = MemCopyString(pszAction);
-
-   UINT32 rcc = pConn->execAction(pTmp, list);
-   delete list;
+   StringList *args = SplitCommandLine(pszAction);
+   TCHAR *command = MemCopyString(args->get(0));
+   args->remove(0);
+   uint32_t rcc = pConn->execAction(command, *args);
+   delete args;
+   MemFree(command);
    pConn->disconnect();
-   MemFree(pTmp);
    return rcc == ERR_SUCCESS;
 }
 
