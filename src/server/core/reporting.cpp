@@ -189,6 +189,56 @@ void ReportingServerConnector()
 	nxlog_debug_tag(DEBUG_TAG, 1, _T("Reporting Server connector stopped"));
 }
 
+struct ViewBuilderContext
+{
+   StringBuffer *query;
+   uint32_t userId;
+   uint32_t tableCount;
+};
+
+static void ViewBuilderCallback(NetObj *object, ViewBuilderContext *context)
+{
+   if (object->isDataCollectionTarget() && object->checkAccessRights(context->userId, OBJECT_ACCESS_READ) && (static_cast<DataCollectionTarget*>(object)->getItemCount() > 0))
+   {
+      context->query->append(_T("SELECT * FROM idata_"));
+      context->query->append(object->getId());
+      context->query->append(_T(" UNION ALL "));
+      context->tableCount++;
+   }
+}
+
+/**
+ * Prepare data view for reporting
+ */
+static bool PrepareReportingDataView(uint32_t userId, TCHAR *viewName)
+{
+   _sntprintf(viewName, MAX_OBJECT_NAME, _T("idata_view_") INT64_FMT, GetCurrentTimeMs());
+   StringBuffer query(_T("CREATE VIEW "));
+   query.append(viewName);
+   query.append(_T(" AS "));
+
+   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+   {
+      query.append(_T("SELECT * FROM idata"));
+   }
+   else
+   {
+      ViewBuilderContext context;
+      context.query = &query;
+      context.userId = userId;
+      context.tableCount = 0;
+      g_idxObjectById.forEach(ViewBuilderCallback, &context);
+      if (context.tableCount == 0)
+         return false;
+      query.shrink(11); // Remove trailing "UNION ALL"
+   }
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   bool success = DBQuery(hdb, query);
+   DBConnectionPoolReleaseConnection(hdb);
+   return success;
+}
+
 /**
  * Forward client message to reporting server
  */
@@ -202,12 +252,20 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
    request->setId(rqId);
    request->setField(VID_USER_ID, session->getUserId());
 
-   // File transfer requests
-   if (request->getCode() == CMD_RS_RENDER_RESULT)
+   TCHAR viewName[MAX_OBJECT_NAME];
+   switch(request->getCode())
    {
-      MutexLock(s_fileRequestLock);
-      s_fileRequests.add(new FileRequest(originalId, rqId, session));
-      MutexUnlock(s_fileRequestLock);
+      case CMD_RS_RENDER_RESULT: // File transfer requests
+         MutexLock(s_fileRequestLock);
+         s_fileRequests.add(new FileRequest(originalId, rqId, session));
+         MutexUnlock(s_fileRequestLock);
+         break;
+      case CMD_RS_EXECUTE_REPORT:
+         if (PrepareReportingDataView(session->getUserId(), viewName))
+         {
+            request->setField(VID_VIEW_NAME, viewName);
+         }
+         break;
    }
 
    NXCPMessage *reply = nullptr;
@@ -238,6 +296,11 @@ void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters)
    NXCPMessage request(CMD_RS_EXECUTE_REPORT, m_connector->generateMessageId());
    request.setField(VID_USER_ID, parameters->m_userId);
    request.setField(VID_EXECUTION_PARAMETERS, parameters->m_persistentData);
+
+   TCHAR viewName[MAX_OBJECT_NAME] = _T("");
+   if (PrepareReportingDataView(parameters->m_userId, viewName))
+      request.setField(VID_VIEW_NAME, viewName);
+
    if (m_connector->sendMessage(&request))
    {
       NXCPMessage *response = m_connector->waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), 5000);
@@ -263,5 +326,13 @@ void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters)
    else
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute report \"%s\" (communication failure)"), parameters->m_comments);
+      if (viewName[0] != 0)
+      {
+         TCHAR query[256];
+         _sntprintf(query, 256, _T("DROP VIEW %s"), viewName);
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         DBQuery(hdb, query);
+         DBConnectionPoolReleaseConnection(hdb);
+      }
    }
 }

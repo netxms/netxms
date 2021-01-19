@@ -79,12 +79,12 @@ static bool H_UpgradeFromV35()
          TCHAR query[1024];
          _sntprintf(query, 1024,
             _T("CREATE TABLE report_results (")
-            _T("   id integer not null,")
+            _T("   id integer not null%s,")
             _T("   executiontime %s null,")
             _T("   jobid char(36) null,")
             _T("   reportid char(36) null,")
             _T("   userid integer null,")
-            _T("   PRIMARY KEY(id))"), dtType);
+            _T("   PRIMARY KEY(id))"), (g_dbSyntax == DB_SYNTAX_MYSQL) ? _T(" auto_increment") : _T(""), dtType);
          CHK_EXEC(CreateTable(query));
 
          if (g_dbSyntax == DB_SYNTAX_ORACLE)
@@ -95,7 +95,7 @@ static bool H_UpgradeFromV35()
          {
             CHK_EXEC(SQLQuery(_T("CREATE SEQUENCE HIBERNATE_SEQUENCE INCREMENT BY 1 MINVALUE 1 CACHE 20")));
          }
-         else
+         else if (g_dbSyntax != DB_SYNTAX_MYSQL)
          {
             CHK_EXEC(SQLQuery(_T("CREATE SEQUENCE HIBERNATE_SEQUENCE INCREMENT BY 1 MINVALUE 1")));
          }

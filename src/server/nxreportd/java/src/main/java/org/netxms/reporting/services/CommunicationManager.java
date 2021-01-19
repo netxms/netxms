@@ -389,12 +389,13 @@ public class CommunicationManager
 
       final UUID jobId = getOrCreateJobId(request);
       final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
+      final String idataView = request.getFieldAsString(NXCPCodes.VID_VIEW_NAME);
       requestObjectAccessSnapshotUpdate(userId);
       server.executeBackgroundTask(new Runnable() {
          @Override
          public void run()
          {
-            server.getReportManager().execute(userId, jobId, jobConfiguration, Locale.US);
+            server.getReportManager().execute(userId, jobId, jobConfiguration, idataView, Locale.US);
          }
       });
       response.setField(NXCPCodes.VID_JOB_ID, jobId);
