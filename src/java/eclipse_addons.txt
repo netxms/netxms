@@ -4,5 +4,5 @@ Eclipse addons required for NetXMS development:
 * Properties Editor: http://propedit.sourceforge.jp/eclipse/updates
 * "TM Terminal Control SDK" from "Target Management Project 4.4". Update site: http://download.eclipse.org/tm/terminal/updates/4.4milestones/20180611
 * BIRT Charting: http://download.eclipse.org/releases/2019-06
-* Babel Project: https://download.eclipse.org/technology/babel/update-site/R0.17.1/2019-12/
-	Required locales: arabic, czech, french, german, russian, portuguese (Brazil), spanish
+* Babel Project: https://download.eclipse.org/technology/babel/update-site/R0.18.1/2020-09/
+	Required locales: arabic, czech, french, german, hebrew, russian, portuguese (Brazil), spanish
