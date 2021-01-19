@@ -2362,7 +2362,11 @@ CREATE TABLE dc_targets
  */
 CREATE TABLE report_results
 (
+#if defined(DB_MYSQL)
+   id integer not null auto_increment,
+#else
    id integer not null,
+#endif
 #if defined(DB_POSTGRESQL) || defined(DB_TSDB)
    executiontime timestamp without time zone null,
 #elif defined(DB_ORACLE)

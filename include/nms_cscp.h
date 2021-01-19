@@ -1400,6 +1400,7 @@ typedef struct
 #define VID_EMAIL                   ((UINT32)728)
 #define VID_PHONE_NUMBER            ((UINT32)729)
 #define VID_EXECUTION_PARAMETERS    ((UINT32)730)
+#define VID_VIEW_NAME               ((UINT32)731)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

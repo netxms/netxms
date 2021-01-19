@@ -10,6 +10,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -62,6 +63,7 @@ import net.sf.jasperreports.engine.util.JRLoader;
 @SuppressWarnings("deprecation")
 public class ReportManager
 {
+   private static final String IDATA_VIEW_KEY = "IDATA_VIEW";
    private static final String SUBREPORT_DIR_KEY = "SUBREPORT_DIR";
    private static final String USER_ID_KEY = "SYS_USER_ID";
    private static final String DEFINITIONS_DIRECTORY = "definitions";
@@ -409,10 +411,11 @@ public class ReportManager
     * @param userId user ID
     * @param jobId job GUID
     * @param jobConfiguration reporting job configuration
+    * @param idataView name of database view for idata tables access or null if not provided
     * @param locale locale for translation
     * @return true on success and false otherwise
     */
-   public boolean execute(int userId, UUID jobId, ReportingJobConfiguration jobConfiguration, Locale locale)
+   public boolean execute(int userId, UUID jobId, ReportingJobConfiguration jobConfiguration, String idataView, Locale locale)
    {
       final JasperReport report = loadReport(jobConfiguration.reportId);
       if (report == null)
@@ -433,10 +436,13 @@ public class ReportManager
       String subrepoDirectory = reportDirectory.getPath() + File.separatorChar;
       localParameters.put(SUBREPORT_DIR_KEY, subrepoDirectory);
       localParameters.put(USER_ID_KEY, userId);
+      if (idataView != null)
+         localParameters.put(IDATA_VIEW_KEY, idataView);
 
       localParameters.put(JRParameter.REPORT_CLASS_LOADER, new URLClassLoader(new URL[] {}, getClass().getClassLoader()));
 
       prepareParameters(jobConfiguration.executionParameters, report, localParameters);
+      logger.debug("Report parameters: " + localParameters);
 
       ThreadLocalReportInfo.setReportLocation(subrepoDirectory);
       ThreadLocalReportInfo.setServer(server);
@@ -470,12 +476,14 @@ public class ReportManager
          catch(HibernateException e)
          {
             transaction.rollback();
+            dropDataView(idataView);
             throw e;
          }
          transaction.commit();
          reportResultManager.saveResult(new ReportResult(new Date(), jobConfiguration.reportId, jobId, userId));
          sendMailNotifications(jobConfiguration.reportId, report.getName(), jobId, jobConfiguration.renderFormat, jobConfiguration.emailRecipients);
          server.getCommunicationManager().sendNotification(SessionNotification.RS_RESULTS_MODIFIED, 0);
+         dropDataView(idataView);
          ret = true;
       }
       catch(Exception e)
@@ -483,6 +491,40 @@ public class ReportManager
          logger.error("Error executing report " + jobConfiguration.reportId + " " + report.getName(), e);
       }
       return ret;
+   }
+
+   /**
+    * Drop data view created by server
+    *
+    * @param viewName view name
+    */
+   private void dropDataView(String viewName)
+   {
+      if (viewName == null)
+         return;
+
+      logger.debug("Drop data view " + viewName);
+      Session session = server.getSessionFactory().getCurrentSession();
+      Transaction transaction = session.beginTransaction();
+      try
+      {
+         session.doWork(new Work() {
+            @Override
+            public void execute(Connection connection) throws SQLException
+            {
+               Statement stmt = connection.createStatement();
+               stmt.execute("DROP VIEW " + viewName);
+               stmt.close();
+            }
+         });
+      }
+      catch(HibernateException e)
+      {
+         logger.error("Cannot drop data view " + viewName, e);
+         transaction.rollback();
+         return;
+      }
+      transaction.commit();
    }
 
    private void prepareParameters(Map<String, String> parameters, JasperReport report, HashMap<String, Object> localParameters)
