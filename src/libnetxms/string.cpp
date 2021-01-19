@@ -61,7 +61,7 @@ String::String(const String &src)
  */
 String::String(const TCHAR *init)
 {
-   m_length = (init != NULL) ? _tcslen(init) : 0;
+   m_length = (init != nullptr) ? _tcslen(init) : 0;
    if (m_length < STRING_INTERNAL_BUFFER_SIZE)
    {
       m_buffer = m_internalBuffer;
