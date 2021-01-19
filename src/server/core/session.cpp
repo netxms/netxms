@@ -7856,7 +7856,7 @@ void ClientSession::writeAgentConfigFile(NXCPMessage *request)
                if ((request->getFieldAsUInt16(VID_APPLY_FLAG) != 0) && (agentRCC == ERR_SUCCESS))
                {
                   StringList list;
-                  agentRCC = pConn->execAction(_T("Agent.Restart"), list);
+                  agentRCC = pConn->executeCommand(_T("Agent.Restart"), list);
                }
 
                switch(agentRCC)
@@ -8005,11 +8005,11 @@ void ClientSession::executeAction(NXCPMessage *request)
                if (withOutput)
                {
                   ActionExecutionData data(this, request->getId());
-                  rcc = pConn->execAction(action, *list, true, ActionExecuteCallback, &data);
+                  rcc = pConn->executeCommand(action, *list, true, ActionExecuteCallback, &data);
                }
                else
                {
-                  rcc = pConn->execAction(action, *list);
+                  rcc = pConn->executeCommand(action, *list);
                }
                debugPrintf(4, _T("executeAction: rcc=%d"), rcc);
 

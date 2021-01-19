@@ -82,7 +82,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int o
    int count = std::min(argc - optind - 2, 256);
    for(i = 0, k = optind + 2; i < count; i++, k++)
       list.add(argv[k]);
-   dwError = conn->execAction(argv[optind + 1], list, s_showOutput, OutputCallback);
+   dwError = conn->executeCommand(argv[optind + 1], list, s_showOutput, OutputCallback);
    if (dwError == ERR_SUCCESS)
       _tprintf(_T("Action executed successfully\n"));
    else

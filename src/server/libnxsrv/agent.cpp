@@ -1599,39 +1599,31 @@ uint32_t AgentConnection::authenticate(BOOL bProxyData)
 }
 
 /**
- * Execute action on agent
+ * Execute command on agent
  */
-UINT32 AgentConnection::execAction(const TCHAR *action, const StringList &list,
-                                   bool withOutput, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *), void *cbData)
+uint32_t AgentConnection::executeCommand(const TCHAR *command, const StringList &args,
+      bool withOutput, void (*outputCallback)(ActionCallbackEvent, const TCHAR*, void*), void *cbData)
 {
-   NXCPMessage msg(m_nProtocolVersion);
-   UINT32 dwRqId;
-   int i;
-
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   dwRqId = generateRequestId();
-   msg.setCode(CMD_ACTION);
-   msg.setId(dwRqId);
-   msg.setField(VID_ACTION_NAME, action);
-   msg.setField(VID_RECEIVE_OUTPUT, withOutput);
-   msg.setField(VID_NUM_ARGS, (UINT32)list.size());
-   for(i = 0; i < list.size(); i++)
-      msg.setField(VID_ACTION_ARG_BASE + i, list.get(i));
+   NXCPMessage request(CMD_ACTION, generateRequestId(), m_nProtocolVersion);
+   request.setField(VID_ACTION_NAME, command);
+   request.setField(VID_RECEIVE_OUTPUT, withOutput);
+   args.fillMessage(&request, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
 
-   if (sendMessage(&msg))
+   if (sendMessage(&request))
    {
       if (withOutput)
       {
-         UINT32 rcc = waitForRCC(dwRqId, m_commandTimeout);
+         uint32_t rcc = waitForRCC(request.getId(), m_commandTimeout);
          if (rcc == ERR_SUCCESS)
          {
             outputCallback(ACE_CONNECTED, nullptr, cbData);    // Indicate successful start
             bool eos = false;
             while(!eos)
             {
-               NXCPMessage *response = waitForMessage(CMD_COMMAND_OUTPUT, dwRqId, m_commandTimeout * 10);
+               NXCPMessage *response = waitForMessage(CMD_COMMAND_OUTPUT, request.getId(), m_commandTimeout * 10);
                if (response != nullptr)
                {
                   eos = response->isEndOfSequence();
@@ -1658,7 +1650,7 @@ UINT32 AgentConnection::execAction(const TCHAR *action, const StringList &list,
       }
       else
       {
-         return waitForRCC(dwRqId, m_commandTimeout);
+         return waitForRCC(request.getId(), m_commandTimeout);
       }
    }
    else

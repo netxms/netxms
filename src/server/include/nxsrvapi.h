@@ -951,8 +951,8 @@ public:
    uint32_t nop();
    uint32_t setServerCapabilities();
    uint32_t setServerId(uint64_t serverId);
-   UINT32 execAction(const TCHAR *action, const StringList &list, bool withOutput = false,
-            void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = nullptr, void *cbData = nullptr);
+   uint32_t executeCommand(const TCHAR *command, const StringList &args, bool withOutput = false,
+         void (*outputCallback)(ActionCallbackEvent, const TCHAR*, void*) = nullptr, void *cbData = nullptr);
    UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
             void (* progressCallback)(INT64, void *) = nullptr, void *cbArg = nullptr,
             NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
