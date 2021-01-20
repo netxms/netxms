@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ import org.netxms.client.constants.ConnectionPointType;
 
 /**
  * Connection point information
- *
  */
 public class ConnectionPoint
 {
@@ -40,7 +39,7 @@ public class ConnectionPoint
 	private ConnectionPointType type; 
 	private Object data;
 	private boolean hasConnection = true;
-	
+
 	/**
 	 * Create connection point information from NXCP message
 	 * 
@@ -57,7 +56,7 @@ public class ConnectionPoint
 		localIpAddress = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
 		type = ConnectionPointType.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_CONNECTION_TYPE));
 	}
-	
+
 	/**
 	 * Create unconnected connection point information
 	 * 

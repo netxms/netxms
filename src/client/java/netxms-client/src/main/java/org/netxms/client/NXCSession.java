@@ -3122,7 +3122,7 @@ public class NXCSession
          syncObjectSet(syncList, syncComments, options);
       }
    }
-   
+
    /**
     * Sync children of given object.
     * 
@@ -3142,7 +3142,6 @@ public class NXCSession
       if (syncRequired)
       {
          syncMissingObjects(object.getChildIdList(), true, NXCSession.OBJECT_SYNC_WAIT);
-
          synchronized(synchronizedObjectSet)
          {
             synchronizedObjectSet.add(object.getObjectId());
@@ -3160,7 +3159,7 @@ public class NXCSession
    {
       synchronized(synchronizedObjectSet)
       {
-         return synchronizedObjectSet.contains(id);
+         return objectsSynchronized || synchronizedObjectSet.contains(id);
       }
    }
 
@@ -10029,7 +10028,7 @@ public class NXCSession
    /**
     * @return the objectsSynchronized
     */
-   public boolean isObjectsSynchronized()
+   public boolean areObjectsSynchronized()
    {
       return objectsSynchronized;
    }

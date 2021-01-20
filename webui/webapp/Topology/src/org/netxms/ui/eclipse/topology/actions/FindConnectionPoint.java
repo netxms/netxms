@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,17 +46,17 @@ public class FindConnectionPoint implements IObjectActionDelegate
 {
 	private IWorkbenchPart wbPart;
 	private List<AbstractObject> objects = null;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
+
+   /**
+    * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+    */
 	@Override
 	public void run(IAction action)
 	{
 	   if ((objects == null) || (objects.isEmpty()))
 	      return;
 	   
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().FindConnectionPoint_JobTitle, wbPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -93,10 +93,10 @@ public class FindConnectionPoint implements IObjectActionDelegate
 			}
 		}.start();
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
-	 */
+
+   /**
+    * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+    */
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
@@ -119,9 +119,9 @@ public class FindConnectionPoint implements IObjectActionDelegate
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
-	 */
+   /**
+    * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+    */
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
