@@ -2377,6 +2377,7 @@ CREATE TABLE report_results
    jobid char(36) null,
    reportid char(36) null,
    userid integer null,
+   is_success char(1) not null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
 

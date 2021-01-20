@@ -396,7 +396,7 @@ public class ReportExecutionForm extends Composite
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            IStructuredSelection selection = (IStructuredSelection)resultList.getSelection();
+            IStructuredSelection selection = resultList.getStructuredSelection();
             actionDeleteResult.setEnabled(selection.size() > 0);
             actionRenderPDF.setEnabled(selection.size() == 1);
             actionRenderXLS.setEnabled(selection.size() == 1);
@@ -429,9 +429,13 @@ public class ReportExecutionForm extends Composite
     */
    private void fillResultsContextMenu(IMenuManager manager)
    {
-      manager.add(actionRenderPDF);
-      manager.add(actionRenderXLS);
-      manager.add(new Separator());
+      IStructuredSelection selection = resultList.getStructuredSelection();
+      if ((selection.size() == 1) && ((ReportResult)selection.getFirstElement()).isSuccess())
+      {
+         manager.add(actionRenderPDF);
+         manager.add(actionRenderXLS);
+         manager.add(new Separator());
+      }
       manager.add(actionDeleteResult);
    }
 

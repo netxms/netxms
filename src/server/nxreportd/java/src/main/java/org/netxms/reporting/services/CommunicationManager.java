@@ -290,7 +290,7 @@ public class CommunicationManager
             reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
             break;
          case NXCPCodes.CMD_GET_NXCP_CAPS:
-            reply = new NXCPMessage(NXCPCodes.CMD_NXCP_CAPS, message.getMessageId());
+            reply.setMessageCode(NXCPCodes.CMD_NXCP_CAPS);
             reply.setControl(true);
             reply.setControlData(5); // NXCP version 5
             break;
@@ -304,7 +304,7 @@ public class CommunicationManager
             executeReport(message, reply);
             break;
          case NXCPCodes.CMD_RS_LIST_RESULTS:
-            listResults(message, reply);
+            getResults(message, reply);
             break;
          case NXCPCodes.CMD_RS_RENDER_RESULT:
             file = renderResult(message, reply);
@@ -360,7 +360,13 @@ public class CommunicationManager
       }
    }
 
-   private void listResults(NXCPMessage request, NXCPMessage reply)
+   /**
+    * Get results for given report.
+    *
+    * @param request request message
+    * @param reply response message
+    */
+   private void getResults(NXCPMessage request, NXCPMessage reply)
    {
       reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
       final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
@@ -369,16 +375,15 @@ public class CommunicationManager
       final List<ReportResult> list = server.getReportManager().listResults(reportId, userId);
       logger.debug("Got {} records", list.size());
       long index = NXCPCodes.VID_ROW_DATA_BASE;
-      int jobNum = 0;
       for(ReportResult record : list)
       {
          reply.setField(index++, record.getJobId());
-         reply.setFieldInt32(index++, (int)(record.getExecutionTime().getTime() / 1000));
+         reply.setField(index++, record.getExecutionTime());
          reply.setFieldInt32(index++, record.getUserId());
-         index += 7;
-         jobNum++;
+         reply.setField(index++, record.isSuccess());
+         index += 6;
       }
-      reply.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, jobNum);
+      reply.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, list.size());
       reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
    }
 

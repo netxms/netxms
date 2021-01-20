@@ -10811,15 +10811,13 @@ public class NXCSession
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
 
-      List<ReportResult> results = new ArrayList<ReportResult>();
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
-      long base = NXCPCodes.VID_ROW_DATA_BASE;
-      for(int i = 0; i < count; i++, base += 10)
+      List<ReportResult> results = new ArrayList<ReportResult>(count);
+      long fieldId = NXCPCodes.VID_ROW_DATA_BASE;
+      for(int i = 0; i < count; i++, fieldId += 10)
       {
-         ReportResult result = ReportResult.createFromMessage(response, base);
-         results.add(result);
+         results.add(new ReportResult(response, fieldId));
       }
-
       return results;
    }
 

@@ -27,59 +27,71 @@ import org.netxms.base.NXCPMessage;
  */
 public class ReportResult
 {
+   private UUID jobId;
 	private Date executionTime;
-	private UUID jobId;
 	private int userId;
+   private boolean success;
 
-	public ReportResult(Date executionTime, UUID reportId, int userId)
+   /**
+    * Create report result object from NXCP message.
+    * 
+    * @param msg NXCP message
+    * @param baseId base field ID
+    */
+   public ReportResult(NXCPMessage msg, long baseId)
 	{
-		this.executionTime = executionTime;
-		this.jobId = reportId;
-		this.userId = userId;
+      jobId = msg.getFieldAsUUID(baseId);
+      executionTime = msg.getFieldAsDate(baseId + 1);
+      userId = msg.getFieldAsInt32(baseId + 2);
+      success = msg.getFieldAsBoolean(baseId + 3);
 	}
 
+   /**
+    * Get job ID.
+    *
+    * @return job ID
+    */
+   public UUID getJobId()
+   {
+      return jobId;
+   }
+
+   /**
+    * Get execution time.
+    *
+    * @return execution time
+    */
 	public Date getExecutionTime()
 	{
 		return executionTime;
 	}
 
-	public void setExecutionTime(Date executionTime)
-	{
-		this.executionTime = executionTime;
-	}
-
-	public UUID getJobId()
-	{
-		return jobId;
-	}
-
-	public void setJobId(UUID reportId)
-	{
-		this.jobId = reportId;
-	}
-
+   /**
+    * Get user ID.
+    *
+    * @return user ID
+    */
 	public int getUserId()
 	{
 		return userId;
 	}
 
-	public void setUserId(int userId)
-	{
-		this.userId = userId;
-	}
+   /**
+    * Get success indicator.
+    *
+    * @return true if execution was successful
+    */
+   public boolean isSuccess()
+   {
+      return success;
+   }
 
-	@Override
-	public String toString()
-	{
-		return "ReportResult [executionTime=" + executionTime + ", jobId=" + jobId + ", userId=" + userId + "]";
-	}
-
-	public static ReportResult createFromMessage(NXCPMessage response, long base)
-	{
-		long id = base;
-		final UUID reportId = response.getFieldAsUUID(id++);
-		final Date date = response.getFieldAsDate(id++);
-		final int userId = response.getFieldAsInt32(id++);
-		return new ReportResult(date, reportId, userId);
-	}
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "ReportResult [jobId=" + jobId + ", executionTime=" + executionTime + ", userId=" + userId + ", success=" + success + "]";
+   }
 }

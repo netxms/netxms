@@ -23,6 +23,22 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 38.1 to 38.2
+ */
+static bool H_UpgradeFromV1()
+{
+   if (DBIsTableExist(g_dbHandle, _T("report_notifications")))
+   {
+      CHK_EXEC(SQLQuery(_T("DROP TABLE report_notifications")));
+   }
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE report_results ADD is_success char(1)")));
+   CHK_EXEC(SQLQuery(_T("UPDATE report_results SET is_success='T'")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("report_results"), _T("is_success")));
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 38.0 to 38.1
  */
 static bool H_UpgradeFromV0()
@@ -113,6 +129,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 1,  38, 2,  H_UpgradeFromV1  },
    { 0,  38, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }
 };
