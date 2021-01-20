@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2021 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.reporting.nxcl;
 
 import net.sf.jasperreports.engine.JRDataSource;
@@ -18,6 +36,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
+/**
+ * Custom query executor for reading data from NetXMS server via API
+ */
 public class NXCLQueryExecutor implements JRQueryExecuter
 {
    private static final Logger log = LoggerFactory.getLogger(NXCLQueryExecutor.class);
@@ -32,6 +53,9 @@ public class NXCLQueryExecutor implements JRQueryExecuter
       this.parametersMap = parametersMap;
    }
 
+   /**
+    * @see net.sf.jasperreports.engine.query.JRQueryExecuter#createDatasource()
+    */
    @SuppressWarnings("unchecked")
    @Override
    public JRDataSource createDatasource() throws JRException

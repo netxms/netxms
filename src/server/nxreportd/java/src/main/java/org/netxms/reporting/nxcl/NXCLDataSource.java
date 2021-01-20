@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2021 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.reporting.nxcl;
 
 import java.io.IOException;
@@ -11,6 +29,9 @@ import org.netxms.client.ProtocolVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Custom data source for reading data from NetXMS server via API
+ */
 public abstract class NXCLDataSource implements JRDataSource
 {
    private static final Logger log = LoggerFactory.getLogger(NXCLDataSource.class);
@@ -26,6 +47,13 @@ public abstract class NXCLDataSource implements JRDataSource
       this.parameters = parameters;
    }
 
+   /**
+    * Connect to NetXMS server.
+    *
+    * @param server server host name
+    * @param login login name
+    * @param password password
+    */
    public void connect(String server, String login, String password)
    {
       log.debug("Connecting to NetXMS server at " + server + " as " + login);
