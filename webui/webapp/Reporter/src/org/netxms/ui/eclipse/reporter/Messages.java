@@ -26,6 +26,7 @@ public class Messages extends NLS
    public String ObjectFieldEditor_SelectObject;
    public String ObjectListFieldEditor_Add;
    public String ObjectListFieldEditor_Delete;
+   public String ReportResultLabelProvider_Failure;
    public String ReportResultLabelProvider_Success;
    public String ScheduleLabelProvider_Daily;
    public String ScheduleLabelProvider_Error;

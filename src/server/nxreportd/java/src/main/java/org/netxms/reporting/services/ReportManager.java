@@ -439,16 +439,15 @@ public class ReportManager
     * @param locale locale for translation
     * @return true on success and false otherwise
     */
-   public boolean execute(int userId, UUID jobId, ReportingJobConfiguration jobConfiguration, String idataView, Locale locale)
+   public void execute(int userId, UUID jobId, ReportingJobConfiguration jobConfiguration, String idataView, Locale locale)
    {
       final JasperReport report = loadReport(jobConfiguration.reportId);
       if (report == null)
       {
          logger.error("Cannot load report with UUID=" + jobConfiguration.reportId);
-         return false;
+         return;
       }
 
-      boolean ret = false;
       final File reportDirectory = getReportDirectory(jobConfiguration.reportId);
 
       final ResourceBundle translations = loadReportTranslation(reportDirectory, locale);
@@ -500,21 +499,26 @@ public class ReportManager
          catch(HibernateException e)
          {
             transaction.rollback();
-            dropDataView(idataView);
             throw e;
          }
          transaction.commit();
-         reportResultManager.saveResult(new ReportResult(new Date(), jobConfiguration.reportId, jobId, userId));
+         reportResultManager.saveResult(new ReportResult(new Date(), jobConfiguration.reportId, jobId, userId, true));
          sendMailNotifications(jobConfiguration.reportId, report.getName(), jobId, jobConfiguration.renderFormat, jobConfiguration.emailRecipients);
-         server.getCommunicationManager().sendNotification(SessionNotification.RS_RESULTS_MODIFIED, 0);
-         dropDataView(idataView);
-         ret = true;
       }
       catch(Exception e)
       {
          logger.error("Error executing report " + jobConfiguration.reportId + " " + report.getName(), e);
+         try
+         {
+            reportResultManager.saveResult(new ReportResult(new Date(), jobConfiguration.reportId, jobId, userId, false));
+         }
+         catch(Throwable t)
+         {
+            logger.error("Unexpected exception while saving failure result", t);
+         }
       }
-      return ret;
+      server.getCommunicationManager().sendNotification(SessionNotification.RS_RESULTS_MODIFIED, 0);
+      dropDataView(idataView);
    }
 
    /**
@@ -551,7 +555,14 @@ public class ReportManager
       transaction.commit();
    }
 
-   private void prepareParameters(Map<String, String> parameters, JasperReport report, HashMap<String, Object> localParameters)
+   /**
+    * Prepare report parameters
+    *
+    * @param parameters input parameters
+    * @param report report object
+    * @param localParameters local report parameters
+    */
+   private static void prepareParameters(Map<String, String> parameters, JasperReport report, HashMap<String, Object> localParameters)
    {
       final JRParameter[] jrParameters = report.getParameters();
       for(JRParameter jrParameter : jrParameters)

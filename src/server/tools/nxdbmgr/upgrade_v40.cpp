@@ -24,6 +24,26 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.36 to 40.37
+ */
+static bool H_UpgradeFromV36()
+{
+   if (GetSchemaLevelForMajorVersion(38) < 2)
+   {
+      if (DBIsTableExist(g_dbHandle, _T("report_notifications")))
+      {
+         CHK_EXEC(SQLQuery(_T("DROP TABLE report_notifications")));
+      }
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE report_results ADD is_success char(1)")));
+      CHK_EXEC(SQLQuery(_T("UPDATE report_results SET is_success='T'")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("report_results"), _T("is_success")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(38, 2));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(37));
+   return true;
+}
+
+/**
  * Upgrade from 40.35 to 40.36
  */
 static bool H_UpgradeFromV35()
@@ -1052,6 +1072,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 36, 40, 37, H_UpgradeFromV36 },
    { 35, 40, 36, H_UpgradeFromV35 },
    { 34, 40, 35, H_UpgradeFromV34 },
    { 33, 40, 34, H_UpgradeFromV33 },

@@ -72,7 +72,8 @@ public class ReportResultLabelProvider extends LabelProvider implements ITableLa
             AbstractUserObject user = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(reportResult.getUserId(), new UserRefreshRunnable(viewer, element));
             return (user != null) ? user.getName() : ("[" + reportResult.getUserId() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case ReportExecutionForm.RESULT_STATUS:
-			   return Messages.get().ReportResultLabelProvider_Success; // TODO: get actual job status
+            return reportResult.isSuccess() ? Messages.get().ReportResultLabelProvider_Success
+                  : Messages.get().ReportResultLabelProvider_Failure;
 		}
 		return "<INTERNAL ERROR>"; //$NON-NLS-1$
 	}

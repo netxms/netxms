@@ -32,7 +32,7 @@ import java.util.UUID;
 @Table(name = "report_results")
 public class ReportResult implements Serializable
 {
-   private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 2L;
 
    @Id
    @Column(name = "id")
@@ -53,16 +53,21 @@ public class ReportResult implements Serializable
    @Column(name = "userId")
    private int userId;
 
-   public ReportResult()
+   @Column(name = "is_success")
+   @Type(type = "true_false")
+   private boolean success;
+
+   protected ReportResult()
    {
    }
 
-   public ReportResult(Date executionTime, UUID reportId, UUID jobId, int userId)
+   public ReportResult(Date executionTime, UUID reportId, UUID jobId, int userId, boolean success)
    {
       this.executionTime = executionTime;
       this.reportId = reportId;
       this.jobId = jobId;
       this.userId = userId;
+      this.success = success;
    }
 
    public Integer getId()
@@ -70,19 +75,9 @@ public class ReportResult implements Serializable
       return id;
    }
 
-   public void setId(Integer id)
-   {
-      this.id = id;
-   }
-
    public Date getExecutionTime()
    {
       return executionTime;
-   }
-
-   public void setExecutionTime(Date executionTime)
-   {
-      this.executionTime = executionTime;
    }
 
    public UUID getReportId()
@@ -90,35 +85,38 @@ public class ReportResult implements Serializable
       return reportId;
    }
 
-   public void setReportId(UUID reportId)
-   {
-      this.reportId = reportId;
-   }
-
    public UUID getJobId()
    {
       return jobId;
    }
 
-   public void setJobId(UUID jobId)
-   {
-      this.jobId = jobId;
-   }
-
+   /**
+    * Get user ID.
+    *
+    * @return user ID
+    */
    public int getUserId()
    {
       return userId;
    }
 
-   public void setUserId(int userId)
+   /**
+    * Get success indicator.
+    *
+    * @return success indicator
+    */
+   public boolean isSuccess()
    {
-      this.userId = userId;
+      return success;
    }
 
+   /**
+    * @see java.lang.Object#toString()
+    */
    @Override
    public String toString()
    {
-      return "ReportResult{" + "id=" + id + ", executionTime=" + executionTime + ", reportId=" + reportId + ", jobId=" + jobId
-            + ", userId='" + userId + '\'' + '}';
+      return "ReportResult [id=" + id + ", executionTime=" + executionTime + ", reportId=" + reportId + ", jobId=" + jobId
+            + ", userId=" + userId + ", success=" + success + "]";
    }
 }

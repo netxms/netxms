@@ -23,6 +23,7 @@ public class Messages extends NLS
    public static String ObjectFieldEditor_SelectObject;
    public static String ObjectListFieldEditor_Add;
    public static String ObjectListFieldEditor_Delete;
+   public static String ReportResultLabelProvider_Failure;
    public static String ReportResultLabelProvider_Success;
    public static String ScheduleLabelProvider_Daily;
    public static String ScheduleLabelProvider_Error;
