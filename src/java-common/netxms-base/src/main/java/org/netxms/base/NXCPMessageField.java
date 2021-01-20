@@ -57,22 +57,6 @@ public class NXCPMessageField
 	private byte[] binaryValue;
 	private InetAddressEx inetAddressValue;
 
-   /**
-    * @see java.lang.Object#toString()
-    */
-	@Override
-	public String toString() {
-		return "NXCPMessageField{" +
-				"id=" + id +
-				", type=" + type +
-				", integerValue=" + integerValue +
-				", realValue=" + realValue +
-				", stringValue='" + stringValue + '\'' +
-				", binaryValue=" + Arrays.toString(binaryValue) +
-				", inetAddressValue=" + inetAddressValue +
-				'}';
-	}
-
 	/**
 	 * Set string value and numeric values if possible
 	 * 
@@ -755,4 +739,20 @@ public class NXCPMessageField
 
 		return byteStream.toByteArray();
 	}
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      if (type == TYPE_BINARY)
+      {
+         StringBuilder sb = new StringBuilder();
+         for(byte b : binaryValue)
+            sb.append(Integer.toHexString((int)b & 0x000000FF));
+         return "NXCPMessageField [id=" + id + ", type=binary, valueLength=" + binaryValue.length + ", value=" + sb.toString() + "]";
+      }
+      return "NXCPMessageField [id=" + id + ", type=" + type + ", value=" + stringValue + "]";
+   }
 }
