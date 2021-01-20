@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -87,7 +87,7 @@ NXSL_METHOD_DEFINITION(Table, addColumn)
       dataType = argv[1]->getValueAsInt32();
    }
 
-   const TCHAR *displayName = NULL;
+   const TCHAR *displayName = nullptr;
    if (argc >= 3)
    {
       if (!argv[2]->isString())
@@ -98,9 +98,9 @@ NXSL_METHOD_DEFINITION(Table, addColumn)
    bool isInstance = false;
    if (argc >= 4)
    {
-      if (!argv[3]->isInteger())
-         return NXSL_ERR_NOT_INTEGER;
-      isInstance = (argv[3]->getValueAsInt32() != 0);
+      if (!argv[3]->isBoolean())
+         return NXSL_ERR_NOT_BOOLEAN;
+      isInstance = argv[3]->isTrue();
    }
 
    *result = vm->createValue(static_cast<Table*>(object->getData())->addColumn(argv[0]->getValueAsCString(), dataType, displayName, isInstance));
@@ -200,7 +200,7 @@ NXSL_METHOD_DEFINITION(Table, getColumnName)
       return NXSL_ERR_NOT_INTEGER;
 
    const TCHAR *value = ((Table *)object->getData())->getColumnName(argv[0]->getValueAsInt32());
-   *result = (value != NULL) ? vm->createValue(value) : vm->createValue();
+   *result = (value != nullptr) ? vm->createValue(value) : vm->createValue();
    return 0;
 }
 
@@ -391,7 +391,7 @@ NXSL_Value *NXSL_TableColumnClass::getAttr(NXSL_Object *object, const char *attr
    }
    else if (compareAttributeName(attr, "isInstanceColumn"))
    {
-      value = vm->createValue((INT32)(tc->isInstanceColumn() ? 1 : 0));
+      value = vm->createValue(tc->isInstanceColumn());
    }
    else if (compareAttributeName(attr, "name"))
    {
@@ -413,7 +413,7 @@ NXSL_METHOD_DEFINITION(TableRow, get)
       ((TableRowReference *)object->getData())->getTable()->getColumnIndex(argv[0]->getValueAsCString());
 
    const TCHAR *value = ((TableRowReference *)object->getData())->get(columnIndex);
-   *result = (value != NULL) ? vm->createValue(value) : vm->createValue();
+   *result = (value != nullptr) ? vm->createValue(value) : vm->createValue();
    return 0;
 }
 

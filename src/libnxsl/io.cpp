@@ -46,14 +46,14 @@ struct NXSL_FileHandle
 
    NXSL_FileHandle(const TCHAR *n, FILE *h)
    {
-      name = _tcsdup(n);
+      name = MemCopyString(n);
       handle = h;
       closed = false;
    }
 
    ~NXSL_FileHandle()
    {
-      free(name);
+      MemFree(name);
       if (!closed)
          fclose(handle);
    }
@@ -94,7 +94,7 @@ NXSL_METHOD_DEFINITION(FILE, read)
       if (count > 0)
       {
          char sbuffer[1024];
-         char *buffer = (count > 1023) ? (char *)malloc(count + 1) : sbuffer;
+         char *buffer = (count > 1023) ? (char *)MemAlloc(count + 1) : sbuffer;
 
          int bytes = (int)fread(buffer, 1, count, f->handle);
          if (bytes > 0)
@@ -108,7 +108,7 @@ NXSL_METHOD_DEFINITION(FILE, read)
          }
 
          if (buffer != sbuffer)
-            free(buffer);
+            MemFree(buffer);
       }
       else
       {
