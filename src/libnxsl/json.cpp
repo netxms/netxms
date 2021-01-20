@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -61,10 +61,10 @@ static NXSL_Value *ValueFromJson(NXSL_VM *vm, json_t *json)
             value = vm->createValue(json_real_value(json));
             break;
          case JSON_TRUE:
-            value = vm->createValue(1);
+            value = vm->createValue(true);
             break;
          case JSON_FALSE:
-            value = vm->createValue(0);
+            value = vm->createValue(false);
             break;
          default:
             value = vm->createValue();
@@ -107,6 +107,8 @@ static json_t *JsonFromValue(NXSL_Value *value)
       }
       return jarray;
    }
+   if (value->getDataType() == NXSL_DT_BOOLEAN)
+      return json_boolean(value->isTrue());
    return json_null();
 }
 
@@ -163,7 +165,7 @@ NXSL_METHOD_DEFINITION(JsonObject, get)
 
    char attr[256];
 #ifdef UNICODE
-   WideCharToMultiByte(CP_UTF8, 0, argv[0]->getValueAsCString(), -1, attr, 256, NULL, NULL);
+   wchar_to_utf8(argv[0]->getValueAsCString(), -1, attr, 256);
 #else
    mb_to_utf8(argv[0]->getValueAsCString(), -1, attr, 256);
 #endif
@@ -183,7 +185,7 @@ NXSL_METHOD_DEFINITION(JsonObject, set)
 
    char attr[256];
 #ifdef UNICODE
-   WideCharToMultiByte(CP_UTF8, 0, argv[0]->getValueAsCString(), -1, attr, 256, NULL, NULL);
+   wchar_to_utf8(argv[0]->getValueAsCString(), -1, attr, 256);
 #else
    mb_to_utf8(argv[0]->getValueAsCString(), -1, attr, 256);
 #endif
@@ -421,6 +423,6 @@ int F_JsonParse(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    json_error_t error;
    json_t *json = json_loads(utfString, 0, &error);
    MemFree(utfString);
-   *result = (json != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslJsonObjectClass, json)) : vm->createValue();
+   *result = (json != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslJsonObjectClass, json)) : vm->createValue();
    return 0;
 }

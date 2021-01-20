@@ -487,7 +487,7 @@ int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {   
    time_t tTime;
-	BOOL bLocalTime;
+	bool useLocalTime;
 
    if ((argc == 0) || (argc > 3))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -496,34 +496,34 @@ int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
       return NXSL_ERR_NOT_STRING;
 	if (argc > 1)
 	{
-		if (!argv[1]->isNumeric() && !argv[1]->isNull())
-			return NXSL_ERR_NOT_NUMBER;
-		tTime = (argv[1]->isNull()) ? time(NULL) : (time_t)argv[1]->getValueAsUInt64();
+		if (!argv[1]->isInteger() && !argv[1]->isNull())
+			return NXSL_ERR_NOT_INTEGER;
+		tTime = argv[1]->isNull() ? time(nullptr) : (time_t)argv[1]->getValueAsUInt64();
 
 		if (argc > 2)
 		{
-			if (!argv[2]->isInteger())
-				return NXSL_ERR_BAD_CONDITION;
-			bLocalTime = argv[2]->getValueAsInt32() ? TRUE : FALSE;
+			if (!argv[2]->isBoolean())
+				return NXSL_ERR_NOT_BOOLEAN;
+			useLocalTime = argv[2]->isTrue();
 		}
 		else
 		{
 			// No third argument, assume localtime
-			bLocalTime = TRUE;
+			useLocalTime = true;
 		}
 	}
 	else
 	{
 		// No second argument
-		tTime = time(NULL);
-		bLocalTime = TRUE;
+		tTime = time(nullptr);
+		useLocalTime = true;
 	}
 
 #if HAVE_LOCALTIME_R && HAVE_GMTIME_R
 	struct tm tbuffer;
-   struct tm *ptm = bLocalTime ? localtime_r(&tTime, &tbuffer) : gmtime_r(&tTime, &tbuffer);
+   struct tm *ptm = useLocalTime ? localtime_r(&tTime, &tbuffer) : gmtime_r(&tTime, &tbuffer);
 #else
-	struct tm *ptm = bLocalTime ? localtime(&tTime) : gmtime(&tTime);
+	struct tm *ptm = useLocalTime ? localtime(&tTime) : gmtime(&tTime);
 #endif
    TCHAR buffer[512];
    _tcsftime(buffer, 512, argv[0]->getValueAsCString(), ptm);
@@ -538,13 +538,12 @@ int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
  */
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-   UINT32 d, h, n;
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
 
-   if (!argv[0]->isNumeric())
-      return NXSL_ERR_NOT_NUMBER;
+   uint64_t arg = argv[0]->getValueAsUInt64();
 
-   QWORD arg = argv[0]->getValueAsUInt64();
-
+   uint32_t d, h, n;
    d = (UINT32)(arg / 86400);
    arg -= d * 86400;
    h = (UINT32)(arg / 3600);
