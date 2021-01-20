@@ -707,9 +707,9 @@ public class ObjectFinder extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            if (!session.isObjectsSynchronized())
-               session.syncObjects();//synchronize all objects first
-            
+            if (!session.areObjectsSynchronized())
+               session.syncObjects();
+
             try
             {
                final List<AbstractObject> objects = session.queryObjects(query);
@@ -807,9 +807,9 @@ public class ObjectFinder extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            if (!session.isObjectsSynchronized())
-               session.syncObjects();//synchronize all objects first
-            
+            if (!session.areObjectsSynchronized())
+               session.syncObjects();
+
             final Pattern regexp = (mode == SEARCH_MODE_REGEXP) ? Pattern.compile(searchString, Pattern.CASE_INSENSITIVE | Pattern.DOTALL | Pattern.UNICODE_CASE) : null;
             final List<AbstractObject> objects = session.filterObjects(new ObjectFilter() {
                @Override

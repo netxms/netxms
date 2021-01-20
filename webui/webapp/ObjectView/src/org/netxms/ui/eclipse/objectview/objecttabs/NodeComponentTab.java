@@ -134,7 +134,7 @@ public abstract class NodeComponentTab extends ObjectTab
          }
       }      
    }
-   
+
    /**
     * Hook for subclasses to synchronize additional objects if needed. Default implementation does nothing.
     *

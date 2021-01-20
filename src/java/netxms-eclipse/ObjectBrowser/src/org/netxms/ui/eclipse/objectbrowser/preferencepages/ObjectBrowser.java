@@ -100,7 +100,7 @@ public class ObjectBrowser extends FieldEditorPreferencePage implements IWorkben
       minLength.setEnabled(enabled, minLengthParent);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.FieldEditorPreferencePage#propertyChange(org.eclipse.jface.util.PropertyChangeEvent)
     */
    @Override
@@ -117,13 +117,12 @@ public class ObjectBrowser extends FieldEditorPreferencePage implements IWorkben
       globalStore.setValue("ObjectsFullSync", fullySync);
       if (fullySync)
       {
-         NXCSession session = ConsoleSharedData.getSession();
+         final NXCSession session = ConsoleSharedData.getSession();
          ConsoleJob job = new ConsoleJob("Synchronize all objects", null, Activator.PLUGIN_ID, null) {
-            
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               if (!session.isObjectsSynchronized())
+               if (!session.areObjectsSynchronized())
                   session.syncObjects();
             }
             

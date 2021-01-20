@@ -289,7 +289,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
 	if (agentConn != nullptr)
 		agentConn->reset();
 
-	UINT32 zoneProxy = 0;
+	uint32_t zoneProxy = 0;
 
 	if (IsZoningEnabled() && (zoneUIN != 0))
 	{
@@ -337,7 +337,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
 		return true;
 
 	// *** NetXMS agent ***
-   shared_ptr<AgentConnectionEx> pAgentConn = AgentConnectionEx::create(0, ipAddr, AGENT_LISTEN_PORT,nullptr);
+   shared_ptr<AgentConnectionEx> pAgentConn = AgentConnectionEx::create(0, ipAddr, AGENT_LISTEN_PORT, nullptr);
    shared_ptr<Node> proxyNode = shared_ptr<Node>();
 	if (zoneProxy != 0)
 	{
@@ -349,7 +349,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
 	}
 
 	pAgentConn->setCommandTimeout(g_agentCommandTimeout);
-   UINT32 rcc;
+   uint32_t rcc;
    if (!pAgentConn->connect(g_pServerKey, &rcc))
    {
       // If there are authentication problem, try default shared secret
@@ -358,16 +358,16 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
          StringList secrets;
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT secret FROM shared_secrets WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (proxyNode != nullptr) ? proxyNode->getZoneUIN() : 0);
 
            DB_RESULT hResult = DBSelectPrepared(hStmt);
-           if (hResult != NULL)
+           if (hResult != nullptr)
            {
               int count = DBGetNumRows(hResult);
               for(int i = 0; i < count; i++)
-                 secrets.addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+                 secrets.addPreallocated(DBGetField(hResult, i, 0, nullptr, 0));
               DBFreeResult(hResult);
            }
            DBFreeStatement(hStmt);
@@ -432,7 +432,7 @@ public:
    DriverData *driverData;
    InterfaceList *ifList;
    int32_t zoneUIN;
-   UINT32 flags;
+   uint32_t flags;
    SNMP_Version snmpVersion;
    bool dnsNameResolved;
    TCHAR dnsName[MAX_DNS_NAME];
@@ -720,7 +720,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 
    if (!memcmp(macAddr, "\xFF\xFF\xFF\xFF\xFF\xFF", 6))
    {
-		DbgPrintf(4, _T("AcceptNewNode(%s): broadcast MAC address"), szIpAddr);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): broadcast MAC address"), szIpAddr);
       return false;  // Broadcast MAC
    }
 
@@ -803,7 +803,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    DiscoveryFilterData data(newNodeData->ipAddr, newNodeData->zoneUIN);
 
    // Check for address range if we use simple filter instead of script
-   UINT32 autoFilterFlags = 0;
+   uint32_t autoFilterFlags = 0;
    if (!_tcsicmp(szFilter, _T("auto")))
    {
       autoFilterFlags = ConfigReadULong(_T("DiscoveryFilterFlags"), DFF_ALLOW_AGENT | DFF_ALLOW_SNMP);
@@ -833,7 +833,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, true, &pTransport, &agentConnection))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): host is not reachable"), szIpAddr);
-      return FALSE;
+      return false;
    }
 
    // Basic communication settings

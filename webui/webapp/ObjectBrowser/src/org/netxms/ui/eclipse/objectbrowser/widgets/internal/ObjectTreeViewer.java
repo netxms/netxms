@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,13 +90,14 @@ public class ObjectTreeViewer extends TreeViewer
 		else
 		{
 	      checkAndSyncChildren((AbstractObject)item.getData());
-	      
 			createChildren(item);
 			item.setExpanded(true);
 		}
 	}
-	
 
+   /**
+    * @see org.eclipse.jface.viewers.TreeViewer#handleTreeExpand(org.eclipse.swt.events.TreeEvent)
+    */
    @Override
    protected void handleTreeExpand(TreeEvent event) 
    {
@@ -111,9 +112,9 @@ public class ObjectTreeViewer extends TreeViewer
     */
    private void checkAndSyncChildren(AbstractObject object)
    {
-      if(!objectsFullySync)
+      if (!objectsFullySync)
       {
-         if(object instanceof Node && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
+         if ((object instanceof Node) && object.hasChildren() && !session.areChildrenSynchronized(object.getObjectId()))
          {
             syncChildren(object);
          }

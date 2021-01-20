@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.topology.views;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -47,6 +48,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -72,19 +74,19 @@ public class HostSearchResults extends ViewPart
 	public static final int COLUMN_SWITCH = 5;
 	public static final int COLUMN_PORT = 6;
 	public static final int COLUMN_TYPE = 7;
-	
+
 	private static final String TABLE_CONFIG_PREFIX = "HostSearchResults"; //$NON-NLS-1$
-	
+
 	private SortableTableViewer viewer;
 	private List<ConnectionPoint> results = new ArrayList<ConnectionPoint>();
 	private Action actionClearLog;
 	private Action actionCopyMAC;
 	private Action actionCopyIP;
 	private Action actionCopyRecord;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -96,7 +98,7 @@ public class HostSearchResults extends ViewPart
 		viewer.setLabelProvider(labelProvider);
 		viewer.setComparator(new ConnectionPointComparator(labelProvider));
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
-		
+
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -104,7 +106,7 @@ public class HostSearchResults extends ViewPart
 				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 			}
 		});
-		
+
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
@@ -245,30 +247,72 @@ public class HostSearchResults extends ViewPart
 	}
 
 	/**
-	 * Show connection point information
-	 * @param cp connection point information
-	 */
-	public static void showConnection(ConnectionPoint cp)
+    * Show connection point information.
+    *
+    * @param cp connection point information
+    */
+   public static void showConnection(final ConnectionPoint cp)
 	{
-		final Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-		
 		if (cp == null)
 		{
-			MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning, Messages.get().HostSearchResults_NotFound);
+         MessageDialogHelper.openWarning(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
+               Messages.get().HostSearchResults_Warning, Messages.get().HostSearchResults_NotFound);
 			return;
 		}
-		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		try
-		{
-			Node host = (Node)session.findObjectById(cp.getLocalNodeId());
-			Node bridge = (Node)session.findObjectById(cp.getNodeId());
-			AbstractObject iface = session.findObjectById(cp.getInterfaceId());
-			
-			if ((bridge != null) && (iface != null))
-			{
-			   if (cp.getType() == ConnectionPointType.WIRELESS)
-			   {
+
+      final NXCSession session = ConsoleSharedData.getSession();
+      if (session.areChildrenSynchronized(cp.getNodeId()) && session.areChildrenSynchronized(cp.getLocalNodeId()))
+      {
+         showConnectionStep2(session, cp);
+      }
+      else
+      {
+         new ConsoleJob("Synchronize objects", null, Activator.PLUGIN_ID, null) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               AbstractObject object = session.findObjectById(cp.getNodeId());
+               if (object != null)
+                  session.syncChildren(object);
+               object = session.findObjectById(cp.getLocalNodeId());
+               if (object != null)
+                  session.syncChildren(object);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     showConnectionStep2(session, cp);
+                  }
+               });
+            }
+            
+            @Override
+            protected String getErrorMessage()
+            {
+               return "Cannot synchronize objects";
+            }
+         }.start();
+      }
+   }
+
+   /**
+    * Show connection point information - step 2.
+    * 
+    * @param session communication session
+    * @param cp connection point information
+    */
+   private static void showConnectionStep2(NXCSession session, ConnectionPoint cp)
+   {
+      final Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+      try
+      {
+         Node host = (Node)session.findObjectById(cp.getLocalNodeId());
+         Node bridge = (Node)session.findObjectById(cp.getNodeId());
+         AbstractObject iface = session.findObjectById(cp.getInterfaceId());
+         if ((bridge != null) && (iface != null))
+         {
+            if (cp.getType() == ConnectionPointType.WIRELESS)
+            {
                if (host != null)
                {
                   MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
@@ -291,80 +335,125 @@ public class HostSearchResults extends ViewPart
                                  cp.getLocalMacAddress(), bridge.getObjectName(), iface.getObjectName()));
                   }
                }
-			   }
-			   else
-			   {
-   				if (host != null)
-   				{
-   					MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
-   					      String.format(Messages.get().HostSearchResults_NodeConnected,
-   					            host.getObjectName(), cp.getType() == ConnectionPointType.DIRECT ? Messages.get().HostSearchResults_ModeDirectly : Messages.get().HostSearchResults_ModeIndirectly,
-   					            bridge.getObjectName(), iface.getObjectName()));
-   				}
-   				else
-   				{
-   				   if (cp.getLocalIpAddress() != null)
-   				   {
-   	               MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
-   	                     String.format(Messages.get().HostSearchResults_NodeIpMacConnected,
-   	                           cp.getLocalIpAddress().getHostAddress(), cp.getLocalMacAddress(),
-   	                           cp.getType() == ConnectionPointType.DIRECT ? Messages.get().HostSearchResults_ModeDirectly : Messages.get().HostSearchResults_ModeIndirectly,
-   	                           bridge.getObjectName(), iface.getObjectName()));
-   				   }
-   				   else
-   				   {
+            }
+            else
+            {
+               if (host != null)
+               {
+                  MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint,
+                        String.format(Messages.get().HostSearchResults_NodeConnected, host.getObjectName(),
+                              cp.getType() == ConnectionPointType.DIRECT ? Messages.get().HostSearchResults_ModeDirectly
+                                    : Messages.get().HostSearchResults_ModeIndirectly,
+                              bridge.getObjectName(), iface.getObjectName()));
+               }
+               else
+               {
+                  if (cp.getLocalIpAddress() != null)
+                  {
+                     MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint,
+                           String.format(Messages.get().HostSearchResults_NodeIpMacConnected,
+                                 cp.getLocalIpAddress().getHostAddress(), cp.getLocalMacAddress(),
+                                 cp.getType() == ConnectionPointType.DIRECT ? Messages.get().HostSearchResults_ModeDirectly
+                                       : Messages.get().HostSearchResults_ModeIndirectly,
+                                 bridge.getObjectName(), iface.getObjectName()));
+                  }
+                  else
+                  {
                      MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
                            String.format(Messages.get().HostSearchResults_NodeMacConnected,
                                  cp.getLocalMacAddress(),
                                  cp.getType() == ConnectionPointType.DIRECT ? Messages.get().HostSearchResults_ModeDirectly : Messages.get().HostSearchResults_ModeIndirectly,
                                  bridge.getObjectName(), iface.getObjectName()));
-   				   }
-   				}
-			   }
-			   
-				IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-				IViewPart part = page.showView(ID);
-				((HostSearchResults)part).addResult(cp);
-			}
-			else if ((host != null) && (cp.getType() == ConnectionPointType.UNKNOWN))
-			{
+                  }
+               }
+            }
+
+            IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+            IViewPart part = page.showView(ID);
+            ((HostSearchResults)part).addResult(cp);
+         }
+         else if ((host != null) && (cp.getType() == ConnectionPointType.UNKNOWN))
+         {
             MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning, String.format("Found node %s but it's connection point is unknown", host.getObjectName()));
             
             IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
             IViewPart part = page.showView(ID);
             ((HostSearchResults)part).addResult(cp);
-			}
-			else
-			{
-				MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning, Messages.get().HostSearchResults_NotFound);
-			}
-		}
-		catch(Exception e)
-		{
-		   Activator.logError("Exception in host search result view", e);
-			MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning, String.format(Messages.get().HostSearchResults_ShowError, e.getLocalizedMessage()));
-		}
+         }
+         else
+         {
+            MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning,
+                  Messages.get().HostSearchResults_NotFound);
+         }
+      }
+      catch(Exception e)
+      {
+         Activator.logError("Exception in host search result view", e);
+         MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning,
+               String.format(Messages.get().HostSearchResults_ShowError, e.getLocalizedMessage()));
+      }
 	}
-	
+
    /**
     * Show connection point information
     * 
     * @param cp[] connection point information
     */
-   public static void showConnection(ConnectionPoint[] cps)
+   public static void showConnection(final ConnectionPoint[] cps)
+   {
+      final NXCSession session = ConsoleSharedData.getSession();
+      if (session.areObjectsSynchronized())
+      {
+         showConnectionStep2(session, cps);
+      }
+      else
+      {
+         new ConsoleJob("Synchronize objects", null, Activator.PLUGIN_ID, null) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               for(ConnectionPoint cp : cps)
+               {
+                  AbstractObject object = session.findObjectById(cp.getNodeId());
+                  if (object != null)
+                     session.syncChildren(object);
+                  object = session.findObjectById(cp.getLocalNodeId());
+                  if (object != null)
+                     session.syncChildren(object);
+               }
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     showConnectionStep2(session, cps);
+                  }
+               });
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return "Cannot synchronize objects";
+            }
+         }.start();
+      }
+   }
+
+   /**
+    * Show connection point information
+    * 
+    * @param cp[] connection point information
+    */
+   public static void showConnectionStep2(NXCSession session, ConnectionPoint[] cps)
    {
       final Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
       int counter = 0;
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       try
       {
-         Node host;
-         AbstractObject iface;
-
          for (ConnectionPoint p : cps)
          {
-            host = (Node)session.findObjectById(p.getLocalNodeId());
-            iface = session.findObjectById(p.getLocalInterfaceId());     
+            Node host = (Node)session.findObjectById(p.getLocalNodeId());
+            AbstractObject iface = session.findObjectById(p.getLocalInterfaceId());
             
             if (!p.hasConnection())
                counter++;
@@ -388,13 +477,11 @@ public class HostSearchResults extends ViewPart
          MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning,
                String.format(Messages.get().HostSearchResults_ShowError, e.getLocalizedMessage()));
       }
-      
    }
-      
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{
