@@ -85,11 +85,11 @@ public final class Server implements Daemon
       String url;
       switch(type)
       {
-         case POSTGRESQL:
-            url = "jdbc:postgresql://" + server + "/" + name;
+         case INFORMIX:
+            url = "jdbc:informix-sqli://" + server + "/" + name;
             break;
-         case ORACLE:
-            url = "jdbc:oracle:thin:@" + server + ":1521:" + name;
+         case MARIADB:
+            url = "jdbc:mariadb://" + server + "/" + name;
             break;
          case MSSQL:
             url = "jdbc:sqlserver://" + server + ";DatabaseName=" + name;
@@ -97,8 +97,11 @@ public final class Server implements Daemon
          case MYSQL:
             url = "jdbc:mysql://" + server + "/" + name;
             break;
-         case INFORMIX:
-            url = "jdbc:informix-sqli://" + server + "/" + name;
+         case ORACLE:
+            url = "jdbc:oracle:thin:@" + server + ":1521:" + name;
+            break;
+         case POSTGRESQL:
+            url = "jdbc:postgresql://" + server + "/" + name;
             break;
          default:
             throw new DaemonInitException("Unsupported database type");
