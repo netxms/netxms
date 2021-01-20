@@ -11272,7 +11272,7 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
 	msg.setId(request->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	UINT32 objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+	uint32_t objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
 	shared_ptr<NetObj> object = FindObjectById(objectId);
 	if ((object != nullptr) && !object->isDeleted())
 	{
@@ -11280,7 +11280,7 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
 		{
 			debugPrintf(5, _T("findNodeConnection: objectId=%d class=%d name=\"%s\""), objectId, object->getObjectClass(), object->getName());
 			shared_ptr<NetObj> cp;
-			UINT32 localNodeId, localIfId;
+			uint32_t localNodeId, localIfId;
 			BYTE localMacAddr[MAC_ADDR_LENGTH];
 			int type = 0;
 			if (object->getObjectClass() == OBJECT_NODE)

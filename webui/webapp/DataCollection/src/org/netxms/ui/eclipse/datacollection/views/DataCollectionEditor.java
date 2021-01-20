@@ -315,7 +315,7 @@ public class DataCollectionEditor extends ViewPart
 				dciConfig = session.openDataCollectionConfiguration(object.getObjectId(), changeListener);
 				dciConfig.setUserData(viewer);
 				//load all related objects
-				if (!session.isObjectsSynchronized())
+            if (!session.areObjectsSynchronized())
 				{
    				List<Long> relatedOpbjects = new ArrayList<Long>();
    				for(DataCollectionObject dco : dciConfig.getItems())
