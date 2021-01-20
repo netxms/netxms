@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2021 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.reporting.services;
 
 import java.io.File;
@@ -37,6 +55,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.reporting.ReportRenderFormat;
 import org.netxms.client.reporting.ReportingJobConfiguration;
 import org.netxms.reporting.Server;
+import org.netxms.reporting.ServerException;
 import org.netxms.reporting.model.ReportDefinition;
 import org.netxms.reporting.model.ReportParameter;
 import org.netxms.reporting.model.ReportResult;
@@ -45,9 +64,7 @@ import org.netxms.reporting.tools.ThreadLocalReportInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.sf.jasperreports.engine.DefaultJasperReportsContext;
-import net.sf.jasperreports.engine.JRAbstractExporter;
 import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JRExpression;
 import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JRPropertiesMap;
@@ -56,11 +73,15 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
 import net.sf.jasperreports.engine.export.JRXlsExporter;
-import net.sf.jasperreports.engine.export.JRXlsExporterParameter;
 import net.sf.jasperreports.engine.query.QueryExecuterFactory;
 import net.sf.jasperreports.engine.util.JRLoader;
+import net.sf.jasperreports.export.SimpleExporterInput;
+import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
+import net.sf.jasperreports.export.SimpleXlsReportConfiguration;
 
-@SuppressWarnings("deprecation")
+/**
+ * Report manager
+ */
 public class ReportManager
 {
    private static final String IDATA_VIEW_KEY = "IDATA_VIEW";
@@ -210,13 +231,13 @@ public class ReportManager
                File destination = new File(definitionsDirectory, deployedName);
                deleteFolder(destination);
                UUID bundleId = unpackJar(destination, new File(definitionsDirectory, archiveName));
-               reportMap.put(bundleId, deployedName);
                compileReport(destination);
+               reportMap.put(bundleId, deployedName);
                logger.info("Report " + bundleId + " deployed as \"" + deployedName + "\" in " + destination.getAbsolutePath());
             }
-            catch(IOException e)
+            catch(Exception e)
             {
-               e.printStackTrace();
+               logger.error("Error while deploying package " + archiveName);
             }
          }
       }
@@ -258,8 +279,9 @@ public class ReportManager
     * @param archive source archive
     * @return Build-Id attribute from manifest
     * @throws IOException if archive cannot be unpacked
+    * @throws ServerException if there are errors in archive
     */
-   private static UUID unpackJar(File destination, File archive) throws IOException
+   private static UUID unpackJar(File destination, File archive) throws IOException, ServerException
    {
       JarFile jarFile = new JarFile(archive);
       try
@@ -272,9 +294,9 @@ public class ReportManager
             if (jarEntry.isDirectory())
             {
                File destDir = new File(destination, jarEntry.getName());
-               if (!destDir.mkdirs())
+               if (!destDir.isDirectory() && !destDir.mkdirs())
                {
-                  logger.error("Can't create directory " + destDir.getAbsolutePath());
+                  throw new ServerException("Cannot create directory " + destDir.getAbsolutePath());
                }
             }
          }
@@ -317,8 +339,10 @@ public class ReportManager
             }
          }
 
-         // TODO: handle possible exception
-         return UUID.fromString(manifest.getMainAttributes().getValue("Build-Id"));
+         String buildId = manifest.getMainAttributes().getValue("Build-Id");
+         if (buildId == null)
+            throw new ServerException("Missing Build-Id attribute in package manifest");
+         return UUID.fromString(buildId);
       }
       finally
       {
@@ -730,59 +754,90 @@ public class ReportManager
       return file.delete();
    }
 
+   /**
+    * Render report result
+    *
+    * @param reportId report ID
+    * @param jobId job ID
+    * @param format rendering format
+    * @return file with rendered results on success and null on failure
+    */
    public File renderResult(UUID reportId, UUID jobId, ReportRenderFormat format)
    {
       final File outputDirectory = getOutputDirectory(reportId);
       final File dataFile = new File(outputDirectory, jobId.toString() + ".jrprint");
-
-      File outputFile = new File(outputDirectory, jobId.toString() + "." + System.currentTimeMillis() + ".render");
-
-      JRAbstractExporter exporter = null;
-      switch(format)
-      {
-         case PDF:
-            exporter = new JRPdfExporter();
-            break;
-         case XLS:
-            exporter = new JRXlsExporter();
-            final JasperReport jasperReport = loadReport(reportId);
-            if (jasperReport != null)
-            {
-               exporter.setParameter(JRXlsExporterParameter.SHEET_NAMES,
-                     new String[] { prepareXlsSheetName(jasperReport.getName()) });
-            }
-            exporter.setParameter(JRXlsExporterParameter.IS_IGNORE_CELL_BORDER, false);
-            exporter.setParameter(JRXlsExporterParameter.IS_WHITE_PAGE_BACKGROUND, false);
-            // Arrange cell spacing and remove paging gaps
-            exporter.setParameter(JRXlsExporterParameter.IS_REMOVE_EMPTY_SPACE_BETWEEN_ROWS, true);
-            exporter.setParameter(JRXlsExporterParameter.IS_COLLAPSE_ROW_SPAN, true);
-            exporter.setParameter(JRXlsExporterParameter.IS_REMOVE_EMPTY_SPACE_BETWEEN_COLUMNS, true);
-            exporter.setParameter(JRXlsExporterParameter.IS_ONE_PAGE_PER_SHEET, false);
-            exporter.setParameter(JRXlsExporterParameter.IS_DETECT_CELL_TYPE, true);
-            // Arrange graphics
-            exporter.setParameter(JRXlsExporterParameter.IS_IMAGE_BORDER_FIX_ENABLED, true);
-            exporter.setParameter(JRXlsExporterParameter.IS_FONT_SIZE_FIX_ENABLED, true);
-            exporter.setParameter(JRXlsExporterParameter.IS_IGNORE_GRAPHICS, false);
-            break;
-         default:
-            break;
-      }
-
-      exporter.setParameter(JRExporterParameter.INPUT_FILE, dataFile);
+      final File outputFile = new File(outputDirectory, jobId.toString() + "." + System.currentTimeMillis() + ".render");
 
       try
       {
-         exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, new FileOutputStream(outputFile));
-         exporter.exportReport();
+         switch(format)
+         {
+            case PDF:
+               renderPDF(dataFile, outputFile);
+               break;
+            case XLS:
+               renderXLS(dataFile, outputFile, loadReport(reportId));
+               break;
+            default:
+               logger.error("Unsupported rendering format " + format);
+               return null;
+         }
+         return outputFile;
       }
-      catch(Exception e)
+      catch(Throwable e)
       {
          logger.error("Failed to render report", e);
          outputFile.delete();
-         outputFile = null;
+         return null;
       }
+   }
 
-      return outputFile;
+   /**
+    * Render report to PDF format.
+    *
+    * @param inputFile input file
+    * @param outputFile output file
+    * @throws Exception on error
+    */
+   private static void renderPDF(File inputFile, File outputFile) throws Exception
+   {
+      JRPdfExporter exporter = new JRPdfExporter();
+      exporter.setExporterInput(new SimpleExporterInput(inputFile));
+      exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(new FileOutputStream(outputFile)));
+      exporter.exportReport();
+   }
+
+   /**
+    * Render report to XLS format.
+    *
+    * @param inputFile input file
+    * @param outputFile output file
+    * @param report report object
+    * @throws Exception on error
+    */
+   private static void renderXLS(File inputFile, File outputFile, JasperReport report) throws Exception
+   {
+      SimpleXlsReportConfiguration configuration = new SimpleXlsReportConfiguration();
+      if (report != null)
+         configuration.setSheetNames(new String[] { prepareXlsSheetName(report.getName()) });
+      configuration.setIgnoreCellBorder(false);
+      configuration.setWhitePageBackground(false);
+      // Arrange cell spacing and remove paging gaps
+      configuration.setRemoveEmptySpaceBetweenRows(true);
+      configuration.setRemoveEmptySpaceBetweenColumns(true);
+      configuration.setCollapseRowSpan(true);
+      configuration.setOnePagePerSheet(false);
+      configuration.setDetectCellType(true);
+      // Arrange graphics
+      configuration.setImageBorderFixEnabled(true);
+      configuration.setFontSizeFixEnabled(true);
+      configuration.setIgnoreGraphics(false);
+
+      JRXlsExporter exporter = new JRXlsExporter();
+      exporter.setConfiguration(configuration);
+      exporter.setExporterInput(new SimpleExporterInput(inputFile));
+      exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(new FileOutputStream(outputFile)));
+      exporter.exportReport();
    }
 
    /**
@@ -792,7 +847,7 @@ public class ReportManager
     * @param sheetName proposed sheet name
     * @return valid sheet name
     */
-   private String prepareXlsSheetName(String sheetName)
+   private static String prepareXlsSheetName(String sheetName)
    {
       int length = Math.min(31, sheetName.length());
       StringBuilder stringBuilder = new StringBuilder(sheetName.substring(0, length));
