@@ -23,11 +23,12 @@ package org.netxms.reporting;
  */
 public enum DatabaseType
 {
-   POSTGRESQL("org.postgresql.Driver", "org.hibernate.dialect.PostgreSQL9Dialect"),
-   ORACLE("oracle.jdbc.driver.OracleDriver", "org.hibernate.dialect.Oracle10gDialect"),
+   INFORMIX("com.informix.jdbc.IfxDriver", "org.hibernate.dialect.InformixDialect"),
+   MARIADB("com.mariadb.jdbc.Driver", "org.hibernate.dialect.MariaDBDialect"),
    MSSQL("com.microsoft.sqlserver.jdbc.SQLServerDriver", "org.hibernate.dialect.SQLServerDialect"),
    MYSQL("com.mysql.jdbc.Driver", "org.hibernate.dialect.MySQLDialect"),
-   INFORMIX("com.informix.jdbc.IfxDriver", "org.hibernate.dialect.InformixDialect");
+   ORACLE("oracle.jdbc.driver.OracleDriver", "org.hibernate.dialect.Oracle10gDialect"),
+   POSTGRESQL("org.postgresql.Driver", "org.hibernate.dialect.PostgreSQL9Dialect");
 
    private final String driver;
    private final String dialect;
@@ -65,6 +66,10 @@ public enum DatabaseType
       else if (lowerKey.contains("mssql"))
       {
          return MSSQL;
+      }
+      else if (lowerKey.contains("mariadb"))
+      {
+         return MYSQL;
       }
       else if (lowerKey.contains("mysql"))
       {
