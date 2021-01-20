@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -29,10 +31,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.daemon.Daemon;
 import org.apache.commons.daemon.DaemonContext;
 import org.apache.commons.daemon.DaemonInitException;
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.netxms.reporting.model.ReportResult;
 import org.netxms.reporting.services.CommunicationManager;
 import org.netxms.reporting.services.ReportManager;
 import org.netxms.reporting.tools.SmtpSender;
@@ -50,7 +48,6 @@ public final class Server implements Daemon
 
    private ServerSocket serverSocket;
    private Thread listenerThread;
-   private SessionFactory sessionFactory;
    private CommunicationManager communicationManager;
    private ReportManager reportManager;
    private Properties configuration;
@@ -72,53 +69,6 @@ public final class Server implements Daemon
       threadPool = new ThreadPoolExecutor(8, 128, 600, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(256));
 
       serverSocket = new ServerSocket(4710);
-
-      String driver = configuration.getProperty("netxms.db.driver");
-      String server = configuration.getProperty("netxms.db.server", "");
-      String name = configuration.getProperty("netxms.db.name", "netxms");
-      String login = configuration.getProperty("netxms.db.login");
-      String password = configuration.getProperty("netxms.db.password");
-      DatabaseType type = DatabaseType.lookup(driver);
-      if (type == null || login == null || password == null)
-         throw new DaemonInitException("Missing or invalid database connection configuration");
-      
-      String url;
-      switch(type)
-      {
-         case INFORMIX:
-            url = "jdbc:informix-sqli://" + server + "/" + name;
-            break;
-         case MARIADB:
-            url = "jdbc:mariadb://" + server + "/" + name;
-            break;
-         case MSSQL:
-            url = "jdbc:sqlserver://" + server + ";DatabaseName=" + name;
-            break;
-         case MYSQL:
-            url = "jdbc:mysql://" + server + "/" + name;
-            break;
-         case ORACLE:
-            url = "jdbc:oracle:thin:@" + server + ":1521:" + name;
-            break;
-         case POSTGRESQL:
-            url = "jdbc:postgresql://" + server + "/" + name;
-            break;
-         default:
-            throw new DaemonInitException("Unsupported database type");
-      }
-      logger.debug("JDBC URL: " + url);
-
-      Properties settings = new Properties();
-      settings.put(Environment.DIALECT, type.getDialect());
-      settings.put(Environment.DRIVER, type.getDriver());
-      settings.put(Environment.URL, url);
-      settings.put(Environment.USER, login);
-      settings.put(Environment.PASS, password);
-      settings.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
-      Configuration hbConfiguration = new Configuration();
-      hbConfiguration.setProperties(settings);
-      hbConfiguration.addAnnotatedClass(ReportResult.class);
-      sessionFactory = hbConfiguration.buildSessionFactory();
 
       communicationManager = new CommunicationManager(this);
       reportManager = new ReportManager(this);
@@ -250,16 +200,6 @@ public final class Server implements Daemon
    }
 
    /**
-    * Get Hibernate session factory
-    * 
-    * @return Hibernate session factory
-    */
-   public SessionFactory getSessionFactory()
-   {
-      return sessionFactory;
-   }
-
-   /**
     * Get SMTP sender
     * 
     * @return SMTP sender
@@ -283,6 +223,53 @@ public final class Server implements Daemon
    public ReportManager getReportManager()
    {
       return reportManager;
+   }
+
+   /**
+    * Get database connection
+    *
+    * @return database connection
+    * @throws Exception if connection cannot be created
+    */
+   public Connection createDatabaseConnection() throws Exception
+   {
+      String driver = configuration.getProperty("netxms.db.driver");
+      String server = configuration.getProperty("netxms.db.server", "");
+      String name = configuration.getProperty("netxms.db.name", "netxms");
+      String login = configuration.getProperty("netxms.db.login");
+      String password = configuration.getProperty("netxms.db.password");
+      DatabaseType type = DatabaseType.lookup(driver);
+      if (type == null || login == null || password == null)
+         throw new ServerException("Missing or invalid database connection configuration");
+
+      String url;
+      switch(type)
+      {
+         case INFORMIX:
+            url = "jdbc:informix-sqli://" + server + "/" + name;
+            break;
+         case MARIADB:
+            url = "jdbc:mariadb://" + server + "/" + name;
+            break;
+         case MSSQL:
+            url = "jdbc:sqlserver://" + server + ";DatabaseName=" + name;
+            break;
+         case MYSQL:
+            url = "jdbc:mysql://" + server + "/" + name;
+            break;
+         case ORACLE:
+            url = "jdbc:oracle:thin:@" + server + ":1521:" + name;
+            break;
+         case POSTGRESQL:
+            url = "jdbc:postgresql://" + server + "/" + name;
+            break;
+         default:
+            throw new ServerException("Unsupported database type");
+      }
+      logger.debug("JDBC URL: " + url);
+
+      Class.forName(type.getDriver());
+      return DriverManager.getConnection(url, login, password);
    }
 
    /**

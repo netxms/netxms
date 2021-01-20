@@ -47,18 +47,14 @@ import java.util.UUID;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.jdbc.Work;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.reporting.ReportRenderFormat;
+import org.netxms.client.reporting.ReportResult;
 import org.netxms.client.reporting.ReportingJobConfiguration;
 import org.netxms.reporting.Server;
 import org.netxms.reporting.ServerException;
 import org.netxms.reporting.model.ReportDefinition;
 import org.netxms.reporting.model.ReportParameter;
-import org.netxms.reporting.model.ReportResult;
 import org.netxms.reporting.tools.DateParameterParser;
 import org.netxms.reporting.tools.ThreadLocalReportInfo;
 import org.slf4j.Logger;
@@ -88,16 +84,16 @@ public class ReportManager
    private static final String SUBREPORT_DIR_KEY = "SUBREPORT_DIR";
    private static final String USER_ID_KEY = "SYS_USER_ID";
    private static final String DEFINITIONS_DIRECTORY = "definitions";
-   private static final String FILE_SUFIX_DEFINITION = ".jrxml";
-   private static final String FILE_SUFIX_COMPILED = ".jasper";
-   private static final String MAIN_REPORT_COMPILED = "main" + FILE_SUFIX_COMPILED;
-   private static final String FILE_SUFIX_FILLED = ".jrprint";
+   private static final String FILE_SUFFIX_DEFINITION = ".jrxml";
+   private static final String FILE_SUFFIX_COMPILED = ".jasper";
+   private static final String FILE_SUFFIX_FILLED = ".jrprint";
+   private static final String FILE_SUFFIX_METADATA = ".meta";
+   private static final String MAIN_REPORT_COMPILED = "main" + FILE_SUFFIX_COMPILED;
 
    private static final Logger logger = LoggerFactory.getLogger(ReportManager.class);
 
-   private String workspace;
    private Server server;
-   private ReportResultManager reportResultManager;
+   private String workspace;
    private Map<UUID, String> reportMap;
 
    /**
@@ -112,7 +108,6 @@ public class ReportManager
       this.server = server;
       workspace = server.getConfigurationProperty("workspace", "");
       reportMap = new HashMap<UUID, String>();
-      reportResultManager = new ReportResultManager(server);
    }
 
    /**
@@ -234,6 +229,7 @@ public class ReportManager
                compileReport(destination);
                reportMap.put(bundleId, deployedName);
                logger.info("Report " + bundleId + " deployed as \"" + deployedName + "\" in " + destination.getAbsolutePath());
+               validateResults(bundleId);
             }
             catch(Exception e)
             {
@@ -361,7 +357,7 @@ public class ReportManager
          @Override
          public boolean accept(File dir, String name)
          {
-            return name.endsWith(FILE_SUFIX_DEFINITION);
+            return name.endsWith(FILE_SUFFIX_DEFINITION);
          }
       });
       for(String fileName : list)
@@ -370,8 +366,8 @@ public class ReportManager
          try
          {
             final String sourceFileName = file.getAbsolutePath();
-            final String destinationFileName = sourceFileName.substring(0, sourceFileName.length() - FILE_SUFIX_DEFINITION.length())
-                  + FILE_SUFIX_COMPILED;
+            final String destinationFileName = sourceFileName.substring(0, sourceFileName.length() - FILE_SUFFIX_DEFINITION.length())
+                  + FILE_SUFFIX_COMPILED;
             JasperCompileManager.compileReportToFile(sourceFileName, destinationFileName);
          }
          catch(JRException e)
@@ -470,39 +466,16 @@ public class ReportManager
       ThreadLocalReportInfo.setReportLocation(subrepoDirectory);
       ThreadLocalReportInfo.setServer(server);
 
-      final File outputDirectory = getOutputDirectory(jobConfiguration.reportId);
-      final String outputFile = new File(outputDirectory, jobId.toString() + ".jrprint").getPath();
+      Connection dbConnection = null;
+      final String outputFile = new File(getOutputDirectory(jobConfiguration.reportId), jobId.toString() + FILE_SUFFIX_FILLED).getPath();
       try
       {
+         dbConnection = server.createDatabaseConnection();
          DefaultJasperReportsContext reportsContext = DefaultJasperReportsContext.getInstance();
          reportsContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "org.netxms.reporting.nxcl.NXCLQueryExecutorFactory");
          final JasperFillManager manager = JasperFillManager.getInstance(reportsContext);
-         Session session = server.getSessionFactory().getCurrentSession();
-         Transaction transaction = session.beginTransaction();
-         try
-         {
-            session.doWork(new Work() {
-               @Override
-               public void execute(Connection connection) throws SQLException
-               {
-                  try
-                  {
-                     manager.fillToFile(report, outputFile, localParameters, connection);
-                  }
-                  catch(JRException e)
-                  {
-                     throw new SQLException(e);
-                  }
-               }
-            });
-         }
-         catch(HibernateException e)
-         {
-            transaction.rollback();
-            throw e;
-         }
-         transaction.commit();
-         reportResultManager.saveResult(new ReportResult(new Date(), jobConfiguration.reportId, jobId, userId, true));
+         manager.fillToFile(report, outputFile, localParameters, dbConnection);
+         saveResult(new ReportResult(jobId, jobConfiguration.reportId, new Date(), userId, true));
          sendMailNotifications(jobConfiguration.reportId, report.getName(), jobId, jobConfiguration.renderFormat, jobConfiguration.emailRecipients);
       }
       catch(Exception e)
@@ -510,15 +483,29 @@ public class ReportManager
          logger.error("Error executing report " + jobConfiguration.reportId + " " + report.getName(), e);
          try
          {
-            reportResultManager.saveResult(new ReportResult(new Date(), jobConfiguration.reportId, jobId, userId, false));
+            saveResult(new ReportResult(jobId, jobConfiguration.reportId, new Date(), userId, false));
          }
          catch(Throwable t)
          {
             logger.error("Unexpected exception while saving failure result", t);
          }
       }
+      finally
+      {
+         if (dbConnection != null)
+         {
+            dropDataView(dbConnection, idataView);
+            try
+            {
+               dbConnection.close();
+            }
+            catch(SQLException e)
+            {
+               logger.error("Unexpected error while closing database connection", e);
+            }
+         }
+      }
       server.getCommunicationManager().sendNotification(SessionNotification.RS_RESULTS_MODIFIED, 0);
-      dropDataView(idataView);
    }
 
    /**
@@ -526,33 +513,23 @@ public class ReportManager
     *
     * @param viewName view name
     */
-   private void dropDataView(String viewName)
+   private void dropDataView(Connection dbConnection, String viewName)
    {
       if (viewName == null)
          return;
 
       logger.debug("Drop data view " + viewName);
-      Session session = server.getSessionFactory().getCurrentSession();
-      Transaction transaction = session.beginTransaction();
       try
       {
-         session.doWork(new Work() {
-            @Override
-            public void execute(Connection connection) throws SQLException
-            {
-               Statement stmt = connection.createStatement();
-               stmt.execute("DROP VIEW " + viewName);
-               stmt.close();
-            }
-         });
+         Statement stmt = dbConnection.createStatement();
+         stmt.execute("DROP VIEW " + viewName);
+         stmt.close();
       }
-      catch(HibernateException e)
+      catch(Exception e)
       {
          logger.error("Cannot drop data view " + viewName, e);
-         transaction.rollback();
          return;
       }
-      transaction.commit();
    }
 
    /**
@@ -739,6 +716,24 @@ public class ReportManager
    }
 
    /**
+    * Save execution result object
+    *
+    * @param result execution result object
+    */
+   public void saveResult(ReportResult result)
+   {
+      try
+      {
+         File outputFile = new File(getOutputDirectory(result.getReportId()), result.getJobId().toString() + FILE_SUFFIX_METADATA);
+         result.saveAsXml(outputFile);
+      }
+      catch(Exception e)
+      {
+         logger.error("Error saving report execution result", e);
+      }
+   }
+
+   /**
     * List available results for given report and user.
     *
     * @param reportId report ID
@@ -747,7 +742,29 @@ public class ReportManager
     */
    public List<ReportResult> listResults(UUID reportId, int userId)
    {
-      return reportResultManager.listResults(reportId, userId);
+      File[] files = getOutputDirectory(reportId).listFiles(new FilenameFilter() {
+         @Override
+         public boolean accept(File dir, String name)
+         {
+            String normalizedName = name.toLowerCase();
+            return normalizedName.endsWith(FILE_SUFFIX_METADATA);
+         }
+      });
+
+      List<ReportResult> results = new ArrayList<ReportResult>(files.length);
+      for(File f : files)
+      {
+         try
+         {
+            results.add(ReportResult.loadFromFile(f));
+         }
+         catch(Exception e)
+         {
+            logger.error("Error reading report execution metadata from file " + f, e);
+         }
+      }
+
+      return results;
    }
 
    /**
@@ -759,10 +776,52 @@ public class ReportManager
     */
    public boolean deleteResult(UUID reportId, UUID jobId)
    {
-      reportResultManager.deleteReportResult(jobId);
-      final File reportDirectory = getOutputDirectory(reportId);
-      final File file = new File(reportDirectory, jobId.toString() + FILE_SUFIX_FILLED);
-      return file.delete();
+      File reportDirectory = getOutputDirectory(reportId);
+      boolean success = true;
+
+      File file = new File(reportDirectory, jobId.toString() + FILE_SUFFIX_FILLED);
+      if (file.exists())
+         success = file.delete();
+
+      file = new File(reportDirectory, jobId.toString() + FILE_SUFFIX_METADATA);
+      if (file.exists())
+         success = file.delete() && success;
+
+      return success;
+   }
+
+   /**
+    * Validate report execution results.
+    *
+    * @param reportId report ID
+    */
+   private void validateResults(UUID reportId)
+   {
+      File[] files = getOutputDirectory(reportId).listFiles(new FilenameFilter() {
+         @Override
+         public boolean accept(File dir, String name)
+         {
+            String normalizedName = name.toLowerCase();
+            return normalizedName.endsWith(FILE_SUFFIX_FILLED);
+         }
+      });
+      for(File f : files)
+      {
+         File metaFile = new File(f.getAbsolutePath().replace(FILE_SUFFIX_FILLED, FILE_SUFFIX_METADATA));
+         if (!metaFile.exists())
+         {
+            logger.warn("Missing metadata for report result file " + f.getAbsolutePath());
+            try
+            {
+               UUID jobId = UUID.fromString(f.getName().substring(0, f.getName().indexOf('.')));
+               saveResult(new ReportResult(jobId, reportId, new Date(f.lastModified()), 0, true));
+            }
+            catch(Throwable t)
+            {
+               logger.error("Cannot create missing metadata file", t);
+            }
+         }
+      }
    }
 
    /**
@@ -776,7 +835,7 @@ public class ReportManager
    public File renderResult(UUID reportId, UUID jobId, ReportRenderFormat format)
    {
       final File outputDirectory = getOutputDirectory(reportId);
-      final File dataFile = new File(outputDirectory, jobId.toString() + ".jrprint");
+      final File dataFile = new File(outputDirectory, jobId.toString() + FILE_SUFFIX_FILLED);
       final File outputFile = new File(outputDirectory, jobId.toString() + "." + System.currentTimeMillis() + ".render");
 
       try

@@ -23,11 +23,24 @@
 #include "nxdbmgr.h"
 
 /**
- * Upgrade from 38.2 to 40.0
+ * Upgrade from 38.3 to 40.0
+ */
+static bool H_UpgradeFromV3()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 38.2 to 38.3
  */
 static bool H_UpgradeFromV2()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   if (DBIsTableExist(g_dbHandle, _T("report_results")))
+   {
+      CHK_EXEC(SQLQuery(_T("DROP TABLE report_results")));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(3));
    return true;
 }
 
@@ -40,15 +53,13 @@ static bool H_UpgradeFromV1()
    {
       CHK_EXEC(SQLQuery(_T("DROP TABLE report_notifications")));
    }
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE report_results ADD is_success char(1)")));
-   CHK_EXEC(SQLQuery(_T("UPDATE report_results SET is_success='T'")));
-   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("report_results"), _T("is_success")));
    CHK_EXEC(SetMinorSchemaVersion(2));
    return true;
 }
 
 /**
- * Upgrade from 38.0 to 38.1
+ * Upgrade from 38.0 to 38.3
+ * Upgrades straight to version 3, versions 1 and 2 skipped because in version 3 all reporting tables are already dropped.
  */
 static bool H_UpgradeFromV0()
 {
@@ -65,6 +76,7 @@ static bool H_UpgradeFromV0()
       _T("qrtz_job_details"),
       _T("qrtz_calendars"),
       _T("report_notification"),
+      _T("reporting_results"),
       nullptr
    };
    for(int i = 0; deprecatedTables[i] != nullptr; i++)
@@ -76,54 +88,7 @@ static bool H_UpgradeFromV0()
          CHK_EXEC(SQLQuery(query));
       }
    }
-
-   if (DBIsTableExist(g_dbHandle, _T("reporting_results")))
-   {
-      CHK_EXEC(DBRenameTable(g_dbHandle, _T("reporting_results"), _T("report_results")));
-   }
-   else
-   {
-      const TCHAR *dtType;
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_ORACLE:
-            dtType = _T("timestamp");
-            break;
-         case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_TSDB:
-            dtType = _T("timestamp without time zone");
-            break;
-         default:
-            dtType = _T("datetime");
-            break;
-      }
-
-      TCHAR query[1024];
-      _sntprintf(query, 1024,
-         _T("CREATE TABLE report_results (")
-         _T("   id integer not null%s,")
-         _T("   executiontime %s null,")
-         _T("   jobid char(36) null,")
-         _T("   reportid char(36) null,")
-         _T("   userid integer null,")
-         _T("   PRIMARY KEY(id))"), (g_dbSyntax == DB_SYNTAX_MYSQL) ? _T(" auto_increment") : _T(""), dtType);
-      CHK_EXEC(CreateTable(query));
-
-      if (g_dbSyntax == DB_SYNTAX_ORACLE)
-      {
-         CHK_EXEC(SQLQuery(_T("CREATE SEQUENCE HIBERNATE_SEQUENCE INCREMENT BY 1 MINVALUE 1 MAXVALUE 9999999999999999999999999999 CACHE 20 NOCYCLE")));
-      }
-      else if (g_dbSyntax == DB_SYNTAX_MSSQL)
-      {
-         CHK_EXEC(SQLQuery(_T("CREATE SEQUENCE HIBERNATE_SEQUENCE INCREMENT BY 1 MINVALUE 1 CACHE 20")));
-      }
-      else if (g_dbSyntax != DB_SYNTAX_MYSQL)
-      {
-         CHK_EXEC(SQLQuery(_T("CREATE SEQUENCE HIBERNATE_SEQUENCE INCREMENT BY 1 MINVALUE 1")));
-      }
-   }
-
-   CHK_EXEC(SetMinorSchemaVersion(1));
+   CHK_EXEC(SetMinorSchemaVersion(3));
    return true;
 }
 
@@ -138,7 +103,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 2,  40, 0,  H_UpgradeFromV2  },
+   { 3,  40, 0,  H_UpgradeFromV3  },
+   { 2,  38, 3,  H_UpgradeFromV2  },
    { 1,  38, 2,  H_UpgradeFromV1  },
    { 0,  38, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }

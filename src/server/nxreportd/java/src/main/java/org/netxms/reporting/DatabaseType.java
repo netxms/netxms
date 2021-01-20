@@ -23,30 +23,23 @@ package org.netxms.reporting;
  */
 public enum DatabaseType
 {
-   INFORMIX("com.informix.jdbc.IfxDriver", "org.hibernate.dialect.InformixDialect"),
-   MARIADB("com.mariadb.jdbc.Driver", "org.hibernate.dialect.MariaDBDialect"),
-   MSSQL("com.microsoft.sqlserver.jdbc.SQLServerDriver", "org.hibernate.dialect.SQLServerDialect"),
-   MYSQL("com.mysql.jdbc.Driver", "org.hibernate.dialect.MySQLDialect"),
-   ORACLE("oracle.jdbc.driver.OracleDriver", "org.hibernate.dialect.Oracle10gDialect"),
-   POSTGRESQL("org.postgresql.Driver", "org.hibernate.dialect.PostgreSQL9Dialect");
+   INFORMIX("com.informix.jdbc.IfxDriver"),
+   MARIADB("com.mariadb.jdbc.Driver"),
+   MSSQL("com.microsoft.sqlserver.jdbc.SQLServerDriver"),
+   MYSQL("com.mysql.jdbc.Driver"),
+   ORACLE("oracle.jdbc.driver.OracleDriver"),
+   POSTGRESQL("org.postgresql.Driver");
 
    private final String driver;
-   private final String dialect;
 
-   DatabaseType(String driver, String dialect)
+   DatabaseType(String driver)
    {
       this.driver = driver;
-      this.dialect = dialect;
    }
 
    public String getDriver()
    {
       return driver;
-   }
-
-   public String getDialect()
-   {
-      return dialect;
    }
 
    public static DatabaseType lookup(String key)
