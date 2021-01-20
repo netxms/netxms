@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005-2018 Raden Solutions
+** Copyright (C) 2005-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ int F_FileAccess(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 	if (!argv[1]->isInteger())
 		return NXSL_ERR_NOT_INTEGER;
 
-	*result = vm->createValue((LONG)((_taccess(argv[0]->getValueAsCString(), argv[1]->getValueAsInt32()) == 0) ? 1 : 0));
+	*result = vm->createValue(_taccess(argv[0]->getValueAsCString(), argv[1]->getValueAsInt32()) == 0);
 	return 0;
 }
 
@@ -55,7 +55,7 @@ int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	*result = vm->createValue((LONG)(CopyFileOrDirectory(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()) ? 1 : 0));
+	*result = vm->createValue(CopyFileOrDirectory(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()));
 	return 0;
 }
 
@@ -73,7 +73,7 @@ int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	*result = vm->createValue((LONG)_trename(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()));
+	*result = vm->createValue(_trename(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()) == 0);
 	return 0;
 }
 
@@ -87,7 +87,7 @@ int F_DeleteFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	*result = vm->createValue((LONG)((_tremove(argv[0]->getValueAsCString()) == 0) ? 1 : 0));
+	*result = vm->createValue(_tremove(argv[0]->getValueAsCString()) == 0);
 	return 0;
 }
 
@@ -102,9 +102,9 @@ int F_CreateDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 		return NXSL_ERR_NOT_STRING;
 
 #ifdef _WIN32
-	*result = vm->createValue(CreateDirectory(argv[0]->getValueAsCString(), NULL));
+	*result = vm->createValue(CreateDirectory(argv[0]->getValueAsCString(), nullptr));
 #else
-	*result = vm->createValue((LONG)((_tmkdir(argv[0]->getValueAsCString(), 0755) == 0) ? 1 : 0));
+	*result = vm->createValue(_tmkdir(argv[0]->getValueAsCString(), 0755) == 0);
 #endif
 	return 0;
 }
@@ -122,7 +122,7 @@ int F_RemoveDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 #ifdef _WIN32
    *result = vm->createValue(RemoveDirectory(argv[0]->getValueAsCString()));
 #else
-	*result = vm->createValue((LONG)((_trmdir(argv[0]->getValueAsCString()) == 0) ? 1 : 0));
+	*result = vm->createValue(_trmdir(argv[0]->getValueAsCString()) == 0);
 #endif
 	return 0;
 }
