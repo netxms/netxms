@@ -1053,7 +1053,6 @@ public class NXCPMessage
 	@Override
 	public String toString()
 	{
-		return "NXCPMessage [messageCode=" + messageCode + ", messageFlags=" + messageFlags + ", messageId=" + messageId
-				+ ", variableMap=" + fields + ", timestamp=" + timestamp + "]";
+		return "NXCPMessage [code=0x" + Integer.toHexString(messageCode) + ", flags=0x" + Integer.toHexString(messageFlags) + ", id=" + messageId + ", fields=" + fields + "]";
 	}
 }
