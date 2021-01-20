@@ -35,10 +35,10 @@ import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.reporting.ReportRenderFormat;
+import org.netxms.client.reporting.ReportResult;
 import org.netxms.client.reporting.ReportingJobConfiguration;
 import org.netxms.reporting.Server;
 import org.netxms.reporting.model.ReportDefinition;
-import org.netxms.reporting.model.ReportResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -374,14 +374,11 @@ public class CommunicationManager
       logger.debug("Loading report results for {} (user={})", reportId, userId);
       final List<ReportResult> list = server.getReportManager().listResults(reportId, userId);
       logger.debug("Got {} records", list.size());
-      long index = NXCPCodes.VID_ROW_DATA_BASE;
+      long fieldId = NXCPCodes.VID_ROW_DATA_BASE;
       for(ReportResult record : list)
       {
-         reply.setField(index++, record.getJobId());
-         reply.setField(index++, record.getExecutionTime());
-         reply.setFieldInt32(index++, record.getUserId());
-         reply.setField(index++, record.isSuccess());
-         index += 6;
+         record.fillMessage(reply, fieldId);
+         fieldId += 10;
       }
       reply.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, list.size());
       reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
@@ -462,9 +459,8 @@ public class CommunicationManager
    {
       final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
       final UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_JOB_ID);
-
-      server.getReportManager().deleteResult(reportId, jobId);
-      reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+      reply.setFieldInt32(NXCPCodes.VID_RCC,
+            server.getReportManager().deleteResult(reportId, jobId) ? CommonRCC.SUCCESS : CommonRCC.IO_ERROR);
       sendNotification(SessionNotification.RS_RESULTS_MODIFIED, 0);
    }
 
