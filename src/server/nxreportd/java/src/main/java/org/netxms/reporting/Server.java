@@ -32,6 +32,7 @@ import org.apache.commons.daemon.Daemon;
 import org.apache.commons.daemon.DaemonContext;
 import org.apache.commons.daemon.DaemonInitException;
 import org.netxms.reporting.services.CommunicationManager;
+import org.netxms.reporting.services.FileMonitor;
 import org.netxms.reporting.services.ReportManager;
 import org.netxms.reporting.tools.SmtpSender;
 import org.slf4j.Logger;
@@ -50,6 +51,7 @@ public final class Server implements Daemon
    private Thread listenerThread;
    private CommunicationManager communicationManager;
    private ReportManager reportManager;
+   private FileMonitor fileMonitor;
    private Properties configuration = new Properties();
    private ThreadPoolExecutor threadPool;
    private SmtpSender smtpSender;
@@ -73,6 +75,26 @@ public final class Server implements Daemon
       reportManager = new ReportManager(this);
       smtpSender = new SmtpSender(this);
 
+      fileMonitor = new FileMonitor(reportManager.getDefinitionsDirectory(), new FileMonitor.Callback() {
+         @Override
+         public void onCreate(final String name)
+         {
+            if (name.endsWith(".jar") || name.endsWith(".zip"))
+               executeBackgroundTask(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     reportManager.deploy(name);
+                  }
+               });
+         }
+
+         @Override
+         public void onDelete(String name)
+         {
+         }
+      });
+
       DefaultJasperReportsContext jrContext = DefaultJasperReportsContext.getInstance();
       jrContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "org.netxms.reporting.nxcl.NXCLQueryExecutorFactory");
    }
@@ -85,7 +107,7 @@ public final class Server implements Daemon
    {
       logger.debug("Starting server instance");
 
-      reportManager.deploy();
+      reportManager.deployAll();
 
       listenerThread = new Thread(new Runnable() {
          @Override
@@ -107,6 +129,8 @@ public final class Server implements Daemon
          }
       }, "Network Listener");
       listenerThread.start();
+
+      fileMonitor.start();
    }
 
    /**

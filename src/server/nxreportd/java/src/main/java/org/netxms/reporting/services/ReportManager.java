@@ -117,8 +117,11 @@ public class ReportManager
     */
    public List<UUID> listReports()
    {
-      ArrayList<UUID> li = new ArrayList<UUID>(reportMap.keySet());
-      return li;
+      synchronized(reportMap)
+      {
+         ArrayList<UUID> li = new ArrayList<UUID>(reportMap.keySet());
+         return li;
+      }
    }
 
    /**
@@ -203,7 +206,7 @@ public class ReportManager
    /**
     * Deploy reports from jar or zip packages
     */
-   public void deploy()
+   public void deployAll()
    {
       File definitionsDirectory = getDefinitionsDirectory();
       logger.info("Deploying *.jar/*.zip in " + definitionsDirectory.getAbsolutePath());
@@ -218,28 +221,40 @@ public class ReportManager
       if (files != null)
       {
          for(String archiveName : files)
-         {
-            logger.debug("Deploying " + archiveName);
-            try
-            {
-               String deployedName = archiveName.split("\\.(?=[^\\.]+$)")[0];
-               File destination = new File(definitionsDirectory, deployedName);
-               deleteFolder(destination);
-               UUID bundleId = unpackJar(destination, new File(definitionsDirectory, archiveName));
-               compileReport(destination);
-               reportMap.put(bundleId, deployedName);
-               logger.info("Report " + bundleId + " deployed as \"" + deployedName + "\" in " + destination.getAbsolutePath());
-               validateResults(bundleId);
-            }
-            catch(Exception e)
-            {
-               logger.error("Error while deploying package " + archiveName);
-            }
-         }
+            deploy(archiveName);
       }
       else
       {
          logger.info("No files found");
+      }
+   }
+
+   /**
+    * Deploy specific archive
+    *
+    * @param archiveName archive name
+    */
+   public void deploy(String archiveName)
+   {
+      File definitionsDirectory = getDefinitionsDirectory();
+      logger.debug("Deploying " + archiveName);
+      try
+      {
+         String deployedName = archiveName.split("\\.(?=[^\\.]+$)")[0];
+         File destination = new File(definitionsDirectory, deployedName);
+         deleteFolder(destination);
+         UUID bundleId = unpackJar(destination, new File(definitionsDirectory, archiveName));
+         compileReport(destination);
+         synchronized(reportMap)
+         {
+            reportMap.put(bundleId, deployedName);
+         }
+         logger.info("Report " + bundleId + " deployed as \"" + deployedName + "\" in " + destination.getAbsolutePath());
+         validateResults(bundleId);
+      }
+      catch(Exception e)
+      {
+         logger.error("Error while deploying package " + archiveName);
       }
    }
 
@@ -382,7 +397,7 @@ public class ReportManager
     *
     * @return directory with report definitions
     */
-   private File getDefinitionsDirectory()
+   public File getDefinitionsDirectory()
    {
       return new File(workspace, DEFINITIONS_DIRECTORY);
    }
@@ -395,13 +410,12 @@ public class ReportManager
     */
    private File getReportDirectory(UUID reportId)
    {
-      String path = reportMap.get(reportId);
-      File file = null;
-      if (path != null)
+      String path;
+      synchronized(reportMap)
       {
-         file = new File(getDefinitionsDirectory(), path);
+         path = reportMap.get(reportId);
       }
-      return file;
+      return (path != null) ? new File(getDefinitionsDirectory(), path) : null;
    }
 
    /**
