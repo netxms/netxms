@@ -1,6 +1,6 @@
 /* 
 ** nxshell - launcher for main Java application
-** Copyright (C) 2017-2020 Raden Solutions
+** Copyright (C) 2017-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,9 +32,9 @@ NETXMS_EXECUTABLE_HEADER(nxshell)
 static const char *s_optHost = "127.0.0.1";
 static const char *s_optPort = "";
 static const char *s_optUser = "admin";
-static const char *s_optPassword = NULL;
-static const char *s_optJre = NULL;
-static const char *s_optClassPath = NULL;
+static const char *s_optPassword = nullptr;
+static const char *s_optJre = nullptr;
+static const char *s_optClassPath = nullptr;
 static bool s_optSync = true;
 
 /**
@@ -43,18 +43,18 @@ static bool s_optSync = true;
 static int StartApp(int argc, char *argv[])
 {
    TCHAR jre[MAX_PATH];
-   if (s_optJre != NULL)
+   if (s_optJre != nullptr)
    {
 #ifdef UNICODE
       MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, s_optJre, -1, jre, MAX_PATH);
       jre[MAX_PATH - 1] = 0;
 #else
-      nx_strncpy(jre, s_optJre, MAX_PATH);
+      strlcpy(jre, s_optJre, MAX_PATH);
 #endif
    }
    else
    {
-      if (FindJavaRuntime(jre, MAX_PATH) == NULL)
+      if (FindJavaRuntime(jre, MAX_PATH) == nullptr)
       {
          _tprintf(_T("Cannot find suitable Java runtime environment\n"));
          return 2;
@@ -73,7 +73,7 @@ static int StartApp(int argc, char *argv[])
    snprintf(buffer, 256, "-Dnetxms.syncObjects=%s", s_optSync ? "true" : "false");
    vmOptions.addMBString(buffer);
 
-	if (s_optPassword == NULL)
+	if (s_optPassword == nullptr)
 	{
       TCHAR prompt[256], passwordBuffer[256];
       _sntprintf(prompt, 256, _T("%hs@%hs password: "), s_optUser, s_optHost);
@@ -114,7 +114,7 @@ static int StartApp(int argc, char *argv[])
 #define cp s_optClassPath
 #endif
    JNIEnv *env;
-   static const TCHAR *syslibs[] = { _T("commons-codec-1.11.jar"), _T("netxms-base.jar"), _T("netxms-client.jar"), _T("simple-xml-2.6.4.jar"), NULL };
+   static const TCHAR *syslibs[] = { _T("commons-codec-1.11.jar"), _T("netxms-base.jar"), _T("netxms-client.jar"), _T("simple-xml-2.6.4.jar"), nullptr };
    JavaBridgeError err = CreateJavaVM(jre, _T("nxshell.jar"), syslibs, cp, &vmOptions, &env);
    if (err == NXJAVA_SUCCESS)
    {
@@ -141,17 +141,17 @@ static int StartApp(int argc, char *argv[])
 #if HAVE_DECL_GETOPT_LONG
 static struct option longOptions[] =
 {
-	{ (char *)"classpath",      required_argument, NULL,        'C' },
-	{ (char *)"debug",          no_argument,       NULL,        'D' },
-	{ (char *)"help",           no_argument,       NULL,        'h' },
-	{ (char *)"host",           required_argument, NULL,        'H' },
-	{ (char *)"jre",            required_argument, NULL,        'j' },
-	{ (char *)"no-sync",        required_argument, NULL,        'n' },
-	{ (char *)"password",       required_argument, NULL,        'P' },
-   { (char *)"port",           required_argument, NULL,        'p' },
-	{ (char *)"user",           required_argument, NULL,        'u' },
-	{ (char *)"version",        no_argument,       NULL,        'v' },
-	{ NULL, 0, NULL, 0 }
+	{ (char *)"classpath",      required_argument, nullptr,        'C' },
+	{ (char *)"debug",          no_argument,       nullptr,        'D' },
+	{ (char *)"help",           no_argument,       nullptr,        'h' },
+	{ (char *)"host",           required_argument, nullptr,        'H' },
+	{ (char *)"jre",            required_argument, nullptr,        'j' },
+	{ (char *)"no-sync",        required_argument, nullptr,        'n' },
+	{ (char *)"password",       required_argument, nullptr,        'P' },
+   { (char *)"port",           required_argument, nullptr,        'p' },
+	{ (char *)"user",           required_argument, nullptr,        'u' },
+	{ (char *)"version",        no_argument,       nullptr,        'v' },
+	{ nullptr, 0, nullptr, 0 }
 };
 #endif
 
@@ -166,7 +166,7 @@ static void ShowUsage(bool showVersion)
    {
       _tprintf(
          _T("NetXMS Interactive Shell  Version ") NETXMS_VERSION_STRING _T("\n")
-         _T("Copyright (c) 2006-2020 Raden Solutions\n\n"));
+         _T("Copyright (c) 2006-2021 Raden Solutions\n\n"));
    }
 
 	_tprintf(
@@ -204,7 +204,7 @@ static void ShowUsage(bool showVersion)
  */
 static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
-   if (tag == NULL)      
+   if (tag == nullptr)
       _tprintf(_T("DBG: "));
    else
       _tprintf(_T("DBG: <%s> "), tag);
@@ -260,8 +260,8 @@ int main(int argc, char *argv[])
 			   break;
 		   case 'v': // version
             _tprintf(
-               _T("NetXMS Interactive Shell  Version ") NETXMS_BUILD_TAG _T("\n")
-               _T("Copyright (c) 2006-2020 Raden Solutions\n\n"));
+               _T("NetXMS Interactive Shell  Version ") NETXMS_VERSION_STRING _T("\n")
+               _T("Copyright (c) 2006-2021 Raden Solutions\n\n"));
 			   exit(0);
 			   break;
 		   case '?':
