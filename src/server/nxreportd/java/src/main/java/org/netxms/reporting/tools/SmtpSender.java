@@ -75,7 +75,11 @@ public final class SmtpSender
       {
          Session session = Session.getDefaultInstance(properties);
          MimeMessage message = new MimeMessage(session);
-         message.setFrom(new InternetAddress(server.getConfigurationProperty("smtp.fromAddr", "reporting@localhost")));
+         String name = server.getConfigurationProperty("smtp.fromName");
+         if (name != null)
+            message.setFrom(new InternetAddress(server.getConfigurationProperty("smtp.fromAddr", "reporting@localhost"), name));
+         else
+            message.setFrom(new InternetAddress(server.getConfigurationProperty("smtp.fromAddr", "reporting@localhost")));
          message.addRecipient(Message.RecipientType.TO, new InternetAddress(recipient));
          message.setSubject(subject);
          if ((fileName != null) && (file != null))

@@ -11,6 +11,6 @@ netxms.db.password
 
 smtp.server
 smtp.fromAddr
+smtp.fromName
 
 workspace
-

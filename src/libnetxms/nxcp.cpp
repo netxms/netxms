@@ -464,7 +464,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GEO_AREA_UPDATE"),
       _T("CMD_FIND_PROXY_FOR_NODE"),
       _T("CMD_BULK_DCI_UPDATE"),
-      _T("CMD_GET_SCHEDULED_REPORTING_TASKS")
+      _T("CMD_GET_SCHEDULED_REPORTING_TASKS"),
+      _T("CMD_CONFIGURE_REPORTING_SERVER")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -477,7 +478,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_SCHEDULED_REPORTING_TASKS))
+   if ((code >= CMD_LOGIN) && (code <= CMD_CONFIGURE_REPORTING_SERVER))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

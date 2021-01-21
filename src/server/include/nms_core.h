@@ -1181,6 +1181,7 @@ void ShutdownNotificationChannels();
 void SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message);
 void GetNotificationChannels(NXCPMessage *msg);
 void GetNotificationDrivers(NXCPMessage *msg);
+char *GetNotificationChannelConfiguration(const TCHAR *name);
 bool IsNotificationChannelExists(const TCHAR *name);
 void CreateNotificationChannelAndSave(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration);
 void UpdateNotificationChannel(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration);
