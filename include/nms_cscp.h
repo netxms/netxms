@@ -658,6 +658,7 @@ typedef struct
 #define CMD_FIND_PROXY_FOR_NODE           0x01A3
 #define CMD_BULK_DCI_UPDATE               0x01A4
 #define CMD_GET_SCHEDULED_REPORTING_TASKS 0x01A5
+#define CMD_CONFIGURE_REPORTING_SERVER    0x01A6
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1401,6 +1402,18 @@ typedef struct
 #define VID_PHONE_NUMBER            ((UINT32)729)
 #define VID_EXECUTION_PARAMETERS    ((UINT32)730)
 #define VID_VIEW_NAME               ((UINT32)731)
+#define VID_DB_DRIVER               ((UINT32)732)
+#define VID_DB_SERVER               ((UINT32)733)
+#define VID_DB_NAME                 ((UINT32)734)
+#define VID_DB_LOGIN                ((UINT32)735)
+#define VID_DB_PASSWORD             ((UINT32)736)
+#define VID_SMTP_SERVER             ((UINT32)737)
+#define VID_SMTP_PORT               ((UINT32)738)
+#define VID_SMTP_FROM_NAME          ((UINT32)739)
+#define VID_SMTP_FROM_ADDRESS       ((UINT32)740)
+#define VID_SMTP_LOCAL_HOSTNAME     ((UINT32)741)
+#define VID_SMTP_LOGIN              ((UINT32)742)
+#define VID_SMTP_PASSWORD           ((UINT32)743)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

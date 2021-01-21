@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ TCHAR g_szDbSchema[MAX_DB_NAME] = _T("");
 /**
  * Debug level from config
  */
-static UINT32 s_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
+static uint32_t s_debugLevel = (uint32_t)NXCONFIG_UNINITIALIZED_VALUE;
 
 /**
  * Debug tags from config

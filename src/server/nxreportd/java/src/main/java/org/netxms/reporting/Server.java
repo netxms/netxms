@@ -50,7 +50,7 @@ public final class Server implements Daemon
    private Thread listenerThread;
    private CommunicationManager communicationManager;
    private ReportManager reportManager;
-   private Properties configuration;
+   private Properties configuration = new Properties();
    private ThreadPoolExecutor threadPool;
    private SmtpSender smtpSender;
 
@@ -62,7 +62,6 @@ public final class Server implements Daemon
    {
       logger.debug("Initializing server instance");
 
-      configuration = new Properties();
       configuration.putAll(System.getProperties());
       configuration.putAll(loadProperties("nxreportd.properties"));
 
@@ -155,11 +154,14 @@ public final class Server implements Daemon
       try
       {
          stream = classLoader.getResourceAsStream(name);
-         properties.load(stream);
+         if (stream != null)
+            properties.load(stream);
+         else
+            logger.info("Properties file " + name + " not found");
       }
       catch(Exception e)
       {
-         logger.error("Unable to load " + name, e);
+         logger.error("Error loading properties file " + name, e);
       }
       finally
       {
@@ -178,13 +180,25 @@ public final class Server implements Daemon
    }
 
    /**
-    * Get server configuration
-    * 
-    * @return server configuration
+    * Update server configuration. Provided properties will be merged into exesting configuration.
+    *
+    * @param update properties for set or update
     */
-   public Properties getConfiguration()
+   public void updateConfiguration(Properties update)
    {
-      return configuration;
+      configuration.putAll(update);
+      logger.info("Server configuration updated");
+   }
+
+   /**
+    * Get server configuration property
+    *
+    * @param name property name
+    * @return property value or null
+    */
+   public String getConfigurationProperty(String name)
+   {
+      return getConfigurationProperty(name, null);
    }
 
    /**
@@ -196,7 +210,8 @@ public final class Server implements Daemon
     */
    public String getConfigurationProperty(String name, String defaultValue)
    {
-      return configuration.getProperty(name, defaultValue);
+      String value = configuration.getProperty(name);
+      return (value != null) ? value : configuration.getProperty(name + "@remote", defaultValue);
    }
 
    /**
@@ -233,11 +248,11 @@ public final class Server implements Daemon
     */
    public Connection createDatabaseConnection() throws Exception
    {
-      String driver = configuration.getProperty("netxms.db.driver");
-      String server = configuration.getProperty("netxms.db.server", "");
-      String name = configuration.getProperty("netxms.db.name", "netxms");
-      String login = configuration.getProperty("netxms.db.login");
-      String password = configuration.getProperty("netxms.db.password");
+      String driver = getConfigurationProperty("netxms.db.driver");
+      String server = getConfigurationProperty("netxms.db.server", "");
+      String name = getConfigurationProperty("netxms.db.name", "netxms");
+      String login = getConfigurationProperty("netxms.db.login");
+      String password = getConfigurationProperty("netxms.db.password");
       DatabaseType type = DatabaseType.lookup(driver);
       if (type == null || login == null || password == null)
          throw new ServerException("Missing or invalid database connection configuration");

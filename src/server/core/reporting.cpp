@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,6 +38,11 @@ struct FileRequest
       originalRequestId = _originalRequestId;
       serverRequestId = _serverRequestId;
       session = _session;
+      session->incRefCount();
+   }
+   ~FileRequest()
+   {
+      session->decRefCount();
    }
 };
 
@@ -90,6 +95,8 @@ public:
       nxlog_debug_tag2(DEBUG_TAG, 6, format, args);
       va_end(args);
    }
+
+   void sendConfiguration();
 };
 
 /**
@@ -155,6 +162,32 @@ void RSConnector::createObjectAccessSnapshot(NXCPMessage *request)
 }
 
 /**
+ * Send configuration to reporting server
+ */
+void RSConnector::sendConfiguration()
+{
+   NXCPMessage msg(CMD_CONFIGURE_REPORTING_SERVER, generateMessageId());
+   msg.setField(VID_DB_DRIVER, g_szDbDriver);
+   msg.setField(VID_DB_SERVER, g_szDbServer);
+   msg.setField(VID_DB_NAME, g_szDbName);
+   msg.setField(VID_DB_LOGIN, g_szDbLogin);
+   msg.setField(VID_DB_PASSWORD, g_szDbPassword);
+
+   TCHAR buffer[256];
+   if (ConfigReadStr(_T("SMTP.Server"), buffer, 256, _T("")))
+      msg.setField(VID_SMTP_SERVER, buffer);
+   msg.setField(VID_SMTP_PORT, static_cast<uint16_t>(ConfigReadUInt32(_T("SMTP.Port"), 25)));
+   if (ConfigReadStr(_T("SMTP.LocalHostName"), buffer, 256, _T("")))
+      msg.setField(VID_SMTP_LOCAL_HOSTNAME, buffer);
+   if (ConfigReadStr(_T("SMTP.FromName"), buffer, 256, _T("")))
+      msg.setField(VID_SMTP_FROM_NAME, buffer);
+   if (ConfigReadStr(_T("SMTP.FromAddr"), buffer, 256, _T("")))
+      msg.setField(VID_SMTP_FROM_ADDRESS, buffer);
+
+   sendMessage(&msg);
+}
+
+/**
  * Reporting server connector instance
  */
 static RSConnector *m_connector = nullptr;
@@ -179,6 +212,7 @@ void ReportingServerConnector()
          if (m_connector->connect(0) == ISC_ERR_SUCCESS)
          {
             nxlog_debug_tag(DEBUG_TAG, 2, _T("Connection to Reporting Server restored"));
+            m_connector->sendConfiguration();
          }
       }
 	}
@@ -189,6 +223,9 @@ void ReportingServerConnector()
 	nxlog_debug_tag(DEBUG_TAG, 1, _T("Reporting Server connector stopped"));
 }
 
+/**
+ * Context for data view builder callback
+ */
 struct ViewBuilderContext
 {
    StringBuffer *query;
@@ -196,6 +233,9 @@ struct ViewBuilderContext
    uint32_t tableCount;
 };
 
+/**
+ * Data view builder callback
+ */
 static void ViewBuilderCallback(NetObj *object, ViewBuilderContext *context)
 {
    if (object->isDataCollectionTarget() && object->checkAccessRights(context->userId, OBJECT_ACCESS_READ) && (static_cast<DataCollectionTarget*>(object)->getItemCount() > 0))

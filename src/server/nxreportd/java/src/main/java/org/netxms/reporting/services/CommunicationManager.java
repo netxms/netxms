@@ -26,6 +26,7 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.UUID;
 import org.netxms.base.CommonRCC;
 import org.netxms.base.NXCPCodes;
@@ -276,14 +277,14 @@ public class CommunicationManager
    /**
     * Process incoming message
     * 
-    * @param message input message
+    * @param request input message
     * @return message processing result
     */
-   public MessageProcessingResult processMessage(NXCPMessage message)
+   public MessageProcessingResult processMessage(NXCPMessage request)
    {
-      NXCPMessage reply = new NXCPMessage(NXCPCodes.CMD_REQUEST_COMPLETED, message.getMessageId());
+      NXCPMessage reply = new NXCPMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
       File file = null;
-      switch(message.getMessageCode())
+      switch(request.getMessageCode())
       {
          case NXCPCodes.CMD_ISC_CONNECT_TO_SERVICE: // ignore and reply "Ok"
          case NXCPCodes.CMD_KEEPALIVE:
@@ -294,29 +295,52 @@ public class CommunicationManager
             reply.setControl(true);
             reply.setControlData(5); // NXCP version 5
             break;
+         case NXCPCodes.CMD_CONFIGURE_REPORTING_SERVER:
+            configureServer(request);
+            reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+            break;
          case NXCPCodes.CMD_RS_LIST_REPORTS:
             listReports(reply);
             break;
          case NXCPCodes.CMD_RS_GET_REPORT_DEFINITION:
-            getReportDefinition(message, reply);
+            getReportDefinition(request, reply);
             break;
          case NXCPCodes.CMD_RS_EXECUTE_REPORT:
-            executeReport(message, reply);
+            executeReport(request, reply);
             break;
          case NXCPCodes.CMD_RS_LIST_RESULTS:
-            getResults(message, reply);
+            getResults(request, reply);
             break;
          case NXCPCodes.CMD_RS_RENDER_RESULT:
-            file = renderResult(message, reply);
+            file = renderResult(request, reply);
             break;
          case NXCPCodes.CMD_RS_DELETE_RESULT:
-            deleteResult(message, reply);
+            deleteResult(request, reply);
             break;
          default:
             reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.NOT_IMPLEMENTED);
             break;
       }
       return new MessageProcessingResult(reply, file);
+   }
+
+   /**
+    * Configure server
+    *
+    * @param request request message
+    */
+   private void configureServer(NXCPMessage request)
+   {
+      Properties properties = new Properties();
+      properties.setProperty("netxms.db.driver@remote", request.getFieldAsString(NXCPCodes.VID_DB_DRIVER));
+      properties.setProperty("netxms.db.server@remote", request.getFieldAsString(NXCPCodes.VID_DB_SERVER));
+      properties.setProperty("netxms.db.name@remote", request.getFieldAsString(NXCPCodes.VID_DB_NAME));
+      properties.setProperty("netxms.db.login@remote", request.getFieldAsString(NXCPCodes.VID_DB_LOGIN));
+      properties.setProperty("netxms.db.password@remote", request.getFieldAsString(NXCPCodes.VID_DB_PASSWORD));
+      properties.setProperty("smtp.fromAddr@remote", request.getFieldAsString(NXCPCodes.VID_SMTP_FROM_ADDRESS));
+      properties.setProperty("smtp.fromName@remote", request.getFieldAsString(NXCPCodes.VID_SMTP_FROM_NAME));
+      properties.setProperty("smtp.server@remote", request.getFieldAsString(NXCPCodes.VID_SMTP_SERVER));
+      server.updateConfiguration(properties);
    }
 
    /**

@@ -436,6 +436,7 @@ public class NXCPCodes
    public static final int CMD_FIND_PROXY_FOR_NODE = 0x01A3;
    public static final int CMD_BULK_DCI_UPDATE = 0x01A4;
    public static final int CMD_GET_SCHEDULED_REPORTING_TASKS = 0x01A5;
+   public static final int CMD_CONFIGURE_REPORTING_SERVER = 0x01A6;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1175,6 +1176,18 @@ public class NXCPCodes
    public static final long VID_PHONE_NUMBER = 729;
    public static final long VID_EXECUTION_PARAMETERS = 730;
    public static final long VID_VIEW_NAME = 731;
+   public static final long VID_DB_DRIVER = 732;
+   public static final long VID_DB_SERVER = 733;
+   public static final long VID_DB_NAME = 734;
+   public static final long VID_DB_LOGIN = 735;
+   public static final long VID_DB_PASSWORD = 736;
+   public static final long VID_SMTP_SERVER = 737;
+   public static final long VID_SMTP_PORT = 738;
+   public static final long VID_SMTP_FROM_NAME = 739;
+   public static final long VID_SMTP_FROM_ADDRESS = 740;
+   public static final long VID_SMTP_LOCAL_HOSTNAME = 741;
+   public static final long VID_SMTP_LOGIN = 742;
+   public static final long VID_SMTP_PASSWORD = 743;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

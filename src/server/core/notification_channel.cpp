@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2019-2020 Raden Solutions
+** Copyright (C) 2019-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -197,7 +197,7 @@ private:
    TCHAR m_name[MAX_OBJECT_NAME];
    TCHAR m_description[MAX_NC_DESCRIPTION];
    MUTEX m_driverLock;
-   THREAD m_senderThread;
+   THREAD m_workerThread;
    ObjectQueue<NotificationMessage> m_notificationQueue;
    TCHAR m_driverName[MAX_OBJECT_NAME];
    char *m_configuration;
@@ -218,7 +218,7 @@ private:
       m_errorMessage[0] = 0;
    }
 
-   static THREAD_RESULT THREAD_CALL sendNotificationThread(void *arg);
+   void workerThread();
 
 public:
    NotificationChannel(NCDriver *driver, NCDriverServerStorageManager *storageManager, const TCHAR *name,
@@ -228,6 +228,7 @@ public:
    void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body);
    void fillMessage(NXCPMessage *msg, uint32_t base);
    const TCHAR *getName() const { return m_name; }
+   const char *getConfiguration() const { return m_configuration; }
 
    void update(const TCHAR *description, const TCHAR *driverName, const char *config);
    void updateName(const TCHAR *newName) { _tcslcpy(m_name, newName, MAX_OBJECT_NAME); }
@@ -282,10 +283,10 @@ NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorage
    _tcslcpy(m_description, description, MAX_NC_DESCRIPTION);
    _tcslcpy(m_driverName, driverName, MAX_OBJECT_NAME);
    m_configuration = config;
-   m_senderThread = ThreadCreateEx(NotificationChannel::sendNotificationThread, 0, this);
    m_driverLock = MutexCreate();
    _tcslcpy(m_errorMessage, errorMessage, MAX_NC_ERROR_MESSAGE);
    m_lastStatus = NCSendStatus::UNKNOWN;
+   m_workerThread = ThreadCreateEx(this, &NotificationChannel::workerThread);
 }
 
 /**
@@ -294,7 +295,7 @@ NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorage
 NotificationChannel::~NotificationChannel()
 {
    m_notificationQueue.setShutdownMode();
-   ThreadJoin(m_senderThread);
+   ThreadJoin(m_workerThread);
    MutexDestroy(m_driverLock);
    delete m_driver;
    delete m_storageManager;
@@ -304,37 +305,37 @@ NotificationChannel::~NotificationChannel()
 /**
  * Notification sending thread
  */
-THREAD_RESULT THREAD_CALL NotificationChannel::sendNotificationThread(void *arg)
+void NotificationChannel::workerThread()
 {
-   NotificationChannel *nc = static_cast<NotificationChannel*>(arg);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread for channel %s started"), m_name);
    while(true)
    {
-      NotificationMessage *notification = nc->m_notificationQueue.getOrBlock();
+      NotificationMessage *notification = m_notificationQueue.getOrBlock();
       if (notification == INVALID_POINTER_VALUE)
          break;
 
-      MutexLock(nc->m_driverLock);
-      if (nc->m_driver != NULL)
+      MutexLock(m_driverLock);
+      if (m_driver != nullptr)
       {
-         if (nc->m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody()))
+         if (m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody()))
          {
-            nc->clearError();
+            clearError();
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel %s, message dropped"), nc->m_name);
-            nc->setError(_T("Driver error"));
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel %s, message dropped"), m_name);
+            setError(_T("Driver error"));
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("No driver for channel %s, message dropped"), nc->m_name);
-         nc->setError(_T("Driver not initialized"));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("No driver for channel %s, message dropped"), m_name);
+         setError(_T("Driver not initialized"));
       }
-      MutexUnlock(nc->m_driverLock);
+      MutexUnlock(m_driverLock);
       delete notification;
    }
-   return THREAD_OK;
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread for channel %s stopped"), m_name);
 }
 
 /**
@@ -679,6 +680,18 @@ void GetNotificationDrivers(NXCPMessage *msg)
 }
 
 /**
+ * Get configuration of given communication channel. Returned string is dynamically allocated and should be freed by caller.
+ */
+char *GetNotificationChannelConfiguration(const TCHAR *name)
+{
+   s_channelListLock.lock();
+   NotificationChannel *nc = s_channelList.get(name);
+   char *configuration = (nc != nullptr) ? MemCopyStringA(nc->getConfiguration()) : nullptr;
+   s_channelListLock.unlock();
+   return configuration;
+}
+
+/**
  * Send notification
  */
 void SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message)
@@ -831,7 +844,6 @@ void LoadNotificationChannels()
       DBFreeResult(result);
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("%d notification channels added"), numberOfAddedDrivers);
-
    DBConnectionPoolReleaseConnection(hdb);
 }
 
