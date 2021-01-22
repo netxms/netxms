@@ -176,7 +176,7 @@ void RSConnector::sendConfiguration()
    TCHAR buffer[256];
    if (ConfigReadStr(_T("SMTP.Server"), buffer, 256, _T("")))
       msg.setField(VID_SMTP_SERVER, buffer);
-   msg.setField(VID_SMTP_PORT, static_cast<uint16_t>(ConfigReadUInt32(_T("SMTP.Port"), 25)));
+   msg.setField(VID_SMTP_PORT, static_cast<uint16_t>(ConfigReadULong(_T("SMTP.Port"), 25)));
    if (ConfigReadStr(_T("SMTP.LocalHostName"), buffer, 256, _T("")))
       msg.setField(VID_SMTP_LOCAL_HOSTNAME, buffer);
    if (ConfigReadStr(_T("SMTP.FromName"), buffer, 256, _T("")))
