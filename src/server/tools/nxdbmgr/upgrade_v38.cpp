@@ -106,7 +106,7 @@ static struct
    { 3,  40, 0,  H_UpgradeFromV3  },
    { 2,  38, 3,  H_UpgradeFromV2  },
    { 1,  38, 2,  H_UpgradeFromV1  },
-   { 0,  38, 1,  H_UpgradeFromV0  },
+   { 0,  38, 3,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }
 };
 

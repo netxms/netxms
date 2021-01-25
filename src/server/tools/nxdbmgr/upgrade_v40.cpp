@@ -1043,7 +1043,7 @@ static struct
 {
    { 37, 40, 38, H_UpgradeFromV37 },
    { 36, 40, 37, H_UpgradeFromV36 },
-   { 35, 40, 36, H_UpgradeFromV35 },
+   { 35, 40, 38, H_UpgradeFromV35 },
    { 34, 40, 35, H_UpgradeFromV34 },
    { 33, 40, 34, H_UpgradeFromV33 },
    { 32, 40, 33, H_UpgradeFromV32 },
