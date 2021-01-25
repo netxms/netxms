@@ -17,6 +17,11 @@
             <url>http://www.gnu.org/licenses/gpl2.txt</url>
         </license>
     </licenses>
+    <scm>
+        <connection>scm:git:https://github.com/netxms/netxms.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:netxms/netxms.git</developerConnection>
+        <url>https://github.com/netxms/netxms</url>
+    </scm>
     <developers>
         <developer>
             <id>alex.kirhenshtein</id>
