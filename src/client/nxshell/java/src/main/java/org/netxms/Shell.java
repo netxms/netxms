@@ -36,7 +36,7 @@ public class Shell
       {
          shell.run(args);
       }
-      catch(Exception e)
+      catch(Throwable e)
       {
          e.printStackTrace();
       }
