@@ -27,6 +27,7 @@ import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.query.JRQueryExecuter;
 import org.netxms.reporting.ReportClassLoader;
 import org.netxms.reporting.Server;
+import org.netxms.reporting.extensions.NXCLDataSource;
 import org.netxms.reporting.tools.ThreadLocalReportInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
