@@ -297,7 +297,7 @@ public final class Server implements Daemon
             url = "jdbc:mysql://" + server + "/" + name;
             break;
          case ORACLE:
-            url = "jdbc:oracle:thin:@" + server + ":1521:" + name;
+            url = "jdbc:oracle:thin:@" + server;
             break;
          case POSTGRESQL:
             url = "jdbc:postgresql://" + server + "/" + name;
