@@ -16,35 +16,22 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.reporting;
+package org.netxms.reporting.extensions;
 
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.sql.Connection;
+import java.util.Map;
 
 /**
- * Custom class loader for reporting engine
+ * Report execution hook
  */
-public class ReportClassLoader extends URLClassLoader
+public interface ExecutionHook
 {
    /**
-    * Create new class loader.
-    *
-    * @param urls list of URLs
-    * @param parent parent class loader
+    * Hook's execution method, called by report executor. Throwing an exception will stop report execution.
+    * 
+    * @param parameters report execution parameters
+    * @param dbConnection database connection
+    * @throws Exception on any unrecoverable failure
     */
-   public ReportClassLoader(URL[] urls, ClassLoader parent)
-   {
-      super(urls, parent);
-   }
-
-   /**
-    * @see java.lang.ClassLoader#loadClass(java.lang.String)
-    */
-   @Override
-   public Class<?> loadClass(String name) throws ClassNotFoundException
-   {
-      if (!name.startsWith("report."))
-         return super.loadClass(name);
-      return findClass(name);
-   }
+   public void run(Map<String, Object> parameters, Connection dbConnection) throws Exception;
 }

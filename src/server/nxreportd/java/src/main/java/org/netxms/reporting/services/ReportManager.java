@@ -51,8 +51,10 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.reporting.ReportRenderFormat;
 import org.netxms.client.reporting.ReportResult;
 import org.netxms.client.reporting.ReportingJobConfiguration;
+import org.netxms.reporting.ReportClassLoader;
 import org.netxms.reporting.Server;
 import org.netxms.reporting.ServerException;
+import org.netxms.reporting.extensions.ExecutionHook;
 import org.netxms.reporting.model.ReportDefinition;
 import org.netxms.reporting.model.ReportParameter;
 import org.netxms.reporting.tools.DateParameterParser;
@@ -472,7 +474,8 @@ public class ReportManager
       if (idataView != null)
          localParameters.put(IDATA_VIEW_KEY, idataView);
 
-      localParameters.put(JRParameter.REPORT_CLASS_LOADER, new URLClassLoader(new URL[] {}, getClass().getClassLoader()));
+      URLClassLoader reportClassLoader = new URLClassLoader(new URL[] {}, getClass().getClassLoader());
+      localParameters.put(JRParameter.REPORT_CLASS_LOADER, reportClassLoader);
 
       prepareParameters(jobConfiguration.executionParameters, report, localParameters);
       logger.debug("Report parameters: " + localParameters);
@@ -485,14 +488,20 @@ public class ReportManager
       try
       {
          dbConnection = server.createDatabaseConnection();
+
+         executeHook("PreparationHook", subrepoDirectory, localParameters, dbConnection);
+
          DefaultJasperReportsContext reportsContext = DefaultJasperReportsContext.getInstance();
          reportsContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "org.netxms.reporting.nxcl.NXCLQueryExecutorFactory");
          final JasperFillManager manager = JasperFillManager.getInstance(reportsContext);
          manager.fillToFile(report, outputFile, localParameters, dbConnection);
+
          saveResult(new ReportResult(jobId, jobConfiguration.reportId, new Date(), userId, true));
          sendMailNotifications(jobConfiguration.reportId, report.getName(), jobId, jobConfiguration.renderFormat, jobConfiguration.emailRecipients);
+
+         executeHook("CleanupHook", subrepoDirectory, localParameters, dbConnection);
       }
-      catch(Exception e)
+      catch(Throwable e)
       {
          logger.error("Error executing report " + jobConfiguration.reportId + " " + report.getName(), e);
          try
@@ -520,6 +529,47 @@ public class ReportManager
          }
       }
       server.getCommunicationManager().sendNotification(SessionNotification.RS_RESULTS_MODIFIED, 0);
+      logger.info("Report execution completed (reportId=" + jobConfiguration.reportId + ", jobId=" + jobId + ")");
+   }
+
+   /**
+    * Execute hook code.
+    *
+    * @param hookName hook name
+    * @param reportLocation location of report's files
+    * @param parameters report execution parameters
+    * @param dbConnection database connection
+    * @throws Exception on any unrecoverable error
+    */
+   @SuppressWarnings("unchecked")
+   private void executeHook(String hookName, String reportLocation, HashMap<String, Object> parameters, Connection dbConnection) throws Exception
+   {
+      ReportClassLoader classLoader = null;
+      try
+      {
+         URL[] urls = { new URL("file:" + reportLocation) };
+         classLoader = new ReportClassLoader(urls, getClass().getClassLoader());
+         Class<ExecutionHook> hookClass = (Class<ExecutionHook>)classLoader.loadClass("report." + hookName);
+         ExecutionHook hook = hookClass.getConstructor().newInstance();
+         logger.info("Running report execution hook " + hookName);
+         hook.run(parameters, dbConnection);
+      }
+      catch(ClassNotFoundException e)
+      {
+         // ignore
+      }
+      finally
+      {
+         try
+         {
+            if (classLoader != null)
+               classLoader.close();
+         }
+         catch(Exception e)
+         {
+            logger.warn("Unexpected exception while closing report hook class loader", e);
+         }
+      }
    }
 
    /**
