@@ -18,7 +18,7 @@ cmd /C mvn -f src/java-common/netxms-base/pom.xml -Dmaven.test.skip=true install
 cmd /C mvn -f src/client/java/netxms-client/pom.xml -Dmaven.test.skip=true install -Ppkg-build
 cmd /C mvn -f src/libnxjava/java/pom.xml -Dmaven.test.skip=true install
 cmd /C mvn -f src/agent/subagents/java/java/pom.xml -Dmaven.test.skip=true install
-cmd /C mvn -f src/client/nxshell/java/pom.xml package -Pnxshell-launcher
+cmd /C mvn -f src/client/nxshell/java/pom.xml package -Plauncher
 for %%p in (%SUBAGENT_POM_FILES%) do cmd /C mvn -f %%p package
 
 cd sql

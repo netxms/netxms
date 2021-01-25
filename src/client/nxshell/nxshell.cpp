@@ -93,11 +93,8 @@ static int StartApp(int argc, char *argv[])
 
    char clearPassword[128];
    DecryptPasswordA(s_optUser, s_optPassword, clearPassword, 128);
-   if (clearPassword[0] != 0)
-   {
-      snprintf(buffer, 256, "-Dnetxms.password=%s", clearPassword);
-      vmOptions.addMBString(buffer);
-   }
+   snprintf(buffer, 256, "-Dnetxms.password=%s", clearPassword);
+   vmOptions.addMBString(buffer);
 
    bool verboseVM = (nxlog_get_debug_level() > 0);
    if (verboseVM)
@@ -114,7 +111,7 @@ static int StartApp(int argc, char *argv[])
 #define cp s_optClassPath
 #endif
    JNIEnv *env;
-   static const TCHAR *syslibs[] = { _T("commons-codec-1.11.jar"), _T("netxms-base.jar"), _T("netxms-client.jar"), _T("simple-xml-2.6.4.jar"), nullptr };
+   static const TCHAR *syslibs[] = { _T("commons-codec-1.11.jar"), _T("netxms-base.jar"), _T("netxms-client.jar"), _T("simple-xml-2.6.4.jar"), _T("slf4j-api-1.7.30.jar"), nullptr };
    JavaBridgeError err = CreateJavaVM(jre, _T("nxshell.jar"), syslibs, cp, &vmOptions, &env);
    if (err == NXJAVA_SUCCESS)
    {
@@ -122,7 +119,7 @@ static int StartApp(int argc, char *argv[])
       err = StartJavaApplication(env, "org/netxms/Shell", argc, argv);
       if (err != NXJAVA_SUCCESS)
       {
-         _tprintf(_T("Cannot start Java application (%s)"), GetJavaBridgeErrorMessage(err));
+         _tprintf(_T("Cannot start Java application (%s)\n"), GetJavaBridgeErrorMessage(err));
          rc = 4;
       }
       DestroyJavaVM();

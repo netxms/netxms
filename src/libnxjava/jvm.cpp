@@ -50,7 +50,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
 {
    TCHAR errorText[256];
    s_jvmModule = DLOpen(jvmPath, errorText);
-   if (s_jvmModule == NULL)
+   if (s_jvmModule == nullptr)
    {
       nxlog_write(NXLOG_ERROR, _T("JavaBridge: Unable to load JVM: %s"), errorText);
       return NXJAVA_JVM_LOAD_FAILED;
@@ -63,16 +63,16 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
    classpath.append(libdir);
    classpath.append(FS_PATH_SEPARATOR_CHAR);
    classpath.append(_T("netxms-java-bridge.jar"));
-   if (jar != NULL)
+   if (jar != nullptr)
    {
       classpath.append(JAVA_CLASSPATH_SEPARATOR);
       classpath.append(libdir);
       classpath.append(FS_PATH_SEPARATOR_CHAR);
       classpath.append(jar);
    }
-   if (syslibs != NULL)
+   if (syslibs != nullptr)
    {
-      for(int i = 0; syslibs[i] != NULL; i++)
+      for(int i = 0; syslibs[i] != nullptr; i++)
       {
          classpath.append(JAVA_CLASSPATH_SEPARATOR);
          classpath.append(libdir);
@@ -80,11 +80,15 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
          classpath.append(syslibs[i]);
       }
    }
-   if (usercp != NULL)
+   if (usercp != nullptr)
    {
       classpath.append(JAVA_CLASSPATH_SEPARATOR);
       classpath.append(usercp);
    }
+
+   GetNetXMSDirectory(nxDirEtc, libdir);
+   classpath.append(JAVA_CLASSPATH_SEPARATOR);
+   classpath.append(libdir);
 
    JavaVMInitArgs vmArgs;
    JavaVMOption options[128];
