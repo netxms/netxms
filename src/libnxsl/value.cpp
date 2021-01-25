@@ -694,6 +694,9 @@ double NXSL_Value::getValueAsReal()
    double dVal;
    switch(m_dataType)
    {
+      case NXSL_DT_BOOLEAN:
+         dVal = (double)(m_value.int32 ? 1 : 0);
+         break;
       case NXSL_DT_INT32:
          dVal = (double)m_value.int32;
          break;
