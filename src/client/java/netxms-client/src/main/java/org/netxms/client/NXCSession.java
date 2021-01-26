@@ -1899,22 +1899,25 @@ public class NXCSession
       final int rcc = msg.getFieldAsInt32(NXCPCodes.VID_RCC);
       if (rcc != RCC.SUCCESS)
       {
+         long[] relatedObjects = msg.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
+         String description;
          if ((rcc == RCC.COMPONENT_LOCKED) && (msg.findField(NXCPCodes.VID_LOCKED_BY) != null))
          {
-            throw new NXCException(rcc, msg.getFieldAsString(NXCPCodes.VID_LOCKED_BY));
+            description = msg.getFieldAsString(NXCPCodes.VID_LOCKED_BY);
          }
          else if (msg.findField(NXCPCodes.VID_ERROR_TEXT) != null)
          {
-            throw new NXCException(rcc, msg.getFieldAsString(NXCPCodes.VID_ERROR_TEXT));
+            description = msg.getFieldAsString(NXCPCodes.VID_ERROR_TEXT);
          }
          else if (msg.findField(NXCPCodes.VID_VALUE) != null)
          {
-            throw new NXCException(rcc, msg.getFieldAsString(NXCPCodes.VID_VALUE));
+            description = msg.getFieldAsString(NXCPCodes.VID_VALUE);
          }
          else
          {
-            throw new NXCException(rcc);
+            description = null;
          }
+         throw new NXCException(rcc, description, relatedObjects);
       }
       return msg;
    }
