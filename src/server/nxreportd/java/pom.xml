@@ -44,7 +44,7 @@
          <groupId>ch.qos.logback</groupId>
          <artifactId>logback-classic</artifactId>
          <version>1.2.3</version>
-         <scope>${lib.scope}</scope>
+         <scope>compile</scope>
       </dependency>
       <dependency>
          <groupId>org.netxms</groupId>
@@ -62,31 +62,31 @@
          <groupId>commons-daemon</groupId>
          <artifactId>commons-daemon</artifactId>
          <version>1.2.3</version>
-         <scope>${lib.scope}</scope>
+         <scope>compile</scope>
       </dependency>
       <dependency>
          <groupId>javax.mail</groupId>
          <artifactId>mail</artifactId>
          <version>1.4.7</version>
-         <scope>${lib.scope}</scope>
+         <scope>compile</scope>
       </dependency>
       <dependency>
          <groupId>net.sf.jasperreports</groupId>
          <artifactId>jasperreports</artifactId>
          <version>6.16.0</version>
-         <scope>${lib.scope}</scope>
+         <scope>compile</scope>
       </dependency>
       <dependency>
          <groupId>org.apache.poi</groupId>
          <artifactId>poi</artifactId>
          <version>4.1.1</version>
-         <scope>${lib.scope}</scope>
+         <scope>compile</scope>
       </dependency>
       <dependency>
          <groupId>net.sf.jpathwatch</groupId>
          <artifactId>jpathwatch</artifactId>
          <version>0.95</version>
-         <scope>${lib.scope}</scope>
+         <scope>compile</scope>
       </dependency>
 
       <!-- DB Drivers -->
