@@ -23,11 +23,55 @@
 #include "nxdbmgr.h"
 
 /**
- * Upgrade from 38.3 to 40.0
+ * Upgrade from 38.4 to 40.0
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 38.3 to 38.4
  */
 static bool H_UpgradeFromV3()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE ssh_keys (")
+         _T("  id integer not null,")
+         _T("  name varchar(255) not null,")
+         _T("  public_key varchar(700) null,")
+         _T("  private_key varchar(1710) null,")
+         _T("PRIMARY KEY(id))")));
+
+   static const TCHAR *batch =
+         _T("ALTER TABLE nodes ADD ssh_key_id integer\n")
+         _T("UPDATE nodes SET ssh_key_id=0\n")
+         _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("ssh_key_id")));
+
+   // Update access rights for predefined "Admins" group
+   DB_RESULT hResult = SQLSelect(_T("SELECT system_access FROM user_groups WHERE id=1073741825"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         uint64_t access = DBGetFieldUInt64(hResult, 0, 0);
+         access |= SYSTEM_ACCESS_SSH_KEY_CONFIGURATION;
+         TCHAR query[256];
+         _sntprintf(query, 256, _T("UPDATE user_groups SET system_access=") UINT64_FMT _T(" WHERE id=1073741825"), access);
+         CHK_EXEC(SQLQuery(query));
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_ignoreErrors)
+         return false;
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(4));
    return true;
 }
 
@@ -103,7 +147,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 3,  40, 0,  H_UpgradeFromV3  },
+   { 4,  40, 0,  H_UpgradeFromV4  },
+   { 3,  38, 4,  H_UpgradeFromV3  },
    { 2,  38, 3,  H_UpgradeFromV2  },
    { 1,  38, 2,  H_UpgradeFromV1  },
    { 0,  38, 3,  H_UpgradeFromV0  },

@@ -74,7 +74,7 @@ void SSHSession::release()
 /**
  * Connect to server
  */
-bool SSHSession::connect(const TCHAR *user, const TCHAR *password)
+bool SSHSession::connect(const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys)
 {
    if (m_session != NULL)
       return false;  // already connected
@@ -99,28 +99,74 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password)
 #endif
 
    if (ssh_options_parse_config(m_session, (g_sshConfigFile[0] != 0) ? g_sshConfigFile : nullptr) != 0)
-      nxlog_debug(6, _T("SSH: config load for %s:%d failed (%hs)"), (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: config load for %s:%d failed (%hs)"), (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
 
    if (ssh_connect(m_session) == SSH_OK)
    {
-#ifdef UNICODE
-      char mbpassword[256];
-      WideCharToMultiByte(CP_UTF8, 0, password, -1, mbpassword, 256, NULL, NULL);
-      if (ssh_userauth_password(m_session, NULL, mbpassword) == SSH_AUTH_SUCCESS)
-#else
-      if (ssh_userauth_password(m_session, NULL, password) == SSH_AUTH_SUCCESS)
-#endif
+      if (keys != nullptr)
       {
-         success = true;
+         ssh_key pkey;
+         if (ssh_pki_import_pubkey_base64(keys->publicKey, keys->type, &pkey) == SSH_OK)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("SSHSession::connect: try to login with public key"));
+
+            if (ssh_userauth_try_publickey(m_session, NULL, pkey) == SSH_AUTH_SUCCESS)
+            {
+               success = true;
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: login with key as %s on %s:%d failed (%hs)"), user, (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
+            }
+            ssh_key_free(pkey);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: SSH key load for %s:%d failed (%hs)"), (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
+         }
+
+         if (ssh_pki_import_privkey_base64(keys->privateKey, nullptr, nullptr, nullptr, &pkey) == SSH_OK)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("SSHSession::connect: try to login with private key"));
+
+            if (ssh_userauth_publickey(m_session, NULL, pkey) == SSH_AUTH_SUCCESS)
+            {
+               success = true;
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: login with key as %s on %s:%d failed (%hs)"), user, (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
+            }
+            ssh_key_free(pkey);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: SSH key load for %s:%d failed (%hs)"), (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
+         }
       }
-      else
+
+      if (!success)
       {
-         nxlog_debug(6, _T("SSH: login as %s on %s:%d failed (%hs)"), user, (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("SSHSession::connect: try to login with password"));
+#ifdef UNICODE
+         char mbpassword[256];
+         wchar_to_utf8(password, -1, mbpassword, 256);;
+         if (ssh_userauth_password(m_session, NULL, mbpassword) == SSH_AUTH_SUCCESS)
+#else
+            if (ssh_userauth_password(m_session, NULL, password) == SSH_AUTH_SUCCESS)
+#endif
+         {
+            success = true;
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: login with password as %s on %s:%d failed (%hs)"), user, (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
+         }
       }
    }
    else
    {
-      nxlog_debug(6, _T("SSH: connect to %s:%d failed (%hs)"), (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: connect to %s:%d failed (%hs)"), (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
    }
 
    if (success)
@@ -131,6 +177,7 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password)
    }
    else
    {
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("session null"));
       if (ssh_is_connected(m_session))
          ssh_disconnect(m_session);
       ssh_free(m_session);
@@ -160,14 +207,14 @@ StringList *SSHSession::execute(const TCHAR *command)
 {
    if ((m_session == nullptr) || !ssh_is_connected(m_session))
    {
-      nxlog_debug(6, _T("SSH: is not connected"));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: is not connected"));
       return nullptr;
    }
 
    ssh_channel channel = ssh_channel_new(m_session);
    if (channel == nullptr)
    {
-      nxlog_debug(6, _T("SSH: channel is null"));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: channel is null"));
       return nullptr;
    }
 
@@ -220,13 +267,13 @@ StringList *SSHSession::execute(const TCHAR *command)
          }
          else
          {
-            nxlog_debug(6, _T("SSH: read error: %hs"), ssh_get_error(m_session));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: read error: %hs"), ssh_get_error(m_session));
             delete_and_null(output);
          }
       }
       else
       {
-         nxlog_debug(6, _T("SSH: command \"%s\" execution on %s:%d failed"), command, (const TCHAR *)m_addr.toString(), m_port);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: command \"%s\" execution on %s:%d failed"), command, (const TCHAR *)m_addr.toString(), m_port);
       }
       ssh_channel_close(channel);
 #ifdef UNICODE
@@ -235,7 +282,7 @@ StringList *SSHSession::execute(const TCHAR *command)
    }
    else
    {
-      nxlog_debug(6, _T("SSH: cannot open channel on %s:%d"), (const TCHAR *)m_addr.toString(), m_port);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::execute: cannot open channel on %s:%d"), (const TCHAR *)m_addr.toString(), m_port);
    }
    ssh_channel_free(channel);
    m_lastAccess = time(NULL);

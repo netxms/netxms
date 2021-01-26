@@ -515,6 +515,7 @@ enum SessionState
 #define NX_NOTIFY_GEO_AREA_UPDATED           50
 #define NX_NOTIFY_GEO_AREA_DELETED           51
 #define NX_NOTIFY_OBJECTS_IN_SYNC            52
+#define NX_NOTIFY_SSH_KEY_DATA_CHAGED        53
 
 /**
  * Request completion codes
@@ -661,6 +662,8 @@ enum SessionState
 #define RCC_INVALID_GEO_AREA_ID        ((uint32_t)139)
 #define RCC_GEO_AREA_NAME_EMPTY        ((uint32_t)140)
 #define RCC_GEO_AREA_IN_USE            ((uint32_t)141)
+#define RCC_INVALID_SSH_KEY_ID         ((uint32_t)142)
+#define RCC_SSH_KEY_IN_USE             ((uint32_t)143)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -765,8 +768,9 @@ enum SessionState
 #define SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS _ULL(0x080000000000)
 #define SYSTEM_ACCESS_OBJECT_CATEGORIES       _ULL(0x100000000000)
 #define SYSTEM_ACCESS_MANAGE_GEO_AREAS        _ULL(0x200000000000)
+#define SYSTEM_ACCESS_SSH_KEY_CONFIGURATION   _ULL(0x400000000000)
 
-#define SYSTEM_ACCESS_FULL                    _ULL(0x3FFFFFFFFFFF)
+#define SYSTEM_ACCESS_FULL                    _ULL(0x7FFFFFFFFFFF)
 
 #endif	/* NETXMS_CUSTOM_USER_RIGHTS */
 

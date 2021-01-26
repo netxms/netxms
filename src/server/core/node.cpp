@@ -173,6 +173,7 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_snmpTrapStormActualDuration = 0;
    m_sshLogin[0] = 0;
    m_sshPassword[0] = 0;
+   m_sshKeyId = 0;
    m_sshPort = SSH_PORT;
    m_sshProxy = 0;
    m_portNumberingScheme = NDD_PN_UNKNOWN;
@@ -296,6 +297,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_snmpTrapStormActualDuration = 0;
    _tcslcpy(m_sshLogin, newNodeData->sshLogin, MAX_SSH_LOGIN_LEN);
    _tcslcpy(m_sshPassword, newNodeData->sshPassword, MAX_SSH_PASSWORD_LEN);
+   m_sshKeyId = 0;
    m_sshPort = newNodeData->sshPort;
    m_sshProxy = newNodeData->sshProxyId;
    m_portNumberingScheme = NDD_PN_UNKNOWN;
@@ -384,7 +386,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("rack_image_rear,agent_id,agent_cert_subject,hypervisor_type,hypervisor_info,icmp_poll_mode,")
       _T("chassis_placement_config,vendor,product_code,product_name,product_version,serial_number,cip_device_type,")
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
-      _T("agent_cert_mapping_data,snmp_engine_id,ssh_port FROM nodes WHERE id=?"));
+      _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -493,6 +495,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBGetField(hResult, 0, 38, m_subType, MAX_NODE_SUBTYPE_LENGTH);
    DBGetField(hResult, 0, 39, m_sshLogin, MAX_SSH_LOGIN_LEN);
    DBGetField(hResult, 0, 40, m_sshPassword, MAX_SSH_PASSWORD_LEN);
+   m_sshKeyId = DBGetFieldLong(hResult, 0, 74);
    m_sshPort = static_cast<uint16_t>(DBGetFieldLong(hResult, 0, 73));
    m_sshProxy = DBGetFieldULong(hResult, 0, 41);
    m_portRowCount = DBGetFieldULong(hResult, 0, 42);
@@ -867,7 +870,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("usm_methods"), _T("snmp_sys_name"), _T("bridge_base_addr"), _T("down_since"), _T("driver_name"),
          _T("rack_image_front"), _T("rack_position"), _T("rack_height"), _T("physical_container_id"), _T("boot_time"), _T("agent_cache_mode"),
          _T("snmp_sys_contact"), _T("snmp_sys_location"), _T("last_agent_comm_time"), _T("syslog_msg_count"),
-         _T("snmp_trap_count"), _T("node_type"), _T("node_subtype"), _T("ssh_login"), _T("ssh_password"), _T("ssh_port"),
+         _T("snmp_trap_count"), _T("node_type"), _T("node_subtype"), _T("ssh_login"), _T("ssh_password"), _T("ssh_key_id"), _T("ssh_port"),
          _T("ssh_proxy"), _T("port_rows"), _T("port_numbering_scheme"), _T("agent_comp_mode"), _T("tunnel_id"), _T("lldp_id"),
          _T("fail_time_snmp"), _T("fail_time_agent"), _T("rack_orientation"), _T("rack_image_rear"), _T("agent_id"),
          _T("agent_cert_subject"), _T("hypervisor_type"), _T("hypervisor_info"), _T("icmp_poll_mode"), _T("chassis_placement_config"),
@@ -964,46 +967,47 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 40, DB_SQLTYPE_VARCHAR, m_subType, DB_BIND_STATIC);
          DBBind(hStmt, 41, DB_SQLTYPE_VARCHAR, m_sshLogin, DB_BIND_STATIC);
          DBBind(hStmt, 42, DB_SQLTYPE_VARCHAR, m_sshPassword, DB_BIND_STATIC);
-         DBBind(hStmt, 43, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_sshPort));
-         DBBind(hStmt, 44, DB_SQLTYPE_INTEGER, m_sshProxy);
-         DBBind(hStmt, 45, DB_SQLTYPE_INTEGER, m_portRowCount);
-         DBBind(hStmt, 46, DB_SQLTYPE_INTEGER, m_portNumberingScheme);
-         DBBind(hStmt, 47, DB_SQLTYPE_VARCHAR, _itot(m_agentCompressionMode, compressionMode, 10), DB_BIND_STATIC, 1);
-         DBBind(hStmt, 48, DB_SQLTYPE_VARCHAR, m_tunnelId);
-         DBBind(hStmt, 49, DB_SQLTYPE_VARCHAR, m_lldpNodeId, DB_BIND_STATIC);
-         DBBind(hStmt, 50, DB_SQLTYPE_INTEGER, (LONG)m_failTimeSNMP);
-         DBBind(hStmt, 51, DB_SQLTYPE_INTEGER, (LONG)m_failTimeAgent);
-         DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, m_rackOrientation);
-         DBBind(hStmt, 53, DB_SQLTYPE_VARCHAR, m_rackImageRear);
-         DBBind(hStmt, 54, DB_SQLTYPE_VARCHAR, m_agentId);
-         DBBind(hStmt, 55, DB_SQLTYPE_VARCHAR, m_agentCertSubject, DB_BIND_STATIC);
-         DBBind(hStmt, 56, DB_SQLTYPE_VARCHAR, m_hypervisorType, DB_BIND_STATIC);
-         DBBind(hStmt, 57, DB_SQLTYPE_VARCHAR, m_hypervisorInfo, DB_BIND_STATIC);
-         DBBind(hStmt, 58, DB_SQLTYPE_VARCHAR, icmpPollMode, DB_BIND_STATIC);
-         DBBind(hStmt, 59, DB_SQLTYPE_VARCHAR, m_chassisPlacementConf, DB_BIND_STATIC);
-         DBBind(hStmt, 60, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC, 127);
-         DBBind(hStmt, 61, DB_SQLTYPE_VARCHAR, m_productCode, DB_BIND_STATIC, 31);
-         DBBind(hStmt, 62, DB_SQLTYPE_VARCHAR, m_productName, DB_BIND_STATIC, 127);
-         DBBind(hStmt, 63, DB_SQLTYPE_VARCHAR, m_productVersion, DB_BIND_STATIC, 15);
-         DBBind(hStmt, 64, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC, 31);
-         DBBind(hStmt, 65, DB_SQLTYPE_INTEGER, m_cipDeviceType);
-         DBBind(hStmt, 66, DB_SQLTYPE_INTEGER, m_cipStatus);
-         DBBind(hStmt, 67, DB_SQLTYPE_INTEGER, m_cipState);
-         DBBind(hStmt, 68, DB_SQLTYPE_INTEGER, m_eipProxy);
-         DBBind(hStmt, 69, DB_SQLTYPE_INTEGER, m_eipPort);
-         DBBind(hStmt, 70, DB_SQLTYPE_VARCHAR, BinToStr(m_hardwareId.value(), HARDWARE_ID_LENGTH, hardwareId), DB_BIND_STATIC);
-         DBBind(hStmt, 71, DB_SQLTYPE_INTEGER, m_cipVendorCode);
-         DBBind(hStmt, 72, DB_SQLTYPE_VARCHAR, agentCertMappingMethod, DB_BIND_STATIC);
-         DBBind(hStmt, 73, DB_SQLTYPE_VARCHAR, m_agentCertMappingData, DB_BIND_STATIC);
+         DBBind(hStmt, 43, DB_SQLTYPE_INTEGER, m_sshKeyId);
+         DBBind(hStmt, 44, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_sshPort));
+         DBBind(hStmt, 45, DB_SQLTYPE_INTEGER, m_sshProxy);
+         DBBind(hStmt, 46, DB_SQLTYPE_INTEGER, m_portRowCount);
+         DBBind(hStmt, 47, DB_SQLTYPE_INTEGER, m_portNumberingScheme);
+         DBBind(hStmt, 48, DB_SQLTYPE_VARCHAR, _itot(m_agentCompressionMode, compressionMode, 10), DB_BIND_STATIC, 1);
+         DBBind(hStmt, 49, DB_SQLTYPE_VARCHAR, m_tunnelId);
+         DBBind(hStmt, 50, DB_SQLTYPE_VARCHAR, m_lldpNodeId, DB_BIND_STATIC);
+         DBBind(hStmt, 51, DB_SQLTYPE_INTEGER, (LONG)m_failTimeSNMP);
+         DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, (LONG)m_failTimeAgent);
+         DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, m_rackOrientation);
+         DBBind(hStmt, 54, DB_SQLTYPE_VARCHAR, m_rackImageRear);
+         DBBind(hStmt, 55, DB_SQLTYPE_VARCHAR, m_agentId);
+         DBBind(hStmt, 56, DB_SQLTYPE_VARCHAR, m_agentCertSubject, DB_BIND_STATIC);
+         DBBind(hStmt, 57, DB_SQLTYPE_VARCHAR, m_hypervisorType, DB_BIND_STATIC);
+         DBBind(hStmt, 58, DB_SQLTYPE_VARCHAR, m_hypervisorInfo, DB_BIND_STATIC);
+         DBBind(hStmt, 59, DB_SQLTYPE_VARCHAR, icmpPollMode, DB_BIND_STATIC);
+         DBBind(hStmt, 60, DB_SQLTYPE_VARCHAR, m_chassisPlacementConf, DB_BIND_STATIC);
+         DBBind(hStmt, 61, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC, 127);
+         DBBind(hStmt, 62, DB_SQLTYPE_VARCHAR, m_productCode, DB_BIND_STATIC, 31);
+         DBBind(hStmt, 63, DB_SQLTYPE_VARCHAR, m_productName, DB_BIND_STATIC, 127);
+         DBBind(hStmt, 64, DB_SQLTYPE_VARCHAR, m_productVersion, DB_BIND_STATIC, 15);
+         DBBind(hStmt, 65, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC, 31);
+         DBBind(hStmt, 66, DB_SQLTYPE_INTEGER, m_cipDeviceType);
+         DBBind(hStmt, 67, DB_SQLTYPE_INTEGER, m_cipStatus);
+         DBBind(hStmt, 68, DB_SQLTYPE_INTEGER, m_cipState);
+         DBBind(hStmt, 69, DB_SQLTYPE_INTEGER, m_eipProxy);
+         DBBind(hStmt, 70, DB_SQLTYPE_INTEGER, m_eipPort);
+         DBBind(hStmt, 71, DB_SQLTYPE_VARCHAR, BinToStr(m_hardwareId.value(), HARDWARE_ID_LENGTH, hardwareId), DB_BIND_STATIC);
+         DBBind(hStmt, 72, DB_SQLTYPE_INTEGER, m_cipVendorCode);
+         DBBind(hStmt, 73, DB_SQLTYPE_VARCHAR, agentCertMappingMethod, DB_BIND_STATIC);
+         DBBind(hStmt, 74, DB_SQLTYPE_VARCHAR, m_agentCertMappingData, DB_BIND_STATIC);
          if (m_snmpSecurity != nullptr)
          {
-            DBBind(hStmt, 74, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthoritativeEngine().toString(), DB_BIND_TRANSIENT);
+            DBBind(hStmt, 75, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthoritativeEngine().toString(), DB_BIND_TRANSIENT);
          }
          else
          {
-            DBBind(hStmt, 74, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+            DBBind(hStmt, 75, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
          }
-         DBBind(hStmt, 75, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 76, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -7053,6 +7057,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_RACK_HEIGHT, m_rackHeight);
    pMsg->setField(VID_SSH_PROXY, m_sshProxy);
    pMsg->setField(VID_SSH_LOGIN, m_sshLogin);
+   pMsg->setField(VID_SSH_KEY_ID, m_sshKeyId);
    pMsg->setField(VID_SSH_PASSWORD, m_sshPassword);
    pMsg->setField(VID_SSH_PORT, m_sshPort);
    pMsg->setField(VID_PORT_ROW_COUNT, m_portRowCount);
@@ -7371,6 +7376,9 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
 
    if (pRequest->isFieldExist(VID_SSH_PASSWORD))
       pRequest->getFieldAsString(VID_SSH_PASSWORD, m_sshPassword, MAX_SSH_PASSWORD_LEN);
+
+   if (pRequest->isFieldExist(VID_SSH_KEY_ID))
+      m_sshKeyId = pRequest->getFieldAsUInt32(VID_SSH_KEY_ID);
 
    if (pRequest->isFieldExist(VID_SSH_PORT))
       m_sshPort = pRequest->getFieldAsUInt16(VID_SSH_PORT);
@@ -10702,6 +10710,7 @@ json_t *Node::toJson()
    json_object_set_new(root, "snmpTrapCount", json_integer(m_snmpTrapCount));
    json_object_set_new(root, "sshLogin", json_string_t(m_sshLogin));
    json_object_set_new(root, "sshPassword", json_string_t(m_sshPassword));
+   json_object_set_new(root, "sshKeyId", json_integer(m_sshKeyId));
    json_object_set_new(root, "sshPort", json_integer(m_sshPort));
    json_object_set_new(root, "sshProxy", json_integer(m_sshProxy));
    json_object_set_new(root, "portNumberingScheme", json_integer(m_portNumberingScheme));

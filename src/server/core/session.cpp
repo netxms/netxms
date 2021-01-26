@@ -1482,6 +1482,18 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_SCHEDULED_REPORTING_TASKS:
          getScheduledReportingTasks(request);
          break;
+      case CMD_GET_SSH_KEYS_LIST:
+         getSshKeys(request);
+         break;
+      case CMD_DELETE_SSH_KEY:
+         deleteSshKey(request);
+         break;
+      case CMD_UPDATE_SSH_KEYS:
+         updateSshKey(request);
+         break;
+      case CMD_GENERATE_SSH_KEYS:
+         generateSshKey(request);
+         break;
 #ifdef WITH_ZMQ
       case CMD_ZMQ_SUBSCRIBE_EVENT:
          zmqManageSubscription(request, zmq::EVENT, true);
@@ -15269,6 +15281,77 @@ void ClientSession::findProxyForNode(NXCPMessage *request)
    else
    {
       msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(&msg);
+}
+
+/**
+ * Get SSH key list
+ */
+void ClientSession::getSshKeys(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   FillMessageWithSshKeys(&msg, request->getFieldAsBoolean(VID_INCLUDE_PUBLIC_KEY));
+   msg.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(&msg);
+}
+
+/**
+ * Delete ssh key data
+ */
+void ClientSession::deleteSshKey(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SSH_KEY_CONFIGURATION)
+   {
+
+      DeleteSshKey(&msg, request->getFieldAsInt32(VID_SSH_KEY_ID), request->getFieldAsBoolean(VID_FORCE_DELETE));
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on delete SSH key"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(&msg);
+}
+
+/**
+ * Update or create ssh key data entry
+ */
+void ClientSession::updateSshKey(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SSH_KEY_CONFIGURATION)
+   {
+      CreateOrEditSshKey(request);
+      msg.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on update SSH key"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(&msg);
+}
+
+/**
+ * Generate new SSH key
+ */
+void ClientSession::generateSshKey(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SSH_KEY_CONFIGURATION)
+   {
+      String name = request->getFieldAsSharedString(VID_NAME);
+      msg.setField(VID_RCC, GenerateSshKey(name));
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on generate SSH key"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    sendMessage(&msg);

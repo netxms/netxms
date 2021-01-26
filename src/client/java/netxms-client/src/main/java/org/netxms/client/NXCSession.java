@@ -6182,6 +6182,11 @@ public class NXCSession
          msg.setFieldInt32(NXCPCodes.VID_SSH_PROXY, (int)data.getSshProxy());
       }
 
+      if (data.isFieldSet(NXCObjectModificationData.SSH_KEY_ID))
+      {
+         msg.setFieldInt32(NXCPCodes.VID_SSH_KEY_ID, data.getSshKeyId());
+      }
+
       if (data.isFieldSet(NXCObjectModificationData.SSH_LOGIN))
       {
          msg.setField(NXCPCodes.VID_SSH_LOGIN, data.getSshLogin());
@@ -12343,5 +12348,77 @@ public class NXCSession
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
+   }
+
+   /**
+    * Get list of SSH key
+    * 
+    * @param withPublicKey true if ssh data should be returned with public key
+    * @return list of SSH keys
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<SshKeyData> getSshKeys(boolean withPublicKey) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SSH_KEYS_LIST);
+      msg.setField(NXCPCodes.VID_INCLUDE_PUBLIC_KEY, withPublicKey);      
+      sendMessage(msg);
+      
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_SSH_KEY_COUNT);
+      List<SshKeyData> sshCertificateList = new ArrayList<SshKeyData>(count);
+      long fieldId = NXCPCodes.VID_SSH_KEY_LIST_BASE;
+      for (int i = 0; i < count; i++, fieldId += 5)
+      {
+         sshCertificateList.add(new SshKeyData(response, fieldId));
+      }
+      
+      return sshCertificateList;
+   }
+
+   /**
+    * Delete SSH key 
+    * 
+    * @param id key id
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteSshKey(int id, boolean force) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_SSH_KEY);
+      msg.setFieldInt32(NXCPCodes.VID_SSH_KEY_ID, id);
+      msg.setField(NXCPCodes.VID_FORCE_DELETE, force);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Update or import new SSH keys
+    * 
+    * @param sshCertificateData ssh key information
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void updateSshKey(SshKeyData sshCertificateData) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_SSH_KEYS);
+      sshCertificateData.fillMessage(msg);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Generate new SSH keys 
+    * 
+    * @param name for new keys
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void generateSshKeys(String name) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GENERATE_SSH_KEYS);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
 }

@@ -372,6 +372,19 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
                delete msg;
             }
             break;
+         case CMD_GET_SSH_KEYS:
+            if (g_agentConnectionThreadPool != nullptr)
+            {
+               ThreadPoolExecute(g_agentConnectionThreadPool, connection, &AgentConnection::getSshKeysCallback, msg);
+            }
+            else
+            {
+               NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), connection->m_nProtocolVersion);
+               response.setField(VID_RCC, ERR_INTERNAL_ERROR);
+               connection->sendMessage(&response);
+               delete msg;
+            }
+            break;
          case CMD_FILE_MONITORING:
             connection->onFileMonitoringData(msg);
             delete msg;
@@ -2589,6 +2602,25 @@ UINT32 AgentConnection::processCollectedData(NXCPMessage *msg)
 UINT32 AgentConnection::processBulkCollectedData(NXCPMessage *request, NXCPMessage *response)
 {
    return ERR_NOT_IMPLEMENTED;
+}
+
+/**
+ * Callback for getting SSH keys by id
+ */
+void AgentConnection::getSshKeysCallback(NXCPMessage *msg)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_nProtocolVersion);
+   getSshKeys(msg, &response);
+   sendMessage(&response);
+   delete msg;
+}
+
+/**
+ * Get SSH key function
+ */
+void AgentConnection::getSshKeys(NXCPMessage *request, NXCPMessage *response)
+{
+   response->setField(VID_RCC, ERR_NOT_IMPLEMENTED);
 }
 
 /**

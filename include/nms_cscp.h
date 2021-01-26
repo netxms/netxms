@@ -659,6 +659,11 @@ typedef struct
 #define CMD_BULK_DCI_UPDATE               0x01A4
 #define CMD_GET_SCHEDULED_REPORTING_TASKS 0x01A5
 #define CMD_CONFIGURE_REPORTING_SERVER    0x01A6
+#define CMD_GET_SSH_KEYS_LIST             0x01A7
+#define CMD_DELETE_SSH_KEY                0x01A8
+#define CMD_UPDATE_SSH_KEYS               0x01A9
+#define CMD_GENERATE_SSH_KEYS             0x01AA
+#define CMD_GET_SSH_KEYS                  0x01AB
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1414,6 +1419,10 @@ typedef struct
 #define VID_SMTP_LOCAL_HOSTNAME     ((UINT32)741)
 #define VID_SMTP_LOGIN              ((UINT32)742)
 #define VID_SMTP_PASSWORD           ((UINT32)743)
+#define VID_PRIVATE_KEY             ((UINT32)744)
+#define VID_INCLUDE_PUBLIC_KEY      ((UINT32)745)
+#define VID_SSH_KEY_COUNT           ((UINT32)746)
+#define VID_SSH_KEY_ID              ((UINT32)747)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1649,6 +1658,8 @@ typedef struct
 #define VID_WEB_SERVICE_DEF_LIST_BASE ((UINT32)0x10000000)
 
 #define VID_MASKED_FIELD_LIST_BASE  ((UINT32)0x10000000)
+
+#define VID_SSH_KEY_LIST_BASE       ((UINT32)0x10000000)
 
 // base value for SNMP community strings
 #define VID_COMMUNITY_STRING_LIST_BASE       ((UINT32)0x10000000)

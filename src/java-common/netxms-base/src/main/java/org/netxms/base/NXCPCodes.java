@@ -437,6 +437,11 @@ public class NXCPCodes
    public static final int CMD_BULK_DCI_UPDATE = 0x01A4;
    public static final int CMD_GET_SCHEDULED_REPORTING_TASKS = 0x01A5;
    public static final int CMD_CONFIGURE_REPORTING_SERVER = 0x01A6;
+   public static final int CMD_GET_SSH_KEYS_LIST = 0x01A7;
+   public static final int CMD_DELETE_SSH_KEY = 0x01A8;
+   public static final int CMD_UPDATE_SSH_KEYS = 0x01A9;
+   public static final int CMD_GENERATE_SSH_KEYS = 0x01AA;
+   public static final int CMD_GET_SSH_KEYS = 0x01AB;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1188,6 +1193,10 @@ public class NXCPCodes
    public static final long VID_SMTP_LOCAL_HOSTNAME = 741;
    public static final long VID_SMTP_LOGIN = 742;
    public static final long VID_SMTP_PASSWORD = 743;
+   public static final long VID_PRIVATE_KEY = 744;
+   public static final long VID_INCLUDE_PUBLIC_KEY = 745;
+   public static final long VID_SSH_KEY_COUNT = 746;
+   public static final long VID_SSH_KEY_ID = 747;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1299,4 +1308,5 @@ public class NXCPCodes
    public static final long VID_SHARED_SECRET_LIST_BASE = 0x10000000L;
    public static final long VID_WEB_SERVICE_DEF_LIST_BASE = 0x10000000L;
    public static final long VID_MASKED_FIELD_LIST_BASE = 0x10000000L;
+   public static final long VID_SSH_KEY_LIST_BASE = 0x10000000L;
 }

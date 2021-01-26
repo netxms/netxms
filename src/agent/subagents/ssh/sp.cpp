@@ -33,7 +33,7 @@ static THREAD s_housekeeperThread = INVALID_THREAD_HANDLE;
 /**
  * Acquire SSH session
  */
-SSHSession *AcquireSession(const InetAddress& addr, UINT16 port, const TCHAR *user, const TCHAR *password)
+SSHSession *AcquireSession(const InetAddress& addr, UINT16 port, const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys)
 {
    MutexLock(s_lock);
    for(int i = 0; i < s_sessions.size(); i++)
@@ -41,7 +41,7 @@ SSHSession *AcquireSession(const InetAddress& addr, UINT16 port, const TCHAR *us
       SSHSession *s = s_sessions.get(i);
       if (s->match(addr, port, user) && s->acquire())
       {
-         nxlog_debug(7, _T("SSH: acquired existing session %s"), s->getName());
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: acquired existing session %s"), s->getName());
          MutexUnlock(s_lock);
          return s;
       }
@@ -50,12 +50,12 @@ SSHSession *AcquireSession(const InetAddress& addr, UINT16 port, const TCHAR *us
 
    // No matching sessions, create new one
    SSHSession *session = new SSHSession(addr, port, InterlockedIncrement(&s_sessionId));
-   if (!session->connect(user, password))
+   if (!session->connect(user, password, keys))
    {
       delete session;
       return NULL;
    }
-   nxlog_debug(7, _T("SSH: created new session %s"), session->getName());
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: created new session %s"), session->getName());
 
    session->acquire();
    MutexLock(s_lock);
@@ -73,7 +73,7 @@ void ReleaseSession(SSHSession *session)
    session->release();
    if (!session->isConnected())
    {
-      nxlog_debug(7, _T("SSH: disconnected session %s removed"), session->getName());
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("ReleaseSession: disconnected session %s removed"), session->getName());
       s_sessions.remove(session);
    }
    MutexUnlock(s_lock);
@@ -94,7 +94,7 @@ static THREAD_RESULT THREAD_CALL HousekeeperThread(void *arg)
          SSHSession *s = s_sessions.get(i);
          if (!s->isBusy() && (!s->isConnected() || (now - s->getLastAccessTime() > g_sshSessionIdleTimeout)))
          {
-            nxlog_debug(7, _T("SSH: session %s removed by housekeeper"), s->getName());
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("HousekeeperThread: session %s removed by housekeeper"), s->getName());
             s_sessions.unlink(i);
             i--;
             deleteList.add(s);
@@ -112,7 +112,7 @@ static THREAD_RESULT THREAD_CALL HousekeeperThread(void *arg)
 void InitializeSessionPool()
 {
    s_housekeeperThread = ThreadCreateEx(HousekeeperThread, 0, NULL);
-   nxlog_debug(5, _T("SSH: connection pool initialized"));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("InitializeSessionPool: connection pool initialized"));
 }
 
 /**
@@ -127,5 +127,5 @@ void ShutdownSessionPool()
    s_sessions.clear();
    MutexUnlock(s_lock);
 
-   nxlog_debug(5, _T("SSH: connection pool closed"));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ShutdownSessionPool: connection pool closed"));
 }

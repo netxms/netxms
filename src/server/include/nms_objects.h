@@ -149,6 +149,7 @@ protected:
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response) override;
    virtual bool processCustomMessage(NXCPMessage *msg) override;
    virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size) override;
+   virtual void getSshKeys(NXCPMessage *msg, NXCPMessage *response) override;
 
    AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr, uint16_t port, const TCHAR *secret, bool allowCompression);
    AgentConnectionEx(uint32_t nodeId, AgentTunnel *tunnel, const TCHAR *secret, bool allowCompression);
@@ -3007,6 +3008,7 @@ protected:
    uint32_t m_snmpTrapStormActualDuration;
    TCHAR m_sshLogin[MAX_SSH_LOGIN_LEN];
 	TCHAR m_sshPassword[MAX_SSH_PASSWORD_LEN];
+	uint32_t m_sshKeyId;
 	uint16_t m_sshPort;
 	uint32_t m_sshProxy;
 	uint32_t m_portNumberingScheme;
@@ -3225,6 +3227,7 @@ public:
    const TCHAR *getSshLogin() const { return m_sshLogin; }
    const TCHAR *getSshPassword() const { return m_sshPassword; }
    uint16_t getSshPort() const { return m_sshPort; }
+   uint32_t getSshKeyId() const { return m_sshKeyId; }
    uint32_t getSshProxy() const { return m_sshProxy; }
    time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
    SharedString getPrimaryHostName() const { return GetAttributeWithLock(m_primaryHostName, m_mutexProperties); }
@@ -3260,6 +3263,7 @@ public:
    void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);
    void forceSyncDataCollectionConfig();
    void relatedNodeDataCollectionChanged() { onDataCollectionChange(); }
+   void clearSshKey() { m_sshKeyId = 0; }
 
    ArpCache *getArpCache(bool forceRead = false);
    InterfaceList *getInterfaceList();
@@ -4570,6 +4574,13 @@ uint32_t ModifyGeoArea(const NXCPMessage& msg, uint32_t *areaId);
 uint32_t DeleteGeoArea(uint32_t id, bool forceDelete);
 void GeoAreasToMessage(NXCPMessage *msg);
 void LoadGeoAreas();
+
+void FillMessageWithSshKeys(NXCPMessage *msg, bool withPublicKey);
+uint32_t GenerateSshKey(const TCHAR *name);
+void CreateOrEditSshKey(NXCPMessage *msg);
+void DeleteSshKey(NXCPMessage *response, uint32_t id, bool forceDelete);
+void FindSshKeyById(uint32_t id, NXCPMessage *msg);
+void LoadSshKeys();
 
 /**
  * Global variables

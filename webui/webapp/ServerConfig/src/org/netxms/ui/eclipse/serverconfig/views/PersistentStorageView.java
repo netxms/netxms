@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2021 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.serverconfig.views;
 
 import java.util.HashMap;
@@ -37,6 +55,9 @@ import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.ui.eclipse.widgets.helpers.AttributeLabelProvider;
 
+/**
+ * Persistent storage view
+ */
 public class PersistentStorageView extends ViewPart
 {
    public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.PersistentStorageView"; //$NON-NLS-1$
@@ -92,6 +113,9 @@ public class PersistentStorageView extends ViewPart
       refresh();
    }
    
+   /**
+    * Create and populate pop-up menu
+    */
    private void createPopupMenu()
    {
    // Create menu manager.
@@ -113,6 +137,11 @@ public class PersistentStorageView extends ViewPart
       getSite().registerContextMenu(menuMgr, viewerSetValue);      
    }
 
+   /**
+    * Fill context menu
+    * 
+    * @param mgr menu manager
+    */
    private void fillContextMenu(IMenuManager mgr)
    {
       IStructuredSelection selection = (IStructuredSelection)viewerSetValue.getSelection();
@@ -128,6 +157,9 @@ public class PersistentStorageView extends ViewPart
       mgr.add(actionCreate);
    }
 
+   /**
+    * Contribute to action bars
+    */
    private void contributeToActionBars()
    {
       IActionBars bars = getViewSite().getActionBars();
@@ -204,7 +236,7 @@ public class PersistentStorageView extends ViewPart
     */
    private void refresh()
    {
-      new ConsoleJob("Reloading scheduled task list", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Reloading persistent storage value list", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -221,7 +253,7 @@ public class PersistentStorageView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get list of scheduled tasks";
+            return "Cannot get list of persistent storage values";
          }
       }.start();
    }
@@ -235,7 +267,7 @@ public class PersistentStorageView extends ViewPart
       if (dlg.open() != Window.OK)
          return;
       
-      new ConsoleJob("Reloading scheduled task list", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Create persistent storage value", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -253,7 +285,7 @@ public class PersistentStorageView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get list of scheduled tasks";
+            return "Cannot create persistent storage value";
          }
       }.start();   
    }
@@ -264,7 +296,7 @@ public class PersistentStorageView extends ViewPart
    private void deleteValue()
    {      
       final IStructuredSelection selection = (IStructuredSelection)viewerSetValue.getSelection();
-      new ConsoleJob("Reloading scheduled task list", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Delete persistent storage value", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {            
@@ -291,7 +323,7 @@ public class PersistentStorageView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get list of scheduled tasks";
+            return "Cannot delete persistent storage value";
          }
       }.start();        
    }   
@@ -311,7 +343,7 @@ public class PersistentStorageView extends ViewPart
       if (dlg.open() != Window.OK)
          return;
       
-      new ConsoleJob("Reloading scheduled task list", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Edit persistent storage value", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -329,7 +361,7 @@ public class PersistentStorageView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get list of scheduled tasks";
+            return "Cannot edit persistent storage value";
          }
       }.start();      
    }

@@ -86,6 +86,13 @@
             name="Windows Event Parser"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.serverconfig.views.SshKeyConfigurator"
+            id="org.netxms.ui.eclipse.serverconfig.views.SshKeyConfigurator"
+            name="SSH Key Configuration"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -189,6 +196,12 @@
             id="org.netxms.ui.eclipse.serverconfig.commands.open_windows_event"
             name="Open Windows event parser">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Copy SSH key"
+            id="org.netxms.ui.eclipse.serverconfig.commands.copy_key_task"
+            name="Copy SSH key">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -276,6 +289,15 @@
            menubarPath="config/additions"
            tooltip="Windows event parser">
      </action>
+     <action
+           class="org.netxms.ui.eclipse.serverconfig.actions.OpenSshKeyConfiguration"
+           definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_ssh_configuration"
+           id="org.netxms.ui.eclipse.serverconfig.actions.open_ssh_key_configuration"
+           label="SSH Key Configuration"
+           menubarPath="config/additions"
+           style="push"
+           tooltip="SSH Key Configuration">
+     </action>
 	   </actionSet>
 	   <actionSet id="org.netxms.ui.eclipse.action_set.export_import_configuration"
 		   label="%actionSet.label.ExportImport"
@@ -320,6 +342,11 @@
       <context
             id="org.netxms.ui.eclipse.serverconfig.context.ScheduledTaskView"
             name="Scheduled Tasks"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+      <context
+            id="org.netxms.ui.eclipse.serverconfig.context.SshKeyConfigurator"
+            name="Ssh Key Configurator"
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>
@@ -390,6 +417,12 @@
             contextId="org.netxms.ui.eclipse.serverconfig.context.ScheduledTaskView"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+E">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.serverconfig.commands.copy_key_task"
+            contextId="org.netxms.ui.eclipse.serverconfig.context.SshKeyConfiguratorv"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+ C">
       </key>
    </extension>
    <extension

@@ -121,6 +121,7 @@
 #define ERR_INVALID_OBJECT          ((UINT32)925)
 #define ERR_FILE_ALREADY_EXISTS     ((UINT32)926)
 #define ERR_FOLDER_ALREADY_EXISTS   ((UINT32)927)
+#define ERR_INVALID_SSH_KEY_ID      ((UINT32)928)
 
 /**
  * Bulk data reconciliation DCI processing status codes

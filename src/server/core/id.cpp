@@ -35,7 +35,7 @@ void LoadLastEventId(DB_HANDLE hdb);
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   28
+#define NUMBER_OF_GROUPS   29
 
 /**
  * Static data
@@ -49,7 +49,8 @@ static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
       1, 10000, 10000, 1,
       1, 1, 1, 1,
       1, 1, 1, 1,
-      1, 1, 1, 1
+      1, 1, 1, 1,
+      1
    };
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
    {
@@ -59,7 +60,8 @@ static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+      0xFFFFFFFE
    };
 static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
 {
@@ -90,7 +92,8 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
    _T("Physical Links"),
    _T("Web Service Definitions"),
    _T("Object Categories"),
-   _T("Geographical Areas")
+   _T("Geographical Areas"),
+   _T("SSH Key id")
 };
 
 /**
@@ -518,6 +521,15 @@ bool InitIdTable()
    {
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_GEO_AREAS] = std::max(s_freeIdTable[IDG_GEO_AREAS], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available SSH key id
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM ssh_keys"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_SSH_KEYS] = std::max(s_freeIdTable[IDG_SSH_KEYS], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

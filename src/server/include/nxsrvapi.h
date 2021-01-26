@@ -867,6 +867,7 @@ private:
    void onSyslogMessageCallback(NXCPMessage *msg);
    void onWindowsEventCallback(NXCPMessage *msg);
    void postRawMessageCallback(NXCP_MESSAGE *msg);
+   void getSshKeysCallback(NXCPMessage *msg);
 
 protected:
    virtual AbstractCommChannel *createChannel();
@@ -882,6 +883,8 @@ protected:
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *pMsg);
    virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size);
+   virtual void getSshKeys(NXCPMessage *msg, NXCPMessage *response);
+
 
    const InetAddress& getIpAddr() const { return m_addr; }
 
