@@ -1114,15 +1114,22 @@ if test $? = 0; then
 	if test "x$DISABLE_ENCRYPTION" = "xyes"; then
 		AC_MSG_ERROR(Encryption support is required for server build.)
 	fi
+
 	BUILD_SERVER="yes"
 	MODULES="$MODULES libnxsl libnxcc server ncdrivers nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music templates"
 	NCDRV_DIRS="$NCDRV_DIRS nxagent"
 	PDSDRV_DIRS="influxdb"
+
 	if test "x$XMPP_SUPPORT" = "xyes"; then
 		MODULES="libstrophe $MODULES"
 		AC_DEFINE(XMPP_SUPPORTED, 1, Define to 1 if XMPP is supported)
+	fi
+
+	check_substr "$COMPONENTS" "java"
+	if test $? = 0; then
+		SERVER_COMPONENTS="$SERVER_COMPONENTS nxreportd"
 	fi
 fi
 
@@ -4530,6 +4537,7 @@ AC_SUBST(PGSQL_LIBS)
 AC_SUBST(PYTHON_CPPFLAGS)
 AC_SUBST(PYTHON_LDFLAGS)
 AC_SUBST(PYTHON_LIBS)
+AC_SUBST(SERVER_COMPONENTS)
 AC_SUBST(SERVER_INCLUDE)
 AC_SUBST(SERVER_LIBS)
 AC_SUBST(SERVER_TOOLS)
@@ -4749,6 +4757,8 @@ AC_CONFIG_FILES([
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
 	src/server/ntcb/Makefile
+	src/server/nxreportd/Makefile
+	src/server/nxreportd/java/Makefile
 	src/server/pdsdrv/Makefile
 	src/server/pdsdrv/influxdb/Makefile
 	src/server/pdsdrv/rrdtool/Makefile

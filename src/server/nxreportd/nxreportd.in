@@ -1,0 +1,54 @@
+#!/bin/sh
+#
+# NetXMS reporting server startup script
+# Copyright (c) 2021 Raden Solutions
+#
+
+SYSTEM_JARS="commons-codec-1.11.jar netxms-base.jar netxms-client.jar simple-xml-2.6.4.jar slf4j-api-1.7.30.jar"
+
+for arg in $@; do
+	if [ "$arg" = "-h" ]; then
+		echo "NetXMS Reporting Server launcher"
+		echo "Copyright (c) 2021 Raden Solutions"
+		echo "Usage:"
+		echo "   nxreportd [options]"
+		echo "Valid options are:"
+		echo "   -d    Run as daemon"
+		echo "   -h    Show help and exit"
+		exit 0
+	fi
+
+	if [ "$arg" = "-d" ]; then
+		DAEMON="yes"
+	fi
+done
+
+if [ "x$JAVA_HOME" != "x" -a -x "$JAVA_HOME/bin/java" ]; then
+	JAVA="$JAVA_HOME/bin/java"
+else
+	JAVA=`which java`
+fi
+
+if [ "x$JAVA" = "x" ]; then
+	echo "Cannot find JVM"
+	exit 1
+fi
+
+if [ "x$NETXMS_HOME" != "x" ]; then
+	WORKSPACE="$NETXMS_HOME/var/lib/netxms/nxreportd"
+else
+	WORKSPACE="~STATEDIR~/nxreportd"
+fi
+
+mkdir -p "$WORKSPACE/definitions"
+
+CLASSPATH="~SYSCONFDIR~/nxreportd:~PKGLIBDIR~/nxreportd.jar"
+for jar in $SYSTEM_JARS; do
+	CLASSPATH="$CLASSPATH:~PKGLIBDIR~/$jar"
+done
+
+if [ "x$DAEMON" = "xyes" ]; then
+	$JAVA -Dworkspace="$WORKSPACE" -cp "$CLASSPATH" $JAVA_OPTIONS org.netxms.reporting.Startup &
+else
+	$JAVA -Dworkspace="$WORKSPACE" -cp "$CLASSPATH" $JAVA_OPTIONS org.netxms.reporting.Startup
+fi

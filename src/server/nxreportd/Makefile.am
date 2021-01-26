@@ -1,17 +1,21 @@
-bin_PROGRAMS = nxreportd
-nxreportd_SOURCES = messages.c nxreportd.cpp
-nxreportd_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
-nxreportd_LDADD = ../../libnetxms/libnetxms.la
+# Copyright (C) 2004-2021 Raden Solutions <bugs@netxms.org>
+#  
+# This file is free software; as a special exception the author gives
+# unlimited permission to copy and/or distribute it, with or without 
+# modifications, as long as this notice is preserved.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-BUILT_SOURCES = messages.h
-CLEANFILES = messages.c messages.h
+bin_SCRIPTS = nxreportd
+EXTRA_DIST = nxreportd.in
+SUBDIRS=java
 
-messages.c: messages.h
+REPLACE_CMD = sed -e "s,~BINDIR~,@NETXMS_BINDIR@,g" -e "s,~DATADIR~,@NETXMS_DATADIR@,g" -e "s,~PKGLIBDIR~,@NETXMS_PKGLIBDIR@,g" -e "s,~STATEDIR~,@NETXMS_STATEDIR@,g" -e "s,~SYSCONFDIR~,@NETXMS_SYSCONFDIR@,g" < $@.in > $@
 
-messages.h: messages.mc
-        $(PERL) @top_builddir@/tools/mc.pl messages.mc
+nxreportd: nxreportd.in
+	$(REPLACE_CMD)
 
-EXTRA_DIST = \
-	messages.mc messages.h messages.c \
-	nxreportd.vcxproj nxreportd.vcxproj.filters \
-	winsrv.cpp
+clean-local:
+	rm -f nxreportd
