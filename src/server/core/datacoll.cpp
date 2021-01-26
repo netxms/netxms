@@ -111,11 +111,13 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
                if (proxy != nullptr)
                {
                   TCHAR name[MAX_PARAM_NAME], ipAddr[64];
-                  _sntprintf(name, MAX_PARAM_NAME, _T("SSH.Command(%s:%d,\"%s\",\"%s\",\"%s\")"),
-                             ((Node *)dcTarget)->getIpAddress().toString(ipAddr), static_cast<Node*>(dcTarget)->getSshPort(),
-                             (const TCHAR *)EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshLogin()),
-                             (const TCHAR *)EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshPassword()),
-                             (const TCHAR *)EscapeStringForAgent(pItem->getName()));
+                  _sntprintf(name, MAX_PARAM_NAME, _T("SSH.Command(%s:%u,\"%s\",\"%s\",\"%s\",\"\",%d)"),
+                             static_cast<Node*>(dcTarget)->getIpAddress().toString(ipAddr),
+                             static_cast<uint32_t>(static_cast<Node*>(dcTarget)->getSshPort()),
+                             EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshLogin()).cstr(),
+                             EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshPassword()).cstr(),
+                             EscapeStringForAgent(pItem->getName()).cstr(),
+                             static_cast<Node*>(dcTarget)->getSshKeyId());
                   *error = proxy->getMetricFromAgent(name, pBuffer, MAX_LINE_SIZE);
                }
                else

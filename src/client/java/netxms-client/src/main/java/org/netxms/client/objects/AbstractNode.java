@@ -160,6 +160,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    protected RackOrientation rackOrientation;
    protected String sshLogin;
    protected String sshPassword;
+   protected int sshKeyId;
    protected int sshPort;
    protected long sshProxyId;
    protected int portRowCount;
@@ -261,6 +262,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
       rackHeight = msg.getFieldAsInt16(NXCPCodes.VID_RACK_HEIGHT);
       sshLogin = msg.getFieldAsString(NXCPCodes.VID_SSH_LOGIN);
       sshPassword = msg.getFieldAsString(NXCPCodes.VID_SSH_PASSWORD);
+      sshKeyId = msg.getFieldAsInt32(NXCPCodes.VID_SSH_KEY_ID);
       sshPort = msg.getFieldAsInt32(NXCPCodes.VID_SSH_PORT);
       sshProxyId = msg.getFieldAsInt64(NXCPCodes.VID_SSH_PROXY);
       portRowCount = msg.getFieldAsInt16(NXCPCodes.VID_PORT_ROW_COUNT);
@@ -915,6 +917,14 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    public String getSshPassword()
    {
       return sshPassword;
+   }
+
+   /**
+    * @return the sshKeyId
+    */
+   public int getSshKeyId()
+   {
+      return sshKeyId;
    }
 
    /**

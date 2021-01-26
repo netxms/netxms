@@ -135,6 +135,8 @@ public final class RCC extends CommonRCC
    public static final int INVALID_GEO_AREA_ID = 139;
    public static final int GEO_AREA_NAME_EMPTY = 140;
    public static final int GEO_AREA_IN_USE = 141;
+   public static final int INVALID_SSH_KEY_ID = 142;
+   public static final int SSH_KEY_IN_USE = 143;
 
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

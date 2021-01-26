@@ -48,8 +48,19 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
    if (!addr.isValidUnicast())
       return SYSINFO_RC_UNSUPPORTED;
 
+   shared_ptr<KeyPair> keys;
+   TCHAR keyId[16] = _T("");
+   AgentGetParameterArg(param, 6, keyId, 16);
+   if (keyId[0] != 0)
+   {
+      TCHAR *end;
+      uint32_t id = _tcstoul(keyId, &end, 0);
+      if (id != 0)
+         keys = GetSshKey(session, id);
+   }
+
    LONG rc = SYSINFO_RC_ERROR;
-   SSHSession *ssh = AcquireSession(addr, port, login, password);
+   SSHSession *ssh = AcquireSession(addr, port, login, password, keys);
    if (ssh != nullptr)
    {
       StringList *output = ssh->execute(command);
@@ -100,19 +111,19 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
          }
          else
          {
-            nxlog_debug(6, _T("SSH output size is zero"));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH output size is zero"));
          }
          delete output;
       }
       else
       {
-         nxlog_debug(6, _T("SSH output is empty"));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH output is empty"));
       }
       ReleaseSession(ssh);
    }
    else
    {
-      nxlog_debug(6, _T("Failed to create SSH connection"));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Failed to create SSH connection"));
    }
    return rc;
 }
@@ -142,8 +153,18 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
    if (!addr.isValidUnicast())
       return SYSINFO_RC_UNSUPPORTED;
 
+   shared_ptr<KeyPair> key;
+   TCHAR keyId[16] = _T("");
+   AgentGetParameterArg(param, 6, keyId, 16);
+   if (keyId[0] != 0)
+   {
+      TCHAR *end;
+      uint32_t id = _tcstoul(keyId, &end, 0);
+      key = GetSshKey(session, id);
+   }
+
    LONG rc = SYSINFO_RC_ERROR;
-   SSHSession *ssh = AcquireSession(addr, port, login, password);
+   SSHSession *ssh = AcquireSession(addr, port, login, password, key);
    if (ssh != nullptr)
    {
       StringList *output = ssh->execute(command);

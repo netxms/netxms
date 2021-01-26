@@ -151,6 +151,7 @@
 #define IDG_WEBSVC_DEFINITION 25
 #define IDG_OBJECT_CATEGORIES 26
 #define IDG_GEO_AREAS         27
+#define IDG_SSH_KEYS          28
 
 /**
  * Exit codes for console commands
@@ -808,6 +809,10 @@ private:
    void updateSharedSecretList(NXCPMessage *request);
    void updateSNMPPortList(NXCPMessage *request);
    void findProxyForNode(NXCPMessage *request);
+   void getSshKeys(NXCPMessage *request);
+   void deleteSshKey(NXCPMessage *request);
+   void updateSshKey(NXCPMessage *request);
+   void generateSshKey(NXCPMessage *request);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);

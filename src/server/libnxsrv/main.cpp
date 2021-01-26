@@ -77,6 +77,7 @@ static struct
    { ERR_INVALID_OBJECT, _T("Invalid object") },
    { ERR_FILE_ALREADY_EXISTS, _T("File already exist") },
    { ERR_FOLDER_ALREADY_EXISTS, _T("Folder already exist") },
+   { ERR_INVALID_SSH_KEY_ID, _T("Invalid SSH key") },
    { -1, NULL }
 };
 

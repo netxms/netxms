@@ -18,22 +18,26 @@
  */
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SshKeyData;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -46,6 +50,9 @@ public class SSH extends PropertyPage
    private LabeledText sshLogin;
    private LabeledText sshPassword;
    private LabeledText sshPort;
+   private Combo sshKey;
+   private List<SshKeyData> keyList;
+   private NXCSession session;
 
    /* (non-Javadoc)
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -54,6 +61,7 @@ public class SSH extends PropertyPage
    protected Control createContents(Composite parent)
    {
       node = (AbstractNode)getElement().getAdapter(AbstractNode.class);
+      session = ConsoleSharedData.getSession();
 
       Composite dialogArea = new Composite(parent, SWT.NONE);
       GridLayout dialogLayout = new GridLayout();
@@ -78,14 +86,58 @@ public class SSH extends PropertyPage
       sshPort.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       sshPort.setText(Integer.toString(node.getSshPort()));
       
+      sshKey = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, 
+            "Key from configuration", new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+      
       sshProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       sshProxy.setLabel(Messages.get().Communication_Proxy);
       sshProxy.setEmptySelectionName("<default>");
       sshProxy.setObjectId(node.getSshProxyId());
       sshProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+      loadSshKeyList();
       
       return dialogArea;
    }
+   
+   /**
+    * Get user info and refresh view
+    */
+   private void loadSshKeyList()
+   {
+      ConsoleJob job = new ConsoleJob("Reloading SSH key list", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final List<SshKeyData> list = session.getSshKeys(true);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  keyList = list;
+                  sshKey.add("");   
+                  int selection = 0;
+                  for (int i = 0; i < keyList.size(); i++)
+                  {
+                     SshKeyData d = keyList.get(i);
+                     sshKey.add(d.getName());   
+                     if (d.getId() == node.getSshKeyId())
+                        selection = i + 1;
+                  }      
+                  sshKey.select(selection);              
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot get list of SSH key";
+         }
+      };
+      job.setUser(false);
+      job.start();  
+   }
+
 
    /**
     * Apply changes
@@ -111,6 +163,15 @@ public class SSH extends PropertyPage
          return false;
       }
       
+      int selection = sshKey.getSelectionIndex();
+      if (selection > 0)
+      {
+         SshKeyData d = keyList.get(selection - 1);
+         md.setSshKeyId(d.getId());
+      }
+      else
+         md.setSshKeyId(0);
+         
       md.setSshProxy(sshProxy.getObjectId());
       md.setSshLogin(sshLogin.getText().trim());
       md.setSshPassword(sshPassword.getText());

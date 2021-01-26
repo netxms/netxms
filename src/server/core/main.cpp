@@ -1111,6 +1111,7 @@ retry_db_lock:
    LoadNetworkDeviceDrivers();
    ObjectsInit();
    LoadObjectCategories();
+   LoadSshKeys();
    if (!LoadObjects())
       return FALSE;
    nxlog_debug(1, _T("Objects loaded and initialized"));

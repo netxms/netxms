@@ -151,6 +151,7 @@ public class NXCObjectModificationData
    public static final int GEO_AREAS              = 91;
    public static final int GEOLOCATION_CTRL_MODE  = 92;
    public static final int SSH_PORT               = 93;
+   public static final int SSH_KEY_ID             = 94;
 
    private Set<Integer> fieldSet;
    private long objectId;
@@ -245,6 +246,7 @@ public class NXCObjectModificationData
    private String sshLogin;
    private String sshPassword;
    private int sshPort;
+   private int sshKeyId;
    private Long[] zoneProxies;
    private List<ObjectUrl> urls;
    private List<Long> seedObjectIds;
@@ -1785,6 +1787,23 @@ public class NXCObjectModificationData
    {
       this.sshProxy = sshProxy;
       fieldSet.add(SSH_PROXY);
+   }
+
+   /**
+    * @return the sshKeyId
+    */
+   public int getSshKeyId()
+   {
+      return sshKeyId;
+   }
+
+   /**
+    * @param sshKeyId the sshKeyId to set
+    */
+   public void setSshKeyId(int sshKeyId)
+   {
+      this.sshKeyId = sshKeyId;
+      fieldSet.add(SSH_KEY_ID);
    }
 
    /**

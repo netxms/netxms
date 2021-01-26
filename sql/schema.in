@@ -404,6 +404,7 @@ CREATE TABLE nodes
   ssh_login varchar(63) null,
   ssh_password varchar(63) null,
   ssh_port integer not null,
+  ssh_key_id integer not null,
   ssh_proxy integer not null,
   port_rows integer not null,
   port_numbering_scheme integer not null,
@@ -2355,4 +2356,16 @@ CREATE TABLE dc_targets
    geolocation_ctrl_mode integer not null,
    geo_areas varchar(2000) null,
    PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * SSH keys
+ */
+CREATE TABLE ssh_keys 
+(
+  id integer not null,
+  name varchar(255) not null,
+  public_key varchar(700) null,
+  private_key varchar(1710) null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;

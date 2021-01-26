@@ -934,6 +934,14 @@ void AgentConnectionEx::processTcpProxyData(uint32_t channelId, const void *data
 }
 
 /**
+ * Get SSH key by id
+ */
+void AgentConnectionEx::getSshKeys(NXCPMessage *msg, NXCPMessage *response)
+{
+   FindSshKeyById(msg->getFieldAsUInt32(VID_SSH_KEY_ID), response);
+}
+
+/**
  * Disconnect handler
  */
 void AgentConnectionEx::onDisconnect()

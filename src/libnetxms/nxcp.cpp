@@ -465,7 +465,12 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_FIND_PROXY_FOR_NODE"),
       _T("CMD_BULK_DCI_UPDATE"),
       _T("CMD_GET_SCHEDULED_REPORTING_TASKS"),
-      _T("CMD_CONFIGURE_REPORTING_SERVER")
+      _T("CMD_CONFIGURE_REPORTING_SERVER"),
+      _T("CMD_GET_SSH_KEYS_LIST"),
+      _T("CMD_DELETE_SSH_KEY"),
+      _T("CMD_UPDATE_SSH_KEYS"),
+      _T("CMD_GENERATE_SSH_KEYS"),
+      _T("CMD_GET_SSH_KEYS")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -478,7 +483,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_CONFIGURE_REPORTING_SERVER))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_SSH_KEYS))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

@@ -1,4 +1,4 @@
-# vim:ts=3:sw=3
+ # vim:ts=3:sw=3
 
 radiusdir=$(pkgdatadir)
 radius_DATA = radius.dict
@@ -28,7 +28,7 @@ libnxcore_la_SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addr
 			pds.cpp physical_link.cpp poll.cpp ps.cpp rack.cpp \
 			radius.cpp reporting.cpp rootobj.cpp schedule.cpp script.cpp \
 			sensor.cpp server_stats.cpp session.cpp slmcheck.cpp smclp.cpp \
-			snmp.cpp snmptrap.cpp stp.cpp subnet.cpp summary_email.cpp \
+			snmp.cpp snmptrap.cpp sshkeys.cpp stp.cpp subnet.cpp summary_email.cpp \
 			svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp \
 			template.cpp tools.cpp tracert.cpp tunnel.cpp ua_notification_item.cpp \
 			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \

@@ -29,6 +29,23 @@
 #include <libssh/libssh.h>
 
 #define MAX_SSH_SESSION_NAME_LEN (MAX_SSH_LOGIN_LEN + MAX_DNS_NAME + 16)
+#define DEBUG_TAG _T("ssh")
+
+/**
+ * Key pair for SSH authentication
+ */
+struct KeyPair
+{
+   DISABLE_COPY_CTOR(KeyPair)
+
+   char *publicKey;
+   char *pubKeySource;
+   enum ssh_keytypes_e type;
+   char *privateKey;
+
+   KeyPair(char *privateKey, char *publicKey);
+   ~KeyPair();
+};
 
 /**
  * SSH session
@@ -49,7 +66,7 @@ public:
    SSHSession(const InetAddress& addr, UINT16 port, INT32 id = 0);
    ~SSHSession();
 
-   bool connect(const TCHAR *user, const TCHAR *password);
+   bool connect(const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys);
    void disconnect();
    bool isConnected() const { return (m_session != NULL) && ssh_is_connected(m_session); }
 
@@ -65,10 +82,13 @@ public:
    StringList *execute(const TCHAR *command);
 };
 
+/* Key functions */
+shared_ptr<KeyPair> GetSshKey(AbstractCommSession *session, uint32_t id);
+
 /* Session pool */
 void InitializeSessionPool();
 void ShutdownSessionPool();
-SSHSession *AcquireSession(const InetAddress& addr, UINT16 port, const TCHAR *user, const TCHAR *password);
+SSHSession *AcquireSession(const InetAddress& addr, UINT16 port, const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys);
 void ReleaseSession(SSHSession *session);
 
 /* handlers */

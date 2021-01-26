@@ -1098,11 +1098,12 @@ NXSL_METHOD_DEFINITION(Node, executeSSHCommand)
       if (proxyNode != nullptr)
       {
          TCHAR command[MAX_PARAM_NAME], ipAddr[64];
-         _sntprintf(command, MAX_PARAM_NAME, _T("SSH.Command(%s:%d,\"%s\",\"%s\",\"%s\")"),
-                    node->getIpAddress().toString(ipAddr), node->getSshPort(),
-                    (const TCHAR *)EscapeStringForAgent(node->getSshLogin()),
-                    (const TCHAR *)EscapeStringForAgent(node->getSshPassword()),
-                    (const TCHAR *)EscapeStringForAgent(argv[0]->getValueAsCString()));
+         _sntprintf(command, MAX_PARAM_NAME, _T("SSH.Command(%s:%u,\"%s\",\"%s\",\"%s\",\"\",%d)"),
+                    node->getIpAddress().toString(ipAddr), static_cast<uint32_t>(node->getSshPort()),
+                    EscapeStringForAgent(node->getSshLogin()).cstr(),
+                    EscapeStringForAgent(node->getSshPassword()).cstr(),
+                    EscapeStringForAgent(argv[0]->getValueAsCString()).cstr(),
+                    node->getSshKeyId());
          StringList *list;
          UINT32 rcc = proxyNode->getListFromAgent(command, &list);
          *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
