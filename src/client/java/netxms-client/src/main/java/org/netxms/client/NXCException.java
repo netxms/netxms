@@ -38,6 +38,11 @@ public class NXCException extends Exception
     */
    protected String additionalInfo;
 
+   /**
+    * List of identifiers of any related objects (for example, objects referencing entity being deleted).
+    */
+   protected long[] relatedObjects;
+
 	/**
 	 * Create new NXC exception.
 	 * 
@@ -45,9 +50,7 @@ public class NXCException extends Exception
 	 */
 	public NXCException(int errorCode)
 	{
-      super();
-      this.errorCode = errorCode;
-      this.additionalInfo = null;
+      this(errorCode, null, null, null);
 	}
 
 	/**
@@ -58,10 +61,20 @@ public class NXCException extends Exception
 	 */
 	public NXCException(int errorCode, String additionalInfo)
 	{
-      super();
-      this.errorCode = errorCode;
-      this.additionalInfo = additionalInfo;
+      this(errorCode, additionalInfo, null, null);
 	}
+
+   /**
+    * Create new NXC exception with additional information.
+    * 
+    * @param errorCode Error code
+    * @param additionalInfo Additional info
+    * @param relatedObjects List of related object identifiers
+    */
+   public NXCException(int errorCode, String additionalInfo, long[] relatedObjects)
+   {
+      this(errorCode, additionalInfo, relatedObjects, null);
+   }
 
    /**
     * Create new NXC exception with root cause reference.
@@ -71,9 +84,23 @@ public class NXCException extends Exception
     */
    public NXCException(int errorCode, Throwable cause)
    {
+      this(errorCode, null, null, cause);
+   }
+
+   /**
+    * Create new NXC exception with additional information and root cause reference.
+    *
+    * @param errorCode Error code
+    * @param additionalInfo Additional info
+    * @param relatedObjects List of related object identifiers
+    * @param cause root cause exception
+    */
+   public NXCException(int errorCode, String additionalInfo, long[] relatedObjects, Throwable cause)
+   {
       super(cause);
       this.errorCode = errorCode;
-      this.additionalInfo = null;
+      this.additionalInfo = additionalInfo;
+      this.relatedObjects = relatedObjects;
    }
 
    /**
@@ -97,7 +124,7 @@ public class NXCException extends Exception
    {
       return errorCode;
    }
-   
+
    /**
     * Get additional information associated with exception (for example, NXSL error message)
     * 
@@ -108,7 +135,17 @@ public class NXCException extends Exception
       return additionalInfo;
    }
 
-   /* (non-Javadoc)
+   /**
+    * Get list of identifiers of related objects.
+    *
+    * @return list of identifiers of related objects or null if not provided
+    */
+   public long[] getRelatedObjects()
+   {
+      return relatedObjects;
+   }
+
+   /**
     * @see java.lang.Throwable#getMessage()
     */
    @Override
@@ -117,7 +154,7 @@ public class NXCException extends Exception
       return getErrorMessage(errorCode, "en");
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Throwable#getLocalizedMessage()
     */
    @Override
