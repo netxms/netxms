@@ -157,8 +157,8 @@ shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
    // reading the modulus
    const BIGNUM *n, *e;
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
-   n = pRsa->n;
-   e = pRsa->e;
+   n = key->n;
+   e = key->e;
 #else
    const BIGNUM *d;
    RSA_get0_key(key, &n, &e, &d);
