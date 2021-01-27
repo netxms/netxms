@@ -28,7 +28,6 @@
  * Data collector thread pool
  */
 extern ThreadPool *g_dataCollectorThreadPool;
-ManualGauge64 *g_currentPollerTimer = nullptr;
 
 /**
  * Data collector worker
