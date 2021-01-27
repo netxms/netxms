@@ -624,7 +624,7 @@ AbstractCommChannel *AgentConnection::acquireChannel()
 shared_ptr<NXCPEncryptionContext> AgentConnection::acquireEncryptionContext()
 {
    lock();
-   shared_ptr<NXCPEncryptionContext> ctx = m_receiver->m_encryptionContext;
+   shared_ptr<NXCPEncryptionContext> ctx = (m_receiver != nullptr) ? m_receiver->m_encryptionContext : shared_ptr<NXCPEncryptionContext>();
    unlock();
    return ctx;
 }
