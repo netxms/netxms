@@ -247,6 +247,8 @@ struct PolicyChangeNotification
 #define DCIDESC_AGENT_SUPPORTEDCIPHERS               _T("List of ciphers supported by agent")
 #define DCIDESC_AGENT_SYSLOGPROXY_ISENABLED          _T("Check if syslog proxy is enabled")
 #define DCIDESC_AGENT_SYSLOGPROXY_RECEIVEDMSGS       _T("Number of syslog messages received by agent")
+#define DCIDESC_AGENT_TCPPROXY_CONNECTIONREQUESTS    _T("Number of TCP proxy connection requests")
+#define DCIDESC_AGENT_TCPPROXY_ISENABLED             _T("Check if TCP proxy is enabled")
 #define DCIDESC_AGENT_THREADPOOL_ACTIVEREQUESTS      _T("Agent thread pool {instance}: active requests")
 #define DCIDESC_AGENT_THREADPOOL_AVERAGEWAITTIME     _T("Agent thread pool {instance}: average wait time")
 #define DCIDESC_AGENT_THREADPOOL_CURRSIZE            _T("Agent thread pool {instance}: current size")
