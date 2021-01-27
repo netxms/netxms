@@ -55,62 +55,62 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class LogParserRuleEditor extends DashboardComposite
 {
-	private static final Color CONDITION_BORDER_COLOR = new Color(Display.getCurrent(), 198,214,172);
-	private static final Color ACTION_BORDER_COLOR = new Color(Display.getCurrent(), 186,176,201);
-	private static final Color TITLE_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
-	
-	private FormToolkit toolkit;
-	private LogParserRule rule;
-	private LogParserEditor editor;
-	private LabeledText name;
-	private LabeledText regexp;
-	private Button checkboxInvert;
+   private static final Color CONDITION_BORDER_COLOR = new Color(Display.getCurrent(), 198, 214, 172);
+   private static final Color ACTION_BORDER_COLOR = new Color(Display.getCurrent(), 186, 176, 201);
+   private static final Color TITLE_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
+
+   private FormToolkit toolkit;
+   private LogParserRule rule;
+   private LogParserEditor editor;
+   private LabeledText name;
+   private LabeledText regexp;
+   private Button checkboxInvert;
    private Button checkboxReset;
    private Spinner repeatCount;
    private Spinner timeRange;
    private Combo timeUnits;
-	private LabeledText severity;
-	private LabeledText facility;
-	private LabeledText tag;
-	private LabeledText logName;
-	private LabeledText activeContext;
-	private LabeledText description;
-	private LabeledText agentAction;
-	private EventSelector event;
+   private LabeledText severity;
+   private LabeledText facility;
+   private LabeledText tag;
+   private LabeledText logName;
+   private LabeledText activeContext;
+   private LabeledText description;
+   private LabeledText agentAction;
+   private EventSelector event;
    private LabeledText eventTag;
    private LabeledText context;
-	private Combo contextAction;
-	private Combo contextResetMode;
-	private Button checkboxBreak;
+   private Combo contextAction;
+   private Combo contextResetMode;
+   private Button checkboxBreak;
    private Button checkboxDoNotSaveToDB;
 
-	/**
-	 * @param parent
-	 * @param style
-	 */
-	public LogParserRuleEditor(Composite parent, FormToolkit toolkit, LogParserRule rule, final LogParserEditor editor)
-	{
-		super(parent, SWT.BORDER);
-		
-		this.toolkit = toolkit;
-		this.rule = rule;
-		this.editor = editor;
-		
-		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
-		layout.makeColumnsEqualWidth = true;
-		setLayout(layout);
-		
-		final Composite controlBar = new Composite(this, SWT.NONE);
-		controlBar.setLayout(new RowLayout(SWT.HORIZONTAL));
-		GridData gd = new GridData();
-		gd.horizontalSpan = 2;
-		gd.horizontalAlignment = SWT.RIGHT;
-		controlBar.setLayoutData(gd);
-		fillControlBar(controlBar);
-		
-		name = new LabeledText(this, SWT.NONE);
-		name.setLabel("Name");
+   /**
+    * @param parent
+    * @param style
+    */
+   public LogParserRuleEditor(Composite parent, FormToolkit toolkit, LogParserRule rule, final LogParserEditor editor)
+   {
+      super(parent, SWT.BORDER);
+
+      this.toolkit = toolkit;
+      this.rule = rule;
+      this.editor = editor;
+
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
+      setLayout(layout);
+
+      final Composite controlBar = new Composite(this, SWT.NONE);
+      controlBar.setLayout(new RowLayout(SWT.HORIZONTAL));
+      GridData gd = new GridData();
+      gd.horizontalSpan = 2;
+      gd.horizontalAlignment = SWT.RIGHT;
+      controlBar.setLayoutData(gd);
+      fillControlBar(controlBar);
+
+      name = new LabeledText(this, SWT.NONE);
+      name.setLabel("Name");
       gd = new GridData();
       gd.horizontalSpan = 2;
       gd.horizontalAlignment = SWT.FILL;
@@ -124,142 +124,142 @@ public class LogParserRuleEditor extends DashboardComposite
             editor.fireModifyListeners();
          }
       });
-		
-		final Card condition = new Card(this, Messages.get().LogParserRuleEditor_Condition) {
-			@Override
-			protected Control createClientArea(Composite parent)
-			{
-				setTitleBackground(CONDITION_BORDER_COLOR);
-				setTitleColor(TITLE_COLOR);
-				return createMatchingArea(parent);
-			}
-		};
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.verticalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.grabExcessVerticalSpace = true;
-		condition.setLayoutData(gd);
 
-		final Card action = new Card(this, Messages.get().LogParserRuleEditor_Action) {
-			@Override
-			protected Control createClientArea(Composite parent)
-			{
-				setTitleBackground(ACTION_BORDER_COLOR);
-				setTitleColor(TITLE_COLOR);
-				return createActionArea(parent);
-			}
-		};
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.verticalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.grabExcessVerticalSpace = true;
-		action.setLayoutData(gd);
-	}
-	
-	/**
-	 * Fill control bar
-	 * 
-	 * @param parent
-	 */
-	private void fillControlBar(Composite parent)
-	{
-		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.NONE);
-		link.setImage(SharedIcons.IMG_UP);
-		link.setToolTipText(Messages.get().LogParserRuleEditor_MoveUp);
-		link.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-				editor.moveRuleUp(rule);
-			}
-		});
-		
-		link = toolkit.createImageHyperlink(parent, SWT.NONE);
-		link.setImage(SharedIcons.IMG_DOWN);
-		link.setToolTipText(Messages.get().LogParserRuleEditor_MoveDown);
-		link.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-				editor.moveRuleDown(rule);
-			}
-		});
-		
-		link = toolkit.createImageHyperlink(parent, SWT.NONE);
-		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
-		link.setToolTipText(Messages.get().LogParserRuleEditor_DeleteRule);
-		link.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-				editor.deleteRule(rule);
-			}
-		});
-	}
+      final Card condition = new Card(this, Messages.get().LogParserRuleEditor_Condition) {
+         @Override
+         protected Control createClientArea(Composite parent)
+         {
+            setTitleBackground(CONDITION_BORDER_COLOR);
+            setTitleColor(TITLE_COLOR);
+            return createMatchingArea(parent);
+         }
+      };
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
+      condition.setLayoutData(gd);
 
-	/**
-	 * Create matching area
-	 */
-	private Composite createMatchingArea(Composite parent)
-	{
-		Composite area = new Composite(parent, SWT.NONE);
-		
-		GridLayout layout = new GridLayout();
-		area.setLayout(layout);
-		
-		final ModifyListener listener = new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e)
-			{
-				editor.fireModifyListeners();
-			}
-		};
-		
-		Composite matcher = new Composite(area, SWT.NONE);
+      final Card action = new Card(this, Messages.get().LogParserRuleEditor_Action) {
+         @Override
+         protected Control createClientArea(Composite parent)
+         {
+            setTitleBackground(ACTION_BORDER_COLOR);
+            setTitleColor(TITLE_COLOR);
+            return createActionArea(parent);
+         }
+      };
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
+      action.setLayoutData(gd);
+   }
+
+   /**
+    * Fill control bar
+    * 
+    * @param parent
+    */
+   private void fillControlBar(Composite parent)
+   {
+      ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.NONE);
+      link.setImage(SharedIcons.IMG_UP);
+      link.setToolTipText(Messages.get().LogParserRuleEditor_MoveUp);
+      link.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            editor.moveRuleUp(rule);
+         }
+      });
+
+      link = toolkit.createImageHyperlink(parent, SWT.NONE);
+      link.setImage(SharedIcons.IMG_DOWN);
+      link.setToolTipText(Messages.get().LogParserRuleEditor_MoveDown);
+      link.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            editor.moveRuleDown(rule);
+         }
+      });
+
+      link = toolkit.createImageHyperlink(parent, SWT.NONE);
+      link.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      link.setToolTipText(Messages.get().LogParserRuleEditor_DeleteRule);
+      link.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            editor.deleteRule(rule);
+         }
+      });
+   }
+
+   /**
+    * Create matching area
+    */
+   private Composite createMatchingArea(Composite parent)
+   {
+      Composite area = new Composite(parent, SWT.NONE);
+
+      GridLayout layout = new GridLayout();
+      area.setLayout(layout);
+
+      final ModifyListener listener = new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            editor.fireModifyListeners();
+         }
+      };
+
+      Composite matcher = new Composite(area, SWT.NONE);
       toolkit.adapt(matcher);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       matcher.setLayoutData(gd);
-      
+
       layout = new GridLayout();
       layout.numColumns = 2;
       layout.marginWidth = 0;
       matcher.setLayout(layout);
-		
-		regexp = new LabeledText(matcher, SWT.NONE);
-		regexp.setLabel(Messages.get().LogParserRuleEditor_MatchingRegExp);
-		regexp.setText(rule.getMatch().getMatch());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		regexp.setLayoutData(gd);
-		regexp.getTextControl().addModifyListener(listener);
-		
-		checkboxInvert = toolkit.createButton(matcher, "Invert", SWT.CHECK);
-		checkboxInvert.addSelectionListener(new SelectionAdapter() {
+
+      regexp = new LabeledText(matcher, SWT.NONE);
+      regexp.setLabel(Messages.get().LogParserRuleEditor_MatchingRegExp);
+      regexp.setText(rule.getMatch().getMatch());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      regexp.setLayoutData(gd);
+      regexp.getTextControl().addModifyListener(listener);
+
+      checkboxInvert = toolkit.createButton(matcher, "Invert", SWT.CHECK);
+      checkboxInvert.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             editor.fireModifyListeners();
          }
-      });          
-		checkboxInvert.setSelection(rule.getMatch().getInvert());
-		
+      });
+      checkboxInvert.setSelection(rule.getMatch().getInvert());
+
       Composite matcherRepeatConf = new Composite(matcher, SWT.NONE);
       toolkit.adapt(matcherRepeatConf);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;      
+      gd.horizontalSpan = 2;
       matcherRepeatConf.setLayoutData(gd);
-      
+
       layout = new GridLayout();
       layout.numColumns = 3;
       layout.marginWidth = 0;
-      matcherRepeatConf.setLayout(layout);      
+      matcherRepeatConf.setLayout(layout);
 
       final WidgetFactory factory = new WidgetFactory() {
          @Override
@@ -268,8 +268,9 @@ public class LogParserRuleEditor extends DashboardComposite
             return new Spinner(parent, style);
          }
       };
-      
-      repeatCount = (Spinner)WidgetHelper.createLabeledControl(matcherRepeatConf, SWT.BORDER, factory, "Repeat count", WidgetHelper.DEFAULT_LAYOUT_DATA);
+
+      repeatCount = (Spinner)WidgetHelper.createLabeledControl(matcherRepeatConf, SWT.BORDER, factory, "Repeat count",
+            WidgetHelper.DEFAULT_LAYOUT_DATA);
       toolkit.adapt(repeatCount);
       repeatCount.setMinimum(0);
       repeatCount.setSelection(rule.getMatch().getRepeatCount());
@@ -280,11 +281,11 @@ public class LogParserRuleEditor extends DashboardComposite
             editor.fireModifyListeners();
          }
       });
-      
+
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      repeatCount.setLayoutData(gd); 
+      repeatCount.setLayoutData(gd);
       Composite timeBackGroup = new Composite(matcherRepeatConf, SWT.NONE);
       toolkit.adapt(timeBackGroup);
       layout = new GridLayout();
@@ -297,20 +298,21 @@ public class LogParserRuleEditor extends DashboardComposite
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       timeBackGroup.setLayoutData(gd);
-      
-      timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, "Repeat interval", 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      timeRange.setSelection(rule.getMatch().getTimeRagne()); 
+
+      timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, "Repeat interval", 1, 10000,
+            WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeRange.setSelection(rule.getMatch().getTimeRagne());
       timeRange.addModifyListener(listener);
       toolkit.adapt(timeRange);
-      
+
       timeUnits = WidgetHelper.createLabeledCombo(timeBackGroup, SWT.READ_ONLY, "", WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeUnits.add("Seconds");
       timeUnits.add("Minutes");
       timeUnits.add("Hours");
-      timeUnits.select(rule.getMatch().getTimeUnit()); 
+      timeUnits.select(rule.getMatch().getTimeUnit());
       timeUnits.addModifyListener(listener);
       toolkit.adapt(timeUnits);
-      //time range
+      // time range
 
       checkboxReset = toolkit.createButton(matcherRepeatConf, "Reset repeat count", SWT.CHECK);
       checkboxReset.addSelectionListener(new SelectionAdapter() {
@@ -319,63 +321,66 @@ public class LogParserRuleEditor extends DashboardComposite
          {
             editor.fireModifyListeners();
          }
-      });          
+      });
       checkboxReset.setSelection(rule.getMatch().getReset());
 
-		severity = new LabeledText(area, SWT.NONE);
-		toolkit.adapt(severity);
-		severity.setLabel(editor.getParserType() == LogParserType.SYSLOG ? Messages.get().LogParserRuleEditor_Severity : "Level");
-		severity.setText(rule.getSeverityOrLevel(editor.getParserType() == LogParserType.SYSLOG)); //$NON-NLS-1$
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		severity.setLayoutData(gd);
-		severity.getTextControl().addModifyListener(listener);
-		
-		facility = new LabeledText(area, SWT.NONE);
-		toolkit.adapt(facility);
-		facility.setLabel(editor.getParserType() == LogParserType.SYSLOG ? Messages.get().LogParserRuleEditor_Facility : "Id");
-		facility.setText(rule.getFacilityOrId(editor.getParserType() == LogParserType.SYSLOG)); //$NON-NLS-1$
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		facility.setLayoutData(gd);
-		facility.getTextControl().addModifyListener(listener);
+      severity = new LabeledText(area, SWT.NONE);
+      toolkit.adapt(severity);
+      severity.setLabel(editor.getParserType() == LogParserType.SYSLOG ? Messages.get().LogParserRuleEditor_Severity : "Level");
+      severity.setText(rule.getSeverityOrLevel(editor.getParserType() == LogParserType.SYSLOG)); // $NON-NLS-1$
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      severity.setLayoutData(gd);
+      severity.getTextControl().addModifyListener(listener);
 
-		tag = new LabeledText(area, SWT.NONE);
-		toolkit.adapt(tag);
-		tag.setLabel(editor.getParserType() == LogParserType.SYSLOG ? Messages.get().LogParserRuleEditor_SyslogTag : "Source");
-		tag.setText(rule.getTagOrSource(editor.getParserType() == LogParserType.SYSLOG)); //$NON-NLS-1$
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		tag.setLayoutData(gd);
-		tag.getTextControl().addModifyListener(listener);		
-		
-		if (editor.getParserType() == LogParserType.WIN_EVENT)
-		{
-	      logName = new LabeledText(area, SWT.NONE);
-	      toolkit.adapt(logName);
-	      logName.setLabel("Log name");
-	      logName.setText(rule.getLogName()); //$NON-NLS-1$
-	      gd = new GridData();
-	      gd.horizontalAlignment = SWT.FILL;
-	      gd.grabExcessHorizontalSpace = true;
-	      logName.setLayoutData(gd);
-	      logName.getTextControl().addModifyListener(listener);  
-		}
-		
-		activeContext = new LabeledText(area, SWT.NONE);
-		toolkit.adapt(activeContext);
-		activeContext.setLabel(Messages.get().LogParserRuleEditor_ActiveContext);
-		activeContext.setText((rule.getContext() != null) ? rule.getContext() : ""); //$NON-NLS-1$
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		activeContext.setLayoutData(gd);
-		activeContext.getTextControl().addModifyListener(listener);
-		
-		description = new LabeledText(area, SWT.NONE);
+      facility = new LabeledText(area, SWT.NONE);
+      toolkit.adapt(facility);
+      facility.setLabel(editor.getParserType() == LogParserType.SYSLOG ? Messages.get().LogParserRuleEditor_Facility : "Id");
+      facility.setText(rule.getFacilityOrId(editor.getParserType() == LogParserType.SYSLOG)); // $NON-NLS-1$
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      facility.setLayoutData(gd);
+      facility.getTextControl().addModifyListener(listener);
+
+      tag = new LabeledText(area, SWT.NONE);
+      toolkit.adapt(tag);
+      tag.setLabel(editor.getParserType() == LogParserType.SYSLOG ? Messages.get().LogParserRuleEditor_SyslogTag : "Source");
+      tag.setText(rule.getTagOrSource(editor.getParserType() == LogParserType.SYSLOG)); // $NON-NLS-1$
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      tag.setLayoutData(gd);
+      tag.getTextControl().addModifyListener(listener);
+
+      if (editor.getParserType() == LogParserType.WIN_EVENT)
+      {
+         logName = new LabeledText(area, SWT.NONE);
+         toolkit.adapt(logName);
+         logName.setLabel("Log name");
+         logName.setText(rule.getLogName()); // $NON-NLS-1$
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         logName.setLayoutData(gd);
+         logName.getTextControl().addModifyListener(listener);
+      }
+
+      if (editor.getParserType() == LogParserType.POLICY)
+      {
+         activeContext = new LabeledText(area, SWT.NONE);
+         toolkit.adapt(activeContext);
+         activeContext.setLabel(Messages.get().LogParserRuleEditor_ActiveContext);
+         activeContext.setText((rule.getContext() != null) ? rule.getContext() : ""); //$NON-NLS-1$
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         activeContext.setLayoutData(gd);
+         activeContext.getTextControl().addModifyListener(listener);
+      }
+
+      description = new LabeledText(area, SWT.NONE);
       toolkit.adapt(description);
       description.setLabel("Description");
       description.setText((rule.getDescription() != null) ? rule.getDescription() : ""); //$NON-NLS-1$
@@ -384,87 +389,86 @@ public class LogParserRuleEditor extends DashboardComposite
       gd.grabExcessHorizontalSpace = true;
       description.setLayoutData(gd);
       description.getTextControl().addModifyListener(listener);
-		
-		updateWindowsEventLogFields();		
-		return area;
-	}
-	
-	/**
-	 * Enables or disables Windows syslog fields depending on filename field
-	 */
-	public void updateWindowsEventLogFields()
-	{
-	   if(editor.getParserType() == LogParserType.SYSLOG)
-	      return;
-	      
-	   if(editor.isWindowsEventLogParser() || editor.getParserType() == LogParserType.WIN_EVENT)
-	   {
-	      severity.setEnabled(true);
-	      facility.setEnabled(true);
-	      tag.setEnabled(true);
-	   }
-	   else
-	   {
+
+      updateWindowsEventLogFields();
+      return area;
+   }
+
+   /**
+    * Enables or disables Windows syslog fields depending on filename field
+    */
+   public void updateWindowsEventLogFields()
+   {
+      if (editor.getParserType() == LogParserType.SYSLOG)
+         return;
+
+      if (editor.isWindowsEventLogParser() || editor.getParserType() == LogParserType.WIN_EVENT)
+      {
+         severity.setEnabled(true);
+         facility.setEnabled(true);
+         tag.setEnabled(true);
+      }
+      else
+      {
          severity.setEnabled(false);
          facility.setEnabled(false);
-         tag.setEnabled(false);	      
-	   }
-	}
-	
-	/**
-	 * Create action area
-	 */
-	private Composite createActionArea(Composite parent)
-	{
-		Composite area = new Composite(parent, SWT.NONE);
-		
-		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
-		area.setLayout(layout);
-		
-		long eventCode = 0;
-		if (rule.getEvent() != null)
-		{
-			try
-			{
-				eventCode = Long.parseLong(rule.getEvent().getEvent());
-			}
-			catch(NumberFormatException e)
-			{
-				EventTemplate tmpl = ConsoleSharedData.getSession().findEventTemplateByName(rule.getEvent().getEvent());
-				if (tmpl != null)
-					eventCode = tmpl.getCode();
-			}
-		}
-		
-		event = new EventSelector(area, SWT.NONE, true);
-		toolkit.adapt(event);
-		event.setLabel(Messages.get().LogParserRuleEditor_GenerateEvent);
-		event.setEventCode(eventCode);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		event.setLayoutData(gd);
-		event.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e)
-			{
-				editor.fireModifyListeners();
-			   eventTag.setEnabled(event.getEventCode() != 0);	   
-			}
-		});
+         tag.setEnabled(false);
+      }
+   }
 
-      
+   /**
+    * Create action area
+    */
+   private Composite createActionArea(Composite parent)
+   {
+      Composite area = new Composite(parent, SWT.NONE);
+
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      area.setLayout(layout);
+
+      long eventCode = 0;
+      if (rule.getEvent() != null)
+      {
+         try
+         {
+            eventCode = Long.parseLong(rule.getEvent().getEvent());
+         }
+         catch(NumberFormatException e)
+         {
+            EventTemplate tmpl = ConsoleSharedData.getSession().findEventTemplateByName(rule.getEvent().getEvent());
+            if (tmpl != null)
+               eventCode = tmpl.getCode();
+         }
+      }
+
+      event = new EventSelector(area, SWT.NONE, true);
+      toolkit.adapt(event);
+      event.setLabel(Messages.get().LogParserRuleEditor_GenerateEvent);
+      event.setEventCode(eventCode);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      event.setLayoutData(gd);
+      event.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            editor.fireModifyListeners();
+            eventTag.setEnabled(event.getEventCode() != 0);
+         }
+      });
+
       String eventTagText = "";
       if (rule.getEvent() != null)
       {
          eventTagText = rule.getEvent().getEventTag() != null ? rule.getEvent().getEventTag() : "";
       }
-      
+
       eventTag = new LabeledText(area, SWT.NONE);
       toolkit.adapt(eventTag);
       eventTag.setLabel("Event tag");
-      eventTag.setText(eventTagText); 
+      eventTag.setText(eventTagText);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -476,160 +480,102 @@ public class LogParserRuleEditor extends DashboardComposite
             editor.fireModifyListeners();
          }
       });
-      eventTag.setEnabled(event.getEventCode() != 0);   
-		
-		final LogParserContext contextDefinition = rule.getContextDefinition();
-		
-		context = new LabeledText(area, SWT.NONE);
-		toolkit.adapt(context);
-		context.setLabel(Messages.get().LogParserRuleEditor_ChangeContext);
-		context.setText((contextDefinition != null) ? contextDefinition.getData() : ""); //$NON-NLS-1$
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		context.setLayoutData(gd);
-		context.getTextControl().addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e)
-			{
-				boolean contextSet = !context.getText().trim().isEmpty();
-				contextAction.setEnabled(contextSet);
-				contextResetMode.setEnabled(contextSet && (contextAction.getSelectionIndex() == 0));
-				editor.fireModifyListeners();
-			}
-		});
-		
-		final Composite contextOptions = new Composite(area, SWT.NONE);
-		layout = new GridLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.numColumns = 2;
-		layout.makeColumnsEqualWidth = true;
-		contextOptions.setLayout(layout);
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		contextOptions.setLayoutData(gd);
-		
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		contextAction = WidgetHelper.createLabeledCombo(contextOptions, SWT.READ_ONLY, Messages.get().LogParserRuleEditor_ContextAction, gd);
-		toolkit.adapt(contextAction);
-		contextAction.add(Messages.get().LogParserRuleEditor_CtxActionActivate);
-		contextAction.add(Messages.get().LogParserRuleEditor_CtxActionClear);
-		if (contextDefinition != null)
-		{
-			contextAction.select(contextDefinition.getAction());
-		}
-		else
-		{
-			contextAction.select(0);
-			contextAction.setEnabled(false);
-		}
-		contextAction.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				contextResetMode.setEnabled(contextAction.getSelectionIndex() == 0);
-				editor.fireModifyListeners();
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
-		
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		contextResetMode = WidgetHelper.createLabeledCombo(contextOptions, SWT.READ_ONLY, Messages.get().LogParserRuleEditor_ContextResetMode, gd);
-		toolkit.adapt(contextResetMode);
-		contextResetMode.add(Messages.get().LogParserRuleEditor_CtxModeAuto);
-		contextResetMode.add(Messages.get().LogParserRuleEditor_CtxModeManual);
-		if (contextDefinition != null)
-		{
-			contextResetMode.select(contextDefinition.getReset());
-			contextResetMode.setEnabled(contextDefinition.getAction() == 0);
-		}
-		else
-		{
-			contextResetMode.select(0);
-			contextResetMode.setEnabled(false);
-		}
-		contextResetMode.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				editor.fireModifyListeners();
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
+      eventTag.setEnabled(event.getEventCode() != 0);
 
       if (editor.getParserType() == LogParserType.POLICY)
       {
-   		agentAction = new LabeledText(area, SWT.NONE);
-   		toolkit.adapt(agentAction);
-   		agentAction.setLabel("Execute action");
-   		agentAction.setText((rule.getAgentAction() != null) ? rule.getAgentAction().getAction() : ""); //$NON-NLS-1$
-   		gd = new GridData();
-   		gd.horizontalAlignment = SWT.FILL;
-   		gd.grabExcessHorizontalSpace = true;
-   		gd.horizontalSpan = 2;
-   		agentAction.setLayoutData(gd);
-         agentAction.getTextControl().addModifyListener(new ModifyListener() {
+         final LogParserContext contextDefinition = rule.getContextDefinition();
+
+         context = new LabeledText(area, SWT.NONE);
+         toolkit.adapt(context);
+         context.setLabel(Messages.get().LogParserRuleEditor_ChangeContext);
+         context.setText((contextDefinition != null) ? contextDefinition.getData() : ""); //$NON-NLS-1$
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalSpan = 2;
+         context.setLayoutData(gd);
+         context.getTextControl().addModifyListener(new ModifyListener() {
             @Override
             public void modifyText(ModifyEvent e)
             {
+               boolean contextSet = !context.getText().trim().isEmpty();
+               contextAction.setEnabled(contextSet);
+               contextResetMode.setEnabled(contextSet && (contextAction.getSelectionIndex() == 0));
                editor.fireModifyListeners();
             }
-         });      
-      }
-		
-		checkboxBreak = toolkit.createButton(area, "Break", SWT.CHECK);
-		checkboxBreak.setSelection(rule.isBreakProcessing());
-		gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
-      checkboxBreak.setLayoutData(gd);
-		checkboxBreak.addSelectionListener(new SelectionListener() {
-         
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            editor.fireModifyListeners();            
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-      });
-		
+         });
 
-      if (editor.getParserType() != LogParserType.POLICY)
-      {
-   		checkboxDoNotSaveToDB = toolkit.createButton(area, "Do not save to database", SWT.CHECK);
-   		checkboxDoNotSaveToDB.setSelection(rule.isDoNotSaveToDatabase());
-   		checkboxDoNotSaveToDB.addSelectionListener(new SelectionListener() {
-            
+         final Composite contextOptions = new Composite(area, SWT.NONE);
+         layout = new GridLayout();
+         layout.marginHeight = 0;
+         layout.marginWidth = 0;
+         layout.numColumns = 2;
+         layout.makeColumnsEqualWidth = true;
+         contextOptions.setLayout(layout);
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalSpan = 2;
+         contextOptions.setLayoutData(gd);
+
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         contextAction = WidgetHelper.createLabeledCombo(contextOptions, SWT.READ_ONLY,
+               Messages.get().LogParserRuleEditor_ContextAction, gd);
+         toolkit.adapt(contextAction);
+         contextAction.add(Messages.get().LogParserRuleEditor_CtxActionActivate);
+         contextAction.add(Messages.get().LogParserRuleEditor_CtxActionClear);
+         if (contextDefinition != null)
+         {
+            contextAction.select(contextDefinition.getAction());
+         }
+         else
+         {
+            contextAction.select(0);
+            contextAction.setEnabled(false);
+         }
+         contextAction.addSelectionListener(new SelectionListener() {
             @Override
             public void widgetSelected(SelectionEvent e)
             {
-               editor.fireModifyListeners();            
+               contextResetMode.setEnabled(contextAction.getSelectionIndex() == 0);
+               editor.fireModifyListeners();
             }
-            
+
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e);
+            }
+         });
+
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         contextResetMode = WidgetHelper.createLabeledCombo(contextOptions, SWT.READ_ONLY,
+               Messages.get().LogParserRuleEditor_ContextResetMode, gd);
+         toolkit.adapt(contextResetMode);
+         contextResetMode.add(Messages.get().LogParserRuleEditor_CtxModeAuto);
+         contextResetMode.add(Messages.get().LogParserRuleEditor_CtxModeManual);
+         if (contextDefinition != null)
+         {
+            contextResetMode.select(contextDefinition.getReset());
+            contextResetMode.setEnabled(contextDefinition.getAction() == 0);
+         }
+         else
+         {
+            contextResetMode.select(0);
+            contextResetMode.setEnabled(false);
+         }
+         contextResetMode.addSelectionListener(new SelectionListener() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               editor.fireModifyListeners();
+            }
+
             @Override
             public void widgetDefaultSelected(SelectionEvent e)
             {
@@ -637,87 +583,156 @@ public class LogParserRuleEditor extends DashboardComposite
             }
          });
       }
-		
-		return area;
-	}
-	
-	/**
-	 * Save data from controls into parser rule
-	 */
-	public void save()
-	{
-	   rule.setName(name.getText().trim());
-		rule.setMatch(new LogParserMatch(regexp.getText(), checkboxInvert.getSelection(), intOrNull(repeatCount.getText()), 
-		                                 Integer.parseInt(timeRange.getText()) * (int)Math.pow(60, timeUnits.getSelectionIndex()), 
-		                                 checkboxReset.getSelection()));
+
+      if (editor.getParserType() == LogParserType.POLICY)
+      {
+         agentAction = new LabeledText(area, SWT.NONE);
+         toolkit.adapt(agentAction);
+         agentAction.setLabel("Execute action");
+         agentAction.setText((rule.getAgentAction() != null) ? rule.getAgentAction().getAction() : ""); //$NON-NLS-1$
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalSpan = 2;
+         agentAction.setLayoutData(gd);
+         agentAction.getTextControl().addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               editor.fireModifyListeners();
+            }
+         });
+      }
+
+      checkboxBreak = toolkit.createButton(area, "Break", SWT.CHECK);
+      checkboxBreak.setSelection(rule.isBreakProcessing());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      checkboxBreak.setLayoutData(gd);
+      checkboxBreak.addSelectionListener(new SelectionListener() {
+
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            editor.fireModifyListeners();
+         }
+
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+
+      if (editor.getParserType() != LogParserType.POLICY)
+      {
+         checkboxDoNotSaveToDB = toolkit.createButton(area, "Do not save to database", SWT.CHECK);
+         checkboxDoNotSaveToDB.setSelection(rule.isDoNotSaveToDatabase());
+         checkboxDoNotSaveToDB.addSelectionListener(new SelectionListener() {
+
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               editor.fireModifyListeners();
+            }
+
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e);
+            }
+         });
+      }
+
+      return area;
+   }
+
+   /**
+    * Save data from controls into parser rule
+    */
+   public void save()
+   {
+      rule.setName(name.getText().trim());
+      rule.setMatch(new LogParserMatch(regexp.getText(), checkboxInvert.getSelection(), intOrNull(repeatCount.getText()),
+            Integer.parseInt(timeRange.getText()) * (int)Math.pow(60, timeUnits.getSelectionIndex()),
+            checkboxReset.getSelection()));
       rule.setFacilityOrId(intOrNull(facility.getText()));
       rule.setSeverityOrLevel(intOrNull(severity.getText()));
-      rule.setTagOrSource(tag.getText());  
-      
+      rule.setTagOrSource(tag.getText());
+
       if (editor.getParserType() == LogParserType.WIN_EVENT)
          rule.setLogName(logName.getText());
       else
          rule.setLogName("");
-      
-		rule.setContext(activeContext.getText().trim().isEmpty() ? null : activeContext.getText());
-		rule.setBreakProcessing(checkboxBreak.getSelection());
-		rule.setDescription(description.getText());
-		if (event.getEventCode() != 0)
-		{
-			rule.setEvent(new LogParserEvent(event.getEventName() != null ? event.getEventName() : Long.toString(event.getEventCode()), 
-			      null, eventTag.getText().isEmpty() ? null : eventTag.getText()));
-		}
-		else
-		{
-			rule.setEvent(null);
-		}
-		
-		if (context.getText().trim().isEmpty())
-		{
-			rule.setContextDefinition(null);
-		}
-		else
-		{
-			LogParserContext ctx = new LogParserContext();
-			ctx.setData(context.getText());
-			ctx.setAction(contextAction.getSelectionIndex());
-			ctx.setReset(contextResetMode.getSelectionIndex());
-			rule.setContextDefinition(ctx);
-		}
 
       if (editor.getParserType() == LogParserType.POLICY)
       {
-   		if (!agentAction.getText().trim().isEmpty())
-   			rule.setAgentAction(agentAction.getText().trim());
+         rule.setContext(activeContext.getText().trim().isEmpty() ? null : activeContext.getText());
+      }
+      else
+      {
+         rule.setContext(null);
+      }
+      rule.setBreakProcessing(checkboxBreak.getSelection());
+      rule.setDescription(description.getText());
+      if (event.getEventCode() != 0)
+      {
+         rule.setEvent(new LogParserEvent(event.getEventName() != null ? event.getEventName() : Long.toString(event.getEventCode()),
+               null, eventTag.getText().isEmpty() ? null : eventTag.getText()));
+      }
+      else
+      {
+         rule.setEvent(null);
+      }
+
+      if ((editor.getParserType() != LogParserType.POLICY) || context.getText().trim().isEmpty())
+      {
+         rule.setContextDefinition(null);
+      }
+      else
+      {
+         LogParserContext ctx = new LogParserContext();
+         ctx.setData(context.getText());
+         ctx.setAction(contextAction.getSelectionIndex());
+         ctx.setReset(contextResetMode.getSelectionIndex());
+         rule.setContextDefinition(ctx);
+      }
+
+      if (editor.getParserType() == LogParserType.POLICY)
+      {
+         if (!agentAction.getText().trim().isEmpty())
+            rule.setAgentAction(agentAction.getText().trim());
       }
       else
          rule.setAgentAction("");
-      
+
       if (editor.getParserType() != LogParserType.POLICY)
-         rule.setDoNotSaveToDatabase(checkboxDoNotSaveToDB.getSelection());   
+         rule.setDoNotSaveToDatabase(checkboxDoNotSaveToDB.getSelection());
       else
          rule.setDoNotSaveToDatabase(false);
-	}
-	
-	/**
-	 * Return integer object created from input string or null if input text string is empty or cannot be parsed
-	 * 
-	 * @param text
-	 * @return
-	 */
-	private Integer intOrNull(String text)
-	{
-		if (text.trim().isEmpty())
-			return null;
-		try
-		{
-			return Integer.parseInt(text);
-		}
-		catch(NumberFormatException e)
-		{
-			return null;
-		}
-	}
+   }
+
+   /**
+    * Return integer object created from input string or null if input text string is empty or cannot be parsed
+    * 
+    * @param text
+    * @return
+    */
+   private Integer intOrNull(String text)
+   {
+      if (text.trim().isEmpty())
+         return null;
+      try
+      {
+         return Integer.parseInt(text);
+      }
+      catch(NumberFormatException e)
+      {
+         return null;
+      }
+   }
 
    /**
     * @return
