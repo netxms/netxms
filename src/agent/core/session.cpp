@@ -60,8 +60,9 @@ static VolatileCounter s_sessionId = 0;
 /**
  * Agent proxy statistics
  */
-static uint64_t s_proxyConnectionRequests = 0;
+static VolatileCounter64 s_proxyConnectionRequests = 0;
 static VolatileCounter s_activeProxySessions = 0;
+static VolatileCounter64 s_tcpProxyConnectionRequests = 0;
 
 /**
  * Handler for agent proxy stats parameters
@@ -71,10 +72,13 @@ LONG H_AgentProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
    switch(*arg)
    {
       case 'A':
-         ret_uint(value, (UINT32)s_activeProxySessions);
+         ret_uint(value, static_cast<uint32_t>(s_activeProxySessions));
          break;
       case 'C':
-         ret_uint64(value, s_proxyConnectionRequests);
+         ret_uint64(value, static_cast<uint64_t>(s_proxyConnectionRequests));
+         break;
+      case 'T':
+         ret_uint64(value, static_cast<uint64_t>(s_tcpProxyConnectionRequests));
          break;
       default:
          return SYSINFO_RC_UNSUPPORTED;
@@ -346,7 +350,7 @@ void CommSession::readThread()
                   delete msg;
                   break;
                case CMD_SETUP_PROXY_CONNECTION:
-                  s_proxyConnectionRequests++;
+                  InterlockedIncrement64(&s_proxyConnectionRequests);
                   rcc = setupProxyConnection(msg);
                   // When proxy session established incoming messages will
                   // not be processed locally. Acknowledgment message sent
@@ -714,6 +718,7 @@ void CommSession::processingThread()
                }
                break;
             case CMD_SETUP_TCP_PROXY:
+               InterlockedIncrement64(&s_tcpProxyConnectionRequests);
                if (m_masterServer && (g_dwFlags & AF_ENABLE_TCP_PROXY))
                {
                   setupTcpProxy(request, &response);

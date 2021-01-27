@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2014-2019 Raden Solutions
+** Copyright (C) 2014-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ public:
    SyslogRecord(const InetAddress& a, const char *m, int len)
    {
       addr = a;
-      timestamp = time(NULL);
+      timestamp = time(nullptr);
       message = MemCopyStringA(m);
       messageLength = len;
    }
@@ -51,7 +51,7 @@ public:
 /**
  * Counter for received messages
  */
-static UINT64 s_receivedMessages = 0;
+static uint64_t s_receivedMessages = 0;
 
 /**
  * Handler for syslog proxy information parameters
