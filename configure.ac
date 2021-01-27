@@ -864,7 +864,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip libnxsl libnxmb libnxlp libnxpython libnxcc db server ncdrivers agent client nxscript nxcproxy"
+	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxtux"
@@ -1095,6 +1095,17 @@ else
 	SYSTEMD_SUPPORT="no"
 fi
 
+check_substr "$COMPONENTS" "client"
+if test $? = 0; then
+	BUILD_CLIENT="yes"
+	MODULES="$MODULES client"
+	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxnotify"
+	check_substr "$COMPONENTS" "java"
+	if test $? = 0; then
+		CLIENT_COMPONENTS="$CLIENT_COMPONENTS java nxshell"
+	fi
+fi
+
 check_substr "$COMPONENTS" "server"
 if test $? = 0; then
 	if test "x$DBDRIVER_SELECTED" != "xyes"; then
@@ -1119,17 +1130,6 @@ if test $? = 0; then
 	check_substr "$COMPONENTS" "java"
 	if test $? = 0; then
 		SERVER_COMPONENTS="$SERVER_COMPONENTS nxreportd"
-	fi
-fi
-
-check_substr "$COMPONENTS" "client"
-if test $? = 0; then
-	BUILD_CLIENT="yes"
-	MODULES="$MODULES client"
-	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxnotify"
-	check_substr "$COMPONENTS" "java"
-	if test $? = 0; then
-		CLIENT_COMPONENTS="$CLIENT_COMPONENTS java nxshell"
 	fi
 fi
 
