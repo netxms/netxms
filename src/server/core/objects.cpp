@@ -85,7 +85,7 @@ static void ApplyTemplateThread()
 
       nxlog_debug_tag(_T("obj.dc"), 5, _T("ApplyTemplateThread: template=%d(%s) updateType=%d target=%d removeDci=%s"),
 		         task->source->getId(), task->source->getName(), task->updateType, task->targetId, task->removeDCI ? _T("true") : _T("false"));
-      BOOL bSuccess = FALSE;
+      bool success = false;
       shared_ptr<NetObj> dcTarget = FindObjectById(task->targetId);
       if ((dcTarget != nullptr) && dcTarget->isDataCollectionTarget())
       {
@@ -94,20 +94,20 @@ static void ApplyTemplateThread()
             case APPLY_TEMPLATE:
                task->source->applyToTarget(static_pointer_cast<DataCollectionTarget>(dcTarget));
                static_cast<DataCollectionTarget*>(dcTarget.get())->applyDCIChanges(false);
-               bSuccess = TRUE;
+               success = true;
                break;
             case REMOVE_TEMPLATE:
                static_cast<DataCollectionTarget*>(dcTarget.get())->unbindFromTemplate(task->source, task->removeDCI);
                static_cast<DataCollectionTarget*>(dcTarget.get())->applyDCIChanges(false);
-               bSuccess = TRUE;
+               success = true;
                break;
             default:
-               bSuccess = TRUE;
+               success = true;
                break;
          }
       }
 
-      if (bSuccess)
+      if (success)
       {
          nxlog_debug_tag(_T("obj.dc"), 8, _T("ApplyTemplateThread: success"));
          delete task;
