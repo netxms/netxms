@@ -703,32 +703,28 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
  * Arguments is template id and list of valid template item ids.
  * all items related to given template and not presented in list should be deleted.
  */
-void DataCollectionTarget::cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList)
+void DataCollectionTarget::cleanDeletedTemplateItems(uint32_t templateId, const IntegerArray<uint32_t>& dciList)
 {
-   UINT32 i, j, dwNumDeleted, *pdwDeleteList;
-
    writeLockDciAccess();  // write lock
 
-   pdwDeleteList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());
-   dwNumDeleted = 0;
-
-   for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
-      if (m_dcObjects->get(i)->getTemplateId() == dwTemplateId)
+   IntegerArray<uint32_t> deleteList;
+   for(int i = 0; i < m_dcObjects->size(); i++)
+      if (m_dcObjects->get(i)->getTemplateId() == templateId)
       {
-         for(j = 0; j < dwNumItems; j++)
-            if (m_dcObjects->get(i)->getTemplateItemId() == pdwItemList[j])
+         int j;
+         for(j = 0; j < dciList.size(); j++)
+            if (m_dcObjects->get(i)->getTemplateItemId() == dciList.get(j))
                break;
 
          // Delete DCI if it's not in list
-         if (j == dwNumItems)
-            pdwDeleteList[dwNumDeleted++] = m_dcObjects->get(i)->getId();
+         if (j == dciList.size())
+            deleteList.add(m_dcObjects->get(i)->getId());
       }
 
-   for(i = 0; i < dwNumDeleted; i++)
-      deleteDCObject(pdwDeleteList[i], false, 0);
+   for(int i = 0; i < deleteList.size(); i++)
+      deleteDCObject(deleteList.get(i), false, 0);
 
    unlockDciAccess();
-   free(pdwDeleteList);
 }
 
 /**

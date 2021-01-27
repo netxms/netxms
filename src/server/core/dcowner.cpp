@@ -852,7 +852,6 @@ UINT32 DataCollectionOwner::modifyFromMessageInternal(NXCPMessage *pRequest)
  */
 bool DataCollectionOwner::applyToTarget(const shared_ptr<DataCollectionTarget>& target)
 {
-   UINT32 *pdwItemList;
    bool bErrors = false;
 
    // Link node to template
@@ -862,16 +861,17 @@ bool DataCollectionOwner::applyToTarget(const shared_ptr<DataCollectionTarget>& 
       target->addParent(self());
    }
 
-   pdwItemList = MemAllocArray<UINT32>(m_dcObjects->size());
+   // Copy items
+   readLockDciAccess();
+
+   IntegerArray<uint32_t> dciList(m_dcObjects->size());
    nxlog_debug_tag(_T("obj.dc"), 4, _T("Apply %d metric items from template \"%s\" to target \"%s\""),
                    m_dcObjects->size(), m_name, target->getName());
 
-   // Copy items
-   readLockDciAccess();
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
 		DCObject *object = m_dcObjects->get(i);
-      pdwItemList[i] = object->getId();
+		dciList.add(object->getId());
       if (!target->applyTemplateItem(m_id, object))
       {
          bErrors = true;
@@ -880,10 +880,7 @@ bool DataCollectionOwner::applyToTarget(const shared_ptr<DataCollectionTarget>& 
    unlockDciAccess();
 
    // Clean items deleted from template
-   target->cleanDeletedTemplateItems(m_id, m_dcObjects->size(), pdwItemList);
-
-   // Cleanup
-   MemFree(pdwItemList);
+   target->cleanDeletedTemplateItems(m_id, dciList);
 
    static_cast<DataCollectionOwner*>(target.get())->onDataCollectionChange();
 

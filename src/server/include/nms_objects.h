@@ -2160,7 +2160,7 @@ public:
    void queuePredictionEngineTraining();
 
    bool applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject);
-   void cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList);
+   void cleanDeletedTemplateItems(uint32_t templateId, const IntegerArray<uint32_t>& dciList);
    virtual void unbindFromTemplate(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI);
 
    virtual bool isEventSource() const override;
