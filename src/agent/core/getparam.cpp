@@ -393,6 +393,8 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Agent.SupportedCiphers"), H_SupportedCiphers, nullptr, DCI_DT_STRING, DCIDESC_AGENT_SUPPORTEDCIPHERS },
    { _T("Agent.SyslogProxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_SYSLOG_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_SYSLOGPROXY_ISENABLED },
    { _T("Agent.SyslogProxy.ReceivedMessages"), H_SyslogStats, _T("R"), DCI_DT_COUNTER64, DCIDESC_AGENT_SYSLOGPROXY_RECEIVEDMSGS },
+   { _T("Agent.TCPProxy.ConnectionRequests"), H_AgentProxyStats, _T("T"), DCI_DT_COUNTER64, DCIDESC_AGENT_TCPPROXY_CONNECTIONREQUESTS },
+   { _T("Agent.TCPProxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_TCP_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_TCPPROXY_ISENABLED },
    { _T("Agent.ThreadPool.ActiveRequests(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_ACTIVE_REQUESTS, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_ACTIVEREQUESTS },
    { _T("Agent.ThreadPool.AverageWaitTime(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_AVG_WAIT_TIME, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_AVERAGEWAITTIME },
    { _T("Agent.ThreadPool.CurrSize(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_CURR_SIZE, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_CURRSIZE },
