@@ -2740,15 +2740,12 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                         if (vm->run(0, nullptr, nullptr, nullptr, (entryPoint[0] != 0) ? entryPoint : nullptr))
                         {
                            NXSL_Value *result = vm->getResult();
-                           if (result != nullptr)
+                           const TCHAR *temp = result->getValueAsCString();
+                           if (temp != nullptr)
                            {
-                              const TCHAR *temp = result->getValueAsCString();
-                              if (temp != nullptr)
-                              {
-                                 output.append(temp);
-                                 DbgPrintf(4, _T("NetObj::ExpandText(%d, \"%s\"): Script %s executed successfully"),
-                                    (int)((event != nullptr) ? event->getCode() : 0), textTemplate, buffer);
-                              }
+                              output.append(temp);
+                              DbgPrintf(4, _T("NetObj::ExpandText(%d, \"%s\"): Script %s executed successfully"),
+                                 (int)((event != nullptr) ? event->getCode() : 0), textTemplate, buffer);
                            }
                         }
                         else

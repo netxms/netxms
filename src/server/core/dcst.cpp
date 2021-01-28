@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -329,11 +329,7 @@ bool SummaryTable::filter(const shared_ptr<DataCollectionTarget>& object)
    SetupServerScriptVM(m_filter, object, shared_ptr<DCObjectInfo>());
    if (m_filter->run())
    {
-      NXSL_Value *value = m_filter->getResult();
-      if (value != nullptr)
-      {
-         result = value->getValueAsBoolean();
-      }
+      result = m_filter->getResult()->getValueAsBoolean();
    }
    else
    {

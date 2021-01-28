@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1476,9 +1476,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 
             if (vm->run(argc, argv))
             {
-               NXSL_Value *pValue = vm->getResult();
-               int retCode = pValue->getValueAsInt32();
-               ConsolePrintf(pCtx, _T("INFO: Script finished with rc=%d\n\n"), retCode);
+               ConsolePrintf(pCtx, _T("INFO: Script finished with return value %s\n\n"), vm->getResult()->getValueAsCString());
             }
             else
             {
