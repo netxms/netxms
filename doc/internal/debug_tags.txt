@@ -55,6 +55,7 @@ ncd.*		Notification channel drivers
 ndd.*           Network device drivers
 
 node.agent	Node agent (connections, etc.)
+node.iface      Node interfaces (creation, deletion, etc.)
 node.poller	Node poller
 
 npe.*		Prediction engines

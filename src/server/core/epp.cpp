@@ -541,17 +541,14 @@ bool EPRule::matchScript(Event *event) const
    if (vm->run(args, &globals))
    {
       NXSL_Value *value = vm->getResult();
-      if (value != nullptr)
+      bRet = value->getValueAsBoolean();
+      if (bRet)
       {
-         bRet = value->getValueAsBoolean();
-         if (bRet)
+         NXSL_Variable *var = globals->find("CUSTOM_MESSAGE");
+         if ((var != nullptr) && var->getValue()->isString())
          {
-         	NXSL_Variable *var = globals->find("CUSTOM_MESSAGE");
-         	if ((var != nullptr) && var->getValue()->isString())
-         	{
-         		// Update custom message in event
-         		event->setCustomMessage(CHECK_NULL_EX(var->getValue()->getValueAsCString()));
-         	}
+            // Update custom message in event
+            event->setCustomMessage(CHECK_NULL_EX(var->getValue()->getValueAsCString()));
          }
       }
    }
