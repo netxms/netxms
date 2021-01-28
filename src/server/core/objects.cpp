@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2699,7 +2699,7 @@ static int FilterObject(NXSL_VM *vm, shared_ptr<NetObj> object, NXSL_VariableSys
       (*globalVariables)->merge(expressionVariables);
       delete expressionVariables;
    }
-   return vm->getResult()->getValueAsBoolean() ? 1 : 0;
+   return vm->getResult()->isTrue() ? 1 : 0;
 }
 
 /**

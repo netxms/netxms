@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1019,8 +1019,7 @@ bool NetworkMap::isAllowedOnMap(const shared_ptr<NetObj>& object)
 	   SetupServerScriptVM(m_filter, object, shared_ptr<DCObjectInfo>());
 		if (m_filter->run())
 		{
-			NXSL_Value *value = m_filter->getResult();
-			result = ((value != nullptr) && value->isTrue());
+			result = m_filter->getResult()->getValueAsBoolean();
 		}
 		else
 		{

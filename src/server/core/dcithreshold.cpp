@@ -319,22 +319,18 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
       if ((m_script != nullptr) && !m_script->isEmpty())
       {
          NXSL_VM *vm = CreateServerScriptVM(m_script, target, dci->createDescriptor());
-         if (vm != NULL)
+         if (vm != nullptr)
          {
             NXSL_Value *parameters[2];
             parameters[0] = vm->createValue(value.getString());
             parameters[1] = vm->createValue(m_value.getString());
             if (vm->run(2, parameters))
             {
-               NXSL_Value *result = vm->getResult();
-               if (result != NULL)
-               {
-                  match = result->getValueAsBoolean();
-               }
+               match = vm->getResult()->getValueAsBoolean();
             }
             else
             {
-               time_t now = time(NULL);
+               time_t now = time(nullptr);
                if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
                {
                   TCHAR buffer[1024];
@@ -349,7 +345,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          }
          else
          {
-            time_t now = time(NULL);
+            time_t now = time(nullptr);
             if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
             {
                TCHAR buffer[1024];

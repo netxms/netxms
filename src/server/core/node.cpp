@@ -27,6 +27,7 @@
 
 #define DEBUG_TAG_DC_AGENT_CACHE    _T("dc.agent.cache")
 #define DEBUG_TAG_ICMP_POLL         _T("poll.icmp")
+#define DEBUG_TAG_NODE_INTERFACES   _T("node.iface")
 #define DEBUG_TAG_ROUTES_POLL       _T("poll.routes")
 #define DEBUG_TAG_TOPOLOGY_POLL     _T("poll.topology")
 #define DEBUG_TAG_SNMP_TRAP_FLOOD   _T("snmp.trap.flood")
@@ -1279,7 +1280,7 @@ InterfaceList *Node::getInterfaceList()
          }
 
          int useAliases = ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0);
-         DbgPrintf(6, _T("Node::getInterfaceList(node=%s [%d]): calling driver (useAliases=%d, useIfXTable=%d)"),
+         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%d]): calling driver (useAliases=%d, useIfXTable=%d)"),
                   m_name, (int)m_id, useAliases, useIfXTable);
          pIfList = m_driver->getInterfaces(pTransport, this, m_driverData, useAliases, useIfXTable);
 
@@ -1291,7 +1292,7 @@ InterfaceList *Node::getInterfaceList()
       }
       else
       {
-         DbgPrintf(6, _T("Node::getInterfaceList(node=%s [%d]): cannot create SNMP transport"), m_name, (int)m_id);
+         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%d]): cannot create SNMP transport"), m_name, (int)m_id);
       }
    }
 
@@ -1315,12 +1316,12 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
    lockProperties();
    if (m_vrrpInfo != nullptr)
    {
-      DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): m_vrrpInfo->size()=%d"), m_name, (int)m_id, m_vrrpInfo->size());
+      nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::addVrrpInterfaces(node=%s [%d]): m_vrrpInfo->size()=%d"), m_name, (int)m_id, m_vrrpInfo->size());
 
       for(i = 0; i < m_vrrpInfo->size(); i++)
       {
          VrrpRouter *router = m_vrrpInfo->getRouter(i);
-         DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): vrouter %d state=%d"), m_name, (int)m_id, i, router->getState());
+         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::addVrrpInterfaces(node=%s [%u]): vrouter %d state=%d"), m_name, m_id, i, router->getState());
          if (router->getState() != VRRP_STATE_MASTER)
             continue;   // Do not add interfaces if router is not in master state
 
@@ -1346,8 +1347,8 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
          // Walk through all VR virtual IPs
          for(j = 0; j < router->getVipCount(); j++)
          {
-            UINT32 vip = router->getVip(j);
-            DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): checking VIP %s@%d"), m_name, (int)m_id, IpToStr(vip, buffer), i);
+            uint32_t vip = router->getVip(j);
+            nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::addVrrpInterfaces(node=%s [%u]): checking VIP %s@%d"), m_name, m_id, IpToStr(vip, buffer), i);
             if (vip != 0)
             {
                for(k = 0; k < ifList->size(); k++)
@@ -1362,7 +1363,7 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
                   addr.setMaskBits(maskBits);
                   iface->ipAddrList.add(addr);
                   ifList->add(iface);
-                  DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): added interface %s"), m_name, (int)m_id, iface->name);
+                  nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::addVrrpInterfaces(node=%s [%u]): added interface %s"), m_name, m_id, iface->name);
                }
             }
          }
@@ -1717,10 +1718,13 @@ shared_ptr<Interface> Node::createInterfaceObject(InterfaceInfo *info, bool manu
    // Call hook script if interface is automatically created
    if (!manuallyCreated)
    {
-      NXSL_VM *vm = CreateServerScriptVM(_T("Hook::CreateInterface"), self());
-      if (vm == nullptr)
+      ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::CreateInterface"), self());
+      if (!vm.isValid())
       {
-         DbgPrintf(7, _T("Node::createInterfaceObject(%s [%u]): hook script \"Hook::CreateInterface\" not found"), m_name, m_id);
+         if (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY)
+            nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 7, _T("Node::createInterfaceObject(%s [%u]): hook script \"Hook::CreateInterface\" is empty"), m_name, m_id);
+         else
+            nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 7, _T("Node::createInterfaceObject(%s [%u]): hook script \"Hook::CreateInterface\" not found"), m_name, m_id);
          return iface;
       }
 
@@ -1728,18 +1732,14 @@ shared_ptr<Interface> Node::createInterfaceObject(InterfaceInfo *info, bool manu
       NXSL_Value *argv = iface->createNXSLObject(vm);
       if (vm->run(1, &argv))
       {
-         NXSL_Value *result = vm->getResult();
-         if ((result != nullptr) && result->isInteger())
-         {
-            pass = result->getValueAsBoolean();
-         }
+         pass = vm->getResult()->getValueAsBoolean();
       }
       else
       {
-         DbgPrintf(4, _T("Node::createInterfaceObject(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
+         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 4, _T("Node::createInterfaceObject(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
       }
-      delete vm;
-      DbgPrintf(6, _T("Node::createInterfaceObject(%s [%u]): interface \"%s\" (ifIndex=%d) %s by filter"),
+      vm.destroy();
+      nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::createInterfaceObject(%s [%u]): interface \"%s\" (ifIndex=%d) %s by filter"),
                 m_name, m_id, info->name, info->index, pass ? _T("accepted") : _T("rejected"));
       if (!pass)
       {
@@ -1769,13 +1769,13 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
    bool bSyntheticMask = false;
    TCHAR buffer[64];
 
-   nxlog_debug(5, _T("Node::createNewInterface(\"%s\", %d, %d, bp=%d, chassis=%u, module=%u, pic=%u, port=%u) called for node %s [%d]"),
+   nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::createNewInterface(\"%s\", %d, %d, bp=%d, chassis=%u, module=%u, pic=%u, port=%u) called for node %s [%d]"),
          info->name, info->index, info->type, info->bridgePort, info->location.chassis, info->location.module,
          info->location.pic, info->location.port, m_name, m_id);
    for(int i = 0; i < info->ipAddrList.size(); i++)
    {
       const InetAddress& addr = info->ipAddrList.get(i);
-      nxlog_debug(5, _T("Node::createNewInterface(%s): IP address %s/%d"), info->name, addr.toString(buffer), addr.getMaskBits());
+      nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::createNewInterface(%s): IP address %s/%d"), info->name, addr.toString(buffer), addr.getMaskBits());
    }
 
    SharedObjectArray<Subnet> bindList;
@@ -1789,7 +1789,7 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
       {
          InetAddress addr = info->ipAddrList.get(i);
          bool addToSubnet = addr.isValidUnicast() && ((pCluster == nullptr) || !pCluster->isSyncAddr(addr));
-         nxlog_debug(5, _T("Node::createNewInterface: node=%s [%d] ip=%s/%d cluster=%s [%d] add=%s"),
+         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::createNewInterface: node=%s [%d] ip=%s/%d cluster=%s [%d] add=%s"),
                    m_name, m_id, addr.toString(buffer), addr.getMaskBits(),
                    (pCluster != nullptr) ? pCluster->getName() : _T("(null)"),
                    (pCluster != nullptr) ? pCluster->getId() : 0, addToSubnet ? _T("yes") : _T("no"));
@@ -1870,7 +1870,7 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
  */
 void Node::deleteInterface(Interface *iface)
 {
-   DbgPrintf(5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d])"), m_name, m_id, iface->getName(), iface->getId());
+   nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d])"), m_name, m_id, iface->getName(), iface->getId());
 
    // Check if we should unlink node from interface's subnet
    if (!iface->isExcludedFromTopology())
@@ -1886,7 +1886,7 @@ void Node::deleteInterface(Interface *iface)
          {
             NetObj *curr = getChildList().get(j);
             if ((curr->getObjectClass() == OBJECT_INTERFACE) && (curr != iface) &&
-                ((Interface *)curr)->getIpAddressList()->findSameSubnetAddress(*addr).isValid())
+                static_cast<Interface*>(curr)->getIpAddressList()->findSameSubnetAddress(*addr).isValid())
             {
                doUnlink = false;
                break;
@@ -1903,7 +1903,7 @@ void Node::deleteInterface(Interface *iface)
                deleteParent(*subnet);
                subnet->deleteChild(*this);
             }
-            DbgPrintf(5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d]): unlinked from subnet %s [%d]"),
+            nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d]): unlinked from subnet %s [%d]"),
                       m_name, m_id, iface->getName(), iface->getId(),
                       (subnet != nullptr) ? subnet->getName() : _T("(null)"),
                       (subnet != nullptr) ? subnet->getId() : 0);
@@ -9320,24 +9320,20 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
 
    shared_ptr<Subnet> subnet = MakeSharedNObject<Subnet>(addr, m_zoneUIN, syntheticMask);
 
-   NXSL_VM *vm = CreateServerScriptVM(_T("Hook::CreateSubnet"), self());
-   if (vm != nullptr)
+   ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::CreateSubnet"), self());
+   if (vm.isValid())
    {
       bool pass = true;
       NXSL_Value *argv = subnet->createNXSLObject(vm);
       if (vm->run(1, &argv))
       {
-         NXSL_Value *result = vm->getResult();
-         if ((result != nullptr) && result->isInteger())
-         {
-            pass = result->getValueAsBoolean();
-         }
+         pass = vm->getResult()->getValueAsBoolean();
       }
       else
       {
          nxlog_debug(4, _T("Node::createSubnet(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
       }
-      delete vm;
+      vm.destroy();
       DbgPrintf(6, _T("Node::createSubnet(%s [%u]): subnet \"%s\" %s by filter"),
                 m_name, m_id, subnet->getName(), pass ? _T("accepted") : _T("rejected"));
       if (!pass)
@@ -9347,7 +9343,10 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
    }
    else
    {
-      nxlog_debug(7, _T("Node::createSubnet(%s [%u]): hook script \"Hook::CreateSubnet\" not found"), m_name, m_id);
+      if (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY)
+         nxlog_debug(7, _T("Node::createSubnet(%s [%u]): hook script \"Hook::CreateSubnet\" is empty"), m_name, m_id);
+      else
+         nxlog_debug(7, _T("Node::createSubnet(%s [%u]): hook script \"Hook::CreateSubnet\" not found"), m_name, m_id);
    }
 
    if (subnet != nullptr)
