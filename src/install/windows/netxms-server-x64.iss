@@ -34,11 +34,8 @@ Name: "server"; Description: "NetXMS Server"; Types: full compact
 Name: "server\mariadb"; Description: "MariaDB Client Library"; Types: full
 Name: "server\mysql"; Description: "MySQL Client Library"; Types: full
 Name: "server\pgsql"; Description: "PostgreSQL Client Library"; Types: full
+Name: "server\reporting"; Description: "Reporting Server"; Types: full
 Name: "pdb"; Description: "Install PDB files for selected components"; Types: custom
-
-[Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
 ; Common files
@@ -135,6 +132,8 @@ Source: "..\..\..\x64\Release\textfile.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: 
 Source: "..\..\..\x64\Release\textfile.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\websms.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\websms.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
+; Reporting server
+Source: "..\..\server\nxreportd\java\target\nxreportd.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server\reporting
 ; Tools
 Source: "..\..\..\x64\Release\libnxdbmgr.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\nxaction.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
@@ -283,8 +282,10 @@ Source: "..\..\..\contrib\netxmsd.conf-dist"; DestDir: "{app}\etc"; Flags: ignor
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
 Source: "..\..\..\images\*"; DestDir: "{app}\var\images"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\music\*"; DestDir: "{app}\var\files"; Flags: ignoreversion; Components: server
-Source: "..\..\java-common\netxms-base\target\netxms-base.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server
-Source: "..\..\libnxjava\java\target\netxms-java-bridge.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server
+; Common Java libraries
+Source: "..\..\java-common\lib\*.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: base
+Source: "..\..\java-common\netxms-base\target\netxms-base.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: base
+Source: "..\..\libnxjava\java\target\netxms-java-bridge.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: base
 ; Command line tools
 Source: "..\..\..\x64\Release\libnxclient.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
 Source: "..\..\..\x64\Release\libnxclient.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools and pdb
@@ -301,7 +302,7 @@ Source: "..\..\..\x64\Release\nxhwid.exe"; DestDir: "{app}\bin"; Flags: ignoreve
 Source: "..\..\..\x64\Release\nxnotify.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
 Source: "..\..\..\x64\Release\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
 Source: "..\..\..\x64\Release\nxshell.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\client\java\netxms-client\target\netxms-client.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: tools
+Source: "..\..\client\java\netxms-client\target\netxms-client.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: tools or server\reporting
 Source: "..\..\client\nxshell\java\target\nxshell.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: tools
 ; Diagnostic tools
 Source: "..\..\server\tools\scripts\nx-collect-server-diag.cmd"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
@@ -324,6 +325,7 @@ Source: "..\files\windows\x64\libssl-1_1-x64.dll"; DestDir: "{app}\bin"; Flags: 
 Source: "..\files\windows\x64\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x64\prunsrv.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server\reporting
 ; Install-time files
 Source: "..\files\windows\x64\vcredist_x64.exe"; DestDir: "{app}\var"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall; Components: base
 Source: "..\files\windows\x64\vcredist-2013-x64.exe"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: server\pgsql
@@ -337,19 +339,24 @@ Name: "{group}\Server Console"; Filename: "{app}\bin\nxadm.exe"; Parameters: "-i
 Name: "{group}\{cm:UninstallProgram,NetXMS}"; Filename: "{uninstallexe}"
 
 [Tasks]
+Name: desktopicon; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: quicklaunchicon; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: configureServer; Description: "Run server configuration wizard"; Components: server; Flags: checkedonce
 Name: upgradeDatabase; Description: "Upgrade database schema if needed"; Components: server
 Name: startCore; Description: "Start NetXMS Core service after installation"; Components: server
+Name: startReporting; Description: "Start NetXMS Reporting Server service after installation"; Components: server\reporting
 Name: fspermissions; Description: "Set hardened file system permissions"
 
 [Dirs]
 Name: "{app}\etc"
+Name: "{app}\etc\nxreportd"; Components: server\reporting
 Name: "{app}\database"
 Name: "{app}\dump"
 Name: "{app}\log"
 Name: "{app}\var\backgrounds"
 Name: "{app}\var\files"
 Name: "{app}\var\images"
+Name: "{app}\var\nxreportd\definitions"; Components: server\reporting
 Name: "{app}\var\packages"
 Name: "{app}\share"
 
@@ -399,8 +406,12 @@ Filename: "{app}\bin\nxconfig.exe"; Parameters: "--configure-if-needed"; Working
 Filename: "{app}\bin\nxdbmgr.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" upgrade"; WorkingDir: "{app}\bin"; StatusMsg: "Upgrading database..."; Flags: runhidden; Components: server; Tasks: upgradeDatabase
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "--check-service"; WorkingDir: "{app}\bin"; StatusMsg: "Checking core service configuration..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "-s -m"; WorkingDir: "{app}\bin"; StatusMsg: "Starting core service..."; Flags: runhidden; Components: server; Tasks: startCore
+Filename: "{app}\bin\prunsrv.exe"; Parameters: "//IS//nxreportd --DisplayName=""NetXMS Reporting Server"" --Startup=auto --StartMode=jvm --StartClass=org.netxms.reporting.Startup --StopMode=jvm --StopClass=org.netxms.reporting.Startup --StopMethod=stop --StopTimeout=10 ++JvmOptions=""-Dnxreportd.workspace={app}\var\nxreportd"" ++JvmOptions=""-Dnxreportd.logfile={app}\log\nxreportd.log"" --Classpath=""{app}\lib\commons-codec-1.11.jar;{app}\lib\netxms-base.jar;{app}\lib\netxms-client.jar;{app}\lib\simple-xml-2.6.4.jar;{app}\lib\slf4j-api-1.7.30.jar;{app}\etc\nxreportd;{app}\lib\nxreportd.jar"" --LogPath=""{app}\log"""; WorkingDir: "{app}\bin"; StatusMsg: "Installing reporting server service..."; Flags: runhidden; Components: server\reporting
+Filename: "{app}\bin\prunsrv.exe"; Parameters: "//ES//nxreportd"; WorkingDir: "{app}\bin"; StatusMsg: "Starting reporting server service..."; Flags: runhidden; Components: server\reporting; Tasks: startReporting
 
 [UninstallRun]
+Filename: "{app}\bin\prunsrv.exe"; Parameters: "//SS//nxreportd"; StatusMsg: "Stopping reporting server service..."; RunOnceId: "StopReportingService"; Flags: runhidden; Components: server\reporting
+Filename: "{app}\bin\prunsrv.exe"; Parameters: "//DS//nxreportd"; StatusMsg: "Uninstalling reporting server service..."; RunOnceId: "DelReportingService"; Flags: runhidden; Components: server\reporting
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "-S"; StatusMsg: "Stopping core service..."; RunOnceId: "StopCoreService"; Flags: runhidden; Components: server
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling core service..."; RunOnceId: "DelCoreService"; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-S"; StatusMsg: "Stopping agent service..."; RunOnceId: "StopAgentService"; Flags: runhidden; Components: server
@@ -417,6 +428,7 @@ Procedure StopAllServices;
 Var
   iResult: Integer;
 Begin
+  Exec('net.exe', 'stop nxreportd', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
   Exec('net.exe', 'stop NetXMSCore', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
   Exec('net.exe', 'stop NetXMSAgentdW32', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
 End;
