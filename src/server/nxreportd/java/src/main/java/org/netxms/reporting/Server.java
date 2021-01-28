@@ -18,6 +18,7 @@
  */
 package org.netxms.reporting;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -74,6 +75,12 @@ public final class Server implements Daemon
       communicationManager = new CommunicationManager(this);
       reportManager = new ReportManager(this);
       smtpSender = new SmtpSender(this);
+
+      File definitionsDirectory = reportManager.getDefinitionsDirectory();
+      if (!definitionsDirectory.isDirectory() && !definitionsDirectory.mkdirs())
+      {
+         logger.error("Cannot create report definitions directory " + definitionsDirectory.getAbsolutePath());
+      }
 
       fileMonitor = new FileMonitor(reportManager.getDefinitionsDirectory(), new FileMonitor.Callback() {
          @Override

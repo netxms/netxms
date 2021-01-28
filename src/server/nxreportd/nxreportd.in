@@ -18,6 +18,7 @@ while [ $# -gt 0 ]; do
 		echo "   -d       Run as daemon"
 		echo "   -h       Show help and exit"
 		echo "   -l file  Write log to given file (if custom logback.xml is not present)"
+		echo "   -w path  Set workspace path"
 		exit 0
 	fi
 
@@ -28,6 +29,11 @@ while [ $# -gt 0 ]; do
 	if [ "$arg" = "-l" ]; then
 		shift
 		JAVA_OPTIONS="$JAVA_OPTIONS -Dnxreportd.logfile=$1"
+	fi
+
+	if [ "$arg" = "-w" ]; then
+		shift
+		WORKSPACE="$1"
 	fi
 
 	shift
@@ -44,13 +50,13 @@ if [ "x$JAVA" = "x" ]; then
 	exit 1
 fi
 
-if [ "x$NETXMS_HOME" != "x" ]; then
-	WORKSPACE="$NETXMS_HOME/var/lib/netxms/nxreportd"
-else
-	WORKSPACE="~STATEDIR~/nxreportd"
+if [ "x$WORKSPACE" = "x" ]; then
+	if [ "x$NETXMS_HOME" != "x" ]; then
+		WORKSPACE="$NETXMS_HOME/var/lib/netxms/nxreportd"
+	else
+		WORKSPACE="~STATEDIR~/nxreportd"
+	fi
 fi
-
-mkdir -p "$WORKSPACE/definitions"
 
 CLASSPATH="~SYSCONFDIR~/nxreportd:~PKGLIBDIR~/nxreportd.jar"
 for jar in $SYSTEM_JARS; do
