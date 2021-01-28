@@ -108,7 +108,7 @@ public class ReportManager
    public ReportManager(Server server)
    {
       this.server = server;
-      workspace = server.getConfigurationProperty("workspace", "");
+      workspace = server.getConfigurationProperty("nxreportd.workspace", "");
       reportMap = new HashMap<UUID, String>();
    }
 

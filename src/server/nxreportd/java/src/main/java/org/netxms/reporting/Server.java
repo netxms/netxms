@@ -21,8 +21,10 @@ package org.netxms.reporting;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Properties;
@@ -70,7 +72,29 @@ public final class Server implements Daemon
 
       threadPool = new ThreadPoolExecutor(8, 128, 600, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(256));
 
-      serverSocket = new ServerSocket(4710);
+      String bindAddressName = getConfigurationProperty("nxreportd.bindAddress", "localhost");
+      InetAddress bindAddress;
+      if (bindAddressName.equalsIgnoreCase("localhost"))
+      {
+         bindAddress = InetAddress.getLoopbackAddress();
+      }
+      else if (bindAddressName.isEmpty() || bindAddressName.equals("*") || bindAddressName.equals("0.0.0.0") || bindAddressName.equals("::"))
+      {
+         bindAddress = null;
+      }
+      else
+      {
+         try
+         {
+            bindAddress = InetAddress.getByName(bindAddressName);
+         }
+         catch(UnknownHostException e)
+         {
+            logger.error("Cannot resolve bind address " + bindAddressName + ", defaulting to loopback");
+            bindAddress = InetAddress.getLoopbackAddress();
+         }
+      }
+      serverSocket = new ServerSocket(4710, 0, bindAddress);
 
       communicationManager = new CommunicationManager(this);
       reportManager = new ReportManager(this);
