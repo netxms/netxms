@@ -194,7 +194,7 @@ shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
    StringBuffer publicKey;
    publicKey.append(_T("ssh-rsa "));
    char *out;
-   int len = base64_encode_alloc(reinterpret_cast<const char *>(encoding), encodingLength, &out);
+   size_t len = base64_encode_alloc(reinterpret_cast<const char *>(encoding), encodingLength, &out);
    publicKey.appendMBString(out, len, CP_UTF8);
 
    MemFree(nBytes);

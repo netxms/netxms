@@ -180,6 +180,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="handlers.cpp" />
+    <ClCompile Include="keys.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="session.cpp" />
     <ClCompile Include="sp.cpp" />
