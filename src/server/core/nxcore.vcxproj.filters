@@ -474,6 +474,9 @@
     <ClCompile Include="geo_areas.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sshkeys.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\dbdrv.h">

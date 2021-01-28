@@ -322,6 +322,7 @@
     <ClCompile Include="smclp.cpp" />
     <ClCompile Include="snmp.cpp" />
     <ClCompile Include="snmptrap.cpp" />
+    <ClCompile Include="sshkeys.cpp" />
     <ClCompile Include="stp.cpp" />
     <ClCompile Include="subnet.cpp" />
     <ClCompile Include="summary_email.cpp" />
