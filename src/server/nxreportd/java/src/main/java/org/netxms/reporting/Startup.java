@@ -30,7 +30,9 @@ public final class Startup
    private static final Object shutdownLatch = new Object();
 
    /**
-    * @param args
+    * Entry point
+    *
+    * @param args command line arguments
     */
    public static void main(String[] args)
    {
@@ -87,5 +89,18 @@ public final class Startup
       }
 
       logger.info("Server instance destroyed");
+   }
+
+   /**
+    * Stop server (intended for call by prunsrv.exe)
+    *
+    * @param args command line arguments
+    */
+   public static void stop(String[] args)
+   {
+      synchronized(shutdownLatch)
+      {
+         shutdownLatch.notify();
+      }
    }
 }
