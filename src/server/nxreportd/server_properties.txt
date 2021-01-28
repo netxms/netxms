@@ -9,8 +9,10 @@ netxms.db.name
 netxms.db.login
 netxms.db.password
 
+nxreportd.bindAddress
+nxreportd.logfile
+nxreportd.workspace
+
 smtp.server
 smtp.fromAddr
 smtp.fromName
-
-workspace

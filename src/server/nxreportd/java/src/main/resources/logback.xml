@@ -1,28 +1,30 @@
 <configuration>
-   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-      <layout class="ch.qos.logback.classic.PatternLayout">
-         <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
-      </layout>
-   </appender>
-   <appender name="LOGFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-      <file>${nxreportd.logfile}</file>
-      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-         <fileNamePattern>${nxreportd.logfile}.%d{yyyy-MM-dd}</fileNamePattern>
-         <maxHistory>30</maxHistory>
-         <totalSizeCap>2GB</totalSizeCap>
-      </rollingPolicy>
-      <layout class="ch.qos.logback.classic.PatternLayout">
-         <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
-      </layout>
-   </appender>
-   <root level="debug">
-      <if condition='isDefined("nxreportd.logfile")'>
-         <then>
+   <if condition='isDefined("nxreportd.logfile")'>
+      <then>
+         <appender name="LOGFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${nxreportd.logfile}</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+               <fileNamePattern>${nxreportd.logfile}.%d{yyyy-MM-dd}</fileNamePattern>
+               <maxHistory>30</maxHistory>
+               <totalSizeCap>2GB</totalSizeCap>
+            </rollingPolicy>
+            <layout class="ch.qos.logback.classic.PatternLayout">
+               <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </layout>
+         </appender>
+         <root level="debug">
             <appender-ref ref="LOGFILE"/>
-         </then>
-         <else>
+         </root>
+      </then>
+      <else>
+         <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <layout class="ch.qos.logback.classic.PatternLayout">
+               <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </layout>
+         </appender>
+         <root level="debug">
             <appender-ref ref="CONSOLE"/>
-         </else>
-      </if>
-   </root>
+         </root>
+      </else>
+   </if>
 </configuration>
