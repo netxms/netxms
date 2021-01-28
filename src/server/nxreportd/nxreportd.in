@@ -6,21 +6,31 @@
 
 SYSTEM_JARS="commons-codec-1.11.jar netxms-base.jar netxms-client.jar simple-xml-2.6.4.jar slf4j-api-1.7.30.jar"
 
-for arg in $@; do
+while [ $# -gt 0 ]; do
+	arg="$1"
+
 	if [ "$arg" = "-h" ]; then
 		echo "NetXMS Reporting Server launcher"
 		echo "Copyright (c) 2021 Raden Solutions"
 		echo "Usage:"
 		echo "   nxreportd [options]"
 		echo "Valid options are:"
-		echo "   -d    Run as daemon"
-		echo "   -h    Show help and exit"
+		echo "   -d       Run as daemon"
+		echo "   -h       Show help and exit"
+		echo "   -l file  Write log to given file (if custom logback.xml is not present)"
 		exit 0
 	fi
 
 	if [ "$arg" = "-d" ]; then
 		DAEMON="yes"
 	fi
+
+	if [ "$arg" = "-l" ]; then
+		shift
+		JAVA_OPTIONS="$JAVA_OPTIONS -Dnxreportd.logfile=$1"
+	fi
+
+	shift
 done
 
 if [ "x$JAVA_HOME" != "x" -a -x "$JAVA_HOME/bin/java" ]; then
