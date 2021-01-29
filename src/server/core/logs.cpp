@@ -291,9 +291,9 @@ LogHandle *AcquireLogHandleObject(ClientSession *session, int32_t logHandle)
       object->incRefCount();
 	}
 
-	if (object != nullptr)
-      object->lock();
-
 	MutexUnlock(s_regListMutex);
+
+   if (object != nullptr)
+      object->lock();
 	return object;
 }
