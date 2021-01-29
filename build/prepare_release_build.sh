@@ -30,10 +30,6 @@ for pom in $POM_FILES; do
 	mvn -f $pom versions:set -DnewVersion=$VERSION
 done
 
-if [ "x$SKIP_JIRA_CONNECTOR" != "xyes" ]; then
-	atlas-mvn -f src/java/netxms-jira-connector/pom.xml versions:set -DnewVersion=$VERSION
-fi
-
 ./build/update_plugin_versions.py . $VERSION
 
 cat src/java/netxms-eclipse/Core/plugin.xml | $SED -r "s,^(.*;Version) [0-9.]+(&#x0A.*)\$,\\1 $VERSION\\2," > ./plugin.xml
