@@ -95,6 +95,7 @@
 #define AF_SYSTEMD_DAEMON           0x00020000
 #define AF_ENABLE_SSL_TRACE         0x00040000
 #define AF_CHECK_SERVER_CERTIFICATE 0x00080000
+#define AF_ENABLE_WEBSVC_PROXY      0x00100000
 
 // Flags for component failures
 #define FAIL_OPEN_LOG               0x00000001

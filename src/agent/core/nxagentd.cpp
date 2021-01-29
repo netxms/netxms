@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -324,6 +324,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableSubagentAutoload"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_AUTOLOAD, 0, &s_startupFlags, nullptr },
    { _T("EnableTCPProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_TCP_PROXY, 0, &g_dwFlags, nullptr },
    { _T("EnableWatchdog"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_WATCHDOG, 0, &s_startupFlags, nullptr },
+   { _T("EnableWebServiceProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_WEBSVC_PROXY, 0, &g_dwFlags, nullptr },
    { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, nullptr },
    { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_execTimeout, nullptr },
    { _T("ExternalList"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalListsConfig, nullptr },

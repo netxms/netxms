@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2020 Raden Solutions
+** Copyright (C) 2020-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -497,6 +497,7 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
       char errbuf[CURL_ERROR_SIZE];
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
 
+      curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROXY_HTTP | CURLPROXY_HTTPS);
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
       curl_easy_setopt(curl, CURLOPT_HEADER, static_cast<long>(0));
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, static_cast<long>((requestTimeout != 0) ? requestTimeout : 10));
