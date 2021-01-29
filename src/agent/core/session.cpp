@@ -383,7 +383,17 @@ void CommSession::readThread()
                   }
                   break;
                case CMD_QUERY_WEB_SERVICE:
-                  queryWebService(msg);
+                  if (g_dwFlags & AF_ENABLE_WEBSVC_PROXY)
+                  {
+                     queryWebService(msg);
+                  }
+                  else
+                  {
+                     NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
+                     response.setField(VID_RCC, ERR_ACCESS_DENIED);
+                     sendMessage(&response);
+                     delete msg;
+                  }
                   break;
                default:
                   m_processingQueue->put(msg);

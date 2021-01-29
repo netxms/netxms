@@ -265,6 +265,7 @@ struct PolicyChangeNotification
 #define DCIDESC_AGENT_UPTIME                         _T("Agent's uptime")
 #define DCIDESC_AGENT_USER_AGENTS_COUNT              _T("Number of connected user agents")
 #define DCIDESC_AGENT_VERSION                        _T("Agent's version")
+#define DCIDESC_AGENT_WEBSVCPROXY_ISENABLED          _T("Check if web service proxy is enabled")
 #define DCIDESC_FILE_COUNT                           _T("Number of files {instance}")
 #define DCIDESC_FILE_FOLDERCOUNT                     _T("Number of folders {instance}")
 #define DCIDESC_FILE_HASH_CRC32                      _T("CRC32 checksum of {instance}")

@@ -410,6 +410,7 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Agent.Uptime"), H_AgentUptime, nullptr, DCI_DT_UINT, DCIDESC_AGENT_UPTIME },
    { _T("Agent.UserAgentCount"), H_SessionAgentCount, _T("U"), DCI_DT_UINT, DCIDESC_AGENT_USER_AGENTS_COUNT },
    { _T("Agent.Version"), H_StringConstant, NETXMS_VERSION_STRING, DCI_DT_STRING, DCIDESC_AGENT_VERSION },
+   { _T("Agent.WebServiceProxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_WEBSVC_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_WEBSVCPROXY_ISENABLED },
    { _T("File.Count(*)"), H_DirInfo, (TCHAR *)DIRINFO_FILE_COUNT, DCI_DT_UINT, DCIDESC_FILE_COUNT },
    { _T("File.FolderCount(*)"), H_DirInfo, (TCHAR *)DIRINFO_FOLDER_COUNT, DCI_DT_UINT, DCIDESC_FILE_FOLDERCOUNT },
    { _T("File.Hash.CRC32(*)"), H_CRC32, nullptr, DCI_DT_UINT, DCIDESC_FILE_HASH_CRC32 },
