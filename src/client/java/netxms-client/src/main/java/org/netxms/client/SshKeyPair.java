@@ -22,56 +22,55 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
 /**
- * SSH key data
+ * SSH key pair
  */
-public class SshKeyData
+public class SshKeyPair
 {
    private int id;
    private String name;
    private String publicKey;
    private String privateKey;
-   
+
    /**
     * Default constructor
     */
-   public SshKeyData()
+   public SshKeyPair()
    {
       id = 0;
       name = "";
       publicKey = null;
       privateKey = null;
    }
-   
+
    /**
     * Copy constructor
     */
-   public SshKeyData(SshKeyData src)
+   public SshKeyPair(SshKeyPair src)
    {
       id = src.id;
       name = src.name;
       publicKey = src.publicKey;
       privateKey = src.privateKey;
    }
-   
+
    /**
-    * Create object form NXCP message
+    * Create from NXCP message
     * 
-    * @param msg message
-    * @param baseID object field base id
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
-   public SshKeyData(NXCPMessage msg, long baseID)
+   public SshKeyPair(NXCPMessage msg, long baseId)
    {
-      id = msg.getFieldAsInt32(baseID++);
-      name = msg.getFieldAsString(baseID++);
-      publicKey = msg.getFieldAsString(baseID++);
+      id = msg.getFieldAsInt32(baseId++);
+      name = msg.getFieldAsString(baseId++);
+      publicKey = msg.getFieldAsString(baseId++);
       privateKey = null;       
    }
-   
+
    /**
     * Fill NXCP message
     * 
-    * @param msg message
-    * @param baseID
+    * @param msg NXCP message
     */
    public void fillMessage(NXCPMessage msg)
    {
@@ -83,60 +82,66 @@ public class SshKeyData
          msg.setField(NXCPCodes.VID_PRIVATE_KEY, privateKey);
       }
    }
-   
+
    /**
-    * @return the id
+    * Get key ID.
+    *
+    * @return key ID
     */
    public int getId()
    {
       return id;
    }
-   
+
    /**
-    * @return the name
+    * Get key name.
+    *
+    * @return key name
     */
    public String getName()
    {
       return name;
    }
-   
+
    /**
-    * @param name the name to set
+    * Set key name.
+    *
+    * @param name new key name
     */
    public void setName(String name)
    {
       this.name = name;
    }
-   
+
    /**
-    * @return the publicCrtificate
+    * Get public part of this key pair.
+    *
+    * @return public key in SSH encoding or empty string if not set
     */
    public String getPublicKey()
    {
       return publicKey != null ? publicKey : "";
    }
-   
-   /**
-    * @param publicKey the publicKey to set
-    */
-   public void setPublicKey(String publicKey)
-   {
-      this.publicKey = publicKey;
-   }
 
    /**
-    * @param privateKey the privateKey to set
-    */
-   public void setPrivateKey(String privateKey)
-   {
-      this.privateKey = privateKey;
-   }
-
-   /**
-    * @return the privateCertificate
+    * Get private part of this key pair.
+    *
+    * @return private key in SSH encoding or empty string if not set
     */
    public String getPrivateKey()
    {
       return privateKey != null ? privateKey : "";
-   }  
+   }
+
+   /**
+    * Set public and private keys.
+    * 
+    * @param publicKey new public key
+    * @param privateKey new private key
+    */
+   public void setKeys(String publicKey, String privateKey)
+   {
+      this.publicKey = publicKey;
+      this.privateKey = privateKey;
+   }
 }

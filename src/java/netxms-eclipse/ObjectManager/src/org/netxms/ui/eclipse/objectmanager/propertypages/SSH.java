@@ -30,7 +30,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.SshKeyData;
+import org.netxms.client.SshKeyPair;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -51,7 +51,7 @@ public class SSH extends PropertyPage
    private LabeledText sshPassword;
    private LabeledText sshPort;
    private Combo sshKey;
-   private List<SshKeyData> keyList;
+   private List<SshKeyPair> keyList;
    private NXCSession session;
 
    /* (non-Javadoc)
@@ -108,7 +108,7 @@ public class SSH extends PropertyPage
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final List<SshKeyData> list = session.getSshKeys(true);
+            final List<SshKeyPair> list = session.getSshKeys(true);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -118,7 +118,7 @@ public class SSH extends PropertyPage
                   int selection = 0;
                   for (int i = 0; i < keyList.size(); i++)
                   {
-                     SshKeyData d = keyList.get(i);
+                     SshKeyPair d = keyList.get(i);
                      sshKey.add(d.getName());   
                      if (d.getId() == node.getSshKeyId())
                         selection = i + 1;
@@ -166,7 +166,7 @@ public class SSH extends PropertyPage
       int selection = sshKey.getSelectionIndex();
       if (selection > 0)
       {
-         SshKeyData d = keyList.get(selection - 1);
+         SshKeyPair d = keyList.get(selection - 1);
          md.setSshKeyId(d.getId());
       }
       else

@@ -28,7 +28,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.SshKeyData;
+import org.netxms.client.SshKeyPair;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -42,7 +42,7 @@ public class EditSshKeysDialog extends Dialog
    private LabeledText publicKey;
    private LabeledText privateKey;
    private Button replaceKeysButton;
-   private SshKeyData key;
+   private SshKeyPair key;
    private boolean isNew;
    
    /**
@@ -51,12 +51,12 @@ public class EditSshKeysDialog extends Dialog
     * @param shell shell
     * @param key key data or null if new key
     */
-   public EditSshKeysDialog(Shell shell, SshKeyData key)
+   public EditSshKeysDialog(Shell shell, SshKeyPair key)
    {
       super(shell);
       if (key == null)
       {
-         this.key = new SshKeyData();
+         this.key = new SshKeyPair();
          isNew = true;
       }
       else
@@ -143,7 +143,7 @@ public class EditSshKeysDialog extends Dialog
     * 
     * @return updated or created SSH key data
     */
-   public SshKeyData getSshKeyData()
+   public SshKeyPair getSshKeyData()
    {
       return key;
    }
@@ -165,8 +165,7 @@ public class EditSshKeysDialog extends Dialog
       key.setName(textName.getText());
       if (isNew || replaceKeysButton.getSelection())
       {
-         key.setPublicKey(publicKey.getText());
-         key.setPrivateKey(privateKey.getText());         
+         key.setKeys(publicKey.getText(), privateKey.getText());
       }
       super.okPressed();
    }   
