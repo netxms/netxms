@@ -51,7 +51,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
-import org.netxms.client.SshKeyData;
+import org.netxms.client.SshKeyPair;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -86,7 +86,7 @@ public class SshKeyConfigurator extends ViewPart
    private Action actionGenerateNew;
    private NXCSession session;
    private SessionListener listener;
-   private List<SshKeyData> keyList;
+   private List<SshKeyPair> keyList;
    
 
    @Override
@@ -311,7 +311,7 @@ public class SshKeyConfigurator extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final List<SshKeyData> list = session.getSshKeys(true);
+            final List<SshKeyPair> list = session.getSshKeys(true);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -339,7 +339,7 @@ public class SshKeyConfigurator extends ViewPart
       if (selection.size() != 1)
          return;
       
-      final SshKeyData key = (SshKeyData)selection.getFirstElement();      
+      final SshKeyPair key = (SshKeyPair)selection.getFirstElement();      
       WidgetHelper.copyToClipboard(key.getPublicKey());
    }
 
@@ -356,18 +356,18 @@ public class SshKeyConfigurator extends ViewPart
       if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Confirmation", "Are you sure you want to delete selected SSH keys?"))
          return;
       
-      final List<SshKeyData> list = new ArrayList<SshKeyData>(selection.size());
+      final List<SshKeyPair> list = new ArrayList<SshKeyPair>(selection.size());
       Iterator<?> it = selection.iterator();
       while(it.hasNext())
       {
-         list.add((SshKeyData)it.next());         
+         list.add((SshKeyPair)it.next());         
       }
       
       new ConsoleJob("Delete SSH key", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {     
-            for (SshKeyData key : list)
+            for (SshKeyPair key : list)
             {
                try
                {
@@ -420,8 +420,8 @@ public class SshKeyConfigurator extends ViewPart
       if (selection.size() != 1)
          return;
       
-      final SshKeyData key = (SshKeyData)selection.getFirstElement();
-      final EditSshKeysDialog dlg = new EditSshKeysDialog(getSite().getShell(), new SshKeyData(key));
+      final SshKeyPair key = (SshKeyPair)selection.getFirstElement();
+      final EditSshKeysDialog dlg = new EditSshKeysDialog(getSite().getShell(), new SshKeyPair(key));
       if (dlg.open() != Window.OK)
          return;
       

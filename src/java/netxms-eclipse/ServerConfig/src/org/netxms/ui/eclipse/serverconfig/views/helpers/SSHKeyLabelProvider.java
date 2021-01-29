@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.serverconfig.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.SshKeyData;
+import org.netxms.client.SshKeyPair;
 import org.netxms.ui.eclipse.serverconfig.views.SshKeyConfigurator;
 
 /**
@@ -39,7 +39,7 @@ public class SSHKeyLabelProvider extends LabelProvider implements ITableLabelPro
    @Override
    public String getColumnText(Object element, int columnIndex)
    {
-      SshKeyData key = (SshKeyData)element;
+      SshKeyPair key = (SshKeyPair)element;
 
       switch(columnIndex)
       {

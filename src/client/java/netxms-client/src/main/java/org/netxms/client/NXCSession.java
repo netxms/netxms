@@ -12358,7 +12358,7 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<SshKeyData> getSshKeys(boolean withPublicKey) throws IOException, NXCException
+   public List<SshKeyPair> getSshKeys(boolean withPublicKey) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SSH_KEYS_LIST);
       msg.setField(NXCPCodes.VID_INCLUDE_PUBLIC_KEY, withPublicKey);      
@@ -12366,11 +12366,11 @@ public class NXCSession
       
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_SSH_KEY_COUNT);
-      List<SshKeyData> sshCertificateList = new ArrayList<SshKeyData>(count);
+      List<SshKeyPair> sshCertificateList = new ArrayList<SshKeyPair>(count);
       long fieldId = NXCPCodes.VID_SSH_KEY_LIST_BASE;
       for (int i = 0; i < count; i++, fieldId += 5)
       {
-         sshCertificateList.add(new SshKeyData(response, fieldId));
+         sshCertificateList.add(new SshKeyPair(response, fieldId));
       }
       
       return sshCertificateList;
@@ -12399,7 +12399,7 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void updateSshKey(SshKeyData sshCertificateData) throws IOException, NXCException
+   public void updateSshKey(SshKeyPair sshCertificateData) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_SSH_KEYS);
       sshCertificateData.fillMessage(msg);
