@@ -1268,7 +1268,40 @@ DataCollectionError DataCollectionTarget::queryWebService(const TCHAR *param, We
    _tcslcpy(name, param, 1024);
    Trim(name);
 
-   TCHAR *path = _tcsrchr(name, _T(':'));
+   TCHAR *path = nullptr;
+   bool openedBraceFound = false;
+   for (const TCHAR *curr = name; *curr != 0 && path == nullptr; curr++)
+   {
+      switch(*curr)
+      {
+         case ')':
+            openedBraceFound = false;
+            break;
+         case '(':
+            openedBraceFound = true;
+            break;
+         case '\'':
+            curr++;
+            while (*curr != '\'' && *curr != 0)
+            {
+               curr++;
+            }
+            break;
+         case '"':
+            curr++;
+            while (*curr != '"' && *curr != 0)
+            {
+               curr++;
+            }
+            break;
+         case ':':
+            if (!openedBraceFound)
+               path = const_cast<TCHAR *>(curr);
+            break;
+      }
+      if (*curr == 0)
+         curr--;
+   }
    if (path == nullptr)
    {
       nxlog_debug(7, _T("DataCollectionTarget(%s)->queryWebService(%s): missing parameter path"), m_name, param);
