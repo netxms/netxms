@@ -21,7 +21,6 @@ POM_FILES="src/java-common/netxms-base/pom.xml src/libnxjava/java/pom.xml src/cl
 for pom in $POM_FILES; do
 	mvn -f $pom versions:set -DnewVersion=$VERSION-SNAPSHOT
 done
-atlas-mvn -f src/java/netxms-jira-connector/pom.xml versions:set -DnewVersion=$VERSION-SNAPSHOT
 
 ./build/update_plugin_versions.py . $VERSION.0
 
