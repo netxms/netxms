@@ -497,7 +497,7 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
       char errbuf[CURL_ERROR_SIZE];
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
 
-      curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROXY_HTTP | CURLPROXY_HTTPS);
+      curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
       curl_easy_setopt(curl, CURLOPT_HEADER, static_cast<long>(0));
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, static_cast<long>((requestTimeout != 0) ? requestTimeout : 10));
