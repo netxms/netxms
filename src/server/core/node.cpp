@@ -6282,7 +6282,44 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, Table **result)
       return rc;
    rc = DCE_SUCCESS;
 
-   if (!_tcsicmp(name, _T("Topology.SwitchForwardingDatabase")))
+   if (!_tcsicmp(name, _T("Topology.RoutingTable")))
+   {
+      RoutingTable *rt = getRoutingTable();
+      if (rt != nullptr)
+      {
+         auto table = new Table();
+         table->addColumn(_T("ID"), DCI_DT_INT, _T("ID"), true);
+         table->addColumn(_T("DEST_ADDR"), DCI_DT_UINT, _T("Destination Address"));
+         table->addColumn(_T("DEST_MASK"), DCI_DT_UINT, _T("Destination Mask"));
+         table->addColumn(_T("NEXT_HOP"), DCI_DT_UINT, _T("Next Hop"));
+         table->addColumn(_T("IF_INDEX"), DCI_DT_COUNTER64, _T("Interface index"));
+         table->addColumn(_T("IF_NAME"), DCI_DT_STRING, _T("Interface name"));
+         table->addColumn(_T("ROUTE_TYPE"), DCI_DT_UINT, _T("Route type"));
+
+         for(int i = 0; i < rt->size(); i++)
+         {
+            auto *r = rt->get(i);
+            table->addRow();
+            table->set(0, i + 1);
+            InetAddress arrd = InetAddress(r->dwDestAddr);
+            table->set(1, arrd.toString());
+            table->set(2, static_cast<UINT32>(BitsInMask(r->dwDestMask)));
+            arrd = InetAddress(r->dwNextHop);
+            table->set(3, arrd.toString());
+            table->set(4, r->dwIfIndex);
+            auto interface = findInterfaceByIndex(r->dwIfIndex);
+            table->set(5, interface != nullptr ? interface->getName() : _T(""));
+            table->set(6, r->dwRouteType);
+         }
+         delete rt;
+         *result = table;
+      }
+      else
+      {
+         rc = isBridge() ? DCE_COLLECTION_ERROR : DCE_NOT_SUPPORTED;
+      }
+   }
+   else if (!_tcsicmp(name, _T("Topology.SwitchForwardingDatabase")))
    {
       ForwardingDatabase *fdb = getSwitchForwardingDatabase();
       if (fdb != nullptr)
