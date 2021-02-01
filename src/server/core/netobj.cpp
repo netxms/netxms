@@ -2407,8 +2407,9 @@ NXSL_Value *NetObj::createNXSLObject(NXSL_VM *vm) const
  * Execute hook script
  *
  * @param hookName hook name. Will find and execute script named Hook::hookName
+ * @param pollRequestId request ID for forced poll request or 0 if not applicable
  */
-void NetObj::executeHookScript(const TCHAR *hookName)
+void NetObj::executeHookScript(const TCHAR *hookName, uint32_t pollRequestId)
 {
    if (g_flags & AF_SHUTDOWN)
       return;
@@ -2423,6 +2424,8 @@ void NetObj::executeHookScript(const TCHAR *hookName)
       return;
    }
 
+   std::pair<NetObj*, uint32_t> context(this, pollRequestId);
+   vm->setUserData(&context);
    if (!vm->run())
    {
       nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),

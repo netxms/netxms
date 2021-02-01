@@ -1947,12 +1947,14 @@ static int F_SendMail(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 			PostMail(curr, subj, text, isHTML);
 			curr = next + 1;
 		} while(next != nullptr);
-	}
-	else
-	{
-		nxlog_debug_tag(_T("nxsl.sendmail"), 3, _T("Empty recipients list - mail will not be sent"));
-	}
-	return 0;
+   }
+   else
+   {
+      nxlog_debug_tag(_T("nxsl.sendmail"), 3, _T("Empty recipients list - mail will not be sent"));
+   }
+
+   *result = vm->createValue();
+   return 0;
 }
 
 /**
@@ -1991,18 +1993,38 @@ static int F_SendNotification(int argc, NXSL_Value **argv, NXSL_Value **result, 
 }
 
 /**
+ * Sends poller trace message to client (if poll initiated by client) and log it
+ * Syntax:
+ *    PollerTrace(text)
+ * Returned value:
+ *    none
+ */
+static int F_PollerTrace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   auto context = static_cast<std::pair<NetObj*, uint32_t>*>(vm->getUserData());
+   if (context != nullptr)
+   {
+      const TCHAR *text = argv[0]->getValueAsCString();
+      context->first->sendPollerMsg(context->second, _T("%s\r\n"), text);
+      nxlog_debug_tag(_T("nxsl.pollertrace"), 4, _T("%s"), text);
+   }
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * Additional server functions to use within all scripts
  */
 static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
-	{ "map", F_map, -1 },
+   { "map", F_map, -1 },
    { "mapList", F_mapList, -1 },
    { "AgentExecuteAction", F_AgentExecuteAction, -1 },
    { "AgentExecuteActionWithOutput", F_AgentExecuteActionWithOutput, -1 },
-	{ "AgentReadList", F_AgentReadList, 2 },
-	{ "AgentReadParameter", F_AgentReadParameter, 2 },
-	{ "AgentReadTable", F_AgentReadTable, 2 },
-	{ "CreateSNMPTransport", F_CreateSNMPTransport, -1 },
+   { "AgentReadList", F_AgentReadList, 2 },
+   { "AgentReadParameter", F_AgentReadParameter, 2 },
+   { "AgentReadTable", F_AgentReadTable, 2 },
+   { "CreateSNMPTransport", F_CreateSNMPTransport, -1 },
    { "CountryAlphaCode", F_CountryAlphaCode, 1 },
    { "CountryName", F_CountryName, 1 },
    { "CountScheduledTasksByKey", F_CountScheduledTasksByKey, 1 },
@@ -2045,6 +2067,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "LeaveMaintenance", F_LeaveMaintenance, 1 },
    { "LoadEvent", F_LoadEvent, 1 },
    { "ManageObject", F_ManageObject, 1 },
+   { "PollerTrace", F_PollerTrace, 1 },
 	{ "PostEvent", F_PostEvent, -1 },
    { "PostEventEx", F_PostEventEx, -1 },
 	{ "RenameObject", F_RenameObject, 2 },

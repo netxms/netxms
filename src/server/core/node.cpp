@@ -2606,7 +2606,7 @@ restart_agent_check:
       {
          time_t oldAgentuptime = m_agentUpTime;
          m_agentUpTime = _tcstol(buffer, nullptr, 0);
-         if ((UINT32)oldAgentuptime > (UINT32)m_agentUpTime)
+         if (oldAgentuptime > m_agentUpTime)
          {
             //cancel file monitoring locally(on agent it is canceled if agent have fallen)
             g_monitoringList.removeDisconnectedNode(m_id);
@@ -2630,11 +2630,11 @@ restart_agent_check:
       TCHAR buffer[MAX_RESULT_LENGTH];
       if (getMetricFromAgent(_T("GPS.LocationData"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
       {
-         GeoLocation loc = GeoLocation::parseAgentData(buffer);
-         if (loc.getType() != GL_UNSET)
+         GeoLocation location = GeoLocation::parseAgentData(buffer);
+         if (location.getType() != GL_UNSET)
          {
-            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): location set to %s, %s from agent"), m_name, m_id, loc.getLatitudeAsString(), loc.getLongitudeAsString());
-            setGeoLocation(loc);
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): location set to %s, %s from agent"), m_name, m_id, location.getLatitudeAsString(), location.getLongitudeAsString());
+            setGeoLocation(location);
          }
       }
       else
@@ -2649,7 +2649,7 @@ restart_agent_check:
       TCHAR buffer[MAX_RESULT_LENGTH];
       if (getMetricFromAgent(_T("Agent.LogFile.Status"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
       {
-         UINT32 status = _tcstol(buffer, nullptr, 0);
+         uint32_t status = _tcstol(buffer, nullptr, 0);
          if (status != 0)
             PostSystemEvent(EVENT_AGENT_LOG_PROBLEM, m_id, "ds", status, _T("could not open"));
       }
@@ -2660,7 +2660,7 @@ restart_agent_check:
 
       if (getMetricFromAgent(_T("Agent.LocalDatabase.Status"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
       {
-         UINT32 status = _tcstol(buffer, nullptr, 0);
+         uint32_t status = _tcstol(buffer, nullptr, 0);
          const TCHAR *statusDescription[3]= {
                                        _T("normal"),
                                        _T("could not open database"),
@@ -2681,7 +2681,7 @@ restart_agent_check:
       TCHAR buffer[MAX_RESULT_LENGTH];
       if (getMetricFromAgent(_T("Agent.IsUserAgentInstalled"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
       {
-         UINT32 status = _tcstol(buffer, nullptr, 0);
+         uint32_t status = _tcstol(buffer, nullptr, 0);
          if (status != 0)
             m_capabilities |= NC_HAS_USER_AGENT;
          else
@@ -2711,7 +2711,7 @@ restart_agent_check:
 
    // Execute hook script
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("StatusPoll"));
+   executeHookScript(_T("StatusPoll"), rqId);
 
    if (resyncDataCollectionConfiguration)
    {
@@ -3758,7 +3758,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
       // Execute hook script
       poller->setStatus(_T("hook"));
-      executeHookScript(_T("ConfigurationPoll"));
+      executeHookScript(_T("ConfigurationPoll"), rqId);
 
       POLL_CANCELLATION_CHECKPOINT();
 
@@ -9156,7 +9156,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
 
    // Execute hook script
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("TopologyPoll"));
+   executeHookScript(_T("TopologyPoll"), rqId);
 
    sendPollerMsg(rqId, _T("Finished topology poll for node %s\r\n"), m_name);
 

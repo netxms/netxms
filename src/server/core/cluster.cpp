@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -502,7 +502,7 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
       updateContainerMembership();
 
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("ConfigurationPoll"));
+   executeHookScript(_T("ConfigurationPoll"), dwRqId);
 
    sendPollerMsg(dwRqId, _T("Configuration poll finished\r\n"));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ClusterConfPoll(%s): finished"), m_name);
@@ -673,7 +673,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 
    // Execute hook script
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("StatusPoll"));
+   executeHookScript(_T("StatusPoll"), dwRqId);
 
    calculateCompoundStatus(true);
    poller->setStatus(_T("cleanup"));

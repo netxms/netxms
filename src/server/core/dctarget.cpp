@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2203,7 +2203,7 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
 
       // Execute hook script
       poller->setStatus(_T("hook"));
-      executeHookScript(_T("InstancePoll"));
+      executeHookScript(_T("InstancePoll"), requestId);
    }
    else
    {
