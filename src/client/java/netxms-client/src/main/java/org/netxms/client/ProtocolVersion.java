@@ -30,7 +30,7 @@ public final class ProtocolVersion
    // Versions
    public static final int ALARMS    = 4;
    public static final int BASE      = 53;
-   public static final int FULL      = 29;
+   public static final int FULL      = 30;
    public static final int MOBILE    = 1;
    public static final int PUSH      = 1;
    public static final int SCHEDULER = 2;
