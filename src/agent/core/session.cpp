@@ -420,7 +420,9 @@ void CommSession::readThread()
    if (m_proxyConnection)
       ThreadJoin(m_proxyReadThread);
 
+   MutexLock(m_tcpProxyLock);
    m_tcpProxies.clear();
+   MutexUnlock(m_tcpProxyLock);
    ThreadJoin(m_tcpProxyReadThread);
 
    debugPrintf(5, _T("Session with %s closed"), m_serverAddr.toString().cstr());
