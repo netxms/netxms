@@ -1956,6 +1956,41 @@ static int F_SendMail(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 }
 
 /**
+ * Sends notifications using provided channel to specified recipients
+ * Syntax:
+ *    SendNotification(channelName, recipients, subject, text)
+ * Returned value:
+ *    none
+ */
+static int F_SendNotification(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (argc != 4)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString() || !argv[1]->isString() || !argv[2]->isString() || !argv[3]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   const TCHAR *channelName = argv[0]->getValueAsCString();
+   StringBuffer rcpts(argv[1]->getValueAsCString());
+   rcpts.trim();
+   const TCHAR *subj = argv[2]->getValueAsCString();
+   const TCHAR *text = argv[3]->getValueAsCString();
+
+   if (!rcpts.isEmpty())
+   {
+      nxlog_debug_tag(_T("nxsl.sendntfy"), 3, _T("Sending notification using channel %s to %s: \"%s\""), channelName, rcpts.cstr(), text);
+      SendNotification(channelName, rcpts.getBuffer(), subj, text);
+   }
+   else
+   {
+      nxlog_debug_tag(_T("nxsl.sendntfy"), 3, _T("Empty recipients list - notification will not be sent"));
+   }
+
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * Additional server functions to use within all scripts
  */
 static NXSL_ExtFunction m_nxslServerFunctions[] =
@@ -2014,6 +2049,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "PostEventEx", F_PostEventEx, -1 },
 	{ "RenameObject", F_RenameObject, 2 },
 	{ "SendMail", F_SendMail, -1 },
+	{ "SendNotification", F_SendNotification, 4 },
    { "SetCustomAttribute", F_SetCustomAttribute, 3 },
    { "SetEventParameter", F_SetEventParameter, 3 },
 	{ "SetInterfaceExpectedState", F_SetInterfaceExpectedState, 2 },
