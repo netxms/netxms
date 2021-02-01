@@ -1949,7 +1949,9 @@ static int F_SendMail(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 	{
 		nxlog_debug_tag(_T("nxsl.sendmail"), 3, _T("Empty recipients list - mail will not be sent"));
 	}
-	return 0;
+
+   *result = vm->createValue();
+   return 0;
 }
 
 /**
@@ -1975,13 +1977,35 @@ static int F_SendNotification(int argc, NXSL_Value **argv, NXSL_Value **result, 
 
    if (!rcpts.isEmpty())
    {
-      nxlog_debug_tag(_T("nxsl.sendnotification"), 3, _T("Sending notification using channel %s to %s: \"%s\""), channelName, rcpts.cstr(), text);
+      nxlog_debug_tag(_T("nxsl.sendntfy"), 3, _T("Sending notification using channel %s to %s: \"%s\""), channelName, rcpts.cstr(), text);
       SendNotification(channelName, rcpts.getBuffer(), subj, text);
    }
    else
    {
-      nxlog_debug_tag(_T("nxsl.sendnotification"), 3, _T("Empty recipients list - notification will not be sent"));
+      nxlog_debug_tag(_T("nxsl.sendntfy"), 3, _T("Empty recipients list - notification will not be sent"));
    }
+
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * Sends poller trace message to client (if poll initiated by client) and log it
+ * Syntax:
+ *    PollerTrace(text)
+ * Returned value:
+ *    none
+ */
+static int F_PollerTrace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   auto context = static_cast<std::pair<NetObj*, uint32_t>*>(vm->getUserData());
+   if (context != nullptr)
+   {
+      const TCHAR *text = argv[0]->getValueAsCString();
+      context->first->sendPollerMsg(context->second, _T("%s\r\n"), text);
+      nxlog_debug_tag(_T("nxsl.pollertrace"), 4, _T("%s"), text);
+   }
+   *result = vm->createValue();
    return 0;
 }
 
@@ -2040,6 +2064,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "LeaveMaintenance", F_LeaveMaintenance, 1 },
    { "LoadEvent", F_LoadEvent, 1 },
    { "ManageObject", F_ManageObject, 1 },
+   { "PollerTrace", F_PollerTrace, 1 },
 	{ "PostEvent", F_PostEvent, -1 },
    { "PostEventEx", F_PostEventEx, -1 },
 	{ "RenameObject", F_RenameObject, 2 },

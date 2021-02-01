@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -582,7 +582,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
 
    // Execute hook script
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("ConfigurationPoll"));
+   executeHookScript(_T("ConfigurationPoll"), rqId);
 
    sendPollerMsg(rqId, _T("Finished configuration poll for sensor %s\r\n"), m_name);
    sendPollerMsg(rqId, _T("Sensor configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
@@ -724,7 +724,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
    calculateStatus(TRUE);
 
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("StatusPoll"));
+   executeHookScript(_T("StatusPoll"), rqId);
 
    lockProperties();
    if (prevState != m_state)

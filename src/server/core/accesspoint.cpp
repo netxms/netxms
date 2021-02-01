@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -549,7 +549,7 @@ void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, 
 
    // Execute hook script
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("ConfigurationPoll"));
+   executeHookScript(_T("ConfigurationPoll"), rqId);
 
    sendPollerMsg(rqId, _T("Finished configuration poll for access point %s\r\n"), m_name);
 

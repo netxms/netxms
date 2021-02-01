@@ -1137,7 +1137,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const;
 
-   void executeHookScript(const TCHAR *hookName);
+   void executeHookScript(const TCHAR *hookName, uint32_t pollRequestId = 0);
 
    ModuleData *getModuleData(const TCHAR *module);
    void setModuleData(const TCHAR *module, ModuleData *data);
