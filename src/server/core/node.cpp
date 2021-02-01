@@ -1744,7 +1744,7 @@ shared_ptr<Interface> Node::createInterfaceObject(InterfaceInfo *info, bool manu
       }
       vm.destroy();
       nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::createInterfaceObject(%s [%u]): interface \"%s\" (ifIndex=%d) %s by filter"),
-                m_name, m_id, info->name, info->index, pass ? _T("accepted") : _T("rejected"));
+                m_name, m_id, iface->getName(), info->index, pass ? _T("accepted") : _T("rejected"));
       if (!pass)
       {
          iface.reset();
@@ -9322,7 +9322,7 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
    InetAddress addr = baseAddr.getSubnetAddress();
    if (syntheticMask)
    {
-      if (AdjustSubnetBaseAddress(baseAddr, m_zoneUIN))
+      if (!AdjustSubnetBaseAddress(addr, m_zoneUIN))
          return shared_ptr<Subnet>();
    }
 
@@ -9492,7 +9492,7 @@ void Node::checkSubnetBinding()
          {
             if (addr.getMaskBits() > 0)
             {
-               pSubnet = createSubnet(addr, false);
+               pSubnet = createSubnet(addr, iface->isSyntheticMask());
             }
             else
             {
