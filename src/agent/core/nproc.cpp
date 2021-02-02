@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -114,20 +114,17 @@ static void MasterNotificationProcessor()
          ServerRegistration *server = s_serverSyncStatus.get(i);
          if (server->status == SyncStatus::ONLINE)
          {
-            MutexLock(g_hSessionListAccess);
-            for(uint32_t j = 0; j < g_maxCommSessions; j++)
+            MutexLock(g_sessionLock);
+            for(int j = 0; j < g_sessions.size(); j++)
             {
-               CommSession *session = g_pSessionList[j];
-               if (session != nullptr)
+               CommSession *session = g_sessions.get(j);
+               if ((session->getServerId() == server->serverId) && session->canAcceptTraps())
                {
-                  if ((session->getServerId() == server->serverId) && session->canAcceptTraps())
-                  {
-                     sent = session->sendMessage(msg);
-                     break;
-                  }
+                  sent = session->sendMessage(msg);
+                  break;
                }
             }
-            MutexUnlock(g_hSessionListAccess);
+            MutexUnlock(g_sessionLock);
          }
 
          if (!sent)
@@ -171,7 +168,7 @@ static void MasterNotificationProcessor()
 /**
  * Synchronize stored notifications with server
  */
-static void NotificationSync(CommSession *session)
+static void NotificationSync(const shared_ptr<CommSession>& session)
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
    if (hdb == nullptr)
@@ -260,7 +257,6 @@ static void NotificationSync(CommSession *session)
    }
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification synchronization finished"));
-   session->decRefCount();
 }
 
 /**
@@ -341,15 +337,16 @@ static void NotificationHousekeeper()
    }
 
    // Update last connection time for all connected sessions
-   MutexLock(g_hSessionListAccess);
-   for(uint32_t i = 0; i < g_maxCommSessions; i++)
+   MutexLock(g_sessionLock);
+   for(int i = 0; i < g_sessions.size(); i++)
    {
-      if ((g_pSessionList[i] != nullptr) && g_pSessionList[i]->canAcceptTraps())
+      CommSession *session = g_sessions.get(i);
+      if (session->canAcceptTraps())
       {
-         UpdateServerRegistration(g_pSessionList[i]->getServerId(), now);
+         UpdateServerRegistration(session->getServerId(), now);
       }
    }
-   MutexUnlock(g_hSessionListAccess);
+   MutexUnlock(g_sessionLock);
    ThreadPoolScheduleRelative(g_commThreadPool, ONE_DAY * 1000, NotificationHousekeeper);
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification housekeeper thread stopped"));
 }
@@ -357,7 +354,7 @@ static void NotificationHousekeeper()
 /**
  * Register session for notification processing
  */
-void RegisterSessionForNotifications(CommSession *session)
+void RegisterSessionForNotifications(const shared_ptr<CommSession>& session)
 {
    time_t now = time(nullptr);
    UpdateServerRegistration(session->getServerId(), now);
@@ -382,7 +379,6 @@ void RegisterSessionForNotifications(CommSession *session)
    else
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("RegisterSessionForNotifications: starting background sync for server ") UINT64X_FMT(_T("016")), session->getServerId());
-      session->incRefCount();
       TCHAR key[64];
       _sntprintf(key, 64, _T("NSync-") UINT64X_FMT(_T("016")), session->getServerId());
       ThreadPoolExecuteSerialized(g_commThreadPool, key, NotificationSync, session);

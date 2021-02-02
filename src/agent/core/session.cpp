@@ -25,15 +25,15 @@
 /**
  * Externals
  */
-void UnregisterSession(uint32_t index, uint32_t id);
+void UnregisterSession(uint32_t id);
 uint32_t DeployPolicy(CommSession *session, NXCPMessage *request);
 uint32_t UninstallPolicy(CommSession *session, NXCPMessage *request);
 uint32_t GetPolicyInventory(CommSession *session, NXCPMessage *msg);
 void ClearDataCollectionConfiguration();
-UINT32 AddUserAgentNotification(UINT64 serverId, NXCPMessage *request);
-UINT32 RemoveUserAgentNotification(UINT64 serverId, NXCPMessage *request);
-UINT32 UpdateUserAgentNotifications(UINT64 serverId, NXCPMessage *request);
-void RegisterSessionForNotifications(CommSession *session);
+uint32_t AddUserAgentNotification(uint64_t serverId, NXCPMessage *request);
+uint32_t RemoveUserAgentNotification(uint64_t serverId, NXCPMessage *request);
+uint32_t UpdateUserAgentNotifications(uint64_t serverId, NXCPMessage *request);
+void RegisterSessionForNotifications(const shared_ptr<CommSession>& session);
 
 extern VolatileCounter g_authenticationFailures;
 
@@ -84,18 +84,6 @@ LONG H_AgentProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
          return SYSINFO_RC_UNSUPPORTED;
    }
    return SYSINFO_RC_SUCCESS;
-}
-
-/**
- * Client communication read thread
- */
-THREAD_RESULT THREAD_CALL CommSession::readThreadStarter(void *arg)
-{
-   static_cast<CommSession *>(arg)->readThread();
-   UnregisterSession(static_cast<CommSession*>(arg)->getIndex(), static_cast<CommSession*>(arg)->getId());
-   static_cast<CommSession *>(arg)->debugPrintf(6, _T("Receiver thread stopped"));
-   static_cast<CommSession *>(arg)->decRefCount();
-   return THREAD_OK;
 }
 
 /**
@@ -185,7 +173,7 @@ void CommSession::debugPrintf(int level, const TCHAR *format, ...)
 void CommSession::run()
 {
    m_processingThread = ThreadCreateEx(this, &CommSession::processingThread);
-   ThreadCreate(readThreadStarter, 0, this);
+   ThreadCreate(self(), &CommSession::readThread);
 }
 
 /**
@@ -194,7 +182,9 @@ void CommSession::run()
 void CommSession::disconnect()
 {
 	debugPrintf(5, _T("CommSession::disconnect()"));
-	m_tcpProxies.clear();
+   MutexLock(m_tcpProxyLock);
+   m_tcpProxies.clear();
+   MutexUnlock(m_tcpProxyLock);
    m_channel->shutdown();
    if (m_hProxySocket != -1)
       shutdown(m_hProxySocket, SHUT_RDWR);
@@ -436,6 +426,9 @@ void CommSession::readThread()
    ThreadJoin(m_tcpProxyReadThread);
 
    debugPrintf(5, _T("Session with %s closed"), m_serverAddr.toString().cstr());
+
+   UnregisterSession(m_id);
+   debugPrintf(6, _T("Receiver thread stopped"));
 }
 
 /**
@@ -520,8 +513,7 @@ void CommSession::postMessage(const NXCPMessage *msg)
 {
    if (m_disconnected)
       return;
-   incRefCount();
-   ThreadPoolExecuteSerialized(g_commThreadPool, m_key, this, &CommSession::sendMessageInBackground, msg->serialize(m_allowCompression));
+   ThreadPoolExecuteSerialized(g_commThreadPool, m_key, self(), &CommSession::sendMessageInBackground, msg->serialize(m_allowCompression));
 }
 
 /**
@@ -531,8 +523,7 @@ void CommSession::postRawMessage(const NXCP_MESSAGE *msg)
 {
    if (m_disconnected)
       return;
-   incRefCount();
-   ThreadPoolExecuteSerialized(g_commThreadPool, m_key, this, &CommSession::sendMessageInBackground, MemCopyBlock(msg, ntohl(msg->size)));
+   ThreadPoolExecuteSerialized(g_commThreadPool, m_key, self(), &CommSession::sendMessageInBackground, MemCopyBlock(msg, ntohl(msg->size)));
 }
 
 /**
@@ -541,7 +532,6 @@ void CommSession::postRawMessage(const NXCP_MESSAGE *msg)
 void CommSession::sendMessageInBackground(NXCP_MESSAGE *msg)
 {
    sendRawMessage(msg, m_encryptionContext.get());
-   decRefCount();
 }
 
 /**
@@ -618,7 +608,7 @@ void CommSession::processingThread()
                break;
             case CMD_ENABLE_AGENT_TRAPS:
                m_acceptTraps = true;
-               RegisterSessionForNotifications(this);
+               RegisterSessionForNotifications(self());
                response.setField(VID_RCC, ERR_SUCCESS);
                break;
             case CMD_ENABLE_FILE_UPDATES:
@@ -957,7 +947,7 @@ void CommSession::queryWebService(NXCPMessage *request)
 void CommSession::action(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
    if ((g_dwFlags & AF_ENABLE_ACTIONS) && m_controlServer)
-      ExecuteAction(pRequest, pMsg, this);
+      ExecuteAction(pRequest, pMsg, self());
    else
       pMsg->setField(VID_RCC, ERR_ACCESS_DENIED);
 }
@@ -988,7 +978,7 @@ void CommSession::recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg)
 /**
  * Open file for writing
  */
-UINT32 CommSession::openFile(TCHAR *szFullPath, UINT32 requestId, time_t fileModTime)
+uint32_t CommSession::openFile(TCHAR *szFullPath, uint32_t requestId, time_t fileModTime)
 {
    DownloadFileInfo *fInfo = new DownloadFileInfo(szFullPath, fileModTime);
    debugPrintf(4, _T("CommSession::openFile(): Writing to local file \"%s\""), szFullPath);
@@ -1198,7 +1188,7 @@ void CommSession::proxyReadThread()
 /**
  * Wait for request completion
  */
-UINT32 CommSession::doRequest(NXCPMessage *msg, UINT32 timeout)
+uint32_t CommSession::doRequest(NXCPMessage *msg, uint32_t timeout)
 {
    if (!sendMessage(msg))
       return ERR_CONNECTION_BROKEN;
@@ -1220,7 +1210,7 @@ UINT32 CommSession::doRequest(NXCPMessage *msg, UINT32 timeout)
 /**
  * Wait for request completion
  */
-NXCPMessage *CommSession::doRequestEx(NXCPMessage *msg, UINT32 timeout)
+NXCPMessage *CommSession::doRequestEx(NXCPMessage *msg, uint32_t timeout)
 {
    if (!sendMessage(msg))
       return NULL;

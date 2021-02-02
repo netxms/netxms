@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -340,7 +340,7 @@ uint32_t DeployPolicy(CommSession *session, NXCPMessage *request)
 /**
  * Remove configuration file
  */
-static uint32_t RemovePolicy(uint32_t session, const uuid& guid, TCHAR *dir)
+static uint32_t RemovePolicy(const uuid& guid, TCHAR *dir)
 {
    TCHAR path[MAX_PATH], name[64];
    uint32_t rcc;
@@ -372,17 +372,17 @@ uint32_t UninstallPolicy(CommSession *session, NXCPMessage *request)
 
    if (!_tcscmp(type, _T("AgentConfig")))
    {
-      rcc = RemovePolicy(session->getIndex(), guid, g_szConfigPolicyDir);
+      rcc = RemovePolicy(guid, g_szConfigPolicyDir);
       if (rcc == RCC_SUCCESS)
          g_restartPending = true;
    }
    else if (!_tcscmp(type, _T("LogParserConfig")))
    {
-      rcc = RemovePolicy(session->getIndex(), guid, g_szLogParserDirectory);
+      rcc = RemovePolicy(guid, g_szLogParserDirectory);
    }
    else if (!_tcscmp(type, _T("SupportApplicationConfig")))
    {
-      rcc = RemovePolicy(session->getIndex(), guid, g_userAgentPolicyDirectory);
+      rcc = RemovePolicy(guid, g_userAgentPolicyDirectory);
       if (rcc == RCC_SUCCESS)
       {
          UpdateUserAgentsConfiguration();

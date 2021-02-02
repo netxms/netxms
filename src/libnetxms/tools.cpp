@@ -26,10 +26,11 @@
 
 #include "libnetxms.h"
 #include <stdarg.h>
-#include <nms_agent.h>
 #include <nms_threads.h>
 #include <netxms-regex.h>
 #include <nxstat.h>
+#include <nxcpapi.h>
+#include <nxproc.h>
 
 #ifdef _WIN32
 #include <psapi.h>

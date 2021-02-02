@@ -22,6 +22,26 @@
 
 #include "libnxagent.h"
 
+/**
+ * Abstract session constructor
+ */
+AbstractCommSession::AbstractCommSession()
+{
+#ifdef _WIN32
+   m_self = new weak_ptr<AbstractCommSession>();
+#endif
+}
+
+/**
+ * Abstract session destructor
+ */
+AbstractCommSession::~AbstractCommSession()
+{
+#ifdef _WIN32
+   delete m_self;
+#endif
+}
+
 #ifdef _WIN32
 
 /**

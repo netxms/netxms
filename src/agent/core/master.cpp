@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -141,7 +141,7 @@ void MasterAgentListener()
 						H_GetList(msg, &response);
 						break;
                case CMD_EXECUTE_ACTION:
-                  ExecuteAction(msg, &response, new ProxySession(msg));
+                  ExecuteAction(msg, &response, MakeSharedCommSession<ProxySession>(msg));
                   break;
 					case CMD_GET_PARAMETER_LIST:
 						response.setField(VID_RCC, ERR_SUCCESS);

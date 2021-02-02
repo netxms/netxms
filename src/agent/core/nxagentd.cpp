@@ -130,7 +130,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void (*postEvent1)(uint32_t, const TCHAR *, time_t, const char *, va_list),
       void (*postEvent2)(uint32_t, const TCHAR *, time_t, int, const TCHAR **),
       bool (*enumerateSessions)(EnumerationCallbackResult(*)(AbstractCommSession *, void *), void*),
-      AbstractCommSession *(*findServerSession)(UINT64),
+      shared_ptr<AbstractCommSession> (*findServerSession)(uint64_t),
       bool (*sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
       bool (*pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
       DB_HANDLE (*getLocalDatabaseHandle)(),

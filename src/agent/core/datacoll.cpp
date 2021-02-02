@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -863,7 +863,7 @@ bool DataElement::sendToServer(bool reconciliation)
    if ((m_type == DCO_TYPE_TABLE) && (m_value.table == nullptr))
       return true;
 
-   CommSession *session = (CommSession *)FindServerSession(SessionComparator_Sender, &m_serverId);
+   shared_ptr<CommSession> session = static_pointer_cast<CommSession>(FindServerSession(SessionComparator_Sender, &m_serverId));
    if (session == nullptr)
       return false;
 
@@ -888,8 +888,7 @@ bool DataElement::sendToServer(bool reconciliation)
          m_value.table->fillMessage(msg, 0, -1);
          break;
    }
-   UINT32 rcc = session->doRequest(&msg, 2000);
-   session->decRefCount();
+   uint32_t rcc = session->doRequest(&msg, 2000);
 
    // consider internal error as success because it means that server
    // cannot accept data for some reason and retry is not feasible
@@ -1021,7 +1020,7 @@ static void ReconciliationThread()
    {
       // Check if there is something to sync
       s_serverSyncStatusLock.lock();
-      CommSession *session = static_cast<CommSession*>(FindServerSession(SessionComparator_Reconciliation, nullptr));
+      shared_ptr<CommSession> session = static_pointer_cast<CommSession>(FindServerSession(SessionComparator_Reconciliation, nullptr));
       s_serverSyncStatusLock.unlock();
       if (session == nullptr)
       {
@@ -1064,7 +1063,6 @@ static void ReconciliationThread()
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: database query failed: %s"), sqlError);
          sleepTime = 30000;
-         session->decRefCount();
          continue;
       }
 
@@ -1204,7 +1202,6 @@ static void ReconciliationThread()
       }
       DBFreeResult(hResult);
 
-      session->decRefCount();
       sleepTime = (count > 0) ? 50 : 30000;
    }
 
