@@ -2472,7 +2472,7 @@ SaveFileStatus LIBNETXMS_EXPORTABLE SaveFile(const TCHAR *fileName, const void *
             auto next = curr;
             while((*next != 0x0D) && (pos < size))
             {
-               *next++;
+               next++;
                pos++;
             }
             int blockSize = static_cast<int>(next - curr);
@@ -2483,7 +2483,7 @@ SaveFileStatus LIBNETXMS_EXPORTABLE SaveFile(const TCHAR *fileName, const void *
             }
             while((*next == 0x0D) && (pos < size))
             {
-               *next++;
+               next++;
                pos++;
             }
             curr = next;
