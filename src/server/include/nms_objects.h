@@ -3021,7 +3021,7 @@ protected:
    uint16_t m_eipPort;  // EtherNet/IP port
    uint16_t m_cipDeviceType;
    uint16_t m_cipStatus;
-   uint16_t m_cipState;
+   uint8_t m_cipState;
    uint16_t m_cipVendorCode;
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
@@ -3238,7 +3238,7 @@ public:
    uint32_t getRequiredPollCount() const { return m_requiredPollCount; }
    uint16_t getCipDeviceType() const { return m_cipDeviceType; }
    uint16_t getCipStatus() const { return m_cipStatus; }
-   uint16_t getCipState() const { return m_cipState; }
+   uint8_t getCipState() const { return m_cipState; }
    uint16_t getCipVendorCode() const { return m_cipVendorCode; }
 
    bool isDown() { return (m_state & DCSF_UNREACHABLE) ? true : false; }

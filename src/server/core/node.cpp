@@ -539,7 +539,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_serialNumber = DBGetFieldAsSharedString(hResult, 0, 62);
    m_cipDeviceType = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 63));
    m_cipStatus = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 64));
-   m_cipState = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 65));
+   m_cipState = static_cast<uint8_t>(DBGetFieldULong(hResult, 0, 65));
    m_eipProxy = DBGetFieldULong(hResult, 0, 66);
    m_eipPort = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 67));
    BYTE hardwareId[HARDWARE_ID_LENGTH];
@@ -6307,8 +6307,8 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, Table **result)
             arrd = InetAddress(r->dwNextHop);
             table->set(3, arrd.toString());
             table->set(4, r->dwIfIndex);
-            auto interface = findInterfaceByIndex(r->dwIfIndex);
-            table->set(5, interface != nullptr ? interface->getName() : _T(""));
+            auto iface = findInterfaceByIndex(r->dwIfIndex);
+            table->set(5, (iface != nullptr) ? iface->getName() : _T(""));
             table->set(6, r->dwRouteType);
          }
          delete rt;
@@ -7134,8 +7134,8 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
       pMsg->setField(VID_CIP_STATUS, m_cipStatus);
       pMsg->setField(VID_CIP_STATUS_TEXT, CIP_DecodeDeviceStatus(m_cipStatus));
       pMsg->setField(VID_CIP_EXT_STATUS_TEXT, CIP_DecodeExtendedDeviceStatus(m_cipStatus));
-      pMsg->setField(VID_CIP_STATE, m_cipState);
-      pMsg->setField(VID_CIP_STATE_TEXT, CIP_DeviceStateTextFromCode(static_cast<uint8_t>(m_cipState)));
+      pMsg->setField(VID_CIP_STATE, static_cast<uint16_t>(m_cipState));
+      pMsg->setField(VID_CIP_STATE_TEXT, CIP_DeviceStateTextFromCode(m_cipState));
       pMsg->setField(VID_CIP_VENDOR_CODE, m_cipVendorCode);
    }
 
