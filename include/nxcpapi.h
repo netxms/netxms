@@ -386,14 +386,13 @@ public:
 class LIBNETXMS_EXPORTABLE CommChannelMessageReceiver : public AbstractMessageReceiver
 {
 private:
-   AbstractCommChannel *m_channel;
+   shared_ptr<AbstractCommChannel> m_channel;
 
 protected:
    virtual ssize_t readBytes(BYTE *buffer, size_t size, uint32_t timeout) override;
 
 public:
-   CommChannelMessageReceiver(AbstractCommChannel *channel, size_t initialSize, size_t maxSize);
-   virtual ~CommChannelMessageReceiver();
+   CommChannelMessageReceiver(const shared_ptr<AbstractCommChannel>& channel, size_t initialSize, size_t maxSize);
 
    virtual void cancel() override;
 };
@@ -591,7 +590,7 @@ typedef bool (*NXCPMessageNameResolver)(UINT16 code, TCHAR *buffer);
 NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, UINT16 flags, const void *data, size_t dataSize,
       NXCP_MESSAGE *buffer, bool allowCompression);
 bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET s, int *pnVersion, MUTEX mutex);
-bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channel, int *pnVersion, MUTEX mutex);
+bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(const shared_ptr<AbstractCommChannel>& channel, int *pnVersion, MUTEX mutex);
 
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, const TCHAR *fileName, NXCPEncryptionContext *ectx, off_t offset,
          void (* progressCallback)(int64_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE,

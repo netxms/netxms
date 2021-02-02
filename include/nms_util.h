@@ -3477,6 +3477,7 @@ private:
    SOCKET m_controlSockets[2];
    MUTEX m_mutex;
    BackgroundSocketPollRequest *m_head;
+   bool m_shutdown;
 
    void workerThread();
    void notifyWorkerThread(char command = 'W');
@@ -3491,6 +3492,7 @@ public:
       poll(socket, timeout, reinterpret_cast<void (*)(BackgroundSocketPollResult, SOCKET, void*)>(callback), context);
    }
    void cancel(SOCKET socket);
+   void shutdown();
 
    bool isValid() const { return (m_controlSockets[0] != INVALID_SOCKET) && (m_workerThread != INVALID_THREAD_HANDLE); }
 };
@@ -3540,15 +3542,13 @@ template<typename C> void AbstractCommChannel_PollWrapperCallback(BackgroundSock
 /**
  * Abstract communication channel
  */
-class LIBNETXMS_EXPORTABLE AbstractCommChannel : public RefCountObject
+class LIBNETXMS_EXPORTABLE AbstractCommChannel
 {
    DISABLE_COPY_CTOR(AbstractCommChannel)
 
-protected:
-   virtual ~AbstractCommChannel();
-
 public:
    AbstractCommChannel();
+   virtual ~AbstractCommChannel();
 
    virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) = 0;
    virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) = 0;
@@ -3582,11 +3582,9 @@ private:
 #endif
    BackgroundSocketPollerHandle *m_socketPoller;
 
-protected:
-   virtual ~SocketCommChannel();
-
 public:
    SocketCommChannel(SOCKET socket, BackgroundSocketPollerHandle *socketPoller = nullptr, Ownership owner = Ownership::True);
+   virtual ~SocketCommChannel();
 
    virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
    virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;

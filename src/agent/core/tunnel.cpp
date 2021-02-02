@@ -73,11 +73,9 @@ private:
    pthread_cond_t m_dataCondition;
 #endif
 
-protected:
-   virtual ~TunnelCommChannel();
-
 public:
    TunnelCommChannel(Tunnel *tunnel);
+   virtual ~TunnelCommChannel();
 
    virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
    virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;
@@ -86,7 +84,7 @@ public:
    virtual int shutdown() override;
    virtual void close() override;
 
-   UINT32 getId() const { return m_id; }
+   uint32_t getId() const { return m_id; }
 
    void putData(const BYTE *data, size_t size);
 };
@@ -114,7 +112,7 @@ private:
    VolatileCounter m_requestId;
    THREAD m_recvThread;
    MsgWaitQueue *m_queue;
-   RefCountHashMap<UINT32, TunnelCommChannel> m_channels;
+   SharedHashMap<uint32_t, TunnelCommChannel> m_channels;
    MUTEX m_channelLock;
    int m_tlsHandshakeFailures;
    bool m_ignoreClientCertificate;
@@ -147,7 +145,7 @@ public:
    void checkConnection();
    void disconnect();
 
-   TunnelCommChannel *createChannel();
+   shared_ptr<TunnelCommChannel> createChannel();
    void closeChannel(TunnelCommChannel *channel);
    ssize_t sendChannelData(uint32_t id, const void *data, size_t len);
 
@@ -161,7 +159,7 @@ public:
 /**
  * Tunnel constructor
  */
-Tunnel::Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword) : m_channels(Ownership::True)
+Tunnel::Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword)
 {
    m_hostname = MemCopyString(hostname);
    m_port = port;
@@ -236,24 +234,16 @@ void Tunnel::disconnect()
    delete_and_null(m_queue);
    MutexUnlock(m_stateLock);
 
-   Array channels(g_maxCommSessions, 16, Ownership::False);
+   SharedObjectArray<TunnelCommChannel> channels(g_maxCommSessions, 16);
    MutexLock(m_channelLock);
-   Iterator<TunnelCommChannel> *it = m_channels.iterator();
+   auto it = m_channels.iterator();
    while(it->hasNext())
-   {
-      TunnelCommChannel *c = it->next();
-      channels.add(c);
-      c->incRefCount();
-   }
+      channels.add(*it->next());
    delete it;
    MutexUnlock(m_channelLock);
 
    for(int i = 0; i < channels.size(); i++)
-   {
-      AbstractCommChannel *c = (AbstractCommChannel *)channels.get(i);
-      c->close();
-      c->decRefCount();
-   }
+      channels.get(i)->close();
 }
 
 /**
@@ -310,12 +300,11 @@ void Tunnel::recvThread()
                if (msg->isBinary())
                {
                   MutexLock(m_channelLock);
-                  TunnelCommChannel *channel = m_channels.get(msg->getId());
+                  shared_ptr<TunnelCommChannel> channel = m_channels.getShared(msg->getId());
                   MutexUnlock(m_channelLock);
                   if (channel != nullptr)
                   {
                      channel->putData(msg->getBinaryData(), msg->getBinaryDataSize());
-                     channel->decRefCount();
                   }
                }
                break;
@@ -1423,8 +1412,8 @@ void Tunnel::createSession(const NXCPMessage& request)
    IsValidServerAddress(m_address, &masterServer, &controlServer, m_forceResolve);
    m_forceResolve = false;
 
-   TunnelCommChannel *channel = createChannel();
-   if (channel != NULL)
+   shared_ptr<TunnelCommChannel> channel = createChannel();
+   if (channel != nullptr)
    {
       shared_ptr<CommSession> session = MakeSharedCommSession<CommSession>(channel, m_address, masterServer, controlServer);
       if (RegisterSession(session))
@@ -1438,7 +1427,6 @@ void Tunnel::createSession(const NXCPMessage& request)
       {
          response.setField(VID_RCC, ERR_OUT_OF_RESOURCES);
       }
-      channel->decRefCount();
    }
    else
    {
@@ -1451,13 +1439,13 @@ void Tunnel::createSession(const NXCPMessage& request)
 /**
  * Create channel
  */
-TunnelCommChannel *Tunnel::createChannel()
+shared_ptr<TunnelCommChannel> Tunnel::createChannel()
 {
-   TunnelCommChannel *channel = NULL;
+   shared_ptr<TunnelCommChannel> channel;
    MutexLock(m_channelLock);
    if (m_channels.size() < (int)g_maxCommSessions)
    {
-      channel = new TunnelCommChannel(this);
+      channel = make_shared<TunnelCommChannel>(this);
       m_channels.set(channel->getId(), channel);
       debugPrintf(5, _T("New channel created (ID=%d)"), channel->getId());
    }
@@ -1473,12 +1461,11 @@ void Tunnel::processChannelCloseRequest(const NXCPMessage& request)
    uint32_t id = request.getFieldAsUInt32(VID_CHANNEL_ID);
    debugPrintf(5, _T("Close request for channel %d"), id);
    MutexLock(m_channelLock);
-   TunnelCommChannel *channel = m_channels.get(id);
+   shared_ptr<TunnelCommChannel> channel = m_channels.getShared(id);
    MutexUnlock(m_channelLock);
    if (channel != nullptr)
    {
       channel->close();
-      channel->decRefCount();
    }
 }
 

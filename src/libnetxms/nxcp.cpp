@@ -602,9 +602,8 @@ NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, 
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, const TCHAR *fileName, NXCPEncryptionContext *ectx, off_t offset,
          void (* progressCallback)(int64_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
 {
-   SocketCommChannel *ch = new SocketCommChannel(hSocket, nullptr, Ownership::False);
-   bool result = SendFileOverNXCP(ch, requestId, fileName, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag);
-   ch->decRefCount();
+   SocketCommChannel ch(hSocket, nullptr, Ownership::False);
+   bool result = SendFileOverNXCP(&ch, requestId, fileName, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag);
    return result;
 }
 
@@ -637,9 +636,8 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, std::istream *stream, NXCPEncryptionContext *ectx, off_t offset,
          void (* progressCallback)(int64_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
 {
-   SocketCommChannel *ch = new SocketCommChannel(hSocket, nullptr, Ownership::False);
-   bool result = SendFileOverNXCP(ch, requestId, stream, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag);
-   ch->decRefCount();
+   SocketCommChannel ch(hSocket, nullptr, Ownership::False);
+   bool result = SendFileOverNXCP(&ch, requestId, stream, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag);
    return result;
 }
 
@@ -794,7 +792,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
 /**
  * Get version of NXCP used by peer
  */
-bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channel, int *pnVersion, MUTEX mutex)
+bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(const shared_ptr<AbstractCommChannel>& channel, int *pnVersion, MUTEX mutex)
 {
    bool success = false;
 
@@ -832,8 +830,7 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channe
  */
 bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET s, int *pnVersion, MUTEX mutex)
 {
-   SocketCommChannel *channel = new SocketCommChannel(s, nullptr, Ownership::False);
+   shared_ptr<SocketCommChannel> channel = make_shared<SocketCommChannel>(s, nullptr, Ownership::False);
    bool success = NXCPGetPeerProtocolVersion(channel, pnVersion, mutex);
-   channel->decRefCount();
    return success;
 }

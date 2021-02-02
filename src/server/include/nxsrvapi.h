@@ -821,7 +821,7 @@ private:
    bool m_masterServer;
    char m_secret[MAX_SECRET_LENGTH];
    time_t m_tLastCommandTime;
-   AbstractCommChannel *m_channel;
+   shared_ptr<AbstractCommChannel> m_channel;
    VolatileCounter m_requestId;
    uint32_t m_commandTimeout;
    uint32_t m_connectionTimeout;
@@ -870,7 +870,7 @@ private:
    void getSshKeysCallback(NXCPMessage *msg);
 
 protected:
-   virtual AbstractCommChannel *createChannel();
+   virtual shared_ptr<AbstractCommChannel> createChannel();
    virtual void onTrap(NXCPMessage *pMsg);
    virtual void onSyslogMessage(const NXCPMessage& msg);
    virtual void onWindowsEvent(const NXCPMessage& msg);
@@ -885,7 +885,6 @@ protected:
    virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size);
    virtual void getSshKeys(NXCPMessage *msg, NXCPMessage *response);
 
-
    const InetAddress& getIpAddr() const { return m_addr; }
 
 	void debugPrintf(int level, const TCHAR *format, ...);
@@ -893,7 +892,7 @@ protected:
    void lock() { MutexLock(m_mutexDataLock); }
    void unlock() { MutexUnlock(m_mutexDataLock); }
 	shared_ptr<NXCPEncryptionContext> acquireEncryptionContext();
-   AbstractCommChannel *acquireChannel();
+   shared_ptr<AbstractCommChannel> acquireChannel();
 
 #ifdef _WIN32
    void setSelfPtr(const shared_ptr<AgentConnection>& sptr) { *m_self = sptr; }
@@ -960,7 +959,7 @@ public:
             void (* progressCallback)(INT64, void *) = nullptr, void *cbArg = nullptr,
             NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
    uint32_t getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **info);
-   UINT32 startUpgrade(const TCHAR *pszPkgName);
+   uint32_t startUpgrade(const TCHAR *pkgName);
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, const TCHAR *pszRequest = nullptr, const TCHAR *pszResponse = nullptr, UINT32 *responseTime = nullptr);
    UINT32 getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);

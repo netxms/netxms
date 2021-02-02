@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -296,7 +296,7 @@ static VolatileCounter s_nextTunnelId = 0;
  */
 AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr,
          uint32_t nodeId, int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer,
-         time_t certificateExpirationTime, BackgroundSocketPollerHandle *socketPoller) : RefCountObject(), m_channels(Ownership::True)
+         time_t certificateExpirationTime, BackgroundSocketPollerHandle *socketPoller) : RefCountObject()
 {
    m_id = InterlockedIncrement(&s_nextTunnelId);
    m_address = addr;
@@ -410,12 +410,11 @@ MessageReceiverResult AgentTunnel::readMessage(bool allowSocketRead)
       if (msg->isBinary())
       {
          MutexLock(m_channelLock);
-         AgentTunnelCommChannel *channel = m_channels.get(msg->getId());
+         shared_ptr<AgentTunnelCommChannel> channel = m_channels.getShared(msg->getId());
          MutexUnlock(m_channelLock);
          if (channel != nullptr)
          {
             channel->putData(msg->getBinaryData(), msg->getBinaryDataSize());
-            channel->decRefCount();
          }
          else
          {
@@ -473,9 +472,9 @@ void AgentTunnel::finalize()
 
    // shutdown all channels
    MutexLock(m_channelLock);
-   Iterator<AgentTunnelCommChannel> *it = m_channels.iterator();
+   auto it = m_channels.iterator();
    while(it->hasNext())
-      it->next()->shutdown();
+      (*it->next())->shutdown();
    delete it;
    m_channels.clear();
    MutexUnlock(m_channelLock);
@@ -854,7 +853,7 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
 /**
  * Create channel
  */
-AgentTunnelCommChannel *AgentTunnel::createChannel()
+shared_ptr<AgentTunnelCommChannel> AgentTunnel::createChannel()
 {
    NXCPMessage request(CMD_CREATE_CHANNEL, InterlockedIncrement(&m_requestId));
    sendMessage(&request);
@@ -862,7 +861,7 @@ AgentTunnelCommChannel *AgentTunnel::createChannel()
    if (response == nullptr)
    {
       debugPrintf(4, _T("createChannel: request timeout"));
-      return nullptr;
+      return shared_ptr<AgentTunnelCommChannel>();
    }
 
    uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
@@ -870,10 +869,10 @@ AgentTunnelCommChannel *AgentTunnel::createChannel()
    {
       delete response;
       debugPrintf(4, _T("createChannel: agent error %d (%s)"), rcc, AgentErrorCodeToText(rcc));
-      return nullptr;
+      return shared_ptr<AgentTunnelCommChannel>();
    }
 
-   AgentTunnelCommChannel *channel = new AgentTunnelCommChannel(this, response->getFieldAsUInt32(VID_CHANNEL_ID));
+   shared_ptr<AgentTunnelCommChannel> channel = make_shared<AgentTunnelCommChannel>(this, response->getFieldAsUInt32(VID_CHANNEL_ID));
    delete response;
    MutexLock(m_channelLock);
    m_channels.set(channel->getId(), channel);
@@ -885,17 +884,16 @@ AgentTunnelCommChannel *AgentTunnel::createChannel()
 /**
  * Process channel close notification from agent
  */
-void AgentTunnel::processChannelClose(UINT32 channelId)
+void AgentTunnel::processChannelClose(uint32_t channelId)
 {
    debugPrintf(4, _T("processChannelClose: notification of channel %d closure"), channelId);
 
    MutexLock(m_channelLock);
-   AgentTunnelCommChannel *ch = m_channels.get(channelId);
+   shared_ptr<AgentTunnelCommChannel> channel = m_channels.getShared(channelId);
    MutexUnlock(m_channelLock);
-   if (ch != nullptr)
+   if (channel != nullptr)
    {
-      ch->shutdown();
-      ch->decRefCount();
+      channel->shutdown();
    }
 }
 

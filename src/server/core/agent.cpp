@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ AgentConnectionEx::~AgentConnectionEx()
 /**
  * Create communication channel
  */
-AbstractCommChannel *AgentConnectionEx::createChannel()
+shared_ptr<AbstractCommChannel> AgentConnectionEx::createChannel()
 {
    if (m_tunnel != nullptr)
       return m_tunnel->createChannel();

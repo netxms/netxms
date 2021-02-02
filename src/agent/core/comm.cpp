@@ -437,9 +437,8 @@ void ListenerThread()
             nxlog_debug(5, _T("Connection from %s accepted"), buffer);
 
             // Create new session structure and threads
-            SocketCommChannel *channel = new SocketCommChannel(hClientSocket);
+            shared_ptr<SocketCommChannel> channel = make_shared<SocketCommChannel>(hClientSocket, nullptr, Ownership::True);
             shared_ptr<CommSession> session = MakeSharedCommSession<CommSession>(channel, addr, masterServer, controlServer);
-            channel->decRefCount();
 
             if (RegisterSession(session))
             {

@@ -76,7 +76,8 @@ void LIBNXSRV_EXPORTABLE DisableAgentConnections()
 {
    s_pollerListLock.lock();
    s_shutdownMode = true;
-   s_pollers.clear();
+   for(int i = 0; i < s_pollers.size(); i++)
+      s_pollers.get(i)->poller.shutdown();
    s_pollerListLock.unlock();
 }
 
@@ -90,7 +91,7 @@ private:
    weak_ptr<AgentConnectionReceiver> m_self;
    uint32_t m_debugId;
    uint32_t m_recvTimeout;
-   AbstractCommChannel *m_channel;
+   shared_ptr<AbstractCommChannel> m_channel;
    TCHAR m_threadPoolKey[16];
    bool m_attached;
 
@@ -113,12 +114,10 @@ public:
       return receiver;
    }
 
-   AgentConnectionReceiver(const shared_ptr<AgentConnection>& connection) : m_connection(connection)
+   AgentConnectionReceiver(const shared_ptr<AgentConnection>& connection) : m_connection(connection), m_channel(connection->m_channel)
    {
       m_debugId = connection->m_debugId;
-      m_channel = connection->m_channel;
       m_messageReceiver = new CommChannelMessageReceiver(m_channel, 4096, MAX_MSG_SIZE);
-      m_channel->incRefCount();
       m_recvTimeout = connection->m_recvTimeout; // 7 minutes
       _sntprintf(m_threadPoolKey, 16, _T("RECV-%u"), m_debugId);
       m_attached = true;
@@ -127,10 +126,7 @@ public:
    ~AgentConnectionReceiver()
    {
       debugPrintf(7, _T("AgentConnectionReceiver destructor called (this=%p)"), this);
-
       delete m_messageReceiver;
-      if (m_channel != nullptr)
-         m_channel->decRefCount();
    }
 
    void start();
@@ -531,10 +527,7 @@ AgentConnection::~AgentConnection()
    }
 
 	if (m_channel != nullptr)
-	{
 	   m_channel->shutdown();
-	   m_channel->decRefCount();
-	}
 
    MutexDestroy(m_mutexDataLock);
 	MutexDestroy(m_mutexSocketWrite);
@@ -555,7 +548,7 @@ void AgentConnection::debugPrintf(int level, const TCHAR *format, ...)
 /**
  * Create channel. Default implementation creates socket channel.
  */
-AbstractCommChannel *AgentConnection::createChannel()
+shared_ptr<AbstractCommChannel> AgentConnection::createChannel()
 {
    if (s_shutdownMode)
       return nullptr;
@@ -602,18 +595,16 @@ AbstractCommChannel *AgentConnection::createChannel()
    }
    s_pollerListLock.unlock();
 
-   return new SocketCommChannel(s, sp);
+   return make_shared<SocketCommChannel>(s, sp);
 }
 
 /**
  * Acquire communication channel. Caller must call decRefCount to release channel.
  */
-AbstractCommChannel *AgentConnection::acquireChannel()
+shared_ptr<AbstractCommChannel> AgentConnection::acquireChannel()
 {
    lock();
-   AbstractCommChannel *channel = m_channel;
-   if (channel != nullptr)
-      channel->incRefCount();
+   shared_ptr<AbstractCommChannel> channel(m_channel);
    unlock();
    return channel;
 }
@@ -665,12 +656,8 @@ bool AgentConnection::connect(RSA *serverKey, uint32_t *error, uint32_t *socketE
       m_receiver.reset();
    }
 
-   // Check if we need to close existing channel
-   if (m_channel != nullptr)
-   {
-      m_channel->decRefCount();
-      m_channel = nullptr;
-   }
+   // Detach from existing channel if any
+   m_channel.reset();
 
    unlock();
 
@@ -826,8 +813,7 @@ connect_cleanup:
       {
          m_channel->shutdown();
          m_channel->close();
-         m_channel->decRefCount();
-         m_channel = nullptr;
+         m_channel.reset();
       }
 
       unlock();
@@ -860,8 +846,7 @@ void AgentConnection::disconnect()
    if (m_channel != nullptr)
    {
       m_channel->shutdown();
-      m_channel->decRefCount();
-      m_channel = nullptr;
+      m_channel.reset();
    }
    m_isConnected = false;
    unlock();
@@ -1309,7 +1294,7 @@ uint32_t AgentConnection::waitForRCC(uint32_t requestId, uint32_t timeout)
  */
 bool AgentConnection::sendMessage(NXCPMessage *pMsg)
 {
-   AbstractCommChannel *channel = acquireChannel();
+   shared_ptr<AbstractCommChannel> channel = acquireChannel();
    if (channel == nullptr)
       return false;
 
@@ -1341,7 +1326,6 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
       success = (channel->send(rawMsg, ntohl(rawMsg->size), m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
    MemFree(rawMsg);
-   channel->decRefCount();
    return success;
 }
 
@@ -1350,7 +1334,7 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
  */
 bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
 {
-   AbstractCommChannel *channel = acquireChannel();
+   shared_ptr<AbstractCommChannel> channel = acquireChannel();
    if (channel == nullptr)
       return false;
 
@@ -1374,7 +1358,6 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
    {
       success = (channel->send(rawMsg, ntohl(rawMsg->size), m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
-   channel->decRefCount();
    return success;
 }
 
@@ -1727,19 +1710,18 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
 
    if (dwResult == ERR_SUCCESS)
    {
-      AbstractCommChannel *channel = acquireChannel();
+      shared_ptr<AbstractCommChannel> channel = acquireChannel();
       if (channel != nullptr)
       {
          debugPrintf(5, _T("Sending file \"%s\" to agent %s compression"),
                   localFile, (compMethod == NXCP_STREAM_COMPRESSION_NONE) ? _T("without") : _T("with"));
          m_fileUploadInProgress = true;
          shared_ptr<NXCPEncryptionContext> ctx = acquireEncryptionContext();
-         if (SendFileOverNXCP(channel, dwRqId, localFile, ctx.get(), 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
+         if (SendFileOverNXCP(channel.get(), dwRqId, localFile, ctx.get(), 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
             dwResult = waitForRCC(dwRqId, m_commandTimeout);
          else
             dwResult = ERR_IO_FAILURE;
          m_fileUploadInProgress = false;
-         channel->decRefCount();
       }
       else
       {
@@ -1753,33 +1735,28 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
 /**
  * Send upgrade command
  */
-UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
+UINT32 AgentConnection::startUpgrade(const TCHAR *pkgName)
 {
-   UINT32 dwRqId, dwResult;
-   NXCPMessage msg(m_nProtocolVersion);
-   int i;
-
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   dwRqId = generateRequestId();
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_UPGRADE_AGENT, requestId, m_nProtocolVersion);
+   int i;
+   for(i = (int)_tcslen(pkgName) - 1;
+       (i >= 0) && (pkgName[i] != '\\') && (pkgName[i] != '/'); i--);
+   msg.setField(VID_FILE_NAME, &pkgName[i + 1]);
 
-   msg.setCode(CMD_UPGRADE_AGENT);
-   msg.setId(dwRqId);
-   for(i = (int)_tcslen(pszPkgName) - 1;
-       (i >= 0) && (pszPkgName[i] != '\\') && (pszPkgName[i] != '/'); i--);
-   msg.setField(VID_FILE_NAME, &pszPkgName[i + 1]);
-
+   uint32_t rcc;
    if (sendMessage(&msg))
    {
-      dwResult = waitForRCC(dwRqId, m_commandTimeout);
+      rcc = waitForRCC(requestId, m_commandTimeout);
    }
    else
    {
-      dwResult = ERR_CONNECTION_BROKEN;
+      rcc = ERR_CONNECTION_BROKEN;
    }
-
-   return dwResult;
+   return rcc;
 }
 
 /**
