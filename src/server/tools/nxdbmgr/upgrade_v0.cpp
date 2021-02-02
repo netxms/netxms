@@ -3853,9 +3853,9 @@ static BOOL H_UpgradeFromV342(int currVersion, int newVersion)
    if (g_dbSyntax != DB_SYNTAX_MSSQL)
    {
       CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp DESC)' WHERE var_name='IDataIndexCreationCommand_0'")));
-      CHK_EXEC(DBCommit(g_dbHandle));   // do reindexing outside current transaction
+      CHK_EXEC_NO_SP(DBCommit(g_dbHandle));   // do reindexing outside current transaction
       ReindexIData();
-      CHK_EXEC(DBBegin(g_dbHandle));
+      CHK_EXEC_NO_SP(DBBegin(g_dbHandle));
    }
    CHK_EXEC(SetSchemaVersion(343));
    return TRUE;
@@ -3868,13 +3868,13 @@ static BOOL H_UpgradeFromV341(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("ALTER TABLE object_tools ADD tool_filter $SQL:TEXT")));
    DB_RESULT hResult = SQLSelect(_T("SELECT tool_id, matching_oid FROM object_tools"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         TCHAR *oid = DBGetField(hResult, i, 1, NULL, 0);
-         if ((oid != NULL) && (*oid != 0))
+         TCHAR *oid = DBGetField(hResult, i, 1, nullptr, 0);
+         if ((oid != nullptr) && (*oid != 0))
          {
             TCHAR *newConfig = (TCHAR *)malloc((_tcslen(oid) + 512) * sizeof(TCHAR));
             _tcscpy(newConfig, _T("<objectToolFilter>"));
