@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1347,6 +1347,8 @@ bool SNMP_PDU::validateSignedMessage(const BYTE *msg, size_t msgLen, SNMP_Securi
       case SNMP_AUTH_SHA512:
          CalculateMessageHash<SHA512_STATE, SHA512Init, SHA512Update, SHA512Final, SHA512_DIGEST_SIZE, 128>(msg, msgLen, m_signatureOffset, signatureSize, securityContext, hash);
          break;
+      default:
+	 return false;
    }
 
    // Computed hash should match message signature

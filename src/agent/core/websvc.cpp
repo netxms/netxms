@@ -75,6 +75,8 @@ private:
          case DocumentType::XML:
             delete m_content.xml;
             break;
+         default:
+	    break;
       }
    }
 
