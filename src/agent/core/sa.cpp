@@ -754,7 +754,7 @@ bool IsUserAgentInstalled()
 /**
  * Notify on new user agent message
  */
-UINT32 AddUserAgentNotification(UINT64 serverId, NXCPMessage *request)
+uint32_t AddUserAgentNotification(uint64_t serverId, NXCPMessage *request)
 {
    UserAgentNotification *n = new UserAgentNotification(serverId, request, VID_UA_NOTIFICATION_BASE);
    DB_HANDLE db = GetLocalDatabaseHandle();
@@ -786,7 +786,7 @@ UINT32 AddUserAgentNotification(UINT64 serverId, NXCPMessage *request)
 /**
  * Remove user agent notification
  */
-UINT32 RemoveUserAgentNotification(UINT64 serverId, NXCPMessage *request)
+uint32_t RemoveUserAgentNotification(uint64_t serverId, NXCPMessage *request)
 {
    ServerObjectKey id = ServerObjectKey(serverId, request->getFieldAsUInt32(VID_UA_NOTIFICATION_BASE));
    
@@ -814,7 +814,7 @@ UINT32 RemoveUserAgentNotification(UINT64 serverId, NXCPMessage *request)
 /**
  * Update complete list of user agent notifications
  */
-UINT32 UpdateUserAgentNotifications(UINT64 serverId, NXCPMessage *request)
+uint32_t UpdateUserAgentNotifications(uint64_t serverId, NXCPMessage *request)
 {
    DB_HANDLE db = GetLocalDatabaseHandle();
 

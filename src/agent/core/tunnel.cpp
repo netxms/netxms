@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *p
 /**
  * Register session
  */
-bool RegisterSession(CommSession *session);
+bool RegisterSession(const shared_ptr<CommSession>& session);
 
 #ifdef _WIN32
 ENGINE *CreateCNGEngine();
@@ -1426,7 +1426,7 @@ void Tunnel::createSession(const NXCPMessage& request)
    TunnelCommChannel *channel = createChannel();
    if (channel != NULL)
    {
-      CommSession *session = new CommSession(channel, m_address, masterServer, controlServer);
+      shared_ptr<CommSession> session = MakeSharedCommSession<CommSession>(channel, m_address, masterServer, controlServer);
       if (RegisterSession(session))
       {
          response.setField(VID_RCC, ERR_SUCCESS);
@@ -1436,7 +1436,6 @@ void Tunnel::createSession(const NXCPMessage& request)
       }
       else
       {
-         delete session;
          response.setField(VID_RCC, ERR_OUT_OF_RESOURCES);
       }
       channel->decRefCount();

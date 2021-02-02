@@ -7869,17 +7869,18 @@ shared_ptr<AgentConnectionEx> Node::acquireProxyConnection(ProxyType type, bool 
    {
       conn.reset();
       m_proxyConnections[type].set(shared_ptr<AgentConnectionEx>());
-      nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%d] type=%d): existing agent connection dropped"), m_name, (int)m_id, (int)type);
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%u] type=%d): existing agent connection dropped"), m_name, m_id, (int)type);
    }
 
    if ((conn != nullptr) && validate)
    {
-      UINT32 rcc = conn->nop();
+      uint32_t rcc = conn->nop();
       if (rcc != ERR_SUCCESS)
       {
          conn.reset();
          m_proxyConnections[type].set(shared_ptr<AgentConnectionEx>());
-         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%d] type=%d): existing agent connection failed validation (RCC=%u) and dropped"), m_name, (int)m_id, (int)type, rcc);
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%u] type=%d): existing agent connection failed validation (RCC=%u) and dropped"),
+                  m_name, m_id, (int)type, rcc);
       }
    }
 
@@ -7891,11 +7892,11 @@ shared_ptr<AgentConnectionEx> Node::acquireProxyConnection(ProxyType type, bool 
          if (conn->isMasterServer())
          {
             m_proxyConnections[type].set(conn);
-            nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%d] type=%d): new agent connection created"), m_name, (int)m_id, (int)type);
+            nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%u] type=%d): new agent connection created"), m_name, m_id, (int)type);
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::acquireProxyConnection(%s [%d] type=%d): server does not have master access to agent"), m_name, (int)m_id, (int)type);
+            nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::acquireProxyConnection(%s [%u] type=%d): server does not have master access to agent"), m_name, m_id, (int)type);
             conn.reset();
          }
       }
@@ -8536,7 +8537,7 @@ SNMP_Transport *Node::createSnmpTransport(UINT16 port, SNMP_Version version, con
       return nullptr;
 
    SNMP_Transport *pTransport = nullptr;
-   UINT32 snmpProxy = getEffectiveSnmpProxy();
+   uint32_t snmpProxy = getEffectiveSnmpProxy();
    if (snmpProxy == 0)
    {
       pTransport = new SNMP_UDPTransport;

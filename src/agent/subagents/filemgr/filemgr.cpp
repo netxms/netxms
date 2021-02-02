@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2014-2020 Raden Solutions
+ ** Copyright (C) 2014-2021 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -579,25 +579,19 @@ static BOOL Delete(const TCHAR *name)
 /**
  * Send file
  */
- THREAD_RESULT THREAD_CALL SendFile(void *dataStruct)
+ static void SendFile(MessageData *data)
 {
-   MessageData *data = (MessageData *)dataStruct;
-
    nxlog_debug_tag(DEBUG_TAG, 5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s, compress = %s"),
                data->fileName, data->follow ? _T("true") : _T("false"), data->allowCompression ? _T("true") : _T("false"));
-   bool success = AgentSendFileToServer(data->session, data->id, data->fileName, (int)data->offset, data->allowCompression, s_downloadFileStopMarkers->get(data->id));
+   bool success = AgentSendFileToServer(data->session.get(), data->id, data->fileName, (int)data->offset, data->allowCompression, s_downloadFileStopMarkers->get(data->id));
    if (data->follow && success)
    {
       g_monitorFileList.add(data->fileNameCode);
       FollowData *flData = new FollowData(data->fileName, data->fileNameCode, 0, data->session->getServerAddress());
       ThreadCreateEx(SendFileUpdatesOverNXCP, 0, flData);
    }
-   data->session->decRefCount();
-   MemFree(data->fileName);
-   MemFree(data->fileNameCode);
    s_downloadFileStopMarkers->remove(data->id);
    delete data;
-   return THREAD_OK;
 }
 
 /**
@@ -1068,18 +1062,16 @@ static void CH_GetFile(NXCPMessage *request, NXCPMessage *response, AbstractComm
    TCHAR *fullPath;
    if (CheckFullPath(fileName, &fullPath, false))
    {
-      MessageData *data = new MessageData();
+      MessageData *data = new MessageData(session->self());
       data->fileName = fullPath;
       data->fileNameCode = request->getFieldAsString(VID_NAME);
       data->follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
       data->allowCompression = request->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
       data->id = request->getId();
       data->offset = request->getFieldAsUInt32(VID_FILE_OFFSET);
-      data->session = session;
-      session->incRefCount();
       s_downloadFileStopMarkers->set(request->getId(), new VolatileCounter(0));
 
-      ThreadCreateEx(SendFile, 0, data);
+      ThreadCreateEx(SendFile, data);
 
       response->setField(VID_RCC, ERR_SUCCESS);
    }

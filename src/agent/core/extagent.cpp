@@ -140,12 +140,9 @@ NXCPMessage *ExternalSubagent::waitForMessage(WORD code, uint32_t id)
  */
 static void ForwardSessionMessage(NXCPMessage *msg)
 {
-   AbstractCommSession *session = FindServerSessionById(msg->getId());
+   shared_ptr<AbstractCommSession> session = FindServerSessionById(msg->getId());
    if (session != nullptr)
-   {
       session->postRawMessage(reinterpret_cast<const NXCP_MESSAGE*>(msg->getBinaryData()));
-      session->decRefCount();
-   }
 }
 
 /**
@@ -174,14 +171,13 @@ void ExternalSubagent::connect(NamedPipe *pipe)
       switch(msg->getCode())
       {
          case CMD_PUSH_DCI_DATA:
-            MutexLock(g_hSessionListAccess);
-            for(uint32_t i = 0; i < g_maxCommSessions; i++)
-               if (g_pSessionList[i] != nullptr)
-                  if (g_pSessionList[i]->canAcceptTraps())
-                  {
-                     g_pSessionList[i]->sendMessage(msg);
-                  }
-            MutexUnlock(g_hSessionListAccess);
+            MutexLock(g_sessionLock);
+            for(int i = 0; i < g_sessions.size(); i++)
+               if (g_sessions.get(i)->canAcceptTraps())
+               {
+                  g_sessions.get(i)->sendMessage(msg);
+               }
+            MutexUnlock(g_sessionLock);
             delete msg;
             break;
          case CMD_TRAP:
@@ -857,14 +853,14 @@ UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value)
  *
  * @return agent error code
  */
-uint32_t ExecuteActionByExtSubagent(const TCHAR *name, const StringList& args, AbstractCommSession *session, uint32_t requestId, bool sendOutput)
+uint32_t ExecuteActionByExtSubagent(const TCHAR *name, const StringList& args, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput)
 {
    uint32_t rc = ERR_UNKNOWN_PARAMETER;
    for(int i = 0; i < s_subagents.size(); i++)
    {
       if (s_subagents.get(i)->isConnected())
       {
-         rc = s_subagents.get(i)->executeAction(name, args, session, requestId, sendOutput);
+         rc = s_subagents.get(i)->executeAction(name, args, session.get(), requestId, sendOutput);
          if (rc != ERR_UNKNOWN_PARAMETER)
             break;
       }

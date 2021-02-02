@@ -709,9 +709,36 @@ public:
 /**
  * API for CommSession
  */
-class AbstractCommSession : public RefCountObject
+class LIBNXAGENT_EXPORTABLE AbstractCommSession
 {
+   DISABLE_COPY_CTOR(AbstractCommSession)
+
+   template <class C, typename... Args> friend shared_ptr<C> MakeSharedCommSession(Args&&... args);
+
+private:
+#ifdef _WIN32
+   weak_ptr<AbstractCommSession> *m_self; // should be pointer because of DLL linkage issues on Windows
+#else
+   weak_ptr<AbstractCommSession> m_self;
+#endif
+
+protected:
+#ifdef _WIN32
+   void setSelfPtr(const shared_ptr<AbstractCommSession>& sptr) { *m_self = sptr; }
+#else
+   void setSelfPtr(const shared_ptr<AbstractCommSession>& sptr) { m_self = sptr; }
+#endif
+
 public:
+   AbstractCommSession();
+   virtual ~AbstractCommSession();
+
+#ifdef _WIN32
+   shared_ptr<AbstractCommSession> self() const { return m_self->lock(); }
+#else
+   shared_ptr<AbstractCommSession> self() const { return m_self.lock(); }
+#endif
+
    virtual uint32_t getId() = 0;
 
    virtual uint64_t getServerId() = 0;
@@ -730,15 +757,25 @@ public:
    virtual bool sendRawMessage(const NXCP_MESSAGE *msg) = 0;
    virtual void postRawMessage(const NXCP_MESSAGE *msg) = 0;
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) = 0;
-   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) = 0;
-   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) = 0;
+   virtual uint32_t doRequest(NXCPMessage *msg, uint32_t timeout) = 0;
+   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, uint32_t timeout) = 0;
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) = 0;
    virtual uint32_t generateRequestId() = 0;
    virtual int getProtocolVersion() = 0;
-   virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId, time_t fileModTime = 0) = 0;
+   virtual uint32_t openFile(TCHAR *nameOfFile, uint32_t requestId, time_t fileModTime = 0) = 0;
    virtual void debugPrintf(int level, const TCHAR *format, ...) = 0;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) = 0;
 };
+
+/**
+ * make_shared() replacement for AbstractCommSession derived classes
+ */
+template <class C, typename... Args> shared_ptr<C> MakeSharedCommSession(Args&&... args)
+{
+   auto object = make_shared<C>(args...);
+   object->setSelfPtr(object);
+   return object;
+}
 
 /**
  * Subagent's parameter information
@@ -1114,7 +1151,7 @@ void LIBNXAGENT_EXPORTABLE AgentPostEvent2(uint32_t eventCode, const TCHAR *even
 void LIBNXAGENT_EXPORTABLE AgentQueueNotifictionMessage(NXCPMessage *msg);
 
 bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void *), void *data);
-AbstractCommSession LIBNXAGENT_EXPORTABLE *AgentFindServerSession(UINT64 serverId);
+shared_ptr<AbstractCommSession> LIBNXAGENT_EXPORTABLE AgentFindServerSession(uint64_t serverId);
 
 bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, 
                                                  bool allowCompression, VolatileCounter *cancellationFlag);

@@ -352,11 +352,11 @@ private:
    void proxyReadThread();
    void tcpProxyReadThread();
 
-   static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
-
 public:
    CommSession(AbstractCommChannel *channel, const InetAddress &serverAddr, bool masterServer, bool controlServer);
    virtual ~CommSession();
+
+   shared_ptr<CommSession> self() const { return static_pointer_cast<CommSession>(AbstractCommSession::self()); }
 
    void run();
    void disconnect();
@@ -366,8 +366,8 @@ public:
    virtual bool sendRawMessage(const NXCP_MESSAGE *msg) override;
    virtual void postRawMessage(const NXCP_MESSAGE *msg) override;
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancellationFlag) override;
-   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) override;
-   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) override;
+   virtual uint32_t doRequest(NXCPMessage *msg, uint32_t timeout) override;
+   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, uint32_t timeout) override;
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override;
    virtual uint32_t generateRequestId() override;
    virtual int getProtocolVersion() override { return m_protocolVersion; }
@@ -385,14 +385,11 @@ public:
    virtual bool isBulkReconciliationSupported() override { return m_bulkReconciliationSupported; }
    virtual bool isIPv6Aware() override { return m_ipv6Aware; }
 
-   virtual UINT32 openFile(TCHAR *nameOfFile, UINT32 requestId, time_t fileModTime = 0) override;
+   virtual uint32_t openFile(TCHAR *nameOfFile, uint32_t requestId, time_t fileModTime = 0) override;
 
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
 
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override;
-
-   uint32_t getIndex() { return m_index; }
-   void setIndex(uint32_t index) { if (m_index == INVALID_INDEX) m_index = index; }
 
    time_t getTimeStamp() { return m_ts; }
 	void updateTimeStamp() { m_ts = time(nullptr); }
@@ -429,12 +426,12 @@ public:
    virtual bool sendRawMessage(const NXCP_MESSAGE *pMsg) override { return false; }
    virtual void postRawMessage(const NXCP_MESSAGE *pMsg) override { }
    virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) override { return false; }
-   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) override { return RCC_NOT_IMPLEMENTED; }
-   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) override { return NULL; }
+   virtual uint32_t doRequest(NXCPMessage *msg, uint32_t timeout) override { return RCC_NOT_IMPLEMENTED; }
+   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, uint32_t timeout) override { return NULL; }
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override { return NULL; }
    virtual uint32_t generateRequestId() override { return 0; }
    virtual int getProtocolVersion() override { return NXCP_VERSION; }
-   virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) override { return ERR_INTERNAL_ERROR; }
+   virtual uint32_t openFile(TCHAR *fileName, uint32_t requestId, time_t fileModTime = 0) override { return ERR_INTERNAL_ERROR; }
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override { }
 };
@@ -477,12 +474,12 @@ public:
    virtual bool sendRawMessage(const NXCP_MESSAGE *pMsg) override;
    virtual void postRawMessage(const NXCP_MESSAGE *pMsg) override;
    virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) override { return false; }
-   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) override { return RCC_NOT_IMPLEMENTED; }
-   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) override { return NULL; }
+   virtual uint32_t doRequest(NXCPMessage *msg, uint32_t timeout) override { return RCC_NOT_IMPLEMENTED; }
+   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, uint32_t timeout) override { return NULL; }
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override { return NULL; }
    virtual uint32_t generateRequestId() override { return 0; }
    virtual int getProtocolVersion() override { return NXCP_VERSION; }
-   virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) override { return ERR_INTERNAL_ERROR; }
+   virtual uint32_t openFile(TCHAR *fileName, uint32_t requestId, time_t fileModTime = 0) override { return ERR_INTERNAL_ERROR; }
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override { }
 };
@@ -761,7 +758,7 @@ void StopExternalSubagentConnectors();
 UINT32 GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer);
 UINT32 GetTableValueFromExtSubagent(const TCHAR *name, Table *value);
 UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value);
-uint32_t ExecuteActionByExtSubagent(const TCHAR *name, const StringList& args, AbstractCommSession *session, uint32_t requestId, bool sendOutput);
+uint32_t ExecuteActionByExtSubagent(const TCHAR *name, const StringList& args, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput);
 void ListParametersFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListParametersFromExtSubagents(StringList *list);
 void ListListsFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
@@ -775,7 +772,7 @@ bool SendRawMessageToMasterAgent(NXCP_MESSAGE *msg);
 void ShutdownExtSubagents(bool restart);
 void RestartExtSubagents();
 void ExecuteAction(const TCHAR *name, const StringList& args);
-void ExecuteAction(const NXCPMessage& request, NXCPMessage *response, AbstractCommSession *session);
+void ExecuteAction(const NXCPMessage& request, NXCPMessage *response, const shared_ptr<AbstractCommSession>& session);
 
 void RegisterApplicationAgent(const TCHAR *name);
 UINT32 GetParameterValueFromAppAgent(const TCHAR *name, TCHAR *buffer);
@@ -807,10 +804,10 @@ uint32_t GenerateMessageId();
 
 void ConfigureDataCollection(uint64_t serverId, const NXCPMessage& request);
 
-bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void* ), void *data);
-AbstractCommSession *FindServerSessionById(UINT32 id);
-AbstractCommSession *FindServerSessionByServerId(UINT64 serverId);
-AbstractCommSession *FindServerSession(bool (*comparator)(AbstractCommSession *, void *), void *userData);
+bool EnumerateSessions(EnumerationCallbackResult (*callback)(AbstractCommSession *, void* ), void *data);
+shared_ptr<AbstractCommSession> FindServerSessionById(uint32_t id);
+shared_ptr<AbstractCommSession> FindServerSessionByServerId(uint64_t serverId);
+shared_ptr<AbstractCommSession> FindServerSession(bool (*comparator)(AbstractCommSession *, void *), void *userData);
 
 bool LoadConfig(const TCHAR *configSection, bool firstStart);
 
@@ -876,12 +873,12 @@ extern StringSet g_trustedRootCertificates;
 extern shared_ptr_store<Config> g_config;
 extern bool g_restartPending;
 
-extern UINT32 g_acceptErrors;
-extern UINT32 g_acceptedConnections;
-extern UINT32 g_rejectedConnections;
+extern uint32_t g_acceptErrors;
+extern uint32_t g_acceptedConnections;
+extern uint32_t g_rejectedConnections;
 
-extern CommSession **g_pSessionList;
-extern MUTEX g_hSessionListAccess;
+extern SharedObjectArray<CommSession> g_sessions;
+extern MUTEX g_sessionLock;
 extern ThreadPool *g_commThreadPool;
 extern ThreadPool *g_executorThreadPool;
 extern ThreadPool *g_webSvcThreadPool;

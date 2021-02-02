@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -50,14 +50,17 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_
    }
    else
    {
-      MutexLock(g_hSessionListAccess);
-      for(uint32_t i = 0; i < g_maxCommSessions; i++)
-         if ((g_pSessionList[i] != nullptr) && g_pSessionList[i]->canAcceptTraps())
+      MutexLock(g_sessionLock);
+      for(int i = 0; i < g_sessions.size(); i++)
+      {
+         CommSession *session = g_sessions.get(i);
+         if (session->canAcceptTraps())
          {
-            g_pSessionList[i]->sendMessage(&msg);
+            session->sendMessage(&msg);
             success = true;
          }
-      MutexUnlock(g_hSessionListAccess);
+      }
+      MutexUnlock(g_sessionLock);
    }
 	return success;
 }

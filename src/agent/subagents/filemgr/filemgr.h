@@ -78,9 +78,25 @@ struct MessageData
    TCHAR *fileNameCode;
    bool follow;
    bool allowCompression;
-   UINT32 id;
+   uint32_t id;
    long offset;
-	AbstractCommSession *session;
+	shared_ptr<AbstractCommSession> session;
+
+	MessageData(const shared_ptr<AbstractCommSession>& _session) : session(_session)
+	{
+	   fileName = nullptr;
+	   fileNameCode = nullptr;
+	   follow = false;
+	   allowCompression = false;
+	   id = 0;
+	   offset = 0;
+	}
+
+	~MessageData()
+	{
+	   MemFree(fileName);
+	   MemFree(fileNameCode);
+	}
 };
 
 /**

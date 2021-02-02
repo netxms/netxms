@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -85,7 +85,7 @@ static bool ReadPDU(SOCKET hSocket, BYTE *pdu, uint32_t *size)
 struct ProxyContext
 {
    InetAddress addr;
-   CommSession *session;
+   shared_ptr<CommSession> session;
    NXCPMessage *request;
    const BYTE *pduIn;
    size_t sizeIn;
@@ -93,10 +93,9 @@ struct ProxyContext
    uint32_t timeout;
    BYTE response[SNMP_BUFFER_SIZE];
 
-   ProxyContext(const InetAddress& _addr, CommSession *_session, NXCPMessage *_request, uint32_t _timeout) : addr(_addr)
+   ProxyContext(const InetAddress& _addr, const shared_ptr<CommSession>& _session, NXCPMessage *_request, uint32_t _timeout) : addr(_addr), session(_session)
    {
       session = _session;
-      session->incRefCount();
       request = _request;
       pduIn = request->getBinaryFieldPtr(VID_PDU, &sizeIn);
       retries = 3;
@@ -104,7 +103,6 @@ struct ProxyContext
    }
    ~ProxyContext()
    {
-      session->decRefCount();
       delete request;
    }
 };
@@ -189,7 +187,7 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
          {
             uint32_t serverTimeout = request->getFieldAsUInt32(VID_TIMEOUT);
             uint32_t timeout = (g_snmpTimeout != 0) ? g_snmpTimeout : ((serverTimeout != 0) ? serverTimeout : 1000);   // 1 second if not set
-            auto context = new ProxyContext(addr, this, request, timeout);
+            auto context = new ProxyContext(addr, self(), request, timeout);
             if (context != nullptr)
             {
                if (send(hSocket, (char *)pduIn, (int)sizeIn, 0) == (int)sizeIn)

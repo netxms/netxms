@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,14 +31,14 @@ class ExternalActionExecutor : public ProcessExecutor
 {
 private:
    uint32_t m_requestId;
-   AbstractCommSession *m_session;
+   shared_ptr<AbstractCommSession> m_session;
 
 protected:
    virtual void onOutput(const char *text) override;
    virtual void endOfOutput() override;
 
 public:
-   ExternalActionExecutor(const TCHAR *command, const StringList& args, AbstractCommSession *session, uint32_t requestId, bool sendOutput);
+   ExternalActionExecutor(const TCHAR *command, const StringList& args, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput);
    virtual ~ExternalActionExecutor();
 };
 
@@ -183,7 +183,7 @@ static void ExecutorCleanup(ExternalActionExecutor *executor)
 /**
  * Execute action
  */
-static uint32_t ExecuteAction(const TCHAR *name, const StringList& args, AbstractCommSession *session, uint32_t requestId, bool sendOutput)
+static uint32_t ExecuteAction(const TCHAR *name, const StringList& args, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput)
 {
    ACTION *action = FindAction(name);
    if (action == nullptr)
@@ -209,7 +209,7 @@ static uint32_t ExecuteAction(const TCHAR *name, const StringList& args, Abstrac
    else
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing internal action %s"), name);
-      rcc = action->handler.sa.handler(name, &args, action->handler.sa.arg, session);
+      rcc = action->handler.sa.handler(name, &args, action->handler.sa.arg, session.get());
    }
    return rcc;
 }
@@ -217,7 +217,7 @@ static uint32_t ExecuteAction(const TCHAR *name, const StringList& args, Abstrac
 /**
  * Execute action (external interface)
  */
-void ExecuteAction(const NXCPMessage& request, NXCPMessage *response, AbstractCommSession *session)
+void ExecuteAction(const NXCPMessage& request, NXCPMessage *response, const shared_ptr<AbstractCommSession>& session)
 {
    TCHAR name[MAX_PARAM_NAME];
    request.getFieldAsString(VID_ACTION_NAME, name, MAX_PARAM_NAME);
@@ -232,22 +232,19 @@ void ExecuteAction(const NXCPMessage& request, NXCPMessage *response, AbstractCo
  */
 void ExecuteAction(const TCHAR *name, const StringList& args)
 {
-   VirtualSession *session = new VirtualSession(0);
+   shared_ptr<VirtualSession> session = MakeSharedCommSession<VirtualSession>(0);
    uint32_t rcc = ExecuteAction(name, args, session, 0, false);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteAction(%s): RCC=%u"), name, rcc);
-   session->decRefCount();
 }
 
 /**
  * External action executor constructor
  */
-ExternalActionExecutor::ExternalActionExecutor(const TCHAR *command, const StringList& args, AbstractCommSession *session,
-         uint32_t requestId, bool sendOutput) : ProcessExecutor(nullptr, true)
+ExternalActionExecutor::ExternalActionExecutor(const TCHAR *command, const StringList& args, const shared_ptr<AbstractCommSession>& session,
+         uint32_t requestId, bool sendOutput) : ProcessExecutor(nullptr, true), m_session(session)
 {
    m_sendOutput = sendOutput;
    m_requestId = requestId;
-   m_session = session;
-   m_session->incRefCount();
 
    if (!args.isEmpty())
    {
@@ -272,7 +269,6 @@ ExternalActionExecutor::ExternalActionExecutor(const TCHAR *command, const Strin
  */
 ExternalActionExecutor::~ExternalActionExecutor()
 {
-   m_session->decRefCount();
 }
 
 /**
