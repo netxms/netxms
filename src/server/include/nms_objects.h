@@ -137,7 +137,7 @@ protected:
    AgentTunnel *m_proxyTunnel;
    ClientSession *m_tcpProxySession;
 
-   virtual AbstractCommChannel *createChannel() override;
+   virtual shared_ptr<AbstractCommChannel> createChannel() override;
    virtual void onTrap(NXCPMessage *msg) override;
    virtual void onSyslogMessage(const NXCPMessage& msg) override;
    virtual void onWindowsEvent(const NXCPMessage& msg) override;

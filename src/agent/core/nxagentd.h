@@ -298,7 +298,7 @@ private:
    uint32_t m_id;
    uint32_t m_index;
    TCHAR m_key[32];  // key for serialized background tasks
-   AbstractCommChannel *m_channel;
+   shared_ptr<AbstractCommChannel> m_channel;
    int m_protocolVersion;
    ObjectQueue<NXCPMessage> *m_processingQueue;
    THREAD m_processingThread;
@@ -353,7 +353,7 @@ private:
    void tcpProxyReadThread();
 
 public:
-   CommSession(AbstractCommChannel *channel, const InetAddress &serverAddr, bool masterServer, bool controlServer);
+   CommSession(const shared_ptr<AbstractCommChannel>& channel, const InetAddress &serverAddr, bool masterServer, bool controlServer);
    virtual ~CommSession();
 
    shared_ptr<CommSession> self() const { return static_pointer_cast<CommSession>(AbstractCommSession::self()); }

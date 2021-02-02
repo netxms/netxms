@@ -173,6 +173,7 @@ BackgroundSocketPoller::BackgroundSocketPoller()
    m_mutex = MutexCreateFast();
    m_head = m_memoryPool.allocate();   // dummy element at list head
    m_head->next = nullptr;
+   m_shutdown = false;
 
 #ifdef _WIN32
    m_controlSockets[0] = CreateSocket(AF_INET, SOCK_DGRAM, 0);
@@ -223,6 +224,12 @@ BackgroundSocketPoller::~BackgroundSocketPoller()
  */
 void BackgroundSocketPoller::poll(SOCKET socket, uint32_t timeout, void (*callback)(BackgroundSocketPollResult, SOCKET, void*), void *context)
 {
+   if (m_shutdown)
+   {
+      callback(BackgroundSocketPollResult::SHUTDOWN, socket, context);
+      return;
+   }
+
    BackgroundSocketPollRequest *request = m_memoryPool.allocate();
    request->socket = socket;
    request->timeout = timeout;
@@ -266,6 +273,21 @@ void BackgroundSocketPoller::cancel(SOCKET socket)
 }
 
 /**
+ * Shutdown poller (cancel all waiting sockets and do not accept new requests)
+ */
+void BackgroundSocketPoller::shutdown()
+{
+   MutexLock(m_mutex);
+   m_shutdown = true;
+   MutexUnlock(m_mutex);
+
+   // No need for notification if poll() called from worker thread itself
+   // (likely that means cancellation from poll completion callback)
+   if (GetCurrentThreadId() != m_workerThreadId)
+      notifyWorkerThread('S');
+}
+
+/**
  * Notify worker thread
  */
 void BackgroundSocketPoller::notifyWorkerThread(char command)
@@ -287,7 +309,7 @@ void BackgroundSocketPoller::workerThread()
 {
    m_workerThreadId = GetCurrentThreadId();
    SocketPoller sp;
-   while(true)
+   while(!m_shutdown)
    {
       sp.reset();
       sp.add(m_controlSockets[0]);

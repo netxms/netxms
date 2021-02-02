@@ -89,15 +89,13 @@ LONG H_AgentProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
 /**
  * Client session class constructor
  */
-CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &serverAddr,
-         bool masterServer, bool controlServer) : m_downloadFileMap(Ownership::True), m_tcpProxies(0, 16, Ownership::True)
+CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const InetAddress &serverAddr,
+         bool masterServer, bool controlServer) : m_downloadFileMap(Ownership::True), m_tcpProxies(0, 16, Ownership::True), m_channel(channel)
 {
    m_id = InterlockedIncrement(&s_sessionId);
    m_index = INVALID_INDEX;
    _sntprintf(m_key, 32, _T("CommSession-%u"), m_id);
    m_processingQueue = new ObjectQueue<NXCPMessage>(64, Ownership::True);
-   m_channel = channel;
-   m_channel->incRefCount();
    m_protocolVersion = NXCP_VERSION;
    m_hProxySocket = INVALID_SOCKET;
    m_processingThread = INVALID_THREAD_HANDLE;
@@ -142,8 +140,6 @@ CommSession::~CommSession()
       InterlockedDecrement(&s_activeProxySessions);
 
    m_channel->shutdown();
-   m_channel->close();
-   m_channel->decRefCount();
    if (m_hProxySocket != INVALID_SOCKET)
       closesocket(m_hProxySocket);
    m_disconnected = true;
@@ -399,13 +395,13 @@ void CommSession::readThread()
          if (rc > 0)
          {
             // Update activity timestamp
-            m_ts = time(NULL);
+            m_ts = time(nullptr);
 
             char buffer[32768];
             ssize_t bytes = m_channel->recv(buffer, 32768);
             if (bytes <= 0)
                break;
-            SendEx(m_hProxySocket, buffer, bytes, 0, NULL);
+            SendEx(m_hProxySocket, buffer, bytes, 0, nullptr);
          }
       }
    }
@@ -684,7 +680,7 @@ void CommSession::processingThread()
                m_bulkReconciliationSupported = request->getFieldAsBoolean(VID_BULK_RECONCILIATION);
                m_allowCompression = request->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
                response.setField(VID_RCC, ERR_SUCCESS);
-               response.setField(VID_FLAGS, static_cast<UINT16>((m_controlServer ? 0x01 : 0x00) | (m_masterServer ? 0x02 : 0x00)));
+               response.setField(VID_FLAGS, static_cast<uint16_t>((m_controlServer ? 0x01 : 0x00) | (m_masterServer ? 0x02 : 0x00)));
                debugPrintf(1, _T("Server capabilities: IPv6: %s; bulk reconciliation: %s; compression: %s"),
                            m_ipv6Aware ? _T("yes") : _T("no"),
                            m_bulkReconciliationSupported ? _T("yes") : _T("no"),
@@ -1001,7 +997,7 @@ uint32_t CommSession::openFile(TCHAR *szFullPath, uint32_t requestId, time_t fil
  */
 static void SendFileProgressCallback(INT64 bytesTransferred, void *cbArg)
 {
-	((CommSession *)cbArg)->updateTimeStamp();
+	static_cast<CommSession*>(cbArg)->updateTimeStamp();
 }
 
 /**
@@ -1011,7 +1007,7 @@ bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset, boo
 {
    if (m_disconnected)
       return false;
-	return SendFileOverNXCP(m_channel, requestId, file, m_encryptionContext.get(), offset, SendFileProgressCallback, this, m_socketWriteMutex,
+	return SendFileOverNXCP(m_channel.get(), requestId, file, m_encryptionContext.get(), offset, SendFileProgressCallback, this, m_socketWriteMutex,
             allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE, cancellationFlag);
 }
 
@@ -1135,7 +1131,7 @@ UINT32 CommSession::setupProxyConnection(NXCPMessage *request)
    InetAddress addr = request->isFieldExist(VID_DESTINATION_ADDRESS) ?
             request->getFieldAsInetAddress(VID_DESTINATION_ADDRESS) :
             request->getFieldAsInetAddress(VID_IP_ADDRESS);
-   UINT16 port = request->getFieldAsUInt16(VID_AGENT_PORT);
+   uint16_t port = request->getFieldAsUInt16(VID_AGENT_PORT);
    m_hProxySocket = ConnectToHost(addr, port, 10000);
    if (m_hProxySocket == INVALID_SOCKET)
    {

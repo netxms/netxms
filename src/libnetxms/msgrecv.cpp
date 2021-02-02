@@ -265,18 +265,9 @@ void SocketMessageReceiver::cancel()
 /**
  * Communication channel message receiver constructor
  */
-CommChannelMessageReceiver::CommChannelMessageReceiver(AbstractCommChannel *channel, size_t initialSize, size_t maxSize) : AbstractMessageReceiver(initialSize, maxSize)
+CommChannelMessageReceiver::CommChannelMessageReceiver(const shared_ptr<AbstractCommChannel>& channel, size_t initialSize, size_t maxSize) :
+         AbstractMessageReceiver(initialSize, maxSize), m_channel(channel)
 {
-   m_channel = channel;
-   m_channel->incRefCount();
-}
-
-/**
- * Communication channel message receiver destructor
- */
-CommChannelMessageReceiver::~CommChannelMessageReceiver()
-{
-   m_channel->decRefCount();
 }
 
 /**

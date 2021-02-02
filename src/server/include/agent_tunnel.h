@@ -55,11 +55,9 @@ private:
    } m_pollers[16];
    int m_pollerCount;
 
-protected:
-   virtual ~AgentTunnelCommChannel();
-
 public:
    AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id);
+   virtual ~AgentTunnelCommChannel();
 
    virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
    virtual ssize_t recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;
@@ -127,7 +125,7 @@ protected:
    bool m_snmpTrapProxy;
    bool m_syslogProxy;
    bool m_extProvCertificate;
-   RefCountHashMap<UINT32, AgentTunnelCommChannel> m_channels;
+   SharedHashMap<uint32_t, AgentTunnelCommChannel> m_channels;
    MUTEX m_channelLock;
    
    virtual ~AgentTunnel();
@@ -140,10 +138,10 @@ protected:
    
    int sslWrite(const void *data, size_t size);
    bool sendMessage(NXCPMessage *msg);
-   NXCPMessage *waitForMessage(UINT16 code, UINT32 id) { return m_queue.waitForMessage(code, id, g_agentCommandTimeout); }
+   NXCPMessage *waitForMessage(uint16_t code, uint32_t id) { return m_queue.waitForMessage(code, id, g_agentCommandTimeout); }
 
    void processCertificateRequest(NXCPMessage *request);
-   void processChannelClose(UINT32 channelId);
+   void processChannelClose(uint32_t channelId);
 
    void setup(const NXCPMessage *request);
    uint32_t initiateCertificateRequest(const uuid& nodeGuid, uint32_t userId);
@@ -157,7 +155,7 @@ public:
    void shutdown();
    uint32_t bind(uint32_t nodeId, uint32_t userId);
    uint32_t renewCertificate();
-   AgentTunnelCommChannel *createChannel();
+   shared_ptr<AgentTunnelCommChannel> createChannel();
    void closeChannel(AgentTunnelCommChannel *channel);
    ssize_t sendChannelData(uint32_t id, const void *data, size_t len);
    void resetStartTime() { m_startTime = time(NULL); }
