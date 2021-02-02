@@ -498,7 +498,6 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
    {
       char errbuf[CURL_ERROR_SIZE];
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
-
       curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
       curl_easy_setopt(curl, CURLOPT_HEADER, static_cast<long>(0));
@@ -544,7 +543,9 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
          if (curl_easy_perform(curl) == CURLE_OK)
          {
             deleteContent();
-            if (data.size() > 0)
+            long response_code;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+            if (data.size() > 0 && response_code == 200)
             {
                data.write('\0');
 
@@ -561,13 +562,22 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
                   m_type = DocumentType::XML;
                   m_content.xml = new Config();
                   if (!m_content.xml->loadXmlConfigFromMemory(text, static_cast<int>(size), nullptr, "*", false))
+                  {
+                     rcc = ERR_MALFORMED_RESPONSE;
                      nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): Failed to load XML"));
+                  }
                }
                else if (!forcePlainTextParser && (*text == '{'))
                {
                   m_type = DocumentType::JSON;
                   json_error_t error;
                   m_content.json = json_loads(text, 0, &error);
+                  if (m_content.json == nullptr)
+                  {
+                     rcc = ERR_MALFORMED_RESPONSE;
+                     nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): Failed to load parse json. Error: \"%hs\" on line %d column %d"), error.text, error.line, error.column);
+
+                  }
                }
                else
                {
@@ -596,7 +606,10 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): request returned empty document"));
+               if (data.size() == 0)
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): request returned empty document"));
+               if (response_code != 200)
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): request returned %d return code"), response_code);
                m_type = DocumentType::NONE;
                rcc = ERR_MALFORMED_RESPONSE;
             }
