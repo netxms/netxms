@@ -31,6 +31,8 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -46,7 +48,7 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.console.dialogs.SetEntryEditDialog;
+import org.netxms.ui.eclipse.console.dialogs.KeyValuePairEditDialog;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
@@ -63,14 +65,14 @@ public class PersistentStorageView extends ViewPart
    public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.PersistentStorageView"; //$NON-NLS-1$
 
    private NXCSession session;
-   private SortableTableViewer viewerSetValue;
+   private SortableTableViewer viewer;
    private Action actionRefresh;
    private Action actionCreate;
    private Action actionEdit;
    private Action actionDelete;
    private Map<String, String> pStorageSet = new HashMap<String, String>();
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -79,32 +81,33 @@ public class PersistentStorageView extends ViewPart
       super.init(site);
       session = ConsoleSharedData.getSession();
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
    public void createPartControl(Composite parent)
    { 
-      //GridLayout layout = new GridLayout();
-      //layout.verticalSpacing = WidgetHelper.INNER_SPACING;
-      //layout.marginWidth = 0;
-      //layout.marginHeight = 0;
-      //parent.setLayout(layout);
-      
       final String[] setColumnNames = { "Key", "Value" };
-      final int[] setColumnWidths = { 150, 200 };
-      viewerSetValue = new SortableTableViewer(parent, setColumnNames, setColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-      viewerSetValue.setContentProvider(new ArrayContentProvider());
-      viewerSetValue.setLabelProvider(new AttributeLabelProvider());
-      viewerSetValue.setComparator(new ObjectLabelComparator((ILabelProvider)viewerSetValue.getLabelProvider()));
-      viewerSetValue.addSelectionChangedListener(new ISelectionChangedListener() {
+      final int[] setColumnWidths = { 200, 400 };
+      viewer = new SortableTableViewer(parent, setColumnNames, setColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      viewer.setContentProvider(new ArrayContentProvider());
+      viewer.setLabelProvider(new AttributeLabelProvider());
+      viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            int size = ((IStructuredSelection)viewerSetValue.getSelection()).size();
+            int size = ((IStructuredSelection)viewer.getSelection()).size();
             actionEdit.setEnabled(size == 1);
             actionDelete.setEnabled(size > 0);
+         }
+      });
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            editValue();
          }
       });
       createActions();
@@ -112,13 +115,12 @@ public class PersistentStorageView extends ViewPart
       createPopupMenu();
       refresh();
    }
-   
+
    /**
     * Create and populate pop-up menu
     */
    private void createPopupMenu()
    {
-   // Create menu manager.
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
       menuMgr.addMenuListener(new IMenuListener() {
@@ -129,12 +131,12 @@ public class PersistentStorageView extends ViewPart
       });
 
       // Create menu.
-      Menu menu = menuMgr.createContextMenu(viewerSetValue.getControl());
-      viewerSetValue.getControl().setMenu(menu);
+      Menu menu = menuMgr.createContextMenu(viewer.getControl());
+      viewer.getControl().setMenu(menu);
 
       // Register menu for extension.
-      getSite().setSelectionProvider(viewerSetValue);
-      getSite().registerContextMenu(menuMgr, viewerSetValue);      
+      getSite().setSelectionProvider(viewer);
+      getSite().registerContextMenu(menuMgr, viewer);      
    }
 
    /**
@@ -144,7 +146,7 @@ public class PersistentStorageView extends ViewPart
     */
    private void fillContextMenu(IMenuManager mgr)
    {
-      IStructuredSelection selection = (IStructuredSelection)viewerSetValue.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() == 1) 
       {         
          mgr.add(actionEdit);
@@ -202,7 +204,7 @@ public class PersistentStorageView extends ViewPart
          }
       };
       
-      actionCreate = new Action("Create new", SharedIcons.ADD_OBJECT) {
+      actionCreate = new Action("Create new...", SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
@@ -212,7 +214,7 @@ public class PersistentStorageView extends ViewPart
       actionCreate.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.new_task"); //$NON-NLS-1$
       handlerService.activateHandler(actionCreate.getActionDefinitionId(), new ActionHandler(actionCreate));
       
-      actionEdit = new Action("Set", SharedIcons.EDIT) {
+      actionEdit = new Action("Change value...", SharedIcons.EDIT) {
          @Override
          public void run()
          {
@@ -221,7 +223,7 @@ public class PersistentStorageView extends ViewPart
       };
       actionEdit.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.edit_task"); //$NON-NLS-1$
       handlerService.activateHandler(actionEdit.getActionDefinitionId(), new ActionHandler(actionEdit));
-      
+
       actionDelete = new Action("Delete", SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
@@ -245,7 +247,7 @@ public class PersistentStorageView extends ViewPart
                @Override
                public void run()
                {
-                  viewerSetValue.setInput(pStorageSet.entrySet().toArray());
+                  viewer.setInput(pStorageSet.entrySet().toArray());
                }
             });
          }
@@ -263,7 +265,7 @@ public class PersistentStorageView extends ViewPart
     */
    private void createValue()
    {
-      final SetEntryEditDialog dlg = new SetEntryEditDialog(getSite().getShell(), null, null, true, true);
+      final KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getSite().getShell(), null, null, true, true);
       if (dlg.open() != Window.OK)
          return;
       
@@ -277,7 +279,7 @@ public class PersistentStorageView extends ViewPart
                public void run()
                {                  
                   pStorageSet.put(dlg.getAtributeName(), dlg.getAttributeValue());
-                  viewerSetValue.setInput(pStorageSet.entrySet().toArray());   
+                  viewer.setInput(pStorageSet.entrySet().toArray());   
                }
             });
          }
@@ -295,7 +297,7 @@ public class PersistentStorageView extends ViewPart
     */
    private void deleteValue()
    {      
-      final IStructuredSelection selection = (IStructuredSelection)viewerSetValue.getSelection();
+      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       new ConsoleJob("Delete persistent storage value", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -313,7 +315,7 @@ public class PersistentStorageView extends ViewPart
                      public void run()
                      {                  
                         pStorageSet.remove(e.getKey());
-                        viewerSetValue.setInput(pStorageSet.entrySet().toArray());   
+                        viewer.setInput(pStorageSet.entrySet().toArray());   
                      }
                   });
                }
@@ -333,17 +335,17 @@ public class PersistentStorageView extends ViewPart
     */
    private void editValue()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewerSetValue.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       @SuppressWarnings("unchecked")
       final Entry<String, String> attr = (Entry<String, String>)selection.getFirstElement();
-      final SetEntryEditDialog dlg = new SetEntryEditDialog(getSite().getShell(), attr.getKey(), attr.getValue(), true, false);
+      final KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getSite().getShell(), attr.getKey(), attr.getValue(), true, false);
       if (dlg.open() != Window.OK)
          return;
-      
-      new ConsoleJob("Edit persistent storage value", this, Activator.PLUGIN_ID, null) {
+
+      new ConsoleJob("Change persistent storage value", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -353,11 +355,11 @@ public class PersistentStorageView extends ViewPart
                public void run()
                {            
                   pStorageSet.put(dlg.getAtributeName(), dlg.getAttributeValue());
-                  viewerSetValue.setInput(pStorageSet.entrySet().toArray());   
+                  viewer.setInput(pStorageSet.entrySet().toArray());   
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -366,9 +368,12 @@ public class PersistentStorageView extends ViewPart
       }.start();      
    }
 
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
    @Override
    public void setFocus()
    {
-      viewerSetValue.getTable().setFocus();
+      viewer.getTable().setFocus();
    }
 }

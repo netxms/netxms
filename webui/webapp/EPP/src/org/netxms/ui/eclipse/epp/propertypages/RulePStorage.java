@@ -45,7 +45,7 @@ import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SetEditor;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
-import org.netxms.ui.eclipse.console.dialogs.SetEntryEditDialog;
+import org.netxms.ui.eclipse.console.dialogs.KeyValuePairEditDialog;
 
 /**
  * "Events" property page for EPP rule
@@ -203,7 +203,7 @@ public class RulePStorage extends PropertyPage
 	 */
 	private void addPStorageDeleteAction()
 	{
-	   SetEntryEditDialog dlg = new SetEntryEditDialog(getShell(), null, null, false, false);
+	   KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, false, false);
 		if (dlg.open() == Window.OK)
 		{
 		   pStorageDelete.add(dlg.getAtributeName());
@@ -221,7 +221,7 @@ public class RulePStorage extends PropertyPage
          return;
       
       String attr = (String)selection.getFirstElement();
-      SetEntryEditDialog dlg = new SetEntryEditDialog(getShell(), attr, null, false, false);
+      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr, null, false, false);
       if (dlg.open() == Window.OK)
       {         
          pStorageDelete.set(pStorageDelete.indexOf(attr), dlg.getAtributeName());

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,33 +29,38 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Add/edit attribute
- *
+ * Edit key/value pair
  */
-public class SetEntryEditDialog extends Dialog
+public class KeyValuePairEditDialog extends Dialog
 {
 	private LabeledText textName;
 	private LabeledText textValue;
 	private String pStorageKey;
 	private String pStorageValue;
-	private boolean isSet;
+	private boolean showValue;
    private boolean isNew;
 	
 	/**
-	 * @param parentShell
-	 */
-	public SetEntryEditDialog(Shell parentShell, String key, String value, boolean isSet, boolean isNew)
+    * Create dialog.
+    *
+    * @param parentShell parent shell
+    * @param key key being edited
+    * @param value current value
+    * @param showValue true if value should be shown in dialog
+    * @param isNew true if new element is being created
+    */
+	public KeyValuePairEditDialog(Shell parentShell, String key, String value, boolean showValue, boolean isNew)
 	{
 		super(parentShell);
 		pStorageKey = key;
 		pStorageValue = value;
-		this.isSet = isSet;
+		this.showValue = showValue;
 		this.isNew = isNew;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -79,9 +84,10 @@ public class SetEntryEditDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.widthHint = 300;
       textName.setLayoutData(gd);
-      textName.setEditable(!isSet || isNew);
-      
-      if(isSet)
+      if (showValue && !isNew)
+         textName.setEditable(false);
+
+      if (showValue)
       {
          textValue = new LabeledText(dialogArea, SWT.NONE);
          textValue.setLabel("Value");
@@ -91,24 +97,24 @@ public class SetEntryEditDialog extends Dialog
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          textValue.setLayoutData(gd);
-      
+
          if (pStorageKey != null)
          	textValue.setFocus();
       }
-      
+
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Set persistent storage value");
+      newShell.setText(isNew ? "Create Value" : "Change Value");
 	}
-	
+
 	/**
 	 * Get attribute name
 	 * 
@@ -117,7 +123,7 @@ public class SetEntryEditDialog extends Dialog
 	{
 		return pStorageKey;
 	}
-	
+
 	/**
 	 * Get attribute value
 	 * 
@@ -127,14 +133,14 @@ public class SetEntryEditDialog extends Dialog
 		return pStorageValue;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
 		pStorageKey = textName.getText();
-		if(isSet)
+      if (showValue)
 		   pStorageValue = textValue.getText();
 		super.okPressed();
 	}
