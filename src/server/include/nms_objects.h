@@ -133,8 +133,8 @@ class NXCORE_EXPORTABLE AgentConnectionEx : public AgentConnection
 {
 protected:
    uint32_t m_nodeId;
-   AgentTunnel *m_tunnel;
-   AgentTunnel *m_proxyTunnel;
+   shared_ptr<AgentTunnel> m_tunnel;
+   shared_ptr<AgentTunnel> m_proxyTunnel;
    ClientSession *m_tcpProxySession;
 
    virtual shared_ptr<AbstractCommChannel> createChannel() override;
@@ -152,7 +152,7 @@ protected:
    virtual void getSshKeys(NXCPMessage *msg, NXCPMessage *response) override;
 
    AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr, uint16_t port, const TCHAR *secret, bool allowCompression);
-   AgentConnectionEx(uint32_t nodeId, AgentTunnel *tunnel, const TCHAR *secret, bool allowCompression);
+   AgentConnectionEx(uint32_t nodeId, const shared_ptr<AgentTunnel>& tunnel, const TCHAR *secret, bool allowCompression);
 
 public:
    static shared_ptr<AgentConnectionEx> create(uint32_t nodeId, const InetAddress& ipAddr, uint16_t port = AGENT_LISTEN_PORT, const TCHAR *secret = nullptr, bool allowCompression = true)
@@ -162,7 +162,7 @@ public:
       object->setSelfPtr(p);
       return p;
    }
-   static shared_ptr<AgentConnectionEx> create(uint32_t nodeId, AgentTunnel *tunnel, const TCHAR *secret = nullptr, bool allowCompression = true)
+   static shared_ptr<AgentConnectionEx> create(uint32_t nodeId, const shared_ptr<AgentTunnel>& tunnel, const TCHAR *secret = nullptr, bool allowCompression = true)
    {
       auto object = new AgentConnectionEx(nodeId, tunnel, secret, allowCompression);
       auto p = shared_ptr<AgentConnectionEx>(object);
@@ -177,10 +177,10 @@ public:
    uint32_t deployPolicy(NXCPMessage *msg);
    uint32_t uninstallPolicy(uuid guid, const TCHAR *type, bool newTypeFormatSupported);
 
-   void setTunnel(AgentTunnel *tunnel);
+   void setTunnel(const shared_ptr<AgentTunnel>& tunnel) { m_tunnel = tunnel; }
 
    using AgentConnection::setProxy;
-   void setProxy(AgentTunnel *tunnel, const TCHAR *secret);
+   void setProxy(const shared_ptr<AgentTunnel>& tunnel, const TCHAR *secret);
 
    void setTcpProxySession(ClientSession *session);
 };

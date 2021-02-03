@@ -1579,6 +1579,8 @@ public:
    bool isEmpty() const { return m_data.isEmpty(); }
 
    void sort(int (*cb)(const T&, const T&)) { m_data.sort(reinterpret_cast<int (*)(void *, const void *, const void *)>(sortCallback), (void *)cb); }
+
+   Iterator<shared_ptr<T>> *iterator() { return new Iterator<shared_ptr<T>>(new ArrayIterator(&m_data)); }
 };
 
 template <class T> shared_ptr<T> SharedObjectArray<T>::m_null = shared_ptr<T>();
@@ -2391,27 +2393,6 @@ public:
       MutexUnlock(m_mutex);
       return result;
    }
-};
-
-/**
- * Hash map template for holding reference counting objects as values
- */
-template<class K, class V> class RefCountHashMap : public HashMapBase
-{
-private:
-   static void destructor(void *object, HashMapBase *map) { if (object != NULL) ((V*)object)->decRefCount(); }
-
-public:
-   RefCountHashMap(Ownership objectOwner = Ownership::False) : HashMapBase(objectOwner, sizeof(K)) { m_objectDestructor = destructor; }
-
-   V *get(const K& key) { V *v = (V*)_get(&key); if (v != NULL) v->incRefCount(); return v; }
-   V *peek(const K& key) { return (V*)_get(&key); }
-   void set(const K& key, V *value) { if (value != NULL) value->incRefCount(); _set(&key, (void *)value); }
-   void remove(const K& key) { _remove(&key, true); }
-   void unlink(const K& key) { _remove(&key, false); }
-   bool contains(const K& key) { return _contains(&key); }
-
-   Iterator<V> *iterator() { return new Iterator<V>(new HashMapIterator(this)); }
 };
 
 /**

@@ -66,9 +66,15 @@ public:
    virtual int shutdown() override;
    virtual void close() override;
 
-   UINT32 getId() const { return m_id; }
+   uint32_t getId() const { return m_id; }
 
    void putData(const BYTE *data, size_t size);
+
+   void detach()
+   {
+      m_active = false;
+      m_tunnel = nullptr;
+   }
 };
 
 /**
@@ -85,9 +91,10 @@ enum AgentTunnelState
 /**
  * Agent tunnel
  */
-class AgentTunnel : public RefCountObject
+class AgentTunnel
 {
 protected:
+   weak_ptr<AgentTunnel> m_self;
    uint32_t m_id;
    uuid m_guid;
    InetAddress m_address;
@@ -128,8 +135,6 @@ protected:
    SharedHashMap<uint32_t, AgentTunnelCommChannel> m_channels;
    MUTEX m_channelLock;
    
-   virtual ~AgentTunnel();
-
    bool readSocket();
    MessageReceiverResult readMessage(bool allowSocketRead);
    void finalize();
@@ -146,11 +151,19 @@ protected:
    void setup(const NXCPMessage *request);
    uint32_t initiateCertificateRequest(const uuid& nodeGuid, uint32_t userId);
 
+
 public:
+   static shared_ptr<AgentTunnel> create(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId,
+            int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime,
+            BackgroundSocketPollerHandle *socketPoller);
+
    AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId, int32_t zoneUIN,
             const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime,
             BackgroundSocketPollerHandle *socketPoller);
-   
+   ~AgentTunnel();
+
+   shared_ptr<AgentTunnel> self() { return m_self.lock(); }
+
    void start();
    void shutdown();
    uint32_t bind(uint32_t nodeId, uint32_t userId);
@@ -207,7 +220,7 @@ bool SetupServerTlsContext(SSL_CTX *context);
 /**
  * Get tunnel for node
  */
-AgentTunnel *GetTunnelForNode(uint32_t nodeId);
+shared_ptr<AgentTunnel> GetTunnelForNode(uint32_t nodeId);
 
 /**
  * Tunnel capability filter

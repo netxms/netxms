@@ -58,8 +58,9 @@ static Mutex s_certificateMappingsLock;
 /**
  * Tunnel registration
  */
-static RefCountHashMap<uint32_t, AgentTunnel> s_boundTunnels(Ownership::True);
-static ObjectRefArray<AgentTunnel> s_unboundTunnels(16, 16);
+static SharedHashMap<uint32_t, AgentTunnel> s_tunnels;   // All tunnels indexed by tunnel ID
+static SharedHashMap<uint32_t, AgentTunnel> s_boundTunnels;
+static SharedObjectArray<AgentTunnel> s_unboundTunnels(16, 16);
 static Mutex s_tunnelListLock;
 static VolatileCounter s_activeSetupCalls = 0;  // Number of tunnel setup calls currently running
 
@@ -85,7 +86,7 @@ static void ExecuteScriptInBackground(NXSL_VM *vm)
 /**
  * Execute hook script when bound tunnel established
  */
-static void ExecuteTunnelHookScript(AgentTunnel *tunnel)
+static void ExecuteTunnelHookScript(const shared_ptr<AgentTunnel>& tunnel)
 {
    shared_ptr<NetObj> node = tunnel->isBound() ? FindObjectById(tunnel->getNodeId(), OBJECT_NODE) : shared_ptr<NetObj>();
    ScriptVMHandle vm = CreateServerScriptVM(tunnel->isBound() ? _T("Hook::OpenBoundTunnel") : _T("Hook::OpenUnboundTunnel"), node);
@@ -95,21 +96,20 @@ static void ExecuteTunnelHookScript(AgentTunnel *tunnel)
       return;
    }
 
-   vm->setGlobalVariable("$tunnel", vm->createValue(new NXSL_Object(vm, &g_nxslTunnelClass, tunnel)));
+   vm->setGlobalVariable("$tunnel", vm->createValue(new NXSL_Object(vm, &g_nxslTunnelClass, new shared_ptr<AgentTunnel>(tunnel))));
    ThreadPoolExecute(g_mainThreadPool, ExecuteScriptInBackground, vm.vm());
 }
 
 /**
  * Register tunnel
  */
-static void RegisterTunnel(AgentTunnel *tunnel)
+static void RegisterTunnel(const shared_ptr<AgentTunnel>& tunnel)
 {
-   tunnel->incRefCount();
    s_tunnelListLock.lock();
+   s_tunnels.set(tunnel->getId(), tunnel);
    if (tunnel->isBound())
    {
       s_boundTunnels.set(tunnel->getNodeId(), tunnel);
-      tunnel->decRefCount(); // set already increased ref count
    }
    else
    {
@@ -135,26 +135,31 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
       // Check that current tunnel for node is tunnel being unregistered
       // New tunnel could be established while old one still finishing
       // outstanding requests
-      if (s_boundTunnels.peek(tunnel->getNodeId()) == tunnel)
+      if (s_boundTunnels.get(tunnel->getNodeId())->getId() == tunnel->getId())
          s_boundTunnels.remove(tunnel->getNodeId());
    }
    else
    {
-      s_unboundTunnels.remove(tunnel);
-      tunnel->decRefCount();
+      for(int i = 0; i < s_unboundTunnels.size(); i++)
+         if (s_unboundTunnels.get(i)->getId() == tunnel->getId())
+         {
+            s_unboundTunnels.remove(i);
+            break;
+         }
    }
+   s_tunnels.remove(tunnel->getId());
    s_tunnelListLock.unlock();
 }
 
 /**
  * Get tunnel for node. Caller must decrease reference counter on tunnel.
  */
-AgentTunnel *GetTunnelForNode(uint32_t nodeId)
+shared_ptr<AgentTunnel> GetTunnelForNode(uint32_t nodeId)
 {
    s_tunnelListLock.lock();
-   AgentTunnel *t = s_boundTunnels.get(nodeId);
+   shared_ptr<AgentTunnel> tunnel = s_boundTunnels.getShared(nodeId);
    s_tunnelListLock.unlock();
-   return t;
+   return tunnel;
 }
 
 /**
@@ -162,14 +167,13 @@ AgentTunnel *GetTunnelForNode(uint32_t nodeId)
  */
 uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId)
 {
-   AgentTunnel *tunnel = nullptr;
+   shared_ptr<AgentTunnel> tunnel;
    s_tunnelListLock.lock();
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
       if (s_unboundTunnels.get(i)->getId() == tunnelId)
       {
-         tunnel = s_unboundTunnels.get(i);
-         tunnel->incRefCount();
+         tunnel = s_unboundTunnels.getShared(i);
          break;
       }
    }
@@ -185,7 +189,6 @@ uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId)
    nxlog_debug_tag(DEBUG_TAG, 4, _T("BindAgentTunnel: processing bind request %u -> %u by user %s"),
             tunnelId, nodeId, ResolveUserId(userId, userName, true));
    uint32_t rcc = tunnel->bind(nodeId, userId);
-   tunnel->decRefCount();
    return rcc;
 }
 
@@ -212,12 +215,11 @@ uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId)
 
    static_cast<Node&>(*node).setTunnelId(uuid::NULL_UUID, nullptr);
 
-   AgentTunnel *tunnel = GetTunnelForNode(nodeId);
+   shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(nodeId);
    if (tunnel != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("UnbindAgentTunnel(%s): shutting down existing tunnel"), node->getName());
       tunnel->shutdown();
-      tunnel->decRefCount();
    }
 
    return RCC_SUCCESS;
@@ -229,23 +231,23 @@ uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId)
 void GetAgentTunnels(NXCPMessage *msg)
 {
    s_tunnelListLock.lock();
-   UINT32 fieldId = VID_ELEMENT_LIST_BASE;
 
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
       s_unboundTunnels.get(i)->fillMessage(msg, fieldId);
       fieldId += 64;
    }
 
-   Iterator<AgentTunnel> *it = s_boundTunnels.iterator();
+   auto it = s_boundTunnels.iterator();
    while(it->hasNext())
    {
-      it->next()->fillMessage(msg, fieldId);
+      (*it->next())->fillMessage(msg, fieldId);
       fieldId += 64;
    }
    delete it;
 
-   msg->setField(VID_NUM_ELEMENTS, (UINT32)(s_unboundTunnels.size() + s_boundTunnels.size()));
+   msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(s_unboundTunnels.size() + s_boundTunnels.size()));
    s_tunnelListLock.unlock();
 }
 
@@ -260,10 +262,10 @@ void ShowAgentTunnels(CONSOLE_CTX console)
             _T("\n\x1b[1mBOUND TUNNELS\x1b[0m\n")
             _T(" ID  | Node ID | EP  | Chan. | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
             _T("-----+---------+-----+-------+--------------------------+--------------------------+--------------------------+------------------+---------------+--------------------------\n"));
-   Iterator<AgentTunnel> *it = s_boundTunnels.iterator();
+   auto it = s_boundTunnels.iterator();
    while(it->hasNext())
    {
-      AgentTunnel *t = it->next();
+      AgentTunnel *t = it->next()->get();
       TCHAR ipAddrBuffer[64];
       ConsolePrintf(console, _T("%4d | %7u | %-3s | %5d | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->getNodeId(),
                t->isExtProvCertificate() ? _T("YES") : _T("NO"), t->getChannelCount(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(),
@@ -287,6 +289,19 @@ void ShowAgentTunnels(CONSOLE_CTX console)
 }
 
 /**
+ * Create shared tunnel object
+ */
+shared_ptr<AgentTunnel> AgentTunnel::create(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId,
+         int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime,
+         BackgroundSocketPollerHandle *socketPoller)
+{
+   shared_ptr<AgentTunnel> tunnel = make_shared<AgentTunnel>(context, ssl, sock, addr, nodeId, zoneUIN, certificateSubject,
+            certificateIssuer, certificateExpirationTime, socketPoller);
+   tunnel->m_self = tunnel;
+   return tunnel;
+}
+
+/**
  * Next free tunnel ID
  */
 static VolatileCounter s_nextTunnelId = 0;
@@ -296,7 +311,7 @@ static VolatileCounter s_nextTunnelId = 0;
  */
 AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr,
          uint32_t nodeId, int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer,
-         time_t certificateExpirationTime, BackgroundSocketPollerHandle *socketPoller) : RefCountObject()
+         time_t certificateExpirationTime, BackgroundSocketPollerHandle *socketPoller)
 {
    m_id = InterlockedIncrement(&s_nextTunnelId);
    m_address = addr;
@@ -425,8 +440,7 @@ MessageReceiverResult AgentTunnel::readMessage(bool allowSocketRead)
    }
    else
    {
-      incRefCount();
-      ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, m_threadPoolKey, this, &AgentTunnel::processMessage, msg);
+      ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, m_threadPoolKey, self(), &AgentTunnel::processMessage, msg);
    }
    return MSGRECV_SUCCESS;
 }
@@ -459,7 +473,6 @@ void AgentTunnel::processMessage(NXCPMessage *msg)
          break;
    }
    delete msg;
-   decRefCount();
 }
 
 /**
@@ -474,13 +487,16 @@ void AgentTunnel::finalize()
    MutexLock(m_channelLock);
    auto it = m_channels.iterator();
    while(it->hasNext())
-      (*it->next())->shutdown();
+   {
+      AgentTunnelCommChannel *channel = it->next()->get();
+      channel->shutdown();
+      channel->detach();
+   }
    delete it;
    m_channels.clear();
    MutexUnlock(m_channelLock);
 
    debugPrintf(4, _T("Tunnel closure completed"));
-   decRefCount();
 }
 
 /**
@@ -500,7 +516,7 @@ void AgentTunnel::socketPollerCallback(BackgroundSocketPollResult pollResult, SO
    {
       tunnel->debugPrintf(5, _T("Socket poll error (%d)"), static_cast<int>(pollResult));
    }
-   ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, tunnel->m_threadPoolKey, tunnel, &AgentTunnel::finalize);
+   ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, tunnel->m_threadPoolKey, tunnel->self(), &AgentTunnel::finalize);
 }
 
 /**
@@ -567,7 +583,6 @@ bool AgentTunnel::sendMessage(NXCPMessage *msg)
 void AgentTunnel::start()
 {
    debugPrintf(4, _T("Tunnel started"));
-   incRefCount();
    m_messageReceiver = new TlsMessageReceiver(m_socket, m_ssl, m_sslLock, 4096, MAX_MSG_SIZE);
    m_socketPoller->poller.poll(m_socket, 60000, socketPollerCallback, this);
 }
@@ -586,7 +601,7 @@ void AgentTunnel::shutdown()
 /**
  * Background certificate renewal
  */
-static void BackgroundRenewCertificate(AgentTunnel *tunnel)
+static void BackgroundRenewCertificate(const shared_ptr<AgentTunnel>& tunnel)
 {
    uint32_t rcc = tunnel->renewCertificate();
    if (rcc == RCC_SUCCESS)
@@ -595,7 +610,6 @@ static void BackgroundRenewCertificate(AgentTunnel *tunnel)
    else
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Agent certificate renewal failed for %s (%s) with error %u"),
                tunnel->getDisplayName(), tunnel->getAddress().toString().cstr(), rcc);
-   tunnel->decRefCount();
 }
 
 /**
@@ -603,9 +617,7 @@ static void BackgroundRenewCertificate(AgentTunnel *tunnel)
  */
 void AgentTunnel::setup(const NXCPMessage *request)
 {
-   NXCPMessage response;
-   response.setCode(CMD_REQUEST_COMPLETED);
-   response.setId(request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
    if (m_state == AGENT_TUNNEL_INIT)
    {
@@ -665,7 +677,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
          debugPrintf(4, _T("   Certificate issuer.......: %s"), CHECK_NULL(m_certificateIssuer));
       }
 
-      ExecuteTunnelHookScript(this);
+      ExecuteTunnelHookScript(self());
       if (m_state == AGENT_TUNNEL_BOUND)
       {
          PostSystemEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssssG", s_eventParamNames,
@@ -674,8 +686,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
          if (!m_extProvCertificate && (m_certificateExpirationTime - time(nullptr) <= 2592000)) // 30 days
          {
             debugPrintf(4, _T("Certificate will expire soon, requesting renewal"));
-            incRefCount();
-            ThreadPoolExecute(g_mainThreadPool, BackgroundRenewCertificate, this);
+            ThreadPoolExecute(g_mainThreadPool, BackgroundRenewCertificate, self());
          }
       }
    }
@@ -966,7 +977,6 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
  */
 AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id) : m_buffer(65536, 65536)
 {
-   tunnel->incRefCount();
    m_tunnel = tunnel;
    m_id = id;
    m_active = true;
@@ -986,7 +996,6 @@ AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id) :
  */
 AgentTunnelCommChannel::~AgentTunnelCommChannel()
 {
-   m_tunnel->decRefCount();
 #ifdef _WIN32
    DeleteCriticalSection(&m_bufferLock);
 #else
@@ -1210,7 +1219,8 @@ int AgentTunnelCommChannel::shutdown()
 void AgentTunnelCommChannel::close()
 {
    shutdown();
-   m_tunnel->closeChannel(this);
+   if (m_tunnel != nullptr)
+      m_tunnel->closeChannel(this);
 }
 
 /**
@@ -1299,7 +1309,7 @@ static void SetupTunnel(ConnectionRequest *request)
    SSL_CTX *context = nullptr;
    SSL *ssl = nullptr;
    BackgroundSocketPollerHandle *sp = nullptr;
-   AgentTunnel *tunnel = nullptr;
+   shared_ptr<AgentTunnel> tunnel;
    int rc;
    uint32_t nodeId = 0;
    int32_t zoneUIN = 0;
@@ -1564,12 +1574,11 @@ retry:
    }
    s_pollerListLock.unlock();
 
-   tunnel = new AgentTunnel(context, ssl, request->sock, request->addr, nodeId, zoneUIN,
+   tunnel = AgentTunnel::create(context, ssl, request->sock, request->addr, nodeId, zoneUIN,
          !certSubject.isEmpty() ? certSubject.cstr() : nullptr, !certIssuer.isEmpty() ? certIssuer.cstr() : nullptr,
          certExpTime, sp);
    RegisterTunnel(tunnel);
    tunnel->start();
-   tunnel->decRefCount();
 
    delete request;
    InterlockedDecrement(&s_activeSetupCalls);
@@ -1671,11 +1680,10 @@ void CloseAgentTunnels()
    s_tunnelListenerLock.unlock();
 
    s_tunnelListLock.lock();
-   Iterator<AgentTunnel> *it = s_boundTunnels.iterator();
+   auto it = s_boundTunnels.iterator();
    while(it->hasNext())
    {
-      AgentTunnel *t = it->next();
-      t->shutdown();
+      (*it->next())->shutdown();
    }
    delete it;
    for(int i = 0; i < s_unboundTunnels.size(); i++)
@@ -1709,11 +1717,9 @@ static bool MatchTunnelToNodeStage1(NetObj *object, AgentTunnel *tunnel)
    if (!node->getTunnelId().isNull())
    {
       // Already have bound tunnel
-      AgentTunnel *activeTunnel = GetTunnelForNode(node->getId());
-      if (activeTunnel != nullptr)
+      if (GetTunnelForNode(node->getId()) != nullptr)
       {
          // Node already have active tunnel, should not match
-         activeTunnel->decRefCount();
          return false;
       }
    }
@@ -1739,11 +1745,9 @@ static bool MatchTunnelToNodeStage2(NetObj *object, AgentTunnel *tunnel)
    if (!node->getTunnelId().isNull())
    {
       // Already have bound tunnel
-      AgentTunnel *activeTunnel = GetTunnelForNode(node->getId());
-      if (activeTunnel != nullptr)
+      if (GetTunnelForNode(node->getId()) != nullptr)
       {
          // Node already have active tunnel, should not match
-         activeTunnel->decRefCount();
          return false;
       }
    }
@@ -1875,18 +1879,17 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
    if (timeout < 0)
       return;  // Auto bind disabled
 
-   ObjectRefArray<AgentTunnel> processingList(16, 16);
+   SharedObjectArray<AgentTunnel> processingList(16, 16);
 
    s_tunnelListLock.lock();
    time_t now = time(nullptr);
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
-      AgentTunnel *t = s_unboundTunnels.get(i);
+      shared_ptr<AgentTunnel> t = s_unboundTunnels.getShared(i);
       nxlog_debug_tag(DEBUG_TAG, 9, _T("Checking tunnel from %s (%s): state=%d, startTime=%ld"),
                t->getDisplayName(), (const TCHAR *)t->getAddress().toString(), t->getState(), (long)t->getStartTime());
       if ((t->getState() == AGENT_TUNNEL_UNBOUND) && (t->getStartTime() + timeout <= now))
       {
-         t->incRefCount();
          processingList.add(t);
       }
    }
@@ -1976,7 +1979,6 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
             }
             break;
       }
-      t->decRefCount();
    }
 }
 
@@ -1985,17 +1987,16 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
  */
 void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
-   ObjectRefArray<AgentTunnel> processingList(16, 16);
+   SharedObjectArray<AgentTunnel> processingList(16, 16);
 
    s_tunnelListLock.lock();
    time_t now = time(nullptr);
    auto it = s_boundTunnels.iterator();
    while(it->hasNext())
    {
-      AgentTunnel *t = it->next();
+      shared_ptr<AgentTunnel> t = *it->next();
       if (!t->isExtProvCertificate() && (t->getCertificateExpirationTime() - now <= 2592000))  // 30 days
       {
-         t->incRefCount();
          processingList.add(t);
       }
    }
@@ -2021,7 +2022,6 @@ void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameter
       else
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Agent certificate renewal failed for %s (%s) with error %u"),
                   t->getDisplayName(), t->getAddress().toString().cstr(), rcc);
-      t->decRefCount();
    }
 }
 
@@ -2041,10 +2041,10 @@ int GetTunnelCount(TunnelCapabilityFilter filter, bool boundTunnels)
    else
    {
       s_tunnelListLock.lock();
-      Iterator<AgentTunnel> *it = boundTunnels ? s_boundTunnels.iterator() : s_unboundTunnels.iterator();
+      Iterator<shared_ptr<AgentTunnel>> *it = boundTunnels ? s_boundTunnels.iterator() : s_unboundTunnels.iterator();
       while (it->hasNext())
       {
-         AgentTunnel *t = it->next();
+         AgentTunnel *t = it->next()->get();
          if ((filter == TunnelCapabilityFilter::AGENT_PROXY && t->isAgentProxy()) ||
              (filter == TunnelCapabilityFilter::SNMP_PROXY && t->isSnmpProxy()) ||
              (filter == TunnelCapabilityFilter::SNMP_TRAP_PROXY && t->isSnmpTrapProxy()) ||

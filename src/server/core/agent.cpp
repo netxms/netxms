@@ -37,21 +37,16 @@ AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr,
          AgentConnection(ipAddr, port, secret, allowCompression)
 {
    m_nodeId = nodeId;
-   m_tunnel = nullptr;
-   m_proxyTunnel = nullptr;
    m_tcpProxySession = nullptr;
 }
 
 /**
  * Create agent connection within tunnel
  */
-AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, AgentTunnel *tunnel, const TCHAR *secret, bool allowCompression) :
-         AgentConnection(InetAddress::INVALID, 0, secret, allowCompression)
+AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const shared_ptr<AgentTunnel>& tunnel, const TCHAR *secret, bool allowCompression) :
+         AgentConnection(InetAddress::INVALID, 0, secret, allowCompression), m_tunnel(tunnel)
 {
    m_nodeId = nodeId;
-   m_tunnel = tunnel;
-   m_tunnel->incRefCount();
-   m_proxyTunnel = nullptr;
    m_tcpProxySession = nullptr;
 }
 
@@ -60,10 +55,6 @@ AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, AgentTunnel *tunnel, const
  */
 AgentConnectionEx::~AgentConnectionEx()
 {
-   if (m_tunnel != nullptr)
-      m_tunnel->decRefCount();
-   if (m_proxyTunnel != nullptr)
-      m_proxyTunnel->decRefCount();
 }
 
 /**
@@ -79,27 +70,11 @@ shared_ptr<AbstractCommChannel> AgentConnectionEx::createChannel()
 }
 
 /**
- * Set tunnel to use
- */
-void AgentConnectionEx::setTunnel(AgentTunnel *tunnel)
-{
-   if (m_tunnel != nullptr)
-      m_tunnel->decRefCount();
-   m_tunnel = tunnel;
-   if (m_tunnel != nullptr)
-      m_tunnel->incRefCount();
-}
-
-/**
  * Set proxy tunnel to use
  */
-void AgentConnectionEx::setProxy(AgentTunnel *tunnel, const TCHAR *secret)
+void AgentConnectionEx::setProxy(const shared_ptr<AgentTunnel>& tunnel, const TCHAR *secret)
 {
-   if (m_proxyTunnel != nullptr)
-      m_proxyTunnel->decRefCount();
    m_proxyTunnel = tunnel;
-   if (m_proxyTunnel != nullptr)
-      m_proxyTunnel->incRefCount();
    setProxy(InetAddress::INVALID, 0, secret);
 }
 
