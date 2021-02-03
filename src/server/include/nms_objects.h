@@ -2869,6 +2869,13 @@ public:
 
    bool equals(const NodeHardwareId &a) const { return GenericId<HARDWARE_ID_LENGTH>::equals(a); }
    bool equals(const BYTE *value) const { return GenericId<HARDWARE_ID_LENGTH>::equals(value, HARDWARE_ID_LENGTH); }
+
+   TCHAR *toString(TCHAR *buffer) const { return BinToStr(m_value, HARDWARE_ID_LENGTH, buffer); }
+   String toString() const
+   {
+      TCHAR buffer[HARDWARE_ID_LENGTH * 2 + 1];
+      return String(BinToStr(m_value, HARDWARE_ID_LENGTH, buffer));
+   }
 };
 
 /**

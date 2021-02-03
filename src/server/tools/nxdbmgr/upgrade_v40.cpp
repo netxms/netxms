@@ -23,6 +23,34 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+/**
+ * Upgrade from 40.39 to 40.40
+ */
+static bool H_UpgradeFromV39()
+{
+   if (GetSchemaLevelForMajorVersion(38) < 5)
+   {
+      CHK_EXEC(CreateEventTemplate(EVENT_TUNNEL_HOST_DATA_MISMATCH, _T("SYS_TUNNEL_HOST_DATA_MISMATCH"),
+               SEVERITY_WARNING, EF_LOG, _T("874aa4f3-51b9-49ad-a8df-fb4bb89d0f81"),
+               _T("Host data mismatch on tunnel reconnect"),
+               _T("Generated when new tunnel is replacing existing one and host data mismatch is detected.\r\n")
+               _T("Parameters:\r\n")
+               _T("   1) Tunnel ID (tunnelId)\r\n")
+               _T("   2) Old remote system IP address (oldIPAddress)\r\n")
+               _T("   3) New remote system IP address (newIPAddress)\r\n")
+               _T("   4) Old remote system name (oldSystemName)\r\n")
+               _T("   5) New remote system name (newSystemName)\r\n")
+               _T("   6) Old remote system FQDN (oldHostName)\r\n")
+               _T("   7) New remote system FQDN (newHostName)\r\n")
+               _T("   8) Old hardware ID (oldHardwareId)\r\n")
+               _T("   9) New hardware ID (newHardwareId)")
+               ));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(38, 5));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(40));
+   return true;
+}
 
 /**
  * Upgrade from 40.38 to 40.39
@@ -1090,6 +1118,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 39, 40, 40, H_UpgradeFromV39 },
    { 38, 40, 39, H_UpgradeFromV38 },
    { 37, 40, 38, H_UpgradeFromV37 },
    { 36, 40, 37, H_UpgradeFromV36 },

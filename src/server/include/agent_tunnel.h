@@ -134,7 +134,8 @@ protected:
    bool m_extProvCertificate;
    SharedHashMap<uint32_t, AgentTunnelCommChannel> m_channels;
    MUTEX m_channelLock;
-   
+   shared_ptr<AgentTunnel> m_replacedTunnel; // Tunnel that was replaced by this tunnel
+
    bool readSocket();
    MessageReceiverResult readMessage(bool allowSocketRead);
    void finalize();
@@ -171,7 +172,8 @@ public:
    shared_ptr<AgentTunnelCommChannel> createChannel();
    void closeChannel(AgentTunnelCommChannel *channel);
    ssize_t sendChannelData(uint32_t id, const void *data, size_t len);
-   void resetStartTime() { m_startTime = time(NULL); }
+   void resetStartTime() { m_startTime = time(nullptr); }
+   void setReplacedTunnel(const shared_ptr<AgentTunnel>& tunnel) { m_replacedTunnel = tunnel; }
 
    uint32_t getId() const { return m_id; }
    uuid getGUID() const { return m_guid; }

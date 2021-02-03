@@ -50,6 +50,16 @@ static const TCHAR *s_eventParamNamesAgentIdMismatch[] =
    };
 
 /**
+ * Event parameter names for SYS_TUNNEL_HOST_DATA_MISMATCH event
+ */
+static const TCHAR *s_eventParamNamesHostDataMismatch[] =
+   {
+      _T("tunnelId"), _T("oldIPAddress"), _T("newIPAddress"), _T("oldSystemName"),
+      _T("newSystemName"), _T("oldHostName"), _T("newHostName"), _T("oldHardwareId"),
+      _T("newHardwareId")
+   };
+
+/**
  * Externally provisioned certificate mapping
  */
 static SharedStringObjectMap<Node> s_certificateMappings;
@@ -109,6 +119,7 @@ static void RegisterTunnel(const shared_ptr<AgentTunnel>& tunnel)
    s_tunnels.set(tunnel->getId(), tunnel);
    if (tunnel->isBound())
    {
+      tunnel->setReplacedTunnel(s_boundTunnels.getShared(tunnel->getNodeId()));
       s_boundTunnels.set(tunnel->getNodeId(), tunnel);
    }
    else
@@ -135,7 +146,8 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
       // Check that current tunnel for node is tunnel being unregistered
       // New tunnel could be established while old one still finishing
       // outstanding requests
-      if (s_boundTunnels.get(tunnel->getNodeId())->getId() == tunnel->getId())
+      AgentTunnel *registeredTunnel = s_boundTunnels.get(tunnel->getNodeId());
+      if ((registeredTunnel != nullptr) && (registeredTunnel->getId() == tunnel->getId()))
          s_boundTunnels.remove(tunnel->getNodeId());
    }
    else
@@ -687,6 +699,25 @@ void AgentTunnel::setup(const NXCPMessage *request)
          {
             debugPrintf(4, _T("Certificate will expire soon, requesting renewal"));
             ThreadPoolExecute(g_mainThreadPool, BackgroundRenewCertificate, self());
+         }
+
+         if (m_replacedTunnel != nullptr)
+         {
+            if (!m_replacedTunnel->getHardwareId().equals(m_hardwareId) ||
+                !m_replacedTunnel->getAgentId().equals(m_agentId) ||
+                _tcscmp(m_replacedTunnel->getHostname(), m_hostname) ||
+                _tcscmp(m_replacedTunnel->getSystemName(), m_systemName))
+            {
+               // Old and new tunnels seems to be from different machines but binding to same node
+               debugPrintf(3, _T("Host data mismatch with existing tunnel (IP address: %s -> %s, Hostname: \"%s\" -> \"%s\", System name: \"%s\" -> \"%s\")"),
+                        m_replacedTunnel->getAddress().toString().cstr(), m_address.toString().cstr(),
+                        m_replacedTunnel->getHostname(), m_hostname, m_replacedTunnel->getSystemName(), m_systemName);
+               PostSystemEventWithNames(EVENT_TUNNEL_HOST_DATA_MISMATCH, m_nodeId, "dsAssssss", s_eventParamNamesHostDataMismatch,
+                        m_id, m_replacedTunnel->getAddress().toString().cstr(), &m_address,
+                        m_replacedTunnel->getSystemName(), m_systemName, m_replacedTunnel->getHostname(), m_hostname,
+                        m_replacedTunnel->getHardwareId().toString().cstr(), m_hardwareId.toString().cstr());
+            }
+            m_replacedTunnel.reset();
          }
       }
    }
