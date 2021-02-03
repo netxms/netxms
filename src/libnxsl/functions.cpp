@@ -538,8 +538,8 @@ int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
  */
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-   if (!argv[0]->isInteger())
-      return NXSL_ERR_NOT_INTEGER;
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
 
    uint64_t arg = argv[0]->getValueAsUInt64();
 
