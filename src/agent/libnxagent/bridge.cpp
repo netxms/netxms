@@ -261,7 +261,7 @@ const TCHAR LIBNXAGENT_EXPORTABLE *AgentGetDataDirectory()
  */
 shared_ptr<AbstractCommSession> LIBNXAGENT_EXPORTABLE AgentFindServerSession(uint64_t serverId)
 {
-   return (s_fpFindServerSession != nullptr) ? s_fpFindServerSession(serverId) : nullptr;
+   return (s_fpFindServerSession != nullptr) ? s_fpFindServerSession(serverId) : shared_ptr<AbstractCommSession>();
 }
 
 /**

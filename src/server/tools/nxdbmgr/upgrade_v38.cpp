@@ -21,7 +21,31 @@
 **/
 
 #include "nxdbmgr.h"
+#include <nxevent.h>
 
+/**
+ * Upgrade from 38.4 to 38.5
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_TUNNEL_HOST_DATA_MISMATCH, _T("SYS_TUNNEL_HOST_DATA_MISMATCH"),
+            SEVERITY_WARNING, EF_LOG, _T("874aa4f3-51b9-49ad-a8df-fb4bb89d0f81"),
+            _T("Host data mismatch on tunnel reconnect"),
+            _T("Generated when new tunnel is replacing existing one and host data mismatch is detected.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Tunnel ID (tunnelId)\r\n")
+            _T("   2) Old remote system IP address (oldIPAddress)\r\n")
+            _T("   3) New remote system IP address (newIPAddress)\r\n")
+            _T("   4) Old remote system name (oldSystemName)\r\n")
+            _T("   5) New remote system name (newSystemName)\r\n")
+            _T("   6) Old remote system FQDN (oldHostName)\r\n")
+            _T("   7) New remote system FQDN (newHostName)\r\n")
+            _T("   8) Old hardware ID (oldHardwareId)\r\n")
+            _T("   9) New hardware ID (newHardwareId)")
+            ));
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
 
 /**
  * Upgrade from 38.3 to 38.4
@@ -139,6 +163,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 4,  38, 5,  H_UpgradeFromV4  },
    { 3,  38, 4,  H_UpgradeFromV3  },
    { 2,  38, 3,  H_UpgradeFromV2  },
    { 1,  38, 2,  H_UpgradeFromV1  },

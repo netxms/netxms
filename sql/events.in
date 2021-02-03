@@ -1401,6 +1401,23 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   3) Cluster ID' CONCAT CRLF CONCAT
       '   4) Cluster name'
    );
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_TUNNEL_HOST_DATA_MISMATCH, 'SYS_TUNNEL_HOST_DATA_MISMATCH', '874aa4f3-51b9-49ad-a8df-fb4bb89d0f81',
+		EVENT_SEVERITY_WARNING, 1,
+		'Host data mismatch on tunnel reconnect',
+		'Generated when new tunnel is replacing existing one and host data mismatch is detected.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Tunnel ID (tunnelId)' CONCAT CRLF CONCAT
+		'   2) Old remote system IP address (oldIPAddress)' CONCAT CRLF CONCAT
+		'   3) New remote system IP address (newIPAddress)' CONCAT CRLF CONCAT
+		'   4) Old remote system name (oldSystemName)' CONCAT CRLF CONCAT
+		'   5) New remote system name (newSystemName)' CONCAT CRLF CONCAT
+		'   6) Old remote system FQDN (oldHostName)' CONCAT CRLF CONCAT
+		'   7) New remote system FQDN (newHostName)' CONCAT CRLF CONCAT
+		'   8) Old hardware ID (oldHardwareId)' CONCAT CRLF CONCAT
+		'   9) New hardware ID (newHardwareId)'
+	);
 
 /*
 ** SNMP traps
