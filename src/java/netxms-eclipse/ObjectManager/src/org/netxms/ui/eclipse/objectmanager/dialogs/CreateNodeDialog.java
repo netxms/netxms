@@ -392,6 +392,8 @@ public class CreateNodeDialog extends Dialog
 		agentProxy = agentProxySelector.getObjectId();
 		snmpProxy = snmpProxySelector.getObjectId();
       etherNetIpProxy = etherNetIpProxySelector.getObjectId();
+      icmpProxy = icmpProxySelector.getObjectId();
+      sshProxy = sshProxySelector.getObjectId();
 
       if (session.isZoningEnabled())
 		{
