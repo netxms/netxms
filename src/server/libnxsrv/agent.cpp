@@ -474,7 +474,6 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
       m_secret[0] = 0;
    }
    m_allowCompression = allowCompression;
-   m_channel = nullptr;
    m_tLastCommandTime = 0;
    m_pMsgWaitQueue = new MsgWaitQueue;
    m_requestId = 0;
@@ -551,7 +550,7 @@ void AgentConnection::debugPrintf(int level, const TCHAR *format, ...)
 shared_ptr<AbstractCommChannel> AgentConnection::createChannel()
 {
    if (s_shutdownMode)
-      return nullptr;
+      return shared_ptr<AbstractCommChannel>();
 
    SOCKET s = m_useProxy ?
             ConnectToHost(m_proxyAddr, m_proxyPort, m_connectionTimeout) :
@@ -564,7 +563,7 @@ shared_ptr<AbstractCommChannel> AgentConnection::createChannel()
       debugPrintf(5, _T("Cannot establish connection with agent at %s:%d"),
                m_useProxy ? m_proxyAddr.toString(buffer) : m_addr.toString(buffer),
                (int)(m_useProxy ? m_proxyPort : m_port));
-      return nullptr;
+      return shared_ptr<AbstractCommChannel>();
    }
 
    // Select socket poller
@@ -575,7 +574,7 @@ shared_ptr<AbstractCommChannel> AgentConnection::createChannel()
       shutdown(s, SHUT_RDWR);
       closesocket(s);
       s_pollerListLock.unlock();
-      return nullptr;
+      return shared_ptr<AbstractCommChannel>();
    }
    for(int i = 0; i < s_pollers.size(); i++)
    {
