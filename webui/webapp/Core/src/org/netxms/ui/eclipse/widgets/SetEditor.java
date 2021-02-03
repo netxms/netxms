@@ -37,7 +37,7 @@ import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.ui.eclipse.console.dialogs.SetEntryEditDialog;
+import org.netxms.ui.eclipse.console.dialogs.KeyValuePairEditDialog;
 import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.helpers.AttributeLabelProvider;
@@ -167,7 +167,7 @@ public class SetEditor extends Composite
     */
    private void addPStorageSetAction()
    {
-      SetEntryEditDialog dlg = new SetEntryEditDialog(getShell(), null, null, true, true);
+      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, true, true);
       if (dlg.open() == Window.OK)
       {
          pStorageSet.put(dlg.getAtributeName(), dlg.getAttributeValue());
@@ -186,7 +186,7 @@ public class SetEditor extends Composite
          return;
       
       Entry<String, String> attr = (Entry<String, String>)selection.getFirstElement();
-      SetEntryEditDialog dlg = new SetEntryEditDialog(getShell(), attr.getKey(), attr.getValue(), true, false);
+      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr.getKey(), attr.getValue(), true, false);
       if (dlg.open() == Window.OK)
       {
          pStorageSet.put(dlg.getAtributeName(), dlg.getAttributeValue());
