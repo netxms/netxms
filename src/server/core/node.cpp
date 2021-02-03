@@ -4038,12 +4038,11 @@ bool Node::confPollAgent(UINT32 rqId)
    bool hasChanges = false;
 
    sendPollerMsg(rqId, _T("   Checking NetXMS agent...\r\n"));
-   AgentTunnel *tunnel = GetTunnelForNode(m_id);
    shared_ptr<AgentConnectionEx> pAgentConn;
+   shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(m_id);
    if (tunnel != nullptr)
    {
       pAgentConn = AgentConnectionEx::create(m_id, tunnel, m_agentSecret, isAgentCompressionAllowed());
-      tunnel->decRefCount();
    }
    else
    {
@@ -5582,7 +5581,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    }
 
    // Check if tunnel is available
-   AgentTunnel *tunnel = GetTunnelForNode(m_id);
+   shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(m_id);
    if ((tunnel == nullptr) && ((!m_ipAddress.isValidUnicast() && !((m_capabilities & NC_IS_LOCAL_MGMT) && m_ipAddress.isLoopback())) || (m_flags & NF_AGENT_OVER_TUNNEL_ONLY)))
    {
       nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%d]): %s and there are no active tunnels"), m_name, m_id,
@@ -5607,8 +5606,6 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
          if (newConnection != nullptr)
             *newConnection = false;
          setLastAgentCommTime();
-         if (tunnel != nullptr)
-            tunnel->decRefCount();
          return true;
       }
 
@@ -5628,7 +5625,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    bool success = m_agentConnection->connect(g_pServerKey, error, socketError, g_serverId);
    if (success)
    {
-      UINT32 rcc = m_agentConnection->setServerId(g_serverId);
+      uint32_t rcc = m_agentConnection->setServerId(g_serverId);
       if (rcc == ERR_SUCCESS)
       {
          syncDataCollectionWithAgent(m_agentConnection.get());
@@ -5651,8 +5648,6 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       deleteAgentConnection();
       m_lastAgentConnectAttempt = time(nullptr);
    }
-   if (tunnel != nullptr)
-      tunnel->decRefCount();
    return success;
 }
 
@@ -7783,13 +7778,12 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
        m_isDeleteInitiated)
       return shared_ptr<AgentConnectionEx>();
 
-   AgentTunnel *tunnel = GetTunnelForNode(m_id);
    shared_ptr<AgentConnectionEx> conn;
+   shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(m_id);
    if (tunnel != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%d]): using agent tunnel"), m_name, (int)m_id);
       conn = AgentConnectionEx::create(m_id, tunnel, m_agentSecret, isAgentCompressionAllowed());
-      tunnel->decRefCount();
    }
    else
    {
@@ -8360,11 +8354,10 @@ bool Node::setAgentProxy(AgentConnectionEx *conn)
       return false;
    }
 
-   AgentTunnel *tunnel = GetTunnelForNode(proxyNode);
+   shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(proxyNode);
    if (tunnel != nullptr)
    {
       conn->setProxy(tunnel, node->m_agentSecret);
-      tunnel->decRefCount();
    }
    else
    {

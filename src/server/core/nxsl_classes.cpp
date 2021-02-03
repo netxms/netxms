@@ -2699,19 +2699,11 @@ NXSL_TunnelClass::NXSL_TunnelClass() : NXSL_Class()
 }
 
 /**
- * NXSL object creation handler
- */
-void NXSL_TunnelClass::onObjectCreate(NXSL_Object *object)
-{
-   static_cast<AgentTunnel*>(object->getData())->incRefCount();
-}
-
-/**
  * NXSL object destructor
  */
 void NXSL_TunnelClass::onObjectDelete(NXSL_Object *object)
 {
-   static_cast<AgentTunnel*>(object->getData())->decRefCount();
+   delete static_cast<shared_ptr<AgentTunnel>*>(object->getData());
 }
 
 /**
@@ -2724,7 +2716,7 @@ NXSL_Value *NXSL_TunnelClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   AgentTunnel *tunnel = static_cast<AgentTunnel*>(object->getData());
+   AgentTunnel *tunnel = static_cast<shared_ptr<AgentTunnel>*>(object->getData())->get();
 
    if (compareAttributeName(attr, "address"))
    {
