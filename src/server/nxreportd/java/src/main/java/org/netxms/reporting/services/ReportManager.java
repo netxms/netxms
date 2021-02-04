@@ -460,8 +460,14 @@ public class ReportManager
          return;
       }
 
-      final File reportDirectory = getReportDirectory(jobConfiguration.reportId);
+      if ((idataView == null) || idataView.isEmpty())
+      {
+         logger.error("Error executing report " + jobConfiguration.reportId + " " + report.getName() + ": DCI data view not provided");
+         saveResult(new ReportResult(jobId, jobConfiguration.reportId, new Date(), userId, false));
+         return;
+      }
 
+      final File reportDirectory = getReportDirectory(jobConfiguration.reportId);
       final ResourceBundle translations = loadReportTranslation(reportDirectory, locale);
 
       // fill report parameters
@@ -471,8 +477,7 @@ public class ReportManager
       String subrepoDirectory = reportDirectory.getPath() + File.separatorChar;
       localParameters.put(SUBREPORT_DIR_KEY, subrepoDirectory);
       localParameters.put(USER_ID_KEY, userId);
-      if (idataView != null)
-         localParameters.put(IDATA_VIEW_KEY, idataView);
+      localParameters.put(IDATA_VIEW_KEY, idataView);
 
       URLClassLoader reportClassLoader = new URLClassLoader(new URL[] {}, getClass().getClassLoader());
       localParameters.put(JRParameter.REPORT_CLASS_LOADER, reportClassLoader);
