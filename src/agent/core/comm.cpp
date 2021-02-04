@@ -100,7 +100,7 @@ bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *p
 bool RegisterSession(const shared_ptr<CommSession>& session)
 {
    MutexLock(g_sessionLock);
-   if (g_sessions.size() < g_maxCommSessions)
+   if (g_sessions.size() < static_cast<int>(g_maxCommSessions))
    {
       g_sessions.add(session);
       MutexUnlock(g_sessionLock);

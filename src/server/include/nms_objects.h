@@ -98,6 +98,7 @@ class GenericAgentPolicy;
 
 #ifdef _WIN32
 template class NXCORE_EXPORTABLE ObjectArray<GeoLocation>;
+template class NXCORE_EXPORTABLE shared_ptr<AgentTunnel>;
 #endif
 
 /**
