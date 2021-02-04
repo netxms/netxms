@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.usermanager;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.model.IWorkbenchAdapter;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.users.AbstractAccessListElement;
 import org.netxms.client.users.AbstractUserObject;
@@ -78,7 +79,16 @@ public class UserAdapterFactory implements IAdapterFactory
 					@Override
 					public String getLabel(Object o)
 					{
-						return ((User)o).getName();
+					   StringBuilder sb = new StringBuilder();
+					   if (((User)o).getFullName().isEmpty())
+					      sb.append(((User)o).getName());
+					   else
+                     sb.append(String.format("%s <%s>", ((User)o).getName(), ((User)o).getFullName()));
+					   
+					   if (!((User)o).getDescription().isEmpty())
+                     sb.append(String.format(" (%s)", ((User)o).getDescription()));
+					   
+					   return sb.toString();
 					}
 
 					@Override
@@ -111,8 +121,14 @@ public class UserAdapterFactory implements IAdapterFactory
 
 					@Override
 					public String getLabel(Object o)
-					{
-						return ((UserGroup)o).getName();
+					{    
+                  StringBuilder sb = new StringBuilder();
+                  sb.append(((UserGroup)o).getName());
+                  
+                  if (!((UserGroup)o).getDescription().isEmpty())
+                     sb.append(String.format(" (%s)", ((UserGroup)o).getDescription()));
+                  
+                  return sb.toString();
 					}
 
 					@Override
@@ -126,6 +142,8 @@ public class UserAdapterFactory implements IAdapterFactory
 			// AccessListElement
 			if (adaptableObject instanceof AbstractAccessListElement)
 			{
+			   WorkbenchLabelProvider wbLabelProvider = new WorkbenchLabelProvider();
+			   
 				return new IWorkbenchAdapter() {
 					@Override
 					public Object[] getChildren(Object o)
@@ -146,7 +164,8 @@ public class UserAdapterFactory implements IAdapterFactory
 						long userId = ((AbstractAccessListElement)object).getUserId();
 						NXCSession session = ConsoleSharedData.getSession();
 						AbstractUserObject dbo = session.findUserDBObjectById(userId, null);
-						return (dbo != null) ? dbo.getName() : ("{" + Long.toString(userId) + "}"); //$NON-NLS-1$ //$NON-NLS-2$
+						
+						return (dbo != null) ? wbLabelProvider.getText(dbo) : ("{" + Long.toString(userId) + "}"); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 
 					@Override
