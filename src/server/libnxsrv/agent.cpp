@@ -56,8 +56,8 @@ static int m_iDefaultEncryptionPolicy = ENCRYPTION_DISABLED;
 #endif
 static ObjectArray<BackgroundSocketPollerHandle> s_pollers(64, 64, Ownership::True);
 static Mutex s_pollerListLock(true);
-static uint32_t s_maxConnectionsPerPoller = 256;
 static bool s_shutdownMode = false;
+static uint32_t s_maxConnectionsPerPoller = std::min(256, SOCKET_POLLER_MAX_SOCKETS - 1);
 
 /**
  * Set default encryption policy for agent communication

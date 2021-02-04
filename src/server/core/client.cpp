@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ static RWLOCK s_sessionListLock = RWLockCreate();
 static session_id_t *s_freeList = nullptr;
 static size_t s_freePos = 0;
 static ObjectArray<BackgroundSocketPollerHandle> s_pollers(8, 8, Ownership::True);
-static uint32_t s_maxClientSessionsPerPoller = 256;
+static uint32_t s_maxClientSessionsPerPoller = std::min(256, SOCKET_POLLER_MAX_SOCKETS - 1);
 
 /**
  * Register new session in list
@@ -154,8 +154,8 @@ static void ClientSessionManager()
 void InitClientListeners()
 {
    s_maxClientSessionsPerPoller = ConfigReadULong(_T("ClientConnector.MaxSessionsPerPoller"), s_maxClientSessionsPerPoller);
-   if (s_maxClientSessionsPerPoller > FD_SETSIZE / 2)
-      s_maxClientSessionsPerPoller = FD_SETSIZE / 2;
+   if (s_maxClientSessionsPerPoller > SOCKET_POLLER_MAX_SOCKETS - 1)
+      s_maxClientSessionsPerPoller = SOCKET_POLLER_MAX_SOCKETS - 1;
 
    s_freeList = MemAllocArrayNoInit<session_id_t>(g_maxClientSessions);
    for(int i = 0; i < g_maxClientSessions; i++)
