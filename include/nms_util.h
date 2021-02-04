@@ -3548,6 +3548,10 @@ public:
    }
 };
 
+#ifdef _WIN32
+template class LIBNETXMS_EXPORTABLE shared_ptr<AbstractCommChannel>;
+#endif
+
 /**
  * Socket communication channel
  */

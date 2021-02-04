@@ -152,7 +152,6 @@ protected:
    void setup(const NXCPMessage *request);
    uint32_t initiateCertificateRequest(const uuid& nodeGuid, uint32_t userId);
 
-
 public:
    static shared_ptr<AgentTunnel> create(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId,
             int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime,
