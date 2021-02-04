@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,12 +31,15 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -45,6 +48,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.Messages;
+import org.netxms.ui.eclipse.usermanager.dialogs.helpers.UserListFilter;
 import org.netxms.ui.eclipse.usermanager.dialogs.helpers.UserListLabelProvider;
 
 /**
@@ -53,11 +57,13 @@ import org.netxms.ui.eclipse.usermanager.dialogs.helpers.UserListLabelProvider;
  */
 public class SelectUserDialog extends Dialog
 {
+	private Text filterText;
 	private TableViewer userList;
 	private NXCSession session;
 	private Class<? extends AbstractUserObject> classFilter;
 	private boolean multiSelection = true;
 	private AbstractUserObject[] selection;
+	private UserListFilter filter;
 	
 	/**
 	 * @param parentShell
@@ -99,18 +105,33 @@ public class SelectUserDialog extends Dialog
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);  
+      
+      filterText = new Text(dialogArea, SWT.BORDER);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      filterText.setLayoutData(gd);
+      filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            filter.setFilter(filterText.getText());
+            userList.refresh(false);
+         }
+      });
 		
 		new Label(dialogArea, SWT.NONE).setText(Messages.get().SelectUserDialog_AvailableUsers);
 		
       userList = new TableViewer(dialogArea, SWT.BORDER | (multiSelection ? SWT.MULTI : 0) | SWT.FULL_SELECTION);
       userList.setContentProvider(new ArrayContentProvider());
-      userList.setLabelProvider(new UserListLabelProvider());
+      final UserListLabelProvider labelProvider = new UserListLabelProvider();
+      userList.setLabelProvider(labelProvider);
       userList.setComparator(new ViewerComparator() {
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
-            String s1 = (e1 instanceof AbstractUserObject) ? ((AbstractUserObject)e1).getName() : e1.toString();
-            String s2 = (e2 instanceof AbstractUserObject) ? ((AbstractUserObject)e2).getName() : e2.toString();
+            String s1 = labelProvider.getText(e1);
+            String s2 = labelProvider.getText(e2);
             return s1.compareToIgnoreCase(s2);
          }
       });
@@ -131,7 +152,10 @@ public class SelectUserDialog extends Dialog
       });
       userList.setInput(session.getUserDatabaseObjects());
       
-      GridData gd = new GridData();
+      filter = new UserListFilter();
+      userList.addFilter(filter);
+      
+      gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
