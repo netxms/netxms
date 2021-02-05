@@ -28,9 +28,10 @@
 #define SNMP_BUFFER_SIZE		65536
 
 /**
- * SNMP proxy socket poller
+ * SNMP proxy socket pollers
  */
-BackgroundSocketPoller *g_snmpProxySocketPoller = nullptr;
+static ObjectArray<BackgroundSocketPollerHandle> s_snmpProxySocketPollers(0, 8, Ownership::True);
+static Mutex s_snmpProxySocketPollersLock(true);
 
 /**
  * SNMP proxy stats
@@ -84,6 +85,7 @@ static bool ReadPDU(SOCKET hSocket, BYTE *pdu, uint32_t *size)
  */
 struct ProxyContext
 {
+   BackgroundSocketPollerHandle *pollerHandle;
    InetAddress addr;
    shared_ptr<CommSession> session;
    NXCPMessage *request;
@@ -95,6 +97,7 @@ struct ProxyContext
 
    ProxyContext(const InetAddress& _addr, const shared_ptr<CommSession>& _session, NXCPMessage *_request, uint32_t _timeout) : addr(_addr), session(_session)
    {
+      pollerHandle = nullptr;
       session = _session;
       request = _request;
       pduIn = request->getBinaryFieldPtr(VID_PDU, &sizeIn);
@@ -120,11 +123,13 @@ static void SocketPollerCallback(BackgroundSocketPollResult result, SOCKET hSock
          if (send(hSocket, (char *)context->pduIn, (int)context->sizeIn, 0) == (int)context->sizeIn)
          {
             InterlockedIncrement64(&s_snmpRequests);
-            g_snmpProxySocketPoller->poll(hSocket, context->timeout, SocketPollerCallback, context);
+            context->pollerHandle->poller.poll(hSocket, context->timeout, SocketPollerCallback, context);
             return;
          }
       }
    }
+
+   InterlockedDecrement(&context->pollerHandle->usageCount);
 
    NXCPMessage response(CMD_REQUEST_COMPLETED, context->request->getId(), context->session->getProtocolVersion());
    if (result == BackgroundSocketPollResult::SUCCESS)
@@ -164,6 +169,34 @@ static void SocketPollerCallback(BackgroundSocketPollResult result, SOCKET hSock
 }
 
 /**
+ * Select poller and start background poll
+ */
+static inline void StartBackgroundPoll(SOCKET hSocket, ProxyContext *context)
+{
+   s_snmpProxySocketPollersLock.lock();
+   BackgroundSocketPollerHandle *sp = nullptr;
+   for(int i = 0; i < s_snmpProxySocketPollers.size(); i++)
+   {
+      BackgroundSocketPollerHandle *p = s_snmpProxySocketPollers.get(i);
+      if (InterlockedIncrement(&p->usageCount) < SOCKET_POLLER_MAX_SOCKETS)
+      {
+         sp = p;
+         break;
+      }
+      InterlockedDecrement(&p->usageCount);
+   }
+   if (sp == nullptr)
+   {
+      sp = new BackgroundSocketPollerHandle();
+      sp->usageCount = 1;
+      s_snmpProxySocketPollers.add(sp);
+   }
+   s_snmpProxySocketPollersLock.unlock();
+   context->pollerHandle = sp;
+   sp->poller.poll(hSocket, context->timeout, SocketPollerCallback, context);
+}
+
+/**
  * Send SNMP request to target, receive response, and send it to server
  */
 void CommSession::proxySnmpRequest(NXCPMessage *request)
@@ -193,7 +226,7 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
                if (send(hSocket, (char *)pduIn, (int)sizeIn, 0) == (int)sizeIn)
                {
                   InterlockedIncrement64(&s_snmpRequests);
-                  g_snmpProxySocketPoller->poll(hSocket, context->timeout, SocketPollerCallback, context);
+                  StartBackgroundPoll(hSocket, context);
                   request = nullptr;   // Prevent destruction
                   hSocket = INVALID_SOCKET;  // Prevent close
                }

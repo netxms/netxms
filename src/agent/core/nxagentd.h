@@ -883,7 +883,6 @@ extern ThreadPool *g_commThreadPool;
 extern ThreadPool *g_executorThreadPool;
 extern ThreadPool *g_webSvcThreadPool;
 extern ObjectQueue<NXCPMessage> g_notificationProcessorQueue;
-extern BackgroundSocketPoller *g_snmpProxySocketPoller;
 
 #ifdef _WIN32
 extern TCHAR g_windowsEventSourceName[];
