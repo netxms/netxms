@@ -1082,10 +1082,6 @@ BOOL Initialize()
       InitSessionList();
 	   g_commThreadPool = ThreadPoolCreate(_T("COMM"), 4, MAX(MIN(g_maxCommSessions * 2, 8), 256));
 	   g_webSvcThreadPool = ThreadPoolCreate(_T("WEBSVC"), 4, s_maxWebSvcPoolSize);
-	   if (g_dwFlags & AF_ENABLE_SNMP_PROXY)
-	   {
-	      g_snmpProxySocketPoller = new BackgroundSocketPoller();
-	   }
 
 		// Load local CRLs
 		auto it = s_crlList.iterator();
@@ -1492,10 +1488,6 @@ void Shutdown()
 
    if (!(g_dwFlags & AF_SUBAGENT_LOADER))
    {
-      if (g_dwFlags & AF_ENABLE_SNMP_PROXY)
-      {
-         delete g_snmpProxySocketPoller;
-      }
       ThreadPoolDestroy(g_commThreadPool);
       ThreadPoolDestroy(g_webSvcThreadPool);
    }
