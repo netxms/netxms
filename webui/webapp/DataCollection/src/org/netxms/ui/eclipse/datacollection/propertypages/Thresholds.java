@@ -63,6 +63,7 @@ public class Thresholds extends DCIPropertyPageDialog
 {
 	public static final int COLUMN_OPERATION = 0;
 	public static final int COLUMN_EVENT = 1;
+   public static final int COLUMN_DEACTIVATION_EVENT = 2;
 
 	private static final String COLUMN_SETTINGS_PREFIX = "Thresholds.ThresholdList"; //$NON-NLS-1$
 
@@ -434,6 +435,10 @@ public class Thresholds extends DCIPropertyPageDialog
 		column = new TableColumn(table, SWT.LEFT);
 		column.setText(Messages.get().Thresholds_Event);
 		column.setWidth(150);
+      
+      column = new TableColumn(table, SWT.LEFT);
+      column.setText("Deactivation Event");
+      column.setWidth(150);
 
 		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
 
