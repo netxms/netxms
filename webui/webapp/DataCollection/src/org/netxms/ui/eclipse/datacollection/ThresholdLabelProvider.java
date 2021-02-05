@@ -52,6 +52,9 @@ public class ThresholdLabelProvider extends LabelProvider implements ITableLabel
 			case Thresholds.COLUMN_EVENT:
 				final EventTemplate event = (EventTemplate)session.findEventTemplateByCode(((Threshold)element).getFireEvent());
 				return StatusDisplayInfo.getStatusImage((event != null) ? event.getSeverity() : Severity.UNKNOWN);
+         case Thresholds.COLUMN_DEACTIVATION_EVENT:
+            final EventTemplate rearmEvent = (EventTemplate)session.findEventTemplateByCode(((Threshold)element).getRearmEvent());
+            return StatusDisplayInfo.getStatusImage((rearmEvent != null) ? rearmEvent.getSeverity() : Severity.UNKNOWN);
 		}
 		return null;
 	}
@@ -69,6 +72,9 @@ public class ThresholdLabelProvider extends LabelProvider implements ITableLabel
 			case Thresholds.COLUMN_EVENT:
 				final EventTemplate event = (EventTemplate)session.findEventTemplateByCode(((Threshold)element).getFireEvent());
 				return eventLabelProvider.getText(event);
+         case Thresholds.COLUMN_DEACTIVATION_EVENT:
+            final EventTemplate rearmEvent = (EventTemplate)session.findEventTemplateByCode(((Threshold)element).getRearmEvent());
+            return eventLabelProvider.getText(rearmEvent);
 		}
 		return null;
 	}
