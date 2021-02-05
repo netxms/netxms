@@ -1,12 +1,9 @@
-javalibdir = $(pkglibdir)
-javalib_DATA = ubntlw.jar
+install-exec-hook:
+	mvn -Dmaven.test.skip=true -Drevision=$(PACKAGE_VERSION) package
+	mkdir -p $(DESTDIR)$(pkglibdir)/java
+	cp target/ubntlw.jar $(DESTDIR)$(pkglibdir)/java/
 
-ubntlw.jar: pom.xml
-	mvn clean
-	mvn package
-	mv target/ubntlw.jar .
+EXTRA_DIST = pom.xml src LICENSE README
 
 clean-local:
-	rm -rf target ubntlw.jar
-
-EXTRA_DIST = pom.xml ubntlw.jar LICENSE README
+	rm -rf target

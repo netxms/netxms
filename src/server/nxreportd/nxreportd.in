@@ -4,7 +4,8 @@
 # Copyright (c) 2021 Raden Solutions
 #
 
-SYSTEM_JARS="commons-codec-1.11.jar netxms-base.jar netxms-client.jar simple-xml-2.6.4.jar slf4j-api-1.7.30.jar"
+MAIN_JAR="nxreportd-~PACKAGE_VERSION~.jar"
+SYSTEM_JARS="~SYSTEM_JARS~"
 
 while [ $# -gt 0 ]; do
 	arg="$1"
@@ -58,9 +59,9 @@ if [ "x$WORKSPACE" = "x" ]; then
 	fi
 fi
 
-CLASSPATH="~SYSCONFDIR~/nxreportd:~PKGLIBDIR~/nxreportd.jar"
+CLASSPATH="~SYSCONFDIR~/nxreportd:~PKGLIBDIR~/java/$MAIN_JAR"
 for jar in $SYSTEM_JARS; do
-	CLASSPATH="$CLASSPATH:~PKGLIBDIR~/$jar"
+	CLASSPATH="$CLASSPATH:~PKGLIBDIR~/java/$jar"
 done
 
 if [ "x$DAEMON" = "xyes" ]; then

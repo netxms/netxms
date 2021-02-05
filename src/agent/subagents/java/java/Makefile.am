@@ -1,12 +1,9 @@
-javalibdir = $(pkglibdir)
-javalib_DATA = netxms-agent.jar
+install-exec-hook:
+	mvn -Dmaven.test.skip=true -Drevision=$(PACKAGE_VERSION) install
+	mkdir -p $(DESTDIR)$(pkglibdir)/java
+	cp target/netxms-agent-$(PACKAGE_VERSION).jar $(DESTDIR)$(pkglibdir)/java/
 
-netxms-agent.jar: pom.xml
-	mvn clean
-	mvn install
-	mv target/netxms-agent.jar .
+EXTRA_DIST = pom.xml src
 
 clean-local:
-	rm -rf netxms-agent.jar
-
-EXTRA_DIST = pom.xml netxms-agent.jar
+	rm -rf target

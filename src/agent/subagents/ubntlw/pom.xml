@@ -4,9 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.rfelements</groupId>
     <artifactId>ubntlw</artifactId>
-    <version>4.0-SNAPSHOT</version>
+    <version>${revision}</version>
 
     <properties>
+        <revision>4.0-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 

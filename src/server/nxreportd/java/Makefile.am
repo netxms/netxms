@@ -1,12 +1,10 @@
-javalibdir = $(pkglibdir)
-javalib_DATA = nxreportd.jar
+EXTRA_DIST = pom.xml src
 
-nxreportd.jar: pom.xml
-	mvn clean
-	mvn package -Plauncher
-	mv target/nxreportd.jar .
-
-EXTRA_DIST = pom.xml nxreportd.jar
+install-exec-hook:
+	mvn -Drevision=$(PACKAGE_VERSION) install
+	mkdir -p $(DESTDIR)$(pkglibdir)/java
+	cp target/nxreportd-$(PACKAGE_VERSION).jar $(DESTDIR)$(pkglibdir)/java/
+	cp target/lib/*.jar $(DESTDIR)$(pkglibdir)/java/
 
 clean-local:
-	rm -rf nxreportd.jar target
+	rm -rf target

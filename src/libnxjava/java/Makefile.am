@@ -1,12 +1,9 @@
-javalibdir = $(pkglibdir)
-javalib_DATA = netxms-java-bridge.jar
+install-exec-hook:
+	mvn -Dmaven.test.skip=true -Drevision=$(PACKAGE_VERSION) install
+	mkdir -p $(DESTDIR)$(pkglibdir)/java
+	cp target/netxms-java-bridge-$(PACKAGE_VERSION).jar $(DESTDIR)$(pkglibdir)/java/
 
-netxms-java-bridge.jar: pom.xml
-	mvn clean
-	mvn install
-	mv target/netxms-java-bridge.jar .
+EXTRA_DIST = pom.xml src
 
 clean-local:
-	rm -rf netxms-java-bridge.jar
-
-EXTRA_DIST = pom.xml netxms-java-bridge.jar
+	rm -rf target

@@ -4,7 +4,7 @@
 
    <groupId>org.netxms</groupId>
    <artifactId>nxreportd</artifactId>
-   <version>4.0-SNAPSHOT</version>
+   <version>${revision}</version>
    <packaging>jar</packaging>
   
    <name>nxreportd</name>
@@ -12,6 +12,7 @@
    <url>http://netxms.org</url>
 
    <properties>
+      <revision>4.0-SNAPSHOT</revision>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <build.finalName>${project.artifactId}-${project.version}</build.finalName>
       <lib.scope>compile</lib.scope>
@@ -146,29 +147,16 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.3.0</version>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
                 <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
                     <archive>
                         <manifest>
                             <mainClass>org.netxms.reporting.Startup</mainClass>
+                            <addClasspath>true</addClasspath>
                         </manifest>
                     </archive>
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <attach>false</attach>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
