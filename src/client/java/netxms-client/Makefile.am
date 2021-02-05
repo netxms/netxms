@@ -1,13 +1,9 @@
-JAR = netxms-client.jar
-javalibdir = $(pkglibdir)
-javalib_DATA = $(JAR)
+install-exec-hook:
+	mvn -Dmaven.test.skip=true -Drevision=$(PACKAGE_VERSION) install
+	mkdir -p $(DESTDIR)$(pkglibdir)/java
+	cp target/netxms-client-$(PACKAGE_VERSION).jar $(DESTDIR)$(pkglibdir)/java/
 
-$(JAR): pom.xml
-	mvn clean
-	mvn -Dmaven.test.skip=true install -Ppkg-build
-	mv target/$(JAR) .
-
-EXTRA_DIST = $(JAR) pom.xml
+EXTRA_DIST = pom.xml src
 
 clean-local:
-	rm -f $(JAR)
+	rm -rf target

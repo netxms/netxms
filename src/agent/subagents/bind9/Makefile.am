@@ -1,12 +1,9 @@
-javalibdir = $(pkglibdir)
-javalib_DATA = bind9.jar
+install-exec-hook:
+	mvn -Dmaven.test.skip=true -Drevision=$(PACKAGE_VERSION) package
+	mkdir -p $(DESTDIR)$(pkglibdir)/java
+	cp target/bind9.jar $(DESTDIR)$(pkglibdir)/java/
 
-bind9.jar: pom.xml
-	mvn clean
-	mvn package
-	mv target/bind9.jar .
+EXTRA_DIST = pom.xml src
 
 clean-local:
-	rm -rf target $(javalib_DATA)
-
-EXTRA_DIST = pom.xml bind9.jar
+	rm -rf target
