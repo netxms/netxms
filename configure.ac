@@ -4691,7 +4691,6 @@ AC_CONFIG_FILES([
 	src/install/windows/Makefile
 	src/jansson/Makefile
 	src/java-common/Makefile
-	src/java-common/lib/Makefile
 	src/java-common/netxms-base/Makefile
 	src/libexpat/Makefile
 	src/libexpat/libexpat/Makefile

@@ -1,6 +1,7 @@
 /**
  * Java-Bridge NetXMS subagent
  * Copyright (C) 2013 TEMPEST a.s.
+ * Copyright (C) 2014-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -221,22 +222,22 @@ public class SubAgent
          for(int i = 0; i < _actions.length; i++)
             actions.put(createContributionItemId(p, _actions[i]), _actions[i]);
       
-         // register paramaters
+         // register parameters
          Parameter[] _parameters = p.getParameters();
          for(int i = 0; i < _parameters.length; i++)
             parameters.put(createContributionItemId(p, _parameters[i]), _parameters[i]);
       
-         // register list paramaters
+         // register list parameters
          ListParameter[] _listParameters = p.getListParameters();
          for(int i = 0; i < _listParameters.length; i++)
             lists.put(createContributionItemId(p, _listParameters[i]), _listParameters[i]);
       
-         // register push paramaters
+         // register push parameters
          PushParameter[] _pushParameters = p.getPushParameters();
          for(int i = 0; i < _pushParameters.length; i++)
             pushParameters.put(createContributionItemId(p, _pushParameters[i]), _pushParameters[i]);
       
-         // register table paramaters
+         // register table parameters
          TableParameter[] _tableParameters = p.getTableParameters();
          for(int i = 0; i < _tableParameters.length; i++)
             tables.put(createContributionItemId(p, _tableParameters[i]), _tableParameters[i]);
@@ -295,16 +296,16 @@ public class SubAgent
             String libDir = Platform.getNetXMSDirectory(DirectoryType.LIB);
             if ((libDir != null) && !libDir.isEmpty())
             {
-               file = new File(libDir + File.separatorChar + jarFile);
+               file = new File(libDir + File.separatorChar + "java" + File.separatorChar + jarFile);
             }
          }
-         
+
          if (!file.isFile())
          {
             Platform.writeLog(LogLevel.WARNING, "File \"" + file.getAbsolutePath() + "\" does not exist or is not a regular file");
             return null;
          }
-         
+
          Platform.writeDebugLog(2, "Loading plugin file \"" + file.getAbsolutePath() + "\"");
          classLoader = new URLClassLoader(new URL[] { file.toURI().toURL() }, Thread.currentThread().getContextClassLoader() );
          URL url = classLoader.findResource(MANIFEST_PATH);
@@ -333,7 +334,7 @@ public class SubAgent
          Platform.writeDebugLog(6, "JAVA:   ", e);
          return null;
       }
-         
+
       List<Plugin> pluginList = new ArrayList<Plugin>();
       String[] classNames = classList.split(";");
       for(String cn : classNames)
