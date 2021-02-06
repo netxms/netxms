@@ -111,8 +111,21 @@ static int StartApp(int argc, char *argv[])
 #define cp s_optClassPath
 #endif
    JNIEnv *env;
-   static const TCHAR *syslibs[] = { _T("commons-codec-1.11.jar"), _T("netxms-base.jar"), _T("netxms-client.jar"), _T("simple-xml-2.6.4.jar"), _T("slf4j-api-1.7.30.jar"), nullptr };
-   JavaBridgeError err = CreateJavaVM(jre, _T("nxshell.jar"), syslibs, cp, &vmOptions, &env);
+   static const TCHAR *syslibs[] =
+   {
+      _T("netxms-base-") NETXMS_PACKAGE_VERSION _T(".jar"),
+      _T("netxms-client-") NETXMS_PACKAGE_VERSION _T(".jar"),
+      _T("commons-codec-1.11.jar"),
+      _T("simple-xml-2.6.4.jar"),
+      _T("slf4j-api-1.7.30.jar"),
+      _T("slf4j-simple-1.7.30.jar"),
+      _T("jython-standalone-2.7.2.jar"),
+      _T("xpp3-1.1.3.3.jar"),
+      _T("stax-api-1.0.1.jar"),
+      _T("stax-1.2.0.jar"),
+      nullptr
+   };
+   JavaBridgeError err = CreateJavaVM(jre, _T("nxshell-") NETXMS_PACKAGE_VERSION _T(".jar"), syslibs, cp, &vmOptions, &env);
    if (err == NXJAVA_SUCCESS)
    {
       nxlog_debug(5, _T("JVM created"));

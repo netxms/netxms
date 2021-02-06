@@ -57,7 +57,7 @@
         <dependency>
             <groupId>org.python</groupId>
             <artifactId>jython-standalone</artifactId>
-            <version>2.7.1</version>
+            <version>2.7.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -113,29 +113,17 @@
                 </executions>
             </plugin>
             <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.3.0</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
                 <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
                     <archive>
                         <manifest>
                             <mainClass>org.netxms.Shell</mainClass>
+                            <addClasspath>true</addClasspath>
                         </manifest>
                     </archive>
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <attach>false</attach>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -162,6 +150,8 @@
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>false</overWriteSnapshots>
                             <overWriteIfNewer>true</overWriteIfNewer>
+                            <excludeScope>test</excludeScope>
+                            <includeScope>runtime</includeScope>
                         </configuration>
                     </execution>
                 </executions>

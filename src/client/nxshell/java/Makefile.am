@@ -1,12 +1,10 @@
-javalibdir = $(pkglibdir)
-javalib_DATA = nxshell.jar
+EXTRA_DIST = pom.xml src
 
-nxshell.jar: pom.xml
-	mvn clean
-	mvn package -Plauncher
-	mv target/nxshell.jar .
-
-EXTRA_DIST = pom.xml nxshell.jar
+install-exec-hook:
+	mvn -Drevision=$(PACKAGE_VERSION) -Dmaven.test.skip=true package
+	mkdir -p $(DESTDIR)$(pkglibdir)/java
+	cp target/nxshell-$(PACKAGE_VERSION).jar $(DESTDIR)$(pkglibdir)/java/
+	cp target/lib/*.jar $(DESTDIR)$(pkglibdir)/java/
 
 clean-local:
-	rm -f nxshell.jar
+	rm -rf target
