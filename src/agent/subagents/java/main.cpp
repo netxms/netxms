@@ -1,7 +1,7 @@
 /* 
  ** Java-Bridge NetXMS subagent
  ** Copyright (c) 2013 TEMPEST a.s.
- ** Copyright (c) 2015-2018 Raden Solutions SIA
+ ** Copyright (c) 2015-2021 Raden Solutions SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -283,7 +283,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
    nxlog_debug(1, _T("JAVA: using JVM %s"), s_jvmPath);
 
    JNIEnv *env;
-   JavaBridgeError err = CreateJavaVM(s_jvmPath, _T("netxms-agent.jar"), NULL, s_userClasspath, NULL, &env);
+   JavaBridgeError err = CreateJavaVM(s_jvmPath, _T("netxms-agent-") NETXMS_VERSION_STRING _T(".jar"), nullptr, s_userClasspath, nullptr, &env);
    if (err != NXJAVA_SUCCESS)
    {
       AgentWriteLog(NXLOG_ERROR, _T("JAVA: Unable to load JVM: %s"), GetJavaBridgeErrorMessage(err));

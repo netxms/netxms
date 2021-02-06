@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -20,16 +20,17 @@
 **/
 
 #include "libnxjava.h"
+#include <netxms-version.h>
 
 /**
  * JVM module
  */
-static HMODULE s_jvmModule = NULL;
+static HMODULE s_jvmModule = nullptr;
 
 /**
  * JVM
  */
-static JavaVM *s_javaVM = NULL;
+static JavaVM *s_javaVM = nullptr;
 
 /**
  * Prototype for JNI_CreateJavaVM
@@ -58,11 +59,11 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
 
    TCHAR libdir[MAX_PATH];
    GetNetXMSDirectory(nxDirLib, libdir);
+   _tcslcat(libdir, FS_PATH_SEPARATOR _T("java"), MAX_PATH);
 
    StringBuffer classpath = _T("-Djava.class.path=");
    classpath.append(libdir);
-   classpath.append(FS_PATH_SEPARATOR_CHAR);
-   classpath.append(_T("netxms-java-bridge.jar"));
+   classpath.append(FS_PATH_SEPARATOR _T("netxms-java-bridge-") NETXMS_VERSION_STRING _T(".jar"));
    if (jar != nullptr)
    {
       classpath.append(JAVA_CLASSPATH_SEPARATOR);
@@ -100,7 +101,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
    options[0].optionString = strdup(classpath);
 #endif
 
-   if (vmOptions != NULL)
+   if (vmOptions != nullptr)
    {
       for(int i = 0; i < vmOptions->size(); i++)
       {
@@ -112,9 +113,9 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
       }
    }
 
-   vmArgs.version = JNI_VERSION_1_6;
+   vmArgs.version = JNI_VERSION_1_8;
    vmArgs.options = options;
-   vmArgs.nOptions = (vmOptions != NULL) ? vmOptions->size() + 1 : 1;
+   vmArgs.nOptions = (vmOptions != nullptr) ? vmOptions->size() + 1 : 1;
    vmArgs.ignoreUnrecognized = JNI_TRUE;
 
    nxlog_debug(6, _T("JVM options:"));
@@ -124,7 +125,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
    JavaBridgeError result;
 
    T_JNI_CreateJavaVM JNI_CreateJavaVM = (T_JNI_CreateJavaVM)DLGetSymbolAddr(s_jvmModule, "JNI_CreateJavaVM", errorText);
-   if (JNI_CreateJavaVM != NULL)
+   if (JNI_CreateJavaVM != nullptr)
    {
       if (JNI_CreateJavaVM(&s_javaVM, (void **)env, &vmArgs) == JNI_OK)
       {
@@ -155,16 +156,16 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
  */
 void LIBNXJAVA_EXPORTABLE DestroyJavaVM()
 {
-   if (s_javaVM != NULL)
+   if (s_javaVM != nullptr)
    {
       s_javaVM->DestroyJavaVM();
-      s_javaVM = NULL;
+      s_javaVM = nullptr;
    }
 
-   if (s_jvmModule != NULL)
+   if (s_jvmModule != nullptr)
    {
       DLClose(s_jvmModule);
-      s_jvmModule = NULL;
+      s_jvmModule = nullptr;
    }
 }
 
@@ -175,12 +176,12 @@ void LIBNXJAVA_EXPORTABLE DestroyJavaVM()
  */
 JNIEnv LIBNXJAVA_EXPORTABLE *AttachThreadToJavaVM()
 {
-   if (s_javaVM == NULL)
-      return NULL;
+   if (s_javaVM == nullptr)
+      return nullptr;
 
    JNIEnv *env;
-   if (s_javaVM->AttachCurrentThread(reinterpret_cast<void **>(&env), NULL) != JNI_OK)
-      return NULL;
+   if (s_javaVM->AttachCurrentThread(reinterpret_cast<void **>(&env), nullptr) != JNI_OK)
+      return nullptr;
    return env;
 }
 
@@ -189,7 +190,7 @@ JNIEnv LIBNXJAVA_EXPORTABLE *AttachThreadToJavaVM()
  */
 void LIBNXJAVA_EXPORTABLE DetachThreadFromJavaVM()
 {
-   if (s_javaVM != NULL)
+   if (s_javaVM != nullptr)
       s_javaVM->DetachCurrentThread();
 }
 
@@ -209,12 +210,12 @@ void LIBNXJAVA_EXPORTABLE DetachThreadFromJavaVM()
 JavaBridgeError LIBNXJAVA_EXPORTABLE StartJavaApplication(JNIEnv *env, const char *appClass, int argc, char **argv)
 {
    jclass app = env->FindClass(appClass);
-   if (app == NULL)
+   if (app == nullptr)
       return NXJAVA_APP_CLASS_NOT_FOUND;
 
    nxlog_debug(5, _T("Application class found"));
    jmethodID appMain = env->GetStaticMethodID(app, "main", "([Ljava/lang/String;)V");
-   if (appMain == NULL)
+   if (appMain == nullptr)
       return NXJAVA_APP_ENTRY_POINT_NOT_FOUND;
 
    nxlog_debug(5, _T("Shell main method found"));
@@ -223,7 +224,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE StartJavaApplication(JNIEnv *env, const cha
    for(int i = 0; i < argc; i++)
    {
       jstring js = JavaStringFromCStringSysLocale(env, argv[i]);
-      if (js != NULL)
+      if (js != nullptr)
       {
          env->SetObjectArrayElement(jargs, i, js);
          env->DeleteLocalRef(js);
