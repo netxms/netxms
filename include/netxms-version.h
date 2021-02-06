@@ -37,6 +37,11 @@
 #define IS_UNICODE_BUILD_STRING     _T(" (NON-UNICODE)")
 #endif
 
+// Package version as defined by configure - may not match version string in development builds.
+#ifndef NETXMS_PACKAGE_VERSION
+#define NETXMS_PACKAGE_VERSION      NETXMS_VERSION_STRING
+#endif
+
 /**
  * Current client-server protocol versions
  */

@@ -63,7 +63,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
 
    StringBuffer classpath = _T("-Djava.class.path=");
    classpath.append(libdir);
-   classpath.append(FS_PATH_SEPARATOR _T("netxms-java-bridge-") NETXMS_VERSION_STRING _T(".jar"));
+   classpath.append(FS_PATH_SEPARATOR _T("netxms-java-bridge-") NETXMS_PACKAGE_VERSION _T(".jar"));
    if (jar != nullptr)
    {
       classpath.append(JAVA_CLASSPATH_SEPARATOR);
