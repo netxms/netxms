@@ -94,6 +94,10 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
             return t.getHostname();
          case TunnelManager.COL_USER_AGENT:
             return t.isUserAgentInstalled() ? "Yes" : "No";
+         case TunnelManager.COL_CONNECTION_TIME:
+            if ((t.getConnectionTime() == null) || (t.getConnectionTime().getTime() == 0))
+               return "";
+            return RegionalSettings.getDateTimeFormat().format(t.getConnectionTime());            
       }
       return null;
    }

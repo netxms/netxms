@@ -1001,6 +1001,7 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
    msg->setField(baseId + 19, m_extProvCertificate);
    msg->setField(baseId + 20, m_certificateIssuer);
    msg->setField(baseId + 21, m_certificateSubject);
+   msg->setFieldFromTime(baseId + 22, m_startTime);
 }
 
 /**

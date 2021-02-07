@@ -99,6 +99,12 @@ public class TunnelListComparator extends ViewerComparator
          case TunnelManager.COL_USER_AGENT:
             result = Boolean.compare(t1.isUserAgentInstalled(), t2.isUserAgentInstalled());
             break;
+         case TunnelManager.COL_CONNECTION_TIME:
+            result = (t1.getConnectionTime() != null) ? 
+                  ((t2.getConnectionTime() != null) ? 
+                        t1.getConnectionTime().compareTo(t2.getConnectionTime()) : 1) :
+                           ((t2 == null) ? 0 : -1);
+            break;
          default:
             result = 0;
       }
