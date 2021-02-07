@@ -89,6 +89,7 @@ public class TunnelManager extends ViewPart
    public static final int COL_SYSLOG_PROXY = 15;
    public static final int COL_USER_AGENT = 16;
    public static final int COL_CERTIFICATE_EXPIRATION = 17;
+   public static final int COL_CONNECTION_TIME = 18;
    
    private SortableTableViewer viewer;
    private TunnelManagerFilter filter;
@@ -131,8 +132,9 @@ public class TunnelManager extends ViewPart
       final String[] names = 
          { "ID", "State", "Node", "IP address", "Channels", "System name", "Hostname",
            "Platform", "System information", "Hardware ID", "Agent version", "Agent ID",
-           "Agent proxy", "SNMP proxy", "SNMP trap proxy", "Syslog proxy", "User agent", "Certificate expiration" };
-      final int[] widths = { 80, 80, 140, 150, 80, 150, 150, 250, 300, 180, 150, 150, 80, 80, 80, 80, 80, 130 };
+           "Agent proxy", "SNMP proxy", "SNMP trap proxy", "Syslog proxy", "User agent", 
+           "Certificate expiration", "Connection time" };
+      final int[] widths = { 80, 80, 140, 150, 80, 150, 150, 250, 300, 180, 150, 150, 80, 80, 80, 80, 80, 130, 130 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new TunnelListLabelProvider());

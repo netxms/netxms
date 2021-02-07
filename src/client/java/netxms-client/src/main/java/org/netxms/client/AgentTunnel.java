@@ -41,6 +41,7 @@ public class AgentTunnel
    private long nodeId;
    private int zoneUIN;
    private Date certificateExpirationTime;
+   private Date connectionTime;
    private int activeChannelCount;
    private String hostname;
    private boolean agentProxy;
@@ -76,6 +77,7 @@ public class AgentTunnel
       certificateExpirationTime = msg.getFieldAsDate(baseId + 16);
       hardwareId = msg.getFieldAsBinary(baseId + 17);
       syslogProxy = msg.getFieldAsBoolean(baseId + 18);
+      connectionTime = msg.getFieldAsDate(baseId + 22);
    }
 
    /**
@@ -168,6 +170,14 @@ public class AgentTunnel
    public Date getCertificateExpirationTime()
    {
       return certificateExpirationTime;
+   }
+
+   /**
+    * @return the connectionTime
+    */
+   public Date getConnectionTime()
+   {
+      return connectionTime;
    }
 
    /**
@@ -296,6 +306,6 @@ public class AgentTunnel
       return "AgentTunnel [id=" + id + ", guid=" + guid + ", address=" + address + ", nodeId=" + nodeId + ", systemName="
             + systemName + ", hostname=" + hostname + ", systemInformation=" + systemInformation + ", platformName="
             + platformName + ", agentVersion=" + agentVersion + ", zoneUIN=" + zoneUIN + ", activeChannelCount=" 
-            + activeChannelCount + ", userAgentInstalled=" + userAgentInstalled + "]";
+            + activeChannelCount + ", userAgentInstalled=" + userAgentInstalled + ", connectionTime=" + connectionTime + "]";
    }
 }
