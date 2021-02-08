@@ -29,6 +29,7 @@
 Makefile
 Makefile.in
 pom.xml.versionsBackup
+.flattened-pom.xml
 *.swp
 language.settings.xml
 
