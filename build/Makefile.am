@@ -17,6 +17,7 @@ EXTRA_DIST = \
 	build.vcxproj.filters \
 	msvc_setenv_x64.cmd \
 	msvc_setenv_x86.cmd \
+	netxms-build-tag.properties \
 	updatetag.pl
 
 netxms-build-tag.properties: netxms-build-tag.iss
