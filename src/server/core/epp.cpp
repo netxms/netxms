@@ -637,11 +637,11 @@ bool EPRule::processEvent(Event *event) const
                         comments, key.isEmpty() ? nullptr : key.cstr(), true);
             }
 
-            if (a->snoozeTime != 0)
+            if (a->snoozeTime != 0 && a->blockingTimerKey != nullptr && a->blockingTimerKey[0] != 0)
             {
                TCHAR parameters[64], comments[256];
                _sntprintf(parameters, 64, _T("action=%u;event=") UINT64_FMT _T(";alarm=%u"), a->actionId, event->getId(), (alarm != nullptr) ? alarm->getAlarmId() : 0);
-               _sntprintf(comments, 256, _T("Snooz action execution for event %s"), event->getName());
+               _sntprintf(comments, 256, _T("Snooze action execution for event %s"), event->getName());
                String key = ((a->blockingTimerKey != nullptr) && (*a->blockingTimerKey != 0)) ? event->expandText(a->blockingTimerKey, alarm) : String();
                AddOneTimeScheduledTask(_T("Dummy"), time(nullptr) + a->snoozeTime, parameters,
                         nullptr, 0, event->getSourceId(), SYSTEM_ACCESS_FULL, comments, key.isEmpty() ? nullptr : key.cstr(), true);
