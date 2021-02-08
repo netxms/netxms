@@ -19,8 +19,8 @@ allprojects {
                 url 'https://nexus.netxms.org/repository/maven-releases/'
             }
             credentials {
-                username = project.nexusUsername
-                password = project.nexusPassword
+                username = project.NEXUS_USERNAME
+                password = project.NEXUS_PASSWORD
             }
         }
         google()
