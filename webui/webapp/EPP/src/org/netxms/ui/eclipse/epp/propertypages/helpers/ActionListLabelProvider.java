@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,6 +73,8 @@ public class ActionListLabelProvider extends LabelProvider implements ITableLabe
          case 2:
             return c.getTimerKey();
          case 3:
+            return Integer.toString(c.getSnoozeTime());
+         case 4:
             return c.getBlockingTimerKey();
       }
       return null;

@@ -1315,6 +1315,7 @@ CREATE TABLE policy_action_list
   timer_delay integer not null,
   timer_key varchar(127) null,
   blocking_timer_key varchar(127) null,
+  snooze_time integer not null,
   PRIMARY KEY(rule_id,action_id)
 ) TABLE_TYPE;
 

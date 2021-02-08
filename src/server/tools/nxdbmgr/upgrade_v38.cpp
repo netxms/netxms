@@ -23,6 +23,22 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+
+/**
+ * Upgrade from 38.5 to 38.6
+ */
+static bool H_UpgradeFromV5()
+{
+   static const TCHAR *batch =
+         _T("ALTER TABLE policy_action_list ADD snooze_time integer\n")
+         _T("UPDATE policy_action_list SET snooze_time=0\n")
+         _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("policy_action_list"), _T("snooze_time")));
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
 /**
  * Upgrade from 38.4 to 38.5
  */
@@ -163,6 +179,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 5,  38, 6,  H_UpgradeFromV5  },
    { 4,  38, 5,  H_UpgradeFromV4  },
    { 3,  38, 4,  H_UpgradeFromV3  },
    { 2,  38, 3,  H_UpgradeFromV2  },
