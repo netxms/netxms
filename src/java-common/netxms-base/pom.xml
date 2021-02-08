@@ -46,9 +46,15 @@
   </issueManagement>
 
   <distributionManagement>
+    <repository>
+      <id>nexus</id>
+      <name>releases</name>
+      <url>https://nexus.netxms.org/repository/maven-releases/</url>
+    </repository>
     <snapshotRepository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <id>nexus</id>
+      <name>snapshots</name>
+      <url>https://nexus.netxms.org/repository/maven-snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
 
@@ -159,18 +165,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.sonatype.plugins</groupId>
-        <artifactId>nexus-staging-maven-plugin</artifactId>
-        <version>1.6.7</version>
-        <extensions>true</extensions>
-        <configuration>
-          <serverId>ossrh</serverId>
-          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-          <autoReleaseAfterClose>false</autoReleaseAfterClose>
-        </configuration>
       </plugin>
     </plugins>
   </build>
