@@ -29,17 +29,17 @@ android {
 
 dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation('org.netxms:netxms-client:3.4-SNAPSHOT') {
+    implementation('org.netxms:netxms-client:4.0-SNAPSHOT') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'
     }
-    implementation('org.netxms:netxms-base:3.4-SNAPSHOT') {
+    implementation('org.netxms:netxms-base:4.0-SNAPSHOT') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'
     }
-    implementation('org.simpleframework:simple-xml:2.7.1') {
+    implementation('org.simpleframework:simple-xml:2.6.4') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'
