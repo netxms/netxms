@@ -4,9 +4,6 @@
 # Copyright (c) 2021 Raden Solutions
 #
 
-MAIN_JAR="nxreportd-~PACKAGE_VERSION~.jar"
-SYSTEM_JARS="~SYSTEM_JARS~"
-
 while [ $# -gt 0 ]; do
 	arg="$1"
 
@@ -59,13 +56,10 @@ if [ "x$WORKSPACE" = "x" ]; then
 	fi
 fi
 
-CLASSPATH="~SYSCONFDIR~/nxreportd:~PKGLIBDIR~/java/$MAIN_JAR"
-for jar in $SYSTEM_JARS; do
-	CLASSPATH="$CLASSPATH:~PKGLIBDIR~/java/$jar"
-done
+CLASSPATH="~SYSCONFDIR~/nxreportd:~PKGLIBDIR~/java/nxreportd-~PACKAGE_VERSION~.jar"
 
 if [ "x$DAEMON" = "xyes" ]; then
-	$JAVA -Dnxreportd.workspace="$WORKSPACE" -cp "$CLASSPATH" $JAVA_OPTIONS org.netxms.reporting.Startup &
+	$JAVA -Dnxreportd.workspace="$WORKSPACE" -cp "$CLASSPATH" -Dnetxms.libdir="~PKGLIBDIR~/java" $JAVA_OPTIONS org.netxms.reporting.Startup &
 else
-	$JAVA -Dnxreportd.workspace="$WORKSPACE" -cp "$CLASSPATH" $JAVA_OPTIONS org.netxms.reporting.Startup
+	$JAVA -Dnxreportd.workspace="$WORKSPACE" -cp "$CLASSPATH" -Dnetxms.libdir="~PKGLIBDIR~/java" $JAVA_OPTIONS org.netxms.reporting.Startup
 fi

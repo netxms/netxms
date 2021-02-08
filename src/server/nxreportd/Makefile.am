@@ -13,7 +13,7 @@ EXTRA_DIST = nxreportd.in
 SUBDIRS=java
 
 nxreportd: nxreportd.in
-	sed -e "s,~PACKAGE_VERSION~,$(PACKAGE_VERSION),g" -e "s,~BINDIR~,@NETXMS_BINDIR@,g" -e "s,~DATADIR~,@NETXMS_DATADIR@,g" -e "s,~PKGLIBDIR~,@NETXMS_PKGLIBDIR@,g" -e "s,~STATEDIR~,@NETXMS_STATEDIR@,g" -e "s,~SYSCONFDIR~,@NETXMS_SYSCONFDIR@,g" -e "s,~SYSTEM_JARS~,`ls ./java/target/lib/ | grep .jar | xargs`,g" < $@.in > $@
+	sed -e "s,~PACKAGE_VERSION~,$(PACKAGE_VERSION),g" -e "s,~BINDIR~,@NETXMS_BINDIR@,g" -e "s,~DATADIR~,@NETXMS_DATADIR@,g" -e "s,~PKGLIBDIR~,@NETXMS_PKGLIBDIR@,g" -e "s,~STATEDIR~,@NETXMS_STATEDIR@,g" -e "s,~SYSCONFDIR~,@NETXMS_SYSCONFDIR@,g" < $@.in > $@
 
 clean-local:
 	rm -f nxreportd

@@ -4,7 +4,7 @@
 
     <groupId>org.netxms</groupId>
     <artifactId>nxtcpproxy</artifactId>
-    <version>3.8-SNAPSHOT</version>
+    <version>${revision}</version>
     <packaging>jar</packaging>
 
     <name>nxtcpproxy</name>
@@ -19,6 +19,7 @@
     </licenses>
 
     <properties>
+        <revision>3.8-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <build.finalName>${project.artifactId}-${project.version}</build.finalName>
         <lib.scope>compile</lib.scope>

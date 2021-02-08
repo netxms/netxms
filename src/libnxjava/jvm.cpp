@@ -53,7 +53,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
    s_jvmModule = DLOpen(jvmPath, errorText);
    if (s_jvmModule == nullptr)
    {
-      nxlog_write(NXLOG_ERROR, _T("JavaBridge: Unable to load JVM: %s"), errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_RUNTIME, _T("JavaBridge: Unable to load JVM: %s"), errorText);
       return NXJAVA_JVM_LOAD_FAILED;
    }
 
@@ -61,7 +61,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
    GetNetXMSDirectory(nxDirLib, libdir);
    _tcslcat(libdir, FS_PATH_SEPARATOR _T("java"), MAX_PATH);
 
-   StringBuffer classpath = _T("-Djava.class.path=");
+   StringBuffer classpath(_T("-Djava.class.path="));
    classpath.append(libdir);
    classpath.append(FS_PATH_SEPARATOR _T("netxms-java-bridge-") NETXMS_PACKAGE_VERSION _T(".jar"));
    if (jar != nullptr)
@@ -91,14 +91,12 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
    classpath.append(JAVA_CLASSPATH_SEPARATOR);
    classpath.append(libdir);
 
-   JavaVMInitArgs vmArgs;
    JavaVMOption options[128];
    memset(options, 0, sizeof(options));
-
 #ifdef UNICODE
    options[0].optionString = classpath.getUTF8String();
 #else
-   options[0].optionString = strdup(classpath);
+   options[0].optionString = MemCopyStringA(classpath);
 #endif
 
    if (vmOptions != nullptr)
@@ -113,14 +111,15 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
       }
    }
 
+   JavaVMInitArgs vmArgs;
    vmArgs.version = JNI_VERSION_1_8;
    vmArgs.options = options;
    vmArgs.nOptions = (vmOptions != nullptr) ? vmOptions->size() + 1 : 1;
    vmArgs.ignoreUnrecognized = JNI_TRUE;
 
-   nxlog_debug(6, _T("JVM options:"));
+   nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 6, _T("JVM options:"));
    for(int i = 0; i < vmArgs.nOptions; i++)
-      nxlog_debug(6, _T("    %hs"), vmArgs.options[i].optionString);
+      nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 6, _T("    %hs"), vmArgs.options[i].optionString);
 
    JavaBridgeError result;
 
@@ -131,18 +130,18 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
       {
          RegisterConfigHelperNatives(*env);
          RegisterPlatformNatives(*env);
-         nxlog_debug(2, _T("JavaBridge: Java VM created"));
+         nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 2, _T("JavaBridge: Java VM created"));
          result = NXJAVA_SUCCESS;
       }
       else
       {
-         nxlog_write(NXLOG_ERROR, _T("JavaBridge: cannot create Java VM"));
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_RUNTIME, _T("JavaBridge: cannot create Java VM"));
          result = NXJAVA_CANNOT_CREATE_JVM;
       }
    }
    else
    {
-      nxlog_write(NXLOG_ERROR, _T("JavaBridge: cannot find JVM entry point (%s)"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_RUNTIME, _T("JavaBridge: cannot find JVM entry point (%s)"));
       result = NXJAVA_NO_ENTRY_POINT;
    }
 
@@ -213,14 +212,14 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE StartJavaApplication(JNIEnv *env, const cha
    if (app == nullptr)
       return NXJAVA_APP_CLASS_NOT_FOUND;
 
-   nxlog_debug(5, _T("Application class found"));
+   nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 5, _T("Application class found"));
    jmethodID appMain = env->GetStaticMethodID(app, "main", "([Ljava/lang/String;)V");
    if (appMain == nullptr)
       return NXJAVA_APP_ENTRY_POINT_NOT_FOUND;
 
-   nxlog_debug(5, _T("Shell main method found"));
+   nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 5, _T("Application main method found"));
    jclass stringClass = env->FindClass("java/lang/String");
-   jobjectArray jargs = env->NewObjectArray(argc, stringClass, NULL);
+   jobjectArray jargs = env->NewObjectArray(argc, stringClass, nullptr);
    for(int i = 0; i < argc; i++)
    {
       jstring js = JavaStringFromCStringSysLocale(env, argv[i]);
