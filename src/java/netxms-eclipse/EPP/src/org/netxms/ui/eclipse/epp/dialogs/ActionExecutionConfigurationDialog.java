@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ public class ActionExecutionConfigurationDialog extends Dialog
    private ActionExecutionConfiguration configuration;
    private LabeledSpinner timerDelay;
    private LabeledText timerKey;
+   private LabeledSpinner snoozeTime;
    private LabeledText blockingTimerKey;
 
    /**
@@ -88,6 +89,11 @@ public class ActionExecutionConfigurationDialog extends Dialog
       gd.widthHint = 400;
       timerKey.setLayoutData(gd);
       
+      snoozeTime = new LabeledSpinner(dialogArea, SWT.NONE);
+      snoozeTime.setLabel("Snooze time");
+      snoozeTime.setRange(0, 100000000);
+      snoozeTime.setSelection(configuration.getSnoozeTime()); 
+      
       blockingTimerKey = new LabeledText(dialogArea, SWT.NONE);
       blockingTimerKey.setLabel("Blocking timer key (Do not run action if this timer exists)");
       blockingTimerKey.setText(configuration.getBlockingTimerKey());
@@ -95,7 +101,6 @@ public class ActionExecutionConfigurationDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.widthHint = 400;
-      gd.horizontalSpan = 2;
       blockingTimerKey.setLayoutData(gd);      
       
       return dialogArea;
@@ -109,6 +114,7 @@ public class ActionExecutionConfigurationDialog extends Dialog
    {
       configuration.setTimerDelay(timerDelay.getSelection());
       configuration.setTimerKey(timerKey.getText().trim());
+      configuration.setSnoozeTime(snoozeTime.getSelection());
       configuration.setBlockingTimerKey(blockingTimerKey.getText().trim());
       super.okPressed();
    }

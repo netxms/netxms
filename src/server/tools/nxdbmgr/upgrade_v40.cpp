@@ -24,6 +24,26 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.40 to 40.41
+ */
+static bool H_UpgradeFromV40()
+{
+   if (GetSchemaLevelForMajorVersion(38) < 6)
+   {
+      static const TCHAR *batch =
+            _T("ALTER TABLE policy_action_list ADD snooze_time integer\n")
+            _T("UPDATE policy_action_list SET snooze_time=0\n")
+            _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("policy_action_list"), _T("snooze_time")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(38, 6));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(41));
+   return true;
+}
+
+/**
  * Upgrade from 40.39 to 40.40
  */
 static bool H_UpgradeFromV39()
@@ -1118,6 +1138,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 40, 40, 41, H_UpgradeFromV40 },
    { 39, 40, 40, H_UpgradeFromV39 },
    { 38, 40, 39, H_UpgradeFromV38 },
    { 37, 40, 38, H_UpgradeFromV37 },

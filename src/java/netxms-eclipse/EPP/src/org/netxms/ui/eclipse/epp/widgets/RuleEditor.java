@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -821,6 +821,12 @@ public class RuleEditor extends Composite
                clabel = createCLabel(clientArea, 2, false);
                clabel.addMouseListener(listener);
                clabel.setText(String.format("Do not run if timer with key \"%s\" is active", c.getBlockingTimerKey()));                  
+            }
+            if (c.getSnoozeTime() != 0)
+            {
+               clabel = createCLabel(clientArea, 2, false);
+               clabel.addMouseListener(listener);
+               clabel.setText(String.format("Snooze for %d seconds", c.getSnoozeTime()));                
             }
          }
       }

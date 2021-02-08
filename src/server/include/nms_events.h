@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -235,13 +235,15 @@ struct ActionExecutionConfiguration
 {
    uint32_t actionId;
    uint32_t timerDelay;
+   uint32_t snoozeTime;
    TCHAR *timerKey;
    TCHAR *blockingTimerKey;
 
-   ActionExecutionConfiguration(uint32_t i, uint32_t d, TCHAR *k, TCHAR *bk)
+   ActionExecutionConfiguration(uint32_t i, uint32_t d, uint32_t st, TCHAR *k, TCHAR *bk)
    {
       actionId = i;
       timerDelay = d;
+      snoozeTime = st;
       timerKey = k;
       blockingTimerKey = bk;
    }

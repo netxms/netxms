@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2013-2018 Victor Kirhenshtein
+ * Copyright (C) 2013-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ public class ActionExecutionConfiguration
 {
    private long actionId;
    private int timerDelay;
+   private int snoozeTime;
    private String timerKey;
    private String blockingTimerKey;
    
@@ -39,6 +40,7 @@ public class ActionExecutionConfiguration
    {
       this.actionId = actionId;
       this.timerDelay = 0;
+      this.snoozeTime = 0;
       this.timerKey = null;
       this.blockingTimerKey = null;
    }
@@ -51,10 +53,11 @@ public class ActionExecutionConfiguration
     * @param timerKey timer key
     * @param blockingTimerKey timer key for blocking the action
     */
-   public ActionExecutionConfiguration(long actionId, int timerDelay, String timerKey, String blockingTimerKey)
+   public ActionExecutionConfiguration(long actionId, int timerDelay, int snoozeTime, String timerKey, String blockingTimerKey)
    {
       this.actionId = actionId;
       this.timerDelay = timerDelay;
+      this.snoozeTime = snoozeTime;
       this.timerKey = timerKey;
       this.blockingTimerKey = blockingTimerKey;
    }
@@ -71,6 +74,7 @@ public class ActionExecutionConfiguration
       timerDelay = msg.getFieldAsInt32(baseId + 1);
       timerKey = msg.getFieldAsString(baseId + 2);
       blockingTimerKey = msg.getFieldAsString(baseId + 3);
+      snoozeTime = msg.getFieldAsInt32(baseId + 4);
    }
 
    /**
@@ -82,6 +86,7 @@ public class ActionExecutionConfiguration
    {
       this.actionId = src.actionId;
       this.timerDelay = src.timerDelay;
+      this.snoozeTime = src.snoozeTime;
       this.timerKey = src.timerKey;
       this.blockingTimerKey = src.blockingTimerKey;
    }
@@ -98,6 +103,7 @@ public class ActionExecutionConfiguration
       msg.setFieldInt32(baseId + 1, timerDelay);
       msg.setField(baseId + 2, timerKey);
       msg.setField(baseId + 3, blockingTimerKey);
+      msg.setFieldInt32(baseId + 4, snoozeTime);
    }
    
    /**
@@ -168,5 +174,21 @@ public class ActionExecutionConfiguration
    public void setBlockingTimerKey(String blockingTimerKey)
    {
       this.blockingTimerKey = blockingTimerKey;
+   }
+
+   /**
+    * @return the snoozeTime
+    */
+   public int getSnoozeTime()
+   {
+      return snoozeTime;
+   }
+
+   /**
+    * @param snoozeTime the snoozeTime to set
+    */
+   public void setSnoozeTime(int snoozeTime)
+   {
+      this.snoozeTime = snoozeTime;
    }
 }

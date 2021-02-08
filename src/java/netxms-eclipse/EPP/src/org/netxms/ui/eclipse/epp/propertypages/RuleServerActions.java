@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,8 +82,8 @@ public class RuleServerActions extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { Messages.get().RuleServerActions_Action, "Delay", "Timer key", "Blocking timer key" };
-      final int[] columnWidths = { 300, 90, 200, 200 };
+      final String[] columnNames = { Messages.get().RuleServerActions_Action, "Delay", "Timer key", "Snooze time", "Blocking timer key" };
+      final int[] columnWidths = { 300, 90, 200, 90, 200 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ActionListLabelProvider(editor.getEditorView()));
@@ -198,7 +198,7 @@ public class RuleServerActions extends PropertyPage
 		if (dlg.open() == Window.OK)
 		{
 			for(ServerAction a : dlg.getSelectedActions())
-				actions.put(a.getId(), new ActionExecutionConfiguration(a.getId(), 0, null, null));
+				actions.put(a.getId(), new ActionExecutionConfiguration(a.getId(), 0, 0, null, null));
 		}
       viewer.setInput(actions.values().toArray());
 	}
