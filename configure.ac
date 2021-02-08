@@ -876,6 +876,7 @@ AC_ARG_WITH(dist,
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music templates"
 	CLIENT_COMPONENTS="java nxalarm nxevent nxpush nxshell nxnotify"
+	SERVER_COMPONENTS="nxreportd"
 	SERVER_TOOLS="nxconfig"
 	DIST_BUILD="yes"
 )
