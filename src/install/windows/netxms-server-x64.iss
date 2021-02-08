@@ -133,7 +133,8 @@ Source: "..\..\..\x64\Release\textfile.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: 
 Source: "..\..\..\x64\Release\websms.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\websms.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
 ; Reporting server
-Source: "..\..\server\nxreportd\java\target\nxreportd.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server\reporting
+Source: "..\..\server\nxreportd\java\target\nxreportd-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server\reporting
+Source: "..\..\server\nxreportd\java\target\lib\*.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server\reporting
 ; Tools
 Source: "..\..\..\x64\Release\libnxdbmgr.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\nxaction.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
@@ -205,10 +206,10 @@ Source: "..\..\..\x64\Release\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignorev
 Source: "..\..\..\x64\Release\winperf.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\wmi.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\wmi.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\agent\subagents\bind9\target\bind9.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server
-Source: "..\..\agent\subagents\java\java\target\netxms-agent.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server
-Source: "..\..\agent\subagents\jmx\target\jmx.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server
-Source: "..\..\agent\subagents\ubntlw\target\ubntlw.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server
+Source: "..\..\agent\subagents\bind9\target\bind9.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server
+Source: "..\..\agent\subagents\java\java\target\netxms-agent-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server
+Source: "..\..\agent\subagents\jmx\target\jmx.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server
+Source: "..\..\agent\subagents\ubntlw\target\ubntlw.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server
 ; Network device drivers
 Source: "..\..\..\x64\Release\at.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\at.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
@@ -283,9 +284,8 @@ Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: igno
 Source: "..\..\..\images\*"; DestDir: "{app}\var\images"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\music\*"; DestDir: "{app}\var\files"; Flags: ignoreversion; Components: server
 ; Common Java libraries
-Source: "..\..\java-common\lib\*.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: base
-Source: "..\..\java-common\netxms-base\target\netxms-base.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: base
-Source: "..\..\libnxjava\java\target\netxms-java-bridge.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: base
+Source: "..\..\java-common\netxms-base\target\netxms-base-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: base
+Source: "..\..\libnxjava\java\target\netxms-java-bridge-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: base
 ; Command line tools
 Source: "..\..\..\x64\Release\libnxclient.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
 Source: "..\..\..\x64\Release\libnxclient.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools and pdb
@@ -302,8 +302,9 @@ Source: "..\..\..\x64\Release\nxhwid.exe"; DestDir: "{app}\bin"; Flags: ignoreve
 Source: "..\..\..\x64\Release\nxnotify.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
 Source: "..\..\..\x64\Release\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
 Source: "..\..\..\x64\Release\nxshell.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\client\java\netxms-client\target\netxms-client.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: tools or server\reporting
-Source: "..\..\client\nxshell\java\target\nxshell.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: tools
+Source: "..\..\client\java\netxms-client\target\netxms-client-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: tools or server\reporting
+Source: "..\..\client\nxshell\java\target\nxshell-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: tools
+Source: "..\..\client\nxshell\java\target\lib\*.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: tools
 ; Diagnostic tools
 Source: "..\..\server\tools\scripts\nx-collect-server-diag.cmd"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "..\..\server\tools\scripts\zip.ps1"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
@@ -365,6 +366,9 @@ Root: HKLM; Subkey: "Software\NetXMS"; Flags: uninsdeletekeyifempty; Components:
 Root: HKLM; Subkey: "Software\NetXMS\Server"; Flags: uninsdeletekey; Components: server
 Root: HKLM; Subkey: "Software\NetXMS\Server"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Components: server
 Root: HKLM; Subkey: "Software\NetXMS\Server"; ValueType: string; ValueName: "ConfigFile"; ValueData: "{app}\etc\netxmsd.conf"; Components: server
+
+[InstallDelete]
+Type: files; Name: "{app}\lib\java\*.jar"
 
 [Run]
 Filename: "{app}\var\rm.exe"; Parameters: "-f ""{app}\bin\*.manifest"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old manifest files..."; Flags: runhidden
