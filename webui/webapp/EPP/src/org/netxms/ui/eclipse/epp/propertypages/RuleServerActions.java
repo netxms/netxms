@@ -82,7 +82,7 @@ public class RuleServerActions extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { Messages.get().RuleServerActions_Action, "Delay", "Timer key", "Snooze time", "Blocking timer key" };
+      final String[] columnNames = { Messages.get().RuleServerActions_Action, "Delay", "Delay timer key", "Snooze time", "Snooze/blocking timer key" };
       final int[] columnWidths = { 300, 90, 200, 90, 200 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());

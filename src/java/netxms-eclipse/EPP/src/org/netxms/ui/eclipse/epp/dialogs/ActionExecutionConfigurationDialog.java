@@ -81,7 +81,7 @@ public class ActionExecutionConfigurationDialog extends Dialog
       timerDelay.setSelection(configuration.getTimerDelay());
       
       timerKey = new LabeledText(dialogArea, SWT.NONE);
-      timerKey.setLabel("Timer key");
+      timerKey.setLabel("Delay timer key");
       timerKey.setText(configuration.getTimerKey());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -95,7 +95,7 @@ public class ActionExecutionConfigurationDialog extends Dialog
       snoozeTime.setSelection(configuration.getSnoozeTime()); 
       
       blockingTimerKey = new LabeledText(dialogArea, SWT.NONE);
-      blockingTimerKey.setLabel("Blocking timer key (Do not run action if this timer exists)");
+      blockingTimerKey.setLabel("Snooze/blocking timer key (Do not run action if this timer exists)");
       blockingTimerKey.setText(configuration.getBlockingTimerKey());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

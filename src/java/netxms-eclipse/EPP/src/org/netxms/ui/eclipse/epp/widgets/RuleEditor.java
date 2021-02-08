@@ -826,7 +826,7 @@ public class RuleEditor extends Composite
             {
                clabel = createCLabel(clientArea, 2, false);
                clabel.addMouseListener(listener);
-               clabel.setText(String.format("Snooze for %d seconds", c.getSnoozeTime()));                
+               clabel.setText(String.format("Set snooze timer for %d seconds after execution with key %s", c.getSnoozeTime(), c.getBlockingTimerKey()));                
             }
          }
       }
