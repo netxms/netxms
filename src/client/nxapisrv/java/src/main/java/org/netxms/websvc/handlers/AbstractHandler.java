@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -452,7 +452,7 @@ public abstract class AbstractHandler extends ServerResource
       String objectGuid = query.get("objectGuid");
       if (objectGuid != null)
       {         
-         if (!session.isObjectsSynchronized())
+         if (!session.areObjectsSynchronized())
             session.syncObjects();
 
          try
@@ -471,7 +471,7 @@ public abstract class AbstractHandler extends ServerResource
       String objectId = query.get("objectId");
       if (objectId != null)
       {
-         if (!session.isObjectsSynchronized())
+         if (!session.areObjectsSynchronized())
             session.syncObjects();
 
          try

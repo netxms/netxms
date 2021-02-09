@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2017 Raden Solutions
+ * Copyright (C) 2017-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ public class SummaryTableAdHoc  extends AbstractHandler
    protected Object create(JSONObject data) throws Exception
    {
       NXCSession session = getSession();
-      if (!session.isObjectsSynchronized())
+      if (!session.areObjectsSynchronized())
          session.syncObjects();
       
       String objectFilter = JsonTools.getStringFromJson(data, "baseObject", null);

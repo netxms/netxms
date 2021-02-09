@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ public class AbstractObjectHandler extends AbstractHandler
    protected AbstractObject getObject() throws Exception
    {
       NXCSession session = getSession();
-      if (!session.isObjectsSynchronized())
+      if (!session.areObjectsSynchronized())
          session.syncObjects();
       
       String entityId = (String)getRequest().getAttributes().get("object-id");

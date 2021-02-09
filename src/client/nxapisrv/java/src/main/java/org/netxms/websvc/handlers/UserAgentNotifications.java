@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2017-2019 Raden Solutions
+ * Copyright (C) 2017-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ public class UserAgentNotifications extends AbstractHandler
    protected Object getCollection(Map<String, String> query) throws Exception
    {
       NXCSession session = getSession();
-      if (!session.isObjectsSynchronized())
+      if (!session.areObjectsSynchronized())
          session.syncObjects();
       return new ResponseContainer("notifications", session.getUserAgentNotifications());
    }

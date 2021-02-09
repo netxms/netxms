@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ public class Alarms extends AbstractHandler
    private static final int STICKY_ACKNOWLEDGE = 2;
    private static final int RESOLVE = 3;
    
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(org.json.JSONObject)
     */
    @Override
@@ -138,7 +138,7 @@ public class Alarms extends AbstractHandler
       if (!Boolean.parseBoolean(query.getOrDefault("resolveReferences", "false")) || alarms.isEmpty())
          return new ResponseContainer("alarms", alarms);
 
-      if (!session.isObjectsSynchronized())
+      if (!session.areObjectsSynchronized())
          session.syncObjects();
       if (!session.isUserDatabaseSynchronized())
          session.syncUserDatabase();
@@ -288,14 +288,14 @@ public class Alarms extends AbstractHandler
       return null;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
     */
    @Override
    protected Object get(String id, Map<String, String> query) throws Exception
    {
       NXCSession session = getSession();
-      if (!session.isObjectsSynchronized())
+      if (!session.areObjectsSynchronized())
          session.syncObjects();
       if (!session.isUserDatabaseSynchronized())
          session.syncUserDatabase();
