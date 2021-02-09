@@ -743,7 +743,7 @@ public class RuleEditor extends Composite
             createLabel(clientArea, 1, false, rule.getAlarmCategories().size() == 1 ? "with category: " : "with categories: ", null);
             for(Long id :rule.getAlarmCategories())
             {
-               AlarmCategory category = editor.findAlarmCategoryById(id);
+               AlarmCategory category = session.findAlarmCategoryById(id);
                if (category != null)
                {
                   createLabel(clientArea, 2, false, category.getName(), null);

@@ -61,7 +61,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
-import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
@@ -651,9 +650,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       }.start();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override
@@ -690,6 +687,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       imageCollapse.dispose();
       imageExpand.dispose();
       imageEdit.dispose();
+
+      modified = false;
+      firePropertyChange(PROP_DIRTY);
 
       super.dispose();
       ImageFactory.clearCache();
@@ -744,15 +744,6 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       return actions.values();
    }
 
-   /**
-    * @return AlarmCategory
-    */
-   public AlarmCategory findAlarmCategoryById(Long id)
-   {
-      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      
-      return session.findAlarmCategoryById(id);
-   }
    /**
     * @return the normalFont
     */
@@ -853,25 +844,24 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       firePropertyChange(PROP_DIRTY);
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
-	 */
-	@Override
-	public void doSave(IProgressMonitor monitor)
-	{
-		try
-		{
-			session.saveEventProcessingPolicy(policy);
-		}
-		catch(Exception e)
-		{
-			MessageDialogHelper.openError(getViewSite().getShell(), Messages.get().EventProcessingPolicyEditor_Error, Messages.get().EventProcessingPolicyEditor_SaveError + e.getMessage());
-		}
-	}
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+    */
+   @Override
+   public void doSave(IProgressMonitor monitor)
+   {
+      try
+      {
+         session.saveEventProcessingPolicy(policy);
+      }
+      catch(Exception e)
+      {
+         MessageDialogHelper.openError(getViewSite().getShell(), Messages.get().EventProcessingPolicyEditor_Error,
+               Messages.get().EventProcessingPolicyEditor_SaveError + e.getMessage());
+      }
+   }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart#doSaveAs()
     */
    @Override
@@ -879,9 +869,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    {
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart#isDirty()
     */
    @Override
@@ -890,9 +878,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       return modified;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
     */
    @Override
@@ -901,9 +887,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       return false;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
     */
    @Override
