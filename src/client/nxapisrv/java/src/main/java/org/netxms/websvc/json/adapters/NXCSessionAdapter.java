@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ public class NXCSessionAdapter extends TypeAdapter<NXCSession>
       writer.value(value.isEncrypted());
       
       writer.name("objectsSynchronized");
-      writer.value(value.isObjectsSynchronized());
+      writer.value(value.areObjectsSynchronized());
       
       writer.name("passwordExpired");
       writer.value(value.isPasswordExpired());

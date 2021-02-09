@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ public class Objects extends AbstractObjectHandler
    protected Object getCollection(Map<String, String> query) throws Exception
    {
       NXCSession session = getSession();
-      if (!session.isObjectsSynchronized())
+      if (!session.areObjectsSynchronized())
          session.syncObjects();
       
       boolean topLevelOnly = (query.get("topLevelOnly") != null) ? Boolean.parseBoolean(query.get("topLevelOnly")) : false;
