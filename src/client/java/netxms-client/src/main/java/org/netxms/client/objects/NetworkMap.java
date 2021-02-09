@@ -58,7 +58,6 @@ public class NetworkMap extends GenericObject
 	
 	private int mapType;
 	private MapLayoutAlgorithm layout;
-	private int flags;
 	private UUID background;
 	private GeoLocation backgroundLocation;
 	private int backgroundZoom;
@@ -81,7 +80,6 @@ public class NetworkMap extends GenericObject
 		super(msg, session);
 		mapType = msg.getFieldAsInt32(NXCPCodes.VID_MAP_TYPE);
 		layout = MapLayoutAlgorithm.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_LAYOUT));
-		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		background = msg.getFieldAsUUID(NXCPCodes.VID_BACKGROUND);
 		backgroundLocation = new GeoLocation(msg.getFieldAsDouble(NXCPCodes.VID_BACKGROUND_LATITUDE), msg.getFieldAsDouble(NXCPCodes.VID_BACKGROUND_LONGITUDE));
 		backgroundZoom = msg.getFieldAsInt32(NXCPCodes.VID_BACKGROUND_ZOOM);
