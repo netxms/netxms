@@ -29,7 +29,6 @@ import org.netxms.client.objects.interfaces.AutoBindObject;
  */
 public class Container extends GenericObject implements AutoBindObject
 {	
-	private int flags;
    private boolean autoBind;
    private boolean autoUnbind;
 	private String autoBindFilter;
@@ -40,7 +39,6 @@ public class Container extends GenericObject implements AutoBindObject
 	public Container(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		autoBindFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
       autoBind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOBIND_FLAG);
       autoUnbind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOUNBIND_FLAG);

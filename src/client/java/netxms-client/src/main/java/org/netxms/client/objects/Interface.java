@@ -404,7 +404,6 @@ public class Interface extends GenericObject implements ZoneMember
 	   ifTypeNames.put(272, "vmwareNicTeam");
 	}
 	
-	private int flags;
 	private int ifIndex;
 	private int ifType;
 	private int mtu;
@@ -436,7 +435,6 @@ public class Interface extends GenericObject implements ZoneMember
 	{
 		super(msg, session);
 		
-		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		ifIndex = msg.getFieldAsInt32(NXCPCodes.VID_IF_INDEX);
 		ifType = msg.getFieldAsInt32(NXCPCodes.VID_IF_TYPE);
       mtu = msg.getFieldAsInt32(NXCPCodes.VID_MTU);
