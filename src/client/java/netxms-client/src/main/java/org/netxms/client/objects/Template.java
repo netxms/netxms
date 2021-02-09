@@ -29,7 +29,6 @@ import org.netxms.client.NXCSession;
 public class Template extends GenericObject
 {	
 	private int version;
-	private int flags;
 	private boolean autoBind;
 	private boolean autoUnbind;
 	private String autoApplyFilter;
@@ -43,7 +42,6 @@ public class Template extends GenericObject
 		super(msg, session);
 		
 		version = msg.getFieldAsInt32(NXCPCodes.VID_VERSION);
-		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		autoApplyFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
 		autoBind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOBIND_FLAG);
 		autoUnbind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOUNBIND_FLAG);
