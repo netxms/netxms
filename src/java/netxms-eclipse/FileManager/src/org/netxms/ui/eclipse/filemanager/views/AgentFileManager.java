@@ -770,13 +770,13 @@ public class AgentFileManager extends ViewPart
          return;
 
       final Object[] objects = selection.toArray();
-      final AgentFile upladFolder = ((AgentFile)objects[0]).isDirectory() ? ((AgentFile)objects[0]) : ((AgentFile)objects[0])
+      final AgentFile uploadFolder = ((AgentFile)objects[0]).isDirectory() ? ((AgentFile)objects[0]) : ((AgentFile)objects[0])
             .getParent();
 
       final StartClientToServerFileUploadDialog dlg = new StartClientToServerFileUploadDialog(getSite().getShell());
       if (dlg.open() == Window.OK)
       {
-         final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         final NXCSession session = ConsoleSharedData.getSession();
          new ConsoleJob(Messages.get().AgentFileManager_UploadFileJobTitle, null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(final IProgressMonitor monitor) throws Exception
@@ -786,25 +786,24 @@ public class AgentFileManager extends ViewPart
                {
                   final File localFile = fileList.get(i);
                   String remoteFile = fileList.get(i).getName();
-                  if(fileList.size() == 1)
+                  if (fileList.size() == 1)
                      remoteFile = dlg.getRemoteFileName();
                   final String rFileName = remoteFile;
-                  
+
                   new NestedVerifyOverwrite(localFile.isDirectory() ? AgentFile.DIRECTORY : AgentFile.FILE, localFile.getName(), true, true, false) {
-                     
                      @Override
                      public void executeAction() throws NXCException, IOException
                      {                        
-                        session.uploadLocalFileToAgent(objectId, localFile, upladFolder.getFullName()+"/"+rFileName, overvrite, new ProgressListener() { //$NON-NLS-1$
+                        session.uploadLocalFileToAgent(objectId, localFile, uploadFolder.getFullName() + "/" + rFileName, overvrite, new ProgressListener() { //$NON-NLS-1$
                            private long prevWorkDone = 0;
-         
+
                            @Override
                            public void setTotalWorkAmount(long workTotal)
                            {
                               monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(),
                                     (int)workTotal);
                            }
-         
+
                            @Override
                            public void markProgress(long workDone)
                            {
@@ -818,16 +817,16 @@ public class AgentFileManager extends ViewPart
                      @Override
                      public void executeSameFunctionWithOverwrite() throws IOException, NXCException
                      {
-                        session.uploadLocalFileToAgent(objectId, localFile, upladFolder.getFullName()+"/"+rFileName, true, new ProgressListener() { //$NON-NLS-1$
+                        session.uploadLocalFileToAgent(objectId, localFile, uploadFolder.getFullName()+"/"+rFileName, true, new ProgressListener() { //$NON-NLS-1$
                            private long prevWorkDone = 0;
-         
+
                            @Override
                            public void setTotalWorkAmount(long workTotal)
                            {
                               monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(),
                                     (int)workTotal);
                            }
-         
+
                            @Override
                            public void markProgress(long workDone)
                            {
@@ -839,14 +838,13 @@ public class AgentFileManager extends ViewPart
                      }
                   }.run(viewer.getControl().getDisplay());
                }
-               
-               upladFolder.setChildren(session.listAgentFiles(upladFolder, upladFolder.getFullName(), objectId));
+
+               uploadFolder.setChildren(session.listAgentFiles(uploadFolder, uploadFolder.getFullName(), objectId));
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
-
-                     viewer.refresh(upladFolder, true);
+                     viewer.refresh(uploadFolder, true);
                   }
                });
             }
