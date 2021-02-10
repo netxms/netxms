@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2016-2021 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.tools.RefreshTimer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.helpers.LineStyleEvent;
@@ -35,7 +36,7 @@ import org.netxms.ui.eclipse.widgets.helpers.LineStyleListener;
 import org.netxms.ui.eclipse.widgets.helpers.StyleRange;
 
 /**
- * Widget for displaying html formated rich text
+ * Read-only implementation of SWT StyledText control with compatible interface 
  */
 public class StyledText extends Composite
 {
@@ -45,6 +46,7 @@ public class StyledText extends Composite
    private Map<Integer, StyleRange> styleRanges = new TreeMap<Integer, StyleRange>(); 
    private int writePosition = 0;
    private boolean refreshContent = false;
+   private boolean refreshInProgress = false;
    private Set<LineStyleListener> lineStyleListeners = new HashSet<LineStyleListener>(0);
    private boolean scrollOnAppend = false;
 
@@ -69,13 +71,14 @@ public class StyledText extends Composite
          }
       });
    }
-   
+
    /**
     * Set widget text
     * @param text
     */
    public void setText(String text)
    {
+      checkWidget();
       styleRanges.clear();
       content = new StringBuilder(text);
       writePosition = 0;
@@ -90,6 +93,7 @@ public class StyledText extends Composite
     */
    public void append(String text)
    {
+      checkWidget();
       int pos = content.length();
       content.append(text);
       fireLineStyleListeners(pos);
@@ -101,6 +105,7 @@ public class StyledText extends Composite
     */
    public void setStyleRange(StyleRange range)
    {
+      checkWidget();
       if ((range.start < 0) || (range.start >= content.length()) || (range.length == 0))
          return;
       styleRanges.put(range.start, range);
@@ -223,7 +228,7 @@ public class StyledText extends Composite
       {
          if (r.start + r.length <= currPos)
             continue;
-         
+
          if (currPos < r.start)
             result.append(WidgetHelper.escapeText(content.substring(currPos, r.start), true, true));
          result.append(applyStyleRange(r, WidgetHelper.escapeText(content.substring(r.start, r.start + r.length), true, true)));
@@ -236,41 +241,52 @@ public class StyledText extends Composite
    /**
     * refresh widget
     */
-   public void refresh()
+   private void refresh()
    {
+      // Call to textArea.execute may call readAndDispatch() on Display
+      // potentially causing recursive call of this method. In this case reschedule
+      // refresh and return immediately.
+      if (refreshInProgress)
+      {
+         refreshTimer.execute();
+         return;
+      }
+
+      refreshInProgress = true;
       boolean success;
       try
       {
-         StringBuilder js = new StringBuilder("document.getElementById(\"textArea\").innerHTML ");
+         StringBuilder js = new StringBuilder("document.getElementById(\"textArea\").innerHTML");
          if (refreshContent)
          {
-            js.append("= '");
+            js.append("='");
             js.append(applyStyleRanges(0));
          }
          else
          {
-            js.append("+= '");
+            js.append("+='");
             js.append(applyStyleRanges(writePosition));
          }
          js.append("';");
          if (scrollOnAppend)
             js.append("window.scrollTo(0, document.body.scrollHeight);");
+         int contentLength = content.length();  // content can be updated by calls to append() while script is executing
          success = textArea.execute(js.toString());
+         if (success)
+         {
+            writePosition = contentLength;
+            refreshContent = false;
+         }
       }
       catch (Exception e)
       {
+         Activator.logError("Exception during StyledText content update", e);
          success = false;
       }
-      
-      if (success)
-      {
-         writePosition = content.length();
-         refreshContent = false;
-      }
-      else
-      {
+      refreshInProgress = false;
+
+      if (!success)
          refreshTimer.execute();
-      }
    }
 
    /**
@@ -308,7 +324,7 @@ public class StyledText extends Composite
          }
       }
    }
-   
+
    /**
     * Call all registered line style listeners
     */
@@ -333,7 +349,7 @@ public class StyledText extends Composite
             line.append(text[i]);
          }
       }
-      
+
       if (line.length() > 0)
       {
          styleLine(line.toString(), lineStartPos);

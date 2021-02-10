@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,9 +79,7 @@ public class NodePollerView extends ViewPart
    private Action actionRestart;
    private Action actionClearOutput;
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -89,7 +87,7 @@ public class NodePollerView extends ViewPart
    {
       super.init(site);
 
-      session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
       display = Display.getCurrent();
 
       // Secondary ID must by in form nodeId&pollType
@@ -106,9 +104,7 @@ public class NodePollerView extends ViewPart
       setPartName(POLL_NAME[pollType.getValue()] + " - " + target.getObjectName()); //$NON-NLS-1$
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -258,9 +254,7 @@ public class NodePollerView extends ViewPart
       return null;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
