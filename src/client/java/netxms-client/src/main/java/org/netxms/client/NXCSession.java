@@ -9625,15 +9625,14 @@ public class NXCSession
    }
 
    /**
-    * Upload local file to remote node via agent. If remote file name is not provided
-    * local file name will be used.
+    * Upload local file to remote node via agent. If remote file name is not provided local file name will be used.
     *
-    * @param nodeId         node object ID
-    * @param localFile      local file
+    * @param nodeId node object ID
+    * @param localFile local file
     * @param remoteFileName remote file name (can be null or empty)
-    * @param overwrite      TODO
-    * @param listener       progress listener (can be null)
-    * @throws IOException  if socket or file I/O error occurs
+    * @param overwrite "allow overwrite" flag (if set to true, agent will overwrite existing file)
+    * @param listener progress listener (can be null)
+    * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void uploadLocalFileToAgent(long nodeId, File localFile, String remoteFileName, boolean overwrite,
