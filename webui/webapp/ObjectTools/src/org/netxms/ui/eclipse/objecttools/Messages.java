@@ -11,11 +11,6 @@ public class Messages extends NLS
    public String AccessControl_Add;
    public String AccessControl_Delete;
    public String AccessControl_Label;
-   public String BrowserView_Back;
-   public String BrowserView_Forward;
-   public String BrowserView_PartName_Changed;
-   public String BrowserView_PartName_Changing;
-   public String BrowserView_Stop;
    public String Columns_Add;
    public String Columns_DefName;
    public String Columns_Delete;
