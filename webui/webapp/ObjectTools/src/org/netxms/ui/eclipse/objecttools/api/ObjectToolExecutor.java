@@ -421,8 +421,8 @@ public final class ObjectToolExecutor
     */
    private static void executeAgentAction(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields)
    {
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      
+      final NXCSession session = ConsoleSharedData.getSession();
+
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {      
          new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, node.object.getObjectName()), null, Activator.PLUGIN_ID, null) {
@@ -431,7 +431,7 @@ public final class ObjectToolExecutor
             {
                return String.format(Messages.get().ObjectToolsDynamicMenu_CannotExecuteOnNode, node.object.getObjectName());
             }
-   
+
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
