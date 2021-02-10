@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,13 +53,13 @@ public abstract class AbstractCommandResults extends ViewPart
 	protected long nodeId;
 	protected long toolId;
 	protected TextConsole console;
-	
+
 	private Action actionClear;
 	private Action actionScrollLock;
 	private Action actionCopy;
 	private Action actionSelectAll;
-	
-	/* (non-Javadoc)
+
+	/**
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
 	 */
 	@Override
@@ -77,7 +77,7 @@ public abstract class AbstractCommandResults extends ViewPart
 			nodeId = Long.parseLong(parts[0]);
 			toolId = Long.parseLong(parts[1]);
 			
-			NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			NXCSession session = ConsoleSharedData.getSession();
 			AbstractObject object = session.findObjectById(nodeId);
 			setPartName(object.getObjectName() + " - " + ObjectToolsCache.getInstance().findTool(toolId).getDisplayName()); //$NON-NLS-1$
 		}
@@ -241,7 +241,7 @@ public abstract class AbstractCommandResults extends ViewPart
 		manager.add(actionCopy);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
 	@Override
