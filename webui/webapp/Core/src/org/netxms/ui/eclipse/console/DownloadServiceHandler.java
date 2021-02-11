@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,12 +41,10 @@ import org.eclipse.rap.rwt.service.ServiceHandler;
 public class DownloadServiceHandler implements ServiceHandler
 {
 	private static Map<String, DownloadInfo> downloads = new HashMap<String, DownloadInfo>();
+	private static Deque<String> iframeIds = new ArrayDeque<String>(16);
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.rap.rwt.service.ServiceHandler#service(javax.servlet.http.HttpServletRequest,
-	 * javax.servlet.http.HttpServletResponse)
+	/**
+	 * @see org.eclipse.rap.rwt.service.ServiceHandler#service(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	@Override
 	public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
@@ -54,7 +55,7 @@ public class DownloadServiceHandler implements ServiceHandler
 		{
 			info = downloads.get(id);
 		}
-		
+
 		if (info == null)
 		{
 			response.sendError(404);
@@ -85,12 +86,13 @@ public class DownloadServiceHandler implements ServiceHandler
 			{
 				in.close();
 			}
-			
+
 			// remove file after successful download
 			synchronized(downloads)
 			{
 				downloads.remove(id);
 				info.localFile.delete();
+				iframeIds.push(info.iframeId);
 			}
 		}
 		else
@@ -137,7 +139,7 @@ public class DownloadServiceHandler implements ServiceHandler
 			downloads.put(id, new DownloadInfo(name, null, contentType, data));
 		}
 	}
-	
+
 	/**
 	 * Start download that was added previously
 	 * 
@@ -149,8 +151,9 @@ public class DownloadServiceHandler implements ServiceHandler
       if (executor != null) 
       {
          StringBuilder js = new StringBuilder();
-         js.append("var hiddenIFrameID = 'hiddenDownloader',");
-         js.append("   iframe = document.getElementById(hiddenIFrameID);");
+         js.append("var hiddenIFrameID = 'hiddenDownloader_");
+         js.append(getIFrameId(id));
+         js.append("', iframe = document.getElementById(hiddenIFrameID);");
          js.append("if (iframe === null) {");
          js.append("   iframe = document.createElement('iframe');");
          js.append("   iframe.id = hiddenIFrameID;");
@@ -165,6 +168,21 @@ public class DownloadServiceHandler implements ServiceHandler
 	}
 
 	/**
+	 * Get iframe ID for given download ID
+	 *
+	 * @param id download ID
+	 * @return iframe ID
+	 */
+	private static String getIFrameId(String id)
+	{
+      synchronized(downloads)
+      {
+         DownloadInfo info = downloads.get(id);
+         return (info != null) ? info.iframeId : "";
+      }
+	}
+
+	/**
 	 * Download information
 	 */
 	private static class DownloadInfo
@@ -173,6 +191,7 @@ public class DownloadServiceHandler implements ServiceHandler
 		File localFile; // if null, use in-memory data
 		String contentType;
 		byte[] data;
+		String iframeId;
 
 		DownloadInfo(String name, File localFile, String contentType, byte[] data)
 		{
@@ -180,6 +199,7 @@ public class DownloadServiceHandler implements ServiceHandler
 			this.localFile = localFile;
 			this.contentType = contentType;
 			this.data = data;
+			this.iframeId = iframeIds.isEmpty() ? UUID.randomUUID().toString() : iframeIds.pop();
 		}
 	}
 }
