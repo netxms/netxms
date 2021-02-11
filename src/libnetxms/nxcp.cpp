@@ -534,9 +534,8 @@ void LIBNETXMS_EXPORTABLE NXCPUnregisterMessageNameResolver(NXCPMessageNameResol
  * If buffer is NULL, new buffer is allocated with malloc()
  * Buffer should be at least dataSize + NXCP_HEADER_SIZE + 8 bytes.
  */
-NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, UINT16 flags,
-                                                        const void *data, size_t dataSize,
-                                                        NXCP_MESSAGE *buffer, bool allowCompression)
+NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(uint16_t code, uint32_t id, uint16_t flags,
+         const void *data, size_t dataSize, NXCP_MESSAGE *buffer, bool allowCompression)
 {
    NXCP_MESSAGE *msg = (buffer == nullptr) ? static_cast<NXCP_MESSAGE*>(MemAlloc(dataSize + NXCP_HEADER_SIZE + 8)) : buffer;
 
@@ -547,10 +546,10 @@ NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, 
    msg->flags = htons(MF_BINARY | flags);
    msg->id = htonl(id);
    size_t msgSize = dataSize + NXCP_HEADER_SIZE + padding;
-   msg->size = htonl((UINT32)msgSize);
-   msg->numFields = htonl((UINT32)dataSize);   // numFields contains actual data size for binary message
+   msg->size = htonl(static_cast<uint32_t>(msgSize));
+   msg->numFields = htonl(static_cast<uint32_t>(dataSize));   // numFields contains actual data size for binary message
 
-   if (allowCompression)
+   if (allowCompression && (dataSize > 128))
    {
       z_stream stream;
       stream.zalloc = Z_NULL;
@@ -589,7 +588,7 @@ NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, 
          deflateEnd(&stream);
       }
    }
-   else
+   else if (dataSize > 0)
    {
       memcpy(msg->fields, data, dataSize);
    }
