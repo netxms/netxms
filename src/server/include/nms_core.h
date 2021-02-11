@@ -437,13 +437,13 @@ class NXCORE_EXPORTABLE ClientSessionConsole : public ServerConsole
 {
 private:
    ClientSession *m_session;
-   UINT16 m_messageCode;
+   uint16_t m_messageCode;
 
 protected:
    virtual void write(const TCHAR *text) override;
 
 public:
-   ClientSessionConsole(ClientSession *session, UINT16 msgCode = CMD_ADM_MESSAGE);
+   ClientSessionConsole(ClientSession *session, uint16_t msgCode = CMD_ADM_MESSAGE);
    virtual ~ClientSessionConsole();
 };
 
@@ -452,9 +452,43 @@ public:
  */
 typedef int session_id_t;
 
+/**
+ * Agent file transfer
+ */
+struct AgentFileTransfer
+{
+   shared_ptr<AgentConnection> connection;
+   uint32_t requestId;
+   TCHAR key[24];
+   TCHAR *fileName;
+   MUTEX mutex;
+   bool active;
+   bool failure;
+
+   AgentFileTransfer(session_id_t sessionId, uint32_t _requestId, const shared_ptr<AgentConnection>& _connection) : connection(_connection)
+   {
+      requestId = _requestId;
+      _sntprintf(key, 24, _T("FT_%d_%u"), sessionId, _requestId);
+      fileName = nullptr;
+      mutex = MutexCreateFast();
+      active = true;
+      failure = false;
+   }
+
+   ~AgentFileTransfer()
+   {
+      if (fileName != nullptr)
+      {
+         _tremove(fileName);
+         MemFree(fileName);
+      }
+      MutexDestroy(mutex);
+   }
+};
+
 // Explicit instantiation of template classes
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE SharedPointerIndex<AgentConnection>;
+template class NXCORE_EXPORTABLE AbstractIndex<AgentFileTransfer>;
 template class NXCORE_EXPORTABLE HashSet<uint32_t>;
 template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #endif
@@ -497,17 +531,17 @@ private:
    UINT32 m_dwNumRecordsToUpload; // Number of records to be uploaded
    UINT32 m_dwRecordsUploaded;
    EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
-   SynchronizedHashMap<uint32_t, ServerDownloadFileInfo> *m_downloadFileMap;
+   SynchronizedHashMap<uint32_t, ServerDownloadFileInfo> m_downloadFileMap;
    VolatileCounter m_refCount;
    uint32_t m_encryptionRqId;
    uint32_t m_encryptionResult;
    CONDITION m_condEncryptionSetup;
 	ClientSessionConsole *m_console;			// Server console context
 	StringList m_soundFileTypes;
-	SharedPointerIndex<AgentConnection> m_agentConnections;
-	StringObjectMap<UINT32> *m_subscriptions;
+	SharedPointerIndex<AgentFileTransfer> m_agentFileTransfers;
+	StringObjectMap<uint32_t> m_subscriptions;
 	MUTEX m_subscriptionLock;
-	SynchronizedSharedHashMap<pid_t, ProcessExecutor> *m_serverCommands;
+	SynchronizedSharedHashMap<pid_t, ProcessExecutor> m_serverCommands;
 	ObjectArray<TcpProxy> *m_tcpProxyConnections;
 	MUTEX m_tcpProxyLock;
 	VolatileCounter m_tcpProxyChannelId;
@@ -529,6 +563,9 @@ private:
 
    void processRequest(NXCPMessage *request);
    void processFileTransferMessage(NXCPMessage *msg);
+   void sendAgentFileTransferMessage(shared_ptr<AgentFileTransfer> ft, NXCPMessage *msg);
+   void agentFileTransferFromFile(shared_ptr<AgentFileTransfer> ft);
+   bool sendDataFromCacheFile(AgentFileTransfer *ft);
 
    void postRawMessageAndDelete(NXCP_MESSAGE *msg);
    void sendRawMessageAndDelete(NXCP_MESSAGE *msg);
