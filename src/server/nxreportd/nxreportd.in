@@ -4,62 +4,96 @@
 # Copyright (c) 2021 Raden Solutions
 #
 
-while [ $# -gt 0 ]; do
-	arg="$1"
+###############################################################################
+# Defaults
+JAVA_OPTIONS="-Djava.awt.headless=true -Xms512m -Xmx1024m"
 
-	if [ "$arg" = "-h" ]; then
-		echo "NetXMS Reporting Server launcher"
-		echo "Copyright (c) 2021 Raden Solutions"
-		echo "Usage:"
-		echo "   nxreportd [options]"
-		echo "Valid options are:"
-		echo "   -d       Run as daemon"
-		echo "   -h       Show help and exit"
-		echo "   -l file  Write log to given file (if custom logback.xml is not present)"
-		echo "   -w path  Set workspace path"
-		exit 0
-	fi
+if [ -z $NETXMS_HOME ]; then
+	WORKSPACE="~STATEDIR~/nxreportd"
+	NETXMS_HOME="~PREFIX~"
+else
+	WORKSPACE="$NETXMS_HOME/var/lib/nxreportd"
+fi
 
-	if [ "$arg" = "-d" ]; then
-		DAEMON="yes"
-	fi
+###############################################################################
+function show_usage_and_exit() {
+	cat <<END
+NetXMS Reporting Server
+Copyright (c) 2021 Raden Solutions
 
-	if [ "$arg" = "-l" ]; then
-		shift
-		JAVA_OPTIONS="$JAVA_OPTIONS -Dnxreportd.logfile=$1"
-	fi
+SYNOPSIS
 
-	if [ "$arg" = "-w" ]; then
-		shift
-		WORKSPACE="$1"
-	fi
+	$0 [-hd] [-l LOGFILE] [-w WORKSPACE]
 
-	shift
+DESCRIPTION
+	The following options are available:
+
+	-h
+		Show this help.
+
+	-d
+		Run as daemon (in background)
+
+	-l LOGFILE
+		Log all output to file LOGFILE
+
+	-w WORKSPACE
+		Set location of the workspace. Default: $WORKSPACE
+
+END
+
+	exit 1
+}
+
+while getopts 'dhl:w:' c; do
+	case $c in
+		h)
+			show_usage_and_exit
+			;;
+		d)
+			DAEMON="yes"
+			;;
+		l)
+			JAVA_OPTIONS="$JAVA_OPTIONS -Dnxreportd.logfile=$OPTARG"
+			;;
+		w)
+			WORKSPACE="$OPTARG"
+			;;
+		*)
+			echo "Invalid option: $OPTARG" 1>&2
+			show_usage_and_exit
+			;;
+		:)
+			echo "Invalid option: $OPTARG requires an argument" 1>&2
+			show_usage_and_exit
+			;;
+	esac
 done
 
-if [ "x$JAVA_HOME" != "x" -a -x "$JAVA_HOME/bin/java" ]; then
+JAVA_OPTIONS="$JAVA_OPTIONS -Dnxreportd.workspace=$WORKSPACE"
+
+# Required for Oracle TNS names resolution
+if [ ! -z $TNS_ADMIN ]; then
+	JAVA_OPTIONS="$JAVA_OPTIONS -Doracle.net.tns_admin=$TNS_ADMIN"
+else
+	if [ ! -z $ORACLE_HOME ]; then
+		JAVA_OPTIONS="$JAVA_OPTIONS -Doracle.net.tns_admin=$ORACLE_HOME/network/admin"
+	fi
+fi
+
+if [ -x "$JAVA_HOME/bin/java" ]; then
 	JAVA="$JAVA_HOME/bin/java"
 else
 	JAVA=`which java`
 fi
 
-if [ "x$JAVA" = "x" ]; then
-	echo "Cannot find JVM"
+if [ -z $JAVA ]; then
+	echo Java executable not found. Set JAVA_HOME or PATH.
 	exit 1
 fi
 
-if [ "x$WORKSPACE" = "x" ]; then
-	if [ "x$NETXMS_HOME" != "x" ]; then
-		WORKSPACE="$NETXMS_HOME/var/lib/netxms/nxreportd"
-	else
-		WORKSPACE="~STATEDIR~/nxreportd"
-	fi
-fi
-
-CLASSPATH="~SYSCONFDIR~/nxreportd:~PKGLIBDIR~/java/nxreportd-~PACKAGE_VERSION~.jar"
-
 if [ "x$DAEMON" = "xyes" ]; then
-	$JAVA -Dnxreportd.workspace="$WORKSPACE" -cp "$CLASSPATH" -Dnetxms.libdir="~PKGLIBDIR~/java" $JAVA_OPTIONS org.netxms.reporting.Startup &
+	nohup $JAVA $JAVA_OPTIONS -jar $NETXMS_HOME/lib/netxms/java/nxreportd-~PACKAGE_VERSION~.jar >/dev/null 2>/dev/null &
 else
-	$JAVA -Dnxreportd.workspace="$WORKSPACE" -cp "$CLASSPATH" -Dnetxms.libdir="~PKGLIBDIR~/java" $JAVA_OPTIONS org.netxms.reporting.Startup
+	$JAVA $JAVA_OPTIONS -jar $NETXMS_HOME/lib/netxms/java/nxreportd-~PACKAGE_VERSION~.jar
 fi
