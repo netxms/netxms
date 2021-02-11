@@ -160,7 +160,7 @@ void ClientSession::terminate(ClientSession *session)
 /**
  * Client session class constructor
  */
-ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
+ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downloadFileMap(Ownership::True), m_subscriptions(Ownership::True)
 {
    m_id = -1;
    m_socket = hSocket;
@@ -172,7 +172,6 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_mutexSendAuditLog = MutexCreate();
    m_mutexPollerInit = MutexCreate();
    m_subscriptionLock = MutexCreateFast();
-   m_subscriptions = new StringObjectMap<UINT32>(Ownership::True);
    m_flags = 0;
 	m_clientType = CLIENT_TYPE_DESKTOP;
 	m_clientAddr = addr;
@@ -194,8 +193,6 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_loginTime = time(nullptr);
    m_soundFileTypes.add(_T("wav"));
    _tcscpy(m_language, _T("en"));
-   m_serverCommands = new SynchronizedSharedHashMap<pid_t, ProcessExecutor>();
-   m_downloadFileMap = new SynchronizedHashMap<uint32_t, ServerDownloadFileInfo>(Ownership::True);
    m_tcpProxyConnections = new ObjectArray<TcpProxy>(0, 16, Ownership::True);
    m_tcpProxyLock = MutexCreate();
    m_tcpProxyChannelId = 0;
@@ -226,7 +223,6 @@ ClientSession::~ClientSession()
    MutexDestroy(m_mutexSendAuditLog);
    MutexDestroy(m_mutexPollerInit);
    MutexDestroy(m_subscriptionLock);
-   delete m_subscriptions;
    if (m_ppEPPRuleList != nullptr)
    {
       if (m_flags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
@@ -242,10 +238,8 @@ ClientSession::~ClientSession()
 
    m_soundFileTypes.clear();
 
-   m_downloadFileMap->forEach(CancelFileTransfer);
-   delete m_downloadFileMap;
+   m_downloadFileMap.forEach(CancelFileTransfer);
 
-   delete m_serverCommands;
    delete m_tcpProxyConnections;
    MutexDestroy(m_tcpProxyLock);
    delete m_pendingObjectNotifications;
@@ -288,10 +282,10 @@ void ClientSession::runHousekeeper()
 {
    IntegerArray<uint32_t> cancelList;
    std::pair<ClientSession*, IntegerArray<uint32_t>*> context(this, &cancelList);
-   m_downloadFileMap->forEach(ClientSession::checkFileTransfer, &context);
+   m_downloadFileMap.forEach(ClientSession::checkFileTransfer, &context);
    for (int i = 0; i < cancelList.size(); i++)
    {
-      m_downloadFileMap->remove(cancelList.get(i));
+      m_downloadFileMap.remove(cancelList.get(i));
    }
 }
 
@@ -345,7 +339,7 @@ void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, U
 bool ClientSession::isSubscribedTo(const TCHAR *channel) const
 {
    MutexLock(m_subscriptionLock);
-   bool subscribed = m_subscriptions->contains(channel);
+   bool subscribed = m_subscriptions.contains(channel);
    MutexUnlock(m_subscriptionLock);
    return subscribed;
 }
@@ -559,7 +553,7 @@ void ClientSession::finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn
  */
 void ClientSession::processFileTransferMessage(NXCPMessage *msg)
 {
-   ServerDownloadFileInfo *dInfo = m_downloadFileMap->get(msg->getId());
+   ServerDownloadFileInfo *dInfo = m_downloadFileMap.get(msg->getId());
    if (dInfo != nullptr)
    {
       if (msg->getCode() == CMD_FILE_DATA)
@@ -569,15 +563,13 @@ void ClientSession::processFileTransferMessage(NXCPMessage *msg)
             if (msg->isEndOfFile())
             {
                debugPrintf(6, _T("Got end of file marker"));
-               NXCPMessage response;
 
-               response.setCode(CMD_REQUEST_COMPLETED);
-               response.setId(msg->getId());
+               NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId());
                response.setField(VID_RCC, RCC_SUCCESS);
                sendMessage(&response);
 
                dInfo->close(true);
-               m_downloadFileMap->remove(msg->getId());
+               m_downloadFileMap.remove(msg->getId());
             }
          }
          else
@@ -589,48 +581,83 @@ void ClientSession::processFileTransferMessage(NXCPMessage *msg)
             sendMessage(&response);
 
             dInfo->close(false);
-            m_downloadFileMap->remove(msg->getId());
+            m_downloadFileMap.remove(msg->getId());
          }
       }
       else
       {
          // Abort current file transfer because of client's problem
          dInfo->close(false);
-         m_downloadFileMap->remove(msg->getId());
+         m_downloadFileMap.remove(msg->getId());
       }
    }
    else
    {
-      shared_ptr<AgentConnection> conn = m_agentConnections.get(msg->getId());
-      if (conn != nullptr)
+      shared_ptr<AgentFileTransfer> ft = m_agentFileTransfers.get(msg->getId());
+      if (ft != nullptr)
       {
          if (msg->getCode() == CMD_FILE_DATA)
          {
-            if (conn->sendMessage(msg))  //send raw message
+            // Check if we should start caching file on file system - this could happen if connection to agent is much slower
+            // then connection from client
+            if ((ft->fileName == nullptr) && (ThreadPoolGetSerializedRequestCount(g_clientThreadPool, ft->key) > 100))
             {
-               if (msg->isEndOfFile())
+               debugPrintf(6, _T("Slow file send to agent (request ID %u), start caching on file system"), msg->getId());
+               TCHAR fileName[MAX_PATH];
+               GetNetXMSDirectory(nxDirData, fileName);
+               _tcslcat(fileName, FS_PATH_SEPARATOR, MAX_PATH);
+               _tcslcat(fileName, ft->key, MAX_PATH);
+               ft->fileName = MemCopyString(fileName);
+               ThreadPoolExecuteSerialized(g_clientThreadPool, ft->key, this, &ClientSession::agentFileTransferFromFile, ft);
+            }
+
+            if (ft->fileName != nullptr)
+            {
+               bool success;
+               MutexLock(ft->mutex);
+               int fd = _topen(ft->fileName, O_CREAT | O_APPEND | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+               if (fd != -1)
                {
-                  debugPrintf(6, _T("Got end of file marker for request ID %u"), msg->getId());
-                  incRefCount();
-                  ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::finalizeFileTransferToAgent, conn, msg->getId());
-                  m_agentConnections.remove(msg->getId());
+                  NXCP_MESSAGE *data = msg->serialize(ft->connection->isCompressionAllowed());
+                  int bytes = static_cast<int>(ntohl(data->size));
+                  success = (_write(fd, data, bytes) == bytes);
+                  _close(fd);
+                  MemFree(data);
+               }
+               MutexUnlock(ft->mutex);
+               if (success && msg->isEndOfFile())
+               {
+                  ft->active = false;
+               }
+               else if (!success)
+               {
+                  debugPrintf(6, _T("Error writing to file transfer cache file (request ID %u): %s"), msg->getId(), _tcserror(errno));
+
+                  NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId());
+                  response.setField(VID_RCC, RCC_COMM_FAILURE);
+                  sendMessage(&response);
+
+                  ft->failure = true;
+                  ft->active = false;
+                  m_agentFileTransfers.remove(msg->getId());
                }
             }
             else
             {
-               debugPrintf(6, _T("Error while sending file to agent (request ID %u)"), msg->getId());
-               m_agentConnections.remove(msg->getId());
-
-               NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId());
-               response.setField(VID_RCC, RCC_COMM_FAILURE);
-               sendMessage(&response);
+               incRefCount();
+               ThreadPoolExecuteSerialized(g_clientThreadPool, ft->key, this, &ClientSession::sendAgentFileTransferMessage, ft, msg);
+               msg = nullptr;
             }
          }
-         else
+         else if (msg->getCode() == CMD_ABORT_FILE_TRANSFER)
          {
             // Resend abort message
-            conn->sendMessage(msg);
-            m_agentConnections.remove(msg->getId());
+            incRefCount();
+            ft->failure = true;
+            ft->active = false;
+            ThreadPoolExecuteSerialized(g_clientThreadPool, ft->key, this, &ClientSession::sendAgentFileTransferMessage, ft, msg);
+            m_agentFileTransfers.remove(msg->getId());
+            msg = nullptr;
          }
       }
       else
@@ -639,6 +666,165 @@ void ClientSession::processFileTransferMessage(NXCPMessage *msg)
       }
    }
    delete msg;
+   decRefCount();
+}
+
+/**
+ * Send agent file transfer message
+ */
+void ClientSession::sendAgentFileTransferMessage(shared_ptr<AgentFileTransfer> ft, NXCPMessage *msg)
+{
+   bool success = ft->connection->sendMessage(msg);
+   if (msg->getCode() == CMD_FILE_DATA)
+   {
+      if (success)
+      {
+         if (msg->isEndOfFile())
+         {
+            debugPrintf(6, _T("Got end of file marker for request ID %u"), msg->getId());
+            incRefCount();
+            ThreadPoolExecuteSerialized(g_clientThreadPool, ft->key, this, &ClientSession::finalizeFileTransferToAgent, ft->connection, msg->getId());
+            m_agentFileTransfers.remove(msg->getId());
+         }
+      }
+      else
+      {
+         debugPrintf(6, _T("Error while sending file to agent (request ID %u)"), msg->getId());
+         m_agentFileTransfers.remove(msg->getId());
+
+         NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId());
+         response.setField(VID_RCC, RCC_COMM_FAILURE);
+         sendMessage(&response);
+      }
+   }
+   delete msg;
+   decRefCount();
+}
+
+/**
+ * Send data from agent file transfer cache file
+ */
+bool ClientSession::sendDataFromCacheFile(AgentFileTransfer *ft)
+{
+   if (_taccess(ft->fileName, F_OK) != 0)
+      return true;   // Assume cache file does not exist yet
+
+   TCHAR tempFileName[MAX_PATH];
+   _tcscpy(tempFileName, ft->fileName);
+   _tcscat(tempFileName, _T(".out"));
+
+   MutexLock(ft->mutex);
+   _trename(ft->fileName, tempFileName);
+   MutexUnlock(ft->mutex);
+
+   int fd = _topen(tempFileName, O_RDONLY | O_BINARY);
+   if (fd == -1)
+   {
+      debugPrintf(6, _T("Cannot open file transfer cache file %s (%s)"), tempFileName, _tcserror(errno));
+      _tremove(tempFileName);
+      return false;
+   }
+
+   bool success = true;
+   size_t bufferSize = FILE_BUFFER_SIZE + 64;
+   char *buffer = MemAllocArrayNoInit<char>(bufferSize);
+
+   while(true)
+   {
+      int bytes = _read(fd, buffer, NXCP_HEADER_SIZE);
+      if (bytes < 0)
+      {
+         debugPrintf(6, _T("Cannot read file transfer cache file %s (%s)"), tempFileName, _tcserror(errno));
+         success = false;
+         break;
+      }
+
+      if (bytes == 0)
+         break;
+
+      if (bytes < NXCP_HEADER_SIZE)
+      {
+         debugPrintf(6, _T("Corrupted file transfer cache file %s"), tempFileName);
+         success = false;
+         break;
+      }
+
+      int msgSize = ntohl(reinterpret_cast<NXCP_MESSAGE*>(buffer)->size);
+      if (msgSize > bufferSize)
+      {
+         bufferSize = msgSize;
+         buffer = MemRealloc(buffer, bufferSize);
+      }
+
+      bytes = _read(fd, buffer + NXCP_HEADER_SIZE, msgSize - NXCP_HEADER_SIZE);
+      if (bytes != msgSize - NXCP_HEADER_SIZE)
+      {
+         if (bytes < 0)
+            debugPrintf(6, _T("Cannot read file transfer cache file %s (%s)"), tempFileName, _tcserror(errno));
+         else
+            debugPrintf(6, _T("Corrupted file transfer cache file %s"), tempFileName);
+         success = false;
+         break;
+      }
+
+      success = ft->connection->sendRawMessage(reinterpret_cast<NXCP_MESSAGE*>(buffer));
+      if (!success)
+      {
+         debugPrintf(6, _T("Cannot send data from file transfer cache file %s"), tempFileName);
+         break;
+      }
+   }
+
+   _close(fd);
+   _tremove(tempFileName);
+   MemFree(buffer);
+   return success;
+}
+
+/**
+ * Continue file transfer from file
+ */
+void ClientSession::agentFileTransferFromFile(shared_ptr<AgentFileTransfer> ft)
+{
+   char buffer[8192];
+
+   bool failure = false;
+   while(ft->active)
+   {
+      if (!sendDataFromCacheFile(ft.get()))
+      {
+         failure = true;
+         break;
+      }
+   }
+
+   if (!failure && !ft->failure)
+   {
+      // Transfer from client complete, send rest of cache file to agent
+      if (sendDataFromCacheFile(ft.get()))
+      {
+         debugPrintf(6, _T("Got end of file marker for request ID %u"), ft->requestId);
+         incRefCount();
+         ThreadPoolExecuteSerialized(g_clientThreadPool, ft->key, this, &ClientSession::finalizeFileTransferToAgent, ft->connection, ft->requestId);
+      }
+      else
+      {
+         failure = true;
+      }
+   }
+
+   if (failure || ft->failure)
+   {
+      NXCPMessage response(CMD_REQUEST_COMPLETED, ft->requestId);
+      response.setField(VID_RCC, RCC_IO_ERROR);
+      sendMessage(&response);
+
+      NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_FILE_DATA, ft->requestId, MF_STREAM | MF_END_OF_FILE, nullptr, 0, nullptr, false);
+      ft->connection->sendRawMessage(msg);
+      MemFree(msg);
+   }
+
+   m_agentFileTransfers.remove(ft->requestId);
    decRefCount();
 }
 
@@ -7045,7 +7231,7 @@ void ClientSession::installPackage(NXCPMessage *request)
                {
                   uint32_t uploadData = CreateUniqueId(IDG_PACKAGE);
                   fInfo->setUploadData(uploadData);
-                  m_downloadFileMap->set(request->getId(), fInfo);
+                  m_downloadFileMap.set(request->getId(), fInfo);
                   msg.setField(VID_RCC, RCC_SUCCESS);
                   msg.setField(VID_PACKAGE_ID, uploadData);
 
@@ -8246,7 +8432,7 @@ void ClientSession::changeSubscription(NXCPMessage *request)
    if (channel[0] != 0)
    {
       MutexLock(m_subscriptionLock);
-      UINT32 *count = m_subscriptions->get(channel);
+      UINT32 *count = m_subscriptions.get(channel);
       if (request->getFieldAsBoolean(VID_OPERATION))
       {
          // Subscribe
@@ -8254,7 +8440,7 @@ void ClientSession::changeSubscription(NXCPMessage *request)
          {
             count = new UINT32;
             *count = 1;
-            m_subscriptions->set(channel, count);
+            m_subscriptions.set(channel, count);
          }
          else
          {
@@ -8270,7 +8456,7 @@ void ClientSession::changeSubscription(NXCPMessage *request)
             (*count)--;
             debugPrintf(5, _T("Subscription removed: %s (%d)"), channel, *count);
             if (*count == 0)
-               m_subscriptions->remove(channel);
+               m_subscriptions.remove(channel);
          }
       }
       MutexUnlock(m_subscriptionLock);
@@ -11739,7 +11925,7 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
             if (dInfo->open())
             {
                dInfo->setImageGuid(guid);
-               m_downloadFileMap->set(request->getId(), dInfo);
+               m_downloadFileMap.set(request->getId(), dInfo);
             }
             else
             {
@@ -11928,7 +12114,7 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 			{
 			   shared_ptr<ServerCommandExecutor> cmd = make_shared<ServerCommandExecutor>(request, this);
             uint32_t taskId = cmd->getId();
-			   m_serverCommands->set(taskId, cmd);
+			   m_serverCommands.set(taskId, cmd);
 			   if (cmd->execute())
 			   {
 			      debugPrintf(5, _T("Started process executor %u for command %s, node id %d"), taskId, cmd->getMaskedCommand(), nodeId);
@@ -11938,7 +12124,7 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 			   }
 			   else
 			   {
-	            m_serverCommands->remove(taskId);
+	            m_serverCommands.remove(taskId);
                msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
 			   }
 			}
@@ -11968,7 +12154,7 @@ void ClientSession::stopServerCommand(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   shared_ptr<ProcessExecutor> cmd = m_serverCommands->getShared(static_cast<pid_t>(request->getFieldAsUInt64(VID_COMMAND_ID)));
+   shared_ptr<ProcessExecutor> cmd = m_serverCommands.getShared(static_cast<pid_t>(request->getFieldAsUInt64(VID_COMMAND_ID)));
    if (cmd != nullptr)
    {
       cmd->stop();
@@ -11996,10 +12182,10 @@ static void WaitForExecutorCompletion(const shared_ptr<ProcessExecutor>& executo
  */
 void ClientSession::unregisterServerCommand(pid_t taskId)
 {
-   shared_ptr<ProcessExecutor> executor = m_serverCommands->getShared(taskId);
+   shared_ptr<ProcessExecutor> executor = m_serverCommands.getShared(taskId);
    if (executor != nullptr)
    {
-      m_serverCommands->remove(taskId);
+      m_serverCommands.remove(taskId);
       ThreadPoolExecuteSerialized(g_clientThreadPool, _T("UnregisterCmd"), WaitForExecutorCompletion, executor);
    }
 }
@@ -12318,7 +12504,7 @@ void ClientSession::receiveFile(NXCPMessage *request)
 
       if (fInfo->open())
       {
-         m_downloadFileMap->set(request->getId(), fInfo);
+         m_downloadFileMap.set(request->getId(), fInfo);
          msg.setField(VID_RCC, RCC_SUCCESS);
          writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Started upload of file \"%s\" to server"), fileName);
          NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
@@ -13276,7 +13462,7 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
                      response->setCode(CMD_REQUEST_COMPLETED);
                      response->setField(VID_ENABLE_COMPRESSION, conn->isCompressionAllowed());
                      responseMessage = response;
-                     m_agentConnections.put(request->getId(), conn);
+                     m_agentFileTransfers.put(request->getId(), make_shared<AgentFileTransfer>(m_id, request->getId(), conn));
                   }
                   else
                   {
