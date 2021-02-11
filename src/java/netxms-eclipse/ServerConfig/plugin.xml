@@ -202,6 +202,10 @@
             id="org.netxms.ui.eclipse.serverconfig.commands.copy_key_task"
             name="Copy SSH key">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.open_ssh_configuration"
+            name="Open SSH key configuration">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -420,9 +424,9 @@
       </key>
       <key
             commandId="org.netxms.ui.eclipse.serverconfig.commands.copy_key_task"
-            contextId="org.netxms.ui.eclipse.serverconfig.context.SshKeyConfiguratorv"
+            contextId="org.netxms.ui.eclipse.serverconfig.context.SshKeyConfigurator"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="M1+ C">
+            sequence="M1+C">
       </key>
    </extension>
    <extension

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -954,62 +954,64 @@ public class AgentFileManager extends ViewPart
     */
    private void startDownload()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.size() != 1)
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
          return;
 
-      final AgentFile sf = (AgentFile)selection.getFirstElement();
-      if (!sf.isDirectory())
+      for(Object o : selection.toList())
       {
-         downloadFile(sf.getFullName());
-      }
-      else
-      {      
-         ConsoleJobCallingServerJob job = new ConsoleJobCallingServerJob("Download from agent", null, Activator.PLUGIN_ID, null) {
-            @Override
-            protected void runInternal(final IProgressMonitor monitor) throws Exception
-            {
-               //create zip from download folder wile download
-               long dirSize = -1;
-               try
+         final AgentFile file = (AgentFile)o;
+         if (!file.isDirectory())
+         {
+            downloadFile(file.getFullName(), file.getName());
+         }
+         else
+         {      
+            ConsoleJobCallingServerJob job = new ConsoleJobCallingServerJob("Download from agent", null, Activator.PLUGIN_ID, null) {
+               @Override
+               protected void runInternal(final IProgressMonitor monitor) throws Exception
                {
-                  dirSize = session.getAgentFileInfo(sf).getSize();
+                  long dirSize = -1;
+                  try
+                  {
+                     dirSize = session.getAgentFileInfo(file).getSize();
+                  }
+                  catch(Exception e)
+                  {
+                  }
+                  monitor.beginTask(String.format("Downloading directory %s", file.getName()), (int)dirSize);
+                  
+                  final File zipFile = File.createTempFile("download_", ".zip");
+                  FileOutputStream fos = new FileOutputStream(zipFile);
+                  ZipOutputStream zos = new ZipOutputStream(fos);
+                  downloadDir(file, file.getName(), zos, monitor, this);
+                  zos.close();
+                  fos.close();
+                  if (!isCanceled())
+                  {
+   	               DownloadServiceHandler.addDownload(zipFile.getName(), file.getName() + ".zip", zipFile, "application/octet-stream");
+   	               runInUIThread(new Runnable() {
+   	                  @Override
+   	                  public void run()
+   	                  {
+   	                     DownloadServiceHandler.startDownload(zipFile.getName());
+   	                  }
+   	               });
+                  }
+                  monitor.done();
                }
-               catch(Exception e)
+
+               @Override
+               protected String getErrorMessage()
                {
+                  return Messages.get().AgentFileManager_DirectoryReadError;
                }
-               monitor.beginTask(String.format("Downloading directory %s", sf.getName()), (int)dirSize);
-               
-               final File zipFile = File.createTempFile("download_", ".zip");
-               FileOutputStream fos = new FileOutputStream(zipFile);
-               ZipOutputStream zos = new ZipOutputStream(fos);
-               downloadDir(sf, sf.getName(), zos, monitor, this);
-               zos.close();
-               fos.close();
-               if(!isCanceled())
-               {
-	               DownloadServiceHandler.addDownload(zipFile.getName(), sf.getName() + ".zip", zipFile, "application/octet-stream");
-	               runInUIThread(new Runnable() {
-	                  @Override
-	                  public void run()
-	                  {
-	                     DownloadServiceHandler.startDownload(zipFile.getName());
-	                  }
-	               });
-               }
-               monitor.done();
-            }
-   
-            @Override
-            protected String getErrorMessage()
-            {
-               return Messages.get().AgentFileManager_DirectoryReadError;
-            }
-         };
-         job.start();
+            };
+            job.start();
+         }
       }
    }
-   
+
    /**
     * Recursively download directory from agent to local pc
     * 
@@ -1028,8 +1030,8 @@ public class AgentFileManager extends ViewPart
       }
       for(AgentFile f : files)
       {
-    	 if(job.isCanceled())
-    		 break;
+         if (job.isCanceled())
+            break;
          if (f.isDirectory())
          {
             downloadDir(f, localFileName + "/" + f.getName(), zos, monitor, job);
@@ -1068,12 +1070,14 @@ public class AgentFileManager extends ViewPart
    }
    
    /**
-    * Downloads file
-    * @throws NXCException 
-    * @throws IOException 
+    * Download file from agent.
+    * 
+    * @param remoteName remote file name
+    * @param localName local file name
     */
-   private void downloadFile(final String remoteName)
+   private void downloadFile(final String remoteName, final String localName)
    {
+      Activator.logInfo("Start download of agent file " + remoteName);
 	   ConsoleJobCallingServerJob job = new ConsoleJobCallingServerJob(Messages.get().SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(final IProgressMonitor monitor) throws Exception
@@ -1091,17 +1095,22 @@ public class AgentFileManager extends ViewPart
                   monitor.worked((int)workDone);
                }
             }, this);
-            
-            if(file != null && file.getFile() != null)
+
+            if ((file != null) && (file.getFile() != null))
             {
-	            DownloadServiceHandler.addDownload(file.getFile().getName(), remoteName, file.getFile(), "application/octet-stream");
+               Activator.logInfo("Registering download with ID " + file.getId());
+	            DownloadServiceHandler.addDownload(file.getId(), localName, file.getFile(), "application/octet-stream");
 	            runInUIThread(new Runnable() {
 	               @Override
 	               public void run()
 	               {
-	                  DownloadServiceHandler.startDownload(file.getFile().getName());
+	                  DownloadServiceHandler.startDownload(file.getId());
 	               }
 	            });
+            }
+            else
+            {
+               Activator.logInfo("Missing local file after download from agent (remote name " + remoteName + ")");
             }
          }
 
@@ -1111,20 +1120,17 @@ public class AgentFileManager extends ViewPart
             return Messages.get().AgentFileManager_DirectoryReadError;
          }
       };
-      job.setUser(false);
       job.start();
    }
-   
+
    /**
     * Rename selected file
     */
    private void renameFile()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.size() != 1)
-         return;
-      
-      viewer.editElement(selection.getFirstElement(), 0);
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() == 1)
+         viewer.editElement(selection.getFirstElement(), 0);
    }
 
    /**
