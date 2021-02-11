@@ -251,7 +251,7 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
             NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(), connection->m_addr.toString().cstr());
       }
 
-      if ((msg->getCode() == CMD_FILE_DATA) && (msg->getId() == connection->m_dwDownloadRequestId))
+      if ((msg->getCode() == CMD_FILE_DATA) && (msg->getId() == connection->m_downloadRequestId))
       {
          if (g_agentConnectionThreadPool != nullptr)
          {
@@ -265,7 +265,7 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
          }
          msg = nullptr; // Prevent delete
       }
-      else if ((msg->getCode() == CMD_ABORT_FILE_TRANSFER) && (msg->getId() == connection->m_dwDownloadRequestId))
+      else if ((msg->getCode() == CMD_ABORT_FILE_TRANSFER) && (msg->getId() == connection->m_downloadRequestId))
       {
          if (g_agentConnectionThreadPool != nullptr)
          {
@@ -495,7 +495,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
 	m_fileUploadInProgress = false;
    m_fileUpdateConnection = false;
    m_sendToClientMessageCallback = nullptr;
-   m_dwDownloadRequestId = 0;
+   m_downloadRequestId = 0;
    m_downloadProgressCallback = nullptr;
    m_downloadProgressCallbackArg = nullptr;
    m_bulkDataProcessing = 0;
@@ -1299,9 +1299,9 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
 
    if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_debugId) >= 6)
    {
-      TCHAR buffer[64];
+      TCHAR codeName[64], ipAddrText[64];
       debugPrintf(6, _T("Sending message %s (%d) to agent at %s"),
-         NXCPMessageCodeName(pMsg->getCode(), buffer), pMsg->getId(), (const TCHAR *)m_addr.toString());
+         NXCPMessageCodeName(pMsg->getCode(), codeName), pMsg->getId(), m_addr.toString(ipAddrText));
    }
 
    bool success;
@@ -1329,6 +1329,25 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
 }
 
 /**
+ * Callback for sending NXCP message in background
+ */
+void AgentConnection::postMessageCallback(NXCPMessage *msg)
+{
+   sendMessage(msg);
+   delete msg;
+}
+
+/**
+ * Send NXCP message in background. Provided message will be destroyed after sending.
+ */
+void AgentConnection::postMessage(NXCPMessage *msg)
+{
+   TCHAR key[64];
+   _sntprintf(key, 64, _T("PostMessage_%p"), this);
+   ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, self(), &AgentConnection::postMessageCallback, msg);
+}
+
+/**
  * Send raw message to agent
  */
 bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
@@ -1336,6 +1355,13 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
    shared_ptr<AbstractCommChannel> channel = acquireChannel();
    if (channel == nullptr)
       return false;
+
+   if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_debugId) >= 6)
+   {
+      TCHAR codeName[64], ipAddrText[64];
+      debugPrintf(6, _T("Sending raw message %s (%d) to agent at %s"),
+         NXCPMessageCodeName(ntohs(pMsg->code), codeName), ntohl(pMsg->id), m_addr.toString(ipAddrText));
+   }
 
    bool success;
    NXCP_MESSAGE *rawMsg = pMsg;
@@ -2327,7 +2353,7 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *request, const TCHAR *r
 uint32_t AgentConnection::cancelFileDownload()
 {
    NXCPMessage msg(CMD_CANCEL_FILE_DOWNLOAD, generateRequestId(), getProtocolVersion());
-   msg.setField(VID_REQUEST_ID, m_dwDownloadRequestId);
+   msg.setField(VID_REQUEST_ID, m_downloadRequestId);
 
    uint32_t rcc;
    if (sendMessage(&msg))
@@ -2375,7 +2401,7 @@ uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rq
             _lseek(m_hCurrFile, 0, SEEK_END);
       }
 
-      m_dwDownloadRequestId = rqId;
+      m_downloadRequestId = rqId;
       m_downloadProgressCallback = downloadProgressCallback;
       m_downloadProgressCallbackArg = cbArg;
 
@@ -2387,7 +2413,7 @@ uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rq
    {
       ConditionReset(m_condFileDownload);
 
-      m_dwDownloadRequestId = rqId;
+      m_downloadRequestId = rqId;
       m_downloadProgressCallback = downloadProgressCallback;
       m_downloadProgressCallbackArg = cbArg;
 

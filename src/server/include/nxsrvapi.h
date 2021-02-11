@@ -838,7 +838,7 @@ private:
    char m_proxySecret[MAX_SECRET_LENGTH];
 	int m_hCurrFile;
 	TCHAR m_currentFileName[MAX_PATH];
-	UINT32 m_dwDownloadRequestId;
+	uint32_t m_downloadRequestId;
 	CONDITION m_condFileDownload;
 	bool m_fileDownloadSucceeded;
 	void (*m_downloadProgressCallback)(size_t, void*);
@@ -866,6 +866,7 @@ private:
    void onTrapCallback(NXCPMessage *msg);
    void onSyslogMessageCallback(NXCPMessage *msg);
    void onWindowsEventCallback(NXCPMessage *msg);
+   void postMessageCallback(NXCPMessage *msg);
    void postRawMessageCallback(NXCP_MESSAGE *msg);
    void getSshKeysCallback(NXCPMessage *msg);
 
@@ -930,6 +931,7 @@ public:
 	bool isFileUpdateConnection() const { return m_fileUpdateConnection; }
 
    bool sendMessage(NXCPMessage *msg);
+   void postMessage(NXCPMessage *msg);
    bool sendRawMessage(NXCP_MESSAGE *msg);
    void postRawMessage(NXCP_MESSAGE *msg);
    NXCPMessage *waitForMessage(uint16_t code, uint32_t id, uint32_t timeout) { return m_pMsgWaitQueue->waitForMessage(code, id, timeout); }
