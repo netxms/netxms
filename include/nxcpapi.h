@@ -588,7 +588,7 @@ typedef bool (*NXCPMessageNameResolver)(UINT16 code, TCHAR *buffer);
 
 #ifdef __cplusplus
 
-NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, UINT16 flags, const void *data, size_t dataSize,
+NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(uint16_t code, uint32_t id, uint16_t flags, const void *data, size_t dataSize,
       NXCP_MESSAGE *buffer, bool allowCompression);
 bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET s, int *pnVersion, MUTEX mutex);
 bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channel, int *pnVersion, MUTEX mutex);
