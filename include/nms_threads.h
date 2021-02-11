@@ -1920,6 +1920,22 @@ template <typename T, typename B, typename R1, typename R2> inline void ThreadPo
 }
 
 /**
+ * Execute serialized task as soon as possible (use class member with two argumenta)
+ */
+template <typename T, typename B, typename R1, typename R2> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, T *object, void (B::*f)(R1, R2), R1 arg1, R2 arg2)
+{
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_WrapperData_2<B, R1, R2>(object, f, arg1, arg2));
+}
+
+/**
+ * Execute task with delay (use class member with two arguments)
+ */
+template <typename T, typename B, typename R1, typename R2> inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, T *object, void (B::*f)(R1, R2), R1 arg1, R2 arg2)
+{
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_WrapperData_2<B, R1, R2>(object, f, arg1, arg2));
+}
+
+/**
  * Wrapper data for ThreadPoolExecute (two arguments) using smart pointer to object
  */
 template <typename T, typename R1, typename R2> class __ThreadPoolExecute_SharedPtr_WrapperData_2
