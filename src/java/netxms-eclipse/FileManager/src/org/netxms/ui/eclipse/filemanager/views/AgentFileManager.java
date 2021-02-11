@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1127,12 +1127,12 @@ public class AgentFileManager extends ViewPart
     */
    private void startDownload()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
 
       AgentFile sf = (AgentFile)selection.getFirstElement();
-      
+
       final String target;
       if (!sf.isDirectory() && (selection.size() == 1))
       {
@@ -1154,7 +1154,7 @@ public class AgentFileManager extends ViewPart
 
       if (target == null)
          return;
-      
+
       final List<AgentFile> files = new ArrayList<AgentFile>(selection.size());
       for(Object o : selection.toList())
          files.add((AgentFile)o);
@@ -1211,7 +1211,7 @@ public class AgentFileManager extends ViewPart
                monitor.beginTask("Downloading files", (int)total);
                for(AgentFile f : files)
                {
-                  if(isCanceled())
+                  if (isCanceled())
                      break;
                   if (f.isDirectory())
                   {
@@ -1256,7 +1256,7 @@ public class AgentFileManager extends ViewPart
       }
       for(AgentFile f : files)
       {
-         if(job.isCanceled())
+         if (job.isCanceled())
             break;
          if (f.isDirectory())
          {
@@ -1293,7 +1293,7 @@ public class AgentFileManager extends ViewPart
             monitor.worked((int)workDone);
          }
       }, job);
-      if(file.getFile() != null)
+      if (file.getFile() != null)
       {
          File outputFile = new File(localName);
          outputFile.createNewFile();
@@ -1310,17 +1310,15 @@ public class AgentFileManager extends ViewPart
          outputFile.setLastModified(sf.getModifyicationTime().getTime());
       }
    }
-   
+
    /**
     * Rename selected file
     */
    private void renameFile()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.size() != 1)
-         return;
-      
-      viewer.editElement(selection.getFirstElement(), 0);
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() == 1)
+         viewer.editElement(selection.getFirstElement(), 0);
    }
 
    /**
