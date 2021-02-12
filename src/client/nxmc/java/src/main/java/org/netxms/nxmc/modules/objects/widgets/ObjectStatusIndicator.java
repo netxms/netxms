@@ -38,7 +38,7 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.objects.widgets.internal.ObjectTreeViewer;
+import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeViewer;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.xnap.commons.i18n.I18n;
 

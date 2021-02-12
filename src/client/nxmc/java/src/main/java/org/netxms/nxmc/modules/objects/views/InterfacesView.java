@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ package org.netxms.nxmc.modules.objects.views;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -42,8 +41,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * @author victor
- *
+ * "Interfaces" view
  */
 public class InterfacesView extends NodeSubObjectTableView
 {
@@ -231,8 +229,6 @@ public class InterfacesView extends NodeSubObjectTableView
       manager.add(actionCopyPeerMacToClipboard);
       manager.add(actionCopyPeerIpToClipboard);
       manager.add(actionExportToCsv);
-      manager.add(new Separator());
-      // FIXME: ObjectContextMenu.fill(manager, getViewPart().getSite(), viewer);
    }
 
    /**

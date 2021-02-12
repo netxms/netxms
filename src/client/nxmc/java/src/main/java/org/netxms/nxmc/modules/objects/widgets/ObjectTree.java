@@ -69,10 +69,10 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.modules.objects.ObjectOpenListener;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
-import org.netxms.nxmc.modules.objects.widgets.internal.ObjectFilter;
-import org.netxms.nxmc.modules.objects.widgets.internal.ObjectTreeComparator;
-import org.netxms.nxmc.modules.objects.widgets.internal.ObjectTreeContentProvider;
-import org.netxms.nxmc.modules.objects.widgets.internal.ObjectTreeViewer;
+import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectFilter;
+import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeComparator;
+import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeContentProvider;
+import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeViewer;
 import org.netxms.nxmc.tools.RefreshTimer;
 
 /**

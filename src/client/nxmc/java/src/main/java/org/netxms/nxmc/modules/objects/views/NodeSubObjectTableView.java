@@ -20,9 +20,8 @@ package org.netxms.nxmc.modules.objects.views;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -38,6 +37,7 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.views.helpers.NodeSubObjectFilter;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -200,17 +200,15 @@ public abstract class NodeSubObjectTableView extends NodeSubObjectView
     */
    protected void createPopupMenu()
    {
-      // Create menu manager.
-      MenuManager menuMgr = new MenuManager();
-      menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager manager)
+      ObjectContextMenuManager menuMgr = new ObjectContextMenuManager(this, viewer) {
+         @Override
+         protected void fillContextMenu()
          {
-            fillContextMenu(manager);
+            super.fillContextMenu();
+            add(new Separator());
+            NodeSubObjectTableView.this.fillContextMenu(this);
          }
-      });
-
-      // Create menu.
+      };
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
    }
