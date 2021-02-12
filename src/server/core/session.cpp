@@ -706,7 +706,7 @@ void ClientSession::sendAgentFileTransferMessage(shared_ptr<AgentFileTransfer> f
  */
 bool ClientSession::sendDataFromCacheFile(AgentFileTransfer *ft)
 {
-   if (_taccess(ft->fileName, F_OK) != 0)
+   if (_taccess(ft->fileName, 0) != 0)
       return true;   // Assume cache file does not exist yet
 
    TCHAR tempFileName[MAX_PATH];
@@ -786,8 +786,6 @@ bool ClientSession::sendDataFromCacheFile(AgentFileTransfer *ft)
  */
 void ClientSession::agentFileTransferFromFile(shared_ptr<AgentFileTransfer> ft)
 {
-   char buffer[8192];
-
    bool failure = false;
    while(ft->active)
    {
@@ -12129,7 +12127,7 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 			{
 			   shared_ptr<ServerCommandExecutor> cmd = make_shared<ServerCommandExecutor>(request, this);
             uint32_t taskId = cmd->getId();
-			   m_serverCommands.set(taskId, cmd);
+			   m_serverCommands.put(taskId, cmd);
 			   if (cmd->execute())
 			   {
 			      debugPrintf(5, _T("Started process executor %u for command %s, node id %d"), taskId, cmd->getMaskedCommand(), nodeId);
@@ -12169,7 +12167,7 @@ void ClientSession::stopServerCommand(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   shared_ptr<ProcessExecutor> cmd = m_serverCommands.getShared(static_cast<pid_t>(request->getFieldAsUInt64(VID_COMMAND_ID)));
+   shared_ptr<ProcessExecutor> cmd = m_serverCommands.get(static_cast<pid_t>(request->getFieldAsUInt64(VID_COMMAND_ID)));
    if (cmd != nullptr)
    {
       cmd->stop();
@@ -12197,7 +12195,7 @@ static void WaitForExecutorCompletion(const shared_ptr<ProcessExecutor>& executo
  */
 void ClientSession::unregisterServerCommand(pid_t taskId)
 {
-   shared_ptr<ProcessExecutor> executor = m_serverCommands.getShared(taskId);
+   shared_ptr<ProcessExecutor> executor = m_serverCommands.get(taskId);
    if (executor != nullptr)
    {
       m_serverCommands.remove(taskId);
