@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.41 to 40.42
+ */
+static bool H_UpgradeFromV41()
+{
+   if (GetSchemaLevelForMajorVersion(38) < 7)
+   {
+      CHK_EXEC(SQLQuery(_T("DROP TABLE job_history")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(38, 7));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(42));
+   return true;
+}
+
+/**
  * Upgrade from 40.40 to 40.41
  */
 static bool H_UpgradeFromV40()
@@ -1138,6 +1152,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 41, 40, 42, H_UpgradeFromV41 },
    { 40, 40, 41, H_UpgradeFromV40 },
    { 39, 40, 40, H_UpgradeFromV39 },
    { 38, 40, 39, H_UpgradeFromV38 },

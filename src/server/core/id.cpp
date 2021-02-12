@@ -35,7 +35,7 @@ void LoadLastEventId(DB_HANDLE hdb);
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   29
+#define NUMBER_OF_GROUPS   28
 
 /**
  * Static data
@@ -44,24 +44,22 @@ static MUTEX s_mutexTableAccess;
 static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
    {
       100, FIRST_USER_EVENT_ID, 1, 1,
+      1, 1, 1, 0x40000001,
       1, 1, 1, 1,
-      0x40000001, 1, 1, 1,
-      1, 10000, 10000, 1,
+      10000, 10000, 1, 1,
       1, 1, 1, 1,
       1, 1, 1, 1,
-      1, 1, 1, 1,
-      1
+      1, 1, 1, 1
    };
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
    {
       0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF,
-      0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x3FFFFFFF,
-      0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE, 0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+      0x7FFFFFFF, 0x7FFFFFFF, 0x3FFFFFFF, 0x7FFFFFFF,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE
+      0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
    };
 static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
 {
@@ -69,7 +67,6 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
    _T("Events"),
    _T("Data Collection Items"),
    _T("SNMP Trap"),
-   _T("Jobs"),
    _T("Actions"),
    _T("Data Collection Thresholds"),
    _T("Users"),
@@ -264,15 +261,6 @@ bool InitIdTable()
    {
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_ITEM] = std::max(s_freeIdTable[IDG_ITEM], DBGetFieldULong(hResult, 0, 0) + 1);
-      DBFreeResult(hResult);
-   }
-
-   // Get first available server job id
-   hResult = DBSelect(hdb, _T("SELECT max(id) FROM job_history"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_JOB] = std::max(s_freeIdTable[IDG_JOB], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

@@ -24,11 +24,21 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 38.6 to 40.0
+ * Upgrade from 38.7 to 40.0
+ */
+static bool H_UpgradeFromV7()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 38.6 to 38.7
  */
 static bool H_UpgradeFromV6()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(SQLQuery(_T("DROP TABLE job_history")));
+   CHK_EXEC(SetMinorSchemaVersion(7));
    return true;
 }
 
@@ -188,7 +198,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 6,  40, 0,  H_UpgradeFromV6  },
+   { 7,  40, 0,  H_UpgradeFromV7  },
+   { 6,  40, 7,  H_UpgradeFromV6  },
    { 5,  38, 6,  H_UpgradeFromV5  },
    { 4,  38, 5,  H_UpgradeFromV4  },
    { 3,  38, 4,  H_UpgradeFromV3  },

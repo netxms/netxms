@@ -1064,11 +1064,6 @@ retry_db_lock:
    InitCountryList();
    InitCurrencyList();
 
-   // Update status for unfinished jobs in job history
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DBQuery(hdb, _T("UPDATE job_history SET status=4,failure_message='Aborted due to server shutdown or crash' WHERE status NOT IN (3,4,5)"));
-   DBConnectionPoolReleaseConnection(hdb);
-
    // Load and compile scripts
    LoadScripts();
 
