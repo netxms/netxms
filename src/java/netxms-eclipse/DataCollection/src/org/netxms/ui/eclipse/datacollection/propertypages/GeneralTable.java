@@ -59,7 +59,7 @@ import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectParameterScriptDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -68,7 +68,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 /**
  * "General" property page for table DCI
  */
-public class GeneralTable extends DCIPropertyPageDialog
+public class GeneralTable extends AbstractDCIPropertyPage
 {
 	private DataCollectionTable dci;
 	private AbstractObject owner;

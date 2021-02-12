@@ -46,7 +46,7 @@ import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AccessListLabelProvider;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
@@ -56,7 +56,7 @@ import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
 /**
  * "Access Control" property page
  */
-public class AccessControl extends DCIPropertyPageDialog
+public class AccessControl extends AbstractDCIPropertyPage
 {
    private DataCollectionObject dco;
 	private Set<AbstractUserObject> acl = new HashSet<AbstractUserObject>();

@@ -25,7 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -33,7 +33,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  * @author Victor
  *
  */
-public class OtherOptionsTable extends DCIPropertyPageDialog
+public class OtherOptionsTable extends AbstractDCIPropertyPage
 {
 	private DataCollectionTable dci;
    private ObjectSelector relatedObject;

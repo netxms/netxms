@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.datacollection.DataCollectionItem;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
@@ -42,7 +42,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 /**
  * DCI property page for Performance Tab settings
  */
-public class PerfTab extends DCIPropertyPageDialog
+public class PerfTab extends AbstractDCIPropertyPage
 {
 	private DataCollectionItem dci;
 	private PerfTabGraphSettings settings;

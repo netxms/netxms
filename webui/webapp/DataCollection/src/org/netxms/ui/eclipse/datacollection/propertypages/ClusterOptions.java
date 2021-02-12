@@ -37,14 +37,14 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Cluster" property page for data collection object
  */
-public class ClusterOptions extends DCIPropertyPageDialog
+public class ClusterOptions extends AbstractDCIPropertyPage
 {
 	private AbstractObject owner;
 	private Cluster cluster = null;

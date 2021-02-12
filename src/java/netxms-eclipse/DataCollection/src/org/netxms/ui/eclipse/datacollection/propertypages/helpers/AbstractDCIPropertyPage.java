@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,11 +32,11 @@ import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 /**
  * Property page for DCI`s
  */
-public class DCIPropertyPageDialog extends PropertyPage
+public abstract class AbstractDCIPropertyPage extends PropertyPage
 {
    protected DataCollectionObjectEditor editor;
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
    @Override

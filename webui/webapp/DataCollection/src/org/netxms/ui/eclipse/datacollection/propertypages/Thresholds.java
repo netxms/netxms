@@ -52,14 +52,14 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditThresholdDialog;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * "Thresholds" page for data collection item
  */
-public class Thresholds extends DCIPropertyPageDialog
+public class Thresholds extends AbstractDCIPropertyPage
 {
 	public static final int COLUMN_OPERATION = 0;
 	public static final int COLUMN_EVENT = 1;

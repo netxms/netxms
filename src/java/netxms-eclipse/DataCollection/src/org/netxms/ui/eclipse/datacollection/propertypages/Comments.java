@@ -25,14 +25,14 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.datacollection.DataCollectionObject;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Comments" property page for NetXMS object
  *
  */
-public class Comments extends DCIPropertyPageDialog
+public class Comments extends AbstractDCIPropertyPage
 {
    private DataCollectionObject dci;
 	private Text comments;

@@ -61,8 +61,9 @@ import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectListener;
+import org.netxms.ui.eclipse.datacollection.api.TableColumnEnumerator;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditColumnDialog;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.TableColumnLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -73,7 +74,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * "Columns" property page for table DCI
  */
-public class TableColumns extends DCIPropertyPageDialog
+public class TableColumns extends AbstractDCIPropertyPage
 {
 	private static final String COLUMN_SETTINGS_PREFIX = "TableColumns.ColumnList"; //$NON-NLS-1$
 	
@@ -87,20 +88,29 @@ public class TableColumns extends DCIPropertyPageDialog
 	private Button upButton;
 	private Button downButton;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 	   Composite dialogArea = (Composite)super.createContents(parent);
 		dci = editor.getObjectAsTable();
-		editor.setCallback(new TableColumnDataProvider());
-		
+      editor.setTableColumnEnumerator(new TableColumnEnumerator() {
+         @Override
+         public List<String> getColumns()
+         {
+            List<String> list = new ArrayList<String>();
+            for(int i = 0; i < columns.size(); i++)
+               list.add(columns.get(i).getName());
+            return list;
+         }
+      });
+
 		columns = new ArrayList<ColumnDefinition>();
 		for(ColumnDefinition c : dci.getColumns())
 			columns.add(new ColumnDefinition(c));
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
@@ -605,15 +615,4 @@ public class TableColumns extends DCIPropertyPageDialog
 		job.setUser(false);
 		job.start();
 	}
-   
-   public class TableColumnDataProvider 
-   {
-      public List<String> getList()
-      {
-         List<String> list = new ArrayList<String>();
-         for(int i=0; i < columns.size(); i++)
-            list.add(columns.get(i).getName());
-         return list;
-      }
-   }
 }
