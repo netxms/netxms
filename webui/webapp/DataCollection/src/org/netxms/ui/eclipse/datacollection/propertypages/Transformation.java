@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Control;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.TestTransformationDlg;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -39,7 +39,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * "Transformation" property page for DCI
  */
-public class Transformation extends DCIPropertyPageDialog
+public class Transformation extends AbstractDCIPropertyPage
 {
 	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 	private static final String[] DCI_VARIABLES = { "$dci", "$node" }; //$NON-NLS-1$ //$NON-NLS-2$

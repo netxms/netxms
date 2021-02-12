@@ -28,14 +28,14 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.PredictionEngine;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Analytics" property page for DCI
  */
-public class Analytics extends DCIPropertyPageDialog
+public class Analytics extends AbstractDCIPropertyPage
 {
 	private DataCollectionItem dci;
 	private Combo predictionEngine;

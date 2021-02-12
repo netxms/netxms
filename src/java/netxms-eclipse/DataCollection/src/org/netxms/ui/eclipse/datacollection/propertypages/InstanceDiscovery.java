@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -41,7 +41,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 /**
  * "Instance Discovery" property page for DCO
  */
-public class InstanceDiscovery extends DCIPropertyPageDialog
+public class InstanceDiscovery extends AbstractDCIPropertyPage
 {
 	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 	private static final String[] DCI_VARIABLES = { "$dci", "$node" }; //$NON-NLS-1$ //$NON-NLS-2$

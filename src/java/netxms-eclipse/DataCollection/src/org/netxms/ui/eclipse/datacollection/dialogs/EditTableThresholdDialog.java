@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.datacollection.TableThreshold;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.propertypages.TableColumns.TableColumnDataProvider;
+import org.netxms.ui.eclipse.datacollection.api.TableColumnEnumerator;
 import org.netxms.ui.eclipse.datacollection.widgets.TableConditionsEditor;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -44,22 +44,22 @@ public class EditTableThresholdDialog extends Dialog
 	private EventSelector deactivationEvent;
 	private LabeledSpinner sampleCount;
 	private TableConditionsEditor conditionsEditor;
-	private TableColumnDataProvider columnCallback;
+   private TableColumnEnumerator columnEnumerator;
 	
 	/**
 	 * @param parentShell
 	 * @param threshold
 	 */
-	public EditTableThresholdDialog(Shell parentShell, TableThreshold threshold, TableColumnDataProvider columnCallback)
+   public EditTableThresholdDialog(Shell parentShell, TableThreshold threshold, TableColumnEnumerator columnEnumerator)
 	{
 		super(parentShell);
 		this.threshold = threshold;
-		this.columnCallback = columnCallback;
+      this.columnEnumerator = columnEnumerator;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -96,7 +96,7 @@ public class EditTableThresholdDialog extends Dialog
 		
 		new Label(dialogArea, SWT.NONE).setText(Messages.get().EditTableThresholdDialog_Conditions);
 		
-		conditionsEditor = new TableConditionsEditor(dialogArea, SWT.BORDER, columnCallback);
+		conditionsEditor = new TableConditionsEditor(dialogArea, SWT.BORDER, columnEnumerator);
 		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gd.widthHint = 700;
 		gd.heightHint = 400;
@@ -106,9 +106,9 @@ public class EditTableThresholdDialog extends Dialog
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{

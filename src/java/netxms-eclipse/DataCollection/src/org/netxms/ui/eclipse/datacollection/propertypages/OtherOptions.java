@@ -28,7 +28,7 @@ import org.eclipse.swt.widgets.Control;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -36,7 +36,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  * @author Victor
  *
  */
-public class OtherOptions extends DCIPropertyPageDialog
+public class OtherOptions extends AbstractDCIPropertyPage
 {
 	private DataCollectionItem dci;
 	private Button checkShowOnTooltip;

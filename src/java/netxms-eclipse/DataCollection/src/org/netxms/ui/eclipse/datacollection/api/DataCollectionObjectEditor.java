@@ -31,7 +31,6 @@ import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.propertypages.TableColumns.TableColumnDataProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -44,7 +43,7 @@ public class DataCollectionObjectEditor
 	private long sourceNode;
 	private Runnable timer;
 	private Set<DataCollectionObjectListener> listeners = new HashSet<DataCollectionObjectListener>(); 
-	private TableColumnDataProvider callback;
+   private TableColumnEnumerator tableColumnEnumerator;
 
 	/**
 	 * @param object
@@ -174,16 +173,26 @@ public class DataCollectionObjectEditor
 		return (DataCollectionTable)object;
 	}
 
-   public TableColumnDataProvider getCallback()
+   /**
+    * Get table column enumerator currently associated with this editor.
+    *
+    * @return table column enumerator currently associated with this editor or null
+    */
+   public TableColumnEnumerator getTableColumnEnumerator()
    {
-      return callback;
+      return tableColumnEnumerator;
    }
-   
-   public void setCallback(TableColumnDataProvider callback)
+
+   /**
+    * Set new table column enumerator for this editor.
+    *
+    * @param enumerator new table column enumerator
+    */
+   public void setTableColumnEnumerator(TableColumnEnumerator enumerator)
    {
-      this.callback = callback;
+      this.tableColumnEnumerator = enumerator;
    }
-   
+
    /**
     * Sets temporary source node ID
     */

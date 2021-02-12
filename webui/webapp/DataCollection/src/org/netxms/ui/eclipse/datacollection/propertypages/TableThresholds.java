@@ -51,14 +51,14 @@ import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditTableThresholdDialog;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.TableThresholdLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Thresholds" property page for table DCI
  */
-public class TableThresholds extends DCIPropertyPageDialog
+public class TableThresholds extends AbstractDCIPropertyPage
 {
 	private static final String COLUMN_SETTINGS_PREFIX = "TableThresholds.ColumnList"; //$NON-NLS-1$
 	
@@ -358,7 +358,7 @@ public class TableThresholds extends DCIPropertyPageDialog
 		if (selection.size() == 1)
 		{
 			final TableThreshold t = (TableThreshold)selection.getFirstElement();
-			EditTableThresholdDialog dlg = new EditTableThresholdDialog(getShell(), t, editor.getCallback());
+			EditTableThresholdDialog dlg = new EditTableThresholdDialog(getShell(), t, editor.getTableColumnEnumerator());
 			if (dlg.open() == Window.OK)
 			{
 				thresholdList.update(t, null);
@@ -372,7 +372,7 @@ public class TableThresholds extends DCIPropertyPageDialog
 	private void addThreshold()
 	{
 		final TableThreshold t = new TableThreshold();
-		final EditTableThresholdDialog dlg = new EditTableThresholdDialog(getShell(), t, editor.getCallback());
+		final EditTableThresholdDialog dlg = new EditTableThresholdDialog(getShell(), t, editor.getTableColumnEnumerator());
 		if (dlg.open() == Window.OK)
 		{
 			thresholds.add(t);

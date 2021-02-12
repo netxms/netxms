@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Event;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditScheduleDialog;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
 import org.netxms.ui.eclipse.tools.StringComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -50,7 +50,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * "Custom Schedule" property page
  */
-public class CustomSchedule extends DCIPropertyPageDialog
+public class CustomSchedule extends AbstractDCIPropertyPage
 {
 	private DataCollectionObject dci;
 	private HashSet<String> schedules;

@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2021 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.datacollection.widgets;
 
@@ -21,7 +36,7 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.netxms.client.datacollection.TableCondition;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.propertypages.TableColumns.TableColumnDataProvider;
+import org.netxms.ui.eclipse.datacollection.api.TableColumnEnumerator;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**
@@ -33,20 +48,20 @@ public class TableConditionsEditor extends Composite
 	private ScrolledForm form;
 	private ImageHyperlink addColumnLink;
 	private List<GroupEditor> groups = new ArrayList<GroupEditor>();
-	private TableColumnDataProvider columnCallback = null;
+   private TableColumnEnumerator columnEnumerator = null;
 	private List<String> columnList;
 
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public TableConditionsEditor(Composite parent, int style, TableColumnDataProvider columnCallback)
+   public TableConditionsEditor(Composite parent, int style, TableColumnEnumerator columnEnumerator)
 	{
 		super(parent, style);
+      this.columnEnumerator = columnEnumerator;
 
 		setLayout(new FillLayout());
 		
-		this.columnCallback = columnCallback;
 		toolkit = new FormToolkit(getDisplay());
 		form = toolkit.createScrolledForm(this);
 		form.getBody().setLayout(new GridLayout());
@@ -206,7 +221,7 @@ public class TableConditionsEditor extends Composite
 			conditions.add(editor);
 			if (initialData != null)
 			{
-				editor.column.select(columnCallback == null ? -1 :columnList.indexOf(initialData.getColumn()));
+				editor.column.select(columnEnumerator == null ? -1 :columnList.indexOf(initialData.getColumn()));
 				editor.operation.select(initialData.getOperation());
 				editor.value.setText(initialData.getValue());
 			}
@@ -241,9 +256,9 @@ public class TableConditionsEditor extends Composite
 			column = new CCombo(parent, SWT.BORDER | SWT.READ_ONLY);
 			toolkit.adapt(column);
 			column.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-			if(columnCallback != null)
+			if(columnEnumerator != null)
 			{
-			   columnList = columnCallback.getList();
+            columnList = columnEnumerator.getColumns();
    			for(String s : columnList)
    			{
    			   column.add(s);
@@ -294,7 +309,7 @@ public class TableConditionsEditor extends Composite
 		 */
 		public TableCondition getCondition()
 		{
-			return new TableCondition(columnCallback == null? column.getText() : columnList.get(column.getSelectionIndex()), operation.getSelectionIndex(), value.getText());
+			return new TableCondition(columnEnumerator == null? column.getText() : columnList.get(column.getSelectionIndex()), operation.getSelectionIndex(), value.getText());
 		}	
 	}
 }
