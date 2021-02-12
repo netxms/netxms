@@ -161,6 +161,7 @@ private:
    bool m_shutdownFlag;
    INT64 m_nextUpdateId;
    NCDriverStorageManager *m_storageManager;   
+   TCHAR m_parseMode[32];
 
    TelegramDriver(NCDriverStorageManager *storageManager) : NCDriver(), m_chats(Ownership::True)
    {
@@ -396,6 +397,7 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
    char authToken[64];
    char protocol[8] = "http";
    uint32_t connType = 0;
+   TCHAR parseMode[32] = _T("");
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
 		{ _T("AuthToken"), CT_MB_STRING, 0, 0, sizeof(authToken), 0, authToken, NULL },
@@ -406,6 +408,7 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
 		{ _T("ProxyType"), CT_MB_STRING, 0, 0, sizeof(protocol), 0, protocol, NULL },
 		{ _T("ProxyUser"), CT_MB_STRING, 0, 0, sizeof(proxy.user), 0, proxy.user, NULL },
 		{ _T("ProxyPassword"), CT_MB_STRING, 0, 0, sizeof(proxy.password), 0, proxy.password, NULL },
+      { _T("ParseMode"), CT_STRING, 0, 0, sizeof(parseMode), 0, parseMode, NULL },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
 	};
 
@@ -458,6 +461,7 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
                delete data;
 
                driver->m_updateHandlerThread = ThreadCreateEx(TelegramDriver::updateHandler, 0, driver);
+               _tcsncpy(driver->m_parseMode, parseMode, 32);
 	         }
 	         else
 	         {
@@ -703,6 +707,10 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
       json_t *request = json_object();
       json_object_set_new(request, "chat_id", useRecipientName ? json_string_t(recipient) : json_integer(chatId));
       json_object_set_new(request, "text", json_string_t(body));
+      if (*m_parseMode != 0)
+      {
+         json_object_set_new(request, "parse_mode", json_string_t(m_parseMode));
+      }
 
       json_t *response = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, "sendMessage", request);
       json_decref(request);
