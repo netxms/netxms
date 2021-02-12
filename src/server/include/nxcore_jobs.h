@@ -87,9 +87,6 @@ private:
 	static THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *);
 	static void sendNotification(ClientSession *session, void *arg);
 
-	void createHistoryRecord();
-	void updateHistoryRecord(bool onStart);
-
 protected:
    uint32_t m_objectId;
    shared_ptr<NetObj> m_object;
