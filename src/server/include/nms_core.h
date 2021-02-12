@@ -488,8 +488,12 @@ struct AgentFileTransfer
 
 // Explicit instantiation of template classes
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE AbstractIndex<AgentFileTransfer>;
+template class NXCORE_EXPORTABLE HashMap<uint32_t, ServerDownloadFileInfo>;
 template class NXCORE_EXPORTABLE HashSet<uint32_t>;
+template class NXCORE_EXPORTABLE SharedPointerIndex<AgentFileTransfer>;
+template class NXCORE_EXPORTABLE SharedPointerIndex<ProcessExecutor>;
+template class NXCORE_EXPORTABLE StringObjectMap<uint32_t>;
+template class NXCORE_EXPORTABLE SynchronizedHashMap<uint32_t, ServerDownloadFileInfo>;
 template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #endif
 
@@ -541,7 +545,7 @@ private:
 	SharedPointerIndex<AgentFileTransfer> m_agentFileTransfers;
 	StringObjectMap<uint32_t> m_subscriptions;
 	MUTEX m_subscriptionLock;
-	SynchronizedSharedHashMap<pid_t, ProcessExecutor> m_serverCommands;
+	SharedPointerIndex<ProcessExecutor> m_serverCommands;
 	ObjectArray<TcpProxy> *m_tcpProxyConnections;
 	MUTEX m_tcpProxyLock;
 	VolatileCounter m_tcpProxyChannelId;
