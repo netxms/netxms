@@ -87,7 +87,7 @@ inline bool IsValidSocket(SOCKET s)
 {
    int val;
    int len = sizeof(int);
-   if (getsockopt(s, SOL_SOCKET, SO_BROADCAST, &val, &len) == 0)
+   if (getsockopt(s, SOL_SOCKET, SO_BROADCAST, (char *)&val, &len) == 0)
       return true;
    return (WSAGetLastError() != WSAENOTSOCK);
 }
