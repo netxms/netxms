@@ -135,6 +135,8 @@ void SocketCommChannel::close()
 {
    if (m_socket != INVALID_SOCKET)
    {
+      if (m_socketPoller != nullptr)
+         m_socketPoller->poller.cancel(m_socket);
       closesocket(m_socket);
       m_socket = INVALID_SOCKET;
    }
@@ -164,7 +166,7 @@ static void BackgroundPollWrapper(BackgroundSocketPollResult pollResult, SOCKET 
  */
 void SocketCommChannel::backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context)
 {
-   if (m_socketPoller != nullptr)
+   if ((m_socketPoller != nullptr) && (m_socket != INVALID_SOCKET))
    {
       auto wrapperContext = MemAllocStruct<BackgroundPollContext>();
       wrapperContext->channel = this;
