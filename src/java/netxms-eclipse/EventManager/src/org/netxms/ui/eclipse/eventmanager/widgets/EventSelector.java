@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,7 @@ package org.netxms.ui.eclipse.eventmanager.widgets;
 
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.eventmanager.Messages;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
@@ -58,9 +56,9 @@ public class EventSelector extends AbstractSelector
 		setText(Messages.get().EventSelector_None);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
+    */
 	@Override
 	protected void selectionButtonHandler()
 	{
@@ -75,11 +73,7 @@ public class EventSelector extends AbstractSelector
 				eventCode = events[0].getCode();
 				eventName = events[0].getName();
 				setText(events[0].getName());
-				if (events[0] instanceof EventTemplate)
-   				setImage(StatusDisplayInfo.getStatusImage(((EventTemplate)events[0]).getSeverity()));
-				else
-				   setImage(SharedIcons.IMG_CONTAINER);
-
+            setImage(StatusDisplayInfo.getStatusImage(events[0].getSeverity()));
             getTextControl().setToolTipText(generateToolTipText(events[0]));
 			}
 			else
@@ -95,9 +89,9 @@ public class EventSelector extends AbstractSelector
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
+    */
 	@Override
 	protected void clearButtonHandler()
 	{
@@ -144,12 +138,12 @@ public class EventSelector extends AbstractSelector
 		this.eventCode = eventCode;
 		if (eventCode != 0)
 		{
-			EventTemplate evt = ((NXCSession)ConsoleSharedData.getSession()).findEventTemplateByCode(eventCode);
+         EventTemplate evt = ConsoleSharedData.getSession().findEventTemplateByCode(eventCode);
 			if (evt != null)
 			{
 			   eventName = evt.getName();
 				setText(eventName);
-			   setImage(StatusDisplayInfo.getStatusImage(((EventTemplate)evt).getSeverity()));
+            setImage(StatusDisplayInfo.getStatusImage(evt.getSeverity()));
 				getTextControl().setToolTipText(generateToolTipText(evt));
 			}
 			else
@@ -179,7 +173,7 @@ public class EventSelector extends AbstractSelector
 		sb.append(" ["); //$NON-NLS-1$
 		sb.append(evt.getCode());
 		sb.append(Messages.get().EventSelector_Severity);
-		sb.append(StatusDisplayInfo.getStatusText(((EventTemplate)evt).getSeverity()));
+      sb.append(StatusDisplayInfo.getStatusText(evt.getSeverity()));
       sb.append("\n\n"); //$NON-NLS-1$
       sb.append(((EventTemplate)evt).getMessage());
 		sb.append("\n\n"); //$NON-NLS-1$
@@ -187,9 +181,9 @@ public class EventSelector extends AbstractSelector
 		return sb.toString();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
+    */
 	@Override
 	protected String getSelectionButtonToolTip()
 	{
