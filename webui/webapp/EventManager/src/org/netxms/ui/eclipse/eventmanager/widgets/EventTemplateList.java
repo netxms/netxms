@@ -120,11 +120,8 @@ public class EventTemplateList extends Composite implements SessionListener
    {
       super(parent, style);
       
-      IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      if (isDialog)
-         filterEnabled = true;
-      else
-         filterEnabled = settings.getBoolean(configPrefix + ".filterEnabled"); //$NON-NLS-1$
+      final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      filterEnabled = isDialog ? true : settings.getBoolean(configPrefix + ".filterEnabled"); //$NON-NLS-1$
       
       session = ConsoleSharedData.getSession();
       
@@ -156,7 +153,7 @@ public class EventTemplateList extends Composite implements SessionListener
             isDialog ? dialogWidths : widths,
             0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
       
-      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
+      WidgetHelper.restoreTableViewerSettings(viewer, settings, configPrefix);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new EventTemplateLabelProvider(isDialog));
       viewer.setComparator(new EventTemplateComparator(isDialog));
@@ -166,7 +163,7 @@ public class EventTemplateList extends Composite implements SessionListener
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+            IStructuredSelection selection = event.getStructuredSelection();
             if (selection != null)
             {
                actionEdit.setEnabled(selection.size() == 1);
@@ -178,13 +175,13 @@ public class EventTemplateList extends Composite implements SessionListener
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
+            session.removeListener(EventTemplateList.this);
 
-            IDialogSettings settings = Activator.getDefault().getDialogSettings();
+            WidgetHelper.saveTableViewerSettings(viewer, settings, configPrefix);
             settings.put(configPrefix + ".filterEnabled", filterEnabled);
          }
       });
-      
+
       // Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -555,19 +552,6 @@ public class EventTemplateList extends Composite implements SessionListener
    {
       filter.setFilterText(filterControl.getText());
       viewer.refresh();
-   }
-   
-   /**
-    * @see org.eclipse.swt.widgets.Widget#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      settings.put("EventConfigurator.filterEnabled", filterEnabled); //$NON-NLS-1$
-      
-      session.removeListener(this);
-      super.dispose();
    }
    
    /**
