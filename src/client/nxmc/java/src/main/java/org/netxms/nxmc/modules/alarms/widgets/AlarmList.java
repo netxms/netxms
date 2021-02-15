@@ -435,7 +435,7 @@ public class AlarmList extends CompositeWithMessageBar
 				TreeItem[] selection = alarmViewer.getTree().getSelection();
 				if (selection.length > 0)
 				{
-               final String newLine = SystemUtils.IS_OS_WINDOWS ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
+               final String newLine = WidgetHelper.getNewLineCharacters();
 					StringBuilder sb = new StringBuilder();
 					for(int i = 0; i < selection.length; i++)
 					{
@@ -679,7 +679,7 @@ public class AlarmList extends CompositeWithMessageBar
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      IStructuredSelection selection = alarmViewer.getStructuredSelection();
 		if (selection.size() == 0)
 			return;
 		

@@ -18,10 +18,18 @@
  */
 package org.netxms.nxmc.modules.datacollection.views;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.widgets.LastValuesWidget;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.VisibilityValidator;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -30,6 +38,8 @@ import org.xnap.commons.i18n.I18n;
 public class LastValuesView extends ObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(LastValuesView.class);
+
+   private LastValuesWidget dataView;
 
    /**
     * @param name
@@ -40,10 +50,48 @@ public class LastValuesView extends ObjectView
       super(i18n.tr("Last Values"), ResourceManager.getImageDescriptor("icons/object-views/last_values.png"), "LastValues");
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    protected void createContent(Composite parent)
    {
-      // TODO Auto-generated method stub
+      final PreferenceStore settings = PreferenceStore.getInstance();
 
+      dataView = new LastValuesWidget(this, parent, SWT.NONE, getObject(), "LastValuesView", new VisibilityValidator() { //$NON-NLS-1$
+         @Override
+         public boolean isVisible()
+         {
+            return LastValuesView.this.isActive();
+         }
+      });
+
+      dataView.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            settings.set("LastValuesView.showFilter", dataView.isFilterEnabled());
+         }
+      });
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      return (context != null) && (context instanceof DataCollectionTarget);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   protected void onObjectChange(AbstractObject object)
+   {
+      dataView.setDataCollectionTarget(object);
+      if (isActive())
+         dataView.refresh();
    }
 }

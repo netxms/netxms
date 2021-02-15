@@ -76,12 +76,22 @@ public class WidgetHelper
 	public static final int BUTTON_WIDTH_HINT = 90;
 	public static final int WIDE_BUTTON_WIDTH_HINT = 120;
 	public static final String DEFAULT_LAYOUT_DATA = "WidgetHelper::default_layout_data"; //$NON-NLS-1$
-	
+
 	private static final Pattern patternOnlyCharNum = Pattern.compile("[a-zA-Z0-9]+");
 	private static final Pattern patternAllDotsAtEnd = Pattern.compile("[.]*$");
 	private static final Pattern patternCharsAndNumbersAtEnd = Pattern.compile("[a-zA-Z0-9]*$");
 	private static final Pattern patternCharsAndNumbersAtStart = Pattern.compile("^[a-zA-Z0-9]*");
-		
+
+   /**
+    * Get character(s) to represent new line in text.
+    *
+    * @return character(s) to represent new line in text
+    */
+   public static String getNewLineCharacters()
+   {
+      return SystemUtils.IS_OS_WINDOWS ? "\r\n" : "\n";
+   }
+
 	/**
     * Create pair of label and input field, with label above
 	 * 

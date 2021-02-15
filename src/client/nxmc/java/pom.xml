@@ -84,6 +84,18 @@
             <scope>${lib.scope}</scope>
         </dependency>
         <dependency>
+            <groupId>org.eclipse</groupId>
+            <artifactId>jface-text</artifactId>
+            <version>3.16.400</version>
+            <scope>${lib.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse</groupId>
+            <artifactId>text</artifactId>
+            <version>3.10.300</version>
+            <scope>${lib.scope}</scope>
+        </dependency>
+        <dependency>
             <groupId>org.netxms</groupId>
             <artifactId>swtchart</artifactId>
             <version>1.0-SNAPSHOT</version>

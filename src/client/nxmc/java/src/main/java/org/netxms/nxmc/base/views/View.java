@@ -267,6 +267,16 @@ public abstract class View
    }
 
    /**
+    * Check if this view is currently visible and inside active tab within owning stack.
+    * 
+    * @return true if active
+    */
+   public boolean isActive()
+   {
+      return isVisible(); // FIXME: check owning stack
+   }
+
+   /**
     * Get view unique ID.
     *
     * @return view unique ID

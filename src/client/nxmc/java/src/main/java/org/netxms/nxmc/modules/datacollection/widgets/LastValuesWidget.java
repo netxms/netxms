@@ -18,19 +18,12 @@
  */
 package org.netxms.nxmc.modules.datacollection.widgets;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -51,6 +44,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
@@ -62,6 +56,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.LastValuesComparator;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.LastValuesFilter;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.LastValuesLabelProvider;
+import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.netxms.nxmc.tools.VisibilityValidator;
@@ -94,6 +89,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	private boolean autoRefreshEnabled = false;
 	private int autoRefreshInterval = 30;	// in seconds
 	private ViewRefreshController refreshController;
+   private Action actionLineChart;
 	private Action actionUseMultipliers;
 	private Action actionShowErrors;
 	private Action actionShowDisabled;
@@ -102,7 +98,6 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	private Action actionExportToCsv;
 	private Action actionCopyToClipboard;
 	private Action actionCopyDciName;
-	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
 
 	/**
 	 * Create "last values" widget
@@ -114,17 +109,14 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	 * @param configPrefix configuration prefix for saving/restoring viewer settings
 	 * @param validator additional visibility validator (used to suppress unneded refresh calls, may be null)
 	 */
-   public LastValuesWidget(View view, Composite parent, int style, AbstractObject dcTarget, final String configPrefix,
-         VisibilityValidator validator)
+   public LastValuesWidget(View view, Composite parent, int style, AbstractObject dcTarget, final String configPrefix, VisibilityValidator validator)
 	{
 		super(parent, style);
       session = Registry.getSession();
       this.view = view;
 		setDataCollectionTarget(dcTarget);
 
-		registerOpenHandlers();
-
-		final IDialogSettings ds = Activator.getDefault().getDialogSettings();
+      final PreferenceStore ds = PreferenceStore.getInstance();
 
       refreshController = new ViewRefreshController(view, -1, new Runnable() {
 			@Override
@@ -164,7 +156,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		});
 		
 		// Setup table columns
-		final String[] names = { Messages.get().LastValuesWidget_ColID, Messages.get().LastValuesWidget_ColDescr, Messages.get().LastValuesWidget_ColValue, Messages.get().LastValuesWidget_ColTime, Messages.get().LastValuesWidget_ColThreshold };
+		final String[] names = { i18n.tr("ID"), i18n.tr("Description"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Threshold") };
 		final int[] widths = { 70, 250, 150, 120, 150 };
 		dataViewer = new SortableTableViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 	
@@ -181,10 +173,9 @@ public class LastValuesWidget extends CompositeWithMessageBar
 			@Override
 			public void doubleClick(DoubleClickEvent event)
 			{
-				IStructuredSelection selection = (IStructuredSelection)dataViewer.getSelection();
+            IStructuredSelection selection = dataViewer.getStructuredSelection();
 				if (selection.size() == 1)
 				{
-					callOpenObjectHandler((DciValue)selection.getFirstElement());
 				}
 			}
 		});
@@ -194,13 +185,13 @@ public class LastValuesWidget extends CompositeWithMessageBar
 			public void widgetDisposed(DisposeEvent e)
 			{
 				WidgetHelper.saveTableViewerSettings(dataViewer, ds, configPrefix);
-				ds.put(configPrefix + ".autoRefresh", autoRefreshEnabled); //$NON-NLS-1$
-				ds.put(configPrefix + ".autoRefreshInterval", autoRefreshEnabled); //$NON-NLS-1$
-				ds.put(configPrefix + ".useMultipliers", labelProvider.areMultipliersUsed()); //$NON-NLS-1$
-				ds.put(configPrefix + ".showErrors", isShowErrors()); //$NON-NLS-1$
-				ds.put(configPrefix + ".showDisabled", isShowDisabled()); //$NON-NLS-1$
-				ds.put(configPrefix + ".showUnsupported", isShowUnsupported()); //$NON-NLS-1$
-            ds.put(configPrefix + ".showHidden", isShowHidden()); //$NON-NLS-1$
+            ds.set(configPrefix + ".autoRefresh", autoRefreshEnabled);
+            ds.set(configPrefix + ".autoRefreshInterval", autoRefreshEnabled);
+            ds.set(configPrefix + ".useMultipliers", labelProvider.areMultipliersUsed());
+            ds.set(configPrefix + ".showErrors", isShowErrors());
+            ds.set(configPrefix + ".showDisabled", isShowDisabled());
+            ds.set(configPrefix + ".showUnsupported", isShowUnsupported());
+            ds.set(configPrefix + ".showHidden", isShowHidden());
 			}
 		});
 
@@ -218,36 +209,17 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		fd.right = new FormAttachment(100, 0);
 		filterText.setLayoutData(fd);
 		
-		try
-		{
-			autoRefreshInterval = ds.getInt(configPrefix + ".autoRefreshInterval"); //$NON-NLS-1$
-			if (autoRefreshInterval >= 1000)
-			{
-			   // assume it was saved by old version in milliseconds
-			   autoRefreshInterval /= 1000;
-			}
-		}
-		catch(NumberFormatException e)
-		{
-		}
-		setAutoRefreshEnabled(ds.getBoolean(configPrefix + ".autoRefresh")); //$NON-NLS-1$
-		if (ds.get(configPrefix + ".useMultipliers") != null) //$NON-NLS-1$
-			labelProvider.setUseMultipliers(ds.getBoolean(configPrefix + ".useMultipliers")); //$NON-NLS-1$
-		else
-			labelProvider.setUseMultipliers(true);
-		if (ds.get(configPrefix + ".showErrors") != null) //$NON-NLS-1$
-		{
-			labelProvider.setShowErrors(ds.getBoolean(configPrefix + ".showErrors")); //$NON-NLS-1$
-			comparator.setShowErrors(ds.getBoolean(configPrefix + ".showErrors")); //$NON-NLS-1$
-		}
-		else
-		{
-			labelProvider.setShowErrors(true);
-			comparator.setShowErrors(true);
-		}
-		filter.setShowDisabled(ds.getBoolean(configPrefix + ".showDisabled")); //$NON-NLS-1$
-		filter.setShowUnsupported(ds.getBoolean(configPrefix + ".showUnsupported")); //$NON-NLS-1$
-      filter.setShowHidden(ds.getBoolean(configPrefix + ".showHidden")); //$NON-NLS-1$
+      autoRefreshInterval = ds.getAsInteger(configPrefix + ".autoRefreshInterval", autoRefreshInterval);
+      setAutoRefreshEnabled(ds.getAsBoolean(configPrefix + ".autoRefresh", true));
+      labelProvider.setUseMultipliers(ds.getAsBoolean(configPrefix + ".useMultipliers", true));
+
+      boolean showErrors = ds.getAsBoolean(configPrefix + ".showErrors", true);
+      labelProvider.setShowErrors(showErrors);
+      comparator.setShowErrors(showErrors);
+
+      filter.setShowDisabled(ds.getAsBoolean(configPrefix + ".showDisabled", false));
+      filter.setShowUnsupported(ds.getAsBoolean(configPrefix + ".showUnsupported", false));
+      filter.setShowHidden(ds.getAsBoolean(configPrefix + ".showHidden", false));
 		
 		createActions();
 		createPopupMenu();
@@ -280,7 +252,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	 */
 	private void createActions()
 	{
-		actionUseMultipliers = new Action(Messages.get().LastValuesWidget_UseMultipliers, Action.AS_CHECK_BOX) {
+      actionUseMultipliers = new Action(i18n.tr("Use &multipliers"), Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -289,7 +261,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		};
 		actionUseMultipliers.setChecked(areMultipliersUsed());
 
-		actionShowErrors = new Action(Messages.get().LastValuesWidget_ShowErrors, Action.AS_CHECK_BOX) {
+      actionShowErrors = new Action(i18n.tr("Show collection &errors"), Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -298,7 +270,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		};
 		actionShowErrors.setChecked(isShowErrors());
 
-		actionShowUnsupported = new Action(Messages.get().LastValuesWidget_ShowUnsupported, Action.AS_CHECK_BOX) {
+      actionShowUnsupported = new Action(i18n.tr("Show &unsupported"), Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -307,7 +279,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		};
 		actionShowUnsupported.setChecked(isShowUnsupported());
 		
-		actionShowHidden = new Action("Show hidden", Action.AS_CHECK_BOX) {
+      actionShowHidden = new Action(i18n.tr("Show &hidden"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -316,7 +288,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
       };
       actionShowHidden.setChecked(isShowHidden());
 		
-		actionShowDisabled = new Action(Messages.get().LastValuesWidget_ShowDisabled, Action.AS_CHECK_BOX) {
+      actionShowDisabled = new Action(i18n.tr("Show disabled"), Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -327,7 +299,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		
       actionExportToCsv = new ExportToCsvAction(view, dataViewer, true);
 		
-		actionCopyToClipboard = new Action(Messages.get().LastValuesWidget_CopyToClipboard, SharedIcons.COPY) {
+      actionCopyToClipboard = new Action(i18n.tr("&Copy to clipboard"), SharedIcons.COPY) {
          @Override
          public void run()
          {
@@ -335,15 +307,23 @@ public class LastValuesWidget extends CompositeWithMessageBar
          }
       };
       
-      actionCopyDciName = new Action(i18n.tr("Copy DCI Name"), SharedIcons.COPY) {
+      actionCopyDciName = new Action(i18n.tr("Copy DCI name"), SharedIcons.COPY) {
          @Override
          public void run()
          {
             copySelectionDciName();
          }
       };
+
+      actionLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/chart_line.png")) {
+         @Override
+         public void run()
+         {
+            showLineChart();
+         }
+      };
 	}
-	
+
 	/**
 	 * Create pop-up menu
 	 */
@@ -370,6 +350,8 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
+      manager.add(actionLineChart);
+      manager.add(new Separator());
 		manager.add(actionCopyToClipboard);
 		manager.add(actionCopyDciName);
 		manager.add(actionExportToCsv);
@@ -393,7 +375,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		}
 
 		final DataCollectionTarget jobTarget = dcTarget;
-      Job job = new Job(Messages.get().LastValuesWidget_JobTitle + jobTarget.getObjectName(), viewPart, Activator.PLUGIN_ID, this) {
+      Job job = new Job(String.format(i18n.tr("Get DCI values for node %s"), jobTarget.getObjectName()), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -430,7 +412,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	{
 		this.dcTarget = (dcTarget instanceof DataCollectionTarget) ? (DataCollectionTarget)dcTarget : null;
 	}
-	
+
 	/**
 	 * Refresh view
 	 */
@@ -674,15 +656,22 @@ public class LastValuesWidget extends CompositeWithMessageBar
       return actionShowHidden;
    }
 
+   /**
+    * Show line chart for selected items
+    */
+   private void showLineChart()
+   {
+   }
+
 	/**
 	 * Copy selection to clipboard
 	 */
 	private void copySelection()
 	{
-	   IStructuredSelection selection = (IStructuredSelection)dataViewer.getSelection();
+      IStructuredSelection selection = dataViewer.getStructuredSelection();
 	   if (selection.isEmpty())
 	      return;
-	   
+
       final String nl = WidgetHelper.getNewLineCharacters();
 	   StringBuilder sb = new StringBuilder();
 	   for(Object o : selection.toList())

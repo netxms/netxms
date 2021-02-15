@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,12 +29,18 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Helper class for handling modifications in data collection objects
  */
 public class DataCollectionObjectEditor
 {
+   private static final I18n i18n = LocalizationHelper.getI18n(DataCollectionObjectEditor.class);
+
 	private DataCollectionObject object;
 	private long sourceNode;
 	private Runnable timer;
@@ -61,9 +67,9 @@ public class DataCollectionObjectEditor
 	 */
 	private void doObjectModification()
 	{
-		new ConsoleJob(Messages.get().DataCollectionObjectEditor_JobName, null, Activator.PLUGIN_ID, null) {
+      new Job(i18n.tr("Modify data collection object"), null) {
 			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final boolean isNewObj = object.isNewItem();
 				synchronized(DataCollectionObjectEditor.this)
@@ -92,11 +98,11 @@ public class DataCollectionObjectEditor
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().DataCollectionObjectEditor_JobError;
+            return i18n.tr("Cannot modify data collection object");
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Schedule object modification
 	 */
@@ -105,7 +111,7 @@ public class DataCollectionObjectEditor
 		Display.getCurrent().timerExec(-1, timer);
 		Display.getCurrent().timerExec(200, timer);
 	}
-	
+
 	/**
 	 * @param listener
 	 */
@@ -113,7 +119,7 @@ public class DataCollectionObjectEditor
 	{
 		listeners.add(listener);
 	}
-	
+
 	/**
 	 * @param listener
 	 */
@@ -121,7 +127,7 @@ public class DataCollectionObjectEditor
 	{
 		listeners.remove(listener);
 	}
-	
+
 	/**
 	 * @param origin
 	 * @param name
@@ -216,19 +222,22 @@ public class DataCollectionObjectEditor
       String message = null;
       if (dco.getTemplateId() == dco.getNodeId())
       {
-         message = "This DCI was added by instance discovery\nAll local changes can be overwritten at any moment";
+         message = i18n.tr("This DCI was added by instance discovery\nAll local changes can be overwritten at any moment");
       }
       else if (dco.getTemplateId() != 0)
       {
-         AbstractObject object = ConsoleSharedData.getSession().findObjectById(dco.getTemplateId());
+         AbstractObject object = Registry.getSession().findObjectById(dco.getTemplateId());
          if (object != null)
          {
-            message = String.format("This DCI was added by %s \"%s\"\nAll local changes can be overwritten at any moment",
-                  (object.getObjectClass() == AbstractObject.OBJECT_CLUSTER) ? "cluster" : "template", object.getObjectName());
+            message = String.format(
+                  (object.getObjectClass() == AbstractObject.OBJECT_CLUSTER) ?
+                        i18n.tr("This DCI was added by cluster \"%s\"\nAll local changes can be overwritten at any moment") :
+                        i18n.tr("This DCI was added by template \"%s\"\nAll local changes can be overwritten at any moment"),
+                  object.getObjectName());
          }
          else
          {
-            message = String.format("This DCI was added by unknown object with ID %d\nAll local changes can be overwritten at any moment", dco.getTemplateId());
+            message = String.format(i18n.tr("This DCI was added by unknown object with ID %d\nAll local changes can be overwritten at any moment"), dco.getTemplateId());
          }
       }
       return message;

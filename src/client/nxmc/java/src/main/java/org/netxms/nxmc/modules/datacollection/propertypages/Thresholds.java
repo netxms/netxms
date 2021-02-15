@@ -46,10 +46,12 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.Threshold;
-import org.netxms.client.events.EventTemplate;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
+import org.netxms.nxmc.modules.datacollection.dialogs.EditThresholdDialog;
+import org.netxms.nxmc.modules.datacollection.widgets.helpers.ThresholdLabelProvider;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -433,28 +435,26 @@ public class Thresholds extends AbstractDCIPropertyPage
 		table.setHeaderVisible(true);
 
 		TableColumn column = new TableColumn(table, SWT.LEFT);
-		column.setText(Messages.get().Thresholds_Expression);
+      column.setText(i18n.tr("Expression"));
 		column.setWidth(200);
 
 		column = new TableColumn(table, SWT.LEFT);
-		column.setText(Messages.get().Thresholds_Event);
+      column.setText(i18n.tr("Activation event"));
 		column.setWidth(150);
       
       column = new TableColumn(table, SWT.LEFT);
-      column.setText("Deactivation Event");
+      column.setText(i18n.tr("Deactivation event"));
       column.setWidth(150);
 
-		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
+      WidgetHelper.restoreColumnSettings(table, PreferenceStore.getInstance(), COLUMN_SETTINGS_PREFIX);
 
 		thresholdList.setContentProvider(new ArrayContentProvider());
 		thresholdList.setLabelProvider(new ThresholdLabelProvider());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
@@ -462,11 +462,9 @@ public class Thresholds extends AbstractDCIPropertyPage
 		applyChanges(true);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -489,11 +487,9 @@ public class Thresholds extends AbstractDCIPropertyPage
 		editor.modify();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.preference.PreferencePage#performCancel()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performCancel()
+    */
 	@Override
 	public boolean performCancel()
 	{
@@ -506,6 +502,6 @@ public class Thresholds extends AbstractDCIPropertyPage
 	 */
 	private void saveSettings()
 	{
-		WidgetHelper.saveColumnSettings(thresholdList.getTable(), Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
+      WidgetHelper.saveColumnSettings(thresholdList.getTable(), PreferenceStore.getInstance(), COLUMN_SETTINGS_PREFIX);
 	}
 }

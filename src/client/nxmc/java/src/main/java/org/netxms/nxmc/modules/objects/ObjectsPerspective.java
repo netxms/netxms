@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.views.LastValuesView;
 import org.netxms.nxmc.modules.objects.views.EntityMIBView;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
 import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
@@ -69,6 +70,7 @@ public class ObjectsPerspective extends Perspective
       addNavigationView(new ObjectBrowser(i18n.tr("Maps"), ResourceManager.getImageDescriptor("icons/objecttree-maps.png"), SubtreeType.MAPS));
 
       addMainView(new ObjectOverviewView());
+      addMainView(new LastValuesView());
       addMainView(new InterfacesView());
       addMainView(new EntityMIBView());
       addMainView(new PerformanceView());
