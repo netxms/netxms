@@ -3417,6 +3417,7 @@ private:
 #if HAVE_POLL
    struct pollfd m_sockets[SOCKET_POLLER_MAX_SOCKETS];
 #else
+   bool m_invalidDescriptor;
    fd_set m_sockets;
 #ifndef _WIN32
    SOCKET m_maxfd;
@@ -3431,6 +3432,15 @@ public:
    int poll(uint32_t timeout);
    bool isSet(SOCKET s);
    void reset();
+
+   bool hasInvalidDescriptor() const
+   {
+#if HAVE_POLL
+      return false;
+#else
+      return m_invalidDescriptor;
+#endif
+   }
 };
 
 /**
@@ -3758,10 +3768,10 @@ typedef struct _dir_struc_w
 
 #ifdef __cplusplus
 
-int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout, bool *isTimeout = NULL);
+int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, uint32_t timeout, bool *isTimeout = NULL);
 ssize_t LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex);
-ssize_t LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout, SOCKET controlSocket = INVALID_SOCKET);
-bool LIBNETXMS_EXPORTABLE RecvAll(SOCKET s, void *buffer, size_t size, UINT32 timeout);
+ssize_t LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, uint32_t timeout, SOCKET controlSocket = INVALID_SOCKET);
+bool LIBNETXMS_EXPORTABLE RecvAll(SOCKET s, void *buffer, size_t size, uint32_t timeout);
 
 SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, uint16_t port, uint32_t timeout);
 SOCKET LIBNETXMS_EXPORTABLE ConnectToHostUDP(const InetAddress& addr, uint16_t port);

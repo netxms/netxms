@@ -31,6 +31,7 @@ SocketPoller::SocketPoller(bool write)
    m_write = write;
    m_count = 0;
 #if !HAVE_POLL
+   m_invalidDescriptor = false;
    FD_ZERO(&m_sockets);
 #ifndef _WIN32
    m_maxfd = 0;
@@ -103,10 +104,13 @@ int SocketPoller::poll(uint32_t timeout)
    if (timeout == INFINITE)
    {
 #ifdef _WIN32
-      return select(0, m_write ? nullptr : &m_sockets, m_write ? &m_sockets : nullptr, nullptr, nullptr);
+      int rc = select(0, m_write ? nullptr : &m_sockets, m_write ? &m_sockets : nullptr, nullptr, nullptr);
+      m_invalidDescriptor = ((rc == -1) && (WSAGetLastError() == WSAENOTSOCK));
 #else
-      return select(SELECT_NFDS(m_maxfd + 1), m_write ? nullptr : &m_sockets, m_write ? &m_sockets : nullptr, nullptr, nullptr);
+      int rc = select(SELECT_NFDS(m_maxfd + 1), m_write ? nullptr : &m_sockets, m_write ? &m_sockets : nullptr, nullptr, nullptr);
+      m_invalidDescriptor = ((rc == -1) && (errno == EBADF));
 #endif
+      return rc;
    }
    else
    {
@@ -114,7 +118,9 @@ int SocketPoller::poll(uint32_t timeout)
 #ifdef _WIN32
       tv.tv_sec = timeout / 1000;
       tv.tv_usec = (timeout % 1000) * 1000;
-      return select(0, m_write ? nullptr : &m_sockets, m_write ? &m_sockets : nullptr, nullptr, (timeout != INFINITE) ? &tv : nullptr);
+      int rc = select(0, m_write ? nullptr : &m_sockets, m_write ? &m_sockets : nullptr, nullptr, (timeout != INFINITE) ? &tv : nullptr);
+      m_invalidDescriptor = ((rc == -1) && (WSAGetLastError() == WSAENOTSOCK));
+      return rc;
 #else
       int rc;
       do
@@ -128,6 +134,7 @@ int SocketPoller::poll(uint32_t timeout)
          uint32_t elapsed = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
          timeout -= std::min(timeout, elapsed);
       } while(timeout > 0);
+      m_invalidDescriptor = ((rc == -1) && (errno == EBADF));
       return rc;
 #endif
    }
@@ -223,6 +230,12 @@ BackgroundSocketPoller::~BackgroundSocketPoller()
  */
 void BackgroundSocketPoller::poll(SOCKET socket, uint32_t timeout, void (*callback)(BackgroundSocketPollResult, SOCKET, void*), void *context)
 {
+   if (socket == INVALID_SOCKET)
+   {
+      callback(BackgroundSocketPollResult::FAILURE, socket, context);
+      return;
+   }
+
    BackgroundSocketPollRequest *request = m_memoryPool.allocate();
    request->socket = socket;
    request->timeout = timeout;
@@ -325,7 +338,8 @@ void BackgroundSocketPoller::workerThread()
          r = n;
       }
 
-      if (sp.poll(timeout) > 0)
+      int rc = sp.poll(timeout);
+      if (rc > 0)
       {
          if (sp.isSet(m_controlSockets[0]))
          {
@@ -357,6 +371,30 @@ void BackgroundSocketPoller::workerThread()
          {
             auto n = r->next;
             r->callback(r->cancelled ? BackgroundSocketPollResult::CANCELLED : BackgroundSocketPollResult::SUCCESS, r->socket, r->context);
+            m_memoryPool.free(r);
+            r = n;
+         }
+      }
+      else if ((rc < 0) && sp.hasInvalidDescriptor())
+      {
+         processedRequests = nullptr;
+         MutexLock(m_mutex);
+         for(auto r = m_head->next, p = m_head; r != nullptr; p = r, r = r->next)
+         {
+            if (!IsValidSocket(r->socket))
+            {
+               p->next = r->next;
+               r->next = processedRequests;
+               processedRequests = r;
+               r = p;
+            }
+         }
+         MutexUnlock(m_mutex);
+
+         for(auto r = processedRequests; r != nullptr;)
+         {
+            auto n = r->next;
+            r->callback(BackgroundSocketPollResult::FAILURE, r->socket, r->context);
             m_memoryPool.free(r);
             r = n;
          }

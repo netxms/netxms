@@ -83,6 +83,15 @@ inline void SetSocketBroadcast(SOCKET s)
 	setsockopt(s, SOL_SOCKET, SO_BROADCAST, (char *)&val, sizeof(BOOL));
 }
 
+inline bool IsValidSocket(SOCKET s)
+{
+   int val;
+   int len = sizeof(int);
+   if (getsockopt(s, SOL_SOCKET, SO_BROADCAST, &val, &len) == 0)
+      return true;
+   return (WSAGetLastError() != WSAENOTSOCK);
+}
+
 #endif /* __cplusplus */
 
 #else /* _WIN32 */
@@ -101,6 +110,7 @@ typedef int SOCKET;
 #define WSAEWOULDBLOCK     EWOULDBLOCK
 #define WSAEPROTONOSUPPORT EPROTONOSUPPORT
 #define WSAEOPNOTSUPP      EOPNOTSUPP
+#define WSAENOTSOCK        ENOTSOCK
 #define INVALID_SOCKET     (-1)
 #define SELECT_NFDS(x)     (x)
 
@@ -146,13 +156,22 @@ inline void SetSocketBlocking(SOCKET s)
 inline void SetSocketNoDelay(SOCKET s)
 {
 	int val = 1;
-	setsockopt(s,  IPPROTO_TCP, TCP_NODELAY, (const void *)&val, sizeof(int));
+	setsockopt(s, IPPROTO_TCP, TCP_NODELAY, (const void *)&val, sizeof(int));
 }
 
 inline void SetSocketBroadcast(SOCKET s)
 {
 	int val = 1;
 	setsockopt(s, SOL_SOCKET, SO_BROADCAST, (const void *)&val, sizeof(int));
+}
+
+inline bool IsValidSocket(SOCKET s)
+{
+   int val;
+   socklen_t len = sizeof(int);
+   if (getsockopt(s, SOL_SOCKET, SO_BROADCAST, &val, &len) == 0)
+      return true;
+   return (errno != EBADF) && (errno != ENOTSOCK);
 }
 
 #endif /* __cplusplus */

@@ -1355,7 +1355,7 @@ retry:
  * @param timeout waiting timeout in milliseconds or INFINITE
  * @return number of bytes read on success, 0 if socket was closed, -1 on error, -2 on timeout
  */
-ssize_t LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout, SOCKET controlSocket)
+ssize_t LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, uint32_t timeout, SOCKET controlSocket)
 {
    if (hSocket == INVALID_SOCKET)
       return -1;
@@ -1398,7 +1398,7 @@ ssize_t LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int 
 /**
  * Read exact number of bytes from socket
  */
-bool RecvAll(SOCKET s, void *buffer, size_t size, UINT32 timeout)
+bool RecvAll(SOCKET s, void *buffer, size_t size, uint32_t timeout)
 {
    size_t bytes = 0;
    char *pos = (char *)buffer;
@@ -1417,11 +1417,11 @@ bool RecvAll(SOCKET s, void *buffer, size_t size, UINT32 timeout)
  * Connect with given timeout
  * Sets socket to non-blocking mode
  */
-int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout, bool *isTimeout)
+int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, uint32_t timeout, bool *isTimeout)
 {
 	SetSocketNonBlocking(s);
 
-	if (isTimeout != NULL)
+	if (isTimeout != nullptr)
 	   *isTimeout = false;
 
 	int rc = connect(s, addr, len);
@@ -1436,11 +1436,11 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
 			fds.revents = 0;
 			do
 			{
-				INT64 startTime = GetCurrentTimeMs();
+				int64_t startTime = GetCurrentTimeMs();
 				rc = poll(&fds, 1, timeout);
 				if ((rc != -1) || (errno != EINTR))
 					break;
-				UINT32 elapsed = (UINT32)(GetCurrentTimeMs() - startTime);
+				uint32_t elapsed = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
 				timeout -= std::min(timeout, elapsed);
 			} while(timeout > 0);
 
@@ -1462,7 +1462,7 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
 			else if (rc == 0)	// timeout, return error
 			{
 				rc = -1;
-			   if (isTimeout != NULL)
+			   if (isTimeout != nullptr)
 			      *isTimeout = true;
 			}
 #else
