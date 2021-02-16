@@ -351,7 +351,6 @@ Name: fspermissions; Description: "Set hardened file system permissions"
 [Dirs]
 Name: "{app}\etc"
 Name: "{app}\etc\nxreportd"; Components: server\reporting
-Name: "{app}\database"
 Name: "{app}\dump"
 Name: "{app}\log"
 Name: "{app}\var\backgrounds"
@@ -400,8 +399,22 @@ Filename: "{app}\var\vcredist.exe"; Parameters: "/install /passive /norestart"; 
 Filename: "{app}\var\vcredist-2013-x64.exe"; Parameters: "/install /passive /norestart"; WorkingDir: "{app}\var"; StatusMsg: "Installing Visual C++ 2013 runtime..."; Flags: waituntilterminated; Components: server\pgsql
 Filename: "icacls.exe"; Parameters: """{app}"" /inheritance:r"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "icacls.exe"; Parameters: """{app}"" /grant:r *S-1-5-18:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}"" /grant:r *S-1-5-19:(OI)(CI)RX"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "icacls.exe"; Parameters: """{app}"" /grant:r *S-1-5-32-544:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "icacls.exe"; Parameters: """{app}\*"" /reset /T"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}"" /grant:r *S-1-5-11:(OI)(CI)RX"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\etc"" /inheritance:r"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\etc"" /grant:r *S-1-5-18:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\etc"" /grant:r *S-1-5-19:(OI)(CI)RX"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\etc"" /grant:r *S-1-5-32-544:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\log"" /inheritance:r"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\log"" /grant:r *S-1-5-18:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\log"" /grant:r *S-1-5-19:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\log"" /grant:r *S-1-5-32-544:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\var"" /inheritance:r"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-18:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-19:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
+Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-32-544:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "{app}\bin\nxmibc.exe"; Parameters: "-z -d ""{app}\share\mibs"" -o ""{app}\var\netxms.mib"""; WorkingDir: "{app}\bin"; StatusMsg: "Compiling MIB files..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxconfig.exe"; Parameters: "--create-agent-config"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's configuration file..."; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing agent service..."; Flags: runhidden; Components: server
@@ -410,8 +423,8 @@ Filename: "{app}\bin\nxconfig.exe"; Parameters: "--configure-if-needed"; Working
 Filename: "{app}\bin\nxdbmgr.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" upgrade"; WorkingDir: "{app}\bin"; StatusMsg: "Upgrading database..."; Flags: runhidden; Components: server; Tasks: upgradeDatabase
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "--check-service"; WorkingDir: "{app}\bin"; StatusMsg: "Checking core service configuration..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "-s -m"; WorkingDir: "{app}\bin"; StatusMsg: "Starting core service..."; Flags: runhidden; Components: server; Tasks: startCore
-Filename: "{app}\bin\prunsrv.exe"; Parameters: "//IS//nxreportd --DisplayName=""NetXMS Reporting Server"" --Startup=auto --StartMode=jvm --StartClass=org.netxms.reporting.Startup --StopMode=jvm --StopClass=org.netxms.reporting.Startup --StopMethod=stop --StopTimeout=10 ++JvmOptions=""-Dnxreportd.workspace={app}\var\nxreportd"" ++JvmOptions=""-Dnxreportd.logfile={app}\log\nxreportd.log"" --Classpath=""{app}\etc\nxreportd;{app}\lib\java\nxreportd-{#VersionString}.jar"" --LogPath=""{app}\log"""; WorkingDir: "{app}\bin"; StatusMsg: "Installing reporting server service..."; Flags: runhidden; Components: server\reporting
-Filename: "{app}\bin\prunsrv.exe"; Parameters: "//US//nxreportd --DisplayName=""NetXMS Reporting Server"" --Startup=auto --StartMode=jvm --StartClass=org.netxms.reporting.Startup --StopMode=jvm --StopClass=org.netxms.reporting.Startup --StopMethod=stop --StopTimeout=10 ++JvmOptions=""-Dnxreportd.workspace={app}\var\nxreportd"" ++JvmOptions=""-Dnxreportd.logfile={app}\log\nxreportd.log"" --Classpath=""{app}\etc\nxreportd;{app}\lib\java\nxreportd-{#VersionString}.jar"" --LogPath=""{app}\log"""; WorkingDir: "{app}\bin"; StatusMsg: "Installing reporting server service..."; Flags: runhidden; Components: server\reporting
+Filename: "{app}\bin\prunsrv.exe"; Parameters: "//IS//nxreportd --DisplayName=""NetXMS Reporting Server"" --Description=""This service provides report generation capabilities to NetXMS server"" --Startup=auto --StartMode=jvm --StartClass=org.netxms.reporting.Startup --StopMode=jvm --StopClass=org.netxms.reporting.Startup --StopMethod=stop --StopTimeout=10 ++JvmOptions=""-Dnxreportd.workspace={app}\var\nxreportd"" ++JvmOptions=""-Dnxreportd.logfile={app}\log\nxreportd.log"" --Classpath=""{app}\etc\nxreportd;{app}\lib\java\nxreportd-{#VersionString}.jar"" --LogPath=""{app}\log"""; WorkingDir: "{app}\bin"; StatusMsg: "Installing reporting server service..."; Flags: runhidden; Components: server\reporting
+Filename: "{app}\bin\prunsrv.exe"; Parameters: "//US//nxreportd --DisplayName=""NetXMS Reporting Server"" --Description=""This service provides report generation capabilities to NetXMS server"" --Startup=auto --StartMode=jvm --StartClass=org.netxms.reporting.Startup --StopMode=jvm --StopClass=org.netxms.reporting.Startup --StopMethod=stop --StopTimeout=10 ++JvmOptions=""-Dnxreportd.workspace={app}\var\nxreportd"" ++JvmOptions=""-Dnxreportd.logfile={app}\log\nxreportd.log"" --Classpath=""{app}\etc\nxreportd;{app}\lib\java\nxreportd-{#VersionString}.jar"" --LogPath=""{app}\log"""; WorkingDir: "{app}\bin"; StatusMsg: "Installing reporting server service..."; Flags: runhidden; Components: server\reporting
 Filename: "{app}\bin\prunsrv.exe"; Parameters: "//ES//nxreportd"; WorkingDir: "{app}\bin"; StatusMsg: "Starting reporting server service..."; Flags: runhidden; Components: server\reporting; Tasks: startReporting
 
 [UninstallRun]
