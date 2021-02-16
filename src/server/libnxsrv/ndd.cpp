@@ -744,13 +744,13 @@ static void ParseVlanPorts(VlanList *vlanList, VlanInfo *vlan, BYTE map, int off
 	// then that port is included in the set of ports; the port
 	// is not included if its bit has a value of '0'.
 
-	int port = offset;
+	uint32_t port = offset;
 	BYTE mask = 0x80;
 	while(mask > 0)
 	{
 		if (map & mask)
 		{
-			vlan->add((UINT32)port);
+			vlan->add(port);
 		}
 		mask >>= 1;
 		port++;
