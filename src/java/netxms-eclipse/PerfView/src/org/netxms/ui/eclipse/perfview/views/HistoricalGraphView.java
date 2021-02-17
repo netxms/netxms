@@ -404,8 +404,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
          settings.setTimeTo(new Date(System.currentTimeMillis()));
       }
-
-      getDataFromServer();
+      
+      updateChart();
 
       // Automatic refresh
       actionAutoRefresh.setChecked(settings.isAutoRefresh());
@@ -587,7 +587,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          {
             showGraphPropertyPages(settings);
             configureGraphFromSettings(); //Always refresh graph (last action was cancel, but before was few apply actions)
-            refreshMenuSelection();
          }
       };
 
@@ -967,8 +966,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
       settings.setTimeTo(new Date(System.currentTimeMillis()));
       getDataFromServer();
-      configureGraphFromSettings();
-      refreshMenuSelection();
    }
    
    /**
@@ -1142,7 +1139,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             }
          }.start();
       }
-      updateChart();
    }
 
    /**
