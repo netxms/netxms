@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,6 +23,8 @@
 
 #include "libnxsrv.h"
 
+#define DEBUG_TAG _T("snmp.proxy")
+
 /**
  * Constructor
  */
@@ -32,6 +34,7 @@ SNMP_ProxyTransport::SNMP_ProxyTransport(const shared_ptr<AgentConnection>& conn
 	m_port = port;
 	m_response = nullptr;
 	m_waitForResponse = true;
+	ipAddr.toString(m_debugId);
 }
 
 /**
@@ -67,6 +70,10 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu, uint32_t timeout)
          {
             nRet = 1;
          }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("SNMP_ProxyTransport::sendMessage(%s): request timeout"), m_debugId);
+         }
       }
       else
       {
@@ -87,7 +94,8 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct so
 		return -1;
 
 	int rc;
-	UINT32 rcc = m_response->getFieldAsUInt32(VID_RCC);
+	uint32_t rcc = m_response->getFieldAsUInt32(VID_RCC);
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("SNMP_ProxyTransport::readMessage(%s): rcc=%u"), m_debugId, rcc);
 	if (rcc == ERR_SUCCESS)
 	{
 	   size_t size;

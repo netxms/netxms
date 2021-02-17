@@ -1284,8 +1284,8 @@ InterfaceList *Node::getInterfaceList()
          }
 
          int useAliases = ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0);
-         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%d]): calling driver (useAliases=%d, useIfXTable=%d)"),
-                  m_name, (int)m_id, useAliases, useIfXTable);
+         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%u]): calling driver (useAliases=%d, useIfXTable=%d)"),
+                  m_name, m_id, useAliases, useIfXTable);
          pIfList = m_driver->getInterfaces(pTransport, this, m_driverData, useAliases, useIfXTable);
 
          if ((pIfList != nullptr) && (m_capabilities & NC_IS_BRIDGE))
@@ -1296,7 +1296,7 @@ InterfaceList *Node::getInterfaceList()
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%d]): cannot create SNMP transport"), m_name, (int)m_id);
+         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%u]): cannot create SNMP transport"), m_name, m_id);
       }
    }
 
@@ -2052,6 +2052,7 @@ restart_agent_check:
                   m_state &= ~NSF_SNMP_UNREACHABLE;
                   PostSystemEventEx(eventQueue, EVENT_SNMP_OK, m_id, nullptr);
                   sendPollerMsg(rqId, POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): Connectivity with SNMP agent restored"), m_name);
                   m_pollCountSNMP = 0;
                }
 
@@ -2084,6 +2085,7 @@ restart_agent_check:
          {
             if (pTransport->isProxyTransport() && (snmpErr == SNMP_ERR_COMM))
             {
+               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): got communication error on proxy transport, checking connection to proxy. Poll count: %d of %d"), m_name, m_pollCountSNMP, m_requiredPollCount);
                shared_ptr<AgentConnectionEx> pconn = acquireProxyConnection(SNMP_PROXY, true);
                if ((pconn != nullptr) && (retryCount > 0))
                {
@@ -2093,8 +2095,8 @@ restart_agent_check:
                }
             }
 
-            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): got communication error on proxy transport, checking connection to proxy. Poll count: %d of %d"), m_name, m_pollCountSNMP, m_requiredPollCount);
             sendPollerMsg(rqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SNMP agent unreachable"), m_name);
             if (m_state & NSF_SNMP_UNREACHABLE)
             {
                if ((now > m_failTimeSNMP + capabilityExpirationTime) && (!(m_state & DCSF_UNREACHABLE)) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
@@ -2103,6 +2105,7 @@ restart_agent_check:
                   m_state &= ~NSF_SNMP_UNREACHABLE;
                   MemFreeAndNull(m_snmpObjectId);
                   sendPollerMsg(rqId, POLLER_WARNING _T("Attribute isSNMP set to FALSE\r\n"));
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 4, _T("StatusPoll(%s): Attribute isSNMP set to FALSE"), m_name);
                }
             }
             else
@@ -4535,8 +4538,8 @@ bool Node::confPollSnmp(uint32_t rqId)
       lockProperties();
       if ((m_sysDescription == nullptr) || _tcscmp(m_sysDescription, szBuffer))
       {
-         free(m_sysDescription);
-         m_sysDescription = _tcsdup(szBuffer);
+         MemFree(m_sysDescription);
+         m_sysDescription = MemCopyString(szBuffer);
          hasChanges = true;
          sendPollerMsg(rqId, _T("   System description changed to %s\r\n"), m_sysDescription);
       }

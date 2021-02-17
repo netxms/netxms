@@ -1010,6 +1010,7 @@ protected:
 	InetAddress m_ipAddr;
 	uint16_t m_port;
 	bool m_waitForResponse;
+	TCHAR m_debugId[64];
 
 public:
 	SNMP_ProxyTransport(const shared_ptr<AgentConnection>& conn, const InetAddress& ipAddr, uint16_t port);
