@@ -910,7 +910,7 @@ shared_ptr<AgentTunnelCommChannel> AgentTunnel::createChannel()
    if (rcc != ERR_SUCCESS)
    {
       delete response;
-      debugPrintf(4, _T("createChannel: agent error %d (%s)"), rcc, AgentErrorCodeToText(rcc));
+      debugPrintf(4, _T("createChannel: agent error %u (%s)"), rcc, AgentErrorCodeToText(rcc));
       return shared_ptr<AgentTunnelCommChannel>();
    }
 
@@ -928,7 +928,7 @@ shared_ptr<AgentTunnelCommChannel> AgentTunnel::createChannel()
  */
 void AgentTunnel::processChannelClose(uint32_t channelId)
 {
-   debugPrintf(4, _T("processChannelClose: notification of channel %d closure"), channelId);
+   debugPrintf(4, _T("processChannelClose: notification of channel %u closure"), channelId);
 
    MutexLock(m_channelLock);
    shared_ptr<AgentTunnelCommChannel> channel = m_channels.getShared(channelId);
@@ -947,7 +947,7 @@ void AgentTunnel::closeChannel(AgentTunnelCommChannel *channel)
    if (m_state == AGENT_TUNNEL_SHUTDOWN)
       return;
 
-   debugPrintf(4, _T("closeChannel: request to close channel %d"), channel->getId());
+   debugPrintf(4, _T("closeChannel: request to close channel %u"), channel->getId());
 
    MutexLock(m_channelLock);
    m_channels.remove(channel->getId());
