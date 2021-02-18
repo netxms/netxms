@@ -898,7 +898,12 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
 shared_ptr<AgentTunnelCommChannel> AgentTunnel::createChannel()
 {
    NXCPMessage request(CMD_CREATE_CHANNEL, InterlockedIncrement(&m_requestId));
-   sendMessage(&request);
+   if (!sendMessage(&request))
+   {
+      debugPrintf(4, _T("createChannel: cannot send setup message"));
+      return shared_ptr<AgentTunnelCommChannel>();
+   }
+
    NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, request.getId());
    if (response == nullptr)
    {

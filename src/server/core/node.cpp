@@ -2083,12 +2083,13 @@ restart_agent_check:
          }
          else
          {
-            if (pTransport->isProxyTransport() && (snmpErr == SNMP_ERR_COMM))
+            if (pTransport->isProxyTransport() && (snmpErr == SNMP_ERR_COMM) && (retryCount > 0))
             {
-               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): got communication error on proxy transport, checking connection to proxy. Poll count: %d of %d"), m_name, m_pollCountSNMP, m_requiredPollCount);
+               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): got communication error on proxy transport, checking connection to proxy"), m_name);
                shared_ptr<AgentConnectionEx> pconn = acquireProxyConnection(SNMP_PROXY, true);
-               if ((pconn != nullptr) && (retryCount > 0))
+               if (pconn != nullptr)
                {
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): proxy connection is valid"), m_name);
                   retryCount--;
                   delete pTransport;
                   goto restart_agent_check;
@@ -2096,7 +2097,7 @@ restart_agent_check:
             }
 
             sendPollerMsg(rqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
-            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SNMP agent unreachable"), m_name);
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SNMP agent unreachable (poll count %d of %d)"), m_name, m_pollCountSNMP, requiredPolls);
             if (m_state & NSF_SNMP_UNREACHABLE)
             {
                if ((now > m_failTimeSNMP + capabilityExpirationTime) && (!(m_state & DCSF_UNREACHABLE)) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
@@ -7872,7 +7873,11 @@ shared_ptr<AgentConnectionEx> Node::acquireProxyConnection(ProxyType type, bool 
    if ((conn != nullptr) && validate)
    {
       uint32_t rcc = conn->nop();
-      if (rcc != ERR_SUCCESS)
+      if (rcc == ERR_SUCCESS)
+      {
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%u] type=%d): existing agent connection passed validation"), m_name, m_id, (int)type);
+      }
+      else
       {
          conn.reset();
          m_proxyConnections[type].set(shared_ptr<AgentConnectionEx>());
@@ -7893,9 +7898,13 @@ shared_ptr<AgentConnectionEx> Node::acquireProxyConnection(ProxyType type, bool 
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::acquireProxyConnection(%s [%u] type=%d): server does not have master access to agent"), m_name, m_id, (int)type);
+            nxlog_debug_tag(DEBUG_TAG_AGENT, 5, _T("Node::acquireProxyConnection(%s [%u] type=%d): server does not have master access to agent"), m_name, m_id, (int)type);
             conn.reset();
          }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 5, _T("Node::acquireProxyConnection(%s [%u] type=%d): cannot create new agent connection"), m_name, m_id, (int)type);
       }
       m_proxyConnections[type].setLastConnectTime(time(nullptr));
    }
