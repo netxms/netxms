@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCException;
@@ -78,15 +80,13 @@ public class LoginJob implements IRunnableWithProgress
       authMethod = AuthenticationType.PASSWORD;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.jface.operation.IRunnableWithProgress#run(org.eclipse.core.runtime.IProgressMonitor)
     */
    @Override
    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
    {
-      monitor.setTaskName(Messages.get().LoginJob_connecting);
+      monitor.beginTask(Messages.LoginJob_connecting, 100);
       try
       {
          final String hostName;
@@ -116,23 +116,65 @@ public class LoginJob implements IRunnableWithProgress
          
          session.setClientInfo("nxmc/" + VersionInfo.version()); //$NON-NLS-1$
          session.setIgnoreProtocolVersion(ignoreProtocolVersion);
-         monitor.worked(1);
+         monitor.worked(10);
 
          session.connect(new int[] { ProtocolVersion.INDEX_FULL });
-         monitor.worked(1);
-
          session.login(authMethod, loginName, password, certificate, signature);
-         monitor.worked(1);
-         
-         monitor.setTaskName(Messages.get().LoginJob_sync_objects);
-         IPreferenceStore store = ConsoleSharedData.getSettings();
-         boolean fullySync = store.getBoolean("ObjectsFullSync");
-         session.syncObjects(fullySync);
-         monitor.worked(1);
+         monitor.worked(40);
+
+         monitor.setTaskName(Messages.LoginJob_sync_objects);
+         final boolean[] objectsFullSync = new boolean[1];
+         display.syncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               IPreferenceStore store = ConsoleSharedData.getSettings();
+               objectsFullSync[0] = store.getBoolean("ObjectsFullSync");
+               store.addPropertyChangeListener(new IPropertyChangeListener() {
+                  @Override
+                  public void propertyChange(PropertyChangeEvent event)
+                  {
+                     if (event.getProperty().equals("ObjectsFullSync"))
+                     {
+                        Object value = event.getNewValue();
+                        boolean doFullSync;
+                        if (value instanceof Boolean)
+                           doFullSync = ((Boolean)value).booleanValue();
+                        else if (value instanceof String)
+                           doFullSync = Boolean.valueOf((String)value);
+                        else
+                           doFullSync = false;
+                        if (doFullSync)
+                        {
+                           Activator.logInfo("Full object synchronization triggered by preference change");
+                           ConsoleJob job = new ConsoleJob("Synchronize all objects", null, Activator.PLUGIN_ID, null) {
+                              @Override
+                              protected void runInternal(IProgressMonitor monitor) throws Exception
+                              {
+                                 if (!session.areObjectsSynchronized())
+                                    session.syncObjects();
+                              }
+   
+                              @Override
+                              protected String getErrorMessage()
+                              {
+                                 return "Failed to synchronize all objects";
+                              }
+                           };
+                           job.setUser(false);
+                           job.start();
+                        }
+                     }
+                  }
+               });
+            }
+         });
+         session.syncObjects(objectsFullSync[0]);
+         monitor.worked(25);
 
          monitor.setTaskName(Messages.get().LoginJob_sync_users);
          session.subscribeToUserDBUpdates();
-         monitor.worked(1);
+         monitor.worked(5);
 
          monitor.setTaskName(Messages.get().LoginJob_sync_event_db);
          try
@@ -153,15 +195,15 @@ public class LoginJob implements IRunnableWithProgress
             if (e.getErrorCode() != RCC.ACCESS_DENIED)
                throw e;
          }
-         monitor.worked(1);
+         monitor.worked(5);
 
          monitor.setTaskName(Messages.get().LoginJob_subscribe);
          session.subscribe(NXCSession.CHANNEL_ALARMS);
          session.subscribe(NXCSession.CHANNEL_GEO_AREAS);
-         monitor.worked(1);
+         monitor.worked(5);
 
          ConsoleSharedData.setSession(session);
-         
+
          display.syncExec(new Runnable() {
             @Override
             public void run()
@@ -173,10 +215,10 @@ public class LoginJob implements IRunnableWithProgress
          monitor.setTaskName(Messages.get().LoginJob_init_extensions);
          TweakletManager.postLogin(session);
          callLoginListeners(session);
-         monitor.worked(1);
+         monitor.worked(5);
          
          setupSessionListener(session, display);
-         
+
          Activator.logInfo("Creating keepalive timer");
          new KeepAliveTimer(session).start();
       }
