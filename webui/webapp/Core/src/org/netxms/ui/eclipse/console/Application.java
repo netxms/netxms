@@ -62,7 +62,7 @@ public class Application implements IApplication
 					session.disconnect();
 			}
 		});
-		
+
 		ClientInfo clientInfo = RWT.getClient().getService(ClientInfo.class);
 		if (clientInfo != null)
 		{

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.VersionInfo;
@@ -81,9 +83,7 @@ public class LoginJob implements IRunnableWithProgress
       language = RWT.getLocale().getLanguage();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.jface.operation.IRunnableWithProgress#run(org.eclipse.core.runtime.IProgressMonitor)
     */
    @Override
@@ -135,6 +135,43 @@ public class LoginJob implements IRunnableWithProgress
             {
                IPreferenceStore store = ConsoleSharedData.getSettings();
                objectsFullSync[0] = store.getBoolean("ObjectsFullSync");
+               store.addPropertyChangeListener(new IPropertyChangeListener() {
+                  @Override
+                  public void propertyChange(PropertyChangeEvent event)
+                  {
+                     if (event.getProperty().equals("ObjectsFullSync"))
+                     {
+                        Object value = event.getNewValue();
+                        boolean doFullSync;
+                        if (value instanceof Boolean)
+                           doFullSync = ((Boolean)value).booleanValue();
+                        else if (value instanceof String)
+                           doFullSync = Boolean.valueOf((String)value);
+                        else
+                           doFullSync = false;
+                        if (doFullSync)
+                        {
+                           Activator.logInfo("Full object synchronization triggered by preference change");
+                           ConsoleJob job = new ConsoleJob("Synchronize all objects", null, Activator.PLUGIN_ID, null) {
+                              @Override
+                              protected void runInternal(IProgressMonitor monitor) throws Exception
+                              {
+                                 if (!session.areObjectsSynchronized())
+                                    session.syncObjects();
+                              }
+   
+                              @Override
+                              protected String getErrorMessage()
+                              {
+                                 return "Failed to synchronize all objects";
+                              }
+                           };
+                           job.setUser(false);
+                           job.start();
+                        }
+                     }
+                  }
+               });
             }
          });
          session.syncObjects(objectsFullSync[0]);

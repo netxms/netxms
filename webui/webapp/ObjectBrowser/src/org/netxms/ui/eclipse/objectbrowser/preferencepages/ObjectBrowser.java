@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.preferencepages;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -27,8 +26,6 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -45,8 +42,8 @@ public class ObjectBrowser extends FieldEditorPreferencePage implements IWorkben
    private BooleanFieldEditor autoApply;
    private StringFieldEditor delay;
    private StringFieldEditor minLength;
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
     */
    @Override
@@ -55,7 +52,7 @@ public class ObjectBrowser extends FieldEditorPreferencePage implements IWorkben
       setPreferenceStore(Activator.getDefault().getPreferenceStore());
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.FieldEditorPreferencePage#createFieldEditors()
     */
    @Override
@@ -63,23 +60,23 @@ public class ObjectBrowser extends FieldEditorPreferencePage implements IWorkben
    {
       makeFullSync = new BooleanFieldEditor("ObjectsFullSync", "Full object synchronization on startup", getFieldEditorParent()); //$NON-NLS-1$
       addField(makeFullSync); 
-      
+
       addField(new BooleanFieldEditor("ObjectBrowser.showStatusIndicator", "Show &status indicator", getFieldEditorParent())); //$NON-NLS-1$
       addField(new BooleanFieldEditor("ObjectBrowser.showFilter", "Show &filter", getFieldEditorParent())); //$NON-NLS-1$
-      
+
       useServerFilter = new BooleanFieldEditor("ObjectBrowser.useServerFilterSettings", "&Use server settings for object filter", getFieldEditorParent()); //$NON-NLS-1$
       addField(useServerFilter);
-      
+
       autoApplyParent = getFieldEditorParent();
       autoApply = new BooleanFieldEditor("ObjectBrowser.filterAutoApply", "&Apply filter automatically", autoApplyParent); //$NON-NLS-1$
       addField(autoApply);
-      
+
       delayParent = getFieldEditorParent();
       delay = new StringFieldEditor("ObjectBrowser.filterDelay", "Filter &delay", delayParent); //$NON-NLS-1$
       addField(delay);
       delay.setEmptyStringAllowed(false);
       delay.setTextLimit(5);
-      
+
       minLengthParent = getFieldEditorParent();
       minLength = new StringFieldEditor("ObjectBrowser.filterMinLength", "Filter &minimal length", minLengthParent); //$NON-NLS-1$
       addField(minLength);
@@ -87,7 +84,7 @@ public class ObjectBrowser extends FieldEditorPreferencePage implements IWorkben
       minLength.setTextLimit(3);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.FieldEditorPreferencePage#initialize()
     */
    @Override
@@ -115,25 +112,5 @@ public class ObjectBrowser extends FieldEditorPreferencePage implements IWorkben
       boolean fullySync = makeFullSync.getBooleanValue();
       IPreferenceStore globalStore = ConsoleSharedData.getSettings();
       globalStore.setValue("ObjectsFullSync", fullySync);
-      if (fullySync)
-      {
-         final NXCSession session = ConsoleSharedData.getSession();
-         ConsoleJob job = new ConsoleJob("Synchronize all objects", null, Activator.PLUGIN_ID, null) {
-            @Override
-            protected void runInternal(IProgressMonitor monitor) throws Exception
-            {
-               if (!session.areObjectsSynchronized())
-                  session.syncObjects();
-            }
-            
-            @Override
-            protected String getErrorMessage()
-            {
-               return "Failed to synchronize all objects";
-            }
-         };
-         job.setUser(false);
-         job.start();
-      }
    }
 }
