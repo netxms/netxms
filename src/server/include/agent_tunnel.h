@@ -56,7 +56,7 @@ private:
    int m_pollerCount;
 
 public:
-   AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id);
+   AgentTunnelCommChannel(AgentTunnel *tunnel, uint32_t id);
    virtual ~AgentTunnelCommChannel();
 
    virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;

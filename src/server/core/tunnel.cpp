@@ -71,14 +71,14 @@ static Mutex s_certificateMappingsLock;
 static SharedHashMap<uint32_t, AgentTunnel> s_tunnels;   // All tunnels indexed by tunnel ID
 static SharedHashMap<uint32_t, AgentTunnel> s_boundTunnels;
 static SharedObjectArray<AgentTunnel> s_unboundTunnels(16, 16);
-static Mutex s_tunnelListLock;
+static Mutex s_tunnelListLock(true);
 static VolatileCounter s_activeSetupCalls = 0;  // Number of tunnel setup calls currently running
 
 /**
  * Socket pollers
  */
 static ObjectArray<BackgroundSocketPollerHandle> s_pollers(64, 64, Ownership::True);
-static uint32_t s_maxTunnelsPerPoller = 256;
+static uint32_t s_maxTunnelsPerPoller = MIN(SOCKET_POLLER_MAX_SOCKETS - 1, 256);
 static Mutex s_pollerListLock(true);
 
 /**
@@ -365,7 +365,6 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
  */
 AgentTunnel::~AgentTunnel()
 {
-   m_channels.clear();
    shutdown();
    SSL_CTX_free(m_context);
    SSL_free(m_ssl);
@@ -492,8 +491,8 @@ void AgentTunnel::processMessage(NXCPMessage *msg)
  */
 void AgentTunnel::finalize()
 {
-   UnregisterTunnel(this);
    m_state = AGENT_TUNNEL_SHUTDOWN;
+   UnregisterTunnel(this);
 
    // shutdown all channels
    MutexLock(m_channelLock);
@@ -897,6 +896,12 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
  */
 shared_ptr<AgentTunnelCommChannel> AgentTunnel::createChannel()
 {
+   if (m_state != AGENT_TUNNEL_BOUND)
+   {
+      debugPrintf(4, _T("createChannel: tunnel is not in bound state"));
+      return shared_ptr<AgentTunnelCommChannel>();
+   }
+
    NXCPMessage request(CMD_CREATE_CHANNEL, InterlockedIncrement(&m_requestId));
    if (!sendMessage(&request))
    {
@@ -922,9 +927,21 @@ shared_ptr<AgentTunnelCommChannel> AgentTunnel::createChannel()
    shared_ptr<AgentTunnelCommChannel> channel = make_shared<AgentTunnelCommChannel>(this, response->getFieldAsUInt32(VID_CHANNEL_ID));
    delete response;
    MutexLock(m_channelLock);
-   m_channels.set(channel->getId(), channel);
+   if (m_state == AGENT_TUNNEL_BOUND)
+   {
+      m_channels.set(channel->getId(), channel);
+   }
+   else
+   {
+      channel.reset();
+   }
    MutexUnlock(m_channelLock);
-   debugPrintf(4, _T("createChannel: new channel created (ID=%d)"), channel->getId());
+
+   if (channel != nullptr)
+      debugPrintf(4, _T("createChannel: new channel created (ID=%d)"), channel->getId());
+   else
+      debugPrintf(4, _T("createChannel: tunnel disconnected during channel setup"));
+
    return channel;
 }
 
@@ -1012,7 +1029,7 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 /**
  * Channel constructor
  */
-AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id) : m_buffer(65536, 65536)
+AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, uint32_t id) : m_buffer(65536, 65536)
 {
    m_tunnel = tunnel;
    m_id = id;
@@ -1021,7 +1038,15 @@ AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id) :
    InitializeCriticalSectionAndSpinCount(&m_bufferLock, 4000);
    InitializeConditionVariable(&m_dataCondition);
 #else
+#if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
+   pthread_mutexattr_t a;
+   pthread_mutexattr_init(&a);
+   MUTEXATTR_SETTYPE(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
+   pthread_mutex_init(&m_bufferLock, &a);
+   pthread_mutexattr_destroy(&a);
+#else
    pthread_mutex_init(&m_bufferLock, nullptr);
+#endif
    pthread_cond_init(&m_dataCondition, nullptr);
 #endif
    memset(m_pollers, 0, sizeof(m_pollers));
@@ -1685,8 +1710,8 @@ void TunnelListenerThread()
    ThreadSetName("TunnelListener");
 
    s_maxTunnelsPerPoller = ConfigReadULong(_T("AgentTunnels.MaxTunnelsPerPoller"), s_maxTunnelsPerPoller);
-   if (s_maxTunnelsPerPoller > FD_SETSIZE / 2)
-      s_maxTunnelsPerPoller = FD_SETSIZE / 2;
+   if (s_maxTunnelsPerPoller > SOCKET_POLLER_MAX_SOCKETS - 1)
+      s_maxTunnelsPerPoller = SOCKET_POLLER_MAX_SOCKETS - 1;
 
    s_tunnelListenerLock.lock();
    uint16_t listenPort = static_cast<uint16_t>(ConfigReadULong(_T("AgentTunnels.ListenPort"), 4703));
