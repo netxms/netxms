@@ -294,6 +294,7 @@
     <ClInclude Include="libnetxms.h" />
     <ClInclude Include="lz4.h" />
     <ClInclude Include="md5.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="sha1.h" />
     <ClInclude Include="sha2.h" />
     <ClInclude Include="StackWalker.h" />
@@ -317,6 +318,9 @@
       <Project>{e7410eb4-3355-4c83-8e05-d2877581cda1}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\build\netxms-build-tag.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

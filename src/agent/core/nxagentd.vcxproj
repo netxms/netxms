@@ -109,6 +109,9 @@
     <Manifest>
       <AdditionalManifestFiles>nxagentd.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\..\..\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
@@ -135,6 +138,9 @@
     <Manifest>
       <AdditionalManifestFiles>nxagentd.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\..\..\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -157,6 +163,9 @@
     <Manifest>
       <AdditionalManifestFiles>nxagentd.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\..\..\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
@@ -182,6 +191,9 @@
     <Manifest>
       <AdditionalManifestFiles>nxagentd.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\..\..\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="actions.cpp" />

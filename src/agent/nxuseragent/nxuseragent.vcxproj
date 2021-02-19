@@ -88,6 +88,9 @@
     <Manifest>
       <EnableDpiAwareness>false</EnableDpiAwareness>
     </Manifest>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\..\..\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -106,6 +109,9 @@
     <Manifest>
       <EnableDpiAwareness>false</EnableDpiAwareness>
     </Manifest>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\..\..\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -128,6 +134,9 @@
     <Manifest>
       <EnableDpiAwareness>false</EnableDpiAwareness>
     </Manifest>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\..\..\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -150,6 +159,9 @@
     <Manifest>
       <EnableDpiAwareness>false</EnableDpiAwareness>
     </Manifest>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\..\..\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="appwnd.cpp" />

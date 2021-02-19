@@ -200,6 +200,9 @@
       <Project>{811f41fe-131d-491a-9184-fbe687068d34}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\build\netxms-build-tag.rc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

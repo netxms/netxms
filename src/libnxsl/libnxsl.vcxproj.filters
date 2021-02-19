@@ -139,4 +139,9 @@
       <Filter>Parser Files</Filter>
     </BISON>
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\build\netxms-build-tag.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
 </Project>

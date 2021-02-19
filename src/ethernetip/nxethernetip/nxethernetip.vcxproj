@@ -185,6 +185,9 @@
       <Project>{11a90214-e31c-5f19-8f0e-81f10e1091fb}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\build\netxms-build-tag.rc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

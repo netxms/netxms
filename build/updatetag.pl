@@ -5,6 +5,7 @@ my $define_prefix = shift || "NETXMS";
 my $h_file = shift || $file_prefix . "-build-tag.h";
 my $iss_file = shift || $file_prefix . "-build-tag.iss";
 my $property_file = shift || $file_prefix . "-build-tag.properties";
+my $rc_file = shift || $file_prefix . "-build-tag.rc";
 
 my $tag = `git describe --always`;
 chomp $tag;
@@ -65,6 +66,39 @@ if (IsUpdateNeeded($property_file, $tag) == 1)
 	close OUT;
 
 	print "Build tag updated in $property_file\n";
+}
+
+if (IsUpdateNeeded($rc_file, $tag) == 1)
+{
+   my $file_version = $version_string;
+   $file_version =~ tr /\./,/;
+	open(OUT, ">$rc_file") or die "Cannot open output file: $!";
+	print OUT "/* BUILDTAG:$tag */\n";
+	print OUT "#include \"winres.h\"\n";
+   print OUT "VS_VERSION_INFO VERSIONINFO\n";
+   print OUT "   FILEVERSION $file_version,0\n";
+   print OUT "   PRODUCTVERSION $file_version,0\n";
+   print OUT "{\n";
+   print OUT "   BLOCK \"StringFileInfo\"\n";
+   print OUT "   {\n";
+   print OUT "      BLOCK \"040904b0\"\n";
+   print OUT "      {\n";
+   print OUT "         VALUE \"CompanyName\",      \"Raden Solutions\\0\"\n";
+   print OUT "         VALUE \"FileDescription\",  \"NetXMS Monitoring System Component\\0\"\n";
+   print OUT "         VALUE \"FileVersion\",      \"$version_string.0\\0\"\n";
+   print OUT "         VALUE \"LegalCopyright\",   \"© 2021 Raden Solutions SIA. All Rights Reserved\\0\"\n";
+   print OUT "         VALUE \"ProductName\",      \"NetXMS\\0\"\n";
+   print OUT "         VALUE \"ProductVersion\",   \"$version_string.0\\0\"\n";
+   print OUT "      }\n";
+   print OUT "   }\n";
+   print OUT "   BLOCK \"VarFileInfo\"\n";
+   print OUT "   {\n";
+   print OUT "      VALUE \"Translation\", 0x409, 1200\n";
+   print OUT "   }\n";
+   print OUT "}\n";
+	close OUT;
+
+	print "Build tag updated in $rc_file\n";
 }
 
 sub IsUpdateNeeded
