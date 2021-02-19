@@ -564,7 +564,7 @@ public class ActionManager extends ViewPart implements SessionListener
          filterText.setText(""); //$NON-NLS-1$
          onFilterModify();
       }
-      settings.put("DataCollectionEditor.showFilter", enable);
+      settings.put("ActionManager.showFilter", enable);
    }
 
    /**

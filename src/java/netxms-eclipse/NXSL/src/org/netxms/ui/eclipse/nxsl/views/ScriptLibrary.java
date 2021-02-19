@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -39,10 +40,15 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.commands.ActionHandler;
@@ -58,10 +64,12 @@ import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.nxsl.dialogs.CreateScriptDialog;
 import org.netxms.ui.eclipse.nxsl.views.helpers.ScriptComparator;
+import org.netxms.ui.eclipse.nxsl.views.helpers.ScriptFilter;
 import org.netxms.ui.eclipse.nxsl.views.helpers.ScriptLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -86,24 +94,53 @@ public class ScriptLibrary extends ViewPart
 	private Action actionRename;
 	private Action actionDelete;
 	private Action actionCopyName;
+   private Action actionShowFilter;
+   
+   private ScriptFilter filter;
+   private FilterText filterText;
+   private IDialogSettings settings;
+   private Composite content;
+
+     
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
+   @Override
+   public void init(IViewSite site) throws PartInitException
+   {
+      super.init(site);
+      session = ConsoleSharedData.getSession();
+      settings = Activator.getDefault().getDialogSettings();
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	public void createPartControl(Composite parent)
-	{
-		session = ConsoleSharedData.getSession();
-		
-		parent.setLayout(new FillLayout());
+	{		
+      content = new Composite(parent, SWT.NONE);
+      content.setLayout(new FormLayout());
+      
+      // Create filter area
+      filterText = new FilterText(content, SWT.NONE);
+      filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
 		
 		final String[] names = { Messages.get().ScriptLibrary_ColumnId, Messages.get().ScriptLibrary_ColumnName };
 		final int[] widths = { 70, 400 };
-		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+		viewer = new SortableTableViewer(content, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ScriptLabelProvider());
 		viewer.setComparator(new ScriptComparator());
+		filter = new ScriptFilter();
+		viewer.addFilter(filter);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
@@ -132,11 +169,40 @@ public class ScriptLibrary extends ViewPart
 				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 			}
 		});
+      
+      // Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(filterText);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      viewer.getTable().setLayoutData(fd);
+      
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
+
+      filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+            actionShowFilter.setChecked(false);
+         }
+      });
 
       activateContext();
-		createActions();
-		contributeToActionBars();
-		createPopupMenu();
+      createActions();
+      contributeToActionBars();
+      createPopupMenu();
+
+      // Set initial focus to filter input line
+      if (actionShowFilter.isChecked())
+         filterText.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
 
 		refreshScriptList();
 	}
@@ -221,6 +287,18 @@ public class ScriptLibrary extends ViewPart
 		};
 		actionCopyName.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.CopyNameToClipboard");
 		handlerService.activateHandler(actionCopyName.getActionDefinitionId(), new ActionHandler(actionCopyName));
+      
+      actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            enableFilter(actionShowFilter.isChecked());
+         }
+      };
+      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
+      actionShowFilter.setChecked(getBooleanFromSettings("ScriptLibrary.showFilter", true));
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
+      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 	}
 
 	/**
@@ -245,6 +323,8 @@ public class ScriptLibrary extends ViewPart
 		manager.add(actionDelete);
 		manager.add(actionRename);
 		manager.add(actionEdit);
+      manager.add(new Separator());
+      manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -260,6 +340,8 @@ public class ScriptLibrary extends ViewPart
 		manager.add(actionNew);
 		manager.add(actionEdit);
 		manager.add(actionDelete);
+      manager.add(new Separator());
+      manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -475,4 +557,48 @@ public class ScriptLibrary extends ViewPart
       IStructuredSelection selection = viewer.getStructuredSelection();
 	   WidgetHelper.copyToClipboard(((Script)selection.getFirstElement()).getName());
 	}
+	
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   private void enableFilter(boolean enable)
+   {
+      filterText.setVisible(enable);
+      FormData fd = (FormData)viewer.getTable().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      content.layout();
+      if (enable)
+      {
+         filterText.setFocus();
+      }
+      else
+      {
+         filterText.setText(""); //$NON-NLS-1$
+         onFilterModify();
+      }
+      settings.put("ScriptLibrary.showFilter", enable);
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   private void onFilterModify()
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      viewer.refresh(false);
+   }
+
+   /**
+    * @param b
+    * @param defval
+    * @return
+    */
+   private boolean getBooleanFromSettings(String name, boolean defval)
+   {
+      String v = settings.get(name);
+      return (v != null) ? Boolean.valueOf(v) : defval;
+   }
 }
