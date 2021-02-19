@@ -46,6 +46,7 @@ target
 /build/netxms-build-tag.h
 /build/netxms-build-tag.iss
 /build/netxms-build-tag.properties
+/build/netxms-build-tag.rc
 
 /netxms-*.tar.gz
 /*.apkg

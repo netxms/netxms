@@ -151,6 +151,9 @@
     <ClInclude Include="..\..\..\..\include\nms_util.h" />
     <ClInclude Include="..\..\..\include\ncdrv.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\build\netxms-build-tag.rc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

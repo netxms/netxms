@@ -183,6 +183,9 @@
     <ClInclude Include="..\..\..\include\nxappc_internal.h" />
     <ClInclude Include="nxappc.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\build\netxms-build-tag.rc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
