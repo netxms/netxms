@@ -1224,22 +1224,29 @@ void AgentTunnelCommChannel::backgroundPoll(uint32_t timeout, void (*callback)(B
 #else
    pthread_mutex_lock(&m_bufferLock);
 #endif
-   if (m_buffer.isEmpty())
+   if (m_active)
    {
-      if (m_pollerCount < 16)
+      if (m_buffer.isEmpty())
       {
-         m_pollers[m_pollerCount].callback = callback;
-         m_pollers[m_pollerCount].context = context;
-         m_pollerCount++;
+         if (m_pollerCount < 16)
+         {
+            m_pollers[m_pollerCount].callback = callback;
+            m_pollers[m_pollerCount].context = context;
+            m_pollerCount++;
+         }
+         else
+         {
+            ThreadPoolExecute(g_agentConnectionThreadPool, callback, BackgroundSocketPollResult::FAILURE, static_cast<AbstractCommChannel*>(this), context);
+         }
       }
       else
       {
-         ThreadPoolExecute(g_agentConnectionThreadPool, callback, BackgroundSocketPollResult::FAILURE, static_cast<AbstractCommChannel*>(this), context);
+         ThreadPoolExecute(g_agentConnectionThreadPool, callback, BackgroundSocketPollResult::SUCCESS, static_cast<AbstractCommChannel*>(this), context);
       }
    }
    else
    {
-      ThreadPoolExecute(g_agentConnectionThreadPool, callback, BackgroundSocketPollResult::SUCCESS, static_cast<AbstractCommChannel*>(this), context);
+      ThreadPoolExecute(g_agentConnectionThreadPool, callback, BackgroundSocketPollResult::SHUTDOWN, static_cast<AbstractCommChannel*>(this), context);
    }
 #ifdef _WIN32
    LeaveCriticalSection(&m_bufferLock);
