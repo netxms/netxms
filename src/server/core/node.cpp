@@ -2016,7 +2016,7 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
 
    int retryCount = 5;
 
-restart_agent_check:
+restart_status_poll:
    if (g_flags & AF_RESOLVE_IP_FOR_EACH_STATUS_POLL)
    {
       poller->setStatus(_T("updating primary IP"));
@@ -2079,20 +2079,33 @@ restart_agent_check:
             unlockProperties();
             delete pTransport;
             retryCount--;
-            goto restart_agent_check;
+            goto restart_status_poll;
          }
          else
          {
-            if (pTransport->isProxyTransport() && (snmpErr == SNMP_ERR_COMM) && (retryCount > 0))
+            if ((snmpErr == SNMP_ERR_COMM) && pTransport->isProxyTransport() && (retryCount > 0))
             {
                nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): got communication error on proxy transport, checking connection to proxy"), m_name);
-               shared_ptr<AgentConnectionEx> pconn = acquireProxyConnection(SNMP_PROXY, true);
-               if (pconn != nullptr)
+               uint32_t proxyNodeId = getEffectiveSnmpProxy();
+               shared_ptr<NetObj> proxyNode = FindObjectById(proxyNodeId, OBJECT_NODE);
+               if (proxyNode != nullptr)
                {
-                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): proxy connection is valid"), m_name);
-                  retryCount--;
-                  delete pTransport;
-                  goto restart_agent_check;
+                  shared_ptr<AgentConnectionEx> pconn = static_cast<Node*>(proxyNode.get())->acquireProxyConnection(SNMP_PROXY, true);
+                  if (pconn != nullptr)
+                  {
+                     nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): proxy connection for SNMP is valid"), m_name);
+                     retryCount--;
+                     delete pTransport;
+                     goto restart_status_poll;
+                  }
+                  else
+                  {
+                     nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): cannot acquire proxy connection for SNMP"), m_name);
+                  }
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): cannot find SNMP proxy node object %u"), m_name, proxyNodeId);
                }
             }
 
@@ -2567,7 +2580,7 @@ restart_agent_check:
             resyncDataCollectionConfiguration = true; // Will cause addition of all remotely collected DCIs on proxy
             // Set recovery time to provide grace period for capability expiration
             m_recoveryTime = now;
-            goto restart_agent_check;
+            goto restart_status_poll;
          }
          else
          {
