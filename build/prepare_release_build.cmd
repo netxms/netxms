@@ -17,3 +17,7 @@ for %%p in (%POM_FILES_PACKAGE%) do cmd /C mvn -f %%p -Dmaven.test.skip=true -Dr
 cd sql
 make -f Makefile.w32
 cd ..
+
+echo @echo off > build\update_exe_version.cmd
+echo chcp 65001 >> build\update_exe_version.cmd 
+echo rcedit %%1 --set-file-version %VERSION% --set-product-version %VERSION% --set-version-string CompanyName "Raden Solutions" --set-version-string FileDescription %%2 --set-version-string ProductName "NetXMS" --set-version-string LegalCopyright "© 2021 Raden Solutions SIA. All Rights Reserved" >> build\update_exe_version.cmd
