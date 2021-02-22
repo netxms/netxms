@@ -94,7 +94,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 		parent.setLayout(new FillLayout());
 		
 		editorMessageBar = new CompositeWithMessageBar(parent, SWT.NONE);
-		editor = new ScriptEditor(editorMessageBar, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL, showLineNumbers);
+		editor = new ScriptEditor(editorMessageBar, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL, showLineNumbers, false);
 		editorMessageBar.setContent(editor);
       editor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
