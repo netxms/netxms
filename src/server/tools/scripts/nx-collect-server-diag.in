@@ -11,17 +11,310 @@ check_command() {
 	return $?
 }
 
+show_usage_and_exit() {
+	cat <<END
+NetXMS Server Diagnostic Collection Tool
+Copyright (c) 2021 Raden Solutions
+
+SYNOPSIS
+
+	$0 [-hs] [-c COUNT] [-i INTERVAL]
+
+DESCRIPTION
+	The following options are available:
+
+	-c COUNT
+		Capture process state information COUNT times
+
+	-h
+		Show this help.
+
+	-i INTERVAL
+		Set interval in seconds between process state captures
+
+	-p
+		Collect process state
+
+	-s
+		Collect system information
+
+END
+
+	exit 1
+}
+
+####################################
+# OS level information
+collect_os_info() {
+   OS_LOG=$LOG_DIR/os.txt
+   CURRENT_LOG=$OS_LOG
+
+   touch $OS_LOG
+
+   #Host name
+   print_header "Host name"
+   uname -a >> $OS_LOG
+   #OS version
+   print_header "OS version"
+   if check_command oslevel; then
+      oslevel -s >> $OS_LOG 2>>$ERROR_LOG
+   fi
+   if check_command  machinfo; then
+      machinfo >> $OS_LOG 2>>$ERROR_LOG
+   fi 
+   if check_command lsb_release; then
+      lsb_release -idr >> $OS_LOG 2>>$ERROR_LOG
+   fi
+   if [ -f /etc/release ]; then
+      cat /etc/release >> $OS_LOG 
+   fi
+
+   # Packages
+   print_header "Packages:"  
+   if check_command lslpp; then
+      lslpp -L >> $OS_LOG
+   fi
+   if check_command rpm; then
+      rpm -qa >> $OS_LOG
+   fi
+   if check_command dpkg; then
+      dpkg --list >> $OS_LOG
+   fi
+   if check_command pkginfo; then
+      pkginfo -l >> $OS_LOG
+   fi
+   if check_command pacman; then
+      pacman -Q >> $OS_LOG
+   fi
+
+   #Memory usage
+   print_header "Memory usage:"  
+   if check_command free; then
+      free -m >> $OS_LOG 2>>$ERROR_LOG
+   fi
+   if check_command svmon; then
+      svmon -P >> $OS_LOG 2>>$ERROR_LOG
+   fi
+   if check_command top; then
+      top -b -n1 >> $OS_LOG 2>>$ERROR_LOG
+      if [ $? -ne 0 ]; then
+         top -b >> $OS_LOG 2>>$ERROR_LOG
+      fi
+   fi
+
+   #Uptime
+   print_header "Uptime"
+   uptime >> $OS_LOG
+
+   #Process list
+   print_header "Process list"
+   ps -e >> $OS_LOG
+
+   #Open files (lsof output)
+   print_header "Open files"
+   if check_command pidof; then
+      SERVER_PID=`pidof netxmsd`   
+      AGENT_PID=`pidof nxagentd`   
+   elif check_command pgrep; then
+      SERVER_PID=`pgrep -x netxmsd`
+      AGENT_PID=`pgrep -x nxagentd`
+   else
+      SERVER_PID=$(ps -eo pid,comm | awk '$2 == "netxmsd" {print $1}')
+      AGENT_PID=$(ps -eo pid,comm | awk '$2 == "nxagentd" {print $1}')
+   fi
+
+   if check_command lsof; then
+      lsof -p $SERVER_PID >> $OS_LOG 2>>$ERROR_LOG
+      lsof -p $AGENT_PID >> $OS_LOG 2>>$ERROR_LOG
+   elif check_command pfiles; then
+      pfiles $SERVER_PID >> $OS_LOG 2>>$ERROR_LOG
+      pfiles $AGENT_PID >> $OS_LOG 2>>$ERROR_LOG
+   elif check_command procfiles; then
+      procfiles $SERVER_PID >> $OS_LOG 2>>$ERROR_LOG
+      procfiles $AGENT_PID >> $OS_LOG 2>>$ERROR_LOG
+   else
+      if [ -f /proc/$SERVER_PID/fd ]; then
+         ls -l /proc/$SERVER_PID/fd >> $OS_LOG 2>>$ERROR_LOG
+      fi
+      if [ -f /proc/$AGENT_PID/fd ]; then
+         ls -l /proc/$AGENT_PID/fd >> $OS_LOG 2>>$ERROR_LOG
+      fi    
+   fi
+
+   #interfaces ifconfig
+   print_header "Interfaces"
+   if check_command ifconfig; then
+      ifconfig -a >> $OS_LOG
+   elif check_command ip; then
+      ip address >> $OS_LOG
+   fi
+
+   # IP routes
+   print_header "IP routes"
+   if check_command route; then
+      route -n >> $OS_LOG 2>>$ERROR_LOG
+   elif check_command netstat; then
+      netstat -rn >> $OS_LOG 2>>$ERROR_LOG
+   elif check_command ip; then
+      ip route >> $OS_LOG 2>>$ERROR_LOG
+   fi
+
+   # ARP cache
+   print_header "ARP cache"
+   arp -an >> $OS_LOG 2>>$ERROR_LOG
+}
+
+####################################
+### Internal server stats
+collect_server_stats() {
+   echo -n "Collecting basic diagnostic data... "
+
+   NXADM_LOG="$LOG_DIR/nxadm.txt"
+   CURRENT_LOG="$NXADM_LOG"
+
+   touch "$NXADM_LOG"
+
+   #debug
+   print_header "debug"
+   $DIR/nxadm -c "debug"  >> $NXADM_LOG
+   #show dbcp
+   print_header "show dbcp:"  
+   $DIR/nxadm -c "show dbcp"  >> $NXADM_LOG
+   #show dbstats
+   print_header "show dbstats:" 
+   $DIR/nxadm -c "show dbstats"  >> $NXADM_LOG
+   #show flags
+   print_header "show flags:"
+   $DIR/nxadm -c "show flags"  >> $NXADM_LOG
+   #show heap details
+   print_header "show heap details:"
+   $DIR/nxadm -c "show heap details"  >> $NXADM_LOG
+   #show heap summary
+   print_header "show heap summary:"
+   $DIR/nxadm -c "show heap summary"  >> $NXADM_LOG
+   #show index id
+   print_header "show index id:" 
+   $DIR/nxadm -c "show index id"  >> $NXADM_LOG
+   #show index interface
+   print_header "show index interface:" 
+   $DIR/nxadm -c "show index interface"  >> $NXADM_LOG
+   #show index nodeaddr
+   print_header "show index nodeaddr:" 
+   $DIR/nxadm -c "show index nodeaddr"  >> $NXADM_LOG
+   #show index subnet
+   print_header "show index subnet:" 
+   $DIR/nxadm -c "show index subnet"  >> $NXADM_LOG
+   #show index zone
+   print_header "show index zone:" 
+   $DIR/nxadm -c "show index zone"  >> $NXADM_LOG
+   #show modules
+   print_header "show modules:" 
+   $DIR/nxadm -c "show modules"  >> $NXADM_LOG
+   #show msgwq
+   print_header "show msgwq:"
+   $DIR/nxadm -c "show msgwq"  >> $NXADM_LOG
+   #show objects
+   print_header "show objects:"
+   $DIR/nxadm -c "show objects"  >> $NXADM_LOG
+   #show pe
+   print_header "show pe:" 
+   $DIR/nxadm -c "show pe"  >> $NXADM_LOG
+   #show pollers
+   print_header "show pollers:" 
+   $DIR/nxadm -c "show pollers"  >> $NXADM_LOG
+   #show queues
+   print_header "show queues:" 
+   $DIR/nxadm -c "show queues"  >> $NXADM_LOG
+   #show sessions
+   print_header "show sessions:" 
+   $DIR/nxadm -c "show sessions"  >> $NXADM_LOG
+   #show stats
+   print_header "show stats:"
+   $DIR/nxadm -c "show stats"  >> $NXADM_LOG
+   #show tunnels
+   print_header "show tunnels:"
+   $DIR/nxadm -c "show tunnels"  >> $NXADM_LOG
+   #show users
+   print_header "show users:"
+   $DIR/nxadm -c "show users"  >> $NXADM_LOG
+   #show watchdog
+   print_header "show watchdog:"
+   $DIR/nxadm -c "show watchdog"  >> $NXADM_LOG
+
+   echo "done"
+}
+
+####################################
+### Collect process state
+collect_process_state() {
+   ts=`date +%Y%m%d-%H%M%S`
+   outputfile="$LOG_DIR/$exec-threads.$pid.$ts"
+   echo -n "Collecting process state information... "
+
+   cmdfile="/tmp/capture_netxmsd_threads.$pid.$ts.gdb"
+   echo "set height 0" > $cmdfile
+   echo "set logging file $outputfile" >> $cmdfile
+   echo "set logging on" >> $cmdfile
+   echo "attach $pid" >> $cmdfile
+   echo "thread apply all bt" >> $cmdfile
+   echo "detach" >> $cmdfile
+   echo "quit" >> $cmdfile
+   sudo gdb --batch-silent --command=$cmdfile "$DIR/$exec"
+   rm $cmdfile
+   echo "done"
+}
+
 #check netxmsd, nxadm and nxagentd 
 DIR="~BINDIR~"
 if [ ! -f "$DIR/netxmsd" ] || [ ! -f "$DIR/nxadm" ] || [ ! -f "$DIR/nxagentd" ]; then
     DIR=$(dirname "$0")
     if [ ! -f "$DIR/netxmsd" ] || [ ! -f "$DIR/nxadm" ] || [ ! -f "$DIR/nxagentd" ]; then
-        echo "Error: required NetXMS binaries not found"
+        echo "ERROR: required NetXMS binaries not found"
         exit 1
     fi
 fi
 
-#create folder
+# Init
+COLLECT_PROCESS_STATE="no"
+COLLECT_SYSTEM_INFO="no"
+COUNT=1
+INTERVAL=15
+
+# parse command line
+while getopts 'c:hi:ps' c; do
+	case $c in
+		c)
+			COUNT="$OPTARG"
+			;;
+		h)
+			show_usage_and_exit
+			;;
+		i)
+			INTERVAL="$OPTARG"
+			;;
+		p)
+			COLLECT_PROCESS_STATE="yes"
+			;;
+		s)
+			COLLECT_SYSTEM_INFO="yes"
+			;;
+		*)
+			echo "Invalid option: $OPTARG" 1>&2
+			show_usage_and_exit
+			;;
+		:)
+			echo "Invalid option: $OPTARG requires an argument" 1>&2
+			show_usage_and_exit
+			;;
+	esac
+done
+
+if [ "$COLLECT_PROCESS_STATE" != "yes" -a "$COLLECT_SYSTEM_INFO" != "yes" ]; then
+   echo "ERROR: at least one of -p or -s options should be given"
+   exit 2
+fi
+
+# Create folder
 
 TS=`date +%Y%m%d-%H%M%S`
 LOG_DIR=/tmp/netxms.info.$TS
@@ -30,203 +323,66 @@ mkdir $LOG_DIR
 # Error log
 ERROR_LOG=$LOG_DIR/stderr.txt
 
+collect_server_stats
 
-####################################
-# OS level information:
+if [ "$COLLECT_PROCESS_STATE" = "yes" ]; then
+   command -v gdb >/dev/null 2>&1 || { echo >&2 "ERROR: gdb is required"; exit 3; }
 
-OS_LOG=$LOG_DIR/os.txt
-CURRENT_LOG=$OS_LOG
+   exec="netxmsd"
+   pid=`ps -ax | grep $exec | grep -v grep | grep -v capture_netxmsd_threads | grep -v tail | grep -v less | grep -v log/$exec | grep -v $exec-asan | awk '{ print $1; }'`
 
-touch $OS_LOG
+   if [ "x$pid" = "x" ]; then
+      echo "ERROR: Unable to find $exec process"
+      exit 4
+   fi
 
-#Host name
-print_header "Host name"
-uname -a >> $OS_LOG
-#OS version
-print_header "OS version"
-if check_command oslevel; then
-    oslevel -s >> $OS_LOG 2>>$ERROR_LOG
-fi
-if check_command  machinfo; then
-    machinfo >> $OS_LOG 2>>$ERROR_LOG
-fi 
-if check_command lsb_release; then
-    lsb_release -idr >> $OS_LOG 2>>$ERROR_LOG
-fi
-if [ -f /etc/release ]; then
-    cat /etc/release >> $OS_LOG 
-fi
+   if [ `echo "$pid" | wc -l` -ne 1 ]; then
+      echo "ERROR: Found several $exec processes"
+      exit 4
+   fi
 
-#Memory usage
-print_header "Memory usage:"  
-if check_command free; then
-    free -m >> $OS_LOG 2>>$ERROR_LOG
-fi
-if check_command svmon; then
-    svmon -P >> $OS_LOG 2>>$ERROR_LOG
-fi
-if check_command top; then
-    top -b -n1 >> $OS_LOG 2>>$ERROR_LOG
-    if [ $? -ne 0 ]; then
-        top -b >> $OS_LOG 2>>$ERROR_LOG
-    fi
+   collect_process_state
+   if [ $COUNT -ge 1 ]; then
+      n=1
+      while [ $n -lt $COUNT ]; do
+         echo -n "Sleeping for $INTERVAL seconds... "
+         sleep $INTERVAL
+         echo "done"
+         collect_process_state
+         n=$((n+1))
+      done
+   fi
 fi
 
-#Uptime
-print_header "Uptime"
-uptime >> $OS_LOG
+if [ "$COLLECT_SYSTEM_INFO" = "yes" ]; then
+   echo -n "Collecting OS information... "
 
-#Process list
-print_header "Process list"
-ps -e >> $OS_LOG
+   collect_os_info
 
-#Open files (lsof output)
-print_header "Open files"
-if check_command pidof; then
-    SERVER_PID=`pidof netxmsd`   
-    AGENT_PID=`pidof nxagentd`   
-elif check_command pgrep; then
-    SERVER_PID=`pgrep -x netxmsd`
-    AGENT_PID=`pgrep -x nxagentd`
-else
-    SERVER_PID=$(ps -eo pid,comm | awk '$2 == "netxmsd" {print $1}')
-    AGENT_PID=$(ps -eo pid,comm | awk '$2 == "nxagentd" {print $1}')
-fi
+   #netxmsd, nxagentd log files
+   NETXMS_LOG=`$DIR/netxmsd -l | tail -1`
+   if [ "{syslog}" != "$NETXMS_LOG" ]; then
+      cp $NETXMS_LOG $LOG_DIR/ 2>>$ERROR_LOG
+   else
+      echo "Server log in syslog">>$ERROR_LOG
+   fi
 
-if check_command lsof; then
-    lsof -p $SERVER_PID >> $OS_LOG 2>>$ERROR_LOG
-    lsof -p $AGENT_PID >> $OS_LOG 2>>$ERROR_LOG
-elif check_command pfiles; then
-    pfiles $SERVER_PID >> $OS_LOG 2>>$ERROR_LOG
-    pfiles $AGENT_PID >> $OS_LOG 2>>$ERROR_LOG
-elif check_command procfiles; then
-    procfiles $SERVER_PID >> $OS_LOG 2>>$ERROR_LOG
-    procfiles $AGENT_PID >> $OS_LOG 2>>$ERROR_LOG
-else
-    if [ -f /proc/$SERVER_PID/fd ]; then
-        ls -l /proc/$SERVER_PID/fd >> $OS_LOG 2>>$ERROR_LOG
-    fi
-    if [ -f /proc/$AGENT_PID/fd ]; then
-        ls -l /proc/$AGENT_PID/fd >> $OS_LOG 2>>$ERROR_LOG
-    fi    
-fi
+   NETXMS_LOG=`$DIR/nxagentd -l | tail -1`
+   if [ "{syslog}" != "$NETXMS_LOG" ]; then
+      cp $NETXMS_LOG $LOG_DIR/ 2>>$ERROR_LOG
+   else
+      echo "Agent log in syslog">>$ERROR_LOG
+   fi
 
-#interfaces ifconfig
-print_header "Interfaces"
-if check_command ifconfig; then
-    ifconfig -a >> $OS_LOG
-elif check_command ip; then
-    ip address >> $OS_LOG
-fi
-
-# IP routes
-print_header "IP routes"
-if check_command route; then
-    route -n >> $OS_LOG 2>>$ERROR_LOG
-elif check_command netstat; then
-    netstat -rn >> $OS_LOG 2>>$ERROR_LOG
-elif check_command ip; then
-    ip route >> $OS_LOG 2>>$ERROR_LOG
-fi
-
-# ARP cache
-print_header "ARP cache"
-arp -an >> $OS_LOG 2>>$ERROR_LOG
-
-
-####################################
-### Output of nxadm commands:
-
-NXADM_LOG="$LOG_DIR/nxadm.txt"
-CURRENT_LOG="$NXADM_LOG"
-
-touch "$NXADM_LOG"
-
-#debug
-print_header "debug"
-$DIR/nxadm -c "debug"  >> $NXADM_LOG
-#show dbcp
-print_header "show dbcp:"  
-$DIR/nxadm -c "show dbcp"  >> $NXADM_LOG
-#show dbstats
-print_header "show dbstats:" 
-$DIR/nxadm -c "show dbstats"  >> $NXADM_LOG
-#show flags
-print_header "show flags:"
-$DIR/nxadm -c "show flags"  >> $NXADM_LOG
-#show heap details
-print_header "show heap details:"
-$DIR/nxadm -c "show heap details"  >> $NXADM_LOG
-#show heap summary
-print_header "show heap summary:"
-$DIR/nxadm -c "show heap summary"  >> $NXADM_LOG
-#show index id
-print_header "show index id:" 
-$DIR/nxadm -c "show index id"  >> $NXADM_LOG
-#show index interface
-print_header "show index interface:" 
-$DIR/nxadm -c "show index interface"  >> $NXADM_LOG
-#show index nodeaddr
-print_header "show index nodeaddr:" 
-$DIR/nxadm -c "show index nodeaddr"  >> $NXADM_LOG
-#show index subnet
-print_header "show index subnet:" 
-$DIR/nxadm -c "show index subnet"  >> $NXADM_LOG
-#show index zone
-print_header "show index zone:" 
-$DIR/nxadm -c "show index zone"  >> $NXADM_LOG
-#show modules
-print_header "show modules:" 
-$DIR/nxadm -c "show modules"  >> $NXADM_LOG
-#show msgwq
-print_header "show msgwq:"
-$DIR/nxadm -c "show msgwq"  >> $NXADM_LOG
-#show objects
-print_header "show objects:"
-$DIR/nxadm -c "show objects"  >> $NXADM_LOG
-#show pe
-print_header "show pe:" 
-$DIR/nxadm -c "show pe"  >> $NXADM_LOG
-#show pollers
-print_header "show pollers:" 
-$DIR/nxadm -c "show pollers"  >> $NXADM_LOG
-#show queues
-print_header "show queues:" 
-$DIR/nxadm -c "show queues"  >> $NXADM_LOG
-#show sessions
-print_header "show sessions:" 
-$DIR/nxadm -c "show sessions"  >> $NXADM_LOG
-#show stats
-print_header "show stats:"
-$DIR/nxadm -c "show stats"  >> $NXADM_LOG
-#show tunnels
-print_header "show tunnels:"
-$DIR/nxadm -c "show tunnels"  >> $NXADM_LOG
-#show users
-print_header "show users:"
-$DIR/nxadm -c "show users"  >> $NXADM_LOG
-#show watchdog
-print_header "show watchdog:"
-$DIR/nxadm -c "show watchdog"  >> $NXADM_LOG
-
-#netxmsd, nxagentd log files
-NETXMS_LOG=`$DIR/netxmsd -l | tail -1`
-if [ "{syslog}" != "$NETXMS_LOG" ]; then
-    cp $NETXMS_LOG $LOG_DIR/ 2>>$ERROR_LOG
-else
-    echo "Server log in syslog">>$ERROR_LOG
-fi
-
-NETXMS_LOG=`$DIR/nxagentd -l | tail -1`
-if [ "{syslog}" != "$NETXMS_LOG" ]; then
-    cp $NETXMS_LOG $LOG_DIR/ 2>>$ERROR_LOG
-else
-    echo "Agent log in syslog">>$ERROR_LOG
+   echo "done"
 fi
 
 #zipDeleteFolder
-tar cf $LOG_DIR.tar $LOG_DIR 2>>$ERROR_LOG
+cd $LOG_DIR
+tar cf $LOG_DIR.tar * 2>>$ERROR_LOG
+cd - >/dev/null
 gzip $LOG_DIR.tar
 rm -rf $LOG_DIR
 
+echo
 echo "Diagnostic file: $LOG_DIR.tar.gz"
