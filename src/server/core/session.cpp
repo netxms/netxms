@@ -842,6 +842,7 @@ void ClientSession::processRequest(NXCPMessage *request)
        (code != CMD_GET_MY_CONFIG) &&
        (code != CMD_REGISTER_AGENT))
    {
+      debugPrintf(6, _T("Cannot process request: session is not authenticated"));
       delete request;
       decRefCount();
       return;
@@ -3063,14 +3064,16 @@ void ClientSession::sendObjectUpdates()
       {
          InterlockedOr(&m_flags, CSF_OBJECTS_OUT_OF_SYNC);
          notify(NX_NOTIFY_OBJECTS_OUT_OF_SYNC);
+         debugPrintf(4, _T("Objects out of sync flag set"));
       }
    }
    else
    {
       if ((m_flags & CSF_OBJECTS_OUT_OF_SYNC) != 0)
       {
-         InterlockedAnd(&m_flags, CSF_OBJECTS_OUT_OF_SYNC);
+         InterlockedAnd(&m_flags, ~CSF_OBJECTS_OUT_OF_SYNC);
          notify(NX_NOTIFY_OBJECTS_IN_SYNC);
+         debugPrintf(4, _T("Objects out of sync flag cleared"));
       }
    }
 
