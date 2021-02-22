@@ -149,6 +149,7 @@ bool Dashboard::saveToDatabase(DB_HANDLE hdb)
                   DBBind(hStmt, 5, DB_SQLTYPE_TEXT, element->m_layout, DB_BIND_STATIC);
                   success = DBExecute(hStmt);
                }
+               DBFreeStatement(hStmt);
             }
             else
             {
