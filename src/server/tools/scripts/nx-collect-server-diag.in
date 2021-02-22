@@ -18,7 +18,7 @@ Copyright (c) 2021 Raden Solutions
 
 SYNOPSIS
 
-	$0 [-hs] [-c COUNT] [-i INTERVAL]
+	$0 [-hps] [-c COUNT] [-i INTERVAL]
 
 DESCRIPTION
 	The following options are available:
@@ -37,6 +37,9 @@ DESCRIPTION
 
 	-s
 		Collect system information
+
+NOTES
+	At least one of -p or -s options should be given
 
 END
 
@@ -300,18 +303,21 @@ while getopts 'c:hi:ps' c; do
 			;;
 		*)
 			echo "Invalid option: $OPTARG" 1>&2
+			echo
 			show_usage_and_exit
 			;;
 		:)
 			echo "Invalid option: $OPTARG requires an argument" 1>&2
+			echo
 			show_usage_and_exit
 			;;
 	esac
 done
 
 if [ "$COLLECT_PROCESS_STATE" != "yes" -a "$COLLECT_SYSTEM_INFO" != "yes" ]; then
-   echo "ERROR: at least one of -p or -s options should be given"
-   exit 2
+	echo "ERROR: at least one of -p or -s options should be given" 1>&2
+	echo
+	show_usage_and_exit
 fi
 
 # Create folder
