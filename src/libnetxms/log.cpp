@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -211,15 +211,15 @@ static void DefaultConsoleWriter(const TCHAR *format, ...)
  */
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
 {
-   if ((level >= 0) && (level <= 9))
-   {
-      s_mutexDebugTagTreeWrite.lock();
-      s_tagTree.secondary->setRootDebugLevel(level); // Update the secondary tree
-      SwapAndWait();
-      s_tagTree.secondary->setRootDebugLevel(level); // Update the previously active tree
-      InterlockedDecrement(&s_tagTree.secondary->m_writers);
-      s_mutexDebugTagTreeWrite.unlock();
-   }
+   if ((level < 0) || (level > 9))
+      return;
+
+   s_mutexDebugTagTreeWrite.lock();
+   s_tagTree.secondary->setRootDebugLevel(level); // Update the secondary tree
+   SwapAndWait();
+   s_tagTree.secondary->setRootDebugLevel(level); // Update the previously active tree
+   InterlockedDecrement(&s_tagTree.secondary->m_writers);
+   s_mutexDebugTagTreeWrite.unlock();
 }
 
 /**
@@ -227,28 +227,30 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
  */
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level)
 {
-   if ((tag == NULL) || !_tcscmp(tag, _T("*")))
+   if ((tag == nullptr) || !_tcscmp(tag, _T("*")))
    {
       nxlog_set_debug_level(level);
+      return;
+   }
+
+   if (level > 9)
+      return;
+
+   s_mutexDebugTagTreeWrite.lock();
+   if (level >= 0)
+   {
+      s_tagTree.secondary->add(tag, level);
+      SwapAndWait();
+      s_tagTree.secondary->add(tag, level);
    }
    else
    {
-      s_mutexDebugTagTreeWrite.lock();
-      if ((level >= 0) && (level <= 9))
-      {
-         s_tagTree.secondary->add(tag, level);
-         SwapAndWait();
-         s_tagTree.secondary->add(tag, level);
-      }
-      else if (level < 0)
-      {
-         s_tagTree.secondary->remove(tag);
-         SwapAndWait();
-         s_tagTree.secondary->remove(tag);
-      }
-      InterlockedDecrement(&s_tagTree.secondary->m_writers);
-      s_mutexDebugTagTreeWrite.unlock();
+      s_tagTree.secondary->remove(tag);
+      SwapAndWait();
+      s_tagTree.secondary->remove(tag);
    }
+   InterlockedDecrement(&s_tagTree.secondary->m_writers);
+   s_mutexDebugTagTreeWrite.unlock();
 }
 
 /**
