@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,22 +20,34 @@ package org.netxms.ui.eclipse.nxsl.widgets;
 
 import java.util.Collection;
 import java.util.Set;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.NXCSession;
+import org.netxms.client.ScriptCompilationResult;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.nxsl.Messages;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * NXSL script editor
@@ -48,6 +60,9 @@ public class ScriptEditor extends Composite
 	private Composite hintArea;
 	private Text hintTextControl = null;
 	private Label hintsExpandButton = null;
+	private Button compileButton;
+   
+   private static final Color ERROR_COLOR = new Color(Display.getDefault(), 255, 0, 0);
 	
    /**
     * @param parent
@@ -56,7 +71,7 @@ public class ScriptEditor extends Composite
     */
    public ScriptEditor(Composite parent, int style, int editorStyle)
    {
-      this(parent, style, editorStyle, true, null);
+      this(parent, style, editorStyle, true, null, true);
    }
 
    /**
@@ -67,17 +82,46 @@ public class ScriptEditor extends Composite
     */
    public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers)
    {
-      this(parent, style, editorStyle, showLineNumbers, null);
+      this(parent, style, editorStyle, showLineNumbers, null, true);
+   }
+   
+   /**
+    * 
+    * @param parent
+    * @param style
+    * @param editorStyle
+    * @param showLineNumbers
+    * @param hints
+    * @param showCompileButton
+    */
+   public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers, String hints)
+   {
+      this(parent, style, editorStyle, showLineNumbers, null, true);
+   }
+
+   /**
+    * 
+    * @param parent
+    * @param style
+    * @param editorStyle
+    * @param showLineNumbers
+    * @param showCompileButton
+    */
+   public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers, boolean showCompileButton)
+   {
+      this(parent, style, editorStyle, showLineNumbers, null, showCompileButton);
    }
    
 	/**
+	 * 
 	 * @param parent
 	 * @param style
 	 * @param editorStyle
 	 * @param showLineNumbers
 	 * @param hints
+	 * @param showCompileButton
 	 */
-	public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers, String hints)
+	public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers, String hints, boolean showCompileButton)
 	{
 		super(parent, style);
 
@@ -97,6 +141,30 @@ public class ScriptEditor extends Composite
 		editor = new Text(this, editorStyle | SWT.MULTI);
 		editor.setData(RWT.CUSTOM_VARIANT, "monospace");
 		editor.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+		
+      if (showCompileButton)
+      {
+         compileButton = new Button(this, SWT.PUSH);
+         GridData gridData = new GridData();
+         gridData.verticalAlignment = GridData.END;
+         gridData.horizontalAlignment = GridData.END;
+         compileButton.setLayoutData(gridData);
+         compileButton.setText("Compile");
+         compileButton.addSelectionListener(new SelectionListener() {
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e);
+            }
+
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               compileScript();
+            }
+         });
+      }
 	}
 	
 	/**
@@ -309,5 +377,43 @@ public class ScriptEditor extends Composite
          hintsExpandButton.setImage(SharedIcons.IMG_COLLAPSE);
       }
       layout(true, true);
+	}
+   
+   /**
+    * Compile script
+    */
+   private void compileScript()
+   {
+      final String source = getText();
+      getTextWidget().setEditable(false);
+      NXCSession session = ConsoleSharedData.getSession();
+      new ConsoleJob("Compile script", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot compile script";
+         }
+
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final ScriptCompilationResult result = session.compileScript(source, false);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (result.success)
+                  {
+                     MessageDialogHelper.openInformation(getShell(), "Info", "Script compiled successfully");
+                  }
+                  else
+                  {
+                     MessageDialogHelper.openInformation(getShell(), "Warning", result.errorMessage);
+                  }
+                  getTextWidget().setEditable(true);
+               }
+            });
+         }
+      }.start();
    }
 }
