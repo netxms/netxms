@@ -86,7 +86,7 @@ public class UserComparator extends ViewerComparator
 				break;
          case UserManagementView.COLUMN_SOURCE:
             int s1 = ((((AbstractUserObject)e1).getFlags() & AbstractUserObject.LDAP_USER) != 0) ? 1 : 0;
-            int s2 = ((((AbstractUserObject)e1).getFlags() & AbstractUserObject.LDAP_USER) != 0) ? 1 : 0;
+            int s2 = ((((AbstractUserObject)e2).getFlags() & AbstractUserObject.LDAP_USER) != 0) ? 1 : 0;
             result = s1 - s2;
             break;
 			case UserManagementView.COLUMN_TYPE:
