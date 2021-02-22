@@ -1383,7 +1383,7 @@ int F_inList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
       }
       free(strings);
    }
-   *ppResult = vm->createValue(result ? 1 : 0);
+   *ppResult = vm->createValue(result);
 	return 0;
 }
 
