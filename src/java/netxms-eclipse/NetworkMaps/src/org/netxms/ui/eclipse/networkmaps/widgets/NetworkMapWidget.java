@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.networkmaps.widgets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.gef4.zest.layouts.LayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.CompositeLayoutAlgorithm;
@@ -61,6 +62,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
@@ -279,6 +281,8 @@ public class NetworkMapWidget extends Composite
     */
    private void setContent(NetworkMap mapObject, boolean resetHistory)
    {
+      syncObjects(mapObject);
+      
       currentMapId = mapObject.getObjectId();
 		setMapLayout(mapObject.getLayout());
 		
@@ -320,6 +324,42 @@ public class NetworkMapWidget extends Composite
 		   history.clear();
 		}
 	}
+   
+   /**
+    * Synchronize objects, required when interface objects are placed on the map
+    */
+   private void syncObjects(NetworkMap mapObject)
+   {
+      NetworkMapPage mapPage = mapObject.createMapPage();
+      final List<Long> mapObjectIds = mapPage.getObjectIds();    
+      mapObjectIds.addAll(mapPage.getAllLinkStatusObjects());
+      NXCSession session = ConsoleSharedData.getSession();
+
+      ConsoleJob job = new ConsoleJob(String.format("Sync missing objects for %s netrowk map", mapObject.getObjectName()), viewPart, Activator.PLUGIN_ID)
+      {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.syncMissingObjects(mapObjectIds, true, NXCSession.OBJECT_SYNC_WAIT);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (!viewer.getControl().isDisposed())
+                     refresh();
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Error synchronizing interface objects";
+         }
+      };
+      job.setUser(false);
+      job.start();
+   }
 	
 	/**
 	 * @param layout
