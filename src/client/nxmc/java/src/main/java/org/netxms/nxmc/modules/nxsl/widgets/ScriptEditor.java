@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.nxsl.widgets;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.jface.text.ITextOperationTarget;
@@ -33,17 +34,33 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.VerifyKeyListener;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.NXCSession;
+import org.netxms.client.ScriptCompilationResult;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.CompositeWithMessageBar;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.nxsl.widgets.helpers.NXSLDocument;
 import org.netxms.nxmc.modules.nxsl.widgets.helpers.NXSLSourceViewerConfiguration;
@@ -55,10 +72,13 @@ import org.xnap.commons.i18n.I18n;
 /**
  * NXSL script editor
  */
-public class ScriptEditor extends Composite
+public class ScriptEditor extends CompositeWithMessageBar
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ScriptEditor.class);
 
+   private static final Color ERROR_COLOR = new Color(Display.getDefault(), 255, 0, 0);
+
+   private Composite content;
 	private SourceViewer editor;
 	private CompositeRuler ruler;
 	private Set<String> functions = new HashSet<String>(0);
@@ -72,7 +92,8 @@ public class ScriptEditor extends Composite
 	private Composite hintArea;
 	private Text hintTextControl = null;
 	private Label hintsExpandButton = null;
-	
+	private Button compileButton;
+
    /**
     * @param parent
     * @param style
@@ -80,7 +101,7 @@ public class ScriptEditor extends Composite
     */
    public ScriptEditor(Composite parent, int style, int editorStyle)
    {
-      this(parent, style, editorStyle, true, null);
+      this(parent, style, editorStyle, true, null, true);
    }
 
    /**
@@ -91,28 +112,59 @@ public class ScriptEditor extends Composite
     */
    public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers)
    {
-      this(parent, style, editorStyle, showLineNumbers, null);
+      this(parent, style, editorStyle, showLineNumbers, null, true);
    }
-   
+
+   /**
+    * 
+    * @param parent
+    * @param style
+    * @param editorStyle
+    * @param showLineNumbers
+    * @param hints
+    * @param showCompileButton
+    */
+   public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers, String hints)
+   {
+      this(parent, style, editorStyle, showLineNumbers, hints, true);
+   }
+
+   /**
+    * 
+    * @param parent
+    * @param style
+    * @param editorStyle
+    * @param showLineNumbers
+    * @param showCompileButton
+    */
+   public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers, boolean showCompileButton)
+   {
+      this(parent, style, editorStyle, showLineNumbers, null, showCompileButton);
+   }
+
 	/**
 	 * @param parent
 	 * @param style
 	 * @param editorStyle
 	 * @param showLineNumbers
 	 * @param hints
+	 * @param showCompileButton
 	 */
-	public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers, String hints)
+	public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers, String hints, boolean showCompileButton)
 	{
 		super(parent, style);
-		
-		hintText = hints;
+
+      hintText = hints;
+
+      content = new Composite(this, SWT.NONE);
+      setContent(content);
 
 		GridLayout layout = new GridLayout();
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		layout.verticalSpacing = 0;
-      setLayout(layout);
-      
+      content.setLayout(layout);
+
       if (hints != null)
       {
          createHintsArea();
@@ -124,7 +176,7 @@ public class ScriptEditor extends Composite
       proposalIcons[3] = ResourceManager.getImageDescriptor("icons/nxsl/constant.gif").createImage();
 		
 		ruler = new CompositeRuler();
-		editor = new SourceViewer(this, ruler, editorStyle | SWT.MULTI);
+      editor = new SourceViewer(content, ruler, editorStyle | SWT.MULTI);
 		editor.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		editor.configure(new NXSLSourceViewerConfiguration(this));
 		if (showLineNumbers)
@@ -133,7 +185,7 @@ public class ScriptEditor extends Composite
 		final TextViewerUndoManager undoManager = new TextViewerUndoManager(50);
 		editor.setUndoManager(undoManager);
 		undoManager.connect(editor);
-		
+
 		editor.getFindReplaceTarget();
 
 		editor.prependVerifyKeyListener(new VerifyKeyListener() {
@@ -189,16 +241,81 @@ public class ScriptEditor extends Composite
 		StyledText control = editor.getTextWidget();
 		control.setFont(JFaceResources.getTextFont());
 		control.setWordWrap(false);
-		
+
 		editor.setDocument(new NXSLDocument("")); //$NON-NLS-1$
+
+      if (showCompileButton)
+      {
+         final Image compileImage = ResourceManager.getImage("icons/compile.gif");
+         compileButton = new Button(content, SWT.PUSH | SWT.FLAT);
+         compileButton.setToolTipText("Compile script");
+         compileButton.setImage(compileImage);
+         compileButton.addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent e)
+            {
+               compileImage.dispose();
+            }
+         });
+
+         GridData gd = new GridData();
+         gd.exclude = true;
+         compileButton.setLayoutData(gd);
+
+         editor.getTextWidget().addControlListener(new ControlListener() {
+            @Override
+            public void controlResized(ControlEvent e)
+            {
+               positionCompileButton();
+            }
+
+            @Override
+            public void controlMoved(ControlEvent e)
+            {
+               positionCompileButton();
+            }
+         });
+
+         compileButton.addSelectionListener(new SelectionListener() {
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e);
+            }
+
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               compileScript();
+            }
+         });
+
+         compileButton.setSize(compileButton.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+         positionCompileButton();
+      }
 	}
-	
+
+   /**
+    * Position "Compile" button
+    */
+   private void positionCompileButton()
+   {
+      compileButton.moveAbove(null);
+      Control textControl = editor.getControl();
+      Point location = textControl.getLocation();
+      int editorWidth = textControl.getSize().x;
+      ScrollBar sb = editor.getTextWidget().getVerticalBar();
+      if (sb != null)
+         editorWidth -= sb.getSize().x;
+      compileButton.setLocation(location.x + editorWidth - compileButton.getSize().x - 3, location.y + 3);
+   }
+
 	/**
 	 * Create hints area
 	 */
 	private void createHintsArea()
 	{
-      hintArea = new Composite(this, SWT.NONE);
+      hintArea = new Composite(content, SWT.NONE);
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
@@ -233,7 +350,7 @@ public class ScriptEditor extends Composite
       hintsExpandButton.setLayoutData(gd);
       hintsExpandButton.addMouseListener(new MouseListener() {
          private boolean doAction = false;
-         
+
          @Override
          public void mouseDoubleClick(MouseEvent e)
          {
@@ -256,13 +373,13 @@ public class ScriptEditor extends Composite
          }
       });
       
-      Label separator = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
+      Label separator = new Label(content, SWT.SEPARATOR | SWT.HORIZONTAL);
       separator.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Widget#dispose()
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Widget#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -288,7 +405,7 @@ public class ScriptEditor extends Composite
 	{
 		editor.setDocument(new NXSLDocument(text));
 	}
-	
+
 	/**
 	 * Get editor's content
 	 * @return
@@ -409,9 +526,9 @@ public class ScriptEditor extends Composite
 		return editor.getFindReplaceTarget();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+    */
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
@@ -459,7 +576,48 @@ public class ScriptEditor extends Composite
          hintTextControl.setBackground(ThemeEngine.getBackgroundColor("MessageBar"));
          hintTextControl.setForeground(ThemeEngine.getForegroundColor("MessageBar"));
          hintsExpandButton.setImage(SharedIcons.IMG_COLLAPSE);
-	   }
-	   layout(true, true);
+      }
+      layout(true, true);
 	}
+
+   /**
+    * Compile script
+    */
+   public void compileScript()
+   {
+      final String source = getText();
+      editor.setEditable(false);
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Compile script"), null) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final ScriptCompilationResult result = session.compileScript(source, false);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  StyledText s = editor.getTextWidget();
+                  s.setLineBackground(0, s.getLineCount(), null);
+                  if (result.success)
+                  {
+                     showMessage(INFORMATION, i18n.tr("Script compiled successfully"));
+                  }
+                  else
+                  {
+                     showMessage(WARNING, result.errorMessage);
+                     s.setLineBackground(result.errorLine - 1, 1, ERROR_COLOR);
+                  }
+                  editor.setEditable(true);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot compile script");
+         }
+      }.start();
+   }
 }

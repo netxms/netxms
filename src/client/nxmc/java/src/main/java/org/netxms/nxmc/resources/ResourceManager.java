@@ -52,6 +52,7 @@ public final class ResourceManager
     */
    public static Image getImage(String path)
    {
-      return getImageDescriptor(path).createImage();
+      ImageDescriptor d = getImageDescriptor(path);
+      return (d != null) ? d.createImage() : null;
    }
 }
