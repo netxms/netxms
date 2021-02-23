@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -78,16 +78,16 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
 {
 #ifdef _WIN32
    TCHAR path[MAX_PATH];
-   GetModuleFileName(NULL, path, MAX_PATH);
+   GetModuleFileName(nullptr, path, MAX_PATH);
    TCHAR *s = _tcsrchr(path, _T('\\'));
-   if (s != NULL)
+   if (s != nullptr)
    {
       s++;
       _tcscpy(s, _T("jre\\bin\\server\\jvm.dll"));
       nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %s (executable path)"), path);
       if (_taccess(path, 0) == 0)
       {
-         nx_strncpy(buffer, path, size);
+         _tcslcpy(buffer, path, size);
          return buffer;
       }
    }
@@ -102,7 +102,7 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
 
    // Use NETXMS_HOME
    const char *netxmsHome = getenv("NETXMS_HOME");
-   if ((netxmsHome != NULL) && (*netxmsHome != 0))
+   if ((netxmsHome != nullptr) && (*netxmsHome != 0))
    {
 #ifdef _WIN32
       snprintf(jvm, MAX_PATH, "%s\\bin\\jre\\bin\\server\\jvm.dll", netxmsHome);
