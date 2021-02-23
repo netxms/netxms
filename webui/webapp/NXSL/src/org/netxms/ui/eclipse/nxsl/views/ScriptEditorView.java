@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,6 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptEditorView"; //$NON-NLS-1$
 	
 	private NXCSession session;
-	private CompositeWithMessageBar editorMessageBar;
 	private ScriptEditor editor;
 	private long scriptId;
 	private String scriptName;
@@ -68,10 +67,10 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	private Action actionCompile;
 	private boolean modified = false;
 	private boolean showLineNumbers = true;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -93,9 +92,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	{
 		parent.setLayout(new FillLayout());
 		
-		editorMessageBar = new CompositeWithMessageBar(parent, SWT.NONE);
-		editor = new ScriptEditor(editorMessageBar, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL, showLineNumbers, false);
-		editorMessageBar.setContent(editor);
+		editor = new ScriptEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL, showLineNumbers, false);
       editor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -108,7 +105,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
             }
          }
       });
-		
+
 		activateContext();
 		createActions();
 		contributeToActionBars();
@@ -167,7 +164,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
          @Override
          public void run()
          {
-            compileScript();
+            editor.compileScript();
          }
       };
       actionCompile.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.compile"); //$NON-NLS-1$
@@ -245,43 +242,6 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	}
 	
 	/**
-	 * Compile script
-	 */
-	private void compileScript()
-	{
-      final String source = editor.getText();
-      editor.getTextWidget().setEditable(false);
-      new ConsoleJob(Messages.get().ScriptEditorView_CompileScript, this, Activator.PLUGIN_ID, null) {
-         @Override
-         protected String getErrorMessage()
-         {
-            return Messages.get().ScriptEditorView_CannotCompileScript;
-         }
-
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            final ScriptCompilationResult result = session.compileScript(source, false);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (result.success)
-                  {
-                     editorMessageBar.showMessage(CompositeWithMessageBar.INFORMATION, Messages.get().ScriptEditorView_ScriptCompiledSuccessfully);
-                  }
-                  else
-                  {
-                     editorMessageBar.showMessage(CompositeWithMessageBar.WARNING, result.errorMessage);
-                  }
-                  editor.getTextWidget().setEditable(true);
-               }
-            });
-         }
-      }.start();
-	}
-	
-	/**
 	 * Save script
 	 */
 	private void saveScript()
@@ -305,7 +265,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
                   @Override
                   public void run()
                   {
-                     editorMessageBar.hideMessage();
+                     editor.hideMessage();
                   }
                });
             }
@@ -318,7 +278,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
                      if (MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().ScriptEditorView_CompilationErrors, 
                            String.format(Messages.get().ScriptEditorView_ScriptCompilationFailed, result.errorMessage)))
                         result.success = true;
-                     editorMessageBar.showMessage(CompositeWithMessageBar.WARNING, result.errorMessage);
+                     editor.showMessage(CompositeWithMessageBar.WARNING, result.errorMessage);
                   }
                });
             }
@@ -339,7 +299,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Do actual script save
 	 * 
