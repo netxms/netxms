@@ -956,4 +956,5 @@ void Threshold::reconcile(const Threshold *src)
    m_lastEventTimestamp = src->m_lastEventTimestamp;
    m_currentSeverity = src->m_currentSeverity;
    m_lastScriptErrorReport = src->m_lastScriptErrorReport;
+   m_lastCheckValue = src->m_lastCheckValue;
 }
