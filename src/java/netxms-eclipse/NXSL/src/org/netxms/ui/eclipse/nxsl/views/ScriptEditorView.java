@@ -74,7 +74,7 @@ import org.netxms.ui.eclipse.widgets.MessageBar;
 public class ScriptEditorView extends ViewPart implements ISaveablePart
 {
 	public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptEditorView"; //$NON-NLS-1$
-	
+
 	private static final Color ERROR_COLOR = new Color(Display.getDefault(), 255, 0, 0);
 
 	private NXCSession session;

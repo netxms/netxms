@@ -73,6 +73,8 @@ import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
  */
 public class ScriptEditor extends CompositeWithMessageBar
 {
+   private static final Color ERROR_COLOR = new Color(Display.getDefault(), 255, 0, 0);
+
    private Composite content;
 	private SourceViewer editor;
 	private CompositeRuler ruler;
@@ -88,8 +90,6 @@ public class ScriptEditor extends CompositeWithMessageBar
 	private Text hintTextControl = null;
 	private Label hintsExpandButton = null;
 	private Button compileButton;
-
-   private static final Color ERROR_COLOR = new Color(Display.getDefault(), 255, 0, 0);
 
    /**
     * @param parent
@@ -184,9 +184,9 @@ public class ScriptEditor extends CompositeWithMessageBar
 		editor.setUndoManager(undoManager);
 		undoManager.connect(editor);
 
-		editor.getFindReplaceTarget();
+      editor.getFindReplaceTarget();
 
-		editor.prependVerifyKeyListener(new VerifyKeyListener() {
+      editor.prependVerifyKeyListener(new VerifyKeyListener() {
 			@Override
 			public void verifyKey(VerifyEvent event)
 			{
@@ -260,7 +260,7 @@ public class ScriptEditor extends CompositeWithMessageBar
          gd.exclude = true;
          compileButton.setLayoutData(gd);
 
-         editor.getTextWidget().addControlListener(new ControlListener() {
+         getTextWidget().addControlListener(new ControlListener() {
             @Override
             public void controlResized(ControlEvent e)
             {
@@ -291,6 +291,15 @@ public class ScriptEditor extends CompositeWithMessageBar
          compileButton.setSize(compileButton.computeSize(SWT.DEFAULT, SWT.DEFAULT));
          positionCompileButton();
       }
+
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            for(int i = 0; i < proposalIcons.length; i++)
+               proposalIcons[i].dispose();
+         }
+      });
 	}
 
    /**
@@ -373,19 +382,8 @@ public class ScriptEditor extends CompositeWithMessageBar
       
       Label separator = new Label(content, SWT.SEPARATOR | SWT.HORIZONTAL);
       separator.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-	}
+   }
 
-   /**
-    * @see org.eclipse.swt.widgets.Widget#dispose()
-    */
-	@Override
-	public void dispose()
-	{
-		for(int i = 0; i < proposalIcons.length; i++)
-			proposalIcons[i].dispose();
-		super.dispose();
-	}
-	
 	/**
 	 * Get underlying text widget
 	 * @return text widget
