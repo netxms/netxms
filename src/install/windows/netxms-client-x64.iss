@@ -34,7 +34,7 @@ Name: "cmdline"; Description: "Command Line Tools"; Types: full
 Name: "jre"; Description: "Java Runtime Environment"; Types: full
 
 [Files]
-Source: ..\..\java\netxms-eclipse\Product\target\products\release\nxmc\*; DestDir: "{app}"; Flags: ignoreversion recursesubdirs; Components: nxmc
+Source: "..\..\..\out\nxmc\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs; Components: nxmc
 ; Common files for nxshell and command line tools
 Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell or cmdline
 Source: "..\..\..\x64\Release\libnetxms.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell or cmdline
