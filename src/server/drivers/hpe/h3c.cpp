@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for H3C (now HPE A-series) switches
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -21,6 +21,9 @@
 **/
 
 #include "hpe.h"
+#include <netxms-regex.h>
+
+#define DEBUG_TAG_H3C   _T("ndd.h3c")
 
 /**
  * Get driver name
@@ -35,7 +38,7 @@ const TCHAR *H3CDriver::getName()
  */
 const TCHAR *H3CDriver::getVersion()
 {
-	return NETXMS_BUILD_TAG;
+	return NETXMS_VERSION_STRING;
 }
 
 /**
@@ -60,6 +63,20 @@ bool H3CDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 }
 
 /**
+ * Extract integer from capture group
+ */
+static uint32_t IntegerFromCGroup(const TCHAR *text, int *cgroups, int cgindex)
+{
+   TCHAR buffer[32];
+   int len = cgroups[cgindex * 2 + 1] - cgroups[cgindex * 2];
+   if (len > 31)
+      len = 31;
+   memcpy(buffer, &text[cgroups[cgindex * 2]], len * sizeof(TCHAR));
+   buffer[len] = 0;
+   return _tcstoul(buffer, nullptr, 10);
+}
+
+/**
  * Do additional checks on the device required by driver.
  * Driver can set device's custom attributes from within
  * this function.
@@ -69,6 +86,31 @@ bool H3CDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  */
 void H3CDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
+   TCHAR sysDescr[256];
+   if (SnmpGetEx(snmp, _T(".1.3.6.1.2.1.1.1.0"), nullptr, 0, sysDescr, sizeof(sysDescr), SG_STRING_RESULT, nullptr) != SNMP_ERR_SUCCESS)
+      return;
+
+   const char *eptr;
+   int eoffset;
+   PCRE *re = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("Software Version ([0-9]+)\\.([0-9]+) Release")), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+   if (re == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_H3C, 5, _T("H3CDriver::analyzeDevice(%s): cannot compile software version regexp: %hs at offset %d"), node->getName(), eptr, eoffset);
+      return;
+   }
+
+   int pmatch[30];
+   if (_pcre_exec_t(re, nullptr, reinterpret_cast<PCRE_TCHAR*>(sysDescr), static_cast<int>(_tcslen(sysDescr)), 0, 0, pmatch, 30) == 3)
+   {
+      uint32_t major = IntegerFromCGroup(sysDescr, pmatch, 1);
+      nxlog_debug_tag(DEBUG_TAG_H3C, 5, _T("H3CDriver::analyzeDevice(%s): detected software version %u.%02u"), node->getName(), major, IntegerFromCGroup(sysDescr, pmatch, 2));
+      if (major <= 3)
+      {
+         node->setCustomAttribute(_T(".ndd.h3c.vlanFix"), _T("true"), StateChange::IGNORE);
+      }
+   }
+
+   _pcre_free_t(re);
 }
 
 /**
@@ -76,9 +118,9 @@ void H3CDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *n
  */
 static UINT32 PortWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
-   InterfaceList *ifList = (InterfaceList *)arg;
+   InterfaceList *ifList = static_cast<InterfaceList*>(arg);
    InterfaceInfo *iface = ifList->findByIfIndex(var->getValueAsUInt());
-   if (iface != NULL)
+   if (iface != nullptr)
    {
       iface->isPhysicalPort = true;
       iface->location.chassis = var->getName().getElement(17);
@@ -94,7 +136,7 @@ static UINT32 PortWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *ar
  */
 static UINT32 IPv6WalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
-   InterfaceList *ifList = (InterfaceList *)arg;
+   InterfaceList *ifList = static_cast<InterfaceList*>(arg);
    // Address type should be IPv6 and address length 16 bytes
    if ((var->getName().getElement(18) == 2) &&
        (var->getName().length() == 36) &&
@@ -123,8 +165,8 @@ InterfaceList *H3CDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, Dri
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
-	if (ifList == NULL)
-		return NULL;
+	if (ifList == nullptr)
+		return nullptr;
 
 	// Find physical ports
    SnmpWalk(snmp, _T(".1.3.6.1.4.1.43.45.1.2.23.1.18.4.5.1.3"), PortWalkHandler, ifList);
@@ -133,6 +175,111 @@ InterfaceList *H3CDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, Dri
    SnmpWalk(snmp, _T(".1.3.6.1.4.1.43.45.1.10.2.71.1.1.2.1.4"), IPv6WalkHandler, ifList);
 
 	return ifList;
+}
+
+/**
+ * Handler for VLAN enumeration
+ */
+static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+   VlanList *vlanList = static_cast<VlanList*>(arg);
+
+   VlanInfo *vlan = new VlanInfo(var->getName().getLastElement(), VLAN_PRM_BPORT);
+
+   TCHAR buffer[256];
+   vlan->setName(var->getValueAsString(buffer, 256));
+
+   vlanList->add(vlan);
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Parse VLAN membership bit map
+ *
+ * @param vlanList VLAN list
+ * @param ifIndex interface index for current interface
+ * @param map VLAN membership map
+ * @param offset VLAN ID offset from 0
+ */
+static void ParseVlanPorts(VlanList *vlanList, VlanInfo *vlan, BYTE map, int offset)
+{
+   // VLAN egress port map description from Q-BRIDGE-MIB:
+   // ===================================================
+   // Each octet within this value specifies a set of eight
+   // ports, with the first octet specifying ports 1 through
+   // 8, the second octet specifying ports 9 through 16, etc.
+   // Within each octet, the most significant bit represents
+   // the lowest numbered port, and the least significant bit
+   // represents the highest numbered port.  Thus, each port
+   // of the bridge is represented by a single bit within the
+   // value of this object.  If that bit has a value of '1'
+   // then that port is included in the set of ports; the port
+   // is not included if its bit has a value of '0'.
+
+   // However, H3C switches with older software (probably 3.x) return
+   // port bits in reversed order within each byte
+   uint32_t port = offset;
+   BYTE mask = 0x01;
+   while(mask != 0)
+   {
+      if (map & mask)
+      {
+         vlan->add(port);
+      }
+      mask <<= 1;
+      port++;
+   }
+}
+
+/**
+ * Handler for VLAN egress port enumeration
+ */
+static UINT32 HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+   VlanList *vlanList = static_cast<VlanList*>(arg);
+   uint32_t vlanId = var->getName().getLastElement();
+   VlanInfo *vlan = vlanList->findById(vlanId);
+   if (vlan != nullptr)
+   {
+      BYTE buffer[4096];
+      size_t size = var->getRawValue(buffer, 4096);
+      for(int i = 0; i < (int)size; i++)
+      {
+         ParseVlanPorts(vlanList, vlan, buffer[i], i * 8 + 1);
+      }
+   }
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Get list of VLANs on given node
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return VLAN list or NULL
+ */
+VlanList *H3CDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   // Use default implementation if fix is not needed
+   if (!node->getCustomAttributeAsBoolean(_T(".ndd.h3c.vlanFix"), false))
+      return NetworkDeviceDriver::getVlans(snmp, node, driverData);
+
+   VlanList *list = new VlanList();
+
+   // dot1qVlanStaticName
+   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.1"), HandlerVlanList, list) != SNMP_ERR_SUCCESS)
+      goto failure;
+
+   // Use dot1qVlanStaticEgressPorts because dot1qVlanCurrentEgressPorts usually empty
+   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.2"), HandlerVlanEgressPorts, list) != SNMP_ERR_SUCCESS)
+      goto failure;
+
+   return list;
+
+failure:
+   delete list;
+   return nullptr;
 }
 
 /**

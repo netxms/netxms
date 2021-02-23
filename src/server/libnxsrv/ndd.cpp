@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -710,7 +710,7 @@ bool NetworkDeviceDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *n
  */
 static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
-   VlanList *vlanList = (VlanList *)arg;
+   VlanList *vlanList = static_cast<VlanList*>(arg);
 
 	VlanInfo *vlan = new VlanInfo(var->getName().getLastElement(), VLAN_PRM_BPORT);
 
@@ -762,10 +762,10 @@ static void ParseVlanPorts(VlanList *vlanList, VlanInfo *vlan, BYTE map, int off
  */
 static UINT32 HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
-   VlanList *vlanList = (VlanList *)arg;
-	UINT32 vlanId = var->getName().getLastElement();
+   VlanList *vlanList = static_cast<VlanList*>(arg);
+   uint32_t vlanId = var->getName().getLastElement();
 	VlanInfo *vlan = vlanList->findById(vlanId);
-	if (vlan != NULL)
+	if (vlan != nullptr)
 	{
 		BYTE buffer[4096];
 		size_t size = var->getRawValue(buffer, 4096);

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Drivers for HPE (Hewlett Packard Enterprise) devices
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,15 +33,16 @@
 class H3CDriver : public NetworkDeviceDriver
 {
 public:
-	virtual const TCHAR *getName();
-	virtual const TCHAR *getVersion();
+	virtual const TCHAR *getName() override;
+	virtual const TCHAR *getVersion() override;
 
-	virtual int isPotentialDevice(const TCHAR *oid);
-	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData);
-	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable);
-   virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);
+	virtual int isPotentialDevice(const TCHAR *oid) override;
+	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable) override;
+   virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout) override;
 };
 
 /**
@@ -50,13 +51,13 @@ public:
 class HPSwitchDriver : public NetworkDeviceDriver
 {
 public:
-   virtual const TCHAR *getName();
-   virtual const TCHAR *getVersion();
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid);
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData);
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable);
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable) override;
 };
 
 /**
@@ -65,13 +66,13 @@ public:
 class ProCurveDriver : public NetworkDeviceDriver
 {
 public:
-   virtual const TCHAR *getName();
-   virtual const TCHAR *getVersion();
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid);
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData);
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable);
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable) override;
 };
 
 #endif
