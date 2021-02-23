@@ -48,7 +48,7 @@ import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
+import org.netxms.ui.eclipse.widgets.MessageBar;
 
 /**
  * Script editor view
@@ -57,7 +57,7 @@ import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 public class ScriptEditorView extends ViewPart implements ISaveablePart
 {
 	public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptEditorView"; //$NON-NLS-1$
-	
+
 	private NXCSession session;
 	private ScriptEditor editor;
 	private long scriptId;
@@ -278,7 +278,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
                      if (MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().ScriptEditorView_CompilationErrors, 
                            String.format(Messages.get().ScriptEditorView_ScriptCompilationFailed, result.errorMessage)))
                         result.success = true;
-                     editor.showMessage(CompositeWithMessageBar.WARNING, result.errorMessage);
+                     editor.showMessage(MessageBar.WARNING, result.errorMessage);
                   }
                });
             }
@@ -325,13 +325,13 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
       });
 	}
 
-	/**
-	 * @see org.eclipse.ui.part.WorkbenchPart#getAdapter(java.lang.Class)
-	 */
-	@Override
-	public <T> T getAdapter(Class<T> adapter)
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#getAdapter(java.lang.Class)
+    */
+   @Override
+   public <T> T getAdapter(Class<T> adapter)
 	{
-		T object = super.getAdapter(adapter);
+      T object = super.getAdapter(adapter);
 		if (object != null)
 		{
 			return object;

@@ -280,7 +280,7 @@ public class ScriptEditor extends CompositeWithMessageBar
       Label separator = new Label(content, SWT.SEPARATOR | SWT.HORIZONTAL);
       separator.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
    }
-	
+
 	/**
 	 * Get underlying text widget
 	 * @return text widget
