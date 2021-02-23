@@ -3210,16 +3210,18 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
       }
    }
 
-   if (!found && (GetModuleFileName(NULL, installPath, MAX_PATH) > 0))
+   if (!found && (GetModuleFileName(nullptr, installPath, MAX_PATH) > 0))
    {
       TCHAR *p = _tcsrchr(installPath, _T('\\'));
-      if (p != NULL)
+      if (p != nullptr)
       {
          *p = 0;
          p = _tcsrchr(installPath, _T('\\'));
-         if (p != NULL)
+         if (p != nullptr)
          {
-            *p = 0;
+            // If last path element is not \bin consider that app binary is installed directly to base
+            if (!_tcsicmp(p, _T("\\bin")))
+               *p = 0;
             found = true;
          }
       }
