@@ -24,20 +24,24 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScriptCompilationResult;
@@ -47,23 +51,21 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 
 /**
  * NXSL script editor
- *
  */
-public class ScriptEditor extends Composite
+public class ScriptEditor extends CompositeWithMessageBar
 {
+   private Composite content;
 	private Text editor;
 	private String hintText;
 	private Composite hintArea;
 	private Text hintTextControl = null;
 	private Label hintsExpandButton = null;
 	private Button compileButton;
-   
-   private static final Color ERROR_COLOR = new Color(Display.getDefault(), 255, 0, 0);
-	
+
    /**
     * @param parent
     * @param style
@@ -84,7 +86,7 @@ public class ScriptEditor extends Composite
    {
       this(parent, style, editorStyle, showLineNumbers, null, true);
    }
-   
+
    /**
     * 
     * @param parent
@@ -96,7 +98,7 @@ public class ScriptEditor extends Composite
     */
    public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers, String hints)
    {
-      this(parent, style, editorStyle, showLineNumbers, null, true);
+      this(parent, style, editorStyle, showLineNumbers, hints, true);
    }
 
    /**
@@ -111,7 +113,7 @@ public class ScriptEditor extends Composite
    {
       this(parent, style, editorStyle, showLineNumbers, null, showCompileButton);
    }
-   
+
 	/**
 	 * 
 	 * @param parent
@@ -127,30 +129,57 @@ public class ScriptEditor extends Composite
 
       hintText = hints;
 
-      GridLayout layout = new GridLayout();
-      layout.marginWidth = 0;
-      layout.marginHeight = 0;
-      layout.verticalSpacing = 0;
-      setLayout(layout);
-      
+      content = new Composite(this, SWT.NONE);
+      setContent(content);
+
+		GridLayout layout = new GridLayout();
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		layout.verticalSpacing = 0;
+      content.setLayout(layout);
+
       if (hints != null)
       {
          createHintsArea();
       }
 		
-		editor = new Text(this, editorStyle | SWT.MULTI);
+		editor = new Text(content, editorStyle | SWT.MULTI);
 		editor.setData(RWT.CUSTOM_VARIANT, "monospace");
 		editor.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		
       if (showCompileButton)
       {
-         compileButton = new Button(this, SWT.PUSH);
-         GridData gridData = new GridData();
-         gridData.verticalAlignment = GridData.END;
-         gridData.horizontalAlignment = GridData.END;
-         compileButton.setLayoutData(gridData);
-         compileButton.setText("Compile");
+         final Image compileImage = Activator.getImageDescriptor("icons/compile.gif").createImage();
+         compileButton = new Button(content, SWT.PUSH | SWT.FLAT);
+         compileButton.setToolTipText("Compile script");
+         compileButton.setImage(compileImage);
+         compileButton.addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent e)
+            {
+               compileImage.dispose();
+            }
+         });
+
+         GridData gd = new GridData();
+         gd.exclude = true;
+         compileButton.setLayoutData(gd);
+
+         getTextWidget().addControlListener(new ControlListener() {
+            @Override
+            public void controlResized(ControlEvent e)
+            {
+               positionCompileButton();
+            }
+
+            @Override
+            public void controlMoved(ControlEvent e)
+            {
+               positionCompileButton();
+            }
+         });
+
          compileButton.addSelectionListener(new SelectionListener() {
             @Override
             public void widgetDefaultSelected(SelectionEvent e)
@@ -164,15 +193,33 @@ public class ScriptEditor extends Composite
                compileScript();
             }
          });
+
+         compileButton.setSize(compileButton.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+         positionCompileButton();
       }
 	}
-	
+
+   /**
+    * Position "Compile" button
+    */
+   private void positionCompileButton()
+   {
+      compileButton.moveAbove(null);
+      Control textControl = editor;
+      Point location = textControl.getLocation();
+      int editorWidth = textControl.getSize().x;
+      ScrollBar sb = editor.getVerticalBar();
+      if (sb != null)
+         editorWidth -= sb.getSize().x;
+      compileButton.setLocation(location.x + editorWidth - compileButton.getSize().x - 3, location.y + 3);
+   }
+
 	/**
 	 * Create hints area
 	 */
 	private void createHintsArea()
 	{
-      hintArea = new Composite(this, SWT.NONE);
+      hintArea = new Composite(content, SWT.NONE);
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
@@ -207,7 +254,7 @@ public class ScriptEditor extends Composite
       hintsExpandButton.setLayoutData(gd);
       hintsExpandButton.addMouseListener(new MouseListener() {
          private boolean doAction = false;
-         
+
          @Override
          public void mouseDoubleClick(MouseEvent e)
          {
@@ -230,7 +277,7 @@ public class ScriptEditor extends Composite
          }
       });
       
-      Label separator = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
+      Label separator = new Label(content, SWT.SEPARATOR | SWT.HORIZONTAL);
       separator.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
    }
 	
@@ -251,7 +298,7 @@ public class ScriptEditor extends Composite
 	{
 		editor.setText((text != null) ? text : "");
 	}
-	
+
 	/**
 	 * Get editor's content
 	 * @return
@@ -344,7 +391,7 @@ public class ScriptEditor extends Composite
 		return null;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
 	 */
 	@Override
@@ -378,20 +425,20 @@ public class ScriptEditor extends Composite
       }
       layout(true, true);
 	}
-   
+
    /**
     * Compile script
     */
-   private void compileScript()
+   public void compileScript()
    {
       final String source = getText();
-      getTextWidget().setEditable(false);
-      NXCSession session = ConsoleSharedData.getSession();
+      editor.setEditable(false);
+      final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob("Compile script", null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot compile script";
+            return Messages.get().ScriptEditorView_CannotCompileScript;
          }
 
          @Override
@@ -404,13 +451,13 @@ public class ScriptEditor extends Composite
                {
                   if (result.success)
                   {
-                     MessageDialogHelper.openInformation(getShell(), "Info", "Script compiled successfully");
+                     showMessage(INFORMATION, Messages.get().ScriptEditorView_ScriptCompiledSuccessfully);
                   }
                   else
                   {
-                     MessageDialogHelper.openInformation(getShell(), "Warning", result.errorMessage);
+                     showMessage(WARNING, result.errorMessage);
                   }
-                  getTextWidget().setEditable(true);
+                  editor.setEditable(true);
                }
             });
          }
