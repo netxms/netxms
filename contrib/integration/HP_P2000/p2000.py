@@ -1,23 +1,23 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 prefix = 'P2000'
 
 import hashlib
 import socket
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import argparse
 import sys
 
 from lxml import etree
 
 
-handler = urllib2.HTTPHandler(debuglevel=0)
-opener = urllib2.build_opener(handler)
+handler = urllib.request.HTTPHandler(debuglevel=0)
+opener = urllib.request.build_opener(handler)
 
 
 def makeCall(command):
     url = ('https://' if config.ssl else 'http://') + config.currentAddress + '/api/'
-    req = urllib2.Request(url + command)
+    req = urllib.request.Request(url + command)
     res = opener.open(req)
     return etree.XML(res.read())
 
@@ -38,7 +38,7 @@ def processEnclosureStatus(root):
             enclosureId += 1
             # next enclosure found
             for prop in obj:
-                print prefix + 'Enclosure[%d].%s=%s' % (enclosureId, prop.get('name'), prop.text)
+                print(prefix + 'Enclosure[%d].%s=%s' % (enclosureId, prop.get('name'), prop.text))
         elif objectName == 'enclosure-component':
             unitNumber = int(obj.findtext('./PROPERTY[@name="enclosure-unit-number"]'))
             unitType = obj.findtext('./PROPERTY[@name="type"]')
@@ -51,7 +51,7 @@ def processEnclosureStatus(root):
                     name = 'current-value'
                     if '=' in value:
                         value = prop.text.split('=')[1]
-                print prefix + 'Enclosure[%d].%s[%d].%s=%s' % (enclosureId, unitType, unitNumber, name, value)
+                print(prefix + 'Enclosure[%d].%s[%d].%s=%s' % (enclosureId, unitType, unitNumber, name, value))
 
 
 def processStatistics(root, objectClass, objectName, durableIdName):
@@ -61,7 +61,7 @@ def processStatistics(root, objectClass, objectName, durableIdName):
             name = prop.get('name')
             if name == durableIdName:
                 continue
-            print prefix + '%s[%s].%s=%s' % (objectClass, durableId, name, prop.text)
+            print(prefix + '%s[%s].%s=%s' % (objectClass, durableId, name, prop.text))
 
 
 def processControllerStatistics(root):
