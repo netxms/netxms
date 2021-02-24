@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.graphics.Image;
@@ -38,16 +39,27 @@ public abstract class Perspective
    private String name;
    private Image image;
    private PerspectiveConfiguration configuration = new PerspectiveConfiguration();
+   private Window window;
    private Composite content;
    private SashForm verticalSplitter;
    private SashForm horizontalSpliter;
    private ViewStack navigationFolder;
    private ViewStack mainFolder;
    private ViewStack supplementaryFolder;
+   private Composite navigationArea;
+   private Composite mainArea;
+   private Composite supplementalArea;
    private ISelectionProvider navigationSelectionProvider;
    private ISelectionChangedListener navigationSelectionListener;
    private ImageCache imageCache;
 
+   /**
+    * Create new perspective.
+    *
+    * @param id perspective ID
+    * @param name perspective display name
+    * @param image perspective image
+    */
    protected Perspective(String id, String name, Image image)
    {
       this.id = id;
@@ -81,6 +93,16 @@ public abstract class Perspective
    {
       if (mainFolder != null)
          mainFolder.setContext(selection.getFirstElement());
+   }
+
+   /**
+    * Bind perspective to window.
+    *
+    * @param window owning window
+    */
+   public void bindToWindow(Window window)
+   {
+      this.window = window;
    }
 
    /**
@@ -131,7 +153,7 @@ public abstract class Perspective
          verticalSplitter = new SashForm(content, SWT.HORIZONTAL);
          if (configuration.multiViewNavigationArea)
          {
-            navigationFolder = new ViewStack(null, this, verticalSplitter, false, false);
+            navigationFolder = new ViewStack(window, this, verticalSplitter, false, false);
             navigationFolder.addSelectionListener(new ViewStackSelectionListener() {
                @Override
                public void viewSelected(View view)
@@ -143,7 +165,9 @@ public abstract class Perspective
          }
          else
          {
-            createNavigationArea(verticalSplitter);
+            navigationArea = new Composite(verticalSplitter, SWT.BORDER);
+            navigationArea.setLayout(new FillLayout());
+            createNavigationArea(navigationArea);
          }
       }
       if (configuration.hasSupplementalArea)
@@ -152,26 +176,30 @@ public abstract class Perspective
       }
       if (configuration.multiViewMainArea)
       {
-         mainFolder = new ViewStack(null, this, configuration.hasSupplementalArea ? horizontalSpliter
+         mainFolder = new ViewStack(window, this, configuration.hasSupplementalArea ? horizontalSpliter
                : (configuration.hasNavigationArea ? verticalSplitter : content), configuration.enableViewExtraction,
                configuration.enableViewPinning);
          mainFolder.setAllViewsAaCloseable(configuration.allViewsAreCloseable);
       }
       else
       {
-         createMainArea(configuration.hasSupplementalArea ? horizontalSpliter : (configuration.hasNavigationArea ? verticalSplitter : content));
+         mainArea = new Composite(configuration.hasSupplementalArea ? horizontalSpliter : (configuration.hasNavigationArea ? verticalSplitter : content), SWT.NONE);
+         mainArea.setLayout(new FillLayout());
+         createMainArea(mainArea);
       }
       if (configuration.hasSupplementalArea)
       {
          if (configuration.multiViewSupplementalArea)
          {
-            supplementaryFolder = new ViewStack(null, this, horizontalSpliter, configuration.enableViewExtraction,
+            supplementaryFolder = new ViewStack(window, this, horizontalSpliter, configuration.enableViewExtraction,
                   configuration.enableViewPinning);
             supplementaryFolder.setAllViewsAaCloseable(configuration.allViewsAreCloseable);
          }
          else
          {
-            createSupplementalArea(horizontalSpliter);
+            supplementalArea = new Composite(verticalSplitter, SWT.NONE);
+            supplementalArea.setLayout(new FillLayout());
+            createSupplementalArea(supplementalArea);
          }
       }
 
@@ -273,6 +301,16 @@ public abstract class Perspective
    public Image getImage()
    {
       return image;
+   }
+
+   /**
+    * Get owning window.
+    *
+    * @return owning window
+    */
+   public Window getWindow()
+   {
+      return window;
    }
 
    /**

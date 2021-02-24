@@ -187,6 +187,7 @@ public class MainWindow extends ApplicationWindow
       perspectives = Registry.getInstance().getPerspectives();
       for(final Perspective p : perspectives)
       {
+         p.bindToWindow(this);
          ToolItem item = new ToolItem(mainMenu, SWT.PUSH);
          item.setText(p.getName());
          item.setImage(p.getImage());
