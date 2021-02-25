@@ -149,7 +149,7 @@ public class EventTemplateList extends Composite implements SessionListener
             isDialog ? dialogWidths : widths,
             0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 
-      WidgetHelper.restoreTableViewerSettings(viewer, settings, configPrefix);
+      WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new EventTemplateLabelProvider(isDialog));
       viewer.setComparator(new EventTemplateComparator(isDialog));
@@ -173,7 +173,7 @@ public class EventTemplateList extends Composite implements SessionListener
          {
             session.removeListener(EventTemplateList.this);
 
-            WidgetHelper.saveTableViewerSettings(viewer, settings, configPrefix);
+            WidgetHelper.saveTableViewerSettings(viewer, configPrefix);
             settings.set(configPrefix + ".filterEnabled", filterEnabled);
          }
       });

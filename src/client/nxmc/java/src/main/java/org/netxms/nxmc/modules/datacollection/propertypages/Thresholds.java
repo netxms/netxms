@@ -46,7 +46,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.Threshold;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
@@ -446,7 +445,7 @@ public class Thresholds extends AbstractDCIPropertyPage
       column.setText(i18n.tr("Deactivation event"));
       column.setWidth(150);
 
-      WidgetHelper.restoreColumnSettings(table, PreferenceStore.getInstance(), COLUMN_SETTINGS_PREFIX);
+      WidgetHelper.restoreColumnSettings(table, COLUMN_SETTINGS_PREFIX);
 
 		thresholdList.setContentProvider(new ArrayContentProvider());
 		thresholdList.setLabelProvider(new ThresholdLabelProvider());
@@ -502,6 +501,6 @@ public class Thresholds extends AbstractDCIPropertyPage
 	 */
 	private void saveSettings()
 	{
-      WidgetHelper.saveColumnSettings(thresholdList.getTable(), PreferenceStore.getInstance(), COLUMN_SETTINGS_PREFIX);
+      WidgetHelper.saveColumnSettings(thresholdList.getTable(), COLUMN_SETTINGS_PREFIX);
 	}
 }

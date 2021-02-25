@@ -400,11 +400,11 @@ public class WidgetHelper
 	 * Save settings of table viewer columns
 	 * 
 	 * @param table Table control
-	 * @param settings Dialog settings object
 	 * @param prefix Prefix for properties
 	 */
-   public static void saveColumnSettings(Table table, PreferenceStore settings, String prefix)
+   public static void saveColumnSettings(Table table, String prefix)
 	{
+      PreferenceStore settings = PreferenceStore.getInstance();
 		TableColumn[] columns = table.getColumns();
 		for(int i = 0; i < columns.length; i++)
 		{
@@ -437,11 +437,11 @@ public class WidgetHelper
     * Restore settings of table viewer columns previously saved by call to WidgetHelper.saveColumnSettings
     *
     * @param table Table control
-    * @param settings Dialog settings object
     * @param prefix Prefix for properties
     */
-   public static void restoreColumnSettings(Table table, PreferenceStore settings, String prefix)
+   public static void restoreColumnSettings(Table table, String prefix)
 	{
+      PreferenceStore settings = PreferenceStore.getInstance();
 		TableColumn[] columns = table.getColumns();
 		for(int i = 0; i < columns.length; i++)
 		{
@@ -464,11 +464,11 @@ public class WidgetHelper
 	 * Save settings of tree viewer columns
 	 * 
 	 * @param table Table control
-	 * @param settings Dialog settings object
 	 * @param prefix Prefix for properties
 	 */
-   public static void saveColumnSettings(Tree tree, PreferenceStore settings, String prefix)
+   public static void saveColumnSettings(Tree tree, String prefix)
 	{
+      PreferenceStore settings = PreferenceStore.getInstance();
 		TreeColumn[] columns = tree.getColumns();
 		for(int i = 0; i < columns.length; i++)
 		{
@@ -483,11 +483,11 @@ public class WidgetHelper
 	 * Restore settings of tree viewer columns previously saved by call to WidgetHelper.saveColumnSettings
 	 * 
 	 * @param table Table control
-	 * @param settings Dialog settings object
 	 * @param prefix Prefix for properties
 	 */
-   public static void restoreColumnSettings(Tree tree, PreferenceStore settings, String prefix)
+   public static void restoreColumnSettings(Tree tree, String prefix)
 	{
+      PreferenceStore settings = PreferenceStore.getInstance();
 		TreeColumn[] columns = tree.getColumns();
 		for(int i = 0; i < columns.length; i++)
 		{
@@ -509,14 +509,14 @@ public class WidgetHelper
 	/**
 	 * Save settings for sortable table viewer
 	 * @param viewer Viewer
-	 * @param settings Dialog settings object
 	 * @param prefix Prefix for properties
 	 */
-   public static void saveTableViewerSettings(SortableTableViewer viewer, PreferenceStore settings, String prefix)
+   public static void saveTableViewerSettings(SortableTableViewer viewer, String prefix)
 	{
 		final Table table = viewer.getTable();
-		saveColumnSettings(table, settings, prefix);
+      saveColumnSettings(table, prefix);
 		TableColumn column = table.getSortColumn();
+      PreferenceStore settings = PreferenceStore.getInstance();
       settings.set(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1); //$NON-NLS-1$ //$NON-NLS-2$
       settings.set(prefix + ".sortDirection", table.getSortDirection()); //$NON-NLS-1$
 	}
@@ -524,13 +524,13 @@ public class WidgetHelper
 	/**
 	 * Restore settings for sortable table viewer
 	 * @param viewer Viewer
-	 * @param settings Dialog settings object
 	 * @param prefix Prefix for properties
 	 */
-   public static void restoreTableViewerSettings(SortableTableViewer viewer, PreferenceStore settings, String prefix)
+   public static void restoreTableViewerSettings(SortableTableViewer viewer, String prefix)
 	{
 		final Table table = viewer.getTable();
-		restoreColumnSettings(table, settings, prefix);
+      restoreColumnSettings(table, prefix);
+      PreferenceStore settings = PreferenceStore.getInstance();
 		try
 		{
          table.setSortDirection(settings.getAsInteger(prefix + ".sortDirection", SWT.UP)); //$NON-NLS-1$
@@ -548,14 +548,14 @@ public class WidgetHelper
 	/**
 	 * Save settings for sortable tree viewer
 	 * @param viewer Viewer
-	 * @param settings Dialog settings object
 	 * @param prefix Prefix for properties
 	 */
-   public static void saveTreeViewerSettings(SortableTreeViewer viewer, PreferenceStore settings, String prefix)
+   public static void saveTreeViewerSettings(SortableTreeViewer viewer, String prefix)
 	{
 		final Tree tree = viewer.getTree();
-		saveColumnSettings(tree, settings, prefix);
+      saveColumnSettings(tree, prefix);
 		TreeColumn column = tree.getSortColumn();
+      PreferenceStore settings = PreferenceStore.getInstance();
       settings.set(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1); //$NON-NLS-1$ //$NON-NLS-2$
       settings.set(prefix + ".sortDirection", tree.getSortDirection()); //$NON-NLS-1$
 	}
@@ -563,13 +563,13 @@ public class WidgetHelper
 	/**
 	 * Restore settings for sortable table viewer
 	 * @param viewer Viewer
-	 * @param settings Dialog settings object
 	 * @param prefix Prefix for properties
 	 */
-   public static void restoreTreeViewerSettings(SortableTreeViewer viewer, PreferenceStore settings, String prefix)
+   public static void restoreTreeViewerSettings(SortableTreeViewer viewer, String prefix)
 	{
 		final Tree tree = viewer.getTree();
-		restoreColumnSettings(tree, settings, prefix);
+      restoreColumnSettings(tree, prefix);
+      PreferenceStore settings = PreferenceStore.getInstance();
       tree.setSortDirection(settings.getAsInteger(prefix + ".sortDirection", SWT.UP)); //$NON-NLS-1$
       int column = settings.getAsInteger(prefix + ".sortColumn", 0); //$NON-NLS-1$
       if (column >= 0)
@@ -579,40 +579,38 @@ public class WidgetHelper
 	}
 
 	/**
-	 * Wrapper for saveTableViewerSettings/saveTreeViewerSettings
-	 * 
-	 * @param viewer
-	 * @param settings
-	 * @param prefix
-	 */
-   public static void saveColumnViewerSettings(ColumnViewer viewer, PreferenceStore settings, String prefix)
+    * Wrapper for saveTableViewerSettings/saveTreeViewerSettings
+    * 
+    * @param viewer Viewer
+    * @param prefix Prefix for properties
+    */
+   public static void saveColumnViewerSettings(ColumnViewer viewer, String prefix)
 	{
 		if (viewer instanceof SortableTableViewer)
 		{
-			saveTableViewerSettings((SortableTableViewer)viewer, settings, prefix);
+         saveTableViewerSettings((SortableTableViewer)viewer, prefix);
 		}
 		else if (viewer instanceof SortableTreeViewer)
 		{
-			saveTreeViewerSettings((SortableTreeViewer)viewer, settings, prefix);
+         saveTreeViewerSettings((SortableTreeViewer)viewer, prefix);
 		}
 	}
 	
 	/**
-	 * Wrapper for restoreTableViewerSettings/restoreTreeViewerSettings
-	 * 
-	 * @param viewer table or tree viewer
-	 * @param settings
-	 * @param prefix
-	 */
-   public static void restoreColumnViewerSettings(ColumnViewer viewer, PreferenceStore settings, String prefix)
+    * Wrapper for restoreTableViewerSettings/restoreTreeViewerSettings
+    * 
+    * @param viewer table or tree viewer
+    * @param prefix Prefix for properties
+    */
+   public static void restoreColumnViewerSettings(ColumnViewer viewer, String prefix)
 	{
 		if (viewer instanceof SortableTableViewer)
 		{
-			restoreTableViewerSettings((SortableTableViewer)viewer, settings, prefix);
+         restoreTableViewerSettings((SortableTableViewer)viewer, prefix);
 		}
 		else if (viewer instanceof SortableTreeViewer)
 		{
-			restoreTreeViewerSettings((SortableTreeViewer)viewer, settings, prefix);
+         restoreTreeViewerSettings((SortableTreeViewer)viewer, prefix);
 		}
 	}
 	

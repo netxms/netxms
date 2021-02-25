@@ -139,12 +139,12 @@ public class InterfacesView extends NodeSubObjectTableView
       filter = new InterfaceListFilter();
       ((InterfaceListFilter)filter).setHideSubInterfaces(hideSubInterfaces);
       viewer.addFilter(filter);
-      WidgetHelper.restoreTableViewerSettings(viewer, PreferenceStore.getInstance(), "InterfacesView.TableViewer");
+      WidgetHelper.restoreTableViewerSettings(viewer, "InterfacesView.TableViewer");
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveColumnSettings(viewer.getTable(), PreferenceStore.getInstance(), "InterfacesView.TableViewer");
+            WidgetHelper.saveColumnSettings(viewer.getTable(), "InterfacesView.TableViewer");
             PreferenceStore.getInstance().set("InterfacesView.HideSubInterfaces", hideSubInterfaces);
          }
       });

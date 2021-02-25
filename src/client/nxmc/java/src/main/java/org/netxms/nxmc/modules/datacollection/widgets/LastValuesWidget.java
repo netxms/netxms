@@ -167,7 +167,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		dataViewer.setContentProvider(new ArrayContentProvider());
 		dataViewer.setComparator(comparator);
 		dataViewer.addFilter(filter);
-		WidgetHelper.restoreTableViewerSettings(dataViewer, ds, configPrefix);
+      WidgetHelper.restoreTableViewerSettings(dataViewer, configPrefix);
 		
 		dataViewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
@@ -184,7 +184,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveTableViewerSettings(dataViewer, ds, configPrefix);
+            WidgetHelper.saveTableViewerSettings(dataViewer, configPrefix);
             ds.set(configPrefix + ".autoRefresh", autoRefreshEnabled);
             ds.set(configPrefix + ".autoRefreshInterval", autoRefreshEnabled);
             ds.set(configPrefix + ".useMultipliers", labelProvider.areMultipliersUsed());

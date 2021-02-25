@@ -39,7 +39,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.helpers.AbstractTraceViewFilter;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -95,12 +94,12 @@ public abstract class AbstractTraceWidget extends Composite
 		viewer.getTable().setHeaderVisible(true);
 		viewer.setContentProvider(new ArrayContentProvider());
 		setupViewer(viewer);
-      WidgetHelper.restoreColumnSettings(viewer.getTable(), PreferenceStore.getInstance(), getConfigPrefix());
+      WidgetHelper.restoreColumnSettings(viewer.getTable(), getConfigPrefix());
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-            WidgetHelper.saveColumnSettings(viewer.getTable(), PreferenceStore.getInstance(), getConfigPrefix());
+            WidgetHelper.saveColumnSettings(viewer.getTable(), getConfigPrefix());
 			}
 		});
 	

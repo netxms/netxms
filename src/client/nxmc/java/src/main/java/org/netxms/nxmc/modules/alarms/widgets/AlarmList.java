@@ -199,7 +199,7 @@ public class AlarmList extends CompositeWithMessageBar
 		alarmViewer = new SortableTreeViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTreeViewer.DEFAULT_STYLE);
       if (!session.isZoningEnabled())
          alarmViewer.removeColumnById(COLUMN_ZONE);
-      WidgetHelper.restoreTreeViewerSettings(alarmViewer, PreferenceStore.getInstance(), configPrefix);
+      WidgetHelper.restoreTreeViewerSettings(alarmViewer, configPrefix);
 
       labelProvider = new AlarmListLabelProvider(alarmViewer);
       labelProvider.setShowColor(PreferenceStore.getInstance().getAsBoolean("AlarmList.ShowStatusColor", false));
@@ -212,7 +212,7 @@ public class AlarmList extends CompositeWithMessageBar
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTreeViewerSettings(alarmViewer, PreferenceStore.getInstance(), configPrefix);
+            WidgetHelper.saveTreeViewerSettings(alarmViewer, configPrefix);
          }
       });
 

@@ -40,7 +40,6 @@ import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -105,12 +104,12 @@ public class EntityMIBView extends ObjectView
       viewer.setContentProvider(new ComponentTreeContentProvider());
       viewer.getTree().setHeaderVisible(true);
       viewer.getTree().setLinesVisible(true);
-      WidgetHelper.restoreColumnSettings(viewer.getTree(), PreferenceStore.getInstance(), "ComponentTree");
+      WidgetHelper.restoreColumnSettings(viewer.getTree(), "ComponentTree");
       viewer.getTree().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveColumnSettings(viewer.getTree(), PreferenceStore.getInstance(), "ComponentTree");
+            WidgetHelper.saveColumnSettings(viewer.getTree(), "ComponentTree");
          }
       });
       createActions();
