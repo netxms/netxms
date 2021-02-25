@@ -37,7 +37,7 @@ class AgentTunnel;
 class AgentTunnelCommChannel : public AbstractCommChannel
 {
 private:
-   AgentTunnel *m_tunnel;
+   weak_ptr<AgentTunnel> m_tunnel;
    uint32_t m_id;
    bool m_active;
    RingBuffer m_buffer;
@@ -56,7 +56,7 @@ private:
    int m_pollerCount;
 
 public:
-   AgentTunnelCommChannel(AgentTunnel *tunnel, uint32_t id);
+   AgentTunnelCommChannel(const shared_ptr<AgentTunnel>& tunnel, uint32_t id);
    virtual ~AgentTunnelCommChannel();
 
    virtual ssize_t send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
@@ -73,7 +73,7 @@ public:
    void detach()
    {
       m_active = false;
-      m_tunnel = nullptr;
+      m_tunnel.reset();
    }
 };
 
