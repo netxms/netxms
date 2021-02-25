@@ -204,6 +204,56 @@ NXSL_METHOD_DEFINITION(NetObj, getCustomAttribute)
 }
 
 /**
+ * Generic implementation for NetObj methods isParent, isChild, isDirectParent, isDirectChild
+ */
+template<bool (NObject::*method)(uint32_t) const> int TestObjectRelation(NXSL_VM *vm, NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result)
+{
+   if (!arg->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   NXSL_Object *nxslObject = arg->getValueAsObject();
+   if (!nxslObject->getClass()->instanceOf(g_nxslNetObjClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   NetObj *testingObject = static_cast<shared_ptr<NetObj>*>(nxslObject->getData())->get();
+   NetObj *thisObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   *result = vm->createValue((thisObject->*method)(testingObject->getId()));
+   return 0;
+}
+
+/**
+ * NetObj::isChild(object)
+ */
+NXSL_METHOD_DEFINITION(NetObj, isChild)
+{
+   return TestObjectRelation<&NObject::isChild>(vm, object, argv[0], result);
+}
+
+/**
+ * NetObj::isDirectChild(object)
+ */
+NXSL_METHOD_DEFINITION(NetObj, isDirectChild)
+{
+   return TestObjectRelation<&NObject::isDirectChild>(vm, object, argv[0], result);
+}
+
+/**
+ * NetObj::isDirectParent(object)
+ */
+NXSL_METHOD_DEFINITION(NetObj, isDirectParent)
+{
+   return TestObjectRelation<&NObject::isDirectParent>(vm, object, argv[0], result);
+}
+
+/**
+ * NetObj::isParent(object)
+ */
+NXSL_METHOD_DEFINITION(NetObj, isParent)
+{
+   return TestObjectRelation<&NObject::isParent>(vm, object, argv[0], result);
+}
+
+/**
  * NetObj::leaveMaintenance()
  */
 NXSL_METHOD_DEFINITION(NetObj, leaveMaintenance)
@@ -544,9 +594,13 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(NetObj, clearGeoLocation, 0);
    NXSL_REGISTER_METHOD(NetObj, delete, 0);
    NXSL_REGISTER_METHOD(NetObj, deleteCustomAttribute, 1);
+   NXSL_REGISTER_METHOD(NetObj, isDirectChild, 1);
+   NXSL_REGISTER_METHOD(NetObj, isDirectParent, 1);
    NXSL_REGISTER_METHOD(NetObj, enterMaintenance, -1);
    NXSL_REGISTER_METHOD(NetObj, expandString, 1);
    NXSL_REGISTER_METHOD(NetObj, getCustomAttribute, 1);
+   NXSL_REGISTER_METHOD(NetObj, isChild, 1);
+   NXSL_REGISTER_METHOD(NetObj, isParent, 1);
    NXSL_REGISTER_METHOD(NetObj, leaveMaintenance, 0);
    NXSL_REGISTER_METHOD(NetObj, manage, 0);
    NXSL_REGISTER_METHOD(NetObj, rename, 1);
