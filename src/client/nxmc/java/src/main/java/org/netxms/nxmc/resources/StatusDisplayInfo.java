@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,8 +36,9 @@ public final class StatusDisplayInfo
 {
    private static I18n i18n = LocalizationHelper.getI18n(StatusDisplayInfo.class);
 	private static String[] statusText = new String[9];
-	private static ImageDescriptor[] statusImageDesc = new ImageDescriptor[9];
-	private static Image[] statusImage = new Image[9];
+	private static ImageDescriptor[] statusImageDescriptors = new ImageDescriptor[9];
+	private static Image[] statusImages = new Image[9];
+   private static ImageDescriptor[] overlayImageDescriptors = new ImageDescriptor[9];
 	private static ColorCache colorCache;
 	private static Color statusColor[] = new Color[9]; 
 	
@@ -56,23 +57,32 @@ public final class StatusDisplayInfo
       statusText[ObjectStatus.DISABLED.getValue()] = i18n.tr("Disabled");
       statusText[ObjectStatus.TESTING.getValue()] = i18n.tr("Testing");
 
-      statusImageDesc[ObjectStatus.NORMAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/normal.png"); //$NON-NLS-1$
-      statusImageDesc[ObjectStatus.WARNING.getValue()] = ResourceManager.getImageDescriptor("icons/status/warning.png"); //$NON-NLS-1$
-      statusImageDesc[ObjectStatus.MINOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/minor.png"); //$NON-NLS-1$
-      statusImageDesc[ObjectStatus.MAJOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/major.png"); //$NON-NLS-1$
-      statusImageDesc[ObjectStatus.CRITICAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/critical.png"); //$NON-NLS-1$
-      statusImageDesc[ObjectStatus.UNKNOWN.getValue()] = ResourceManager.getImageDescriptor("icons/status/unknown.png"); //$NON-NLS-1$
-      statusImageDesc[ObjectStatus.UNMANAGED.getValue()] = ResourceManager.getImageDescriptor("icons/status/unmanaged.png"); //$NON-NLS-1$
-      statusImageDesc[ObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/status/disabled.png"); //$NON-NLS-1$
-      statusImageDesc[ObjectStatus.TESTING.getValue()] = ResourceManager.getImageDescriptor("icons/status/testing.png"); //$NON-NLS-1$
+      statusImageDescriptors[ObjectStatus.NORMAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/normal.png");
+      statusImageDescriptors[ObjectStatus.WARNING.getValue()] = ResourceManager.getImageDescriptor("icons/status/warning.png");
+      statusImageDescriptors[ObjectStatus.MINOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/minor.png");
+      statusImageDescriptors[ObjectStatus.MAJOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/major.png");
+      statusImageDescriptors[ObjectStatus.CRITICAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/critical.png");
+      statusImageDescriptors[ObjectStatus.UNKNOWN.getValue()] = ResourceManager.getImageDescriptor("icons/status/unknown.png");
+      statusImageDescriptors[ObjectStatus.UNMANAGED.getValue()] = ResourceManager.getImageDescriptor("icons/status/unmanaged.png");
+      statusImageDescriptors[ObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/status/disabled.png");
+      statusImageDescriptors[ObjectStatus.TESTING.getValue()] = ResourceManager.getImageDescriptor("icons/status/testing.png");
 
-		for(int i = 0; i < statusImageDesc.length; i++)
-			statusImage[i] = statusImageDesc[i].createImage();
+		for(int i = 0; i < statusImageDescriptors.length; i++)
+			statusImages[i] = statusImageDescriptors[i].createImage();
 
+		overlayImageDescriptors[ObjectStatus.WARNING.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/warning.png");
+		overlayImageDescriptors[ObjectStatus.MINOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/minor.png");
+		overlayImageDescriptors[ObjectStatus.MAJOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/major.png");
+		overlayImageDescriptors[ObjectStatus.CRITICAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/critical.png");
+		overlayImageDescriptors[ObjectStatus.UNKNOWN.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/unknown.gif");
+		overlayImageDescriptors[ObjectStatus.UNMANAGED.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/unmanaged.gif");
+		overlayImageDescriptors[ObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/disabled.gif");
+		overlayImageDescriptors[ObjectStatus.TESTING.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/testing.png");
+		
 		colorCache = new ColorCache();
 		updateStatusColors();
 	}
-	
+
 	/**
 	 * Update status colors
 	 */
@@ -122,7 +132,7 @@ public final class StatusDisplayInfo
    {
       return getStatusText(ObjectStatus.getByValue(code));
    }
-   
+
 	/**
 	 * Get image descriptor for given status/severity code.
 	 * 
@@ -131,9 +141,9 @@ public final class StatusDisplayInfo
 	 */
 	public static ImageDescriptor getStatusImageDescriptor(ObjectStatus status)
 	{
-		return statusImageDesc[status.getValue()];
+		return statusImageDescriptors[status.getValue()];
 	}
-	
+
    /**
     * Get image descriptor for given status/severity code.
     * 
@@ -142,9 +152,9 @@ public final class StatusDisplayInfo
     */
    public static ImageDescriptor getStatusImageDescriptor(Severity severity)
    {
-      return statusImageDesc[severity.getValue()];
+      return statusImageDescriptors[severity.getValue()];
    }
-   
+
    /**
     * Get image descriptor for given status/severity code.
     * 
@@ -155,7 +165,7 @@ public final class StatusDisplayInfo
    {
       return getStatusImageDescriptor(ObjectStatus.getByValue(code));
    }
-   
+
 	/**
 	 * Get image for given status/severity code. Image is owned by library
 	 * and should not be disposed by caller.
@@ -165,7 +175,7 @@ public final class StatusDisplayInfo
 	 */
 	public static Image getStatusImage(ObjectStatus status)
 	{
-		return statusImage[status.getValue()];
+		return statusImages[status.getValue()];
 	}
 	
    /**
@@ -189,9 +199,42 @@ public final class StatusDisplayInfo
     */
    public static Image getStatusImage(Severity severity)
    {
-      return statusImage[severity.getValue()];
+      return statusImages[severity.getValue()];
+   }
+
+   /**
+    * Get overlay image descriptor for given status/severity code.
+    * 
+    * @param status Status code
+    * @return Overlay image descriptor for given code
+    */
+   public static ImageDescriptor getStatusOverlayImageDescriptor(ObjectStatus status)
+   {
+      return overlayImageDescriptors[status.getValue()];
+   }
+
+   /**
+    * Get overlay image descriptor for given status/severity code.
+    * 
+    * @param severity Severity code
+    * @return Overlay image descriptor for given code
+    */
+   public static ImageDescriptor getStatusOverlayImageDescriptor(Severity severity)
+   {
+      return overlayImageDescriptors[severity.getValue()];
    }
    
+   /**
+    * Get image descriptor for given status/severity code.
+    * 
+    * @param code Status or severity code
+    * @return Overlay image descriptor for given code
+    */
+   public static ImageDescriptor getStatusOverlayImageDescriptor(int code)
+   {
+      return getStatusOverlayImageDescriptor(ObjectStatus.getByValue(code));
+   }
+
 	/**
 	 * Get color for given status/severity code.
 	 * 
@@ -200,10 +243,9 @@ public final class StatusDisplayInfo
 	 */
 	public static Color getStatusColor(ObjectStatus status)
 	{
-	   
 		return statusColor[status.getValue()];
 	}
-   
+
    /**
     * Get color for given status/severity code.
     * 
@@ -214,7 +256,7 @@ public final class StatusDisplayInfo
    {
       return statusColor[severity.getValue()];
    }
-   
+
    /**
     * Get color for given status/severity code.
     * 
