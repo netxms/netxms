@@ -924,7 +924,7 @@ shared_ptr<AgentTunnelCommChannel> AgentTunnel::createChannel()
       return shared_ptr<AgentTunnelCommChannel>();
    }
 
-   shared_ptr<AgentTunnelCommChannel> channel = make_shared<AgentTunnelCommChannel>(this, response->getFieldAsUInt32(VID_CHANNEL_ID));
+   shared_ptr<AgentTunnelCommChannel> channel = make_shared<AgentTunnelCommChannel>(self(), response->getFieldAsUInt32(VID_CHANNEL_ID));
    delete response;
    MutexLock(m_channelLock);
    if (m_state == AGENT_TUNNEL_BOUND)
@@ -1029,9 +1029,8 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 /**
  * Channel constructor
  */
-AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, uint32_t id) : m_buffer(65536, 65536)
+AgentTunnelCommChannel::AgentTunnelCommChannel(const shared_ptr<AgentTunnel>& tunnel, uint32_t id) : m_buffer(65536, 65536), m_tunnel(tunnel)
 {
-   m_tunnel = tunnel;
    m_id = id;
    m_active = true;
 #ifdef _WIN32
@@ -1071,7 +1070,10 @@ AgentTunnelCommChannel::~AgentTunnelCommChannel()
  */
 ssize_t AgentTunnelCommChannel::send(const void *data, size_t size, MUTEX mutex)
 {
-   return m_active ? m_tunnel->sendChannelData(m_id, data, size) : -1;
+   if (!m_active)
+      return -1;
+   shared_ptr<AgentTunnel> tunnel = m_tunnel.lock();
+   return (tunnel != nullptr) ? tunnel->sendChannelData(m_id, data, size) : -1;
 }
 
 /**
@@ -1288,8 +1290,9 @@ int AgentTunnelCommChannel::shutdown()
 void AgentTunnelCommChannel::close()
 {
    shutdown();
-   if (m_tunnel != nullptr)
-      m_tunnel->closeChannel(this);
+   shared_ptr<AgentTunnel> tunnel = m_tunnel.lock();
+   if (tunnel != nullptr)
+      tunnel->closeChannel(this);
 }
 
 /**
