@@ -6,4 +6,8 @@ nxshell_LDADD = @top_srcdir@/src/libnxjava/libnxjava.la @top_srcdir@/src/libnetx
 
 EXTRA_DIST = nxshell.vcxproj nxshell.vcxproj.filters
 
+if JAR_BUILD
 SUBDIRS = java
+else
+SUBDIRS =
+endif
