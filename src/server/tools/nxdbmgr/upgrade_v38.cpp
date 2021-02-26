@@ -24,11 +24,23 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 38.7 to 40.0
+ * Upgrade from 38.8 to 40.0
+ */
+static bool H_UpgradeFromV8()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 38.7 to 38.8
  */
 static bool H_UpgradeFromV7()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE raw_dci_values ADD cache_timestamp integer")));
+   CHK_EXEC(SQLQuery(_T("UPDATE raw_dci_values SET cache_timestamp=0")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("raw_dci_values"), _T("cache_timestamp")));
+   CHK_EXEC(SetMinorSchemaVersion(8));
    return true;
 }
 
@@ -198,7 +210,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 7,  40, 0,  H_UpgradeFromV7  },
+   { 8,  40, 0,  H_UpgradeFromV8  },
+   { 7,  40, 8,  H_UpgradeFromV7  },
    { 6,  40, 7,  H_UpgradeFromV6  },
    { 5,  38, 6,  H_UpgradeFromV5  },
    { 4,  38, 5,  H_UpgradeFromV4  },

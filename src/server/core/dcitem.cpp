@@ -408,7 +408,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    // Create record in raw_dci_values if needed
    if (!IsDatabaseRecordExist(hdb, _T("raw_dci_values"), _T("item_id"), m_id))
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time) VALUES (?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time,cache_timestamp) VALUES (?,?,?,?)"));
       if (hStmt == nullptr)
       {
          unlock();
@@ -416,7 +416,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       }
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
       DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT64)m_tPrevValueTimeStamp);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_tPrevValueTimeStamp));
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_bCacheLoaded ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0));
       bResult = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -696,7 +697,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *upda
 
    m_dwErrorCount = 0;
 
-   if (isStatusDCO() && (tmTimeStamp > m_tPrevValueTimeStamp) && ((m_cacheSize == 0) || !m_bCacheLoaded || ((UINT32)*pValue != (UINT32)*m_ppValueCache[0])))
+   if (isStatusDCO() && (tmTimeStamp > m_tPrevValueTimeStamp) && ((m_cacheSize == 0) || !m_bCacheLoaded || (pValue->getUInt32() != m_ppValueCache[0]->getUInt32())))
    {
       *updateStatus = true;
    }
@@ -707,7 +708,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *upda
       m_tPrevValueTimeStamp = tmTimeStamp;
 
       // Save raw value into database
-      QueueRawDciDataUpdate(tmTimeStamp, m_id, static_cast<TCHAR*>(originalValue), pValue->getString());
+      QueueRawDciDataUpdate(tmTimeStamp, m_id, static_cast<TCHAR*>(originalValue), pValue->getString(), m_bCacheLoaded ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0);
    }
 
 	// Save transformed value to database
@@ -1265,13 +1266,12 @@ void DCItem::reloadCache(bool forceReload)
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,date_part('epoch',idata_timestamp)::int FROM idata_sc_%s ")
-                              _T("WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
-                    getStorageClassName(getStorageClass()), m_id, m_requiredCacheSize);
+                              _T("WHERE item_id=%u AND idata_timestamp >= (SELECT to_timestamp(last_poll_time) FROM raw_dci_values WHERE item_id=%u) ORDER BY idata_timestamp DESC LIMIT %u"),
+                    getStorageClassName(getStorageClass()), m_id, m_id, m_requiredCacheSize);
          }
          else
          {
-            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
-                              _T("WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
+            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %u"),
                     m_ownerId, m_id, m_requiredCacheSize);
          }
          break;
