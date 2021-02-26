@@ -214,7 +214,8 @@ bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, char *content
  */
 void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
 {
-   if (data->conn == nullptr)
+   shared_ptr<AgentConnectionEx> conn = data->node->getAgentConnection();
+   if (conn == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("GenericAgentPolicy::deploy(%s): failed - no connection to agent"), data->debugId);
       return;
@@ -233,11 +234,11 @@ void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
    {
 #ifdef UNICODE
       WCHAR *tmp = WideStringFromUTF8String(m_content);
-      StringBuffer expanded = data->object->expandText(tmp, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr);
+      StringBuffer expanded = data->node->expandText(tmp, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr);
       content = UTF8StringFromWideString(expanded.cstr());
       MemFree(tmp);
 #else
-      StringBuffer expanded = data->object->expandText(m_content, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr);
+      StringBuffer expanded = data->node->expandText(m_content, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr);
       content = MemCopyString(expanded.cstr());
 #endif
       BYTE newHash[MD5_DIGEST_SIZE];
@@ -258,10 +259,10 @@ void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Calling GenericAgentPolicy::deploy at %s (type=%s, newTypeFormat=%d)"), data->debugId, m_type, data->newTypeFormat);
 
-      NXCPMessage msg(data->conn->getProtocolVersion());
+      NXCPMessage msg(conn->getProtocolVersion());
       if (createDeploymentMessage(&msg, content, data->newTypeFormat))
       {
-         uint32_t rcc = data->conn->deployPolicy(&msg);
+         uint32_t rcc = conn->deployPolicy(&msg);
          if (rcc == RCC_SUCCESS)
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("GenericAgentPolicy::deploy(%s): policy successfully deployed"), data->debugId);
@@ -494,7 +495,8 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
       return;
    }
 
-   if (data->conn == nullptr)
+   shared_ptr<AgentConnectionEx> conn = data->node->getAgentConnection();
+   if (conn == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): failed - no connection to agent"), data->debugId);
       return;
@@ -532,7 +534,7 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
       fileRequest.add(files.get(i)->path);
    }
    ObjectArray<RemoteFileInfo> *remoteFiles;
-   uint32_t rcc = data->conn->getFileSetInfo(&fileRequest, true, &remoteFiles);
+   uint32_t rcc = conn->getFileSetInfo(&fileRequest, true, &remoteFiles);
    if (rcc != RCC_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): call to AgentConnection::getFileSetInfo failed (%s)"), data->debugId, AgentErrorCodeToText(rcc));
@@ -556,7 +558,7 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
       if (CalculateFileMD5Hash(localFile, localHash) && ((remoteFile->status() == ERR_FILE_STAT_FAILED) || memcmp(localHash, remoteFile->hash(), MD5_DIGEST_SIZE)))
       {
          nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): uploading %s"), data->debugId, files.get(i)->path);
-         rcc = data->conn->uploadFile(localFile, remoteFile->name(), true);
+         rcc = conn->uploadFile(localFile, remoteFile->name(), true);
          nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): upload completed (%s)"), data->debugId, AgentErrorCodeToText(rcc));
       }
       else
@@ -597,9 +599,10 @@ void LogParserPolicy::getEventList(HashSet<uint32_t> *eventList) const
  */
 void RemoveAgentPolicy(const shared_ptr<AgentPolicyRemovalData>& data)
 {
-   if (data->conn != nullptr)
+   shared_ptr<AgentConnectionEx> conn = data->node->getAgentConnection();
+   if (conn != nullptr)
    {
-      uint32_t rcc = data->conn->uninstallPolicy(data->guid, data->policyType, data->newTypeFormat);
+      uint32_t rcc = conn->uninstallPolicy(data->guid, data->policyType, data->newTypeFormat);
       if (rcc == ERR_SUCCESS)
       {
          nxlog_debug_tag(DEBUG_TAG, 5, _T("RemoveAgentPolicy(%s): policy successfully removed"), data->debugId);

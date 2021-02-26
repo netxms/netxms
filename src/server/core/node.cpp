@@ -3105,7 +3105,7 @@ void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
 
          if (!found)
          {
-            auto data = make_shared<AgentPolicyRemovalData>(conn, guid, ap->getType(i), isNewPolicyTypeFormatSupported());
+            auto data = make_shared<AgentPolicyRemovalData>(self(), guid, ap->getType(i), isNewPolicyTypeFormatSupported());
             _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), getName(), getId(), _T("unknown"), guid.toString().cstr());
             ThreadPoolExecute(g_agentConnectionThreadPool, RemoveAgentPolicy, data);
          }

@@ -1373,15 +1373,14 @@ public:
  */
 struct AgentPolicyDeploymentData
 {
-   shared_ptr<AgentConnectionEx> conn;
-   shared_ptr<NetObj> object;
+   shared_ptr<Node> node;
    bool forceInstall;
    uint32_t currVersion;
    uint8_t currHash[MD5_DIGEST_SIZE];
    bool newTypeFormat;
    TCHAR debugId[256];
 
-   AgentPolicyDeploymentData(const shared_ptr<AgentConnectionEx>& _conn, const shared_ptr<NetObj>& _object, bool _newTypeFormat) : conn(_conn), object(_object)
+   AgentPolicyDeploymentData(const shared_ptr<Node>& _node, bool _newTypeFormat) : node(_node)
    {
       forceInstall = false;
       currVersion = 0;
@@ -1396,15 +1395,14 @@ struct AgentPolicyDeploymentData
  */
 struct AgentPolicyRemovalData
 {
-   shared_ptr<AgentConnectionEx> conn;
+   shared_ptr<Node> node;
    uuid guid;
    TCHAR policyType[MAX_POLICY_TYPE_LEN];
    bool newTypeFormat;
    TCHAR debugId[256];
 
-   AgentPolicyRemovalData(const shared_ptr<AgentConnectionEx>& _conn, const uuid& _guid, const TCHAR *_type, bool _newTypeFormat) : conn(_conn), guid(_guid)
+   AgentPolicyRemovalData(const shared_ptr<Node>& _node, const uuid& _guid, const TCHAR *_type, bool _newTypeFormat) : node(_node), guid(_guid)
    {
-      conn = _conn;
       _tcslcpy(policyType, _type, MAX_POLICY_TYPE_LEN);
       newTypeFormat = _newTypeFormat;
       debugId[0] = 0;
