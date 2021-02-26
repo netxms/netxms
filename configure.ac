@@ -177,7 +177,6 @@ LTINIT_CXX=""
 SQLFLAGS=""
 RUNTIME_PREFIX=""
 RUNTIME_STATE_DIR=""
-HPUX_HPPA="no"
 XMPP_SUPPORT="yes"
 ZEROMQ_SUPPORT="no"
 ZEROMQ_REQUIRED="no"
@@ -223,6 +222,7 @@ JEMALLOC_REQUIRED="no"
 MARIADB_MYSQL_CONFLICT="no"
 FORCE_INTERNAL_RWLOCK="no"
 LIBNXAGENT_LIBS=""
+JAR_BUILD="yes"
 
 
 #--------------------------------------------------------------------
@@ -909,6 +909,12 @@ AC_ARG_ENABLE(null-free-check,
 	fi
 ])
 
+AC_ARG_ENABLE(jar-build,
+	      [AS_HELP_STRING(--disable-jar-build,disable build and installation of jar files)],
+[
+	JAR_BUILD="no"
+])
+
 
 #--------------------------------------------------------------------
 # Set LD_LIBRARY_PATH from LD_RUN_PATH because on some systems
@@ -944,7 +950,11 @@ fi
 check_substr "$COMPONENTS" "java"
 if test $? = 0; then
 	MODULES="$MODULES java-common libnxjava"
-	SUBAGENT_DIRS="$SUBAGENT_DIRS java bind9 jmx ubntlw"
+	if test "x$JAR_BUILD" = "xyes"; then
+		SUBAGENT_DIRS="$SUBAGENT_DIRS java bind9 jmx ubntlw"
+	else
+		SUBAGENT_DIRS="$SUBAGENT_DIRS java"
+	fi
 fi
 
 check_substr "$COMPONENTS" "python"
@@ -1418,7 +1428,7 @@ case "$PLATFORM" in
          LDFLAGS="$LDFLAGS -mt"
       fi
       if test `uname -m` != 'ia64'; then
-         HPUX_HPPA="yes"
+         AC_MSG_ERROR(Only Itanium architeture is supported)
       fi
       ;;
    SunOS)
@@ -1624,11 +1634,7 @@ fi
 
 if test "x$CXX" = "xaCC" ; then
 	if test "x$FORCE_32BIT_BUILD" = "xyes"; then
-		if test "x$HPUX_HPPA" = "xyes"; then
-			ARCHFLAG="+DA1.1"
-		else
-			ARCHFLAG="+DD32"
-		fi
+		ARCHFLAG="+DD32"
 		AC_MSG_CHECKING(whether C compiler accepts $ARCHFLAG)
 		OLD_CPPFLAGS="$CPPFLAGS"
 		CPPFLAGS="$ARCHFLAG $CPPFLAGS"
@@ -1643,11 +1649,7 @@ if test "x$CXX" = "xaCC" ; then
 				AC_MSG_RESULT(no)
 			])
 	else
-		if test "x$HPUX_HPPA" = "xyes"; then
-			ARCHFLAG="+DA2.0W"
-		else
-			ARCHFLAG="+DD64"
-		fi
+		ARCHFLAG="+DD64"
 		AC_MSG_CHECKING(whether C compiler accepts $ARCHFLAG)
 		OLD_CPPFLAGS="$CPPFLAGS"
 		CPPFLAGS="$ARCHFLAG $CPPFLAGS"
@@ -4431,18 +4433,18 @@ if test "x$ENABLE_DEBUG" = "xno"; then
 	CPPFLAGS="$CPPFLAGS -DNDEBUG"
 fi
 
+AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
+AM_CONDITIONAL([JAR_BUILD], [test "x$JAR_BUILD" = "xyes"])
+AM_CONDITIONAL([MQTT_SUPPORT], [test "x$MQTT_SUPPORT" = "xyes"])
+AM_CONDITIONAL([PYTHON_SUPPORT], [test "x$PYTHON_SUPPORT" = "xyes"])
+AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_JANSSON], [test "x$HAVE_JANSSON" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_SQLITE], [test "x$HAVE_SQLITE" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$HAVE_ZLIB" = "no"])
-AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
-AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
 AM_CONDITIONAL([USE_ENCRYPTION], [test "x${WITH_ENCRYPTION}" = "xyes"])
-AM_CONDITIONAL([HPUX_HPPA], [test "x$HPUX_HPPA" = "xyes"])
-AM_CONDITIONAL([MQTT_SUPPORT], [test "x$MQTT_SUPPORT" = "xyes"])
-AM_CONDITIONAL([PYTHON_SUPPORT], [test "x$PYTHON_SUPPORT" = "xyes"])
-AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
 AM_CONDITIONAL([WITH_PRIVATE_EXTENSIONS], [test "x$WITH_PRIVATE_EXTENSIONS" = "xyes"])
+AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
 AM_CONDITIONAL([ZEROMQ_SUPPORT], [test "x$ZEROMQ_SUPPORT" = "xyes"])
 
 
@@ -4570,7 +4572,6 @@ AC_SUBST(ZEROMQ_LDFLAGS)
 
 NETXMS_LIBRARY_VERSION=`echo $VERSION | cut -f 1 -d '-' | cut -f 1,2 -d . | sed 's/\.//'`
 AC_SUBST(NETXMS_LIBRARY_VERSION)
-
 
 #--------------------------------------------------------------------
 # Generate output files

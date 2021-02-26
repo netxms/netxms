@@ -9,4 +9,8 @@ EXTRA_DIST = \
 	libnxjava.vcxproj libnxjava.vcxproj.filters \
 	libnxjava.h
 
+if JAR_BUILD
 SUBDIRS = java
+else
+SUBDIRS =
+endif
