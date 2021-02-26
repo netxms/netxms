@@ -1052,12 +1052,12 @@ CREATE TABLE idata_sc_other
    PRIMARY KEY(item_id,idata_timestamp)
 ) TABLE_TYPE;
 
-SELECT create_hypertable('idata_sc_default', 'idata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds');
-SELECT create_hypertable('idata_sc_7', 'idata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds');
-SELECT create_hypertable('idata_sc_30', 'idata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds');
-SELECT create_hypertable('idata_sc_90', 'idata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds');
-SELECT create_hypertable('idata_sc_180', 'idata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds');
-SELECT create_hypertable('idata_sc_other', 'idata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds');
+SELECT create_hypertable('idata_sc_default', 'idata_timestamp', chunk_time_interval => interval '86400 seconds');
+SELECT create_hypertable('idata_sc_7', 'idata_timestamp', chunk_time_interval => interval '86400 seconds');
+SELECT create_hypertable('idata_sc_30', 'idata_timestamp', chunk_time_interval => interval '86400 seconds');
+SELECT create_hypertable('idata_sc_90', 'idata_timestamp', chunk_time_interval => interval '86400 seconds');
+SELECT create_hypertable('idata_sc_180', 'idata_timestamp', chunk_time_interval => interval '86400 seconds');
+SELECT create_hypertable('idata_sc_other', 'idata_timestamp', chunk_time_interval => interval '86400 seconds');
 
 CREATE VIEW idata AS
    SELECT * FROM idata_sc_default
@@ -1138,12 +1138,12 @@ CREATE TABLE tdata_sc_other
    PRIMARY KEY(item_id,tdata_timestamp)
 ) TABLE_TYPE;
 
-SELECT create_hypertable('tdata_sc_default', 'tdata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds');
-SELECT create_hypertable('tdata_sc_7', 'tdata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds');
-SELECT create_hypertable('tdata_sc_30', 'tdata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds');
-SELECT create_hypertable('tdata_sc_90', 'tdata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds');
-SELECT create_hypertable('tdata_sc_180', 'tdata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds');
-SELECT create_hypertable('tdata_sc_other', 'tdata_timestamp', 'item_id', chunk_time_interval => interval '86400 seconds');
+SELECT create_hypertable('tdata_sc_default', 'tdata_timestamp', chunk_time_interval => interval '86400 seconds');
+SELECT create_hypertable('tdata_sc_7', 'tdata_timestamp', chunk_time_interval => interval '86400 seconds');
+SELECT create_hypertable('tdata_sc_30', 'tdata_timestamp', chunk_time_interval => interval '86400 seconds');
+SELECT create_hypertable('tdata_sc_90', 'tdata_timestamp', chunk_time_interval => interval '86400 seconds');
+SELECT create_hypertable('tdata_sc_180', 'tdata_timestamp', chunk_time_interval => interval '86400 seconds');
+SELECT create_hypertable('tdata_sc_other', 'tdata_timestamp', chunk_time_interval => interval '86400 seconds');
 
 CREATE VIEW tdata AS
    SELECT * FROM tdata_sc_default
