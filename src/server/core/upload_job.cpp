@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@
 **/
 
 #include "nxcore.h"
+
+#define DEBUG_TAG _T("file.upload")
 
 /**
  * Static members
@@ -43,17 +45,17 @@ static void ScheduledFileUpload(const shared_ptr<ScheduledTaskParameters>& param
          if (!AddJob(job))
          {
             delete job;
-            DbgPrintf(4, _T("ScheduledUploadFile: Failed to add job(incorrect parameters or no such object)."));
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("ScheduledUploadFile: Failed to add job (incorrect parameters or no such object)."));
          }
       }
       else
       {
-         DbgPrintf(4, _T("ScheduledUploadFile: Access to node %s denied"), object->getName());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ScheduledUploadFile: Access to node %s denied"), object->getName());
       }
    }
    else
    {
-      DbgPrintf(4, _T("ScheduledUploadFile: Node with id=\'%d\' not found"), parameters->m_userId);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ScheduledUploadFile: Node with id=\'%d\' not found"), parameters->m_userId);
    }
 }
 
@@ -93,15 +95,15 @@ FileUploadJob::FileUploadJob(const shared_ptr<Node>& node, const TCHAR *localFil
 FileUploadJob::FileUploadJob(const TCHAR *params, const shared_ptr<Node>& node, uint32_t userId)
               : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node, userId, false)
 {
-   m_localFile = NULL;
-   m_localFileFullPath = NULL;
-   m_remoteFile = NULL;
-   m_info = NULL;
+   m_localFile = nullptr;
+   m_localFileFullPath = nullptr;
+   m_remoteFile = nullptr;
+   m_info = nullptr;
 
    StringList fileList(params, _T(","));
    if (fileList.size() < 2)
    {
-      nxlog_debug(4, _T("FileUploadJob: invalid job parameters \"%s\" (nodeId=%d, userId=%d)"), params, node->getId(), userId);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileUploadJob: invalid job parameters \"%s\" (nodeId=%d, userId=%d)"), params, node->getId(), userId);
       invalidate();
       return;
    }
@@ -139,16 +141,13 @@ FileUploadJob::~FileUploadJob()
  */
 void FileUploadJob::setLocalFileFullPath()
 {
-   int nLen;
    TCHAR fullPath[MAX_PATH];
-
-   // Create full path to the file store
    _tcscpy(fullPath, g_netxmsdDataDir);
    _tcscat(fullPath, DDIR_FILES);
    _tcscat(fullPath, FS_PATH_SEPARATOR);
-   nLen = (int)_tcslen(fullPath);
-   _tcslcpy(&fullPath[nLen], GetCleanFileName(m_localFile), MAX_PATH - nLen);
-   m_localFileFullPath = _tcsdup(fullPath);
+   size_t len = _tcslen(fullPath);
+   _tcslcpy(&fullPath[len], GetCleanFileName(m_localFile), MAX_PATH - len);
+   m_localFileFullPath = MemCopyString(fullPath);
 }
 
 /**
@@ -156,7 +155,7 @@ void FileUploadJob::setLocalFileFullPath()
  */
 ServerJobResult FileUploadJob::run()
 {
-	ServerJobResult success = JOB_RESULT_FAILED;
+	ServerJobResult result = JOB_RESULT_FAILED;
 
 	while(true)
 	{
@@ -174,11 +173,11 @@ ServerJobResult FileUploadJob::run()
 	shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*m_object).createAgentConnection();
 	if (conn != nullptr)
 	{
-		m_fileSize = (INT64)FileSize(m_localFileFullPath);
-		UINT32 rcc = conn->uploadFile(m_localFileFullPath, m_remoteFile, false, uploadCallback, this, NXCP_STREAM_COMPRESSION_DEFLATE);
+		m_fileSize = FileSize(m_localFileFullPath);
+		uint32_t rcc = conn->uploadFile(m_localFileFullPath, m_remoteFile, false, uploadCallback, this, NXCP_STREAM_COMPRESSION_DEFLATE);
 		if (rcc == ERR_SUCCESS)
 		{
-			success = JOB_RESULT_SUCCESS;
+			result = JOB_RESULT_SUCCESS;
 		}
 		else
 		{
@@ -194,15 +193,15 @@ ServerJobResult FileUploadJob::run()
 	m_activeJobs--;
 	MutexUnlock(m_sharedDataMutex);
 
-   if(success == JOB_RESULT_FAILED && m_retryCount-- > 0)
+   if ((result == JOB_RESULT_FAILED) && (m_retryCount-- > 0))
    {
       TCHAR description[256];
-      _sntprintf(description, 256, _T("File upload failed. Wainting %d minutes to restart job."), getRetryDelay() / 60);
+      _sntprintf(description, 256, _T("File upload failed. Waiting %d minutes to restart job."), getRetryDelay() / 60);
       setDescription(description);
-      success = JOB_RESULT_RESCHEDULE;
+      result = JOB_RESULT_RESCHEDULE;
    }
 
-	return success;
+	return result;
 }
 
 /**
@@ -210,10 +209,10 @@ ServerJobResult FileUploadJob::run()
  */
 void FileUploadJob::uploadCallback(INT64 size, void *arg)
 {
-	if (((FileUploadJob *)arg)->m_fileSize > 0)
-		((FileUploadJob *)arg)->markProgress((int)(size * _LL(100) / ((FileUploadJob *)arg)->m_fileSize));
+	if (static_cast<FileUploadJob*>(arg)->m_fileSize > 0)
+	   static_cast<FileUploadJob*>(arg)->markProgress((int)(size * _LL(100) / static_cast<FileUploadJob*>(arg)->m_fileSize));
 	else
-		((FileUploadJob *)arg)->markProgress(100);
+	   static_cast<FileUploadJob*>(arg)->markProgress(100);
 }
 
 /**
@@ -239,10 +238,10 @@ const String FileUploadJob::serializeParameters()
 }
 
 /**
- * Schedules repeated execution
+ * Schedule another attempt for job execution
  */
 void FileUploadJob::rescheduleExecution()
 {
-   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), nullptr,
-            0, m_objectId, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);//TODO: change to correct user
+   AddOneTimeScheduledTask(_T("Upload.File"), time(nullptr) + getRetryDelay(), serializeParameters(), nullptr,
+            getUserId(), m_objectId, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
 }
