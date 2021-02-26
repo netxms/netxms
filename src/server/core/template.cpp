@@ -375,7 +375,7 @@ void Template::forceDeployPolicies(const shared_ptr<Node>& target)
    for (int i = 0; i < m_policyList->size(); i++)
    {
       GenericAgentPolicy *object = m_policyList->get(i);
-      auto data = make_shared<AgentPolicyDeploymentData>(target->getAgentConnection(), target, target->isNewPolicyTypeFormatSupported());
+      auto data = make_shared<AgentPolicyDeploymentData>(target, target->isNewPolicyTypeFormatSupported());
       data->forceInstall = true;
       _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), target->getName(), target->getId(), getName(), object->getName());
       ThreadPoolExecute(g_agentConnectionThreadPool, object, &GenericAgentPolicy::deploy, data);
@@ -531,7 +531,7 @@ void Template::removeAllPolicies(Node *node)
    for (int i = 0; i < m_policyList->size(); i++)
    {
       GenericAgentPolicy *policy = m_policyList->get(i);
-      auto data = make_shared<AgentPolicyRemovalData>(node->getAgentConnection(), policy->getGuid(), policy->getType(), node->isNewPolicyTypeFormatSupported());
+      auto data = make_shared<AgentPolicyRemovalData>(node->self(), policy->getGuid(), policy->getType(), node->isNewPolicyTypeFormatSupported());
       _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), getName(), policy->getName());
       ThreadPoolExecute(g_agentConnectionThreadPool, RemoveAgentPolicy, data);
    }
@@ -661,41 +661,45 @@ uuid Template::updatePolicyFromMessage(const NXCPMessage& request)
  */
 bool Template::removePolicy(const uuid& guid)
 {
-   lockProperties();
    bool success = false;
    shared_ptr<GenericAgentPolicy> policy;
+
+   lockProperties();
    for (int i = 0; i < m_policyList->size(); i++)
    {
       if (m_policyList->get(i)->getGuid().equals(guid))
       {
          policy = m_policyList->getShared(i);
+         m_deletedPolicyList->add(policy);
          m_policyList->remove(i);
          break;
       }
    }
+   unlockProperties();
+
    if (policy != nullptr)
    {
       readLockChildList();
       for(int i = 0; i < getChildList().size(); i++)
       {
-         NetObj *object = getChildList().get(i);
+         shared_ptr<NetObj> object = getChildList().getShared(i);
          if (object->getObjectClass() == OBJECT_NODE)
          {
-            auto data = make_shared<AgentPolicyRemovalData>(static_cast<Node*>(object)->getAgentConnection(), policy->getGuid(), policy->getType(), static_cast<Node*>(object)->isNewPolicyTypeFormatSupported());
+            auto data = make_shared<AgentPolicyRemovalData>(static_pointer_cast<Node>(object), policy->getGuid(), policy->getType(), static_cast<Node*>(object.get())->isNewPolicyTypeFormatSupported());
             _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), object->getName(), object->getId(), getName(), policy->getName());
             ThreadPoolExecute(g_agentConnectionThreadPool, RemoveAgentPolicy, data);
          }
       }
       unlockChildList();
 
-      m_deletedPolicyList->add(policy);
       updateVersion();
 
       NotifyClientsOnPolicyDelete(guid, *this);
       setModified(MODIFY_POLICY, false);
+
       success = true;
    }
-   unlockProperties();
+
    return success;
 }
 
@@ -752,7 +756,7 @@ void Template::forceApplyPolicyChanges()
          for (int i = 0; i < m_policyList->size(); i++)
          {
             const shared_ptr<GenericAgentPolicy>& policy = m_policyList->getShared(i);
-            auto data = make_shared<AgentPolicyDeploymentData>(node->getAgentConnection(), node, node->isNewPolicyTypeFormatSupported());
+            auto data = make_shared<AgentPolicyDeploymentData>(node, node->isNewPolicyTypeFormatSupported());
             data->forceInstall = true;
             _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), getName(), policy->getName());
             ThreadPoolExecute(g_agentConnectionThreadPool, policy, &GenericAgentPolicy::deploy, data);
@@ -767,15 +771,14 @@ void Template::forceApplyPolicyChanges()
  */
 void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyInfo *ap)
 {
-   shared_ptr<AgentConnectionEx> conn = node->getAgentConnection();
-   if (conn == nullptr)
+   if (node->getAgentConnection() == nullptr)
       return;
 
    lockProperties();
    for (int i = 0; i < m_policyList->size(); i++)
    {
       shared_ptr<GenericAgentPolicy> policy = m_policyList->getShared(i);
-      auto data = make_shared<AgentPolicyDeploymentData>(conn, node, node->isNewPolicyTypeFormatSupported());
+      auto data = make_shared<AgentPolicyDeploymentData>(node, node->isNewPolicyTypeFormatSupported());
       data->forceInstall = true;
 
       int j;
