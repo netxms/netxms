@@ -267,7 +267,7 @@ void ServerJob::fillMessage(NXCPMessage *msg)
 	msg->setField(VID_JOB_STATUS, (WORD)m_status);
 	msg->setField(VID_JOB_PROGRESS, (WORD)m_progress);
 	if (m_status == JOB_FAILED)
-		msg->setField(VID_FAILURE_MESSAGE, (m_failureMessage != NULL) ? m_failureMessage : _T("Internal error"));
+		msg->setField(VID_FAILURE_MESSAGE, (m_failureMessage != nullptr) ? m_failureMessage : _T("Internal error"));
 	else
 		msg->setField(VID_FAILURE_MESSAGE, CHECK_NULL_EX(m_failureMessage));
 }
@@ -289,7 +289,7 @@ const String ServerJob::serializeParameters()
 }
 
 /**
- * Schedules execution in 10 minutes
+ * Schedule another attempt for job execution
  */
 void ServerJob::rescheduleExecution()
 {
