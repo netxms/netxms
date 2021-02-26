@@ -976,6 +976,7 @@ CREATE TABLE raw_dci_values
   raw_value varchar(255) null,
   transformed_value varchar(255) null,
   last_poll_time integer not null,
+  cache_timestamp integer not null,
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -55,6 +55,7 @@ struct DELAYED_RAW_DATA_UPDATE
 {
    UT_hash_handle hh;
    time_t timestamp;
+   time_t cacheTimestamp;
    uint32_t dciId;
    bool deleteFlag;
    TCHAR rawValue[MAX_RESULT_LENGTH];
@@ -253,7 +254,7 @@ void QueueIDataInsert(time_t timestamp, uint32_t nodeId, uint32_t dciId, const T
 /**
  * Queue UPDATE request for raw_dci_values table
  */
-void QueueRawDciDataUpdate(time_t timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue)
+void QueueRawDciDataUpdate(time_t timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, time_t cacheTimestamp)
 {
    s_rawDataWriterLock.lock();
    DELAYED_RAW_DATA_UPDATE *rq;
@@ -266,6 +267,7 @@ void QueueRawDciDataUpdate(time_t timestamp, uint32_t dciId, const TCHAR *rawVal
       HASH_ADD_INT(s_rawDataWriterQueue, dciId, rq);
    }
 	rq->timestamp = timestamp;
+	rq->cacheTimestamp = cacheTimestamp;
 	_tcslcpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
 	_tcslcpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
    g_rawDataWriteRequests++;
@@ -682,7 +684,7 @@ static void SaveRawData(int maxRecords)
 {
    s_rawDataWriterLock.lock();
    DELAYED_RAW_DATA_UPDATE *batch = s_rawDataWriterQueue;
-   s_rawDataWriterQueue = NULL;
+   s_rawDataWriterQueue = nullptr;
    s_rawDataWriterLock.unlock();
 
    s_batchSize = HASH_COUNT(batch);
@@ -696,10 +698,10 @@ static void SaveRawData(int maxRecords)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    if (DBBegin(hdb))
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE raw_dci_values SET raw_value=?,transformed_value=?,last_poll_time=? WHERE item_id=?"), true);
-      if (hStmt != NULL)
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE raw_dci_values SET raw_value=?,transformed_value=?,last_poll_time=?,cache_timestamp=? WHERE item_id=?"), true);
+      if (hStmt != nullptr)
       {
-         DB_STATEMENT hDeleteStmt = NULL;
+         DB_STATEMENT hDeleteStmt = nullptr;
          int count = 0;
 
          DELAYED_RAW_DATA_UPDATE *rq, *tmp;
@@ -708,9 +710,9 @@ static void SaveRawData(int maxRecords)
             bool success = false;
             if (rq->deleteFlag)
             {
-               if (hDeleteStmt == NULL)
+               if (hDeleteStmt == nullptr)
                   hDeleteStmt = DBPrepare(hdb, _T("DELETE FROM raw_dci_values WHERE item_id=?"), true);
-               if (hDeleteStmt != NULL)
+               if (hDeleteStmt != nullptr)
                {
                   DBBind(hDeleteStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
                   success = DBExecute(hDeleteStmt);
@@ -720,8 +722,9 @@ static void SaveRawData(int maxRecords)
             {
                DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
                DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
-               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, rq->dciId);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(rq->timestamp));
+               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>(rq->cacheTimestamp));
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, rq->dciId);
                success = DBExecute(hStmt);
             }
 
@@ -729,7 +732,7 @@ static void SaveRawData(int maxRecords)
                break;
 
             HASH_DEL(batch, rq);
-            free(rq);
+            MemFree(rq);
             s_batchSize--;
 
             count++;
@@ -742,7 +745,7 @@ static void SaveRawData(int maxRecords)
             }
          }
          DBFreeStatement(hStmt);
-         if (hDeleteStmt != NULL)
+         if (hDeleteStmt != nullptr)
             DBFreeStatement(hDeleteStmt);
       }
       DBCommit(hdb);
