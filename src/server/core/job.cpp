@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,9 +23,10 @@
 #include "nxcore.h"
 #include <math.h>
 
-
-
-static VolatileCounter s_id = 0;
+/**
+ * Last used job ID
+ */
+static VolatileCounter s_lastUsedJobId = 0;
 
 /**
  * Unregister job
@@ -37,7 +38,7 @@ void UnregisterJob(uint32_t jobId);
  */
 ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, const shared_ptr<NetObj>& object, UINT32 userId, bool createOnHold, int retryCount) : m_object(object)
 {
-   m_id = InterlockedIncrement(&s_id);
+   m_id = InterlockedIncrement(&s_lastUsedJobId);
 	m_userId = userId;
 	m_objectId = (object != nullptr) ? object->getId() : 0;
 	_tcslcpy(m_type, CHECK_NULL(type), MAX_JOB_NAME_LEN);
