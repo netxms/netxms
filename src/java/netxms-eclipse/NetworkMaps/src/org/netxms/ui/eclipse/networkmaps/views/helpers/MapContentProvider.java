@@ -87,18 +87,15 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 		{
 			synchronized(cachedDciValues)
 			{
-				for(Entry<Long, DciValue[]> e : cachedDciValues.entrySet())
-				{
-					try
-					{
-						DciValue[] values = session.getLastValues(e.getKey(), true, false, false);
-						cachedDciValues.put(e.getKey(), values);
-					}
-					catch(Exception e2)
-					{
-						e2.printStackTrace();	// for debug
-					}
-				}
+			   try 
+			   {
+			      if(cachedDciValues.size() > 0)
+			         cachedDciValues.putAll(session.getTooltipLastValues(cachedDciValues.keySet()));
+			   }
+            catch(Exception e2)
+            {
+               e2.printStackTrace();   // for debug
+            }
 				display.asyncExec(new Runnable() {
 					@Override
 					public void run()

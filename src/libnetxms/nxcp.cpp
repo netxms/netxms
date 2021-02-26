@@ -470,7 +470,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_DELETE_SSH_KEY"),
       _T("CMD_UPDATE_SSH_KEYS"),
       _T("CMD_GENERATE_SSH_KEYS"),
-      _T("CMD_GET_SSH_KEYS")
+      _T("CMD_GET_SSH_KEYS"),
+      _T("CMD_GET_TOOLTIP_LAST_VALUES")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -483,7 +484,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_SSH_KEYS))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_TOOLTIP_LAST_VALUES))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

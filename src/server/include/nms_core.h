@@ -625,6 +625,7 @@ private:
    void changeDCIStatus(NXCPMessage *pRequest);
    void getLastValues(NXCPMessage *pRequest);
    void getLastValuesByDciId(NXCPMessage *pRequest);
+   void getTooltipLastValues(NXCPMessage *request);
    void getTableLastValue(NXCPMessage *request);
    void getLastValue(NXCPMessage *request);
    void getActiveThresholds(NXCPMessage *pRequest);

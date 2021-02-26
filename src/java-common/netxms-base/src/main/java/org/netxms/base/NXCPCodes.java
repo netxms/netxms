@@ -442,6 +442,7 @@ public class NXCPCodes
    public static final int CMD_UPDATE_SSH_KEYS = 0x01A9;
    public static final int CMD_GENERATE_SSH_KEYS = 0x01AA;
    public static final int CMD_GET_SSH_KEYS = 0x01AB;
+   public static final int CMD_GET_TOOLTIP_LAST_VALUES = 0x01AC;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

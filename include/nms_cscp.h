@@ -664,6 +664,7 @@ typedef struct
 #define CMD_UPDATE_SSH_KEYS               0x01A9
 #define CMD_GENERATE_SSH_KEYS             0x01AA
 #define CMD_GET_SSH_KEYS                  0x01AB
+#define CMD_GET_TOOLTIP_LAST_VALUES       0x01AC
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
