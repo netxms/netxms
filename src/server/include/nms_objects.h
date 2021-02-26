@@ -2185,6 +2185,7 @@ public:
    void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
    UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId);
    double getProxyLoadFactor() const { return m_proxyLoadFactor.load(); }
+   void getTooltipLastValues(NXCPMessage &msg, uint32_t userId, uint32_t *index);
 
    void updateDciCache();
    void updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId = 0);

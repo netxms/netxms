@@ -2484,6 +2484,37 @@ UINT32 DataCollectionTarget::getLastValues(NXCPMessage *msg, bool objectTooltipO
 }
 
 /**
+ * Get last (current) DCI values that should be shown on tooltip
+ */
+void DataCollectionTarget::getTooltipLastValues(NXCPMessage &msg, uint32_t userId, uint32_t *index)
+{
+   readLockDciAccess();
+
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *object = m_dcObjects->get(i);
+      if (object->hasValue() && object->isShowOnObjectTooltip() &&
+          object->hasAccess(userId))
+      {
+         if (object->getType() == DCO_TYPE_ITEM)
+         {
+            msg.setField(*index + 1, object->getId());
+            msg.setField(*index + 2, CHECK_NULL_EX(((DCItem *)object)->getLastValue()));
+            msg.setField(*index + 3, ((DCItem *)object)->getDataType());
+            msg.setField(*index + 4, static_cast<INT16>(object->getStatus()));
+            msg.setField(*index + 5, getId());
+            msg.setField(*index + 6, static_cast<INT16>(object->getDataSource()));
+            msg.setField(*index + 7, object->getName());
+            msg.setField(*index + 8, object->getDescription());
+            msg.setField(*index + 9, ((DCItem *)object)->getThresholdSeverity());
+            *index += 10;
+         }
+      }
+   }
+   unlockDciAccess();
+}
+
+/**
  * Hook for data collection load
  */
 void DataCollectionTarget::onDataCollectionLoad()

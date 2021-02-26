@@ -1155,6 +1155,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_DCI_VALUES:
          getLastValuesByDciId(request);
          break;
+      case CMD_GET_TOOLTIP_LAST_VALUES:
+         getTooltipLastValues(request);
+         break;
       case CMD_GET_TABLE_LAST_VALUE:
          getTableLastValue(request);
          break;
@@ -5204,6 +5207,39 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
    }
 
    msg.setField(VID_NUM_ITEMS, (outgoingIndex - VID_DCI_VALUES_BASE) / 10);
+   msg.setField(VID_RCC, RCC_SUCCESS);
+
+   sendMessage(&msg);
+}
+
+/**
+ * Send tooltip visible latest collected values for all nodes
+ * Error message will never be returned. Will be returned only
+ * possible DCI values.
+ */
+void ClientSession::getTooltipLastValues(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   IntegerArray<uint32_t> nodes;
+   request->getFieldAsInt32Array(VID_OBJECT_LIST, &nodes);
+   uint32_t index = VID_DCI_VALUES_BASE;
+   for(int i = 0; i < nodes.size(); i++)
+   {
+      shared_ptr<NetObj> object = FindObjectById(nodes.get(i));
+      if (object != nullptr)
+      {
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+            if (object->isDataCollectionTarget())
+            {
+               static_cast<DataCollectionTarget&>(*object).getTooltipLastValues(msg, m_dwUserId, &index);
+            }
+         }
+      }
+   }
+
+   msg.setField(VID_NUM_ITEMS, (index - VID_DCI_VALUES_BASE) / 10);
    msg.setField(VID_RCC, RCC_SUCCESS);
 
    sendMessage(&msg);

@@ -4944,6 +4944,49 @@ public class NXCSession
    {
       return getLastValues(nodeId, false, false, false);
    }
+   
+   /**
+    * Get tooltip last values for all objects 
+    * 
+    * @param nodeList list of node IDs
+    * @return map with node id to DCI last values
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Map<Long, DciValue[]> getTooltipLastValues(Set<Long> nodeList) throws IOException, NXCException
+   {
+      Map<Long, DciValue[]> cachedDciValues = new HashMap<Long, DciValue[]>();
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_TOOLTIP_LAST_VALUES);
+      msg.setField(NXCPCodes.VID_OBJECT_LIST, nodeList.toArray(new Long[nodeList.size()]));
+      sendMessage(msg);
+
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
+      long base = NXCPCodes.VID_DCI_VALUES_BASE;
+      List<DciValue> values = null;
+      Long nodeId = 0L;
+      for (int i = 0; i < count; i++, base += 10)
+      {
+         DciValue v = (DciValue)new SimpleDciValue(response, base);
+         if(nodeId != v.getNodeId())
+         {
+            if (nodeId != 0)
+            {
+               cachedDciValues.put(nodeId, values.toArray(new DciValue[values.size()]));
+            }
+            values = new ArrayList<DciValue>();
+            nodeId = v.getNodeId();
+         }
+         values.add(v);
+         
+      }
+      if (nodeId != 0)
+      {
+         cachedDciValues.put(nodeId, values.toArray(new DciValue[values.size()]));
+      }
+      return cachedDciValues;
+   }
 
    /**
     * Get last DCI values for given Map DCI Instance list
