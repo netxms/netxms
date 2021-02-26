@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,8 +34,8 @@
 /**
  * Static data
  */
-static AbstractIndexWithDestructor<ServerJobQueue> s_jobQueues(Ownership::True);
 static AbstractIndex<ServerJobQueue> s_jobQueueIndex(Ownership::False);
+static AbstractIndexWithDestructor<ServerJobQueue> s_jobQueues(Ownership::True);
 static Mutex s_indexLock;
 
 /**
