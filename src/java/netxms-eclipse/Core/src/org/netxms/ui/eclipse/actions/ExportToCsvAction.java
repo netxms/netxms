@@ -19,7 +19,8 @@
 package org.netxms.ui.eclipse.actions;
 
 import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -103,10 +104,10 @@ public class ExportToCsvAction extends Action
 	{
 		this(viewPart, null, viewerProvider, selectionOnly);
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.action.Action#run()
-	 */
+
+   /**
+    * @see org.eclipse.jface.action.Action#run()
+    */
 	@Override
 	public void run()
 	{
@@ -163,12 +164,12 @@ public class ExportToCsvAction extends Action
 				}
 			}
 		}
-		
+
 		new ConsoleJob(String.format(Messages.get().ExportToCsvAction_SaveTo, fileName), viewPart, Activator.PLUGIN_ID, null) { //$NON-NLS-1$
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				BufferedWriter out = new BufferedWriter(new FileWriter(fileName));
+            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8"));
 				for(String[] row : data)
 				{
 					for(int i = 0; i < row.length; i++)
@@ -183,7 +184,7 @@ public class ExportToCsvAction extends Action
 				}
 				out.close();
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
