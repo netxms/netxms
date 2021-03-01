@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,8 @@
 package org.netxms.nxmc.base.actions;
 
 import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -49,7 +50,7 @@ public class ExportToCsvAction extends Action
 	private ColumnViewer viewer;
 	private ViewerProvider viewerProvider;
 	private boolean selectionOnly;
-	
+
 	/**
 	 * Create "Export to CSV" action attached to handler service
 	 * 
@@ -69,7 +70,7 @@ public class ExportToCsvAction extends Action
 		this.viewerProvider = viewerProvider;
 		this.selectionOnly = selectionOnly;
 	}
-	
+
 	/**
 	 * Create "Export to CSV" action attached to handler service
 	 * 
@@ -93,7 +94,7 @@ public class ExportToCsvAction extends Action
 	{
       this(view, null, viewerProvider, selectionOnly);
 	}
-	
+
    /**
     * @see org.eclipse.jface.action.Action#run()
     */
@@ -153,12 +154,12 @@ public class ExportToCsvAction extends Action
 				}
 			}
 		}
-		
+
       new Job(String.format(i18n.tr("Save data to CSV file %s"), fileName), view) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
-				BufferedWriter out = new BufferedWriter(new FileWriter(fileName));
+            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8"));
 				for(String[] row : data)
 				{
 					for(int i = 0; i < row.length; i++)
@@ -173,7 +174,7 @@ public class ExportToCsvAction extends Action
 				}
 				out.close();
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
