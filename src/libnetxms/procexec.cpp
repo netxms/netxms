@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -122,7 +122,8 @@ ProcessExecutor::~ProcessExecutor()
    ThreadJoin(m_outputThread);
    MemFree(m_cmd);
 #ifdef _WIN32
-   CloseHandle(m_phandle);
+   if (m_phandle != INVALID_HANDLE_VALUE)
+      CloseHandle(m_phandle);
 #endif
    ConditionDestroy(m_completed);
 }
@@ -183,6 +184,12 @@ bool ProcessExecutor::execute()
    }
    ConditionReset(m_completed);
 
+   if (m_phandle != INVALID_HANDLE_VALUE)
+   {
+      CloseHandle(m_phandle);
+      m_phandle = INVALID_HANDLE_VALUE;
+   }
+
    bool success = false;
 
 #ifdef _WIN32  /* Windows implementation */
@@ -229,7 +236,7 @@ bool ProcessExecutor::execute()
 
    StringBuffer cmdLine = m_shellExec ? _T("CMD.EXE /C ") : _T("");
    cmdLine.append(m_cmd);
-   if (CreateProcess(NULL, cmdLine.getBuffer(), NULL, NULL, TRUE, EXTENDED_STARTUPINFO_PRESENT, NULL, NULL, &si.StartupInfo, &pi))
+   if (CreateProcess(nullptr, cmdLine.getBuffer(), nullptr, nullptr, TRUE, EXTENDED_STARTUPINFO_PRESENT, nullptr, nullptr, &si.StartupInfo, &pi))
    {
       nxlog_debug(5, _T("ProcessExecutor::execute(): process \"%s\" started"), cmdLine.getBuffer());
 
@@ -505,7 +512,11 @@ void ProcessExecutor::stop()
 {
 #ifdef _WIN32
    if (m_phandle != INVALID_HANDLE_VALUE)
+   {
       TerminateProcess(m_phandle, 127);
+      CloseHandle(m_phandle);
+      m_phandle = INVALID_HANDLE_VALUE;
+   }
 #else
    if (m_pid != 0)
       kill(-m_pid, SIGKILL);  // kill all processes in group
