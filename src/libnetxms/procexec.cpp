@@ -184,20 +184,20 @@ bool ProcessExecutor::execute()
    }
    ConditionReset(m_completed);
 
+   bool success = false;
+
+#ifdef _WIN32  /* Windows implementation */
+
    if (m_phandle != INVALID_HANDLE_VALUE)
    {
       CloseHandle(m_phandle);
       m_phandle = INVALID_HANDLE_VALUE;
    }
 
-   bool success = false;
-
-#ifdef _WIN32  /* Windows implementation */
-
-	SECURITY_ATTRIBUTES sa;
-	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-	sa.lpSecurityDescriptor = nullptr;
-	sa.bInheritHandle = TRUE;
+   SECURITY_ATTRIBUTES sa;
+   sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+   sa.lpSecurityDescriptor = nullptr;
+   sa.bInheritHandle = TRUE;
 
    HANDLE stdoutRead, stdoutWrite;
    if (!CreatePipeEx(&stdoutRead, &stdoutWrite, true))
