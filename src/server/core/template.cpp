@@ -795,7 +795,8 @@ void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyIn
          }
       }
 
-      _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), getName(), policy->getName());
+      node->sendPollerMsg(_T("      Deploying policy %s from template %s\r\n"), policy->getName(), m_name);
+      _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), m_name, policy->getName());
       ThreadPoolExecute(g_agentConnectionThreadPool, policy, &GenericAgentPolicy::deploy, data);
    }
    unlockProperties();

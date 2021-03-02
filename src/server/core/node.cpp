@@ -3101,6 +3101,8 @@ NetworkPathCheckResult Node::checkNetworkPath(uint32_t requestId)
  */
 void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
 {
+   sendPollerMsg(_T("   Checking agent policy deployment\r\n"));
+
    AgentPolicyInfo *ap;
    uint32_t rcc = conn->getPolicyInventory(&ap);
    if (rcc == ERR_SUCCESS)
@@ -3125,6 +3127,7 @@ void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
 
          if (!found)
          {
+            sendPollerMsg(_T("      Removing policy %s from agent\r\n"), guid.toString().cstr());
             auto data = make_shared<AgentPolicyRemovalData>(self(), guid, ap->getType(i), isNewPolicyTypeFormatSupported());
             _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), getName(), getId(), _T("unknown"), guid.toString().cstr());
             ThreadPoolExecute(g_agentConnectionThreadPool, RemoveAgentPolicy, data);
@@ -3149,6 +3152,7 @@ void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
    }
    else
    {
+      sendPollerMsg(POLLER_WARNING _T("      Cannot get policy inventory form agent (%s)\r\n"), AgentErrorCodeToText(rcc));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): AgentConnection::getPolicyInventory() failed: rcc=%d"), m_name, rcc);
    }
 }
