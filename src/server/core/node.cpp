@@ -133,7 +133,7 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_snmpProxy = 0;
    m_eipProxy = 0;
    m_icmpProxy = 0;
-   memset(m_lastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
+   memset(m_lastEvents, 0, sizeof(m_lastEvents));
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
    m_routingTable = nullptr;
    m_arpCache = nullptr;
@@ -256,7 +256,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_snmpProxy = newNodeData->snmpProxyId;
    m_eipProxy = newNodeData->eipProxyId;
    m_icmpProxy = newNodeData->icmpProxyId;
-   memset(m_lastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
+   memset(m_lastEvents, 0, sizeof(m_lastEvents));
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
    m_isHidden = true;
    m_routingTable = nullptr;
@@ -2643,19 +2643,38 @@ restart_status_poll:
    }
 
    // Get geolocation
-   if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
+   if (!(m_state & DCSF_UNREACHABLE))
    {
-      TCHAR buffer[MAX_RESULT_LENGTH];
-      if (getMetricFromAgent(_T("GPS.LocationData"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
+      bool geoLocationRetrieved = false;
+      if (isNativeAgent())
       {
-         GeoLocation location = GeoLocation::parseAgentData(buffer);
-         if (location.getType() != GL_UNSET)
+         TCHAR buffer[MAX_RESULT_LENGTH];
+         if (getMetricFromAgent(_T("GPS.LocationData"), buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
          {
-            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): location set to %s, %s from agent"), m_name, m_id, location.getLatitudeAsString(), location.getLongitudeAsString());
-            setGeoLocation(location);
+            GeoLocation location = GeoLocation::parseAgentData(buffer);
+            if (location.getType() != GL_UNSET)
+            {
+               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): location set to %s, %s from agent"), m_name, m_id, location.getLatitudeAsString(), location.getLongitudeAsString());
+               setGeoLocation(location);
+               geoLocationRetrieved = true;
+            }
          }
       }
-      else
+      if (!geoLocationRetrieved && isSNMPSupported() && (m_driver != nullptr))
+      {
+         SNMP_Transport *transport = createSnmpTransport();
+         if (transport != nullptr)
+         {
+            GeoLocation location = m_driver->getGeoLocation(transport, this, m_driverData);
+            if (location.getType() != GL_UNSET)
+            {
+               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): location set to %s, %s from SNMP device driver"), m_name, m_id, location.getLatitudeAsString(), location.getLongitudeAsString());
+               setGeoLocation(location);
+               geoLocationRetrieved = true;
+            }
+         }
+      }
+      if (!geoLocationRetrieved)
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get system location"), m_name, m_id);
       }

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Westerstrand clocks
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -90,25 +90,82 @@ bool WesterstrandDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *n
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.25281.100.1.2.0")));  // Firmware version
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   uint32_t rc;
+   if ((rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3)) != SNMP_ERR_SUCCESS)
    {
-      TCHAR buffer[256];
-
-      SNMP_Variable *v = response->getVariable(0);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-      {
-         _tcslcpy(hwInfo->productName, v->getValueAsString(buffer, 256), 128);
-      }
-
-      v = response->getVariable(1);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-      {
-         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-      }
-
-      delete response;
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getHardwareInformation(%s): SNMP failure (%s)"), node->getName(), SNMPGetErrorText(rc));
+      return false;
    }
+
+   TCHAR buffer[256];
+
+   SNMP_Variable *v = response->getVariable(0);
+   if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+   {
+      _tcslcpy(hwInfo->productName, v->getValueAsString(buffer, 256), 128);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getHardwareInformation(%s): retrieved product name \"%s\""), node->getName(), buffer);
+   }
+
+   v = response->getVariable(1);
+   if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+   {
+      _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getHardwareInformation(%s): retrieved product version \"%s\""), node->getName(), buffer);
+   }
+
+   delete response;
    return true;
+}
+
+/**
+ * Get device geographical location.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @return device geographical location or "UNSET" type location object
+ */
+GeoLocation WesterstrandDriver::getGeoLocation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.25281.130.10.8.5.0")));  // Latitude
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.25281.130.10.8.6.0")));  // Longitude
+
+   SNMP_PDU *response;
+   uint32_t rc;
+   if ((rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3)) != SNMP_ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getGeoLocation(%s): SNMP failure (%s)"), node->getName(), SNMPGetErrorText(rc));
+      return GeoLocation();
+   }
+
+   double lat, lon;
+   bool vlat = false, vlon = false;
+   TCHAR buffer[256];
+
+   SNMP_Variable *v = response->getVariable(0);
+   if ((v != nullptr) && (v->getType() != ASN_NULL))
+   {
+      TCHAR *eptr;
+      lat = _tcstod(v->getValueAsString(buffer, 256), &eptr);
+      if (*eptr == 0)
+         vlat = true;
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getGeoLocation(%s): got latitude \"%s\" (%s number)"), node->getName(), buffer, vlat ? _T("valid") : _T("invalid"));
+   }
+
+   v = response->getVariable(1);
+   if ((v != nullptr) && (v->getType() != ASN_NULL))
+   {
+      TCHAR *eptr;
+      lon = _tcstod(v->getValueAsString(buffer, 256), &eptr);
+      if (*eptr == 0)
+         vlon = true;
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getGeoLocation(%s): got longitude \"%s\" (%s number)"), node->getName(), buffer, vlat ? _T("valid") : _T("invalid"));
+   }
+
+   delete response;
+
+   return (vlat && vlon) ? GeoLocation(GL_MANUAL, lat, lon) : GeoLocation();
 }
 
 /**
