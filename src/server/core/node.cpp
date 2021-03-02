@@ -2672,6 +2672,7 @@ restart_status_poll:
                setGeoLocation(location);
                geoLocationRetrieved = true;
             }
+            delete transport;
          }
       }
       if (!geoLocationRetrieved)
