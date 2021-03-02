@@ -573,11 +573,20 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
 }
 
 /**
+ * Get current time in milliseconds
+ */
+int F_GetCurrentTimeMs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   *result = vm->createValue(GetCurrentTimeMs());
+   return 0;
+}
+
+/**
  * Get current time
  */
-int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_time(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   *ppResult = vm->createValue((UINT32)time(NULL));
+   *result = vm->createValue(static_cast<int64_t>(time(nullptr)));
    return 0;
 }
 
