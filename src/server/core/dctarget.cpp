@@ -1980,38 +1980,41 @@ static bool TemplateSelectionFilter(NetObj *object, void *userData)
 }
 
 /**
- * Apply user templates
+ * Apply templates
  */
-void DataCollectionTarget::applyUserTemplates()
+void DataCollectionTarget::applyTemplates()
 {
    if (IsShutdownInProgress())
       return;
 
+   sendPollerMsg(_T("Processing template autoapply rules\r\n"));
    SharedObjectArray<NetObj> *templates = g_idxObjectById.getObjects(TemplateSelectionFilter);
    for(int i = 0; i < templates->size(); i++)
    {
-      Template *pTemplate = (Template *)templates->get(i);
-      AutoBindDecision decision = pTemplate->isApplicable(self());
+      Template *templateObject = static_cast<Template*>(templates->get(i));
+      AutoBindDecision decision = templateObject->isApplicable(self());
       if (decision == AutoBindDecision_Bind)
       {
-         if (!pTemplate->isDirectChild(m_id))
+         if (!templateObject->isDirectChild(m_id))
          {
-            nxlog_debug_tag(_T("obj.dc"), 4, _T("DataCollectionTarget::applyUserTemplates(): applying template %d \"%s\" to object %d \"%s\""),
-                      pTemplate->getId(), pTemplate->getName(), m_id, m_name);
-            pTemplate->applyToTarget(self());
-            PostSystemEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
+            sendPollerMsg(_T("   Applying template %s\r\n"), templateObject->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyUserTemplates(): applying template %d \"%s\" to object %d \"%s\""),
+                      templateObject->getId(), templateObject->getName(), m_id, m_name);
+            templateObject->applyToTarget(self());
+            PostSystemEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", m_id, m_name, templateObject->getId(), templateObject->getName());
          }
       }
       else if (decision == AutoBindDecision_Unbind)
       {
-         if (pTemplate->isAutoUnbindEnabled() && pTemplate->isDirectChild(m_id))
+         if (templateObject->isAutoUnbindEnabled() && templateObject->isDirectChild(m_id))
          {
-            nxlog_debug_tag(_T("obj.dc"), 4, _T("DataCollectionTarget::applyUserTemplates(): removing template %d \"%s\" from object %d \"%s\""),
-                      pTemplate->getId(), pTemplate->getName(), m_id, m_name);
-            pTemplate->deleteChild(*this);
-            deleteParent(*pTemplate);
-            pTemplate->queueRemoveFromTarget(m_id, true);
-            PostSystemEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
+            sendPollerMsg(_T("   Removing template %s\r\n"), templateObject->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyUserTemplates(): removing template %d \"%s\" from object %d \"%s\""),
+                      templateObject->getId(), templateObject->getName(), m_id, m_name);
+            templateObject->deleteChild(*this);
+            deleteParent(*templateObject);
+            templateObject->queueRemoveFromTarget(m_id, true);
+            PostSystemEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, templateObject->getId(), templateObject->getName());
          }
       }
    }
@@ -2034,33 +2037,36 @@ void DataCollectionTarget::updateContainerMembership()
    if (IsShutdownInProgress())
       return;
 
+   sendPollerMsg(_T("Processing container autobind rules\r\n"));
    SharedObjectArray<NetObj> *containers = g_idxObjectById.getObjects(ContainerSelectionFilter);
    for(int i = 0; i < containers->size(); i++)
    {
-      Container *pContainer = (Container *)containers->get(i);
-      AutoBindDecision decision = pContainer->isApplicable(self());
+      Container *container = static_cast<Container*>(containers->get(i));
+      AutoBindDecision decision = container->isApplicable(self());
       if (decision == AutoBindDecision_Bind)
       {
-         if (!pContainer->isDirectChild(m_id))
+         if (!container->isDirectChild(m_id))
          {
-            DbgPrintf(4, _T("DataCollectionTarget::updateContainerMembership(): binding object %d \"%s\" to container %d \"%s\""),
-                      m_id, m_name, pContainer->getId(), pContainer->getName());
-            pContainer->addChild(self());
-            addParent(pContainer->self());
-            PostSystemEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
-            pContainer->calculateCompoundStatus();
+            sendPollerMsg(_T("   Binding to container %s\r\n"), container->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): binding object %d \"%s\" to container %d \"%s\""),
+                      m_id, m_name, container->getId(), container->getName());
+            container->addChild(self());
+            addParent(container->self());
+            PostSystemEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", m_id, m_name, container->getId(), container->getName());
+            container->calculateCompoundStatus();
          }
       }
       else if (decision == AutoBindDecision_Unbind)
       {
-         if (pContainer->isAutoUnbindEnabled() && pContainer->isDirectChild(m_id))
+         if (container->isAutoUnbindEnabled() && container->isDirectChild(m_id))
          {
-            DbgPrintf(4, _T("DataCollectionTarget::updateContainerMembership(): removing object %d \"%s\" from container %d \"%s\""),
-                      m_id, m_name, pContainer->getId(), pContainer->getName());
-            pContainer->deleteChild(*this);
-            deleteParent(*pContainer);
-            PostSystemEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
-            pContainer->calculateCompoundStatus();
+            sendPollerMsg(_T("   Removing from container %s\r\n"), container->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): removing object %d \"%s\" from container %d \"%s\""),
+                      m_id, m_name, container->getId(), container->getName());
+            container->deleteChild(*this);
+            deleteParent(*container);
+            PostSystemEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_id, m_name, container->getId(), container->getName());
+            container->calculateCompoundStatus();
          }
       }
    }
@@ -2180,16 +2186,17 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
    }
 
    m_pollRequestor = session;
+   m_pollRequestId = requestId;
 
    if (m_status == STATUS_UNMANAGED)
    {
-      sendPollerMsg(requestId, POLLER_WARNING _T("%s %s is unmanaged, instance discovery  poll aborted\r\n"), getObjectClassName(), m_name);
+      sendPollerMsg(POLLER_WARNING _T("%s %s is unmanaged, instance discovery  poll aborted\r\n"), getObjectClassName(), m_name);
       nxlog_debug(5, _T("%s %s [%u] is unmanaged, instance discovery poll aborted"), getObjectClassName(), m_name, m_id);
       pollerUnlock();
       return;
    }
 
-   sendPollerMsg(requestId, _T("Starting instance discovery poll for %s %s\r\n"), getObjectClassName(), m_name);
+   sendPollerMsg(_T("Starting instance discovery poll for %s %s\r\n"), getObjectClassName(), m_name);
    DbgPrintf(4, _T("Starting instance discovery poll for %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
 
    // Check if DataCollectionTarget is marked as unreachable
@@ -2207,7 +2214,7 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
    }
    else
    {
-      sendPollerMsg(requestId, POLLER_WARNING _T("%s is marked as unreachable, instance discovery poll aborted\r\n"), getObjectClassName());
+      sendPollerMsg(POLLER_WARNING _T("%s is marked as unreachable, instance discovery poll aborted\r\n"), getObjectClassName());
       DbgPrintf(4, _T("%s is marked as unreachable, instance discovery poll aborted"), getObjectClassName());
    }
 
@@ -2244,7 +2251,7 @@ if (g_flags & AF_SHUTDOWN) \
  */
 void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
 {
-   sendPollerMsg(requestId, _T("Running DCI instance discovery\r\n"));
+   sendPollerMsg(_T("Running DCI instance discovery\r\n"));
 
    // collect instance discovery DCIs
    SharedObjectArray<DCObject> rootObjects;
@@ -2268,7 +2275,7 @@ void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
       DCObject *object = rootObjects.get(i);
       DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): Updating instances for instance discovery DCO %s [%d]"),
                 m_name, m_id, object->getName().cstr(), object->getId());
-      sendPollerMsg(requestId, _T("   Updating instances for %s [%d]\r\n"), object->getName().cstr(), object->getId());
+      sendPollerMsg(_T("   Updating instances for %s [%d]\r\n"), object->getName().cstr(), object->getId());
       StringMap *instances = getInstanceList(object);
       INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT;
       if (instances != nullptr)
@@ -2285,7 +2292,7 @@ void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
       {
          DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): failed to get instance list for DCO %s [%d]"),
                    m_name, m_id, object->getName().cstr(), object->getId());
-         sendPollerMsg(requestId, POLLER_ERROR _T("      Failed to get instance list\r\n"));
+         sendPollerMsg(POLLER_ERROR _T("      Failed to get instance list\r\n"));
       }
       object->clearBusyFlag();
    }
@@ -2315,7 +2322,11 @@ struct CreateInstanceDCOData
 {
    DCObject *root;
    shared_ptr<DataCollectionTarget> object;
-   UINT32 requestId;
+
+   CreateInstanceDCOData(DCObject *_root, const shared_ptr<DataCollectionTarget>& _object) : object(_object)
+   {
+      root = _root;
+   }
 };
 
 /**
@@ -2328,7 +2339,7 @@ static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const Insta
 
    DbgPrintf(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): creating new DCO for instance \"%s\""),
              object->getName(), object->getId(), root->getName().cstr(), root->getId(), key);
-   object->sendPollerMsg(data->requestId, _T("      Creating new DCO for instance \"%s\"\r\n"), key);
+   object->sendPollerMsg(_T("      Creating new DCO for instance \"%s\"\r\n"), key);
 
    DCObject *dco = root->clone();
 
@@ -2402,7 +2413,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
             object->setStatus(ITEM_STATUS_DISABLED, false);
             nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, grace period started"),
                       m_name, m_id, root->getName().cstr(), root->getId(), dcoInstance.cstr());
-            sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found, grace period started\r\n"), dcoInstance.cstr());
+            sendPollerMsg(_T("      Existing instance \"%s\" not found, grace period started\r\n"), dcoInstance.cstr());
             changed = true;
          }
 
@@ -2411,7 +2422,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
             // not found, delete DCO
             nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCO will be deleted"),
                       m_name, m_id, root->getName().cstr(), root->getId(), dcoInstance.cstr());
-            sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found and will be deleted\r\n"), dcoInstance.cstr());
+            sendPollerMsg(_T("      Existing instance \"%s\" not found and will be deleted\r\n"), dcoInstance.cstr());
             deleteList.add(object->getId());
             changed = true;
          }
@@ -2424,10 +2435,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
    // Create new instances
    if (instances->size() > 0)
    {
-      CreateInstanceDCOData data;
-      data.root = root;
-      data.object = self();
-      data.requestId = requestId;
+      CreateInstanceDCOData data(root, self());
       instances->forEach(CreateInstanceDCI, &data);
       changed = true;
    }

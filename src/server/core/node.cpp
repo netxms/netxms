@@ -1993,17 +1993,18 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
 
    poller->setStatus(_T("preparing"));
    m_pollRequestor = pSession;
+   m_pollRequestId = rqId;
 
    if (m_status == STATUS_UNMANAGED)
    {
-      sendPollerMsg(rqId, POLLER_WARNING _T("Node %s is unmanaged, status poll aborted\r\n"), m_name);
+      sendPollerMsg(POLLER_WARNING _T("Node %s is unmanaged, status poll aborted\r\n"), m_name);
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node %s [%u] is unmanaged, status poll aborted"), m_name, m_id);
       delete eventQueue;
       pollerUnlock();
       return;
    }
 
-   sendPollerMsg(rqId, _T("Starting status poll for node %s\r\n"), m_name);
+   sendPollerMsg(_T("Starting status poll for node %s\r\n"), m_name);
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Starting status poll for node %s (ID: %d)"), m_name, m_id);
 
    // Read capability expiration time and current time
@@ -2033,7 +2034,7 @@ restart_status_poll:
       if (pTransport != nullptr)
       {
          poller->setStatus(_T("check SNMP"));
-         sendPollerMsg(rqId, _T("Checking SNMP agent connectivity\r\n"));
+         sendPollerMsg(_T("Checking SNMP agent connectivity\r\n"));
          SharedString testOid = getCustomAttribute(_T("snmp.testoid"));
          if (testOid.isEmpty())
          {
@@ -2051,7 +2052,7 @@ restart_status_poll:
                {
                   m_state &= ~NSF_SNMP_UNREACHABLE;
                   PostSystemEventEx(eventQueue, EVENT_SNMP_OK, m_id, nullptr);
-                  sendPollerMsg(rqId, POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
+                  sendPollerMsg(POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): Connectivity with SNMP agent restored"), m_name);
                   m_pollCountSNMP = 0;
                }
@@ -2109,7 +2110,7 @@ restart_status_poll:
                }
             }
 
-            sendPollerMsg(rqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
+            sendPollerMsg(POLLER_ERROR _T("SNMP agent unreachable\r\n"));
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SNMP agent unreachable (poll count %d of %d)"), m_name, m_pollCountSNMP, requiredPolls);
             if (m_state & NSF_SNMP_UNREACHABLE)
             {
@@ -2118,7 +2119,7 @@ restart_status_poll:
                   m_capabilities &= ~NC_IS_SNMP;
                   m_state &= ~NSF_SNMP_UNREACHABLE;
                   MemFreeAndNull(m_snmpObjectId);
-                  sendPollerMsg(rqId, POLLER_WARNING _T("Attribute isSNMP set to FALSE\r\n"));
+                  sendPollerMsg(POLLER_WARNING _T("Attribute isSNMP set to FALSE\r\n"));
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 4, _T("StatusPoll(%s): Attribute isSNMP set to FALSE"), m_name);
                }
             }
@@ -2150,7 +2151,7 @@ restart_status_poll:
    {
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): checking agent"), m_name);
       poller->setStatus(_T("check agent"));
-      sendPollerMsg(rqId, _T("Checking NetXMS agent connectivity\r\n"));
+      sendPollerMsg(_T("Checking NetXMS agent connectivity\r\n"));
 
       UINT32 error, socketError;
       bool newConnection;
@@ -2165,7 +2166,7 @@ restart_status_poll:
             {
                m_state &= ~NSF_AGENT_UNREACHABLE;
                PostSystemEventEx(eventQueue, EVENT_AGENT_OK, m_id, nullptr);
-               sendPollerMsg(rqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
+               sendPollerMsg(POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
                m_pollCountAgent = 0;
 
                // Reset connection time of all proxy connections so they can be re-established immediately
@@ -2186,7 +2187,7 @@ restart_status_poll:
       else
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d. Poll count %d of %d"), m_name, (int)error, (int)socketError, m_pollCountAgent, m_requiredPollCount);
-         sendPollerMsg(rqId, POLLER_ERROR _T("Cannot connect to NetXMS agent (%s)\r\n"), AgentErrorCodeToText(error));
+         sendPollerMsg(POLLER_ERROR _T("Cannot connect to NetXMS agent (%s)\r\n"), AgentErrorCodeToText(error));
          if (m_state & NSF_AGENT_UNREACHABLE)
          {
             if ((now > m_failTimeAgent + capabilityExpirationTime) && !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
@@ -2195,7 +2196,7 @@ restart_status_poll:
                m_state &= ~NSF_AGENT_UNREACHABLE;
                m_platformName[0] = 0;
                m_agentVersion[0] = 0;
-               sendPollerMsg(rqId, POLLER_WARNING _T("Attribute isNetXMSAgent set to FALSE\r\n"));
+               sendPollerMsg(POLLER_WARNING _T("Attribute isNetXMSAgent set to FALSE\r\n"));
             }
          }
          else
@@ -2231,7 +2232,7 @@ restart_status_poll:
    {
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): checking EtherNet/IP"), m_name);
       poller->setStatus(_T("check EtherNet/IP"));
-      sendPollerMsg(rqId, _T("Checking EtherNet/IP connectivity\r\n"));
+      sendPollerMsg(_T("Checking EtherNet/IP connectivity\r\n"));
 
       CIP_Identity *identity = nullptr;
       EIP_Status status;
@@ -2257,7 +2258,7 @@ restart_status_poll:
             {
                m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
                PostSystemEventEx(eventQueue, EVENT_ETHERNET_IP_OK, m_id, nullptr);
-               sendPollerMsg(rqId, POLLER_INFO _T("EtherNet/IP connectivity restored\r\n"));
+               sendPollerMsg(POLLER_INFO _T("EtherNet/IP connectivity restored\r\n"));
                m_pollCountEtherNetIP = 0;
             }
          }
@@ -2276,14 +2277,14 @@ restart_status_poll:
          String reason = status.failureReason();
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): EtherNet/IP unreachable (%s), poll count %d of %d"),
                   m_name, reason.cstr(), m_pollCountEtherNetIP, m_requiredPollCount);
-         sendPollerMsg(rqId, POLLER_ERROR _T("Cannot connect to device via EtherNet/IP (%s)\r\n"), reason.cstr());
+         sendPollerMsg(POLLER_ERROR _T("Cannot connect to device via EtherNet/IP (%s)\r\n"), reason.cstr());
          if (m_state & NSF_ETHERNET_IP_UNREACHABLE)
          {
             if ((now > m_failTimeEtherNetIP + capabilityExpirationTime) && !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
             {
                m_capabilities &= ~NC_IS_ETHERNET_IP;
                m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
-               sendPollerMsg(rqId, POLLER_WARNING _T("Attribute isEtherNetIP set to FALSE\r\n"));
+               sendPollerMsg(POLLER_WARNING _T("Attribute isEtherNetIP set to FALSE\r\n"));
             }
          }
          else
@@ -2400,17 +2401,17 @@ restart_status_poll:
             if (m_ipAddress.isValidUnicast())
             {
                nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): using TCP ping on primary IP address"), m_name);
-               sendPollerMsg(rqId, _T("Checking primary IP address with TCP ping on agent's port\r\n"));
+               sendPollerMsg(_T("Checking primary IP address with TCP ping on agent's port\r\n"));
                TcpPingResult r = TcpPing(m_ipAddress, m_agentPort, 1000);
                if ((r == TCP_PING_SUCCESS) || (r == TCP_PING_REJECT))
                {
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): agent is unreachable but IP address is likely reachable (TCP ping returns %d)"), m_name, r);
-                  sendPollerMsg(rqId, POLLER_INFO _T("   Primary IP address is responding to TCP ping\r\n"));
+                  sendPollerMsg(POLLER_INFO _T("   Primary IP address is responding to TCP ping\r\n"));
                   allDown = false;
                }
                else
                {
-                  sendPollerMsg(rqId, POLLER_ERROR _T("   Primary IP address is not responding to TCP ping\r\n"));
+                  sendPollerMsg(POLLER_ERROR _T("   Primary IP address is not responding to TCP ping\r\n"));
                }
             }
          }
@@ -2432,17 +2433,17 @@ restart_status_poll:
             if (m_ipAddress.isValidUnicast())
             {
                nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): using TCP ping on primary IP address"), m_name);
-               sendPollerMsg(rqId, _T("Checking primary IP address with TCP ping on EtherNet/IP port\r\n"));
+               sendPollerMsg(_T("Checking primary IP address with TCP ping on EtherNet/IP port\r\n"));
                TcpPingResult r = TcpPing(m_ipAddress, m_eipPort, 1000);
                if ((r == TCP_PING_SUCCESS) || (r == TCP_PING_REJECT))
                {
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): EtherNet/IP is unreachable but IP address is likely reachable (TCP ping returns %d)"), m_name, r);
-                  sendPollerMsg(rqId, POLLER_INFO _T("   Primary IP address is responding to TCP ping\r\n"));
+                  sendPollerMsg(POLLER_INFO _T("   Primary IP address is responding to TCP ping\r\n"));
                   allDown = false;
                }
                else
                {
-                  sendPollerMsg(rqId, POLLER_ERROR _T("   Primary IP address is not responding to TCP ping\r\n"));
+                  sendPollerMsg(POLLER_ERROR _T("   Primary IP address is not responding to TCP ping\r\n"));
                }
             }
          }
@@ -2454,16 +2455,16 @@ restart_status_poll:
       if (allDown && (m_flags & NF_PING_PRIMARY_IP) && m_ipAddress.isValidUnicast())
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): using ICMP ping on primary IP address"), m_name);
-         sendPollerMsg(rqId, _T("Checking primary IP address with ICMP ping\r\n"));
+         sendPollerMsg(_T("Checking primary IP address with ICMP ping\r\n"));
          if (IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, nullptr, g_icmpPingSize, false) == ICMP_SUCCESS)
          {
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): primary IP address responds to ICMP ping, considering node as reachable"), m_name);
-            sendPollerMsg(rqId, POLLER_INFO _T("   Primary IP address is responding to ICMP ping\r\n"));
+            sendPollerMsg(POLLER_INFO _T("   Primary IP address is responding to ICMP ping\r\n"));
             allDown = false;
          }
          else
          {
-            sendPollerMsg(rqId, POLLER_ERROR _T("   Primary IP address is not responding to ICMP ping\r\n"));
+            sendPollerMsg(POLLER_ERROR _T("   Primary IP address is not responding to ICMP ping\r\n"));
          }
       }
 
@@ -2548,14 +2549,14 @@ restart_status_poll:
                         reasonNames[static_cast<int32_t>(patchCheckResult.reason)], patchCheckResult.rootCauseNodeId,
                         GetObjectName(patchCheckResult.rootCauseNodeId, _T("")), patchCheckResult.rootCauseInterfaceId,
                         GetObjectName(patchCheckResult.rootCauseInterfaceId, _T("")), description);
-               sendPollerMsg(rqId, POLLER_WARNING _T("Detected network path problem (%s)\r\n"), description);
+               sendPollerMsg(POLLER_WARNING _T("Detected network path problem (%s)\r\n"), description);
             }
             else
             {
                PostSystemEvent(EVENT_NODE_DOWN, m_id, nullptr);
             }
             g_monitoringList.removeDisconnectedNode(m_id);
-            sendPollerMsg(rqId, POLLER_ERROR _T("Node is unreachable\r\n"));
+            sendPollerMsg(POLLER_ERROR _T("Node is unreachable\r\n"));
             resyncDataCollectionConfiguration = true; // Will cause removal of all remotely collected DCIs from proxy
          }
          else
@@ -2565,7 +2566,7 @@ restart_status_poll:
                PostSystemEvent(EVENT_NODE_DOWN, m_id, nullptr);
                m_state &= ~DCSF_NETWORK_PATH_PROBLEM;
             }
-            sendPollerMsg(rqId, POLLER_WARNING _T("Node is still unreachable\r\n"));
+            sendPollerMsg(POLLER_WARNING _T("Node is still unreachable\r\n"));
          }
       }
       else
@@ -2576,7 +2577,7 @@ restart_status_poll:
             int reason = (m_state & DCSF_NETWORK_PATH_PROBLEM) ? 1 : 0;
             m_state &= ~(DCSF_UNREACHABLE | DCSF_NETWORK_PATH_PROBLEM);
             PostSystemEvent(EVENT_NODE_UP, m_id, "d", reason);
-            sendPollerMsg(rqId, POLLER_INFO _T("Node recovered from unreachable state\r\n"));
+            sendPollerMsg(POLLER_INFO _T("Node recovered from unreachable state\r\n"));
             resyncDataCollectionConfiguration = true; // Will cause addition of all remotely collected DCIs on proxy
             // Set recovery time to provide grace period for capability expiration
             m_recoveryTime = now;
@@ -2584,7 +2585,7 @@ restart_status_poll:
          }
          else
          {
-            sendPollerMsg(rqId, POLLER_INFO _T("Node is connected\r\n"));
+            sendPollerMsg(POLLER_INFO _T("Node is connected\r\n"));
          }
       }
    }
@@ -2758,8 +2759,8 @@ restart_status_poll:
       }
    }
 
-   sendPollerMsg(rqId, _T("Finished status poll for node %s\r\n"), m_name);
-   sendPollerMsg(rqId, _T("Node status after poll is %s\r\n"), GetStatusAsText(m_status, true));
+   sendPollerMsg(_T("Finished status poll for node %s\r\n"), m_name);
+   sendPollerMsg(_T("Node status after poll is %s\r\n"), GetStatusAsText(m_status, true));
 
    lockProperties();
    m_pollRequestor = nullptr;
@@ -2808,14 +2809,14 @@ NetworkPathCheckResult Node::checkNetworkPathElement(uint32_t nodeId, const TCHA
    {
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPathElement(%s [%d]): %s %s [%d] is down"),
                 m_name, m_id, nodeType, node->getName(), node->getId());
-      sendPollerMsg(requestId, POLLER_WARNING _T("   %s %s is down\r\n"), nodeType, node->getName());
+      sendPollerMsg(POLLER_WARNING _T("   %s %s is down\r\n"), nodeType, node->getName());
       return NetworkPathCheckResult(isProxy ? NetworkPathFailureReason::PROXY_NODE_DOWN : (isSwitch ? NetworkPathFailureReason::SWITCH_DOWN : NetworkPathFailureReason::ROUTER_DOWN), node->getId());
    }
    if (isProxy && node->isNativeAgent() && (node->getState() & NSF_AGENT_UNREACHABLE))
    {
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPathElement(%s [%d]): agent on %s %s [%d] is down"),
                 m_name, m_id, nodeType, node->getName(), node->getId());
-      sendPollerMsg(requestId, POLLER_WARNING _T("   Agent on %s %s is down\r\n"), nodeType, node->getName());
+      sendPollerMsg(POLLER_WARNING _T("   Agent on %s %s is down\r\n"), nodeType, node->getName());
       return NetworkPathCheckResult(NetworkPathFailureReason::PROXY_AGENT_UNREACHABLE, node->getId());
    }
    return NetworkPathCheckResult();
@@ -2846,7 +2847,7 @@ NetworkPathCheckResult Node::checkNetworkPathLayer2(uint32_t requestId, bool sec
    }
 
    // Check directly connected switch
-   sendPollerMsg(requestId, _T("Checking ethernet connectivity...\r\n"));
+   sendPollerMsg(_T("Checking ethernet connectivity...\r\n"));
    shared_ptr<Interface> iface = findInterfaceByIP(m_ipAddress);
    if (iface != nullptr)
    {
@@ -2864,7 +2865,7 @@ NetworkPathCheckResult Node::checkNetworkPathLayer2(uint32_t requestId, bool sec
          {
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on switch %s [%d] is administratively down"),
                         m_name, m_id, switchIface->getName(), switchIface->getId(), switchNode->getName(), switchNode->getId());
-            sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is administratively down\r\n"), switchIface->getName(), switchNode->getName());
+            sendPollerMsg(POLLER_WARNING _T("   Upstream interface %s on node %s is administratively down\r\n"), switchIface->getName(), switchNode->getName());
             result.rootCauseFound = true;
             result.reason = NetworkPathFailureReason::INTERFACE_DISABLED;
             result.rootCauseNodeId = switchNode->getId();
@@ -2900,7 +2901,7 @@ NetworkPathCheckResult Node::checkNetworkPathLayer2(uint32_t requestId, bool sec
                   String parentNodeName = iface->getParentNodeName();
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%u]): upstream interface %s [%u] on switch %s [%u] is administratively down"),
                               m_name, m_id, iface->getName(), iface->getId(), parentNodeName.cstr(), iface->getParentNodeId());
-                  sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is administratively down\r\n"),
+                  sendPollerMsg(POLLER_WARNING _T("   Upstream interface %s on node %s is administratively down\r\n"),
                                 iface->getName(), parentNodeName.cstr());
                   return NetworkPathCheckResult(NetworkPathFailureReason::INTERFACE_DISABLED, iface->getParentNodeId(), iface->getId());
                }
@@ -2912,7 +2913,7 @@ NetworkPathCheckResult Node::checkNetworkPathLayer2(uint32_t requestId, bool sec
                {
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): wireless access point %s [%d] is down"),
                               m_name, m_id, ap->getName(), ap->getId());
-                  sendPollerMsg(requestId, POLLER_WARNING _T("   Wireless access point %s is down\r\n"), ap->getName());
+                  sendPollerMsg(POLLER_WARNING _T("   Wireless access point %s is down\r\n"), ap->getName());
                   return NetworkPathCheckResult(NetworkPathFailureReason::WIRELESS_AP_DOWN, ap->getId());
                }
             }
@@ -2965,7 +2966,7 @@ NetworkPathCheckResult Node::checkNetworkPathLayer3(uint32_t requestId, bool sec
    // If unreachable intermediate node will be found on first pass,
    // then method will just return true. Otherwise, we will do
    // second pass, this time forcing status poll on each node in the path.
-   sendPollerMsg(requestId, _T("Checking network path (%s pass)...\r\n"), secondPass ? _T("second") : _T("first"));
+   sendPollerMsg(_T("Checking network path (%s pass)...\r\n"), secondPass ? _T("second") : _T("first"));
    NetworkPathCheckResult result;
    for(int i = 0; i < trace->getHopCount(); i++)
    {
@@ -2984,7 +2985,7 @@ NetworkPathCheckResult Node::checkNetworkPathLayer3(uint32_t requestId, bool sec
                prevHop = trace->getHopInfo(i - 1);
                nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): routing loop detected on upstream node %s [%d]"),
                            m_name, m_id, prevHop->object->getName(), prevHop->object->getId());
-               sendPollerMsg(requestId, POLLER_WARNING _T("   Routing loop detected on upstream node %s\r\n"), prevHop->object->getName());
+               sendPollerMsg(POLLER_WARNING _T("   Routing loop detected on upstream node %s\r\n"), prevHop->object->getName());
 
                static const TCHAR *names[] =
                         { _T("protocol"), _T("destNodeId"), _T("destAddress"),
@@ -3019,7 +3020,7 @@ NetworkPathCheckResult Node::checkNetworkPathLayer3(uint32_t requestId, bool sec
          {
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on node %s [%d] is administratively down"),
                         m_name, m_id, iface->getName(), iface->getId(), hop->object->getName(), hop->object->getId());
-            sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is administratively down\r\n"), iface->getName(), hop->object->getName());
+            sendPollerMsg(POLLER_WARNING _T("   Upstream interface %s on node %s is administratively down\r\n"), iface->getName(), hop->object->getName());
             result.rootCauseFound = true;
             result.reason = NetworkPathFailureReason::INTERFACE_DISABLED;
             result.rootCauseNodeId = hop->object->getId();
@@ -3248,7 +3249,7 @@ bool Node::updateSystemHardwareProperty(SharedString &property, const TCHAR *val
    if (_tcscmp(property, value))
    {
       if (*value != 0)
-         sendPollerMsg(requestId, _T("   System hardware %s set to %s\r\n"), displayName, value);
+         sendPollerMsg(_T("   System hardware %s set to %s\r\n"), displayName, value);
       property = value;
       modified = true;
    }
@@ -3270,7 +3271,7 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestI
    }
 
    poller->setStatus(_T("hardware check"));
-   sendPollerMsg(requestId, _T("Updating general system hardware information\r\n"));
+   sendPollerMsg(_T("Updating general system hardware information\r\n"));
 
    DeviceHardwareInfo hwInfo;
    memset(&hwInfo, 0, sizeof(hwInfo));
@@ -3361,7 +3362,7 @@ bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
       return false;
 
    poller->setStatus(_T("hardware check"));
-   sendPollerMsg(requestId, _T("Reading list of installed hardware components\r\n"));
+   sendPollerMsg(_T("Reading list of installed hardware components\r\n"));
 
    ObjectArray<HardwareComponent> *components = new ObjectArray<HardwareComponent>(16, 16, Ownership::True);
    int readCount = ReadBaseboardInformation(this, components);
@@ -3373,11 +3374,11 @@ bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
 
    if (readCount == 0)
    {
-      sendPollerMsg(requestId, POLLER_WARNING _T("Cannot read hardware component information\r\n"));
+      sendPollerMsg(POLLER_WARNING _T("Cannot read hardware component information\r\n"));
       delete components;
       return false;
    }
-   sendPollerMsg(requestId, POLLER_INFO _T("Received information on %d hardware components\r\n"), components->size());
+   sendPollerMsg(POLLER_INFO _T("Received information on %d hardware components\r\n"), components->size());
 
    static const TCHAR *eventParamNames[] =
             { _T("category"), _T("type"), _T("vendor"), _T("model"),
@@ -3400,7 +3401,7 @@ bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
             case CHANGE_ADDED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): new hardware component \"%s %s (%s)\" serial number %s added"),
                         m_name, categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
-               sendPollerMsg(requestId, _T("   %s %s (%s) added, serial number %s\r\n"),
+               sendPollerMsg(_T("   %s %s (%s) added, serial number %s\r\n"),
                         categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
                PostSystemEventWithNames(EVENT_HARDWARE_COMPONENT_ADDED, m_id, "sssssssDs", eventParamNames, categoryNames[c->getCategory()],
                         c->getType(), c->getVendor(), c->getModel(), c->getLocation(), c->getPartNumber(),
@@ -3409,7 +3410,7 @@ bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
             case CHANGE_REMOVED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): hardware component \"%s %s (%s)\" serial number %s removed"),
                         m_name, categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
-               sendPollerMsg(requestId, _T("   %s %s (%s) removed, serial number %s\r\n"),
+               sendPollerMsg(_T("   %s %s (%s) removed, serial number %s\r\n"),
                         categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
                PostSystemEventWithNames(EVENT_HARDWARE_COMPONENT_REMOVED, m_id, "sssssssDs", eventParamNames, categoryNames[c->getCategory()],
                         c->getType(), c->getVendor(), c->getModel(), c->getLocation(), c->getPartNumber(),
@@ -3440,12 +3441,12 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, uint32_t requestId)
       return false;
 
    poller->setStatus(_T("software check"));
-   sendPollerMsg(requestId, _T("Reading list of installed software packages\r\n"));
+   sendPollerMsg(_T("Reading list of installed software packages\r\n"));
 
    Table *table;
    if (getTableFromAgent(_T("System.InstalledProducts"), &table) != DCE_SUCCESS)
    {
-      sendPollerMsg(requestId, POLLER_WARNING _T("Unable to get information about installed software packages\r\n"));
+      sendPollerMsg(POLLER_WARNING _T("Unable to get information about installed software packages\r\n"));
       return false;
    }
 
@@ -3458,7 +3459,7 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, uint32_t requestId)
    }
    packages->sort(PackageNameVersionComparator);
    delete table;
-   sendPollerMsg(requestId, POLLER_INFO _T("Got information about %d installed software packages\r\n"), packages->size());
+   sendPollerMsg(POLLER_INFO _T("Got information about %d installed software packages\r\n"), packages->size());
 
    lockProperties();
    if (m_softwarePackages != nullptr)
@@ -3473,18 +3474,18 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, uint32_t requestId)
                break;
             case CHANGE_ADDED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): new package %s version %s"), m_name, p->getName(), p->getVersion());
-               sendPollerMsg(requestId, _T("   New package %s version %s\r\n"), p->getName(), p->getVersion());
+               sendPollerMsg(_T("   New package %s version %s\r\n"), p->getName(), p->getVersion());
                PostSystemEventWithNames(EVENT_PACKAGE_INSTALLED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
                break;
             case CHANGE_REMOVED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): package %s version %s removed"), m_name, p->getName(), p->getVersion());
-               sendPollerMsg(requestId, _T("   Package %s version %s removed\r\n"), p->getName(), p->getVersion());
+               sendPollerMsg(_T("   Package %s version %s removed\r\n"), p->getName(), p->getVersion());
                PostSystemEventWithNames(EVENT_PACKAGE_REMOVED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
                break;
             case CHANGE_UPDATED:
                SoftwarePackage *prev = changes->get(++i);   // next entry contains previous package version
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): package %s updated (%s -> %s)"), m_name, p->getName(), prev->getVersion(), p->getVersion());
-               sendPollerMsg(requestId, _T("   Package %s updated (%s -> %s)\r\n"), p->getName(), prev->getVersion(), p->getVersion());
+               sendPollerMsg(_T("   Package %s updated (%s -> %s)\r\n"), p->getName(), prev->getVersion(), p->getVersion());
                PostSystemEventWithNames(EVENT_PACKAGE_UPDATED, m_id, "sss", eventParamNames, p->getName(), p->getVersion(), prev->getVersion());
                break;
          }
@@ -3559,10 +3560,11 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    POLL_CANCELLATION_CHECKPOINT();
 
    m_pollRequestor = session;
+   m_pollRequestId = rqId;
 
    if (m_status == STATUS_UNMANAGED)
    {
-      sendPollerMsg(rqId, POLLER_WARNING _T("Node %s is unmanaged, configuration poll aborted\r\n"), m_name);
+      sendPollerMsg(POLLER_WARNING _T("Node %s is unmanaged, configuration poll aborted\r\n"), m_name);
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node %s [%u] is unmanaged, configuration poll aborted"), m_name, m_id);
       pollerUnlock();
       return;
@@ -3571,13 +3573,13 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    uint32_t oldCapabilities = m_capabilities;
    uint32_t modified = 0;
 
-   sendPollerMsg(rqId, _T("Starting configuration poll for node %s\r\n"), m_name);
+   sendPollerMsg(_T("Starting configuration poll for node %s\r\n"), m_name);
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Starting configuration poll for node %s (ID: %d)"), m_name, m_id);
 
    // Check for forced capabilities recheck
    if (m_runtimeFlags & NDF_RECHECK_CAPABILITIES)
    {
-      sendPollerMsg(rqId, POLLER_WARNING _T("Capability reset\r\n"));
+      sendPollerMsg(POLLER_WARNING _T("Capability reset\r\n"));
       lockProperties();
       m_capabilities &= NC_IS_LOCAL_MGMT; // reset all except "local management" flag
       m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PASSED;
@@ -3602,7 +3604,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    // Check if node is marked as unreachable
    if ((m_state & DCSF_UNREACHABLE) && !(m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
    {
-      sendPollerMsg(rqId, POLLER_WARNING _T("Node is marked as unreachable, configuration poll aborted\r\n"));
+      sendPollerMsg(POLLER_WARNING _T("Node is marked as unreachable, configuration poll aborted\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Node is marked as unreachable, configuration poll aborted"));
    }
    else
@@ -3610,7 +3612,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       updatePrimaryIpAddr();
 
       poller->setStatus(_T("capability check"));
-      sendPollerMsg(rqId, _T("Checking node's capabilities...\r\n"));
+      sendPollerMsg(_T("Checking node's capabilities...\r\n"));
 
       if (confPollAgent(rqId))
          modified |= MODIFY_NODE_PROPERTIES;
@@ -3636,7 +3638,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
       // Retrieve interface list
       poller->setStatus(_T("interface check"));
-      sendPollerMsg(rqId, _T("Capability check finished\r\n"));
+      sendPollerMsg(_T("Capability check finished\r\n"));
 
       if (updateInterfaceConfiguration(rqId, 0)) // maskBits
          modified |= MODIFY_NODE_PROPERTIES;
@@ -3672,48 +3674,48 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       }
 
       // Check node name
-      sendPollerMsg(rqId, _T("Checking node name\r\n"));
+      sendPollerMsg(_T("Checking node name\r\n"));
       if (g_flags & AF_RESOLVE_NODE_NAMES)
       {
          InetAddress addr = InetAddress::parse(m_name);
          if (addr.isValidUnicast() && isMyIP(addr))
          {
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name is an IP address and need to be resolved"), m_name, m_id);
-            sendPollerMsg(rqId, _T("Node name is an IP address and need to be resolved\r\n"));
+            sendPollerMsg(_T("Node name is an IP address and need to be resolved\r\n"));
             poller->setStatus(_T("resolving name"));
             if (resolveName(false))
             {
-               sendPollerMsg(rqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
+               sendPollerMsg(POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
                modified |= MODIFY_COMMON_PROPERTIES;
             }
             else
             {
-               sendPollerMsg(rqId, POLLER_WARNING _T("Node name cannot be resolved\r\n"));
+               sendPollerMsg(POLLER_WARNING _T("Node name cannot be resolved\r\n"));
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name cannot be resolved"), m_name, m_id);
             }
          }
          else
          {
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name cannot be interpreted as valid IP address"), m_name, m_id);
-            sendPollerMsg(rqId, _T("Node name %s, no need to resolve to host name\r\n"), addr.isValidUnicast() ? _T("is a valid IP address but cannot be found in interface configuration") : _T("cannot be interpreted as valid IP address"));
+            sendPollerMsg(_T("Node name %s, no need to resolve to host name\r\n"), addr.isValidUnicast() ? _T("is a valid IP address but cannot be found in interface configuration") : _T("cannot be interpreted as valid IP address"));
          }
       }
       else if (g_flags & AF_SYNC_NODE_NAMES_WITH_DNS)
       {
-         sendPollerMsg(rqId, _T("Synchronizing node name with DNS\r\n"));
+         sendPollerMsg(_T("Synchronizing node name with DNS\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): synchronizing node name with DNS"), m_name, m_id);
          poller->setStatus(_T("resolving name"));
          if (resolveName(TRUE))
          {
-            sendPollerMsg(rqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
+            sendPollerMsg(POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
             modified |= MODIFY_COMMON_PROPERTIES;
          }
       }
       else
       {
-         sendPollerMsg(rqId, _T("Node name is OK\r\n"));
+         sendPollerMsg(_T("Node name is OK\r\n"));
       }
 
       POLL_CANCELLATION_CHECKPOINT();
@@ -3749,14 +3751,14 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          m_type = type;
          modified |= MODIFY_NODE_PROPERTIES;
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node type set to %d (%s)"), m_name, type, typeName(type));
-         sendPollerMsg(rqId, _T("   Node type changed to %s\r\n"), typeName(type));
+         sendPollerMsg(_T("   Node type changed to %s\r\n"), typeName(type));
 
          if (*hypervisorType != 0)
-            sendPollerMsg(rqId, _T("   Hypervisor type set to %s\r\n"), hypervisorType);
+            sendPollerMsg(_T("   Hypervisor type set to %s\r\n"), hypervisorType);
          _tcslcpy(m_hypervisorType, hypervisorType, MAX_HYPERVISOR_TYPE_LENGTH);
 
          if (*hypervisorInfo != 0)
-            sendPollerMsg(rqId, _T("   Hypervisor information set to %s\r\n"), hypervisorInfo);
+            sendPollerMsg(_T("   Hypervisor information set to %s\r\n"), hypervisorInfo);
          m_hypervisorInfo = hypervisorInfo;
       }
       unlockProperties();
@@ -3780,12 +3782,12 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       POLL_CANCELLATION_CHECKPOINT();
 
       poller->setStatus(_T("autobind"));
-      applyUserTemplates();
+      applyTemplates();
       updateContainerMembership();
       updateClusterMembership();
 
-      sendPollerMsg(rqId, _T("Finished configuration poll for node %s\r\n"), m_name);
-      sendPollerMsg(rqId, _T("Node configuration was%schanged after poll\r\n"), (modified != 0) ? _T(" ") : _T(" not "));
+      sendPollerMsg(_T("Finished configuration poll for node %s\r\n"), m_name);
+      sendPollerMsg(_T("Node configuration was%schanged after poll\r\n"), (modified != 0) ? _T(" ") : _T(" not "));
 
       m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
       m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
@@ -4048,13 +4050,13 @@ bool Node::confPollAgent(UINT32 rqId)
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent Flags={%08X} StateFlags={%08X} RuntimeFlags={%08X}"), m_name, m_flags, m_state, m_runtimeFlags);
    if (((m_capabilities & NC_IS_NATIVE_AGENT) && (m_state & NSF_AGENT_UNREACHABLE)) || (m_flags & NF_DISABLE_NXCP))
    {
-      sendPollerMsg(rqId, _T("   NetXMS agent polling is %s\r\n"), (m_flags & NF_DISABLE_NXCP) ? _T("disabled") : _T("not possible"));
+      sendPollerMsg(_T("   NetXMS agent polling is %s\r\n"), (m_flags & NF_DISABLE_NXCP) ? _T("disabled") : _T("not possible"));
       return false;
    }
 
    bool hasChanges = false;
 
-   sendPollerMsg(rqId, _T("   Checking NetXMS agent...\r\n"));
+   sendPollerMsg(_T("   Checking NetXMS agent...\r\n"));
    shared_ptr<AgentConnectionEx> pAgentConn;
    shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(m_id);
    if (tunnel != nullptr)
@@ -4065,13 +4067,13 @@ bool Node::confPollAgent(UINT32 rqId)
    {
       if (m_flags & NF_AGENT_OVER_TUNNEL_ONLY)
       {
-         sendPollerMsg(rqId, POLLER_ERROR _T("   Direct agent connection is disabled and there are no active tunnels\r\n"));
+         sendPollerMsg(POLLER_ERROR _T("   Direct agent connection is disabled and there are no active tunnels\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): direct agent connection is disabled and there are no active tunnels"), m_name);
          return false;
       }
       if (!m_ipAddress.isValidUnicast() && !((m_capabilities & NC_IS_LOCAL_MGMT) && m_ipAddress.isLoopback()))
       {
-         sendPollerMsg(rqId, POLLER_ERROR _T("   Node primary IP is invalid and there are no active tunnels\r\n"));
+         sendPollerMsg(POLLER_ERROR _T("   Node primary IP is invalid and there are no active tunnels\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node primary IP is invalid and there are no active tunnels"), m_name);
          return false;
       }
@@ -4134,11 +4136,11 @@ bool Node::confPollAgent(UINT32 rqId)
       {
          m_state &= ~NSF_AGENT_UNREACHABLE;
          PostSystemEvent(EVENT_AGENT_OK, m_id, nullptr);
-         sendPollerMsg(rqId, POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
+         sendPollerMsg(POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
       }
       else
       {
-         sendPollerMsg(rqId, POLLER_INFO _T("   NetXMS agent is active\r\n"));
+         sendPollerMsg(POLLER_INFO _T("   NetXMS agent is active\r\n"));
       }
       unlockProperties();
 
@@ -4150,7 +4152,7 @@ bool Node::confPollAgent(UINT32 rqId)
          {
             _tcscpy(m_agentVersion, buffer);
             hasChanges = true;
-            sendPollerMsg(rqId, _T("   NetXMS agent version changed to %s\r\n"), m_agentVersion);
+            sendPollerMsg(_T("   NetXMS agent version changed to %s\r\n"), m_agentVersion);
          }
          unlockProperties();
       }
@@ -4164,7 +4166,7 @@ bool Node::confPollAgent(UINT32 rqId)
             PostSystemEvent(EVENT_AGENT_ID_CHANGED, m_id, "GG", &m_agentId, &agentId);
             m_agentId = agentId;
             hasChanges = true;
-            sendPollerMsg(rqId, _T("   NetXMS agent ID changed to %s\r\n"), m_agentId.toString(buffer));
+            sendPollerMsg(_T("   NetXMS agent ID changed to %s\r\n"), m_agentId.toString(buffer));
          }
          unlockProperties();
       }
@@ -4176,7 +4178,7 @@ bool Node::confPollAgent(UINT32 rqId)
          {
             _tcscpy(m_platformName, buffer);
             hasChanges = true;
-            sendPollerMsg(rqId, _T("   Platform name changed to %s\r\n"), m_platformName);
+            sendPollerMsg(_T("   Platform name changed to %s\r\n"), m_platformName);
          }
          unlockProperties();
       }
@@ -4190,7 +4192,7 @@ bool Node::confPollAgent(UINT32 rqId)
          {
             m_hardwareId = NodeHardwareId(hardwareId);
             hasChanges = true;
-            sendPollerMsg(rqId, _T("   Hardware ID changed to %s\r\n"), buffer);
+            sendPollerMsg(_T("   Hardware ID changed to %s\r\n"), buffer);
          }
          unlockProperties();
       }
@@ -4216,7 +4218,7 @@ bool Node::confPollAgent(UINT32 rqId)
             free(m_sysDescription);
             m_sysDescription = MemCopyString(buffer);
             hasChanges = true;
-            sendPollerMsg(rqId, _T("   System description changed to %s\r\n"), m_sysDescription);
+            sendPollerMsg(_T("   System description changed to %s\r\n"), m_sysDescription);
          }
          unlockProperties();
       }
@@ -4265,14 +4267,14 @@ bool Node::confPollAgent(UINT32 rqId)
       // Get supported Windows Performance Counters
       if (!_tcsncmp(m_platformName, _T("windows-"), 8) && (!(m_flags & NF_DISABLE_PERF_COUNT)))
       {
-         sendPollerMsg(rqId, _T("   Reading list of available Windows Performance Counters...\r\n"));
+         sendPollerMsg(_T("   Reading list of available Windows Performance Counters...\r\n"));
          ObjectArray<WinPerfObject> *perfObjects = WinPerfObject::getWinPerfObjectsFromNode(this, pAgentConn.get());
          lockProperties();
          delete m_winPerfObjects;
          m_winPerfObjects = perfObjects;
          if (m_winPerfObjects != nullptr)
          {
-            sendPollerMsg(rqId, POLLER_INFO _T("   %d counters read\r\n"), m_winPerfObjects->size());
+            sendPollerMsg(POLLER_INFO _T("   %d counters read\r\n"), m_winPerfObjects->size());
             if (!(m_capabilities & NC_HAS_WINPDH))
             {
                m_capabilities |= NC_HAS_WINPDH;
@@ -4281,7 +4283,7 @@ bool Node::confPollAgent(UINT32 rqId)
          }
          else
          {
-            sendPollerMsg(rqId, POLLER_ERROR _T("   unable to get Windows Performance Counters list\r\n"));
+            sendPollerMsg(POLLER_ERROR _T("   unable to get Windows Performance Counters list\r\n"));
             if (m_capabilities & NC_HAS_WINPDH)
             {
                m_capabilities &= ~NC_HAS_WINPDH;
@@ -4326,7 +4328,7 @@ bool Node::confPollAgent(UINT32 rqId)
    else
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (%s)"), m_name, AgentErrorCodeToText(rcc));
-      sendPollerMsg(rqId, _T("   Cannot connect to NetXMS agent (%s)\r\n"), AgentErrorCodeToText(rcc));
+      sendPollerMsg(_T("   Cannot connect to NetXMS agent (%s)\r\n"), AgentErrorCodeToText(rcc));
    }
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_name);
    return hasChanges;
@@ -4340,13 +4342,13 @@ bool Node::confPollEthernetIP(uint32_t requestId)
    if (((m_capabilities & NC_IS_ETHERNET_IP) && (m_state & NSF_ETHERNET_IP_UNREACHABLE)) ||
        !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_ETHERNET_IP))
    {
-      sendPollerMsg(requestId, _T("   EtherNet/IP polling is %s\r\n"), (m_flags & NF_DISABLE_ETHERNET_IP) ? _T("disabled") : _T("not possible"));
+      sendPollerMsg(_T("   EtherNet/IP polling is %s\r\n"), (m_flags & NF_DISABLE_ETHERNET_IP) ? _T("disabled") : _T("not possible"));
       return false;
    }
 
    bool hasChanges = false;
 
-   sendPollerMsg(requestId, _T("   Checking EtherNet/IP...\r\n"));
+   sendPollerMsg(_T("   Checking EtherNet/IP...\r\n"));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking EtherNet/IP"), m_name);
 
    CIP_Identity *identity = nullptr;
@@ -4369,10 +4371,10 @@ bool Node::confPollEthernetIP(uint32_t requestId)
 
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): EtherNet/IP device - %s by %s"), m_name,
                CIP_DeviceTypeNameFromCode(identity->deviceType), vendorName);
-      sendPollerMsg(requestId, _T("   EtherNet/IP connection established\r\n"));
-      sendPollerMsg(requestId, _T("      Device type: %s\r\n"), CIP_DeviceTypeNameFromCode(identity->deviceType));
-      sendPollerMsg(requestId, _T("      Vendor: %s\r\n"), vendorName);
-      sendPollerMsg(requestId, _T("      Product: %s\r\n"), identity->productName);
+      sendPollerMsg(_T("   EtherNet/IP connection established\r\n"));
+      sendPollerMsg(_T("      Device type: %s\r\n"), CIP_DeviceTypeNameFromCode(identity->deviceType));
+      sendPollerMsg(_T("      Vendor: %s\r\n"), vendorName);
+      sendPollerMsg(_T("      Product: %s\r\n"), identity->productName);
 
       lockProperties();
       m_capabilities |= NC_IS_ETHERNET_IP;
@@ -4380,7 +4382,7 @@ bool Node::confPollEthernetIP(uint32_t requestId)
       {
          m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
          PostSystemEvent(EVENT_ETHERNET_IP_OK, m_id, nullptr);
-         sendPollerMsg(requestId, POLLER_INFO _T("   EtherNet/IP connectivity restored\r\n"));
+         sendPollerMsg(POLLER_INFO _T("   EtherNet/IP connectivity restored\r\n"));
       }
 
       if (m_cipVendorCode != identity->vendor)
@@ -4448,7 +4450,7 @@ bool Node::confPollEthernetIP(uint32_t requestId)
    {
       String reason = status.failureReason();
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for EtherNet/IP - failed to get device identity (%s)"), m_name, reason.cstr());
-      sendPollerMsg(requestId, _T("   Cannot establish EtherNet/IP connection or get device identity (%s)\r\n"), reason.cstr());
+      sendPollerMsg(_T("   Cannot establish EtherNet/IP connection or get device identity (%s)\r\n"), reason.cstr());
    }
 
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): check for EtherNet/IP completed"), m_name);
@@ -4472,13 +4474,13 @@ bool Node::confPollSnmp(uint32_t rqId)
    if (((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE)) ||
        !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_SNMP))
    {
-      sendPollerMsg(rqId, _T("   SNMP polling is %s\r\n"), (m_flags & NF_DISABLE_SNMP) ? _T("disabled") : _T("not possible"));
+      sendPollerMsg(_T("   SNMP polling is %s\r\n"), (m_flags & NF_DISABLE_SNMP) ? _T("disabled") : _T("not possible"));
       return false;
    }
 
    bool hasChanges = false;
 
-   sendPollerMsg(rqId, _T("   Checking SNMP...\r\n"));
+   sendPollerMsg(_T("   Checking SNMP...\r\n"));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): calling SnmpCheckCommSettings()"), m_name);
    StringList oids;
    SharedString customOid = getCustomAttribute(_T("snmp.testoid"));
@@ -4496,7 +4498,7 @@ bool Node::confPollSnmp(uint32_t rqId)
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is not responding to SNMP using current settings"), m_name);
       if (m_flags & NF_SNMP_SETTINGS_LOCKED)
       {
-         sendPollerMsg(rqId, _T("   Node is not responding to SNMP using current settings and SNMP settings are locked\r\n"));
+         sendPollerMsg(_T("   Node is not responding to SNMP using current settings and SNMP settings are locked\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): SNMP settings are locked, skip SnmpCheckCommSettings()"), m_name);
          return false;
       }
@@ -4506,7 +4508,7 @@ bool Node::confPollSnmp(uint32_t rqId)
                &m_snmpVersion, m_snmpPort, m_snmpSecurity, oids, m_zoneUIN);
    if (pTransport == nullptr)
    {
-      sendPollerMsg(rqId, _T("   No response from SNMP agent\r\n"));
+      sendPollerMsg(_T("   No response from SNMP agent\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): unable to create SNMP transport"), m_name);
       return false;
    }
@@ -4520,10 +4522,10 @@ bool Node::confPollSnmp(uint32_t rqId)
    {
       m_state &= ~NSF_SNMP_UNREACHABLE;
       PostSystemEvent(EVENT_SNMP_OK, m_id, nullptr);
-      sendPollerMsg(rqId, POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
+      sendPollerMsg(POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
    }
    unlockProperties();
-   sendPollerMsg(rqId, _T("   SNMP agent is active (version %s)\r\n"),
+   sendPollerMsg(_T("   SNMP agent is active (version %s)\r\n"),
             (m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): SNMP agent detected (version %s)"), m_name,
             (m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
@@ -4555,7 +4557,7 @@ bool Node::confPollSnmp(uint32_t rqId)
          MemFree(m_sysDescription);
          m_sysDescription = MemCopyString(szBuffer);
          hasChanges = true;
-         sendPollerMsg(rqId, _T("   System description changed to %s\r\n"), m_sysDescription);
+         sendPollerMsg(_T("   System description changed to %s\r\n"), m_sysDescription);
       }
       unlockProperties();
    }
@@ -4567,11 +4569,11 @@ bool Node::confPollSnmp(uint32_t rqId)
    if (driver != m_driver)
    {
       m_driver = driver;
-      sendPollerMsg(rqId, _T("   New network device driver selected: %s\r\n"), m_driver->getName());
+      sendPollerMsg(_T("   New network device driver selected: %s\r\n"), m_driver->getName());
    }
    else
    {
-      sendPollerMsg(rqId, _T("   Use previously selected network device driver %s\r\n"), m_driver->getName());
+      sendPollerMsg(_T("   Use previously selected network device driver %s\r\n"), m_driver->getName());
    }
    unlockProperties();
 
@@ -4597,7 +4599,7 @@ bool Node::confPollSnmp(uint32_t rqId)
       ObjectArray<AgentParameterDefinition> *metrics = m_driver->getAvailableMetrics(pTransport, this, m_driverData);
       if (metrics != nullptr)
       {
-         sendPollerMsg(rqId, _T("   %d metrics provided by network device driver\r\n"), metrics->size());
+         sendPollerMsg(_T("   %d metrics provided by network device driver\r\n"), metrics->size());
          lockProperties();
          delete m_driverParameters;
          m_driverParameters = metrics;
@@ -4605,14 +4607,14 @@ bool Node::confPollSnmp(uint32_t rqId)
       }
    }
 
-   sendPollerMsg(rqId, _T("   Collecting system information from SNMP agent...\r\n"));
+   sendPollerMsg(_T("   Collecting system information from SNMP agent...\r\n"));
 
    // Get sysName, sysContact, sysLocation
-   if (querySnmpSysProperty(pTransport, _T(".1.3.6.1.2.1.1.5.0"), _T("name"), rqId, &m_sysName))
+   if (querySnmpSysProperty(pTransport, _T(".1.3.6.1.2.1.1.5.0"), _T("name"), &m_sysName))
       hasChanges = true;
-   if (querySnmpSysProperty(pTransport, _T(".1.3.6.1.2.1.1.4.0"), _T("contact"), rqId, &m_sysContact))
+   if (querySnmpSysProperty(pTransport, _T(".1.3.6.1.2.1.1.4.0"), _T("contact"), &m_sysContact))
       hasChanges = true;
-   if (querySnmpSysProperty(pTransport, _T(".1.3.6.1.2.1.1.6.0"), _T("location"), rqId, &m_sysLocation))
+   if (querySnmpSysProperty(pTransport, _T(".1.3.6.1.2.1.1.6.0"), _T("location"), &m_sysLocation))
       hasChanges = true;
 
    // Check IP forwarding
@@ -4744,7 +4746,7 @@ bool Node::confPollSnmp(uint32_t rqId)
             MemFree(m_lldpNodeId);
             m_lldpNodeId = _tcsdup(szBuffer);
             hasChanges = true;
-            sendPollerMsg(rqId, _T("   LLDP node ID changed to %s\r\n"), m_lldpNodeId);
+            sendPollerMsg(_T("   LLDP node ID changed to %s\r\n"), m_lldpNodeId);
          }
          unlockProperties();
       }
@@ -4799,7 +4801,7 @@ bool Node::confPollSnmp(uint32_t rqId)
    if ((m_driver != nullptr) && m_driver->isWirelessController(pTransport, this, m_driverData))
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is wireless controller, reading access point information"), m_name);
-      sendPollerMsg(rqId, _T("   Reading wireless access point information\r\n"));
+      sendPollerMsg(_T("   Reading wireless access point information\r\n"));
       lockProperties();
       m_capabilities |= NC_IS_WIFI_CONTROLLER;
       unlockProperties();
@@ -4809,7 +4811,7 @@ bool Node::confPollSnmp(uint32_t rqId)
       ObjectArray<AccessPointInfo> *aps = m_driver->getAccessPoints(pTransport, this, m_driverData);
       if (aps != nullptr)
       {
-         sendPollerMsg(rqId, POLLER_INFO _T("   %d wireless access points found\r\n"), aps->size());
+         sendPollerMsg(POLLER_INFO _T("   %d wireless access points found\r\n"), aps->size());
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): got information about %d access points"), m_name, aps->size());
          int adopted = 0;
          for(int i = 0; i < aps->size(); i++)
@@ -4907,7 +4909,7 @@ bool Node::confPollSnmp(uint32_t rqId)
       else
       {
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): failed to read access point information"), m_name);
-         sendPollerMsg(rqId, POLLER_ERROR _T("   Failed to read access point information\r\n"));
+         sendPollerMsg(POLLER_ERROR _T("   Failed to read access point information\r\n"));
       }
    }
    else
@@ -4935,7 +4937,7 @@ bool Node::confPollSnmp(uint32_t rqId)
          m_capabilities |= NC_IS_SNMP | NC_IS_ROUTER;
          m_state &= ~NSF_SNMP_UNREACHABLE;
          unlockProperties();
-         sendPollerMsg(rqId, POLLER_INFO _T("   CheckPoint SNMP agent on port 161 is active\r\n"));
+         sendPollerMsg(POLLER_INFO _T("   CheckPoint SNMP agent on port 161 is active\r\n"));
       }
    }
    delete pTransport;
@@ -4945,7 +4947,7 @@ bool Node::confPollSnmp(uint32_t rqId)
 /**
  * Query SNMP sys property (sysName, sysLocation, etc.)
  */
-bool Node::querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, UINT32 pollRqId, TCHAR **value)
+bool Node::querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, TCHAR **value)
 {
    TCHAR buffer[256];
    bool hasChanges = false;
@@ -4958,7 +4960,7 @@ bool Node::querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TC
          MemFree(*value);
          *value = _tcsdup(buffer);
          hasChanges = true;
-         sendPollerMsg(pollRqId, _T("   System %s changed to %s\r\n"), propName, *value);
+         sendPollerMsg(_T("   System %s changed to %s\r\n"), propName, *value);
       }
       unlockProperties();
    }
@@ -5091,7 +5093,7 @@ bool Node::deleteDuplicateInterfaces(uint32_t requestId)
    for(int i = 0; i < deleteList.size(); i++)
    {
       Interface *iface = deleteList.get(i);
-      sendPollerMsg(requestId, POLLER_WARNING _T("   Duplicate interface \"%s\" deleted\r\n"), iface->getName());
+      sendPollerMsg(POLLER_WARNING _T("   Duplicate interface \"%s\" deleted\r\n"), iface->getName());
       deleteInterface(iface);
    }
 
@@ -5103,7 +5105,7 @@ bool Node::deleteDuplicateInterfaces(uint32_t requestId)
  */
 bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
 {
-   sendPollerMsg(requestId, _T("Checking interface configuration...\r\n"));
+   sendPollerMsg(_T("Checking interface configuration...\r\n"));
 
    bool hasChanges = deleteDuplicateInterfaces(requestId);
 
@@ -5152,7 +5154,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
          for(int j = 0; j < deleteList.size(); j++)
          {
             Interface *iface = deleteList.get(j);
-            sendPollerMsg(requestId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), iface->getName());
+            sendPollerMsg(POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), iface->getName());
             const InetAddress& addr = iface->getFirstIpAddress();
             PostSystemEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", iface->getIfIndex(), iface->getName(), &addr, addr.getMaskBits());
             deleteInterface(iface);
@@ -5252,14 +5254,14 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
                            PostSystemEvent(EVENT_IF_MASK_CHANGED, m_id, "dsAddd", pInterface->getId(), pInterface->getName(),
                                      &addr, addr.getMaskBits(), pInterface->getIfIndex(), ifAddr.getMaskBits());
                            pInterface->setNetMask(addr);
-                           sendPollerMsg(requestId, POLLER_INFO _T("   IP network mask changed to /%d on interface \"%s\" address %s\r\n"),
+                           sendPollerMsg(POLLER_INFO _T("   IP network mask changed to /%d on interface \"%s\" address %s\r\n"),
                               addr.getMaskBits(), pInterface->getName(), (const TCHAR *)ifAddr.toString());
                            interfaceUpdated = true;
                         }
                      }
                      else
                      {
-                        sendPollerMsg(requestId, POLLER_WARNING _T("   IP address %s removed from interface \"%s\"\r\n"),
+                        sendPollerMsg(POLLER_WARNING _T("   IP address %s removed from interface \"%s\"\r\n"),
                            (const TCHAR *)ifAddr.toString(), pInterface->getName());
                         PostSystemEvent(EVENT_IF_IPADDR_DELETED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
                                   &ifAddr, ifAddr.getMaskBits(), pInterface->getIfIndex());
@@ -5277,7 +5279,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
                         pInterface->addIpAddress(addr);
                         PostSystemEvent(EVENT_IF_IPADDR_ADDED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
                                   &addr, addr.getMaskBits(), pInterface->getIfIndex());
-                        sendPollerMsg(requestId, POLLER_INFO _T("   IP address %s added to interface \"%s\"\r\n"),
+                        sendPollerMsg(POLLER_INFO _T("   IP address %s added to interface \"%s\"\r\n"),
                            (const TCHAR *)addr.toString(), pInterface->getName());
                         interfaceUpdated = true;
                      }
@@ -5296,14 +5298,14 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
          if (isNewInterface)
          {
             // New interface
-            sendPollerMsg(requestId, POLLER_INFO _T("   Found new interface \"%s\"\r\n"), ifInfo->name);
+            sendPollerMsg(POLLER_INFO _T("   Found new interface \"%s\"\r\n"), ifInfo->name);
             if (createNewInterface(ifInfo, false, false) != nullptr)
             {
                hasChanges = true;
             }
             else
             {
-               sendPollerMsg(requestId, POLLER_WARNING _T("   Creation of interface object \"%s\" blocked by filter\r\n"), ifInfo->name);
+               sendPollerMsg(POLLER_WARNING _T("   Creation of interface object \"%s\" blocked by filter\r\n"), ifInfo->name);
             }
          }
       }
@@ -5340,7 +5342,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
    }
    else if (!(m_flags & NF_EXTERNAL_GATEWAY))    /* pIfList == nullptr or empty */
    {
-      sendPollerMsg(requestId, POLLER_ERROR _T("Unable to get interface list from node\r\n"));
+      sendPollerMsg(POLLER_ERROR _T("Unable to get interface list from node\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): Unable to get interface list from node"), m_name, m_id);
 
       // Delete all existing interfaces in case of forced capability recheck
@@ -5358,7 +5360,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
          for(int j = 0; j < deleteList.size(); j++)
          {
             auto iface = deleteList.get(j);
-            sendPollerMsg(requestId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), iface->getName());
+            sendPollerMsg(POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), iface->getName());
             const InetAddress& addr = iface->getIpAddressList()->getFirstUnicastAddress();
             PostSystemEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", iface->getIfIndex(), iface->getName(), &addr, addr.getMaskBits());
             deleteInterface(iface);
@@ -5452,7 +5454,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
    delete ifList;
    checkSubnetBinding();
 
-   sendPollerMsg(requestId, _T("Interface configuration check finished\r\n"));
+   sendPollerMsg(_T("Interface configuration check finished\r\n"));
    return hasChanges;
 }
 
@@ -8934,16 +8936,17 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
    POLL_CANCELLATION_CHECKPOINT();
 
    m_pollRequestor = pSession;
+   m_pollRequestId = rqId;
 
    if (m_status == STATUS_UNMANAGED)
    {
-      sendPollerMsg(rqId, POLLER_WARNING _T("Node %s is unmanaged, topology poll aborted\r\n"), m_name);
+      sendPollerMsg(POLLER_WARNING _T("Node %s is unmanaged, topology poll aborted\r\n"), m_name);
       nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Node %s [%u] is unmanaged, topology poll aborted"), m_name, m_id);
       pollerUnlock();
       return;
    }
 
-   sendPollerMsg(rqId, _T("Starting topology poll for node %s\r\n"), m_name);
+   sendPollerMsg(_T("Starting topology poll for node %s\r\n"), m_name);
    nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Started topology poll for node %s [%d]"), m_name, m_id);
 
    if (m_driver != nullptr)
@@ -8959,13 +8962,13 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
          if (vlanList != nullptr)
          {
             resolveVlanPorts(vlanList);
-            sendPollerMsg(rqId, POLLER_INFO _T("VLAN list successfully retrieved from node\r\n"));
+            sendPollerMsg(POLLER_INFO _T("VLAN list successfully retrieved from node\r\n"));
             nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("VLAN list retrieved from node %s [%d]"), m_name, m_id);
             m_vlans = shared_ptr<VlanList>(vlanList);
          }
          else
          {
-            sendPollerMsg(rqId, POLLER_WARNING _T("Cannot get VLAN list\r\n"));
+            sendPollerMsg(POLLER_WARNING _T("Cannot get VLAN list\r\n"));
             nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Cannot retrieve VLAN list from node %s [%d]"), m_name, m_id);
             m_vlans.reset();
          }
@@ -8995,12 +8998,12 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
    if (fdb != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Switch forwarding database retrieved for node %s [%d]"), m_name, m_id);
-      sendPollerMsg(rqId, POLLER_INFO _T("Switch forwarding database retrieved\r\n"));
+      sendPollerMsg(POLLER_INFO _T("Switch forwarding database retrieved\r\n"));
    }
    else
    {
       nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Failed to get switch forwarding database from node %s [%d]"), m_name, m_id);
-      sendPollerMsg(rqId, POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
+      sendPollerMsg(POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
    }
 
    POLL_CANCELLATION_CHECKPOINT();
@@ -9009,7 +9012,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
    LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(this);
    if (nbs != nullptr)
    {
-      sendPollerMsg(rqId, POLLER_INFO _T("Link layer topology retrieved (%d connections found)\r\n"), nbs->size());
+      sendPollerMsg(POLLER_INFO _T("Link layer topology retrieved (%d connections found)\r\n"), nbs->size());
       nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Link layer topology retrieved for node %s [%d] (%d connections found)"), m_name, (int)m_id, nbs->size());
 
       MutexLock(m_mutexTopoAccess);
@@ -9019,7 +9022,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       MutexUnlock(m_mutexTopoAccess);
 
       // Walk through interfaces and update peers
-      sendPollerMsg(rqId, _T("Updating peer information on interfaces\r\n"));
+      sendPollerMsg(_T("Updating peer information on interfaces\r\n"));
       for(int i = 0; i < nbs->size(); i++)
       {
          LL_NEIGHBOR_INFO *ni = nbs->getConnection(i);
@@ -9058,7 +9061,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
 
                ifLocal->setPeer(static_cast<Node*>(object.get()), ifRemote.get(), ni->protocol, false);
                ifRemote->setPeer(this, ifLocal.get(), ni->protocol, true);
-               sendPollerMsg(rqId, _T("   Local interface %s linked to remote interface %s:%s\r\n"),
+               sendPollerMsg(_T("   Local interface %s linked to remote interface %s:%s\r\n"),
                              ifLocal->getName(), object->getName(), ifRemote->getName());
                nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Local interface %s:%s linked to remote interface %s:%s"),
                          m_name, ifLocal->getName(), object->getName(), ifRemote->getName());
@@ -9120,12 +9123,12 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       }
       unlockChildList();
 
-      sendPollerMsg(rqId, _T("Link layer topology processed\r\n"));
+      sendPollerMsg(_T("Link layer topology processed\r\n"));
       nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Link layer topology processed for node %s [%d]"), m_name, m_id);
    }
    else
    {
-      sendPollerMsg(rqId, POLLER_ERROR _T("Cannot get link layer topology\r\n"));
+      sendPollerMsg(POLLER_ERROR _T("Cannot get link layer topology\r\n"));
    }
 
    POLL_CANCELLATION_CHECKPOINT();
@@ -9141,7 +9144,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
          delete snmp;
          if (stations != nullptr)
          {
-            sendPollerMsg(rqId, _T("   %d wireless stations found\r\n"), stations->size());
+            sendPollerMsg(_T("   %d wireless stations found\r\n"), stations->size());
             nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("%d wireless stations found on controller node %s [%d]"), stations->size(), m_name, m_id);
 
             for(int i = 0; i < stations->size(); i++)
@@ -9214,7 +9217,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
    poller->setStatus(_T("hook"));
    executeHookScript(_T("TopologyPoll"), rqId);
 
-   sendPollerMsg(rqId, _T("Finished topology poll for node %s\r\n"), m_name);
+   sendPollerMsg(_T("Finished topology poll for node %s\r\n"), m_name);
 
    pollerUnlock();
 
@@ -9657,16 +9660,17 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
    }
 
    m_pollRequestor = pSession;
+   m_pollRequestId = rqId;
 
    if (m_status == STATUS_UNMANAGED)
    {
-      sendPollerMsg(rqId, POLLER_WARNING _T("Node %s is unmanaged, interface names poll aborted\r\n"), m_name);
+      sendPollerMsg(POLLER_WARNING _T("Node %s is unmanaged, interface names poll aborted\r\n"), m_name);
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node %s [%u] is unmanaged, interface names poll aborted"), m_name, m_id);
       _pollerUnlock();
       return;
    }
 
-   sendPollerMsg(rqId, _T("Starting interface names poll for node %s\r\n"), m_name);
+   sendPollerMsg(_T("Starting interface names poll for node %s\r\n"), m_name);
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Starting interface names poll for node %s (ID: %d)"), m_name, m_id);
 
    // Retrieve interface list
@@ -9687,21 +9691,21 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
 
                if (ifInfo->index == pInterface->getIfIndex())
                {
-                  sendPollerMsg(rqId, _T("   Checking interface %d (%s)\r\n"), pInterface->getIfIndex(), pInterface->getName());
+                  sendPollerMsg(_T("   Checking interface %d (%s)\r\n"), pInterface->getIfIndex(), pInterface->getName());
                   if (_tcscmp(ifInfo->name, pInterface->getName()))
                   {
                      pInterface->setName(ifInfo->name);
-                     sendPollerMsg(rqId, POLLER_WARNING _T("   Name of interface %d changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->name);
+                     sendPollerMsg(POLLER_WARNING _T("   Name of interface %d changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->name);
                   }
                   if (_tcscmp(ifInfo->description, pInterface->getDescription()))
                   {
                      pInterface->setDescription(ifInfo->description);
-                     sendPollerMsg(rqId, POLLER_WARNING _T("   Description of interface %d changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->description);
+                     sendPollerMsg(POLLER_WARNING _T("   Description of interface %d changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->description);
                   }
                   if (_tcscmp(ifInfo->alias, pInterface->getAlias()))
                   {
                      pInterface->setAlias(ifInfo->alias);
-                     sendPollerMsg(rqId, POLLER_WARNING _T("   Alias of interface %d changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->alias);
+                     sendPollerMsg(POLLER_WARNING _T("   Alias of interface %d changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->alias);
                   }
                   break;
                }
@@ -9714,11 +9718,11 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
    }
    else     /* pIfList == nullptr */
    {
-      sendPollerMsg(rqId, POLLER_ERROR _T("   Unable to get interface list from node\r\n"));
+      sendPollerMsg(POLLER_ERROR _T("   Unable to get interface list from node\r\n"));
    }
 
    // Finish poll
-   sendPollerMsg(rqId, _T("Finished interface names poll for node %s\r\n"), m_name);
+   sendPollerMsg(_T("Finished interface names poll for node %s\r\n"), m_name);
    _pollerUnlock();
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Finished interface names poll for node %s (ID: %d)"), m_name, m_id);
 }
@@ -11113,33 +11117,36 @@ void Node::updateClusterMembership()
    if (IsShutdownInProgress())
       return;
 
+   sendPollerMsg(_T("Processing cluster autobind rules\r\n"));
    SharedObjectArray<NetObj> *clusters = g_idxObjectById.getObjects(ClusterSelectionFilter);
    for(int i = 0; i < clusters->size(); i++)
    {
-      Cluster *pCluster = (Cluster *)clusters->get(i);
-      AutoBindDecision decision = pCluster->isApplicable(self());
+      Cluster *cluster = static_cast<Cluster*>(clusters->get(i));
+      AutoBindDecision decision = cluster->isApplicable(self());
       if (decision == AutoBindDecision_Bind)
       {
-         if (!pCluster->isDirectChild(m_id))
+         if (!cluster->isDirectChild(m_id))
          {
-            DbgPrintf(4, _T("DataCollectionTarget::updateClusterMembership(): binding object %d \"%s\" to cluster %d \"%s\""),
-                      m_id, m_name, pCluster->getId(), pCluster->getName());
-            pCluster->addChild(self());
-            addParent(pCluster->self());
-            PostSystemEvent(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode, "isis", m_id, m_name, pCluster->getId(), pCluster->getName());
-            pCluster->calculateCompoundStatus();
+            sendPollerMsg(_T("   Binding to cluster %s\r\n"), cluster->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateClusterMembership(): binding object %d \"%s\" to cluster %d \"%s\""),
+                      m_id, m_name, cluster->getId(), cluster->getName());
+            cluster->addChild(self());
+            addParent(cluster->self());
+            PostSystemEvent(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode, "isis", m_id, m_name, cluster->getId(), cluster->getName());
+            cluster->calculateCompoundStatus();
          }
       }
       else if (decision == AutoBindDecision_Unbind)
       {
-         if (pCluster->isAutoUnbindEnabled() && pCluster->isDirectChild(m_id))
+         if (cluster->isAutoUnbindEnabled() && cluster->isDirectChild(m_id))
          {
-            DbgPrintf(4, _T("DataCollectionTarget::updateClusterMembership(): removing object %d \"%s\" from cluster %d \"%s\""),
-                      m_id, m_name, pCluster->getId(), pCluster->getName());
-            pCluster->deleteChild(*this);
-            deleteParent(*pCluster);
-            PostSystemEvent(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, pCluster->getId(), pCluster->getName());
-            pCluster->calculateCompoundStatus();
+            sendPollerMsg(_T("   Removing from cluster %s\r\n"), cluster->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateClusterMembership(): removing object %d \"%s\" from cluster %d \"%s\""),
+                      m_id, m_name, cluster->getId(), cluster->getName());
+            cluster->deleteChild(*this);
+            deleteParent(*cluster);
+            PostSystemEvent(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, cluster->getId(), cluster->getName());
+            cluster->calculateCompoundStatus();
          }
       }
    }

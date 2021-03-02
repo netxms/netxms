@@ -215,6 +215,7 @@ AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<DataCollectionTar
 
    filter->setGlobalVariable("$container", m_this->createNXSLObject(filter));
    filter->setGlobalVariable("$template", m_this->createNXSLObject(filter));
+   filter->setUserData(target.get());  // For PollerTrace()
    if (filter->run())
    {
       const NXSL_Value *value = filter->getResult();

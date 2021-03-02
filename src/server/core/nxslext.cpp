@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1998,11 +1998,11 @@ static int F_SendNotification(int argc, NXSL_Value **argv, NXSL_Value **result, 
  */
 static int F_PollerTrace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   auto context = static_cast<std::pair<NetObj*, uint32_t>*>(vm->getUserData());
+   auto context = static_cast<NetObj*>(vm->getUserData());
    if (context != nullptr)
    {
       const TCHAR *text = argv[0]->getValueAsCString();
-      context->first->sendPollerMsg(context->second, _T("%s\r\n"), text);
+      context->sendPollerMsg(_T("%s\r\n"), text);
       nxlog_debug_tag(_T("nxsl.pollertrace"), 4, _T("%s"), text);
    }
    *result = vm->createValue();

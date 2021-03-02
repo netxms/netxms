@@ -417,15 +417,16 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
          Node *controller, SNMP_Transport *snmpTransport)
 {
    m_pollRequestor = session;
+   m_pollRequestId = rqId;
 
-   sendPollerMsg(rqId, _T("   Starting status poll on access point %s\r\n"), m_name);
-   sendPollerMsg(rqId, _T("      Current access point status is %s\r\n"), GetStatusAsText(m_status, true));
+   sendPollerMsg(_T("   Starting status poll on access point %s\r\n"), m_name);
+   sendPollerMsg(_T("      Current access point status is %s\r\n"), GetStatusAsText(m_status, true));
 
    AccessPointState state = controller->getAccessPointState(this, snmpTransport, m_radioInterfaces);
    if ((state == AP_UNKNOWN) && m_ipAddress.isValid())
    {
       DbgPrintf(6, _T("AccessPoint::statusPoll(%s [%d]): unable to get AP state from driver"), m_name, m_id);
-      sendPollerMsg(rqId, POLLER_WARNING _T("      Unable to get AP state from controller\r\n"));
+      sendPollerMsg(POLLER_WARNING _T("      Unable to get AP state from controller\r\n"));
 
 		uint32_t icmpProxy = 0;
 
@@ -440,7 +441,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 
 		if (icmpProxy != 0)
 		{
-			sendPollerMsg(rqId, _T("      Starting ICMP ping via proxy\r\n"));
+			sendPollerMsg(_T("      Starting ICMP ping via proxy\r\n"));
 			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): ping via proxy [%u]"), m_id, m_name, icmpProxy);
 			shared_ptr<Node> proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(icmpProxy));
 			if ((proxyNode != nullptr) && proxyNode->isNativeAgent() && !proxyNode->isDown())
@@ -461,13 +462,13 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 						{
                      if (value < 10000)
                      {
-                        sendPollerMsg(rqId, POLLER_ERROR _T("      responded to ICMP ping\r\n"));
+                        sendPollerMsg(POLLER_ERROR _T("      responded to ICMP ping\r\n"));
                         if (m_apState == AP_DOWN)
                            state = m_prevState;  /* FIXME: get actual AP state here */
                      }
                      else
                      {
-                        sendPollerMsg(rqId, POLLER_ERROR _T("      no response to ICMP ping\r\n"));
+                        sendPollerMsg(POLLER_ERROR _T("      no response to ICMP ping\r\n"));
                         state = AP_DOWN;
                      }
 						}
@@ -477,32 +478,32 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 				else
 				{
 					DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): cannot connect to agent on proxy node"), m_id, m_name);
-					sendPollerMsg(rqId, POLLER_ERROR _T("      Unable to establish connection with proxy node\r\n"));
+					sendPollerMsg(POLLER_ERROR _T("      Unable to establish connection with proxy node\r\n"));
 				}
 			}
 			else
 			{
 			   nxlog_debug(7, _T("AccessPoint::StatusPoll(%d,%s): proxy node not available"), m_id, m_name);
-				sendPollerMsg(rqId, POLLER_ERROR _T("      ICMP proxy not available\r\n"));
+				sendPollerMsg(POLLER_ERROR _T("      ICMP proxy not available\r\n"));
 			}
 		}
 		else	// not using ICMP proxy
 		{
          TCHAR buffer[64];
-			sendPollerMsg(rqId, _T("      Starting ICMP ping\r\n"));
+			sendPollerMsg(_T("      Starting ICMP ping\r\n"));
 			nxlog_debug(7, _T("AccessPoint::StatusPoll(%d,%s): calling IcmpPing on %s, timeout=%d, size=%d"), m_id, m_name,
 			         m_ipAddress.toString(buffer), g_icmpPingTimeout, g_icmpPingSize);
 			UINT32 responseTime;
 			UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &responseTime, g_icmpPingSize, false);
 			if (dwPingStatus == ICMP_SUCCESS)
          {
-				sendPollerMsg(rqId, POLLER_ERROR _T("      responded to ICMP ping\r\n"));
+				sendPollerMsg(POLLER_ERROR _T("      responded to ICMP ping\r\n"));
             if (m_apState == AP_DOWN)
                state = m_prevState;  /* FIXME: get actual AP state here */
          }
          else
 			{
-				sendPollerMsg(rqId, POLLER_ERROR _T("      no response to ICMP ping\r\n"));
+				sendPollerMsg(POLLER_ERROR _T("      no response to ICMP ping\r\n"));
             state = AP_DOWN;
 			}
 			nxlog_debug(7, _T("AccessPoint::StatusPoll(%d,%s): ping result %d, state=%d"), m_id, m_name, dwPingStatus, state);
@@ -511,8 +512,8 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 
    updateState(state);
 
-   sendPollerMsg(rqId, _T("      Access point status after poll is %s\r\n"), GetStatusAsText(m_status, true));
-	sendPollerMsg(rqId, _T("   Finished status poll on access point %s\r\n"), m_name);
+   sendPollerMsg(_T("      Access point status after poll is %s\r\n"), GetStatusAsText(m_status, true));
+	sendPollerMsg(_T("   Finished status poll on access point %s\r\n"), m_name);
 }
 
 /**
@@ -539,11 +540,12 @@ void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, 
    }
 
    m_pollRequestor = session;
+   m_pollRequestId = rqId;
    nxlog_debug(5, _T("Starting configuration poll for access point %s (ID: %d), m_flags: %d"), m_name, m_id, m_flags);
 
    poller->setStatus(_T("autobind"));
    if (ConfigReadBoolean(_T("Objects.AccessPoints.TemplateAutoApply"), false))
-      applyUserTemplates();
+      applyTemplates();
    if (ConfigReadBoolean(_T("Objects.AccessPoints.ContainerAutoBind"), false))
       updateContainerMembership();
 
@@ -551,7 +553,7 @@ void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, 
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"), rqId);
 
-   sendPollerMsg(rqId, _T("Finished configuration poll for access point %s\r\n"), m_name);
+   sendPollerMsg(_T("Finished configuration poll for access point %s\r\n"), m_name);
 
    lockProperties();
    m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
