@@ -238,6 +238,19 @@ bool NetworkDeviceDriver::getVirtualizationType(SNMP_Transport *snmp, NObject *n
 }
 
 /**
+ * Get device geographical location.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @return device geographical location or "UNSET" type location object
+ */
+GeoLocation NetworkDeviceDriver::getGeoLocation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   return GeoLocation();
+}
+
+/**
  * Handler for enumerating indexes
  */
 static UINT32 HandlerIndex(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)

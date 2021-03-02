@@ -39,6 +39,7 @@ public:
    virtual int isPotentialDevice(const TCHAR *oid) override;
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual GeoLocation getGeoLocation(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
 };
 
 #endif
