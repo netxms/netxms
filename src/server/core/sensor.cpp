@@ -547,6 +547,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
    }
 
    m_pollRequestor = session;
+   m_pollRequestId = rqId;
    nxlog_debug(5, _T("Starting configuration poll for sensor %s (ID: %d), m_flags: %d"), m_name, m_id, m_flags);
 
    bool hasChanges = false;
@@ -576,7 +577,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
 
    poller->setStatus(_T("autobind"));
    if (ConfigReadBoolean(_T("Objects.Sensors.TemplateAutoApply"), false))
-      applyUserTemplates();
+      applyTemplates();
    if (ConfigReadBoolean(_T("Objects.Sensors.ContainerAutoBind"), false))
       updateContainerMembership();
 
@@ -584,8 +585,8 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"), rqId);
 
-   sendPollerMsg(rqId, _T("Finished configuration poll for sensor %s\r\n"), m_name);
-   sendPollerMsg(rqId, _T("Sensor configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
+   sendPollerMsg(_T("Finished configuration poll for sensor %s\r\n"), m_name);
+   sendPollerMsg(_T("Sensor configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
 
    lockProperties();
    m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
@@ -635,14 +636,15 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
    }
 
    m_pollRequestor = session;
-   sendPollerMsg(rqId, _T("Starting status poll for sensor %s\r\n"), m_name);
+   m_pollRequestId = rqId;
+   sendPollerMsg(_T("Starting status poll for sensor %s\r\n"), m_name);
    nxlog_debug(5, _T("Starting status poll for sensor %s (ID: %d)"), m_name, m_id);
 
    UINT32 prevState = m_state;
 
    nxlog_debug(6, _T("StatusPoll(%s): checking agent"), m_name);
    poller->setStatus(_T("check agent"));
-   sendPollerMsg(rqId, _T("Checking NetXMS agent connectivity\r\n"));
+   sendPollerMsg(_T("Checking NetXMS agent connectivity\r\n"));
 
    shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    lockProperties();
@@ -652,13 +654,13 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
       if (m_state & DCSF_UNREACHABLE)
       {
          m_state &= ~DCSF_UNREACHABLE;
-         sendPollerMsg(rqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
+         sendPollerMsg(POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
       }
    }
    else
    {
       nxlog_debug(6, _T("StatusPoll(%s): agent unreachable"), m_name);
-      sendPollerMsg(rqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
+      sendPollerMsg(POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
       if (!(m_state & DCSF_UNREACHABLE))
          m_state |= DCSF_UNREACHABLE;
    }
@@ -731,8 +733,8 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
       setModified(MODIFY_SENSOR_PROPERTIES);
    unlockProperties();
 
-   sendPollerMsg(rqId, _T("Finished status poll for sensor %s\r\n"), m_name);
-   sendPollerMsg(rqId, _T("Sensor status after poll is %s\r\n"), GetStatusAsText(m_status, true));
+   sendPollerMsg(_T("Finished status poll for sensor %s\r\n"), m_name);
+   sendPollerMsg(_T("Sensor status after poll is %s\r\n"), GetStatusAsText(m_status, true));
 
    pollerUnlock();
    nxlog_debug(5, _T("Finished status poll for sensor %s (ID: %d)"), m_name, m_id);

@@ -310,6 +310,7 @@ UINT32 NetworkService::modifyFromMessageInternal(NXCPMessage *pRequest)
 void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, const shared_ptr<Node>& pollerNode, ObjectQueue<Event> *eventQueue)
 {
    m_pollRequestor = session;
+   m_pollRequestId = rqId;
 
    shared_ptr<Node> hostNode = m_hostNode.lock();
    if (hostNode == nullptr)
@@ -318,8 +319,8 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, const share
       return;     // Service without host node, which is VERY strange
    }
 
-   sendPollerMsg(rqId, _T("   Starting status poll on network service %s\r\n"), m_name);
-   sendPollerMsg(rqId, _T("      Current service status is %s\r\n"), GetStatusAsText(m_status, true));
+   sendPollerMsg(_T("   Starting status poll on network service %s\r\n"), m_name);
+   sendPollerMsg(_T("      Current service status is %s\r\n"), GetStatusAsText(m_status, true));
 
    int oldStatus = m_status, newStatus;
 
@@ -340,7 +341,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, const share
       TCHAR szBuffer[64];
       UINT32 dwStatus;
 
-      sendPollerMsg(rqId, _T("      Polling service from node %s [%s]\r\n"),
+      sendPollerMsg(_T("      Polling service from node %s [%s]\r\n"),
                node->getName(), node->getIpAddress().toString(szBuffer));
       if (node->checkNetworkService(&dwStatus,
                                      m_ipAddress.isValidUnicast() ? m_ipAddress : hostNode->getIpAddress(),
@@ -348,17 +349,17 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, const share
                                      m_request, m_response, &m_responseTime) == ERR_SUCCESS)
       {
          newStatus = (dwStatus == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
-         sendPollerMsg(rqId, _T("      Agent reports service status [%d]\r\n"), dwStatus);
+         sendPollerMsg(_T("      Agent reports service status [%d]\r\n"), dwStatus);
       }
       else
       {
-         sendPollerMsg(rqId, _T("      Unable to check service status due to agent or communication error\r\n"));
+         sendPollerMsg(_T("      Unable to check service status due to agent or communication error\r\n"));
          newStatus = STATUS_UNKNOWN;
       }
    }
    else
    {
-      sendPollerMsg(rqId, _T("      Unable to find node object for poll\r\n"));
+      sendPollerMsg(_T("      Unable to find node object for poll\r\n"));
       newStatus = STATUS_UNKNOWN;
    }
 
@@ -385,7 +386,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, const share
 		{
 			m_status = newStatus;
 			m_pendingStatus = -1;	// Invalidate pending status
-			sendPollerMsg(rqId, _T("      Service status changed to %s\r\n"), GetStatusAsText(m_status, true));
+			sendPollerMsg(_T("      Service status changed to %s\r\n"), GetStatusAsText(m_status, true));
 			PostSystemEventEx(eventQueue, m_status == STATUS_NORMAL ? EVENT_SERVICE_UP :
 							(m_status == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
 							hostNode->getId(), "sdd", m_name, m_id, m_serviceType);
@@ -394,7 +395,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, const share
 			unlockProperties();
 		}
    }
-   sendPollerMsg(rqId, _T("   Finished status poll on network service %s\r\n"), m_name);
+   sendPollerMsg(_T("   Finished status poll on network service %s\r\n"), m_name);
 }
 
 /**

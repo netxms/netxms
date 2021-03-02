@@ -967,6 +967,7 @@ protected:
 	GeoLocation m_geoLocation;
    PostalAddress *m_postalAddress;
    ClientSession *m_pollRequestor;
+   uint32_t m_pollRequestId;
 	IntegerArray<UINT32> *m_dashboards; // Dashboards associated with this object
 	ObjectArray<ObjectUrl> *m_urls;  // URLs associated with this object
 	uint32_t m_primaryZoneProxyId;     // ID of assigned primary zone proxy node
@@ -1162,7 +1163,7 @@ public:
    void setStatusCalculation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
    void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
 
-   void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...);
+   void sendPollerMsg(const TCHAR *format, ...);
 
    StringBuffer expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci,
             const TCHAR *userName, const TCHAR *objectName, const StringMap *inputFields, const StringList *args);
@@ -2086,7 +2087,7 @@ protected:
 
    NXSL_VM *runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject);
 
-   void applyUserTemplates();
+   void applyTemplates();
    void updateContainerMembership();
 
    DataCollectionError queryWebService(const TCHAR *param, WebServiceRequestType queryType, TCHAR *buffer, size_t bufSize, StringList *list);
@@ -3085,7 +3086,7 @@ protected:
    bool updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestId);
    bool updateHardwareComponents(PollerInfo *poller, uint32_t requestId);
    bool updateSoftwarePackages(PollerInfo *poller, uint32_t requestId);
-   bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, UINT32 pollRqId, TCHAR **value);
+   bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, TCHAR **value);
    void checkBridgeMib(SNMP_Transport *pTransport);
    void checkIfXTable(SNMP_Transport *pTransport);
    NetworkPathCheckResult checkNetworkPath(uint32_t requestId);

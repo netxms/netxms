@@ -81,6 +81,7 @@ NetObj::NetObj() : NObject()
    m_inheritAccessRights = true;
 	m_trustedNodes = nullptr;
    m_pollRequestor = nullptr;
+   m_pollRequestId = 0;
    m_statusCalcAlg = SA_CALCULATE_DEFAULT;
    m_statusPropAlg = SA_PROPAGATE_DEFAULT;
    m_fixedStatus = STATUS_WARNING;
@@ -1613,18 +1614,17 @@ bool NetObj::setMgmtStatus(bool isManaged)
  * Send message to client, who requests poll, if any
  * This method is used by Node and Interface class objects
  */
-void NetObj::sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...)
+void NetObj::sendPollerMsg(const TCHAR *format, ...)
 {
-   if (m_pollRequestor != NULL)
-   {
-      va_list args;
-      TCHAR szBuffer[1024];
+   if (m_pollRequestor == nullptr)
+      return;
 
-      va_start(args, pszFormat);
-      _vsntprintf(szBuffer, 1024, pszFormat, args);
-      va_end(args);
-      m_pollRequestor->sendPollerMsg(dwRqId, szBuffer);
-   }
+   va_list args;
+   va_start(args, format);
+   TCHAR buffer[1024];
+   _vsntprintf(buffer, 1024, format, args);
+   va_end(args);
+   m_pollRequestor->sendPollerMsg(m_pollRequestId, buffer);
 }
 
 /**
@@ -2424,8 +2424,7 @@ void NetObj::executeHookScript(const TCHAR *hookName, uint32_t pollRequestId)
       return;
    }
 
-   std::pair<NetObj*, uint32_t> context(this, pollRequestId);
-   vm->setUserData(&context);
+   vm->setUserData(this);
    if (!vm->run())
    {
       nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
