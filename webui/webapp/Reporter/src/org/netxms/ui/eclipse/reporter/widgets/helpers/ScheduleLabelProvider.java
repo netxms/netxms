@@ -63,14 +63,14 @@ public class ScheduleLabelProvider extends LabelProvider implements ITableLabelP
       final ScheduledTask task = ((ReportingJob)element).getTask();
       switch(columnIndex)
       {
-         case ReportExecutionForm.SCHEDULED_EXECUTION_TIME:
+         case ReportExecutionForm.COLUMN_SCHEDULE_EXEC_TIME:
             return task.getSchedule().isEmpty() ? RegionalSettings.getDateTimeFormat().format(task.getExecutionTime()) : task.getSchedule();
-         case ReportExecutionForm.SCHEDULE_OWNER:
+         case ReportExecutionForm.COLUMN_SCHEDULE_OWNER:
             AbstractUserObject user = ConsoleSharedData.getSession().findUserDBObjectById(task.getOwner(), new UserRefreshRunnable(viewer, element));
             return (user != null) ? user.getName() : ("[" + task.getOwner() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-         case ReportExecutionForm.LAST_EXECUTION_TIME:
+         case ReportExecutionForm.COLUMN_SCHEDULE_LAST_EXEC_TIME:
             return (task.getLastExecutionTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(task.getLastExecutionTime());
-         case ReportExecutionForm.STATUS:
+         case ReportExecutionForm.COLUMN_SCHEDULE_STATUS:
             return task.getStatus();
       }
 
