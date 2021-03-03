@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.GridData;
 import org.eclipse.draw2d.GridLayout;
@@ -29,12 +30,14 @@ import org.eclipse.draw2d.text.TextFlow;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.netxms.base.MacAddress;
+import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
@@ -45,7 +48,10 @@ import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.figures.BirtChartFigure;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.Messages;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Tooltip for object on map
@@ -53,12 +59,19 @@ import org.netxms.ui.eclipse.networkmaps.Messages;
 public class ObjectTooltip extends Figure
 {
 	private NodeLastValuesFigure lastValuesFigure = null;
+   private int index;
+   private AbstractObject object;
+   private MapLabelProvider labelProvider;
+   private long refreshTimestamp = 0;
 
 	/**
 	 * @param object
 	 */
 	public ObjectTooltip(AbstractObject object, MapLabelProvider labelProvider)
 	{
+	   this.object = object;
+	   this.labelProvider = labelProvider;
+	   
 		setBorder(new MarginBorder(3));
 		GridLayout layout = new GridLayout(2, false);
 		layout.horizontalSpacing = 10;
@@ -114,20 +127,21 @@ public class ObjectTooltip extends Figure
 			gd.horizontalSpan = 2;
 			setConstraint(iface, gd);
 		}
-
-		if (object instanceof Node)
+		
+      index = getChildren().size();		
+		if (object instanceof Node && labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL)
 		{
-			DciValue[] values = labelProvider.getNodeLastValues(object.getObjectId());
-			if ((values != null) && (values.length > 0))
-			{
-				lastValuesFigure = new NodeLastValuesFigure(values);
-				add(lastValuesFigure);
-
-				gd = new GridData();
-				gd.horizontalSpan = 2;
-				setConstraint(lastValuesFigure, gd);
-			}
-		}
+   		DciValue[] values = labelProvider.getNodeLastValues(object.getObjectId());
+   		if ((values != null) && (values.length > 0))
+   		{
+      		lastValuesFigure = new NodeLastValuesFigure(values);
+            add(lastValuesFigure);
+            
+             gd = new GridData();
+            gd.horizontalSpan = 2;
+            setConstraint(lastValuesFigure, gd);
+         }
+      }
 
 		if (object instanceof Container)
 			addStatusChart(object, labelProvider);
@@ -176,6 +190,63 @@ public class ObjectTooltip extends Figure
 			text.setText("\n" + object.getComments()); //$NON-NLS-1$
 			page.add(text);
 		}
+	}
+
+   /**
+    * Refresh tooltip
+    */
+   public void refresh()
+   {
+      long now = System.currentTimeMillis();
+      if (now < refreshTimestamp + 15000)
+         return;
+
+      refreshTimestamp = now;
+	   if (labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL)
+	      return;
+	   
+      final NXCSession session = ConsoleSharedData.getSession();
+      final long nodeId = object.getObjectId();
+      ConsoleJob job = new ConsoleJob("Get DCI data for object tooltip", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            try
+            {
+               final DciValue[] values = session.getLastValues(nodeId, true, false, false);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     if ((object instanceof Node) && (values != null) && (values.length > 0))
+                     {
+                        if (lastValuesFigure != null)
+                           remove(lastValuesFigure);
+                        lastValuesFigure = new NodeLastValuesFigure(values);
+                        GridData gd = new GridData();
+                        gd.horizontalSpan = 2;
+                        add(lastValuesFigure, gd, index);
+                        layout();
+                        labelProvider.getViewer().resizeToolTipShell();
+                     }
+                  }
+               });
+            }
+            catch(Exception e)
+            {
+               Activator.logError("Exception while reading data for object tooltip", e); //$NON-NLS-1$
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return null;
+         }
+      };
+      job.setUser(false);
+      job.setSystem(true);
+      job.start();
 	}
 
    /**

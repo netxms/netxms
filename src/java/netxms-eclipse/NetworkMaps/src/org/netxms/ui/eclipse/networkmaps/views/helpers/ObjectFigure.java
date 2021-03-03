@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,13 +35,13 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public abstract class ObjectFigure extends Figure
 {
 	protected static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 132, 0, 200);
-	
+
 	protected NetworkMapObject element;
 	protected AbstractObject object;
 	protected MapLabelProvider labelProvider;
-	
+
 	private boolean moved = false;
-	
+
 	/**
 	 * Constructor
 	 */
@@ -49,17 +49,17 @@ public abstract class ObjectFigure extends Figure
 	{
 		this.element = element;
 		this.labelProvider = labelProvider;
-		
+
 		// set default font
       setFont(labelProvider.getLabelFont());
-		
+
 		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		object = session.findObjectById(element.getObjectId());
 		if (object == null)
 			object = new UnknownObject(element.getObjectId(), session);
 
 		setFocusTraversable(true);
-		
+
 		addFigureListener(new FigureListener() {
 			@Override
 			public void figureMoved(IFigure source)
@@ -68,17 +68,31 @@ public abstract class ObjectFigure extends Figure
 			}
 		});
 	}
-	
-   /* (non-Javadoc)
-	 * @see org.eclipse.draw2d.Figure#setToolTip(org.eclipse.draw2d.IFigure)
-	 */
+
+   /**
+    * @see org.eclipse.draw2d.Figure#getToolTip()
+    */
+   @Override
+   public IFigure getToolTip()
+   {
+      IFigure tooltip = super.getToolTip();
+      if ((tooltip != null) && (tooltip instanceof ObjectTooltip))
+      {
+         ((ObjectTooltip)tooltip).refresh();
+      }
+      return tooltip;
+   }
+
+   /**
+    * @see org.eclipse.draw2d.Figure#setToolTip(org.eclipse.draw2d.IFigure)
+    */
 	@Override
 	public void setToolTip(IFigure f)
 	{
 		// Use our own tooltip figure instead of supplied by viewer
 		super.setToolTip((f == null) ? null : new ObjectTooltip(object, labelProvider));
 	}
-	
+
 	/**
 	 * Check if associated map element is currently selected.
 	 * 
@@ -88,7 +102,7 @@ public abstract class ObjectFigure extends Figure
 	{
 		return labelProvider.isElementSelected(element);
 	}
-	
+
 	/**
 	 * Read figure's "moved" state. State reset to false after read.
 	 * 

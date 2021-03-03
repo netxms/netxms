@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,8 +110,8 @@ public class NetworkMapWidget extends Composite
 		setLayout(new FillLayout());
 
 		viewer = new ExtendedGraphViewer(this, SWT.NONE);
-		viewer.setContentProvider(new MapContentProvider(viewer));
-		labelProvider = new MapLabelProvider(viewer);
+      labelProvider = new MapLabelProvider(viewer);
+		viewer.setContentProvider(new MapContentProvider(viewer, labelProvider));
 		viewer.setLabelProvider(labelProvider);
 		
 		addDisposeListener(new DisposeListener() {
