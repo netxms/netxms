@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -199,8 +199,16 @@ struct CutoffTimes
 static void DropChunksForStorageClass(DB_HANDLE hdb, time_t cutoffTime, TCHAR objectType, DCObjectStorageClass storageClass)
 {
    TCHAR query[256];
-   _sntprintf(query, 256, _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), '%cdata_sc_%s')"),
-            static_cast<int64_t>(cutoffTime), objectType, DCObject::getStorageClassName(storageClass));
+   if (g_flags & AF_TSDB_DROP_CHUNKS_V2)
+   {
+      _sntprintf(query, 256, _T("SELECT drop_chunks('%cdata_sc_%s', to_timestamp(") INT64_FMT _T("))"),
+               objectType, DCObject::getStorageClassName(storageClass), static_cast<int64_t>(cutoffTime));
+   }
+   else
+   {
+      _sntprintf(query, 256, _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), '%cdata_sc_%s')"),
+               static_cast<int64_t>(cutoffTime), objectType, DCObject::getStorageClassName(storageClass));
+   }
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Executing query \"%s\""), query);
    DBQuery(hdb, query);
 }
@@ -259,6 +267,17 @@ static void QueuePredictionEngineTraining(NetObj *object, void *arg)
    if (s_shutdown || !object->isDataCollectionTarget())
       return;
    static_cast<DataCollectionTarget*>(object)->queuePredictionEngineTraining();
+}
+
+/**
+ * Construct query with drop_chunks() function
+ */
+static void BuildDropChunksQuery(const TCHAR *table, time_t cutoffTime, TCHAR *query, size_t size)
+{
+   if (g_flags & AF_TSDB_DROP_CHUNKS_V2)
+      _sntprintf(query, size, _T("SELECT drop_chunks('%s', to_timestamp(") INT64_FMT _T("))"), table, static_cast<int64_t>(cutoffTime));
+   else
+      _sntprintf(query, size, _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), '%s')"), static_cast<int64_t>(cutoffTime), table);
 }
 
 /**
@@ -325,7 +344,7 @@ static void HouseKeeper()
 			retentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
          if (g_dbSyntax == DB_SYNTAX_TSDB)
-            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), 'event_log')"), static_cast<int64_t>(cycleStartTime - retentionTime));
+            BuildDropChunksQuery(_T("event_log"), cycleStartTime - retentionTime, query, sizeof(query) / sizeof(TCHAR));
          else
             _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
 			DBQuery(hdb, query);
@@ -341,7 +360,7 @@ static void HouseKeeper()
 			retentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
          if (g_dbSyntax == DB_SYNTAX_TSDB)
-            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), 'syslog')"), static_cast<int64_t>(cycleStartTime - retentionTime));
+            BuildDropChunksQuery(_T("syslog"), cycleStartTime - retentionTime, query, sizeof(query) / sizeof(TCHAR));
          else
             _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
 			DBQuery(hdb, query);
@@ -357,7 +376,7 @@ static void HouseKeeper()
          retentionTime *= 86400; // Convert days to seconds
          TCHAR query[256];
          if (g_dbSyntax == DB_SYNTAX_TSDB)
-            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), 'win_event_log')"), static_cast<int64_t>(cycleStartTime - retentionTime));
+            BuildDropChunksQuery(_T("win_event_log"), cycleStartTime - retentionTime, query, sizeof(query) / sizeof(TCHAR));
          else
             _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM win_event_log WHERE event_timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
          DBQuery(hdb, query);
@@ -386,7 +405,7 @@ static void HouseKeeper()
 			retentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
          if (g_dbSyntax == DB_SYNTAX_TSDB)
-            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT drop_chunks(to_timestamp(") INT64_FMT _T("), 'snmp_trap_log')"), static_cast<int64_t>(cycleStartTime - retentionTime));
+            BuildDropChunksQuery(_T("snmp_trap_log"), cycleStartTime - retentionTime, query, sizeof(query) / sizeof(TCHAR));
          else
             _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_log WHERE trap_timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
 			DBQuery(hdb, query);

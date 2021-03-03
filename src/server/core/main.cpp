@@ -903,7 +903,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
    else if (g_dbSyntax == DB_SYNTAX_PGSQL)
    {
       DB_RESULT hResult = DBSelect(hdbBootstrap, _T("SELECT version()"));
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) > 0)
          {
@@ -926,6 +926,26 @@ BOOL NXCORE_EXPORTABLE Initialize()
    {
       // TimeScaleDB requires PostgreSQL 9.6.3+ so merge is always supported
       g_flags |= AF_DB_SUPPORTS_MERGE;
+
+      DB_RESULT hResult = DBSelect(hdbBootstrap, _T("SELECT extversion FROM pg_extension WHERE extname='timescaledb'"));
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            char version[256];
+            DBGetFieldA(hResult, 0, 0, version, 256);
+            int major, minor;
+            if (sscanf(version, "%d.%d.", &major, &minor) == 2)
+            {
+               nxlog_debug(1, _T("Detected TimescaleDB version %d.%d"), major, minor);
+               if (major >= 2)
+               {
+                  g_flags |= AF_TSDB_DROP_CHUNKS_V2;
+               }
+            }
+         }
+         DBFreeResult(hResult);
+      }
    }
 	else if (g_dbSyntax == DB_SYNTAX_SQLITE)
 	{
