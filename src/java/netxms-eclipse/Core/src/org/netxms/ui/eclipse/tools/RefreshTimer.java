@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.tools;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 
 /**
  * Refresh timer helper class - calls given runnable on demand,
@@ -30,6 +31,7 @@ public class RefreshTimer
 {
    private static ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(4);
    
+   private Display display;
    private Control control;
    private Runnable callback;
    private long interval;
@@ -49,13 +51,28 @@ public class RefreshTimer
    {
       this.interval = interval;
       this.control = control;
+      this.display = control.getDisplay();
       this.callback = callback;
    }
    
    /**
-    * Execute runnable if possible. If last execution was later than current time minus
-    * interval, runnable execution will be delayed. Multiple delayed execution requests will
-    * be reduced into one.
+    * Create new refresh timer
+    * 
+    * @param interval minimal interval between executions (in milliseconds)
+    * @param display managing display
+    * @param callback callback to run
+    */
+   public RefreshTimer(int interval, Display display, Runnable callback)
+   {
+      this.interval = interval;
+      this.control = null;
+      this.display = display;
+      this.callback = callback;
+   }
+
+   /**
+    * Execute runnable if possible. If last execution was later than current time minus interval, runnable execution will be
+    * delayed. Multiple delayed execution requests will be reduced into one.
     */
    public synchronized void execute()
    {
@@ -69,11 +86,11 @@ public class RefreshTimer
       if ((interval <= 0) || (curr - lastRun >= interval))
       {
          lastRun = curr;
-         control.getDisplay().asyncExec(new Runnable() {
+         display.asyncExec(new Runnable() {
             @Override
             public void run()
             {
-               if (!control.isDisposed())
+               if ((control == null) || !control.isDisposed())
                   callback.run();
             }
          });
@@ -92,12 +109,12 @@ public class RefreshTimer
                   return;
                }
                
-               control.getDisplay().asyncExec(new Runnable() {
+               display.asyncExec(new Runnable() {
                   @Override
                   public void run()
                   {
                      onTimer();
-                     if (!control.isDisposed())
+                     if ((control == null) || !control.isDisposed())
                         callback.run();
                   }
                });

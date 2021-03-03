@@ -28,6 +28,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
@@ -51,12 +52,15 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	private Thread syncThread = null;
 	private volatile boolean syncRunning = true;
+	private MapLabelProvider labelProvider;
 	
 	/**
 	 * Constructor
+	 * @param labelProvider 
 	 */
-	public MapContentProvider(ExtendedGraphViewer viewer)
+	public MapContentProvider(ExtendedGraphViewer viewer, MapLabelProvider labelProvider)
 	{
+	   this.labelProvider = labelProvider;
 		this.viewer = viewer;
 		final Display display = viewer.getControl().getDisplay();
 		syncThread = new Thread(new Runnable() {
@@ -89,7 +93,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 			{
 			   try 
 			   {
-			      if(cachedDciValues.size() > 0)
+			      if(labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL && cachedDciValues.size() > 0)
 			         cachedDciValues.putAll(session.getTooltipLastValues(cachedDciValues.keySet()));
 			   }
             catch(Exception e2)
@@ -105,14 +109,17 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 						
 						synchronized(cachedDciValues)
 						{
-							for(Entry<Long, DciValue[]> e : cachedDciValues.entrySet())
-							{
-								if ((e.getValue() == null) || (e.getValue().length == 0))
-									continue;
-								NetworkMapObject o = page.findObjectElement(e.getKey());
-								if (o != null)
-									viewer.refresh(o);
-							}
+						   if(labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL)
+						   {
+   							for(Entry<Long, DciValue[]> e : cachedDciValues.entrySet())
+   							{
+   								if ((e.getValue() == null) || (e.getValue().length == 0))
+   									continue;
+   								NetworkMapObject o = page.findObjectElement(e.getKey());
+   								if (o != null)
+   									viewer.refresh(o);
+   							}
+						   }
 							if(page != null && page.getLinks() != null)
 							{
    							for(NetworkMapLink e : page.getLinks())

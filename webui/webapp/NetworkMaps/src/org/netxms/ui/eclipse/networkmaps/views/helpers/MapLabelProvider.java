@@ -785,4 +785,14 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    {
       this.connectionsVisible = connectionsVisible;
    }
+
+   /**
+    * Get owning viewer.
+    *
+    * @return the viewer owning viewer
+    */
+   public ExtendedGraphViewer getViewer()
+   {
+      return viewer;
+   }
 }

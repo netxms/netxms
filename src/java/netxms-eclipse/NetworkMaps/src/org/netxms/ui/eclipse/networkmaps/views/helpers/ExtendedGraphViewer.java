@@ -32,8 +32,10 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Layer;
 import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
+import org.eclipse.draw2d.SWTEventDispatcher;
 import org.eclipse.draw2d.SWTGraphics;
 import org.eclipse.draw2d.ScalableFigure;
+import org.eclipse.draw2d.ToolTipHelper;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.gef4.zest.core.viewers.GraphViewer;
 import org.eclipse.gef4.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
@@ -58,6 +60,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
@@ -82,7 +85,8 @@ import org.netxms.ui.eclipse.tools.ColorCache;
 public class ExtendedGraphViewer extends GraphViewer
 {
 	private static final double[] zoomLevels = { 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 4.00 };
-	
+
+   private ExtendedSWTEventDispatcher eventDispatcher;
 	private BackgroundFigure backgroundFigure;
 	private Image backgroundImage = null;
 	private GeoLocation backgroundLocation = null;
@@ -115,6 +119,9 @@ public class ExtendedGraphViewer extends GraphViewer
 	{
 		super(composite, style);
 		
+      eventDispatcher = new ExtendedSWTEventDispatcher();
+      graph.getLightweightSystem().setEventDispatcher(eventDispatcher);
+
 		colors = new ColorCache(graph);
 		
 		final ScalableFigure rootLayer = graph.getRootLayer();
@@ -244,7 +251,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			}
 		};
 	}
-	
+
 	/**
 	 * Update decoration figure
 	 * 
@@ -257,9 +264,9 @@ public class ExtendedGraphViewer extends GraphViewer
 			figure.refresh();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.gef4.zest.core.viewers.GraphViewer#inputChanged(java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.gef4.zest.core.viewers.GraphViewer#inputChanged(java.lang.Object, java.lang.Object)
+    */
 	@Override
 	protected void inputChanged(Object input, Object oldInput)
 	{
@@ -330,10 +337,10 @@ public class ExtendedGraphViewer extends GraphViewer
 			firePostSelectionChanged(event);
 		}
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.gef4.zest.core.viewers.GraphViewer#setSelectionToWidget(java.util.List, boolean)
-	 */
+
+   /**
+    * @see org.eclipse.gef4.zest.core.viewers.GraphViewer#setSelectionToWidget(java.util.List, boolean)
+    */
 	@SuppressWarnings("rawtypes")
 	@Override
 	protected void setSelectionToWidget(List l, boolean reveal)
@@ -496,9 +503,9 @@ public class ExtendedGraphViewer extends GraphViewer
 		gc.dispose();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.StructuredViewer#internalRefresh(java.lang.Object, boolean)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.StructuredViewer#internalRefresh(java.lang.Object, boolean)
+    */
 	@Override
 	protected void internalRefresh(Object element, boolean updateLabels)
 	{
@@ -785,9 +792,17 @@ public class ExtendedGraphViewer extends GraphViewer
       graph.setDraggingEnabled(draggingEnabled);
    }
 
-   /* (non-Javadoc)
-	 * @see org.eclipse.gef4.zest.core.viewers.GraphViewer#getFactory()
-	 */
+   /**
+    * Resize tooltip's shell. Usually called by tooltip figure after re-layout.
+    */
+   void resizeToolTipShell()
+   {
+      eventDispatcher.resizeToolTipShell();
+   }
+
+   /**
+    * @see org.eclipse.gef4.zest.core.viewers.GraphViewer#getFactory()
+    */
 	@Override
 	protected IStylingGraphModelFactory getFactory()
 	{
@@ -825,9 +840,9 @@ public class ExtendedGraphViewer extends GraphViewer
 	 */
 	private class BackgroundFigure extends Figure implements IDecorationLayer
 	{
-		/* (non-Javadoc)
-		 * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
-		 */
+      /**
+       * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+       */
 		@Override
 		protected void paintFigure(Graphics gc)
 		{
@@ -835,23 +850,23 @@ public class ExtendedGraphViewer extends GraphViewer
 				gc.drawImage(backgroundImage, 0, 0);
 		}
 	}
-	
+
 	/**
 	 * Crosshair
 	 */
 	private class Crosshair extends Figure
 	{
 		/**
-		 * 
-		 */
+       * Create crosshair figure
+       */
 		public Crosshair()
 		{
 			setOpaque(false);
 		}
 		
-		/* (non-Javadoc)
-		 * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
-		 */
+      /**
+       * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+       */
 		@Override
 		protected void paintFigure(Graphics gc)
 		{
@@ -874,10 +889,10 @@ public class ExtendedGraphViewer extends GraphViewer
 		{
 			setOpaque(false);
 		}
-		
-		/* (non-Javadoc)
-		 * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
-		 */
+
+      /**
+       * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+       */
 		@Override
 		protected void paintFigure(Graphics gc)
 		{
@@ -893,7 +908,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	/**
 	 * Overlay button
 	 */
-	private class OverlayButton extends Figure
+   private class OverlayButton extends Figure
 	{
 	   private Image icon;
 	   private Runnable action;
@@ -925,8 +940,8 @@ public class ExtendedGraphViewer extends GraphViewer
 	      });
 	      setSize(getPreferredSize());
 	   }
-	   
-	   /* (non-Javadoc)
+
+      /**
        * @see org.eclipse.draw2d.Figure#getPreferredSize(int, int)
        */
       @Override
@@ -935,7 +950,7 @@ public class ExtendedGraphViewer extends GraphViewer
          return new Dimension(icon.getImageData().width, icon.getImageData().height).expand(6, 6);
       }
 
-      /* (non-Javadoc)
+      /**
        * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
        */
       @Override
@@ -961,4 +976,52 @@ public class ExtendedGraphViewer extends GraphViewer
 	      this.action = action;
 	   }
 	}
+
+   /**
+    * Extended SWT event dispatcher - provides access to tooltip helper's shell
+    */
+   private static class ExtendedSWTEventDispatcher extends SWTEventDispatcher
+   {
+      private ExtendedToolTipHelper toolTipHelper;
+
+      /**
+       * @see org.eclipse.draw2d.SWTEventDispatcher#getToolTipHelper()
+       */
+      @Override
+      protected ToolTipHelper getToolTipHelper()
+      {
+         if (toolTipHelper == null)
+            toolTipHelper = new ExtendedToolTipHelper(control);
+         return toolTipHelper;
+      }
+
+      /**
+       * Resize tooltip shell
+       */
+      public void resizeToolTipShell()
+      {
+         if (toolTipHelper.isShowing())
+            toolTipHelper.resizeShell();
+      }
+   }
+
+   /**
+    * Extended tooltip helper - provides access to tooltip helper's shell
+    */
+   private static class ExtendedToolTipHelper extends ToolTipHelper
+   {
+      public ExtendedToolTipHelper(Control c)
+      {
+         super(c);
+      }
+
+      /**
+       * Resize tooltip shell
+       */
+      public void resizeShell()
+      {
+         Dimension shellSize = getLightweightSystem().getRootFigure().getPreferredSize().getExpanded(getShellTrimSize());
+         getShell().setSize(shellSize.width, shellSize.height);
+      }
+   }
 }
