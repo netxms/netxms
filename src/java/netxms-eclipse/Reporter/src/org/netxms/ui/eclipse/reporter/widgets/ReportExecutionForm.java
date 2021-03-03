@@ -79,6 +79,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.reporter.Activator;
 import org.netxms.ui.eclipse.reporter.api.CustomControlFactory;
 import org.netxms.ui.eclipse.reporter.propertypages.General;
+import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportResultComparator;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ReportResultLabelProvider;
 import org.netxms.ui.eclipse.reporter.widgets.helpers.ScheduleLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -93,14 +94,14 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 @SuppressWarnings("restriction")
 public class ReportExecutionForm extends Composite
 {
-   public static final int SCHEDULED_EXECUTION_TIME = 0;
-   public static final int SCHEDULE_OWNER = 1;
-   public static final int LAST_EXECUTION_TIME = 2;
-   public static final int STATUS = 3;
+   public static final int COLUMN_SCHEDULE_EXEC_TIME = 0;
+   public static final int COLUMN_SCHEDULE_OWNER = 1;
+   public static final int COLUMN_SCHEDULE_LAST_EXEC_TIME = 2;
+   public static final int COLUMN_SCHEDULE_STATUS = 3;
 
-	public static final int RESULT_EXEC_TIME = 0;
-   public static final int RESULT_STARTED_BY = 1;
-   public static final int RESULT_STATUS = 2;
+	public static final int COLUMN_RESULT_EXEC_TIME = 0;
+   public static final int COLUMN_RESULT_STARTED_BY = 1;
+   public static final int COLUMN_RESULT_STATUS = 2;
 	
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	
@@ -380,6 +381,7 @@ public class ReportExecutionForm extends Composite
 		resultList.getControl().setLayoutData(gd);
 		resultList.setContentProvider(new ArrayContentProvider());
 		resultList.setLabelProvider(new ReportResultLabelProvider(resultList));
+      resultList.setComparator(new ReportResultComparator());
 
       WidgetHelper.restoreTableViewerSettings(resultList, Activator.getDefault().getDialogSettings(), "ReportExecutionForm.ResultList");
       resultList.getControl().addDisposeListener(new DisposeListener() {

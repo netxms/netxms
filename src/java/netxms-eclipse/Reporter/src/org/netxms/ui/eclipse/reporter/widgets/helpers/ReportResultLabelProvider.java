@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class ReportResultLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+   private NXCSession session = ConsoleSharedData.getSession();
 	private DateFormat dateFormat = RegionalSettings.getDateTimeFormat();
 	private SortableTableViewer viewer;
 	
@@ -48,30 +49,30 @@ public class ReportResultLabelProvider extends LabelProvider implements ITableLa
 	   this.viewer = viewer;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
 		final ReportResult reportResult = (ReportResult)element;
 		switch(columnIndex)
 		{
-			case ReportExecutionForm.RESULT_EXEC_TIME:
+			case ReportExecutionForm.COLUMN_RESULT_EXEC_TIME:
 				return dateFormat.format(reportResult.getExecutionTime());
-			case ReportExecutionForm.RESULT_STARTED_BY:
-            AbstractUserObject user = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(reportResult.getUserId(), new UserRefreshRunnable(viewer, element));
+			case ReportExecutionForm.COLUMN_RESULT_STARTED_BY:
+            AbstractUserObject user = session.findUserDBObjectById(reportResult.getUserId(), new UserRefreshRunnable(viewer, element));
             return (user != null) ? user.getName() : ("[" + reportResult.getUserId() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-			case ReportExecutionForm.RESULT_STATUS:
+			case ReportExecutionForm.COLUMN_RESULT_STATUS:
             return reportResult.isSuccess() ? Messages.get().ReportResultLabelProvider_Success
                   : Messages.get().ReportResultLabelProvider_Failure;
 		}
