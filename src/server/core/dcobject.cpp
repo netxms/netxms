@@ -1462,6 +1462,7 @@ StringObjectMap<InstanceDiscoveryData> *DCObject::filterInstanceList(StringMap *
 
    FilterCallbackData data;
    data.instanceFilter = new NXSL_VM(new NXSL_ServerEnv());
+   data.instanceFilter->setUserData(getOwner().get());
    if (!data.instanceFilter->load(m_instanceFilter))
    {
       TCHAR scriptIdentification[1024];
