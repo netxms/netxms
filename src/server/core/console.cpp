@@ -945,6 +945,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DBWRITER_HK_INTERLOCK));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_LOG_ALL_SNMP_TRAPS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ALLOW_TRAP_VARBIND_CONVERSION));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_TSDB_DROP_CHUNKS_V2));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(pCtx, _T("\n"));

@@ -287,7 +287,7 @@ void DataCollectionTarget::updateDciCache()
 }
 
 /**
- * Clean expired DCI data using TSDB drop_chunks() function
+ * Calculate DCI cutoff time for cleaning expired DCI data using TSDB drop_chunks() function
  */
 void DataCollectionTarget::calculateDciCutoffTimes(time_t *cutoffTimeIData, time_t *cutoffTimeTData)
 {
