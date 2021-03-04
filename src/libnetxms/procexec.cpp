@@ -512,17 +512,20 @@ void ProcessExecutor::stop()
 {
 #ifdef _WIN32
    if (m_phandle != INVALID_HANDLE_VALUE)
-   {
       TerminateProcess(m_phandle, 127);
-      CloseHandle(m_phandle);
-      m_phandle = INVALID_HANDLE_VALUE;
-   }
 #else
    if (m_pid != 0)
       kill(-m_pid, SIGKILL);  // kill all processes in group
 #endif
    waitForCompletion(INFINITE);
    m_started = false;
+#ifdef _WIN32
+   if (m_phandle != INVALID_HANDLE_VALUE)
+   {
+      CloseHandle(m_phandle);
+      m_phandle = INVALID_HANDLE_VALUE;
+   }
+#endif
 }
 
 /**
@@ -546,8 +549,9 @@ bool ProcessExecutor::isRunning()
 {
    if (!m_running)
       return false;
-
 #ifdef _WIN32
+   if (m_phandle == INVALID_HANDLE_VALUE)
+      return false;
    DWORD exitCode;
    if (!GetExitCodeProcess(m_phandle, &exitCode))
       return false;
@@ -568,7 +572,7 @@ bool ProcessExecutor::waitForCompletion(uint32_t timeout)
 #ifdef _WIN32
    if (m_sendOutput)
       return ConditionWait(m_completed, timeout);
-   return WaitForSingleObject(m_phandle, timeout) == WAIT_OBJECT_0;
+   return (m_phandle != INVALID_HANDLE_VALUE) ? (WaitForSingleObject(m_phandle, timeout) == WAIT_OBJECT_0) : true;
 #else
    return ConditionWait(m_completed, timeout);
 #endif
