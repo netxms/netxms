@@ -3482,6 +3482,23 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, uint32_t requestId)
          packages->add(pkg);
    }
    packages->sort(PackageNameVersionComparator);
+   for(int i = 0; i < packages->size(); i++)
+   {
+      SoftwarePackage *curr = packages->get(i);
+      for(int j = i + 1; j < packages->size(); j++)
+      {
+         SoftwarePackage *next = packages->get(j);
+         if (_tcscmp(curr->getName(), next->getName()))
+            break;
+         if (!_tcscmp(curr->getVersion(), next->getVersion()))
+         {
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_CONF_POLL, _T("Inconsistent software package data received from node %s [%u]: duplicate entry for package %s version %s"),
+                     m_name, m_id, curr->getName(), curr->getVersion());
+            packages->remove(j);
+            j--;
+         }
+      }
+   }
    delete table;
    sendPollerMsg(POLLER_INFO _T("Got information about %d installed software packages\r\n"), packages->size());
 
