@@ -82,11 +82,19 @@ enum LogParserFileEncoding
  *    NetXMS event code, NetXMS event name, event tag, original text, source,
  *    original event ID (facility), original severity,
  *    capture groups, variables, record id, object id, repeat count,
- *    log record timestamp, agent action, agent action arguments, context
+ *    log record timestamp, context
  */
 typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *,
          const TCHAR *, UINT32, UINT32, const StringList *, const StringList *, UINT64, UINT32,
-         int, time_t, const TCHAR *, const StringList *, void *);
+         int, time_t, void *);
+
+/**
+ * Log parser action callback
+ * Parameters:
+ *    NetXMS agent action, agent action arguments
+ */
+typedef void (* LogParserActionCallback)(const TCHAR *, const StringList &);
+
 
 class LIBNXLP_EXPORTABLE LogParser;
 
@@ -153,7 +161,7 @@ private:
 
 	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
 	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName,
-	         LogParserCallback cb, void *context);
+	         LogParserCallback cb, LogParserActionCallback cbAction, void *context);
 	bool matchRepeatCount();
    void expandMacros(const TCHAR *regexp, StringBuffer &out);
    void incCheckCount(uint32_t objectId);
@@ -172,9 +180,9 @@ public:
 	bool isValid() const { return m_preg != NULL; }
 	UINT32 getEventCode() const { return m_eventCode; }
 
-	bool match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, void *context);
+	bool match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, LogParserActionCallback cbAction, void *context);
 	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, 
-                UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *fileName, LogParserCallback cb, void *context);
+                UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *fileName, LogParserCallback cb, LogParserActionCallback cbAction, void *context);
 
 	void setLogName(const TCHAR *logName) { MemFree(m_logName); m_logName = MemCopyString(logName); }
 
@@ -237,6 +245,7 @@ private:
 	StringMap m_contexts;
 	StringMap m_macros;
 	LogParserCallback m_cb;
+	LogParserActionCallback m_cbAction;
 	void *m_userArg;
 	TCHAR *m_fileName;
 	int m_fileEncoding;
@@ -325,6 +334,7 @@ public:
 
 	bool addRule(LogParserRule *rule);
 	void setCallback(LogParserCallback cb) { m_cb = cb; }
+   void setActionCallback(LogParserActionCallback cb) { m_cbAction = cb; }
 	void setUserArg(void *arg) { m_userArg = arg; }
 	void setEventNameList(CodeLookupElement *lookupTable) { m_eventNameList = lookupTable; }
 	void setEventNameResolver(bool (*cb)(const TCHAR *, UINT32 *)) { m_eventResolver = cb; }

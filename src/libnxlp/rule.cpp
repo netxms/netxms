@@ -46,30 +46,30 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_level = level;
 	m_idStart = idStart;
 	m_idEnd = idEnd;
-	m_context = NULL;
+	m_context = nullptr;
 	m_contextAction = 0;
-	m_contextToChange = NULL;
+	m_contextToChange = nullptr;
    m_ignoreCase = ignoreCase;
 	m_isInverted = false;
 	m_breakOnMatch = false;
 	m_doNotSaveToDatabase = false;
-	m_description = NULL;
+	m_description = nullptr;
    m_repeatInterval = repeatInterval;
 	m_repeatCount = repeatCount;
 	m_matchArray = new IntegerArray<time_t>();
 	m_resetRepeat = resetRepeat;
 	m_checkCount = 0;
 	m_matchCount = 0;
-	m_agentAction = NULL;
-	m_logName = NULL;
+	m_agentAction = nullptr;
+	m_logName = nullptr;
 	m_agentActionArgs = new StringList();
    m_objectCounters = new HashMap<uint32_t, ObjectRuleStats>(Ownership::True);
 
    const char *eptr;
    int eoffset;
    m_preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(m_regexp), 
-         m_ignoreCase ? PCRE_COMMON_FLAGS | PCRE_CASELESS : PCRE_COMMON_FLAGS, &eptr, &eoffset, NULL);
-   if (m_preg == NULL)
+         m_ignoreCase ? PCRE_COMMON_FLAGS | PCRE_CASELESS : PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
+   if (m_preg == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Regexp \"%s\" compilation error: %hs at offset %d"), m_regexp, eptr, eoffset);
    }
@@ -101,7 +101,7 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
    m_repeatInterval = src->m_repeatInterval;
 	m_repeatCount = src->m_repeatCount;
 	m_resetRepeat = src->m_resetRepeat;
-   if (src->m_matchArray != NULL)
+   if (src->m_matchArray != nullptr)
    {
       m_matchArray = new IntegerArray<time_t>(src->m_matchArray->size(), 16);
       for(int i = 0; i < src->m_matchArray->size(); i++)
@@ -120,8 +120,8 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
    const char *eptr;
    int eoffset;
    m_preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(m_regexp),
-         m_ignoreCase ? PCRE_COMMON_FLAGS | PCRE_CASELESS : PCRE_COMMON_FLAGS, &eptr, &eoffset, NULL);
-   if (m_preg == NULL)
+         m_ignoreCase ? PCRE_COMMON_FLAGS | PCRE_CASELESS : PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
+   if (m_preg == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Regexp \"%s\" compilation error: %hs at offset %d"), m_regexp, eptr, eoffset);
    }
@@ -133,7 +133,7 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
 LogParserRule::~LogParserRule()
 {
    MemFree(m_name);
-	if (m_preg != NULL)
+	if (m_preg != nullptr)
 		_pcre_free_t(m_preg);
 	MemFree(m_pmatch);
 	MemFree(m_description);
@@ -155,12 +155,12 @@ LogParserRule::~LogParserRule()
  */
 bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
          StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName, LogParserCallback cb,
-         void *context)
+         LogParserActionCallback cbAction, void *context)
 {
    incCheckCount(objectId);
    if (extMode)
    {
-	   if (m_source != NULL)
+	   if (m_source != nullptr)
 	   {
 		   m_parser->trace(6, _T("  matching source \"%s\" against pattern \"%s\""), source, m_source);
 		   if (!MatchString(m_source, source, false))
@@ -170,7 +170,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 		   }
 	   }
 
-      if (m_logName != NULL)
+      if (m_logName != nullptr)
       {
          m_parser->trace(6, _T("  matching file name \"%s\" against pattern \"%s\""), logName, m_logName);
          if (!MatchString(m_logName, logName, false))
@@ -202,12 +202,14 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	if (m_isInverted)
 	{
 		m_parser->trace(6, _T("  negated matching against regexp %s"), m_regexp);
-		if ((_pcre_exec_t(m_preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3) < 0) && matchRepeatCount())
+		if ((_pcre_exec_t(m_preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3) < 0) && matchRepeatCount())
 		{
 			m_parser->trace(6, _T("  matched"));
-			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
-				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, NULL, variables, recordId, objectId,
-               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, m_agentAction, m_agentActionArgs, context);
+			if ((cb != nullptr) && ((m_eventCode != 0) || (m_eventName != nullptr)))
+				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, nullptr, variables, recordId, objectId,
+               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, context);
+         if (cbAction != nullptr)
+            cbAction(m_agentAction, *m_agentActionArgs);
 			incMatchCount(objectId);
 			return true;
 		}
@@ -215,12 +217,12 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	else
 	{
 		m_parser->trace(6, _T("  matching against regexp %s"), m_regexp);
-		int cgcount = _pcre_exec_t(m_preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3);
+		int cgcount = _pcre_exec_t(m_preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3);
       m_parser->trace(7, _T("  pcre_exec returns %d"), cgcount);
 		if ((cgcount >= 0) && matchRepeatCount())
 		{
 			m_parser->trace(6, _T("  matched"));
-			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
+			if ((cb != nullptr) && ((m_eventCode != 0) || (m_eventName != nullptr)))
 			{
 			   if (cgcount == 0)
 			      cgcount = MAX_PARAM_COUNT;
@@ -238,9 +240,11 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 				}
 
 				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, &captureGroups, variables, recordId, objectId,
-               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, m_agentAction, m_agentActionArgs, context);
+               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, context);
             m_parser->trace(8, _T("  callback completed"));
          }
+			if (cbAction != nullptr)
+			   cbAction(m_agentAction, *m_agentActionArgs);
          incMatchCount(objectId);
 			return true;
 		}
@@ -253,18 +257,18 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 /**
  * Match line
  */
-bool LogParserRule::match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, void *context)
+bool LogParserRule::match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, LogParserActionCallback cbAction, void *context)
 {
-   return matchInternal(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, nullptr, cb, context);
+   return matchInternal(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, nullptr, cb, cbAction, context);
 }
 
 /**
  * Match event
  */
 bool LogParserRule::matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables,
-                            UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *fileName, LogParserCallback cb, void *context)
+                            UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *fileName, LogParserCallback cb, LogParserActionCallback cbAction, void *context)
 {
-   return matchInternal(true, source, eventId, level, line, variables, recordId, objectId, timestamp, fileName, cb, context);
+   return matchInternal(true, source, eventId, level, line, variables, recordId, objectId, timestamp, fileName, cb, cbAction, context);
 }
 
 /**

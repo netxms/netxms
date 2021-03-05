@@ -269,7 +269,7 @@ uint64_t GetNextWinEventId()
 static void WindwsEventParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
          const TCHAR *line, const TCHAR *source, UINT32 facility, UINT32 severity, const StringList *captureGroups,
          const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount, time_t timestamp,
-         const TCHAR *agentAction, const StringList *agentActionArgs, void *context)
+         void *context)
 {
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Windows event message matched, capture group count = %d, repeat count = %d"), captureGroups->size(), repeatCount);
 
