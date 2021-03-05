@@ -139,7 +139,7 @@ static void SubagentShutdown()
 static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
          const TCHAR *text, const TCHAR *source, UINT32 eventId, UINT32 severity, const StringList *cgs,
          const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount,
-         time_t timestamp, const TCHAR *agentAction, const StringList *agentActionArgs, void *context)
+         time_t timestamp, void *context)
 {
    int count = cgs->size() + ((eventTag != NULL) ? 1 : 0) + 1 + ((variables != NULL) ? variables->size() : 0);
    TCHAR eventIdText[16], severityText[16], repeatCountText[16], recordIdText[32];
@@ -174,9 +174,6 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
          list[i++] = variables->get(j);
    }
 
-   if (agentAction != nullptr)
-      AgentExecuteAction(agentAction, *agentActionArgs);
-
    AgentPostEvent2(eventCode, eventName, timestamp, count, list);
    MemFree(list);
 }
@@ -200,6 +197,7 @@ static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
 				if (parser->getFileName() != nullptr)
 				{
 					parser->setCallback(LogParserMatch);
+               parser->setActionCallback(AgentExecuteAction);
                parser->setGuid(guid);
                s_parsers.add(parser);
                nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file \"%s\", GUID %s, trace level %d"),

@@ -296,8 +296,8 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 		if ((state = checkContext(rule)) != NULL)
 		{
 			bool ruleMatched = hasAttributes ?
-			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, timestamp, logName, m_cb, m_userArg) :
-				rule->match(line, objectId, m_cb, m_userArg);
+			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, timestamp, logName, m_cb, m_cbAction, m_userArg) :
+				rule->match(line, objectId, m_cb, m_cbAction, m_userArg);
 			if (ruleMatched)
 			{
 				trace(5, _T("rule %d \"%s\" matched"), i + 1, rule->getDescription());
