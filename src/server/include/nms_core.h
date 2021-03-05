@@ -417,11 +417,11 @@ public:
 struct TcpProxy
 {
    shared_ptr<AgentConnectionEx> agentConnection;
-   UINT32 agentChannelId;
-   UINT32 clientChannelId;
-   UINT32 nodeId;
+   uint32_t agentChannelId;
+   uint32_t clientChannelId;
+   uint32_t nodeId;
 
-   TcpProxy(const shared_ptr<AgentConnectionEx>& c, UINT32 aid, UINT32 cid, UINT32 nid) : agentConnection(c)
+   TcpProxy(const shared_ptr<AgentConnectionEx>& c, uint32_t aid, uint32_t cid, uint32_t nid) : agentConnection(c)
    {
       agentChannelId = aid;
       clientChannelId = cid;
@@ -939,7 +939,7 @@ public:
    void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
    void onActionDBUpdate(UINT32 dwCode, const Action *action);
    void onLibraryImageChange(const uuid& guid, bool removed = false);
-   void processTcpProxyData(AgentConnectionEx *conn, UINT32 agentChannelId, const void *data, size_t size);
+   void processTcpProxyData(AgentConnectionEx *conn, uint32_t agentChannelId, const void *data, size_t size);
 
    void unregisterServerCommand(pid_t taskId);
 };

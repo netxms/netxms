@@ -12,12 +12,16 @@ import org.netxms.client.TcpProxy;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Zone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Sample TCP proxy application
  */
 public class TcpProxyApp
 {
+   private static final Logger logger = LoggerFactory.getLogger(TcpProxyApp.class);
+
    private String server;
    private int serverPort; 
    private String login;
@@ -54,20 +58,20 @@ public class TcpProxyApp
     */
    private void run() throws Exception
    {
-      print("Connecting to NetXMS server " + server + " as user " + login);
+      logger.info("Connecting to NetXMS server " + server + " as user " + login);
       NXCSession session = new NXCSession(server, serverPort);
       session.connect(new int[] { ProtocolVersion.INDEX_TCPPROXY });
       session.login(login, password);
 
-      print("Synchronizing objects");
+      logger.info("Synchronizing objects");
       session.syncObjects();
       AbstractObject object = session.findObjectByName(node);
       if ((object == null) || (!(object instanceof Node) && !(object instanceof Zone)))
          throw new IllegalArgumentException("Node or zone object with given name does not exist");
-      print("Found " + ((object instanceof Zone) ? "zone " : "node ") + node + " with ID " + object.getObjectId());
+      logger.info("Found " + ((object instanceof Zone) ? "zone " : "node ") + node + " with ID " + object.getObjectId());
 
       ServerSocket listener = new ServerSocket(localPort);
-      print("Listening on port " + localPort);
+      logger.info("Listening on port " + localPort);
       try
       {
          while(true)
@@ -75,7 +79,7 @@ public class TcpProxyApp
             final Socket socket = listener.accept();
             try
             {
-               print("Establishing proxy session to " + remoteAddress.getHostAddress() + ":" + remotePort);
+               logger.info("Establishing proxy session to " + remoteAddress.getHostAddress() + ":" + remotePort);
                final TcpProxy proxy = session.setupTcpProxy(object.getObjectId(), remoteAddress, remotePort);
                new Session(++sessionId, socket, proxy);
             }
@@ -91,7 +95,7 @@ public class TcpProxyApp
          listener.close();
       }
    }
-   
+
    /**
     * @param args
     */
@@ -99,7 +103,7 @@ public class TcpProxyApp
    {
       if (args.length < 6)
       {
-         print("Required arguments: server login password proxy_node remote_address remote_port local_port");
+         System.out.println("Required arguments: server login password proxy_node remote_address remote_port local_port");
          return;
       }
       
@@ -111,10 +115,5 @@ public class TcpProxyApp
       {
          e.printStackTrace();
       }
-   }
-
-   private static void print(String text)
-   {
-      System.out.println(text);
    }
 }

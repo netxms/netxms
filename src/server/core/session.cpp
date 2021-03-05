@@ -429,7 +429,7 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
             }
          }
          MutexUnlock(m_tcpProxyLock);
-         if (conn != nullptr)
+         if ((conn != nullptr) && conn->isConnected())
          {
             size_t size = msg->getBinaryDataSize();
             size_t msgSize = size + NXCP_HEADER_SIZE;
@@ -439,10 +439,33 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
             fwmsg->code = htons(CMD_TCP_PROXY_DATA);
             fwmsg->flags = htons(MF_BINARY);
             fwmsg->id = htonl(agentChannelId);
-            fwmsg->numFields = htonl(static_cast<UINT32>(size));
-            fwmsg->size = htonl(static_cast<UINT32>(msgSize));
+            fwmsg->numFields = htonl(static_cast<uint32_t>(size));
+            fwmsg->size = htonl(static_cast<uint32_t>(msgSize));
             memcpy(fwmsg->fields, msg->getBinaryData(), size);
             conn->postRawMessage(fwmsg);
+         }
+         else
+         {
+            debugPrintf(5, _T("Missing or broken TCP proxy channel %u"), msg->getId());
+            if (conn != nullptr)
+            {
+               MutexLock(m_tcpProxyLock);
+               for(int i = 0; i < m_tcpProxyConnections->size(); i++)
+               {
+                  TcpProxy *p = m_tcpProxyConnections->get(i);
+                  if (p->clientChannelId == msg->getId())
+                  {
+                     m_tcpProxyConnections->remove(i);
+                     break;
+                  }
+               }
+               MutexUnlock(m_tcpProxyLock);
+            }
+
+            NXCPMessage response(CMD_CLOSE_TCP_PROXY, 0);
+            response.setField(VID_CHANNEL_ID, msg->getId());
+            response.setField(VID_RCC, RCC_COMM_FAILURE);
+            postMessage(response);
          }
       }
       delete msg;
@@ -14251,9 +14274,9 @@ void ClientSession::closeTcpProxy(NXCPMessage *request)
 /**
  * Process TCP proxy data (in direction from from agent to client)
  */
-void ClientSession::processTcpProxyData(AgentConnectionEx *conn, UINT32 agentChannelId, const void *data, size_t size)
+void ClientSession::processTcpProxyData(AgentConnectionEx *conn, uint32_t agentChannelId, const void *data, size_t size)
 {
-   UINT32 clientChannelId = 0;
+   uint32_t clientChannelId = 0;
    MutexLock(m_tcpProxyLock);
    for(int i = 0; i < m_tcpProxyConnections->size(); i++)
    {
@@ -14278,12 +14301,12 @@ void ClientSession::processTcpProxyData(AgentConnectionEx *conn, UINT32 agentCha
          size_t msgSize = size + NXCP_HEADER_SIZE;
          if (msgSize % 8 != 0)
             msgSize += 8 - msgSize % 8;
-         NXCP_MESSAGE *msg = (NXCP_MESSAGE *)MemAlloc(msgSize);
+         NXCP_MESSAGE *msg = static_cast<NXCP_MESSAGE*>(MemAlloc(msgSize));
          msg->code = htons(CMD_TCP_PROXY_DATA);
          msg->flags = htons(MF_BINARY);
          msg->id = htonl(clientChannelId);
-         msg->numFields = htonl(static_cast<UINT32>(size));
-         msg->size = htonl(static_cast<UINT32>(msgSize));
+         msg->numFields = htonl(static_cast<uint32_t>(size));
+         msg->size = htonl(static_cast<uint32_t>(msgSize));
          memcpy(msg->fields, data, size);
          postRawMessageAndDelete(msg);
       }
@@ -14291,7 +14314,8 @@ void ClientSession::processTcpProxyData(AgentConnectionEx *conn, UINT32 agentCha
       {
          NXCPMessage msg(CMD_CLOSE_TCP_PROXY, 0);
          msg.setField(VID_CHANNEL_ID, clientChannelId);
-         postMessage(&msg);
+         msg.setField(VID_RCC, RCC_SUCCESS); // Normal closure
+         postMessage(msg);
       }
    }
 }

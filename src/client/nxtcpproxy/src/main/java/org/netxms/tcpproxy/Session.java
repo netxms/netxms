@@ -8,13 +8,16 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import org.netxms.client.TcpProxy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Proxy session
  */
 public class Session
 {
-   private int id;
+   private static final Logger logger = LoggerFactory.getLogger(Session.class);
+
    private Socket socket;
    private TcpProxy proxy;
    private Thread socketReaderThread;
@@ -22,7 +25,6 @@ public class Session
    
    public Session(int id, Socket socket, TcpProxy proxy)
    {
-      this.id = id;
       this.socket = socket;
       this.proxy = proxy;
       
@@ -30,23 +32,23 @@ public class Session
          @Override
          public void run()
          {
-            print("Socket reader started");
+            logger.info("Socket reader started");
             socketReader();
          }
-      });
+      }, "Session-" + id + "-Socket");
       proxyReaderThread = new Thread(new Runnable() {
          @Override
          public void run()
          {
-            print("Proxy reader started");
+            logger.info("Proxy reader started");
             proxyReader();
          }
-      });
-      
+      }, "Session-" + id + "-Proxy");
+
       socketReaderThread.start();
       proxyReaderThread.start();
    }
-   
+
    private void socketReader()
    {
       try
@@ -57,27 +59,30 @@ public class Session
          {
             int bytes = in.read(buffer);
             if (bytes <= 0)
+            {
+               logger.info("Exit code " + bytes + " while reading socket input stream");
                break;
+            }
             proxy.getOutputStream().write(buffer, 0, bytes);
          }
       }
       catch(Exception e)
       {
-         e.printStackTrace();
+         logger.error("Socket reader exception", e);
       }
 
       proxy.close();
       
-      print("Waiting for proxy reader to stop");
+      logger.info("Waiting for proxy reader to stop");
       try
       {
          proxyReaderThread.join();
       }
       catch(InterruptedException e)
       {
-         e.printStackTrace();
+         logger.error("Thread join exception", e);
       }
-      
+
       try
       {
          socket.close();
@@ -85,7 +90,7 @@ public class Session
       catch(IOException e)
       {
       }
-      print("Socket reader terminated");
+      logger.info("Socket reader terminated");
       
       socket = null;
       proxy = null;
@@ -102,15 +107,19 @@ public class Session
          {
             int bytes = in.read(buffer);
             if (bytes <= 0)
+            {
+               logger.info("Exit code " + bytes + " while reading proxy input stream");
                break;
+            }
             out.write(buffer, 0, bytes);
          }
       }
       catch(Exception e)
       {
-         e.printStackTrace();
+         logger.error("Proxy reader exception", e);
       }
 
+      logger.info("Proxy reader requesting local socket closure");
       try
       {
          socket.close();
@@ -118,11 +127,6 @@ public class Session
       catch(IOException e)
       {
       }
-      print("Proxy reader terminated");
-   }
-
-   private void print(String text)
-   {
-      System.out.println("<" + id + "> " + text);
+      logger.info("Proxy reader terminated");
    }
 }
