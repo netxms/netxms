@@ -14285,6 +14285,38 @@ void ClientSession::processTcpProxyData(AgentConnectionEx *conn, uint32_t agentC
 }
 
 /**
+ * Process disconnect notification from agent session used for TCP proxy
+ */
+void ClientSession::processTcpProxyAgentDisconnect(AgentConnectionEx *conn)
+{
+   IntegerArray<uint32_t> clientChannelList;
+   MutexLock(m_tcpProxyLock);
+   for(int i = 0; i < m_tcpProxyConnections->size(); i++)
+   {
+      TcpProxy *p = m_tcpProxyConnections->get(i);
+      if (p->agentConnection.get() == conn)
+      {
+         clientChannelList.add(p->clientChannelId);
+         debugPrintf(5, _T("TCP proxy channel %u closed because of agent session disconnect"), p->clientChannelId);
+         m_tcpProxyConnections->remove(i);
+         i--;
+      }
+   }
+   MutexUnlock(m_tcpProxyLock);
+
+   if (!clientChannelList.isEmpty())
+   {
+      NXCPMessage msg(CMD_CLOSE_TCP_PROXY, 0);
+      msg.setField(VID_RCC, RCC_COMM_FAILURE);
+      for(int i = 0; i < clientChannelList.size(); i++)
+      {
+         msg.setField(VID_CHANNEL_ID, clientChannelList.get(i));
+         postMessage(msg);
+      }
+   }
+}
+
+/**
  * Expand event processing macros
  */
 void ClientSession::expandMacros(NXCPMessage *request)
