@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -27,19 +27,16 @@
 /**
  * Default constructor for the class
  */
-NObject::NObject()
+NObject::NObject() : m_customAttributes(Ownership::True), m_parentList(8, 8), m_childList(0, 32)
 {
 #ifdef _WIN32
    m_self = new weak_ptr<NObject>();
 #endif
    m_id = 0;
    m_name[0] = 0;
-   m_customAttributes = new StringObjectMap<CustomAttribute>(Ownership::True);
    m_customAttributeLock = MutexCreateFast();
    m_rwlockParentList = RWLockCreate();
    m_rwlockChildList = RWLockCreate();
-   m_parentList = new SharedObjectArray<NObject>(8, 8);
-   m_childList = new SharedObjectArray<NObject>(0, 32);
 }
 
 /**
@@ -47,9 +44,6 @@ NObject::NObject()
  */
 NObject::~NObject()
 {
-   delete m_parentList;
-   delete m_childList;
-   delete m_customAttributes;
    MutexDestroy(m_customAttributeLock);
    RWLockDestroy(m_rwlockParentList);
    RWLockDestroy(m_rwlockChildList);
@@ -64,7 +58,7 @@ NObject::~NObject()
  */
 void NObject::clearParentList()
 {
-   m_parentList->clear();
+   m_parentList.clear();
 }
 
 /**
@@ -72,7 +66,7 @@ void NObject::clearParentList()
  */
 void NObject::clearChildList()
 {
-   m_childList->clear();
+   m_childList.clear();
 }
 
 /**
@@ -86,13 +80,13 @@ void NObject::addChild(const shared_ptr<NObject>& object)
       unlockChildList();
       return;     // Already in the child list
    }
-   m_childList->add(object);
+   m_childList.add(object);
    unlockChildList();
 
    // Update custom attribute inheritance
    ObjectArray<std::pair<String, UINT32>> updateList(0, 16, Ownership::True);
    lockCustomAttributes();
-   Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes->iterator();
+   Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes.iterator();
    while(iterator->hasNext())
    {
       std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
@@ -117,7 +111,7 @@ void NObject::addParent(const shared_ptr<NObject>& object)
       unlockParentList();
       return;     // Already in the parents list
    }
-   m_parentList->add(object);
+   m_parentList.add(object);
    unlockParentList();
 }
 
@@ -127,10 +121,10 @@ void NObject::addParent(const shared_ptr<NObject>& object)
 void NObject::deleteChild(uint32_t objectId)
 {
    writeLockChildList();
-   for(int i = 0; i < m_childList->size(); i++)
-      if (m_childList->get(i)->getId() == objectId)
+   for(int i = 0; i < m_childList.size(); i++)
+      if (m_childList.get(i)->getId() == objectId)
       {
-         m_childList->remove(i);
+         m_childList.remove(i);
          break;
       }
    unlockChildList();
@@ -143,10 +137,10 @@ void NObject::deleteParent(uint32_t objectId)
 {
    writeLockParentList();
    bool success = false;
-   for(int i = 0; i < m_parentList->size(); i++)
-      if (m_parentList->get(i)->getId() == objectId)
+   for(int i = 0; i < m_parentList.size(); i++)
+      if (m_parentList.get(i)->getId() == objectId)
       {
-         m_parentList->remove(i);
+         m_parentList.remove(i);
          success = true;
          break;
       }
@@ -157,7 +151,7 @@ void NObject::deleteParent(uint32_t objectId)
       StringList removeList;
 
       lockCustomAttributes();
-      Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes->iterator();
+      Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes.iterator();
       while(iterator->hasNext())
       {
          std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
@@ -185,8 +179,8 @@ bool NObject::isChild(uint32_t id) const
    if (!result)
    {
       readLockChildList();
-      for(int i = 0; i < m_childList->size(); i++)
-         if (m_childList->get(i)->isChild(id))
+      for(int i = 0; i < m_childList.size(); i++)
+         if (m_childList.get(i)->isChild(id))
          {
             result = true;
             break;
@@ -227,8 +221,8 @@ bool NObject::isParent(uint32_t id) const
    if (!result)
    {
       readLockParentList();
-      for(int i = 0; i < m_parentList->size(); i++)
-         if (m_parentList->get(i)->isParent(id))
+      for(int i = 0; i < m_parentList.size(); i++)
+         if (m_parentList.get(i)->isParent(id))
          {
             result = true;
             break;
@@ -263,9 +257,9 @@ SharedString NObject::getCustomAttributeFromParent(const TCHAR *name)
 {
    SharedString value;
    readLockParentList();
-   for(int i = 0; i < m_parentList->size(); i++)
+   for(int i = 0; i < m_parentList.size(); i++)
    {
-      value = m_parentList->get(i)->getCustomAttribute(name);
+      value = m_parentList.get(i)->getCustomAttribute(name);
       if (!value.isNull())
          break;
    }
@@ -294,7 +288,7 @@ static StringBuffer ObjectListToString(const SharedObjectArray<NObject>& list)
 StringBuffer NObject::dbgGetChildList() const
 {
    readLockChildList();
-   StringBuffer list = ObjectListToString(*m_childList);
+   StringBuffer list = ObjectListToString(m_childList);
    unlockChildList();
    return list;
 }
@@ -305,7 +299,7 @@ StringBuffer NObject::dbgGetChildList() const
 StringBuffer NObject::dbgGetParentList() const
 {
    readLockParentList();
-   StringBuffer list = ObjectListToString(*m_parentList);
+   StringBuffer list = ObjectListToString(m_parentList);
    unlockParentList();
    return list;
 }
@@ -328,14 +322,14 @@ static inline uint32_t CalculateFlagChange(uint32_t flags, StateChange change, u
 void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateChange inheritable)
 {
    lockCustomAttributes();
-   CustomAttribute *curr = m_customAttributes->get(name);
-   UINT32 source = 0;
+   CustomAttribute *curr = m_customAttributes.get(name);
+   uint32_t source = 0;
    bool remove = false;
 
    if (curr == nullptr)
    {
       curr = new CustomAttribute(value, CalculateFlagChange(0, inheritable, CAF_INHERITABLE));
-      m_customAttributes->set(name, curr);
+      m_customAttributes.set(name, curr);
       onCustomAttributeChange();
    }
    else if (_tcscmp(curr->value, value) || (curr->flags != CalculateFlagChange(curr->flags, inheritable, CAF_INHERITABLE)))
@@ -367,12 +361,12 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, uint32_t
 {
    lockCustomAttributes();
 
-   CustomAttribute *curr = m_customAttributes->get(name);
+   CustomAttribute *curr = m_customAttributes.get(name);
    bool callPopulate = true;
    if (curr == nullptr)
    {
       curr = new CustomAttribute(value, CAF_INHERITABLE, parent);
-      m_customAttributes->set(name, curr);
+      m_customAttributes.set(name, curr);
       onCustomAttributeChange();
    }
    else if (_tcscmp(curr->value, value) || (curr->sourceObject == 0))
@@ -449,9 +443,9 @@ void NObject::setCustomAttribute(const TCHAR *key, uint64_t value)
 void NObject::populate(const TCHAR *name, SharedString value, uint32_t source)
 {
    writeLockChildList();
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < m_childList.size(); i++)
    {
-      m_childList->get(i)->setCustomAttribute(name, value, source);
+      m_childList.get(i)->setCustomAttribute(name, value, source);
    }
    unlockChildList();
 }
@@ -462,9 +456,9 @@ void NObject::populate(const TCHAR *name, SharedString value, uint32_t source)
 void NObject::populateRemove(const TCHAR *name)
 {
    writeLockChildList();
-   for(int i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < m_childList.size(); i++)
    {
-      m_childList->get(i)->deletePopulatedCustomAttribute(name);
+      m_childList.get(i)->deletePopulatedCustomAttribute(name);
    }
    unlockChildList();
 }
@@ -484,7 +478,7 @@ void NObject::setCustomAttributesFromDatabase(DB_RESULT hResult)
          if (value != nullptr)
          {
             CustomAttribute *curr = new CustomAttribute(value, DBGetFieldULong(hResult, i, 2));
-            m_customAttributes->setPreallocated(name, curr);
+            m_customAttributes.setPreallocated(name, curr);
             MemFree(value);
          }
          else
@@ -532,7 +526,7 @@ void NObject::setCustomAttributesFromMessage(const NXCPMessage *msg)
    }
 
    lockCustomAttributes();
-   Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes->iterator();
+   Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes.iterator();
    while(iterator->hasNext())
    {
       std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
@@ -565,7 +559,7 @@ void NObject::setCustomAttributesFromMessage(const NXCPMessage *msg)
 void NObject::deleteCustomAttribute(const TCHAR *name)
 {
    lockCustomAttributes();
-   CustomAttribute *ca = m_customAttributes->get(name);
+   CustomAttribute *ca = m_customAttributes.get(name);
    bool populate = false;
    bool redefined = false;
    uint32_t parent;
@@ -582,7 +576,7 @@ void NObject::deleteCustomAttribute(const TCHAR *name)
       }
       else
       {
-         m_customAttributes->remove(name);
+         m_customAttributes.remove(name);
       }
 
       onCustomAttributeChange();
@@ -601,7 +595,7 @@ void NObject::deleteCustomAttribute(const TCHAR *name)
 void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name)
 {
    lockCustomAttributes();
-   CustomAttribute *ca = m_customAttributes->get(name);
+   CustomAttribute *ca = m_customAttributes.get(name);
    bool populate = false;
    if (ca != nullptr)
    {
@@ -614,7 +608,7 @@ void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name)
       }
       else
       {
-         m_customAttributes->remove(name);
+         m_customAttributes.remove(name);
       }
 
       onCustomAttributeChange();
@@ -631,13 +625,13 @@ void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name)
 void NObject::deletePopulatedCustomAttribute(const TCHAR *name)
 {
    lockCustomAttributes();
-   CustomAttribute *ca = m_customAttributes->get(name);
+   CustomAttribute *ca = m_customAttributes.get(name);
    bool populate = false;
    if (ca != nullptr)
    {
       if (!ca->isRedefined())
       {
-         m_customAttributes->remove(name);
+         m_customAttributes.remove(name);
          populate = true;
       }
       else
@@ -669,7 +663,7 @@ bool NObject::getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAlloc
 TCHAR *NObject::getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size) const
 {
    lockCustomAttributes();
-   const CustomAttribute *attr = m_customAttributes->get(name);
+   const CustomAttribute *attr = m_customAttributes.get(name);
    if (attr != nullptr)
    {
       _tcslcpy(buffer, attr->value, size);
@@ -700,7 +694,7 @@ TCHAR *NObject::getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size
 SharedString NObject::getCustomAttribute(const TCHAR *name) const
 {
    lockCustomAttributes();
-   const CustomAttribute *attr = m_customAttributes->get(name);
+   const CustomAttribute *attr = m_customAttributes.get(name);
    if (attr != nullptr)
    {
       unlockCustomAttributes();
@@ -727,7 +721,7 @@ SharedString NObject::getCustomAttribute(const TCHAR *name) const
 TCHAR *NObject::getCustomAttributeCopy(const TCHAR *name) const
 {
    lockCustomAttributes();
-   const CustomAttribute *attr = m_customAttributes->get(name);
+   const CustomAttribute *attr = m_customAttributes.get(name);
    if (attr != nullptr)
    {
       TCHAR *result = MemCopyString(attr->value);
@@ -751,7 +745,7 @@ int32_t NObject::getCustomAttributeAsInt32(const TCHAR *key, int32_t defaultValu
 {
    int32_t result = defaultValue;
    lockCustomAttributes();
-   const CustomAttribute *attr = m_customAttributes->get(key);
+   const CustomAttribute *attr = m_customAttributes.get(key);
    if (attr != nullptr)
       result = _tcstol(attr->value, nullptr, 0);
    unlockCustomAttributes();
@@ -765,7 +759,7 @@ uint32_t NObject::getCustomAttributeAsUInt32(const TCHAR *key, uint32_t defaultV
 {
    uint32_t result = defaultValue;
    lockCustomAttributes();
-   const CustomAttribute *attr = m_customAttributes->get(key);
+   const CustomAttribute *attr = m_customAttributes.get(key);
    if (attr != nullptr)
       result = _tcstoul(attr->value, nullptr, 0);
    unlockCustomAttributes();
@@ -779,7 +773,7 @@ int64_t NObject::getCustomAttributeAsInt64(const TCHAR *key, int64_t defaultValu
 {
    int64_t result = defaultValue;
    lockCustomAttributes();
-   const CustomAttribute *attr = m_customAttributes->get(key);
+   const CustomAttribute *attr = m_customAttributes.get(key);
    if (attr != nullptr)
       result = _tcstoll(attr->value, nullptr, 0);
    unlockCustomAttributes();
@@ -794,7 +788,7 @@ uint64_t NObject::getCustomAttributeAsUInt64(const TCHAR *key, uint64_t defaultV
 {
    uint64_t result = defaultValue;
    lockCustomAttributes();
-   const CustomAttribute *attr = m_customAttributes->get(key);
+   const CustomAttribute *attr = m_customAttributes.get(key);
    if (attr != nullptr)
       result = _tcstoull(attr->value, nullptr, 0);
    unlockCustomAttributes();
@@ -808,7 +802,7 @@ double NObject::getCustomAttributeAsDouble(const TCHAR *key, double defaultValue
 {
    double result = defaultValue;
    lockCustomAttributes();
-   const CustomAttribute *attr = m_customAttributes->get(key);
+   const CustomAttribute *attr = m_customAttributes.get(key);
    if (attr != nullptr)
       result = _tcstod(attr->value, nullptr);
    unlockCustomAttributes();
@@ -823,7 +817,7 @@ bool NObject::getCustomAttributeAsBoolean(const TCHAR *key, bool defaultValue) c
 {
    bool result = defaultValue;
    lockCustomAttributes();
-   const CustomAttribute *attr = m_customAttributes->get(key);
+   const CustomAttribute *attr = m_customAttributes.get(key);
    if (attr != nullptr)
    {
       if (!_tcsicmp(attr->value, _T("false")))
@@ -845,7 +839,7 @@ StringMap *NObject::getCustomAttributes(bool (*filter)(const TCHAR *, const Cust
 {
    StringMap *attributes = new StringMap();
    lockCustomAttributes();
-   StructArray<KeyValuePair<CustomAttribute>> *filtered = m_customAttributes->toArray(filter, context);
+   StructArray<KeyValuePair<CustomAttribute>> *filtered = m_customAttributes.toArray(filter, context);
    for(int i = 0; i < filtered->size(); i++)
       attributes->set(filtered->get(i)->key, filtered->get(i)->value->value);
    delete filtered;
@@ -879,7 +873,7 @@ StringMap *NObject::getCustomAttributes(const TCHAR *regexp) const
 
    StringMap *attributes = new StringMap();
    lockCustomAttributes();
-   StructArray<KeyValuePair<CustomAttribute>> *filtered = m_customAttributes->toArray(RegExpAttrFilter, preg);
+   StructArray<KeyValuePair<CustomAttribute>> *filtered = m_customAttributes.toArray(RegExpAttrFilter, preg);
    for(int i = 0; i < filtered->size(); i++)
       attributes->set(filtered->get(i)->key, filtered->get(i)->value->value);
    delete filtered;
@@ -895,7 +889,7 @@ NXSL_Value *NObject::getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) c
 {
    NXSL_Value *value = nullptr;
    lockCustomAttributes();
-   const CustomAttribute *attr = m_customAttributes->get(name);
+   const CustomAttribute *attr = m_customAttributes.get(name);
    if (attr != nullptr)
    {
       value = vm->createValue(attr->value);
@@ -922,7 +916,7 @@ NXSL_Value *NObject::getCustomAttributesForNXSL(NXSL_VM *vm) const
 {
    NXSL_HashMap *map = new NXSL_HashMap(vm);
    lockCustomAttributes();
-   StructArray<KeyValuePair<CustomAttribute>> *attributes = m_customAttributes->toArray();
+   StructArray<KeyValuePair<CustomAttribute>> *attributes = m_customAttributes.toArray();
    for(int i = 0; i < attributes->size(); i++)
    {
       KeyValuePair<CustomAttribute> *p = attributes->get(i);
@@ -947,7 +941,7 @@ void NObject::pruneCustomAttributes()
 {
    StringList deletionList;
    lockCustomAttributes();
-   StructArray<KeyValuePair<CustomAttribute>> *attributes = m_customAttributes->toArray();
+   StructArray<KeyValuePair<CustomAttribute>> *attributes = m_customAttributes.toArray();
    for(int i = 0; i < attributes->size(); i++)
    {
       KeyValuePair<CustomAttribute> *p = attributes->get(i);
@@ -956,7 +950,7 @@ void NObject::pruneCustomAttributes()
          SharedString parentValue = getCustomAttributeFromParent(p->key);
          if (parentValue.isNull())
          {
-            CustomAttribute *ca = m_customAttributes->get(p->key);
+            CustomAttribute *ca = m_customAttributes.get(p->key);
             ca->flags &= ~CAF_REDEFINED;
             onCustomAttributeChange();
          }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -116,6 +116,7 @@ NetObj::NetObj() : NObject()
  */
 NetObj::~NetObj()
 {
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 7, _T("Called destructor for object %s [%u]"), m_name, m_id);
    MutexDestroy(m_mutexProperties);
    MutexDestroy(m_mutexACL);
    delete m_accessList;
@@ -592,11 +593,11 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 	if (success)
 	{
 		hStmt = DBPrepare(hdb, _T("SELECT attr_name,attr_value,flags FROM object_custom_attributes WHERE object_id=?"));
-		if (hStmt != NULL)
+		if (hStmt != nullptr)
 		{
 			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
-			if (hResult != NULL)
+			if (hResult != nullptr)
 			{
 			   setCustomAttributesFromDatabase(hResult);
 				DBFreeResult(hResult);
@@ -617,11 +618,11 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
    if (success)
    {
       hStmt = DBPrepare(hdb, _T("SELECT dashboard_id FROM dashboard_associations WHERE object_id=?"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          DB_RESULT hResult = DBSelectPrepared(hStmt);
-         if (hResult != NULL)
+         if (hResult != nullptr)
          {
             int count = DBGetNumRows(hResult);
             for(int i = 0; i < count; i++)
@@ -646,11 +647,11 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
    if (success)
    {
       hStmt = DBPrepare(hdb, _T("SELECT url_id,url,description FROM object_urls WHERE object_id=?"));
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          DB_RESULT hResult = DBSelectPrepared(hStmt);
-         if (hResult != NULL)
+         if (hResult != nullptr)
          {
             int count = DBGetNumRows(hResult);
             for(int i = 0; i < count; i++)
@@ -678,11 +679,11 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 	{
       success = false;
 	   hStmt = DBPrepare(hdb, _T("SELECT user_id FROM responsible_users WHERE object_id=?"));
-	   if (hStmt != NULL)
+	   if (hStmt != nullptr)
 	   {
 	      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 	      DB_RESULT hResult = DBSelectPrepared(hStmt);
-	      if (hResult != NULL)
+	      if (hResult != nullptr)
 	      {
 	         success = true;
 	         int numRows = DBGetNumRows(hResult);
@@ -908,7 +909,7 @@ void NetObj::onObjectDelete(UINT32 objectId)
          setModified(MODIFY_COMMON_PROPERTIES);
       }
    }
-   unlockProperties();;
+   unlockProperties();
 }
 
 /**
