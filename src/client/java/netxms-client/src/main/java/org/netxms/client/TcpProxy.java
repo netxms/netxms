@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,12 +26,16 @@ import java.util.Timer;
 import java.util.TimerTask;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * TCP proxy object
  */
 public class TcpProxy
 {
+   private static final Logger logger = LoggerFactory.getLogger(TcpProxy.class);
+
    private NXCSession session;
    private int channelId;
    private ProxyInputStream localInputStream;
@@ -40,13 +44,14 @@ public class TcpProxy
    private byte[] sendBuffer = new byte[256];
    private int pendingBytes = 0;
    private Timer sendTimer = new Timer(true);
+   private Exception flushException = null;
 
    /**
-    * TODO
+    * Create new TCP proxy object.
     *
-    * @param session   TODO
-    * @param channelId TODO
-    * @throws IOException TODO
+    * @param session underlying NetXMS client session
+    * @param channelId proxy channel ID
+    * @throws IOException when input or output stream cannot be created
     */
    protected TcpProxy(NXCSession session, int channelId) throws IOException
    {
@@ -55,6 +60,8 @@ public class TcpProxy
 
       localInputStream = new ProxyInputStream();
       localOutputStream = new ProxyOutputStream();
+
+      logger.debug("New TCP proxy object created for channel " + channelId);
    }
 
    /**
@@ -75,6 +82,7 @@ public class TcpProxy
     */
    protected void localClose()
    {
+      logger.debug("Local close for TCP proxy channel " + channelId);
       sendTimer.cancel();
       session = null;
       try
@@ -87,6 +95,26 @@ public class TcpProxy
       }
       localInputStream = null;
       localOutputStream = null;
+   }
+
+   /**
+    * Abort TCP proxy session due to external error. Next attempt to read from this proxy input stream will throw IOException.
+    *
+    * @param cause cause for abort
+    */
+   protected void abort(Throwable cause)
+   {
+      logger.debug("Abort for TCP proxy channel " + channelId, cause);
+      localInputStream.setException(cause);
+      sendTimer.cancel();
+      session = null;
+      try
+      {
+         localOutputStream.close();
+      }
+      catch(Exception e)
+      {
+      }
    }
 
    /**
@@ -172,13 +200,15 @@ public class TcpProxy
     */
    public synchronized void send(byte[] data) throws IOException, NXCException
    {
+      if (flushException != null)
+         throw new IOException(flushException);
+
       if (pendingBytes + data.length < sendBuffer.length)
       {
          appendBytes(sendBuffer, pendingBytes, data, data.length);
          if (pendingBytes == 0)
          {
-            sendTimer.schedule(new TimerTask()
-            {
+            sendTimer.schedule(new TimerTask() {
                @Override
                public void run()
                {
@@ -233,6 +263,8 @@ public class TcpProxy
       }
       catch(Exception e)
       {
+         logger.warn("Error flushing TCP proxy buffer", e);
+         flushException = e; // Next attempt to send data will abort
       }
       pendingBytes = 0;
    }
@@ -262,7 +294,7 @@ public class TcpProxy
    }
 
    /**
-    * Proxy output stream
+    * Proxy output stream. Writing to this stream will send data to remote system.
     */
    private class ProxyOutputStream extends OutputStream
    {
@@ -302,7 +334,7 @@ public class TcpProxy
    }
    
    /**
-    * Proxy input stream
+    * Proxy input stream. Reading from this stream will retrieve data received from remote system.
     */
    private class ProxyInputStream extends InputStream
    {
@@ -311,7 +343,8 @@ public class TcpProxy
       private int readPos = 0;
       private int writePos = 0;
       private Object monitor = new Object();
-      
+      private Throwable exception = null;
+
       /**
        * Write bytes to stream internal buffer
        * 
@@ -343,6 +376,20 @@ public class TcpProxy
          }
       }
       
+      /**
+       * Set stream to exception state. Next attempt to read from this stream will throw IOException.
+       *
+       * @param exception cause for IOException to be thrown
+       */
+      public void setException(Throwable exception)
+      {
+         synchronized(monitor)
+         {
+            this.exception = exception;
+            monitor.notify();
+         }
+      }
+
       /**
        * @see java.io.InputStream#close()
        */
@@ -378,6 +425,8 @@ public class TcpProxy
          {
             while(readPos == writePos)
             {
+               if (exception != null)
+                  throw new IOException(exception);
                if (closed)
                   return -1;
                try
@@ -411,6 +460,8 @@ public class TcpProxy
          {
             while(readPos == writePos)
             {
+               if (exception != null)
+                  throw new IOException(exception);
                if (closed)
                   return -1;
                try

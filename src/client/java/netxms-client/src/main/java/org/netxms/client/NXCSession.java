@@ -465,6 +465,7 @@ public class NXCSession
             return; // Stop receiver thread if input stream cannot be obtained
          }
 
+         Throwable cause = null;
          while(socket.isConnected())
          {
             try
@@ -629,7 +630,7 @@ public class NXCSession
                      processTcpProxyData((int)msg.getMessageId(), msg.getBinaryData());
                      break;
                   case NXCPCodes.CMD_CLOSE_TCP_PROXY:
-                     processTcpProxyClosure(msg.getFieldAsInt32(NXCPCodes.VID_CHANNEL_ID));
+                     processTcpProxyClosure(msg.getFieldAsInt32(NXCPCodes.VID_CHANNEL_ID), msg.getFieldAsInt32(NXCPCodes.VID_RCC));
                      break;
                   case NXCPCodes.CMD_MODIFY_NODE_DCI:
                      DataCollectionObject dco;
@@ -709,19 +710,36 @@ public class NXCSession
             }
             catch(IOException e)
             {
+               cause = e;
                break; // Stop on read errors
             }
             catch(NXCPException e)
             {
                if (e.getErrorCode() == NXCPException.SESSION_CLOSED)
+               {
+                  cause = e;
                   break;
+               }
             }
             catch(NXCException e)
             {
                if (e.getErrorCode() == RCC.ENCRYPTION_ERROR)
+               {
+                  cause = e;
                   break;
+               }
             }
          }
+
+         synchronized(tcpProxies)
+         {
+            if (cause == null)
+               cause = new NXCPException(NXCPException.SESSION_CLOSED);
+            for(TcpProxy p : tcpProxies.values())
+               p.abort(cause);
+         }
+
+         logger.info("Network receiver thread stopped");
       }
 
       /**
@@ -1111,7 +1129,7 @@ public class NXCSession
        *
        * @param channelId proxy channel ID
        */
-      private void processTcpProxyClosure(int channelId)
+      private void processTcpProxyClosure(int channelId, int rcc)
       {
          TcpProxy proxy;
          synchronized(tcpProxies)
@@ -1119,7 +1137,12 @@ public class NXCSession
             proxy = tcpProxies.remove(channelId);
          }
          if (proxy != null)
-            proxy.localClose();
+         {
+            if (rcc == RCC.SUCCESS)
+               proxy.localClose();
+            else
+               proxy.abort(new NXCException(rcc));
+         }
       }
    }
 
