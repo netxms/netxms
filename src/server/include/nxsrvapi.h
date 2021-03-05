@@ -520,10 +520,10 @@ private:
    weak_ptr<NObject> m_self;
 #endif
 
-   SharedObjectArray<NObject> *m_childList;     // Array of pointers to child objects
-   SharedObjectArray<NObject> *m_parentList;    // Array of pointers to parent objects
+   SharedObjectArray<NObject> m_childList;     // Array of pointers to child objects
+   SharedObjectArray<NObject> m_parentList;    // Array of pointers to parent objects
 
-   StringObjectMap<CustomAttribute> *m_customAttributes;
+   StringObjectMap<CustomAttribute> m_customAttributes;
    MUTEX m_customAttributeLock;
 
    SharedString getCustomAttributeFromParent(const TCHAR *name);
@@ -547,23 +547,23 @@ protected:
    void setSelfPtr(const shared_ptr<NObject>& sptr) { m_self = sptr; }
 #endif
 
-   const SharedObjectArray<NObject> &getChildList() const { return *m_childList; }
-   const SharedObjectArray<NObject> &getParentList() const { return *m_parentList; }
+   const SharedObjectArray<NObject> &getChildList() const { return m_childList; }
+   const SharedObjectArray<NObject> &getParentList() const { return m_parentList; }
 
    void clearChildList();
    void clearParentList();
 
    bool isDirectChildInternal(uint32_t id) const
    {
-      for(int i = 0; i < m_childList->size(); i++)
-         if (m_childList->get(i)->getId() == id)
+      for(int i = 0; i < m_childList.size(); i++)
+         if (m_childList.get(i)->getId() == id)
             return true;
       return false;
    }
    bool isDirectParentInternal(uint32_t id) const
    {
-      for(int i = 0; i < m_parentList->size(); i++)
-         if (m_parentList->get(i)->getId() == id)
+      for(int i = 0; i < m_parentList.size(); i++)
+         if (m_parentList.get(i)->getId() == id)
             return true;
       return false;
    }
@@ -607,8 +607,8 @@ public:
    bool isParent(uint32_t id) const;
    bool isDirectParent(uint32_t id) const;
 
-   int getChildCount() const { return m_childList->size(); }
-   int getParentCount() const { return m_parentList->size(); }
+   int getChildCount() const { return m_childList.size(); }
+   int getParentCount() const { return m_parentList.size(); }
 
    TCHAR *getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size) const;
    SharedString getCustomAttribute(const TCHAR *name) const;
@@ -635,13 +635,13 @@ public:
    void updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name);
    NXSL_Value *getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const;
    NXSL_Value *getCustomAttributesForNXSL(NXSL_VM *vm) const;
-   int getCustomAttributeSize() const { return m_customAttributes->size(); }
+   int getCustomAttributeSize() const { return m_customAttributes.size(); }
 
    template <typename C>
    EnumerationCallbackResult forEachCustomAttribute(EnumerationCallbackResult (*cb)(const TCHAR *, const CustomAttribute *, C *), C *context) const
    {
       lockCustomAttributes();
-      EnumerationCallbackResult result =  m_customAttributes->forEach(reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, const void*, void*)>(cb), (void *)context);
+      EnumerationCallbackResult result =  m_customAttributes.forEach(reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, const void*, void*)>(cb), (void *)context);
       unlockCustomAttributes();
       return result;
    }

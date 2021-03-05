@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -236,10 +236,10 @@ MacAddress Subnet::findMacAddress(const InetAddress& ipAddr)
 		Node *node = nodes.get(i);
 		nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Subnet[%s]::findMacAddress: reading ARP cache for node %s [%u]"), m_name, node->getName(), node->getId());
 		ArpCache *arpCache = node->getArpCache();
-		if (arpCache != NULL)
+		if (arpCache != nullptr)
 		{
          const ArpEntry *e = arpCache->findByIP(ipAddr);
-         if (e != NULL)
+         if (e != nullptr)
          {
             nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Subnet[%s]::findMacAddress: found MAC address for IP address %s"), m_name, ipAddr.toString(buffer));
             macAddr = e->macAddr;

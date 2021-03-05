@@ -7873,9 +7873,8 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
 }
 
 /**
- * Get agent connection. It may or may not be primary connection. Caller should call decRefCount
- * when connection is no longer needed. File transfers and other long running oprations should
- * be avoided.
+ * Get agent connection. It may or may not be primary connection.
+ * File transfers and other long running oprations should be avoided.
  */
 shared_ptr<AgentConnectionEx> Node::getAgentConnection(bool forcePrimary)
 {
@@ -8401,7 +8400,7 @@ UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
  */
 bool Node::setAgentProxy(AgentConnectionEx *conn)
 {
-   UINT32 proxyNode = m_agentProxy;
+   uint32_t proxyNode = m_agentProxy;
 
    if (IsZoningEnabled() && (proxyNode == 0) && (m_zoneUIN != 0))
    {
@@ -8451,6 +8450,9 @@ void Node::prepareForDeletion()
    nxlog_debug(4, _T("Node::PrepareForDeletion(%s [%u]): no outstanding polls left"), m_name, m_id);
 
    UnbindAgentTunnel(m_id, 0);
+
+   // Clear possible references to self and other nodes
+   m_lastKnownNetworkPath.reset();
 
    super::prepareForDeletion();
 }
