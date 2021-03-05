@@ -940,6 +940,7 @@ public:
    void onActionDBUpdate(UINT32 dwCode, const Action *action);
    void onLibraryImageChange(const uuid& guid, bool removed = false);
    void processTcpProxyData(AgentConnectionEx *conn, uint32_t agentChannelId, const void *data, size_t size);
+   void processTcpProxyAgentDisconnect(AgentConnectionEx *conn);
 
    void unregisterServerCommand(pid_t taskId);
 };

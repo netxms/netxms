@@ -924,4 +924,7 @@ void AgentConnectionEx::onDisconnect()
    // Cancel file monitoring locally
    if (isFileUpdateConnection())
       g_monitoringList.removeDisconnectedNode(m_nodeId);
+
+   if (m_tcpProxySession != nullptr)
+      m_tcpProxySession->processTcpProxyAgentDisconnect(this);
 }
