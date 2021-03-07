@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -651,28 +651,12 @@ InetAddress InetAddress::createFromSockaddr(const struct sockaddr *s)
 }
 
 /**
- * Address list constructor
- */
-InetAddressList::InetAddressList()
-{
-   m_list = new ObjectArray<InetAddress>(8, 8, Ownership::True);
-}
-
-/**
- * Address list destructor
- */
-InetAddressList::~InetAddressList()
-{
-   delete m_list;
-}
-
-/**
  * Add address to list
  */
 void InetAddressList::add(const InetAddress &addr)
 {
    if (!hasAddress(addr))
-      m_list->add(new InetAddress(addr));
+      m_list.add(new InetAddress(addr));
 }
 
 /**
@@ -680,8 +664,8 @@ void InetAddressList::add(const InetAddress &addr)
  */
 void InetAddressList::add(const InetAddressList &addrList)
 {
-   for(int i = 0; i < addrList.m_list->size(); i++)
-      add(*(addrList.m_list->get(i)));
+   for(int i = 0; i < addrList.m_list.size(); i++)
+      add(*(addrList.m_list.get(i)));
 }
 
 /**
@@ -691,7 +675,7 @@ void InetAddressList::remove(const InetAddress &addr)
 {
    int index = indexOf(addr);
    if (index != -1)
-      m_list->remove(index);
+      m_list.remove(index);
 }
 
 /**
@@ -702,7 +686,7 @@ void InetAddressList::replace(const InetAddress& addr)
    int index = indexOf(addr);
    if (index != -1)
    {
-      m_list->get(index)->setMaskBits(addr.getMaskBits());
+      m_list.get(index)->setMaskBits(addr.getMaskBits());
    }
 }
 
@@ -711,8 +695,8 @@ void InetAddressList::replace(const InetAddress& addr)
  */
 int InetAddressList::indexOf(const InetAddress &addr) const
 {
-   for(int i = 0; i < m_list->size(); i++)
-      if (m_list->get(i)->equals(addr))
+   for(int i = 0; i < m_list.size(); i++)
+      if (m_list.get(i)->equals(addr))
          return i;
    return -1;
 }
@@ -722,9 +706,9 @@ int InetAddressList::indexOf(const InetAddress &addr) const
  */
 const InetAddress& InetAddressList::getFirstUnicastAddress() const
 {
-   for(int i = 0; i < m_list->size(); i++)
+   for(int i = 0; i < m_list.size(); i++)
    {
-      InetAddress *a = m_list->get(i);
+      InetAddress *a = m_list.get(i);
       if (a->isValidUnicast())
          return *a;
    }
@@ -736,9 +720,9 @@ const InetAddress& InetAddressList::getFirstUnicastAddress() const
  */
 const InetAddress& InetAddressList::getFirstUnicastAddressV4() const
 {
-   for(int i = 0; i < m_list->size(); i++)
+   for(int i = 0; i < m_list.size(); i++)
    {
-      InetAddress *a = m_list->get(i);
+      InetAddress *a = m_list.get(i);
       if ((a->getFamily() == AF_INET) && a->isValidUnicast())
          return *a;
    }
@@ -750,9 +734,9 @@ const InetAddress& InetAddressList::getFirstUnicastAddressV4() const
  */
 const InetAddress& InetAddressList::findSameSubnetAddress(const InetAddress& addr) const
 {
-   for(int i = 0; i < m_list->size(); i++)
+   for(int i = 0; i < m_list.size(); i++)
    {
-      InetAddress *a = m_list->get(i);
+      InetAddress *a = m_list.get(i);
       if (a->sameSubnet(addr))
          return *a;
    }
@@ -764,11 +748,11 @@ const InetAddress& InetAddressList::findSameSubnetAddress(const InetAddress& add
  */
 bool InetAddressList::isLoopbackOnly() const
 {
-   if (m_list->size() == 0)
+   if (m_list.size() == 0)
       return false;
-   for(int i = 0; i < m_list->size(); i++)
+   for(int i = 0; i < m_list.size(); i++)
    {
-      if (!m_list->get(i)->isLoopback())
+      if (!m_list.get(i)->isLoopback())
          return false;
    }
    return true;
@@ -777,13 +761,13 @@ bool InetAddressList::isLoopbackOnly() const
 /**
  * Fill NXCP message
  */
-void InetAddressList::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const
+void InetAddressList::fillMessage(NXCPMessage *msg, uint32_t sizeFieldId, uint32_t baseFieldId) const
 {
-   msg->setField(sizeFieldId, m_list->size());
+   msg->setField(sizeFieldId, m_list.size());
    uint32_t fieldId = baseFieldId;
-   for(int i = 0; i < m_list->size(); i++)
+   for(int i = 0; i < m_list.size(); i++)
    {
-      msg->setField(fieldId++, *m_list->get(i));
+      msg->setField(fieldId++, *m_list.get(i));
    }
 }
 
@@ -793,7 +777,7 @@ void InetAddressList::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 b
 InetAddressList *InetAddressList::resolveHostName(const WCHAR *hostname)
 {
    char mbName[256];
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, hostname, -1, mbName, 256, NULL, NULL);
+   wchar_to_mb(hostname, -1, mbName, 256);
    return resolveHostName(mbName);
 }
 
@@ -814,14 +798,14 @@ InetAddressList *InetAddressList::resolveHostName(const char *hostname)
    // Not a valid IP address, resolve hostname
 #if HAVE_GETADDRINFO
    struct addrinfo *ai;
-   if (getaddrinfo(hostname, NULL, NULL, &ai) == 0)
+   if (getaddrinfo(hostname, nullptr, nullptr, &ai) == 0)
    {
-      for(struct addrinfo *p = ai; p->ai_next != NULL; p = p->ai_next)
+      for(struct addrinfo *p = ai; p->ai_next != nullptr; p = p->ai_next)
          result->add(InetAddress::createFromSockaddr(p->ai_addr));
       freeaddrinfo(ai);
    }
 #elif HAVE_GETHOSTBYNAME2_R
-   struct hostent h, *hs = NULL;
+   struct hostent h, *hs = nullptr;
    char buffer[4096];
    int err;
    gethostbyname2_r(hostname, AF_INET, &h, buffer, 4096, &hs, &err);
@@ -829,43 +813,43 @@ InetAddressList *InetAddressList::resolveHostName(const char *hostname)
    {
       if (hs->h_addrtype == AF_INET)
       {
-         for(int i = 0; hs->h_addr_list[i] != NULL; i++)
+         for(int i = 0; hs->h_addr_list[i] != nullptr; i++)
             result->add(InetAddress(ntohl(*((UINT32 *)hs->h_addr_list[i])));
       }
       else if (hs->h_addrtype == AF_INET6)
       {
-         for(int i = 0; hs->h_addr_list[i] != NULL; i++)
+         for(int i = 0; hs->h_addr_list[i] != nullptr; i++)
             result->add(InetAddress((BYTE *)hs->h_addr_list[i]));
       }
    }
 
    hs = NULL;
    gethostbyname2_r(hostname, AF_INET6, &h, buffer, 4096, &hs, &err);
-   if (hs != NULL)
+   if (hs != nullptr)
    {
       if (hs->h_addrtype == AF_INET)
       {
-         for(int i = 0; hs->h_addr_list[i] != NULL; i++)
+         for(int i = 0; hs->h_addr_list[i] != nullptr; i++)
             result->add(InetAddress(ntohl(*((UINT32 *)hs->h_addr_list[i])));
       }
       else if (hs->h_addrtype == AF_INET6)
       {
-         for(int i = 0; hs->h_addr_list[i] != NULL; i++)
+         for(int i = 0; hs->h_addr_list[i] != nullptr; i++)
             result->add(InetAddress((BYTE *)hs->h_addr_list[i]));
       }
    }
 #else
    struct hostent *hs = gethostbyname(hostname);
-   if (hs != NULL)
+   if (hs != nullptr)
    {
       if (hs->h_addrtype == AF_INET)
       {
-         for(int i = 0; hs->h_addr_list[i] != NULL; i++)
+         for(int i = 0; hs->h_addr_list[i] != nullptr; i++)
             result->add(InetAddress(ntohl(*((UINT32 *)hs->h_addr_list[i])));
       }
       else if (hs->h_addrtype == AF_INET6)
       {
-         for(int i = 0; hs->h_addr_list[i] != NULL; i++)
+         for(int i = 0; hs->h_addr_list[i] != nullptr; i++)
             result->add(InetAddress((BYTE *)hs->h_addr_list[i]));
       }
    }

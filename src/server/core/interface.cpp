@@ -293,14 +293,13 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    }
    else
    {
-      const ObjectArray<InetAddress> *list = m_ipAddressList.getList();
       int count = 0;
-      for(int i = 0; i < list->size(); i++)
+      for(int i = 0; i < m_ipAddressList.size(); i++)
       {
-         if (list->get(i)->isLoopback())
+         if (m_ipAddressList.get(i).isLoopback())
             count++;
       }
-      if ((count > 0) && (count == list->size())) // all loopback addresses
+      if ((count > 0) && (count == m_ipAddressList.size())) // all loopback addresses
    		m_flags |= IF_LOOPBACK;
       else
          m_flags &= ~IF_LOOPBACK;
@@ -411,10 +410,10 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
             if (hStmt != nullptr)
             {
                DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-               const ObjectArray<InetAddress> *list = m_ipAddressList.getList();
-               for(int i = 0; (i < list->size()) && success; i++)
+               const ObjectArray<InetAddress>& list = m_ipAddressList.getList();
+               for(int i = 0; (i < m_ipAddressList.size()) && success; i++)
                {
-                  InetAddress *a = list->get(i);
+                  InetAddress *a = list.get(i);
                   TCHAR buffer[64];
                   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, a->toString(buffer), DB_BIND_STATIC);
                   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, a->getMaskBits());
@@ -726,11 +725,11 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 			if (conn != nullptr)
 			{
 				TCHAR parameter[128], buffer[64];
-            const ObjectArray<InetAddress> *list = m_ipAddressList.getList();
+            const ObjectArray<InetAddress>& list = m_ipAddressList.getList();
             long value = -1;
-            for(int i = 0; (i < list->size()) && ((value == 10000) || (value == -1)); i++)
+            for(int i = 0; (i < list.size()) && ((value == 10000) || (value == -1)); i++)
             {
-               const InetAddress *a = list->get(i);
+               const InetAddress *a = list.get(i);
                if (a->isValidUnicast() && ((cluster == nullptr) || !cluster->isSyncAddr(*a)))
                {
 				      _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), a->toString(buffer));
@@ -777,15 +776,15 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 	else	// not using ICMP proxy
 	{
 		sendPollerMsg(_T("      Starting ICMP ping\r\n"));
-      const ObjectArray<InetAddress> *list = m_ipAddressList.getList();
+      const ObjectArray<InetAddress>& list = m_ipAddressList.getList();
       uint32_t dwPingStatus = ICMP_TIMEOUT;
-      for(int i = 0; (i < list->size()) && (dwPingStatus != ICMP_SUCCESS); i++)
+      for(int i = 0; (i < list.size()) && (dwPingStatus != ICMP_SUCCESS); i++)
       {
-         const InetAddress *a = list->get(i);
+         const InetAddress *a = list.get(i);
          if (a->isValidUnicast() && ((cluster == nullptr) || !cluster->isSyncAddr(*a)))
          {
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d)"),
-               m_id, m_name, (const TCHAR *)a->toString(), g_icmpPingTimeout, g_icmpPingSize);
+               m_id, m_name, a->toString().cstr(), g_icmpPingTimeout, g_icmpPingSize);
 		      dwPingStatus = IcmpPing(*a, 3, g_icmpPingTimeout, nullptr, g_icmpPingSize, false);
          }
       }

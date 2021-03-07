@@ -63,7 +63,7 @@ static const char *s_classNameA[]=
 /**
  * Default constructor
  */
-NetObj::NetObj() : NObject()
+NetObj::NetObj() : NObject(), m_dashboards(0, 8), m_urls(0, 8, Ownership::True)
 {
    m_mutexProperties = MutexCreateFast();
    m_mutexACL = MutexCreateFast();
@@ -77,7 +77,6 @@ NetObj::NetObj() : NObject()
 	m_isSystem = false;
 	m_maintenanceEventId = 0;
 	m_maintenanceInitiator = 0;
-   m_accessList = new AccessList();
    m_inheritAccessRights = true;
 	m_trustedNodes = nullptr;
    m_pollRequestor = nullptr;
@@ -96,9 +95,6 @@ NetObj::NetObj() : NObject()
 	m_submapId = 0;
    m_moduleData = nullptr;
    m_moduleDataLock = MutexCreateFast();
-   m_postalAddress = new PostalAddress();
-   m_dashboards = new IntegerArray<UINT32>();
-   m_urls = new ObjectArray<ObjectUrl>(4, 4, Ownership::True);
    m_primaryZoneProxyId = 0;
    m_backupZoneProxyId = 0;
    m_state = 0;
@@ -119,13 +115,9 @@ NetObj::~NetObj()
    nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 7, _T("Called destructor for object %s [%u]"), m_name, m_id);
    MutexDestroy(m_mutexProperties);
    MutexDestroy(m_mutexACL);
-   delete m_accessList;
 	delete m_trustedNodes;
    delete m_moduleData;
    MutexDestroy(m_moduleDataLock);
-   delete m_postalAddress;
-   delete m_dashboards;
-   delete m_urls;
    delete m_responsibleUsers;
    RWLockDestroy(m_rwlockResponsibleUsers);
 }
@@ -272,15 +264,15 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_mapImage);
    DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_submapId);
-   DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_postalAddress->getCountry(), DB_BIND_STATIC);
-   DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress->getCity(), DB_BIND_STATIC);
-   DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress->getStreetAddress(), DB_BIND_STATIC);
-   DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress->getPostCode(), DB_BIND_STATIC);
+   DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_postalAddress.getCountry(), DB_BIND_STATIC);
+   DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress.getCity(), DB_BIND_STATIC);
+   DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress.getStreetAddress(), DB_BIND_STATIC);
+   DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress.getPostCode(), DB_BIND_STATIC);
    DBBind(hStmt, 27, DB_SQLTYPE_BIGINT, m_maintenanceEventId);
    DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_stateBeforeMaintenance);
    DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_state);
    DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_flags);
-   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)m_creationTime);
+   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
    DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_maintenanceInitiator);
    DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
    DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_nameOnMap, DB_BIND_STATIC);
@@ -294,15 +286,15 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    if (success)
    {
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dashboard_associations WHERE object_id=?"));
-      if (success && !m_dashboards->isEmpty())
+      if (success && !m_dashboards.isEmpty())
       {
          hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_associations (object_id,dashboard_id) VALUES (?,?)"), true);
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; (i < m_dashboards->size()) && success; i++)
+            for(int i = 0; (i < m_dashboards.size()) && success; i++)
             {
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dashboards->get(i));
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dashboards.get(i));
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);
@@ -318,15 +310,15 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    if (success)
    {
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_urls WHERE object_id=?"));
-      if (success && !m_urls->isEmpty())
+      if (success && !m_urls.isEmpty())
       {
          hStmt = DBPrepare(hdb, _T("INSERT INTO object_urls (object_id,url_id,url,description) VALUES (?,?,?,?)"), true);
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; (i < m_urls->size()) && success; i++)
+            for(int i = 0; (i < m_urls.size()) && success; i++)
             {
-               const ObjectUrl *url = m_urls->get(i);
+               const ObjectUrl *url = m_urls.get(i);
                DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, url->getId());
                DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, url->getUrl(), DB_BIND_STATIC);
                DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, url->getDescription(), DB_BIND_STATIC);
@@ -562,13 +554,11 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 				m_mapImage = DBGetFieldGUID(hResult, 0, 20);
 				m_submapId = DBGetFieldULong(hResult, 0, 21);
 
-            TCHAR country[64], city[64], streetAddress[256], postcode[32];
-            DBGetField(hResult, 0, 22, country, 64);
-            DBGetField(hResult, 0, 23, city, 64);
-            DBGetField(hResult, 0, 24, streetAddress, 256);
-            DBGetField(hResult, 0, 25, postcode, 32);
-            delete m_postalAddress;
-            m_postalAddress = new PostalAddress(country, city, streetAddress, postcode);
+            TCHAR buffer[256];
+            m_postalAddress.setCountry(DBGetField(hResult, 0, 22, buffer, 64));
+            m_postalAddress.setCity(DBGetField(hResult, 0, 23, buffer, 64));
+            m_postalAddress.setStreetAddress(DBGetField(hResult, 0, 24, buffer, 256));
+            m_postalAddress.setPostCode(DBGetField(hResult, 0, 25, buffer, 32));
 
             m_maintenanceEventId = DBGetFieldUInt64(hResult, 0, 26);
             m_stateBeforeMaintenance = DBGetFieldULong(hResult, 0, 27);
@@ -627,7 +617,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
             int count = DBGetNumRows(hResult);
             for(int i = 0; i < count; i++)
             {
-               m_dashboards->add(DBGetFieldULong(hResult, i, 0));
+               m_dashboards.add(DBGetFieldULong(hResult, i, 0));
             }
             DBFreeResult(hResult);
          }
@@ -656,7 +646,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
             int count = DBGetNumRows(hResult);
             for(int i = 0; i < count; i++)
             {
-               m_urls->add(new ObjectUrl(hResult, i));
+               m_urls.add(new ObjectUrl(hResult, i));
             }
             DBFreeResult(hResult);
          }
@@ -689,7 +679,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 	         int numRows = DBGetNumRows(hResult);
 	         if (numRows > 0)
 	         {
-	            m_responsibleUsers = new IntegerArray<UINT32>(numRows, 16);
+	            m_responsibleUsers = new IntegerArray<uint32_t>(numRows, 16);
                for(int i = 0; i < numRows; i++)
                   m_responsibleUsers->add(DBGetFieldULong(hResult, i, 0));
 	         }
@@ -1096,7 +1086,7 @@ bool NetObj::loadACLFromDB(DB_HANDLE hdb)
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
-				m_accessList->addElement(DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1));
+				m_accessList.addElement(DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1));
 			DBFreeResult(hResult);
 			success = true;
 		}
@@ -1129,7 +1119,7 @@ bool NetObj::saveACLToDB(DB_HANDLE hdb)
    {
       std::pair<uint32_t, DB_HANDLE> context(m_id, hdb);
       lockACL();
-      m_accessList->enumerateElements(EnumerationHandler, &context);
+      m_accessList.enumerateElements(EnumerationHandler, &context);
       unlockACL();
    }
    return success;
@@ -1217,16 +1207,16 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 
 	m_geoLocation.fillMessage(*pMsg);
 
-   pMsg->setField(VID_COUNTRY, m_postalAddress->getCountry());
-   pMsg->setField(VID_CITY, m_postalAddress->getCity());
-   pMsg->setField(VID_STREET_ADDRESS, m_postalAddress->getStreetAddress());
-   pMsg->setField(VID_POSTCODE, m_postalAddress->getPostCode());
+   pMsg->setField(VID_COUNTRY, m_postalAddress.getCountry());
+   pMsg->setField(VID_CITY, m_postalAddress.getCity());
+   pMsg->setField(VID_STREET_ADDRESS, m_postalAddress.getStreetAddress());
+   pMsg->setField(VID_POSTCODE, m_postalAddress.getPostCode());
 
-   pMsg->setField(VID_NUM_URLS, (UINT32)m_urls->size());
+   pMsg->setField(VID_NUM_URLS, static_cast<uint32_t>(m_urls.size()));
    UINT32 fieldId = VID_URL_LIST_BASE;
-   for(int i = 0; i < m_urls->size(); i++)
+   for(int i = 0; i < m_urls.size(); i++)
    {
-      const ObjectUrl *url = m_urls->get(i);
+      const ObjectUrl *url = m_urls.get(i);
       pMsg->setField(fieldId++, url->getId());
       pMsg->setField(fieldId++, url->getUrl());
       pMsg->setField(fieldId++, url->getDescription());
@@ -1267,7 +1257,7 @@ void NetObj::fillMessage(NXCPMessage *msg, UINT32 userId)
    fillMessageInternalStage2(msg, userId);
 
    lockACL();
-   m_accessList->fillMessage(msg);
+   m_accessList.fillMessage(msg);
    unlockACL();
 
    UINT32 dwId;
@@ -1386,22 +1376,27 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
    {
       lockACL();
       m_inheritAccessRights = pRequest->getFieldAsBoolean(VID_INHERIT_RIGHTS);
-      m_accessList->deleteAll();
+      m_accessList.deleteAll();
       int count = pRequest->getFieldAsUInt32(VID_ACL_SIZE);
       for(int i = 0; i < count; i++)
-         m_accessList->addElement(pRequest->getFieldAsUInt32(VID_ACL_USER_BASE + i),
-                                  pRequest->getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i));
+         m_accessList.addElement(pRequest->getFieldAsUInt32(VID_ACL_USER_BASE + i), pRequest->getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i));
       unlockACL();
    }
 
 	// Change trusted nodes list
    if (pRequest->isFieldExist(VID_NUM_TRUSTED_NODES))
    {
-      if (m_trustedNodes == nullptr)
-         m_trustedNodes = new IntegerArray<uint32_t>();
+      int count = pRequest->getFieldAsInt32(VID_NUM_TRUSTED_NODES);
+      if (count > 0)
+      {
+         if (m_trustedNodes == nullptr)
+            m_trustedNodes = new IntegerArray<uint32_t>(count);
+         pRequest->getFieldAsInt32Array(VID_TRUSTED_NODES, m_trustedNodes);
+      }
       else
-         m_trustedNodes->clear();
-		pRequest->getFieldAsInt32Array(VID_TRUSTED_NODES, m_trustedNodes);
+      {
+         delete_and_null(m_trustedNodes);
+      }
    }
 
 	// Change geolocation
@@ -1422,45 +1417,45 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
    {
       TCHAR buffer[64];
       pRequest->getFieldAsString(VID_COUNTRY, buffer, 64);
-      m_postalAddress->setCountry(buffer);
+      m_postalAddress.setCountry(buffer);
    }
 
    if (pRequest->isFieldExist(VID_CITY))
    {
       TCHAR buffer[64];
       pRequest->getFieldAsString(VID_CITY, buffer, 64);
-      m_postalAddress->setCity(buffer);
+      m_postalAddress.setCity(buffer);
    }
 
    if (pRequest->isFieldExist(VID_STREET_ADDRESS))
    {
       TCHAR buffer[256];
       pRequest->getFieldAsString(VID_STREET_ADDRESS, buffer, 256);
-      m_postalAddress->setStreetAddress(buffer);
+      m_postalAddress.setStreetAddress(buffer);
    }
 
    if (pRequest->isFieldExist(VID_POSTCODE))
    {
       TCHAR buffer[32];
       pRequest->getFieldAsString(VID_POSTCODE, buffer, 32);
-      m_postalAddress->setPostCode(buffer);
+      m_postalAddress.setPostCode(buffer);
    }
 
    // Change dashboard list
    if (pRequest->isFieldExist(VID_DASHBOARDS))
    {
-      pRequest->getFieldAsInt32Array(VID_DASHBOARDS, m_dashboards);
+      pRequest->getFieldAsInt32Array(VID_DASHBOARDS, &m_dashboards);
    }
 
    // Update URL list
    if (pRequest->isFieldExist(VID_NUM_URLS))
    {
-      m_urls->clear();
+      m_urls.clear();
       int count = pRequest->getFieldAsInt32(VID_NUM_URLS);
       uint32_t fieldId = VID_URL_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         m_urls->add(new ObjectUrl(pRequest, fieldId));
+         m_urls.add(new ObjectUrl(pRequest, fieldId));
          fieldId += 10;
       }
    }
@@ -1484,12 +1479,18 @@ UINT32 NetObj::modifyFromMessageInternalStage2(NXCPMessage *pRequest)
 
    if (pRequest->isFieldExist(VID_RESPONSIBLE_USERS))
    {
+      int count = pRequest->getFieldAsInt32(VID_RESPONSIBLE_USERS);
       lockResponsibleUsersList(true);
-      if (m_responsibleUsers == NULL)
-         m_responsibleUsers = new IntegerArray<UINT32>(0, 16);
-      pRequest->getFieldAsInt32Array(VID_RESPONSIBLE_USERS, m_responsibleUsers);
-      if (m_responsibleUsers->isEmpty())
+      if (count > 0)
+      {
+         if (m_responsibleUsers == nullptr)
+            m_responsibleUsers = new IntegerArray<uint32_t>(count);
+         pRequest->getFieldAsInt32Array(VID_RESPONSIBLE_USERS, m_responsibleUsers);
+      }
+      else
+      {
          delete_and_null(m_responsibleUsers);
+      }
       unlockResponsibleUsersList();
    }
 
@@ -1523,7 +1524,7 @@ uint32_t NetObj::getUserRights(uint32_t userId) const
 
    // Check if have direct right assignment
    lockACL();
-   bool hasDirectRights = m_accessList->getUserRights(userId, &rights);
+   bool hasDirectRights = m_accessList.getUserRights(userId, &rights);
    unlockACL();
 
    if (!hasDirectRights)
@@ -1561,7 +1562,7 @@ bool NetObj::checkAccessRights(uint32_t userId, uint32_t requiredRights) const
 void NetObj::dropUserAccess(uint32_t userId)
 {
    lockACL();
-   bool modified = m_accessList->deleteElement(userId);
+   bool modified = m_accessList.deleteElement(userId);
    unlockACL();
    if (modified)
    {
@@ -2473,11 +2474,11 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "maintenanceInitiator", json_integer(m_maintenanceInitiator));
    json_object_set_new(root, "mapImage", m_mapImage.toJson());
    json_object_set_new(root, "geoLocation", m_geoLocation.toJson());
-   json_object_set_new(root, "postalAddress", m_postalAddress->toJson());
+   json_object_set_new(root, "postalAddress", m_postalAddress.toJson());
    json_object_set_new(root, "submapId", json_integer(m_submapId));
-   json_object_set_new(root, "dashboards", m_dashboards->toJson());
+   json_object_set_new(root, "dashboards", m_dashboards.toJson());
    json_object_set_new(root, "urls", json_object_array(m_urls));
-   json_object_set_new(root, "accessList", m_accessList->toJson());
+   json_object_set_new(root, "accessList", m_accessList.toJson());
    json_object_set_new(root, "inheritAccessRights", json_boolean(m_inheritAccessRights));
    json_object_set_new(root, "trustedNodes", (m_trustedNodes != nullptr) ? m_trustedNodes->toJson() : json_array());
    json_object_set_new(root, "creationTime", json_integer(m_creationTime));
@@ -2502,15 +2503,9 @@ json_t *NetObj::toJson()
    unlockParentList();
    json_object_set_new(root, "parents", parents);
 
-   json_t *responsibleUsers = json_array();
    lockResponsibleUsersList(false);
-   if (m_responsibleUsers != NULL)
-   {
-      for(int i = 0; i < m_responsibleUsers->size(); i++)
-         json_array_append_new(responsibleUsers, json_integer(m_responsibleUsers->get(i)));
-   }
+   json_object_set_new(root, "responsibleUsers", json_integer_array(m_responsibleUsers));
    unlockResponsibleUsersList();
-   json_object_set_new(root, "responsibleUsers", responsibleUsers);
 
    return root;
 }
@@ -2885,18 +2880,18 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
 /**
  * Internal function to get inherited list of responsible users for object
  */
-void NetObj::getAllResponsibleUsersInternal(IntegerArray<UINT32> *list)
+void NetObj::getAllResponsibleUsersInternal(IntegerArray<uint32_t> *list)
 {
    readLockParentList();
    for(int i = 0; i < getParentList().size(); i++)
    {
       NetObj *obj = getParentList().get(i);
       obj->lockResponsibleUsersList(false);
-      if (obj->m_responsibleUsers != NULL)
+      if (obj->m_responsibleUsers != nullptr)
       {
          for(int n = 0; n < obj->m_responsibleUsers->size(); n++)
          {
-            UINT32 userId = obj->m_responsibleUsers->get(n);
+            uint32_t userId = obj->m_responsibleUsers->get(n);
             if (!list->contains(userId))
                list->add(userId);
          }
@@ -2910,10 +2905,10 @@ void NetObj::getAllResponsibleUsersInternal(IntegerArray<UINT32> *list)
 /**
  * Get all responsible users for object
  */
-IntegerArray<UINT32> *NetObj::getAllResponsibleUsers()
+IntegerArray<uint32_t> *NetObj::getAllResponsibleUsers()
 {
    lockResponsibleUsersList(false);
-   IntegerArray<UINT32> *responsibleUsers = (m_responsibleUsers != NULL) ? new IntegerArray<UINT32>(m_responsibleUsers) : new IntegerArray<UINT32>(0, 16);
+   IntegerArray<uint32_t> *responsibleUsers = (m_responsibleUsers != nullptr) ? new IntegerArray<uint32_t>(m_responsibleUsers) : new IntegerArray<uint32_t>(0, 16);
    unlockResponsibleUsersList();
 
    getAllResponsibleUsersInternal(responsibleUsers);

@@ -690,7 +690,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    }
    else if (compareAttributeName(attr, "city"))
    {
-      value = vm->createValue(object->getPostalAddress()->getCity());
+      value = vm->createValue(object->getPostalAddress().getCity());
    }
    else if (compareAttributeName(attr, "comments"))
    {
@@ -698,7 +698,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    }
    else if (compareAttributeName(attr, "country"))
    {
-      value = vm->createValue(object->getPostalAddress()->getCountry());
+      value = vm->createValue(object->getPostalAddress().getCountry());
    }
    else if (compareAttributeName(attr, "creationTime"))
    {
@@ -754,7 +754,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    }
    else if (compareAttributeName(attr, "postcode"))
    {
-      value = vm->createValue(object->getPostalAddress()->getPostCode());
+      value = vm->createValue(object->getPostalAddress().getPostCode());
    }
    else if (compareAttributeName(attr, "primaryZoneProxy"))
    {
@@ -797,7 +797,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    }
    else if (compareAttributeName(attr, "streetAddress"))
    {
-      value = vm->createValue(object->getPostalAddress()->getStreetAddress());
+      value = vm->createValue(object->getPostalAddress().getStreetAddress());
    }
    else if (compareAttributeName(attr, "type"))
    {

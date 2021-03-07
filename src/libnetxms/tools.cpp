@@ -648,8 +648,8 @@ void LIBNETXMS_EXPORTABLE StrStripW(WCHAR *str)
  */
 TCHAR LIBNETXMS_EXPORTABLE *Trim(TCHAR *str)
 {
-   if (str == NULL)
-      return NULL;
+   if (str == nullptr)
+      return nullptr;
 
    int i;
    for(i = 0; (str[i] != 0) && _istspace(str[i]); i++);

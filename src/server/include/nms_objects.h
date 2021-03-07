@@ -965,15 +965,15 @@ protected:
    uint32_t m_categoryId;
    MUTEX m_mutexProperties;         // Object data access mutex
 	GeoLocation m_geoLocation;
-   PostalAddress *m_postalAddress;
+   PostalAddress m_postalAddress;
    ClientSession *m_pollRequestor;
    uint32_t m_pollRequestId;
-	IntegerArray<UINT32> *m_dashboards; // Dashboards associated with this object
-	ObjectArray<ObjectUrl> *m_urls;  // URLs associated with this object
+	IntegerArray<uint32_t> m_dashboards; // Dashboards associated with this object
+	ObjectArray<ObjectUrl> m_urls;  // URLs associated with this object
 	uint32_t m_primaryZoneProxyId;     // ID of assigned primary zone proxy node
 	uint32_t m_backupZoneProxyId;      // ID of assigned backup zone proxy node
 
-   AccessList *m_accessList;
+   AccessList m_accessList;
    bool m_inheritAccessRights;
    MUTEX m_mutexACL;
 
@@ -982,7 +982,7 @@ protected:
    StringObjectMap<ModuleData> *m_moduleData;
    MUTEX m_moduleDataLock;
 
-   IntegerArray<UINT32> *m_responsibleUsers;
+   IntegerArray<uint32_t> *m_responsibleUsers;
    RWLOCK m_rwlockResponsibleUsers;
 
    const SharedObjectArray<NetObj> &getChildList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getChildList()); }
@@ -1019,7 +1019,7 @@ protected:
    bool isGeoLocationHistoryTableExists(DB_HANDLE hdb) const;
    bool createGeoLocationHistoryTable(DB_HANDLE hdb);
 
-   void getAllResponsibleUsersInternal(IntegerArray<UINT32> *list);
+   void getAllResponsibleUsersInternal(IntegerArray<uint32_t> *list);
 
 public:
    NetObj();
@@ -1056,8 +1056,8 @@ public:
 	const GeoLocation& getGeoLocation() const { return m_geoLocation; }
 	void setGeoLocation(const GeoLocation& geoLocation);
 
-   const PostalAddress *getPostalAddress() const { return m_postalAddress; }
-   void setPostalAddress(PostalAddress * addr) { lockProperties(); delete m_postalAddress; m_postalAddress = addr; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
+   PostalAddress getPostalAddress() const { return GetAttributeWithLock(m_postalAddress, m_mutexProperties); }
+   void setPostalAddress(const PostalAddress& addr) { lockProperties(); m_postalAddress = addr; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 
    const uuid& getMapImage() const { return m_mapImage; }
    void setMapImage(const uuid& image) { lockProperties(); m_mapImage = image; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
@@ -1170,7 +1170,7 @@ public:
 
    void updateGeoLocationHistory(GeoLocation location);
 
-   IntegerArray<UINT32> *getAllResponsibleUsers();
+   IntegerArray<uint32_t> *getAllResponsibleUsers();
 
    virtual json_t *toJson();
 

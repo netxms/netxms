@@ -2972,17 +2972,57 @@ template<typename T> json_t *json_integer_array(const IntegerArray<T>& values)
 }
 
 /**
+ * Create JSON array from integer array
+ */
+template<typename T> json_t *json_integer_array(const IntegerArray<T> *values)
+{
+   json_t *a = json_array();
+   if (values != nullptr)
+   {
+      for(int i = 0; i < values->size(); i++)
+         json_array_append_new(a, json_integer(values->get(i)));
+   }
+   return a;
+}
+
+/**
  * Serialize ObjectArray as JSON
  */
 template<typename T> json_t *json_object_array(const ObjectArray<T> *a)
 {
    json_t *root = json_array();
-   if (a != NULL)
+   if (a != nullptr)
    {
       for(int i = 0; i < a->size(); i++)
       {
          T *e = a->get(i);
-         if (e != NULL)
+         if (e != nullptr)
+            json_array_append_new(root, e->toJson());
+      }
+   }
+   return root;
+}
+
+/**
+ * Serialize ObjectArray as JSON
+ */
+template<typename T> json_t *json_object_array(const ObjectArray<T>& a)
+{
+   return json_object_array<T>(&a);
+}
+
+/**
+ * Serialize SharedObjectArray as JSON
+ */
+template<typename T> json_t *json_object_array(const SharedObjectArray<T> *a)
+{
+   json_t *root = json_array();
+   if (a != nullptr)
+   {
+      for(int i = 0; i < a->size(); i++)
+      {
+         T *e = a->get(i);
+         if (e != nullptr)
             json_array_append_new(root, e->toJson());
       }
    }
@@ -2992,19 +3032,9 @@ template<typename T> json_t *json_object_array(const ObjectArray<T> *a)
 /**
  * Serialize SharedObjectArray as JSON
  */
-template<typename T> json_t *json_object_array(const SharedObjectArray<T> *a)
+template<typename T> json_t *json_object_array(const SharedObjectArray<T>& a)
 {
-   json_t *root = json_array();
-   if (a != NULL)
-   {
-      for(int i = 0; i < a->size(); i++)
-      {
-         T *e = a->get(i);
-         if (e != NULL)
-            json_array_append_new(root, e->toJson());
-      }
-   }
-   return root;
+   return json_object_array<T>(&a);
 }
 
 /**
@@ -3252,34 +3282,33 @@ class LIBNETXMS_EXPORTABLE InetAddressList
    DISABLE_COPY_CTOR(InetAddressList)
 
 private:
-   ObjectArray<InetAddress> *m_list;
+   ObjectArray<InetAddress> m_list;
 
    int indexOf(const InetAddress& addr) const;
 
 public:
-   InetAddressList();
-   ~InetAddressList();
+   InetAddressList() : m_list(0, 8, Ownership::True) { }
 
    void add(const InetAddress& addr);
    void add(const InetAddressList& addrList);
    void replace(const InetAddress& addr);
    void remove(const InetAddress& addr);
-   void clear() { m_list->clear(); }
-   const InetAddress& get(int index) const { const InetAddress *a = m_list->get(index); return (a != NULL) ? *a : InetAddress::INVALID; }
+   void clear() { m_list.clear(); }
+   const InetAddress& get(int index) const { const InetAddress *a = m_list.get(index); return (a != nullptr) ? *a : InetAddress::INVALID; }
 
-   int size() const { return m_list->size(); }
-   bool isEmpty() const { return m_list->isEmpty(); }
+   int size() const { return m_list.size(); }
+   bool isEmpty() const { return m_list.isEmpty(); }
    bool hasAddress(const InetAddress& addr) const { return indexOf(addr) != -1; }
-   const InetAddress& findAddress(const InetAddress& addr) const { int idx = indexOf(addr); return (idx != -1) ? *m_list->get(idx) : InetAddress::INVALID; }
+   const InetAddress& findAddress(const InetAddress& addr) const { int idx = indexOf(addr); return (idx != -1) ? *m_list.get(idx) : InetAddress::INVALID; }
    const InetAddress& findSameSubnetAddress(const InetAddress& addr) const;
    const InetAddress& getFirstUnicastAddress() const;
    const InetAddress& getFirstUnicastAddressV4() const;
    bool hasValidUnicastAddress() const { return getFirstUnicastAddress().isValid(); }
    bool isLoopbackOnly() const;
 
-   const ObjectArray<InetAddress> *getList() const { return m_list; }
+   const ObjectArray<InetAddress>& getList() const { return m_list; }
 
-   void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;
+   void fillMessage(NXCPMessage *msg, uint32_t sizeFieldId, uint32_t baseFieldId) const;
 
    json_t *toJson() const { return json_object_array(m_list); }
 
@@ -3346,37 +3375,6 @@ public:
    static TelnetConnection *createConnection(const InetAddress& ip, uint16_t port, uint32_t timeout);
 
    ssize_t readLine(char *buffer, size_t size, uint32_t timeout = INFINITE);
-};
-
-/**
- * Postal address representation
- */
-class LIBNETXMS_EXPORTABLE PostalAddress
-{
-   DISABLE_COPY_CTOR(PostalAddress)
-
-private:
-   TCHAR *m_country;
-   TCHAR *m_city;
-   TCHAR *m_streetAddress;
-   TCHAR *m_postcode;
-
-public:
-   PostalAddress();
-   PostalAddress(const TCHAR *country, const TCHAR *city, const TCHAR *streetAddress, const TCHAR *postcode);
-   ~PostalAddress();
-
-   const TCHAR *getCountry() const { return CHECK_NULL_EX(m_country); }
-   const TCHAR *getCity() const { return CHECK_NULL_EX(m_city); }
-   const TCHAR *getStreetAddress() const { return CHECK_NULL_EX(m_streetAddress); }
-   const TCHAR *getPostCode() const { return CHECK_NULL_EX(m_postcode); }
-
-   json_t *toJson() const;
-
-   void setCountry(const TCHAR *country) { MemFree(m_country); m_country = MemCopyString(country); }
-   void setCity(const TCHAR *city) { MemFree(m_city); m_city = MemCopyString(city); }
-   void setStreetAddress(const TCHAR *streetAddress) { MemFree(m_streetAddress); m_streetAddress = MemCopyString(streetAddress); }
-   void setPostCode(const TCHAR *postcode) { MemFree(m_postcode); m_postcode = MemCopyString(postcode); }
 };
 
 #if defined(FD_SETSIZE) && (FD_SETSIZE <= 1024)
@@ -4534,6 +4532,44 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *fileName, size_t *fileSize);
 #endif
 char LIBNETXMS_EXPORTABLE *LoadFileAsUTF8String(const TCHAR *fileName);
 
-#endif
+/**
+ * Postal address representation
+ */
+class LIBNETXMS_EXPORTABLE PostalAddress
+{
+private:
+   TCHAR *m_country;
+   TCHAR *m_city;
+   TCHAR *m_streetAddress;
+   TCHAR *m_postcode;
+
+   void setField(TCHAR **field, const TCHAR *value)
+   {
+      MemFree(*field);
+      *field = ((value != nullptr) && (*value != 0)) ? MemCopyString(value) : nullptr;
+   }
+
+public:
+   PostalAddress();
+   PostalAddress(const TCHAR *country, const TCHAR *city, const TCHAR *streetAddress, const TCHAR *postcode);
+   PostalAddress(const PostalAddress& src);
+   ~PostalAddress();
+
+   PostalAddress& operator =(const PostalAddress& src);
+
+   const TCHAR *getCountry() const { return CHECK_NULL_EX(m_country); }
+   const TCHAR *getCity() const { return CHECK_NULL_EX(m_city); }
+   const TCHAR *getStreetAddress() const { return CHECK_NULL_EX(m_streetAddress); }
+   const TCHAR *getPostCode() const { return CHECK_NULL_EX(m_postcode); }
+
+   json_t *toJson() const;
+
+   void setCountry(const TCHAR *country) { setField(&m_country, country); }
+   void setCity(const TCHAR *city) { setField(&m_city, city); }
+   void setStreetAddress(const TCHAR *streetAddress) { setField(&m_streetAddress, streetAddress); }
+   void setPostCode(const TCHAR *postcode) { setField(&m_postcode, postcode); }
+};
+
+#endif   /* __cplusplus */
 
 #endif   /* _nms_util_h_ */

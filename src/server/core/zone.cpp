@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -332,10 +332,10 @@ bool Zone::showThresholdSummary() const
  */
 void Zone::removeFromIndex(const Interface& iface)
 {
-   const ObjectArray<InetAddress> *list = iface.getIpAddressList()->getList();
-   for(int i = 0; i < list->size(); i++)
+   const ObjectArray<InetAddress>& list = iface.getIpAddressList()->getList();
+   for(int i = 0; i < list.size(); i++)
    {
-      InetAddress *addr = list->get(i);
+      InetAddress *addr = list.get(i);
       if (addr->isValidUnicast())
       {
 	      shared_ptr<NetObj> o = m_idxInterfaceByAddr->get(*addr);

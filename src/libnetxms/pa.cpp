@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -28,10 +28,10 @@
  */
 PostalAddress::PostalAddress()
 {
-   m_country = NULL;
-   m_city = NULL;
-   m_streetAddress = NULL;
-   m_postcode = NULL;
+   m_country = nullptr;
+   m_city = nullptr;
+   m_streetAddress = nullptr;
+   m_postcode = nullptr;
 }
 
 /**
@@ -46,6 +46,17 @@ PostalAddress::PostalAddress(const TCHAR *country, const TCHAR *city, const TCHA
 }
 
 /**
+ * Copy constructor
+ */
+PostalAddress::PostalAddress(const PostalAddress& src)
+{
+   m_country = MemCopyString(src.m_country);
+   m_city = MemCopyString(src.m_city);
+   m_streetAddress = MemCopyString(src.m_streetAddress);
+   m_postcode = MemCopyString(src.m_postcode);
+}
+
+/**
  * Destructor
  */
 PostalAddress::~PostalAddress()
@@ -54,6 +65,22 @@ PostalAddress::~PostalAddress()
    MemFree(m_city);
    MemFree(m_streetAddress);
    MemFree(m_postcode);
+}
+
+/**
+ * Assignment operator
+ */
+PostalAddress& PostalAddress::operator =(const PostalAddress& src)
+{
+   MemFree(m_country);
+   MemFree(m_city);
+   MemFree(m_streetAddress);
+   MemFree(m_postcode);
+   m_country = MemCopyString(src.m_country);
+   m_city = MemCopyString(src.m_city);
+   m_streetAddress = MemCopyString(src.m_streetAddress);
+   m_postcode = MemCopyString(src.m_postcode);
+   return *this;
 }
 
 /**
