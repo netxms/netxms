@@ -388,7 +388,7 @@ static UINT32 HandlerIpAddressTable(SNMP_Variable *var, SNMP_Transport *snmp, vo
 static UINT32 HandlerIpAddressPrefixTable(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    InterfaceList *ifList = (InterfaceList *)arg;
-   const UINT32 *oid = var->getName().value();
+   const uint32_t *oid = var->getName().value();
    
    // Check address family (1 = ipv4, 2 = ipv6)
    if ((oid[10] != 1) && (oid[10] != 2))
@@ -412,12 +412,12 @@ static UINT32 HandlerIpAddressPrefixTable(SNMP_Variable *var, SNMP_Transport *sn
 
    // Find matching IP and set mask
    InterfaceInfo *iface = ifList->findByIfIndex(oid[12]);
-   if (iface != NULL)
+   if (iface != nullptr)
    {
       for(int i = 0; i < iface->ipAddrList.size(); i++)
       {
-         InetAddress *addr = iface->ipAddrList.getList()->get(i);
-         if ((addr != NULL) && prefix.contain(*addr))
+         InetAddress *addr = iface->ipAddrList.getList().get(i);
+         if ((addr != nullptr) && prefix.contain(*addr))
          {
             addr->setMaskBits(prefix.getMaskBits());
          }

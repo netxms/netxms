@@ -551,10 +551,10 @@ void NetObjDeleteFromIndexes(const NetObj& object)
 			}
 			else
 			{
-            const ObjectArray<InetAddress> *list = static_cast<const Interface&>(object).getIpAddressList()->getList();
-            for(int i = 0; i < list->size(); i++)
+            const ObjectArray<InetAddress>& list = static_cast<const Interface&>(object).getIpAddressList()->getList();
+            for(int i = 0; i < list.size(); i++)
             {
-               InetAddress *addr = list->get(i);
+               InetAddress *addr = list.get(i);
                if (addr->isValidUnicast())
                {
 				      shared_ptr<NetObj> o = g_idxInterfaceByAddr.get(*addr);

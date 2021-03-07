@@ -1879,11 +1879,11 @@ void Node::deleteInterface(Interface *iface)
    // Check if we should unlink node from interface's subnet
    if (!iface->isExcludedFromTopology())
    {
-      const ObjectArray<InetAddress> *list = iface->getIpAddressList()->getList();
-      for(int i = 0; i < list->size(); i++)
+      const ObjectArray<InetAddress>& list = iface->getIpAddressList()->getList();
+      for(int i = 0; i < list.size(); i++)
       {
          bool doUnlink = true;
-         const InetAddress *addr = list->get(i);
+         const InetAddress *addr = list.get(i);
 
          readLockChildList();
          for(int j = 0; j < getChildList().size(); j++)
