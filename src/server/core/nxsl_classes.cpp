@@ -1805,6 +1805,20 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue(node->getSysDescription());
    }
+   else if (compareAttributeName(attr, "tunnel"))
+   {
+      auto connection = node->getAgentConnection();
+      if (connection != nullptr)
+      {
+         auto tunnel = connection->getTunnel();
+         if (tunnel != nullptr)
+            value = vm->createValue(new NXSL_Object(vm, &g_nxslTunnelClass, new shared_ptr<AgentTunnel>(tunnel)));
+         else
+            value = vm->createValue();
+      }
+      else
+         value = vm->createValue();
+   }
    else if (compareAttributeName(attr, "vendor"))
    {
       value = vm->createValue(node->getVendor());
