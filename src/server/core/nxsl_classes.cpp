@@ -1466,6 +1466,18 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
       TCHAR buffer[64];
       value = vm->createValue(node->getAgentId().toString(buffer));
    }
+   else if (compareAttributeName(attr, "agentProxy"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(node->getAgentProxy());
+      if (object != nullptr)
+      {
+         value = object->createNXSLObject(vm);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
    else if (compareAttributeName(attr, "agentVersion"))
    {
       value = vm->createValue(node->getAgentVersion());
@@ -1549,6 +1561,42 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue(static_cast<INT64>(node->getDownSince()));
    }
+   else if (compareAttributeName(attr, "effectiveAgentProxy"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(node->getEffectiveAgentProxy());
+      if (object != nullptr)
+      {
+         value = object->createNXSLObject(vm);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (compareAttributeName(attr, "effectiveIcmpProxy"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(node->getEffectiveIcmpProxy());
+      if (object != nullptr)
+      {
+         value = object->createNXSLObject(vm);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (compareAttributeName(attr, "effectiveSnmpProxy"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(node->getEffectiveSnmpProxy());
+      if (object != nullptr)
+      {
+         value = object->createNXSLObject(vm);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
    else if (compareAttributeName(attr, "flags"))
    {
 		value = vm->createValue(node->getFlags());
@@ -1609,6 +1657,18 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    else if (compareAttributeName(attr, "icmpPacketLoss"))
    {
       value = GetNodeIcmpStatistic(node, IcmpStatFunction::LOSS, vm);
+   }
+   else if (compareAttributeName(attr, "icmpProxy"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(node->getIcmpProxy());
+      if (object != nullptr)
+      {
+         value = object->createNXSLObject(vm);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
    }
    else if (compareAttributeName(attr, "interfaces"))
    {
@@ -1784,6 +1844,18 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    else if (compareAttributeName(attr, "snmpOID"))
    {
       value = vm->createValue(node->getSNMPObjectId());
+   }
+   else if (compareAttributeName(attr, "snmpProxy"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(node->getSNMPProxy());
+      if (object != nullptr)
+      {
+         value = object->createNXSLObject(vm);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
    }
    else if (compareAttributeName(attr, "snmpSysContact"))
    {
