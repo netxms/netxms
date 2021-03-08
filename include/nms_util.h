@@ -668,6 +668,29 @@ public:
          free(p);
       }
    }
+
+   /**
+    * Get number of allocated regions
+    */
+   int getRegionCount() const
+   {
+      int count = 0;
+      void *r = m_currentRegion;
+      while(r != nullptr)
+      {
+         count++;
+         r = *((void **)r);
+      }
+      return count;
+   }
+
+   /**
+    * Get estimated memory usage by this pool
+    */
+   uint64_t getMemoryUsage() const
+   {
+      return sizeof(ObjectMemoryPool<T>) + getRegionCount() * m_regionSize;
+   }
 };
 
 /**
