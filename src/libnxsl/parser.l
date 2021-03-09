@@ -100,9 +100,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>{identifier}	{ strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_IDENTIFIER; }
 <INITIAL>{compound_ident} { strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_COMPOUND_IDENTIFIER; }
 <INITIAL>{integer}	{
-				INT64 nVal;
-
-				nVal = strtoll(yytext, NULL, 0);
+				int64_t nVal = strtoll(yytext, nullptr, 0);
 				if ((nVal < -2147483647) || (nVal > 2147483647))
 				{
 					yylval->valInt64 = nVal;
@@ -110,14 +108,14 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 				}
 				else
 				{
-					yylval->valInt32 = (LONG)nVal;
+					yylval->valInt32 = static_cast<int32_t>(nVal);
 					return T_INT32;
 				}
 			}
-<INITIAL>{uint32}	{ yylval->valUInt32 = strtoul(yytext, NULL, 0); return T_UINT32; }
-<INITIAL>{int64}	{ yylval->valInt64 = strtoll(yytext, NULL, 0); return T_INT64; }
-<INITIAL>{uint64}	{ yylval->valUInt64 = strtoull(yytext, NULL, 0); return T_UINT64; }
-<INITIAL>{real}		{ yylval->valReal = strtod(yytext, NULL); return T_REAL; }
+<INITIAL>{uint32} { yylval->valUInt32 = strtoul(yytext, nullptr, 0); return T_UINT32; }
+<INITIAL>{int64}  { yylval->valInt64 = strtoll(yytext, nullptr, 0); return T_INT64; }
+<INITIAL>{uint64} { yylval->valUInt64 = strtoull(yytext, nullptr, 0); return T_UINT64; }
+<INITIAL>{real}   { yylval->valReal = strtod(yytext, nullptr); return T_REAL; }
 
 <INITIAL>"=="	return T_EQ;
 <INITIAL>"!="	return T_NE;

@@ -864,7 +864,11 @@ enum OperandType
    OP_TYPE_IDENTIFIER = 2,
    OP_TYPE_CONST = 3,
    OP_TYPE_VARIABLE = 4,
-   OP_TYPE_EXT_FUNCTION = 5
+   OP_TYPE_EXT_FUNCTION = 5,
+   OP_TYPE_INT32 = 6,
+   OP_TYPE_UINT32 = 7,
+   OP_TYPE_INT64 = 8,
+   OP_TYPE_UINT64 = 9
 };
 
 /**
@@ -887,6 +891,10 @@ protected:
       NXSL_Variable *m_variable;
       const NXSL_ExtFunction *m_function;
       uint32_t m_addr;
+      int32_t m_valueInt32;
+      uint32_t m_valueUInt32;
+      int64_t m_valueInt64;
+      uint64_t m_valueUInt64;
    } m_operand;
    uint32_t m_addr2;   // Second address
    int32_t m_sourceLine;

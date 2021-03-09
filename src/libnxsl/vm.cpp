@@ -624,6 +624,27 @@ void NXSL_VM::execute()
       case OPCODE_PUSH_CONSTANT:
          m_dataStack->push(createValue(cp->m_operand.m_constant));
          break;
+      case OPCODE_PUSH_NULL:
+         m_dataStack->push(createValue());
+         break;
+      case OPCODE_PUSH_TRUE:
+         m_dataStack->push(createValue(true));
+         break;
+      case OPCODE_PUSH_FALSE:
+         m_dataStack->push(createValue(false));
+         break;
+      case OPCODE_PUSH_INT32:
+         m_dataStack->push(createValue(cp->m_operand.m_valueInt32));
+         break;
+      case OPCODE_PUSH_UINT32:
+         m_dataStack->push(createValue(cp->m_operand.m_valueUInt32));
+         break;
+      case OPCODE_PUSH_INT64:
+         m_dataStack->push(createValue(cp->m_operand.m_valueInt64));
+         break;
+      case OPCODE_PUSH_UINT64:
+         m_dataStack->push(createValue(cp->m_operand.m_valueUInt64));
+         break;
       case OPCODE_PUSH_VARIABLE:
          pValue = m_env->getConstantValue(*cp->m_operand.m_identifier, this);
          if (pValue != nullptr)

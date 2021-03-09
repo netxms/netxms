@@ -116,6 +116,18 @@ NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, const NXSL_Instruction
       case OP_TYPE_IDENTIFIER:
          m_operand.m_identifier = vm->createIdentifier(*src->m_operand.m_identifier);
          break;
+      case OP_TYPE_INT32:
+         m_operand.m_valueInt32 = src->m_operand.m_valueInt32;
+         break;
+      case OP_TYPE_INT64:
+         m_operand.m_valueInt64 = src->m_operand.m_valueInt64;
+         break;
+      case OP_TYPE_UINT32:
+         m_operand.m_valueUInt32 = src->m_operand.m_valueUInt32;
+         break;
+      case OP_TYPE_UINT64:
+         m_operand.m_valueUInt64 = src->m_operand.m_valueUInt64;
+         break;
       default:
          m_operand.m_addr = src->m_operand.m_addr;
          break;
@@ -196,6 +208,14 @@ OperandType NXSL_Instruction::getOperandType()
          return OP_TYPE_ADDR;
       case OPCODE_CALL_EXTPTR:
          return OP_TYPE_EXT_FUNCTION;
+      case OPCODE_PUSH_INT32:
+         return OP_TYPE_INT32;
+      case OPCODE_PUSH_INT64:
+         return OP_TYPE_INT64;
+      case OPCODE_PUSH_UINT32:
+         return OP_TYPE_UINT32;
+      case OPCODE_PUSH_UINT64:
+         return OP_TYPE_UINT64;
       default:
          return OP_TYPE_NONE;
    }
