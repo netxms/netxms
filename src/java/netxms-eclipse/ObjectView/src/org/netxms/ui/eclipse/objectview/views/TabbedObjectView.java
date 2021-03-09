@@ -25,6 +25,7 @@ import java.util.List;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -60,6 +61,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.SourceProvider;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
@@ -68,6 +70,8 @@ import org.netxms.ui.eclipse.tools.Command;
 import org.netxms.ui.eclipse.tools.CommandBridge;
 import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 
 /**
  * Tabbed view of currently selected object
@@ -90,6 +94,8 @@ public class TabbedObjectView extends ViewPart
 	private Action actionRefresh;
 	private SourceProvider sourceProvider = null;
 	private long objectId = 0; 
+	private NXCSession session;
+   private ViewRefreshController refreshController;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -98,6 +104,7 @@ public class TabbedObjectView extends ViewPart
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
+      session = ConsoleSharedData.getSession();
 		sourceProvider = SourceProvider.getInstance();
 		selectionService = getSite().getWorkbenchWindow().getSelectionService();
 	}
@@ -173,7 +180,6 @@ public class TabbedObjectView extends ViewPart
 		selectionProvider = new IntermediateSelectionProvider();
 		getSite().setSelectionProvider(selectionProvider);
 		
-		final NXCSession session = ConsoleSharedData.getSession();
 		sessionListener = new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
@@ -212,6 +218,24 @@ public class TabbedObjectView extends ViewPart
 				return null;
 			}
 		});
+		
+
+      VisibilityValidator validator = new VisibilityValidator() { 
+         @Override
+         public boolean isVisible()
+         {
+            return getSite().getPage().isPartVisible(TabbedObjectView.this);
+         }
+      };
+
+      refreshController = new ViewRefreshController(this, -1, new Runnable() {
+         @Override
+         public void run()
+         {
+            refreshCurrentTab();
+         }
+      }, validator);
+      refreshController.setInterval(30);
 	}
 	
 	/**
@@ -263,9 +287,32 @@ public class TabbedObjectView extends ViewPart
 	 */
 	private void refreshCurrentTab()
 	{
-		CTabItem item = tabFolder.getSelection();
-		if (item != null)
-			((ObjectTab)item.getData()).refresh();
+	   if (objectId == 0)
+	      return;
+	   
+	   ConsoleJob job = new ConsoleJob(String.format("Refresh current object %d", objectId), this, Activator.PLUGIN_ID)
+      {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.syncObjectSet(new long[] { objectId }, false, NXCSession.OBJECT_SYNC_WAIT);            
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  onObjectUpdate(session.findObjectById(objectId));
+               }
+            });            
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Error updating ";
+         }
+      };
+      job.setUser(false);
+      job.start();	   
 	}
 	/**
 	 * Notify visible tabs about object update
@@ -484,6 +531,7 @@ public class TabbedObjectView extends ViewPart
 	@Override
 	public void dispose()
 	{
+      refreshController.dispose();
 	   ConsoleSharedData.getSession().removeListener(sessionListener);
 		CommandBridge.getInstance().unregisterCommand("TabbedObjectView/selectTab"); //$NON-NLS-1$
       CommandBridge.getInstance().unregisterCommand("TabbedObjectView/changeObject"); //$NON-NLS-1$
