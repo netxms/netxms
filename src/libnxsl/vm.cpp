@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -2861,7 +2861,7 @@ void NXSL_VM::setSecurityContext(NXSL_SecurityContext *context)
  */
 void NXSL_VM::dump(FILE *fp) const
 {
-   NXSL_Program::dump(fp, m_instructionSet);
+   NXSL_ProgramBuilder::dump(fp, m_instructionSet);
 
    if (!m_functions.isEmpty())
    {

@@ -453,7 +453,7 @@ void CreateScriptExportRecord(StringBuffer &xml, UINT32 id)
    xml.append(EscapeStringForXML2(script->getName()));
    xml.append(_T("</name>\n"));
    xml.append(_T("\t\t\t<code>"));
-   xml.append(EscapeStringForXML2(script->getCode()));
+   xml.append(EscapeStringForXML2(script->getSourceCode()));
    xml.append(_T("</code>\n\t\t</script>\n"));
 
    delete script;

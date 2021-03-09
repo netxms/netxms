@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -66,10 +66,10 @@ void NXSL_Library::deleteScript(const TCHAR *pszName)
 /**
  * Delete script by id
  */
-void NXSL_Library::deleteScript(UINT32 dwId)
+void NXSL_Library::deleteScript(uint32_t id)
 {
    for(int i = 0; i < m_scriptList->size(); i++)
-      if (m_scriptList->get(i)->getId() == dwId)
+      if (m_scriptList->get(i)->getId() == id)
       {
          m_scriptList->remove(i);
          break;
@@ -86,16 +86,16 @@ NXSL_Program *NXSL_Library::findNxslProgram(const TCHAR *name)
       NXSL_LibraryScript *script = m_scriptList->get(i);
       if (!_tcsicmp(script->getName(), name))
       {
-         return script->isValid() ? script->getProgram() : NULL;
+         return script->isValid() ? script->getProgram() : nullptr;
       }
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
  * Find script object by ID
  */
-NXSL_LibraryScript *NXSL_Library::findScript(UINT32 id)
+NXSL_LibraryScript *NXSL_Library::findScript(uint32_t id)
 {
    for(int i = 0; i < m_scriptList->size(); i++)
    {
@@ -131,16 +131,16 @@ NXSL_LibraryScript *NXSL_Library::findScript(const TCHAR *name)
  */
 NXSL_VM *NXSL_Library::createVM(const TCHAR *name, NXSL_Environment *(*environmentCreator)(void*), bool (*scriptValidator)(NXSL_LibraryScript*, void*), void *context)
 {
-   NXSL_VM *vm = NULL;
+   NXSL_VM *vm = nullptr;
    lock();
    NXSL_LibraryScript *s = findScript(name);
-   if ((s != NULL) && s->isValid() && ((scriptValidator == NULL) || scriptValidator(s, context)))
+   if ((s != NULL) && s->isValid() && ((scriptValidator == nullptr) || scriptValidator(s, context)))
    {
       vm = new NXSL_VM(environmentCreator(context));
       if (!vm->load(s->getProgram()))
       {
          delete vm;
-         vm = NULL;
+         vm = nullptr;
       }
    }
    unlock();
@@ -153,16 +153,16 @@ NXSL_VM *NXSL_Library::createVM(const TCHAR *name, NXSL_Environment *(*environme
  */
 NXSL_VM *NXSL_Library::createVM(const TCHAR *name, NXSL_Environment *env)
 {
-   NXSL_VM *vm = NULL;
+   NXSL_VM *vm = nullptr;
    lock();
    NXSL_Program *p = findNxslProgram(name);
-   if (p != NULL)
+   if (p != nullptr)
    {
       vm = new NXSL_VM(env);
       if (!vm->load(p))
       {
          delete vm;
-         vm = NULL;
+         vm = nullptr;
       }
    }
    else
@@ -211,7 +211,7 @@ NXSL_LibraryScript::NXSL_LibraryScript()
 {
    m_id = 0;
    _tcslcpy(m_name, _T(""), 1);
-   m_source = NULL;
+   m_source = nullptr;
    m_program = new NXSL_Program();
 }
 
@@ -239,7 +239,7 @@ NXSL_LibraryScript::~NXSL_LibraryScript()
 /**
  * Fill message with script id and name for list
  */
-void NXSL_LibraryScript::fillMessage(NXCPMessage *msg, UINT32 base) const
+void NXSL_LibraryScript::fillMessage(NXCPMessage *msg, uint32_t base) const
 {
    msg->setField(base, m_id);
    msg->setField(base + 1, m_name);
