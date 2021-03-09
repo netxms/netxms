@@ -74,11 +74,11 @@ NetObj::NetObj() : NObject(), m_dashboards(0, 8), m_urls(0, 8, Ownership::True)
    m_isDeleted = false;
    m_isDeleteInitiated = false;
    m_isHidden = false;
-	m_isSystem = false;
-	m_maintenanceEventId = 0;
-	m_maintenanceInitiator = 0;
+   m_isSystem = false;
+   m_maintenanceEventId = 0;
+   m_maintenanceInitiator = 0;
    m_inheritAccessRights = true;
-	m_trustedNodes = nullptr;
+   m_trustedNodes = nullptr;
    m_pollRequestor = nullptr;
    m_pollRequestId = 0;
    m_statusCalcAlg = SA_CALCULATE_DEFAULT;
@@ -92,7 +92,7 @@ NetObj::NetObj() : NObject(), m_dashboards(0, 8), m_urls(0, 8, Ownership::True)
       m_statusTranslation[i] = i + 1;
       m_statusThresholds[i] = 80 - i * 20;
    }
-	m_submapId = 0;
+   m_submapId = 0;
    m_moduleData = nullptr;
    m_moduleDataLock = MutexCreateFast();
    m_primaryZoneProxyId = 0;
@@ -112,10 +112,11 @@ NetObj::NetObj() : NObject(), m_dashboards(0, 8), m_urls(0, 8, Ownership::True)
  */
 NetObj::~NetObj()
 {
-   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 7, _T("Called destructor for object %s [%u]"), m_name, m_id);
+   if (!(g_flags & AF_SHUTDOWN))
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 7, _T("Called destructor for object %s [%u]"), m_name, m_id);
    MutexDestroy(m_mutexProperties);
    MutexDestroy(m_mutexACL);
-	delete m_trustedNodes;
+   delete m_trustedNodes;
    delete m_moduleData;
    MutexDestroy(m_moduleDataLock);
    delete m_responsibleUsers;

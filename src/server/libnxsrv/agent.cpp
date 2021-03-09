@@ -125,7 +125,8 @@ public:
 
    ~AgentConnectionReceiver()
    {
-      debugPrintf(7, _T("AgentConnectionReceiver destructor called (this=%p)"), this);
+      if (!(g_flags & AF_SHUTDOWN))
+         debugPrintf(7, _T("AgentConnectionReceiver destructor called (this=%p)"), this);
       delete m_messageReceiver;
    }
 
@@ -508,29 +509,30 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
  */
 AgentConnection::~AgentConnection()
 {
-   debugPrintf(7, _T("AgentConnection destructor called (this=%p)"), this);
+   if (!(g_flags & AF_SHUTDOWN))
+      debugPrintf(7, _T("AgentConnection destructor called (this=%p)"), this);
 
    if (m_receiver != nullptr)
       m_receiver->detach();
 
    delete m_pMsgWaitQueue;
 
-	if (m_hCurrFile != -1)
-	{
-		_close(m_hCurrFile);
-		onFileDownload(false);
-	}
+   if (m_hCurrFile != -1)
+   {
+      _close(m_hCurrFile);
+      onFileDownload(false);
+   }
    else if (m_sendToClientMessageCallback != nullptr)
    {
       onFileDownload(false);
    }
 
-	if (m_channel != nullptr)
-	   m_channel->shutdown();
+   if (m_channel != nullptr)
+      m_channel->shutdown();
 
    MutexDestroy(m_mutexDataLock);
-	MutexDestroy(m_mutexSocketWrite);
-	ConditionDestroy(m_condFileDownload);
+   MutexDestroy(m_mutexSocketWrite);
+   ConditionDestroy(m_condFileDownload);
 }
 
 /**
