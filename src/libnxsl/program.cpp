@@ -56,7 +56,9 @@ static const char *s_nxslCommandMnemonic[] =
    "PUSH", "SET", "CALL", "INC", "DEC",
    "INCP", "DECP", "IN", "PUSH", "SET",
    "UPDATE", "CLREXPR", "RANGE", "CASELT",
-   "CASELT", "CASEGT", "CASEGT", "PUSH"
+   "CASELT", "CASEGT", "CASEGT", "PUSH",
+   "PUSH", "PUSH", "PUSH", "PUSH", "PUSH",
+   "PUSH", "PUSH"
 };
 
 /**
@@ -360,6 +362,27 @@ void NXSL_ProgramBuilder::dump(FILE *fp, const ObjectArray<NXSL_Instruction>& in
          case OPCODE_CAST:
             _ftprintf(fp, _T("[%s]\n"), g_szTypeNames[instr->m_stackItems]);
             break;
+         case OPCODE_PUSH_NULL:
+            _ftprintf(fp, _T("null\n"));
+            break;
+         case OPCODE_PUSH_TRUE:
+            _ftprintf(fp, _T("true\n"));
+            break;
+         case OPCODE_PUSH_FALSE:
+            _ftprintf(fp, _T("false\n"));
+            break;
+         case OPCODE_PUSH_INT32:
+            _ftprintf(fp, _T("%d\n"), instr->m_operand.m_valueInt32);
+            break;
+         case OPCODE_PUSH_INT64:
+            _ftprintf(fp, INT64_FMT _T("L\n"), instr->m_operand.m_valueInt64);
+            break;
+         case OPCODE_PUSH_UINT32:
+            _ftprintf(fp, _T("%uU\n"), instr->m_operand.m_valueUInt32);
+            break;
+         case OPCODE_PUSH_UINT64:
+            _ftprintf(fp, UINT64_FMT _T("UL\n"), instr->m_operand.m_valueUInt64);
+            break;
          default:
             _ftprintf(fp, _T("\n"));
             break;
@@ -386,16 +409,65 @@ void NXSL_ProgramBuilder::optimize()
 	int i;
 
 	// Convert push constant followed by NEG to single push constant
+	// Convert push integer and boolean constants to special push instructions
 	for(i = 0; (m_instructionSet.size() > 1) && (i < m_instructionSet.size() - 1); i++)
 	{
       NXSL_Instruction *instr = m_instructionSet.get(i);
-		if ((instr->m_opCode == OPCODE_PUSH_CONSTANT) &&
-		    (m_instructionSet.get(i + 1)->m_opCode == OPCODE_NEG) &&
+		if (instr->m_opCode != OPCODE_PUSH_CONSTANT)
+		   continue;
+
+		if ((m_instructionSet.get(i + 1)->m_opCode == OPCODE_NEG) &&
 			 instr->m_operand.m_constant->isNumeric() &&
 			 !instr->m_operand.m_constant->isUnsigned())
 		{
 			instr->m_operand.m_constant->negate();
 			removeInstructions(i + 1, 1);
+		}
+
+		switch(instr->m_operand.m_constant->getDataType())
+		{
+		   case NXSL_DT_BOOLEAN:
+		      instr->m_opCode = instr->m_operand.m_constant->isTrue() ? OPCODE_PUSH_TRUE : OPCODE_PUSH_FALSE;
+            destroyValue(instr->m_operand.m_constant);
+            break;
+         case NXSL_DT_NULL:
+            instr->m_opCode = OPCODE_PUSH_NULL;
+            destroyValue(instr->m_operand.m_constant);
+            break;
+         case NXSL_DT_INT32:
+            instr->m_opCode = OPCODE_PUSH_INT32;
+            {
+               int32_t i32 = instr->m_operand.m_constant->getValueAsInt32();
+               destroyValue(instr->m_operand.m_constant);
+               instr->m_operand.m_valueInt32 = i32;
+            }
+            break;
+         case NXSL_DT_INT64:
+            instr->m_opCode = OPCODE_PUSH_INT64;
+            {
+               int64_t i64 = instr->m_operand.m_constant->getValueAsInt64();
+               destroyValue(instr->m_operand.m_constant);
+               instr->m_operand.m_valueInt64 = i64;
+            }
+            break;
+         case NXSL_DT_UINT32:
+            instr->m_opCode = OPCODE_PUSH_UINT32;
+            {
+               uint32_t u32 = instr->m_operand.m_constant->getValueAsUInt32();
+               destroyValue(instr->m_operand.m_constant);
+               instr->m_operand.m_valueInt32 = u32;
+            }
+            break;
+         case NXSL_DT_UINT64:
+            instr->m_opCode = OPCODE_PUSH_UINT64;
+            {
+               uint64_t u64 = instr->m_operand.m_constant->getValueAsUInt64();
+               destroyValue(instr->m_operand.m_constant);
+               instr->m_operand.m_valueUInt64 = u64;
+            }
+            break;
+		   default:
+		      break;
 		}
 	}
 
@@ -626,10 +698,6 @@ void NXSL_Program::serialize(ByteStream& s) const
          case OP_TYPE_ADDR:
             s.write(instr->m_operand.m_addr);
             break;
-         case OP_TYPE_IDENTIFIER:
-            s.write(instr->m_operand.m_identifier->length);
-            s.write(instr->m_operand.m_identifier->value, instr->m_operand.m_identifier->length);
-            break;
          case OP_TYPE_CONST:
             {
                int32_t idx = -1;
@@ -651,6 +719,22 @@ void NXSL_Program::serialize(ByteStream& s) const
                s.write(idx);
             }
             break;
+         case OP_TYPE_IDENTIFIER:
+            s.write(instr->m_operand.m_identifier->length);
+            s.write(instr->m_operand.m_identifier->value, instr->m_operand.m_identifier->length);
+            break;
+         case OP_TYPE_INT32:
+            s.write(instr->m_operand.m_valueInt32);
+            break;
+         case OP_TYPE_INT64:
+            s.write(instr->m_operand.m_valueInt64);
+            break;
+         case OP_TYPE_UINT32:
+            s.write(instr->m_operand.m_valueUInt32);
+            break;
+         case OP_TYPE_UINT64:
+            s.write(instr->m_operand.m_valueUInt64);
+            break;
          default:
             break;
       }
@@ -669,7 +753,7 @@ void NXSL_Program::serialize(ByteStream& s) const
    {
       NXSL_ModuleImport *module = m_requiredModules.get(i);
       s.writeString(module->name);
-      s.write((INT32)module->lineNumber);
+      s.write(static_cast<int32_t>(module->lineNumber));
    }
 
    // write function list
@@ -739,17 +823,6 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
          case OP_TYPE_ADDR:
             instr->m_operand.m_addr = s.readUInt32();
             break;
-         case OP_TYPE_IDENTIFIER:
-            instr->m_operand.m_identifier = p->createIdentifier();
-            instr->m_operand.m_identifier->length = s.readByte();
-            if ((instr->m_operand.m_identifier->length == 0) || (instr->m_operand.m_identifier->length > MAX_IDENTIFIER_LENGTH))
-            {
-               _sntprintf(errMsg, errMsgSize, _T("Binary file read error (instruction %04X)"), p->m_instructionSet.size());
-               delete instr;
-               goto failure;
-            }
-            s.read(instr->m_operand.m_identifier->value, instr->m_operand.m_identifier->length);
-            break;
          case OP_TYPE_CONST:
             {
                int32_t idx = s.readInt32();
@@ -762,6 +835,29 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
                }
                instr->m_operand.m_constant = p->createValue(v);
             }
+            break;
+         case OP_TYPE_IDENTIFIER:
+            instr->m_operand.m_identifier = p->createIdentifier();
+            instr->m_operand.m_identifier->length = s.readByte();
+            if ((instr->m_operand.m_identifier->length == 0) || (instr->m_operand.m_identifier->length > MAX_IDENTIFIER_LENGTH))
+            {
+               _sntprintf(errMsg, errMsgSize, _T("Binary file read error (instruction %04X)"), p->m_instructionSet.size());
+               delete instr;
+               goto failure;
+            }
+            s.read(instr->m_operand.m_identifier->value, instr->m_operand.m_identifier->length);
+            break;
+         case OP_TYPE_INT32:
+            instr->m_operand.m_valueInt32 = s.readInt32();
+            break;
+         case OP_TYPE_INT64:
+            instr->m_operand.m_valueInt64 = s.readInt64();
+            break;
+         case OP_TYPE_UINT32:
+            instr->m_operand.m_valueUInt32 = s.readUInt32();
+            break;
+         case OP_TYPE_UINT64:
+            instr->m_operand.m_valueUInt64 = s.readUInt64();
             break;
          default:
             break;

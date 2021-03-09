@@ -143,6 +143,13 @@ typedef void *yyscan_t;
 #define OPCODE_CASE_GT        98
 #define OPCODE_CASE_CONST_GT  99
 #define OPCODE_PUSH_PROPERTY  100
+#define OPCODE_PUSH_INT32     101
+#define OPCODE_PUSH_UINT32    102
+#define OPCODE_PUSH_INT64     103
+#define OPCODE_PUSH_UINT64    104
+#define OPCODE_PUSH_TRUE      105
+#define OPCODE_PUSH_FALSE     106
+#define OPCODE_PUSH_NULL      107
 
 class NXSL_Compiler;
 
