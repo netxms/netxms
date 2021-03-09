@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -95,7 +95,6 @@ public class TabbedObjectView extends ViewPart
 	private SourceProvider sourceProvider = null;
 	private long objectId = 0; 
 	private NXCSession session;
-   private ViewRefreshController refreshController;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -217,24 +216,6 @@ public class TabbedObjectView extends ViewPart
 				return null;
 			}
 		});
-		
-
-      VisibilityValidator validator = new VisibilityValidator() { 
-         @Override
-         public boolean isVisible()
-         {
-            return getSite().getPage().isPartVisible(TabbedObjectView.this);
-         }
-      };
-
-      refreshController = new ViewRefreshController(this, -1, new Runnable() {
-         @Override
-         public void run()
-         {
-            refreshCurrentTab();
-         }
-      }, validator);
-      refreshController.setInterval(30);
 	}
 	
 	/**
@@ -284,7 +265,7 @@ public class TabbedObjectView extends ViewPart
 	/**
 	 * Refresh current tab
 	 */
-	private void refreshCurrentTab()
+	public void refreshCurrentTab()
 	{
 	   if (objectId == 0)
 	      return;
@@ -530,7 +511,6 @@ public class TabbedObjectView extends ViewPart
 	@Override
 	public void dispose()
 	{
-      refreshController.dispose();
 	   ConsoleSharedData.getSession().removeListener(sessionListener);
 		CommandBridge.getInstance().unregisterCommand("TabbedObjectView/selectTab"); //$NON-NLS-1$
       CommandBridge.getInstance().unregisterCommand("TabbedObjectView/changeObject"); //$NON-NLS-1$
