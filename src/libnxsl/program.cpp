@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -62,8 +62,8 @@ static const char *s_nxslCommandMnemonic[] =
 /**
  * Constructor
  */
-NXSL_Program::NXSL_Program() : NXSL_ValueManager(), m_instructionSet(256, 256, Ownership::True), m_constants(this, Ownership::True),
-         m_functions(64, 64, Ownership::True), m_requiredModules(0, 16, Ownership::True)
+NXSL_ProgramBuilder::NXSL_ProgramBuilder() : NXSL_ValueManager(), m_instructionSet(256, 256, Ownership::True),
+         m_constants(this, Ownership::True), m_functions(64, 64), m_requiredModules(0, 16)
 {
    m_expressionVariables = nullptr;
 }
@@ -71,16 +71,16 @@ NXSL_Program::NXSL_Program() : NXSL_ValueManager(), m_instructionSet(256, 256, O
 /**
  * Destructor
  */
-NXSL_Program::~NXSL_Program()
+NXSL_ProgramBuilder::~NXSL_ProgramBuilder()
 {
    delete m_expressionVariables;
 }
 
 /**
  * Add new constant. Name expected to be dynamically allocated and
- * will be destroyed by NXSL_Program when no longer needed.
+ * will be destroyed by NXSL_ProgramBuilder when no longer needed.
  */
-bool NXSL_Program::addConstant(const NXSL_Identifier& name, NXSL_Value *value)
+bool NXSL_ProgramBuilder::addConstant(const NXSL_Identifier& name, NXSL_Value *value)
 {
    bool success = false;
    if (!m_constants.contains(name))
@@ -94,15 +94,15 @@ bool NXSL_Program::addConstant(const NXSL_Identifier& name, NXSL_Value *value)
 /**
  * Enable expression variables
  */
-void NXSL_Program::enableExpressionVariables()
+void NXSL_ProgramBuilder::enableExpressionVariables()
 {
-   m_expressionVariables = new ObjectArray<NXSL_IdentifierLocation>(16, 16, Ownership::True);
+   m_expressionVariables = new StructArray<NXSL_IdentifierLocation>(16, 16);
 }
 
 /**
  * Disable expression variables
  */
-void NXSL_Program::disableExpressionVariables(int line)
+void NXSL_ProgramBuilder::disableExpressionVariables(int line)
 {
    addInstruction(new NXSL_Instruction(this, line, OPCODE_JZ_PEEK, INVALID_ADDRESS));
    for(int i = 0; i < m_expressionVariables->size(); i++)
@@ -119,17 +119,17 @@ void NXSL_Program::disableExpressionVariables(int line)
 /**
  * Register expression variable
  */
-void NXSL_Program::registerExpressionVariable(const NXSL_Identifier& identifier)
+void NXSL_ProgramBuilder::registerExpressionVariable(const NXSL_Identifier& identifier)
 {
    if (m_expressionVariables != nullptr)
-      m_expressionVariables->add(new NXSL_IdentifierLocation(identifier, m_instructionSet.size()));
+      m_expressionVariables->add(NXSL_IdentifierLocation(identifier, m_instructionSet.size()));
 }
 
 /**
  * Get address of expression variable code block. Will return
  * INVALID_ADDRESS if given variable is not registered as expression variable.
  */
-uint32_t NXSL_Program::getExpressionVariableCodeBlock(const NXSL_Identifier& identifier)
+uint32_t NXSL_ProgramBuilder::getExpressionVariableCodeBlock(const NXSL_Identifier& identifier)
 {
    if (m_expressionVariables == nullptr)
       return INVALID_ADDRESS;
@@ -148,7 +148,7 @@ uint32_t NXSL_Program::getExpressionVariableCodeBlock(const NXSL_Identifier& ide
 /**
  * Add "push variable" instruction
  */
-void NXSL_Program::addPushVariableInstruction(const NXSL_Identifier& name, int line)
+void NXSL_ProgramBuilder::addPushVariableInstruction(const NXSL_Identifier& name, int line)
 {
    uint32_t addr = getExpressionVariableCodeBlock(name);
    if (addr == INVALID_ADDRESS)
@@ -165,7 +165,7 @@ void NXSL_Program::addPushVariableInstruction(const NXSL_Identifier& name, int l
 /**
  * Resolve last jump with INVALID_ADDRESS to current address
  */
-void NXSL_Program::resolveLastJump(int opcode, int offset)
+void NXSL_ProgramBuilder::resolveLastJump(int opcode, int offset)
 {
    for(int i = m_instructionSet.size(); i > 0;)
    {
@@ -183,7 +183,7 @@ void NXSL_Program::resolveLastJump(int opcode, int offset)
 /**
  * Create jump at given address replacing another instruction (usually NOP)
  */
-void NXSL_Program::createJumpAt(uint32_t opAddr, uint32_t jumpAddr)
+void NXSL_ProgramBuilder::createJumpAt(uint32_t opAddr, uint32_t jumpAddr)
 {
 	if (opAddr >= (uint32_t)m_instructionSet.size())
 		return;
@@ -197,7 +197,7 @@ void NXSL_Program::createJumpAt(uint32_t opAddr, uint32_t jumpAddr)
  * Will use first free address if dwAddr == INVALID_ADDRESS
  * Name must be in UTF-8
  */
-bool NXSL_Program::addFunction(const NXSL_Identifier& name, uint32_t addr, char *errorText)
+bool NXSL_ProgramBuilder::addFunction(const NXSL_Identifier& name, uint32_t addr, char *errorText)
 {
    // Check for duplicate function names
    for(int i = 0; i < m_functions.size(); i++)
@@ -206,9 +206,7 @@ bool NXSL_Program::addFunction(const NXSL_Identifier& name, uint32_t addr, char 
          sprintf(errorText, "Duplicate function name: \"%s\"", name.value);
          return false;
       }
-   NXSL_Function *f = new NXSL_Function;
-	f->m_name = name;
-   f->m_addr = (addr == INVALID_ADDRESS) ? m_instructionSet.size() : addr;
+   NXSL_Function f(name, (addr == INVALID_ADDRESS) ? m_instructionSet.size() : addr);
    m_functions.add(f);
    return true;
 }
@@ -216,7 +214,7 @@ bool NXSL_Program::addFunction(const NXSL_Identifier& name, uint32_t addr, char 
 /**
  * Add required module name (must be dynamically allocated).
  */
-void NXSL_Program::addRequiredModule(const char *name, int lineNumber, bool removeLastElement)
+void NXSL_ProgramBuilder::addRequiredModule(const char *name, int lineNumber, bool removeLastElement)
 {
 #ifdef UNICODE
    WCHAR mname[MAX_PATH];
@@ -244,16 +242,16 @@ void NXSL_Program::addRequiredModule(const char *name, int lineNumber, bool remo
       if (!_tcscmp(m_requiredModules.get(i)->name, mname))
          return;
 
-   NXSL_ModuleImport *module = new NXSL_ModuleImport();
-   _tcslcpy(module->name, mname, MAX_PATH);
-   module->lineNumber = lineNumber;
+   NXSL_ModuleImport module;
+   _tcslcpy(module.name, mname, MAX_PATH);
+   module.lineNumber = lineNumber;
    m_requiredModules.add(module);
 }
 
 /**
  * resolve local functions
  */
-void NXSL_Program::resolveFunctions()
+void NXSL_ProgramBuilder::resolveFunctions()
 {
    for(int i = 0; i < m_instructionSet.size(); i++)
    {
@@ -278,7 +276,7 @@ void NXSL_Program::resolveFunctions()
 /**
  * Dump program to file (as text)
  */
-void NXSL_Program::dump(FILE *fp, const ObjectArray<NXSL_Instruction>& instructionSet)
+void NXSL_ProgramBuilder::dump(FILE *fp, const ObjectArray<NXSL_Instruction>& instructionSet)
 {
    for(int i = 0; i < instructionSet.size(); i++)
    {
@@ -372,7 +370,7 @@ void NXSL_Program::dump(FILE *fp, const ObjectArray<NXSL_Instruction>& instructi
 /**
  * Get final jump destination from a jump chain
  */
-uint32_t NXSL_Program::getFinalJumpDestination(uint32_t addr, int srcJump)
+uint32_t NXSL_ProgramBuilder::getFinalJumpDestination(uint32_t addr, int srcJump)
 {
    NXSL_Instruction *instr = m_instructionSet.get(addr);
 	if ((instr->m_opCode == OPCODE_JMP) || (instr->m_opCode == srcJump))
@@ -383,7 +381,7 @@ uint32_t NXSL_Program::getFinalJumpDestination(uint32_t addr, int srcJump)
 /**
  * Optimize compiled program
  */
-void NXSL_Program::optimize()
+void NXSL_ProgramBuilder::optimize()
 {
 	int i;
 
@@ -448,7 +446,7 @@ void NXSL_Program::optimize()
 		if (((instr->m_opCode == OPCODE_JMP) ||
 			  (instr->m_opCode == OPCODE_JZ_PEEK) ||
 			  (instr->m_opCode == OPCODE_JNZ_PEEK)) &&
-			 (instr->m_operand.m_addr == static_cast<UINT32>(i + 1)))
+			 (instr->m_operand.m_addr == static_cast<uint32_t>(i + 1)))
 		{
 			removeInstructions(i, 1);
 			i--;
@@ -462,7 +460,7 @@ void NXSL_Program::optimize()
  * @param start start offset
  * @param count number of instructions to remove
  */
-void NXSL_Program::removeInstructions(uint32_t start, int count)
+void NXSL_ProgramBuilder::removeInstructions(uint32_t start, int count)
 {
 	if ((count <= 0) || (start + (uint32_t)count >= (uint32_t)m_instructionSet.size()))
 		return;
@@ -504,17 +502,114 @@ void NXSL_Program::removeInstructions(uint32_t start, int count)
 }
 
 /**
+ * Get list of required module names
+ */
+StringList *NXSL_ProgramBuilder::getRequiredModules() const
+{
+   StringList *modules = new StringList();
+   for(int i = 0; i < m_requiredModules.size(); i++)
+      modules->add(m_requiredModules.get(i)->name);
+   return modules;
+}
+
+/**
+ * Get estimated memory usage
+ */
+uint64_t NXSL_ProgramBuilder::getMemoryUsage() const
+{
+   uint64_t mem = NXSL_ValueManager::getMemoryUsage();
+   mem += m_instructionSet.size() * sizeof(NXSL_Instruction) + sizeof(m_instructionSet);
+   mem += m_requiredModules.size() * sizeof(NXSL_ModuleImport) + sizeof(m_requiredModules);
+   mem += m_functions.size() * sizeof(NXSL_Function) + sizeof(m_functions);
+   if (m_expressionVariables != nullptr)
+      mem += m_expressionVariables->size() * sizeof(NXSL_IdentifierLocation);
+   return mem;
+}
+
+/**
+ * Create empty compiled script
+ */
+NXSL_Program::NXSL_Program(size_t valueRegionSize, size_t identifierRegionSize) : NXSL_ValueManager(valueRegionSize, identifierRegionSize),
+         m_instructionSet(0, 256, Ownership::True), m_constants(this, Ownership::True), m_functions(0, 64), m_requiredModules(0, 16)
+{
+}
+
+/**
+ * Constant copy callback
+ */
+EnumerationCallbackResult CopyConstantsCallback(const void *key, void *value, void *data)
+{
+   static_cast<NXSL_ValueHashMap<NXSL_Identifier>*>(data)->set(*static_cast<const NXSL_Identifier*>(key),
+            static_cast<NXSL_ValueHashMap<NXSL_Identifier>*>(data)->vm()->createValue(static_cast<NXSL_Value*>(value)));
+   return _CONTINUE;
+}
+
+/**
+ * Create compiled script object from code builder
+ */
+NXSL_Program::NXSL_Program(NXSL_ProgramBuilder *builder) :
+         NXSL_ValueManager(builder->m_values.getElementCount(), builder->m_identifiers.getElementCount()),
+         m_instructionSet(builder->m_instructionSet.size(), 256, Ownership::True),
+         m_constants(this, Ownership::True),
+         m_functions(builder->m_functions.getBuffer(), builder->m_functions.size()),
+         m_requiredModules(builder->m_requiredModules.getBuffer(), builder->m_requiredModules.size())
+{
+   for(int i = 0; i < builder->m_instructionSet.size(); i++)
+      m_instructionSet.add(new NXSL_Instruction(this, builder->m_instructionSet.get(i)));
+   builder->m_constants.forEach(CopyConstantsCallback, &m_constants);
+}
+
+/**
+ * Destructor
+ */
+NXSL_Program::~NXSL_Program()
+{
+}
+
+/**
+ * Get list of required module names
+ */
+StringList *NXSL_Program::getRequiredModules() const
+{
+   StringList *modules = new StringList();
+   for(int i = 0; i < m_requiredModules.size(); i++)
+      modules->add(m_requiredModules.get(i)->name);
+   return modules;
+}
+
+/**
+ * Get estimated memory usage
+ */
+uint64_t NXSL_Program::getMemoryUsage() const
+{
+   uint64_t mem = NXSL_ValueManager::getMemoryUsage();
+   mem += m_instructionSet.size() * sizeof(NXSL_Instruction) + sizeof(m_instructionSet);
+   mem += m_requiredModules.size() * sizeof(NXSL_ModuleImport) + sizeof(m_requiredModules);
+   mem += m_functions.size() * sizeof(NXSL_Function) + sizeof(m_functions);
+   return mem;
+}
+
+/**
+ * Dump program code
+ */
+void NXSL_Program::dump(FILE *fp) const
+{
+   NXSL_ProgramBuilder::dump(fp, m_instructionSet);
+}
+
+/**
  * Serialize compiled script
  */
 void NXSL_Program::serialize(ByteStream& s) const
 {
-   StringList strings;
    ObjectRefArray<NXSL_Value> constants(64, 64);
 
    NXSL_FileHeader header;
    memset(&header, 0, sizeof(header));
    memcpy(header.magic, "NXSL", 4);
    header.version = NXSL_BIN_FORMAT_VERSION;
+   header.valueRegionSizeHint = htonl(static_cast<uint32_t>(m_values.getElementCount()));
+   header.identifierRegionSizeHint = htonl(static_cast<uint32_t>(m_identifiers.getElementCount()));
    s.write(&header, sizeof(header));
 
    // Serialize instructions
@@ -532,23 +627,12 @@ void NXSL_Program::serialize(ByteStream& s) const
             s.write(instr->m_operand.m_addr);
             break;
          case OP_TYPE_IDENTIFIER:
-            break;
-            /*
-         case OP_TYPE_STRING:
-            {
-               INT32 idx = strings.indexOf(instr->m_operand.m_pszString);
-               if (idx == -1)
-               {
-                  idx = strings.size();
-                  strings.add(instr->m_operand.m_pszString);
-               }
-               s.write(idx);
-            }
-            */
+            s.write(instr->m_operand.m_identifier->length);
+            s.write(instr->m_operand.m_identifier->value, instr->m_operand.m_identifier->length);
             break;
          case OP_TYPE_CONST:
             {
-               INT32 idx = -1;
+               int32_t idx = -1;
                for(int i = 0; i < constants.size(); i++)
                {
                   if (constants.get(i)->equals(instr->m_operand.m_constant))
@@ -570,13 +654,6 @@ void NXSL_Program::serialize(ByteStream& s) const
          default:
             break;
       }
-   }
-
-   // write strings section
-   header.stringSectionOffset = htonl((UINT32)s.pos());
-   for(i = 0; i < strings.size(); i++)
-   {
-      s.writeString(strings.get(i));
    }
 
    // write constants section
@@ -617,36 +694,23 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
    NXSL_FileHeader header;
    if (s.read(&header, sizeof(NXSL_FileHeader)) != sizeof(NXSL_FileHeader))
    {
-      nx_strncpy(errMsg, _T("Binary file is too small"), errMsgSize);
-      return NULL;  // Too small
+      _tcslcpy(errMsg, _T("Binary file is too small"), errMsgSize);
+      return nullptr;  // Too small
    }
    if (memcmp(header.magic, "NXSL", 4) || (header.version != NXSL_BIN_FORMAT_VERSION))
    {
-      nx_strncpy(errMsg, _T("Binary file header is invalid"), errMsgSize);
-      return NULL;  // invalid header
+      _tcslcpy(errMsg, _T("Binary file header is invalid"), errMsgSize);
+      return nullptr;  // invalid header
    }
 
    header.codeSectionOffset = ntohl(header.codeSectionOffset);
    header.constSectionOffset = ntohl(header.constSectionOffset);
    header.functionSectionOffset = ntohl(header.functionSectionOffset);
    header.moduleSectionOffset = ntohl(header.moduleSectionOffset);
-   header.stringSectionOffset = ntohl(header.stringSectionOffset);
+   header.valueRegionSizeHint = ntohl(header.valueRegionSizeHint);
+   header.identifierRegionSizeHint = ntohl(header.identifierRegionSizeHint);
 
-   // Load strings
-   StringList strings;
-   s.seek(header.stringSectionOffset);
-   while(!s.eos() && (s.pos() < header.constSectionOffset))
-   {
-      TCHAR *str = s.readString();
-      if (str == NULL)
-      {
-         nx_strncpy(errMsg, _T("Binary file read error (strings section)"), errMsgSize);
-         return NULL;   // read error
-      }
-      strings.addPreallocated(str);
-   }
-
-   NXSL_Program *p = new NXSL_Program();
+   NXSL_Program *p = new NXSL_Program(MAX(header.valueRegionSizeHint, 4), MAX(header.identifierRegionSizeHint, 4));
 
    // Load constants
    ObjectRefArray<NXSL_Value> constants(64, 64);
@@ -654,9 +718,9 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
    while(!s.eos() && (s.pos() < header.moduleSectionOffset))
    {
       NXSL_Value *v = NXSL_Value::load(p, s);
-      if (v == NULL)
+      if (v == nullptr)
       {
-         nx_strncpy(errMsg, _T("Binary file read error (constants section)"), errMsgSize);
+         _tcslcpy(errMsg, _T("Binary file read error (constants section)"), errMsgSize);
          goto failure;   // read error
       }
       constants.add(v);
@@ -664,37 +728,33 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
 
    // Load code
    s.seek(header.codeSectionOffset);
-   while(!s.eos() && (s.pos() < header.stringSectionOffset))
+   while(!s.eos() && (s.pos() < header.constSectionOffset))
    {
-      INT16 opcode = s.readInt16();
-      INT16 si = s.readInt16();
-      INT32 line = s.readInt32();
+      int16_t opcode = s.readInt16();
+      int16_t si = s.readInt16();
+      int32_t line = s.readInt32();
       NXSL_Instruction *instr = new NXSL_Instruction(p, line, opcode, si);
       switch(instr->getOperandType())
       {
          case OP_TYPE_ADDR:
             instr->m_operand.m_addr = s.readUInt32();
             break;
-            /*
-         case OP_TYPE_STRING:
+         case OP_TYPE_IDENTIFIER:
+            instr->m_operand.m_identifier = p->createIdentifier();
+            instr->m_operand.m_identifier->length = s.readByte();
+            if ((instr->m_operand.m_identifier->length == 0) || (instr->m_operand.m_identifier->length > MAX_IDENTIFIER_LENGTH))
             {
-               INT32 idx = s.readInt32();
-               const TCHAR *str = strings.get(idx);
-               if (str == NULL)
-               {
-                  _sntprintf(errMsg, errMsgSize, _T("Binary file read error (instruction %04X)"), p->m_instructionSet.size());
-                  delete instr;
-                  goto failure;
-               }
-               instr->m_operand.m_pszString = _tcsdup(str);
+               _sntprintf(errMsg, errMsgSize, _T("Binary file read error (instruction %04X)"), p->m_instructionSet.size());
+               delete instr;
+               goto failure;
             }
+            s.read(instr->m_operand.m_identifier->value, instr->m_operand.m_identifier->length);
             break;
-            */
          case OP_TYPE_CONST:
             {
-               INT32 idx = s.readInt32();
+               int32_t idx = s.readInt32();
                NXSL_Value *v = constants.get(idx);
-               if (v == NULL)
+               if (v == nullptr)
                {
                   _sntprintf(errMsg, errMsgSize, _T("Binary file read error (instruction %04X)"), p->m_instructionSet.size());
                   delete instr;
@@ -738,7 +798,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
          _tcslcpy(errMsg, _T("Binary file read error (functions section)"), errMsgSize);
          goto failure;
       }
-      p->m_functions.add(new NXSL_Function(name, s.readUInt32()));
+      p->m_functions.add(NXSL_Function(name, s.readUInt32()));
       MemFree(name);
    }
 
@@ -753,15 +813,4 @@ failure:
 
    delete p;
    return nullptr;
-}
-
-/**
- * Get list of required module names
- */
-StringList *NXSL_Program::getRequiredModules() const
-{
-   StringList *modules = new StringList();
-   for(int i = 0; i < m_requiredModules.size(); i++)
-      modules->add(m_requiredModules.get(i)->name);
-   return modules;
 }

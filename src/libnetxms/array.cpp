@@ -57,7 +57,7 @@ Array::Array(int initial, int grow, Ownership owner, void (*objectDestructor)(vo
 /**
  * Constructor for struct arrays
  */
-Array::Array(void *data, int initial, int grow, size_t elementSize)
+Array::Array(const void *data, int initial, int grow, size_t elementSize)
 {
    m_size = (data != nullptr) ? initial : 0;
    m_grow = (grow > 0) ? grow : 16;

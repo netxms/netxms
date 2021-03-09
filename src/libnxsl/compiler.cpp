@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,7 +26,7 @@
 /**
  * Externals
  */
-int yyparse(yyscan_t scanner, NXSL_Lexer *, NXSL_Compiler *, NXSL_Program *);
+int yyparse(yyscan_t scanner, NXSL_Lexer *, NXSL_Compiler *, NXSL_ProgramBuilder *);
 void yyset_extra(NXSL_Lexer *, yyscan_t);
 int yylex_init(yyscan_t *);
 int yylex_destroy(yyscan_t);
@@ -89,32 +89,29 @@ void NXSL_Compiler::error(const char *pszMsg)
  */
 NXSL_Program *NXSL_Compiler::compile(const TCHAR *pszSourceCode)
 {
-   NXSL_Program *pResult;
-	yyscan_t scanner;
-
    m_lexer = new NXSL_Lexer(this, pszSourceCode);
-   pResult = new NXSL_Program;
+
+	yyscan_t scanner;
 	yylex_init(&scanner);
 	yyset_extra(m_lexer, scanner);
-   if (yyparse(scanner, m_lexer, this, pResult) == 0)
+
+	NXSL_Program *code = nullptr;
+   NXSL_ProgramBuilder builder;
+   if (yyparse(scanner, m_lexer, this, &builder) == 0)
    {
-      pResult->resolveFunctions();
-		pResult->optimize();
-   }
-   else
-   {
-      delete pResult;
-      pResult = NULL;
+      builder.resolveFunctions();
+		builder.optimize();
+		code = new NXSL_Program(&builder);
    }
 	yylex_destroy(scanner);
-   return pResult;
+   return code;
 }
 
 /**
  * yyerror() for parser
  */
 void yyerror(yyscan_t scanner, NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
-             NXSL_Program *pScript, const char *pszText)
+             NXSL_ProgramBuilder *pScript, const char *pszText)
 {
    pCompiler->error(pszText);
 }
@@ -122,45 +119,45 @@ void yyerror(yyscan_t scanner, NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
 /**
  * Pop address
  */
-UINT32 NXSL_Compiler::popAddr()
+uint32_t NXSL_Compiler::popAddr()
 {
    void *addr = m_addrStack->pop();
-   return addr ? CAST_FROM_POINTER(addr, UINT32) : INVALID_ADDRESS;
+   return addr ? CAST_FROM_POINTER(addr, uint32_t) : INVALID_ADDRESS;
 }
 
 /**
  * Peek address
  */
-UINT32 NXSL_Compiler::peekAddr()
+uint32_t NXSL_Compiler::peekAddr()
 {
    void *addr = m_addrStack->peek();
-   return addr ? CAST_FROM_POINTER(addr, UINT32) : INVALID_ADDRESS;
+   return (addr != nullptr) ? CAST_FROM_POINTER(addr, uint32_t) : INVALID_ADDRESS;
 }
 
 /**
  * Add "break" statement address
  */
-void NXSL_Compiler::addBreakAddr(UINT32 dwAddr)
+void NXSL_Compiler::addBreakAddr(uint32_t addr)
 {
 	Queue *queue = static_cast<Queue*>(m_breakStack->peek());
-	if (queue != NULL)
+	if (queue != nullptr)
 	{
-		queue->put(CAST_TO_POINTER(dwAddr, void *));
+		queue->put(CAST_TO_POINTER(addr, void *));
 	}
 }
 
 /**
  * Resolve all breal statements at current level
  */
-void NXSL_Compiler::closeBreakLevel(NXSL_Program *pScript)
+void NXSL_Compiler::closeBreakLevel(NXSL_ProgramBuilder *pScript)
 {
    Queue *queue = static_cast<Queue*>(m_breakStack->pop());
-	if (queue != NULL)
+	if (queue != nullptr)
 	{
 	   void *addr;
-		while((addr = queue->get()) != NULL)
+		while((addr = queue->get()) != nullptr)
 		{
-			UINT32 nxslAddr = CAST_FROM_POINTER(addr, UINT32);
+		   uint32_t nxslAddr = CAST_FROM_POINTER(addr, uint32_t);
 			pScript->createJumpAt(nxslAddr, pScript->getCodeSize());
 		}
 		delete queue;
@@ -172,16 +169,16 @@ void NXSL_Compiler::closeBreakLevel(NXSL_Program *pScript)
  */
 void NXSL_Compiler::closeSelectLevel()
 {
-   delete (Queue *)m_selectStack->pop();
+   delete static_cast<Queue*>(m_selectStack->pop());
 }
 
 /**
  * Push jump address for select
  */
-void NXSL_Compiler::pushSelectJumpAddr(UINT32 addr)
+void NXSL_Compiler::pushSelectJumpAddr(uint32_t addr)
 {
-   Queue *q = (Queue *)m_selectStack->peek();
-   if (q != NULL)
+   Queue *q = static_cast<Queue*>(m_selectStack->peek());
+   if (q != nullptr)
    {
       q->put(CAST_TO_POINTER(addr, void *));
    }
@@ -190,9 +187,9 @@ void NXSL_Compiler::pushSelectJumpAddr(UINT32 addr)
 /**
  * Pop jump address for select
  */
-UINT32 NXSL_Compiler::popSelectJumpAddr()
+uint32_t NXSL_Compiler::popSelectJumpAddr()
 {
-   Queue *q = (Queue *)m_selectStack->peek();
+   Queue *q = static_cast<Queue*>(m_selectStack->peek());
    if ((q == NULL) || (q->size() == 0))
       return INVALID_ADDRESS;
 

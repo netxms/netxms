@@ -98,12 +98,12 @@ struct NXSL_FileHeader
    char magic[4];
    BYTE version;
    BYTE padding1[3];
-   UINT32 codeSectionOffset;
-   UINT32 stringSectionOffset;
-   UINT32 constSectionOffset;
-   UINT32 moduleSectionOffset;
-   UINT32 functionSectionOffset;
-   UINT32 padding2;
+   uint32_t codeSectionOffset;
+   uint32_t constSectionOffset;
+   uint32_t moduleSectionOffset;
+   uint32_t functionSectionOffset;
+   uint32_t valueRegionSizeHint;
+   uint32_t identifierRegionSizeHint;
 };
 
 #ifdef __HP_aCC
@@ -115,7 +115,7 @@ struct NXSL_FileHeader
 /**
  * Binary format version
  */
-#define NXSL_BIN_FORMAT_VERSION     2
+#define NXSL_BIN_FORMAT_VERSION     3
 
 /**
  * Exportable classes

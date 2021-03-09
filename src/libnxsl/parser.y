@@ -14,7 +14,7 @@
 #include "parser.tab.hpp"
 
 void yyerror(yyscan_t scanner, NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
-             NXSL_Program *pScript, const char *pszText);
+      NXSL_ProgramBuilder *pScript, const char *pszText);
 int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 
 %}
@@ -25,14 +25,14 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %parse-param	{yyscan_t scanner}
 %parse-param	{NXSL_Lexer *pLexer}
 %parse-param	{NXSL_Compiler *pCompiler}
-%parse-param	{NXSL_Program *pScript}
+%parse-param	{NXSL_ProgramBuilder *pScript}
 
 %union
 {
-	INT32 valInt32;
-	UINT32 valUInt32;
-	INT64 valInt64;
-	UINT64 valUInt64;
+	int32_t valInt32;
+	uint32_t valUInt32;
+	int64_t valInt64;
+	uint64_t valUInt64;
 	char *valStr;
 	identifier_t valIdentifier;
 	double valReal;
@@ -197,10 +197,10 @@ ConstDefinition:
 	{
 		pCompiler->error("Constant already defined");
 		pScript->destroyValue($3);
-		$3 = NULL;
+		$3 = nullptr;
 		YYERROR;
 	}
-	$3 = NULL;
+	$3 = nullptr;
 }
 ;
 

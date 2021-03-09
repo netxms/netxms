@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Host
-** Copyright (C) 2005-2020 Victor Kirhenshtein
+** Copyright (C) 2005-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,17 +53,17 @@ int main(int argc, char *argv[])
    NXSL_Environment *pEnv;
    NXSL_Value **ppArgs;
    int i, ch;
-   bool dump = false, printResult = false, compileOnly = false, binary = false, showExprVars = false;
+   bool dump = false, printResult = false, compileOnly = false, binary = false, showExprVars = false, showMemoryUsage = false;
    int runCount = 1, rc = 0;
 
    InitNetXMSProcess(true);
 
    WriteToTerminal(_T("NetXMS Scripting Host  Version \x1b[1m") NETXMS_VERSION_STRING _T("\x1b[0m\n")
-                   _T("Copyright (c) 2005-2020 Victor Kirhenshtein\n\n"));
+                   _T("Copyright (c) 2005-2021 Victor Kirhenshtein\n\n"));
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "bcC:de:Eo:r")) != -1)
+   while((ch = getopt(argc, argv, "bcC:de:Emo:r")) != -1)
    {
       switch(ch)
       {
@@ -85,6 +85,9 @@ int main(int argc, char *argv[])
 			case 'E':
 				showExprVars = true;
 				break;
+         case 'm':
+            showMemoryUsage = true;
+            break;
          case 'o':
 				strncpy(outFile, optarg, MAX_PATH - 1);
             outFile[MAX_PATH - 1] = 0;
@@ -109,6 +112,7 @@ int main(int argc, char *argv[])
                _T("   -d         Dump compiled script code\n")
 				   _T("   -e <name>  Entry point\n")
                _T("   -E         Show expression variables on exit\n")
+               _T("   -m         Show memory usage information\n")
                _T("   -o <file>  Write compiled script\n")
                _T("   -r         Print script return value\n")
                _T("\n"));
@@ -154,11 +158,14 @@ int main(int argc, char *argv[])
       }
 
 		pScript = NXSLCompile(pszSource, szError, 1024, NULL);
-		free(pszSource);
+		MemFree(pszSource);
    }
 
-	if (pScript != NULL)
+	if (pScript != nullptr)
 	{
+	   if (showMemoryUsage)
+	      _tprintf(_T("Compiled object memory usage: %u KBytes\n\n"), static_cast<uint32_t>(pScript->getMemoryUsage() / 1024));
+
       if (outFile[0] != 0)
       {
          int f = open(outFile, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IREAD | S_IWRITE);

@@ -575,6 +575,7 @@ private:
    size_t m_regionSize;
    size_t m_elementSize;
    size_t m_allocated;
+   size_t m_elements;
 
 public:
    /**
@@ -593,6 +594,7 @@ public:
       *((void **)m_currentRegion) = nullptr; // pointer to previous region
       m_firstDeleted = nullptr;
       m_allocated = m_headerSize;
+      m_elements = 0;
    }
 
    /**
@@ -633,6 +635,7 @@ public:
          p = (T*)((char*)m_currentRegion + m_headerSize);
          m_allocated = m_headerSize + m_elementSize;
       }
+      m_elements++;
       return p;
    }
 
@@ -654,6 +657,7 @@ public:
       {
          *((T**)p) = m_firstDeleted;
          m_firstDeleted = p;
+         m_elements--;
       }
    }
 
@@ -670,11 +674,19 @@ public:
    }
 
    /**
+    * Get total number of allocated elememnts
+    */
+   size_t getElementCount() const
+   {
+      return m_elements;
+   }
+
+   /**
     * Get number of allocated regions
     */
-   int getRegionCount() const
+   size_t getRegionCount() const
    {
-      int count = 0;
+      size_t count = 0;
       void *r = m_currentRegion;
       while(r != nullptr)
       {
@@ -1323,7 +1335,7 @@ protected:
    bool m_storePointers;
 	void (*m_objectDestructor)(void *, Array *);
 
-   Array(void *data, int initial, int grow, size_t elementSize);
+   Array(const void *data, int initial, int grow, size_t elementSize);
    Array(const Array *src);
 
    void *__getBuffer() const { return m_data; }
@@ -1508,7 +1520,7 @@ private:
 
 public:
 	StructArray(int initial = 0, int grow = 16) : Array(nullptr, initial, grow, sizeof(T)) { m_objectDestructor = destructor; }
-	StructArray(T *data, int size, int grow = 16) : Array(data, size, grow, sizeof(T)) { m_objectDestructor = destructor; }
+	StructArray(const T *data, int size, int grow = 16) : Array(data, size, grow, sizeof(T)) { m_objectDestructor = destructor; }
 	StructArray(const StructArray<T> *src) : Array(src) { }
 	virtual ~StructArray() { }
 

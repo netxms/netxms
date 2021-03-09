@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -147,6 +147,51 @@ typedef void *yyscan_t;
 class NXSL_Compiler;
 
 /**
+ * NXSL program builder
+ */
+class NXSL_ProgramBuilder : public NXSL_ValueManager
+{
+   friend class NXSL_Program;
+
+protected:
+   ObjectArray<NXSL_Instruction> m_instructionSet;
+   StructArray<NXSL_ModuleImport> m_requiredModules;
+   NXSL_ValueHashMap<NXSL_Identifier> m_constants;
+   StructArray<NXSL_Function> m_functions;
+   StructArray<NXSL_IdentifierLocation> *m_expressionVariables;
+
+   uint32_t getFinalJumpDestination(uint32_t addr, int srcJump);
+   uint32_t getExpressionVariableCodeBlock(const NXSL_Identifier& identifier);
+
+public:
+   NXSL_ProgramBuilder();
+   virtual ~NXSL_ProgramBuilder();
+
+   bool addFunction(const NXSL_Identifier& name, uint32_t addr, char *errorText);
+   void resolveFunctions();
+   void addInstruction(NXSL_Instruction *pInstruction) { m_instructionSet.add(pInstruction); }
+   void addPushVariableInstruction(const NXSL_Identifier& name, int line);
+   void resolveLastJump(int opcode, int offset = 0);
+   void createJumpAt(uint32_t opAddr, uint32_t jumpAddr);
+   void addRequiredModule(const char *name, int lineNumber, bool removeLastElement);
+   void optimize();
+   void removeInstructions(uint32_t start, int count);
+   bool addConstant(const NXSL_Identifier& name, NXSL_Value *value);
+   void enableExpressionVariables();
+   void disableExpressionVariables(int line);
+   void registerExpressionVariable(const NXSL_Identifier& identifier);
+
+   uint32_t getCodeSize() const { return m_instructionSet.size(); }
+   bool isEmpty() const { return m_instructionSet.isEmpty() || ((m_instructionSet.size() == 1) && (m_instructionSet.get(0)->m_opCode == 28)); }
+   StringList *getRequiredModules() const;
+
+   virtual uint64_t getMemoryUsage() const override;
+
+   void dump(FILE *fp) const { dump(fp, m_instructionSet); }
+   static void dump(FILE *fp, const ObjectArray<NXSL_Instruction>& instructionSet);
+};
+
+/**
  * Modified lexer class
  */
 class NXSL_Lexer
@@ -199,19 +244,19 @@ public:
    const TCHAR *getErrorText() { return CHECK_NULL(m_errorText); }
    int getErrorLineNumber() { return m_errorLineNumber; }
 
-   void pushAddr(UINT32 dwAddr) { m_addrStack->push(CAST_TO_POINTER(dwAddr, void *)); }
-   UINT32 popAddr();
-   UINT32 peekAddr();
+   void pushAddr(uint32_t addr) { m_addrStack->push(CAST_TO_POINTER(addr, void *)); }
+   uint32_t popAddr();
+   uint32_t peekAddr();
 
-	void addBreakAddr(UINT32 dwAddr);
-	void closeBreakLevel(NXSL_Program *pScript);
+	void addBreakAddr(uint32_t addr);
+	void closeBreakLevel(NXSL_ProgramBuilder *pScript);
 	BOOL canUseBreak() { return m_breakStack->getSize() > 0; }
 	void newBreakLevel() { m_breakStack->push(new Queue); }
 
 	void newSelectLevel() { m_selectStack->push(new Queue); }
    void closeSelectLevel();
-   void pushSelectJumpAddr(UINT32 addr);
-   UINT32 popSelectJumpAddr();
+   void pushSelectJumpAddr(uint32_t addr);
+   uint32_t popSelectJumpAddr();
 
    void incTemporaryStackItems() { m_temporaryStackItems++; }
    void decTemporaryStackItems() { m_temporaryStackItems--; }

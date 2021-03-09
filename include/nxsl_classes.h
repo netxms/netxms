@@ -645,6 +645,7 @@ protected:
 
 public:
    NXSL_ValueManager() : m_values(256), m_identifiers(64) { }
+   NXSL_ValueManager(size_t valuesRegCapacity, size_t identifiersRegCapacity) : m_values(valuesRegCapacity), m_identifiers(identifiersRegCapacity) { }
    virtual ~NXSL_ValueManager() { }
 
    NXSL_Value *createValue() { return new(m_values.allocate()) NXSL_Value(); }
@@ -674,6 +675,8 @@ public:
    NXSL_Identifier *createIdentifier(const identifier_t& s) { return new(m_identifiers.allocate()) NXSL_Identifier(s); }
    NXSL_Identifier *createIdentifier(const NXSL_Identifier& src) { return new(m_identifiers.allocate()) NXSL_Identifier(src); }
    void destroyIdentifier(NXSL_Identifier *i) { m_identifiers.destroy(i); }
+
+   virtual uint64_t getMemoryUsage() const { return m_values.getMemoryUsage() + m_identifiers.getMemoryUsage(); }
 };
 
 /**
@@ -689,12 +692,14 @@ private:
 public:
    NXSL_ValueHashMap(NXSL_ValueManager *vm, Ownership objectOwner = Ownership::False) : HashMapBase(objectOwner, sizeof(K)) { m_vm = vm; m_objectDestructor = destructor; }
 
-   NXSL_Value *get(const K& key) { return (NXSL_Value*)_get(&key); }
+   NXSL_Value *get(const K& key) const { return (NXSL_Value*)_get(&key); }
    void set(const K& key, NXSL_Value *value) { _set(&key, (void *)value); }
    void remove(const K& key) { _remove(&key, true); }
-   bool contains(const K& key) { return _contains(&key); }
+   bool contains(const K& key) const { return _contains(&key); }
 
    Iterator<NXSL_Value> *iterator() { return new Iterator<NXSL_Value>(new HashMapIterator(this)); }
+
+   NXSL_ValueManager *vm() const { return m_vm; }
 };
 
 /**
@@ -709,6 +714,7 @@ public:
    NXSL_Function() : m_name() { m_addr = INVALID_ADDRESS; }
    NXSL_Function(const NXSL_Function *src) { m_name = src->m_name; m_addr = src->m_addr; }
    NXSL_Function(const char *name, uint32_t addr) : m_name(name) { m_addr = addr; }
+   NXSL_Function(const NXSL_Identifier& name, uint32_t addr) : m_name(name) { m_addr = addr; }
 };
 
 /**
@@ -867,6 +873,7 @@ enum OperandType
 class LIBNXSL_EXPORTABLE NXSL_Instruction
 {
    friend class NXSL_Program;
+   friend class NXSL_ProgramBuilder;
    friend class NXSL_VM;
 
 protected:
@@ -984,54 +991,33 @@ struct NXSL_IdentifierLocation
    }
 };
 
-#ifdef _WIN32
-template class LIBNXSL_EXPORTABLE ObjectArray<NXSL_Instruction>;
-template class LIBNXSL_EXPORTABLE ObjectArray<NXSL_Function>;
-template class LIBNXSL_EXPORTABLE ObjectArray<NXSL_ModuleImport>;
-template class LIBNXSL_EXPORTABLE NXSL_ValueHashMap<NXSL_Identifier>;
-#endif
+class NXSL_ProgramBuilder;
 
 /**
- * Compiled NXSL program
+ * Compiled NXSL script
  */
 class LIBNXSL_EXPORTABLE NXSL_Program : public NXSL_ValueManager
 {
    friend class NXSL_VM;
 
-protected:
+private:
    ObjectArray<NXSL_Instruction> m_instructionSet;
-   ObjectArray<NXSL_ModuleImport> m_requiredModules;
+   StructArray<NXSL_ModuleImport> m_requiredModules;
    NXSL_ValueHashMap<NXSL_Identifier> m_constants;
-   ObjectArray<NXSL_Function> m_functions;
-   ObjectArray<NXSL_IdentifierLocation> *m_expressionVariables;
-
-   uint32_t getFinalJumpDestination(uint32_t addr, int srcJump);
-   uint32_t getExpressionVariableCodeBlock(const NXSL_Identifier& identifier);
+   StructArray<NXSL_Function> m_functions;
 
 public:
-   NXSL_Program();
-   virtual ~NXSL_Program();
-
-   bool addFunction(const NXSL_Identifier& name, uint32_t addr, char *errorText);
-   void resolveFunctions();
-   void addInstruction(NXSL_Instruction *pInstruction) { m_instructionSet.add(pInstruction); }
-   void addPushVariableInstruction(const NXSL_Identifier& name, int line);
-   void resolveLastJump(int opcode, int offset = 0);
-	void createJumpAt(uint32_t opAddr, uint32_t jumpAddr);
-   void addRequiredModule(const char *name, int lineNumber, bool removeLastElement);
-	void optimize();
-	void removeInstructions(uint32_t start, int count);
-   bool addConstant(const NXSL_Identifier& name, NXSL_Value *value);
-   void enableExpressionVariables();
-   void disableExpressionVariables(int line);
-   void registerExpressionVariable(const NXSL_Identifier& identifier);
+   NXSL_Program(size_t valueRegionSize = 0, size_t identifierRegionSize = 0);
+   NXSL_Program(NXSL_ProgramBuilder *builder);
+   ~NXSL_Program();
 
    uint32_t getCodeSize() const { return m_instructionSet.size(); }
    bool isEmpty() const { return m_instructionSet.isEmpty() || ((m_instructionSet.size() == 1) && (m_instructionSet.get(0)->m_opCode == 28)); }
    StringList *getRequiredModules() const;
 
-   void dump(FILE *fp) const { dump(fp, m_instructionSet); }
-   static void dump(FILE *fp, const ObjectArray<NXSL_Instruction>& instructionSet);
+   virtual uint64_t getMemoryUsage() const;
+
+   void dump(FILE *fp) const;
 
    void serialize(ByteStream& s) const;
    static NXSL_Program *load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize);
@@ -1052,22 +1038,22 @@ protected:
 
 public:
    NXSL_LibraryScript();
-   NXSL_LibraryScript(UINT32 id, uuid guid, const TCHAR *name, TCHAR *source);
+   NXSL_LibraryScript(uint32_t id, uuid guid, const TCHAR *name, TCHAR *source);
    ~NXSL_LibraryScript();
 
-   bool isValid() const { return m_program != NULL; }
-   bool isEmpty() const { return (m_program == NULL) || m_program->isEmpty(); }
+   bool isValid() const { return m_program != nullptr; }
+   bool isEmpty() const { return (m_program == nullptr) || m_program->isEmpty(); }
 
    const uuid& getGuid() const { return m_guid; }
    uint32_t getId() const { return m_id; }
 
    const TCHAR *getName() const { return m_name; }
-   const TCHAR *getCode() const { return m_source; }
+   const TCHAR *getSourceCode() const { return m_source; }
    const TCHAR *getError() const { return m_error; }
 
    NXSL_Program *getProgram() const { return m_program; }
 
-   void fillMessage(NXCPMessage *msg, UINT32 base) const;
+   void fillMessage(NXCPMessage *msg, uint32_t base) const;
    void fillMessage(NXCPMessage *msg) const;
 };
 
@@ -1091,9 +1077,9 @@ public:
 
    bool addScript(NXSL_LibraryScript *script);
    void deleteScript(const TCHAR *name);
-   void deleteScript(UINT32 id);
+   void deleteScript(uint32_t id);
    NXSL_Program *findNxslProgram(const TCHAR *name);
-   NXSL_LibraryScript *findScript(UINT32 id);
+   NXSL_LibraryScript *findScript(uint32_t id);
    NXSL_LibraryScript *findScript(const TCHAR *name);
    StringList *getScriptDependencies(const TCHAR *name);
    NXSL_VM *createVM(const TCHAR *name, NXSL_Environment *env);
