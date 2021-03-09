@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -41,6 +43,9 @@ import org.netxms.ui.eclipse.objectview.objecttabs.elements.ExternalResources;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.GeneralInfo;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.LastValues;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement;
+import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 
 /**
  * Object overview tab
@@ -52,6 +57,7 @@ public class ObjectOverview extends ObjectTab
 	private Composite viewArea;
 	private Composite leftColumn;
 	private Composite rightColumn;
+   private ViewRefreshController refreshController;
 	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
@@ -114,6 +120,34 @@ public class ObjectOverview extends ObjectTab
 		elements.add(e);
 		e = new Connection(rightColumn, e, this);
 		elements.add(e);
+
+      VisibilityValidator validator = new VisibilityValidator() { // $NON-NLS-1$
+         @Override
+         public boolean isVisible()
+         {
+            return isActive();
+         }
+      };
+
+      refreshController = new ViewRefreshController(getViewPart(), -1, new Runnable() {
+         @Override
+         public void run()
+         {
+            if (viewArea.isDisposed())
+               return;
+
+            ((TabbedObjectView)getViewPart()).refreshCurrentTab();
+         }
+      }, validator);
+      refreshController.setInterval(30);
+
+      viewArea.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            refreshController.dispose();
+         }
+      });
 	}
 	
 	/**
