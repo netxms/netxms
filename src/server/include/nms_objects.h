@@ -914,6 +914,11 @@ public:
    void fillMessage(NXCPMessage *msg, uint32_t baseId);
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE IntegerArray<uint32_t>;
+template class NXCORE_EXPORTABLE ObjectArray<ObjectUrl>;
+#endif
+
 /**
  * Base class for network objects
  */

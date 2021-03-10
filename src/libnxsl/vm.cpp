@@ -177,7 +177,7 @@ bool NXSL_SecurityContext::validateAccess(int accessType, const void *object)
  * Constructor
  */
 NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManager(), m_instructionSet(256, 256),
-         m_functions(0, 16, Ownership::True), m_modules(0, 16, Ownership::True)
+         m_functions(0, 16), m_modules(0, 16, Ownership::True)
 {
    m_cp = INVALID_ADDRESS;
    m_dataStack = nullptr;
@@ -264,7 +264,7 @@ bool NXSL_VM::load(const NXSL_Program *program)
    // Copy function information
    m_functions.clear();
    for(int i = 0; i < program->m_functions.size(); i++)
-      m_functions.add(new NXSL_Function(program->m_functions.get(i)));
+      m_functions.add(NXSL_Function(program->m_functions.get(i)));
 
    // Set constants
    if (program->m_constants.size() > 0)
@@ -2444,12 +2444,12 @@ void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
       {
          // Add fully qualified function name (module::function)
          strcpy(&fname[fnpos], mf->m_name.value);
-         m_functions.add(new NXSL_Function(fname, mf->m_addr + start));
+         m_functions.add(NXSL_Function(fname, mf->m_addr + start));
       }
       if (!strcmp(mf->m_name.value, "main") || !strcmp(mf->m_name.value, "$main"))
          continue;
-      NXSL_Function *f = new NXSL_Function(mf);
-      f->m_addr += static_cast<uint32_t>(start);
+      NXSL_Function f(mf);
+      f.m_addr += static_cast<uint32_t>(start);
       m_functions.add(f);
    }
 

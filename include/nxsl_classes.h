@@ -948,6 +948,13 @@ struct NXSL_IdentifierLocation
 
 class NXSL_ProgramBuilder;
 
+#ifdef _WIN32
+template class LIBNXSL_EXPORTABLE StructArray<NXSL_Instruction>;
+template class LIBNXSL_EXPORTABLE StructArray<NXSL_ModuleImport>;
+template class LIBNXSL_EXPORTABLE StructArray<NXSL_Function>;
+template class LIBNXSL_EXPORTABLE NXSL_ValueHashMap<NXSL_Identifier>;
+#endif
+
 /**
  * Compiled NXSL script
  */
@@ -1126,7 +1133,7 @@ protected:
    NXSL_Storage *m_storage;
    NXSL_Storage *m_localStorage;
 
-   ObjectArray<NXSL_Function> m_functions;
+   StructArray<NXSL_Function> m_functions;
    ObjectArray<NXSL_Module> m_modules;
 
    NXSL_SecurityContext *m_securityContext;
