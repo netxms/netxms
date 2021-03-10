@@ -3310,6 +3310,10 @@ public:
    static const InetAddress NONE;
 };
 
+#ifdef _WIN32
+template class LIBNETXMS_EXPORTABLE ObjectArray<InetAddress>;
+#endif
+
 /**
  * IP address list
  */

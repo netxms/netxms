@@ -418,7 +418,7 @@ typedef struct
 /**
  * Access list class
  */
-class AccessList
+class NXCORE_EXPORTABLE AccessList
 {
 private:
    int m_size;
