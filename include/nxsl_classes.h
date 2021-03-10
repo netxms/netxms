@@ -854,69 +854,16 @@ public:
 	bool isConstant() { return m_constant; }
 };
 
-/**
- * Instruction's operand type
- */
-enum OperandType
-{
-   OP_TYPE_NONE = 0,
-   OP_TYPE_ADDR = 1,
-   OP_TYPE_IDENTIFIER = 2,
-   OP_TYPE_CONST = 3,
-   OP_TYPE_VARIABLE = 4,
-   OP_TYPE_EXT_FUNCTION = 5,
-   OP_TYPE_INT32 = 6,
-   OP_TYPE_UINT32 = 7,
-   OP_TYPE_INT64 = 8,
-   OP_TYPE_UINT64 = 9
-};
-
-/**
- * Single execution instruction
- */
-class LIBNXSL_EXPORTABLE NXSL_Instruction
-{
-   friend class NXSL_Program;
-   friend class NXSL_ProgramBuilder;
-   friend class NXSL_VM;
-
-protected:
-   NXSL_ValueManager *m_vm;
-   int16_t m_opCode;
-   int16_t m_stackItems;
-   union
-   {
-      NXSL_Value *m_constant;
-      NXSL_Identifier *m_identifier;
-      NXSL_Variable *m_variable;
-      const NXSL_ExtFunction *m_function;
-      uint32_t m_addr;
-      int32_t m_valueInt32;
-      uint32_t m_valueUInt32;
-      int64_t m_valueInt64;
-      uint64_t m_valueUInt64;
-   } m_operand;
-   uint32_t m_addr2;   // Second address
-   int32_t m_sourceLine;
-
-public:
-   NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode);
-   NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, NXSL_Value *value);
-   NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, const NXSL_Identifier& identifier);
-   NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, const NXSL_Identifier& identifier, int16_t stackItems, uint32_t addr2 = INVALID_ADDRESS);
-   NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, uint32_t addr);
-   NXSL_Instruction(NXSL_ValueManager *vm, int line, int16_t opCode, int16_t stackItems);
-   NXSL_Instruction(NXSL_ValueManager *vm, const NXSL_Instruction *src);
-   ~NXSL_Instruction();
-
-   OperandType getOperandType();
-   void restoreVariableReference(NXSL_Identifier *identifier);
-};
 
 /**
  * Variable hash map element
  */
 struct NXSL_VariablePtr;
+
+/**
+ * NXSL program instruction
+ */
+struct NXSL_Instruction;
 
 /**
  * Variable pointer restore point
@@ -968,7 +915,7 @@ public:
    bool isConstant() const { return m_type == NXSL_VariableSystemType::CONSTANT; }
 
    bool createVariableReferenceRestorePoint(uint32_t addr, NXSL_Identifier *identifier);
-   void restoreVariableReferences(ObjectArray<NXSL_Instruction> *instructions);
+   void restoreVariableReferences(StructArray<NXSL_Instruction> *instructions);
 
    void dump(FILE *fp) const;
 };
@@ -1009,7 +956,7 @@ class LIBNXSL_EXPORTABLE NXSL_Program : public NXSL_ValueManager
    friend class NXSL_VM;
 
 private:
-   ObjectArray<NXSL_Instruction> m_instructionSet;
+   StructArray<NXSL_Instruction> m_instructionSet;
    StructArray<NXSL_ModuleImport> m_requiredModules;
    NXSL_ValueHashMap<NXSL_Identifier> m_constants;
    StructArray<NXSL_Function> m_functions;
@@ -1020,7 +967,7 @@ public:
    ~NXSL_Program();
 
    uint32_t getCodeSize() const { return m_instructionSet.size(); }
-   bool isEmpty() const { return m_instructionSet.isEmpty() || ((m_instructionSet.size() == 1) && (m_instructionSet.get(0)->m_opCode == 28)); }
+   bool isEmpty() const;
    StringList *getRequiredModules() const;
 
    virtual uint64_t getMemoryUsage() const;
@@ -1160,7 +1107,7 @@ protected:
    NXSL_Environment *m_env;
 	void *m_userData;
 
-   ObjectArray<NXSL_Instruction> m_instructionSet;
+   StructArray<NXSL_Instruction> m_instructionSet;
    uint32_t m_cp;
 
    uint32_t m_subLevel;

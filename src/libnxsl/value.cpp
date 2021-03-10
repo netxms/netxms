@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -271,7 +271,7 @@ NXSL_Value::NXSL_Value(const TCHAR *value)
    m_dataType = NXSL_DT_STRING;
 	if (value != nullptr)
 	{
-		m_length = (UINT32)_tcslen(value);
+		m_length = static_cast<uint32_t>(_tcslen(value));
 		if (m_length < NXSL_SHORT_STRING_LENGTH)
 		{
 		   _tcscpy(m_stringValue, value);
@@ -307,7 +307,7 @@ NXSL_Value::NXSL_Value(const char *value)
 	if (value != nullptr)
 	{
 		m_stringPtr = WideStringFromUTF8String(value);
-		m_length = (UINT32)_tcslen(m_stringPtr);
+		m_length = static_cast<uint32_t>(_tcslen(m_stringPtr));
 		if (m_length < NXSL_SHORT_STRING_LENGTH)
 		{
 		   _tcscpy(m_stringValue, m_stringPtr);

@@ -1344,7 +1344,7 @@ public:
 	Array(int initial = 0, int grow = 16, Ownership owner = Ownership::False, void (*objectDestructor)(void *, Array *) = nullptr);
 	virtual ~Array();
 
-   void *get(int index) const { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): nullptr; }
+   void *get(int index) const { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)) : nullptr; }
    void *first() const { return get(0); }
    void *last() const { return get(m_size - 1); }
    int indexOf(void *element) const;
@@ -1526,6 +1526,7 @@ public:
 
 	int add(const T *element) { return Array::add((void *)element); }
    int add(const T &element) { return Array::add((void *)&element); }
+   T *addPlaceholder() { return (T*)Array::addPlaceholder(); }
 	T *get(int index) const { return (T*)Array::get(index); }
    int indexOf(const T *element) const { return Array::indexOf((void *)element); }
    int indexOf(const T &element) const { return Array::indexOf((void *)&element); }
