@@ -210,7 +210,7 @@ bool NXSL_VariableSystem::createVariableReferenceRestorePoint(uint32_t addr, NXS
 /**
  * Restore saved variable references
  */
-void NXSL_VariableSystem::restoreVariableReferences(ObjectArray<NXSL_Instruction> *instructions)
+void NXSL_VariableSystem::restoreVariableReferences(StructArray<NXSL_Instruction> *instructions)
 {
    for(int i = 0; i < m_restorePointCount; i++)
       instructions->get(m_restorePoints[i].addr)->restoreVariableReference(m_restorePoints[i].identifier);

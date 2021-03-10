@@ -64,7 +64,7 @@ static const char *s_nxslCommandMnemonic[] =
 /**
  * Constructor
  */
-NXSL_ProgramBuilder::NXSL_ProgramBuilder() : NXSL_ValueManager(), m_instructionSet(256, 256, Ownership::True),
+NXSL_ProgramBuilder::NXSL_ProgramBuilder() : NXSL_ValueManager(), m_instructionSet(256, 256),
          m_constants(this, Ownership::True), m_functions(64, 64), m_requiredModules(0, 16)
 {
    m_expressionVariables = nullptr;
@@ -75,6 +75,8 @@ NXSL_ProgramBuilder::NXSL_ProgramBuilder() : NXSL_ValueManager(), m_instructionS
  */
 NXSL_ProgramBuilder::~NXSL_ProgramBuilder()
 {
+   for(int i = 0; i < m_instructionSet.size(); i++)
+      m_instructionSet.get(i)->dispose(this);
    delete m_expressionVariables;
 }
 
@@ -106,16 +108,16 @@ void NXSL_ProgramBuilder::enableExpressionVariables()
  */
 void NXSL_ProgramBuilder::disableExpressionVariables(int line)
 {
-   addInstruction(new NXSL_Instruction(this, line, OPCODE_JZ_PEEK, INVALID_ADDRESS));
+   addInstruction(line, OPCODE_JZ_PEEK, INVALID_ADDRESS);
    for(int i = 0; i < m_expressionVariables->size(); i++)
    {
       const NXSL_IdentifierLocation *l = m_expressionVariables->get(i);
-      addInstruction(new NXSL_Instruction(this, line, OPCODE_UPDATE_EXPRVAR, l->m_identifier, 0, l->m_addr));
-      addInstruction(new NXSL_Instruction(this, line, OPCODE_SET_EXPRVAR, l->m_identifier, 1));
+      addInstruction(line, OPCODE_UPDATE_EXPRVAR, l->m_identifier, 0, l->m_addr);
+      addInstruction(line, OPCODE_SET_EXPRVAR, l->m_identifier, 1);
    }
    delete_and_null(m_expressionVariables);
    resolveLastJump(OPCODE_JZ_PEEK);
-   addInstruction(new NXSL_Instruction(this, line, OPCODE_CLEAR_EXPRVARS));
+   addInstruction(line, OPCODE_CLEAR_EXPRVARS);
 }
 
 /**
@@ -155,12 +157,12 @@ void NXSL_ProgramBuilder::addPushVariableInstruction(const NXSL_Identifier& name
    uint32_t addr = getExpressionVariableCodeBlock(name);
    if (addr == INVALID_ADDRESS)
    {
-      addInstruction(new NXSL_Instruction(this, line, OPCODE_PUSH_VARIABLE, name));
+      addInstruction(line, OPCODE_PUSH_VARIABLE, name);
    }
    else
    {
-      addInstruction(new NXSL_Instruction(this, line, OPCODE_PUSH_EXPRVAR, name, 0, addr));
-      addInstruction(new NXSL_Instruction(this, line, OPCODE_SET_EXPRVAR, name));
+      addInstruction(line, OPCODE_PUSH_EXPRVAR, name, 0, addr);
+      addInstruction(line, OPCODE_SET_EXPRVAR, name);
    }
 }
 
@@ -190,8 +192,10 @@ void NXSL_ProgramBuilder::createJumpAt(uint32_t opAddr, uint32_t jumpAddr)
 	if (opAddr >= (uint32_t)m_instructionSet.size())
 		return;
 
-	int nLine = m_instructionSet.get(opAddr)->m_sourceLine;
-   m_instructionSet.set(opAddr, new NXSL_Instruction(this, nLine, OPCODE_JMP, jumpAddr));
+	NXSL_Instruction *i = m_instructionSet.get(opAddr);
+	i->dispose(this);
+	i->m_opCode = OPCODE_JMP;
+	i->m_operand.m_addr = jumpAddr;
 }
 
 /**
@@ -278,7 +282,7 @@ void NXSL_ProgramBuilder::resolveFunctions()
 /**
  * Dump program to file (as text)
  */
-void NXSL_ProgramBuilder::dump(FILE *fp, const ObjectArray<NXSL_Instruction>& instructionSet)
+void NXSL_ProgramBuilder::dump(FILE *fp, const StructArray<NXSL_Instruction>& instructionSet)
 {
    for(int i = 0; i < instructionSet.size(); i++)
    {
@@ -311,7 +315,6 @@ void NXSL_ProgramBuilder::dump(FILE *fp, const ObjectArray<NXSL_Instruction>& in
          case OPCODE_PUSH_CONSTREF:
          case OPCODE_PUSH_VARIABLE:
          case OPCODE_PUSH_PROPERTY:
-         case OPCODE_SET:
          case OPCODE_BIND:
          case OPCODE_ARRAY:
          case OPCODE_GLOBAL_ARRAY:
@@ -328,6 +331,9 @@ void NXSL_ProgramBuilder::dump(FILE *fp, const ObjectArray<NXSL_Instruction>& in
          case OPCODE_CASE_CONST_GT:
             _ftprintf(fp, _T("%hs\n"), instr->m_operand.m_identifier->value);
             break;
+         case OPCODE_SET:
+            _ftprintf(fp, _T("%hs, %d\n"), instr->m_operand.m_identifier->value, instr->m_stackItems);
+            break;
          case OPCODE_SET_EXPRVAR:
             _ftprintf(fp, _T("(%hs), %d\n"), instr->m_operand.m_identifier->value, instr->m_stackItems);
             break;
@@ -338,8 +344,10 @@ void NXSL_ProgramBuilder::dump(FILE *fp, const ObjectArray<NXSL_Instruction>& in
             _ftprintf(fp, _T("(%hs)\n"), instr->m_operand.m_identifier->value);
             break;
          case OPCODE_PUSH_VARPTR:
-         case OPCODE_SET_VARPTR:
             _ftprintf(fp, _T("%hs\n"), instr->m_operand.m_variable->getName().value);
+            break;
+         case OPCODE_SET_VARPTR:
+            _ftprintf(fp, _T("%hs, %d\n"), instr->m_operand.m_variable->getName().value, instr->m_stackItems);
             break;
          case OPCODE_PUSH_CONSTANT:
 			case OPCODE_CASE:
@@ -357,6 +365,7 @@ void NXSL_ProgramBuilder::dump(FILE *fp, const ObjectArray<NXSL_Instruction>& in
          case OPCODE_POP:
          case OPCODE_PUSHCP:
          case OPCODE_STORAGE_READ:
+         case OPCODE_SET_ELEMENT:
             _ftprintf(fp, _T("%d\n"), instr->m_stackItems);
             break;
          case OPCODE_CAST:
@@ -475,7 +484,7 @@ void NXSL_ProgramBuilder::optimize()
 	for(i = 0; i < m_instructionSet.size(); i++)
 	{
       NXSL_Instruction *instr = m_instructionSet.get(i);
-		if ((instr->m_opCode == OPCODE_JMP) && (instr->m_operand.m_addr >= (UINT32)m_instructionSet.size()))
+		if ((instr->m_opCode == OPCODE_JMP) && (instr->m_operand.m_addr >= static_cast<uint32_t>(m_instructionSet.size())))
 		{
 			instr->m_opCode = OPCODE_RET_NULL;
 		}
@@ -524,6 +533,20 @@ void NXSL_ProgramBuilder::optimize()
 			i--;
 		}
 	}
+
+   // Convert SET/ESET followed by POP 1 to SET/ESET with POP
+   for(i = 0; (m_instructionSet.size() > 1) && (i < m_instructionSet.size() - 1); i++)
+   {
+      NXSL_Instruction *instr = m_instructionSet.get(i);
+      if (((instr->m_opCode == OPCODE_SET) || (instr->m_opCode == OPCODE_SET_ELEMENT)) &&
+          (instr->m_stackItems == 0) &&
+          (m_instructionSet.get(i + 1)->m_opCode == OPCODE_POP) &&
+          (m_instructionSet.get(i + 1)->m_stackItems == 1))
+      {
+         instr->m_stackItems = 1;
+         removeInstructions(i + 1, 1);
+      }
+   }
 }
 
 /**
@@ -539,7 +562,10 @@ void NXSL_ProgramBuilder::removeInstructions(uint32_t start, int count)
 
    int i;
 	for(i = 0; i < count; i++)
+	{
+      m_instructionSet.get(start)->dispose(this);
       m_instructionSet.remove(start);
+	}
 
 	// Change jump destination addresses
 	for(i = 0; i < m_instructionSet.size(); i++)
@@ -602,7 +628,7 @@ uint64_t NXSL_ProgramBuilder::getMemoryUsage() const
  * Create empty compiled script
  */
 NXSL_Program::NXSL_Program(size_t valueRegionSize, size_t identifierRegionSize) : NXSL_ValueManager(valueRegionSize, identifierRegionSize),
-         m_instructionSet(0, 256, Ownership::True), m_constants(this, Ownership::True), m_functions(0, 64), m_requiredModules(0, 16)
+         m_instructionSet(0, 256), m_constants(this, Ownership::True), m_functions(0, 64), m_requiredModules(0, 16)
 {
 }
 
@@ -621,13 +647,13 @@ EnumerationCallbackResult CopyConstantsCallback(const void *key, void *value, vo
  */
 NXSL_Program::NXSL_Program(NXSL_ProgramBuilder *builder) :
          NXSL_ValueManager(builder->m_values.getElementCount(), builder->m_identifiers.getElementCount()),
-         m_instructionSet(builder->m_instructionSet.size(), 256, Ownership::True),
+         m_instructionSet(builder->m_instructionSet.size(), 256),
          m_constants(this, Ownership::True),
          m_functions(builder->m_functions.getBuffer(), builder->m_functions.size()),
          m_requiredModules(builder->m_requiredModules.getBuffer(), builder->m_requiredModules.size())
 {
    for(int i = 0; i < builder->m_instructionSet.size(); i++)
-      m_instructionSet.add(new NXSL_Instruction(this, builder->m_instructionSet.get(i)));
+      m_instructionSet.addPlaceholder()->copyFrom(builder->m_instructionSet.get(i), this);
    builder->m_constants.forEach(CopyConstantsCallback, &m_constants);
 }
 
@@ -636,6 +662,16 @@ NXSL_Program::NXSL_Program(NXSL_ProgramBuilder *builder) :
  */
 NXSL_Program::~NXSL_Program()
 {
+   for(int i = 0; i < m_instructionSet.size(); i++)
+      m_instructionSet.get(i)->dispose(this);
+}
+
+/**
+ * Check if this program is empty
+ */
+bool NXSL_Program::isEmpty() const
+{
+   return m_instructionSet.isEmpty() || ((m_instructionSet.size() == 1) && (m_instructionSet.get(0)->m_opCode == OPCODE_RET_NULL));
 }
 
 /**
@@ -815,9 +851,12 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
    while(!s.eos() && (s.pos() < header.constSectionOffset))
    {
       int16_t opcode = s.readInt16();
-      int16_t si = s.readInt16();
+      int16_t stackItems = s.readInt16();
       int32_t line = s.readInt32();
-      NXSL_Instruction *instr = new NXSL_Instruction(p, line, opcode, si);
+      NXSL_Instruction *instr = p->m_instructionSet.addPlaceholder();
+      instr->m_sourceLine = line;
+      instr->m_opCode = opcode;
+      instr->m_stackItems = stackItems;
       switch(instr->getOperandType())
       {
          case OP_TYPE_ADDR:
@@ -862,7 +901,6 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
          default:
             break;
       }
-      p->m_instructionSet.add(instr);
    }
 
    // Load module list

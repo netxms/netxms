@@ -154,6 +154,60 @@ typedef void *yyscan_t;
 class NXSL_Compiler;
 
 /**
+ * Statement data used in parser
+ */
+struct SimpleStatementData
+{
+   int sourceLine;
+   int16_t opCode;
+};
+
+/**
+ * Instruction's operand type
+ */
+enum OperandType
+{
+   OP_TYPE_NONE = 0,
+   OP_TYPE_ADDR = 1,
+   OP_TYPE_IDENTIFIER = 2,
+   OP_TYPE_CONST = 3,
+   OP_TYPE_VARIABLE = 4,
+   OP_TYPE_EXT_FUNCTION = 5,
+   OP_TYPE_INT32 = 6,
+   OP_TYPE_UINT32 = 7,
+   OP_TYPE_INT64 = 8,
+   OP_TYPE_UINT64 = 9
+};
+
+/**
+ * Single execution instruction
+ */
+struct NXSL_Instruction
+{
+   int16_t m_opCode;
+   int16_t m_stackItems;
+   uint32_t m_addr2;   // Second address
+   union
+   {
+      NXSL_Value *m_constant;
+      NXSL_Identifier *m_identifier;
+      NXSL_Variable *m_variable;
+      const NXSL_ExtFunction *m_function;
+      uint32_t m_addr;
+      int32_t m_valueInt32;
+      uint32_t m_valueUInt32;
+      int64_t m_valueInt64;
+      uint64_t m_valueUInt64;
+   } m_operand;
+   int32_t m_sourceLine;
+
+   OperandType getOperandType() const;
+   void copyFrom(const NXSL_Instruction *src, NXSL_ValueManager *vm);
+   void dispose(NXSL_ValueManager *vm);
+   void restoreVariableReference(NXSL_Identifier *identifier);
+};
+
+/**
  * NXSL program builder
  */
 class NXSL_ProgramBuilder : public NXSL_ValueManager
@@ -161,7 +215,7 @@ class NXSL_ProgramBuilder : public NXSL_ValueManager
    friend class NXSL_Program;
 
 protected:
-   ObjectArray<NXSL_Instruction> m_instructionSet;
+   StructArray<NXSL_Instruction> m_instructionSet;
    StructArray<NXSL_ModuleImport> m_requiredModules;
    NXSL_ValueHashMap<NXSL_Identifier> m_constants;
    StructArray<NXSL_Function> m_functions;
@@ -170,13 +224,50 @@ protected:
    uint32_t getFinalJumpDestination(uint32_t addr, int srcJump);
    uint32_t getExpressionVariableCodeBlock(const NXSL_Identifier& identifier);
 
+   NXSL_Instruction *addInstructionPlaceholder(int line, int16_t opCode)
+   {
+      NXSL_Instruction *i = m_instructionSet.addPlaceholder();
+      memset(i, 0, sizeof(NXSL_Instruction));
+      i->m_sourceLine = line;
+      i->m_opCode = opCode;
+      i->m_addr2 = INVALID_ADDRESS;
+      return i;
+   }
+
 public:
    NXSL_ProgramBuilder();
    virtual ~NXSL_ProgramBuilder();
 
+   void addInstruction(int line, int16_t opCode)
+   {
+      addInstructionPlaceholder(line, opCode);
+   }
+   void addInstruction(int line, int16_t opCode, NXSL_Value *value)
+   {
+      addInstructionPlaceholder(line, opCode)->m_operand.m_constant = value;
+   }
+   void addInstruction(int line, int16_t opCode, const NXSL_Identifier& identifier)
+   {
+      addInstructionPlaceholder(line, opCode)->m_operand.m_identifier = createIdentifier(identifier);
+   }
+   void addInstruction(int line, int16_t opCode, const NXSL_Identifier& identifier, int16_t stackItems, uint32_t addr2 = INVALID_ADDRESS)
+   {
+      NXSL_Instruction *i = addInstructionPlaceholder(line, opCode);
+      i->m_operand.m_identifier = createIdentifier(identifier);
+      i->m_stackItems = stackItems;
+      i->m_addr2 = addr2;
+   }
+   void addInstruction(int line, int16_t opCode, uint32_t addr)
+   {
+      addInstructionPlaceholder(line, opCode)->m_operand.m_addr = addr;
+   }
+   void addInstruction(int line, int16_t opCode, int16_t stackItems)
+   {
+      addInstructionPlaceholder(line, opCode)->m_stackItems = stackItems;
+   }
+
    bool addFunction(const NXSL_Identifier& name, uint32_t addr, char *errorText);
    void resolveFunctions();
-   void addInstruction(NXSL_Instruction *pInstruction) { m_instructionSet.add(pInstruction); }
    void addPushVariableInstruction(const NXSL_Identifier& name, int line);
    void resolveLastJump(int opcode, int offset = 0);
    void createJumpAt(uint32_t opAddr, uint32_t jumpAddr);
@@ -195,7 +286,7 @@ public:
    virtual uint64_t getMemoryUsage() const override;
 
    void dump(FILE *fp) const { dump(fp, m_instructionSet); }
-   static void dump(FILE *fp, const ObjectArray<NXSL_Instruction>& instructionSet);
+   static void dump(FILE *fp, const StructArray<NXSL_Instruction>& instructionSet);
 };
 
 /**

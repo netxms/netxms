@@ -176,7 +176,7 @@ bool NXSL_SecurityContext::validateAccess(int accessType, const void *object)
 /**
  * Constructor
  */
-NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManager(), m_instructionSet(256, 256, Ownership::True),
+NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManager(), m_instructionSet(256, 256),
          m_functions(0, 16, Ownership::True), m_modules(0, 16, Ownership::True)
 {
    m_cp = INVALID_ADDRESS;
@@ -215,6 +215,9 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManag
  */
 NXSL_VM::~NXSL_VM()
 {
+   for(int i = 0; i < m_instructionSet.size(); i++)
+      m_instructionSet.get(i)->dispose(this);
+
    delete m_dataStack;
    delete m_codeStack;
    delete m_catchStack;
@@ -252,9 +255,11 @@ bool NXSL_VM::load(const NXSL_Program *program)
    bool success = true;
 
    // Copy instructions
+   for(int i = 0; i < m_instructionSet.size(); i++)
+      m_instructionSet.get(i)->dispose(this);
    m_instructionSet.clear();
    for(int i = 0; i < program->m_instructionSet.size(); i++)
-      m_instructionSet.add(new NXSL_Instruction(this, program->m_instructionSet.get(i)));
+      m_instructionSet.addPlaceholder()->copyFrom(program->m_instructionSet.get(i), this);
 
    // Copy function information
    m_functions.clear();
@@ -787,10 +792,10 @@ void NXSL_VM::execute()
          pVar = findOrCreateVariable(*cp->m_operand.m_identifier, &vs);
 			if (!pVar->isConstant())
 			{
-				pValue = m_dataStack->peek();
+	         pValue = (cp->m_stackItems == 0) ? m_dataStack->peek() : m_dataStack->pop();
 				if (pValue != nullptr)
 				{
-					pVar->setValue(createValue(pValue));
+					pVar->setValue((cp->m_stackItems == 0) ? createValue(pValue) : pValue);
                // convert to direct variable access without name lookup
 		         if (vs->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
 		         {
@@ -809,10 +814,10 @@ void NXSL_VM::execute()
 			}
          break;
       case OPCODE_SET_VARPTR:
-         pValue = m_dataStack->peek();
+         pValue = (cp->m_stackItems == 0) ? m_dataStack->peek() : m_dataStack->pop();
          if (pValue != nullptr)
          {
-            cp->m_operand.m_variable->setValue(createValue(pValue));
+            cp->m_operand.m_variable->setValue((cp->m_stackItems == 0) ? createValue(pValue) : pValue);
          }
          else
          {
@@ -1023,7 +1028,7 @@ void NXSL_VM::execute()
 						error(NXSL_ERR_NOT_CONTAINER);
                   success = false;
                }
-               if (success)
+               if (success && (cp->m_stackItems == 0))   // Do not push value back if operation is combined with POP
                {
 		            m_dataStack->push(pValue);
 		            pValue = nullptr;		// Prevent deletion
@@ -2418,7 +2423,7 @@ void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
    // Add code from module
    int start = m_instructionSet.size();
    for(int i = 0; i < module->m_instructionSet.size(); i++)
-      m_instructionSet.add(new NXSL_Instruction(this, module->m_instructionSet.get(i)));
+      m_instructionSet.addPlaceholder()->copyFrom(module->m_instructionSet.get(i), this);
    relocateCode(start, module->m_instructionSet.size(), start);
 
    // Add function names from module
