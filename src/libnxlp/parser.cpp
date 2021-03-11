@@ -120,15 +120,16 @@ struct LogParser_XmlParserState
 LogParser::LogParser()
 {
    m_rules = new ObjectArray<LogParserRule>(16, 16, Ownership::True);
-	m_cb = NULL;
-	m_userArg = NULL;
-	m_name = NULL;
-	m_fileName = NULL;
+	m_cb = nullptr;
+	m_cbAction = nullptr;
+	m_userArg = nullptr;
+	m_name = nullptr;
+	m_fileName = nullptr;
 	m_fileEncoding = LP_FCP_ACP;
 	m_preallocatedFile = false;
 	m_detectBrokenPrealloc = false;
-	m_eventNameList = NULL;
-	m_eventResolver = NULL;
+	m_eventNameList = nullptr;
+	m_eventResolver = nullptr;
 	m_thread = INVALID_THREAD_HANDLE;
    m_stopCondition = ConditionCreate(true);
 	m_recordsProcessed = 0;
@@ -141,7 +142,7 @@ LogParser::LogParser()
 	m_traceLevel = 0;
 	m_status = LPS_INIT;
 #ifdef _WIN32
-   m_marker = NULL;
+   m_marker = nullptr;
 #endif
 }
 
@@ -160,6 +161,7 @@ LogParser::LogParser(const LogParser *src)
 	m_exclusionSchedules.addAll(&src->m_exclusionSchedules);
 
 	m_cb = src->m_cb;
+   m_cbAction = src->m_cbAction;
 	m_userArg = src->m_userArg;
 	m_name = MemCopyString(src->m_name);
 	m_fileName = MemCopyString(src->m_fileName);
