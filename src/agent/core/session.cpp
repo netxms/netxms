@@ -26,9 +26,9 @@
  * Externals
  */
 void UnregisterSession(uint32_t id);
-uint32_t DeployPolicy(CommSession *session, NXCPMessage *request);
-uint32_t UninstallPolicy(CommSession *session, NXCPMessage *request);
-uint32_t GetPolicyInventory(CommSession *session, NXCPMessage *msg);
+uint32_t DeployPolicy(NXCPMessage *request, uint32_t serverId, const TCHAR *serverInfo);
+uint32_t UninstallPolicy(NXCPMessage *request);
+uint32_t GetPolicyInventory(NXCPMessage *msg);
 void ClearDataCollectionConfiguration();
 uint32_t AddUserAgentNotification(uint64_t serverId, NXCPMessage *request);
 uint32_t RemoveUserAgentNotification(uint64_t serverId, NXCPMessage *request);
@@ -621,7 +621,8 @@ void CommSession::processingThread()
 				case CMD_DEPLOY_AGENT_POLICY:
 					if (m_masterServer)
 					{
-					   response.setField(VID_RCC, DeployPolicy(this, request));
+					   debugPrintf(3, _T("Processing policy deployment request"));
+					   response.setField(VID_RCC, DeployPolicy(request, m_serverId, m_serverAddr.toString()));
 					}
 					else
 					{
@@ -631,7 +632,8 @@ void CommSession::processingThread()
 				case CMD_UNINSTALL_AGENT_POLICY:
 					if (m_masterServer)
 					{
-					   response.setField(VID_RCC, UninstallPolicy(this, request));
+                  debugPrintf(3, _T("Processing policy uninstall request"));
+					   response.setField(VID_RCC, UninstallPolicy(request));
 					}
 					else
 					{
@@ -641,7 +643,7 @@ void CommSession::processingThread()
 				case CMD_GET_POLICY_INVENTORY:
 					if (m_masterServer)
 					{
-					   response.setField(VID_RCC, GetPolicyInventory(this, &response));
+					   response.setField(VID_RCC, GetPolicyInventory(&response));
 					}
 					else
 					{
@@ -1359,7 +1361,7 @@ void CommSession::prepareProxySessionSetupMsg(NXCPMessage *msg)
 /**
  * Virtual session constructor
  */
-VirtualSession::VirtualSession(UINT64 serverId)
+VirtualSession::VirtualSession(uint64_t serverId)
 {
    m_id = InterlockedIncrement(&s_sessionId);
    m_serverId = serverId;
@@ -1391,8 +1393,8 @@ ProxySession::ProxySession(NXCPMessage *msg)
    m_id = msg->getFieldAsUInt32(VID_SESSION_ID);
    m_serverId = msg->getFieldAsUInt64(VID_SERVER_ID);
    m_serverAddress = msg->getFieldAsInetAddress(VID_IP_ADDRESS);
-   
-   UINT32 flags = msg->getFieldAsUInt32(VID_FLAGS);
+
+   uint32_t flags = msg->getFieldAsUInt32(VID_FLAGS);
    m_masterServer = ((flags & 0x01) != 0);
    m_controlServer = ((flags & 0x02) != 0);
    m_canAcceptData = ((flags & 0x04) != 0);

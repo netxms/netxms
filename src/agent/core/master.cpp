@@ -33,6 +33,16 @@ LONG RestartAgent();
 void ScheduleDelayedRestart();
 
 /**
+ * Synchronize agent policies with master agent
+ */
+void SyncAgentPolicies(const NXCPMessage& msg);
+
+/**
+ * Get policy type by GUID
+ */
+String GetPolicyType(const uuid& guid);
+
+/**
  * Handler for CMD_GET_PARAMETER command
  */
 static void H_GetParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
@@ -82,6 +92,18 @@ static void H_GetList(NXCPMessage *pRequest, NXCPMessage *pMsg)
 		for(int i = 0; i < value.size(); i++)
 			pMsg->setField(VID_ENUM_VALUE_BASE + i, value.get(i));
    }
+}
+
+/**
+ * Notify subagents on new policy installation
+ */
+static void NotifySubAgentsOnPolicyInstall(const uuid& guid)
+{
+   String type = GetPolicyType(guid);
+   PolicyChangeNotification n;
+   n.guid = guid;
+   n.type = type;
+   NotifySubAgents(AGENT_NOTIFY_POLICY_INSTALLED, &n);
 }
 
 /**
@@ -170,6 +192,12 @@ void MasterAgentListener()
                   RestartAgent();
                   ThreadSleep(10);
                   exit(0);
+                  break;
+               case CMD_SYNC_AGENT_POLICIES:
+                  SyncAgentPolicies(*msg);
+                  break;
+               case CMD_DEPLOY_AGENT_POLICY:
+                  NotifySubAgentsOnPolicyInstall(msg->getFieldAsGUID(VID_GUID));
                   break;
 					default:
 						response.setField(VID_RCC, ERR_UNKNOWN_COMMAND);
