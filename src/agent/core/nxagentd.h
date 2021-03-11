@@ -210,7 +210,7 @@ private:
    uint32_t m_listenerStartDelay;
 
 	bool sendMessage(const NXCPMessage *msg);
-	NXCPMessage *waitForMessage(WORD code, uint32_t id);
+	NXCPMessage *waitForMessage(uint16_t code, uint32_t id);
 	NETXMS_SUBAGENT_PARAM *getSupportedParameters(UINT32 *count);
 	NETXMS_SUBAGENT_LIST *getSupportedLists(UINT32 *count);
 	NETXMS_SUBAGENT_TABLE *getSupportedTables(UINT32 *count);
@@ -242,6 +242,8 @@ public:
 	void listActions(StringList *list);
    void shutdown(bool restart);
    void restart();
+   void syncPolicies();
+   void notifyOnPolicyInstall(const uuid& guid);
 };
 
 /**
@@ -735,7 +737,7 @@ void GetActionList(NXCPMessage *msg);
 bool LoadSubAgent(const TCHAR *moduleName);
 void UnloadAllSubAgents();
 bool ProcessCommandBySubAgent(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
-void NotifySubAgents(UINT32 code, void *data);
+void NotifySubAgents(uint32_t code, void *data);
 bool AddAction(const TCHAR *name, bool isExternal, const TCHAR *arg, LONG (*handler)(const TCHAR*, const StringList*, const TCHAR*, AbstractCommSession *session),
          const TCHAR *subAgent, const TCHAR *description);
 bool AddActionFromConfig(const TCHAR *config);
@@ -755,9 +757,9 @@ void ListTablesFromExtProviders(StringList *list);
 
 bool AddExternalSubagent(const TCHAR *config);
 void StopExternalSubagentConnectors();
-UINT32 GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer);
-UINT32 GetTableValueFromExtSubagent(const TCHAR *name, Table *value);
-UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value);
+uint32_t GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer);
+uint32_t GetTableValueFromExtSubagent(const TCHAR *name, Table *value);
+uint32_t GetListValueFromExtSubagent(const TCHAR *name, StringList *value);
 uint32_t ExecuteActionByExtSubagent(const TCHAR *name, const StringList& args, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput);
 void ListParametersFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListParametersFromExtSubagents(StringList *list);

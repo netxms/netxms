@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ struct ActionList
 };
 
 /**
- *Static data
+ * List of registered external subagents
  */
 static ObjectArray<ExternalSubagent> s_subagents;
 
@@ -130,7 +130,7 @@ bool ExternalSubagent::sendMessage(const NXCPMessage *msg)
 /**
  * Wait for specific message to arrive
  */
-NXCPMessage *ExternalSubagent::waitForMessage(WORD code, uint32_t id)
+NXCPMessage *ExternalSubagent::waitForMessage(uint16_t code, uint32_t id)
 {
    return m_msgQueue->waitForMessage(code, id, 5000);	// 5 sec timeout
 }
@@ -150,9 +150,12 @@ static void ForwardSessionMessage(NXCPMessage *msg)
  */
 void ExternalSubagent::connect(NamedPipe *pipe)
 {
-	m_pipe = pipe;
-	m_connected = true;
-	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): connection established"), m_name);
+   m_pipe = pipe;
+   m_connected = true;
+   nxlog_debug(2, _T("ExternalSubagent(%s): connection established"), m_name);
+
+   syncPolicies();
+
    PipeMessageReceiver receiver(pipe->handle(), 8192, 1048576);  // 8K initial, 1M max
 	while(!(g_dwFlags & AF_SHUTDOWN))
 	{
@@ -376,7 +379,7 @@ void ExternalSubagent::listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *
 		}
 		*baseId = id;
 		*count += paramCount;
-		free(list);
+		MemFree(list);
 	}
 }
 
@@ -391,7 +394,7 @@ void ExternalSubagent::listParameters(StringList *list)
 	{
 		for(UINT32 i = 0; i < paramCount; i++)
 			list->add(plist[i].name);
-		free(plist);
+		MemFree(plist);
 	}
 }
 
@@ -412,7 +415,7 @@ void ExternalSubagent::listLists(NXCPMessage *msg, UINT32 *baseId, UINT32 *count
 		}
 		*baseId = id;
 		*count += paramCount;
-		free(list);
+		MemFree(list);
 	}
 }
 
@@ -427,7 +430,7 @@ void ExternalSubagent::listLists(StringList *list)
 	{
 		for(UINT32 i = 0; i < paramCount; i++)
 			list->add(plist[i].name);
-		free(plist);
+		MemFree(plist);
 	}
 }
 
@@ -450,7 +453,7 @@ void ExternalSubagent::listTables(NXCPMessage *msg, UINT32 *baseId, UINT32 *coun
 		}
 		*baseId = id;
 		*count += paramCount;
-		free(list);
+		MemFree(list);
 	}
 }
 
@@ -643,6 +646,90 @@ uint32_t ExternalSubagent::executeAction(const TCHAR *name, const StringList& ar
 }
 
 /**
+ * Synchronize agent policies
+ */
+void ExternalSubagent::syncPolicies()
+{
+   DB_HANDLE hdb = GetLocalDatabaseHandle();
+   if (hdb == nullptr)
+      return;
+
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT guid,type,server_info,server_id,version,content_hash FROM agent_policy"));
+   if (hResult == nullptr)
+      return;
+
+   NXCPMessage msg(CMD_SYNC_AGENT_POLICIES, m_requestId++);
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   uint32_t count = 0;
+   int rowCount = DBGetNumRows(hResult);
+   for(int row = 0; row < rowCount; row++)
+   {
+      uuid guid = DBGetFieldGUID(hResult, row, 0);
+      TCHAR type[32];
+      DBGetField(hResult, row, 1, type, 32);
+
+      TCHAR filePath[MAX_PATH], name[64];
+      if (!_tcscmp(type, _T("AgentConfig")))
+      {
+         _sntprintf(filePath, MAX_PATH, _T("%s%s.xml"), g_szConfigPolicyDir, guid.toString(name));
+      }
+      else if (!_tcscmp(type, _T("LogParserConfig")))
+      {
+         _sntprintf(filePath, MAX_PATH, _T("%s%s.xml"), g_szLogParserDirectory, guid.toString(name));
+      }
+      else
+      {
+         // Ignore all other policy types
+         continue;
+      }
+
+      size_t size;
+      BYTE *content = LoadFile(filePath, &size);
+      if (content == nullptr)
+         continue;
+
+      msg.setField(fieldId++, type);
+      msg.setField(fieldId++, guid);
+      msg.setField(fieldId++, content, size);
+      TCHAR serverInfo[256];
+      msg.setField(fieldId++, DBGetField(hResult, row, 2, serverInfo, 256));
+      msg.setField(fieldId++, DBGetFieldUInt64(hResult, row, 3));
+      msg.setField(fieldId++, DBGetFieldULong(hResult, row, 4));
+
+      TCHAR hashAsText[33];
+      if (DBGetField(hResult, row, 5, hashAsText, 33) != nullptr)
+      {
+         BYTE hash[MD5_DIGEST_SIZE];
+         StrToBin(hashAsText, hash, MD5_DIGEST_SIZE);
+         msg.setField(fieldId++, hash, MD5_DIGEST_SIZE);
+      }
+      else
+      {
+         fieldId++;
+      }
+
+      MemFree(content);
+      count++;
+      fieldId += 93;
+   }
+   DBFreeResult(hResult);
+
+   msg.setField(VID_NUM_ELEMENTS, count);
+   msg.setField(VID_DATA_DIRECTORY, g_szDataDirectory);
+   sendMessage(&msg);
+}
+
+/**
+ * Notify subagent that new policy is installed
+ */
+void ExternalSubagent::notifyOnPolicyInstall(const uuid& guid)
+{
+   NXCPMessage msg(CMD_DEPLOY_AGENT_POLICY, m_requestId++);
+   msg.setField(VID_GUID, guid);
+   sendMessage(&msg);
+}
+
+/**
  * Add external subagent from config.
  * Each line in config should be in form 
  * name:user
@@ -793,9 +880,9 @@ void ListActionsFromExtSubagents(StringList *list)
  *
  * @return agent error code
  */
-UINT32 GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer)
+uint32_t GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer)
 {
-	UINT32 rc = ERR_UNKNOWN_PARAMETER;
+   uint32_t rc = ERR_UNKNOWN_PARAMETER;
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
 		if (s_subagents.get(i)->isConnected())
@@ -813,9 +900,9 @@ UINT32 GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer)
  *
  * @return agent error code
  */
-UINT32 GetTableValueFromExtSubagent(const TCHAR *name, Table *value)
+uint32_t GetTableValueFromExtSubagent(const TCHAR *name, Table *value)
 {
-	UINT32 rc = ERR_UNKNOWN_PARAMETER;
+   uint32_t rc = ERR_UNKNOWN_PARAMETER;
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
 		if (s_subagents.get(i)->isConnected())
@@ -833,9 +920,9 @@ UINT32 GetTableValueFromExtSubagent(const TCHAR *name, Table *value)
  *
  * @return agent error code
  */
-UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value)
+uint32_t GetListValueFromExtSubagent(const TCHAR *name, StringList *value)
 {
-	UINT32 rc = ERR_UNKNOWN_PARAMETER;
+   uint32_t rc = ERR_UNKNOWN_PARAMETER;
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
 		if (s_subagents.get(i)->isConnected())
@@ -896,6 +983,34 @@ void RestartExtSubagents()
          s_subagents.get(i)->restart();
       }
    }
+}
+
+/**
+ * Synchronize policies for all connected external subagents
+ */
+void SyncPoliciesWithExtSubagents()
+{
+   for(int i = 0; i < s_subagents.size(); i++)
+   {
+      if (s_subagents.get(i)->isConnected())
+      {
+         nxlog_debug(1, _T("Requesting policies synchronization with external subagent %s"), s_subagents.get(i)->getName());
+         s_subagents.get(i)->syncPolicies();
+      }
+   }
+}
+
+void NotifyExtSubagentsOnPolicyInstall(uuid *guid)
+{
+   for(int i = 0; i < s_subagents.size(); i++)
+   {
+      if (s_subagents.get(i)->isConnected())
+      {
+         nxlog_debug(1, _T("Sending policy installation notification to external subagent %s"), s_subagents.get(i)->getName());
+         s_subagents.get(i)->notifyOnPolicyInstall(*guid);
+      }
+   }
+   delete guid;
 }
 
 /**

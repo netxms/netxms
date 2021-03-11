@@ -281,8 +281,9 @@ bool ProcessCommandBySubAgent(UINT32 command, NXCPMessage *request, NXCPMessage 
 /**
  * Notify all sub-agents
  */
-void NotifySubAgents(UINT32 code, void *data)
+void NotifySubAgents(uint32_t code, void *data)
 {
+   nxlog_debug(5, _T("NotifySubAgents(): processing notification with code %u"), code);
    for(int i = 0; i < s_subAgents.size(); i++)
    {
       NETXMS_SUBAGENT_INFO *s = s_subAgents.get(i)->pInfo;

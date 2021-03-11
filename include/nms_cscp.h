@@ -665,6 +665,7 @@ typedef struct
 #define CMD_GENERATE_SSH_KEYS             0x01AA
 #define CMD_GET_SSH_KEYS                  0x01AB
 #define CMD_GET_TOOLTIP_LAST_VALUES       0x01AC
+#define CMD_SYNC_AGENT_POLICIES           0x01AD
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1424,6 +1425,7 @@ typedef struct
 #define VID_INCLUDE_PUBLIC_KEY      ((UINT32)745)
 #define VID_SSH_KEY_COUNT           ((UINT32)746)
 #define VID_SSH_KEY_ID              ((UINT32)747)
+#define VID_DATA_DIRECTORY          ((UINT32)748)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
