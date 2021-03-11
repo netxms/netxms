@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2016-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,13 @@ public class EventMonitorElement extends ElementWidget
    private EventMonitorConfig config;
    private final NXCSession session;
 
+   /**
+    * Create event monitor dashboard element.
+    *
+    * @param parent parent widget
+    * @param element dashboard element definition
+    * @param viewPart owning view part
+    */
    protected EventMonitorElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
    {
       super(parent, element, viewPart);
@@ -89,6 +96,9 @@ public class EventMonitorElement extends ElementWidget
       });
    }
 
+   /**
+    * @see org.eclipse.swt.widgets.Widget#dispose()
+    */
    @Override
    public void dispose()
    {
@@ -111,5 +121,4 @@ public class EventMonitorElement extends ElementWidget
       job.start();
       super.dispose();
    }
-
 }

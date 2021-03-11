@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,12 +53,13 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 	private Action actionShowColor;
 	private Action actionShowIcons;
 	private SyslogLabelProvider labelProvider;
+   private SyslogMonitorFilter filter;
 
 	public SyslogTraceWidget(Composite parent, int style, IViewPart viewPart)
 	{
 		super(parent, style, viewPart);
 
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 		session.addListener(this);
 		addDisposeListener(new DisposeListener() {
 			@Override
@@ -69,19 +70,19 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 		});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#setupViewer(org.eclipse.jface.viewers.TableViewer)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#setupViewer(org.eclipse.jface.viewers.TableViewer)
+    */
 	@Override
 	protected void setupViewer(TableViewer viewer)
 	{
 		labelProvider = new SyslogLabelProvider();
 		viewer.setLabelProvider(labelProvider);
-		
+
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		labelProvider.setShowColor(ps.getBoolean("SyslogMonitor.showColor")); //$NON-NLS-1$
 		labelProvider.setShowIcons(ps.getBoolean("SyslogMonitor.showIcons")); //$NON-NLS-1$
-		
+
 		addColumn(Messages.get().SyslogMonitor_ColTimestamp, 150);
 		addColumn(Messages.get().SyslogMonitor_ColSource, 200);
 		addColumn(Messages.get().SyslogMonitor_ColSeverity, 90);
@@ -89,31 +90,32 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 		addColumn(Messages.get().SyslogMonitor_ColHostName, 130);
 		addColumn(Messages.get().SyslogMonitor_ColTag, 90);
 		addColumn(Messages.get().SyslogMonitor_ColMessage, 600);
-		
-		setFilter(new SyslogMonitorFilter());
+
+      filter = new SyslogMonitorFilter();
+      setFilter(filter);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#getDialogSettings()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#getDialogSettings()
+    */
 	@Override
 	protected IDialogSettings getDialogSettings()
 	{
 		return Activator.getDefault().getDialogSettings();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#getConfigPrefix()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#getConfigPrefix()
+    */
 	@Override
 	protected String getConfigPrefix()
 	{
 		return "SyslogMonitor"; //$NON-NLS-1$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#saveConfig()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#saveConfig()
+    */
 	@Override
 	protected void saveConfig()
 	{
@@ -124,14 +126,14 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 		ps.setValue("SyslogMonitor.showIcons", labelProvider.isShowIcons()); //$NON-NLS-1$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#createActions()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#createActions()
+    */
 	@Override
 	protected void createActions()
 	{
 		super.createActions();
-		
+
 		actionShowColor = new Action(Messages.get().SyslogMonitor_ShowStatusColors, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -141,7 +143,7 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 			}
 		};
 		actionShowColor.setChecked(labelProvider.isShowColor());
-		
+
 		actionShowIcons = new Action(Messages.get().SyslogMonitor_ShowStatusIcons, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -153,9 +155,9 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 		actionShowIcons.setChecked(labelProvider.isShowIcons());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
-	 */
+   /**
+    * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
+    */
 	@Override
 	public void notificationHandler(final SessionNotification n)
 	{
@@ -186,16 +188,15 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 	{
 		return actionShowIcons;
 	}
-	
+
 	/**
-    *  sets root ID
-    * @param objectId
+    * Sets root object ID
+    *
+    * @param objectId root object ID
     */
    public void setRootObject(long objectId)
    {
-      enableFilter(false);
-      if (objectId == 0)
-         return;
-      setFilter(session.findObjectById(objectId).getObjectName().toLowerCase());
+      filter.setRootObject(objectId);
+      refresh();
    }
 }
