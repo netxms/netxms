@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,30 +30,31 @@ import org.netxms.ui.eclipse.views.helpers.AbstractTraceViewFilter;
  */
 public class EventMonitorFilter extends AbstractTraceViewFilter
 {
-	private NXCSession session;
-	
+   private NXCSession session = ConsoleSharedData.getSession();
+   private long rootObjectId = 0;
+
 	/**
-	 * The constructor
-	 */
-	public EventMonitorFilter()
-	{
-		super();
-		session = (NXCSession)ConsoleSharedData.getSession();
-	}
-	
-	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
+      Event event = (Event)element;
+
+      if ((rootObjectId != 0) && (rootObjectId != event.getSourceId()))
+      {
+         AbstractObject object = session.findObjectById(event.getSourceId());
+         if ((object == null) || !object.isChildOf(rootObjectId))
+            return false;
+      }
+
 		if ((filterString == null) || (filterString.isEmpty()))
 			return true;
-		
-		if (((Event)element).getMessage().toLowerCase().contains(filterString))
+
+      if (event.getMessage().toLowerCase().contains(filterString))
 			return true;
 		
-		AbstractObject object = session.findObjectById(((Event)element).getSourceId());
+      AbstractObject object = session.findObjectById(event.getSourceId());
 		if (object != null)
 		{
 			return object.getObjectName().toLowerCase().contains(filterString);
@@ -61,4 +62,14 @@ public class EventMonitorFilter extends AbstractTraceViewFilter
 		
 		return false;
 	}
+
+   /**
+    * Set root object ID (0 to disable filtering)
+    *
+    * @param rootObjectId new root object ID
+    */
+   public void setRootObject(long rootObjectId)
+   {
+      this.rootObjectId = rootObjectId;
+   }
 }

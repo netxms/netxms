@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2016-2021 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,12 +32,22 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.widgets.SnmpTrapTraceWidget;
 
+/**
+ * SNMP trap monitor dashboard element
+ */
 public class SnmpTrapMonitorElement extends ElementWidget
 {
    private SnmpTrapTraceWidget viewer;
    private SnmpTrapMonitorConfig config;
-   private final NXCSession session;
+   private NXCSession session;
 
+   /**
+    * Create SNMP trap monitor element.
+    *
+    * @param parent parent widget
+    * @param element dashboard element definition
+    * @param viewPart owning view part
+    */
    protected SnmpTrapMonitorElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
    {
       super(parent, element, viewPart);
@@ -48,7 +58,7 @@ public class SnmpTrapMonitorElement extends ElementWidget
       }
       catch(Exception e)
       {
-         e.printStackTrace();
+         Activator.logError("Cannot parse dashboard element configuration", e);
          config = new SnmpTrapMonitorConfig();
       }
 
@@ -90,6 +100,9 @@ public class SnmpTrapMonitorElement extends ElementWidget
 
    }
 
+   /**
+    * @see org.eclipse.swt.widgets.Widget#dispose()
+    */
    @Override
    public void dispose()
    {

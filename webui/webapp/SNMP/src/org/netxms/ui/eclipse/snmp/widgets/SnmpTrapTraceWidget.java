@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,8 +45,9 @@ public class SnmpTrapTraceWidget extends AbstractTraceWidget implements SessionL
 	public static final int COLUMN_OID = 3;
 	public static final int COLUMN_VARBINDS = 4;
 	
-	private NXCSession session;
-	
+   private NXCSession session = ConsoleSharedData.getSession();
+   private SnmpTrapMonitorFilter filter;
+
 	/**
 	 * @param parent
 	 * @param style
@@ -55,7 +56,7 @@ public class SnmpTrapTraceWidget extends AbstractTraceWidget implements SessionL
 	public SnmpTrapTraceWidget(Composite parent, int style, IViewPart viewPart)
 	{
 		super(parent, style, viewPart);
-		session = (NXCSession)ConsoleSharedData.getSession();
+
 		session.addListener(this);
 		addDisposeListener(new DisposeListener() {
 			@Override
@@ -66,9 +67,9 @@ public class SnmpTrapTraceWidget extends AbstractTraceWidget implements SessionL
 		});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#setupViewer(org.eclipse.jface.viewers.TableViewer)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#setupViewer(org.eclipse.jface.viewers.TableViewer)
+    */
 	@Override
 	protected void setupViewer(TableViewer viewer)
 	{
@@ -79,30 +80,32 @@ public class SnmpTrapTraceWidget extends AbstractTraceWidget implements SessionL
 		addColumn(Messages.get().SnmpTrapMonitor_ColVarbinds, 600);
 		
 		viewer.setLabelProvider(new SnmpTrapMonitorLabelProvider());
-		setFilter(new SnmpTrapMonitorFilter());
+
+      filter = new SnmpTrapMonitorFilter();
+      setFilter(filter);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#getDialogSettings()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#getDialogSettings()
+    */
 	@Override
 	protected IDialogSettings getDialogSettings()
 	{
 		return Activator.getDefault().getDialogSettings();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#getConfigPrefix()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#getConfigPrefix()
+    */
 	@Override
 	protected String getConfigPrefix()
 	{
 		return "SnmpTrapMonitor"; //$NON-NLS-1$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
-	 */
+   /**
+    * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
+    */
 	@Override
 	public void notificationHandler(final SessionNotification n)
 	{
@@ -117,16 +120,15 @@ public class SnmpTrapTraceWidget extends AbstractTraceWidget implements SessionL
 			});
 		}
 	}
-	
+
 	/**
-    *  sets root ID
-    * @param objectId
+    * Set root object ID.
+    *
+    * @param objectId new root object ID or 0
     */
    public void setRootObject(long objectId)
    {
-      enableFilter(false);
-      if (objectId == 0)
-         return;
-      setFilter(session.findObjectById(objectId).getObjectName().toLowerCase());
+      filter.setRootObject(objectId);
+      refresh();
    }
 }

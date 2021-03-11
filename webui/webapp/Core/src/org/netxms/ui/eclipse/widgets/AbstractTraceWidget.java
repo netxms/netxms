@@ -266,7 +266,7 @@ public abstract class AbstractTraceWidget extends Composite
 		   }
 		}
 	}
-	
+
 	/**
 	 * Clear viewer
 	 */
@@ -275,7 +275,7 @@ public abstract class AbstractTraceWidget extends Composite
 		data.clear();
 		viewer.setInput(new Object[0]);
 	}
-	
+
 	/**
 	 * Refresh viewer
 	 */

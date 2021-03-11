@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,11 +46,12 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	public static final int COLUMN_SEVERITY = 2;
 	public static final int COLUMN_EVENT = 3;
 	public static final int COLUMN_MESSAGE = 4;
-	
+
 	private NXCSession session;
 	private Action actionShowColor; 
 	private Action actionShowIcons;
 	private EventLabelProvider labelProvider;
+   private EventMonitorFilter filter;
 
 	/**
 	 * @param parent
@@ -61,7 +62,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	{
 		super(parent, style, viewPart);
 
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 		session.addListener(this);
 		addDisposeListener(new DisposeListener() {
 			@Override
@@ -91,7 +92,8 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 		addColumn(Messages.get().EventMonitor_ColEvent, 200);
 		addColumn(Messages.get().EventMonitor_ColMessage, 600);
 		
-		setFilter(new EventMonitorFilter());
+      filter = new EventMonitorFilter();
+      setFilter(filter);
 	}
 
    /**
@@ -188,7 +190,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	{
 		return actionShowIcons;
 	}
-	
+
 	/**
     * Set root object ID
     *
@@ -196,9 +198,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
     */
    public void setRootObject(long objectId)
    {
-      enableFilter(false);
-      if (objectId == 0)
-         return;
-      setFilter(session.findObjectById(objectId).getObjectName().toLowerCase());
+      filter.setRootObject(objectId);
+      refresh();
    }
 }

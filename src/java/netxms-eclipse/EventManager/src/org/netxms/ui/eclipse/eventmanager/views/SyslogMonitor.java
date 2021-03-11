@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ public class SyslogMonitor extends AbstractTraceView
 {
 	public static final String ID = "org.netxms.ui.eclipse.eventmanager.views.SyslogMonitor"; //$NON-NLS-1$
 	
-	/* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -50,7 +50,7 @@ public class SyslogMonitor extends AbstractTraceView
       settings = Activator.getDefault().getDialogSettings();
       initShowFilter = safeCast(settings.get("SyslogMonitor.showFilter"), settings.getBoolean("SyslogMonitor.showFilter"), initShowFilter);
    }
-   
+
    /**
     * @param b
     * @param defval
@@ -60,19 +60,19 @@ public class SyslogMonitor extends AbstractTraceView
    {
       return (s != null) ? b : defval;
    }
-   
-   /* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#createTraceWidget(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.netxms.ui.eclipse.views.AbstractTraceView#createTraceWidget(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected AbstractTraceWidget createTraceWidget(Composite parent)
 	{
 		return new SyslogTraceWidget(parent, SWT.NONE, this);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#fillLocalPullDown(org.eclipse.jface.action.IMenuManager)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.views.AbstractTraceView#fillLocalPullDown(org.eclipse.jface.action.IMenuManager)
+    */
 	@Override
 	protected void fillLocalPullDown(IMenuManager manager)
 	{
@@ -82,9 +82,9 @@ public class SyslogMonitor extends AbstractTraceView
 		manager.add(((SyslogTraceWidget)getTraceWidget()).getActionShowIcons());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{
