@@ -179,7 +179,6 @@ public:
    uint32_t uninstallPolicy(uuid guid, const TCHAR *type, bool newTypeFormatSupported);
 
    void setTunnel(const shared_ptr<AgentTunnel>& tunnel) { m_tunnel = tunnel; }
-   shared_ptr<AgentTunnel> getTunnel() { return m_tunnel; }
 
    using AgentConnection::setProxy;
    void setProxy(const shared_ptr<AgentTunnel>& tunnel, const TCHAR *secret);
