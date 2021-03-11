@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,36 +30,37 @@ import org.netxms.ui.eclipse.views.helpers.AbstractTraceViewFilter;
  */
 public class SnmpTrapMonitorFilter extends AbstractTraceViewFilter
 {
-	private NXCSession session;
+   private NXCSession session = ConsoleSharedData.getSession();
+   private long rootObjectId = 0;
 	
 	/**
-	 * The constructor
-	 */
-	public SnmpTrapMonitorFilter()
-	{
-		super();
-		session = (NXCSession)ConsoleSharedData.getSession();
-	}
-	
-	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
+      SnmpTrapLogRecord record = (SnmpTrapLogRecord)element;
+
+      if ((rootObjectId != 0) && (rootObjectId != record.getSourceNode()))
+      {
+         AbstractObject object = session.findObjectById(record.getSourceNode());
+         if ((object == null) || !object.isChildOf(rootObjectId))
+            return false;
+      }
+
 		if ((filterString == null) || (filterString.isEmpty()))
 			return true;
 		
-		if (((SnmpTrapLogRecord)element).getTrapObjectId().contains(filterString))
+      if (record.getTrapObjectId().contains(filterString))
 			return true;
 		
-		if (((SnmpTrapLogRecord)element).getVarbinds().toLowerCase().contains(filterString))
+      if (record.getVarbinds().toLowerCase().contains(filterString))
 			return true;
 		
-		if (((SnmpTrapLogRecord)element).getSourceAddress().getHostAddress().contains(filterString))
+      if (record.getSourceAddress().getHostAddress().contains(filterString))
 			return true;
 		
-		AbstractObject object = session.findObjectById(((SnmpTrapLogRecord)element).getSourceNode());
+      AbstractObject object = session.findObjectById(record.getSourceNode());
 		if (object != null)
 		{
 			return object.getObjectName().toLowerCase().contains(filterString);
@@ -67,4 +68,14 @@ public class SnmpTrapMonitorFilter extends AbstractTraceViewFilter
 		
 		return false;
 	}
+
+   /**
+    * Set root object ID (0 to disable filtering)
+    *
+    * @param rootObjectId new root object ID
+    */
+   public void setRootObject(long rootObjectId)
+   {
+      this.rootObjectId = rootObjectId;
+   }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,41 +30,52 @@ import org.netxms.ui.eclipse.views.helpers.AbstractTraceViewFilter;
  */
 public class SyslogMonitorFilter extends AbstractTraceViewFilter
 {
-	private NXCSession session;
+   private NXCSession session = ConsoleSharedData.getSession();
+   private long rootObjectId = 0;
 	
 	/**
-	 * The constructor
-	 */
-	public SyslogMonitorFilter()
-	{
-		super();
-		session = (NXCSession)ConsoleSharedData.getSession();
-	}
-	
-	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-		if ((filterString == null) || (filterString.isEmpty()))
+      SyslogRecord record = (SyslogRecord)element;
+
+      if ((rootObjectId != 0) && (rootObjectId != record.getSourceObjectId()))
+      {
+         AbstractObject object = session.findObjectById(record.getSourceObjectId());
+         if ((object == null) || !object.isChildOf(rootObjectId))
+            return false;
+      }
+
+		if ((filterString == null) || filterString.isEmpty())
 			return true;
 		
-		if (((SyslogRecord)element).getMessage().toLowerCase().contains(filterString))
+      if (record.getMessage().toLowerCase().contains(filterString))
 			return true;
 		
-		if (((SyslogRecord)element).getHostname().toLowerCase().contains(filterString))
+      if (record.getHostname().toLowerCase().contains(filterString))
 			return true;
 		
-		if (((SyslogRecord)element).getTag().toLowerCase().contains(filterString))
+      if (record.getTag().toLowerCase().contains(filterString))
 			return true;
 		
-		AbstractObject object = session.findObjectById(((SyslogRecord)element).getSourceObjectId());
+      AbstractObject object = session.findObjectById(record.getSourceObjectId());
 		if (object != null)
 		{
 			return object.getObjectName().toLowerCase().contains(filterString);
 		}
-		
+
 		return false;
 	}
+
+   /**
+    * Set root object ID (0 to disable filtering)
+    *
+    * @param rootObjectId new root object ID
+    */
+   public void setRootObject(long rootObjectId)
+   {
+      this.rootObjectId = rootObjectId;
+   }
 }
