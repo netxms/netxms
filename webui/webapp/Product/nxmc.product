@@ -322,11 +322,11 @@
       <plugin id="org.eclipse.rap.ui.workbench.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.rap.ui.workbench.nl_ru" fragment="true"/>
       <plugin id="org.mozilla.javascript"/>
-      <plugin id="org.netxms.gef4.zest.core"/>
-      <plugin id="org.netxms.gef4.zest.jface"/>
-      <plugin id="org.netxms.gef4.zest.layouts"/>
       <plugin id="org.netxms.rap.draw2d"/>
       <plugin id="org.netxms.rap.draw2d.compatibility"/>
+      <plugin id="org.netxms.rap.gef4.zest.core"/>
+      <plugin id="org.netxms.rap.gef4.zest.jface"/>
+      <plugin id="org.netxms.rap.gef4.zest.layouts"/>
       <plugin id="org.netxms.ui.base"/>
       <plugin id="org.netxms.ui.eclipse.actionmanager"/>
       <plugin id="org.netxms.ui.eclipse.agentmanager"/>
