@@ -5,13 +5,13 @@ Bundle-SymbolicName: org.netxms.ui.eclipse.osm;singleton:=true
 Bundle-Version: 4.0.0
 Bundle-Activator: org.netxms.ui.eclipse.osm.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.eclipse.rap.ui;bundle-version="2.3.2",
+Require-Bundle: org.eclipse.rap.ui;bundle-version="3.14.0",
  org.netxms.ui.base;bundle-version="4.0.0",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="4.0.0",
  org.netxms.webui.core;bundle-version="4.0.0",
  org.netxms.ui.eclipse.objectbrowser;bundle-version="4.0.0",
- org.netxms.rap.draw2d.compatibility;bundle-version="1.5.2",
- org.eclipse.rap.filedialog;bundle-version="3.12.0"
+ org.netxms.rap.draw2d.compatibility;bundle-version="1.5.3",
+ org.eclipse.rap.filedialog;bundle-version="3.14.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.osm.actions,
