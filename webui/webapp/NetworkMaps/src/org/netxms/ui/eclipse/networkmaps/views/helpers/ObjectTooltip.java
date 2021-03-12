@@ -42,6 +42,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.RadioInterface;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
@@ -202,7 +203,7 @@ public class ObjectTooltip extends Figure
          return;
 
       refreshTimestamp = now;
-	   if (labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL)
+	   if (labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL || !(object instanceof DataCollectionTarget))
 	      return;
 	   
       final NXCSession session = ConsoleSharedData.getSession();
