@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,11 +59,11 @@ public class BrowserView extends ViewPart
    @Override
    public void init(IViewSite site, IMemento memento) throws PartInitException
    {
-      initialUrl = memento.getString("URL");
+      initialUrl = (memento != null) ? memento.getString("URL") : null;
       if ((initialUrl != null) && initialUrl.isEmpty())
          initialUrl = null;
 
-      title = memento.getString("Title");
+      title = (memento != null) ? memento.getString("Title") : null;
       if ((title != null) && title.isEmpty())
          title = null;
 
