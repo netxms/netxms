@@ -1374,7 +1374,7 @@ NXSL_METHOD_DEFINITION(Node, readWebServiceList)
 NXSL_METHOD_DEFINITION(Node, setIfXTableUsageMode)
 {
    if (!argv[0]->isInteger())
-      return NXSL_ERR_NOT_STRING;
+      return NXSL_ERR_NOT_INTEGER;
 
    int mode = argv[0]->getValueAsInt32();
    if ((mode != IFXTABLE_DISABLED) && (mode != IFXTABLE_ENABLED))
@@ -1999,8 +1999,8 @@ NXSL_METHOD_DEFINITION(Interface, enableSNMPStatusPolling)
  */
 NXSL_METHOD_DEFINITION(Interface, setExcludeFromTopology)
 {
-   if (!argv[0]->isInteger())
-      return NXSL_ERR_NOT_INTEGER;
+   if (!argv[0]->isBoolean())
+      return NXSL_ERR_NOT_BOOLEAN;
 
    Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
    iface->setExcludeFromTopology(argv[0]->getValueAsBoolean());
@@ -2043,8 +2043,8 @@ NXSL_METHOD_DEFINITION(Interface, setExpectedState)
  */
 NXSL_METHOD_DEFINITION(Interface, setIncludeInIcmpPoll)
 {
-   if (!argv[0]->isInteger())
-      return NXSL_ERR_NOT_INTEGER;
+   if (!argv[0]->isBoolean())
+      return NXSL_ERR_NOT_BOOLEAN;
 
    Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
    iface->setIncludeInIcmpPoll(argv[0]->getValueAsBoolean());
@@ -2652,8 +2652,8 @@ NXSL_Value *NXSL_ClusterClass::getAttr(NXSL_Object *object, const char *attr)
  */
 NXSL_METHOD_DEFINITION(Container, setAutoBindMode)
 {
-   if (!argv[0]->isInteger() || !argv[1]->isInteger())
-      return NXSL_ERR_NOT_INTEGER;
+   if (!argv[0]->isBoolean() || !argv[1]->isBoolean())
+      return NXSL_ERR_NOT_BOOLEAN;
 
    static_cast<shared_ptr<Container>*>(object->getData())->get()->setAutoBindMode(argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
    *result = vm->createValue();
@@ -2759,8 +2759,8 @@ NXSL_METHOD_DEFINITION(Template, removeFrom)
  */
 NXSL_METHOD_DEFINITION(Template, setAutoApplyMode)
 {
-   if (!argv[0]->isInteger() || !argv[1]->isInteger())
-      return NXSL_ERR_NOT_INTEGER;
+   if (!argv[0]->isBoolean() || !argv[1]->isBoolean())
+      return NXSL_ERR_NOT_BOOLEAN;
 
    static_cast<shared_ptr<Template>*>(object->getData())->get()->setAutoBindMode(argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
    *result = vm->createValue();
@@ -2951,7 +2951,7 @@ NXSL_METHOD_DEFINITION(Event, setMessage)
 NXSL_METHOD_DEFINITION(Event, setSeverity)
 {
    if (!argv[0]->isInteger())
-      return NXSL_ERR_NOT_STRING;
+      return NXSL_ERR_NOT_INTEGER;
 
    int s = argv[0]->getValueAsInt32();
    if ((s >= SEVERITY_NORMAL) && (s <= SEVERITY_CRITICAL))
@@ -3371,19 +3371,15 @@ NXSL_METHOD_DEFINITION(Alarm, addComment)
    bool syncWithHelpdesk = true;
    if (argc > 1)
    {
-      if(!argv[1]->isInteger())
+      if (!argv[1]->isInteger())
          return NXSL_ERR_NOT_INTEGER;
-      else
-         syncWithHelpdesk = argv[1]->getValueAsBoolean();
+      syncWithHelpdesk = argv[1]->getValueAsBoolean();
    }
 
    Alarm *alarm = static_cast<Alarm*>(object->getData());
-   UINT32 id = 0;
-   UINT32 rcc = UpdateAlarmComment(alarm->getAlarmId(), &id, argv[0]->getValueAsCString(), 0, syncWithHelpdesk);
-   if(rcc != RCC_SUCCESS)
-      return NXSL_ERR_INTERNAL;
-
-   *result = vm->createValue(id);
+   uint32_t id = 0;
+   uint32_t rcc = UpdateAlarmComment(alarm->getAlarmId(), &id, argv[0]->getValueAsCString(), 0, syncWithHelpdesk);
+   *result = (rcc == RCC_SUCCESS) ? vm->createValue(id) : vm->createValue();
    return 0;
 }
 
