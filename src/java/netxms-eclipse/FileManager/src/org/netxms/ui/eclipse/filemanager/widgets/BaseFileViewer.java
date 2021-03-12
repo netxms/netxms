@@ -68,7 +68,7 @@ public class BaseFileViewer extends Composite
    public static final int WARNING = 1;
    public static final int ERROR = 2;
 
-   public static final long MAX_FILE_SIZE = 8192000;
+   public static final long MAX_FILE_SIZE = 67108864; // 64MB
    
    protected IViewPart viewPart;
    protected StyledText text;

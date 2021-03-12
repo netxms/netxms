@@ -514,7 +514,7 @@ public class AgentFileManager extends ViewPart
          @Override
          public void run()
          {
-            tailFile(true, 1024);
+            tailFile(true, 8192);
          }
       };
       
