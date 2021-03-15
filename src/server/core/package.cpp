@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -121,19 +121,15 @@ uint32_t UninstallPackage(uint32_t packageId)
 /**
  * Package deployment worker thread
  */
-static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
+static void DeploymentThread(PackageDeploymentTask *task)
 {
-   PackageDeploymentTask *task = static_cast<PackageDeploymentTask*>(arg);
-
    // Read configuration
    uint32_t dwMaxWait = ConfigReadULong(_T("AgentUpgradeWaitTime"), 600);
    if (dwMaxWait % 20 != 0)
       dwMaxWait += 20 - (dwMaxWait % 20);
 
-   // Prepare notification message
-   NXCPMessage msg;
-   msg.setCode(CMD_INSTALLER_INFO);
-   msg.setId(task->requestId);
+   // Notification message
+   NXCPMessage msg(CMD_INSTALLER_INFO, task->requestId);
 
    while(true)
    {
@@ -152,7 +148,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
       if (!(node->getCapabilities() & NC_IS_LOCAL_MGMT))
       {
          // Change deployment status to "Initializing"
-         msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INITIALIZE);
+         msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_INITIALIZE));
          task->session->sendMessage(&msg);
 
          // Create agent connection
@@ -184,7 +180,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
             if (targetCheckOK)
             {
                // Change deployment status to "File Transfer"
-               msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_TRANSFER);
+               msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_TRANSFER));
                task->session->sendMessage(&msg);
 
                // Upload package file to agent
@@ -202,7 +198,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
                      agentConn.reset();
 
                      // Change deployment status to "Package installation"
-                     msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INSTALLATION);
+                     msg.setField(VID_DEPLOYMENT_STATUS, static_cast<uint16_t>(DEPLOYMENT_STATUS_INSTALLATION));
                      task->session->sendMessage(&msg);
 
                      // Wait for agent's restart
@@ -280,8 +276,10 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *arg)
          success ? static_cast<uint16_t>(DEPLOYMENT_STATUS_COMPLETED) : static_cast<uint16_t>(DEPLOYMENT_STATUS_FAILED));
       msg.setField(VID_ERROR_MESSAGE, errorMessage);
       task->session->sendMessage(&msg);
+
+      if (success)
+         node->forceConfigurationPoll();
    }
-   return THREAD_OK;
 }
 
 /**
@@ -311,7 +309,7 @@ void DeploymentManager(PackageDeploymentTask *task)
    // Start worker threads
    THREAD *threadList = MemAllocArray<THREAD>(numThreads);
    for(int i = 0; i < numThreads; i++)
-      threadList[i] = ThreadCreateEx(DeploymentThread, 0, task);
+      threadList[i] = ThreadCreateEx(DeploymentThread, task);
 
    // Wait for all worker threads termination
    for(int i = 0; i < numThreads; i++)
