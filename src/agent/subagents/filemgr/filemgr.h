@@ -133,7 +133,7 @@ public:
    RootFolder(const TCHAR *folder);
    ~RootFolder()
    {
-      free(m_folder);
+      MemFree(m_folder);
    }
 
    const TCHAR *getFolder() { return m_folder; }
