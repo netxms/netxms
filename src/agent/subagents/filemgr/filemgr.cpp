@@ -89,17 +89,18 @@ static void ConvertPathToNetwork(TCHAR *path)
  */
 RootFolder::RootFolder(const TCHAR *folder)
 {
-   m_folder = _tcsdup(folder);
+   m_folder = MemCopyString(folder);
    m_readOnly = false;
 
    TCHAR *ptr = _tcschr(m_folder, _T(';'));
-   if (ptr == NULL)
-      return;
-   ConvertPathToHost(m_folder, false, false);
+   if (ptr != nullptr)
+   {
+      *ptr = 0;
+      if (_tcscmp(ptr + 1, _T("ro")) == 0)
+         m_readOnly = true;
+   }
 
-   *ptr = 0;
-   if (_tcscmp(ptr+1, _T("ro")) == 0)
-      m_readOnly = true;
+   ConvertPathToHost(m_folder, false, false);
 }
 
 /**
@@ -110,13 +111,40 @@ static bool SubagentInit(Config *config)
    s_rootDirectories = new ObjectArray<RootFolder>(16, 16, Ownership::True);
    s_downloadFileStopMarkers = new HashMap<uint32_t, VolatileCounter>(Ownership::True);
    ConfigEntry *root = config->getEntry(_T("/filemgr/RootFolder"));
-   if (root != NULL)
+   if (root != nullptr)
    {
       for(int i = 0; i < root->getValueCount(); i++)
       {
-         RootFolder *folder = new RootFolder(root->getValue(i));
-         s_rootDirectories->add(folder);
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Added file manager root directory \"%s\""), folder->getFolder());
+         auto folder = new RootFolder(root->getValue(i));
+
+         bool alreadyRegistered = false;
+         for(int j = 0; j < s_rootDirectories->size(); j++)
+         {
+            RootFolder *curr = s_rootDirectories->get(j);
+#ifdef _WIN32
+            if (!_tcsicmp(curr->getFolder(), folder->getFolder()))
+#else
+            if (!_tcscmp(curr->getFolder(), folder->getFolder()))
+#endif
+            {
+               if (curr->isReadOnly() && !folder->isReadOnly())
+                  s_rootDirectories->remove(j); // Replace read-only element with read-write
+               else
+                  alreadyRegistered = true;
+               break;
+            }
+         }
+
+         if (!alreadyRegistered)
+         {
+            s_rootDirectories->add(folder);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Added file manager root directory \"%s\" (%s)"), folder->getFolder(), folder->isReadOnly() ? _T("R/O") : _T("R/W"));
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("File manager root directory \"%s\" already registered"), folder->getFolder());
+            delete folder;
+         }
       }
    }
    nxlog_debug_tag(DEBUG_TAG, 2, _T("File manager subagent initialized"));
@@ -325,7 +353,7 @@ TCHAR *GetFileOwnerWin(const TCHAR *file)
 
 #endif // _WIN32
 
-static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileName, NXCPMessage *msg, UINT32 varId)
+static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileName, NXCPMessage *msg, uint32_t varId)
 {
    if (_taccess(filePath, 4) != 0)
       return false;
@@ -334,9 +362,9 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
    if (CALL_STAT(filePath, &st) == 0)
    {
       msg->setField(varId++, fileName);
-      msg->setField(varId++, (QWORD)st.st_size);
-      msg->setField(varId++, (QWORD)st.st_mtime);
-      UINT32 type = 0;
+      msg->setField(varId++, static_cast<uint64_t>(st.st_size));
+      msg->setField(varId++, static_cast<uint64_t>(st.st_mtime));
+      uint32_t type = 0;
       TCHAR accessRights[11];
 #ifndef _WIN32
       if(S_ISLNK(st.st_mode))
@@ -350,17 +378,21 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
          }
       }
 
-      if(S_ISCHR(st.st_mode)) accessRights[0] = _T('c');
-      if(S_ISBLK(st.st_mode)) accessRights[0] = _T('b');
-      if(S_ISFIFO(st.st_mode)) accessRights[0] = _T('p');
-      if(S_ISSOCK(st.st_mode)) accessRights[0] = _T('s');
+      if (S_ISCHR(st.st_mode))
+         accessRights[0] = _T('c');
+      if (S_ISBLK(st.st_mode))
+         accessRights[0] = _T('b');
+      if (S_ISFIFO(st.st_mode))
+         accessRights[0] = _T('p');
+      if (S_ISSOCK(st.st_mode))
+         accessRights[0] = _T('s');
 #endif
-      if(S_ISREG(st.st_mode))
+      if (S_ISREG(st.st_mode))
       {
          type |= REGULAR_FILE;
          accessRights[0] = _T('-');
       }
-      if(S_ISDIR(st.st_mode))
+      if (S_ISDIR(st.st_mode))
       {
          type |= DIRECTORY;
          accessRights[0] = _T('d');
@@ -387,24 +419,24 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
       struct group *gr = getgrgid(st.st_gid);
 #endif
 
-      if (pw != NULL)
+      if (pw != nullptr)
       {
          msg->setFieldFromMBString(varId++, pw->pw_name);
       }
       else
       {
-	 TCHAR id[32];
-	 _sntprintf(id, 32, _T("[%lu]"), (unsigned long)st.st_uid);
+         TCHAR id[32];
+         _sntprintf(id, 32, _T("[%lu]"), (unsigned long)st.st_uid);
          msg->setField(varId++, id);
       }
-      if (gr != NULL)
+      if (gr != nullptr)
       {
          msg->setFieldFromMBString(varId++, gr->gr_name);
       }
       else
       {
-	 TCHAR id[32];
-	 _sntprintf(id, 32, _T("[%lu]"), (unsigned long)st.st_gid);
+         TCHAR id[32];
+         _sntprintf(id, 32, _T("[%lu]"), (unsigned long)st.st_gid);
          msg->setField(varId++, id);
       }
 
@@ -456,8 +488,8 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
       msg = response;
    }
 
-   UINT32 count = 0;
-   UINT32 fieldId = VID_INSTANCE_LIST_BASE;
+   uint32_t count = 0;
+   uint32_t fieldId = VID_INSTANCE_LIST_BASE;
 
    if (!_tcscmp(folder, FS_PATH_SEPARATOR) && rootFolder)
    {
@@ -538,42 +570,35 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
 /**
  * Delete file/folder
  */
-static BOOL Delete(const TCHAR *name)
+static bool Delete(const TCHAR *name)
 {
    NX_STAT_STRUCT st;
-
    if (CALL_STAT(name, &st) != 0)
-   {
-      return FALSE;
-   }
+      return false;
 
+   if (!S_ISDIR(st.st_mode))
+      return _tremove(name) == 0;
+
+   // get element list and for each element run Delete
    bool result = true;
-
-   if (S_ISDIR(st.st_mode))
+   _TDIR *dir = _topendir(name);
+   if (dir != nullptr)
    {
-      // get element list and for each element run Delete
-      _TDIR *dir = _topendir(name);
-      if (dir != NULL)
+      struct _tdirent *d;
+      while((d = _treaddir(dir)) != nullptr)
       {
-         struct _tdirent *d;
-         while((d = _treaddir(dir)) != NULL)
-         {
-            if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
-            {
-               continue;
-            }
-            TCHAR newName[MAX_PATH];
-            _tcscpy(newName, name);
-            _tcscat(newName, FS_PATH_SEPARATOR);
-            _tcscat(newName, d->d_name);
-            result = result && Delete(newName);
-         }
-         _tclosedir(dir);
+         if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+            continue;
+
+         TCHAR newName[MAX_PATH];
+         _tcscpy(newName, name);
+         _tcslcat(newName, FS_PATH_SEPARATOR, MAX_PATH);
+         _tcslcat(newName, d->d_name, MAX_PATH);
+         result = result && Delete(newName);
       }
-      //remove directory
-      return _trmdir(name) == 0;
+      _tclosedir(dir);
    }
-   return _tremove(name) == 0;
+   return _trmdir(name) == 0;
 }
 
 /**
