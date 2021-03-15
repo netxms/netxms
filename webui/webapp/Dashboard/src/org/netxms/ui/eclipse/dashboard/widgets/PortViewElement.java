@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
@@ -55,7 +56,9 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
+import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PortViewConfig;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -157,17 +160,7 @@ public class PortViewElement extends ElementWidget
 		contentLayout.verticalSpacing = WidgetHelper.OUTER_SPACING * 3;
 		content.setLayout(contentLayout);
 
-		buildView();
-		
-      scroller.setContent(content);
-      scroller.setExpandVertical(true);
-      scroller.setExpandHorizontal(true);
-      scroller.addControlListener(new ControlAdapter() {
-         public void controlResized(ControlEvent e)
-         {
-            scroller.setMinSize(content.computeSize(SWT.DEFAULT, SWT.DEFAULT));
-         }
-      });
+		syncChildren();
       
       final SessionListener sessionListener = new SessionListener() {
          @Override
@@ -205,6 +198,82 @@ public class PortViewElement extends ElementWidget
          }
       });
 	}
+	
+	/**
+	 * Sync required children
+	 */
+	private void syncChildren() 
+	{
+      AbstractObject root = session.findObjectById(config.getRootObjectId());
+      List<AbstractObject> parentsForChildSync = new ArrayList<AbstractObject>();
+      if (root instanceof Node)
+      {
+         if (((Node)root).isBridge())
+         {
+            parentsForChildSync.add(root);
+         }         
+      }
+      else
+      {
+         List<AbstractObject> nodes = new ArrayList<AbstractObject>(root.getAllChildren(AbstractObject.OBJECT_NODE));
+         Collections.sort(nodes, new Comparator<AbstractObject>() {
+            @Override
+            public int compare(AbstractObject o1, AbstractObject o2)
+            {
+               return o1.getObjectName().compareToIgnoreCase(o2.getObjectName());
+            }
+         });
+         for(AbstractObject o : nodes)
+         {
+            if (((Node)o).isBridge())
+            {
+               parentsForChildSync.add(o);
+            }
+         }
+      }
+
+      
+      final NXCSession session = ConsoleSharedData.getSession();
+      ConsoleJob job = new ConsoleJob("Sync objects", viewPart, Activator.PLUGIN_ID, null) {
+         
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            for (AbstractObject o : parentsForChildSync)
+            {
+               session.syncChildren(o);
+            }
+           
+            runInUIThread(new Runnable() {
+               
+               @Override
+               public void run()
+               {
+                  buildView();
+                  
+                  scroller.setContent(content);
+                  scroller.setExpandVertical(true);
+                  scroller.setExpandHorizontal(true);
+                  scroller.addControlListener(new ControlAdapter() {
+                     public void controlResized(ControlEvent e)
+                     {
+                        scroller.setMinSize(content.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+                     }
+                  });
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Failed to sync objects";
+         }
+      };
+      job.setUser(false);
+      job.start();
+	}
+   
 	
 	/**
 	 * Build view
