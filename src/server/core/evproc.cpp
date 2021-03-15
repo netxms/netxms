@@ -327,15 +327,17 @@ struct EventProcessingThread
 {
    ObjectQueue<Event> queue;
    THREAD thread;
-   int64_t averageWaitTime;
    uint64_t processedEvents;
+   int64_t averageWaitTime;
+   uint64_t maxWaitTime;
    uint32_t bindings;
 
    EventProcessingThread() : queue(4096, Ownership::True)
    {
       thread = INVALID_THREAD_HANDLE;
-      averageWaitTime = 0;
       processedEvents = 0;
+      averageWaitTime = 0;
+      maxWaitTime = 0;
       bindings = 0;
    }
 
@@ -359,7 +361,10 @@ void EventProcessingThread::run(int id)
       if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      UpdateExpMovingAverage(averageWaitTime, EMA_EXP_180, GetCurrentTimeMs() - event->getQueueTime());
+      int64_t waitTime = GetCurrentTimeMs() - event->getQueueTime();
+      UpdateExpMovingAverage(averageWaitTime, EMA_EXP_180, waitTime);
+      if (static_cast<uint32_t>(waitTime) > maxWaitTime)
+         maxWaitTime = static_cast<uint32_t>(waitTime);
       EventQueueBinding *binding = event->getQueueBinding();
       ProcessEvent(event, id);
       InterlockedDecrement(&binding->usage);
@@ -567,6 +572,7 @@ StructArray<EventProcessingThreadStats> *GetEventProcessingThreadStats()
       EventProcessingThreadStats s;
       s.processedEvents = s_processingThreads[i].processedEvents;
       s.averageWaitTime = s_processingThreads[i].getAverageWaitTime();
+      s.maxWaitTime = s_processingThreads[i].maxWaitTime;
       s.queueSize = static_cast<uint32_t>(s_processingThreads[i].queue.size());
       s.bindings = s_processingThreads[i].bindings;
       stats->add(&s);

@@ -6404,6 +6404,7 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, Table **result)
          table->addColumn(_T("BINDINGS"), DCI_DT_UINT, _T("Bindings"));
          table->addColumn(_T("QUEUE_SIZE"), DCI_DT_UINT, _T("Queue Size"));
          table->addColumn(_T("AVG_WAIT_TIME"), DCI_DT_UINT, _T("Avg. Wait Time"));
+         table->addColumn(_T("MAX_WAIT_TIME"), DCI_DT_UINT, _T("Max Wait Time"));
          table->addColumn(_T("PROCESSED_EVENTS"), DCI_DT_COUNTER64, _T("Processed Events"));
 
          StructArray<EventProcessingThreadStats> *stats = GetEventProcessingThreadStats();
@@ -6415,7 +6416,8 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, Table **result)
             table->set(1, s->bindings);
             table->set(2, s->queueSize);
             table->set(3, s->averageWaitTime);
-            table->set(4, s->processedEvents);
+            table->set(4, s->maxWaitTime);
+            table->set(5, s->processedEvents);
          }
          delete stats;
 
