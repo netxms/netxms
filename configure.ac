@@ -9,7 +9,7 @@ m4_ifdef([m4_esyscmd_s],
 	[AC_INIT([NetXMS], [4.0.0], [bugs@netxms.org])])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
-AM_INIT_AUTOMAKE([tar-ustar])
+AM_INIT_AUTOMAKE([tar-ustar subdir-objects])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -157,7 +157,8 @@ AGENT_DIRS=""
 SERVER_LIBS=""
 SERVER_TOOLS=""
 SERVER_INCLUDE=""
-NCDRV_DIRS=""
+NCDRV_MODULES=""
+NCDRV_LTLIBRARIES=""
 HDLINK_DIRS=""
 PDSDRV_DIRS=""
 TOP_LEVEL_MODULES=""
@@ -874,7 +875,7 @@ AC_ARG_WITH(dist,
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxtux"
-	NCDRV_DIRS="anysms kannel msteams mymobile nexmo nxagent slack smseagle telegram text2reach websms"
+	NCDRV_MODULES="anysms kannel msteams mymobile nexmo nxagent slack smseagle telegram text2reach websms"
    HDLINK_DIRS="jira redmine"
    PDSDRV_DIRS="influxdb rrdtool"
 	NXCONFIG="nxconfig"
@@ -1141,7 +1142,7 @@ if test $? = 0; then
 	MODULES="$MODULES libnxsl libnxcc server ncdrivers nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music templates"
-	NCDRV_DIRS="$NCDRV_DIRS nxagent"
+	NCDRV_MODULES="$NCDRV_MODULES nxagent"
 	PDSDRV_DIRS="influxdb"
 
 	if test "x$XMPP_SUPPORT" = "xyes"; then
@@ -2514,7 +2515,7 @@ if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 	fi
 
 	SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
-	NCDRV_DIRS="$NCDRV_DIRS anysms kannel msteams mymobile nexmo slack smseagle telegram text2reach websms"
+	NCDRV_MODULES="$NCDRV_MODULES anysms kannel msteams mymobile nexmo slack smseagle telegram text2reach websms"
 	HDLINK_DIRS="$HDLINK_DIRS jira redmine"
 	AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
@@ -4475,15 +4476,14 @@ AC_DEFINE_UNQUOTED([CPP_COMPILER_VERSION], "$COMPILER_VERSION", [C++ compiler ve
 # Cleanup variables
 #--------------------------------------------------------------------
 
-AS_IF([test "x$with_dist" = "xyes"],
-[
-  AGENT_DIRS=`echo $AGENT_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
-  SUBAGENT_DIRS=`echo $SUBAGENT_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
-  MODULES=`echo $MODULES|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
-  NCDRV_DIRS=`echo $NCDRV_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
-  HDLINK_DIRS=`echo $HDLINK_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
-])
+AGENT_DIRS=`echo $AGENT_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
+HDLINK_DIRS=`echo $HDLINK_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
+MODULES=`echo $MODULES|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
+NCDRV_MODULES=`echo $NCDRV_MODULES|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
+SUBAGENT_DIRS=`echo $SUBAGENT_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
 
+NCDRV_LTLIBRARIES=`echo $NCDRV_MODULES|perl -nae 'my @out; for (@F) {push(@out, $_ . ".la"); }; print join(" ", @out)'`
+DB_DRIVERS_LTLIBRARIES=`echo $DB_DRIVERS|perl -nae 'my @out; for (@F) {push(@out, $_ . ".la"); }; print join(" ", @out)'`
 
 #--------------------------------------------------------------------
 # Substitute variables
@@ -4498,6 +4498,7 @@ AC_SUBST(CLIENT_COMPONENTS)
 AC_SUBST(CONTRIB_MODULES)
 AC_SUBST(CUSTOM_INCLUDE)
 AC_SUBST(DB_DRIVERS)
+AC_SUBST(DB_DRIVERS_LTLIBRARIES)
 AC_SUBST(DB2_CPPFLAGS)
 AC_SUBST(DB2_LDFLAGS)
 AC_SUBST(DB2_LIBS)
@@ -4524,6 +4525,8 @@ AC_SUBST(MQTT_LIBS)
 AC_SUBST(MYSQL_CPPFLAGS)
 AC_SUBST(MYSQL_LDFLAGS)
 AC_SUBST(MYSQL_LIBS)
+AC_SUBST(NCDRV_LTLIBRARIES)
+AC_SUBST(NCDRV_MODULES)
 AC_SUBST(NETXMS_BINDIR)
 AC_SUBST(NETXMS_DATADIR)
 AC_SUBST(NETXMS_LIBDIR)
@@ -4550,7 +4553,6 @@ AC_SUBST(SERVER_INCLUDE)
 AC_SUBST(SERVER_LIBS)
 AC_SUBST(SERVER_TOOLS)
 AC_SUBST(SHLIB_SUFFIX)
-AC_SUBST(NCDRV_DIRS)
 AC_SUBST(SQLFLAGS)
 AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_DIRS)

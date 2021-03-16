@@ -9,3 +9,25 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 SUBDIRS = nxcsum nxdevcfg nxencpasswd nxgenguid @TOOLS@
+
+bin_PROGRAMS = nxcsum/nxcsum nxdevcfg/nxdevcfg nxencpasswd/nxencpasswd nxgenguid/nxgenguid
+
+nxcsum_nxcsum_SOURCES = nxcsum/nxcsum.cpp
+nxcsum_nxcsum_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
+nxcsum_nxcsum_LDFLAGS = @EXEC_LDFLAGS@
+nxcsum_nxcsum_LDADD = ../libnetxms/libnetxms.la @EXEC_LIBS@
+
+nxdevcfg_nxdevcfg_SOURCES = nxdevcfg/flags.cpp nxdevcfg/nxdevcfg.cpp
+nxdevcfg_nxdevcfg_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
+nxdevcfg_nxdevcfg_LDFLAGS = -I@top_srcdir@/include @EXEC_LDFLAGS@
+nxdevcfg_nxdevcfg_LDADD = ../libnetxms/libnetxms.la @EXEC_LIBS@
+
+nxencpasswd_nxencpasswd_SOURCES = nxencpasswd/nxencpasswd.cpp
+nxencpasswd_nxencpasswd_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
+nxencpasswd_nxencpasswd_LDFLAGS = -I@top_srcdir@/include @EXEC_LDFLAGS@
+nxencpasswd_nxencpasswd_LDADD = ../libnetxms/libnetxms.la @EXEC_LIBS@
+
+nxgenguid_nxgenguid_SOURCES = nxgenguid/nxgenguid.cpp
+nxgenguid_nxgenguid_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
+nxgenguid_nxgenguid_LDFLAGS = @EXEC_LDFLAGS@
+nxgenguid_nxgenguid_LDADD = ../libnetxms/libnetxms.la @EXEC_LIBS@
