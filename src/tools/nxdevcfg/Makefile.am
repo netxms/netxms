@@ -8,8 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-bin_PROGRAMS = nxdevcfg
-nxdevcfg_SOURCES = flags.cpp nxdevcfg.cpp
-nxdevcfg_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
-nxdevcfg_LDFLAGS = -I@top_srcdir@/include @EXEC_LDFLAGS@
-nxdevcfg_LDADD = ../../libnetxms/libnetxms.la @EXEC_LIBS@
+EXTRA_DIST = flags.cpp nxdevcfg.cpp

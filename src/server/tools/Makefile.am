@@ -8,6 +8,49 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = libnxdbmgr nddload nxget nxadm nxaction nxap nxdbmgr nxminfo nxwsget nxupload scripts 
-SUBDIRS += @SERVER_TOOLS@
+SUBDIRS = libnxdbmgr nddload nxget nxadm nxaction nxap nxdbmgr nxminfo nxwsget nxupload scripts @SERVER_TOOLS@
 
+bin_PROGRAMS = nddload/nddload nxaction/nxaction nxadm/nxadm nxap/nxap nxget/nxget \
+	       nxminfo/nxminfo nxupload/nxupload nxwsget/nxwsget
+
+COMMON_LDADD = ../libnxsrv/libnxsrv.la ../../libnxsl/libnxsl.la ../../snmp/libnxsnmp/libnxsnmp.la ../../libnetxms/libnetxms.la @SERVER_LIBS@ @EXEC_LIBS@
+
+nddload_nddload_SOURCES = nddload/nddload.cpp
+nddload_nddload_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+nddload_nddload_LDFLAGS = @EXEC_LDFLAGS@
+nddload_nddload_LDADD = $(COMMON_LDADD)
+
+nxaction_nxaction_SOURCES = nxaction/nxaction.cpp
+nxaction_nxaction_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+nxaction_nxaction_LDFLAGS = @EXEC_LDFLAGS@
+nxaction_nxaction_LDADD = $(COMMON_LDADD)
+
+nxadm_nxadm_SOURCES = nxadm/comm.cpp nxadm/nxadm.cpp
+nxadm_nxadm_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+nxadm_nxadm_LDFLAGS = @EXEC_LDFLAGS@
+nxadm_nxadm_LDADD = $(COMMON_LDADD)
+
+nxap_nxap_SOURCES = nxap/nxap.cpp
+nxap_nxap_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+nxap_nxap_LDFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include @EXEC_LDFLAGS@
+nxap_nxap_LDADD = $(COMMON_LDADD)
+
+nxget_nxget_SOURCES = nxget/nxget.cpp
+nxget_nxget_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+nxget_nxget_LDFLAGS = @EXEC_LDFLAGS@
+nxget_nxget_LDADD = $(COMMON_LDADD)
+
+nxminfo_nxminfo_SOURCES = nxminfo/nxminfo.cpp
+nxminfo_nxminfo_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+nxminfo_nxminfo_LDFLAGS = @EXEC_LDFLAGS@
+nxminfo_nxminfo_LDADD = $(COMMON_LDADD)
+
+nxupload_nxupload_SOURCES = nxupload/nxupload.cpp
+nxupload_nxupload_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+nxupload_nxupload_LDFLAGS = @EXEC_LDFLAGS@
+nxupload_nxupload_LDADD = $(COMMON_LDADD)
+
+nxwsget_nxwsget_SOURCES = nxwsget/nxwsget.cpp
+nxwsget_nxwsget_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+nxwsget_nxwsget_LDFLAGS = @EXEC_LDFLAGS@
+nxwsget_nxwsget_LDADD = $(COMMON_LDADD)
