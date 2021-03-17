@@ -966,12 +966,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_USER:
          deleteUser(request);
          break;
-      case CMD_LOCK_USER_DB:
-         lockUserDB(request->getId(), TRUE);
-         break;
-      case CMD_UNLOCK_USER_DB:
-         lockUserDB(request->getId(), FALSE);
-         break;
       case CMD_SET_PASSWORD:
          setPassword(request);
          break;
@@ -3323,12 +3317,6 @@ void ClientSession::createUser(NXCPMessage *pRequest)
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   else if (!(m_flags & CSF_USER_DB_LOCKED))
-   {
-      // User database have to be locked before any
-      // changes to user database can be made
-      msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-   }
    else
    {
       UINT32 rcc, dwUserId;
@@ -3372,12 +3360,6 @@ void ClientSession::updateUser(NXCPMessage *pRequest)
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
-   else if (!(m_flags & CSF_USER_DB_LOCKED))
-   {
-      // User database have to be locked before any
-      // changes to user database can be made
-      msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-   }
    else
    {
       json_t *oldData = nullptr, *newData = nullptr;
@@ -3414,12 +3396,6 @@ void ClientSession::detachLdapUser(NXCPMessage *pRequest)
    if (!(m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   else if (!(m_flags & CSF_USER_DB_LOCKED))
-   {
-      // User database have to be locked before any
-      // changes to user database can be made
-      msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
    }
    else
    {
@@ -3459,12 +3435,6 @@ void ClientSession::deleteUser(NXCPMessage *pRequest)
       ResolveUserId(dwUserId, name, true);
       writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on delete %s %s [%d]"), (dwUserId & GROUP_FLAG) ? _T("group") : _T("user"), name, dwUserId);
    }
-   else if (!(m_flags & CSF_USER_DB_LOCKED))
-   {
-      // User database have to be locked before any
-      // changes to user database can be made
-      msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-   }
    else
    {
       // Get Id of user to be deleted
@@ -3494,53 +3464,6 @@ void ClientSession::deleteUser(NXCPMessage *pRequest)
          // System administrator account and everyone group cannot be deleted
          msg.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
-   }
-
-   // Send response
-   sendMessage(&msg);
-}
-
-/**
- * Lock/unlock user database
- */
-void ClientSession::lockUserDB(UINT32 dwRqId, BOOL bLock)
-{
-   NXCPMessage msg;
-   TCHAR szBuffer[256];
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
-
-   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
-   {
-      if (bLock)
-      {
-         if (!LockComponent(CID_USER_DB, m_id, m_sessionName, nullptr, szBuffer))
-         {
-            msg.setField(VID_RCC, RCC_COMPONENT_LOCKED);
-            msg.setField(VID_LOCKED_BY, szBuffer);
-         }
-         else
-         {
-            InterlockedOr(&m_flags, CSF_USER_DB_LOCKED);
-            msg.setField(VID_RCC, RCC_SUCCESS);
-         }
-      }
-      else
-      {
-         if (m_flags & CSF_USER_DB_LOCKED)
-         {
-            UnlockComponent(CID_USER_DB);
-            InterlockedAnd(&m_flags, ~CSF_USER_DB_LOCKED);
-         }
-         msg.setField(VID_RCC, RCC_SUCCESS);
-      }
-   }
-   else
-   {
-      // Current user has no rights for user account management
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
@@ -5306,7 +5229,7 @@ void ClientSession::openEventProcessingPolicy(NXCPMessage *request)
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
       TCHAR buffer[256];
-      if (!readOnly && !LockComponent(CID_EPP, m_id, m_sessionName, nullptr, buffer))
+      if (!readOnly && !LockEPP(m_id, m_sessionName, nullptr, buffer))
       {
          msg.setField(VID_RCC, RCC_COMPONENT_LOCKED);
          msg.setField(VID_LOCKED_BY, buffer);
@@ -5366,7 +5289,7 @@ void ClientSession::closeEventProcessingPolicy(NXCPMessage *request)
             MemFreeAndNull(m_ppEPPRuleList);
          }
          InterlockedAnd(&m_flags, ~(CSF_EPP_LOCKED | CSF_EPP_UPLOAD));
-         UnlockComponent(CID_EPP);
+         UnlockEPP();
       }
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
@@ -10013,7 +9936,7 @@ void ClientSession::importConfiguration(NXCPMessage *pRequest)
          if (config.loadXmlConfigFromMemory(content, strlen(content), nullptr, "configuration"))
          {
             // Lock all required components
-            if (LockComponent(CID_EPP, m_id, m_sessionName, nullptr, szLockInfo))
+            if (LockEPP(m_id, m_sessionName, nullptr, szLockInfo))
             {
                InterlockedOr(&m_flags, CSF_EPP_LOCKED);
 
@@ -10029,7 +9952,7 @@ void ClientSession::importConfiguration(NXCPMessage *pRequest)
                   msg.setField(VID_ERROR_TEXT, szError);
                }
 
-					UnlockComponent(CID_EPP);
+					UnlockEPP();
 					InterlockedAnd(&m_flags, ~CSF_EPP_LOCKED);
             }
             else

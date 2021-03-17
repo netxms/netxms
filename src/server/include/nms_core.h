@@ -171,7 +171,7 @@
  */
 #define CSF_TERMINATED           ((uint32_t)0x00000001)
 #define CSF_EPP_LOCKED           ((uint32_t)0x00000002)
-#define CSF_USER_DB_LOCKED       ((uint32_t)0x00000008)
+//#define CSF_USER_DB_LOCKED       ((uint32_t)0x00000008)
 #define CSF_EPP_UPLOAD           ((uint32_t)0x00000010)
 #define CSF_CONSOLE_OPEN         ((uint32_t)0x00000020)
 #define CSF_AUTHENTICATED        ((uint32_t)0x00000080)
@@ -597,7 +597,6 @@ private:
    void deleteUser(NXCPMessage *pRequest);
    void setPassword(NXCPMessage *request);
    void validatePassword(NXCPMessage *request);
-   void lockUserDB(UINT32 dwRqId, BOOL bLock);
    void getAlarmCategories(UINT32 requestId);
    void modifyAlarmCategory(NXCPMessage *pRequest);
    void deleteAlarmCategory(NXCPMessage *pRequest);

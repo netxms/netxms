@@ -4706,32 +4706,6 @@ public class NXCSession
    }
 
    /**
-    * Lock user database
-    *
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void lockUserDatabase() throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_LOCK_USER_DB);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
-    * Unlock user database
-    *
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void unlockUserDatabase() throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_UNLOCK_USER_DB);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
     * Set custom attribute for currently logged in user. Server will allow to change
     * only attributes whose name starts with dot.
     *

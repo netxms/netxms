@@ -99,7 +99,6 @@ public class UserManagementView extends ViewPart
 	private TableViewer viewer;
 	private NXCSession session;
 	private SessionListener sessionListener;
-	private boolean databaseLocked = false;
 	private boolean editNewUser = false;
 	private Action actionAddUser;
 	private Action actionAddGroup;
@@ -243,42 +242,8 @@ public class UserManagementView extends ViewPart
 				}
 			}
 		};
-
-		// Request server to lock user database, and on success refresh view
-		new ConsoleJob(Messages.get().UserManagementView_OpenJobName, this, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				session.lockUserDatabase();
-				databaseLocked = true;
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						viewer.setInput(session.getUserDatabaseObjects());
-						session.addListener(sessionListener);
-					}
-				});
-			}
-
-			@Override
-			protected void jobFailureHandler()
-			{
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						UserManagementView.this.getViewSite().getPage().hideView(UserManagementView.this);
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().UserManagementView_OpenJobError;
-			}
-		}.start();
+      session.addListener(sessionListener);      
+      viewer.setInput(session.getUserDatabaseObjects());
 		
 		getUsersAndRefresh();
 	}
@@ -557,22 +522,6 @@ public class UserManagementView extends ViewPart
 	{
 		if (sessionListener != null)
 			session.removeListener(sessionListener);
-		if (databaseLocked)
-		{
-			new ConsoleJob(Messages.get().UserManagementView_UnlockJobName, null, Activator.PLUGIN_ID, null) {
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					session.unlockUserDatabase();
-				}
-
-				@Override
-				protected String getErrorMessage()
-				{
-					return Messages.get().UserManagementView_UnlockJobError;
-				}
-			}.start();
-		}
 		super.dispose();
 	}
 	
