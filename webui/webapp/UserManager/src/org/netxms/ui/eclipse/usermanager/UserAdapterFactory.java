@@ -155,7 +155,7 @@ public class UserAdapterFactory implements IAdapterFactory
 					public ImageDescriptor getImageDescriptor(Object object)
 					{
 						long userId = ((AbstractAccessListElement)object).getUserId();
-						return Activator.getImageDescriptor((userId < 0x80000000L) ? "icons/user.png" : "icons/group.png"); //$NON-NLS-1$ //$NON-NLS-2$
+                  return Activator.getImageDescriptor(((userId & 0x40000000L) == 0) ? "icons/user.png" : "icons/group.png"); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 
 					@Override
