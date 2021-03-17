@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.datacollection.widgets;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -41,6 +43,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
@@ -48,14 +51,18 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.CompositeWithMessageBar;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.LastValuesComparator;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.LastValuesFilter;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.LastValuesLabelProvider;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.ViewRefreshController;
@@ -661,6 +668,33 @@ public class LastValuesWidget extends CompositeWithMessageBar
     */
    private void showLineChart()
    {
+      IStructuredSelection selection = dataViewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(selection.size());
+      for(Object o : selection.toList())
+      {
+         items.add(new ChartDciConfig((DciValue)o));
+      }
+
+      if (view instanceof ObjectView)
+      {
+         Perspective p = view.getPerspective();
+         if (p != null)
+         {
+            p.addMainView(new HistoricalGraphView(((ObjectView)view).getObject(), items));
+         }
+         else
+         {
+            PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(((ObjectView)view).getObject(), items));
+            window.open();
+         }
+      }
+      else
+      {
+         // TODO: implement context-independent call
+      }
    }
 
 	/**

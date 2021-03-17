@@ -128,7 +128,7 @@ public abstract class Job
       catch(Exception e)
       {
          LoggerFactory.getLogger(Job.class).error("Exception in UI job - " + e.getMessage(), e);
-         jobFailureHandler();
+         jobFailureHandler(e);
          if (messageBar != null)
          {
             runInUIThread(new Runnable() {
@@ -239,8 +239,10 @@ public abstract class Job
 
    /**
     * Called from within Job.run() if job has failed. Default implementation does nothing.
+    * 
+    * @param e exception that cause job to abort
     */
-   protected void jobFailureHandler()
+   protected void jobFailureHandler(Exception e)
    {
    }
 

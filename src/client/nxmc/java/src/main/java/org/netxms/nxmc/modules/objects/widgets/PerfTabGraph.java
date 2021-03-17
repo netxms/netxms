@@ -353,7 +353,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 			}
 
 			@Override
-			protected void jobFailureHandler()
+         protected void jobFailureHandler(Exception e)
 			{
 				updateInProgress = false;
             runInUIThread(new Runnable() {
@@ -364,7 +364,6 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
                      chart.addError(getErrorMessage());
                }
             });
-				super.jobFailureHandler();
 			}
 		};
 		job.setUser(false);

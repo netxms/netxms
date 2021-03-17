@@ -165,9 +165,15 @@ public abstract class View
       for(ViewStateListener listener : stateListeners)
          listener.viewClosed(this);
       if ((viewArea != null) && !viewArea.isDisposed())
+      {
          viewArea.dispose();
+         viewArea = null;
+      }
       if (image != null)
+      {
          image.dispose();
+         image = null;
+      }
    }
 
    /**
@@ -201,6 +207,18 @@ public abstract class View
    }
 
    /**
+    * @param name
+    */
+   public void setName(String name)
+   {
+      this.name = name;
+      if (perspective != null)
+         perspective.updateViewTrim(this);
+      else if (window != null)
+         window.getShell().setText(getFullName()); // Standalone view, update window title
+   }
+
+   /**
     * Get view's image
     * 
     * @return view's image
@@ -218,6 +236,16 @@ public abstract class View
    public Window getWindow()
    {
       return window;
+   }
+
+   /**
+    * Get owning perspective (can be null for standalone views).
+    *
+    * @return owning perspective or null
+    */
+   public Perspective getPerspective()
+   {
+      return perspective;
    }
 
    /**

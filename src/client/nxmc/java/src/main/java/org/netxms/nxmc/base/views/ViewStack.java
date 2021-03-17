@@ -38,12 +38,16 @@ import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * View stack
  */
 public class ViewStack extends Composite
 {
+   private static final Logger logger = LoggerFactory.getLogger(ViewStack.class);
+
    private Window window;
    private Perspective perspective;
    private CTabFolder tabFolder;
@@ -78,7 +82,14 @@ public class ViewStack extends Composite
             CTabItem tabItem = tabFolder.getSelection();
             View view = (tabItem != null) ? (View)tabItem.getData("view") : null;
             if (view != null)
+            {
                view.activate();
+               if (view instanceof ViewWithContext)
+               {
+                  if (((ViewWithContext)view).getContext() != context)
+                     ((ViewWithContext)view).setContext(context);
+               }
+            }
             fireSelectionListeners(view);
          }
 
@@ -177,21 +188,7 @@ public class ViewStack extends Composite
       if (ignoreContext || !(view instanceof ViewWithContext) || ((ViewWithContext)view).isValidForContext(context))
       {
          view.create(window, perspective, tabFolder);
-
-         CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
-         tabItem.setControl(view.getViewArea());
-         tabItem.setText(ignoreContext ? view.getFullName() : view.getName());
-         tabItem.setImage(view.getImage());
-         tabItem.setData("view", view);
-         tabItem.setShowClose(allViewsAreCloseable || view.isCloseable());
-         tabItem.addDisposeListener(new DisposeListener() {
-            @Override
-            public void widgetDisposed(DisposeEvent e)
-            {
-               ((View)e.widget.getData("view")).dispose();
-            }
-         });
-         tabs.put(view.getId(), tabItem);
+         createViewTab(view, ignoreContext);
       }
    }
 
@@ -210,6 +207,54 @@ public class ViewStack extends Composite
          if (tabItem != null)
             tabItem.dispose();
       }
+   }
+
+   /**
+    * Update trim (title, actions on toolbar, etc.) for given view.
+    *
+    * @param view view to update
+    * @return true if view trim was updated
+    */
+   public boolean updateViewTrim(View view)
+   {
+      boolean updated = false;
+      CTabItem tab = tabs.get(view.getId());
+      if (tab != null)
+      {
+         Object ignoreContext = tab.getData("ignoreContext");
+         tab.setText((ignoreContext != null) && (ignoreContext instanceof Boolean) && (Boolean)ignoreContext ? view.getFullName() : view.getName());
+         tab.setImage(view.getImage());
+         updated = true;
+      }
+      return updated;
+   }
+
+   /**
+    * Create tab for view
+    *
+    * @param view view to add
+    * @param ignoreContext set to true to ignore current context
+    */
+   private void createViewTab(View view, boolean ignoreContext)
+   {
+      CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
+      tabItem.setControl(view.getViewArea());
+      tabItem.setText(ignoreContext ? view.getFullName() : view.getName());
+      tabItem.setImage(view.getImage());
+      tabItem.setData("view", view);
+      tabItem.setData("ignoreContext", Boolean.valueOf(ignoreContext));
+      tabItem.setShowClose(allViewsAreCloseable || view.isCloseable());
+      tabItem.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            View view = (View)e.widget.getData("view");
+            if (e.widget.getData("keepView") == null)
+               view.dispose();
+            tabs.remove(view.getId());
+         }
+      });
+      tabs.put(view.getId(), tabItem);
    }
 
    /**
@@ -234,13 +279,7 @@ public class ViewStack extends Composite
                   view.setVisible(true);
                else
                   view.create(window, perspective, tabFolder);
-
-               CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
-               tabItem.setControl(view.getViewArea());
-               tabItem.setText(view.getName());
-               tabItem.setImage(view.getImage());
-               tabItem.setData("view", view);
-               tabs.put(view.getId(), tabItem);
+               createViewTab(view, false);
             }
             ((ViewWithContext)view).setContext(context);
          }
@@ -249,6 +288,8 @@ public class ViewStack extends Composite
             CTabItem tabItem = tabs.remove(view.getId());
             if (tabItem != null)
             {
+               logger.debug("View " + view.getId() + " is not valid for current context");
+               tabItem.setData("keepView", Boolean.TRUE); // Prevent view dispose by tab's dispose listener
                tabItem.dispose();
                view.setVisible(false);
             }

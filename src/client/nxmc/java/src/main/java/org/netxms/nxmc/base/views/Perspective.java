@@ -420,4 +420,22 @@ public abstract class Perspective
       if (supplementaryFolder != null)
          supplementaryFolder.removeView(id);
    }
+
+   /**
+    * Update trim (title, actions on toolbar, etc.) for given view.
+    *
+    * @param view view to update
+    * @return true if view trim was updated
+    */
+   public boolean updateViewTrim(View view)
+   {
+      boolean updated = false;
+      if (mainFolder != null)
+         updated = mainFolder.updateViewTrim(view);
+      if (!updated && (navigationFolder != null))
+         updated = navigationFolder.updateViewTrim(view);
+      if (!updated && (supplementaryFolder != null))
+         updated = supplementaryFolder.updateViewTrim(view);
+      return updated;
+   }
 }
