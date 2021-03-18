@@ -316,6 +316,9 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    }
    else if (m_function == F_SCRIPT)
    {
+      tvalue = m_expandValue ?
+               ItemValue(target->expandText(m_value.getString(), nullptr, nullptr, dci->createDescriptor(), nullptr, nullptr, nullptr, nullptr), m_value.getTimeStamp()) :
+               m_value;
       if ((m_script != nullptr) && !m_script->isEmpty())
       {
          NXSL_VM *vm = CreateServerScriptVM(m_script, target, dci->createDescriptor());
@@ -323,7 +326,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          {
             NXSL_Value *parameters[2];
             parameters[0] = vm->createValue(value.getString());
-            parameters[1] = vm->createValue(m_value.getString());
+            parameters[1] = vm->createValue(tvalue.getString());
             if (vm->run(2, parameters))
             {
                match = vm->getResult()->getValueAsBoolean();
@@ -362,7 +365,6 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          DbgPrintf(7, _T("Script not compiled for threshold %d of DCI %d of data collection target %s [%u]"),
                    m_id, dci->getId(), target->getName(), target->getId());
       }
-      tvalue = m_value;
    }
    else
    {
