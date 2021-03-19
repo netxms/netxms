@@ -106,6 +106,17 @@ public class ViewStack extends Composite
 
       ToolItem refreshView = new ToolItem(viewControlBar, SWT.PUSH);
       refreshView.setImage(SharedIcons.IMG_REFRESH);
+      refreshView.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            View view = getSelection();
+            if (view != null)
+            {
+               view.handleRefresh();
+            }
+         }
+      });
 
       if (enableViewPinning)
       {
@@ -158,7 +169,7 @@ public class ViewStack extends Composite
     */
    public void addView(View view)
    {
-      addView(view, false);
+      addView(view, false, false);
    }
 
    /**
@@ -166,9 +177,10 @@ public class ViewStack extends Composite
     * it's creation will be delayed until valid context change.
     *
     * @param view view to add
+    * @param activate if set to true, view will be activated
     * @param ignoreContext set to true to ignore current context
     */
-   public void addView(View view, boolean ignoreContext)
+   public void addView(View view, boolean activate, boolean ignoreContext)
    {
       View currentView = views.get(view.getId());
       if (currentView != null)
@@ -188,7 +200,17 @@ public class ViewStack extends Composite
       if (ignoreContext || !(view instanceof ViewWithContext) || ((ViewWithContext)view).isValidForContext(context))
       {
          view.create(window, perspective, tabFolder);
-         createViewTab(view, ignoreContext);
+         CTabItem tabItem = createViewTab(view, ignoreContext);
+         if (activate)
+         {
+            tabFolder.setSelection(tabItem);
+            view.activate();
+            if (view instanceof ViewWithContext)
+            {
+               if (((ViewWithContext)view).getContext() != context)
+                  ((ViewWithContext)view).setContext(context);
+            }
+         }
       }
    }
 
@@ -234,8 +256,9 @@ public class ViewStack extends Composite
     *
     * @param view view to add
     * @param ignoreContext set to true to ignore current context
+    * @return created tab item
     */
-   private void createViewTab(View view, boolean ignoreContext)
+   private CTabItem createViewTab(View view, boolean ignoreContext)
    {
       CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
       tabItem.setControl(view.getViewArea());
@@ -250,11 +273,15 @@ public class ViewStack extends Composite
          {
             View view = (View)e.widget.getData("view");
             if (e.widget.getData("keepView") == null)
+            {
+               views.remove(view.getId());
                view.dispose();
+            }
             tabs.remove(view.getId());
          }
       });
       tabs.put(view.getId(), tabItem);
+      return tabItem;
    }
 
    /**

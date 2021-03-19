@@ -678,22 +678,16 @@ public class LastValuesWidget extends CompositeWithMessageBar
          items.add(new ChartDciConfig((DciValue)o));
       }
 
-      if (view instanceof ObjectView)
+      AbstractObject object = (view instanceof ObjectView) ? ((ObjectView)view).getObject() : dcTarget;
+      Perspective p = view.getPerspective();
+      if (p != null)
       {
-         Perspective p = view.getPerspective();
-         if (p != null)
-         {
-            p.addMainView(new HistoricalGraphView(((ObjectView)view).getObject(), items));
-         }
-         else
-         {
-            PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(((ObjectView)view).getObject(), items));
-            window.open();
-         }
+         p.addMainView(new HistoricalGraphView(object, items), true, false);
       }
       else
       {
-         // TODO: implement context-independent call
+         PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(object, items));
+         window.open();
       }
    }
 

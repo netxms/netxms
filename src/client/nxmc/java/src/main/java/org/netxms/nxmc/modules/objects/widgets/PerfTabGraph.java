@@ -28,6 +28,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -42,20 +43,28 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.PerfTabDci;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.DashboardComposite;
+import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartFactory;
 import org.netxms.nxmc.modules.charts.api.HistoricalChartOwner;
 import org.netxms.nxmc.modules.charts.api.HistoricalDataChart;
 import org.netxms.nxmc.modules.charts.api.PerfTabGraphSettings;
+import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
+import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView.ChartActionType;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.netxms.nxmc.tools.VisibilityValidator;
 import org.xnap.commons.i18n.I18n;
@@ -108,11 +117,11 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		chart.setLogScaleEnabled(settings.isLogScaleEnabled());
       chart.setUseMultipliers(settings.isUseMultipliers());
 		chart.setStacked(settings.isStacked());
-      
+
       final Date from = new Date(System.currentTimeMillis() - settings.getTimeRangeMillis());
       final Date to = new Date(System.currentTimeMillis());
       chart.setTimeRange(from, to);
-		
+
 		GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, settings.isInvertedValues() ? GraphItemStyle.INVERTED : 0);
 		chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
 		if (!settings.isAutoScale())
@@ -120,7 +129,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		   chart.setYAxisRange(settings.getMinYScaleValue(), settings.getMaxYScaleValue());
       }
 		chart.addParameter(new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s")); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -129,27 +138,18 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
                refreshController.dispose();
          }
       });
-		
+
 		chart.addMouseListener(new MouseListener() {
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
-          */
          @Override
          public void mouseUp(MouseEvent e)
          {
          }
          
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
-          */
          @Override
          public void mouseDown(MouseEvent e)
          {
          }
          
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
-          */
          @Override
          public void mouseDoubleClick(MouseEvent e)
          {
@@ -158,32 +158,23 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       });
 
       chart.getPlotAreaControl().addMouseListener(new MouseListener() {
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
-          */
          @Override
          public void mouseUp(MouseEvent e)
          {
          }
          
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
-          */
          @Override
          public void mouseDown(MouseEvent e)
          {
          }
          
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
-          */
          @Override
          public void mouseDoubleClick(MouseEvent e)
          {
             openHistoryGraph();
          }
       });
-		
+
 		createActions();
 		createChartContextMenu();
 	}
@@ -200,7 +191,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
             refreshData();
          }
       };
-/*
+
       actionAdjustX = HistoricalGraphView.createAction(ChartActionType.ADJUST_X, this);
       actionAdjustY = HistoricalGraphView.createAction(ChartActionType.ADJUST_Y, this);
       actionAdjustBoth = HistoricalGraphView.createAction(ChartActionType.ADJUST_BOTH, this);
@@ -214,7 +205,6 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
             refreshData();
          }
       });
-      */
    }
 
    /**
@@ -230,7 +220,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
             fillContextMenu(manager);
          }
       });
-      
+
       Menu menu = manager.createContextMenu((Control)chart);
       ((Control)chart).setMenu(menu);
       for(Control ch : ((Composite)chart).getChildren())
@@ -238,7 +228,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
          ch.setMenu(menu);
       }
    }
-   
+
    /**
     * Fill context menu
     * 
@@ -338,7 +328,8 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 							{
 								chart.setTimeRange(from, to);
 								for(int i = 0; i < data.length; i++)
-									chart.updateParameter(i, data[i], true);
+                           chart.updateParameter(i, data[i], false);
+                        chart.refresh();
 							}
 							updateInProgress = false;
 						}
@@ -375,7 +366,29 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 	 */
 	private void openHistoryGraph()
 	{
-      // TODO: implement graph open
+      List<ChartDciConfig> graphItems = new ArrayList<ChartDciConfig>(items.size());
+      for(PerfTabDci dci : items)
+      {
+         ChartDciConfig cd = new ChartDciConfig();
+         cd.nodeId = nodeId;
+         cd.dciId = dci.getId();
+         cd.name = dci.getDescription();
+         cd.dciName = dci.getDescription();
+         cd.dciDescription = dci.getDescription();
+         graphItems.add(cd);
+      }
+
+      AbstractObject object = (view instanceof ObjectView) ? ((ObjectView)view).getObject() : session.findObjectById(nodeId);
+      Perspective p = view.getPerspective();
+      if (p != null)
+      {
+         p.addMainView(new HistoricalGraphView(object, graphItems), true, false);
+      }
+      else
+      {
+         PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(object, graphItems));
+         window.open();
+      }
 	}
 
    /**

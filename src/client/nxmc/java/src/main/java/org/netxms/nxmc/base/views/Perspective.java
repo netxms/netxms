@@ -358,12 +358,13 @@ public abstract class Perspective
     * Add view to main folder.
     *
     * @param view view to add
+    * @param activvate if true, view will be activated
     * @param ignoreContext set to true to ignore current context
     */
-   public void addMainView(View view, boolean ignoreContext)
+   public void addMainView(View view, boolean activate, boolean ignoreContext)
    {
       if (mainFolder != null)
-         mainFolder.addView(view, ignoreContext);
+         mainFolder.addView(view, activate, ignoreContext);
    }
 
    /**

@@ -680,6 +680,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void refresh()
 	{
+      suspendUpdate(false);
 	   updateLayout();
 	   updateStackAndRiserData();
 	   if (adjustYAxis && !zoomedToSelectionY)
@@ -687,13 +688,14 @@ public class LineChart extends Chart implements HistoricalDataChart
 	   else
 	      redraw();
 	}
-	
+
    /**
     * @see org.netxms.nxmc.modules.charts.api.DataChart#rebuild()
     */
 	@Override
 	public void rebuild()
 	{
+      suspendUpdate(false);
 	   zoomedToSelectionX = false;
 	   zoomedToSelectionY = false;
       updateStackAndRiserData();

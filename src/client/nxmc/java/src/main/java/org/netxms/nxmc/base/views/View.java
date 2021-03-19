@@ -157,6 +157,13 @@ public abstract class View
    }
 
    /**
+    * Handle refresh request initiated via view stack or perspective. Default implementation does nothing.
+    */
+   public void handleRefresh()
+   {
+   }
+
+   /**
     * Dispose view 
     */
    public void dispose()
@@ -164,6 +171,7 @@ public abstract class View
       logger.debug("View disposed - " + getId());
       for(ViewStateListener listener : stateListeners)
          listener.viewClosed(this);
+      stateListeners.clear();
       if ((viewArea != null) && !viewArea.isDisposed())
       {
          viewArea.dispose();

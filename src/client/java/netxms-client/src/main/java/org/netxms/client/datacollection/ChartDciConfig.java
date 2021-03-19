@@ -244,8 +244,7 @@ public class ChartDciConfig
       this.dciDescription = dciDescription;
    }   
 
-
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#equals(java.lang.Object)
     */
    @Override
@@ -259,12 +258,25 @@ public class ChartDciConfig
       return super.equals(arg0);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#hashCode()
     */
    @Override
    public int hashCode()
    {
       return Long.valueOf(dciId).hashCode();
+   }
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "ChartDciConfig [nodeId=" + nodeId + ", dciId=" + dciId + ", dciName=" + dciName + ", dciDescription=" + dciDescription
+            + ", type=" + type + ", color=" + color + ", name=" + name + ", lineWidth=" + lineWidth + ", displayType=" + displayType
+            + ", area=" + area + ", showThresholds=" + showThresholds + ", invertValues=" + invertValues + ", useRawValues="
+            + useRawValues + ", multiMatch=" + multiMatch + ", instance=" + instance + ", column=" + column + ", displayFormat="
+            + displayFormat + "]";
    }
 }

@@ -67,6 +67,7 @@ import org.netxms.nxmc.base.views.ViewWithContext;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartFactory;
+import org.netxms.nxmc.modules.charts.api.HistoricalChartOwner;
 import org.netxms.nxmc.modules.charts.api.HistoricalDataChart;
 import org.netxms.nxmc.modules.datacollection.dialogs.SaveGraphDlg;
 import org.netxms.nxmc.modules.datacollection.propertypages.DataSources;
@@ -295,7 +296,7 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
       chart.setTranslucent(settings.isTranslucent());
       chart.setLineWidth(settings.getLineWidth());
       chart.setUseMultipliers(settings.isUseMultipliers());
-      if(!settings.isAutoScale())
+      if (!settings.isAutoScale())
          chart.setYAxisRange(settings.getMinYScaleValue(), settings.getMaxYScaleValue());
       else
          chart.modifyYBase(settings.modifyYBase());
@@ -308,18 +309,19 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
       {
          nodeId |= dci.nodeId; //Check that all DCI's are form one node
          final String name = settings.isShowHostNames() ? (session.getObjectName(dci.nodeId) + " - " + dci.getName()) : dci.getName(); //$NON-NLS-1$
-         chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, DataOrigin.INTERNAL, DataType.INT32, Long.toString(dci.dciId), name, dci.getDisplayFormat()));
+         GraphItem graphItem = new GraphItem(dci.nodeId, dci.dciId, DataOrigin.INTERNAL, DataType.INT32, Long.toString(dci.dciId), name, dci.getDisplayFormat());
+         chart.addParameter(graphItem);
          int color = dci.getColorAsInt();
          if (color == -1)
             color = ChartColor.getDefaultColor(index).getRGB();
          styles.add(new GraphItemStyle(getDisplayType(dci), color, 2, dci.invertValues ? GraphItemStyle.INVERTED : 0));
          index++;
       }
-      
+
       // Check that all DCI's are form one node
       if (index > 0)
          multipleSourceNodes = (nodeId != settings.getDciList()[0].nodeId);
-      
+
       chart.setItemStyles(styles);
 
       if (settings.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW)
@@ -327,7 +329,7 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
          settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
          settings.setTimeTo(new Date(System.currentTimeMillis()));
       }
-      
+
       updateChart();
 
       // Automatic refresh
@@ -790,6 +792,15 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#handleRefresh()
+    */
+   @Override
+   public void handleRefresh()
+   {
+      updateChart();
+   }
+
+   /**
     * Copy graph as image
     */
    private void saveAsImage()
@@ -1049,19 +1060,6 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
       public void onPresetSelected(int units, int range);
    }
 
-   /**
-    * Chart owner
-    */
-   public interface HistoricalChartOwner
-   {
-      /**
-       * Get current chart object
-       * 
-       * @return current chart object
-       */
-      public HistoricalDataChart getChart();
-   } 
-   
    /**
     * Show Graph configuration dialog
     * 

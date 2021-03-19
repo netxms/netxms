@@ -267,4 +267,15 @@ public class GraphItem
    {
       this.displayFormat = displayFormat;
    }
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "GraphItem [nodeId=" + nodeId + ", dciId=" + dciId + ", type=" + type + ", source=" + source + ", dataType=" + dataType
+            + ", name=" + name + ", description=" + description + ", displayFormat=" + displayFormat + ", dataColumn=" + dataColumn
+            + ", instance=" + instance + "]";
+   }
 }

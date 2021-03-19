@@ -94,4 +94,13 @@ public class LastValuesView extends ObjectView
       if (isActive())
          dataView.refresh();
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#handleRefresh()
+    */
+   @Override
+   public void handleRefresh()
+   {
+      dataView.refresh();
+   }
 }
