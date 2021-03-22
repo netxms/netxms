@@ -788,7 +788,6 @@ public class PolicyListView extends ViewPart implements SessionListener
     */
    public void showInformationMessage()
    {
-      System.out.println("Added");
       if (!viewerContainer.isDisposed())
       {
          viewerContainer.showMessage(CompositeWithMessageBar.INFORMATION,
