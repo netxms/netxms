@@ -60,39 +60,39 @@
             <scope>${lib.scope}</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse</groupId>
-            <artifactId>swt</artifactId>
-            <version>3.115.0</version>
+            <groupId>org.eclipse.platform</groupId>
+            <artifactId>org.eclipse.swt</artifactId>
+            <version>3.116.0</version>
             <scope>${lib.scope}</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse</groupId>
-            <artifactId>equinox-common</artifactId>
+            <groupId>org.eclipse.platform</groupId>
+            <artifactId>org.eclipse.equinox.common</artifactId>
+            <version>3.14.100</version>
+            <scope>${lib.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.platform</groupId>
+            <artifactId>org.eclipse.core.commands</artifactId>
+            <version>3.9.800</version>
+            <scope>${lib.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.platform</groupId>
+            <artifactId>org.eclipse.jface</artifactId>
+            <version>3.22.100</version>
+            <scope>${lib.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.platform</groupId>
+            <artifactId>org.eclipse.jface.text</artifactId>
+            <version>3.17.0</version>
+            <scope>${lib.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.platform</groupId>
+            <artifactId>org.eclipse.text</artifactId>
             <version>3.11.0</version>
-            <scope>${lib.scope}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse</groupId>
-            <artifactId>core-commands</artifactId>
-            <version>3.9.700</version>
-            <scope>${lib.scope}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse</groupId>
-            <artifactId>jface</artifactId>
-            <version>3.19.0</version>
-            <scope>${lib.scope}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse</groupId>
-            <artifactId>jface-text</artifactId>
-            <version>3.16.400</version>
-            <scope>${lib.scope}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse</groupId>
-            <artifactId>text</artifactId>
-            <version>3.10.300</version>
             <scope>${lib.scope}</scope>
         </dependency>
         <dependency>
