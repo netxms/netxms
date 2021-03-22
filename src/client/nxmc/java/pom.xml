@@ -18,9 +18,9 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:https://git.netxms.org/public/netxms.git</connection>
-        <developerConnection>scm:git:ssh://git.netxms.org/public/netxms.git</developerConnection>
-        <url>http://git.netxms.org/public/netxms.git/shortlog/refs/heads/develop</url>
+        <connection>scm:git:https://github.com/netxms/netxms</connection>
+        <developerConnection>scm:git:ssh://github.com/netxms/netxms</developerConnection>
+        <url>https://github.com/netxms/netxms</url>
     </scm>
     <developers>
         <developer>
@@ -44,7 +44,77 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <build.finalName>${project.artifactId}</build.finalName>
         <lib.scope>compile</lib.scope>
+        <swt.version>3.116.0</swt.version>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>windows</id>
+            <activation>
+            <os>
+                <family>windows</family>
+            </os>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.eclipse.platform</groupId>
+                    <artifactId>org.eclipse.swt.win32.win32.x86_64</artifactId>
+                    <version>${swt.version}</version>
+                    <scope>${lib.scope}</scope>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.eclipse.platform</groupId>
+                            <artifactId>org.eclipse.swt</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>linux</id>
+            <activation>
+            <os>
+                <name>Linux</name>
+            </os>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.eclipse.platform</groupId>
+                    <artifactId>org.eclipse.swt.gtk.linux.x86_64</artifactId>
+                    <version>${swt.version}</version>
+                    <scope>${lib.scope}</scope>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.eclipse.platform</groupId>
+                            <artifactId>org.eclipse.swt</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>macos</id>
+            <activation>
+            <os>
+                <name>Mac OS X</name>
+            </os>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.eclipse.platform</groupId>
+                    <artifactId>org.eclipse.swt.cocoa.macosx.x86_64</artifactId>
+                    <version>${swt.version}</version>
+                    <scope>${lib.scope}</scope>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.eclipse.platform</groupId>
+                            <artifactId>org.eclipse.swt</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>
@@ -57,12 +127,6 @@
             <groupId>org.netxms</groupId>
             <artifactId>netxms-client</artifactId>
             <version>${project.version}</version>
-            <scope>${lib.scope}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.platform</groupId>
-            <artifactId>org.eclipse.swt</artifactId>
-            <version>3.116.0</version>
             <scope>${lib.scope}</scope>
         </dependency>
         <dependency>
@@ -82,18 +146,44 @@
             <artifactId>org.eclipse.jface</artifactId>
             <version>3.22.100</version>
             <scope>${lib.scope}</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.platform</groupId>
+                    <artifactId>org.eclipse.swt</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.eclipse.platform</groupId>
             <artifactId>org.eclipse.jface.text</artifactId>
             <version>3.17.0</version>
             <scope>${lib.scope}</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.platform</groupId>
+                    <artifactId>org.eclipse.core.runtime</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.platform</groupId>
+                    <artifactId>org.eclipse.swt</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.eclipse.platform</groupId>
             <artifactId>org.eclipse.text</artifactId>
             <version>3.11.0</version>
             <scope>${lib.scope}</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.platform</groupId>
+                    <artifactId>org.eclipse.core.runtime</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.platform</groupId>
+                    <artifactId>org.eclipse.equinox.preferences</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.netxms</groupId>
@@ -101,55 +191,55 @@
             <version>1.0-SNAPSHOT</version>
             <scope>${lib.scope}</scope>
         </dependency>
-	<dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.30</version>
             <scope>${lib.scope}</scope>
         </dependency>
-	<dependency>
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.2.3</version>
             <scope>${lib.scope}</scope>
         </dependency>
-	<dependency>
+        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.10</version>
             <scope>${lib.scope}</scope>
         </dependency>
-	<dependency>
+        <dependency>
             <groupId>com.googlecode.gettext-commons</groupId>
             <artifactId>gettext-commons</artifactId>
             <version>0.9.8</version>
             <scope>${lib.scope}</scope>
         </dependency>
-	<dependency>
+        <dependency>
             <groupId>org.eclipse.birt</groupId>
             <artifactId>birt-core</artifactId>
             <version>4.8.0</version>
             <scope>${lib.scope}</scope>
         </dependency>
-	<dependency>
+        <dependency>
             <groupId>org.eclipse.birt</groupId>
             <artifactId>birt-chart-engine</artifactId>
             <version>4.8.0</version>
             <scope>${lib.scope}</scope>
         </dependency>
-	<dependency>
+        <dependency>
             <groupId>org.eclipse.birt</groupId>
             <artifactId>birt-chart-device-swt</artifactId>
             <version>4.8.0</version>
             <scope>${lib.scope}</scope>
         </dependency>
-	<dependency>
+        <dependency>
             <groupId>org.eclipse.emf</groupId>
             <artifactId>emf-common</artifactId>
             <version>2.14.0</version>
             <scope>${lib.scope}</scope>
         </dependency>
-	<dependency>
+        <dependency>
             <groupId>org.eclipse.emf</groupId>
             <artifactId>emf-ecore</artifactId>
             <version>2.14.0</version>
