@@ -58,6 +58,7 @@ import org.netxms.client.AgentPolicy;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.datacollection.LocalChangeListener;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -73,6 +74,7 @@ import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -108,7 +110,7 @@ public class PolicyListView extends ViewPart implements SessionListener
    private Action actionMove;
    private Action actionDuplicate;
    private Action actionShowFilter;
-   private Composite content;
+   private CompositeWithMessageBar viewerContainer;
    
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -134,13 +136,19 @@ public class PolicyListView extends ViewPart implements SessionListener
    @Override
    public void createPartControl(Composite parent)
    {
-      display = parent.getDisplay();
-      
-      content = new Composite(parent, SWT.NONE);
-      content.setLayout(new FormLayout());
+      display = parent.getDisplay();      
+      viewerContainer = new CompositeWithMessageBar(parent, SWT.NONE) {
+         @Override
+         protected Composite createContent(Composite parent)
+         {
+            Composite content = super.createContent(parent);
+            content.setLayout(new FormLayout());
+            return content;
+         }
+      };
       
       // Create filter area
-      filterText = new FilterText(content, SWT.NONE);
+      filterText = new FilterText(viewerContainer.getContent(), SWT.NONE);
       filterText.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -152,7 +160,7 @@ public class PolicyListView extends ViewPart implements SessionListener
       final String[] names = { "Name", "Type", "GUID" };
       final int[] widths = { 250, 200, 100 };
       
-      policyList = new SortableTableViewer(content, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+      policyList = new SortableTableViewer(viewerContainer.getContent(), names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
       policyList.setContentProvider(new ArrayContentProvider());
       policyList.setLabelProvider(new PolicyLabelProvider());
       policyList.setComparator(new PolicyComparator());
@@ -398,15 +406,29 @@ public class PolicyListView extends ViewPart implements SessionListener
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
+            boolean sameObject = false;
             for(AbstractObject o : dlg.getSelectedObjects(Template.class))
             {
                for(AgentPolicy p : policyList)
                   session.savePolicy(o.getObjectId(), new AgentPolicy(p), true);
+               if (o.getObjectId() == templateId)
+                  sameObject = true;
             }
             if (doMove)
             {
                for(AgentPolicy p : policyList)
                   session.deletePolicy(templateId, ((AgentPolicy)p).getGuid()); 
+            }
+            
+            if (doMove || sameObject)
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     showInformationMessage();
+                  }
+               });
             }
          }
 
@@ -432,6 +454,15 @@ public class PolicyListView extends ViewPart implements SessionListener
          {
             for(AgentPolicy p : policyList)
                session.savePolicy(templateId, p, true);
+            
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  showInformationMessage();
+               }
+            });
+            
          }
 
          @Override
@@ -451,7 +482,13 @@ public class PolicyListView extends ViewPart implements SessionListener
       {
          PolicyEditorView view = (PolicyEditorView)getSite().getPage().showView(PolicyEditorView.ID, policy.getGuid().toString() + Long.toString(templateId), IWorkbenchPage.VIEW_ACTIVATE);
          if (view != null)
-            view.setPolicy(policy.getGuid(), templateId);
+            view.setPolicy(policy.getGuid(), templateId, new LocalChangeListener() {               
+               @Override
+               public void onObjectChange()
+               {        
+                  showInformationMessage();
+               }
+            });
       }
       catch(PartInitException e)
       {
@@ -483,6 +520,14 @@ public class PolicyListView extends ViewPart implements SessionListener
             {
                session.deletePolicy(templateId, ((AgentPolicy)policy).getGuid()); 
             }
+            
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  showInformationMessage();
+               }
+            });
          }
          
          @Override
@@ -517,7 +562,15 @@ public class PolicyListView extends ViewPart implements SessionListener
                   {
                      PolicyEditorView view = (PolicyEditorView)getSite().getPage().showView(PolicyEditorView.ID, newObjectGuid.toString() + Long.toString(templateId), IWorkbenchPage.VIEW_ACTIVATE);
                      if (view != null)
-                        view.setPolicy(newObjectGuid, templateId);
+                     {
+                        view.setPolicy(newObjectGuid, templateId, new LocalChangeListener() {                           
+                           @Override
+                           public void onObjectChange()
+                           {         
+                              PolicyListView.this.showInformationMessage();
+                           }
+                        });
+                     }
                   }
                   catch(PartInitException e)
                   {
@@ -691,7 +744,7 @@ public class PolicyListView extends ViewPart implements SessionListener
       filterText.setVisible(enable);
       FormData fd = (FormData)policyList.getTable().getLayoutData();
       fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
-      content.layout();
+      viewerContainer.layout();
       if (enable)
       {
          filterText.setFocus();
@@ -728,5 +781,18 @@ public class PolicyListView extends ViewPart implements SessionListener
    @Override
    public void setFocus()
    {
+   }
+   
+   /**
+    * Display message with information about policy deploy
+    */
+   public void showInformationMessage()
+   {
+      System.out.println("Added");
+      if (!viewerContainer.isDisposed())
+      {
+         viewerContainer.showMessage(CompositeWithMessageBar.INFORMATION,
+               "Changes in policies will be deployed to nodes the moment when the tab is closed");
+      }
    }
 }

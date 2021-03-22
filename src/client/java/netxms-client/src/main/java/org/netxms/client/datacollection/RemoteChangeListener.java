@@ -21,7 +21,7 @@ package org.netxms.client.datacollection;
 /**
  * Callback to notify View about object change
  */
-public interface DataCollectionConfigurationChangeListener
+public interface RemoteChangeListener
 {
    /**
     * Called when data collection object updated.
