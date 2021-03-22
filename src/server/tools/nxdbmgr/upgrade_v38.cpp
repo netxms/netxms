@@ -26,9 +26,19 @@
 /**
  * Upgrade from 38.8 to 40.0
  */
-static bool H_UpgradeFromV8()
+static bool H_UpgradeFromV9()
 {
    CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 38.8 to 38.9
+ */
+static bool H_UpgradeFromV8()
+{
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='JobHistoryRetentionTime'")));
+   CHK_EXEC(SetMinorSchemaVersion(9));
    return true;
 }
 
@@ -210,7 +220,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 8,  40, 0,  H_UpgradeFromV8  },
+   { 9,  40, 0,  H_UpgradeFromV9  },
+   { 8,  38, 9,  H_UpgradeFromV8  },
    { 7,  38, 8,  H_UpgradeFromV7  },
    { 6,  38, 7,  H_UpgradeFromV6  },
    { 5,  38, 6,  H_UpgradeFromV5  },

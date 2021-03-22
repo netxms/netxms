@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.43 to 40.44
+ */
+static bool H_UpgradeFromV43()
+{
+   if (GetSchemaLevelForMajorVersion(38) < 9)
+   {
+      CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='JobHistoryRetentionTime'")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(38, 9));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(44));
+   return true;
+}
+
+/**
  * Upgrade from 40.42 to 40.43
  */
 static bool H_UpgradeFromV42()
@@ -1168,6 +1182,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 43, 40, 44, H_UpgradeFromV43 },
    { 42, 40, 43, H_UpgradeFromV42 },
    { 41, 40, 42, H_UpgradeFromV41 },
    { 40, 40, 41, H_UpgradeFromV40 },
