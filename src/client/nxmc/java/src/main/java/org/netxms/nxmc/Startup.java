@@ -106,6 +106,8 @@ public class Startup
       w.setBlockOnOpen(true);
       w.open();
       display.dispose();
+      logger.info("Application exit");
+      System.exit(0);
    }
 
    /**

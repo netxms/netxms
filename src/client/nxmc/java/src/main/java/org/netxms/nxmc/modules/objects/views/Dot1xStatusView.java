@@ -203,4 +203,13 @@ public class Dot1xStatusView extends ObjectView
       return (context != null) && ((context instanceof Container) || (context instanceof Node) || (context instanceof Cluster)
             || (context instanceof Rack) || (context instanceof Subnet) || (context instanceof Zone));
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 290;
+   }
 }

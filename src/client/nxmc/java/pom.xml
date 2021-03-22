@@ -62,7 +62,7 @@
         <dependency>
             <groupId>org.eclipse</groupId>
             <artifactId>swt</artifactId>
-            <version>3.114.0</version>
+            <version>3.115.0</version>
             <scope>${lib.scope}</scope>
         </dependency>
         <dependency>

@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.base.views;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -169,9 +170,12 @@ public abstract class View
    public void dispose()
    {
       logger.debug("View disposed - " + getId());
-      for(ViewStateListener listener : stateListeners)
+
+      // Use copy of listener set to avoid concurrent changes if listener will call View.removeStateListener()
+      for(ViewStateListener listener : new ArrayList<ViewStateListener>(stateListeners))
          listener.viewClosed(this);
       stateListeners.clear();
+
       if ((viewArea != null) && !viewArea.isDisposed())
       {
          viewArea.dispose();
@@ -234,6 +238,17 @@ public abstract class View
    public Image getImage()
    {
       return image;
+   }
+
+   /**
+    * Get view priority in stack. Views with lower priority value placed to the left of views with higher priority values. Default
+    * implementation always returns 65535.
+    * 
+    * @return view priority
+    */
+   public int getPriority()
+   {
+      return 65535;
    }
 
    /**

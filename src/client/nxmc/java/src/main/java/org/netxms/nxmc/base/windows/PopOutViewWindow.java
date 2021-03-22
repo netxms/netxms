@@ -22,11 +22,13 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.views.View;
 
 /**
@@ -53,6 +55,9 @@ public class PopOutViewWindow extends Window
    {
       super.configureShell(newShell);
       newShell.setText(view.getFullName());
+      Point shellSize = PreferenceStore.getInstance().getAsPoint("PopupWindowSize." + view.getId(), null);
+      if (shellSize != null)
+         newShell.setSize(shellSize);
    }
 
    /**
@@ -70,7 +75,19 @@ public class PopOutViewWindow extends Window
    @Override
    protected Control createContents(Composite parent)
    {
-      Composite viewArea = new Composite(parent, SWT.NONE);
+      Composite viewArea = new Composite(parent, SWT.NONE) {
+         @Override
+         public Point computeSize(int wHint, int hHint, boolean changed)
+         {
+            Point size = super.computeSize(wHint, hHint, changed);
+            if ((wHint == SWT.DEFAULT) && (size.x < 100))
+               size.x = 800;
+            if ((hHint == SWT.DEFAULT) && (size.y < 100))
+               size.y = 600;
+            return size;
+         }
+
+      };
       viewArea.setLayout(new FillLayout());
       view.create(this, null, viewArea);
       viewArea.addDisposeListener(new DisposeListener() {
@@ -78,6 +95,7 @@ public class PopOutViewWindow extends Window
          public void widgetDisposed(DisposeEvent e)
          {
             view.dispose();
+            PreferenceStore.getInstance().set("PopupWindowSize." + view.getId(), getShell().getSize());
          }
       });
       return viewArea;

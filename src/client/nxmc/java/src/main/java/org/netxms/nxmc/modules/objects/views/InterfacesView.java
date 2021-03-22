@@ -273,4 +273,13 @@ public class InterfacesView extends NodeSubObjectTableView
       labelProvider.setNode((AbstractNode)object);
       super.onObjectChange(object);
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 50;
+   }
 }

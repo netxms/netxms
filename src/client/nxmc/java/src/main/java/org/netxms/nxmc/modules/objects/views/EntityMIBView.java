@@ -327,4 +327,13 @@ public class EntityMIBView extends ObjectView
       }
       return false;
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 60;
+   }
 }

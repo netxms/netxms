@@ -280,7 +280,22 @@ public class PreferenceStore
     */
    public Point getAsPoint(String name, Point defaultValue)
    {
-      return getAsPoint(name, defaultValue.x, defaultValue.y);
+      String v = properties.getProperty(name);
+      if (v == null)
+         return defaultValue;
+
+      String[] parts = v.split(",");
+      if (parts.length != 2)
+         return defaultValue;
+
+      try
+      {
+         return new Point(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
+      }
+      catch(NumberFormatException e)
+      {
+         return defaultValue;
+      }
    }
 
    /**

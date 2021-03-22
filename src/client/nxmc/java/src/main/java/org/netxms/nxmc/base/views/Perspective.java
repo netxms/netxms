@@ -29,12 +29,16 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.tools.ImageCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * UI perspective
  */
 public abstract class Perspective
 {
+   private static Logger logger = LoggerFactory.getLogger(Perspective.class);
+
    private String id;
    private String name;
    private Image image;
@@ -75,6 +79,7 @@ public abstract class Perspective
       };
 
       configurePerspective(configuration);
+      logger.debug("Perspective \"" + name + "\" configuration: " + configuration);
    }
 
    /**
@@ -122,9 +127,14 @@ public abstract class Perspective
    public void show(Composite parent)
    {
       if ((content == null) || content.isDisposed())
+      {
+         logger.debug("Creating content for perspective " + name);
          createWidgets(parent);
+      }
       else
+      {
          content.setVisible(true);
+      }
    }
 
    /**
@@ -158,6 +168,7 @@ public abstract class Perspective
                @Override
                public void viewSelected(View view)
                {
+                  logger.debug("New navigation view selected - " + view.getId());
                   setNavigationSelectionProvider(((view != null) && (view instanceof NavigationView)) ? ((NavigationView)view).getSelectionProvider() : null);
                }
             });

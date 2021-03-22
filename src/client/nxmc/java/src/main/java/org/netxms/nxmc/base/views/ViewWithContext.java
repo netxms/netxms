@@ -72,6 +72,9 @@ public abstract class ViewWithContext extends View
          contextChanged(null, context);
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#globalizeId()
+    */
    @Override
    public void globalizeId()
    {

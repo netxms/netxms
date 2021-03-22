@@ -302,4 +302,13 @@ public class SwitchForwardingDatabaseView extends ObjectView
    {
       refresh();
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 200;
+   }
 }

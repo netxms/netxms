@@ -165,6 +165,15 @@ public class PerformanceView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 40;
+   }
+
+   /**
     * Update tab with received DCIs
     * 
     * @param items Performance tab items

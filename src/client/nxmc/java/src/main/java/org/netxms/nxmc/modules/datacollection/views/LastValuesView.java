@@ -103,4 +103,13 @@ public class LastValuesView extends ObjectView
    {
       dataView.refresh();
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 30;
+   }
 }

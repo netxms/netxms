@@ -63,6 +63,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewWithContext;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
@@ -167,7 +168,7 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
     */
    public HistoricalGraphView(AbstractObject contextObject, List<ChartDciConfig> items)
    {
-      super("Graph", ResourceManager.getImageDescriptor("icons/object-views/performance.png"), buildId(contextObject, items));
+      super(i18n.tr("Graph"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"), buildId(contextObject, items));
 
       objectId = contextObject.getObjectId();
 
@@ -215,6 +216,39 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
       }
       settings.setTitle(getFullName());
       settings.setDciList(items.toArray(new ChartDciConfig[items.size()]));
+   }
+
+   /**
+    * Default constructor for use by cloneView()
+    */
+   public HistoricalGraphView()
+   {
+      super(i18n.tr("Graph"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"));
+
+      refreshController = new ViewRefreshController(this, -1, new Runnable() {
+         @Override
+         public void run()
+         {
+            if (((Widget)chart).isDisposed())
+               return;
+
+            updateChart();
+         }
+      });
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      HistoricalGraphView view = (HistoricalGraphView)super.cloneView();
+      view.objectId = objectId;
+      view.fullName = fullName;
+      view.multipleSourceNodes = multipleSourceNodes;
+      view.settings = new GraphSettings(settings);
+      return view;
    }
 
    /**

@@ -260,7 +260,16 @@ public class ViewStack extends Composite
     */
    private CTabItem createViewTab(View view, boolean ignoreContext)
    {
-      CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
+      int index = 0;
+      int priority = view.getPriority();
+      for(CTabItem i : tabFolder.getItems())
+      {
+         if (((View)i.getData("view")).getPriority() > priority)
+            break;
+         index++;
+      }
+
+      CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE, index);
       tabItem.setControl(view.getViewArea());
       tabItem.setText(ignoreContext ? view.getFullName() : view.getName());
       tabItem.setImage(view.getImage());

@@ -32,4 +32,17 @@ public class PerspectiveConfiguration
    public boolean enableViewExtraction = true;
    public boolean allViewsAreCloseable = false;
    public int priority = 255;
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "PerspectiveConfiguration [hasNavigationArea=" + hasNavigationArea + ", multiViewNavigationArea="
+            + multiViewNavigationArea + ", multiViewMainArea=" + multiViewMainArea + ", hasSupplementalArea=" + hasSupplementalArea
+            + ", multiViewSupplementalArea=" + multiViewSupplementalArea + ", enableViewPinning=" + enableViewPinning
+            + ", enableViewExtraction=" + enableViewExtraction + ", allViewsAreCloseable=" + allViewsAreCloseable + ", priority="
+            + priority + "]";
+   }
 }

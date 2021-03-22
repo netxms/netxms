@@ -171,4 +171,13 @@ public class ObjectOverviewView extends ObjectView
       Point s = viewArea.getSize();
       viewArea.redraw(0, 0, s.x, s.y, true);
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 10;
+   }
 }
