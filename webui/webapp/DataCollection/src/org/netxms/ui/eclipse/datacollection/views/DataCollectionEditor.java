@@ -62,7 +62,8 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
-import org.netxms.client.datacollection.DataCollectionConfigurationChangeListener;
+import org.netxms.client.datacollection.RemoteChangeListener;
+import org.netxms.client.datacollection.LocalChangeListener;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
@@ -89,6 +90,7 @@ import org.netxms.ui.eclipse.tools.DialogData;
 import org.netxms.ui.eclipse.tools.ExtendedPropertyDialog;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -114,7 +116,7 @@ public class DataCollectionEditor extends ViewPart
    public static final int COLUMN_RELATEDOBJ = 10;
    public static final int COLUMN_STATUSCALC = 11;
 
-	private Composite content;
+   private CompositeWithMessageBar viewerContainer;
 	private FilterText filterText;
 	private SortableTableViewer viewer;
 	private NXCSession session;
@@ -138,7 +140,7 @@ public class DataCollectionEditor extends ViewPart
 	private Action actionExportAllToCsv;
 	private Action actionBulkUpdate;
 	private boolean hideModificationWarnings;
-	private DataCollectionConfigurationChangeListener changeListener;
+	private RemoteChangeListener changeListener;
 
    /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -154,7 +156,7 @@ public class DataCollectionEditor extends ViewPart
 		object = ((obj != null) && ((obj instanceof DataCollectionTarget) || (obj instanceof Template))) ? obj : null;
 		setPartName(Messages.get().DataCollectionEditor_PartNamePrefix + ((object != null) ? object.getObjectName() : Messages.get().DataCollectionEditor_Error));
 	
-		changeListener = new DataCollectionConfigurationChangeListener() {
+		changeListener = new RemoteChangeListener() {
          @Override
          public void onUpdate(DataCollectionObject object)
          {
@@ -209,12 +211,19 @@ public class DataCollectionEditor extends ViewPart
     */
 	@Override
 	public void createPartControl(Composite parent)
-	{
-		content = new Composite(parent, SWT.NONE);
-		content.setLayout(new FormLayout());
+	{      
+      viewerContainer = new CompositeWithMessageBar(parent, SWT.NONE) {
+         @Override
+         protected Composite createContent(Composite parent)
+         {
+            Composite content = super.createContent(parent);
+            content.setLayout(new FormLayout());
+            return content;
+         }
+      };
 		
 		// Create filter area
-		filterText = new FilterText(content, SWT.NONE);
+		filterText = new FilterText(viewerContainer.getContent(), SWT.NONE);
 		filterText.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e)
@@ -225,7 +234,7 @@ public class DataCollectionEditor extends ViewPart
 		
 		final String[] names = { Messages.get().DataCollectionEditor_ColID, Messages.get().DataCollectionEditor_ColOrigin, Messages.get().DataCollectionEditor_ColDescription, Messages.get().DataCollectionEditor_ColParameter, Messages.get().DataCollectionEditor_ColDataType, Messages.get().DataCollectionEditor_ColPollingInterval, Messages.get().DataCollectionEditor_ColRetentionTime, Messages.get().DataCollectionEditor_ColStatus, Messages.get().DataCollectionEditor_ColThresholds, Messages.get().DataCollectionEditor_ColTemplate, "Related Object", "Is status calculation" };
 		final int[] widths = { 60, 100, 250, 200, 90, 90, 90, 100, 200, 150, 150, 90 };
-		viewer = new SortableTableViewer(content, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+		viewer = new SortableTableViewer(viewerContainer.getContent(), names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new DciLabelProvider());
 		viewer.setComparator(new DciComparator((DciLabelProvider)viewer.getLabelProvider()));
@@ -314,6 +323,23 @@ public class DataCollectionEditor extends ViewPart
 			{
 				dciConfig = session.openDataCollectionConfiguration(object.getObjectId(), changeListener);
 				dciConfig.setUserData(viewer);
+				if (object instanceof Template)
+				{
+               dciConfig.setLocalChangeCallback(new LocalChangeListener() {                  
+                  @Override
+                  public void onObjectChange()
+                  {         
+                     runInUIThread(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           DataCollectionEditor.this.showInformationMessage();
+                        }
+                     });
+                  }
+               });
+				}
+            
 				//load all related objects
             if (!session.areObjectsSynchronized())
 				{
@@ -1105,7 +1131,7 @@ public class DataCollectionEditor extends ViewPart
 		filterText.setVisible(enable);
 		FormData fd = (FormData)viewer.getTable().getLayoutData();
 		fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
-		content.layout();
+		viewerContainer.layout();
 		if (enable)
 		{
 			filterText.setFocus();
@@ -1127,4 +1153,16 @@ public class DataCollectionEditor extends ViewPart
 		filter.setFilterString(text);
 		viewer.refresh(false);
 	}
+   
+   /**
+    * Display message with information about policy deploy
+    */
+   public void showInformationMessage()
+   {
+      if (!viewerContainer.isDisposed())
+      {
+         viewerContainer.showMessage(CompositeWithMessageBar.INFORMATION,
+               "Changes in policies will be deployed to nodes the moment when the tab is closed");
+      }
+   }
 }

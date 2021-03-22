@@ -38,6 +38,7 @@ import org.netxms.client.AgentPolicy;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.datacollection.LocalChangeListener;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -79,6 +80,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    private Composite content;
    private Action actionSave;
    private Action actionRefresh;
+   private LocalChangeListener localChangeListener;
 
    /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -96,10 +98,11 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
     * @param policyGUID policy object GUID
     * @param templateId template object ID
     */
-   public void setPolicy(UUID policyGUID, long templateId)
+   public void setPolicy(UUID policyGUID, long templateId, LocalChangeListener localChangeListener)
    {
       this.templateId = templateId;
       this.policyGUID = policyGUID;
+      this.localChangeListener = localChangeListener;
       modified = false;
       firePropertyChange(PROP_DIRTY);
       actionSave.setEnabled(false);
@@ -133,6 +136,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    {
       modified = false;
       firePropertyChange(PROP_DIRTY);
+      localChangeListener = null;
 
       super.dispose();
    }
@@ -385,6 +389,8 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
                   firePropertyChange(PROP_DIRTY);
                   actionSave.setEnabled(false);
                   saveInProgress = false;
+                  if (localChangeListener != null)
+                     localChangeListener.onObjectChange();
                }
             });
          }
@@ -462,6 +468,8 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          }      
          policy = editor.updatePolicyFromControl();
          editor.onSave();
+         if (localChangeListener != null)
+            localChangeListener.onObjectChange();
          return YES;
       }
       if (rc == SavePolicyDialog.CANCEL)

@@ -38,7 +38,8 @@ public class DataCollectionConfiguration
    private HashMap<Long, DataCollectionObject> items;
    private Object userData = null;
    private SessionListener listener;
-   private DataCollectionConfigurationChangeListener changeListener;
+   private RemoteChangeListener remoteChangeListener;
+   private LocalChangeListener localChangeListener;
 
    /**
     * Create empty data collection configuration.
@@ -60,13 +61,13 @@ public class DataCollectionConfiguration
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void open(DataCollectionConfigurationChangeListener changeListener) throws IOException, NXCException
+   public void open(RemoteChangeListener changeListener) throws IOException, NXCException
    {
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_GET_NODE_DCI_LIST);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
       session.sendMessage(msg);
       session.waitForRCC(msg.getMessageId());
-      this.changeListener = changeListener;
+      this.remoteChangeListener = changeListener;
 
       while(true)
       {
@@ -106,24 +107,24 @@ public class DataCollectionConfiguration
                      (dco instanceof DataCollectionItem)
                            ? new DataCollectionItem(DataCollectionConfiguration.this, (DataCollectionItem)dco)
                            : new DataCollectionTable(DataCollectionConfiguration.this, (DataCollectionTable)dco));
-               if (DataCollectionConfiguration.this.changeListener != null)
-                  DataCollectionConfiguration.this.changeListener.onUpdate(dco);
+               if (DataCollectionConfiguration.this.remoteChangeListener != null)
+                  DataCollectionConfiguration.this.remoteChangeListener.onUpdate(dco);
             }
             else if (n.getCode() == SessionNotification.DCI_DELETE)
             {
                final long id = (Long)n.getObject();
                items.remove(id);
-               if (DataCollectionConfiguration.this.changeListener != null)
-                  DataCollectionConfiguration.this.changeListener.onDelete(id);
+               if (DataCollectionConfiguration.this.remoteChangeListener != null)
+                  DataCollectionConfiguration.this.remoteChangeListener.onDelete(id);
             }
             else if (n.getCode() == SessionNotification.DCI_STATE_CHANGE)
             {
                DCOStatusHolder stHolder = (DCOStatusHolder)n.getObject();
                updateItemStatusFromNotification(stHolder.getDciIdArray(), stHolder.getStatus());
-               if (DataCollectionConfiguration.this.changeListener != null)
+               if (DataCollectionConfiguration.this.remoteChangeListener != null)
                {
                   for(long id : stHolder.getDciIdArray())
-                     DataCollectionConfiguration.this.changeListener.onStatusChange(id, stHolder.getStatus());
+                     DataCollectionConfiguration.this.remoteChangeListener.onStatusChange(id, stHolder.getStatus());
                }
             }
          }
@@ -185,7 +186,7 @@ public class DataCollectionConfiguration
       session.waitForRCC(msg.getMessageId());
       items.clear();
       session.removeListener(listener);
-      changeListener = null;
+      remoteChangeListener = null;
    }
 
    /**
@@ -299,6 +300,9 @@ public class DataCollectionConfiguration
     */
    public long modifyObject(DataCollectionObject dco) throws IOException, NXCException
    {
+      if (localChangeListener != null)
+         localChangeListener.onObjectChange();
+      
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_MODIFY_NODE_DCI);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
       if (dco != null)
@@ -318,6 +322,9 @@ public class DataCollectionConfiguration
     */
    private void copyObjectsInternal(long destNodeId, long[] items, boolean move) throws IOException, NXCException
    {
+      if (localChangeListener != null)
+         localChangeListener.onObjectChange();
+      
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_COPY_DCI);
       msg.setFieldInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, (int)ownerId);
       msg.setFieldInt32(NXCPCodes.VID_DESTINATION_OBJECT_ID, (int)destNodeId);
@@ -398,6 +405,9 @@ public class DataCollectionConfiguration
     */
    public void deleteObject(long itemId) throws IOException, NXCException
    {
+      if (localChangeListener != null)
+         localChangeListener.onObjectChange();
+      
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_DELETE_NODE_DCI);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)itemId);
@@ -416,6 +426,9 @@ public class DataCollectionConfiguration
    public void bulkUpdateDCIs(Collection<Long> idList, Collection<? extends BulkDciUpdateElement> fields)
          throws IOException, NXCException
    {
+      if (localChangeListener != null)
+         localChangeListener.onObjectChange();
+      
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_BULK_DCI_UPDATE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
 
@@ -459,5 +472,10 @@ public class DataCollectionConfiguration
    protected final NXCSession getSession()
    {
       return session;
+   }
+
+   public void setLocalChangeCallback(LocalChangeListener localChangeListener)
+   {
+      this.localChangeListener = localChangeListener;
    }
 }
