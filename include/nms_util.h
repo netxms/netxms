@@ -4522,14 +4522,14 @@ String LIBNETXMS_EXPORTABLE FormatTimestamp(time_t t);
 
 String LIBNETXMS_EXPORTABLE GetEnvironmentVariableEx(const TCHAR *var);
 
-bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const WCHAR *option, WCHAR *buffer, int bufSize);
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const WCHAR *option, WCHAR *buffer, size_t bufSize);
 bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolW(const WCHAR *optString, const WCHAR *option, bool defVal);
 int32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntW(const WCHAR *optString, const WCHAR *option, int32_t defVal);
 uint32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntW(const WCHAR *optString, const WCHAR *option, uint32_t defVal);
 uint64_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64W(const WCHAR *optString, const WCHAR *option, uint64_t defVal);
 uuid LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsGUIDW(const WCHAR *optString, const WCHAR *option, const uuid& defVal);
 
-bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueA(const char *optString, const char *option, char *buffer, int bufSize);
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueA(const char *optString, const char *option, char *buffer, size_t bufSize);
 bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolA(const char *optString, const char *option, bool defVal);
 int32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntA(const char *optString, const char *option, int32_t defVal);
 uint32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntA(const char *optString, const char *option, uint32_t defVal);

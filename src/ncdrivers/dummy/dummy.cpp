@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** Dummy SMS driver for debugging
-** Copyright (C) 2012-2020 Raden Solutions
+** Dummy notification channel driver for debugging
+** Copyright (C) 2012-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -17,12 +17,11 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: main.cpp
+** File: dummy.cpp
 **
 **/
 
 #include <ncdrv.h>
-#include <nms_util.h>
 
 #define DEBUG_TAG _T("ncd.dummy")
 
@@ -41,7 +40,7 @@ public:
  */
 DummyDriver::DummyDriver()
 {
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Dummy SMS Driver loaded, set debug=6 or higher to see actual messages"));
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Dummy notification channel driver instantiated, set debug level to 6 or higher to see actual messages"));
 }
 
 /**
@@ -56,7 +55,7 @@ bool DummyDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
 /**
  * Driver entry point
  */
-DECLARE_NCD_ENTRY_POINT(Dummy, NULL)
+DECLARE_NCD_ENTRY_POINT(Dummy, nullptr)
 {
    return new DummyDriver();
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -132,18 +132,21 @@ inline SNMP_Version SNMP_VersionFromInt(int v)
    }
 }
 
-//
-// PDU types
-//
-#define SNMP_INVALID_PDU         255
-#define SNMP_GET_REQUEST         0
-#define SNMP_GET_NEXT_REQUEST    1
-#define SNMP_RESPONSE            2
-#define SNMP_SET_REQUEST         3
-#define SNMP_TRAP                4
-#define SNMP_GET_BULK_REQUEST    5
-#define SNMP_INFORM_REQUEST      6
-#define SNMP_REPORT              8
+/**
+ * SNMP command codes (PDU types)
+ */
+enum SNMP_Command
+{
+   SNMP_GET_REQUEST         = 0,
+   SNMP_GET_NEXT_REQUEST    = 1,
+   SNMP_RESPONSE            = 2,
+   SNMP_SET_REQUEST         = 3,
+   SNMP_TRAP                = 4,
+   SNMP_GET_BULK_REQUEST    = 5,
+   SNMP_INFORM_REQUEST      = 6,
+   SNMP_REPORT              = 8,
+   SNMP_INVALID_PDU         = 255
+};
 
 /**
  * SNMP PDU error codes
@@ -481,6 +484,8 @@ public:
    SNMP_Variable *decodeOpaque() const;
 
    void setValueFromString(uint32_t type, const TCHAR *value);
+   void setValueFromUInt32(uint32_t type, uint32_t value);
+   void setValueFromObjectId(uint32_t type, const SNMP_ObjectId& value);
 };
 
 /**
@@ -606,9 +611,9 @@ class LIBNXSNMP_EXPORTABLE SNMP_PDU
 {
 private:
    SNMP_Version m_version;
-   uint32_t m_command;
-   ObjectArray<SNMP_Variable> *m_variables;
-   SNMP_ObjectId *m_pEnterprise;
+   SNMP_Command m_command;
+   ObjectArray<SNMP_Variable> m_variables;
+   SNMP_ObjectId m_trapId;
    int m_trapType;
    int m_specificTrap;
    uint32_t m_timestamp;
@@ -651,21 +656,25 @@ private:
 
 public:
    SNMP_PDU();
-   SNMP_PDU(uint32_t command, uint32_t requestId, SNMP_Version version = SNMP_VERSION_2C);
-   SNMP_PDU(const SNMP_PDU *src);
+   SNMP_PDU(SNMP_Command command, uint32_t requestId, SNMP_Version version = SNMP_VERSION_2C);
+   SNMP_PDU(SNMP_Command command, SNMP_Version version, const SNMP_ObjectId& trapId, uint32_t sysUpTime, uint32_t requestId);
+   SNMP_PDU(const SNMP_PDU& src);
    ~SNMP_PDU();
 
    bool parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate);
    size_t encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext);
 
-   uint32_t getCommand() const { return m_command; }
-   const SNMP_ObjectId *getTrapId() const { return m_pEnterprise; }
-   int getTrapType() const { return m_trapType; }
-   int getSpecificTrapType() const { return m_specificTrap; }
-   int getNumVariables() const { return m_variables->size(); }
-   SNMP_Variable *getVariable(int index) const { return m_variables->get(index); }
+   SNMP_Command getCommand() const { return m_command; }
+   int getNumVariables() const { return m_variables.size(); }
+   SNMP_Variable *getVariable(int index) const { return m_variables.get(index); }
    SNMP_Version getVersion() const { return m_version; }
    SNMP_ErrorCode getErrorCode() const { return static_cast<SNMP_ErrorCode>(m_errorCode); }
+
+   void setTrapId(const SNMP_ObjectId& id) { setTrapId(id.value(), id.length()); }
+   void setTrapId(const uint32_t *value, size_t length);
+   const SNMP_ObjectId& getTrapId() const { return m_trapId; }
+   int getTrapType() const { return m_trapType; }
+   int getSpecificTrapType() const { return m_specificTrap; }
 
 	void setMessageId(uint32_t msgId) { m_msgId = msgId; }
 	uint32_t getMessageId() const { return m_msgId; }
@@ -689,8 +698,16 @@ public:
 	size_t getContextEngineIdLength() const { return m_contextEngineIdLen; }
 	const BYTE *getContextEngineId() const { return m_contextEngineId; }
 
-   void unlinkVariables() { m_variables->setOwner(Ownership::False); m_variables->clear(); m_variables->setOwner(Ownership::True); }
-   void bindVariable(SNMP_Variable *var);
+   void bindVariable(SNMP_Variable *var)
+   {
+      m_variables.add(var);
+   }
+   void unlinkVariables()
+   {
+      m_variables.setOwner(Ownership::False);
+      m_variables.clear();
+      m_variables.setOwner(Ownership::True);
+   }
 };
 
 /**
@@ -719,6 +736,7 @@ public:
    virtual bool isProxyTransport() = 0;
 
    uint32_t doRequest(SNMP_PDU *request, SNMP_PDU **response, uint32_t timeout = INFINITE, int numRetries = 1);
+   uint32_t sendTrap(SNMP_PDU *trap, uint32_t timeout = INFINITE, int numRetries = 1);
 
 	void setSecurityContext(SNMP_SecurityContext *ctx);
 	SNMP_SecurityContext *getSecurityContext() { return m_securityContext; }

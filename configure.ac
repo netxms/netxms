@@ -4726,6 +4726,7 @@ AC_CONFIG_FILES([
 	src/ncdrivers/slack/Makefile
 	src/ncdrivers/smseagle/Makefile
 	src/ncdrivers/smtp/Makefile
+	src/ncdrivers/snmptrap/Makefile
 	src/ncdrivers/telegram/Makefile
 	src/ncdrivers/text2reach/Makefile
 	src/ncdrivers/textfile/Makefile

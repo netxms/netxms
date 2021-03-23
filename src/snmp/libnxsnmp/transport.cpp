@@ -256,6 +256,43 @@ retry_wait:
 }
 
 /**
+ * Send TRAP or INFORM REQUEST message
+ */
+uint32_t SNMP_Transport::sendTrap(SNMP_PDU *trap, uint32_t timeout, int numRetries)
+{
+   if ((trap == nullptr) || (numRetries <= 0))
+      return SNMP_ERR_PARAM;
+
+   if (trap->getCommand() == SNMP_INFORM_REQUEST)
+   {
+      SNMP_PDU *response = nullptr;
+      uint32_t rc = doRequest(trap, &response, timeout, numRetries);
+      delete response;
+      return rc;
+   }
+
+   if (trap->getCommand() != SNMP_TRAP)
+      return SNMP_ERR_PARAM;
+
+   // Create dummy context
+   if (m_securityContext == nullptr)
+      m_securityContext = new SNMP_SecurityContext();
+
+   // Update SNMP V3 request with cached context engine id
+   if (trap->getVersion() == SNMP_VERSION_3)
+   {
+      if ((trap->getContextEngineIdLength() == 0) && (m_contextEngine != nullptr))
+      {
+         trap->setContextEngineId(m_contextEngine->getId(), m_contextEngine->getIdLen());
+      }
+   }
+
+   // TODO: implement SNMPv3 engine ID discovery and time sync
+
+   return (sendMessage(trap, timeout) > 0) ? SNMP_ERR_SUCCESS : SNMP_ERR_COMM;
+}
+
+/**
  * SNMP_UDPTransport default constructor
  */
 SNMP_UDPTransport::SNMP_UDPTransport() : SNMP_Transport()
