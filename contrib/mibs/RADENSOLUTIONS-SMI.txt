@@ -1,40 +1,40 @@
--- **************************************************************************
--- RADENSOLUTIONS-SMI -aden Solutions SIA structure of management informaton
+-- ****************************************************************************
+-- RADENSOLUTIONS-SMI - Raden Solutions SIA structure of management informaton
 --   
 -- Copyright (c) 2021 Raden Solutions
 --   
--- **************************************************************************
+-- ****************************************************************************
 
 RADENSOLUTIONS-SMI DEFINITIONS ::= BEGIN
 
 IMPORTS
-    MODULE-IDENTITY,
-    OBJECT-IDENTITY,
-    enterprises
-        FROM SNMPv2-SMI;
+   MODULE-IDENTITY,
+   OBJECT-IDENTITY,
+   enterprises
+      FROM SNMPv2-SMI;
 
 radenSolutions MODULE-IDENTITY
-    LAST-UPDATED    "202103220000Z"
-    ORGANIZATION    "Raden Solutions SIA"
-    CONTACT-INFO
-            "Raden Solutions SIA
+   LAST-UPDATED    "202103220000Z"
+   ORGANIZATION    "Raden Solutions SIA"
+   CONTACT-INFO
+         "Raden Solutions SIA
 
-            Postal: Gustava Zemgala 71
-                    Riga, LV-1039
-                    Latvia
+         Postal: Gustava Zemgala 71
+                  Riga, LV-1039
+                  Latvia
 
-            E-mail: snmp@radensolutions.com"
-    DESCRIPTION
-        "The structure of management information for Raden Solutions products."
-    REVISION "1"
-    DESCRIPTION
-        "Initial version of this MIB module."
-    ::= { enterprises 57163 }
+         E-mail: snmp@radensolutions.com"
+   DESCRIPTION
+      "The structure of management information for Raden Solutions products."
+   REVISION "1"
+   DESCRIPTION
+      "Initial version of this MIB module."
+   ::= { enterprises 57163 }
 
 netxms OBJECT-IDENTITY
-    STATUS          current
-    DESCRIPTION
-        "Root OBJECT IDENTIFIER for NetXMS network management system."
-    ::= { radenSolutions 1 }
+   STATUS          current
+   DESCRIPTION
+      "Root OBJECT IDENTIFIER for NetXMS network management system."
+   ::= { radenSolutions 1 }
 
 END
