@@ -1,0 +1,109 @@
+-- **************************************************************************
+-- NETXMS-MIB - MIB file for NetXMS network management system
+--   
+-- Copyright (c) 2021 Raden Solutions
+--   
+-- **************************************************************************
+
+NETXMS-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+   MODULE-IDENTITY,
+   NOTIFICATION-TYPE,
+   OBJECT-TYPE
+      FROM SNMPv2-SMI
+   OBJECT-GROUP
+      FROM SNMPv2-CONF
+   TimeTicks
+      FROM RFC1155-SMI
+   DisplayString
+      FROM SNMPv2-TC
+   radenSolutions
+      FROM RADENSOLUTIONS-SMI;
+
+netxms MODULE-IDENTITY
+   LAST-UPDATED    "202103230000Z"
+   ORGANIZATION    "Raden Solutions SIA"
+   CONTACT-INFO
+      "Raden Solutions SIA
+
+      Postal: Gustava Zemgala 71
+              Riga, LV-1039
+              Latvia
+
+      E-mail: snmp@radensolutions.com"
+   DESCRIPTION
+      "Enterprise specific traps and SNMP objects for NetXMS network management system."
+   REVISION "1"
+   DESCRIPTION
+      "Initial version of this MIB module."
+   ::= { radenSolutions 1 }
+
+nxEvent OBJECT-GROUP
+   OBJECTS { nxSourceNode, nxSeverity, nxMessage, nxTimestamp, nxAlarmKey, nxAdditionalData }
+   STATUS current
+   DESCRIPTION "NetXMS event (alert) object."
+   ::= { netxms 1 }
+
+nxSourceNode OBJECT-TYPE
+   SYNTAX DisplayString
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "Name of source node for this event."
+      ::= { nxEvent 1 }
+
+nxSeverity OBJECT-TYPE
+   SYNTAX INTEGER {
+      normal(0),
+      warning(1),
+      minor(2),
+      major(3),
+      critical(4)
+   }
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "Severity of this event. Possible values are:
+      0   Normal
+      1   Warning
+      2   Minor
+      3   Major
+      4   Critical"
+      ::= { nxEvent 2 }
+
+nxMessage OBJECT-TYPE
+   SYNTAX DisplayString
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "Message text for this event."
+      ::= { nxEvent 3 }
+
+nxTimestamp OBJECT-TYPE
+   SYNTAX TimeTicks
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "Timestamp for this event as UNIX time."
+      ::= { nxEvent 4 }
+
+nxAlarmKey OBJECT-TYPE
+   SYNTAX DisplayString
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "Alarm key that can be used to match events related to one alarm."
+      ::= { nxEvent 5 }
+
+nxAdditionalData OBJECT-TYPE
+   SYNTAX DisplayString
+   MAX-ACCESS read-only
+   STATUS current
+   DESCRIPTION "Additional data for this event."
+      ::= { nxEvent 6 }
+
+nxNotifications OBJECT IDENTIFIER ::= { netxms 0 }
+
+nxAlert NOTIFICATION-TYPE
+    OBJECTS { nxSourceNode, nxSeverity, nxMessage, nxTimestamp, nxAlarmKey, nxAdditionalData }
+    STATUS current
+    DESCRIPTION "Generic NetXMS notification generated from event."
+    ::= { nxNotifications 1 }
+
+END

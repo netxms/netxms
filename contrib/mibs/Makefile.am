@@ -537,6 +537,7 @@ mibs_DATA = \
 	NETSCREEN-VSYS-MIB.txt \
 	NETSWITCH-MIB.txt \
 	NETUP-MIB.txt \
+	NETXMS-MIB.txt \
 	NetWare-Server-MIB.txt \
 	NETWORK-APPLIANCE-MIB.txt \
 	NETWORK-SERVICES-MIB.txt \
