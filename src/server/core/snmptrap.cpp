@@ -430,7 +430,7 @@ static void GenerateTrapEvent(const shared_ptr<Node>& node, UINT32 dwIndex, SNMP
    SNMPTrapConfiguration *trapCfg = m_trapCfgList.get(dwIndex);
 
    StringMap parameters;
-   parameters.set(_T("oid"), pdu->getTrapId()->toString());
+   parameters.set(_T("oid"), pdu->getTrapId().toString());
 
 	// Extract varbinds from trap and add them as event's parameters
    int numMaps = trapCfg->getParameterMappingCount();
@@ -485,7 +485,7 @@ static void GenerateTrapEvent(const shared_ptr<Node>& node, UINT32 dwIndex, SNMP
       vm = CreateServerScriptVM(trapCfg->getScript(), node);
       if (vm != nullptr)
       {
-         vm->setGlobalVariable("$trap", vm->createValue(pdu->getTrapId()->toString()));
+         vm->setGlobalVariable("$trap", vm->createValue(pdu->getTrapId().toString()));
          NXSL_Array *varbinds = new NXSL_Array(vm);
          for(int i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2; i < pdu->getNumVariables(); i++)
          {
@@ -559,7 +559,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int
 
    InterlockedIncrement64(&g_snmpTrapsReceived);
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Received SNMP %s %s from %s"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"),
-             pdu->getTrapId()->toString(&buffer[96], 4000), srcAddr.toString(buffer));
+             pdu->getTrapId().toString(&buffer[96], 4000), srcAddr.toString(buffer));
 
 	if (isInformRq)
 	{
@@ -593,7 +593,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int
                  trapId, (g_dbSyntax == DB_SYNTAX_TSDB) ? _T("to_timestamp(") : _T(""), static_cast<int64_t>(timestamp),
                  (g_dbSyntax == DB_SYNTAX_TSDB) ? _T(")") : _T(""), srcAddr.toString(buffer),
                  (node != nullptr) ? node->getId() : (UINT32)0, (node != nullptr) ? node->getZoneUIN() : zoneUIN,
-                 pdu->getTrapId()->toString(oidText, 1024),
+                 pdu->getTrapId().toString(oidText, 1024),
                  (const TCHAR *)DBPrepareString(g_dbDriver, varbinds));
       QueueSQLRequest(query);
 
@@ -606,7 +606,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int
       msg.setFieldFromTime(VID_TRAP_LOG_MSG_BASE + 1, timestamp);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 2, srcAddr);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 3, (node != nullptr) ? node->getId() : (UINT32)0);
-      msg.setField(VID_TRAP_LOG_MSG_BASE + 4, pdu->getTrapId()->toString(oidText, 1024));
+      msg.setField(VID_TRAP_LOG_MSG_BASE + 4, pdu->getTrapId().toString(oidText, 1024));
       msg.setField(VID_TRAP_LOG_MSG_BASE + 5, varbinds);
       EnumerateClientSessions(BroadcastNewTrap, &msg);
    }
@@ -646,7 +646,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int
                const SNMPTrapConfiguration *trapCfg = m_trapCfgList.get(i);
                if (trapCfg->getOid().length() > 0)
                {
-                  iResult = pdu->getTrapId()->compare(trapCfg->getOid());
+                  iResult = pdu->getTrapId().compare(trapCfg->getOid());
                   if (iResult == OID_EQUAL)
                   {
                      matchLen = trapCfg->getOid().length();
@@ -674,7 +674,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int
                const TCHAR *names[3] = { _T("oid"), nullptr, _T("sourcePort") };
                TCHAR oidText[1024];
                PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, EventOrigin::SNMP, 0, node->getId(), "ssd", names,
-                  pdu->getTrapId()->toString(oidText, 1024), (const TCHAR *)varbinds, srcPort);
+                  pdu->getTrapId().toString(oidText, 1024), (const TCHAR *)varbinds, srcPort);
             }
             s_trapCfgLock.unlock();
          }

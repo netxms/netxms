@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
-** Notification drivder that writes messages to text file
-** Copyright (C) 2019 Raden Solutions
+** Notification channel driver that writes messages to text file
+** Copyright (C) 2019-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,9 +37,17 @@ private:
    TCHAR m_fileName[MAX_PATH];
 
 public:
-   TextFileDriver(const TCHAR *fileName) { _tcsncpy(m_fileName, fileName, MAX_PATH); }
+   TextFileDriver(const TCHAR *fileName);
    virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
 };
+
+/**
+ * Create driver instance
+ */
+TextFileDriver::TextFileDriver(const TCHAR *fileName)
+{
+   _tcslcpy(m_fileName, fileName, MAX_PATH);
+}
 
 /**
  * Driver send method
@@ -48,9 +56,9 @@ bool TextFileDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
 {
    bool success = false;
    FILE *f = _tfopen(m_fileName, _T("a"));
-   if (f == NULL)
+   if (f == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot open file: %s"), m_fileName);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot open file %s (%s)"), m_fileName, _tcserror(errno));
       return false;
    }
 
@@ -66,7 +74,12 @@ bool TextFileDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
  */
 DECLARE_NCD_ENTRY_POINT(TextFile, &s_config)
 {
-   const TCHAR *fileName = config->getValue(_T("/TextFile/filePath"), _T("/tmp/test.txt"));
+   const TCHAR *fileName = config->getValue(_T("/TextFile/OutputFile"));
+   if (fileName == nullptr)
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot create driver instance (output file name not set)"));
+      return nullptr;
+   }
    return new TextFileDriver(fileName);
 }
 

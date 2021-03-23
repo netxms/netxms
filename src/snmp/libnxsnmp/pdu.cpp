@@ -68,12 +68,10 @@ static struct
 /**
  * SNMP_PDU default constructor
  */
-SNMP_PDU::SNMP_PDU()
+SNMP_PDU::SNMP_PDU() : m_variables(0, 16, Ownership::True)
 {
    m_version = SNMP_VERSION_1;
    m_command = SNMP_INVALID_PDU;
-   m_variables = new ObjectArray<SNMP_Variable>(0, 16, Ownership::True);
-   m_pEnterprise = nullptr;
    m_errorCode = SNMP_PDU_ERR_SUCCESS;
    m_errorIndex = 0;
    m_requestId = 0;
@@ -95,12 +93,10 @@ SNMP_PDU::SNMP_PDU()
 /**
  * Create request PDU
  */
-SNMP_PDU::SNMP_PDU(uint32_t command, uint32_t requestId, SNMP_Version version)
+SNMP_PDU::SNMP_PDU(SNMP_Command command, uint32_t requestId, SNMP_Version version) : m_variables(0, 16, Ownership::True)
 {
    m_version = version;
    m_command = command;
-   m_variables = new ObjectArray<SNMP_Variable>(0, 16, Ownership::True);
-   m_pEnterprise = nullptr;
    m_errorCode = SNMP_PDU_ERR_SUCCESS;
    m_errorIndex = 0;
    m_requestId = requestId;
@@ -120,33 +116,67 @@ SNMP_PDU::SNMP_PDU(uint32_t command, uint32_t requestId, SNMP_Version version)
 }
 
 /**
- * Copy constructor
+ * Create trap or inform request PDU
  */
-SNMP_PDU::SNMP_PDU(const SNMP_PDU *src) : m_authoritativeEngine(&src->m_authoritativeEngine)
+SNMP_PDU::SNMP_PDU(SNMP_Command command, SNMP_Version version, const SNMP_ObjectId& trapId, uint32_t sysUpTime, uint32_t requestId) : m_variables(16, 16, Ownership::True)
 {
-   m_version = src->m_version;
-   m_command = src->m_command;
-   m_variables = new ObjectArray<SNMP_Variable>(src->m_variables->size(), 16, Ownership::True);
-   for(int i = 0; i < src->m_variables->size(); i++)
-      m_variables->add(new SNMP_Variable(src->m_variables->get(i)));
-   m_pEnterprise = (src->m_pEnterprise != nullptr) ? new SNMP_ObjectId(*src->m_pEnterprise) : nullptr;
-   m_errorCode = src->m_errorCode;
-   m_errorIndex = src->m_errorIndex;
-   m_requestId = src->m_requestId;
-	m_msgId = src->m_msgId;
-	m_flags = src->m_flags;
-   m_trapType = src->m_trapType;
-   m_specificTrap = src->m_specificTrap;
-	m_contextEngineIdLen = src->m_contextEngineIdLen;
-   memcpy(m_contextEngineId, src->m_contextEngineId, SNMP_MAX_ENGINEID_LEN); 
-	strcpy(m_contextName, src->m_contextName);
-	m_msgMaxSize = src->m_msgMaxSize;
-   m_authObject = MemCopyStringA(src->m_authObject);
-	m_reportable = src->m_reportable;
-   m_securityModel = src->m_securityModel;
+   m_version = version;
+   m_command = command;
+   m_errorCode = SNMP_PDU_ERR_SUCCESS;
+   m_errorIndex = 0;
+   m_requestId = requestId;
+   m_msgId = requestId;
+   m_flags = 0;
+   m_contextEngineIdLen = 0;
+   m_contextName[0] = 0;
+   m_msgMaxSize = SNMP_DEFAULT_MSG_MAX_SIZE;
+   m_authObject = nullptr;
+   m_reportable = true;
+   m_securityModel = (m_version == SNMP_VERSION_1) ? SNMP_SECURITY_MODEL_V1 : ((m_version == SNMP_VERSION_2C) ? SNMP_SECURITY_MODEL_V2C : SNMP_SECURITY_MODEL_USM);
    m_dwAgentAddr = 0;
    m_timestamp = 0;
-   m_signatureOffset = src->m_signatureOffset;
+   m_signatureOffset = 0;
+
+   setTrapId(trapId);
+   if (version != SNMP_VERSION_1)
+   {
+      // V2 TRAP PDU - add uptime and OID varbinds
+      SNMP_Variable *v = new SNMP_Variable(_T(".1.3.6.1.2.1.1.3.0"));
+      v->setValueFromUInt32(ASN_TIMETICKS, sysUpTime);
+      m_variables.add(v);
+
+      v = new SNMP_Variable(_T(".1.3.6.1.6.3.1.1.4.1.0"));
+      v->setValueFromObjectId(ASN_OBJECT_ID, trapId);
+      m_variables.add(v);
+   }
+}
+
+/**
+ * Copy constructor
+ */
+SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) : m_authoritativeEngine(&src.m_authoritativeEngine), m_trapId(src.m_trapId), m_variables(src.m_variables.size(), 16, Ownership::True)
+{
+   m_version = src.m_version;
+   m_command = src.m_command;
+   for(int i = 0; i < src.m_variables.size(); i++)
+      m_variables.add(new SNMP_Variable(src.m_variables.get(i)));
+   m_errorCode = src.m_errorCode;
+   m_errorIndex = src.m_errorIndex;
+   m_requestId = src.m_requestId;
+	m_msgId = src.m_msgId;
+	m_flags = src.m_flags;
+   m_trapType = src.m_trapType;
+   m_specificTrap = src.m_specificTrap;
+	m_contextEngineIdLen = src.m_contextEngineIdLen;
+   memcpy(m_contextEngineId, src.m_contextEngineId, SNMP_MAX_ENGINEID_LEN);
+	strcpy(m_contextName, src.m_contextName);
+	m_msgMaxSize = src.m_msgMaxSize;
+   m_authObject = MemCopyStringA(src.m_authObject);
+	m_reportable = src.m_reportable;
+   m_securityModel = src.m_securityModel;
+   m_dwAgentAddr = 0;
+   m_timestamp = 0;
+   m_signatureOffset = src.m_signatureOffset;
 }
 
 /**
@@ -154,8 +184,6 @@ SNMP_PDU::SNMP_PDU(const SNMP_PDU *src) : m_authoritativeEngine(&src->m_authorit
  */
 SNMP_PDU::~SNMP_PDU()
 {
-   delete m_pEnterprise;
-   delete m_variables;
 	MemFree(m_authObject);
 }
 
@@ -277,10 +305,10 @@ bool SNMP_PDU::parsePduContent(const BYTE *pData, size_t pduLength)
  */
 bool SNMP_PDU::parseTrapPDU(const BYTE *pData, size_t pduLength)
 {
-   UINT32 dwType;
+   uint32_t dwType;
    size_t dwLength, idLength;
    const BYTE *pbCurrPos = pData;
-   UINT32 dwBuffer;
+   uint32_t dwBuffer;
    bool bResult = false;
 
    // Enterprise ID
@@ -292,7 +320,7 @@ bool SNMP_PDU::parseTrapPDU(const BYTE *pData, size_t pduLength)
          memset(&oid, 0, sizeof(SNMP_OID));
          if (BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&oid))
          {
-            m_pEnterprise = new SNMP_ObjectId(oid.value, oid.length);
+            m_trapId.setValue(oid.value, oid.length);
             pduLength -= dwLength + idLength;
             pbCurrPos += dwLength;
 
@@ -386,12 +414,12 @@ bool SNMP_PDU::parseTrapPDU(const BYTE *pData, size_t pduLength)
          };
 
          // For standard trap types, create standard V2 Enterprise ID
-         m_pEnterprise->setValue(pdwStdOid[m_trapType], 10);
+         m_trapId.setValue(pdwStdOid[m_trapType], 10);
       }
       else
       {
-         m_pEnterprise->extend(0);
-         m_pEnterprise->extend(m_specificTrap);
+         m_trapId.extend(0);
+         m_trapId.extend(m_specificTrap);
       }
    }
 
@@ -404,35 +432,18 @@ bool SNMP_PDU::parseTrapPDU(const BYTE *pData, size_t pduLength)
 bool SNMP_PDU::parseTrap2PDU(const BYTE *pData, size_t pduLength)
 {
    bool bResult;
-   static UINT32 pdwStdTrapPrefix[9] = { 1, 3, 6, 1, 6, 3, 1, 1, 5 };
 
    bResult = parsePduContent(pData, pduLength);
    if (bResult)
    {
       bResult = false;
-      if (m_variables->size() >= 2)
+      if (m_variables.size() >= 2)
       {
-         SNMP_Variable *var = m_variables->get(1);
+         SNMP_Variable *var = m_variables.get(1);
          if (var->getType() == ASN_OBJECT_ID)
          {
-            m_pEnterprise = new SNMP_ObjectId((UINT32 *)var->getValue(), var->getValueLength() / sizeof(UINT32));
+            setTrapId(reinterpret_cast<const uint32_t*>(var->getValue()), var->getValueLength() / sizeof(uint32_t));
             bResult = true;
-         }
-      }
-
-      // Set V1 trap type and specific trap type fields
-      if (bResult)
-      {
-         if ((m_pEnterprise->compare(pdwStdTrapPrefix, 9) == OID_LONGER) &&
-             (m_pEnterprise->length() == 10))
-         {
-            m_trapType = m_pEnterprise->value()[9];
-            m_specificTrap = 0;
-         }
-         else
-         {
-            m_trapType = 6;
-            m_specificTrap = m_pEnterprise->value()[m_pEnterprise->length() - 1];
          }
       }
    }
@@ -879,9 +890,9 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 
    // Estimate required buffer size and allocate it
 	size_t bufferSize = 1024;
-   for(int i = 0; i < m_variables->size(); i++)
+   for(int i = 0; i < m_variables.size(); i++)
    {
-      SNMP_Variable *var = m_variables->get(i);
+      SNMP_Variable *var = m_variables.get(i);
       bufferSize += var->getValueLength() + var->getName().length() * 4 + 16;
    }
    BYTE *pBlock = static_cast<BYTE*>(SNMP_MemAlloc(bufferSize));
@@ -891,9 +902,9 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
    // Encode variables
    dwVarBindsSize = 0;
    BYTE *pbCurrPos = pVarBinds;
-   for(int i = 0; i < m_variables->size(); i++)
+   for(int i = 0; i < m_variables.size(); i++)
    {
-      SNMP_Variable *var = m_variables->get(i);
+      SNMP_Variable *var = m_variables.get(i);
       dwBytes = var->encode(pbCurrPos, bufferSize - dwVarBindsSize);
       pbCurrPos += dwBytes;
       dwVarBindsSize += dwBytes;
@@ -919,8 +930,8 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
       switch(pduType)
       {
          case ASN_TRAP_V1_PDU:
-            dwBytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_pEnterprise->value(),
-                                 m_pEnterprise->length() * sizeof(uint32_t),
+            dwBytes = BER_Encode(ASN_OBJECT_ID, reinterpret_cast<const BYTE*>(m_trapId.value()),
+                                 m_trapId.length() * sizeof(uint32_t),
                                  pbCurrPos, bufferSize - dwPDUSize);
             dwPDUSize += dwBytes;
             pbCurrPos += dwBytes;
@@ -1356,14 +1367,6 @@ bool SNMP_PDU::validateSignedMessage(const BYTE *msg, size_t msgLen, SNMP_Securi
 }
 
 /**
- * Bind variable to PDU
- */
-void SNMP_PDU::bindVariable(SNMP_Variable *pVar)
-{
-   m_variables->add(pVar);
-}
-
-/**
  * Set context engine ID
  */
 void SNMP_PDU::setContextEngineId(const BYTE *id, size_t len)
@@ -1379,4 +1382,25 @@ void SNMP_PDU::setContextEngineId(const char *id)
 {
 	m_contextEngineIdLen = std::min(strlen(id), SNMP_MAX_ENGINEID_LEN);
 	memcpy(m_contextEngineId, id, m_contextEngineIdLen);
+}
+
+/**
+ * Set trap ID
+ */
+void SNMP_PDU::setTrapId(const uint32_t *value, size_t length)
+{
+   m_trapId.setValue(value, length);
+
+   // Set V1 trap type and specific trap type fields
+   static uint32_t standardTrapPrefix[9] = { 1, 3, 6, 1, 6, 3, 1, 1, 5 };
+   if ((m_trapId.compare(standardTrapPrefix, 9) == OID_LONGER) && (m_trapId.length() == 10))
+   {
+      m_trapType = m_trapId.value()[9];
+      m_specificTrap = 0;
+   }
+   else
+   {
+      m_trapType = 6;
+      m_specificTrap = m_trapId.value()[m_trapId.length() - 1];
+   }
 }

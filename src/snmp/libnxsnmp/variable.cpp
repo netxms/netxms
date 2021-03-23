@@ -669,6 +669,86 @@ void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value)
          m_valueLength = strlen(reinterpret_cast<char*>(m_value));
          break;
       default:
+         m_type = ASN_NULL;
+         MemFreeAndNull(m_value);
+         m_valueLength = 0;
+         break;
+   }
+}
+
+/**
+ * Set variable from unsigned integer
+ */
+void SNMP_Variable::setValueFromUInt32(uint32_t type, uint32_t value)
+{
+   char text[32];
+   m_type = type;
+   switch(m_type)
+   {
+      case ASN_INTEGER:
+         m_valueLength = sizeof(int32_t);
+         m_value = MemRealloc(m_value, m_valueLength);
+         *reinterpret_cast<int32_t*>(m_value) = value;
+         break;
+      case ASN_COUNTER32:
+      case ASN_GAUGE32:
+      case ASN_TIMETICKS:
+      case ASN_UINTEGER32:
+         m_valueLength = sizeof(uint32_t);
+         m_value = MemRealloc(m_value, m_valueLength);
+         *reinterpret_cast<int32_t*>(m_value) = value;
+         break;
+      case ASN_COUNTER64:
+         m_valueLength = sizeof(uint64_t);
+         m_value = MemRealloc(m_value, m_valueLength);
+         *reinterpret_cast<uint64_t*>(m_value) = value;
+         break;
+      case ASN_IP_ADDR:
+         m_valueLength = sizeof(uint32_t);
+         m_value = MemRealloc(m_value, m_valueLength);
+         *reinterpret_cast<uint32_t*>(m_value) = htonl(value);
+         break;
+      case ASN_OBJECT_ID:
+         m_valueLength = sizeof(uint32_t);
+         MemFree(m_value);
+         m_value = reinterpret_cast<BYTE*>(MemCopyBlock(&value, m_valueLength));
+         break;
+      case ASN_OCTET_STRING:
+         MemFree(m_value);
+         snprintf(text, 32, "%u", value);
+         m_value = reinterpret_cast<BYTE*>(MemCopyStringA(text));
+         m_valueLength = strlen(reinterpret_cast<char*>(m_value));
+         break;
+      default:
+         m_type = ASN_NULL;
+         MemFreeAndNull(m_value);
+         m_valueLength = 0;
+         break;
+   }
+}
+
+/**
+ * Set variable from unsigned integer
+ */
+void SNMP_Variable::setValueFromObjectId(uint32_t type, const SNMP_ObjectId& value)
+{
+   m_type = type;
+   switch(m_type)
+   {
+      case ASN_OBJECT_ID:
+         m_valueLength = value.length() * sizeof(uint32_t);
+         MemFree(m_value);
+         m_value = reinterpret_cast<BYTE*>(MemCopyBlock(value.value(), m_valueLength));
+         break;
+      case ASN_OCTET_STRING:
+         MemFree(m_value);
+         m_value = reinterpret_cast<BYTE*>(value.toString().getUTF8String());
+         m_valueLength = strlen(reinterpret_cast<char*>(m_value));
+         break;
+      default:
+         m_type = ASN_NULL;
+         MemFreeAndNull(m_value);
+         m_valueLength = 0;
          break;
    }
 }

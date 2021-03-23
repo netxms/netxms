@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1814,9 +1814,10 @@ int LIBNETXMS_EXPORTABLE CodeFromText(const TCHAR *text, CodeLookupElement *look
 /**
  * Extract option value from string of form option=value;option=value;... (UNICODE version)
  */
-bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const WCHAR *option, WCHAR *buffer, int bufSize)
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const WCHAR *option, WCHAR *buffer, size_t bufSize)
 {
-	int state, pos;
+	int state;
+	size_t pos;
 	const WCHAR *curr, *start;
 	WCHAR temp[256];
 
@@ -1870,9 +1871,10 @@ bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const
 /**
  * Extract option value from string of form option=value;option=value;... (multibyte version)
  */
-bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueA(const char *optString, const char *option, char *buffer, int bufSize)
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueA(const char *optString, const char *option, char *buffer, size_t bufSize)
 {
-	int state, pos;
+	int state;
+	size_t pos;
 	const char *curr, *start;
 	char temp[256];
 
