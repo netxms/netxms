@@ -1171,7 +1171,7 @@ public:
    void sendPollerMsg(const TCHAR *format, ...);
 
    StringBuffer expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci,
-            const TCHAR *userName, const TCHAR *objectName, const StringMap *inputFields, const StringList *args);
+            const TCHAR *userName, const TCHAR *objectName, const TCHAR *instance, const StringMap *inputFields, const StringList *args);
 
    void updateGeoLocationHistory(GeoLocation location);
 

@@ -1598,7 +1598,7 @@ ServerCommandExecutor::ServerCommandExecutor(NXCPMessage *request, ClientSession
       }
 
       TCHAR *cmd = request->getFieldAsString(VID_COMMAND);
-      m_cmd = MemCopyString(object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, inputFields, nullptr));
+      m_cmd = MemCopyString(object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, nullptr, inputFields, nullptr));
 
       if (request->getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0)
       {
@@ -1607,7 +1607,7 @@ ServerCommandExecutor::ServerCommandExecutor(NXCPMessage *request, ClientSession
          {
             inputFields->set(list.get(i), _T("******"));
          }
-         m_maskedCommand = object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, inputFields, nullptr);
+         m_maskedCommand = object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, nullptr, inputFields, nullptr);
       }
       else
       {

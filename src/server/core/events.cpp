@@ -618,7 +618,7 @@ StringBuffer Event::expandText(const TCHAR *textTemplate, const Alarm *alarm) co
         object = g_entireNetwork;
    }
 
-   return object->expandText(textTemplate, alarm, this, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr);
+   return object->expandText(textTemplate, alarm, this, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, nullptr);
 }
 
 /**

@@ -2515,7 +2515,7 @@ json_t *NetObj::toJson()
  * Expand text
  */
 StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci,
-         const TCHAR *userName, const TCHAR *objectName, const StringMap *inputFields, const StringList *args)
+         const TCHAR *userName, const TCHAR *objectName, const TCHAR *instance, const StringMap *inputFields, const StringList *args)
 {
    if (textTemplate == nullptr)
       return StringBuffer();
@@ -2524,8 +2524,9 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
    char entryPoint[MAX_IDENTIFIER_LENGTH];
    int i;
 
-   nxlog_debug_tag(_T("obj.macro"), 8, _T("NetObj::expandText(sourceObject=%u template='%s' alarm=%u event=") UINT64_FMT _T(")"),
-             m_id, CHECK_NULL(textTemplate), (alarm == nullptr) ? 0 : alarm->getAlarmId() , (event == nullptr) ? 0 : event->getId());
+   nxlog_debug_tag(_T("obj.macro"), 8, _T("NetObj::expandText(sourceObject=%u template='%s' alarm=%u event=") UINT64_FMT _T(" instance='%s')"),
+             m_id, CHECK_NULL(textTemplate), (alarm == nullptr) ? 0 : alarm->getAlarmId() , (event == nullptr) ? 0 : event->getId(),
+             CHECK_NULL(instance));
 
    StringBuffer output;
    for(const TCHAR *curr = textTemplate; *curr != 0; curr++)
@@ -2784,7 +2785,26 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                         *defaultValue = 0;
                         defaultValue++;
                         StrStrip(buffer);
-                        TCHAR *v = getCustomAttributeCopy(buffer);
+                        TCHAR *v = nullptr;
+                        if (instance != nullptr)
+                        {
+                           TCHAR tmp[128];
+                           _sntprintf(tmp, 128, _T("%s::%s"), buffer, instance);
+                           v = getCustomAttributeCopy(tmp);
+                        }
+                        else if (event != nullptr)
+                        {
+                           const StringList *names = event->getParameterNames();
+                           int index = names->indexOfIgnoreCase(_T("instance"));
+                           if (index != -1)
+                           {
+                              TCHAR tmp[128];
+                              _sntprintf(tmp, 128, _T("%s::%s"), buffer, event->getParameter(index));
+                              v = getCustomAttributeCopy(tmp);
+                           }
+                        }
+                        if (v == nullptr)
+                           v = getCustomAttributeCopy(buffer);
                         if (v != nullptr)
                            output.appendPreallocated(v);
                         else
