@@ -3161,6 +3161,10 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue(event->getId());
    }
+   else if (compareAttributeName(attr, "lastAlarmKey"))
+   {
+      value = vm->createValue(event->getLastAlarmKey());
+   }
    else if (compareAttributeName(attr, "message"))
    {
       value = vm->createValue(event->getMessage());

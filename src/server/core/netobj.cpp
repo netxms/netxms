@@ -2576,6 +2576,10 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   {
                      output.append(alarm->getKey());
                   }
+                  else if (event != nullptr)
+                  {
+                     output.append(event->getLastAlarmKey());
+                  }
                   break;
                case 'm':
                   if (event != nullptr)
