@@ -8162,7 +8162,7 @@ void ClientSession::executeAction(NXCPMessage *request)
                      delete alarm;
                      return;
                   }
-                  list = SplitCommandLine(object->expandText(action, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, &inputFields, nullptr));
+                  list = SplitCommandLine(object->expandText(action, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr));
                   _tcslcpy(action, list->get(0), MAX_PARAM_NAME);
                   list->remove(0);
                }
@@ -8202,7 +8202,7 @@ void ClientSession::executeAction(NXCPMessage *request)
                   {
                      inputFields.set(maskedFields.get(i), _T("******"));
                   }
-                  list = SplitCommandLine(object->expandText(originalActionString, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, &inputFields, nullptr));
+                  list = SplitCommandLine(object->expandText(originalActionString, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr));
                   list->remove(0);
                }
 
@@ -10622,7 +10622,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
                else
                {
                   task = make_shared<FileDownloadTask>(static_pointer_cast<Node>(object), this, request->getId(),
-                           object->expandText(remoteFile, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, &inputFields, nullptr),
+                           object->expandText(remoteFile, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr),
                            true, request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), monitor);
                   success = true;
                }
@@ -11014,7 +11014,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                      delete inputFields;
                      return;
                   }
-                  String expScript = object->expandText(script, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, inputFields, nullptr);
+                  String expScript = object->expandText(script, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, inputFields, nullptr);
                   MemFree(script);
                   script = MemCopyString(expScript);
                   delete alarm;
@@ -14310,7 +14310,7 @@ void ClientSession::expandMacros(NXCPMessage *request)
          return;
       }
 
-      String result = object->expandText(textToExpand, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, &inputFields, nullptr);
+      String result = object->expandText(textToExpand, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr);
       msg.setField(outFieldId, result);
       debugPrintf(7, _T("ClientSession::expandMacros(): template=\"%s\", result=\"%s\""), textToExpand, (const TCHAR *)result);
       MemFree(textToExpand);

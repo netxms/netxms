@@ -154,7 +154,7 @@ struct ExpandHeadersContext
  */
 static EnumerationCallbackResult ExpandHeaders(const TCHAR *key, const TCHAR *value, ExpandHeadersContext *context)
 {
-   context->headers->set(key, context->object->expandText(value, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, context->args));
+   context->headers->set(key, context->object->expandText(value, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, context->args));
    return _CONTINUE;
 }
 
@@ -164,7 +164,7 @@ static EnumerationCallbackResult ExpandHeaders(const TCHAR *key, const TCHAR *va
 uint32_t WebServiceDefinition::query(DataCollectionTarget *object, WebServiceRequestType requestType, const TCHAR *path,
          const StringList& args, AgentConnection *conn, void *result) const
 {
-   StringBuffer url = object->expandText(m_url, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, &args);
+   StringBuffer url = object->expandText(m_url, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, &args);
 
    StringMap headers;
    ExpandHeadersContext context;

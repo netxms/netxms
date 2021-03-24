@@ -1528,7 +1528,7 @@ void DCObject::updateTimeIntervalsInternal()
 {
    if ((m_retentionTimeSrc != nullptr) && (*m_retentionTimeSrc != 0))
    {
-      StringBuffer exp = m_owner.lock()->expandText(m_retentionTimeSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, nullptr, nullptr);
+      StringBuffer exp = m_owner.lock()->expandText(m_retentionTimeSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, m_instance, nullptr, nullptr);
       m_retentionTime = _tcstol(exp, nullptr, 10);
    }
    else
@@ -1538,7 +1538,7 @@ void DCObject::updateTimeIntervalsInternal()
 
    if ((m_pollingIntervalSrc != nullptr) && (*m_pollingIntervalSrc != 0))
    {
-      StringBuffer exp = m_owner.lock()->expandText(m_pollingIntervalSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, nullptr, nullptr);
+      StringBuffer exp = m_owner.lock()->expandText(m_pollingIntervalSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, m_instance, nullptr, nullptr);
       m_pollingInterval = _tcstol(exp, nullptr, 10);
    }
    else

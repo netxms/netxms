@@ -1905,7 +1905,7 @@ static int F_ExpandString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
       event = static_cast<Event*>(argv[2]->getValueAsObject()->getData());
    }
 
-   *result = vm->createValue(object->expandText(argv[0]->getValueAsCString(), nullptr, event, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr));
+   *result = vm->createValue(object->expandText(argv[0]->getValueAsCString(), nullptr, event, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, nullptr));
    return 0;
 }
 
