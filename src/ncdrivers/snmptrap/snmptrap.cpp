@@ -51,6 +51,7 @@ private:
    SNMP_AuthMethod m_authMethod;
    SNMP_EncryptionMethod m_privMethod;
    uint16_t m_port;
+   bool m_useInformRequest;
    time_t m_startTime;
 
    SNMPTrapDriver();
@@ -73,6 +74,7 @@ SNMPTrapDriver::SNMPTrapDriver()
    m_authMethod = SNMP_AUTH_NONE;
    m_privMethod = SNMP_ENCRYPT_NONE;
    m_port = 162;
+   m_useInformRequest = false;
    m_startTime = time(nullptr);
 }
 
@@ -100,7 +102,7 @@ bool SNMPTrapDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
 {
    nxlog_debug_tag(DEBUG_TAG, 6, _T("recipient=\"%s\", subject=\"%s\", text=\"%s\""), recipient, subject, body);
 
-   SNMP_PDU pdu(SNMP_TRAP, m_version, m_trapId, static_cast<uint32_t>(time(nullptr) - m_startTime), InterlockedIncrement(&s_requestId));
+   SNMP_PDU pdu(m_useInformRequest ? SNMP_INFORM_REQUEST : SNMP_TRAP, m_version, m_trapId, static_cast<uint32_t>(time(nullptr) - m_startTime), InterlockedIncrement(&s_requestId));
 
    pdu.bindVariable(CreateVarbind(m_messageFieldId, ASN_OCTET_STRING, body));
    if ((subject != nullptr) && (*subject != 0))
@@ -294,6 +296,7 @@ SNMPTrapDriver *SNMPTrapDriver::createInstance(Config *config)
       strlcpy(instance->m_authPassword, config->getValue("/SNMPTrap/AuthPassword", ""), 64);
       strlcpy(instance->m_privPassword, config->getValue("/SNMPTrap/PrivPassword", ""), 64);
 #endif
+      instance->m_useInformRequest = config->getValueAsBoolean(_T("/SNMPTrap/UseInformRequest"), instance->m_useInformRequest);
    }
    else
    {
