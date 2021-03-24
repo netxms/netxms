@@ -125,7 +125,7 @@ public:
 
    void updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, int state, int severity, uint32_t timeout,
             uint32_t timeoutEvent, uint32_t ackTimeout, const TCHAR *message, const TCHAR *impact, const IntegerArray<uint32_t>& alarmCategoryList);
-   void updateParentAlarm(UINT32 parentAlarmId);
+   void updateParentAlarm(uint32_t parentAlarmId);
    uint32_t acknowledge(ClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates);
    void resolve(uint32_t userId, Event *event, bool terminate, bool notify, bool includeSubordinates);
    uint32_t openHelpdeskIssue(TCHAR *hdref);

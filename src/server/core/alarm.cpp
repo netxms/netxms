@@ -827,7 +827,7 @@ void Alarm::updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *r
 /**
  * Update parent alarm ID
  */
-void Alarm::updateParentAlarm(UINT32 parentAlarmId)
+void Alarm::updateParentAlarm(uint32_t parentAlarmId)
 {
    // Update parent's subordinate list if parent is changed
    if (m_parentAlarmId != parentAlarmId)
@@ -856,17 +856,12 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message
    bool newAlarm = true;
    bool updateRelatedEvent = false;
 
-   // Expand alarm's message and key
-   String expMsg = event->expandText(message);
-   String expKey = event->expandText(key);
-   String expImpact = event->expandText(impact);
-
    // Check if we have a duplicate alarm
-   if (((state & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED) && !expKey.isEmpty())
+   if (((state & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED) && (key[0] != 0))
    {
       s_alarmList.lock();
 
-      Alarm *alarm = s_alarmList.find(expKey);
+      Alarm *alarm = s_alarmList.find(key);
       if (alarm != nullptr)
       {
          // Update parent's subordinate list if parent is changed
@@ -879,7 +874,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message
             if (parent != nullptr)
                parent->addSubordinateAlarm(alarm->getAlarmId());
          }
-         alarm->updateFromEvent(event, parentAlarmId, rcaScriptName, state, severity, timeout, timeoutEvent, ackTimeout, expMsg, expImpact, alarmCategoryList);
+         alarm->updateFromEvent(event, parentAlarmId, rcaScriptName, state, severity, timeout, timeoutEvent, ackTimeout, message, impact, alarmCategoryList);
          if (!alarm->isEventRelated(event->getId()))
          {
             alarmId = alarm->getAlarmId();      // needed for correct update of related events
@@ -899,7 +894,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message
    if (newAlarm)
    {
       // Create new alarm structure
-      Alarm *alarm = new Alarm(event, parentAlarmId, rcaScriptName, rule, expMsg, expKey, expImpact, state, severity, timeout, timeoutEvent, ackTimeout, alarmCategoryList);
+      Alarm *alarm = new Alarm(event, parentAlarmId, rcaScriptName, rule, message, key, impact, state, severity, timeout, timeoutEvent, ackTimeout, alarmCategoryList);
       alarmId = alarm->getAlarmId();
 
       // Open helpdesk issue

@@ -688,10 +688,13 @@ bool EPRule::processEvent(Event *event) const
 uint32_t EPRule::generateAlarm(Event *event) const
 {
    uint32_t alarmId = 0;
+   String message = event->expandText(m_alarmMessage);
+   String key = event->expandText(m_alarmKey);
+   String impact = event->expandText(m_alarmImpact);
+
    // Terminate alarms with key == our ack_key
 	if ((m_alarmSeverity == SEVERITY_RESOLVE) || (m_alarmSeverity == SEVERITY_TERMINATE))
 	{
-		String key = event->expandText(m_alarmKey);
 		if (!key.isEmpty())
 		   ResolveAlarmByKey(key, (m_flags & RF_TERMINATE_BY_REGEXP) ? true : false, m_alarmSeverity == SEVERITY_TERMINATE, event);
 	}
@@ -723,11 +726,13 @@ uint32_t EPRule::generateAlarm(Event *event) const
 	         delete vm;
 	      }
 	   }
-	   alarmId = CreateNewAlarm(m_guid, CHECK_NULL_EX(m_alarmMessage), CHECK_NULL_EX(m_alarmKey), m_alarmImpact, ALARM_STATE_OUTSTANDING,
+	   alarmId = CreateNewAlarm(m_guid, message, key, impact, ALARM_STATE_OUTSTANDING,
                      (m_alarmSeverity == SEVERITY_FROM_EVENT) ? event->getSeverity() : m_alarmSeverity,
                      m_alarmTimeout, m_alarmTimeoutEvent, parentAlarmId, m_rcaScriptName, event, 0, &m_alarmCategoryList,
                      ((m_flags & RF_CREATE_TICKET) != 0) ? true : false);
 	}
+
+   event->setLastAlarmKey(key);
 	return alarmId;
 }
 
