@@ -2275,7 +2275,7 @@ bool LIBNETXMS_EXPORTABLE MatchSchedule(const TCHAR *schedule, bool *withSeconds
 /**
  * Failure handler for DecryptPasswordW
  */
-inline bool DecryptPasswordFailW(const WCHAR *encryptedPasswd, WCHAR *decryptedPasswd, size_t bufferLenght)
+static inline bool DecryptPasswordFailW(const WCHAR *encryptedPasswd, WCHAR *decryptedPasswd, size_t bufferLenght)
 {
    if (decryptedPasswd != encryptedPasswd)
       wcsncpy(decryptedPasswd, encryptedPasswd, bufferLenght);
@@ -2323,7 +2323,7 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordW(const WCHAR *login, const WCHAR *encr
 /**
  * Failure handler for DecryptPasswordA
  */
-inline bool DecryptPasswordFailA(const char *encryptedPasswd, char *decryptedPasswd, size_t bufferLenght)
+static inline bool DecryptPasswordFailA(const char *encryptedPasswd, char *decryptedPasswd, size_t bufferLenght)
 {
    if (decryptedPasswd != encryptedPasswd)
       strncpy(decryptedPasswd, encryptedPasswd, bufferLenght);
