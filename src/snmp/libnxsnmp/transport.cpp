@@ -84,9 +84,32 @@ void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
 }
 
 /**
+ * Perform engine ID discovery.
+ * Authoritative engine ID should be cached in transport object after successful operation and
+ * context engine ID updated in original request PDU.
+ */
+uint32_t SNMP_Transport::doEngineIdDiscovery(SNMP_PDU *originalRequest, uint32_t timeout, int numRetries)
+{
+   SNMP_PDU discoveryRequest(SNMP_GET_REQUEST, originalRequest->getRequestId(), SNMP_VERSION_3);
+   discoveryRequest.bindVariable(new SNMP_Variable(_T(".1.3.6.1.6.3.10.2.1.1.0")));    // snmpEngineID
+   SNMP_PDU *response = nullptr;
+   uint32_t rc = doRequest(&discoveryRequest, &response, timeout, numRetries, true);
+   if (rc != SNMP_ERR_SUCCESS)
+      return rc;
+
+   if (response->getContextEngineIdLength() > 0)
+      originalRequest->setContextEngineId(response->getContextEngineId(), response->getContextEngineIdLength());
+   else if (response->getAuthoritativeEngine().getIdLen() != 0)
+      originalRequest->setContextEngineId(response->getAuthoritativeEngine().getId(), response->getAuthoritativeEngine().getIdLen());
+
+   delete response;
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
  * Send a request and wait for response with respect for timeouts and retransmissions
  */
-uint32_t SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, uint32_t timeout, int numRetries)
+uint32_t SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, uint32_t timeout, int numRetries, bool engineIdDiscoveryOnly)
 {
    if ((request == nullptr) || (response == nullptr) || (numRetries <= 0))
       return SNMP_ERR_PARAM;
@@ -100,7 +123,13 @@ uint32_t SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, uint3
 	// Update SNMP V3 request with cached context engine id
 	if (request->getVersion() == SNMP_VERSION_3)
 	{
-		if ((request->getContextEngineIdLength() == 0) && (m_contextEngine != nullptr))
+	   if ((m_authoritativeEngine == nullptr) && (request->getCommand() != SNMP_GET_REQUEST))
+	   {
+	      uint32_t rc = doEngineIdDiscovery(request, timeout, numRetries);
+	      if ((rc != SNMP_ERR_SUCCESS) || engineIdDiscoveryOnly)
+	         return rc;
+	   }
+	   else if ((request->getContextEngineIdLength() == 0) && (m_contextEngine != nullptr))
 		{
 			request->setContextEngineId(m_contextEngine->getId(), m_contextEngine->getIdLen());
 		}
@@ -188,8 +217,16 @@ retry_wait:
                            m_securityContext->setAuthoritativeEngine((*response)->getAuthoritativeEngine());
                            canRetry = true;
                         }
+
                         if (canRetry)
+                        {
+                           if (engineIdDiscoveryOnly)
+                           {
+                              rc = SNMP_ERR_SUCCESS;
+                              break;
+                           }
                            goto retry;
+                        }
                      }
                      else if (rc == SNMP_ERR_TIME_WINDOW)
                      {
@@ -278,16 +315,21 @@ uint32_t SNMP_Transport::sendTrap(SNMP_PDU *trap, uint32_t timeout, int numRetri
    if (m_securityContext == nullptr)
       m_securityContext = new SNMP_SecurityContext();
 
+   // Do engine ID discovery if needed
    // Update SNMP V3 request with cached context engine id
    if (trap->getVersion() == SNMP_VERSION_3)
    {
-      if ((trap->getContextEngineIdLength() == 0) && (m_contextEngine != nullptr))
+      if (m_authoritativeEngine == nullptr)
+      {
+         uint32_t rc = doEngineIdDiscovery(trap, timeout, numRetries);
+         if (rc != SNMP_ERR_SUCCESS)
+            return rc;
+      }
+      else if ((trap->getContextEngineIdLength() == 0) && (m_contextEngine != nullptr))
       {
          trap->setContextEngineId(m_contextEngine->getId(), m_contextEngine->getIdLen());
       }
    }
-
-   // TODO: implement SNMPv3 engine ID discovery and time sync
 
    return (sendMessage(trap, timeout) > 0) ? SNMP_ERR_SUCCESS : SNMP_ERR_COMM;
 }

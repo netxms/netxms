@@ -724,6 +724,8 @@ protected:
 	bool m_reliable;
 	SNMP_Version m_snmpVersion;
 
+	uint32_t doEngineIdDiscovery(SNMP_PDU *originalRequest, uint32_t timeout, int numRetries);
+
 public:
    SNMP_Transport();
    virtual ~SNMP_Transport();
@@ -735,7 +737,7 @@ public:
    virtual uint16_t getPort() = 0;
    virtual bool isProxyTransport() = 0;
 
-   uint32_t doRequest(SNMP_PDU *request, SNMP_PDU **response, uint32_t timeout = INFINITE, int numRetries = 1);
+   uint32_t doRequest(SNMP_PDU *request, SNMP_PDU **response, uint32_t timeout = INFINITE, int numRetries = 1, bool engineIdDiscoveryOnly = false);
    uint32_t sendTrap(SNMP_PDU *trap, uint32_t timeout = INFINITE, int numRetries = 1);
 
 	void setSecurityContext(SNMP_SecurityContext *ctx);
