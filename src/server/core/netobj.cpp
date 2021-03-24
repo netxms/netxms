@@ -465,7 +465,7 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM object_urls WHERE object_id=?"));
 
    // Delete events
-   if (success && ConfigReadBoolean(_T("DeleteEventsOfDeletedObject"), true))
+   if (success && (g_dbSyntax != DB_SYNTAX_TSDB) && ConfigReadBoolean(_T("DeleteEventsOfDeletedObject"), true))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM event_log WHERE event_source=?"));
    }
