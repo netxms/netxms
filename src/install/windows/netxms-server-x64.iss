@@ -124,6 +124,8 @@ Source: "..\..\..\x64\Release\slack.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ign
 Source: "..\..\..\x64\Release\slack.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\smseagle.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\smseagle.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\snmptrap.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\snmptrap.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\telegram.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\telegram.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\text2reach.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server

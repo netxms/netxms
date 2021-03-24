@@ -604,6 +604,10 @@ inline size_t SNMP_SecurityContext::getSignatureSize() const
    }
 }
 
+#ifdef _WIN32
+template class LIBNXSNMP_EXPORTABLE ObjectArray<SNMP_Variable>;
+#endif
+
 /**
  * SNMP PDU
  */
