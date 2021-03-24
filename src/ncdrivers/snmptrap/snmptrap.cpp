@@ -44,9 +44,9 @@ private:
    SNMP_ObjectId m_timestampFieldId;
    SNMP_ObjectId m_keyFieldId;
    SNMP_ObjectId m_additionalDataFieldId;
-   char m_authName[64];
-   char m_authPassword[64];
-   char m_privPassword[64];
+   char m_authName[128];
+   char m_authPassword[128];
+   char m_privPassword[128];
    SNMP_Version m_version;
    SNMP_AuthMethod m_authMethod;
    SNMP_EncryptionMethod m_privMethod;
@@ -285,28 +285,31 @@ SNMPTrapDriver *SNMPTrapDriver::createInstance(Config *config)
    if (instance->m_version == SNMP_VERSION_3)
    {
 #ifdef UNICODE
-      char mbString[64];
-      wchar_to_mb(config->getValue(L"/SNMPTrap/UserName", L"netxms"), -1, mbString, 64);
-      strlcpy(instance->m_authName, mbString, 64);
-      wchar_to_mb(config->getValue(L"/SNMPTrap/AuthPassword", L""), -1, mbString, 64);
-      strlcpy(instance->m_authPassword, mbString, 64);
-      wchar_to_mb(config->getValue(L"/SNMPTrap/PrivPassword", L""), -1, mbString, 64);
-      strlcpy(instance->m_privPassword, mbString, 64);
+      char mbString[128];
+      wchar_to_mb(config->getValue(L"/SNMPTrap/UserName", L"netxms"), -1, mbString, 128);
+      strlcpy(instance->m_authName, mbString, 128);
+      wchar_to_mb(config->getValue(L"/SNMPTrap/AuthPassword", L""), -1, mbString, 128);
+      strlcpy(instance->m_authPassword, mbString, 128);
+      wchar_to_mb(config->getValue(L"/SNMPTrap/PrivPassword", L""), -1, mbString, 128);
+      strlcpy(instance->m_privPassword, mbString, 128);
 #else
-      strlcpy(instance->m_authPassword, config->getValue("/SNMPTrap/AuthPassword", ""), 64);
-      strlcpy(instance->m_privPassword, config->getValue("/SNMPTrap/PrivPassword", ""), 64);
+      strlcpy(instance->m_authPassword, config->getValue("/SNMPTrap/AuthPassword", ""), 128);
+      strlcpy(instance->m_privPassword, config->getValue("/SNMPTrap/PrivPassword", ""), 128);
 #endif
+      DecryptPasswordA(instance->m_authName, instance->m_authPassword, instance->m_authPassword, 128);
+      DecryptPasswordA(instance->m_authName, instance->m_privPassword, instance->m_privPassword, 128);
       instance->m_useInformRequest = config->getValueAsBoolean(_T("/SNMPTrap/UseInformRequest"), instance->m_useInformRequest);
    }
    else
    {
 #ifdef UNICODE
-      char mbString[64];
-      wchar_to_mb(config->getValue(L"/SNMPTrap/Community", L"public"), -1, mbString, 64);
-      strlcpy(instance->m_authName, mbString, 64);
+      char mbString[128];
+      wchar_to_mb(config->getValue(L"/SNMPTrap/Community", L"public"), -1, mbString, 128);
+      strlcpy(instance->m_authName, mbString, 128);
 #else
-      strlcpy(instance->m_authName, config->getValue("/SNMPTrap/Community", "public"), 64);
+      strlcpy(instance->m_authName, config->getValue("/SNMPTrap/Community", "public"), 128);
 #endif
+      DecryptPasswordA("netxms", instance->m_authName, instance->m_authName, 128);
    }
 
    instance->m_port = static_cast<uint16_t>(config->getValueAsUInt(_T("/SNMPTrap/Port"), instance->m_port));
