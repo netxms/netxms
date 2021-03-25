@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
+import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
@@ -129,7 +130,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		   chart.setYAxisRange(settings.getMinYScaleValue(), settings.getMaxYScaleValue());
       }
 		chart.addParameter(new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s")); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -140,25 +141,16 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       });
 		
 		chart.addMouseListener(new MouseListener() {
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
-          */
          @Override
          public void mouseUp(MouseEvent e)
          {
          }
          
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
-          */
          @Override
          public void mouseDown(MouseEvent e)
          {
          }
          
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
-          */
          @Override
          public void mouseDoubleClick(MouseEvent e)
          {
@@ -216,16 +208,14 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 
       presetActions = HistoricalGraphView.createPresetActions(new HistoricalGraphView.PresetHandler() {
          @Override
-         public void onPresetSelected(int units, int range)
+         public void onPresetSelected(TimeUnit unit, int range)
          {
-            settings.setTimeUnits(units);
+            settings.setTimeUnits(unit.getValue());
             settings.setTimeRange(range);
             refreshData();
          }
       });
    }
-   
-
 
    /**
     * Create chart's context menu

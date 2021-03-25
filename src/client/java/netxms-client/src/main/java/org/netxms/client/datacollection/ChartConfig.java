@@ -24,6 +24,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import org.netxms.client.TimePeriod;
+import org.netxms.client.constants.TimeFrameType;
+import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.xml.XMLTools;
 import org.netxms.client.xml.XmlDateConverter;
 import org.simpleframework.xml.Element;
@@ -92,23 +94,26 @@ public class ChartConfig
 	@Element(required = false)
 	protected int refreshRate = 30;
 
+   @Element(required = false)
+   protected TimePeriod timePeriod = new TimePeriod();
+
 	@Element(required=false)
-	protected int timeUnits = GraphSettings.TIME_UNIT_HOUR;
-	
+   protected Integer timeUnit = null; // For reading old format configuration, new format will use TimePeriod
+
 	@Element(required=false)
-	protected int timeRange = 1;
-	
+   protected Integer timeRange = null; // For reading old format configuration, new format will use TimePeriod
+
 	@Element(required=false)
-	protected int timeFrameType = GraphSettings.TIME_FRAME_BACK_FROM_NOW;
-	
+   protected Integer timeFrameType = null; // For reading old format configuration, new format will use TimePeriod
+
 	@Element(required=false)
 	@Convert(XmlDateConverter.class)
-	protected Date timeFrom;
-	
+   protected Date timeFrom = null; // For reading old format configuration, new format will use TimePeriod
+
 	@Element(required=false)
 	@Convert(XmlDateConverter.class)
-	protected Date timeTo;
-	
+   protected Date timeTo = null; // For reading old format configuration, new format will use TimePeriod
+
    @Element(required = false)
    private boolean modifyYBase = false;
    
@@ -116,7 +121,7 @@ public class ChartConfig
    private boolean useMultipliers = true;
 
    private Set<GraphSettingsChangeListener> changeListeners = new HashSet<GraphSettingsChangeListener>(0);
-	
+
 	/**
 	 * Create chart settings object from XML document
 	 * 
@@ -127,9 +132,23 @@ public class ChartConfig
    public static ChartConfig createFromXml(final String xml) throws Exception
    {
       Serializer serializer = XMLTools.createSerializer();
-      return serializer.read(ChartConfig.class, xml);
+      ChartConfig config = serializer.read(ChartConfig.class, xml);
+      if (config.timeFrameType != null)
+      {
+         // Old format, create TimePeriod object
+         config.timePeriod = new TimePeriod(TimeFrameType.getByValue(config.timeFrameType),
+               config.timeRange != null ? config.timeRange : 1,
+               config.timeUnit != null ? TimeUnit.getByValue(config.timeUnit) : TimeUnit.HOUR,
+               config.timeFrom, config.timeTo);
+         config.timeFrameType = null;
+         config.timeRange = null;
+         config.timeUnit = null;
+         config.timeFrom = null;
+         config.timeTo = null;
+      }
+      return config;
    }
-	
+
 	/**
 	 * Create XML from configuration.
 	 * 
@@ -151,14 +170,14 @@ public class ChartConfig
 	 */
 	public long getTimeRangeMillis()
 	{
-		switch(timeUnits)
+      switch(timePeriod.getTimeUnit())
 		{
-			case GraphSettings.TIME_UNIT_MINUTE:
-				return (long)timeRange * 60L * 1000L;
-			case GraphSettings.TIME_UNIT_HOUR:
-				return (long)timeRange * 60L * 60L * 1000L;
-			case GraphSettings.TIME_UNIT_DAY:
-				return (long)timeRange * 24L * 60L * 60L * 1000L;
+         case MINUTE:
+            return (long)timePeriod.getTimeRange() * 60L * 1000L;
+         case HOUR:
+            return (long)timePeriod.getTimeRange() * 60L * 60L * 1000L;
+         case DAY:
+            return (long)timePeriod.getTimeRange() * 24L * 60L * 60L * 1000L;
 		}
 		return 0;
 	}
@@ -260,38 +279,6 @@ public class ChartConfig
 	}
 
 	/**
-	 * @return the timeUnits
-	 */
-	public int getTimeUnits()
-	{
-		return timeUnits;
-	}
-
-	/**
-	 * @param timeUnits the timeUnits to set
-	 */
-	public void setTimeUnits(int timeUnits)
-	{
-		this.timeUnits = timeUnits;
-	}
-
-	/**
-	 * @return the timeRange
-	 */
-	public int getTimeRange()
-	{
-		return timeRange;
-	}
-
-	/**
-	 * @param timeRange the timeRange to set
-	 */
-	public void setTimeRange(int timeRange)
-	{
-		this.timeRange = timeRange;
-	}
-
-	/**
 	 * @return the showHostNames
 	 */
 	public boolean isShowHostNames()
@@ -337,54 +324,6 @@ public class ChartConfig
 	public void setLogScale(boolean logScale)
 	{
 		this.logScale = logScale;
-	}
-
-	/**
-	 * @return the timeFrameType
-	 */
-	public int getTimeFrameType()
-	{
-		return timeFrameType;
-	}
-
-	/**
-	 * @param timeFrameType the timeFrameType to set
-	 */
-	public void setTimeFrameType(int timeFrameType)
-	{
-		this.timeFrameType = timeFrameType;
-	}
-
-	/**
-	 * @return the timeFrom
-	 */
-	public Date getTimeFrom()
-	{
-		return timeFrom;
-	}
-
-	/**
-	 * @param timeFrom the timeFrom to set
-	 */
-	public void setTimeFrom(Date timeFrom)
-	{
-		this.timeFrom = timeFrom;
-	}
-
-	/**
-	 * @return the timeTo
-	 */
-	public Date getTimeTo()
-	{
-		return timeTo;
-	}
-
-	/**
-	 * @param timeTo the timeTo to set
-	 */
-	public void setTimeTo(Date timeTo)
-	{
-		this.timeTo = timeTo;
 	}
 
 	/**
@@ -534,22 +473,60 @@ public class ChartConfig
    /**
     * @return The time period
     */
-   public TimePeriod timePeriod()
+   public TimePeriod getTimePeriod()
    {
-      return new TimePeriod(timeFrameType, timeRange, timeUnits, timeFrom, timeTo);
+      return timePeriod;
    }
-   
+
    /**
-    * @param tp The time period to set
+    * Set time period for chart.
+    *
+    * @param timePeriod new time period
     */
-   public void setTimePeriod(TimePeriod tp)
+   public void setTimePeriod(TimePeriod timePeriod)
    {
-      timeFrameType = tp.getTimeFrameType();
-      timeRange = tp.getTimeRangeValue();
-      timeUnits = tp.getTimeUnitValue();
-      timeFrom = tp.getTimeFromValue();
-      timeTo = tp.getTimeToValue();
-   } 
+      this.timePeriod = timePeriod;
+   }
+
+   /**
+    * Get start time for time period.
+    *
+    * @return start time for time period
+    */
+   public Date getTimeFrom()
+   {
+      return timePeriod.getTimeFrom();
+   }
+
+   /**
+    * Set start time for time period.
+    *
+    * @param timeFrom new start time for time period
+    */
+   public void setTimeFrom(Date timeFrom)
+   {
+      timePeriod.setTimeFrom(timeFrom);
+   }
+
+   /**
+    * Get end time for time period.
+    *
+    * @return end time for time period
+    */
+   public Date getTimeTo()
+   {
+      return timePeriod.getTimeTo();
+   }
+
+   /**
+    * Set end time for time period.
+    *
+    * @param timeTo new end time for time period
+    */
+   public void setTimeTo(Date timeTo)
+   {
+      timePeriod.setTimeTo(timeTo);
+   }
 
    /**
     * Add change listener
@@ -600,35 +577,36 @@ public class ChartConfig
       return modifyYBase;
    }
 
-   public void setConfig(ChartConfig config)
+   /**
+    * Update from another configuration.
+    *
+    * @param src source configuration
+    */
+   public void update(ChartConfig src)
    {
-      dciList = config.dciList.clone();
-      title = config.title; 
-      legendPosition = config.legendPosition; 
-      showLegend = config.showLegend; 
-      extendedLegend = config.extendedLegend; 
-      showTitle = config.showTitle; 
-      showGrid = config.showGrid; 
-      showHostNames = config.showHostNames; 
-      autoRefresh = config.autoRefresh; 
-      logScale = config.logScale; 
-      stacked = config.stacked; 
-      translucent = config.translucent; 
-      area = config.area;
-      lineWidth = config.lineWidth;
-      autoScale = config.autoScale; 
-      minYScaleValue = config.minYScaleValue; 
-      maxYScaleValue = config.maxYScaleValue; 
-      refreshRate = config.refreshRate; 
-      timeUnits = config.timeUnits; 
-      timeRange = config.timeRange; 
-      timeFrameType = config.timeFrameType; 
-      timeFrom = config.timeFrom; 
-      timeTo = config.timeTo; 
-      modifyYBase = config.modifyYBase;
-      useMultipliers = config.useMultipliers;
+      dciList = src.dciList.clone();
+      title = src.title; 
+      legendPosition = src.legendPosition; 
+      showLegend = src.showLegend; 
+      extendedLegend = src.extendedLegend; 
+      showTitle = src.showTitle; 
+      showGrid = src.showGrid; 
+      showHostNames = src.showHostNames; 
+      autoRefresh = src.autoRefresh; 
+      logScale = src.logScale; 
+      stacked = src.stacked; 
+      translucent = src.translucent; 
+      area = src.area;
+      lineWidth = src.lineWidth;
+      autoScale = src.autoScale; 
+      minYScaleValue = src.minYScaleValue; 
+      maxYScaleValue = src.maxYScaleValue; 
+      refreshRate = src.refreshRate;
+      timePeriod = src.timePeriod;
+      modifyYBase = src.modifyYBase;
+      useMultipliers = src.useMultipliers;
    }
-   
+
    /**
     * @return the useMultipliers
     */

@@ -19,6 +19,7 @@
 package org.netxms.client.datacollection;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.netxms.base.NXCPCodes;
@@ -40,14 +41,6 @@ import org.slf4j.LoggerFactory;
 public class GraphSettings extends ChartConfig implements ObjectAction
 {
    public static final int MAX_GRAPH_ITEM_COUNT = 16;
-
-   public static final int TIME_FRAME_FIXED = 0;
-   public static final int TIME_FRAME_BACK_FROM_NOW = 1;
-   public static final int TIME_FRAME_CURRENT = 2;
-
-   public static final int TIME_UNIT_MINUTE = 0;
-   public static final int TIME_UNIT_HOUR = 1;
-   public static final int TIME_UNIT_DAY = 2;
 
    public static final int GF_AUTO_UPDATE         = 0x000001;
    public static final int GF_AUTO_SCALE          = 0x000100;
@@ -133,7 +126,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
       this.accessList = new ArrayList<AccessListElement>(src.accessList.size());
       this.accessList.addAll(src.accessList);
       filter = src.filter;
-      setConfig(src);
+      update(src);
       setTitle(name);
       parent = null;
    }
@@ -154,7 +147,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
       this.accessList = new ArrayList<AccessListElement>(src.accessList.size());
       this.accessList.addAll(src.accessList);
       filter = src.filter;
-      setConfig(src);
+      update(src);
       setTitle(src.getTitle());
       parent = null;
    }
@@ -368,7 +361,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
       this.parent = parent;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objecttools.ObjectAction#isApplicableForNode(org.netxms.client.objects.AbstractNode)
     */
    @Override
@@ -377,7 +370,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
       return filter.isApplicableForNode(node);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objecttools.ObjectAction#getMenuFilter()
     */
    @Override
@@ -386,7 +379,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
       return filter;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objecttools.ObjectAction#setMenuFilter(org.netxms.client.ObjectMenuFilter)
     */
    @Override
@@ -395,7 +388,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
       this.filter = filter;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objecttools.ObjectAction#getToolType()
     */
    @Override
@@ -412,13 +405,20 @@ public class GraphSettings extends ChartConfig implements ObjectAction
       this.id = id;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return "GraphSettings [id=" + id + ", ownerId=" + ownerId + ", flags=" + flags + ", name=" + name + ", shortName=" + shortName
-            + ", accessList=" + accessList + ", filter=" + filter + "]";
+      return "GraphSettings [parent=" + ((parent != null) ? parent.getName() : "null") + ", id=" + id + ", ownerId=" + ownerId
+            + ", flags=" + flags + ", name=" + name + ", shortName=" + shortName + ", displayName=" + displayName + ", accessList="
+            + accessList + ", filter=" + filter + ", dciList=" + Arrays.toString(dciList) + ", title=" + title + ", legendPosition="
+            + legendPosition + ", showLegend=" + showLegend + ", extendedLegend=" + extendedLegend + ", showTitle=" + showTitle
+            + ", showGrid=" + showGrid + ", showHostNames=" + showHostNames + ", autoRefresh=" + autoRefresh + ", logScale="
+            + logScale + ", stacked=" + stacked + ", translucent=" + translucent + ", area=" + area + ", lineWidth=" + lineWidth
+            + ", autoScale=" + autoScale + ", minYScaleValue=" + minYScaleValue + ", maxYScaleValue=" + maxYScaleValue
+            + ", refreshRate=" + refreshRate + ", timeUnits=" + timeUnit + ", timeRange=" + timeRange + ", timeFrameType="
+            + timeFrameType + ", timeFrom=" + timeFrom + ", timeTo=" + timeTo + "]";
    }
 }

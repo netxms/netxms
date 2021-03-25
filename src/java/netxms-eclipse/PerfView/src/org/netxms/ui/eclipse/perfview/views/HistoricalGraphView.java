@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,6 +61,7 @@ import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.ChartConfig;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
@@ -94,10 +95,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    public static final String ID = "org.netxms.ui.eclipse.perfview.views.HistoryGraph"; //$NON-NLS-1$
    public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph"; //$NON-NLS-1$
 
-   private static final int[] presetUnits = { GraphSettings.TIME_UNIT_MINUTE, GraphSettings.TIME_UNIT_MINUTE,
-         GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR,
-         GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY,
-         GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY };
+   private static final TimeUnit[] presetUnits = { TimeUnit.MINUTE, TimeUnit.MINUTE, TimeUnit.HOUR, TimeUnit.HOUR, TimeUnit.HOUR,
+         TimeUnit.HOUR, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY };
    private static final int[] presetRanges = { 10, 30, 1, 2, 4, 12, 1, 2, 5, 7, 31, 365 };
    private static final String[] presetNames = 
       { Messages.get().HistoricalGraphView_Preset10min, Messages.get().HistoricalGraphView_Preset30min, Messages.get().HistoricalGraphView_Preset1hour, Messages.get().HistoricalGraphView_Preset2hours, Messages.get().HistoricalGraphView_Preset4hours, Messages.get().HistoricalGraphView_Preset12hours, Messages.get().HistoricalGraphView_Preset1day,
@@ -136,9 +135,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private Action actionCopyImage;
    private Action actionSaveAsImage;
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -159,8 +156,11 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 
       session = ConsoleSharedData.getSession();
 
-      settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
-      settings.setTimeTo(new Date(System.currentTimeMillis()));
+      if (settings.getTimePeriod().isBackFromNow())
+      {
+         settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
+         settings.setTimeTo(new Date(System.currentTimeMillis()));
+      }
 
       // Extract DCI ids from view id
       // (first field will be unique view id, so we skip it)
@@ -372,7 +372,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       chart.setTranslucent(settings.isTranslucent());
       chart.setLineWidth(settings.getLineWidth());
       chart.setUseMultipliers(settings.isUseMultipliers());
-      if(!settings.isAutoScale())
+      if (!settings.isAutoScale())
          chart.setYAxisRange(settings.getMinYScaleValue(), settings.getMaxYScaleValue());
       else
          chart.modifyYBase(settings.modifyYBase());
@@ -383,7 +383,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       int nodeId = 0;
       for(ChartDciConfig dci : settings.getDciList())
       {
-         nodeId |= dci.nodeId; //Check that all DCI's are form one node
+         nodeId |= dci.nodeId; // Check that all DCI's are form one node
          final String name = settings.isShowHostNames() ? (session.getObjectName(dci.nodeId) + " - " + dci.getName()) : dci.getName(); //$NON-NLS-1$
          chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, DataOrigin.INTERNAL, DataType.INT32, Long.toString(dci.dciId), name, dci.getDisplayFormat()));
          int color = dci.getColorAsInt();
@@ -392,19 +392,13 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          styles.add(new GraphItemStyle(getDisplayType(dci), color, 2, dci.invertValues ? GraphItemStyle.INVERTED : 0));
          index++;
       }
-      
+
       // Check that all DCI's are form one node
       if (index > 0)
          multipleSourceNodes = (nodeId != settings.getDciList()[0].nodeId);
-      
+
       chart.setItemStyles(styles);
 
-      if (settings.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW)
-      {
-         settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
-         settings.setTimeTo(new Date(System.currentTimeMillis()));
-      }
-      
       updateChart();
 
       // Automatic refresh
@@ -557,9 +551,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       job.start();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
@@ -586,7 +578,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          public void run()
          {
             showGraphPropertyPages(settings);
-            configureGraphFromSettings(); //Always refresh graph (last action was cancel, but before was few apply actions)
+            configureGraphFromSettings(); // Always refresh graph (last action was cancel, but before could have been apply actions)
          }
       };
 
@@ -774,14 +766,14 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 
       presetActions = createPresetActions(new PresetHandler() {
          @Override
-         public void onPresetSelected(int units, int range)
+         public void onPresetSelected(TimeUnit unit, int range)
          {
-            settings.setTimeUnits(units);
-            settings.setTimeRange(range);
+            settings.getTimePeriod().setTimeUnit(unit);
+            settings.getTimePeriod().setTimeRange(range);
             updateChart();
          }
       });
-      
+
       if (!System.getProperty("os.name").toLowerCase().contains("linux"))
       {
          actionCopyImage = new Action(Messages.get().HistoricalGraphView_CopyToClipboard, SharedIcons.COPY) {
@@ -963,11 +955,14 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          return;
 
       updateInProgress = true;
-      settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
-      settings.setTimeTo(new Date(System.currentTimeMillis()));
+      if (settings.getTimePeriod().isBackFromNow())
+      {
+         settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
+         settings.setTimeTo(new Date(System.currentTimeMillis()));
+      }
       getDataFromServer();
    }
-   
+
    /**
     * Copy graph as image
     */
@@ -993,9 +988,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       image.dispose();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override
@@ -1041,12 +1034,12 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          if (result == Window.CANCEL)
             return;
          tamplateGs.setName(dlg.getName());
-         tamplateGs.setConfig(settings);
+         tamplateGs.update(settings);
          tamplateGs.setFlags(GraphSettings.GRAPH_FLAG_TEMPLATE);
       }
       else
       {
-         if(showNameDialog)
+         if (showNameDialog)
          {
             SaveGraphDlg dlg = new SaveGraphDlg(getSite().getShell(), graphName, errorMessage, canBeOverwritten);
             result = dlg.open();
@@ -1230,10 +1223,10 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       /**
        * Called when new preset selected
        * 
-       * @param units
-       * @param range
+       * @param unit time unit
+       * @param range time range in units
        */
-      public void onPresetSelected(int units, int range);
+      public void onPresetSelected(TimeUnit unit, int range);
    }
    
    /**

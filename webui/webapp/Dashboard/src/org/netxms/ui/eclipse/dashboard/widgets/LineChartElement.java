@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
+import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
@@ -178,9 +179,9 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 
       presetActions = HistoricalGraphView.createPresetActions(new HistoricalGraphView.PresetHandler() {
          @Override
-         public void onPresetSelected(int units, int range)
+         public void onPresetSelected(TimeUnit unit, int range)
          {
-            config.setTimeUnits(units);
+            config.setTimeUnits(unit.getValue());
             config.setTimeRange(range);
             refreshData();
          }

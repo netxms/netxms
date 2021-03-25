@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,144 +19,216 @@
 package org.netxms.client;
 
 import java.util.Date;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.constants.TimeFrameType;
+import org.netxms.client.constants.TimeUnit;
+import org.netxms.client.xml.XmlDateConverter;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
+import org.simpleframework.xml.convert.Convert;
 
+@Root(strict = false)
 public class TimePeriod
 {
-   private int timeFrameType; 
-   private int timeRangeValue;
-   private int timeUnitValue; 
-   private Date timeFromValue;
-   private Date timeToValue;
-   
-   public TimePeriod(int timeFrameType, int timeRangeValue, int timeUnitValue, Date timeFromValue, Date timeToValue)
+   @Element(required = false)
+   private TimeFrameType timeFrameType;
+
+   @Element(required = false)
+   private int timeRange;
+
+   @Element(required = false)
+   private TimeUnit timeUnit;
+
+   @Element(required = false)
+   @Convert(XmlDateConverter.class)
+   private Date timeFrom;
+
+   @Element(required = false)
+   @Convert(XmlDateConverter.class)
+   private Date timeTo;
+
+   /**
+    * Create new time period.
+    *
+    * @param timeFrameType time frame type
+    * @param timeRange time range length in time units
+    * @param timeUnit time unit used for defining this range
+    * @param timeFrom start point in time for fixed period, can be null for "back from now"
+    * @param timeTo end point in time for fixed period, can be null for "back from now"
+    */
+   public TimePeriod(TimeFrameType timeFrameType, int timeRange, TimeUnit timeUnit, Date timeFrom, Date timeTo)
    {
       this.timeFrameType = timeFrameType;
-      this.timeRangeValue = timeRangeValue;
-      this.timeUnitValue = timeUnitValue;
-      this.timeFromValue = timeFromValue;
-      this.timeToValue = timeToValue;
-   }
-   
-   public TimePeriod()
-   {
-      timeFrameType = GraphSettings.TIME_FRAME_BACK_FROM_NOW;
-      timeRangeValue = 2;
-      timeUnitValue = GraphSettings.TIME_UNIT_HOUR;      
-   }
-   
-   public boolean isBackFromNow()
-   {
-      return timeFrameType == GraphSettings.TIME_FRAME_BACK_FROM_NOW;
+      this.timeRange = timeRange;
+      this.timeUnit = timeUnit;
+      this.timeFrom = timeFrom;
+      this.timeTo = timeTo;
    }
    
    /**
-    * @return the timeFrameType
+    * Default constructor. Created "back from now" type time period with 1 hour length.
     */
-   public int getTimeFrameType()
+   public TimePeriod()
+   {
+      timeFrameType = TimeFrameType.BACK_FROM_NOW;
+      timeRange = 1;
+      timeUnit = TimeUnit.HOUR;
+      timeTo = new Date();
+      timeFrom = new Date(timeTo.getTime() - 3600000L);
+   }
+
+   /**
+    * Check if period time frame type is "back from now".
+    *
+    * @return true if period time frame type is "back from now"
+    */
+   public boolean isBackFromNow()
+   {
+      return timeFrameType == TimeFrameType.BACK_FROM_NOW;
+   }
+
+   /**
+    * Get time frame type ("fixed" or "back from now") for this period.
+    *
+    * @return time frame type for this period
+    */
+   public TimeFrameType getTimeFrameType()
    {
       return timeFrameType;
    }
+
    /**
-    * @param timeFrameType the timeFrameType to set
+    * Set time frame type ("fixed" or "back from now") for this period.
+    *
+    * @param timeFrameType new time frame type for this period
     */
-   public void setTimeFrameType(int timeFrameType)
+   public void setTimeFrameType(TimeFrameType timeFrameType)
    {
       this.timeFrameType = timeFrameType;
    }
+
    /**
-    * @return the timeRangeValue
+    * Get time range in time units.
+    *
+    * @return time range in time units
     */
-   public int getTimeRangeValue()
+   public int getTimeRange()
    {
-      return timeRangeValue;
+      return timeRange;
    }
+
    /**
-    * @param timeRangeValue the timeRangeValue to set
+    * Set time range in time units.
+    *
+    * @param timeRange new time range in time units
     */
-   public void setTimeRangeValue(int timeRangeValue)
+   public void setTimeRange(int timeRange)
    {
-      this.timeRangeValue = timeRangeValue;
+      this.timeRange = timeRange;
    }
+
    /**
-    * @return the timeUnitValue
+    * Get time unit used for defining this time range.
+    *
+    * @return time unit used for defining this time range.
     */
-   public int getTimeUnitValue()
+   public TimeUnit getTimeUnit()
    {
-      return timeUnitValue;
+      return timeUnit;
    }
+
    /**
-    * @param timeUnitValue the timeUnitValue to set
+    * Set time unit used for defining this time range.
+    *
+    * @param timeUnit new time unit used for defining this time range.
     */
-   public void setTimeUnitValue(int timeUnitValue)
+   public void setTimeUnit(TimeUnit timeUnit)
    {
-      this.timeUnitValue = timeUnitValue;
+      this.timeUnit = timeUnit;
    }
+
    /**
-    * @return the timeFromValue
+    * Get starting point in time for this time range.
+    * 
+    * @return starting point in time for this time range
     */
-   public Date getTimeFromValue()
+   public Date getTimeFrom()
    {
-      return timeFromValue;
+      return timeFrom;
    }
+
    /**
-    * @param timeFromValue the timeFromValue to set
+    * Set starting point in time for this time range.
+    *
+    * @param timeFrom new starting point in time for this time range
     */
-   public void setTimeFromValue(Date timeFromValue)
+   public void setTimeFrom(Date timeFrom)
    {
-      this.timeFromValue = timeFromValue;
+      this.timeFrom = timeFrom;
    }
+
    /**
-    * @return the timeToValue
+    * Get ending point in time for this time range.
+    * 
+    * @return ending point in time for this time range
     */
-   public Date getTimeToValue()
+   public Date getTimeTo()
    {
-      return timeToValue;
+      return timeTo;
    }
+
    /**
-    * @param timeToValue the timeToValue to set
+    * Set ending point in time for this time range.
+    *
+    * @param timeTo new ending point in time for this time range
     */
-   public void setTimeToValue(Date timeToValue)
+   public void setTimeTo(Date timeTo)
    {
-      this.timeToValue = timeToValue;
+      this.timeTo = timeTo;
    }
-   
+
    /**
-    * @return Start date of request period
+    * Get period start calculated from time frame type, time unit, etc.
+    *
+    * @return calculated period start
     */
    public Date getPeriodStart()
    {
-      if(isBackFromNow())
+      if (isBackFromNow())
       {
-         switch(timeUnitValue)
+         switch(timeUnit)
          {
-            case GraphSettings.TIME_UNIT_MINUTE:
-               return new Date((new Date()).getTime() - (long)timeRangeValue * 60L * 1000L);
-            case GraphSettings.TIME_UNIT_HOUR:
-               return new Date((new Date()).getTime() - (long)timeRangeValue * 60L * 60L * 1000L);
-            case GraphSettings.TIME_UNIT_DAY:
-               return new Date((new Date()).getTime() - (long)timeRangeValue * 24L * 60L * 60L * 1000L);
+            case MINUTE:
+               return new Date(System.currentTimeMillis() - (long)timeRange * 60L * 1000L);
+            case HOUR:
+               return new Date(System.currentTimeMillis() - (long)timeRange * 60L * 60L * 1000L);
+            case DAY:
+               return new Date(System.currentTimeMillis() - (long)timeRange * 24L * 60L * 60L * 1000L);
          }
          return new Date();
       }
       else
       {
-         return getTimeFromValue();
+         return timeFrom;
       }
    }
-   
+
    /**
-    * @return end date for request period
+    * Get period end calculated from time frame type, time unit, etc.
+    *
+    * @return calculated period end
     */
    public Date getPeriodEnd()
    {
-      if(isBackFromNow())
-      {
-         return new Date();
-      }
-      else
-      {
-         return getTimeToValue();
-      }
+      return isBackFromNow() ? new Date() : timeTo;
+   }
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "TimePeriod [timeFrameType=" + timeFrameType + ", timeRange=" + timeRange + ", timeUnit=" + timeUnit + ", timeFrom="
+            + timeFrom + ", timeTo=" + timeTo + "]";
    }
 }

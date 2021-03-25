@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.osm.Messages;
@@ -52,18 +52,15 @@ public class HistoryView extends ViewPart
 {
    public static final String ID = "org.netxms.ui.eclipse.osm.views.HistoryView"; //$NON-NLS-1$
 	public static final String JOB_FAMILY = "MapViewJob"; //$NON-NLS-1$
-   private static final int[] presetUnits = { GraphSettings.TIME_UNIT_MINUTE, GraphSettings.TIME_UNIT_MINUTE,
-      GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR,
-      GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY,
-      GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY };
+   private static final TimeUnit[] presetUnits = { TimeUnit.MINUTE, TimeUnit.MINUTE, TimeUnit.HOUR, TimeUnit.HOUR, TimeUnit.HOUR,
+         TimeUnit.HOUR, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY };
    private static final int[] presetRanges = { 10, 30, 1, 2, 4, 12, 1, 2, 5, 7, 31, 365 };
    private static final String[] presetNames = 
       { Messages.get().HistoryView_Preset10min, Messages.get().HistoryView_Preset30min, Messages.get().HistoryView_Preset1hour, Messages.get().HistoryView_Preset2hours, Messages.get().HistoryView_Preset4hours, Messages.get().HistoryView_Preset12hours, Messages.get().HistoryView_Preset1day,
         Messages.get().HistoryView_Preset2days, Messages.get().HistoryView_Preset5days, Messages.get().HistoryView_Preset1week, Messages.get().HistoryView_Preset1month,Messages.get().HistoryView_Preset1year };
-
 	
 	protected GeoLocationHistoryViewer map;
-	
+
 	private MapAccessor mapAccessor;
 	private int zoomLevel = 15;
 	private Action actionZoomIn;

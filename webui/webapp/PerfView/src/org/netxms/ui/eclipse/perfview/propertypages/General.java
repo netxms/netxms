@@ -81,7 +81,7 @@ public class General extends PreferencePage
       config = settings;     
       this.saveToDatabase = saveToDatabase;
    }
-	
+
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
@@ -286,8 +286,8 @@ public class General extends PreferencePage
 			}
 		});
       refreshIntervalSpinner.setEnabled(config.isAutoRefresh()); 
-      
-      timeSelector = new TimePeriodSelector(dialogArea, SWT.NONE, config.timePeriod());
+
+      timeSelector = new TimePeriodSelector(dialogArea, SWT.NONE, config.getTimePeriod());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -303,9 +303,9 @@ public class General extends PreferencePage
       return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
 	@Override
 	protected void performDefaults()
 	{
@@ -353,21 +353,16 @@ public class General extends PreferencePage
       config.setLegendPosition((int)Math.pow(2,legendLocation.getSelectionIndex()));
       config.setTranslucent(checkTranslucent.getSelection());
       config.setLineWidth(lineWidth.getSelection());
-		config.setTimeFrameType(timeSelector.getTimeFrameType());
-		config.setTimeUnits(timeSelector.getTimeUnitValue());
-		config.setTimeRange(timeSelector.getTimeRangeValue());
-		config.setTimeFrom(timeSelector.getTimeFrom());
-		config.setTimeTo(timeSelector.getTimeTo());
+      config.setTimePeriod(timeSelector.getTimePeriod());
 		config.setUseMultipliers(checkUseMultipliers.getSelection());
-		
 		config.setMinYScaleValue(yAxisRange.getMinY());
 		config.setMaxYScaleValue(yAxisRange.getMaxY());
       config.setModifyYBase(yAxisRange.modifyYBase());
-		
+
 		if (saveToDatabase && isApply)
 		{
 			setValid(false);
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         final NXCSession session = ConsoleSharedData.getSession();
 			new ConsoleJob(Messages.get().General_JobName, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -390,10 +385,10 @@ public class General extends PreferencePage
 			}.start();
 		}
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{      
@@ -401,9 +396,9 @@ public class General extends PreferencePage
          applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
