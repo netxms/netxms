@@ -23,7 +23,6 @@ import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.GridData;
 import org.eclipse.draw2d.GridLayout;
 import org.eclipse.draw2d.Label;
-import org.eclipse.draw2d.LineBorder;
 import org.eclipse.draw2d.MarginBorder;
 import org.eclipse.draw2d.text.FlowPage;
 import org.eclipse.draw2d.text.TextFlow;
@@ -31,22 +30,14 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.netxms.base.MacAddress;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.DataOrigin;
-import org.netxms.client.constants.DataType;
-import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
-import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.RadioInterface;
-import org.netxms.ui.eclipse.charts.api.ChartColor;
-import org.netxms.ui.eclipse.charts.figures.BirtChartFigure;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -143,9 +134,6 @@ public class ObjectTooltip extends Figure
             setConstraint(lastValuesFigure, gd);
          }
       }
-
-		if (object instanceof Container)
-			addStatusChart(object, labelProvider);
 
 		if (object instanceof AccessPoint)
 		{
@@ -268,52 +256,4 @@ public class ObjectTooltip extends Figure
       gd.horizontalSpan = 2;
       setConstraint(info, gd);
    }
-
-	/**
-	 * Status chart
-	 */
-	private void addStatusChart(AbstractObject object, MapLabelProvider labelProvider)
-	{
-		BirtChartFigure chart = new BirtChartFigure(BirtChartFigure.BAR_CHART, labelProvider.getColors());
-		add(chart);
-		GridData gd = new GridData();
-		gd.horizontalSpan = 2;
-		gd.horizontalAlignment = SWT.FILL;
-		gd.heightHint = 180;
-		gd.widthHint = 320;
-		setConstraint(chart, gd);
-
-		int[] objectCount = new int[6];
-		collectData(objectCount, object);
-
-		chart.setTitleVisible(true);
-		chart.setChartTitle(Messages.get().ObjectTooltip_ChartTitle);
-		chart.setLegendPosition(GraphSettings.POSITION_RIGHT);
-		chart.setLegendVisible(true);
-		chart.set3DModeEnabled(true);
-		chart.setTransposed(false);
-		chart.setTranslucent(false);
-		chart.setBorder(new LineBorder());
-
-		for(int i = 0; i <= ObjectStatus.UNKNOWN.getValue(); i++)
-		{
-         chart.addParameter(new GraphItem(0, 0, DataOrigin.INTERNAL, DataType.INT32, StatusDisplayInfo.getStatusText(i),
-               StatusDisplayInfo.getStatusText(i), "%s"), objectCount[i]);
-			chart.setPaletteEntry(i, new ChartColor(StatusDisplayInfo.getStatusColor(i).getRGB()));
-		}
-		chart.initializationComplete();
-	}
-
-	/**
-	 * @param objectCount
-	 * @param root
-	 */
-	private void collectData(int[] objectCount, AbstractObject root)
-	{
-		for(AbstractObject o : root.getAllChildren(AbstractObject.OBJECT_NODE))
-		{
-			if (o.getStatus().compareTo(ObjectStatus.UNKNOWN) <= 0)
-				objectCount[o.getStatus().getValue()]++;
-		}
-	}
 }

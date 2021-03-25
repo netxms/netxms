@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
@@ -36,7 +35,7 @@ import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.Threshold;
-import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -48,7 +47,7 @@ import org.netxms.ui.eclipse.tools.ViewRefreshController;
  */
 public abstract class ComparisonChartElement extends ElementWidget
 {
-	protected DataComparisonChart chart;
+   protected Chart chart;
 	protected NXCSession session;
 	protected int refreshInterval = 30;
 	protected boolean updateThresholds = false;
@@ -63,7 +62,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 	public ComparisonChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
 		super(parent, element, viewPart);
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 
 		setLayout(new FillLayout());
 		
@@ -76,7 +75,7 @@ public abstract class ComparisonChartElement extends ElementWidget
          }
       });
 	}
-	
+
 	/**
 	 * Start refresh timer
 	 */
@@ -139,7 +138,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 					@Override
 					public void run()
 					{
-						if (!((Widget)chart).isDisposed())
+                  if (!chart.isDisposed())
 						{
 							for(int i = 0; i < data.length; i++)
 							{
@@ -155,7 +154,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 					}
 				});
 			}
-	
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -186,9 +185,9 @@ public abstract class ComparisonChartElement extends ElementWidget
 		job.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+    */
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{

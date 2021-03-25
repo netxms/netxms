@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,9 +36,10 @@ import org.netxms.client.TableRow;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.ui.eclipse.charts.api.DataChart;
-import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableComparisonChartConfig;
@@ -51,13 +52,13 @@ import org.netxms.ui.eclipse.tools.ViewRefreshController;
  */
 public abstract class TableComparisonChartElement extends ElementWidget
 {
-	protected DataComparisonChart chart;
+   protected Chart chart;
 	protected NXCSession session;
 	protected TableComparisonChartConfig config;
 	
 	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
-	private Map<String, Integer> instanceMap = new HashMap<String, Integer>(DataChart.MAX_CHART_ITEMS);
+   private Map<String, Integer> instanceMap = new HashMap<String, Integer>(ChartConfiguration.MAX_GRAPH_ITEM_COUNT);
 	private boolean chartInitialized = false;
 
 	/**
@@ -67,7 +68,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 	public TableComparisonChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
 		super(parent, element, viewPart);
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 
 		setLayout(new FillLayout());
 		
@@ -80,7 +81,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
          }
       });
 	}
-	
+
 	/**
 	 * Start refresh timer
 	 */
@@ -213,11 +214,10 @@ public abstract class TableComparisonChartElement extends ElementWidget
 			Integer index = instanceMap.get(instance);
 			if (index == null)
 			{
-				if ((instanceMap.size() >= DataChart.MAX_CHART_ITEMS) ||
+            if ((instanceMap.size() >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT) ||
 				    ((value == 0) && config.isIgnoreZeroValues()))
 					continue;
-            index = chart.addParameter(new GraphItem(config.getNodeId(), config.getDciId(), DataOrigin.INTERNAL, DataType.INT32,
-                  Long.toString(config.getDciId()), instance, "%s"), 0.0); //$NON-NLS-1$
+            index = chart.addParameter(new GraphItem(config.getNodeId(), config.getDciId(), DataOrigin.INTERNAL, DataType.INT32, Long.toString(config.getDciId()), instance, "%s", ChartDciConfig.DEFAULT, -1)); //$NON-NLS-1$
 				instanceMap.put(instance, index);
 				rebuild = true;
 			}
@@ -227,7 +227,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 
 		if (!chartInitialized)
 		{
-			chart.initializationComplete();
+         chart.rebuild();
 			chartInitialized = true;
 		}
 		else

@@ -52,7 +52,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -85,11 +85,11 @@ public class TemplateGraphView extends ViewPart implements SessionListener
 	private Action actionAdd;
 	private Action actionRefresh;
    private boolean updateInProgress = false;
-   List<GraphSettings> graphList;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   List<GraphDefinition> graphList;
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -97,9 +97,9 @@ public class TemplateGraphView extends ViewPart implements SessionListener
 		session = (NXCSession)ConsoleSharedData.getSession();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -172,9 +172,9 @@ public class TemplateGraphView extends ViewPart implements SessionListener
       if (result == Window.CANCEL)
          return;
 
-      final GraphSettings gs = new GraphSettings(0, session.getUserId(), 0, new ArrayList<AccessListElement>(0));
+      final GraphDefinition gs = new GraphDefinition(0, session.getUserId(), 0, new ArrayList<AccessListElement>(0));
       gs.setName(dlg.getName());
-      gs.setFlags(GraphSettings.GRAPH_FLAG_TEMPLATE);
+      gs.setFlags(GraphDefinition.GF_TEMPLATE);
 
       if (result == SaveGraphDlg.OVERRIDE)
       {
@@ -276,7 +276,7 @@ public class TemplateGraphView extends ViewPart implements SessionListener
                @Override
                public void run()
                {
-                  if(!(n.getObject() instanceof GraphSettings))
+                  if(!(n.getObject() instanceof GraphDefinition))
                   {
                      return;
                   }                       
@@ -288,7 +288,7 @@ public class TemplateGraphView extends ViewPart implements SessionListener
                   {
                      if(graphList.get(i).getId() == n.getSubCode())
                      {
-                        graphList.set(i, (GraphSettings)n.getObject());
+                        graphList.set(i, (GraphDefinition)n.getObject());
                         objectUpdated = true;
                         break;
                      }
@@ -296,18 +296,18 @@ public class TemplateGraphView extends ViewPart implements SessionListener
                   
                   if(!objectUpdated)
                   {
-                     if(((GraphSettings)n.getObject()).isTemplate())
-                        graphList.add((GraphSettings)n.getObject());
+                     if(((GraphDefinition)n.getObject()).isTemplate())
+                        graphList.add((GraphDefinition)n.getObject());
                   }
                   viewer.setInput(graphList);
                   
                   if (selection.size() == 1)
                   {
-                     if(selection.getFirstElement() instanceof GraphSettings)
+                     if(selection.getFirstElement() instanceof GraphDefinition)
                      {
-                        GraphSettings element = (GraphSettings)selection.getFirstElement();
+                        GraphDefinition element = (GraphDefinition)selection.getFirstElement();
                         if(element.getId() == n.getSubCode())
-                              viewer.setSelection(new StructuredSelection((GraphSettings)n.getObject()), true);
+                              viewer.setSelection(new StructuredSelection((GraphDefinition)n.getObject()), true);
                      }
                   }
                }
@@ -325,10 +325,10 @@ public class TemplateGraphView extends ViewPart implements SessionListener
       if (selection.size() != 1)
          return;
       
-      GraphSettings settings = (GraphSettings)selection.getFirstElement();
+      GraphDefinition settings = (GraphDefinition)selection.getFirstElement();
       if (showGraphPropertyPages(settings))
       {
-         final GraphSettings newSettings = settings;
+         final GraphDefinition newSettings = settings;
          try
          {
             new ConsoleJob("Update template graph", null, Activator.PLUGIN_ID, null) {
@@ -373,14 +373,14 @@ public class TemplateGraphView extends ViewPart implements SessionListener
       
       for(final Object o : selection.toList())
       {
-         if (!(o instanceof GraphSettings))
+         if (!(o instanceof GraphDefinition))
             continue;
          
-         new ConsoleJob(String.format(Messages.get().PredefinedGraphTree_DeleteJobName, ((GraphSettings)o).getShortName()), null, Activator.PLUGIN_ID, null) {
+         new ConsoleJob(String.format(Messages.get().PredefinedGraphTree_DeleteJobName, ((GraphDefinition)o).getShortName()), null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.deletePredefinedGraph(((GraphSettings)o).getId());
+               session.deletePredefinedGraph(((GraphDefinition)o).getId());
             }
             
             @Override
@@ -488,7 +488,7 @@ public class TemplateGraphView extends ViewPart implements SessionListener
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<GraphSettings> settings = session.getPredefinedGraphs(true);
+				final List<GraphDefinition> settings = session.getPredefinedGraphs(true);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -515,7 +515,7 @@ public class TemplateGraphView extends ViewPart implements SessionListener
     * @param trap Object tool details object
     * @return true if OK was pressed
     */
-   private boolean showGraphPropertyPages(final GraphSettings settings)
+   private boolean showGraphPropertyPages(GraphDefinition settings)
    {
       PreferenceManager pm = new PreferenceManager();    
       pm.addToRoot(new PreferenceNode("graph", new Graph(settings, true)));

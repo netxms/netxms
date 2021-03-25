@@ -26,14 +26,14 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
-import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.ServiceContainer;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
-import org.netxms.ui.eclipse.charts.api.ChartFactory;
-import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
+import org.netxms.ui.eclipse.charts.api.ChartType;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AvailabilityChartConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -43,8 +43,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class AvailabilityChartElement extends ElementWidget implements DisposeListener, SessionListener
 {
-	private AvailabilityChartConfig config;
-	private DataComparisonChart chart;
+	private AvailabilityChartConfig elementConfig;
+   private Chart chart;
 
 	/**
 	 * @param parent
@@ -56,46 +56,46 @@ public class AvailabilityChartElement extends ElementWidget implements DisposeLi
 		
 		try
 		{
-			config = AvailabilityChartConfig.createFromXml(element.getData());
+			elementConfig = AvailabilityChartConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
-			config = new AvailabilityChartConfig();
+			elementConfig = new AvailabilityChartConfig();
 		}
 
 		setLayout(new FillLayout());
 		
-		chart = ChartFactory.createPieChart(this, SWT.NONE);
-		chart.setTitleVisible(config.isShowTitle());
-		chart.setChartTitle(config.getTitle());
-		chart.setLegendPosition(config.getLegendPosition());
-		chart.setLegendVisible(config.isShowLegend());
-		chart.set3DModeEnabled(config.isShowIn3D());
-		chart.setTranslucent(config.isTranslucent());
-		chart.setRotation(225.0);
+      ChartConfiguration chartConfig = new ChartConfiguration();
+      chartConfig.setTitleVisible(elementConfig.isShowTitle());
+      chartConfig.setTitle(elementConfig.getTitle());
+      chartConfig.setLegendPosition(elementConfig.getLegendPosition());
+      chartConfig.setLegendVisible(elementConfig.isShowLegend());
+      chartConfig.setShowIn3D(elementConfig.isShowIn3D());
+      chartConfig.setTranslucent(elementConfig.isTranslucent());
+      chartConfig.setRotation(225.0);
+
+      chart = new Chart(this, SWT.NONE, ChartType.PIE, chartConfig);
 		
-      chart.addParameter(new GraphItem(0, 0, DataOrigin.INTERNAL, DataType.FLOAT, Messages.get().AvailabilityChartElement_Up,
-            Messages.get().AvailabilityChartElement_Uptime, "%s"), 100); //$NON-NLS-1$
-      chart.addParameter(new GraphItem(0, 0, DataOrigin.INTERNAL, DataType.FLOAT, Messages.get().AvailabilityChartElement_Down,
-            Messages.get().AvailabilityChartElement_Downtime, "%s"), 0); //$NON-NLS-1$
+      chart.addParameter(new GraphItem(DataType.FLOAT, Messages.get().AvailabilityChartElement_Up, Messages.get().AvailabilityChartElement_Uptime, "%s")); //$NON-NLS-1$
+      chart.addParameter(new GraphItem(DataType.FLOAT, Messages.get().AvailabilityChartElement_Down, Messages.get().AvailabilityChartElement_Downtime, "%s")); //$NON-NLS-1$
 		chart.setPaletteEntry(0, new ChartColor(127, 154, 72));
 		chart.setPaletteEntry(1, new ChartColor(158, 65, 62));
-		chart.initializationComplete();
-		
+      chart.rebuild();
+
 		addDisposeListener(this);
 		ConsoleSharedData.getSession().addListener(this);
 
 		refreshChart();
 	}
-	
+
 	/**
 	 * Refresh chart
 	 */
 	private void refreshChart()
 	{
-		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		ServiceContainer service = (ServiceContainer)session.findObjectById(config.getObjectId(), ServiceContainer.class);
+      NXCSession session = ConsoleSharedData.getSession();
+		ServiceContainer service = (ServiceContainer)session.findObjectById(elementConfig.getObjectId(), ServiceContainer.class);
 		if (service != null)
 		{
 			chart.updateParameter(0, service.getUptimeForDay(), false);
@@ -119,7 +119,7 @@ public class AvailabilityChartElement extends ElementWidget implements DisposeLi
 	public void notificationHandler(SessionNotification n)
 	{
 		if ((n.getCode() == SessionNotification.OBJECT_CHANGED) &&
-		    (n.getSubCode() == config.getObjectId()) &&
+		    (n.getSubCode() == elementConfig.getObjectId()) &&
 		    !isDisposed())
 		{
 			getDisplay().asyncExec(new Runnable() {

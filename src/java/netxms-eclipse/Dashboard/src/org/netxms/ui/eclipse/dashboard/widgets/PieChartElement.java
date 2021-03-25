@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,11 +24,11 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.ui.eclipse.charts.api.ChartColor;
-import org.netxms.ui.eclipse.charts.api.ChartFactory;
-import org.netxms.ui.eclipse.charts.widgets.GenericChart;
+import org.netxms.ui.eclipse.charts.api.ChartType;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
 
 /**
@@ -36,7 +36,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
  */
 public class PieChartElement extends ComparisonChartElement
 {
-	private PieChartConfig config;
+   private PieChartConfig elementConfig;
 
 	/**
 	 * @param parent
@@ -45,51 +45,45 @@ public class PieChartElement extends ComparisonChartElement
 	public PieChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
 		super(parent, element, viewPart);
-		
+
 		try
 		{
-			config = PieChartConfig.createFromXml(element.getData());
+         elementConfig = PieChartConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
-			config = new PieChartConfig();
+         elementConfig = new PieChartConfig();
 		}
 
-		refreshInterval = config.getRefreshRate();
-		
+      refreshInterval = elementConfig.getRefreshRate();
+
+      ChartConfiguration chartConfig = new ChartConfiguration();
+      chartConfig.setTitleVisible(elementConfig.isShowTitle());
+      chartConfig.setTitle(elementConfig.getTitle());
+      chartConfig.setLegendPosition(elementConfig.getLegendPosition());
+      chartConfig.setLegendVisible(elementConfig.isShowLegend());
+      chartConfig.setShowIn3D(elementConfig.isShowIn3D());
+      chartConfig.setTranslucent(elementConfig.isTranslucent());
+
 		setLayout(new FillLayout());
-		
-		chart = ChartFactory.createPieChart(this, SWT.NONE);
-		chart.setTitleVisible(config.isShowTitle());
-		chart.setChartTitle(config.getTitle());
-		chart.setLegendPosition(config.getLegendPosition());
-		chart.setLegendVisible(config.isShowLegend());
-		chart.set3DModeEnabled(config.isShowIn3D());
-		chart.setTranslucent(config.isTranslucent());
-      ((GenericChart)chart).setDrillDownObjectId(config.getDrillDownObjectId());
-		
-		int index = 0;
-		for(ChartDciConfig dci : config.getDciList())
-		{
-         chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, DataOrigin.INTERNAL, DataType.INT32, Long.toString(dci.dciId),
-               dci.getName(), dci.getDisplayFormat()), 0.0);
-			int color = dci.getColorAsInt();
-			if (color != -1)
-				chart.setPaletteEntry(index, new ChartColor(color));
-			index++;
-		}
-		chart.initializationComplete();
+
+      chart = new Chart(this, SWT.NONE, ChartType.PIE, chartConfig);
+      chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
+
+      for(ChartDciConfig dci : elementConfig.getDciList())
+         chart.addParameter(new GraphItem(dci, DataOrigin.INTERNAL, DataType.INT32));
+      chart.rebuild();
 
 		startRefreshTimer();
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()
-	 */
+
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()
+    */
 	@Override
 	protected ChartDciConfig[] getDciList()
 	{
-		return config.getDciList();
+      return elementConfig.getDciList();
 	}
 }

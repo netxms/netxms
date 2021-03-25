@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ public class DciData
 	private long dciId;
 	private DataType dataType;
 	private ArrayList<DciDataRow> values = new ArrayList<DciDataRow>();
-		
+
 	/**
 	 * @param nodeId The node ID
 	 * @param dciId The dci ID
@@ -111,7 +111,7 @@ public class DciData
 	      r.invert();
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#toString()
     */
    @Override

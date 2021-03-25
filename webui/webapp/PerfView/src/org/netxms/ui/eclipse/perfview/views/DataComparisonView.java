@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,15 +46,17 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
+import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.charts.api.ChartFactory;
-import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
+import org.netxms.ui.eclipse.charts.api.ChartType;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
@@ -78,8 +80,8 @@ public class DataComparisonView extends ViewPart
 	private static final String KEY_TRANSLUCENT = "isTRanslucent"; //$NON-NLS-1$
 	private static final String KEY_SHOW_LEGEND = "showLegend"; //$NON-NLS-1$
 	private static final String KEY_LEGEND_POSITION = "legendPosition"; //$NON-NLS-1$
-	
-	private DataComparisonChart chart;
+
+   private Chart chart;
 	protected NXCSession session;
 	private boolean updateInProgress = false;
 	protected ArrayList<GraphItem> items = new ArrayList<GraphItem>(8);
@@ -88,17 +90,16 @@ public class DataComparisonView extends ViewPart
 	private boolean useLogScale = false;
 	private boolean showIn3D = true;
 	private int autoRefreshInterval = 30;	// 30 seconds
-	private int chartType = DataComparisonChart.BAR_CHART;
+   private ChartType chartType = ChartType.BAR;
 	private boolean transposed = false;
 	private boolean showLegend = true;
-	private int legendPosition = GraphSettings.POSITION_BOTTOM;
+	private int legendPosition = ChartConfiguration.POSITION_BOTTOM;
 	private boolean translucent = false;
-	private Image[] titleImages = new Image[5];
+   private Image[] titleImages = new Image[4];
 
 	private RefreshAction actionRefresh;
 	private Action actionAutoRefresh;
 	private Action actionShowBarChart;
-	private Action actionShowTubeChart;
 	private Action actionShowPieChart;
 	private Action actionShowIn3D;
 	private Action actionShowTranslucent;
@@ -111,21 +112,20 @@ public class DataComparisonView extends ViewPart
 	private Action actionLegendTop;
 	private Action actionLegendBottom;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
 
 		session = (NXCSession)ConsoleSharedData.getSession();
-		
+
 		titleImages[0] = Activator.getImageDescriptor("icons/chart_bar.png").createImage(); //$NON-NLS-1$
 		titleImages[1] = Activator.getImageDescriptor("icons/chart_pie.png").createImage(); //$NON-NLS-1$
 		titleImages[2] = Activator.getImageDescriptor("icons/graph.png").createImage(); // TODO: add radar icon //$NON-NLS-1$
-		titleImages[3] = Activator.getImageDescriptor("icons/chart_tube.png").createImage(); //$NON-NLS-1$
-		titleImages[4] = Activator.getImageDescriptor("icons/chart_dial.png").createImage(); //$NON-NLS-1$
+      titleImages[3] = Activator.getImageDescriptor("icons/chart_dial.png").createImage(); //$NON-NLS-1$
 
 		// Extract information from view id
 		//   first field is unique ID
@@ -137,11 +137,11 @@ public class DataComparisonView extends ViewPart
 		{
 			try
 			{
-				chartType = Integer.parseInt(fields[1]);
+            chartType = ChartType.getByValue(Integer.parseInt(fields[1]));
 			}
 			catch(NumberFormatException e)
 			{
-				chartType = DataComparisonChart.BAR_CHART;
+            chartType = ChartType.BAR;
 			}
 			for(int i = 2; i < fields.length; i++)
 			{
@@ -156,7 +156,7 @@ public class DataComparisonView extends ViewPart
 								DataType.getByValue(Integer.parseInt(subfields[3], 10)), // data type
 								URLDecoder.decode(subfields[4], "UTF-8"), // name //$NON-NLS-1$
 								URLDecoder.decode(subfields[5], "UTF-8"), // description //$NON-NLS-1$
-								"%s")); // format //$NON-NLS-1$
+                        "%s", ChartDciConfig.DEFAULT, -1)); // format //$NON-NLS-1$
 					}
 					catch(NumberFormatException e)
 					{
@@ -193,18 +193,12 @@ public class DataComparisonView extends ViewPart
 			}
 		}
 		
-		try
-		{
-			setTitleImage(titleImages[chartType]);
-		}
-		catch(ArrayIndexOutOfBoundsException e)
-		{
-		}
+      setTitleImage(getIconByChartType(chartType));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
+    */
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException
 	{
@@ -212,7 +206,7 @@ public class DataComparisonView extends ViewPart
 		
 		if (memento != null)
 		{
-			chartType = safeCast(memento.getInteger(KEY_CHART_TYPE), chartType);
+         chartType = ChartType.getByValue(safeCast(memento.getInteger(KEY_CHART_TYPE), chartType.getValue()));
 			autoRefreshEnabled = safeCast(memento.getBoolean(KEY_AUTO_REFRESH), autoRefreshEnabled);
 			autoRefreshInterval = safeCast(memento.getInteger(KEY_REFRESH_INTERVAL), autoRefreshInterval);
 			translucent = safeCast(memento.getBoolean(KEY_TRANSLUCENT), translucent);
@@ -221,14 +215,7 @@ public class DataComparisonView extends ViewPart
 			legendPosition = safeCast(memento.getInteger(KEY_LEGEND_POSITION), legendPosition);
 			useLogScale = safeCast(memento.getBoolean(KEY_LOG_SCALE), useLogScale);
 			showIn3D = safeCast(memento.getBoolean(KEY_3D_VIEW), showIn3D);
-			
-			try
-			{
-				setTitleImage(titleImages[chartType]);
-			}
-			catch(ArrayIndexOutOfBoundsException e)
-			{
-			}
+         setTitleImage(getIconByChartType(chartType));
 		}
 	}
 	
@@ -252,13 +239,13 @@ public class DataComparisonView extends ViewPart
 		return (b != null) ? b : defval;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
+    */
 	@Override
 	public void saveState(IMemento memento)
 	{
-		memento.putInteger(KEY_CHART_TYPE, chartType);
+      memento.putInteger(KEY_CHART_TYPE, chartType.getValue());
 		memento.putBoolean(KEY_AUTO_REFRESH, autoRefreshEnabled);
 		memento.putInteger(KEY_REFRESH_INTERVAL, autoRefreshInterval);
 		memento.putBoolean(KEY_TRANSLUCENT, translucent);
@@ -269,40 +256,28 @@ public class DataComparisonView extends ViewPart
 		memento.putBoolean(KEY_3D_VIEW, showIn3D);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		switch(chartType)
-		{
-			case DataComparisonChart.BAR_CHART:
-				chart = ChartFactory.createBarChart(parent, SWT.NONE);
-				break;
-			case DataComparisonChart.TUBE_CHART:
-				chart = ChartFactory.createTubeChart(parent, SWT.NONE);
-				break;
-			case DataComparisonChart.PIE_CHART:
-				chart = ChartFactory.createPieChart(parent, SWT.NONE);
-				break;
-		}
-		
-		chart.setLegendPosition(legendPosition);
-		chart.setLegendVisible(showLegend);
-		chart.set3DModeEnabled(showIn3D);
-		chart.setTransposed(transposed);
-		chart.setTranslucent(translucent);
-		
+      ChartConfiguration chartConfiguration = new ChartConfiguration();
+      chartConfiguration.setLegendPosition(legendPosition);
+      chartConfiguration.setLegendVisible(showLegend);
+      chartConfiguration.setShowIn3D(showIn3D);
+      chartConfiguration.setTransposed(transposed);
+      chartConfiguration.setTranslucent(translucent);
+
+      chart = new Chart(parent, SWT.NONE, chartType, chartConfiguration);
 		for(GraphItem item : items)
-			chart.addParameter(item, 0);
-		
-		chart.initializationComplete();
-		
-		createActions();
+         chart.addParameter(item);
+      chart.rebuild();
+
+      createActions();
 		contributeToActionBars();
 		createPopupMenu();
-		
+
 		updateChart();
 
 		refreshController = new ViewRefreshController(this, autoRefreshEnabled ? autoRefreshInterval : -1, new Runnable() {
@@ -317,15 +292,15 @@ public class DataComparisonView extends ViewPart
 		});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
-		((Composite)chart).setFocus();
+      chart.setFocus();
 	}
-	
+
 	/**
 	 * Create pop-up menu for user list
 	 */
@@ -376,7 +351,8 @@ public class DataComparisonView extends ViewPart
 			{
 				useLogScale = !useLogScale;
 				setChecked(useLogScale);
-				chart.setLogScaleEnabled(useLogScale);
+            chart.getConfiguration().setLogScale(useLogScale);
+            chart.rebuild();
 			}
 		};
 		actionUseLogScale.setChecked(useLogScale);
@@ -387,7 +363,8 @@ public class DataComparisonView extends ViewPart
 			{
 				showIn3D = !showIn3D;
 				setChecked(showIn3D);
-				chart.set3DModeEnabled(showIn3D);
+            chart.getConfiguration().setShowIn3D(showIn3D);
+            chart.rebuild();
 			}
 		};
 		actionShowIn3D.setChecked(showIn3D);
@@ -399,7 +376,8 @@ public class DataComparisonView extends ViewPart
 			{
 				translucent = !translucent;
 				setChecked(translucent);
-				chart.setTranslucent(translucent);
+            chart.getConfiguration().setTranslucent(translucent);
+            chart.rebuild();
 			}
 		};
 		actionShowTranslucent.setChecked(translucent);
@@ -410,7 +388,8 @@ public class DataComparisonView extends ViewPart
 			{
 				showLegend = !showLegend;
 				setChecked(showLegend);
-				chart.setLegendVisible(showLegend);
+            chart.getConfiguration().setLegendVisible(showLegend);
+            chart.rebuild();
 			}
 		};
 		actionShowLegend.setChecked(showLegend);
@@ -419,70 +398,64 @@ public class DataComparisonView extends ViewPart
 			@Override
 			public void run()
 			{
-				legendPosition = GraphSettings.POSITION_LEFT;
-				chart.setLegendPosition(legendPosition);
+				legendPosition = ChartConfiguration.POSITION_LEFT;
+            chart.getConfiguration().setLegendPosition(legendPosition);
+            chart.rebuild();
 			}
 		};
-		actionLegendLeft.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
+		actionLegendLeft.setChecked(legendPosition == ChartConfiguration.POSITION_LEFT);
 		
 		actionLegendRight = new Action(Messages.get().DataComparisonView_PlaceOnRight, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendPosition = GraphSettings.POSITION_RIGHT;
-				chart.setLegendPosition(legendPosition);
+				legendPosition = ChartConfiguration.POSITION_RIGHT;
+            chart.getConfiguration().setLegendPosition(legendPosition);
+            chart.rebuild();
 			}
 		};
-		actionLegendRight.setChecked(legendPosition == GraphSettings.POSITION_RIGHT);
+		actionLegendRight.setChecked(legendPosition == ChartConfiguration.POSITION_RIGHT);
 		
 		actionLegendTop = new Action(Messages.get().DataComparisonView_PlaceOnTop, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendPosition = GraphSettings.POSITION_TOP;
-				chart.setLegendPosition(legendPosition);
+				legendPosition = ChartConfiguration.POSITION_TOP;
+            chart.getConfiguration().setLegendPosition(legendPosition);
+            chart.rebuild();
 			}
 		};
-		actionLegendTop.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
+		actionLegendTop.setChecked(legendPosition == ChartConfiguration.POSITION_LEFT);
 		
 		actionLegendBottom = new Action(Messages.get().DataComparisonView_PlaceOnBottom, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendPosition = GraphSettings.POSITION_BOTTOM;
-				chart.setLegendPosition(legendPosition);
+				legendPosition = ChartConfiguration.POSITION_BOTTOM;
+            chart.getConfiguration().setLegendPosition(legendPosition);
+            chart.rebuild();
 			}
 		};
-		actionLegendBottom.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
+		actionLegendBottom.setChecked(legendPosition == ChartConfiguration.POSITION_LEFT);
 		
 		actionShowBarChart = new Action(Messages.get().DataComparisonView_BarChart, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				setChartType(DataComparisonChart.BAR_CHART);
+            setChartType(ChartType.BAR);
 			}
 		};
-		actionShowBarChart.setChecked(chart.getChartType() == DataComparisonChart.BAR_CHART);
+      actionShowBarChart.setChecked(chartType == ChartType.BAR);
 		actionShowBarChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_bar.png")); //$NON-NLS-1$
-		
-		actionShowTubeChart = new Action(Messages.get().DataComparisonView_TubeChart, Action.AS_RADIO_BUTTON) {
-			@Override
-			public void run()
-			{
-				setChartType(DataComparisonChart.TUBE_CHART);
-			}
-		};
-		actionShowTubeChart.setChecked(chart.getChartType() == DataComparisonChart.TUBE_CHART);
-		actionShowTubeChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_tube.png")); //$NON-NLS-1$
 		
 		actionShowPieChart = new Action(Messages.get().DataComparisonView_PieChart, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				setChartType(DataComparisonChart.PIE_CHART);
+            setChartType(ChartType.PIE);
 			}
 		};
-		actionShowPieChart.setChecked(chart.getChartType() == DataComparisonChart.PIE_CHART);
+      actionShowPieChart.setChecked(chartType == ChartType.PIE);
 		actionShowPieChart.setImageDescriptor(Activator.getImageDescriptor("icons/chart_pie.png")); //$NON-NLS-1$
 
 		actionHorizontal = new Action(Messages.get().DataComparisonView_ShowHorizontally, Action.AS_RADIO_BUTTON) {
@@ -490,7 +463,8 @@ public class DataComparisonView extends ViewPart
 			public void run()
 			{
 				transposed = true;
-				chart.setTransposed(true);
+            chart.getConfiguration().setTransposed(true);
+            chart.rebuild();
 			}
 		};
 		actionHorizontal.setChecked(transposed);
@@ -502,7 +476,8 @@ public class DataComparisonView extends ViewPart
 			public void run()
 			{
 				transposed = false;
-				chart.setTransposed(false);
+            chart.getConfiguration().setTransposed(false);
+            chart.rebuild();
 			}
 		};
 		actionVertical.setChecked(!transposed);
@@ -535,7 +510,6 @@ public class DataComparisonView extends ViewPart
 		legend.add(actionLegendBottom);
 		
 		manager.add(actionShowBarChart);
-		manager.add(actionShowTubeChart);
 		manager.add(actionShowPieChart);
 		manager.add(new Separator());
 		manager.add(actionVertical);
@@ -565,7 +539,6 @@ public class DataComparisonView extends ViewPart
 		legend.add(actionLegendBottom);
 		
 		manager.add(actionShowBarChart);
-		manager.add(actionShowTubeChart);
 		manager.add(actionShowPieChart);
 		manager.add(new Separator());
 		manager.add(actionVertical);
@@ -587,7 +560,6 @@ public class DataComparisonView extends ViewPart
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionShowBarChart);
-		manager.add(actionShowTubeChart);
 		manager.add(actionShowPieChart);
 		manager.add(new Separator());
 		manager.add(actionVertical);
@@ -602,16 +574,18 @@ public class DataComparisonView extends ViewPart
 	 * Set new chart type
 	 * @param newType
 	 */
-	private void setChartType(int newType)
+   private void setChartType(ChartType newType)
 	{
 		chartType = newType;
-		chart.setLabelsVisible(chartType == DataComparisonChart.PIE_CHART);
-		chart.setChartType(newType);
+      chart.getConfiguration().setLabelsVisible(chartType == ChartType.PIE);
+      chart.setType(chartType);
+      chart.rebuild();
+
 		actionHorizontal.setEnabled(chart.hasAxes());
 		actionVertical.setEnabled(chart.hasAxes());
 		try
 		{
-			setTitleImage(titleImages[chartType]);
+         setTitleImage(getIconByChartType(chartType));
 			firePropertyChange(IWorkbenchPart.PROP_TITLE);
 		}
 		catch(ArrayIndexOutOfBoundsException e)
@@ -626,7 +600,7 @@ public class DataComparisonView extends ViewPart
 	{
 		if (updateInProgress)
 			return;
-		
+
 		updateInProgress = true;
 		ConsoleJob job = new ConsoleJob(Messages.get().DataComparisonView_JobName, this, Activator.PLUGIN_ID) {
 			@Override
@@ -650,7 +624,7 @@ public class DataComparisonView extends ViewPart
 				}
 				
 				final Threshold[][] thresholds = new Threshold[items.size()][];
-				if (chartType == DataComparisonChart.GAUGE_CHART)
+            if ((chartType == ChartType.DIAL) || (chartType == ChartType.GAUGE) || (chartType == ChartType.TEXT))
 				{
 					for(int i = 0; i < items.size(); i++)
 					{
@@ -663,7 +637,7 @@ public class DataComparisonView extends ViewPart
 					@Override
 					public void run()
 					{
-						if (chartType == DataComparisonChart.GAUGE_CHART)
+                  if ((chartType == ChartType.DIAL) || (chartType == ChartType.GAUGE) || (chartType == ChartType.TEXT))
 							for(int i = 0; i < thresholds.length; i++)
 								chart.updateParameterThresholds(i, thresholds[i]);
 						setChartData(values);
@@ -716,4 +690,25 @@ public class DataComparisonView extends ViewPart
 		}
 		super.dispose();
 	}
+
+   /**
+    * Get icon for given chart type
+    *
+    * @param chartType
+    * @return
+    */
+   private Image getIconByChartType(ChartType chartType)
+   {
+      switch(chartType)
+      {
+         case BAR:
+            return titleImages[0];
+         case PIE:
+            return titleImages[1];
+         case DIAL:
+            return titleImages[3];
+         default:
+            return titleImages[2];
+      }
+   }
 }

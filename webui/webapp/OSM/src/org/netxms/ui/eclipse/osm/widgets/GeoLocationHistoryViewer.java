@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,8 @@ import org.eclipse.swt.widgets.ToolTip;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TimePeriod;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.constants.TimeFrameType;
+import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -266,15 +267,15 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
     * @param value
     * @param unit
     */
-   public void changeTimePeriod(int value, int unit)
+   public void changeTimePeriod(int value, TimeUnit unit)
    {
-      timePeriod.setTimeFrameType(GraphSettings.TIME_FRAME_BACK_FROM_NOW);
-      timePeriod.setTimeRangeValue(value);
-      timePeriod.setTimeUnitValue(unit);
+      timePeriod.setTimeFrameType(TimeFrameType.BACK_FROM_NOW);
+      timePeriod.setTimeRange(value);
+      timePeriod.setTimeUnit(unit);
       updateHistory();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#drawContent(org.eclipse.swt.graphics.GC, org.netxms.base.GeoLocation, int, int)
     */
    @Override

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,13 +32,13 @@ import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.views.DataComparisonView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Base class for displaying all data comparison charts
- *
  */
 public abstract class ShowDataComparisonChart implements IObjectActionDelegate
 {
@@ -46,24 +46,24 @@ public abstract class ShowDataComparisonChart implements IObjectActionDelegate
 	private Object[] currentSelection = null;
 	private long uniqueId = 0;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
-	 */
+   /**
+    * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+    */
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
 		window = targetPart.getSite().getWorkbenchWindow();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+    */
 	@Override
 	public void run(IAction action)
 	{
 		if (currentSelection != null)
 		{
-			String id = Long.toString(uniqueId++) + "&" + Integer.toString(getChartType()); //$NON-NLS-1$
+         String id = Long.toString(uniqueId++) + "&" + Integer.toString(getChartType().getValue()); //$NON-NLS-1$
 			for(int i = 0; i < currentSelection.length; i++)
 			{
 				long dciId = 0, nodeId = 0;
@@ -121,11 +121,11 @@ public abstract class ShowDataComparisonChart implements IObjectActionDelegate
 	 * 
 	 * @return chart type to be displayed
 	 */
-	abstract protected int getChartType();
+   abstract protected ChartType getChartType();
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+    */
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{

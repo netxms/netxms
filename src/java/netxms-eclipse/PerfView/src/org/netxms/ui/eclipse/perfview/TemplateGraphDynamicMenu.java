@@ -16,7 +16,7 @@ import org.eclipse.ui.services.IEvaluationService;
 import org.eclipse.ui.services.IServiceLocator;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.api.GraphTemplateCache;
@@ -74,16 +74,16 @@ public class TemplateGraphDynamicMenu extends ContributionItem implements IWorkb
          return;
 
       final AbstractNode node = firstNode;
-      GraphSettings[] settings = GraphTemplateCache.getInstance().getGraphTemplates(); //array should be already sorted
+      GraphDefinition[] templates = GraphTemplateCache.getInstance().getGraphTemplates(); //array should be already sorted
       final Menu graphMenu = new Menu(menu);
       
       Map<String, Menu> menus = new HashMap<String, Menu>();
       int added = 0;
-      for(int i = 0; i < settings.length; i++)
+      for(int i = 0; i < templates.length; i++)
       {
-         if(settings[i].isApplicableForNode(node))
+         if (templates[i].isApplicableForNode(node))
          {
-            String[] path = settings[i].getName().split("\\-\\>"); //$NON-NLS-1$
+            String[] path = templates[i].getName().split("\\-\\>"); //$NON-NLS-1$
             
             Menu rootMenu = graphMenu;
             for(int j = 0; j < path.length - 1; j++)
@@ -103,18 +103,18 @@ public class TemplateGraphDynamicMenu extends ContributionItem implements IWorkb
             
             final MenuItem item = new MenuItem(rootMenu, SWT.PUSH);
             item.setText(path[path.length - 1]);
-            item.setData(settings[i]);
+            item.setData(templates[i]);
             item.addSelectionListener(new SelectionAdapter() {
                @Override
                public void widgetSelected(SelectionEvent e)
                {
                   final NXCSession session = ConsoleSharedData.getSession();
-                  final GraphSettings gs = (GraphSettings)item.getData();
+                  final GraphDefinition gs = (GraphDefinition)item.getData();
                   ConsoleJob job = new ConsoleJob(String.format("Display graph from template for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
                      @Override
                      protected String getErrorMessage()
                      {
-                        return String.format("Cannot craete graph from template for node %s", node.getObjectName());
+                        return String.format("Cannot create graph from template for node %s", node.getObjectName());
                      }
 
                      @Override
@@ -128,7 +128,7 @@ public class TemplateGraphDynamicMenu extends ContributionItem implements IWorkb
                   job.start();
                }
             });
-            
+
             added++;
          }
       }

@@ -41,7 +41,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
@@ -59,7 +59,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class Graph extends PreferencePage
 {
-   private GraphSettings settings;
+   private GraphDefinition settings;
 	private LabeledText name;
 	private SortableTableViewer userList;
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(2);
@@ -70,7 +70,7 @@ public class Graph extends PreferencePage
 	 * Constructor
 	 * @param settings
 	 */
-	public Graph(GraphSettings settings, boolean saveToDatabase)
+	public Graph(GraphDefinition settings, boolean saveToDatabase)
 	{
       super(settings.isTemplate() ? "Template Graph" : "Predefined Graph");
       this.settings = settings;	   
@@ -225,8 +225,8 @@ public class Graph extends PreferencePage
       gd.verticalAlignment = SWT.FILL;
       rights.setLayoutData(gd);
       
-      createAccessCheck(rights, Messages.get().PredefinedGraph_Read, GraphSettings.ACCESS_READ);
-      createAccessCheck(rights, Messages.get().PredefinedGraph_Modify, GraphSettings.ACCESS_WRITE);
+      createAccessCheck(rights, Messages.get().PredefinedGraph_Read, GraphDefinition.ACCESS_READ);
+      createAccessCheck(rights, Messages.get().PredefinedGraph_Modify, GraphDefinition.ACCESS_WRITE);
       
       userList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override

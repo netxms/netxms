@@ -21,7 +21,9 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.ui.eclipse.charts.api.ChartFactory;
+import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.ui.eclipse.charts.api.ChartType;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableBarChartConfig;
 
 /**
@@ -47,16 +49,19 @@ public class TableBarChartElement extends TableComparisonChartElement
 			config = new TableBarChartConfig();
 		}
 
-		chart = ChartFactory.createBarChart(this, SWT.NONE);
-		chart.setTitleVisible(config.isShowTitle());
-		chart.setChartTitle(config.getTitle());
-		chart.setLegendPosition(config.getLegendPosition());
-		chart.setLegendVisible(config.isShowLegend());
-		chart.set3DModeEnabled(config.isShowIn3D());
-		chart.setTransposed(((TableBarChartConfig)config).isTransposed());
-		chart.setTranslucent(config.isTranslucent());
-		if (!config.isAutoScale())
-         chart.setYAxisRange(config.getMinYScaleValue(), config.getMaxYScaleValue());
+      ChartConfiguration chartConfig = new ChartConfiguration();
+      chartConfig.setTitleVisible(config.isShowTitle());
+      chartConfig.setTitle(config.getTitle());
+      chartConfig.setLegendPosition(config.getLegendPosition());
+      chartConfig.setLegendVisible(config.isShowLegend());
+      chartConfig.setShowIn3D(config.isShowIn3D());
+      chartConfig.setTransposed(((TableBarChartConfig)config).isTransposed());
+      chartConfig.setTranslucent(config.isTranslucent());
+      chartConfig.setAutoScale(config.isAutoScale());
+      chartConfig.setMinYScaleValue(config.getMinYScaleValue());
+      chartConfig.setMaxYScaleValue(config.getMaxYScaleValue());
+
+      chart = new Chart(this, SWT.NONE, ChartType.BAR, chartConfig);
 		
 		startRefreshTimer();
 	}

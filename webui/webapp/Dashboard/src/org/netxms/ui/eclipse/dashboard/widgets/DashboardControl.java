@@ -65,7 +65,7 @@ public class DashboardControl extends Composite
 	public static final String DEFAULT_WEB_PAGE_CONFIG = "<element>\n\t<url>http://</url>\n\t<title></title>\n</element>";  //$NON-NLS-1$
 	public static final String DEFAULT_TABLE_VALUE_CONFIG = "<element>\n\t<objectId>0</objectId>\n\t<dciId>0</dciId>\n\t<title></title>\n</element>";  //$NON-NLS-1$
    public static final String DEFAULT_SUMMARY_TABLE_CONFIG = "<element>\n\t<baseObjectId>0</baseObjectId>\n\t<tableId>0</tableId>\n</element>"; //$NON-NLS-1$
-			
+
 	private Dashboard dashboard;
 	private List<DashboardElement> elements;
 	private Map<DashboardElement, ElementWidget> elementWidgets = new HashMap<DashboardElement, ElementWidget>();
@@ -145,6 +145,7 @@ public class DashboardControl extends Composite
             w = new AvailabilityChartElement(this, e, viewPart);
             break;
          case DashboardElement.BAR_CHART:
+         case DashboardElement.TUBE_CHART:
          	w = new BarChartElement(this, e, viewPart);
          	break;
          case DashboardElement.CUSTOM:
@@ -211,19 +212,14 @@ public class DashboardControl extends Composite
             w = new SyslogMonitorElement(this, e, viewPart);
             break;
          case DashboardElement.TABLE_BAR_CHART:
+         case DashboardElement.TABLE_TUBE_CHART:
             w = new TableBarChartElement(this, e, viewPart);
             break;
          case DashboardElement.TABLE_PIE_CHART:
             w = new TablePieChartElement(this, e, viewPart);
             break;
-         case DashboardElement.TABLE_TUBE_CHART:
-            w = new TableTubeChartElement(this, e, viewPart);
-            break;
          case DashboardElement.TABLE_VALUE:
             w = new TableValueElement(this, e, viewPart);
-            break;
-         case DashboardElement.TUBE_CHART:
-            w = new TubeChartElement(this, e, viewPart);
             break;
          case DashboardElement.WEB_PAGE:
             w = new WebPageElement(this, e, viewPart);
@@ -245,7 +241,7 @@ public class DashboardControl extends Composite
 		
 		return w;
 	}
-	
+
 	/**
 	 * Redo element layout
 	 */

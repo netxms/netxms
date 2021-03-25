@@ -28,14 +28,14 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceContainer;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
-import org.netxms.ui.eclipse.charts.api.ChartFactory;
-import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
+import org.netxms.ui.eclipse.charts.api.ChartType;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
@@ -47,9 +47,9 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
  */
 public class AvailabilityChart extends OverviewPageElement
 {
-	private DataComparisonChart dayChart;
-	private DataComparisonChart weekChart;
-	private DataComparisonChart monthChart;
+   private Chart dayChart;
+   private Chart weekChart;
+   private Chart monthChart;
 	private ColorCache colors;
 	
 	/**
@@ -129,31 +129,30 @@ public class AvailabilityChart extends OverviewPageElement
 	 * @param title
 	 * @return
 	 */
-	private DataComparisonChart createChart(Composite parent, String title)
+   private Chart createChart(Composite parent, String title)
 	{
-		DataComparisonChart chart = ChartFactory.createPieChart(parent, SWT.NONE);
-		chart.setTitleVisible(true);
-		chart.set3DModeEnabled(true);
-		chart.setChartTitle(title);
-		chart.setLegendVisible(false);
-		chart.setLabelsVisible(false);
-		chart.setRotation(225.0);
-		
-      chart.addParameter(new GraphItem(0, 0, DataOrigin.INTERNAL, DataType.FLOAT, Messages.get().AvailabilityChart_Up,
-            Messages.get().AvailabilityChart_Up, "%s"), 100); //$NON-NLS-1$
-      chart.addParameter(new GraphItem(0, 0, DataOrigin.INTERNAL, DataType.FLOAT, Messages.get().AvailabilityChart_Down,
-            Messages.get().AvailabilityChart_Down, "%s"), 0); //$NON-NLS-1$
+      ChartConfiguration chartConfiguration = new ChartConfiguration();
+      chartConfiguration.setTitleVisible(true);
+      chartConfiguration.setShowIn3D(true);
+      chartConfiguration.setTitle(title);
+      chartConfiguration.setLegendVisible(false);
+      chartConfiguration.setLabelsVisible(false);
+      chartConfiguration.setRotation(225.0);
+      Chart chart = new Chart(parent, SWT.NONE, ChartType.PIE, chartConfiguration);
+
+      chart.addParameter(new GraphItem(DataType.FLOAT, Messages.get().AvailabilityChart_Up, Messages.get().AvailabilityChart_Up, "%s")); //$NON-NLS-1$
+      chart.addParameter(new GraphItem(DataType.FLOAT, Messages.get().AvailabilityChart_Down, Messages.get().AvailabilityChart_Down, "%s")); //$NON-NLS-1$
 		chart.setPaletteEntry(0, new ChartColor(127, 154, 72));
 		chart.setPaletteEntry(1, new ChartColor(158, 65, 62));
-		chart.initializationComplete();
+      chart.rebuild();
 		
 		GridData gd = new GridData();
 		gd.widthHint = 250;
 		gd.heightHint = 190;
-		((Control)chart).setLayoutData(gd);
+      chart.setLayoutData(gd);
 		return chart;
 	}
-	
+
 	/**
 	 * Paint legend for charts
 	 * 

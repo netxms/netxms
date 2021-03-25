@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
@@ -47,7 +47,7 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
 	private String title = ""; //$NON-NLS-1$
 	
 	@Element(required = false)
-	private int legendPosition = GraphSettings.POSITION_RIGHT;
+	private int legendPosition = ChartConfiguration.POSITION_RIGHT;
 	
 	@Element(required = false)
 	private boolean showLegend = true;

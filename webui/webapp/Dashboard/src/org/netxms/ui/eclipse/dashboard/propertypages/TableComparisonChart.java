@@ -28,7 +28,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableBarChartConfig;
@@ -183,13 +183,13 @@ public class TableComparisonChart extends PropertyPage
 	{
 		switch(value)
 		{
-			case GraphSettings.POSITION_BOTTOM:
+			case ChartConfiguration.POSITION_BOTTOM:
 				return 3;
-			case GraphSettings.POSITION_LEFT:
+			case ChartConfiguration.POSITION_LEFT:
 				return 0;
-			case GraphSettings.POSITION_RIGHT:
+			case ChartConfiguration.POSITION_RIGHT:
 				return 1;
-			case GraphSettings.POSITION_TOP:
+			case ChartConfiguration.POSITION_TOP:
 				return 2;
 		}
 		return 0;

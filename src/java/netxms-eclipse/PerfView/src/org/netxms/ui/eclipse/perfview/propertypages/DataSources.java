@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,10 +46,9 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.ChartConfig;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.ui.eclipse.datacollection.dialogs.DataSourceEditDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -72,8 +71,8 @@ public class DataSources extends PreferencePage
 	public static final int COLUMN_METRIC = 2;
 	public static final int COLUMN_LABEL = 3;
 	public static final int COLUMN_COLOR = 4;
-	
-	private ChartConfig config;
+
+   private GraphDefinition config;
 	private DciListLabelProvider labelProvider;
 	private SortableTableViewer viewer;
 	private Button addButton;
@@ -85,13 +84,12 @@ public class DataSources extends PreferencePage
 	private ColorCache colorCache;
 	private boolean graphIsTemplate = false;
 	private boolean saveToDatabase;
-   
-   
+
    /**
     * Constructor
     * @param settings
     */
-   public DataSources(GraphSettings settings, boolean saveToDatabase)
+   public DataSources(GraphDefinition settings, boolean saveToDatabase)
    {
       super("Data Source");
       config = settings;     
@@ -104,8 +102,7 @@ public class DataSources extends PreferencePage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-      if (config instanceof GraphSettings)
-		   graphIsTemplate = ((GraphSettings)config).isTemplate();
+      graphIsTemplate = config.isTemplate();
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		colorCache = new ColorCache(dialogArea);
 
@@ -139,7 +136,7 @@ public class DataSources extends PreferencePage
 			}
 		});
       viewer.setInput(dciList.toArray());
-      
+
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
       gridData.grabExcessVerticalSpace = true;
@@ -160,7 +157,7 @@ public class DataSources extends PreferencePage
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.LEFT;
       leftButtons.setLayoutData(gridData);
-      
+
       upButton = new Button(leftButtons, SWT.PUSH);
       upButton.setText(Messages.get().DataSources_Up);
       RowData rd = new RowData();
@@ -180,7 +177,7 @@ public class DataSources extends PreferencePage
 			}
       });
       upButton.setEnabled(false);
-      
+
       downButton = new Button(leftButtons, SWT.PUSH);
       downButton.setText(Messages.get().DataSources_Down);
       rd = new RowData();
@@ -425,7 +422,7 @@ public class DataSources extends PreferencePage
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph((GraphSettings)config, false);
+					session.saveGraph((GraphDefinition)config, false);
 				}
 	
 				@Override

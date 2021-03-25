@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -42,11 +43,12 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.ChartConfig;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.ui.eclipse.datacollection.dialogs.DataSourceEditDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -54,6 +56,8 @@ import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.propertypages.helpers.DciListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ColorCache;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -67,8 +71,8 @@ public class DataSources extends PreferencePage
 	public static final int COLUMN_METRIC = 2;
 	public static final int COLUMN_LABEL = 3;
 	public static final int COLUMN_COLOR = 4;
-	
-	private ChartConfig config;
+
+   private GraphDefinition config;
 	private DciListLabelProvider labelProvider;
 	private SortableTableViewer viewer;
 	private Button addButton;
@@ -77,15 +81,15 @@ public class DataSources extends PreferencePage
 	private Button upButton;
 	private Button downButton;
 	private List<ChartDciConfig> dciList = null;
+	private ColorCache colorCache;
 	private boolean graphIsTemplate = false;
 	private boolean saveToDatabase;
-   
-   
+
    /**
     * Constructor
     * @param settings
     */
-   public DataSources(GraphSettings settings, boolean saveToDatabase)
+   public DataSources(GraphDefinition settings, boolean saveToDatabase)
    {
       super("Data Source");
       config = settings;     
@@ -98,10 +102,10 @@ public class DataSources extends PreferencePage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-      if (config instanceof GraphSettings)
-		   graphIsTemplate = ((GraphSettings)config).isTemplate();
+      graphIsTemplate = config.isTemplate();
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+		colorCache = new ColorCache(dialogArea);
+
       dciList = new ArrayList<ChartDciConfig>();
       for(ChartDciConfig dci : config.getDciList())
       	dciList.add(new ChartDciConfig(dci));
@@ -123,8 +127,16 @@ public class DataSources extends PreferencePage
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(labelProvider);
       viewer.disableSorting();
+      viewer.getTable().addListener(SWT.PaintItem, new Listener() {
+			@Override
+			public void handleEvent(Event event)
+			{
+				if (event.index == COLUMN_COLOR)
+					drawColorCell(event);
+			}
+		});
       viewer.setInput(dciList.toArray());
-      
+
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
       gridData.grabExcessVerticalSpace = true;
@@ -145,7 +157,7 @@ public class DataSources extends PreferencePage
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.LEFT;
       leftButtons.setLayoutData(gridData);
-      
+
       upButton = new Button(leftButtons, SWT.PUSH);
       upButton.setText(Messages.get().DataSources_Up);
       RowData rd = new RowData();
@@ -165,7 +177,7 @@ public class DataSources extends PreferencePage
 			}
       });
       upButton.setEnabled(false);
-      
+
       downButton = new Button(leftButtons, SWT.PUSH);
       downButton.setText(Messages.get().DataSources_Down);
       rd = new RowData();
@@ -281,6 +293,25 @@ public class DataSources extends PreferencePage
 	}
 
 	/**
+	 * @param event
+	 */
+	private void drawColorCell(Event event)
+	{
+		TableItem item = (TableItem)event.item;
+		ChartDciConfig dci = (ChartDciConfig)item.getData();
+		if (dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR))
+			return;
+		
+		int width = viewer.getTable().getColumn(COLUMN_COLOR).getWidth();
+		Color color = ColorConverter.colorFromInt(dci.getColorAsInt(), colorCache);
+		event.gc.setForeground(colorCache.create(0, 0, 0));
+		event.gc.setBackground(color);
+		event.gc.setLineWidth(1);
+		event.gc.fillRectangle(event.x + 3, event.y + 2, width - 7, event.height - 5);
+		event.gc.drawRectangle(event.x + 3, event.y + 2, width - 7, event.height - 5);
+	}
+
+	/**
 	 * Add new item
 	 */
 	private void addItem()
@@ -391,7 +422,7 @@ public class DataSources extends PreferencePage
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph((GraphSettings)config, false);
+					session.saveGraph((GraphDefinition)config, false);
 				}
 	
 				@Override

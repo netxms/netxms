@@ -34,8 +34,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.ChartConfig;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
@@ -51,7 +51,7 @@ import org.netxms.ui.eclipse.widgets.TimePeriodSelector;
  */
 public class General extends PreferencePage
 {
-	private ChartConfig config;
+	private ChartConfiguration config;
 	private LabeledText title;
 	private Button checkShowGrid;
 	private Button checkShowLegend;
@@ -75,13 +75,13 @@ public class General extends PreferencePage
     * Constructor
     * @param settings
     */
-   public General(GraphSettings settings, boolean saveToDatabase)
+   public General(ChartConfiguration settings, boolean saveToDatabase)
    {
       super("General");
       config = settings;     
       this.saveToDatabase = saveToDatabase;
    }
-	
+
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
@@ -120,7 +120,7 @@ public class General extends PreferencePage
       
       checkShowGrid = new Button(optionsGroup, SWT.CHECK);
       checkShowGrid.setText(Messages.get().General_ShowGridLines);
-      checkShowGrid.setSelection(config.isShowGrid());
+      checkShowGrid.setSelection(config.isGridVisible());
 
       checkLogScale = new Button(optionsGroup, SWT.CHECK);
       checkLogScale.setText(Messages.get().General_LogScale);
@@ -145,7 +145,7 @@ public class General extends PreferencePage
       
       checkShowLegend = new Button(optionsGroup, SWT.CHECK);
       checkShowLegend.setText(Messages.get().General_ShowLegend);
-      checkShowLegend.setSelection(config.isShowLegend());
+      checkShowLegend.setSelection(config.isLegendVisible());
       checkShowLegend.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -165,8 +165,8 @@ public class General extends PreferencePage
       checkShowHostNames = new Button(optionsGroup, SWT.CHECK);
       checkShowHostNames.setText(Messages.get().General_ShowHostNames);
       checkShowHostNames.setSelection(config.isShowHostNames());
-      checkShowHostNames.setEnabled(config.isShowLegend());
-      
+      checkShowHostNames.setEnabled(config.isLegendVisible());
+
       gd = new GridData();
       gd.horizontalAlignment = GridData.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -178,21 +178,21 @@ public class General extends PreferencePage
       legendLocation.add(Messages.get().General_Top);
       legendLocation.add(Messages.get().General_Bottom);
       legendLocation.select(31 - Integer.numberOfLeadingZeros(config.getLegendPosition()));      
-      legendLocation.setEnabled(config.isShowLegend()); 
+      legendLocation.setEnabled(config.isLegendVisible()); 
       
       checkExtendedLegend = new Button(optionsGroup, SWT.CHECK);
       checkExtendedLegend.setText(Messages.get().General_8);
       checkExtendedLegend.setSelection(config.isExtendedLegend());         
-      checkExtendedLegend.setEnabled(config.isShowLegend());   
+      checkExtendedLegend.setEnabled(config.isLegendVisible());   
       
       checkAreaChart = new Button(optionsGroup, SWT.CHECK);
       checkAreaChart.setText("Area chart");
       checkAreaChart.setSelection(config.isArea());         
-      
+
       checkUseMultipliers = new Button(optionsGroup, SWT.CHECK);
       checkUseMultipliers.setText("Use multipliers");
       checkUseMultipliers.setSelection(config.isUseMultipliers());
-      
+
       Composite refreshGroup = new Composite(optionsGroup, SWT.NONE);
       layout = new GridLayout();
       layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
@@ -286,8 +286,8 @@ public class General extends PreferencePage
 			}
 		});
       refreshIntervalSpinner.setEnabled(config.isAutoRefresh()); 
-      
-      timeSelector = new TimePeriodSelector(dialogArea, SWT.NONE, config.timePeriod());
+
+      timeSelector = new TimePeriodSelector(dialogArea, SWT.NONE, config.getTimePeriod());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -298,14 +298,14 @@ public class General extends PreferencePage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       yAxisRange.setLayoutData(gd);
-      yAxisRange.setSelection(config.isAutoScale(),  config.modifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue());
+      yAxisRange.setSelection(config.isAutoScale(), config.isModifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue());
       
       return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
 	@Override
 	protected void performDefaults()
 	{
@@ -340,8 +340,8 @@ public class General extends PreferencePage
 	protected void applyChanges(final boolean isApply)
 	{
 		config.setTitle(title.getText());
-		config.setShowGrid(checkShowGrid.getSelection());
-		config.setShowLegend(checkShowLegend.getSelection());
+		config.setGridVisible(checkShowGrid.getSelection());
+		config.setLegendVisible(checkShowLegend.getSelection());
 		config.setAutoScale(yAxisRange.isAuto());
 		config.setShowHostNames(checkShowHostNames.getSelection());
 		config.setAutoRefresh(checkAutoRefresh.getSelection());
@@ -353,26 +353,21 @@ public class General extends PreferencePage
       config.setLegendPosition((int)Math.pow(2,legendLocation.getSelectionIndex()));
       config.setTranslucent(checkTranslucent.getSelection());
       config.setLineWidth(lineWidth.getSelection());
-		config.setTimeFrameType(timeSelector.getTimeFrameType());
-		config.setTimeUnits(timeSelector.getTimeUnitValue());
-		config.setTimeRange(timeSelector.getTimeRangeValue());
-		config.setTimeFrom(timeSelector.getTimeFrom());
-		config.setTimeTo(timeSelector.getTimeTo());
+      config.setTimePeriod(timeSelector.getTimePeriod());
 		config.setUseMultipliers(checkUseMultipliers.getSelection());
-		
 		config.setMinYScaleValue(yAxisRange.getMinY());
 		config.setMaxYScaleValue(yAxisRange.getMaxY());
       config.setModifyYBase(yAxisRange.modifyYBase());
-		
+
 		if (saveToDatabase && isApply)
 		{
 			setValid(false);
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         final NXCSession session = ConsoleSharedData.getSession();
 			new ConsoleJob(Messages.get().General_JobName, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph((GraphSettings)config, false);
+					session.saveGraph((GraphDefinition)config, false);
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()
@@ -390,10 +385,10 @@ public class General extends PreferencePage
 			}.start();
 		}
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{      
@@ -401,9 +396,9 @@ public class General extends PreferencePage
          applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{

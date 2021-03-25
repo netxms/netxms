@@ -23,22 +23,20 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
-import org.netxms.ui.eclipse.charts.api.ChartFactory;
-import org.netxms.ui.eclipse.charts.api.Gauge;
-import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
-import org.netxms.ui.eclipse.charts.widgets.GenericChart;
+import org.netxms.ui.eclipse.charts.api.ChartType;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
-import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * Dial chart element
  */
 public class GaugeElement extends ComparisonChartElement
 {
-	private GaugeConfig config;
+	private GaugeConfig elementConfig;
 	
 	/**
 	 * @param parent
@@ -47,72 +45,68 @@ public class GaugeElement extends ComparisonChartElement
 	public GaugeElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
 		super(parent, element, viewPart);
-		
+
 		try
 		{
-			config = GaugeConfig.createFromXml(element.getData());
+			elementConfig = GaugeConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
-			config = new GaugeConfig();
+			elementConfig = new GaugeConfig();
 		}
 
-		refreshInterval = config.getRefreshRate();
+		refreshInterval = elementConfig.getRefreshRate();
 		
-		switch(config.getGaugeType())
+      ChartConfiguration chartConfig = new ChartConfiguration();
+      chartConfig.setTitle(elementConfig.getTitle());
+      chartConfig.setTitleVisible(elementConfig.isShowTitle());
+      chartConfig.setLegendVisible(false);
+      chartConfig.setLegendPosition(elementConfig.getLegendPosition());
+      chartConfig.setLabelsVisible(elementConfig.isShowLegend());
+      chartConfig.setLabelsInside(elementConfig.isLegendInside());
+      chartConfig.setTransposed(elementConfig.isVertical());
+      chartConfig.setElementBordersVisible(elementConfig.isElementBordersVisible());
+      chartConfig.setMinYScaleValue(elementConfig.getMinValue());
+      chartConfig.setMaxYScaleValue(elementConfig.getMaxValue());
+      chartConfig.setLeftYellowZone(elementConfig.getLeftYellowZone());
+      chartConfig.setLeftRedZone(elementConfig.getLeftRedZone());
+      chartConfig.setRightYellowZone(elementConfig.getRightYellowZone());
+      chartConfig.setRightRedZone(elementConfig.getRightRedZone());
+      chartConfig.setFontName(elementConfig.getFontName());
+      chartConfig.setGaugeColorMode(elementConfig.getColorMode());
+
+		switch(elementConfig.getGaugeType())
 		{
          case GaugeConfig.BAR:
-            chart = ChartFactory.createBarGaugeChart(this, SWT.NONE);
+            chart = new Chart(this, SWT.NONE, ChartType.GAUGE, chartConfig);
             updateThresholds = true;
             break;
 			case GaugeConfig.TEXT:
-				chart = ChartFactory.createCurrentValueChart(this, SWT.NONE);
+            chart = new Chart(this, SWT.NONE, ChartType.TEXT, chartConfig);
 		      updateThresholds = true;
 				break;
 			default:
-				chart = ChartFactory.createDialChart(this, SWT.NONE);
+            chart = new Chart(this, SWT.NONE, ChartType.DIAL, chartConfig);
 				break;
 		}
-		chart.setChartTitle(config.getTitle());
-		chart.setTitleVisible(config.isShowTitle());
-		chart.setLegendVisible(config.isShowLegend());
-      chart.setLegendPosition(config.getLegendPosition());
-		((Gauge)chart).setLegendInside(config.isLegendInside());
-		((Gauge)chart).setVertical(config.isVertical());
-      ((Gauge)chart).setElementBordersVisible(config.isElementBordersVisible());
-		((Gauge)chart).setMinValue(config.getMinValue());
-		((Gauge)chart).setMaxValue(config.getMaxValue());
-		((Gauge)chart).setLeftYellowZone(config.getLeftYellowZone());
-		((Gauge)chart).setLeftRedZone(config.getLeftRedZone());
-		((Gauge)chart).setRightYellowZone(config.getRightYellowZone());
-		((Gauge)chart).setRightRedZone(config.getRightRedZone());
-		((Gauge)chart).setFontName(config.getFontName());
-		((Gauge)chart).setColorMode(GaugeColorMode.getByValue(config.getColorMode()));
-		((Gauge)chart).setCustomColor(ColorConverter.rgbFromInt(config.getCustomColor()));
-      ((GenericChart)chart).setDrillDownObjectId(config.getDrillDownObjectId());
-		
-		int index = 0;
-		for(ChartDciConfig dci : config.getDciList())
-		{
-         chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, DataOrigin.INTERNAL, DataType.INT32, Long.toString(dci.dciId),
-               dci.getName(), dci.getDisplayFormat()), 0.0);
-			int color = dci.getColorAsInt();
-			if (color != -1)
-				chart.setPaletteEntry(index, new ChartColor(color));
-			index++;
-		}
-		chart.initializationComplete();
+      chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
+
+		for(ChartDciConfig dci : elementConfig.getDciList())
+         chart.addParameter(new GraphItem(dci, DataOrigin.INTERNAL, DataType.INT32));
+
+      chart.setPaletteEntry(0, new ChartColor(elementConfig.getCustomColor()));
+      chart.rebuild();
 
 		startRefreshTimer();
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()
-	 */
+
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()
+    */
 	@Override
 	protected ChartDciConfig[] getDciList()
 	{
-		return config.getDciList();
+		return elementConfig.getDciList();
 	}
 }

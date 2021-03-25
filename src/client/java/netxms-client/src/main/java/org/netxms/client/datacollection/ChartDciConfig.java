@@ -28,19 +28,22 @@ import org.simpleframework.xml.Root;
 @Root(name="dci", strict=false)
 public class ChartDciConfig
 {
-	public static final String UNSET_COLOR = "UNSET"; //$NON-NLS-1$
-	
+   public static final String UNSET_COLOR = "UNSET";
+
 	public static final int ITEM = DataCollectionObject.DCO_TYPE_ITEM;
 	public static final int TABLE = DataCollectionObject.DCO_TYPE_TABLE;
-	
-	// display types
-	public static final int DEFAULT = 0;
-   public static final int LINE = 1;
-   public static final int AREA = 2;
-	
+
+   // line chart types
+   public static final int DEFAULT = -1;
+   public static final int LINE = 0;
+   public static final int AREA = 1;
+
+   // Unset integer field indicator
+   private static final int UNSET = -99;
+
 	@Attribute
 	public long nodeId;
-	
+
 	@Attribute
 	public long dciId;
 
@@ -49,7 +52,7 @@ public class ChartDciConfig
 
    @Element(required=false)
    public String dciDescription;
-	
+
 	@Element(required=false)
 	public int type;
 
@@ -58,16 +61,16 @@ public class ChartDciConfig
 
 	@Element(required=false)
 	public String name;
-	
+
 	@Element(required=false)
 	public int lineWidth;
-	
-	@Element(required=false)
-	public int displayType;
-	
-	@Element(required=false)
-	public boolean area;
-	
+
+   @Element(required = false)
+   public int lineChartType;
+
+   @Element(required = false)
+   protected int displayType;    // For compatibility, new configurations use lineChartType
+
 	@Element(required=false)
 	public boolean showThresholds;
 
@@ -82,13 +85,13 @@ public class ChartDciConfig
 
 	@Element(required=false)
 	public String instance;
-	
+
 	@Element(required=false)
 	public String column;
-	
+
    @Element(required=false)
    public String displayFormat;
-   
+
 	/**
 	 * Default constructor
 	 */
@@ -102,8 +105,8 @@ public class ChartDciConfig
 		color = UNSET_COLOR;
 		name = ""; //$NON-NLS-1$
 		lineWidth = 2;
-		displayType = DEFAULT;
-		area = false;
+      lineChartType = DEFAULT;
+      displayType = UNSET;
 		showThresholds = false;
 		invertValues = false;
 		multiMatch = false;
@@ -127,8 +130,8 @@ public class ChartDciConfig
 		this.color = src.color;
 		this.name = src.name;
 		this.lineWidth = src.lineWidth;
-		this.displayType = src.displayType;
-		this.area = src.area;
+      this.lineChartType = src.lineChartType;
+      this.displayType = src.displayType;
 		this.showThresholds = src.showThresholds;
 		this.invertValues = src.invertValues;
 		this.useRawValues = src.useRawValues;
@@ -153,7 +156,8 @@ public class ChartDciConfig
 		name = dci.getDescription();
 		color = UNSET_COLOR;
 		lineWidth = 2;
-		area = false;
+      lineChartType = DEFAULT;
+      displayType = UNSET;
 		showThresholds = false;
 		invertValues = false;
 		useRawValues = false;
@@ -162,6 +166,32 @@ public class ChartDciConfig
 		column = ""; //$NON-NLS-1$
       displayFormat = "%s"; //$NON-NLS-1$
 	}
+
+   /**
+    * Create DCI info from DataCollectionObject object
+    * 
+    * @param dci DCI to use as source
+    */
+   public ChartDciConfig(DataCollectionObject dci)
+   {
+      nodeId = dci.getNodeId();
+      dciId = dci.getId();
+      dciName = dci.getName();
+      dciDescription = dci.getDescription();
+      type = (dci instanceof DataCollectionItem) ? ITEM : TABLE;
+      name = dci.getDescription();
+      color = UNSET_COLOR;
+      lineWidth = 2;
+      lineChartType = DEFAULT;
+      displayType = UNSET;
+      showThresholds = false;
+      invertValues = false;
+      useRawValues = false;
+      multiMatch = false;
+      instance = "";
+      column = "";
+      displayFormat = "%s";
+   }
 
 	/**
 	 * @return the color
@@ -184,14 +214,21 @@ public class ChartDciConfig
 	}
 	
 	/**
-	 * Get DCI name. Always returns non-empty string.
-	 * @return The name
-	 */
-	public String getName()
+    * Get DCI label. Always returns non-empty string.
+    * 
+    * @return DCI label
+    */
+	public String getLabel()
 	{
-		return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(dciId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+	   if ((name != null) && !name.isEmpty())
+	      return name;
+	   if ((dciDescription != null) && !dciDescription.isEmpty())
+	      return dciDescription;
+      if ((dciName != null) && !dciName.isEmpty())
+         return dciName;
+      return "[" + Long.toString(dciId) + "]";
 	}
-	
+
 	/**
 	 * Get display format
 	 * 
@@ -201,15 +238,15 @@ public class ChartDciConfig
 	{
 	   return ((displayFormat != null) && !displayFormat.isEmpty()) ? displayFormat : "%s"; //$NON-NLS-1$
 	}
-	
+
 	/**
-	 * Get display type
-	 * 
-	 * @return The display type
-	 */
-	public int getDisplayType()
+    * Get line chart type
+    * 
+    * @return The display type
+    */
+   public int getLineChartType()
 	{
-	   return ((displayType == DEFAULT) && area) ? AREA : displayType;
+      return (displayType != UNSET) ? displayType - 1 : lineChartType; // old configuration format
 	}
 
    /**
@@ -266,5 +303,16 @@ public class ChartDciConfig
    public int hashCode()
    {
       return Long.valueOf(dciId).hashCode();
+   }
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "ChartDciConfig [nodeId=" + nodeId + ", dciId=" + dciId + ", dciName=" + dciName + ", dciDescription=" + dciDescription + ", type=" + type + ", color=" + color + ", name=" + name +
+            ", lineWidth=" + lineWidth + ", lineChartType=" + lineChartType + ", displayType=" + displayType + ", showThresholds=" + showThresholds + ", invertValues=" +
+            invertValues + ", useRawValues=" + useRawValues + ", multiMatch=" + multiMatch + ", instance=" + instance + ", column=" + column + ", displayFormat=" + displayFormat + "]";
    }
 }

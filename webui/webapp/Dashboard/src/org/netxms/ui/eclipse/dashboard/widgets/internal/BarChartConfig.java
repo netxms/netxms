@@ -42,7 +42,7 @@ public class BarChartConfig extends ComparisonChartConfig
 		Serializer serializer = new Persister();
 		return serializer.read(BarChartConfig.class, xml);
 	}
-	
+
 	/**
 	 * @return the transposed
 	 */

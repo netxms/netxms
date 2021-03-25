@@ -11,10 +11,6 @@
       <plugin id="org.apache.felix.gogo.command"/>
       <plugin id="org.apache.felix.gogo.runtime"/>
       <plugin id="org.apache.felix.gogo.shell"/>
-      <plugin id="org.eclipse.birt.chart.device.extension"/>
-      <plugin id="org.eclipse.birt.chart.engine"/>
-      <plugin id="org.eclipse.birt.chart.engine.extension"/>
-      <plugin id="org.eclipse.birt.core"/>
       <plugin id="org.eclipse.core.commands"/>
       <plugin id="org.eclipse.core.commands.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.core.commands.nl_cs" fragment="true"/>
@@ -371,10 +367,6 @@
       <plugin id="org.apache.felix.gogo.command" autoStart="true" startLevel="0" />
       <plugin id="org.apache.felix.gogo.runtime" autoStart="true" startLevel="0" />
       <plugin id="org.apache.felix.gogo.shell" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.birt.chart.device.extension" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.birt.chart.engine" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.birt.chart.engine.extension" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.birt.core" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.core.commands" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.core.contenttype" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.core.databinding" autoStart="true" startLevel="0" />

@@ -91,19 +91,19 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 		this.elementList = elementList;
 		session = (NXCSession)ConsoleSharedData.getSession();
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -125,7 +125,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Resolve DCI names for given collection of condition DCIs and add to cache
 	 * 

@@ -20,8 +20,8 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import java.util.Map;
 import java.util.Set;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
@@ -38,13 +38,13 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	private String title = ""; //$NON-NLS-1$
 	
 	@Element(required = false)
-	private int legendPosition = GraphSettings.POSITION_BOTTOM;
+	private int legendPosition = ChartConfiguration.POSITION_BOTTOM;
 	
 	@Element(required = false)
 	private boolean showLegend = true;
 	
 	@Element(required = false)
-	private boolean showTitle = true;
+   private boolean showTitle = true;
 
    @Element(required = false)
    private boolean autoScale = true;
@@ -194,15 +194,15 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	 */
 	public boolean isShowTitle()
 	{
-		return showTitle;
+      return showTitle;
 	}
 
 	/**
-	 * @param showTitle the showTitle to set
-	 */
-	public void setShowTitle(boolean showTitle)
+    * @param showTitle the showTitle to set
+    */
+   public void setShowTitle(boolean showTitle)
 	{
-		this.showTitle = showTitle;
+      this.showTitle = showTitle;
 	}
 	
    /**

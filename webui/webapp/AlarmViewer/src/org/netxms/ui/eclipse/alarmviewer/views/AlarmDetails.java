@@ -70,11 +70,11 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.datacollection.GraphItemStyle;
-import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmComment;
@@ -89,8 +89,8 @@ import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeContentProvider;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.HistoricalDataLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmCommentsEditor;
-import org.netxms.ui.eclipse.charts.api.ChartFactory;
-import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
+import org.netxms.ui.eclipse.charts.api.ChartType;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -144,7 +144,7 @@ public class AlarmDetails extends ViewPart
 	private CLabel labelAccessDenied = null;
 	private boolean dataSectionCreated = false;
 	private Section dataSection;
-	private HistoricalDataChart chart;
+   private Chart chart;
 	private TableViewer dataViewer;
 	private Control dataViewControl;
 	private long nodeId;
@@ -629,23 +629,20 @@ public class AlarmDetails extends ViewPart
       
       if (dci.getDataType() != DataType.STRING)
       {
-         chart = ChartFactory.createLineChart(dataArea, SWT.BORDER);
-         chart.setZoomEnabled(true);
-         chart.setTitleVisible(true);
-         chart.setChartTitle(dci.getDescription());
-         chart.setLegendVisible(true);
-         chart.setLegendPosition(GraphSettings.POSITION_BOTTOM);
-         chart.setExtendedLegend(true);
-         chart.setGridVisible(true);
-         chart.setTranslucent(true);
-         chart.addParameter(new GraphItem(nodeId, dciId, DataOrigin.INTERNAL, dci.getDataType(), dci.getName(), dci.getDescription(), "%s"));
-         
-         List<GraphItemStyle> itemStyles = chart.getItemStyles();
-         itemStyles.get(0).setType(GraphItemStyle.AREA);
-         itemStyles.get(0).setColor(ColorConverter.rgbToInt(new RGB(127, 154, 72)));
-         chart.setItemStyles(itemStyles);
-         
-         dataViewControl = (Control)chart;
+         ChartConfiguration chartConfiguration = new ChartConfiguration();
+         chartConfiguration.setZoomEnabled(true);
+         chartConfiguration.setTitleVisible(true);
+         chartConfiguration.setTitle(dci.getDescription());
+         chartConfiguration.setLegendVisible(true);
+         chartConfiguration.setLegendPosition(ChartConfiguration.POSITION_BOTTOM);
+         chartConfiguration.setExtendedLegend(true);
+         chartConfiguration.setGridVisible(true);
+         chartConfiguration.setTranslucent(true);
+
+         chart = new Chart(dataArea, SWT.BORDER, ChartType.LINE, chartConfiguration);
+         chart.addParameter(new GraphItem(dci, DataOrigin.INTERNAL, "%s", ChartDciConfig.AREA, ColorConverter.rgbToInt(new RGB(127, 154, 72))));
+
+         dataViewControl = chart;
       }
       else
       {
@@ -656,10 +653,10 @@ public class AlarmDetails extends ViewPart
          tc.setText("Timestamp");
          tc = new TableColumn(dataViewer.getTable(), SWT.LEFT);
          tc.setText("Value");
-         
+
          dataViewer.setContentProvider(new ArrayContentProvider());
          dataViewer.setLabelProvider(new HistoricalDataLabelProvider());
-         
+
          dataViewControl = dataViewer.getControl();
       }
       
