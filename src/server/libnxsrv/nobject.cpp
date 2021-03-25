@@ -892,7 +892,13 @@ NXSL_Value *NObject::getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) c
    const CustomAttribute *attr = m_customAttributes.get(name);
    if (attr != nullptr)
    {
-      value = vm->createValue(attr->value);
+      // Handle "true" and "false" strings as boolean value
+      if (!_tcscmp(attr->value.cstr(), _T("true")))
+         value = vm->createValue(true);
+      else if (!_tcscmp(attr->value.cstr(), _T("false")))
+         value = vm->createValue(false);
+      else
+         value = vm->createValue(attr->value);
    }
    else
    {
