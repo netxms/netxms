@@ -178,6 +178,7 @@ public class MapLoader
       {
 		   conn = (HttpURLConnection)url.openConnection();
 		   conn.setRequestProperty("User-Agent", "nxmc/" + VersionInfo.version());
+         conn.setAllowUserInteraction(false);
          in = new BufferedInputStream(conn.getInputStream());
          image = new Image(display, in);
       }
