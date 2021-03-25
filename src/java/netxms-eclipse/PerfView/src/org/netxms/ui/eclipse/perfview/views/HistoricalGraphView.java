@@ -159,8 +159,11 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 
       session = ConsoleSharedData.getSession();
 
-      settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
-      settings.setTimeTo(new Date(System.currentTimeMillis()));
+      if (settings.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW)
+      {
+         settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
+         settings.setTimeTo(new Date(System.currentTimeMillis()));
+      }
 
       // Extract DCI ids from view id
       // (first field will be unique view id, so we skip it)
@@ -399,12 +402,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       
       chart.setItemStyles(styles);
 
-      if (settings.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW)
-      {
-         settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
-         settings.setTimeTo(new Date(System.currentTimeMillis()));
-      }
-      
       updateChart();
 
       // Automatic refresh
@@ -963,8 +960,11 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          return;
 
       updateInProgress = true;
-      settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
-      settings.setTimeTo(new Date(System.currentTimeMillis()));
+      if (settings.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW)
+      {
+         settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
+         settings.setTimeTo(new Date(System.currentTimeMillis()));
+      }
       getDataFromServer();
    }
    
