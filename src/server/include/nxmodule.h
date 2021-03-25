@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -111,6 +111,7 @@ typedef struct
 	void (*pfPreObjectDelete)(NetObj *object);
 	shared_ptr<NetObj> (*pfCreateObject)(int objectClass, const TCHAR *name, const shared_ptr<NetObj>& parent, NXCPMessage *msg);
 	bool (*pfIsValidParentClass)(int childClass, int parentClass);
+	bool (*pfGetObjectAttribute)(const NetObj& object, const TCHAR *name, TCHAR **value, bool *isAllocated);
 	bool (*pfAcceptNewNode)(const InetAddress& addr, uint32_t zoneId, BYTE *macAddr);
 	uint32_t (*pfValidateObjectCreation)(int objectClass, const TCHAR *name, const InetAddress& ipAddr, uint32_t zoneId, NXCPMessage *request);
    uint32_t (*pfAdditionalLoginCheck)(uint32_t userId, NXCPMessage *request);

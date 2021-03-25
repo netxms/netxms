@@ -1045,6 +1045,8 @@ public:
 
    virtual InetAddress getPrimaryIpAddress() const { return InetAddress::INVALID; }
 
+   virtual bool getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocated) const override;
+
    int getStatus() const { return m_status; }
    uint32_t getState() const { return m_state; }
    uint32_t getRuntimeFlags() const { return m_runtimeFlags; }

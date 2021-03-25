@@ -11117,6 +11117,9 @@ DataCollectionError Node::getIcmpStatistic(const TCHAR *param, IcmpStatFunction 
  */
 bool Node::getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocated) const
 {
+   if (super::getObjectAttribute(name, value, isAllocated))
+      return true;
+
    if (!_tcscmp(name, _T("ssh.login")))
    {
       lockProperties();

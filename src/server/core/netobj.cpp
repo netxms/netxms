@@ -2939,3 +2939,16 @@ IntegerArray<uint32_t> *NetObj::getAllResponsibleUsers()
    getAllResponsibleUsersInternal(responsibleUsers);
    return responsibleUsers;
 }
+
+/**
+ * Get values for virtual attributes
+ */
+bool NetObj::getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocated) const
+{
+   ENUMERATE_MODULES(pfGetObjectAttribute)
+   {
+      if (CURRENT_MODULE.pfGetObjectAttribute(*this, name, value, isAllocated))
+         return true;
+   }
+   return false;
+}
