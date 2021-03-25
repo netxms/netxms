@@ -221,6 +221,9 @@ public class HttpProxyPrefs extends PreferencePage implements IWorkbenchPreferen
 			System.setProperty("http.proxyHost", ps.getString("HTTP_PROXY_SERVER")); //$NON-NLS-1$ //$NON-NLS-2$
 			System.setProperty("http.proxyPort", ps.getString("HTTP_PROXY_PORT")); //$NON-NLS-1$ //$NON-NLS-2$
 			System.setProperty("http.noProxyHosts", ps.getString("HTTP_PROXY_EXCLUSIONS")); //$NON-NLS-1$ //$NON-NLS-2$
+         System.setProperty("https.proxyHost", ps.getString("HTTP_PROXY_SERVER")); //$NON-NLS-1$ //$NON-NLS-2$
+         System.setProperty("https.proxyPort", ps.getString("HTTP_PROXY_PORT")); //$NON-NLS-1$ //$NON-NLS-2$
+         System.setProperty("https.noProxyHosts", ps.getString("HTTP_PROXY_EXCLUSIONS")); //$NON-NLS-1$ //$NON-NLS-2$
 			
 			if (checkRequireAuth.getSelection())
 			{
@@ -242,6 +245,9 @@ public class HttpProxyPrefs extends PreferencePage implements IWorkbenchPreferen
 			System.clearProperty("http.proxyHost"); //$NON-NLS-1$
 			System.clearProperty("http.proxyPort"); //$NON-NLS-1$
 			System.clearProperty("http.noProxyHosts"); //$NON-NLS-1$
+         System.clearProperty("https.proxyHost"); //$NON-NLS-1$
+         System.clearProperty("https.proxyPort"); //$NON-NLS-1$
+         System.clearProperty("https.noProxyHosts"); //$NON-NLS-1$
 			Authenticator.setDefault(null);
 		}
 		
