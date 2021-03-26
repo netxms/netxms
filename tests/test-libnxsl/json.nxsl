@@ -12,9 +12,6 @@ r = json->data;
 r->extraBytes = "some extra bytes";
 
 serialized = json->serialize();
-println "\n";
-println serialized;
-
 assert(serialized like "*   \"flags\": 42*");
 assert(serialized like "*   \"name\": \"Test Object\"*");
 assert(serialized like "*   \"data\": {*");
@@ -68,8 +65,6 @@ json->timestamp = timestamp;
 json->zzz = %(1, 2, %("level2-1", "level2-2"));
 
 serialized = json->serialize();
-println serialized;
-
 assert(serialized like "*   \"flags\": 42*");
 assert(serialized like "*   \"name\": \"Test Object\"*");
 assert(serialized like "*   \"data\": {*");
