@@ -45,6 +45,31 @@ static void TestCompiler()
    EndTest();
 }
 
+static void StopThread(NXSL_VM *vm)
+{
+   ThreadSleepMs(1000);
+   vm->stop();
+}
+
+/**
+ * Test NXSL VM stop function
+ */
+static void TestStop()
+{
+   StartTest(_T("NXSL_VM::stop"));
+
+   TCHAR errorMessage[256];
+   NXSL_VM *vm = NXSLCompileAndCreateVM(_T("c = 0; for(i = 0; i < 100000000; i++) c++;"), errorMessage, 256, new NXSL_Environment());
+   AssertNotNull(vm);
+
+   ThreadCreate(StopThread, vm);
+   AssertFalse(vm->run());
+   AssertEquals(vm->getErrorCode(), NXSL_ERR_EXECUTION_ABORTED);
+   delete vm;
+
+   EndTest();
+}
+
 /**
  * Run test NXSL script
  */
@@ -112,6 +137,7 @@ int main(int argc, char *argv[])
    }
 
    TestCompiler();
+   TestStop();
    RunTestScript(_T("addr.nxsl"));
    RunTestScript(_T("arrays.nxsl"));
    RunTestScript(_T("base64.nxsl"));

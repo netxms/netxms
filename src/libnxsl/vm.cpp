@@ -180,6 +180,7 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManag
          m_functions(0, 16), m_modules(0, 16, Ownership::True)
 {
    m_cp = INVALID_ADDRESS;
+   m_stopFlag = false;
    m_dataStack = nullptr;
    m_codeStack = nullptr;
    m_catchStack = nullptr;
@@ -355,7 +356,7 @@ bool NXSL_VM::run(const ObjectRefArray<NXSL_Value>& args, NXSL_VariableSystem **
 	m_env->configureVM(this);
 
    // Locate entry point and run
-   UINT32 entryAddr = INVALID_ADDRESS;
+   uint32_t entryAddr = INVALID_ADDRESS;
 	if (entryPoint != nullptr)
 	{
       entryAddr = getFunctionAddress(entryPoint);
@@ -374,27 +375,35 @@ bool NXSL_VM::run(const ObjectRefArray<NXSL_Value>& args, NXSL_VariableSystem **
    if (entryAddr != INVALID_ADDRESS)
    {
       m_cp = entryAddr;
+      m_stopFlag = false;
 resume:
-      while(m_cp < static_cast<uint32_t>(m_instructionSet.size()))
+      while((m_cp < static_cast<uint32_t>(m_instructionSet.size())) && !m_stopFlag)
          execute();
-      if (m_cp != INVALID_ADDRESS)
+      if (!m_stopFlag)
       {
-         m_pRetValue = m_dataStack->pop();
-         if (m_pRetValue == nullptr)
+         if (m_cp != INVALID_ADDRESS)
          {
-            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+            m_pRetValue = m_dataStack->pop();
+            if (m_pRetValue == nullptr)
+            {
+               error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+            }
+         }
+         else if (m_catchStack->getSize() > 0)
+         {
+            if (unwind())
+            {
+               setGlobalVariable("$errorcode", createValue(m_errorCode));
+               setGlobalVariable("$errorline", createValue(m_errorLine));
+               setGlobalVariable("$errormsg", createValue(GetErrorMessage(m_errorCode)));
+               setGlobalVariable("$errortext", createValue(m_errorText));
+               goto resume;
+            }
          }
       }
-      else if (m_catchStack->getSize() > 0)
+      else
       {
-         if (unwind())
-         {
-            setGlobalVariable("$errorcode", createValue(m_errorCode));
-            setGlobalVariable("$errorline", createValue(m_errorLine));
-            setGlobalVariable("$errormsg", createValue(GetErrorMessage(m_errorCode)));
-            setGlobalVariable("$errortext", createValue(m_errorText));
-            goto resume;
-         }
+         error(NXSL_ERR_EXECUTION_ABORTED);
       }
    }
    else
