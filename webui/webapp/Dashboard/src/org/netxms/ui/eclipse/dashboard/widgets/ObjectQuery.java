@@ -89,6 +89,7 @@ public class ObjectQuery extends ElementWidget
       
       setLayout(new FillLayout());
       
+      //Do not set sort column to leave element sorting provided form server
       viewer = new SortableTableViewer(this, SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ObjectDetailsLabelProvider(config.getProperties()));
@@ -126,10 +127,6 @@ public class ObjectQuery extends ElementWidget
          TableColumn c = viewer.addColumn(p.displayName == null || p.displayName.isEmpty() ? p.name : p.displayName, 150);
          c.setData("ObjectProperty", p);
       }
-
-      viewer.getTable().setSortDirection(SWT.UP);
-      if(viewer.getTable().getColumnCount() > 0)
-         viewer.getTable().setSortColumn(viewer.getTable().getColumn(0));
       
       objectSelectionProvider = new ObjectSelectionProvider(viewer);
       createPopupMenu();
