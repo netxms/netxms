@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -128,7 +128,7 @@ bool LoadNetXMSModules()
 			continue;
 		}
 
-		bool mandatory = false;
+		bool mandatory = true;
 
 		// Check for "mandatory" option
 		TCHAR *options = _tcschr(curr, _T(','));
@@ -138,7 +138,8 @@ bool LoadNetXMSModules()
 			options++;
 			StrStrip(curr);
 			StrStrip(options);
-			mandatory = (*options == _T('1')) || (*options == _T('Y')) || (*options == _T('y'));
+			if ((*options == _T('0')) || (*options == _T('N')) || (*options == _T('n')))
+			   mandatory = false;
 		}
 
       if (!LoadNetXMSModule(curr))
