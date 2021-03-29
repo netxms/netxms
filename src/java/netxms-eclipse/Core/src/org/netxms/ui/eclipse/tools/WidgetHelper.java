@@ -879,7 +879,7 @@ public class WidgetHelper
 				curr = first + (last - first) / 2;
 			}
 		}
-		
+
 		// Use smallest font if no one fit
 		if (font == null)
 			font = fonts[0];

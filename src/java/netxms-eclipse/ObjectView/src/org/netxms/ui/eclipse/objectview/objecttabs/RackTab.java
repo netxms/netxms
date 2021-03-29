@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,9 +56,9 @@ public class RackTab extends ObjectTab implements ISelectionProvider
    private ISelection selection = new StructuredSelection();
    private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
    
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected void createTabContent(Composite parent)
 	{
@@ -147,26 +147,26 @@ public class RackTab extends ObjectTab implements ISelectionProvider
          ObjectContextMenu.fill(manager, getViewPart().getSite(), this);
    }
 
-   /* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#currentObjectUpdated(org.netxms.client.objects.AbstractObject)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#currentObjectUpdated(org.netxms.client.objects.AbstractObject)
+    */
 	@Override
 	public void currentObjectUpdated(AbstractObject object)
 	{
 		objectChanged(object);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
+    */
 	@Override
 	public void refresh()
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
+    */
 	@Override
 	public void objectChanged(final AbstractObject object)
 	{
@@ -205,16 +205,16 @@ public class RackTab extends ObjectTab implements ISelectionProvider
 	   }
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
+    */
 	@Override
 	public boolean showForObject(AbstractObject object)
 	{
 		return (object instanceof Rack);
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
