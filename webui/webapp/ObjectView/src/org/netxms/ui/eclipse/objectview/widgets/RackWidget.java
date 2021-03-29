@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,9 +69,10 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private static final int FULL_UNIT_WIDTH = 482;
    private static final int FULL_UNIT_HEIGHT = 45;
    private static final int MARGIN_HEIGHT = 10;
-   private static final int MARGIN_WIDTH = 10;
+   private static final int MARGIN_WIDTH = 5;
    private static final int UNIT_NUMBER_WIDTH = 30;
    private static final int TITLE_HEIGHT = 20;
+   private static final int MAX_BORDER_WIDTH = 30;
    private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    private static final String[] VIEW_LABELS = { "Front", "Back" };
    
@@ -83,7 +84,29 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private static Image imageFillerPanel;
    private static Image imageOrganiserPanel;
    private static Object syncObject = new Object();
-   
+
+   /**
+    * Create images required for rack drawing
+    */
+   private static void createImages()
+   {
+      synchronized(syncObject)
+      {
+         if (imageDefaultTop != null)
+            return;
+
+         imageDefaultTop = Activator.getImageDescriptor("icons/rack-default-top.png").createImage(); //$NON-NLS-1$
+         imageDefaultMiddle = Activator.getImageDescriptor("icons/rack-default-middle.png").createImage(); //$NON-NLS-1$
+         imageDefaultBottom = Activator.getImageDescriptor("icons/rack-default-bottom.png").createImage(); //$NON-NLS-1$
+         imageDefaultRear = Activator.getImageDescriptor("icons/rack-default-rear.png").createImage(); //$NON-NLS-1$
+         imagePatchPanel = Activator.getImageDescriptor("icons/rack-patch-panel.png").createImage();
+         imageOrganiserPanel = Activator.getImageDescriptor("icons/rack-filler-panel.png").createImage(); // FIXME use actual organiser
+                                                                                                          // panel image once
+                                                                                                          // available!
+         imageFillerPanel = Activator.getImageDescriptor("icons/rack-filler-panel.png").createImage();
+      }
+   }
+
    private Rack rack;
    private Font[] labelFonts;
    private Font[] titleFonts;
@@ -114,26 +137,9 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       WidgetHelper.attachMouseTrackListener(this, this);
       addDisposeListener(this);
       ImageProvider.getInstance().addUpdateListener(this);
-      initializeImmages();
+      createImages();
    }
    
-   public static void initializeImmages()
-   {
-      synchronized(syncObject) 
-      {    
-         if(imageDefaultTop == null)
-         {
-            imageDefaultTop = Activator.getImageDescriptor("icons/rack-default-top.png").createImage(); //$NON-NLS-1$
-            imageDefaultMiddle = Activator.getImageDescriptor("icons/rack-default-middle.png").createImage(); //$NON-NLS-1$
-            imageDefaultBottom = Activator.getImageDescriptor("icons/rack-default-bottom.png").createImage(); //$NON-NLS-1$
-            imageDefaultRear = Activator.getImageDescriptor("icons/rack-default-rear.png").createImage(); //$NON-NLS-1$
-            imagePatchPanel = Activator.getImageDescriptor("icons/rack-patch-panel.png").createImage();
-            imageOrganiserPanel = Activator.getImageDescriptor("icons/rack-filler-panel.png").createImage(); // FIXME use actual organiser panel image once available!
-            imageFillerPanel = Activator.getImageDescriptor("icons/rack-filler-panel.png").createImage();      
-         }
-      }
-   }
-
    /**
     * @return the currentObject
     */
@@ -142,40 +148,44 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       return selectedObject;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
     */
    @Override
    public void paintControl(PaintEvent e)
    {
       final GC gc = e.gc;
-      
+
       gc.setAntialias(SWT.ON);
       //gc.setInterpolation(SWT.HIGH);
-      
+
       // Calculate bounding box for rack picture
       Rectangle rect = getClientArea();
       rect.x += MARGIN_WIDTH + UNIT_NUMBER_WIDTH;
       rect.y += MARGIN_HEIGHT + MARGIN_HEIGHT / 2 + TITLE_HEIGHT;
       rect.height -= MARGIN_HEIGHT * 2 + MARGIN_HEIGHT / 2 + TITLE_HEIGHT;
-      
+
       // Estimated unit width/height and calculate border width
       double unitHeight = (double)rect.height / (double)rack.getHeight();
       int unitWidth = (int)(unitHeight * UNIT_WH_RATIO);
       int borderWidth = unitWidth / BORDER_WIDTH_RATIO;
       if (borderWidth < 3)
          borderWidth = 3;
-      rect.height -= borderWidth;
+      else if (borderWidth > MAX_BORDER_WIDTH)
+         borderWidth = MAX_BORDER_WIDTH;
+      rect.height -= borderWidth + borderWidth / 2;
+      rect.y += borderWidth / 2;
 
       // precise unit width and height taking borders into consideration
       unitHeight = (double)(rect.height - ((borderWidth + 1) / 2) * 2) / (double)rack.getHeight();
       unitWidth = (int)(unitHeight * UNIT_WH_RATIO);
       rect.width = unitWidth + borderWidth * 2;
-      
+      rect.x += borderWidth / 2;
+
       // Title
       gc.setFont(WidgetHelper.getBestFittingFont(gc, titleFonts, VIEW_LABELS[0], rect.width, TITLE_HEIGHT)); //$NON-NLS-1$
       Point titleSize = gc.textExtent(VIEW_LABELS[view.getValue() - 1]);
-      gc.drawText(VIEW_LABELS[view.getValue() - 1], (rect.width / 2 - titleSize.x / 2) + UNIT_NUMBER_WIDTH + MARGIN_WIDTH, rect.y - TITLE_HEIGHT - MARGIN_HEIGHT / 2);
+      gc.drawText(VIEW_LABELS[view.getValue() - 1], (rect.width / 2 - titleSize.x / 2) + UNIT_NUMBER_WIDTH + MARGIN_WIDTH, rect.y - TITLE_HEIGHT - MARGIN_HEIGHT / 2 - borderWidth / 2);
 
       // Rack itself
       gc.setBackground(ThemeEngine.getBackgroundColor("Rack.EmptySpace"));
@@ -183,7 +193,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       gc.setLineWidth(borderWidth);
       gc.setForeground(ThemeEngine.getForegroundColor("Rack.Border"));
       gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 3, 3);
-      
+
       // Rack bottom
       gc.setBackground(ThemeEngine.getBackgroundColor("Rack.Border"));
       gc.fillRectangle(rect.x + borderWidth * 2 - (borderWidth + 1) / 2, rect.y + rect.height, borderWidth * 2, (int)(borderWidth * 1.5));
@@ -290,7 +300,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
 
          if ((unitRect.width <= 0) || (unitRect.height <= 0))
             break;
-         
+
          objects.add(new ObjectImage(n, unitRect));
 
          // draw status indicator
@@ -368,8 +378,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          }
       }
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
     */
    @Override
@@ -381,20 +391,23 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       if (hHint == SWT.DEFAULT)
       {
          int borderWidth = FULL_UNIT_WIDTH / BORDER_WIDTH_RATIO;
-         return new Point(FULL_UNIT_WIDTH + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + borderWidth * 2, rack.getHeight() * FULL_UNIT_HEIGHT + MARGIN_HEIGHT * 2 + borderWidth * 2);
+         return new Point(FULL_UNIT_WIDTH + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + borderWidth * 2 + borderWidth / 2,
+               rack.getHeight() * FULL_UNIT_HEIGHT + MARGIN_HEIGHT * 2 + borderWidth * 2 + MARGIN_HEIGHT / 2 + TITLE_HEIGHT);
       }
-      
+
       double unitHeight = (double)hHint / (double)rack.getHeight();
       int unitWidth = (int)(unitHeight * UNIT_WH_RATIO);
       int borderWidth = unitWidth / BORDER_WIDTH_RATIO;
       if (borderWidth < 3)
          borderWidth = 3;
-      
+      else if (borderWidth > MAX_BORDER_WIDTH)
+         borderWidth = MAX_BORDER_WIDTH;
+
       unitWidth = (int)((double)(hHint - ((borderWidth + 1) / 2) * 2 - MARGIN_HEIGHT * 2) / (double)rack.getHeight() * UNIT_WH_RATIO);
-      return new Point(unitWidth + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + borderWidth * 2, hHint);
+      return new Point(unitWidth + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + borderWidth * 2 + borderWidth / 2, hHint);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.DisposeListener#widgetDisposed(org.eclipse.swt.events.DisposeEvent)
     */
    @Override
@@ -403,7 +416,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       ImageProvider.getInstance().removeUpdateListener(this);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener#imageUpdated(java.util.UUID)
     */
    @Override
@@ -431,7 +444,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          });
       }
    }
-   
+
    /**
     * Get object at given point
     * 
@@ -448,7 +461,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       return null;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -478,7 +491,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -493,7 +506,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       setCurrentObject(getObjectAtPoint(new Point(e.x, e.y)));
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -501,7 +514,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    {
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.MouseTrackListener#mouseEnter(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -509,7 +522,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    {
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.MouseTrackListener#mouseExit(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -523,7 +536,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       tooltipObject = null;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.MouseTrackListener#mouseHover(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -608,7 +621,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
     */
    public static Image getImageDefaultTop()
    {
-      initializeImmages();
+      createImages();
       return imageDefaultTop;
    }
 
@@ -617,7 +630,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
     */
    public static Image getImageDefaultMiddle()
    {
-      initializeImmages();
+      createImages();
       return imageDefaultMiddle;
    }
 
@@ -626,7 +639,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
     */
    public static Image getImageDefaultBottom()
    {
-      initializeImmages();
+      createImages();
       return imageDefaultBottom;
    }
 
@@ -635,7 +648,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
     */
    public static Image getImageDefaultRear()
    {
-      initializeImmages();
+      createImages();
       return imageDefaultRear;
    }
 }
