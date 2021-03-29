@@ -432,7 +432,7 @@ resume:
 	NXSL_Value *v;
    while((v = m_dataStack->pop()) != nullptr)
       destroyValue(v);
-   
+
    while(m_subLevel > 0)
    {
       m_subLevel--;
@@ -440,11 +440,11 @@ resume:
       delete (NXSL_VariableSystem *)m_codeStack->pop();
       m_codeStack->pop();
    }
-   
+
    NXSL_CatchPoint *p;
    while((p = (NXSL_CatchPoint *)m_catchStack->pop()) != nullptr)
       delete p;
-   
+
    delete_and_null(m_localVariables);
    delete_and_null(m_expressionVariables);
    delete_and_null(m_dataStack);
