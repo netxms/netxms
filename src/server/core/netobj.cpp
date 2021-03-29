@@ -2784,37 +2784,32 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      {
                         *defaultValue = 0;
                         defaultValue++;
-                        StrStrip(buffer);
-                        TCHAR *v = nullptr;
-                        if (instance != nullptr)
+                     }
+                     StrStrip(buffer);
+                     TCHAR *v = nullptr;
+                     if (instance != nullptr)
+                     {
+                        TCHAR tmp[128];
+                        _sntprintf(tmp, 128, _T("%s::%s"), buffer, instance);
+                        v = getCustomAttributeCopy(tmp);
+                     }
+                     else if (event != nullptr)
+                     {
+                        const StringList *names = event->getParameterNames();
+                        int index = names->indexOfIgnoreCase(_T("instance"));
+                        if (index != -1)
                         {
                            TCHAR tmp[128];
-                           _sntprintf(tmp, 128, _T("%s::%s"), buffer, instance);
+                           _sntprintf(tmp, 128, _T("%s::%s"), buffer, event->getParameter(index));
                            v = getCustomAttributeCopy(tmp);
                         }
-                        else if (event != nullptr)
-                        {
-                           const StringList *names = event->getParameterNames();
-                           int index = names->indexOfIgnoreCase(_T("instance"));
-                           if (index != -1)
-                           {
-                              TCHAR tmp[128];
-                              _sntprintf(tmp, 128, _T("%s::%s"), buffer, event->getParameter(index));
-                              v = getCustomAttributeCopy(tmp);
-                           }
-                        }
-                        if (v == nullptr)
-                           v = getCustomAttributeCopy(buffer);
-                        if (v != nullptr)
-                           output.appendPreallocated(v);
-                        else
-                           output.append(defaultValue);
                      }
-                     else
-                     {
-                        StrStrip(buffer);
-                        output.appendPreallocated(getCustomAttributeCopy(buffer));
-                     }
+                     if (v == nullptr)
+                        v = getCustomAttributeCopy(buffer);
+                     if (v != nullptr)
+                        output.appendPreallocated(v);
+                     else if (defaultValue != nullptr)
+                        output.append(defaultValue);
                   }
                   break;
                case '(':   // Input field
