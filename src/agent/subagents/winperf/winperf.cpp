@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -152,9 +152,9 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 		_tcslcpy(szCounter, pArg, MAX_PATH);
 	}
 
-   if ((rc = PdhOpenQuery(NULL, 0, &hQuery)) != ERROR_SUCCESS)
+   if ((rc = PdhOpenQuery(nullptr, 0, &hQuery)) != ERROR_SUCCESS)
    {
-      ReportPdhError(szFName, _T("PdhOpenQuery"), rc);
+      ReportPdhError(szFName, _T("PdhOpenQuery"), nullptr, rc);
       return SYSINFO_RC_ERROR;
    }
 
@@ -173,7 +173,7 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 		}
 	   if (rc != ERROR_SUCCESS)
 		{
-			ReportPdhError(szFName, _T("PdhAddCounter"), rc);
+			ReportPdhError(szFName, _T("PdhAddCounter"), szCounter, rc);
 			PdhCloseQuery(hQuery);
 	      return SYSINFO_RC_UNSUPPORTED;
 		}
@@ -182,7 +182,7 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
    // Get first sample
    if ((rc = PdhCollectQueryData(hQuery)) != ERROR_SUCCESS)
    {
-      ReportPdhError(szFName, _T("PdhCollectQueryData"), rc);
+      ReportPdhError(szFName, _T("PdhCollectQueryData"), nullptr, rc);
       PdhCloseQuery(hQuery);
       return SYSINFO_RC_ERROR;
    }
@@ -197,7 +197,7 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 			Sleep(1000);   // We will take second sample after one second
 			if ((rc = PdhCollectQueryData(hQuery)) != ERROR_SUCCESS)
 			{
-				ReportPdhError(szFName, _T("PdhCollectQueryData"), rc);
+				ReportPdhError(szFName, _T("PdhCollectQueryData"), nullptr,  rc);
 				PdhCloseQuery(hQuery);
 				return SYSINFO_RC_ERROR;
 			}
@@ -233,30 +233,27 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 /**
  * List of available performance objects
  */
-static LONG H_PdhObjects(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
+static LONG H_PdhObjects(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   TCHAR *pszObject, *pszObjList, szHostName[256];
+   TCHAR hostName[256];
    LONG iResult = SYSINFO_RC_ERROR;
-   PDH_STATUS rc;
-   DWORD dwSize;
-
-   dwSize = 256;
-   if (GetComputerName(szHostName, &dwSize))
+   DWORD size = 256;
+   if (GetComputerName(hostName, &size))
    {
-      dwSize = 256000;
-      pszObjList = (TCHAR *)malloc(sizeof(TCHAR) * dwSize);
-      if ((rc = PdhEnumObjects(NULL, szHostName, pszObjList, &dwSize,
-                               PERF_DETAIL_WIZARD, TRUE)) == ERROR_SUCCESS)
+      size = 256000;
+      TCHAR *objectList = MemAllocString(size);
+      PDH_STATUS rc = PdhEnumObjects(nullptr, hostName, objectList, &size, PERF_DETAIL_WIZARD, TRUE);
+      if (rc == ERROR_SUCCESS)
       {
-         for(pszObject = pszObjList; *pszObject != 0; pszObject += _tcslen(pszObject) + 1)
-				value->add(pszObject);
+         for(TCHAR *object = objectList; *object != 0; object += _tcslen(object) + 1)
+				value->add(object);
          iResult = SYSINFO_RC_SUCCESS;
       }
       else
       {
-         ReportPdhError(_T("H_PdhObjects"), _T("PdhEnumObjects"), rc);
+         ReportPdhError(_T("H_PdhObjects"), _T("PdhEnumObjects"), nullptr, rc);
       }
-      free(pszObjList);
+      MemFree(objectList);
    }
    return iResult;
 }
@@ -278,8 +275,8 @@ static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, StringLis
       if (GetComputerName(szHostName, &dwSize1))
       {
          dwSize1 = dwSize2 = 256000;
-         pszCounterList = (TCHAR *)malloc(sizeof(TCHAR) * dwSize1);
-         pszInstanceList = (TCHAR *)malloc(sizeof(TCHAR) * dwSize2);
+         pszCounterList = MemAllocString(dwSize1);
+         pszInstanceList = MemAllocString(dwSize2);
          rc = PdhEnumObjectItems(NULL, szHostName, szObject,
                                  pszCounterList, &dwSize1, pszInstanceList, &dwSize2,
                                  PERF_DETAIL_WIZARD, 0);
@@ -292,10 +289,10 @@ static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, StringLis
          }
          else
          {
-            ReportPdhError(_T("H_PdhObjectItems"), _T("PdhEnumObjectItems"), rc);
+            ReportPdhError(_T("H_PdhObjectItems"), _T("PdhEnumObjectItems"), szObject, rc);
          }
-         free(pszCounterList);
-         free(pszInstanceList);
+         MemFree(pszCounterList);
+         MemFree(pszInstanceList);
       }
    }
    else
@@ -309,9 +306,9 @@ static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, StringLis
  * Value of specific performance parameter, which is mapped one-to-one to
  * performance counter. Actually, it's an alias for PDH.CounterValue(xxx) parameter.
  */
-static LONG H_CounterAlias(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+static LONG H_CounterAlias(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   return H_PdhCounterValue(NULL, pArg, pValue, session);
+   return H_PdhCounterValue(nullptr, arg, value, session);
 }
 
 /**

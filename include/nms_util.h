@@ -3821,6 +3821,10 @@ bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdownEx(UINT32 milliseconds);
 bool LIBNETXMS_EXPORTABLE IsShutdownInProgress();
 CONDITION LIBNETXMS_EXPORTABLE GetShutdownConditionObject();
 
+#ifdef _WIN32
+void LIBNETXMS_EXPORTABLE EnableFatalExitOnCRTError(bool enable);
+#endif
+
 const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int32_t code, CodeLookupElement *lookupTable, const TCHAR *defaultText = _T("Unknown"));
 int LIBNETXMS_EXPORTABLE CodeFromText(const TCHAR *text, CodeLookupElement *lookupTable, int32_t defaultCode = -1);
 
