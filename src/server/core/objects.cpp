@@ -2697,8 +2697,8 @@ static int FilterObject(NXSL_VM *vm, shared_ptr<NetObj> object, NXSL_VariableSys
    if ((globalVariables != nullptr) && (expressionVariables != nullptr))
    {
       (*globalVariables)->merge(expressionVariables);
-      delete expressionVariables;
    }
+   delete expressionVariables;
    return vm->getResult()->isTrue() ? 1 : 0;
 }
 
