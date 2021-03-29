@@ -59,14 +59,15 @@ TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize)
 /**
  * Report PDH error to master agent's log
  */
-void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError)
+void ReportPdhError(const TCHAR *function, const TCHAR *pdhCall, const TCHAR *pdhObject, PDH_STATUS status)
 {
-   if (dwError == PDH_NO_DATA)
+   if (status == PDH_NO_DATA)
       return;
 
    TCHAR buffer[1024];
-   nxlog_write_tag(NXLOG_WARNING, WINPERF_DEBUG_TAG, _T("%s: PDH Error %08X in call to %s (%s)"), 
-         pszFunction, dwError, pszPdhCall, GetPdhErrorText(dwError, buffer, 1024));
+   nxlog_write_tag(NXLOG_WARNING, WINPERF_DEBUG_TAG, _T("%s: PDH Error %08X in call to %s%s%s (%s)"), 
+         function, status, pdhCall, (pdhObject != nullptr) ? _T(" for ") : _T(""),
+         (pdhObject != nullptr) ? pdhObject : _T(""), GetPdhErrorText(status, buffer, 1024));
 }
 
 /**

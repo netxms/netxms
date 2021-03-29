@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -42,13 +42,11 @@ public:
 		: StackWalker(options, szSymPath, dwProcessId, hProcess) { }
 };
 
-
-//
-// Static data
-//
-
-static BOOL (*m_pfExceptionHandler)(EXCEPTION_POINTERS *) = NULL;
-static void (*m_pfWriter)(const TCHAR *pszText) = NULL;
+/**
+ * Static data
+ */
+static BOOL (*m_pfExceptionHandler)(EXCEPTION_POINTERS *) = nullptr;
+static void (*m_pfWriter)(const TCHAR *pszText) = nullptr;
 static HANDLE m_hExceptionLock = INVALID_HANDLE_VALUE;
 static TCHAR m_szBaseProcessName[64] = _T("netxms");
 static TCHAR m_szDumpDir[MAX_PATH] = _T("C:\\");
@@ -60,13 +58,13 @@ static BOOL m_writeFullDump = FALSE;
  */
 void NxStackWalker::OnOutput(LPCSTR pszText)
 {
-	if (m_pfWriter != NULL)
+	if (m_pfWriter != nullptr)
 	{
 		m_pfWriter(_T("  "));
 #ifdef UNICODE
 		WCHAR *wtext = WideStringFromMBString(pszText);
 		m_pfWriter(wtext);
-		free(wtext);
+		MemFree(wtext);
 #else
 		m_pfWriter(pszText);
 #endif
@@ -96,7 +94,7 @@ void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTE
 {
 	m_pfExceptionHandler = pfHandler;
 	m_pfWriter = pfWriter;
-	if (pszBaseProcessName != NULL)
+	if (pszBaseProcessName != nullptr)
 		_tcslcpy(m_szBaseProcessName, pszBaseProcessName, 64);
 	if (pszDumpDir != NULL)
 		_tcslcpy(m_szDumpDir, pszDumpDir, MAX_PATH);
@@ -135,11 +133,11 @@ TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(DWORD code)
       { EXCEPTION_PRIV_INSTRUCTION, _T("Priveledged instruction") },
       { EXCEPTION_SINGLE_STEP, _T("Single step") },
       { EXCEPTION_STACK_OVERFLOW, _T("Stack overflow") },
-      { 0, NULL }
+      { 0, nullptr }
    };
    int i;
 
-   for(i = 0; exceptionList[i].name != NULL; i++)
+   for(i = 0; exceptionList[i].name != nullptr; i++)
       if (code == exceptionList[i].code)
          return exceptionList[i].name;
 
@@ -192,7 +190,7 @@ void LIBNETXMS_EXPORTABLE SEHShowCallStack(CONTEXT *pCtx)
  */
 int LIBNETXMS_EXPORTABLE ___ExceptionHandler(EXCEPTION_POINTERS *pInfo)
 {
-	if ((m_pfExceptionHandler != NULL) &&
+	if ((m_pfExceptionHandler != nullptr) &&
 		 (pInfo->ExceptionRecord->ExceptionCode != EXCEPTION_BREAKPOINT) &&
 		 (pInfo->ExceptionRecord->ExceptionCode != EXCEPTION_SINGLE_STEP))
 	{
@@ -231,14 +229,14 @@ THREAD_RESULT LIBNETXMS_EXPORTABLE THREAD_CALL SEHThreadStarter(void *pArg)
 /**
  * Exception info file handle
  */
-static FILE *m_pExInfoFile = NULL;
+static FILE *m_pExInfoFile = nullptr;
 
 /**
  * Writer for SEHShowCallStack()
  */
 void LIBNETXMS_EXPORTABLE SEHServiceExceptionDataWriter(const TCHAR *pszText)
 {
-	if (m_pExInfoFile != NULL)
+	if (m_pExInfoFile != nullptr)
 		_fputts(pszText, m_pExInfoFile);
 }
 
@@ -247,12 +245,12 @@ void LIBNETXMS_EXPORTABLE SEHServiceExceptionDataWriter(const TCHAR *pszText)
  */
 BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 {
-	TCHAR szWindowsVersion[256] = _T("ERROR"), szInfoFile[MAX_PATH], szDumpFile[MAX_PATH], szProcNameUppercase[64];
+	TCHAR szWindowsVersion[256] = _T("ERROR"), szInfoFile[MAX_PATH], szProcNameUppercase[64];
 	HANDLE hFile;
 	time_t t;
    SYSTEM_INFO sysInfo;
 
-	t = time(NULL);
+	t = time(nullptr);
 	_tcscpy(szProcNameUppercase, m_szBaseProcessName);
 	_tcsupr(szProcNameUppercase);
 
@@ -260,7 +258,7 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 	_sntprintf(szInfoFile, MAX_PATH, _T("%s\\%s-%d-%u.info"),
 	           m_szDumpDir, m_szBaseProcessName, GetCurrentProcessId(), (DWORD)t);
 	m_pExInfoFile = _tfopen(szInfoFile, _T("w"));
-	if (m_pExInfoFile != NULL)
+	if (m_pExInfoFile != nullptr)
 	{
 		_ftprintf(m_pExInfoFile, _T("%s CRASH DUMP\n%s\n"), szProcNameUppercase, _tctime(&t));
 #ifdef _M_IX86
@@ -332,9 +330,10 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 	}
 
 	// Create minidump
-	_sntprintf(szDumpFile, MAX_PATH, _T("%s\\%s-%u-%u.mdmp"),
+   TCHAR dumpFile[MAX_PATH];
+   _sntprintf(dumpFile, MAX_PATH, _T("%s\\%s-%u-%u.mdmp"),
 	           m_szDumpDir, m_szBaseProcessName, GetCurrentProcessId(), (DWORD)t);
-   hFile = CreateFile(szDumpFile, GENERIC_WRITE, 0, NULL,
+   hFile = CreateFile(dumpFile, GENERIC_WRITE, 0, NULL,
                       CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
    if (hFile != INVALID_HANDLE_VALUE)
    {
@@ -358,13 +357,13 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
                 &mei, &usi, NULL))
       {
          CloseHandle(hFile);
-         if (DeflateFile(szDumpFile))
-            DeleteFile(szDumpFile);
+         if (DeflateFile(dumpFile))
+            DeleteFile(dumpFile);
       }
       else
       {
          CloseHandle(hFile);
-         DeleteFile(szDumpFile);
+         DeleteFile(dumpFile);
       }
    }
 
@@ -374,7 +373,7 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
          pInfo->ExceptionRecord->ExceptionCode,
          SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
 	      pInfo->ExceptionRecord->ExceptionAddress,
-	      szInfoFile, szDumpFile);
+	      szInfoFile, dumpFile);
 
 	if (m_printToScreen)
 	{

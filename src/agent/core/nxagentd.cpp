@@ -75,6 +75,7 @@ NETXMS_EXECUTABLE_HEADER(nxagentd)
 #define SF_ENABLE_CONTROL_CONNECTOR 0x00000800
 #define SF_ENABLE_PUSH_CONNECTOR    0x00001000
 #define SF_ENABLE_EVENT_CONNECTOR   0x00002000
+#define SF_FATAL_EXIT_ON_CRT_ERROR  0x00004000
 
 /**
  * Externals
@@ -335,6 +336,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ExternalParameterProviderTimeout"), CT_LONG, 0, 0, 0, 0, &g_eppTimeout, nullptr },
    { _T("ExternalSubagent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalSubAgentsList, nullptr },
    { _T("ExternalTable"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalTablesConfig, nullptr },
+   { _T("FatalExitOnCRTError"), CT_BOOLEAN_FLAG_32, 0, 0, SF_FATAL_EXIT_ON_CRT_ERROR, 0, &s_startupFlags, nullptr },
    { _T("FileStore"), CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore, nullptr },
    { _T("FullCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, SF_WRITE_FULL_DUMP, 0, &s_startupFlags, nullptr },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, nullptr },
@@ -2176,13 +2178,16 @@ int main(int argc, char *argv[])
                }
 #endif
 
-					// Set exception handler
 #ifdef _WIN32
-					if (s_startupFlags & SF_CATCH_EXCEPTIONS)
+               // Configure exception handling
+               if (s_startupFlags & SF_FATAL_EXIT_ON_CRT_ERROR)
+                  EnableFatalExitOnCRTError(true);
+               if (s_startupFlags & SF_CATCH_EXCEPTIONS)
 						SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, s_dumpDir,
 												  _T("nxagentd"), s_startupFlags & SF_WRITE_FULL_DUMP, !(g_dwFlags & AF_DAEMON));
 					__try {
 #endif
+
 					if ((!_tcsicmp(g_szLogFile, _T("{syslog}"))) ||
 						 (!_tcsicmp(g_szLogFile, _T("{eventlog}"))))
 					{

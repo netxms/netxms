@@ -97,7 +97,7 @@ void WinPerfCounterSet::collectorThread()
 		nxlog_debug_tag(WINPERF_DEBUG_TAG, 2, _T("%s: set changed"), szFName);
 		if ((rc = PdhOpenQuery(NULL, 0, &hQuery)) != ERROR_SUCCESS)
 		{
-			ReportPdhError(szFName, _T("PdhOpenQuery"), rc);
+			ReportPdhError(szFName, _T("PdhOpenQuery"), nullptr, rc);
 			continue;
 		}
 
@@ -145,7 +145,7 @@ void WinPerfCounterSet::collectorThread()
 
 			// Collect data
 			if ((rc = PdhCollectQueryData(hQuery)) != ERROR_SUCCESS)
-				ReportPdhError(szFName, _T("PdhCollectQueryData"), rc);
+				ReportPdhError(szFName, _T("PdhCollectQueryData"), nullptr, rc);
 
 			// Get raw values for each counter and compute average value
 			for(int i = 0; i < m_counters->size(); i++)
@@ -167,7 +167,7 @@ void WinPerfCounterSet::collectorThread()
 								counter->pRawValues,
 								&statData)) != ERROR_SUCCESS)
 					{
-						ReportPdhError(szFName, _T("PdhComputeCounterStatistics"), rc);
+						ReportPdhError(szFName, _T("PdhComputeCounterStatistics"), counter->pszName, rc);
 					}
 
 					// Update mean value in counter set
@@ -225,11 +225,11 @@ int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName)
    DWORD dwSize;
    static TCHAR szFName[] = _T("CheckCounter");
 
-	*ppszNewName = NULL;
+	*ppszNewName = nullptr;
 
-   if ((rc = PdhOpenQuery(NULL, 0, &hQuery)) != ERROR_SUCCESS)
+   if ((rc = PdhOpenQuery(nullptr, 0, &hQuery)) != ERROR_SUCCESS)
    {
-      ReportPdhError(szFName, _T("PdhOpenQuery"), rc);
+      ReportPdhError(szFName, _T("PdhOpenQuery"), nullptr, rc);
       return -1;
    }
 
@@ -247,13 +247,13 @@ int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName)
 				if (rc != ERROR_SUCCESS)
 				{
 					MemFree(*ppszNewName);
-					*ppszNewName = NULL;
+					*ppszNewName = nullptr;
 				}
 			}
 		}
 	   if (rc != ERROR_SUCCESS)
 		{
-			ReportPdhError(szFName, _T("PdhAddCounter"), rc);
+			ReportPdhError(szFName, _T("PdhAddCounter"), pszName, rc);
 			PdhCloseQuery(hQuery);
 			return -1;
 		}
@@ -262,7 +262,7 @@ int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName)
    dwSize = sizeof(ci);
    if ((rc = PdhGetCounterInfo(hCounter, FALSE, &dwSize, &ci)) != ERROR_SUCCESS)
    {
-      ReportPdhError(szFName, _T("PdhGetCounterInfo"), rc);
+      ReportPdhError(szFName, _T("PdhGetCounterInfo"), pszName, rc);
       PdhCloseQuery(hQuery);
       return -1;
    }

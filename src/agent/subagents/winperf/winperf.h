@@ -104,7 +104,7 @@ int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName);
 void StartCollectorThreads();
 void JoinCollectorThreads();
 TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize);
-void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError);
+void ReportPdhError(const TCHAR *function, const TCHAR *pdhCall, const TCHAR *pdhObject, PDH_STATUS status);
 WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDataType);
 BOOL AddCounterFromConfig(TCHAR *pszStr);
 BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *),

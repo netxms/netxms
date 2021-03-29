@@ -99,6 +99,19 @@ static void OnProcessExit()
 #ifdef _WIN32
 
 /**
+ * Flag for core dump on CRT error
+ */
+static bool s_coreDumpOnCRTError = false;
+
+/**
+ * Enable/disable process fatal exit on CRT error
+ */
+void LIBNETXMS_EXPORTABLE EnableFatalExitOnCRTError(bool enable)
+{
+   s_coreDumpOnCRTError = enable;
+}
+
+/**
  * Invalid parameter handler
  */
 static void InvalidParameterHandler(const wchar_t *expression, const wchar_t *function, const wchar_t *file, unsigned int line, uintptr_t reserved)
@@ -112,7 +125,14 @@ static void InvalidParameterHandler(const wchar_t *expression, const wchar_t *fu
 #else
    nxlog_write(NXLOG_ERROR, _T("CRT error detected"));
    if (IsDebuggerPresent())
+   {
       DebugBreak();
+   }
+   else if (s_coreDumpOnCRTError)
+   {
+      char *p = nullptr;
+      *p = 'X';
+   }
 #endif
 }
 

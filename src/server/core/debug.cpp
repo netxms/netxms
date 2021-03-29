@@ -200,7 +200,7 @@ void DumpProcess(CONSOLE_CTX console)
 	ConsolePrintf(console, _T("Dumping process to disk...\n"));
 
 	TCHAR cmdLine[MAX_PATH + 64];
-	_sntprintf(cmdLine, MAX_PATH + 64, _T("netxmsd.exe --dump-dir \"%s\" --dump %d"), g_szDumpDir, GetCurrentProcessId());
+	_sntprintf(cmdLine, MAX_PATH + 64, _T("netxmsd.exe --dump-dir \"%s\" --dump %u"), g_szDumpDir, GetCurrentProcessId());
 
 	PROCESS_INFORMATION pi;
    STARTUPINFO si;
