@@ -139,7 +139,7 @@ void InstallService(const TCHAR *execName, const TCHAR *dllName, const TCHAR *lo
    }
 
    TCHAR szCmdLine[MAX_PATH * 2];
-   _sntprintf(szCmdLine, MAX_PATH * 2, _T("\"%s\" -d --config \"%s\"%s"), execName, g_szConfigFile, g_bCheckDB ? _T(" --check-db") : _T(""));
+   _sntprintf(szCmdLine, MAX_PATH * 2, _T("\"%s\" -d --config \"%s\"%s"), execName, g_szConfigFile, g_checkDatabase ? _T(" --check-db") : _T(""));
    SC_HANDLE hService = CreateService(hMgr, CORE_SERVICE_NAME, _T("NetXMS Core"),
                             GENERIC_READ | SERVICE_CHANGE_CONFIG, SERVICE_WIN32_OWN_PROCESS,
                             manualStart ? SERVICE_DEMAND_START : SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,

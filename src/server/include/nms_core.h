@@ -1180,6 +1180,7 @@ INT32 NXCORE_EXPORTABLE MetaDataReadInt32(const TCHAR *variable, INT32 defaultVa
 bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *variable, const TCHAR *value);
 bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *variable, INT32 value);
 
+void NXCORE_EXPORTABLE FindConfigFile();
 bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel);
 
 bool LockDatabase(InetAddress *lockAddr, TCHAR *lockInfo);

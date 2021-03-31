@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,6 +41,6 @@ void RemoveEventSource();
 
 #endif   /* _WIN32 */
 
-extern BOOL g_bCheckDB;
+extern bool g_checkDatabase;
 
 #endif   /* _netxmsd_h_ */
