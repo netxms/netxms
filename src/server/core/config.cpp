@@ -125,6 +125,51 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 Config g_serverConfig;
 
 /**
+ * Find configuration file if set to "{search}"
+ */
+void NXCORE_EXPORTABLE FindConfigFile()
+{
+   if (_tcscmp(g_szConfigFile, _T("{search}")))
+      return;
+
+#ifdef _WIN32
+   TCHAR path[MAX_PATH];
+   GetNetXMSDirectory(nxDirEtc, path);
+   _tcscat(path, _T("\\netxmsd.conf"));
+   if (_taccess(path, 4) == 0)
+   {
+      _tcscpy(g_szConfigFile, path);
+   }
+   else
+   {
+      _tcscpy(g_szConfigFile, _T("C:\\netxmsd.conf"));
+   }
+#else
+   String homeDir = GetEnvironmentVariableEx(_T("NETXMS_HOME"));
+   if (!homeDir.isEmpty())
+   {
+      TCHAR config[MAX_PATH];
+      _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir.cstr());
+      if (_taccess(config, 4) == 0)
+      {
+         _tcscpy(g_szConfigFile, config);
+         goto stop_search;
+      }
+   }
+   if (_taccess(SYSCONFDIR _T("/netxmsd.conf"), 4) == 0)
+   {
+      _tcscpy(g_szConfigFile, SYSCONFDIR _T("/netxmsd.conf"));
+   }
+   else
+   {
+      _tcscpy(g_szConfigFile, _T("/etc/netxmsd.conf"));
+   }
+stop_search:
+   ;
+#endif
+}
+
+/**
  * Load and parse configuration file
  * Returns TRUE on success and FALSE on failure
  */
@@ -132,45 +177,7 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
 {
    bool bSuccess = false;
 
-	if (!_tcscmp(g_szConfigFile, _T("{search}")))
-	{
-#ifdef _WIN32
-      TCHAR path[MAX_PATH];
-      GetNetXMSDirectory(nxDirEtc, path);
-      _tcscat(path, _T("\\netxmsd.conf"));
-      if (_taccess(path, 4) == 0)
-      {
-		   _tcscpy(g_szConfigFile, path);
-      }
-      else
-      {
-         _tcscpy(g_szConfigFile, _T("C:\\netxmsd.conf"));
-      }
-#else
-      String homeDir = GetEnvironmentVariableEx(_T("NETXMS_HOME"));
-      if (!homeDir.isEmpty())
-      {
-         TCHAR config[MAX_PATH];
-         _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir.cstr());
-		   if (_taccess(config, 4) == 0)
-		   {
-			   _tcscpy(g_szConfigFile, config);
-            goto stop_search;
-		   }
-      }
-		if (_taccess(SYSCONFDIR _T("/netxmsd.conf"), 4) == 0)
-		{
-			_tcscpy(g_szConfigFile, SYSCONFDIR _T("/netxmsd.conf"));
-		}
-		else
-		{
-			_tcscpy(g_szConfigFile, _T("/etc/netxmsd.conf"));
-		}
-stop_search:
-      ;
-#endif
-	}
-
+   FindConfigFile();
    if (IsStandalone())
       _tprintf(_T("Using configuration file \"%s\"\n"), g_szConfigFile);
 

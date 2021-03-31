@@ -38,7 +38,7 @@ NETXMS_EXECUTABLE_HEADER(netxmsd)
 /**
  * Global data
  */
-BOOL g_bCheckDB = FALSE;
+bool g_checkDatabase = false;
 
 /**
  * Debug level
@@ -47,16 +47,25 @@ static int s_debugLevel = NXCONFIG_UNINITIALIZED_VALUE;
 static TCHAR *s_debugTags = nullptr;
 
 /**
+ * Configuration entries
+ */
+static StringList *s_configEntries = nullptr;
+static bool s_generateConfig = false;
+
+/**
  * Help text
  */
 static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n")
-                           _T("Copyright (c) 2003-2020 Raden Solutions\n\n")
+                           _T("Copyright (c) 2003-2021 Raden Solutions\n\n")
                            _T("Usage: netxmsd [<options>]\n\n")
                            _T("Valid options are:\n")
+                           _T("   -A entry    : Add configuration file entry\n")
                            _T("   -e          : Run database check on startup\n")
                            _T("   -c <file>   : Set non-default configuration file\n")
+                           _T("   -C          : Check configuration and exit\n")
                            _T("   -d          : Run as daemon/service\n")
                            _T("   -D <level>  : Set debug level (valid levels are 0..9)\n")
+                           _T("   -G          : Generate configuration file and exit\n")
                            _T("   -h          : Display help and exit\n")
 #ifdef _WIN32
                            _T("   -I          : Install Windows service\n")
@@ -83,44 +92,6 @@ static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T
                            _T("   -T          : Enable SQL query trace\n")
                            _T("   -v          : Display version and exit\n")
                            _T("\n");
-
-/**
- * Execute command and wait
- */
-static BOOL ExecAndWait(char *pszCommand)
-{
-   BOOL bSuccess = TRUE;
-
-#ifdef _WIN32
-   STARTUPINFOA si;
-   PROCESS_INFORMATION pi;
-
-   // Fill in process startup info structure
-   memset(&si, 0, sizeof(STARTUPINFOA));
-   si.cb = sizeof(STARTUPINFOA);
-   si.dwFlags = 0;
-
-   // Create new process
-   if (!CreateProcessA(NULL, pszCommand, NULL, NULL, FALSE,
-                       IsStandalone() ? 0 : CREATE_NO_WINDOW | DETACHED_PROCESS,
-                       NULL, NULL, &si, &pi))
-   {
-      bSuccess = FALSE;
-   }
-   else
-   {
-      WaitForSingleObject(pi.hProcess, INFINITE);
-
-      // Close all handles
-      CloseHandle(pi.hThread);
-      CloseHandle(pi.hProcess);
-   }
-#else
-   bSuccess = (system(pszCommand) != -1);
-#endif
-
-   return bSuccess;
-}
 
 #ifdef _WIN32
 
@@ -182,9 +153,9 @@ static void CreateMiniDump(DWORD pid)
 #endif
 
 #ifdef _WIN32
-#define VALID_OPTIONS   "c:CdD:ehIlL:mMP:qRsSTv"
+#define VALID_OPTIONS   "A:c:CdD:eGhIlL:mMP:qRsSTv"
 #else
-#define VALID_OPTIONS   "c:CdD:ehlp:qSTv"
+#define VALID_OPTIONS   "A:c:CdD:eGhlp:qSTv"
 #endif
 
 /**
@@ -207,10 +178,13 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 #if defined(_WIN32) || HAVE_DECL_GETOPT_LONG
 	static struct option longOptions[] =
 	{
+      { (char *)"add-config-entry", 1, NULL, 'A' },
 		{ (char *)"check-db", 0, NULL, 'e' },
-		{ (char *)"config", 1, NULL, 'c' },
+      { (char *)"config", 1, NULL, 'c' },
+      { (char *)"check-config", 0, NULL, 'C' },
 		{ (char *)"daemon", 0, NULL, 'd' },
 		{ (char *)"debug", 1, NULL, 'D' },
+      { (char *)"generate-config", 0, NULL, 'G' },
 		{ (char *)"help", 0, NULL, 'h' },
 		{ (char *)"quiet", 1, NULL, 'q' },
       { (char *)"show-log-location", 0, NULL, 'l' },
@@ -257,6 +231,15 @@ static BOOL ParseCommandLine(int argc, char *argv[])
                _tprintf(_T("Built with: %hs\n"), CPP_COMPILER_VERSION);
             }
 				return FALSE;
+			case 'A':
+			   if (s_configEntries == nullptr)
+			      s_configEntries = new StringList();
+#ifdef UNICODE
+			   s_configEntries->addPreallocated(WideStringFromMBStringSysLocale(optarg));
+#else
+            s_configEntries->add(optarg);
+#endif
+			   break;
 			case 'c':
 #ifdef UNICODE
 				MultiByteToWideCharSysLocale(optarg, g_szConfigFile, MAX_PATH);
@@ -285,8 +268,11 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 				g_flags |= AF_DEBUG_CONSOLE_DISABLED;
 				break;
 			case 'e':
-				g_bCheckDB = TRUE;
+				g_checkDatabase = true;
 				break;
+         case 'G':
+            s_generateConfig = true;
+            break;
 #ifdef _WIN32
 			case 'L':
 #ifdef UNICODE
@@ -438,12 +424,41 @@ int main(int argc, char* argv[])
    if (!ParseCommandLine(argc, argv))
       return 1;
 
+   if (s_generateConfig)
+   {
+      FindConfigFile();
+      _tprintf(_T("Using configuration file \"%s\"\n"), g_szConfigFile);
+
+      FILE *fp = _tfopen(g_szConfigFile, _T("w"));
+      if (fp == nullptr)
+      {
+         _tprintf(_T("Cannot create file \"%s\" (%s)"), g_szConfigFile, _tcserror(errno));
+         return 1;
+      }
+
+      time_t now = time(nullptr);
+      fprintf(fp, "#\n# Configuration file generated on %s#\n\n", ctime(&now));
+      if (s_configEntries != nullptr)
+      {
+         for(int i = 0; i < s_configEntries->size(); i++)
+         {
+            char *line = UTF8StringFromTString(s_configEntries->get(i));
+            fprintf(fp, "%s\n", line);
+            MemFree(line);
+         }
+      }
+
+      fclose(fp);
+      return 0;
+   }
+
    if (!LoadConfig(&s_debugLevel))
    {
       if (IsStandalone())
          _tprintf(_T("Error loading configuration file\n"));
       return 1;
    }
+   delete s_configEntries;
 
    if (s_debugLevel == NXCONFIG_UNINITIALIZED_VALUE)
       s_debugLevel = 0;
@@ -459,24 +474,33 @@ int main(int argc, char* argv[])
 #endif
 
    // Check database before start if requested
-   if (g_bCheckDB)
+   if (g_checkDatabase)
    {
-      char szCmd[MAX_PATH + 128], *pszSep;
-
-      strncpy(szCmd, argv[0], MAX_PATH);
-      pszSep = strrchr(szCmd, FS_PATH_SEPARATOR[0]);
-      if (pszSep != NULL)
-         pszSep++;
+      char command[MAX_PATH + 128];
+      strlcpy(command, argv[0], MAX_PATH);
+      char *pathSeparator = strrchr(command, FS_PATH_SEPARATOR[0]);
+      if (pathSeparator != nullptr)
+         pathSeparator++;
       else
-         pszSep = szCmd;
+         pathSeparator = command;
 #ifdef UNICODE
-      snprintf(pszSep, 128, "nxdbmgr -c \"%S\" -f check", g_szConfigFile);
+      snprintf(pathSeparator, 128, "nxdbmgr -c \"%S\" -f check", g_szConfigFile);
+      WCHAR *wcmd = WideStringFromMBStringSysLocale(command);
+      ProcessExecutor executor(wcmd, false);
+      MemFree(wcmd);
 #else
-      snprintf(pszSep, 128, "nxdbmgr -c \"%s\" -f check", g_szConfigFile);
+      snprintf(pathSeparator, 128, "nxdbmgr -c \"%s\" -f check", g_szConfigFile);
+      ProcessExecutor executor(command, false);
 #endif
-      if (!ExecAndWait(szCmd))
+      if (executor.execute())
+      {
+         executor.waitForCompletion(INFINITE);
+      }
+      else
+      {
          if (IsStandalone())
-            _tprintf(_T("ERROR: Failed to execute command \"%hs\"\n"), szCmd);
+            _tprintf(_T("ERROR: Failed to execute command \"%hs\"\n"), command);
+      }
    }
 
 #ifdef _WIN32
@@ -515,9 +539,9 @@ int main(int argc, char* argv[])
 
    // Write PID file
    FILE *fp = _tfopen(g_szPIDFile, _T("w"));
-   if (fp != NULL)
+   if (fp != nullptr)
    {
-      _ftprintf(fp, _T("%d"), getpid());
+      _ftprintf(fp, _T("%u"), getpid());
       fclose(fp);
    }
 
