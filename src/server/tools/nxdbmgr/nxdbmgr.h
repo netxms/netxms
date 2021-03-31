@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,7 +46,8 @@ struct COLUMN_IDENTIFIER
 
 DB_HANDLE ConnectToDatabase();
 void CheckDatabase();
-void InitDatabase(const char *pszInitFile);
+bool CreateDatabase(const char *driver, const TCHAR *dbName, const TCHAR *dbLogin, const TCHAR *dbPassword);
+void InitDatabase(const char *initFile);
 bool ClearDatabase(bool preMigration);
 void ExportDatabase(char *file, const StringList& excludedTables, const StringList& includedTables);
 void ImportDatabase(const char *file, const StringList& excludedTables, const StringList& includedTables);

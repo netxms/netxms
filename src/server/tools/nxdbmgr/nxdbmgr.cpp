@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -151,9 +151,24 @@ DB_HANDLE ConnectToDatabase()
 {
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    DB_HANDLE hdb = DBConnect(s_driver, s_dbServer, s_dbName, s_dbLogin, s_dbPassword, s_dbSchema, errorText);
-   if (hdb == NULL)
+   if (hdb == nullptr)
    {
       _tprintf(_T("Unable to connect to database %s@%s as %s (%s)\n"), s_dbName, s_dbServer, s_dbLogin, errorText);
+   }
+   return hdb;
+}
+
+/**
+ * Open database connection
+ */
+static DB_HANDLE ConnectToDatabaseAsDBA(const TCHAR *login, const TCHAR *password)
+{
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   const TCHAR *dbName = !stricmp(DBGetDriverName(s_driver), "pgsql") ? _T("template1") : nullptr;
+   DB_HANDLE hdb = DBConnect(s_driver, s_dbServer, dbName, login, password, nullptr, errorText);
+   if (hdb == nullptr)
+   {
+      _tprintf(_T("Unable to connect to database server %s as %s (%s)\n"), s_dbServer, login, errorText);
    }
    return hdb;
 }
@@ -265,6 +280,7 @@ int main(int argc, char *argv[])
    bool replaceValue = true;
    bool showOutput = false;
 	TCHAR fallbackSyntax[32] = _T("");
+	TCHAR *dbaLogin = nullptr, *dbaPassword = nullptr;
 	StringList includedTables, excludedTables;
    int ch;
 
@@ -329,7 +345,7 @@ stop_search:
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:dDe:fF:GhIL:MNoqsStT:vXY:Z:")) != -1)
+   while((ch = getopt(argc, argv, "c:C:dDe:fF:GhIL:MNoqsStT:vXY:Z:")) != -1)
    {
       switch(ch)
       {
@@ -344,8 +360,7 @@ stop_search:
                      _T("   export <file>        : Export database to file\n")
                      _T("   get <name>           : Get value of server configuration variable\n")
                      _T("   import <file>        : Import database from file\n")
-                     _T("   init [<file>]        : Initialize database. If schema file is not specified,\n")
-                     _T("                          it's loaded from $NETXMS_HOME/share/netxms/sql/dbinit_DBTYPE.sql\n")
+                     _T("   init [<type>]        : Initialize database. If type is not provided it will be deduced from driver name.\n")
 				         _T("   migrate <source>     : Migrate database from given source\n")
                      _T("   reset-system-account : Unlock user \"system\" and reset it's password to default\n")
                      _T("   set <name> <value>   : Set value of server configuration variable\n")
@@ -353,6 +368,7 @@ stop_search:
                      _T("   upgrade              : Upgrade database to new version\n")
                      _T("Valid options are:\n")
                      _T("   -c <config> : Use alternate configuration file. Default is %s\n")
+                     _T("   -C <dba>    : Create database and user before initialization using provided DBA credentials\n")
                      _T("   -d          : Check collected data (may take very long time).\n")
                      _T("   -D          : Migrate only collected data.\n")
                      _T("   -e <table>  : Exclude specific table from export, import, or migration.\n")
@@ -378,9 +394,12 @@ stop_search:
                      _T("   -Z <log>    : Exclude specific log from export, import, or migration.\n")
                      _T("Valid log names are:\n")
                      _T("   alarm audit event snmptrap syslog winevent\n")
+                     _T("Valid database types are:\n")
+                     _T("   db2 mssql mysql oracle pgsql sqlite tsdb\n")
                      _T("Notes:\n")
                      _T("   * -e, -L, -Y, and -Z options can be specified more than once for different tables\n")
                      _T("   * -L and -Y options automatically exclude all other (not explicitly listed) tables\n")
+                     _T("   * DBA credentials should be provided in form login/password\n")
                      _T("\n"), configFile);
             bStart = FALSE;
             break;
@@ -390,11 +409,24 @@ stop_search:
             break;
          case 'c':
 #ifdef UNICODE
-	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, configFile, MAX_PATH);
+	         MultiByteToWideCharSysLocale(optarg, configFile, MAX_PATH);
 				configFile[MAX_PATH - 1] = 0;
 #else
             strlcpy(configFile, optarg, MAX_PATH);
 #endif
+            break;
+         case 'C':
+#ifdef UNICODE
+            dbaLogin = WideStringFromMBStringSysLocale(optarg);
+#else
+            dbaLogin = MemCopyStringA(optarg);
+#endif
+            dbaPassword = _tcschr(dbaLogin, _T('/'));
+            if (dbaPassword != nullptr)
+            {
+               *dbaPassword = 0;
+               dbaPassword++;
+            }
             break;
 			case 'd':
 				g_checkData = true;
@@ -410,7 +442,7 @@ stop_search:
             break;
          case 'F':
 #ifdef UNICODE
-	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, fallbackSyntax, 32);
+            MultiByteToWideCharSysLocale(optarg, fallbackSyntax, 32);
 				fallbackSyntax[31] = 0;
 #else
             strlcpy(fallbackSyntax, optarg, 32);
@@ -597,6 +629,25 @@ stop_search:
       return 3;
    }
 
+   if (!strcmp(argv[optind], "init") && (dbaLogin != nullptr))
+   {
+      g_dbHandle = ConnectToDatabaseAsDBA(dbaLogin, CHECK_NULL_EX(dbaPassword));
+      if (g_dbHandle == nullptr)
+      {
+         DBUnloadDriver(s_driver);
+         return 4;
+      }
+      bool success = CreateDatabase(DBGetDriverName(s_driver), s_dbName, s_dbLogin, s_dbPassword);
+      DBDisconnect(g_dbHandle);
+      if (!success)
+      {
+         _tprintf(_T("Unable to create database or user\n"));
+         DBUnloadDriver(s_driver);
+         return 9;
+      }
+      _tprintf(_T("Database created successfully\n"));
+   }
+
    g_dbHandle = ConnectToDatabase();
    if (g_dbHandle == nullptr)
    {
@@ -647,9 +698,9 @@ stop_search:
          initFile.appendMBString(driver, strlen(driver), CP_ACP);
          initFile.append(_T(".sql"));
 
-         char *initFileUtf8 = initFile.getUTF8String();
-         InitDatabase(initFileUtf8);
-         MemFree(initFileUtf8);
+         char *initFileMB = MBStringFromWideStringSysLocale(initFile);
+         InitDatabase(initFileMB);
+         MemFree(initFileMB);
       }
       else if (strchr(argv[optind + 1], FS_PATH_SEPARATOR_CHAR_A) == nullptr)
       {
@@ -661,9 +712,9 @@ stop_search:
          initFile.appendMBString(argv[optind + 1], strlen(argv[optind + 1]), CP_ACP);
          initFile.append(_T(".sql"));
 
-         char *initFileUtf8 = initFile.getUTF8String();
-         InitDatabase(initFileUtf8);
-         MemFree(initFileUtf8);
+         char *initFileMB = MBStringFromWideStringSysLocale(initFile);
+         InitDatabase(initFileMB);
+         MemFree(initFileMB);
       }
       else
       {
