@@ -39,7 +39,6 @@ Name: "pdb"; Description: "Install PDB files for selected components"; Types: cu
 
 [Files]
 ; Common files
-Source: "..\..\..\ChangeLog"; DestDir: "{app}\doc"; Flags: ignoreversion; Components: base
 Source: "..\..\..\x64\Release\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion signonce; Components: base
 Source: "..\..\..\x64\Release\libnetxms.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 Source: "..\..\..\x64\Release\libnxjava.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
@@ -75,7 +74,6 @@ Source: "..\..\..\x64\Release\libstrophe.dll"; DestDir: "{app}\bin"; Flags: igno
 Source: "..\..\..\x64\Release\libstrophe.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\netxmsd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\netxmsd.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\nxconfig.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\nxcore.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\nxcore.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\nxinstall.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
@@ -341,14 +339,13 @@ Source: "..\files\windows\x86\rm.exe"; DestDir: "{app}\var"; Flags: ignoreversio
 [Icons]
 Name: "{group}\Collect NetXMS diagnostic information"; Filename: "{app}\bin\nx-collect-server-diag.cmd"; Components: server
 Name: "{group}\Recompile MIB Files"; Filename: "{app}\bin\nxmibc.exe"; Parameters: "-P -z -d ""{app}\var\mibs"" -o ""{app}\var\mibs\netxms.mib"""; Components: server
-Name: "{group}\Server Configuration Wizard"; Filename: "{app}\bin\nxconfig.exe"; Components: server
 Name: "{group}\Server Console"; Filename: "{app}\bin\nxadm.exe"; Parameters: "-i"; Components: server
 Name: "{group}\{cm:UninstallProgram,NetXMS}"; Filename: "{uninstallexe}"
 
 [Tasks]
 Name: desktopicon; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: quicklaunchicon; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: configureServer; Description: "Run server configuration wizard"; Components: server; Flags: checkedonce
+Name: initializeDatabase; Description: "Initialize database"; Components: server; Flags: checkedonce
 Name: upgradeDatabase; Description: "Upgrade database schema if needed"; Components: server
 Name: startCore; Description: "Start NetXMS Core service after installation"; Components: server
 Name: startReporting; Description: "Start NetXMS Reporting Server service after installation"; Components: server\reporting
@@ -422,13 +419,18 @@ Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-18:(OI)(CI)F"
 Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-19:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-32-544:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "{app}\bin\nxmibc.exe"; Parameters: "-z -d ""{app}\share\mibs"" -o ""{app}\var\netxms.mib"""; WorkingDir: "{app}\bin"; StatusMsg: "Compiling MIB files..."; Flags: runhidden; Components: server
-Filename: "{app}\bin\nxconfig.exe"; Parameters: "--create-agent-config"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's configuration file..."; Components: server
+; Setup agent service
+Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" 127.0.0.1,::1 ""{app}\log\nxagentd.log"" ""{app}\var"" ""{app}\etc\nxagentd.conf.d"" portcheck.nsm ssh.nsm winperf.nsm wmi.nsm"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent configuration file..."; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing agent service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting agent service..."; Flags: runhidden; Components: server
-Filename: "{app}\bin\nxconfig.exe"; Parameters: "--configure-if-needed"; WorkingDir: "{app}\bin"; StatusMsg: "Running server configuration wizard..."; Components: server; Tasks: configureServer
+; Setup server core service
+Filename: "{app}\bin\netxmsd.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" -G {code:GetServerConfigEntries}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating server configuration file..."; Components: server; Tasks: initializeDatabase
+Filename: "{app}\bin\nxdbmgr.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" init -P -F {code:GetDatabaseSyntax} {code:GetDatabaseInitOptions}"; WorkingDir: "{app}\bin"; StatusMsg: "Initializing database..."; Components: server; Tasks: initializeDatabase
 Filename: "{app}\bin\nxdbmgr.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" upgrade"; WorkingDir: "{app}\bin"; StatusMsg: "Upgrading database..."; Flags: runhidden; Components: server; Tasks: upgradeDatabase
-Filename: "{app}\bin\netxmsd.exe"; Parameters: "--check-service"; WorkingDir: "{app}\bin"; StatusMsg: "Checking core service configuration..."; Flags: runhidden; Components: server
+Filename: "{app}\bin\netxmsd.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing core service..."; Flags: runhidden; Components: server
+Filename: "{app}\bin\netxmsd.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" --check-service"; WorkingDir: "{app}\bin"; StatusMsg: "Checking core service configuration..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "-s -m"; WorkingDir: "{app}\bin"; StatusMsg: "Starting core service..."; Flags: runhidden; Components: server; Tasks: startCore
+; Setup reporting service
 Filename: "{app}\bin\prunsrv.exe"; Parameters: "//IS//nxreportd --DisplayName=""NetXMS Reporting Server"" --Description=""This service provides report generation capabilities to NetXMS server"" --Startup=auto --StartMode=jvm --StartClass=org.netxms.reporting.Startup --StopMode=jvm --StopClass=org.netxms.reporting.Startup --StopMethod=stop --StopTimeout=10 ++JvmOptions=""-Dnxreportd.workspace={app}\var\nxreportd"" ++JvmOptions=""-Dnxreportd.logfile={app}\log\nxreportd.log"" --Classpath=""{app}\etc\nxreportd;{app}\lib\java\nxreportd-{#VersionString}.jar"" --LogPath=""{app}\log"""; WorkingDir: "{app}\bin"; StatusMsg: "Installing reporting server service..."; Flags: runhidden; Components: server\reporting
 Filename: "{app}\bin\prunsrv.exe"; Parameters: "//US//nxreportd --DisplayName=""NetXMS Reporting Server"" --Description=""This service provides report generation capabilities to NetXMS server"" --Startup=auto --StartMode=jvm --StartClass=org.netxms.reporting.Startup --StopMode=jvm --StopClass=org.netxms.reporting.Startup --StopMethod=stop --StopTimeout=10 ++JvmOptions=""-Dnxreportd.workspace={app}\var\nxreportd"" ++JvmOptions=""-Dnxreportd.logfile={app}\log\nxreportd.log"" --Classpath=""{app}\etc\nxreportd;{app}\lib\java\nxreportd-{#VersionString}.jar"" --LogPath=""{app}\log"""; WorkingDir: "{app}\bin"; StatusMsg: "Installing reporting server service..."; Flags: runhidden; Components: server\reporting
 Filename: "{app}\bin\prunsrv.exe"; Parameters: "//ES//nxreportd"; WorkingDir: "{app}\bin"; StatusMsg: "Starting reporting server service..."; Flags: runhidden; Components: server\reporting; Tasks: startReporting
@@ -443,8 +445,13 @@ Filename: "{app}\bin\nxagentd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling a
 
 [Code]
 Var
-  HttpdSettingsPage: TInputQueryWizardPage;
+  DatabaseInitPage: TWizardPage;
   backupFileSuffix: String;
+  dbInitServer, dbInitName, dbInitLogin, dbInitDBALogin: TEdit;
+  dbInitPassword, dbInitDBAPassword: TPasswordEdit;
+  dbInitCheckCreateDB: TNewCheckBox;
+  dbInitType: TNewComboBox;
+  dbInitServerLabel: TNewStaticText;
 
 #include "firewall.iss"
 
@@ -464,31 +471,309 @@ Begin
   Result := TRUE
 End;
 
-Procedure InitializeWizard;
+Procedure OnDatabaseSelectionChange(Sender: TObject);
 Begin
-  HttpdSettingsPage := CreateInputQueryPage(wpSelectTasks,
-    'Select Master Server', 'Where is master server for web interface?',
-    'Please enter host name or IP address of NetXMS master server. NetXMS web interface you are installing will provide connectivity to that server.');
-  HttpdSettingsPage.Add('NetXMS server:', False);
-  HttpdSettingsPage.Values[0] := GetPreviousData('MasterServer', 'localhost');
+  Case dbInitType.ItemIndex Of
+    3: { Oracle }
+      Begin
+        dbInitServerLabel.Caption := 'TNS name or connection string';
+        dbInitName.Enabled := False;
+        dbInitLogin.Enabled := True;
+        dbInitPassword.Enabled := True;
+      End;
+    5: { SQLite }
+      Begin
+        dbInitServerLabel.Caption := 'Path to database file';
+        dbInitName.Enabled := False;
+        dbInitLogin.Enabled := False;
+        dbInitPassword.Enabled := False;
+      End;
+    Else
+      Begin
+        dbInitServerLabel.Caption := 'Database server';
+        dbInitName.Enabled := True;
+        dbInitLogin.Enabled := True;
+        dbInitPassword.Enabled := True;
+      End;
+  End;
 End;
 
-Procedure RegisterPreviousData(PreviousDataKey: Integer);
+Procedure OnDatabaseCreationOptionChange(Sender: TObject);
 Begin
-  SetPreviousData(PreviousDataKey, 'MasterServer', HttpdSettingsPage.Values[0]);
+  dbInitDBALogin.Enabled := dbInitCheckCreateDB.Checked;
+  dbInitDBAPassword.Enabled := dbInitCheckCreateDB.Checked;
+End;
+
+Procedure CreateDatabaseInitPage;
+Var
+  lblLeft, lblRight: TNewStaticText;
+  offset, controlWidth, innerSpacing, outerSpacing: Integer;
+Begin
+  DatabaseInitPage := CreateCustomPage(wpSelectTasks,
+    'Initialize Database', 'Initialize database for use by NetXMS server');
+
+  innerSpacing := ScaleY(3);
+  outerSpacing := ScaleY(10);
+
+  { database type }
+  lblLeft := TNewStaticText.Create(DatabaseInitPage);
+  lblLeft.Anchors := [akLeft, akTop];
+  lblLeft.Parent := DatabaseInitPage.Surface;
+  lblLeft.Caption := 'Database type';
+
+  offset := lblLeft.Left;
+  controlWidth := DatabaseInitPage.Surface.Width / 2 - offset - offset / 2;
+
+  dbInitType := TNewComboBox.Create(DatabaseInitPage);
+  dbInitType.Top := lblLeft.Top + lblLeft.Height + innerSpacing;
+  dbInitType.Width := controlWidth;
+  dbInitType.Anchors := [akLeft, akTop];
+  dbInitType.Parent := DatabaseInitPage.Surface;
+  dbInitType.Style := csDropDownList;
+  dbInitType.Items.Add('MariaDB');
+  dbInitType.Items.Add('Microsoft SQL');
+  dbInitType.Items.Add('MySQL');
+  dbInitType.Items.Add('Oracle');
+  dbInitType.Items.Add('PostgreSQL');
+  dbInitType.Items.Add('SQLite');
+  dbInitType.Items.Add('TimescaleDB');
+  dbInitType.ItemIndex := 4;
+  dbInitType.OnChange := @OnDatabaseSelectionChange;
+
+  { server name }
+  lblLeft := TNewStaticText.Create(DatabaseInitPage);
+  lblLeft.Anchors := [akLeft, akTop];
+  lblLeft.Parent := DatabaseInitPage.Surface;
+  lblLeft.Caption := 'Database server';
+  lblLeft.Top := dbInitType.Top + dbInitType.Height + outerSpacing;
+  dbInitServerLabel := lblLeft;
+
+  dbInitServer := TEdit.Create(DatabaseInitPage);
+  dbInitServer.Anchors := [akLeft, akTop];
+  dbInitServer.Parent := DatabaseInitPage.Surface;
+  dbInitServer.Top := lblLeft.Top + lblLeft.Height + innerSpacing;
+  dbInitServer.Width := controlWidth;
+
+  { database name }
+  lblLeft := TNewStaticText.Create(DatabaseInitPage);
+  lblLeft.Anchors := [akLeft, akTop];
+  lblLeft.Parent := DatabaseInitPage.Surface;
+  lblLeft.Caption := 'Database name';
+  lblLeft.Top := dbInitServer.Top + dbInitServer.Height + outerSpacing;
+
+  dbInitName := TEdit.Create(DatabaseInitPage);
+  dbInitName.Anchors := [akLeft, akTop];
+  dbInitName.Parent := DatabaseInitPage.Surface;
+  dbInitName.Top := lblLeft.Top + lblLeft.Height + innerSpacing;
+  dbInitName.Width := controlWidth;
+
+  { login }
+  lblRight := TNewStaticText.Create(DatabaseInitPage);
+  lblRight.Anchors := [akTop, akRight];
+  lblRight.Parent := DatabaseInitPage.Surface;
+  lblRight.Caption := 'Login name';
+  lblRight.Top := dbInitType.Top + dbInitType.Height + outerSpacing;
+  lblRight.Left := DatabaseInitPage.Surface.Width / 2 + offset / 2;
+
+  dbInitLogin := TEdit.Create(DatabaseInitPage);
+  dbInitLogin.Anchors := [akTop, akRight];
+  dbInitLogin.Parent := DatabaseInitPage.Surface;
+  dbInitLogin.Top := lblRight.Top + lblRight.Height + innerSpacing;
+  dbInitLogin.Left := lblRight.Left;
+  dbInitLogin.Width := controlWidth;
+
+  { password }
+  lblRight := TNewStaticText.Create(DatabaseInitPage);
+  lblRight.Anchors := [akTop, akRight];
+  lblRight.Parent := DatabaseInitPage.Surface;
+  lblRight.Caption := 'Password';
+  lblRight.Top := dbInitLogin.Top + dbInitLogin.Height + outerSpacing;
+  lblRight.Left := DatabaseInitPage.Surface.Width / 2 + offset / 2;
+
+  dbInitPassword := TPasswordEdit.Create(DatabaseInitPage);
+  dbInitPassword.Anchors := [akTop, akRight];
+  dbInitPassword.Parent := DatabaseInitPage.Surface;
+  dbInitPassword.Top := lblRight.Top + lblRight.Height + innerSpacing;
+  dbInitPassword.Left := lblRight.Left;
+  dbInitPassword.Width := controlWidth;
+
+  { database creation option }
+  dbInitCheckCreateDB := TNewCheckBox.Create(DatabaseInitPage);
+  dbInitCheckCreateDB.Anchors := [akLeft, akTop];
+  dbInitCheckCreateDB.Parent := DatabaseInitPage.Surface;
+  dbInitCheckCreateDB.Caption := 'Create database and database user before initialization';
+  dbInitCheckCreateDB.Top := dbInitName.Top + dbInitName.Height + outerSpacing * 2;
+  dbInitCheckCreateDB.Width := controlWidth * 2;
+  dbInitCheckCreateDB.OnClick := @OnDatabaseCreationOptionChange;
+
+  { DBA login }
+  lblLeft := TNewStaticText.Create(DatabaseInitPage);
+  lblLeft.Anchors := [akLeft, akTop];
+  lblLeft.Parent := DatabaseInitPage.Surface;
+  lblLeft.Caption := 'DBA login name';
+  lblLeft.Top := dbInitCheckCreateDB.Top + dbInitCheckCreateDB.Height + outerSpacing;
+
+  dbInitDBALogin := TEdit.Create(DatabaseInitPage);
+  dbInitDBALogin.Anchors := [akLeft, akTop];
+  dbInitDBALogin.Parent := DatabaseInitPage.Surface;
+  dbInitDBALogin.Top := lblLeft.Top + lblLeft.Height + innerSpacing;
+  dbInitDBALogin.Width := controlWidth;
+  dbInitDBALogin.Enabled := False;
+
+  { DBA password }
+  lblRight := TNewStaticText.Create(DatabaseInitPage);
+  lblRight.Anchors := [akTop, akRight];
+  lblRight.Parent := DatabaseInitPage.Surface;
+  lblRight.Caption := 'DBA password';
+  lblRight.Top := dbInitCheckCreateDB.Top + dbInitCheckCreateDB.Height + outerSpacing;
+  lblRight.Left := DatabaseInitPage.Surface.Width / 2 + offset / 2;
+
+  dbInitDBAPassword := TPasswordEdit.Create(DatabaseInitPage);
+  dbInitDBAPassword.Anchors := [akTop, akRight];
+  dbInitDBAPassword.Parent := DatabaseInitPage.Surface;
+  dbInitDBAPassword.Top := lblRight.Top + lblRight.Height + innerSpacing;
+  dbInitDBAPassword.Left := lblRight.Left;
+  dbInitDBAPassword.Width := controlWidth;
+  dbInitDBAPassword.Enabled := False;
+End;
+
+Procedure InitializeWizard;
+Begin
+  CreateDatabaseInitPage;
 End;
 
 Function ShouldSkipPage(PageID: Integer): Boolean;
 Begin
-  If PageID = HttpdSettingsPage.ID Then
-    Result := not WizardIsComponentSelected('websrv')
+  If PageID = DatabaseInitPage.ID Then
+    Result := not WizardIsTaskSelected('initializeDatabase')
   Else
     Result := False;
 End;
 
-Function GetMasterServer(Param: String): String;
+Function GetDatabaseType: String;
 Begin
-  Result := HttpdSettingsPage.Values[0];
+  Case dbInitType.ItemIndex Of
+    0: Result := 'MariaDB';
+    1: Result := 'Microsoft SQL';
+    2: Result := 'MySQL';
+    3: Result := 'Oracle';
+    4: Result := 'PostgreSQL';
+    5: Result := 'SQLite';
+    6: Result := 'TimescaleDB';
+  End;
+End;
+
+Function GetDatabaseSyntax(arg : String): String;
+Begin
+  Case dbInitType.ItemIndex Of
+    0: Result := 'mysql';
+    1: Result := 'mssql';
+    2: Result := 'mysql';
+    3: Result := 'oracle';
+    4: Result := 'pgsql';
+    5: Result := 'sqlite';
+    6: Result := 'tsdb';
+  End;
+End;
+
+Function GetDatabaseDriverName: String;
+Begin
+  Case dbInitType.ItemIndex Of
+    0: Result := 'mariadb.ddr';
+    1: Result := 'mssql.ddr';
+    2: Result := 'mysql.ddr';
+    3: Result := 'oracle.ddr';
+    4: Result := 'pgsql.ddr';
+    5: Result := 'sqlite.ddr';
+    6: Result := 'pgsql.ddr';
+  End;
+End;
+
+Function UpdateReadyMemo(Space, NewLine, MemoUserInfoInfo, MemoDirInfo, MemoTypeInfo,
+                         MemoComponentsInfo, MemoGroupInfo, MemoTasksInfo: String): String;
+Var
+  Server, Text: String;
+Begin
+  Text := '';
+  If MemoUserInfoInfo <> '' Then
+    Text := Text + MemoUserInfoInfo + NewLine + NewLine;
+  If MemoDirInfo <> '' Then
+    Text := Text + MemoDirInfo + NewLine + NewLine;
+  If MemoTypeInfo <> '' Then
+    Text := Text + MemoTypeInfo + NewLine + NewLine;
+  If MemoComponentsInfo <> '' Then
+    Text := Text + MemoComponentsInfo + NewLine + NewLine;
+  If MemoGroupInfo <> '' Then
+    Text := Text + MemoGroupInfo + NewLine + NewLine;
+  If MemoTasksInfo <> '' Then
+    Text := Text + MemoTasksInfo + NewLine + NewLine;
+  If WizardIsTaskSelected('initializeDatabase') Then Begin
+    Text := Text + 'Initialize database:' + NewLine;
+    Text := Text + Space + 'Database type: ' + GetDatabaseType + NewLine;
+    If dbInitType.ItemIndex = 3 Then Begin
+      Text := Text + Space + 'Connection string: ' + dbInitServer.Text + NewLine;
+      Text := Text + Space + 'Login: ' + dbInitLogin.Text + NewLine;
+    End
+    Else Begin
+      If dbInitType.ItemIndex = 5 Then Begin
+        Server := dbInitServer.Text;
+        If Server = '' Then
+          Server := ExpandConstant('{app}\var\netxmsd.db');
+        Text := Text + Space + 'Path to database file: ' + Server + NewLine;
+      End
+      Else Begin
+        Server := dbInitServer.Text;
+        If Server = '' Then
+          Server := 'localhost';
+        Text := Text + Space + 'Server: ' + Server + NewLine;
+        Text := Text + Space + 'Database name: ' + dbInitName.Text + NewLine;
+        Text := Text + Space + 'Login: ' + dbInitLogin.Text + NewLine;
+      End;
+    End;
+  End;
+
+  Result := Text;
+End;
+
+Function GetServerConfigEntries(arg : String): String;
+Var options, dbFile : String;
+Begin
+  options := '-A DBDriver=' + GetDatabaseDriverName;
+  If dbInitType.ItemIndex = 5 Then { SQLite }
+  Begin
+    dbFile := dbInitServer.Text;
+    If dbFile = '' Then
+      dbFile := ExpandConstant('{app}\var\netxmsd.db');
+    options := options + ' -A "DBName=' + dbFile + '"';
+  End Else Begin
+    options := options + ' -A DBServer=';
+    If dbInitServer.Text = '' Then
+      options := options + 'localhost'
+    Else
+      options := options + dbInitServer.Text;
+
+    If (dbInitType.ItemIndex <> 3) And (dbInitName.Text <> '') Then { not Oracle }
+      options := options + ' -A DBName=' + dbInitName.Text;
+
+    If dbInitLogin.Text <> '' Then
+      options := options + ' -A DBLogin=' + dbInitLogin.Text;
+
+    If dbInitPassword.Text <> '' Then
+      options := options + ' -A DBPassword=' + dbInitPassword.Text;
+  End;
+
+  options := options + ' -A "LogFile=' + ExpandConstant('{app}\log\netxmsd.log') + '"';
+  Result := options;
+End;
+
+Function GetDatabaseInitOptions(arg : String): String;
+Var options : String;
+Begin
+  options := '';
+  If dbInitCheckCreateDB.Checked Then Begin
+    options := '-C "' + dbInitDBALogin.Text + '/' + dbInitDBAPassword.Text + '"';
+  End;
+  Result := options;
 End;
 
 Procedure RenameOldFile;

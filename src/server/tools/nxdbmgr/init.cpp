@@ -25,9 +25,9 @@
 /**
  * Check if query is empty
  */
-static bool IsEmptyQuery(const char *pszQuery)
+static bool IsEmptyQuery(const char *query)
 {
-   for (const char *ptr = pszQuery; *ptr != 0; ptr++)
+   for (const char *ptr = query; *ptr != 0; ptr++)
       if ((*ptr != ' ') && (*ptr != '\t') && (*ptr != '\r') && (*ptr != '\n'))
          return false;
    return true;
@@ -36,14 +36,14 @@ static bool IsEmptyQuery(const char *pszQuery)
 /**
  * Find end of query in batch
  */
-static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
+static char *FindEndOfQuery(char *start, char *batchEnd)
 {
-   BYTE *ptr;
+   char *ptr;
    int iState;
    bool proc = false;
    bool procEnd = false;
 
-   for(ptr = pStart, iState = 0; (ptr < pBatchEnd) && (iState != -1); ptr++)
+   for(ptr = start, iState = 0; (ptr < batchEnd) && (iState != -1); ptr++)
    {
       switch(iState)
       {
@@ -63,17 +63,17 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
             }
             else if ((*ptr == 'C') || (*ptr == 'c'))
             {
-               if (!strnicmp((char *)ptr, "CREATE FUNCTION", 15) ||
-                   !strnicmp((char *)ptr, "CREATE OR REPLACE FUNCTION", 26) ||
-                   !strnicmp((char *)ptr, "CREATE PROCEDURE", 16) ||
-                   !strnicmp((char *)ptr, "CREATE OR REPLACE PROCEDURE", 27))
+               if (!strnicmp(ptr, "CREATE FUNCTION", 15) ||
+                   !strnicmp(ptr, "CREATE OR REPLACE FUNCTION", 26) ||
+                   !strnicmp(ptr, "CREATE PROCEDURE", 16) ||
+                   !strnicmp(ptr, "CREATE OR REPLACE PROCEDURE", 27))
                {
                   proc = true;
                }
             }
             else if (proc && ((*ptr == 'E') || (*ptr == 'e')))
             {
-               if (!strnicmp((char *)ptr, "END", 3))
+               if (!strnicmp(ptr, "END", 3))
                {
                   proc = false;
                   procEnd = true;
@@ -104,8 +104,8 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
 bool ExecSQLBatch(const char *batchFile, bool showOutput)
 {
    size_t size;
-   BYTE *batch = LoadFileA(strcmp(batchFile, "-") ? batchFile : NULL, &size);
-   if (batch == NULL)
+   char *batch = reinterpret_cast<char*>(LoadFileA(strcmp(batchFile, "-") ? batchFile : nullptr, &size));
+   if (batch == nullptr)
    {
       if (strcmp(batchFile, "-"))
          _tprintf(_T("ERROR: Cannot load SQL command file %hs\n"), batchFile);
@@ -114,23 +114,22 @@ bool ExecSQLBatch(const char *batchFile, bool showOutput)
       return false;
    }
 
-   BYTE *pQuery, *pNext;
    bool result = false;
-
-   for(pQuery = batch; pQuery < batch + size; pQuery = pNext)
+   char *next;
+   for(char *query = batch; query < batch + size; query = next)
    {
-      pNext = FindEndOfQuery(pQuery, batch + size);
-      if (!IsEmptyQuery((char *)pQuery))
+      next = FindEndOfQuery(query, batch + size);
+      if (!IsEmptyQuery((char *)query))
       {
 #ifdef UNICODE
-         WCHAR *wcQuery = WideStringFromMBString((char *)pQuery);
+         WCHAR *wcQuery = WideStringFromMBString(query);
          result = SQLQuery(wcQuery, showOutput);
          MemFree(wcQuery);
 #else
-         result = SQLQuery((char *)pQuery, showOutput);
+         result = SQLQuery(query, showOutput);
 #endif
          if (!result)
-            pNext = batch + size;
+            next = batch + size;
       }
    }
    MemFree(batch);
@@ -140,42 +139,174 @@ bool ExecSQLBatch(const char *batchFile, bool showOutput)
 /**
  * Initialize database
  */
-void InitDatabase(const char *pszInitFile)
+int InitDatabase(const char *initFile)
 {
-   uuid_t guid;
-   TCHAR szQuery[256], szGUID[64];
+   TCHAR query[256];
 
    _tprintf(_T("Initializing database...\n"));
-   if (!ExecSQLBatch(pszInitFile, false))
+   if (!ExecSQLBatch(initFile, false))
       goto init_failed;
 
    // Generate GUID for user "system"
-   _uuid_generate(guid);
-   _sntprintf(szQuery, 256, _T("UPDATE users SET guid='%s' WHERE id=0"), _uuid_to_string(guid, szGUID));
-   if (!SQLQuery(szQuery))
+   _sntprintf(query, 256, _T("UPDATE users SET guid='%s' WHERE id=0"), uuid::generate().toString().cstr());
+   if (!SQLQuery(query))
       goto init_failed;
 
    // Generate GUID for user "admin"
-   _uuid_generate(guid);
-   _sntprintf(szQuery, 256, _T("UPDATE users SET guid='%s' WHERE id=1"), _uuid_to_string(guid, szGUID));
-   if (!SQLQuery(szQuery))
+   _sntprintf(query, 256, _T("UPDATE users SET guid='%s' WHERE id=1"), uuid::generate().toString().cstr());
+   if (!SQLQuery(query))
       goto init_failed;
 
    // Generate GUID for "everyone" group
-   _uuid_generate(guid);
-   _sntprintf(szQuery, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=%d"), _uuid_to_string(guid, szGUID), GROUP_EVERYONE);
-   if (!SQLQuery(szQuery))
+   _sntprintf(query, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=%d"), uuid::generate().toString().cstr(), GROUP_EVERYONE);
+   if (!SQLQuery(query))
       goto init_failed;
 
    // Generate GUID for "Admins" group
-   _uuid_generate(guid);
-   _sntprintf(szQuery, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=1073741825"), _uuid_to_string(guid, szGUID));
-   if (!SQLQuery(szQuery))
+   _sntprintf(query, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=1073741825"), uuid::generate().toString().cstr());
+   if (!SQLQuery(query))
       goto init_failed;
 
    _tprintf(_T("Database initialized successfully\n"));
-   return;
+   return 0;
 
 init_failed:
    _tprintf(_T("Database initialization failed\n"));
+   return 10;
+}
+
+/**
+ * Create database in MySQL or MariaDB
+ */
+static bool CreateDatabase_MySQL(const TCHAR *dbName, const TCHAR *dbLogin, const TCHAR *dbPassword)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("CREATE DATABASE %s"), dbName);
+   bool success = SQLQuery(query);
+
+   if (success)
+   {
+      _sntprintf(query, 256, _T("GRANT ALL ON %s.* TO %s IDENTIFIED BY '%s'"), dbName, dbLogin, dbPassword);
+      success = SQLQuery(query);
+   }
+
+   if (success)
+   {
+      _sntprintf(query, 256, _T("GRANT ALL ON %s.* TO %s@localhost IDENTIFIED BY '%s'"), dbName, dbLogin, dbPassword);
+      success = SQLQuery(query);
+   }
+
+   if (success)
+      success = SQLQuery(_T("FLUSH PRIVILEGES"));
+   return success;
+}
+
+/**
+ * Create database (actually user) in Oracle
+ */
+static bool CreateDatabase_Oracle(const TCHAR *dbLogin, const TCHAR *dbPassword)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("CREATE USER %s IDENTIFIED BY %s"), dbLogin, dbPassword);
+   bool success = SQLQuery(query);
+
+   if (success)
+   {
+      _sntprintf(query, 256, _T("ALTER USER %s QUOTA UNLIMITED ON USERS"), dbLogin);
+      success = SQLQuery(query);
+   }
+
+   if (success)
+   {
+      _sntprintf(query, 256, _T("GRANT CREATE SESSION, RESOURCE, CREATE VIEW TO %s"), dbLogin);
+      success = SQLQuery(query);
+   }
+
+   return success;
+}
+
+/**
+ * Create database in PostgreSQL
+ */
+static bool CreateDatabase_PostgreSQL(const TCHAR *dbName, const TCHAR *dbLogin, const TCHAR *dbPassword)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("CREATE DATABASE %s"), dbName);
+   bool success = SQLQuery(query);
+
+   if (success)
+   {
+      _sntprintf(query, 256, _T("CREATE USER %s WITH PASSWORD '%s'"), dbLogin, dbPassword);
+      success = SQLQuery(query);
+   }
+
+   if (success)
+   {
+      _sntprintf(query, 256, _T("GRANT ALL PRIVILEGES ON DATABASE %s TO %s"), dbName, dbLogin);
+      success = SQLQuery(query);
+   }
+
+   return success;
+}
+
+/**
+ * Create database in Microsoft SQL
+ */
+static bool CreateDatabase_MSSQL(const TCHAR *dbName, const TCHAR *dbLogin, const TCHAR *dbPassword)
+{
+   TCHAR query[512];
+
+   bool success = SQLQuery(_T("USE master"));
+   if (success)
+   {
+      _sntprintf(query, 512, _T("CREATE DATABASE %s"), dbName);
+      success = SQLQuery(query);
+   }
+
+   if (success)
+   {
+      _sntprintf(query, 512, _T("USE %s"), dbName);
+      success = SQLQuery(query);
+   }
+
+   // TODO: implement grant for Windows authentication
+   if (success && _tcscmp(dbLogin, _T("*")))
+   {
+      _sntprintf(query, 512, _T("sp_addlogin @loginame = '%s', @passwd = '%s', @defdb = '%s'"), dbLogin, dbPassword, dbName);
+      success = SQLQuery(query);
+
+      if (success)
+      {
+         _sntprintf(query, 512, _T("sp_grantdbaccess @loginame = '%s'"), dbLogin);
+         success = SQLQuery(query);
+      }
+
+      if (success)
+      {
+         _sntprintf(query, 512, _T("GRANT ALL TO %s"), dbLogin);
+         success = SQLQuery(query);
+      }
+   }
+
+   return success;
+}
+
+/**
+ * Create database and database user
+ */
+bool CreateDatabase(const char *driver, const TCHAR *dbName, const TCHAR *dbLogin, const TCHAR *dbPassword)
+{
+   _tprintf(_T("Creating database and user...\n"));
+
+   if (!stricmp(driver, "mssql"))
+      return CreateDatabase_MSSQL(dbName, dbLogin, dbPassword);
+   if (!stricmp(driver, "mysql") || !stricmp(driver, "mariadb"))
+      return CreateDatabase_MySQL(dbName, dbLogin, dbPassword);
+   if (!stricmp(driver, "oracle"))
+      return CreateDatabase_Oracle(dbLogin, dbPassword);
+   if (!stricmp(driver, "pgsql"))
+      return CreateDatabase_PostgreSQL(dbName, dbLogin, dbPassword);
+
+   _tprintf(_T("Database creation is not implemented for selected database type"));
+   return false;
 }

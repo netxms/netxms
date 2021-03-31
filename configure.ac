@@ -872,13 +872,11 @@ AC_ARG_WITH(dist,
 	NCDRV_MODULES="anysms kannel msteams mymobile nexmo nxagent slack smseagle telegram text2reach websms"
    HDLINK_DIRS="jira redmine"
    PDSDRV_DIRS="influxdb rrdtool"
-	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music templates"
 	CLIENT_COMPONENTS="java nxalarm nxevent nxpush nxshell nxnotify"
 	SERVER_COMPONENTS="nxreportd"
-	SERVER_TOOLS="nxconfig"
 	DIST_BUILD="yes"
 )
 
@@ -4765,8 +4763,6 @@ AC_CONFIG_FILES([
 	src/server/tools/nxaction/Makefile
 	src/server/tools/nxadm/Makefile
 	src/server/tools/nxap/Makefile
-	src/server/tools/nxconfig/Makefile
-	src/server/tools/nxconfig/res/Makefile
 	src/server/tools/nxdbmgr/Makefile
 	src/server/tools/nxdownload/Makefile
 	src/server/tools/nxget/Makefile
