@@ -60,6 +60,7 @@ public class MainWindow extends ApplicationWindow
    private List<Perspective> perspectives;
    private Perspective currentPerspective;
    private Perspective pinboardPerspective;
+   private boolean verticalMainMenu = true;
 
    /**
     * @param parentShell
@@ -109,34 +110,74 @@ public class MainWindow extends ApplicationWindow
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
-      layout.numColumns = 2;
+      layout.numColumns = verticalMainMenu ? 3 : 1;
       windowContent.setLayout(layout);
-
-      mainMenu = new ToolBar(windowContent, SWT.FLAT | SWT.WRAP | SWT.RIGHT);
-      mainMenu.setFont(font);
+      
+      Composite menuArea = new Composite(windowContent, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.numColumns = verticalMainMenu ? 1 : 2;
+      menuArea.setLayout(layout);
       GridData gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;
+      if (verticalMainMenu)
+      {
+         gd.grabExcessVerticalSpace = true;
+         gd.verticalAlignment = SWT.FILL;
+      }
+      else
+      {
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalAlignment = SWT.FILL;
+      }
+      menuArea.setLayoutData(gd);
+
+      mainMenu = new ToolBar(menuArea, SWT.FLAT | SWT.WRAP | SWT.RIGHT | (verticalMainMenu ? SWT.VERTICAL : SWT.HORIZONTAL));
+      mainMenu.setFont(font);
+      gd = new GridData();
+      if (verticalMainMenu)
+      {
+         gd.grabExcessVerticalSpace = true;
+         gd.verticalAlignment = SWT.FILL;
+      }
+      else
+      {
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalAlignment = SWT.FILL;
+      }
       mainMenu.setLayoutData(gd);
 
-      toolsMenu = new ToolBar(windowContent, SWT.FLAT | SWT.WRAP | SWT.RIGHT);
+      toolsMenu = new ToolBar(menuArea, SWT.FLAT | SWT.WRAP | SWT.RIGHT | (verticalMainMenu ? SWT.VERTICAL : SWT.HORIZONTAL));
       toolsMenu.setFont(font);
 
       ToolItem userMenu = new ToolItem(toolsMenu, SWT.PUSH);
       userMenu.setImage(ResourceManager.getImage("icons/user-menu.png"));
       NXCSession session = Registry.getSession();
-      userMenu.setText(session.getUserName() + "@" + session.getServerName());
+      if (verticalMainMenu)
+         userMenu.setToolTipText(session.getUserName() + "@" + session.getServerName());
+      else
+         userMenu.setText(session.getUserName() + "@" + session.getServerName());
 
-      Label separator = new Label(windowContent, SWT.SEPARATOR | SWT.HORIZONTAL);
+      ToolItem appPreferencesMenu = new ToolItem(toolsMenu, SWT.PUSH);
+      appPreferencesMenu.setImage(ResourceManager.getImage("icons/preferences.png"));
+      appPreferencesMenu.setToolTipText("Console preferences");
+
+      Label separator = new Label(windowContent, SWT.SEPARATOR | (verticalMainMenu ? SWT.VERTICAL : SWT.HORIZONTAL));
       gd = new GridData();
-      gd.horizontalSpan = 2;
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;
+      if (verticalMainMenu)
+      {
+         gd.grabExcessVerticalSpace = true;
+         gd.verticalAlignment = SWT.FILL;
+      }
+      else
+      {
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalAlignment = SWT.FILL;
+      }
       separator.setLayoutData(gd);
 
       perspectiveArea = new Composite(windowContent, SWT.NONE);
       gd = new GridData();
-      gd.horizontalSpan = 2;
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -181,16 +222,16 @@ public class MainWindow extends ApplicationWindow
     */
    private void setupPerspectiveSwitcher()
    {
-      ToolItem appMenu = new ToolItem(mainMenu, SWT.PUSH);
-      appMenu.setImage(ResourceManager.getImage("icons/app-menu.png"));
-
       perspectives = Registry.getInstance().getPerspectives();
       for(final Perspective p : perspectives)
       {
          p.bindToWindow(this);
-         ToolItem item = new ToolItem(mainMenu, SWT.PUSH);
-         item.setText(p.getName());
+         ToolItem item = new ToolItem(mainMenu, SWT.RADIO);
          item.setImage(p.getImage());
+         if (verticalMainMenu)
+            item.setToolTipText(p.getName());
+         else
+            item.setText(p.getName());
          item.addSelectionListener(new SelectionListener() {
             @Override
             public void widgetSelected(SelectionEvent e)
