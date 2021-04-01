@@ -83,7 +83,7 @@ public class General extends PreferencePage
       config = settings;     
       this.saveToDatabase = saveToDatabase;
    }
-	
+
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
@@ -288,8 +288,8 @@ public class General extends PreferencePage
 			}
 		});
       refreshIntervalSpinner.setEnabled(config.isAutoRefresh()); 
-      
-      timeSelector = new TimePeriodSelector(dialogArea, SWT.NONE, config.timePeriod());
+
+      timeSelector = new TimePeriodSelector(dialogArea, SWT.NONE, config.getTimePeriod());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -355,13 +355,8 @@ public class General extends PreferencePage
       config.setLegendPosition((int)Math.pow(2,legendLocation.getSelectionIndex()));
       config.setTranslucent(checkTranslucent.getSelection());
       config.setLineWidth(lineWidth.getSelection());
-		config.setTimeFrameType(timeSelector.getTimeFrameType());
-		config.setTimeUnits(timeSelector.getTimeUnitValue());
-		config.setTimeRange(timeSelector.getTimeRangeValue());
-		config.setTimeFrom(timeSelector.getTimeFrom());
-		config.setTimeTo(timeSelector.getTimeTo());
+      config.setTimePeriod(timeSelector.getTimePeriod());
 		config.setUseMultipliers(checkUseMultipliers.getSelection());
-
 		config.setMinYScaleValue(yAxisRange.getMinY());
 		config.setMaxYScaleValue(yAxisRange.getMaxY());
       config.setModifyYBase(yAxisRange.modifyYBase());

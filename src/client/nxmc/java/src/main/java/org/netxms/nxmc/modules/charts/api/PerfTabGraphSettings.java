@@ -20,8 +20,8 @@ package org.netxms.nxmc.modules.charts.api;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.GraphItemStyle;
-import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
@@ -60,13 +60,13 @@ public class PerfTabGraphSettings
    
    @Element(required = false)
    private double maxYScaleValue = 100;
-   
+
    @Element(required = false)
    private int timeRange = 1;
-   
+
    @Element(required = false)
    private int timeUnits = 1;
-	
+
 	@Element(required=false)
 	private int type = GraphItemStyle.LINE;
 	
@@ -93,10 +93,10 @@ public class PerfTabGraphSettings
 
    @Element(required = false)
    private boolean modifyYBase = false;
-   
+
    @Element(required = false)
    private boolean invertedValues = false;
-	
+
    private PerfTabDci runtimeDciInfo = null;
 
 	/**
@@ -402,13 +402,13 @@ public class PerfTabGraphSettings
     */
    public long getTimeRangeMillis()
    {
-      switch(timeUnits)
+      switch(TimeUnit.getByValue(timeUnits))
       {
-         case GraphSettings.TIME_UNIT_MINUTE:
+         case MINUTE:
             return (long)timeRange * 60L * 1000L;
-         case GraphSettings.TIME_UNIT_HOUR:
+         case HOUR:
             return (long)timeRange * 60L * 60L * 1000L;
-         case GraphSettings.TIME_UNIT_DAY:
+         case DAY:
             return (long)timeRange * 24L * 60L * 60L * 1000L;
       }
       return 0;

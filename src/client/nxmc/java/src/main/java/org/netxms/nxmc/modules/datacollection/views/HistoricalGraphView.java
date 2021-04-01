@@ -51,6 +51,7 @@ import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.ChartConfig;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
@@ -92,10 +93,8 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
 
    public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph"; //$NON-NLS-1$
 
-   private static final int[] presetUnits = { GraphSettings.TIME_UNIT_MINUTE, GraphSettings.TIME_UNIT_MINUTE,
-         GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR,
-         GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY,
-         GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY };
+   private static final TimeUnit[] presetUnits = { TimeUnit.MINUTE, TimeUnit.MINUTE, TimeUnit.HOUR, TimeUnit.HOUR, TimeUnit.HOUR,
+         TimeUnit.HOUR, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY, TimeUnit.DAY };
    private static final int[] presetRanges = { 10, 30, 1, 2, 4, 12, 1, 2, 5, 7, 31, 365 };
    private static final String[] presetNames = 
          { i18n.tr("Last 10 minutes"), i18n.tr("Last 30 minutes"), i18n.tr("Last hour"), i18n.tr("Last 2 hours"),
@@ -357,12 +356,6 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
          multipleSourceNodes = (nodeId != settings.getDciList()[0].nodeId);
 
       chart.setItemStyles(styles);
-
-      if (settings.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW)
-      {
-         settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
-         settings.setTimeTo(new Date(System.currentTimeMillis()));
-      }
 
       updateChart();
 
@@ -711,10 +704,10 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
 
       presetActions = createPresetActions(new PresetHandler() {
          @Override
-         public void onPresetSelected(int units, int range)
+         public void onPresetSelected(TimeUnit unit, int range)
          {
-            settings.setTimeUnits(units);
-            settings.setTimeRange(range);
+            settings.getTimePeriod().setTimeUnit(unit);
+            settings.getTimePeriod().setTimeRange(range);
             updateChart();
          }
       });
@@ -889,11 +882,11 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
          String templateError = "More than one node is used for template creation.\nThis may cause undefined behaviour.";
          errorMessage = (errorMessage == null) ? templateError : errorMessage + "\n\n" + templateError;
       }
-      
+
       int result = SaveGraphDlg.OK;
       GraphSettings templateGS = null;
       final long oldGraphId = settings.getId();
-      if(asTemplate)
+      if (asTemplate)
       {
          templateGS = new GraphSettings(0, session.getUserId(), 0, new ArrayList<AccessListElement>(0));
          SaveGraphDlg dlg = new SaveGraphDlg(getWindow().getShell(), graphName, errorMessage, canBeOverwritten);
@@ -901,7 +894,7 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
          if (result == Window.CANCEL)
             return;
          templateGS.setName(dlg.getName());
-         templateGS.setConfig(settings);
+         templateGS.update(settings);
          templateGS.setFlags(GraphSettings.GRAPH_FLAG_TEMPLATE);
       }
       else
@@ -919,9 +912,8 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
          else
             settings.setName(graphName);
       }    
-      
-      final GraphSettings gs = asTemplate ? templateGS : settings;
 
+      final GraphSettings gs = asTemplate ? templateGS : settings;
       if (result == SaveGraphDlg.OVERRIDE)
       {
          new Job(i18n.tr("Save graph settings"), this) {
@@ -1088,10 +1080,10 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
       /**
        * Called when new preset selected
        * 
-       * @param units
-       * @param range
+       * @param unit time unit
+       * @param range time range in units
        */
-      public void onPresetSelected(int units, int range);
+      public void onPresetSelected(TimeUnit unit, int range);
    }
 
    /**

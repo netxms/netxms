@@ -28,7 +28,6 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -43,9 +42,9 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
+import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.PerfTabDci;
@@ -198,9 +197,9 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 
       presetActions = HistoricalGraphView.createPresetActions(new HistoricalGraphView.PresetHandler() {
          @Override
-         public void onPresetSelected(int units, int range)
+         public void onPresetSelected(TimeUnit unit, int range)
          {
-            settings.setTimeUnits(units);
+            settings.setTimeUnits(unit.getValue());
             settings.setTimeRange(range);
             refreshData();
          }
