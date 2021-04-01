@@ -32,7 +32,11 @@ import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PinboardPerspective;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.modules.alarms.AlarmsPerspective;
-import org.netxms.nxmc.modules.objects.ObjectsPerspective;
+import org.netxms.nxmc.modules.objects.DashboardsPerspective;
+import org.netxms.nxmc.modules.objects.InfrastructurePerspective;
+import org.netxms.nxmc.modules.objects.MapsPerspective;
+import org.netxms.nxmc.modules.objects.NetworkPerspective;
+import org.netxms.nxmc.modules.objects.TemplatesPerspective;
 
 /**
  * Global registry
@@ -104,7 +108,11 @@ public final class Registry
    private Registry()
    {
       perspectives.add(new AlarmsPerspective());
-      perspectives.add(new ObjectsPerspective());
+      perspectives.add(new NetworkPerspective());
+      perspectives.add(new InfrastructurePerspective());
+      perspectives.add(new MapsPerspective());
+      perspectives.add(new DashboardsPerspective());
+      perspectives.add(new TemplatesPerspective());
       perspectives.add(new ConfigurationPerspective());
       perspectives.add(new PinboardPerspective());
    }

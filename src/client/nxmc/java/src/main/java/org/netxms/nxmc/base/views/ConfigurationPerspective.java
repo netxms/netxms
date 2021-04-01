@@ -125,18 +125,12 @@ public class ConfigurationPerspective extends Perspective
       viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new LabelProvider() {
-         /**
-          * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
-          */
          @Override
          public Image getImage(Object element)
          {
             return imageCache.create(((ConfigurationPerspectiveElement)element).getImage());
          }
 
-         /**
-          * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-          */
          @Override
          public String getText(Object element)
          {
@@ -154,6 +148,9 @@ public class ConfigurationPerspective extends Perspective
       });
    }
 
+   /**
+    * Change configuration view
+    */
    private void changeView()
    {
       if (currentView != null)

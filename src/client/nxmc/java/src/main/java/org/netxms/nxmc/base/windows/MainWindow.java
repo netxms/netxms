@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,16 @@
 package org.netxms.nxmc.base.windows;
 
 import java.util.List;
+import org.eclipse.jface.preference.PreferenceDialog;
+import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
@@ -39,12 +43,15 @@ import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.preferencepages.Appearance;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Main window
@@ -52,6 +59,7 @@ import org.slf4j.LoggerFactory;
 public class MainWindow extends ApplicationWindow
 {
    private static Logger logger = LoggerFactory.getLogger(MainWindow.class);
+   private static I18n i18n = LocalizationHelper.getI18n(MainWindow.class);
 
    private Composite windowContent;
    private ToolBar mainMenu;
@@ -60,7 +68,7 @@ public class MainWindow extends ApplicationWindow
    private List<Perspective> perspectives;
    private Perspective currentPerspective;
    private Perspective pinboardPerspective;
-   private boolean verticalMainMenu = true;
+   private boolean verticalLayout;
 
    /**
     * @param parentShell
@@ -69,6 +77,7 @@ public class MainWindow extends ApplicationWindow
    {
       super(parentShell);
       addStatusLine();
+      verticalLayout = PreferenceStore.getInstance().getAsBoolean("Appearance.VerticalLayout", true);
    }
 
    /**
@@ -110,17 +119,17 @@ public class MainWindow extends ApplicationWindow
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
-      layout.numColumns = verticalMainMenu ? 3 : 1;
+      layout.numColumns = verticalLayout ? 3 : 1;
       windowContent.setLayout(layout);
       
       Composite menuArea = new Composite(windowContent, SWT.NONE);
       layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
-      layout.numColumns = verticalMainMenu ? 1 : 2;
+      layout.numColumns = verticalLayout ? 1 : 2;
       menuArea.setLayout(layout);
       GridData gd = new GridData();
-      if (verticalMainMenu)
+      if (verticalLayout)
       {
          gd.grabExcessVerticalSpace = true;
          gd.verticalAlignment = SWT.FILL;
@@ -132,10 +141,10 @@ public class MainWindow extends ApplicationWindow
       }
       menuArea.setLayoutData(gd);
 
-      mainMenu = new ToolBar(menuArea, SWT.FLAT | SWT.WRAP | SWT.RIGHT | (verticalMainMenu ? SWT.VERTICAL : SWT.HORIZONTAL));
+      mainMenu = new ToolBar(menuArea, SWT.FLAT | SWT.WRAP | SWT.RIGHT | (verticalLayout ? SWT.VERTICAL : SWT.HORIZONTAL));
       mainMenu.setFont(font);
       gd = new GridData();
-      if (verticalMainMenu)
+      if (verticalLayout)
       {
          gd.grabExcessVerticalSpace = true;
          gd.verticalAlignment = SWT.FILL;
@@ -147,13 +156,13 @@ public class MainWindow extends ApplicationWindow
       }
       mainMenu.setLayoutData(gd);
 
-      toolsMenu = new ToolBar(menuArea, SWT.FLAT | SWT.WRAP | SWT.RIGHT | (verticalMainMenu ? SWT.VERTICAL : SWT.HORIZONTAL));
+      toolsMenu = new ToolBar(menuArea, SWT.FLAT | SWT.WRAP | SWT.RIGHT | (verticalLayout ? SWT.VERTICAL : SWT.HORIZONTAL));
       toolsMenu.setFont(font);
 
       ToolItem userMenu = new ToolItem(toolsMenu, SWT.PUSH);
       userMenu.setImage(ResourceManager.getImage("icons/user-menu.png"));
       NXCSession session = Registry.getSession();
-      if (verticalMainMenu)
+      if (verticalLayout)
          userMenu.setToolTipText(session.getUserName() + "@" + session.getServerName());
       else
          userMenu.setText(session.getUserName() + "@" + session.getServerName());
@@ -161,10 +170,17 @@ public class MainWindow extends ApplicationWindow
       ToolItem appPreferencesMenu = new ToolItem(toolsMenu, SWT.PUSH);
       appPreferencesMenu.setImage(ResourceManager.getImage("icons/preferences.png"));
       appPreferencesMenu.setToolTipText("Console preferences");
+      appPreferencesMenu.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            showPreferences();
+         }
+      });
 
-      Label separator = new Label(windowContent, SWT.SEPARATOR | (verticalMainMenu ? SWT.VERTICAL : SWT.HORIZONTAL));
+      Label separator = new Label(windowContent, SWT.SEPARATOR | (verticalLayout ? SWT.VERTICAL : SWT.HORIZONTAL));
       gd = new GridData();
-      if (verticalMainMenu)
+      if (verticalLayout)
       {
          gd.grabExcessVerticalSpace = true;
          gd.verticalAlignment = SWT.FILL;
@@ -228,7 +244,7 @@ public class MainWindow extends ApplicationWindow
          p.bindToWindow(this);
          ToolItem item = new ToolItem(mainMenu, SWT.RADIO);
          item.setImage(p.getImage());
-         if (verticalMainMenu)
+         if (verticalLayout)
             item.setToolTipText(p.getName());
          else
             item.setText(p.getName());
@@ -290,5 +306,25 @@ public class MainWindow extends ApplicationWindow
       logger.debug("Request to pin view with ID=" + view.getId());
       view.globalizeId();
       pinboardPerspective.addMainView(view, false, true);
+   }
+
+   /**
+    * Show console preferences
+    */
+   private void showPreferences()
+   {
+      PreferenceManager pm = new PreferenceManager();
+      pm.addToRoot(new PreferenceNode("appearance", new Appearance()));
+
+      PreferenceDialog dlg = new PreferenceDialog(getShell(), pm) {
+         @Override
+         protected void configureShell(Shell newShell)
+         {
+            super.configureShell(newShell);
+            newShell.setText(i18n.tr("Console Preferences"));
+         }
+      };
+      dlg.setBlockOnOpen(true);
+      dlg.open();
    }
 }

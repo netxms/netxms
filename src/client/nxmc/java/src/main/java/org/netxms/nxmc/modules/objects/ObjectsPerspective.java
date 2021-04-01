@@ -18,33 +18,44 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import java.util.HashSet;
+import java.util.Set;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
-import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.LastValuesView;
 import org.netxms.nxmc.modules.datacollection.views.PerformanceView;
 import org.netxms.nxmc.modules.objects.views.Dot1xStatusView;
 import org.netxms.nxmc.modules.objects.views.EntityMIBView;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
-import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.modules.objects.views.ObjectOverviewView;
 import org.netxms.nxmc.modules.objects.views.SwitchForwardingDatabaseView;
-import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
+import org.netxms.nxmc.modules.objects.widgets.ObjectTree;
 
 /**
  * Object browser perspective
  */
-public class ObjectsPerspective extends Perspective
+public abstract class ObjectsPerspective extends Perspective
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ObjectsPerspective.class);
+   private SubtreeType subtreeType;
+   private ObjectTree objectTree;
 
    /**
+    * Create new object perspective
+    *
+    * @param id
     * @param name
+    * @param image
+    * @param subtreeType
     */
-   public ObjectsPerspective()
+   protected ObjectsPerspective(String id, String name, Image image, SubtreeType subtreeType)
    {
-      super("Objects", i18n.tr("Objects"), ResourceManager.getImage("icons/perspective-objects.png"));
+      super(id, name, image);
+      this.subtreeType = subtreeType;
    }
 
    /**
@@ -56,7 +67,7 @@ public class ObjectsPerspective extends Perspective
       super.configurePerspective(configuration);
       configuration.hasNavigationArea = true;
       configuration.hasSupplementalArea = false;
-      configuration.multiViewNavigationArea = true;
+      configuration.multiViewNavigationArea = false;
       configuration.multiViewMainArea = true;
       configuration.priority = 20;
    }
@@ -67,10 +78,6 @@ public class ObjectsPerspective extends Perspective
    @Override
    protected void configureViews()
    {
-      addNavigationView(new ObjectBrowser(i18n.tr("Network"), ResourceManager.getImageDescriptor("icons/objecttree-network.png"), SubtreeType.NETWORK));
-      addNavigationView(new ObjectBrowser(i18n.tr("Infrastructure"), ResourceManager.getImageDescriptor("icons/objecttree-infrastructure.png"), SubtreeType.INFRASTRUCTURE));
-      addNavigationView(new ObjectBrowser(i18n.tr("Maps"), ResourceManager.getImageDescriptor("icons/objecttree-maps.png"), SubtreeType.MAPS));
-
       addMainView(new ObjectOverviewView());
       addMainView(new LastValuesView());
       addMainView(new InterfacesView());
@@ -78,5 +85,77 @@ public class ObjectsPerspective extends Perspective
       addMainView(new PerformanceView());
       addMainView(new Dot1xStatusView());
       addMainView(new SwitchForwardingDatabaseView());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#createNavigationArea(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected void createNavigationArea(Composite parent)
+   {
+      objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, calculateClassFilter(), true, true);
+      Menu menu = new ObjectContextMenuManager(null, objectTree.getSelectionProvider()).createContextMenu(objectTree.getTreeControl());
+      objectTree.getTreeControl().setMenu(menu);
+      setNavigationSelectionProvider(objectTree.getSelectionProvider());
+   }
+
+   /**
+    * Calculate class filter based on subtree type.
+    *
+    * @return root objects
+    */
+   private Set<Integer> calculateClassFilter()
+   {
+      Set<Integer> classFilter = new HashSet<Integer>();
+      switch(subtreeType)
+      {
+         case INFRASTRUCTURE:
+            classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+            classFilter.add(AbstractObject.OBJECT_CONTAINER);
+            classFilter.add(AbstractObject.OBJECT_CLUSTER);
+            classFilter.add(AbstractObject.OBJECT_CHASSIS);
+            classFilter.add(AbstractObject.OBJECT_RACK);
+            classFilter.add(AbstractObject.OBJECT_NODE);
+            classFilter.add(AbstractObject.OBJECT_INTERFACE);
+            classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
+            classFilter.add(AbstractObject.OBJECT_VPNCONNECTOR);
+            classFilter.add(AbstractObject.OBJECT_NETWORKSERVICE);
+            classFilter.add(AbstractObject.OBJECT_CONDITION);
+            classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
+            classFilter.add(AbstractObject.OBJECT_SENSOR);
+            break;
+         case MAPS:
+            classFilter.add(AbstractObject.OBJECT_NETWORKMAP);
+            classFilter.add(AbstractObject.OBJECT_NETWORKMAPGROUP);
+            classFilter.add(AbstractObject.OBJECT_NETWORKMAPROOT);
+            break;
+         case NETWORK:
+            classFilter.add(AbstractObject.OBJECT_NETWORK);
+            classFilter.add(AbstractObject.OBJECT_ZONE);
+            classFilter.add(AbstractObject.OBJECT_SUBNET);
+            classFilter.add(AbstractObject.OBJECT_NODE);
+            classFilter.add(AbstractObject.OBJECT_INTERFACE);
+            classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
+            classFilter.add(AbstractObject.OBJECT_VPNCONNECTOR);
+            classFilter.add(AbstractObject.OBJECT_NETWORKSERVICE);
+            break;
+         case TEMPLATES:
+            classFilter.add(AbstractObject.OBJECT_TEMPLATE);
+            classFilter.add(AbstractObject.OBJECT_TEMPLATEGROUP);
+            classFilter.add(AbstractObject.OBJECT_TEMPLATEROOT);
+            break;
+         case DASHBOARDS:
+            classFilter.add(AbstractObject.OBJECT_DASHBOARD);
+            classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
+            classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
+            break;
+         case BUSINESS_SERVICES:
+            classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICE);
+            classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEROOT);
+            classFilter.add(AbstractObject.OBJECT_NODELINK);
+            classFilter.add(AbstractObject.OBJECT_SLMCHECK);
+            break;
+      }
+      return classFilter;
    }
 }
