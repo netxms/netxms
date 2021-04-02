@@ -84,7 +84,7 @@ public class ViewStack extends Composite
             if (view != null)
             {
                view.activate();
-               if (view instanceof ViewWithContext)
+               if ((view instanceof ViewWithContext) && !ignoreContextForView(tabItem))
                {
                   if (((ViewWithContext)view).getContext() != context)
                      ((ViewWithContext)view).setContext(context);
@@ -243,8 +243,7 @@ public class ViewStack extends Composite
       CTabItem tab = tabs.get(view.getId());
       if (tab != null)
       {
-         Object ignoreContext = tab.getData("ignoreContext");
-         tab.setText((ignoreContext != null) && (ignoreContext instanceof Boolean) && (Boolean)ignoreContext ? view.getFullName() : view.getName());
+         tab.setText(ignoreContextForView(tab) ? view.getFullName() : view.getName());
          tab.setImage(view.getImage());
          updated = true;
       }
@@ -397,5 +396,17 @@ public class ViewStack extends Composite
    public void setAllViewsAaCloseable(boolean allViewsAreCloseable)
    {
       this.allViewsAreCloseable = allViewsAreCloseable;
+   }
+
+   /**
+    * Check if context should be ignored for view in given tab.
+    *
+    * @param tabItem tab item
+    * @return true if context should be ignored
+    */
+   private static boolean ignoreContextForView(CTabItem tabItem)
+   {
+      Object ignoreContext = tabItem.getData("ignoreContext");
+      return (ignoreContext != null) && (ignoreContext instanceof Boolean) && (Boolean)ignoreContext;
    }
 }
