@@ -135,12 +135,12 @@
       </dependency>
       <dependency>
          <groupId>com.microsoft.sqlserver</groupId>
-         <artifactId>sqljdbc4</artifactId>
-         <version>4.2</version>
+         <artifactId>mssql-jdbc</artifactId>
+         <version>9.2.1.jre8</version>
          <scope>runtime</scope>
       </dependency>
       <dependency>
-         <groupId>com.oracle</groupId>
+         <groupId>com.oracle.database.jdbc</groupId>
          <artifactId>ojdbc8</artifactId>
          <version>12.2.0.1</version>
          <scope>runtime</scope>
