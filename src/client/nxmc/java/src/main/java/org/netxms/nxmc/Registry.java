@@ -37,6 +37,7 @@ import org.netxms.nxmc.modules.objects.InfrastructurePerspective;
 import org.netxms.nxmc.modules.objects.MapsPerspective;
 import org.netxms.nxmc.modules.objects.NetworkPerspective;
 import org.netxms.nxmc.modules.objects.TemplatesPerspective;
+import org.netxms.nxmc.modules.worldmap.WorldMapPerspective;
 
 /**
  * Global registry
@@ -115,6 +116,7 @@ public final class Registry
       perspectives.add(new TemplatesPerspective());
       perspectives.add(new ConfigurationPerspective());
       perspectives.add(new PinboardPerspective());
+      perspectives.add(new WorldMapPerspective());
    }
 
    /**

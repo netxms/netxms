@@ -34,6 +34,7 @@ public abstract class Job
    private static final int TYPE_USER = 2;
 
    private int id;
+   private JobState state;
    private Display display;
    private View view;
    private MessageBar messageBar;
@@ -78,6 +79,7 @@ public abstract class Job
    public Job(String name, View view, MessageBar messageBar, Display display)
    {
       this.id = -1;
+      this.state = JobState.PENDING;
       this.name = name;
       this.type = TYPE_USER;
       this.view = view;
@@ -106,10 +108,21 @@ public abstract class Job
    }
 
    /**
+    * Get job state.
+    *
+    * @return job state
+    */
+   public JobState getState()
+   {
+      return state;
+   }
+
+   /**
     * Execute job.
     */
    protected void execute()
    {
+      state = JobState.RUNNING;
       monitor = new JobProgressMonitor();
       try
       {
@@ -144,6 +157,7 @@ public abstract class Job
       {
          monitor.done();
          jobFinalize();
+         state = JobState.COMPLETED;
       }
    }
 
@@ -155,6 +169,16 @@ public abstract class Job
       JobManager.getInstance().submit(this);
    }
    
+   /**
+    * Schedule job for later execution.
+    *
+    * @param delay execution delay in milliseconds
+    */
+   public void schedule(long delay)
+   {
+      JobManager.getInstance().schedule(this, delay);
+   }
+
    /**
     * Set/remove system background job mark.
     * 
@@ -269,6 +293,14 @@ public abstract class Job
    protected Display getDisplay()
    {
       return display;
+   }
+
+   /**
+    * Set job to "scheduled" state
+    */
+   protected void setScheduledState()
+   {
+      state = JobState.SCHEDULED;
    }
 
    /**

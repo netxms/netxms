@@ -269,7 +269,7 @@ public class ObjectContextMenuManager extends MenuManager
          return 0;
       return ((AbstractObject)selection.getFirstElement()).getObjectId();
    }
-   
+
    /**
     * Action for generic object creation (when only object name is requested)
     */
@@ -284,7 +284,7 @@ public class ObjectContextMenuManager extends MenuManager
          this.objectClass = objectClass;
          this.className = className;
       }
-   
+
       /**
        * @see org.eclipse.jface.action.Action#run()
        */
