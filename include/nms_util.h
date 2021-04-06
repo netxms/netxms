@@ -2666,6 +2666,7 @@ public:
    static ByteStream *load(const TCHAR *file);
 
    void seek(size_t pos) { if (pos <= m_size) m_pos = pos; }
+
    size_t pos() const { return m_pos; }
    size_t size() const { return m_size; }
    bool eos() { return m_pos == m_size; }
@@ -2676,6 +2677,8 @@ public:
    const BYTE *buffer() const { return m_data; }
 
    BYTE *takeBuffer();
+
+   void clear() { m_size = 0; m_pos = 0; }
 
    void write(const void *data, size_t size);
    void write(char c) { write(&c, 1); }

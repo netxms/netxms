@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for Telegram messenger
-** Copyright (C) 2014-2020 Raden Solutions
+** Copyright (C) 2014-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -36,6 +36,8 @@
 
 #define DISABLE_IP_V4 1
 #define DISABLE_IP_V6 2
+#define LONG_POLLING  4
+
 #define NUMBERS_TEXT _T("1234567890")
 
 /**
@@ -76,10 +78,10 @@ struct Chat
    Chat(const TCHAR *key, const TCHAR *value)
    {
       const TCHAR *p = _tcschr(key, _T('.'));
-      if (p != NULL)
+      if (p != nullptr)
       {
          p++;
-         id = _tcstoll(p, NULL, 10);
+         id = _tcstoll(p, nullptr, 10);
       }
       else
       {
@@ -159,22 +161,26 @@ private:
    MUTEX m_chatsLock;
    CONDITION m_shutdownCondition;
    bool m_shutdownFlag;
-   INT64 m_nextUpdateId;
+   int64_t m_nextUpdateId;
    NCDriverStorageManager *m_storageManager;   
    TCHAR m_parseMode[32];
+   bool m_longPollingMode;
+   uint32_t m_pollingInterval;
 
    TelegramDriver(NCDriverStorageManager *storageManager) : NCDriver(), m_chats(Ownership::True)
    {
       m_updateHandlerThread = INVALID_THREAD_HANDLE;
       memset(m_authToken, 0, sizeof(m_authToken));
       m_ipVersion = CURL_IPRESOLVE_WHATEVER;
-      m_proxy = NULL;
-      m_botName = NULL;
+      m_proxy = nullptr;
+      m_botName = nullptr;
       m_chatsLock = MutexCreateFast();
       m_shutdownCondition = ConditionCreate(true);
       m_shutdownFlag = false;
       m_nextUpdateId = 0;
       m_storageManager = storageManager;
+      m_longPollingMode = true;
+      m_pollingInterval = 300;
    }
 
    static THREAD_RESULT THREAD_CALL updateHandler(void *arg);
@@ -209,22 +215,9 @@ TelegramDriver::~TelegramDriver()
  */
 static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
 {
-   ResponseData *response = static_cast<ResponseData*>(context);
-   if ((response->allocated - response->size) < (size * nmemb))
-   {
-      char *newData = MemRealloc(response->data, response->allocated + CURL_MAX_HTTP_HEADER);
-      if (newData == NULL)
-      {
-         return 0;
-      }
-      response->data = newData;
-      response->allocated += CURL_MAX_HTTP_HEADER;
-   }
-
-   memcpy(response->data + response->size, ptr, size * nmemb);
-   response->size += size * nmemb;
-
-   return size * nmemb;
+   size_t bytes = size * nmemb;
+   static_cast<ByteStream*>(context)->write(ptr, bytes);
+   return bytes;
 }
 
 /**
@@ -249,8 +242,9 @@ static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, lo
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Telegram Driver/" NETXMS_VERSION_STRING_A);
 
-   ResponseData *responseData = MemAllocStruct<ResponseData>();
-   curl_easy_setopt(curl, CURLOPT_WRITEDATA, responseData);
+   ByteStream responseData(32768);
+   responseData.setAllocationStep(32768);
+   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
    curl_easy_setopt(curl, CURLOPT_IPRESOLVE, ipVersion);
 
    if (proxy != nullptr)
@@ -301,12 +295,12 @@ static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, lo
    {
       if (curl_easy_perform(curl) == CURLE_OK)
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("Got %d bytes"), responseData->size);
-         if (responseData->allocated > 0)
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Got %d bytes"), static_cast<int>(responseData.size()));
+         if (responseData.size() > 0)
          {
-            responseData->data[responseData->size] = 0;
+            responseData.write('\0');
             json_error_t error;
-            response = json_loads(responseData->data, 0, &error);
+            response = json_loads(reinterpret_cast<const char*>(responseData.buffer()), 0, &error);
             if (response == nullptr)
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot parse API response (%hs)"), error.text);
@@ -322,8 +316,6 @@ static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, lo
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
    }
-   MemFree(responseData->data);
-   MemFree(responseData);
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
    MemFree(json);
@@ -396,20 +388,23 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
 
    char authToken[64];
    char protocol[8] = "http";
-   uint32_t connType = 0;
+   uint32_t options = LONG_POLLING;
+   uint32_t pollingInterval = 300;
    TCHAR parseMode[32] = _T("");
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("AuthToken"), CT_MB_STRING, 0, 0, sizeof(authToken), 0, authToken, NULL },
-		{ _T("DisableIPv4"), CT_BOOLEAN_FLAG_32, 0, 0, DISABLE_IP_V4, 0, &connType, NULL },
-		{ _T("DisableIPv6"), CT_BOOLEAN_FLAG_32, 0, 0, DISABLE_IP_V6, 0, &connType, NULL },
-		{ _T("Proxy"), CT_MB_STRING, 0, 0, sizeof(proxy.hostname), 0, proxy.hostname, NULL },
-		{ _T("ProxyPort"), CT_WORD, 0, 0, 0, 0, &proxy.port, NULL },
-		{ _T("ProxyType"), CT_MB_STRING, 0, 0, sizeof(protocol), 0, protocol, NULL },
-		{ _T("ProxyUser"), CT_MB_STRING, 0, 0, sizeof(proxy.user), 0, proxy.user, NULL },
-		{ _T("ProxyPassword"), CT_MB_STRING, 0, 0, sizeof(proxy.password), 0, proxy.password, NULL },
-      { _T("ParseMode"), CT_STRING, 0, 0, sizeof(parseMode), 0, parseMode, NULL },
-		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
+		{ _T("AuthToken"), CT_MB_STRING, 0, 0, sizeof(authToken), 0, authToken, nullptr },
+		{ _T("DisableIPv4"), CT_BOOLEAN_FLAG_32, 0, 0, DISABLE_IP_V4, 0, &options, nullptr },
+		{ _T("DisableIPv6"), CT_BOOLEAN_FLAG_32, 0, 0, DISABLE_IP_V6, 0, &options, nullptr },
+      { _T("LongPolling"), CT_BOOLEAN_FLAG_32, 0, 0, LONG_POLLING, 0, &options, nullptr },
+      { _T("PollingInterval"), CT_LONG, 0, 0, 0, 0, &pollingInterval, nullptr },
+		{ _T("Proxy"), CT_MB_STRING, 0, 0, sizeof(proxy.hostname), 0, proxy.hostname, nullptr },
+		{ _T("ProxyPort"), CT_WORD, 0, 0, 0, 0, &proxy.port, nullptr },
+		{ _T("ProxyType"), CT_MB_STRING, 0, 0, sizeof(protocol), 0, protocol, nullptr },
+		{ _T("ProxyUser"), CT_MB_STRING, 0, 0, sizeof(proxy.user), 0, proxy.user, nullptr },
+		{ _T("ProxyPassword"), CT_MB_STRING, 0, 0, sizeof(proxy.password), 0, proxy.password, nullptr },
+      { _T("ParseMode"), CT_STRING, 0, 0, sizeof(parseMode), 0, parseMode, nullptr },
+		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
 	};
 
    if (!config->parseTemplate(_T("Telegram"), configTemplate))
@@ -418,7 +413,7 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
       return nullptr;
    }
 
-   if (connType == (DISABLE_IP_V4 | DISABLE_IP_V6))
+   if ((options & (DISABLE_IP_V4 | DISABLE_IP_V6)) == (DISABLE_IP_V4 | DISABLE_IP_V6))
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Inconsistent configuration - both IPv4 and IPv6 are disabled"));
       return nullptr;
@@ -432,8 +427,8 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
    }
 
    TelegramDriver *driver = nullptr;
-   json_t *info = SendTelegramRequest(authToken, &proxy, IPVersionFromOptions(connType), "getMe", nullptr);
-	if (info != NULL)
+   json_t *info = SendTelegramRequest(authToken, &proxy, IPVersionFromOptions(options), "getMe", nullptr);
+	if (info != nullptr)
 	{
 	   json_t *ok = json_object_get(info, "ok");
 	   if (json_is_true(ok))
@@ -447,8 +442,10 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
 	         {
 	            driver = new TelegramDriver(storageManager);
 	            strcpy(driver->m_authToken, authToken);
+	            driver->m_longPollingMode = (options & LONG_POLLING) ? true : false;
+	            driver->m_pollingInterval = pollingInterval;
 	            driver->m_proxy = (proxy.hostname[0] != 0) ? MemCopyBlock(&proxy, sizeof(ProxyInfo)) : nullptr;
-               driver->m_ipVersion = IPVersionFromOptions(connType);
+               driver->m_ipVersion = IPVersionFromOptions(options);
 #ifdef UNICODE
 	            driver->m_botName = WideStringFromUTF8String(json_string_value(name));
 #else
@@ -461,7 +458,7 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
                delete data;
 
                driver->m_updateHandlerThread = ThreadCreateEx(TelegramDriver::updateHandler, 0, driver);
-               _tcsncpy(driver->m_parseMode, parseMode, 32);
+               _tcslcpy(driver->m_parseMode, parseMode, 32);
 	         }
 	         else
 	         {
@@ -516,6 +513,8 @@ THREAD_RESULT THREAD_CALL TelegramDriver::updateHandler(void *arg)
    TelegramDriver *driver = static_cast<TelegramDriver*>(arg);
 
    // Main loop
+   ByteStream responseData(32768);
+   responseData.setAllocationStep(32768);
    while(!driver->m_shutdownFlag)
    {
       CURL *curl = curl_easy_init();
@@ -537,8 +536,7 @@ THREAD_RESULT THREAD_CALL TelegramDriver::updateHandler(void *arg)
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
       curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Telegram Driver/" NETXMS_VERSION_STRING_A);
 
-      ResponseData *responseData = MemAllocStruct<ResponseData>();
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, responseData);
+      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
       curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 #if LIBCURL_VERSION_NUM < 0x072000
@@ -567,19 +565,26 @@ THREAD_RESULT THREAD_CALL TelegramDriver::updateHandler(void *arg)
       // Inner loop while connection is active
       while(!driver->m_shutdownFlag)
       {
+         if (!driver->m_longPollingMode)
+         {
+            if (SleepAndCheckForShutdown(driver->m_pollingInterval))
+               break;
+         }
+
          char url[256];
-         snprintf(url, 256, "https://api.telegram.org/bot%s/getUpdates?timeout=270&offset=" INT64_FMTA, driver->m_authToken, driver->m_nextUpdateId);
+         snprintf(url, 256, "https://api.telegram.org/bot%s/getUpdates?timeout=%u&offset=" INT64_FMTA,
+               driver->m_authToken, driver->m_longPollingMode ? driver->m_pollingInterval : 0, driver->m_nextUpdateId);
          if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
          {
             if (curl_easy_perform(curl) == CURLE_OK)
             {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateHandler(%s): got %d bytes"), driver->m_botName, responseData->size);
-               if (responseData->allocated > 0)
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateHandler(%s): got %d bytes"), driver->m_botName, static_cast<int>(responseData.size()));
+               if (responseData.size() > 0)
                {
-                  responseData->data[responseData->size] = 0;
+                  responseData.write('\0');
                   json_error_t error;
-                  json_t *data = json_loads(responseData->data, 0, &error);
-                  if (data != NULL)
+                  json_t *data = json_loads(reinterpret_cast<const char*>(responseData.buffer()), 0, &error);
+                  if (data != nullptr)
                   {
                      nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateHandler(%s): valid JSON document received"), driver->m_botName);
                      driver->processUpdate(data);
@@ -602,12 +607,11 @@ THREAD_RESULT THREAD_CALL TelegramDriver::updateHandler(void *arg)
             nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Call to curl_easy_setopt(CURLOPT_URL) failed"), driver->m_botName);
             break;
          }
-         responseData->size = 0;
+         responseData.clear();
       }
 
       curl_easy_cleanup(curl);
-      MemFree(responseData->data);
-      MemFree(responseData);
+      responseData.clear();
    }
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Update handler thread for Telegram bot %s stopped"), driver->m_botName);
@@ -634,7 +638,8 @@ void TelegramDriver::processUpdate(json_t *data)
       if (!json_is_object(update))
          continue;
 
-      INT64 id = json_object_get_integer(update, "update_id", -1);
+      int64_t id = json_object_get_integer(update, "update_id", -1);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Received update_id=") INT64_FMT, id);
       if (id >= m_nextUpdateId)
          m_nextUpdateId = id + 1;
 
@@ -651,14 +656,14 @@ void TelegramDriver::processUpdate(json_t *data)
          continue;
 
       const char *type = json_object_get_string_utf8(chat, "type", "unknown");
-      TCHAR *username = json_object_get_string_t(chat, (!strcmp(type, "group") || !strcmp(type, "channel")) ? "title" : "username", NULL);
-      if (username == NULL)
+      TCHAR *username = json_object_get_string_t(chat, (!strcmp(type, "group") || !strcmp(type, "channel")) ? "title" : "username", nullptr);
+      if (username == nullptr)
          continue;
 
       // Check and create chat object
       MutexLock(m_chatsLock);
       Chat *chatObject = m_chats.get(username);
-      if (chatObject == NULL)
+      if (chatObject == nullptr)
       {
          chatObject = new Chat(chat);
          m_chats.set(username, chatObject);
@@ -745,12 +750,12 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
 /**
  * Driver entry point
  */
-DECLARE_NCD_ENTRY_POINT(Telegram, NULL)
+DECLARE_NCD_ENTRY_POINT(Telegram, nullptr)
 {
    if (!InitializeLibCURL())
    {
       nxlog_debug_tag(DEBUG_TAG, 1, _T("cURL initialization failed"));
-      return NULL;
+      return nullptr;
    }
    return TelegramDriver::createInstance(config, storageManager);
 }
