@@ -688,6 +688,7 @@ typedef uint64_t UINT64;
 typedef uint64_t QWORD;
 
 typedef void * HANDLE;
+typedef void * HINSTANCE;
 typedef void * HMODULE;
 
 #if !HAVE_MODE_T
