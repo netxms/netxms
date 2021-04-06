@@ -29,7 +29,7 @@ import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
-import org.netxms.client.datacollection.DataCollectionConfigurationChangeListener;
+import org.netxms.client.datacollection.RemoteChangeListener;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciSummaryTable;
@@ -90,7 +90,7 @@ public class DataCollectionTest extends AbstractSessionTest
 
 		final Object condition = new Object();
 		DataCollectionConfiguration dc = session.openDataCollectionConfiguration(TestConstants.NODE_ID, 
-		      new DataCollectionConfigurationChangeListener() {
+		      new RemoteChangeListener() {
                @Override
                public void onUpdate(DataCollectionObject object)
                {
