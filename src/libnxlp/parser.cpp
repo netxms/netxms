@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -169,15 +169,15 @@ LogParser::LogParser(const LogParser *src)
 	m_preallocatedFile = src->m_preallocatedFile;
 	m_detectBrokenPrealloc = src->m_detectBrokenPrealloc;
 
-	if (src->m_eventNameList != NULL)
+	if (src->m_eventNameList != nullptr)
 	{
 		int count;
-		for(count = 0; src->m_eventNameList[count].text != NULL; count++);
-		m_eventNameList = (count > 0) ? MemCopyBlock(src->m_eventNameList, sizeof(CodeLookupElement) * (count + 1)) : NULL;
+		for(count = 0; src->m_eventNameList[count].text != nullptr; count++);
+		m_eventNameList = (count > 0) ? MemCopyBlock(src->m_eventNameList, sizeof(CodeLookupElement) * (count + 1)) : nullptr;
 	}
 	else
 	{
-		m_eventNameList = NULL;
+		m_eventNameList = nullptr;
 	}
 
 	m_eventResolver = src->m_eventResolver;
@@ -295,7 +295,7 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 	{
 	   LogParserRule *rule = m_rules->get(i);
 		trace(6, _T("checking rule %d \"%s\""), i + 1, rule->getDescription());
-		if ((state = checkContext(rule)) != NULL)
+		if ((state = checkContext(rule)) != nullptr)
 		{
 			bool ruleMatched = hasAttributes ?
 			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, timestamp, logName, m_cb, m_cbAction, m_userArg) :
@@ -307,7 +307,7 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 					m_recordsMatched++;
 
 				// Update context
-				if (rule->getContextToChange() != NULL)
+				if (rule->getContextToChange() != nullptr)
 				{
 					m_contexts.set(rule->getContextToChange(), s_states[rule->getContextAction()]);
 					trace(5, _T("rule %d \"%s\": context %s set to %s"), i + 1,
@@ -511,26 +511,26 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	}
 	else if (!strcmp(name, "rule"))
 	{
-		ps->regexp = NULL;
+		ps->regexp = nullptr;
       ps->ignoreCase = true;
 		ps->invertedRule = false;
-		ps->event = NULL;
-		ps->context = NULL;
+		ps->event = nullptr;
+		ps->context = nullptr;
 		ps->contextAction = CONTEXT_SET_AUTOMATIC;
-		ps->description = NULL;
-		ps->id = NULL;
-		ps->source = NULL;
-		ps->level = NULL;
-		ps->agentAction = NULL;
-      ps->logName = NULL;
+		ps->description = nullptr;
+		ps->id = nullptr;
+		ps->source = nullptr;
+		ps->level = nullptr;
+		ps->agentAction = nullptr;
+      ps->logName = nullptr;
 #ifdef UNICODE
 		ps->ruleContext.clear();
 		const char *context = XMLGetAttr(attrs, "context");
-		if (context != NULL)
+		if (context != nullptr)
 			ps->ruleContext.appendMBString(context, strlen(context), CP_UTF8);
       ps->ruleName.clear();
       const char *name = XMLGetAttr(attrs, "name");
-      if (name != NULL)
+      if (name != nullptr)
          ps->ruleName.appendMBString(name, strlen(name), CP_UTF8);
 #else
 		ps->ruleContext = XMLGetAttr(attrs, "context");
@@ -544,7 +544,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	{
 	   ps->state = XML_STATE_AGENT_ACTION;
 	   const char *action = XMLGetAttr(attrs, "action");
-	   if (action != NULL)
+	   if (action != nullptr)
 	   {
 #ifdef UNICODE
 	      ps->agentAction.appendMBString(action, strlen(action), CP_UTF8);
@@ -726,11 +726,11 @@ static void EndElement(void *userData, const char *name)
 			rule->setSource(ps->source);
 
 		if (!ps->level.isEmpty())
-			rule->setLevel(_tcstoul(ps->level, NULL, 0));
+			rule->setLevel(_tcstoul(ps->level, nullptr, 0));
 
 		if (!ps->id.isEmpty())
 		{
-			UINT32 start, end;
+			uint32_t start, end;
 			TCHAR *eptr;
 
 			start = _tcstoul(ps->id, &eptr, 0);
@@ -742,7 +742,7 @@ static void EndElement(void *userData, const char *name)
 			{
 				while(!_istdigit(*eptr))
 					eptr++;
-				end = _tcstoul(eptr, NULL, 0);
+				end = _tcstoul(eptr, nullptr, 0);
 			}
 			rule->setIdRange(start, end);
 		}
