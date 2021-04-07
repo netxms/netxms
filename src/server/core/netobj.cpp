@@ -1335,8 +1335,13 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
       // Cleanup
       for(int i = 0; m_name[i] != 0; i++)
       {
+#ifdef UNICODE
          if (m_name[i] < 0x20)
+            m_name[i] = L' ';
+#else
+         if (reinterpret_cast<BYTE*>(m_name)[i] < 0x20)
             m_name[i] = ' ';
+#endif
       }
    }
 
