@@ -39,7 +39,7 @@ public class DciFilter extends ViewerFilter
 			return true;
 		
 		final DataCollectionObject dci = (DataCollectionObject)element;
-		return dci.getDescription().toLowerCase().contains(filterString);
+		return dci.getDescription().toLowerCase().contains(filterString) || dci.getName().toLowerCase().contains(filterString) || Long.toString(dci.getId()).contains(filterString);
 	}
 
 	/**
