@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -208,7 +208,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 			if ((cb != nullptr) && ((m_eventCode != 0) || (m_eventName != nullptr)))
 				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, nullptr, variables, recordId, objectId,
                ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, context);
-         if (cbAction != nullptr)
+         if ((cbAction != nullptr) && (m_agentAction != nullptr))
             cbAction(m_agentAction, *m_agentActionArgs);
 			incMatchCount(objectId);
 			return true;
@@ -243,7 +243,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
                ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, context);
             m_parser->trace(8, _T("  callback completed"));
          }
-			if (cbAction != nullptr)
+			if ((cbAction != nullptr) && (m_agentAction != nullptr))
 			   cbAction(m_agentAction, *m_agentActionArgs);
          incMatchCount(objectId);
 			return true;

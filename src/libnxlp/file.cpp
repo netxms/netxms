@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -621,7 +621,10 @@ bool LogParser::monitorFile()
 		while(true)
 		{
 			if (ConditionWait(m_stopCondition, 5000))
+			{
+			   _close(fh);
 				goto stop_parser;
+			}
 
 			// Check if file name was changed
 			ExpandFileName(getFileName(), temp, MAX_PATH, true);
