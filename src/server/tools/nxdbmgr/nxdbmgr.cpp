@@ -698,9 +698,13 @@ stop_search:
          initFile.appendMBString(driver, strlen(driver), CP_ACP);
          initFile.append(_T(".sql"));
 
+#ifdef UNICODE
          char *initFileMB = MBStringFromWideStringSysLocale(initFile);
          InitDatabase(initFileMB);
          MemFree(initFileMB);
+#else
+         InitDatabase(initFile);
+#endif
       }
       else if (strchr(argv[optind + 1], FS_PATH_SEPARATOR_CHAR_A) == nullptr)
       {
@@ -712,9 +716,13 @@ stop_search:
          initFile.appendMBString(argv[optind + 1], strlen(argv[optind + 1]), CP_ACP);
          initFile.append(_T(".sql"));
 
+#ifdef UNICODE
          char *initFileMB = MBStringFromWideStringSysLocale(initFile);
          InitDatabase(initFileMB);
          MemFree(initFileMB);
+#else
+         InitDatabase(initFile);
+#endif
       }
       else
       {
