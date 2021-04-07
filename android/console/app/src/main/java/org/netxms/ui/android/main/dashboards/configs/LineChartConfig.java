@@ -19,6 +19,7 @@
 package org.netxms.ui.android.main.dashboards.configs;
 
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.constants.TimeUnit;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -29,7 +30,7 @@ import org.simpleframework.xml.core.Persister;
 public class LineChartConfig extends AbstractChartConfig
 {
 	@Element(required=false)
-	private int timeUnits = GraphSettings.TIME_UNIT_HOUR;
+	private int timeUnits = TimeUnit.HOUR.getValue();
 	
 	@Element(required=false)
 	private int timeRange = 1;
@@ -89,13 +90,13 @@ public class LineChartConfig extends AbstractChartConfig
 	 */
 	public long getTimeRangeMillis()
 	{
-		switch(timeUnits)
+		switch(TimeUnit.getByValue(timeUnits))
 		{
-			case GraphSettings.TIME_UNIT_MINUTE:
+			case MINUTE:
 				return (long)timeRange * 60L * 1000L;
-			case GraphSettings.TIME_UNIT_HOUR:
+			case HOUR:
 				return (long)timeRange * 60L * 60L * 1000L;
-			case GraphSettings.TIME_UNIT_DAY:
+			case DAY:
 				return (long)timeRange * 24L * 60L * 60L * 1000L;
 		}
 		return 0;

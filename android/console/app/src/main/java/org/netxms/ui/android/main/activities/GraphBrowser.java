@@ -6,12 +6,12 @@ import java.util.List;
 
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.helpers.Colors;
-import org.netxms.ui.android.main.activities.helpers.ChartConfig;
-import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
 import org.netxms.ui.android.main.adapters.GraphAdapter;
+import org.netxms.client.constants.TimeFrameType;
 
 import android.app.ProgressDialog;
 import android.content.ComponentName;
@@ -108,17 +108,6 @@ public class GraphBrowser extends AbstractClientActivity
 	{
 		if (gs != null)
 		{
-			ChartConfig config;
-			try
-			{
-				config = ChartConfig.createFromXml(gs.createXml());
-			}
-			catch (Exception e)
-			{
-				Log.e(TAG, "ChartConfig.createFromXml", e);
-				config = new ChartConfig();
-			}
-
 			Intent newIntent = new Intent(this, DrawGraph.class);
 			ArrayList<Integer> nodeIdList = new ArrayList<Integer>();
 			ArrayList<Integer> dciIdList = new ArrayList<Integer>();
@@ -127,7 +116,7 @@ public class GraphBrowser extends AbstractClientActivity
 			ArrayList<String> nameList = new ArrayList<String>();
 
 			// Set values
-			ChartDciConfig[] items = config.getDciList();
+			ChartDciConfig[] items = gs.getDciList();
 			for (int i = 0; i < items.length && i < Colors.DEFAULT_ITEM_COLORS.length; i++)
 			{
 				nodeIdList.add((int)items[i].nodeId);
@@ -146,14 +135,14 @@ public class GraphBrowser extends AbstractClientActivity
 			newIntent.putIntegerArrayListExtra("lineWidthList", lineWidthList);
 			newIntent.putStringArrayListExtra("nameList", nameList);
 			newIntent.putExtra("graphTitle", adapter.TrimGroup(gs.getName()));
-			if (config.getTimeFrameType() == GraphSettings.TIME_FRAME_FIXED)
+			if (gs.getTimePeriod().getTimeFrameType() == TimeFrameType.FIXED)
 			{
-				newIntent.putExtra("timeFrom", config.getTimeFrom().getTime());
-				newIntent.putExtra("timeTo", config.getTimeTo().getTime());
+				newIntent.putExtra("timeFrom", gs.getTimeFrom().getTime());
+				newIntent.putExtra("timeTo", gs.getTimeTo().getTime());
 			}
 			else
 			{	// Back from now
-				newIntent.putExtra("timeFrom", System.currentTimeMillis() - config.getTimeRangeMillis());
+				newIntent.putExtra("timeFrom", System.currentTimeMillis() - gs.getTimeRangeMillis());
 				newIntent.putExtra("timeTo", System.currentTimeMillis());
 			}
 			startActivity(newIntent);
