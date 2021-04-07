@@ -2850,7 +2850,7 @@ NXSL_Value *NXSL_TunnelClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   AgentTunnel *tunnel = static_cast<shared_ptr<AgentTunnel>*>(object->getData())->get();
+   AgentTunnel *tunnel = (object->getData() != nullptr) ? static_cast<shared_ptr<AgentTunnel>*>(object->getData())->get() : nullptr;
 
    if (compareAttributeName(attr, "address"))
    {
