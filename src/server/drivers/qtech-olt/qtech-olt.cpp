@@ -145,8 +145,8 @@ InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
  * @param *adminState
  * @param *operState
  */
-void QtechOLTDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 ifIndex,
-                                       int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
+void QtechOLTDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
+         int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
    UINT32 dwOperStatus = 0;
    UINT32 oid[MAX_OID_LEN];

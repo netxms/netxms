@@ -7609,7 +7609,7 @@ UINT32 Node::wakeUp()
 /**
  * Get status of interface with given index from SNMP agent
  */
-void Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 index, int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
+void Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, uint32_t index, int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
    if (m_driver != nullptr)
    {

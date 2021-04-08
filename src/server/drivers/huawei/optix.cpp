@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Huawei Optix devices
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -228,8 +228,8 @@ InterfaceList *OptixDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
  * @param adminState OUT: interface administrative state
  * @param operState OUT: interface operational state
  */
-void OptixDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 ifIndex,
-                                    int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
+void OptixDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
+         int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
    *adminState = IF_ADMIN_STATE_UNKNOWN;
    *operState = IF_OPER_STATE_UNKNOWN;

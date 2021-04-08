@@ -646,16 +646,16 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
  * @param adminState OUT: interface administrative state
  * @param operState OUT: interface operational state
  */
-void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 ifIndex,
-                                            int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
+void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
+         int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
-   UINT32 state = 0;
+   uint32_t state = 0;
    TCHAR oid[256], suffix[128];
    if (ifTableSuffixLen > 0)
       _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7%s"), SNMPConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128)); // Interface administrative state
    else
       _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7.%d"), (int)ifIndex); // Interface administrative state
-   SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &state, sizeof(UINT32), 0);
+   SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &state, sizeof(uint32_t), 0);
 
    switch(state)
    {
@@ -672,7 +672,7 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
             _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8%s"), SNMPConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128));
          else
             _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8.%d"), (int)ifIndex);
-         SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &state, sizeof(UINT32), 0);
+         SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &state, sizeof(uint32_t), 0);
          switch(state)
          {
             case 1:
@@ -863,6 +863,19 @@ void NetworkDeviceDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, D
 bool NetworkDeviceDriver::isPerVlanFdbSupported()
 {
 	return false;
+}
+
+/**
+ * Returns true if FDB uses ifIndex instead of bridge port number for referencing interfaces.
+ * Default implementation always return false;
+ *
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return true if FDB uses ifIndex instead of bridge port number for referencing interfaces
+ */
+bool NetworkDeviceDriver::isFdbUsingIfIndex(const NObject *node, DriverData *driverData)
+{
+   return false;
 }
 
 /**
