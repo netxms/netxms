@@ -106,6 +106,7 @@ protected:
    TCHAR *m_cmd;
    bool m_shellExec;
    bool m_sendOutput;
+   bool m_selfDestruct;
 
 #ifdef _WIN32
    HANDLE getOutputPipe() { return m_pipe; }
@@ -122,7 +123,7 @@ protected:
    virtual void endOfOutput();
 
 public:
-   ProcessExecutor(const TCHAR *cmd, bool shellExec = true);
+   ProcessExecutor(const TCHAR *cmd, bool shellExec = true, bool selfDestruct = false);
    virtual ~ProcessExecutor();
 
    const TCHAR *getCommand() const { return m_cmd; }

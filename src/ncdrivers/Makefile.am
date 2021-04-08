@@ -8,12 +8,12 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-DRIVERS = dbtable dummy gsm portech smtp snmptrap textfile @NCDRV_MODULES@
+DRIVERS = dbtable dummy gsm portech shell smtp snmptrap textfile @NCDRV_MODULES@
 
 SUBDIRS = $(DRIVERS)
 
 EXTRA_LTLIBRARIES = anysms.la kannel.la msteams.la mymobile.la nexmo.la nxagent.la slack.la smseagle.la telegram.la text2reach.la websms.la
-pkglib_LTLIBRARIES = dbtable.la dummy.la gsm.la portech.la smtp.la snmptrap.la textfile.la @NCDRV_LTLIBRARIES@
+pkglib_LTLIBRARIES = dbtable.la dummy.la gsm.la portech.la shell.la smtp.la snmptrap.la textfile.la @NCDRV_LTLIBRARIES@
 
 anysms_la_SOURCES = anysms/anysms.cpp
 anysms_la_CPPFLAGS=-I@top_srcdir@/include  -I@top_srcdir@/build
@@ -74,6 +74,11 @@ portech_la_SOURCES = portech/portech.cpp portech/pdumode.cpp
 portech_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 portech_la_LDFLAGS = -module -avoid-version
 portech_la_LIBADD = ../libnetxms/libnetxms.la
+
+shell_la_SOURCES = shell/shell.cpp
+shell_la_CPPFLAGS=-I@top_srcdir@/include  -I@top_srcdir@/build
+shell_la_LDFLAGS = -module -avoid-version
+shell_la_LIBADD = ../libnetxms/libnetxms.la
 
 slack_la_SOURCES = slack/slack.cpp
 slack_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build

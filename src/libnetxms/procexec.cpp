@@ -93,7 +93,7 @@ static VolatileCounter s_executorId = 0;
 /**
  * Create new process executor object for given command line
  */
-ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec)
+ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec, bool selfDestruct)
 {
    m_id = InterlockedIncrement(&s_executorId);
 #ifdef _WIN32
@@ -107,6 +107,7 @@ ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec)
    m_cmd = MemCopyString(cmd);
    m_shellExec = shellExec;
    m_sendOutput = false;
+   m_selfDestruct = selfDestruct;
    m_outputThread = INVALID_THREAD_HANDLE;
    m_completed = ConditionCreate(true);
    m_started = false;
@@ -382,6 +383,8 @@ THREAD_RESULT THREAD_CALL ProcessExecutor::waitForProcess(void *arg)
    waitpid(static_cast<ProcessExecutor*>(arg)->m_pid, nullptr, 0);
    static_cast<ProcessExecutor*>(arg)->m_running = false;
    ConditionSet(static_cast<ProcessExecutor*>(arg)->m_completed);
+   if (static_cast<ProcessExecutor*>(arg)->m_selfDestruct)
+      delete static_cast<ProcessExecutor*>(arg);
    return THREAD_OK;
 }
 
@@ -502,6 +505,8 @@ do_wait:
 #endif
    static_cast<ProcessExecutor*>(arg)->m_running = false;
    ConditionSet(static_cast<ProcessExecutor*>(arg)->m_completed);
+   if (static_cast<ProcessExecutor*>(arg)->m_selfDestruct)
+      delete static_cast<ProcessExecutor*>(arg);
    return THREAD_OK;
 }
 
