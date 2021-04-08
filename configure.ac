@@ -4710,6 +4710,7 @@ AC_CONFIG_FILES([
 	src/ncdrivers/nexmo/Makefile
 	src/ncdrivers/nxagent/Makefile
 	src/ncdrivers/portech/Makefile
+	src/ncdrivers/shell/Makefile
 	src/ncdrivers/slack/Makefile
 	src/ncdrivers/smseagle/Makefile
 	src/ncdrivers/snmptrap/Makefile
