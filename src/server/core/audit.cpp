@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -55,18 +55,17 @@ static void SendSyslogRecord(const TCHAR *text)
    static char month[12][5] = { "Jan ", "Feb ", "Mar ", "Apr ",
                                 "May ", "Jun ", "Jul ", "Aug ",
                                 "Sep ", "Oct ", "Nov ", "Dec " };
-	if (!s_auditServerAddr.isValidUnicast())
-		return;
+   if (!s_auditServerAddr.isValidUnicast())
+      return;
 
-	time_t ts = time(nullptr);
+   time_t ts = time(nullptr);
 #if HAVE_LOCALTIME_R
-	struct tm tmbuffer;
+   struct tm tmbuffer;
    struct tm *now = localtime_r(&ts, &tmbuffer);
 #else
-	struct tm *now = localtime(&ts);
+   struct tm *now = localtime(&ts);
 #endif
 
-   char message[1025];
    char *mbText = nullptr;
 #ifdef UNICODE
    if (ConfigReadBoolean(_T("AuditLog.External.UseUTF8"), false))
@@ -83,10 +82,12 @@ static void SendSyslogRecord(const TCHAR *text)
       mbText = UTF8StringFromMBString(text);
    }
 #endif
+   char message[1025];
    snprintf(message, 1025, "<%d>%s %2d %02d:%02d:%02d %s %s %s", (s_auditFacility << 3) + s_auditSeverity, month[now->tm_mon],
-	      now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, s_localHostName, s_auditTag, mbText != nullptr ? mbText : reinterpret_cast <const char*>(text));
+         now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, s_localHostName, s_auditTag,
+         (mbText != nullptr) ? mbText : reinterpret_cast<const char*>(text));
    MemFree(mbText);
-	message[1024] = 0;
+   message[1024] = 0;
 
    SOCKET hSocket = CreateSocket(s_auditServerAddr.getFamily(), SOCK_DGRAM, 0);
    if (hSocket != INVALID_SOCKET)

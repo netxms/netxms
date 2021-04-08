@@ -23,21 +23,20 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
-
 /**
  * Upgrade from 40.44 to 40.45
  */
 static bool H_UpgradeFromV44()
 {
    CHK_EXEC(CreateConfigParam(_T("AuditLog.External.UseUTF8"),
-   _T("0"),
-   _T("Changes audit log encoding to UTF-8"),
-   nullptr,
-   'B',
-   true,
-   false,
-   false,
-   false));
+         _T("0"),
+         _T("Changes audit log encoding to UTF-8"),
+         nullptr,
+         'B',
+         true,
+         false,
+         false,
+         false));
    CHK_EXEC(SetMinorSchemaVersion(45));
    return true;
 }
