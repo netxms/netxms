@@ -23,6 +23,25 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+
+/**
+ * Upgrade from 40.44 to 40.45
+ */
+static bool H_UpgradeFromV44()
+{
+   CHK_EXEC(CreateConfigParam(_T("AuditLog.External.UseUTF8"),
+   _T("0"),
+   _T("Changes audit log encoding to UTF-8"),
+   nullptr,
+   'B',
+   true,
+   false,
+   false,
+   false));
+   CHK_EXEC(SetMinorSchemaVersion(45));
+   return true;
+}
+
 /**
  * Upgrade from 40.43 to 40.44
  */
@@ -1182,6 +1201,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 44, 40, 45, H_UpgradeFromV44 },
    { 43, 40, 44, H_UpgradeFromV43 },
    { 42, 40, 43, H_UpgradeFromV42 },
    { 41, 40, 42, H_UpgradeFromV41 },

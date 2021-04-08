@@ -67,15 +67,25 @@ static void SendSyslogRecord(const TCHAR *text)
 #endif
 
    char message[1025];
+   char *mbText = nullptr;
 #ifdef UNICODE
-	char *mbText = MBStringFromWideString(text);
-	snprintf(message, 1025, "<%d>%s %2d %02d:%02d:%02d %s %s %s", (s_auditFacility << 3) + s_auditSeverity, month[now->tm_mon],
-	         now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, s_localHostName, s_auditTag, mbText);
-	MemFree(mbText);
+   if (ConfigReadBoolean(_T("AuditLog.External.UseUTF8"), false))
+   {
+      mbText = UTF8StringFromWideString(text);
+   }
+   else
+   {
+      mbText = MBStringFromWideString(text);
+   }
 #else
-	snprintf(message, 1025, "<%d>%s %2d %02d:%02d:%02d %s %s %s", (s_auditFacility << 3) + s_auditSeverity, month[now->tm_mon],
-	         now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, s_localHostName, s_auditTag, text);
+   if (ConfigReadBoolean(_T("AuditLog.External.UseUTF8"), false))
+   {
+      mbText = UTF8StringFromMBString(text);
+   }
 #endif
+   snprintf(message, 1025, "<%d>%s %2d %02d:%02d:%02d %s %s %s", (s_auditFacility << 3) + s_auditSeverity, month[now->tm_mon],
+	      now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, s_localHostName, s_auditTag, mbText != nullptr ? mbText : reinterpret_cast <const char*>(text));
+   MemFree(mbText);
 	message[1024] = 0;
 
    SOCKET hSocket = CreateSocket(s_auditServerAddr.getFamily(), SOCK_DGRAM, 0);
