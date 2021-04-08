@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Drivers for Huawei devices
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,8 +40,8 @@ public:
 	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
 	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable) override;
-   virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 ifIndex,
-                                  int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState) override;
+   virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
+            int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState) override;
    virtual ArpCache *getArpCache(SNMP_Transport *snmp, DriverData *driverData) override;
 };
 

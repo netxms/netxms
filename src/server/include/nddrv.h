@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,7 @@
 /**
  * API version
  */
-#define NDDRV_API_VERSION           8
+#define NDDRV_API_VERSION           9
 
 /**
  * Begin driver list
@@ -329,6 +329,15 @@ public:
 };
 
 /**
+ * Device capabilities
+ */
+enum class DeviceCapability
+{
+   PER_VLAN_FDB,
+   BRIDGE_PORT_NUMBERS_IN_FDB
+};
+
+/**
  * Base class for device drivers
  */
 class LIBNXSRV_EXPORTABLE NetworkDeviceDriver
@@ -352,13 +361,14 @@ public:
    virtual bool getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype);
    virtual GeoLocation getGeoLocation(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable);
-   virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, UINT32 ifIndex,
-                                  int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);
+   virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
+            int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);
    virtual bool lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id);
    virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);
    virtual bool isPerVlanFdbSupported();
+   virtual bool isFdbUsingIfIndex(const NObject *node, DriverData *driverData);
    virtual int getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData);

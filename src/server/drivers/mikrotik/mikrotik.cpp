@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Mikrotik routers
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -70,6 +70,34 @@ int MikrotikDriver::isPotentialDevice(const TCHAR *oid)
 bool MikrotikDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
 	return true;
+}
+
+/**
+ * Do additional checks on the device required by driver.
+ * Driver can set device's custom attributes and driver's data from within this method.
+ * If driver's data was set on previous call, same pointer will be passed on all subsequent calls.
+ * It is driver's responsibility to destroy existing object if it is to be replaced . One data
+ * object should not be used for multiple nodes. Data object may be destroyed by framework when no longer needed.
+ *
+ * @param snmp SNMP transport
+ * @param oid Device OID
+ * @param node Node
+ * @param driverData pointer to pointer to driver-specific data
+ */
+void MikrotikDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+{
+   node->setCustomAttribute(_T(".mikrotik.fdbUsesIfIndex"),
+         (SnmpWalkCount(snmp, _T(".1.3.6.1.2.1.17.1.4.1.2")) == 0) ? _T("true") : _T("false"), StateChange::IGNORE);
+}
+
+/**
+ * Returns true if FDB uses ifIndex instead of bridge port number for referencing interfaces.
+ *
+ * @return true if FDB uses ifIndex instead of bridge port number for referencing interfaces
+ */
+bool MikrotikDriver::isFdbUsingIfIndex(const NObject *node, DriverData *driverData)
+{
+   return node->getCustomAttributeAsBoolean(_T(".mikrotik.fdbUsesIfIndex"), false);
 }
 
 /**

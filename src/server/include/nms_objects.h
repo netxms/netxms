@@ -3199,6 +3199,7 @@ public:
    bool isRouter() const { return m_capabilities & NC_IS_ROUTER ? true : false; }
    bool isLocalManagement() const { return m_capabilities & NC_IS_LOCAL_MGMT ? true : false; }
    bool isPerVlanFdbSupported() const { return (m_driver != nullptr) ? m_driver->isPerVlanFdbSupported() : false; }
+   bool isFdbUsingIfIndex() const { return (m_driver != nullptr) ? m_driver->isFdbUsingIfIndex(this, m_driverData) : false; }
    bool isWirelessController() const { return m_capabilities & NC_IS_WIFI_CONTROLLER ? true : false; }
    bool isNewPolicyTypeFormatSupported() const { return m_capabilities & NC_IS_NEW_POLICY_TYPES ? true : false; }
 
@@ -3294,7 +3295,7 @@ public:
    shared_ptr<AccessPoint> findAccessPointByRadioId(int rfIndex) const;
    ObjectArray<WirelessStationInfo> *getWirelessStations() const;
    bool isMyIP(const InetAddress& addr) const;
-   void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 dwIndex, int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);
+   void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, uint32_t index, int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);
    void getInterfaceStatusFromAgent(UINT32 dwIndex, InterfaceAdminState *adminState, InterfaceOperState *operState);
    RoutingTable *getRoutingTable();
    RoutingTable *getCachedRoutingTable() { return m_routingTable; }

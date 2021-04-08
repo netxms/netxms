@@ -127,13 +127,14 @@ private:
 	int m_pmAllocated;
 	PORT_MAPPING_ENTRY *m_portMap;
 	time_t m_timestamp;
+	bool m_portReferenceByIfIndex;
 	uint16_t m_currentVlanId;
 
 	uint32_t ifIndexFromPort(uint32_t port);
 	static String interfaceIndexToName(const shared_ptr<NetObj>& node, uint32_t index);
 
 public:
-	ForwardingDatabase(uint32_t nodeId);
+	ForwardingDatabase(uint32_t nodeId, bool portReferenceByIfIndex);
 	virtual ~ForwardingDatabase();
 
 	void addEntry(FDB_ENTRY *entry);
@@ -141,9 +142,9 @@ public:
 	void sort();
 
 	time_t getTimeStamp() { return m_timestamp; }
-	int getAge() { return (int)(time(NULL) - m_timestamp); }
+	int getAge() { return (int)(time(nullptr) - m_timestamp); }
 	int getSize() { return m_fdbSize; }
-	FDB_ENTRY *getEntry(int index) { return ((index >= 0) && (index < m_fdbSize)) ? &m_fdb[index] : NULL; }
+	FDB_ENTRY *getEntry(int index) { return ((index >= 0) && (index < m_fdbSize)) ? &m_fdb[index] : nullptr; }
 
    void setCurrentVlanId(UINT16 vlanId) { m_currentVlanId = vlanId; }
    UINT16 getCurrentVlanId() { return m_currentVlanId; }
