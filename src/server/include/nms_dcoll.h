@@ -452,8 +452,8 @@ protected:
    BYTE m_dataType;
 	int m_sampleCount;            // Number of samples required to calculate value
 	ObjectArray<Threshold> *m_thresholds;
-   UINT32 m_cacheSize;          // Number of items in cache
-   UINT32 m_requiredCacheSize;
+   uint32_t m_cacheSize;          // Number of items in cache
+   uint32_t m_requiredCacheSize;
    ItemValue **m_ppValueCache;
    ItemValue m_prevRawValue;     // Previous raw value (used for delta calculation)
    time_t m_tPrevValueTimeStamp;
@@ -466,7 +466,7 @@ protected:
 
    bool transform(ItemValue &value, time_t nElapsedTime);
    void checkThresholds(ItemValue &value);
-   void updateCacheSizeInternal(bool allowLoad, UINT32 conditionId = 0);
+   void updateCacheSizeInternal(bool allowLoad, uint32_t conditionId = 0);
    void clearCache();
 
    bool hasScriptThresholds() const;

@@ -263,7 +263,7 @@ void DCItem::deleteAllThresholds()
  */
 void DCItem::clearCache()
 {
-   for(UINT32 i = 0; i < m_cacheSize; i++)
+   for(uint32_t i = 0; i < m_cacheSize; i++)
       delete m_ppValueCache[i];
    MemFree(m_ppValueCache);
    m_ppValueCache = nullptr;
@@ -417,7 +417,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
       DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_tPrevValueTimeStamp));
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_bCacheLoaded ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0));
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>((m_bCacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0));
       bResult = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -708,7 +708,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *upda
       m_tPrevValueTimeStamp = tmTimeStamp;
 
       // Save raw value into database
-      QueueRawDciDataUpdate(tmTimeStamp, m_id, static_cast<TCHAR*>(originalValue), pValue->getString(), m_bCacheLoaded ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0);
+      QueueRawDciDataUpdate(tmTimeStamp, m_id, static_cast<TCHAR*>(originalValue), pValue->getString(), (m_bCacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0);
    }
 
 	// Save transformed value to database
@@ -1110,7 +1110,7 @@ void DCItem::changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOwne
  * GetCacheSizeForDCI should be called with bNoLock == TRUE for appropriate
  * condition object
  */
-void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
+void DCItem::updateCacheSizeInternal(bool allowLoad, uint32_t conditionId)
 {
    auto owner = m_owner.lock();
 
