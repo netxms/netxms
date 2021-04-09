@@ -386,7 +386,7 @@ void NotificationChannel::update(const TCHAR *description, const TCHAR *driverNa
       const NCConfigurationTemplate *confTemplate = nullptr;
       if (dd != nullptr)
       {
-         Config cfg;
+         Config cfg(false);
          if (cfg.loadConfigFromMemory(config, (int)strlen(config), driverName, nullptr, true, false))
          {
             driver = dd->instanceFactory(&cfg, m_storageManager);
