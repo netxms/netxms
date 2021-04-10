@@ -2278,7 +2278,10 @@ public class NXCSession
       request.setField(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
       request.setFieldInt16(NXCPCodes.VID_CLIENT_TYPE, clientType);
       if (clientAddress != null)
+      {
+         logger.debug("Client address provided: " + clientAddress);
          request.setField(NXCPCodes.VID_CLIENT_ADDRESS, clientAddress);
+      }
       if (clientLanguage != null)
          request.setField(NXCPCodes.VID_LANGUAGE, clientLanguage);
       request.setFieldInt16(NXCPCodes.VID_ENABLE_COMPRESSION, 1);

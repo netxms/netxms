@@ -22,4 +22,10 @@
       <servlet-name>RestletServlet</servlet-name>  
       <url-pattern>/*</url-pattern>  
    </servlet-mapping>  
+
+   <!-- Enable processing of X-Forwarded-For header -->  
+   <context-param>
+      <param-name>useForwardedForHeader</param-name>
+      <param-value>true</param-value>
+   </context-param>
 </web-app>

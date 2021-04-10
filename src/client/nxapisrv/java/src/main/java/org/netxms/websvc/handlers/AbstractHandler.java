@@ -397,8 +397,11 @@ public abstract class AbstractHandler extends ServerResource
     */
    protected SessionToken login(String login, String password) throws Exception
    {
-      log.debug("Performing login to " + properties.getServerAddress() + ":" + properties.getServerPort());
+      String clientAddress = getRequest().getClientInfo().getUpstreamAddress();
+      log.debug("Performing login to " + properties.getServerAddress() + ":" + properties.getServerPort() + " for client at " + clientAddress);
       session = new NXCSession(properties.getServerAddress(), properties.getServerPort(), properties.isEncryptedSession());
+      session.setClientType(NXCSession.WEB_CLIENT);
+      session.setClientAddress(clientAddress);
       session.connect();
       session.login(login, (password == null) ? "" : password);
       return SessionStore.getInstance(getServletContext()).registerSession(session);
