@@ -71,7 +71,7 @@ public class WebSvcApplication extends Application
       statusService.setOverwriting(true);
       setStatusService(statusService);
    }
-   
+
    /**
     * @see org.restlet.Application#createInboundRoot()
     */
