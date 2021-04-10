@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.websvc.json.ResponseContainer;
@@ -132,13 +132,12 @@ public class HistoricalData extends AbstractObjectHandler
          {
             Date now = new Date();
             long from;
-            if (parseInt(timeUnit, 0 ) == GraphSettings.TIME_UNIT_HOUR)
+            if (parseInt(timeUnit, 0) == TimeUnit.HOUR.getValue())
                from = now.getTime() - parseLong(timeInterval, 0) * 3600000;
-            else if (parseInt(timeUnit, 0 ) == GraphSettings.TIME_UNIT_DAY)
+            else if (parseInt(timeUnit, 0) == TimeUnit.DAY.getValue())
                from = now.getTime() - parseLong(timeInterval, 0) * 3600000 * 24;
             else
                from = now.getTime() - parseLong(timeInterval, 0) * 60000;
-
             collectedData = session.getCollectedData(parseInt(nodeId, 0), parseInt(dciId, 0), new Date(from), new Date(), 0, HistoricalDataType.PROCESSED);
          }
          else
@@ -147,7 +146,7 @@ public class HistoricalData extends AbstractObjectHandler
             long from = now.getTime() - 3600000; // one hour
             collectedData = session.getCollectedData(parseInt(nodeId, 0), parseInt(dciId, 0), new Date(from), now, 0, HistoricalDataType.PROCESSED);
          }
-         
+
          dciData.put((long)parseInt(dciId, 0), collectedData);
       }
 
