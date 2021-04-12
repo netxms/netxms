@@ -1674,6 +1674,9 @@ uint32_t UpdateEventTemplate(NXCPMessage *request, NXCPMessage *response, json_t
 
    shared_ptr<EventTemplate> e;
    uint32_t eventCode = request->getFieldAsUInt32(VID_EVENT_CODE);
+   shared_ptr<EventTemplate> et = FindEventTemplateByName(name);
+   if (et && et->getCode() != eventCode)
+      return RCC_NAME_ALEARDY_EXISTS;
    RWLockWriteLock(s_eventTemplatesLock);
 
    if (eventCode == 0)
