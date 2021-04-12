@@ -286,21 +286,27 @@ void ScheduledTask::run(SchedulerCallback *callback)
    m_flags &= ~SCHEDULED_TASK_RUNNING;
    m_flags |= SCHEDULED_TASK_COMPLETED;
    saveToDatabase(false);
+   bool isSystemTask = ((m_flags & SCHEDULED_TASK_SYSTEM) != 0);
+   bool recurrent = m_recurrent;
+   uint32_t id = m_id;
    unlock();
 
-   if (!m_recurrent)
+   // After this point task can be deleted from outside because SCHEDULED_TASK_RUNNING flag is cleared
+   // No access to class members should be made
+
+   if (!recurrent)
    {
       s_oneTimeScheduleLock.lock();
       s_oneTimeSchedules.sort(ScheduledTaskComparator);
       s_oneTimeScheduleLock.unlock();
 
-      if (isSystem())
+      if (isSystemTask)
       {
-         DeleteScheduledTask(m_id, 0, SYSTEM_ACCESS_FULL);
+         DeleteScheduledTask(id, 0, SYSTEM_ACCESS_FULL);
       }
       else
       {
-         ThreadPoolScheduleRelative(g_schedulerThreadPool, ConfigReadULong(_T("Scheduler.TaskRetentionTime"), 86400) * 1000, DelayedTaskDelete, CAST_TO_POINTER(m_id, void*));
+         ThreadPoolScheduleRelative(g_schedulerThreadPool, ConfigReadULong(_T("Scheduler.TaskRetentionTime"), 86400) * 1000, DelayedTaskDelete, CAST_TO_POINTER(id, void*));
       }
    }
 }
