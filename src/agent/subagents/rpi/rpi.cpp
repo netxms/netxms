@@ -77,13 +77,10 @@ static LONG H_Sensors(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
  */
 static LONG H_PinState(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	TCHAR tmp[128];
-	if (!AgentGetParameterArg(param, 1, tmp, 128))
-   {
-		return SYSINFO_RC_UNSUPPORTED;
-   }
-	StrStrip(tmp);
-   long pin = _tcstol(tmp, NULL, 10);
+   TCHAR tmp[128];
+   if (!AgentGetParameterArg(param, 1, tmp, 128))
+      return SYSINFO_RC_UNSUPPORTED;
+   long pin = _tcstol(Trim(tmp), nullptr, 10);
 
    uint8_t level = bcm2835_gpio_lev((uint8_t)pin);
    ret_int(value, level == HIGH ? 1 : 0);
@@ -123,7 +120,7 @@ static LONG H_CpuTemperature(const TCHAR *param, const TCHAR *arg, TCHAR *value,
    if (fgets(buffer, 10, cpuTemp) != NULL)
    {
       float result;
-      if(sscanf(buffer, "%f", &result))
+      if (sscanf(buffer, "%f", &result))
       {
          result = result / 1000.0;
          ret_double(value, result, 1);
@@ -141,23 +138,22 @@ static LONG H_CpuTemperature(const TCHAR *param, const TCHAR *arg, TCHAR *value,
  */
 static void ConfigureGPIO(TCHAR *str, uint8_t mode)
 {
-   if (str != NULL)
+   if (str != nullptr)
    {
       TCHAR *item, *end;
       for(item = str; *item != 0; item = end + 1)
       {
          end = _tcschr(item, _T(','));
-         if (end != NULL)
+         if (end != nullptr)
          {
             *end = 0;
          }
-         StrStrip(item);
-         uint8_t pin = (uint8_t)_tcstol(item, NULL, 10);
+         uint8_t pin = (uint8_t)_tcstol(Trim(item), nullptr, 10);
          AgentWriteDebugLog(1, _T("RPI: configuring gpio%u as %s"), pin,
                mode == BCM2835_GPIO_FSEL_INPT ? _T("INPUT") : _T("OUTPUT"));
          bcm2835_gpio_fsel(pin, mode);
       }
-      free(str);
+      MemFree(str);
    }
 }
 
@@ -172,15 +168,15 @@ static bool SubagentInit(Config *config)
       return false;
    }
 
-	// Parse configuration
-	bool success = config->parseTemplate(_T("RPI"), m_cfgTemplate);
-	if (success)
-	{
+   // Parse configuration
+   bool success = config->parseTemplate(_T("RPI"), m_cfgTemplate);
+   if (success)
+   {
       ConfigureGPIO(m_inputPins, BCM2835_GPIO_FSEL_INPT);
       ConfigureGPIO(m_outputPins, BCM2835_GPIO_FSEL_OUTP);
    }
 
-	bool ret = true;
+   bool ret = true;
    if (!m_disableDHT22)
    {
       ret = StartSensorCollector();

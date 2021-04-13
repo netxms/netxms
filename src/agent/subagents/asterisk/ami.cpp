@@ -234,8 +234,8 @@ AmiMessage *AmiMessage::createFromNetwork(RingBuffer& buffer)
             {
                *s = 0;
                s++;
-               StrStripA(line);
-               StrStripA(s);
+               TrimA(line);
+               TrimA(s);
                if (!stricmp(line, "Action"))
                {
                   m->m_type = AMI_ACTION;

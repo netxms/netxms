@@ -561,7 +561,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
             next = _tcschr(curr, _T('\n'));
             if (next != nullptr)
                *next = 0;
-            StrStrip(curr);
+            Trim(curr);
             if (!AddCounterFromConfig(curr))
             {
                nxlog_write_tag(NXLOG_WARNING, WINPERF_DEBUG_TAG,

@@ -1721,20 +1721,20 @@ void LIBNETXMS_EXPORTABLE WindowsProductNameFromVersion(OSVERSIONINFOEX *ver, TC
  */
 bool LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, size_t size)
 {
-	OSVERSIONINFOEX ver;
-	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+   OSVERSIONINFOEX ver;
+   ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 #pragma warning(push)
 #pragma warning(disable : 4996)
    if (!GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&ver)))
-		return false;
+      return false;
 #pragma warning(pop)
 
    TCHAR buffer[256];
    WindowsProductNameFromVersion(&ver, buffer);
 
-	_sntprintf(versionString, size, _T("Windows %s Build %d %s"), buffer, ver.dwBuildNumber, ver.szCSDVersion);
-	StrStrip(versionString);
-	return true;
+   _sntprintf(versionString, size, _T("Windows %s Build %d %s"), buffer, ver.dwBuildNumber, ver.szCSDVersion);
+   Trim(versionString);
+   return true;
 }
 
 #endif

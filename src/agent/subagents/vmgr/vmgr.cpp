@@ -81,9 +81,9 @@ static void AddHostConnectionFromConfig(TCHAR *hostName, Config *config)
 	bool success = config->parseTemplate(section, m_aditionalCfgTemplate);
 	if (success)
 	{
-	   StrStripA(s_url);
-	   StrStripA(s_login);
-	   StrStripA(s_password);
+	   TrimA(s_url);
+	   TrimA(s_login);
+	   TrimA(s_password);
 	}
 
    if (!success || s_url[0] == 0 || !ConnectToHost(hostName))
@@ -136,8 +136,7 @@ static bool SubagentInit(Config *config)
          itemEnd = _tcschr(item, _T('\n'));
          if (itemEnd != nullptr)
             *itemEnd = 0;
-         StrStrip(item);
-         AddHostConnectionFromConfig(item, config);
+         AddHostConnectionFromConfig(Trim(item), config);
       }
    }
 

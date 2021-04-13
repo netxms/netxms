@@ -436,7 +436,7 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    // Get process name
    AgentGetParameterArgA(param, 1, procName, MAX_PATH);
    AgentGetParameterArgA(param, 3, cmdLine, MAX_PATH);
-   StrStripA(cmdLine);
+   TrimA(cmdLine);
 
    nCount = ProcRead(&pList, (procName[0] != 0) ? procName : NULL, (cmdLine[0] != 0) ? cmdLine : NULL, 0);
    if (nCount > 0)
