@@ -830,12 +830,12 @@ static bool SaveComponent(DB_STATEMENT hStmt, const Component *component)
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, component->getPosition());
    DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, component->getClass());
    DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, component->getIfIndex());
-   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, component->getName(), DB_BIND_STATIC);
-   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, component->getDescription(), DB_BIND_STATIC);
-   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, component->getModel(), DB_BIND_STATIC);
-   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, component->getSerial(), DB_BIND_STATIC);
-   DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, component->getVendor(), DB_BIND_STATIC);
-   DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, component->getFirmware(), DB_BIND_STATIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, component->getName(), DB_BIND_STATIC, 255);
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, component->getDescription(), DB_BIND_STATIC, 255);
+   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, component->getModel(), DB_BIND_STATIC, 255);
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, component->getSerial(), DB_BIND_STATIC, 63);
+   DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, component->getVendor(), DB_BIND_STATIC, 63);
+   DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, component->getFirmware(), DB_BIND_STATIC, 127);
    if (!DBExecute(hStmt))
       return false;
 
