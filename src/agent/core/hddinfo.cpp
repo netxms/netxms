@@ -195,7 +195,7 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
                memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->model, 40);
                pValue[40] = 0;
 #endif
-               StrStrip(pValue);
+               Trim(pValue);
                nRet = SYSINFO_RC_SUCCESS;
                break;
             case _T('N'):   // Serial number
@@ -207,7 +207,7 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
                memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->serial_no, 20);
                pValue[20] = 0;
 #endif
-               StrStrip(pValue);
+               Trim(pValue);
                nRet = SYSINFO_RC_SUCCESS;
                break;
             case _T('F'):   // Firmware
@@ -219,7 +219,7 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
                memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->fw_rev, 8);
                pValue[8] = 0;
 #endif
-               StrStrip(pValue);
+               Trim(pValue);
                nRet = SYSINFO_RC_SUCCESS;
                break;
             default:

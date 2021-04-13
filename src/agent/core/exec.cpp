@@ -451,7 +451,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 					   char *eptr = strchr(line, '\r');
 					   if (eptr != nullptr)
 						   *eptr = 0;
-                  StrStripA(line);
+                  TrimA(line);
 
                   if (line[0] != 0)
                   {

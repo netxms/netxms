@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,11 +38,9 @@ struct LOCK_INFO
    TCHAR szOwnerInfo[MAX_OWNER_INFO];
 };
 
-
-//
-// Static data
-//
-
+/**
+ * EPP lock
+ */
 static MUTEX m_hMutexLockerAccess = NULL;
 static LOCK_INFO s_eppLock = { UNLOCKED, _T("")};
 
@@ -151,8 +149,6 @@ void UnlockEPP()
  */
 void RemoveAllSessionLocks(int sessionId)
 {
-   UINT32 i;
-
    MutexLock(m_hMutexLockerAccess);
    if (s_eppLock.dwLockStatus == (UINT32)sessionId)
    {

@@ -873,7 +873,7 @@ AC_ARG_WITH(dist,
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy"
 	TOOLS="nxlptest"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxtux"
 	NCDRV_MODULES="anysms kannel msteams mymobile nexmo nxagent slack smseagle telegram text2reach websms"
    HDLINK_DIRS="jira redmine"
@@ -984,12 +984,6 @@ if test $? = 0; then
 	if test $? = 0; then
 		COMPONENTS="$COMPONENTS asterisk"
 		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/asterisk/asterisk.la"
-	fi
-
-	check_substr "$STATIC_SUBAGENT_LIST" "odbcquery"
-	if test $? = 0; then
-		COMPONENTS="$COMPONENTS odbc"
-		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/odbcquery/odbcquery.la"
 	fi
 
 	check_substr "$STATIC_SUBAGENT_LIST" "oracle"
@@ -4639,7 +4633,6 @@ AC_CONFIG_FILES([
 	src/agent/subagents/mysql/Makefile
 	src/agent/subagents/netbsd/Makefile
 	src/agent/subagents/netsvc/Makefile
-	src/agent/subagents/odbcquery/Makefile
 	src/agent/subagents/openbsd/Makefile
 	src/agent/subagents/oracle/Makefile
 	src/agent/subagents/pgsql/Makefile
