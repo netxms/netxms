@@ -4,7 +4,7 @@ SET POM_FILES_INSTALL=src/java-common/netxms-base/pom.xml;src/libnxjava/java/pom
 SET POM_FILES_PACKAGE=src/agent/subagents/bind9/pom.xml;src/agent/subagents/jmx/pom.xml;src/agent/subagents/ubntlw/pom.xml;src/client/nxapisrv/java/pom.xml;src/client/nxshell/java/pom.xml;src/client/nxtcpproxy/pom.xml;tests/integration/pom.xml
 
 cd build
-updatetag.pl
+perl updatetag.pl
 cd ..
 copy build\netxms-build-tag.properties src\java-common\netxms-base\src\main\resources\ 
 
