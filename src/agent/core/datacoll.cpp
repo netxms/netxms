@@ -103,7 +103,7 @@ SNMPTableColumnDefinition::SNMPTableColumnDefinition(DB_RESULT hResult, int row)
    TCHAR oid[1024];
    oid[0] = 0;
    DBGetField(hResult, row, 3, oid, 1024);
-   StrStrip(oid);
+   Trim(oid);
    if (oid[0] != 0)
    {
       uint32_t oidBin[256];

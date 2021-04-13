@@ -119,10 +119,8 @@ bool AddActionFromConfig(const TCHAR *config)
    if (index == String::npos)
       return false;
 
-   TCHAR *name = sb.substring(0, index, nullptr);
-   TCHAR *cmdLine = sb.substring(index + 1, -1, nullptr);
-   StrStrip(name);
-   StrStrip(cmdLine);
+   TCHAR *name = Trim(sb.substring(0, index, nullptr));
+   TCHAR *cmdLine = Trim(sb.substring(index + 1, -1, nullptr));
    bool result = AddAction(name, true, cmdLine, nullptr, nullptr, _T(""));
    MemFree(name);
    MemFree(cmdLine);

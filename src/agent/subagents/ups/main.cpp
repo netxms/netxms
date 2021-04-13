@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2020 Victor Kirhenshtein
+** Copyright (C) 2006-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -270,8 +270,7 @@ static bool SubAgentInit(Config *config)
 	{
 		for(i = 0; i < devices->getValueCount(); i++)
 		{
-			entry = _tcsdup(devices->getValue(i));
-			StrStrip(entry);
+			entry = Trim(MemCopyString(devices->getValue(i)));
 			if (!AddDeviceFromConfig(entry))
 			{
 				AgentWriteLog(EVENTLOG_WARNING_TYPE,
@@ -393,24 +392,24 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_enums[] =
 {
-	{ _T("UPS.DeviceList"), H_DeviceList, NULL }
+	{ _T("UPS.DeviceList"), H_DeviceList, nullptr }
 };
 
 /**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("UPS"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, NULL, NULL,
+   SubAgentInit, SubAgentShutdown, nullptr, nullptr,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
    m_enums,
-   0, NULL,	// tables
-   0, NULL,	// actions
-   0, NULL	// push parameters
+   0, nullptr,	// tables
+   0, nullptr,	// actions
+   0, nullptr	// push parameters
 };
 
 /**
@@ -418,7 +417,7 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(UPS)
 {
-   *ppInfo = &m_info;
+   *ppInfo = &s_info;
    return true;
 }
 

@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2014 Victor Kirhenshtein
+** Copyright (C) 2006-2021 Victor Kirhenshtein
 ** Code is partially based on  Meta System driver for NUT:
 **
 ** ! metasys.c - driver for Meta System UPS
@@ -243,7 +243,7 @@ BOOL MetaSysInterface::open()
 
             memset(m_paramList[UPS_PARAM_SERIAL].szValue, 0, 13);
             memcpy(m_paramList[UPS_PARAM_SERIAL].szValue, m_data + 7, std::min(12, nBytes - 7));
-            StrStripA(m_paramList[UPS_PARAM_SERIAL].szValue);
+            TrimA(m_paramList[UPS_PARAM_SERIAL].szValue);
 
             sprintf(m_paramList[UPS_PARAM_FIRMWARE].szValue, "%d.%02d", m_data[5], m_data[6]);
 

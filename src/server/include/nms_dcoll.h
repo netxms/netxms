@@ -420,7 +420,7 @@ public:
    StringObjectMap<InstanceDiscoveryData> *filterInstanceList(StringMap *instances);
    void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
    void setInstanceDiscoveryData(const TCHAR *data) { lock(); m_instanceDiscoveryData = data; unlock(); }
-   void setInstanceFilter(const TCHAR *pszScript);
+   void setInstanceFilter(const TCHAR *script);
    void setInstance(const TCHAR *instance) { lock(); m_instance = instance; unlock(); }
    SharedString getInstance() const { return GetAttributeWithLock(m_instance, m_hMutex); }
    void expandInstance();

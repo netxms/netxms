@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Avaya ERS switches (except ERS 8xxx) (former Nortel/Bay Networks BayStack)
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -61,7 +61,7 @@ bool BayStackDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  */
 void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
-	UINT32 slotSize;
+   uint32_t slotSize;
 	
 	if (!_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.74"), 20) ||	// 56xx
 	    !_tcsncmp(oid, _T(".1.3.6.1.4.1.45.3.65"), 20))	// 5530-24TFD
@@ -83,7 +83,7 @@ void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObje
 	node->setCustomAttribute(_T(".baystack.slotSize"), slotSize);
 
 	UINT32 numVlans;
-	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.1.0"), NULL, 0, &numVlans, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
+	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.1.0"), nullptr, 0, &numVlans, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
 		node->setCustomAttribute(_T(".baystack.rapidCity.vlan"), numVlans);
 	else
 		node->setCustomAttribute(_T(".baystack.rapidCity.vlan"), (UINT32)0);
@@ -110,8 +110,8 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
-	if (ifList == NULL)
-		return NULL;
+	if (ifList == nullptr)
+		return nullptr;
 
    // Translate interface names 
 	// TODO: does it really needed?
@@ -120,21 +120,21 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
 		InterfaceInfo *iface = ifList->get(i);
 
 		const TCHAR *ptr;
-      if ((ptr = _tcsstr(iface->name, _T("- Port"))) != NULL)
+      if ((ptr = _tcsstr(iface->name, _T("- Port"))) != nullptr)
 		{
 			ptr += 2;
          memmove(iface->name, ptr, _tcslen(ptr) + 1);
 		}
-      else if ((ptr = _tcsstr(iface->name, _T("- Unit"))) != NULL)
+      else if ((ptr = _tcsstr(iface->name, _T("- Unit"))) != nullptr)
 		{
 			ptr += 2;
          memmove(iface->name, ptr, _tcslen(ptr) + 1);
 		}
-      else if ((_tcsstr(iface->name, _T("BayStack")) != NULL) ||
-               (_tcsstr(iface->name, _T("Nortel Ethernet Switch")) != NULL))
+      else if ((_tcsstr(iface->name, _T("BayStack")) != nullptr) ||
+               (_tcsstr(iface->name, _T("Nortel Ethernet Switch")) != nullptr))
       {
          ptr = _tcsrchr(iface->name, _T('-'));
-         if (ptr != NULL)
+         if (ptr != nullptr)
          {
             ptr++;
             while(*ptr == _T(' '))
@@ -142,14 +142,14 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
             memmove(iface->name, ptr, _tcslen(ptr) + 1);
          }
       }
-		StrStrip(iface->name);
+		Trim(iface->name);
    }
 	
 	// Calculate slot/port pair from ifIndex
-	UINT32 slotSize = node->getCustomAttributeAsUInt32(_T(".baystack.slotSize"), 64);
+	uint32_t slotSize = node->getCustomAttributeAsUInt32(_T(".baystack.slotSize"), 64);
 	for(int i = 0; i < ifList->size(); i++)
 	{
-		UINT32 slot = ifList->get(i)->index / slotSize + 1;
+	   uint32_t slot = ifList->get(i)->index / slotSize + 1;
 		if ((slot > 0) && (slot <= 8))
 		{
 			ifList->get(i)->location.module = slot;
@@ -161,13 +161,13 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
 	if (node->getCustomAttributeAsUInt32(_T(".baystack.rapidCity.vlan"), 0) > 0)
 		getVlanInterfaces(snmp, ifList);
 
-	UINT32 mgmtIpAddr, mgmtNetMask;
-	if ((SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.2.1"), NULL, 0, &mgmtIpAddr, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS) &&
-	    (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.3.1"), NULL, 0, &mgmtNetMask, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS))
+	uint32_t mgmtIpAddr, mgmtNetMask;
+	if ((SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.2.1"), nullptr, 0, &mgmtIpAddr, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS) &&
+	    (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.3.1"), nullptr, 0, &mgmtNetMask, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS))
 	{
 		// Get switch base MAC address
 		BYTE baseMacAddr[MAC_ADDR_LENGTH];
-		SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.10.1"), NULL, 0, baseMacAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT);
+		SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.10.1"), nullptr, 0, baseMacAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT);
 
 		if (mgmtIpAddr != 0)
 		{

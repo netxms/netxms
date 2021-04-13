@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
 	TCHAR oid[1024];
 	oid[0] = 0;
 	DBGetField(hResult, row, 2, oid, 1024);
-	StrStrip(oid);
+	Trim(oid);
 	if (oid[0] != 0)
 	{
 		UINT32 oidBin[256];

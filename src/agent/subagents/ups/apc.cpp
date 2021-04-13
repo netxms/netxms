@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2015 Victor Kirhenshtein
+** Copyright (C) 2006-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -136,8 +136,7 @@ BOOL APCInterface::open()
    	m_serial.write("\x01", 1);
 		if (readLineFromSerial(buffer, MAX_RESULT_LENGTH))
 		{
-			StrStripA(buffer);
-			setName(buffer);
+			setName(TrimA(buffer));
 		}
    }
    else

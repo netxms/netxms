@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1139,8 +1139,7 @@ void DCObject::setTransformationScript(const TCHAR *source)
    delete m_transformationScript;
    if (source != nullptr)
    {
-      m_transformationScriptSource = _tcsdup(source);
-      StrStrip(m_transformationScriptSource);
+      m_transformationScriptSource = Trim(MemCopyString(source));
       if (m_transformationScriptSource[0] != 0)
       {
          TCHAR errorText[1024];
@@ -1481,14 +1480,13 @@ StringObjectMap<InstanceDiscoveryData> *DCObject::filterInstanceList(StringMap *
 /**
  * Set new instance discovery filter script
  */
-void DCObject::setInstanceFilter(const TCHAR *pszScript)
+void DCObject::setInstanceFilter(const TCHAR *script)
 {
    MemFree(m_instanceFilterSource);
    delete m_instanceFilter;
-   if (pszScript != nullptr)
+   if (script != nullptr)
    {
-      m_instanceFilterSource = MemCopyString(pszScript);
-      StrStrip(m_instanceFilterSource);
+      m_instanceFilterSource = Trim(MemCopyString(script));
       if (m_instanceFilterSource[0] != 0)
       {
          TCHAR errorText[1024];

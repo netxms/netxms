@@ -1,6 +1,6 @@
 /* 
  ** NetXMS subagent for GNU/Linux
- ** Copyright (C) 2004-2020 Raden Solutions
+ ** Copyright (C) 2004-2021 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -741,11 +741,11 @@ LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
    {
       // If name is an alias (i.e. eth0:1), remove alias number
       ptr = strchr(szName, ':');
-      if (ptr != NULL)
+      if (ptr != nullptr)
          *ptr = 0;
 
       fp = fopen("/proc/net/dev", "r");
-      if (fp != NULL)
+      if (fp != nullptr)
       {
          while(1)
          {
@@ -757,9 +757,9 @@ LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
             }
 
             // We expect line in form interface:stats
-            StrStripA(szBuffer);
+            TrimA(szBuffer);
             ptr = strchr(szBuffer, ':');
-            if (ptr == NULL)
+            if (ptr == nullptr)
                continue;
             *ptr = 0;
 
@@ -778,7 +778,7 @@ LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 
       if (nRet == SYSINFO_RC_SUCCESS)
       {
-         StrStripA(ptr);
+         TrimA(ptr);
          switch ((long) pArg)
          {
             case IF_INFO_BYTES_IN:

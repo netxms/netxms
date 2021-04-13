@@ -885,7 +885,7 @@ static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
 		pEnd = _tcschr(pItem, _T(','));
 		if (pEnd != NULL)
 			*pEnd = 0;
-		StrStrip(pItem);
+		Trim(pItem);
 		if (*pItem != 0)
 		{
          g_serverList.add(new ServerInfo(pItem, isControl, isMaster));

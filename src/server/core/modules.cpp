@@ -121,7 +121,7 @@ bool LoadNetXMSModules()
 	for(int i = 0; i < g_moduleLoadList.size(); i++)
    {
 	   TCHAR *curr = MemCopyString(g_moduleLoadList.get(i));
-		StrStrip(curr);
+		Trim(curr);
 		if (*curr == 0)
 		{
 		   MemFree(curr);
@@ -136,8 +136,8 @@ bool LoadNetXMSModules()
 		{
 			*options = 0;
 			options++;
-			StrStrip(curr);
-			StrStrip(options);
+			Trim(curr);
+			Trim(options);
 			if ((*options == _T('0')) || (*options == _T('N')) || (*options == _T('n')))
 			   mandatory = false;
 		}

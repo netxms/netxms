@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -118,11 +118,11 @@ bool LoadServerModules(TCHAR *moduleLoadList)
          *next = 0;
          next++;
       }
-      StrStrip(curr);
+      Trim(curr);
       if (*curr == 0)
          continue;
 
-      bool mandatory = false;
+      bool mandatory = true;
 
       // Check for "mandatory" option
       ptr = _tcschr(curr, _T(','));
@@ -130,8 +130,8 @@ bool LoadServerModules(TCHAR *moduleLoadList)
       {
          *ptr = 0;
          ptr++;
-         StrStrip(curr);
-         StrStrip(ptr);
+         Trim(curr);
+         Trim(ptr);
          mandatory = (*ptr == _T('1')) || (*ptr == _T('Y')) || (*ptr == _T('y'));
       }
 

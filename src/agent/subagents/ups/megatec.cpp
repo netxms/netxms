@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2019 Victor Kirhenshtein
+** Copyright (C) 2006-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -129,10 +129,10 @@ void MegatecInterface::queryStaticData()
       if (buffer[0] == '#')
       {
          buffer[27] = 0;
-         StrStripA(&buffer[17]);
+         TrimA(&buffer[17]);
          strcpy(m_paramList[UPS_PARAM_MODEL].szValue, &buffer[17]);
 
-         StrStripA(&buffer[28]);
+         TrimA(&buffer[28]);
          strcpy(m_paramList[UPS_PARAM_FIRMWARE].szValue, &buffer[28]);
 
          m_paramList[UPS_PARAM_MODEL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);

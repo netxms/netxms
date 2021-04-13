@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -441,12 +441,12 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
 					   do
 					   {
 						   next = _tcschr(curr, _T(';'));
-						   if (next != NULL)
+						   if (next != nullptr)
 							   *next = 0;
-						   StrStrip(curr);
+						   Trim(curr);
 	                  SendXMPPMessage(curr, expandedData);
 						   curr = next + 1;
-					   } while(next != NULL);
+					   } while(next != nullptr);
 #else
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("cannot send XMPP message to %s (server compiled without XMPP support)"), expandedRcpt.cstr());
 #endif

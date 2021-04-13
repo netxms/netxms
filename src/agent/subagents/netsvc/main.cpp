@@ -1,6 +1,6 @@
 /*
 ** NetXMS Network Service check subagent
-** Copyright (C) 2013 Alex Kirhenshtein
+** Copyright (C) 2013-2021 Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -74,8 +74,8 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
 
    AgentGetParameterArgA(parameters, 1, url, 2048);
    AgentGetParameterArg(parameters, 2, pattern, 256);
-   StrStripA(url);
-   StrStrip(pattern);
+   TrimA(url);
+   Trim(pattern);
    if (url[0] != 0)
    {
       if (pattern[0] == 0)
@@ -222,7 +222,7 @@ static void SubagentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] = 
 {
-   { _T("Service.Check(*)"), H_CheckService, NULL, DCI_DT_INT, _T("Service {instance} status") },
+   { _T("Service.Check(*)"), H_CheckService, nullptr, DCI_DT_INT, _T("Service {instance} status") },
 };
 
 /**
@@ -232,13 +232,13 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("NETSVC"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, NULL, NULL,
+   SubagentInit, SubagentShutdown, nullptr, nullptr,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
-   0, NULL, // enums
-   0, NULL,	// tables
-   0, NULL,	// actions
-   0, NULL	// push parameters
+   0, nullptr, // enums
+   0, nullptr,	// tables
+   0, nullptr,	// actions
+   0, nullptr	// push parameters
 };
 
 /**

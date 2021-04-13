@@ -632,9 +632,7 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 
    if (request->isFieldExist(VID_FILTER))
    {
-      TCHAR *filter = request->getFieldAsString(VID_FILTER);
-      if (filter != nullptr)
-         StrStrip(filter);
+      TCHAR *filter = Trim(request->getFieldAsString(VID_FILTER));
       setFilter(filter);
       MemFree(filter);
    }

@@ -486,7 +486,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 			if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0,
 	                  iface->alias, MAX_DB_STRING * sizeof(TCHAR), 0) == SNMP_ERR_SUCCESS)
          {
-            StrStrip(iface->alias);
+            Trim(iface->alias);
          }
          else
          {

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -127,7 +127,7 @@ static bool AgentGetParameterArgInternal(const TCHAR *param, int index, TCHAR *a
    }
 
    if (success)
-      StrStrip(arg);
+      Trim(arg);
    return success;
 }
 

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Local administration tool
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -152,22 +152,18 @@ static void Shell()
       ptr = szCommand;
 #endif
 
-      if (ptr != NULL)
+      if (ptr != nullptr)
       {
 #ifdef UNICODE
          WCHAR wcCommand[256];
-#if HAVE_MBSTOWCS
-         mbstowcs(wcCommand, ptr, 255);
-#else
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, ptr, -1, wcCommand, 256);
-#endif
+         MultiByteToWideCharSysLocale(ptr, wcCommand, 255);
          wcCommand[255] = 0;
-         StrStrip(wcCommand);
+         TrimW(wcCommand);
          if (wcCommand[0] != 0)
          {
             if (ExecCommand(wcCommand))
 #else
-         StrStrip(ptr);
+         TrimA(ptr);
          if (*ptr != 0)
          {
             if (ExecCommand(ptr))

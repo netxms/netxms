@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2020 Raden Solutions
+ ** Copyright (C) 2003-2021 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -1297,7 +1297,7 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
       if (ptr != nullptr)
          *ptr = 0;
 
-      StrStrip(buffer);
+      Trim(buffer);
       if (buffer[0] == 0)
          continue;
 
@@ -1348,8 +1348,8 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
          }
          *ptr = 0;
          ptr++;
-         StrStrip(buffer);
-         StrStrip(ptr);
+         Trim(buffer);
+         Trim(ptr);
 
          ConfigEntry *entry = currentSection->findEntry(buffer);
          if (entry == nullptr)

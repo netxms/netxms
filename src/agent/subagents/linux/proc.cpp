@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2020 Raden Solutions
+** Copyright (C) 2004-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ public:
    
    FileDescriptor(struct dirent *e, const char *base)
    {
-      handle = strtol(e->d_name, NULL, 10);
+      handle = strtol(e->d_name, nullptr, 10);
       
       char path[MAX_PATH];
       snprintf(path, MAX_PATH, "%s/%s", base, e->d_name);
@@ -46,17 +46,17 @@ public:
       if (len >= 0)
       {
          fname[len] = 0;
-         name = strdup(fname);
+         name = MemCopyStringA(fname);
       }
       else
       {
-         name = strdup("");
+         name = MemCopyStringA("");
       }
    }
    
    ~FileDescriptor()
    {
-      free(name);
+      MemFree(name);
    }
 };
 
@@ -66,10 +66,10 @@ public:
 class Process
 {
 public:
-	UINT32 pid;
+	uint32_t pid;
 	char name[MAX_PROCESS_NAME_LEN];
-	UINT32 parent;          // PID of parent process
-	UINT32 group;           // Group ID
+	uint32_t parent;          // PID of parent process
+	uint32_t group;           // Group ID
 	char state;             // Process state
 	long threads;           // Number of threads
 	unsigned long ktime;    // Number of ticks spent in kernel mode
@@ -80,7 +80,7 @@ public:
 	unsigned long majflt;   // Number of major page faults
    ObjectArray<FileDescriptor> *fd;
    
-   Process(UINT32 _pid, const char *_name)
+   Process(uint32_t _pid, const char *_name)
    {
       pid = _pid;
       strlcpy(name, _name, MAX_PROCESS_NAME_LEN);
@@ -94,7 +94,7 @@ public:
       rss = 0;
       minflt = 0;
       majflt = 0;
-      fd = NULL;
+      fd = nullptr;
    }
    
    ~Process()
@@ -110,7 +110,7 @@ static int ProcFilter(const struct dirent *pEnt)
 {
 	char *pTmp;
 
-	if (pEnt == NULL)
+	if (pEnt == nullptr)
 	{
 		return 0; // ignore file
 	}
@@ -473,7 +473,7 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
 	int i, count, type;
 	INT64 currVal, finalVal;
 	char procNameFilter[MAX_PATH], cmdLineFilter[MAX_PATH], buffer[256], userFilter[256] = "";
-   static const char *typeList[]={ "min", "max", "avg", "sum", NULL };
+   static const char *typeList[]={ "min", "max", "avg", "sum", nullptr };
 
    // Get parameter type arguments
    AgentGetParameterArgA(param, 2, buffer, 256);
@@ -483,10 +483,10 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
    }
    else
    {
-      for(type = 0; typeList[type] != NULL; type++)
+      for(type = 0; typeList[type] != nullptr; type++)
          if (!stricmp(typeList[type], buffer))
             break;
-      if (typeList[type] == NULL)
+      if (typeList[type] == nullptr)
          return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
    }
 
@@ -494,11 +494,11 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
 	AgentGetParameterArgA(param, 1, procNameFilter, MAX_PATH);
 	AgentGetParameterArgA(param, 3, cmdLineFilter, MAX_PATH);
    AgentGetParameterArgA(param, 4, userFilter, sizeof(userFilter));
-	StrStripA(cmdLineFilter);
+	TrimA(cmdLineFilter);
 
 	ObjectArray<Process> procList(128, 128, Ownership::True);
-	count = ProcRead(&procList, procNameFilter, (cmdLineFilter[0] != 0) ? cmdLineFilter : NULL,
-	         (userFilter[0] != 0) ? userFilter : NULL, CAST_FROM_POINTER(arg, int) == PROCINFO_HANDLES);
+	count = ProcRead(&procList, procNameFilter, (cmdLineFilter[0] != 0) ? cmdLineFilter : nullptr,
+	         (userFilter[0] != 0) ? userFilter : nullptr, CAST_FROM_POINTER(arg, int) == PROCINFO_HANDLES);
 	AgentWriteDebugLog(5, _T("H_ProcessDetails(\"%hs\"): ProcRead() returns %d"), param, count);
 	if (count == -1)
 		return SYSINFO_RC_ERROR;

@@ -2720,7 +2720,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      {
                         *s = 0;
                         s++;
-                        StrStrip(s);
+                        Trim(s);
 #ifdef UNICODE
                         WideCharToMultiByte(CP_UTF8, 0, s, -1, entryPoint, MAX_IDENTIFIER_LENGTH, NULL, NULL);
                         entryPoint[MAX_IDENTIFIER_LENGTH - 1] = 0;
@@ -2732,7 +2732,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      {
                         entryPoint[0] = 0;
                      }
-                     StrStrip(buffer);
+                     Trim(buffer);
 
                      NXSL_VM *vm = CreateServerScriptVM(buffer, self(), dci);
                      if (vm != nullptr)
@@ -2790,7 +2790,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                         *defaultValue = 0;
                         defaultValue++;
                      }
-                     StrStrip(buffer);
+                     Trim(buffer);
                      TCHAR *v = nullptr;
                      if (instance != nullptr)
                      {
@@ -2829,7 +2829,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   else if (inputFields != nullptr)
                   {
                      buffer[i] = 0;
-                     StrStrip(buffer);
+                     Trim(buffer);
                      output.append(inputFields->get(buffer));
                   }
                   break;
@@ -2853,7 +2853,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                         {
                            *defaultValue = 0;
                            defaultValue++;
-                           StrStrip(buffer);
+                           Trim(buffer);
                            int index = names->indexOfIgnoreCase(buffer);
                            if (index != -1)
                               output.append(event->getParameter(index));
@@ -2862,7 +2862,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                         }
                         else
                         {
-                           StrStrip(buffer);
+                           Trim(buffer);
                            int index = names->indexOfIgnoreCase(buffer);
                            if (index != -1)
                               output.append(event->getParameter(index));

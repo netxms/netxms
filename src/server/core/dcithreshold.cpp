@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -916,15 +916,14 @@ void Threshold::setScript(TCHAR *script)
 {
    MemFree(m_scriptSource);
    delete m_script;
-   if (script != NULL)
+   if (script != nullptr)
    {
-      m_scriptSource = script;
-      StrStrip(m_scriptSource);
+      m_scriptSource = Trim(script);
       if (m_scriptSource[0] != 0)
       {
          TCHAR errorText[1024];
-         m_script = NXSLCompile(m_scriptSource, errorText, 1024, NULL);
-         if (m_script == NULL)
+         m_script = NXSLCompile(m_scriptSource, errorText, 1024, nullptr);
+         if (m_script == nullptr)
          {
             TCHAR buffer[1024], defaultName[32];
             _sntprintf(defaultName, 32, _T("[%d]"), m_targetId);
@@ -936,13 +935,13 @@ void Threshold::setScript(TCHAR *script)
       }
       else
       {
-         m_script = NULL;
+         m_script = nullptr;
       }
    }
    else
    {
-      m_scriptSource = NULL;
-      m_script = NULL;
+      m_scriptSource = nullptr;
+      m_script = nullptr;
    }
    m_lastScriptErrorReport = 0;  // allow immediate error report after script change
 }

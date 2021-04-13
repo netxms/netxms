@@ -1166,7 +1166,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          // Get filter
          ExtractWord(pArg, szBuffer);
-         StrStrip(szBuffer);
+         Trim(szBuffer);
          DumpObjects(pCtx, (szBuffer[0] != 0) ? szBuffer : nullptr);
       }
       else if (IsCommand(_T("PE"), szBuffer, 2))

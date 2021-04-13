@@ -1,6 +1,6 @@
 /*
 ** NetXMS PING subagent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 /**
  * Static data
  */
-static ThreadPool *s_pollers = NULL;
+static ThreadPool *s_pollers = nullptr;
 static ObjectArray<PING_TARGET> s_targets(16, 16, Ownership::True);
 static Mutex s_targetLock;
 static UINT32 s_timeout = 3000;    // Default timeout is 3 seconds
@@ -49,7 +49,7 @@ static UINT32 s_options = PING_OPT_ALLOW_AUTOCONFIGURE;
 static void Poller(PING_TARGET *target)
 {
 	bool unreachable = false;
-	INT64 startTime = GetCurrentTimeMs();
+	int64_t startTime = GetCurrentTimeMs();
 
    if (target->automatic && (startTime / 1000 - target->lastDataRead > s_maxTargetInactivityTime))
    {
@@ -73,7 +73,7 @@ retry:
          goto retry;
       }
       target->lastRTT = 10000;
-      unreachable = TRUE;
+      unreachable = true;
    }
 
    target->history[target->bufPos++] = target->lastRTT;
@@ -235,18 +235,18 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	TCHAR szTarget[MAX_DB_STRING];
-	BOOL bUseName = FALSE;
+	bool bUseName = false;
 
 	if (!AgentGetParameterArg(pszParam, 1, szTarget, MAX_DB_STRING))
 		return SYSINFO_RC_UNSUPPORTED;
-	StrStrip(szTarget);
+	Trim(szTarget);
 
    InetAddress ipAddr = InetAddress::parse(szTarget);
    if (!ipAddr.isValid())
-		bUseName = TRUE;
+		bUseName = true;
 
    int i;
-   PING_TARGET *t = NULL;
+   PING_TARGET *t = nullptr;
    s_targetLock.lock();
    for(i = 0; i < s_targets.size(); i++)
 	{
@@ -284,7 +284,7 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
          t->cumulativeMinRTT = 0x7FFFFFFF;
          t->movingAvgRTT = 0x7FFFFFFF;
          t->automatic = true;
-         t->lastDataRead = time(NULL);
+         t->lastDataRead = time(nullptr);
 
          s_targetLock.lock();
          s_targets.add(t);
@@ -300,7 +300,7 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
    }
    s_targetLock.unlock();
 
-   t->lastDataRead = time(NULL);
+   t->lastDataRead = time(nullptr);
 	switch(*pArg)
 	{
 		case _T('A'):
@@ -415,14 +415,14 @@ static LONG H_ScanRange(const TCHAR *param, const TCHAR *arg, StringList *value,
 
    InetAddress start = InetAddress::parse(startAddr);
    InetAddress end = InetAddress::parse(endAddr);
-   UINT32 timeout = (timeoutText[0] != 0) ? _tcstoul(timeoutText, NULL, 0) : 1000;
+   uint32_t timeout = (timeoutText[0] != 0) ? _tcstoul(timeoutText, nullptr, 0) : 1000;
    if (!start.isValid() || !end.isValid() || (timeout == 0))
    {
       return SYSINFO_RC_UNSUPPORTED;
    }
 
    StructArray<InetAddress> *results = ScanAddressRange(start, end, timeout);
-   if (results == NULL)
+   if (results == nullptr)
       return SYSINFO_RC_ERROR;
 
    TCHAR buffer[128];
@@ -448,13 +448,12 @@ static void SubagentShutdown()
  */
 static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 {
-	TCHAR *ptr, *pszLine, *pszName = NULL;
-	UINT32 dwPacketSize = s_defaultPacketSize;
+	TCHAR *ptr, *pszLine, *pszName = nullptr;
+	uint32_t dwPacketSize = s_defaultPacketSize;
 	bool dontFragment = ((s_options & PING_OPT_DONT_FRAGMENT) != 0);
 	BOOL bResult = FALSE;
 
-	pszLine = _tcsdup(pszCfg);
-   StrStrip(pszLine);
+	pszLine = Trim(MemCopyString(pszCfg));
    TCHAR *addrStart = pszLine;
    TCHAR *scanStart = pszLine;
 
@@ -462,7 +461,7 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
    {
       addrStart++;
 	   ptr = _tcschr(addrStart, _T(']'));
-	   if (ptr != NULL)
+	   if (ptr != nullptr)
 	   {
          *ptr = 0;
          scanStart = ptr + 1;
@@ -470,38 +469,38 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
    }
 
 	ptr = _tcschr(scanStart, _T(':'));
-	if (ptr != NULL)
+	if (ptr != nullptr)
 	{
 		*ptr = 0;
 		ptr++;
-		StrStrip(ptr);
+		Trim(ptr);
 		pszName = ptr;
 
 		// Packet size
 		ptr = _tcschr(pszName, _T(':'));
-		if (ptr != NULL)
+		if (ptr != nullptr)
 		{
 			*ptr = 0;
 			ptr++;
-			StrStrip(ptr);
-			StrStrip(pszName);
+			Trim(ptr);
+			Trim(pszName);
 
 			// Options
 	      TCHAR *options = _tcschr(ptr, _T(':'));
-	      if (options != NULL)
+	      if (options != nullptr)
 	      {
 	         *options = 0;
 	         options++;
-	         StrStrip(ptr);
-	         StrStrip(options);
+	         Trim(ptr);
+	         Trim(options);
 	         dontFragment = (_tcsicmp(options, _T("DF")) != 0);
 	      }
 
 	      if (*ptr != 0)
-	         dwPacketSize = _tcstoul(ptr, NULL, 0);
+	         dwPacketSize = _tcstoul(ptr, nullptr, 0);
 		}
 	}
-	StrStrip(addrStart);
+	Trim(addrStart);
 
    InetAddress addr = InetAddress::resolveHostName(addrStart);
    if (addr.isValid())
@@ -509,9 +508,9 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
       PING_TARGET *t = new PING_TARGET;
 		memset(t, 0, sizeof(PING_TARGET));
 		t->ipAddr = addr;
-		nx_strncpy(t->dnsName, addrStart, MAX_DB_STRING);
-		if (pszName != NULL)
-			nx_strncpy(t->name, pszName, MAX_DB_STRING);
+		_tcslcpy(t->dnsName, addrStart, MAX_DB_STRING);
+		if (pszName != nullptr)
+			_tcslcpy(t->name, pszName, MAX_DB_STRING);
 		else
          addr.toString(t->name);
 		t->packetSize = dwPacketSize;
@@ -529,21 +528,21 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 /**
  * Configuration file template
  */
-static TCHAR *m_pszTargetList = NULL;
-UINT32 s_poolMaxSize = 1024;
-UINT32 s_poolMinSize = 1;
+static TCHAR *m_pszTargetList = nullptr;
+static uint32_t s_poolMaxSize = 1024;
+static uint32_t s_poolMinSize = 1;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("AutoConfigureTargets"), CT_BOOLEAN_FLAG_32, 0, 0, PING_OPT_ALLOW_AUTOCONFIGURE, 0, &s_options, NULL },
-	{ _T("DefaultPacketSize"), CT_LONG, 0, 0, 0, 0, &s_defaultPacketSize, NULL },
-   { _T("DefaultDoNotFragmentFlag"), CT_BOOLEAN_FLAG_32, 0, 0, PING_OPT_DONT_FRAGMENT, 0, &s_options, NULL },
-   { _T("MaxTargetInactivityTime"), CT_LONG, 0, 0, 0, 0, &s_maxTargetInactivityTime, NULL },
-	{ _T("PacketRate"), CT_LONG, 0, 0, 0, 0, &s_pollsPerMinute, NULL },
-	{ _T("Target"), CT_STRING_CONCAT, _T('\n'), 0, 0, 0, &m_pszTargetList, NULL },
-   { _T("ThreadPoolMaxSize"), CT_LONG, 0, 0, 0, 0, &s_poolMaxSize, NULL },
-   { _T("ThreadPoolMinSize"), CT_LONG, 0, 0, 0, 0, &s_poolMinSize, NULL },
-	{ _T("Timeout"), CT_LONG, 0, 0, 0, 0, &s_timeout, NULL },
-	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
+   { _T("AutoConfigureTargets"), CT_BOOLEAN_FLAG_32, 0, 0, PING_OPT_ALLOW_AUTOCONFIGURE, 0, &s_options, nullptr },
+	{ _T("DefaultPacketSize"), CT_LONG, 0, 0, 0, 0, &s_defaultPacketSize, nullptr },
+   { _T("DefaultDoNotFragmentFlag"), CT_BOOLEAN_FLAG_32, 0, 0, PING_OPT_DONT_FRAGMENT, 0, &s_options, nullptr },
+   { _T("MaxTargetInactivityTime"), CT_LONG, 0, 0, 0, 0, &s_maxTargetInactivityTime, nullptr },
+	{ _T("PacketRate"), CT_LONG, 0, 0, 0, 0, &s_pollsPerMinute, nullptr },
+	{ _T("Target"), CT_STRING_CONCAT, _T('\n'), 0, 0, 0, &m_pszTargetList, nullptr },
+   { _T("ThreadPoolMaxSize"), CT_LONG, 0, 0, 0, 0, &s_poolMaxSize, nullptr },
+   { _T("ThreadPoolMinSize"), CT_LONG, 0, 0, 0, 0, &s_poolMinSize, nullptr },
+	{ _T("Timeout"), CT_LONG, 0, 0, 0, 0, &s_timeout, nullptr },
+	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
 };
 
 /**
@@ -568,16 +567,16 @@ static bool SubagentInit(Config *config)
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Packet rate set to %d packets per minute (%d ms between packets)"), s_pollsPerMinute, 60000 / s_pollsPerMinute);
 
    // Parse target list
-   if (m_pszTargetList != NULL)
+   if (m_pszTargetList != nullptr)
    {
       TCHAR *pItem = m_pszTargetList;
       TCHAR *pEnd = _tcschr(pItem, _T('\n'));
-      while(pEnd != NULL)
+      while(pEnd != nullptr)
       {
          *pEnd = 0;
-         StrStrip(pItem);
+         Trim(pItem);
          if (!AddTargetFromConfig(pItem))
-            AgentWriteLog(NXLOG_WARNING,
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG,
                   _T("Unable to add ICMP ping target from configuration file. ")
                   _T("Original configuration record: %s"), pItem);
          pItem = pEnd +1;

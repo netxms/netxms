@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2020 Raden Solutions
+** Copyright (C) 2004-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -465,7 +465,7 @@ struct CPU_INFO
 static int ReadCpuInfo(CPU_INFO *info, int size)
 {
    FILE *f = fopen("/proc/cpuinfo", "r");
-   if (f == NULL)
+   if (f == nullptr)
    {
       AgentWriteDebugLog(2, _T("Cannot open /proc/cpuinfo"));
       return -1;
@@ -475,26 +475,26 @@ static int ReadCpuInfo(CPU_INFO *info, int size)
    char buffer[256];
    while(!feof(f))
    {
-      if (fgets(buffer, sizeof(buffer), f) == NULL)
+      if (fgets(buffer, sizeof(buffer), f) == nullptr)
          break;
       char *s = strchr(buffer, '\n');
-      if (s != NULL)
+      if (s != nullptr)
          *s = 0;
 
       s = strchr(buffer, ':');
-      if (s == NULL)
+      if (s == nullptr)
          continue;
 
       *s = 0;
       s++;
-      StrStripA(buffer);
-      StrStripA(s);
+      TrimA(buffer);
+      TrimA(s);
 
       if (!strcmp(buffer, "processor"))
       {
          count++;
          memset(&info[count], 0, sizeof(CPU_INFO));
-         info[count].id = (int)strtol(s, NULL, 10);
+         info[count].id = (int)strtol(s, nullptr, 10);
          continue;
       }
 
@@ -512,20 +512,20 @@ static int ReadCpuInfo(CPU_INFO *info, int size)
          if (*eptr == '.')
          {
             eptr[4] = 0;
-            info[count].frequency += strtoll(eptr + 1, NULL, 10);
+            info[count].frequency += strtoll(eptr + 1, nullptr, 10);
          }
       }
       else if (!strcmp(buffer, "cache size"))
       {
-         info[count].cacheSize = (int)strtol(s, NULL, 10);
+         info[count].cacheSize = (int)strtol(s, nullptr, 10);
       }
       else if (!strcmp(buffer, "physical id"))
       {
-         info[count].physicalId = (int)strtol(s, NULL, 10);
+         info[count].physicalId = (int)strtol(s, nullptr, 10);
       }
       else if (!strcmp(buffer, "core id"))
       {
-         info[count].coreId = (int)strtol(s, NULL, 10);
+         info[count].coreId = (int)strtol(s, nullptr, 10);
       }
    }
 

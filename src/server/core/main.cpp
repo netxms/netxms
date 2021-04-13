@@ -978,15 +978,15 @@ BOOL NXCORE_EXPORTABLE Initialize()
    // Read server ID
    TCHAR buffer[256];
    MetaDataReadStr(_T("ServerID"), buffer, 256, _T(""));
-   StrStrip(buffer);
+   Trim(buffer);
    if (buffer[0] != 0)
    {
-      g_serverId = _tcstoull(buffer, NULL, 16);
+      g_serverId = _tcstoull(buffer, nullptr, 16);
    }
    else
    {
       // Generate new ID
-      g_serverId = ((UINT64)time(NULL) << 31) | (UINT64)((UINT32)rand() & 0x7FFFFFFF);
+      g_serverId = ((UINT64)time(nullptr) << 31) | (UINT64)((UINT32)rand() & 0x7FFFFFFF);
       _sntprintf(buffer, 256, UINT64X_FMT(_T("016")), g_serverId);
       MetaDataWriteStr(_T("ServerID"), buffer);
    }
@@ -1579,29 +1579,25 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 #else
 			   WriteToTerminal(_T("\x1b[33mnetxmsd:\x1b[0m "));
 			   fflush(stdout);
-			   if (fgets(szCommand, 255, stdin) == NULL)
+			   if (fgets(szCommand, 255, stdin) == nullptr)
 				   break;   // Error reading stdin
 			   ptr = strchr(szCommand, '\n');
-			   if (ptr != NULL)
+			   if (ptr != nullptr)
 				   *ptr = 0;
 			   ptr = szCommand;
 #endif
 
-			   if (ptr != NULL)
+			   if (ptr != nullptr)
 			   {
 #ifdef UNICODE
-#if HAVE_MBSTOWCS
-			      mbstowcs(wcCommand, ptr, 255);
-#else
-				   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, ptr, -1, wcCommand, 256);
-#endif
+			      MultiByteToWideCharSysLocale(ptr, wcCommand, 255);
 				   wcCommand[255] = 0;
-				   StrStrip(wcCommand);
+				   TrimW(wcCommand);
 				   if (wcCommand[0] != 0)
 				   {
 					   if (ProcessConsoleCommand(wcCommand, &ctx) == CMD_EXIT_SHUTDOWN)
 #else
-				   StrStrip(ptr);
+				   TrimA(ptr);
 				   if (*ptr != 0)
 				   {
 					   if (ProcessConsoleCommand(ptr, &ctx) == CMD_EXIT_SHUTDOWN)

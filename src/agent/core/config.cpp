@@ -186,7 +186,7 @@ int CreateConfig(bool forceCreate, const char *masterServers, const char *logFil
          {
             strlcpy(address, curr, sizeof(address));
          }
-         StrStripA(address);
+         TrimA(address);
 
          if (next == nullptr)
          {
@@ -196,7 +196,7 @@ int CreateConfig(bool forceCreate, const char *masterServers, const char *logFil
          size_t len = next - curr;
          char temp[1024];
          strlcpy(temp, curr, std::min(len + 1, sizeof(temp)));
-         StrStripA(temp);
+         TrimA(temp);
          if (temp[0] != 0)
             _ftprintf(fp, _T("ServerConnection = %hs\nMasterServers = %hs\n"), temp, address);
          curr = next + 1;
@@ -253,7 +253,7 @@ int CreateConfig(bool forceCreate, const char *masterServers, const char *logFil
          next = strstr(curr, "~~");
          if (next != nullptr)
             *next = 0;
-         StrStripA(curr);
+         TrimA(curr);
          if ((*curr == '[') || (*curr == '*') || (strchr(curr, '=') != nullptr))
          {
             _ftprintf(fp, _T("%hs\n"), curr);

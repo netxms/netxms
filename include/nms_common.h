@@ -1323,10 +1323,10 @@ template <typename T> static inline void MemFreeAndNull(T* &p) { if (p != nullpt
 #define MemRealloc(p, size) realloc(p, size)
 #if FREE_IS_NULL_SAFE
 #define MemFree(p) free(p);
-#define MemFreeAndNull(p) do { free(p); p = NULL; } while(0)
+#define MemFreeAndNull(p) do { free(p); p = nullptr; } while(0)
 #else
 #define MemFree(p) do { if ((p) != NULL) free(p); } while(0)
-#define MemFreeAndNull(p) do { if ((p) != NULL) { free(p); p = NULL; } } while(0)
+#define MemFreeAndNull(p) do { if ((p) != nullptr) { free(p); p = nullptr; } } while(0)
 #endif
 
 #endif /* __cplusplus */
@@ -1372,18 +1372,18 @@ template<typename T> T *MemCopyArray(const T *data, size_t count)
 
 inline char *MemCopyStringA(const char *src)
 {
-   return (src != NULL) ? MemCopyBlock(src, strlen(src) + 1) : NULL;
+   return (src != nullptr) ? MemCopyBlock(src, strlen(src) + 1) : nullptr;
 }
 
 inline WCHAR *MemCopyStringW(const WCHAR *src)
 {
-   return (src != NULL) ? MemCopyBlock(src, (wcslen(src) + 1) * sizeof(WCHAR)) : NULL;
+   return (src != nullptr) ? MemCopyBlock(src, (wcslen(src) + 1) * sizeof(WCHAR)) : nullptr;
 }
 
 #else
 
-#define MemCopyStringA(s) (((s) != NULL) ? static_cast<char*>(MemCopyBlock((s), strlen(s) + 1)) : NULL)
-#define MemCopyStringW(s) (((s) != NULL) ? static_cast<WCHAR*>(MemCopyBlock((s), (wcslen(s) + 1) * sizeof(WCHAR))) : NULL)
+#define MemCopyStringA(s) (((s) != nullptr) ? static_cast<char*>(MemCopyBlock((s), strlen(s) + 1)) : nullptr)
+#define MemCopyStringW(s) (((s) != nullptr) ? static_cast<WCHAR*>(MemCopyBlock((s), (wcslen(s) + 1) * sizeof(WCHAR))) : nullptr)
 
 #endif
 

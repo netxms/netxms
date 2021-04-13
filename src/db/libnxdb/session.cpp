@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -639,7 +639,7 @@ uint32_t LIBNXDB_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int row, int colu
    TCHAR *value = DBGetField(hResult, row, column, buffer, 256);
    if (value == nullptr)
       return 0;
-	StrStrip(value);
+	Trim(value);
 	uint32_t u;
 	if (*value == _T('-'))
 	{
@@ -662,7 +662,7 @@ uint64_t LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int row, int col
    TCHAR *value = DBGetField(hResult, row, column, buffer, 256);
    if (value == nullptr)
       return 0;
-   StrStrip(value);
+   Trim(value);
    uint64_t u;
    if (*value == _T('-'))
 	{
@@ -1044,7 +1044,7 @@ UINT32 LIBNXDB_EXPORTABLE DBGetFieldULong(DB_UNBUFFERED_RESULT hResult, int iCol
 
    if (DBGetField(hResult, iColumn, szBuffer, 64) == NULL)
       return 0;
-	StrStrip(szBuffer);
+	Trim(szBuffer);
 	if (szBuffer[0] == _T('-'))
 	{
 		iVal = _tcstol(szBuffer, NULL, 10);
@@ -1068,7 +1068,7 @@ UINT64 LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_UNBUFFERED_RESULT hResult, int iCo
 
    if (DBGetField(hResult, iColumn, szBuffer, 64) == NULL)
       return 0;
-	StrStrip(szBuffer);
+	Trim(szBuffer);
 	if (szBuffer[0] == _T('-'))
 	{
 		iVal = _tcstoll(szBuffer, NULL, 10);

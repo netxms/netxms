@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -203,7 +203,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
       TCHAR suffixText[128];
       DBGetField(hResult, 0, 21, suffixText, 128);
-      StrStrip(suffixText);
+      Trim(suffixText);
       if (suffixText[0] == 0)
       {
          UINT32 suffix[16];

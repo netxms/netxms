@@ -117,12 +117,12 @@ InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
             iface->type = IFTYPE_GPON;
             if (SnmpGetEx(snmp, NULL, oid, 16, iface->alias, MAX_DB_STRING * sizeof(TCHAR), 0, NULL) != SNMP_ERR_SUCCESS)
             {
-               StrStrip(iface->alias);
+               Trim(iface->alias);
             }
             oid[12] = 13;
             if (SnmpGetEx(snmp, NULL, oid, 16, iface->description, MAX_DB_STRING * sizeof(TCHAR), 0, NULL) != SNMP_ERR_SUCCESS)
             {
-               StrStrip(iface->description);
+               Trim(iface->description);
             }
             oid[12] = 2;
             if (SnmpGetEx(snmp, NULL, oid, 16, iface->name, MAX_DB_STRING * sizeof(TCHAR), 0, NULL) != SNMP_ERR_SUCCESS)

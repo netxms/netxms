@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -135,8 +135,8 @@ TCHAR *SMCLP_Connection::get(const TCHAR *path, const TCHAR *parameter)
       {
          *ptr = 0;
          ptr++;
-         StrStrip(_buffer);
-         StrStrip(ptr);
+         Trim(_buffer);
+         Trim(ptr);
          if (!_tcsicmp(_buffer, parameter))
          {
             ret = _tcsdup(ptr);

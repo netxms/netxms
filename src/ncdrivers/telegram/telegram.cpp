@@ -41,16 +41,6 @@
 #define NUMBERS_TEXT _T("1234567890")
 
 /**
- * Request data for cURL call
- */
-struct ResponseData
-{
-   size_t size;
-   size_t allocated;
-   char *data;
-};
-
-/**
  * Chat information
  */
 struct Chat

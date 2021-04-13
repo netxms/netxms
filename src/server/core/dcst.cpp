@@ -224,7 +224,7 @@ SummaryTable::SummaryTable(INT32 id, DB_RESULT hResult)
    m_filterSource = DBGetField(hResult, 0, 4, nullptr, 0);
    if (m_filterSource != nullptr)
    {
-      StrStrip(m_filterSource);
+      Trim(m_filterSource);
       if (*m_filterSource != 0)
       {
          TCHAR errorText[1024];

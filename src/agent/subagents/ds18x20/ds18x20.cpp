@@ -1,6 +1,6 @@
 /*
 ** NetXMS DS18x20 sensor subagent
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -96,8 +96,8 @@ static bool AddSensorNameMapping(TCHAR *str)
 
 	*ptr = 0;
 	ptr++;
-	StrStrip(str);
-	StrStrip(ptr);
+	Trim(str);
+	Trim(ptr);
 	s_sensorNames.set(str, ptr);
 	return true;
 }
@@ -130,7 +130,7 @@ static bool SubagentInit(Config *config)
 				next = _tcschr(curr, _T('\n'));
 				if (next != NULL)
 					*next = 0;
-				StrStrip(curr);
+				Trim(curr);
 				if (!AddSensorNameMapping(curr))
 				{
 					AgentWriteLog(EVENTLOG_WARNING_TYPE,

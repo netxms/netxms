@@ -472,7 +472,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    // Setup driver
    TCHAR driverName[34];
    DBGetField(hResult, 0, 25, driverName, 34);
-   StrStrip(driverName);
+   Trim(driverName);
    if (driverName[0] != 0)
       m_driver = FindDriverByName(driverName);
 
@@ -8743,7 +8743,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
          DbgPrintf(4, _T("Resolving name for node %d [%s] via agent"), m_id, m_name);
          if (getMetricFromAgent(_T("System.Hostname"), szBuffer, 256) == DCE_SUCCESS)
          {
-            StrStrip(szBuffer);
+            Trim(szBuffer);
             if (szBuffer[0] != 0)
             {
                _tcslcpy(m_name, szBuffer, MAX_OBJECT_NAME);
@@ -8758,7 +8758,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
          DbgPrintf(4, _T("Resolving name for node %d [%s] via SNMP"), m_id, m_name);
          if (getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.5.0"), szBuffer, 256, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
          {
-            StrStrip(szBuffer);
+            Trim(szBuffer);
             if (szBuffer[0] != 0)
             {
                _tcslcpy(m_name, szBuffer, MAX_OBJECT_NAME);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ void BeaconPoller()
 
 	TCHAR hosts[MAX_CONFIG_VALUE];
 	ConfigReadStr(_T("Beacon.Hosts"), hosts, MAX_CONFIG_VALUE, _T(""));
-	StrStrip(hosts);
+	Trim(hosts);
 	if (hosts[0] == 0)	// Empty list
 	{
 	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Beacon poller will not start because beacon host list is empty"));
@@ -51,7 +51,7 @@ void BeaconPoller()
 			*next = 0;
 			next++;
 		}
-		StrStrip(curr);
+		Trim(curr);
       InetAddress addr = InetAddress::resolveHostName(curr);
       if (addr.isValidUnicast())
       {

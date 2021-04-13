@@ -797,7 +797,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 
    // Read configuration
    ConfigReadStr(_T("DiscoveryFilter"), szFilter, MAX_CONFIG_VALUE, _T(""));
-   StrStrip(szFilter);
+   Trim(szFilter);
 
    // Initialize discovered node data
    DiscoveryFilterData data(newNodeData->ipAddr, newNodeData->zoneUIN);

@@ -3889,14 +3889,6 @@ size_t LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *data, size_t size)
 
 TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const uint8_t *data, TCHAR *str);
 
-void LIBNETXMS_EXPORTABLE StrStripA(char *pszStr);
-void LIBNETXMS_EXPORTABLE StrStripW(WCHAR *pszStr);
-#ifdef UNICODE
-#define StrStrip StrStripW
-#else
-#define StrStrip StrStripA
-#endif
-
 const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer);
 const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer);
 #ifdef UNICODE
@@ -3945,7 +3937,14 @@ bool LIBNETXMS_EXPORTABLE MatchStringW(const WCHAR *pattern, const WCHAR *str, b
 #define MatchString MatchStringA
 #endif
 
-TCHAR LIBNETXMS_EXPORTABLE *Trim(TCHAR *str);
+char LIBNETXMS_EXPORTABLE *TrimA(char *str);
+WCHAR LIBNETXMS_EXPORTABLE *TrimW(WCHAR *str);
+#ifdef UNICODE
+#define Trim TrimW
+#else
+#define Trim TrimA
+#endif
+
 TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
 int LIBNETXMS_EXPORTABLE GetLastMonthDay(struct tm *currTime);
 bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime, bool checkSeconds);

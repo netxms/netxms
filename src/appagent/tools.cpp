@@ -108,7 +108,7 @@ static bool AgentGetParameterArgInternal(const TCHAR *param, int index, TCHAR *a
    }
 
    if (success)
-      StrStrip(arg);
+      Trim(arg);
    return success;
 }
 

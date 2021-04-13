@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -252,8 +252,7 @@ double GeoLocation::parse(const TCHAR *str, bool isLat, bool *isValid)
 	*isValid = false;
 
 	// Prepare input string
-	TCHAR *in = MemCopyString(str);
-	StrStrip(in);
+	TCHAR *in = Trim(MemCopyString(str));
 
 	// Check if string given is just double value
 	TCHAR *eptr;

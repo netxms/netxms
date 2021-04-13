@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -116,7 +116,7 @@ bool LIBNXCC_EXPORTABLE ClusterInit(Config *config, const TCHAR *section, Cluste
          next = _tcschr(curr, _T('\n'));
          if (next != NULL)
             *next = 0;
-         StrStrip(curr);
+         Trim(curr);
          if (!AddPeerNode(curr))
          {
             free(s_peerNodeList);

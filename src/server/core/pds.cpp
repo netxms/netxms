@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -218,7 +218,7 @@ void LoadPerfDataStorageDrivers()
          *next = 0;
          next++;
       }
-      StrStrip(curr);
+      Trim(curr);
       if (*curr == 0)
          continue;
 

@@ -710,7 +710,7 @@ void SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject,
             next = _tcschr(curr, _T(';'));
             if (next != nullptr)
                *next = 0;
-            StrStrip(curr);
+            Trim(curr);
             nc->send(curr, subject, message);
             curr = next + 1;
          } while(next != nullptr);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2014 Victor Kirhenshtein
+** Copyright (C) 2006-2021 Victor Kirhenshtein
 ** Code is partially based on BCMXCP driver for NUT:
 **
 ** ! bcmxcp.c - driver for powerware UPS
@@ -352,7 +352,7 @@ BOOL BCMXCPInterface::open()
             {
                memcpy(szBuffer, &m_data[nPos + 1], nLen);
                szBuffer[nLen] = 0;
-               StrStripA(szBuffer);
+               TrimA(szBuffer);
                setName(szBuffer);
             }
 
@@ -450,7 +450,7 @@ void BCMXCPInterface::queryModel()
          {
             memcpy(m_paramList[UPS_PARAM_MODEL].szValue, &m_data[nPos + 1], m_data[nPos]);
             m_paramList[UPS_PARAM_MODEL].szValue[m_data[nPos]] = 0;
-            StrStripA(m_paramList[UPS_PARAM_MODEL].szValue);
+            TrimA(m_paramList[UPS_PARAM_MODEL].szValue);
             m_paramList[UPS_PARAM_MODEL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
          }
          else
@@ -583,7 +583,7 @@ void BCMXCPInterface::querySerialNumber()
          else
          {
             m_paramList[UPS_PARAM_SERIAL].szValue[16] = 0;
-            StrStripA(m_paramList[UPS_PARAM_SERIAL].szValue);
+            TrimA(m_paramList[UPS_PARAM_SERIAL].szValue);
          }
          m_paramList[UPS_PARAM_SERIAL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
       }

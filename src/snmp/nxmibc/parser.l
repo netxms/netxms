@@ -316,7 +316,7 @@ static void CountNewlines(char *pszStr, int len)
    }
    PushState(MACRO);
    mplval.pszString[length] = 0;
-   StrStripA(mplval.pszString);
+   TrimA(mplval.pszString);
    return MACRO_SYM;
 }
 
