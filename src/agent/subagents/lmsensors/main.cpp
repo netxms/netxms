@@ -1,21 +1,22 @@
-/* ** NetXMS PING subagent
-** Copyright (C) 2012 Alex Kirhenshtein
-**
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
-** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-**
-**/
+/**
+ * NetXMS lmsensors subagent
+ * Copyright (C) 2012-2021 Alex Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ */
 
 #include <nms_common.h>
 #include <nms_util.h>
@@ -24,26 +25,25 @@
 #include <sensors/sensors.h>
 #include <sensors/error.h>
 
-
-//
-// Static data
-//
-
+/**
+ * Configuration
+ */
 static bool m_temperatureInFahrenheit = false;
 static TCHAR m_configFileName[256] = _T("");
 
-//
-// Support methods
-//
-static double celsiusToFahrenheit(double celsius) {
+/**
+ * Convert Celsius to Fahrenheit
+ */
+static inline double CelsiusToFahrenheit(double celsius)
+{
    return celsius * (9.0F / 5.0F) + 32.0F;
 }
 
-//
-// lm_sensors interface
-//
-
-static bool getSensorValue(char *chipName, char *featureName, double *result) {
+/**
+ * lm_sensors interface
+ */
+static bool GetSensorValue(char *chipName, char *featureName, double *result)
+{
    bool ret = false;
    sensors_chip_name match;
 
@@ -112,7 +112,7 @@ static bool getSensorValue(char *chipName, char *featureName, double *result) {
                if (sensors_get_value(chip, subFeature->number, &val) == 0) {
                   ret = true;
                   if (feature->type == SENSORS_FEATURE_TEMP && m_temperatureInFahrenheit) {
-                     *result = celsiusToFahrenheit(val);
+                     *result = CelsiusToFahrenheit(val);
                   }
                   else {
                      *result = val;
@@ -128,23 +128,24 @@ static bool getSensorValue(char *chipName, char *featureName, double *result) {
    return ret;
 }
 
-
-//
-// Hanlder for immediate ping request
-//
-
-static LONG H_GetValue(const TCHAR *parameters, const TCHAR *arg, TCHAR *value, AbstractCommSession *session) {
+/**
+ * Hanlder for agent metrics
+ */
+static LONG H_GetValue(const TCHAR *parameters, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
    int ret = SYSINFO_RC_ERROR;
 
    char chipName[256];
    char featureName[256];
 
-   if (AgentGetParameterArgA(parameters, 1, chipName, 256) && AgentGetParameterArgA(parameters, 2, featureName, 256)) {
-      StrStripA(chipName);
-      StrStripA(featureName);
+   if (AgentGetParameterArgA(parameters, 1, chipName, 256) && AgentGetParameterArgA(parameters, 2, featureName, 256))
+   {
+      TrimA(chipName);
+      TrimA(featureName);
 
       double result;
-      if (getSensorValue(chipName, featureName, &result)) {
+      if (GetSensorValue(chipName, featureName, &result))
+      {
          ret_double(value, result);
          ret = SYSINFO_RC_SUCCESS;
       }
@@ -153,23 +154,21 @@ static LONG H_GetValue(const TCHAR *parameters, const TCHAR *arg, TCHAR *value, 
    return ret;
 }
 
-
-//
-// Configuration file template
-//
-
-static NX_CFG_TEMPLATE m_cfgTemplate[] = {
+/**
+ * Configuration template
+ */
+static NX_CFG_TEMPLATE m_cfgTemplate[] =
+{
    { _T("UseFahrenheit"), CT_BOOLEAN, 0, 0, 1, 0, &m_temperatureInFahrenheit },
    { _T("ConfigFile"), CT_STRING, 0, 0, 256, 0, &m_configFileName },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
-
-//
-// Subagent initialization
-//
-
-static bool SubagentInit(Config *config) {
+/**
+ * Subagent initialization
+ */
+static bool SubagentInit(Config *config)
+{
    bool ret;
 
    ret = config->parseTemplate(_T("lmsensors"), m_cfgTemplate);
@@ -192,7 +191,8 @@ static bool SubagentInit(Config *config) {
          }
       }
 
-      if (configFile != NULL) {
+      if (configFile != NULL)
+      {
          fclose(configFile);
       }
    }
@@ -200,21 +200,17 @@ static bool SubagentInit(Config *config) {
    return ret;
 }
 
-//
-//
-// Called by master agent at unload
-//
-
+/**
+ * Subagent shutdown
+ */
 static void SubagentShutdown()
 {
    sensors_cleanup();
 }
 
-
-//
-// Subagent information
-//
-
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] = 
 {
    { _T("LMSensors.Value(*)"), H_GetValue, NULL, DCI_DT_FLOAT, _T("Sensor {instance}") },
@@ -233,11 +229,9 @@ static NETXMS_SUBAGENT_INFO m_info =
    0, NULL	// push parameters
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(LMSENSORS)
 {
    *ppInfo = &m_info;
