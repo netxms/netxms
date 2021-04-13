@@ -1,2 +1,4 @@
 EXTRA_DIST = \
-	shell.cpp
+	shell.cpp \
+	shell.vcxproj \
+	shell.vcxproj.filters
