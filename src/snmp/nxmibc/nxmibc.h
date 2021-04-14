@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS MIB compiler
-** Copyright (C) 2005 Victor Kirhenshtein
+** Copyright (C) 2005-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,28 +33,22 @@
 
 #endif
 
-
-//
-// Error codes
-//
-
+/**
+ * Error codes
+ */
 #define ERR_UNRESOLVED_IMPORT    1
 #define ERR_UNRESOLVED_MODULE    2
 #define ERR_PARSER_ERROR         3
 #define ERR_CANNOT_OPEN_FILE     4
 #define ERR_UNRESOLVED_SYMBOL    5
 #define ERR_UNRESOLVED_SYNTAX    6
-
-
-//
-// Functions
-//
+#define ERR_UPPERCASE_IDENTIFIER 7
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void Error(int nError, const char *pszModule, ...);
+void Error(int error, const char *module, ...);
 
 #ifdef __cplusplus
 }

@@ -242,33 +242,31 @@ static void BuildFullOID(MP_MODULE *pModule, MP_OBJECT *pObject)
  */
 static void ResolveSyntax(MP_MODULE *pModule, MP_OBJECT *pObject)
 {
-   MP_OBJECT *pType;
-   MP_MODULE *pCurrModule = pModule;
-   char *pszType;
-	int index;
 
-   if ((pObject->iSyntax != -1) || (pObject->pszDataType == NULL))
+   if ((pObject->iSyntax != -1) || (pObject->pszDataType == nullptr))
       return;
 
-   pszType = pObject->pszDataType;
+   char *pszType = pObject->pszDataType;
+   MP_MODULE *pCurrModule = pModule;
+   MP_OBJECT *pType;
    do
    {
-		index = 0;
+		int index = 0;
 		do
 		{
 			pType = FindObjectByName(pCurrModule, CHECK_NULL_A(pszType), &index);
 		}
-		while((pType != NULL) && (pType->iType == MIBC_OBJECT));
-      if (pType == NULL)
+		while((pType != nullptr) && (pType->iType == MIBC_OBJECT));
+      if (pType == nullptr)
          pType = FindImportedObjectByName(pCurrModule,
                                           CHECK_NULL_A(pszType),
                                           &pCurrModule);
-      if (pType == NULL)
+      if (pType == nullptr)
          break;
       pszType = pType->pszDataType;
    } while(pType->iSyntax == -1);
 
-   if (pType != NULL)
+   if (pType != nullptr)
    {
       pObject->iSyntax = pType->iSyntax;
 		if (pType->iType == MIBC_TEXTUAL_CONVENTION)
