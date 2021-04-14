@@ -1,6 +1,6 @@
 /* 
 ** nxupload - command line tool used to upload files to NetXMS agent
-** Copyright (C) 2004-2020 Raden Solutions
+** Copyright (C) 2004-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -124,7 +124,7 @@ static void ProgressCallback(INT64 bytesTransferred, void *cbArg)
 }
 
 /**
- * Process nxuload specifuc parameters
+ * Process nxupload specific parameters
  */
 static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
 {
@@ -152,7 +152,7 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
 }
 
 /**
- * Validate parametercount
+ * Validate parameters count
  */
 static bool IsArgMissingCb(int currentCount)
 {

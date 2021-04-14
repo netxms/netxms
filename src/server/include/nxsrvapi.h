@@ -969,6 +969,9 @@ public:
    UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
             void (* progressCallback)(INT64, void *) = nullptr, void *cbArg = nullptr,
             NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
+   UINT32 downloadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
+            void (* progressCallback)(size_t, void *) = nullptr, void *cbArg = nullptr,
+            NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
    uint32_t getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **info);
    uint32_t startUpgrade(const TCHAR *pkgName);
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType, WORD wPort = 0,

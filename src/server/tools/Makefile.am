@@ -8,9 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = libnxdbmgr nddload nxget nxadm nxaction nxap nxdbmgr nxminfo nxwsget nxupload scripts @SERVER_TOOLS@
+SUBDIRS = libnxdbmgr nddload nxget nxadm nxaction nxap nxdbmgr nxdownload nxminfo nxwsget nxupload scripts @SERVER_TOOLS@
 
-bin_PROGRAMS = nddload/nddload nxaction/nxaction nxadm/nxadm nxap/nxap nxget/nxget \
+bin_PROGRAMS = nddload/nddload nxaction/nxaction nxadm/nxadm nxap/nxap nxdownload/nxdownload nxget/nxget \
 	       nxminfo/nxminfo nxupload/nxupload nxwsget/nxwsget
 
 COMMON_LDADD = ../libnxsrv/libnxsrv.la ../../libnxsl/libnxsl.la ../../snmp/libnxsnmp/libnxsnmp.la ../../libnetxms/libnetxms.la @SERVER_LIBS@ @EXEC_LIBS@
@@ -34,6 +34,11 @@ nxap_nxap_SOURCES = nxap/nxap.cpp
 nxap_nxap_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 nxap_nxap_LDFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include @EXEC_LDFLAGS@
 nxap_nxap_LDADD = $(COMMON_LDADD)
+
+nxdownload_nxdownload_SOURCES = nxdownload/nxdownload.cpp
+nxdownload_nxdownload_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+nxdownload_nxdownload_LDFLAGS = @EXEC_LDFLAGS@
+nxdownload_nxdownload_LDADD = $(COMMON_LDADD)
 
 nxget_nxget_SOURCES = nxget/nxget.cpp
 nxget_nxget_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build

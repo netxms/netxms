@@ -28,6 +28,7 @@ f none /opt/netxms/bin/nxappget 0755 root other
 f none /opt/netxms/bin/nxapush 0755 root other
 f none /opt/netxms/bin/nxdbmgr 0755 root other
 f none /opt/netxms/bin/nxdevcfg 0755 root other
+f none /opt/netxms/bin/nxdownload 0755 root other
 f none /opt/netxms/bin/nxencpasswd 0755 root other
 f none /opt/netxms/bin/nxget 0755 root other
 f none /opt/netxms/bin/nxmibc 0755 root other

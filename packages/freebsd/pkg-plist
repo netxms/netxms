@@ -5,6 +5,7 @@
 %%SERVER%%bin/nxagentd
 %%CLIENT%%bin/nxcmd
 %%SERVER%%bin/nxdbmgr
+%%SERVER%%bin/nxdownload
 %%CLIENT%%bin/nxevent
 %%SERVER%%bin/nxget
 %%SERVER%%bin/nxmibc

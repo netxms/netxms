@@ -4771,6 +4771,7 @@ AC_CONFIG_FILES([
 	src/server/tools/nxadm/Makefile
 	src/server/tools/nxap/Makefile
 	src/server/tools/nxdbmgr/Makefile
+	src/server/tools/nxdownload/Makefile
 	src/server/tools/nxget/Makefile
 	src/server/tools/nxminfo/Makefile
 	src/server/tools/nxupload/Makefile
