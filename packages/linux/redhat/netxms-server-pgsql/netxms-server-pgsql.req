@@ -1,2 +1,0 @@
-netxms-server = %{vesion}
-postgresql-server >= 8.4

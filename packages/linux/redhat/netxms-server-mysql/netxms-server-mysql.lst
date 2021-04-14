@@ -1,2 +1,0 @@
-%attr(755, root, root) %{_libdir}/libnxddr_mysql.so*
-%attr(755, root, root) %{_libdir}/netxms/dbdrv/mysql.ddr

@@ -1,4 +1,0 @@
-# Pre-install phase
-agentd=/etc/init.d/nxagentd
-[ -f "$agentd" ] && "$agentd" stop
-unset agentd

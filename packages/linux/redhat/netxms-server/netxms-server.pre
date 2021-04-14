@@ -1,5 +1,0 @@
-# Pre-install phase
-
-xmsd=/etc/init.d/netxmsd
-[ -f "$xmsd" ] && "$xmsd" stop
-unset xmsd
