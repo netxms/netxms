@@ -26,10 +26,6 @@
 #include <nxsrvapi.h>
 #include <netxms-version.h>
 
-#ifndef _WIN32
-#include <netdb.h>
-#endif
-
 NETXMS_EXECUTABLE_HEADER(nxdownload)
 
 /**
