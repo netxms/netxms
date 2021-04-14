@@ -206,8 +206,11 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 		{
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
-				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, NULL, variables, recordId, objectId,
+			{
+            StringList captureGroups;
+				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, &captureGroups, variables, recordId, objectId,
                ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, m_agentAction, m_agentActionArgs, context);
+			}
 			incMatchCount(objectId);
 			return true;
 		}
