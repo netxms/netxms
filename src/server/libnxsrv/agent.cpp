@@ -1760,6 +1760,43 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
 }
 
 /**
+ * Download file from agent
+ */
+UINT32 AgentConnection::downloadFile(const TCHAR *sourceFile, const TCHAR *destinationFile, bool allowPathExpansion,
+         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod)
+{
+   NXCPMessage msg(m_nProtocolVersion);
+
+   // Disable compression if it is disabled on connection level or if agent do not support it
+   if (!m_allowCompression || (m_nProtocolVersion < 4))
+      compMethod = NXCP_STREAM_COMPRESSION_NONE;
+
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   msg.setId(generateRequestId());
+   msg.setCode(CMD_GET_AGENT_FILE);
+   msg.setField(VID_FILE_NAME, sourceFile);
+   msg.setField(VID_ALLOW_PATH_EXPANSION, allowPathExpansion);
+   msg.setField(VID_FILE_OFFSET, 0);
+
+   NXCPMessage *response = customRequest(&msg, destinationFile, false, progressCallback, nullptr, nullptr);
+   UINT32 dwResult;
+   if (response != nullptr)
+   {
+      dwResult = response->getFieldAsUInt32(VID_RCC);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Download request for file %s RCC=%u (%s)"), sourceFile, dwResult, AgentErrorCodeToText(dwResult));
+      delete response;
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Download request for file %s timeout"), sourceFile);
+      dwResult = ERR_REQUEST_TIMEOUT;
+   }
+   return dwResult;
+}
+
+/**
  * Send upgrade command
  */
 UINT32 AgentConnection::startUpgrade(const TCHAR *pkgName)

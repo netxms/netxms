@@ -349,6 +349,7 @@ typedef unsigned __int64 uint64_t;
 #define UINT64_FMT		_T("%I64u")
 #define UINT64_FMTA		"%I64u"
 #define UINT64_FMTW		L"%I64u"
+#define UINT64_FMT_ARGS(m)	_T("%") m _T("I64u")
 #define UINT64X_FMT(m)  _T("%") m _T("I64X")
 #if defined(__64BIT__) || (_MSC_VER > 1300)
 #define TIME_T_FMT      _T("%I64u")
@@ -713,14 +714,17 @@ typedef int mode_t;
 #define UINT64_FMT       _T("%") PRIu64
 #define UINT64_FMTW      L"%" PRIu64
 #define UINT64_FMTA      "%" PRIu64
+#define UINT64_FMT_ARGS(m) _T("%") m PRIu64
 #elif SIZEOF_LONG == 8
 #define UINT64_FMT		_T("%lu")
 #define UINT64_FMTW		L"%lu"
 #define UINT64_FMTA		"%lu"
+#define UINT64_FMT_ARGS(m)	_T("%") m _T("lu")
 #else
 #define UINT64_FMT		_T("%llu")
 #define UINT64_FMTW		L"%llu"
 #define UINT64_FMTA		"%llu"
+#define UINT64_FMT_ARGS(m)	_T("%") m _T("llu")
 #endif
 
 #if defined(PRIX64)

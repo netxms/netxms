@@ -247,6 +247,7 @@ target
 /src/server/tools/nxap/nxap
 /src/server/tools/nxdbmgr/nxdbmgr
 /src/server/tools/nxdbmgr/tables.cpp
+/src/server/tools/nxdownload/nxdownload
 /src/server/tools/nxencpasswd/nxencpasswd
 /src/server/tools/nxget/nxget
 /src/server/tools/nxminfo/nxminfo

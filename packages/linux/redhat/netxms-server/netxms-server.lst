@@ -1,6 +1,7 @@
 %attr(755, root, root) %{_bindir}/netxmsd
 %attr(755, root, root) %{_bindir}/nxadm
 %attr(755, root, root) %{_bindir}/nxdbmgr
+%attr(755, root, root) %{_bindir}/nxdownload
 %attr(755, root, root) %{_bindir}/nxencpasswd
 %attr(755, root, root) %{_bindir}/nxget
 %attr(755, root, root) %{_bindir}/nxmibc
