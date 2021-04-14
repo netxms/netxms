@@ -186,13 +186,25 @@ static bool CreateDatabase_MySQL(const TCHAR *dbName, const TCHAR *dbLogin, cons
 
    if (success)
    {
-      _sntprintf(query, 256, _T("GRANT ALL ON %s.* TO %s IDENTIFIED BY '%s'"), dbName, dbLogin, dbPassword);
+      _sntprintf(query, 256, _T("CREATE USER %s IDENTIFIED BY '%s'"), dbLogin, dbPassword);
       success = SQLQuery(query);
    }
 
    if (success)
    {
-      _sntprintf(query, 256, _T("GRANT ALL ON %s.* TO %s@localhost IDENTIFIED BY '%s'"), dbName, dbLogin, dbPassword);
+      _sntprintf(query, 256, _T("CREATE USER %s@localhost IDENTIFIED BY '%s'"), dbLogin, dbPassword);
+      success = SQLQuery(query);
+   }
+
+   if (success)
+   {
+      _sntprintf(query, 256, _T("GRANT ALL ON %s.* TO %s"), dbName, dbLogin);
+      success = SQLQuery(query);
+   }
+
+   if (success)
+   {
+      _sntprintf(query, 256, _T("GRANT ALL ON %s.* TO %s@localhost"), dbName, dbLogin);
       success = SQLQuery(query);
    }
 
