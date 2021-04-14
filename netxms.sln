@@ -368,6 +368,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "snmptrap", "src\ncdrivers\s
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shell", "src\ncdrivers\shell\shell.vcxproj", "{22CFEF31-1E43-17B7-12C2-AD14E7C5441F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxdownload", "src\server\tools\nxdownload\nxdownload.vcxproj", "{793EA8FD-BD22-6447-9017-632F1630B62C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1422,6 +1424,12 @@ Global
 		{22CFEF31-1E43-17B7-12C2-AD14E7C5441F}.Release|Win32.Build.0 = Release|Win32
 		{22CFEF31-1E43-17B7-12C2-AD14E7C5441F}.Release|x64.ActiveCfg = Release|x64
 		{22CFEF31-1E43-17B7-12C2-AD14E7C5441F}.Release|x64.Build.0 = Release|x64
+		{793EA8FD-BD22-6447-9017-632F1630B62C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{793EA8FD-BD22-6447-9017-632F1630B62C}.Debug|x64.ActiveCfg = Debug|x64
+		{793EA8FD-BD22-6447-9017-632F1630B62C}.Debug|x64.Build.0 = Debug|x64
+		{793EA8FD-BD22-6447-9017-632F1630B62C}.Release|Win32.ActiveCfg = Release|Win32
+		{793EA8FD-BD22-6447-9017-632F1630B62C}.Release|x64.ActiveCfg = Release|x64
+		{793EA8FD-BD22-6447-9017-632F1630B62C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1582,6 +1590,7 @@ Global
 		{F73BDD90-C0F0-119C-9004-B87473BB0421} = {896A7CDA-423A-460A-83E2-6ED37DAE187C}
 		{A17489DF-43CD-1243-A867-317C2818EC11} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
 		{22CFEF31-1E43-17B7-12C2-AD14E7C5441F} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
+		{793EA8FD-BD22-6447-9017-632F1630B62C} = {64482674-7B36-4A14-A612-247333174315}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}
