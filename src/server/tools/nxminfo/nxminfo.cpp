@@ -1,6 +1,6 @@
 /*
 ** nxminfo - NetXMS module info tool
-** Copyright (C) 2016-2020 Raden Solutions
+** Copyright (C) 2016-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by

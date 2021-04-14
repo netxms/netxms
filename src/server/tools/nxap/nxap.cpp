@@ -1,6 +1,6 @@
 /*
 ** nxap - command line tool used to manage agent policies
-** Copyright (C) 2010-2020 Raden Solutions
+** Copyright (C) 2010-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,10 +25,6 @@
 #include <nms_util.h>
 #include <nxsrvapi.h>
 #include <netxms-version.h>
-
-#ifndef _WIN32
-#include <netdb.h>
-#endif
 
 NETXMS_EXECUTABLE_HEADER(nxap)
 
