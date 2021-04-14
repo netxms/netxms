@@ -67,7 +67,8 @@ static struct
    { MIBC_ERROR, _T("Parser error - %hs in line %d") },
    { MIBC_ERROR, _T("Cannot open input file (%hs)") },
    { MIBC_ERROR, _T("Cannot resolve symbol %hs") },
-   { MIBC_WARNING, _T("Cannot resolve data type \"%hs\" for object \"%hs\"") }
+   { MIBC_WARNING, _T("Cannot resolve data type \"%hs\" for object \"%hs\"") },
+   { MIBC_WARNING, _T("Object identifier started with uppercase letter in line %d") }
 };
 
 /**

@@ -331,13 +331,17 @@ ModuleIdentifier:
 ;
 
 ObjectIdentifierAssignment:
-    LCidentifier OBJECT_IDENTIFIER_SYM AssignedIdentifier
+    Identifier OBJECT_IDENTIFIER_SYM AssignedIdentifier
 {
    $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
    delete $$->pOID;
    $$->pOID = $3;
+   if (isupper($$->pszName[0]))
+   {
+      Error(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
+   }
 }
 |   LCidentifier AssignedIdentifier
 {
@@ -451,7 +455,7 @@ Number:
 ;
 
 ObjectIdentityAssignment:
-    LCidentifier OBJECT_IDENTITY_SYM
+    Identifier OBJECT_IDENTITY_SYM
     SnmpStatusPart
     SnmpDescriptionPart
     SnmpReferencePart
@@ -464,6 +468,10 @@ ObjectIdentityAssignment:
    $$->pszDescription = $4;
    delete $$->pOID;
    $$->pOID = $6;
+   if (isupper($$->pszName[0]))
+   {
+      Error(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
+   }
 }
 ;
 
@@ -491,6 +499,10 @@ ObjectTypeAssignment:
    $$->pszDescription = $7;
    delete $$->pOID;
    $$->pOID = $11;
+   if (isupper($$->pszName[0]))
+   {
+      Error(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
+   }
 }
 ;
 
@@ -912,7 +924,7 @@ TextualConventionAssignment:
 ;
 
 SnmpNotificationTypeAssignment:
-    LCidentifier NOTIFICATION_TYPE_SYM
+    Identifier NOTIFICATION_TYPE_SYM
     SnmpObjectsPart
     SnmpAccessPart
     SnmpStatusPart
@@ -929,8 +941,12 @@ SnmpNotificationTypeAssignment:
    $$->pszDescription = $6;
    delete $$->pOID;
    $$->pOID = $8;
+   if (isupper($$->pszName[0]))
+   {
+      Error(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
+   }
 }
-|   LCidentifier TRAP_TYPE_SYM
+|   Identifier TRAP_TYPE_SYM
     ENTERPRISE_SYM LCidentifier
     SnmpTrapVariablePart
     SnmpDescriptionPart
@@ -959,6 +975,11 @@ SnmpNotificationTypeAssignment:
       $$->pOID->add($8->get(i));
    $8->setOwner(Ownership::False);
    delete $8;
+
+   if (isupper($$->pszName[0]))
+   {
+      Error(ERR_UPPERCASE_IDENTIFIER, s_currentFilename, g_nCurrLine);
+   }
 }
 ;
 
