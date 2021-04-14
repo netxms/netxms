@@ -1,9 +1,0 @@
-#!/bin/sh
-
-svcs nxagentd >/dev/null 2>&1
-if [ $? = 0 ]; then
-	svcadm disable -s -t nxagentd
-	if [ x"$UPDATE" != "xyes" ]; then
-		svccfg delete nxagentd
-	fi
-fi

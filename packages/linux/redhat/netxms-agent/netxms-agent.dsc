@@ -1,1 +1,0 @@
-NetXMS agent

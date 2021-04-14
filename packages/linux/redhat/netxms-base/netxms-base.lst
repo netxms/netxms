@@ -1,3 +1,0 @@
-%attr(755, root, root) %{_libdir}/libnetxms.so*
-%attr(755, root, root) %{_libdir}/libnxsqlite.so*
-%attr(755, root, root) %{_libdir}/libnxtre.so*
