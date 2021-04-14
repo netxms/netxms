@@ -271,6 +271,12 @@ static void PrintConfig(const TCHAR *pattern)
    delete variables;
 }
 
+#ifdef _WIN32
+#define PAUSE do { if (pauseAfterError) { _tprintf(_T("\n***** PRESS ANY KEY TO CONTINUE *****\n")); _getch(); } } while(0)
+#else
+#define PAUSE do { if (pauseAfterError) { _tprintf(_T("\n***** PRESS ENTER TO CONTINUE *****\n")); char s[1024]; fgets(s, 1024, stdin); } } while(0)
+#endif
+
 /**
  * Startup
  */
@@ -279,6 +285,7 @@ int main(int argc, char *argv[])
    bool bStart = true, bQuiet = false;
    bool replaceValue = true;
    bool showOutput = false;
+   bool pauseAfterError = false;
 	TCHAR fallbackSyntax[32] = _T("");
 	TCHAR *dbaLogin = nullptr, *dbaPassword = nullptr;
 	StringList includedTables, excludedTables;
@@ -345,7 +352,7 @@ stop_search:
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:C:dDe:fF:GhIL:MNoqsStT:vXY:Z:")) != -1)
+   while((ch = getopt(argc, argv, "c:C:dDe:fF:GhIL:MNoPqsStT:vXY:Z:")) != -1)
    {
       switch(ch)
       {
@@ -354,14 +361,14 @@ stop_search:
             _tprintf(_T("Usage: nxdbmgr [<options>] <command> [<options>]\n")
                      _T("Valid commands are:\n")
                      _T("   background-upgrade   : Run pending background upgrade procedures\n")
-						   _T("   batch <file>         : Run SQL batch file\n")
+                     _T("   batch <file>         : Run SQL batch file\n")
                      _T("   check                : Check database for errors\n")
                      _T("   check-data-tables    : Check database for missing data tables\n")
                      _T("   export <file>        : Export database to file\n")
                      _T("   get <name>           : Get value of server configuration variable\n")
                      _T("   import <file>        : Import database from file\n")
                      _T("   init [<type>]        : Initialize database. If type is not provided it will be deduced from driver name.\n")
-				         _T("   migrate <source>     : Migrate database from given source\n")
+                     _T("   migrate <source>     : Migrate database from given source\n")
                      _T("   reset-system-account : Unlock user \"system\" and reset it's password to default\n")
                      _T("   set <name> <value>   : Set value of server configuration variable\n")
                      _T("   unlock               : Forced database unlock\n")
@@ -383,6 +390,7 @@ stop_search:
                      _T("   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n")
                      _T("   -N          : Do not replace existing configuration value (\"set\" command only).\n")
                      _T("   -o          : Show output from SELECT statements in a batch.\n")
+                     _T("   -P          : Pause after error.\n")
                      _T("   -q          : Quiet mode (don't show startup banner).\n")
                      _T("   -s          : Skip collected data during export, import, or migration.\n")
                      _T("   -S          : Skip collected data during export, import, or migration and do not clear or create data tables.\n")
@@ -491,6 +499,9 @@ stop_search:
          case 'o':
             showOutput = true;
             break;
+         case 'P':
+            pauseAfterError = true;
+            break;
          case 'q':
             bQuiet = true;
             break;
@@ -564,6 +575,7 @@ stop_search:
    if (argc - optind == 0)
    {
       _tprintf(_T("Command missing. Type nxdbmgr -h for command line syntax.\n"));
+      PAUSE;
       return 1;
    }
    if (strcmp(argv[optind], "background-upgrade") &&
@@ -582,12 +594,14 @@ stop_search:
        strcmp(argv[optind], "upgrade"))
    {
       _tprintf(_T("Invalid command \"%hs\". Type nxdbmgr -h for command line syntax.\n"), argv[optind]);
+      PAUSE;
       return 1;
    }
    if (((!strcmp(argv[optind], "batch") || !strcmp(argv[optind], "export") || !strcmp(argv[optind], "import") || !strcmp(argv[optind], "get") || !strcmp(argv[optind], "migrate")) && (argc - optind < 2)) ||
        (!strcmp(argv[optind], "set") && (argc - optind < 3)))
    {
       _tprintf(_T("Required command argument(s) missing\n"));
+      PAUSE;
       return 1;
    }
 
@@ -596,6 +610,7 @@ stop_search:
 	if (!config->loadIniConfig(configFile, _T("server")) || !config->parseTemplate(_T("server"), m_cfgTemplate))
    {
       _tprintf(_T("Error loading configuration file\n"));
+      PAUSE;
       return 2;
    }
 	delete config;
@@ -606,7 +621,8 @@ stop_search:
 	   if (!ReadPassword(_T("Database password: "), s_dbPassword, MAX_PASSWORD))
 	   {
 	      _tprintf(_T("Cannot read password from terminal\n"));
-	      return 3;
+         PAUSE;
+         return 3;
 	   }
    }
    DecryptPassword(s_dbLogin, s_dbPassword, s_dbPassword, MAX_PASSWORD);
@@ -619,6 +635,7 @@ stop_search:
    if (!DBInit())
    {
       _tprintf(_T("Unable to initialize database library\n"));
+      PAUSE;
       return 3;
    }
 
@@ -626,6 +643,7 @@ stop_search:
 	if (s_driver == nullptr)
    {
       _tprintf(_T("Unable to load and initialize database driver \"%s\"\n"), s_dbDriver);
+      PAUSE;
       return 3;
    }
 
@@ -635,6 +653,7 @@ stop_search:
       if (g_dbHandle == nullptr)
       {
          DBUnloadDriver(s_driver);
+         PAUSE;
          return 4;
       }
       bool success = CreateDatabase(DBGetDriverName(s_driver), s_dbName, s_dbLogin, s_dbPassword);
@@ -643,6 +662,7 @@ stop_search:
       {
          _tprintf(_T("Unable to create database or user\n"));
          DBUnloadDriver(s_driver);
+         PAUSE;
          return 9;
       }
       _tprintf(_T("Database created successfully\n"));
@@ -652,6 +672,7 @@ stop_search:
    if (g_dbHandle == nullptr)
    {
       DBUnloadDriver(s_driver);
+      PAUSE;
       return 4;
    }
 
@@ -659,9 +680,11 @@ stop_search:
    {
       DBDisconnect(g_dbHandle);
       DBUnloadDriver(s_driver);
+      PAUSE;
       return 6;
    }
 
+   int exitCode = 0;
    if (!strcmp(argv[optind], "init"))
    {
       if (argc - optind < 2) 
@@ -700,10 +723,10 @@ stop_search:
 
 #ifdef UNICODE
          char *initFileMB = MBStringFromWideStringSysLocale(initFile);
-         InitDatabase(initFileMB);
+         exitCode = InitDatabase(initFileMB);
          MemFree(initFileMB);
 #else
-         InitDatabase(initFile);
+         exitCode = InitDatabase(initFile);
 #endif
       }
       else if (strchr(argv[optind + 1], FS_PATH_SEPARATOR_CHAR_A) == nullptr)
@@ -718,10 +741,10 @@ stop_search:
 
 #ifdef UNICODE
          char *initFileMB = MBStringFromWideStringSysLocale(initFile);
-         InitDatabase(initFileMB);
+         exitCode = InitDatabase(initFileMB);
          MemFree(initFileMB);
 #else
-         InitDatabase(initFile);
+         exitCode = InitDatabase(initFile);
 #endif
       }
       else
@@ -732,10 +755,11 @@ stop_search:
             if (!GetYesNo(_T("Do you really want to continue")))
             {
                _tprintf(_T("Database initialization aborted\n"));
+               PAUSE;
                return 8;
             }
          }
-         InitDatabase(argv[optind + 1]);
+         exitCode = InitDatabase(argv[optind + 1]);
       }
    }
    else
@@ -747,6 +771,7 @@ stop_search:
          _tprintf(_T("Unable to determine database syntax\n"));
          DBDisconnect(g_dbHandle);
          DBUnloadDriver(s_driver);
+         PAUSE;
          return 5;
       }
 
@@ -839,5 +864,8 @@ stop_search:
    // Shutdown
    DBDisconnect(g_dbHandle);
    DBUnloadDriver(s_driver);
-   return 0;
+
+   if (exitCode != 0)
+      PAUSE;
+   return exitCode;
 }

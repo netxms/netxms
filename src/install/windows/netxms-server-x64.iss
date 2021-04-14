@@ -39,7 +39,6 @@ Name: "pdb"; Description: "Install PDB files for selected components"; Types: cu
 
 [Files]
 ; Common files
-Source: "..\..\..\ChangeLog"; DestDir: "{app}\doc"; Flags: ignoreversion; Components: base
 Source: "..\..\..\x64\Release\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion signonce; Components: base
 Source: "..\..\..\x64\Release\libnetxms.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 Source: "..\..\..\x64\Release\libnxjava.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
@@ -419,12 +418,18 @@ Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-18:(OI)(CI)F"
 Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-19:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "icacls.exe"; Parameters: """{app}\var"" /grant:r *S-1-5-32-544:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "{app}\bin\nxmibc.exe"; Parameters: "-z -d ""{app}\share\mibs"" -o ""{app}\var\netxms.mib"""; WorkingDir: "{app}\bin"; StatusMsg: "Compiling MIB files..."; Flags: runhidden; Components: server
-Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" 127.0.0.1,::1 ""{app}\log\nxagentd.log"" ""{app}\var"" ""{app}\etc\nxagentd.conf.d"" portcheck.nsm ssh.nsm winperf.nsm wmi.nsm"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's configuration file..."; Components: server
+; Setup agent service
+Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" 127.0.0.1,::1 ""{app}\log\nxagentd.log"" ""{app}\var"" ""{app}\etc\nxagentd.conf.d"" portcheck.nsm ssh.nsm winperf.nsm wmi.nsm"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent configuration file..."; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing agent service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting agent service..."; Flags: runhidden; Components: server
+; Setup server core service
+Filename: "{app}\bin\netxmsd.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" -G {code:GetServerConfigEntries}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating server configuration file..."; Components: server; Tasks: initializeDatabase
+Filename: "{app}\bin\nxdbmgr.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" init -P -F {code:GetDatabaseSyntax} {code:GetDatabaseInitOptions}"; WorkingDir: "{app}\bin"; StatusMsg: "Initializing database..."; Components: server; Tasks: initializeDatabase
 Filename: "{app}\bin\nxdbmgr.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" upgrade"; WorkingDir: "{app}\bin"; StatusMsg: "Upgrading database..."; Flags: runhidden; Components: server; Tasks: upgradeDatabase
-Filename: "{app}\bin\netxmsd.exe"; Parameters: "--check-service"; WorkingDir: "{app}\bin"; StatusMsg: "Checking core service configuration..."; Flags: runhidden; Components: server
+Filename: "{app}\bin\netxmsd.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing core service..."; Flags: runhidden; Components: server
+Filename: "{app}\bin\netxmsd.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" --check-service"; WorkingDir: "{app}\bin"; StatusMsg: "Checking core service configuration..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "-s -m"; WorkingDir: "{app}\bin"; StatusMsg: "Starting core service..."; Flags: runhidden; Components: server; Tasks: startCore
+; Setup reporting service
 Filename: "{app}\bin\prunsrv.exe"; Parameters: "//IS//nxreportd --DisplayName=""NetXMS Reporting Server"" --Description=""This service provides report generation capabilities to NetXMS server"" --Startup=auto --StartMode=jvm --StartClass=org.netxms.reporting.Startup --StopMode=jvm --StopClass=org.netxms.reporting.Startup --StopMethod=stop --StopTimeout=10 ++JvmOptions=""-Dnxreportd.workspace={app}\var\nxreportd"" ++JvmOptions=""-Dnxreportd.logfile={app}\log\nxreportd.log"" --Classpath=""{app}\etc\nxreportd;{app}\lib\java\nxreportd-{#VersionString}.jar"" --LogPath=""{app}\log"""; WorkingDir: "{app}\bin"; StatusMsg: "Installing reporting server service..."; Flags: runhidden; Components: server\reporting
 Filename: "{app}\bin\prunsrv.exe"; Parameters: "//US//nxreportd --DisplayName=""NetXMS Reporting Server"" --Description=""This service provides report generation capabilities to NetXMS server"" --Startup=auto --StartMode=jvm --StartClass=org.netxms.reporting.Startup --StopMode=jvm --StopClass=org.netxms.reporting.Startup --StopMethod=stop --StopTimeout=10 ++JvmOptions=""-Dnxreportd.workspace={app}\var\nxreportd"" ++JvmOptions=""-Dnxreportd.logfile={app}\log\nxreportd.log"" --Classpath=""{app}\etc\nxreportd;{app}\lib\java\nxreportd-{#VersionString}.jar"" --LogPath=""{app}\log"""; WorkingDir: "{app}\bin"; StatusMsg: "Installing reporting server service..."; Flags: runhidden; Components: server\reporting
 Filename: "{app}\bin\prunsrv.exe"; Parameters: "//ES//nxreportd"; WorkingDir: "{app}\bin"; StatusMsg: "Starting reporting server service..."; Flags: runhidden; Components: server\reporting; Tasks: startReporting
@@ -657,6 +662,32 @@ Begin
   End;
 End;
 
+Function GetDatabaseSyntax(arg : String): String;
+Begin
+  Case dbInitType.ItemIndex Of
+    0: Result := 'mysql';
+    1: Result := 'mssql';
+    2: Result := 'mysql';
+    3: Result := 'oracle';
+    4: Result := 'pgsql';
+    5: Result := 'sqlite';
+    6: Result := 'tsdb';
+  End;
+End;
+
+Function GetDatabaseDriverName: String;
+Begin
+  Case dbInitType.ItemIndex Of
+    0: Result := 'mariadb.ddr';
+    1: Result := 'mssql.ddr';
+    2: Result := 'mysql.ddr';
+    3: Result := 'oracle.ddr';
+    4: Result := 'pgsql.ddr';
+    5: Result := 'sqlite.ddr';
+    6: Result := 'pgsql.ddr';
+  End;
+End;
+
 Function UpdateReadyMemo(Space, NewLine, MemoUserInfoInfo, MemoDirInfo, MemoTypeInfo,
                          MemoComponentsInfo, MemoGroupInfo, MemoTasksInfo: String): String;
 Var
@@ -701,6 +732,47 @@ Begin
   End;
 
   Result := Text;
+End;
+
+Function GetServerConfigEntries(arg : String): String;
+Var options, dbFile : String;
+Begin
+  options := '-A DBDriver=' + GetDatabaseDriverName;
+  If dbInitType.ItemIndex = 5 Then { SQLite }
+  Begin
+    dbFile := dbInitServer.Text;
+    If dbFile = '' Then
+      dbFile := ExpandConstant('{app}\var\netxmsd.db');
+    options := options + ' -A "DBName=' + dbFile + '"';
+  End Else Begin
+    options := options + ' -A DBServer=';
+    If dbInitServer.Text = '' Then
+      options := options + 'localhost'
+    Else
+      options := options + dbInitServer.Text;
+
+    If (dbInitType.ItemIndex <> 3) And (dbInitName.Text <> '') Then { not Oracle }
+      options := options + ' -A DBName=' + dbInitName.Text;
+
+    If dbInitLogin.Text <> '' Then
+      options := options + ' -A DBLogin=' + dbInitLogin.Text;
+
+    If dbInitPassword.Text <> '' Then
+      options := options + ' -A DBPassword=' + dbInitPassword.Text;
+  End;
+
+  options := options + ' -A "LogFile=' + ExpandConstant('{app}\log\netxmsd.log') + '"';
+  Result := options;
+End;
+
+Function GetDatabaseInitOptions(arg : String): String;
+Var options : String;
+Begin
+  options := '';
+  If dbInitCheckCreateDB.Checked Then Begin
+    options := '-C "' + dbInitDBALogin.Text + '/' + dbInitDBAPassword.Text + '"';
+  End;
+  Result := options;
 End;
 
 Procedure RenameOldFile;

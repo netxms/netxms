@@ -139,7 +139,7 @@ bool ExecSQLBatch(const char *batchFile, bool showOutput)
 /**
  * Initialize database
  */
-void InitDatabase(const char *initFile)
+int InitDatabase(const char *initFile)
 {
    TCHAR query[256];
 
@@ -168,10 +168,11 @@ void InitDatabase(const char *initFile)
       goto init_failed;
 
    _tprintf(_T("Database initialized successfully\n"));
-   return;
+   return 0;
 
 init_failed:
    _tprintf(_T("Database initialization failed\n"));
+   return 10;
 }
 
 /**
@@ -211,7 +212,7 @@ static bool CreateDatabase_Oracle(const TCHAR *dbLogin, const TCHAR *dbPassword)
 
    if (success)
    {
-      _sntprintf(query, 256, _T("ALTER USER initTEST QUOTA UNLIMITED ON USERS"), dbLogin);
+      _sntprintf(query, 256, _T("ALTER USER %s QUOTA UNLIMITED ON USERS"), dbLogin);
       success = SQLQuery(query);
    }
 

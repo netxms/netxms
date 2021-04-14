@@ -47,7 +47,7 @@ struct COLUMN_IDENTIFIER
 DB_HANDLE ConnectToDatabase();
 void CheckDatabase();
 bool CreateDatabase(const char *driver, const TCHAR *dbName, const TCHAR *dbLogin, const TCHAR *dbPassword);
-void InitDatabase(const char *initFile);
+int InitDatabase(const char *initFile);
 bool ClearDatabase(bool preMigration);
 void ExportDatabase(char *file, const StringList& excludedTables, const StringList& includedTables);
 void ImportDatabase(const char *file, const StringList& excludedTables, const StringList& includedTables);
