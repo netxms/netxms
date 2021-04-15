@@ -3112,11 +3112,33 @@ inline const char *json_object_get_string_utf8(json_t *object, const char *tag, 
 /**
  * Get integer value from object
  */
-inline INT64 json_object_get_integer(json_t *object, const char *tag, INT64 defval)
+inline int64_t json_object_get_integer(json_t *object, const char *tag, int64_t defval)
 {
    json_t *value = json_object_get(object, tag);
    return json_is_integer(value) ? json_integer_value(value) : defval;
 }
+
+/**
+ * Get element from object by path (separated by /)
+ */
+json_t LIBNETXMS_EXPORTABLE *json_object_get_by_path_a(json_t *root, const char *path);
+
+/**
+ * Get element from object by path (separated by /)
+ */
+inline json_t *json_object_get_by_path_w(json_t *root, const WCHAR *path)
+{
+   char utf8path[1024];
+   wchar_to_utf8(path, -1, utf8path, 1024);
+   utf8path[1023] = 0;
+   return json_object_get_by_path_a(root, utf8path);
+}
+
+#ifdef UNICODE
+#define json_object_get_by_path json_object_get_by_path_w
+#else
+#define json_object_get_by_path json_object_get_by_path_a
+#endif
 
 /**
  * sockaddr buffer

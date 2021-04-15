@@ -3435,6 +3435,41 @@ String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s)
 }
 
 /**
+ * Get element from object by path (separated by /)
+ */
+json_t LIBNETXMS_EXPORTABLE *json_object_get_by_path_a(json_t *root, const char *path)
+{
+   if ((path[0] == 0) || ((path[0] == '/') && (path[1] == 0)))
+      return root;   // points to root object itself
+
+   if (*path == '/')
+      path++;
+
+   json_t *object = root;
+   char name[128];
+   const char *separator = nullptr;
+   do
+   {
+      separator = strchr(path, '/');
+      if (separator != nullptr)
+      {
+         size_t len = separator - path;
+         if (len > 127)
+            len = 127;
+         memcpy(name, path, len);
+         name[len] = 0;
+         object = json_object_get(object, name);
+         path = separator + 1;
+      }
+      else
+      {
+         object = json_object_get(object, path); // last element in path
+      }
+   } while ((separator != nullptr) && (*path != 0) && (object != nullptr));
+   return object;
+}
+
+/**
  * Escape string for agent parameter
  */
 String LIBNETXMS_EXPORTABLE EscapeStringForAgent(const TCHAR *s)

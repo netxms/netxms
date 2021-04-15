@@ -194,27 +194,7 @@ void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
    for (int i = 0; i < params->size(); i++)
    {
       nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromJSON(): get parameter \"%s\""), params->get(i));
-      json_t *object = m_content.json;
-#ifdef UNICODE
-      char *copy = UTF8StringFromWideString(params->get(i));
-#else
-      char *copy = UTF8StringFromMBString(params->get(i));
-#endif
-      char *item = copy;
-      char *separator = nullptr;
-      if (*item == '/')
-         item++;
-      do
-      {
-         separator = strchr(item, '/');
-         if (separator != nullptr)
-            *separator = 0;
-
-         object = json_object_get(object, item);
-         if (separator != nullptr)
-            item = separator + 1;
-      } while (separator != nullptr && *item != 0 && object != nullptr);
-      MemFree(copy);
+      json_t *object = json_object_get_by_path(m_content.json, params->get(i));
       if (object != nullptr)
       {
          response->setField(fieldId++, params->get(i));
@@ -340,32 +320,7 @@ void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *result)
    uint32_t fieldId = VID_PARAM_LIST_BASE;
    nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromJSON(): Get child object list for JSON path \"%s\""), path);
 
-#ifdef UNICODE
-   char *copy = UTF8StringFromWideString(path);
-#else
-   char *copy = UTF8StringFromMBString(path);
-#endif
-   char *item = copy;
-   if (*item == '/')
-      item++;
-
-   char *separator = strchr(item, '/');
-   if (separator != nullptr)
-      *separator = 0;
-   json_t *object = m_content.json;
-   while (*item != 0)
-   {
-      object = json_object_get(object, item);
-      if ((separator == nullptr) || (object == nullptr))
-         break;
-
-      item = separator + 1;
-      separator = strchr(item, '/');
-      if (separator != nullptr)
-         *separator = 0;
-   }
-   MemFree(copy);
-
+   json_t *object = json_object_get_by_path(m_content.json, path);
    if (object != nullptr)
    {
       void *it = json_object_iter(object);

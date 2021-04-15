@@ -28,14 +28,14 @@
 #define DEBUG_TAG _T("sa.bind9")
 
 /**
- * Json response containing bind9 statistics
+ * JSON response containing bind9 statistics
  */
 json_t * s_response = nullptr;
 
 /**
- * Time between stat file re-generation and value updating
+ * Statistic cache retention time
  */
-static uint32_t s_queryInterval = 5;
+static uint32_t s_cacheRetentionTime = 5;
 
 /**
  * Timestamp of last query
@@ -75,7 +75,7 @@ static void FetchStats()
    time_t now = time(nullptr);
 
    // Skip fetch if last query still valid
-   if ((now - s_queryTimestamp) < s_queryInterval)
+   if ((now - s_queryTimestamp) < s_cacheRetentionTime)
    {
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Skipping fetch due to query time not reached"));
       return;
@@ -143,44 +143,31 @@ static LONG H_Bind9Info(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 
    MutexLock(s_paramsLock);
    FetchStats();
-
    if (s_response != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Received valid API response"));
       s_inErrorState = false;
 
-      char objectName[128];
-      strcpy(objectName, reinterpret_cast<const char *>(arg));
-      char *paramName = strchr(objectName, '/');
-      if (paramName != nullptr)
+      json_t *property = json_object_get_by_path_a(s_response, reinterpret_cast<const char*>(arg));
+      if (property != nullptr)
       {
-         *paramName = 0;
-         paramName++;
-      }
-
-      json_t *object = json_object_get(s_response, objectName);
-
-      if (json_is_object(object))
-      {
-         json_t *param = json_object_get(object, paramName);
-
-         if (json_is_integer(param))
+         if (json_is_integer(property))
          {
-            ret_int64(value, json_integer_value(param));
+            ret_int64(value, json_integer_value(property));
          }
-         else if (json_is_string(param))
+         else if (json_is_string(property))
          {
-            ret_utf8string(value, json_string_value(param));
+            ret_utf8string(value, json_string_value(property));
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 3, _T("Attempted to query \"%hs\", but failed to find parameter \"%hs\""), reinterpret_cast<const char *>(arg), paramName);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Unsupported data type for property \"%hs\""), reinterpret_cast<const char*>(arg));
             rc = SYSINFO_RC_UNSUPPORTED;
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 3, _T("Attempted to query \"%hs\", but failed to find object \"%hs\""), reinterpret_cast<const char *>(arg), objectName);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Cannot find property \"%hs\""), reinterpret_cast<const char*>(arg));
          rc = SYSINFO_RC_UNSUPPORTED;
       }
    }
@@ -194,12 +181,23 @@ static LONG H_Bind9Info(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 }
 
 /**
+ * Get metric from user-supplied path
+ */
+static LONG H_Bind9CustomInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char path[256];
+   if (!AgentGetParameterArgA(param, 1, path, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+   return H_Bind9Info(param, reinterpret_cast<TCHAR*>(path), value, session);
+}
+
+/**
  * Subagent initialization
  */
 static bool SubAgentInit(Config *config)
 {
    // Parse configuration
-   s_queryInterval = config->getValueAsInt(_T("/Bind9/CacheRetentionTime"), s_queryInterval);
+   s_cacheRetentionTime = config->getValueAsInt(_T("/Bind9/CacheRetentionTime"), s_cacheRetentionTime);
    const TCHAR *ip = config->getValue(_T("/Bind9/Address"), _T("127.0.0.1"));
    int port = config->getValueAsInt(_T("/Bind9/Port"), 80);
 
@@ -218,7 +216,6 @@ static bool SubAgentInit(Config *config)
 #endif
 
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Query URL: %hs"), s_queryUrl);
-
    return true;
 }
 
@@ -228,7 +225,6 @@ static bool SubAgentInit(Config *config)
 static void SubAgentShutdown()
 {
    json_decref(s_response);
-   s_response = nullptr;
 }
 
 /**
@@ -236,21 +232,34 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("Bind9.Requests.Received.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/Requestv4"), DCI_DT_INT, _T("Received IPv4 requests since bind9 started") },
-   { _T("Bind9.Requests.Received.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/Requestv6"), DCI_DT_INT, _T("Received IPv6 requests since bind9 started") },
-   { _T("Bind9.Requests.Recursive.Rejected"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/RecQryRej"), DCI_DT_INT, _T("Rejected recursive queries since bind9 started") },
-   { _T("Bind9.Answers.Auth"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryAuthAns"), DCI_DT_INT, _T("Queries that resulted in an authoritative answer since bind9 started") },
-   { _T("Bind9.Answers.NonAuth"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryNoauthAns"), DCI_DT_INT, _T("Queries that resulted in a non-authoritative answer since bind9 started") },
-   { _T("Bind9.Answers.nxrrset"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryNxrrset"), DCI_DT_INT, _T("Queries that resulted in a nxrrset answer since bind9 started") },
-   { _T("Bind9.Answers.SERVFAIL"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QrySERVFAIL"), DCI_DT_INT, _T("Queries that resulted in a SERVFAIL answer since bind9 started") },
-   { _T("Bind9.Answers.NXDOMAIN"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryNXDOMAIN"), DCI_DT_INT, _T("Queries that resulted in a NXDOMAIN answer since bind9 started") },
-   { _T("Bind9.Answers.Recursive"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryRecursion"), DCI_DT_INT, _T("Queries that caused recursion since bind9 started") },
-   { _T("Bind9.Requests.Failed.Other"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryFailure"), DCI_DT_INT, _T("Other query failures since bind9 started") },
-   { _T("Bind9.Notifies.Sent.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyOutv4"), DCI_DT_INT, _T("Sent IPv4 notifies since bind9 started") },
-   { _T("Bind9.Notifies.Sent.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyOutv6"), DCI_DT_INT, _T("Sent IPv6 notifies since bind9 started") },
-   { _T("Bind9.Notifies.Received.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyInv4"), DCI_DT_INT, _T("Received IPv4 notifies since bind9 started") },
-   { _T("Bind9.Notifies.Received.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyInv6"), DCI_DT_INT, _T("Received IPv6 notifies since bind9 started") }
-}; // @todo Update list of parameters according to modern documentation. Some (i.e. "nsstats/QryFailure") may be deprecated
+   { _T("Bind9.Answers.Auth"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryAuthAns"), DCI_DT_UINT, _T("Bind9: queries resulted in an authoritative answer") },
+   { _T("Bind9.Answers.FORMERR"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryFORMERR"), DCI_DT_UINT, _T("Bind9: queries resulted in a FORMERR answer") },
+   { _T("Bind9.Answers.NoData"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryNxrrset"), DCI_DT_UINT, _T("Bind9: queries resulted in NOERROR responses with no data") },
+   { _T("Bind9.Answers.NonAuth"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryNoauthAns"), DCI_DT_UINT, _T("Bind9: queries resulted in a non-authoritative answer") },
+   { _T("Bind9.Answers.NXDOMAIN"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryNXDOMAIN"), DCI_DT_UINT, _T("Bind9: queries resulted in a NXDOMAIN answer") },
+   { _T("Bind9.Answers.Recursive"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryRecursion"), DCI_DT_UINT, _T("Bind9: queries that caused recursion") },
+   { _T("Bind9.Answers.Referral"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryReferral"), DCI_DT_UINT, _T("Bind9: queries resulted in referral answer") },
+   { _T("Bind9.Answers.SERVFAIL"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QrySERVFAIL"), DCI_DT_UINT, _T("Bind9: queries resulted in a SERVFAIL answer") },
+   { _T("Bind9.BootTime"), H_Bind9Info, reinterpret_cast<const TCHAR*>("boot-time"), DCI_DT_STRING, _T("Bind9: boot time") },
+   { _T("Bind9.ConfigTime"), H_Bind9Info, reinterpret_cast<const TCHAR*>("config-time"), DCI_DT_STRING, _T("Bind9: boot time") },
+   { _T("Bind9.Notifies.Received.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyInv4"), DCI_DT_UINT, _T("Bind9: received IPv4 notifies") },
+   { _T("Bind9.Notifies.Received.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyInv6"), DCI_DT_UINT, _T("Bind9: received IPv6 notifies") },
+   { _T("Bind9.Notifies.Sent.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyOutv4"), DCI_DT_UINT, _T("Bind9: sent IPv4 notifies") },
+   { _T("Bind9.Notifies.Sent.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyOutv6"), DCI_DT_UINT, _T("Bind9: sent IPv6 notifies") },
+   { _T("Bind9.Other(*)"), H_Bind9CustomInfo, nullptr, DCI_DT_UINT, _T("Bind9: value of metric {instance}") },
+   { _T("Bind9.Requests.Completed.Updates"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/UpdateDone"), DCI_DT_UINT, _T("Bind9: completed updates") },
+   { _T("Bind9.Requests.Completed.ZoneTransfers"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/XfrReqDone"), DCI_DT_UINT, _T("Bind9: completed zone transfers") },
+   { _T("Bind9.Requests.Failed.Dropped"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryDropped"), DCI_DT_UINT, _T("Bind9: dropped queries") },
+   { _T("Bind9.Requests.Failed.Other"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryFailure"), DCI_DT_UINT, _T("Bind9: other query failures") },
+   { _T("Bind9.Requests.Received.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/Requestv4"), DCI_DT_UINT, _T("Bind9: received IPv4 requests") },
+   { _T("Bind9.Requests.Received.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/Requestv6"), DCI_DT_UINT, _T("Bind9: received IPv6 requests") },
+   { _T("Bind9.Requests.Received.TCP"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/ReqTCP"), DCI_DT_UINT, _T("Bind9: received TCP requests") },
+   { _T("Bind9.Requests.Rejected.Authoritative"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/AuthQryRej"), DCI_DT_UINT, _T("Bind9: rejected authoritative queries") },
+   { _T("Bind9.Requests.Rejected.Recursive"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/RecQryRej"), DCI_DT_UINT, _T("Bind9: rejected recursive queries") },
+   { _T("Bind9.Requests.Rejected.Updates"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/UpdateRej"), DCI_DT_UINT, _T("Bind9: rejected updates") },
+   { _T("Bind9.Requests.Rejected.ZoneTransfers"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/XfrRej"), DCI_DT_UINT, _T("Bind9: rejected zone transfers") },
+   { _T("Bind9.Version"), H_Bind9Info, reinterpret_cast<const TCHAR*>("version"), DCI_DT_STRING, _T("Bind9: version") },
+};
 
 /**
  * Subagent information
