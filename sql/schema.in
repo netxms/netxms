@@ -580,6 +580,8 @@ CREATE TABLE interfaces
   dot1x_backend_state integer not null,
   description varchar(255) null,
   iftable_suffix varchar(127) null,
+  last_known_oper_state integer not null,
+  last_known_admin_state integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

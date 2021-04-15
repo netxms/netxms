@@ -23,6 +23,28 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+
+/**
+ * Upgrade from 40.45 to 40.46
+ */
+static bool H_UpgradeFromV45()
+{
+   if (GetSchemaLevelForMajorVersion(38) < 10)
+   {
+      static const TCHAR *batch =
+         _T("ALTER TABLE interfaces ADD last_known_oper_state integer\n")
+         _T("ALTER TABLE interfaces ADD last_known_admin_state integer\n")
+         _T("UPDATE interfaces SET last_known_oper_state=0,last_known_admin_state=0\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("interfaces"), _T("last_known_oper_state")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("interfaces"), _T("last_known_admin_state")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(38, 10));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(46));
+   return true;
+}
+
 /**
  * Upgrade from 40.44 to 40.45
  */
@@ -1200,6 +1222,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 45, 40, 46, H_UpgradeFromV45 },
    { 44, 40, 45, H_UpgradeFromV44 },
    { 43, 40, 44, H_UpgradeFromV43 },
    { 42, 40, 43, H_UpgradeFromV42 },

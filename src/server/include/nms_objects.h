@@ -1586,6 +1586,8 @@ protected:
 	int32_t m_ifTableSuffixLen;
    uint32_t *m_ifTableSuffix;
    IntegerArray<uint32_t> *m_vlans;
+   int16_t m_lastKnownOperState;
+   int16_t m_lastKnownAdminState;
 
    void icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
 	void paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *node);

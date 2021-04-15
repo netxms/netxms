@@ -24,11 +24,28 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 38.8 to 40.0
+ * Upgrade from 38.10 to 40.0
+ */
+static bool H_UpgradeFromV10()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 38.9 to 38.10
  */
 static bool H_UpgradeFromV9()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   static const TCHAR *batch =
+      _T("ALTER TABLE interfaces ADD last_known_oper_state integer\n")
+      _T("ALTER TABLE interfaces ADD last_known_admin_state integer\n")
+      _T("UPDATE interfaces SET last_known_oper_state=0,last_known_admin_state=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("interfaces"), _T("last_known_oper_state")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("interfaces"), _T("last_known_admin_state")));
+   CHK_EXEC(SetMinorSchemaVersion(10));
    return true;
 }
 
@@ -220,7 +237,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 9,  40, 0,  H_UpgradeFromV9  },
+   { 10, 40, 0,  H_UpgradeFromV10 },
+   { 9,  38, 10, H_UpgradeFromV9  },
    { 8,  38, 9,  H_UpgradeFromV8  },
    { 7,  38, 8,  H_UpgradeFromV7  },
    { 6,  38, 7,  H_UpgradeFromV6  },
