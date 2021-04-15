@@ -25,7 +25,7 @@
 #include <nms_util.h>
 #include <curl/curl.h>
 
-#define DEBUG_TAG _T("bind9")
+#define DEBUG_TAG _T("sa.bind9")
 
 /**
  * Json response containing bind9 statistics
@@ -236,20 +236,20 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("bind9.Requests.Received.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR *>("nsstats/Requestv4"), DCI_DT_INT, _T("Received IPv4 requests since bind9 started") },
-   { _T("bind9.Requests.Received.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR *>("nsstats/Requestv6"), DCI_DT_INT, _T("Received IPv6 requests since bind9 started") },
-   { _T("bind9.Requests.Recursive.Rejected"), H_Bind9Info, reinterpret_cast<const TCHAR *>("nsstats/RecQryRej"), DCI_DT_INT, _T("Rejected recursive queries since bind9 started") },
-   { _T("bind9.Answers.Auth"), H_Bind9Info, reinterpret_cast<const TCHAR *>("nsstats/QryAuthAns"), DCI_DT_INT, _T("Queries that resulted in an authoritative answer since bind9 started") },
-   { _T("bind9.Answers.NonAuth"), H_Bind9Info, reinterpret_cast<const TCHAR *>("nsstats/QryNoauthAns"), DCI_DT_INT, _T("Queries that resulted in a non-authoritative answer since bind9 started") },
-   { _T("bind9.Answers.nxrrset"), H_Bind9Info, reinterpret_cast<const TCHAR *>("nsstats/QryNxrrset"), DCI_DT_INT, _T("Queries that resulted in a nxrrset answer since bind9 started") },
-   { _T("bind9.Answers.SERVFAIL"), H_Bind9Info, reinterpret_cast<const TCHAR *>("nsstats/QrySERVFAIL"), DCI_DT_INT, _T("Queries that resulted in a SERVFAIL answer since bind9 started") },
-   { _T("bind9.Answers.NXDOMAIN"), H_Bind9Info, reinterpret_cast<const TCHAR *>("nsstats/QryNXDOMAIN"), DCI_DT_INT, _T("Queries that resulted in a NXDOMAIN answer since bind9 started") },
-   { _T("bind9.Answers.Recursive"), H_Bind9Info, reinterpret_cast<const TCHAR *>("nsstats/QryRecursion"), DCI_DT_INT, _T("Queries that caused recursion since bind9 started") },
-   { _T("bind9.Requests.Failed.Other"), H_Bind9Info, reinterpret_cast<const TCHAR *>("nsstats/QryFailure"), DCI_DT_INT, _T("Other query failures since bind9 started") },
-   { _T("bind9.Notifies.Sent.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR *>("zonestats/NotifyOutv4"), DCI_DT_INT, _T("Sent IPv4 notifies since bind9 started") },
-   { _T("bind9.Notifies.Sent.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR *>("zonestats/NotifyOutv6"), DCI_DT_INT, _T("Sent IPv6 notifies since bind9 started") },
-   { _T("bind9.Notifies.Received.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR *>("zonestats/NotifyInv4"), DCI_DT_INT, _T("Received IPv4 notifies since bind9 started") },
-   { _T("bind9.Notifies.Received.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR *>("zonestats/NotifyInv6"), DCI_DT_INT, _T("Received IPv6 notifies since bind9 started") }
+   { _T("Bind9.Requests.Received.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/Requestv4"), DCI_DT_INT, _T("Received IPv4 requests since bind9 started") },
+   { _T("Bind9.Requests.Received.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/Requestv6"), DCI_DT_INT, _T("Received IPv6 requests since bind9 started") },
+   { _T("Bind9.Requests.Recursive.Rejected"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/RecQryRej"), DCI_DT_INT, _T("Rejected recursive queries since bind9 started") },
+   { _T("Bind9.Answers.Auth"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryAuthAns"), DCI_DT_INT, _T("Queries that resulted in an authoritative answer since bind9 started") },
+   { _T("Bind9.Answers.NonAuth"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryNoauthAns"), DCI_DT_INT, _T("Queries that resulted in a non-authoritative answer since bind9 started") },
+   { _T("Bind9.Answers.nxrrset"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryNxrrset"), DCI_DT_INT, _T("Queries that resulted in a nxrrset answer since bind9 started") },
+   { _T("Bind9.Answers.SERVFAIL"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QrySERVFAIL"), DCI_DT_INT, _T("Queries that resulted in a SERVFAIL answer since bind9 started") },
+   { _T("Bind9.Answers.NXDOMAIN"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryNXDOMAIN"), DCI_DT_INT, _T("Queries that resulted in a NXDOMAIN answer since bind9 started") },
+   { _T("Bind9.Answers.Recursive"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryRecursion"), DCI_DT_INT, _T("Queries that caused recursion since bind9 started") },
+   { _T("Bind9.Requests.Failed.Other"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryFailure"), DCI_DT_INT, _T("Other query failures since bind9 started") },
+   { _T("Bind9.Notifies.Sent.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyOutv4"), DCI_DT_INT, _T("Sent IPv4 notifies since bind9 started") },
+   { _T("Bind9.Notifies.Sent.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyOutv6"), DCI_DT_INT, _T("Sent IPv6 notifies since bind9 started") },
+   { _T("Bind9.Notifies.Received.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyInv4"), DCI_DT_INT, _T("Received IPv4 notifies since bind9 started") },
+   { _T("Bind9.Notifies.Received.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyInv6"), DCI_DT_INT, _T("Received IPv6 notifies since bind9 started") }
 }; // @todo Update list of parameters according to modern documentation. Some (i.e. "nsstats/QryFailure") may be deprecated
 
 /**

@@ -950,7 +950,7 @@ check_substr "$COMPONENTS" "java"
 if test $? = 0; then
 	MODULES="$MODULES java-common libnxjava"
 	if test "x$JAR_BUILD" = "xyes"; then
-		SUBAGENT_DIRS="$SUBAGENT_DIRS java bind9 jmx ubntlw"
+		SUBAGENT_DIRS="$SUBAGENT_DIRS java jmx ubntlw"
 	else
 		SUBAGENT_DIRS="$SUBAGENT_DIRS java"
 	fi
@@ -2506,7 +2506,7 @@ if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 		AC_MSG_ERROR(libcurl is required. Check that it is installed or use --without-curl option)
 	fi
 
-	SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS bind9 netsvc"
 	NCDRV_MODULES="$NCDRV_MODULES anysms kannel msteams mymobile nexmo slack smseagle telegram text2reach websms"
 	HDLINK_DIRS="$HDLINK_DIRS jira redmine"
 	AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)

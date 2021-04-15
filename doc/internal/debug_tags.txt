@@ -89,6 +89,7 @@ proxy		Proxy related (in agent log)
 sa.*		Sub-agent related messages
 sa.aix		AIX platform subagent messages
 sa.asterisk	Asterisk subagent messages
+sa.bind9	Bind9 subagent messages
 sa.freebsd	FreeBSD platform subagent messages
 sa.mysql	MySQL monitoring subagent messages
 sa.ping		Ping subagent
