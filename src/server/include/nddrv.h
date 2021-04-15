@@ -29,7 +29,7 @@
 /**
  * API version
  */
-#define NDDRV_API_VERSION           9
+#define NDDRV_API_VERSION           10
 
 /**
  * Begin driver list
@@ -379,7 +379,7 @@ public:
    virtual bool hasMetrics();
    virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size);
    virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual ArpCache *getArpCache(SNMP_Transport *snmp, DriverData *driverData);
+   virtual shared_ptr<ArpCache> getArpCache(SNMP_Transport *snmp, DriverData *driverData);
 };
 
 /**

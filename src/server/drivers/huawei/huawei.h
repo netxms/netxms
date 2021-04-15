@@ -42,7 +42,7 @@ public:
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable) override;
    virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
             int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState) override;
-   virtual ArpCache *getArpCache(SNMP_Transport *snmp, DriverData *driverData) override;
+   virtual shared_ptr<ArpCache> getArpCache(SNMP_Transport *snmp, DriverData *driverData) override;
 };
 
 #endif

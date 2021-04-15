@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -377,24 +377,19 @@ static InterfaceList *SysGetLocalIfList()
 /**
  * Get local ARP cache
  */
-ArpCache *GetLocalArpCache()
+shared_ptr<ArpCache> GetLocalArpCache()
 {
-   ArpCache *pArpCache = nullptr;
-
    // Get ARP cache from built-in code or platform subagent
-   pArpCache = SysGetLocalArpCache();
+   ArpCache *arpCache = SysGetLocalArpCache();
+   if (arpCache != nullptr)
+      return shared_ptr<ArpCache>(arpCache);
 
    // Try to get ARP cache from agent via loopback address
-   if (pArpCache == NULL)
-   {
-      shared_ptr<AgentConnection> conn = AgentConnection::create(InetAddress::LOOPBACK);
-      if (conn->connect(g_pServerKey))
-      {
-         pArpCache = conn->getArpCache();
-      }
-   }
+   shared_ptr<AgentConnection> conn = AgentConnection::create(InetAddress::LOOPBACK);
+   if (conn->connect(g_pServerKey))
+      return conn->getArpCache();
 
-   return pArpCache;
+   return shared_ptr<ArpCache>();
 }
 
 /**
@@ -402,19 +397,17 @@ ArpCache *GetLocalArpCache()
  */
 InterfaceList *GetLocalInterfaceList()
 {
-   InterfaceList *pIfList = NULL;
-
    // Get interface list from built-in code or platform subagent
-   pIfList = SysGetLocalIfList();
+   InterfaceList *ifList = SysGetLocalIfList();
 
    // Try to get local interface list from agent via loopback address
-   if (pIfList == NULL)
+   if (ifList == nullptr)
    {
       shared_ptr<AgentConnection> conn = AgentConnection::create(InetAddress::LOOPBACK);
       if (conn->connect(g_pServerKey))
       {
-         pIfList = conn->getInterfaceList();
+         ifList = conn->getInterfaceList();
       }
    }
-   return pIfList;
+   return ifList;
 }

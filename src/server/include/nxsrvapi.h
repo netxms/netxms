@@ -218,49 +218,55 @@ enum ActionCallbackEvent
  */
 struct ArpEntry
 {
-   UINT32 ifIndex;       // Interface index, 0 if unknown
+   uint32_t ifIndex;       // Interface index, 0 if unknown
    InetAddress ipAddr;
    MacAddress macAddr;
 
-   ArpEntry(const InetAddress& _ipAddr, const MacAddress& _macAddr, UINT32 _ifIndex) : ipAddr(_ipAddr), macAddr(_macAddr) { ifIndex = _ifIndex; }
+   ArpEntry(const InetAddress& _ipAddr, const MacAddress& _macAddr, uint32_t _ifIndex) : ipAddr(_ipAddr), macAddr(_macAddr) { ifIndex = _ifIndex; }
 };
+
+#ifdef _WIN32
+template class LIBNXSRV_EXPORTABLE ObjectArray<ArpEntry>;
+template class LIBNXSRV_EXPORTABLE HashMap<InetAddress, ArpEntry>;
+#endif
 
 /**
  * ARP cache structure used by discovery functions and AgentConnection class
  */
-class LIBNXSRV_EXPORTABLE ArpCache : public RefCountObject
+class LIBNXSRV_EXPORTABLE ArpCache
 {
 private:
-   ObjectArray<ArpEntry> *m_entries;
-   HashMap<InetAddress, ArpEntry> *m_ipIndex;
+   ObjectArray<ArpEntry> m_entries;
+   HashMap<InetAddress, ArpEntry> m_ipIndex;
    time_t m_timestamp;
-
-protected:
-   virtual ~ArpCache();
 
 public:
    ArpCache();
 
    void addEntry(ArpEntry *entry);
-   void addEntry(const InetAddress& ipAddr, const MacAddress& macAddr, UINT32 ifIndex = 0) { addEntry(new ArpEntry(ipAddr, macAddr, ifIndex)); }
+   void addEntry(const InetAddress& ipAddr, const MacAddress& macAddr, uint32_t ifIndex = 0) { addEntry(new ArpEntry(ipAddr, macAddr, ifIndex)); }
 
-   int size() const { return m_entries->size(); }
+   int size() const { return m_entries.size(); }
    time_t timestamp() const { return m_timestamp; }
-   const ArpEntry *get(int index) const { return m_entries->get(index); }
+   const ArpEntry *get(int index) const { return m_entries.get(index); }
    const ArpEntry *findByIP(const InetAddress& addr);
 
    void dumpToLog() const;
 };
+
+#ifdef _WIN32
+template class LIBNXSRV_EXPORTABLE shared_ptr<ArpCache>;
+#endif
 
 /**
  * Interface physical location
  */
 struct LIBNXSRV_EXPORTABLE InterfacePhysicalLocation
 {
-   UINT32 chassis;
-   UINT32 module;
-   UINT32 pic;
-   UINT32 port;
+   uint32_t chassis;
+   uint32_t module;
+   uint32_t pic;
+   uint32_t port;
 
    InterfacePhysicalLocation()
    {
@@ -270,7 +276,7 @@ struct LIBNXSRV_EXPORTABLE InterfacePhysicalLocation
       port = 0;
    }
 
-   InterfacePhysicalLocation(UINT32 _chassis, UINT32 _module, UINT32 _pic, UINT32 _port)
+   InterfacePhysicalLocation(uint32_t _chassis, uint32_t _module, uint32_t _pic, uint32_t _port)
    {
       chassis = _chassis;
       module = _module;
@@ -946,7 +952,7 @@ public:
    NXCPMessage *waitForMessage(uint16_t code, uint32_t id, uint32_t timeout) { return m_pMsgWaitQueue->waitForMessage(code, id, timeout); }
    uint32_t waitForRCC(uint32_t requestId, uint32_t timeout);
 
-   ArpCache *getArpCache();
+   shared_ptr<ArpCache> getArpCache();
    InterfaceList *getInterfaceList();
    RoutingTable *getRoutingTable();
    uint32_t getParameter(const TCHAR *param, TCHAR *buffer, size_t size);

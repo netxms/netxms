@@ -235,7 +235,7 @@ MacAddress Subnet::findMacAddress(const InetAddress& ipAddr)
    {
 		Node *node = nodes.get(i);
 		nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Subnet[%s]::findMacAddress: reading ARP cache for node %s [%u]"), m_name, node->getName(), node->getId());
-		ArpCache *arpCache = node->getArpCache();
+		shared_ptr<ArpCache> arpCache = node->getArpCache();
 		if (arpCache != nullptr)
 		{
          const ArpEntry *e = arpCache->findByIP(ipAddr);
@@ -245,7 +245,6 @@ MacAddress Subnet::findMacAddress(const InetAddress& ipAddr)
             macAddr = e->macAddr;
             success = true;
          }
-         arpCache->decRefCount();
 		}
 		else
       {

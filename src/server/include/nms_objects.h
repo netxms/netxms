@@ -2995,7 +2995,7 @@ protected:
    RoutingTable *m_routingTable;
    shared_ptr<NetworkPath> m_lastKnownNetworkPath;
 	ForwardingDatabase *m_fdb;
-	ArpCache *m_arpCache;
+	shared_ptr<ArpCache> m_arpCache;
 	LinkLayerNeighbors *m_linkLayerNeighbors;
 	shared_ptr<VlanList> m_vlans;
 	VrrpInfo *m_vrrpInfo;
@@ -3280,7 +3280,7 @@ public:
    void relatedNodeDataCollectionChanged() { onDataCollectionChange(); }
    void clearSshKey() { m_sshKeyId = 0; }
 
-   ArpCache *getArpCache(bool forceRead = false);
+   shared_ptr<ArpCache> getArpCache(bool forceRead = false);
    InterfaceList *getInterfaceList();
    shared_ptr<Interface> findInterfaceByIndex(UINT32 ifIndex) const;
    shared_ptr<Interface> findInterfaceByName(const TCHAR *name) const;
