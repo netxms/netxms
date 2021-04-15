@@ -9,6 +9,7 @@ aix		AIX platform subagent messages
 alarm.*		Alarm management
 
 asterisk	Asterisk subagent messages
+bind9		Bind9 subagent messages
 
 client.session	Client sessions
 
