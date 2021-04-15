@@ -188,7 +188,7 @@ public class CreateInterfaceDialog extends Dialog
 		if (!WidgetHelper.validateTextInput(nameField, new ObjectNameValidator(), null) ||
 		    !WidgetHelper.validateTextInput(macAddrField, new MacAddressValidator(true), null) ||
 		    !WidgetHelper.validateTextInput(ipAddrField, new IPAddressValidator(true), null) ||
-		    !WidgetHelper.validateTextInput(ipMaskField, new IPNetMaskValidator(true), null) ||
+		    !WidgetHelper.validateTextInput(ipMaskField, new IPNetMaskValidator(true, ipAddrField.getText().trim()), null) ||
 		    (physicalPort && !WidgetHelper.validateTextInput(slotField, new NumericTextFieldValidator(0, 4096), null)) ||
 		    (physicalPort && !WidgetHelper.validateTextInput(portField, new NumericTextFieldValidator(0, 4096), null)))
 			return;

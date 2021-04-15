@@ -905,6 +905,47 @@
             allPopups="false"
             locationURI="popup:org.eclipse.ui.popup.any?before=objectmgmt">
          <menu
+               id="create"
+               label="&amp;Create">
+            <command
+                  commandId="org.netxms.ui.eclipse.objectmanager.popupActions.CreateSubnet"
+                  label="&amp;Subnet..."
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <and>
+                     <count
+                           value="1">
+                     </count>
+                     <iterate>
+                        <or>
+                           <and>
+                              <instanceof
+                                    value="org.netxms.client.objects.EntireNetwork">
+                              </instanceof>
+                              <not>
+                                 <test
+                                       forcePluginActivation="true"
+                                       property="org.netxms.ui.eclipse.objectmanager.isZoningEnabled">
+                                 </test>
+                              </not>
+                           </and>
+                           <and>
+                              <instanceof
+                                    value="org.netxms.client.objects.Zone">
+                              </instanceof>
+                              <test
+                                    forcePluginActivation="true"
+                                    property="org.netxms.ui.eclipse.objectmanager.isZoningEnabled">
+                              </test>
+                           </and>
+                        </or>
+                     </iterate>
+                  </and>
+               </visibleWhen>
+            </command>
+         </menu>
+         <menu
                id="org.netxms.ui.ObjectOperationsMenu"
                label="%menu.label.Object">
             <separator
@@ -1257,6 +1298,11 @@
             id="org.netxms.ui.eclipse.objectmanager.commands.open_object_categories_editor"
             name="Object categories">
       </command>
+      <command
+            description="Create new subnet"
+            id="org.netxms.ui.eclipse.objectmanager.popupActions.CreateSubnet"
+            name="Create Subnet">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -1283,6 +1329,10 @@
       <handler
             class="org.netxms.ui.eclipse.objectmanager.actions.ScheduleMaintenance"
             commandId="org.netxms.ui.eclipse.objectmanager.popupActions.ScheduleMaintenance">
+      </handler>
+      <handler
+            class="org.netxms.ui.eclipse.objectmanager.actions.CreateSubnet"
+            commandId="org.netxms.ui.eclipse.objectmanager.popupActions.CreateSubnet">
       </handler>
    </extension>
    <extension
@@ -1336,6 +1386,16 @@
                toolbarPath="config/additions">
          </action>
       </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="org.netxms.ui.eclipse.objectmanager.isZoningEnabled"
+            id="org.netxms.ui.eclipse.objectmanager.isZoningEnabled"
+            namespace="org.netxms.ui.eclipse.objectmanager"
+            properties="isZoningEnabled"
+            type="org.netxms.client.objects.AbstractObject">
+      </propertyTester>
    </extension>
 
 </plugin>

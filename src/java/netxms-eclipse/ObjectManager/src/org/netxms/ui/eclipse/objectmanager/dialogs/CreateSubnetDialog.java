@@ -1,0 +1,175 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2021 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.ui.eclipse.objectmanager.dialogs;
+
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Shell;
+import org.netxms.base.InetAddressEx;
+import org.netxms.ui.eclipse.tools.IPAddressValidator;
+import org.netxms.ui.eclipse.tools.IPNetMaskValidator;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledText;
+
+/**
+ * New subnet creation dialog
+ */
+public class CreateSubnetDialog extends Dialog
+{
+   private String objectName = "";
+   private InetAddressEx ipAddress;
+   
+   private LabeledText objectNameText;
+   private LabeledText ipAddressText;
+   private LabeledText maskText;
+   
+   /**
+    * Dialog constructor
+    * 
+    * @param shell
+    */
+   public CreateSubnetDialog(Shell shell)
+   {
+      super(shell);
+   }
+
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
+   @Override
+   protected void configureShell(Shell newShell)
+   {
+      super.configureShell(newShell);
+      newShell.setText("Create Subnet");
+   }
+
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
+   @Override
+   protected Control createDialogArea(Composite parent)
+   {
+      Composite dialogArea = (Composite)super.createDialogArea(parent);
+      
+      GridLayout layout = new GridLayout();
+      layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+      layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
+      layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
+      dialogArea.setLayout(layout);
+      
+      objectNameText = new LabeledText(dialogArea, SWT.NONE);
+      objectNameText.setLabel("Name (leave empty to construct from address and mask)");
+      objectNameText.getTextControl().setTextLimit(255);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.widthHint = 600;
+      gd.horizontalSpan = 2;
+      objectNameText.setLayoutData(gd);
+      objectNameText.setText(objectName);
+      
+      ipAddressText = new LabeledText(dialogArea, SWT.NONE);
+      ipAddressText.setLabel("IP address");
+      ipAddressText.getTextControl().setTextLimit(64);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      ipAddressText.setLayoutData(gd);
+      ipAddressText.setText("");
+      
+      maskText = new LabeledText(dialogArea, SWT.NONE);
+      maskText.setLabel("Network mask");
+      maskText.getTextControl().setTextLimit(16);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      maskText.setLayoutData(gd);
+      maskText.setText("");
+      
+      return dialogArea;
+   }
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
+   @Override
+   protected void okPressed()
+   {
+      if (!WidgetHelper.validateTextInput(ipAddressText, new IPAddressValidator(false), null) || 
+          !WidgetHelper.validateTextInput(maskText, new IPNetMaskValidator(false, ipAddressText.getText()), null))
+      {
+         return;
+      }
+      
+      try
+      {
+         objectName = objectNameText.getText().trim();
+         InetAddress addr = InetAddress.getByName(ipAddressText.getText().trim());
+         int maskBits;
+         try
+         {
+            maskBits = Integer.parseInt(maskText.getText().trim());
+         }
+         catch(NumberFormatException e)
+         {
+            InetAddress mask = InetAddress.getByName(maskText.getText().trim());
+            maskBits = InetAddressEx.bitsInMask(mask);
+         }
+         if (maskBits > (addr instanceof Inet4Address ? 31 : 127))
+         {
+            MessageDialogHelper.openError(getShell(), "Invalid network mask", "Please enter valid network mask");
+            return;
+         }
+         ipAddress = new InetAddressEx(addr, maskBits);
+      }
+      catch (Exception e)
+      {
+         MessageDialog.openError(getShell(), "Error", String.format("Internal error: %s", e.getMessage()));
+      }
+      
+      super.okPressed();
+   }
+
+   /**
+    * @return the objectName
+    */
+   public String getObjectName()
+   {
+      return objectName;
+   }
+
+   /**
+    * @return the ipAddress
+    */
+   public InetAddressEx getIpAddress()
+   {
+      return ipAddress;
+   }
+}

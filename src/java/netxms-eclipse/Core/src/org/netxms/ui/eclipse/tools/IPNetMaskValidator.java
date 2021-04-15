@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,10 @@
  */
 package org.netxms.ui.eclipse.tools;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import org.netxms.base.InetAddressEx;
 import org.netxms.ui.eclipse.console.Messages;
 
 /**
@@ -28,45 +30,64 @@ import org.netxms.ui.eclipse.console.Messages;
 public class IPNetMaskValidator implements TextFieldValidator
 {
 	private static final String IP_ADDRESS_PATTERN = "^([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}|[A-Fa-f0-9:]+)$"; //$NON-NLS-1$
-	
+
 	private boolean allowEmpty;
-	
+	private int maxBits;
+
 	/**
 	 * Create new IP network mask validator.
 	 * 
 	 * @param allowEmpty if true, empty string is allowed
 	 */
-	public IPNetMaskValidator(boolean allowEmpty)
+   public IPNetMaskValidator(boolean allowEmpty, String ipAddress)
 	{
 		this.allowEmpty = allowEmpty;
+      if (ipAddress.isEmpty())
+      {
+         maxBits = 32;
+      }
+      else
+      {
+         try
+         {
+            maxBits = (InetAddress.getByName(ipAddress) instanceof Inet4Address) ? 32 : 128;
+         }
+         catch(UnknownHostException e)
+         {
+            maxBits = 32;
+         }
+      }
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.tools.TextFieldValidator#validate(java.lang.String)
-	 */
+
+   /**
+    * @see org.netxms.ui.eclipse.tools.TextFieldValidator#validate(java.lang.String)
+    */
 	@Override
 	public boolean validate(String text)
 	{
 		if (allowEmpty && text.trim().isEmpty())
 			return true;
-		
+
 		if (!text.matches(IP_ADDRESS_PATTERN))
 			return false;
-		
+
+		if (text.length() <= 2)
+		{
+	      try
+	      {
+	         int bits = Integer.parseInt(text);
+            return ((bits >= 0) && (bits < maxBits));
+	      }
+	      catch(NumberFormatException e)
+	      {
+	      }
+		}		   
+
 		try
 		{
-			byte[] bytes = InetAddress.getByName(text).getAddress();
-			for(int i = 0, state = 0; i < bytes.length; i++)
-			{
-				if (bytes[i] == (byte)0xFF)
-					continue;
-				if ((state != 0) && (bytes[i] != 0))
-					return false;
-				if ((bytes[i] != 0) && (bytes[i] != (byte)0x80) && (bytes[i] != (byte)0xC0) && (bytes[i] != (byte)0xE0) && (bytes[i] != (byte)0xF0) && (bytes[i] != (byte)0xF8) && (bytes[i] != (byte)0xFC) && (bytes[i] != (byte)0xFE))
-					return false;
-				state = 1;
-			}
-			return true;
+         InetAddress mask = InetAddress.getByName(text);
+         int bits = InetAddressEx.bitsInMask(mask);
+         return ((bits >= 0) && (bits < maxBits));
 		}
 		catch(UnknownHostException e)
 		{
@@ -74,9 +95,9 @@ public class IPNetMaskValidator implements TextFieldValidator
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.tools.TextFieldValidator#getErrorMessage(java.lang.String, java.lang.String)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.tools.TextFieldValidator#getErrorMessage(java.lang.String, java.lang.String)
+    */
 	@Override
 	public String getErrorMessage(String text, String label)
 	{

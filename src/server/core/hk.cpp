@@ -70,7 +70,7 @@ static void DeleteEmptySubnetsFromList(SharedObjectArray<NetObj> *subnets)
       NetObj *object = subnets->get(i);
       nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: checking subnet %s [%d] (children: %d, parents: %d)"),
                 object->getName(), object->getId(), object->getChildCount(), object->getParentCount());
-      if (object->isEmpty())
+      if (object->isEmpty() && !static_cast<Subnet*>(object)->isManuallyCreated())
       {
          nxlog_debug_tag(DEBUG_TAG, 5, _T("DeleteEmptySubnets: delete subnet %s [%d] (children: %d, parents: %d)"),
                    object->getName(), object->getId(), object->getChildCount(), object->getParentCount());

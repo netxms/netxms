@@ -234,6 +234,13 @@
 #define NF_DISABLE_8021X_STATUS_POLL   0x20000000
 
 /**
+ * Subnet flags
+ */
+#define SF_SYNTETIC_MASK               0x00010000
+#define SF_MANUALLY_CREATED            0x00020000
+
+
+/**
  * Data Collection Target flags (lower bits of flags field)
  */
 #define DCF_DISABLE_STATUS_POLL        0x00000001
@@ -664,6 +671,7 @@ enum SessionState
 #define RCC_GEO_AREA_IN_USE            ((uint32_t)141)
 #define RCC_INVALID_SSH_KEY_ID         ((uint32_t)142)
 #define RCC_SSH_KEY_IN_USE             ((uint32_t)143)
+#define RCC_SUBNET_OVERLAP             ((uint32_t)144)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

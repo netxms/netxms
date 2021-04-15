@@ -5668,6 +5668,21 @@ void ClientSession::createObject(NXCPMessage *request)
                         object = MakeSharedNObject<SlmCheck>(objectName, request->getFieldAsBoolean(VID_IS_TEMPLATE));
                         NetObjInsert(object, true, false);
                         break;
+                     case OBJECT_SUBNET:
+                     {
+                        auto ipAddr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
+                        IntegerArray<uint32_t> objects = CheckSubnetOverlap(ipAddr, zoneUIN);
+                        if (objects.size() > 0)
+                        {
+                           msg.setFieldFromInt32Array(VID_OBJECT_LIST, objects);
+                        }
+                        else
+                        {
+                           object = MakeSharedNObject<Subnet>(objectName, ipAddr, zoneUIN);
+                           NetObjInsert(object, true, false);
+                        }
+                        break;
+                     }
                      case OBJECT_TEMPLATE:
                         object = MakeSharedNObject<Template>(objectName);
                         NetObjInsert(object, true, false);
@@ -5760,6 +5775,10 @@ void ClientSession::createObject(NXCPMessage *request)
                      else if (objectClass == OBJECT_ZONE)
                      {
                         msg.setField(VID_RCC, RCC_ZONE_ID_ALREADY_IN_USE);
+                     }
+                     else if (objectClass == OBJECT_SUBNET)
+                     {
+                        msg.setField(VID_RCC, RCC_SUBNET_OVERLAP);
                      }
                      else
                      {

@@ -2363,6 +2363,8 @@ bool IsValidParentClass(int childClass, int parentClass)
 		case OBJECT_NETWORK:
 			if ((childClass == OBJECT_ZONE) && (g_flags & AF_ENABLE_ZONING))
 				return true;
+         if ((childClass == OBJECT_SUBNET) && !(g_flags & AF_ENABLE_ZONING))
+            return true;
 			break;
       case OBJECT_SERVICEROOT:
       case OBJECT_CONTAINER:
@@ -2439,6 +2441,10 @@ bool IsValidParentClass(int childClass, int parentClass)
          break;
 		case OBJECT_NODELINK:
 			if (childClass == OBJECT_SLMCHECK)
+            return true;
+         break;
+      case OBJECT_ZONE:
+         if ((childClass == OBJECT_SUBNET) && (g_flags & AF_ENABLE_ZONING))
             return true;
          break;
       case -1:    // Creating object without parent

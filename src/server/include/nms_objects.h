@@ -3531,7 +3531,6 @@ private:
 protected:
    InetAddress m_ipAddress;
    int32_t m_zoneUIN;
-	bool m_bSyntheticMask;
 
    virtual void prepareForDeletion() override;
 
@@ -3542,6 +3541,7 @@ protected:
 public:
    Subnet();
    Subnet(const InetAddress& addr, int32_t zoneUIN, bool bSyntheticMask);
+   Subnet(const TCHAR *name, const InetAddress& addr, int32_t zoneUIN);
    virtual ~Subnet();
 
    shared_ptr<Subnet> self() const { return static_pointer_cast<Subnet>(NObject::self()); }
@@ -3565,7 +3565,8 @@ public:
    virtual bool showThresholdSummary() const override;
 
    InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
-	bool isSyntheticMask() const { return m_bSyntheticMask; }
+	bool isSyntheticMask() const { return (m_flags & SF_SYNTETIC_MASK) > 0; }
+	bool isManuallyCreated() const { return (m_flags & SF_MANUALLY_CREATED) > 0; }
 	bool isPointToPoint() const;
 
 	void setCorrectMask(const InetAddress& addr);
@@ -4555,6 +4556,7 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId
          size_t errorMessageLen, const StringList *fields = nullptr, const StringList *orderBy = nullptr,
          uint32_t limit = 0);
 StructArray<DependentNode> *GetNodeDependencies(uint32_t nodeId);
+IntegerArray<uint32_t> CheckSubnetOverlap(const InetAddress &addr, int32_t uin);
 
 BOOL LoadObjects();
 void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter);

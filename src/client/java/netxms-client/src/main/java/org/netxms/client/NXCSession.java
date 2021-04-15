@@ -5606,6 +5606,9 @@ public class NXCSession
             msg.setField(NXCPCodes.VID_DESCRIPTION, data.getDescription());
             msg.setFieldInt32(NXCPCodes.VID_SENSOR_PROXY, (int)data.getSensorProxy());
             break;
+         case AbstractObject.OBJECT_SUBNET:
+            msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
+            break;
       }
 
       if (userData != null)

@@ -27,19 +27,40 @@
 Subnet::Subnet() : super()
 {
    m_zoneUIN = 0;
-	m_bSyntheticMask = false;
+}
+
+/**
+ * Subnet class constructor for manual subnet creation
+ */
+Subnet::Subnet(const TCHAR *name, const InetAddress& addr, int32_t zoneUIN) : super()
+{
+   if (*name == 0)
+   {
+      TCHAR szBuffer[64];
+      _sntprintf(m_name, MAX_OBJECT_NAME, _T("%s/%d"), addr.toString(szBuffer), addr.getMaskBits());
+   }
+   else
+   {
+      _tcslcpy(m_name, name, MAX_OBJECT_NAME);
+   }
+
+   m_ipAddress = addr;
+   m_zoneUIN = zoneUIN;
+   m_flags |= SF_MANUALLY_CREATED;
+   setCreationTime();
 }
 
 /**
  * Subnet class constructor
  */
-Subnet::Subnet(const InetAddress& addr, int32_t zoneUIN, bool bSyntheticMask) : super()
+Subnet::Subnet(const InetAddress& addr, int32_t zoneUIN, bool syntheticMask) : super()
 {
    TCHAR szBuffer[64];
    _sntprintf(m_name, MAX_OBJECT_NAME, _T("%s/%d"), addr.toString(szBuffer), addr.getMaskBits());
    m_ipAddress = addr;
    m_zoneUIN = zoneUIN;
-	m_bSyntheticMask = bSyntheticMask;
+   if (syntheticMask)
+      m_flags |= SF_SYNTETIC_MASK;
    setCreationTime();
 }
 
@@ -63,7 +84,7 @@ bool Subnet::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (!loadCommonProperties(hdb))
       return false;
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT ip_addr,ip_netmask,zone_guid,synthetic_mask FROM subnets WHERE id=%d"), dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT ip_addr,ip_netmask,zone_guid FROM subnets WHERE id=%d"), dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult == 0)
       return false;     // Query failed
@@ -77,7 +98,6 @@ bool Subnet::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_ipAddress = DBGetFieldInetAddr(hResult, 0, 0);
    m_ipAddress.setMaskBits(DBGetFieldLong(hResult, 0, 1));
    m_zoneUIN = DBGetFieldULong(hResult, 0, 2);
-	m_bSyntheticMask = DBGetFieldLong(hResult, 0, 3) ? true : false;
 
    DBFreeResult(hResult);
 
@@ -96,15 +116,14 @@ bool Subnet::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_OTHER))
    {
-      static const TCHAR *columns[] = { _T("ip_addr"), _T("ip_netmask"), _T("zone_guid"), _T("synthetic_mask"), nullptr };
+      static const TCHAR *columns[] = { _T("ip_addr"), _T("ip_netmask"), _T("zone_guid"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("subnets"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_ipAddress.getMaskBits());
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_zoneUIN);
-         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_bSyntheticMask ? 1 : 0));
-         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -164,7 +183,6 @@ void Subnet::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    super::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
    pMsg->setField(VID_ZONE_UIN, m_zoneUIN);
-	pMsg->setField(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));
 }
 
 /**
@@ -191,7 +209,7 @@ void Subnet::setCorrectMask(const InetAddress& addr)
    }
 
 	m_ipAddress = addr;
-	m_bSyntheticMask = false;
+	m_flags &= ~SF_SYNTETIC_MASK;
 
 	if (reAdd)
    {
@@ -376,7 +394,6 @@ json_t *Subnet::toJson()
 
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
-   json_object_set_new(root, "syntheticMask", json_boolean(m_bSyntheticMask));
 
    unlockProperties();
    return root;
@@ -388,4 +405,40 @@ json_t *Subnet::toJson()
 NXSL_Value *Subnet::createNXSLObject(NXSL_VM *vm) const
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslSubnetClass, new shared_ptr<Subnet>(self())));
+}
+
+/**
+ * Check if given address overlaps with any subnet
+ * Will return subnet id if overlap with any or 0 if not
+ */
+IntegerArray<uint32_t> CheckSubnetOverlap(const InetAddress &addr, int32_t uin)
+{
+   SharedObjectArray<NetObj> *subnets = nullptr;
+   IntegerArray<uint32_t> overlappingSubnet;
+   if (IsZoningEnabled())
+   {
+      auto zone = FindZoneByUIN(uin);
+      if (zone != nullptr)
+         subnets = zone->getSubnets();
+   }
+   else
+   {
+      subnets = g_idxSubnetByAddr.getObjects();
+   }
+
+   if (subnets != nullptr)
+   {
+      for (int i = 0; i < subnets->size(); i++)
+      {
+         auto subnet = static_cast<Subnet *>(subnets->get(i));
+         auto subnetAddr = subnet->getIpAddress();
+         if (addr.contain(subnetAddr) || subnetAddr.contain(addr))
+         {
+            overlappingSubnet.add(subnet->getId());
+         }
+      }
+   }
+
+   delete subnets;
+   return overlappingSubnet;
 }

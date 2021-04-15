@@ -25,6 +25,17 @@
 
 
 /**
+ * Upgrade from 40.46 to 40.47
+ */
+static bool H_UpgradeFromV46()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET flags=65536 WHERE object_id IN (SELECT id FROM subnets WHERE synthetic_mask > 0)")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("subnets"), _T("synthetic_mask")));
+   CHK_EXEC(SetMinorSchemaVersion(47));
+   return true;
+}
+
+/**
  * Upgrade from 40.45 to 40.46
  */
 static bool H_UpgradeFromV45()
@@ -1222,6 +1233,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 46, 40, 47, H_UpgradeFromV46 },
    { 45, 40, 46, H_UpgradeFromV45 },
    { 44, 40, 45, H_UpgradeFromV44 },
    { 43, 40, 44, H_UpgradeFromV43 },

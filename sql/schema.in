@@ -548,7 +548,6 @@ CREATE TABLE subnets
   ip_addr varchar(48) not null,
   ip_netmask integer not null,
   zone_guid integer not null,
-  synthetic_mask integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
