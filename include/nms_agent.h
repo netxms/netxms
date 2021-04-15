@@ -888,7 +888,7 @@ static inline void ret_wstring(TCHAR *rbuf, const WCHAR *value)
 #ifdef UNICODE
    wcslcpy(rbuf, value, MAX_RESULT_LENGTH);
 #else
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, rbuf, MAX_RESULT_LENGTH, NULL, NULL);
+   wchar_to_mb(value, -1, rbuf, MAX_RESULT_LENGTH);
    rbuf[MAX_RESULT_LENGTH - 1] = 0;
 #endif
 }
@@ -896,10 +896,21 @@ static inline void ret_wstring(TCHAR *rbuf, const WCHAR *value)
 static inline void ret_mbstring(TCHAR *rbuf, const char *value)
 {
 #ifdef UNICODE
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, value, -1, rbuf, MAX_RESULT_LENGTH);
+   mb_to_wchar(value, -1, rbuf, MAX_RESULT_LENGTH);
    rbuf[MAX_RESULT_LENGTH - 1] = 0;
 #else
    strlcpy(rbuf, value, MAX_RESULT_LENGTH);
+#endif
+}
+
+static inline void ret_utf8string(TCHAR *rbuf, const char *value)
+{
+#ifdef UNICODE
+   utf8_to_wchar(value, -1, rbuf, MAX_RESULT_LENGTH);
+   rbuf[MAX_RESULT_LENGTH - 1] = 0;
+#else
+   utf8_to_mb(value, -1, rbuf, MAX_RESULT_LENGTH);
+   rbuf[MAX_RESULT_LENGTH - 1] = 0;
 #endif
 }
 
