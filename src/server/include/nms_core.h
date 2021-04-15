@@ -1210,7 +1210,7 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
 
 void InitLocalNetInfo();
 
-ArpCache *GetLocalArpCache();
+shared_ptr<ArpCache> GetLocalArpCache();
 InterfaceList *GetLocalInterfaceList();
 
 RoutingTable *SnmpGetRoutingTable(SNMP_Transport *pTransport);

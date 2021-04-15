@@ -1138,57 +1138,48 @@ uint32_t AgentConnection::queryWebServiceParameters(const TCHAR *url, uint32_t r
 /**
  * Get ARP cache
  */
-ArpCache *AgentConnection::getArpCache()
+shared_ptr<ArpCache> AgentConnection::getArpCache()
 {
    StringList *data;
    if (getList(_T("Net.ArpCache"), &data) != ERR_SUCCESS)
-      return nullptr;
+      return shared_ptr<ArpCache>();
 
    // Create empty structure
-   ArpCache *arpCache = new ArpCache();
-
-   TCHAR szByte[4], *pBuf, *pChar;
-   szByte[2] = 0;
+   shared_ptr<ArpCache> arpCache = make_shared<ArpCache>();
 
    // Parse data lines
    // Each line has form of XXXXXXXXXXXX a.b.c.d n
    // where XXXXXXXXXXXX is a MAC address (12 hexadecimal digits)
    // a.b.c.d is an IP address in decimal dotted notation
    // n is an interface index
+   TCHAR line[256];
    for(int i = 0; i < data->size(); i++)
    {
-      TCHAR *line = MemCopyString(data->get(i));
-      pBuf = line;
-      if (_tcslen(pBuf) < 20)     // Invalid line
+      _tcslcpy(line, data->get(i), 256);
+      TCHAR *buffer = line;
+      if (_tcslen(buffer) < 20)     // Invalid line
       {
          debugPrintf(7, _T("AgentConnection::getArpCache(): invalid line received from agent (\"%s\")"), line);
-         free(line);
          continue;
       }
 
       // MAC address
       BYTE macAddr[6];
-      for(int j = 0; j < 6; j++)
-      {
-         memcpy(szByte, pBuf, sizeof(TCHAR) * 2);
-         macAddr[j] = (BYTE)_tcstol(szByte, nullptr, 16);
-         pBuf += 2;
-      }
+      StrToBin(buffer, macAddr, 6);
+      buffer += 12;
 
       // IP address
-      while(*pBuf == ' ')
-         pBuf++;
-      pChar = _tcschr(pBuf, _T(' '));
-      if (pChar != nullptr)
-         *pChar = 0;
-      InetAddress ipAddr = InetAddress::parse(pBuf);
+      while(*buffer == ' ')
+         buffer++;
+      TCHAR *ch = _tcschr(buffer, _T(' '));
+      if (ch != nullptr)
+         *ch = 0;
+      InetAddress ipAddr = InetAddress::parse(buffer);
 
       // Interface index
-      UINT32 ifIndex = (pChar != nullptr) ? _tcstoul(pChar + 1, nullptr, 10) : 0;
+      uint32_t ifIndex = (ch != nullptr) ? _tcstoul(ch + 1, nullptr, 10) : 0;
 
       arpCache->addEntry(ipAddr, MacAddress(macAddr, 6), ifIndex);
-
-      free(line);
    }
 
    delete data;

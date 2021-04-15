@@ -1063,13 +1063,10 @@ static UINT32 HandlerArp(SNMP_Variable *var, SNMP_Transport *transport, void *ar
  * @param driverData driver-specific data previously created in analyzeDevice (must be derived from HostMibDriverData)
  * @return ARP cache or NULL on failure
  */
-ArpCache *NetworkDeviceDriver::getArpCache(SNMP_Transport *snmp, DriverData *driverData)
+shared_ptr<ArpCache> NetworkDeviceDriver::getArpCache(SNMP_Transport *snmp, DriverData *driverData)
 {
-   ArpCache *arpCache = new ArpCache();
-   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.22.1.3"), HandlerArp, arpCache) != SNMP_ERR_SUCCESS)
-   {
-      arpCache->decRefCount();
-      arpCache = NULL;
-   }
+   shared_ptr<ArpCache> arpCache = make_shared<ArpCache>();
+   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.22.1.3"), HandlerArp, arpCache.get()) != SNMP_ERR_SUCCESS)
+      arpCache.reset();
    return arpCache;
 }

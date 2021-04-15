@@ -463,7 +463,7 @@ void DiscoveryPoller(PollerInfo *poller)
 	          node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneUIN());
 
    // Retrieve and analyze node's ARP cache
-   ArpCache *pArpCache = node->getArpCache(true);
+   shared_ptr<ArpCache> pArpCache = node->getArpCache(true);
    if (pArpCache != nullptr)
    {
       for(int i = 0; i < pArpCache->size(); i++)
@@ -472,7 +472,6 @@ void DiscoveryPoller(PollerInfo *poller)
 			if (!e->macAddr.isBroadcast())	// Ignore broadcast addresses
 				CheckPotentialNode(node, e->ipAddr, e->ifIndex, e->macAddr, DA_SRC_ARP_CACHE, node->getId());
       }
-      pArpCache->decRefCount();
    }
 
    if (node->isDeleteInitiated() || IsShutdownInProgress())

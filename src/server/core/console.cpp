@@ -81,20 +81,20 @@ static void ShowMemoryUsage(ServerConsole *console)
 /**
  * Print ARP cache
  */
-static void PrintArpCache(CONSOLE_CTX ctx, Node *node, ArpCache *arpCache)
+static void PrintArpCache(CONSOLE_CTX ctx, const Node& node, const ArpCache& arpCache)
 {
    ConsolePrintf(ctx, _T("\x1b[1mIP address\x1b[0m      | \x1b[1mMAC address\x1b[0m       | \x1b[1mIfIndex\x1b[0m | \x1b[1mInterface\x1b[0m\n"));
    ConsolePrintf(ctx, _T("----------------+-------------------+---------+----------------------\n"));
 
    TCHAR ipAddrStr[64], macAddrStr[64];
-   for(int i = 0; i < arpCache->size(); i++)
+   for(int i = 0; i < arpCache.size(); i++)
    {
-      const ArpEntry *e = arpCache->get(i);
-      shared_ptr<Interface> iface = node->findInterfaceByIndex(e->ifIndex);
+      const ArpEntry *e = arpCache.get(i);
+      shared_ptr<Interface> iface = node.findInterfaceByIndex(e->ifIndex);
       ConsolePrintf(ctx, _T("%-15s | %s | %7d | %-20s\n"), e->ipAddr.toString(ipAddrStr), e->macAddr.toString(macAddrStr),
          e->ifIndex, (iface != nullptr) ? iface->getName() : _T("\x1b[31;1mUNKNOWN\x1b[0m"));
    }
-   ConsolePrintf(ctx, _T("\n%d entries\n\n"), arpCache->size());
+   ConsolePrintf(ctx, _T("\n%d entries\n\n"), arpCache.size());
 }
 
 /**
@@ -725,19 +725,18 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          // Get argument
          ExtractWord(pArg, szBuffer);
-         UINT32 dwNode = _tcstoul(szBuffer, nullptr, 0);
-         if (dwNode != 0)
+         uint32_t nodeId = _tcstoul(szBuffer, nullptr, 0);
+         if (nodeId != 0)
          {
-            shared_ptr<NetObj> pObject = FindObjectById(dwNode);
-            if (pObject != nullptr)
+            shared_ptr<NetObj> object = FindObjectById(nodeId);
+            if (object != nullptr)
             {
-               if (pObject->getObjectClass() == OBJECT_NODE)
+               if (object->getObjectClass() == OBJECT_NODE)
                {
-                  ArpCache *arpCache = static_cast<Node*>(pObject.get())->getArpCache();
+                  shared_ptr<ArpCache> arpCache = static_cast<Node&>(*object).getArpCache();
                   if (arpCache != nullptr)
                   {
-                     PrintArpCache(pCtx, static_cast<Node*>(pObject.get()), arpCache);
-                     arpCache->decRefCount();
+                     PrintArpCache(pCtx, static_cast<Node&>(*object), *arpCache);
                   }
                   else
                   {
@@ -751,7 +750,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             }
             else
             {
-               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode);
+               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
             }
          }
          else

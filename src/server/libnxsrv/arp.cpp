@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -25,20 +25,9 @@
 /**
  * Constructor
  */
-ArpCache::ArpCache()
+ArpCache::ArpCache() : m_entries(64, 64, Ownership::True), m_ipIndex(Ownership::False)
 {
-   m_entries = new ObjectArray<ArpEntry>(64, 64, Ownership::True);
-   m_ipIndex = new HashMap<InetAddress, ArpEntry>(Ownership::False);
-   m_timestamp = time(NULL);
-}
-
-/**
- * Destructor
- */
-ArpCache::~ArpCache()
-{
-   delete m_entries;
-   delete m_ipIndex;
+   m_timestamp = time(nullptr);
 }
 
 /**
@@ -47,8 +36,8 @@ ArpCache::~ArpCache()
 void ArpCache::addEntry(ArpEntry *entry)
 {
    entry->ipAddr.setMaskBits(0); // always use 0 bits to avoid hash map issues on lookup
-   m_entries->add(entry);
-   m_ipIndex->set(entry->ipAddr, entry);
+   m_entries.add(entry);
+   m_ipIndex.set(entry->ipAddr, entry);
 }
 
 /**
@@ -58,7 +47,7 @@ const ArpEntry *ArpCache::findByIP(const InetAddress& addr)
 {
    InetAddress key = addr;
    key.setMaskBits(0);
-   return m_ipIndex->get(key);
+   return m_ipIndex.get(key);
 }
 
 /**
@@ -70,9 +59,9 @@ void ArpCache::dumpToLog() const
       return;
 
    TCHAR buffer1[64], buffer2[64];
-   for(int i = 0; i < m_entries->size(); i++)
+   for(int i = 0; i < m_entries.size(); i++)
    {
-      const ArpEntry *e = m_entries->get(i);
+      const ArpEntry *e = m_entries.get(i);
       nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 7, _T("   %-15s = %s"), e->ipAddr.toString(buffer1), e->macAddr.toString(buffer2));
    }
 }

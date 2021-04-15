@@ -136,7 +136,6 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    memset(m_lastEvents, 0, sizeof(m_lastEvents));
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
    m_routingTable = nullptr;
-   m_arpCache = nullptr;
    m_failTimeAgent = NEVER;
    m_failTimeSNMP = NEVER;
    m_failTimeEtherNetIP = NEVER;
@@ -260,7 +259,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
    m_isHidden = true;
    m_routingTable = nullptr;
-   m_arpCache = nullptr;
    m_failTimeAgent = NEVER;
    m_failTimeSNMP = NEVER;
    m_failTimeEtherNetIP = NEVER;
@@ -335,8 +333,6 @@ Node::~Node()
    MemFree(m_snmpObjectId);
    MemFree(m_sysDescription);
    delete m_routingTable;
-   if (m_arpCache != nullptr)
-      m_arpCache->decRefCount();
    if (m_linkLayerNeighbors != nullptr)
       m_linkLayerNeighbors->decRefCount();
    delete m_vrrpInfo;
@@ -1195,16 +1191,15 @@ bool Node::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Get ARP cache from node
  */
-ArpCache *Node::getArpCache(bool forceRead)
+shared_ptr<ArpCache> Node::getArpCache(bool forceRead)
 {
-   ArpCache *arpCache = nullptr;
+   shared_ptr<ArpCache> arpCache;
    if (!forceRead)
    {
       lockProperties();
       if ((m_arpCache != nullptr) && (m_arpCache->timestamp() > time(nullptr) - 3600))
       {
          arpCache = m_arpCache;
-         arpCache->incRefCount();
       }
       unlockProperties();
       if (arpCache != nullptr)
@@ -1239,10 +1234,7 @@ ArpCache *Node::getArpCache(bool forceRead)
       arpCache->dumpToLog();
 
       lockProperties();
-      if (m_arpCache != nullptr)
-         m_arpCache->decRefCount();
       m_arpCache = arpCache;
-      m_arpCache->incRefCount();
       unlockProperties();
    }
    return arpCache;
