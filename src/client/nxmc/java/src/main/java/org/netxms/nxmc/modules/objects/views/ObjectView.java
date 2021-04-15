@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,16 @@ package org.netxms.nxmc.modules.objects.views;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.views.ViewWithContext;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Base class for all context views where context should be NetXMS object.
  */
 public abstract class ObjectView extends ViewWithContext
 {
+   private static final I18n i18n = LocalizationHelper.getI18n(ObjectView.class);
+
    /**
     * Create object view with random ID.
     *
@@ -56,7 +60,7 @@ public abstract class ObjectView extends ViewWithContext
    @Override
    protected String getContextName()
    {
-      return (getContext() != null) ? ((AbstractObject)getContext()).getObjectName() : "[none]";
+      return (getContext() != null) ? ((AbstractObject)getContext()).getObjectName() : i18n.tr("[none]");
    }
 
    /**

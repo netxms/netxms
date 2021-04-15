@@ -166,7 +166,7 @@ public class AlarmListFilter extends ViewerFilter
       if (((1 << alarm.getCurrentSeverity().getValue()) & severityFilter) == 0)
          return false;
 
-      synchronized(this.rootObjects)
+      synchronized(rootObjects)
       {
          if (rootObjects.isEmpty() || (rootObjects.contains(((Alarm)alarm).getSourceObjectId())))
             return true; // No filtering by object ID or root object is a source
@@ -188,26 +188,31 @@ public class AlarmListFilter extends ViewerFilter
    }
 
    /**
-    * @param rootObject the rootObject to set
+    * Set root object for filter (0 to disable filtering by root object).
+    *
+    * @param rootObject new root object ID or 0
     */
    public final void setRootObject(long rootObject)
    {
-      synchronized(this.rootObjects)
+      synchronized(rootObjects)
       {
-         this.rootObjects.clear();
-         this.rootObjects.add(rootObject);
+         rootObjects.clear();
+         if (rootObject != 0)
+            rootObjects.add(rootObject);
       }
    }
 
    /**
-    * @param selectedObjects
+    * Set root objects for filter.
+    *
+    * @param rootObjects new root object set
     */
-   public void setRootObjects(List<Long> selectedObjects)
+   public void setRootObjects(List<Long> rootObjects)
    {
       synchronized(this.rootObjects)
       {
          this.rootObjects.clear();
-         this.rootObjects.addAll(selectedObjects);
+         this.rootObjects.addAll(rootObjects);
       }
    }
 

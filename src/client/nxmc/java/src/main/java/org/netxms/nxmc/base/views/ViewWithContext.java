@@ -78,7 +78,7 @@ public abstract class ViewWithContext extends View
    @Override
    public void globalizeId()
    {
-      setId(getId() + "@" + context.hashCode());
+      setId(getId() + "@" + ((context != null) ? Integer.toString(context.hashCode()) : "null"));
    }
 
    /**

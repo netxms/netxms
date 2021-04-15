@@ -18,7 +18,6 @@
  */
 package org.netxms.nxmc.modules.worldmap;
 
-import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -55,10 +54,10 @@ public class WorldMapPerspective extends Perspective
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.Perspective#createMainArea(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.nxmc.base.views.Perspective#configureViews()
     */
    @Override
-   protected void createMainArea(Composite parent)
+   protected void configureViews()
    {
    }
 }

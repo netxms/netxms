@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,8 +67,7 @@ public class ViewStack extends Composite
     * @param enableViewExtraction enable/disable view extraction into separate window
     * @param enableViewPinning nable/disable view extraction into "Pinboard" perspective
     */
-   public ViewStack(Window window, Perspective perspective, Composite parent, boolean enableViewExtraction,
-         boolean enableViewPinning)
+   public ViewStack(Window window, Perspective perspective, Composite parent, boolean enableViewExtraction, boolean enableViewPinning)
    {
       super(parent, SWT.NONE);
       this.window = window;
@@ -113,7 +112,7 @@ public class ViewStack extends Composite
             View view = getSelection();
             if (view != null)
             {
-               view.handleRefresh();
+               view.refresh();
             }
          }
       });

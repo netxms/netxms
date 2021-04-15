@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -54,9 +53,7 @@ public class ConfigurationPerspective extends Perspective
    private ImageCache imageCache;
    private FilterText filter;
    private TableViewer viewer;
-   private Composite mainViewArea;
    private ConfigurationPerspectiveElement currentElement;
-   private ConfigurationView currentView;
 
    /**
     * The constructor.
@@ -92,16 +89,6 @@ public class ConfigurationPerspective extends Perspective
       configuration.multiViewMainArea = false;
       configuration.hasSupplementalArea = false;
       configuration.priority = 250;
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.Perspective#createMainArea(org.eclipse.swt.widgets.Composite)
-    */
-   @Override
-   protected void createMainArea(Composite parent)
-   {
-      mainViewArea = new Composite(parent, SWT.BORDER);
-      mainViewArea.setLayout(new FillLayout());
    }
 
    /**
@@ -153,20 +140,14 @@ public class ConfigurationPerspective extends Perspective
     */
    private void changeView()
    {
-      if (currentView != null)
-      {
-         currentView.dispose();
-      }
-
       currentElement = (ConfigurationPerspectiveElement)viewer.getStructuredSelection().getFirstElement();
-      if (currentElement == null)
+      if (currentElement != null)
       {
-         currentView = null;
-         return;
+         setMainView(currentElement.createView());
       }
-
-      currentView = currentElement.createView();
-      currentView.create(getWindow(), this, mainViewArea);
-      mainViewArea.layout(true, true);
+      else
+      {
+         setMainView(null);
+      }
    }
 }

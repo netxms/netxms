@@ -51,7 +51,7 @@ public abstract class Perspective
    private ViewStack mainFolder;
    private ViewStack supplementaryFolder;
    private Composite navigationArea;
-   private Composite mainArea;
+   private ViewContainer mainArea;
    private Composite supplementalArea;
    private ISelectionProvider navigationSelectionProvider;
    private ISelectionChangedListener navigationSelectionListener;
@@ -187,23 +187,20 @@ public abstract class Perspective
       }
       if (configuration.multiViewMainArea)
       {
-         mainFolder = new ViewStack(window, this, configuration.hasSupplementalArea ? horizontalSpliter
-               : (configuration.hasNavigationArea ? verticalSplitter : content), configuration.enableViewExtraction,
-               configuration.enableViewPinning);
+         mainFolder = new ViewStack(window, this, configuration.hasSupplementalArea ? horizontalSpliter : (configuration.hasNavigationArea ? verticalSplitter : content),
+               configuration.enableViewExtraction, configuration.enableViewPinning);
          mainFolder.setAllViewsAaCloseable(configuration.allViewsAreCloseable);
       }
       else
       {
-         mainArea = new Composite(configuration.hasSupplementalArea ? horizontalSpliter : (configuration.hasNavigationArea ? verticalSplitter : content), SWT.NONE);
-         mainArea.setLayout(new FillLayout());
-         createMainArea(mainArea);
+         mainArea = new ViewContainer(window, this, configuration.hasSupplementalArea ? horizontalSpliter : (configuration.hasNavigationArea ? verticalSplitter : content),
+               configuration.enableViewExtraction, configuration.enableViewPinning);
       }
       if (configuration.hasSupplementalArea)
       {
          if (configuration.multiViewSupplementalArea)
          {
-            supplementaryFolder = new ViewStack(window, this, horizontalSpliter, configuration.enableViewExtraction,
-                  configuration.enableViewPinning);
+            supplementaryFolder = new ViewStack(window, this, horizontalSpliter, configuration.enableViewExtraction, configuration.enableViewPinning);
             supplementaryFolder.setAllViewsAaCloseable(configuration.allViewsAreCloseable);
          }
          else
@@ -237,15 +234,6 @@ public abstract class Perspective
    {
       if (!content.isDisposed())
          content.dispose();
-   }
-
-   /**
-    * Create main area for single view perspectives
-    *
-    * @param parent
-    */
-   protected void createMainArea(Composite parent)
-   {
    }
 
    /**
@@ -355,7 +343,7 @@ public abstract class Perspective
    }
 
    /**
-    * Add view to main folder.
+    * Add view to main folder or replace view for single-view perspectives.
     *
     * @param view view to add
     */
@@ -363,10 +351,12 @@ public abstract class Perspective
    {
       if (mainFolder != null)
          mainFolder.addView(view);
+      else
+         mainArea.setView(view);
    }
 
    /**
-    * Add view to main folder.
+    * Add view to main folder or replace view for single-view perspectives.
     *
     * @param view view to add
     * @param activvate if true, view will be activated
@@ -376,6 +366,18 @@ public abstract class Perspective
    {
       if (mainFolder != null)
          mainFolder.addView(view, activate, ignoreContext);
+      else
+         mainArea.setView(view);
+   }
+
+   /**
+    * Set main view for single-view perspectives. Has no effect for multi-view perspectives.
+    *
+    * @param view new main view
+    */
+   public void setMainView(View view)
+   {
+      mainArea.setView(view);
    }
 
    /**

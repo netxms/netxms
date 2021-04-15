@@ -158,13 +158,6 @@ public abstract class View
    }
 
    /**
-    * Handle refresh request initiated via view stack or perspective. Default implementation does nothing.
-    */
-   public void handleRefresh()
-   {
-   }
-
-   /**
     * Dispose view 
     */
    public void dispose()
@@ -301,7 +294,7 @@ public abstract class View
    }
 
    /**
-    * Refresh view. Called by framework when user press "Refresh" button in view toolbar. Default implementation does nothing.
+    * Handle refresh request initiated via view stack or perspective. Default implementation does nothing.
     */
    public void refresh()
    {

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,10 @@
  */
 package org.netxms.nxmc.modules.alarms;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.alarms.widgets.AlarmList;
+import org.netxms.nxmc.modules.alarms.views.AlarmsView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
@@ -33,8 +31,6 @@ import org.xnap.commons.i18n.I18n;
 public class AlarmsPerspective extends Perspective
 {
    private static final I18n i18n = LocalizationHelper.getI18n(AlarmsPerspective.class);
-
-   private AlarmList alarmList;
 
    /**
     * @param name
@@ -59,11 +55,11 @@ public class AlarmsPerspective extends Perspective
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.Perspective#createMainArea(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.nxmc.base.views.Perspective#configureViews()
     */
    @Override
-   protected void createMainArea(Composite parent)
+   protected void configureViews()
    {
-      alarmList = new AlarmList(null, parent, SWT.NONE, "AlarmPerspective.AlarmList", null);
+      setMainView(new AlarmsView());
    }
 }

@@ -819,10 +819,10 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#handleRefresh()
+    * @see org.netxms.nxmc.base.views.View#refresh()
     */
    @Override
-   public void handleRefresh()
+   public void refresh()
    {
       updateChart();
    }
