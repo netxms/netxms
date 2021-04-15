@@ -53,6 +53,8 @@ Interface::Interface() : super(), m_macAddr(MacAddress::ZERO)
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = nullptr;
    m_vlans = nullptr;
+   m_lastKnownOperState = IF_OPER_STATE_UNKNOWN;
+   m_lastKnownAdminState = IF_ADMIN_STATE_UNKNOWN;
 }
 
 /**
@@ -92,6 +94,8 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = nullptr;
    m_vlans = nullptr;
+   m_lastKnownOperState = IF_OPER_STATE_UNKNOWN;
+   m_lastKnownAdminState = IF_ADMIN_STATE_UNKNOWN;
    setCreationTime();
 }
 
@@ -134,6 +138,8 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = nullptr;
    m_vlans = nullptr;
+   m_lastKnownOperState = IF_OPER_STATE_UNKNOWN;
+   m_lastKnownAdminState = IF_ADMIN_STATE_UNKNOWN;
    setCreationTime();
 }
 
@@ -164,7 +170,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		_T("phy_pic,phy_port,peer_node_id,peer_if_id,description,")
 		_T("dot1x_pae_state,dot1x_backend_state,admin_state,")
       _T("oper_state,peer_proto,mtu,speed,parent_iface,")
-      _T("iftable_suffix FROM interfaces WHERE id=?"));
+      _T("iftable_suffix,last_known_oper_state,last_known_admin_state FROM interfaces WHERE id=?"));
 	if (hStmt == nullptr)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -214,6 +220,9 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
             m_ifTableSuffix = MemCopyArray(suffix, l);
          }
       }
+
+      m_lastKnownOperState = (int16_t)DBGetFieldLong(hResult, 0, 22);
+      m_lastKnownAdminState = (int16_t)DBGetFieldLong(hResult, 0, 23);
 
       // Link interface to node
       if (!m_isDeleted)
@@ -322,7 +331,8 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          _T("node_id"), _T("if_type"), _T("if_index"), _T("mac_addr"), _T("required_polls"), _T("bridge_port"),
          _T("phy_chassis"), _T("phy_module"), _T("phy_pic"), _T("phy_port"), _T("peer_node_id"), _T("peer_if_id"),
          _T("description"), _T("admin_state"), _T("oper_state"), _T("dot1x_pae_state"), _T("dot1x_backend_state"),
-         _T("peer_proto"), _T("mtu"), _T("speed"), _T("parent_iface"), _T("iftable_suffix"),
+         _T("peer_proto"), _T("mtu"), _T("speed"), _T("parent_iface"), _T("iftable_suffix"), _T("last_known_oper_state"),
+          _T("last_known_admin_state"),
          nullptr
       };
 
@@ -361,7 +371,9 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          {
             DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
          }
-         DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastKnownOperState));
+         DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastKnownAdminState));
+         DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -670,10 +682,20 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
       if (!m_isSystem)
       {
 		   sendPollerMsg(_T("      Interface status changed to %s\r\n"), GetStatusAsText(m_status, true));
-         const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
-		   PostSystemEventEx(eventQueue,
+
+         //Post system event if it was not already sent before unknown state
+         if ((m_lastKnownOperState == IF_OPER_STATE_UNKNOWN || m_lastKnownOperState != static_cast<int16_t>(operState)) ||
+         (m_lastKnownAdminState == IF_ADMIN_STATE_UNKNOWN || m_lastKnownAdminState != static_cast<int16_t>(adminState)))
+         {
+            const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
+		      PostSystemEventEx(eventQueue,
 		               (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status],
                      node->getId(), "dsAdd", m_id, m_name, &addr, addr.getMaskBits(), m_index);
+         }
+         if(static_cast<int16_t>(operState) != IF_OPER_STATE_UNKNOWN)
+            m_lastKnownOperState = static_cast<int16_t>(operState);
+         if(static_cast<int16_t>(adminState) != IF_ADMIN_STATE_UNKNOWN)
+            m_lastKnownAdminState = static_cast<int16_t>(adminState);
       }
    }
 	else if (expectedState == IF_EXPECTED_STATE_IGNORE)
@@ -1416,6 +1438,8 @@ json_t *Interface::toJson()
    json_object_set_new(root, "peerDiscoveryProtocol", json_integer(m_peerDiscoveryProtocol));
    json_object_set_new(root, "adminState", json_integer(m_adminState));
    json_object_set_new(root, "operState", json_integer(m_operState));
+   json_object_set_new(root, "lastKnownOperState", json_integer(m_lastKnownOperState));
+   json_object_set_new(root, "lastKnownAdminState", json_integer(m_lastKnownAdminState));
    json_object_set_new(root, "pendingOperState", json_integer(m_pendingOperState));
    json_object_set_new(root, "confirmedOperState", json_integer(m_confirmedOperState));
    json_object_set_new(root, "dot1xPaeAuthState", json_integer(m_dot1xPaeAuthState));
