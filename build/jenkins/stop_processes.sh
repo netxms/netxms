@@ -42,7 +42,7 @@ if test "x$NEED_SLEEP" = "xyes"; then
             exit 1
         fi
 	count=$((count+1))
-        sleep 5
+        sleep 10
     done
 fi
 
