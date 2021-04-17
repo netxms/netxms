@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -194,7 +194,7 @@ public class AlarmListFilter extends ViewerFilter
 
       synchronized(this.rootObjects)
       {
-         if (rootObjects.isEmpty() || (rootObjects.contains(((Alarm)alarm).getSourceObjectId())))
+         if (rootObjects.isEmpty() || rootObjects.contains(alarm.getSourceObjectId()))
             return true; // No filtering by object ID or root object is a source
 
          AbstractObject object = session.findObjectById(alarm.getSourceObjectId());

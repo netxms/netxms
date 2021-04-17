@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -917,7 +917,10 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message
       {
          Alarm *parent = s_alarmList.find(parentAlarmId);
          if (parent != nullptr)
+         {
             parent->addSubordinateAlarm(alarm->getAlarmId());
+            NotifyClients(NX_NOTIFY_ALARM_CHANGED, parent);
+         }
       }
 
       // Notify connected clients about new alarm
