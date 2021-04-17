@@ -231,7 +231,7 @@ EPRule::EPRule(const NXCPMessage& msg) : m_actions(0, 16, Ownership::True)
 
    if (msg.isFieldExist(VID_RULE_ACTIONS))
    {
-      IntegerArray<UINT32> actions;
+      IntegerArray<uint32_t> actions;
       msg.getFieldAsInt32Array(VID_RULE_ACTIONS, &actions);
       for(int i = 0; i < actions.size(); i++)
       {
@@ -241,14 +241,14 @@ EPRule::EPRule(const NXCPMessage& msg) : m_actions(0, 16, Ownership::True)
    else
    {
       int count = msg.getFieldAsInt32(VID_NUM_ACTIONS);
-      UINT32 fieldId = VID_ACTION_LIST_BASE;
+      uint32_t fieldId = VID_ACTION_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         UINT32 actionId = msg.getFieldAsUInt32(fieldId++);
-         UINT32 timerDelay = msg.getFieldAsUInt32(fieldId++);
+         uint32_t actionId = msg.getFieldAsUInt32(fieldId++);
+         uint32_t timerDelay = msg.getFieldAsUInt32(fieldId++);
          TCHAR *timerKey = msg.getFieldAsString(fieldId++);
          TCHAR *blockingTimerKey = msg.getFieldAsString(fieldId++);
-         UINT32 snoozeTime = msg.getFieldAsUInt32(fieldId++);
+         uint32_t snoozeTime = msg.getFieldAsUInt32(fieldId++);
          fieldId += 5;
          m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, snoozeTime, timerKey, blockingTimerKey));
       }

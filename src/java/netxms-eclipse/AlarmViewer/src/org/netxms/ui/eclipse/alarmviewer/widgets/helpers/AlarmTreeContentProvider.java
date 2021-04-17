@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ import org.netxms.client.events.Alarm;
 public class AlarmTreeContentProvider implements ITreeContentProvider
 {
    private Map<Long, Alarm> alarms;
-   
+
    /**
     * Create alarm tree content provider 
     */
@@ -40,7 +40,7 @@ public class AlarmTreeContentProvider implements ITreeContentProvider
    {
       alarms = new HashMap<Long, Alarm>();
    }
-   
+
    /**
     * Get alarm object from local cache
     * 

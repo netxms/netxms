@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -118,7 +118,7 @@ public class AlarmList extends CompositeWithMessageBar
 	public static final int COLUMN_ACK_BY = 8;
 	public static final int COLUMN_CREATED = 9;
 	public static final int COLUMN_LASTCHANGE = 10;
-	
+
 	private final IViewPart viewPart;
 	private NXCSession session = null;
 	private SessionListener clientListener = null;
@@ -990,8 +990,7 @@ public class AlarmList extends CompositeWithMessageBar
 
       synchronized(newAlarmList)
       {
-         if (!AlarmNotifier.isGlobalSoundEnabled() && viewPart.getSite().getPage().isPartVisible(viewPart)
-               && isLocalNotificationsEnabled)
+         if (!AlarmNotifier.isGlobalSoundEnabled() && viewPart.getSite().getPage().isPartVisible(viewPart) && isLocalNotificationsEnabled)
          {
             for(Alarm a : newAlarmList)
             {
