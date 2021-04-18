@@ -205,6 +205,7 @@ bool LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn);
 bool LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn);
 bool LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn);
 
+StringList LIBNXDB_EXPORTABLE *DBGetTableList(DB_HANDLE hdb);
 int LIBNXDB_EXPORTABLE DBIsTableExist(DB_HANDLE conn, const TCHAR *table);
 
 bool LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn, INT32 *major, INT32 *minor);
