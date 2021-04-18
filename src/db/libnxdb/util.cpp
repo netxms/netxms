@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -41,11 +41,11 @@ void LIBNXDB_EXPORTABLE DBSetUtilityQueryTracer(void (*queryTracer)(const TCHAR 
  */
 static bool ExecuteQuery(DB_HANDLE hdb, const TCHAR *query)
 {
-   if (s_queryTracer != NULL)
-      s_queryTracer(query, false, NULL);
+   if (s_queryTracer != nullptr)
+      s_queryTracer(query, false, nullptr);
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    bool success = DBQueryEx(hdb, query, errorText);
-   if (!success && (s_queryTracer != NULL))
+   if (!success && (s_queryTracer != nullptr))
       s_queryTracer(query, true, errorText);
    return success;
 }
@@ -124,7 +124,7 @@ bool LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn, INT32 *major, INT32 *
    // may not exist in old schema versions
 	int legacy = 0;
    hResult = DBSelect(conn, _T("SELECT var_value FROM metadata WHERE var_name='SchemaVersion'"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
          legacy = DBGetFieldLong(hResult, 0, 0);
@@ -136,7 +136,7 @@ bool LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn, INT32 *major, INT32 *
    if (legacy == 0)
    {
       hResult = DBSelect(conn, _T("SELECT var_value FROM config WHERE var_name='DBFormatVersion'"));
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) > 0)
             legacy = DBGetFieldLong(hResult, 0, 0);
@@ -156,7 +156,7 @@ bool LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn, INT32 *major, INT32 *
    }
 
    hResult = DBSelect(conn, _T("SELECT var_value FROM metadata WHERE var_name='SchemaVersionMajor'"));
-   if (hResult == NULL)
+   if (hResult == nullptr)
       return false;  // DB error
 
    if (DBGetNumRows(hResult) > 0)
@@ -164,7 +164,7 @@ bool LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn, INT32 *major, INT32 *
    DBFreeResult(hResult);
 
    hResult = DBSelect(conn, _T("SELECT var_value FROM metadata WHERE var_name='SchemaVersionMinor'"));
-   if (hResult == NULL)
+   if (hResult == nullptr)
       return false;  // DB error
 
    if (DBGetNumRows(hResult) > 0)
@@ -178,7 +178,7 @@ bool LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn, INT32 *major, INT32 *
 /**
  * Custom syntax reader
  */
-static bool (*s_syntaxReader)(DB_HANDLE, TCHAR *) = NULL;
+static bool (*s_syntaxReader)(DB_HANDLE, TCHAR *) = nullptr;
 
 /**
  * Set custom syntax reader
@@ -221,7 +221,7 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn, const TCHAR *fallback)
 	if (!read)
 	{
 		DB_RESULT hResult = DBSelect(conn, _T("SELECT var_value FROM config WHERE var_name='DBSyntax'"));
-		if (hResult != NULL)
+		if (hResult != nullptr)
 		{
 			if (DBGetNumRows(hResult) > 0)
 			{
@@ -234,7 +234,7 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn, const TCHAR *fallback)
 
 	// Use fallback if cannot read syntax from database
 	if (!read)
-      _tcslcpy(syntaxId, (fallback != NULL) ? fallback : _T("UNKNOWN"), 256);
+      _tcslcpy(syntaxId, (fallback != nullptr) ? fallback : _T("UNKNOWN"), 256);
 
    int syntax;
    if (!_tcscmp(syntaxId, _T("MYSQL")))
@@ -271,6 +271,56 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn, const TCHAR *fallback)
    }
 
 	return syntax;
+}
+
+/**
+ * Get list of tables
+ */
+StringList LIBNXDB_EXPORTABLE *DBGetTableList(DB_HANDLE hdb)
+{
+   const TCHAR *query;
+   switch(DBGetSyntax(hdb))
+   {
+      case DB_SYNTAX_DB2:
+         query = _T("SELECT lower(name) FROM sysibm.systables WHERE type='T'");
+         break;
+      case DB_SYNTAX_INFORMIX:
+         query = _T("SELECT lower(tabname) FROM informix.systables WHERE tabtype='T'");
+         break;
+      case DB_SYNTAX_MSSQL:
+         query = _T("SELECT lower(name) FROM sysobjects WHERE xtype='U'");
+         break;
+      case DB_SYNTAX_MYSQL:
+         query = _T("SELECT lower(table_name) FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema=database()");
+         break;
+      case DB_SYNTAX_ORACLE:
+         query = _T("SELECT lower(table_name) FROM user_tables");
+         break;
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
+         query = _T("SELECT lower(table_name) FROM information_schema.tables WHERE table_catalog=current_database() AND table_schema=current_schema()");
+         break;
+      case DB_SYNTAX_SQLITE:
+         query = _T("SELECT lower(name) FROM sqlite_master WHERE type='table'");
+         break;
+      default:    // Unsupported DB engine
+         return nullptr;
+   }
+
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult == nullptr)
+      return nullptr;
+
+   StringList *tables = new StringList();
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+   {
+      TCHAR name[256];
+      DBGetField(hResult, i, 0, name, 256);
+      tables->add(name);
+   }
+   DBFreeResult(hResult);
+   return tables;
 }
 
 /**
@@ -326,7 +376,7 @@ static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR
    query.append(table);
    query.append(_T("')"));
    DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult == NULL)
+   if (hResult == nullptr)
       return false;
 
    int numColumns = DBGetNumRows(hResult);
@@ -417,17 +467,17 @@ static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR
       query.append(table);
       query.append(_T("' AND type='table'"));
       hResult = DBSelect(hdb, query);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
-         TCHAR *sql = DBGetField(hResult, 0, 0, NULL, 0);
-         if (sql != NULL)
+         TCHAR *sql = DBGetField(hResult, 0, 0, nullptr, 0);
+         if (sql != nullptr)
          {
             _tcsupr(sql);
             TCHAR *p = _tcsstr(sql, _T("PRIMARY KEY"));
-            if (p != NULL)
+            if (p != nullptr)
             {
                TCHAR *s = _tcschr(p, _T(')'));
-               if (s != NULL)
+               if (s != nullptr)
                {
                   s++;
                   *s = 0;
@@ -447,12 +497,12 @@ static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR
    query.append(table);
    query.append(_T("' AND type<>'table' AND sql<>''"));
    hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         constraints.addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+         constraints.addPreallocated(DBGetField(hResult, i, 0, nullptr, 0));
       }
       DBFreeResult(hResult);
    }
@@ -513,7 +563,7 @@ static bool GetColumnDataType_MSSQL_PGSQL(DB_HANDLE hdb, const TCHAR *table, con
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("SELECT data_type,character_maximum_length,numeric_precision,numeric_scale FROM information_schema.columns WHERE table_name='%s' AND column_name='%s'"), table, column);
    DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
       {
@@ -575,7 +625,7 @@ static bool GetColumnDataType_MYSQL(DB_HANDLE hdb, const TCHAR *table, const TCH
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("SELECT column_type FROM information_schema.columns WHERE table_schema=database() AND table_name='%s' AND column_name='%s'"), table, column);
    DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
       {
@@ -596,7 +646,7 @@ static bool GetColumnDataType_SQLite(DB_HANDLE hdb, const TCHAR *table, const TC
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("PRAGMA TABLE_INFO('%s')"), table);
    DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; (i < count) && !success; i++)
@@ -690,7 +740,7 @@ bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
          success = FALSE;
          _sntprintf(query, 1024, _T("SELECT name FROM sysobjects WHERE xtype='PK' AND parent_obj=OBJECT_ID('%s')"), table);
          hResult = DBSelect(hdb, query);
-         if (hResult != NULL)
+         if (hResult != nullptr)
          {
             if (DBGetNumRows(hResult) > 0)
             {
@@ -1018,7 +1068,7 @@ void LIBNXDB_EXPORTABLE DBResultToTable(DB_RESULT hResult, Table *table)
       table->addRow();
       for(int c = 0; c < numColumns; c++)
       {
-         table->setPreallocated(c, DBGetField(hResult, r, c, NULL, 0));
+         table->setPreallocated(c, DBGetField(hResult, r, c, nullptr, 0));
       }
    }
 }
