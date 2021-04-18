@@ -1,6 +1,6 @@
 /* 
 ** SQLite Database Driver
-** Copyright (C) 2005-2020 Victor Kirhenshtein
+** Copyright (C) 2005-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -411,7 +411,7 @@ extern "C" void __EXPORT DrvFreeResult(SQLITE_RESULT *hResult)
 /**
  * Perform SELECT query - actual implementation
  */
-static SQLITE_RESULT *DrvSelectInternal(SQLITE_CONN *conn, WCHAR *query, DWORD *errorCode, WCHAR *errorText)
+static SQLITE_RESULT *DrvSelectInternal(SQLITE_CONN *conn, const WCHAR *query, uint32_t *errorCode, WCHAR *errorText)
 {
    char *queryUTF8 = UTF8StringFromWideString(query);
 
@@ -442,7 +442,7 @@ retry:
 /**
  * Perform SELECT query - public entry point
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelect(SQLITE_CONN *conn, WCHAR *query, DWORD *errorCode, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelect(SQLITE_CONN *conn, WCHAR *query, uint32_t *errorCode, WCHAR *errorText)
 {
    return DrvSelectInternal(conn, query, errorCode, errorText);
 }
@@ -450,7 +450,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(SQLITE_CONN *conn, WCHAR *query, DWOR
 /**
  * Perform SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_stmt *stmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_stmt *stmt, uint32_t *errorCode, WCHAR *errorText)
 {
    SQLITE_RESULT *result = MemAllocStruct<SQLITE_RESULT>();
 
@@ -487,24 +487,24 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_s
 		}
 		else if (rc == SQLITE_DONE)
 		{
-			*pdwError = DBERR_SUCCESS;
+			*errorCode = DBERR_SUCCESS;
 			break;
 		}
 		else
 		{
 			GetErrorMessage(hConn->pdb, errorText);
-			*pdwError = DBERR_OTHER_ERROR;
+			*errorCode = DBERR_OTHER_ERROR;
 			break;
 		}
 	}
    MemFree(cnames);
 
-	if (*pdwError == DBERR_SUCCESS)
+	if (*errorCode == DBERR_SUCCESS)
    {
 	   if (sqlite3_reset(stmt) != SQLITE_OK)
 	   {
 		   GetErrorMessage(hConn->pdb, errorText);
-		   *pdwError = DBERR_OTHER_ERROR;
+		   *errorCode = DBERR_OTHER_ERROR;
 	   }
    }
    else
@@ -514,7 +514,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_s
 
    MutexUnlock(hConn->mutexQueryLock);
 
-	if (*pdwError != DBERR_SUCCESS)
+	if (*errorCode != DBERR_SUCCESS)
 	{
 	   DrvFreeResultInternal(result);
 		result = nullptr;
@@ -805,7 +805,7 @@ extern "C" int __EXPORT DrvIsTableExist(SQLITE_CONN *conn, const WCHAR *name)
    wcscat(query, name);
    wcscat(query, L"')");
 #endif
-   DWORD error;
+   uint32_t error;
    int rc = DBIsTableExist_Failure;
    SQLITE_RESULT *hResult = DrvSelectInternal(conn, query, &error, nullptr);
    if (hResult != nullptr)
