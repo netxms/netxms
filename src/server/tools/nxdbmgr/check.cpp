@@ -630,15 +630,15 @@ BOOL CreateTDataTable(DWORD nodeId)
 /**
  * Check if DCI exists
  */
-static bool IsDciExists(UINT32 dciId, UINT32 nodeId, bool isTable)
+static bool IsDciExists(uint32_t dciId, uint32_t nodeId, bool isTable)
 {
    TCHAR query[256];
    if (nodeId != 0)
-      _sntprintf(query, 256, _T("SELECT count(*) FROM %s WHERE item_id=%d AND node_id=%d"), isTable ? _T("dc_tables") : _T("items"), dciId, nodeId);
+      _sntprintf(query, 256, _T("SELECT count(*) FROM %s WHERE item_id=%u AND node_id=%u"), isTable ? _T("dc_tables") : _T("items"), dciId, nodeId);
    else
-      _sntprintf(query, 256, _T("SELECT count(*) FROM %s WHERE item_id=%d"), isTable ? _T("dc_tables") : _T("items"), dciId);
+      _sntprintf(query, 256, _T("SELECT count(*) FROM %s WHERE item_id=%u"), isTable ? _T("dc_tables") : _T("items"), dciId);
    DB_RESULT hResult = SQLSelect(query);
-   if (hResult == NULL)
+   if (hResult == nullptr)
       return false;
 
    int count = DBGetFieldLong(hResult, 0, 0);
@@ -936,19 +936,19 @@ static void CheckTableThresholds()
    StartStage(_T("Table DCI thresholds"));
 
    DB_RESULT hResult = SQLSelect(_T("SELECT id,table_id FROM dct_thresholds"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       SetStageWorkTotal(count);
       for(int i = 0; i < count; i++)
       {
-         UINT32 dciId = DBGetFieldULong(hResult, i, 1);
+         uint32_t dciId = DBGetFieldULong(hResult, i, 1);
          if (!IsDciExists(dciId, 0, true))
          {
             g_dbCheckErrors++;
             if (GetYesNoEx(_T("Found threshold configuration for non-existing table DCI [%d]. Delete?"), dciId))
             {
-               UINT32 id = DBGetFieldLong(hResult, i, 0);
+               uint32_t id = DBGetFieldLong(hResult, i, 0);
 
                TCHAR query[256];
                _sntprintf(query, 256, _T("DELETE FROM dct_threshold_instances WHERE threshold_id=%d"), id);
@@ -965,6 +965,68 @@ static void CheckTableThresholds()
             }
          }
          UpdateStageProgress(1);
+      }
+      DBFreeResult(hResult);
+   }
+
+   EndStage();
+}
+
+/**
+ * Check data collection items
+ */
+static void CheckDataCollectionItems()
+{
+   StartStage(_T("DCI configuration"));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT item_id,node_id FROM items WHERE node_id NOT IN (SELECT object_id FROM object_properties)"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         g_dbCheckErrors++;
+         uint32_t dciId = DBGetFieldLong(hResult, i, 0);
+         uint32_t objectId = DBGetFieldLong(hResult, i, 1);
+         if (GetYesNoEx(_T("DCI [%u] belongs to non-existing object [%u]. Delete?"), dciId, objectId))
+         {
+            TCHAR query[256];
+            _sntprintf(query, 256, _T("DELETE FROM items WHERE item_id=%u"), dciId);
+            if (SQLQuery(query))
+            {
+               _sntprintf(query, 256, _T("DELETE FROM thresholds WHERE item_id=%u"), dciId);
+               if (SQLQuery(query))
+               {
+                  _sntprintf(query, 256, _T("DELETE FROM raw_dci_values WHERE item_id=%u"), dciId);
+                  if (SQLQuery(query))
+                     g_dbCheckFixes++;
+               }
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   hResult = SQLSelect(_T("SELECT item_id,node_id FROM dc_tables WHERE node_id NOT IN (SELECT object_id FROM object_properties)"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         g_dbCheckErrors++;
+         uint32_t dciId = DBGetFieldLong(hResult, i, 0);
+         uint32_t objectId = DBGetFieldLong(hResult, i, 1);
+         if (GetYesNoEx(_T("Table DCI [%u] belongs to non-existing object [%u]. Delete?"), dciId, objectId))
+         {
+            TCHAR query[256];
+            _sntprintf(query, 256, _T("DELETE FROM dc_tables WHERE item_id=%u"), dciId);
+            if (SQLQuery(query))
+            {
+               _sntprintf(query, 256, _T("DELETE FROM dc_table_columns WHERE table_id=%u"), dciId);
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
       }
       DBFreeResult(hResult);
    }
@@ -1283,6 +1345,7 @@ void CheckDatabase()
          CheckEPP();
          CheckMapLinks();
          CheckDataTables();
+         CheckDataCollectionItems();
          CheckRawDciValues();
          CheckThresholds();
          CheckTableThresholds();
