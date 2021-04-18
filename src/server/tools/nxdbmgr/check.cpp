@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -996,15 +996,14 @@ static void CheckDataTables()
       return;  // Single table mode
 
    StartStage(_T("Data tables"));
-
-	IntegerArray<UINT32> *targets = GetDataCollectionTargets();
+	IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
 	SetStageWorkTotal(targets->size());
 	for(int i = 0; i < targets->size(); i++)
    {
-      UINT32 objectId = targets->get(i);
+	   uint32_t objectId = targets->get(i);
 
       // IDATA
-      if (!IsDataTableExist(_T("idata_%d"), objectId))
+      if (!IsDataTableExist(_T("idata_%u"), objectId))
       {
 			g_dbCheckErrors++;
 
@@ -1018,7 +1017,7 @@ static void CheckDataTables()
       }
 
       // TDATA
-      if (!IsDataTableExist(_T("tdata_%d"), objectId))
+      if (!IsDataTableExist(_T("tdata_%u"), objectId))
       {
 			g_dbCheckErrors++;
 
@@ -1033,9 +1032,37 @@ static void CheckDataTables()
 
       UpdateStageProgress(1);
    }
+	EndStage();
+
+
+   StartStage(_T("Orphaned data tables"));
+   StringList *tables = DBGetTableList(g_dbHandle);
+   SetStageWorkTotal(tables->size());
+   for(int i = 0; i < tables->size(); i++)
+   {
+      const TCHAR *table = tables->get(i);
+      if (!_tcsncmp(table, _T("idata_"), 6) || !_tcsncmp(table, _T("tdata_"), 6))
+      {
+         TCHAR *eptr;
+         uint32_t objectId = _tcstoul(&table[6], &eptr, 10);
+         if ((*eptr == 0) && !targets->contains(objectId))
+         {
+            g_dbCheckErrors++;
+            if (GetYesNoEx(_T("Data collection table %s belongs to deleted object and no longer in use. Delete it? (Y/N) "), table))
+            {
+               TCHAR query[256];
+               _sntprintf(query, 256, _T("DROP TABLE %s"), table);
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
+      }
+      UpdateStageProgress(1);
+   }
+   delete tables;
+   EndStage();
 
    delete targets;
-	EndStage();
 }
 
 /**
