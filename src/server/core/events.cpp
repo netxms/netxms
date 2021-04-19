@@ -240,7 +240,6 @@ Event::Event()
    m_timestamp = 0;
    m_originTimestamp = 0;
 	m_customMessage = nullptr;
-	m_lastAlarmKey[0] = 0;
 	m_queueTime = 0;
 	m_queueBinding = nullptr;
 	m_parameters.setOwner(Ownership::True);
@@ -249,7 +248,7 @@ Event::Event()
 /**
  * Copy constructor for event
  */
-Event::Event(const Event *src)
+Event::Event(const Event *src) : m_lastAlarmKey(src->m_lastAlarmKey), m_lastAlarmMessage(src->m_lastAlarmMessage)
 {
    m_id = src->m_id;
    _tcscpy(m_name, src->m_name);
@@ -267,7 +266,6 @@ Event::Event(const Event *src)
    m_originTimestamp = src->m_originTimestamp;
    m_tags.addAll(src->m_tags);
 	m_customMessage = MemCopyString(src->m_customMessage);
-	_tcscpy(m_lastAlarmKey, src->m_lastAlarmKey);
    m_queueTime = src->m_queueTime;
    m_queueBinding = src->m_queueBinding;
 	m_parameters.setOwner(Ownership::True);
@@ -287,31 +285,39 @@ Event *Event::createFromJson(json_t *json)
 
    json_int_t id, rootId, timestamp, originTimestamp;
    int origin;
-   const char *name = nullptr, *message = nullptr, *lastAlarmKey = nullptr;
+   const char *name = nullptr, *message = nullptr, *lastAlarmKey = nullptr, *lastAlarmMessage = nullptr;
    json_t *tags = nullptr;
-   if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:I, s:i, s:i, s:i, s:i, s:i, s:s, s:o}",
+   if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:I, s:i, s:i, s:i, s:i, s:i, s:s, s:s, s:s, s:o}",
             "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
             "originTimestamp", &originTimestamp, "origin", &origin, "source", &event->m_sourceId,
             "zone", &event->m_zoneUIN, "dci", &event->m_dciId, "severity", &event->m_severity,
-            "message", &message, "lastAlarmKey", &lastAlarmKey,
+            "message", &message, "lastAlarmKey", &lastAlarmKey, "lastAlarmMessage", &lastAlarmMessage,
             (json_object_get(json, "tags") != nullptr) ? "tags" : "tag", &tags) == -1)
    {
-      if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:I, s:i, s:i, s:i, s:i, s:i, s:s, s:o}",
+      if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:I, s:i, s:i, s:i, s:i, s:i, s:s, s:s, s:o}",
                "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
                "originTimestamp", &originTimestamp, "origin", &origin, "source", &event->m_sourceId,
-               "zone", &event->m_zoneUIN, "dci", &event->m_dciId, "severity", &event->m_severity, "message", &message,
+               "zone", &event->m_zoneUIN, "dci", &event->m_dciId, "severity", &event->m_severity,
+               "message", &message, "lastAlarmKey", &lastAlarmKey,
                (json_object_get(json, "tags") != nullptr) ? "tags" : "tag", &tags) == -1)
       {
-         if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:i, s:i, s:i, s:i, s:s, s:o}",
+         if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:I, s:i, s:i, s:i, s:i, s:i, s:s, s:o}",
                   "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
-                  "source", &event->m_sourceId, "zone", &event->m_zoneUIN, "dci", &event->m_dciId,
-                  "severity", &event->m_severity, "message", &message,
+                  "originTimestamp", &originTimestamp, "origin", &origin, "source", &event->m_sourceId,
+                  "zone", &event->m_zoneUIN, "dci", &event->m_dciId, "severity", &event->m_severity, "message", &message,
                   (json_object_get(json, "tags") != nullptr) ? "tags" : "tag", &tags) == -1)
          {
-            delete event;
-            return nullptr;   // Unpack failure
+            if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:i, s:i, s:i, s:i, s:s, s:o}",
+                     "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
+                     "source", &event->m_sourceId, "zone", &event->m_zoneUIN, "dci", &event->m_dciId,
+                     "severity", &event->m_severity, "message", &message,
+                     (json_object_get(json, "tags") != nullptr) ? "tags" : "tag", &tags) == -1)
+            {
+               delete event;
+               return nullptr;   // Unpack failure
+            }
+            originTimestamp = timestamp;
          }
-         originTimestamp = timestamp;
       }
    }
 
@@ -336,10 +342,24 @@ Event *Event::createFromJson(json_t *json)
    if (lastAlarmKey != nullptr)
    {
 #ifdef UNICODE
-      utf8_to_wchar(lastAlarmKey, -1, event->m_lastAlarmKey, MAX_DB_STRING);
+      WCHAR s[MAX_DB_STRING];
+      utf8_to_wchar(lastAlarmKey, -1, s, MAX_DB_STRING);
 #else
-      utf8_to_mb(lastAlarmKey, -1, event->m_lastAlarmKey, MAX_DB_STRING);
+      char s[MAX_DB_STRING];
+      utf8_to_mb(lastAlarmKey, -1, s, MAX_DB_STRING);
 #endif
+      event->m_lastAlarmKey = s;
+   }
+   if (lastAlarmMessage != nullptr)
+   {
+#ifdef UNICODE
+      WCHAR s[MAX_EVENT_MSG_LENGTH];
+      utf8_to_wchar(lastAlarmMessage, -1, s, MAX_EVENT_MSG_LENGTH);
+#else
+      char s[MAX_EVENT_MSG_LENGTH];
+      utf8_to_mb(lastAlarmMessage, -1, s, MAX_EVENT_MSG_LENGTH);
+#endif
+      event->m_lastAlarmMessage = s;
    }
    if (tags != nullptr)
    {
@@ -540,7 +560,6 @@ void Event::init(const EventTemplate *eventTemplate, EventOrigin origin, time_t 
    m_dciId = dciId;
    m_queueTime = 0;
    m_queueBinding = nullptr;
-   m_lastAlarmKey[0] = 0;
    m_messageText = nullptr;
    m_messageTemplate = MemCopyString(eventTemplate->getMessageTemplate());
 
@@ -749,6 +768,7 @@ json_t *Event::toJson()
    json_object_set_new(root, "severity", json_integer(m_severity));
    json_object_set_new(root, "message", json_string_t(m_messageText));
    json_object_set_new(root, "lastAlarmKey", json_string_t(m_lastAlarmKey));
+   json_object_set_new(root, "lastAlarmMessage", json_string_t(m_lastAlarmMessage));
 
    if (!m_tags.isEmpty())
    {

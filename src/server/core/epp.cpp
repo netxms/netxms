@@ -497,9 +497,7 @@ bool EPRule::matchEvent(uint32_t eventCode) const
  */
 bool EPRule::matchSeverity(uint32_t severity) const
 {
-   static UINT32 severityFlag[] = { RF_SEVERITY_INFO, RF_SEVERITY_WARNING,
-                                    RF_SEVERITY_MINOR, RF_SEVERITY_MAJOR,
-                                    RF_SEVERITY_CRITICAL };
+   static uint32_t severityFlag[] = { RF_SEVERITY_INFO, RF_SEVERITY_WARNING, RF_SEVERITY_MINOR, RF_SEVERITY_MAJOR, RF_SEVERITY_CRITICAL };
 	return (severityFlag[severity] & m_flags) != 0;
 }
 
@@ -688,20 +686,18 @@ bool EPRule::processEvent(Event *event) const
 uint32_t EPRule::generateAlarm(Event *event) const
 {
    uint32_t alarmId = 0;
-   String message = event->expandText(m_alarmMessage);
    String key = event->expandText(m_alarmKey);
-   String impact = event->expandText(m_alarmImpact);
 
    // Terminate alarms with key == our ack_key
-	if ((m_alarmSeverity == SEVERITY_RESOLVE) || (m_alarmSeverity == SEVERITY_TERMINATE))
-	{
-		if (!key.isEmpty())
-		   ResolveAlarmByKey(key, (m_flags & RF_TERMINATE_BY_REGEXP) ? true : false, m_alarmSeverity == SEVERITY_TERMINATE, event);
-	}
-	else	// Generate new alarm
-	{
-	   uint32_t parentAlarmId = 0;
-	   if ((m_rcaScriptName != nullptr) && (m_rcaScriptName[0] != 0))
+   if ((m_alarmSeverity == SEVERITY_RESOLVE) || (m_alarmSeverity == SEVERITY_TERMINATE))
+   {
+      if (!key.isEmpty())
+         ResolveAlarmByKey(key, (m_flags & RF_TERMINATE_BY_REGEXP) ? true : false, m_alarmSeverity == SEVERITY_TERMINATE, event);
+   }
+   else	// Generate new alarm
+   {
+      uint32_t parentAlarmId = 0;
+      if ((m_rcaScriptName != nullptr) && (m_rcaScriptName[0] != 0))
 	   {
 	      shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
 	      NXSL_VM *vm = CreateServerScriptVM(m_rcaScriptName, object);
@@ -726,10 +722,13 @@ uint32_t EPRule::generateAlarm(Event *event) const
 	         delete vm;
 	      }
 	   }
+	   String message = event->expandText(m_alarmMessage);
+	   String impact = event->expandText(m_alarmImpact);
 	   alarmId = CreateNewAlarm(m_guid, message, key, impact, ALARM_STATE_OUTSTANDING,
                      (m_alarmSeverity == SEVERITY_FROM_EVENT) ? event->getSeverity() : m_alarmSeverity,
                      m_alarmTimeout, m_alarmTimeoutEvent, parentAlarmId, m_rcaScriptName, event, 0, &m_alarmCategoryList,
                      ((m_flags & RF_CREATE_TICKET) != 0) ? true : false);
+	   event->setLastAlarmMessage(message);
 	}
 
    event->setLastAlarmKey(key);
