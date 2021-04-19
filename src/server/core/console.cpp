@@ -1292,7 +1292,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(nodeId, OBJECT_NODE));
             if (node != nullptr)
             {
-               LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(node.get());
+               shared_ptr<LinkLayerNeighbors> nbs = BuildLinkLayerNeighborList(node.get());
                if (nbs != nullptr)
                {
                   ConsolePrintf(pCtx, _T("Proto   | PtP | ifLocal | ifRemote | Peer\n")
@@ -1316,7 +1316,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                      ConsolePrintf(pCtx, _T("%-7s | %c   | %7d | %7d | %s\n"),
                         GetLinkLayerProtocolName(ni->protocol), ni->isPtToPt ? _T('Y') : _T('N'), ni->ifLocal, ni->ifRemote, peer);
                   }
-                  nbs->decRefCount();
                }
                else
                {

@@ -274,31 +274,6 @@ MacAddress Subnet::findMacAddress(const InetAddress& ipAddr)
 }
 
 /**
- * Build IP topology
- */
-void Subnet::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedNode, bool includeEndNodes)
-{
-	SharedObjectArray<Node> nodes;
-	readLockChildList();
-	for(int i = 0; i < getChildList().size(); i++)
-	{
-	   shared_ptr<NetObj> object = getChildList().getShared(i);
-		if ((object->getId() == seedNode) || (object->getObjectClass() != OBJECT_NODE))
-			continue;
-		if (!includeEndNodes && !((Node *)object.get())->isRouter())
-			continue;
-		nodes.add(static_pointer_cast<Node>(object));
-	}
-	unlockChildList();
-
-	for(int j = 0; j < nodes.size(); j++)
-	{
-		Node *n = nodes.get(j);
-		n->buildIPTopologyInternal(topology, nDepth - 1, m_id, NULL, false, includeEndNodes);
-	}
-}
-
-/**
  * Called by client session handler to check if threshold summary should be shown for this object.
  */
 bool Subnet::showThresholdSummary() const
@@ -346,28 +321,6 @@ void Subnet::prepareForDeletion()
 {
    PostSystemEvent(EVENT_SUBNET_DELETED, g_dwMgmtNode, "isAd", m_id, m_name, &m_ipAddress, m_ipAddress.getMaskBits());
    super::prepareForDeletion();
-}
-
-/**
- * Get child node other than given one (useful for subnets representing point to point links)
- */
-shared_ptr<Node> Subnet::getOtherNode(uint32_t nodeId)
-{
-   shared_ptr<Node> node;
-   readLockChildList();
-   for(int i = 0; i < getChildList().size(); i++)
-   {
-      auto curr = getChildList().getShared(i);
-      if (curr->getId() == nodeId)
-         continue;
-      if (curr->getObjectClass() == OBJECT_NODE)
-      {
-         node = static_pointer_cast<Node>(curr);
-         break;
-      }
-   }
-   unlockChildList();
-   return node;
 }
 
 /**

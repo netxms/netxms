@@ -93,7 +93,7 @@ public:
    void merge(const NetworkMapObjectList& src);
 
    void addObject(uint32_t id);
-   void linkObjects(uint32_t id1, uint32_t id2, int linkType = LINK_TYPE_NORMAL, const TCHAR *linkName = nullptr);
+   void linkObjects(uint32_t id1, uint32_t id2, int linkType = LINK_TYPE_NORMAL, const TCHAR *linkName = nullptr, const TCHAR *port1 = nullptr, const TCHAR *port2 = nullptr);
    void linkObjectsEx(uint32_t id1, uint32_t id2, const TCHAR *port1, const TCHAR *port2, uint32_t portId1, uint32_t portId2);
    void removeObject(uint32_t id);
    void clear();

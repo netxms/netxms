@@ -160,7 +160,7 @@ void NetworkMapObjectList::removeObject(uint32_t id)
 /**
  * Link two objects
  */
-void NetworkMapObjectList::linkObjects(uint32_t id1, uint32_t id2, int linkType, const TCHAR *linkName)
+void NetworkMapObjectList::linkObjects(uint32_t id1, uint32_t id2, int linkType, const TCHAR *linkName, const TCHAR *port1, const TCHAR *port2)
 {
    bool linkExists = false;
    if ((m_objectList.indexOf(id1) != -1) && (m_objectList.indexOf(id2) != -1))  // if both objects exist
@@ -194,6 +194,10 @@ void NetworkMapObjectList::linkObjects(uint32_t id1, uint32_t id2, int linkType,
          link->type = linkType;
          if (linkName != nullptr)
             link->name = linkName;
+         if(port1 != nullptr)
+            _tcslcpy(link->port1, port1, MAX_CONNECTOR_NAME);
+         if(port2 != nullptr)
+            _tcslcpy(link->port2, port2, MAX_CONNECTOR_NAME);
          m_linkList.add(link);
       }
    }
