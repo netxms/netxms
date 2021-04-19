@@ -348,7 +348,6 @@
     <ClCompile Include="winevent.cpp" />
     <ClCompile Include="winperf.cpp" />
     <ClCompile Include="xmpp.cpp" />
-    <ClCompile Include="zeromq.cpp" />
     <ClCompile Include="zone.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -414,9 +414,6 @@
     <ClCompile Include="xmpp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="zeromq.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="zone.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
