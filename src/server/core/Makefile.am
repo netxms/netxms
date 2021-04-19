@@ -33,11 +33,11 @@ libnxcore_la_SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addr
 			template.cpp tools.cpp tracert.cpp tunnel.cpp ua_notification_item.cpp \
 			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
 			userdb_objects.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
-			websvc.cpp winevent.cpp winperf.cpp xmpp.cpp zeromq.cpp zone.cpp
+			websvc.cpp winevent.cpp winperf.cpp xmpp.cpp zone.cpp
 libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS \
-	@MQTT_CPPFLAGS@ @ZEROMQ_CPPFLAGS@ @PYTHON_CPPFLAGS@
+	@MQTT_CPPFLAGS@ @PYTHON_CPPFLAGS@
 libnxcore_la_CXXFLAGS = -I@top_srcdir@/@CUSTOM_INCLUDE@
-libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @ZEROMQ_LDFLAGS@ @PYTHON_LDFLAGS@
+libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @PYTHON_LDFLAGS@
 libnxcore_la_LIBADD = \
 	../libnxsrv/libnxsrv.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \

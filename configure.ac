@@ -412,7 +412,7 @@ AC_ARG_WITH(tuxedo,
 fi ])
 
 AC_ARG_WITH(zeromq,
-[AS_HELP_STRING(--with-zeromq,build with ZeroMQ)],
+[AS_HELP_STRING(--with-zeromq,build ZeroMQ-dependent components)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 		ZEROMQ_BASE="$withval"
@@ -4070,7 +4070,7 @@ if test $? = 0; then
 			ZEROMQ_SUPPORT="no"
 		fi
 	])
-	AC_CHECK_LIB(zmq, zmq_ctx_new, [ SERVER_LIBS="$SERVER_LIBS -lzmq" ], [
+	AC_CHECK_LIB(zmq, zmq_ctx_new, [ ], [
 		if test "x$ZEROMQ_REQUIRED" = "xyes"; then
 			AC_MSG_ERROR([*** libzmq is missing or too old - check your ZeroMQ installation ***])
 		else
@@ -4438,7 +4438,6 @@ AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$HAVE_ZLIB" = "no"])
 AM_CONDITIONAL([USE_ENCRYPTION], [test "x${WITH_ENCRYPTION}" = "xyes"])
 AM_CONDITIONAL([WITH_PRIVATE_EXTENSIONS], [test "x$WITH_PRIVATE_EXTENSIONS" = "xyes"])
 AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
-AM_CONDITIONAL([ZEROMQ_SUPPORT], [test "x$ZEROMQ_SUPPORT" = "xyes"])
 
 
 #--------------------------------------------------------------------
@@ -4850,6 +4849,11 @@ if test "x${MQTT_SUPPORT}" = "xyes"; then
 else
 	echo "MQTT support            : NO"
 fi
+if test "x${ZEROMQ_SUPPORT}" = "xyes"; then
+	echo "ZeroMQ support          : YES"
+else
+	echo "ZeroMQ support          : NO"
+fi
 if test "x${BUILD_SERVER}" = "xyes"; then
 	echo "Build Server            : YES"
 	echo "Server libs             : ${SERVER_LIBS}"
@@ -4862,11 +4866,6 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 		echo "XMPP support            : YES"
 	else
 		echo "XMPP support            : NO"
-	fi
-	if test "x${ZEROMQ_SUPPORT}" = "xyes"; then
-		echo "ZeroMQ support          : YES"
-	else
-		echo "ZeroMQ support          : NO"
 	fi
 else
 	echo "Build Server            : NO"
