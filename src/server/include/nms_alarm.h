@@ -220,7 +220,7 @@ uint32_t NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *se
 uint32_t NXCORE_EXPORTABLE ResolveAlarmById(uint32_t alarmId, ClientSession *session, bool terminate, bool includeSubordinates);
 void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, IntegerArray<UINT32> *failIds,
          IntegerArray<UINT32> *failCodes, ClientSession *session, bool terminate, bool includeSubordinates);
-void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bool terminate, Event *pEvent);
+void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bool terminate, Event *event);
 void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(uint32_t dciId, bool terminate);
 uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession *session, bool terminate);
 uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref);

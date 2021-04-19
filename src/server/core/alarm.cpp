@@ -1056,6 +1056,9 @@ void Alarm::resolve(uint32_t userId, Event *event, bool terminate, bool notify, 
    if (includeSubordinates && !m_subordinateAlarms->isEmpty())
       ThreadPoolExecute(g_mainThreadPool, ResolveAlarmsInBackground, new AlarmBackgroundProcessingData(m_subordinateAlarms, terminate, true));
 
+   if (event != nullptr)
+      event->setLastAlarmMessage(m_message);
+
    if (terminate)
       m_termByUser = userId;
    else
@@ -1196,11 +1199,11 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
 /**
  * Resolve and possibly terminate all alarms with given key
  */
-void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bool terminate, Event *pEvent)
+void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bool terminate, Event *event)
 {
    if (useRegexp)
    {
-      IntegerArray<UINT32> objectList;
+      IntegerArray<uint32_t> objectList;
       s_alarmList.lock();
       for(int i = 0; i < s_alarmList.size(); i++)
       {
@@ -1214,7 +1217,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
                objectList.add(alarm->getSourceObject());
 
             // Resolve or terminate alarm
-            alarm->resolve(0, pEvent, terminate, true, false);
+            alarm->resolve(0, event, terminate, true, false);
             if (terminate)
             {
                s_alarmList.remove(i);
@@ -1230,7 +1233,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
    }
    else
    {
-      UINT32 objectId = 0;
+      uint32_t objectId = 0;
       s_alarmList.lock();
       Alarm *alarm = s_alarmList.find(pszKey);
       if ((alarm != nullptr) &&
@@ -1241,7 +1244,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
          objectId = alarm->getSourceObject();
 
          // Resolve or terminate alarm
-         alarm->resolve(0, pEvent, terminate, true, false);
+         alarm->resolve(0, event, terminate, true, false);
          if (terminate)
          {
             s_alarmList.remove(alarm);

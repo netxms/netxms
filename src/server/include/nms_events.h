@@ -108,7 +108,8 @@ private:
 	TCHAR *m_customMessage;
 	Array m_parameters;
 	StringList m_parameterNames;
-	TCHAR m_lastAlarmKey[MAX_DB_STRING];
+	MutableString m_lastAlarmKey;
+	MutableString m_lastAlarmMessage;
 	int64_t m_queueTime;
 	EventQueueBinding *m_queueBinding;
 
@@ -137,12 +138,14 @@ public:
    void getTagsAsList(StringBuffer *sb) const;
    time_t getTimestamp() const { return m_timestamp; }
    time_t getOriginTimestamp() const { return m_originTimestamp; }
-   const TCHAR *getLastAlarmKey() const { return m_lastAlarmKey; }
+   const TCHAR *getLastAlarmKey() const { return m_lastAlarmKey.cstr(); }
+   const TCHAR *getLastAlarmMessage() const { return m_lastAlarmMessage.cstr(); }
    const Array *getParameterList() const { return &m_parameters; }
    const StringList *getParameterNames() const { return &m_parameterNames; }
 
    void setSeverity(int severity) { m_severity = severity; }
-   void setLastAlarmKey(const TCHAR *key) { _tcslcpy(m_lastAlarmKey, key, MAX_DB_STRING); }
+   void setLastAlarmKey(const TCHAR *key) { m_lastAlarmKey = key; }
+   void setLastAlarmMessage(const TCHAR *message) { m_lastAlarmMessage = message; }
 
    int64_t getQueueTime() const { return m_queueTime; }
    void setQueueTime(int64_t t) { m_queueTime = t; }
