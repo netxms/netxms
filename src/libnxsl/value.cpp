@@ -482,11 +482,15 @@ void NXSL_Value::updateString()
    MemFreeAndNull(m_mbString);
 #endif
 
-   if (m_dataType == NXSL_DT_ARRAY)
+   if ((m_dataType == NXSL_DT_ARRAY) || (m_dataType == NXSL_DT_HASHMAP))
    {
       StringBuffer sb;
-      m_value.arrayHandle->getObject()->toString(&sb, _T(", "), true);
-      m_length = (UINT32)sb.length();
+      if (m_dataType == NXSL_DT_ARRAY)
+         m_value.arrayHandle->getObject()->toString(&sb, _T(", "), true);
+      else
+         m_value.hashMapHandle->getObject()->toString(&sb, _T(", "), true);
+
+      m_length = static_cast<uint32_t>(sb.length());
       if (m_length < NXSL_SHORT_STRING_LENGTH)
       {
          _tcscpy(m_stringValue, sb.cstr());

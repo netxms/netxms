@@ -377,7 +377,7 @@ bool NXSL_Array::contains(NXSL_Value *value)
 }
 
 /**
- * Convert array to string (recursively for array values)
+ * Convert array to string (recursively for array and hash map values)
  */
 void NXSL_Array::toString(StringBuffer *stringBuffer, const TCHAR *separator, bool withBrackets) const
 {
@@ -391,6 +391,10 @@ void NXSL_Array::toString(StringBuffer *stringBuffer, const TCHAR *separator, bo
       if (e->isArray())
       {
          e->getValueAsArray()->toString(stringBuffer, separator, withBrackets);
+      }
+      else if (e->isHashMap())
+      {
+         e->getValueAsHashMap()->toString(stringBuffer, separator, withBrackets);
       }
       else
       {
