@@ -13491,6 +13491,7 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
             if (conn != nullptr)
             {
                request->setField(VID_ALLOW_PATH_EXPANSION, false);   // explicitly disable path expansion
+               request->setProtocolVersion(conn->getProtocolVersion());
                conn->sendMessage(request);
                response = conn->waitForMessage(CMD_REQUEST_COMPLETED, request->getId(), 10000);
                if (response != nullptr)
