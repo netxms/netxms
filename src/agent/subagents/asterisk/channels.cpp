@@ -1,6 +1,6 @@
 /*
 ** NetXMS Asterisk subagent
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,10 +27,10 @@
  */
 char *PeerFromChannelA(const char *channel, char *peer, size_t size)
 {
-   if (channel == NULL)
+   if (channel == nullptr)
    {
       *peer = 0;
-      return NULL;
+      return nullptr;
    }
 
    const char *src = channel;
@@ -39,7 +39,7 @@ char *PeerFromChannelA(const char *channel, char *peer, size_t size)
    if (*src == 0)
    {
       *peer = 0;
-      return NULL;
+      return nullptr;
    }
 
    src++;
@@ -58,10 +58,10 @@ char *PeerFromChannelA(const char *channel, char *peer, size_t size)
  */
 WCHAR *PeerFromChannelW(const char *channel, WCHAR *peer, size_t size)
 {
-   if (channel == NULL)
+   if (channel == nullptr)
    {
       *peer = 0;
-      return NULL;
+      return nullptr;
    }
 
    const char *src = channel;
@@ -70,7 +70,7 @@ WCHAR *PeerFromChannelW(const char *channel, WCHAR *peer, size_t size)
    if (*src == 0)
    {
       *peer = 0;
-      return NULL;
+      return nullptr;
    }
 
    src++;
@@ -91,14 +91,14 @@ LONG H_ChannelList(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
 {
    GET_ASTERISK_SYSTEM(0);
 
-   ObjectRefArray<AmiMessage> *messages = sys->readTable("Status");
-   if (messages == NULL)
+   SharedObjectArray<AmiMessage> *messages = sys->readTable("Status");
+   if (messages == nullptr)
       return SYSINFO_RC_ERROR;
 
    for(int i = 0; i < messages->size(); i++)
    {
       const char *ch = messages->get(i)->getTag("Channel");
-      if (ch != NULL)
+      if (ch != nullptr)
          value->addMBString(ch);
    }
 
@@ -113,8 +113,8 @@ LONG H_ChannelTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
 {
    GET_ASTERISK_SYSTEM(0);
 
-   ObjectRefArray<AmiMessage> *messages = sys->readTable("Status");
-   if (messages == NULL)
+   SharedObjectArray<AmiMessage> *messages = sys->readTable("Status");
+   if (messages == nullptr)
       return SYSINFO_RC_ERROR;
 
    value->addColumn(_T("CHANNEL"), DCI_DT_STRING, _T("Channel"), true);
@@ -145,7 +145,7 @@ LONG H_ChannelTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
    {
       AmiMessage *msg = messages->get(i);
       const char *ch = msg->getTag("Channel");
-      if (ch == NULL)
+      if (ch == nullptr)
          continue;
 
       value->addRow();
@@ -185,8 +185,8 @@ LONG H_ChannelStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
 {
    GET_ASTERISK_SYSTEM(0);
 
-   ObjectRefArray<AmiMessage> *messages = sys->readTable("Status");
-   if (messages == NULL)
+   SharedObjectArray<AmiMessage> *messages = sys->readTable("Status");
+   if (messages == nullptr)
       return SYSINFO_RC_ERROR;
 
    if (*arg == _T('A'))
@@ -199,7 +199,7 @@ LONG H_ChannelStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
       for(int i = 0; i < messages->size(); i++)
       {
          AmiMessage *msg = messages->get(i);
-         if (msg->getTag("Channel") == NULL)
+         if (msg->getTag("Channel") == nullptr)
             continue;
 
          int state = atoi(msg->getTag("ChannelState"));

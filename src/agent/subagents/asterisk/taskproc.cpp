@@ -1,6 +1,6 @@
 /*
 ** NetXMS Asterisk subagent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,8 +40,8 @@ struct TaskProcessor
 static ObjectArray<TaskProcessor> *ReadTaskProcessorList(AsteriskSystem *sys)
 {
    StringList *rawData = sys->executeCommand("core show taskprocessors");
-   if (rawData == NULL)
-      return NULL;
+   if (rawData == nullptr)
+      return nullptr;
 
    ObjectArray<TaskProcessor> *list = new ObjectArray<TaskProcessor>(128, 128, Ownership::True);
    for(int i = 0; i < rawData->size(); i++)
@@ -73,7 +73,7 @@ LONG H_TaskProcessorList(const TCHAR *param, const TCHAR *arg, StringList *value
 {
    GET_ASTERISK_SYSTEM(0);
    ObjectArray<TaskProcessor> *list = ReadTaskProcessorList(sys);
-   if (list == NULL)
+   if (list == nullptr)
       return SYSINFO_RC_ERROR;
 
    for(int i = 0; i < list->size(); i++)
@@ -90,7 +90,7 @@ LONG H_TaskProcessorTable(const TCHAR *param, const TCHAR *arg, Table *value, Ab
 {
    GET_ASTERISK_SYSTEM(0);
    ObjectArray<TaskProcessor> *list = ReadTaskProcessorList(sys);
-   if (list == NULL)
+   if (list == nullptr)
       return SYSINFO_RC_ERROR;
 
    value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
@@ -125,7 +125,7 @@ struct TaskProcessorCacheEntry
 
    TaskProcessorCacheEntry()
    {
-      data = NULL;
+      data = nullptr;
       timestamp = 0;
    }
 
@@ -146,18 +146,18 @@ LONG H_TaskProcessorDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, 
 
    s_cacheLock.lock();
    TaskProcessorCacheEntry *cache = s_cache.get(sysName);
-   if ((cache == NULL) || (time(NULL) - cache->timestamp > 5))
+   if ((cache == nullptr) || (time(nullptr) - cache->timestamp > 5))
    {
       nxlog_debug_tag(DEBUG_TAG, 8, _T("H_TaskProcessorDetails: re-read task processors list for %s"), sysName);
 
-      if (cache == NULL)
+      if (cache == nullptr)
       {
          cache = new TaskProcessorCacheEntry();
          s_cache.set(sysName, cache);
       }
 
       ObjectArray<TaskProcessor> *list = ReadTaskProcessorList(sys);
-      if (list == NULL)
+      if (list == nullptr)
       {
          cache->timestamp = 0;
          delete_and_null(cache->data);
@@ -167,13 +167,13 @@ LONG H_TaskProcessorDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, 
 
       delete cache->data;
       cache->data = list;
-      cache->timestamp = time(NULL);
+      cache->timestamp = time(nullptr);
    }
 
    TCHAR name[128];
    GET_ARGUMENT(1, name, 128);
 
-   TaskProcessor *p = NULL;
+   TaskProcessor *p = nullptr;
    for(int i = 0; i < cache->data->size(); i++)
    {
       TaskProcessor *curr = cache->data->get(i);
@@ -185,7 +185,7 @@ LONG H_TaskProcessorDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, 
    }
 
    LONG rc;
-   if (p != NULL)
+   if (p != nullptr)
    {
       switch(*arg)
       {

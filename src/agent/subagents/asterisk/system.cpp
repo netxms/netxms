@@ -1,6 +1,6 @@
 /*
 ** NetXMS Asterisk subagent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -77,15 +77,14 @@ AsteriskSystem::AsteriskSystem(const TCHAR *name) :
 {
    m_name = MemCopyString(name);
    m_port = 5038;
-   m_login = NULL;
-   m_password = NULL;
+   m_login = nullptr;
+   m_password = nullptr;
    m_connectorThread = INVALID_THREAD_HANDLE;
    m_socket = INVALID_SOCKET;
    m_requestId = 1;
    m_activeRequestId = 0;
    m_requestLock = MutexCreate();
    m_requestCompletion = ConditionCreate(false);
-   m_response = NULL;
    m_amiSessionReady = false;
    m_resetSession = false;
    m_eventListenersLock = MutexCreate();
@@ -105,8 +104,6 @@ AsteriskSystem::~AsteriskSystem()
    MemFree(m_password);
    MutexDestroy(m_requestLock);
    ConditionDestroy(m_requestCompletion);
-   if (m_response != NULL)
-      m_response->decRefCount();
    MutexDestroy(m_eventListenersLock);
    MutexDestroy(m_eventCounterLock);
    MutexDestroy(m_rtcpLock);
@@ -138,21 +135,20 @@ void AsteriskSystem::removeEventListener(AmiEventListener *listener)
  */
 LONG AsteriskSystem::readSingleTag(const char *rqname, const char *tag, TCHAR *value)
 {
-   AmiMessage *response = sendRequest(new AmiMessage(rqname));
-   if (response == NULL)
+   shared_ptr<AmiMessage> response = sendRequest(make_shared<AmiMessage>(rqname));
+   if (response == nullptr)
       return SYSINFO_RC_ERROR;
 
    if (!response->isSuccess())
    {
       const char *reason = response->getTag("Message");
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Request \"%hs\" to %s failed (%hs)"), rqname, m_name, (reason != NULL) ? reason : "Unknown reason");
-      response->decRefCount();
       return SYSINFO_RC_ERROR;
    }
 
    LONG rc;
    const char *v = response->getTag(tag);
-   if (v != NULL)
+   if (v != nullptr)
    {
       ret_mbstring(value, v);
       rc = SYSINFO_RC_SUCCESS;
@@ -161,35 +157,31 @@ LONG AsteriskSystem::readSingleTag(const char *rqname, const char *tag, TCHAR *v
    {
       rc = SYSINFO_RC_UNSUPPORTED;
    }
-   response->decRefCount();
    return rc;
 }
 
 /**
  * Read table (as sequence of event messages)
  */
-ObjectRefArray<AmiMessage> *AsteriskSystem::readTable(const char *rqname)
+SharedObjectArray<AmiMessage> *AsteriskSystem::readTable(const char *rqname)
 {
-   ObjectRefArray<AmiMessage> *messages = new ObjectRefArray<AmiMessage>();
+   auto messages = new SharedObjectArray<AmiMessage>();
 
-   AmiMessage *response = sendRequest(new AmiMessage(rqname), messages);
-   if (response == NULL)
+   shared_ptr<AmiMessage> response = sendRequest(make_shared<AmiMessage>(rqname), messages);
+   if (response == nullptr)
    {
       delete messages;
-      return NULL;
+      return nullptr;
    }
 
    if (!response->isSuccess())
    {
       const char *reason = response->getTag("Message");
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Request \"%hs\" to %s failed (%hs)"), rqname, m_name, (reason != NULL) ? reason : "Unknown reason");
-
-      response->decRefCount();
       delete messages;
-      return NULL;
+      return nullptr;
    }
 
-   response->decRefCount();
    return messages;
 }
 
@@ -198,20 +190,18 @@ ObjectRefArray<AmiMessage> *AsteriskSystem::readTable(const char *rqname)
  */
 StringList *AsteriskSystem::executeCommand(const char *command)
 {
-   AmiMessage *request = new AmiMessage("Command");
+   auto request = make_shared<AmiMessage>("Command");
    request->setTag("Command", command);
-   AmiMessage *response = sendRequest(request);
-   if (response == NULL)
-      return NULL;
+   shared_ptr<AmiMessage> response = sendRequest(request);
+   if (response == nullptr)
+      return nullptr;
 
-   if (!response->isSuccess() || (response->getData() == NULL))
+   if (!response->isSuccess() || (response->getData() == nullptr))
    {
       const char *reason = response->getTag("Message");
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Request \"Command\" to %s failed (%hs)"), m_name, (reason != NULL) ? reason : "Unknown reason");
-      response->decRefCount();
-      return NULL;
+      return nullptr;
    }
    StringList *output = response->acquireData();
-   response->decRefCount();
    return output;
 }
