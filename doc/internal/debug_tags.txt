@@ -46,6 +46,8 @@ job.manager	Job manager
 
 housekeeper	Housekeeper messages
 
+logs		Server log access
+
 logwatch.*	Messages from log monitoring library
 
 nc.*		Notification channels

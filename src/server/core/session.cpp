@@ -11231,7 +11231,7 @@ void ClientSession::openServerLog(NXCPMessage *request)
 		msg.setField(VID_RCC, RCC_SUCCESS);
 		msg.setField(VID_LOG_HANDLE, handle);
 
-		LogHandle *log = AcquireLogHandleObject(this, handle);
+		shared_ptr<LogHandle> log = AcquireLogHandleObject(this, handle);
 		log->getColumnInfo(&msg);
 		log->release();
 	}
@@ -11270,11 +11270,11 @@ void ClientSession::queryServerLog(NXCPMessage *request)
 	msg.setId(request->getId());
 
 	int32_t handle = request->getFieldAsInt32(VID_LOG_HANDLE);
-	LogHandle *log = AcquireLogHandleObject(this, handle);
+	shared_ptr<LogHandle> log = AcquireLogHandleObject(this, handle);
 	if (log != nullptr)
 	{
 		INT64 rowCount;
-		msg.setField(VID_RCC, log->query(new LogFilter(*request, log), &rowCount, getUserId()) ? RCC_SUCCESS : RCC_DB_FAILURE);
+		msg.setField(VID_RCC, log->query(new LogFilter(*request, log.get()), &rowCount, getUserId()) ? RCC_SUCCESS : RCC_DB_FAILURE);
 		msg.setField(VID_NUM_ROWS, rowCount);
 		log->release();
 	}
@@ -11298,7 +11298,7 @@ void ClientSession::getServerLogQueryData(NXCPMessage *request)
 	msg.setId(request->getId());
 
 	int32_t handle = (int)request->getFieldAsUInt32(VID_LOG_HANDLE);
-	LogHandle *log = AcquireLogHandleObject(this, handle);
+	shared_ptr<LogHandle> log = AcquireLogHandleObject(this, handle);
 	if (log != nullptr)
 	{
 		INT64 startRow = request->getFieldAsUInt64(VID_START_ROW);
@@ -11347,7 +11347,7 @@ void ClientSession::getServerLogRecordDetails(NXCPMessage *request)
    msg.setId(request->getId());
 
    int32_t handle = request->getFieldAsInt32(VID_LOG_HANDLE);
-   LogHandle *log = AcquireLogHandleObject(this, handle);
+   shared_ptr<LogHandle> log = AcquireLogHandleObject(this, handle);
    if (log != nullptr)
    {
       log->getRecordDetails(request->getFieldAsInt64(VID_RECORD_ID), &msg);
@@ -11432,7 +11432,9 @@ void ClientSession::updateUsmCredentials(NXCPMessage *request)
       }
 	}
 	else
+	{
       rcc = RCC_ACCESS_DENIED;
+	}
 
    msg.setField(VID_RCC, rcc);
 	sendMessage(&msg);
@@ -11443,10 +11445,7 @@ void ClientSession::updateUsmCredentials(NXCPMessage *request)
  */
 void ClientSession::findNodeConnection(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-	msg.setId(request->getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
 	uint32_t objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
 	shared_ptr<NetObj> object = FindObjectById(objectId);
@@ -11463,7 +11462,7 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
 			{
 				localNodeId = objectId;
 				cp = static_cast<Node&>(*object).findConnectionPoint(&localIfId, localMacAddr, &type);
-				msg.setField(VID_RCC, RCC_SUCCESS);
+				response.setField(VID_RCC, RCC_SUCCESS);
 			}
 			else if (object->getObjectClass() == OBJECT_INTERFACE)
 			{
@@ -11471,7 +11470,7 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
 				localIfId = objectId;
 				memcpy(localMacAddr, static_cast<Interface&>(*object).getMacAddr().value(), MAC_ADDR_LENGTH);
 				cp = FindInterfaceConnectionPoint(MacAddress(localMacAddr, MAC_ADDR_LENGTH), &type);
-				msg.setField(VID_RCC, RCC_SUCCESS);
+				response.setField(VID_RCC, RCC_SUCCESS);
 			}
          else if (object->getObjectClass() == OBJECT_ACCESSPOINT)
 			{
@@ -11479,11 +11478,11 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
 				localIfId = 0;
 				memcpy(localMacAddr, static_cast<AccessPoint&>(*object).getMacAddr().value(), MAC_ADDR_LENGTH);
 				cp = FindInterfaceConnectionPoint(MacAddress(localMacAddr, MAC_ADDR_LENGTH), &type);
-				msg.setField(VID_RCC, RCC_SUCCESS);
+				response.setField(VID_RCC, RCC_SUCCESS);
 			}
 			else
 			{
-				msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+				response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
 
 			if (cp != nullptr)
@@ -11492,13 +11491,13 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
             shared_ptr<Node> node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getParentNode() : static_cast<AccessPoint&>(*cp).getParentNode();
             if (node != nullptr)
             {
-               msg.setField(VID_OBJECT_ID, node->getId());
-				   msg.setField(VID_INTERFACE_ID, cp->getId());
-               msg.setField(VID_IF_INDEX, (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getIfIndex() : (UINT32)0);
-				   msg.setField(VID_LOCAL_NODE_ID, localNodeId);
-				   msg.setField(VID_LOCAL_INTERFACE_ID, localIfId);
-				   msg.setField(VID_MAC_ADDR, localMacAddr, MAC_ADDR_LENGTH);
-				   msg.setField(VID_CONNECTION_TYPE, (UINT16)type);
+               response.setField(VID_OBJECT_ID, node->getId());
+				   response.setField(VID_INTERFACE_ID, cp->getId());
+               response.setField(VID_IF_INDEX, (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getIfIndex() : (UINT32)0);
+				   response.setField(VID_LOCAL_NODE_ID, localNodeId);
+				   response.setField(VID_LOCAL_INTERFACE_ID, localIfId);
+				   response.setField(VID_MAC_ADDR, localMacAddr, MAC_ADDR_LENGTH);
+				   response.setField(VID_CONNECTION_TYPE, (UINT16)type);
                if (cp->getObjectClass() == OBJECT_INTERFACE)
                   debugPrintf(5, _T("findNodeConnection: nodeId=%d ifId=%d ifName=%s ifIndex=%d"), node->getId(), cp->getId(), cp->getName(), static_cast<Interface&>(*cp).getIfIndex());
                else
@@ -11507,21 +11506,21 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
             else
             {
                debugPrintf(5, _T("findNodeConnection: cp=(null)"));
-      			msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+      			response.setField(VID_RCC, RCC_INTERNAL_ERROR);
             }
 			}
 		}
 		else
 		{
-			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+			response.setField(VID_RCC, RCC_ACCESS_DENIED);
 		}
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+		response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-	sendMessage(&msg);
+	sendMessage(&response);
 }
 
 /**
@@ -11529,12 +11528,12 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
  */
 void ClientSession::findMacAddress(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
 	MacAddress macAddr = request->getFieldAsMacAddress(VID_MAC_ADDR);
 	int type;
 	shared_ptr<NetObj> cp = FindInterfaceConnectionPoint(macAddr, &type);
-	msg.setField(VID_RCC, RCC_SUCCESS);
+	response.setField(VID_RCC, RCC_SUCCESS);
 
 	if (cp != nullptr)
 	{
@@ -11555,14 +11554,14 @@ void ClientSession::findMacAddress(NXCPMessage *request)
       shared_ptr<Node> node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getParentNode() : static_cast<AccessPoint&>(*cp).getParentNode();
       if (node != nullptr)
       {
-		   msg.setField(VID_OBJECT_ID, node->getId());
-		   msg.setField(VID_INTERFACE_ID, cp->getId());
-         msg.setField(VID_IF_INDEX, (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getIfIndex() : (uint32_t)0);
-	      msg.setField(VID_LOCAL_NODE_ID, localNodeId);
-		   msg.setField(VID_LOCAL_INTERFACE_ID, localIfId);
-		   msg.setField(VID_MAC_ADDR, macAddr);
-         msg.setField(VID_IP_ADDRESS, (localIf != nullptr) ? localIf->getIpAddressList()->getFirstUnicastAddress() : InetAddress::INVALID);
-		   msg.setField(VID_CONNECTION_TYPE, (UINT16)type);
+		   response.setField(VID_OBJECT_ID, node->getId());
+		   response.setField(VID_INTERFACE_ID, cp->getId());
+         response.setField(VID_IF_INDEX, (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getIfIndex() : (uint32_t)0);
+	      response.setField(VID_LOCAL_NODE_ID, localNodeId);
+		   response.setField(VID_LOCAL_INTERFACE_ID, localIfId);
+		   response.setField(VID_MAC_ADDR, macAddr);
+         response.setField(VID_IP_ADDRESS, (localIf != nullptr) ? localIf->getIpAddressList()->getFirstUnicastAddress() : InetAddress::INVALID);
+		   response.setField(VID_CONNECTION_TYPE, (UINT16)type);
          if (cp->getObjectClass() == OBJECT_INTERFACE)
             debugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifName=%s ifIndex=%d"), node->getId(), cp->getId(), cp->getName(), static_cast<Interface&>(*cp).getIfIndex());
          else
@@ -11570,7 +11569,7 @@ void ClientSession::findMacAddress(NXCPMessage *request)
       }
       else
       {
-		   msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+		   response.setField(VID_RCC, RCC_INTERNAL_ERROR);
       }
 	}
 	else
@@ -11579,25 +11578,25 @@ void ClientSession::findMacAddress(NXCPMessage *request)
       shared_ptr<Interface> localIf = FindInterfaceByMAC(macAddr);
       if (localIf != nullptr)
       {
-         msg.setField(VID_LOCAL_NODE_ID, localIf->getParentNodeId());
-         msg.setField(VID_LOCAL_INTERFACE_ID, localIf->getId());
-         msg.setField(VID_MAC_ADDR, macAddr);
-         msg.setField(VID_IP_ADDRESS, localIf->getIpAddressList()->getFirstUnicastAddress());
+         response.setField(VID_LOCAL_NODE_ID, localIf->getParentNodeId());
+         response.setField(VID_LOCAL_INTERFACE_ID, localIf->getId());
+         response.setField(VID_MAC_ADDR, macAddr);
+         response.setField(VID_IP_ADDRESS, localIf->getIpAddressList()->getFirstUnicastAddress());
 
          if (localIf->getPeerInterfaceId() != 0)
          {
-            msg.setField(VID_CONNECTION_TYPE, static_cast<uint16_t>(CP_TYPE_DIRECT));
-            msg.setField(VID_OBJECT_ID, localIf->getPeerNodeId());
+            response.setField(VID_CONNECTION_TYPE, static_cast<uint16_t>(CP_TYPE_DIRECT));
+            response.setField(VID_OBJECT_ID, localIf->getPeerNodeId());
             shared_ptr<NetObj> remoteIf = FindObjectById(localIf->getPeerInterfaceId(), OBJECT_INTERFACE);
             if (remoteIf != nullptr)
             {
-               msg.setField(VID_INTERFACE_ID, remoteIf->getId());
-               msg.setField(VID_IF_INDEX, static_cast<Interface&>(*remoteIf).getIfIndex());
+               response.setField(VID_INTERFACE_ID, remoteIf->getId());
+               response.setField(VID_IF_INDEX, static_cast<Interface&>(*remoteIf).getIfIndex());
             }
          }
          else
          {
-            msg.setField(VID_CONNECTION_TYPE, static_cast<uint16_t>(CP_TYPE_UNKNOWN));
+            response.setField(VID_CONNECTION_TYPE, static_cast<uint16_t>(CP_TYPE_UNKNOWN));
          }
 
          TCHAR buffer[64];
@@ -11606,7 +11605,7 @@ void ClientSession::findMacAddress(NXCPMessage *request)
       }
 	}
 
-	sendMessage(&msg);
+	sendMessage(&response);
 }
 
 /**

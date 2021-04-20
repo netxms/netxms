@@ -646,9 +646,9 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
    {
       TCHAR result[MAX_RESULT_LENGTH];
 #ifdef _WIN32
-      UINT32 rcc = ac->getParameter(_T("Process.Count(netxmsd.exe)"), result, MAX_RESULT_LENGTH);
+      uint32_t rcc = ac->getParameter(_T("Process.Count(netxmsd.exe)"), result, MAX_RESULT_LENGTH);
 #else
-      UINT32 rcc = ac->getParameter(_T("Process.Count(netxmsd)"), result, MAX_RESULT_LENGTH);
+      uint32_t rcc = ac->getParameter(_T("Process.Count(netxmsd)"), result, MAX_RESULT_LENGTH);
 #endif
       if (key != nullptr)
          RSA_free(key);
@@ -663,15 +663,8 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
          RSA_free(key);
    }
 
-   UINT16 port = (UINT16)ConfigReadInt(_T("ClientListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS);
-   SOCKET s = ConnectToHost(addr, port, 5000);
-   if (s != INVALID_SOCKET)
-   {
-      shutdown(s, SHUT_RDWR);
-      closesocket(s);
-      result = true;
-   }
-   return result;
+   uint16_t port = static_cast<uint16_t>(ConfigReadInt(_T("ClientListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS));
+   return TcpPing(addr, port, 5000) == TCP_PING_SUCCESS;
 }
 
 /**
@@ -966,7 +959,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	   return FALSE;
 	}
 
-   UINT32 lrt = ConfigReadULong(_T("LongRunningQueryThreshold"), 0);
+   uint32_t lrt = ConfigReadULong(_T("LongRunningQueryThreshold"), 0);
    if (lrt != 0)
    {
       DBSetLongRunningThreshold(lrt);
@@ -1147,7 +1140,6 @@ retry_db_lock:
    SetHDLinkEntryPoints(ResolveAlarmByHDRef, TerminateAlarmByHDRef);
    LoadHelpDeskLink();
 
-   InitLogAccess();
    FileUploadJob::init();
    InitMappingTables();
 

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ static inline bool IsIgnoredColumn(int type)
 /**
  * Constructor
  */
-LogHandle::LogHandle(const NXCORE_LOG *info) : RefCountObject()
+LogHandle::LogHandle(const NXCORE_LOG *info)
 {
 	m_log = info;
 	m_filter = nullptr;

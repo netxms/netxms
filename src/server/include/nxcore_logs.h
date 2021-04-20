@@ -172,7 +172,7 @@ public:
 /**
  * Log handle - object used to access log
  */
-class LogHandle : public RefCountObject
+class LogHandle
 {
 private:
    const NXCORE_LOG *m_log;
@@ -191,10 +191,10 @@ private:
 
 public:
    LogHandle(const NXCORE_LOG *log);
-   virtual ~LogHandle();
+   ~LogHandle();
 
    void lock() { MutexLock(m_lock); }
-   void release() { MutexUnlock(m_lock); decRefCount(); }
+   void release() { MutexUnlock(m_lock); }
 
    bool query(LogFilter *filter, int64_t *rowCount, uint32_t userId);
    Table *getData(int64_t startRow, int64_t numRows, bool refresh, uint32_t userId);
@@ -204,10 +204,9 @@ public:
 };
 
 // API functions
-void InitLogAccess();
 int32_t OpenLog(const TCHAR *name, ClientSession *session, uint32_t *rcc);
 uint32_t CloseLog(ClientSession *session, int32_t logHandle);
 void CloseAllLogsForSession(session_id_t sessionId);
-LogHandle *AcquireLogHandleObject(ClientSession *session, int32_t logHandle);
+shared_ptr<LogHandle> AcquireLogHandleObject(ClientSession *session, int32_t logHandle);
 
 #endif

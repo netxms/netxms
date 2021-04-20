@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 #include <nxcore_logs.h>
+
+#define DEBUG_TAG _T("logs")
 
 /**
  * Defined logs
@@ -133,48 +135,45 @@ static NXCORE_LOG s_logs[] =
 /**
  * Registered log handles
  */
-struct LOG_HANDLE_REGISTRATION
+struct LogHandleRegistration
 {
-	LogHandle *handle;
+   LogHandleRegistration *next;
+	shared_ptr<LogHandle> handle;
 	session_id_t sessionId;
-};
-int s_regListSize = 0;
-LOG_HANDLE_REGISTRATION *s_regList = nullptr;
-MUTEX s_regListMutex = INVALID_MUTEX_HANDLE;
+	int32_t id;
 
-/**
- * Init log access
- */
-void InitLogAccess()
-{
-	s_regListMutex = MutexCreate();
-}
+	LogHandleRegistration()
+	{
+	   next = nullptr;
+	   sessionId = -1;
+	   id = -1;
+	}
+
+   LogHandleRegistration(const shared_ptr<LogHandle>& h, session_id_t sid) : handle(h)
+   {
+      next = nullptr;
+      sessionId = sid;
+      id = -1;
+   }
+};
+static LogHandleRegistration *s_regList = new LogHandleRegistration();
+static MUTEX s_regListMutex = MutexCreate();
+static int32_t s_handleId = 0;
 
 /**
  * Register log handle
  */
-static int32_t RegisterLogHandle(LogHandle *handle, ClientSession *session)
+static int32_t RegisterLogHandle(const shared_ptr<LogHandle>& handle, ClientSession *session)
 {
-	int i;
-
+	LogHandleRegistration *r = new LogHandleRegistration(handle, session->getId());
 	MutexLock(s_regListMutex);
-
-	for(i = 0; i < s_regListSize; i++)
-		if (s_regList[i].handle == nullptr)
-			break;
-	if (i == s_regListSize)
-	{
-		s_regListSize += 10;
-		s_regList = MemReallocArray(s_regList, s_regListSize);
-      memset(&s_regList[i], 0, sizeof(LOG_HANDLE_REGISTRATION) * (s_regListSize - i));
-	}
-
-	s_regList[i].handle = handle;
-	s_regList[i].sessionId = session->getId();
-
+	r->next = s_regList->next;
+	s_regList->next = r;
+	r->id = s_handleId++;
 	MutexUnlock(s_regListMutex);
-   DbgPrintf(6, _T("RegisterLogHandle: handle object %p registered as %d"), handle, i);
-	return i;
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("RegisterLogHandle: handle object %p registered as %d"), handle, r->id);
+	return r->id;
 }
 
 /**
@@ -191,8 +190,7 @@ static int32_t OpenLogInternal(NXCORE_LOG *logs, const TCHAR *name, ClientSessio
 			if (session->checkSysAccessRights(logs[i].requiredAccess))
 			{
 				*rcc = RCC_SUCCESS;
-				LogHandle *handle = new LogHandle(&logs[i]);
-				return RegisterLogHandle(handle, session);
+				return RegisterLogHandle(make_shared<LogHandle>(&logs[i]), session);
 			}
 			else
 			{
@@ -231,26 +229,20 @@ int32_t OpenLog(const TCHAR *name, ClientSession *session, uint32_t *rcc)
 uint32_t CloseLog(ClientSession *session, int32_t logHandle)
 {
    uint32_t rcc = RCC_INVALID_LOG_HANDLE;
-   LogHandle *log = NULL;
-
-   DbgPrintf(6, _T("CloseLog: close request from session %d for handle %d"), session->getId(), logHandle);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("CloseLog: close request from session %d for handle %d"), session->getId(), logHandle);
 	MutexLock(s_regListMutex);
-
-	if ((logHandle >= 0) && (logHandle < s_regListSize) &&
-	    (s_regList[logHandle].sessionId == session->getId()) &&
-		 (s_regList[logHandle].handle != nullptr))
+	for(LogHandleRegistration *r = s_regList; r->next != nullptr; r = r->next)
 	{
-      log = s_regList[logHandle].handle;
-      s_regList[logHandle].handle = nullptr;
+	   LogHandleRegistration *n = r->next;
+	   if ((n->id == logHandle) && (n->sessionId == session->getId()))
+	   {
+	      r->next = n->next;
+	      delete n;
+	      rcc = RCC_SUCCESS;
+	      break;
+	   }
 	}
-
 	MutexUnlock(s_regListMutex);
-
-   if (log != nullptr)
-   {
-      log->decRefCount();
-      rcc = RCC_SUCCESS;
-   }
 	return rcc;
 }
 
@@ -259,14 +251,17 @@ uint32_t CloseLog(ClientSession *session, int32_t logHandle)
  */
 void CloseAllLogsForSession(session_id_t sessionId)
 {
-   nxlog_debug(6, _T("Closing all logs for session %d"), sessionId);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Closing all logs for session %d"), sessionId);
    MutexLock(s_regListMutex);
-   for(int i = 0; i < s_regListSize; i++)
+   for(LogHandleRegistration *r = s_regList; r->next != nullptr; r = r->next)
    {
-      if ((s_regList[i].sessionId == sessionId) && (s_regList[i].handle != nullptr))
+      LogHandleRegistration *n = r->next;
+      if (n->sessionId == sessionId)
       {
-         s_regList[i].handle->decRefCount();
-         s_regList[i].handle = nullptr;
+         r->next = n->next;
+         delete n;
+         if (r->next == nullptr)
+            break;
       }
    }
    MutexUnlock(s_regListMutex);
@@ -276,21 +271,20 @@ void CloseAllLogsForSession(session_id_t sessionId)
  * Acquire log handle object
  * Caller must call LogHandle::unlock() when it finish work with acquired object
  */
-LogHandle *AcquireLogHandleObject(ClientSession *session, int32_t logHandle)
+shared_ptr<LogHandle> AcquireLogHandleObject(ClientSession *session, int32_t logHandle)
 {
-	LogHandle *object = nullptr;
+	shared_ptr<LogHandle> object;
 
-   DbgPrintf(6, _T("AcquireLogHandleObject: request from session %d for handle %d"), session->getId(), logHandle);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("AcquireLogHandleObject: request from session %d for handle %d"), session->getId(), logHandle);
 	MutexLock(s_regListMutex);
-
-	if ((logHandle >= 0) && (logHandle < s_regListSize) &&
-	    (s_regList[logHandle].sessionId == session->getId()) &&
-		 (s_regList[logHandle].handle != nullptr))
-	{
-		object = s_regList[logHandle].handle;
-      object->incRefCount();
-	}
-
+   for(LogHandleRegistration *r = s_regList->next; r != nullptr; r = r->next)
+   {
+      if ((r->id == logHandle) && (r->sessionId == session->getId()))
+      {
+         object = r->handle;
+         break;
+      }
+   }
 	MutexUnlock(s_regListMutex);
 
    if (object != nullptr)
