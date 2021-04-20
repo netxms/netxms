@@ -396,6 +396,7 @@ public:
 
    StringMap *toStringMap() const;
    void toStringMap(StringMap *map) const;
+   void toString(StringBuffer *stringBuffer, const TCHAR *separator, bool withBrackets) const;
 
 	int size() const { return m_values->size(); }
 };

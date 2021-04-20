@@ -88,7 +88,7 @@ NXSL_Value *NXSL_HashMap::getValues() const
    for(int i = 0; i < values->size(); i++)
    {
       KeyValuePair<void> *p = values->get(i);
-      array->append(m_vm->createValue((const NXSL_Value *)p->value));
+      array->append(m_vm->createValue(static_cast<const NXSL_Value*>(p->value)));
    }
    delete values;
    return m_vm->createValue(array);
@@ -114,9 +114,45 @@ void NXSL_HashMap::toStringMap(StringMap *map) const
    for(int i = 0; i < values->size(); i++)
    {
       KeyValuePair<void> *p = values->get(i);
-      const TCHAR *s = ((NXSL_Value *)p->value)->getValueAsCString();
-      if (s != NULL)
+      const TCHAR *s = const_cast<NXSL_Value*>(static_cast<const NXSL_Value*>(p->value))->getValueAsCString();
+      if (s != nullptr)
          map->set(p->key, s);
    }
    delete values;
+}
+
+/**
+ * Convert hash map to string (recursively for array and hash map values)
+ */
+void NXSL_HashMap::toString(StringBuffer *stringBuffer, const TCHAR *separator, bool withBrackets) const
+{
+   if (withBrackets)
+      stringBuffer->append(_T("{"));
+
+   StructArray<KeyValuePair<void>> *values = m_values->toArray();
+   for(int i = 0; i < values->size(); i++)
+   {
+      KeyValuePair<void> *p = values->get(i);
+      if (!stringBuffer->isEmpty() && (!withBrackets || (i > 0)))
+         stringBuffer->append(separator);
+      stringBuffer->append(p->key);
+      stringBuffer->append(_T("="));
+      NXSL_Value *e = const_cast<NXSL_Value*>(static_cast<const NXSL_Value*>(p->value));
+      if (e->isArray())
+      {
+         e->getValueAsArray()->toString(stringBuffer, separator, withBrackets);
+      }
+      else if (e->isHashMap())
+      {
+         e->getValueAsHashMap()->toString(stringBuffer, separator, withBrackets);
+      }
+      else
+      {
+         stringBuffer->append(e->getValueAsCString());
+      }
+   }
+   delete values;
+
+   if (withBrackets)
+      stringBuffer->append(_T("}"));
 }
