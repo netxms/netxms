@@ -16,7 +16,7 @@ else
 fi
 
 ###############################################################################
-function show_usage_and_exit() {
+show_usage_and_exit() {
 	cat <<END
 NetXMS Reporting Server
 Copyright (c) 2021 Raden Solutions
