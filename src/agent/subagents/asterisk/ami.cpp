@@ -25,25 +25,25 @@
 /**
  * Default AMI message object constructor
  */
-AmiMessage::AmiMessage() : RefCountObject()
+AmiMessage::AmiMessage()
 {
    m_type = AMI_UNKNOWN;
    m_subType[0] = 0;
    m_id = 0;
-   m_tags = NULL;
-   m_data = NULL;
+   m_tags = nullptr;
+   m_data = nullptr;
 }
 
 /**
  * Constructor for request message
  */
-AmiMessage::AmiMessage(const char *subType) : RefCountObject()
+AmiMessage::AmiMessage(const char *subType)
 {
    m_type = AMI_ACTION;
    strlcpy(m_subType, subType, MAX_AMI_SUBTYPE_LEN);
    m_id = 0;
-   m_tags = NULL;
-   m_data = NULL;
+   m_tags = nullptr;
+   m_data = nullptr;
 }
 
 /**
@@ -52,7 +52,7 @@ AmiMessage::AmiMessage(const char *subType) : RefCountObject()
 AmiMessage::~AmiMessage()
 {
    AmiMessageTag *curr = m_tags;
-   while(curr != NULL)
+   while(curr != nullptr)
    {
       AmiMessageTag *next = curr->next;
       delete curr;
@@ -67,13 +67,13 @@ AmiMessage::~AmiMessage()
 AmiMessageTag *AmiMessage::findTag(const char *name)
 {
    AmiMessageTag *curr = m_tags;
-   while(curr != NULL)
+   while(curr != nullptr)
    {
       if (!stricmp(curr->name, name))
          return curr;
       curr = curr->next;
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -82,25 +82,25 @@ AmiMessageTag *AmiMessage::findTag(const char *name)
 const char *AmiMessage::getTag(const char *name)
 {
    AmiMessageTag *tag = findTag(name);
-   return (tag != NULL) ? tag->value : NULL;
+   return (tag != nullptr) ? tag->value : nullptr;
 }
 
 /**
  * Get tag value as 32 bit integer
  */
-INT32 AmiMessage::getTagAsInt32(const char *name, INT32 defaultValue)
+int32_t AmiMessage::getTagAsInt32(const char *name, int32_t defaultValue)
 {
    const char *v = getTag(name);
-   return (v != NULL) ? strtol(v, NULL, 0) : defaultValue;
+   return (v != nullptr) ? strtol(v, nullptr, 0) : defaultValue;
 }
 
 /**
  * Get tag value as 32 bit unsigned integer
  */
-UINT32 AmiMessage::getTagAsUInt32(const char *name, UINT32 defaultValue)
+uint32_t AmiMessage::getTagAsUInt32(const char *name, uint32_t defaultValue)
 {
    const char *v = getTag(name);
-   return (v != NULL) ? strtoul(v, NULL, 0) : defaultValue;
+   return (v != nullptr) ? strtoul(v, nullptr, 0) : defaultValue;
 }
 
 /**
@@ -109,7 +109,7 @@ UINT32 AmiMessage::getTagAsUInt32(const char *name, UINT32 defaultValue)
 double AmiMessage::getTagAsDouble(const char *name, double defaultValue)
 {
    const char *v = getTag(name);
-   return (v != NULL) ? strtod(v, NULL) : defaultValue;
+   return (v != nullptr) ? strtod(v, nullptr) : defaultValue;
 }
 
 /**
@@ -118,7 +118,7 @@ double AmiMessage::getTagAsDouble(const char *name, double defaultValue)
 void AmiMessage::setTag(const char *name, const char *value)
 {
    AmiMessageTag *tag = findTag(name);
-   if (tag != NULL)
+   if (tag != nullptr)
    {
       MemFree(tag->value);
       tag->value = strdup(value);
@@ -162,7 +162,7 @@ ByteStream *AmiMessage::serialize()
    }
 
    AmiMessageTag *tag = m_tags;
-   while(tag != NULL)
+   while(tag != nullptr)
    {
       out->write(tag->name, strlen(tag->name));
       out->write(": ", 2);
@@ -189,7 +189,7 @@ inline bool IsValidTag(char *line, char *separator)
 /**
  * Create AMI message object from network buffer
  */
-AmiMessage *AmiMessage::createFromNetwork(RingBuffer& buffer)
+shared_ptr<AmiMessage> AmiMessage::createFromNetwork(RingBuffer& buffer)
 {
    char line[4096];
    size_t linePos = 0;
@@ -211,7 +211,7 @@ AmiMessage *AmiMessage::createFromNetwork(RingBuffer& buffer)
          {
             // Empty CR/LF
             if ((m->m_type != AMI_RESPONSE) || stricmp(m->m_subType, "Follows") || (m->m_data != NULL))
-               return m;
+               return shared_ptr<AmiMessage>(m);
             dataMode = true;   // CLI data will follow
             m->m_data = new StringList();
          }
@@ -230,7 +230,7 @@ AmiMessage *AmiMessage::createFromNetwork(RingBuffer& buffer)
          else
          {
             char *s = strchr(line, ':');
-            if ((s != NULL) && IsValidTag(line, s))
+            if ((s != nullptr) && IsValidTag(line, s))
             {
                *s = 0;
                s++;
@@ -253,14 +253,14 @@ AmiMessage *AmiMessage::createFromNetwork(RingBuffer& buffer)
                }
                else if (!stricmp(line, "ActionID"))
                {
-                  m->m_id = strtoll(s, NULL, 0);
+                  m->m_id = strtoll(s, nullptr, 0);
                }
                else
                {
                   m->m_tags = new AmiMessageTag(line, s, m->m_tags);
                }
             }
-            else if ((m->m_type == AMI_RESPONSE) && !stricmp(m->m_subType, "Follows") && (m->m_data == NULL))
+            else if ((m->m_type == AMI_RESPONSE) && !stricmp(m->m_subType, "Follows") && (m->m_data == nullptr))
             {
                m->m_data = new StringList();
                if (stricmp(line, "--END COMMAND--"))
@@ -274,17 +274,8 @@ AmiMessage *AmiMessage::createFromNetwork(RingBuffer& buffer)
       }
    }
    buffer.restorePos();
-   m->decRefCount();
-   return NULL;
-}
-
-/**
- * AMI connector thread starter
- */
-THREAD_RESULT THREAD_CALL AsteriskSystem::connectorThreadStarter(void *arg)
-{
-   static_cast<AsteriskSystem*>(arg)->connectorThread();
-   return THREAD_OK;
+   delete m;
+   return nullptr;
 }
 
 /**
@@ -315,11 +306,10 @@ void AsteriskSystem::connectorThread()
                   break;
                m_networkBuffer.write(data, bytes);
 
-               AmiMessage *msg;
                while(true)
                {
-                  AmiMessage *msg = readMessage();
-                  if (msg == NULL)
+                  shared_ptr<AmiMessage> msg = readMessage();
+                  if (msg == nullptr)
                      break;
                   if (!processMessage(msg))
                      break;
@@ -369,8 +359,8 @@ static EnumerationCallbackResult StartRegistrationTest(const TCHAR *name, const 
  */
 void AsteriskSystem::start()
 {
-   m_connectorThread = ThreadCreateEx(AsteriskSystem::connectorThreadStarter, 0, this);
-   m_registrationTests.forEach(StartRegistrationTest, NULL);
+   m_connectorThread = ThreadCreateEx(this, &AsteriskSystem::connectorThread);
+   m_registrationTests.forEach(StartRegistrationTest, nullptr);
 }
 
 /**
@@ -407,7 +397,7 @@ void AsteriskSystem::reset()
 /**
  * Process AMi message
  */
-bool AsteriskSystem::processMessage(AmiMessage *msg)
+bool AsteriskSystem::processMessage(const shared_ptr<AmiMessage>& msg)
 {
    bool success = true;
    nxlog_debug_tag(DEBUG_TAG, 6, _T("AMI message received from %s: type=%d subType=%hs id=") INT64_FMT, m_name, msg->getType(), msg->getSubType(), msg->getId());
@@ -429,7 +419,6 @@ bool AsteriskSystem::processMessage(AmiMessage *msg)
    else if ((msg->getType() == AMI_RESPONSE) && (msg->getId() == m_activeRequestId))
    {
       m_response = msg;
-      msg->incRefCount();
       ConditionSet(m_requestCompletion);
    }
    else if (msg->getType() == AMI_EVENT)
@@ -447,7 +436,6 @@ bool AsteriskSystem::processMessage(AmiMessage *msg)
          processRTCP(msg);
    }
 
-   msg->decRefCount();
    return success;
 }
 
@@ -457,12 +445,12 @@ bool AsteriskSystem::processMessage(AmiMessage *msg)
 class ListCollector : public AmiEventListener
 {
 private:
-   ObjectRefArray<AmiMessage> *m_messages;
-   INT64 m_requestId;
+   SharedObjectArray<AmiMessage> *m_messages;
+   int64_t m_requestId;
    CONDITION m_completed;
 
 public:
-   ListCollector(ObjectRefArray<AmiMessage> *messages, INT64 requestId)
+   ListCollector(SharedObjectArray<AmiMessage> *messages, int64_t requestId)
    {
       m_messages = messages;
       m_requestId = requestId;
@@ -474,9 +462,9 @@ public:
       ConditionDestroy(m_completed);
    }
 
-   virtual void processEvent(AmiMessage *event);
+   virtual void processEvent(const shared_ptr<AmiMessage>& event) override;
 
-   bool waitForCompletion(UINT32 timeout)
+   bool waitForCompletion(uint32_t timeout)
    {
       return ConditionWait(m_completed, timeout);
    }
@@ -485,19 +473,18 @@ public:
 /**
  * Process event
  */
-void ListCollector::processEvent(AmiMessage *event)
+void ListCollector::processEvent(const shared_ptr<AmiMessage>& event)
 {
    if (m_requestId != event->getId())
       return;
 
    const char *v = event->getTag("EventList");
-   if ((v != NULL) && !stricmp(v, "Complete"))
+   if ((v != nullptr) && !stricmp(v, "Complete"))
    {
       ConditionSet(m_completed);
       return;
    }
 
-   event->incRefCount();
    m_messages->add(event);
 }
 
@@ -505,18 +492,15 @@ void ListCollector::processEvent(AmiMessage *event)
  * Send AMI request and wait for response.
  * Will decrease reference count of request
  */
-AmiMessage *AsteriskSystem::sendRequest(AmiMessage *request, ObjectRefArray<AmiMessage> *list, UINT32 timeout)
+shared_ptr<AmiMessage> AsteriskSystem::sendRequest(const shared_ptr<AmiMessage>& request, SharedObjectArray<AmiMessage> *list, uint32_t timeout)
 {
    if (!m_amiSessionReady)
-   {
-      request->decRefCount();
-      return NULL;
-   }
+      return nullptr;
 
    if (timeout == 0)
       timeout = m_amiTimeout;
 
-   AmiMessage *response = NULL;
+   shared_ptr<AmiMessage> response;
    MutexLock(m_requestLock);
    ConditionReset(m_requestCompletion);
 
@@ -524,8 +508,8 @@ AmiMessage *AsteriskSystem::sendRequest(AmiMessage *request, ObjectRefArray<AmiM
    request->setId(m_activeRequestId);
    ByteStream *serializedMessage = request->serialize();
 
-   ListCollector *collector = NULL;
-   if (list != NULL)
+   ListCollector *collector = nullptr;
+   if (list != nullptr)
    {
       collector = new ListCollector(list, m_activeRequestId);
       addEventListener(collector);
@@ -538,7 +522,7 @@ AmiMessage *AsteriskSystem::sendRequest(AmiMessage *request, ObjectRefArray<AmiM
       if (ConditionWait(m_requestCompletion, timeout))
       {
          response = m_response;
-         m_response = NULL;
+         m_response.reset();
       }
       else
       {
@@ -548,10 +532,10 @@ AmiMessage *AsteriskSystem::sendRequest(AmiMessage *request, ObjectRefArray<AmiM
    }
    delete serializedMessage;
 
-   if (collector != NULL)
+   if (collector != nullptr)
    {
       bool success;
-      if ((response != NULL) && response->isSuccess())
+      if ((response != nullptr) && response->isSuccess())
       {
          success = collector->waitForCompletion(timeout);
       }
@@ -565,8 +549,6 @@ AmiMessage *AsteriskSystem::sendRequest(AmiMessage *request, ObjectRefArray<AmiM
       // Clear partially collected messages in case of error
       if (!success)
       {
-         for(int i = 0; i < list->size(); i++)
-            list->get(i)->decRefCount();
          list->clear();
       }
    }
@@ -574,22 +556,17 @@ AmiMessage *AsteriskSystem::sendRequest(AmiMessage *request, ObjectRefArray<AmiM
    m_activeRequestId = 0;
    MutexUnlock(m_requestLock);
 
-   request->decRefCount();
    return response;
 }
 
 /**
  * Send simple AMI request - response message is analyzed and dropped
  */
-bool AsteriskSystem::sendSimpleRequest(AmiMessage *request)
+bool AsteriskSystem::sendSimpleRequest(const shared_ptr<AmiMessage>& request)
 {
-   request->incRefCount(); // prevent destruction by sendRequest()
-   AmiMessage *response = sendRequest(request);
-   if (response == NULL)
-   {
-      request->decRefCount();
+   shared_ptr<AmiMessage> response = sendRequest(request);
+   if (response == nullptr)
       return false;
-   }
 
    bool success = response->isSuccess();
    if (!success)
@@ -597,7 +574,5 @@ bool AsteriskSystem::sendSimpleRequest(AmiMessage *request)
       const char *reason = response->getTag("Message");
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Request \"%hs\" to %s failed (%hs)"), request->getSubType(), m_name, (reason != NULL) ? reason : "Unknown reason");
    }
-   request->decRefCount();
-   response->decRefCount();
    return success;
 }

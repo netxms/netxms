@@ -29,18 +29,18 @@ void AsteriskSystem::setupEventFilters()
 {
    ThreadSleepMs(100);
 
-   AmiMessage *request = new AmiMessage("Events");
+   auto request = make_shared<AmiMessage>("Events");
    request->setTag("EventMask", "call,reporting");
    sendSimpleRequest(request);
 
    // Try to setup filter for specific events (may fail if user does not have "system" permission)
    // https://wiki.asterisk.org/wiki/display/AST/Asterisk+16+ManagerAction_Filter
-   request = new AmiMessage("Filter");
+   request = make_shared<AmiMessage>("Filter");
    request->setTag("Operation", "Add");
    request->setTag("Filter", "Event: Hangup");
    sendSimpleRequest(request);
 
-   request = new AmiMessage("Filter");
+   request = make_shared<AmiMessage>("Filter");
    request->setTag("Operation", "Add");
    request->setTag("Filter", "Event: RTCPReceived");
    sendSimpleRequest(request);
@@ -62,7 +62,7 @@ const EventCounters *AsteriskSystem::getPeerEventCounters(const TCHAR *peer) con
 /**
  * Process hangup event
  */
-void AsteriskSystem::processHangup(AmiMessage *msg)
+void AsteriskSystem::processHangup(const shared_ptr<AmiMessage>& msg)
 {
    const char *channel = msg->getTag("Channel");
 
@@ -73,7 +73,7 @@ void AsteriskSystem::processHangup(AmiMessage *msg)
    {
       MutexLock(m_eventCounterLock);
       peerEventCounters = m_peerEventCounters.get(peer);
-      if (peerEventCounters == NULL)
+      if (peerEventCounters == nullptr)
       {
          peerEventCounters = new EventCounters;
          memset(peerEventCounters, 0, sizeof(EventCounters));
@@ -83,7 +83,7 @@ void AsteriskSystem::processHangup(AmiMessage *msg)
    }
    else
    {
-      peerEventCounters = NULL;
+      peerEventCounters = nullptr;
    }
 
    switch(msg->getTagAsInt32("Cause"))
@@ -91,34 +91,34 @@ void AsteriskSystem::processHangup(AmiMessage *msg)
       case 2:
       case 3:
          m_globalEventCounters.noRoute++;
-         if (peerEventCounters != NULL)
+         if (peerEventCounters != nullptr)
             peerEventCounters->noRoute++;
          break;
       case 20:
          m_globalEventCounters.subscriberAbsent++;
-         if (peerEventCounters != NULL)
+         if (peerEventCounters != nullptr)
             peerEventCounters->subscriberAbsent++;
          break;
       case 21:
          m_globalEventCounters.callRejected++;
-         if (peerEventCounters != NULL)
+         if (peerEventCounters != nullptr)
             peerEventCounters->callRejected++;
          break;
       case 34:
       case 44:
          m_globalEventCounters.channelUnavailable++;
-         if (peerEventCounters != NULL)
+         if (peerEventCounters != nullptr)
             peerEventCounters->channelUnavailable++;
          break;
       case 42:
          m_globalEventCounters.congestion++;
-         if (peerEventCounters != NULL)
+         if (peerEventCounters != nullptr)
             peerEventCounters->congestion++;
          break;
       case 52:
       case 54:
          m_globalEventCounters.callBarred++;
-         if (peerEventCounters != NULL)
+         if (peerEventCounters != nullptr)
             peerEventCounters->callBarred++;
          break;
    }
@@ -170,22 +170,22 @@ LONG H_PeerEventCounters(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
    switch(*arg)
    {
       case 'A':
-         ret_uint64(value, (cnt != NULL) ? cnt->subscriberAbsent : 0);
+         ret_uint64(value, (cnt != nullptr) ? cnt->subscriberAbsent : 0);
          break;
       case 'B':
-         ret_uint64(value, (cnt != NULL) ? cnt->callBarred : 0);
+         ret_uint64(value, (cnt != nullptr) ? cnt->callBarred : 0);
          break;
       case 'C':
-         ret_uint64(value, (cnt != NULL) ? cnt->congestion : 0);
+         ret_uint64(value, (cnt != nullptr) ? cnt->congestion : 0);
          break;
       case 'N':
-         ret_uint64(value, (cnt != NULL) ? cnt->noRoute : 0);
+         ret_uint64(value, (cnt != nullptr) ? cnt->noRoute : 0);
          break;
       case 'R':
-         ret_uint64(value, (cnt != NULL) ? cnt->callRejected : 0);
+         ret_uint64(value, (cnt != nullptr) ? cnt->callRejected : 0);
          break;
       case 'U':
-         ret_uint64(value, (cnt != NULL) ? cnt->channelUnavailable : 0);
+         ret_uint64(value, (cnt != nullptr) ? cnt->channelUnavailable : 0);
          break;
    }
    return SYSINFO_RC_SUCCESS;

@@ -1,6 +1,6 @@
 /*
 ** NetXMS Asterisk subagent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ LONG H_TaskProcessorTable(const TCHAR *param, const TCHAR *arg, Table *value, Ab
 /**
  * Thread pool
  */
-ThreadPool *g_asteriskThreadPool = NULL;
+ThreadPool *g_asteriskThreadPool = nullptr;
 
 /**
  * Configured systems
@@ -119,7 +119,7 @@ static LONG H_CommandOutput(const TCHAR *param, const TCHAR *arg, StringList *va
    GET_ARGUMENT_A(1, command, 256);
 
    StringList *output = sys->executeCommand(command);
-   if (output == NULL)
+   if (output == nullptr)
       return SYSINFO_RC_ERROR;
 
    value->addAll(output);
@@ -132,13 +132,13 @@ static LONG H_CommandOutput(const TCHAR *param, const TCHAR *arg, StringList *va
  */
 static bool SubagentInit(Config *config)
 {
-   ObjectArray<ConfigEntry> *systems = config->getSubEntries(_T("/Asterisk/Systems"), NULL);
-   if (systems != NULL)
+   ObjectArray<ConfigEntry> *systems = config->getSubEntries(_T("/Asterisk/Systems"), nullptr);
+   if (systems != nullptr)
    {
       for(int i = 0; i < systems->size(); i++)
       {
          AsteriskSystem *s = AsteriskSystem::createFromConfig(systems->get(i), false);
-         if (s != NULL)
+         if (s != nullptr)
          {
             s_systems.add(s);
             s_indexByName.set(s->getName(), s);
@@ -154,11 +154,11 @@ static bool SubagentInit(Config *config)
 
    // Create default "LOCAL" system if explicitly enabled or other systems are not defined
    ConfigEntry *root = config->getEntry(_T("/Asterisk"));
-   if ((root != NULL) &&
-       (s_systems.isEmpty() || (root->getSubEntryValue(_T("Login")) != NULL) || (root->getSubEntryValue(_T("Port")) != NULL)))
+   if ((root != nullptr) &&
+       (s_systems.isEmpty() || (root->getSubEntryValue(_T("Login")) != nullptr) || (root->getSubEntryValue(_T("Port")) != nullptr)))
    {
       AsteriskSystem *s = AsteriskSystem::createFromConfig(root, true);
-      if (s != NULL)
+      if (s != nullptr)
       {
          s_systems.add(s);
          s_indexByName.set(s->getName(), s);
@@ -193,10 +193,10 @@ static void SubagentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ _T("Asterisk.AMI.Status"), H_AMIStatus, NULL, DCI_DT_INT, _T("Asterisk: AMI connection status") },
-   { _T("Asterisk.AMI.Status(*)"), H_AMIStatus, NULL, DCI_DT_INT, _T("Asterisk: AMI connection status") },
-   { _T("Asterisk.AMI.Version"), H_AMIVersion, NULL, DCI_DT_STRING, _T("Asterisk: AMI version") },
-   { _T("Asterisk.AMI.Version(*)"), H_AMIVersion, NULL, DCI_DT_STRING, _T("Asterisk: AMI version") },
+	{ _T("Asterisk.AMI.Status"), H_AMIStatus, nullptr, DCI_DT_INT, _T("Asterisk: AMI connection status") },
+   { _T("Asterisk.AMI.Status(*)"), H_AMIStatus, nullptr, DCI_DT_INT, _T("Asterisk: AMI connection status") },
+   { _T("Asterisk.AMI.Version"), H_AMIVersion, nullptr, DCI_DT_STRING, _T("Asterisk: AMI version") },
+   { _T("Asterisk.AMI.Version(*)"), H_AMIVersion, nullptr, DCI_DT_STRING, _T("Asterisk: AMI version") },
    { _T("Asterisk.Channels.Active"), H_ChannelStats, _T("A"), DCI_DT_UINT, _T("Asterisk: active channels") },
    { _T("Asterisk.Channels.Active(*)"), H_ChannelStats, _T("A"), DCI_DT_UINT, _T("Asterisk: active channels") },
    { _T("Asterisk.Channels.Busy"), H_ChannelStats, _T("B"), DCI_DT_UINT, _T("Asterisk: busy channels") },
@@ -211,8 +211,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Asterisk.Channels.Ringing(*)"), H_ChannelStats, _T("r"), DCI_DT_UINT, _T("Asterisk: ringing channels") },
    { _T("Asterisk.Channels.Up"), H_ChannelStats, _T("U"), DCI_DT_UINT, _T("Asterisk: up channels") },
    { _T("Asterisk.Channels.Up(*)"), H_ChannelStats, _T("U"), DCI_DT_UINT, _T("Asterisk: up channels") },
-   { _T("Asterisk.CurrentCalls"), H_CurrentCalls, NULL, DCI_DT_UINT, _T("Asterisk: current calls") },
-   { _T("Asterisk.CurrentCalls(*)"), H_CurrentCalls, NULL, DCI_DT_UINT, _T("Asterisk: current calls") },
+   { _T("Asterisk.CurrentCalls"), H_CurrentCalls, nullptr, DCI_DT_UINT, _T("Asterisk: current calls") },
+   { _T("Asterisk.CurrentCalls(*)"), H_CurrentCalls, nullptr, DCI_DT_UINT, _T("Asterisk: current calls") },
    { _T("Asterisk.Events.CallBarred"), H_GlobalEventCounters, _T("B"), DCI_DT_COUNTER64, _T("Asterisk: call barred events") },
    { _T("Asterisk.Events.CallBarred(*)"), H_GlobalEventCounters, _T("B"), DCI_DT_COUNTER64, _T("Asterisk: call barred events") },
    { _T("Asterisk.Events.CallRejected"), H_GlobalEventCounters, _T("R"), DCI_DT_COUNTER64, _T("Asterisk: call rejected events") },
@@ -243,7 +243,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Asterisk.Peer.RTCP.MinJitter(*)"), H_PeerRTCPStats, _T("Jm"), DCI_DT_INT, _T("Asterisk: peer {instance} minimum jitter") },
    { _T("Asterisk.Peer.RTCP.MinPacketLoss(*)"), H_PeerRTCPStats, _T("Pm"), DCI_DT_INT, _T("Asterisk: peer {instance} minimum packet loss") },
    { _T("Asterisk.Peer.RTCP.MinRTT(*)"), H_PeerRTCPStats, _T("Rm"), DCI_DT_INT, _T("Asterisk: peer {instance} minimum RTT") },
-   { _T("Asterisk.SIP.Peer.Details(*)"), H_SIPPeerDetails, NULL, DCI_DT_STRING, _T("Asterisk: SIP peer {instance} detailed information") },
+   { _T("Asterisk.SIP.Peer.Details(*)"), H_SIPPeerDetails, nullptr, DCI_DT_STRING, _T("Asterisk: SIP peer {instance} detailed information") },
    { _T("Asterisk.SIP.Peer.IPAddress(*)"), H_SIPPeerDetails, _T("I"), DCI_DT_STRING, _T("Asterisk: SIP peer {instance} IP address") },
    { _T("Asterisk.SIP.Peer.Status(*)"), H_SIPPeerDetails, _T("S"), DCI_DT_STRING, _T("Asterisk: SIP peer {instance} status") },
    { _T("Asterisk.SIP.Peer.Type(*)"), H_SIPPeerDetails, _T("T"), DCI_DT_STRING, _T("Asterisk: SIP peer {instance} type") },
@@ -258,14 +258,14 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Asterisk.SIP.RegistrationTest.Status(*)"), H_SIPRegistrationTestData, _T("S"), DCI_DT_INT, _T("Asterisk: SIP client registration test {instance} status") },
    { _T("Asterisk.SIP.RegistrationTest.StatusText(*)"), H_SIPRegistrationTestData, _T("s"), DCI_DT_STRING, _T("Asterisk: SIP client registration test {instance} status text") },
    { _T("Asterisk.SIP.RegistrationTest.Timestamp(*)"), H_SIPRegistrationTestData, _T("T"), DCI_DT_INT64, _T("Asterisk: SIP client registration test {instance} timestamp") },
-   { _T("Asterisk.SIP.TestRegistration(*)"), H_SIPTestRegistration, NULL, DCI_DT_INT, _T("Asterisk: ad-hoc SIP client registration test") },
+   { _T("Asterisk.SIP.TestRegistration(*)"), H_SIPTestRegistration, nullptr, DCI_DT_INT, _T("Asterisk: ad-hoc SIP client registration test") },
    { _T("Asterisk.TaskProcessor.HighWatermark(*)"), H_TaskProcessorDetails, _T("H"), DCI_DT_UINT, _T("Asterisk: task processor {instance} high watermark") },
    { _T("Asterisk.TaskProcessor.LowWatermark(*)"), H_TaskProcessorDetails, _T("L"), DCI_DT_UINT, _T("Asterisk: task processor {instance} low watermark") },
    { _T("Asterisk.TaskProcessor.MaxDepth(*)"), H_TaskProcessorDetails, _T("M"), DCI_DT_UINT, _T("Asterisk: task processor {instance} max queue depth") },
    { _T("Asterisk.TaskProcessor.Processed(*)"), H_TaskProcessorDetails, _T("P"), DCI_DT_COUNTER64, _T("Asterisk: task processor {instance} processed tasks") },
    { _T("Asterisk.TaskProcessor.Queued(*)"), H_TaskProcessorDetails, _T("Q"), DCI_DT_UINT, _T("Asterisk: task processor {instance} queued tasks") },
-   { _T("Asterisk.Version"), H_AsteriskVersion, NULL, DCI_DT_STRING, _T("Asterisk: version") },
-   { _T("Asterisk.Version(*)"), H_AsteriskVersion, NULL, DCI_DT_STRING, _T("Asterisk: version") }
+   { _T("Asterisk.Version"), H_AsteriskVersion, nullptr, DCI_DT_STRING, _T("Asterisk: version") },
+   { _T("Asterisk.Version(*)"), H_AsteriskVersion, nullptr, DCI_DT_STRING, _T("Asterisk: version") }
 };
 
 /**
@@ -273,16 +273,16 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-	{ _T("Asterisk.Channels"), H_ChannelList, NULL },
-   { _T("Asterisk.Channels(*)"), H_ChannelList, NULL },
-   { _T("Asterisk.CommandOutput(*)"), H_CommandOutput, NULL },
-   { _T("Asterisk.SIP.Peers"), H_SIPPeerList, NULL },
-   { _T("Asterisk.SIP.Peers(*)"), H_SIPPeerList, NULL },
-   { _T("Asterisk.SIP.RegistrationTests"), H_SIPRegistrationTestList, NULL },
-   { _T("Asterisk.SIP.RegistrationTests(*)"), H_SIPRegistrationTestList, NULL },
-   { _T("Asterisk.Systems"), H_SystemList, NULL },
-   { _T("Asterisk.TaskProcessors"), H_TaskProcessorList, NULL },
-   { _T("Asterisk.TaskProcessors(*)"), H_TaskProcessorList, NULL }
+	{ _T("Asterisk.Channels"), H_ChannelList, nullptr },
+   { _T("Asterisk.Channels(*)"), H_ChannelList, nullptr },
+   { _T("Asterisk.CommandOutput(*)"), H_CommandOutput, nullptr },
+   { _T("Asterisk.SIP.Peers"), H_SIPPeerList, nullptr },
+   { _T("Asterisk.SIP.Peers(*)"), H_SIPPeerList, nullptr },
+   { _T("Asterisk.SIP.RegistrationTests"), H_SIPRegistrationTestList, nullptr },
+   { _T("Asterisk.SIP.RegistrationTests(*)"), H_SIPRegistrationTestList, nullptr },
+   { _T("Asterisk.Systems"), H_SystemList, nullptr },
+   { _T("Asterisk.TaskProcessors"), H_TaskProcessorList, nullptr },
+   { _T("Asterisk.TaskProcessors(*)"), H_TaskProcessorList, nullptr }
 };
 
 /**

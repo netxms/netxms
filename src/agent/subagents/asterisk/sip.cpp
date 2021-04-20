@@ -1,6 +1,6 @@
 /*
 ** NetXMS Asterisk subagent
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,14 +29,14 @@ LONG H_SIPPeerList(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
 {
    GET_ASTERISK_SYSTEM(0);
 
-   ObjectRefArray<AmiMessage> *messages = sys->readTable("SIPpeers");
-   if (messages == NULL)
+   SharedObjectArray<AmiMessage> *messages = sys->readTable("SIPpeers");
+   if (messages == nullptr)
       return SYSINFO_RC_ERROR;
 
    for(int i = 0; i < messages->size(); i++)
    {
       const char *name = messages->get(i)->getTag("ObjectName");
-      if (name != NULL)
+      if (name != nullptr)
          value->addMBString(name);
    }
 
@@ -51,8 +51,8 @@ LONG H_SIPPeerTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
 {
    GET_ASTERISK_SYSTEM(0);
 
-   ObjectRefArray<AmiMessage> *messages = sys->readTable("SIPpeers");
-   if (messages == NULL)
+   SharedObjectArray<AmiMessage> *messages = sys->readTable("SIPpeers");
+   if (messages == nullptr)
       return SYSINFO_RC_ERROR;
 
    value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
@@ -75,7 +75,7 @@ LONG H_SIPPeerTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
    {
       AmiMessage *msg = messages->get(i);
       const char *name = msg->getTag("ObjectName");
-      if (name == NULL)
+      if (name == nullptr)
          continue;
 
       value->addRow();
@@ -107,8 +107,8 @@ LONG H_SIPPeerStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
 {
    GET_ASTERISK_SYSTEM(0);
 
-   ObjectRefArray<AmiMessage> *messages = sys->readTable("SIPpeers");
-   if (messages == NULL)
+   SharedObjectArray<AmiMessage> *messages = sys->readTable("SIPpeers");
+   if (messages == nullptr)
       return SYSINFO_RC_ERROR;
 
    if (*arg == 'T')
@@ -121,10 +121,10 @@ LONG H_SIPPeerStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
       for(int i = 0; i < messages->size(); i++)
       {
          AmiMessage *msg = messages->get(i);
-         if (msg->getTag("ObjectName") == NULL)
+         if (msg->getTag("ObjectName") == nullptr)
             continue;
          const char *status = msg->getTag("Status");
-         if ((status == NULL) || !stricmp(status, "Unknown"))
+         if ((status == nullptr) || !stricmp(status, "Unknown"))
          {
             unknown++;
          }
@@ -171,38 +171,31 @@ LONG H_SIPPeerDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
    char peerId[128];
    GET_ARGUMENT_A(1, peerId, 128);
 
-   AmiMessage *request = new AmiMessage("SIPshowpeer");
+   auto request = make_shared<AmiMessage>("SIPshowpeer");
    request->setTag("Peer", peerId);
 
-   AmiMessage *response = sys->sendRequest(request);
-   if (response == NULL)
+   shared_ptr<AmiMessage> response = sys->sendRequest(request);
+   if (response == nullptr)
       return SYSINFO_RC_ERROR;
 
    if (!response->isSuccess())
    {
       const char *reason = response->getTag("Message");
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Request \"SIPshowpeer\" to %s failed (%hs)"), sys->getName(), (reason != NULL) ? reason : "Unknown reason");
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Request \"SIPshowpeer\" to %s failed (%hs)"), sys->getName(), (reason != nullptr) ? reason : "Unknown reason");
       bool unknownPeer = RegexpMatchA(reason, "Peer [^ ]+ not found", false);
-      response->decRefCount();
       return unknownPeer ? SYSINFO_RC_NO_SUCH_INSTANCE : SYSINFO_RC_ERROR;
    }
 
-   if (arg == NULL)
+   if (arg == nullptr)
    {
       // Direct tag access
       char tagName[128];
       if (!AgentGetParameterArgA(param, 3, tagName, 128))
-      {
-         response->decRefCount();
          return SYSINFO_RC_UNSUPPORTED;
-      }
 
       const char *tagValue = response->getTag(tagName);
-      if (tagValue == NULL)
-      {
-         response->decRefCount();
+      if (tagValue == nullptr)
          return SYSINFO_RC_UNSUPPORTED;
-      }
 
       ret_mbstring(value, tagValue);
    }
@@ -232,15 +225,11 @@ LONG H_SIPPeerDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
       }
 
       const char *tagValue = response->getTag(tagName);
-      if (tagValue == NULL)
-      {
-         response->decRefCount();
+      if (tagValue == nullptr)
          return SYSINFO_RC_UNSUPPORTED;
-      }
 
       ret_mbstring(value, tagValue);
    }
 
-   response->decRefCount();
    return SYSINFO_RC_SUCCESS;
 }

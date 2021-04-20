@@ -1,6 +1,6 @@
 /*
 ** NetXMS Asterisk subagent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,10 +25,10 @@
 /**
  * Process "RTCP Received" event
  */
-void AsteriskSystem::processRTCP(AmiMessage *msg)
+void AsteriskSystem::processRTCP(const shared_ptr<AmiMessage>& msg)
 {
    const char *channel = msg->getTag("Channel");
-   if ((channel == NULL) || (*channel == 0))
+   if ((channel == nullptr) || (*channel == 0))
       return;
 
    if (msg->getTagAsInt32("ReportCount") == 0)
@@ -42,14 +42,14 @@ void AsteriskSystem::processRTCP(AmiMessage *msg)
 #endif
 
    RTCPData *data = m_rtcpData.get(channelKey);
-   if (data != NULL)
+   if (data != nullptr)
    {
       data->jitter = msg->getTagAsUInt32("Report0IAJitter");
-      UINT64 packetLoss = static_cast<UINT64>(data->packetLoss) * data->count + msg->getTagAsUInt32("Report0FractionLost");
-      UINT64 rtt = static_cast<UINT64>(data->rtt) * data->count + static_cast<UINT64>(msg->getTagAsDouble("RTT") * 1000);
+      uint64_t packetLoss = static_cast<uint64_t>(data->packetLoss) * data->count + msg->getTagAsUInt32("Report0FractionLost");
+      uint64_t rtt = static_cast<uint64_t>(data->rtt) * data->count + static_cast<uint64_t>(msg->getTagAsDouble("RTT") * 1000);
       data->count++;
-      data->packetLoss = static_cast<UINT32>(packetLoss / data->count);
-      data->rtt = static_cast<UINT32>(rtt / data->count);
+      data->packetLoss = static_cast<uint32_t>(packetLoss / data->count);
+      data->rtt = static_cast<uint32_t>(rtt / data->count);
    }
    else
    {
@@ -57,7 +57,7 @@ void AsteriskSystem::processRTCP(AmiMessage *msg)
       data->count = 1;
       data->jitter = msg->getTagAsUInt32("Report0IAJitter");
       data->packetLoss = msg->getTagAsUInt32("Report0FractionLost");
-      data->rtt = static_cast<UINT32>(msg->getTagAsDouble("RTT") * 1000);
+      data->rtt = static_cast<uint32_t>(msg->getTagAsDouble("RTT") * 1000);
       m_rtcpData.set(channelKey, data);
    }
 #undef channelKey
@@ -100,12 +100,12 @@ void AsteriskSystem::updateRTCPStatistic(const char *channel, const TCHAR *peer)
 #endif
    RTCPData *data = m_rtcpData.get(channelKey);
 
-   if (data == NULL)
+   if (data == nullptr)
       return;  // No RTCP data for this channel
 
    MutexLock(m_rtcpLock);
    RTCPStatistic *stat = m_peerRTCPStatistic.get(peer);
-   if (stat == NULL)
+   if (stat == nullptr)
    {
       stat = new RTCPStatistic;
       InitRTCPStatisticEntry(data->jitter, stat->jitter);
@@ -136,10 +136,10 @@ RTCPStatistic *AsteriskSystem::getPeerRTCPStatistic(const TCHAR *peer, RTCPStati
 {
    MutexLock(m_rtcpLock);
    const RTCPStatistic *stats = m_peerRTCPStatistic.get(peer);
-   if (stats != NULL)
+   if (stats != nullptr)
       memcpy(buffer, stats, sizeof(RTCPStatistic));
    MutexUnlock(m_rtcpLock);
-   return (stats != NULL) ? buffer : NULL;
+   return (stats != nullptr) ? buffer : nullptr;
 }
 
 /**
@@ -179,7 +179,7 @@ LONG H_PeerRTCPStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstrac
    GET_ARGUMENT(1, peerId, 128);
 
    RTCPStatistic stats;
-   if (sys->getPeerRTCPStatistic(peerId, &stats) == NULL)
+   if (sys->getPeerRTCPStatistic(peerId, &stats) == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
    switch(arg[0])

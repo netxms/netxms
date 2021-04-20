@@ -1,6 +1,6 @@
 /*
 ** NetXMS Asterisk subagent
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -68,12 +68,12 @@ struct AmiMessageTag
 /**
  * AMI message
  */
-class AmiMessage : public RefCountObject
+class AmiMessage
 {
 private:
    AmiMessageType m_type;
    char m_subType[MAX_AMI_SUBTYPE_LEN];
-   INT64 m_id;
+   int64_t m_id;
    AmiMessageTag *m_tags;
    StringList *m_data;
 
@@ -81,31 +81,29 @@ private:
 
    AmiMessageTag *findTag(const char *name);
 
-protected:
-   virtual ~AmiMessage();
-
 public:
    AmiMessage(const char *subType);
+   ~AmiMessage();
 
    AmiMessageType getType() const { return m_type; }
    const char *getSubType() const { return m_subType; }
    bool isSuccess() const { return !stricmp(m_subType, "Success") || !stricmp(m_subType, "Follows"); }
 
-   INT64 getId() const { return m_id; }
-   void setId(INT64 id) { m_id = id; }
+   int64_t getId() const { return m_id; }
+   void setId(int64_t id) { m_id = id; }
 
    const char *getTag(const char *name);
-   INT32 getTagAsInt32(const char *name, INT32 defaultValue = 0);
-   UINT32 getTagAsUInt32(const char *name, UINT32 defaultValue = 0);
+   int32_t getTagAsInt32(const char *name, int32_t defaultValue = 0);
+   uint32_t getTagAsUInt32(const char *name, uint32_t defaultValue = 0);
    double getTagAsDouble(const char *name, double defaultValue = 0);
    void setTag(const char *name, const char *value);
 
    const StringList *getData() const { return m_data; }
-   StringList *acquireData() { StringList *d = m_data; m_data = NULL; return d; }
+   StringList *acquireData() { StringList *d = m_data; m_data = nullptr; return d; }
 
    ByteStream *serialize();
 
-   static AmiMessage *createFromNetwork(RingBuffer& buffer);
+   static shared_ptr<AmiMessage> createFromNetwork(RingBuffer& buffer);
 };
 
 /**
@@ -116,7 +114,7 @@ class AmiEventListener
 public:
    virtual ~AmiEventListener() { }
 
-   virtual void processEvent(AmiMessage *event) = 0;
+   virtual void processEvent(const shared_ptr<AmiMessage>& event) = 0;
 };
 
 /**
@@ -124,12 +122,12 @@ public:
  */
 struct EventCounters
 {
-   UINT64 callBarred;
-   UINT64 callRejected;
-   UINT64 channelUnavailable;
-   UINT64 congestion;
-   UINT64 noRoute;
-   UINT64 subscriberAbsent;
+   uint64_t callBarred;
+   uint64_t callRejected;
+   uint64_t channelUnavailable;
+   uint64_t congestion;
+   uint64_t noRoute;
+   uint64_t subscriberAbsent;
 };
 
 /**
@@ -137,10 +135,10 @@ struct EventCounters
  */
 struct RTCPData
 {
-   UINT32 count;
-   UINT32 rtt;
-   UINT32 jitter;
-   UINT32 packetLoss;
+   uint32_t count;
+   uint32_t rtt;
+   uint32_t jitter;
+   uint32_t packetLoss;
 };
 
 /**
@@ -211,22 +209,22 @@ class AsteriskSystem
 private:
    TCHAR *m_name;
    InetAddress m_ipAddress;
-   UINT16 m_port;
+   uint16_t m_port;
    char *m_login;
    char *m_password;
    SOCKET m_socket;
    THREAD m_connectorThread;
    RingBuffer m_networkBuffer;
-   INT64 m_requestId;
-   INT64 m_activeRequestId;
+   int64_t m_requestId;
+   int64_t m_activeRequestId;
    MUTEX m_requestLock;
    CONDITION m_requestCompletion;
-   AmiMessage *m_response;
+   shared_ptr<AmiMessage> m_response;
    bool m_amiSessionReady;
    bool m_resetSession;
    ObjectArray<AmiEventListener> m_eventListeners;
    MUTEX m_eventListenersLock;
-   UINT32 m_amiTimeout;
+   uint32_t m_amiTimeout;
    EventCounters m_globalEventCounters;
    StringObjectMap<EventCounters> m_peerEventCounters;
    MUTEX m_eventCounterLock;
@@ -235,17 +233,15 @@ private:
    MUTEX m_rtcpLock;
    StringObjectMap<SIPRegistrationTest> m_registrationTests;
 
-   static THREAD_RESULT THREAD_CALL connectorThreadStarter(void *arg);
-
-   AmiMessage *readMessage() { return AmiMessage::createFromNetwork(m_networkBuffer); }
-   bool processMessage(AmiMessage *msg);
+   shared_ptr<AmiMessage> readMessage() { return AmiMessage::createFromNetwork(m_networkBuffer); }
+   bool processMessage(const shared_ptr<AmiMessage>& msg);
    void connectorThread();
 
    bool sendLoginRequest();
    void setupEventFilters();
 
-   void processHangup(AmiMessage *msg);
-   void processRTCP(AmiMessage *msg);
+   void processHangup(const shared_ptr<AmiMessage>& msg);
+   void processRTCP(const shared_ptr<AmiMessage>& msg);
    void updateRTCPStatistic(const char *channel, const TCHAR *peer);
 
    AsteriskSystem(const TCHAR *name);
@@ -266,11 +262,11 @@ public:
    void addEventListener(AmiEventListener *listener);
    void removeEventListener(AmiEventListener *listener);
 
-   AmiMessage *sendRequest(AmiMessage *request, ObjectRefArray<AmiMessage> *list = NULL, UINT32 timeout = 0);
+   shared_ptr<AmiMessage> sendRequest(const shared_ptr<AmiMessage>& request, SharedObjectArray<AmiMessage> *list = nullptr, uint32_t timeout = 0);
 
-   bool sendSimpleRequest(AmiMessage *request);
+   bool sendSimpleRequest(const shared_ptr<AmiMessage>& request);
    LONG readSingleTag(const char *rqname, const char *tag, TCHAR *value);
-   ObjectRefArray<AmiMessage> *readTable(const char *rqname);
+   SharedObjectArray<AmiMessage> *readTable(const char *rqname);
    StringList *executeCommand(const char *command);
 
    const EventCounters *getGlobalEventCounters() const { return &m_globalEventCounters; }
