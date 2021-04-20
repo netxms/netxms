@@ -4070,14 +4070,14 @@ if test $? = 0; then
 			ZEROMQ_SUPPORT="no"
 		fi
 	])
-	AC_CHECK_LIB(zmq, zmq_ctx_new, [ ], [
+	AC_CHECK_LIB(zmq, zmq_ctx_new, [], [
 		if test "x$ZEROMQ_REQUIRED" = "xyes"; then
 			AC_MSG_ERROR([*** libzmq is missing or too old - check your ZeroMQ installation ***])
 		else
 			ZEROMQ_SUPPORT="no"
 		fi
 	])
-    
+
 	if test "x$ZEROMQ_SUPPORT" = "xyes"; then
 		AC_DEFINE(WITH_ZMQ, 1, Define to 1 if ZeroMQ is supported)
 	fi
