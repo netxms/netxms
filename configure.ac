@@ -873,7 +873,7 @@ AC_ARG_WITH(dist,
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy"
 	TOOLS="nxlptest"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux informix oracle lmsensors darwin rpi java jmx opcua ubntlw bind9 netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxtux"
 	NCDRV_MODULES="anysms kannel msteams mymobile nexmo nxagent slack smseagle telegram text2reach websms"
    HDLINK_DIRS="jira redmine"
@@ -950,7 +950,7 @@ check_substr "$COMPONENTS" "java"
 if test $? = 0; then
 	MODULES="$MODULES java-common libnxjava"
 	if test "x$JAR_BUILD" = "xyes"; then
-		SUBAGENT_DIRS="$SUBAGENT_DIRS java jmx ubntlw"
+		SUBAGENT_DIRS="$SUBAGENT_DIRS java jmx opcua ubntlw"
 	else
 		SUBAGENT_DIRS="$SUBAGENT_DIRS java"
 	fi
@@ -4632,6 +4632,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/mysql/Makefile
 	src/agent/subagents/netbsd/Makefile
 	src/agent/subagents/netsvc/Makefile
+	src/agent/subagents/opcua/Makefile
 	src/agent/subagents/openbsd/Makefile
 	src/agent/subagents/oracle/Makefile
 	src/agent/subagents/pgsql/Makefile
