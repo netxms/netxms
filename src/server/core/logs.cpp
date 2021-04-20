@@ -172,7 +172,7 @@ static int32_t RegisterLogHandle(const shared_ptr<LogHandle>& handle, ClientSess
 	r->id = s_handleId++;
 	MutexUnlock(s_regListMutex);
 
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("RegisterLogHandle: handle object %p registered as %d"), handle, r->id);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("RegisterLogHandle: handle object %p registered as %d"), handle.get(), r->id);
 	return r->id;
 }
 
