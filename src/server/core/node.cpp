@@ -3702,6 +3702,36 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          }
       }
 
+      // Update system description
+      TCHAR buffer[MAX_RESULT_LENGTH] = { 0 };
+      if ((m_capabilities & NC_IS_NATIVE_AGENT) && !(m_flags & NF_DISABLE_NXCP))
+      {
+         getMetricFromAgent(_T("System.Uname"), buffer, MAX_RESULT_LENGTH);
+      }
+      else if ((m_capabilities & NC_IS_SNMP) && !(m_flags & NF_DISABLE_SNMP))
+      {
+         getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.1.0"), buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE);
+      }
+
+      if (buffer[0] != _T('\0'))
+      {
+         TranslateStr(buffer, _T("\r\n"), _T(" "));
+         TranslateStr(buffer, _T("\n"), _T(" "));
+         TranslateStr(buffer, _T("\r"), _T(" "));
+
+         lockProperties();
+
+         if ((m_sysDescription == nullptr) || _tcscmp(m_sysDescription, buffer))
+         {
+            free(m_sysDescription);
+            m_sysDescription = MemCopyString(buffer);
+            modified |= MODIFY_NODE_PROPERTIES;
+            sendPollerMsg(_T("   System description changed to %s\r\n"), m_sysDescription);
+         }
+
+         unlockProperties();
+      }
+
       // Check node name
       sendPollerMsg(_T("Checking node name\r\n"));
       if (g_flags & AF_RESOLVE_NODE_NAMES)
@@ -4235,23 +4265,6 @@ bool Node::confPollAgent(UINT32 rqId)
             m_capabilities &= ~NC_IS_ROUTER;
       }
 
-      // Get uname
-      if (pAgentConn->getParameter(_T("System.Uname"), buffer, MAX_DB_STRING) == ERR_SUCCESS)
-      {
-         TranslateStr(buffer, _T("\r\n"), _T(" "));
-         TranslateStr(buffer, _T("\n"), _T(" "));
-         TranslateStr(buffer, _T("\r"), _T(" "));
-         lockProperties();
-         if ((m_sysDescription == nullptr) || _tcscmp(m_sysDescription, buffer))
-         {
-            free(m_sysDescription);
-            m_sysDescription = MemCopyString(buffer);
-            hasChanges = true;
-            sendPollerMsg(_T("   System description changed to %s\r\n"), m_sysDescription);
-         }
-         unlockProperties();
-      }
-
       // Check for 64 bit counter support.
       // if Net.Interface.64BitCounters not supported by agent then use
       // only presence of 64 bit parameters as indicator
@@ -4573,23 +4586,6 @@ bool Node::confPollSnmp(uint32_t rqId)
       hasChanges = true;
    }
    unlockProperties();
-
-   // Get system description
-   if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.1.0"), nullptr, 0, szBuffer, sizeof(szBuffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
-   {
-      TranslateStr(szBuffer, _T("\r\n"), _T(" "));
-      TranslateStr(szBuffer, _T("\n"), _T(" "));
-      TranslateStr(szBuffer, _T("\r"), _T(" "));
-      lockProperties();
-      if ((m_sysDescription == nullptr) || _tcscmp(m_sysDescription, szBuffer))
-      {
-         MemFree(m_sysDescription);
-         m_sysDescription = MemCopyString(szBuffer);
-         hasChanges = true;
-         sendPollerMsg(_T("   System description changed to %s\r\n"), m_sysDescription);
-      }
-      unlockProperties();
-   }
 
    // Select device driver
    NetworkDeviceDriver *driver = FindDriverForNode(this, pTransport);
