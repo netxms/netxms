@@ -9706,7 +9706,7 @@ ForwardingDatabase *Node::getSwitchForwardingDatabase()
 shared_ptr<LinkLayerNeighbors> Node::getLinkLayerNeighbors()
 {
    MutexLock(m_mutexTopoAccess);
-   shared_ptr<LinkLayerNeighbors> linkLayerNeighbors(m_linkLayerNeighbors != nullptr ? m_linkLayerNeighbors->clone() : nullptr);
+   shared_ptr<LinkLayerNeighbors> linkLayerNeighbors = m_linkLayerNeighbors;
    MutexUnlock(m_mutexTopoAccess);
    return linkLayerNeighbors;
 }

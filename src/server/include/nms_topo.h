@@ -210,22 +210,7 @@ public:
    void setData(void *data) { setData(0, data); }
    void *getData() { return getData(0); }
    int size() { return m_count; }
-
-   LinkLayerNeighbors *clone() const
-   {
-      auto a = new LinkLayerNeighbors();
-      for (int i = 0; i < m_count; i++)
-      {
-         a->addConnection(&m_connections[i]);
-      }
-      for (int i = 0; i < 4; i++)
-      {
-         a->setData(i, m_data[i]);
-      }
-      return a;
-   }
 };
-
 
 //
 // VRRP information
