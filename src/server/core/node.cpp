@@ -142,7 +142,6 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_recoveryTime = NEVER;
    m_lastAgentCommTime = NEVER;
    m_lastAgentConnectAttempt = 0;
-   m_linkLayerNeighbors = nullptr;
    m_vrrpInfo = nullptr;
    m_topology = nullptr;
    m_topologyRebuildTimestamp = 0;
@@ -265,7 +264,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_recoveryTime = NEVER;
    m_lastAgentCommTime = NEVER;
    m_lastAgentConnectAttempt = 0;
-   m_linkLayerNeighbors = nullptr;
    m_vrrpInfo = nullptr;
    m_topology = nullptr;
    m_topologyRebuildTimestamp = 0;
@@ -333,8 +331,6 @@ Node::~Node()
    MemFree(m_snmpObjectId);
    MemFree(m_sysDescription);
    delete m_routingTable;
-   if (m_linkLayerNeighbors != nullptr)
-      m_linkLayerNeighbors->decRefCount();
    delete m_vrrpInfo;
    delete m_topology;
    delete m_snmpSecurity;
@@ -8823,119 +8819,6 @@ NetworkMapObjectList *Node::buildL2Topology(UINT32 *pdwStatus, int radius, bool 
 }
 
 /**
- * Build IP topology
- */
-NetworkMapObjectList *Node::buildIPTopology(UINT32 *pdwStatus, int radius, bool includeEndNodes)
-{
-   int maxDepth = (radius < 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
-   NetworkMapObjectList *topology = new NetworkMapObjectList();
-   buildIPTopologyInternal(*topology, maxDepth, 0, nullptr, false, includeEndNodes);
-   return topology;
-}
-
-/**
- * Peer information
- */
-struct PeerInfo
-{
-   shared_ptr<Node> node;
-   String linkName;
-   bool vpnLink;
-
-   PeerInfo(shared_ptr<Node> _node, const TCHAR *_linkName, bool _vpnLink) : node(_node), linkName(_linkName)
-   {
-      vpnLink = _vpnLink;
-   }
-};
-
-/**
- * Build IP topology
- */
-void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedObject,
-         const TCHAR *linkName, bool vpnLink, bool includeEndNodes)
-{
-   if (topology.isObjectExist(m_id))
-   {
-      // this node was processed already
-      if (seedObject != 0)
-         topology.linkObjects(seedObject, m_id, vpnLink ? LINK_TYPE_VPN : LINK_TYPE_NORMAL, linkName);
-      return;
-   }
-
-   topology.addObject(m_id);
-   if (seedObject != 0)
-      topology.linkObjects(seedObject, m_id, vpnLink ? LINK_TYPE_VPN : LINK_TYPE_NORMAL, linkName);
-
-   if (nDepth > 0)
-   {
-      SharedObjectArray<Subnet> subnets;
-      ObjectArray<PeerInfo> peers(0, 64, Ownership::True);
-
-      readLockParentList();
-      for(int i = 0; i < getParentList().size(); i++)
-      {
-         NetObj *object = getParentList().get(i);
-
-         if ((object->getId() == seedObject) || (object->getObjectClass() != OBJECT_SUBNET))
-            continue;
-
-         if (object->getChildCount() == 1)
-            continue;   // Do not add subnets with only one node
-
-         // Check if subnet actually connects two point-to-point interfaces
-         if (object->getChildCount() == 2)
-         {
-            shared_ptr<Interface> iface = findInterfaceBySubnet(static_cast<Subnet*>(object)->getIpAddress());
-            if (((iface != nullptr) && iface->isPointToPoint()) || static_cast<Subnet*>(object)->isPointToPoint())
-            {
-               shared_ptr<Node> node = static_cast<Subnet*>(object)->getOtherNode(m_id);
-               if ((node != nullptr) && (node->getId() != seedObject) && !topology.isObjectExist(node->getId()))
-               {
-                  peers.add(new PeerInfo(node, object->getName(), false));
-               }
-               continue;
-            }
-         }
-
-         if (!topology.isObjectExist(object->getId()))
-         {
-            topology.addObject(object->getId());
-            subnets.add(static_pointer_cast<Subnet>(getParentList().getShared(i)));
-         }
-         topology.linkObjects(m_id, object->getId());
-      }
-      unlockParentList();
-
-      for(int i = 0; i < subnets.size(); i++)
-      {
-         subnets.get(i)->buildIPTopologyInternal(topology, nDepth, m_id, includeEndNodes);
-      }
-
-      readLockChildList();
-      for(int i = 0; i < getChildList().size(); i++)
-      {
-         NetObj *object = getChildList().get(i);
-
-         if (object->getObjectClass() != OBJECT_VPNCONNECTOR)
-            continue;
-
-         shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(static_cast<VPNConnector*>(object)->getPeerGatewayId(), OBJECT_NODE));
-         if ((node != nullptr) && (node->getId() != seedObject) && !topology.isObjectExist(node->getId()))
-         {
-            peers.add(new PeerInfo(node, object->getName(), true));
-         }
-      }
-      unlockChildList();
-
-      for(int i = 0; i < peers.size(); i++)
-      {
-         auto p = peers.get(i);
-         p->node->buildIPTopologyInternal(topology, nDepth - 1, m_id, p->linkName, p->vpnLink, includeEndNodes);
-      }
-   }
-}
-
-/**
  * Entry point for topology poller
  */
 void Node::topologyPollWorkerEntry(PollerInfo *poller)
@@ -9046,15 +8929,13 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
    POLL_CANCELLATION_CHECKPOINT();
 
    poller->setStatus(_T("building neighbor list"));
-   LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(this);
+   shared_ptr<LinkLayerNeighbors> nbs = BuildLinkLayerNeighborList(this);
    if (nbs != nullptr)
    {
       sendPollerMsg(POLLER_INFO _T("Link layer topology retrieved (%d connections found)\r\n"), nbs->size());
       nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Link layer topology retrieved for node %s [%d] (%d connections found)"), m_name, (int)m_id, nbs->size());
 
       MutexLock(m_mutexTopoAccess);
-      if (m_linkLayerNeighbors != nullptr)
-         m_linkLayerNeighbors->decRefCount();
       m_linkLayerNeighbors = nbs;
       MutexUnlock(m_mutexTopoAccess);
 
@@ -9826,14 +9707,12 @@ ForwardingDatabase *Node::getSwitchForwardingDatabase()
 /**
  * Get link layer neighbors
  */
-LinkLayerNeighbors *Node::getLinkLayerNeighbors()
+shared_ptr<LinkLayerNeighbors> Node::getLinkLayerNeighbors()
 {
    MutexLock(m_mutexTopoAccess);
-   if (m_linkLayerNeighbors != nullptr)
-      m_linkLayerNeighbors->incRefCount();
-   LinkLayerNeighbors *nbs = m_linkLayerNeighbors;
+   shared_ptr<LinkLayerNeighbors> linkLayerNeighbors(m_linkLayerNeighbors != nullptr ? m_linkLayerNeighbors->clone() : nullptr);
    MutexUnlock(m_mutexTopoAccess);
-   return nbs;
+   return linkLayerNeighbors;
 }
 
 /**

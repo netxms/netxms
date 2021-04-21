@@ -32,7 +32,7 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, boo
 
 	topology.addObject(root->getId());
 
-	LinkLayerNeighbors *nbs = root->getLinkLayerNeighbors();
+	auto nbs = root->getLinkLayerNeighbors();
 	if (nbs == nullptr)
 		return;
 
@@ -58,7 +58,6 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, boo
 			}
 		}
 	}
-	nbs->decRefCount();
 }
 
 /**

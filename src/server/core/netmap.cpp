@@ -719,7 +719,7 @@ void NetworkMap::updateContent()
                   topology = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
                   break;
                case MAP_TYPE_IP_TOPOLOGY:
-                  topology = seed->buildIPTopology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
+                  topology = BuildIPTopology(seed, &status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
                   break;
                case MAP_INTERNAL_COMMUNICATION_TOPOLOGY:
                   topology = seed->buildInternalCommunicationTopology();

@@ -86,7 +86,7 @@ void LinkLayerNeighbors::addConnection(LL_NEIGHBOR_INFO *info)
 /**
  * Gather link layer connectivity information from node
  */
-LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node)
+shared_ptr<LinkLayerNeighbors> BuildLinkLayerNeighborList(Node *node)
 {
 	LinkLayerNeighbors *nbs = new LinkLayerNeighbors();
 
@@ -115,7 +115,7 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node)
    // but can be useful in other situations (for example, STP topology data can be obtained only on one side),
    // so we just walk node's interfaces and copy connection point information
    node->addExistingConnections(nbs);
-	return nbs;
+	return shared_ptr<LinkLayerNeighbors>(nbs);
 }
 
 /**

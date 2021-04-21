@@ -30,7 +30,7 @@ libnxcore_la_SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addr
 			sensor.cpp server_stats.cpp session.cpp slmcheck.cpp smclp.cpp \
 			snmp.cpp snmptrap.cpp sshkeys.cpp stp.cpp subnet.cpp summary_email.cpp \
 			svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp \
-			template.cpp tools.cpp tracert.cpp tunnel.cpp ua_notification_item.cpp \
+			template.cpp tools.cpp topology_builder.cpp tracert.cpp tunnel.cpp ua_notification_item.cpp \
 			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
 			userdb_objects.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			websvc.cpp winevent.cpp winperf.cpp xmpp.cpp zeromq.cpp zone.cpp
