@@ -98,6 +98,7 @@ NetObj::NetObj() : NObject(), m_dashboards(0, 8), m_urls(0, 8, Ownership::True)
    m_primaryZoneProxyId = 0;
    m_backupZoneProxyId = 0;
    m_state = 0;
+   m_savedState = 0;
    m_stateBeforeMaintenance = 0;
    m_runtimeFlags = 0;
    m_flags = 0;
@@ -282,6 +283,11 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
 
    success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
+   if (success)
+   {
+      m_savedStatus = m_status;
+      m_savedState = m_state;
+   }
 
    // Save dashboard associations
    if (success)
@@ -411,19 +417,23 @@ static EnumerationCallbackResult SaveModuleRuntimeDataCallback(const TCHAR *key,
 bool NetObj::saveRuntimeData(DB_HANDLE hdb)
 {
    bool success;
-   if (m_status != m_savedStatus)
+   if (m_status != m_savedStatus || m_state != m_savedState)
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE object_properties SET status=? WHERE object_id=?"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE object_properties SET status=?,state=? WHERE object_id=?"));
       if (hStmt == NULL)
          return false;
 
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_status);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_state);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
 
       if (success)
+      {
          m_savedStatus = m_status;
+         m_savedState = m_state;
+      }
    }
    else
    {
@@ -565,7 +575,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
             m_stateBeforeMaintenance = DBGetFieldULong(hResult, 0, 27);
             m_maintenanceInitiator = DBGetFieldULong(hResult, 0, 28);
 
-            m_state = DBGetFieldULong(hResult, 0, 29);
+            m_state = m_savedState = DBGetFieldULong(hResult, 0, 29);
             m_runtimeFlags = 0;
             m_flags = DBGetFieldULong(hResult, 0, 30);
             m_creationTime = static_cast<time_t>(DBGetFieldULong(hResult, 0, 31));

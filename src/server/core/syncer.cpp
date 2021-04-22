@@ -168,6 +168,10 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
       }
 		else if (object->isModified())
 		{
+         if (saveRuntimeData)
+         {
+            object->markAsModified(MODIFY_COMMON_PROPERTIES); //save runtime data as well
+         }
 		   nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 5, _T("Object %s [%d] modified"), object->getName(), object->getId());
 		   if (g_syncerThreadPool != nullptr)
 		   {
