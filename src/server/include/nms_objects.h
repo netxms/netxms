@@ -957,6 +957,7 @@ protected:
    uint32_t m_flags;
    uint32_t m_runtimeFlags;
    uint32_t m_state;
+   uint32_t m_savedState; // Object state in database
    uint32_t m_stateBeforeMaintenance;
    uint64_t m_maintenanceEventId;
    uint32_t m_maintenanceInitiator;

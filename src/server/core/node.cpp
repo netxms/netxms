@@ -2749,7 +2749,7 @@ restart_status_poll:
 
    if (oldState != m_state)
    {
-      markAsModified(MODIFY_COMMON_PROPERTIES);
+      markAsModified(MODIFY_RUNTIME); // only notify clients
    }
 
    if (oldCapabilities != m_capabilities)
