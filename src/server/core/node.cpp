@@ -2747,7 +2747,12 @@ restart_status_poll:
    if (oldCapabilities != m_capabilities)
       PostSystemEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", oldCapabilities, m_capabilities);
 
-   if (oldState != m_state || oldCapabilities != m_capabilities)
+   if (oldState != m_state)
+   {
+      markAsModified(MODIFY_COMMON_PROPERTIES);
+   }
+
+   if (oldCapabilities != m_capabilities)
    {
       markAsModified(MODIFY_NODE_PROPERTIES);
    }
