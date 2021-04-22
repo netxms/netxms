@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ int HardwareComponentComparator(const HardwareComponent **c1, const HardwareComp
  */
 ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareComponent> *oldSet, ObjectArray<HardwareComponent> *newSet)
 {
-   HardwareComponent *nc = NULL, *oc = NULL;
+   HardwareComponent *nc = nullptr, *oc = nullptr;
    int i;
    ObjectArray<HardwareComponent> *changes = new ObjectArray<HardwareComponent>(16, 16);
 
@@ -60,7 +60,7 @@ ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareCom
    {
       nc = newSet->get(i);
       oc = oldSet->find(nc, HardwareComponentComparator);
-      if (oc == NULL)
+      if (oc == nullptr)
       {
          nc->setChangeCode(CHANGE_ADDED);
          changes->add(nc);
@@ -71,7 +71,7 @@ ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareCom
    {
       oc = oldSet->get(i);
       nc = newSet->find(oc, HardwareComponentComparator);
-      if (nc == NULL)
+      if (nc == nullptr)
       {
          oc->setChangeCode(CHANGE_REMOVED);
          changes->add(oc);
@@ -84,7 +84,7 @@ ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareCom
 /**
  * Create hardware component
  */
-HardwareComponent::HardwareComponent(HardwareComponentCategory category, UINT32 index, const TCHAR *type,
+HardwareComponent::HardwareComponent(HardwareComponentCategory category, uint32_t index, const TCHAR *type,
          const TCHAR *vendor, const TCHAR *model, const TCHAR *partNumber, const TCHAR *serialNumber)
 {
    m_category = category;
@@ -92,11 +92,11 @@ HardwareComponent::HardwareComponent(HardwareComponentCategory category, UINT32 
    m_type = MemCopyString(type);
    m_vendor = MemCopyString(vendor);
    m_model = MemCopyString(model);
-   m_location = NULL;
+   m_location = nullptr;
    m_capacity = 0;
    m_partNumber = MemCopyString(partNumber);
    m_serialNumber = MemCopyString(serialNumber);
-   m_description = NULL;
+   m_description = nullptr;
    m_changeCode = CHANGE_NONE;
 }
 
@@ -108,63 +108,63 @@ HardwareComponent::HardwareComponent(DB_RESULT result, int row)
 {
    m_category = static_cast<HardwareComponentCategory>(DBGetFieldLong(result, row, 0));
    m_index = DBGetFieldULong(result, row, 1);
-   m_type = DBGetField(result, row, 2, NULL, 0);
-   m_vendor = DBGetField(result, row, 3, NULL, 0);
-   m_model = DBGetField(result, row, 4, NULL, 0);
-   m_location = DBGetField(result, row, 5, NULL, 0);
+   m_type = DBGetField(result, row, 2, nullptr, 0);
+   m_vendor = DBGetField(result, row, 3, nullptr, 0);
+   m_model = DBGetField(result, row, 4, nullptr, 0);
+   m_location = DBGetField(result, row, 5, nullptr, 0);
    m_capacity = DBGetFieldUInt64(result, row, 6);
-   m_partNumber = DBGetField(result, row, 7, NULL, 0);
-   m_serialNumber = DBGetField(result, row, 8, NULL, 0);
-   m_description = DBGetField(result, row, 9, NULL, 0);
+   m_partNumber = DBGetField(result, row, 7, nullptr, 0);
+   m_serialNumber = DBGetField(result, row, 8, nullptr, 0);
+   m_description = DBGetField(result, row, 9, nullptr, 0);
    m_changeCode = CHANGE_NONE;
 }
 
 /**
  * Create hardware component from table row
  */
-HardwareComponent::HardwareComponent(HardwareComponentCategory category, const Table *table, int row)
+HardwareComponent::HardwareComponent(HardwareComponentCategory category, const Table& table, int row)
 {
    m_category = category;
    m_index = 0;
-   m_type = NULL;
-   m_vendor = NULL;
-   m_model = NULL;
-   m_location = NULL;
+   m_type = nullptr;
+   m_vendor = nullptr;
+   m_model = nullptr;
+   m_location = nullptr;
    m_capacity = 0;
-   m_partNumber = NULL;
-   m_serialNumber = NULL;
-   m_description = NULL;
+   m_partNumber = nullptr;
+   m_serialNumber = nullptr;
+   m_description = nullptr;
 
-   for(int i = 0; i < table->getNumColumns(); i++)
+   for(int i = 0; i < table.getNumColumns(); i++)
    {
-      const TCHAR *cname = table->getColumnName(i);
+      const TCHAR *cname = table.getColumnName(i);
       if (!_tcsicmp(cname, _T("HANDLE")) ||
           !_tcsicmp(cname, _T("NUMBER")) ||
           !_tcsicmp(cname, _T("INDEX")))
-         m_index = table->getAsUInt(row, i);
+         m_index = table.getAsUInt(row, i);
       else if (!_tcsicmp(cname, _T("LOCATION")))
-         m_location = MemCopyString(table->getAsString(row, i));
+         m_location = MemCopyString(table.getAsString(row, i));
       else if (!_tcsicmp(cname, _T("MANUFACTURER")))
-         m_vendor = MemCopyString(table->getAsString(row, i));
-      else if (!_tcsicmp(table->getColumnName(i), _T("NAME")) ||
-               !_tcsicmp(table->getColumnName(i), _T("VERSION")) ||
-               !_tcsicmp(table->getColumnName(i), _T("FORM_FACTOR")) ||
-               !_tcsicmp(table->getColumnName(i), _T("PRODUCT")))
-         m_model = MemCopyString(table->getAsString(row, i));
-      else if (!_tcsicmp(table->getColumnName(i), _T("PART_NUMBER")))
-         m_partNumber = MemCopyString(table->getAsString(row, i));
-      else if (!_tcsicmp(table->getColumnName(i), _T("CAPACITY")) ||
-               !_tcsicmp(table->getColumnName(i), _T("SPEED")) ||
-               !_tcsicmp(table->getColumnName(i), _T("CURR_SPEED")) ||
-               !_tcsicmp(table->getColumnName(i), _T("SIZE")))
-         m_capacity = table->getAsUInt64(row, i);
-      else if (!_tcsicmp(table->getColumnName(i), _T("SERIAL_NUMBER")) ||
-               !_tcsicmp(table->getColumnName(i), _T("MAC_ADDRESS")))
-         m_serialNumber = MemCopyString(table->getAsString(row, i));
-      else if ((!_tcsicmp(table->getColumnName(i), _T("TYPE")) && (category != HWC_STORAGE)) ||
-               !_tcsicmp(table->getColumnName(i), _T("TYPE_DESCRIPTION")) ||
-               !_tcsicmp(table->getColumnName(i), _T("CHEMISTRY")))
-         m_type = MemCopyString(table->getAsString(row, i));
+         m_vendor = MemCopyString(table.getAsString(row, i));
+      else if (!_tcsicmp(table.getColumnName(i), _T("NAME")) ||
+               !_tcsicmp(table.getColumnName(i), _T("VERSION")) ||
+               !_tcsicmp(table.getColumnName(i), _T("FORM_FACTOR")) ||
+               !_tcsicmp(table.getColumnName(i), _T("PRODUCT")))
+         m_model = MemCopyString(table.getAsString(row, i));
+      else if (!_tcsicmp(table.getColumnName(i), _T("PART_NUMBER")))
+         m_partNumber = MemCopyString(table.getAsString(row, i));
+      else if (!_tcsicmp(table.getColumnName(i), _T("CAPACITY")) ||
+               !_tcsicmp(table.getColumnName(i), _T("SPEED")) ||
+               !_tcsicmp(table.getColumnName(i), _T("CURR_SPEED")) ||
+               !_tcsicmp(table.getColumnName(i), _T("SIZE")))
+         m_capacity = table.getAsUInt64(row, i);
+      else if (!_tcsicmp(table.getColumnName(i), _T("SERIAL_NUMBER")) ||
+               !_tcsicmp(table.getColumnName(i), _T("MAC_ADDRESS")))
+         m_serialNumber = MemCopyString(table.getAsString(row, i));
+      else if ((!_tcsicmp(table.getColumnName(i), _T("TYPE")) && (category != HWC_STORAGE)) ||
+               !_tcsicmp(table.getColumnName(i), _T("TYPE_DESCRIPTION")) ||
+               !_tcsicmp(table.getColumnName(i), _T("CHEMISTRY")))
+         m_type = MemCopyString(table.getAsString(row, i));
    }
 
    m_changeCode = CHANGE_NONE;

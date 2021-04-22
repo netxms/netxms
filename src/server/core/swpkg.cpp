@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -108,9 +108,9 @@ ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackag
  */
 #define EXTRACT_VALUE(name, field) \
 	{ \
-		if (!_tcsicmp(table->getColumnName(i), _T(name))) \
+		if (!_tcsicmp(table.getColumnName(i), _T(name))) \
 		{ \
-			const TCHAR *value = table->getAsString(row, i); \
+			const TCHAR *value = table.getAsString(row, i); \
 			pkg->field = MemCopyString(value); \
 			continue; \
 		} \
@@ -123,10 +123,10 @@ ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackag
  * @param row row number in a table
  * @return new object on success, NULL on parse error
  */
-SoftwarePackage *SoftwarePackage::createFromTableRow(const Table *table, int row)
+SoftwarePackage *SoftwarePackage::createFromTableRow(const Table& table, int row)
 {
    SoftwarePackage *pkg = new SoftwarePackage();
-   for(int i = 0; i < table->getNumColumns(); i++)
+   for(int i = 0; i < table.getNumColumns(); i++)
    {
       EXTRACT_VALUE("NAME", m_name);
       EXTRACT_VALUE("VERSION", m_version);
@@ -134,17 +134,17 @@ SoftwarePackage *SoftwarePackage::createFromTableRow(const Table *table, int row
       EXTRACT_VALUE("URL", m_url);
       EXTRACT_VALUE("DESCRIPTION", m_description);
 
-      if (!_tcsicmp(table->getColumnName(i), _T("DATE")))
-         pkg->m_date = (time_t)table->getAsInt(row, i);
+      if (!_tcsicmp(table.getColumnName(i), _T("DATE")))
+         pkg->m_date = table.getAsUInt(row, i);
    }
 
-   if (pkg->m_name == NULL)
+   if (pkg->m_name == nullptr)
    {
       delete pkg;
-      return NULL;
+      return nullptr;
    }
 
-   if ((pkg->m_version == NULL) || (*pkg->m_version == 0))
+   if ((pkg->m_version == nullptr) || (*pkg->m_version == 0))
    {
       MemFree(pkg->m_version);
       pkg->m_version = MemCopyString(_T("unset"));

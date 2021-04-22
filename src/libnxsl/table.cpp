@@ -27,7 +27,6 @@
  * Instance of NXSL_Table class
  */
 NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
-NXSL_StaticTableClass LIBNXSL_EXPORTABLE g_nxslStaticTableClass;
 NXSL_TableRowClass LIBNXSL_EXPORTABLE g_nxslTableRowClass;
 NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
 
@@ -37,24 +36,18 @@ NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
 class TableRowReference
 {
 private:
-   Table *m_table;
+   shared_ptr<Table> m_table;
    int m_index;
 
 public:
-   TableRowReference(Table *table, int index)
+   TableRowReference(const shared_ptr<Table>& table, int index) : m_table(table)
    {
-      m_table = table;
       m_index = index;
-      table->incRefCount();
-   }
-   ~TableRowReference()
-   {
-      m_table->decRefCount();
    }
 
    const TCHAR *get(int col) { return m_table->getAsString(m_index, col); }
    int getIndex() { return m_index; }
-   Table *getTable() { return m_table; }
+   Table *getTable() { return m_table.get(); }
 
    void set(int col, const TCHAR *value) { m_table->setAt(m_index, col, value); }
 };
@@ -64,7 +57,7 @@ public:
  */
 NXSL_METHOD_DEFINITION(Table, addRow)
 {
-   *result = vm->createValue(static_cast<Table*>(object->getData())->addRow());
+   *result = vm->createValue(static_cast<shared_ptr<Table>*>(object->getData())->get()->addRow());
    return 0;
 }
 
@@ -103,7 +96,7 @@ NXSL_METHOD_DEFINITION(Table, addColumn)
       isInstance = argv[3]->isTrue();
    }
 
-   *result = vm->createValue(static_cast<Table*>(object->getData())->addColumn(argv[0]->getValueAsCString(), dataType, displayName, isInstance));
+   *result = vm->createValue(static_cast<shared_ptr<Table>*>(object->getData())->get()->addColumn(argv[0]->getValueAsCString(), dataType, displayName, isInstance));
    return 0;
 }
 
@@ -115,7 +108,7 @@ NXSL_METHOD_DEFINITION(Table, deleteColumn)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   static_cast<Table*>(object->getData())->deleteColumn(argv[0]->getValueAsInt32());
+   static_cast<shared_ptr<Table>*>(object->getData())->get()->deleteColumn(argv[0]->getValueAsInt32());
    *result = vm->createValue();
    return 0;
 }
@@ -128,7 +121,7 @@ NXSL_METHOD_DEFINITION(Table, deleteRow)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   static_cast<Table*>(object->getData())->deleteRow(argv[0]->getValueAsInt32());
+   static_cast<shared_ptr<Table>*>(object->getData())->get()->deleteRow(argv[0]->getValueAsInt32());
    *result = vm->createValue();
    return 0;
 }
@@ -141,7 +134,7 @@ NXSL_METHOD_DEFINITION(Table, findRowByInstance)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   auto table = static_cast<Table*>(object->getData());
+   shared_ptr<Table> table(*static_cast<shared_ptr<Table>*>(object->getData()));
    int index = table->findRowByInstance(argv[0]->getValueAsCString());
    *result = (index != -1) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableRowClass, new TableRowReference(table, index))) : vm->createValue();
    return 0;
@@ -155,7 +148,7 @@ NXSL_METHOD_DEFINITION(Table, findRowIndexByInstance)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   *result = vm->createValue(static_cast<Table*>(object->getData())->findRowByInstance(argv[0]->getValueAsCString()));
+   *result = vm->createValue(static_cast<shared_ptr<Table>*>(object->getData())->get()->findRowByInstance(argv[0]->getValueAsCString()));
    return 0;
 }
 
@@ -170,11 +163,10 @@ NXSL_METHOD_DEFINITION(Table, get)
    if (!argv[1]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   int columnIndex = argv[1]->isInteger() ?
-      argv[1]->getValueAsInt32() :
-      static_cast<Table*>(object->getData())->getColumnIndex(argv[1]->getValueAsCString());
+   Table *table = static_cast<shared_ptr<Table>*>(object->getData())->get();
+   int columnIndex = argv[1]->isInteger() ? argv[1]->getValueAsInt32() : table->getColumnIndex(argv[1]->getValueAsCString());
 
-   const TCHAR *value = static_cast<Table*>(object->getData())->getAsString(argv[0]->getValueAsInt32(), columnIndex);
+   const TCHAR *value = table->getAsString(argv[0]->getValueAsInt32(), columnIndex);
    *result = (value != nullptr) ? vm->createValue(value) : vm->createValue();
    return 0;
 }
@@ -187,7 +179,7 @@ NXSL_METHOD_DEFINITION(Table, getColumnIndex)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   *result = vm->createValue((LONG)((Table *)object->getData())->getColumnIndex(argv[0]->getValueAsCString()));
+   *result = vm->createValue((LONG)static_cast<shared_ptr<Table>*>(object->getData())->get()->getColumnIndex(argv[0]->getValueAsCString()));
    return 0;
 }
 
@@ -199,7 +191,7 @@ NXSL_METHOD_DEFINITION(Table, getColumnName)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   const TCHAR *value = ((Table *)object->getData())->getColumnName(argv[0]->getValueAsInt32());
+   const TCHAR *value = static_cast<shared_ptr<Table>*>(object->getData())->get()->getColumnName(argv[0]->getValueAsInt32());
    *result = (value != nullptr) ? vm->createValue(value) : vm->createValue();
    return 0;
 }
@@ -214,11 +206,10 @@ NXSL_METHOD_DEFINITION(Table, set)
    if (!argv[1]->isString() || !argv[2]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   int columnIndex = argv[1]->isInteger() ?
-      argv[1]->getValueAsInt32() :
-      ((Table *)object->getData())->getColumnIndex(argv[1]->getValueAsCString());
+   Table *table = static_cast<shared_ptr<Table>*>(object->getData())->get();
+   int columnIndex = argv[1]->isInteger() ? argv[1]->getValueAsInt32() : table->getColumnIndex(argv[1]->getValueAsCString());
 
-   ((Table *)object->getData())->setAt(argv[0]->getValueAsInt32(), columnIndex, argv[2]->getValueAsCString());
+   table->setAt(argv[0]->getValueAsInt32(), columnIndex, argv[2]->getValueAsCString());
    *result = vm->createValue();
    return 0;
 }
@@ -254,7 +245,7 @@ NXSL_TableClass::~NXSL_TableClass()
  */
 void NXSL_TableClass::onObjectDelete(NXSL_Object *object)
 {
-   static_cast<Table*>(object->getData())->decRefCount();
+   delete static_cast<shared_ptr<Table>*>(object->getData());
 }
 
 /**
@@ -267,7 +258,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   Table *table = static_cast<Table*>(object->getData());
+   shared_ptr<Table> table(*static_cast<shared_ptr<Table>*>(object->getData()));
    if (compareAttributeName(attr, "columnCount"))
    {
       value = vm->createValue((LONG)table->getNumColumns());
@@ -324,27 +315,6 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
       value = vm->createValue(table->getTitle());
    }
    return value;
-}
-
-/**
- * Implementation of "StaticTable" class: constructor
- */
-NXSL_StaticTableClass::NXSL_StaticTableClass() : NXSL_TableClass()
-{
-}
-
-/**
- * Implementation of "StaticTable" class: destructor
- */
-NXSL_StaticTableClass::~NXSL_StaticTableClass()
-{
-}
-
-/**
- * Static table: object delete
- */
-void NXSL_StaticTableClass::onObjectDelete(NXSL_Object *object)
-{
 }
 
 /**
@@ -499,6 +469,6 @@ NXSL_Value *NXSL_TableRowClass::getAttr(NXSL_Object *object, const char *attr)
  */
 int F_Table(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   *result = vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new Table()));
+   *result = vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(new Table())));
    return 0;
 }

@@ -129,7 +129,8 @@ DCTable::DCTable(const DCTable *src, bool shadowCopy) : DCObject(src, shadowCopy
    m_thresholds = new ObjectArray<DCTableThreshold>(src->m_thresholds->size(), 4, Ownership::True);
 	for(int i = 0; i < src->m_thresholds->size(); i++)
 		m_thresholds->add(new DCTableThreshold(src->m_thresholds->get(i), shadowCopy));
-	m_lastValue = (shadowCopy && (src->m_lastValue != nullptr)) ? new Table(src->m_lastValue) : nullptr;
+	if (shadowCopy && (src->m_lastValue != nullptr))
+	   m_lastValue = make_shared<Table>(src->m_lastValue.get());
 }
 
 /**
@@ -141,7 +142,6 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, const TCHAR *pollingI
 {
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, Ownership::True);
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, Ownership::True);
-	m_lastValue = nullptr;
 }
 
 /**
@@ -200,8 +200,6 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<Dat
    m_startTime = (useStartupDelay && (effectivePollingInterval > 0)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
 
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, Ownership::True);
-	m_lastValue = nullptr;
-
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT column_name,flags,snmp_oid,display_name FROM dc_table_columns WHERE table_id=? ORDER BY sequence_number"));
 	if (hStmt != nullptr)
 	{
@@ -262,8 +260,6 @@ DCTable::DCTable(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& own
 	{
       m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, Ownership::True);
 	}
-
-   m_lastValue = nullptr;
 }
 
 /**
@@ -273,8 +269,6 @@ DCTable::~DCTable()
 {
 	delete m_columns;
    delete m_thresholds;
-   if (m_lastValue != nullptr)
-      m_lastValue->decRefCount();
 }
 
 /**
@@ -342,7 +336,7 @@ bool DCTable::deleteEntry(time_t timestamp)
  *
  * @return true on success
  */
-bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
+bool DCTable::processNewValue(time_t timestamp, const shared_ptr<Table>& value, bool *updateStatus)
 {
    *updateStatus = false;
    lock();
@@ -353,7 +347,6 @@ bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
    if (owner == nullptr)
    {
       unlock();
-      static_cast<Table*>(value)->decRefCount();
       return false;
    }
 
@@ -362,27 +355,22 @@ bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
    // should not be used on aggregation
    if ((owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
-      if (!transform(static_cast<Table*>(value)))
+      if (!transform(value))
       {
          unlock();
-         static_cast<Table*>(value)->decRefCount();
          return false;
       }
    }
 
    m_dwErrorCount = 0;
-   if (m_lastValue != nullptr)
-      m_lastValue->decRefCount();
-	m_lastValue = static_cast<Table*>(value);
+	m_lastValue = value;
 	m_lastValue->setTitle(m_description);
    m_lastValue->setSource(m_source);
 
 	// Copy required fields into local variables
-	UINT32 tableId = m_id;
-	UINT32 nodeId = owner->getId();
+	uint32_t tableId = m_id;
+	uint32_t nodeId = owner->getId();
    bool save = (m_retentionType != DC_RETENTION_NONE);
-
-   static_cast<Table*>(value)->incRefCount();
 
    unlock();
 
@@ -398,7 +386,6 @@ bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
       }
 
       bool success = false;
-	   Table *data = static_cast<Table*>(value);
 
 	   DB_STATEMENT hStmt;
 	   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
@@ -425,7 +412,7 @@ bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
 	   {
 		   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
 		   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)timestamp);
-		   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, data->createPackedXML(), DB_BIND_DYNAMIC);
+		   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, value->createPackedXML(), DB_BIND_DYNAMIC);
 	      success = DBExecute(hStmt);
 		   DBFreeStatement(hStmt);
 	   }
@@ -438,19 +425,18 @@ bool DCTable::processNewValue(time_t timestamp, void *value, bool *updateStatus)
 	   DBConnectionPoolReleaseConnection(hdb);
    }
    if ((g_offlineDataRelevanceTime <= 0) || (timestamp > (time(nullptr) - g_offlineDataRelevanceTime)))
-      checkThresholds(static_cast<Table*>(value));
+      checkThresholds(value.get());
 
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
-      PerfDataStorageRequest(this, timestamp, static_cast<Table*>(value));
+      PerfDataStorageRequest(this, timestamp, value.get());
 
-   static_cast<Table*>(value)->decRefCount();
    return true;
 }
 
 /**
  * Transform received value. Expected to be called while object is locked.
  */
-bool DCTable::transform(Table *value)
+bool DCTable::transform(const shared_ptr<Table>& value)
 {
    if (m_transformationScript == nullptr)
       return true;
@@ -459,7 +445,7 @@ bool DCTable::transform(Table *value)
    ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript, m_owner.lock(), createDescriptorInternal());
    if (vm.isValid())
    {
-      NXSL_Value *nxslValue = vm->createValue(new NXSL_Object(vm, &g_nxslStaticTableClass, value));
+      NXSL_Value *nxslValue = vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(value)));
 
       // remove lock from DCI for script execution to avoid deadlocks
       unlock();
@@ -926,19 +912,10 @@ int DCTable::getColumnDataType(const TCHAR *name) const
 /**
  * Get last collected value
  */
-Table *DCTable::getLastValue()
+shared_ptr<Table> DCTable::getLastValue()
 {
    lock();
-   Table *value;
-   if (m_lastValue != nullptr)
-   {
-      value = m_lastValue;
-      value->incRefCount();
-   }
-   else
-   {
-      value = nullptr;
-   }
+   shared_ptr<Table> value = m_lastValue;
    unlock();
    return value;
 }
@@ -1027,7 +1004,7 @@ void DCTable::mergeValues(Table *dest, Table *src, int count)
 /**
  * Update columns in resulting table according to definition
  */
-void DCTable::updateResultColumns(Table *t)
+void DCTable::updateResultColumns(const shared_ptr<Table>& t)
 {
    lock();
    for(int i = 0; i < m_columns->size(); i++)

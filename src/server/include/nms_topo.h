@@ -116,7 +116,7 @@ struct PORT_MAPPING_ENTRY
 /**
  * Switch forwarding database
  */
-class ForwardingDatabase : public RefCountObject
+class ForwardingDatabase
 {
 private:
    uint32_t m_nodeId;
@@ -135,27 +135,27 @@ private:
 
 public:
    ForwardingDatabase(uint32_t nodeId, bool portReferenceByIfIndex);
-   virtual ~ForwardingDatabase();
+   ~ForwardingDatabase();
 
    void addEntry(FDB_ENTRY *entry);
    void addPortMapping(PORT_MAPPING_ENTRY *entry);
    void sort();
 
-   time_t getTimeStamp() { return m_timestamp; }
-   int getAge() { return (int)(time(nullptr) - m_timestamp); }
-   int getSize() { return m_fdbSize; }
-   FDB_ENTRY *getEntry(int index) { return ((index >= 0) && (index < m_fdbSize)) ? &m_fdb[index] : nullptr; }
+   time_t getTimeStamp() const { return m_timestamp; }
+   int getAge() const { return static_cast<int>(time(nullptr) - m_timestamp); }
+   int getSize() const { return m_fdbSize; }
+   FDB_ENTRY *getEntry(int index) const { return ((index >= 0) && (index < m_fdbSize)) ? &m_fdb[index] : nullptr; }
 
-   void setCurrentVlanId(UINT16 vlanId) { m_currentVlanId = vlanId; }
-   UINT16 getCurrentVlanId() { return m_currentVlanId; }
+   void setCurrentVlanId(uint16_t vlanId) { m_currentVlanId = vlanId; }
+   uint16_t getCurrentVlanId() const { return m_currentVlanId; }
 
    uint32_t findMacAddress(const BYTE *macAddr, bool *isStatic);
-   bool isSingleMacOnPort(uint32_t ifIndex, BYTE *macAddr = NULL);
+   bool isSingleMacOnPort(uint32_t ifIndex, BYTE *macAddr = nullptr);
    int getMacCountOnPort(uint32_t ifIndex);
 
    void print(CONSOLE_CTX ctx, Node *owner);
    void fillMessage(NXCPMessage *msg);
-   Table *getAsTable();
+   shared_ptr<Table> getAsTable();
 };
 
 /**
@@ -210,22 +210,7 @@ public:
    void setData(void *data) { setData(0, data); }
    void *getData() { return getData(0); }
    int size() { return m_count; }
-
-   LinkLayerNeighbors *clone() const
-   {
-      auto a = new LinkLayerNeighbors();
-      for (int i = 0; i < m_count; i++)
-      {
-         a->addConnection(&m_connections[i]);
-      }
-      for (int i = 0; i < 4; i++)
-      {
-         a->setData(i, m_data[i]);
-      }
-      return a;
-   }
 };
-
 
 //
 // VRRP information
@@ -244,12 +229,12 @@ class VrrpRouter
    friend UINT32 VRRPHandler(SNMP_Variable *, SNMP_Transport *, void *);
 
 private:
-   UINT32 m_id;
-   UINT32 m_ifIndex;
+   uint32_t m_id;
+   uint32_t m_ifIndex;
    int m_state;
    BYTE m_virtualMacAddr[MAC_ADDR_LENGTH];
    int m_ipAddrCount;
-   UINT32 *m_ipAddrList;
+   uint32_t *m_ipAddrList;
 
    void addVirtualIP(SNMP_Variable *var);
    static UINT32 walkerCallback(SNMP_Variable *var, SNMP_Transport *transport, void *arg);
@@ -261,12 +246,12 @@ public:
    VrrpRouter(UINT32 id, UINT32 ifIndex, int state, BYTE *macAddr);
    ~VrrpRouter();
 
-   UINT32 getId() { return m_id; }
-   UINT32 getIfIndex() { return m_ifIndex; }
-   int getState() { return m_state; }
-   BYTE *getVirtualMacAddr() { return m_virtualMacAddr; }
-   int getVipCount() { return m_ipAddrCount; }
-   UINT32 getVip(int index) { return ((index >= 0) && (index < m_ipAddrCount)) ? m_ipAddrList[index] : 0; }
+   uint32_t getId() const { return m_id; }
+   uint32_t getIfIndex() const { return m_ifIndex; }
+   int getState() const { return m_state; }
+   const BYTE *getVirtualMacAddr() const { return m_virtualMacAddr; }
+   int getVipCount() const { return m_ipAddrCount; }
+   uint32_t getVip(int index) const { return ((index >= 0) && (index < m_ipAddrCount)) ? m_ipAddrList[index] : 0; }
 };
 
 class VrrpInfo
@@ -296,7 +281,7 @@ public:
 
 shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
 void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, bool includeEndNodes);
-ForwardingDatabase *GetSwitchForwardingDatabase(Node *node);
+shared_ptr<ForwardingDatabase> GetSwitchForwardingDatabase(Node *node);
 shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
 
 ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp);

@@ -152,7 +152,6 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_pollCountAllDown = 0;
    m_requiredPollCount = 0; // Use system default
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
-   m_fdb = nullptr;
    m_wirelessStations = nullptr;
    m_adoptedApCount = 0;
    m_totalApCount = 0;
@@ -274,7 +273,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_pollCountAllDown = 0;
    m_requiredPollCount = 0; // Use system default
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
-   m_fdb = nullptr;
    m_wirelessStations = nullptr;
    m_adoptedApCount = 0;
    m_totalApCount = 0;
@@ -334,8 +332,6 @@ Node::~Node()
    delete m_vrrpInfo;
    delete m_topology;
    delete m_snmpSecurity;
-   if (m_fdb != nullptr)
-      m_fdb->decRefCount();
    delete m_wirelessStations;
    MemFree(m_lldpNodeId);
    delete m_lldpLocalPortInfo;
@@ -3218,7 +3214,7 @@ static int ReadBaseboardInformation(Node *node, ObjectArray<HardwareComponent> *
  */
 static int ReadHardwareInformation(Node *node, ObjectArray<HardwareComponent> *components, HardwareComponentCategory category, const TCHAR *tableName)
 {
-   Table *table;
+   shared_ptr<Table> table;
    if (node->getTableFromAgent(tableName, &table) != DCE_SUCCESS)
       return 0;
 
@@ -3226,7 +3222,7 @@ static int ReadHardwareInformation(Node *node, ObjectArray<HardwareComponent> *c
    int base = components->size();
    for(int i = 0; i < table->getNumRows(); i++)
    {
-      HardwareComponent *c = new HardwareComponent(category, table, i);
+      HardwareComponent *c = new HardwareComponent(category, *table, i);
       if (!resequence)
       {
          // Check for duplicate indexes - older agent versions that use BIOS handles may return duplicate handles
@@ -3241,7 +3237,6 @@ static int ReadHardwareInformation(Node *node, ObjectArray<HardwareComponent> *c
       }
       components->add(c);
    }
-   delete table;
 
    if (resequence)
    {
@@ -3455,7 +3450,7 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, uint32_t requestId)
    poller->setStatus(_T("software check"));
    sendPollerMsg(_T("Reading list of installed software packages\r\n"));
 
-   Table *table;
+   shared_ptr<Table> table;
    if (getTableFromAgent(_T("System.InstalledProducts"), &table) != DCE_SUCCESS)
    {
       sendPollerMsg(POLLER_WARNING _T("Unable to get information about installed software packages\r\n"));
@@ -3465,7 +3460,7 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, uint32_t requestId)
    ObjectArray<SoftwarePackage> *packages = new ObjectArray<SoftwarePackage>(table->getNumRows(), 16, Ownership::True);
    for(int i = 0; i < table->getNumRows(); i++)
    {
-      SoftwarePackage *pkg = SoftwarePackage::createFromTableRow(table, i);
+      SoftwarePackage *pkg = SoftwarePackage::createFromTableRow(*table, i);
       if (pkg != nullptr)
          packages->add(pkg);
    }
@@ -3487,7 +3482,6 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, uint32_t requestId)
          }
       }
    }
-   delete table;
    sendPollerMsg(POLLER_INFO _T("Got information about %d installed software packages\r\n"), packages->size());
 
    lockProperties();
@@ -5514,7 +5508,7 @@ StringMap *Node::getInstanceList(DCObject *dco)
 
    StringList *instances = nullptr;
    StringMap *instanceMap = nullptr;
-   Table *instanceTable = nullptr;
+   shared_ptr<Table> instanceTable;
    switch(dco->getInstanceDiscoveryMethod())
    {
       case IDM_AGENT_LIST:
@@ -5535,7 +5529,6 @@ StringMap *Node::getInstanceList(DCObject *dco)
                instanceTable->buildInstanceString(i, buffer, 1024);
                instances->add(buffer);
             }
-            delete instanceTable;
          }
          break;
       case IDM_SCRIPT:
@@ -5858,10 +5851,8 @@ static UINT32 SNMPGetTableCallback(SNMP_Variable *varbind, SNMP_Transport *snmp,
 /**
  * Get table from SNMP
  */
-DataCollectionError Node::getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, Table **table)
+DataCollectionError Node::getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table)
 {
-   *table = nullptr;
-
    SNMP_Transport *snmp = createSnmpTransport(port, version);
    if (snmp == nullptr)
       return DCE_COMM_ERROR;
@@ -5870,7 +5861,7 @@ DataCollectionError Node::getTableFromSNMP(UINT16 port, SNMP_Version version, co
    uint32_t rc = SnmpWalk(snmp, oid, SNMPGetTableCallback, &oidList);
    if (rc == SNMP_ERR_SUCCESS)
    {
-      *table = new Table;
+      *table = make_shared<Table>();
       for(int i = 0; i < columns.size(); i++)
       {
          const DCTableColumn *c = columns.get(i);
@@ -5881,10 +5872,10 @@ DataCollectionError Node::getTableFromSNMP(UINT16 port, SNMP_Version version, co
       size_t baseOidLen = SNMPGetOIDLength(oid);
       for(int i = 0; i < oidList.size(); i++)
       {
-         rc = ReadSNMPTableRow(snmp, oidList.get(i), baseOidLen, 0, columns, *table);
+         rc = ReadSNMPTableRow(snmp, oidList.get(i), baseOidLen, 0, columns, table->get());
          if (rc != SNMP_ERR_SUCCESS)
          {
-            delete_and_null(*table);
+            table->reset();
             break;
          }
       }
@@ -5900,7 +5891,7 @@ static UINT32 SNMPGetListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, 
 {
    bool convert = false;
    TCHAR buffer[256];
-   ((StringList *)arg)->add(varbind->getValueAsPrintableString(buffer, 256, &convert));
+   static_cast<StringList*>(arg)->add(varbind->getValueAsPrintableString(buffer, 256, &convert));
    return SNMP_ERR_SUCCESS;
 }
 
@@ -6117,13 +6108,11 @@ uint64_t Node::getMetricFromAgentAsUInt64(const TCHAR *name, uint64_t defaultVal
 /**
  * Get table from agent
  */
-DataCollectionError Node::getTableFromAgent(const TCHAR *name, Table **table)
+DataCollectionError Node::getTableFromAgent(const TCHAR *name, shared_ptr<Table> *table)
 {
-   UINT32 dwError = ERR_NOT_CONNECTED;
+   uint32_t error = ERR_NOT_CONNECTED;
    DataCollectionError result = DCE_COMM_ERROR;
-   UINT32 dwTries = 3;
-
-   *table = nullptr;
+   uint32_t retries = 3;
 
    if ((m_state & NSF_AGENT_UNREACHABLE) ||
        (m_state & DCSF_UNREACHABLE) ||
@@ -6136,12 +6125,14 @@ DataCollectionError Node::getTableFromAgent(const TCHAR *name, Table **table)
       goto end_loop;
 
    // Get parameter from agent
-   while(dwTries-- > 0)
+   while(retries-- > 0)
    {
-      dwError = conn->getTable(name, table);
-      switch(dwError)
+      Table *tableObject;
+      error = conn->getTable(name, &tableObject);
+      switch(error)
       {
          case ERR_SUCCESS:
+            *table = shared_ptr<Table>(tableObject);
             result = DCE_SUCCESS;
             setLastAgentCommTime();
             goto end_loop;
@@ -6168,7 +6159,7 @@ DataCollectionError Node::getTableFromAgent(const TCHAR *name, Table **table)
    }
 
 end_loop:
-   DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, result);
+   DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, error, result);
    return result;
 }
 
@@ -6314,7 +6305,7 @@ static void DciCountCallback(NetObj *object, void *data)
 /**
  * Get value for server's internal table parameter
  */
-DataCollectionError Node::getInternalTable(const TCHAR *name, Table **result)
+DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> *result)
 {
    DataCollectionError rc = super::getInternalTable(name, result);
    if (rc != DCE_NOT_SUPPORTED)
@@ -6326,7 +6317,7 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, Table **result)
       RoutingTable *rt = getRoutingTable();
       if (rt != nullptr)
       {
-         auto table = new Table();
+         auto table = make_shared<Table>();
          table->addColumn(_T("ID"), DCI_DT_INT, _T("ID"), true);
          table->addColumn(_T("DEST_ADDR"), DCI_DT_UINT, _T("Destination Address"));
          table->addColumn(_T("DEST_MASK"), DCI_DT_UINT, _T("Destination Mask"));
@@ -6360,11 +6351,10 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, Table **result)
    }
    else if (!_tcsicmp(name, _T("Topology.SwitchForwardingDatabase")))
    {
-      ForwardingDatabase *fdb = getSwitchForwardingDatabase();
+      shared_ptr<ForwardingDatabase> fdb = getSwitchForwardingDatabase();
       if (fdb != nullptr)
       {
          *result = fdb->getAsTable();
-         fdb->decRefCount();
       }
       else
       {
@@ -6383,7 +6373,7 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, Table **result)
    {
       if (!_tcsicmp(name, _T("Server.EventProcessors")))
       {
-         auto table = new Table();
+         auto table = make_shared<Table>();
          table->addColumn(_T("ID"), DCI_DT_INT, _T("ID"), true);
          table->addColumn(_T("BINDINGS"), DCI_DT_UINT, _T("Bindings"));
          table->addColumn(_T("QUEUE_SIZE"), DCI_DT_UINT, _T("Queue Size"));
@@ -7063,7 +7053,7 @@ uint32_t Node::getMetricForClient(int origin, uint32_t userId, const TCHAR *name
 /**
  * Get table for client
  */
-uint32_t Node::getTableForClient(const TCHAR *name, Table **table)
+uint32_t Node::getTableForClient(const TCHAR *name, shared_ptr<Table> *table)
 {
    return RCCFromDCIError(getTableFromAgent(name, table));
 }
@@ -8905,10 +8895,8 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
    POLL_CANCELLATION_CHECKPOINT();
 
    poller->setStatus(_T("reading FDB"));
-   ForwardingDatabase *fdb = GetSwitchForwardingDatabase(this);
+   shared_ptr<ForwardingDatabase> fdb = GetSwitchForwardingDatabase(this);
    MutexLock(m_mutexTopoAccess);
-   if (m_fdb != nullptr)
-      m_fdb->decRefCount();
    m_fdb = fdb;
    MutexUnlock(m_mutexTopoAccess);
    if (fdb != nullptr)
@@ -9143,7 +9131,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
  */
 void Node::addHostConnections(LinkLayerNeighbors *nbs)
 {
-   ForwardingDatabase *fdb = getSwitchForwardingDatabase();
+   shared_ptr<ForwardingDatabase> fdb = getSwitchForwardingDatabase();
    if (fdb == nullptr)
       return;
 
@@ -9183,8 +9171,6 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
       }
    }
    unlockChildList();
-
-   fdb->decRefCount();
 }
 
 /**
@@ -9688,14 +9674,10 @@ NXSL_Array *Node::getInterfacesForNXSL(NXSL_VM *vm)
 /**
  * Get switch forwarding database
  */
-ForwardingDatabase *Node::getSwitchForwardingDatabase()
+shared_ptr<ForwardingDatabase> Node::getSwitchForwardingDatabase()
 {
-   ForwardingDatabase *fdb;
-
    MutexLock(m_mutexTopoAccess);
-   if (m_fdb != nullptr)
-      m_fdb->incRefCount();
-   fdb = m_fdb;
+   shared_ptr<ForwardingDatabase> fdb = m_fdb;
    MutexUnlock(m_mutexTopoAccess);
    return fdb;
 }
@@ -9706,7 +9688,7 @@ ForwardingDatabase *Node::getSwitchForwardingDatabase()
 shared_ptr<LinkLayerNeighbors> Node::getLinkLayerNeighbors()
 {
    MutexLock(m_mutexTopoAccess);
-   shared_ptr<LinkLayerNeighbors> linkLayerNeighbors(m_linkLayerNeighbors != nullptr ? m_linkLayerNeighbors->clone() : nullptr);
+   shared_ptr<LinkLayerNeighbors> linkLayerNeighbors = m_linkLayerNeighbors;
    MutexUnlock(m_mutexTopoAccess);
    return linkLayerNeighbors;
 }
@@ -9915,13 +9897,13 @@ void Node::writeHardwareListToMessage(NXCPMessage *msg)
 /**
  * Create DCI Table form list of registered wireless stations
  */
-Table *Node::wsListAsTable()
+shared_ptr<Table> Node::wsListAsTable()
 {
-   Table *result = nullptr;
+   shared_ptr<Table> result;
    lockProperties();
    if (m_wirelessStations != nullptr)
    {
-      result = new Table();
+      result = make_shared<Table>();
       result->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("Mac address"), true);
       result->addColumn(_T("IP_ADDRESS"), DCI_DT_STRING, _T("IP address"));
       result->addColumn(_T("NODE_ID"), DCI_DT_UINT, _T("Node id"));

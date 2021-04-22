@@ -340,7 +340,6 @@ public:
    virtual void deleteFromDatabase();
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
-   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus);
    void processNewError(bool noInstance);
    virtual void processNewError(bool noInstance, time_t now);
    virtual void updateThresholdsBeforeMaintenanceState();
@@ -511,7 +510,8 @@ public:
 
 	UINT64 getCacheMemoryUsage() const;
 
-   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus) override;
+   bool processNewValue(time_t nTimeStamp, const TCHAR *value, bool *updateStatus);
+
    virtual void processNewError(bool noInstance, time_t now) override;
    virtual void updateThresholdsBeforeMaintenanceState() override;
    virtual void generateEventsBasedOnThrDiff() override;
@@ -731,14 +731,14 @@ class NXCORE_EXPORTABLE DCTable : public DCObject
 protected:
 	ObjectArray<DCTableColumn> *m_columns;
    ObjectArray<DCTableThreshold> *m_thresholds;
-	Table *m_lastValue;
+	shared_ptr<Table> m_lastValue;
 
 	static TC_ID_MAP_ENTRY *m_cache;
 	static int m_cacheSize;
 	static int m_cacheAllocated;
 	static MUTEX m_cacheMutex;
 
-   bool transform(Table *value);
+   bool transform(const shared_ptr<Table>& value);
    void checkThresholds(Table *value);
 
    bool loadThresholds(DB_HANDLE hdb);
@@ -762,7 +762,6 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual void deleteFromDatabase() override;
 
-   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus) override;
    virtual void processNewError(bool noInstance, time_t now) override;
    virtual void updateThresholdsBeforeMaintenanceState() override;
    virtual void generateEventsBasedOnThrDiff() override;
@@ -777,17 +776,19 @@ public:
    virtual void createExportRecord(StringBuffer &xml) override;
    virtual json_t *toJson() override;
 
+   bool processNewValue(time_t nTimeStamp, const shared_ptr<Table>& value, bool *updateStatus);
+
 	void fillLastValueMessage(NXCPMessage *msg);
    void fillLastValueSummaryMessage(NXCPMessage *pMsg, UINT32 dwId);
 
    int getColumnDataType(const TCHAR *name) const;
    const ObjectArray<DCTableColumn>& getColumns() const { return *m_columns; }
-   Table *getLastValue();
+   shared_ptr<Table> getLastValue();
    IntegerArray<UINT32> *getThresholdIdList();
 
    void mergeValues(Table *dest, Table *src, int count);
 
-   void updateResultColumns(Table *t);
+   void updateResultColumns(const shared_ptr<Table>& t);
 
 	static INT32 columnIdFromName(const TCHAR *name);
 };

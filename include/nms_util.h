@@ -2709,38 +2709,6 @@ public:
    bool save(int f);
 };
 
-/**
- * Auxilliary class for objects which counts references and
- * destroys itself wheren reference count falls to 0
- */
-class LIBNETXMS_EXPORTABLE RefCountObject
-{
-   DISABLE_COPY_CTOR(RefCountObject)
-
-private:
-	VolatileCounter m_refCount;
-
-protected:
-   virtual ~RefCountObject();
-
-public:
-	RefCountObject()
-   {
-      m_refCount = 1;
-   }
-
-	void incRefCount()
-   {
-      InterlockedIncrement(&m_refCount);
-   }
-
-	void decRefCount()
-   {
-      if (InterlockedDecrement(&m_refCount) == 0)
-         delete this;
-   }
-};
-
 class NXCPMessage;
 
 /**
@@ -2848,29 +2816,29 @@ public:
 /**
  * Class for table data storage
  */
-class LIBNETXMS_EXPORTABLE Table : public RefCountObject
+class LIBNETXMS_EXPORTABLE Table
 {
    DISABLE_COPY_CTOR(Table)
 
 private:
    ObjectArray<TableRow> *m_data;
    ObjectArray<TableColumnDefinition> *m_columns;
-	TCHAR *m_title;
+   TCHAR *m_title;
    int m_source;
    bool m_extendedFormat;
 
-	void createFromMessage(NXCPMessage *msg);
-	void destroy();
+   void createFromMessage(const NXCPMessage *msg);
+   void destroy();
    bool parseXML(const char *xml);
 
 public:
    Table();
-   Table(Table *src);
-   Table(NXCPMessage *msg);
-   virtual ~Table();
+   Table(const Table *src);
+   Table(const NXCPMessage *msg);
+   ~Table();
 
-	int fillMessage(NXCPMessage &msg, int offset, int rowLimit);
-	void updateFromMessage(NXCPMessage *msg);
+   int fillMessage(NXCPMessage &msg, int offset, int rowLimit);
+   void updateFromMessage(NXCPMessage *msg);
 
    void addAll(const Table *src);
    int copyRow(const Table *src, int row);
@@ -2879,19 +2847,19 @@ public:
 
    int getNumRows() const { return m_data->size(); }
    int getNumColumns() const { return m_columns->size(); }
-	const TCHAR *getTitle() const { return CHECK_NULL_EX(m_title); }
+   const TCHAR *getTitle() const { return CHECK_NULL_EX(m_title); }
    int getSource() const { return m_source; }
 
    bool isExtendedFormat() { return m_extendedFormat; }
    void setExtendedFormat(bool ext) { m_extendedFormat = ext; }
 
-   const TCHAR *getColumnName(int col) const { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getName() : NULL; }
-   INT32 getColumnDataType(int col) const { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getDataType() : 0; }
+   const TCHAR *getColumnName(int col) const { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getName() : nullptr; }
+   int32_t getColumnDataType(int col) const { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getDataType() : 0; }
    const TableColumnDefinition *getColumnDefinition(int col) const { return m_columns->get(col); }
 	int getColumnIndex(const TCHAR *name) const;
    ObjectArray<TableColumnDefinition> *getColumnDefinitions() { return m_columns; }
 
-	void setTitle(const TCHAR *title) { MemFree(m_title); m_title = MemCopyString(title); }
+   void setTitle(const TCHAR *title) { MemFree(m_title); m_title = MemCopyString(title); }
    void setSource(int source) { m_source = source; }
    int addColumn(const TCHAR *name, INT32 dataType = 0, const TCHAR *displayName = NULL, bool isInstance = false);
    int addColumn(const TableColumnDefinition *d);
@@ -2926,10 +2894,10 @@ public:
    void setStatus(int col, int status) { setStatusAt(getNumRows() - 1, col, status); }
 
    const TCHAR *getAsString(int nRow, int nCol, const TCHAR *defaultValue = NULL) const;
-   INT32 getAsInt(int nRow, int nCol) const;
-   UINT32 getAsUInt(int nRow, int nCol) const;
-   INT64 getAsInt64(int nRow, int nCol) const;
-   UINT64 getAsUInt64(int nRow, int nCol) const;
+   int32_t getAsInt(int nRow, int nCol) const;
+   uint32_t getAsUInt(int nRow, int nCol) const;
+   int64_t getAsInt64(int nRow, int nCol) const;
+   uint64_t getAsUInt64(int nRow, int nCol) const;
    double getAsDouble(int nRow, int nCol) const;
 
    int getStatus(int nRow, int nCol) const;
@@ -2939,17 +2907,17 @@ public:
 
    int findRow(void *key, bool (*comparator)(const TableRow *, void *));
 
-   UINT32 getObjectId(int row) const { const TableRow *r = m_data->get(row); return (r != NULL) ? r->getObjectId() : 0; }
-   void setObjectIdAt(int row, UINT32 id) { TableRow *r = m_data->get(row); if (r != NULL) r->setObjectId(id); }
-   void setObjectId(UINT32 id) { setObjectIdAt(getNumRows() - 1, id); }
+   uint32_t getObjectId(int row) const { const TableRow *r = m_data->get(row); return (r != nullptr) ? r->getObjectId() : 0; }
+   void setObjectIdAt(int row, uint32_t id) { TableRow *r = m_data->get(row); if (r != nullptr) r->setObjectId(id); }
+   void setObjectId(uint32_t id) { setObjectIdAt(getNumRows() - 1, id); }
 
-   void setCellObjectIdAt(int row, int col, UINT32 objectId);
-   void setCellObjectId(int col, UINT32 objectId) { setCellObjectIdAt(getNumRows() - 1, col, objectId); }
-   UINT32 getCellObjectId(int row, int col) const { const TableRow *r = m_data->get(row); return (r != NULL) ? r->getCellObjectId(col) : 0; }
+   void setCellObjectIdAt(int row, int col, uint32_t objectId);
+   void setCellObjectId(int col, uint32_t objectId) { setCellObjectIdAt(getNumRows() - 1, col, objectId); }
+   uint32_t getCellObjectId(int row, int col) const { const TableRow *r = m_data->get(row); return (r != nullptr) ? r->getCellObjectId(col) : 0; }
 
    void setBaseRowAt(int row, int baseRow);
    void setBaseRow(int baseRow) { setBaseRowAt(getNumRows() - 1, baseRow); }
-   int getBaseRow(int row) const { const TableRow *r = m_data->get(row); return (r != NULL) ? r->getBaseRow() : 0; }
+   int getBaseRow(int row) const { const TableRow *r = m_data->get(row); return (r != nullptr) ? r->getBaseRow() : 0; }
 
    void writeToTerminal();
    void dump(FILE *out, bool withHeader = true, TCHAR delimiter = _T(','));

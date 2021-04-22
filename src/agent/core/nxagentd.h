@@ -489,9 +489,12 @@ public:
 /**
  * Session agent connector
  */
-class SessionAgentConnector : public RefCountObject
+class SessionAgentConnector
 {
+   friend shared_ptr<SessionAgentConnector> CreateSessionAgentConnector(uint32_t id, SOCKET s);
+
 private:
+   weak_ptr<SessionAgentConnector> m_self;
    uint32_t m_id;
    SOCKET m_socket;
    MUTEX m_mutex;
@@ -505,17 +508,18 @@ private:
    bool m_userAgent;
    VolatileCounter m_requestId;
 
+   void setSelfPtr(const shared_ptr<SessionAgentConnector>& self) { m_self = self; }
+
    void readThread();
    bool sendMessage(const NXCPMessage *msg);
    uint32_t nextRequestId() { return InterlockedIncrement(&m_requestId); }
 
-   static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
-
 public:
    SessionAgentConnector(uint32_t id, SOCKET s);
-   virtual ~SessionAgentConnector();
+   ~SessionAgentConnector();
 
-   void run();
+   shared_ptr<SessionAgentConnector> self() const { return m_self.lock(); }
+
    void disconnect();
 
    uint32_t getId() const { return m_id; }
@@ -537,6 +541,17 @@ public:
    void removeUserAgentNotification(const ServerObjectKey& id);
    void shutdown(bool restart);
 };
+
+/**
+ * Create and run session agent connector
+ */
+inline shared_ptr<SessionAgentConnector> CreateSessionAgentConnector(uint32_t id, SOCKET s)
+{
+   shared_ptr<SessionAgentConnector> c = make_shared<SessionAgentConnector>(id, s);
+   c->setSelfPtr(c);
+   ThreadCreate(c, &SessionAgentConnector::readThread);
+   return c;
+}
 
 /**
  * Class to reciever traps
@@ -796,8 +811,8 @@ void StartControlConnector();
 bool SendControlMessage(NXCPMessage *msg);
 
 void StartSessionAgentConnector();
-SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName);
-SessionAgentConnector *AcquireSessionAgentConnector(uint32_t sessionId);
+shared_ptr<SessionAgentConnector> AcquireSessionAgentConnector(const TCHAR *sessionName);
+shared_ptr<SessionAgentConnector> AcquireSessionAgentConnector(uint32_t sessionId);
 void ShutdownSessionAgents(bool restart);
 bool IsUserAgentInstalled();
 bool GetScreenInfoForUserSession(uint32_t sessionId, uint32_t *width, uint32_t *height, uint32_t *bpp);
@@ -854,20 +869,20 @@ extern TCHAR g_certificateDirectory[];
 extern TCHAR g_szDataDirectory[];
 extern TCHAR g_masterAgent[];
 extern TCHAR g_szSNMPTrapListenAddress[];
-extern UINT16 g_wListenPort;
+extern uint16_t g_wListenPort;
 extern TCHAR g_systemName[];
 extern ObjectArray<ServerInfo> g_serverList;
 extern time_t g_tmAgentStartTime;
 extern TCHAR g_szPlatformSuffix[];
-extern UINT32 g_dwStartupDelay;
-extern UINT32 g_dwIdleTimeout;
+extern uint32_t g_dwStartupDelay;
+extern uint32_t g_dwIdleTimeout;
 extern uint32_t g_maxCommSessions;
-extern UINT32 g_execTimeout;
-extern UINT32 g_eppTimeout;
-extern UINT32 g_snmpTimeout;
-extern UINT16 g_snmpTrapPort;
-extern UINT32 g_longRunningQueryThreshold;
-extern UINT16 g_sessionAgentPort;
+extern uint32_t g_execTimeout;
+extern uint32_t g_eppTimeout;
+extern uint32_t g_snmpTimeout;
+extern uint16_t g_snmpTrapPort;
+extern uint32_t g_longRunningQueryThreshold;
+extern uint16_t g_sessionAgentPort;
 extern int32_t g_zoneUIN;
 extern uint32_t g_tunnelKeepaliveInterval;
 extern uint16_t g_syslogListenPort;

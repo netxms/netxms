@@ -859,10 +859,12 @@ UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId
 /**
  * Process new DCI value
  */
-bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dco, time_t currTime, void *value)
+bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dco, time_t currTime, const TCHAR *itemValue, const shared_ptr<Table>& tableValue)
 {
    bool updateStatus;
-	bool result = dco->processNewValue(currTime, value, &updateStatus);
+	bool result = (dco->getType() == DCO_TYPE_ITEM) ?
+	         static_cast<DCItem&>(*dco).processNewValue(currTime, itemValue, &updateStatus) :
+	         static_cast<DCTable&>(*dco).processNewValue(currTime, tableValue, &updateStatus);
 	if (updateStatus)
 	{
       calculateCompoundStatus(FALSE);
@@ -965,7 +967,7 @@ shared_ptr<NetObj> DataCollectionTarget::objectFromParameter(const TCHAR *param)
 /**
  * Get value for server's internal table parameter
  */
-DataCollectionError DataCollectionTarget::getInternalTable(const TCHAR *name, Table **result)
+DataCollectionError DataCollectionTarget::getInternalTable(const TCHAR *name, shared_ptr<Table> *result)
 {
    return DCE_NOT_SUPPORTED;
 }
@@ -1483,7 +1485,7 @@ DataCollectionError DataCollectionTarget::getListFromScript(const TCHAR *param, 
 /**
  * Get table from NXSL script
  */
-DataCollectionError DataCollectionTarget::getTableFromScript(const TCHAR *param, Table **result, DataCollectionTarget *targetObject)
+DataCollectionError DataCollectionTarget::getTableFromScript(const TCHAR *param, shared_ptr<Table> *result, DataCollectionTarget *targetObject)
 {
    DataCollectionError rc = DCE_NOT_SUPPORTED;
    NXSL_VM *vm = runDataCollectionScript(param, targetObject);
@@ -1492,8 +1494,7 @@ DataCollectionError DataCollectionTarget::getTableFromScript(const TCHAR *param,
       NXSL_Value *value = vm->getResult();
       if (value->isObject(_T("Table")))
       {
-         *result = (Table *)value->getValueAsObject()->getData();
-         (*result)->incRefCount();
+         *result = *static_cast<shared_ptr<Table>*>(value->getValueAsObject()->getData());
          rc = DCE_SUCCESS;
       }
       else
@@ -1674,7 +1675,7 @@ void DataCollectionTarget::getTableDciValuesSummary(SummaryTable *tableDefinitio
            !_tcsicmp(o->getName(), tableDefinition->getTableDciName()) &&
            o->hasAccess(userId))
       {
-         Table *lastValue = ((DCTable*)o)->getLastValue();
+         shared_ptr<Table> lastValue = static_cast<DCTable*>(o)->getLastValue();
          if (lastValue == nullptr)
             continue;
 

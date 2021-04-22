@@ -660,7 +660,7 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
  *
  * @return true on success
  */
-bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *updateStatus)
+bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, bool *updateStatus)
 {
    ItemValue rawValue, *pValue;
 
@@ -678,7 +678,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *upda
    }
 
    // Create new ItemValue object and transform it as needed
-   pValue = new ItemValue(static_cast<TCHAR*>(originalValue), tmTimeStamp);
+   pValue = new ItemValue(originalValue, tmTimeStamp);
    if (m_tPrevValueTimeStamp == 0)
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
@@ -708,12 +708,12 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *upda
       m_tPrevValueTimeStamp = tmTimeStamp;
 
       // Save raw value into database
-      QueueRawDciDataUpdate(tmTimeStamp, m_id, static_cast<TCHAR*>(originalValue), pValue->getString(), (m_bCacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0);
+      QueueRawDciDataUpdate(tmTimeStamp, m_id, originalValue, pValue->getString(), (m_bCacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0);
    }
 
 	// Save transformed value to database
    if (m_retentionType != DC_RETENTION_NONE)
-	   QueueIDataInsert(tmTimeStamp, owner->getId(), m_id, static_cast<TCHAR*>(originalValue), pValue->getString(), getStorageClass());
+	   QueueIDataInsert(tmTimeStamp, owner->getId(), m_id, originalValue, pValue->getString(), getStorageClass());
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
 

@@ -339,9 +339,6 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
       case DCO_TYPE_TABLE:
          dc = "table";
          break;
-      case DCO_TYPE_LIST:
-         dc = "list";
-         break;
       default:
          dc = "unknown";
          break;

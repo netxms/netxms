@@ -46,12 +46,12 @@ void ProxyListenerThread();
 extern HashMap<ServerObjectKey, DataCollectionProxy> g_proxyList;
 extern Mutex g_proxyListMutex;
 
-extern UINT32 g_dcReconciliationBlockSize;
-extern UINT32 g_dcReconciliationTimeout;
-extern UINT32 g_dcWriterFlushInterval;
-extern UINT32 g_dcWriterMaxTransactionSize;
-extern UINT32 g_dcMaxCollectorPoolSize;
-extern UINT32 g_dcOfflineExpirationTime;
+extern uint32_t g_dcReconciliationBlockSize;
+extern uint32_t g_dcReconciliationTimeout;
+extern uint32_t g_dcWriterFlushInterval;
+extern uint32_t g_dcWriterMaxTransactionSize;
+extern uint32_t g_dcMaxCollectorPoolSize;
+extern uint32_t g_dcOfflineExpirationTime;
 
 /**
  * Data collector start indicator
@@ -167,7 +167,7 @@ enum class ScheduleType
 /**
  * Data collection item
  */
-class DataCollectionItem : public RefCountObject
+class DataCollectionItem
 {
 private:
    uint64_t m_serverId;
@@ -192,7 +192,7 @@ public:
    DataCollectionItem(uint64_t serverId, const NXCPMessage& msg, uint32_t baseId, uint32_t extBaseId, bool hasExtraData);
    DataCollectionItem(DB_RESULT hResult, int row);
    DataCollectionItem(const DataCollectionItem *item);
-   virtual ~DataCollectionItem();
+   ~DataCollectionItem();
 
    uint32_t getId() const { return m_id; }
    uint64_t getServerId() const { return m_serverId; }
@@ -209,13 +209,13 @@ public:
    uint32_t getBackupProxyId() const { return m_backupProxyId; }
    const ObjectArray<SNMPTableColumnDefinition> *getColumns() const { return m_tableColumns; }
 
-   bool updateAndSave(const DataCollectionItem *item, bool txnOpen, DB_HANDLE hdb, DataCollectionStatementSet *statements);
+   bool updateAndSave(const shared_ptr<DataCollectionItem>& item, bool txnOpen, DB_HANDLE hdb, DataCollectionStatementSet *statements);
    void saveToDatabase(bool newObject, DB_HANDLE hdb, DataCollectionStatementSet *statements);
    void deleteFromDatabase(DB_HANDLE hdb, DataCollectionStatementSet *statements);
    void setLastPollTime(time_t time);
 
-   void startDataCollection() { m_busy = 1; incRefCount(); }
-   void finishDataCollection() { m_busy = 0; decRefCount(); }
+   void startDataCollection() { m_busy = 1; }
+   void finishDataCollection() { m_busy = 0; }
 
    uint32_t getTimeToNextPoll(time_t now)
    {
@@ -285,7 +285,7 @@ static bool UsesSeconds(const TCHAR *schedule)
 /**
  * Create data collection item from NXCP mesage
  */
-DataCollectionItem::DataCollectionItem(uint64_t serverId, const NXCPMessage& msg, UINT32 baseId, uint32_t extBaseId, bool hasExtraData) : RefCountObject()
+DataCollectionItem::DataCollectionItem(uint64_t serverId, const NXCPMessage& msg, UINT32 baseId, uint32_t extBaseId, bool hasExtraData)
 {
    m_serverId = serverId;
    m_id = msg.getFieldAsInt32(baseId);
@@ -467,7 +467,7 @@ DataCollectionItem::~DataCollectionItem()
  * Will check if object has changed. If at least one field is changed - all data will be updated and
  * saved to database.
  */
-bool DataCollectionItem::updateAndSave(const DataCollectionItem *item, bool txnOpen, DB_HANDLE hdb, DataCollectionStatementSet *statements)
+bool DataCollectionItem::updateAndSave(const shared_ptr<DataCollectionItem>& item, bool txnOpen, DB_HANDLE hdb, DataCollectionStatementSet *statements)
 {
    // if at least one of fields changed - set all fields and save to DB
    if ((m_type != item->m_type) || (m_origin != item->m_origin) || _tcscmp(m_name, item->m_name) ||
@@ -690,22 +690,21 @@ void DataCollectionItem::setLastPollTime(time_t time)
 class DataElement
 {
 private:
-   UINT64 m_serverId;
-   UINT32 m_dciId;
+   uint64_t m_serverId;
+   uint32_t m_dciId;
    time_t m_timestamp;
    int m_origin;
    int m_type;
-   UINT32 m_statusCode;
+   uint32_t m_statusCode;
    uuid m_snmpNode;
    union
    {
       TCHAR *item;
-      StringList *list;
       Table *table;
    } m_value;
 
 public:
-   DataElement(DataCollectionItem *dci, const TCHAR *value, UINT32 status)
+   DataElement(DataCollectionItem *dci, const TCHAR *value, uint32_t status)
    {
       m_serverId = dci->getServerId();
       m_dciId = dci->getId();
@@ -717,19 +716,7 @@ public:
       m_value.item = MemCopyString(value);
    }
 
-   DataElement(DataCollectionItem *dci, StringList *value, UINT32 status)
-   {
-      m_serverId = dci->getServerId();
-      m_dciId = dci->getId();
-      m_timestamp = time(nullptr);
-      m_origin = dci->getOrigin();
-      m_type = DCO_TYPE_LIST;
-      m_statusCode = status;
-      m_snmpNode = dci->getSnmpTargetGuid();
-      m_value.list = value;
-   }
-
-   DataElement(DataCollectionItem *dci, Table *value, UINT32 status)
+   DataElement(DataCollectionItem *dci, Table *value, uint32_t status)
    {
       m_serverId = dci->getServerId();
       m_dciId = dci->getId();
@@ -759,17 +746,6 @@ public:
          case DCO_TYPE_ITEM:
             m_value.item = DBGetField(hResult, row, 7, nullptr, 0);
             break;
-         case DCO_TYPE_LIST:
-            {
-               m_value.list = new StringList();
-               TCHAR *text = DBGetField(hResult, row, 7, nullptr, 0);
-               if (text != nullptr)
-               {
-                  m_value.list->splitAndAdd(text, _T("\n"));
-                  MemFree(text);
-               }
-            }
-            break;
          case DCO_TYPE_TABLE:
             {
                char *xml = DBGetFieldUTF8(hResult, row, 7, nullptr, 0);
@@ -798,30 +774,27 @@ public:
          case DCO_TYPE_ITEM:
             MemFree(m_value.item);
             break;
-         case DCO_TYPE_LIST:
-            delete m_value.list;
-            break;
          case DCO_TYPE_TABLE:
             delete m_value.table;
             break;
       }
    }
 
-   time_t getTimestamp() { return m_timestamp; }
-   UINT64 getServerId() { return m_serverId; }
-   UINT32 getDciId() { return m_dciId; }
-   int getType() { return m_type; }
-   UINT32 getStatusCode() { return m_statusCode; }
+   time_t getTimestamp() const { return m_timestamp; }
+   uint64_t getServerId() const { return m_serverId; }
+   uint32_t getDciId() const { return m_dciId; }
+   int getType() const { return m_type; }
+   uint32_t getStatusCode() const { return m_statusCode; }
 
-   void saveToDatabase(DB_STATEMENT hStmt);
-   bool sendToServer(bool reconcillation);
-   void fillReconciliationMessage(NXCPMessage *msg, UINT32 baseId);
+   void saveToDatabase(DB_STATEMENT hStmt) const;
+   bool sendToServer(bool reconcillation) const;
+   void fillReconciliationMessage(NXCPMessage *msg, uint32_t baseId) const;
 };
 
 /**
  * Save data element to database
  */
-void DataElement::saveToDatabase(DB_STATEMENT hStmt)
+void DataElement::saveToDatabase(DB_STATEMENT hStmt) const
 {
    DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, m_serverId);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_dciId);
@@ -834,9 +807,6 @@ void DataElement::saveToDatabase(DB_STATEMENT hStmt)
    {
       case DCO_TYPE_ITEM:
          DBBind(hStmt, 8, DB_SQLTYPE_TEXT, m_value.item, DB_BIND_STATIC);
-         break;
-      case DCO_TYPE_LIST:
-         DBBind(hStmt, 8, DB_SQLTYPE_TEXT, m_value.list->join(_T("\n")), DB_BIND_DYNAMIC);
          break;
       case DCO_TYPE_TABLE:
          DBBind(hStmt, 8, DB_SQLTYPE_TEXT, m_value.table->createXML(), DB_BIND_DYNAMIC);
@@ -856,14 +826,14 @@ static bool SessionComparator_Sender(AbstractCommSession *session, void *data)
 /**
  * Send collected data to server
  */
-bool DataElement::sendToServer(bool reconciliation)
+bool DataElement::sendToServer(bool reconciliation) const
 {
    // If data in database was invalid table may not be parsed correctly
    // Consider sending a success in that case so data element can be dropped
    if ((m_type == DCO_TYPE_TABLE) && (m_value.table == nullptr))
       return true;
 
-   shared_ptr<CommSession> session = static_pointer_cast<CommSession>(FindServerSession(SessionComparator_Sender, &m_serverId));
+   shared_ptr<CommSession> session = static_pointer_cast<CommSession>(FindServerSession(SessionComparator_Sender, (void*)&m_serverId));
    if (session == nullptr)
       return false;
 
@@ -880,9 +850,6 @@ bool DataElement::sendToServer(bool reconciliation)
       case DCO_TYPE_ITEM:
          msg.setField(VID_VALUE, m_value.item);
          break;
-      case DCO_TYPE_LIST:
-         m_value.list->fillMessage(&msg, VID_ENUM_VALUE_BASE, VID_NUM_STRINGS);
-         break;
       case DCO_TYPE_TABLE:
          m_value.table->setSource(m_origin);
          m_value.table->fillMessage(msg, 0, -1);
@@ -898,7 +865,7 @@ bool DataElement::sendToServer(bool reconciliation)
 /**
  * Fill bulk reconciliation message with DCI data
  */
-void DataElement::fillReconciliationMessage(NXCPMessage *msg, UINT32 baseId)
+void DataElement::fillReconciliationMessage(NXCPMessage *msg, uint32_t baseId) const
 {
    msg->setField(baseId, m_dciId);
    msg->setField(baseId + 1, (INT16)m_origin);
@@ -988,7 +955,7 @@ static void DatabaseWriter()
 /**
  * List of all data collection items
  */
-static HashMap<ServerObjectKey, DataCollectionItem> s_items(Ownership::True);
+static SharedHashMap<ServerObjectKey, DataCollectionItem> s_items;
 static Mutex s_itemLock;
 
 /**
@@ -1030,10 +997,10 @@ static void ReconciliationThread()
          {
             DBBegin(hdb);
             TCHAR query[256];
-            Iterator<DataCollectionItem> *it = s_items.iterator();
+            auto it = s_items.iterator();
             while(it->hasNext())
             {
-               DataCollectionItem *dci = it->next();
+               DataCollectionItem *dci = it->next()->get();
                _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"),
                           (UINT64)dci->getLastPollTime(), (UINT64)dci->getServerId(), dci->getId());
                DBQuery(hdb, query);
@@ -1270,12 +1237,6 @@ static DataElement *CollectDataFromAgent(DataCollectionItem *dci)
       status = GetParameterValue(dci->getName(), value, &session);
       e = new DataElement(dci, (status == ERR_SUCCESS) ? value : _T(""), status);
    }
-   else if (dci->getType() == DCO_TYPE_LIST)
-   {
-      StringList *value = new StringList();
-      status = GetListValue(dci->getName(), value, &session);
-      e = new DataElement(dci, value, status);
-   }
    else if (dci->getType() == DCO_TYPE_TABLE)
    {
       Table *value = new Table();
@@ -1370,10 +1331,10 @@ static uint32_t DataCollectionSchedulerRun()
 
    s_itemLock.lock();
    time_t now = time(nullptr);
-   Iterator<DataCollectionItem> *it = s_items.iterator();
+   auto it = s_items.iterator();
    while(it->hasNext())
    {
-      DataCollectionItem *dci = it->next();
+      DataCollectionItem *dci = it->next()->get();
       uint32_t timeToPoll = dci->getTimeToNextPoll(now);
       if (timeToPoll == 0)
       {
@@ -1489,14 +1450,14 @@ void ConfigureDataCollection(uint64_t serverId, const NXCPMessage& request)
    nxlog_debug_tag(DEBUG_TAG, 4, _T("%d proxies received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
    // Read data collection items
-   HashMap<ServerObjectKey, DataCollectionItem> config(Ownership::True);
+   SharedHashMap<ServerObjectKey, DataCollectionItem> config;
    bool hasExtraData = request.getFieldAsBoolean(VID_EXTENDED_DCI_DATA);
    count = request.getFieldAsInt32(VID_NUM_ELEMENTS);
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    uint32_t extFieldId = VID_EXTRA_DCI_INFO_BASE;
    for(int i = 0; i < count; i++)
    {
-      DataCollectionItem *dci = new DataCollectionItem(serverId, request, fieldId, extFieldId, hasExtraData);
+      shared_ptr<DataCollectionItem> dci = make_shared<DataCollectionItem>(serverId, request, fieldId, extFieldId, hasExtraData);
       config.set(dci->getKey(), dci);
       fieldId += 10;
       extFieldId += 1100;
@@ -1511,25 +1472,24 @@ void ConfigureDataCollection(uint64_t serverId, const NXCPMessage& request)
    s_itemLock.lock();
 
    // Update and add new
-   Iterator<DataCollectionItem> *it = config.iterator();
+   auto it = config.iterator();
    while(it->hasNext())
    {
-      DataCollectionItem *item = it->next();
-      DataCollectionItem *existingItem = s_items.get(item->getKey());
+      shared_ptr<DataCollectionItem> item(*it->next());
+      shared_ptr<DataCollectionItem> existingItem = s_items.getShared(item->getKey());
       if (existingItem != nullptr)
       {
          txnOpen = existingItem->updateAndSave(item, txnOpen, hdb, &statements);
       }
       else
       {
-         DataCollectionItem *newItem = new DataCollectionItem(item);
-         s_items.set(newItem->getKey(), newItem);
+         s_items.set(item->getKey(), item);
          if (!txnOpen)
          {
             DBBegin(hdb);
             txnOpen = true;
          }
-         newItem->saveToDatabase(true, hdb, &statements);
+         item->saveToDatabase(true, hdb, &statements);
       }
 
       if (item->getBackupProxyId() != 0)
@@ -1552,7 +1512,7 @@ void ConfigureDataCollection(uint64_t serverId, const NXCPMessage& request)
    it = s_items.iterator();
    while(it->hasNext())
    {
-      DataCollectionItem *item = it->next();
+      shared_ptr<DataCollectionItem> item(*it->next());
       if (item->getServerId() != serverId)
          continue;
 
@@ -1564,8 +1524,7 @@ void ConfigureDataCollection(uint64_t serverId, const NXCPMessage& request)
             txnOpen = true;
          }
          item->deleteFromDatabase(hdb, &statements);
-         it->unlink();
-         item->decRefCount();
+         it->remove();
       }
    }
    delete it;
@@ -1615,7 +1574,7 @@ static void LoadState()
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         DataCollectionItem *dci = new DataCollectionItem(hResult, i);
+         shared_ptr<DataCollectionItem> dci = make_shared<DataCollectionItem>(hResult, i);
          s_items.set(dci->getKey(), dci);
       }
       DBFreeResult(hResult);
@@ -1638,7 +1597,7 @@ static void LoadState()
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         UINT64 serverId = DBGetFieldUInt64(hResult, i, 0);
+         uint64_t serverId = DBGetFieldUInt64(hResult, i, 0);
          ServerSyncStatus *s = new ServerSyncStatus(serverId);
          s->queueSize = DBGetFieldLong(hResult, i, 1);
          s->lastSync = static_cast<time_t>(DBGetFieldInt64(hResult, i, 2));
@@ -1662,7 +1621,7 @@ static void ClearStalledOfflineData(void *arg)
    if (g_dwFlags & AF_SHUTDOWN)
       return;
 
-   IntegerArray<UINT64> deleteList;
+   IntegerArray<uint64_t> deleteList;
 
    s_serverSyncStatusLock.lock();
    time_t expirationTime = time(nullptr) - g_dcOfflineExpirationTime * 86400;
@@ -1703,14 +1662,13 @@ static void ClearStalledOfflineData(void *arg)
          DBCommit(hdb);
 
          s_itemLock.lock();
-         Iterator<DataCollectionItem> *it = s_items.iterator();
+         auto it = s_items.iterator();
          while(it->hasNext())
          {
-            DataCollectionItem *item = it->next();
+            shared_ptr<DataCollectionItem> item(*it->next());
             if (item->getServerId() == serverId)
             {
-               it->unlink();
-               item->decRefCount();
+               it->remove();
             }
          }
          delete it;

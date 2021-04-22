@@ -70,7 +70,7 @@ static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Valu
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
-	if (dci != NULL)
+	if (dci != nullptr)
    {
       if (dci->getType() == DCO_TYPE_ITEM)
 	   {
@@ -78,8 +78,8 @@ static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Valu
 	   }
       else if (dci->getType() == DCO_TYPE_TABLE)
       {
-         Table *t = static_cast<DCTable*>(dci.get())->getLastValue();
-         *ppResult = (t != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, t)) : vm->createValue();
+         shared_ptr<Table> t = static_cast<DCTable*>(dci.get())->getLastValue();
+         *ppResult = (t != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(t))) : vm->createValue();
       }
       else
       {
@@ -139,8 +139,8 @@ static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Valu
 	   }
       else if (dci->getType() == DCO_TYPE_TABLE)
       {
-         Table *t = static_cast<DCTable*>(dci.get())->getLastValue();
-         *ppResult = (t != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, t)) : vm->createValue();
+         shared_ptr<Table> t = static_cast<DCTable*>(dci.get())->getLastValue();
+         *ppResult = (t != nullptr) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(t))) : vm->createValue();
       }
       else
       {
@@ -558,10 +558,10 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
 
    bool success = false;
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
-   if ((dci != NULL) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getType() == DCO_TYPE_ITEM))
+   if ((dci != nullptr) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getType() == DCO_TYPE_ITEM))
    {
-      time_t t = time(NULL);
-      success = node->processNewDCValue(dci, t, const_cast<TCHAR*>(argv[2]->getValueAsCString())); // value will not be modified by processNewDCValue
+      time_t t = time(nullptr);
+      success = node->processNewDCValue(dci, t, argv[2]->getValueAsCString(), shared_ptr<Table>());
       if (success)
          dci->setLastPollTime(t);
    }

@@ -665,7 +665,7 @@ public:
 
    void setChangeCode(ChangeCode c) { m_changeCode = c; }
 
-   static SoftwarePackage *createFromTableRow(const Table *table, int row);
+   static SoftwarePackage *createFromTableRow(const Table& table, int row);
 };
 
 /**
@@ -690,8 +690,8 @@ class HardwareComponent
 private:
    HardwareComponentCategory m_category;
    ChangeCode m_changeCode;
-   UINT32 m_index;
-   UINT64 m_capacity;
+   uint32_t m_index;
+   uint64_t m_capacity;
    TCHAR *m_type;
    TCHAR *m_vendor;
    TCHAR *m_model;
@@ -701,10 +701,10 @@ private:
    TCHAR *m_description;
 
 public:
-   HardwareComponent(HardwareComponentCategory category, UINT32 index, const TCHAR *type,
+   HardwareComponent(HardwareComponentCategory category, uint32_t index, const TCHAR *type,
             const TCHAR *vendor, const TCHAR *model, const TCHAR *partNumber, const TCHAR *serialNumber);
    HardwareComponent(DB_RESULT result, int row);
-   HardwareComponent(HardwareComponentCategory category, const Table *table, int row);
+   HardwareComponent(HardwareComponentCategory category, const Table& table, int row);
    ~HardwareComponent();
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
@@ -712,8 +712,8 @@ public:
 
    ChangeCode getChangeCode() const { return m_changeCode; };
    HardwareComponentCategory getCategory() const { return m_category; };
-   UINT32 getIndex() const { return m_index; }
-   UINT64 getCapacity() const { return m_capacity; }
+   uint32_t getIndex() const { return m_index; }
+   uint64_t getCapacity() const { return m_capacity; }
    const TCHAR *getType() const { return CHECK_NULL_EX(m_type); };
    const TCHAR *getVendor() const { return CHECK_NULL_EX(m_vendor); };
    const TCHAR *getModel() const { return CHECK_NULL_EX(m_model); };
@@ -2148,10 +2148,10 @@ public:
    virtual void leaveMaintenanceMode(uint32_t userId) override;
 
    virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size);
-   virtual DataCollectionError getInternalTable(const TCHAR *name, Table **result);
+   virtual DataCollectionError getInternalTable(const TCHAR *name, shared_ptr<Table> *result);
 
    DataCollectionError getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject);
-   DataCollectionError getTableFromScript(const TCHAR *param, Table **result, DataCollectionTarget *targetObject);
+   DataCollectionError getTableFromScript(const TCHAR *param, shared_ptr<Table> *result, DataCollectionTarget *targetObject);
    DataCollectionError getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject);
    DataCollectionError getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject);
 
@@ -2179,7 +2179,7 @@ public:
    void cleanDCIData(DB_HANDLE hdb);
    void calculateDciCutoffTimes(time_t *cutoffTimeIData, time_t *cutoffTimeTData);
    void queueItemsForPolling();
-   bool processNewDCValue(const shared_ptr<DCObject>& dco, time_t currTime, void *value);
+   bool processNewDCValue(const shared_ptr<DCObject>& dco, time_t currTime, const TCHAR *itemValue, const shared_ptr<Table>& tableValue);
    void scheduleItemDataCleanup(UINT32 dciId);
    void scheduleTableDataCleanup(UINT32 dciId);
    void queuePredictionEngineTraining();
@@ -2519,8 +2519,8 @@ public:
    UINT32 getResourceOwner(UINT32 resourceId) { return getResourceOwnerInternal(resourceId, nullptr); }
    UINT32 getResourceOwner(const TCHAR *resourceName) { return getResourceOwnerInternal(0, resourceName); }
 
-   UINT32 collectAggregatedData(DCItem *item, TCHAR *buffer);
-   UINT32 collectAggregatedData(DCTable *table, Table **result);
+   uint32_t collectAggregatedData(DCItem *item, TCHAR *buffer);
+   uint32_t collectAggregatedData(DCTable *table, shared_ptr<Table> *result);
 
    NXSL_Array *getNodesForNXSL(NXSL_VM *vm);
    void addNode(shared_ptr<Node> node);
@@ -2692,7 +2692,7 @@ public:
 
    DataCollectionError getMetricFromAgent(const TCHAR *naram, TCHAR *buffer, size_t bufferSize);
    DataCollectionError getListFromAgent(const TCHAR *name, StringList **list);
-   DataCollectionError getTableFromAgent(const TCHAR *name, Table **table);
+   DataCollectionError getTableFromAgent(const TCHAR *name, shared_ptr<Table> *table);
 
    void setProvisoned() { m_state |= SSF_PROVISIONED; }
 
@@ -3011,7 +3011,7 @@ protected:
    ObjectArray<RoutingLoopEvent> *m_routingLoopEvents;
    RoutingTable *m_routingTable;
    shared_ptr<NetworkPath> m_lastKnownNetworkPath;
-   ForwardingDatabase *m_fdb;
+   shared_ptr<ForwardingDatabase> m_fdb;
    shared_ptr<ArpCache> m_arpCache;
    shared_ptr<LinkLayerNeighbors> m_linkLayerNeighbors;
    shared_ptr<VlanList> m_vlans;
@@ -3350,14 +3350,14 @@ public:
    bool connectToSMCLP();
 
    virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size) override;
-   virtual DataCollectionError getInternalTable(const TCHAR *name, Table **result) override;
+   virtual DataCollectionError getInternalTable(const TCHAR *name, shared_ptr<Table> *result) override;
 
    DataCollectionError getMetricFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *name, TCHAR *buffer, size_t size, int interpretRawValue);
-   DataCollectionError getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, Table **table);
+   DataCollectionError getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table);
    DataCollectionError getListFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, StringList **list);
    DataCollectionError getOIDSuffixListFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, StringMap **values);
    DataCollectionError getMetricFromAgent(const TCHAR *name, TCHAR *buffer, size_t size);
-   DataCollectionError getTableFromAgent(const TCHAR *name, Table **table);
+   DataCollectionError getTableFromAgent(const TCHAR *name, shared_ptr<Table> *table);
    DataCollectionError getListFromAgent(const TCHAR *name, StringList **list);
    DataCollectionError getMetricFromSMCLP(const TCHAR *name, TCHAR *buffer, size_t size);
    DataCollectionError getMetricFromDeviceDriver(const TCHAR *name, TCHAR *buffer, size_t size);
@@ -3369,7 +3369,7 @@ public:
    uint64_t getMetricFromAgentAsUInt64(const TCHAR *name, uint64_t defaultValue = 0);
 
    uint32_t getMetricForClient(int origin, uint32_t userId, const TCHAR *name, TCHAR *buffer, size_t size);
-   uint32_t getTableForClient(const TCHAR *name, Table **table);
+   uint32_t getTableForClient(const TCHAR *name, shared_ptr<Table> *table);
 
    virtual NXSL_Array *getParentsForNXSL(NXSL_VM *vm) override;
    NXSL_Array *getInterfacesForNXSL(NXSL_VM *vm);
@@ -3398,7 +3398,7 @@ public:
    void writeWsListToMessage(NXCPMessage *msg);
    void writeHardwareListToMessage(NXCPMessage *msg);
 
-   Table *wsListAsTable();
+   shared_ptr<Table> wsListAsTable();
 
    UINT32 wakeUp();
 
@@ -3416,7 +3416,7 @@ public:
 
    NetworkMapObjectList *getL2Topology();
    NetworkMapObjectList *buildL2Topology(UINT32 *pdwStatus, int radius, bool includeEndNodes);
-   ForwardingDatabase *getSwitchForwardingDatabase();
+   shared_ptr<ForwardingDatabase> getSwitchForwardingDatabase();
    shared_ptr<NetObj> findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *type);
    void addHostConnections(LinkLayerNeighbors *nbs);
    void addExistingConnections(LinkLayerNeighbors *nbs);

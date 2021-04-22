@@ -300,7 +300,7 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
                time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
                if (t == 0)
 			         t = time(nullptr);
-			      target->processNewDCValue(dci, t, value);
+			      target->processNewDCValue(dci, t, value, shared_ptr<Table>());
                if (t > dci->getLastPollTime())
 			         dci->setLastPollTime(t);
 		      }
@@ -654,7 +654,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
       target = node;
    }
 
-   UINT32 dciId = msg->getFieldAsUInt32(VID_DCI_ID);
+   uint32_t dciId = msg->getFieldAsUInt32(VID_DCI_ID);
    shared_ptr<DCObject> dcObject = target->getDCObjectById(dciId, 0);
    if (dcObject == nullptr)
    {
@@ -682,17 +682,15 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    {
       case ERR_SUCCESS:
       {
-         void *value;
+         TCHAR itemValue[MAX_RESULT_LENGTH];
+         shared_ptr<Table> tableValue;
          switch(type)
          {
             case DCO_TYPE_ITEM:
-               value = msg->getFieldAsString(VID_VALUE);
-               break;
-            case DCO_TYPE_LIST:
-               value = new StringList();
+               msg->getFieldAsString(VID_VALUE, itemValue, MAX_RESULT_LENGTH);
                break;
             case DCO_TYPE_TABLE:
-               value = new Table(msg);
+               tableValue = make_shared<Table>(msg);
                break;
             default:
                debugPrintf(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%d] on object %s [%d]"),
@@ -702,22 +700,9 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
 
          if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
             dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-         success = target->processNewDCValue(dcObject, t, value);
+         success = target->processNewDCValue(dcObject, t, itemValue, tableValue);
          if (t > dcObject->getLastPollTime())
             dcObject->setLastPollTime(t);
-
-         switch(type)
-         {
-            case DCO_TYPE_ITEM:
-               MemFree(value);
-               break;
-            case DCO_TYPE_LIST:
-               delete static_cast<StringList*>(value);
-               break;
-            case DCO_TYPE_TABLE:
-               // DCTable will keep ownership of created table
-               break;
-         }
          break;
       }
       case ERR_UNKNOWN_PARAMETER:
@@ -773,15 +758,16 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
    debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: %d elements from node %s [%d]"), count, node->getName(), node->getId());
 
    // Use half timeout for sending progress updates
-   UINT32 agentTimeout = request->getFieldAsUInt32(VID_TIMEOUT) / 2;
+   uint32_t agentTimeout = request->getFieldAsUInt32(VID_TIMEOUT) / 2;
 
+   shared_ptr<Table> tableValue;
    BYTE status[MAX_BULK_DATA_BLOCK_SIZE];
    memset(status, 0, MAX_BULK_DATA_BLOCK_SIZE);
-   UINT32 fieldId = VID_ELEMENT_LIST_BASE;
-   INT64 startTime = GetCurrentTimeMs();
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   int64_t startTime = GetCurrentTimeMs();
    for(int i = 0; i < count; i++, fieldId += 10)
    {
-      UINT32 elapsed = static_cast<UINT32>(GetCurrentTimeMs() - startTime);
+      uint32_t elapsed = static_cast<UINT32>(GetCurrentTimeMs() - startTime);
       if ((agentTimeout > 0) && (elapsed >= agentTimeout)) // agent timeout 0 means that agent will not understand processing notifications
       {
          NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId(), getProtocolVersion());
@@ -852,7 +838,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
          continue;
       }
 
-      void *value = request->getFieldAsString(fieldId + 5);
+      TCHAR *value = request->getFieldAsString(fieldId + 5);
       uint32_t statusCode = request->getFieldAsUInt32(fieldId + 6);
       debugPrintf(7, _T("AgentConnectionEx::processBulkCollectedData: processing DCI %s [%d] (type=%d) (status=%d) on object %s [%d] (element %d)"),
                   dcObject->getName().cstr(), dciId, type, statusCode, target->getName(), target->getId(), i);
@@ -864,7 +850,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
          case ERR_SUCCESS:
             if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-            success = target->processNewDCValue(dcObject, t, value);
+            success = target->processNewDCValue(dcObject, t, value, tableValue);
             if (t > dcObject->getLastPollTime())
                dcObject->setLastPollTime(t);
             break;

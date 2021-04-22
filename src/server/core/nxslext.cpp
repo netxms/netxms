@@ -1630,9 +1630,9 @@ static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **result, NX
 	if (!object->getClass()->instanceOf(g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	Table *table;
-   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getTableFromAgent(argv[1]->getValueAsCString(), &table);
-   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, table)) : vm->createValue();
+	shared_ptr<Table> table;
+   uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getTableFromAgent(argv[1]->getValueAsCString(), &table);
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(table))) : vm->createValue();
 	return 0;
 }
 
@@ -1659,7 +1659,7 @@ static int F_AgentReadList(int argc, NXSL_Value **argv, NXSL_Value **result, NXS
 		return NXSL_ERR_BAD_CLASS;
 
 	StringList *list;
-   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getListFromAgent(argv[1]->getValueAsCString(), &list);
+	uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getListFromAgent(argv[1]->getValueAsCString(), &list);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
    delete list;
 	return 0;
@@ -1688,7 +1688,7 @@ static int F_DriverReadParameter(int argc, NXSL_Value **argv, NXSL_Value **resul
       return NXSL_ERR_BAD_CLASS;
 
    TCHAR buffer[MAX_RESULT_LENGTH];
-   UINT32 rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromDeviceDriver(argv[1]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
+   uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getMetricFromDeviceDriver(argv[1]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
    *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
    return 0;
 }

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library API
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -66,9 +66,9 @@
  */
 struct NXCPushData
 {
-   UINT32 dciId;          // DCI ID or 0 if name is used
+   uint32_t dciId;          // DCI ID or 0 if name is used
    TCHAR *dciName;
-   UINT32 nodeId;      // Node ID or 0 if name is used
+   uint32_t nodeId;      // Node ID or 0 if name is used
    TCHAR *nodeName;
    TCHAR *value;
 };
@@ -212,7 +212,7 @@ private:
    ObjectCacheEntry *m_cache;
    MUTEX m_cacheLock;
 
-   void addObject(AbstractObject *object);
+   void addObject(const shared_ptr<AbstractObject>& object);
 
 public:
    ObjectController(NXCSession *session);
@@ -224,7 +224,7 @@ public:
    UINT32 syncObjectSet(UINT32 *idList, size_t length, bool syncComments, UINT16 flags);
    UINT32 syncSingleObject(UINT32 id);
 
-   AbstractObject *findObjectById(UINT32 id);
+   shared_ptr<AbstractObject> findObjectById(uint32_t id);
 
    UINT32 manage(UINT32 objectId);
    UINT32 unmanage(UINT32 objectId);
@@ -261,7 +261,7 @@ protected:
    SOCKET m_hSocket;
    MsgWaitQueue *m_msgWaitQueue;
    shared_ptr<NXCPEncryptionContext> m_encryptionContext;
-   UINT32 m_commandTimeout;
+   uint32_t m_commandTimeout;
    bool m_compressionEnabled;
 
    // server information
@@ -269,8 +269,8 @@ protected:
    TCHAR m_serverVersion[64];
    IntegerArray<UINT32> *m_protocolVersions;
    TCHAR m_serverTimeZone[MAX_TZ_LEN];
-   UINT32 m_userId;
-   UINT64 m_systemRights;
+   uint32_t m_userId;
+   uint64_t m_systemRights;
    bool m_passwordChangeNeeded;
 
    // data
@@ -290,20 +290,20 @@ public:
       const UINT32 *cpvIndexList = NULL, size_t cpvIndexListSize = 0);
    void disconnect();
 
-   UINT32 createMessageId() { return InterlockedIncrement(&m_msgId); }
+   uint32_t createMessageId() { return InterlockedIncrement(&m_msgId); }
    bool sendMessage(NXCPMessage *msg);
    NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout = 0);
    UINT32 waitForRCC(UINT32 id, UINT32 timeout = 0);
 
-   void setCommandTimeout(UINT32 timeout) { m_commandTimeout = timeout; }
-   UINT32 getCommandTimeout() { return m_commandTimeout; }
+   void setCommandTimeout(uint32_t timeout) { m_commandTimeout = timeout; }
+   uint32_t getCommandTimeout() const { return m_commandTimeout; }
 
-   const TCHAR *getServerVersion() { return m_serverVersion; }
-   const TCHAR *getServerTimeZone() { return m_serverTimeZone; }
-   UINT32 getProtocolVersion(int index) { return m_protocolVersions->get(index); }
-   UINT32 getUserId() { return m_userId; }
-   UINT64 getSystemRights() { return m_systemRights; }
-   bool isPasswordChangeNeeded() { return m_passwordChangeNeeded; }
+   const TCHAR *getServerVersion() const { return m_serverVersion; }
+   const TCHAR *getServerTimeZone() const { return m_serverTimeZone; }
+   uint32_t getProtocolVersion(int index) const { return m_protocolVersions->get(index); }
+   uint32_t getUserId() const { return m_userId; }
+   uint64_t getSystemRights() const { return m_systemRights; }
+   bool isPasswordChangeNeeded() const { return m_passwordChangeNeeded; }
 
    Controller *getController(const TCHAR *name);
 };

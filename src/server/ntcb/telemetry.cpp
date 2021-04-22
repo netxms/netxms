@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -876,6 +876,7 @@ void TelemetryRecord::updateDevice()
 {
    m_device->updateStatus(m_deviceStatus);
 
+   shared_ptr<Table> tableValue; // Empty pointer for processNewDCValue()
    auto it = m_pushList.iterator();
    while(it->hasNext())
    {
@@ -887,7 +888,7 @@ void TelemetryRecord::updateDevice()
                   (dci == nullptr) ? _T("does not exist") : _T("is of incompatible type"));
          continue;
       }
-      m_device->processNewDCValue(dci, m_timestamp, const_cast<TCHAR*>(data->second));
+      m_device->processNewDCValue(dci, m_timestamp, const_cast<TCHAR*>(data->second), tableValue);
    }
    delete it;
 }

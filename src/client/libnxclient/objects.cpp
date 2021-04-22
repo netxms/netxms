@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -30,8 +30,14 @@
 struct ObjectCacheEntry
 {
    UT_hash_handle hh;
-   UINT32 id;
-   AbstractObject *object;
+   uint32_t id;
+   shared_ptr<AbstractObject> object;
+
+   ObjectCacheEntry(uint32_t _id, const shared_ptr<AbstractObject>& _object) : object(_object)
+   {
+      id = _id;
+      memset(&hh, 0, sizeof(hh));
+   }
 };
 
 /**
@@ -39,7 +45,7 @@ struct ObjectCacheEntry
  */
 ObjectController::ObjectController(NXCSession *session) : Controller(session)
 {
-   m_cache = NULL;
+   m_cache = nullptr;
    m_cacheLock = MutexCreate();
 }
 
@@ -52,8 +58,7 @@ ObjectController::~ObjectController()
    HASH_ITER(hh, m_cache, entry, tmp)
    {
       HASH_DEL(m_cache, entry);
-      entry->object->decRefCount();
-      free(entry);
+      delete entry;
    }
    MutexDestroy(m_cacheLock);
 }
@@ -65,7 +70,7 @@ bool ObjectController::handleMessage(NXCPMessage *msg)
 {
    if ((msg->getCode() == CMD_OBJECT_UPDATE) || (msg->getCode() == CMD_OBJECT))
    {
-      addObject(new AbstractObject(msg));
+      addObject(make_shared<AbstractObject>(msg));
       return true;
    }
    return false;
@@ -98,7 +103,7 @@ UINT32 ObjectController::syncObjectSet(UINT32 *idList, size_t length, bool syncC
       return RCC_COMM_FAILURE;
 
    // Wait for reply
-   UINT32 rcc = m_session->waitForRCC(msg.getId());
+   uint32_t rcc = m_session->waitForRCC(msg.getId());
 	if ((rcc == RCC_SUCCESS) && (flags & OBJECT_SYNC_DUAL_CONFIRM))
 	{
       rcc = m_session->waitForRCC(msg.getId());
@@ -118,22 +123,19 @@ UINT32 ObjectController::syncSingleObject(UINT32 id)
 /**
  * Add object to cache
  */
-void ObjectController::addObject(AbstractObject *object)
+void ObjectController::addObject(const shared_ptr<AbstractObject>& object)
 {
    MutexLock(m_cacheLock);
    ObjectCacheEntry *entry;
-   UINT32 id = object->getId();
+   uint32_t id = object->getId();
    HASH_FIND_INT(m_cache, &id, entry);
-   if (entry != NULL)
+   if (entry != nullptr)
    {
-      entry->object->decRefCount();
       entry->object = object;
    }
    else
    {
-      entry = (ObjectCacheEntry *)malloc(sizeof(ObjectCacheEntry));
-      entry->id = id;
-      entry->object = object;
+      entry = new ObjectCacheEntry(id, object);
       HASH_ADD_INT(m_cache, id, entry);
    }
    MutexUnlock(m_cacheLock);
@@ -143,16 +145,15 @@ void ObjectController::addObject(AbstractObject *object)
  * Find object by ID.
  * Caller must decrease reference count for object.
  */
-AbstractObject *ObjectController::findObjectById(UINT32 id)
+shared_ptr<AbstractObject> ObjectController::findObjectById(uint32_t id)
 {
-   AbstractObject *object = NULL;
+   shared_ptr<AbstractObject> object;
    MutexLock(m_cacheLock);
    ObjectCacheEntry *entry;
    HASH_FIND_INT(m_cache, &id, entry);
-   if (entry != NULL)
+   if (entry != nullptr)
    {
       object = entry->object;
-      object->incRefCount();
    }
    MutexUnlock(m_cacheLock);
    return object;
@@ -176,7 +177,7 @@ AbstractObject::AbstractObject(NXCPMessage *msg)
 	// Custom attributes
    int i;
 	int count = msg->getFieldAsInt32(VID_NUM_CUSTOM_ATTRIBUTES);
-   UINT32 id = VID_CUSTOM_ATTRIBUTES_BASE;
+	uint32_t id = VID_CUSTOM_ATTRIBUTES_BASE;
 	for(i = 0; i < count; i++, id += 2)
 	{
 		m_customAttributes.setPreallocated(msg->getFieldAsString(id), msg->getFieldAsString(id + 1));
@@ -184,14 +185,14 @@ AbstractObject::AbstractObject(NXCPMessage *msg)
 
    // Parents
 	count = msg->getFieldAsInt32(VID_PARENT_CNT);
-   m_parents = new IntegerArray<UINT32>(count);
+   m_parents = new IntegerArray<uint32_t>(count);
    id = VID_PARENT_ID_BASE;
 	for(i = 0; i < count; i++, id++)
       m_parents->add(msg->getFieldAsUInt32(id));
 
    // Children
 	count = msg->getFieldAsInt32(VID_CHILD_CNT);
-   m_children = new IntegerArray<UINT32>(count);
+   m_children = new IntegerArray<uint32_t>(count);
    id = VID_CHILD_ID_BASE;
 	for(i = 0; i < count; i++, id++)
       m_children->add(msg->getFieldAsUInt32(id));

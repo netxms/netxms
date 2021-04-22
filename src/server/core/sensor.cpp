@@ -466,7 +466,7 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
 
    StringList *instances = nullptr;
    StringMap *instanceMap = nullptr;
-   Table *instanceTable = nullptr;
+   shared_ptr<Table> instanceTable;
    switch(dco->getInstanceDiscoveryMethod())
    {
       case IDM_AGENT_LIST:
@@ -500,7 +500,6 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
                instanceTable->buildInstanceString(i, buffer, 1024);
                instances->add(buffer);
             }
-            delete instanceTable;
          }
          break;
       case IDM_SCRIPT:
@@ -960,11 +959,10 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
 /**
  * Get table from agent
  */
-DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, Table **table)
+DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, shared_ptr<Table> *table)
 {
-   UINT32 dwError = ERR_NOT_CONNECTED;
+   uint32_t error = ERR_NOT_CONNECTED;
    DataCollectionError dwResult = DCE_COMM_ERROR;
-   UINT32 dwTries = 3;
 
    *table = nullptr;
 
@@ -990,13 +988,16 @@ DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, Table **table)
    nxlog_debug(3, _T("Sensor(%s)->getTableFromAgent(%s)"), m_name, parameter.getBuffer());
 
    // Get parameter from agent
-   while(dwTries-- > 0)
+   int retries = 3;
+   while(retries-- > 0)
    {
-      dwError = conn->getTable(parameter, table);
-      switch(dwError)
+      Table *tableObject;
+      error = conn->getTable(parameter, &tableObject);
+      switch(error)
       {
          case ERR_SUCCESS:
             dwResult = DCE_SUCCESS;
+            *table = shared_ptr<Table>(tableObject);
             break;
          case ERR_UNKNOWN_PARAMETER:
             dwResult = DCE_NOT_SUPPORTED;
@@ -1019,7 +1020,7 @@ DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, Table **table)
       }
    }
 
-   DbgPrintf(7, _T("Sensor(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, dwResult);
+   DbgPrintf(7, _T("Sensor(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, error, dwResult);
    return dwResult;
 }
 

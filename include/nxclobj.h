@@ -29,10 +29,10 @@
 /**
  * Generic object class
  */
-class LIBNXCLIENT_EXPORTABLE AbstractObject : public RefCountObject
+class LIBNXCLIENT_EXPORTABLE AbstractObject
 {
 protected:
-   UINT32 m_id;
+   uint32_t m_id;
    uuid_t m_guid;
    int m_class;
    TCHAR m_name[MAX_OBJECT_NAME];
@@ -40,23 +40,23 @@ protected:
    InetAddress m_primaryIP;
    TCHAR *m_comments;
    StringMap m_customAttributes;
-   UINT32 m_submapId;
-   IntegerArray<UINT32> *m_parents;
-   IntegerArray<UINT32> *m_children;
+   uint32_t m_submapId;
+   IntegerArray<uint32_t> *m_parents;
+   IntegerArray<uint32_t> *m_children;
    GeoLocation m_geoLocation;
 
 public:
    AbstractObject(NXCPMessage *msg);
    virtual ~AbstractObject();
 
-   UINT32 getId() { return m_id; }
-   int getObjectClass() { return m_class; }
-   const TCHAR *getName() { return m_name; }
-   const InetAddress& getPrimaryIP() { return m_primaryIP; }
-   const TCHAR *getComments() { return m_comments; }
-   const TCHAR *getCustomAttribute(const TCHAR *name) { return m_customAttributes.get(name); }
-   UINT32 getSubmapId() { return m_submapId; }
-   const GeoLocation& getGeoLocation() { return m_geoLocation; }
+   uint32_t getId() const { return m_id; }
+   int getObjectClass() const { return m_class; }
+   const TCHAR *getName() const { return m_name; }
+   const InetAddress& getPrimaryIP() const { return m_primaryIP; }
+   const TCHAR *getComments() const { return m_comments; }
+   const TCHAR *getCustomAttribute(const TCHAR *name) const { return m_customAttributes.get(name); }
+   uint32_t getSubmapId() const { return m_submapId; }
+   const GeoLocation& getGeoLocation() const { return m_geoLocation; }
 };
 
 /**

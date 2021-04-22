@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -33,12 +33,12 @@ AlarmComment::AlarmComment(NXCPMessage *msg, UINT32 baseId)
    m_timestamp = (time_t)msg->getFieldAsUInt32(baseId + 2);
    m_userId = msg->getFieldAsUInt32(baseId + 3);
    m_text = msg->getFieldAsString(baseId + 4);
-   if (m_text == NULL)
-      m_text = _tcsdup(_T(""));
+   if (m_text == nullptr)
+      m_text = MemCopyString(_T(""));
    m_userName = msg->getFieldAsString(baseId + 5);
-   if (m_userName == NULL)
+   if (m_userName == nullptr)
    {
-      m_userName = (TCHAR *)malloc(32 * sizeof(TCHAR));
+      m_userName = MemAllocString(32);
       _sntprintf(m_userName, 32, _T("[%u]"), m_userId);
    }
 }
@@ -48,7 +48,7 @@ AlarmComment::AlarmComment(NXCPMessage *msg, UINT32 baseId)
  */
 AlarmComment::~AlarmComment()
 {
-   free(m_text);
+   MemFree(m_text);
 }
 
 /**
@@ -313,8 +313,8 @@ TCHAR *AlarmController::formatAlarmText(NXC_ALARM *alarm, const TCHAR *format)
 	static const TCHAR *severityText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"), _T("CRITICAL") };
 
    ObjectController *oc = (ObjectController *)m_session->getController(CONTROLLER_OBJECTS);
-   AbstractObject *object = oc->findObjectById(alarm->sourceObject);
-   if (object == NULL)
+   shared_ptr<AbstractObject> object = oc->findObjectById(alarm->sourceObject);
+   if (object == nullptr)
    {
 	   oc->syncSingleObject(alarm->sourceObject);
 	   object = oc->findObjectById(alarm->sourceObject);
@@ -326,7 +326,7 @@ TCHAR *AlarmController::formatAlarmText(NXC_ALARM *alarm, const TCHAR *format)
 	for(prev = format; *prev != 0; prev = curr)
 	{
 		curr = _tcschr(prev, _T('%'));
-		if (curr == NULL)
+		if (curr == nullptr)
 		{
 			out += prev;
 			break;
@@ -339,10 +339,10 @@ TCHAR *AlarmController::formatAlarmText(NXC_ALARM *alarm, const TCHAR *format)
 				out += _T("%");
 				break;
 			case 'a':
-            out += (object != NULL) ? object->getPrimaryIP().toString(buffer) : _T("<unknown>");
+            out += (object != nullptr) ? object->getPrimaryIP().toString(buffer) : _T("<unknown>");
 				break;
 			case 'A':
-            out += ((object != NULL) && (object->getObjectClass() == OBJECT_NODE)) ? ((Node *)object)->getPrimaryHostname() : _T("<unknown>");
+            out += ((object != nullptr) && (object->getObjectClass() == OBJECT_NODE)) ? static_cast<Node&>(*object).getPrimaryHostname() : _T("<unknown>");
 				break;
 			case 'c':
 				out.appendFormattedString(_T("%u"), (unsigned int)alarm->repeatCount);

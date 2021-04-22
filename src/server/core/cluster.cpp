@@ -735,7 +735,7 @@ UINT32 Cluster::getResourceOwnerInternal(UINT32 id, const TCHAR *name)
 /**
  * Collect aggregated data for cluster nodes - single value
  */
-UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
+uint32_t Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 {
    readLockChildList();
    ObjectArray<ItemValue> values(getChildList().size(), 32, Ownership::True);
@@ -766,7 +766,7 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
    }
    unlockChildList();
 
-   UINT32 rcc = DCE_SUCCESS;
+   uint32_t rcc = DCE_SUCCESS;
    if (!values.isEmpty())
    {
       ItemValue result;
@@ -801,11 +801,10 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 /**
  * Collect aggregated data for cluster nodes - table
  */
-UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
+uint32_t Cluster::collectAggregatedData(DCTable *table, shared_ptr<Table> *result)
 {
    readLockChildList();
-   Table **values = MemAllocArray<Table*>(getChildList().size());
-   int valueCount = 0;
+   SharedObjectArray<Table> values(getChildList().size());
    for(int i = 0; i < getChildList().size(); i++)
    {
       if (getChildList().get(i)->getObjectClass() != OBJECT_NODE)
@@ -819,28 +818,24 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
           ((dco->getErrorCount() == 0) || dco->isAggregateWithErrors()) &&
           dco->matchClusterResource())
       {
-         Table *v = static_cast<DCTable*>(dco.get())->getLastValue();
-         if (v != NULL)
-            values[valueCount++] = v;
+         shared_ptr<Table> v = static_cast<DCTable*>(dco.get())->getLastValue();
+         if (v != nullptr)
+            values.add(v);
       }
    }
    unlockChildList();
 
-   UINT32 rcc = DCE_SUCCESS;
-   if (valueCount > 0)
+   uint32_t rcc = DCE_SUCCESS;
+   if (!values.isEmpty())
    {
-      *result = new Table(values[0]);
-      for(int i = 1; i < valueCount; i++)
-         table->mergeValues(*result, values[i], i);
+      *result = make_shared<Table>(values.get(0));
+      for(int i = 1; i < values.size(); i++)
+         table->mergeValues(result->get(), values.get(i), i);
    }
    else
    {
       rcc = DCE_COLLECTION_ERROR;
    }
-
-   for(int i = 0; i < valueCount; i++)
-      values[i]->decRefCount();
-   MemFree(values);
 
    return rcc;
 }

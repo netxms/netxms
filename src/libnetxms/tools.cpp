@@ -2869,13 +2869,6 @@ int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *tmpl)
 #endif
 
 /**
- * Destructor for RefCountObject
- */
-RefCountObject::~RefCountObject()
-{
-}
-
-/**
  * Safe _fgetts implementation which will work
  * with handles opened by popen
  */

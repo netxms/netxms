@@ -673,7 +673,7 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
                MobileDataPushElement *v = values.get(i);
 			      if (_tcslen(v->value) >= MAX_DCI_STRING_VALUE)
 				      v->value[MAX_DCI_STRING_VALUE - 1] = 0;
-			      device->processNewDCValue(v->dci, t, v->value);
+			      device->processNewDCValue(v->dci, t, v->value, shared_ptr<Table>());
 			      v->dci->setLastPollTime(t);
             }
             msg.setField(VID_RCC, RCC_SUCCESS);

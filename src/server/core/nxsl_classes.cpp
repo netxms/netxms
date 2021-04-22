@@ -1291,9 +1291,9 @@ NXSL_METHOD_DEFINITION(Node, readAgentTable)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   Table *table;
+   shared_ptr<Table> table;
    uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getTableFromAgent(argv[0]->getValueAsCString(), &table);
-   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, table)) : vm->createValue();
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(table))) : vm->createValue();
    return 0;
 }
 
@@ -1333,9 +1333,9 @@ NXSL_METHOD_DEFINITION(Node, readInternalTable)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   Table *table;
+   shared_ptr<Table> table;
    uint32_t rcc = static_cast<shared_ptr<Node>*>(object->getData())->get()->getInternalTable(argv[0]->getValueAsCString(), &table);
-   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, table)) : vm->createValue();
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(table))) : vm->createValue();
    return 0;
 }
 

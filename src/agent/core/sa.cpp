@@ -25,7 +25,7 @@
 /**
  * Session agent list
  */
-static ObjectArray<SessionAgentConnector> s_agents(8, 8, Ownership::False);
+static SharedObjectArray<SessionAgentConnector> s_agents(8, 8);
 static RWLOCK s_lock = RWLockCreate();
 static int s_sessionAgentCount = 0;
 static int s_userAgentCount = 0;
@@ -39,7 +39,7 @@ static Mutex s_userAgentNotificationsLock;
 /**
  * Register session agent
  */
-static void RegisterSessionAgent(SessionAgentConnector *newConnector)
+static void RegisterSessionAgent(const shared_ptr<SessionAgentConnector>& newConnector)
 {
    RWLockWriteLock(s_lock);
    bool idFound = false;
@@ -114,21 +114,6 @@ static void UnregisterSessionAgent(uint32_t id)
 }
 
 /**
- * Session agent connector read thread
- */
-THREAD_RESULT THREAD_CALL SessionAgentConnector::readThreadStarter(void *arg)
-{
-   static_cast<SessionAgentConnector*>(arg)->readThread();
-
-   // When SessionAgentConnector::ReadThread exits, all other
-   // threads are already stopped, so we can safely destroy
-   // session object
-   UnregisterSessionAgent(static_cast<SessionAgentConnector*>(arg)->getId());
-   static_cast<SessionAgentConnector*>(arg)->decRefCount();
-   return THREAD_OK;
-}
-
-/**
  * Connector constructor
  */
 SessionAgentConnector::SessionAgentConnector(uint32_t id, SOCKET s)
@@ -156,14 +141,6 @@ SessionAgentConnector::~SessionAgentConnector()
    MemFree(m_sessionName);
    MemFree(m_userName);
    MemFree(m_clientName);
-}
-
-/**
- * Start all threads
- */
-void SessionAgentConnector::run()
-{
-   ThreadCreate(readThreadStarter, 0, this);
 }
 
 /**
@@ -230,7 +207,7 @@ void SessionAgentConnector::readThread()
          DebugPrintf(5, _T("Session agent connector %d: login as %s@%s [%d] (%s client)"),
             m_id, getUserName(), getSessionName(), m_sessionId, m_userAgent ? _T("extended") : _T("basic"));
 
-         RegisterSessionAgent(this);
+         RegisterSessionAgent(self());
 
          if (m_userAgent)
          {
@@ -249,6 +226,7 @@ void SessionAgentConnector::readThread()
    }
 
    nxlog_debug(5, _T("Session agent connector %d stopped"), m_id);
+   UnregisterSessionAgent(m_id);
 }
 
 /**
@@ -459,7 +437,7 @@ static void SessionAgentListener()
    int iNumErrors = 0, nRet;
    socklen_t iSize;
    TCHAR szBuffer[256];
-   UINT32 id = 1;
+   uint32_t id = 1;
 
    // Create socket
    if ((hSocket = CreateSocket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
@@ -509,7 +487,6 @@ static void SessionAgentListener()
          if ((hClientSocket = accept(hSocket, (struct sockaddr *)&servAddr, &iSize)) == -1)
          {
             int error = WSAGetLastError();
-
             if (error != WSAEINTR)
             {
                TCHAR buffer[1024];
@@ -534,8 +511,7 @@ static void SessionAgentListener()
          nxlog_debug(5, _T("Incoming session agent connection"));
 
          // Create new session structure and threads
-		   SessionAgentConnector *c = new SessionAgentConnector(id++, hClientSocket);
-         c->run();
+		   CreateSessionAgentConnector(id++, hClientSocket);
       }
       else if (nRet == -1)
       {
@@ -603,17 +579,16 @@ void StartSessionAgentConnector()
 /**
  * Acquire session agent connector
  */
-SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName)
+shared_ptr<SessionAgentConnector> AcquireSessionAgentConnector(const TCHAR *sessionName)
 {
-   SessionAgentConnector *c = NULL;
+   shared_ptr<SessionAgentConnector> c;
 
    RWLockReadLock(s_lock);
    for(int i = 0; i < s_agents.size(); i++)
    {
       if (!_tcsicmp(s_agents.get(i)->getSessionName(), sessionName))
       {
-         c = s_agents.get(i);
-         c->incRefCount();
+         c = s_agents.getShared(i);
          break;
       }
    }
@@ -625,17 +600,16 @@ SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName)
 /**
  * Acquire session agent connector
  */
-SessionAgentConnector *AcquireSessionAgentConnector(uint32_t sessionId)
+shared_ptr<SessionAgentConnector> AcquireSessionAgentConnector(uint32_t sessionId)
 {
-   SessionAgentConnector *c = NULL;
+   shared_ptr<SessionAgentConnector> c;
 
    RWLockReadLock(s_lock);
    for (int i = 0; i < s_agents.size(); i++)
    {
       if (s_agents.get(i)->getSessionId() == sessionId)
       {
-         c = s_agents.get(i);
-         c->incRefCount();
+         c = s_agents.getShared(i);
          break;
       }
    }
@@ -856,7 +830,7 @@ uint32_t UpdateUserAgentNotifications(uint64_t serverId, NXCPMessage *request)
 void LoadUserAgentNotifications()
 {
    DB_HANDLE db = GetLocalDatabaseHandle();
-   if (db == NULL)
+   if (db == nullptr)
    {
       nxlog_write(NXLOG_WARNING, _T("Cannot load user agent notifications (local database is unavailable)"));
       return;
@@ -866,7 +840,7 @@ void LoadUserAgentNotifications()
    _sntprintf(query, 1024, _T("SELECT server_id,notification_id,message,start_time,end_time,on_startup FROM user_agent_notifications"));
 
    DB_RESULT hResult = DBSelect(db, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
@@ -890,11 +864,10 @@ void LoadUserAgentNotifications()
  */
 bool GetScreenInfoForUserSession(uint32_t sessionId, uint32_t *width, uint32_t *height, uint32_t *bpp)
 {
-   SessionAgentConnector *connector = AcquireSessionAgentConnector(sessionId);
+   shared_ptr<SessionAgentConnector> connector = AcquireSessionAgentConnector(sessionId);
    if (connector == nullptr)
       return false;
 
    bool success = connector->getScreenInfo(width, height, bpp);
-   connector->decRefCount();
    return success;
 }

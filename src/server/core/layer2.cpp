@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
 	{
 		Node *node = (Node *)nodes->get(i);
 		
-      ForwardingDatabase *fdb = node->getSwitchForwardingDatabase();
+      shared_ptr<ForwardingDatabase> fdb = node->getSwitchForwardingDatabase();
 		if (fdb != nullptr)
 		{
 			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%d]"),
@@ -131,7 +131,6 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
 					          macAddrText, ifIndex, node->getName(), (int)node->getId(), count);
 				}
 			}
-			fdb->decRefCount();
 		}
 
       if (node->isWirelessController())

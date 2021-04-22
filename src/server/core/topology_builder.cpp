@@ -47,7 +47,7 @@ static void BuildIPTopology(NetworkMapObjectList *topology, const shared_ptr<Nod
  */
 static void LinkObjectsWithInterfaces(NetworkMapObjectList *topology, const shared_ptr<Node>& seed, const shared_ptr<Node>& node, int vpnLink, const TCHAR* linkName)
 {
-   auto nbs = seed->getLinkLayerNeighbors();
+   shared_ptr<LinkLayerNeighbors> nbs = seed->getLinkLayerNeighbors();
    const TCHAR* interface1 = _T("Interface1");
    const TCHAR* interface2 = _T("Interface2");
    if (nbs != nullptr)
@@ -163,7 +163,6 @@ static void BuildIPTopology(NetworkMapObjectList *topology, const shared_ptr<Nod
       return;
 
    topology->addObject(seed->getId());
-
    if (nDepth > 0)
    {
       ObjectArray<PeerInfo> peers(0, 64, Ownership::True);

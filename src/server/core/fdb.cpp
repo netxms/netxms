@@ -243,9 +243,9 @@ void ForwardingDatabase::fillMessage(NXCPMessage *msg)
 /**
  * Get Table filled with switch forwarding database information
  */
-Table *ForwardingDatabase::getAsTable()
+shared_ptr<Table> ForwardingDatabase::getAsTable()
 {
-   Table *result = new Table();
+   shared_ptr<Table> result = make_shared<Table>();
    result->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("Mac address"), true);
    result->addColumn(_T("PORT"), DCI_DT_UINT, _T("Port"));
    result->addColumn(_T("IF_INDEX"), DCI_DT_UINT, _T("Interface index"));
@@ -408,22 +408,22 @@ static UINT32 Dot1dPortTableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransp
 	return SNMP_ERR_SUCCESS;
 }
 
-#define FDB_CHECK_FAILURE(s) if ((s) != SNMP_ERR_SUCCESS) { delete fdb; return nullptr; }
+#define FDB_CHECK_FAILURE(s) if ((s) != SNMP_ERR_SUCCESS) { return shared_ptr<ForwardingDatabase>(); }
 
 /**
  * Get switch forwarding database from node
  */
-ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
+shared_ptr<ForwardingDatabase> GetSwitchForwardingDatabase(Node *node)
 {
 	if (!node->isBridge())
-		return nullptr;
+		return shared_ptr<ForwardingDatabase>();
 
 	bool portReferenceByIfIndex = node->isFdbUsingIfIndex();
-	ForwardingDatabase *fdb = new ForwardingDatabase(node->getId(), portReferenceByIfIndex);
+	shared_ptr<ForwardingDatabase> fdb = make_shared<ForwardingDatabase>(node->getId(), portReferenceByIfIndex);
 
 	if (!portReferenceByIfIndex)
 	{
-      FDB_CHECK_FAILURE(node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb, nullptr, true));
+      FDB_CHECK_FAILURE(node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb.get(), nullptr, true));
       if (node->isPerVlanFdbSupported())
       {
          shared_ptr<VlanList> vlans = node->getVlans();
@@ -433,7 +433,7 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
             {
                TCHAR context[16];
                _sntprintf(context, 16, _T("%s%d"), (node->getSNMPVersion() < SNMP_VERSION_3) ? _T("") : _T("vlan-"), vlans->get(i)->getVlanId());
-               if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb, context, true) != SNMP_ERR_SUCCESS)
+               if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb.get(), context, true) != SNMP_ERR_SUCCESS)
                {
                   // Some Cisco switches may not return data for certain system VLANs
                   nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: cannot read port table in context %s"), context);
@@ -443,12 +443,12 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
       }
 	}
 
-   FDB_CHECK_FAILURE(node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.7.1.2.2.1.2"), Dot1qTpFdbHandler, fdb, nullptr, true));
+   FDB_CHECK_FAILURE(node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.7.1.2.2.1.2"), Dot1qTpFdbHandler, fdb.get(), nullptr, true));
    int size = fdb->getSize();
    nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: %d entries read from dot1qTpFdbTable"), size);
 
    fdb->setCurrentVlanId(1);
-   FDB_CHECK_FAILURE(node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb, nullptr, true));
+   FDB_CHECK_FAILURE(node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb.get(), nullptr, true));
    nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: %d entries read from dot1dTpFdbTable"), fdb->getSize() - size);
    size = fdb->getSize();
 
@@ -462,7 +462,7 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 				TCHAR context[16];
 				_sntprintf(context, 16, _T("%s%d"), (node->getSNMPVersion() < SNMP_VERSION_3) ? _T("") : _T("vlan-"), vlans->get(i)->getVlanId());
             fdb->setCurrentVlanId((UINT16)vlans->get(i)->getVlanId());
-				if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb, context) != SNMP_ERR_SUCCESS)
+				if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb.get(), context) != SNMP_ERR_SUCCESS)
 				{
                // Some Cisco switches may not return data for certain system VLANs
 				   nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("FDB: cannot read  FDB in context %s"), context);

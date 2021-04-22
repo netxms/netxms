@@ -1254,18 +1254,6 @@ public:
 };
 
 /**
- * NXSL "StaticTable" class - table that is not deleted when ref count reaches 0
- */
-class LIBNXSL_EXPORTABLE NXSL_StaticTableClass : public NXSL_TableClass
-{
-public:
-   NXSL_StaticTableClass();
-   virtual ~NXSL_StaticTableClass();
-
-	virtual void onObjectDelete(NXSL_Object *object) override;
-};
-
-/**
  * NXSL "Connector" class
  */
 class LIBNXSL_EXPORTABLE NXSL_ConnectorClass : public NXSL_Class
@@ -1352,7 +1340,6 @@ public:
 extern NXSL_Class LIBNXSL_EXPORTABLE g_nxslBaseClass;
 extern NXSL_MetaClass LIBNXSL_EXPORTABLE g_nxslMetaClass;
 extern NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
-extern NXSL_StaticTableClass LIBNXSL_EXPORTABLE g_nxslStaticTableClass;
 extern NXSL_TableRowClass LIBNXSL_EXPORTABLE g_nxslTableRowClass;
 extern NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
 extern NXSL_ConnectorClass LIBNXSL_EXPORTABLE g_nxslConnectorClass;

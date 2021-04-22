@@ -365,10 +365,10 @@ void ConditionObject::check()
             }
             else if (pItem->getType() == DCO_TYPE_TABLE)
             {
-               Table *t = static_cast<DCTable&>(*pItem).getLastValue();
+               shared_ptr<Table> t = static_cast<DCTable&>(*pItem).getLastValue();
                if (t != nullptr)
                {
-                  value = vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, t));
+                  value = vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, new shared_ptr<Table>(t)));
                }
             }
          }

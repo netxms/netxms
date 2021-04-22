@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -55,10 +55,10 @@ TableRow::TableRow(TableRow *src)
 /**
  * Create empty table
  */
-Table::Table() : RefCountObject()
+Table::Table()
 {
    m_data = new ObjectArray<TableRow>(32, 32, Ownership::True);
-	m_title = NULL;
+   m_title = nullptr;
    m_source = DS_INTERNAL;
    m_columns = new ObjectArray<TableColumnDefinition>(8, 8, Ownership::True);
    m_extendedFormat = false;
@@ -67,26 +67,25 @@ Table::Table() : RefCountObject()
 /**
  * Create table from NXCP message
  */
-Table::Table(NXCPMessage *msg) : RefCountObject()
+Table::Table(const NXCPMessage *msg)
 {
    m_columns = new ObjectArray<TableColumnDefinition>(8, 8, Ownership::True);
-	createFromMessage(msg);
+   createFromMessage(msg);
 }
 
 /**
  * Copy constructor
  */
-Table::Table(Table *src) : RefCountObject()
+Table::Table(const Table *src)
 {
    m_extendedFormat = src->m_extendedFormat;
    m_data = new ObjectArray<TableRow>(src->m_data->size(), 32, Ownership::True);
-	int i;
-   for(i = 0; i < src->m_data->size(); i++)
+   for(int i = 0; i < src->m_data->size(); i++)
       m_data->add(new TableRow(src->m_data->get(i)));
-   m_title = (src->m_title != NULL) ? _tcsdup(src->m_title) : NULL;
+   m_title = MemCopyString(src->m_title);
    m_source = src->m_source;
    m_columns = new ObjectArray<TableColumnDefinition>(src->m_columns->size(), 8, Ownership::True);
-	for(i = 0; i < src->m_columns->size(); i++)
+   for(int i = 0; i < src->m_columns->size(); i++)
       m_columns->add(new TableColumnDefinition(src->m_columns->get(i)));
 }
 
@@ -129,9 +128,9 @@ void Table::destroy()
 typedef struct
 {
    Table *table;
-	int state;
-	StringBuffer *buffer;
-	int column;
+   int state;
+   StringBuffer *buffer;
+   int column;
 } XML_PARSER_STATE;
 
 /**
@@ -435,26 +434,25 @@ char *Table::createPackedXML() const
 /**
  * Create table from NXCP message
  */
-void Table::createFromMessage(NXCPMessage *msg)
+void Table::createFromMessage(const NXCPMessage *msg)
 {
-	int i;
-	uint32_t dwId;
-
-	int rows = msg->getFieldAsUInt32(VID_TABLE_NUM_ROWS);
-	int columns = msg->getFieldAsUInt32(VID_TABLE_NUM_COLS);
-	m_title = msg->getFieldAsString(VID_TABLE_TITLE);
+   int rows = msg->getFieldAsUInt32(VID_TABLE_NUM_ROWS);
+   int columns = msg->getFieldAsUInt32(VID_TABLE_NUM_COLS);
+   m_title = msg->getFieldAsString(VID_TABLE_TITLE);
    m_source = msg->getFieldAsInt16(VID_DCI_SOURCE_TYPE);
    m_extendedFormat = msg->getFieldAsBoolean(VID_TABLE_EXTENDED_FORMAT);
 
-	for(i = 0, dwId = VID_TABLE_COLUMN_INFO_BASE; i < columns; i++, dwId += 10)
-	{
+   uint32_t dwId = VID_TABLE_COLUMN_INFO_BASE;
+   for(int i = 0; i < columns; i++, dwId += 10)
+   {
       m_columns->add(new TableColumnDefinition(msg, dwId));
-	}
+   }
+
    if (msg->isFieldExist(VID_INSTANCE_COLUMN))
    {
       TCHAR name[MAX_COLUMN_NAME];
       msg->getFieldAsString(VID_INSTANCE_COLUMN, name, MAX_COLUMN_NAME);
-      for(i = 0; i < m_columns->size(); i++)
+      for(int i = 0; i < m_columns->size(); i++)
       {
          if (!_tcsicmp(m_columns->get(i)->getName(), name))
          {
@@ -464,11 +462,12 @@ void Table::createFromMessage(NXCPMessage *msg)
       }
    }
 
-	m_data = new ObjectArray<TableRow>(rows, 32, Ownership::True);
-	for(i = 0, dwId = VID_TABLE_DATA_BASE; i < rows; i++)
+   m_data = new ObjectArray<TableRow>(rows, 32, Ownership::True);
+   dwId = VID_TABLE_DATA_BASE;
+   for(int i = 0; i < rows; i++)
    {
       TableRow *row = new TableRow(columns);
-		m_data->add(row);
+      m_data->add(row);
       if (m_extendedFormat)
       {
          row->setObjectId(msg->getFieldAsUInt32(dwId++));
@@ -698,47 +697,60 @@ void Table::setAt(int nRow, int nCol, double value)
 }
 
 /**
- * Get data from position
+ * Get value of given cell as string
  */
 const TCHAR *Table::getAsString(int nRow, int nCol, const TCHAR *defaultValue) const
 {
    const TableRow *r = m_data->get(nRow);
-   if (r == NULL)
+   if (r == nullptr)
       return defaultValue;
    const TCHAR *v = r->getValue(nCol);
-   return (v != NULL) ? v : defaultValue;
+   return (v != nullptr) ? v : defaultValue;
 }
 
-INT32 Table::getAsInt(int nRow, int nCol) const
+/**
+ * Get value of given cell as 32 bit integer
+ */
+int32_t Table::getAsInt(int nRow, int nCol) const
 {
-   const TCHAR *pszVal = getAsString(nRow, nCol);
-   return pszVal != NULL ? _tcstol(pszVal, NULL, 0) : 0;
+   const TCHAR *v = getAsString(nRow, nCol);
+   return v != nullptr ? _tcstol(v, nullptr, 0) : 0;
 }
 
-UINT32 Table::getAsUInt(int nRow, int nCol) const
+/**
+ * Get value of given cell as 32 bit unsigned integer
+ */
+uint32_t Table::getAsUInt(int nRow, int nCol) const
 {
-   const TCHAR *pszVal = getAsString(nRow, nCol);
-   return pszVal != NULL ? _tcstoul(pszVal, NULL, 0) : 0;
+   const TCHAR *v = getAsString(nRow, nCol);
+   return v != nullptr ? _tcstoul(v, nullptr, 0) : 0;
 }
 
-INT64 Table::getAsInt64(int nRow, int nCol) const
+/**
+ * Get value of given cell as 64 bit integer
+ */
+int64_t Table::getAsInt64(int nRow, int nCol) const
 {
-   const TCHAR *pszVal;
-
-   pszVal = getAsString(nRow, nCol);
-   return pszVal != NULL ? _tcstoll(pszVal, NULL, 0) : 0;
+   const TCHAR *v = getAsString(nRow, nCol);
+   return v != nullptr ? _tcstoll(v, nullptr, 0) : 0;
 }
 
-UINT64 Table::getAsUInt64(int nRow, int nCol) const
+/**
+ * Get value of given cell as 64 bit unsigned integer
+ */
+uint64_t Table::getAsUInt64(int nRow, int nCol) const
 {
-   const TCHAR *pszVal = getAsString(nRow, nCol);
-   return pszVal != NULL ? _tcstoull(pszVal, NULL, 0) : 0;
+   const TCHAR *v = getAsString(nRow, nCol);
+   return v != nullptr ? _tcstoull(v, nullptr, 0) : 0;
 }
 
+/**
+ * Get value of given cell as floating point number
+ */
 double Table::getAsDouble(int nRow, int nCol) const
 {
-   const TCHAR *pszVal = getAsString(nRow, nCol);
-   return pszVal != NULL ? _tcstod(pszVal, NULL) : 0;
+   const TCHAR *v = getAsString(nRow, nCol);
+   return v != nullptr ? _tcstod(v, nullptr) : 0;
 }
 
 /**
@@ -747,7 +759,7 @@ double Table::getAsDouble(int nRow, int nCol) const
 void Table::setStatusAt(int row, int col, int status)
 {
    TableRow *r = m_data->get(row);
-   if (r != NULL)
+   if (r != nullptr)
    {
       r->setStatus(col, status);
    }
@@ -759,16 +771,16 @@ void Table::setStatusAt(int row, int col, int status)
 int Table::getStatus(int nRow, int nCol) const
 {
    const TableRow *r = m_data->get(nRow);
-   return (r != NULL) ? r->getStatus(nCol) : -1;
+   return (r != nullptr) ? r->getStatus(nCol) : -1;
 }
 
 /**
  * Set object ID of given cell
  */
-void Table::setCellObjectIdAt(int row, int col, UINT32 objectId)
+void Table::setCellObjectIdAt(int row, int col, uint32_t objectId)
 {
    TableRow *r = m_data->get(row);
-   if (r != NULL)
+   if (r != nullptr)
    {
       r->setCellObjectId(col, objectId);
    }
@@ -780,7 +792,7 @@ void Table::setCellObjectIdAt(int row, int col, UINT32 objectId)
 void Table::setBaseRowAt(int row, int baseRow)
 {
    TableRow *r = m_data->get(row);
-   if (r != NULL)
+   if (r != nullptr)
    {
       r->setBaseRow(baseRow);
    }

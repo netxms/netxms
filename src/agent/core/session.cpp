@@ -656,12 +656,11 @@ void CommSession::processingThread()
                   TCHAR sessionName[256];
                   request->getFieldAsString(VID_NAME, sessionName, 256);
                   debugPrintf(6, _T("Take screenshot from session \"%s\""), sessionName);
-                  SessionAgentConnector *conn = AcquireSessionAgentConnector(sessionName);
-                  if (conn != NULL)
+                  shared_ptr<SessionAgentConnector> conn = AcquireSessionAgentConnector(sessionName);
+                  if (conn != nullptr)
                   {
                      debugPrintf(6, _T("Session agent connector acquired"));
                      conn->takeScreenshot(&response);
-                     conn->decRefCount();
                   }
                   else
                   {

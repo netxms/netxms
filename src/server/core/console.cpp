@@ -868,11 +868,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             {
                if (pObject->getObjectClass() == OBJECT_NODE)
                {
-                  ForwardingDatabase *fdb = static_cast<Node*>(pObject.get())->getSwitchForwardingDatabase();
+                  shared_ptr<ForwardingDatabase> fdb = static_cast<Node*>(pObject.get())->getSwitchForwardingDatabase();
                   if (fdb != nullptr)
                   {
                      fdb->print(pCtx, static_cast<Node*>(pObject.get()));
-                     fdb->decRefCount();
                   }
                   else
                   {
