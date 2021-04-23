@@ -173,6 +173,8 @@ NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool) = nullptr;
 int16_t g_defaultAgentCacheMode = AGENT_CACHE_OFF;
 InetAddressList g_peerNodeAddrList;
 Condition g_dbPasswordReady(true);
+TCHAR g_startupSqlScriptPath[MAX_PATH] = _T("");
+TCHAR g_dbSessionSetupSqlScriptPath[MAX_PATH] = _T("");
 
 /**
  * Static data
@@ -729,12 +731,19 @@ static void LogConsoleWriter(const TCHAR *format, ...)
 }
 
 /**
- * Oracle session init callback
+ * Database session init callback
  */
-static void OracleSessionInitCallback(DB_HANDLE hdb)
+static void DbSessionInitCallback(DB_HANDLE hdb)
 {
-   if (!strcmp(DBGetDriverName(DBGetDriver(hdb)), "ORACLE"))
+   if ((g_dbSyntax == DB_SYNTAX_ORACLE) && (!strcmp(DBGetDriverName(DBGetDriver(hdb)), "ORACLE")))
+   {
       DBQuery(hdb, _T("ALTER SESSION SET DDL_LOCK_TIMEOUT = 60"));
+   }
+
+   if (*g_dbSessionSetupSqlScriptPath != 0)
+   {
+      ExecuteSQLCommandFile(g_dbSessionSetupSqlScriptPath, hdb);
+   }
 }
 
 /**
@@ -855,6 +864,9 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	// Wait for database password if needed
 	GetDatabasePassword();
 
+   // Set up callback for DBConnect
+   DBSetSessionInitCallback(DbSessionInitCallback);
+
 	// Connect to database
 	DB_HANDLE hdbBootstrap = nullptr;
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
@@ -871,6 +883,12 @@ BOOL NXCORE_EXPORTABLE Initialize()
 		return FALSE;
 	}
 	nxlog_debug(1, _T("Successfully connected to database %s@%s"), g_szDbName, g_szDbServer);
+
+   // Run SQL commands from file if set
+   if (*g_startupSqlScriptPath != 0)
+   {
+      ExecuteSQLCommandFile(g_startupSqlScriptPath, hdbBootstrap);
+   }
 
 	// Check database schema version
 	INT32 schemaVersionMajor, schemaVersionMinor;
@@ -890,11 +908,8 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	// Read database syntax
 	g_dbSyntax = DBGetSyntax(hdbBootstrap);
-   if (g_dbSyntax == DB_SYNTAX_ORACLE)
-   {
-      DBSetSessionInitCallback(OracleSessionInitCallback);
-   }
-   else if (g_dbSyntax == DB_SYNTAX_PGSQL)
+
+   if (g_dbSyntax == DB_SYNTAX_PGSQL)
    {
       DB_RESULT hResult = DBSelect(hdbBootstrap, _T("SELECT version()"));
       if (hResult != nullptr)
