@@ -114,6 +114,8 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ServerCertificate"), CT_STRING, 0, 0, MAX_PATH, 0, g_serverCertificatePath, nullptr },
    { _T("ServerCertificateKey"), CT_STRING, 0, 0, MAX_PATH, 0, g_serverCertificateKeyPath, nullptr },
    { _T("ServerCertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, g_serverCertificatePassword, nullptr },
+   { _T("StartupSQLScript"), CT_STRING, 0, 0, MAX_PATH, 0, g_startupSqlScriptPath, nullptr },
+   { _T("DBSessionSetupSQLScript"), CT_STRING, 0, 0, MAX_PATH, 0, g_dbSessionSetupSqlScriptPath, nullptr },
    { _T("TrustedCertificate"), CT_STRING_SET, 0, 0, 0, 0, &g_trustedCertificates, nullptr },
    { _T("WriteLogAsJson"), CT_BOOLEAN_FLAG_64, 0, 0, AF_LOG_IN_JSON_FORMAT, 0, &g_flags, nullptr },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }

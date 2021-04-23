@@ -675,3 +675,92 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
    }
    return DBPrepare(hdb, query);
 }
+
+/**
+ * Parser function for SQL command file and their execution on selected database
+ */
+bool ExecuteSQLCommandFile(const TCHAR *filePath, DB_HANDLE hdb)
+{
+   // Read file contents into a string
+   size_t size;
+   char *buf = reinterpret_cast<char*>(LoadFile(filePath, &size));
+
+   if (buf == nullptr)
+   {
+      return false;
+   }
+
+   // Parse string
+   char *ptr = buf;
+   char *query = ptr;
+
+   while (true)   // For every query in line
+   {
+      // Trim the query
+      bool indentSingleQuote = false;
+
+      while (true)
+      {
+         // Find query terminator that's not part of a string in the query
+         if ((ptr == nullptr) || (*ptr == 0))
+         {
+            break;
+         }
+
+         ptr = strpbrk(ptr, ";'");
+
+         if (ptr == nullptr)
+         {
+            break;
+         }
+
+         if (*ptr == ';')
+         {
+            if (indentSingleQuote)
+            {
+               ptr++;
+            }
+            else
+            {
+               // Query-terminating ';' found
+               break;
+            }
+         }
+         else if (*ptr == '\'')
+         {
+            indentSingleQuote = !indentSingleQuote;
+            ptr++;
+         }
+      }
+
+      // Cut off query at ';'
+      if (ptr != nullptr)
+      {
+         *ptr = 0;
+      }
+
+      TrimA(query);
+
+      // Execute the query
+      if (*query != 0)
+      {
+#ifdef UNICODE
+         TCHAR *wquery = WideStringFromUTF8String(query);
+         DBQuery(hdb, wquery);
+         MemFree(wquery);
+#else
+         DBQuery(hdb, query);
+#endif
+      }
+
+      // Get next query ready
+      if ((ptr == nullptr) || (*(++ptr) == 0))
+      {
+         break;
+      }
+
+      query = ptr;
+   }
+
+   return true;
+}

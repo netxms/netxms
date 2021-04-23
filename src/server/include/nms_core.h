@@ -1417,6 +1417,8 @@ bool NXCORE_EXPORTABLE IsCommand(const TCHAR *cmdTemplate, const TCHAR *str, int
 
 ObjectArray<InetAddressListElement> *LoadServerAddressList(int listType);
 
+bool ExecuteSQLCommandFile(const TCHAR *filePath, DB_HANDLE hdb);
+
 /**
  * Watchdog API
  */
@@ -1604,6 +1606,9 @@ extern FileMonitoringList g_monitoringList;
 extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool);
 extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_clientThreadPool);
 extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_mobileThreadPool);
+
+extern TCHAR g_startupSqlScriptPath[];
+extern TCHAR g_dbSessionSetupSqlScriptPath[];
 
 #endif   /* MODULE_NXDBMGR_EXTENSION */
 
