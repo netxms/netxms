@@ -1033,21 +1033,6 @@ public:
 
    shared_ptr<NetObj> self() const { return static_pointer_cast<NetObj>(NObject::self()); }
 
-   shared_ptr<SharedObjectArray<NetObj>> getChildListSharedCopy()
-   {
-      readLockChildList();
-      shared_ptr<SharedObjectArray<NetObj>> copy(getChildList().clone());
-      unlockChildList();
-      return copy;
-   }
-   shared_ptr<SharedObjectArray<NetObj>> getParentListSharedCopy()
-   {
-      readLockParentList();
-      shared_ptr<SharedObjectArray<NetObj>> copy(getParentList().clone());
-      unlockParentList();
-      return copy;
-   }
-
    virtual int getObjectClass() const { return OBJECT_GENERIC; }
    virtual const WCHAR *getObjectClassNameW() const;
    virtual const char *getObjectClassNameA() const;

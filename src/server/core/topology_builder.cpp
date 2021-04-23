@@ -51,6 +51,7 @@ static void LinkObjectsWithInterfaces(NetworkMapObjectList *topology, const shar
    const TCHAR* interface1 = _T("Interface1");
    const TCHAR* interface2 = _T("Interface2");
    if (nbs != nullptr)
+   {
       for (int i = 0; i < nbs->size(); i++)
       {
          LL_NEIGHBOR_INFO *info = nbs->getConnection(i);
@@ -65,6 +66,7 @@ static void LinkObjectsWithInterfaces(NetworkMapObjectList *topology, const shar
             }
          }
       }
+   }
    topology->linkObjects(seed->getId(), node->getId(), vpnLink, linkName, interface1, interface2);
 }
 
@@ -73,24 +75,24 @@ static void LinkObjectsWithInterfaces(NetworkMapObjectList *topology, const shar
  */
 static void ProcessParentSubnets(NetworkMapObjectList *topology, const shared_ptr<Node>& seed, int nDepth, ObjectArray<PeerInfo>& peers, bool includeEndNodes)
 {
-   auto parentList = seed->getParentListSharedCopy();
-   for(int i = 0; i < parentList->size(); i++)
+   SharedObjectArray<NetObj> *parents = seed->getParents();
+   for(int i = 0; i < parents->size(); i++)
    {
-      shared_ptr<NetObj> parentNetObject = parentList->getShared(i);
+      shared_ptr<NetObj> parentNetObject = parents->getShared(i);
       if (parentNetObject->getObjectClass() == OBJECT_SUBNET && parentNetObject->getChildCount() > 1)
       {
          // Check if subnet actually connects two point-to-point interfaces
-         auto childList = parentNetObject->getChildListSharedCopy();
-         if (childList->size() == 2)
+         SharedObjectArray<NetObj> *children = parentNetObject->getChildren();
+         if (children->size() == 2)
          {
             shared_ptr<Interface> iface = seed->findInterfaceBySubnet(static_pointer_cast<Subnet>(parentNetObject)->getIpAddress());
             if (((iface != nullptr) && iface->isPointToPoint()) || static_pointer_cast<Subnet>(parentNetObject)->isPointToPoint())
             {
                shared_ptr<Node> node;
                // Let's get other node in subnet
-               for (int j = 0; j < childList->size(); j++)
+               for (int j = 0; j < children->size(); j++)
                {
-                  auto curr = childList->getShared(j);
+                  auto curr = children->getShared(j);
                   if (curr->getId() != seed->getId() && curr->getObjectClass() == OBJECT_NODE)
                   {
                      node = static_pointer_cast<Node>(curr);
@@ -108,9 +110,9 @@ static void ProcessParentSubnets(NetworkMapObjectList *topology, const shared_pt
          if (!topology->isObjectExist(parentNetObject->getId()))
          {
             topology->addObject(parentNetObject->getId());
-            for (int j = 0; j < childList->size(); j++)
+            for (int j = 0; j < children->size(); j++)
             {
-               shared_ptr<NetObj> childNetObject = childList->getShared(j);
+               shared_ptr<NetObj> childNetObject = children->getShared(j);
                if (childNetObject->getId() != seed->getId() && childNetObject->getObjectClass() == OBJECT_NODE)
                {
                   shared_ptr<Node> node = static_pointer_cast<Node>(childNetObject);
@@ -123,8 +125,11 @@ static void ProcessParentSubnets(NetworkMapObjectList *topology, const shared_pt
             }
          }
          topology->linkObjects(seed->getId(), parentNetObject->getId());
+
+         delete children;
       }
    }
+   delete parents;
 }
 
 /**
@@ -132,10 +137,10 @@ static void ProcessParentSubnets(NetworkMapObjectList *topology, const shared_pt
  */
 static void ProcessPeers(NetworkMapObjectList *topology, const shared_ptr<Node>& seed, int nDepth, ObjectArray<PeerInfo>& peers, bool includeEndNodes)
 {
-   auto childList = seed->getChildListSharedCopy();
-   for (int i = 0; i < childList->size(); i++)
+   SharedObjectArray<NetObj> *children = seed->getChildren();
+   for (int i = 0; i < children->size(); i++)
    {
-      NetObj *object = childList->get(i);
+      NetObj *object = children->get(i);
       if (object->getObjectClass() == OBJECT_VPNCONNECTOR)
       {
          shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(static_cast<VPNConnector*>(object)->getPeerGatewayId(), OBJECT_NODE));
@@ -145,6 +150,7 @@ static void ProcessPeers(NetworkMapObjectList *topology, const shared_ptr<Node>&
          }
       }
    }
+   delete children;
 
    for (int i = 0; i < peers.size(); i++)
    {

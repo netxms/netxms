@@ -1271,6 +1271,9 @@ inline shared_ptr<T> make_shared(Args&&... args)
    return shared_ptr<T>(new T(args...));
 }
 
+// xlC++ implementation C++11 TR1 does not have unique_ptr
+#define unique_ptr auto_ptr
+
 #elif defined(__HP_aCC)
 
 // HP aC++ does not have shared_ptr implementation, use bundled one
@@ -1288,6 +1291,7 @@ using std::shared_ptr;
 using std::weak_ptr;
 using std::make_shared;
 using std::static_pointer_cast;
+using std::unique_ptr;
 
 #endif
 

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -382,7 +382,7 @@ shared_ptr<WebServiceDefinition> FindWebServiceDefinition(const TCHAR *name)
 SharedObjectArray<WebServiceDefinition> *GetWebServiceDefinitions()
 {
    s_webServiceDefinitionLock.lock();
-   auto definitions = s_webServiceDefinitions.clone();
+   auto definitions = new SharedObjectArray<WebServiceDefinition>(s_webServiceDefinitions);
    s_webServiceDefinitionLock.unlock();
    return definitions;
 }

@@ -674,6 +674,14 @@ public:
    }
 
    /**
+    * Get region capacity
+    */
+   size_t getRegionCapacity() const
+   {
+      return (m_regionSize - m_headerSize) / m_elementSize;
+   }
+
+   /**
     * Get total number of allocated elememnts
     */
    size_t getElementCount() const
@@ -1371,6 +1379,7 @@ public:
 
 	int size() const { return m_size; }
 	bool isEmpty() const { return m_size == 0; }
+	int sizeIncrement() const { return m_grow; }
 
 	size_t memoryUsage() const { return m_allocated * m_elementSize; }
 
@@ -1551,8 +1560,6 @@ public:
  */
 template <class T> class SharedObjectArray
 {
-   DISABLE_COPY_CTOR(SharedObjectArray)
-
    // Note: member order is important because m_data allocates memory from m_pool
 private:
    ObjectMemoryPool<shared_ptr<T>> m_pool;
@@ -1573,7 +1580,16 @@ private:
 
 public:
    SharedObjectArray(int initial = 0, int grow = 16) :
-      m_pool(std::max(grow, 64)), m_data(initial, grow, Ownership::True, SharedObjectArray<T>::destructor) { m_data.setContext(this); }
+      m_pool(std::max(grow, 64)), m_data(initial, grow, Ownership::True, SharedObjectArray<T>::destructor)
+   {
+      m_data.setContext(this);
+   }
+   SharedObjectArray(const SharedObjectArray& src) :
+      m_pool(src.m_pool.getRegionCapacity()), m_data(src.m_data.size(), src.m_data.sizeIncrement(), Ownership::True, SharedObjectArray<T>::destructor)
+   {
+      for(int i = 0; i < src.m_data.size(); i++)
+         add(*static_cast<shared_ptr<T>*>(src.m_data.get(i)));
+   }
    virtual ~SharedObjectArray() { }
 
    int add(shared_ptr<T> element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
@@ -1581,35 +1597,27 @@ public:
    T *get(int index) const
    {
       auto p = static_cast<shared_ptr<T>*>(m_data.get(index));
-      return (p != NULL) ? p->get() : NULL;
+      return (p != nullptr) ? p->get() : nullptr;
    }
    const shared_ptr<T>& getShared(int index) const
    {
       auto p = static_cast<shared_ptr<T>*>(m_data.get(index));
-      return (p != NULL) ? *p : m_null;
+      return (p != nullptr) ? *p : m_null;
    }
    void replace(int index, shared_ptr<T> element)
    {
       auto p = static_cast<shared_ptr<T>**>(m_data.replaceWithPlaceholder(index));
-      if (p != NULL)
+      if (p != nullptr)
          *p = new(m_pool.allocate()) shared_ptr<T>(element);
    }
    void replace(int index, T *element)
    {
       auto p = static_cast<shared_ptr<T>**>(m_data.replaceWithPlaceholder(index));
-      if (p != NULL)
+      if (p != nullptr)
          *p = new(m_pool.allocate()) shared_ptr<T>(element);
    }
    void remove(int index) { m_data.remove(index); }
    void clear() { m_data.clear(); }
-
-   SharedObjectArray<T> *clone() const
-   {
-      auto a = new SharedObjectArray<T>(m_data.size());
-      for(int i = 0; i < m_data.size(); i++)
-         a->add(*static_cast<shared_ptr<T>*>(m_data.get(i)));
-      return a;
-   }
 
    int size() const { return m_data.size(); }
    bool isEmpty() const { return m_data.isEmpty(); }
