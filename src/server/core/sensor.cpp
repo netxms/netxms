@@ -964,8 +964,6 @@ DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, shared_ptr<Tabl
    uint32_t error = ERR_NOT_CONNECTED;
    DataCollectionError dwResult = DCE_COMM_ERROR;
 
-   *table = nullptr;
-
    if (m_state & DCSF_UNREACHABLE) //removed disable agent usage for all polls
       return DCE_COMM_ERROR;
 
