@@ -269,7 +269,7 @@ static uint32_t DeployPolicy(const uuid& guid, const BYTE *content, size_t size,
 /**
  * Deploy policy on agent
  */
-uint32_t DeployPolicy(NXCPMessage *request, uint32_t serverId, const TCHAR *serverInfo)
+uint32_t DeployPolicy(NXCPMessage *request, uint64_t serverId, const TCHAR *serverInfo)
 {
    if (!request->isFieldExist(VID_POLICY_TYPE))
    {
