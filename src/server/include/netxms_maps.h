@@ -58,7 +58,7 @@
 /**
  * Link between objects
  */
-class ObjLink
+class NXCORE_EXPORTABLE ObjLink
 {
 public:
    uint32_t id1;
@@ -76,10 +76,14 @@ public:
    ObjLink(const ObjLink *src);
  };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE ObjectArray<ObjLink>;
+#endif
+
 /**
  * Connected object list
  */
-class NetworkMapObjectList
+class NXCORE_EXPORTABLE NetworkMapObjectList
 {
 protected:
    IntegerArray<uint32_t> m_objectList;
@@ -114,6 +118,10 @@ public:
 	void setAllowDuplicateLinks(bool allowDuplicateLinks) { m_allowDuplicateLinks = allowDuplicateLinks; }
 	bool isAllowDuplicateLinks() const { return m_allowDuplicateLinks; }
 };
+
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE shared_ptr<NetworkMapObjectList>;
+#endif
 
 /**
  * Map element types

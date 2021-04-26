@@ -572,7 +572,7 @@ StructArray<EventProcessingThreadStats> *GetEventProcessingThreadStats()
       EventProcessingThreadStats s;
       s.processedEvents = s_processingThreads[i].processedEvents;
       s.averageWaitTime = s_processingThreads[i].getAverageWaitTime();
-      s.maxWaitTime = s_processingThreads[i].maxWaitTime;
+      s.maxWaitTime = static_cast<uint32_t>(s_processingThreads[i].maxWaitTime);
       s.queueSize = static_cast<uint32_t>(s_processingThreads[i].queue.size());
       s.bindings = s_processingThreads[i].bindings;
       stats->add(&s);

@@ -116,7 +116,7 @@ struct PORT_MAPPING_ENTRY
 /**
  * Switch forwarding database
  */
-class ForwardingDatabase
+class NXCORE_EXPORTABLE ForwardingDatabase
 {
 private:
    uint32_t m_nodeId;
@@ -158,6 +158,10 @@ public:
    shared_ptr<Table> getAsTable();
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE shared_ptr<ForwardingDatabase>;
+#endif
+
 /**
  * Link layer discovery protocols
  */
@@ -188,7 +192,7 @@ struct LL_NEIGHBOR_INFO
 /**
  * link layer neighbors
  */
-class LinkLayerNeighbors
+class NXCORE_EXPORTABLE LinkLayerNeighbors
 {
 private:
    int m_count;
@@ -211,6 +215,10 @@ public:
    void *getData() { return getData(0); }
    int size() { return m_count; }
 };
+
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE shared_ptr<LinkLayerNeighbors>;
+#endif
 
 //
 // VRRP information

@@ -1517,6 +1517,14 @@ public:
    }
 };
 
+#ifdef _WIN32
+// Define DLL interfaces for common integer types in libnetxms
+template class LIBNETXMS_EXPORTABLE IntegerArray<int32_t>;
+template class LIBNETXMS_EXPORTABLE IntegerArray<uint32_t>;
+template class LIBNETXMS_EXPORTABLE IntegerArray<int64_t>;
+template class LIBNETXMS_EXPORTABLE IntegerArray<uint64_t>;
+#endif
+
 /**
  * Auxilliary class to hold dynamically allocated array of structures
  */
@@ -2936,6 +2944,10 @@ public:
    static Table *createFromPackedXML(const char *packedXml);
    char *createPackedXML() const;
 };
+
+#ifdef _WIN32
+template class LIBNETXMS_EXPORTABLE shared_ptr<Table>;
+#endif
 
 /**
  * Create JSON string with null check

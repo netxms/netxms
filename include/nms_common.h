@@ -187,6 +187,7 @@ typedef int bool;
 #define CAN_DELETE_COPY_CTOR      1
 #define HAVE_OVERRIDE_SPECIFIER   1
 #define HAVE_THREAD_LOCAL_STORAGE 1
+#define HAVE_STD_MAKE_UNIQUE      1
 
 // Disable some warnings:
 //   4293 - 'function xxx' not available as intrinsic function

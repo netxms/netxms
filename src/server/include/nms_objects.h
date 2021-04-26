@@ -914,7 +914,6 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE IntegerArray<uint32_t>;
 template class NXCORE_EXPORTABLE ObjectArray<ObjectUrl>;
 #endif
 

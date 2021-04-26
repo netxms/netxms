@@ -26,7 +26,7 @@
  * Externals
  */
 void UnregisterSession(uint32_t id);
-uint32_t DeployPolicy(NXCPMessage *request, uint32_t serverId, const TCHAR *serverInfo);
+uint32_t DeployPolicy(NXCPMessage *request, uint64_t serverId, const TCHAR *serverInfo);
 uint32_t UninstallPolicy(NXCPMessage *request);
 uint32_t GetPolicyInventory(NXCPMessage *msg);
 void ClearDataCollectionConfiguration();
