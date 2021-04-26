@@ -188,7 +188,7 @@ struct LL_NEIGHBOR_INFO
 /**
  * link layer neighbors
  */
-class LinkLayerNeighbors
+class NXCORE_EXPORTABLE LinkLayerNeighbors
 {
 private:
    int m_count;
@@ -211,6 +211,10 @@ public:
    void *getData() { return getData(0); }
    int size() { return m_count; }
 };
+
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE shared_ptr<LinkLayerNeighbors>;
+#endif
 
 //
 // VRRP information
