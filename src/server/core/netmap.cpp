@@ -709,18 +709,18 @@ void NetworkMap::updateContent()
          shared_ptr<Node> seed = static_pointer_cast<Node>(FindObjectById(m_seedObjects->get(i), OBJECT_NODE));
          if (seed != nullptr)
          {
-            UINT32 status;
-            NetworkMapObjectList *topology;
+            uint32_t status;
+            shared_ptr<NetworkMapObjectList> topology;
             switch(m_mapType)
             {
                case MAP_TYPE_LAYER2_TOPOLOGY:
                   topology = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
                   break;
                case MAP_TYPE_IP_TOPOLOGY:
-                  topology = BuildIPTopology(seed, &status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
+                  topology = shared_ptr<NetworkMapObjectList>(BuildIPTopology(seed, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0));
                   break;
                case MAP_INTERNAL_COMMUNICATION_TOPOLOGY:
-                  topology = seed->buildInternalCommunicationTopology();
+                  topology = shared_ptr<NetworkMapObjectList>(seed->buildInternalCommunicationTopology());
                   break;
                default:
                   topology = nullptr;
@@ -729,7 +729,6 @@ void NetworkMap::updateContent()
             if (topology != nullptr)
             {
                objects.merge(*topology);
-               delete topology;
             }
             else
             {

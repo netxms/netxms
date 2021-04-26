@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -219,17 +219,17 @@ StringBuffer ColumnFilter::generateSql()
 				shared_ptr<NetObj> object = FindObjectById(static_cast<uint32_t>(m_value.numericValue));
 				if (object != NULL)
 				{
-					SharedObjectArray<NetObj> *childObjects = object->getAllChildren(true);
-					if (childObjects->size() > 0)
+					unique_ptr<SharedObjectArray<NetObj>> children = object->getAllChildren(true);
+					if (children->size() > 0)
 					{
 						sql.append(m_column);
 						sql.append(_T(" IN ("));
-						for(int i = 0; i < childObjects->size(); i++)
+						for(int i = 0; i < children->size(); i++)
 						{
 							if (i > 0)
 								sql.append(_T(", "));
 							TCHAR buffer[32];
-							_sntprintf(buffer, 32, _T("%u"), childObjects->get(i)->getId());
+							_sntprintf(buffer, 32, _T("%u"), children->get(i)->getId());
 							sql.append(buffer);
 						}
 						sql.append(_T(")"));
@@ -238,7 +238,6 @@ StringBuffer ColumnFilter::generateSql()
 					{
 						sql.append(_T("0=1"));
 					}
-					delete childObjects;
 				}
 				else
 				{

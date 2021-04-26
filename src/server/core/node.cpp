@@ -143,7 +143,6 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_lastAgentCommTime = NEVER;
    m_lastAgentConnectAttempt = 0;
    m_vrrpInfo = nullptr;
-   m_topology = nullptr;
    m_topologyRebuildTimestamp = 0;
    m_pendingState = -1;
    m_pollCountAgent = 0;
@@ -264,7 +263,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_lastAgentCommTime = NEVER;
    m_lastAgentConnectAttempt = 0;
    m_vrrpInfo = nullptr;
-   m_topology = nullptr;
    m_topologyRebuildTimestamp = 0;
    m_pendingState = -1;
    m_pollCountAgent = 0;
@@ -330,7 +328,6 @@ Node::~Node()
    MemFree(m_sysDescription);
    delete m_routingTable;
    delete m_vrrpInfo;
-   delete m_topology;
    delete m_snmpSecurity;
    delete m_wirelessStations;
    MemFree(m_lldpNodeId);
@@ -3879,7 +3876,7 @@ static bool FilterByZone(NetObj *object, void *zoneUIN)
 DuplicateCheckResult Node::checkForDuplicates(shared_ptr<Node> *duplicate, TCHAR *reason, size_t size)
 {
    DuplicateCheckResult result = NO_DUPLICATES;
-   SharedObjectArray<NetObj> *nodes = g_idxNodeById.getObjects(FilterByZone, CAST_TO_POINTER(m_zoneUIN, void*));
+   unique_ptr<SharedObjectArray<NetObj>> nodes = g_idxNodeById.getObjects(FilterByZone, CAST_TO_POINTER(m_zoneUIN, void*));
    int i;
    for(i = 0; i < nodes->size(); i++)
    {
@@ -3924,7 +3921,6 @@ DuplicateCheckResult Node::checkForDuplicates(shared_ptr<Node> *duplicate, TCHAR
          break;
       }
    }
-   delete nodes;
    return result;
 }
 
@@ -4899,7 +4895,7 @@ bool Node::confPollSnmp(uint32_t rqId)
          if (clusterMode == CLUSTER_MODE_STANDALONE)
          {
             // Delete access points no longer reported by controller
-            SharedObjectArray<NetObj> *apList = getChildren(OBJECT_ACCESSPOINT);
+            unique_ptr<SharedObjectArray<NetObj>> apList = getChildren(OBJECT_ACCESSPOINT);
             for(int i = 0; i < apList->size(); i++)
             {
                auto ap = static_cast<AccessPoint*>(apList->get(i));
@@ -4920,7 +4916,6 @@ bool Node::confPollSnmp(uint32_t rqId)
                   ap->deleteObject();
                }
             }
-            delete apList;
          }
 
          lockProperties();
@@ -5399,7 +5394,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
       {
          // Node has interfaces from previous polls but do not report them anymore
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): clearing interface list"), m_name, m_id);
-         SharedObjectArray<NetObj> *ifaces = getChildren(OBJECT_INTERFACE);
+         unique_ptr<SharedObjectArray<NetObj>> ifaces = getChildren(OBJECT_INTERFACE);
          for(int i = 0; i < ifaces->size(); i++)
             deleteInterface(static_cast<Interface*>(ifaces->get(i)));
          ifaceCount = 0;
@@ -8759,31 +8754,25 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
  * Get current layer 2 topology (as dynamically created list which should be destroyed by caller)
  * Will return nullptr if there are no topology information or it is expired
  */
-NetworkMapObjectList *Node::getL2Topology()
+shared_ptr<NetworkMapObjectList> Node::getL2Topology()
 {
-   NetworkMapObjectList *pResult;
-   UINT32 dwExpTime;
-
-   dwExpTime = ConfigReadULong(_T("Topology.AdHocRequest.ExpirationTime"), 900);
+   shared_ptr<NetworkMapObjectList> result;
+   time_t expTime = ConfigReadULong(_T("Topology.AdHocRequest.ExpirationTime"), 900);
    MutexLock(m_mutexTopoAccess);
-   if ((m_topology == nullptr) || (m_topologyRebuildTimestamp + (time_t)dwExpTime < time(nullptr)))
+   if ((m_topology != nullptr) && (m_topologyRebuildTimestamp + expTime >= time(nullptr)))
    {
-      pResult = nullptr;
-   }
-   else
-   {
-      pResult = new NetworkMapObjectList(*m_topology);
+      result = m_topology;
    }
    MutexUnlock(m_mutexTopoAccess);
-   return pResult;
+   return result;
 }
 
 /**
  * Rebuild layer 2 topology and return it as dynamically reated list which should be destroyed by caller
  */
-NetworkMapObjectList *Node::buildL2Topology(UINT32 *pdwStatus, int radius, bool includeEndNodes)
+shared_ptr<NetworkMapObjectList> Node::buildL2Topology(uint32_t *status, int radius, bool includeEndNodes)
 {
-   NetworkMapObjectList *result;
+   shared_ptr<NetworkMapObjectList> result;
    int nDepth = (radius < 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
 
    MutexLock(m_mutexTopoAccess);
@@ -8791,19 +8780,18 @@ NetworkMapObjectList *Node::buildL2Topology(UINT32 *pdwStatus, int radius, bool 
    {
       MutexUnlock(m_mutexTopoAccess);
 
-      result = new NetworkMapObjectList();
+      result = make_shared<NetworkMapObjectList>();
       BuildL2Topology(*result, this, nDepth, includeEndNodes);
 
       MutexLock(m_mutexTopoAccess);
-      delete m_topology;
-      m_topology = new NetworkMapObjectList(*result);
+      m_topology = result;
       m_topologyRebuildTimestamp = time(nullptr);
    }
    else
    {
       result = nullptr;
-      delete_and_null(m_topology);
-      *pdwStatus = RCC_NO_L2_TOPOLOGY_SUPPORT;
+      m_topology.reset();
+      *status = RCC_NO_L2_TOPOLOGY_SUPPORT;
    }
    MutexUnlock(m_mutexTopoAccess);
    return result;
@@ -10476,20 +10464,9 @@ void Node::setTunnelId(const uuid& tunnelId, const TCHAR *certSubject)
 }
 
 /**
- * Build internal connection topology
- */
-NetworkMapObjectList *Node::buildInternalConnectionTopology()
-{
-   NetworkMapObjectList *topology = new NetworkMapObjectList();
-   topology->setAllowDuplicateLinks(true);
-   buildInternalConnectionTopologyInternal(topology, m_id, false, false);
-   return topology;
-}
-
-/**
  * Checks if proxy has been set and links objects, if not set, creates new server link or edits existing
  */
-bool Node::checkProxyAndLink(NetworkMapObjectList *topology, UINT32 seedNode, UINT32 proxyId, UINT32 linkType, const TCHAR *linkName, bool checkAllProxies)
+bool Node::checkProxyAndLink(NetworkMapObjectList *topology, uint32_t seedNode, uint32_t proxyId, uint32_t linkType, const TCHAR *linkName, bool checkAllProxies)
 {
    if ((proxyId == 0) || (proxyId == g_dwMgmtNode))
       return false;
@@ -10510,7 +10487,7 @@ bool Node::checkProxyAndLink(NetworkMapObjectList *topology, UINT32 seedNode, UI
 
       topology->addObject(proxyId);
       topology->linkObjects(m_id, proxyId, linkType, linkName);
-      proxy->buildInternalConnectionTopologyInternal(topology, seedNode, !checkAllProxies, checkAllProxies);
+      proxy->buildInternalCommunicationTopologyInternal(topology, seedNode, !checkAllProxies, checkAllProxies);
    }
    return true;
 }
@@ -10518,7 +10495,7 @@ bool Node::checkProxyAndLink(NetworkMapObjectList *topology, UINT32 seedNode, UI
 /**
  * Build internal connection topology - internal function
  */
-void Node::buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, UINT32 seedNode, bool agentConnectionOnly, bool checkAllProxies)
+void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology, uint32_t seedNode, bool agentConnectionOnly, bool checkAllProxies)
 {
    if (topology->getNumObjects() != 0 && seedNode == m_id)
       return;
@@ -10577,37 +10554,14 @@ void Node::buildInternalConnectionTopologyInternal(NetworkMapObjectList *topolog
 }
 
 /**
- * Build entire network map
+ * Build internal communication topology
  */
-NetworkMapObjectList *Node::buildInternalCommunicationTopology()
+unique_ptr<NetworkMapObjectList> Node::buildInternalCommunicationTopology()
 {
-   NetworkMapObjectList *topology = new NetworkMapObjectList();
+   auto topology = make_unique<NetworkMapObjectList>();
    topology->setAllowDuplicateLinks(true);
-   buildInternalCommunicationTopologyInternal(topology);
+   buildInternalCommunicationTopologyInternal(topology.get(), m_id, false, false);
    return topology;
-}
-
-/**
- * Build entire network map - internal function
- */
-void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology)
-{
-   SharedObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
-   for(int i = 0; i < objects->size(); i++)
-   {
-      NetObj *obj = objects->get(i);
-      if (!obj->isDeleted())
-      {
-         if (obj->getId() == m_id)
-            continue;
-
-         if (obj->getObjectClass() == OBJECT_NODE)
-            static_cast<Node*>(obj)->buildInternalConnectionTopologyInternal(topology, m_id, false, true);
-         else if (obj->getObjectClass() == OBJECT_SENSOR)
-            static_cast<Sensor*>(obj)->buildInternalConnectionTopologyInternal(topology, true);
-      }
-   }
-   delete objects;
 }
 
 /**
@@ -11020,7 +10974,7 @@ void Node::updateClusterMembership()
       return;
 
    sendPollerMsg(_T("Processing cluster autobind rules\r\n"));
-   SharedObjectArray<NetObj> *clusters = g_idxObjectById.getObjects(ClusterSelectionFilter);
+   unique_ptr<SharedObjectArray<NetObj>> clusters = g_idxObjectById.getObjects(ClusterSelectionFilter);
    for(int i = 0; i < clusters->size(); i++)
    {
       Cluster *cluster = static_cast<Cluster*>(clusters->get(i));
@@ -11052,5 +11006,4 @@ void Node::updateClusterMembership()
          }
       }
    }
-   delete clusters;
 }

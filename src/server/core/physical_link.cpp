@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2019-2020 Raden Solutions
+** Copyright (C) 2019-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -341,18 +341,17 @@ static void FillMessageCallback(PhysicalLink *link, FillMessageCallbackData *dat
  */
 void GetObjectPhysicalLinks(const NetObj *object, uint32_t userId, uint32_t patchPanelId, NXCPMessage *msg)
 {
-   IntegerArray<UINT32> m_filter;
+   IntegerArray<uint32_t> m_filter;
    if (object != nullptr)
    {
       m_filter.add(object->getId());
       if ((object->getObjectClass() == OBJECT_RACK) && (patchPanelId == 0))
       {
-         SharedObjectArray<NetObj> *nodes = object->getChildren(OBJECT_NODE);
+         unique_ptr<SharedObjectArray<NetObj>> nodes = object->getChildren(OBJECT_NODE);
          for(int i = 0; i < nodes->size(); i++)
          {
             m_filter.add(nodes->get(i)->getId());
          }
-         delete nodes;
       }
    }
    FillMessageCallbackData data;
@@ -389,7 +388,7 @@ static bool FindPLinksForDeletionCallback2(PhysicalLink *link, std::pair<UINT32,
  */
 void DeleteObjectFromPhysicalLinks(UINT32 id)
 {
-   SharedObjectArray<PhysicalLink> *objectsForDeletion = s_physicalLinks.findAll(FindPLinksForDeletionCallback, &id);
+   unique_ptr<SharedObjectArray<PhysicalLink>> objectsForDeletion = s_physicalLinks.findAll(FindPLinksForDeletionCallback, &id);
 
    bool modified = false;
    for(int i = 0; i < objectsForDeletion->size(); i++)
@@ -402,8 +401,6 @@ void DeleteObjectFromPhysicalLinks(UINT32 id)
 
    if (modified)
       NotifyClientSessions(NX_NOTIFY_PHYSICAL_LINK_UPDATE, 0);
-
-   delete objectsForDeletion;
 }
 
 /**
@@ -413,7 +410,7 @@ void DeleteObjectFromPhysicalLinks(UINT32 id)
 void DeletePatchPanelFromPhysicalLinks(UINT32 rackId, UINT32 patchPanelId)
 {
    std::pair<UINT32, UINT32> context(rackId, patchPanelId);
-   SharedObjectArray<PhysicalLink> *objectsForDeletion = s_physicalLinks.findAll(FindPLinksForDeletionCallback2, &context);
+   unique_ptr<SharedObjectArray<PhysicalLink>> objectsForDeletion = s_physicalLinks.findAll(FindPLinksForDeletionCallback2, &context);
 
    bool modified = false;
    for(int i = 0; i < objectsForDeletion->size(); i++)
@@ -426,8 +423,6 @@ void DeletePatchPanelFromPhysicalLinks(UINT32 rackId, UINT32 patchPanelId)
 
    if (modified)
       NotifyClientSessions(NX_NOTIFY_PHYSICAL_LINK_UPDATE, 0);
-
-   delete objectsForDeletion;
 }
 
 /**
@@ -533,15 +528,13 @@ uint32_t AddPhysicalLink(const NXCPMessage *msg, uint32_t userId)
    epd.link = link.get();
    epd.leftObject = leftObject.get();
    epd.rightObject = rightObject.get();
-   SharedObjectArray<PhysicalLink> *matchedObjects = s_physicalLinks.findAll(FindPLinksWithSameEndpoint, &epd);
+   unique_ptr<SharedObjectArray<PhysicalLink>> matchedObjects = s_physicalLinks.findAll(FindPLinksWithSameEndpoint, &epd);
    if (matchedObjects->size() > 0 ||
          CompareLinkSides(link->getRightObjectId(), link->getRightPatchPanelId(), link->getRightPortNumber(), link->isRightFront(),
                   link->getLeftObjectId(), link->getLeftPatchPanelId(), link->getLeftPortNumber(), link->isLeftFront(), rightObject->getObjectClass() == OBJECT_RACK))
    {
-      delete matchedObjects;
       return RCC_ENDPOINT_ALREADY_IN_USE;
    }
-   delete matchedObjects;
 
    if (link->getId() == 0)
       link->updateId();

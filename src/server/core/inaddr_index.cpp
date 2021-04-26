@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -198,9 +198,9 @@ int InetAddressIndex::size() const
 /**
  * Get all objects
  */
-SharedObjectArray<NetObj> *InetAddressIndex::getObjects(bool (*filter)(NetObj *, void *), void *context) const
+unique_ptr<SharedObjectArray<NetObj>> InetAddressIndex::getObjects(bool (*filter)(NetObj *, void *), void *context) const
 {
-   SharedObjectArray<NetObj> *objects = new SharedObjectArray<NetObj>();
+   unique_ptr<SharedObjectArray<NetObj>> objects = make_unique<SharedObjectArray<NetObj>>();
 
    RWLockReadLock(m_lock);
    InetAddressIndexEntry *entry, *tmp;

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1293,6 +1293,15 @@ using std::make_shared;
 using std::static_pointer_cast;
 using std::unique_ptr;
 
+#endif
+
+#if HAVE_STD_MAKE_UNIQUE
+using std::make_unique;
+#else
+template<class T, class... Args> unique_ptr<T> make_unique(Args&&... args)
+{
+   return unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
 #endif
 
 #endif	/* __cplusplus */

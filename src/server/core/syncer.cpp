@@ -141,7 +141,7 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
    if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
       RWLockWriteLock(s_objectTxnLock);
 
-	SharedObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
+	unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects();
    nxlog_debug_tag(DEBUG_TAG_SYNC, 5, _T("%d objects to process"), objects->size());
 	for(int i = 0; i < objects->size(); i++)
    {
@@ -210,7 +210,6 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
 
    if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
       RWLockUnlock(s_objectTxnLock);
-	delete objects;
 	nxlog_debug_tag(DEBUG_TAG_SYNC, 5, _T("Save objects completed"));
 }
 

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -457,10 +457,10 @@ void AbstractIndexBase::forEach(void (*callback)(void *, void *), void *data)
  * must be destroyed by the caller. Changes in result array will
  * not affect content of the index.
  */
-SharedObjectArray<NetObj> *ObjectIndex::getObjects(bool (*filter)(NetObj *, void *), void *context)
+unique_ptr<SharedObjectArray<NetObj>> ObjectIndex::getObjects(bool (*filter)(NetObj *, void *), void *context)
 {
    INDEX_HEAD *index = acquireIndex();
-   auto result = new SharedObjectArray<NetObj>(index->size);
+   auto result = make_unique<SharedObjectArray<NetObj>>(index->size);
    for(size_t i = 0; i < index->size; i++)
    {
       if ((filter == nullptr) || filter(static_cast<shared_ptr<NetObj>*>(index->elements[i].object)->get(), context))

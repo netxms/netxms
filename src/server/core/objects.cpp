@@ -128,13 +128,12 @@ static void ApplyTemplateThread()
  */
 static void UpdateDataCollectionCache(ObjectIndex *idx)
 {
-	SharedObjectArray<NetObj> *objects = idx->getObjects();
+	unique_ptr<SharedObjectArray<NetObj>> objects = idx->getObjects();
    for(int i = 0; i < objects->size(); i++)
    {
       DataCollectionTarget *t = static_cast<DataCollectionTarget*>(objects->get(i));
       t->updateDciCache();
    }
-	delete objects;
 }
 
 /**
@@ -834,14 +833,13 @@ static bool HostnameComparator(NetObj *object, NodeFindHostnameData *data)
 /**
  * Find a list of nodes that contain the hostname
  */
-SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindNodesByHostname(int32_t zoneUIN, const TCHAR *hostname)
+unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindNodesByHostname(int32_t zoneUIN, const TCHAR *hostname)
 {
    NodeFindHostnameData data;
    data.zoneUIN = zoneUIN;
    _tcslcpy(data.hostname, hostname, MAX_DNS_NAME);
    _tcsupr(data.hostname);
-   SharedObjectArray<NetObj> *nodes = g_idxNodeById.findAll(HostnameComparator, &data);
-   return nodes;
+   return g_idxNodeById.findAll(HostnameComparator, &data);
 }
 
 /**
@@ -896,9 +894,8 @@ shared_ptr<Node> NXCORE_EXPORTABLE FindNodeBySysName(const TCHAR *sysName)
       return shared_ptr<Node>();
 
    // return nullptr if multiple nodes with same sysName found
-   SharedObjectArray<NetObj> *objects = g_idxNodeById.findAll(SysNameComparator, sysName);
+   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxNodeById.findAll(SysNameComparator, sysName);
    shared_ptr<Node> node = (objects->size() == 1) ? static_pointer_cast<Node>(objects->getShared(0)) : shared_ptr<Node>();
-   delete objects;
    return node;
 }
 
@@ -1111,7 +1108,7 @@ static bool ObjectNameRegexAndClassFilter(NetObj *object, std::pair<int, PCRE*> 
  * @param objClass
  * @return
  */
-SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindObjectsByRegex(const TCHAR *regex, int objClass)
+unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const TCHAR *regex, int objClass)
 {
    const char *eptr;
    int eoffset;
@@ -1146,7 +1143,7 @@ SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindObjectsByRegex(const TCHAR *reg
    }
 
    std::pair<int, PCRE*> context(objClass, preg);
-   SharedObjectArray<NetObj> *result = index->getObjects(ObjectNameRegexAndClassFilter, &context);
+   unique_ptr<SharedObjectArray<NetObj>> result = index->getObjects(ObjectNameRegexAndClassFilter, &context);
    _pcre_free_t(preg);
    return result;
 }
@@ -2784,7 +2781,7 @@ static int ObjectQueryComparator(ObjectQueryComparatorData *data, const ObjectQu
 /**
  * Query objects
  */
-ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage,
+unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage,
          size_t errorMessageLen, const StringList *fields, const StringList *orderBy, uint32_t limit)
 {
    NXSL_VM *vm = NXSLCompileAndCreateVM(query, errorMessage, errorMessageLen, new NXSL_ServerEnv());
@@ -2824,8 +2821,8 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId
    vm->addConstant("VPNCONNECTOR", vm->createValue(OBJECT_VPNCONNECTOR));
    vm->addConstant("ZONE", vm->createValue(OBJECT_ZONE));
 
-   SharedObjectArray<NetObj> *objects = g_idxObjectById.getObjects(FilterAccessibleObjects);
-   ObjectArray<ObjectQueryResult> *resultSet = new ObjectArray<ObjectQueryResult>(64, 64, Ownership::True);
+   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(FilterAccessibleObjects);
+   auto resultSet = new ObjectArray<ObjectQueryResult>(64, 64, Ownership::True);
    for(int i = 0; i < objects->size(); i++)
    {
       shared_ptr<NetObj> curr = objects->getShared(i);
@@ -2888,7 +2885,6 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId
    }
 
    delete vm;
-   delete objects;
 
    // Sort result set and apply limit
    if (resultSet != nullptr)
@@ -2906,7 +2902,7 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId
       }
    }
 
-   return resultSet;
+   return unique_ptr<ObjectArray<ObjectQueryResult>>(resultSet);
 }
 
 /**

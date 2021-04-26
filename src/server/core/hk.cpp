@@ -62,12 +62,12 @@ bool ThrottleHousekeeper()
 /**
  * Delete empty subnets from given list
  */
-static void DeleteEmptySubnetsFromList(SharedObjectArray<NetObj> *subnets)
+static void DeleteEmptySubnetsFromList(const SharedObjectArray<NetObj>& subnets)
 {
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: %d subnets to check"), subnets->size());
-   for(int i = 0; i < subnets->size(); i++)
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: %d subnets to check"), subnets.size());
+   for(int i = 0; i < subnets.size(); i++)
    {
-      NetObj *object = subnets->get(i);
+      NetObj *object = subnets.get(i);
       nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: checking subnet %s [%d] (children: %d, parents: %d)"),
                 object->getName(), object->getId(), object->getChildCount(), object->getParentCount());
       if (object->isEmpty() && !static_cast<Subnet*>(object)->isManuallyCreated())
@@ -86,24 +86,21 @@ static void DeleteEmptySubnets()
 {
    if (IsZoningEnabled())
    {
-      SharedObjectArray<NetObj> *zones = g_idxZoneByUIN.getObjects();
+      unique_ptr<SharedObjectArray<NetObj>> zones = g_idxZoneByUIN.getObjects();
       nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: %d zones to check"), zones->size());
       for(int i = 0; i < zones->size(); i++)
       {
          Zone *zone = static_cast<Zone*>(zones->get(i));
          nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: processing zone %s (UIN=%u)"), zone->getName(), zone->getUIN());
-         SharedObjectArray<NetObj> *subnets = zone->getSubnets();
-         DeleteEmptySubnetsFromList(subnets);
-         delete subnets;
+         unique_ptr<SharedObjectArray<NetObj>> subnets = zone->getSubnets();
+         DeleteEmptySubnetsFromList(*subnets);
          nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: zone processing completed"));
       }
-      delete zones;
    }
    else
    {
-      SharedObjectArray<NetObj> *subnets = g_idxSubnetByAddr.getObjects();
-      DeleteEmptySubnetsFromList(subnets);
-      delete subnets;
+      unique_ptr<SharedObjectArray<NetObj>> subnets = g_idxSubnetByAddr.getObjects();
+      DeleteEmptySubnetsFromList(*subnets);
    }
 }
 
@@ -466,12 +463,11 @@ static void HouseKeeper()
 
 	   // Save object runtime data
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Saving object runtime data"));
-	   SharedObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
+	   unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects();
 	   for(int i = 0; i < objects->size(); i++)
 	   {
 	      objects->get(i)->saveRuntimeData(hdb);
 	   }
-	   delete objects;
 
 		DBConnectionPoolReleaseConnection(hdb);
 

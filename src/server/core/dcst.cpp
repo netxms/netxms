@@ -420,7 +420,7 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
    if (tableDefinition == nullptr)
       return nullptr;
 
-   SharedObjectArray<NetObj> *childObjects = object->getAllChildren(true);
+   unique_ptr<SharedObjectArray<NetObj>> childObjects = object->getAllChildren(true);
    Table *tableData = tableDefinition->createEmptyResultTable();
    for(int i = 0; i < childObjects->size(); i++)
    {
@@ -435,7 +435,6 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
       }
    }
 
-   delete childObjects;
    delete tableDefinition;
 
    return tableData;

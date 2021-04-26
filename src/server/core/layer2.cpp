@@ -74,7 +74,7 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
       return shared_ptr<NetObj>();
 
 	shared_ptr<NetObj> cp;
-	SharedObjectArray<NetObj> *nodes = g_idxNodeById.getObjects();
+	unique_ptr<SharedObjectArray<NetObj>> nodes = g_idxNodeById.getObjects();
 
 	Node *bestMatchNode = nullptr;
 	uint32_t bestMatchIfIndex = 0;
@@ -196,6 +196,5 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
       }
 	}
 
-   delete nodes;
 	return cp;
 }

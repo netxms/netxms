@@ -180,7 +180,7 @@ bool LogHandle::query(LogFilter *filter, int64_t *rowCount, uint32_t userId)
 StringBuffer LogHandle::buildObjectAccessConstraint(uint32_t userId)
 {
    StringBuffer constraint;
-	SharedObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
+	unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects();
    IntegerArray<uint32_t> allowed(objects->size());
    IntegerArray<uint32_t> restricted(objects->size());
 	for(int i = 0; i < objects->size(); i++)
@@ -198,7 +198,6 @@ StringBuffer LogHandle::buildObjectAccessConstraint(uint32_t userId)
          }
       }
 	}
-   delete objects;
 
    if (restricted.isEmpty())
    {

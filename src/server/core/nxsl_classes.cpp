@@ -776,8 +776,8 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    else if (compareAttributeName(attr, "responsibleUsers"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
-      IntegerArray<UINT32> *responsibleUsers = object->getAllResponsibleUsers();
-      ObjectArray<UserDatabaseObject> *userDB = FindUserDBObjects(responsibleUsers);
+      unique_ptr<IntegerArray<uint32_t>> responsibleUsers = object->getAllResponsibleUsers();
+      ObjectArray<UserDatabaseObject> *userDB = FindUserDBObjects(*responsibleUsers);
       userDB->setOwner(Ownership::False);
       for(int i = 0; i < userDB->size(); i++)
       {
@@ -785,7 +785,6 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
       }
       value = vm->createValue(array);
       delete userDB;
-      delete responsibleUsers;
    }
    else if (compareAttributeName(attr, "state"))
    {

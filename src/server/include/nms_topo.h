@@ -299,6 +299,6 @@ VrrpInfo *GetVRRPInfo(Node *node);
 
 const TCHAR *GetLinkLayerProtocolName(LinkLayerProtocol p); 
 
-NetworkMapObjectList* BuildIPTopology(const shared_ptr<Node>& root, UINT32 *pdwStatus, int radius, bool includeEndNodes);
+unique_ptr<NetworkMapObjectList> BuildIPTopology(const shared_ptr<Node>& root, int radius, bool includeEndNodes);
 
 #endif   /* _nms_topo_h_ */

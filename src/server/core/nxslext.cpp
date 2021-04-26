@@ -575,7 +575,7 @@ static int F_GetAllNodes(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
    NXSL_Array *a = new NXSL_Array(vm);
    if (!(g_flags & AF_CHECK_TRUSTED_NODES) || (node != nullptr))
    {
-      SharedObjectArray<NetObj> *nodes = g_idxNodeById.getObjects();
+      unique_ptr<SharedObjectArray<NetObj>> nodes = g_idxNodeById.getObjects();
       int index = 0;
       for(int i = 0; i < nodes->size(); i++)
       {
@@ -585,7 +585,6 @@ static int F_GetAllNodes(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
             a->set(index++, n->createNXSLObject(vm));
          }
       }
-      delete nodes;
    }
    *ppResult = vm->createValue(a);
    return 0;

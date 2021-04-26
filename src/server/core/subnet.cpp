@@ -366,7 +366,7 @@ NXSL_Value *Subnet::createNXSLObject(NXSL_VM *vm) const
  */
 IntegerArray<uint32_t> CheckSubnetOverlap(const InetAddress &addr, int32_t uin)
 {
-   SharedObjectArray<NetObj> *subnets = nullptr;
+   unique_ptr<SharedObjectArray<NetObj>> subnets;
    IntegerArray<uint32_t> overlappingSubnet;
    if (IsZoningEnabled())
    {
@@ -392,6 +392,5 @@ IntegerArray<uint32_t> CheckSubnetOverlap(const InetAddress &addr, int32_t uin)
       }
    }
 
-   delete subnets;
    return overlappingSubnet;
 }

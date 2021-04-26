@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2019-2020 Raden Solutions
+** Copyright (C) 2019-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -190,12 +190,11 @@ static void SendUpdate(NXCPMessage *msg, NetObj *object)
    }
    else
    {
-      SharedObjectArray<NetObj> *children = object->getChildren();
+      unique_ptr<SharedObjectArray<NetObj>> children = object->getChildren();
       for(int i = 0; i < children->size(); i++)
       {
          SendUpdate(msg, children->get(i));
       }
-      delete children;
    }
 }
 

@@ -419,18 +419,18 @@ public:
       return find(reinterpret_cast<bool (*)(T *, void *)>(comparator), (void *)context);
    }
 
-   SharedObjectArray<T> *findAll(bool (*comparator)(T *, void *), void *context)
+   unique_ptr<SharedObjectArray<T>> findAll(bool (*comparator)(T *, void *), void *context)
    {
       std::pair<bool (*)(T*, void*), void*> wrapperData(comparator, context);
       ObjectArray<shared_ptr<T>> tempResultSet;
       AbstractIndexBase::findAll(&tempResultSet, reinterpret_cast<bool (*)(void*, void*)>(comparatorWrapper), &wrapperData);
-      auto resultSet = new SharedObjectArray<T>(tempResultSet.size());
+      auto resultSet = make_unique<SharedObjectArray<T>>(tempResultSet.size());
       for(int i = 0; i < tempResultSet.size(); i++)
          resultSet->add(*tempResultSet.get(i));
       return resultSet;
    }
 
-   template<typename P> SharedObjectArray<T> *findAll(bool (*comparator)(T *, P *), P *context)
+   template<typename P> unique_ptr<SharedObjectArray<T>> findAll(bool (*comparator)(T *, P *), P *context)
    {
       return findAll(reinterpret_cast<bool (*)(T *, void *)>(comparator), (void *)context);
    }
@@ -533,10 +533,10 @@ class NXCORE_EXPORTABLE ObjectIndex : public SharedPointerIndex<NetObj>
 public:
    ObjectIndex() : SharedPointerIndex<NetObj>() { }
 
-   SharedObjectArray<NetObj> *getObjects(bool (*filter)(NetObj *, void *) = nullptr, void *context = nullptr);
+   unique_ptr<SharedObjectArray<NetObj>> getObjects(bool (*filter)(NetObj *, void *) = nullptr, void *context = nullptr);
 
    template<typename C>
-   SharedObjectArray<NetObj> *getObjects(bool (*filter)(NetObj *, C *), C *context)
+   unique_ptr<SharedObjectArray<NetObj>> getObjects(bool (*filter)(NetObj *, C *), C *context)
    {
       return getObjects(reinterpret_cast<bool (*)(NetObj*, void*)>(filter), context);
    }
@@ -573,7 +573,7 @@ public:
    shared_ptr<NetObj> find(bool (*comparator)(NetObj *, void *), void *context) const;
 
    int size() const;
-   SharedObjectArray<NetObj> *getObjects(bool (*filter)(NetObj *, void *) = nullptr, void *context = nullptr) const;
+   unique_ptr<SharedObjectArray<NetObj>> getObjects(bool (*filter)(NetObj *, void *) = nullptr, void *context = nullptr) const;
 
    void forEach(void (*callback)(const InetAddress&, NetObj *, void *), void *context) const;
 };
@@ -989,7 +989,7 @@ protected:
    MUTEX m_moduleDataLock;
 
    IntegerArray<uint32_t> *m_responsibleUsers;
-   RWLOCK m_rwlockResponsibleUsers;
+   MUTEX m_mutexResponsibleUsers;
 
    const SharedObjectArray<NetObj> &getChildList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getChildList()); }
    const SharedObjectArray<NetObj> &getParentList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getParentList()); }
@@ -998,14 +998,8 @@ protected:
    void unlockProperties() const { MutexUnlock(m_mutexProperties); }
    void lockACL() const { MutexLock(m_mutexACL); }
    void unlockACL() const { MutexUnlock(m_mutexACL); }
-   void lockResponsibleUsersList(bool writeLock)
-   {
-      if (writeLock)
-         RWLockWriteLock(m_rwlockResponsibleUsers);
-      else
-         RWLockReadLock(m_rwlockResponsibleUsers);
-   }
-   void unlockResponsibleUsersList() { RWLockUnlock(m_rwlockResponsibleUsers); }
+   void lockResponsibleUsersList() const { MutexLock(m_mutexResponsibleUsers); }
+   void unlockResponsibleUsersList() const { MutexUnlock(m_mutexResponsibleUsers); }
 
    void setModified(uint32_t flags, bool notify = true);                  // Used to mark object as modified
 
@@ -1025,7 +1019,7 @@ protected:
    bool isGeoLocationHistoryTableExists(DB_HANDLE hdb) const;
    bool createGeoLocationHistoryTable(DB_HANDLE hdb);
 
-   void getAllResponsibleUsersInternal(IntegerArray<uint32_t> *list);
+   void getAllResponsibleUsersInternal(IntegerArray<uint32_t> *list) const;
 
 public:
    NetObj();
@@ -1152,9 +1146,9 @@ public:
    ModuleData *getModuleData(const TCHAR *module);
    void setModuleData(const TCHAR *module, ModuleData *data);
 
-   SharedObjectArray<NetObj> *getParents(int typeFilter = -1) const;
-   SharedObjectArray<NetObj> *getChildren(int typeFilter = -1) const;
-   SharedObjectArray<NetObj> *getAllChildren(bool eventSourceOnly) const;
+   unique_ptr<SharedObjectArray<NetObj>> getParents(int typeFilter = -1) const;
+   unique_ptr<SharedObjectArray<NetObj>> getChildren(int typeFilter = -1) const;
+   unique_ptr<SharedObjectArray<NetObj>> getAllChildren(bool eventSourceOnly) const;
    int getParentsCount(int typeFilter = -1) const;
    int getChildrenCount(int typeFilter = -1) const;
 
@@ -1178,7 +1172,7 @@ public:
 
    void updateGeoLocationHistory(GeoLocation location);
 
-   IntegerArray<uint32_t> *getAllResponsibleUsers();
+   unique_ptr<IntegerArray<uint32_t>> getAllResponsibleUsers() const;
 
    virtual json_t *toJson();
 
@@ -2640,7 +2634,7 @@ protected:
 
    static bool registerLoraDevice(Sensor *sensor);
 
-   void buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, bool checkAllProxies);
+   void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology, bool checkAllProxies);
 
 public:
    static shared_ptr<Sensor> create(const TCHAR *name, const NXCPMessage *msg);
@@ -2690,7 +2684,7 @@ public:
    void prepareDlmsDciParameters(StringBuffer &parameter);
    void prepareLoraDciParameters(StringBuffer &parameter);
 
-   NetworkMapObjectList *buildInternalConnectionTopology();
+   unique_ptr<NetworkMapObjectList> buildInternalCommunicationTopology();
 };
 
 class Subnet;
@@ -2894,7 +2888,7 @@ public:
  */
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
 {
-   friend void Sensor::buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, bool checkAllProxies);
+   friend void Sensor::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology, bool checkAllProxies);
 
 private:
    typedef DataCollectionTarget super;
@@ -3006,7 +3000,7 @@ protected:
    int m_adoptedApCount;
    int m_totalApCount;
    BYTE m_baseBridgeAddress[MAC_ADDR_LENGTH];   // Bridge base address (dot1dBaseBridgeAddress in bridge MIB)
-   NetworkMapObjectList *m_topology;
+   shared_ptr<NetworkMapObjectList> m_topology;
    time_t m_topologyRebuildTimestamp;
    shared_ptr<ComponentTree> m_components;      // Hardware components
    ObjectArray<SoftwarePackage> *m_softwarePackages;  // installed software packages
@@ -3118,9 +3112,8 @@ protected:
    bool connectToAgent(UINT32 *error = nullptr, UINT32 *socketError = nullptr, bool *newConnection = nullptr, bool forceConnect = false);
    void setLastAgentCommTime() { m_lastAgentCommTime = time(nullptr); }
 
-   void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology);
-   void buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, UINT32 seedNode, bool agentConnectionOnly, bool checkAllProxies);
-   bool checkProxyAndLink(NetworkMapObjectList *topology, UINT32 seedNode, UINT32 proxyId, UINT32 linkType, const TCHAR *linkName, bool checkAllProxies);
+   void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology, uint32_t seedNode, bool agentConnectionOnly, bool checkAllProxies);
+   bool checkProxyAndLink(NetworkMapObjectList *topology, uint32_t seedNode, uint32_t proxyId, uint32_t linkType, const TCHAR *linkName, bool checkAllProxies);
 
    void updateClusterMembership();
 
@@ -3400,12 +3393,14 @@ public:
       UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *), void *pArg,
       const TCHAR *context = nullptr, bool failOnShutdown = false);
 
-   NetworkMapObjectList *getL2Topology();
-   NetworkMapObjectList *buildL2Topology(UINT32 *pdwStatus, int radius, bool includeEndNodes);
+   shared_ptr<NetworkMapObjectList> getL2Topology();
+   shared_ptr<NetworkMapObjectList> buildL2Topology(uint32_t *status, int radius, bool includeEndNodes);
    shared_ptr<ForwardingDatabase> getSwitchForwardingDatabase();
    shared_ptr<NetObj> findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *type);
    void addHostConnections(LinkLayerNeighbors *nbs);
    void addExistingConnections(LinkLayerNeighbors *nbs);
+
+   unique_ptr<NetworkMapObjectList> buildInternalCommunicationTopology();
 
    bool getIcmpStatistics(const TCHAR *target, UINT32 *last, UINT32 *min, UINT32 *max, UINT32 *avg, UINT32 *loss) const;
    DataCollectionError getIcmpStatistic(const TCHAR *param, IcmpStatFunction function, TCHAR *value) const;
@@ -3420,11 +3415,11 @@ public:
    bool checkTrapShouldBeProcessed();
 
    static const TCHAR *typeName(NodeType type);
-
-   NetworkMapObjectList *buildInternalConnectionTopology();
-   NetworkMapObjectList *buildInternalCommunicationTopology();
 };
 
+/**
+ * Lock node for status poll
+ */
 inline bool Node::lockForStatusPoll()
 {
    bool success = false;
@@ -3450,6 +3445,9 @@ inline bool Node::lockForStatusPoll()
    return success;
 }
 
+/**
+ * Lock node for discovery poll
+ */
 inline bool Node::lockForDiscoveryPoll()
 {
    bool success = false;
@@ -3467,6 +3465,9 @@ inline bool Node::lockForDiscoveryPoll()
    return success;
 }
 
+/**
+ * Lock node for routing table poll
+ */
 inline bool Node::lockForRoutePoll()
 {
    bool success = false;
@@ -3483,6 +3484,9 @@ inline bool Node::lockForRoutePoll()
    return success;
 }
 
+/**
+ * Lock node for topology poll
+ */
 inline bool Node::lockForTopologyPoll()
 {
    bool success = false;
@@ -3499,6 +3503,9 @@ inline bool Node::lockForTopologyPoll()
    return success;
 }
 
+/*
+ * Lock node ofr ICMP poll
+ */
 inline bool Node::lockForIcmpPoll()
 {
    bool success = false;
@@ -3880,10 +3887,10 @@ public:
 
    int32_t getUIN() const { return m_uin; }
 
-   UINT32 getProxyNodeId(NetObj *object, bool backup = false);
-   bool isProxyNode(UINT32 nodeId) const;
-   UINT32 getProxyNodeAssignments(UINT32 nodeId) const;
-   bool isProxyNodeAvailable(UINT32 nodeId) const;
+   uint32_t getProxyNodeId(NetObj *object, bool backup = false);
+   bool isProxyNode(uint32_t nodeId) const;
+   uint32_t getProxyNodeAssignments(uint32_t nodeId) const;
+   bool isProxyNodeAvailable(uint32_t nodeId) const;
    IntegerArray<UINT32> *getAllProxyNodes() const;
    void fillAgentConfigurationMessage(NXCPMessage *msg) const;
 
@@ -3915,7 +3922,7 @@ public:
    shared_ptr<Interface> findInterface(bool (*comparator)(NetObj *, void *), void *context) const { return static_pointer_cast<Interface>(m_idxInterfaceByAddr->find(comparator, context)); }
    shared_ptr<Node> findNode(bool (*comparator)(NetObj *, void *), void *context) const { return static_pointer_cast<Node>(m_idxNodeByAddr->find(comparator, context)); }
    void forEachSubnet(void (*callback)(const InetAddress& addr, NetObj *, void *), void *context) const { m_idxSubnetByAddr->forEach(callback, context); }
-   SharedObjectArray<NetObj> *getSubnets() const { return m_idxSubnetByAddr->getObjects(); }
+   unique_ptr<SharedObjectArray<NetObj>> getSubnets() const { return m_idxSubnetByAddr->getObjects(); }
 
    void dumpState(ServerConsole *console) const;
    void dumpInterfaceIndex(ServerConsole *console) const;
@@ -4515,7 +4522,7 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objClass = 
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const TCHAR *name, int objClass = -1);
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByGUID(const uuid& guid, int objClass = -1);
 shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (* comparator)(NetObj *, void *), void *userData, int objClass = -1);
-SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindObjectsByRegex(const TCHAR *regex, int objClass = -1);
+unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const TCHAR *regex, int objClass = -1);
 const TCHAR NXCORE_EXPORTABLE *GetObjectName(uint32_t id, const TCHAR *defaultName);
 shared_ptr<Template> NXCORE_EXPORTABLE FindTemplateByName(const TCHAR *pszName);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, const InetAddress& ipAddr);
@@ -4528,7 +4535,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByLLDPId(const TCHAR *lldpId);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeBySysName(const TCHAR *sysName);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByAgentId(const uuid& agentId);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByHardwareId(const NodeHardwareId& hardwareId);
-SharedObjectArray<NetObj> NXCORE_EXPORTABLE *FindNodesByHostname(int32_t zoneUIN, const TCHAR *hostname);
+unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindNodesByHostname(int32_t zoneUIN, const TCHAR *hostname);
 shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByIP(int32_t zoneUIN, const InetAddress& ipAddr);
 shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByMAC(const BYTE *macAddr);
 shared_ptr<Interface> NXCORE_EXPORTABLE FindInterfaceByMAC(const MacAddress& macAddr);
@@ -4544,7 +4551,7 @@ shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByProxyId(uint32_t proxyId);
 int32_t FindUnusedZoneUIN();
 bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr);
 bool NXCORE_EXPORTABLE IsParentObject(uint32_t object1, uint32_t object2);
-ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage,
+unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage,
          size_t errorMessageLen, const StringList *fields = nullptr, const StringList *orderBy = nullptr,
          uint32_t limit = 0);
 StructArray<DependentNode> *GetNodeDependencies(uint32_t nodeId);

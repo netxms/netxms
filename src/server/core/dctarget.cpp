@@ -1989,7 +1989,7 @@ void DataCollectionTarget::applyTemplates()
       return;
 
    sendPollerMsg(_T("Processing template autoapply rules\r\n"));
-   SharedObjectArray<NetObj> *templates = g_idxObjectById.getObjects(TemplateSelectionFilter);
+   unique_ptr<SharedObjectArray<NetObj>> templates = g_idxObjectById.getObjects(TemplateSelectionFilter);
    for(int i = 0; i < templates->size(); i++)
    {
       Template *templateObject = static_cast<Template*>(templates->get(i));
@@ -2019,7 +2019,6 @@ void DataCollectionTarget::applyTemplates()
          }
       }
    }
-   delete templates;
 }
 
 /**
@@ -2039,7 +2038,7 @@ void DataCollectionTarget::updateContainerMembership()
       return;
 
    sendPollerMsg(_T("Processing container autobind rules\r\n"));
-   SharedObjectArray<NetObj> *containers = g_idxObjectById.getObjects(ContainerSelectionFilter);
+   unique_ptr<SharedObjectArray<NetObj>> containers = g_idxObjectById.getObjects(ContainerSelectionFilter);
    for(int i = 0; i < containers->size(); i++)
    {
       Container *container = static_cast<Container*>(containers->get(i));
@@ -2071,7 +2070,6 @@ void DataCollectionTarget::updateContainerMembership()
          }
       }
    }
-   delete containers;
 }
 
 /**

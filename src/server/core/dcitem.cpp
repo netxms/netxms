@@ -1134,7 +1134,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, uint32_t conditionId)
          if (requiredSize < m_thresholds->get(i)->getRequiredCacheSize())
             requiredSize = m_thresholds->get(i)->getRequiredCacheSize();
 
-		SharedObjectArray<NetObj> *conditions = g_idxConditionById.getObjects();
+		unique_ptr<SharedObjectArray<NetObj>> conditions = g_idxConditionById.getObjects();
 		for(int i = 0; i < conditions->size(); i++)
       {
 		   ConditionObject *c = static_cast<ConditionObject*>(conditions->get(i));
@@ -1142,7 +1142,6 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, uint32_t conditionId)
          if (size > requiredSize)
             requiredSize = size;
       }
-		delete conditions;
 
 		m_requiredCacheSize = requiredSize;
    }

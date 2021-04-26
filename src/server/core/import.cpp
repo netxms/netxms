@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -458,9 +458,7 @@ static void DeleteEmptyTemplateGroup(shared_ptr<NetObj> templateGroup)
    if (templateGroup->getChildCount() != 0)
       return;
 
-   SharedObjectArray<NetObj> *parents = templateGroup->getParents(OBJECT_TEMPLATEGROUP);
-   shared_ptr<NetObj> parent = parents->getShared(0);
-   delete parents;
+   shared_ptr<NetObj> parent = templateGroup->getParents(OBJECT_TEMPLATEGROUP)->getShared(0);
 
    ObjectTransactionStart();
    templateGroup->deleteObject();
@@ -558,7 +556,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags)
                {
                   nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): existing template %s [%d] with GUID %s moved to %s template group"), object->getName(), object->getId(), (const TCHAR *)guid.toString(), parent->getName());
                   ObjectTransactionStart();
-                  SharedObjectArray<NetObj> *parents = object->getParents(OBJECT_TEMPLATEGROUP);
+                  unique_ptr<SharedObjectArray<NetObj>> parents = object->getParents(OBJECT_TEMPLATEGROUP);
                   if (parents->size() > 0)
                   {
                      shared_ptr<NetObj> parent = parents->getShared(0);
@@ -570,7 +568,6 @@ uint32_t ImportConfig(const Config& config, uint32_t flags)
                         DeleteEmptyTemplateGroup(parent);
                      }
                   }
-                  delete parents;
                   object->addParent(parent);
                   parent->addChild(object);
                   ObjectTransactionEnd();

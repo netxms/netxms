@@ -103,7 +103,7 @@ NetObj::NetObj() : NObject(), m_dashboards(0, 8), m_urls(0, 8, Ownership::True)
    m_runtimeFlags = 0;
    m_flags = 0;
    m_responsibleUsers = nullptr;
-   m_rwlockResponsibleUsers = RWLockCreate();
+   m_mutexResponsibleUsers = MutexCreate();
    m_creationTime = 0;
    m_categoryId = 0;
 }
@@ -121,7 +121,7 @@ NetObj::~NetObj()
    delete m_moduleData;
    MutexDestroy(m_moduleDataLock);
    delete m_responsibleUsers;
-   RWLockDestroy(m_rwlockResponsibleUsers);
+   MutexDestroy(m_mutexResponsibleUsers);
 }
 
 /**
@@ -349,7 +349,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    if (success)
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM responsible_users WHERE object_id=?"));
-      lockResponsibleUsersList(false);
+      lockResponsibleUsersList();
       if (success && (m_responsibleUsers != nullptr) && !m_responsibleUsers->isEmpty())
       {
          hStmt = DBPrepare(hdb, _T("INSERT INTO responsible_users (object_id,user_id) VALUES (?,?)"), m_responsibleUsers->size() > 1);
@@ -1286,7 +1286,7 @@ void NetObj::fillMessage(NXCPMessage *msg, UINT32 userId)
       msg->setField(dwId, getChildList().get(i)->getId());
    unlockChildList();
 
-   lockResponsibleUsersList(false);
+   lockResponsibleUsersList();
    msg->setFieldFromInt32Array(VID_RESPONSIBLE_USERS, m_responsibleUsers);
    unlockResponsibleUsersList();
 }
@@ -1496,7 +1496,7 @@ UINT32 NetObj::modifyFromMessageInternalStage2(NXCPMessage *pRequest)
    if (pRequest->isFieldExist(VID_RESPONSIBLE_USERS))
    {
       int count = pRequest->getFieldAsInt32(VID_RESPONSIBLE_USERS);
-      lockResponsibleUsersList(true);
+      lockResponsibleUsersList();
       if (count > 0)
       {
          if (m_responsibleUsers == nullptr)
@@ -1976,7 +1976,7 @@ void NetObj::getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly) c
  *
  * @param eventSourceOnly if true, only objects that can be event source will be included
  */
-SharedObjectArray<NetObj> *NetObj::getAllChildren(bool eventSourceOnly) const
+unique_ptr<SharedObjectArray<NetObj>> NetObj::getAllChildren(bool eventSourceOnly) const
 {
 	ObjectIndex list;
 	getFullChildListInternal(&list, eventSourceOnly);
@@ -1990,7 +1990,7 @@ SharedObjectArray<NetObj> *NetObj::getAllChildren(bool eventSourceOnly) const
  * @param typeFilter Only return objects with class ID equals given value.
  *                   Set to -1 to disable filtering.
  */
-SharedObjectArray<NetObj> *NetObj::getChildren(int typeFilter) const
+unique_ptr<SharedObjectArray<NetObj>> NetObj::getChildren(int typeFilter) const
 {
 	readLockChildList();
 	auto list = new SharedObjectArray<NetObj>(getChildList().size());
@@ -2000,7 +2000,7 @@ SharedObjectArray<NetObj> *NetObj::getChildren(int typeFilter) const
 			list->add(getChildList().getShared(i));
 	}
 	unlockChildList();
-	return list;
+	return unique_ptr<SharedObjectArray<NetObj>>(list);
 }
 
 /**
@@ -2034,7 +2034,7 @@ int NetObj::getChildrenCount(int typeFilter) const
  * @param typeFilter Only return objects with class ID equals given value.
  *                   Set to -1 to disable filtering.
  */
-SharedObjectArray<NetObj> *NetObj::getParents(int typeFilter) const
+unique_ptr<SharedObjectArray<NetObj>> NetObj::getParents(int typeFilter) const
 {
     readLockParentList();
     auto list = new SharedObjectArray<NetObj>(getParentList().size(), 16);
@@ -2044,7 +2044,7 @@ SharedObjectArray<NetObj> *NetObj::getParents(int typeFilter) const
            list->add(getParentList().getShared(i));
     }
     unlockParentList();
-    return list;
+    return unique_ptr<SharedObjectArray<NetObj>>(list);
 }
 
 /**
@@ -2519,7 +2519,7 @@ json_t *NetObj::toJson()
    unlockParentList();
    json_object_set_new(root, "parents", parents);
 
-   lockResponsibleUsersList(false);
+   lockResponsibleUsersList();
    json_object_set_new(root, "responsibleUsers", json_integer_array(m_responsibleUsers));
    unlockResponsibleUsersList();
 
@@ -2919,13 +2919,13 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
 /**
  * Internal function to get inherited list of responsible users for object
  */
-void NetObj::getAllResponsibleUsersInternal(IntegerArray<uint32_t> *list)
+void NetObj::getAllResponsibleUsersInternal(IntegerArray<uint32_t> *list) const
 {
    readLockParentList();
    for(int i = 0; i < getParentList().size(); i++)
    {
       NetObj *obj = getParentList().get(i);
-      obj->lockResponsibleUsersList(false);
+      obj->lockResponsibleUsersList();
       if (obj->m_responsibleUsers != nullptr)
       {
          for(int n = 0; n < obj->m_responsibleUsers->size(); n++)
@@ -2944,14 +2944,14 @@ void NetObj::getAllResponsibleUsersInternal(IntegerArray<uint32_t> *list)
 /**
  * Get all responsible users for object
  */
-IntegerArray<uint32_t> *NetObj::getAllResponsibleUsers()
+unique_ptr<IntegerArray<uint32_t>> NetObj::getAllResponsibleUsers() const
 {
-   lockResponsibleUsersList(false);
+   lockResponsibleUsersList();
    IntegerArray<uint32_t> *responsibleUsers = (m_responsibleUsers != nullptr) ? new IntegerArray<uint32_t>(m_responsibleUsers) : new IntegerArray<uint32_t>(0, 16);
    unlockResponsibleUsersList();
 
    getAllResponsibleUsersInternal(responsibleUsers);
-   return responsibleUsers;
+   return unique_ptr<IntegerArray<uint32_t>>(responsibleUsers);
 }
 
 /**

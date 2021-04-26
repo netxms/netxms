@@ -370,9 +370,8 @@ void DeleteSshKey(NXCPMessage *response, uint32_t id, bool forceDelete)
    shared_ptr<SshKeyPair> key = s_sshKeys.getShared(id);
    if (key != nullptr)
    {
-      SharedObjectArray<NetObj> *objects = g_idxNodeById.findAll(CheckIfSshKeyIsUsed, &id);
-
-      if (objects->size() == 0 || forceDelete)
+      unique_ptr<SharedObjectArray<NetObj>> objects = g_idxNodeById.findAll(CheckIfSshKeyIsUsed, &id);
+      if (objects->isEmpty() || forceDelete)
       {
          for (int i = 0; i < objects->size(); i++)
          {
@@ -393,8 +392,6 @@ void DeleteSshKey(NXCPMessage *response, uint32_t id, bool forceDelete)
          response->setFieldFromInt32Array(VID_OBJECT_LIST, ids);
          response->setField(VID_RCC, RCC_SSH_KEY_IN_USE);
       }
-
-      delete objects;
    }
    else
    {

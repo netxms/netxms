@@ -362,7 +362,7 @@ static EnumerationCallbackResult ForceConfigurationSync(const UINT32 *nodeId, vo
  * Get proxy node for given object. Always prefers proxy that is already assigned to the object
  * and will update assigned proxy property if changed.
  */
-UINT32 Zone::getProxyNodeId(NetObj *object, bool backup)
+uint32_t Zone::getProxyNodeId(NetObj *object, bool backup)
 {
    ZoneProxy *proxy = nullptr;
    HashSet<uint32_t> syncSet;
@@ -447,7 +447,7 @@ UINT32 Zone::getProxyNodeId(NetObj *object, bool backup)
 /**
  * Check if given node is a proxy for this zone
  */
-bool Zone::isProxyNode(UINT32 nodeId) const
+bool Zone::isProxyNode(uint32_t nodeId) const
 {
    bool result = false;
    lockProperties();
@@ -464,9 +464,9 @@ bool Zone::isProxyNode(UINT32 nodeId) const
 /**
  * Get number of assignments for given proxy node
  */
-UINT32 Zone::getProxyNodeAssignments(UINT32 nodeId) const
+uint32_t Zone::getProxyNodeAssignments(uint32_t nodeId) const
 {
-   UINT32 result = 0;
+   uint32_t result = 0;
    lockProperties();
    for(int i = 0; i < m_proxyNodes->size(); i++)
       if (m_proxyNodes->get(i)->nodeId == nodeId)
@@ -481,7 +481,7 @@ UINT32 Zone::getProxyNodeAssignments(UINT32 nodeId) const
 /**
  * Check if given proxy node is available.
  */
-bool Zone::isProxyNodeAvailable(UINT32 nodeId) const
+bool Zone::isProxyNodeAvailable(uint32_t nodeId) const
 {
    bool result = false;
    lockProperties();
@@ -649,7 +649,7 @@ static void UpdateNodeBackupProxy(void *node)
  */
 void Zone::migrateProxyLoad(ZoneProxy *source, ZoneProxy *target)
 {
-   SharedObjectArray<NetObj> *nodes = g_idxNodeById.getObjects(ProxyFilter, CAST_TO_POINTER(source->nodeId, void*));
+   unique_ptr<SharedObjectArray<NetObj>> nodes = g_idxNodeById.getObjects(ProxyFilter, CAST_TO_POINTER(source->nodeId, void*));
    nodes->sort(CompareNodesByProxyLoad);
 
    double loadFactor = 0;
@@ -678,8 +678,6 @@ void Zone::migrateProxyLoad(ZoneProxy *source, ZoneProxy *target)
       }
       loadFactor -= n->getProxyLoadFactor();
    }
-
-   delete nodes;
 
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(target->nodeId, OBJECT_NODE));
    if (node != nullptr)

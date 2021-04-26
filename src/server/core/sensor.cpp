@@ -1055,18 +1055,18 @@ void Sensor::prepareForDeletion()
 /**
  * Build internal connection topology
  */
-NetworkMapObjectList *Sensor::buildInternalConnectionTopology()
+unique_ptr<NetworkMapObjectList> Sensor::buildInternalCommunicationTopology()
 {
-   NetworkMapObjectList *topology = new NetworkMapObjectList();
+   auto topology = make_unique<NetworkMapObjectList>();
    topology->setAllowDuplicateLinks(true);
-   buildInternalConnectionTopologyInternal(topology, false);
+   buildInternalCommunicationTopologyInternal(topology.get(), false);
    return topology;
 }
 
 /**
  * Build internal connection topology - internal function
  */
-void Sensor::buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, bool checkAllProxies)
+void Sensor::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology, bool checkAllProxies)
 {
    topology->addObject(m_id);
 
@@ -1077,7 +1077,7 @@ void Sensor::buildInternalConnectionTopologyInternal(NetworkMapObjectList *topol
       {
          topology->addObject(m_proxyNodeId);
          topology->linkObjects(m_id, m_proxyNodeId, LINK_TYPE_SENSOR_PROXY, _T("Sensor proxy"));
-         static_cast<Node&>(*proxy).buildInternalConnectionTopologyInternal(topology, m_proxyNodeId, false, checkAllProxies);
+         static_cast<Node&>(*proxy).buildInternalCommunicationTopologyInternal(topology, m_proxyNodeId, false, checkAllProxies);
       }
    }
 }

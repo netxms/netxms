@@ -75,14 +75,14 @@ static void LinkObjectsWithInterfaces(NetworkMapObjectList *topology, const shar
  */
 static void ProcessParentSubnets(NetworkMapObjectList *topology, const shared_ptr<Node>& seed, int nDepth, ObjectArray<PeerInfo>& peers, bool includeEndNodes)
 {
-   SharedObjectArray<NetObj> *parents = seed->getParents();
+   unique_ptr<SharedObjectArray<NetObj>> parents = seed->getParents();
    for(int i = 0; i < parents->size(); i++)
    {
       shared_ptr<NetObj> parentNetObject = parents->getShared(i);
       if (parentNetObject->getObjectClass() == OBJECT_SUBNET && parentNetObject->getChildCount() > 1)
       {
          // Check if subnet actually connects two point-to-point interfaces
-         SharedObjectArray<NetObj> *children = parentNetObject->getChildren();
+         unique_ptr<SharedObjectArray<NetObj>> children = parentNetObject->getChildren();
          if (children->size() == 2)
          {
             shared_ptr<Interface> iface = seed->findInterfaceBySubnet(static_pointer_cast<Subnet>(parentNetObject)->getIpAddress());
@@ -125,11 +125,8 @@ static void ProcessParentSubnets(NetworkMapObjectList *topology, const shared_pt
             }
          }
          topology->linkObjects(seed->getId(), parentNetObject->getId());
-
-         delete children;
       }
    }
-   delete parents;
 }
 
 /**
@@ -137,7 +134,7 @@ static void ProcessParentSubnets(NetworkMapObjectList *topology, const shared_pt
  */
 static void ProcessPeers(NetworkMapObjectList *topology, const shared_ptr<Node>& seed, int nDepth, ObjectArray<PeerInfo>& peers, bool includeEndNodes)
 {
-   SharedObjectArray<NetObj> *children = seed->getChildren();
+   unique_ptr<SharedObjectArray<NetObj>> children = seed->getChildren();
    for (int i = 0; i < children->size(); i++)
    {
       NetObj *object = children->get(i);
@@ -150,11 +147,10 @@ static void ProcessPeers(NetworkMapObjectList *topology, const shared_ptr<Node>&
          }
       }
    }
-   delete children;
 
    for (int i = 0; i < peers.size(); i++)
    {
-      auto p = peers.get(i);
+      PeerInfo *p = peers.get(i);
       BuildIPTopology(topology, p->node, nDepth - 1, includeEndNodes);
       LinkObjectsWithInterfaces(topology, seed, p->node, p->vpnLink, p->linkName);
    }
@@ -180,10 +176,10 @@ static void BuildIPTopology(NetworkMapObjectList *topology, const shared_ptr<Nod
 /**
  * Build IP topology
  */
-NetworkMapObjectList* BuildIPTopology(const shared_ptr<Node>& root, UINT32 *pdwStatus, int radius, bool includeEndNodes)
+unique_ptr<NetworkMapObjectList> BuildIPTopology(const shared_ptr<Node>& root, int radius, bool includeEndNodes)
 {
    int maxDepth = (radius < 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
-   NetworkMapObjectList *topology = new NetworkMapObjectList();
-   BuildIPTopology(topology, root, maxDepth, includeEndNodes);
+   auto topology = make_unique<NetworkMapObjectList>();
+   BuildIPTopology(topology.get(), root, maxDepth, includeEndNodes);
    return topology;
 }
