@@ -27,6 +27,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.tools.ImageCache;
 import org.slf4j.Logger;
@@ -51,6 +53,7 @@ public abstract class Perspective
    private ViewStack mainFolder;
    private ViewStack supplementaryFolder;
    private Composite navigationArea;
+   private Composite headerArea;
    private ViewContainer mainArea;
    private Composite supplementalArea;
    private ISelectionProvider navigationSelectionProvider;
@@ -98,6 +101,8 @@ public abstract class Perspective
    {
       if (mainFolder != null)
          mainFolder.setContext(selection.getFirstElement());
+      else if (mainArea != null)
+         mainArea.setContext(selection.getFirstElement());
    }
 
    /**
@@ -185,17 +190,44 @@ public abstract class Perspective
       {
          horizontalSpliter = new SashForm(configuration.hasNavigationArea ? verticalSplitter : content, SWT.VERTICAL);
       }
-      if (configuration.multiViewMainArea)
+
+      Composite mainAreaHolder = new Composite(configuration.hasSupplementalArea ? horizontalSpliter : (configuration.hasNavigationArea ? verticalSplitter : content), SWT.NONE);
+      if (configuration.hasHeaderArea)
       {
-         mainFolder = new ViewStack(window, this, configuration.hasSupplementalArea ? horizontalSpliter : (configuration.hasNavigationArea ? verticalSplitter : content),
-               configuration.enableViewExtraction, configuration.enableViewPinning);
-         mainFolder.setAllViewsAaCloseable(configuration.allViewsAreCloseable);
+         GridLayout layout = new GridLayout();
+         layout.marginHeight = 0;
+         layout.marginWidth = 0;
+         mainAreaHolder.setLayout(layout);
+
+         headerArea = new Composite(mainAreaHolder, SWT.NONE);
+         GridData gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.verticalAlignment = SWT.CENTER;
+         gd.grabExcessHorizontalSpace = true;
+         headerArea.setLayoutData(gd);
+         headerArea.setLayout(new FillLayout());
+
+         createHeaderArea(headerArea);
       }
       else
       {
-         mainArea = new ViewContainer(window, this, configuration.hasSupplementalArea ? horizontalSpliter : (configuration.hasNavigationArea ? verticalSplitter : content),
-               configuration.enableViewExtraction, configuration.enableViewPinning);
+         mainAreaHolder.setLayout(new FillLayout());
       }
+
+      if (configuration.multiViewMainArea)
+      {
+         mainFolder = new ViewStack(window, this, mainAreaHolder, configuration.enableViewExtraction, configuration.enableViewPinning);
+         mainFolder.setAllViewsAaCloseable(configuration.allViewsAreCloseable);
+         if (configuration.hasHeaderArea)
+            mainFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      }
+      else
+      {
+         mainArea = new ViewContainer(window, this, mainAreaHolder, configuration.enableViewExtraction, configuration.enableViewPinning);
+         if (configuration.hasHeaderArea)
+            mainArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      }
+
       if (configuration.hasSupplementalArea)
       {
          if (configuration.multiViewSupplementalArea)
@@ -242,6 +274,15 @@ public abstract class Perspective
     * @param parent
     */
    protected void createNavigationArea(Composite parent)
+   {
+   }
+
+   /**
+    * Create header area above main area
+    *
+    * @param parent parent composite for header area
+    */
+   protected void createHeaderArea(Composite parent)
    {
    }
 

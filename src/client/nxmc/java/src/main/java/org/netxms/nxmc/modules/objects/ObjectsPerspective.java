@@ -20,10 +20,15 @@ package org.netxms.nxmc.modules.objects;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.ToolBar;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
@@ -36,6 +41,7 @@ import org.netxms.nxmc.modules.objects.views.InterfacesView;
 import org.netxms.nxmc.modules.objects.views.ObjectOverviewView;
 import org.netxms.nxmc.modules.objects.views.SwitchForwardingDatabaseView;
 import org.netxms.nxmc.modules.objects.widgets.ObjectTree;
+import org.netxms.nxmc.tools.FontTools;
 
 /**
  * Object browser perspective
@@ -44,6 +50,9 @@ public abstract class ObjectsPerspective extends Perspective
 {
    private SubtreeType subtreeType;
    private ObjectTree objectTree;
+   private Composite headerArea;
+   private Label objectName;
+   private ToolBar objectToolBar;
 
    /**
     * Create new object perspective
@@ -70,6 +79,7 @@ public abstract class ObjectsPerspective extends Perspective
       configuration.hasSupplementalArea = false;
       configuration.multiViewNavigationArea = false;
       configuration.multiViewMainArea = true;
+      configuration.hasHeaderArea = true;
       configuration.priority = 20;
    }
 
@@ -99,6 +109,56 @@ public abstract class ObjectsPerspective extends Perspective
       Menu menu = new ObjectContextMenuManager(null, objectTree.getSelectionProvider()).createContextMenu(objectTree.getTreeControl());
       objectTree.getTreeControl().setMenu(menu);
       setNavigationSelectionProvider(objectTree.getSelectionProvider());
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#createHeaderArea(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected void createHeaderArea(Composite parent)
+   {
+      headerArea = new Composite(parent, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 3;
+      headerArea.setLayout(layout);
+
+      objectName = new Label(headerArea, SWT.LEFT);
+      objectName.setFont(FontTools.createTitleFont());
+
+      Label separator = new Label(headerArea, SWT.SEPARATOR | SWT.VERTICAL);
+      separator.setLayoutData(new GridData(SWT.CENTER, SWT.FILL, false, true));
+
+      objectToolBar = new ToolBar(headerArea, SWT.FLAT | SWT.HORIZONTAL);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#navigationSelectionChanged(org.eclipse.jface.viewers.IStructuredSelection)
+    */
+   @Override
+   protected void navigationSelectionChanged(IStructuredSelection selection)
+   {
+      super.navigationSelectionChanged(selection);
+      if (selection.getFirstElement() instanceof AbstractObject)
+      {
+         AbstractObject object = (AbstractObject)selection.getFirstElement();
+         objectName.setText(object.getObjectName());
+         updateObjectToolBar(object);
+      }
+      else
+      {
+         objectName.setText("");
+      }
+      headerArea.layout();
+   }
+
+   /**
+    * Update object toolbar
+    *
+    * @param object selected object
+    */
+   private void updateObjectToolBar(AbstractObject object)
+   {
+
    }
 
    /**

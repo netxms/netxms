@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ public class PerspectiveConfiguration
    public boolean hasNavigationArea = true;
    public boolean multiViewNavigationArea = true;
    public boolean multiViewMainArea = true;
+   public boolean hasHeaderArea = false;
    public boolean hasSupplementalArea = false;
    public boolean multiViewSupplementalArea = false;
    public boolean enableViewPinning = true;
@@ -39,10 +40,8 @@ public class PerspectiveConfiguration
    @Override
    public String toString()
    {
-      return "PerspectiveConfiguration [hasNavigationArea=" + hasNavigationArea + ", multiViewNavigationArea="
-            + multiViewNavigationArea + ", multiViewMainArea=" + multiViewMainArea + ", hasSupplementalArea=" + hasSupplementalArea
-            + ", multiViewSupplementalArea=" + multiViewSupplementalArea + ", enableViewPinning=" + enableViewPinning
-            + ", enableViewExtraction=" + enableViewExtraction + ", allViewsAreCloseable=" + allViewsAreCloseable + ", priority="
-            + priority + "]";
+      return "PerspectiveConfiguration [hasNavigationArea=" + hasNavigationArea + ", multiViewNavigationArea=" + multiViewNavigationArea + ", multiViewMainArea=" + multiViewMainArea +
+            ", hasHeaderArea=" + hasHeaderArea + ", hasSupplementalArea=" + hasSupplementalArea + ", multiViewSupplementalArea=" + multiViewSupplementalArea + ", enableViewPinning=" +
+            enableViewPinning + ", enableViewExtraction=" + enableViewExtraction + ", allViewsAreCloseable=" + allViewsAreCloseable + ", priority=" + priority + "]";
    }
 }
