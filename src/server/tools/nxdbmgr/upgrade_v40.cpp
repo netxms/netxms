@@ -25,6 +25,24 @@
 
 
 /**
+ * Upgrade from 40.47 to 40.48
+ */
+static bool H_UpgradeFromV47()
+{
+   CHK_EXEC(CreateConfigParam(_T("DataCollection.TemplateRemovalGracePeriod"),
+      _T("0"),
+      _T("Setting up grace period for deleting templates from DataCollection"),
+      nullptr,
+      'I',
+      true,
+      false,
+      false,
+      false));
+   CHK_EXEC(SetMinorSchemaVersion(48));
+   return true;
+}
+
+/**
  * Upgrade from 40.46 to 40.47
  */
 static bool H_UpgradeFromV46()
@@ -1233,6 +1251,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 47, 40, 48, H_UpgradeFromV47 },
    { 46, 40, 47, H_UpgradeFromV46 },
    { 45, 40, 46, H_UpgradeFromV45 },
    { 44, 40, 45, H_UpgradeFromV44 },
