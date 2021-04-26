@@ -103,6 +103,7 @@ static void ProcessParentSubnets(NetworkMapObjectList *topology, const shared_pt
                {
                   peers.add(new PeerInfo(node, parentNetObject->getName(), false));
                }
+	       delete children;
                continue;
             }
          }

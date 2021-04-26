@@ -525,10 +525,9 @@ ObjectArray<ObjectsDistance> *FindNearestObjects(uint32_t currObjectId, int maxD
 
       result->add(new ObjectsDistance(objects->getShared(i), distance));
    }
+   delete objects;
 
-   // Sort filtered objects
    result->sort(DistanceSortCallback);
-
    return result;
 }
 
