@@ -2090,8 +2090,9 @@ protected:
 
    NXSL_VM *runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject);
 
-   void applyTemplates();
    void updateContainerMembership();
+   void applyTemplates();
+   void removeTemplate(Template *templateObject);
 
    DataCollectionError queryWebService(const TCHAR *param, WebServiceRequestType queryType, TCHAR *buffer, size_t bufSize, StringList *list);
 
@@ -2163,9 +2164,9 @@ public:
    void scheduleTableDataCleanup(UINT32 dciId);
    void queuePredictionEngineTraining();
 
-   bool applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject);
+   bool applyTemplateItem(uint32_t templateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(uint32_t templateId, const IntegerArray<uint32_t>& dciList);
-   virtual void unbindFromTemplate(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI);
+   virtual void onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI);
 
    virtual bool isEventSource() const override;
 
@@ -2192,6 +2193,8 @@ public:
    virtual void resetPollTimers();
 
    uint64_t getCacheMemoryUsage();
+
+   static void removeTemplate(const shared_ptr<ScheduledTaskParameters>& parameters);
 };
 
 /**
@@ -2484,7 +2487,7 @@ public:
 
    virtual bool lockForInstancePoll() override { return false; }
 
-   virtual void unbindFromTemplate(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI) override;
+   virtual void onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI) override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
 

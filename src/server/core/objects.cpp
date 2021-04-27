@@ -97,7 +97,7 @@ static void ApplyTemplateThread()
                success = true;
                break;
             case REMOVE_TEMPLATE:
-               static_cast<DataCollectionTarget*>(dcTarget.get())->unbindFromTemplate(task->source, task->removeDCI);
+               static_cast<DataCollectionTarget*>(dcTarget.get())->onTemplateRemove(task->source, task->removeDCI);
                static_cast<DataCollectionTarget*>(dcTarget.get())->applyDCIChanges(false);
                success = true;
                break;

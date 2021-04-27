@@ -656,7 +656,7 @@ uint32_t DataCollectionTarget::getTableLastValue(uint32_t dciId, NXCPMessage *ms
  * Apply DCI from template
  * dcObject passed to this method should be a template's DCI
  */
-bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject)
+bool DataCollectionTarget::applyTemplateItem(uint32_t templateId, DCObject *dcObject)
 {
    bool bResult = true;
 
@@ -667,7 +667,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
    // Check if that template item exists
 	int i;
    for(i = 0; i < m_dcObjects->size(); i++)
-      if ((m_dcObjects->get(i)->getTemplateId() == dwTemplateId) &&
+      if ((m_dcObjects->get(i)->getTemplateId() == templateId) &&
           (m_dcObjects->get(i)->getTemplateItemId() == dcObject->getId()))
          break;   // Item with specified id already exist
 
@@ -675,7 +675,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
    {
       // New item from template, just add it
 		DCObject *newObject = dcObject->clone();
-      newObject->setTemplateId(dwTemplateId, dcObject->getId());
+      newObject->setTemplateId(templateId, dcObject->getId());
       newObject->changeBinding(CreateUniqueId(IDG_ITEM), self(), TRUE);
       bResult = addDCObject(newObject, true);
    }
@@ -731,7 +731,7 @@ void DataCollectionTarget::cleanDeletedTemplateItems(uint32_t templateId, const 
  * Unbind data collection target from template, i.e either remove DCI
  * association with template or remove these DCIs at all
  */
-void DataCollectionTarget::unbindFromTemplate(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI)
+void DataCollectionTarget::onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI)
 {
    if ((getObjectClass() == OBJECT_NODE) && (templateObject->getObjectClass() == OBJECT_TEMPLATE))
    {
@@ -1981,20 +1981,6 @@ static bool TemplateSelectionFilter(NetObj *object, void *userData)
 }
 
 /**
- * Remove template from data collection target
- */
-static void RemoveTemplateFromTarget(const shared_ptr<Template>& templateObject, const shared_ptr<DataCollectionTarget>& target)
-{
-   target->sendPollerMsg(_T("   Removing template %s\r\n"), templateObject->getName());
-   nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyUserTemplates(): removing template %d \"%s\" from object %d \"%s\""),
-               templateObject->getId(), templateObject->getName(), target->getId(), target->getName());
-   templateObject->deleteChild(*target);
-   target->deleteParent(*templateObject);
-   templateObject->queueRemoveFromTarget(target->getId(), true);
-   PostSystemEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", templateObject->getId(), templateObject->getName(), target->getId(), target->getName());
-}
-
-/**
  * Apply templates
  */
 void DataCollectionTarget::applyTemplates()
@@ -2031,12 +2017,12 @@ void DataCollectionTarget::applyTemplates()
             {
                TCHAR key[50];
                _sntprintf(key, 50, _T("Delete.Template.%u.NetObj.%u"), templateObject->getId(), m_id);
-               AddOneTimeScheduledTask(_T("DataCollection.RemoveTemplate"), time(nullptr) + (time_t)(gracePeriod * 60 * 60 * 24), nullptr, nullptr,
-                  m_id, templateObject->getId(), SYSTEM_ACCESS_FULL, _T(""), key, true);
+               AddOneTimeScheduledTask(_T("DataCollection.RemoveTemplate"), time(nullptr) + (time_t)(gracePeriod * 60 * 60 * 24),
+                        templateObject->getGuid().toString(), nullptr, 0, m_id, SYSTEM_ACCESS_FULL, _T(""), key, true);
             }
             else
             {
-               RemoveTemplateFromTarget(templateObject->self(), self());
+               removeTemplate(templateObject);
             }
          }
       }
@@ -2044,15 +2030,33 @@ void DataCollectionTarget::applyTemplates()
 }
 
 /**
+ * Remove template from this data collection target. Intended to be called only by template automatic removal code.
+ */
+void DataCollectionTarget::removeTemplate(Template *templateObject)
+{
+   sendPollerMsg(_T("   Removing template %s\r\n"), templateObject->getName());
+   nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::removeTemplate(): removing template %d \"%s\" from object %d \"%s\""),
+               templateObject->getId(), templateObject->getName(), m_id, m_name);
+   templateObject->deleteChild(*this);
+   deleteParent(*templateObject);
+   templateObject->queueRemoveFromTarget(m_id, true);
+   PostSystemEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", templateObject->getId(), templateObject->getName(), m_id, m_name);
+}
+
+/**
  * Scheduled task executor - remove template from data collection target
  */
-void RemoveTemplateFromNetObj(const shared_ptr<ScheduledTaskParameters>& parameters)
+void DataCollectionTarget::removeTemplate(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
-   shared_ptr<Template> templateObject = static_pointer_cast<Template>(FindObjectById(parameters->m_objectId));
-   shared_ptr<DataCollectionTarget> target = static_pointer_cast<DataCollectionTarget>(FindObjectById(parameters->m_userId));
-   if (templateObject != nullptr && target != nullptr)
+   shared_ptr<NetObj> target = FindObjectById(parameters->m_objectId);
+   if ((target != nullptr) && target->isDataCollectionTarget())
    {
-      RemoveTemplateFromTarget(templateObject, target);
+      uuid guid = uuid::parse(parameters->m_persistentData);
+      shared_ptr<Template> templateObject = static_pointer_cast<Template>(FindObjectByGUID(guid, OBJECT_TEMPLATE));
+      if (templateObject != nullptr)
+      {
+         static_cast<DataCollectionTarget&>(*target).removeTemplate(templateObject.get());
+      }
    }
 }
 

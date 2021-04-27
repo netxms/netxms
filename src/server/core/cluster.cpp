@@ -841,11 +841,11 @@ uint32_t Cluster::collectAggregatedData(DCTable *table, shared_ptr<Table> *resul
 }
 
 /**
- * Unbind cluster from template
+ * Process template removal
  */
-void Cluster::unbindFromTemplate(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI)
+void Cluster::onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI)
 {
-   super::unbindFromTemplate(templateObject, removeDCI);
+   super::onTemplateRemove(templateObject, removeDCI);
    queueUpdate();
 }
 

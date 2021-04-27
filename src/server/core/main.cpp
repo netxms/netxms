@@ -86,7 +86,6 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
 void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ReloadCRLs(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters);
-void RemoveTemplateFromNetObj(const shared_ptr<ScheduledTaskParameters>& parameters);
 
 void InitCountryList();
 void InitCurrencyList();
@@ -1252,7 +1251,7 @@ retry_db_lock:
    RegisterSchedulerTaskHandler(RELOAD_CRLS_TASK_ID, ReloadCRLs, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(DCT_RESET_POLL_TIMERS_TASK_ID, ResetObjectPollTimers, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(EXECUTE_REPORT_TASK_ID, ExecuteReport, SYSTEM_ACCESS_REPORTING_SERVER);
-   RegisterSchedulerTaskHandler(_T("DataCollection.RemoveTemplate"), RemoveTemplateFromNetObj, 0);
+   RegisterSchedulerTaskHandler(_T("DataCollection.RemoveTemplate"), DataCollectionTarget::removeTemplate, 0);
    InitializeTaskScheduler();
 
    // Schedule unbound agent tunnel processing and automatic agent certificate renewal
