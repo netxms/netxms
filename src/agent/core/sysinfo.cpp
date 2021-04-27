@@ -49,18 +49,29 @@ LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
  * File filter for GetDirInfo
  */
 #ifdef _WIN32
-static bool MatchFileFilter(const WCHAR *fileName, const NX_STAT_STRUCT &fileInfo, const WCHAR *pattern, int ageFilter, INT64 sizeFilter)
+static bool MatchFileFilter(const WCHAR *fileName, const NX_STAT_STRUCT &fileInfo, const WCHAR *pattern, int ageFilter, INT64 sizeFilter, bool searchInverse)
 #else
-static bool MatchFileFilter(const char *fileName, const NX_STAT_STRUCT &fileInfo, const char *pattern, int ageFilter, INT64 sizeFilter)
+static bool MatchFileFilter(const char *fileName, const NX_STAT_STRUCT &fileInfo, const char *pattern, int ageFilter, INT64 sizeFilter, bool searchInverse)
 #endif
 {
+   if (searchInverse)
+   {
 #ifdef _WIN32
-   if (!MatchStringW(pattern, fileName, FALSE))
-      return false;
+      if (MatchStringW(pattern, fileName, FALSE))
 #else
-   if (!MatchStringA(pattern, fileName, FALSE))
-      return false;
+      if (MatchStringA(pattern, fileName, FALSE))
 #endif
+         return false;
+   }
+   else
+   {
+#ifdef _WIN32
+      if (!MatchStringW(pattern, fileName, FALSE))
+#else
+      if (!MatchStringA(pattern, fileName, FALSE))
+#endif
+         return false;
+   }
 
    if (ageFilter != 0)
    {
@@ -99,10 +110,10 @@ static bool MatchFileFilter(const char *fileName, const NX_STAT_STRUCT &fileInfo
  */
 #ifdef _WIN32
 static LONG GetDirInfo(const WCHAR *path, const WCHAR *pattern, bool bRecursive, unsigned int &uFileCount,
-                       UINT64 &llFileSize, int ageFilter, INT64 sizeFilter, bool countFiles, bool countFolders)
+                       UINT64 &llFileSize, int ageFilter, INT64 sizeFilter, bool countFiles, bool countFolders, bool searchInverse)
 #else
 static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, unsigned int &uFileCount,
-                       UINT64 &llFileSize, int ageFilter, INT64 sizeFilter, bool countFiles, bool countFolders)
+                       UINT64 &llFileSize, int ageFilter, INT64 sizeFilter, bool countFiles, bool countFolders, bool searchInverse)
 #endif
 {
    NX_STAT_STRUCT fileInfo;
@@ -179,13 +190,13 @@ static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, u
 
          if (S_ISDIR(fileInfo.st_mode) && bRecursive)
          {
-            nRet = GetDirInfo(szFileName, pattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, countFiles, countFolders);
+            nRet = GetDirInfo(szFileName, pattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, countFiles, countFolders, searchInverse);
             if (nRet != SYSINFO_RC_SUCCESS)
                 break;
          }
 
          if (((countFiles && !S_ISDIR(fileInfo.st_mode)) || (countFolders && S_ISDIR(fileInfo.st_mode))) && 
-             MatchFileFilter(pFile->d_name, fileInfo, pattern, ageFilter, sizeFilter))
+             MatchFileFilter(pFile->d_name, fileInfo, pattern, ageFilter, sizeFilter, searchInverse))
          {
              llFileSize += (UINT64)fileInfo.st_size;
              uFileCount++;
@@ -218,6 +229,7 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
 {
    TCHAR szPath[MAX_PATH], szRealPath[MAX_PATH], szPattern[MAX_PATH], szRealPattern[MAX_PATH], szRecursive[10], szBuffer[128];
    bool bRecursive = false;
+   bool searchInverse = false;
 
    unsigned int uFileCount = 0;
    QWORD llFileSize = 0;
@@ -244,6 +256,12 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
    // If pattern is omited use asterisk
    if (szPattern[0] == 0)
       _tcscpy(szPattern, _T("*"));
+   else if (szPattern[0] == _T('!'))
+   {
+      // Inverse counting flag
+      searchInverse = true;
+      memmove(szPattern, &szPattern[1], ((MAX_PATH - 1) * sizeof(WCHAR)));
+   }
 
    // Expand strftime macros in the path and in the pattern
    if ((ExpandFileName(szPath, szRealPath, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL) ||
@@ -261,12 +279,12 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
    DebugPrintf(6, _T("H_DirInfo: path=\"%s\" pattern=\"%s\" recursive=%s mode=%d"), szRealPath, szRealPattern, bRecursive ? _T("true") : _T("false"), mode);
 
 #if defined(_WIN32) || !defined(UNICODE)
-   nRet = GetDirInfo(szRealPath, szRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT);
+   nRet = GetDirInfo(szRealPath, szRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT, searchInverse);
 #else
    char mbRealPath[MAX_PATH], mbRealPattern[MAX_PATH];
    WideCharToMultiByte(CP_UTF8, 0, szRealPath, -1, mbRealPath, MAX_PATH, NULL, NULL);
    WideCharToMultiByte(CP_UTF8, 0, szRealPattern, -1, mbRealPattern, MAX_PATH, NULL, NULL);
-   nRet = GetDirInfo(mbRealPath, mbRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT);
+   nRet = GetDirInfo(mbRealPath, mbRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT, searchInverse);
 #endif
 
    switch(mode)
