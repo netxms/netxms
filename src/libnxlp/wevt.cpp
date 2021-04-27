@@ -153,6 +153,12 @@ cleanup:
  */
 static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID userContext, EVT_HANDLE event)
 {
+   if (action != EvtSubscribeActionDeliver)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Subscribe callback called with action = %d"), action);
+      return 0;
+   }
+
 	WCHAR buffer[4096], *msg = buffer;
    void *renderBuffer = buffer;
 	DWORD reqSize, propCount = 0;
