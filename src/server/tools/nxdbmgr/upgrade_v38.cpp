@@ -24,13 +24,32 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 38.10 to 40.0
+ * Upgrade from 38.11 to 40.0
  */
-static bool H_UpgradeFromV10()
+static bool H_UpgradeFromV11()
 {
    CHK_EXEC(SetMajorSchemaVersion(40, 0));
    return true;
 }
+
+/**
+ * Upgrade from 38.10 to 38.11
+ */
+static bool H_UpgradeFromV10()
+{
+   switch(g_dbSyntax){
+      case DB_SYNTAX_ORACLE:
+      case DB_SYNTAX_DB2:
+      case DB_SYNTAX_INFORMIX:
+         CHK_EXEC(SQLQuery(_T("UPDATE nodes SET last_agent_comm_time=0 WHERE (BITAND(capabilities, 2) = 0) AND (last_agent_comm_time > 0)")));
+         break;
+      default:
+         CHK_EXEC(SQLQuery(_T("UPDATE nodes SET last_agent_comm_time=0 WHERE ((capabilities & 2) = 0) AND (last_agent_comm_time > 0)")));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
 
 /**
  * Upgrade from 38.9 to 38.10
@@ -237,7 +256,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 10, 40, 0,  H_UpgradeFromV10 },
+   { 11, 40, 0,  H_UpgradeFromV11 },
+   { 10, 38, 11, H_UpgradeFromV10 },
    { 9,  38, 10, H_UpgradeFromV9  },
    { 8,  38, 9,  H_UpgradeFromV8  },
    { 7,  38, 8,  H_UpgradeFromV7  },

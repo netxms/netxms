@@ -3642,6 +3642,9 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       if (confPollAgent(rqId))
          modified |= MODIFY_NODE_PROPERTIES;
 
+      if ((oldCapabilities & NC_IS_NATIVE_AGENT) && !(m_capabilities & NC_IS_NATIVE_AGENT))
+         m_lastAgentCommTime = NEVER;
+
       POLL_CANCELLATION_CHECKPOINT();
 
       if (confPollSnmp(rqId))
