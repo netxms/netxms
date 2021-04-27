@@ -1286,13 +1286,13 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
       {
          ExtractWord(pArg, szBuffer);
-         UINT32 nodeId = _tcstoul(szBuffer, nullptr, 0);
+         uint32_t nodeId = _tcstoul(szBuffer, nullptr, 0);
          if (nodeId != 0)
          {
             shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(nodeId, OBJECT_NODE));
             if (node != nullptr)
             {
-               shared_ptr<LinkLayerNeighbors> nbs = BuildLinkLayerNeighborList(node.get());
+               shared_ptr<LinkLayerNeighbors> nbs = node->getLinkLayerNeighbors();
                if (nbs != nullptr)
                {
                   ConsolePrintf(pCtx, _T("Proto   | PtP | ifLocal | ifRemote | Peer\n")

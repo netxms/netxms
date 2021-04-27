@@ -25,14 +25,14 @@
 /**
  * Build layer 2 topology for switch
  */
-void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, bool includeEndNodes)
+void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool includeEndNodes)
 {
 	if (topology.isObjectExist(root->getId()))
 		return;  // loop in object connections
 
 	topology.addObject(root->getId());
 
-	auto nbs = root->getLinkLayerNeighbors();
+	shared_ptr<LinkLayerNeighbors> nbs = root->getLinkLayerNeighbors();
 	if (nbs == nullptr)
 		return;
 
@@ -42,12 +42,12 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, boo
 		if (info != nullptr)
 		{
 			shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(info->objectId, OBJECT_NODE));
-			if ((node != nullptr) && (nDepth > 0) && (node->isBridge() || includeEndNodes))
+			if ((node != nullptr) && (depth > 0) && (node->isBridge() || includeEndNodes))
 			{
-				BuildL2Topology(topology, node.get(), nDepth - 1, includeEndNodes);
+				BuildL2Topology(topology, node.get(), depth - 1, includeEndNodes);
 				shared_ptr<Interface> ifLocal = root->findInterfaceByIndex(info->ifLocal);
 				shared_ptr<Interface> ifRemote = node->findInterfaceByIndex(info->ifRemote);
-				nxlog_debug(5, _T("BuildL2Topology: root=%s [%d], node=%s [%d], ifLocal=%d %s, ifRemote=%d %s"),
+				nxlog_debug_tag(_T("topo.layer2"), 5, _T("BuildL2Topology: root=%s [%d], node=%s [%d], ifLocal=%d %s, ifRemote=%d %s"),
                   root->getName(), root->getId(), node->getName(), node->getId(), info->ifLocal,
                   (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"), info->ifRemote,
                   (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
@@ -82,7 +82,7 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
 
 	for(int i = 0; (i < nodes->size()) && (cp == nullptr); i++)
 	{
-		Node *node = (Node *)nodes->get(i);
+		Node *node = static_cast<Node*>(nodes->get(i));
 		
       ForwardingDatabase *fdb = node->getSwitchForwardingDatabase();
 		if (fdb != nullptr)
