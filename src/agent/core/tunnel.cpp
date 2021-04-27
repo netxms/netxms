@@ -954,13 +954,16 @@ bool Tunnel::connectToServer()
       if (rc != 1)
       {
          int sslErr = SSL_get_error(m_ssl, rc);
-         if (sslErr == SSL_ERROR_WANT_READ)
+         if ((sslErr == SSL_ERROR_WANT_READ) || (sslErr == SSL_ERROR_WANT_WRITE))
          {
-            SocketPoller poller;
+            SocketPoller poller(sslErr == SSL_ERROR_WANT_WRITE);
             poller.add(m_socket);
             if (poller.poll(REQUEST_TIMEOUT) > 0)
+            {
+               debugPrintf(8, _T("TLS handshake: %s wait completed"), (sslErr == SSL_ERROR_WANT_READ) ? _T("read") : _T("write"));
                continue;
-            debugPrintf(4, _T("TLS handshake failed (timeout)"));
+            }
+            debugPrintf(4, _T("TLS handshake failed (timeout on %s)"), (sslErr == SSL_ERROR_WANT_READ) ? _T("read") : _T("write"));
             MutexUnlock(m_stateLock);
             return false;
          }
@@ -1634,7 +1637,6 @@ ssize_t TunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
          pthread_mutex_unlock(&m_bufferLock);
          return 0;   // closed
       }
-
 #if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
       struct timespec ts;
       ts.tv_sec = timeout / 1000;
