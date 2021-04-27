@@ -1,0 +1,5 @@
+<Configure class="org.eclipse.jetty.webapp.WebAppContext">
+  <Set name="contextPath">/api</Set>
+  <Set name="war"><SystemProperty name="jetty.home"/>\webapps\api.war</Set>
+  <Set name="tempDirectory">api</Set>
+</Configure>
