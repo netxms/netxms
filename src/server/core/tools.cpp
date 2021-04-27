@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -684,62 +684,44 @@ bool ExecuteSQLCommandFile(const TCHAR *filePath, DB_HANDLE hdb)
    // Read file contents into a string
    size_t size;
    char *buf = reinterpret_cast<char*>(LoadFile(filePath, &size));
-
    if (buf == nullptr)
-   {
       return false;
-   }
 
    // Parse string
    char *ptr = buf;
    char *query = ptr;
 
-   while (true)   // For every query in line
+   while (true)
    {
       // Trim the query
-      bool indentSingleQuote = false;
+      bool inString = false;
 
       while (true)
       {
          // Find query terminator that's not part of a string in the query
          if ((ptr == nullptr) || (*ptr == 0))
-         {
             break;
-         }
 
          ptr = strpbrk(ptr, ";'");
-
          if (ptr == nullptr)
-         {
             break;
-         }
 
          if (*ptr == ';')
          {
-            if (indentSingleQuote)
-            {
-               ptr++;
-            }
-            else
-            {
-               // Query-terminating ';' found
+            if (!inString)
                break;
-            }
          }
-         else if (*ptr == '\'')
+         else
          {
-            indentSingleQuote = !indentSingleQuote;
-            ptr++;
+            inString = !inString;
          }
+         ptr++;
       }
 
       // Cut off query at ';'
       if (ptr != nullptr)
-      {
          *ptr = 0;
-      }
-
-      TrimA(query);
+      StrStripA(query);
 
       // Execute the query
       if (*query != 0)
@@ -755,9 +737,7 @@ bool ExecuteSQLCommandFile(const TCHAR *filePath, DB_HANDLE hdb)
 
       // Get next query ready
       if ((ptr == nullptr) || (*(++ptr) == 0))
-      {
          break;
-      }
 
       query = ptr;
    }
