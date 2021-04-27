@@ -813,7 +813,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       if ((e->getType() != MAP_ELEMENT_OBJECT) || !(e->getFlags() & AUTO_GENERATED))
          continue;
 
-      UINT32 objectId = static_cast<NetworkMapObject*>(e)->getObjectId();
+      uint32_t objectId = static_cast<NetworkMapObject*>(e)->getObjectId();
       if (!objects->isObjectExist(objectId))
       {
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: object element %u (object %u) removed"), m_name, m_id, e->getId(), objectId);
@@ -832,7 +832,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
          NetworkMapElement *e = m_elements->get(j);
          if (e->getType() != MAP_ELEMENT_OBJECT)
             continue;
-         if (((NetworkMapObject *)e)->getObjectId() == objects->getObjects().get(i))
+         if (static_cast<NetworkMapObject*>(e)->getObjectId() == objects->getObjects().get(i))
          {
             found = true;
             break;
