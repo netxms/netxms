@@ -207,7 +207,7 @@ TCHAR g_szSNMPTrapListenAddress[MAX_PATH] = _T("*");
 uint16_t g_wListenPort = AGENT_LISTEN_PORT;
 TCHAR g_systemName[MAX_OBJECT_NAME] = _T("");
 ObjectArray<ServerInfo> g_serverList(8, 8, Ownership::True);
-uint32_t g_execTimeout = 2000;     // External process execution timeout in milliseconds
+uint32_t g_execTimeout = 30000;  // External process execution timeout in milliseconds
 uint32_t g_eppTimeout = 30;      // External parameter processor timeout in seconds
 uint32_t g_snmpTimeout = 0;
 uint16_t g_snmpTrapPort = 162;
