@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -530,21 +530,21 @@ static bool H_UpgradeFromV91()
    StringBuffer newConfiguration;
    StringBuffer newDriverName;
 
-   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='SMSDriver'"));
+   DB_RESULT hResult = SQLSelect(_T("SELECT var_value FROM config WHERE var_name='SMSDriver'"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         driver = DBGetField(hResult, 0, 0, NULL, 0);
+         driver = DBGetField(hResult, 0, 0, nullptr, 0);
       DBFreeResult(hResult);
    }
 
    if ((driver != NULL) && (driver[0] != 0) && _tcscmp(driver, _T("<none>")))
    {
-      hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='SMSDrvConfig'"));
+      hResult = SQLSelect(_T("SELECT var_value FROM config WHERE var_name='SMSDrvConfig'"));
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) > 0)
-            oldConfiguration = DBGetField(hResult, 0, 0, NULL, 0);
+            oldConfiguration = DBGetField(hResult, 0, 0, nullptr, 0);
          DBFreeResult(hResult);
       }
 
@@ -985,17 +985,17 @@ static bool H_UpgradeFromV81()
  */
 static bool H_UpgradeFromV80()
 {
-   UINT32 discoveryEnabled = 0;
-   UINT32 activeDiscoveryEnabled = 0;
-   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT var_value from config WHERE var_name='RunNetworkDiscovery'"));
-   if (hResult != NULL)
+   uint32_t discoveryEnabled = 0;
+   uint32_t activeDiscoveryEnabled = 0;
+   DB_RESULT hResult = SQLSelect(_T("SELECT var_value from config WHERE var_name='RunNetworkDiscovery'"));
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
          discoveryEnabled = DBGetFieldLong(hResult, 0, 0);
       DBFreeResult(hResult);
    }
-   hResult = DBSelect(g_dbHandle, _T("SELECT var_value from config WHERE var_name='ActiveNetworkDiscovery'"));
-   if (hResult != NULL)
+   hResult = SQLSelect(_T("SELECT var_value from config WHERE var_name='ActiveNetworkDiscovery'"));
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
          activeDiscoveryEnabled = DBGetFieldLong(hResult, 0, 0);
@@ -1614,8 +1614,8 @@ static bool H_UpgradeFromV55()
 
    bool success = true;
 
-   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT id,policy_type,name,guid FROM ap_common_old a INNER JOIN object_properties p ON p.object_id=a.id WHERE policy_type IN (1,2)"));
-   if (hResult != NULL)
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,policy_type,name,guid FROM ap_common_old a INNER JOIN object_properties p ON p.object_id=a.id WHERE policy_type IN (1,2)"));
+   if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i=0; i < count; i++)
@@ -1633,8 +1633,8 @@ static bool H_UpgradeFromV55()
          if (type == 1)
          {
             _sntprintf(query, 512, _T("SELECT file_content FROM ap_config_files WHERE policy_id=%d"), id);
-            DB_RESULT policy = DBSelect(g_dbHandle, query);
-            if (policy != NULL)
+            DB_RESULT policy = SQLSelect(query);
+            if (policy != nullptr)
             {
                if(DBGetNumRows(policy) > 0)
                   content = DBGetField(policy, 0, 0, NULL, 0);
@@ -1649,11 +1649,11 @@ static bool H_UpgradeFromV55()
          else
          {
             _sntprintf(query, 512, _T("SELECT file_content FROM ap_log_parser WHERE policy_id=%d"), id);
-            DB_RESULT policy = DBSelect(g_dbHandle, query);
-            if (policy != NULL)
+            DB_RESULT policy = SQLSelect(query);
+            if (policy != nullptr)
             {
                if(DBGetNumRows(policy) > 0)
-                  content = DBGetField(policy, 0, 0, NULL, 0);
+                  content = DBGetField(policy, 0, 0, nullptr, 0);
                DBFreeResult(policy);
             }
             else
@@ -1665,7 +1665,7 @@ static bool H_UpgradeFromV55()
 
          //Change every policy to template
          DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO templates (id) VALUES (?)"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
             if (!(SQLExecute(hStmt)))
@@ -1719,8 +1719,8 @@ static bool H_UpgradeFromV55()
    }
 
    //ap_bindings move to template bindings dct_node_map (template_id,node_id)
-   hResult = DBSelect(g_dbHandle, _T("SELECT policy_id,node_id FROM ap_bindings"));
-   if (hResult == NULL)
+   hResult = SQLSelect(_T("SELECT policy_id,node_id FROM ap_bindings"));
+   if (hResult == nullptr)
    {
       if (!g_ignoreErrors)
          return false;
@@ -1869,8 +1869,8 @@ static bool H_UpgradeFromV49()
    if (GetSchemaLevelForMajorVersion(22) < 39)
    {
       TCHAR tmp[MAX_CONFIG_VALUE] = _T("");
-      DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT var_value from config WHERE var_name='LdapMappingName'"));
-      if (hResult != NULL)
+      DB_RESULT hResult = SQLSelect(_T("SELECT var_value from config WHERE var_name='LdapMappingName'"));
+      if (hResult != nullptr)
       {
          if(DBGetNumRows(hResult) > 0)
             DBGetField(hResult, 0, 0, tmp, MAX_CONFIG_VALUE);
@@ -2076,8 +2076,8 @@ static bool H_UpgradeFromV45()
                UINT32 flags = 0;
                TCHAR query[512];
                _sntprintf(query, 512, _T("SELECT flags FROM object_properties WHERE object_id=%d"), id);
-               DB_RESULT flagResult = DBSelect(g_dbHandle, query);
-               if (flagResult != NULL)
+               DB_RESULT flagResult = SQLSelect(query);
+               if (flagResult != nullptr)
                {
                   flags = DBGetFieldULong(flagResult, 0, 0);
                   DBBind(stmtFlags, 1, DB_SQLTYPE_INTEGER, (flags & !3)); //remove auto apply flags
@@ -3149,11 +3149,11 @@ static bool H_UpgradeFromV6()
 {
    if ((GetSchemaLevelForMajorVersion(21) < 4) && (GetSchemaLevelForMajorVersion(22) < 1))
    {
-      DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT access_rights,object_id FROM acl WHERE user_id=-2147483647")); // Get group Admins object acl
-      if (hResult != NULL)
+      DB_RESULT hResult = SQLSelect(_T("SELECT access_rights,object_id FROM acl WHERE user_id=-2147483647")); // Get group Admins object acl
+      if (hResult != nullptr)
       {
          DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE acl SET access_rights=? WHERE user_id=-2147483647 AND object_id=? "));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             int nRows = DBGetNumRows(hResult);
             UINT32 rights;
@@ -3234,15 +3234,15 @@ static bool H_UpgradeFromV4()
 /**
  * Move object flags from old to new tables
  */
-static BOOL MoveFlagsFromOldTables(const TCHAR *tableName)
+static bool MoveFlagsFromOldTables(const TCHAR *tableName)
 {
    TCHAR query[256];
    _sntprintf(query, 256, _T("SELECT id,flags FROM %s"), tableName);
-   DB_RESULT hResult = DBSelect(g_dbHandle, query);
-   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE object_properties SET flags=? WHERE object_id=?"));
-   if (hResult != NULL)
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult != nullptr)
    {
-      if (hStmt != NULL)
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE object_properties SET flags=? WHERE object_id=?"));
+      if (hStmt != nullptr)
       {
          int nRows = DBGetNumRows(hResult);
          for(int i = 0; i < nRows; i++)
@@ -3264,23 +3264,23 @@ static BOOL MoveFlagsFromOldTables(const TCHAR *tableName)
       }
       else if (!g_ignoreErrors)
       {
-         return FALSE;
+         return false;
       }
       DBFreeResult(hResult);
    }
    else if (!g_ignoreErrors)
    {
-      return FALSE;
+      return false;
    }
 
    CHK_EXEC(DBDropColumn(g_dbHandle, tableName, _T("flags")));
-   return TRUE;
+   return true;
 }
 
 /**
  * Move single flag
  */
-inline void MoveFlag(UINT32 oldVar, UINT32 *newVar, UINT32 oldFlag, UINT32 newFlag)
+static inline void MoveFlag(uint32_t oldVar, uint32_t *newVar, uint32_t oldFlag, uint32_t newFlag)
 {
    *newVar |= ((oldVar & oldFlag) != 0) ? newFlag : 0;
 }
@@ -3288,7 +3288,7 @@ inline void MoveFlag(UINT32 oldVar, UINT32 *newVar, UINT32 oldFlag, UINT32 newFl
 /**
  * Move node flags
  */
-static void MoveNodeFlags(UINT32 oldFlag, UINT32 *flags, bool withSnmpConfLock)
+static void MoveNodeFlags(uint32_t oldFlag, uint32_t *flags, bool withSnmpConfLock)
 {
    MoveFlag(oldFlag, flags, 0x10000000, DCF_DISABLE_STATUS_POLL);
    MoveFlag(oldFlag, flags, 0x20000000, DCF_DISABLE_CONF_POLL);
@@ -3310,7 +3310,7 @@ static void MoveNodeFlags(UINT32 oldFlag, UINT32 *flags, bool withSnmpConfLock)
 /**
  * Move node capabilities flags
  */
-static void MoveNodeCapabilities(UINT32 oldFlag, UINT32 *capabilities, bool withSnmpConfLock)
+static void MoveNodeCapabilities(uint32_t oldFlag, uint32_t *capabilities, bool withSnmpConfLock)
 {
    MoveFlag(oldFlag, capabilities, 0x00000001, NC_IS_SNMP);
    MoveFlag(oldFlag, capabilities, 0x00000002, NC_IS_NATIVE_AGENT);
@@ -3341,7 +3341,7 @@ static void MoveNodeCapabilities(UINT32 oldFlag, UINT32 *capabilities, bool with
 /**
  * Move node state flags
  */
-static void MoveNodeState(UINT32 oldRuntime, UINT32 *state)
+static void MoveNodeState(uint32_t oldRuntime, uint32_t *state)
 {
    MoveFlag(oldRuntime, state, 0x000004, DCSF_UNREACHABLE);
    MoveFlag(oldRuntime, state, 0x000008, NSF_AGENT_UNREACHABLE);
@@ -3354,7 +3354,7 @@ static void MoveNodeState(UINT32 oldRuntime, UINT32 *state)
 /**
  * Move sensor state flags
  */
-static void MoveSensorState(UINT32 oldFlag, UINT32 oldRuntime, UINT32 *status)
+static void MoveSensorState(uint32_t oldFlag, uint32_t oldRuntime, uint32_t *status)
 {
    MoveFlag(oldFlag, status, 0x00000001, SSF_PROVISIONED);
    MoveFlag(oldFlag, status, 0x00000002, SSF_REGISTERED);
@@ -3369,12 +3369,15 @@ static void MoveSensorState(UINT32 oldFlag, UINT32 oldRuntime, UINT32 *status)
 static bool H_UpgradeFromV3()
 {
    static const TCHAR *batch =
-            _T("ALTER TABLE object_properties ADD flags integer null\n")
-            _T("ALTER TABLE object_properties ADD state integer null\n")
-            _T("ALTER TABLE nodes ADD capabilities integer null\n")
+            _T("ALTER TABLE object_properties ADD flags integer\n")
+            _T("ALTER TABLE object_properties ADD state integer\n")
+            _T("ALTER TABLE nodes ADD capabilities integer\n")
             _T("UPDATE object_properties set flags=0,state=0\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
+   DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("flags"));
+   DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("state"));
+   DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("capabilities"));
 
    // move flags from old tables to the new one
    CHK_EXEC(MoveFlagsFromOldTables(_T("interfaces")));
@@ -3389,37 +3392,37 @@ static bool H_UpgradeFromV3()
 
    // create special behavior for node and sensor, cluster node
    bool withSnmpConfLock = (GetSchemaLevelForMajorVersion(22) >= 37);
-   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT id,runtime_flags FROM nodes"));
-   DB_STATEMENT stmtNetObj = DBPrepare(g_dbHandle, _T("UPDATE object_properties SET flags=?, state=? WHERE object_id=?"));
-   DB_STATEMENT stmtNode = DBPrepare(g_dbHandle, _T("UPDATE nodes SET capabilities=? WHERE id=?"));
-   if (hResult != NULL)
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,runtime_flags FROM nodes"));
+   if (hResult != nullptr)
    {
-      if ((stmtNetObj != NULL) && (stmtNode != NULL))
+      DB_STATEMENT stmtNetObj = DBPrepare(g_dbHandle, _T("UPDATE object_properties SET flags=?, state=? WHERE object_id=?"));
+      DB_STATEMENT stmtNode = DBPrepare(g_dbHandle, _T("UPDATE nodes SET capabilities=? WHERE id=?"));
+      if ((stmtNetObj != nullptr) && (stmtNode != nullptr))
       {
          int nRows = DBGetNumRows(hResult);
          for(int i = 0; i < nRows; i++)
          {
-            UINT32 id = DBGetFieldULong(hResult, i, 0);
-            UINT32 oldFlags = 0;
-            UINT32 oldRuntime = DBGetFieldULong(hResult, i, 1);
-            UINT32 flags = 0;
-            UINT32 state = 0;
-            UINT32 capabilities = 0;
+            uint32_t id = DBGetFieldULong(hResult, i, 0);
+            uint32_t oldFlags = 0;
+            uint32_t oldRuntime = DBGetFieldULong(hResult, i, 1);
+            uint32_t flags = 0;
+            uint32_t state = 0;
+            uint32_t capabilities = 0;
             TCHAR query[256];
             _sntprintf(query, 256, _T("SELECT node_flags FROM nodes WHERE id=%d"), id);
-            DB_RESULT flagResult = DBSelect(g_dbHandle, query);
+            DB_RESULT flagResult = SQLSelect(query);
             if (DBGetNumRows(flagResult) >= 1)
             {
                oldFlags = DBGetFieldULong(flagResult, 0, 0);
             }
             else
             {
-               if(!g_ignoreErrors)
+               if (!g_ignoreErrors)
                {
                   DBFreeStatement(stmtNetObj);
                   DBFreeStatement(stmtNode);
                   DBFreeResult(hResult);
-                  return FALSE;
+                  return false;
                }
             }
             MoveNodeFlags(oldFlags, &flags, withSnmpConfLock);
@@ -3440,7 +3443,7 @@ static bool H_UpgradeFromV3()
                   DBFreeStatement(stmtNetObj);
                   DBFreeStatement(stmtNode);
                   DBFreeResult(hResult);
-                  return FALSE;
+                  return false;
                }
             }
 
@@ -3451,41 +3454,38 @@ static bool H_UpgradeFromV3()
                   DBFreeStatement(stmtNetObj);
                   DBFreeStatement(stmtNode);
                   DBFreeResult(hResult);
-                  return FALSE;
+                  return false;
                }
             }
          }
          DBFreeStatement(stmtNetObj);
          DBFreeStatement(stmtNode);
-     }
-     else
-     {
-        if(stmtNetObj != NULL)
-           DBFreeStatement(stmtNetObj);
-
-        if(stmtNode != NULL)
-           DBFreeStatement(stmtNode);
-        if (!g_ignoreErrors)
-        {
-           return FALSE;
-        }
-     }
-     DBFreeResult(hResult);
+      }
+      else
+      {
+         if (stmtNetObj != nullptr)
+            DBFreeStatement(stmtNetObj);
+         if (stmtNode != nullptr)
+            DBFreeStatement(stmtNode);
+         if (!g_ignoreErrors)
+            return false;
+      }
+      DBFreeResult(hResult);
    }
    CHK_EXEC(DBDropColumn(g_dbHandle, _T("nodes"), _T("runtime_flags")));
    CHK_EXEC(DBDropColumn(g_dbHandle, _T("nodes"), _T("node_flags")));
 
    //sensor
-   hResult = DBSelect(g_dbHandle, _T("SELECT id,runtime_flags,flags FROM sensors"));
-   DB_STATEMENT stmt = DBPrepare(g_dbHandle, _T("UPDATE object_properties SET status=? WHERE object_id=?"));
-   if (hResult != NULL)
+   hResult = SQLSelect(_T("SELECT id,runtime_flags,flags FROM sensors"));
+   if (hResult != nullptr)
    {
-      if (stmt != NULL)
+      DB_STATEMENT stmt = DBPrepare(g_dbHandle, _T("UPDATE object_properties SET status=? WHERE object_id=?"));
+      if (stmt != nullptr)
       {
          int nRows = DBGetNumRows(hResult);
          for(int i = 0; i < nRows; i++)
          {
-            UINT32 status = 0;
+            uint32_t status = 0;
             MoveSensorState(DBGetFieldULong(hResult, i, 2), DBGetFieldULong(hResult, i, 1), &status);
 
             DBBind(stmt, 1, DB_SQLTYPE_INTEGER, status);
@@ -3497,7 +3497,7 @@ static bool H_UpgradeFromV3()
                {
                   DBFreeStatement(stmt);
                   DBFreeResult(hResult);
-                  return FALSE;
+                  return false;
                }
             }
          }
@@ -3505,7 +3505,7 @@ static bool H_UpgradeFromV3()
       }
       else if (!g_ignoreErrors)
       {
-         return FALSE;
+         return false;
       }
       DBFreeResult(hResult);
    }
@@ -3701,7 +3701,7 @@ static struct
    { 2,  30, 3,  H_UpgradeFromV2 },
    { 1,  30, 2,  H_UpgradeFromV1 },
    { 0,  30, 1,  H_UpgradeFromV0 },
-   { 0,  0,  0, NULL }
+   { 0,  0,  0,  nullptr }
 };
 
 /**
@@ -3717,10 +3717,10 @@ bool MajorSchemaUpgrade_V30()
    {
       // Find upgrade procedure
       int i;
-      for(i = 0; s_dbUpgradeMap[i].upgradeProc != NULL; i++)
+      for(i = 0; s_dbUpgradeMap[i].upgradeProc != nullptr; i++)
          if (s_dbUpgradeMap[i].version == minor)
             break;
-      if (s_dbUpgradeMap[i].upgradeProc == NULL)
+      if (s_dbUpgradeMap[i].upgradeProc == nullptr)
       {
          _tprintf(_T("Unable to find upgrade procedure for version 30.%d\n"), minor);
          return false;
