@@ -2532,10 +2532,15 @@ restart_status_poll:
                         GetObjectName(patchCheckResult.rootCauseInterfaceId, _T("")), description);
                sendPollerMsg(POLLER_WARNING _T("Detected network path problem (%s)\r\n"), description);
             }
+            else if ((m_flags & (NF_DISABLE_NXCP | NF_DISABLE_SNMP | NF_DISABLE_ICMP | NF_DISABLE_ETHERNET_IP)) == (NF_DISABLE_NXCP | NF_DISABLE_SNMP | NF_DISABLE_ICMP | NF_DISABLE_ETHERNET_IP))
+            {
+               sendPollerMsg(POLLER_WARNING _T("All poller methods (NetXMS agent, SNMP, ICMP and EtherNet/IP) are currently disabled\r\n"));
+            }
             else
             {
                PostSystemEvent(EVENT_NODE_DOWN, m_id, nullptr);
             }
+
             g_monitoringList.removeDisconnectedNode(m_id);
             sendPollerMsg(POLLER_ERROR _T("Node is unreachable\r\n"));
             resyncDataCollectionConfiguration = true; // Will cause removal of all remotely collected DCIs from proxy
@@ -2544,7 +2549,15 @@ restart_status_poll:
          {
             if ((m_state & DCSF_NETWORK_PATH_PROBLEM) && !checkNetworkPath(rqId).rootCauseFound)
             {
-               PostSystemEvent(EVENT_NODE_DOWN, m_id, nullptr);
+               if ((m_flags & (NF_DISABLE_NXCP | NF_DISABLE_SNMP | NF_DISABLE_ICMP | NF_DISABLE_ETHERNET_IP)) == (NF_DISABLE_NXCP | NF_DISABLE_SNMP | NF_DISABLE_ICMP | NF_DISABLE_ETHERNET_IP))
+               {
+                  sendPollerMsg(POLLER_WARNING _T("All poller methods (NetXMS agent, SNMP, ICMP and EtherNet/IP) are currently disabled\r\n"));
+               }
+               else
+               {
+                  PostSystemEvent(EVENT_NODE_DOWN, m_id, nullptr);
+               }
+
                m_state &= ~DCSF_NETWORK_PATH_PROBLEM;
             }
             sendPollerMsg(POLLER_WARNING _T("Node is still unreachable\r\n"));
