@@ -194,7 +194,7 @@ static uint32_t ExecuteAction(const TCHAR *name, const StringList& args, const s
       if (executor->execute())
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Execution of external action %s (%s) started"), name, executor->getCommand());
-         ThreadPoolScheduleRelative(g_executorThreadPool, g_execTimeout, ExecutorCleanup, executor);
+         ThreadPoolScheduleRelative(g_executorThreadPool, g_externalCommandTimeout, ExecutorCleanup, executor);
          rcc = ERR_SUCCESS;
       }
       else

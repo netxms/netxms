@@ -185,8 +185,8 @@ enum class Command
  * Global variables
  */
 uuid g_agentId;
-UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_REQUIRE_ENCRYPTION;
-UINT32 g_failFlags = 0;
+uint32_t g_dwFlags = AF_ENABLE_ACTIONS | AF_REQUIRE_ENCRYPTION;
+uint32_t g_failFlags = 0;
 TCHAR g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
 TCHAR g_szSharedSecret[MAX_SECRET_LENGTH] = _T("admin");
 TCHAR g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
@@ -207,8 +207,9 @@ TCHAR g_szSNMPTrapListenAddress[MAX_PATH] = _T("*");
 uint16_t g_wListenPort = AGENT_LISTEN_PORT;
 TCHAR g_systemName[MAX_OBJECT_NAME] = _T("");
 ObjectArray<ServerInfo> g_serverList(8, 8, Ownership::True);
-uint32_t g_execTimeout = 30000;  // External process execution timeout in milliseconds
-uint32_t g_eppTimeout = 30;      // External parameter processor timeout in seconds
+uint32_t g_externalCommandTimeout = 0;   // External process execution timeout for external commands (actions) in milliseconds (0 = unset)
+uint32_t g_externalParameterTimeout = 0;  // External process execution timeout for external parameters in milliseconds (0 = unset)
+uint32_t g_externalParameterProviderTimeout = 30000;  // External parameter provider timeout in milliseconds
 uint32_t g_snmpTimeout = 0;
 uint16_t g_snmpTrapPort = 162;
 time_t g_tmAgentStartTime;
@@ -226,11 +227,11 @@ uint32_t g_tunnelKeepaliveInterval = 30;
 uint16_t g_syslogListenPort = 514;
 StringSet g_trustedRootCertificates;
 #ifdef _WIN32
-UINT16 g_sessionAgentPort = 28180;
+uint16_t g_sessionAgentPort = 28180;
 #else
-UINT16 g_sessionAgentPort = 0;
+uint16_t g_sessionAgentPort = 0;
 #endif
-UINT32 g_dwIdleTimeout = 120;   // Session idle timeout
+uint32_t g_dwIdleTimeout = 120;   // Session idle timeout
 uint32_t g_webSvcCacheExpirationTime = 600;  // 10 minutes by default
 bool g_restartPending = false;   // Restart pending flag
 
@@ -279,6 +280,7 @@ static TCHAR s_executableName[MAX_PATH];
 static int s_debugLevel = NXCONFIG_UNINITIALIZED_VALUE;
 static TCHAR *s_debugTags = nullptr;
 static uint32_t s_maxWebSvcPoolSize = 64;
+static uint32_t s_defaultExecutionTimeout = 0;  // Default execution timeout for external processes (0 = unset)
 
 #if defined(_WIN32)
 static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
@@ -309,6 +311,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, s_dailyLogFileSuffix, nullptr },
    { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
    { _T("DebugTags"), CT_STRING_CONCAT, ',', 0, 0, 0, &s_debugTags, nullptr },
+   { _T("DefaultExecutionTimeout"), CT_LONG, 0, 0, 0, 0, &s_defaultExecutionTimeout, nullptr },
    { _T("DisableIPv4"), CT_BOOLEAN_FLAG_32, 0, 0, AF_DISABLE_IPV4, 0, &g_dwFlags, nullptr },
    { _T("DisableIPv6"), CT_BOOLEAN_FLAG_32, 0, 0, AF_DISABLE_IPV6, 0, &g_dwFlags, nullptr },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, s_dumpDir, nullptr },
@@ -327,13 +330,14 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableWatchdog"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_WATCHDOG, 0, &s_startupFlags, nullptr },
    { _T("EnableWebServiceProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_WEBSVC_PROXY, 0, &g_dwFlags, nullptr },
    { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, nullptr },
-   { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_execTimeout, nullptr },
+   { _T("ExternalCommandTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalCommandTimeout, nullptr },
    { _T("ExternalList"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalListsConfig, nullptr },
    { _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, nullptr },
    { _T("ExternalParameter"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalParametersConfig, nullptr },
    { _T("ExternalParameterShellExec"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalShellExecParametersConfig, nullptr },
-   { _T("ExternalParametersProvider"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalParameterProvidersConfig, nullptr },
-   { _T("ExternalParameterProviderTimeout"), CT_LONG, 0, 0, 0, 0, &g_eppTimeout, nullptr },
+   { _T("ExternalParameterProvider"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalParameterProvidersConfig, nullptr },
+   { _T("ExternalParameterProviderTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalParameterProviderTimeout, nullptr },
+   { _T("ExternalParameterTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalParameterTimeout, nullptr },
    { _T("ExternalSubagent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalSubAgentsList, nullptr },
    { _T("ExternalTable"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalTablesConfig, nullptr },
    { _T("FatalExitOnCRTError"), CT_BOOLEAN_FLAG_32, 0, 0, SF_FATAL_EXIT_ON_CRT_ERROR, 0, &s_startupFlags, nullptr },
@@ -372,8 +376,11 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("WebServiceCacheExpirationTime"), CT_LONG, 0, 0, 0, 0, &g_webSvcCacheExpirationTime, nullptr },
    { _T("WebServiceThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &s_maxWebSvcPoolSize, nullptr },
    { _T("WriteLogAsJson"), CT_BOOLEAN_FLAG_32, 0, 0, SF_JSON_LOG, 0, &s_startupFlags, nullptr },
-   { _T("ZoneId"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr }, // for backward compatibility
    { _T("ZoneUIN"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr },
+   /* Parameters below are deprecated and left for compatibility with older versions */
+   { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &s_defaultExecutionTimeout, nullptr },
+   { _T("ExternalParametersProvider"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalParameterProvidersConfig, nullptr },
+   { _T("ZoneId"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
 };
 
@@ -2142,6 +2149,18 @@ int main(int argc, char *argv[])
 
 			if (LoadConfig(configSection, true))
 			{
+			   // Calculate execution timeouts
+			   // Default value is in DefaultExecutionTimeout (old versions may use ExecTimeout)
+			   // Then individual timeouts can be set by ExternalCommandTimeout, ExternalParameterTimeout, and ExternalParameterProviderTimeout
+			   if (s_defaultExecutionTimeout == 0)
+			      s_defaultExecutionTimeout = 5000;   // 5 seconds default
+			   if (g_externalCommandTimeout == 0)
+			      g_externalCommandTimeout = s_defaultExecutionTimeout;
+            if (g_externalParameterTimeout == 0)
+               g_externalParameterTimeout = s_defaultExecutionTimeout;
+            if (g_externalParameterProviderTimeout == 0)
+               g_externalParameterProviderTimeout = s_defaultExecutionTimeout;
+
 			   shared_ptr<Config> config = g_config;
             // Check if master section starts with EXT:
             // If yes, switch to external subagent mode

@@ -852,8 +852,8 @@ bool ExecuteInAllSessions(const TCHAR *command);
  * Global variables
  */
 extern uuid g_agentId;
-extern UINT32 g_dwFlags;
-extern UINT32 g_failFlags;
+extern uint32_t g_dwFlags;
+extern uint32_t g_failFlags;
 extern TCHAR g_szLogFile[];
 extern TCHAR g_szSharedSecret[];
 extern TCHAR g_szConfigFile[];
@@ -877,8 +877,9 @@ extern TCHAR g_szPlatformSuffix[];
 extern uint32_t g_dwStartupDelay;
 extern uint32_t g_dwIdleTimeout;
 extern uint32_t g_maxCommSessions;
-extern uint32_t g_execTimeout;
-extern uint32_t g_eppTimeout;
+extern uint32_t g_externalCommandTimeout;
+extern uint32_t g_externalParameterTimeout;
+extern uint32_t g_externalParameterProviderTimeout;
 extern uint32_t g_snmpTimeout;
 extern uint16_t g_snmpTrapPort;
 extern uint32_t g_longRunningQueryThreshold;
