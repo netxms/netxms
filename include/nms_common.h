@@ -1273,7 +1273,7 @@ inline shared_ptr<T> make_shared(Args&&... args)
 }
 
 // xlC++ implementation C++11 TR1 does not have unique_ptr
-#define unique_ptr auto_ptr
+#define unique_ptr std::auto_ptr
 
 #elif defined(__HP_aCC)
 
@@ -1301,7 +1301,11 @@ using std::make_unique;
 #else
 template<class T, class... Args> unique_ptr<T> make_unique(Args&&... args)
 {
+#if HAVE_STD_FORWARD
    return unique_ptr<T>(new T(std::forward<Args>(args)...));
+#else
+   return unique_ptr<T>(new T(args...));
+#endif
 }
 #endif
 

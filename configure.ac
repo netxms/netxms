@@ -1715,7 +1715,7 @@ if test "x$CXX" = "xxlC_r" ; then
 
 	# Check for std::shared_ptr
 	AC_LANG_PUSH([C++])
-	AC_MSG_CHECKING(if std::shared_ptr is supported)
+	AC_MSG_CHECKING(whether C++ compiler supports std::shared_ptr)
 	AC_COMPILE_IFELSE([
 		AC_LANG_PROGRAM([
 #include <memory>
@@ -1726,7 +1726,7 @@ if test "x$CXX" = "xxlC_r" ; then
 		],
 		[
 			AC_MSG_RESULT(no)
-			AC_MSG_CHECKING(if std::tr1::shared_ptr is supported)
+			AC_MSG_CHECKING(whether C++ compiler supports std::tr1::shared_ptr)
 			OLD_CXXFLAGS="$CXXFLAGS"
 			CXXFLAGS="$CXXFLAGS -D__IBMCPP_TR1__"
 			AC_COMPILE_IFELSE([
@@ -1883,6 +1883,29 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 ],[
         AC_MSG_RESULT(no)
         AC_DEFINE(HAVE_STD_MAKE_UNIQUE,0,Define to 1 if std::make_unique is available)
+])
+
+AC_MSG_CHECKING(whether C++ compiler supports std::forward)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <utility>
+struct X
+{
+	int f;
+};
+int F(X arg)
+{
+	return arg.f;
+}
+]],[[
+	X a;
+	return F(std::forward<X>(a));
+]])
+],[
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(HAVE_STD_FORWARD,1,Define to 1 if std::forward is available)
+],[
+        AC_MSG_RESULT(no)
+        AC_DEFINE(HAVE_STD_FORWARD,0,Define to 1 if std::forward is available)
 ])
 
 AC_LANG_POP([C++])
