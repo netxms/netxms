@@ -114,6 +114,20 @@ static EnumerationCallbackResult UpdateGauge(const TCHAR *key, const void *value
 }
 
 /**
+ * Callback for logging queue lenth stats
+ */
+static EnumerationCallbackResult LogStats(const TCHAR *key, const void *value, void *context)
+{
+   nxlog_debug_tag(_T("statcoll.output"), 8, _T("Queue name: %s; Cur: %d; Min: %d; Max: %d; Avg: %f"),
+      key,
+      const_cast<Gauge64*>(static_cast<const Gauge64*>(value))->getCurrent(),
+      const_cast<Gauge64*>(static_cast<const Gauge64*>(value))->getMin(),
+      const_cast<Gauge64*>(static_cast<const Gauge64*>(value))->getMax(),
+      const_cast<Gauge64*>(static_cast<const Gauge64*>(value))->getAverage());
+   return _CONTINUE;
+}
+
+/**
  * Statistics collection thread
  */
 void ServerStatCollector()
@@ -138,11 +152,18 @@ void ServerStatCollector()
    AddQueueToCollector(_T("WindowsEventWriter"), &g_windowsEventWriterQueue);
    s_queuesLock.unlock();
 
+   int counter = 0;
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Server statistic collector thread started"));
    while(!SleepAndCheckForShutdown(QUEUE_STATS_COLLECTION_INTERVAL))
    {
       s_queuesLock.lock();
       s_queues.forEach(UpdateGauge, nullptr);
+      counter++;
+      if ((counter % (60 / QUEUE_STATS_COLLECTION_INTERVAL)) == 0)
+      {
+         counter = 0;
+         s_queues.forEach(LogStats, nullptr);
+      }
       s_queuesLock.unlock();
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Server statistic collector thread stopped"));
