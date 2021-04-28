@@ -23,7 +23,6 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
-
 /**
  * Upgrade from 40.48 to 40.49
  */
@@ -31,15 +30,10 @@ static bool H_UpgradeFromV48()
 {
    if (GetSchemaLevelForMajorVersion(38) < 11)
    {
-      switch(g_dbSyntax){
-         case DB_SYNTAX_ORACLE:
-         case DB_SYNTAX_DB2:
-         case DB_SYNTAX_INFORMIX:
-            CHK_EXEC(SQLQuery(_T("UPDATE nodes SET last_agent_comm_time=0 WHERE (BITAND(capabilities, 2) = 0) AND (last_agent_comm_time > 0)")));
-            break;
-         default:
-            CHK_EXEC(SQLQuery(_T("UPDATE nodes SET last_agent_comm_time=0 WHERE ((capabilities & 2) = 0) AND (last_agent_comm_time > 0)")));
-      }
+      if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+         CHK_EXEC(SQLQuery(_T("UPDATE nodes SET last_agent_comm_time=0 WHERE (BITAND(capabilities, 2) = 0) AND (last_agent_comm_time > 0)")));
+      else
+         CHK_EXEC(SQLQuery(_T("UPDATE nodes SET last_agent_comm_time=0 WHERE ((capabilities & 2) = 0) AND (last_agent_comm_time > 0)")));
       CHK_EXEC(SetSchemaLevelForMajorVersion(38, 11));
    }
    CHK_EXEC(SetMinorSchemaVersion(49));
