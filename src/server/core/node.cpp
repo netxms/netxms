@@ -3182,17 +3182,7 @@ void Node::updatePrimaryIpAddr()
       PostSystemEvent(EVENT_IP_ADDRESS_CHANGED, m_id, "AA", &ipAddr, &m_ipAddress);
 
       lockProperties();
-
-      if (m_flags & NF_EXTERNAL_GATEWAY)
-      {
-         m_ipAddress = ipAddr;
-         setModified(MODIFY_NODE_PROPERTIES);
-      }
-      else
-      {
-         setPrimaryIPAddress(ipAddr);
-      }
-
+      setPrimaryIPAddress(ipAddr);
       unlockProperties();
 
       agentLock();
@@ -7270,19 +7260,14 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    {
       InetAddress ipAddr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
 
-      if (m_flags & NF_EXTERNAL_GATEWAY)
-      {
-         lockProperties();
-         m_ipAddress = ipAddr;
-         setModified(MODIFY_NODE_PROPERTIES);
-         unlockProperties();
-      }
-      else
+
+      if (!(m_flags & NF_EXTERNAL_GATEWAY))
       {
          // Check if received IP address is one of node's interface addresses
+         unlockProperties(); //removing possible deadlock
          readLockChildList();
          int i, count = getChildList().size();
-         for(i = 0; i < count; i++)
+         for (i = 0; i < count; i++)
          {
             NetObj *curr = getChildList().get(i);
             if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
@@ -7290,6 +7275,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
                break;
          }
          unlockChildList();
+         lockProperties();
          if (i == count)
          {
             return RCC_INVALID_IP_ADDR;
@@ -7300,9 +7286,8 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
          {
             return RCC_ALREADY_EXIST;
          }
-
-         setPrimaryIPAddress(ipAddr);
       }
+      setPrimaryIPAddress(ipAddr); //properties locking mutex already locked in NetObj::modifyFromMessage
 
       // Update primary name if it is not set with the same message
       if (!pRequest->isFieldExist(VID_PRIMARY_NAME))
@@ -7981,12 +7966,30 @@ shared_ptr<AgentConnectionEx> Node::acquireProxyConnection(ProxyType type, bool 
  */
 void Node::setPrimaryIPAddress(const InetAddress& addr)
 {
-   if (addr.equals(m_ipAddress) || (m_flags & NF_EXTERNAL_GATEWAY))
+   if (addr.equals(m_ipAddress))
       return;
 
    InetAddress oldIpAddr = m_ipAddress;
    m_ipAddress = addr;
-   UpdateNodeIndex(oldIpAddr, addr, self());
+   if (!(m_flags & NF_EXTERNAL_GATEWAY))
+   {
+      UpdateNodeIndex(oldIpAddr, addr, self());
+      if (!(m_capabilities & (NC_IS_NATIVE_AGENT | NC_IS_SNMP | NC_IS_ETHERNET_IP)))
+      {
+         unlockProperties(); //removing possible deadlock
+         readLockChildList();
+         for (int i = 0; i < getChildList().size(); i++)
+         {
+            NetObj *iface = getChildList().get(i);
+            if (iface->getObjectClass() == OBJECT_INTERFACE && static_cast<Interface*>(iface)->isFake())
+            {
+               static_cast<Interface*>(iface)->setIpAddress(m_ipAddress);
+            }
+         }
+         unlockChildList();
+         lockProperties();
+      }
+   }
 
    setModified(MODIFY_NODE_PROPERTIES);
 }
