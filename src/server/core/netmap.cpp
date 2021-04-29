@@ -723,7 +723,6 @@ void NetworkMap::updateContent()
                   topology = shared_ptr<NetworkMapObjectList>(seed->buildInternalCommunicationTopology());
                   break;
                default:
-                  topology = nullptr;
                   break;
             }
             if (topology != nullptr)
