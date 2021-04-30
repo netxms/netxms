@@ -2760,7 +2760,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                            vm->setGlobalVariable("$alarmKey", vm->createValue(alarm->getKey()));
                         }
 
-                        if (vm->run(0, nullptr, nullptr, nullptr, (entryPoint[0] != 0) ? entryPoint : nullptr))
+                        if (vm->run(0, nullptr, nullptr, nullptr, nullptr, (entryPoint[0] != 0) ? entryPoint : nullptr))
                         {
                            NXSL_Value *result = vm->getResult();
                            const TCHAR *temp = result->getValueAsCString();
