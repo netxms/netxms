@@ -1275,6 +1275,23 @@ inline shared_ptr<T> make_shared(Args&&... args)
 // xlC++ implementation C++11 TR1 does not have unique_ptr
 #define unique_ptr std::auto_ptr
 
+#if HAVE_STD_NULLPTR_T
+using std::nullptr_t;
+#else
+typedef decltype(nullptr) nullptr_t;
+#endif
+
+// Implementation of == and != for comparing unique_ptr with nullptr_t
+template<typename T> bool operator ==(const unique_ptr<T> &a, const nullptr_t &b)
+{
+        return a.get() == nullptr;
+}
+
+template<typename T> bool operator !=(const unique_ptr<T> &a, const nullptr_t &b)
+{
+        return a.get() != nullptr;
+}
+
 #elif defined(__HP_aCC)
 
 // HP aC++ does not have shared_ptr implementation, use bundled one

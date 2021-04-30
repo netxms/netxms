@@ -8808,7 +8808,6 @@ shared_ptr<NetworkMapObjectList> Node::buildL2Topology(uint32_t *status, int rad
    }
    else
    {
-      result = nullptr;
       m_topology.reset();
       *status = RCC_NO_L2_TOPOLOGY_SUPPORT;
    }

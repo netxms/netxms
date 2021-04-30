@@ -1713,8 +1713,9 @@ if test "x$CXX" = "xxlC_r" ; then
 	AC_CPP_CHECK_OPTION(-qsuppress=1506-356)
 	AC_CPP_CHECK_OPTION(-qsuppress=1540-1401)
 
-	# Check for std::shared_ptr
 	AC_LANG_PUSH([C++])
+
+	# Check for std::shared_ptr
 	AC_MSG_CHECKING(whether C++ compiler supports std::shared_ptr)
 	AC_COMPILE_IFELSE([
 		AC_LANG_PROGRAM([
@@ -1744,6 +1745,30 @@ if test "x$CXX" = "xxlC_r" ; then
 			)
 		]
 	)
+
+	# Check for std::nullptr_t
+	AC_MSG_CHECKING(whether C++ compiler supports std::nullptr_t)
+	AC_COMPILE_IFELSE([
+		AC_LANG_PROGRAM([
+#include <memory>
+#include <stddef.h>
+
+int func(std::nullptr_t p)
+{
+	return 0;
+}
+			],
+			[ return 0; ])],
+		[
+			AC_MSG_RESULT(yes)
+			AC_DEFINE(HAVE_STD_NULLPTR_T, 1, Define to 1 if compiler supports std::nullptr_t)
+		],
+		[
+			AC_MSG_RESULT(no)
+			AC_DEFINE(HAVE_STD_NULLPTR_T, 0, Define to 1 if compiler supports std::nullptr_t)
+		]
+	)
+
 	AC_LANG_POP([C++])
 fi
 

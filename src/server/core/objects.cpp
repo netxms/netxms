@@ -1114,7 +1114,7 @@ unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const
    int eoffset;
    PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regex), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
    if (preg == nullptr)
-      return nullptr;
+      return unique_ptr<SharedObjectArray<NetObj>>();
 
    ObjectIndex *index;
    switch(objClass)
@@ -2786,7 +2786,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint
 {
    NXSL_VM *vm = NXSLCompileAndCreateVM(query, errorMessage, errorMessageLen, new NXSL_ServerEnv());
    if (vm == nullptr)
-      return nullptr;
+      return unique_ptr<ObjectArray<ObjectQueryResult>>();
 
    bool readFields = (fields != nullptr);
 
