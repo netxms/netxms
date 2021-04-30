@@ -27,6 +27,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
@@ -790,6 +791,19 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
       manager.add(actionRefresh);
       manager.add(new Separator());
       manager.add(actionProperties);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
+   {
+      super.fillLocalToolbar(manager);
+      manager.add(actionSave);
+      manager.add(actionSaveAs);
+      manager.add(actionSaveAsImage);
+      manager.add(actionCopyImage);
    }
 
    /**

@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.base.views;
 
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -46,6 +47,8 @@ public class ViewContainer extends Composite
    private Perspective perspective;
    private View view;
    private Object context;
+   private ToolBarManager viewToolBarManager;
+   private ToolBar viewToolBar;
    private ToolBar viewControlBar;
    private Composite viewArea;
 
@@ -68,13 +71,20 @@ public class ViewContainer extends Composite
       layout.verticalSpacing = 0;
       layout.marginHeight = 0;
       layout.marginWidth = 0;
-      layout.numColumns = 1;
+      layout.numColumns = 2;
       setLayout(layout);
 
-      viewControlBar = new ToolBar(this, SWT.FLAT | SWT.WRAP | SWT.RIGHT);
+      viewToolBarManager = new ToolBarManager(SWT.FLAT | SWT.WRAP | SWT.RIGHT);
+      viewToolBar = viewToolBarManager.createControl(this);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
       gd.grabExcessHorizontalSpace = true;
+      viewToolBar.setLayoutData(gd);
+
+      viewControlBar = new ToolBar(this, SWT.FLAT | SWT.WRAP | SWT.RIGHT);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      gd.grabExcessHorizontalSpace = false;
       viewControlBar.setLayoutData(gd);
 
       ToolItem refreshView = new ToolItem(viewControlBar, SWT.PUSH);
@@ -132,6 +142,7 @@ public class ViewContainer extends Composite
 
       Label separator = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
       gd = new GridData();
+      gd.horizontalSpan = 2;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       separator.setLayoutData(gd);
@@ -139,6 +150,7 @@ public class ViewContainer extends Composite
       viewArea = new Composite(this, SWT.NONE);
       viewArea.setLayout(new FillLayout());
       gd = new GridData();
+      gd.horizontalSpan = 2;
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -165,6 +177,10 @@ public class ViewContainer extends Composite
          viewArea.layout(true, true);
          if (view instanceof ViewWithContext)
             ((ViewWithContext)view).setContext(context);
+
+         viewToolBarManager.removeAll();
+         view.fillLocalToolbar(viewToolBarManager);
+         viewToolBarManager.update(true);
       }
    }
 

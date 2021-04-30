@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -32,6 +33,8 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
@@ -51,6 +54,9 @@ public class ViewStack extends Composite
    private Window window;
    private Perspective perspective;
    private CTabFolder tabFolder;
+   private Composite topRightControl;
+   private ToolBarManager viewToolBarManager;
+   private ToolBar viewToolBar;
    private ToolBar viewControlBar;
    private Object context;
    private boolean allViewsAreCloseable = false;
@@ -82,12 +88,7 @@ public class ViewStack extends Composite
             View view = (tabItem != null) ? (View)tabItem.getData("view") : null;
             if (view != null)
             {
-               view.activate();
-               if ((view instanceof ViewWithContext) && !ignoreContextForView(tabItem))
-               {
-                  if (((ViewWithContext)view).getContext() != context)
-                     ((ViewWithContext)view).setContext(context);
-               }
+               activateView(view, tabItem);
             }
             fireSelectionListeners(view);
          }
@@ -100,8 +101,19 @@ public class ViewStack extends Composite
       });
       tabFolder.setUnselectedCloseVisible(true);
 
-      viewControlBar = new ToolBar(tabFolder, SWT.FLAT | SWT.WRAP | SWT.RIGHT);
-      tabFolder.setTopRight(viewControlBar);
+      topRightControl = new Composite(tabFolder, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      topRightControl.setLayout(layout);
+      tabFolder.setTopRight(topRightControl);
+
+      viewToolBarManager = new ToolBarManager(SWT.FLAT | SWT.WRAP | SWT.RIGHT);
+      viewToolBar = viewToolBarManager.createControl(topRightControl);
+      viewToolBar.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      viewControlBar = new ToolBar(topRightControl, SWT.FLAT | SWT.WRAP | SWT.RIGHT);
+      viewControlBar.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, true));
 
       ToolItem refreshView = new ToolItem(viewControlBar, SWT.PUSH);
       refreshView.setImage(SharedIcons.IMG_REFRESH);
@@ -203,12 +215,7 @@ public class ViewStack extends Composite
          if (activate)
          {
             tabFolder.setSelection(tabItem);
-            view.activate();
-            if (view instanceof ViewWithContext)
-            {
-               if (((ViewWithContext)view).getContext() != context)
-                  ((ViewWithContext)view).setContext(context);
-            }
+            activateView(view, tabItem);
          }
       }
    }
@@ -228,6 +235,25 @@ public class ViewStack extends Composite
          if (tabItem != null)
             tabItem.dispose();
       }
+   }
+
+   /**
+    * Activate view internal handling of view activation.
+    *
+    * @param view view to activate
+    * @param tabItem tab item holding view
+    */
+   private void activateView(View view, CTabItem tabItem)
+   {
+      view.activate();
+      if ((view instanceof ViewWithContext) && !ignoreContextForView(tabItem))
+      {
+         if (((ViewWithContext)view).getContext() != context)
+            ((ViewWithContext)view).setContext(context);
+      }
+      viewToolBarManager.removeAll();
+      view.fillLocalToolbar(viewToolBarManager);
+      viewToolBarManager.update(true);
    }
 
    /**

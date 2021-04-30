@@ -26,6 +26,8 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -81,7 +83,6 @@ public class ScriptLibraryView extends ConfigurationView
    private ScriptFilter filter;
    private FilterText filterText;
    private Composite content;
-   private RefreshAction actionRefresh;
    private Action actionNew;
    private Action actionEdit;
    private Action actionRename;
@@ -186,8 +187,15 @@ public class ScriptLibraryView extends ConfigurationView
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
+   }
 
-      refreshScriptList();
+   /**
+    * @see org.netxms.nxmc.base.views.View#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      refresh();
    }
 
    /**
@@ -212,14 +220,6 @@ public class ScriptLibraryView extends ConfigurationView
     */
    private void createActions()
    {
-      actionRefresh = new RefreshAction() {
-         @Override
-         public void run()
-         {
-            refreshScriptList();
-         }
-      };
-
       actionNew = new Action(i18n.tr("Create &new script..."), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
@@ -309,9 +309,22 @@ public class ScriptLibraryView extends ConfigurationView
    }
 
    /**
-    * Reload script list from server
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
     */
-   private void refreshScriptList()
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
+   {
+      super.fillLocalToolbar(manager);
+      manager.add(actionNew);
+      manager.add(new Separator());
+      manager.add(actionShowFilter);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#refresh()
+    */
+   @Override
+   public void refresh()
    {
       new Job(i18n.tr("Loading library script list"), this) {
          @Override
@@ -456,7 +469,7 @@ public class ScriptLibraryView extends ConfigurationView
          @Override
          protected void jobFinalize()
          {
-            refreshScriptList();
+            refresh();
          }
 
          @Override

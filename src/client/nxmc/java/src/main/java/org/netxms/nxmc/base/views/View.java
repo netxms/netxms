@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -94,7 +95,7 @@ public abstract class View
    {
       try
       {
-         View view = (View)getClass().newInstance();
+         View view = (View)getClass().getDeclaredConstructor().newInstance();
          view.id = id;
          view.name = name;
          view.imageDescriptor = imageDescriptor;
@@ -137,6 +138,15 @@ public abstract class View
     * Called after view content was created. Default implementation does nothing. Can be used by subclasses to run initial refresh.
     */
    protected void postContentCreate()
+   {
+   }
+
+   /**
+    * Fill view's local toolbar
+    *
+    * @param manager toolbar manager
+    */
+   protected void fillLocalToolbar(ToolBarManager manager)
    {
    }
 
