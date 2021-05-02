@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -371,7 +371,7 @@ void Array::sort(int (*cb)(const void *, const void *))
  */
 void Array::sort(int (*cb)(void *, const void *, const void *), void *context)
 {
-   qsort_s(m_data, m_size, m_elementSize, cb, context);
+   QSort(m_data, m_size, m_elementSize, cb, context);
 }
 
 /**

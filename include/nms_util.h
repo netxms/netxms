@@ -3855,8 +3855,12 @@ void LIBNETXMS_EXPORTABLE __strupr(char *in);
 #define strupr __strupr
 #endif   /* _WIN32 */
 
-#if !defined(_WIN32)
-void LIBNETXMS_EXPORTABLE qsort_s(void *base, size_t nmemb, size_t size, int (*compare)(void *, const void *, const void *), void *context);
+// Use internally the following quick sort prototype (based on Windows version of qsort_s):
+// void qsort_s(void *base, size_t nmemb, size_t size, int (*compare)(void *, const void *, const void *), void *context);
+#if defined(_WIN32)
+#define QSort qsort_s
+#else
+void LIBNETXMS_EXPORTABLE QSort(void *base, size_t nmemb, size_t size, int (*compare)(void *, const void *, const void *), void *context);
 #endif
 
 int64_t LIBNETXMS_EXPORTABLE GetCurrentTimeMs();
