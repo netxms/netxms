@@ -74,7 +74,7 @@
 
 /*
 * Minor changes for NetXMS integration:
-*  - function renamed to qsort_s
+*  - function renamed to QSort
 *  - use NetXMS common headers
 *  - use alloca instead of malloc if possible
 */
@@ -444,7 +444,7 @@ static void qsort_words(void *base, size_t nmemb, void *context, int (*compare)(
 
 /* ---------------------------------------------------------------------- */
 
-void LIBNETXMS_EXPORTABLE qsort_s(void *base, size_t nmemb, size_t size, int (*compare)(void *, const void *, const void *), void *context)
+void LIBNETXMS_EXPORTABLE QSort(void *base, size_t nmemb, size_t size, int (*compare)(void *, const void *, const void *), void *context)
 {
    if (nmemb <= 1)
       return;
