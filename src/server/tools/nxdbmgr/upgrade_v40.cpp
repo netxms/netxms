@@ -24,6 +24,31 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.49 to 40.50
+ */
+static bool H_UpgradeFromV49()
+{
+   if (GetSchemaLevelForMajorVersion(38) < 12)
+   {
+      CHK_EXEC(CreateEventTemplate(EVENT_POLICY_VALIDATION_ERROR, _T("SYS_POLICY_VALIDATION_ERROR"),
+            SEVERITY_WARNING, EF_LOG, _T("7a0c3a71-8125-4692-985a-a7e94fbee570"),
+            _T("Failed validation of %4 policy %3 in template %1 (%6)"),
+            _T("Generated when agent policy within template fails validation.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Template name\r\n")
+            _T("   2) Template ID\r\n")
+            _T("   3) Policy name\r\n")
+            _T("   4) Policy type\r\n")
+            _T("   5) Policy ID\r\n")
+            _T("   6) Additional info")
+            ));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(38, 12));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(50));
+   return true;
+}
+
+/**
  * Upgrade from 40.48 to 40.49
  */
 static bool H_UpgradeFromV48()
@@ -1267,6 +1292,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 49, 40, 50, H_UpgradeFromV49 },
    { 48, 40, 49, H_UpgradeFromV48 },
    { 47, 40, 48, H_UpgradeFromV47 },
    { 46, 40, 47, H_UpgradeFromV46 },

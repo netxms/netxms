@@ -801,6 +801,20 @@ void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyIn
 }
 
 /**
+ * Check if policies are valid
+ */
+void Template::callPolicyValidation()
+{
+   lockProperties();
+   for (int i = 0; i < m_policyList->size(); i++)
+   {
+      shared_ptr<GenericAgentPolicy> policy = m_policyList->getShared(i);
+      ThreadPoolExecute(g_mainThreadPool, policy, &GenericAgentPolicy::validate);
+   }
+   unlockProperties();
+}
+
+/**
  * Create NXSL object for this object
  */
 NXSL_Value *Template::createNXSLObject(NXSL_VM *vm) const
