@@ -272,6 +272,28 @@ public class PreferenceStore
    }
 
    /**
+    * Get property as floating point number.
+    * 
+    * @param name property name
+    * @param defaultValue default value
+    * @return property value or default value if not found or cannot be interpreted as floating point number
+    */
+   public double getAsDouble(String name, double defaultValue)
+   {
+      String v = properties.getProperty(name);
+      if (v == null)
+         return defaultValue;
+      try
+      {
+         return Double.parseDouble(v);
+      }
+      catch(NumberFormatException e)
+      {
+         return defaultValue;
+      }
+   }
+
+   /**
     * Get property as point object.
     * 
     * @param name property name
@@ -440,6 +462,17 @@ public class PreferenceStore
    public void set(String name, long value)
    {
       set(name, Long.toString(value));
+   }
+
+   /**
+    * Set property.
+    *
+    * @param name property name
+    * @param value new property value
+    */
+   public void set(String name, double value)
+   {
+      set(name, Double.toString(value));
    }
 
    /**

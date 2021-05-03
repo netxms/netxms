@@ -27,6 +27,7 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
@@ -37,6 +38,7 @@ import org.netxms.client.objects.ServiceRoot;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.helpers.MenuContributionItem;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.dialogs.CreateChassisDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateInterfaceDialog;
@@ -217,6 +219,14 @@ public class ObjectContextMenuManager extends MenuManager
       addAction(createMenu, actionCreateVpnConnector, (AbstractObject o) -> o instanceof Node);
       if (!createMenu.isEmpty())
          add(createMenu);
+
+      final Menu toolsMenu = ObjectToolsMenuFactory.createMenu((IStructuredSelection)selectionProvider.getSelection(), getMenu(), null);
+      if (toolsMenu != null)
+      {
+         add(new Separator());
+         add(new MenuContributionItem(i18n.tr("&Tools"), toolsMenu));
+      }
+
       add(new Separator());
       add(actionProperties);
    }

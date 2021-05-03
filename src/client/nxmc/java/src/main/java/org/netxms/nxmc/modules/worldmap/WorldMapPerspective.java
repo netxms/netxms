@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.worldmap;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.worldmap.views.WorldMap;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
@@ -59,5 +60,6 @@ public class WorldMapPerspective extends Perspective
    @Override
    protected void configureViews()
    {
+      setMainView(new WorldMap());
    }
 }

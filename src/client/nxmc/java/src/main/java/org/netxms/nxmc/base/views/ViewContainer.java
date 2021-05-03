@@ -21,6 +21,8 @@ package org.netxms.nxmc.base.views;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FillLayout;
@@ -156,6 +158,15 @@ public class ViewContainer extends Composite
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       viewArea.setLayoutData(gd);
+
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent arg0)
+         {
+            if (view != null)
+               view.dispose();
+         }
+      });
    }
 
    /**

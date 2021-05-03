@@ -21,7 +21,10 @@ package org.netxms.nxmc.modules.worldmap.views;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -56,10 +59,30 @@ public abstract class AbstractGeolocationView extends View implements ISelection
 	private Set<ISelectionChangedListener> selectionChangeListeners = new HashSet<ISelectionChangedListener>();
 	
 	/**
-	 * Get initial center point for displayed map
-	 * 
-	 * @return
-	 */
+    * Default constructor
+    */
+   protected AbstractGeolocationView()
+   {
+      super();
+   }
+
+   /**
+    * Create new view with given name and ID.
+    *
+    * @param name view name
+    * @param image view image
+    * @param id view ID
+    */
+   public AbstractGeolocationView(String name, ImageDescriptor image, String id)
+   {
+      super(name, image, id);
+   }
+
+   /**
+    * Get initial center point for displayed map
+    * 
+    * @return
+    */
 	protected abstract GeoLocation getInitialCenterPoint();
 	
 	/**
@@ -147,8 +170,7 @@ public abstract class AbstractGeolocationView extends View implements ISelection
          {
             if (getSelection().isEmpty())
             {
-               add(actionZoomIn);
-               add(actionZoomOut);
+               AbstractGeolocationView.this.fillContextMenu(this);
             }
             else
             {
@@ -160,11 +182,33 @@ public abstract class AbstractGeolocationView extends View implements ISelection
 		map.setMenu(menu);
 	}
 
+   /**
+    * Fill context menu if selection is empty
+    *
+    * @param manager menu manager
+    */
+   protected void fillContextMenu(IMenuManager manager)
+   {
+      manager.add(actionZoomIn);
+      manager.add(actionZoomOut);
+   }
+
 	/**
-	 * Set new zoom level for map
-	 * 
-	 * @param newLevel new zoom level
-	 */
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
+   {
+      super.fillLocalToolbar(manager);
+      manager.add(actionZoomIn);
+      manager.add(actionZoomOut);
+   }
+
+   /**
+    * Set new zoom level for map
+    * 
+    * @param newLevel new zoom level
+    */
 	private void setZoomLevel(int newLevel)
 	{
 		if ((newLevel < MapAccessor.MIN_MAP_ZOOM) || (newLevel > MapAccessor.MAX_MAP_ZOOM))
@@ -196,7 +240,7 @@ public abstract class AbstractGeolocationView extends View implements ISelection
          l.selectionChanged(e);
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
@@ -205,7 +249,7 @@ public abstract class AbstractGeolocationView extends View implements ISelection
       selectionChangeListeners.add(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
@@ -214,7 +258,7 @@ public abstract class AbstractGeolocationView extends View implements ISelection
       selectionChangeListeners.remove(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
     */
    @Override
@@ -223,7 +267,7 @@ public abstract class AbstractGeolocationView extends View implements ISelection
       return selection;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
     */
    @Override

@@ -21,10 +21,13 @@ package org.netxms.nxmc.modules.objects;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -61,6 +64,7 @@ public abstract class ObjectsPerspective extends Perspective
    private Composite headerArea;
    private Label objectName;
    private ToolBar objectToolBar;
+   private ToolBar objectMenuBar;
 
    /**
     * Create new object perspective
@@ -127,7 +131,7 @@ public abstract class ObjectsPerspective extends Perspective
    {
       headerArea = new Composite(parent, SWT.NONE);
       GridLayout layout = new GridLayout();
-      layout.numColumns = 3;
+      layout.numColumns = 5;
       headerArea.setLayout(layout);
 
       objectName = new Label(headerArea, SWT.LEFT);
@@ -135,10 +139,17 @@ public abstract class ObjectsPerspective extends Perspective
 
       Label separator = new Label(headerArea, SWT.SEPARATOR | SWT.VERTICAL);
       GridData gd = new GridData(SWT.CENTER, SWT.FILL, false, true);
-      gd.heightHint = 1;
+      gd.heightHint = 24;
       separator.setLayoutData(gd);
 
-      objectToolBar = new ToolBar(headerArea, SWT.FLAT | SWT.HORIZONTAL);
+      objectToolBar = new ToolBar(headerArea, SWT.FLAT | SWT.HORIZONTAL | SWT.RIGHT);
+
+      separator = new Label(headerArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData(SWT.CENTER, SWT.FILL, false, true);
+      gd.heightHint = 24;
+      separator.setLayoutData(gd);
+
+      objectMenuBar = new ToolBar(headerArea, SWT.FLAT | SWT.HORIZONTAL | SWT.RIGHT);
    }
 
    /**
@@ -153,6 +164,7 @@ public abstract class ObjectsPerspective extends Perspective
          AbstractObject object = (AbstractObject)selection.getFirstElement();
          objectName.setText(object.getObjectName());
          updateObjectToolBar(object);
+         updateObjectMenuBar(object);
       }
       else
       {
@@ -171,7 +183,7 @@ public abstract class ObjectsPerspective extends Perspective
       for(ToolItem item : objectToolBar.getItems())
          item.dispose();
 
-      addToolBarItem(i18n.tr("Properties"), SharedIcons.IMG_EDIT, new Runnable() {
+      addObjectToolBarItem(i18n.tr("Properties"), SharedIcons.IMG_EDIT, new Runnable() {
          @Override
          public void run()
          {
@@ -179,7 +191,7 @@ public abstract class ObjectsPerspective extends Perspective
          }
       });
 
-      addToolBarItem(i18n.tr("Delete"), SharedIcons.IMG_DELETE_OBJECT, new Runnable() {
+      addObjectToolBarItem(i18n.tr("Delete"), SharedIcons.IMG_DELETE_OBJECT, new Runnable() {
          @Override
          public void run()
          {
@@ -187,7 +199,14 @@ public abstract class ObjectsPerspective extends Perspective
       });
    }
 
-   private void addToolBarItem(String name, Image icon, final Runnable handler)
+   /**
+    * Add object toolbar item.
+    *
+    * @param name tooltip text
+    * @param icon icon
+    * @param handler selection handler
+    */
+   private void addObjectToolBarItem(String name, Image icon, final Runnable handler)
    {
       ToolItem item = new ToolItem(objectToolBar, SWT.PUSH);
       item.setImage(icon);
@@ -197,6 +216,45 @@ public abstract class ObjectsPerspective extends Perspective
          public void widgetSelected(SelectionEvent e)
          {
             handler.run();
+         }
+      });
+   }
+
+   /**
+    * Update object toolbar
+    *
+    * @param object selected object
+    */
+   private void updateObjectMenuBar(final AbstractObject object)
+   {
+      for(ToolItem item : objectMenuBar.getItems())
+         item.dispose();
+
+      addObjectMenu(i18n.tr("Tools"), ObjectToolsMenuFactory.createMenu(new StructuredSelection(object), null, objectToolBar));
+   }
+
+   /**
+    * Add drop-down menu for current object
+    *
+    * @param name menu name
+    * @param menu menu
+    */
+   private void addObjectMenu(String name, final Menu menu)
+   {
+      if ((menu == null) || (menu.getItemCount() == 0))
+         return;
+
+      ToolItem item = new ToolItem(objectMenuBar, SWT.PUSH);
+      item.setText(name + " \u25BE");
+      item.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            Rectangle rect = item.getBounds();
+            Point pt = new Point(rect.x, rect.y + rect.height);
+            pt = objectMenuBar.toDisplay(pt);
+            menu.setLocation(pt.x, pt.y);
+            menu.setVisible(true);
          }
       });
    }
