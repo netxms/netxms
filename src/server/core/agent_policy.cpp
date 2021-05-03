@@ -529,12 +529,12 @@ void FileDeliveryPolicy::validate()
       localFile.append(files.get(i)->guid.toString());
 
       // Check if the file exists
-      if (_taccess(localFile, F_OK ) != 0)
+      if (_taccess(localFile, 0) != 0)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::validate(): failed to find file %s"), files.get(i)->path);
-         TCHAR description[MAX_EVENT_MSG_LENGTH] = _T("Can not find policy file ");
-         _tcslcat(description, localFile, MAX_EVENT_MSG_LENGTH);
-         static const TCHAR *names[] = {_T("templateName"), _T("templateId"), _T("policyName"), _T("policyType"), _T("policyId"), _T("additionalInfo")};
+         TCHAR description[MAX_PATH] = _T("Missing policy file ");
+         _tcslcat(description, localFile, MAX_PATH);
+         static const TCHAR *names[] = { _T("templateName"), _T("templateId"), _T("policyName"), _T("policyType"), _T("policyId"), _T("additionalInfo") };
          PostSystemEventWithNames(EVENT_POLICY_VALIDATION_ERROR, g_dwMgmtNode, "sdssGs", names, GetObjectName(m_ownerId, _T("UNKNOWN")), m_ownerId, m_name, m_type, m_guid.getValue(), description);
       }
    }

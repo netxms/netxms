@@ -272,7 +272,7 @@ static void QueuePredictionEngineTraining(NetObj *object, void *arg)
 static void ValidatePolicies(NetObj *object, void *data)
 {
    if (object->getObjectClass() == OBJECT_TEMPLATE)
-      static_cast<Template*>(object)->callPolicyValidation();
+      static_cast<Template*>(object)->initiatePolicyValidation();
 }
 
 /**

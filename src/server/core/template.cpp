@@ -801,9 +801,9 @@ void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyIn
 }
 
 /**
- * Check if policies are valid
+ * Initiate validation of policies within this template
  */
-void Template::callPolicyValidation()
+void Template::initiatePolicyValidation()
 {
    lockProperties();
    for (int i = 0; i < m_policyList->size(); i++)
