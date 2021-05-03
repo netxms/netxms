@@ -1549,7 +1549,7 @@ public:
    void applyPolicyChanges();
    void forceApplyPolicyChanges();
    void checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyInfo *ap);
-   void callPolicyValidation();
+   void initiatePolicyValidation();
    void removeAllPolicies(Node *node);
 };
 
