@@ -1418,6 +1418,20 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   8) Old hardware ID (oldHardwareId)' CONCAT CRLF CONCAT
 		'   9) New hardware ID (newHardwareId)'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_POLICY_VALIDATION_ERROR, 'SYS_POLICY_VALIDATION_ERROR', '7a0c3a71-8125-4692-985a-a7e94fbee570',
+      EVENT_SEVERITY_WARNING, 1,
+      'Failed validation of %4 policy %3 in template %1 (%6)',
+      'Generated when agent policy within template fails validation.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Template name' CONCAT CRLF CONCAT
+      '   2) Template ID' CONCAT CRLF CONCAT
+      '   3) Policy name' CONCAT CRLF CONCAT
+      '   4) Policy type' CONCAT CRLF CONCAT
+      '   5) Policy ID' CONCAT CRLF CONCAT
+      '   6) Additional info'
+   );
 
 /*
 ** SNMP traps

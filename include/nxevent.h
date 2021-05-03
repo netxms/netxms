@@ -171,6 +171,7 @@
 #define EVENT_CLUSTER_AUTOADD                       114
 #define EVENT_CLUSTER_AUTOREMOVE                    115
 #define EVENT_TUNNEL_HOST_DATA_MISMATCH             116
+#define EVENT_POLICY_VALIDATION_ERROR               117
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

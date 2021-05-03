@@ -210,6 +210,14 @@ bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, char *content
 }
 
 /**
+ * Policy validation
+ */
+void GenericAgentPolicy::validate()
+{
+   return;
+}
+
+/**
  * Deploy policy to agent. Default implementation calls connector's deployPolicy() method
  */
 void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
@@ -480,6 +488,56 @@ bool FileDeliveryPolicy::deleteFromDatabase(DB_HANDLE hdb)
    }
 
    return GenericAgentPolicy::deleteFromDatabase(hdb);
+}
+
+/**
+ * Policy validation
+ */
+void FileDeliveryPolicy::validate()
+{
+   MutexLock(m_contentLock);
+   if (m_content == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::validate(): empty content"));
+      MutexUnlock(m_contentLock);
+      return;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("FileDeliveryPolicy::validate(): preparing file list"));
+   ObjectArray<FileInfo> files(64, 64, Ownership::True);
+   Config content;
+   content.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), nullptr, "FileDeliveryPolicy", false);
+   MutexUnlock(m_contentLock);
+
+   ObjectArray<ConfigEntry> *rootElements = content.getSubEntries(_T("/elements"), _T("*"));
+   if (rootElements != nullptr)
+   {
+      for(int i = 0; i < rootElements->size(); i++)
+      {
+         StringBuffer path;
+         BuildFileList(rootElements->get(i), &path, &files, false);
+      }
+      delete rootElements;
+   }
+
+   for(int i = 0; i < files.size(); i++)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::validate(): processing file path %s"), files.get(i)->path);
+
+      StringBuffer localFile = g_netxmsdDataDir;
+      localFile.append(DDIR_FILES FS_PATH_SEPARATOR _T("FileDelivery-"));
+      localFile.append(files.get(i)->guid.toString());
+
+      // Check if the file exists
+      if (_taccess(localFile, F_OK ) != 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::validate(): failed to find file %s"), files.get(i)->path);
+         TCHAR description[MAX_EVENT_MSG_LENGTH] = _T("Can not find policy file ");
+         _tcslcat(description, localFile, MAX_EVENT_MSG_LENGTH);
+         static const TCHAR *names[] = {_T("templateName"), _T("templateId"), _T("policyName"), _T("policyType"), _T("policyId"), _T("additionalInfo")};
+         PostSystemEventWithNames(EVENT_POLICY_VALIDATION_ERROR, g_dwMgmtNode, "sdssGs", names, GetObjectName(m_ownerId, _T("UNKNOWN")), m_ownerId, m_name, m_type, m_guid.getValue(), description);
+      }
+   }
 }
 
 /**

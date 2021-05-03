@@ -1463,6 +1463,7 @@ public:
    virtual json_t *toJson();
 
    virtual void deploy(shared_ptr<AgentPolicyDeploymentData> data);
+   virtual void validate();
 };
 
 /**
@@ -1479,6 +1480,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
    virtual void deploy(shared_ptr<AgentPolicyDeploymentData> data) override;
+   virtual void validate() override;
 };
 
 /**
@@ -1547,6 +1549,7 @@ public:
    void applyPolicyChanges();
    void forceApplyPolicyChanges();
    void checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyInfo *ap);
+   void callPolicyValidation();
    void removeAllPolicies(Node *node);
 };
 
