@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <agent_tunnel.h>
 #include <ethernet_ip.h>
 
 #define DEBUG_TAG _T("obj.poll.node")
@@ -280,17 +281,16 @@ static shared_ptr<Interface> GetOldNodeWithNewIP(const InetAddress& ipAddr, int3
 /**
  * Check if host at given IP address is reachable by NetXMS server
  */
-static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool fullCheck, SNMP_Transport **transport, shared_ptr<AgentConnection> *agentConn)
+static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool fullCheck, SNMP_Transport **transport, shared_ptr<AgentConnection> *preparedAgentConnection)
 {
 	bool reachable = false;
 
 	if (transport != nullptr)
 		*transport = nullptr;
-	if (agentConn != nullptr)
-		agentConn->reset();
+	if (preparedAgentConnection != nullptr)
+		preparedAgentConnection->reset();
 
 	uint32_t zoneProxy = 0;
-
 	if (IsZoningEnabled() && (zoneUIN != 0))
 	{
 		shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
@@ -337,20 +337,28 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
 		return true;
 
 	// *** NetXMS agent ***
-   shared_ptr<AgentConnectionEx> pAgentConn = AgentConnectionEx::create(0, ipAddr, AGENT_LISTEN_PORT, nullptr);
+   shared_ptr<AgentConnectionEx> agentConnection = AgentConnectionEx::create(0, ipAddr, AGENT_LISTEN_PORT, nullptr);
    shared_ptr<Node> proxyNode = shared_ptr<Node>();
 	if (zoneProxy != 0)
 	{
 		proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(zoneProxy));
       if (proxyNode != nullptr)
       {
-         pAgentConn->setProxy(proxyNode->getIpAddress(), proxyNode->getAgentPort(), proxyNode->getAgentSecret());
+         shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(zoneProxy);
+         if (tunnel != nullptr)
+         {
+            agentConnection->setProxy(tunnel, proxyNode->getAgentSecret());
+         }
+         else
+         {
+            agentConnection->setProxy(proxyNode->getIpAddress(), proxyNode->getAgentPort(), proxyNode->getAgentSecret());
+         }
       }
 	}
 
-	pAgentConn->setCommandTimeout(g_agentCommandTimeout);
+	agentConnection->setCommandTimeout(g_agentCommandTimeout);
    uint32_t rcc;
-   if (!pAgentConn->connect(g_pServerKey, &rcc))
+   if (!agentConnection->connect(g_pServerKey, &rcc))
    {
       // If there are authentication problem, try default shared secret
       if ((rcc == ERR_AUTH_REQUIRED) || (rcc == ERR_AUTH_FAILED))
@@ -376,8 +384,8 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
 
          for (int i = 0; (i < secrets.size()) && !IsShutdownInProgress(); i++)
          {
-            pAgentConn->setSharedSecret(secrets.get(i));
-            if (pAgentConn->connect(g_pServerKey, &rcc))
+            agentConnection->setSharedSecret(secrets.get(i));
+            if (agentConnection->connect(g_pServerKey, &rcc))
             {
                break;
             }
@@ -391,9 +399,16 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
    }
    if (rcc == ERR_SUCCESS)
    {
-		if (agentConn != nullptr)
-			*agentConn = pAgentConn;
+		if (preparedAgentConnection != nullptr)
+			*preparedAgentConnection = agentConnection;
 		reachable = true;
+   }
+   else
+   {
+      TCHAR ipAddrText[64];
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("HostIsReachable(%s): agent connection check failed with error %u (%s)%s%s"),
+               ipAddr.toString(ipAddrText), rcc, AgentErrorCodeToText(rcc), (proxyNode != nullptr) ? _T(", proxy node ") : _T(""),
+               (proxyNode != nullptr) ? proxyNode->getName() : _T(""));
    }
 
 	if (reachable && !fullCheck)

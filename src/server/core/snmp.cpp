@@ -255,7 +255,7 @@ SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipA
 
    for(int j = -1; (j < ports.size()) && !IsShutdownInProgress(); j++)
    {
-      UINT16 port;
+      uint16_t port;
       if (j == -1)
       {
          if (originalPort == 0)
