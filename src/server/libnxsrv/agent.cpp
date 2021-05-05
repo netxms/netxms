@@ -402,6 +402,18 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
             connection->processTcpProxyData(msg->getFieldAsUInt32(VID_CHANNEL_ID), nullptr, 0);
             delete msg;
             break;
+         case CMD_NOTIFY:
+            if (g_agentConnectionThreadPool != nullptr)
+            {
+               TCHAR key[64];
+               _sntprintf(key, 64, _T("Notify_%p"), this);
+               ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onNotifyCallback, msg);
+            }
+            else
+            {
+               delete msg;
+            }
+            break;
          default:
             if (connection->processCustomMessage(msg))
                delete msg;
@@ -1488,6 +1500,23 @@ void AgentConnection::onSnmpTrapCallback(NXCPMessage *msg)
  * actual SNMP trap processing. Default implementation do nothing.
  */
 void AgentConnection::onSnmpTrap(NXCPMessage *pMsg)
+{
+}
+
+/**
+ * Callback for handling agent notification messages on a separate thread
+ */
+void AgentConnection::onNotifyCallback(NXCPMessage *msg)
+{
+   onNotify(msg);
+   delete msg;
+}
+
+/**
+ * Notification message handler. Should be implemented in derived classes
+ * to implement actual processing. Default implementation does nothing.
+ */
+void AgentConnection::onNotify(NXCPMessage *msg)
 {
 }
 

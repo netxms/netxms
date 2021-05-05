@@ -536,6 +536,27 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
 }
 
 /**
+ * Handle agent notification message
+ */
+void AgentConnectionEx::onNotify(NXCPMessage *msg)
+{
+   TCHAR notificationCode[32];
+   msg->getFieldAsString(VID_NOTIFICATION_CODE, notificationCode, 32);
+
+   if (!_tcscmp(notificationCode, _T("AgentRestart")))
+   {
+      // Set restart grace timestamp
+      shared_ptr<Node> node;
+      if (m_nodeId != 0)
+         node = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
+      if (node == nullptr)
+         node = FindNodeByIP(0, getIpAddr());
+      if (node != nullptr)
+         node->setAgentRestartTime();
+   }
+}
+
+/**
  * Deploy policy to agent
  */
 uint32_t AgentConnectionEx::deployPolicy(NXCPMessage *msg)

@@ -146,6 +146,7 @@ protected:
    virtual void onFileMonitoringData(NXCPMessage *msg) override;
    virtual void onSnmpTrap(NXCPMessage *pMsg) override;
    virtual void onDisconnect() override;
+   virtual void onNotify(NXCPMessage *msg) override;
    virtual UINT32 processCollectedData(NXCPMessage *msg) override;
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response) override;
    virtual bool processCustomMessage(NXCPMessage *msg) override;
@@ -2084,6 +2085,8 @@ protected:
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   virtual bool isAgentRestarting();
+   virtual bool isProxyAgentRestarting();
 
    virtual StringMap *getInstanceList(DCObject *dco);
    void doInstanceDiscovery(UINT32 requestId);
@@ -2977,6 +2980,7 @@ protected:
    time_t m_agentUpTime;
    time_t m_lastAgentCommTime;
    time_t m_lastAgentConnectAttempt;
+   time_t m_agentRestartTime;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_hSmclpAccessMutex;
    MUTEX m_mutexRTAccess;
@@ -3045,6 +3049,8 @@ protected:
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual bool isAgentRestarting() override;
+   virtual bool isProxyAgentRestarting() override;
 
    void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
@@ -3142,6 +3148,8 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
    virtual bool lockForStatusPoll() override;
+   virtual bool lockForConfigurationPoll() override;
+
    bool lockForDiscoveryPoll();
    bool lockForRoutePoll();
    bool lockForTopologyPoll();
@@ -3425,11 +3433,15 @@ public:
 
    NetworkMapObjectList *buildInternalConnectionTopology();
    NetworkMapObjectList *buildInternalCommunicationTopology();
+
+   void setAgentRestartTime() { m_agentRestartTime = time(nullptr); }
+   time_t getAgentRestartTime() { return m_agentRestartTime; }
 };
 
 inline bool Node::lockForStatusPoll()
 {
    bool success = false;
+
    lockProperties();
    if (!m_isDeleted && !m_isDeleteInitiated)
    {
@@ -3443,9 +3455,35 @@ inline bool Node::lockForStatusPoll()
                (!(m_flags & DCF_DISABLE_STATUS_POLL)) &&
                (getMyCluster() == nullptr) &&
                (!(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING)) &&
-               (static_cast<UINT32>(time(nullptr) - m_statusPollState.getLastCompleted()) > g_statusPollingInterval))
+               (static_cast<UINT32>(time(nullptr) - m_statusPollState.getLastCompleted()) > g_statusPollingInterval) &&
+               (!isAgentRestarting()) && (!isProxyAgentRestarting()))
       {
          success = m_statusPollState.schedule();
+      }
+   }
+   unlockProperties();
+   return success;
+}
+
+inline bool Node::lockForConfigurationPoll()
+{
+   bool success = false;
+
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated)
+   {
+      if (m_runtimeFlags & ODF_FORCE_CONFIGURATION_POLL)
+      {
+         success = m_configurationPollState.schedule();
+         if (success)
+            m_runtimeFlags &= ~ODF_FORCE_CONFIGURATION_POLL;
+      }
+      else if ((m_status != STATUS_UNMANAGED) &&
+               (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
+               (static_cast<UINT32>(time(nullptr) - m_configurationPollState.getLastCompleted()) > g_configurationPollingInterval) &&
+               (!isAgentRestarting()) && (!isProxyAgentRestarting()))
+      {
+         success = m_configurationPollState.schedule();
       }
    }
    unlockProperties();
@@ -3461,7 +3499,8 @@ inline bool Node::lockForDiscoveryPoll()
        (m_status != STATUS_UNMANAGED) &&
        (!(m_flags & NF_DISABLE_DISCOVERY_POLL)) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<UINT32>(time(nullptr) - m_discoveryPollState.getLastCompleted()) > g_discoveryPollingInterval))
+       (static_cast<UINT32>(time(nullptr) - m_discoveryPollState.getLastCompleted()) > g_discoveryPollingInterval) &&
+       (!isAgentRestarting()) && (!isProxyAgentRestarting()))
    {
       success = m_discoveryPollState.schedule();
    }
@@ -3477,7 +3516,8 @@ inline bool Node::lockForRoutePoll()
        (m_status != STATUS_UNMANAGED) &&
        (!(m_flags & NF_DISABLE_ROUTE_POLL)) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<UINT32>(time(nullptr) - m_routingPollState.getLastCompleted()) > g_routingTableUpdateInterval))
+       (static_cast<UINT32>(time(nullptr) - m_routingPollState.getLastCompleted()) > g_routingTableUpdateInterval) &&
+       (!isAgentRestarting()) && (!isProxyAgentRestarting()))
    {
       success = m_routingPollState.schedule();
    }
@@ -3493,7 +3533,8 @@ inline bool Node::lockForTopologyPoll()
        (m_status != STATUS_UNMANAGED) &&
        (!(m_flags & NF_DISABLE_TOPOLOGY_POLL)) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<UINT32>(time(nullptr) - m_topologyPollState.getLastCompleted()) > g_topologyPollingInterval))
+       (static_cast<UINT32>(time(nullptr) - m_topologyPollState.getLastCompleted()) > g_topologyPollingInterval) &&
+       (!isAgentRestarting()) && (!isProxyAgentRestarting()))
    {
       success = m_topologyPollState.schedule();
    }
@@ -3504,12 +3545,14 @@ inline bool Node::lockForTopologyPoll()
 inline bool Node::lockForIcmpPoll()
 {
    bool success = false;
+
    lockProperties();
    if (!m_isDeleted && !m_isDeleteInitiated &&
        (m_status != STATUS_UNMANAGED) &&
        isIcmpStatCollectionEnabled() &&
        (!(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING)) &&
-       ((UINT32)(time(nullptr) - m_icmpPollState.getLastCompleted()) > g_icmpPollingInterval))
+       ((UINT32)(time(nullptr) - m_icmpPollState.getLastCompleted()) > g_icmpPollingInterval) &&
+       (!isProxyAgentRestarting()))
    {
       success = m_icmpPollState.schedule();
    }
