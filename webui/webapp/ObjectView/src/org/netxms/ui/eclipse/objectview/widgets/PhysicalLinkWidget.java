@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.objectview.widgets;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -52,6 +53,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.PhysicalLink;
 import org.netxms.client.SessionListener;
@@ -222,6 +224,29 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
       session.addListener(this);
       refresh();
    }
+   
+   /**
+    * Sync physical links interface objects
+    * 
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   private void syncAdditionalObjects() throws IOException, NXCException
+   {
+      List<Long> additionalSyncInterfaces = new ArrayList<Long>();
+      for(PhysicalLink link : linkList)
+      {
+         long id = link.getLeftObjectId();         
+         if (id != 0)
+            additionalSyncInterfaces.add(id);
+         id = link.getRightObjectId();         
+         if (id != 0)
+            additionalSyncInterfaces.add(id);
+      }
+
+      if (!additionalSyncInterfaces.isEmpty())
+         session.syncMissingObjects(additionalSyncInterfaces, true, NXCSession.OBJECT_SYNC_WAIT);
+   }
 
    /**
     * Refresh physical link list
@@ -240,6 +265,7 @@ public class PhysicalLinkWidget extends  Composite implements SessionListener
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {            
             linkList = session.getPhysicalLinks(objectId, patchPanelId);
+            syncAdditionalObjects();
             runInUIThread(new Runnable() {
                
                @Override
