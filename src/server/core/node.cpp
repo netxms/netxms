@@ -307,6 +307,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_cipState = 0;
    m_cipStatus = 0;
    m_cipVendorCode = 0;
+   m_agentRestartTime = 0;
 }
 
 /**
@@ -3867,6 +3868,45 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    {
       markAsModified(modified);
    }
+}
+
+/**
+ * Check if agent can still be in process of restarting
+ */
+bool Node::isAgentRestarting()
+{
+   time_t restartWaitTime = static_cast<time_t>(ConfigReadULong(_T("Agent.RestartWaitTime"), 0));
+   time_t now = time(nullptr);
+
+   return ((m_agentRestartTime + restartWaitTime) >= now);
+}
+
+/**
+ * Check if a proxy node with the specified ID counts as being in process of restarting
+ */
+static inline bool checkProxyRestarting(uint32_t proxyId, time_t agentRestartGrace, time_t now)
+{
+   if (proxyId != 0)
+   {
+      shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
+      return ((proxyNode != nullptr) && ((proxyNode->getAgentRestartTime() + agentRestartGrace) >= now));
+   }
+
+   return false;
+}
+
+/**
+ * Check if any of the agent's proxies can still be in process of restarting
+ */
+bool Node::isProxyAgentRestarting()
+{
+   time_t restartWaitTime = static_cast<time_t>(ConfigReadULong(_T("Agent.RestartWaitTime"), 0));
+   time_t now = time(nullptr);
+
+   return (checkProxyRestarting(getEffectiveAgentProxy(), restartWaitTime, now) ||
+           checkProxyRestarting(getEffectiveSnmpProxy(), restartWaitTime, now) ||
+           checkProxyRestarting(getEffectiveEtherNetIPProxy(), restartWaitTime, now) ||
+           checkProxyRestarting(getEffectiveIcmpProxy(), restartWaitTime, now));
 }
 
 /**

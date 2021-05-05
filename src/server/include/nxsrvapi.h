@@ -881,6 +881,7 @@ private:
    void onTrapCallback(NXCPMessage *msg);
    void onSyslogMessageCallback(NXCPMessage *msg);
    void onWindowsEventCallback(NXCPMessage *msg);
+   void onNotifyCallback(NXCPMessage *msg);
    void postMessageCallback(NXCPMessage *msg);
    void postRawMessageCallback(NXCP_MESSAGE *msg);
    void getSshKeysCallback(NXCPMessage *msg);
@@ -893,6 +894,7 @@ protected:
    virtual void onDataPush(NXCPMessage *msg);
    virtual void onFileMonitoringData(NXCPMessage *msg);
    virtual void onSnmpTrap(NXCPMessage *pMsg);
+   virtual void onNotify(NXCPMessage *msg);
    virtual void onFileDownload(bool success);
    virtual void onDisconnect();
    virtual UINT32 processCollectedData(NXCPMessage *msg);

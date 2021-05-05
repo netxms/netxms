@@ -24,11 +24,29 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 38.13 to 40.0
+ * Upgrade from 38.14 to 40.0
+ */
+static bool H_UpgradeFromV14()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 38.13 to 38.14
  */
 static bool H_UpgradeFromV13()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(CreateConfigParam(_T("Agent.RestartWaitTime"),
+         _T("0"),
+         _T("Period of time after agent restart for which agent will not be considered unreachable"),
+         nullptr,
+         'I',
+         true,
+         false,
+         false,
+         false));
+   CHK_EXEC(SetMinorSchemaVersion(14));
    return true;
 }
 
@@ -291,7 +309,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 13, 40, 0,  H_UpgradeFromV13 },
+   { 14, 40, 0,  H_UpgradeFromV14 },
+   { 13, 38, 14, H_UpgradeFromV13 },
    { 12, 38, 13, H_UpgradeFromV12 },
    { 11, 38, 12, H_UpgradeFromV11 },
    { 10, 38, 11, H_UpgradeFromV10 },
