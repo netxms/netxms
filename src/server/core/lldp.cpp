@@ -192,16 +192,16 @@ static uint32_t LLDPRemoteTableHandler(SNMP_Variable *var, SNMP_Transport *trans
 /**
  * Read LLDP remote device table
  */
-static unique_ptr<StringObjectMap<SNMP_Variable>> ReadLLDPRemoteTable(Node *node)
+static StringObjectMap<SNMP_Variable> *ReadLLDPRemoteTable(Node *node)
 {
    // Entire table should be cached before processing because some devices (D-Link for example)
    // do not allow GET requests for table elements
-   unique_ptr<StringObjectMap<SNMP_Variable>> connections;
+   StringObjectMap<SNMP_Variable> *connections = nullptr;
    SNMP_Transport *snmp = node->createSnmpTransport();
    if (snmp != nullptr)
    {
-      connections = make_unique<StringObjectMap<SNMP_Variable>>(Ownership::True);
-      SnmpWalk(snmp, _T(".1.0.8802.1.1.2.1.4.1.1"), LLDPRemoteTableHandler, connections.get(), false, false);
+      connections = new StringObjectMap<SNMP_Variable>(Ownership::True);
+      SnmpWalk(snmp, _T(".1.0.8802.1.1.2.1.4.1.1"), LLDPRemoteTableHandler, connections, false, false);
       if (connections->size() > 0)
       {
          nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("%d entries in LLDP connection database for node %s [%u]"), connections->size(), node->getName(), node->getId());
@@ -209,7 +209,7 @@ static unique_ptr<StringObjectMap<SNMP_Variable>> ReadLLDPRemoteTable(Node *node
       else
       {
          nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("LLDP connection database empty for node %s [%d]"), node->getName(), node->getId());
-         connections.reset();
+         delete_and_null(connections);
       }
       delete snmp;
    }
@@ -261,7 +261,7 @@ static shared_ptr<Node> FindRemoteNode(Node *node, const SNMP_Variable *lldpRemC
  */
 static uint32_t FindLocalInterfaceOnRemoteNode(Node *thisNode, Node *remoteNode)
 {
-   unique_ptr<StringObjectMap<SNMP_Variable>> connections = ReadLLDPRemoteTable(remoteNode);
+   StringObjectMap<SNMP_Variable> *connections = ReadLLDPRemoteTable(remoteNode);
    if (connections == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("FindLocalInterfaceOnRemoteNode(%s [%u]): cannot get LLDP remote table from node %s [%d]"),
@@ -337,6 +337,7 @@ static uint32_t FindLocalInterfaceOnRemoteNode(Node *thisNode, Node *remoteNode)
       }
    }
    delete oids;
+   delete connections;
    return localIfIndex;
 }
 
@@ -468,7 +469,7 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 
 	nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("Collecting LLDP topology information for node %s [%d]"), node->getName(), node->getId());
 
-	unique_ptr<StringObjectMap<SNMP_Variable>> connections = ReadLLDPRemoteTable(node);
+   StringObjectMap<SNMP_Variable> *connections = ReadLLDPRemoteTable(node);
 	if (connections != nullptr)
 	{
       StringList *oids = connections->keys();
@@ -481,6 +482,7 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
          ProcessLLDPConnectionEntry(node, connections.get(), var, nbs);
       }
       delete oids;
+      delete connections;
 	}
 
 	nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("Finished collecting LLDP topology information for node %s [%d]"), node->getName(), node->getId());
