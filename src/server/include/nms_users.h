@@ -310,27 +310,6 @@ struct PasswordHash
    BYTE salt[PASSWORD_SALT_LENGTH];
 };
 
-/**
- * User 2FA method binding information
- */
-class User2FABindingInfo
-{
-protected:
-   TCHAR m_methodName[MAX_OBJECT_NAME];
-   char* m_configuration;
-
-public:
-   User2FABindingInfo(const TCHAR* methodName, char* configuration) : m_configuration(configuration)
-   {
-      _tcscpy(m_methodName, methodName);
-   };
-
-   ~User2FABindingInfo() { MemFree(m_configuration); };
-
-   const TCHAR* getMethodName() { return m_methodName; };
-   const char* getConfiguration() { return m_configuration; };
-};
-
 #ifdef _WIN32
 template class NXCORE_EXPORTABLE ObjectMemoryPool<shared_ptr<Config>>;
 template class NXCORE_EXPORTABLE StringObjectMap<shared_ptr<Config>>;

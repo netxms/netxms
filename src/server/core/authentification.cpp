@@ -212,7 +212,7 @@ bool MessageAuthMethod::validateResponse(AuthentificationToken *token, const TCH
 /**
  * Create new authentification driver based on configuration data
  */
-AuthentificationMethod* CreateAuthentificationMethod(const TCHAR* name, const TCHAR* methodType, const TCHAR* description, const char* configData)
+static AuthentificationMethod* CreateAuthentificationMethod(const TCHAR* name, const TCHAR* methodType, const TCHAR* description, const char* configData)
 {
    AuthentificationMethod* method = nullptr;
    Config config;
@@ -351,7 +351,7 @@ void LoadAuthentificationMethods()
 /**
  * Prepare 2FA challenge for user using selected method
  */
-AuthentificationToken* Prepare2FAChallenge( const TCHAR* methodName, uint32_t userId)
+AuthentificationToken* Prepare2FAChallenge(const TCHAR* methodName, uint32_t userId)
 {
    AuthentificationToken* token = nullptr;
    s_authMethodListLock.lock();
@@ -399,6 +399,11 @@ void Get2FAMethodInfo(const TCHAR* methodInfo, NXCPMessage& msg)
          DBGetField(result, 0, 1, driver, MAX_OBJECT_NAME);
          DBGetField(result, 0, 2, description, MAX_2FA_DESCRIPTION);
          char* configuration = DBGetFieldUTF8(result, 0, 3, nullptr, 0);
+         msg.setField(VID_2FA_METHOD + 0, name);
+         msg.setField(VID_2FA_METHOD + 1, driver);
+         msg.setField(VID_2FA_METHOD + 2, description);
+         msg.setFieldFromUtf8String(VID_2FA_METHOD + 3, configuration);
+         MemFree(configuration);
       }
       DBFreeResult(result);
    }

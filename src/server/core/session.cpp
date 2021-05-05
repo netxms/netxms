@@ -15579,7 +15579,7 @@ void ClientSession::prepare2FAChallenge(NXCPMessage *request)
    if (method != nullptr)
    {
       delete_and_null(m_token);
-      m_token = Prepare2FAChallenge( method, m_dwUserId);
+      m_token = Prepare2FAChallenge(method, m_dwUserId);
       if (m_token != nullptr)
       {
          msg.setField(VID_CHALLENGE, m_token->getChallenge());
@@ -15709,10 +15709,7 @@ void ClientSession::delete2FAMethod(NXCPMessage *request)
 void ClientSession::getUser2FABindings(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   TCHAR userIdStr[MAX_USER_NAME];
-   request->getFieldAsString(VID_USER_ID, userIdStr, MAX_USER_NAME);
-   int userId = _tcstol(userIdStr, nullptr, 10);
-
+   uint32_t userId = request->getFieldAsUInt32(VID_USER_ID);
    if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       GetUser2FABindingNames(userId, &msg);
@@ -15732,9 +15729,7 @@ void ClientSession::getUser2FABindings(NXCPMessage *request)
 void ClientSession::getUser2FABindingInfo(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   TCHAR userIdStr[MAX_USER_NAME];
-   request->getFieldAsString(VID_USER_ID, userIdStr, MAX_USER_NAME);
-   int userId = _tcstol(userIdStr, nullptr, 10);
+   uint32_t userId = request->getFieldAsUInt32(VID_USER_ID);
    if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       TCHAR methodName[MAX_OBJECT_NAME];
@@ -15765,17 +15760,18 @@ void ClientSession::getUser2FABindingInfo(NXCPMessage *request)
 void ClientSession::modifyUser2FABinding(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   if (m_systemAccessRights & SYSTEM_ACCESS_NONE)
+   uint32_t userId = request->getFieldAsUInt32(VID_USER_ID);
+   if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       TCHAR methodName[MAX_OBJECT_NAME];
       request->getFieldAsString(VID_2FA_RESPONSE, methodName, MAX_OBJECT_NAME);
       char* configuration = request->getFieldAsUtf8String(VID_2FA_RESPONSE + 1);
-      msg.setField(VID_RCC, ModifyUser2FABinding(m_dwUserId, methodName, configuration));
+      msg.setField(VID_RCC, ModifyUser2FABinding(userId, methodName, configuration));
       MemFree(configuration);
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on modify 2FA method binding"));
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on modify 2FA method binding"));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);
@@ -15787,15 +15783,16 @@ void ClientSession::modifyUser2FABinding(NXCPMessage *request)
 void ClientSession::deleteUser2FABinding(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   if (m_systemAccessRights & SYSTEM_ACCESS_NONE)
+   uint32_t userId = request->getFieldAsUInt32(VID_USER_ID);
+   if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       TCHAR name[MAX_OBJECT_NAME];
       request->getFieldAsString(VID_2FA_RESPONSE, name, MAX_OBJECT_NAME);
-      msg.setField(VID_RCC, DeleteUser2FABinding(m_dwUserId, name));
+      msg.setField(VID_RCC, DeleteUser2FABinding(userId, name));
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting 2FA method"));
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on deleting 2FA method"));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);

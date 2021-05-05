@@ -898,11 +898,6 @@ private:
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
    void sendObjectUpdates();
 
-   void loginFinalization(NXCPMessage& msg, NXCPMessage *request);
-   uint32_t AuthenticateUserByPassword(NXCPMessage *pRequest, LoginInfo& loginInfo);
-   uint32_t AuthenticateUserByCertificate(NXCPMessage *pRequest, LoginInfo& loginInfo);
-   uint32_t AuthenticateUserBySSOTicket(NXCPMessage *pRequest, LoginInfo& loginInfo);
-
    void finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId);
 
 public:
@@ -983,9 +978,6 @@ public:
    void processTcpProxyAgentDisconnect(AgentConnectionEx *conn);
 
    void unregisterServerCommand(pid_t taskId);
-
-   AuthentificationToken* get2FAToken() { return m_token; };
-   void set2FAToken(AuthentificationToken* token) { m_token = token; };
 };
 
 /**
