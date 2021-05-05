@@ -30,7 +30,7 @@ static VolatileCounter s_requestId = 0;
 /**
  * Generate new request ID
  */
-UINT32 LIBNXSNMP_EXPORTABLE SnmpNewRequestId()
+uint32_t LIBNXSNMP_EXPORTABLE SnmpNewRequestId()
 {
    return (UINT32)InterlockedIncrement(&s_requestId) & 0x7FFFFFFF;
 }
@@ -38,12 +38,12 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpNewRequestId()
 /**
  * Default timeout for utility finctions
  */
-static UINT32 s_snmpTimeout = 1500;
+static uint32_t s_snmpTimeout = 1500;
 
 /**
  * Set SNMP timeout
  */
-void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(UINT32 timeout)
+void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(uint32_t timeout)
 {
    s_snmpTimeout = timeout;
 }
@@ -51,7 +51,7 @@ void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(UINT32 timeout)
 /**
  * Get SNMP timeout
  */
-UINT32 LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout()
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout()
 {
    return s_snmpTimeout;
 }
@@ -62,21 +62,20 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout()
  * binary representation from oidBinary and dwOidLen
  * Note: buffer size is in bytes
  */
-UINT32 LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport,
-                                    const TCHAR *szOidStr, const UINT32 *oidBinary, size_t dwOidLen, void *pValue,
-                                    size_t bufferSize, UINT32 dwFlags)
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport,const TCHAR *oidStr,
+         const uint32_t *oidBinary, size_t oidLen, void *value, size_t bufferSize, uint32_t flags)
 {
    if (version != transport->getSnmpVersion())
    {
       SNMP_Version v = transport->getSnmpVersion();
       transport->setSnmpVersion(version);
-      uint32_t rc = SnmpGetEx(transport, szOidStr, oidBinary, dwOidLen, pValue, bufferSize, dwFlags, NULL);
+      uint32_t rc = SnmpGetEx(transport, oidStr, oidBinary, oidLen, value, bufferSize, flags, nullptr);
       transport->setSnmpVersion(v);
       return rc;
    }
    else
    {
-      return SnmpGetEx(transport, szOidStr, oidBinary, dwOidLen, pValue, bufferSize, dwFlags, NULL);
+      return SnmpGetEx(transport, oidStr, oidBinary, oidLen, value, bufferSize, flags, nullptr);
    }
 }
 
@@ -87,80 +86,80 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transp
  * If SG_RAW_RESULT flag given and dataLen is not NULL actual data length will be stored there
  * Note: buffer size is in bytes
  */
-UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
-                                      const TCHAR *szOidStr, const UINT32 *oidBinary, size_t dwOidLen, void *pValue,
-                                      size_t bufferSize, UINT32 dwFlags, UINT32 *dataLen)
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR *oidStr,
+         const uint32_t *oidBinary, size_t dwOidLen, void *value, size_t bufferSize, uint32_t flags, uint32_t *dataLen)
 {
-   SNMP_PDU *pRqPDU, *pRespPDU;
-   UINT32 pdwVarName[MAX_OID_LEN], dwResult = SNMP_ERR_SUCCESS;
-   size_t nameLength;
-
-	if (pTransport == NULL)
+	if (pTransport == nullptr)
 		return SNMP_ERR_COMM;
 
-   // Create PDU and send request
-   pRqPDU = new SNMP_PDU((dwFlags & SG_GET_NEXT_REQUEST) ? SNMP_GET_NEXT_REQUEST : SNMP_GET_REQUEST, (UINT32)InterlockedIncrement(&s_requestId) & 0x7FFFFFFF, pTransport->getSnmpVersion());
-   if (szOidStr != NULL)
+	uint32_t result = SNMP_ERR_SUCCESS;
+
+   // Parse text OID
+   uint32_t varName[MAX_OID_LEN];
+   size_t nameLength;
+   if (oidStr != nullptr)
    {
-      nameLength = SNMPParseOID(szOidStr, pdwVarName, MAX_OID_LEN);
+      nameLength = SNMPParseOID(oidStr, varName, MAX_OID_LEN);
       if (nameLength == 0)
       {
          InetAddress a = pTransport->getPeerIpAddress();
-         if (dwFlags & SG_VERBOSE)
+         if (flags & SG_VERBOSE)
          {
             TCHAR temp[64];
             nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 5,
-                     _T("Error parsing SNMP OID \"%s\" in SnmpGetEx (destination IP address %s)"), szOidStr, a.toString(temp));
+                     _T("Error parsing SNMP OID \"%s\" in SnmpGetEx (destination IP address %s)"), oidStr, a.toString(temp));
          }
-         dwResult = SNMP_ERR_BAD_OID;
+         result = SNMP_ERR_BAD_OID;
       }
    }
    else
    {
-      memcpy(pdwVarName, oidBinary, dwOidLen * sizeof(UINT32));
+      memcpy(varName, oidBinary, dwOidLen * sizeof(uint32_t));
       nameLength = dwOidLen;
    }
 
-   if (dwResult == SNMP_ERR_SUCCESS)   // Still no errors
+   if (result == SNMP_ERR_SUCCESS)   // Still no errors
    {
-      pRqPDU->bindVariable(new SNMP_Variable(pdwVarName, nameLength));
-      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, s_snmpTimeout, 3);
+      SNMP_PDU requestPDU((flags & SG_GET_NEXT_REQUEST) ? SNMP_GET_NEXT_REQUEST : SNMP_GET_REQUEST, (uint32_t)InterlockedIncrement(&s_requestId) & 0x7FFFFFFF, pTransport->getSnmpVersion());
+      requestPDU.bindVariable(new SNMP_Variable(varName, nameLength));
+      SNMP_PDU *responsePDU;
+      result = pTransport->doRequest(&requestPDU, &responsePDU, s_snmpTimeout, 3);
 
       // Analyze response
-      if (dwResult == SNMP_ERR_SUCCESS)
+      if (result == SNMP_ERR_SUCCESS)
       {
-         if ((pRespPDU->getNumVariables() > 0) &&
-             (pRespPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+         if ((responsePDU->getNumVariables() > 0) &&
+             (responsePDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
          {
-            SNMP_Variable *pVar = pRespPDU->getVariable(0);
+            SNMP_Variable *pVar = responsePDU->getVariable(0);
 
             if ((pVar->getType() != ASN_NO_SUCH_OBJECT) &&
                 (pVar->getType() != ASN_NO_SUCH_INSTANCE) &&
                 (pVar->getType() != ASN_END_OF_MIBVIEW) &&
-                (!(dwFlags & SG_GET_NEXT_REQUEST) || (pVar->getName().compare(pdwVarName, nameLength) == OID_LONGER)))
+                (!(flags & SG_GET_NEXT_REQUEST) || (pVar->getName().compare(varName, nameLength) == OID_LONGER)))
             {
-               if (dwFlags & SG_RAW_RESULT)
+               if (flags & SG_RAW_RESULT)
                {
-						pVar->getRawValue((BYTE *)pValue, bufferSize);
+						pVar->getRawValue((BYTE *)value, bufferSize);
                   if (dataLen != NULL)
                      *dataLen = (UINT32)pVar->getValueLength();
                }
-               else if (dwFlags & SG_HSTRING_RESULT)
+               else if (flags & SG_HSTRING_RESULT)
                {
 						size_t rawLen = (bufferSize - sizeof(TCHAR)) / 2 / sizeof(TCHAR);
 						BYTE *raw = static_cast<BYTE*>(SNMP_MemAlloc(rawLen));
 						rawLen = (int)pVar->getRawValue(raw, rawLen);
-						BinToStr(raw, rawLen, (TCHAR *)pValue);
+						BinToStr(raw, rawLen, (TCHAR *)value);
 						SNMP_MemFree(raw, rawLen);
                }
-               else if (dwFlags & SG_STRING_RESULT)
+               else if (flags & SG_STRING_RESULT)
                {
-                  pVar->getValueAsString((TCHAR *)pValue, bufferSize / sizeof(TCHAR));
+                  pVar->getValueAsString((TCHAR *)value, bufferSize / sizeof(TCHAR));
                }
-               else if (dwFlags & SG_PSTRING_RESULT)
+               else if (flags & SG_PSTRING_RESULT)
                {
 						bool convert = true;
-                  pVar->getValueAsPrintableString((TCHAR *)pValue, bufferSize / sizeof(TCHAR), &convert);
+                  pVar->getValueAsPrintableString((TCHAR *)value, bufferSize / sizeof(TCHAR), &convert);
                }
                else
                {
@@ -168,91 +167,89 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                   {
                      case ASN_INTEGER:
                         if (bufferSize >= sizeof(int32_t))
-                           *((int32_t *)pValue) = pVar->getValueAsInt();
+                           *((int32_t *)value) = pVar->getValueAsInt();
                         break;
                      case ASN_COUNTER32:
                      case ASN_GAUGE32:
                      case ASN_TIMETICKS:
                      case ASN_UINTEGER32:
                         if (bufferSize >= sizeof(uint32_t))
-                           *((UINT32 *)pValue) = pVar->getValueAsUInt();
+                           *((UINT32 *)value) = pVar->getValueAsUInt();
                         break;
                      case ASN_INTEGER64:
                         if (bufferSize >= sizeof(int64_t))
-                           *((int64_t *)pValue) = pVar->getValueAsInt64();
+                           *((int64_t *)value) = pVar->getValueAsInt64();
                         else if (bufferSize >= sizeof(int32_t))
-                           *((int32_t *)pValue) = pVar->getValueAsInt();
+                           *((int32_t *)value) = pVar->getValueAsInt();
                         break;
                      case ASN_COUNTER64:
                      case ASN_UINTEGER64:
                         if (bufferSize >= sizeof(uint64_t))
-                           *((uint64_t *)pValue) = pVar->getValueAsUInt64();
+                           *((uint64_t *)value) = pVar->getValueAsUInt64();
                         else if (bufferSize >= sizeof(uint32_t))
-                           *((uint32_t *)pValue) = pVar->getValueAsUInt();
+                           *((uint32_t *)value) = pVar->getValueAsUInt();
                         break;
                      case ASN_FLOAT:
                      case ASN_DOUBLE:
                         if (bufferSize >= sizeof(double))
-                           *((double *)pValue) = pVar->getValueAsDouble();
+                           *((double *)value) = pVar->getValueAsDouble();
                         else if (bufferSize >= sizeof(float))
-                           *((float *)pValue) = static_cast<float>(pVar->getValueAsDouble());
+                           *((float *)value) = static_cast<float>(pVar->getValueAsDouble());
                         break;
                      case ASN_IP_ADDR:
                         if (bufferSize >= sizeof(uint32_t))
-                           *((uint32_t *)pValue) = ntohl(pVar->getValueAsUInt());
+                           *((uint32_t *)value) = ntohl(pVar->getValueAsUInt());
                         break;
                      case ASN_OCTET_STRING:
-                        pVar->getValueAsString((TCHAR *)pValue, bufferSize / sizeof(TCHAR));
+                        pVar->getValueAsString((TCHAR *)value, bufferSize / sizeof(TCHAR));
                         break;
                      case ASN_OBJECT_ID:
-                        pVar->getValueAsString((TCHAR *)pValue, bufferSize / sizeof(TCHAR));
+                        pVar->getValueAsString((TCHAR *)value, bufferSize / sizeof(TCHAR));
                         break;
                      case ASN_NULL:
-                        dwResult = SNMP_ERR_NO_OBJECT;
+                        result = SNMP_ERR_NO_OBJECT;
                         break;
                      default:
                         nxlog_write_tag(NXLOG_WARNING, LIBNXSNMP_DEBUG_TAG, _T("Unknown SNMP varbind type %u in GET response PDU"), pVar->getType());
-                        dwResult = SNMP_ERR_BAD_TYPE;
+                        result = SNMP_ERR_BAD_TYPE;
                         break;
                   }
                }
             }
             else
             {
-               dwResult = SNMP_ERR_NO_OBJECT;
+               result = SNMP_ERR_NO_OBJECT;
             }
          }
          else
          {
-            if (pRespPDU->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME)
-               dwResult = SNMP_ERR_NO_OBJECT;
+            if (responsePDU->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME)
+               result = SNMP_ERR_NO_OBJECT;
             else
-               dwResult = SNMP_ERR_AGENT;
+               result = SNMP_ERR_AGENT;
          }
-         delete pRespPDU;
+         delete responsePDU;
       }
       else
       {
-         if (dwFlags & SG_VERBOSE)
-            nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 7, _T("Error %u processing SNMP GET request"), dwResult);
+         if (flags & SG_VERBOSE)
+            nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 7, _T("Error %u processing SNMP GET request"), result);
       }
    }
 
-   delete pRqPDU;
-   return dwResult;
+   return result;
 }
 
 /**
  * Enumerate multiple values by walking through MIB, starting at given root
  */
-UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid,
-                                     UINT32 (* handler)(SNMP_Variable *, SNMP_Transport *, void *),
-                                     void *userArg, bool logErrors, bool failOnShutdown)
+uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid,
+         uint32_t (* handler)(SNMP_Variable *, SNMP_Transport *, void *), void *context, bool logErrors, bool failOnShutdown)
 {
-   if (transport == NULL)
+   if (transport == nullptr)
       return SNMP_ERR_COMM;
 
-   UINT32 rootOidBin[MAX_OID_LEN];
+   uint32_t rootOidBin[MAX_OID_LEN];
    size_t rootOidLen = SNMPParseOID(rootOid, rootOidBin, MAX_OID_LEN);
    if (rootOidLen == 0)
    {
@@ -266,28 +263,27 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *roo
       return SNMP_ERR_BAD_OID;
    }
 
-   return SnmpWalk(transport, rootOidBin, rootOidLen, handler, userArg, logErrors, failOnShutdown);
+   return SnmpWalk(transport, rootOidBin, rootOidLen, handler, context, logErrors, failOnShutdown);
 }
 
 /**
  * Enumerate multiple values by walking through MIB, starting at given root
  */
-UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen,
-                                     UINT32 (* handler)(SNMP_Variable *, SNMP_Transport *, void *),
-                                     void *userArg, bool logErrors, bool failOnShutdown)
+uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen,
+         uint32_t (* handler)(SNMP_Variable *, SNMP_Transport *, void *), void *context, bool logErrors, bool failOnShutdown)
 {
-	if (transport == NULL)
+	if (transport == nullptr)
 		return SNMP_ERR_COMM;
 
 	// First OID to request
-   UINT32 pdwName[MAX_OID_LEN];
+	uint32_t pdwName[MAX_OID_LEN];
    memcpy(pdwName, rootOid, rootOidLen * sizeof(UINT32));
    size_t nameLength = rootOidLen;
 
    // Walk the MIB
-   UINT32 dwResult;
+   uint32_t dwResult;
    BOOL bRunning = TRUE;
-   UINT32 firstObjectName[MAX_OID_LEN];
+   uint32_t firstObjectName[MAX_OID_LEN];
    size_t firstObjectNameLen = 0;
    while(bRunning)
    {
@@ -335,7 +331,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *ro
 					}
 
                // Call user's callback function for processing
-               dwResult = handler(pVar, transport, userArg);
+               dwResult = handler(pVar, transport, context);
                if (dwResult != SNMP_ERR_SUCCESS)
                {
                   bRunning = FALSE;
@@ -369,7 +365,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *ro
 /**
  * Handler for counting walk
  */
-static UINT32 WalkCountHandler(SNMP_Variable *var, SNMP_Transport *transport, void *context)
+static uint32_t WalkCountHandler(SNMP_Variable *var, SNMP_Transport *transport, void *context)
 {
    (*static_cast<int*>(context))++;
    return SNMP_ERR_SUCCESS;
@@ -378,7 +374,7 @@ static UINT32 WalkCountHandler(SNMP_Variable *var, SNMP_Transport *transport, vo
 /**
  * Count number of objects under given root. Returns -1 on error.
  */
-int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen)
+int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen)
 {
    int count = 0;
    if (SnmpWalk(transport, rootOid, rootOidLen, WalkCountHandler, &count) != SNMP_ERR_SUCCESS)

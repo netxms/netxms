@@ -863,30 +863,26 @@ TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(uint32_t type, TCHAR *buffer, size_
 const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(uint32_t errorCode);
 const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetProtocolErrorText(SNMP_ErrorCode errorCode);
 
-UINT32 LIBNXSNMP_EXPORTABLE SnmpNewRequestId();
-void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(UINT32 timeout);
-UINT32 LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout();
-UINT32 LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport,
-                                    const TCHAR *szOidStr, const UINT32 *oidBinary, size_t oidLen, void *pValue,
-                                    size_t bufferSize, UINT32 dwFlags);
-UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
-                                      const TCHAR *szOidStr, const UINT32 *oidBinary, size_t oidLen, void *pValue,
-                                      size_t bufferSize, UINT32 dwFlags, UINT32 *dataLen);
-UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid,
-						                   UINT32 (* handler)(SNMP_Variable *, SNMP_Transport *, void *),
-                                     void *userArg, bool logErrors = false, bool failOnShutdown = false);
-UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen,
-                                     UINT32 (* handler)(SNMP_Variable*, SNMP_Transport*, void*),
-                                     void *userArg, bool logErrors = false, bool failOnShutdown = false);
-int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpNewRequestId();
+void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(uint32_t timeout);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout();
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport, const TCHAR *oidStr,
+         const uint32_t *oidBinary, size_t oidLen, void *value, size_t bufferSize, uint32_t dwFlags);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR *oidStr,
+         const UINT32 *oidBinary, size_t oidLen, void *value, size_t bufferSize, uint32_t flags, uint32_t *dataLen);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid,
+         uint32_t (* handler)(SNMP_Variable *, SNMP_Transport *, void *), void *context, bool logErrors = false, bool failOnShutdown = false);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen,
+         uint32_t (* handler)(SNMP_Variable*, SNMP_Transport*, void*), void *context, bool logErrors = false, bool failOnShutdown = false);
+int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen);
 int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const TCHAR *rootOid);
 
 /**
  * Wrapper function for calling SnmpWalk with specific context type
  */
-template <typename C> uint32_t SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid, UINT32 (*callback)(SNMP_Variable*, SNMP_Transport*, C*), C *context, bool logErrors = false, bool failOnShutdown = false)
+template <typename C> uint32_t SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid, uint32_t (*callback)(SNMP_Variable*, SNMP_Transport*, C*), C *context, bool logErrors = false, bool failOnShutdown = false)
 {
-   return SnmpWalk(transport, rootOid, reinterpret_cast<UINT32 (*)(SNMP_Variable*, SNMP_Transport*, void*)>(callback), context, logErrors, failOnShutdown);
+   return SnmpWalk(transport, rootOid, reinterpret_cast<uint32_t (*)(SNMP_Variable*, SNMP_Transport*, void*)>(callback), context, logErrors, failOnShutdown);
 }
 
 /**
