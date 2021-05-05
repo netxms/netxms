@@ -299,7 +299,7 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddNDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddCDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddSTPNeighbors(Node *node, LinkLayerNeighbors *nbs);
-void BuildLldpId(int type, const BYTE *data, int length, TCHAR *id, int idLen);
+void BuildLldpId(int type, const BYTE *data, size_t length, TCHAR *id, int idLen);
 
 void BridgeMapPorts(SNMP_Transport *transport, InterfaceList *ifList);
 
