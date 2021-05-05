@@ -298,6 +298,8 @@ bool LoadUsers()
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("User group \"Everyone\" was created because it was not presented in database"));
    }
 
+
+
    DBConnectionPoolReleaseConnection(hdb);
    if (cachedb != nullptr)
       DBCloseInMemoryDatabase(cachedb);
@@ -1556,6 +1558,86 @@ ObjectArray<UserDatabaseObject> *FindUserDBObjects(const IntegerArray<uint32_t>&
    }
    RWLockUnlock(s_userDatabaseLock);
    return userDB;
+}
+
+/**
+ * Get 2FA method binding names for specific user
+ */
+void GetUser2FABindingNames(uint32_t userId, NXCPMessage& response)
+{
+   RWLockReadLock(s_userDatabaseLock);
+   UserDatabaseObject *object = s_userDatabase.get(userId);
+   if (object != NULL && !object->isGroup())
+   {
+      User* user = static_cast<User*>(object);
+      user->get2FABindings()->fillMessage(&response, VID_2FA_METHODS_LIST_BASE, VID_2FA_METHODS_COUNT);
+   }
+   RWLockUnlock(s_userDatabaseLock);
+}
+
+/**
+ * Searching for 2FA method binding for selected user and 2FA method
+ */
+shared_ptr<Config> GetUser2FABindingInfo(int userId, const TCHAR* methodName)
+{
+   shared_ptr<Config> binding;
+   RWLockReadLock(s_userDatabaseLock);
+   UserDatabaseObject *object = s_userDatabase.get(userId);
+   if (object != NULL && !object->isGroup())
+   {
+      User* user = static_cast<User*>(object);
+      binding = user->get2FABindingInfo(methodName);
+   }
+   RWLockUnlock(s_userDatabaseLock);
+   return binding;
+}
+
+/**
+ * Create/Modify 2FA method binding for specific user
+ */
+uint32_t ModifyUser2FABinding(uint32_t userId, const TCHAR* methodName, char* configuration)
+{
+   uint32_t rcc = RCC_INVALID_USER_ID;
+   RWLockReadLock(s_userDatabaseLock);
+   UserDatabaseObject *object = s_userDatabase.get(userId);
+   if (object != NULL && !object->isGroup())
+   {
+      User* user = static_cast<User*>(object);
+      rcc = user->modify2FABinding(methodName, configuration);
+   }
+   RWLockUnlock(s_userDatabaseLock);
+   return rcc;
+}
+
+/**
+ * Delete 2FA method binding for specific user
+ */
+uint32_t DeleteUser2FABinding(uint32_t userId, const TCHAR* methodName)
+{
+   uint32_t rcc = RCC_INVALID_USER_ID;
+   RWLockReadLock(s_userDatabaseLock);
+   UserDatabaseObject *object = s_userDatabase.get(userId);
+   if (object != NULL && !object->isGroup())
+   {
+      User* user = static_cast<User*>(object);
+      if(user->has2FABinding(methodName))
+      {
+         if(user->delete2FABinding(methodName))
+         {
+            rcc = RCC_SUCCESS;
+         }
+         else
+         {
+            rcc = RCC_DB_FAILURE;
+         }
+      }
+      else
+      {
+         rcc = RCC_2FA_NO_SUCH_METHOD;
+      }
+   }
+   RWLockUnlock(s_userDatabaseLock);
+   return rcc;
 }
 
 /**

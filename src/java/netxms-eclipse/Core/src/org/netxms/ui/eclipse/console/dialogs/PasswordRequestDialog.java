@@ -31,7 +31,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- *
+ * Password request dialog
  */
 public class PasswordRequestDialog extends Dialog
 {

@@ -1522,7 +1522,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
 }
 
 /**
- * Load config from XML in memory
+ * Load config from XML or INI in memory
  */
 bool Config::loadConfigFromMemory(const char *xml, size_t xmlSize, const TCHAR *defaultIniSection, const char *topLevelTag, bool ignoreErrors, bool merge)
 {

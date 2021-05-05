@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.jobs;
 import java.lang.reflect.InvocationTargetException;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.util.List;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -38,6 +39,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ProtocolVersion;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.TwoFactorAuthenticationCallback;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.console.Activator;
@@ -46,6 +48,8 @@ import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.SourceProvider;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
 import org.netxms.ui.eclipse.console.api.SessionProvider;
+import org.netxms.ui.eclipse.console.dialogs.TwoFactorMetodSelectionDialog;
+import org.netxms.ui.eclipse.console.dialogs.TwoFactorResponseDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -116,7 +120,7 @@ public class LoginJob implements IRunnableWithProgress
 
          final NXCSession session = createSession(hostName, port);
          session.setClientLanguage(language);
-                  
+
          session.setClientInfo("nxmc-webui/" + VersionInfo.version()); //$NON-NLS-1$
          session.setIgnoreProtocolVersion(ignoreProtocolVersion);
          session.setClientType(NXCSession.WEB_CLIENT);
@@ -124,7 +128,40 @@ public class LoginJob implements IRunnableWithProgress
          monitor.worked(10);
 
          session.connect(new int[] { ProtocolVersion.INDEX_FULL });
-         session.login(authMethod, (loginName != null) ? loginName : "?", password, certificate, signature);
+         session.login(authMethod, (loginName != null) ? loginName : "?", password, certificate, signature, new TwoFactorAuthenticationCallback() {
+            @Override
+            public int selectAuthentificationMethod(final List<String> methods)
+            {
+               final int[] selection = new int[1];
+               selection[0] = -1;
+               display.syncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     TwoFactorMetodSelectionDialog dlg = new TwoFactorMetodSelectionDialog(null, methods);
+                     if (dlg.open() == Window.OK)
+                        selection[0] = dlg.getSelectedMethod();
+                  }
+               });
+               return selection[0];
+            }
+
+            @Override
+            public String getUserResponse(final String challenge)
+            {
+               final String[] response = new String[1];
+               display.syncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     TwoFactorResponseDialog dlg = new TwoFactorResponseDialog(null, challenge);
+                     if (dlg.open() == Window.OK)
+                        response[0] = dlg.getResponse();
+                  }
+               });
+               return response[0];
+            }
+         });
          monitor.worked(40);
 
          monitor.setTaskName(Messages.get(display).LoginJob_sync_objects);

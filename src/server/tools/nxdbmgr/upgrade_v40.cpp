@@ -24,6 +24,38 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.55 to 40.56
+ */
+static bool H_UpgradeFromV55()
+{
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE two_factor_auth_methods (")
+         _T("  name varchar(63) not null,")
+         _T("  type varchar(63) null,")
+         _T("  description  varchar(255) null,")
+         _T("  configuration $SQL:TEXT null,")
+         _T("PRIMARY KEY(name))")));
+
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE user_two_factor_auth_bindings (")
+         _T("  uid integer not null,")
+         _T("  name varchar(63) not null,")
+         _T("  configuration $SQL:TEXT null,")
+         _T("PRIMARY KEY(uid,name))")));
+
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE users SET system_access=system_access+140737488355328 WHERE (BITAND(system_access, 1) = 1)")));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE users SET system_access=system_access+140737488355328 WHERE ((system_access & 1) = 1)")));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(56));
+   return true;
+}
+
+/**
  * Upgrade from 40.54 to 40.55
  */
 static bool H_UpgradeFromV54()
@@ -51,9 +83,11 @@ static bool H_UpgradeFromV54()
 
       CHK_EXEC(SetSchemaLevelForMajorVersion(38, 17));
    }
+
    CHK_EXEC(SetMinorSchemaVersion(55));
    return true;
 }
+
 
 /**
  * Upgrade from 40.53 to 40.54
@@ -1434,6 +1468,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 55, 40, 56, H_UpgradeFromV55 },
    { 54, 40, 55, H_UpgradeFromV54 },
    { 53, 40, 54, H_UpgradeFromV53 },
    { 52, 40, 53, H_UpgradeFromV52 },

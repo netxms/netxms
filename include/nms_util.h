@@ -3893,8 +3893,8 @@ char LIBNETXMS_EXPORTABLE *BinToStrExA(const void *data, size_t size, char *str,
 #define BinToStrEx BinToStrExA
 #endif
 
-size_t LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *data, size_t size);
-size_t LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *data, size_t size);
+size_t LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, uint8_t *data, size_t size);
+size_t LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, uint8_t *data, size_t size);
 #ifdef UNICODE
 #define StrToBin StrToBinW
 #else

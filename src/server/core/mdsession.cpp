@@ -324,7 +324,6 @@ void MobileDeviceSession::sendServerInfo(uint32_t requestId)
  */
 void MobileDeviceSession::login(NXCPMessage *request)
 {
-   NXCPMessage msg;
    TCHAR szLogin[MAX_USER_NAME], szPassword[1024];
 	int nAuthType;
    bool changePasswd = false, intruderLockout = false, closeOtherSessions = false;
@@ -333,9 +332,7 @@ void MobileDeviceSession::login(NXCPMessage *request)
 	X509 *pCert;
 #endif
 
-   // Prepare response message
-   msg.setCode(CMD_LOGIN_RESP);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_LOGIN_RESPONSE, request->getId());
 
    // Get client info string
    if (request->isFieldExist(VID_CLIENT_INFO))

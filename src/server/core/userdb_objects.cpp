@@ -516,6 +516,8 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
 	if (m_id == 0)
 		m_systemRights = SYSTEM_ACCESS_FULL;
 
+   load2FABindings(hdb);
+
 	loadCustomAttributes(hdb);
 }
 
@@ -567,6 +569,15 @@ User::User(uint32_t id, const TCHAR *name, UserAuthenticationMethod authMethod) 
 }
 
 /**
+ * Copy callback for user 2FA configs
+ */
+static EnumerationCallbackResult User2FAMethodsCopyCallback(const TCHAR* name, const shared_ptr<Config>* value, SharedStringObjectMap<Config>* config)
+{
+   config->set(name, *value);
+   return _CONTINUE;
+}
+
+/**
  * Copy constructor for user object
  */
 User::User(const User *src) : UserDatabaseObject(src)
@@ -588,6 +599,8 @@ User::User(const User *src) : UserDatabaseObject(src)
    m_xmppId = MemCopyString(src->m_xmppId);
    m_email = MemCopyString(src->m_email);
    m_phoneNumber = MemCopyString(src->m_phoneNumber);
+
+   src->m_2FABindings.forEach(User2FAMethodsCopyCallback, &m_2FABindings);
 }
 
 /**
@@ -887,6 +900,177 @@ json_t *User::toJson() const
 NXSL_Value *User::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslUserClass, this));
+}
+
+/**
+ * Load 2FA methods bindings for user from DB
+ */
+void User::load2FABindings(DB_HANDLE hdb)
+{
+   int numberOfAddedBindings = 0;
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,configuration FROM user_two_factor_auth_bindings WHERE uid=?"));
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         int rowCount = DBGetNumRows(hResult);
+         for (int i = 0; i < rowCount; i++)
+         {
+            TCHAR methodName[MAX_OBJECT_NAME];
+            DBGetField(hResult, i, 0, methodName, MAX_OBJECT_NAME);
+            char* configuration = DBGetFieldUTF8(hResult, i, 1, nullptr, 0);
+            auto binding = make_shared<Config>();
+            if (binding->loadConfigFromMemory(configuration, strlen(configuration), _T("2FA"), nullptr, true, false))
+            {
+               m_2FABindings.set(methodName, binding);
+               numberOfAddedBindings++;
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Loaded binding for authentification method %s for user %s"), methodName, m_name);
+            }
+            else
+            {
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Binding for authentification method %s for user %s failed to load"), methodName, m_name);
+            }
+            MemFree(configuration);
+         }
+         DBFreeResult(hResult);
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("%d authentification methods bindings added for user %s"), numberOfAddedBindings, m_name);
+      }
+      else
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to load authentification method bindings for user %s. Database error."), m_name);
+      }
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to prepare db select for authentification methods bindings for user %s."), m_name);
+   }
+}
+
+/**
+ * Get cashed user 2FA method bindings
+ */
+shared_ptr<Config> User::get2FABindingInfo(const TCHAR* method)
+{
+   return m_2FABindings.getShared(method);
+}
+
+/**
+ * Get cashed 2FA methods names for user
+ */
+unique_ptr<StringList> User::get2FABindings()
+{
+   auto bindings = new StringList();
+   auto it = m_2FABindings.iterator();
+   while (it->hasNext())
+   {
+      auto value = it->next();
+      bindings->add(value->first);
+   }
+   delete it;
+   return make_unique<StringList>(bindings);
+}
+
+/**
+ * Create/modify 2FA method binding for user
+ */
+uint32_t User::modify2FABinding(const TCHAR* methodName, char* configuration)
+{
+   auto config = make_shared<Config>();
+   uint32_t rcc = RCC_2FA_INVALID_CONFIG;
+   if (config->loadConfigFromMemory(configuration, strlen(configuration), _T("2FA"), nullptr, true, false))
+   {
+      if (saveBindingInDB(methodName, configuration, m_2FABindings.contains(methodName)))
+      {
+         m_2FABindings.set(methodName, config);
+         rcc = RCC_SUCCESS;
+      }
+      else
+      {
+         rcc = RCC_DB_FAILURE;
+      }
+   }
+   return rcc;
+}
+
+/**
+ * Create/modify 2FA method binding for user in database
+ */
+bool User::saveBindingInDB(const TCHAR* methodName, char* configuration, bool exists)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt;
+   if (exists)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb,
+         _T("UPDATE user_two_factor_auth_bindings SET configuration=? WHERE id=?,name=?"));
+   }
+   else
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb,
+         _T("INSERT INTO user_two_factor_auth_bindings (configuration,id,name) VALUES (?,?,?)"));
+   }
+
+
+   if(hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, configuration, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_CTYPE_UINT32, m_id);
+      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, methodName, DB_BIND_STATIC);
+   }
+
+   bool success = DBBegin(hdb);
+   if (success)
+   {
+      success = DBExecute(hStmt);
+      if (success)
+         DBCommit(hdb);
+      else
+         DBRollback(hdb);
+   }
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+   return success;
+}
+
+/**
+ * Delete 2FA binding for user
+ */
+bool User::delete2FABinding(const TCHAR* methodName)
+{
+   m_2FABindings.remove(methodName);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb,
+         _T("DELETE FROM user_two_factor_auth_bindings WHERE id=?,name=?"));
+
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_CTYPE_UINT32, m_id);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, methodName, DB_BIND_STATIC);
+   }
+
+   bool success = DBBegin(hdb);
+   if (success)
+   {
+      success = DBExecute(hStmt);
+      if (success)
+         DBCommit(hdb);
+      else
+         DBRollback(hdb);
+   }
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+   return success;
+}
+
+/**
+ * Checks 2FA method binding for user
+ */
+bool User::has2FABinding(const TCHAR* methodName)
+{
+   return m_2FABindings.contains(methodName);
 }
 
 /*****************************************************************************

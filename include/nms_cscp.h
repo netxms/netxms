@@ -242,7 +242,7 @@ typedef struct
  * Message (command) codes
  */
 #define CMD_LOGIN                         0x0001
-#define CMD_LOGIN_RESP                    0x0002
+#define CMD_LOGIN_RESPONSE                0x0002   /* Only used by mobile agent since 4.0 */
 #define CMD_KEEPALIVE                     0x0003
 #define CMD_OPEN_HELPDESK_ISSUE           0x0004
 #define CMD_GET_OBJECTS                   0x0005
@@ -666,6 +666,16 @@ typedef struct
 #define CMD_GET_SSH_KEYS                  0x01AB
 #define CMD_GET_TOOLTIP_LAST_VALUES       0x01AC
 #define CMD_SYNC_AGENT_POLICIES           0x01AD
+#define CMD_2FA_PREPARE_CHALLENGE         0x01AE
+#define CMD_2FA_VALIDATE_RESPONSE         0x01AF
+#define CMD_2FA_GET_METHODS               0x01B0
+#define CMD_2FA_GET_METHOD_INFO           0x01B1
+#define CMD_2FA_MODIFY_METHOD             0x01B2
+#define CMD_2FA_DELETE_METHOD             0x01B3
+#define CMD_2FA_GET_USER_BINDINGS         0x01B4
+#define CMD_2FA_GET_USER_BINDING_INFO     0x01B5
+#define CMD_2FA_MODIFY_USER_BINDING       0x01B6
+#define CMD_2FA_DELETE_USER_BINDING       0x01B7
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1428,6 +1438,9 @@ typedef struct
 #define VID_DATA_DIRECTORY          ((UINT32)748)
 #define VID_RULE_DESCRIPTION        ((UINT32)749)
 #define VID_READ_ALL_FIELDS         ((UINT32)750)
+#define VID_2FA_METHODS_COUNT       ((uint32_t)751)
+#define VID_2FA_METHOD              ((uint32_t)752)
+#define VID_2FA_RESPONSE            ((uint32_t)753)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1671,6 +1684,8 @@ typedef struct
 #define VID_COMMUNITY_STRING_ZONE_LIST_BASE  ((UINT32)0x20000000)
 
 #define VID_ZONE_SNMP_PORT_LIST_BASE         ((UINT32)0x10000000)
+
+#define VID_2FA_METHODS_LIST_BASE   ((uint32_t)0x10000000)
 
 #ifdef __cplusplus
 

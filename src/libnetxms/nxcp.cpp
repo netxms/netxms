@@ -472,7 +472,17 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GENERATE_SSH_KEYS"),
       _T("CMD_GET_SSH_KEYS"),
       _T("CMD_GET_TOOLTIP_LAST_VALUES"),
-      _T("CMD_SYNC_AGENT_POLICIES")
+      _T("CMD_SYNC_AGENT_POLICIES"),
+      _T("CMD_2FA_PREPARE_CHALLENGE"),
+      _T("CMD_2FA_VALIDATE_RESPONSE"),
+      _T("CMD_2FA_GET_METHODS"),
+      _T("CMD_2FA_GET_METHOD_INFO"),
+      _T("CMD_2FA_MODIFY_METHOD"),
+      _T("CMD_2FA_DELETE_METHOD"),
+      _T("CMD_2FA_GET_USER_BINDINGS"),
+      _T("CMD_2FA_GET_USER_BINDING_INFO"),
+      _T("CMD_2FA_MODIFY_USER_BINDING"),
+      _T("CMD_2FA_DELETE_USER_BINDING")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -485,7 +495,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_SYNC_AGENT_POLICIES))
+   if ((code >= CMD_LOGIN) && (code <= CMD_2FA_DELETE_USER_BINDING))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

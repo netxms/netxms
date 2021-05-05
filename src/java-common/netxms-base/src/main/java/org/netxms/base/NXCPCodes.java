@@ -25,7 +25,7 @@ public class NXCPCodes
 {
 	// NXCP command codes
 	public static final int CMD_LOGIN = 0x0001;
-	public static final int CMD_LOGIN_RESP = 0x0002;
+   public static final int CMD_LOGIN_RESPONSE = 0x0002;
 	public static final int CMD_KEEPALIVE = 0x0003;
 	public static final int CMD_OPEN_HELPDESK_ISSUE = 0x0004;
 	public static final int CMD_GET_OBJECTS = 0x0005;
@@ -443,6 +443,16 @@ public class NXCPCodes
    public static final int CMD_GENERATE_SSH_KEYS = 0x01AA;
    public static final int CMD_GET_SSH_KEYS = 0x01AB;
    public static final int CMD_GET_TOOLTIP_LAST_VALUES = 0x01AC;
+   public static final int CMD_2FA_PREPARE_CHALLENGE = 0x01AE;
+   public static final int CMD_2FA_VALIDATE_RESPONSE = 0x01AF;
+   public static final int CMD_2FA_GET_METHODS = 0x01B0;
+   public static final int CMD_2FA_GET_METHOD_INFO = 0x01B1;
+   public static final int CMD_2FA_MODIFY_METHOD = 0x01B2;
+   public static final int CMD_2FA_DELETE_METHOD = 0x01B3;
+   public static final int CMD_2FA_GET_USER_BINDINGS = 0x01B4;
+   public static final int CMD_2FA_GET_USER_BINDING_INFO = 0x01B5;
+   public static final int CMD_2FA_MODIFY_USER_BINDING = 0x01B6;
+   public static final int CMD_2FA_DELETE_USER_BINDING = 0x01B7;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1200,6 +1210,10 @@ public class NXCPCodes
    public static final long VID_SSH_KEY_ID = 747;
    public static final long VID_DATA_DIRECTORY = 748;
    public static final long VID_RULE_DESCRIPTION = 749;
+   public static final long VID_READ_ALL_FIELDS = 750;
+   public static final long VID_2FA_METHODS_COUNT = 751;
+   public static final long VID_2FA_METHOD = 752;
+   public static final long VID_2FA_RESPONSE = 753;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1312,4 +1326,5 @@ public class NXCPCodes
    public static final long VID_WEB_SERVICE_DEF_LIST_BASE = 0x10000000L;
    public static final long VID_MASKED_FIELD_LIST_BASE = 0x10000000L;
    public static final long VID_SSH_KEY_LIST_BASE = 0x10000000L;
+   public static final long VID_2FA_METHODS_LIST_BASE = 0x10000000L;
 }

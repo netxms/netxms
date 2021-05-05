@@ -2234,6 +2234,29 @@ CREATE TABLE nc_persistent_storage
 ) TABLE_TYPE;
 
 /**
+ * 2FA methods configurations
+ */
+CREATE TABLE two_factor_auth_methods
+(
+   name varchar(63) not null,
+   type varchar(63) null,
+   description  varchar(255) null,
+   configuration SQL_TEXT null,
+   PRIMARY KEY(name)
+) TABLE_TYPE;
+
+/**
+ * 2FA user configurations
+ */
+CREATE TABLE user_two_factor_auth_bindings
+(
+   uid integer not null,
+   name varchar(63) not null,
+   configuration SQL_TEXT null,
+   PRIMARY KEY(uid,name)
+) TABLE_TYPE;
+
+/**
  * Web service definitions
  */
 CREATE TABLE websvc_definitions

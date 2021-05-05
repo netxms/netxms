@@ -405,7 +405,7 @@ INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,1073741825,524287);
 INSERT INTO snmp_communities (id,community,zone) VALUES(1,'public',-1);
 
 /*
-**Notificaiotn channels
+**Notification channels
 */
 INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES 
    (

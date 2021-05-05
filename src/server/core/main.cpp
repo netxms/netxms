@@ -1150,6 +1150,9 @@ retry_db_lock:
    LoadNotificationChannelDrivers();
    LoadNotificationChannels();
 
+   // Initialize 2FA methods
+   LoadAuthentificationMethods();
+
    // Initialize objects infrastructure and load objects from database
    LoadGeoAreas();
    LoadNetworkDeviceDrivers();

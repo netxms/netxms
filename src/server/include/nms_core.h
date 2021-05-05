@@ -92,6 +92,7 @@
 #include "nms_script.h"
 #include "nxcore_jobs.h"
 #include "nxcore_schedule.h"
+#include "authentification.h"
 #ifdef WITH_ZMQ
 #include "zeromq.h"
 #endif
@@ -495,6 +496,15 @@ struct AgentFileTransfer
    }
 };
 
+struct LoginInfo
+{
+   TCHAR szLogin[MAX_USER_NAME];
+   bool changePasswd;
+   uint32_t graceLogins;
+   bool closeOtherSessions;
+   bool intruderLockout;
+};
+
 // Explicit instantiation of template classes
 #ifdef _WIN32
 template class NXCORE_EXPORTABLE HashMap<uint32_t, ServerDownloadFileInfo>;
@@ -563,6 +573,8 @@ private:
    bool m_objectNotificationScheduled;
    uint32_t m_objectNotificationDelay;
    size_t m_objectNotificationBatchSize;
+   AuthentificationToken* m_token;
+   LoginInfo m_loginInfo;
 
    static void socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, ClientSession *session);
    static void terminate(ClientSession *session);
@@ -586,10 +598,14 @@ private:
    void debugPrintf(int level, const TCHAR *format, ...);
 
    void setupEncryption(NXCPMessage *request);
+   void login(NXCPMessage *request);
+   uint32_t authenticateUserByPassword(NXCPMessage *pRequest, LoginInfo& loginInfo);
+   uint32_t authenticateUserByCertificate(NXCPMessage *pRequest, LoginInfo& loginInfo);
+   uint32_t authenticateUserBySSOTicket(NXCPMessage *pRequest, LoginInfo& loginInfo);
+
    void respondToKeepalive(UINT32 dwRqId);
    void onFileUpload(BOOL bSuccess);
    void sendServerInfo(UINT32 dwRqId);
-   void login(NXCPMessage *pRequest);
    void getObjects(NXCPMessage *request);
    void getSelectedObjects(NXCPMessage *request);
    void queryObjects(NXCPMessage *request);
@@ -867,10 +883,25 @@ private:
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);
 #endif
-
+   void prepare2FAChallenge(NXCPMessage *request);
+   void validate2FAChallenge(NXCPMessage *request);
+   void get2FAMethods(NXCPMessage *request);
+   void get2FAMethodInfo(NXCPMessage *request);
+   void modify2FAMethod(NXCPMessage *request);
+   void delete2FAMethod(NXCPMessage *request);
+   void getUser2FABindings(NXCPMessage *request);
+   void getUser2FABindingInfo(NXCPMessage *request);
+   void modifyUser2FABinding(NXCPMessage *request);
+   void deleteUser2FABinding(NXCPMessage *request);
+   void finalizeLogin(const NXCPMessage& request, NXCPMessage *response);
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
    void sendObjectUpdates();
+
+   void loginFinalization(NXCPMessage& msg, NXCPMessage *request);
+   uint32_t AuthenticateUserByPassword(NXCPMessage *pRequest, LoginInfo& loginInfo);
+   uint32_t AuthenticateUserByCertificate(NXCPMessage *pRequest, LoginInfo& loginInfo);
+   uint32_t AuthenticateUserBySSOTicket(NXCPMessage *pRequest, LoginInfo& loginInfo);
 
    void finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId);
 
@@ -952,6 +983,9 @@ public:
    void processTcpProxyAgentDisconnect(AgentConnectionEx *conn);
 
    void unregisterServerCommand(pid_t taskId);
+
+   AuthentificationToken* get2FAToken() { return m_token; };
+   void set2FAToken(AuthentificationToken* token) { m_token = token; };
 };
 
 /**

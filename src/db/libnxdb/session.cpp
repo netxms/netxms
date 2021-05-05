@@ -399,6 +399,18 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *query)
 	return DBSelectEx(hConn, query, errorText);
 }
 
+DB_RESULT LIBNXDB_EXPORTABLE DBSelectFormatted(DB_HANDLE hConn, const TCHAR *query, ...)
+{
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   TCHAR formattedQuery[MAX_DB_STRING];
+   va_list args;
+   va_start(args, query);
+   _vsntprintf(formattedQuery, MAX_DB_STRING, query, args);
+   va_end(args);
+
+   return DBSelectEx(hConn, query, errorText);
+}
+
 /**
  * Get number of columns
  */

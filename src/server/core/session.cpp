@@ -197,6 +197,8 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
    m_objectNotificationScheduled = false;
    m_objectNotificationBatchSize = 500;
    m_objectNotificationDelay = 200;
+   m_token = nullptr;
+   memset(&m_loginInfo, 0, sizeof(LoginInfo));
 }
 
 /**
@@ -240,6 +242,8 @@ ClientSession::~ClientSession()
    MutexDestroy(m_tcpProxyLock);
    delete m_pendingObjectNotifications;
    MutexDestroy(m_pendingObjectNotificationsLock);
+
+   delete m_token;
 
    debugPrintf(5, _T("Session object destroyed"));
 }
@@ -859,7 +863,9 @@ void ClientSession::processRequest(NXCPMessage *request)
        (code != CMD_GET_SERVER_INFO) &&
        (code != CMD_REQUEST_ENCRYPTION) &&
        (code != CMD_GET_MY_CONFIG) &&
-       (code != CMD_REGISTER_AGENT))
+       (code != CMD_REGISTER_AGENT) &&
+       (code != CMD_2FA_PREPARE_CHALLENGE) &&
+       (code != CMD_2FA_VALIDATE_RESPONSE))
    {
       debugPrintf(6, _T("Cannot process request: session is not authenticated"));
       delete request;
@@ -1695,6 +1701,36 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GENERATE_SSH_KEYS:
          generateSshKey(request);
          break;
+      case CMD_2FA_PREPARE_CHALLENGE:
+         prepare2FAChallenge(request);
+         break;
+      case CMD_2FA_VALIDATE_RESPONSE:
+         validate2FAChallenge(request);
+         break;
+      case CMD_2FA_GET_METHODS:
+         get2FAMethods(request);
+         break;
+      case CMD_2FA_GET_METHOD_INFO:
+         get2FAMethodInfo(request);
+         break;
+      case CMD_2FA_MODIFY_METHOD:
+         modify2FAMethod(request);
+         break;
+      case CMD_2FA_DELETE_METHOD:
+         delete2FAMethod(request);
+         break;
+      case CMD_2FA_GET_USER_BINDINGS:
+         getUser2FABindings(request);
+         break;
+      case CMD_2FA_GET_USER_BINDING_INFO:
+         getUser2FABindingInfo(request);
+         break;
+      case CMD_2FA_MODIFY_USER_BINDING:
+         modifyUser2FABinding(request);
+         break;
+      case CMD_2FA_DELETE_USER_BINDING:
+         deleteUser2FABinding(request);
+         break;
       default:
          if ((code >> 8) == 0x11)
          {
@@ -2019,211 +2055,242 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 }
 
 /**
- * Authenticate client
+ * Authenticate user by password
  */
-void ClientSession::login(NXCPMessage *pRequest)
+uint32_t ClientSession::authenticateUserByPassword(NXCPMessage *request, LoginInfo& loginInfo)
 {
-   NXCPMessage msg;
-   TCHAR szLogin[MAX_USER_NAME], szPassword[1024];
-	int nAuthType;
-   bool changePasswd = false, intruderLockout = false;
+   request->getFieldAsString(VID_LOGIN_NAME, loginInfo.szLogin, MAX_USER_NAME);
+   TCHAR szPassword[1024];
+#ifdef UNICODE
+	request->getFieldAsString(VID_PASSWORD, szPassword, 256);
+#else
+	request->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
+#endif
+	return AuthenticateUser(loginInfo.szLogin, szPassword, 0, nullptr, nullptr, &m_dwUserId, &m_systemAccessRights, &loginInfo.changePasswd, &loginInfo.intruderLockout,
+													 &loginInfo.closeOtherSessions, false, &loginInfo.graceLogins);
+}
+
+uint32_t ClientSession::authenticateUserByCertificate(NXCPMessage *pRequest, LoginInfo& loginInfo)
+{
    uint32_t rcc;
 #ifdef _WITH_ENCRYPTION
-	X509 *pCert;
+   pRequest->getFieldAsString(VID_LOGIN_NAME, loginInfo.szLogin, MAX_USER_NAME);
+   X509 *pCert = CertificateFromLoginMessage(pRequest);
+   if (pCert != nullptr)
+   {
+      size_t sigLen;
+      const BYTE *signature = pRequest->getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
+      if (signature != nullptr)
+      {
+         rcc = AuthenticateUser(loginInfo.szLogin, reinterpret_cast<const TCHAR*>(signature), sigLen,
+               pCert, m_challenge, &m_dwUserId, &m_systemAccessRights, &loginInfo.changePasswd, &loginInfo.intruderLockout,
+													 &loginInfo.closeOtherSessions, false, &loginInfo.graceLogins);
+      }
+      else
+      {
+         rcc = RCC_INVALID_REQUEST;
+      }
+      X509_free(pCert);
+   }
+   else
+   {
+      rcc = RCC_BAD_CERTIFICATE;
+   }
+#else
+	rcc = RCC_NOT_IMPLEMENTED;
 #endif
+   return rcc;
+}
 
-   // Prepare response message
-   msg.setCode(CMD_LOGIN_RESP);
-   msg.setId(pRequest->getId());
+uint32_t ClientSession::authenticateUserBySSOTicket(NXCPMessage *pRequest, LoginInfo& loginInfo)
+{
+   uint32_t rcc;
+   char ticket[1024];
+   pRequest->getFieldAsMBString(VID_PASSWORD, ticket, 1024);
+   pRequest->getFieldAsString(VID_LOGIN_NAME, loginInfo.szLogin, MAX_USER_NAME);
+   if (CASAuthenticate(ticket, loginInfo.szLogin))
+   {
+      debugPrintf(5, _T("SSO ticket %hs is valid, login name %s"), ticket, loginInfo.szLogin);
+      rcc = AuthenticateUser(loginInfo.szLogin, nullptr, 0, nullptr, nullptr, &m_dwUserId,
+                                    &m_systemAccessRights, &loginInfo.changePasswd, &loginInfo.intruderLockout,
+													 &loginInfo.closeOtherSessions, true, &loginInfo.graceLogins);
+   }
+   else
+   {
+      debugPrintf(5, _T("SSO ticket %hs is invalid"), ticket);
+      rcc = RCC_ACCESS_DENIED;
+   }
+   return rcc;
+}
+
+/**
+ * Authenticate client
+ */
+void ClientSession::login(NXCPMessage *request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
    // Get client info string
-   if (pRequest->isFieldExist(VID_CLIENT_INFO))
+   if (request->isFieldExist(VID_CLIENT_INFO))
    {
       TCHAR szClientInfo[32], szOSInfo[32], szLibVersion[16];
 
-      pRequest->getFieldAsString(VID_CLIENT_INFO, szClientInfo, 32);
-      pRequest->getFieldAsString(VID_OS_INFO, szOSInfo, 32);
-      pRequest->getFieldAsString(VID_LIBNXCL_VERSION, szLibVersion, 16);
+      request->getFieldAsString(VID_CLIENT_INFO, szClientInfo, 32);
+      request->getFieldAsString(VID_OS_INFO, szOSInfo, 32);
+      request->getFieldAsString(VID_LIBNXCL_VERSION, szLibVersion, 16);
       _sntprintf(m_clientInfo, 96, _T("%s (%s; libnxcl %s)"), szClientInfo, szOSInfo, szLibVersion);
    }
 
-	m_clientType = pRequest->getFieldAsUInt16(VID_CLIENT_TYPE);
+	m_clientType = request->getFieldAsUInt16(VID_CLIENT_TYPE);
 	if ((m_clientType < 0) || (m_clientType > CLIENT_TYPE_APPLICATION))
 		m_clientType = CLIENT_TYPE_DESKTOP;
 
    if (m_clientType == CLIENT_TYPE_WEB)
    {
       _tcscpy(m_webServerAddress, m_workstation);
-      if (pRequest->isFieldExist(VID_CLIENT_ADDRESS))
+      if (request->isFieldExist(VID_CLIENT_ADDRESS))
       {
-         pRequest->getFieldAsString(VID_CLIENT_ADDRESS, m_workstation, 256);
+         request->getFieldAsString(VID_CLIENT_ADDRESS, m_workstation, 256);
          debugPrintf(5, _T("Real web client address is %s"), m_workstation);
       }
    }
 
-   if (pRequest->isFieldExist(VID_LANGUAGE))
+   if (request->isFieldExist(VID_LANGUAGE))
    {
-      pRequest->getFieldAsString(VID_LANGUAGE, m_language, 8);
+      request->getFieldAsString(VID_LANGUAGE, m_language, 8);
    }
 
    if (!(m_flags & CSF_AUTHENTICATED))
    {
-      uint32_t graceLogins = 0;
-      bool closeOtherSessions = false;
-      pRequest->getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
-		nAuthType = (int)pRequest->getFieldAsUInt16(VID_AUTH_TYPE);
+      uint32_t rcc;
+      memset(&m_loginInfo, 0, sizeof(LoginInfo));
+      int nAuthType = (int)request->getFieldAsUInt16(VID_AUTH_TYPE);
       debugPrintf(6, _T("authentication type %d"), nAuthType);
 		switch(nAuthType)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:
-#ifdef UNICODE
-				pRequest->getFieldAsString(VID_PASSWORD, szPassword, 256);
-#else
-				pRequest->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
-#endif
-				rcc = AuthenticateUser(szLogin, szPassword, 0, nullptr, nullptr, &m_dwUserId,
-													 &m_systemAccessRights, &changePasswd, &intruderLockout,
-													 &closeOtherSessions, false, &graceLogins);
+            rcc = authenticateUserByPassword(request, m_loginInfo);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
-#ifdef _WITH_ENCRYPTION
-				pCert = CertificateFromLoginMessage(pRequest);
-				if (pCert != nullptr)
-				{
-               size_t sigLen;
-					const BYTE *signature = pRequest->getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
-               if (signature != nullptr)
-               {
-                  rcc = AuthenticateUser(szLogin, reinterpret_cast<const TCHAR*>(signature), sigLen,
-                        pCert, m_challenge, &m_dwUserId, &m_systemAccessRights, &changePasswd, &intruderLockout,
-                        &closeOtherSessions, false, &graceLogins);
-               }
-               else
-               {
-                  rcc = RCC_INVALID_REQUEST;
-               }
-					X509_free(pCert);
-				}
-				else
-				{
-					rcc = RCC_BAD_CERTIFICATE;
-				}
-#else
-				rcc = RCC_NOT_IMPLEMENTED;
-#endif
+            rcc = authenticateUserByCertificate(request, m_loginInfo);
 				break;
          case NETXMS_AUTH_TYPE_SSO_TICKET:
-            char ticket[1024];
-            pRequest->getFieldAsMBString(VID_PASSWORD, ticket, 1024);
-            if (CASAuthenticate(ticket, szLogin))
-            {
-               debugPrintf(5, _T("SSO ticket %hs is valid, login name %s"), ticket, szLogin);
-				   rcc = AuthenticateUser(szLogin, nullptr, 0, nullptr, nullptr, &m_dwUserId,
-													    &m_systemAccessRights, &changePasswd, &intruderLockout,
-													    &closeOtherSessions, true, &graceLogins);
-            }
-            else
-            {
-               debugPrintf(5, _T("SSO ticket %hs is invalid"), ticket);
-               rcc = RCC_ACCESS_DENIED;
-            }
+            rcc = authenticateUserBySSOTicket(request, m_loginInfo);
             break;
 			default:
 				rcc = RCC_UNSUPPORTED_AUTH_TYPE;
 				break;
 		}
 
-      // Additional validation by loaded modules
       if (rcc == RCC_SUCCESS)
       {
-         ENUMERATE_MODULES(pfAdditionalLoginCheck)
+         GetUser2FABindingNames(m_dwUserId, response);
+         if (response.getFieldAsInt32(VID_2FA_METHODS_COUNT) > 0)
          {
-            rcc = CURRENT_MODULE.pfAdditionalLoginCheck(m_dwUserId, pRequest);
-            if (rcc != RCC_SUCCESS)
-            {
-               debugPrintf(4, _T("Login blocked by module %s (rcc=%d)"), CURRENT_MODULE.szName, rcc);
-               break;
-            }
-         }
-      }
-
-      if (rcc == RCC_SUCCESS)
-      {
-         InterlockedOr(&m_flags, CSF_AUTHENTICATED);
-         _tcslcpy(m_loginName, szLogin, MAX_USER_NAME);
-         _sntprintf(m_sessionName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_workstation);
-         m_loginTime = time(nullptr);
-         msg.setField(VID_RCC, RCC_SUCCESS);
-         msg.setField(VID_USER_SYS_RIGHTS, m_systemAccessRights);
-         msg.setField(VID_USER_ID, m_dwUserId);
-			msg.setField(VID_SESSION_ID, (UINT32)m_id);
-			msg.setField(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
-         msg.setField(VID_DBCONN_STATUS, (UINT16)((g_flags & AF_DB_CONNECTION_LOST) ? 0 : 1));
-			msg.setField(VID_ZONING_ENABLED, (UINT16)((g_flags & AF_ENABLE_ZONING) ? 1 : 0));
-			msg.setField(VID_POLLING_INTERVAL, (INT32)DCObject::m_defaultPollingInterval);
-			msg.setField(VID_RETENTION_TIME, (INT32)DCObject::m_defaultRetentionTime);
-			msg.setField(VID_ALARM_STATUS_FLOW_STATE, ConfigReadBoolean(_T("StrictAlarmStatusFlow"), false));
-			msg.setField(VID_TIMED_ALARM_ACK_ENABLED, ConfigReadBoolean(_T("EnableTimedAlarmAck"), false));
-			msg.setField(VID_VIEW_REFRESH_INTERVAL, (UINT16)ConfigReadInt(_T("Client.MinViewRefreshInterval"), 300));
-			msg.setField(VID_HELPDESK_LINK_ACTIVE, (UINT16)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
-			msg.setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("Client.AlarmList.DisplayLimit"), 4096));
-         msg.setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("ServerCommandOutputTimeout"), 60));
-         msg.setField(VID_GRACE_LOGINS, graceLogins);
-
-         GetClientConfigurationHints(&msg);
-         FillLicenseProblemsMessage(&msg);
-
-         if (pRequest->getFieldAsBoolean(VID_ENABLE_COMPRESSION))
-         {
-            debugPrintf(3, _T("Protocol level compression is supported by client"));
-            InterlockedOr(&m_flags, CSF_COMPRESSION_ENABLED);
-            msg.setField(VID_ENABLE_COMPRESSION, true);
+            response.setField(VID_RCC, RCC_NEED_2FA);
          }
          else
          {
-            debugPrintf(3, _T("Protocol level compression is not supported by client"));
+            finalizeLogin(*request, &response);
+            memset(&m_loginInfo, 0, sizeof(LoginInfo));
          }
-
-         TCHAR buffer[MAX_DB_STRING];
-         ConfigReadStr(_T("ServerName"), buffer, MAX_DB_STRING, _T(""));
-         msg.setField(VID_SERVER_NAME, buffer);
-
-         ConfigReadStr(_T("ServerColor"), buffer, MAX_DB_STRING, _T(""));
-         msg.setField(VID_SERVER_COLOR, buffer);
-
-         ConfigReadStr(_T("MessageOfTheDay"), buffer, MAX_DB_STRING, _T(""));
-         msg.setField(VID_MESSAGE_OF_THE_DAY, buffer);
-
-         debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
-			writeAuditLog(AUDIT_SECURITY, true, 0, _T("User \"%s\" logged in (language: %s; client info: %s)"), szLogin, m_language, m_clientInfo);
-
-			if (closeOtherSessions)
-			{
-			   debugPrintf(5, _T("Closing other sessions for user %s"), m_loginName);
-			   CloseOtherSessions(m_dwUserId, m_id);
-			}
-      }
-      else
-      {
-         msg.setField(VID_RCC, rcc);
-			writeAuditLog(AUDIT_SECURITY, false, 0,
-			              _T("User \"%s\" login failed with error code %d (client info: %s)"),
-							  szLogin, rcc, m_clientInfo);
-			if (intruderLockout)
-			{
-				writeAuditLog(AUDIT_SECURITY, false, 0,
-								  _T("User account \"%s\" temporary disabled due to excess count of failed authentication attempts"), szLogin);
-			}
-			m_dwUserId = INVALID_INDEX;   // reset user ID to avoid incorrect count of logged in sessions for that user
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
+}
+
+/**
+ * Finalize login
+ */
+void ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *response)
+{
+   uint32_t rcc = RCC_SUCCESS;
+
+   // Additional validation by loaded modules
+   ENUMERATE_MODULES(pfAdditionalLoginCheck)
+   {
+      rcc = CURRENT_MODULE.pfAdditionalLoginCheck(m_dwUserId, request);
+      if (rcc != RCC_SUCCESS)
+      {
+         debugPrintf(4, _T("Login blocked by module %s (rcc=%d)"), CURRENT_MODULE.szName, rcc);
+         break;
+      }
+   }
+
+   if (rcc == RCC_SUCCESS)
+   {
+      InterlockedOr(&m_flags, CSF_AUTHENTICATED);
+      _tcslcpy(m_loginName, m_loginInfo.szLogin, MAX_USER_NAME);
+      _sntprintf(m_sessionName, MAX_SESSION_NAME, _T("%s@%s"), m_loginInfo.szLogin, m_workstation);
+      m_loginTime = time(nullptr);
+      response->setField(VID_RCC, RCC_SUCCESS);
+      response->setField(VID_USER_SYS_RIGHTS, m_systemAccessRights);
+      response->setField(VID_USER_ID, m_dwUserId);
+      response->setField(VID_SESSION_ID, (uint32_t)m_id);
+      response->setField(VID_CHANGE_PASSWD_FLAG, (uint16_t)m_loginInfo.changePasswd);
+      response->setField(VID_DBCONN_STATUS, (uint16_t)((g_flags & AF_DB_CONNECTION_LOST) ? 0 : 1));
+      response->setField(VID_ZONING_ENABLED, (uint16_t)((g_flags & AF_ENABLE_ZONING) ? 1 : 0));
+      response->setField(VID_POLLING_INTERVAL, (int32_t)DCObject::m_defaultPollingInterval);
+      response->setField(VID_RETENTION_TIME, (int32_t)DCObject::m_defaultRetentionTime);
+      response->setField(VID_ALARM_STATUS_FLOW_STATE, ConfigReadBoolean(_T("StrictAlarmStatusFlow"), false));
+      response->setField(VID_TIMED_ALARM_ACK_ENABLED, ConfigReadBoolean(_T("EnableTimedAlarmAck"), false));
+      response->setField(VID_VIEW_REFRESH_INTERVAL, (uint16_t)ConfigReadInt(_T("Client.MinViewRefreshInterval"), 300));
+      response->setField(VID_HELPDESK_LINK_ACTIVE, (uint16_t)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
+      response->setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("Client.AlarmList.DisplayLimit"), 4096));
+      response->setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("ServerCommandOutputTimeout"), 60));
+      response->setField(VID_GRACE_LOGINS, m_loginInfo.graceLogins);
+
+      GetClientConfigurationHints(response);
+      FillLicenseProblemsMessage(response);
+
+      if (request.getFieldAsBoolean(VID_ENABLE_COMPRESSION))
+      {
+         debugPrintf(3, _T("Protocol level compression is supported by client"));
+         InterlockedOr(&m_flags, CSF_COMPRESSION_ENABLED);
+         response->setField(VID_ENABLE_COMPRESSION, true);
+      }
+      else
+      {
+         debugPrintf(3, _T("Protocol level compression is not supported by client"));
+      }
+
+      TCHAR buffer[MAX_DB_STRING];
+      ConfigReadStr(_T("ServerName"), buffer, MAX_DB_STRING, _T(""));
+      response->setField(VID_SERVER_NAME, buffer);
+
+      ConfigReadStr(_T("ServerColor"), buffer, MAX_DB_STRING, _T(""));
+      response->setField(VID_SERVER_COLOR, buffer);
+
+      ConfigReadStr(_T("MessageOfTheDay"), buffer, MAX_DB_STRING, _T(""));
+      response->setField(VID_MESSAGE_OF_THE_DAY, buffer);
+
+      debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
+      writeAuditLog(AUDIT_SECURITY, true, 0, _T("User \"%s\" logged in (language: %s; client info: %s)"), m_loginInfo.szLogin, m_language, m_clientInfo);
+
+      if (m_loginInfo.closeOtherSessions)
+      {
+         debugPrintf(5, _T("Closing other sessions for user %s"), m_loginName);
+         CloseOtherSessions(m_dwUserId, m_id);
+      }
+   }
+   else
+   {
+      response->setField(VID_RCC, rcc);
+      writeAuditLog(AUDIT_SECURITY, false, 0,
+                     _T("User \"%s\" login failed with error code %d (client info: %s)"),
+                     m_loginInfo.szLogin, rcc, m_clientInfo);
+      if (m_loginInfo.intruderLockout)
+      {
+         writeAuditLog(AUDIT_SECURITY, false, 0,
+                        _T("User account \"%s\" temporary disabled due to excess count of failed authentication attempts"), m_loginInfo.szLogin);
+      }
+      m_dwUserId = INVALID_INDEX;   // reset user ID to avoid incorrect count of logged in sessions for that user
+   }
 }
 
 /**
@@ -15499,5 +15566,237 @@ void ClientSession::generateSshKey(NXCPMessage *request)
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
+   sendMessage(&msg);
+}
+
+/**
+ * Prepares 2FA challenge for user
+ */
+void ClientSession::prepare2FAChallenge(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   TCHAR *method = request->getFieldAsString(VID_2FA_METHOD);
+   if (method != nullptr)
+   {
+      delete_and_null(m_token);
+      m_token = Prepare2FAChallenge( method, m_dwUserId);
+      if (m_token != nullptr)
+      {
+         msg.setField(VID_CHALLENGE, m_token->getChallenge());
+         msg.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_2FA_CHALLENGE_ERROR); //can't prepare 2FA challenge
+      }
+      MemFree(method);
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_2FA_NO_SUCH_METHOD);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Validating user 2FA response
+ */
+void ClientSession::validate2FAChallenge(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (_tcslen(m_loginInfo.szLogin) != 0)
+   {
+      TCHAR *challenge = request->getFieldAsString(VID_2FA_RESPONSE);
+      if (Validate2FAChallenge(m_token, challenge))
+      {
+         delete_and_null(m_token);
+         finalizeLogin(*request, &msg);
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_2FA_FAILED);
+      }
+      MemFree(challenge);
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+   memset(&m_loginInfo, 0, sizeof(LoginInfo));
+   sendMessage(&msg);
+}
+
+/**
+ * Returns list of configured 2FA methods with method name, description and method loading status
+ */
+void ClientSession::get2FAMethods(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   Get2FAMethods(msg);
+   msg.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(&msg);
+}
+
+/**
+ * Returns 2FA method with method name, description, configuration and method loading status
+ */
+void ClientSession::get2FAMethodInfo(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
+   {
+      TCHAR name[MAX_OBJECT_NAME];
+      request->getFieldAsString(VID_2FA_RESPONSE, name, MAX_OBJECT_NAME);
+      Get2FAMethodInfo(name, msg);
+      msg.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on getting 2FA method information"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * API call for creating or modifying 2FA method
+ */
+void ClientSession::modify2FAMethod(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
+   {
+      TCHAR name[MAX_OBJECT_NAME];
+      request->getFieldAsString(VID_2FA_RESPONSE, name, MAX_OBJECT_NAME);
+      TCHAR methodType[MAX_OBJECT_NAME];
+      request->getFieldAsString(VID_2FA_RESPONSE + 1, methodType, MAX_OBJECT_NAME);
+      TCHAR description[MAX_2FA_DESCRIPTION];
+      request->getFieldAsString(VID_2FA_RESPONSE + 2, description, MAX_2FA_DESCRIPTION);
+      char* configuration = request->getFieldAsUtf8String(VID_2FA_RESPONSE + 3);
+      msg.setField(VID_RCC, Modify2FAMethod(name, methodType, description, configuration));
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on modify 2FA method"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Delete 2FA method
+ */
+void ClientSession::delete2FAMethod(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
+   {
+      TCHAR name[MAX_OBJECT_NAME];
+      request->getFieldAsString(VID_2FA_RESPONSE, name, MAX_OBJECT_NAME);
+      msg.setField(VID_RCC, Delete2FAMethod(name));
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting 2FA method"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Returns list of configured 2FA methods bindings with method name and description
+ */
+void ClientSession::getUser2FABindings(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   TCHAR userIdStr[MAX_USER_NAME];
+   request->getFieldAsString(VID_USER_ID, userIdStr, MAX_USER_NAME);
+   int userId = _tcstol(userIdStr, nullptr, 10);
+
+   if (userId == m_dwUserId || m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
+   {
+      GetUser2FABindingNames(userId, msg);
+      msg.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on getting 2FA methods bindings"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Returns list of configured 2FA methods bindings with method name and description
+ */
+void ClientSession::getUser2FABindingInfo(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   TCHAR userIdStr[MAX_USER_NAME];
+   request->getFieldAsString(VID_USER_ID, userIdStr, MAX_USER_NAME);
+   int userId = _tcstol(userIdStr, nullptr, 10);
+   if (userId == m_dwUserId || m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
+   {
+      TCHAR methodName[MAX_OBJECT_NAME];
+      request->getFieldAsString(VID_2FA_METHOD, methodName, MAX_OBJECT_NAME);
+      shared_ptr<Config> binding = GetUser2FABindingInfo(userId, methodName);
+      if(binding != nullptr)
+      {
+         msg.setField(VID_2FA_METHOD, binding->createXml());
+         msg.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_2FA_NO_SUCH_METHOD);
+      }
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on getting 2FA methods bindings"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+
+/**
+ * API call for creating or modifying 2FA method
+ */
+void ClientSession::modifyUser2FABinding(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_NONE)
+   {
+      TCHAR methodName[MAX_OBJECT_NAME];
+      request->getFieldAsString(VID_2FA_RESPONSE, methodName, MAX_OBJECT_NAME);
+      char* configuration = request->getFieldAsUtf8String(VID_2FA_RESPONSE + 1);
+      msg.setField(VID_RCC, ModifyUser2FABinding(m_dwUserId, methodName, configuration));
+      MemFree(configuration);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on modify 2FA method"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Delete 2FA method
+ */
+void ClientSession::deleteUser2FABinding(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_NONE)
+   {
+      TCHAR name[MAX_OBJECT_NAME];
+      request->getFieldAsString(VID_2FA_RESPONSE, name, MAX_OBJECT_NAME);
+      msg.setField(VID_RCC, DeleteUser2FABinding(m_dwUserId, name));
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting 2FA method"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
    sendMessage(&msg);
 }

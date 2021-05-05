@@ -62,6 +62,7 @@
 #define MAX_INT32                   0x7FFFFFFF
 #define MAX_NC_DESCRIPTION          256
 #define MAX_NC_ERROR_MESSAGE        1024
+#define MAX_2FA_DESCRIPTION         256
 
 /**
  * NetXMS agent authentication methods
@@ -672,6 +673,12 @@ enum SessionState
 #define RCC_INVALID_SSH_KEY_ID         ((uint32_t)142)
 #define RCC_SSH_KEY_IN_USE             ((uint32_t)143)
 #define RCC_SUBNET_OVERLAP             ((uint32_t)144)
+#define RCC_NEED_2FA                   ((uint32_t)145)
+#define RCC_2FA_FAILED                 ((uint32_t)146)
+#define RCC_2FA_CHALLENGE_ERROR        ((uint32_t)147)
+#define RCC_2FA_NO_SUCH_METHOD         ((uint32_t)148)
+#define RCC_2FA_INVALID_METHOD         ((uint32_t)149)
+#define RCC_2FA_INVALID_CONFIG         ((uint32_t)150)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -730,6 +737,7 @@ enum SessionState
  */
 #ifndef NETXMS_CUSTOM_USER_RIGHTS
 
+#define SYSTEM_ACCESS_NONE                    _ULL(0x000000000000)
 #define SYSTEM_ACCESS_MANAGE_USERS            _ULL(0x000000000001)
 #define SYSTEM_ACCESS_SERVER_CONFIG           _ULL(0x000000000002)
 #define SYSTEM_ACCESS_CONFIGURE_TRAPS         _ULL(0x000000000004)
@@ -777,8 +785,9 @@ enum SessionState
 #define SYSTEM_ACCESS_OBJECT_CATEGORIES       _ULL(0x100000000000)
 #define SYSTEM_ACCESS_MANAGE_GEO_AREAS        _ULL(0x200000000000)
 #define SYSTEM_ACCESS_SSH_KEY_CONFIGURATION   _ULL(0x400000000000)
+#define SYSTEM_ACCESS_MANAGE_2FA_METHODS      _ULL(0x800000000000)
 
-#define SYSTEM_ACCESS_FULL                    _ULL(0x7FFFFFFFFFFF)
+#define SYSTEM_ACCESS_FULL                    _ULL(0xFFFFFFFFFFFF)
 
 #endif	/* NETXMS_CUSTOM_USER_RIGHTS */
 

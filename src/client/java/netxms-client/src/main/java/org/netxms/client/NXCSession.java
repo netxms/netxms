@@ -2203,7 +2203,7 @@ public class NXCSession
     */
    public void login(String login, String password) throws NXCException, IOException, IllegalStateException
    {
-      login(AuthenticationType.PASSWORD, login, password, null, null);
+      login(AuthenticationType.PASSWORD, login, password, null, null, null);
    }
 
    /**
@@ -2219,7 +2219,7 @@ public class NXCSession
    public void login(String login, Certificate certificate, Signature signature)
          throws NXCException, IOException, IllegalStateException
    {
-      login(AuthenticationType.CERTIFICATE, login, null, certificate, signature);
+      login(AuthenticationType.CERTIFICATE, login, null, certificate, signature, null);
    }
 
    /**
@@ -2234,8 +2234,9 @@ public class NXCSession
     * @throws NXCException          if NetXMS server returns an error or operation was timed out
     * @throws IllegalStateException if the state is illegal
     */
-   public void login(AuthenticationType authType, String login, String password, Certificate certificate, Signature signature)
-         throws NXCException, IOException, IllegalStateException
+   public void login(AuthenticationType authType, String login, String password, Certificate certificate,
+		 Signature signature, TwoFactorAuthenticationCallback twoFactorAuthentificationCallback)
+		 throws NXCException, IOException, IllegalStateException
    {
       if (!connected)
          throw new IllegalStateException("Session not connected");
@@ -2246,7 +2247,7 @@ public class NXCSession
       authenticationMethod = authType;
       userName = login;
 
-      final NXCPMessage request = newMessage(NXCPCodes.CMD_LOGIN);
+      NXCPMessage request = newMessage(NXCPCodes.CMD_LOGIN);
       request.setFieldInt16(NXCPCodes.VID_AUTH_TYPE, authType.getValue());
       request.setField(NXCPCodes.VID_LOGIN_NAME, login);
 
@@ -2286,14 +2287,49 @@ public class NXCSession
       request.setFieldInt16(NXCPCodes.VID_ENABLE_COMPRESSION, 1);
       sendMessage(request);
 
-      final NXCPMessage response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
+      NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
       int rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
       logger.debug("CMD_LOGIN_RESP received, RCC=" + rcc);
+
+      if ((rcc == RCC.NEED_2FA) && (twoFactorAuthentificationCallback != null))
+      {
+         logger.info("Two factor authentication requested by server");
+
+         List<String> methods = response.getStringListFromFields(NXCPCodes.VID_2FA_METHODS_LIST_BASE, NXCPCodes.VID_2FA_METHODS_COUNT);
+         int selectedMethod = twoFactorAuthentificationCallback.selectAuthentificationMethod(methods);
+         logger.debug("Selected method " + selectedMethod);
+
+         if ((selectedMethod >= 0) && (selectedMethod < methods.size()))
+         {
+            request = newMessage(NXCPCodes.CMD_2FA_PREPARE_CHALLENGE);
+            request.setField(NXCPCodes.VID_2FA_METHOD, methods.get(selectedMethod));
+            sendMessage(request);
+
+            response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
+            rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
+            logger.debug("Two factor challenge preparation completed, RCC=" + rcc);
+
+            if (rcc == RCC.SUCCESS)
+            {
+               String challenge = response.getFieldAsString(NXCPCodes.VID_CHALLENGE);
+               String userResponse = twoFactorAuthentificationCallback.getUserResponse(challenge);
+               request = newMessage(NXCPCodes.CMD_2FA_VALIDATE_RESPONSE);
+               request.setField(NXCPCodes.VID_2FA_RESPONSE, userResponse);
+               sendMessage(request);
+
+               response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
+               rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
+               logger.debug("Two factor validation response received, RCC=" + rcc);
+            }
+         }
+      }
+
       if (rcc != RCC.SUCCESS)
       {
          logger.warn("Login failed, RCC=" + rcc);
          throw new NXCException(rcc);
       }
+
       userId = response.getFieldAsInt32(NXCPCodes.VID_USER_ID);
       sessionId = response.getFieldAsInt32(NXCPCodes.VID_SESSION_ID);
       userSystemRights = response.getFieldAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
@@ -2341,7 +2377,7 @@ public class NXCSession
       }
 
       messageOfTheDay = response.getFieldAsString(NXCPCodes.VID_MESSAGE_OF_THE_DAY);
-      
+
       count = response.getFieldAsInt32(NXCPCodes.VID_LICENSE_PROBLEM_COUNT);
       if (count > 0)
       {
