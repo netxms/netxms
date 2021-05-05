@@ -467,11 +467,11 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 	if (!(node->getCapabilities() & NC_IS_LLDP))
 		return;
 
-	nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("Collecting LLDP topology information for node %s [%d]"), node->getName(), node->getId());
+   nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("Collecting LLDP topology information for node %s [%d]"), node->getName(), node->getId());
 
    StringObjectMap<SNMP_Variable> *connections = ReadLLDPRemoteTable(node);
-	if (connections != nullptr)
-	{
+   if (connections != nullptr)
+   {
       StringList *oids = connections->keys();
       for(int i = 0; i < oids->size(); i++)
       {
@@ -479,13 +479,13 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
          if (_tcsncmp(oid, _T(".1.0.8802.1.1.2.1.4.1.1.5."), 26))
             continue;
          SNMP_Variable *var = connections->get(oid);
-         ProcessLLDPConnectionEntry(node, connections.get(), var, nbs);
+         ProcessLLDPConnectionEntry(node, connections, var, nbs);
       }
       delete oids;
       delete connections;
-	}
+   }
 
-	nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("Finished collecting LLDP topology information for node %s [%d]"), node->getName(), node->getId());
+   nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("Finished collecting LLDP topology information for node %s [%d]"), node->getName(), node->getId());
 }
 
 /**
