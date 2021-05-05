@@ -24,6 +24,30 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.50 to 40.51
+ */
+static bool H_UpgradeFromV50()
+{
+   if (GetSchemaLevelForMajorVersion(38) < 13)
+   {
+      int ruleId = NextFreeEPPruleID();
+
+      TCHAR query[1024];
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
+               _T("VALUES (%d,'b517ca11-cdf8-4813-87fa-9a2ace070564',7944,'Generate alarm on agent policy validation failure','%%m',5,'POLICY_ERROR_%%2_%%5','',0,%d)"),
+               ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+
+      _sntprintf(query, 256, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_POLICY_VALIDATION_ERROR);
+      CHK_EXEC(SQLQuery(query));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(38, 13));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(51));
+   return true;
+}
+
+/**
  * Upgrade from 40.49 to 40.50
  */
 static bool H_UpgradeFromV49()
@@ -1292,6 +1316,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 50, 40, 51, H_UpgradeFromV50 },
    { 49, 40, 50, H_UpgradeFromV49 },
    { 48, 40, 49, H_UpgradeFromV48 },
    { 47, 40, 48, H_UpgradeFromV47 },
