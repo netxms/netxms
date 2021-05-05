@@ -16,6 +16,11 @@ else
 fi
 
 ###############################################################################
+NXREPORTD_JAR_FILE=~PKGLIBDIR~/java/nxreportd-~PACKAGE_VERSION~.jar
+if [ ! -r $NXREPORTD_JAR_FILE ]; then
+	NXREPORTD_JAR_FILE=$NETXMS_HOME/lib/netxms/java/nxreportd-~PACKAGE_VERSION~.jar
+fi
+
 show_usage_and_exit() {
 	cat <<END
 NetXMS Reporting Server
@@ -93,7 +98,7 @@ if [ -z $JAVA ]; then
 fi
 
 if [ "x$DAEMON" = "xyes" ]; then
-	nohup $JAVA $JAVA_OPTIONS -jar $NETXMS_HOME/lib/netxms/java/nxreportd-~PACKAGE_VERSION~.jar >/dev/null 2>/dev/null &
+	nohup $JAVA $JAVA_OPTIONS -jar $NXREPORTD_JAR_FILE >/dev/null 2>/dev/null &
 else
-	$JAVA $JAVA_OPTIONS -jar $NETXMS_HOME/lib/netxms/java/nxreportd-~PACKAGE_VERSION~.jar
+	$JAVA $JAVA_OPTIONS -jar $NXREPORTD_JAR_FILE
 fi
