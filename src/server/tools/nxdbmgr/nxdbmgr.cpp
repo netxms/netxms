@@ -164,8 +164,7 @@ DB_HANDLE ConnectToDatabase()
 static DB_HANDLE ConnectToDatabaseAsDBA(const TCHAR *login, const TCHAR *password)
 {
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   const TCHAR *dbName = !stricmp(DBGetDriverName(s_driver), "pgsql") ? _T("template1") : nullptr;
-   DB_HANDLE hdb = DBConnect(s_driver, s_dbServer, dbName, login, password, nullptr, errorText);
+   DB_HANDLE hdb = DBConnect(s_driver, s_dbServer, nullptr, login, password, nullptr, errorText);
    if (hdb == nullptr)
    {
       _tprintf(_T("Unable to connect to database server %s as %s (%s)\n"), s_dbServer, login, errorText);
