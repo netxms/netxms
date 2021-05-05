@@ -207,14 +207,10 @@ extern "C" void __EXPORT DrvUnload()
 extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *login, const char *password, 
 															 const char *database, const char *schema, WCHAR *errorText)
 {
-   long iResult;
-   MSSQL_CONN *pConn;
-
-   // Allocate our connection structure
-   pConn = (MSSQL_CONN *)malloc(sizeof(MSSQL_CONN));
+   MSSQL_CONN *pConn = MemAllocStruct<MSSQL_CONN>();
 
    // Allocate environment
-   iResult = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pConn->sqlEnv);
+   long iResult = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pConn->sqlEnv);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{
 		wcscpy(errorText, L"Cannot allocate environment handle");
@@ -245,11 +241,11 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
 
 	if (!strcmp(login, "*"))
 	{
-		snprintf(connectString, 1024, "DRIVER={%s};Server=%s;Trusted_Connection=yes;Database=%s;APP=NetXMS", s_driver, host, database);
+		snprintf(connectString, 1024, "DRIVER={%s};Server=%s;Trusted_Connection=yes;Database=%s;APP=NetXMS", s_driver, host, (database != nullptr) ? database : "master");
 	}
 	else
 	{
-		snprintf(connectString, 1024, "DRIVER={%s};Server=%s;UID=%s;PWD=%s;Database=%s;APP=NetXMS", s_driver, host, login, password, database);
+		snprintf(connectString, 1024, "DRIVER={%s};Server=%s;UID=%s;PWD=%s;Database=%s;APP=NetXMS", s_driver, host, login, password, (database != nullptr) ? database : "master");
 	}
 	iResult = SQLDriverConnectA(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
 
