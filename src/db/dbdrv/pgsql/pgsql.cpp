@@ -232,7 +232,7 @@ extern "C" void __EXPORT DrvUnload()
 extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *serverAddress,	const char *login, const char *password,
          const char *database, const char *schema, WCHAR *errorText)
 {
-	if ((database == nullptr) || (*database == 0))
+	if ((database != nullptr) && (*database == 0))
 	{
 		wcscpy(errorText, L"Database name is empty");
 		return nullptr;
@@ -264,7 +264,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *serverAddress,	const
 	if (pConn != nullptr)
 	{
 		// should be replaced with PQconnectdb();
-		pConn->handle = PQsetdbLogin(host, port, nullptr, nullptr, database, login, password);
+		pConn->handle = PQsetdbLogin(host, port, nullptr, nullptr, (database != nullptr) ? database : "template1", login, password);
 
 		if (PQstatus(pConn->handle) == CONNECTION_BAD)
 		{
