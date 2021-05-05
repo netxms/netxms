@@ -24,6 +24,26 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 38.12 to 38.13
+ */
+static bool H_UpgradeFromV12()
+{
+   int ruleId = NextFreeEPPruleID();
+
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
+            _T("VALUES (%d,'b517ca11-cdf8-4813-87fa-9a2ace070564',7944,'Generate alarm on agent policy validation failure','%%m',5,'POLICY_ERROR_%%2_%%5','',0,%d)"),
+            ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 256, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_POLICY_VALIDATION_ERROR);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 38.11 to 38.12
  */
 static bool H_UpgradeFromV11()
@@ -261,6 +281,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 12, 38, 13, H_UpgradeFromV12 },
    { 11, 38, 12, H_UpgradeFromV11 },
    { 10, 38, 11, H_UpgradeFromV10 },
    { 9,  38, 10, H_UpgradeFromV9  },
