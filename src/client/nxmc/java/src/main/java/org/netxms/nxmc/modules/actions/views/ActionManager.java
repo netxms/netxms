@@ -49,7 +49,6 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.FilterText;
@@ -84,7 +83,6 @@ public class ActionManager extends ConfigurationView
    private NXCSession session;
    private SessionListener sessionListener;
    private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
-   private Action actionRefresh;
    private Action actionNew;
    private Action actionEdit;
    private Action actionDelete;
@@ -217,10 +215,17 @@ public class ActionManager extends ConfigurationView
          }
       };
       session.addListener(sessionListener);
-
-      refreshActionList();
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      refresh();
+   }   
+   
    /**
     * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
     */
@@ -249,9 +254,10 @@ public class ActionManager extends ConfigurationView
    }
 
    /**
-    * Refresh action list
+    * @see org.netxms.nxmc.base.views.View#refresh()
     */
-   private void refreshActionList()
+   @Override
+   public void refresh()
    {
       new Job(i18n.tr("Load configured actions"), this) {
          @Override
@@ -283,14 +289,6 @@ public class ActionManager extends ConfigurationView
     */
    private void createActions()
    {
-      actionRefresh = new RefreshAction() {
-         @Override
-         public void run()
-         {
-            refreshActionList();
-         }
-      };
-
       actionNew = new Action(i18n.tr("&Create..."), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()

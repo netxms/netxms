@@ -1,2 +1,3 @@
 org.netxms.nxmc.modules.actions.ActionsConfigurationElement
 org.netxms.nxmc.modules.nxsl.ScriptLibraryConfigurationElement
+org.netxms.nxmc.modules.serverconfig.ServerVariableElement
