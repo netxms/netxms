@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.server.ServerVariable;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.actions.views.helpers.ActionLabelProvider;
 import org.netxms.nxmc.modules.serverconfig.views.ServerVariables;
 import org.xnap.commons.i18n.I18n;
 
