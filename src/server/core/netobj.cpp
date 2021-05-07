@@ -2447,6 +2447,7 @@ void NetObj::executeHookScript(const TCHAR *hookName, uint32_t pollRequestId)
    {
       nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
                 m_name, m_id, scriptName, vm->getErrorText());
+      PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
    }
    vm.destroy();
 }
