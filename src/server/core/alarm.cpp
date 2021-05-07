@@ -425,6 +425,7 @@ static void ExecuteHookScript(NXSL_VM *vm)
    if (!vm->run())
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Alarm::executeHookScript: hook script execution error (%s)"), vm->getErrorText());
+      PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", _T("Hook::AlarmStateChange"), vm->getErrorText(), 0);
    }
    delete vm;
 }

@@ -1729,6 +1729,7 @@ shared_ptr<Interface> Node::createInterfaceObject(InterfaceInfo *info, bool manu
       else
       {
          nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 4, _T("Node::createInterfaceObject(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
+         PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", _T("Hook::CreateInterface"), vm->getErrorText(), 0);
       }
       vm.destroy();
       nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::createInterfaceObject(%s [%u]): interface \"%s\" (ifIndex=%d) %s by filter"),
@@ -5088,6 +5089,7 @@ void Node::executeInterfaceUpdateHook(Interface *iface)
    if (!vm->run(1, &argv))
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Node::executeInterfaceUpdateHook(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
+      PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", _T("Hook::UpdateInterface"), vm->getErrorText(), 0);
    }
    delete vm;
 }
@@ -5202,18 +5204,18 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
       for(int j = 0; j < ifList->size(); j++)
       {
          InterfaceInfo *ifInfo = ifList->get(j);
+         shared_ptr<Interface> pInterface;
          bool isNewInterface = true;
+         bool interfaceUpdated = false;
 
          readLockChildList();
          for(int i = 0; i < getChildList().size(); i++)
          {
             if (getChildList().get(i)->getObjectClass() == OBJECT_INTERFACE)
             {
-               Interface *pInterface = static_cast<Interface*>(getChildList().get(i));
+               pInterface = static_pointer_cast<Interface>(getChildList().getShared(i));
                if (ifInfo->index == pInterface->getIfIndex())
                {
-                  bool interfaceUpdated = false;
-
                   // Existing interface, check configuration
                   if (memcmp(ifInfo->macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) &&
                       !pInterface->getMacAddr().equals(ifInfo->macAddr, MAC_ADDR_LENGTH))
@@ -5321,9 +5323,6 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
                      }
                   }
 
-                  if (interfaceUpdated)
-                     executeInterfaceUpdateHook(pInterface);
-
                   isNewInterface = false;
                   break;
                }
@@ -5343,6 +5342,10 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
             {
                sendPollerMsg(POLLER_WARNING _T("   Creation of interface object \"%s\" blocked by filter\r\n"), ifInfo->name);
             }
+         }
+         else if (interfaceUpdated)
+         {
+            executeInterfaceUpdateHook(pInterface.get());
          }
       }
 
@@ -9337,6 +9340,7 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
       else
       {
          nxlog_debug(4, _T("Node::createSubnet(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
+         PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", _T("Hook::CreateSubnet"), vm->getErrorText(), 0);
       }
       vm.destroy();
       DbgPrintf(6, _T("Node::createSubnet(%s [%u]): subnet \"%s\" %s by filter"),

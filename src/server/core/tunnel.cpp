@@ -84,11 +84,12 @@ static Mutex s_pollerListLock(true);
 /**
  * Execute tunnel establishing hook script in the separate thread
  */
-static void ExecuteScriptInBackground(NXSL_VM *vm)
+static void ExecuteScriptInBackground(NXSL_VM *vm, const TCHAR *scriptName)
 {
    if (!vm->run())
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Tunnel hook script execution error (%s)"), vm->getErrorText());
+      PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
    }
    delete vm;
 }
@@ -98,8 +99,9 @@ static void ExecuteScriptInBackground(NXSL_VM *vm)
  */
 static void ExecuteTunnelHookScript(const shared_ptr<AgentTunnel>& tunnel)
 {
+   const TCHAR *scriptName = tunnel->isBound() ? _T("Hook::OpenBoundTunnel") : _T("Hook::OpenUnboundTunnel");
    shared_ptr<NetObj> node = tunnel->isBound() ? FindObjectById(tunnel->getNodeId(), OBJECT_NODE) : shared_ptr<NetObj>();
-   ScriptVMHandle vm = CreateServerScriptVM(tunnel->isBound() ? _T("Hook::OpenBoundTunnel") : _T("Hook::OpenUnboundTunnel"), node);
+   ScriptVMHandle vm = CreateServerScriptVM(scriptName, node);
    if (!vm.isValid())
    {
       tunnel->debugPrintf(5, _T("Hook script %s"), (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY) ? _T("is empty") : _T("not found"));
@@ -107,7 +109,7 @@ static void ExecuteTunnelHookScript(const shared_ptr<AgentTunnel>& tunnel)
    }
 
    vm->setGlobalVariable("$tunnel", vm->createValue(new NXSL_Object(vm, &g_nxslTunnelClass, new shared_ptr<AgentTunnel>(tunnel))));
-   ThreadPoolExecute(g_mainThreadPool, ExecuteScriptInBackground, vm.vm());
+   ThreadPoolExecute(g_mainThreadPool, ExecuteScriptInBackground, vm.vm(), scriptName);
 }
 
 /**
