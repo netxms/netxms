@@ -223,6 +223,7 @@ static void EventLogger()
 			if (hStmt != nullptr)
 			{
 			   WriteEvent(hStmt, event);
+			   delete event;
             event = s_loggerQueue.getOrBlock(500);
 			   while((event != nullptr) && (event != INVALID_POINTER_VALUE))
 				{
