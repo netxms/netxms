@@ -25,9 +25,7 @@
 
 #define DEBUG_TAG _T("event.proc")
 
-#if WITH_ZMQ
-#include "zeromq.h"
-#endif
+#define MAX_DB_QUERY_FAILED_EVENTS     30
 
 /**
  * Number of processed events since start
@@ -96,6 +94,63 @@ static void EventStormDetector()
 }
 
 /**
+ * Timestamps of latest SYS_DB_QUERY_FAILED events
+ */
+static time_t s_dbQueryFailedTimestamps[MAX_DB_QUERY_FAILED_EVENTS];
+static int s_dbQueryFailedTimestampPos = 0;
+
+/**
+ * Check that event can be written to database
+ */
+static bool IsEventWriteAllowed(Event *event)
+{
+   // Don't write SYS_DB_QUERY_FAILED to log if happening too often to prevent
+   // possible event recursion in case of severe DB failure
+   if  (event->getCode() == EVENT_DB_QUERY_FAILED)
+   {
+      time_t now = time(nullptr);
+      bool allow = false;
+      for(int i = 0; i < MAX_DB_QUERY_FAILED_EVENTS; i++)
+      {
+         if (s_dbQueryFailedTimestamps[i] < now - 60)
+         {
+            allow = true;
+            break;
+         }
+      }
+      s_dbQueryFailedTimestamps[s_dbQueryFailedTimestampPos++] = event->getTimestamp();
+      if (s_dbQueryFailedTimestampPos == MAX_DB_QUERY_FAILED_EVENTS)
+         s_dbQueryFailedTimestampPos = 0;
+      if (!allow)
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("EventLogger: event %s with ID ") UINT64_FMT _T(" dropped by rate limiter"), event->getName(), event->getId());
+      return allow;
+   }
+   return true;
+}
+
+/**
+ * Write event
+ */
+static inline void WriteEvent(DB_STATEMENT hStmt, Event *event)
+{
+   DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, event->getId());
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, event->getCode());
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<UINT32>(event->getTimestamp()));
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<INT32>(event->getOrigin()));
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<UINT32>(event->getOriginTimestamp()));
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, event->getSourceId());
+   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, event->getZoneUIN());
+   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, event->getDciId());
+   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, event->getSeverity());
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, event->getMessage(), DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
+   DBBind(hStmt, 11, DB_SQLTYPE_BIGINT, event->getRootId());
+   DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, event->getTagsAsList(), DB_BIND_TRANSIENT, 2000);
+   DBBind(hStmt, 13, DB_SQLTYPE_TEXT, event->toJson(), DB_BIND_DYNAMIC);
+   DBExecute(hStmt);
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("EventLogger: DBExecute: id=%d,code=%d"), (int)event->getId(), (int)event->getCode());
+}
+
+/**
  * Event logger
  */
 static void EventLogger()
@@ -104,50 +159,56 @@ static void EventLogger()
 
    while(true)
    {
-      Event *pEvent = s_loggerQueue.getOrBlock();
-      if (pEvent == INVALID_POINTER_VALUE)
+      Event *event = s_loggerQueue.getOrBlock();
+      if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
+
+      if (!IsEventWriteAllowed(event))
+      {
+         delete event;
+         continue;
+      }
 
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		int syntaxId = DBGetSyntax(hdb);
 		if (syntaxId == DB_SYNTAX_SQLITE)
 		{ 
-			StringBuffer query = _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,zone_uin,origin,")
-			               _T("origin_timestamp,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) VALUES (");
-			query.append(pEvent->getId());
+         StringBuffer query = _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,zone_uin,origin,")
+                        _T("origin_timestamp,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) VALUES (");
+         query.append(event->getId());
          query.append(_T(','));
-			query.append(pEvent->getCode());
+         query.append(event->getCode());
          query.append(_T(','));
-         query.append((UINT32)pEvent->getTimestamp());
+         query.append((UINT32)event->getTimestamp());
          query.append(_T(','));
-         query.append(pEvent->getSourceId());
+         query.append(event->getSourceId());
          query.append(_T(','));
-         query.append(pEvent->getZoneUIN());
+         query.append(event->getZoneUIN());
          query.append(_T(','));
-         query.append(static_cast<INT32>(pEvent->getOrigin()));
+         query.append(static_cast<int32_t>(event->getOrigin()));
          query.append(_T(','));
-         query.append(static_cast<UINT32>(pEvent->getOriginTimestamp()));
+         query.append(static_cast<uint32_t>(event->getOriginTimestamp()));
          query.append(_T(','));
-         query.append(pEvent->getDciId());
+         query.append(event->getDciId());
          query.append(_T(','));
-         query.append(pEvent->getSeverity());
+         query.append(event->getSeverity());
          query.append(_T(','));
-         query.append(DBPrepareString(hdb, pEvent->getMessage(), MAX_EVENT_MSG_LENGTH));
+         query.append(DBPrepareString(hdb, event->getMessage(), MAX_EVENT_MSG_LENGTH));
          query.append(_T(','));
-         query.append(pEvent->getRootId());
+         query.append(event->getRootId());
          query.append(_T(','));
-         query.append(DBPrepareString(hdb, pEvent->getTagsAsList(), 2000));
+         query.append(DBPrepareString(hdb, event->getTagsAsList(), 2000));
          query.append(_T(','));
-         json_t *json = pEvent->toJson();
+         json_t *json = event->toJson();
          char *jsonText = json_dumps(json, JSON_INDENT(3) | JSON_EMBED);
          query.append(DBPrepareStringUTF8(hdb, jsonText));
          MemFree(jsonText);
          json_decref(json);
          query.append(_T(')'));
 
-			DBQuery(hdb, query);
-			nxlog_debug_tag(DEBUG_TAG, 8, _T("EventLogger: DBQuery: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
-			delete pEvent;
+         DBQuery(hdb, query);
+         nxlog_debug_tag(DEBUG_TAG, 8, _T("EventLogger: DBQuery: id=%d,code=%d"), (int)event->getId(), (int)event->getCode());
+			delete event;
 		}
 		else
 		{
@@ -161,36 +222,27 @@ static void EventLogger()
                         _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"), true);
 			if (hStmt != nullptr)
 			{
-				do
+			   WriteEvent(hStmt, event);
+            event = s_loggerQueue.getOrBlock(500);
+			   while((event != nullptr) && (event != INVALID_POINTER_VALUE))
 				{
-					DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, pEvent->getId());
-					DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, pEvent->getCode());
-					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<UINT32>(pEvent->getTimestamp()));
-               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<INT32>(pEvent->getOrigin()));
-               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<UINT32>(pEvent->getOriginTimestamp()));
-					DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, pEvent->getSourceId());
-               DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, pEvent->getZoneUIN());
-               DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, pEvent->getDciId());
-					DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, pEvent->getSeverity());
-               DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
-					DBBind(hStmt, 11, DB_SQLTYPE_BIGINT, pEvent->getRootId());
-               DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, pEvent->getTagsAsList(), DB_BIND_TRANSIENT, 2000);
-               DBBind(hStmt, 13, DB_SQLTYPE_TEXT, pEvent->toJson(), DB_BIND_DYNAMIC);
-					DBExecute(hStmt);
-					nxlog_debug_tag(DEBUG_TAG, 8, _T("EventLogger: DBExecute: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
-					delete pEvent;
-					pEvent = s_loggerQueue.getOrBlock(500);
-				} while((pEvent != nullptr) && (pEvent != INVALID_POINTER_VALUE));
+				   if (IsEventWriteAllowed(event))
+				   {
+		            WriteEvent(hStmt, event);
+				   }
+					delete event;
+					event = s_loggerQueue.getOrBlock(500);
+				}
 				DBFreeStatement(hStmt);
 			}
 			else
 			{
-				delete pEvent;
+				delete event;
 			}
 		}
 
 		DBConnectionPoolReleaseConnection(hdb);
-		if (pEvent == INVALID_POINTER_VALUE)
+		if (event == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator (need second check if got it in inner loop)
 	}
 }
@@ -251,19 +303,13 @@ static void ProcessEvent(Event *event, int processorId)
    // Pass event through event processing policy if it is not correlated
    if (event->getRootId() == 0)
    {
-#ifdef WITH_ZMQ
-      ZmqPublishEvent(event);
-#endif
-
       g_pEventPolicy->processEvent(event);
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Event ") UINT64_FMT _T(" with code %d passed event processing policy"), event->getId(), event->getCode());
    }
 
    // Write event to log if required, otherwise destroy it
-   // Don't write SYS_DB_QUERY_FAILED to log to prevent
-   // possible event recursion in case of severe DB failure
    // Logger will destroy event object after logging
-   if ((event->getFlags() & EF_LOG) && (event->getCode() != EVENT_DB_QUERY_FAILED))
+   if (event->getFlags() & EF_LOG)
    {
       s_loggerQueue.put(event);
    }
@@ -545,6 +591,7 @@ static void ParallelEventProcessor()
  */
 THREAD StartEventProcessor()
 {
+   memset(s_dbQueryFailedTimestamps, 0, sizeof(s_dbQueryFailedTimestamps));
    s_threadLogger = ThreadCreateEx(EventLogger);
    s_threadStormDetector = ThreadCreateEx(EventStormDetector);
    return (ConfigReadInt(_T("Events.Processor.PoolSize"), 1) > 1) ? ThreadCreateEx(ParallelEventProcessor) : ThreadCreateEx(SerialEventProcessor);
