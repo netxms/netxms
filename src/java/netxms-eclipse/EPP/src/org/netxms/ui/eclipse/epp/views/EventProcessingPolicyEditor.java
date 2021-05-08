@@ -41,7 +41,6 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
@@ -51,7 +50,6 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.contexts.IContextService;
@@ -65,6 +63,7 @@ import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.epp.Activator;
 import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.views.helpers.RuleClipboard;
@@ -82,8 +81,6 @@ import org.netxms.ui.eclipse.widgets.FilterText;
 public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePart
 {
    public static final String ID = "org.netxms.ui.eclipse.epp.view.policy_editor"; //$NON-NLS-1$
-
-   private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
 
    private NXCSession session;
    private boolean policyLocked = false;
@@ -192,7 +189,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       layout.marginWidth = 0;
       layout.verticalSpacing = 0;
       dataArea.setLayout(layout);
-      dataArea.setBackground(BACKGROUND_COLOR);
+      dataArea.setBackground(ThemeEngine.getBackgroundColor("RuleEditor"));
 
       scroller.setContent(dataArea);
       scroller.setExpandVertical(true);
