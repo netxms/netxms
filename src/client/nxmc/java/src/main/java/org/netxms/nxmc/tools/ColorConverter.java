@@ -509,6 +509,13 @@ public class ColorConverter
 	   return colorNames.get(cdef.toLowerCase());
 	}
 	
+   /**
+    * Select text color based on background color.
+    *
+    * @param color background color
+    * @param cache color cache
+    * @return proposed text color
+    */
 	public static Color selectTextColorByBackgroundColor(Color color, ColorCache cache)
 	{
 	   float arr[] = new float[3];
@@ -528,6 +535,17 @@ public class ColorConverter
       
       return l > 0.179 ? cache.create(rgbFromInt(0xFF000000)) : cache.create(rgbFromInt(0xFFFFFFFF));
 	}
+
+   /**
+    * Check if given color is dark
+    *
+    * @param rgb color to test
+    * @return true if color is darker than 64,64,64
+    */
+   public static boolean isDarkColor(RGB rgb)
+   {
+      return rgb.blue < 64 && rgb.green < 64 && rgb.red < 64;
+   }
 
    /**
     * Blends two primary color components based on the provided ratio.
