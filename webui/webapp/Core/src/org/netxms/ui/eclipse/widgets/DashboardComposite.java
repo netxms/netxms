@@ -48,7 +48,7 @@ public class DashboardComposite extends Canvas
 		colors = new ColorCache(this);
       if (ColorConverter.isDarkColor(getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB()))
       {
-         borderOuterColor = colors.create(171, 173, 179);
+         borderOuterColor = colors.create(110, 111, 115);
          borderInnerColor = colors.create(53, 53, 53);
       }
       else

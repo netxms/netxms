@@ -217,23 +217,23 @@ public class ThemeEngine
          elements.put("Card.Title", new ThemeElement(new RGB(53, 80, 9), new RGB(240, 240, 240)));
          elements.put("Dashboard", new ThemeElement(new RGB(53, 53, 53), null));
          elements.put("GeoMap.Title", new ThemeElement(null, new RGB(0, 0, 0)));
-         elements.put("List.Error", new ThemeElement(null, new RGB(255, 0, 0)));
+         elements.put("List.Error", new ThemeElement(null, new RGB(220, 35, 61)));
          elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
          elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
-         elements.put("MessageBar", new ThemeElement(new RGB(255, 252, 192), new RGB(0, 0, 0)));
+         elements.put("MessageBar", new ThemeElement(new RGB(138, 148, 47), new RGB(0, 0, 0)));
          elements.put("MibExplorer.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
          elements.put("ObjectTab.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
          elements.put("Rack", new ThemeElement(new RGB(255, 255, 255), new RGB(0, 0, 0)));
          elements.put("Rack.Border", new ThemeElement(new RGB(92, 92, 92), new RGB(92, 92, 92)));
          elements.put("Rack.EmptySpace", new ThemeElement(new RGB(224, 224, 224), null));
-         elements.put("RuleEditor", new ThemeElement(new RGB(255, 255, 255), new RGB(0, 0, 0)));
-         elements.put("RuleEditor.Title.Disabled", new ThemeElement(new RGB(202, 227, 206), null));
-         elements.put("RuleEditor.Title.Normal", new ThemeElement(new RGB(225, 233, 241), null));
-         elements.put("RuleEditor.Title.Selected", new ThemeElement(new RGB(245, 249, 104), null));
-         elements.put("RuleEditor.Border.Action", new ThemeElement(new RGB(186, 176, 201), null));
-         elements.put("RuleEditor.Border.Condition", new ThemeElement(new RGB(198, 214, 172), null));
-         elements.put("RuleEditor.Border.Rule", new ThemeElement(new RGB(153, 180, 209), null));
-         elements.put("ServiceAvailability.Legend", new ThemeElement(null, new RGB(0, 0, 0)));
+         elements.put("RuleEditor", new ThemeElement(new RGB(53, 53, 53), new RGB(240, 240, 240)));
+         elements.put("RuleEditor.Title.Disabled", new ThemeElement(new RGB(98, 110, 99), null));
+         elements.put("RuleEditor.Title.Normal", new ThemeElement(new RGB(80, 84, 87), null));
+         elements.put("RuleEditor.Title.Selected", new ThemeElement(new RGB(113, 115, 48), null));
+         elements.put("RuleEditor.Border.Action", new ThemeElement(new RGB(90, 85, 97), null));
+         elements.put("RuleEditor.Border.Condition", new ThemeElement(new RGB(94, 102, 82), null));
+         elements.put("RuleEditor.Border.Rule", new ThemeElement(new RGB(56, 66, 77), null));
+         elements.put("ServiceAvailability.Legend", new ThemeElement(null, new RGB(240, 240, 240)));
          elements.put("Status.Normal", new ThemeElement(null, new RGB(0, 192, 0)));
          elements.put("Status.Warning", new ThemeElement(null, new RGB(0, 255, 255)));
          elements.put("Status.Minor", new ThemeElement(null, new RGB(231, 226, 0)));
@@ -244,7 +244,7 @@ public class ThemeEngine
          elements.put("Status.Disabled", new ThemeElement(null, new RGB(128, 64, 0)));
          elements.put("Status.Testing", new ThemeElement(null, new RGB(255, 128, 255)));
          elements.put("StatusMap.Text", new ThemeElement(null, new RGB(0, 0, 0)));
-         elements.put("TextInput.Error", new ThemeElement(new RGB(255, 0, 0), null));
+         elements.put("TextInput.Error", new ThemeElement(new RGB(48, 0, 0), null));
       }
       else
       {

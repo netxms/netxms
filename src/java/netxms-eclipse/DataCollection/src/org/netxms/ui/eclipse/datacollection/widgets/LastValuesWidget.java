@@ -147,7 +147,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
             refreshController.dispose();
          }
       });
-		
+
       getContent().setLayout(new FormLayout());
 		
 		// Create filter area
