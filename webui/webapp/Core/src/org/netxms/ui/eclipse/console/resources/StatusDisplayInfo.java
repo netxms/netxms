@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.console.resources;
 
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
@@ -29,18 +27,18 @@ import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.ColorCache;
 
 /**
  * Status display information
  */
 public final class StatusDisplayInfo
 {
+   private static final String[] STATUS_COLOR_NAMES =
+         { "Status.Normal", "Status.Warning", "Status.Minor", "Status.Major", "Status.Critical", "Status.Unknown", "Status.Unmanaged", "Status.Disabled", "Status.Testing" };
+
    private String[] statusText = new String[9];
    private ImageDescriptor[] statusImageDesc = new ImageDescriptor[9];
    private Image[] statusImage = new Image[9];
-   private ColorCache colorCache;
-   private Color statusColor[] = new Color[9]; 
    
    /**
     * Get status display instance for current display
@@ -88,45 +86,16 @@ public final class StatusDisplayInfo
 		for(int i = 0; i < statusImageDesc.length; i++)
 			statusImage[i] = statusImageDesc[i].createImage(display);
 
-      colorCache = new ColorCache(display);
-      updateStatusColorsInternal();
-		
 		display.disposeExec(new Runnable() {
          @Override
          public void run()
          {
             for(int i = 0; i < statusImageDesc.length; i++)
                statusImage[i].dispose();
-            colorCache.dispose();
          }
       });
 	}
 
-   /**
-    * Update status colors
-    */
-   public static void updateStatusColors()
-   {
-      getInstance().updateStatusColorsInternal();
-   }
-   
-   /**
-    * Update status colors
-    */
-   private void updateStatusColorsInternal()
-   {
-      final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-      statusColor[0] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Normal"));
-      statusColor[1] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Warning"));
-      statusColor[2] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Minor"));
-      statusColor[3] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Major"));
-      statusColor[4] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Critical"));
-      statusColor[5] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Unknown"));
-      statusColor[6] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Unmanaged"));
-      statusColor[7] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Disabled"));
-      statusColor[8] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Testing"));
-   }
-	
    /**
     * Get text for given status/severity code.
     * 
@@ -137,7 +106,7 @@ public final class StatusDisplayInfo
    {
       return getInstance().statusText[status.getValue()];
    }
-   
+
    /**
     * Get text for given status/severity code.
     * 
@@ -148,7 +117,7 @@ public final class StatusDisplayInfo
    {
       return getInstance().statusText[severity.getValue()];
    }
-   
+
    /**
     * Get text for given status/severity code.
     * 
@@ -159,7 +128,7 @@ public final class StatusDisplayInfo
    {
       return getStatusText(ObjectStatus.getByValue(code));
    }
-   
+
    /**
     * Get image descriptor for given status/severity code.
     * 
@@ -170,7 +139,7 @@ public final class StatusDisplayInfo
    {
       return getInstance().statusImageDesc[status.getValue()];
    }
-   
+
    /**
     * Get image descriptor for given status/severity code.
     * 
@@ -192,7 +161,7 @@ public final class StatusDisplayInfo
    {
       return getStatusImageDescriptor(ObjectStatus.getByValue(code));
    }
-   
+
    /**
     * Get image for given status/severity code. Image is owned by library
     * and should not be disposed by caller.
@@ -216,7 +185,7 @@ public final class StatusDisplayInfo
    {
       return getStatusImage(ObjectStatus.getByValue(code));
    }
-   
+
    /**
     * Get image for given status/severity code. Image is owned by library
     * and should not be disposed by caller.
@@ -228,7 +197,7 @@ public final class StatusDisplayInfo
    {
       return getInstance().statusImage[severity.getValue()];
    }
-   
+
 	/**
 	 * Get color for given status/severity code.
 	 * 
@@ -237,10 +206,9 @@ public final class StatusDisplayInfo
 	 */
 	public static Color getStatusColor(ObjectStatus status)
 	{
-	   
-		return getInstance().statusColor[status.getValue()];
+      return ThemeEngine.getForegroundColor(STATUS_COLOR_NAMES[status.getValue()]);
 	}
-   
+
    /**
     * Get color for given status/severity code.
     * 
@@ -249,9 +217,9 @@ public final class StatusDisplayInfo
     */
    public static Color getStatusColor(Severity severity)
    {
-      return getInstance().statusColor[severity.getValue()];
+      return ThemeEngine.getForegroundColor(STATUS_COLOR_NAMES[severity.getValue()]);
    }
-   
+
    /**
     * Get color for given status/severity code.
     * 

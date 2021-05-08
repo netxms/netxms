@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.console;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
-import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 
 /**
  * Preference initializer for console
@@ -56,15 +55,5 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 		ps.setDefault("TIME_FORMAT_STRING", Messages.get().PreferenceInitializer_DefaultTimeFormat); //$NON-NLS-1$
       ps.setDefault("SHORT_TIME_FORMAT_STRING", Messages.get().PreferenceInitializer_DefaultShortTimeFormat); //$NON-NLS-1$
       ps.setDefault("USE_SERVER_TIMEZONE", false); //$NON-NLS-1$
-
-      ps.setDefault("Status.Colors.Normal", ThemeEngine.getForegroundColorDefinitionAsText("Status.Normal")); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Warning", ThemeEngine.getForegroundColorDefinitionAsText("Status.Warning")); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Minor", ThemeEngine.getForegroundColorDefinitionAsText("Status.Minor")); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Major", ThemeEngine.getForegroundColorDefinitionAsText("Status.Major")); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Critical", ThemeEngine.getForegroundColorDefinitionAsText("Status.Critical")); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Unknown", ThemeEngine.getForegroundColorDefinitionAsText("Status.Unknown")); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Unmanaged", ThemeEngine.getForegroundColorDefinitionAsText("Status.Unmanaged")); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Disabled", ThemeEngine.getForegroundColorDefinitionAsText("Status.Disabled")); //$NON-NLS-1$
-      ps.setDefault("Status.Colors.Testing", ThemeEngine.getForegroundColorDefinitionAsText("Status.Testing")); //$NON-NLS-1$
 	}
 }

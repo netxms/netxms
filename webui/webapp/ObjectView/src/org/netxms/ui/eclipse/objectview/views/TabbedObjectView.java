@@ -70,8 +70,6 @@ import org.netxms.ui.eclipse.tools.Command;
 import org.netxms.ui.eclipse.tools.CommandBridge;
 import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
-import org.netxms.ui.eclipse.tools.ViewRefreshController;
-import org.netxms.ui.eclipse.tools.VisibilityValidator;
 
 /**
  * Tabbed view of currently selected object

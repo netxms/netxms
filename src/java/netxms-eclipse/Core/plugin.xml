@@ -144,9 +144,9 @@
            name="%page.regionalSettings">
      </page>
      <page
-           class="org.netxms.ui.eclipse.console.preferencepages.StatusColors"
-           id="org.netxms.ui.eclipse.console.preferencepages.StatusColors"
-           name="Status Colors">
+           class="org.netxms.ui.eclipse.console.preferencepages.ThemePrefs"
+           id="org.netxms.ui.eclipse.console.preferencepages.Theme"
+           name="Theme">
      </page>
    </extension>
    <extension

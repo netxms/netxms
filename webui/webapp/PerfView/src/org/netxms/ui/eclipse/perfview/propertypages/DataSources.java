@@ -91,31 +91,31 @@ public class DataSources extends PreferencePage
       config = settings;     
       this.saveToDatabase = saveToDatabase;
    }
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		if(config instanceof GraphSettings)
+      if (config instanceof GraphSettings)
 		   graphIsTemplate = ((GraphSettings)config).isTemplate();
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
       dciList = new ArrayList<ChartDciConfig>();
       for(ChartDciConfig dci : config.getDciList())
       	dciList.add(new ChartDciConfig(dci));
-      
+
 		labelProvider = new DciListLabelProvider(dciList);
 		labelProvider.resolveDciNames(dciList);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
-      
+
       final String[] columnNames = { Messages.get().DataSources_ColPosition, Messages.get().DataSources_ColNode, Messages.get().DataSources_ColParameter, Messages.get().DataSources_ColLabel, Messages.get().DataSources_ColColor };
       final int[] columnWidths = { 40, 130, 200, 150, 50 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
