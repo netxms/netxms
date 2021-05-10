@@ -3372,12 +3372,13 @@ static bool H_UpgradeFromV3()
             _T("ALTER TABLE object_properties ADD flags integer\n")
             _T("ALTER TABLE object_properties ADD state integer\n")
             _T("ALTER TABLE nodes ADD capabilities integer\n")
-            _T("UPDATE object_properties set flags=0,state=0\n")
+            _T("UPDATE object_properties SET flags=0,state=0\n")
+            _T("UPDATE nodes SET capabilities=0\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("flags"));
-   DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("state"));
-   DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("capabilities"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("flags")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("state")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("capabilities")));
 
    // move flags from old tables to the new one
    CHK_EXEC(MoveFlagsFromOldTables(_T("interfaces")));
