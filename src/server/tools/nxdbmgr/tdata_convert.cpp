@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -180,10 +180,10 @@ static bool ConvertTDataForClass(const TCHAR *className, int stage)
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         uint32_t id = DBGetFieldULong(hResult, i, 0);
          if (stage == 1)
          {
-            if (IsDataTableExist(_T("tdata_%d"), id))
+            if (IsDataTableExist(_T("tdata_%u"), id))
             {
                TCHAR oldName[32], newName[32];
                _sntprintf(oldName, 32, _T("tdata_%d"), id);
@@ -192,7 +192,7 @@ static bool ConvertTDataForClass(const TCHAR *className, int stage)
             }
             CreateTDataTable(id);
          }
-         else if ((stage == 2) && IsDataTableExist(_T("tdata_temp_%d"), id))
+         else if ((stage == 2) && IsDataTableExist(_T("tdata_temp_%u"), id))
          {
             WriteToTerminalEx(_T("Converting table \x1b[1mtdata_%d\x1b[0m:   0%%"), id);
             fflush(stdout);
