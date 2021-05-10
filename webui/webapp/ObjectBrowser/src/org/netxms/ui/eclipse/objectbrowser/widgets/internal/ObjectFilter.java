@@ -118,7 +118,7 @@ public class ObjectFilter extends ViewerFilter
 			   if (object instanceof AbstractObject)
 			   {
 			      long objectID = ((AbstractObject)object).getObjectId();
-			      return String.valueOf(objectID).startsWith(filterString);
+			      return String.valueOf(objectID).contentEquals(filterString);
 			   }
             return false;
 			case ZONE:
