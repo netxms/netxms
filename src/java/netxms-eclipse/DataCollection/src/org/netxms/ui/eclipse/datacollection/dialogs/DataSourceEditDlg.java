@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,8 @@
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -36,6 +34,7 @@ import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.ExtendedColorSelector;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -49,9 +48,7 @@ public class DataSourceEditDlg extends Dialog
    private LabeledText displayFormat;
    private LabeledText dciName;
    private LabeledText dciDescription;
-	private Button colorAuto;
-	private Button colorCustom;
-	private ColorSelector colorSelector;
+   private ExtendedColorSelector colorSelector;
 	private Combo displayType;
 	private Button checkShowThresholds;
 	private Button checkInvertValues;
@@ -72,9 +69,9 @@ public class DataSourceEditDlg extends Dialog
 		this.graphIsTemplate = graphIsTemplate;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -82,9 +79,9 @@ public class DataSourceEditDlg extends Dialog
 		newShell.setText(Messages.get().DataSourceEditDlg_ShellTitle);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -128,7 +125,7 @@ public class DataSourceEditDlg extends Dialog
       gd.horizontalSpan = 2;
       displayFormat.setLayoutData(gd);
       
-		if(graphIsTemplate)
+      if (graphIsTemplate)
 		{
 		   dciName = new LabeledText(dialogArea, SWT.NONE);
 		   dciName.setLabel("DCI Name");
@@ -205,90 +202,42 @@ public class DataSourceEditDlg extends Dialog
       checkShowThresholds = new Button(optionsGroup, SWT.CHECK);
       checkShowThresholds.setText(Messages.get().DataSourceEditDlg_ShowThresholds);
       checkShowThresholds.setSelection(dci.showThresholds);
-      
+
       checkInvertValues = new Button(optionsGroup, SWT.CHECK);
       checkInvertValues.setText(Messages.get().DataSourceEditDlg_InvertValues);
       checkInvertValues.setSelection(dci.invertValues);
-      
+
       checkRawValues = new Button(optionsGroup, SWT.CHECK);
       checkRawValues.setText("Raw values");
       checkRawValues.setSelection(dci.useRawValues);
-      
-      if(graphIsTemplate)
+
+      if (graphIsTemplate)
       {
          checkMultipeMatch = new Button(optionsGroup, SWT.CHECK);
          checkMultipeMatch.setText("Multiple match");
          checkMultipeMatch.setSelection(dci.multiMatch);         
       }
 
-      /*** Color group ***/
-		Group colorGroup = new Group(dialogArea, SWT.NONE);
-		colorGroup.setText(Messages.get().DataSourceEditDlg_Color);
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.FILL;
-		colorGroup.setLayoutData(gd);
-		
-		layout = new GridLayout();
-		layout.numColumns = 2;
-		colorGroup.setLayout(layout);
-		
-		colorAuto = new Button(colorGroup, SWT.RADIO);
-		colorAuto.setText(Messages.get().DataSourceEditDlg_AutoColor);
-		colorAuto.setSelection(dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR));
-		gd = new GridData();
-		gd.horizontalSpan = 2;
-		colorAuto.setLayoutData(gd);
-		colorAuto.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				colorSelector.setEnabled(false);
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
-		
-		colorCustom = new Button(colorGroup, SWT.RADIO);
-		colorCustom.setText(Messages.get().DataSourceEditDlg_CustomColor);
-		colorCustom.setSelection(!dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR));
-		colorCustom.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				colorSelector.setEnabled(true);
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
-		
-		colorSelector = new ColorSelector(colorGroup);
-		colorSelector.setColorValue(ColorConverter.rgbFromInt(dci.getColorAsInt()));
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.LEFT;
-		gd.grabExcessHorizontalSpace = true;
-		colorSelector.getButton().setLayoutData(gd);
-		colorSelector.setEnabled(!dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR));
-		
+      /*** Color ***/
+      colorSelector = new ExtendedColorSelector(dialogArea);
+      colorSelector.setLabels(Messages.get().DataSourceEditDlg_Color, Messages.get().DataSourceEditDlg_AutoColor, Messages.get().DataSourceEditDlg_CustomColor);
+      colorSelector.setColorValue(dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR) ? null : ColorConverter.rgbFromInt(dci.getColorAsInt()));
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      colorSelector.setLayoutData(gd);
+
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
-      if(graphIsTemplate)
+      if (graphIsTemplate)
       {
          dci.dciName = dciName.getText();
          dci.dciDescription = dciDescription.getText();
@@ -301,13 +250,14 @@ public class DataSourceEditDlg extends Dialog
       }
 		dci.name = name.getText();
 		dci.displayFormat = displayFormat.getText();
-		if (colorAuto.getSelection())
+      RGB color = colorSelector.getColorValue();
+      if (color == null)
 		{
 			dci.color = ChartDciConfig.UNSET_COLOR;
 		}
 		else
 		{
-			dci.color = "0x" + Integer.toHexString(ColorConverter.rgbToInt(colorSelector.getColorValue())); //$NON-NLS-1$
+         dci.color = "0x" + Integer.toHexString(ColorConverter.rgbToInt(color)); //$NON-NLS-1$
 		}
 		dci.area = false;
 		dci.displayType = displayType.getSelectionIndex();

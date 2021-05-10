@@ -25,11 +25,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.eclipse.swt.graphics.RGB;
+import org.netxms.client.xml.XMLTools;
+import org.netxms.ui.eclipse.tools.RGBConverter;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.convert.Registry;
 
 /**
  * UI theme
@@ -38,7 +41,7 @@ import org.simpleframework.xml.core.Persister;
 public class Theme
 {
    @Attribute
-   protected String name = "";
+   protected String name;
 
    @ElementMap
    protected Map<String, ThemeElement> elements = new HashMap<String, ThemeElement>();
@@ -52,8 +55,18 @@ public class Theme
     */
    public static Theme load(File file) throws Exception
    {
-      Serializer serializer = new Persister();
+      Registry registry = new Registry();
+      registry.bind(RGB.class, RGBConverter.class);
+      Serializer serializer = XMLTools.createSerializer(registry);
       return serializer.read(Theme.class, file);
+   }
+
+   /**
+    * Create new theme object.
+    */
+   public Theme()
+   {
+      name = "Unnamed";
    }
 
    /**
@@ -86,7 +99,9 @@ public class Theme
     */
    public void save(File file) throws Exception
    {
-      Serializer serializer = new Persister();
+      Registry registry = new Registry();
+      registry.bind(RGB.class, RGBConverter.class);
+      Serializer serializer = XMLTools.createSerializer(registry);
       Writer writer = new FileWriter(file);
       try
       {
@@ -148,5 +163,16 @@ public class Theme
    public List<String> getTags()
    {
       return new ArrayList<String>(elements.keySet());
+   }
+
+   /**
+    * Set elements that are missing comparing to provided source theme.
+    *
+    * @param src source theme
+    */
+   public void setMissingElements(Theme src)
+   {
+      for(String tag : src.elements.keySet())
+         elements.putIfAbsent(tag, src.elements.get(tag));
    }
 }

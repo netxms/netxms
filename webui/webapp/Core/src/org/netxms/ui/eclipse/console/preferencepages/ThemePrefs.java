@@ -20,14 +20,12 @@ package org.netxms.ui.eclipse.console.preferencepages;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.window.Window;
-import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -37,13 +35,20 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.DownloadServiceHandler;
 import org.netxms.ui.eclipse.console.dialogs.ThemeEditDialog;
+import org.netxms.ui.eclipse.console.resources.DefaultDarkTheme;
 import org.netxms.ui.eclipse.console.resources.DefaultLightTheme;
 import org.netxms.ui.eclipse.console.resources.Theme;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -53,8 +58,10 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
 {
    private Combo themeSelector;
    private Button importButton;
+   private Button exportButton;
    private Button newButton;
    private Button editButton;
+   private Button removeButton;
    List<Theme> themes = new ArrayList<Theme>();
 
    /**
@@ -77,21 +84,17 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
-      layout.numColumns = 3;
+      layout.numColumns = 6;
 		dialogArea.setLayout(layout);
+
+      loadThemes();
 
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 3;
-      themeSelector = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY | SWT.BORDER, "Theme", gd);
-      themeSelector.add("Automatic");
-      themeSelector.add("Default Light");
-      themeSelector.add("Default Dark");
-
-      loadThemes();
-      for(Theme t : themes)
-         themeSelector.add(t.getName());
+      gd.horizontalSpan = 4;
+      themeSelector = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY | SWT.BORDER, "Active theme", gd);
+      updateThemeDropDown();
 
       String currentTheme = getPreferenceStore().getString("CurrentTheme");
       if ((currentTheme != null) && !currentTheme.isEmpty())
@@ -107,17 +110,53 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            editButton.setEnabled(themeSelector.getSelectionIndex() > 2);
+            onThemeSelectionChange();
+         }
+      });
+
+      editButton = new Button(dialogArea, SWT.PUSH);
+      editButton.setText("&Edit...");
+      gd = new GridData();
+      gd.verticalAlignment = SWT.BOTTOM;
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      editButton.setLayoutData(gd);
+      editButton.setEnabled(themeSelector.getSelectionIndex() > 2);
+      editButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            editTheme();
+         }
+      });
+
+      removeButton = new Button(dialogArea, SWT.PUSH);
+      removeButton.setText("&Remove");
+      gd = new GridData();
+      gd.verticalAlignment = SWT.BOTTOM;
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      removeButton.setLayoutData(gd);
+      removeButton.setEnabled(themeSelector.getSelectionIndex() > 2);
+      removeButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            removeTheme();
          }
       });
 
       importButton = new Button(dialogArea, SWT.PUSH);
       importButton.setText("&Import...");
       gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.RIGHT;
+      gd.horizontalAlignment = SWT.CENTER;
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       importButton.setLayoutData(gd);
+      importButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            importTheme();
+         }
+      });
 
       newButton = new Button(dialogArea, SWT.PUSH);
       newButton.setText("&New...");
@@ -133,33 +172,73 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
          }
       });
 
-      editButton = new Button(dialogArea, SWT.PUSH);
-      editButton.setText("&Edit...");
+      exportButton = new Button(dialogArea, SWT.PUSH);
+      exportButton.setText("E&xport...");
       gd = new GridData();
       gd.horizontalAlignment = SWT.CENTER;
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-      editButton.setLayoutData(gd);
-      editButton.setEnabled(themeSelector.getSelectionIndex() > 2);
+      exportButton.setLayoutData(gd);
+      exportButton.setEnabled(themeSelector.getSelectionIndex() > 2);
+      exportButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            exportTheme();
+         }
+      });
 
 		return dialogArea;
 	}
+
+   /**
+    * Handle theme selection change
+    */
+   private void onThemeSelectionChange()
+   {
+      int index = themeSelector.getSelectionIndex();
+      editButton.setEnabled(index > 2);
+      removeButton.setEnabled(index > 2);
+      exportButton.setEnabled(index > 2);
+   }
+
+   /**
+    * Select theme programmatically.
+    *
+    * @param theme theme to select
+    */
+   private void selectTheme(Theme theme)
+   {
+      int index = themeSelector.indexOf(theme.getName());
+      themeSelector.select((index != -1) ? index : 0);
+      onThemeSelectionChange();
+   }
+
+   /**
+    * Update dropdown with theme list
+    */
+   private void updateThemeDropDown()
+   {
+      themes.sort(new Comparator<Theme>() {
+         @Override
+         public int compare(Theme t1, Theme t2)
+         {
+            return t1.getName().compareToIgnoreCase(t2.getName());
+         }
+      });
+      themeSelector.removeAll();
+      themeSelector.add("[automatic]");
+      themeSelector.add("Light [built-in]");
+      themeSelector.add("Dark [built-in]");
+      for(Theme t : themes)
+         themeSelector.add(t.getName());
+   }
 
    /**
     * Load custom themes from files
     */
    private void loadThemes()
    {
-      Location loc = Platform.getInstanceLocation();
-      File targetDir;
-      try
-      {
-         targetDir = new File(loc.getURL().toURI());
-      }
-      catch(URISyntaxException e)
-      {
-         targetDir = new File(loc.getURL().getPath());
-      }
-      File base = new File(targetDir, "themes");
+      File base = ThemeEngine.getThemeStorageDirectory();
       if (base.isDirectory())
       {
          for(File f : base.listFiles(new FilenameFilter() {
@@ -172,7 +251,9 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
          {
             try
             {
-               themes.add(Theme.load(f));
+               Theme t = Theme.load(f);
+               t.setMissingElements(getAutomaticTheme());
+               themes.add(t);
             }
             catch(Exception e)
             {
@@ -180,14 +261,6 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
             }
          }
       }
-
-      themes.sort(new Comparator<Theme>() {
-         @Override
-         public int compare(Theme t1, Theme t2)
-         {
-            return t1.getName().compareToIgnoreCase(t2.getName());
-         }
-      });
    }
 
    /**
@@ -195,11 +268,150 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
     */
    private void addNewTheme()
    {
-      Theme theme = new Theme("New Theme", new DefaultLightTheme());
+      Theme currentTheme;
+      int index = themeSelector.getSelectionIndex();
+      switch(index)
+      {
+         case 0:
+            currentTheme = getAutomaticTheme();
+            break;
+         case 1:
+            currentTheme = new DefaultLightTheme();
+            break;
+         case 2:
+            currentTheme = new DefaultDarkTheme();
+            break;
+         default:
+            currentTheme = themes.get(index - 3);
+            break;
+      }
+      Theme theme = new Theme("New Theme", currentTheme);
       ThemeEditDialog dlg = new ThemeEditDialog(getShell(), theme);
       if (dlg.open() == Window.OK)
       {
+         try
+         {
+            ThemeEngine.saveTheme(theme);
+            themes.add(theme);
+            updateThemeDropDown();
+            selectTheme(theme);
+         }
+         catch(Exception e)
+         {
+            MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot save theme (%s)", e.getLocalizedMessage()));
+            Activator.logError("Cannot save theme", e);
+         }
       }
+   }
+
+   /**
+    * Import theme from file
+    */
+   private void importTheme()
+   {
+      FileDialog dlg = new FileDialog(getShell(), SWT.OPEN);
+      dlg.setFilterExtensions(new String[] { "*.xml", "*.*" });
+      String importFileName = dlg.open();
+      if (importFileName == null)
+         return;
+
+      try
+      {
+         Theme theme = Theme.load(new File(importFileName));
+         ThemeEngine.saveTheme(theme);
+         themes.add(theme);
+         updateThemeDropDown();
+         selectTheme(theme);
+      }
+      catch(Exception e)
+      {
+         MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot import theme (%s)", e.getLocalizedMessage()));
+         Activator.logError("Cannot import theme", e);
+      }
+   }
+
+   /**
+    * Edit currently selected theme
+    */
+   private void editTheme()
+   {
+      int index = themeSelector.getSelectionIndex();
+      if (index < 3)
+         return;
+
+      Theme theme = themes.get(index - 3);
+      String oldName = theme.getName();
+      ThemeEditDialog dlg = new ThemeEditDialog(getShell(), theme);
+      if (dlg.open() == Window.OK)
+      {
+         try
+         {
+            if (!oldName.equals(theme.getName()))
+               ThemeEngine.deleteTheme(oldName);
+            ThemeEngine.saveTheme(theme);
+            updateThemeDropDown();
+            selectTheme(theme);
+         }
+         catch(Exception e)
+         {
+            MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot save theme (%s)", e.getLocalizedMessage()));
+            Activator.logError("Cannot save theme", e);
+         }
+      }
+   }
+
+   /**
+    * Remove currently selected theme
+    */
+   private void removeTheme()
+   {
+      int index = themeSelector.getSelectionIndex();
+      if (index < 3)
+         return;
+
+      Theme theme = themes.get(index - 3);
+      if (!MessageDialogHelper.openQuestion(getShell(), "Remove Theme", String.format("Theme %s will be removed. Are you sure?", theme.getName())))
+         return;
+
+      ThemeEngine.deleteTheme(theme.getName());
+      updateThemeDropDown();
+      themeSelector.select(0);
+      onThemeSelectionChange();
+   }
+
+   /**
+    * Export currently selected theme
+    */
+   private void exportTheme()
+   {
+      int index = themeSelector.getSelectionIndex();
+      if (index < 3)
+         return;
+
+      final Theme theme = themes.get(index - 3);
+      new ConsoleJob("Export theme", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final File tmpFile = File.createTempFile("ExportTheme", "_" + System.currentTimeMillis());
+            theme.save(tmpFile);
+            
+            DownloadServiceHandler.addDownload(tmpFile.getName(), theme.getName() + ".xml", tmpFile, "text/xml");
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  DownloadServiceHandler.startDownload(tmpFile.getName());
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot export theme";
+         }
+      }.start();
    }
 
    /**
@@ -211,6 +423,8 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
 		super.performDefaults();
       themeSelector.select(0);
       editButton.setEnabled(false);
+      removeButton.setEnabled(false);
+      exportButton.setEnabled(false);
 	}
 
    /**
@@ -223,4 +437,15 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
       ThemeEngine.reload();
 		return super.performOk();
 	}
+
+   /**
+    * Get automatic theme.
+    *
+    * @return automatically created built-in theme
+    */
+   private static Theme getAutomaticTheme()
+   {
+      boolean darkOSTheme = ColorConverter.isDarkColor(Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB());
+      return darkOSTheme ? new DefaultDarkTheme() : new DefaultLightTheme();
+   }
 }

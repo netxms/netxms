@@ -40,6 +40,18 @@ public class ThemeElement
    @Element(required = false)
    public int fontHeight;
 
+   public ThemeElement()
+   {
+   }
+
+   public ThemeElement(ThemeElement src)
+   {
+      this.background = src.background;
+      this.foreground = src.foreground;
+      this.fontName = src.fontName;
+      this.fontHeight = src.fontHeight;
+   }
+
    public ThemeElement(RGB background, RGB foreground, String fontName, int fontHeight)
    {
       this.background = background;

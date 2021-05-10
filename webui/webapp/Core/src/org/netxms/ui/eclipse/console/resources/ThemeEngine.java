@@ -190,6 +190,52 @@ public class ThemeEngine
    }
 
    /**
+    * Get storage directory for custom themes.
+    *
+    * @return storage directory for custom themes
+    */
+   public static File getThemeStorageDirectory()
+   {
+      Location loc = Platform.getInstanceLocation();
+      File targetDir;
+      try
+      {
+         targetDir = new File(loc.getURL().toURI());
+      }
+      catch(URISyntaxException e)
+      {
+         targetDir = new File(loc.getURL().getPath());
+      }
+      return new File(targetDir, "themes");
+   }
+
+   /**
+    * Save theme to storage location.
+    *
+    * @param theme theme to save
+    * @throws Exception
+    */
+   public static void saveTheme(Theme theme) throws Exception
+   {
+      File storage = getThemeStorageDirectory();
+      if (!storage.exists())
+         storage.mkdirs();
+      File file = new File(storage, theme.getName() + ".xml");
+      theme.save(file);
+   }
+
+   /**
+    * Delete theme file from storage.
+    *
+    * @param name theme name
+    * @return true if file successfully deleted
+    */
+   public static boolean deleteTheme(String name)
+   {
+      return new File(getThemeStorageDirectory(), name + ".xml").delete();
+   }
+
+   /**
     * Reload current instance of theme manager
     */
    public static void reload()
@@ -207,15 +253,15 @@ public class ThemeEngine
    {
       IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
       String currentTheme = ps.getString("CurrentTheme");
-      if ((currentTheme == null) || currentTheme.isEmpty() || currentTheme.equalsIgnoreCase("Automatic"))
+      if ((currentTheme == null) || currentTheme.isEmpty() || currentTheme.equalsIgnoreCase("[automatic]"))
       {
          loadDefaultTheme(display);
       }
-      else if (currentTheme.equalsIgnoreCase("Default Light"))
+      else if (currentTheme.equalsIgnoreCase("Light [built-in]"))
       {
          loadTheme(new DefaultLightTheme());
       }
-      else if (currentTheme.equalsIgnoreCase("Default Dark"))
+      else if (currentTheme.equalsIgnoreCase("Dark [built-in]"))
       {
          loadTheme(new DefaultDarkTheme());
       }
@@ -223,17 +269,7 @@ public class ThemeEngine
       {
          boolean loaded = false;
 
-         Location loc = Platform.getInstanceLocation();
-         File targetDir;
-         try
-         {
-            targetDir = new File(loc.getURL().toURI());
-         }
-         catch(URISyntaxException e)
-         {
-            targetDir = new File(loc.getURL().getPath());
-         }
-         File base = new File(targetDir, "themes");
+         File base = getThemeStorageDirectory();
          if (base.isDirectory())
          {
             for(File f : base.listFiles(new FilenameFilter() {
@@ -251,6 +287,8 @@ public class ThemeEngine
                   if (t.getName().equalsIgnoreCase(currentTheme))
                   {
                      Activator.logInfo("Applying theme " + t.getName());
+                     boolean darkOSTheme = ColorConverter.isDarkColor(display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB());
+                     t.setMissingElements(darkOSTheme ? new DefaultDarkTheme() : new DefaultLightTheme());
                      loadTheme(t);
                      loaded = true;
                      break;

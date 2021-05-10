@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,17 @@ public final class XMLTools
     */
    public static Serializer createSerializer() throws Exception
    {
-      Registry registry = new Registry();
+      return createSerializer(new Registry());
+   }
+
+   /**
+    * Create serializer with registered converters using caller provided registry.
+    * 
+    * @return serializer with registered converters
+    * @throws Exception on XML library failures
+    */
+   public static Serializer createSerializer(Registry registry) throws Exception
+   {
       registry.bind(UUID.class, UUIDConverter.class);
       // Add dummy filter to prevent expansion of ${name} in XML data
       return new Persister(new AnnotationStrategy(new RegistryStrategy(registry)), new Filter() {
