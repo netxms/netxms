@@ -1,16 +1,38 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.console.dialogs;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -24,6 +46,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.resources.Theme;
 import org.netxms.ui.eclipse.console.resources.ThemeElement;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -40,6 +63,7 @@ public class ThemeEditDialog extends Dialog
    private Theme theme;
    private LabeledText name;
    private TableViewer viewer;
+   private Map<String, ThemeElement> changedElements = new HashMap<String, ThemeElement>();
 
    /**
     * @param parentShell
@@ -99,6 +123,13 @@ public class ThemeEditDialog extends Dialog
       setupViewer();
       viewer.setInput(theme.getTags());
       viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            editElement();
+         }
+      });
 
       return dialogArea;
    }
@@ -150,6 +181,25 @@ public class ThemeEditDialog extends Dialog
    }
 
    /**
+    * Edit selected element
+    */
+   private void editElement()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      String tag = (String)selection.getFirstElement();
+      ThemeElement element = new ThemeElement(changedElements.containsKey(tag) ? changedElements.get(tag) : theme.getElement(tag));
+      ThemeElementEditDialog dlg = new ThemeElementEditDialog(getShell(), element);
+      if (dlg.open() == Window.OK)
+      {
+         changedElements.put(tag, element);
+         viewer.update(tag, null);
+      }
+   }
+
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
     */
    @Override
@@ -166,6 +216,9 @@ public class ThemeEditDialog extends Dialog
    protected void okPressed()
    {
       saveSettings();
+      theme.setName(name.getText().trim());
+      for(Entry<String, ThemeElement> e : changedElements.entrySet())
+         theme.setElement(e.getKey(), e.getValue());
       super.okPressed();
    }
 
@@ -189,15 +242,22 @@ public class ThemeEditDialog extends Dialog
       @Override
       public String getColumnText(Object element, int columnIndex)
       {
+         ThemeElement te;
          switch(columnIndex)
          {
             case COLUMN_TAG:
                return (String)element;
             case COLUMN_FONT:
-               ThemeElement te = theme.getElement((String)element);
+               te = changedElements.containsKey(element) ? changedElements.get(element) : theme.getElement((String)element);
                if ((te.fontName == null) || te.fontName.isEmpty())
                   return "";
                return te.fontName + " " + Integer.toString(te.fontHeight) + "pt";
+            case COLUMN_FOREGROUND:
+               te = changedElements.containsKey(element) ? changedElements.get(element) : theme.getElement((String)element);
+               return (te.foreground != null) ? ColorConverter.rgbToCss(te.foreground) : "";
+            case COLUMN_BACKGROUND:
+               te = changedElements.containsKey(element) ? changedElements.get(element) : theme.getElement((String)element);
+               return (te.background != null) ? ColorConverter.rgbToCss(te.background) : "";
             default:
                return "";
          }

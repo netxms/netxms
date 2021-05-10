@@ -16,9 +16,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client.xml;
+package org.netxms.ui.eclipse.tools;
 
-import java.util.UUID;
+import org.eclipse.swt.graphics.RGB;
 import org.simpleframework.xml.convert.Converter;
 import org.simpleframework.xml.stream.InputNode;
 import org.simpleframework.xml.stream.OutputNode;
@@ -26,23 +26,23 @@ import org.simpleframework.xml.stream.OutputNode;
 /**
  * SimpleXML converter for UUID class
  */
-public class UUIDConverter implements Converter<UUID>
+public class RGBConverter implements Converter<RGB>
 {
    /**
     * @see org.simpleframework.xml.convert.Converter#read(org.simpleframework.xml.stream.InputNode)
     */
    @Override
-   public UUID read(InputNode n) throws Exception
+   public RGB read(InputNode n) throws Exception
    {
-      return UUID.fromString(n.getValue());
+      return ColorConverter.parseColorDefinition(n.getValue());
    }
 
    /**
     * @see org.simpleframework.xml.convert.Converter#write(org.simpleframework.xml.stream.OutputNode, java.lang.Object)
     */
    @Override
-   public void write(OutputNode n, UUID uuid) throws Exception
+   public void write(OutputNode n, RGB rgb) throws Exception
    {
-      n.setValue(uuid.toString());
+      n.setValue(ColorConverter.rgbToCss(rgb));
    }
 }
