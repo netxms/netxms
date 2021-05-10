@@ -1037,7 +1037,7 @@ static void CheckDataCollectionItems()
 /**
  * Check if given data table exist
  */
-bool IsDataTableExist(const TCHAR *format, UINT32 id)
+bool IsDataTableExist(const TCHAR *format, uint32_t id)
 {
    TCHAR table[256];
    _sntprintf(table, 256, format, id);
@@ -1113,6 +1113,20 @@ static void CheckDataTables()
             if (GetYesNoEx(_T("Data collection table %s belongs to deleted object and no longer in use. Delete it? (Y/N) "), table))
             {
                TCHAR query[256];
+               if (!_tcsncmp(table, _T("tdata_"), 6))
+               {
+                  // Check for tdata_rows_NNN and tdata_records_NNN from older versions
+                  if (IsDataTableExist(_T("tdata_rows_%u"), objectId))
+                  {
+                     _sntprintf(query, 256, _T("DROP TABLE tdata_rows_%u"), objectId);
+                     SQLQuery(query);
+                  }
+                  if (IsDataTableExist(_T("tdata_records_%u"), objectId))
+                  {
+                     _sntprintf(query, 256, _T("DROP TABLE tdata_records_%u"), objectId);
+                     SQLQuery(query);
+                  }
+               }
                _sntprintf(query, 256, _T("DROP TABLE %s"), table);
                if (SQLQuery(query))
                   g_dbCheckFixes++;
