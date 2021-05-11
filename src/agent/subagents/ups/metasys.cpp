@@ -146,63 +146,65 @@ MetaSysInterface::MetaSysInterface(const TCHAR *device) : SerialInterface(device
 /**
  * Send read command to device
  */
-BOOL MetaSysInterface::sendReadCommand(BYTE nCommand)
+bool MetaSysInterface::sendReadCommand(BYTE command)
 {
-   BYTE packet[4];
-   BOOL bRet;
+   bool success;
    int nRetries = 5;
 
+   BYTE packet[4];
    packet[0] = MS_COMMAND_START_BYTE;
    packet[1] = 0x02; // length
-   packet[2] = nCommand;
+   packet[2] = command;
    CalculateChecksum(packet);
+
    do
    {
-      bRet = m_serial.write((char *)packet, 4);
+      success = m_serial.write((char *)packet, 4);
       nRetries--;
-   } while((!bRet) && (nRetries > 0));
-   nxlog_debug_tag(UPS_DEBUG_TAG, 9, _T("METASYS: command %d %s"), (int)nCommand, bRet ? _T("sent successfully") :_T("send failed"));
-   return bRet;
+   } while((!success) && (nRetries > 0));
+
+   nxlog_debug_tag(UPS_DEBUG_TAG, 9, _T("METASYS: command %d %s"), (int)command, success ? _T("sent successfully") :_T("send failed"));
+   return success;
 }
 
 /**
  * Receive data block from device, and check hat it is for right command
  */
-int MetaSysInterface::recvData(int nCommand)
+int MetaSysInterface::recvData(int command)
 {
-   BYTE packet[256];
-   int nCount, nLength, nBytes, nRead;
-
    memset(m_data, 0, METASYS_BUFFER_SIZE);
-   nCount = 0;
+
+   int count = 0;
+   BYTE packet[256];
    do
    {
 		// Read MS_COMMAND_START_BYTE byte
 		if (m_serial.read((char *)packet, 1) != 1)
          return -1;  // Read error
-		nCount++;
-	} while((packet[0] != MS_COMMAND_START_BYTE) && (nCount < 256));
+		count++;
+	} while((packet[0] != MS_COMMAND_START_BYTE) && (count < 256));
 	
-	if (nCount == 256)
+	if (count == 256)
 		return -1;  // Didn't get command start byte
 
 	// Read data lenght byte
    if (m_serial.read((char *)&packet[1], 1) != 1)
       return -1;  // Read error
-	nLength = packet[1];
-	if (nLength < 2) 
+	int length = packet[1];
+	if (length < 2) 
 		return -1;  // Invalid data length
 
 	// Read data
-   for(nRead = 0; nRead < nLength; nRead += nBytes)
+   int bytes, bytesTotal;
+   for(bytesTotal = 0; bytesTotal < length; bytesTotal += bytes)
    {
-      nBytes = m_serial.read((char *)&packet[nRead + 2], nLength - nRead);
-      if (nBytes <= 0)
+      bytes = m_serial.read((char *)&packet[bytesTotal + 2], length - bytesTotal);
+      if (bytes <= 0)
          return -1;  // Read error
    }
 
    // Check if packet is a responce to right command
-	if (nCommand != packet[2])
+	if (command != packet[2])
 		return -1;  // Invalid command
 
 	// Validate packet's checksum
@@ -210,56 +212,57 @@ int MetaSysInterface::recvData(int nCommand)
 		return -1;  // Bad checksum
 
    TCHAR dump[516];
-   nxlog_debug_tag(UPS_DEBUG_TAG, 9, _T("METASYS: %d bytes read (%s)"), nLength + 1, BinToStr(packet, nLength + 1, dump));
+   nxlog_debug_tag(UPS_DEBUG_TAG, 9, _T("METASYS: %d bytes read (%s)"), length + 1, BinToStr(packet, length + 1, dump));
 
-	memcpy(m_data, &packet[2], nLength - 1);
-	return nLength - 1;
+	memcpy(m_data, &packet[2], length - 1);
+	return length - 1;
 }
 
 /**
  * Open device
  */
-BOOL MetaSysInterface::open()
+bool MetaSysInterface::open()
 {
-   BOOL bRet = FALSE;
+   if (!SerialInterface::open())
+      return false;
 
-   if (SerialInterface::open())
+   m_serial.setTimeout(1000);
+   m_serial.set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
+
+   bool success = false;
+
+   // Send 100 zeroes to reset UPS serial interface
+   char zeroes[100];
+   memset(zeroes, 0, 100);
+   m_serial.write(zeroes, 100);
+
+   // Read UPS information
+   if (sendReadCommand(MS_INFO))
    {
-      m_serial.setTimeout(1000);
-      m_serial.set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
-
-      // Send 100 zeroes to reset UPS serial interface
-      char zeroes[100];
-      memset(zeroes, 0, 100);
-      m_serial.write(zeroes, 100);
-
-      // Read UPS information
-      if (sendReadCommand(MS_INFO))
+      int nBytes = recvData(MS_INFO);
+      if (nBytes > 0)
       {
-         int nBytes = recvData(MS_INFO);
-         if (nBytes > 0)
-         {
-            parseModelId();
+         parseModelId();
 
-            memset(m_paramList[UPS_PARAM_SERIAL].szValue, 0, 13);
-            memcpy(m_paramList[UPS_PARAM_SERIAL].szValue, m_data + 7, std::min(12, nBytes - 7));
-            TrimA(m_paramList[UPS_PARAM_SERIAL].szValue);
+         memset(m_paramList[UPS_PARAM_SERIAL].value, 0, 13);
+         memcpy(m_paramList[UPS_PARAM_SERIAL].value, m_data + 7, std::min(12, nBytes - 7));
+         TrimA(m_paramList[UPS_PARAM_SERIAL].value);
 
-            sprintf(m_paramList[UPS_PARAM_FIRMWARE].szValue, "%d.%02d", m_data[5], m_data[6]);
+         sprintf(m_paramList[UPS_PARAM_FIRMWARE].value, "%d.%02d", m_data[5], m_data[6]);
 
-            m_paramList[UPS_PARAM_MODEL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
-            m_paramList[UPS_PARAM_SERIAL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
-            m_paramList[UPS_PARAM_FIRMWARE].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+         m_paramList[UPS_PARAM_MODEL].flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+         m_paramList[UPS_PARAM_SERIAL].flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+         m_paramList[UPS_PARAM_FIRMWARE].flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 
-            nxlog_debug_tag(UPS_DEBUG_TAG, 4, _T("Established connection with METASYS device (%hs FW:%hs)"),
-               m_paramList[UPS_PARAM_MODEL].szValue, m_paramList[UPS_PARAM_FIRMWARE].szValue);
+         nxlog_debug_tag(UPS_DEBUG_TAG, 4, _T("Established connection with METASYS device (%hs FW:%hs)"),
+            m_paramList[UPS_PARAM_MODEL].value, m_paramList[UPS_PARAM_FIRMWARE].value);
 
-            bRet = TRUE;
-            setConnected();
-         }
+         success = true;
+         setConnected();
       }
    }
-   return bRet;
+
+   return success;
 }
 
 /**
@@ -272,215 +275,215 @@ void MetaSysInterface::parseModelId()
    switch (id) 
    {        
       case 11:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (1 board)");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF Line (1 board)");
          m_nominalPower = 630;
          break;
       case 12:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (2 boards)");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF Line (2 boards)");
          m_nominalPower = 1260;
          break;
       case 13:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (3 boards)");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF Line (3 boards)");
          m_nominalPower = 1890;
          break;
       case 14:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (4 boards)");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF Line (4 boards)");
          m_nominalPower = 2520;
          break;
       case 21:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO Network 750/1000");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO Network 750/1000");
          m_nominalPower = 500;
          break;	
       case 22:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO Network 1050/1500");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO Network 1050/1500");
          m_nominalPower = 700;
          break;	
       case 23:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO Network 1500/2000");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO Network 1500/2000");
          m_nominalPower = 1000;
          break;	
       case 24:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO Network 1800/2500");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO Network 1800/2500");
          m_nominalPower = 1200;
          break;	
       case 25:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO Network 2100/3000");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO Network 2100/3000");
          m_nominalPower = 1400;
          break;	
       case 31:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 308");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO 308");
          m_nominalPower = 500;
          break;	
       case 32:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 311");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO 311");
          m_nominalPower = 700;
          break;	
       case 44:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (4 boards)/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF Line (4 boards)/2");
          m_nominalPower = 2520;
          break;
       case 45:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (5 boards)/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF Line (5 boards)/2");
          m_nominalPower = 3150;
          break;
       case 46:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (6 boards)/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF Line (6 boards)/2");
          m_nominalPower = 3780;
          break;
       case 47:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (7 boards)/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF Line (7 boards)/2");
          m_nominalPower = 4410;
          break;
       case 48:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Line (8 boards)/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF Line (8 boards)/2");
          m_nominalPower = 5040;
          break;
       case 51:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Millennium 810");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF Millennium 810");
          m_nominalPower = 700;
          break;
       case 52:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF Millennium 820");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF Millennium 820");
          m_nominalPower = 1400;
          break;
       case 61:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 910");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF TOP Line 910");
          m_nominalPower = 700;
          break;
       case 62:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 920");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF TOP Line 920");
          m_nominalPower = 1400;
          break;
       case 63:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 930");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF TOP Line 930");
          m_nominalPower = 2100;
          break;
       case 64:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 940");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF TOP Line 940");
          m_nominalPower = 2800;
          break;
       case 74:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 940/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF TOP Line 940/2");
          m_nominalPower = 2800;
          break;
       case 75:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 950/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF TOP Line 950/2");
          m_nominalPower = 3500;
          break;
       case 76:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 960/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF TOP Line 960/2");
          m_nominalPower = 4200;
          break;
       case 77:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 970/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF TOP Line 970/2");
          m_nominalPower = 4900;
          break;
       case 78:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "HF TOP Line 980/2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "HF TOP Line 980/2");
          m_nominalPower = 5600;
          break;
       case 81:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 508");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO 508");
          m_nominalPower = 500;
          break;
       case 82:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 511");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO 511");
          m_nominalPower = 700;
          break;
       case 83:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 516");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO 516");
          m_nominalPower = 1000;
          break;
       case 84:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 519");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO 519");
          m_nominalPower = 1200;
          break;
       case 85:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 522");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO 522");
          m_nominalPower = 1400;
          break;
       case 91:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 305 / Harviot 530 SX");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO 305 / Harviot 530 SX");
          m_nominalPower = 330;
          break;
       case 92:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ORDINATORE 2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ORDINATORE 2");
          m_nominalPower = 330;
          break;
       case 93:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Harviot 730 SX");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "Harviot 730 SX");
          m_nominalPower = 430;
          break;
       case 101:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 308 SX / SX Interactive / Ordinatore");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO 308 SX / SX Interactive / Ordinatore");
          m_nominalPower = 500;
          break;
       case 102:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ECO 311 SX / SX Interactive");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ECO 311 SX / SX Interactive");
          m_nominalPower = 700;
          break;
       case 111:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ally HF 800 / BI-TWICE 800");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ally HF 800 / BI-TWICE 800");
          m_nominalPower = 560;
          break;
       case 112:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ally HF 1600");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ally HF 1600");
          m_nominalPower = 1120;
          break;
       case 121:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ally HF 1000 / BI-TWICE 1000");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ally HF 1000 / BI-TWICE 1000");
          m_nominalPower = 700;
          break;
       case 122:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ally HF 2000");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ally HF 2000");
          m_nominalPower = 1400;
          break;
       case 131:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ally HF 1250 / BI-TWICE 1250");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ally HF 1250 / BI-TWICE 1250");
          m_nominalPower = 875;
          break;
       case 132:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "ally HF 2500");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "ally HF 2500");
          m_nominalPower = 1750;
          break;
       case 141:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 1250");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "Megaline 1250");
          m_nominalPower = 875;
          break;
       case 142:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 2500");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "Megaline 2500");
          m_nominalPower = 1750;
          break;
       case 143:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 3750");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "Megaline 3750");
          m_nominalPower = 2625;
          break;
       case 144:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 5000");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "Megaline 5000");
          m_nominalPower = 3500;
          break;
       case 154:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 5000 / 2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "Megaline 5000 / 2");
          m_nominalPower = 3500;
          break;
       case 155:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 6250 / 2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "Megaline 6250 / 2");
          m_nominalPower = 4375;
          break;
       case 156:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 7500 / 2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "Megaline 7500 / 2");
          m_nominalPower = 5250;
          break;
       case 157:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 8750 / 2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "Megaline 8750 / 2");
          m_nominalPower = 6125;
          break;
       case 158:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "Megaline 10000 / 2");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "Megaline 10000 / 2");
          m_nominalPower = 7000;
          break;
       default:
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, "unknown");
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, "unknown");
          m_nominalPower = 0;
          break;
    } 
@@ -489,14 +492,9 @@ void MetaSysInterface::parseModelId()
 /**
  * Validate connection to the device
  */
-BOOL MetaSysInterface::validateConnection()
+bool MetaSysInterface::validateConnection()
 {
-   if (sendReadCommand(MS_INFO))
-   {
-      if (recvData(MS_INFO) > 0)
-         return TRUE;
-   }
-   return FALSE;
+   return sendReadCommand(MS_INFO) && (recvData(MS_INFO) > 0);
 }
 
 /**
@@ -511,22 +509,22 @@ void MetaSysInterface::readParameter(int command, int offset, int format, UPS_PA
       {
          if (offset < nBytes)
          {
-            DecodeValue(&m_data[offset], format, param->szValue);
-            param->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+            DecodeValue(&m_data[offset], format, param->value);
+            param->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
          }
          else
          {
-            param->dwFlags |= UPF_NOT_SUPPORTED;
+            param->flags |= UPF_NOT_SUPPORTED;
          }
       }
       else
       {
-         param->dwFlags |= UPF_NULL_VALUE;
+         param->flags |= UPF_NULL_VALUE;
       }
    }
    else
    {
-      param->dwFlags |= UPF_NULL_VALUE;
+      param->flags |= UPF_NULL_VALUE;
    }
 }
 
@@ -604,22 +602,22 @@ void MetaSysInterface::queryPowerLoad()
       UPS_PARAMETER upsCurrOutput;
       memset(&upsCurrOutput, 0, sizeof(UPS_PARAMETER));
       readParameter(MS_OUTPUT_DATA, 1, FMT_SHORT, &upsCurrOutput);
-      m_paramList[UPS_PARAM_LOAD].dwFlags = upsCurrOutput.dwFlags;
-      if ((m_paramList[UPS_PARAM_LOAD].dwFlags & (UPF_NOT_SUPPORTED | UPF_NULL_VALUE)) == 0)
+      m_paramList[UPS_PARAM_LOAD].flags = upsCurrOutput.flags;
+      if ((m_paramList[UPS_PARAM_LOAD].flags & (UPF_NOT_SUPPORTED | UPF_NULL_VALUE)) == 0)
       {
-         int pw = atoi(upsCurrOutput.szValue);
+         int pw = atoi(upsCurrOutput.value);
          if (m_nominalPower >= pw)
          {
-            sprintf(m_paramList[UPS_PARAM_LOAD].szValue, "%d", pw * 100 / m_nominalPower);
+            sprintf(m_paramList[UPS_PARAM_LOAD].value, "%d", pw * 100 / m_nominalPower);
          }
          else
          {
-            m_paramList[UPS_PARAM_LOAD].dwFlags |= UPF_NULL_VALUE;
+            m_paramList[UPS_PARAM_LOAD].flags |= UPF_NULL_VALUE;
          }
       }
    }
    else
    {
-      m_paramList[UPS_PARAM_LOAD].dwFlags |= UPF_NOT_SUPPORTED;
+      m_paramList[UPS_PARAM_LOAD].flags |= UPF_NOT_SUPPORTED;
    }
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2014 Victor Kirhenshtein
+** Copyright (C) 2006-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -111,9 +111,12 @@ bool SerialInterface::readLineFromSerial(char *buffer, size_t bufLen, char eol)
 /**
  * Open communication to UPS
  */
-BOOL SerialInterface::open()
+bool SerialInterface::open()
 {
-   return m_serial.open(m_device);
+   nxlog_debug_tag(UPS_DEBUG_TAG, 6, _T("Serial configuration for UPS #%d: device=%s baudrate=%d"), getId(), m_device, m_portSpeed);
+   bool success = m_serial.open(m_device);
+   nxlog_debug_tag(UPS_DEBUG_TAG, 5, _T("Serial device %s open %s"), m_device, success ? _T("successful") : _T("failed"));
+   return success;
 }
 
 /**
@@ -122,5 +125,6 @@ BOOL SerialInterface::open()
 void SerialInterface::close()
 {
    m_serial.close();
+   nxlog_debug_tag(UPS_DEBUG_TAG, 5, _T("Serial device %s closed"), m_device);
    UPSInterface::close();
 }

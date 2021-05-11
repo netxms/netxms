@@ -84,27 +84,23 @@
 /**
  * Calculate checksum for prepared message and add it to the end of buffer
  */
-static void CalculateChecksum(BYTE *pBuffer)
+static inline void CalculateChecksum(BYTE *buffer)
 {
-	BYTE sum;
-	int i, nLen;
-
-   nLen = pBuffer[1] + 2;
-	for(sum = 0, i = 0; i < nLen; i++)
-		sum -= pBuffer[i];
-   pBuffer[nLen] = sum;
+	BYTE sum = 0;
+   int len = buffer[1] + 2;
+	for(int i = 0; i < len; i++)
+		sum -= buffer[i];
+   buffer[len] = sum;
 }
 
 /**
  * Validate checksum of received packet
  */
-static BOOL ValidateChecksum(BYTE *pBuffer)
+static inline bool ValidateChecksum(BYTE *pBuffer)
 {
-   BYTE sum;
-   int i, nLen;
-
-   nLen = pBuffer[2] + 5;
-	for(i = 0, sum = 0; i < nLen; i++)
+   BYTE sum = 0;
+   int len = pBuffer[2] + 5;
+	for(int i = 0; i < len; i++)
 		sum += pBuffer[i];
    return sum == 0;
 }
@@ -223,7 +219,7 @@ BCMXCPInterface::BCMXCPInterface(const TCHAR *device) : SerialInterface(device)
 /**
  * Send read command to device
  */
-BOOL BCMXCPInterface::sendReadCommand(BYTE nCommand)
+bool BCMXCPInterface::sendReadCommand(BYTE command)
 {
    BYTE packet[4];
    BOOL bRet;
@@ -231,7 +227,7 @@ BOOL BCMXCPInterface::sendReadCommand(BYTE nCommand)
 
    packet[0] = PW_COMMAND_START_BYTE;
    packet[1] = 0x01;
-   packet[2] = nCommand;
+   packet[2] = command;
    CalculateChecksum(packet);
    do
    {
@@ -324,83 +320,78 @@ int BCMXCPInterface::recvData(int nCommand)
 /**
  * Open device
  */
-BOOL BCMXCPInterface::open()
+bool BCMXCPInterface::open()
 {
-   BOOL bRet = FALSE;
-   char szBuffer[256];
-   int i, nBytes, nPos, nLen, nOffset;
+   if (!SerialInterface::open())
+      return false;
 
-   if (SerialInterface::open())
+   m_serial.setTimeout(1000);
+   m_serial.set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
+
+   bool success = false;
+
+   // Send two escapes
+   m_serial.write("\x1D\x1D", 2);
+
+   // Read UPS ID block
+   if (sendReadCommand(PW_ID_BLOCK_REQ))
    {
-      m_serial.setTimeout(1000);
-      m_serial.set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
-
-      // Send two escapes
-      m_serial.write("\x1D\x1D", 2);
-
-      // Read UPS ID block
-      if (sendReadCommand(PW_ID_BLOCK_REQ))
+      int nBytes = recvData(PW_ID_BLOCK_REQ);
+      if (nBytes > 0)
       {
-         nBytes = recvData(PW_ID_BLOCK_REQ);
-         if (nBytes > 0)
+         // Skip to model name
+         int pos = m_data[0] * 2 + 1;
+         pos += (m_data[pos] == 0) ? 5 : 3;
+         int len = std::min((int)m_data[pos], 255);
+         if ((pos < nBytes) && (pos + len <= nBytes))
          {
-            // Skip to model name
-            nPos = m_data[0] * 2 + 1;
-            nPos += (m_data[nPos] == 0) ? 5 : 3;
-            nLen = std::min((int)m_data[nPos], 255);
-            if ((nPos < nBytes) && (nPos + nLen <= nBytes))
-            {
-               memcpy(szBuffer, &m_data[nPos + 1], nLen);
-               szBuffer[nLen] = 0;
-               TrimA(szBuffer);
-               setName(szBuffer);
-            }
-
-            // Read meter map
-            memset(m_map, 0, sizeof(BCMXCP_METER_MAP_ENTRY) * BCMXCP_MAP_SIZE);
-            nPos += m_data[nPos] + 1;
-            nLen = m_data[nPos++];
-            for(i = 0, nOffset = 0; (i < nLen) && (i < BCMXCP_MAP_SIZE); i++, nPos++)
-            {
-               m_map[i].nFormat = m_data[nPos];
-               if (m_map[i].nFormat != 0)
-               {
-                  m_map[i].nOffset = nOffset;
-                  nOffset += 4;
-               }
-            }
-
-            bRet = TRUE;
-            setConnected();
+            char buffer[256];
+            memcpy(buffer, &m_data[pos + 1], len);
+            buffer[len] = 0;
+            TrimA(buffer);
+            setName(buffer);
          }
+
+         // Read meter map
+         memset(m_map, 0, sizeof(BCMXCP_METER_MAP_ENTRY) * BCMXCP_MAP_SIZE);
+         pos += m_data[pos] + 1;
+         len = m_data[pos++];
+         for(int i = 0, offset = 0; (i < len) && (i < BCMXCP_MAP_SIZE); i++, pos++)
+         {
+            m_map[i].format = m_data[pos];
+            if (m_map[i].format != 0)
+            {
+               m_map[i].offset = offset;
+               offset += 4;
+            }
+         }
+
+         success = true;
+         setConnected();
       }
    }
-   return bRet;
+
+   return success;
 }
 
 /**
  * Validate connection to the device
  */
-BOOL BCMXCPInterface::validateConnection()
+bool BCMXCPInterface::validateConnection()
 {
-   if (sendReadCommand(PW_ID_BLOCK_REQ))
-   {
-      if (recvData(PW_ID_BLOCK_REQ) > 0)
-         return TRUE;
-   }
-   return FALSE;
+   return sendReadCommand(PW_ID_BLOCK_REQ) && (recvData(PW_ID_BLOCK_REQ) > 0);
 }
 
 /**
  * Read parameter from UPS
  */
-void BCMXCPInterface::readParameter(int nIndex, int nFormat, UPS_PARAMETER *pParam)
+void BCMXCPInterface::readParameter(int index, int format, UPS_PARAMETER *pParam)
 {
    int nBytes;
 
-   if ((nIndex >= BCMXCP_MAP_SIZE) || (m_map[nIndex].nFormat == 0))
+   if ((index >= BCMXCP_MAP_SIZE) || (m_map[index].format == 0))
    {
-      pParam->dwFlags |= UPF_NOT_SUPPORTED;
+      pParam->flags |= UPF_NOT_SUPPORTED;
    }
    else
    {
@@ -409,25 +400,24 @@ void BCMXCPInterface::readParameter(int nIndex, int nFormat, UPS_PARAMETER *pPar
          nBytes = recvData(PW_METER_BLOCK_REQ);
          if (nBytes > 0)
          {
-            if (m_map[nIndex].nOffset < nBytes)
+            if (m_map[index].offset < nBytes)
             {
-               DecodeValue(&m_data[m_map[nIndex].nOffset],
-                           m_map[nIndex].nFormat, nFormat, pParam->szValue);
-               pParam->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+               DecodeValue(&m_data[m_map[index].offset], m_map[index].format, format, pParam->value);
+               pParam->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
             }
             else
             {
-               pParam->dwFlags |= UPF_NOT_SUPPORTED;
+               pParam->flags |= UPF_NOT_SUPPORTED;
             }
          }
          else
          {
-            pParam->dwFlags |= UPF_NULL_VALUE;
+            pParam->flags |= UPF_NULL_VALUE;
          }
       }
       else
       {
-         pParam->dwFlags |= UPF_NULL_VALUE;
+         pParam->flags |= UPF_NULL_VALUE;
       }
    }
 }
@@ -448,24 +438,24 @@ void BCMXCPInterface::queryModel()
          nPos += (m_data[nPos] == 0) ? 5 : 3;
          if ((nPos < nBytes) && (nPos + m_data[nPos] <= nBytes))
          {
-            memcpy(m_paramList[UPS_PARAM_MODEL].szValue, &m_data[nPos + 1], m_data[nPos]);
-            m_paramList[UPS_PARAM_MODEL].szValue[m_data[nPos]] = 0;
-            TrimA(m_paramList[UPS_PARAM_MODEL].szValue);
-            m_paramList[UPS_PARAM_MODEL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+            memcpy(m_paramList[UPS_PARAM_MODEL].value, &m_data[nPos + 1], m_data[nPos]);
+            m_paramList[UPS_PARAM_MODEL].value[m_data[nPos]] = 0;
+            TrimA(m_paramList[UPS_PARAM_MODEL].value);
+            m_paramList[UPS_PARAM_MODEL].flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
          }
          else
          {
-            m_paramList[UPS_PARAM_MODEL].dwFlags |= UPF_NOT_SUPPORTED;
+            m_paramList[UPS_PARAM_MODEL].flags |= UPF_NOT_SUPPORTED;
          }
       }
       else
       {
-         m_paramList[UPS_PARAM_MODEL].dwFlags |= UPF_NULL_VALUE;
+         m_paramList[UPS_PARAM_MODEL].flags |= UPF_NULL_VALUE;
       }
    }
    else
    {
-      m_paramList[UPS_PARAM_MODEL].dwFlags |= UPF_NULL_VALUE;
+      m_paramList[UPS_PARAM_MODEL].flags |= UPF_NULL_VALUE;
    }
 }
 
@@ -542,24 +532,24 @@ void BCMXCPInterface::queryFirmwareVersion()
          {
             if ((m_data[nPos + 1] != 0) || (m_data[nPos] != 0))
             {
-               sprintf(m_paramList[UPS_PARAM_FIRMWARE].szValue, "%d.%02d", m_data[nPos + 1], m_data[nPos]);
-               m_paramList[UPS_PARAM_FIRMWARE].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+               sprintf(m_paramList[UPS_PARAM_FIRMWARE].value, "%d.%02d", m_data[nPos + 1], m_data[nPos]);
+               m_paramList[UPS_PARAM_FIRMWARE].flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
                break;
             }
          }
          if (i == nLen)
          {
-            m_paramList[UPS_PARAM_FIRMWARE].dwFlags |= UPF_NOT_SUPPORTED;
+            m_paramList[UPS_PARAM_FIRMWARE].flags |= UPF_NOT_SUPPORTED;
          }
       }
       else
       {
-         m_paramList[UPS_PARAM_FIRMWARE].dwFlags |= UPF_NULL_VALUE;
+         m_paramList[UPS_PARAM_FIRMWARE].flags |= UPF_NULL_VALUE;
       }
    }
    else
    {
-      m_paramList[UPS_PARAM_FIRMWARE].dwFlags |= UPF_NULL_VALUE;
+      m_paramList[UPS_PARAM_FIRMWARE].flags |= UPF_NULL_VALUE;
    }
 }
 
@@ -575,26 +565,26 @@ void BCMXCPInterface::querySerialNumber()
       nBytes = recvData(PW_ID_BLOCK_REQ);
       if (nBytes >= 80)    // Serial number offset + length
       {
-         memcpy(m_paramList[UPS_PARAM_SERIAL].szValue, &m_data[64], 16);
-         if (m_paramList[UPS_PARAM_SERIAL].szValue[0] == 0)
+         memcpy(m_paramList[UPS_PARAM_SERIAL].value, &m_data[64], 16);
+         if (m_paramList[UPS_PARAM_SERIAL].value[0] == 0)
          {
-            strcpy(m_paramList[UPS_PARAM_SERIAL].szValue, "UNSET");
+            strcpy(m_paramList[UPS_PARAM_SERIAL].value, "UNSET");
          }
          else
          {
-            m_paramList[UPS_PARAM_SERIAL].szValue[16] = 0;
-            TrimA(m_paramList[UPS_PARAM_SERIAL].szValue);
+            m_paramList[UPS_PARAM_SERIAL].value[16] = 0;
+            TrimA(m_paramList[UPS_PARAM_SERIAL].value);
          }
-         m_paramList[UPS_PARAM_SERIAL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+         m_paramList[UPS_PARAM_SERIAL].flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
       }
       else
       {
-         m_paramList[UPS_PARAM_SERIAL].dwFlags |= (nBytes == -1) ? UPF_NULL_VALUE : UPF_NOT_SUPPORTED;
+         m_paramList[UPS_PARAM_SERIAL].flags |= (nBytes == -1) ? UPF_NULL_VALUE : UPF_NOT_SUPPORTED;
       }
    }
    else
    {
-      m_paramList[UPS_PARAM_SERIAL].dwFlags |= UPF_NULL_VALUE;
+      m_paramList[UPS_PARAM_SERIAL].flags |= UPF_NULL_VALUE;
    }
 }
 
@@ -613,29 +603,29 @@ void BCMXCPInterface::queryOnlineStatus()
          switch(m_data[0])
          {
             case 0x50:  // Online
-               m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '0';
+               m_paramList[UPS_PARAM_ONLINE_STATUS].value[0] = '0';
                break;
             case 0xF0:  // On battery
                if (m_data[1] & 0x20)
-                  m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '2';   // Low battery
+                  m_paramList[UPS_PARAM_ONLINE_STATUS].value[0] = '2';   // Low battery
                else
-                  m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '1';
+                  m_paramList[UPS_PARAM_ONLINE_STATUS].value[0] = '1';
                break;
             default:    // Unknown status, assume OK
-               m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '0';
+               m_paramList[UPS_PARAM_ONLINE_STATUS].value[0] = '0';
                break;
          }
-         m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[1] = 0;
-         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+         m_paramList[UPS_PARAM_ONLINE_STATUS].value[1] = 0;
+         m_paramList[UPS_PARAM_ONLINE_STATUS].flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
       }
       else
       {
-         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
+         m_paramList[UPS_PARAM_ONLINE_STATUS].flags |= UPF_NULL_VALUE;
       }
    }
    else
    {
-      m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
+      m_paramList[UPS_PARAM_ONLINE_STATUS].flags |= UPF_NULL_VALUE;
    }
 }
 
@@ -651,18 +641,18 @@ void BCMXCPInterface::queryPowerLoad()
 
    readParameter(MAP_OUTPUT_VA, FMT_INTEGER, &upsCurrOutput);
    readParameter(MAP_MAX_OUTPUT_VA, FMT_INTEGER, &upsMaxOutput);
-   m_paramList[UPS_PARAM_LOAD].dwFlags = upsCurrOutput.dwFlags | upsMaxOutput.dwFlags;
-   if ((m_paramList[UPS_PARAM_LOAD].dwFlags & (UPF_NOT_SUPPORTED | UPF_NULL_VALUE)) == 0)
+   m_paramList[UPS_PARAM_LOAD].flags = upsCurrOutput.flags | upsMaxOutput.flags;
+   if ((m_paramList[UPS_PARAM_LOAD].flags & (UPF_NOT_SUPPORTED | UPF_NULL_VALUE)) == 0)
    {
-      int nCurrOutput = atoi(upsCurrOutput.szValue);
-      int nMaxOutput = atoi(upsMaxOutput.szValue);
+      int nCurrOutput = atoi(upsCurrOutput.value);
+      int nMaxOutput = atoi(upsMaxOutput.value);
       if ((nMaxOutput > 0) && (nMaxOutput >= nCurrOutput))
       {
-         sprintf(m_paramList[UPS_PARAM_LOAD].szValue, "%d", nCurrOutput * 100 / nMaxOutput);
+         sprintf(m_paramList[UPS_PARAM_LOAD].value, "%d", nCurrOutput * 100 / nMaxOutput);
       }
       else
       {
-         m_paramList[UPS_PARAM_LOAD].dwFlags |= UPF_NULL_VALUE;
+         m_paramList[UPS_PARAM_LOAD].flags |= UPF_NULL_VALUE;
       }
    }
 }

@@ -39,35 +39,35 @@ static void CheckNA(UPS_PARAMETER *p, int nType)
    double dVal;
    char *pErr;
 
-   if (!strcmp(p->szValue, "NA"))
+   if (!strcmp(p->value, "NA"))
    {
-      p->dwFlags |= UPF_NOT_SUPPORTED;
+      p->flags |= UPF_NOT_SUPPORTED;
    }
    else
    {
-      p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+      p->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
       switch(nType)
       {
          case TYPE_LONG:
-            nVal = strtol(p->szValue, &pErr, 10);
+            nVal = strtol(p->value, &pErr, 10);
             if (*pErr == 0)
             {
-               sprintf(p->szValue, "%d", nVal);
+               sprintf(p->value, "%d", nVal);
             }
             else
             {
-               p->dwFlags |= UPF_NULL_VALUE;
+               p->flags |= UPF_NULL_VALUE;
             }
             break;
          case TYPE_DOUBLE:
-            dVal = strtod(p->szValue, &pErr);
+            dVal = strtod(p->value, &pErr);
             if (*pErr == 0)
             {
-               sprintf(p->szValue, "%f", dVal);
+               sprintf(p->value, "%f", dVal);
             }
             else
             {
-               p->dwFlags |= UPF_NULL_VALUE;
+               p->flags |= UPF_NULL_VALUE;
             }
             break;
          default:
@@ -93,11 +93,11 @@ void APCInterface::queryParameter(const char *pszRq, UPS_PARAMETER *p, int nType
    char *pch;
 
    m_serial.write(pszRq, 1);
-   if (readLineFromSerial(p->szValue, MAX_RESULT_LENGTH))
+   if (readLineFromSerial(p->value, MAX_RESULT_LENGTH))
    {
       if (chSep != -1)
       {
-         pch = strchr(p->szValue, chSep);
+         pch = strchr(p->value, chSep);
          if (pch != NULL)
             *pch = 0;
       }
@@ -105,59 +105,53 @@ void APCInterface::queryParameter(const char *pszRq, UPS_PARAMETER *p, int nType
    }
    else
    {
-      p->dwFlags |= UPF_NULL_VALUE;
+      p->flags |= UPF_NULL_VALUE;
    }
 }
 
 /**
  * Open device
  */
-BOOL APCInterface::open()
+bool APCInterface::open()
 {
-   char szLine[256];
-   BOOL bRet;
-
    if (!SerialInterface::open())
-      return FALSE;
+      return false;
 
    m_serial.setTimeout(1000);
    m_serial.set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
 
    // Turn on "smart" mode
    m_serial.write("Y", 1);
-   bRet = readLineFromSerial(szLine, 256);
-   if (bRet && !strcmp(szLine, "SM"))
+   char response[MAX_RESULT_LENGTH];
+   bool success = readLineFromSerial(response, MAX_RESULT_LENGTH);
+   if (success && !strcmp(response, "SM"))
    {
-      bRet = TRUE;
       setConnected();
 		
 		// Query model and set as device name
-		char buffer[MAX_RESULT_LENGTH];
    	m_serial.write("\x01", 1);
-		if (readLineFromSerial(buffer, MAX_RESULT_LENGTH))
+		if (readLineFromSerial(response, MAX_RESULT_LENGTH))
 		{
-			setName(TrimA(buffer));
+			setName(TrimA(response));
 		}
    }
    else
    {
-      bRet = FALSE;
+      success = false;
    }
 
-   return bRet;
+   return success;
 }
 
 /**
  * Validate connection
  */
-BOOL APCInterface::validateConnection()
+bool APCInterface::validateConnection()
 {
-   BOOL bRet;
-   char szLine[256];
-
    m_serial.write("Y", 1);
-   bRet = readLineFromSerial(szLine, 256);
-   return (bRet && !strcmp(szLine, "SM"));
+   char response[256];
+   bool success = readLineFromSerial(response, 256);
+   return (success && !strcmp(response, "SM"));
 }
 
 /**
@@ -173,29 +167,29 @@ void APCInterface::queryModel()
  */
 void APCInterface::queryFirmwareVersion()
 {
-   char szRev[256], szVer[256];
-
    m_serial.write("V", 1);
-   if (!readLineFromSerial(szVer, 256))
+   char version[256];
+   if (!readLineFromSerial(version, 256))
    {
-      szVer[0] = 0;
+      version[0] = 0;
    }
 
    m_serial.write("b", 1);
-   if (!readLineFromSerial(szRev, 256))
+   char revision[256];
+   if (!readLineFromSerial(revision, 256))
    {
-      szRev[0] = 0;
+      revision[0] = 0;
    }
       
-   if ((szVer[0] != 0) || (szRev[0] != 0))
+   if ((version[0] != 0) || (revision[0] != 0))
    {
-      snprintf(m_paramList[UPS_PARAM_FIRMWARE].szValue, MAX_RESULT_LENGTH, "%s%s%s", szVer,
-               ((szVer[0] != 0) && (szRev[0] != 0)) ? " " : "", szRev);
-      m_paramList[UPS_PARAM_FIRMWARE].dwFlags &= ~UPF_NULL_VALUE;
+      snprintf(m_paramList[UPS_PARAM_FIRMWARE].value, MAX_RESULT_LENGTH, "%s%s%s", version,
+               ((version[0] != 0) && (revision[0] != 0)) ? " " : "", revision);
+      m_paramList[UPS_PARAM_FIRMWARE].flags &= ~UPF_NULL_VALUE;
    }
    else
    {
-      m_paramList[UPS_PARAM_FIRMWARE].dwFlags |= UPF_NULL_VALUE;
+      m_paramList[UPS_PARAM_FIRMWARE].flags |= UPF_NULL_VALUE;
    }
 }
 
@@ -293,42 +287,42 @@ void APCInterface::queryEstimatedRuntime()
 void APCInterface::queryOnlineStatus()
 {
    char *eptr, szLine[MAX_RESULT_LENGTH];
-   DWORD dwFlags;
+   DWORD flags;
 
    m_serial.write("Q", 1);
    if (readLineFromSerial(szLine, MAX_RESULT_LENGTH))
    {
       if (strcmp(szLine, "NA"))
       {
-         dwFlags = strtoul(szLine, &eptr, 16);
+         flags = strtoul(szLine, &eptr, 16);
          if (*eptr == 0)
          {
-            m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[1] = 0;
-            if (dwFlags & 0x08)  // online
+            m_paramList[UPS_PARAM_ONLINE_STATUS].value[1] = 0;
+            if (flags & 0x08)  // online
             {
-               m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '0';
+               m_paramList[UPS_PARAM_ONLINE_STATUS].value[0] = '0';
             }
-            else if (dwFlags & 0x10)   // on battery
+            else if (flags & 0x10)   // on battery
             {
-               if (dwFlags & 0x40)  // battery low
-                  m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '2';
+               if (flags & 0x40)  // battery low
+                  m_paramList[UPS_PARAM_ONLINE_STATUS].value[0] = '2';
                else
-                  m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '1';
+                  m_paramList[UPS_PARAM_ONLINE_STATUS].value[0] = '1';
             }
-            m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags &= ~(UPF_NULL_VALUE | UPF_NOT_SUPPORTED);
+            m_paramList[UPS_PARAM_ONLINE_STATUS].flags &= ~(UPF_NULL_VALUE | UPF_NOT_SUPPORTED);
          }
          else
          {
-            m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
+            m_paramList[UPS_PARAM_ONLINE_STATUS].flags |= UPF_NULL_VALUE;
          }
       }
       else
       {
-         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NOT_SUPPORTED;
+         m_paramList[UPS_PARAM_ONLINE_STATUS].flags |= UPF_NOT_SUPPORTED;
       }
    }
    else
    {
-      m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
+      m_paramList[UPS_PARAM_ONLINE_STATUS].flags |= UPF_NULL_VALUE;
    }
 }

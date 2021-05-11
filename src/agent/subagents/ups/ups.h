@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2014 Victor Kirhenshtein
+** Copyright (C) 2006-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,11 +66,11 @@ extern "C" {
 /**
  * UPS parameter structure
  */
-typedef struct
+struct UPS_PARAMETER
 {
-   DWORD dwFlags;
-   char szValue[MAX_RESULT_LENGTH];
-} UPS_PARAMETER;
+   uint32_t flags;
+   char value[MAX_RESULT_LENGTH];
+};
 
 /**
  * UPS parameter codes
@@ -100,30 +100,29 @@ class UPSInterface
 private:
    MUTEX m_mutex;
    CONDITION m_condStop;
-   THREAD m_thCommThread;
-   int m_nIndex;
+   THREAD m_commThread;
+   int m_id;
 
-   static THREAD_RESULT THREAD_CALL commThreadStarter(void *pArg);
    void commThread();
 
 protected:
    TCHAR *m_device;
-   TCHAR *m_pszName;
-   BOOL m_bIsConnected;
+   TCHAR *m_name;
+   bool m_isConnected;
    UPS_PARAMETER m_paramList[UPS_PARAM_COUNT];
 
-   void setConnected() { m_bIsConnected = TRUE; }
-   void setNullFlag(int nParam, BOOL bFlag) 
+   void setConnected() { m_isConnected = true; }
+   void setNullFlag(int parameterIndex, bool value)
    { 
-      if (bFlag)
-         m_paramList[nParam].dwFlags |= UPF_NULL_VALUE;
+      if (value)
+         m_paramList[parameterIndex].flags |= UPF_NULL_VALUE;
       else
-         m_paramList[nParam].dwFlags &= ~UPF_NULL_VALUE;
+         m_paramList[parameterIndex].flags &= ~UPF_NULL_VALUE;
    }
 
-   virtual BOOL open();
+   virtual bool open();
    virtual void close();
-   virtual BOOL validateConnection();
+   virtual bool validateConnection();
 
    virtual void queryModel();
    virtual void queryFirmwareVersion();
@@ -144,20 +143,21 @@ public:
    UPSInterface(const TCHAR *device);
    virtual ~UPSInterface();
 
-   const TCHAR *getDevice() { return m_device; }
-   const TCHAR *getName() { return CHECK_NULL(m_pszName); }
-   virtual const TCHAR *getType() { return _T("GENERIC"); }
-   BOOL isConnected() { return m_bIsConnected; }
+   int getId() const { return m_id; }
+   const TCHAR *getDevice() const { return m_device; }
+   const TCHAR *getName() const { return CHECK_NULL(m_name); }
+   virtual const TCHAR *getType() const { return _T("GENERIC"); }
+   bool isConnected() const { return m_isConnected; }
 
-   void setName(const char *pszName);
+   void setName(const char *name);
 #ifdef UNICODE
-   void setName(const WCHAR *pszName);
+   void setName(const WCHAR *name);
 #endif
-   void setIndex(int nIndex) { m_nIndex = nIndex; }
+   void setId(int id) { m_id = id; }
 
    void startCommunication();
 
-   LONG getParameter(int nParam, TCHAR *pszValue);
+   LONG getParameter(int parameterIndex, TCHAR *value);
 
    virtual void queryStaticData();
    virtual void queryDynamicData();
@@ -175,8 +175,8 @@ protected:
 	int m_parity;
 	int m_stopBits;
 
-   virtual BOOL open();
-   virtual void close();
+   virtual bool open() override;
+   virtual void close() override;
 
    bool readLineFromSerial(char *buffer, size_t bufLen, char eol = '\n');
 
@@ -190,30 +190,30 @@ public:
 class APCInterface : public SerialInterface
 {
 protected:
-   virtual BOOL open();
-   virtual BOOL validateConnection();
+   virtual bool open() override;
+   virtual bool validateConnection() override;
 
    void queryParameter(const char *pszRq, UPS_PARAMETER *p, int nType, int chSep);
 
-   virtual void queryModel();
-   virtual void queryFirmwareVersion();
-   virtual void queryMfgDate();
-   virtual void querySerialNumber();
-   virtual void queryTemperature();
-   virtual void queryBatteryVoltage();
-   virtual void queryNominalBatteryVoltage();
-   virtual void queryBatteryLevel();
-   virtual void queryInputVoltage();
-   virtual void queryOutputVoltage();
-   virtual void queryLineFrequency();
-   virtual void queryPowerLoad();
-   virtual void queryEstimatedRuntime();
-   virtual void queryOnlineStatus();
+   virtual void queryModel() override;
+   virtual void queryFirmwareVersion() override;
+   virtual void queryMfgDate() override;
+   virtual void querySerialNumber() override;
+   virtual void queryTemperature() override;
+   virtual void queryBatteryVoltage() override;
+   virtual void queryNominalBatteryVoltage() override;
+   virtual void queryBatteryLevel() override;
+   virtual void queryInputVoltage() override;
+   virtual void queryOutputVoltage() override;
+   virtual void queryLineFrequency() override;
+   virtual void queryPowerLoad() override;
+   virtual void queryEstimatedRuntime() override;
+   virtual void queryOnlineStatus() override;
 
 public:
    APCInterface(const TCHAR *device);
 
-   virtual const TCHAR *getType() { return _T("APC"); }
+   virtual const TCHAR *getType() const override { return _T("APC"); }
 };
 
 /**
@@ -227,16 +227,16 @@ private:
    void calculatePacks(double nominalVoltage, double actualVoltage);
 
 protected:
-   virtual BOOL open();
-   virtual BOOL validateConnection();
+   virtual bool open() override;
+   virtual bool validateConnection() override;
 
 public:
    MegatecInterface(const TCHAR *device);
 
-   virtual const TCHAR *getType() { return _T("MEGATEC"); }
+   virtual const TCHAR *getType() const override { return _T("MEGATEC"); }
 
-   virtual void queryStaticData();
-   virtual void queryDynamicData();
+   virtual void queryStaticData() override;
+   virtual void queryDynamicData() override;
 };
 
 /**
@@ -244,8 +244,8 @@ public:
  */
 struct BCMXCP_METER_MAP_ENTRY
 {
-   int nFormat;
-   int nOffset;
+   int format;
+   int offset;
 };
 
 /**
@@ -257,30 +257,30 @@ protected:
    BYTE m_data[BCMXCP_BUFFER_SIZE];
    BCMXCP_METER_MAP_ENTRY m_map[BCMXCP_MAP_SIZE];
 
-   virtual BOOL open();
-   virtual BOOL validateConnection();
+   virtual bool open() override;
+   virtual bool validateConnection() override;
 
-   BOOL sendReadCommand(BYTE nCommand);
-   int recvData(int nCommand);
-   void readParameter(int nIndex, int nFormat, UPS_PARAMETER *pParam);
+   bool sendReadCommand(BYTE command);
+   int recvData(int command);
+   void readParameter(int index, int format, UPS_PARAMETER *param);
 
-   virtual void queryTemperature();
-   virtual void queryLineFrequency();
-   virtual void queryBatteryLevel();
-   virtual void queryInputVoltage();
-   virtual void queryOutputVoltage();
-   virtual void queryBatteryVoltage();
-   virtual void queryEstimatedRuntime();
-   virtual void queryModel();
-   virtual void queryFirmwareVersion();
-   virtual void querySerialNumber();
-   virtual void queryOnlineStatus();
-   virtual void queryPowerLoad();
+   virtual void queryTemperature() override;
+   virtual void queryLineFrequency() override;
+   virtual void queryBatteryLevel() override;
+   virtual void queryInputVoltage() override;
+   virtual void queryOutputVoltage() override;
+   virtual void queryBatteryVoltage() override;
+   virtual void queryEstimatedRuntime() override;
+   virtual void queryModel() override;
+   virtual void queryFirmwareVersion() override;
+   virtual void querySerialNumber() override;
+   virtual void queryOnlineStatus() override;
+   virtual void queryPowerLoad() override;
 
 public:
    BCMXCPInterface(const TCHAR *device);
 
-   virtual const TCHAR *getType() { return _T("BCMXCP"); }
+   virtual const TCHAR *getType() const override { return _T("BCMXCP"); }
 };
 
 /**
@@ -292,28 +292,28 @@ protected:
    BYTE m_data[METASYS_BUFFER_SIZE];
    int m_nominalPower;
 
-   virtual BOOL open();
-   virtual BOOL validateConnection();
+   virtual bool open() override;
+   virtual bool validateConnection() override;
 
-   BOOL sendReadCommand(BYTE nCommand);
-   int recvData(int nCommand);
+   bool sendReadCommand(BYTE command);
+   int recvData(int command);
    void readParameter(int command, int offset, int format, UPS_PARAMETER *param);
    void parseModelId();
 
-   virtual void queryTemperature();
-   virtual void queryInputVoltage();
-   virtual void queryOutputVoltage();
-   virtual void queryBatteryVoltage();
-   virtual void queryModel();
-   virtual void queryFirmwareVersion();
-   virtual void querySerialNumber();
-   virtual void queryOnlineStatus();
-   virtual void queryPowerLoad();
+   virtual void queryTemperature() override;
+   virtual void queryInputVoltage() override;
+   virtual void queryOutputVoltage() override;
+   virtual void queryBatteryVoltage() override;
+   virtual void queryModel() override;
+   virtual void queryFirmwareVersion() override;
+   virtual void querySerialNumber() override;
+   virtual void queryOnlineStatus() override;
+   virtual void queryPowerLoad() override;
 
 public:
    MetaSysInterface(const TCHAR *device);
 
-   virtual const TCHAR *getType() { return _T("METASYS"); }
+   virtual const TCHAR *getType() const override { return _T("METASYS"); }
 };
 
 /**
@@ -322,32 +322,32 @@ public:
 class MicrodowellInterface : public SerialInterface
 {
 protected:
-	virtual BOOL open();
-	virtual BOOL validateConnection();
+   bool m_ge2kva;
 
-	BOOL sendCmd(const char *cmd, int cmdLen, char *ret, int *retLen);
+	virtual bool open() override;
+	virtual bool validateConnection() override;
 
-	int ge2kva;
+	bool sendCmd(const char *cmd, int cmdLen, char *ret, int *retLen);
 
-   virtual void queryModel();
-   virtual void queryFirmwareVersion();
-   virtual void queryMfgDate();
-   virtual void querySerialNumber();
-   virtual void queryTemperature();
-   virtual void queryBatteryVoltage();
-   virtual void queryNominalBatteryVoltage();
-   virtual void queryBatteryLevel();
-   virtual void queryInputVoltage();
-   virtual void queryOutputVoltage();
-   virtual void queryLineFrequency();
-   virtual void queryPowerLoad();
-   virtual void queryEstimatedRuntime();
-   virtual void queryOnlineStatus();
+   virtual void queryModel() override;
+   virtual void queryFirmwareVersion() override;
+   virtual void queryMfgDate() override;
+   virtual void querySerialNumber() override;
+   virtual void queryTemperature() override;
+   virtual void queryBatteryVoltage() override;
+   virtual void queryNominalBatteryVoltage() override;
+   virtual void queryBatteryLevel() override;
+   virtual void queryInputVoltage() override;
+   virtual void queryOutputVoltage() override;
+   virtual void queryLineFrequency() override;
+   virtual void queryPowerLoad() override;
+   virtual void queryEstimatedRuntime() override;
+   virtual void queryOnlineStatus() override;
 
 public:
    MicrodowellInterface(const TCHAR *device);
 
-   virtual const TCHAR *getType() { return _T("MICRODOWELL"); }
+   virtual const TCHAR *getType() const override { return _T("MICRODOWELL"); }
 };
 
 #ifdef _WIN32
@@ -363,9 +363,9 @@ protected:
    PHIDP_PREPARSED_DATA m_pPreparsedData;
    HIDP_VALUE_CAPS *m_pFeatureValueCaps;
 
-   virtual BOOL open();
-   virtual void close();
-   virtual BOOL validateConnection();
+   virtual bool open() override;
+   virtual void close() override;
+   virtual bool validateConnection() override;
 
    LONG readIndexedString(USAGE nPage, USAGE uUsage, char *pszBuffer, int nBufLen);
    LONG readInt(USAGE nPage, USAGE nUsage, LONG *pnValue);
@@ -373,20 +373,20 @@ protected:
    void readStringParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam);
    void readIntParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam, int nDiv, BOOL bDouble);
 
-   virtual void queryModel();
-   virtual void querySerialNumber();
-   virtual void queryBatteryVoltage();
-   virtual void queryNominalBatteryVoltage();
-   virtual void queryBatteryLevel();
-   virtual void queryPowerLoad();
-   virtual void queryEstimatedRuntime();
-   virtual void queryOnlineStatus();
+   virtual void queryModel() override;
+   virtual void querySerialNumber() override;
+   virtual void queryBatteryVoltage() override;
+   virtual void queryNominalBatteryVoltage() override;
+   virtual void queryBatteryLevel() override;
+   virtual void queryPowerLoad() override;
+   virtual void queryEstimatedRuntime() override;
+   virtual void queryOnlineStatus() override;
 
 public:
    USBInterface(const TCHAR *device);
    virtual ~USBInterface();
 
-   virtual const TCHAR *getType() { return _T("USB"); }
+   virtual const TCHAR *getType() const override { return _T("USB"); }
 };
 
 #endif

@@ -262,6 +262,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_recoveryTime = NEVER;
    m_lastAgentCommTime = NEVER;
    m_lastAgentConnectAttempt = 0;
+   m_agentRestartTime = NEVER;
    m_vrrpInfo = nullptr;
    m_topologyRebuildTimestamp = 0;
    m_pendingState = -1;
@@ -307,7 +308,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_cipState = 0;
    m_cipStatus = 0;
    m_cipVendorCode = 0;
-   m_agentRestartTime = 0;
 }
 
 /**
@@ -3876,23 +3876,18 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 bool Node::isAgentRestarting()
 {
    time_t restartWaitTime = static_cast<time_t>(ConfigReadULong(_T("Agent.RestartWaitTime"), 0));
-   time_t now = time(nullptr);
-
-   return ((m_agentRestartTime + restartWaitTime) >= now);
+   return m_agentRestartTime + restartWaitTime >= time(nullptr);
 }
 
 /**
- * Check if a proxy node with the specified ID counts as being in process of restarting
+ * Check if agent on given node is restarting
  */
-static inline bool checkProxyRestarting(uint32_t proxyId, time_t agentRestartGrace, time_t now)
+static inline bool IsProxyAgentRestarting(uint32_t proxyId, time_t restartWaitTime, time_t now)
 {
-   if (proxyId != 0)
-   {
-      shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
-      return ((proxyNode != nullptr) && ((proxyNode->getAgentRestartTime() + agentRestartGrace) >= now));
-   }
-
-   return false;
+   if (proxyId == 0)
+      return false;
+   shared_ptr<NetObj> proxyNode = FindObjectById(proxyId, OBJECT_NODE);
+   return (proxyNode != nullptr) && static_cast<Node&>(*proxyNode).getAgentRestartTime() + restartWaitTime >= now;
 }
 
 /**
@@ -3902,11 +3897,10 @@ bool Node::isProxyAgentRestarting()
 {
    time_t restartWaitTime = static_cast<time_t>(ConfigReadULong(_T("Agent.RestartWaitTime"), 0));
    time_t now = time(nullptr);
-
-   return (checkProxyRestarting(getEffectiveAgentProxy(), restartWaitTime, now) ||
-           checkProxyRestarting(getEffectiveSnmpProxy(), restartWaitTime, now) ||
-           checkProxyRestarting(getEffectiveEtherNetIPProxy(), restartWaitTime, now) ||
-           checkProxyRestarting(getEffectiveIcmpProxy(), restartWaitTime, now));
+   return IsProxyAgentRestarting(getEffectiveAgentProxy(), restartWaitTime, now) ||
+          IsProxyAgentRestarting(getEffectiveSnmpProxy(), restartWaitTime, now) ||
+          IsProxyAgentRestarting(getEffectiveEtherNetIPProxy(), restartWaitTime, now) ||
+          IsProxyAgentRestarting(getEffectiveIcmpProxy(), restartWaitTime, now);
 }
 
 /**
@@ -7110,138 +7104,138 @@ uint32_t Node::getTableForClient(const TCHAR *name, shared_ptr<Table> *table)
 /**
  * Create NXCP message with object's data
  */
-void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
+void Node::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   super::fillMessageInternal(pMsg, userId);
-   pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
-   pMsg->setField(VID_PRIMARY_NAME, m_primaryHostName);
-   pMsg->setField(VID_NODE_TYPE, (INT16)m_type);
-   pMsg->setField(VID_NODE_SUBTYPE, m_subType);
-   pMsg->setField(VID_HYPERVISOR_TYPE, m_hypervisorType);
-   pMsg->setField(VID_HYPERVISOR_INFO, m_hypervisorInfo);
-   pMsg->setField(VID_VENDOR, m_vendor);
-   pMsg->setField(VID_PRODUCT_CODE, m_productCode);
-   pMsg->setField(VID_PRODUCT_NAME, m_productName);
-   pMsg->setField(VID_PRODUCT_VERSION, m_productVersion);
-   pMsg->setField(VID_SERIAL_NUMBER, m_serialNumber);
-   pMsg->setField(VID_STATE_FLAGS, m_state);
-   pMsg->setField(VID_CAPABILITIES, m_capabilities);
-   pMsg->setField(VID_AGENT_PORT, m_agentPort);
-   pMsg->setField(VID_AGENT_CACHE_MODE, m_agentCacheMode);
-   pMsg->setField(VID_SHARED_SECRET, m_agentSecret);
-   pMsg->setFieldFromMBString(VID_SNMP_AUTH_OBJECT, m_snmpSecurity->getCommunity());
-   pMsg->setFieldFromMBString(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity->getAuthPassword());
-   pMsg->setFieldFromMBString(VID_SNMP_PRIV_PASSWORD, m_snmpSecurity->getPrivPassword());
-   pMsg->setField(VID_SNMP_USM_METHODS, (WORD)((WORD)m_snmpSecurity->getAuthMethod() | ((WORD)m_snmpSecurity->getPrivMethod() << 8)));
-   pMsg->setField(VID_SNMP_OID, CHECK_NULL_EX(m_snmpObjectId));
-   pMsg->setField(VID_SNMP_PORT, m_snmpPort);
-   pMsg->setField(VID_SNMP_VERSION, (WORD)m_snmpVersion);
-   pMsg->setField(VID_AGENT_VERSION, m_agentVersion);
-   pMsg->setField(VID_AGENT_ID, m_agentId);
-   pMsg->setField(VID_HARDWARE_ID, m_hardwareId.value(), HARDWARE_ID_LENGTH);
-   pMsg->setField(VID_PLATFORM_NAME, m_platformName);
-   pMsg->setField(VID_POLLER_NODE_ID, m_pollerNode);
-   pMsg->setField(VID_ZONE_UIN, m_zoneUIN);
-   pMsg->setField(VID_AGENT_PROXY, m_agentProxy);
-   pMsg->setField(VID_SNMP_PROXY, m_snmpProxy);
-   pMsg->setField(VID_ETHERNET_IP_PROXY, m_eipProxy);
-   pMsg->setField(VID_ICMP_PROXY, m_icmpProxy);
-   pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
-   pMsg->setField(VID_SYS_NAME, CHECK_NULL_EX(m_sysName));
-   pMsg->setField(VID_SYS_DESCRIPTION, CHECK_NULL_EX(m_sysDescription));
-   pMsg->setField(VID_SYS_CONTACT, CHECK_NULL_EX(m_sysContact));
-   pMsg->setField(VID_SYS_LOCATION, CHECK_NULL_EX(m_sysLocation));
-   pMsg->setFieldFromTime(VID_BOOT_TIME, m_bootTime);
-   pMsg->setFieldFromTime(VID_AGENT_COMM_TIME, m_lastAgentCommTime);
-   pMsg->setField(VID_BRIDGE_BASE_ADDRESS, m_baseBridgeAddress, 6);
+   super::fillMessageInternal(msg, userId);
+   msg->setField(VID_IP_ADDRESS, m_ipAddress);
+   msg->setField(VID_PRIMARY_NAME, m_primaryHostName);
+   msg->setField(VID_NODE_TYPE, (INT16)m_type);
+   msg->setField(VID_NODE_SUBTYPE, m_subType);
+   msg->setField(VID_HYPERVISOR_TYPE, m_hypervisorType);
+   msg->setField(VID_HYPERVISOR_INFO, m_hypervisorInfo);
+   msg->setField(VID_VENDOR, m_vendor);
+   msg->setField(VID_PRODUCT_CODE, m_productCode);
+   msg->setField(VID_PRODUCT_NAME, m_productName);
+   msg->setField(VID_PRODUCT_VERSION, m_productVersion);
+   msg->setField(VID_SERIAL_NUMBER, m_serialNumber);
+   msg->setField(VID_STATE_FLAGS, m_state);
+   msg->setField(VID_CAPABILITIES, m_capabilities);
+   msg->setField(VID_AGENT_PORT, m_agentPort);
+   msg->setField(VID_AGENT_CACHE_MODE, m_agentCacheMode);
+   msg->setField(VID_SHARED_SECRET, m_agentSecret);
+   msg->setFieldFromMBString(VID_SNMP_AUTH_OBJECT, m_snmpSecurity->getCommunity());
+   msg->setFieldFromMBString(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity->getAuthPassword());
+   msg->setFieldFromMBString(VID_SNMP_PRIV_PASSWORD, m_snmpSecurity->getPrivPassword());
+   msg->setField(VID_SNMP_USM_METHODS, (WORD)((WORD)m_snmpSecurity->getAuthMethod() | ((WORD)m_snmpSecurity->getPrivMethod() << 8)));
+   msg->setField(VID_SNMP_OID, CHECK_NULL_EX(m_snmpObjectId));
+   msg->setField(VID_SNMP_PORT, m_snmpPort);
+   msg->setField(VID_SNMP_VERSION, (WORD)m_snmpVersion);
+   msg->setField(VID_AGENT_VERSION, m_agentVersion);
+   msg->setField(VID_AGENT_ID, m_agentId);
+   msg->setField(VID_HARDWARE_ID, m_hardwareId.value(), HARDWARE_ID_LENGTH);
+   msg->setField(VID_PLATFORM_NAME, m_platformName);
+   msg->setField(VID_POLLER_NODE_ID, m_pollerNode);
+   msg->setField(VID_ZONE_UIN, m_zoneUIN);
+   msg->setField(VID_AGENT_PROXY, m_agentProxy);
+   msg->setField(VID_SNMP_PROXY, m_snmpProxy);
+   msg->setField(VID_ETHERNET_IP_PROXY, m_eipProxy);
+   msg->setField(VID_ICMP_PROXY, m_icmpProxy);
+   msg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
+   msg->setField(VID_SYS_NAME, CHECK_NULL_EX(m_sysName));
+   msg->setField(VID_SYS_DESCRIPTION, CHECK_NULL_EX(m_sysDescription));
+   msg->setField(VID_SYS_CONTACT, CHECK_NULL_EX(m_sysContact));
+   msg->setField(VID_SYS_LOCATION, CHECK_NULL_EX(m_sysLocation));
+   msg->setFieldFromTime(VID_BOOT_TIME, m_bootTime);
+   msg->setFieldFromTime(VID_AGENT_COMM_TIME, m_lastAgentCommTime);
+   msg->setField(VID_BRIDGE_BASE_ADDRESS, m_baseBridgeAddress, 6);
    if (m_lldpNodeId != nullptr)
-      pMsg->setField(VID_LLDP_NODE_ID, m_lldpNodeId);
-   pMsg->setField(VID_USE_IFXTABLE, (WORD)m_nUseIfXTable);
+      msg->setField(VID_LLDP_NODE_ID, m_lldpNodeId);
+   msg->setField(VID_USE_IFXTABLE, (WORD)m_nUseIfXTable);
    if (m_vrrpInfo != nullptr)
    {
-      pMsg->setField(VID_VRRP_VERSION, (WORD)m_vrrpInfo->getVersion());
-      pMsg->setField(VID_VRRP_VR_COUNT, (WORD)m_vrrpInfo->size());
+      msg->setField(VID_VRRP_VERSION, (WORD)m_vrrpInfo->getVersion());
+      msg->setField(VID_VRRP_VR_COUNT, (WORD)m_vrrpInfo->size());
    }
    if (m_driver != nullptr)
    {
-      pMsg->setField(VID_DRIVER_NAME, m_driver->getName());
-      pMsg->setField(VID_DRIVER_VERSION, m_driver->getVersion());
+      msg->setField(VID_DRIVER_NAME, m_driver->getName());
+      msg->setField(VID_DRIVER_VERSION, m_driver->getVersion());
    }
-   pMsg->setField(VID_PHYSICAL_CONTAINER_ID, m_physicalContainer);
-   pMsg->setField(VID_RACK_IMAGE_FRONT, m_rackImageFront);
-   pMsg->setField(VID_RACK_IMAGE_REAR, m_rackImageRear);
-   pMsg->setField(VID_RACK_POSITION, m_rackPosition);
-   pMsg->setField(VID_RACK_HEIGHT, m_rackHeight);
-   pMsg->setField(VID_SSH_PROXY, m_sshProxy);
-   pMsg->setField(VID_SSH_LOGIN, m_sshLogin);
-   pMsg->setField(VID_SSH_KEY_ID, m_sshKeyId);
-   pMsg->setField(VID_SSH_PASSWORD, m_sshPassword);
-   pMsg->setField(VID_SSH_PORT, m_sshPort);
-   pMsg->setField(VID_PORT_ROW_COUNT, m_portRowCount);
-   pMsg->setField(VID_PORT_NUMBERING_SCHEME, m_portNumberingScheme);
-   pMsg->setField(VID_AGENT_COMPRESSION_MODE, m_agentCompressionMode);
-   pMsg->setField(VID_RACK_ORIENTATION, static_cast<INT16>(m_rackOrientation));
-   pMsg->setField(VID_ICMP_COLLECTION_MODE, (INT16)m_icmpStatCollectionMode);
-   pMsg->setField(VID_CHASSIS_PLACEMENT, m_chassisPlacementConf);
+   msg->setField(VID_PHYSICAL_CONTAINER_ID, m_physicalContainer);
+   msg->setField(VID_RACK_IMAGE_FRONT, m_rackImageFront);
+   msg->setField(VID_RACK_IMAGE_REAR, m_rackImageRear);
+   msg->setField(VID_RACK_POSITION, m_rackPosition);
+   msg->setField(VID_RACK_HEIGHT, m_rackHeight);
+   msg->setField(VID_SSH_PROXY, m_sshProxy);
+   msg->setField(VID_SSH_LOGIN, m_sshLogin);
+   msg->setField(VID_SSH_KEY_ID, m_sshKeyId);
+   msg->setField(VID_SSH_PASSWORD, m_sshPassword);
+   msg->setField(VID_SSH_PORT, m_sshPort);
+   msg->setField(VID_PORT_ROW_COUNT, m_portRowCount);
+   msg->setField(VID_PORT_NUMBERING_SCHEME, m_portNumberingScheme);
+   msg->setField(VID_AGENT_COMPRESSION_MODE, m_agentCompressionMode);
+   msg->setField(VID_RACK_ORIENTATION, static_cast<INT16>(m_rackOrientation));
+   msg->setField(VID_ICMP_COLLECTION_MODE, (INT16)m_icmpStatCollectionMode);
+   msg->setField(VID_CHASSIS_PLACEMENT, m_chassisPlacementConf);
    if (isIcmpStatCollectionEnabled() && (m_icmpStatCollectors != nullptr))
    {
       IcmpStatCollector *collector = m_icmpStatCollectors->get(_T("PRI"));
       if (collector != nullptr)
       {
-         pMsg->setField(VID_ICMP_LAST_RESPONSE_TIME, collector->last());
-         pMsg->setField(VID_ICMP_MIN_RESPONSE_TIME, collector->min());
-         pMsg->setField(VID_ICMP_MAX_RESPONSE_TIME, collector->max());
-         pMsg->setField(VID_ICMP_AVG_RESPONSE_TIME, collector->average());
-         pMsg->setField(VID_ICMP_PACKET_LOSS, collector->packetLoss());
+         msg->setField(VID_ICMP_LAST_RESPONSE_TIME, collector->last());
+         msg->setField(VID_ICMP_MIN_RESPONSE_TIME, collector->min());
+         msg->setField(VID_ICMP_MAX_RESPONSE_TIME, collector->max());
+         msg->setField(VID_ICMP_AVG_RESPONSE_TIME, collector->average());
+         msg->setField(VID_ICMP_PACKET_LOSS, collector->packetLoss());
       }
-      pMsg->setField(VID_HAS_ICMP_DATA, true);
+      msg->setField(VID_HAS_ICMP_DATA, true);
    }
    else
    {
-      pMsg->setField(VID_HAS_ICMP_DATA, false);
+      msg->setField(VID_HAS_ICMP_DATA, false);
    }
 
-   pMsg->setField(VID_ICMP_TARGET_COUNT, m_icmpTargets.size());
-   UINT32 fieldId = VID_ICMP_TARGET_LIST_BASE;
+   msg->setField(VID_ICMP_TARGET_COUNT, m_icmpTargets.size());
+   uint32_t fieldId = VID_ICMP_TARGET_LIST_BASE;
    for(int i = 0; i < m_icmpTargets.size(); i++)
-      pMsg->setField(fieldId++, m_icmpTargets.get(i));
+      msg->setField(fieldId++, m_icmpTargets.get(i));
 
-   pMsg->setField(VID_ETHERNET_IP_PORT, m_eipPort);
+   msg->setField(VID_ETHERNET_IP_PORT, m_eipPort);
    if (m_capabilities & NC_IS_ETHERNET_IP)
    {
-      pMsg->setField(VID_CIP_DEVICE_TYPE, m_cipDeviceType);
-      pMsg->setField(VID_CIP_DEVICE_TYPE_NAME, CIP_DeviceTypeNameFromCode(m_cipDeviceType));
-      pMsg->setField(VID_CIP_STATUS, m_cipStatus);
-      pMsg->setField(VID_CIP_STATUS_TEXT, CIP_DecodeDeviceStatus(m_cipStatus));
-      pMsg->setField(VID_CIP_EXT_STATUS_TEXT, CIP_DecodeExtendedDeviceStatus(m_cipStatus));
-      pMsg->setField(VID_CIP_STATE, static_cast<uint16_t>(m_cipState));
-      pMsg->setField(VID_CIP_STATE_TEXT, CIP_DeviceStateTextFromCode(m_cipState));
-      pMsg->setField(VID_CIP_VENDOR_CODE, m_cipVendorCode);
+      msg->setField(VID_CIP_DEVICE_TYPE, m_cipDeviceType);
+      msg->setField(VID_CIP_DEVICE_TYPE_NAME, CIP_DeviceTypeNameFromCode(m_cipDeviceType));
+      msg->setField(VID_CIP_STATUS, m_cipStatus);
+      msg->setField(VID_CIP_STATUS_TEXT, CIP_DecodeDeviceStatus(m_cipStatus));
+      msg->setField(VID_CIP_EXT_STATUS_TEXT, CIP_DecodeExtendedDeviceStatus(m_cipStatus));
+      msg->setField(VID_CIP_STATE, static_cast<uint16_t>(m_cipState));
+      msg->setField(VID_CIP_STATE_TEXT, CIP_DeviceStateTextFromCode(m_cipState));
+      msg->setField(VID_CIP_VENDOR_CODE, m_cipVendorCode);
    }
 
-   pMsg->setField(VID_CERT_MAPPING_METHOD, static_cast<int16_t>(m_agentCertMappingMethod));
-   pMsg->setField(VID_CERT_MAPPING_DATA, m_agentCertMappingData);
-   pMsg->setField(VID_AGENT_CERT_SUBJECT, m_agentCertSubject);
+   msg->setField(VID_CERT_MAPPING_METHOD, static_cast<int16_t>(m_agentCertMappingMethod));
+   msg->setField(VID_CERT_MAPPING_DATA, m_agentCertMappingData);
+   msg->setField(VID_AGENT_CERT_SUBJECT, m_agentCertSubject);
 }
 
 /**
  * Modify object from NXCP message
  */
-UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
+UINT32 Node::modifyFromMessageInternal(NXCPMessage *request)
 {
    // Change flags
-   if (pRequest->isFieldExist(VID_FLAGS))
+   if (request->isFieldExist(VID_FLAGS))
    {
       bool wasRemoteAgent = ((m_flags & NF_EXTERNAL_GATEWAY) != 0);
-      if (pRequest->isFieldExist(VID_FLAGS_MASK))
+      if (request->isFieldExist(VID_FLAGS_MASK))
       {
-         UINT32 mask = pRequest->getFieldAsUInt32(VID_FLAGS_MASK);
+         uint32_t mask = request->getFieldAsUInt32(VID_FLAGS_MASK);
          m_flags &= ~mask;
-         m_flags |= pRequest->getFieldAsUInt32(VID_FLAGS);
+         m_flags |= request->getFieldAsUInt32(VID_FLAGS);
       }
       else
       {
-         m_flags = pRequest->getFieldAsUInt32(VID_FLAGS);
+         m_flags = request->getFieldAsUInt32(VID_FLAGS);
       }
       if (wasRemoteAgent && !(m_flags & NF_EXTERNAL_GATEWAY) && m_ipAddress.isValidUnicast())
       {
@@ -7284,9 +7278,9 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    }
 
    // Change primary IP address
-   if (pRequest->isFieldExist(VID_IP_ADDRESS))
+   if (request->isFieldExist(VID_IP_ADDRESS))
    {
-      InetAddress ipAddr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
+      InetAddress ipAddr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
 
 
       if (!(m_flags & NF_EXTERNAL_GATEWAY))
@@ -7318,7 +7312,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       setPrimaryIPAddress(ipAddr); //properties locking mutex already locked in NetObj::modifyFromMessage
 
       // Update primary name if it is not set with the same message
-      if (!pRequest->isFieldExist(VID_PRIMARY_NAME))
+      if (!request->isFieldExist(VID_PRIMARY_NAME))
       {
          m_primaryHostName = m_ipAddress.toString();
       }
@@ -7329,10 +7323,10 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    }
 
    // Change primary host name
-   if (pRequest->isFieldExist(VID_PRIMARY_NAME))
+   if (request->isFieldExist(VID_PRIMARY_NAME))
    {
       TCHAR primaryName[MAX_DNS_NAME];
-      pRequest->getFieldAsString(VID_PRIMARY_NAME, primaryName, MAX_DNS_NAME);
+      request->getFieldAsString(VID_PRIMARY_NAME, primaryName, MAX_DNS_NAME);
 
       InetAddress ipAddr = ResolveHostName(m_zoneUIN, primaryName);
       if (ipAddr.isValid() && !(m_flags & NF_EXTERNAL_GATEWAY))
@@ -7363,9 +7357,9 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    }
 
    // Poller node ID
-   if (pRequest->isFieldExist(VID_POLLER_NODE_ID))
+   if (request->isFieldExist(VID_POLLER_NODE_ID))
    {
-      UINT32 dwNodeId = pRequest->getFieldAsUInt32(VID_POLLER_NODE_ID);
+      UINT32 dwNodeId = request->getFieldAsUInt32(VID_POLLER_NODE_ID);
       if (dwNodeId != 0)
       {
          shared_ptr<NetObj> pObject = FindObjectById(dwNodeId);
@@ -7384,43 +7378,43 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    }
 
    // Change listen port of native agent
-   if (pRequest->isFieldExist(VID_AGENT_PORT))
-      m_agentPort = pRequest->getFieldAsUInt16(VID_AGENT_PORT);
+   if (request->isFieldExist(VID_AGENT_PORT))
+      m_agentPort = request->getFieldAsUInt16(VID_AGENT_PORT);
 
    // Change cache mode for agent DCI
-   if (pRequest->isFieldExist(VID_AGENT_CACHE_MODE))
-      m_agentCacheMode = pRequest->getFieldAsInt16(VID_AGENT_CACHE_MODE);
+   if (request->isFieldExist(VID_AGENT_CACHE_MODE))
+      m_agentCacheMode = request->getFieldAsInt16(VID_AGENT_CACHE_MODE);
 
    // Change shared secret of native agent
-   if (pRequest->isFieldExist(VID_SHARED_SECRET))
-      pRequest->getFieldAsString(VID_SHARED_SECRET, m_agentSecret, MAX_SECRET_LENGTH);
+   if (request->isFieldExist(VID_SHARED_SECRET))
+      request->getFieldAsString(VID_SHARED_SECRET, m_agentSecret, MAX_SECRET_LENGTH);
 
    // Change SNMP protocol version
-   if (pRequest->isFieldExist(VID_SNMP_VERSION))
+   if (request->isFieldExist(VID_SNMP_VERSION))
    {
-      m_snmpVersion = static_cast<SNMP_Version>(pRequest->getFieldAsUInt16(VID_SNMP_VERSION));
+      m_snmpVersion = static_cast<SNMP_Version>(request->getFieldAsUInt16(VID_SNMP_VERSION));
       m_snmpSecurity->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
    }
 
    // Change SNMP port
-   if (pRequest->isFieldExist(VID_SNMP_PORT))
-      m_snmpPort = pRequest->getFieldAsUInt16(VID_SNMP_PORT);
+   if (request->isFieldExist(VID_SNMP_PORT))
+      m_snmpPort = request->getFieldAsUInt16(VID_SNMP_PORT);
 
    // Change SNMP authentication data
-   if (pRequest->isFieldExist(VID_SNMP_AUTH_OBJECT))
+   if (request->isFieldExist(VID_SNMP_AUTH_OBJECT))
    {
       char mbBuffer[256];
 
-      pRequest->getFieldAsMBString(VID_SNMP_AUTH_OBJECT, mbBuffer, 256);
+      request->getFieldAsMBString(VID_SNMP_AUTH_OBJECT, mbBuffer, 256);
       m_snmpSecurity->setAuthName(mbBuffer);
 
-      pRequest->getFieldAsMBString(VID_SNMP_AUTH_PASSWORD, mbBuffer, 256);
+      request->getFieldAsMBString(VID_SNMP_AUTH_PASSWORD, mbBuffer, 256);
       m_snmpSecurity->setAuthPassword(mbBuffer);
 
-      pRequest->getFieldAsMBString(VID_SNMP_PRIV_PASSWORD, mbBuffer, 256);
+      request->getFieldAsMBString(VID_SNMP_PRIV_PASSWORD, mbBuffer, 256);
       m_snmpSecurity->setPrivPassword(mbBuffer);
 
-      uint16_t methods = pRequest->getFieldAsUInt16(VID_SNMP_USM_METHODS);
+      uint16_t methods = request->getFieldAsUInt16(VID_SNMP_USM_METHODS);
       m_snmpSecurity->setAuthMethod(static_cast<SNMP_AuthMethod>(methods & 0xFF));
       m_snmpSecurity->setPrivMethod(static_cast<SNMP_EncryptionMethod>(methods >> 8));
 
@@ -7429,18 +7423,18 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    }
 
    // Change EtherNet/IP port
-   if (pRequest->isFieldExist(VID_ETHERNET_IP_PORT))
-      m_eipPort = pRequest->getFieldAsUInt16(VID_ETHERNET_IP_PORT);
+   if (request->isFieldExist(VID_ETHERNET_IP_PORT))
+      m_eipPort = request->getFieldAsUInt16(VID_ETHERNET_IP_PORT);
 
    // Change proxy node
-   if (pRequest->isFieldExist(VID_AGENT_PROXY))
-      m_agentProxy = pRequest->getFieldAsUInt32(VID_AGENT_PROXY);
+   if (request->isFieldExist(VID_AGENT_PROXY))
+      m_agentProxy = request->getFieldAsUInt32(VID_AGENT_PROXY);
 
    // Change SNMP proxy node
-   if (pRequest->isFieldExist(VID_SNMP_PROXY))
+   if (request->isFieldExist(VID_SNMP_PROXY))
    {
       UINT32 oldProxy = m_snmpProxy;
-      m_snmpProxy = pRequest->getFieldAsUInt32(VID_SNMP_PROXY);
+      m_snmpProxy = request->getFieldAsUInt32(VID_SNMP_PROXY);
       if (oldProxy != m_snmpProxy)
       {
          ThreadPoolExecute(g_mainThreadPool, this, &Node::onSnmpProxyChange, oldProxy);
@@ -7448,62 +7442,62 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    }
 
    // Change ICMP proxy node
-   if (pRequest->isFieldExist(VID_ICMP_PROXY))
-      m_icmpProxy = pRequest->getFieldAsUInt32(VID_ICMP_PROXY);
+   if (request->isFieldExist(VID_ICMP_PROXY))
+      m_icmpProxy = request->getFieldAsUInt32(VID_ICMP_PROXY);
 
    // Change EtherNet/IP proxy node
-   if (pRequest->isFieldExist(VID_ETHERNET_IP_PROXY))
-      m_eipProxy = pRequest->getFieldAsUInt32(VID_ETHERNET_IP_PROXY);
+   if (request->isFieldExist(VID_ETHERNET_IP_PROXY))
+      m_eipProxy = request->getFieldAsUInt32(VID_ETHERNET_IP_PROXY);
 
    // Number of required polls
-   if (pRequest->isFieldExist(VID_REQUIRED_POLLS))
-      m_requiredPollCount = (int)pRequest->getFieldAsUInt16(VID_REQUIRED_POLLS);
+   if (request->isFieldExist(VID_REQUIRED_POLLS))
+      m_requiredPollCount = (int)request->getFieldAsUInt16(VID_REQUIRED_POLLS);
 
    // Enable/disable usage of ifXTable
-   if (pRequest->isFieldExist(VID_USE_IFXTABLE))
-      m_nUseIfXTable = (BYTE)pRequest->getFieldAsUInt16(VID_USE_IFXTABLE);
+   if (request->isFieldExist(VID_USE_IFXTABLE))
+      m_nUseIfXTable = (BYTE)request->getFieldAsUInt16(VID_USE_IFXTABLE);
 
    // Physical container settings
-   if (pRequest->isFieldExist(VID_PHYSICAL_CONTAINER_ID))
+   if (request->isFieldExist(VID_PHYSICAL_CONTAINER_ID))
    {
-      m_physicalContainer = pRequest->getFieldAsUInt32(VID_PHYSICAL_CONTAINER_ID);
+      m_physicalContainer = request->getFieldAsUInt32(VID_PHYSICAL_CONTAINER_ID);
       ThreadPoolExecute(g_mainThreadPool, this, &Node::updatePhysicalContainerBinding, m_physicalContainer);
    }
-   if (pRequest->isFieldExist(VID_RACK_IMAGE_FRONT))
-      m_rackImageFront = pRequest->getFieldAsGUID(VID_RACK_IMAGE_FRONT);
-   if (pRequest->isFieldExist(VID_RACK_IMAGE_REAR))
-      m_rackImageRear = pRequest->getFieldAsGUID(VID_RACK_IMAGE_REAR);
-   if (pRequest->isFieldExist(VID_RACK_POSITION))
-      m_rackPosition = pRequest->getFieldAsInt16(VID_RACK_POSITION);
-   if (pRequest->isFieldExist(VID_RACK_HEIGHT))
-      m_rackHeight = pRequest->getFieldAsInt16(VID_RACK_HEIGHT);
-   if (pRequest->isFieldExist(VID_CHASSIS_PLACEMENT))
-      pRequest->getFieldAsString(VID_CHASSIS_PLACEMENT, &m_chassisPlacementConf);
+   if (request->isFieldExist(VID_RACK_IMAGE_FRONT))
+      m_rackImageFront = request->getFieldAsGUID(VID_RACK_IMAGE_FRONT);
+   if (request->isFieldExist(VID_RACK_IMAGE_REAR))
+      m_rackImageRear = request->getFieldAsGUID(VID_RACK_IMAGE_REAR);
+   if (request->isFieldExist(VID_RACK_POSITION))
+      m_rackPosition = request->getFieldAsInt16(VID_RACK_POSITION);
+   if (request->isFieldExist(VID_RACK_HEIGHT))
+      m_rackHeight = request->getFieldAsInt16(VID_RACK_HEIGHT);
+   if (request->isFieldExist(VID_CHASSIS_PLACEMENT))
+      request->getFieldAsString(VID_CHASSIS_PLACEMENT, &m_chassisPlacementConf);
 
-   if (pRequest->isFieldExist(VID_SSH_PROXY))
-      m_sshProxy = pRequest->getFieldAsUInt32(VID_SSH_PROXY);
+   if (request->isFieldExist(VID_SSH_PROXY))
+      m_sshProxy = request->getFieldAsUInt32(VID_SSH_PROXY);
 
-   if (pRequest->isFieldExist(VID_SSH_LOGIN))
-      pRequest->getFieldAsString(VID_SSH_LOGIN, m_sshLogin, MAX_SSH_LOGIN_LEN);
+   if (request->isFieldExist(VID_SSH_LOGIN))
+      request->getFieldAsString(VID_SSH_LOGIN, m_sshLogin, MAX_SSH_LOGIN_LEN);
 
-   if (pRequest->isFieldExist(VID_SSH_PASSWORD))
-      pRequest->getFieldAsString(VID_SSH_PASSWORD, m_sshPassword, MAX_SSH_PASSWORD_LEN);
+   if (request->isFieldExist(VID_SSH_PASSWORD))
+      request->getFieldAsString(VID_SSH_PASSWORD, m_sshPassword, MAX_SSH_PASSWORD_LEN);
 
-   if (pRequest->isFieldExist(VID_SSH_KEY_ID))
-      m_sshKeyId = pRequest->getFieldAsUInt32(VID_SSH_KEY_ID);
+   if (request->isFieldExist(VID_SSH_KEY_ID))
+      m_sshKeyId = request->getFieldAsUInt32(VID_SSH_KEY_ID);
 
-   if (pRequest->isFieldExist(VID_SSH_PORT))
-      m_sshPort = pRequest->getFieldAsUInt16(VID_SSH_PORT);
+   if (request->isFieldExist(VID_SSH_PORT))
+      m_sshPort = request->getFieldAsUInt16(VID_SSH_PORT);
 
-   if (pRequest->isFieldExist(VID_AGENT_COMPRESSION_MODE))
-      m_agentCompressionMode = pRequest->getFieldAsInt16(VID_AGENT_COMPRESSION_MODE);
+   if (request->isFieldExist(VID_AGENT_COMPRESSION_MODE))
+      m_agentCompressionMode = request->getFieldAsInt16(VID_AGENT_COMPRESSION_MODE);
 
-   if (pRequest->isFieldExist(VID_RACK_ORIENTATION))
-      m_rackOrientation = static_cast<RackOrientation>(pRequest->getFieldAsUInt16(VID_RACK_ORIENTATION));
+   if (request->isFieldExist(VID_RACK_ORIENTATION))
+      m_rackOrientation = static_cast<RackOrientation>(request->getFieldAsUInt16(VID_RACK_ORIENTATION));
 
-   if (pRequest->isFieldExist(VID_ICMP_COLLECTION_MODE))
+   if (request->isFieldExist(VID_ICMP_COLLECTION_MODE))
    {
-      switch(pRequest->getFieldAsInt16(VID_ICMP_COLLECTION_MODE))
+      switch(request->getFieldAsInt16(VID_ICMP_COLLECTION_MODE))
       {
          case 1:
             m_icmpStatCollectionMode = IcmpStatCollectionMode::ON;
@@ -7528,24 +7522,24 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       }
    }
 
-   if (pRequest->isFieldExist(VID_ICMP_TARGET_COUNT))
+   if (request->isFieldExist(VID_ICMP_TARGET_COUNT))
    {
       m_icmpTargets.clear();
-      int count = pRequest->getFieldAsInt32(VID_ICMP_TARGET_COUNT);
+      int count = request->getFieldAsInt32(VID_ICMP_TARGET_COUNT);
       UINT32 fieldId = VID_ICMP_TARGET_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         InetAddress addr = pRequest->getFieldAsInetAddress(fieldId++);
+         InetAddress addr = request->getFieldAsInetAddress(fieldId++);
          if (addr.isValidUnicast() && !m_icmpTargets.hasAddress(addr))
             m_icmpTargets.add(addr);
       }
    }
 
-   if (pRequest->isFieldExist(VID_CERT_MAPPING_METHOD))
+   if (request->isFieldExist(VID_CERT_MAPPING_METHOD))
    {
-      m_agentCertMappingMethod = static_cast<CertificateMappingMethod>(pRequest->getFieldAsInt16(VID_CERT_MAPPING_METHOD));
+      m_agentCertMappingMethod = static_cast<CertificateMappingMethod>(request->getFieldAsInt16(VID_CERT_MAPPING_METHOD));
       TCHAR *oldMappingData = m_agentCertMappingData;
-      m_agentCertMappingData = pRequest->getFieldAsString(VID_CERT_MAPPING_DATA);
+      m_agentCertMappingData = request->getFieldAsString(VID_CERT_MAPPING_DATA);
       if (m_agentCertMappingData != nullptr)
       {
          Trim(m_agentCertMappingData);
@@ -7556,7 +7550,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       MemFree(oldMappingData);
    }
 
-   return super::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(request);
 }
 
 /**
@@ -7584,9 +7578,9 @@ void Node::onSnmpProxyChange(uint32_t oldProxy)
 /**
  * Wakeup node using magic packet
  */
-UINT32 Node::wakeUp()
+uint32_t Node::wakeUp()
 {
-   UINT32 dwResult = RCC_NO_WOL_INTERFACES;
+   uint32_t rcc = RCC_NO_WOL_INTERFACES;
 
    readLockChildList();
 
@@ -7595,33 +7589,33 @@ UINT32 Node::wakeUp()
       NetObj *object = getChildList().get(i);
       if ((object->getObjectClass() == OBJECT_INTERFACE) &&
           (object->getStatus() != STATUS_UNMANAGED) &&
-          ((Interface *)object)->getIpAddressList()->getFirstUnicastAddressV4().isValid())
+          static_cast<Interface*>(object)->getIpAddressList()->getFirstUnicastAddressV4().isValid())
       {
-         dwResult = ((Interface *)object)->wakeUp();
-         if (dwResult == RCC_SUCCESS)
+         rcc = static_cast<Interface*>(object)->wakeUp();
+         if (rcc == RCC_SUCCESS)
             break;
       }
    }
 
    // If no interface found try to find interface in unmanaged state
-   if (dwResult != RCC_SUCCESS)
+   if (rcc != RCC_SUCCESS)
    {
       for(int i = 0; i < getChildList().size(); i++)
       {
          NetObj *object = getChildList().get(i);
          if ((object->getObjectClass() == OBJECT_INTERFACE) &&
              (object->getStatus() == STATUS_UNMANAGED) &&
-             ((Interface *)object)->getIpAddressList()->getFirstUnicastAddressV4().isValid())
+             static_cast<Interface*>(object)->getIpAddressList()->getFirstUnicastAddressV4().isValid())
          {
-            dwResult = ((Interface *)object)->wakeUp();
-            if (dwResult == RCC_SUCCESS)
+            rcc = static_cast<Interface*>(object)->wakeUp();
+            if (rcc == RCC_SUCCESS)
                break;
          }
       }
    }
 
    unlockChildList();
-   return dwResult;
+   return rcc;
 }
 
 /**
@@ -7827,13 +7821,12 @@ void Node::onObjectDelete(UINT32 objectId)
  */
 void Node::checkOSPFSupport(SNMP_Transport *pTransport)
 {
-   LONG nAdminStatus;
-
+   int32_t adminStatus;
    if (SnmpGet(m_snmpVersion, pTransport,
-               _T(".1.3.6.1.2.1.14.1.2.0"), nullptr, 0, &nAdminStatus, sizeof(LONG), 0) == SNMP_ERR_SUCCESS)
+               _T(".1.3.6.1.2.1.14.1.2.0"), nullptr, 0, &adminStatus, sizeof(int32_t), 0) == SNMP_ERR_SUCCESS)
    {
       lockProperties();
-      if (nAdminStatus)
+      if (adminStatus)
       {
          m_capabilities |= NC_IS_OSPF;
       }
@@ -7850,7 +7843,7 @@ void Node::checkOSPFSupport(SNMP_Transport *pTransport)
  */
 shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
 {
-   if ((!(m_capabilities & NC_IS_NATIVE_AGENT)) ||
+   if (!(m_capabilities & NC_IS_NATIVE_AGENT) ||
        (m_flags & NF_DISABLE_NXCP) ||
        (m_state & NSF_AGENT_UNREACHABLE) ||
        (m_state & DCSF_UNREACHABLE) ||

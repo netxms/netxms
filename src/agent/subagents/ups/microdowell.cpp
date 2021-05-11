@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2014 Alex Kirhenshtein
+** Copyright (C) 2006-2021 Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
  */
 MicrodowellInterface::MicrodowellInterface(const TCHAR *device) : SerialInterface(device)
 {
+   m_ge2kva = false;
 	if (m_portSpeed == 0)
 		m_portSpeed = 19200;
 }
@@ -34,7 +35,7 @@ MicrodowellInterface::MicrodowellInterface(const TCHAR *device) : SerialInterfac
 /**
  * Prepare and send data packet
  */
-BOOL MicrodowellInterface::sendCmd(const char *cmd, int cmdLen, char *ret, int *retLen)
+bool MicrodowellInterface::sendCmd(const char *cmd, int cmdLen, char *ret, int *retLen)
 {
 	char buff[512];
 	int i, crc;
@@ -57,13 +58,13 @@ BOOL MicrodowellInterface::sendCmd(const char *cmd, int cmdLen, char *ret, int *
 	{
 		if (m_serial.read((char *)&c, 1) != 1)
 		{
-			return FALSE;
+			return false;
 		}
 	}
 
 	if (m_serial.read(buff, i + 1) < i + 1)
 	{
-		return FALSE;
+		return false;
 	}
 
 	for (crc = i, c = 0; c < i; c++)
@@ -73,24 +74,24 @@ BOOL MicrodowellInterface::sendCmd(const char *cmd, int cmdLen, char *ret, int *
 
 	if (crc != buff[c])
 	{
-		return FALSE;
+		return false;
 	}
 
 	memcpy(ret, buff, i);
 	*retLen = i;
 
-	return TRUE;
+	return true;
 }
 
 /**
  * Open device
  */
-BOOL MicrodowellInterface::open()
+bool MicrodowellInterface::open()
 {
-   BOOL bRet = FALSE;
-
    if (!SerialInterface::open())
-      return FALSE;
+      return false;
+
+   bool success = false;
 
    m_serial.setTimeout(1000);
    m_serial.set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
@@ -102,35 +103,28 @@ BOOL MicrodowellInterface::open()
 		buff[11] = 0;
 		if (buff[3] != 'E' || buff[4] != 'N' || buff[5] != 'T')
 		{
-			AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("Unknown Microdowell UPS model on port %s (%hs)"), m_device, buff);
+			nxlog_write_tag(NXLOG_WARNING, UPS_DEBUG_TAG, _T("Unknown Microdowell UPS model on port %s (%hs)"), m_device, buff);
 		}
 		else
 		{
-			bRet = TRUE;
+			success = true;
 			setConnected();
 		}
 
-		ge2kva = buff[4] > '2' || ( buff[4] == '2' && buff[5] > '0' );
+		m_ge2kva = (buff[4] > '2') || ((buff[4] == '2') && (buff[5] > '0'));
 	}
 
-   return bRet;
+   return success;
 }
 
 /**
  * Validate connection
  */
-BOOL MicrodowellInterface::validateConnection()
+bool MicrodowellInterface::validateConnection()
 {
-   BOOL bRet = TRUE;
 	char buff[512];
 	int len;
-
-	if (!sendCmd("\x00", 1, buff, &len))
-	{
-		bRet = FALSE;
-	}
-
-   return bRet;
+	return sendCmd("\x00", 1, buff, &len);
 }
 
 /**
@@ -145,32 +139,28 @@ void MicrodowellInterface::queryModel()
 	if (sendCmd("\x50\x80\x08", 3, buff, &len))
 	{
 		buff[11] = 0;
-		strcpy(p->szValue, buff + 1);
-      p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+		strcpy(p->value, buff + 1);
+      p->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 	}
 	else
 	{
-		p->dwFlags |= UPF_NULL_VALUE;
+		p->flags |= UPF_NULL_VALUE;
 	}
 }
 
-
-//
-// Get UPS firmware version
-//
-
+/**
+ * Get UPS firmware version
+ */
 void MicrodowellInterface::queryFirmwareVersion()
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_FIRMWARE];
 
-	p->dwFlags |= UPF_NOT_SUPPORTED;
+	p->flags |= UPF_NOT_SUPPORTED;
 }
 
-
-//
-// Get manufacturing date
-//
-
+/**
+ * Get manufacturing date
+ */
 void MicrodowellInterface::queryMfgDate()
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_MFG_DATE];
@@ -180,20 +170,18 @@ void MicrodowellInterface::queryMfgDate()
 	if (sendCmd("\x50\xA0\x08", 3, buff, &len))
 	{
 		buff[11] = 0;
-		snprintf(p->szValue, MAX_RESULT_LENGTH, "%d/%d/%d", buff[4], buff[5], buff[3]);
-      p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+		snprintf(p->value, MAX_RESULT_LENGTH, "%d/%d/%d", buff[4], buff[5], buff[3]);
+      p->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 	}
 	else
 	{
-		p->dwFlags |= UPF_NULL_VALUE;
+		p->flags |= UPF_NULL_VALUE;
 	}
 }
 
-
-//
-// Get serial number
-//
-
+/**
+ * Get serial number
+ */
 void MicrodowellInterface::querySerialNumber()
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_SERIAL];
@@ -202,20 +190,18 @@ void MicrodowellInterface::querySerialNumber()
 	if (sendCmd("\x50\x98\x08", 3, buff, &len))
 	{
 		buff[11] = 0;
-		strcpy(p->szValue, buff + 1);
-		p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+		strcpy(p->value, buff + 1);
+		p->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 	}
 	else
 	{
-		p->dwFlags |= UPF_NULL_VALUE;
+		p->flags |= UPF_NULL_VALUE;
 	}
 }
 
-
-//
-// Get temperature inside UPS
-//
-
+/**
+ * Get temperature inside UPS
+ */
 void MicrodowellInterface::queryTemperature()
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_TEMP];
@@ -224,20 +210,18 @@ void MicrodowellInterface::queryTemperature()
 	int len;
 	if (sendCmd("\x01", 1, buff, &len))
 	{
-		snprintf(p->szValue, MAX_RESULT_LENGTH, "%.1f", ((float)VAL(11)  - 202.97) / 1.424051);
-		p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+		snprintf(p->value, MAX_RESULT_LENGTH, "%.1f", ((float)VAL(11)  - 202.97) / 1.424051);
+		p->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 	}
 	else
 	{
-		p->dwFlags |= UPF_NULL_VALUE;
+		p->flags |= UPF_NULL_VALUE;
 	}
 }
 
-
-//
-// Get battery voltage
-//
-
+/**
+ * Get battery voltage
+ */
 void MicrodowellInterface::queryBatteryVoltage()
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_BATTERY_VOLTAGE];
@@ -246,31 +230,27 @@ void MicrodowellInterface::queryBatteryVoltage()
 	int len;
 	if (sendCmd("\x01", 1, buff, &len))
 	{
-		snprintf(p->szValue, MAX_RESULT_LENGTH, "%.1f", (float)VAL(3) / 36.4);
-		p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+		snprintf(p->value, MAX_RESULT_LENGTH, "%.1f", (float)VAL(3) / 36.4);
+		p->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 	}
 	else
 	{
-		p->dwFlags |= UPF_NULL_VALUE;
+		p->flags |= UPF_NULL_VALUE;
 	}
 }
 
-
-//
-// Get nominal battery voltage
-//
-
+/**
+ * Get nominal battery voltage
+ */
 void MicrodowellInterface::queryNominalBatteryVoltage()
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE];
-	p->dwFlags |= UPF_NOT_SUPPORTED;
+	p->flags |= UPF_NOT_SUPPORTED;
 }
 
-
-//
-// Get battery level (in percents)
-//
-
+/**
+ * Get battery level (in percents)
+ */
 void MicrodowellInterface::queryBatteryLevel()
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_BATTERY_LEVEL];
@@ -279,20 +259,18 @@ void MicrodowellInterface::queryBatteryLevel()
 	int len;
 	if (sendCmd("\x03", 1, buff, &len))
 	{
-		snprintf(p->szValue, MAX_RESULT_LENGTH, "%d", (int)buff[1]);
-		p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+		snprintf(p->value, MAX_RESULT_LENGTH, "%d", (int)buff[1]);
+		p->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 	}
 	else
 	{
-		p->dwFlags |= UPF_NULL_VALUE;
+		p->flags |= UPF_NULL_VALUE;
 	}
 }
 
-
-//
-// Get input line voltage
-//
-
+/**
+ * Get input line voltage
+ */
 void MicrodowellInterface::queryInputVoltage()
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_INPUT_VOLTAGE];
@@ -301,20 +279,18 @@ void MicrodowellInterface::queryInputVoltage()
 	int len;
 	if (sendCmd("\x01", 1, buff, &len))
 	{
-		snprintf(p->szValue, MAX_RESULT_LENGTH, "%.1f", (float)VAL(3) / 36.4);
-		p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+		snprintf(p->value, MAX_RESULT_LENGTH, "%.1f", (float)VAL(3) / 36.4);
+		p->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 	}
 	else
 	{
-		p->dwFlags |= UPF_NULL_VALUE;
+		p->flags |= UPF_NULL_VALUE;
 	}
 }
 
-
-//
-// Get output voltage
-//
-
+/**
+ * Get output voltage
+ */
 void MicrodowellInterface::queryOutputVoltage()
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_OUTPUT_VOLTAGE];
@@ -323,20 +299,18 @@ void MicrodowellInterface::queryOutputVoltage()
 	int len;
 	if (sendCmd("\x01", 1, buff, &len))
 	{
-		snprintf(p->szValue, MAX_RESULT_LENGTH, "%.1f", (float)VAL(7) / (ge2kva ? 63.8 : 36.4));
-		p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+		snprintf(p->value, MAX_RESULT_LENGTH, "%.1f", (float)VAL(7) / (m_ge2kva ? 63.8 : 36.4));
+		p->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 	}
 	else
 	{
-		p->dwFlags |= UPF_NULL_VALUE;
+		p->flags |= UPF_NULL_VALUE;
 	}
 }
 
-
-//
-// Get line frequency (Hz)
-//
-
+/**
+ * Get line frequency (Hz)
+ */
 void MicrodowellInterface::queryLineFrequency()
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_LINE_FREQ];
@@ -345,20 +319,18 @@ void MicrodowellInterface::queryLineFrequency()
 	int len;
 	if (sendCmd("\x03", 1, buff, &len) && VAL(8))
 	{
-		snprintf(p->szValue, MAX_RESULT_LENGTH, "%d", (int)(50000.0 / VAL(8)));
-		p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+		snprintf(p->value, MAX_RESULT_LENGTH, "%d", (int)(50000.0 / VAL(8)));
+		p->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 	}
 	else
 	{
-		p->dwFlags |= UPF_NULL_VALUE;
+		p->flags |= UPF_NULL_VALUE;
 	}
 }
 
-
-//
-// Get UPS power load (in percents)
-//
-
+/**
+ * Get UPS power load (in percents)
+ */
 void MicrodowellInterface::queryPowerLoad()
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_LOAD];
@@ -367,20 +339,18 @@ void MicrodowellInterface::queryPowerLoad()
 	int len;
 	if (sendCmd("\x03", 1, buff, &len))
 	{
-		snprintf(p->szValue, MAX_RESULT_LENGTH, "%d", (int)buff[7]);
-		p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+		snprintf(p->value, MAX_RESULT_LENGTH, "%d", (int)buff[7]);
+		p->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 	}
 	else
 	{
-		p->dwFlags |= UPF_NULL_VALUE;
+		p->flags |= UPF_NULL_VALUE;
 	}
 }
 
-
-//
-// Get estimated on-battery runtime
-//
-
+/**
+ * Get estimated on-battery runtime
+ */
 void MicrodowellInterface::queryEstimatedRuntime()
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_EST_RUNTIME];
@@ -389,20 +359,18 @@ void MicrodowellInterface::queryEstimatedRuntime()
 	int len;
 	if (sendCmd("\x03", 1, buff, &len) && VAL(2) != 65535)
 	{
-		snprintf(p->szValue, MAX_RESULT_LENGTH, "%d", VAL(2));
-		p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+		snprintf(p->value, MAX_RESULT_LENGTH, "%d", VAL(2));
+		p->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 	}
 	else
 	{
-		p->dwFlags |= UPF_NULL_VALUE;
+		p->flags |= UPF_NULL_VALUE;
 	}
 }
 
-
-//
-// Check if UPS is online or on battery power
-//
-
+/**
+ * Check if UPS is online or on battery power
+ */
 void MicrodowellInterface::queryOnlineStatus()
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_ONLINE_STATUS];
@@ -411,43 +379,27 @@ void MicrodowellInterface::queryOnlineStatus()
 	int len;
 	if (sendCmd("\x00", 1, buff, &len))
 	{
-		p->szValue[1] = 0;
-		p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+		p->value[1] = 0;
+		p->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 		if (buff[1] & 0x10) // online
 		{
-			p->szValue[0] = '0';
+			p->value[0] = '0';
 		}
 		else if (buff[1] & 0x01) // on battery
 		{
-			p->szValue[0] = '1';
+			p->value[0] = '1';
 		}
 		else if (buff[1] & 0x02) // low battery
 		{
-			p->szValue[0] = '2';
+			p->value[0] = '2';
 		}
 		else // unknown
 		{
-			p->dwFlags |= UPF_NULL_VALUE;
+			p->flags |= UPF_NULL_VALUE;
 		}
 	}
 	else
 	{
-		p->dwFlags |= UPF_NULL_VALUE;
+		p->flags |= UPF_NULL_VALUE;
 	}
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.3  2007/04/17 19:04:54  alk
-microdowell fixed(?). should test on a real hardware
-
-Revision 1.2  2006/12/09 21:02:11  victor
-New configure works on Gentoo Linux
-
-Revision 1.1  2006/12/05 13:20:15  alk
-Microdowell UPS support added
-
-
-*/

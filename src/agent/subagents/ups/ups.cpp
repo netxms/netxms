@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2019 Victor Kirhenshtein
+** Copyright (C) 2006-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,16 +27,16 @@
  */
 UPSInterface::UPSInterface(const TCHAR *device)
 {
-   m_nIndex = 0;
-   m_pszName = NULL;
-   m_device = _tcsdup(device);
-   m_bIsConnected = FALSE;
+   m_id = 0;
+   m_name = nullptr;
+   m_device = MemCopyString(device);
+   m_isConnected = false;
    memset(m_paramList, 0, sizeof(UPS_PARAMETER) * UPS_PARAM_COUNT);
    for(int i = 0; i < UPS_PARAM_COUNT; i++)
-      m_paramList[i].dwFlags |= UPF_NULL_VALUE;
+      m_paramList[i].flags |= UPF_NULL_VALUE;
    m_mutex = MutexCreate();
-   m_condStop = ConditionCreate(TRUE);
-   m_thCommThread = INVALID_THREAD_HANDLE;
+   m_condStop = ConditionCreate(true);
+   m_commThread = INVALID_THREAD_HANDLE;
 }
 
 /**
@@ -45,9 +45,9 @@ UPSInterface::UPSInterface(const TCHAR *device)
 UPSInterface::~UPSInterface()
 {
    ConditionSet(m_condStop);
-   ThreadJoin(m_thCommThread);
+   ThreadJoin(m_commThread);
    MemFree(m_device);
-   MemFree(m_pszName);
+   MemFree(m_name);
    MutexDestroy(m_mutex);
    ConditionDestroy(m_condStop);
 }
@@ -57,20 +57,20 @@ UPSInterface::~UPSInterface()
  */
 void UPSInterface::setName(const char *pszName)
 {
-   MemFree(m_pszName);
+   MemFree(m_name);
    if (pszName[0] == 0)
    {
       TCHAR szBuffer[MAX_DB_STRING];
 
       _sntprintf(szBuffer, MAX_DB_STRING, _T("%s-%s"), getType(), m_device);
-      m_pszName = _tcsdup(szBuffer);
+      m_name = _tcsdup(szBuffer);
    }
    else
    {
 #ifdef UNICODE
-      m_pszName = WideStringFromMBString(pszName);
+      m_name = WideStringFromMBString(pszName);
 #else
-      m_pszName = strdup(pszName);
+      m_name = strdup(pszName);
 #endif
    }
 }
@@ -90,8 +90,8 @@ void UPSInterface::setName(const WCHAR *pszName)
    }
    else
    {
-	   MemFree(m_pszName);
-      m_pszName = _tcsdup(pszName);
+	   MemFree(m_name);
+      m_name = _tcsdup(pszName);
    }
 }
 
@@ -100,9 +100,9 @@ void UPSInterface::setName(const WCHAR *pszName)
 /**
  * Open communication to UPS
  */
-BOOL UPSInterface::open()
+bool UPSInterface::open()
 {
-   return FALSE;
+   return false;
 }
 
 /**
@@ -110,49 +110,46 @@ BOOL UPSInterface::open()
  */
 void UPSInterface::close()
 {
-   m_bIsConnected = FALSE;
+   m_isConnected = false;
 }
 
 /**
  * Validate connection to the UPS
  */
-BOOL UPSInterface::validateConnection()
+bool UPSInterface::validateConnection()
 {
-   return FALSE;
+   return false;
 }
 
 /**
  * Get parameter's value
  */
-LONG UPSInterface::getParameter(int nParam, TCHAR *pszValue)
+LONG UPSInterface::getParameter(int parameterIndex, TCHAR *value)
 {
-   LONG nRet;
-
-   if ((nParam < 0) || (nParam >= UPS_PARAM_COUNT))
+   if ((parameterIndex < 0) || (parameterIndex >= UPS_PARAM_COUNT))
       return SYSINFO_RC_UNSUPPORTED;
 
+   LONG rc;
    MutexLock(m_mutex);
-
-   if (m_paramList[nParam].dwFlags & UPF_NOT_SUPPORTED)
+   if (m_paramList[parameterIndex].flags & UPF_NOT_SUPPORTED)
    {
-      nRet = SYSINFO_RC_UNSUPPORTED;
+      rc = SYSINFO_RC_UNSUPPORTED;
    }
-   else if (m_paramList[nParam].dwFlags & UPF_NULL_VALUE)
+   else if (m_paramList[parameterIndex].flags & UPF_NULL_VALUE)
    {
-      nRet = SYSINFO_RC_ERROR;
+      rc = SYSINFO_RC_ERROR;
    }
    else
    {
 #ifdef UNICODE
-		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_paramList[nParam].szValue, -1, pszValue, MAX_RESULT_LENGTH);
+		mb_to_wchar(m_paramList[parameterIndex].value, -1, value, MAX_RESULT_LENGTH);
 #else
-      strcpy(pszValue, m_paramList[nParam].szValue);
+      strcpy(value, m_paramList[parameterIndex].value);
 #endif
-      nRet = SYSINFO_RC_SUCCESS;
+      rc = SYSINFO_RC_SUCCESS;
    }
-
    MutexUnlock(m_mutex);
-   return nRet;
+   return rc;
 }
 
 /**
@@ -160,72 +157,72 @@ LONG UPSInterface::getParameter(int nParam, TCHAR *pszValue)
  */
 void UPSInterface::queryModel()
 {
-   m_paramList[UPS_PARAM_MODEL].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_MODEL].flags |= UPF_NOT_SUPPORTED;
 }
 
 void UPSInterface::queryFirmwareVersion()
 {
-   m_paramList[UPS_PARAM_FIRMWARE].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_FIRMWARE].flags |= UPF_NOT_SUPPORTED;
 }
 
 void UPSInterface::queryMfgDate()
 {
-   m_paramList[UPS_PARAM_MFG_DATE].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_MFG_DATE].flags |= UPF_NOT_SUPPORTED;
 }
 
 void UPSInterface::querySerialNumber()
 {
-   m_paramList[UPS_PARAM_SERIAL].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_SERIAL].flags |= UPF_NOT_SUPPORTED;
 }
 
 void UPSInterface::queryTemperature()
 {
-   m_paramList[UPS_PARAM_TEMP].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_TEMP].flags |= UPF_NOT_SUPPORTED;
 }
 
 void UPSInterface::queryBatteryVoltage()
 {
-   m_paramList[UPS_PARAM_BATTERY_VOLTAGE].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_BATTERY_VOLTAGE].flags |= UPF_NOT_SUPPORTED;
 }
 
 void UPSInterface::queryNominalBatteryVoltage()
 {
-   m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE].flags |= UPF_NOT_SUPPORTED;
 }
 
 void UPSInterface::queryBatteryLevel()
 {
-   m_paramList[UPS_PARAM_BATTERY_LEVEL].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_BATTERY_LEVEL].flags |= UPF_NOT_SUPPORTED;
 }
 
 void UPSInterface::queryInputVoltage()
 {
-   m_paramList[UPS_PARAM_INPUT_VOLTAGE].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_INPUT_VOLTAGE].flags |= UPF_NOT_SUPPORTED;
 }
 
 void UPSInterface::queryOutputVoltage()
 {
-   m_paramList[UPS_PARAM_OUTPUT_VOLTAGE].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_OUTPUT_VOLTAGE].flags |= UPF_NOT_SUPPORTED;
 }
 
 void UPSInterface::queryLineFrequency()
 {
-   m_paramList[UPS_PARAM_LINE_FREQ].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_LINE_FREQ].flags |= UPF_NOT_SUPPORTED;
 }
 
 void UPSInterface::queryPowerLoad()
 {
-   m_paramList[UPS_PARAM_LOAD].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_LOAD].flags |= UPF_NOT_SUPPORTED;
 }
 
 void UPSInterface::queryEstimatedRuntime()
 {
-   m_paramList[UPS_PARAM_EST_RUNTIME].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_EST_RUNTIME].flags |= UPF_NOT_SUPPORTED;
 }
 
 void UPSInterface::queryOnlineStatus()
 {
-   m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_ONLINE_STATUS].flags |= UPF_NOT_SUPPORTED;
 }
 
 /**
@@ -257,20 +254,11 @@ void UPSInterface::queryDynamicData()
 }
 
 /**
- * Communication thread starter
- */
-THREAD_RESULT THREAD_CALL UPSInterface::commThreadStarter(void *pArg)
-{
-   ((UPSInterface *)pArg)->commThread();
-   return THREAD_OK;
-}
-
-/**
  * Start communication thread
  */
 void UPSInterface::startCommunication()
 {
-   m_thCommThread = ThreadCreateEx(commThreadStarter, 0, this);
+   m_commThread = ThreadCreateEx(this, &UPSInterface::commThread);
 }
 
 /**
@@ -280,10 +268,10 @@ void UPSInterface::commThread()
 {
    int nIteration;
 
-   // Try to open device immediatelly after start
+   // Try to open device immediately after start
    if (open())
    {
-      nxlog_write_tag(NXLOG_INFO, UPS_DEBUG_TAG, _T("Established communication with device #%d \"%s\""), m_nIndex, m_pszName);
+      nxlog_write_tag(NXLOG_INFO, UPS_DEBUG_TAG, _T("Established communication with device #%d \"%s\""), m_id, m_name);
 
       // Open successfully, query all parameters
       MutexLock(m_mutex);
@@ -291,11 +279,11 @@ void UPSInterface::commThread()
       queryDynamicData();
       MutexUnlock(m_mutex);
 
-      nxlog_debug_tag(UPS_DEBUG_TAG, 5, _T("Initial poll finished for device #%d \"%s\""), m_nIndex, m_pszName);
+      nxlog_debug_tag(UPS_DEBUG_TAG, 5, _T("Initial poll finished for device #%d \"%s\""), m_id, m_name);
    }
    else
    {
-      nxlog_write_tag(NXLOG_WARNING, UPS_DEBUG_TAG, _T("Cannot establish communication with device #%d \"%s\""), m_nIndex, m_pszName);
+      nxlog_write_tag(NXLOG_WARNING, UPS_DEBUG_TAG, _T("Cannot establish communication with device #%d \"%s\""), m_id, m_name);
    }
 
    for(nIteration = 0; ; nIteration++)
@@ -304,11 +292,11 @@ void UPSInterface::commThread()
          break;
 
       // Try to connect to device if it is not connected
-      if (!m_bIsConnected)
+      if (!m_isConnected)
       {
          if (open())
          {
-            AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("UPS: Established communication with device #%d \"%s\""), m_nIndex, m_pszName);
+            nxlog_write_tag(NXLOG_INFO, UPS_DEBUG_TAG, _T("Established communication with device #%d \"%s\""), m_id, m_name);
             nIteration = 100;    // Force all parameters to be polled
          }
       }
@@ -324,13 +312,13 @@ void UPSInterface::commThread()
             }
             else
             {
-               AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("UPS: Lost communication with device #%d \"%s\""), m_nIndex, m_pszName);
+               nxlog_write_tag(NXLOG_WARNING, UPS_DEBUG_TAG, _T("Lost communication with device #%d \"%s\""), m_id, m_name);
             }
          }
       }
 
       // query parameters if we are connected
-      if (m_bIsConnected)
+      if (m_isConnected)
       {
          MutexLock(m_mutex);
 
@@ -343,7 +331,7 @@ void UPSInterface::commThread()
          queryDynamicData();
          
          MutexUnlock(m_mutex);
-         nxlog_debug_tag(UPS_DEBUG_TAG, 9, _T("Poll finished for device #%d \"%s\""), m_nIndex, m_pszName);
+         nxlog_debug_tag(UPS_DEBUG_TAG, 9, _T("Poll finished for device #%d \"%s\""), m_id, m_name);
       }
    }
 }

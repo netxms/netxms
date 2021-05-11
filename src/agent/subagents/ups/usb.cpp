@@ -86,7 +86,7 @@ USBInterface::~USBInterface()
 /**
  * Open device
  */
-BOOL USBInterface::open()
+bool USBInterface::open()
 {
    GUID hidGuid;
    HDEVINFO hInfo;
@@ -95,7 +95,7 @@ BOOL USBInterface::open()
    int nIndex;
    DWORD dwLen, dwTemp;
    WORD wSize;
-   BOOL bSuccess = FALSE;
+   bool bSuccess = false;
    TCHAR errorText[256];
 
    HidD_GetHidGuid(&hidGuid);
@@ -171,7 +171,7 @@ BOOL USBInterface::open()
                if (HidP_GetValueCaps(HidP_Feature, m_pFeatureValueCaps, &wSize, m_pPreparsedData) == HIDP_STATUS_SUCCESS)
                {
                   AgentWriteDebugLog(7, _T("UPS: found matching device"));
-                  bSuccess = TRUE;
+                  bSuccess = true;
                   break;
                }
                else
@@ -226,7 +226,7 @@ void USBInterface::close()
 /**
  * Validate connection
  */
-BOOL USBInterface::validateConnection()
+bool USBInterface::validateConnection()
 {
    WCHAR wszSerial[256];
    return HidD_GetSerialNumberString(m_hDev, wszSerial, 256 * sizeof(WCHAR));
@@ -306,17 +306,17 @@ void USBInterface::readStringParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pPa
 {
    LONG nRet;
 
-   nRet = readIndexedString(nPage, nUsage, pParam->szValue, MAX_RESULT_LENGTH);
+   nRet = readIndexedString(nPage, nUsage, pParam->value, MAX_RESULT_LENGTH);
    switch(nRet)
    {
       case SYSINFO_RC_SUCCESS:
-         pParam->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+         pParam->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
          break;
       case SYSINFO_RC_ERROR:
-         pParam->dwFlags |= UPF_NULL_VALUE;
+         pParam->flags |= UPF_NULL_VALUE;
          break;
       case SYSINFO_RC_UNSUPPORTED:
-         pParam->dwFlags |= UPF_NOT_SUPPORTED;
+         pParam->flags |= UPF_NOT_SUPPORTED;
          break;
    }
 }
@@ -333,24 +333,24 @@ void USBInterface::readIntParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam
    switch(nRet)
    {
       case SYSINFO_RC_SUCCESS:
-         pParam->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+         pParam->flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
          if (bDouble)
          {
             dValue = (nDiv != 0) ? (double)nValue / nDiv : nValue;
-            sprintf(pParam->szValue, "%f", dValue);
+            sprintf(pParam->value, "%f", dValue);
          }
          else
          {
             if (nDiv != 0)
                nValue /= nDiv;
-            sprintf(pParam->szValue, "%d", nValue);
+            sprintf(pParam->value, "%d", nValue);
          }
          break;
       case SYSINFO_RC_ERROR:
-         pParam->dwFlags |= UPF_NULL_VALUE;
+         pParam->flags |= UPF_NULL_VALUE;
          break;
       case SYSINFO_RC_UNSUPPORTED:
-         pParam->dwFlags |= UPF_NOT_SUPPORTED;
+         pParam->flags |= UPF_NOT_SUPPORTED;
          break;
    }
 }
@@ -428,25 +428,25 @@ void USBInterface::queryOnlineStatus()
             nRet = readInt(0x85, 0x42, &nBelowLimit);
             if (nRet == SYSINFO_RC_SUCCESS)
             {
-               m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = nBelowLimit ? '2' : '1';
+               m_paramList[UPS_PARAM_ONLINE_STATUS].value[0] = nBelowLimit ? '2' : '1';
             }
             else
             {
-               m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '1';
+               m_paramList[UPS_PARAM_ONLINE_STATUS].value[0] = '1';
             }
          }
          else
          {
-            m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '0';
+            m_paramList[UPS_PARAM_ONLINE_STATUS].value[0] = '0';
          }
-         m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[1] = 0;
-         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+         m_paramList[UPS_PARAM_ONLINE_STATUS].value[1] = 0;
+         m_paramList[UPS_PARAM_ONLINE_STATUS].flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
          break;
       case SYSINFO_RC_ERROR:
-         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
+         m_paramList[UPS_PARAM_ONLINE_STATUS].flags |= UPF_NULL_VALUE;
          break;
       case SYSINFO_RC_UNSUPPORTED:
-         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NOT_SUPPORTED;
+         m_paramList[UPS_PARAM_ONLINE_STATUS].flags |= UPF_NOT_SUPPORTED;
          break;
    }
 }

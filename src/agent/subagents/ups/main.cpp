@@ -33,23 +33,22 @@ static UPSInterface *m_deviceInfo[MAX_UPS_DEVICES];
  */
 static LONG H_UPSData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	LONG nDev;
-	TCHAR *pErr, szArg[256];
-
-	if (!AgentGetParameterArg(pszParam, 1, szArg, 256))
+	TCHAR deviceIdText[256];
+	if (!AgentGetParameterArg(pszParam, 1, deviceIdText, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	nDev = _tcstol(szArg, &pErr, 0);
-	if ((*pErr != 0) || (nDev < 0) || (nDev >= MAX_UPS_DEVICES))
+   TCHAR *eptr;
+	int deviceId = _tcstol(deviceIdText, &eptr, 0);
+	if ((*eptr != 0) || (deviceId < 0) || (deviceId >= MAX_UPS_DEVICES))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	if (m_deviceInfo[nDev] == NULL)
+	if (m_deviceInfo[deviceId] == nullptr)
 		return SYSINFO_RC_UNSUPPORTED;
 
-	if (!m_deviceInfo[nDev]->isConnected())
+	if (!m_deviceInfo[deviceId]->isConnected())
 		return SYSINFO_RC_ERROR;
 
-	return m_deviceInfo[nDev]->getParameter(CAST_FROM_POINTER(pArg, int), pValue);
+	return m_deviceInfo[deviceId]->getParameter(CAST_FROM_POINTER(pArg, int), pValue);
 }
 
 /**
@@ -57,20 +56,19 @@ static LONG H_UPSData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
  */
 static LONG H_UPSConnStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	LONG nDev;
-	TCHAR *pErr, szArg[256];
-
-	if (!AgentGetParameterArg(pszParam, 1, szArg, 256))
+	TCHAR deviceIdText[256];
+	if (!AgentGetParameterArg(pszParam, 1, deviceIdText, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	nDev = _tcstol(szArg, &pErr, 0);
-	if ((*pErr != 0) || (nDev < 0) || (nDev >= MAX_UPS_DEVICES))
+   TCHAR *eptr;
+	int deviceId = _tcstol(deviceIdText, &eptr, 0);
+	if ((*eptr != 0) || (deviceId < 0) || (deviceId >= MAX_UPS_DEVICES))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	if (m_deviceInfo[nDev] == NULL)
+	if (m_deviceInfo[deviceId] == nullptr)
 		return SYSINFO_RC_UNSUPPORTED;
 
-	ret_int(pValue, m_deviceInfo[nDev]->isConnected() ? 0 : 1);
+	ret_boolean(pValue, m_deviceInfo[deviceId]->isConnected());
 	return SYSINFO_RC_SUCCESS;
 }
 
@@ -79,16 +77,14 @@ static LONG H_UPSConnStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVa
  */
 static LONG H_DeviceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
-	TCHAR szBuffer[256];
-	int i;
-
-	for(i = 0; i < MAX_UPS_DEVICES; i++)
-		if (m_deviceInfo[i] != NULL)
+	TCHAR buffer[256];
+	for(int i = 0; i < MAX_UPS_DEVICES; i++)
+		if (m_deviceInfo[i] != nullptr)
 		{
-			_sntprintf(szBuffer, 256, _T("%d %s %s %s"), i,
+			_sntprintf(buffer, 256, _T("%d %s %s %s"), i,
 					m_deviceInfo[i]->getDevice(), m_deviceInfo[i]->getType(),
 					m_deviceInfo[i]->getName());
-			value->add(szBuffer);
+			value->add(buffer);
 		}
 	return SYSINFO_RC_SUCCESS;
 }
@@ -97,88 +93,87 @@ static LONG H_DeviceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
  * Add device from configuration file parameter
  * Parameter value should be <device_id>:<port>:<protocol>:<name>
  */
-static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
+static bool AddDeviceFromConfig(const TCHAR *configString)
 {
 	const TCHAR *ptr;
-	TCHAR *eptr, *pszCurrField;
-	TCHAR szPort[MAX_PATH], szName[MAX_DB_STRING] = _T("");
-	int nState, nField, nDev, nPos, nProto;
+	TCHAR *eptr;
+	TCHAR port[MAX_PATH], name[MAX_DB_STRING] = _T("");
+	int state, field, deviceIndex, pos, protocol;
 
 	// Parse line
-	pszCurrField = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszStr) + 1));
-	for(ptr = pszStr, nState = 0, nField = 0, nPos = 0;
-			(nState != -1) && (nState != 255); ptr++)
+	TCHAR *currField = MemAllocString(_tcslen(configString) + 1);
+	for(ptr = configString, state = 0, field = 0, pos = 0; (state != -1) && (state != 255); ptr++)
 	{
-		switch(nState)
+		switch(state)
 		{
 			case 0:  // Normal text
 				switch(*ptr)
 				{
 					case '\'':
-						nState = 1;
+						state = 1;
 						break;
 					case '"':
-						nState = 2;
+						state = 2;
 						break;
 					case ':':   // New field
 					case 0:
-						pszCurrField[nPos] = 0;
-						switch(nField)
+						currField[pos] = 0;
+						switch(field)
 						{
 							case 0:  // Device number
-								nDev = _tcstol(pszCurrField, &eptr, 0);
-								if ((*eptr != 0) || (nDev < 0) || (nDev >= MAX_UPS_DEVICES))
-									nState = 255;  // Error
+								deviceIndex = _tcstol(currField, &eptr, 0);
+								if ((*eptr != 0) || (deviceIndex < 0) || (deviceIndex >= MAX_UPS_DEVICES))
+									state = 255;  // Error
 								break;
 							case 1:  // Serial port
-								nx_strncpy(szPort, pszCurrField, MAX_PATH);
+							   _tcslcpy(port, currField, MAX_PATH);
 								break;
 							case 2:  // Protocol
-								if (!_tcsicmp(pszCurrField, _T("APC")))
+								if (!_tcsicmp(currField, _T("APC")))
 								{
-									nProto = UPS_PROTOCOL_APC;
+									protocol = UPS_PROTOCOL_APC;
 								}
-								else if (!_tcsicmp(pszCurrField, _T("BCMXCP")))
+								else if (!_tcsicmp(currField, _T("BCMXCP")))
 								{
-									nProto = UPS_PROTOCOL_BCMXCP;
+									protocol = UPS_PROTOCOL_BCMXCP;
 								}
-								else if (!_tcsicmp(pszCurrField, _T("MEGATEC")))
+								else if (!_tcsicmp(currField, _T("MEGATEC")))
 								{
-									nProto = UPS_PROTOCOL_MEGATEC;
+									protocol = UPS_PROTOCOL_MEGATEC;
 								}
-								else if (!_tcsicmp(pszCurrField, _T("METASYS")))
+								else if (!_tcsicmp(currField, _T("METASYS")))
 								{
-									nProto = UPS_PROTOCOL_METASYS;
+									protocol = UPS_PROTOCOL_METASYS;
 								}
-								else if (!_tcsicmp(pszCurrField, _T("MICRODOWELL")))
+								else if (!_tcsicmp(currField, _T("MICRODOWELL")))
 								{
-									nProto = UPS_PROTOCOL_MICRODOWELL;
+									protocol = UPS_PROTOCOL_MICRODOWELL;
 								}
 #ifdef _WIN32
-								else if (!_tcsicmp(pszCurrField, _T("USB")))
+								else if (!_tcsicmp(currField, _T("USB")))
 								{
-									nProto = UPS_PROTOCOL_USB;
+									protocol = UPS_PROTOCOL_USB;
 								}
 #endif
 								else
 								{
-									nState = 255;  // Error
+									state = 255;  // Error
 								}
 								break;
 							case 3:  // Name
-								nx_strncpy(szName, pszCurrField, MAX_DB_STRING);
+								_tcslcpy(name, currField, MAX_DB_STRING);
 								break;
 							default:
-								nState = 255;  // Error
+								state = 255;  // Error
 								break;
 						}
-						nField++;
-						nPos = 0;
-						if ((nState != 255) && (*ptr == 0))
-							nState = -1;   // Finish
+						field++;
+						pos = 0;
+						if ((state != 255) && (*ptr == 0))
+							state = -1;   // Finish
 						break;
 					default:
-						pszCurrField[nPos++] = *ptr;
+						currField[pos++] = *ptr;
 						break;
 				}
 				break;
@@ -186,13 +181,13 @@ static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
 				switch(*ptr)
 				{
 					case '\'':
-						nState = 0;
+						state = 0;
 						break;
 					case 0:  // Unexpected end of line
-						nState = 255;
+						state = 255;
 						break;
 					default:
-						pszCurrField[nPos++] = *ptr;
+						currField[pos++] = *ptr;
 						break;
 				}
 				break;
@@ -200,13 +195,13 @@ static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
 				switch(*ptr)
 				{
 					case '"':
-						nState = 0;
+						state = 0;
 						break;
 					case 0:  // Unexpected end of line
-						nState = 255;
+						state = 255;
 						break;
 					default:
-						pszCurrField[nPos++] = *ptr;
+						currField[pos++] = *ptr;
 						break;
 				}
 				break;
@@ -214,43 +209,43 @@ static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
 				break;
 		}
 	}
-	MemFree(pszCurrField);
+	MemFree(currField);
 
 	// Add new device if parsing was successful
-	if ((nState == -1) && (nField >= 3))
+	if ((state == -1) && (field >= 3))
 	{
-		if (m_deviceInfo[nDev] != NULL)
-			delete m_deviceInfo[nDev];
-		switch(nProto)
+		if (m_deviceInfo[deviceIndex] != nullptr)
+			delete m_deviceInfo[deviceIndex];
+		switch(protocol)
 		{
 			case UPS_PROTOCOL_APC:
-				m_deviceInfo[nDev] = new APCInterface(szPort);
+				m_deviceInfo[deviceIndex] = new APCInterface(port);
 				break;
 			case UPS_PROTOCOL_BCMXCP:
-				m_deviceInfo[nDev] = new BCMXCPInterface(szPort);
+				m_deviceInfo[deviceIndex] = new BCMXCPInterface(port);
 				break;
          case UPS_PROTOCOL_MEGATEC:
-				m_deviceInfo[nDev] = new MegatecInterface(szPort);
+				m_deviceInfo[deviceIndex] = new MegatecInterface(port);
 				break;
          case UPS_PROTOCOL_METASYS:
-				m_deviceInfo[nDev] = new MetaSysInterface(szPort);
+				m_deviceInfo[deviceIndex] = new MetaSysInterface(port);
 				break;
 			case UPS_PROTOCOL_MICRODOWELL:
-				m_deviceInfo[nDev] = new MicrodowellInterface(szPort);
+				m_deviceInfo[deviceIndex] = new MicrodowellInterface(port);
 				break;
 #ifdef _WIN32
 			case UPS_PROTOCOL_USB:
-				m_deviceInfo[nDev] = new USBInterface(szPort);
+				m_deviceInfo[deviceIndex] = new USBInterface(port);
 				break;
 #endif
 			default:
 				break;
 		}
-		m_deviceInfo[nDev]->setName(szName);
-		m_deviceInfo[nDev]->setIndex(nDev);
+		m_deviceInfo[deviceIndex]->setName(name);
+		m_deviceInfo[deviceIndex]->setId(deviceIndex);
 	}
 
-	return ((nState == -1) && (nField >= 3));
+	return ((state == -1) && (field >= 3));
 }
 
 /**
@@ -258,22 +253,18 @@ static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
  */
 static bool SubAgentInit(Config *config)
 {
-	int i;
-	TCHAR *entry;
-	ConfigEntry *devices; 
-
 	memset(m_deviceInfo, 0, sizeof(UPSInterface *) * MAX_UPS_DEVICES);
 
 	// Parse configuration
-	devices = config->getEntry(_T("/UPS/Device"));
-	if (devices != NULL)
+	ConfigEntry *devices = config->getEntry(_T("/UPS/Device"));
+	if (devices != nullptr)
 	{
-		for(i = 0; i < devices->getValueCount(); i++)
+		for(int i = 0; i < devices->getValueCount(); i++)
 		{
-			entry = Trim(MemCopyString(devices->getValue(i)));
+			TCHAR *entry = Trim(MemCopyString(devices->getValue(i)));
 			if (!AddDeviceFromConfig(entry))
 			{
-				AgentWriteLog(EVENTLOG_WARNING_TYPE,
+				nxlog_write_tag(NXLOG_WARNING, UPS_DEBUG_TAG,
 						_T("Unable to add UPS device from configuration file. ")
 						_T("Original configuration record: %s"), devices->getValue(i));
 			}
@@ -282,9 +273,9 @@ static bool SubAgentInit(Config *config)
 	}
 
 	// Start communicating with configured devices
-	for(i = 0; i < MAX_UPS_DEVICES; i++)
+	for(int i = 0; i < MAX_UPS_DEVICES; i++)
 	{
-		if (m_deviceInfo[i] != NULL)
+		if (m_deviceInfo[i] != nullptr)
 			m_deviceInfo[i]->startCommunication();
 	}
 
@@ -296,14 +287,8 @@ static bool SubAgentInit(Config *config)
  */
 static void SubAgentShutdown()
 {
-	int i;
-
-	// Close all devices
-	for(i = 0; i < MAX_UPS_DEVICES; i++)
-		if (m_deviceInfo[i] != NULL)
-		{
-			delete_and_null(m_deviceInfo[i]);
-		}
+	for(int i = 0; i < MAX_UPS_DEVICES; i++)
+      delete_and_null(m_deviceInfo[i]);
 }
 
 /**
@@ -322,7 +307,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	},
 
 	{ _T("UPS.ConnectionStatus(*)"),       H_UPSConnStatus,
-		NULL,
+		nullptr,
 		DCI_DT_INT,      _T("UPS {instance} connection status")
 	},
 
