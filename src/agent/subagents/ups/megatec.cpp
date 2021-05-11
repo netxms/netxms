@@ -31,19 +31,19 @@ MegatecInterface::MegatecInterface(const TCHAR *device) : SerialInterface(device
 		m_portSpeed = 2400;
    m_packs = 0;
 
-   m_paramList[UPS_PARAM_MFG_DATE].dwFlags |= UPF_NOT_SUPPORTED;
-   m_paramList[UPS_PARAM_SERIAL].dwFlags |= UPF_NOT_SUPPORTED;
-   m_paramList[UPS_PARAM_BATTERY_LEVEL].dwFlags |= UPF_NOT_SUPPORTED;
-   m_paramList[UPS_PARAM_EST_RUNTIME].dwFlags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_MFG_DATE].flags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_SERIAL].flags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_BATTERY_LEVEL].flags |= UPF_NOT_SUPPORTED;
+   m_paramList[UPS_PARAM_EST_RUNTIME].flags |= UPF_NOT_SUPPORTED;
 }
 
 /**
  * Open device
  */
-BOOL MegatecInterface::open()
+bool MegatecInterface::open()
 {
    if (!SerialInterface::open())
-      return FALSE;
+      return false;
 
    m_serial.setTimeout(1000);
    m_serial.set(m_portSpeed, m_dataBits, m_parity, m_stopBits);
@@ -59,9 +59,9 @@ BOOL MegatecInterface::open()
       setConnected();
 		
       buffer[16] = 0;
-      double nominalVoltage = strtod(&buffer[11], NULL);
-      sprintf(m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE].szValue, "%0.2f", nominalVoltage);
-      m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE].dwFlags &= ~UPF_NULL_VALUE;
+      double nominalVoltage = strtod(&buffer[11], nullptr);
+      sprintf(m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE].value, "%0.2f", nominalVoltage);
+      m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE].flags &= ~UPF_NULL_VALUE;
       
       m_serial.write("Q1\r", 3);
       if (readLineFromSerial(buffer, 256, '\r'))
@@ -69,7 +69,7 @@ BOOL MegatecInterface::open()
          if (buffer[0] == '(')
          {
             buffer[32] = 0;
-            calculatePacks(nominalVoltage, strtod(&buffer[28], NULL));
+            calculatePacks(nominalVoltage, strtod(&buffer[28], nullptr));
          }
       }
    }
@@ -105,7 +105,7 @@ void MegatecInterface::calculatePacks(double nominalVoltage, double actualVoltag
 /**
  * Validate connection
  */
-BOOL MegatecInterface::validateConnection()
+bool MegatecInterface::validateConnection()
 {
    m_serial.write("F\r", 2);
    char buffer[256];
@@ -130,24 +130,24 @@ void MegatecInterface::queryStaticData()
       {
          buffer[27] = 0;
          StrStripA(&buffer[17]);
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, &buffer[17]);
+         strcpy(m_paramList[UPS_PARAM_MODEL].value, &buffer[17]);
 
          StrStripA(&buffer[28]);
-         strcpy(m_paramList[UPS_PARAM_FIRMWARE].szValue, &buffer[28]);
+         strcpy(m_paramList[UPS_PARAM_FIRMWARE].value, &buffer[28]);
 
-         m_paramList[UPS_PARAM_MODEL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
-         m_paramList[UPS_PARAM_FIRMWARE].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+         m_paramList[UPS_PARAM_MODEL].flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+         m_paramList[UPS_PARAM_FIRMWARE].flags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
       }
       else
       {
-         m_paramList[UPS_PARAM_MODEL].dwFlags |= UPF_NOT_SUPPORTED;
-         m_paramList[UPS_PARAM_FIRMWARE].dwFlags |= UPF_NOT_SUPPORTED;
+         m_paramList[UPS_PARAM_MODEL].flags |= UPF_NOT_SUPPORTED;
+         m_paramList[UPS_PARAM_FIRMWARE].flags |= UPF_NOT_SUPPORTED;
       }
    }
    else
    {
-      m_paramList[UPS_PARAM_MODEL].dwFlags |= UPF_NOT_SUPPORTED;
-      m_paramList[UPS_PARAM_FIRMWARE].dwFlags |= UPF_NOT_SUPPORTED;
+      m_paramList[UPS_PARAM_MODEL].flags |= UPF_NOT_SUPPORTED;
+      m_paramList[UPS_PARAM_FIRMWARE].flags |= UPF_NOT_SUPPORTED;
    }
 }
 
@@ -179,21 +179,21 @@ void MegatecInterface::queryDynamicData()
                p++;
             if (*p == 0)
                p--;
-            strcpy(m_paramList[index].szValue, p);
-            m_paramList[index].dwFlags &= ~UPF_NULL_VALUE;
+            strcpy(m_paramList[index].value, p);
+            m_paramList[index].flags &= ~UPF_NULL_VALUE;
          }
          
          // curr should point to bit flags now
          while(isspace(*curr))
             curr++;
-         strcpy(m_paramList[UPS_PARAM_ONLINE_STATUS].szValue, curr[0] == '1' ? (curr[1] == '1' ? "2" : "1") : "0");
-         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags &= ~UPF_NULL_VALUE;
-         nxlog_debug_tag(UPS_DEBUG_TAG, 7, _T("MEGATEC: status bits = %hs, online = %hs"), curr, m_paramList[UPS_PARAM_ONLINE_STATUS].szValue);
+         strcpy(m_paramList[UPS_PARAM_ONLINE_STATUS].value, curr[0] == '1' ? (curr[1] == '1' ? "2" : "1") : "0");
+         m_paramList[UPS_PARAM_ONLINE_STATUS].flags &= ~UPF_NULL_VALUE;
+         nxlog_debug_tag(UPS_DEBUG_TAG, 7, _T("MEGATEC: status bits = %hs, online = %hs"), curr, m_paramList[UPS_PARAM_ONLINE_STATUS].value);
 
          // recalculate battery voltage for online devices
          if ((curr[4] == '0') && (m_packs > 0))
          {
-            sprintf(m_paramList[UPS_PARAM_BATTERY_VOLTAGE].szValue, "%0.2f", strtod(m_paramList[UPS_PARAM_BATTERY_VOLTAGE].szValue, NULL) * m_packs);
+            sprintf(m_paramList[UPS_PARAM_BATTERY_VOLTAGE].value, "%0.2f", strtod(m_paramList[UPS_PARAM_BATTERY_VOLTAGE].value, nullptr) * m_packs);
          }
       }
       else
@@ -201,9 +201,9 @@ void MegatecInterface::queryDynamicData()
          for(int i = 0; i < 7; i++)
          {
             if (paramIndex[i] != -1)
-               m_paramList[paramIndex[i]].dwFlags |= UPF_NULL_VALUE;
+               m_paramList[paramIndex[i]].flags |= UPF_NULL_VALUE;
          }
-         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
+         m_paramList[UPS_PARAM_ONLINE_STATUS].flags |= UPF_NULL_VALUE;
       }
    }
    else
@@ -211,8 +211,8 @@ void MegatecInterface::queryDynamicData()
       for(int i = 0; i < 7; i++)
       {
          if (paramIndex[i] != -1)
-            m_paramList[paramIndex[i]].dwFlags |= UPF_NULL_VALUE;
+            m_paramList[paramIndex[i]].flags |= UPF_NULL_VALUE;
       }
-      m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
+      m_paramList[UPS_PARAM_ONLINE_STATUS].flags |= UPF_NULL_VALUE;
    }
 }

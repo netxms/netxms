@@ -395,6 +395,9 @@ public:
 
    time_t getTimeStamp() { return m_ts; }
 	void updateTimeStamp() { m_ts = time(nullptr); }
+
+   bool sendMessage(const NXCPMessage& msg) { return sendMessage(&msg); }
+   void postMessage(const NXCPMessage& msg) { postMessage(&msg); }
 };
 
 /**
@@ -810,6 +813,7 @@ bool EnumerateSessions(EnumerationCallbackResult (*callback)(AbstractCommSession
 shared_ptr<AbstractCommSession> FindServerSessionById(uint32_t id);
 shared_ptr<AbstractCommSession> FindServerSessionByServerId(uint64_t serverId);
 shared_ptr<AbstractCommSession> FindServerSession(bool (*comparator)(AbstractCommSession *, void *), void *userData);
+void NotifyConnectedServers(const TCHAR *notificationCode);
 
 bool LoadConfig(const TCHAR *configSection, bool firstStart);
 

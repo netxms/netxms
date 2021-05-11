@@ -2082,11 +2082,12 @@ protected:
    virtual void onInstanceDiscoveryChange() override;
    virtual bool isDataCollectionDisabled();
 
+   virtual bool isAgentRestarting();
+   virtual bool isProxyAgentRestarting();
+
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   virtual bool isAgentRestarting();
-   virtual bool isProxyAgentRestarting();
 
    virtual StringMap *getInstanceList(DCObject *dco);
    void doInstanceDiscovery(UINT32 requestId);
@@ -3047,10 +3048,11 @@ protected:
    uint8_t m_cipState;
    uint16_t m_cipVendorCode;
 
-   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual bool isAgentRestarting() override;
    virtual bool isProxyAgentRestarting() override;
+
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
 
    void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
@@ -3396,7 +3398,7 @@ public:
 
    Table *wsListAsTable();
 
-   UINT32 wakeUp();
+   uint32_t wakeUp();
 
    void addService(const shared_ptr<NetworkService>& service) { addChild(service); service->addParent(self()); }
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, int iServiceType, WORD wPort = 0,
@@ -3452,11 +3454,11 @@ inline bool Node::lockForStatusPoll()
             m_runtimeFlags &= ~ODF_FORCE_STATUS_POLL;
       }
       else if ((m_status != STATUS_UNMANAGED) &&
-               (!(m_flags & DCF_DISABLE_STATUS_POLL)) &&
+               !(m_flags & DCF_DISABLE_STATUS_POLL) &&
                (getMyCluster() == nullptr) &&
-               (!(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING)) &&
-               (static_cast<UINT32>(time(nullptr) - m_statusPollState.getLastCompleted()) > g_statusPollingInterval) &&
-               (!isAgentRestarting()) && (!isProxyAgentRestarting()))
+               !(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING) &&
+               (static_cast<uint32_t>(time(nullptr) - m_statusPollState.getLastCompleted()) > g_statusPollingInterval) &&
+               !isAgentRestarting() && !isProxyAgentRestarting())
       {
          success = m_statusPollState.schedule();
       }
@@ -3479,9 +3481,9 @@ inline bool Node::lockForConfigurationPoll()
             m_runtimeFlags &= ~ODF_FORCE_CONFIGURATION_POLL;
       }
       else if ((m_status != STATUS_UNMANAGED) &&
-               (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
-               (static_cast<UINT32>(time(nullptr) - m_configurationPollState.getLastCompleted()) > g_configurationPollingInterval) &&
-               (!isAgentRestarting()) && (!isProxyAgentRestarting()))
+               !(m_flags & DCF_DISABLE_CONF_POLL) &&
+               (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) > g_configurationPollingInterval) &&
+               !isAgentRestarting() && !isProxyAgentRestarting())
       {
          success = m_configurationPollState.schedule();
       }
@@ -3497,10 +3499,10 @@ inline bool Node::lockForDiscoveryPoll()
    if (!m_isDeleted && !m_isDeleteInitiated &&
        (g_flags & AF_PASSIVE_NETWORK_DISCOVERY) &&
        (m_status != STATUS_UNMANAGED) &&
-       (!(m_flags & NF_DISABLE_DISCOVERY_POLL)) &&
+       !(m_flags & NF_DISABLE_DISCOVERY_POLL) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<UINT32>(time(nullptr) - m_discoveryPollState.getLastCompleted()) > g_discoveryPollingInterval) &&
-       (!isAgentRestarting()) && (!isProxyAgentRestarting()))
+       (static_cast<uint32_t>(time(nullptr) - m_discoveryPollState.getLastCompleted()) > g_discoveryPollingInterval) &&
+       !isAgentRestarting() && !isProxyAgentRestarting())
    {
       success = m_discoveryPollState.schedule();
    }
@@ -3514,10 +3516,10 @@ inline bool Node::lockForRoutePoll()
    lockProperties();
    if (!m_isDeleted && !m_isDeleteInitiated &&
        (m_status != STATUS_UNMANAGED) &&
-       (!(m_flags & NF_DISABLE_ROUTE_POLL)) &&
+       !(m_flags & NF_DISABLE_ROUTE_POLL) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<UINT32>(time(nullptr) - m_routingPollState.getLastCompleted()) > g_routingTableUpdateInterval) &&
-       (!isAgentRestarting()) && (!isProxyAgentRestarting()))
+       (static_cast<uint32_t>(time(nullptr) - m_routingPollState.getLastCompleted()) > g_routingTableUpdateInterval) &&
+       !isAgentRestarting() && !isProxyAgentRestarting())
    {
       success = m_routingPollState.schedule();
    }
@@ -3531,10 +3533,10 @@ inline bool Node::lockForTopologyPoll()
    lockProperties();
    if (!m_isDeleted && !m_isDeleteInitiated &&
        (m_status != STATUS_UNMANAGED) &&
-       (!(m_flags & NF_DISABLE_TOPOLOGY_POLL)) &&
+       !(m_flags & NF_DISABLE_TOPOLOGY_POLL) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<UINT32>(time(nullptr) - m_topologyPollState.getLastCompleted()) > g_topologyPollingInterval) &&
-       (!isAgentRestarting()) && (!isProxyAgentRestarting()))
+       (static_cast<uint32_t>(time(nullptr) - m_topologyPollState.getLastCompleted()) > g_topologyPollingInterval) &&
+       !isAgentRestarting() && !isProxyAgentRestarting())
    {
       success = m_topologyPollState.schedule();
    }
@@ -3550,9 +3552,9 @@ inline bool Node::lockForIcmpPoll()
    if (!m_isDeleted && !m_isDeleteInitiated &&
        (m_status != STATUS_UNMANAGED) &&
        isIcmpStatCollectionEnabled() &&
-       (!(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING)) &&
-       ((UINT32)(time(nullptr) - m_icmpPollState.getLastCompleted()) > g_icmpPollingInterval) &&
-       (!isProxyAgentRestarting()))
+       !(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING) &&
+       (static_cast<uint32_t>(time(nullptr) - m_icmpPollState.getLastCompleted()) > g_icmpPollingInterval) &&
+       !isProxyAgentRestarting())
    {
       success = m_icmpPollState.schedule();
    }

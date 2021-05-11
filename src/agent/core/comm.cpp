@@ -209,6 +209,24 @@ shared_ptr<AbstractCommSession> FindServerSession(bool (*comparator)(AbstractCom
 }
 
 /**
+ * Send notification message to all connected servers
+ */
+void NotifyConnectedServers(const TCHAR *notificationCode)
+{
+   NXCPMessage msg(CMD_NOTIFY, 0);
+   msg.setField(VID_NOTIFICATION_CODE, notificationCode);
+
+   MutexLock(g_sessionLock);
+   for(int j = 0; j < g_sessions.size(); j++)
+   {
+      CommSession *session = g_sessions.get(j);
+      if (session->canAcceptTraps())
+         session->sendMessage(msg);
+   }
+   MutexUnlock(g_sessionLock);
+}
+
+/**
  * TCP/IP Listener
  */ 
 void ListenerThread()
