@@ -22,11 +22,12 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.nxmc.base.views.ViewerFilterInternal;
 
 /**
  * Filter for last values view
  */
-public class LastValuesFilter extends ViewerFilter
+public class LastValuesFilter extends ViewerFilter implements ViewerFilterInternal
 {
 	private String filterString = null;
 	private boolean showDisabled = false;

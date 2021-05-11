@@ -57,9 +57,9 @@ public abstract class NodeSubObjectView extends ObjectView
     * @param image
     * @param id
     */
-   public NodeSubObjectView(String name, ImageDescriptor image, String id)
+   public NodeSubObjectView(String name, ImageDescriptor image, String id, boolean hasFilter)
    {
-      super(name, image, id);
+      super(name, image, id, hasFilter);
    }
 
    /**

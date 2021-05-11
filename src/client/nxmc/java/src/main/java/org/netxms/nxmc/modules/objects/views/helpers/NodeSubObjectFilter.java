@@ -19,11 +19,12 @@
 package org.netxms.nxmc.modules.objects.views.helpers;
 
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.nxmc.base.views.ViewerFilterInternal;
 
 /**
  * Abstract filter class for node sub-object views
  */
-public abstract class NodeSubObjectFilter extends ViewerFilter
+public abstract class NodeSubObjectFilter extends ViewerFilter implements ViewerFilterInternal
 {
    protected String filterString = null;
    

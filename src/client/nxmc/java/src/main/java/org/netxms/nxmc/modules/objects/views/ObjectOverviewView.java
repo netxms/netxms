@@ -62,7 +62,7 @@ public class ObjectOverviewView extends ObjectView
     */
    public ObjectOverviewView()
    {
-      super(i18n.tr("Overview"), ResourceManager.getImageDescriptor("icons/object-views/overview.gif"), "ObjectOverview");
+      super(i18n.tr("Overview"), ResourceManager.getImageDescriptor("icons/object-views/overview.gif"), "ObjectOverview", false);
    }
 
    /**

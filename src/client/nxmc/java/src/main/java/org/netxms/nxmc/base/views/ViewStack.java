@@ -63,6 +63,8 @@ public class ViewStack extends Composite
    private Map<String, View> views = new HashMap<String, View>();
    private Map<String, CTabItem> tabs = new HashMap<String, CTabItem>();
    private Set<ViewStackSelectionListener> selectionListeners = new HashSet<ViewStackSelectionListener>();
+   private Runnable onFilterCloseCallback = null;
+   private ToolItem enableFilter = null;
 
    /**
     * Create new view stack.
@@ -128,6 +130,33 @@ public class ViewStack extends Composite
             }
          }
       });
+
+      enableFilter = new ToolItem(viewControlBar, SWT.CHECK);
+      enableFilter.setImage(SharedIcons.IMG_FILTER);
+      enableFilter.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            View view = getSelection();
+            if (view != null)
+            {
+               view.enableFilter(enableFilter.getSelection());
+            }
+         }
+      });
+      onFilterCloseCallback = new Runnable() {
+         
+         @Override
+         public void run()
+         {
+            View view = getSelection();
+            if (view != null)
+            {
+               enableFilter.setSelection(false);
+               view.enableFilter(enableFilter.getSelection());
+            }            
+         }
+      };
 
       if (enableViewPinning)
       {
@@ -210,7 +239,7 @@ public class ViewStack extends Composite
 
       if (ignoreContext || !(view instanceof ViewWithContext) || ((ViewWithContext)view).isValidForContext(context))
       {
-         view.create(window, perspective, tabFolder);
+         view.create(window, perspective, tabFolder, onFilterCloseCallback);
          CTabItem tabItem = createViewTab(view, ignoreContext);
          if (activate)
          {
@@ -252,8 +281,11 @@ public class ViewStack extends Composite
             ((ViewWithContext)view).setContext(context);
       }
       viewToolBarManager.removeAll();
-      view.fillLocalToolbar(viewToolBarManager);
-      viewToolBarManager.update(true);
+      view.fillLocalToolbar(viewToolBarManager);      
+      viewToolBarManager.update(true);      
+
+      enableFilter.setSelection(view.isFilterEnabled());
+      enableFilter.setEnabled(view.hasFilter());
    }
 
    /**
@@ -338,7 +370,7 @@ public class ViewStack extends Composite
                if (view.isCreated())
                   view.setVisible(true);
                else
-                  view.create(window, perspective, tabFolder);
+                  view.create(window, perspective, tabFolder, onFilterCloseCallback);
                createViewTab(view, false);
             }
             ((ViewWithContext)view).setContext(context);

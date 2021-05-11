@@ -53,6 +53,8 @@ public class ViewContainer extends Composite
    private ToolBar viewToolBar;
    private ToolBar viewControlBar;
    private Composite viewArea;
+   private Runnable onFilterCloseCallback = null;
+   private ToolItem enableFilter = null;
 
    /**
     * Create new view stack.
@@ -101,6 +103,28 @@ public class ViewContainer extends Composite
             }
          }
       });
+
+      enableFilter = new ToolItem(viewControlBar, SWT.CHECK);
+      enableFilter.setImage(SharedIcons.IMG_FILTER);
+      enableFilter.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            if (view != null)
+            {
+               view.enableFilter(enableFilter.getSelection());
+            }
+         }
+      });
+      onFilterCloseCallback = new Runnable() {
+         
+         @Override
+         public void run()
+         {
+            enableFilter.setSelection(false);
+            view.enableFilter(enableFilter.getSelection());
+         }
+      };
 
       if (enableViewPinning)
       {
@@ -184,7 +208,7 @@ public class ViewContainer extends Composite
       this.view = view;
       if (view != null)
       {
-         view.create(window, perspective, viewArea);
+         view.create(window, perspective, viewArea, onFilterCloseCallback);
          viewArea.layout(true, true);
          if (view instanceof ViewWithContext)
             ((ViewWithContext)view).setContext(context);
@@ -192,6 +216,9 @@ public class ViewContainer extends Composite
          viewToolBarManager.removeAll();
          view.fillLocalToolbar(viewToolBarManager);
          viewToolBarManager.update(true);
+         
+         enableFilter.setSelection(view.isFilterEnabled());
+         enableFilter.setEnabled(view.hasFilter());
       }
    }
 

@@ -89,7 +89,7 @@ public class PopOutViewWindow extends Window
 
       };
       viewArea.setLayout(new FillLayout());
-      view.create(this, null, viewArea);
+      view.create(this, null, viewArea, null);
       viewArea.addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)

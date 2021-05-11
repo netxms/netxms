@@ -30,18 +30,7 @@ import org.xnap.commons.i18n.I18n;
 public abstract class ObjectView extends ViewWithContext
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ObjectView.class);
-
-   /**
-    * Create object view with random ID.
-    *
-    * @param name view name
-    * @param image view image
-    */
-   public ObjectView(String name, ImageDescriptor image)
-   {
-      super(name, image);
-   }
-
+   
    /**
     * Create object view with specific ID.
     *
@@ -49,9 +38,9 @@ public abstract class ObjectView extends ViewWithContext
     * @param image view image
     * @param id view ID
     */
-   public ObjectView(String name, ImageDescriptor image, String id)
+   public ObjectView(String name, ImageDescriptor image, String id, boolean hasFilter)
    {
-      super(name, image, id);
+      super(name, image, id, hasFilter);
    }
 
    /**

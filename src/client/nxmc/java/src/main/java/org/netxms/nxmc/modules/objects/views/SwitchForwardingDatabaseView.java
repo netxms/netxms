@@ -28,22 +28,15 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.FdbEntry;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.FDBComparator;
@@ -69,20 +62,15 @@ public class SwitchForwardingDatabaseView extends ObjectView
 	
 	private NXCSession session;
 	private SortableTableViewer viewer;
-	private Composite resultArea;
-	private FilterText filterText;
-	private FDBFilter filter;
-   private boolean showFilter = true;
    private Action actionExportToCsv;
    private Action actionExportAllToCsv;
-   private Action actionShowFilter;
 
    /**
     * Default constructor
     */
    public SwitchForwardingDatabaseView()
    {
-      super(i18n.tr("FDB"), ResourceManager.getImageDescriptor("icons/object-views/fdb.gif"), "FDB");
+      super(i18n.tr("FDB"), ResourceManager.getImageDescriptor("icons/object-views/fdb.gif"), "FDB", true);
       session = Registry.getSession();
    }
 
@@ -91,56 +79,17 @@ public class SwitchForwardingDatabaseView extends ObjectView
     */
    @Override
    protected void createContent(Composite parent)
-	{
-      final PreferenceStore settings = PreferenceStore.getInstance();
-      showFilter = settings.getAsBoolean("FDB.showFilter", showFilter);
-
-      // Create result area
-      resultArea = new Composite(parent, SWT.BORDER);
-      FormLayout formLayout = new FormLayout();
-      resultArea.setLayout(formLayout);
-      // Create filter area
-      filterText = new FilterText(resultArea, SWT.BORDER);
-      filterText.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            onFilterModify();
-         }
-      });
-      filterText.setCloseAction(new Action() {
-         @Override
-         public void run()
-         {
-            enableFilter(false);
-            actionShowFilter.setChecked(showFilter);
-         }
-      });
-      filterText.addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            settings.set("FDB.showFilter", showFilter);
-         }
-      });
-
-      // Setup layout
-      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      ;
-      fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      filterText.setLayoutData(fd);
-	   
+	{	   
 		final String[] names = { 
             i18n.tr("MAC"), i18n.tr("Port"), i18n.tr("Interface"), i18n.tr("VLAN"), i18n.tr("Node"), i18n.tr("Type")
 		   };
 		final int[] widths = { 180, 100, 200, 100, 250, 110 };
-		viewer = new SortableTableViewer(resultArea, names, widths, COLUMN_MAC_ADDRESS, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
+		viewer = new SortableTableViewer(parent, names, widths, COLUMN_MAC_ADDRESS, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new FDBLabelProvider());
 		viewer.setComparator(new FDBComparator());
-		filter = new FDBFilter();
+		FDBFilter filter = new FDBFilter();
+		setViewerAndFilter(viewer, filter);
 		viewer.addFilter(filter);
 
       WidgetHelper.restoreTableViewerSettings(viewer, "SwitchForwardingDatabase");
@@ -151,58 +100,10 @@ public class SwitchForwardingDatabaseView extends ObjectView
             WidgetHelper.saveTableViewerSettings(viewer, "SwitchForwardingDatabase");
 			}
 		});
-		
-		// Setup layout
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);;
-      fd.top = new FormAttachment(filterText, 0, SWT.BOTTOM);
-      fd.bottom = new FormAttachment(100, 0);
-      fd.right = new FormAttachment(100, 0);
-      viewer.getControl().setLayoutData(fd);
 
 		createActions();
 		createPopupMenu();
-		
-		// Set initial focus to filter input line
-      if (showFilter)
-         filterText.setFocus();
-      else
-         enableFilter(false); // Will hide filter area correctly
 	}
-
-   /**
-    * Enable or disable filter
-    * 
-    * @param enable New filter state
-    */
-   public void enableFilter(boolean enable)
-   {
-      showFilter = enable;
-      filterText.setVisible(showFilter);
-      FormData fd = (FormData)viewer.getTable().getLayoutData();
-      fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
-      resultArea.layout();
-      if (enable)
-      {
-         filterText.setFocus();
-      }
-      else
-      {
-         filterText.setText("");
-         onFilterModify();
-      }
-
-   }
-
-   /**
-    * Handler for filter modification
-    */
-   public void onFilterModify()
-   {
-      final String text = filterText.getText();
-      filter.setFilterString(text);
-      viewer.refresh(false);
-   }
 
 	/**
 	 * Create actions
@@ -211,16 +112,6 @@ public class SwitchForwardingDatabaseView extends ObjectView
 	{
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
-		
-		actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
-	        @Override
-	        public void run()
-	        {
-            enableFilter(!showFilter);
-            actionShowFilter.setChecked(showFilter);
-	        }
-	      };
-      actionShowFilter.setChecked(showFilter);
 	}
 
 	/**

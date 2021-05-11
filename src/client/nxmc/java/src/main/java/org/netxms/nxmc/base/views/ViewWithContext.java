@@ -28,26 +28,16 @@ public abstract class ViewWithContext extends View
    private Object context = null;
 
    /**
-    * Create view with random ID that is context aware.
-    *
-    * @param name view name
-    * @param image view image
-    */
-   public ViewWithContext(String name, ImageDescriptor image)
-   {
-      super(name, image);
-   }
-
-   /**
     * Create view with specific ID that is context aware.
     *
     * @param name view name
     * @param image view image
     * @param id view ID
+    * @param hasFileter true if view should contain filter
     */
-   public ViewWithContext(String name, ImageDescriptor image, String id)
+   public ViewWithContext(String name, ImageDescriptor image, String id, boolean hasFilter)
    {
-      super(name, image, id);
+      super(name, image, id, hasFilter);
    }
 
    /**

@@ -42,7 +42,7 @@ public class AlarmsView extends ObjectView
     */
    public AlarmsView()
    {
-      super(i18n.tr("Alarms"), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"), "Alarms");
+      super(i18n.tr("Alarms"), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"), "Alarms", true);
    }
 
    /**
@@ -52,6 +52,7 @@ public class AlarmsView extends ObjectView
    protected void createContent(Composite parent)
    {
       alarmList = new AlarmList(this, parent, SWT.NONE, "AlarmView.AlarmList", null);
+      setViewerAndFilter(alarmList.getViewer(), alarmList.getFilter());
    }
 
    /**
@@ -88,5 +89,5 @@ public class AlarmsView extends ObjectView
    protected String getContextName()
    {
       return (getObject() != null) ? getObject().getObjectName() : i18n.tr("All");
-   }
+   }  
 }

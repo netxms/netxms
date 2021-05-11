@@ -36,22 +36,15 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
-import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.actions.dialogs.EditActionDlg;
@@ -70,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
 public class ActionManager extends ConfigurationView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ActionManager.class);
-   private static final String TABLE_CONFIG_PREFIX = "ActionList";
+   private static final String ID = "ActionList";
 
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_TYPE = 1;
@@ -86,18 +79,13 @@ public class ActionManager extends ConfigurationView
    private Action actionNew;
    private Action actionEdit;
    private Action actionDelete;
-   private Action actionShowFilter;
-
-   private ActionManagerFilter filter;
-   private FilterText filterText;
-   private Composite content;
 
    /**
     * Create action manager view
     */
    public ActionManager()
    {
-      super(i18n.tr("Actions"), ResourceManager.getImageDescriptor("icons/config-views/actions.png"));
+      super(i18n.tr("Actions"), ResourceManager.getImageDescriptor("icons/config-views/actions.png"), ID, true);
       session = Registry.getSession();
    }
 
@@ -107,29 +95,17 @@ public class ActionManager extends ConfigurationView
    @Override
    protected void createContent(Composite parent)
    {
-      content = new Composite(parent, SWT.NONE);
-      content.setLayout(new FormLayout());
-
-      // Create filter area
-      filterText = new FilterText(content, SWT.NONE);
-      filterText.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            onFilterModify();
-         }
-      });
-
       final String[] columnNames = { i18n.tr("Name"), i18n.tr("Type"), i18n.tr("Recipient"),
             i18n.tr("Subject"), i18n.tr("Data"), i18n.tr("Channel") };
       final int[] columnWidths = { 150, 90, 100, 120, 200, 100 };
-      viewer = new SortableTableViewer(content, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
-      WidgetHelper.restoreTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
+      viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+      WidgetHelper.restoreTableViewerSettings(viewer, ID);
       viewer.setContentProvider(new ArrayContentProvider());
       ActionLabelProvider labelProvider = new ActionLabelProvider();
       viewer.setLabelProvider(labelProvider);
       viewer.setComparator(new ActionComparator());
-      filter = new ActionManagerFilter(labelProvider);
+      ActionManagerFilter filter = new ActionManagerFilter(labelProvider);
+      setViewerAndFilter(viewer, filter);
       viewer.addFilter(filter);
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
@@ -154,41 +130,12 @@ public class ActionManager extends ConfigurationView
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
+            WidgetHelper.saveTableViewerSettings(viewer, ID);
          }
       });
-
-      // Setup layout
-      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(filterText);
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-      viewer.getTable().setLayoutData(fd);
-
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      filterText.setLayoutData(fd);
 
       createActions();
       createPopupMenu();
-
-      filterText.setCloseAction(new Action() {
-         @Override
-         public void run()
-         {
-            enableFilter(false);
-            actionShowFilter.setChecked(false);
-         }
-      });
-
-      // Set initial focus to filter input line
-      if (actionShowFilter.isChecked())
-         filterText.setFocus();
-      else
-         enableFilter(false); // Will hide filter area correctly
 
       sessionListener = new SessionListener() {
          @Override
@@ -312,16 +259,6 @@ public class ActionManager extends ConfigurationView
             deleteActions();
          }
       };
-
-      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
-         @Override
-         public void run()
-         {
-            enableFilter(actionShowFilter.isChecked());
-         }
-      };
-      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
-      actionShowFilter.setChecked(PreferenceStore.getInstance().getAsBoolean("ActionManager.showFilter", true));
    }
 
    /**
@@ -459,38 +396,5 @@ public class ActionManager extends ConfigurationView
             }
          }
       });
-   }
-
-   /**
-    * Enable or disable filter
-    * 
-    * @param enable New filter state
-    */
-   private void enableFilter(boolean enable)
-   {
-      filterText.setVisible(enable);
-      FormData fd = (FormData)viewer.getTable().getLayoutData();
-      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
-      content.layout();
-      if (enable)
-      {
-         filterText.setFocus();
-      }
-      else
-      {
-         filterText.setText(""); //$NON-NLS-1$
-         onFilterModify();
-      }
-      PreferenceStore.getInstance().set("ActionManager.showFilter", enable);
-   }
-
-   /**
-    * Handler for filter modification
-    */
-   private void onFilterModify()
-   {
-      final String text = filterText.getText();
-      filter.setFilterString(text);
-      viewer.refresh(false);
    }
 }

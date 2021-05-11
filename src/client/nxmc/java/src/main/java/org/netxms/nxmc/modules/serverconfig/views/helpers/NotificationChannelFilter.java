@@ -20,13 +20,13 @@ package org.netxms.nxmc.modules.serverconfig.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.server.ServerVariable;
+import org.netxms.client.NotificationChannel;
 import org.netxms.nxmc.base.views.ViewerFilterInternal;
 
 /**
  * Server configuration variable filter
  */
-public class ServerVariablesFilter extends ViewerFilter implements ViewerFilterInternal
+public class NotificationChannelFilter extends ViewerFilter implements ViewerFilterInternal
 {
 	private String filterString = null;
 
@@ -39,8 +39,10 @@ public class ServerVariablesFilter extends ViewerFilter implements ViewerFilterI
 		if ((filterString == null) || (filterString.isEmpty()))
 			return true;
 		
-		final ServerVariable var = (ServerVariable)element;
-		return var.getName().toLowerCase().contains(filterString.toLowerCase());
+		final NotificationChannel channel = (NotificationChannel)element;
+		return channel.getName().toLowerCase().contains(filterString.toLowerCase()) || 
+		      channel.getDescription().toLowerCase().contains(filterString.toLowerCase()) ||
+		      channel.getDriverName().toLowerCase().contains(filterString.toLowerCase());
 	}
 
 	/**

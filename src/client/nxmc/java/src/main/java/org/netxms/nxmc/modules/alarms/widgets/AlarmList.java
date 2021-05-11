@@ -41,14 +41,10 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -64,8 +60,8 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewerFilterInternal;
 import org.netxms.nxmc.base.widgets.CompositeWithMessageBar;
-import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.MessageBar;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -116,7 +112,6 @@ public class AlarmList extends CompositeWithMessageBar
 	private SortableTreeViewer alarmViewer;
    private AlarmListLabelProvider labelProvider;
 	private AlarmListFilter alarmFilter;
-   private FilterText filterText;
 	private Point toolTipLocation;
 	private Alarm toolTipObject;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
@@ -137,7 +132,6 @@ public class AlarmList extends CompositeWithMessageBar
    private Action actionShowIssue;
    private Action actionUnlinkIssue;
    private Action actionExportToCsv;
-   private Action actionShowFilter;
    private MenuManager timeAcknowledgeMenu;
    private List<Action> timeAcknowledge;
    private Action timeAcknowledgeOther;
@@ -161,25 +155,7 @@ public class AlarmList extends CompositeWithMessageBar
       this.view = view;
 		this.visibilityValidator = visibilityValidator;
 
-      getContent().setLayout(new FormLayout());
-
-      // Create filter area
-      filterText = new FilterText(getContent(), SWT.NONE, null, true);
-      filterText.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            onFilterModify();
-         }
-      });
-      filterText.setCloseAction(new Action() {
-         @Override
-         public void run()
-         {
-            enableFilter(false);
-            actionShowFilter.setChecked(false);
-         }
-      });
+      getContent().setLayout(new FillLayout());
 		
 		// Setup table columns
 		final String[] names = { 
@@ -391,26 +367,6 @@ public class AlarmList extends CompositeWithMessageBar
             ps.set("AlarmList.ShowFilter", initShowfilter);
          }
       });
-
-      // Setup layout
-      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(filterText);
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-      alarmViewer.getControl().setLayoutData(fd);
-
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      filterText.setLayoutData(fd);
-
-      // Set initial focus to filter input line
-      if (initShowfilter)
-         filterText.setFocus();
-      else
-         enableFilter(false); // Will hide filter area correctly*/
    }
 	
    /**
@@ -580,17 +536,6 @@ public class AlarmList extends CompositeWithMessageBar
          }
       };
       actionShowColor.setChecked(labelProvider.isShowColor());
-      
-      actionShowFilter = new Action(i18n.tr("Show filter")) {
-         @Override
-         public void run()
-         {
-            enableFilter(actionShowFilter.isChecked());
-         }
-      };
-      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
-      actionShowFilter.setChecked(initShowfilter);
-      actionShowFilter.setActionDefinitionId("AlarmList.ShowFilter");
 	}
 
 	/**
@@ -1229,64 +1174,6 @@ public class AlarmList extends CompositeWithMessageBar
       alarmViewer.refresh();
       PreferenceStore.getInstance().set("AlarmList.ShowStatusColor", show);
    }
-
-   /**
-    * Handler for filter modification
-    */
-   private void onFilterModify()
-   {
-      final String text = filterText.getText();
-      alarmFilter.setFilterString(text);
-      alarmViewer.refresh(false);
-   }
-   
-   /**
-    * Enable or disable filter
-    * 
-    * @param enable New filter state
-    */
-   public void enableFilter(boolean enable)
-   {
-      initShowfilter = enable;
-      filterText.setVisible(initShowfilter);
-      FormData fd = (FormData)alarmViewer.getControl().getLayoutData();
-      fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
-      getContent().layout();
-      if (enable)
-         filterText.setFocus();
-      else
-         setFilter(""); //$NON-NLS-1$
-   }
-   
-   /**
-    * Set filter text
-    * 
-    * @param text New filter text
-    */
-   public void setFilter(final String text)
-   {
-      filterText.setText(text);
-      onFilterModify();
-   }
-   
-   /**
-    * @return action to show filter
-    */
-   public Action getActionShowFilter()
-   {
-      return actionShowFilter;
-   }
-   
-   /**
-    * Set action to be executed when user press "Close" button in object filter.
-    * Default implementation will hide filter area without notifying parent.
-    * 
-    * @param action
-    */
-   public void setFilterCloseAction(Action action)
-   {
-      filterText.setCloseAction(action);
-   }
    
    /**
     * @return true if filter is enabled
@@ -1299,5 +1186,10 @@ public class AlarmList extends CompositeWithMessageBar
    public void setIsLocalSoundEnabled(boolean isLocalSoundEnabled)
    {
       this.isLocalNotificationsEnabled = isLocalSoundEnabled;
+   }
+
+   public ViewerFilterInternal getFilter()
+   {
+      return alarmFilter;
    }
 }

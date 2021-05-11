@@ -45,7 +45,7 @@ public class ObjectBrowser extends NavigationView
     */
    public ObjectBrowser(String name, ImageDescriptor image, SubtreeType subtreeType)
    {
-      super(name, image, "ObjectBrowser." + subtreeType.toString());
+      super(name, image, "ObjectBrowser." + subtreeType.toString(), false);
       this.subtreeType = subtreeType;
    }
 
@@ -64,7 +64,7 @@ public class ObjectBrowser extends NavigationView
    @Override
    protected void createContent(Composite parent)
    {
-      objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, calculateClassFilter(), true, true);
+      objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, calculateClassFilter(), true, false);
 
       Menu menu = new ObjectContextMenuManager(this, objectTree.getSelectionProvider()).createContextMenu(objectTree.getTreeControl());
       objectTree.getTreeControl().setMenu(menu);

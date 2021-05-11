@@ -37,22 +37,15 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ServerVariableDataType;
 import org.netxms.client.server.ServerVariable;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
-import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.serverconfig.dialogs.VariableEditDialog;
@@ -71,7 +64,7 @@ import org.xnap.commons.i18n.I18n;
 public class ServerVariables extends ConfigurationView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ServerVariables.class);
-   private static final String TABLE_CONFIG_PREFIX = "ServerVariables";
+   private static final String ID = "ServerVariables";
 
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_VALUE = 1;
@@ -82,16 +75,12 @@ public class ServerVariables extends ConfigurationView
    private SortableTableViewer viewer;
    private NXCSession session;
    private Map<String, ServerVariable> varList;
-   private Composite content;
-   private FilterText filterText;
-   private ServerVariablesFilter filter;
 
    private Action actionAdd;
    private Action actionEdit;
    private Action actionDelete;
    private Action actionExportToCsv;
    private Action actionExportAllToCsv;
-   private Action actionShowFilter;
    private Action actionDefaultValue;
 
    /**
@@ -99,36 +88,24 @@ public class ServerVariables extends ConfigurationView
     */
    public ServerVariables()
    {
-      super(i18n.tr("Server configuration"), ResourceManager.getImageDescriptor("icons/config-views/server_config.png"));
+      super(i18n.tr("Server configuration"), ResourceManager.getImageDescriptor("icons/config-views/server_config.png"), ID, true);
       session = Registry.getSession();
    }
 
    @Override
    protected void createContent(Composite parent)
    {
-      content = new Composite(parent, SWT.NONE);
-      content.setLayout(new FormLayout());
-
-      // Create filter area
-      filterText = new FilterText(content, SWT.NONE);
-      filterText.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            onFilterModify();
-         }
-      });
-
       final String[] names = { i18n.tr("Name"), i18n.tr("Value"), i18n.tr("Default value"), i18n.tr("Restart"),
             i18n.tr("Description") };
       final int[] widths = { 200, 150, 150, 80, 500 };
-      viewer = new SortableTableViewer(content, names, widths, 0, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER,
+      viewer = new SortableTableViewer(parent, names, widths, 0, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER,
             SortableTableViewer.DEFAULT_STYLE);
-      WidgetHelper.restoreTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
+      WidgetHelper.restoreTableViewerSettings(viewer, ID);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ServerVariablesLabelProvider());
       viewer.setComparator(new ServerVariableComparator());
-      filter = new ServerVariablesFilter();
+      ServerVariablesFilter filter = new ServerVariablesFilter();
+      setViewerAndFilter(viewer, filter);
       viewer.addFilter(filter);
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
@@ -151,34 +128,12 @@ public class ServerVariables extends ConfigurationView
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
+            WidgetHelper.saveTableViewerSettings(viewer, ID);
          }
       });
 
-      // Setup layout
-      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(filterText);
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-      viewer.getTable().setLayoutData(fd);
-
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      filterText.setLayoutData(fd);
-
       createActions();
       createPopupMenu();
-
-      filterText.setCloseAction(actionShowFilter);
-
-      // Set initial focus to filter input line
-      if (actionShowFilter.isChecked())
-         filterText.setFocus();
-      else
-         enableFilter(false); // Will hide filter area correctly
    }  
 
    /**
@@ -221,16 +176,6 @@ public class ServerVariables extends ConfigurationView
          }
       };
       actionDelete.setEnabled(false);
-      
-      actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
-         @Override
-         public void run()
-         {
-            enableFilter(actionShowFilter.isChecked());
-         }
-      };
-      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
-      actionShowFilter.setChecked(PreferenceStore.getInstance().getAsBoolean(TABLE_CONFIG_PREFIX + "showFilter", true));
       
       actionDefaultValue = new Action("Set default value") {
          @Override
@@ -467,38 +412,5 @@ public class ServerVariables extends ConfigurationView
    @Override
    public void save()
    {
-   }
-
-   /**
-    * Enable or disable filter
-    * 
-    * @param enable New filter state
-    */
-   private void enableFilter(boolean enable)
-   {
-      filterText.setVisible(enable);
-      FormData fd = (FormData)viewer.getTable().getLayoutData();
-      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
-      content.layout();
-      if (enable)
-      {
-         filterText.setFocus();
-      }
-      else
-      {
-         filterText.setText(""); //$NON-NLS-1$
-         onFilterModify();
-      }
-      PreferenceStore.getInstance().set(TABLE_CONFIG_PREFIX + "showFilter", enable);
-   }
-
-   /**
-    * Handler for filter modification
-    */
-   private void onFilterModify()
-   {
-      final String text = filterText.getText();
-      filter.setFilterString(text);
-      viewer.refresh(false);
    }
 }

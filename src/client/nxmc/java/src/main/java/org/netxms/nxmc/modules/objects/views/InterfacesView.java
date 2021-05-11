@@ -24,8 +24,6 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
@@ -86,7 +84,7 @@ public class InterfacesView extends NodeSubObjectTableView
     */
    public InterfacesView()
    {
-      super(i18n.tr("Interfaces"), ResourceManager.getImageDescriptor("icons/object-views/interfaces.png"), "Interfaces");
+      super(i18n.tr("Interfaces"), ResourceManager.getImageDescriptor("icons/object-views/interfaces.png"), "Interfaces", true);
    }
 
    /**
@@ -138,6 +136,7 @@ public class InterfacesView extends NodeSubObjectTableView
       viewer.setComparator(new InterfaceListComparator());
       filter = new InterfaceListFilter();
       ((InterfaceListFilter)filter).setHideSubInterfaces(hideSubInterfaces);
+      setViewerAndFilter(viewer, filter);
       viewer.addFilter(filter);
       WidgetHelper.restoreTableViewerSettings(viewer, "InterfacesView.TableViewer");
       viewer.getTable().addDisposeListener(new DisposeListener() {
@@ -148,14 +147,6 @@ public class InterfacesView extends NodeSubObjectTableView
             PreferenceStore.getInstance().set("InterfacesView.HideSubInterfaces", hideSubInterfaces);
          }
       });
-
-      // Setup layout
-      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(filterText, 0, SWT.BOTTOM);
-      fd.bottom = new FormAttachment(100, 0);
-      fd.right = new FormAttachment(100, 0);
-      viewer.getControl().setLayoutData(fd);
    }
 
    /**

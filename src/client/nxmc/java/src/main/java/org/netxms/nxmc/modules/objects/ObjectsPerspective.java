@@ -117,7 +117,7 @@ public abstract class ObjectsPerspective extends Perspective
    @Override
    protected void createNavigationArea(Composite parent)
    {
-      objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, calculateClassFilter(), true, true);
+      objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, calculateClassFilter(), true, false);
       Menu menu = new ObjectContextMenuManager(null, objectTree.getSelectionProvider()).createContextMenu(objectTree.getTreeControl());
       objectTree.getTreeControl().setMenu(menu);
       setNavigationSelectionProvider(objectTree.getSelectionProvider());

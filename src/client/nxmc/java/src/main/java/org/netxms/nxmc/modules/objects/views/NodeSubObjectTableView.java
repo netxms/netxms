@@ -24,16 +24,9 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -50,8 +43,6 @@ public abstract class NodeSubObjectTableView extends NodeSubObjectView
    protected SortableTableViewer viewer;
    protected Action actionCopyToClipboard;
    protected Action actionExportToCsv;
-   protected boolean showFilter = true;
-   protected FilterText filterText;
    protected NodeSubObjectFilter filter;
 
    /**
@@ -59,9 +50,9 @@ public abstract class NodeSubObjectTableView extends NodeSubObjectView
     * @param image
     * @param id
     */
-   public NodeSubObjectTableView(String name, ImageDescriptor image, String id)
+   public NodeSubObjectTableView(String name, ImageDescriptor image, String id, boolean hasFilters)
    {
-      super(name, image, id);
+      super(name, image, id, hasFilters);
    }
 
    /**
@@ -72,51 +63,9 @@ public abstract class NodeSubObjectTableView extends NodeSubObjectView
    {
       super.createContent(parent);
 
-      final PreferenceStore settings = PreferenceStore.getInstance();
-      showFilter = settings.getAsBoolean(getFilterSettingName(), showFilter);
-
-      // Create filter
-      filterText = new FilterText(mainArea, SWT.NONE);
-      filterText.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            onFilterModify();
-         }
-      });
-      filterText.addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            settings.set(getFilterSettingName(), showFilter);
-         }
-      });
-
-      Action action = new Action() {
-         @Override
-         public void run()
-         {
-            enableFilter(false);
-         }
-      };
-      filterText.setCloseAction(action);
-
-      // Setup layout
-      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      filterText.setLayoutData(fd);
-
       createViewer();
       createActions();
       createPopupMenu();
-
-      // Set initial focus to filter input line
-      if (showFilter)
-         filterText.setFocus();
-      else
-         enableFilter(false); // Will hide filter area correctly
    }
 
    /**
@@ -142,42 +91,6 @@ public abstract class NodeSubObjectTableView extends NodeSubObjectView
     * @return filter setting name
     */
    public abstract String getFilterSettingName();
-
-   /**
-    * Enable or disable filter
-    * 
-    * @param enable New filter state
-    */
-   public void enableFilter(boolean enable)
-   {
-      showFilter = enable;
-      filterText.setVisible(showFilter);
-      FormData fd = (FormData)viewer.getTable().getLayoutData();
-      fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
-      mainArea.layout();
-      if (enable)
-      {
-         filterText.setFocus();
-      }
-      else
-      {
-         filterText.setText(""); //$NON-NLS-1$
-         onFilterModify();
-      }
-   }
-
-   /**
-    * Handler for filter modification
-    */
-   public void onFilterModify()
-   {
-      if (filter == null)
-         return;
-
-      final String text = filterText.getText();
-      filter.setFilterString(text);
-      viewer.refresh(false);
-   }
 
    /**
     * Create actions

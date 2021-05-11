@@ -30,14 +30,11 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
@@ -53,8 +50,8 @@ import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewerFilterInternal;
 import org.netxms.nxmc.base.widgets.CompositeWithMessageBar;
-import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -87,8 +84,6 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	private DataCollectionTarget dcTarget;
 	private NXCSession session;
 	private SessionListener clientListener = null;
-	private boolean filterEnabled = true;
-	private FilterText filterText;
 	private SortableTableViewer dataViewer;
 	private LastValuesLabelProvider labelProvider;
 	private LastValuesComparator comparator;
@@ -143,24 +138,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
          }
       });
 		
-      getContent().setLayout(new FormLayout());
-		
-		// Create filter area
-		filterText = new FilterText(getContent(), SWT.NONE);
-		filterText.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e)
-			{
-				onFilterModify();
-			}
-		});
-		filterText.setCloseAction(new Action() {
-			@Override
-			public void run()
-			{
-				enableFilter(false);
-			}
-		});
+      getContent().setLayout(new FillLayout());
 		
 		// Setup table columns
 		final String[] names = { i18n.tr("ID"), i18n.tr("Description"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Threshold") };
@@ -201,20 +179,6 @@ public class LastValuesWidget extends CompositeWithMessageBar
             ds.set(configPrefix + ".showHidden", isShowHidden());
 			}
 		});
-
-		// Setup layout
-		FormData fd = new FormData();
-		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(filterText);
-		fd.right = new FormAttachment(100, 0);
-		fd.bottom = new FormAttachment(100, 0);
-		dataViewer.getTable().setLayoutData(fd);
-		
-		fd = new FormData();
-		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(0, 0);
-		fd.right = new FormAttachment(100, 0);
-		filterText.setLayoutData(fd);
 		
       autoRefreshInterval = ds.getAsInteger(configPrefix + ".autoRefreshInterval", autoRefreshInterval);
       setAutoRefreshEnabled(ds.getAsBoolean(configPrefix + ".autoRefresh", true));
@@ -233,12 +197,6 @@ public class LastValuesWidget extends CompositeWithMessageBar
 
 		if ((validator == null) || validator.isVisible())
 		   getDataFromServer();
-		
-		// Set initial focus to filter input line
-		if (filterEnabled)
-			filterText.setFocus();
-		else
-			enableFilter(false);	// Will hide filter area correctly
 		
 		clientListener = new SessionListener() {
          @Override
@@ -483,64 +441,6 @@ public class LastValuesWidget extends CompositeWithMessageBar
 			}
 		}
 	}
-
-	/**
-	 * Enable or disable filter
-	 * 
-	 * @param enable New filter state
-	 */
-	public void enableFilter(boolean enable)
-	{
-		filterEnabled = enable;
-		filterText.setVisible(filterEnabled);
-		FormData fd = (FormData)dataViewer.getTable().getLayoutData();
-		fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
-		getContent().layout();
-		if (enable)
-			filterText.setFocus();
-		else
-			setFilter(""); //$NON-NLS-1$
-	}
-
-	/**
-	 * @return the filterEnabled
-	 */
-	public boolean isFilterEnabled()
-	{
-		return filterEnabled;
-	}
-
-	/**
-	 * Set filter text
-	 * 
-	 * @param text New filter text
-	 */
-	public void setFilter(final String text)
-	{
-		filterText.setText(text);
-		onFilterModify();
-	}
-
-	/**
-	 * Handler for filter modification
-	 */
-	private void onFilterModify()
-	{
-		final String text = filterText.getText();
-		filter.setFilterString(text);
-		dataViewer.refresh(false);
-	}
-	
-	/**
-	 * Set action to be executed when user press "Close" button in object filter.
-	 * Default implementation will hide filter area without notifying parent.
-	 * 
-	 * @param action
-	 */
-	public void setFilterCloseAction(Action action)
-	{
-		filterText.setCloseAction(action);
-	}
 	
 	/**
 	 * @return
@@ -735,4 +635,14 @@ public class LastValuesWidget extends CompositeWithMessageBar
       }
       WidgetHelper.copyToClipboard(dciName.toString());
 	}
+
+   public StructuredViewer getViewer()
+   {
+      return dataViewer;
+   }
+
+   public ViewerFilterInternal getFilter()
+   {
+      return filter;
+   }
 }

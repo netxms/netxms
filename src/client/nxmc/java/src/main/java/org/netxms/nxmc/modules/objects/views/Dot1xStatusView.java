@@ -44,6 +44,7 @@ import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.Dot1xPortComparator;
+import org.netxms.nxmc.modules.objects.views.helpers.Dot1xPortFilter;
 import org.netxms.nxmc.modules.objects.views.helpers.Dot1xPortListLabelProvider;
 import org.netxms.nxmc.modules.objects.views.helpers.Dot1xPortSummary;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -73,7 +74,7 @@ public class Dot1xStatusView extends ObjectView
     */
    public Dot1xStatusView()
    {
-      super(i18n.tr("802.1x"), ResourceManager.getImageDescriptor("icons/object-views/pae.png"), "Dot1xStatusView");
+      super(i18n.tr("802.1x"), ResourceManager.getImageDescriptor("icons/object-views/pae.png"), "Dot1xStatusView", true);
    }
 
    /**
@@ -88,6 +89,9 @@ public class Dot1xStatusView extends ObjectView
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new Dot1xPortListLabelProvider());
 		viewer.setComparator(new Dot1xPortComparator());
+		Dot1xPortFilter filter = new Dot1xPortFilter();
+		setViewerAndFilter(viewer, filter);
+		viewer.setFilters(filter);
 
       WidgetHelper.restoreTableViewerSettings(viewer, "Dot1xStatusView");
 		viewer.getTable().addDisposeListener(new DisposeListener() {

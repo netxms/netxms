@@ -59,6 +59,7 @@ public class FilterText extends Composite
 	private Label closeButton;
 	private Label clearButton;
 	private Action closeAction = null;
+   private Runnable closeCallback = null;
    private boolean autoApply = true;
 	private int delay = 300;
 	private int minLength = 1;
@@ -282,6 +283,8 @@ public class FilterText extends Composite
 	{
 		if (closeAction != null)
 			closeAction.run();
+		if (closeCallback != null)
+		   closeCallback.run();
 	}
 	
 	/**
@@ -394,7 +397,15 @@ public class FilterText extends Composite
 		this.closeAction = closeAction;
 	}
 
-	/* (non-Javadoc)
+	/**
+    * @param closeCallback the closeCallback to set
+    */
+   public void setCloseCallback(Runnable closeCallback)
+   {
+      this.closeCallback = closeCallback;
+   }
+
+   /* (non-Javadoc)
 	 * @see org.eclipse.swt.widgets.Composite#setFocus()
 	 */
 	@Override

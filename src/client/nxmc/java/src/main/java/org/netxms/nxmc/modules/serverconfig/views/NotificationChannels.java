@@ -48,6 +48,7 @@ import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.serverconfig.dialogs.NotificationChannelDialog;
+import org.netxms.nxmc.modules.serverconfig.views.helpers.NotificationChannelFilter;
 import org.netxms.nxmc.modules.serverconfig.views.helpers.NotificationChannelLabelProvider;
 import org.netxms.nxmc.modules.serverconfig.views.helpers.NotificationChannelListComparator;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -62,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
 public class NotificationChannels extends ConfigurationView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(NotificationChannels.class);
-   private static final String TABLE_CONFIG_PREFIX = "NotificationChannels";
+   private static final String ID = "NotificationChannels";
 
    // Columns
    public static final int COLUMN_NAME = 0;
@@ -86,7 +87,7 @@ public class NotificationChannels extends ConfigurationView
     */
    public NotificationChannels()
    {
-      super(i18n.tr("Notification channels"), ResourceManager.getImageDescriptor("icons/config-views/nchannels.png"));
+      super(i18n.tr("Notification channels"), ResourceManager.getImageDescriptor("icons/config-views/nchannels.png"), ID, true);
       session = Registry.getSession();
    }
 
@@ -96,10 +97,13 @@ public class NotificationChannels extends ConfigurationView
       final int[] widths = { 80, 200, 80, 80, 400 };
       final String[] names = { i18n.tr("Name"), i18n.tr("Description"), i18n.tr("Driver"), i18n.tr("Status"), i18n.tr("Error message") };
       viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
-      WidgetHelper.restoreTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
+      WidgetHelper.restoreTableViewerSettings(viewer, ID);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new NotificationChannelLabelProvider());
       viewer.setComparator(new NotificationChannelListComparator());
+      NotificationChannelFilter filter = new NotificationChannelFilter();
+      viewer.setFilters(filter);
+      setViewerAndFilter(viewer, filter);
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -121,7 +125,7 @@ public class NotificationChannels extends ConfigurationView
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
+            WidgetHelper.saveTableViewerSettings(viewer, ID);
          }
       });
       

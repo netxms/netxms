@@ -36,9 +36,9 @@ public abstract class AdHocObjectView extends ObjectView
     * @param baseId base view ID (actual ID will be derived from base and object ID)
     * @param objectId object ID this view is intended for
     */
-   public AdHocObjectView(String name, ImageDescriptor image, String baseId, long objectId)
+   public AdHocObjectView(String name, ImageDescriptor image, String baseId, long objectId, boolean hasFilter)
    {
-      super(name, image, baseId + "#" + Long.toString(objectId));
+      super(name, image, baseId + "#" + Long.toString(objectId), hasFilter);
       this.objectId = objectId;
    }
 

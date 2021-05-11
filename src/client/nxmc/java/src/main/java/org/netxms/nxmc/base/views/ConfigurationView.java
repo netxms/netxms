@@ -40,24 +40,13 @@ public abstract class ConfigurationView extends View
     * @param name view name
     * @param image view image
     * @param id view ID
+    * @param hasFileter true if view should contain filter
     */
-   public ConfigurationView(String name, ImageDescriptor image, String id)
+   public ConfigurationView(String name, ImageDescriptor image, String id, boolean hasFilter)
    {
-      super(name, image, id);
+      super(name, image, id, hasFilter);
    }
-
-   /**
-    * Create new view with random ID. This will not create actual widgets that composes view - creation can be delayed by framework
-    * until view actually has to be shown for the first time.
-    *
-    * @param name view name
-    * @param image view image
-    */
-   public ConfigurationView(String name, ImageDescriptor image)
-   {
-      super(name, image);
-   }
-
+   
    /**
     * Check if view content is modified and requires saving.
     *

@@ -26,7 +26,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -39,20 +38,13 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
-import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.nxsl.dialogs.CreateScriptDialog;
@@ -75,26 +67,22 @@ public class ScriptLibraryView extends ConfigurationView
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_NAME = 1;
 
-   private static final String TABLE_CONFIG_PREFIX = "ScriptLibrary";
+   private static final String ID = "ScriptLibrary";
 
    private NXCSession session;
    private SortableTableViewer viewer;
-   private ScriptFilter filter;
-   private FilterText filterText;
-   private Composite content;
    private Action actionNew;
    private Action actionEdit;
    private Action actionRename;
    private Action actionDelete;
    private Action actionCopyName;
-   private Action actionShowFilter;
 
    /**
     * Create script library view
     */
    public ScriptLibraryView()
    {
-      super(i18n.tr("Script Library"), ResourceManager.getImageDescriptor("icons/config-views/script_library.png"));
+      super(i18n.tr("Script Library"), ResourceManager.getImageDescriptor("icons/config-views/script_library.png"), ID, true);
       session = Registry.getSession();
    }
 
@@ -104,27 +92,15 @@ public class ScriptLibraryView extends ConfigurationView
    @Override
    protected void createContent(Composite parent)
    {
-      content = new Composite(parent, SWT.NONE);
-      content.setLayout(new FormLayout());
-
-      // Create filter area
-      filterText = new FilterText(content, SWT.NONE);
-      filterText.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            onFilterModify();
-         }
-      });
-
       final String[] names = { i18n.tr("ID"), i18n.tr("Name") };
       final int[] widths = { 90, 500 };
-      viewer = new SortableTableViewer(content, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
-      WidgetHelper.restoreTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
+      viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+      WidgetHelper.restoreTableViewerSettings(viewer, ID);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ScriptLabelProvider());
       viewer.setComparator(new ScriptComparator());
-      filter = new ScriptFilter();
+      ScriptFilter filter = new ScriptFilter();
+      setViewerAndFilter(viewer, filter);
       viewer.addFilter(filter);
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
@@ -151,41 +127,12 @@ public class ScriptLibraryView extends ConfigurationView
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
-         }
-      });
-
-      // Setup layout
-      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(filterText);
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-      viewer.getTable().setLayoutData(fd);
-
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      filterText.setLayoutData(fd);
-
-      filterText.setCloseAction(new Action() {
-         @Override
-         public void run()
-         {
-            enableFilter(false);
-            actionShowFilter.setChecked(false);
+            WidgetHelper.saveTableViewerSettings(viewer, ID);
          }
       });
 
       createActions();
       createPopupMenu();
-
-      // Set initial focus to filter input line
-      if (actionShowFilter.isChecked())
-         filterText.setFocus();
-      else
-         enableFilter(false); // Will hide filter area correctly
    }
 
    /**
@@ -261,16 +208,6 @@ public class ScriptLibraryView extends ConfigurationView
             copyNameToClipboard();
          }
       };
-
-      actionShowFilter = new Action(i18n.tr("Show &filter"), Action.AS_CHECK_BOX) {
-         @Override
-         public void run()
-         {
-            enableFilter(actionShowFilter.isChecked());
-         }
-      };
-      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
-      actionShowFilter.setChecked(PreferenceStore.getInstance().getAsBoolean("ScriptLibrary.showFilter", true));
    }
 
    /**
@@ -315,8 +252,6 @@ public class ScriptLibraryView extends ConfigurationView
    {
       super.fillLocalToolbar(manager);
       manager.add(actionNew);
-      manager.add(new Separator());
-      manager.add(actionShowFilter);
    }
 
    /**
@@ -486,38 +421,5 @@ public class ScriptLibraryView extends ConfigurationView
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
       WidgetHelper.copyToClipboard(((Script)selection.getFirstElement()).getName());
-   }
-
-   /**
-    * Enable or disable filter
-    * 
-    * @param enable New filter state
-    */
-   private void enableFilter(boolean enable)
-   {
-      filterText.setVisible(enable);
-      FormData fd = (FormData)viewer.getTable().getLayoutData();
-      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
-      content.layout();
-      if (enable)
-      {
-         filterText.setFocus();
-      }
-      else
-      {
-         filterText.setText(""); //$NON-NLS-1$
-         onFilterModify();
-      }
-      PreferenceStore.getInstance().set("ScriptLibrary.showFilter", enable);
-   }
-
-   /**
-    * Handler for filter modification
-    */
-   private void onFilterModify()
-   {
-      final String text = filterText.getText();
-      filter.setFilterString(text);
-      viewer.refresh(false);
    }
 }

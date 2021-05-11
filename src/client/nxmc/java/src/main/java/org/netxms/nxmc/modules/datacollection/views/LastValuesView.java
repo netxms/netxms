@@ -19,12 +19,9 @@
 package org.netxms.nxmc.modules.datacollection.views;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.LastValuesWidget;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
@@ -47,7 +44,7 @@ public class LastValuesView extends ObjectView
     */
    public LastValuesView()
    {
-      super(i18n.tr("Last Values"), ResourceManager.getImageDescriptor("icons/object-views/last_values.png"), "LastValues");
+      super(i18n.tr("Last Values"), ResourceManager.getImageDescriptor("icons/object-views/last_values.png"), "LastValues", true); 
    }
 
    /**
@@ -56,8 +53,6 @@ public class LastValuesView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      final PreferenceStore settings = PreferenceStore.getInstance();
-
       dataView = new LastValuesWidget(this, parent, SWT.NONE, getObject(), "LastValuesView", new VisibilityValidator() { //$NON-NLS-1$
          @Override
          public boolean isVisible()
@@ -65,14 +60,7 @@ public class LastValuesView extends ObjectView
             return LastValuesView.this.isActive();
          }
       });
-
-      dataView.addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            settings.set("LastValuesView.showFilter", dataView.isFilterEnabled());
-         }
-      });
+      setViewerAndFilter(dataView.getViewer(), dataView.getFilter());
    }
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,31 +18,16 @@
  */
 package org.netxms.nxmc.base.views;
 
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.viewers.ISelectionProvider;
-
 /**
- * Base class for all navigation views. Those views intended for placement in navigation area within perspective.
+ * Viewer filter interface
  */
-public abstract class NavigationView extends View
+public interface ViewerFilterInternal
 {
+   
    /**
-    * Create navigation view with specific ID.
-    *
-    * @param name view name
-    * @param image view image
-    * @param id view ID
-    * @param hasFileter true if view should contain filter
+    * Update filtering string
+    * 
+    * @param string new filtering string
     */
-   public NavigationView(String name, ImageDescriptor image, String id, boolean hasFilter)
-   {
-      super(name, image, id, hasFilter);
-   }
-
-   /**
-    * Get selection provider for navigation selection.
-    *
-    * @return selection provider
-    */
-   public abstract ISelectionProvider getSelectionProvider();
+   public void setFilterString(String string);
 }

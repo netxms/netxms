@@ -81,7 +81,7 @@ public class EntityMIBView extends ObjectView
     */
    public EntityMIBView()
    {
-      super(i18n.tr("Components"), ResourceManager.getImageDescriptor("icons/object-views/components.png"), "EntityMIBView");
+      super(i18n.tr("Components"), ResourceManager.getImageDescriptor("icons/object-views/components.png"), "EntityMIBView", false);
    }
 
    /**

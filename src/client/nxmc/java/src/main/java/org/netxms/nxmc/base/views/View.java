@@ -21,15 +21,22 @@ package org.netxms.nxmc.base.views;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.widgets.FilterText;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,21 +54,14 @@ public abstract class View
    private Window window;
    private Perspective perspective;
    private Composite viewArea;
+   private Composite userArea;
    private Set<ViewStateListener> stateListeners = new HashSet<ViewStateListener>();
-
-   /**
-    * Create new view with random ID. This will not create actual widgets that composes view - creation can be delayed by framework
-    * until view actually has to be shown for the first time.
-    *
-    * @param name view name
-    * @param image view image
-    */
-   public View(String name, ImageDescriptor image)
-   {
-      id = UUID.randomUUID().toString();
-      this.name = name;
-      this.imageDescriptor = image;
-   }
+   
+   private boolean hasFilter;
+   private boolean filterEnabled;
+   protected FilterText filterText;
+   private ViewerFilterInternal filter;
+   private StructuredViewer viewer;
 
    /**
     * Create new view with specific ID. This will not create actual widgets that composes view - creation can be delayed by
@@ -70,12 +70,15 @@ public abstract class View
     * @param name view name
     * @param image view image
     * @param id view ID
+    * @param hasFileter true if view should contain filter
     */
-   public View(String name, ImageDescriptor image, String id)
+   public View(String name, ImageDescriptor image, String id, boolean hasFilter)
    {
       this.id = id;
       this.name = name;
       this.imageDescriptor = image;
+      this.hasFilter = hasFilter;
+      filterEnabled = PreferenceStore.getInstance().getAsBoolean(id + ".showFilter", true);
    }
 
    /**
@@ -99,6 +102,7 @@ public abstract class View
          view.id = id;
          view.name = name;
          view.imageDescriptor = imageDescriptor;
+         view.hasFilter = hasFilter;
          return view;
       }
       catch(Exception e)
@@ -114,17 +118,59 @@ public abstract class View
     * @param window owning window
     * @param perspective owning perspective
     * @param parent parent composite
+    * @param onFilterCloseCallback 
     */
-   public void create(Window window, Perspective perspective, Composite parent)
+   public void create(Window window, Perspective perspective, Composite parent, Runnable onFilterCloseCallback)
    {
       this.window = window;
       this.perspective = perspective;
       if (imageDescriptor != null)
          image = imageDescriptor.createImage();
+
       viewArea = new Composite(parent, SWT.NONE);
-      viewArea.setLayout(new FillLayout());
-      createContent(viewArea);
+      userArea = viewArea;
+      if (hasFilter)
+      {  
+         viewArea.setLayout(new FormLayout());
+         
+         filterText = new FilterText(viewArea, SWT.NONE);
+         filterText.addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               onFilterModify();
+            }
+         });               
+         filterText.setCloseCallback(onFilterCloseCallback);
+         userArea = new Composite(viewArea, SWT.NONE);    
+         
+         // Setup layout
+         FormData fd = new FormData();
+         fd.left = new FormAttachment(0, 0);
+         fd.top = new FormAttachment(filterText);
+         fd.right = new FormAttachment(100, 0);
+         fd.bottom = new FormAttachment(100, 0);
+         userArea.setLayoutData(fd);
+         
+         fd = new FormData();
+         fd.left = new FormAttachment(0, 0);
+         fd.top = new FormAttachment(0, 0);
+         fd.right = new FormAttachment(100, 0);
+         filterText.setLayoutData(fd);
+          
+      }
+      userArea.setLayout(new FillLayout());    
+
+      createContent(userArea);
       postContentCreate();
+      
+      if (hasFilter)
+      { 
+         if (filterEnabled)
+            filterText.setFocus();
+         else
+            enableFilter(false);
+      }
    }
 
    /**
@@ -395,5 +441,78 @@ public abstract class View
    public void removeStateListener(ViewStateListener listener)
    {
       stateListeners.remove(listener);
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   protected void onFilterModify()
+   {
+      if (filter != null && viewer != null)
+         defaultOnFilterModify();
+   }
+   
+   /**
+    * Set viewer and filter to use default onFilterModify method
+    * 
+    * @param viewer viewer to refresh
+    * @param filter filter to set filtering text
+    */
+   public void setViewerAndFilter(StructuredViewer viewer, ViewerFilterInternal filter)
+   {
+      this.viewer = viewer;
+      this.filter = filter;
+   }
+   
+   /**
+    * Default on modify for view with viewer
+    */
+   private void defaultOnFilterModify()
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      viewer.refresh(false);
+   }
+
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   protected void enableFilter(boolean enable)
+   {
+      if (!hasFilter)
+         return;
+      
+      filterText.setVisible(enable);
+      FormData fd = (FormData)userArea.getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      viewArea.layout();
+      if (enable)
+      {
+         filterText.setFocus();
+      }
+      else
+      {
+         filterText.setText(""); //$NON-NLS-1$
+         onFilterModify();
+      }
+      PreferenceStore.getInstance().set(id + ".showFilter", enable);
+   }
+   
+   /**
+    * @return the hasFilter
+    */
+   public boolean hasFilter()
+   {
+      return hasFilter;
+   }
+   
+   /**
+    * @return the filterEnabled
+    */
+   public boolean isFilterEnabled()
+   {
+      return filterEnabled;
    }
 }

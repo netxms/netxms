@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.datacollection.views;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -168,7 +169,7 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
     */
    public HistoricalGraphView(AbstractObject contextObject, List<ChartDciConfig> items)
    {
-      super(i18n.tr("Graph"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"), buildId(contextObject, items));
+      super(i18n.tr("Graph"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"), buildId(contextObject, items), false);
 
       objectId = contextObject.getObjectId();
 
@@ -223,7 +224,7 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
     */
    public HistoricalGraphView()
    {
-      super(i18n.tr("Graph"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"));
+      super(i18n.tr("Graph"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"), UUID.randomUUID().toString(), false); //TODO: is random id ok?
 
       refreshController = new ViewRefreshController(this, -1, new Runnable() {
          @Override
