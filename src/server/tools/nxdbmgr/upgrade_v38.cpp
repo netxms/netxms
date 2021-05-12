@@ -40,7 +40,7 @@ static bool H_UpgradeFromV13()
    CHK_EXEC(CreateConfigParam(_T("Agent.RestartWaitTime"),
          _T("0"),
          _T("Period of time after agent restart for which agent will not be considered unreachable"),
-         nullptr,
+         _T("seconds"),
          'I',
          true,
          false,
