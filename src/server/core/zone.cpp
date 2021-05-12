@@ -350,7 +350,7 @@ void Zone::removeFromIndex(const Interface& iface)
 /**
  * Callback for processing zone configuration synchronization
  */
-static EnumerationCallbackResult ForceConfigurationSync(const UINT32 *nodeId, void *arg)
+static EnumerationCallbackResult ForceConfigurationSync(const uint32_t *nodeId, void *arg)
 {
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(*nodeId, OBJECT_NODE));
    if (node != nullptr)

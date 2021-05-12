@@ -162,6 +162,7 @@ uint64_t g_serverId = 0;
 RSA *g_pServerKey = nullptr;
 time_t g_serverStartTime = 0;
 uint32_t g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
+uint32_t g_agentRestartWaitTime = 0;   // Wait time for agent restart in seconds
 uint32_t g_thresholdRepeatInterval = 0;	// Disabled by default
 uint32_t g_requiredPolls = 1;
 int32_t g_instanceRetentionTime = 7; // Default instance retention time (in days)
@@ -505,6 +506,7 @@ static void LoadGlobalConfig()
    g_icmpPingTimeout = ConfigReadInt(_T("IcmpPingTimeout"), 1500);
    g_icmpPingSize = ConfigReadInt(_T("IcmpPingSize"), 46);
    g_agentCommandTimeout = ConfigReadInt(_T("AgentCommandTimeout"), 4000);
+   g_agentRestartWaitTime = ConfigReadInt(_T("Agent.RestartWaitTime"), 0);
    g_thresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
    g_requiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
    g_offlineDataRelevanceTime = ConfigReadInt(_T("OfflineDataRelevanceTime"), 86400);

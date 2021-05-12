@@ -808,8 +808,7 @@ void Template::initiatePolicyValidation()
    lockProperties();
    for (int i = 0; i < m_policyList->size(); i++)
    {
-      shared_ptr<GenericAgentPolicy> policy = m_policyList->getShared(i);
-      ThreadPoolExecute(g_mainThreadPool, policy, &GenericAgentPolicy::validate);
+      ThreadPoolExecute(g_mainThreadPool, m_policyList->getShared(i), &GenericAgentPolicy::validate);
    }
    unlockProperties();
 }

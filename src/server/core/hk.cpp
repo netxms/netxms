@@ -269,7 +269,7 @@ static void QueuePredictionEngineTraining(NetObj *object, void *arg)
 /**
  * Callback for checking template policy validity
  */
-static void ValidatePolicies(NetObj *object, void *data)
+static void InitiatePolicyValidation(NetObj *object, void *data)
 {
    if (object->getObjectClass() == OBJECT_TEMPLATE)
       static_cast<Template*>(object)->initiatePolicyValidation();
@@ -324,7 +324,7 @@ static void HouseKeeper()
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Wakeup time is %02d:%02d"), hour, minute);
 
    // Call policy validation for templates
-   g_idxObjectById.forEach(ValidatePolicies, nullptr);
+   g_idxObjectById.forEach(InitiatePolicyValidation, nullptr);
 
    int sleepTime = GetSleepTime(hour, minute, 0);
    while(!s_shutdown)
@@ -474,7 +474,7 @@ static void HouseKeeper()
       }
 
       // Call policy validation for templates
-      g_idxObjectById.forEach(ValidatePolicies, nullptr);
+      g_idxObjectById.forEach(InitiatePolicyValidation, nullptr);
 
 	   // Save object runtime data
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Saving object runtime data"));
