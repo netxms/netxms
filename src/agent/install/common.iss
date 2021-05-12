@@ -341,8 +341,7 @@ Procedure InitializeWizard;
 Var
   static: TNewStaticText;
 Begin
-  ServerSelectionPage := CreateCustomPage(wpSelectTasks,
-    'NetXMS Server', 'Select your management server.');
+  ServerSelectionPage := CreateCustomPage(wpSelectTasks, 'NetXMS Server', 'Select your management server.');
 
   static := TNewStaticText.Create(ServerSelectionPage);
   static.Top := ScaleY(8);
@@ -399,6 +398,14 @@ Begin
   SubagentSelectionPage.Values[9] := StrToBool(sbWinPerf);
   SubagentSelectionPage.Values[10] := StrToBool(sbWMI);
   SubagentSelectionPage.Values[11] := StrToBool(sbUPS);
+End;
+
+Function ShouldSkipPage(PageID: Integer): Boolean;
+Begin
+  If (PageID = ServerSelectionPage.ID) Or (PageID = SubagentSelectionPage.ID) Then
+    Result := RegKeyExists(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\NetXMS Agent_is1')
+  Else
+    Result := False;
 End;
 
 Procedure RegisterPreviousData(PreviousDataKey: Integer);
