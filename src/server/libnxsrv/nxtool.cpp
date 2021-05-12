@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -259,8 +259,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
          }
          else
          {
-            shared_ptr<AgentConnection> conn = AgentConnection::create(addr, agentPort, secret);
-
+            auto conn = make_shared<AgentConnection>(addr, agentPort, secret);
             conn->setConnectionTimeout(dwConnTimeout);
             conn->setCommandTimeout(dwTimeout);
             conn->setEncryptionPolicy(iEncryptionPolicy);

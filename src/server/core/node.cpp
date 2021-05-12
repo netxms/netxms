@@ -1665,12 +1665,12 @@ shared_ptr<Interface> Node::createInterfaceObject(InterfaceInfo *info, bool manu
    shared_ptr<Interface> iface;
    if (info->name[0] != 0)
    {
-      iface = MakeSharedNObject<Interface>(info->name, (info->description[0] != 0) ? info->description : info->name,
+      iface = make_shared<Interface>(info->name, (info->description[0] != 0) ? info->description : info->name,
                info->index, info->ipAddrList, info->type, m_zoneUIN);
    }
    else
    {
-      iface = MakeSharedNObject<Interface>(info->ipAddrList, m_zoneUIN, syntheticMask);
+      iface = make_shared<Interface>(info->ipAddrList, m_zoneUIN, syntheticMask);
    }
    iface->setAlias(info->alias);
    iface->setMacAddr(MacAddress(info->macAddr, MAC_ADDR_LENGTH), false);
@@ -4147,7 +4147,7 @@ bool Node::confPollAgent(UINT32 rqId)
    shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(m_id);
    if (tunnel != nullptr)
    {
-      pAgentConn = AgentConnectionEx::create(m_id, tunnel, m_agentSecret, isAgentCompressionAllowed());
+      pAgentConn = make_shared<AgentConnectionEx>(m_id, tunnel, m_agentSecret, isAgentCompressionAllowed());
    }
    else
    {
@@ -4163,7 +4163,7 @@ bool Node::confPollAgent(UINT32 rqId)
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node primary IP is invalid and there are no active tunnels"), m_name);
          return false;
       }
-      pAgentConn = AgentConnectionEx::create(m_id, m_ipAddress, m_agentPort, m_agentSecret, isAgentCompressionAllowed());
+      pAgentConn = make_shared<AgentConnectionEx>(m_id, m_ipAddress, m_agentPort, m_agentSecret, isAgentCompressionAllowed());
       setAgentProxy(pAgentConn.get());
    }
    pAgentConn->setCommandTimeout(g_agentCommandTimeout);
@@ -4908,7 +4908,7 @@ bool Node::confPollSnmp(uint32_t rqId)
                      name += info->getRadioInterfaces()->get(j)->name;
                   }
                }
-               ap = MakeSharedNObject<AccessPoint>(name.cstr(), info->getIndex(), info->getMacAddr());
+               ap = make_shared<AccessPoint>(name.cstr(), info->getIndex(), info->getMacAddr());
                NetObjInsert(ap, true, false);
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_name, ap->getName(), ap->getId());
                newAp = true;
@@ -5664,8 +5664,8 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    if (m_agentConnection == nullptr)
    {
       m_agentConnection = (tunnel != nullptr) ?
-               AgentConnectionEx::create(m_id, tunnel, m_agentSecret, isAgentCompressionAllowed()) :
-               AgentConnectionEx::create(m_id, m_ipAddress, m_agentPort, m_agentSecret, isAgentCompressionAllowed());
+               make_shared<AgentConnectionEx>(m_id, tunnel, m_agentSecret, isAgentCompressionAllowed()) :
+               make_shared<AgentConnectionEx>(m_id, m_ipAddress, m_agentPort, m_agentSecret, isAgentCompressionAllowed());
       nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_name, m_id);
    }
    else
@@ -7847,7 +7847,7 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
    if (tunnel != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%d]): using agent tunnel"), m_name, (int)m_id);
-      conn = AgentConnectionEx::create(m_id, tunnel, m_agentSecret, isAgentCompressionAllowed());
+      conn = make_shared<AgentConnectionEx>(m_id, tunnel, m_agentSecret, isAgentCompressionAllowed());
    }
    else
    {
@@ -7857,7 +7857,7 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
                   (m_flags & NF_AGENT_OVER_TUNNEL_ONLY) ? _T("direct agent connections are disabled") : _T("node primary IP is invalid"));
          return shared_ptr<AgentConnectionEx>();
       }
-      conn = AgentConnectionEx::create(m_id, m_ipAddress, m_agentPort, m_agentSecret, isAgentCompressionAllowed());
+      conn = make_shared<AgentConnectionEx>(m_id, m_ipAddress, m_agentPort, m_agentSecret, isAgentCompressionAllowed());
       if (!setAgentProxy(conn.get()))
       {
          return shared_ptr<AgentConnectionEx>();
@@ -9323,7 +9323,7 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
          return shared_ptr<Subnet>();
    }
 
-   shared_ptr<Subnet> subnet = MakeSharedNObject<Subnet>(addr, m_zoneUIN, syntheticMask);
+   shared_ptr<Subnet> subnet = make_shared<Subnet>(addr, m_zoneUIN, syntheticMask);
 
    ScriptVMHandle vm = CreateServerScriptVM(_T("Hook::CreateSubnet"), self());
    if (vm.isValid())
@@ -10319,7 +10319,7 @@ void Node::updatePhysicalContainerBinding(uint32_t containerId)
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Node::createNXSLObject(NXSL_VM *vm) const
+NXSL_Value *Node::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslNodeClass, new shared_ptr<Node>(self())));
 }

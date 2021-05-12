@@ -84,11 +84,10 @@ void LIBNXSRV_EXPORTABLE DisableAgentConnections()
 /**
  * Agent connection receiver
  */
-class AgentConnectionReceiver
+class AgentConnectionReceiver : public enable_shared_from_this<AgentConnectionReceiver>
 {
 private:
    weak_ptr<AgentConnection> m_connection;
-   weak_ptr<AgentConnectionReceiver> m_self;
    uint32_t m_debugId;
    uint32_t m_recvTimeout;
    shared_ptr<AbstractCommChannel> m_channel;
@@ -106,13 +105,6 @@ private:
 public:
    shared_ptr<NXCPEncryptionContext> m_encryptionContext;
    CommChannelMessageReceiver *m_messageReceiver;
-
-   static shared_ptr<AgentConnectionReceiver> create(const shared_ptr<AgentConnection>& connection)
-   {
-      auto receiver = make_shared<AgentConnectionReceiver>(connection);
-      receiver->m_self = receiver;
-      return receiver;
-   }
 
    AgentConnectionReceiver(const shared_ptr<AgentConnection>& connection) : m_connection(connection), m_channel(connection->m_channel)
    {
@@ -178,7 +170,7 @@ void AgentConnectionReceiver::channelPollerCallback(BackgroundSocketPollResult p
  */
 void AgentConnectionReceiver::start()
 {
-   m_channel->backgroundPoll(m_recvTimeout, channelPollerCallback, m_self.lock());
+   m_channel->backgroundPoll(m_recvTimeout, channelPollerCallback, shared_from_this());
 }
 
 /**
@@ -466,9 +458,6 @@ void AgentConnectionReceiver::finalize()
  */
 AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const TCHAR *secret, bool allowCompression)
 {
-#ifdef _WIN32
-   m_self = new weak_ptr<AgentConnection>();
-#endif
    m_debugId = InterlockedIncrement(&s_connectionId);
    m_addr = addr;
    m_port = port;
@@ -696,7 +685,7 @@ bool AgentConnection::connect(RSA *serverKey, uint32_t *error, uint32_t *socketE
 
    // Start receiver thread
    lock();
-   m_receiver = AgentConnectionReceiver::create(self());
+   m_receiver = make_shared<AgentConnectionReceiver>(shared_from_this());
    m_receiver->start();
    unlock();
 
@@ -1349,7 +1338,7 @@ void AgentConnection::postMessage(NXCPMessage *msg)
 {
    TCHAR key[64];
    _sntprintf(key, 64, _T("PostMessage_%p"), this);
-   ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, self(), &AgentConnection::postMessageCallback, msg);
+   ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, shared_from_this(), &AgentConnection::postMessageCallback, msg);
 }
 
 /**
@@ -1407,7 +1396,7 @@ void AgentConnection::postRawMessage(NXCP_MESSAGE *msg)
 {
    TCHAR key[64];
    _sntprintf(key, 64, _T("PostMessage_%p"), this);
-   ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, self(), &AgentConnection::postRawMessageCallback, msg);
+   ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, shared_from_this(), &AgentConnection::postRawMessageCallback, msg);
 }
 
 /**

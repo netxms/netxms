@@ -1,6 +1,6 @@
 /*
 ** nxget - command line tool used to retrieve parameters from NetXMS agent
-** Copyright (C) 2004-2020 Raden Solutions
+** Copyright (C) 2004-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by

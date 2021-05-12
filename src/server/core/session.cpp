@@ -5511,33 +5511,33 @@ void ClientSession::createObject(NXCPMessage *request)
                   switch(objectClass)
                   {
                      case OBJECT_BUSINESSSERVICE:
-                        object = MakeSharedNObject<BusinessService>(objectName);
+                        object = make_shared<BusinessService>(objectName);
                         NetObjInsert(object, true, false);
                         break;
                      case OBJECT_CHASSIS:
-                        object = MakeSharedNObject<Chassis>(objectName, request->getFieldAsUInt32(VID_CONTROLLER_ID));
+                        object = make_shared<Chassis>(objectName, request->getFieldAsUInt32(VID_CONTROLLER_ID));
                         NetObjInsert(object, true, false);
                         break;
                      case OBJECT_CLUSTER:
-                        object = MakeSharedNObject<Cluster>(objectName, zoneUIN);
+                        object = make_shared<Cluster>(objectName, zoneUIN);
                         NetObjInsert(object, true, false);
                         break;
                      case OBJECT_CONDITION:
-                        object = MakeSharedNObject<ConditionObject>(true);
+                        object = make_shared<ConditionObject>(true);
                         object->setName(objectName);
                         NetObjInsert(object, true, false);
                         break;
                      case OBJECT_CONTAINER:
-                        object = MakeSharedNObject<Container>(objectName, request->getFieldAsUInt32(VID_CATEGORY));
+                        object = make_shared<Container>(objectName, request->getFieldAsUInt32(VID_CATEGORY));
                         NetObjInsert(object, true, false);
                         object->calculateCompoundStatus();  // Force status change to NORMAL
                         break;
                      case OBJECT_DASHBOARD:
-                        object = MakeSharedNObject<Dashboard>(objectName);
+                        object = make_shared<Dashboard>(objectName);
                         NetObjInsert(object, true, false);
                         break;
                      case OBJECT_DASHBOARDGROUP:
-                        object = MakeSharedNObject<DashboardGroup>(objectName);
+                        object = make_shared<DashboardGroup>(objectName);
                         NetObjInsert(object, true, false);
                         object->calculateCompoundStatus();
                         break;
@@ -5560,7 +5560,7 @@ void ClientSession::createObject(NXCPMessage *request)
                         break;
                      case OBJECT_MOBILEDEVICE:
                         request->getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
-                        object = MakeSharedNObject<MobileDevice>(objectName, deviceId);
+                        object = make_shared<MobileDevice>(objectName, deviceId);
                         NetObjInsert(object, true, false);
                         break;
                      case OBJECT_SENSOR:
@@ -5570,20 +5570,20 @@ void ClientSession::createObject(NXCPMessage *request)
                         break;
                      case OBJECT_NETWORKMAP:
                         {
-                           IntegerArray<UINT32> seeds;
+                           IntegerArray<uint32_t> seeds;
                            request->getFieldAsInt32Array(VID_SEED_OBJECTS, &seeds);
-                           object = MakeSharedNObject<NetworkMap>((int)request->getFieldAsUInt16(VID_MAP_TYPE), &seeds);
+                           object = make_shared<NetworkMap>((int)request->getFieldAsUInt16(VID_MAP_TYPE), &seeds);
                            object->setName(objectName);
                            NetObjInsert(object, true, false);
                         }
                         break;
                      case OBJECT_NETWORKMAPGROUP:
-                        object = MakeSharedNObject<NetworkMapGroup>(objectName);
+                        object = make_shared<NetworkMapGroup>(objectName);
                         NetObjInsert(object, true, false);
                         object->calculateCompoundStatus();  // Force status change to NORMAL
                         break;
                      case OBJECT_NETWORKSERVICE:
-                        object = MakeSharedNObject<NetworkService>(request->getFieldAsInt16(VID_SERVICE_TYPE),
+                        object = make_shared<NetworkService>(request->getFieldAsInt16(VID_SERVICE_TYPE),
                                                     request->getFieldAsUInt16(VID_IP_PROTO),
                                                     request->getFieldAsUInt16(VID_IP_PORT),
                                                     request->getFieldAsString(VID_SERVICE_REQUEST),
@@ -5608,16 +5608,16 @@ void ClientSession::createObject(NXCPMessage *request)
                         nodeId = request->getFieldAsUInt32(VID_NODE_ID);
                         if (nodeId > 0)
                         {
-                           object = MakeSharedNObject<NodeLink>(objectName, nodeId);
+                           object = make_shared<NodeLink>(objectName, nodeId);
                            NetObjInsert(object, true, false);
                         }
                         break;
                      case OBJECT_RACK:
-                        object = MakeSharedNObject<Rack>(objectName, (int)request->getFieldAsUInt16(VID_HEIGHT));
+                        object = make_shared<Rack>(objectName, (int)request->getFieldAsUInt16(VID_HEIGHT));
                         NetObjInsert(object, true, false);
                         break;
                      case OBJECT_SLMCHECK:
-                        object = MakeSharedNObject<SlmCheck>(objectName, request->getFieldAsBoolean(VID_IS_TEMPLATE));
+                        object = make_shared<SlmCheck>(objectName, request->getFieldAsBoolean(VID_IS_TEMPLATE));
                         NetObjInsert(object, true, false);
                         break;
                      case OBJECT_SUBNET:
@@ -5630,23 +5630,23 @@ void ClientSession::createObject(NXCPMessage *request)
                         }
                         else
                         {
-                           object = MakeSharedNObject<Subnet>(objectName, ipAddr, zoneUIN);
+                           object = make_shared<Subnet>(objectName, ipAddr, zoneUIN);
                            NetObjInsert(object, true, false);
                         }
                         break;
                      }
                      case OBJECT_TEMPLATE:
-                        object = MakeSharedNObject<Template>(objectName);
+                        object = make_shared<Template>(objectName);
                         NetObjInsert(object, true, false);
                         object->calculateCompoundStatus();  // Force status change to NORMAL
                         break;
                      case OBJECT_TEMPLATEGROUP:
-                        object = MakeSharedNObject<TemplateGroup>(objectName);
+                        object = make_shared<TemplateGroup>(objectName);
                         NetObjInsert(object, true, false);
                         object->calculateCompoundStatus();	// Force status change to NORMAL
                         break;
                      case OBJECT_VPNCONNECTOR:
-                        object = MakeSharedNObject<VPNConnector>(TRUE);
+                        object = make_shared<VPNConnector>(true);
                         object->setName(objectName);
                         NetObjInsert(object, true, false);
                         break;
@@ -5655,7 +5655,7 @@ void ClientSession::createObject(NXCPMessage *request)
                            zoneUIN = FindUnusedZoneUIN();
                         if ((zoneUIN > 0) && (zoneUIN != ALL_ZONES) && (FindZoneByUIN(zoneUIN) == nullptr))
                         {
-                           object = MakeSharedNObject<Zone>(zoneUIN, objectName);
+                           object = make_shared<Zone>(zoneUIN, objectName);
                            NetObjInsert(object, true, false);
                         }
                         break;
@@ -10713,7 +10713,7 @@ void ClientSession::testDCITransformation(NXCPMessage *pRequest)
 
 				   TCHAR value[256], result[256];
 					pRequest->getFieldAsString(VID_VALUE, value, sizeof(value) / sizeof(TCHAR));
-               bool success = DCItem::testTransformation(static_cast<DataCollectionTarget&>(*object), dcObjectInfo, script, value, result, sizeof(result) / sizeof(TCHAR));
+               bool success = DCItem::testTransformation(static_cast<DataCollectionTarget*>(object.get()), dcObjectInfo, script, value, result, sizeof(result) / sizeof(TCHAR));
 					MemFree(script);
 					msg.setField(VID_RCC, RCC_SUCCESS);
 					msg.setField(VID_EXECUTION_STATUS, success);

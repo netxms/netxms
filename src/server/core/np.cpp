@@ -159,7 +159,7 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
       flags |= NF_SNMP_SETTINGS_LOCKED;
    if (newNodeData->creationFlags & NXC_NCF_EXTERNAL_GATEWAY)
       flags |= NF_EXTERNAL_GATEWAY;
-   shared_ptr<Node> node = MakeSharedNObject<Node>(newNodeData, flags);
+   shared_ptr<Node> node = make_shared<Node>(newNodeData, flags);
    NetObjInsert(node, true, false);
 
    if (newNodeData->creationFlags & NXC_NCF_ENTER_MAINTENANCE)
@@ -337,8 +337,8 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
 		return true;
 
 	// *** NetXMS agent ***
-   shared_ptr<AgentConnectionEx> agentConnection = AgentConnectionEx::create(0, ipAddr, AGENT_LISTEN_PORT, nullptr);
-   shared_ptr<Node> proxyNode = shared_ptr<Node>();
+   auto agentConnection = make_shared<AgentConnectionEx>(0, ipAddr, AGENT_LISTEN_PORT, nullptr);
+   shared_ptr<Node> proxyNode;
 	if (zoneProxy != 0)
 	{
 		proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(zoneProxy));

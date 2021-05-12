@@ -197,27 +197,27 @@ void ObjectsInit()
    ConfigReadByteArray(_T("StatusThresholds"), m_iStatusThresholds, 4, 50);
 
    // Create "Entire Network" object
-   g_entireNetwork = MakeSharedNObject<Network>();
+   g_entireNetwork = make_shared<Network>();
    NetObjInsert(g_entireNetwork, false, false);
 
    // Create "Service Root" object
-   g_infrastructureServiceRoot = MakeSharedNObject<ServiceRoot>();
+   g_infrastructureServiceRoot = make_shared<ServiceRoot>();
    NetObjInsert(g_infrastructureServiceRoot, false, false);
 
    // Create "Template Root" object
-   g_templateRoot = MakeSharedNObject<TemplateRoot>();
+   g_templateRoot = make_shared<TemplateRoot>();
    NetObjInsert(g_templateRoot, false, false);
 
 	// Create "Network Maps Root" object
-   g_mapRoot = MakeSharedNObject<NetworkMapRoot>();
+   g_mapRoot = make_shared<NetworkMapRoot>();
    NetObjInsert(g_mapRoot, false, false);
 
 	// Create "Dashboard Root" object
-   g_dashboardRoot = MakeSharedNObject<DashboardRoot>();
+   g_dashboardRoot = make_shared<DashboardRoot>();
    NetObjInsert(g_dashboardRoot, false, false);
 
    // Create "Business Service Root" object
-   g_businessServiceRoot = MakeSharedNObject<BusinessServiceRoot>();
+   g_businessServiceRoot = make_shared<BusinessServiceRoot>();
    NetObjInsert(g_businessServiceRoot, false, false);
 
 	DbgPrintf(1, _T("Built-in objects created"));
@@ -496,7 +496,7 @@ void NetObjDeleteFromIndexes(const NetObj& object)
             }
          }
          if (static_cast<const Node&>(object).getAgentCertificateMappingData() != nullptr)
-            UpdateAgentCertificateMappingIndex(static_cast<const Node&>(object).self(), static_cast<const Node&>(object).getAgentCertificateMappingData(), nullptr);
+            UpdateAgentCertificateMappingIndex(const_cast<Node&>(static_cast<const Node&>(object)).self(), static_cast<const Node&>(object).getAgentCertificateMappingData(), nullptr);
          break;
 		case OBJECT_CLUSTER:
 			g_idxClusterById.remove(object.getId());
@@ -1503,7 +1503,7 @@ BOOL LoadObjects()
       DbgPrintf(2, _T("Loading zones..."));
 
       // Load (or create) default zone
-      auto zone = MakeSharedNObject<Zone>();
+      auto zone = make_shared<Zone>();
       zone->generateGuid();
       zone->loadFromDatabase(hdb, BUILTIN_OID_ZONE0);
       NetObjInsert(zone, false, false);
@@ -1516,7 +1516,7 @@ BOOL LoadObjects()
          for(int i = 0; i < count; i++)
          {
             UINT32 id = DBGetFieldULong(hResult, i, 0);
-            zone = MakeSharedNObject<Zone>();
+            zone = make_shared<Zone>();
             if (zone->loadFromDatabase(hdb, id))
             {
                if (!zone->isDeleted())
@@ -1545,7 +1545,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto condition = MakeSharedNObject<ConditionObject>();
+         auto condition = make_shared<ConditionObject>();
          if (condition->loadFromDatabase(hdb, id))
          {
             NetObjInsert(condition, false, false);  // Insert into indexes
@@ -1569,7 +1569,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto subnet = MakeSharedNObject<Subnet>();
+         auto subnet = make_shared<Subnet>();
          if (subnet->loadFromDatabase(hdb, id))
          {
             if (!subnet->isDeleted())
@@ -1606,7 +1606,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto rack = MakeSharedNObject<Rack>();
+         auto rack = make_shared<Rack>();
          if (rack->loadFromDatabase(hdb, id))
          {
             NetObjInsert(rack, false, false);  // Insert into indexes
@@ -1629,7 +1629,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto chassis = MakeSharedNObject<Chassis>();
+         auto chassis = make_shared<Chassis>();
          if (chassis->loadFromDatabase(hdb, id))
          {
             NetObjInsert(chassis, false, false);  // Insert into indexes
@@ -1653,7 +1653,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto md = MakeSharedNObject<MobileDevice>();
+         auto md = make_shared<MobileDevice>();
          if (md->loadFromDatabase(hdb, id))
          {
             NetObjInsert(md, false, false);  // Insert into indexes
@@ -1677,7 +1677,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto sensor = MakeSharedNObject<Sensor>();
+         auto sensor = make_shared<Sensor>();
          if (sensor->loadFromDatabase(hdb, id))
          {
             NetObjInsert(sensor, false, false);  // Insert into indexes
@@ -1701,7 +1701,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto node = MakeSharedNObject<Node>();
+         auto node = make_shared<Node>();
          if (node->loadFromDatabase(hdb, id))
          {
             NetObjInsert(node, false, false);  // Insert into indexes
@@ -1733,7 +1733,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto ap = MakeSharedNObject<AccessPoint>();
+         auto ap = make_shared<AccessPoint>();
          if (ap->loadFromDatabase(hdb, id))
          {
             NetObjInsert(ap, false, false);  // Insert into indexes
@@ -1757,7 +1757,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto iface = MakeSharedNObject<Interface>();
+         auto iface = make_shared<Interface>();
          if (iface->loadFromDatabase(hdb, id))
          {
             NetObjInsert(iface, false, false);  // Insert into indexes
@@ -1780,7 +1780,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto service = MakeSharedNObject<NetworkService>();
+         auto service = make_shared<NetworkService>();
          if (service->loadFromDatabase(hdb, id))
          {
             NetObjInsert(service, false, false);  // Insert into indexes
@@ -1803,7 +1803,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto connector = MakeSharedNObject<VPNConnector>();
+         auto connector = make_shared<VPNConnector>();
          if (connector->loadFromDatabase(hdb, id))
          {
             NetObjInsert(connector, false, false);  // Insert into indexes
@@ -1826,7 +1826,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto cluster = MakeSharedNObject<Cluster>();
+         auto cluster = make_shared<Cluster>();
          if (cluster->loadFromDatabase(hdb, id))
          {
             NetObjInsert(cluster, false, false);  // Insert into indexes
@@ -1854,7 +1854,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto tmpl = MakeSharedNObject<Template>();
+         auto tmpl = make_shared<Template>();
          if (tmpl->loadFromDatabase(hdb, id))
          {
             NetObjInsert(tmpl, false, false);  // Insert into indexes
@@ -1878,7 +1878,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto map = MakeSharedNObject<NetworkMap>();
+         auto map = make_shared<NetworkMap>();
          if (map->loadFromDatabase(hdb, id))
          {
             NetObjInsert(map, false, false);  // Insert into indexes
@@ -1904,7 +1904,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto container = MakeSharedNObject<Container>();
+         auto container = make_shared<Container>();
          if (container->loadFromDatabase(hdb, id))
          {
             NetObjInsert(container, false, false);  // Insert into indexes
@@ -1928,7 +1928,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto group = MakeSharedNObject<TemplateGroup>();
+         auto group = make_shared<TemplateGroup>();
          if (group->loadFromDatabase(hdb, id))
          {
             NetObjInsert(group, false, false);  // Insert into indexes
@@ -1952,7 +1952,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto group = MakeSharedNObject<NetworkMapGroup>();
+         auto group = make_shared<NetworkMapGroup>();
          if (group->loadFromDatabase(hdb, id))
          {
             NetObjInsert(group, false, false);  // Insert into indexes
@@ -1975,7 +1975,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto dashboard = MakeSharedNObject<Dashboard>();
+         auto dashboard = make_shared<Dashboard>();
          if (dashboard->loadFromDatabase(hdb, id))
          {
             NetObjInsert(dashboard, false, false);  // Insert into indexes
@@ -1999,7 +1999,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto group = MakeSharedNObject<DashboardGroup>();
+         auto group = make_shared<DashboardGroup>();
          if (group->loadFromDatabase(hdb, id))
          {
             NetObjInsert(group, false, false);  // Insert into indexes
@@ -2023,7 +2023,7 @@ BOOL LoadObjects()
 	   for(int i = 0; i < count; i++)
 	   {
 		   UINT32 id = DBGetFieldULong(hResult, i, 0);
-		   auto service = MakeSharedNObject<BusinessService>();
+		   auto service = make_shared<BusinessService>();
 		   if (service->loadFromDatabase(hdb, id))
 		   {
 			   NetObjInsert(service, false, false);  // Insert into indexes
@@ -2047,7 +2047,7 @@ BOOL LoadObjects()
 	   for(int i = 0; i < count; i++)
 	   {
 		   UINT32 id = DBGetFieldULong(hResult, i, 0);
-		   auto nl = MakeSharedNObject<NodeLink>();
+		   auto nl = make_shared<NodeLink>();
 		   if (nl->loadFromDatabase(hdb, id))
 		   {
 			   NetObjInsert(nl, false, false);  // Insert into indexes
@@ -2070,7 +2070,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto check = MakeSharedNObject<SlmCheck>();
+         auto check = make_shared<SlmCheck>();
          if (check->loadFromDatabase(hdb, id))
          {
             NetObjInsert(check, false, false);  // Insert into indexes

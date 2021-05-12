@@ -2416,7 +2416,7 @@ void NetObj::leaveMaintenanceMode(uint32_t userId)
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *NetObj::createNXSLObject(NXSL_VM *vm) const
+NXSL_Value *NetObj::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslNetObjClass, new shared_ptr<NetObj>(self())));
 }

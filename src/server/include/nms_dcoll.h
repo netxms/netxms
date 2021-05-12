@@ -549,7 +549,7 @@ public:
 	void prepareForRecalc();
 	void recalculateValue(ItemValue &value);
 
-   static bool testTransformation(const DataCollectionTarget& object, const shared_ptr<DCObjectInfo>& dcObjectInfo,
+   static bool testTransformation(DataCollectionTarget *object, const shared_ptr<DCObjectInfo>& dcObjectInfo,
             const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };
 

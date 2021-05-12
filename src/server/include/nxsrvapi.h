@@ -521,19 +521,11 @@ template class LIBNXSRV_EXPORTABLE StringObjectMap<CustomAttribute>;
 /**
  * Base class for all monitoring objects
  */
-class LIBNXSRV_EXPORTABLE NObject
+class LIBNXSRV_EXPORTABLE NObject : public enable_shared_from_this<NObject>
 {
    DISABLE_COPY_CTOR(NObject)
 
-   template <class C, typename... Args> friend shared_ptr<C> MakeSharedNObject(Args&&... args);
-
 private:
-#ifdef _WIN32
-   weak_ptr<NObject> *m_self; // should be pointer because of DLL linkage issues on Windows
-#else
-   weak_ptr<NObject> m_self;
-#endif
-
    SharedObjectArray<NObject> m_childList;     // Array of pointers to child objects
    SharedObjectArray<NObject> m_parentList;    // Array of pointers to parent objects
 
@@ -554,12 +546,6 @@ protected:
 
    RWLOCK m_rwlockParentList; // Lock for parent list
    RWLOCK m_rwlockChildList;  // Lock for child list
-
-#ifdef _WIN32
-   void setSelfPtr(const shared_ptr<NObject>& sptr) { *m_self = sptr; }
-#else
-   void setSelfPtr(const shared_ptr<NObject>& sptr) { m_self = sptr; }
-#endif
 
    const SharedObjectArray<NObject> &getChildList() const { return m_childList; }
    const SharedObjectArray<NObject> &getParentList() const { return m_parentList; }
@@ -600,11 +586,8 @@ public:
    NObject();
    virtual ~NObject();
 
-#ifdef _WIN32
-   shared_ptr<NObject> self() const { return m_self->lock(); }
-#else
-   shared_ptr<NObject> self() const { return m_self.lock(); }
-#endif
+   shared_ptr<NObject> self() { return shared_from_this(); }
+   shared_ptr<const NObject> self() const { return shared_from_this(); }
 
    uint32_t getId() const { return m_id; }
    const uuid& getGuid() const { return m_guid; }
@@ -665,16 +648,6 @@ public:
 
    void pruneCustomAttributes();
 };
-
-/**
- * make_shared() replacement for NObject derived classes
- */
-template <class C, typename... Args> shared_ptr<C> MakeSharedNObject(Args&&... args)
-{
-   auto object = make_shared<C>(args...);
-   object->setSelfPtr(object);
-   return object;
-}
 
 /**
  * Route information
@@ -818,16 +791,11 @@ template class LIBNXSRV_EXPORTABLE shared_ptr<AgentConnectionReceiver>;
 /**
  * Agent connection
  */
-class LIBNXSRV_EXPORTABLE AgentConnection
+class LIBNXSRV_EXPORTABLE AgentConnection : public enable_shared_from_this<AgentConnection>
 {
    friend class AgentConnectionReceiver;
 
 private:
-#ifdef _WIN32
-   weak_ptr<AgentConnection> *m_self; // should be pointer because of DLL linkage issues on Windows
-#else
-   weak_ptr<AgentConnection> m_self;
-#endif
    shared_ptr<AgentConnectionReceiver> m_receiver;
    uint32_t m_debugId;
    InetAddress m_addr;
@@ -912,30 +880,12 @@ protected:
 	shared_ptr<NXCPEncryptionContext> acquireEncryptionContext();
    shared_ptr<AbstractCommChannel> acquireChannel();
 
-#ifdef _WIN32
-   void setSelfPtr(const shared_ptr<AgentConnection>& sptr) { *m_self = sptr; }
-#else
-   void setSelfPtr(const shared_ptr<AgentConnection>& sptr) { m_self = sptr; }
-#endif
-
-   AgentConnection(const InetAddress& addr, uint16_t port, const TCHAR *secret, bool allowCompression);
-
 public:
-   static shared_ptr<AgentConnection> create(const InetAddress& addr, uint16_t port = AGENT_LISTEN_PORT, const TCHAR *secret = nullptr, bool allowCompression = true)
-   {
-      auto object = new AgentConnection(addr, port, secret, allowCompression);
-      auto p = shared_ptr<AgentConnection>(object);
-      object->setSelfPtr(p);
-      return p;
-   }
-
+   AgentConnection(const InetAddress& addr, uint16_t port = AGENT_LISTEN_PORT, const TCHAR *secret = nullptr, bool allowCompression = true);
    virtual ~AgentConnection();
 
-#ifdef _WIN32
-   shared_ptr<AgentConnection> self() const { return m_self->lock(); }
-#else
-   shared_ptr<AgentConnection> self() const { return m_self.lock(); }
-#endif
+   shared_ptr<AgentConnection> self() { return shared_from_this(); }
+   shared_ptr<const AgentConnection> self() const { return shared_from_this(); }
 
    bool connect(RSA *serverKey = nullptr, uint32_t *error = nullptr, uint32_t *socketError = nullptr, uint64_t serverId = 0);
    void disconnect();

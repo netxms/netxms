@@ -567,7 +567,7 @@ void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, 
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *AccessPoint::createNXSLObject(NXSL_VM *vm) const
+NXSL_Value *AccessPoint::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslAccessPointClass, new shared_ptr<AccessPoint>(self())));
 }

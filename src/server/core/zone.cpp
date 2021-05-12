@@ -793,7 +793,7 @@ void Zone::healthCheck(PollerInfo *poller)
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Zone::createNXSLObject(NXSL_VM *vm) const
+NXSL_Value *Zone::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslZoneClass, new shared_ptr<Zone>(self())));
 }

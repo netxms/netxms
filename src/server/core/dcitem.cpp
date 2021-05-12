@@ -1974,7 +1974,7 @@ BOOL DCItem::enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), vo
  * Test DCI's transformation script
  * If dcObjectInfo is not nullptr it will be destroyed by this method
  */
-bool DCItem::testTransformation(const DataCollectionTarget& object, const shared_ptr<DCObjectInfo>& dcObjectInfo,
+bool DCItem::testTransformation(DataCollectionTarget *object, const shared_ptr<DCObjectInfo>& dcObjectInfo,
          const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
 {
 	bool success = false;
@@ -1982,16 +1982,16 @@ bool DCItem::testTransformation(const DataCollectionTarget& object, const shared
    if (vm != nullptr)
    {
       NXSL_Value *pValue = vm->createValue(value);
-      vm->setGlobalVariable("$object", object.createNXSLObject(vm));
-      if (object.getObjectClass() == OBJECT_NODE)
+      vm->setGlobalVariable("$object", object->createNXSLObject(vm));
+      if (object->getObjectClass() == OBJECT_NODE)
       {
-         vm->setGlobalVariable("$node", object.createNXSLObject(vm));
+         vm->setGlobalVariable("$node", object->createNXSLObject(vm));
       }
       if (dcObjectInfo != nullptr)
       {
          vm->setGlobalVariable(_T("$dci"), vm->createValue(new NXSL_Object(vm, &g_nxslDciClass, new shared_ptr<DCObjectInfo>(dcObjectInfo))));
       }
-      vm->setGlobalVariable("$isCluster", vm->createValue(object.getObjectClass() == OBJECT_CLUSTER));
+      vm->setGlobalVariable("$isCluster", vm->createValue(object->getObjectClass() == OBJECT_CLUSTER));
 
 		if (vm->run(1, &pValue))
       {

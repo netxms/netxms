@@ -355,7 +355,7 @@ json_t *Subnet::toJson()
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Subnet::createNXSLObject(NXSL_VM *vm) const
+NXSL_Value *Subnet::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslSubnetClass, new shared_ptr<Subnet>(self())));
 }

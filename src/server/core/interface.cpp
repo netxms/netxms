@@ -1337,7 +1337,7 @@ void Interface::updateVlans(IntegerArray<uint32_t> *vlans)
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Interface::createNXSLObject(NXSL_VM *vm) const
+NXSL_Value *Interface::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslInterfaceClass, new shared_ptr<Interface>(self())));
 }

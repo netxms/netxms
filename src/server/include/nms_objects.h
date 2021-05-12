@@ -154,28 +154,13 @@ protected:
    virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size) override;
    virtual void getSshKeys(NXCPMessage *msg, NXCPMessage *response) override;
 
-   AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr, uint16_t port, const TCHAR *secret, bool allowCompression);
-   AgentConnectionEx(uint32_t nodeId, const shared_ptr<AgentTunnel>& tunnel, const TCHAR *secret, bool allowCompression);
-
 public:
-   static shared_ptr<AgentConnectionEx> create(uint32_t nodeId, const InetAddress& ipAddr, uint16_t port = AGENT_LISTEN_PORT, const TCHAR *secret = nullptr, bool allowCompression = true)
-   {
-      auto object = new AgentConnectionEx(nodeId, ipAddr, port, secret, allowCompression);
-      auto p = shared_ptr<AgentConnectionEx>(object);
-      object->setSelfPtr(p);
-      return p;
-   }
-   static shared_ptr<AgentConnectionEx> create(uint32_t nodeId, const shared_ptr<AgentTunnel>& tunnel, const TCHAR *secret = nullptr, bool allowCompression = true)
-   {
-      auto object = new AgentConnectionEx(nodeId, tunnel, secret, allowCompression);
-      auto p = shared_ptr<AgentConnectionEx>(object);
-      object->setSelfPtr(p);
-      return p;
-   }
-
+   AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr, uint16_t port = AGENT_LISTEN_PORT, const TCHAR *secret = nullptr, bool allowCompression = true);
+   AgentConnectionEx(uint32_t nodeId, const shared_ptr<AgentTunnel>& tunnel, const TCHAR *secret = nullptr, bool allowCompression = true);
    virtual ~AgentConnectionEx();
 
-   shared_ptr<AgentConnectionEx> self() const { return static_pointer_cast<AgentConnectionEx>(AgentConnection::self()); }
+   shared_ptr<AgentConnectionEx> self() { return static_pointer_cast<AgentConnectionEx>(AgentConnection::self()); }
+   shared_ptr<const AgentConnectionEx> self() const { return static_pointer_cast<const AgentConnectionEx>(AgentConnection::self()); }
 
    uint32_t deployPolicy(NXCPMessage *msg);
    uint32_t uninstallPolicy(uuid guid, const TCHAR *type, bool newTypeFormatSupported);
@@ -1026,7 +1011,8 @@ public:
    NetObj();
    virtual ~NetObj();
 
-   shared_ptr<NetObj> self() const { return static_pointer_cast<NetObj>(NObject::self()); }
+   shared_ptr<NetObj> self() { return static_pointer_cast<NetObj>(NObject::self()); }
+   shared_ptr<const NetObj> self() const { return static_pointer_cast<const NetObj>(NObject::self()); }
 
    virtual int getObjectClass() const { return OBJECT_GENERIC; }
    virtual const WCHAR *getObjectClassNameW() const;
@@ -1140,7 +1126,7 @@ public:
    uint32_t getAssignedZoneProxyId(bool backup = false) const { return backup ? m_backupZoneProxyId : m_primaryZoneProxyId; }
    void setAssignedZoneProxyId(uint32_t id, bool backup) { if (backup) m_backupZoneProxyId = id; else m_primaryZoneProxyId = id; }
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const;
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
    void executeHookScript(const TCHAR *hookName, uint32_t pollRequestId = 0);
 
@@ -1331,7 +1317,8 @@ public:
    DataCollectionOwner(const TCHAR *name, const uuid& guid = uuid::NULL_UUID);
    virtual ~DataCollectionOwner();
 
-   shared_ptr<DataCollectionOwner> self() const { return static_pointer_cast<DataCollectionOwner>(NObject::self()); }
+   shared_ptr<DataCollectionOwner> self() { return static_pointer_cast<DataCollectionOwner>(NObject::self()); }
+   shared_ptr<const DataCollectionOwner> self() const { return static_pointer_cast<const DataCollectionOwner>(NObject::self()); }
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
@@ -1363,8 +1350,8 @@ public:
    virtual void applyDCIChanges(bool forcedChange);
    virtual bool applyToTarget(const shared_ptr<DataCollectionTarget>& target);
 
-   void queueUpdate() const;
-   void queueRemoveFromTarget(UINT32 targetId, bool removeDCI) const;
+   void queueUpdate();
+   void queueRemoveFromTarget(uint32_t targetId, bool removeDCI);
 
    bool enumDCObjects(bool (*callback)(const shared_ptr<DCObject>&, uint32_t, void *), void *context) const;
    void associateItems();
@@ -1516,7 +1503,8 @@ public:
    Template(const TCHAR *name, const uuid& guid = uuid::NULL_UUID);
    ~Template();
 
-   shared_ptr<Template> self() const { return static_pointer_cast<Template>(NObject::self()); }
+   shared_ptr<Template> self() { return static_pointer_cast<Template>(NObject::self()); }
+   shared_ptr<const Template> self() const { return static_pointer_cast<const Template>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_TEMPLATE; }
 
@@ -1531,7 +1519,7 @@ public:
    virtual void updateFromImport(ConfigEntry *config) override;
    virtual json_t *toJson() override;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    void createExportRecord(StringBuffer &xml);
    virtual HashSet<uint32_t> *getRelatedEventsList() const override;
@@ -1606,7 +1594,8 @@ public:
    Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, int32_t zoneUIN);
    virtual ~Interface();
 
-   shared_ptr<Interface> self() const { return static_pointer_cast<Interface>(NObject::self()); }
+   shared_ptr<Interface> self() { return static_pointer_cast<Interface>(NObject::self()); }
+   shared_ptr<const Interface> self() const { return static_pointer_cast<const Interface>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_INTERFACE; }
    virtual InetAddress getPrimaryIpAddress() const override { lockProperties(); auto a = m_ipAddressList.getFirstUnicastAddress(); unlockProperties(); return a; }
@@ -1615,7 +1604,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
@@ -2119,7 +2108,8 @@ public:
    DataCollectionTarget(const TCHAR *name);
    virtual ~DataCollectionTarget();
 
-   shared_ptr<DataCollectionTarget> self() const { return static_pointer_cast<DataCollectionTarget>(NObject::self()); }
+   shared_ptr<DataCollectionTarget> self() { return static_pointer_cast<DataCollectionTarget>(NObject::self()); }
+   shared_ptr<const DataCollectionTarget> self() const { return static_pointer_cast<const DataCollectionTarget>(NObject::self()); }
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
@@ -2344,7 +2334,8 @@ public:
    MobileDevice(const TCHAR *name, const TCHAR *deviceId);
    virtual ~MobileDevice();
 
-   shared_ptr<MobileDevice> self() const { return static_pointer_cast<MobileDevice>(NObject::self()); }
+   shared_ptr<MobileDevice> self() { return static_pointer_cast<MobileDevice>(NObject::self()); }
+   shared_ptr<const MobileDevice> self() const { return static_pointer_cast<const MobileDevice>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_MOBILEDEVICE; }
 
@@ -2354,7 +2345,7 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual json_t *toJson() override;
 
@@ -2412,7 +2403,8 @@ public:
    AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& macAddr);
    virtual ~AccessPoint();
 
-   shared_ptr<AccessPoint> self() const { return static_pointer_cast<AccessPoint>(NObject::self()); }
+   shared_ptr<AccessPoint> self() { return static_pointer_cast<AccessPoint>(NObject::self()); }
+   shared_ptr<const AccessPoint> self() const { return static_pointer_cast<const AccessPoint>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_ACCESSPOINT; }
    virtual InetAddress getPrimaryIpAddress() const override { return getIpAddress(); }
@@ -2421,7 +2413,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual int32_t getZoneUIN() const override;
 
@@ -2482,7 +2474,8 @@ public:
    Cluster(const TCHAR *pszName, int32_t zoneUIN);
    virtual ~Cluster();
 
-   shared_ptr<Cluster> self() const { return static_pointer_cast<Cluster>(NObject::self()); }
+   shared_ptr<Cluster> self() { return static_pointer_cast<Cluster>(NObject::self()); }
+   shared_ptr<const Cluster> self() const { return static_pointer_cast<const Cluster>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_CLUSTER; }
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
@@ -2494,7 +2487,7 @@ public:
 
    virtual void onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI) override;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
@@ -2559,7 +2552,8 @@ public:
    Chassis(const TCHAR *name, UINT32 controllerId);
    virtual ~Chassis();
 
-   shared_ptr<Chassis> self() const { return static_pointer_cast<Chassis>(NObject::self()); }
+   shared_ptr<Chassis> self() { return static_pointer_cast<Chassis>(NObject::self()); }
+   shared_ptr<const Chassis> self() const { return static_pointer_cast<const Chassis>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_CHASSIS; }
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
@@ -2573,7 +2567,7 @@ public:
    virtual bool lockForConfigurationPoll() override { return false; }
    virtual bool lockForInstancePoll() override { return false; }
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual json_t *toJson() override;
 
@@ -2650,7 +2644,8 @@ public:
    Sensor(const TCHAR *name, const NXCPMessage *msg); // Intended for use by create() call only
    virtual ~Sensor();
 
-   shared_ptr<Sensor> self() const { return static_pointer_cast<Sensor>(NObject::self()); }
+   shared_ptr<Sensor> self() { return static_pointer_cast<Sensor>(NObject::self()); }
+   shared_ptr<const Sensor> self() const { return static_pointer_cast<const Sensor>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_SENSOR; }
 
@@ -2659,7 +2654,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual void prepareForDeletion() override;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
@@ -3133,7 +3128,8 @@ public:
    Node(const NewNodeData *newNodeData, UINT32 flags);
    virtual ~Node();
 
-   shared_ptr<Node> self() const { return static_pointer_cast<Node>(NObject::self()); }
+   shared_ptr<Node> self() { return static_pointer_cast<Node>(NObject::self()); }
+   shared_ptr<const Node> self() const { return static_pointer_cast<const Node>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_NODE; }
    virtual InetAddress getPrimaryIpAddress() const override { return getIpAddress(); }
@@ -3156,7 +3152,7 @@ public:
 
    void completeDiscoveryPoll(INT64 elapsedTime) { m_discoveryPollState.complete(elapsedTime); }
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
@@ -3595,7 +3591,8 @@ public:
    Subnet(const TCHAR *name, const InetAddress& addr, int32_t zoneUIN);
    virtual ~Subnet();
 
-   shared_ptr<Subnet> self() const { return static_pointer_cast<Subnet>(NObject::self()); }
+   shared_ptr<Subnet> self() { return static_pointer_cast<Subnet>(NObject::self()); }
+   shared_ptr<const Subnet> self() const { return static_pointer_cast<const Subnet>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_SUBNET; }
    virtual InetAddress getPrimaryIpAddress() const override { return getIpAddress(); }
@@ -3604,7 +3601,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
@@ -3727,7 +3724,8 @@ public:
    Container(const TCHAR *pszName, UINT32 dwCategory) : super(pszName, dwCategory), AutoBindTarget(this) {}
    virtual ~Container() {}
 
-   shared_ptr<Container> self() const { return static_pointer_cast<Container>(NObject::self()); }
+   shared_ptr<Container> self() { return static_pointer_cast<Container>(NObject::self()); }
+   shared_ptr<const Container> self() const { return static_pointer_cast<const Container>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_CONTAINER; }
 
@@ -3736,7 +3734,7 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool showThresholdSummary() const override;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 };
 
 /**
@@ -3813,7 +3811,8 @@ public:
    Rack(const TCHAR *name, int height);
    virtual ~Rack();
 
-   shared_ptr<Rack> self() const { return static_pointer_cast<Rack>(NObject::self()); }
+   shared_ptr<Rack> self() { return static_pointer_cast<Rack>(NObject::self()); }
+   shared_ptr<const Rack> self() const { return static_pointer_cast<const Rack>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_RACK; }
 
@@ -3922,7 +3921,8 @@ public:
    Zone(int32_t uin, const TCHAR *name);
    virtual ~Zone();
 
-   shared_ptr<Zone> self() const { return static_pointer_cast<Zone>(NObject::self()); }
+   shared_ptr<Zone> self() { return static_pointer_cast<Zone>(NObject::self()); }
+   shared_ptr<const Zone> self() const { return static_pointer_cast<const Zone>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_ZONE; }
 
@@ -3932,7 +3932,7 @@ public:
 
    virtual bool showThresholdSummary() const override;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) const override;
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual json_t *toJson() override;
 
@@ -4056,7 +4056,8 @@ public:
    ConditionObject(bool hidden);
    virtual ~ConditionObject();
 
-   shared_ptr<ConditionObject> self() const { return static_pointer_cast<ConditionObject>(NObject::self()); }
+   shared_ptr<ConditionObject> self() { return static_pointer_cast<ConditionObject>(NObject::self()); }
+   shared_ptr<const ConditionObject> self() const { return static_pointer_cast<const ConditionObject>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_CONDITION; }
 
@@ -4304,7 +4305,8 @@ public:
    SlmCheck(SlmCheck *tmpl);
    virtual ~SlmCheck();
 
-   shared_ptr<SlmCheck> self() const { return static_pointer_cast<SlmCheck>(NObject::self()); }
+   shared_ptr<SlmCheck> self() { return static_pointer_cast<SlmCheck>(NObject::self()); }
+   shared_ptr<const SlmCheck> self() const { return static_pointer_cast<const SlmCheck>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_SLMCHECK; }
 

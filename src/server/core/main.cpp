@@ -645,7 +645,7 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
    _tcscat(keyFile, DFILE_KEYS);
    RSA *key = LoadRSAKeys(keyFile);
 
-   shared_ptr<AgentConnection> ac = AgentConnection::create(addr);
+   shared_ptr<AgentConnection> ac = make_shared<AgentConnection>(addr);
    if (ac->connect(key))
    {
       TCHAR result[MAX_RESULT_LENGTH];

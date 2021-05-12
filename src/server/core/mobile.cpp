@@ -334,7 +334,7 @@ void MobileDevice::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *MobileDevice::createNXSLObject(NXSL_VM *vm) const
+NXSL_Value *MobileDevice::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslMobileDeviceClass, new shared_ptr<MobileDevice>(self())));
 }

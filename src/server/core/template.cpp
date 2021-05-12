@@ -816,7 +816,7 @@ void Template::initiatePolicyValidation()
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Template::createNXSLObject(NXSL_VM *vm) const
+NXSL_Value *Template::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslTemplateClass, new shared_ptr<Template>(self())));
 }

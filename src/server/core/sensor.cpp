@@ -76,7 +76,7 @@ Sensor::Sensor(const TCHAR *name, const NXCPMessage *request) : super(name)
  */
 shared_ptr<Sensor> Sensor::create(const TCHAR *name, const NXCPMessage *request)
 {
-   shared_ptr<Sensor> sensor = MakeSharedNObject<Sensor>(name, request);
+   shared_ptr<Sensor> sensor = make_shared<Sensor>(name, request);
    sensor->generateGuid();
    switch(request->getFieldAsUInt32(VID_COMM_PROTOCOL))
    {
@@ -295,7 +295,7 @@ bool Sensor::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Sensor::createNXSLObject(NXSL_VM *vm) const
+NXSL_Value *Sensor::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslSensorClass, new shared_ptr<Sensor>(self())));
 }

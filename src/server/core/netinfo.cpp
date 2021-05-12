@@ -385,7 +385,7 @@ shared_ptr<ArpCache> GetLocalArpCache()
       return shared_ptr<ArpCache>(arpCache);
 
    // Try to get ARP cache from agent via loopback address
-   shared_ptr<AgentConnection> conn = AgentConnection::create(InetAddress::LOOPBACK);
+   auto conn = make_shared<AgentConnection>(InetAddress::LOOPBACK);
    if (conn->connect(g_pServerKey))
       return conn->getArpCache();
 
@@ -403,7 +403,7 @@ InterfaceList *GetLocalInterfaceList()
    // Try to get local interface list from agent via loopback address
    if (ifList == nullptr)
    {
-      shared_ptr<AgentConnection> conn = AgentConnection::create(InetAddress::LOOPBACK);
+      auto conn = make_shared<AgentConnection>(InetAddress::LOOPBACK);
       if (conn->connect(g_pServerKey))
       {
          ifList = conn->getInterfaceList();

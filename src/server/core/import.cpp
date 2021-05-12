@@ -414,7 +414,7 @@ static shared_ptr<NetObj> FindTemplateRoot(const ConfigEntry *config)
       shared_ptr<NetObj> o = parent->findChildObject(name, OBJECT_TEMPLATEGROUP);
       if (o == nullptr)
       {
-         o = MakeSharedNObject<TemplateGroup>(name);
+         o = make_shared<TemplateGroup>(name);
          NetObjInsert(o, true, false);
          o->addParent(parent);
          parent->addChild(o);
@@ -579,7 +579,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags)
             ObjectTransactionStart();
             nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): template with GUID %s not found"), (const TCHAR *)guid.toString());
             shared_ptr<NetObj> parent = FindTemplateRoot(tc);
-            object = MakeSharedNObject<Template>(tc->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), guid);
+            object = make_shared<Template>(tc->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), guid);
             NetObjInsert(object, true, true);
             object->updateFromImport(tc);
             object->addParent(parent);

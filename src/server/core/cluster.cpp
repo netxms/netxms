@@ -860,7 +860,7 @@ void Cluster::onDataCollectionChange()
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Cluster::createNXSLObject(NXSL_VM *vm) const
+NXSL_Value *Cluster::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslClusterClass, new shared_ptr<Cluster>(self())));
 }

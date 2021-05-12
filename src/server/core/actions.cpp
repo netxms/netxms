@@ -219,7 +219,7 @@ static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
       else
       {
          // Target node is not in our database, try default communication settings
-         conn = AgentConnection::create(addr, AGENT_LISTEN_PORT, nullptr);
+         conn = make_shared<AgentConnection>(addr, AGENT_LISTEN_PORT, nullptr);
          conn->setCommandTimeout(g_agentCommandTimeout);
          if (!conn->connect(g_pServerKey))
             return false;

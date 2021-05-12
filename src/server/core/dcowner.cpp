@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -896,7 +896,7 @@ bool DataCollectionOwner::applyToTarget(const shared_ptr<DataCollectionTarget>& 
 /**
  * Queue template update
  */
-void DataCollectionOwner::queueUpdate() const
+void DataCollectionOwner::queueUpdate()
 {
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
@@ -913,7 +913,7 @@ void DataCollectionOwner::queueUpdate() const
 /**
  * Queue template remove from node
  */
-void DataCollectionOwner::queueRemoveFromTarget(UINT32 targetId, bool removeDCI) const
+void DataCollectionOwner::queueRemoveFromTarget(uint32_t targetId, bool removeDCI)
 {
    g_templateUpdateQueue.put(new TemplateUpdateTask(self(), targetId, REMOVE_TEMPLATE, removeDCI));
 }

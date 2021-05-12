@@ -29,9 +29,6 @@
  */
 NObject::NObject() : m_customAttributes(Ownership::True), m_parentList(8, 8), m_childList(0, 32)
 {
-#ifdef _WIN32
-   m_self = new weak_ptr<NObject>();
-#endif
    m_id = 0;
    m_name[0] = 0;
    m_customAttributeLock = MutexCreateFast();
@@ -47,9 +44,6 @@ NObject::~NObject()
    MutexDestroy(m_customAttributeLock);
    RWLockDestroy(m_rwlockParentList);
    RWLockDestroy(m_rwlockChildList);
-#ifdef _WIN32
-   delete m_self;
-#endif
 }
 
 /**
