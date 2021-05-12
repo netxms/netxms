@@ -2225,24 +2225,6 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
 }
 
 /**
- * Check if agent can still be in process of restarting. Should be implemented in derived classes.
- * Default implementation always returns false
- */
-bool DataCollectionTarget::isAgentRestarting()
-{
-   return false;
-}
-
-/**
- * Check if any of the agent's proxies can still be in process of restarting. Should be implemented in derived classes.
- * Default implementation always returns false
- */
-bool DataCollectionTarget::isProxyAgentRestarting()
-{
-   return false;
-}
-
-/**
  * Get list of instances for given data collection object. Default implementation always returns nullptr.
  */
 StringMap *DataCollectionTarget::getInstanceList(DCObject *dco)

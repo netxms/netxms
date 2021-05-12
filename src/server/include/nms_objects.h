@@ -52,6 +52,7 @@ extern uint32_t g_topologyPollingInterval;
 extern uint32_t g_conditionPollingInterval;
 extern uint32_t g_instancePollingInterval;
 extern uint32_t g_icmpPollingInterval;
+extern uint32_t g_agentRestartWaitTime;
 extern int16_t g_defaultAgentCacheMode;
 
 /**
@@ -2082,9 +2083,6 @@ protected:
    virtual void onInstanceDiscoveryChange() override;
    virtual bool isDataCollectionDisabled();
 
-   virtual bool isAgentRestarting();
-   virtual bool isProxyAgentRestarting();
-
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
@@ -2269,9 +2267,9 @@ inline bool DataCollectionTarget::lockForStatusPoll()
             m_runtimeFlags &= ~ODF_FORCE_STATUS_POLL;
       }
       else if ((m_status != STATUS_UNMANAGED) &&
-               (!(m_flags & DCF_DISABLE_STATUS_POLL)) &&
-               (!(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING)) &&
-               ((UINT32)(time(nullptr) - m_statusPollState.getLastCompleted()) > g_statusPollingInterval))
+               !(m_flags & DCF_DISABLE_STATUS_POLL) &&
+               !(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING) &&
+               (static_cast<uint32_t>(time(nullptr) - m_statusPollState.getLastCompleted()) > g_statusPollingInterval))
       {
          success = m_statusPollState.schedule();
       }
@@ -3048,9 +3046,6 @@ protected:
    uint8_t m_cipState;
    uint16_t m_cipVendorCode;
 
-   virtual bool isAgentRestarting() override;
-   virtual bool isProxyAgentRestarting() override;
-
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
 
@@ -3090,6 +3085,9 @@ protected:
 
    bool setAgentProxy(AgentConnectionEx *conn);
    bool isAgentCompressionAllowed();
+
+   bool isAgentRestarting() const { return m_agentRestartTime + g_agentRestartWaitTime >= time(nullptr); }
+   bool isProxyAgentRestarting();
 
    uint32_t getInterfaceCount(Interface **lastInterface);
    void deleteInterface(Interface *iface);

@@ -141,10 +141,11 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_failTimeEtherNetIP = NEVER;
    m_recoveryTime = NEVER;
    m_lastAgentCommTime = NEVER;
-   m_lastAgentConnectAttempt = 0;
+   m_lastAgentConnectAttempt = NEVER;
+   m_agentRestartTime = NEVER;
    m_vrrpInfo = nullptr;
    m_topology = nullptr;
-   m_topologyRebuildTimestamp = 0;
+   m_topologyRebuildTimestamp = NEVER;
    m_pendingState = -1;
    m_pollCountAgent = 0;
    m_pollCountSNMP = 0;
@@ -263,11 +264,11 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_failTimeEtherNetIP = NEVER;
    m_recoveryTime = NEVER;
    m_lastAgentCommTime = NEVER;
-   m_lastAgentConnectAttempt = 0;
+   m_lastAgentConnectAttempt = NEVER;
    m_agentRestartTime = NEVER;
    m_vrrpInfo = nullptr;
    m_topology = nullptr;
-   m_topologyRebuildTimestamp = 0;
+   m_topologyRebuildTimestamp = NEVER;
    m_pendingState = -1;
    m_pollCountAgent = 0;
    m_pollCountSNMP = 0;
@@ -3880,23 +3881,14 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 }
 
 /**
- * Check if agent can still be in process of restarting
- */
-bool Node::isAgentRestarting()
-{
-   time_t restartWaitTime = static_cast<time_t>(ConfigReadULong(_T("Agent.RestartWaitTime"), 0));
-   return m_agentRestartTime + restartWaitTime >= time(nullptr);
-}
-
-/**
  * Check if agent on given node is restarting
  */
-static inline bool IsProxyAgentRestarting(uint32_t proxyId, time_t restartWaitTime, time_t now)
+static inline bool IsProxyAgentRestarting(uint32_t proxyId, time_t now)
 {
    if (proxyId == 0)
       return false;
    shared_ptr<NetObj> proxyNode = FindObjectById(proxyId, OBJECT_NODE);
-   return (proxyNode != nullptr) && static_cast<Node&>(*proxyNode).getAgentRestartTime() + restartWaitTime >= now;
+   return (proxyNode != nullptr) && (static_cast<Node&>(*proxyNode).getAgentRestartTime() + g_agentRestartWaitTime >= now);
 }
 
 /**
@@ -3904,12 +3896,11 @@ static inline bool IsProxyAgentRestarting(uint32_t proxyId, time_t restartWaitTi
  */
 bool Node::isProxyAgentRestarting()
 {
-   time_t restartWaitTime = static_cast<time_t>(ConfigReadULong(_T("Agent.RestartWaitTime"), 0));
    time_t now = time(nullptr);
-   return IsProxyAgentRestarting(getEffectiveAgentProxy(), restartWaitTime, now) ||
-          IsProxyAgentRestarting(getEffectiveSnmpProxy(), restartWaitTime, now) ||
-          IsProxyAgentRestarting(getEffectiveEtherNetIPProxy(), restartWaitTime, now) ||
-          IsProxyAgentRestarting(getEffectiveIcmpProxy(), restartWaitTime, now);
+   return IsProxyAgentRestarting(getEffectiveAgentProxy(), now) ||
+          IsProxyAgentRestarting(getEffectiveSnmpProxy(), now) ||
+          IsProxyAgentRestarting(getEffectiveEtherNetIPProxy(), now) ||
+          IsProxyAgentRestarting(getEffectiveIcmpProxy(), now);
 }
 
 /**

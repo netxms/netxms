@@ -1577,6 +1577,7 @@ extern uint32_t g_icmpPingTimeout;
 extern uint32_t g_auditFlags;
 extern time_t g_serverStartTime;
 extern uint32_t g_agentCommandTimeout;
+extern uint32_t g_agentRestartWaitTime;
 extern uint32_t g_thresholdRepeatInterval;
 extern uint32_t g_requiredPolls;
 extern uint32_t g_slmPollingInterval;

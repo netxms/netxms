@@ -484,6 +484,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       InitializeWindowsEventParser();
    }
+   else if (!_tcscmp(name, _T("Agent.RestartWaitTime")))
+   {
+      g_agentRestartWaitTime = _tcstol(value, nullptr, 0);
+   }
    else if (!_tcscmp(name, _T("Alarms.ResolveExpirationTime")))
    {
       UpdateAlarmExpirationTimes();
