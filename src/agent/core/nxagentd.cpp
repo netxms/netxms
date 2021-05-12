@@ -213,7 +213,7 @@ uint32_t g_externalParameterProviderTimeout = 30000;  // External parameter prov
 uint32_t g_snmpTimeout = 0;
 uint16_t g_snmpTrapPort = 162;
 time_t g_tmAgentStartTime;
-uint32_t g_dwStartupDelay = 0;
+uint32_t g_startupDelay = 0;
 uint32_t g_maxCommSessions = 0;
 uint32_t g_longRunningQueryThreshold = 250;
 uint32_t g_dcReconciliationBlockSize = 1024;
@@ -365,7 +365,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_snmpTimeout, nullptr },
 	{ _T("SNMPTrapListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, &g_szSNMPTrapListenAddress, nullptr },
    { _T("SNMPTrapPort"), CT_WORD, 0, 0, 0, 0, &g_snmpTrapPort, nullptr },
-   { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay, nullptr },
+   { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_startupDelay, nullptr },
    { _T("SubAgent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &m_pszSubagentList, nullptr },
    { _T("SyslogListenPort"), CT_WORD, 0, 0, 0, 0, &g_syslogListenPort, nullptr },
    { _T("SystemName"), CT_STRING, 0, 0, MAX_OBJECT_NAME, 0, g_systemName, nullptr },
@@ -1309,19 +1309,17 @@ BOOL Initialize()
    ThreadSleep(1);
 
    // If StartupDelay is greater than zero, then wait
-   if (g_dwStartupDelay > 0)
+   if (g_startupDelay > 0)
    {
       if (g_dwFlags & AF_DAEMON)
       {
-         ThreadSleep(g_dwStartupDelay);
+         ThreadSleep(g_startupDelay);
       }
       else
       {
-         UINT32 i;
-
-         _tprintf(_T("XXXXXX%*s]\rWAIT ["), g_dwStartupDelay, _T(" "));
+         _tprintf(_T("XXXXXX%*s]\rWAIT ["), g_startupDelay, _T(" "));
          fflush(stdout);
-         for(i = 0; i < g_dwStartupDelay; i++)
+         for(uint32_t i = 0; i < g_startupDelay; i++)
          {
             ThreadSleep(1);
             _puttc(_T('.'), stdout);

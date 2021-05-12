@@ -86,7 +86,7 @@ static VOID WINAPI AgentServiceMain(DWORD argc, LPTSTR *argv)
    status.dwWin32ExitCode = 0;
    status.dwServiceSpecificExitCode = 0;
    status.dwCheckPoint = 0;
-   status.dwWaitHint = 10000 + g_dwStartupDelay * 1000;
+   status.dwWaitHint = 10000 + g_startupDelay * 1000;
    SetServiceStatus(serviceHandle, &status);
 
    // Actual initialization

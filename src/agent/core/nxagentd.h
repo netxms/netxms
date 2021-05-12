@@ -878,7 +878,7 @@ extern TCHAR g_systemName[];
 extern ObjectArray<ServerInfo> g_serverList;
 extern time_t g_tmAgentStartTime;
 extern TCHAR g_szPlatformSuffix[];
-extern uint32_t g_dwStartupDelay;
+extern uint32_t g_startupDelay;
 extern uint32_t g_dwIdleTimeout;
 extern uint32_t g_maxCommSessions;
 extern uint32_t g_externalCommandTimeout;
