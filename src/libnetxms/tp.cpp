@@ -390,6 +390,12 @@ static EnumerationCallbackResult ThreadPoolDestroyCallback(const uint64_t& key, 
  */
 void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
 {
+   if (p == nullptr)
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Internal error: ThreadPoolDestroy called with null pointer"));
+      return;
+   }
+
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Stopping threads in thread pool %s"), p->name);
 
    s_registryLock.lock();
