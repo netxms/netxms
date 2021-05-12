@@ -134,10 +134,10 @@ ProcessExecutor::~ProcessExecutor()
 /**
  * Set explicit list of inherited handles
  */
-static bool SetInheritedHandles(STARTUPINFOEX *si, HANDLE h1, HANDLE h2)
+static bool SetInheritedHandle(STARTUPINFOEX *si, HANDLE handle)
 {
    SIZE_T size;
-   if (!InitializeProcThreadAttributeList(NULL, 1, 0, &size))
+   if (!InitializeProcThreadAttributeList(nullptr, 1, 0, &size))
    {
       if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
       {
@@ -156,8 +156,8 @@ static bool SetInheritedHandles(STARTUPINFOEX *si, HANDLE h1, HANDLE h2)
       return false;
    }
 
-   HANDLE handles[2] = { h1, h2 };
-   if (!UpdateProcThreadAttribute(si->lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, handles, 2 * sizeof(HANDLE), NULL, NULL))
+   HANDLE handles[1] = { handle };
+   if (!UpdateProcThreadAttribute(si->lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, handles, sizeof(HANDLE), nullptr, nullptr))
    {
       TCHAR buffer[1024];
       nxlog_debug(4, _T("ProcessExecutor::execute(): UpdateProcThreadAttribute failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
@@ -211,29 +211,15 @@ bool ProcessExecutor::execute()
    // Ensure the read handle to the pipe for STDOUT is not inherited.
    SetHandleInformation(stdoutRead, HANDLE_FLAG_INHERIT, 0);
 
-   HANDLE stdinRead, stdinWrite;
-   if (!CreatePipe(&stdinRead, &stdinWrite, &sa, 0))
-   {
-      TCHAR buffer[1024];
-      nxlog_debug(4, _T("ProcessExecutor::execute(): cannot create pipe (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
-      CloseHandle(stdoutRead);
-      CloseHandle(stdoutWrite);
-      return false;
-   }
-
-   // Ensure the write handle to the pipe for STDIN is not inherited. 
-   SetHandleInformation(stdinWrite, HANDLE_FLAG_INHERIT, 0);
-
    STARTUPINFOEX si;
    PROCESS_INFORMATION pi;
 
    memset(&si, 0, sizeof(STARTUPINFOEX));
    si.StartupInfo.cb = sizeof(STARTUPINFOEX);
    si.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
-   si.StartupInfo.hStdInput = stdinRead;
    si.StartupInfo.hStdOutput = stdoutWrite;
    si.StartupInfo.hStdError = stdoutWrite;
-   SetInheritedHandles(&si, stdinRead, stdoutWrite);
+   SetInheritedHandle(&si, stdoutWrite);
 
    StringBuffer cmdLine = m_shellExec ? _T("CMD.EXE /C ") : _T("");
    cmdLine.append(m_cmd);
@@ -244,8 +230,6 @@ bool ProcessExecutor::execute()
       m_phandle = pi.hProcess;
       CloseHandle(pi.hThread);
       CloseHandle(stdoutWrite);
-      CloseHandle(stdinRead);
-      CloseHandle(stdinWrite);
       if (m_sendOutput)
       {
          m_pipe = stdoutRead;
@@ -265,8 +249,6 @@ bool ProcessExecutor::execute()
 
       CloseHandle(stdoutRead);
       CloseHandle(stdoutWrite);
-      CloseHandle(stdinRead);
-      CloseHandle(stdinWrite);
    }
 
    DeleteProcThreadAttributeList(si.lpAttributeList);
