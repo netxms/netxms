@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.widgets;
+package org.netxms.nxmc.modules.datacollection.widgets;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -106,7 +106,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       session = Registry.getSession();
 		
 		setLayout(new FillLayout());
-		
+
 		chart = ChartFactory.createLineChart(this, SWT.NONE);
 		chart.setZoomEnabled(false);
 		chart.setTitleVisible(true);
@@ -116,6 +116,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		chart.setLogScaleEnabled(settings.isLogScaleEnabled());
       chart.setUseMultipliers(settings.isUseMultipliers());
 		chart.setStacked(settings.isStacked());
+      chart.setTranslucent(settings.isTranslucent());
 
       final Date from = new Date(System.currentTimeMillis() - settings.getTimeRangeMillis());
       final Date to = new Date(System.currentTimeMillis());
