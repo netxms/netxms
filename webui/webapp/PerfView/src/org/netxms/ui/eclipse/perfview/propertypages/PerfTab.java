@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ public class PerfTab extends AbstractDCIPropertyPage
    private Button checkExtendedLegend;
    private Button checkUseMultipliers;
    private Button checkInvertValues;
+   private Button checkTranslucent;
 	private LabeledText title;
 	private LabeledText name;
 	private ColorSelector color;
@@ -63,10 +64,10 @@ public class PerfTab extends AbstractDCIPropertyPage
    private Spinner timeRange;
    private Combo timeUnits;
 	private YAxisRangeEditor yAxisRange;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -232,6 +233,13 @@ public class PerfTab extends AbstractDCIPropertyPage
       gd.horizontalSpan = layout.numColumns;
       checkInvertValues.setLayoutData(gd);
       
+      checkTranslucent = new Button(optionsGroup, SWT.CHECK);
+      checkTranslucent.setText("&Translucent");
+      checkTranslucent.setSelection(settings.isTranslucent());
+      gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
+      checkTranslucent.setLayoutData(gd);
+
       yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
@@ -265,7 +273,8 @@ public class PerfTab extends AbstractDCIPropertyPage
       settings.setExtendedLegend(checkExtendedLegend.getSelection());
       settings.setUseMultipliers(checkUseMultipliers.getSelection());
       settings.setInvertedValues(checkInvertValues.getSelection());
-		
+      settings.setTranslucent(checkTranslucent.getSelection());
+
 		settings.setAutoScale(yAxisRange.isAuto());
 		settings.setMinYScaleValue(yAxisRange.getMinY());
 		settings.setMaxYScaleValue(yAxisRange.getMaxY());
@@ -273,7 +282,7 @@ public class PerfTab extends AbstractDCIPropertyPage
 
 		settings.setTimeRange(timeRange.getSelection());
 		settings.setTimeUnits(timeUnits.getSelectionIndex());
-		
+
 		try
 		{
 			dci.setPerfTabSettings(settings.createXml());
@@ -282,13 +291,13 @@ public class PerfTab extends AbstractDCIPropertyPage
 		{
 			dci.setPerfTabSettings(null);
 		}
-		
+
 		editor.modify();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
@@ -296,9 +305,9 @@ public class PerfTab extends AbstractDCIPropertyPage
          applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -308,9 +317,9 @@ public class PerfTab extends AbstractDCIPropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
 	@Override
 	protected void performDefaults()
 	{

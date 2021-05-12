@@ -97,6 +97,9 @@ public class PerfTabGraphSettings
    @Element(required = false)
    private boolean invertedValues = false;
 
+   @Element(required = false)
+   private boolean translucent = true;
+
    private PerfTabDci runtimeDciInfo = null;
 
 	/**
@@ -536,5 +539,21 @@ public class PerfTabGraphSettings
    public void setInvertedValues(boolean invertedValues)
    {
       this.invertedValues = invertedValues;
+   }
+
+   /**
+    * @return the translucent
+    */
+   public boolean isTranslucent()
+   {
+      return translucent;
+   }
+
+   /**
+    * @param translucent the translucent to set
+    */
+   public void setTranslucent(boolean translucent)
+   {
+      this.translucent = translucent;
    }
 }
