@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,15 +66,15 @@ public class PerformanceTab extends ObjectTab
 	private ScrolledComposite scroller;
 	private Composite chartArea;
 	private AnimatedImage waitingImage = null;
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected void createTabContent(Composite parent)
 	{
 		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
-		
+
 		chartArea = new Composite(scroller, SWT.NONE);
       chartArea.setBackground(ThemeEngine.getBackgroundColor("Dashboard"));
 
@@ -193,7 +193,7 @@ public class PerformanceTab extends ObjectTab
 			{
 			}
 		}
-		
+
 		// Sort DCIs: by group name, then by order number, then alphabetically
 		Collections.sort(settings, new Comparator<PerfTabGraphSettings>() {
 			@Override
@@ -213,7 +213,7 @@ public class PerformanceTab extends ObjectTab
 				return result;
 			}
 		});
-		
+
 		for(PerfTabGraphSettings s : settings)
 		{
 		   String groupName = s.getGroupName();
@@ -228,7 +228,7 @@ public class PerformanceTab extends ObjectTab
                }
             });
 			   charts.put(groupName.isEmpty() ? "##" + Long.toString(s.getRuntimeDciInfo().getId()) : groupName, chart);
-				
+
 				final GridData gd = new GridData();
 				gd.horizontalAlignment = SWT.FILL;
 				gd.grabExcessHorizontalSpace = true;
@@ -240,10 +240,10 @@ public class PerformanceTab extends ObjectTab
 				chart.addItem(s.getRuntimeDciInfo(), s);
 			}
 		}
-		
+
 		for(PerfTabGraph chart : charts.values())
 			chart.start();
-		
+
 		updateChartAreaLayout();
 	}
 

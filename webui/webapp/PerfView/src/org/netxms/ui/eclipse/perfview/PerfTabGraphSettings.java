@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -96,7 +96,10 @@ public class PerfTabGraphSettings
    
    @Element(required = false)
    private boolean invertedValues = false;
-	
+
+   @Element(required = false)
+   private boolean translucent = true;
+
    private PerfTabDci runtimeDciInfo = null;
 
 	/**
@@ -536,5 +539,21 @@ public class PerfTabGraphSettings
    public void setInvertedValues(boolean invertedValues)
    {
       this.invertedValues = invertedValues;
+   }
+
+   /**
+    * @return the translucent
+    */
+   public boolean isTranslucent()
+   {
+      return translucent;
+   }
+
+   /**
+    * @param translucent the translucent to set
+    */
+   public void setTranslucent(boolean translucent)
+   {
+      this.translucent = translucent;
    }
 }

@@ -105,9 +105,9 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		this.settings = settings;
 		items.add(dci);
 		session = (NXCSession)ConsoleSharedData.getSession();
-		
+
 		setLayout(new FillLayout());
-		
+
 		chart = ChartFactory.createLineChart(this, SWT.NONE);
 		chart.setZoomEnabled(false);
 		chart.setTitleVisible(true);
@@ -117,7 +117,8 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		chart.setLogScaleEnabled(settings.isLogScaleEnabled());
       chart.setUseMultipliers(settings.isUseMultipliers());
 		chart.setStacked(settings.isStacked());
-      
+      chart.setTranslucent(settings.isTranslucent());
+
       final Date from = new Date(System.currentTimeMillis() - settings.getTimeRangeMillis());
       final Date to = new Date(System.currentTimeMillis());
       chart.setTimeRange(from, to);
