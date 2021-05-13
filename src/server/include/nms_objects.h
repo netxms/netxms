@@ -2930,6 +2930,7 @@ protected:
    uint32_t m_pollCountSNMP;
    uint32_t m_pollCountEtherNetIP;
    uint32_t m_requiredPollCount;
+   uint32_t m_pollCountDnsToIp;
    int32_t m_zoneUIN;
    uint16_t m_agentPort;
    int16_t m_agentCacheMode;

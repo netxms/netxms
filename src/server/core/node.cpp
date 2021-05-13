@@ -150,6 +150,7 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_pollCountSNMP = 0;
    m_pollCountEtherNetIP = 0;
    m_requiredPollCount = 0; // Use system default
+   m_pollCountDnsToIp = 0;
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
    m_wirelessStations = nullptr;
    m_adoptedApCount = 0;
@@ -270,6 +271,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_pollCountSNMP = 0;
    m_pollCountEtherNetIP = 0;
    m_requiredPollCount = 0; // Use system default
+   m_pollCountDnsToIp = 0;
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
    m_wirelessStations = nullptr;
    m_adoptedApCount = 0;
@@ -1996,11 +1998,27 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
 
    bool agentConnected = false;
    bool resyncDataCollectionConfiguration = false;
+   bool dnsToIpUpdatedRun = false;
 
    int retryCount = 5;
 
 restart_status_poll:
-   if (g_flags & AF_RESOLVE_IP_FOR_EACH_STATUS_POLL)
+   uint32_t dnsToIpMode = ConfigReadInt(_T("Objects.Nodes.ResolveDNSToIPOnStatusPoll"), DTIM_NEVER);
+   if (dnsToIpMode == DTIM_ALWAYS)
+   {
+      if (ConfigReadULong(_T("Objects.Nodes.ResolveDNSToIPOnStatusPoll.Interval"), 0) <= m_pollCountDnsToIp)
+      {
+         poller->setStatus(_T("updating primary IP"));
+         updatePrimaryIpAddr();
+
+         m_pollCountDnsToIp = 0;
+      }
+      else
+      {
+         m_pollCountDnsToIp++;
+      }
+   }
+   else if (dnsToIpUpdatedRun)
    {
       poller->setStatus(_T("updating primary IP"));
       updatePrimaryIpAddr();
@@ -2053,6 +2071,8 @@ restart_status_poll:
                m_snmpSecurity->recalculateKeys();
                unlockProperties();
             }
+
+            dnsToIpUpdatedRun = false;
          }
          else if ((snmpErr == SNMP_ERR_ENGINE_ID) && (m_snmpVersion == SNMP_VERSION_3) && (retryCount > 0))
          {
@@ -2110,6 +2130,30 @@ restart_status_poll:
                m_pollCountSNMP++;
                if (m_pollCountSNMP >= requiredPolls)
                {
+                  if (dnsToIpMode == DTIM_ON_FAIL)
+                  {
+                     if (!dnsToIpUpdatedRun)
+                     {
+                        InetAddress oldIp = m_ipAddress;
+                        InetAddress ipAddr;
+                        if (!(m_primaryHostName.isNull()) && !(m_primaryHostName.isEmpty()))
+                        {
+                           ipAddr = ResolveHostName(m_zoneUIN, m_primaryHostName);
+                           if (!(oldIp.equals(ipAddr)))
+                           {
+                              nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): retrying poll with new IP from DNS"), m_name);
+                              dnsToIpUpdatedRun = true;
+                              goto restart_status_poll;
+                           }
+                        }
+                     }
+                     else
+                     {
+                        // State is still "unreachable" after getting new IP
+                        dnsToIpUpdatedRun = false;
+                     }
+                  }
+
                   m_state |= NSF_SNMP_UNREACHABLE;
                   PostSystemEventEx(eventQueue, EVENT_SNMP_FAIL, m_id, nullptr);
                   m_failTimeSNMP = now;
@@ -2164,6 +2208,7 @@ restart_status_poll:
          {
             m_pollCountAgent = 0;
          }
+         dnsToIpUpdatedRun = false;
          agentConnected = true;
       }
       else
@@ -2187,6 +2232,32 @@ restart_status_poll:
             m_pollCountAgent++;
             if (m_pollCountAgent >= requiredPolls)
             {
+               if (dnsToIpMode == DTIM_ON_FAIL)
+               {
+                  if (!dnsToIpUpdatedRun)
+                  {
+                     poller->setStatus(_T("updating primary IP"));
+                     InetAddress oldIp = m_ipAddress;
+                     InetAddress ipAddr;
+                     if (!(m_primaryHostName.isNull()) && !(m_primaryHostName.isEmpty()))
+                     {
+                        ipAddr = ResolveHostName(m_zoneUIN, m_primaryHostName);
+                        if (!(oldIp.equals(ipAddr)))
+                        {
+                           nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): retrying poll with new IP from DNS"), m_name);
+                           dnsToIpUpdatedRun = true;
+                           agentUnlock();
+                           goto restart_status_poll;
+                        }
+                     }
+                  }
+                  else
+                  {
+                     // State is still "unreachable" after getting new IP
+                     dnsToIpUpdatedRun = false;
+                  }
+               }
+
                m_state |= NSF_AGENT_UNREACHABLE;
                PostSystemEventEx(eventQueue, EVENT_AGENT_FAIL, m_id, nullptr);
                m_failTimeAgent = now;
@@ -2207,6 +2278,9 @@ restart_status_poll:
          fileUpdateConnection->nop();
       }
    }
+
+   // In the rare event that SNMP and Agent both got disabled since the flag was set
+   dnsToIpUpdatedRun = false;
 
    POLL_CANCELLATION_CHECKPOINT_EX(delete eventQueue);
 

@@ -24,6 +24,37 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.52 to 40.53
+ */
+static bool H_UpgradeFromV52()
+{
+   if (GetSchemaLevelForMajorVersion(38) < 15)
+   {
+      static const TCHAR *batch =
+         _T("UPDATE config SET data_type='C',need_server_restart=0 WHERE var_name='Objects.Nodes.ResolveDNSToIPOnStatusPoll'\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','0','Never')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','1','Always')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','2','On failure')\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+
+      CHK_EXEC(CreateConfigParam(_T("Objects.Nodes.ResolveDNSToIPOnStatusPoll.Interval"),
+            _T("0"),
+            _T("Number of status polls between resolving primary host name to IP, if Objects.Nodes.ResolveDNSToIPOnStatusPoll set to \"Always\"."),
+            _T("polls"),
+            'I',
+            true,
+            false,
+            false,
+            false));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(38, 15));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(53));
+   return true;
+}
+
+/**
  * Upgrade from 40.51 to 40.52
  */
 static bool H_UpgradeFromV51()
@@ -1339,6 +1370,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 52, 40, 53, H_UpgradeFromV52 },
    { 51, 40, 52, H_UpgradeFromV51 },
    { 50, 40, 51, H_UpgradeFromV50 },
    { 49, 40, 50, H_UpgradeFromV49 },

@@ -183,6 +183,13 @@
 #define CSF_TERMINATE_REQUESTED  ((uint32_t)0x00002000)
 
 /**
+ * Modes for DNS to IP resolution
+ */
+#define DTIM_NEVER   0
+#define DTIM_ALWAYS  1
+#define DTIM_ON_FAIL 2
+
+/**
  * Certificate types
  */
 enum CertificateType
