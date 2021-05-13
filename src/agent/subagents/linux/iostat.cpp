@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2020 Raden Solutions
+** Copyright (C) 2004-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -159,7 +159,7 @@ static IOSTAT_DEVICE *ParseIoStat(char *line)
 	   s_devices[dev].isRealDevice = IsRealDevice(s_devices[dev].sysfsName);
 	   s_devices[dev].isFirstRead = true;
 	   memset(s_devices[dev].samples, 0, sizeof(IOSTAT_SAMPLE) * SAMPLES_PER_MINUTE);
-	   AgentWriteDebugLog(2, _T("ParseIoStat(): new device added (name=%hs isRealDevice=%d)"), devName, s_devices[dev].isRealDevice);
+	   nxlog_debug_tag(DEBUG_TAG, 2, _T("ParseIoStat(): new device added (name=%hs isRealDevice=%d)"), devName, s_devices[dev].isRealDevice);
 	}
 
 	// Parse counters
@@ -239,7 +239,7 @@ void StartIoStatCollector()
 		if (S_ISDIR(st.st_mode))
 		{
 			s_isSysFsAvailable = true;
-			AgentWriteDebugLog(2, _T("Linux: using /sys/block to distinguish devices from partitions"));
+			nxlog_debug_tag(DEBUG_TAG, 2, _T("Using /sys/block to distinguish devices from partitions"));
 		}
 	}	
 

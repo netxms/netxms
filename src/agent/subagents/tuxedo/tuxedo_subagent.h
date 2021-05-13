@@ -36,7 +36,7 @@
 #endif
 #endif
 
-#define TUXEDO_DEBUG_TAG   _T("sa.tuxedo")
+#define TUXEDO_DEBUG_TAG   _T("tuxedo")
 
 #define MAX_LMID_LEN    64
 

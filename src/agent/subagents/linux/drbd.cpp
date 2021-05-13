@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2006-2020 Victor Kirhenshtein
+** Copyright (C) 2006-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -135,17 +135,16 @@ static bool ParseDrbdStatus()
 /**
  * DRBD stat collector thread
  */
-static THREAD_RESULT THREAD_CALL CollectorThread(void *arg)
+static void CollectorThread()
 {
 	if (!ParseDrbdStatus())
 	{
-		AgentWriteDebugLog(1, _T("Unable to parse /proc/drbd, DRBD data collector will not start"));
-		return THREAD_OK;
+		nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Unable to parse /proc/drbd, DRBD data collector will not start"));
+		return;
 	}
 
 	while(!ConditionWait(s_stopCondition, 15000))
 		ParseDrbdStatus();
-	return THREAD_OK;
 }
 
 /**
@@ -156,7 +155,7 @@ void InitDrbdCollector()
 	s_deviceAccess = MutexCreate();
 	s_versionAccess = MutexCreate();
 	s_stopCondition = ConditionCreate(TRUE);
-	s_collectorThread = ThreadCreateEx(CollectorThread, 0, NULL);
+	s_collectorThread = ThreadCreateEx(CollectorThread);
 }
 
 /**

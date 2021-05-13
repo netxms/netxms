@@ -29,7 +29,7 @@
 #include <sys/var.h>
 #include "libperfstat_compat.h"
 
-#define AIX_DEBUG_TAG	_T("sa.aix")
+#define AIX_DEBUG_TAG	_T("aix")
 
 /**
  * CPU stats

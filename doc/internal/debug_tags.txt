@@ -4,7 +4,11 @@ agent.conn	Agent connections
 agent.policy	Agent policies
 agent.tunnel	Agent tunnels
 
+aix		AIX platform subagent messages
+
 alarm.*		Alarm management
+
+asterisk	Asterisk subagent messages
 
 client.session	Client sessions
 
@@ -33,6 +37,8 @@ event.corr	Event correlation
 event.policy	Event processing policy
 event.proc	Event processor
 
+freebsd		FreeBSD platform subagent messages
+
 import.*	Server configuration import
 
 init.*		Generic process or library initialization
@@ -47,6 +53,8 @@ job.manager	Job manager
 housekeeper	Housekeeper messages
 
 logwatch.*	Messages from log monitoring library
+
+mysql		MySQL monitoring subagent messages
 
 nc.*		Notification channels
 
@@ -71,6 +79,8 @@ obj.sync	Object synchronization
 pdsdrv.*	Performance data storage drivers
 pdsdrv.influxdb	InfluxDB performance data storage driver
 
+ping		Ping subagent
+
 poll.*		Polling
 poll.conf	Configuration poll
 poll.discovery	Network discovery
@@ -81,22 +91,17 @@ poll.route	Routing table poll
 poll.status	Status poll
 poll.topo	Topology poll
 
+portcheck	Portcheck subagent messages
+
 proc.*		Process related trace
 proc.spexec	Sub-process executor
 
 proxy		Proxy related (in agent log)
 
-sa.*		Sub-agent related messages
-sa.aix		AIX platform subagent messages
-sa.asterisk	Asterisk subagent messages
-sa.freebsd	FreeBSD platform subagent messages
-sa.mysql	MySQL monitoring subagent messages
-sa.ping		Ping subagent
-sa.portcheck	Portcheck subagent messages
-sa.python	Python subagent messages
-sa.tuxedo	Tuxedo subagent messages
-sa.ups		UPS subagent messages
-sa.winnt	WINNT subagent messages
+python		Python subagent messages
+
+scripts.*	Script library related messages
+scripts.scheduled	Scheduled script execution
 
 smbios		SMBIOS related messages
 
@@ -107,6 +112,8 @@ snmp.lib	SNMP library low-level diagnostic
 snmp.trap	SNMP trap processing
 
 statcoll	Internal server statistic collector
+
+subagents	Sub-agent manager
 
 sync		Syncer messages
 
@@ -121,6 +128,10 @@ topo.layer2     Layer 2 topology builder
 topo.lldp	LLDP related messages
 
 tunnel		Tunnel (in agent log)
+
+tuxedo		Tuxedo subagent messages
+ups		UPS subagent messages
+winnt		WINNT subagent messages
 
 xmpp		XMPP notifications
 

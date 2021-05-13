@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@
 **/
 
 #include "nxagentd.h"
+
+#define DEBUG_TAG _T("subagents")
 
 /**
  * Subagent list
@@ -101,30 +103,30 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegi
 									 pInfo->name,
 									 pInfo->actions[i].description);
 
-					nxlog_write(NXLOG_INFO, _T("Subagent \"%s\" (%s) loaded successfully (version %s)"), pInfo->name, moduleName, pInfo->version);
+					nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Subagent \"%s\" (%s) loaded successfully (version %s)"), pInfo->name, moduleName, pInfo->version);
 					success = true;
 				}
 				else
 				{
-					nxlog_write(NXLOG_ERROR, _T("Initialization of subagent \"%s\" (%s) failed"), pInfo->name, moduleName);
+					nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Initialization of subagent \"%s\" (%s) failed"), pInfo->name, moduleName);
 					DLClose(hModule);
 				}
          }
          else
          {
-            nxlog_write(NXLOG_WARNING, _T("Subagent \"%s\" already loaded from module \"%s\""), pInfo->name, sa->szName);
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Subagent \"%s\" already loaded from module \"%s\""), pInfo->name, sa->szName);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write(NXLOG_ERROR, _T("Subagent \"%s\" has invalid magic number - probably it was compiled for different agent version"), moduleName);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Subagent \"%s\" has invalid magic number - probably it was compiled for different agent version"), moduleName);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(NXLOG_ERROR, _T("Registration of subagent \"%s\" failed"), moduleName);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Registration of subagent \"%s\" failed"), moduleName);
       DLClose(hModule);
    }
 
@@ -283,7 +285,7 @@ bool ProcessCommandBySubAgent(UINT32 command, NXCPMessage *request, NXCPMessage 
  */
 void NotifySubAgents(uint32_t code, void *data)
 {
-   nxlog_debug(5, _T("NotifySubAgents(): processing notification with code %u"), code);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("NotifySubAgents(): processing notification with code %u"), code);
    for(int i = 0; i < s_subAgents.size(); i++)
    {
       NETXMS_SUBAGENT_INFO *s = s_subAgents.get(i)->pInfo;

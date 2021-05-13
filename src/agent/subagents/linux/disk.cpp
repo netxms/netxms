@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2020 Raden Solutions
+** Copyright (C) 2004-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,12 +44,12 @@ static void FindMountpointByDevice(char *dev, int size)
 /**
  * Handler for FileSystem.* parameters
  */
-LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_DiskInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szArg[512] = {0};
 
-	AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
+	AgentGetParameterArgA(param, 1, szArg, sizeof(szArg));
 	if (szArg[0] == 0)
 	   return SYSINFO_RC_UNSUPPORTED;
 
@@ -60,72 +60,72 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
    {
       nRet = SYSINFO_RC_SUCCESS;
 
-      QWORD usedBlocks = (QWORD)(s.f_blocks - s.f_bfree);
-      QWORD totalBlocks = (QWORD)s.f_blocks;
-      QWORD blockSize = (QWORD)s.f_bsize;
-      QWORD freeBlocks = (QWORD)s.f_bfree;
-      QWORD availableBlocks = (QWORD)s.f_bavail;
+      uint64_t usedBlocks = static_cast<uint64_t>(s.f_blocks - s.f_bfree);
+      uint64_t totalBlocks = static_cast<uint64_t>(s.f_blocks);
+      uint64_t blockSize = static_cast<uint64_t>(s.f_bsize);
+      uint64_t freeBlocks = static_cast<uint64_t>(s.f_bfree);
+      uint64_t availableBlocks = static_cast<uint64_t>(s.f_bavail);
 
-      switch((long)pArg)
+      switch(CAST_FROM_POINTER(arg, int))
       {
          case DISK_TOTAL:
-            ret_uint64(pValue, totalBlocks * blockSize);
+            ret_uint64(value, totalBlocks * blockSize);
             break;
          case DISK_USED:
-            ret_uint64(pValue, usedBlocks * blockSize);
+            ret_uint64(value, usedBlocks * blockSize);
             break;
          case DISK_FREE:
-            ret_uint64(pValue, freeBlocks * blockSize);
+            ret_uint64(value, freeBlocks * blockSize);
             break;
          case DISK_AVAIL:
-            ret_uint64(pValue, availableBlocks * blockSize);
+            ret_uint64(value, availableBlocks * blockSize);
             break;
          case DISK_USED_PERC:
             if (totalBlocks > 0)
             {
-               ret_double(pValue, (usedBlocks * 100.0) / totalBlocks);
+               ret_double(value, (usedBlocks * 100.0) / totalBlocks);
             }
             else
             {
-               ret_double(pValue, 0.0);
+               ret_double(value, 0.0);
             }
             break;
          case DISK_AVAIL_PERC:
             if (totalBlocks > 0)
             {
-               ret_double(pValue, (availableBlocks * 100.0) / totalBlocks);
+               ret_double(value, (availableBlocks * 100.0) / totalBlocks);
             }
             else
             {
-               ret_double(pValue, 0.0);
+               ret_double(value, 0.0);
             }
             break;
          case DISK_FREE_PERC:
             if (totalBlocks > 0)
             {
-               ret_double(pValue, (freeBlocks * 100.0) / totalBlocks);
+               ret_double(value, (freeBlocks * 100.0) / totalBlocks);
             }
             else
             {
-               ret_double(pValue, 0.0);
+               ret_double(value, 0.0);
             }
             break;
          case DISK_TOTAL_INODES:
-            ret_uint64(pValue, s.f_files);
+            ret_uint64(value, s.f_files);
             break;
          case DISK_FREE_INODES:
          case DISK_AVAIL_INODES:
-            ret_uint64(pValue, s.f_ffree);
+            ret_uint64(value, s.f_ffree);
             break;
          case DISK_FREE_INODES_PERC:
          case DISK_AVAIL_INODES_PERC:
-            ret_double(pValue, (s.f_files > 0) ? s.f_ffree * 100.0 / s.f_files : 0);
+            ret_double(value, (s.f_files > 0) ? s.f_ffree * 100.0 / s.f_files : 0);
             break;
          case DISK_USED_INODES:
-            ret_uint64(pValue, s.f_files - s.f_ffree);
+            ret_uint64(value, s.f_files - s.f_ffree);
             break;
          case DISK_USED_INODES_PERC:
-            ret_double(pValue, (s.f_files > 0) ? (s.f_files - s.f_ffree) * 100.0 / s.f_files : 0);
+            ret_double(value, (s.f_files > 0) ? (s.f_files - s.f_ffree) * 100.0 / s.f_files : 0);
             break;
          default:
             nRet = SYSINFO_RC_UNSUPPORTED;
@@ -207,7 +207,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
          else
          {
             TCHAR buffer[1024];
-            AgentWriteDebugLog(4, _T("Linux: H_FileSystems: Call to statfs(\"%hs\") failed (%hs)"), mountPoint, strerror(errno));
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("H_FileSystems: Call to statfs(\"%hs\") failed (%hs)"), mountPoint, strerror(errno));
 
             table->set(4, (QWORD)0);
             table->set(5, (QWORD)0);
@@ -222,7 +222,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
    }
    else
    {
-      AgentWriteDebugLog(4, _T("Linux: H_FileSystems: cannot open /etc/mtab"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("H_FileSystems: cannot open /etc/mtab"));
       rc = SYSINFO_RC_ERROR;
    }
    return rc;
@@ -264,7 +264,7 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
    }
    else
    {
-      AgentWriteDebugLog(4, _T("Linux: H_MountPoints: cannot open /etc/mtab"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("H_MountPoints: cannot open /etc/mtab"));
       rc = SYSINFO_RC_ERROR;
    }
    return rc;
@@ -301,7 +301,7 @@ LONG H_FileSystemType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
 	}
    else
    {
-      AgentWriteDebugLog(4, _T("Linux: H_FileSystemType: call to setmntent failed"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("H_FileSystemType: call to setmntent failed"));
       rc = SYSINFO_RC_ERROR;
    }
    return rc;

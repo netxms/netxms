@@ -27,7 +27,7 @@ enum
 	INTERVAL_15MIN
 };
 
-#define DEBUG_TAG _T("Darwin")
+#define DEBUG_TAG _T("darwin")
 
 #define __darwin_h__
 
