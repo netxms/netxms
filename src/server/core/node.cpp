@@ -150,7 +150,6 @@ Node::Node() : super(), m_discoveryPollState(_T("discovery")),
    m_pollCountAgent = 0;
    m_pollCountSNMP = 0;
    m_pollCountEtherNetIP = 0;
-   m_pollCountAllDown = 0;
    m_requiredPollCount = 0; // Use system default
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
    m_fdb = nullptr;
@@ -273,7 +272,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_discovery
    m_pollCountAgent = 0;
    m_pollCountSNMP = 0;
    m_pollCountEtherNetIP = 0;
-   m_pollCountAllDown = 0;
    m_requiredPollCount = 0; // Use system default
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
    m_fdb = nullptr;
@@ -10691,7 +10689,6 @@ json_t *Node::toJson()
    json_object_set_new(root, "pendingState", json_integer(m_pendingState));
    json_object_set_new(root, "pollCountSNMP", json_integer(m_pollCountSNMP));
    json_object_set_new(root, "pollCountAgent", json_integer(m_pollCountAgent));
-   json_object_set_new(root, "pollCountAllDown", json_integer(m_pollCountAllDown));
    json_object_set_new(root, "requiredPollCount", json_integer(m_requiredPollCount));
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
    json_object_set_new(root, "agentPort", json_integer(m_agentPort));
