@@ -2168,7 +2168,8 @@ restart_status_poll:
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d. Poll count %d of %d"), m_name, (int)error, (int)socketError, m_pollCountAgent, m_requiredPollCount);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d. Poll count %d of %d"),
+                  m_name, (int)error, (int)socketError, m_pollCountAgent, requiredPolls);
          sendPollerMsg(POLLER_ERROR _T("Cannot connect to NetXMS agent (%s)\r\n"), AgentErrorCodeToText(error));
          if (m_state & NSF_AGENT_UNREACHABLE)
          {
@@ -2258,7 +2259,7 @@ restart_status_poll:
       {
          String reason = status.failureReason();
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): EtherNet/IP unreachable (%s), poll count %d of %d"),
-                  m_name, reason.cstr(), m_pollCountEtherNetIP, m_requiredPollCount);
+                  m_name, reason.cstr(), m_pollCountEtherNetIP, requiredPolls);
          sendPollerMsg(POLLER_ERROR _T("Cannot connect to device via EtherNet/IP (%s)\r\n"), reason.cstr());
          if (m_state & NSF_ETHERNET_IP_UNREACHABLE)
          {
