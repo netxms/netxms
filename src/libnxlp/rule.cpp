@@ -155,7 +155,7 @@ LogParserRule::~LogParserRule()
  */
 bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
          StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName, LogParserCallback cb,
-         LogParserActionCallback cbAction, void *context)
+         LogParserActionCallback cbAction, void *userData)
 {
    incCheckCount(objectId);
    if (extMode)
@@ -209,10 +209,10 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 			{
             StringList captureGroups;
 				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, &captureGroups, variables, recordId, objectId,
-               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, context);
+               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, userData);
 			}
          if ((cbAction != nullptr) && (m_agentAction != nullptr))
-            cbAction(m_agentAction, *m_agentActionArgs);
+            cbAction(m_agentAction, *m_agentActionArgs, userData);
 			incMatchCount(objectId);
 			return true;
 		}
@@ -243,11 +243,11 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 				}
 
 				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, &captureGroups, variables, recordId, objectId,
-               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, context);
+               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, userData);
             m_parser->trace(8, _T("  callback completed"));
          }
 			if ((cbAction != nullptr) && (m_agentAction != nullptr))
-			   cbAction(m_agentAction, *m_agentActionArgs);
+			   cbAction(m_agentAction, *m_agentActionArgs, userData);
          incMatchCount(objectId);
 			return true;
 		}
@@ -255,23 +255,6 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 
 	m_parser->trace(6, _T("  no match"));
 	return false;	// no match
-}
-
-/**
- * Match line
- */
-bool LogParserRule::match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, LogParserActionCallback cbAction, void *context)
-{
-   return matchInternal(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, nullptr, cb, cbAction, context);
-}
-
-/**
- * Match event
- */
-bool LogParserRule::matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables,
-                            UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *fileName, LogParserCallback cb, LogParserActionCallback cbAction, void *context)
-{
-   return matchInternal(true, source, eventId, level, line, variables, recordId, objectId, timestamp, fileName, cb, cbAction, context);
 }
 
 /**

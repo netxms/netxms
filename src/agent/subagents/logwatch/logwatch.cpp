@@ -39,10 +39,9 @@ static bool s_processOfflineEvents;
 /**
  * File parsing thread
  */
-THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
+static void ParserThreadFile(LogParser *parser)
 {
-   static_cast<LogParser*>(arg)->monitorFile();
-	return THREAD_OK;
+   parser->monitorFile(-1);
 }
 
 #ifdef _WIN32
@@ -50,10 +49,9 @@ THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
 /**
  * Event log parsing thread
  */
-THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
+static void ParserThreadEventLog(LogParser *parser)
 {
-   static_cast<LogParser*>(arg)->monitorEventLog(s_processOfflineEvents ? _T("LogWatch") : NULL);
-	return THREAD_OK;
+   parser->monitorEventLog(s_processOfflineEvents ? _T("LogWatch") : nullptr);
 }
 
 #endif
@@ -179,6 +177,14 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
 }
 
 /**
+ * Callback for action execution
+ */
+static void ExecuteAction(const TCHAR *action, const StringList& args, void *userData)
+{
+   AgentExecuteAction(action, args);
+}
+
+/**
  * Add parser from config parameter
  */
 static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
@@ -197,7 +203,7 @@ static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
 				if (parser->getFileName() != nullptr)
 				{
 					parser->setCallback(LogParserMatch);
-               parser->setActionCallback(AgentExecuteAction);
+               parser->setActionCallback(ExecuteAction);
                parser->setGuid(guid);
                s_parsers.add(parser);
                nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file \"%s\", GUID %s, trace level %d"),
@@ -308,17 +314,17 @@ static bool SubagentInit(Config *config)
 #ifdef _WIN32
 		if (p->getFileName()[0] == _T('*'))	// event log
 		{
-			p->setThread(ThreadCreateEx(ParserThreadEventLog, 0, p));
+			p->setThread(ThreadCreateEx(ParserThreadEventLog, p));
 			// Seems that simultaneous calls to OpenEventLog() from two or more threads may
 			// cause entire process to hang
 			ThreadSleepMs(200);
 		}
 		else	// regular file
 		{
-			p->setThread(ThreadCreateEx(ParserThreadFile, 0, p));
+			p->setThread(ThreadCreateEx(ParserThreadFile, p));
 		}
 #else
-		p->setThread(ThreadCreateEx(ParserThreadFile, 0, p));
+		p->setThread(ThreadCreateEx(ParserThreadFile, p));
 #endif
 	}
 
@@ -370,17 +376,17 @@ static void OnAgentNotify(UINT32 code, void *data)
 #ifdef _WIN32
       if (p->getFileName()[0] == _T('*'))	// event log
       {
-         p->setThread(ThreadCreateEx(ParserThreadEventLog, 0, p));
+         p->setThread(ThreadCreateEx(ParserThreadEventLog, p));
          // Seems that simultaneous calls to OpenEventLog() from two or more threads may
          // cause entire process to hang
          ThreadSleepMs(200);
       }
       else	// regular file
       {
-         p->setThread(ThreadCreateEx(ParserThreadFile, 0, p));
+         p->setThread(ThreadCreateEx(ParserThreadFile, p));
       }
 #else
-      p->setThread(ThreadCreateEx(ParserThreadFile, 0, p));
+      p->setThread(ThreadCreateEx(ParserThreadFile, p));
 #endif
    }
 

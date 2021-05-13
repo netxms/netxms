@@ -82,19 +82,25 @@ enum LogParserFileEncoding
  *    NetXMS event code, NetXMS event name, event tag, original text, source,
  *    original event ID (facility), original severity,
  *    capture groups, variables, record id, object id, repeat count,
- *    log record timestamp, context
+ *    log record timestamp, user data
  */
-typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *,
-         const TCHAR *, UINT32, UINT32, const StringList *, const StringList *, UINT64, UINT32,
-         int, time_t, void *);
+typedef void (*LogParserCallback)(UINT32, const TCHAR*, const TCHAR*, const TCHAR*,
+         const TCHAR*, UINT32, UINT32, const StringList*, const StringList*, UINT64, UINT32,
+         int, time_t, void*);
 
 /**
  * Log parser action callback
  * Parameters:
- *    NetXMS agent action, agent action arguments
+ *    NetXMS agent action, agent action arguments, user data
  */
-typedef void (* LogParserActionCallback)(const TCHAR *, const StringList &);
+typedef void (*LogParserActionCallback)(const TCHAR*, const StringList&, void*);
 
+/**
+ * Log parser copy callback
+ * Parameters:
+ *    record text, source, event ID (facility), severity, user data
+ */
+typedef void (*LogParserCopyCallback)(const TCHAR*, const TCHAR*, uint32_t, uint32_t, void*);
 
 class LIBNXLP_EXPORTABLE LogParser;
 
@@ -131,15 +137,15 @@ private:
 	LogParser *m_parser;
 	TCHAR *m_name;
 	PCRE *m_preg;
-	UINT32 m_eventCode;
+	uint32_t m_eventCode;
 	TCHAR *m_eventName;
 	TCHAR *m_eventTag;
 	int *m_pmatch;
 	TCHAR *m_regexp;
 	TCHAR *m_source;
-	UINT32 m_level;
-	UINT32 m_idStart;
-	UINT32 m_idEnd;
+   uint32_t m_level;
+   uint32_t m_idStart;
+   uint32_t m_idEnd;
 	TCHAR *m_context;
 	int m_contextAction;
 	TCHAR *m_contextToChange;
@@ -161,7 +167,7 @@ private:
 
 	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
 	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName,
-	         LogParserCallback cb, LogParserActionCallback cbAction, void *context);
+	         LogParserCallback cb, LogParserActionCallback cbAction, void *userData);
 	bool matchRepeatCount();
    void expandMacros(const TCHAR *regexp, StringBuffer &out);
    void incCheckCount(uint32_t objectId);
@@ -177,12 +183,19 @@ public:
 	~LogParserRule();
 
 	const TCHAR *getName() const { return m_name; }
-	bool isValid() const { return m_preg != NULL; }
-	UINT32 getEventCode() const { return m_eventCode; }
+	bool isValid() const { return m_preg != nullptr; }
+	uint32_t getEventCode() const { return m_eventCode; }
 
-	bool match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, LogParserActionCallback cbAction, void *context);
-	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, 
-                UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *fileName, LogParserCallback cb, LogParserActionCallback cbAction, void *context);
+   bool match(const TCHAR *line, uint32_t objectId, LogParserCallback cb, LogParserActionCallback cbAction, void *userData)
+   {
+      return matchInternal(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, nullptr, cb, cbAction, userData);
+   }
+   bool matchEx(const TCHAR *source, uint32_t eventId, uint32_t level, const TCHAR *line, StringList *variables,
+         uint64_t recordId, uint32_t objectId, time_t timestamp, const TCHAR *fileName, LogParserCallback cb,
+         LogParserActionCallback cbAction, void *userData)
+   {
+      return matchInternal(true, source, eventId, level, line, variables, recordId, objectId, timestamp, fileName, cb, cbAction, userData);
+   }
 
 	void setLogName(const TCHAR *logName) { MemFree(m_logName); m_logName = MemCopyString(logName); }
 
@@ -212,11 +225,11 @@ public:
 	void setSource(const TCHAR *source) { MemFree(m_source); m_source = MemCopyString(source); }
 	const TCHAR *getSource() const { return CHECK_NULL_EX(m_source); }
 
-	void setLevel(UINT32 level) { m_level = level; }
-	UINT32 getLevel() const { return m_level; }
+	void setLevel(uint32_t level) { m_level = level; }
+   uint32_t getLevel() const { return m_level; }
 
-	void setIdRange(UINT32 start, UINT32 end) { m_idStart = start; m_idEnd = end; }
-	QWORD getIdRange() const { return ((QWORD)m_idStart << 32) | (QWORD)m_idEnd; }
+	void setIdRange(uint32_t start, uint32_t end) { m_idStart = start; m_idEnd = end; }
+	uint64_t getIdRange() const { return ((uint64_t)m_idStart << 32) | (uint64_t)m_idEnd; }
 
    void setRepeatInterval(int repeatInterval) { m_repeatInterval = repeatInterval; }
    int getRepeatInterval() const { return m_repeatInterval; }
@@ -235,18 +248,23 @@ public:
    void restoreCounters(const LogParserRule *rule);
 };
 
+#ifdef _WIN32
+template class LIBNXLP_EXPORTABLE ObjectArray<LogParserRule>;
+#endif
+
 /**
  * Log parser class
  */
 class LIBNXLP_EXPORTABLE LogParser
 {
 private:
-	ObjectArray<LogParserRule> *m_rules;
+	ObjectArray<LogParserRule> m_rules;
 	StringMap m_contexts;
 	StringMap m_macros;
 	LogParserCallback m_cb;
 	LogParserActionCallback m_cbAction;
-	void *m_userArg;
+   LogParserCopyCallback m_cbCopy;
+	void *m_userData;
 	TCHAR *m_fileName;
 	int m_fileEncoding;
 	StringList m_exclusionSchedules;
@@ -273,22 +291,20 @@ private:
    uuid m_guid;
 
 	const TCHAR *checkContext(LogParserRule *rule);
-	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
-	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName, bool *saveToDatabase);
+	bool matchLogRecord(bool hasAttributes, const TCHAR *source, uint32_t eventId, uint32_t level, const TCHAR *line,
+	         StringList *variables, uint64_t recordId, uint32_t objectId, time_t timestamp, const TCHAR *logName, bool *saveToDatabase);
 
 	bool isExclusionPeriod();
 
    const LogParserRule *findRuleByName(const TCHAR *name) const;
 
-   int getCharSize() const;
-
    void setStatus(LogParserStatus status) { m_status = status; }
 
-   bool monitorFile2();
+   off_t processNewRecords(int fh);
+   bool monitorFile2(off_t startOffset);
 
 #ifdef _WIN32
-   void parseEvent(EVENTLOGRECORD *rec);
-   bool monitorFileWithSnapshot();
+   bool monitorFileWithSnapshot(off_t startOffset);
    time_t readLastProcessedRecordTimestamp();
 #endif
 
@@ -309,12 +325,14 @@ public:
    bool isFilePreallocated() const { return m_preallocatedFile; }
    bool isDetectBrokenPrealloc() const { return m_detectBrokenPrealloc; }
    void getEventList(HashSet<uint32_t> *eventList) const;
+   int getCharSize() const;
 
 	void setName(const TCHAR *name);
    void setFileName(const TCHAR *name);
+   void setFileEncoding(int encoding) { m_fileEncoding = encoding; }
    void setGuid(const uuid& guid);
 
-	void setThread(THREAD th) { m_thread = th; }
+	void setThread(THREAD thread) { m_thread = thread; }
 	THREAD getThread() { return m_thread; }
    CONDITION getStopCondition() { return m_stopCondition; }
 
@@ -335,19 +353,20 @@ public:
 	bool addRule(LogParserRule *rule);
 	void setCallback(LogParserCallback cb) { m_cb = cb; }
    void setActionCallback(LogParserActionCallback cb) { m_cbAction = cb; }
-	void setUserArg(void *arg) { m_userArg = arg; }
+   void setCopyCallback(LogParserCopyCallback cb) { m_cbCopy = cb; }
+   void setUserData(void *userData) { m_userData = userData; }
 	void setEventNameList(CodeLookupElement *lookupTable) { m_eventNameList = lookupTable; }
-	void setEventNameResolver(bool (*cb)(const TCHAR *, UINT32 *)) { m_eventResolver = cb; }
-	UINT32 resolveEventName(const TCHAR *name, UINT32 defVal = 0);
+	void setEventNameResolver(bool (*cb)(const TCHAR *, uint32_t *)) { m_eventResolver = cb; }
+   uint32_t resolveEventName(const TCHAR *name, uint32_t defaultValue = 0);
 
    void addExclusionSchedule(const TCHAR *schedule) { m_exclusionSchedules.add(schedule); }
 
 	void addMacro(const TCHAR *name, const TCHAR *value);
 	const TCHAR *getMacro(const TCHAR *name);
 
-	bool matchLine(const TCHAR *line, UINT32 objectId = 0);
-	bool matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables,
-	         UINT64 recordId, UINT32 objectId = 0, time_t timestamp = 0, const TCHAR *logName = nullptr, bool *saveToDatabase = nullptr);
+	bool matchLine(const TCHAR *line, uint32_t objectId = 0);
+	bool matchEvent(const TCHAR *source, uint32_t eventId, uint32_t level, const TCHAR *line, StringList *variables,
+	         uint64_t recordId, uint32_t objectId = 0, time_t timestamp = 0, const TCHAR *logName = nullptr, bool *saveToDatabase = nullptr);
 
 	int getProcessedRecordsCount() const { return m_recordsProcessed; }
 	int getMatchedRecordsCount() const { return m_recordsMatched; }
@@ -355,7 +374,8 @@ public:
 	int getTraceLevel() const { return m_traceLevel; }
 	void setTraceLevel(int level) { m_traceLevel = level; }
 
-	bool monitorFile();
+   off_t scanFile(int fh, off_t startOffset);
+	bool monitorFile(off_t startOffset);
 #ifdef _WIN32
    bool monitorEventLog(const TCHAR *markerPrefix);
    void saveLastProcessedRecordTimestamp(time_t timestamp);
@@ -382,6 +402,11 @@ void LIBNXLP_EXPORTABLE InitLogParserLibrary();
  * Cleanup event log parsig library
  */
 void LIBNXLP_EXPORTABLE CleanupLogParserLibrary();
+
+/**
+ * Skip block of zeroes within file
+ */
+bool LIBNXLP_EXPORTABLE SkipZeroBlock(int fh, int chsize);
 
 #ifdef _WIN32
 

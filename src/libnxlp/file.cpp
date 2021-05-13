@@ -148,11 +148,10 @@ static char *FindEOL(char *start, int length, int encoding)
 /**
  * Parse new log records
  */
-static off_t ParseNewRecords(LogParser *parser, int fh)
+off_t LogParser::processNewRecords(int fh)
 {
-   int encoding = parser->getFileEncoding();
    int charSize;
-   switch (encoding)
+   switch (m_fileEncoding)
    {
       case LP_FCP_UCS2:
       case LP_FCP_UCS2_LE:
@@ -183,7 +182,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
          for(ptr = buffer;; ptr = eptr + charSize)
          {
             bufPos = (int)(ptr - buffer);
-				eptr = FindEOL(ptr, bytes - bufPos, encoding);
+				eptr = FindEOL(ptr, bytes - bufPos, m_fileEncoding);
             if (eptr == nullptr)
             {
 					int remaining = bytes - bufPos;
@@ -192,7 +191,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 					{
 					   if (buffer != ptr)
 					      memmove(buffer, ptr, remaining);
-                  if (parser->isFilePreallocated() && !memcmp(buffer, "\x00\x00\x00\x00", std::min(remaining, 4)))
+                  if (m_preallocatedFile && !memcmp(buffer, "\x00\x00\x00\x00", std::min(remaining, 4)))
                   {
                      // Found zeroes in preallocated file, next read should be after last known EOL
                      return resetPos;
@@ -200,11 +199,11 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 					}
 					bufPos = remaining;
                nxlog_debug_tag(DEBUG_TAG, 7, _T("Last line in data block for file \"%s\", resetPos=") UINT64_FMT _T(", remaining=%d"),
-                     parser->getFileName(), static_cast<uint64_t>(resetPos), remaining);
+                     m_fileName, static_cast<uint64_t>(resetPos), remaining);
                break;
             }
 				// remove possible CR character and put 0 to indicate end of line
-				switch(encoding)
+				switch(m_fileEncoding)
 				{
 					case LP_FCP_UCS2:
 #if WORDS_BIGENDIAN
@@ -268,7 +267,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 				// Do the conversion to platform encoding
             TCHAR text[READ_BUFFER_SIZE];
 #ifdef UNICODE
-				switch(encoding)
+				switch(m_fileEncoding)
 				{
 					case LP_FCP_ACP:
 						MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, ptr, -1, text, READ_BUFFER_SIZE);
@@ -334,7 +333,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 						break;
 				}
 #else
-				switch(encoding)
+				switch(m_fileEncoding)
 				{
 					case LP_FCP_ACP:
 						_tcslcpy(text, ptr, READ_BUFFER_SIZE);
@@ -376,7 +375,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 						break;
 				}
 #endif
-				parser->matchLine(text);
+				matchLine(text);
          }
       }
       else
@@ -443,16 +442,16 @@ template<typename T> bool SkipZeroBlock(int fh)
  * Seek file to the end of zeroes block
  * Reset position to the beginning of zero block if zeroes are till end of file
  */
-static bool SkipZeroBlock(int fh, int chsize)
+bool LIBNXLP_EXPORTABLE SkipZeroBlock(int fh, int chsize)
 {
    switch(chsize)
    {
       case 1:
          return SkipZeroBlock<char>(fh);
       case 2:
-         return SkipZeroBlock<INT16>(fh);
+         return SkipZeroBlock<int16_t>(fh);
       case 4:
-         return SkipZeroBlock<INT32>(fh);
+         return SkipZeroBlock<int32_t>(fh);
    }
    return false;
 }
@@ -494,10 +493,10 @@ static void SeekToZero(int fh, int chsize, bool detectBrokenPrealloc)
          found = SeekToZero<char>(fh);
          break;
       case 2:
-         found = SeekToZero<INT16>(fh);
+         found = SeekToZero<int16_t>(fh);
          break;
       case 4:
-         found = SeekToZero<INT32>(fh);
+         found = SeekToZero<int32_t>(fh);
          break;
       default:
          found = false;
@@ -517,14 +516,9 @@ static void SeekToZero(int fh, int chsize, bool detectBrokenPrealloc)
 /**
  * File parser thread
  */
-bool LogParser::monitorFile()
+bool LogParser::monitorFile(off_t startOffset)
 {
-	TCHAR fname[MAX_PATH], temp[MAX_PATH];
-	NX_STAT_STRUCT st, stn;
-	int fh;
-	bool readFromStart = m_rescan;
-
-	if (m_fileName == NULL)
+	if (m_fileName == nullptr)
 	{
 		nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread will not start, file name not set"));
 		return false;
@@ -534,15 +528,17 @@ bool LogParser::monitorFile()
    if (m_useSnapshot)
    {
 	   nxlog_debug_tag(DEBUG_TAG, 0, _T("Using VSS snapshots for file \"%s\""), m_fileName);
-      return monitorFileWithSnapshot();
+      return monitorFileWithSnapshot(startOffset);
    }
 #endif
 
    if (!m_keepFileOpen)
    {
 	   nxlog_debug_tag(DEBUG_TAG, 0, _T("LogParser: \"keep open\" option disabled for file \"%s\""), m_fileName);
-      return monitorFile2();
+      return monitorFile2(startOffset);
    }
+
+   bool readFromStart = (m_rescan || (startOffset == 0));
 
 	nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread for file \"%s\" started"), m_fileName);
 	bool exclusionPeriod = false;
@@ -567,8 +563,10 @@ bool LogParser::monitorFile()
          nxlog_debug_tag(DEBUG_TAG, 6, _T("Exclusion period for file \"%s\" ended"), getFileName());
 	   }
 
+      TCHAR fname[MAX_PATH];
       ExpandFileName(getFileName(), fname, MAX_PATH, true);
-		if (CALL_STAT(fname, &st) != 0)
+      NX_STAT_STRUCT st;
+      if (CALL_STAT(fname, &st) != 0)
       {
          if (errno == ENOENT)
             readFromStart = true;
@@ -579,9 +577,9 @@ bool LogParser::monitorFile()
       }
 
 #ifdef _WIN32
-      fh = _tsopen(fname, O_RDONLY | O_BINARY, _SH_DENYNO);
+      int fh = _tsopen(fname, O_RDONLY | O_BINARY, _SH_DENYNO);
 #else
-		fh = _topen(fname, O_RDONLY);
+		int fh = _topen(fname, O_RDONLY);
 #endif
 		if (fh == -1)
       {
@@ -606,9 +604,19 @@ bool LogParser::monitorFile()
 		if (readFromStart)
 		{
 			nxlog_debug_tag(DEBUG_TAG, 5, _T("Parsing existing records in file \"%s\""), fname);
-			off_t resetPos = ParseNewRecords(this, fh);
+			off_t resetPos = processNewRecords(fh);
          _lseek(fh, resetPos, SEEK_SET);
-		}
+         readFromStart = m_rescan;
+         startOffset = -1;
+      }
+      else if (startOffset > 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Parsing existing records in file \"%s\" starting at offset ") INT64_FMT, fname, static_cast<int64_t>(startOffset));
+         _lseek(fh, startOffset, SEEK_SET);
+         off_t resetPos = processNewRecords(fh);
+         _lseek(fh, resetPos, SEEK_SET);
+         startOffset = -1;
+      }
 		else if (m_preallocatedFile)
 		{
 			SeekToZero(fh, getCharSize(), m_detectBrokenPrealloc);
@@ -627,6 +635,7 @@ bool LogParser::monitorFile()
 			}
 
 			// Check if file name was changed
+         TCHAR temp[MAX_PATH];
 			ExpandFileName(getFileName(), temp, MAX_PATH, true);
 			if (_tcscmp(temp, fname))
 			{
@@ -642,7 +651,8 @@ bool LogParser::monitorFile()
 				break;
 			}
 
-			if (CALL_STAT(fname, &stn) < 0)
+         NX_STAT_STRUCT stn;
+         if (CALL_STAT(fname, &stn) < 0)
 			{
 				nxlog_debug_tag(DEBUG_TAG, 1, _T("stat(%s) failed, errno=%d"), fname, errno);
 				readFromStart = true;
@@ -678,7 +688,7 @@ bool LogParser::monitorFile()
 				size = (size_t)st.st_size;
 				mtime = st.st_mtime;
 				nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
-				off_t resetPos = ParseNewRecords(this, fh);
+				off_t resetPos = processNewRecords(fh);
 				_lseek(fh, resetPos, SEEK_SET);
 			}
 			else if (m_preallocatedFile)
@@ -689,7 +699,7 @@ bool LogParser::monitorFile()
 				{
                _lseek(fh, -4, SEEK_CUR);
 	            nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
-	            off_t resetPos = ParseNewRecords(this, fh);
+	            off_t resetPos = processNewRecords(fh);
 	            _lseek(fh, resetPos, SEEK_SET);
 				}
 				else
@@ -704,7 +714,7 @@ bool LogParser::monitorFile()
                   {
                      nxlog_debug_tag(DEBUG_TAG, 6, _T("Detected reset of preallocated file \"%s\""), fname);
                      _lseek(fh, 0, SEEK_SET);
-                     off_t resetPos = ParseNewRecords(this, fh);
+                     off_t resetPos = processNewRecords(fh);
                      _lseek(fh, resetPos, SEEK_SET);
                   }
                }
@@ -730,7 +740,7 @@ stop_parser:
 /**
  * File parser thread (do not keep it open)
  */
-bool LogParser::monitorFile2()
+bool LogParser::monitorFile2(off_t startOffset)
 {
    size_t size = 0;
    time_t mtime = 0;
@@ -738,7 +748,7 @@ bool LogParser::monitorFile2()
    time_t ctime = 0; // creation time on Windows
 #endif
    off_t lastPos = 0;
-   bool readFromStart = m_rescan;
+   bool readFromStart = (m_rescan || (startOffset == 0));
    bool firstRead = true;
 
    nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread for file \"%s\" started (\"keep open\" option disabled)"), m_fileName);
@@ -774,6 +784,7 @@ bool LogParser::monitorFile2()
          {
             readFromStart = true;
             firstRead = true;
+            startOffset = -1;
          }
          setStatus(LPS_NO_FILE);
          if (ConditionWait(m_stopCondition, 10000))
@@ -786,7 +797,7 @@ bool LogParser::monitorFile2()
          ctime = st.st_ctime; // prevent incorrect rotation detection on first read
 #endif
 
-      if (!readFromStart)
+      if (!readFromStart && (startOffset == -1))
       {
 #ifdef _WIN32
          if ((m_ignoreMTime && !m_preallocatedFile && (size == st.st_size) && (ctime == st.st_ctime)) ||
@@ -833,22 +844,32 @@ bool LogParser::monitorFile2()
                static_cast<UINT64>(size), static_cast<UINT64>(st.st_size));
 #endif
          readFromStart = true;   // Assume file rotation
+         startOffset = -1;
       }
 
-      if (m_fileEncoding == -1)
+      if (m_fileEncoding == LP_FCP_AUTO)
       {
          m_fileEncoding = ScanFileEncoding(fh);
          _lseek(fh, 0, SEEK_SET);
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Detected encoding %s for file \"%s\""), s_encodingName[m_fileEncoding], fname);
       }
 
       if (!readFromStart && !m_rescan)
       {
          if (firstRead)
          {
-            if (m_preallocatedFile)
-               SeekToZero(fh, getCharSize(), m_detectBrokenPrealloc);
+            if (startOffset > 0)
+            {
+               _lseek(fh, startOffset, SEEK_SET);
+               startOffset = -1;
+            }
             else
-               _lseek(fh, 0, SEEK_END);
+            {
+               if (m_preallocatedFile)
+                  SeekToZero(fh, getCharSize(), m_detectBrokenPrealloc);
+               else
+                  _lseek(fh, 0, SEEK_END);
+            }
             firstRead = false;
          }
          else
@@ -884,7 +905,7 @@ bool LogParser::monitorFile2()
       }
       readFromStart = false;
 
-      lastPos = ParseNewRecords(this, fh);
+      lastPos = processNewRecords(fh);
       _close(fh);
       size = static_cast<size_t>(st.st_size);
       mtime = st.st_mtime;
@@ -897,12 +918,51 @@ bool LogParser::monitorFile2()
    return true;
 }
 
+/**
+ * Scan file for changes without monitoring loop
+ */
+off_t LogParser::scanFile(int fh, off_t startOffset)
+{
+   if (m_fileEncoding == LP_FCP_AUTO)
+   {
+      m_fileEncoding = ScanFileEncoding(fh);
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Detected encoding %s for file \"%s\""), s_encodingName[m_fileEncoding], m_fileName);
+   }
+
+   _lseek(fh, startOffset, SEEK_SET);
+
+   char buffer[4];
+   int bytes = _read(fh, buffer, 4);
+   if ((bytes == 4) && memcmp(buffer, "\x00\x00\x00\x00", 4))
+   {
+      _lseek(fh, -4, SEEK_CUR);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), m_fileName);
+   }
+   else
+   {
+      off_t pos = _lseek(fh, -bytes, SEEK_CUR);
+      if (pos > 0)
+      {
+         int readSize = std::min(pos, (off_t)4);
+         _lseek(fh, -readSize, SEEK_CUR);
+         int bytes = _read(fh, buffer, readSize);
+         if ((bytes == readSize) && !memcmp(buffer, "\x00\x00\x00\x00", readSize))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Detected reset of preallocated file \"%s\""), m_fileName);
+            _lseek(fh, 0, SEEK_SET);
+         }
+      }
+   }
+
+   return processNewRecords(fh);
+}
+
 #ifdef _WIN32
 
 /**
  * File parser thread (using VSS snapshots)
  */
-bool LogParser::monitorFileWithSnapshot()
+bool LogParser::monitorFileWithSnapshot(off_t startOffset)
 {
    HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
    if (FAILED(hr))
@@ -965,7 +1025,7 @@ bool LogParser::monitorFileWithSnapshot()
       }
 
       FileSnapshot *snapshot = CreateFileSnapshot(fname);
-      if (snapshot == NULL)
+      if (snapshot == nullptr)
       {
          setStatus(LPS_VSS_FAILURE);
          if (ConditionWait(m_stopCondition, 30000))  // retry in 30 seconds
@@ -994,20 +1054,29 @@ bool LogParser::monitorFileWithSnapshot()
          ctime = st.st_ctime;
       }
 
-      if (m_fileEncoding == -1)
+      if (m_fileEncoding == LP_FCP_AUTO)
       {
          m_fileEncoding = ScanFileEncoding(fh);
          _lseek(fh, 0, SEEK_SET);
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Detected encoding %s for file \"%s\""), s_encodingName[m_fileEncoding], fname);
       }
 
       if (!readFromStart && !m_rescan)
       {
          if (firstRead)
          {
-            if (m_preallocatedFile)
-               SeekToZero(fh, getCharSize(), m_detectBrokenPrealloc);
+            if (startOffset > 0)
+            {
+               _lseek(fh, startOffset, SEEK_SET);
+               startOffset = -1;
+            }
             else
-               _lseek(fh, 0, SEEK_END);
+            {
+               if (m_preallocatedFile)
+                  SeekToZero(fh, getCharSize(), m_detectBrokenPrealloc);
+               else
+                  _lseek(fh, 0, SEEK_END);
+            }
             firstRead = false;
          }
          else
@@ -1017,7 +1086,7 @@ bool LogParser::monitorFileWithSnapshot()
       }
       readFromStart = false;
 
-      lastPos = ParseNewRecords(this, fh);
+      lastPos = processNewRecords(fh);
       _close(fh);
       size = static_cast<size_t>(st.st_size);
       mtime = st.st_mtime;

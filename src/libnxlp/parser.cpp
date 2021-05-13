@@ -68,13 +68,13 @@ struct LogParser_XmlParserState
 	TCHAR *eventTag;
 	StringBuffer file;
 	StringList files;
-	IntegerArray<INT32> encodings;
-   IntegerArray<INT32> preallocFlags;
-   IntegerArray<INT32> detectBrokenPreallocFlags;
-   IntegerArray<INT32> snapshotFlags;
-   IntegerArray<INT32> keepOpenFlags;
-   IntegerArray<INT32> ignoreMTimeFlags;
-   IntegerArray<INT32> rescanFlags;
+	IntegerArray<int32_t> encodings;
+   IntegerArray<int32_t> preallocFlags;
+   IntegerArray<int32_t> detectBrokenPreallocFlags;
+   IntegerArray<int32_t> snapshotFlags;
+   IntegerArray<int32_t> keepOpenFlags;
+   IntegerArray<int32_t> ignoreMTimeFlags;
+   IntegerArray<int32_t> rescanFlags;
    StringBuffer logName;
    StringBuffer id;
    StringBuffer level;
@@ -117,12 +117,12 @@ struct LogParser_XmlParserState
 /**
  * Parser default constructor
  */
-LogParser::LogParser()
+LogParser::LogParser() : m_rules(0, 16, Ownership::True)
 {
-   m_rules = new ObjectArray<LogParserRule>(16, 16, Ownership::True);
 	m_cb = nullptr;
 	m_cbAction = nullptr;
-	m_userArg = nullptr;
+   m_cbCopy = nullptr;
+	m_userData = nullptr;
 	m_name = nullptr;
 	m_fileName = nullptr;
 	m_fileEncoding = LP_FCP_ACP;
@@ -149,12 +149,11 @@ LogParser::LogParser()
 /**
  * Parser copy constructor
  */
-LogParser::LogParser(const LogParser *src)
+LogParser::LogParser(const LogParser *src) : m_rules(src->m_rules.size(), 16, Ownership::True)
 {
-   int count = src->m_rules->size();
-   m_rules = new ObjectArray<LogParserRule>(count, 16, Ownership::True);
+   int count = src->m_rules.size();
 	for(int i = 0; i < count; i++)
-		m_rules->add(new LogParserRule(src->m_rules->get(i), this));
+		m_rules.add(new LogParserRule(src->m_rules.get(i), this));
 
 	m_macros.addAll(&src->m_macros);
 	m_contexts.addAll(&src->m_contexts);
@@ -162,7 +161,8 @@ LogParser::LogParser(const LogParser *src)
 
 	m_cb = src->m_cb;
    m_cbAction = src->m_cbAction;
-	m_userArg = src->m_userArg;
+   m_cbCopy = src->m_cbCopy;
+   m_userData = src->m_userData;
 	m_name = MemCopyString(src->m_name);
 	m_fileName = MemCopyString(src->m_fileName);
 	m_fileEncoding = src->m_fileEncoding;
@@ -202,7 +202,6 @@ LogParser::LogParser(const LogParser *src)
  */
 LogParser::~LogParser()
 {
-   delete m_rules;
 	MemFree(m_name);
 	MemFree(m_fileName);
 #ifdef _WIN32
@@ -233,7 +232,7 @@ bool LogParser::addRule(LogParserRule *rule)
 	bool valid = rule->isValid();
 	if (valid)
 	{
-	   m_rules->add(rule);
+	   m_rules.add(rule);
 	}
 	else
 	{
@@ -249,23 +248,23 @@ const TCHAR *LogParser::checkContext(LogParserRule *rule)
 {
 	const TCHAR *state;
 
-	if (rule->getContext() == NULL)
+	if (rule->getContext() == nullptr)
 	{
 		trace(5, _T("  rule has no context"));
 		return s_states[CONTEXT_SET_MANUAL];
 	}
 
 	state = m_contexts.get(rule->getContext());
-	if (state == NULL)
+	if (state == nullptr)
 	{
 		trace(5, _T("  context '%s' inactive, rule should be skipped"), rule->getContext());
-		return NULL;	// Context inactive, don't use this rule
+		return nullptr;	// Context inactive, don't use this rule
 	}
 
 	if (!_tcscmp(state, s_states[CONTEXT_CLEAR]))
 	{
 		trace(5, _T("  context '%s' inactive, rule should be skipped"), rule->getContext());
-		return NULL;
+		return nullptr;
 	}
 	else
 	{
@@ -277,9 +276,9 @@ const TCHAR *LogParser::checkContext(LogParserRule *rule)
 /**
  * Match log record
  */
-bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId,
-         UINT32 level, const TCHAR *line, StringList *variables, UINT64 recordId,
-         UINT32 objectId, time_t timestamp, const TCHAR *logName, bool *saveToDatabase)
+bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, uint32_t eventId,
+      uint32_t level, const TCHAR *line, StringList *variables, uint64_t recordId,
+      uint32_t objectId, time_t timestamp, const TCHAR *logName, bool *saveToDatabase)
 {
 	const TCHAR *state;
 	bool matched = false;
@@ -291,15 +290,15 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 
 	m_recordsProcessed++;
 	int i;
-	for(i = 0; i < m_rules->size(); i++)
+	for(i = 0; i < m_rules.size(); i++)
 	{
-	   LogParserRule *rule = m_rules->get(i);
+	   LogParserRule *rule = m_rules.get(i);
 		trace(6, _T("checking rule %d \"%s\""), i + 1, rule->getDescription());
 		if ((state = checkContext(rule)) != nullptr)
 		{
 			bool ruleMatched = hasAttributes ?
-			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, timestamp, logName, m_cb, m_cbAction, m_userArg) :
-				rule->match(line, objectId, m_cb, m_cbAction, m_userArg);
+			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, timestamp, logName, m_cb, m_cbAction, m_userData) :
+				rule->match(line, objectId, m_cb, m_cbAction, m_userData);
 			if (ruleMatched)
 			{
 				trace(5, _T("rule %d \"%s\" matched"), i + 1, rule->getDescription());
@@ -332,18 +331,27 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 			}
 		}
 	}
-	if (i < m_rules->size())
+	if (i < m_rules.size())
 		trace(5, _T("processing stopped at rule %d \"%s\"; result = %s"), i + 1,
-				m_rules->get(i)->getDescription(), matched ? _T("true") : _T("false"));
+				m_rules.get(i)->getDescription(), matched ? _T("true") : _T("false"));
 	else
 		trace(5, _T("Processing stopped at end of rules list; result = %s"), matched ? _T("true") : _T("false"));
+
+   if (m_cbCopy != nullptr)
+   {
+      if (hasAttributes)
+         m_cbCopy(line, source, eventId, level, m_userData);
+      else
+         m_cbCopy(line, nullptr, 0, 0, m_userData);
+   }
+
 	return matched;
 }
 
 /**
  * Match simple log line
  */
-bool LogParser::matchLine(const TCHAR *line, UINT32 objectId)
+bool LogParser::matchLine(const TCHAR *line, uint32_t objectId)
 {
 	return matchLogRecord(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, nullptr, nullptr);
 }
@@ -351,8 +359,8 @@ bool LogParser::matchLine(const TCHAR *line, UINT32 objectId)
 /**
  * Match log event (text with additional attributes - source, severity, event id)
  */
-bool LogParser::matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables,
-         UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName, bool *saveToDatabase)
+bool LogParser::matchEvent(const TCHAR *source, uint32_t eventId, uint32_t level, const TCHAR *line, StringList *variables,
+         uint64_t recordId, uint32_t objectId, time_t timestamp, const TCHAR *logName, bool *saveToDatabase)
 {
 	return matchLogRecord(true, source, eventId, level, line, variables, recordId, objectId, timestamp, logName, saveToDatabase);
 }
@@ -364,7 +372,7 @@ void LogParser::setFileName(const TCHAR *name)
 {
 	MemFree(m_fileName);
 	m_fileName = MemCopyString(name);
-	if (m_name == NULL)
+	if (m_name == nullptr)
 		m_name = MemCopyString(name);	// Set parser name to file name
 }
 
@@ -374,7 +382,7 @@ void LogParser::setFileName(const TCHAR *name)
 void LogParser::setName(const TCHAR *name)
 {
 	MemFree(m_name);
-	m_name = MemCopyString((name != NULL) ? name : CHECK_NULL(m_fileName));
+	m_name = MemCopyString((name != nullptr) ? name : CHECK_NULL(m_fileName));
 }
 
 /**
@@ -921,23 +929,23 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, ssize_t xmlLen
 /**
  * Resolve event name
  */
-UINT32 LogParser::resolveEventName(const TCHAR *name, UINT32 defVal)
+uint32_t LogParser::resolveEventName(const TCHAR *name, uint32_t defaultValue)
 {
-	if (m_eventNameList != NULL)
+	if (m_eventNameList != nullptr)
 	{
 		for(int i = 0; m_eventNameList[i].text != NULL; i++)
 			if (!_tcsicmp(name, m_eventNameList[i].text))
 				return m_eventNameList[i].code;
 	}
 
-	if (m_eventResolver != NULL)
+	if (m_eventResolver != nullptr)
 	{
 		uint32_t val;
 		if (m_eventResolver(name, &val))
 			return val;
 	}
 
-	return defVal;
+	return defaultValue;
 }
 
 /**
@@ -945,13 +953,13 @@ UINT32 LogParser::resolveEventName(const TCHAR *name, UINT32 defVal)
  */
 const LogParserRule *LogParser::findRuleByName(const TCHAR *name) const
 {
-   for(int i = 0; i < m_rules->size(); i++)
+   for(int i = 0; i < m_rules.size(); i++)
    {
-      LogParserRule *rule = m_rules->get(i);
+      LogParserRule *rule = m_rules.get(i);
       if (!_tcsicmp(rule->getName(), name))
          return rule;
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -959,12 +967,12 @@ const LogParserRule *LogParser::findRuleByName(const TCHAR *name) const
  */
 void LogParser::restoreCounters(const LogParser *parser)
 {
-   for(int i = 0; i < m_rules->size(); i++)
+   for(int i = 0; i < m_rules.size(); i++)
    {
-      const LogParserRule *rule = parser->findRuleByName(m_rules->get(i)->getName());
-      if (rule != NULL)
+      const LogParserRule *rule = parser->findRuleByName(m_rules.get(i)->getName());
+      if (rule != nullptr)
       {
-         m_rules->get(i)->restoreCounters(rule);
+         m_rules.get(i)->restoreCounters(rule);
       }
    }
 }
@@ -1000,7 +1008,7 @@ bool LogParser::isExclusionPeriod()
    if (m_exclusionSchedules.isEmpty())
       return false;
 
-   time_t now = time(NULL);
+   time_t now = time(nullptr);
    struct tm localTime;
 #if HAVE_LOCALTIME_R
    localtime_r(&now, &localTime);
@@ -1065,8 +1073,8 @@ const TCHAR *LogParser::getStatusText() const
  */
 void LogParser::getEventList(HashSet<uint32_t> *eventList) const
 {
-   for(int i = 0; i < m_rules->size(); i++)
+   for(int i = 0; i < m_rules.size(); i++)
    {
-      eventList->put(m_rules->get(i)->getEventCode());
+      eventList->put(m_rules.get(i)->getEventCode());
    }
 }
