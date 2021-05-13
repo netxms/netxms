@@ -43,7 +43,7 @@
 #include <kvm.h>
 #include <paths.h>
 
-#define SUBAGENT_DEBUG_TAG _T("sa.freebsd")
+#define SUBAGENT_DEBUG_TAG _T("freebsd")
 
 #include "net.h"
 #include "disk.h"

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,9 @@
 **/
 
 #include "nxcore.h"
+
+#define DEBUG_TAG_BASE        _T("scripts")
+#define DEBUG_TAG_SCHEDULED   DEBUG_TAG_BASE _T(".scheduled")
 
 /**
  * Script library
@@ -114,20 +117,20 @@ void LoadScripts()
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    hResult = DBSelect(hdb, _T("SELECT script_id,guid,script_name,script_code FROM script_library"));
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       int numRows = DBGetNumRows(hResult);
       for(int i = 0; i < numRows; i++)
       {
          pScript = new NXSL_LibraryScript(DBGetFieldULong(hResult, i, 0), DBGetFieldGUID(hResult, i, 1),
-                  DBGetField(hResult, i, 2, buffer, MAX_DB_STRING), DBGetField(hResult, i, 3, NULL, 0));
+                  DBGetField(hResult, i, 2, buffer, MAX_DB_STRING), DBGetField(hResult, i, 3, nullptr, 0));
          if (!pScript->isValid())
          {
             nxlog_write(NXLOG_WARNING, _T("Error compiling library script %s [%u] (%s)"),
                      pScript->getName(), pScript->getId(), pScript->getError());
          }
          s_scriptLibrary.addScript(pScript);
-         DbgPrintf(2, _T("Script %s added to library"), pScript->getName());
+         nxlog_debug_tag(DEBUG_TAG_BASE,  2, _T("Script %s added to library"), pScript->getName());
       }
       DBFreeResult(hResult);
    }
@@ -137,24 +140,24 @@ void LoadScripts()
 /**
  * Load script name and code from database
  */
-NXSL_LibraryScript *LoadScriptFromDatabase(UINT32 id)
+static NXSL_LibraryScript *LoadScriptFromDatabase(uint32_t id)
 {
-   NXSL_LibraryScript *script = NULL;
+   NXSL_LibraryScript *script = nullptr;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT script_id,guid,script_name,script_code FROM script_library WHERE script_id=?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) > 0)
          {
             TCHAR name[MAX_DB_STRING];
             script = new NXSL_LibraryScript(DBGetFieldULong(hResult, 0, 0), DBGetFieldGUID(hResult, 0, 1),
-                     DBGetField(hResult, 0, 2, name, MAX_DB_STRING), DBGetField(hResult, 0, 3, NULL, 0));
+                     DBGetField(hResult, 0, 2, name, MAX_DB_STRING), DBGetField(hResult, 0, 3, nullptr, 0));
          }
          DBFreeResult(hResult);
       }
@@ -168,12 +171,12 @@ NXSL_LibraryScript *LoadScriptFromDatabase(UINT32 id)
 /**
  * Reload script from database
  */
-void ReloadScript(UINT32 id)
+void ReloadScript(uint32_t id)
 {
    NXSL_LibraryScript *script = LoadScriptFromDatabase(id);
-   if (script == NULL)
+   if (script == nullptr)
    {
-      DbgPrintf(3, _T("ReloadScript: failed to load script with ID %d from database"), (int)id);
+      nxlog_debug_tag(DEBUG_TAG_BASE,  3, _T("ReloadScript: failed to load script with ID %d from database"), (int)id);
       return;
    }
 
@@ -238,11 +241,11 @@ uint32_t ResolveScriptName(const TCHAR *name)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT script_id FROM script_library WHERE script_name=?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) > 0)
             id = DBGetFieldULong(hResult, 0, 0);
@@ -265,11 +268,11 @@ static uint32_t ResolveScriptGuid(const uuid& guid)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT script_id FROM script_library WHERE guid=?"));
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          if (DBGetNumRows(hResult) > 0)
             id = DBGetFieldULong(hResult, 0, 0);
@@ -437,9 +440,9 @@ uint32_t DeleteScript(uint32_t scriptId)
 void CreateScriptExportRecord(StringBuffer &xml, UINT32 id)
 {
    NXSL_LibraryScript *script = LoadScriptFromDatabase(id);
-   if (script == NULL)
+   if (script == nullptr)
    {
-      nxlog_debug(3, _T("CreateScriptExportRecord: failed to load script with ID %u from database"), id);
+      nxlog_debug_tag(DEBUG_TAG_BASE, 3, _T("CreateScriptExportRecord: failed to load script with ID %u from database"), id);
       return;
    }
 
@@ -465,9 +468,9 @@ void CreateScriptExportRecord(StringBuffer &xml, UINT32 id)
 void ImportScript(ConfigEntry *config, bool overwrite)
 {
    const TCHAR *name = config->getSubEntryValue(_T("name"));
-   if (name == NULL)
+   if (name == nullptr)
    {
-      DbgPrintf(4, _T("ImportScript: name missing"));
+      nxlog_debug_tag(DEBUG_TAG_BASE,  4, _T("ImportScript: name missing"));
       return;
    }
 
@@ -475,13 +478,13 @@ void ImportScript(ConfigEntry *config, bool overwrite)
    if (guid.isNull())
    {
       guid = uuid::generate();
-      DbgPrintf(4, _T("ImportScript: GUID not found in config, generated GUID %s for script \"%s\""), (const TCHAR *)guid.toString(), name);
+      nxlog_debug_tag(DEBUG_TAG_BASE,  4, _T("ImportScript: GUID not found in config, generated GUID %s for script \"%s\""), (const TCHAR *)guid.toString(), name);
    }
 
    const TCHAR *code = config->getSubEntryValue(_T("code"));
-   if (code == NULL)
+   if (code == nullptr)
    {
-      DbgPrintf(4, _T("ImportScript: code missing"));
+      nxlog_debug_tag(DEBUG_TAG_BASE,  4, _T("ImportScript: code missing"));
       return;
    }
 
@@ -491,7 +494,7 @@ void ImportScript(ConfigEntry *config, bool overwrite)
       DB_STATEMENT hStmt;
 
       bool newScript = false;
-      UINT32 id = ResolveScriptGuid(guid);
+      uint32_t id = ResolveScriptGuid(guid);
       if (id == 0) // Create new script
       {
          id = CreateUniqueId(IDG_SCRIPT);
@@ -508,7 +511,7 @@ void ImportScript(ConfigEntry *config, bool overwrite)
          hStmt = DBPrepare(hdb, _T("UPDATE script_library SET script_name=?,script_code=? WHERE script_id=?"));
       }
 
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_TEXT, code, DB_BIND_STATIC);
@@ -548,7 +551,7 @@ void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameter
    shared_ptr<NetObj> object = FindObjectById(parameters->m_objectId);
    if ((object != nullptr) && !object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
    {
-      nxlog_debug(4, _T("ExecuteScheduledScript(%s): access denied for userId %d object \"%s\" [%d]"),
+      nxlog_debug_tag(DEBUG_TAG_SCHEDULED, 4, _T("ExecuteScheduledScript(%s): access denied for userId %d object \"%s\" [%d]"),
                name, parameters->m_userId, object->getName(), object->getId());
       return;
    }
@@ -557,10 +560,10 @@ void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameter
    if (vm == nullptr)
    {
       if (object != nullptr)
-         nxlog_debug(4, _T("ExecuteScheduledScript(%s): cannot create VM (object \"%s\" [%d])"),
+         nxlog_debug_tag(DEBUG_TAG_SCHEDULED, 4, _T("ExecuteScheduledScript(%s): cannot create VM (object \"%s\" [%d])"),
                   name, object->getName(), object->getId());
       else
-         nxlog_debug(4, _T("ExecuteScheduledScript(%s): cannot create VM (not attached to object)"), name);
+         nxlog_debug_tag(DEBUG_TAG_SCHEDULED, 4, _T("ExecuteScheduledScript(%s): cannot create VM (not attached to object)"), name);
       return;
    }
 
@@ -577,10 +580,10 @@ void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameter
       {
          // argument parsing error
          if (object != nullptr)
-            nxlog_debug(4, _T("ExecuteScheduledScript(%s): argument parsing error (object \"%s\" [%d])"),
+            nxlog_debug_tag(DEBUG_TAG_SCHEDULED, 4, _T("ExecuteScheduledScript(%s): argument parsing error (object \"%s\" [%d])"),
                      name, object->getName(), object->getId());
          else
-            nxlog_debug(4, _T("ExecuteScheduledScript(%s): argument parsing error (not attached to object)"), name);
+            nxlog_debug_tag(DEBUG_TAG_SCHEDULED, 4, _T("ExecuteScheduledScript(%s): argument parsing error (not attached to object)"), name);
          delete vm;
          return;
       }
@@ -588,19 +591,19 @@ void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameter
 
    if (vm->run(args))
    {
-      if (object != NULL)
-         nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully on object \"%s\" [%d]"),
+      if (object != nullptr)
+         nxlog_debug_tag(DEBUG_TAG_SCHEDULED, 4, _T("ExecuteScheduledScript(%s): Script executed successfully on object \"%s\" [%d]"),
                   name, object->getName(), object->getId());
       else
-         nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully (not attached to object)"), name);
+         nxlog_debug_tag(DEBUG_TAG_SCHEDULED, 4, _T("ExecuteScheduledScript(%s): Script executed successfully (not attached to object)"), name);
    }
    else
    {
-      if (object != NULL)
-         nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script execution error on object \"%s\" [%d]: %s"),
+      if (object != nullptr)
+         nxlog_debug_tag(DEBUG_TAG_SCHEDULED, 4, _T("ExecuteScheduledScript(%s): Script execution error on object \"%s\" [%d]: %s"),
                   name, object->getName(), object->getId(), vm->getErrorText());
       else
-         nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script execution error (not attached to object): %s"),
+         nxlog_debug_tag(DEBUG_TAG_SCHEDULED, 4, _T("ExecuteScheduledScript(%s): Script execution error (not attached to object): %s"),
                   name, vm->getErrorText());
    }
    delete vm;
@@ -755,15 +758,15 @@ void ExecuteStartupScripts()
    _tcscat(path, SDIR_SCRIPTS);
 
    int count = 0;
-   nxlog_debug(1, _T("Running startup scripts from %s"), path);
+   nxlog_debug_tag(DEBUG_TAG_BASE,  1, _T("Running startup scripts from %s"), path);
    _TDIR *dir = _topendir(path);
-   if (dir != NULL)
+   if (dir != nullptr)
    {
       _tcscat(path, FS_PATH_SEPARATOR);
       int insPos = (int)_tcslen(path);
 
       struct _tdirent *f;
-      while((f = _treaddir(dir)) != NULL)
+      while((f = _treaddir(dir)) != nullptr)
       {
          if (MatchString(_T("*.nxsl"), f->d_name, FALSE))
          {
@@ -777,35 +780,35 @@ void ExecuteStartupScripts()
 #ifdef UNICODE
                WCHAR *wsource = WideStringFromUTF8String(source);
                NXSL_VM *vm = NXSLCompileAndCreateVM(wsource, errorText, 1024, new NXSL_ServerEnv());
-               free(wsource);
+               MemFree(wsource);
 #else
                NXSL_VM *vm = NXSLCompileAndCreateVM(source, errorText, 1024, new NXSL_ServerEnv());
 #endif
-               free(source);
-               if (vm != NULL)
+               MemFree(source);
+               if (vm != nullptr)
                {
                   if (vm->run())
                   {
-                     nxlog_debug(1, _T("Startup script %s completed successfully"), f->d_name);
+                     nxlog_debug_tag(DEBUG_TAG_BASE,  1, _T("Startup script %s completed successfully"), f->d_name);
                   }
                   else
                   {
-                     nxlog_debug(1, _T("Runtime error in startup script %s: %s"), f->d_name, vm->getErrorText());
+                     nxlog_debug_tag(DEBUG_TAG_BASE,  1, _T("Runtime error in startup script %s: %s"), f->d_name, vm->getErrorText());
                   }
                   delete vm;
                }
                else
                {
-                  nxlog_debug(1, _T("Cannot compile startup script %s (%s)"), f->d_name, errorText);
+                  nxlog_debug_tag(DEBUG_TAG_BASE,  1, _T("Cannot compile startup script %s (%s)"), f->d_name, errorText);
                }
             }
             else
             {
-               nxlog_debug(1, _T("Cannot load startup script %s"), f->d_name);
+               nxlog_debug_tag(DEBUG_TAG_BASE,  1, _T("Cannot load startup script %s"), f->d_name);
             }
          }
       }
       _tclosedir(dir);
    }
-   nxlog_debug(1, _T("%d startup scripts processed"), count);
+   nxlog_debug_tag(DEBUG_TAG_BASE,  1, _T("%d startup scripts processed"), count);
 }

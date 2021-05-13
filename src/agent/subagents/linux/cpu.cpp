@@ -56,10 +56,9 @@ static int m_maxCPU = 0;
 static void CpuUsageCollector()
 {
 	FILE *hStat = fopen("/proc/stat", "r");
-
-	if (hStat == NULL)
+	if (hStat == nullptr)
 	{
-		AgentWriteDebugLog(2, _T("Cannot open /proc/stat"));
+		nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot open /proc/stat"));
 		return;
 	}
 
@@ -199,22 +198,24 @@ static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
 	return THREAD_OK;
 }
 
-static UINT32 GetCpuCountFromStat()
+/**
+ * Get number of CPU from /proc/stat
+ */
+static uint32_t GetCpuCountFromStat()
 {
-   UINT32 count = 0;
+   uint32_t count = 0;
 
    FILE *hStat = fopen("/proc/stat", "r");
-   char buffer[1024];
-
-   if (hStat == NULL)
+   if (hStat == nullptr)
    {
-      AgentWriteDebugLog(2, _T("Cannot open /proc/stat"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot open /proc/stat"));
       return count;
    }
 
+   char buffer[1024];
    while(true)
    {
-      if (fgets(buffer, sizeof(buffer), hStat) == NULL)
+      if (fgets(buffer, sizeof(buffer), hStat) == nullptr)
          break;
 
       int ret;
@@ -223,7 +224,6 @@ static UINT32 GetCpuCountFromStat()
          count++;
       }
    }
-
 
    fclose(hStat);
    return count;
@@ -238,8 +238,8 @@ void StartCpuUsageCollector()
 
 	m_cpuUsageMutex = MutexCreate();
 
-   UINT32 cpuCount = sysconf(_SC_NPROCESSORS_ONLN);
-   UINT32 cpuCount2 = GetCpuCountFromStat();
+   uint32_t cpuCount = sysconf(_SC_NPROCESSORS_ONLN);
+   uint32_t cpuCount2 = GetCpuCountFromStat();
    cpuCount = std::max(cpuCount, cpuCount2);
 
    m_cpuUsage = MemAllocArray<float>(CPU_USAGE_SLOTS * (cpuCount + 1));
@@ -303,25 +303,25 @@ void ShutdownCpuUsageCollector()
 	ThreadJoin(m_cpuUsageCollector);
 	MutexDestroy(m_cpuUsageMutex);
 
-	free(m_cpuUsage);
-	free(m_cpuUsageUser);
-	free(m_cpuUsageNice);
-	free(m_cpuUsageSystem);
-	free(m_cpuUsageIdle);
-	free(m_cpuUsageIoWait);
-	free(m_cpuUsageIrq);
-	free(m_cpuUsageSoftIrq);
-	free(m_cpuUsageSteal);
-	free(m_cpuUsageGuest);
-	free(m_user);
-	free(m_nice);
-	free(m_system);
-	free(m_idle);
-	free(m_iowait);
-	free(m_irq);
-	free(m_softirq);
-	free(m_steal);
-	free(m_guest);
+	MemFree(m_cpuUsage);
+	MemFree(m_cpuUsageUser);
+	MemFree(m_cpuUsageNice);
+	MemFree(m_cpuUsageSystem);
+	MemFree(m_cpuUsageIdle);
+	MemFree(m_cpuUsageIoWait);
+	MemFree(m_cpuUsageIrq);
+	MemFree(m_cpuUsageSoftIrq);
+	MemFree(m_cpuUsageSteal);
+	MemFree(m_cpuUsageGuest);
+	MemFree(m_user);
+	MemFree(m_nice);
+	MemFree(m_system);
+	MemFree(m_idle);
+	MemFree(m_iowait);
+	MemFree(m_irq);
+	MemFree(m_softirq);
+	MemFree(m_steal);
+	MemFree(m_guest);
 }
 
 static void GetUsage(int source, int cpu, int count, TCHAR *value)
@@ -467,7 +467,7 @@ static int ReadCpuInfo(CPU_INFO *info, int size)
    FILE *f = fopen("/proc/cpuinfo", "r");
    if (f == nullptr)
    {
-      AgentWriteDebugLog(2, _T("Cannot open /proc/cpuinfo"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot open /proc/cpuinfo"));
       return -1;
    }
 

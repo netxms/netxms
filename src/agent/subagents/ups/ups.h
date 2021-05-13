@@ -61,7 +61,7 @@ extern "C" {
 #define UPF_NOT_SUPPORTED        ((DWORD)0x00000001)
 #define UPF_NULL_VALUE           ((DWORD)0x00000002)
 
-#define UPS_DEBUG_TAG            _T("sa.ups")
+#define UPS_DEBUG_TAG            _T("ups")
 
 /**
  * UPS parameter structure

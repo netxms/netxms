@@ -36,7 +36,7 @@
 #define PING_OPT_ALLOW_AUTOCONFIGURE   0x0001
 #define PING_OPT_DONT_FRAGMENT         0x0002
 
-#define DEBUG_TAG _T("sa.ping")
+#define DEBUG_TAG _T("ping")
 
 /**
  * Target information structure

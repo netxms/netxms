@@ -25,7 +25,7 @@
 #include <nms_util.h>
 #include <curl/curl.h>
 
-#define DEBUG_TAG _T("sa.bind9")
+#define DEBUG_TAG _T("bind9")
 
 /**
  * JSON response containing bind9 statistics
