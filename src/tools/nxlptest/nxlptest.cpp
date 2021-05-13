@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Log Parser Testing Utility
-** Copyright (C) 2009-2020 Victor Kirhenshtein
+** Copyright (C) 2009-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ static TCHAR m_helpText[] =
    _T("   -f file    : Input file (overrides parser settings)\n")
    _T("   -h         : Show this help\n")
 	_T("   -i         : Use standard input instead of file defined in parser\n" )
+   _T("   -o offset  : Start offset in file\n")
 #ifdef _WIN32
    _T("   -s         : Use VSS snapshots (overrides parser settings)\n")
 #endif
@@ -56,7 +57,7 @@ static TCHAR m_helpText[] =
  */
 static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
-   if (tag != NULL)
+   if (tag != nullptr)
       _tprintf(_T("[%s] "), tag);
    _vtprintf(format, args);
    _fputtc(_T('\n'), stdout);
@@ -65,10 +66,9 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 /**
  * File parsing thread
  */
-static THREAD_RESULT THREAD_CALL ParserThread(void *arg)
+static void ParserThread(LogParser *parser, off_t startOffset)
 {
-	((LogParser *)arg)->monitorFile();
-	return THREAD_OK;
+	parser->monitorFile(startOffset);
 }
 
 #ifndef _WIN32
@@ -88,7 +88,8 @@ static void OnBreak(int sig)
 int main(int argc, char *argv[])
 {
 	int rc = 0, ch, traceLevel = -1;
-	TCHAR *inputFile = NULL;
+	TCHAR *inputFile = nullptr;
+   off_t startOffset = -1;
 #ifdef _WIN32
    bool vssSnapshots = false;
 #endif
@@ -97,7 +98,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "D:f:hist:v")) != -1)
+	while((ch = getopt(argc, argv, "D:f:hio:st:v")) != -1)
    {
 		switch(ch)
 		{
@@ -113,18 +114,21 @@ int main(int argc, char *argv[])
             return 0;
 			case 'f':
 #ifdef UNICODE
-				inputFile = WideStringFromMBString(optarg);
+				inputFile = WideStringFromMBStringSysLocale(optarg);
 #else
 				inputFile = optarg;
 #endif
 				break;
+         case 'o':
+            startOffset = strtol(optarg, nullptr, 0);
+            break;
 #ifdef _WIN32
          case 's':
             vssSnapshots = true;
             break;
 #endif
 			case 't':
-				traceLevel = strtol(optarg, NULL, 0);
+				traceLevel = strtol(optarg, nullptr, 0);
 				break;
          case '?':
             return 1;
@@ -164,10 +168,10 @@ int main(int argc, char *argv[])
             parser->setSnapshotMode(true);
 #endif
 
-			THREAD thread = ThreadCreateEx(ParserThread, 0, parser);
+			THREAD thread = ThreadCreateEx(ParserThread, parser, startOffset);
 #ifdef _WIN32
 			_tprintf(_T("Parser started. Press ESC to stop.\nFile: %s\nTrace level: %d\n\n"),
-				      parser->getFileName(), parser->getTraceLevel());
+               parser->getFileName(), parser->getTraceLevel());
 			while(1)
 			{
 				ch = _getch();
