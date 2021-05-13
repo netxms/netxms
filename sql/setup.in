@@ -174,7 +174,8 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Nodes.CapabilityExpirationGracePeriod','3600','3600',1,0,'I','Grace period for capability expiration after node recovered from unreachable state.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Nodes.CapabilityExpirationTime','604800','604800',1,0,'I','Time before capability (NetXMS Agent, SNMP, EtherNet/IP) expires if node is not responding for requests via appropriate protocol.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Nodes.FallbackToLocalResolver','0','0',1,0,'B','Fallback to server''s local resolver if node address cannot be resolved via zone proxy.','');
-INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','0','0',1,1,'B','Resolve DNS to IP on status poll.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','0','0',1,0,'C','Resolve DNS to IP on status poll.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll.Interval','0','0',1,0,'I','Number of status polls between resolving primary host name to IP, if Objects.Nodes.ResolveDNSToIPOnStatusPoll set to "Always".','polls');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Nodes.ResolveNames','1','1',1,0,'B','Resolve node name using DNS, SNMP system name, or host name if current node name is it''s IP address.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Nodes.SyncNamesWithDNS','0','0',1,0,'B','Enable/disable synchronization of node names with DNS on each configuration poll.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Sensors.ContainerAutoBind','0','0',1,0,'B','Enable/disable container auto binding for sensors.','');
@@ -333,6 +334,9 @@ INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Interfaces.UseAliases','1','Use alias when available');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Interfaces.UseAliases','2','Concatenate alias with name');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Interfaces.UseAliases','3','Concatenate name with alias');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','0','Never');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','1','Always');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','2','On failure');
 
 
 /*

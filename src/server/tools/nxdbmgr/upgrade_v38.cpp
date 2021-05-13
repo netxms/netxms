@@ -24,6 +24,33 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 38.14 to 38.15
+ */
+static bool H_UpgradeFromV14()
+{
+   static const TCHAR *batch =
+         _T("UPDATE config SET data_type='C',need_server_restart=0 WHERE var_name='Objects.Nodes.ResolveDNSToIPOnStatusPoll'\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','0','Never')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','1','Always')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','2','On failure')\n")
+         _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(CreateConfigParam(_T("Objects.Nodes.ResolveDNSToIPOnStatusPoll.Interval"),
+         _T("0"),
+         _T("Number of status polls between resolving primary host name to IP, if Objects.Nodes.ResolveDNSToIPOnStatusPoll set to \"Always\"."),
+         _T("polls"),
+         'I',
+         true,
+         false,
+         false,
+         false));
+
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade from 38.13 to 38.14
  */
 static bool H_UpgradeFromV13()
@@ -299,6 +326,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 14, 38, 15, H_UpgradeFromV14 },
    { 13, 38, 14, H_UpgradeFromV13 },
    { 12, 38, 13, H_UpgradeFromV12 },
    { 11, 38, 12, H_UpgradeFromV11 },
