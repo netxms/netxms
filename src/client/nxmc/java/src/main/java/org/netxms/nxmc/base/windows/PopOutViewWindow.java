@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewContainer;
 
 /**
  * Window that holds pop out view
@@ -75,7 +76,7 @@ public class PopOutViewWindow extends Window
    @Override
    protected Control createContents(Composite parent)
    {
-      Composite viewArea = new Composite(parent, SWT.NONE) {
+      ViewContainer viewContainer = new ViewContainer(this, null, parent, false, false) {
          @Override
          public Point computeSize(int wHint, int hHint, boolean changed)
          {
@@ -88,9 +89,8 @@ public class PopOutViewWindow extends Window
          }
 
       };
-      viewArea.setLayout(new FillLayout());
-      view.create(this, null, viewArea, null);
-      viewArea.addDisposeListener(new DisposeListener() {
+      viewContainer.setView(view);
+      parent.addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
@@ -98,6 +98,6 @@ public class PopOutViewWindow extends Window
             PreferenceStore.getInstance().set("PopupWindowSize." + view.getId(), getShell().getSize());
          }
       });
-      return viewArea;
+      return parent;
    }
 }
