@@ -183,11 +183,14 @@
 #define CSF_TERMINATE_REQUESTED  ((uint32_t)0x00002000)
 
 /**
- * Modes for DNS to IP resolution
+ * Options for primary IP update on status poll
  */
-#define DTIM_NEVER   0
-#define DTIM_ALWAYS  1
-#define DTIM_ON_FAIL 2
+enum class PrimaryIPUpdateMode
+{
+   NEVER = 0,
+   ALWAYS = 1,
+   ON_FAILURE = 2
+};
 
 /**
  * Certificate types
@@ -1589,6 +1592,8 @@ extern uint32_t g_offlineDataRelevanceTime;
 extern int32_t g_instanceRetentionTime;
 extern uint32_t g_snmpTrapStormCountThreshold;
 extern uint32_t g_snmpTrapStormDurationThreshold;
+extern uint32_t g_pollsBetweenPrimaryIpUpdate;
+extern PrimaryIPUpdateMode g_primaryIpUpdateMode;
 
 extern TCHAR g_szDbDriver[];
 extern TCHAR g_szDbDrvParams[];

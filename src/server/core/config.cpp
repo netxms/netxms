@@ -568,9 +568,7 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    }
    else if (!_tcscmp(name, _T("ICMP.PollingInterval")))
    {
-      TCHAR *eptr;
-      uint32_t i = _tcstoul(value, &eptr, 0);
-      g_icmpPollingInterval = (i > 0) && (*eptr == 0) ? i : 60;
+      g_icmpPollingInterval = ConvertToUint32(value, 60);
    }
    else if (!_tcscmp(name, _T("NetworkDiscovery.ActiveDiscovery.Interval")) ||
             !_tcscmp(name, _T("NetworkDiscovery.ActiveDiscovery.Schedule")))
@@ -608,6 +606,25 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
          g_flags |= AF_ENABLE_8021X_STATUS_POLL;
       else
          g_flags &= ~AF_ENABLE_8021X_STATUS_POLL;
+   }
+   else if (!_tcscmp(name, _T("Objects.Nodes.ResolveDNSToIPOnStatusPoll")))
+   {
+      switch(ConvertToUint32(value, static_cast<int>(PrimaryIPUpdateMode::NEVER)))
+      {
+         case static_cast<int>(PrimaryIPUpdateMode::ALWAYS):
+            g_primaryIpUpdateMode = PrimaryIPUpdateMode::ALWAYS;
+            break;
+         case static_cast<int>(PrimaryIPUpdateMode::ON_FAILURE):
+            g_primaryIpUpdateMode = PrimaryIPUpdateMode::ON_FAILURE;
+            break;
+         default:
+            g_primaryIpUpdateMode = PrimaryIPUpdateMode::NEVER;
+            break;
+      }
+   }
+   else if (!_tcscmp(name, _T("Objects.Nodes.ResolveDNSToIPOnStatusPoll.Interval")))
+   {
+      g_pollsBetweenPrimaryIpUpdate = ConvertToUint32(value, 1);
    }
    else if (!_tcscmp(name, _T("SNMP.Traps.AllowVarbindsConversion")))
    {
@@ -1110,8 +1127,8 @@ bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *variable, const TCHAR *value
  */
 struct GetClientConfigurationHints_CallbackData
 {
-   UINT32 count;
-   UINT32 fieldId;
+   uint32_t count;
+   uint32_t fieldId;
    NXCPMessage *msg;
 };
 

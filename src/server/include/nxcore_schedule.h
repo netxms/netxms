@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Core
-** Copyright (C) 2015 Victor Kirhenshtein
+** Copyright (C) 2015-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 #ifndef _nxcore_schedule_h_
 #define _nxcore_schedule_h_
 
-#define NEVER 0
+#define TIMESTAMP_NEVER                   0
 
 #define SCHEDULED_TASK_DISABLED           0x01
 #define SCHEDULED_TASK_COMPLETED          0x02
