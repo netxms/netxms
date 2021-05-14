@@ -283,7 +283,7 @@ public class LogParserRule
     */
    public void setLogName(String logName)
    {
-      this.logName = ((logName == null) || logName.trim().isEmpty()) ? null : description;
+      this.logName = ((logName == null) || logName.trim().isEmpty()) ? null : logName;
    }
 
    /**
