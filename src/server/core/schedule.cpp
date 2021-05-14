@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -85,8 +85,8 @@ ScheduledTask::ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, const TCHA
 {
    m_id = id;
    m_parameters = parameters;
-   m_scheduledExecutionTime = NEVER;
-   m_lastExecutionTime = NEVER;
+   m_scheduledExecutionTime = TIMESTAMP_NEVER;
+   m_lastExecutionTime = TIMESTAMP_NEVER;
    m_recurrent = true;
    m_flags = systemTask ? SCHEDULED_TASK_SYSTEM : 0;
    m_mutex = MutexCreate();
@@ -102,7 +102,7 @@ ScheduledTask::ScheduledTask(uint32_t id, const TCHAR *taskHandlerId, time_t exe
    m_id = id;
    m_parameters = parameters;
    m_scheduledExecutionTime = executionTime;
-   m_lastExecutionTime = NEVER;
+   m_lastExecutionTime = TIMESTAMP_NEVER;
    m_recurrent = false;
    m_flags = systemTask ? SCHEDULED_TASK_SYSTEM : 0;
    m_mutex = MutexCreate();
@@ -1057,7 +1057,7 @@ static void AdHocScheduler()
          if (task->isDisabled() || task->isRunning() || task->isCompleted())
             continue;
 
-         if (task->getScheduledExecutionTime() == NEVER)
+         if (task->getScheduledExecutionTime() == TIMESTAMP_NEVER)
             break;   // there won't be any more schedulable tasks
 
          // execute all tasks that is expected to execute now

@@ -42,7 +42,7 @@ Zone::Zone() : super()
 	m_idxNodeByAddr = new InetAddressIndex;
 	m_idxInterfaceByAddr = new InetAddressIndex;
 	m_idxSubnetByAddr = new InetAddressIndex;
-   m_lastHealthCheck = NEVER;
+   m_lastHealthCheck = TIMESTAMP_NEVER;
    m_lockedForHealthCheck = false;
 }
 
@@ -59,7 +59,7 @@ Zone::Zone(int32_t uin, const TCHAR *name) : super()
 	m_idxNodeByAddr = new InetAddressIndex;
 	m_idxInterfaceByAddr = new InetAddressIndex;
 	m_idxSubnetByAddr = new InetAddressIndex;
-   m_lastHealthCheck = NEVER;
+   m_lastHealthCheck = TIMESTAMP_NEVER;
    m_lockedForHealthCheck = false;
    setCreationTime();
 }

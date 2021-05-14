@@ -1910,7 +1910,7 @@ public:
    PollState(const TCHAR *name)
    {
       m_pollerCount = 0;
-      m_lastCompleted = NEVER;
+      m_lastCompleted = TIMESTAMP_NEVER;
       m_timer = new ManualGauge64(name, 1, 1000);
       m_lock = MutexCreateFast();
    }
@@ -2938,7 +2938,7 @@ protected:
    uint32_t m_pollCountSNMP;
    uint32_t m_pollCountEtherNetIP;
    uint32_t m_requiredPollCount;
-   uint32_t m_pollCountDnsToIp;
+   uint32_t m_pollsAfterIpUpdate;
    int32_t m_zoneUIN;
    uint16_t m_agentPort;
    int16_t m_agentCacheMode;
@@ -3815,17 +3815,17 @@ public:
  */
 struct ZoneProxy
 {
-   UINT32 nodeId;
+   uint32_t nodeId;
    bool isAvailable;    // True if proxy is available
-   UINT32 assignments;  // Number of objects where this proxy is assigned
-   INT64 rawDataSenderLoad;
+   uint32_t assignments;  // Number of objects where this proxy is assigned
+   int64_t rawDataSenderLoad;
    double cpuLoad;
    double dataCollectorLoad;
    double dataSenderLoad;
    double dataSenderLoadTrend;
    time_t loadBalanceTimestamp;
 
-   ZoneProxy(UINT32 _nodeId)
+   ZoneProxy(uint32_t _nodeId)
    {
       nodeId = _nodeId;
       isAvailable = false;
@@ -3835,7 +3835,7 @@ struct ZoneProxy
       dataCollectorLoad = 0;
       dataSenderLoad = 0;
       dataSenderLoadTrend = 0;
-      loadBalanceTimestamp = NEVER;
+      loadBalanceTimestamp = TIMESTAMP_NEVER;
    }
 
    int compareLoad(const ZoneProxy *p)

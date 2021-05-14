@@ -154,6 +154,8 @@ uint32_t g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
 uint32_t g_auditFlags;
 uint32_t g_slmPollingInterval;
 uint32_t g_offlineDataRelevanceTime = 86400;
+uint32_t g_pollsBetweenPrimaryIpUpdate = 1;
+PrimaryIPUpdateMode g_primaryIpUpdateMode = PrimaryIPUpdateMode::NEVER;
 NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdDataDir[MAX_PATH]) = _T("");
 NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[MAX_PATH]) = _T("");
 NXCORE_EXPORTABLE_VAR(int g_dbSyntax) = DB_SYNTAX_UNKNOWN;
@@ -511,6 +513,20 @@ static void LoadGlobalConfig()
    g_instanceRetentionTime = ConfigReadInt(_T("DataCollection.InstanceRetentionTime"), 7); // Config values are in days
    g_snmpTrapStormCountThreshold = ConfigReadInt(_T("SNMP.Traps.RateLimit.Threshold"), 0);
    g_snmpTrapStormDurationThreshold = ConfigReadInt(_T("SNMP.Traps.RateLimit.Duration"), 15);
+
+   switch(ConfigReadInt(_T("Objects.Nodes.ResolveDNSToIPOnStatusPoll"), static_cast<int>(PrimaryIPUpdateMode::NEVER)))
+   {
+      case static_cast<int>(PrimaryIPUpdateMode::ALWAYS):
+         g_primaryIpUpdateMode = PrimaryIPUpdateMode::ALWAYS;
+         break;
+      case static_cast<int>(PrimaryIPUpdateMode::ON_FAILURE):
+         g_primaryIpUpdateMode = PrimaryIPUpdateMode::ON_FAILURE;
+         break;
+      default:
+         g_primaryIpUpdateMode = PrimaryIPUpdateMode::NEVER;
+         break;
+   }
+   g_pollsBetweenPrimaryIpUpdate = ConfigReadULong(_T("Objects.Nodes.ResolveDNSToIPOnStatusPoll.Interval"), 1);
 
    SnmpSetDefaultTimeout(ConfigReadInt(_T("SNMPRequestTimeout"), 1500));
 }
