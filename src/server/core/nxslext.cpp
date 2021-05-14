@@ -2120,11 +2120,11 @@ void NXSL_ServerEnv::trace(int level, const TCHAR *text)
 {
 	if (level == 0)
 	{
-		nxlog_write(NXLOG_INFO, _T("%s"), text);
+		nxlog_write_tag(NXLOG_INFO, _T("nxsl.trace"), _T("%s"), text);
 	}
 	else
 	{
-		nxlog_debug(level, _T("%s"), text);
+		nxlog_debug_tag(_T("nxsl.trace"), level, _T("%s"), text);
 	}
 }
 
