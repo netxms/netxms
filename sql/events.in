@@ -1432,6 +1432,17 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   5) Policy ID' CONCAT CRLF CONCAT
       '   6) Additional info'
    );
+   
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_TUNNEL_SETUP_ERROR, 'SYS_TUNNEL_SETUP_ERROR', '50792874-0b2e-4eca-8c54-274b7d5e3aa2',
+      EVENT_SEVERITY_MAJOR, 1,
+      'Error setting up agent tunnel from %<ipAddress> (%<error>)',
+      'Generated on agent tunnel setup error.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Source IP address (ipAddress)' CONCAT CRLF CONCAT
+      '   2) Error message (error)' 
+   );
 
 /*
 ** SNMP traps

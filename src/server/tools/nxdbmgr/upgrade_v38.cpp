@@ -24,6 +24,36 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 38.15 to 38.16
+ */
+static bool H_UpgradeFromV15()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_TUNNEL_SETUP_ERROR, _T("SYS_TUNNEL_SETUP_ERROR"),
+            EVENT_SEVERITY_MAJOR, EF_LOG, _T("50792874-0b2e-4eca-8c54-274b7d5e3aa2"),
+            _T("Error setting up agent tunnel from %<ipAddress> (%<error>)"),
+            _T("Generated on agent tunnel setup error.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Source IP address (ipAddress)\r\n")
+            _T("   2) Error message (error)")
+            ));
+
+   int ruleId = NextFreeEPPruleID();
+
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
+            _T("VALUES (%d,'bdd8f6b1-fe3a-4b20-bc0b-bb7507b264b2',7944,'Generate alarm on agent tunnel setup error','%%m',5,'TUNNEL_SETUP_ERROR_%%1','',0,%d)"),
+            ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 256, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_TUNNEL_SETUP_ERROR);
+   CHK_EXEC(SQLQuery(query));
+
+
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Upgrade from 38.14 to 38.15
  */
 static bool H_UpgradeFromV14()
@@ -326,6 +356,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 15, 38, 16, H_UpgradeFromV15 },
    { 14, 38, 15, H_UpgradeFromV14 },
    { 13, 38, 14, H_UpgradeFromV13 },
    { 12, 38, 13, H_UpgradeFromV12 },
