@@ -58,13 +58,14 @@ public class ViewStack extends Composite
    private ToolBarManager viewToolBarManager;
    private ToolBar viewToolBar;
    private ToolBar viewControlBar;
+   private ToolItem enableFilter = null;
    private Object context;
    private boolean allViewsAreCloseable = false;
+   private boolean useGlobalViewId = false;
    private Map<String, View> views = new HashMap<String, View>();
    private Map<String, CTabItem> tabs = new HashMap<String, CTabItem>();
    private Set<ViewStackSelectionListener> selectionListeners = new HashSet<ViewStackSelectionListener>();
    private Runnable onFilterCloseCallback = null;
-   private ToolItem enableFilter = null;
 
    /**
     * Create new view stack.
@@ -222,7 +223,8 @@ public class ViewStack extends Composite
     */
    public void addView(View view, boolean activate, boolean ignoreContext)
    {
-      View currentView = views.get(view.getId());
+      String viewId = getViewId(view);
+      View currentView = views.get(viewId);
       if (currentView != null)
       {
          if (currentView == view)
@@ -230,12 +232,12 @@ public class ViewStack extends Composite
 
          // Dispose current view with same ID and replace with provided one
          currentView.dispose();
-         CTabItem tabItem = tabs.remove(view.getId());
+         CTabItem tabItem = tabs.remove(viewId);
          if (tabItem != null)
             tabItem.dispose();
       }
 
-      views.put(view.getId(), view);
+      views.put(viewId, view);
 
       if (ignoreContext || !(view instanceof ViewWithContext) || ((ViewWithContext)view).isValidForContext(context))
       {
@@ -260,7 +262,7 @@ public class ViewStack extends Composite
       if (view != null)
       {
          view.dispose();
-         CTabItem tabItem = tabs.remove(view.getId());
+         CTabItem tabItem = tabs.remove(getViewId(view));
          if (tabItem != null)
             tabItem.dispose();
       }
@@ -274,7 +276,6 @@ public class ViewStack extends Composite
     */
    private void activateView(View view, CTabItem tabItem)
    {
-      view.activate();
       if ((view instanceof ViewWithContext) && !ignoreContextForView(tabItem))
       {
          if (((ViewWithContext)view).getContext() != context)
@@ -286,6 +287,8 @@ public class ViewStack extends Composite
 
       enableFilter.setSelection(view.isFilterEnabled());
       enableFilter.setEnabled(view.hasFilter());
+
+      view.activate();
    }
 
    /**
@@ -297,7 +300,7 @@ public class ViewStack extends Composite
    public boolean updateViewTrim(View view)
    {
       boolean updated = false;
-      CTabItem tab = tabs.get(view.getId());
+      CTabItem tab = tabs.get(getViewId(view));
       if (tab != null)
       {
          tab.setText(ignoreContextForView(tab) ? view.getFullName() : view.getName());
@@ -337,15 +340,16 @@ public class ViewStack extends Composite
          public void widgetDisposed(DisposeEvent e)
          {
             View view = (View)e.widget.getData("view");
+            String viewId = getViewId(view);
             if (e.widget.getData("keepView") == null)
             {
-               views.remove(view.getId());
+               views.remove(viewId);
                view.dispose();
             }
-            tabs.remove(view.getId());
+            tabs.remove(viewId);
          }
       });
-      tabs.put(view.getId(), tabItem);
+      tabs.put(getViewId(view), tabItem);
       return tabItem;
    }
 
@@ -365,7 +369,7 @@ public class ViewStack extends Composite
          if (((ViewWithContext)view).isValidForContext(context))
          {
             view.setVisible(true);
-            if (!tabs.containsKey(view.getId()))
+            if (!tabs.containsKey(getViewId(view)))
             {
                if (view.isCreated())
                   view.setVisible(true);
@@ -377,10 +381,11 @@ public class ViewStack extends Composite
          }
          else
          {
-            CTabItem tabItem = tabs.remove(view.getId());
+            String viewId = getViewId(view);
+            CTabItem tabItem = tabs.remove(viewId);
             if (tabItem != null)
             {
-               logger.debug("View " + view.getId() + " is not valid for current context");
+               logger.debug("View " + viewId + " is not valid for current context");
                tabItem.setData("keepView", Boolean.TRUE); // Prevent view dispose by tab's dispose listener
                tabItem.dispose();
                view.setVisible(false);
@@ -465,5 +470,37 @@ public class ViewStack extends Composite
    {
       Object ignoreContext = tabItem.getData("ignoreContext");
       return (ignoreContext != null) && (ignoreContext instanceof Boolean) && (Boolean)ignoreContext;
+   }
+
+   /**
+    * Get view identification mode.
+    *
+    * @return true if view stack uses global ID to check if view already present
+    */
+   public boolean isUseGlobalViewId()
+   {
+      return useGlobalViewId;
+   }
+
+   /**
+    * Set view identification mode. If useGlobalViewId set to true, view stack will use global IDs to check if view already present,
+    * otherwise base ID will be used.
+    *
+    * @param useGlobalViewId true to use global view ID to identify duplicate views
+    */
+   public void setUseGlobalViewId(boolean useGlobalViewId)
+   {
+      this.useGlobalViewId = useGlobalViewId;
+   }
+
+   /**
+    * Get ID for given view. Dependng on operation mode will return base or global view ID.
+    * 
+    * @param view view to get ID from
+    * @return view ID according to current operation mode
+    */
+   private String getViewId(View view)
+   {
+      return useGlobalViewId ? view.getGlobalId() : view.getBaseId();
    }
 }

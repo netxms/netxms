@@ -37,7 +37,6 @@ import org.netxms.nxmc.modules.worldmap.tools.MapAccessor;
 import org.netxms.nxmc.modules.worldmap.widgets.AbstractGeoMapViewer;
 import org.netxms.nxmc.modules.worldmap.widgets.ObjectGeoLocationViewer;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -50,8 +49,6 @@ public class WorldMap extends AbstractGeolocationView
    public static final String ID = "WorldMap";
 	
 	private Action actionPlaceObject;
-   private Action actionShowFilter;
-   private boolean filterEnabled;
 
    public WorldMap()
    {
@@ -88,7 +85,6 @@ public class WorldMap extends AbstractGeolocationView
       settings.set(ID + ".zoom", m.getZoom());
       settings.set(ID + ".latitude", m.getLatitude());
       settings.set(ID + ".longitude", m.getLongitude());
-      settings.set(ID + ".filterEnabled", filterEnabled);
 
       super.dispose();
    }
@@ -127,17 +123,6 @@ public class WorldMap extends AbstractGeolocationView
 				placeObject();
 			}
 		};
-
-      actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
-         @Override
-         public void run()
-         {
-            enableFilter(actionShowFilter.isChecked());
-         }
-      };
-
-      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
-      actionShowFilter.setChecked(filterEnabled);
 	}
 
    /**
@@ -149,9 +134,8 @@ public class WorldMap extends AbstractGeolocationView
 		super.fillContextMenu(manager);
       manager.add(new Separator());
       manager.add(actionPlaceObject);
-      manager.add(actionShowFilter);
 	}
-	
+
    /**
     * @param manager
     */
@@ -159,8 +143,6 @@ public class WorldMap extends AbstractGeolocationView
    protected void fillLocalToolbar(ToolBarManager manager)
    {
       super.fillLocalToolbar(manager);
-      manager.add(new Separator());
-      manager.add(actionShowFilter);
    }
 
    /**
@@ -192,8 +174,9 @@ public class WorldMap extends AbstractGeolocationView
 	}
 	
 	/**
-	 * On filter modify
-	 */
+    * @see org.netxms.nxmc.base.views.View#onFilterModify()
+    */
+   @Override
 	protected void onFilterModify()
 	{
 	   ((ObjectGeoLocationViewer)map).setFilterString(filterText.getText().trim().toLowerCase());

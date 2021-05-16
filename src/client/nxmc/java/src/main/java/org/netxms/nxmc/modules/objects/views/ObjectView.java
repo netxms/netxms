@@ -44,6 +44,16 @@ public abstract class ObjectView extends ViewWithContext
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#getGlobalId()
+    */
+   @Override
+   public String getGlobalId()
+   {
+      AbstractObject object = getObject();
+      return getBaseId() + "@" + ((object != null) ? Long.toString(object.getObjectId()) : "none");
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.ViewWithContext#getContextName()
     */
    @Override

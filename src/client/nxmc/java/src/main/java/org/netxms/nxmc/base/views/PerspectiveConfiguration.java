@@ -32,6 +32,7 @@ public class PerspectiveConfiguration
    public boolean enableViewPinning = true;
    public boolean enableViewExtraction = true;
    public boolean allViewsAreCloseable = false;
+   public boolean useGlobalViewId = false;
    public int priority = 255;
 
    /**
@@ -42,6 +43,7 @@ public class PerspectiveConfiguration
    {
       return "PerspectiveConfiguration [hasNavigationArea=" + hasNavigationArea + ", multiViewNavigationArea=" + multiViewNavigationArea + ", multiViewMainArea=" + multiViewMainArea +
             ", hasHeaderArea=" + hasHeaderArea + ", hasSupplementalArea=" + hasSupplementalArea + ", multiViewSupplementalArea=" + multiViewSupplementalArea + ", enableViewPinning=" +
-            enableViewPinning + ", enableViewExtraction=" + enableViewExtraction + ", allViewsAreCloseable=" + allViewsAreCloseable + ", priority=" + priority + "]";
+            enableViewPinning + ", enableViewExtraction=" + enableViewExtraction + ", allViewsAreCloseable=" + allViewsAreCloseable + ", useGlobalViewId=" + useGlobalViewId + ", priority=" +
+            priority + "]";
    }
 }

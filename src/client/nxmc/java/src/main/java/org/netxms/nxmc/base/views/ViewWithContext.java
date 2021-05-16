@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,15 +60,6 @@ public abstract class ViewWithContext extends View
       super.postContentCreate();
       if (context != null) // Cloned view will have context set at creation
          contextChanged(null, context);
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#globalizeId()
-    */
-   @Override
-   public void globalizeId()
-   {
-      setId(getId() + "@" + ((context != null) ? Integer.toString(context.hashCode()) : "null"));
    }
 
    /**

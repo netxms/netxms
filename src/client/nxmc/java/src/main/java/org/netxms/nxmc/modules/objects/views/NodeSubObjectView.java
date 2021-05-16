@@ -21,9 +21,9 @@ package org.netxms.nxmc.modules.objects.views;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -74,8 +74,8 @@ public abstract class NodeSubObjectView extends ObjectView
       objectsFullySync = coreStore.getAsBoolean("ObjectBrowser.FullSync", false);
 
       // Create tab main area
-      mainArea = new Composite(parent, SWT.BORDER);
-      mainArea.setLayout(new FormLayout());
+      mainArea = new Composite(parent, SWT.NONE);
+      mainArea.setLayout(new FillLayout());
 
       sessionListener = new SessionListener() {
          @Override

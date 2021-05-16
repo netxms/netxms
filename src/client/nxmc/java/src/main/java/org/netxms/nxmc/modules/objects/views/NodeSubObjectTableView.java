@@ -23,12 +23,10 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
-import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.views.helpers.NodeSubObjectFilter;
@@ -41,9 +39,9 @@ import org.netxms.nxmc.tools.WidgetHelper;
 public abstract class NodeSubObjectTableView extends NodeSubObjectView
 {
    protected SortableTableViewer viewer;
+   protected NodeSubObjectFilter filter;
    protected Action actionCopyToClipboard;
    protected Action actionExportToCsv;
-   protected NodeSubObjectFilter filter;
 
    /**
     * @param name
@@ -69,28 +67,11 @@ public abstract class NodeSubObjectTableView extends NodeSubObjectView
    }
 
    /**
-    * Create filter control
-    * 
-    * @return filter control
-    */
-   protected FilterText createFilterText()
-   {
-      return new FilterText(mainArea, SWT.NONE);
-   }
-
-   /**
     * Returns created viewer
     * 
     * @return viewer
     */
    protected abstract void createViewer();
-
-   /**
-    * Return filter setting name
-    * 
-    * @return filter setting name
-    */
-   public abstract String getFilterSettingName();
 
    /**
     * Create actions

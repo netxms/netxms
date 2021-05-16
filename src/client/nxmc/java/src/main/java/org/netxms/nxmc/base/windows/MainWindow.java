@@ -102,6 +102,7 @@ public class MainWindow extends ApplicationWindow
             ps.set("MainWindow.Maximized", getShell().getMaximized());
             ps.set("MainWindow.Size", getShell().getSize());
             ps.set("MainWindow.Location", getShell().getLocation());
+            ps.set("MainWindow.CurrentPerspective", (currentPerspective != null) ? currentPerspective.getId() : "(none)");
          }
       });
    }
@@ -215,6 +216,9 @@ public class MainWindow extends ApplicationWindow
 
       setupPerspectiveSwitcher();
 
+      switchToPerspective("Pinboard");
+      switchToPerspective(PreferenceStore.getInstance().getAsString("MainWindow.CurrentPerspective"));
+
       return windowContent;
    }
 
@@ -243,6 +247,7 @@ public class MainWindow extends ApplicationWindow
       {
          p.bindToWindow(this);
          ToolItem item = new ToolItem(mainMenu, SWT.RADIO);
+         item.setData("PerspectiveId", p.getId());
          item.setImage(p.getImage());
          if (verticalLayout)
             item.setToolTipText(p.getName());
@@ -279,6 +284,15 @@ public class MainWindow extends ApplicationWindow
       currentPerspective = p;
       currentPerspective.show(perspectiveArea);
       resizePerspectiveAreaContent();
+      for(ToolItem item : mainMenu.getItems())
+      {
+         Object id = item.getData("PerspectiveId");
+         if (id != null)
+         {
+            // This is perspective switcher item, set selection according to current perspective
+            item.setSelection(p.getId().equals(id));
+         }
+      }
    }
 
    /**
@@ -303,8 +317,7 @@ public class MainWindow extends ApplicationWindow
     */
    public void pinView(View view)
    {
-      logger.debug("Request to pin view with ID=" + view.getId());
-      view.globalizeId();
+      logger.debug("Request to pin view with GlobalID=" + view.getGlobalId());
       pinboardPerspective.addMainView(view, false, true);
    }
 

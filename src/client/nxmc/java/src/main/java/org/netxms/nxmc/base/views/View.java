@@ -47,7 +47,7 @@ public abstract class View
 {
    private static final Logger logger = LoggerFactory.getLogger(View.class);
 
-   private String id;
+   private String baseId;
    private String name;
    private ImageDescriptor imageDescriptor;
    private Image image;
@@ -64,21 +64,21 @@ public abstract class View
    private StructuredViewer viewer;
 
    /**
-    * Create new view with specific ID. This will not create actual widgets that composes view - creation can be delayed by
-    * framework until view actually has to be shown for the first time.
+    * Create new view with specific base ID. Actual view ID will be derived from base ID, possibly by classes derived from base view
+    * class. This will not create actual widgets that composes view - creation can be delayed by framework until view actually has
+    * to be shown for the first time.
     *
     * @param name view name
     * @param image view image
-    * @param id view ID
+    * @param baseId view base ID
     * @param hasFileter true if view should contain filter
     */
-   public View(String name, ImageDescriptor image, String id, boolean hasFilter)
+   public View(String name, ImageDescriptor image, String baseId, boolean hasFilter)
    {
-      this.id = id;
+      this.baseId = baseId;
       this.name = name;
       this.imageDescriptor = image;
       this.hasFilter = hasFilter;
-      filterEnabled = PreferenceStore.getInstance().getAsBoolean(id + ".showFilter", true);
    }
 
    /**
@@ -98,11 +98,12 @@ public abstract class View
    {
       try
       {
-         View view = (View)getClass().getDeclaredConstructor().newInstance();
-         view.id = id;
+         View view = getClass().getDeclaredConstructor().newInstance();
+         view.baseId = baseId;
          view.name = name;
          view.imageDescriptor = imageDescriptor;
          view.hasFilter = hasFilter;
+         view.filterEnabled = filterEnabled;
          return view;
       }
       catch(Exception e)
@@ -132,7 +133,7 @@ public abstract class View
       if (hasFilter)
       {  
          viewArea.setLayout(new FormLayout());
-         
+
          filterText = new FilterText(viewArea, SWT.NONE);
          filterText.addModifyListener(new ModifyListener() {
             @Override
@@ -142,8 +143,9 @@ public abstract class View
             }
          });               
          filterText.setCloseCallback(onFilterCloseCallback);
+
          userArea = new Composite(viewArea, SWT.NONE);    
-         
+
          // Setup layout
          FormData fd = new FormData();
          fd.left = new FormAttachment(0, 0);
@@ -151,21 +153,21 @@ public abstract class View
          fd.right = new FormAttachment(100, 0);
          fd.bottom = new FormAttachment(100, 0);
          userArea.setLayoutData(fd);
-         
+
          fd = new FormData();
          fd.left = new FormAttachment(0, 0);
          fd.top = new FormAttachment(0, 0);
          fd.right = new FormAttachment(100, 0);
          filterText.setLayoutData(fd);
-          
       }
       userArea.setLayout(new FillLayout());    
 
       createContent(userArea);
       postContentCreate();
-      
+
       if (hasFilter)
       { 
+         filterEnabled = PreferenceStore.getInstance().getAsBoolean(getBaseId() + ".showFilter", true);
          if (filterEnabled)
             filterText.setFocus();
          else
@@ -218,7 +220,7 @@ public abstract class View
     */
    public void dispose()
    {
-      logger.debug("View disposed - " + getId());
+      logger.debug("View disposed - " + getGlobalId());
 
       // Use copy of listener set to avoid concurrent changes if listener will call View.removeStateListener()
       for(ViewStateListener listener : new ArrayList<ViewStateListener>(stateListeners))
@@ -377,30 +379,23 @@ public abstract class View
    }
 
    /**
-    * Get view unique ID.
+    * Get view global ID. Default implementation returns base ID.
     *
-    * @return view unique ID
+    * @return view global ID
     */
-   public String getId()
+   public String getGlobalId()
    {
-      return id;
+      return baseId;
    }
 
    /**
-    * Change view ID.
+    * Get view base ID.
     *
-    * @param id new view ID
+    * @return view base ID
     */
-   protected void setId(String id)
+   public String getBaseId()
    {
-      this.id = id;
-   }
-
-   /**
-    * Update ID to incorporate optional context. Default implementation does nothing.
-    */
-   public void globalizeId()
-   {
+      return baseId;
    }
 
    /**
@@ -458,12 +453,12 @@ public abstract class View
     * @param viewer viewer to refresh
     * @param filter filter to set filtering text
     */
-   public void setViewerAndFilter(StructuredViewer viewer, ViewerFilterInternal filter)
+   protected void setViewerAndFilter(StructuredViewer viewer, ViewerFilterInternal filter)
    {
       this.viewer = viewer;
       this.filter = filter;
    }
-   
+
    /**
     * Default on modify for view with viewer
     */
@@ -483,7 +478,8 @@ public abstract class View
    {
       if (!hasFilter)
          return;
-      
+
+      filterEnabled = enable;
       filterText.setVisible(enable);
       FormData fd = (FormData)userArea.getLayoutData();
       fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
@@ -497,9 +493,9 @@ public abstract class View
          filterText.setText(""); //$NON-NLS-1$
          onFilterModify();
       }
-      PreferenceStore.getInstance().set(id + ".showFilter", enable);
+      PreferenceStore.getInstance().set(getBaseId() + ".showFilter", enable);
    }
-   
+
    /**
     * @return the hasFilter
     */
@@ -507,7 +503,7 @@ public abstract class View
    {
       return hasFilter;
    }
-   
+
    /**
     * @return the filterEnabled
     */

@@ -173,7 +173,7 @@ public abstract class Perspective
                @Override
                public void viewSelected(View view)
                {
-                  logger.debug("New navigation view selected - " + view.getId());
+                  logger.debug("New navigation view selected - " + view.getGlobalId());
                   setNavigationSelectionProvider(((view != null) && (view instanceof NavigationView)) ? ((NavigationView)view).getSelectionProvider() : null);
                }
             });
@@ -218,6 +218,7 @@ public abstract class Perspective
       {
          mainFolder = new ViewStack(window, this, mainAreaHolder, configuration.enableViewExtraction, configuration.enableViewPinning);
          mainFolder.setAllViewsAaCloseable(configuration.allViewsAreCloseable);
+         mainFolder.setUseGlobalViewId(configuration.useGlobalViewId);
          if (configuration.hasHeaderArea)
             mainFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       }

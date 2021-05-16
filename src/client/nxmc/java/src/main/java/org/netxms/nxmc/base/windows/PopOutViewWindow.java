@@ -56,7 +56,7 @@ public class PopOutViewWindow extends Window
    {
       super.configureShell(newShell);
       newShell.setText(view.getFullName());
-      Point shellSize = PreferenceStore.getInstance().getAsPoint("PopupWindowSize." + view.getId(), null);
+      Point shellSize = PreferenceStore.getInstance().getAsPoint("PopupWindowSize." + view.getBaseId(), null);
       if (shellSize != null)
          newShell.setSize(shellSize);
    }
@@ -87,16 +87,14 @@ public class PopOutViewWindow extends Window
                size.y = 600;
             return size;
          }
-
       };
+      viewContainer.setContextAware(false); // Preserve view's context if any
       viewContainer.setView(view);
-      viewContainer.setLayout(new FillLayout());
       parent.addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            view.dispose();
-            PreferenceStore.getInstance().set("PopupWindowSize." + view.getId(), getShell().getSize());
+            PreferenceStore.getInstance().set("PopupWindowSize." + view.getBaseId(), getShell().getSize());
          }
       });
       return parent;

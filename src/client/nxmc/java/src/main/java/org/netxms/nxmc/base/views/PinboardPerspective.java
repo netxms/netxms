@@ -50,5 +50,6 @@ public class PinboardPerspective extends Perspective
       configuration.multiViewMainArea = true;
       configuration.enableViewPinning = false;
       configuration.allViewsAreCloseable = true;
+      configuration.useGlobalViewId = true;
    }
 }

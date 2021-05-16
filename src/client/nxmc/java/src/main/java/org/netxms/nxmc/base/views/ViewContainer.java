@@ -48,6 +48,7 @@ public class ViewContainer extends Composite
    private Window window;
    private Perspective perspective;
    private View view;
+   private boolean contextAware = true;
    private Object context;
    private ToolBarManager viewToolBarManager;
    private ToolBar viewToolBar;
@@ -91,19 +92,6 @@ public class ViewContainer extends Composite
       gd.grabExcessHorizontalSpace = false;
       viewControlBar.setLayoutData(gd);
 
-      ToolItem refreshView = new ToolItem(viewControlBar, SWT.PUSH);
-      refreshView.setImage(SharedIcons.IMG_REFRESH);
-      refreshView.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            if (view != null)
-            {
-               view.refresh();
-            }
-         }
-      });
-
       enableFilter = new ToolItem(viewControlBar, SWT.CHECK);
       enableFilter.setImage(SharedIcons.IMG_FILTER);
       enableFilter.addSelectionListener(new SelectionAdapter() {
@@ -117,7 +105,6 @@ public class ViewContainer extends Composite
          }
       });
       onFilterCloseCallback = new Runnable() {
-         
          @Override
          public void run()
          {
@@ -125,6 +112,19 @@ public class ViewContainer extends Composite
             view.enableFilter(enableFilter.getSelection());
          }
       };
+
+      ToolItem refreshView = new ToolItem(viewControlBar, SWT.PUSH);
+      refreshView.setImage(SharedIcons.IMG_REFRESH);
+      refreshView.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            if (view != null)
+            {
+               view.refresh();
+            }
+         }
+      });
 
       if (enableViewPinning)
       {
@@ -188,7 +188,10 @@ public class ViewContainer extends Composite
          public void widgetDisposed(DisposeEvent arg0)
          {
             if (view != null)
+            {
                view.dispose();
+               view = null;
+            }
          }
       });
    }
@@ -202,7 +205,7 @@ public class ViewContainer extends Composite
    {
       if (this.view != null)
       {
-         logger.debug("Existing view " + this.view.getId() + " replaced by view " + view.getId());
+         logger.debug("Existing view " + this.view.getGlobalId() + " replaced by view " + view.getGlobalId());
          this.view.dispose();
       }
       this.view = view;
@@ -210,7 +213,7 @@ public class ViewContainer extends Composite
       {
          view.create(window, perspective, viewArea, onFilterCloseCallback);
          viewArea.layout(true, true);
-         if (view instanceof ViewWithContext)
+         if (contextAware && (view instanceof ViewWithContext))
             ((ViewWithContext)view).setContext(context);
 
          viewToolBarManager.removeAll();
@@ -219,6 +222,8 @@ public class ViewContainer extends Composite
          
          enableFilter.setSelection(view.isFilterEnabled());
          enableFilter.setEnabled(view.hasFilter());
+
+         view.activate();
       }
    }
 
@@ -240,7 +245,27 @@ public class ViewContainer extends Composite
    public void setContext(Object context)
    {
       this.context = context;
-      if ((view != null) && (view instanceof ViewWithContext))
+      if (contextAware && (view != null) && (view instanceof ViewWithContext))
          ((ViewWithContext)view).setContext(context);
+   }
+
+   /**
+    * Check if this view container is context aware and will update view's context.
+    * 
+    * @return true if this view container is context aware and will update view's context
+    */
+   public boolean isContextAware()
+   {
+      return contextAware;
+   }
+
+   /**
+    * Set if this view container should be context aware and update view's context.
+    *
+    * @param contextAware true if this view container should be context aware and update view's context
+    */
+   public void setContextAware(boolean contextAware)
+   {
+      this.contextAware = contextAware;
    }
 }

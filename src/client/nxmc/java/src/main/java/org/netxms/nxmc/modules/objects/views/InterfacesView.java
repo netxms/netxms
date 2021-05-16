@@ -150,15 +150,6 @@ public class InterfacesView extends NodeSubObjectTableView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.NodeSubObjectTableView#getFilterSettingName()
-    */
-   @Override
-   public String getFilterSettingName()
-   {
-      return "InterfacesView.Filter";
-   }
-
-   /**
     * @see org.netxms.nxmc.modules.objects.views.NodeSubObjectTableView#createActions()
     */
    @Override
