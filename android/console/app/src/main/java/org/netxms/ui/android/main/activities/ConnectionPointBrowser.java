@@ -57,7 +57,6 @@ public class ConnectionPointBrowser extends AbstractClientActivity {
     private final int maxConnectionPoints = 50;
     private List<String> cpList = new ArrayList<String>(0);
     private EditText editText;
-    private ListView listView;
     private ConnectionPointListAdapter adapter;
     private int nodeId = 0;
     private ProgressDialog dialog;
@@ -72,15 +71,15 @@ public class ConnectionPointBrowser extends AbstractClientActivity {
         r = getResources();
         setContentView(R.layout.connection_point_view);
 
-        TextView title = (TextView) findViewById(R.id.ScreenTitlePrimary);
+        TextView title = findViewById(R.id.ScreenTitlePrimary);
         title.setText(R.string.connection_point_title);
         // keeps current list of alarms as datasource for listview
         adapter = new ConnectionPointListAdapter(this);
-        listView = (ListView) findViewById(R.id.ConnectionPointList);
+        ListView listView = findViewById(R.id.ConnectionPointList);
         listView.setAdapter(adapter);
         registerForContextMenu(listView);
 
-        editText = (EditText) findViewById(R.id.MacAddressToSearch);
+        editText = findViewById(R.id.MacAddressToSearch);
         editText.setOnKeyListener(new OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -94,7 +93,7 @@ public class ConnectionPointBrowser extends AbstractClientActivity {
             }
         });
 
-        final Button scanButton = (Button) findViewById(R.id.ScanBarcode);
+        final Button scanButton = findViewById(R.id.ScanBarcode);
         scanButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {

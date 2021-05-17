@@ -49,10 +49,8 @@ public class OverviewFragment extends ExpandableListFragment implements LoaderMa
         getExpandableListView().expandGroup(0);
         setListShown(false, true);
         loader = (GenericObjectLoader) getActivity().getSupportLoaderManager().initLoader(R.layout.overview_fragment, null, this);
-        if (loader != null) {
-            loader.setObjId(nodeId);
-            loader.setService(service);
-        }
+        loader.setObjId(nodeId);
+        loader.setService(service);
     }
 
     @Override

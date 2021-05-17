@@ -17,7 +17,7 @@ public class Multipliers {
     public static final int Y = 5;
 
     static public String getLabel(int type, int mul) {
-        String labels[][] = {
+        String[][] labels = {
                 {"", "", "", "", "", "", "", ""}, // No multiplier
                 {"K", "M", "G", "T", "P", "E", "Z", "Y"}, // Decimal multiplier
                 {"Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"} // Binary multiplier
@@ -26,7 +26,7 @@ public class Multipliers {
     }
 
     static public double getValue(int type, int mul) {
-        double values[][] = {
+        double[][] values = {
                 {1, 1, 1, 1, 1, 1, 1, 1},
                 {1E3, 1E6, 1E9, 1E12, 1E15, 1E18, 1E21, 1E24},
                 {

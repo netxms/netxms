@@ -53,7 +53,7 @@ public class OverviewAdapter extends BaseExpandableListAdapter {
     /**
      * Set values for overview adapter
      *
-     * @param object from which to extract overview data
+     * @param obj from which to extract overview data
      */
     public void setValues(AbstractObject obj) {
         groups.clear();
@@ -161,13 +161,13 @@ public class OverviewAdapter extends BaseExpandableListAdapter {
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
         ViewGroup item = getViewGroupChild(convertView, parent);
-        ListView label = (ListView) item.findViewById(R.id.overviewChild);
+        ListView label = item.findViewById(R.id.overviewChild);
         OverviewDetailsAdapter idAdapter = new OverviewDetailsAdapter(parent.getContext());
         Details details = (Details) getChild(groupPosition, childPosition);
         if (details != null)
             idAdapter.setValues(details.info);
         label.setAdapter(idAdapter);
-        TextView tv = (TextView) parent.findViewById(R.id.overview_text);
+        TextView tv = parent.findViewById(R.id.overview_text);
         int totalHeight = tv != null ? tv.getMeasuredHeight() : 0;
         for (int i = 0; i < idAdapter.getCount(); i++) {
             View listItem = idAdapter.getView(i, null, label);
@@ -210,7 +210,7 @@ public class OverviewAdapter extends BaseExpandableListAdapter {
             LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = layoutInflater.inflate(R.layout.overview_group, null);
         }
-        TextView tv = (TextView) convertView.findViewById(R.id.overview_text);
+        TextView tv = convertView.findViewById(R.id.overview_text);
         Details d = (Details) getChild(groupPosition, 0);
         if (d != null)
             tv.setText(d.name);

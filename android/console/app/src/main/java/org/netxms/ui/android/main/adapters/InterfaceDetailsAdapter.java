@@ -42,11 +42,6 @@ public class InterfaceDetailsAdapter extends BaseAdapter {
         r = context.getResources();
     }
 
-    /**
-     * Set alarms
-     *
-     * @param alarms
-     */
     public void setValues(Interface i) {
         addRow(r.getString(R.string.if_id), Long.toString(i.getObjectId()));
         addRow(r.getString(R.string.if_name), i.getObjectName());
@@ -211,18 +206,17 @@ public class InterfaceDetailsAdapter extends BaseAdapter {
     }
 
     private String getNodeStatusText(ObjectStatus status) {
-        final int[] statuses =
-                {
-                        R.string.status_normal,
-                        R.string.status_warning,
-                        R.string.status_minor,
-                        R.string.status_major,
-                        R.string.status_critical,
-                        R.string.status_unknown,
-                        R.string.status_unmanaged,
-                        R.string.status_disabled,
-                        R.string.status_testing
-                };
+        final int[] statuses = {
+                R.string.status_normal,
+                R.string.status_warning,
+                R.string.status_minor,
+                R.string.status_major,
+                R.string.status_critical,
+                R.string.status_unknown,
+                R.string.status_unmanaged,
+                R.string.status_disabled,
+                R.string.status_testing
+        };
 
         return r.getString(status.getValue() >= 0 && status.getValue() < statuses.length ? statuses[status.getValue()] : R.string.status_unknown);
     }

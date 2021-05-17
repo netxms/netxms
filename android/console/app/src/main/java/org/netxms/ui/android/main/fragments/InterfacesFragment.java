@@ -48,8 +48,7 @@ public class InterfacesFragment extends ExpandableListFragment implements Loader
     private static final int IF_EXPECTED_STATE_DOWN = 1;
     private static final int IF_EXPECTED_STATE_IGNORE = 2;
     private static final String TAG = "nxclient/InterfacesFragment";
-    private final GenericObjectChildrenLoader loader = null;
-    private ListView lv = null;
+    private GenericObjectChildrenLoader loader;
     private InterfacesAdapter adapter = null;
     private AbstractObject selectedObject = null;
 
@@ -66,13 +65,13 @@ public class InterfacesFragment extends ExpandableListFragment implements Loader
         adapter = new InterfacesAdapter(getActivity(), null, null);
         setListAdapter(adapter);
         setListShown(false, true);
-        GenericObjectChildrenLoader loader = (GenericObjectChildrenLoader) getActivity().getSupportLoaderManager().initLoader(R.layout.interfaces_fragment, null, this);
+        loader = (GenericObjectChildrenLoader) getActivity().getSupportLoaderManager().initLoader(R.layout.interfaces_fragment, null, this);
         if (loader != null) {
             loader.setObjId(nodeId);
             loader.setClassFilter(AbstractObject.OBJECT_INTERFACE);
             loader.setService(service);
         }
-        lv = getListView();
+        ListView lv = getListView();
         registerForContextMenu(lv);
         lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override

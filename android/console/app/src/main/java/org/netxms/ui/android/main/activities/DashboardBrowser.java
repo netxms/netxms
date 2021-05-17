@@ -32,7 +32,6 @@ public class DashboardBrowser extends AbstractClientActivity {
     private static final String TAG = "nxclient/DashboardBrowser";
     private final long initialParent = 7;
     private final Stack<AbstractObject> containerPath = new Stack<AbstractObject>();
-    private ListView listView;
     private ObjectListAdapter adapter;
     private AbstractObject currentParent = null;
     private long[] savedPath = null;
@@ -46,17 +45,16 @@ public class DashboardBrowser extends AbstractClientActivity {
         dialog = new ProgressDialog(this);
         setContentView(R.layout.node_view);
 
-        TextView title = (TextView) findViewById(R.id.ScreenTitlePrimary);
+        TextView title = findViewById(R.id.ScreenTitlePrimary);
         title.setText(R.string.dashboard_title);
 
         // keeps current list of nodes as datasource for listview
         adapter = new ObjectListAdapter(this);
 
-        listView = (ListView) findViewById(R.id.NodeList);
+        ListView listView = findViewById(R.id.NodeList);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            @SuppressWarnings("rawtypes")
             public void onItemClick(AdapterView parent, View v, int position, long id) {
                 AbstractObject obj = (AbstractObject) adapter.getItem(position);
                 if (obj.getChildIdList().length > 0) {
@@ -163,9 +161,6 @@ public class DashboardBrowser extends AbstractClientActivity {
 //		final GenericObject object = (GenericObject)adapter.getItem(info.position);
 
         // process menu selection
-        switch (item.getItemId()) {
-            default:
-        }
 
         return super.onContextItemSelected(item);
     }
@@ -205,7 +200,7 @@ public class DashboardBrowser extends AbstractClientActivity {
             return;
         }
 
-        TextView curPath = (TextView) findViewById(R.id.ScreenTitleSecondary);
+        TextView curPath = findViewById(R.id.ScreenTitleSecondary);
         curPath.setText(getFullPath());
         adapter.setNodes(currentParent.getChildrenAsArray());
         adapter.notifyDataSetChanged();
@@ -242,7 +237,7 @@ public class DashboardBrowser extends AbstractClientActivity {
             path[i++] = o.getObjectId();
 
         if (currentParent != null)
-            path[i++] = currentParent.getObjectId();
+            path[i] = currentParent.getObjectId();
 
         return path;
     }

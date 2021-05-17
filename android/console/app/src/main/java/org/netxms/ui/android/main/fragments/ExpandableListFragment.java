@@ -220,7 +220,7 @@ public class ExpandableListFragment extends AbstractListFragment
 
     public void onContentChanged() {
         View emptyView = getView().findViewById(android.R.id.empty);
-        mList = (ExpandableListView) getView().findViewById(android.R.id.list);
+        mList = getView().findViewById(android.R.id.list);
         if (mList == null) {
             throw new RuntimeException(
                     "Your content must have a ExpandableListView whose id attribute is 'android.R.id.list'");

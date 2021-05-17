@@ -95,7 +95,7 @@ public class DrawGraph extends AbstractClientActivity {
         graphView.setLegendAlign(LegendAlign.TOP);
         graphView.setScalable(true);
         graphView.setScrollable(true);
-        TextView title = (TextView) findViewById(R.id.ScreenTitlePrimary);
+        TextView title = findViewById(R.id.ScreenTitlePrimary);
         title.setText(R.string.graph_title);
     }
 
@@ -125,7 +125,7 @@ public class DrawGraph extends AbstractClientActivity {
      */
     public void refreshGraph() {
         if (graphTitle != null) {
-            TextView title = (TextView) findViewById(R.id.ScreenTitlePrimary);
+            TextView title = findViewById(R.id.ScreenTitlePrimary);
             title.setText(graphTitle);
         }
         new LoadDataTask().execute();
@@ -198,7 +198,7 @@ public class DrawGraph extends AbstractClientActivity {
                     GraphViewSeries gwSeries = new GraphViewSeries("", new GraphViewSeriesStyle(0xFFFFFF, 4), gwData);
                     graphView.addSeries(gwSeries);
                 }
-                LinearLayout layout = (LinearLayout) findViewById(R.id.graphics);
+                LinearLayout layout = findViewById(R.id.graphics);
                 if (layout != null) {
                     graphView.setViewPort(start, end - start + 1); // Start showing full graph
                     layout.addView(graphView);

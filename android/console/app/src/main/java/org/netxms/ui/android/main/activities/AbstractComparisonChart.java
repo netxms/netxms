@@ -52,7 +52,7 @@ public abstract class AbstractComparisonChart extends AbstractClientActivity {
             }
             graphTitle = getIntent().getStringExtra("graphTitle");
         }
-        TextView title = (TextView) findViewById(R.id.ScreenTitlePrimary);
+        TextView title = findViewById(R.id.ScreenTitlePrimary);
         title.setText(R.string.graph_title);
     }
 
@@ -78,7 +78,7 @@ public abstract class AbstractComparisonChart extends AbstractClientActivity {
      */
     public void refreshGraph() {
         if (graphTitle != null) {
-            TextView title = (TextView) findViewById(R.id.ScreenTitlePrimary);
+            TextView title = findViewById(R.id.ScreenTitlePrimary);
             title.setText(graphTitle);
         }
         new LoadDataTask().execute();
@@ -154,7 +154,7 @@ public abstract class AbstractComparisonChart extends AbstractClientActivity {
                     values[i] = (value != null) ? value.getValueAsDouble() : 0.0;
                 }
 
-                LinearLayout layout = (LinearLayout) findViewById(R.id.graphics);
+                LinearLayout layout = findViewById(R.id.graphics);
                 if (layout != null) {
                     if (graphView != null)
                         layout.removeView(graphView);

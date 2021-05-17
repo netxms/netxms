@@ -39,9 +39,18 @@ import java.util.List;
  */
 
 public class LastValuesAdapter extends BaseAdapter {
-    private static final int[] severityImageId = {R.drawable.status_normal, R.drawable.status_warning, R.drawable.status_minor,
-            R.drawable.status_major, R.drawable.status_critical};
-    private static final int[] stateImageId = {R.drawable.state_active, R.drawable.state_disabled, R.drawable.state_unsupported};
+    private static final int[] severityImageId = {
+            R.drawable.status_normal,
+            R.drawable.status_warning,
+            R.drawable.status_minor,
+            R.drawable.status_major,
+            R.drawable.status_critical
+    };
+    private static final int[] stateImageId = {
+            R.drawable.state_active,
+            R.drawable.state_disabled,
+            R.drawable.state_unsupported
+    };
     private final SharedPreferences sp;
     private final Context context;
     private final List<DciValue> currentValues = new ArrayList<DciValue>(0);

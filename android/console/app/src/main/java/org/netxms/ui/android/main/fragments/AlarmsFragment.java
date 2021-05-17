@@ -64,8 +64,7 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
         setListShown(false, true);
         adapter.setService(service);
         loader = (AlarmLoader) getActivity().getSupportLoaderManager().initLoader(R.layout.alarms_fragment, null, this);
-        if (loader != null)
-            loader.setService(service);
+        loader.setService(service);
         lv = getListView();
         registerForContextMenu(lv);
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -192,7 +191,7 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         SharedPreferences.Editor editor = prefs.edit();
         editor.putInt(SORT_KEY, sortBy);
-        editor.commit();
+        editor.apply();
         item.setChecked(!item.isChecked());
         selectAll(false);
         adapter.setSortBy(sortBy);
