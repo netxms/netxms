@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
-    <item android:id="@+id/connection_point_delete_one" android:title="@string/connection_point_delete_one" android:enabled="true" android:visible="true"></item>
-    <item android:id="@+id/connection_point_delete_all" android:title="@string/connection_point_delete_all" android:enabled="true" android:visible="true" android:checkable="false" android:checked="false"></item>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/connection_point_delete_one"
+        android:enabled="true"
+        android:title="@string/connection_point_delete_one"
+        android:visible="true"></item>
+    <item
+        android:id="@+id/connection_point_delete_all"
+        android:checkable="false"
+        android:checked="false"
+        android:enabled="true"
+        android:title="@string/connection_point_delete_all"
+        android:visible="true"></item>
 </menu>
