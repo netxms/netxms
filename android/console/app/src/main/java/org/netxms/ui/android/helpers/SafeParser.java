@@ -47,7 +47,7 @@ public class SafeParser {
     static public float parseFloat(String text, float defVal) {
         try {
             return Float.parseFloat(text);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException ignored) {
         }
         return defVal;
     }
@@ -62,7 +62,7 @@ public class SafeParser {
     static public double parseDouble(String text, double defVal) {
         try {
             return Double.parseDouble(text);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException ignored) {
         }
         return defVal;
     }

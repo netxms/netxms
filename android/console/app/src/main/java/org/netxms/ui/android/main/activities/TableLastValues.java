@@ -37,7 +37,7 @@ public class TableLastValues extends AbstractClientActivity {
 
         setContentView(R.layout.table_last_values);
 
-        textView = (TextView) findViewById(R.id.TextView);
+        textView = findViewById(R.id.TextView);
         textView.setTypeface(Typeface.MONOSPACE);
         textView.setMovementMethod(new ScrollingMovementMethod());
         textView.setHorizontallyScrolling(true);
@@ -50,8 +50,8 @@ public class TableLastValues extends AbstractClientActivity {
     public void onServiceConnected(ComponentName name, IBinder binder) {
         super.onServiceConnected(name, binder);
         AbstractObject object = service.findObjectById(nodeId);
-        TextView title = (TextView) findViewById(R.id.ScreenTitlePrimary);
-        title.setText(((object != null) ? object.getObjectName() : ("[" + Long.toString(nodeId) + "]")) + ":" + getIntent().getStringExtra("description"));
+        TextView title = findViewById(R.id.ScreenTitlePrimary);
+        title.setText(((object != null) ? object.getObjectName() : ("[" + nodeId + "]")) + ":" + getIntent().getStringExtra("description"));
         refresh();
     }
 

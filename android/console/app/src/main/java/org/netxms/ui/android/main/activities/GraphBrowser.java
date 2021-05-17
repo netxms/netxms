@@ -31,7 +31,6 @@ import java.util.List;
  */
 public class GraphBrowser extends AbstractClientActivity {
     private static final String TAG = "nxclient/GraphBrowser";
-    private ExpandableListView listView;
     private GraphAdapter adapter;
     private ProgressDialog dialog;
 
@@ -47,12 +46,12 @@ public class GraphBrowser extends AbstractClientActivity {
         dialog = new ProgressDialog(this);
         setContentView(R.layout.graph_view);
 
-        TextView title = (TextView) findViewById(R.id.ScreenTitlePrimary);
+        TextView title = findViewById(R.id.ScreenTitlePrimary);
         title.setText(R.string.predefined_graphs_title);
 
         // keeps current list of graphs as datasource for listview
         adapter = new GraphAdapter(this, new ArrayList<String>(), new ArrayList<ArrayList<GraphSettings>>());
-        listView = (ExpandableListView) findViewById(R.id.GraphList);
+        ExpandableListView listView = findViewById(R.id.GraphList);
         listView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
             public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {

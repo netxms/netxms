@@ -5,7 +5,6 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -58,7 +57,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
         setIntentionalExit(false);// Allow autorestart on change connectivity status for premature exit
         setContentView(R.layout.homescreen);
 
-        GridView gridview = (GridView) findViewById(R.id.ActivityList);
+        GridView gridview = findViewById(R.id.ActivityList);
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
             gridview.setNumColumns(5);
         else
@@ -67,9 +66,9 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
         gridview.setAdapter(adapter);
         gridview.setOnItemClickListener(this);
 
-        statusText = (TextView) findViewById(R.id.ScreenTitleSecondary);
+        statusText = findViewById(R.id.ScreenTitleSecondary);
 
-        TextView buildName = (TextView) findViewById(R.id.MainScreenVersion);
+        TextView buildName = findViewById(R.id.MainScreenVersion);
         buildName.setText(String.format("%s %s (%s)", getString(R.string.version), VersionInfo.version(), getString(R.string.build_number)));
     }
 
@@ -96,8 +95,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-            menu.removeItem(android.R.id.home);
+        menu.removeItem(android.R.id.home);
         menu.add(Menu.NONE, R.string.reconnect, Menu.NONE, getString(R.string.reconnect)).setIcon(android.R.drawable.ic_menu_revert);
         menu.add(Menu.NONE, R.string.exit, Menu.NONE, getString(R.string.exit)).setIcon(android.R.drawable.ic_menu_close_clear_cancel);
         return true;
@@ -129,7 +127,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         // Avoid starting activity if no connection
-        if (service != null && (service.getConnectionStatus() == ConnectionStatus.CS_CONNECTED || service.getConnectionStatus() == ConnectionStatus.CS_ALREADYCONNECTED))
+        if (service != null && (service.getConnectionStatus() == ConnectionStatus.CS_CONNECTED || service.getConnectionStatus() == ConnectionStatus.CS_ALREADYCONNECTED)) {
             switch ((int) id) {
                 case ACTIVITY_ALARMS:
                     startActivity(new Intent(this, AlarmBrowserFragment.class));
@@ -152,8 +150,9 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
                 default:
                     break;
             }
-        else
+        } else {
             showToast(getString(R.string.notify_disconnected));
+        }
     }
 
     /**
@@ -216,6 +215,6 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean(ClientConnectorService.INTENTIONAL_EXIT_KEY, flag);
-        editor.commit();
+        editor.apply();
     }
 }

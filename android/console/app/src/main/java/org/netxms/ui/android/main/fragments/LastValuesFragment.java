@@ -43,8 +43,24 @@ import java.util.ArrayList;
  */
 
 public class LastValuesFragment extends AbstractListFragment implements LoaderManager.LoaderCallbacks<DciValue[]> {
-    private static final Integer[] DEFAULT_COLORS = {0x40699C, 0x9E413E, 0x7F9A48, 0x695185, 0x3C8DA3, 0xCC7B38, 0x4F81BD, 0xC0504D,
-            0x9BBB59, 0x8064A2, 0x4BACC6, 0xF79646, 0xAABAD7, 0xD9AAA9, 0xC6D6AC, 0xBAB0C9};
+    private static final Integer[] DEFAULT_COLORS = {
+            0x40699C,
+            0x9E413E,
+            0x7F9A48,
+            0x695185,
+            0x3C8DA3,
+            0xCC7B38,
+            0x4F81BD,
+            0xC0504D,
+            0x9BBB59,
+            0x8064A2,
+            0x4BACC6,
+            0xF79646,
+            0xAABAD7,
+            0xD9AAA9,
+            0xC6D6AC,
+            0xBAB0C9
+    };
     private static final int MAX_COLORS = DEFAULT_COLORS.length;
 
     private LastValuesAdapter adapter = null;
@@ -68,10 +84,8 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
         setListAdapter(adapter);
         setListShown(false, true);
         loader = (DciValueLoader) getActivity().getSupportLoaderManager().initLoader(R.layout.lastvalues_fragment, null, this);
-        if (loader != null) {
-            loader.setObjId(nodeId);
-            loader.setService(service);
-        }
+        loader.setObjId(nodeId);
+        loader.setService(service);
         lv = getListView();
         registerForContextMenu(lv);
     }

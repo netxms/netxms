@@ -43,7 +43,7 @@ public class NodePollerActivity extends AbstractClientActivity {
 
         setContentView(R.layout.node_poller);
 
-        textView = (TextView) findViewById(R.id.TextView);
+        textView = findViewById(R.id.TextView);
         textView.setTypeface(Typeface.MONOSPACE);
         textView.setMovementMethod(new ScrollingMovementMethod());
         textView.setHorizontallyScrolling(true);
@@ -56,8 +56,8 @@ public class NodePollerActivity extends AbstractClientActivity {
     public void onServiceConnected(ComponentName name, IBinder binder) {
         super.onServiceConnected(name, binder);
         AbstractObject object = service.findObjectById(nodeId);
-        TextView title = (TextView) findViewById(R.id.ScreenTitlePrimary);
-        title.setText(POLL_NAME[pollType.getValue()] + " poll: " + ((object != null) ? object.getObjectName() : ("[" + Long.toString(nodeId) + "]")));
+        TextView title = findViewById(R.id.ScreenTitlePrimary);
+        title.setText(POLL_NAME[pollType.getValue()] + " poll: " + ((object != null) ? object.getObjectName() : ("[" + nodeId + "]")));
         restart();
     }
 

@@ -26,11 +26,35 @@ import java.util.ArrayList;
  *
  */
 public class ActivityListAdapter extends BaseAdapter {
-    private static final int[] activityId = {HomeScreen.ACTIVITY_ALARMS, HomeScreen.ACTIVITY_DASHBOARDS, HomeScreen.ACTIVITY_NODES, HomeScreen.ACTIVITY_ENTIRENETWORK, HomeScreen.ACTIVITY_GRAPHS, HomeScreen.ACTIVITY_MACADDRESS};
+    private static final int[] activityId = {
+            HomeScreen.ACTIVITY_ALARMS,
+            HomeScreen.ACTIVITY_DASHBOARDS,
+            HomeScreen.ACTIVITY_NODES,
+            HomeScreen.ACTIVITY_ENTIRENETWORK,
+            HomeScreen.ACTIVITY_GRAPHS,
+            HomeScreen.ACTIVITY_MACADDRESS
+    };
     //		HomeScreen.ACTIVITY_TEST };
-    private static final int[] imageId = {R.drawable.alarms, R.drawable.dashboard, R.drawable.nodes, R.drawable.entire_network, R.drawable.graphs, R.drawable.macaddress, R.drawable.icon};
-    private static final int[] textId = {R.string.home_screen_alarms, R.string.home_screen_dashboards, R.string.home_screen_nodes, R.string.home_screen_entire_network, R.string.home_screen_graphs, R.string.home_screen_macaddress, R.string.home};
-    private static final int[] statusImageId = {R.drawable.status_normal, // STATUS_NORMAL = 0;
+    private static final int[] imageId = {
+            R.drawable.alarms,
+            R.drawable.dashboard,
+            R.drawable.nodes,
+            R.drawable.entire_network,
+            R.drawable.graphs,
+            R.drawable.macaddress,
+            R.drawable.icon
+    };
+    private static final int[] textId = {
+            R.string.home_screen_alarms,
+            R.string.home_screen_dashboards,
+            R.string.home_screen_nodes,
+            R.string.home_screen_entire_network,
+            R.string.home_screen_graphs,
+            R.string.home_screen_macaddress,
+            R.string.home
+    };
+    private static final int[] statusImageId = {
+            R.drawable.status_normal, // STATUS_NORMAL = 0;
             R.drawable.status_warning, // STATUS_WARNING = 1;
             R.drawable.status_minor, // STATUS_MINOR = 2;
             R.drawable.status_major, // STATUS_MAJOR = 3;
@@ -40,7 +64,18 @@ public class ActivityListAdapter extends BaseAdapter {
             R.drawable.status_disabled, // STATUS_DISABLED = 7;
             R.drawable.status_testing// STATUS_TESTING = 8;
     };
-    private static final int[] alarmId = {R.drawable.alarm_pg, R.drawable.alarm_p1, R.drawable.alarm_p2, R.drawable.alarm_p3, R.drawable.alarm_p4, R.drawable.alarm_p5, R.drawable.alarm_p6, R.drawable.alarm_p7, R.drawable.alarm_p8, R.drawable.alarm_p9};
+    private static final int[] alarmId = {
+            R.drawable.alarm_pg,
+            R.drawable.alarm_p1,
+            R.drawable.alarm_p2,
+            R.drawable.alarm_p3,
+            R.drawable.alarm_p4,
+            R.drawable.alarm_p5,
+            R.drawable.alarm_p6,
+            R.drawable.alarm_p7,
+            R.drawable.alarm_p8,
+            R.drawable.alarm_p9
+    };
     private static final int MAX_ALARMS = alarmId.length;
     private final Context context;
     private SparseArray<AbstractObject> topNodes = null;

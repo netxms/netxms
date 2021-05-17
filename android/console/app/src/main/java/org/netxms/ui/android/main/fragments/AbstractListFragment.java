@@ -99,7 +99,7 @@ public abstract class AbstractListFragment extends ListFragment {
         int INTERNAL_EMPTY_ID = 0x00ff0001;
         listContainer = v.findViewById(R.id.listContainer);
         progressContainer = v.findViewById(R.id.progressContainer);
-        standardEmptyView = (TextView) v.findViewById(INTERNAL_EMPTY_ID);
+        standardEmptyView = v.findViewById(INTERNAL_EMPTY_ID);
         if (standardEmptyView != null)
             ((ListView) v).setEmptyView(standardEmptyView);
 

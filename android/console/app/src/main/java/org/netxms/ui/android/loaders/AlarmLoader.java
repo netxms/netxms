@@ -44,7 +44,7 @@ public class AlarmLoader extends AsyncTaskLoader<Alarm[]> {
             if (service != null && service.getSession() != null) {
                 Map<Long, Alarm> list = service.getSession().getAlarms();
                 if (list != null)
-                    alarms = list.values().toArray(new Alarm[list.size()]);
+                    alarms = list.values().toArray(new Alarm[0]);
             } else
                 Log.d(TAG, "loadInBackground: service or session null!");
         } catch (Exception e) {

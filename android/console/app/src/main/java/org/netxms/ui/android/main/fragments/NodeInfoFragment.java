@@ -74,7 +74,7 @@ public class NodeInfoFragment extends AbstractFragmentActivity {
         interfaces.setNodeId(nodeId);
         adapter.setItem(TAB_INTERFACES_ID, interfaces, getString(R.string.ni_interfaces), R.drawable.ni_interfaces_tab);
 
-        ViewPager pager = (ViewPager) findViewById(R.id.pager);
+        ViewPager pager = findViewById(R.id.pager);
         pager.setAdapter(adapter);
         pager.setCurrentItem(tabId, true);
     }

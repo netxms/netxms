@@ -35,7 +35,7 @@ public class DashboardActivity extends AbstractClientActivity {
         dashboardId = getIntent().getLongExtra("objectId", 0);
         Log.d(TAG, "onCreateStep2: dashboardId=" + dashboardId);
         setContentView(R.layout.dashboard);
-        rootView = (FrameLayout) findViewById(R.id.DashboardLayout);
+        rootView = findViewById(R.id.DashboardLayout);
     }
 
     /* (non-Javadoc)

@@ -12,7 +12,7 @@ import android.widget.LinearLayout;
  * Linear layout implementing checkable interface
  */
 public class CheckableLinearLayout extends LinearLayout implements Checkable {
-    private CheckBox checkBox;
+    private final CheckBox checkBox;
 
     /**
      * @param context

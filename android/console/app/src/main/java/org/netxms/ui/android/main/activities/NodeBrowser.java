@@ -1,6 +1,3 @@
-/**
- *
- */
 package org.netxms.ui.android.main.activities;
 
 import android.app.AlertDialog;
@@ -56,7 +53,6 @@ import java.util.Stack;
 public class NodeBrowser extends AbstractClientActivity {
     private static final String TAG = "nxclient/NodeBrowser";
     private final Stack<AbstractObject> containerPath = new Stack<AbstractObject>();
-    private ListView listView;
     private ObjectListAdapter adapter;
     private long initialParent;
     private AbstractObject currentParent = null;
@@ -72,7 +68,7 @@ public class NodeBrowser extends AbstractClientActivity {
         dialog = new ProgressDialog(this);
         setContentView(R.layout.node_view);
 
-        TextView title = (TextView) findViewById(R.id.ScreenTitlePrimary);
+        TextView title = findViewById(R.id.ScreenTitlePrimary);
         title.setText(R.string.nodes_title);
 
         initialParent = getIntent().getIntExtra("parentId", GenericObject.SERVICEROOT);
@@ -80,20 +76,16 @@ public class NodeBrowser extends AbstractClientActivity {
         // keeps current list of nodes as datasource for listview
         adapter = new ObjectListAdapter(this);
 
-        listView = (ListView) findViewById(R.id.NodeList);
+        ListView listView = findViewById(R.id.NodeList);
         listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            @SuppressWarnings("rawtypes")
-            public void onItemClick(AdapterView parent, View v, int position, long id) {
-                AbstractObject obj = (AbstractObject) adapter.getItem(position);
-                if ((obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER) || (obj.getObjectClass() == AbstractObject.OBJECT_SUBNET) || (obj.getObjectClass() == AbstractObject.OBJECT_CLUSTER) || (obj.getObjectClass() == AbstractObject.OBJECT_ZONE)) {
-                    containerPath.push(currentParent);
-                    currentParent = obj;
-                    refreshList();
-                } else if (obj.getObjectClass() == AbstractObject.OBJECT_NODE || obj.getObjectClass() == AbstractObject.OBJECT_MOBILEDEVICE) {
-                    showNodeInfo(obj.getObjectId());
-                }
+        listView.setOnItemClickListener((parent, v, position, id) -> {
+            AbstractObject obj = (AbstractObject) adapter.getItem(position);
+            if ((obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER) || (obj.getObjectClass() == AbstractObject.OBJECT_SUBNET) || (obj.getObjectClass() == AbstractObject.OBJECT_CLUSTER) || (obj.getObjectClass() == AbstractObject.OBJECT_ZONE)) {
+                containerPath.push(currentParent);
+                currentParent = obj;
+                refreshList();
+            } else if (obj.getObjectClass() == AbstractObject.OBJECT_NODE || obj.getObjectClass() == AbstractObject.OBJECT_MOBILEDEVICE) {
+                showNodeInfo(obj.getObjectId());
             }
         });
 
@@ -202,10 +194,6 @@ public class NodeBrowser extends AbstractClientActivity {
             item.setVisible(false);
     }
 
-    /* (non-Javadoc)
-     * @see android.app.Activity#onContextItemSelected(android.view.MenuItem)
-     */
-    @SuppressWarnings("deprecation")
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         if (selectedObject == null)
@@ -218,7 +206,7 @@ public class NodeBrowser extends AbstractClientActivity {
                 startActivity(fspIntent);
                 break;
             case R.id.view_alarms:
-                new SyncMissingChildsTask().execute(new Integer[]{(int) selectedObject.getObjectId()});
+                new SyncMissingChildsTask().execute((int) selectedObject.getObjectId());
                 break;
             case R.id.unmanage:
                 service.setObjectMgmtState(selectedObject.getObjectId(), false);
@@ -324,7 +312,7 @@ public class NodeBrowser extends AbstractClientActivity {
             return;
         }
 
-        TextView curPath = (TextView) findViewById(R.id.ScreenTitleSecondary);
+        TextView curPath = findViewById(R.id.ScreenTitleSecondary);
         curPath.setText(getFullPath());
         new SyncMissingObjectsTask(currentParent.getObjectId()).execute(new Object[]{currentParent.getChildIdList()});
     }

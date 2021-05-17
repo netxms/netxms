@@ -68,7 +68,7 @@ public class EmbeddedDashboardElement extends AbstractDashboardElement {
      */
     @Override
     public void refresh() {
-        final Dashboard dashboard = (Dashboard) service.getSession().findObjectById(config.getDashboardObjects()[current], Dashboard.class);
+        final Dashboard dashboard = service.getSession().findObjectById(config.getDashboardObjects()[current], Dashboard.class);
         current++;
         if (current >= config.getDashboardObjects().length)
             current = 0;

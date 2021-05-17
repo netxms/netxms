@@ -38,11 +38,6 @@ public class InterfacesAdapter extends BaseExpandableListAdapter {
         this.children = new ArrayList<ArrayList<Interface>>(0);
     }
 
-    /**
-     * Set graphs
-     *
-     * @param graphs
-     */
     public void setValues(List<Interface> interfaces) {
         groups.clear();
         children.clear();
@@ -89,11 +84,11 @@ public class InterfacesAdapter extends BaseExpandableListAdapter {
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
         ViewGroup item = getViewGroupChild(convertView, parent);
-        ListView label = (ListView) item.findViewById(R.id.interfacesChild);
+        ListView label = item.findViewById(R.id.interfacesChild);
         InterfaceDetailsAdapter idAdapter = new InterfaceDetailsAdapter(parent.getContext());
         idAdapter.setValues((Interface) getChild(groupPosition, childPosition));
         label.setAdapter(idAdapter);
-        TextView tv = (TextView) parent.findViewById(R.id.interface_text);
+        TextView tv = parent.findViewById(R.id.interface_text);
         int totalHeight = tv != null ? tv.getMeasuredHeight() : 0;
         for (int i = 0; i < idAdapter.getCount(); i++) {
             View listItem = idAdapter.getView(i, null, label);
@@ -129,7 +124,6 @@ public class InterfacesAdapter extends BaseExpandableListAdapter {
         return groupPosition;
     }
 
-    @SuppressWarnings("deprecation")
     @SuppressLint("InflateParams")
     @Override
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
@@ -138,7 +132,7 @@ public class InterfacesAdapter extends BaseExpandableListAdapter {
             convertView = layoutInflater.inflate(R.layout.interfaces_group, null);
         }
         Interface i = (Interface) getChild(groupPosition, 0);
-        TextView tv = (TextView) convertView.findViewById(R.id.interface_text);
+        TextView tv = convertView.findViewById(R.id.interface_text);
         tv.setText(" " + i.getObjectName());
         tv.setCompoundDrawablesWithIntrinsicBounds(parent.getResources().getDrawable(getInterfaceStatusIcon(i.getStatus())), null, null, null);
 

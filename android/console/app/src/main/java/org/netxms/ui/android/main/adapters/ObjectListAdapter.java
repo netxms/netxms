@@ -63,7 +63,7 @@ public class ObjectListAdapter extends BaseAdapter {
     /**
      * Set nodes
      *
-     * @param objecs
+     * @param objects
      */
     public void setNodes(AbstractObject[] objects) {
         objectList.clear();

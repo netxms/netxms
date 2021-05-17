@@ -178,7 +178,7 @@ public class GraphViewStyle {
      */
     public void useTextColorFromTheme(Context context) {
         if (context instanceof ContextThemeWrapper) {
-            TypedArray array = ((ContextThemeWrapper) context).getTheme().obtainStyledAttributes(new int[]{android.R.attr.textColorPrimary});
+            TypedArray array = context.getTheme().obtainStyledAttributes(new int[]{android.R.attr.textColorPrimary});
             int color = array.getColor(0, getVerticalLabelsColor());
             array.recycle();
 

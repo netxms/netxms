@@ -21,9 +21,9 @@ import java.util.List;
  */
 
 public class ConnectionPointListAdapter extends BaseAdapter {
-    private Context context;
+    private final Context context;
     private List<String> cpList = new ArrayList<String>(0);
-    private Resources r;
+    private final Resources r;
 
     /**
      * @param context
@@ -36,7 +36,7 @@ public class ConnectionPointListAdapter extends BaseAdapter {
     /**
      * Set addresses
      *
-     * @param addresses list of addresses
+     * @param list of addresses
      */
     public void setConnectionPoint(List<String> list) {
         cpList = list;

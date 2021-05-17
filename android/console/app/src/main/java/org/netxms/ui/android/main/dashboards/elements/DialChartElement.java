@@ -24,7 +24,7 @@ public class DialChartElement extends AbstractDashboardElement {
     private static final String TAG = "nxclient/DialChartElement";
 
     private DialChartConfig config;
-    private DialChart chart;
+    private final DialChart chart;
 
     /**
      * @param context

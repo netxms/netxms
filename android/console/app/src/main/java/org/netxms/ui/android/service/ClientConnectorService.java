@@ -64,7 +64,6 @@ import java.util.Set;
 public class ClientConnectorService extends Service implements SessionListener {
     public static final String ACTION_CONNECT = "org.netxms.ui.android.ACTION_CONNECT";
 
-    ;
     public static final String ACTION_FORCE_CONNECT = "org.netxms.ui.android.ACTION_FORCE_CONNECT";
     public static final String ACTION_DISCONNECT = "org.netxms.ui.android.ACTION_DISCONNECT";
     public static final String ACTION_FORCE_DISCONNECT = "org.netxms.ui.android.ACTION_FORCE_DISCONNECT";
@@ -450,7 +449,7 @@ public class ClientConnectorService extends Service implements SessionListener {
     /**
      * Reconnect to server.
      *
-     * @param forceReconnect if set to true forces disconnection before connecting
+     * @param force if set to true forces disconnection before connecting
      */
     public void reconnect(boolean force) {
         if (force || (isScheduleExpired() || NXApplication.isActivityVisible()) && connectionStatus != ConnectionStatus.CS_CONNECTED && connectionStatus != ConnectionStatus.CS_ALREADYCONNECTED) {
@@ -1166,7 +1165,7 @@ public class ClientConnectorService extends Service implements SessionListener {
      * @param tool
      */
     public void executeObjectTool(long nodeId, ObjectTool tool) {
-        new ExecObjectToolTask().execute(new Object[]{session, nodeId, tool, this});
+        new ExecObjectToolTask().execute(session, nodeId, tool, this);
     }
 
     /**

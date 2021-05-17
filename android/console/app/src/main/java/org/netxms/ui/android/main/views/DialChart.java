@@ -38,11 +38,11 @@ public class DialChart extends View {
 
     private int backgroundColor = 0xFFF0F0F0;
     private int plotAreaColor = 0xFFFFFFFF;
-    private int borderColor = 0xFF000000;
-    private int scaleColor = 0xFF161616;
-    private int needleColor = 0xFF334E71;
-    private int needlePinColor = 0xFFEFE4B0;
-    private int valueColor = 0xFFFFFFFF;
+    private final int borderColor = 0xFF000000;
+    private final int scaleColor = 0xFF161616;
+    private final int needleColor = 0xFF334E71;
+    private final int needlePinColor = 0xFFEFE4B0;
+    private final int valueColor = 0xFFFFFFFF;
 
     private boolean titleVisible = true;
     private String title = "";
@@ -55,7 +55,7 @@ public class DialChart extends View {
     private boolean legendVisible;
     private boolean legendInside = true;
     private boolean gridVisible = true;
-    private List<ChartItem> parameters = new ArrayList<ChartItem>();
+    private final List<ChartItem> parameters = new ArrayList<ChartItem>();
 
     /**
      * @param context
@@ -302,15 +302,15 @@ public class DialChart extends View {
         double value = (angle - 135) * angleValue + minValue;
         double absValue = Math.abs(value);
         if (absValue >= 10000000000L) {
-            return Long.toString(Math.round(value / 1000000000)) + "G";
+            return Math.round(value / 1000000000) + "G";
         } else if (absValue >= 1000000000) {
             return new DecimalFormat("#.#").format(value / 1000000000) + "G";
         } else if (absValue >= 10000000) {
-            return Long.toString(Math.round(value / 1000000)) + "M";
+            return Math.round(value / 1000000) + "M";
         } else if (absValue >= 1000000) {
             return new DecimalFormat("#.#").format(value / 1000000) + "M";
         } else if (absValue >= 10000) {
-            return Long.toString(Math.round(value / 1000)) + "K";
+            return Math.round(value / 1000) + "K";
         } else if (absValue >= 1000) {
             return new DecimalFormat("#.#").format(value / 1000) + "K";
         } else if ((absValue >= 1) && (step >= 1)) {

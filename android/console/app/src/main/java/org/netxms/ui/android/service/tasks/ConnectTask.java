@@ -126,8 +126,7 @@ public class ConnectTask extends Thread {
             if (wifi != null && wifi.getState() == NetworkInfo.State.CONNECTED)
                 return true;
             NetworkInfo mobile = connec.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-            if (mobile != null && mobile.getState() == NetworkInfo.State.CONNECTED)
-                return true;
+            return mobile != null && mobile.getState() == NetworkInfo.State.CONNECTED;
         }
         return false;
     }

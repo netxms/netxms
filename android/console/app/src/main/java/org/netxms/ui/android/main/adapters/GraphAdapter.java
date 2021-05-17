@@ -21,10 +21,9 @@ import java.util.List;
  * Expandable list adapter for browsing predefined graphics
  */
 public class GraphAdapter extends BaseExpandableListAdapter {
-    private Context context;
-    private List<GraphSettings> graphList = new ArrayList<GraphSettings>(0);
-    private ArrayList<String> groups;
-    private ArrayList<ArrayList<GraphSettings>> children;
+    private final Context context;
+    private final ArrayList<String> groups;
+    private final ArrayList<ArrayList<GraphSettings>> children;
 
     /**
      * @param context
@@ -43,8 +42,7 @@ public class GraphAdapter extends BaseExpandableListAdapter {
      * @param graphs
      */
     public void setGraphs(List<GraphSettings> graphs) {
-        graphList = graphs;
-        Collections.sort(this.graphList, new Comparator<GraphSettings>() {
+        Collections.sort(graphs, new Comparator<GraphSettings>() {
             @Override
             public int compare(GraphSettings object1, GraphSettings object2) {
                 return object1.getName().compareTo(object2.getName());
@@ -55,16 +53,16 @@ public class GraphAdapter extends BaseExpandableListAdapter {
         children.clear();
         groups.add(context.getString(R.string.graph_uncategorized)); // To have it on top
         children.add(new ArrayList<GraphSettings>());
-        for (int i = 0; i < graphList.size(); i++) {
+        for (int i = 0; i < graphs.size(); i++) {
             String title = "";
-            String[] splitStr = graphList.get(i).getName().split("->");
+            String[] splitStr = graphs.get(i).getName().split("->");
             title = splitStr.length == 1 ? context.getString(R.string.graph_uncategorized) : splitStr[0];
             if (!groups.contains(title))
                 groups.add(title);
             int index = groups.indexOf(title);
             if (children.size() < index + 1)
                 children.add(new ArrayList<GraphSettings>());
-            children.get(index).add(graphList.get(i));
+            children.get(index).add(graphs.get(i));
         }
         if (children.get(0).size() == 0) // If <Uncategorized> is empty, remove it
         {
@@ -93,7 +91,7 @@ public class GraphAdapter extends BaseExpandableListAdapter {
             LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = layoutInflater.inflate(R.layout.graph_view_child_layout, null);
         }
-        TextView tv = (TextView) convertView.findViewById(R.id.tvChild);
+        TextView tv = convertView.findViewById(R.id.tvChild);
         tv.setTextColor(context.getResources().getColor(R.color.text_color));
         tv.setText(name);
         return convertView;
@@ -128,7 +126,7 @@ public class GraphAdapter extends BaseExpandableListAdapter {
             LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = layoutInflater.inflate(R.layout.graph_view_group_layout, null);
         }
-        TextView tv = (TextView) convertView.findViewById(R.id.tvGroup);
+        TextView tv = convertView.findViewById(R.id.tvGroup);
         tv.setTextColor(context.getResources().getColor(R.color.text_color));
         tv.setText(name);
         return convertView;
