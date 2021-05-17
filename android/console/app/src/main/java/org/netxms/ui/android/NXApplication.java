@@ -1,27 +1,25 @@
 package org.netxms.ui.android;
 
 import org.acra.ACRA;
-import org.acra.ReportField;
-import org.acra.ReportingInteractionMode;
-import org.acra.annotation.ReportsCrashes;
+import org.acra.annotation.AcraCore;
+import org.acra.annotation.AcraMailSender;
+import org.acra.annotation.AcraToast;
 
 import android.app.Application;
+import android.content.Context;
 
-@ReportsCrashes(
-		mailTo = "acra@netxms.org",
-		customReportContent = { ReportField.APP_VERSION_CODE, ReportField.APP_VERSION_NAME, ReportField.ANDROID_VERSION, ReportField.PHONE_MODEL, ReportField.CUSTOM_DATA, ReportField.STACK_TRACE, ReportField.LOGCAT },
-		mode = ReportingInteractionMode.TOAST,
-		resToastText = R.string.crash_toast_text)
+@AcraCore(buildConfigClass = BuildConfig.class)
+@AcraMailSender(mailTo = "acra@netxms.org", reportAsFile = true)
+@AcraToast(resText = R.string.crash_toast_text)
 public class NXApplication extends Application
 {
 	private static boolean activityVisible;
 
 	@Override
-	public void onCreate()
-	{
+	protected void attachBaseContext(Context base) {
+		super.attachBaseContext(base);
+
 		ACRA.init(this);
-		ACRA.getErrorReporter().checkReportsOnApplicationStart();
-		super.onCreate();
 	}
 
 	public static boolean isActivityVisible()
