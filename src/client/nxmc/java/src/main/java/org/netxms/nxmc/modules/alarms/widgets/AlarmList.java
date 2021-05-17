@@ -890,7 +890,7 @@ public class AlarmList extends CompositeWithMessageBar
       filterRunning = true;
       filterRunPending = false;
 
-      new Job(i18n.tr("Synchronize alarm list"), view, this) {
+      new Job(i18n.tr("Synchronize alarm list"), view, null) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{

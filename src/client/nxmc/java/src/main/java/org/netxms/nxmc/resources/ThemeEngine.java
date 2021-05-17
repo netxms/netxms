@@ -221,6 +221,11 @@ public class ThemeEngine
          elements.put("List.Error", new ThemeElement(null, new RGB(220, 35, 61)));
          elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
          elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
+         elements.put("MessageArea", new ThemeElement(new RGB(255, 255, 255), new RGB(51, 51, 51)));
+         elements.put("MessageArea.Error", new ThemeElement(new RGB(254, 221, 215), new RGB(51, 51, 51)));
+         elements.put("MessageArea.Info", new ThemeElement(new RGB(227, 245, 252), new RGB(51, 51, 51)));
+         elements.put("MessageArea.Success", new ThemeElement(new RGB(223, 240, 208), new RGB(51, 51, 51)));
+         elements.put("MessageArea.Warning", new ThemeElement(new RGB(255, 244, 199), new RGB(51, 51, 51)));
          elements.put("MessageBar", new ThemeElement(new RGB(138, 148, 47), new RGB(0, 0, 0)));
          elements.put("MibExplorer.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
          elements.put("ObjectTab.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
@@ -255,6 +260,11 @@ public class ThemeEngine
          elements.put("List.Error", new ThemeElement(null, new RGB(255, 0, 0)));
          elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
          elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
+         elements.put("MessageArea", new ThemeElement(new RGB(255, 255, 255), new RGB(51, 51, 51)));
+         elements.put("MessageArea.Error", new ThemeElement(new RGB(254, 221, 215), new RGB(219, 33, 0)));
+         elements.put("MessageArea.Info", new ThemeElement(new RGB(227, 245, 252), new RGB(0, 114, 163)));
+         elements.put("MessageArea.Success", new ThemeElement(new RGB(223, 240, 208), new RGB(60, 133, 0)));
+         elements.put("MessageArea.Warning", new ThemeElement(new RGB(255, 244, 199), new RGB(254, 226, 114)));
          elements.put("MessageBar", new ThemeElement(new RGB(255, 252, 192), new RGB(0, 0, 0)));
          elements.put("MibExplorer.Header", new ThemeElement(new RGB(153, 180, 209), new RGB(255, 255, 255)));
          elements.put("ObjectTab.Header", new ThemeElement(new RGB(153, 180, 209), new RGB(255, 255, 255)));

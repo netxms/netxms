@@ -36,7 +36,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
@@ -46,6 +45,8 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.preferencepages.Appearance;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
@@ -56,7 +57,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Main window
  */
-public class MainWindow extends ApplicationWindow
+public class MainWindow extends ApplicationWindow implements MessageAreaHolder
 {
    private static Logger logger = LoggerFactory.getLogger(MainWindow.class);
    private static I18n i18n = LocalizationHelper.getI18n(MainWindow.class);
@@ -64,6 +65,7 @@ public class MainWindow extends ApplicationWindow
    private Composite windowContent;
    private ToolBar mainMenu;
    private ToolBar toolsMenu;
+   private MessageArea messageArea;
    private Composite perspectiveArea;
    private List<Perspective> perspectives;
    private Perspective currentPerspective;
@@ -120,9 +122,10 @@ public class MainWindow extends ApplicationWindow
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
-      layout.numColumns = verticalLayout ? 3 : 1;
+      layout.verticalSpacing = 0;
+      layout.numColumns = verticalLayout ? 2 : 1;
       windowContent.setLayout(layout);
-      
+
       Composite menuArea = new Composite(windowContent, SWT.NONE);
       layout = new GridLayout();
       layout.marginWidth = 0;
@@ -134,6 +137,7 @@ public class MainWindow extends ApplicationWindow
       {
          gd.grabExcessVerticalSpace = true;
          gd.verticalAlignment = SWT.FILL;
+         gd.verticalSpan = 2;
       }
       else
       {
@@ -179,19 +183,11 @@ public class MainWindow extends ApplicationWindow
          }
       });
 
-      Label separator = new Label(windowContent, SWT.SEPARATOR | (verticalLayout ? SWT.VERTICAL : SWT.HORIZONTAL));
+      messageArea = new MessageArea(windowContent, SWT.NONE);
       gd = new GridData();
-      if (verticalLayout)
-      {
-         gd.grabExcessVerticalSpace = true;
-         gd.verticalAlignment = SWT.FILL;
-      }
-      else
-      {
-         gd.grabExcessHorizontalSpace = true;
-         gd.horizontalAlignment = SWT.FILL;
-      }
-      separator.setLayoutData(gd);
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      messageArea.setLayoutData(gd);
 
       perspectiveArea = new Composite(windowContent, SWT.NONE);
       gd = new GridData();
@@ -218,6 +214,10 @@ public class MainWindow extends ApplicationWindow
 
       switchToPerspective("Pinboard");
       switchToPerspective(PreferenceStore.getInstance().getAsString("MainWindow.CurrentPerspective"));
+
+      String motd = session.getMessageOfTheDay();
+      if ((motd != null) && !motd.isEmpty())
+         addMessage(MessageArea.INFO, session.getMessageOfTheDay());
 
       return windowContent;
    }
@@ -339,5 +339,32 @@ public class MainWindow extends ApplicationWindow
       };
       dlg.setBlockOnOpen(true);
       dlg.open();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String)
+    */
+   @Override
+   public int addMessage(int level, String text)
+   {
+      return messageArea.addMessage(level, text);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#deleteMessage(int)
+    */
+   @Override
+   public void deleteMessage(int id)
+   {
+      messageArea.deleteMessage(id);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#clearMessages()
+    */
+   @Override
+   public void clearMessages()
+   {
+      messageArea.clearMessages();
    }
 }

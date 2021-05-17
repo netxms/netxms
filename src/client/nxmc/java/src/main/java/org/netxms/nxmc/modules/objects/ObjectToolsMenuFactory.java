@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -56,9 +57,10 @@ public class ObjectToolsMenuFactory
     *
     * @param selection selection of objects
     * @param parentMenu parent menu
+    * @param window owning window (can be used for displaying messages)
     * @return newly constructed menu
     */
-   public static Menu createMenu(IStructuredSelection selection, Menu parentMenu, Control parentControl)
+   public static Menu createMenu(IStructuredSelection selection, Menu parentMenu, Control parentControl, final Window window)
 	{
 		final Set<ObjectContext> nodes = buildNodeSet((IStructuredSelection)selection);
       final Menu toolsMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);
@@ -116,7 +118,7 @@ public class ObjectToolsMenuFactory
 					@Override
 					public void widgetSelected(SelectionEvent e)
 					{
-					   ObjectToolExecutor.execute(nodes, (ObjectTool)item.getData());
+                  ObjectToolExecutor.execute(nodes, (ObjectTool)item.getData(), window);
 					}
 				});
 				

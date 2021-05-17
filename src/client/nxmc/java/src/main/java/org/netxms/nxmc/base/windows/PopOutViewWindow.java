@@ -24,6 +24,8 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Layout;
@@ -31,12 +33,16 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewContainer;
+import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 
 /**
  * Window that holds pop out view
  */
-public class PopOutViewWindow extends Window
+public class PopOutViewWindow extends Window implements MessageAreaHolder
 {
+   private Composite windowArea;
+   private MessageArea messageArea;
    private View view;
 
    /**
@@ -76,7 +82,17 @@ public class PopOutViewWindow extends Window
    @Override
    protected Control createContents(Composite parent)
    {
-      ViewContainer viewContainer = new ViewContainer(this, null, parent, false, false) {
+      windowArea = new Composite(parent, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      windowArea.setLayout(layout);
+
+      messageArea = new MessageArea(windowArea, SWT.NONE);
+      messageArea.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+
+      ViewContainer viewContainer = new ViewContainer(this, null, windowArea, false, false) {
          @Override
          public Point computeSize(int wHint, int hHint, boolean changed)
          {
@@ -88,6 +104,7 @@ public class PopOutViewWindow extends Window
             return size;
          }
       };
+      viewContainer.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       viewContainer.setContextAware(false); // Preserve view's context if any
       viewContainer.setView(view);
       parent.addDisposeListener(new DisposeListener() {
@@ -98,5 +115,32 @@ public class PopOutViewWindow extends Window
          }
       });
       return parent;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String)
+    */
+   @Override
+   public int addMessage(int level, String text)
+   {
+      return messageArea.addMessage(level, text);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#deleteMessage(int)
+    */
+   @Override
+   public void deleteMessage(int id)
+   {
+      messageArea.deleteMessage(id);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#clearMessages()
+    */
+   @Override
+   public void clearMessages()
+   {
+      messageArea.clearMessages();
    }
 }

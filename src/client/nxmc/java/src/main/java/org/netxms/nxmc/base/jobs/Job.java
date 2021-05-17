@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@ package org.netxms.nxmc.base.jobs;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.nxmc.base.views.View;
-import org.netxms.nxmc.base.widgets.MessageBar;
+import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -37,7 +38,7 @@ public abstract class Job
    private JobState state;
    private Display display;
    private View view;
-   private MessageBar messageBar;
+   private MessageAreaHolder messageArea;
    private String name;
    private int type;
    private IProgressMonitor monitor;
@@ -51,7 +52,7 @@ public abstract class Job
     */
    public Job(String name, View view)
    {
-      this(name, view, null, Display.getCurrent());
+      this(name, view, view, Display.getCurrent());
    }
 
    /**
@@ -60,11 +61,11 @@ public abstract class Job
     * @param name Job's name
     * @param viewPart Related view part or null
     * @param pluginId Related plugin ID
-    * @param messageBar Message bar for displaying error or null
+    * @param messageArea Dedicated message area for displaying error or null
     */
-   public Job(String name, View view, MessageBar messageBar)
+   public Job(String name, View view, MessageAreaHolder messageArea)
    {
-      this(name, view, messageBar, Display.getCurrent());
+      this(name, view, (messageArea != null) ? messageArea : view, Display.getCurrent());
    }
 
    /**
@@ -73,17 +74,17 @@ public abstract class Job
     * @param name Job's name
     * @param viewPart Related view part or null
     * @param pluginId Related plugin ID
-    * @param messageBar Message bar for displaying error or null
+    * @param messageArea Dedicated message area for displaying error or null
     * @param display display object used for execution in UI thread
     */
-   public Job(String name, View view, MessageBar messageBar, Display display)
+   public Job(String name, View view, MessageAreaHolder messageArea, Display display)
    {
       this.id = -1;
       this.state = JobState.PENDING;
       this.name = name;
       this.type = TYPE_USER;
       this.view = view;
-      this.messageBar = messageBar;
+      this.messageArea = (messageArea != null) ? messageArea : view;
       this.display = display;
    }
 
@@ -127,28 +128,18 @@ public abstract class Job
       try
       {
          run(monitor);
-         if (messageBar != null)
-         {
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  messageBar.hideMessage();
-               }
-            });
-         }
       }
       catch(Exception e)
       {
          LoggerFactory.getLogger(Job.class).error("Exception in UI job - " + e.getMessage(), e);
          jobFailureHandler(e);
-         if (messageBar != null)
+         if (messageArea != null)
          {
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  messageBar.showMessage(MessageBar.ERROR, getErrorMessage() + ": " + e.getMessage());
+                  messageArea.addMessage(MessageArea.ERROR, getErrorMessage() + ": " + e.getMessage());
                }
             });
          }

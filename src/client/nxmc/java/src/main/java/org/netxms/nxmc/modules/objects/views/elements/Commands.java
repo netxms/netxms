@@ -126,7 +126,7 @@ public class Commands extends OverviewPageElement
                @Override
                public void run()
                {
-                  ObjectToolExecutor.execute(nodes, tool);
+                  ObjectToolExecutor.execute(nodes, tool, getObjectView().getWindow());
                }
             };
             ImageDescriptor icon = ObjectToolsCache.getInstance().findIcon(tool.getId());

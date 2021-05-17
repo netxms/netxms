@@ -37,13 +37,15 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.widgets.FilterText;
+import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Base view class
  */
-public abstract class View
+public abstract class View implements MessageAreaHolder
 {
    private static final Logger logger = LoggerFactory.getLogger(View.class);
 
@@ -54,14 +56,14 @@ public abstract class View
    private Window window;
    private Perspective perspective;
    private Composite viewArea;
-   private Composite userArea;
-   private Set<ViewStateListener> stateListeners = new HashSet<ViewStateListener>();
-   
+   private MessageArea messageArea;
+   protected FilterText filterText;
+   private Composite clientArea;
    private boolean hasFilter;
    private boolean filterEnabled;
-   protected FilterText filterText;
    private ViewerFilterInternal filter;
    private StructuredViewer viewer;
+   private Set<ViewStateListener> stateListeners = new HashSet<ViewStateListener>();
 
    /**
     * Create new view with specific base ID. Actual view ID will be derived from base ID, possibly by classes derived from base view
@@ -129,11 +131,11 @@ public abstract class View
          image = imageDescriptor.createImage();
 
       viewArea = new Composite(parent, SWT.NONE);
-      userArea = viewArea;
+      viewArea.setLayout(new FormLayout());
+
+      messageArea = new MessageArea(viewArea, SWT.NONE);
       if (hasFilter)
       {  
-         viewArea.setLayout(new FormLayout());
-
          filterText = new FilterText(viewArea, SWT.NONE);
          filterText.addModifyListener(new ModifyListener() {
             @Override
@@ -143,35 +145,48 @@ public abstract class View
             }
          });               
          filterText.setCloseCallback(onFilterCloseCallback);
+      }
 
-         userArea = new Composite(viewArea, SWT.NONE);    
+      clientArea = new Composite(viewArea, SWT.NONE);
+      clientArea.setLayout(new FillLayout());
+      createContent(clientArea);
+      postContentCreate();
 
-         // Setup layout
-         FormData fd = new FormData();
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      messageArea.setLayoutData(fd);
+
+      if (hasFilter)
+      {
+         fd = new FormData();
+         fd.left = new FormAttachment(0, 0);
+         fd.top = new FormAttachment(messageArea);
+         fd.right = new FormAttachment(100, 0);
+         filterText.setLayoutData(fd);
+
+         fd = new FormData();
          fd.left = new FormAttachment(0, 0);
          fd.top = new FormAttachment(filterText);
          fd.right = new FormAttachment(100, 0);
          fd.bottom = new FormAttachment(100, 0);
-         userArea.setLayoutData(fd);
+         clientArea.setLayoutData(fd);
 
-         fd = new FormData();
-         fd.left = new FormAttachment(0, 0);
-         fd.top = new FormAttachment(0, 0);
-         fd.right = new FormAttachment(100, 0);
-         filterText.setLayoutData(fd);
-      }
-      userArea.setLayout(new FillLayout());    
-
-      createContent(userArea);
-      postContentCreate();
-
-      if (hasFilter)
-      { 
          filterEnabled = PreferenceStore.getInstance().getAsBoolean(getBaseId() + ".showFilter", true);
          if (filterEnabled)
             filterText.setFocus();
          else
             enableFilter(false);
+      }
+      else
+      {
+         fd = new FormData();
+         fd.left = new FormAttachment(0, 0);
+         fd.top = new FormAttachment(messageArea);
+         fd.right = new FormAttachment(100, 0);
+         fd.bottom = new FormAttachment(100, 0);
+         clientArea.setLayoutData(fd);
       }
    }
 
@@ -196,6 +211,33 @@ public abstract class View
     */
    protected void fillLocalToolbar(ToolBarManager manager)
    {
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String)
+    */
+   @Override
+   public int addMessage(int level, String text)
+   {
+      return messageArea.addMessage(level, text);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#deleteMessage(int)
+    */
+   @Override
+   public void deleteMessage(int id)
+   {
+      messageArea.deleteMessage(id);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#clearMessages()
+    */
+   @Override
+   public void clearMessages()
+   {
+      messageArea.clearMessages();
    }
 
    /**
@@ -481,8 +523,8 @@ public abstract class View
 
       filterEnabled = enable;
       filterText.setVisible(enable);
-      FormData fd = (FormData)userArea.getLayoutData();
-      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      FormData fd = (FormData)clientArea.getLayoutData();
+      fd.top = new FormAttachment(enable ? filterText : messageArea);
       viewArea.layout();
       if (enable)
       {

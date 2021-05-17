@@ -220,7 +220,7 @@ public class ObjectContextMenuManager extends MenuManager
       if (!createMenu.isEmpty())
          add(createMenu);
 
-      final Menu toolsMenu = ObjectToolsMenuFactory.createMenu((IStructuredSelection)selectionProvider.getSelection(), getMenu(), null);
+      final Menu toolsMenu = ObjectToolsMenuFactory.createMenu((IStructuredSelection)selectionProvider.getSelection(), getMenu(), null, view.getWindow());
       if (toolsMenu != null)
       {
          add(new Separator());

@@ -230,7 +230,7 @@ public abstract class ObjectsPerspective extends Perspective
       for(ToolItem item : objectMenuBar.getItems())
          item.dispose();
 
-      addObjectMenu(i18n.tr("Tools"), ObjectToolsMenuFactory.createMenu(new StructuredSelection(object), null, objectToolBar));
+      addObjectMenu(i18n.tr("Tools"), ObjectToolsMenuFactory.createMenu(new StructuredSelection(object), null, objectToolBar, getWindow()));
    }
 
    /**
