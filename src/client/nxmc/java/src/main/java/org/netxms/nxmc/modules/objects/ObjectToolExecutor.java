@@ -427,7 +427,7 @@ public final class ObjectToolExecutor
 
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {
-         new Job(String.format(i18n.tr("Execute command on node %s"), node.object.getObjectName()), null) {
+         new Job(String.format(i18n.tr("Execute command on node %s"), node.object.getObjectName()), null, (window instanceof MessageAreaHolder) ? (MessageAreaHolder)window : null) {
             @Override
             protected String getErrorMessage()
             {

@@ -70,7 +70,7 @@ public class SharedIcons
 	public static ImageDescriptor XML;
 	public static ImageDescriptor ZOOM_IN;
 	public static ImageDescriptor ZOOM_OUT;
-	
+
 	public static Image IMG_ADD_OBJECT;
 	public static Image IMG_ALARM;
    public static Image IMG_BROWSER;
