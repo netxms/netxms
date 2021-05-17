@@ -3,26 +3,9 @@
  */
 package org.netxms.ui.android.main.fragments;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
-import org.netxms.client.NXCException;
-import org.netxms.client.NXCObjectModificationData;
-import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Interface;
-import org.netxms.ui.android.R;
-import org.netxms.ui.android.loaders.GenericObjectChildrenLoader;
-import org.netxms.ui.android.main.activities.ConnectionPointBrowser;
-import org.netxms.ui.android.main.adapters.InterfacesAdapter;
-
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.Loader;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -36,6 +19,24 @@ import android.widget.AdapterView;
 import android.widget.ExpandableListView;
 import android.widget.ListView;
 
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
+
+import org.netxms.client.NXCException;
+import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Interface;
+import org.netxms.ui.android.R;
+import org.netxms.ui.android.loaders.GenericObjectChildrenLoader;
+import org.netxms.ui.android.main.activities.ConnectionPointBrowser;
+import org.netxms.ui.android.main.adapters.InterfacesAdapter;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 /**
  * Fragment for last values info
  *
@@ -43,14 +44,14 @@ import android.widget.ListView;
  */
 
 public class InterfacesFragment extends ExpandableListFragment implements LoaderManager.LoaderCallbacks<Set<AbstractObject>> {
-    private ListView lv = null;
-    private InterfacesAdapter adapter = null;
-    private final GenericObjectChildrenLoader loader = null;
-    private AbstractObject selectedObject = null;
     private static final int IF_EXPECTED_STATE_UP = 0;
     private static final int IF_EXPECTED_STATE_DOWN = 1;
     private static final int IF_EXPECTED_STATE_IGNORE = 2;
     private static final String TAG = "nxclient/InterfacesFragment";
+    private final GenericObjectChildrenLoader loader = null;
+    private ListView lv = null;
+    private InterfacesAdapter adapter = null;
+    private AbstractObject selectedObject = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

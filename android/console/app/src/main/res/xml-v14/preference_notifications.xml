@@ -1,8 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="@string/pref_status">
-		<ListPreference android:dialogTitle="@string/pref_global_notification_status" android:key="global.notification.status" android:title="@string/pref_global_notification_status" android:entryValues="@array/notification_status_values" android:entries="@array/notification_status_labels" android:defaultValue="3" />
-        <org.netxms.ui.android.main.settings.CustomSwitchPreference android:summaryOff="@string/pref_global_notification_toast_disabled" android:summaryOn="@string/pref_global_notification_toast_enabled" android:key="global.notification.toast" android:enabled="true" android:defaultValue="false" android:title="@string/pref_global_notification_toast"/>
-    	<org.netxms.ui.android.main.settings.CustomSwitchPreference android:summaryOff="@string/pref_global_notification_icon_disabled" android:summaryOn="@string/pref_global_notification_icon_enabled" android:key="global.notification.icon" android:enabled="true" android:defaultValue="true" android:title="@string/pref_global_notification_icon"/>
-	</PreferenceCategory>
+        <ListPreference
+            android:defaultValue="3"
+            android:dialogTitle="@string/pref_global_notification_status"
+            android:entries="@array/notification_status_labels"
+            android:entryValues="@array/notification_status_values"
+            android:key="global.notification.status"
+            android:title="@string/pref_global_notification_status" />
+        <org.netxms.ui.android.main.settings.CustomSwitchPreference
+            android:defaultValue="false"
+            android:enabled="true"
+            android:key="global.notification.toast"
+            android:summaryOff="@string/pref_global_notification_toast_disabled"
+            android:summaryOn="@string/pref_global_notification_toast_enabled"
+            android:title="@string/pref_global_notification_toast" />
+        <org.netxms.ui.android.main.settings.CustomSwitchPreference
+            android:defaultValue="true"
+            android:enabled="true"
+            android:key="global.notification.icon"
+            android:summaryOff="@string/pref_global_notification_icon_disabled"
+            android:summaryOn="@string/pref_global_notification_icon_enabled"
+            android:title="@string/pref_global_notification_icon" />
+    </PreferenceCategory>
 </PreferenceScreen>

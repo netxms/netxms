@@ -32,336 +32,292 @@ import android.widget.LinearLayout;
 
 /**
  * A preference type that allows a user to choose a time
+ *
  * @author Sergey Margaritov
  */
 public class ColorPickerPreference
-		extends
-		Preference
-		implements
-		Preference.OnPreferenceClickListener,
-		ColorPickerDialog.OnColorChangedListener
-{
+        extends
+        Preference
+        implements
+        Preference.OnPreferenceClickListener,
+        ColorPickerDialog.OnColorChangedListener {
 
-	View mView;
-	ColorPickerDialog mDialog;
-	private int mValue = Color.BLACK;
-	private float mDensity = 0;
-	private boolean mAlphaSliderEnabled = false;
-	private boolean mHexValueEnabled = false;
+    View mView;
+    ColorPickerDialog mDialog;
+    private int mValue = Color.BLACK;
+    private float mDensity = 0;
+    private boolean mAlphaSliderEnabled = false;
+    private boolean mHexValueEnabled = false;
 
-	public ColorPickerPreference(Context context)
-	{
-		super(context);
-		init(context, null);
-	}
+    public ColorPickerPreference(Context context) {
+        super(context);
+        init(context, null);
+    }
 
-	public ColorPickerPreference(Context context, AttributeSet attrs)
-	{
-		super(context, attrs);
-		init(context, attrs);
-	}
+    public ColorPickerPreference(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init(context, attrs);
+    }
 
-	public ColorPickerPreference(Context context, AttributeSet attrs, int defStyle)
-	{
-		super(context, attrs, defStyle);
-		init(context, attrs);
-	}
+    public ColorPickerPreference(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        init(context, attrs);
+    }
 
-	@Override
-	protected Object onGetDefaultValue(TypedArray a, int index)
-	{
-		return a.getColor(index, Color.BLACK);
-	}
+    /**
+     * For custom purposes. Not used by ColorPickerPreferrence
+     *
+     * @param color
+     * @author Unknown
+     */
+    public static String convertToARGB(int color) {
+        String alpha = Integer.toHexString(Color.alpha(color));
+        String red = Integer.toHexString(Color.red(color));
+        String green = Integer.toHexString(Color.green(color));
+        String blue = Integer.toHexString(Color.blue(color));
 
-	@Override
-	protected void onSetInitialValue(boolean restoreValue, Object defaultValue)
-	{
-		onColorChanged(restoreValue ? getPersistedInt(mValue) : (Integer)defaultValue);
-	}
+        if (alpha.length() == 1) {
+            alpha = "0" + alpha;
+        }
 
-	private void init(Context context, AttributeSet attrs)
-	{
-		mDensity = getContext().getResources().getDisplayMetrics().density;
-		setOnPreferenceClickListener(this);
-		if (attrs != null)
-		{
-			mAlphaSliderEnabled = attrs.getAttributeBooleanValue(null, "alphaSlider", false);
-			mHexValueEnabled = attrs.getAttributeBooleanValue(null, "hexValue", false);
-		}
-	}
+        if (red.length() == 1) {
+            red = "0" + red;
+        }
 
-	@Override
-	protected void onBindView(View view)
-	{
-		super.onBindView(view);
-		mView = view;
-		setPreviewColor();
-	}
+        if (green.length() == 1) {
+            green = "0" + green;
+        }
 
-	@SuppressWarnings("deprecation")
-	private void setPreviewColor()
-	{
-		if (mView == null)
-			return;
-		ImageView iView = new ImageView(getContext());
-		LinearLayout widgetFrameView = ((LinearLayout)mView.findViewById(android.R.id.widget_frame));
-		if (widgetFrameView == null)
-			return;
-		widgetFrameView.setVisibility(View.VISIBLE);
-		widgetFrameView.setPadding(
-				widgetFrameView.getPaddingLeft(),
-				widgetFrameView.getPaddingTop(),
-				(int)(mDensity * 8),
-				widgetFrameView.getPaddingBottom()
-				);
-		// remove already create preview image
-		int count = widgetFrameView.getChildCount();
-		if (count > 0)
-		{
-			widgetFrameView.removeViews(0, count);
-		}
-		widgetFrameView.addView(iView);
-		widgetFrameView.setMinimumWidth(0);
-		iView.setBackgroundDrawable(new AlphaPatternDrawable((int)(5 * mDensity)));
-		iView.setImageBitmap(getPreviewBitmap());
-	}
+        if (blue.length() == 1) {
+            blue = "0" + blue;
+        }
 
-	private Bitmap getPreviewBitmap()
-	{
-		int d = (int)(mDensity * 31); //30dip
-		int color = mValue;
-		Bitmap bm = Bitmap.createBitmap(d, d, Config.ARGB_8888);
-		int w = bm.getWidth();
-		int h = bm.getHeight();
-		int c = color;
-		for (int i = 0; i < w; i++)
-		{
-			for (int j = i; j < h; j++)
-			{
-				c = (i <= 1 || j <= 1 || i >= w - 2 || j >= h - 2) ? Color.GRAY : color;
-				bm.setPixel(i, j, c);
-				if (i != j)
-				{
-					bm.setPixel(j, i, c);
-				}
-			}
-		}
+        return "#" + alpha + red + green + blue;
+    }
 
-		return bm;
-	}
+    /**
+     * For custom purposes. Not used by ColorPickerPreference
+     *
+     * @param color
+     * @return A string representing the hex value of color,
+     * without the alpha value
+     * @author Charles Rosaaen
+     */
+    public static String convertToRGB(int color) {
+        String red = Integer.toHexString(Color.red(color));
+        String green = Integer.toHexString(Color.green(color));
+        String blue = Integer.toHexString(Color.blue(color));
 
-	@Override
-	public void onColorChanged(int color)
-	{
-		if (isPersistent())
-		{
-			persistInt(color);
-		}
-		mValue = color;
-		setPreviewColor();
-		try
-		{
-			getOnPreferenceChangeListener().onPreferenceChange(this, color);
-		}
-		catch (NullPointerException e)
-		{
+        if (red.length() == 1) {
+            red = "0" + red;
+        }
 
-		}
-	}
+        if (green.length() == 1) {
+            green = "0" + green;
+        }
 
-	@Override
-	public boolean onPreferenceClick(Preference preference)
-	{
-		showDialog(null);
-		return false;
-	}
+        if (blue.length() == 1) {
+            blue = "0" + blue;
+        }
 
-	protected void showDialog(Bundle state)
-	{
-		mDialog = new ColorPickerDialog(getContext(), mValue);
-		mDialog.setOnColorChangedListener(this);
-		if (mAlphaSliderEnabled)
-		{
-			mDialog.setAlphaSliderVisible(true);
-		}
-		if (mHexValueEnabled)
-		{
-			mDialog.setHexValueEnabled(true);
-		}
-		if (state != null)
-		{
-			mDialog.onRestoreInstanceState(state);
-		}
-		mDialog.show();
-	}
+        return "#" + red + green + blue;
+    }
 
-	/**
-	 * Toggle Alpha Slider visibility (by default it's disabled)
-	 * @param enable
-	 */
-	public void setAlphaSliderEnabled(boolean enable)
-	{
-		mAlphaSliderEnabled = enable;
-	}
+    /**
+     * For custom purposes. Not used by ColorPickerPreferrence
+     *
+     * @param argb
+     * @throws NumberFormatException
+     * @author Unknown
+     */
+    public static int convertToColorInt(String argb) throws IllegalArgumentException {
 
-	/**
-	 * Toggle Hex Value visibility (by default it's disabled)
-	 * @param enable
-	 */
-	public void setHexValueEnabled(boolean enable)
-	{
-		mHexValueEnabled = enable;
-	}
+        if (!argb.startsWith("#")) {
+            argb = "#" + argb;
+        }
 
-	/**
-	 * For custom purposes. Not used by ColorPickerPreferrence
-	 * @param color
-	 * @author Unknown
-	 */
-	public static String convertToARGB(int color)
-	{
-		String alpha = Integer.toHexString(Color.alpha(color));
-		String red = Integer.toHexString(Color.red(color));
-		String green = Integer.toHexString(Color.green(color));
-		String blue = Integer.toHexString(Color.blue(color));
+        return Color.parseColor(argb);
+    }
 
-		if (alpha.length() == 1)
-		{
-			alpha = "0" + alpha;
-		}
+    @Override
+    protected Object onGetDefaultValue(TypedArray a, int index) {
+        return a.getColor(index, Color.BLACK);
+    }
 
-		if (red.length() == 1)
-		{
-			red = "0" + red;
-		}
+    @Override
+    protected void onSetInitialValue(boolean restoreValue, Object defaultValue) {
+        onColorChanged(restoreValue ? getPersistedInt(mValue) : (Integer) defaultValue);
+    }
 
-		if (green.length() == 1)
-		{
-			green = "0" + green;
-		}
+    private void init(Context context, AttributeSet attrs) {
+        mDensity = getContext().getResources().getDisplayMetrics().density;
+        setOnPreferenceClickListener(this);
+        if (attrs != null) {
+            mAlphaSliderEnabled = attrs.getAttributeBooleanValue(null, "alphaSlider", false);
+            mHexValueEnabled = attrs.getAttributeBooleanValue(null, "hexValue", false);
+        }
+    }
 
-		if (blue.length() == 1)
-		{
-			blue = "0" + blue;
-		}
+    @Override
+    protected void onBindView(View view) {
+        super.onBindView(view);
+        mView = view;
+        setPreviewColor();
+    }
 
-		return "#" + alpha + red + green + blue;
-	}
+    @SuppressWarnings("deprecation")
+    private void setPreviewColor() {
+        if (mView == null)
+            return;
+        ImageView iView = new ImageView(getContext());
+        LinearLayout widgetFrameView = ((LinearLayout) mView.findViewById(android.R.id.widget_frame));
+        if (widgetFrameView == null)
+            return;
+        widgetFrameView.setVisibility(View.VISIBLE);
+        widgetFrameView.setPadding(
+                widgetFrameView.getPaddingLeft(),
+                widgetFrameView.getPaddingTop(),
+                (int) (mDensity * 8),
+                widgetFrameView.getPaddingBottom()
+        );
+        // remove already create preview image
+        int count = widgetFrameView.getChildCount();
+        if (count > 0) {
+            widgetFrameView.removeViews(0, count);
+        }
+        widgetFrameView.addView(iView);
+        widgetFrameView.setMinimumWidth(0);
+        iView.setBackgroundDrawable(new AlphaPatternDrawable((int) (5 * mDensity)));
+        iView.setImageBitmap(getPreviewBitmap());
+    }
 
-	/**
-	 * For custom purposes. Not used by ColorPickerPreference
-	 * @param color
-	 * @author Charles Rosaaen
-	 * @return A string representing the hex value of color,
-	 * without the alpha value
-	 */
-	public static String convertToRGB(int color)
-	{
-		String red = Integer.toHexString(Color.red(color));
-		String green = Integer.toHexString(Color.green(color));
-		String blue = Integer.toHexString(Color.blue(color));
+    private Bitmap getPreviewBitmap() {
+        int d = (int) (mDensity * 31); //30dip
+        int color = mValue;
+        Bitmap bm = Bitmap.createBitmap(d, d, Config.ARGB_8888);
+        int w = bm.getWidth();
+        int h = bm.getHeight();
+        int c = color;
+        for (int i = 0; i < w; i++) {
+            for (int j = i; j < h; j++) {
+                c = (i <= 1 || j <= 1 || i >= w - 2 || j >= h - 2) ? Color.GRAY : color;
+                bm.setPixel(i, j, c);
+                if (i != j) {
+                    bm.setPixel(j, i, c);
+                }
+            }
+        }
 
-		if (red.length() == 1)
-		{
-			red = "0" + red;
-		}
+        return bm;
+    }
 
-		if (green.length() == 1)
-		{
-			green = "0" + green;
-		}
+    @Override
+    public void onColorChanged(int color) {
+        if (isPersistent()) {
+            persistInt(color);
+        }
+        mValue = color;
+        setPreviewColor();
+        try {
+            getOnPreferenceChangeListener().onPreferenceChange(this, color);
+        } catch (NullPointerException e) {
 
-		if (blue.length() == 1)
-		{
-			blue = "0" + blue;
-		}
+        }
+    }
 
-		return "#" + red + green + blue;
-	}
+    @Override
+    public boolean onPreferenceClick(Preference preference) {
+        showDialog(null);
+        return false;
+    }
 
-	/**
-	 * For custom purposes. Not used by ColorPickerPreferrence
-	 * @param argb
-	 * @throws NumberFormatException
-	 * @author Unknown
-	 */
-	public static int convertToColorInt(String argb) throws IllegalArgumentException
-	{
+    protected void showDialog(Bundle state) {
+        mDialog = new ColorPickerDialog(getContext(), mValue);
+        mDialog.setOnColorChangedListener(this);
+        if (mAlphaSliderEnabled) {
+            mDialog.setAlphaSliderVisible(true);
+        }
+        if (mHexValueEnabled) {
+            mDialog.setHexValueEnabled(true);
+        }
+        if (state != null) {
+            mDialog.onRestoreInstanceState(state);
+        }
+        mDialog.show();
+    }
 
-		if (!argb.startsWith("#"))
-		{
-			argb = "#" + argb;
-		}
+    /**
+     * Toggle Alpha Slider visibility (by default it's disabled)
+     *
+     * @param enable
+     */
+    public void setAlphaSliderEnabled(boolean enable) {
+        mAlphaSliderEnabled = enable;
+    }
 
-		return Color.parseColor(argb);
-	}
+    /**
+     * Toggle Hex Value visibility (by default it's disabled)
+     *
+     * @param enable
+     */
+    public void setHexValueEnabled(boolean enable) {
+        mHexValueEnabled = enable;
+    }
 
-	@Override
-	protected Parcelable onSaveInstanceState()
-	{
-		final Parcelable superState = super.onSaveInstanceState();
-		if (mDialog == null || !mDialog.isShowing())
-		{
-			return superState;
-		}
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        final Parcelable superState = super.onSaveInstanceState();
+        if (mDialog == null || !mDialog.isShowing()) {
+            return superState;
+        }
 
-		final SavedState myState = new SavedState(superState);
-		myState.dialogBundle = mDialog.onSaveInstanceState();
-		return myState;
-	}
+        final SavedState myState = new SavedState(superState);
+        myState.dialogBundle = mDialog.onSaveInstanceState();
+        return myState;
+    }
 
-	@Override
-	protected void onRestoreInstanceState(Parcelable state)
-	{
-		if (state == null || !(state instanceof SavedState))
-		{
-			// Didn't save state for us in onSaveInstanceState
-			super.onRestoreInstanceState(state);
-			return;
-		}
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        if (state == null || !(state instanceof SavedState)) {
+            // Didn't save state for us in onSaveInstanceState
+            super.onRestoreInstanceState(state);
+            return;
+        }
 
-		SavedState myState = (SavedState)state;
-		super.onRestoreInstanceState(myState.getSuperState());
-		showDialog(myState.dialogBundle);
-	}
+        SavedState myState = (SavedState) state;
+        super.onRestoreInstanceState(myState.getSuperState());
+        showDialog(myState.dialogBundle);
+    }
 
-	private static class SavedState extends BaseSavedState
-	{
-		Bundle dialogBundle;
+    private static class SavedState extends BaseSavedState {
+        @SuppressWarnings("unused")
+        public static final Parcelable.Creator<SavedState> CREATOR =
+                new Parcelable.Creator<SavedState>() {
+                    @Override
+                    public SavedState createFromParcel(Parcel in) {
+                        return new SavedState(in);
+                    }
 
-		public SavedState(Parcel source)
-		{
-			super(source);
-			dialogBundle = source.readBundle();
-		}
+                    @Override
+                    public SavedState[] newArray(int size) {
+                        return new SavedState[size];
+                    }
+                };
+        Bundle dialogBundle;
 
-		@Override
-		public void writeToParcel(Parcel dest, int flags)
-		{
-			super.writeToParcel(dest, flags);
-			dest.writeBundle(dialogBundle);
-		}
+        public SavedState(Parcel source) {
+            super(source);
+            dialogBundle = source.readBundle();
+        }
 
-		public SavedState(Parcelable superState)
-		{
-			super(superState);
-		}
+        public SavedState(Parcelable superState) {
+            super(superState);
+        }
 
-		@SuppressWarnings("unused")
-		public static final Parcelable.Creator<SavedState> CREATOR =
-				new Parcelable.Creator<SavedState>()
-				{
-					@Override
-					public SavedState createFromParcel(Parcel in)
-					{
-						return new SavedState(in);
-					}
-
-					@Override
-					public SavedState[] newArray(int size)
-					{
-						return new SavedState[size];
-					}
-				};
-	}
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            super.writeToParcel(dest, flags);
+            dest.writeBundle(dialogBundle);
+        }
+    }
 }

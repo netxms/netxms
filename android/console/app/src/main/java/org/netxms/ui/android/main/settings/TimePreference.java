@@ -1,7 +1,5 @@
 package org.netxms.ui.android.main.settings;
 
-import org.netxms.ui.android.R;
-
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.preference.DialogPreference;
@@ -10,110 +8,96 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.TimePicker;
 
+import org.netxms.ui.android.R;
+
 /**
  * Custom handler for time picker
- * 
+ *
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
- * 
  */
 
-public class TimePreference extends DialogPreference
-{
-	private int lastHour = 0;
-	private int lastMinute = 0;
-	private TimePicker picker = null;
+public class TimePreference extends DialogPreference {
+    private int lastHour = 0;
+    private int lastMinute = 0;
+    private TimePicker picker = null;
 
-	public static int getHour(String time)
-	{
-		String[] pieces = time.split(":");
+    public TimePreference(Context ctxt) {
+        this(ctxt, null);
+    }
 
-		return (Integer.parseInt(pieces[0]));
-	}
+    public TimePreference(Context ctxt, AttributeSet attrs) {
+        this(ctxt, attrs, android.R.attr.dialogPreferenceStyle);
+    }
 
-	public static int getMinute(String time)
-	{
-		String[] pieces = time.split(":");
+    public TimePreference(Context ctxt, AttributeSet attrs, int defStyle) {
+        super(ctxt, attrs, defStyle);
 
-		return (Integer.parseInt(pieces[1]));
-	}
+        setPositiveButtonText(ctxt.getResources().getString(R.string.set));
+        setNegativeButtonText(ctxt.getResources().getString(R.string.cancel));
+    }
 
-	public TimePreference(Context ctxt)
-	{
-		this(ctxt, null);
-	}
+    public static int getHour(String time) {
+        String[] pieces = time.split(":");
 
-	public TimePreference(Context ctxt, AttributeSet attrs)
-	{
-		this(ctxt, attrs, android.R.attr.dialogPreferenceStyle);
-	}
+        return (Integer.parseInt(pieces[0]));
+    }
 
-	public TimePreference(Context ctxt, AttributeSet attrs, int defStyle)
-	{
-		super(ctxt, attrs, defStyle);
+    public static int getMinute(String time) {
+        String[] pieces = time.split(":");
 
-		setPositiveButtonText(ctxt.getResources().getString(R.string.set));
-		setNegativeButtonText(ctxt.getResources().getString(R.string.cancel));
-	}
+        return (Integer.parseInt(pieces[1]));
+    }
 
-	@Override
-	protected View onCreateDialogView()
-	{
-		picker = new TimePicker(getContext());
-		picker.setIs24HourView(DateFormat.is24HourFormat(this.getContext()));
-		picker.setAddStatesFromChildren(true);
-		return (picker);
-	}
+    @Override
+    protected View onCreateDialogView() {
+        picker = new TimePicker(getContext());
+        picker.setIs24HourView(DateFormat.is24HourFormat(this.getContext()));
+        picker.setAddStatesFromChildren(true);
+        return (picker);
+    }
 
-	@Override
-	protected void onBindDialogView(View v)
-	{
-		super.onBindDialogView(v);
+    @Override
+    protected void onBindDialogView(View v) {
+        super.onBindDialogView(v);
 
-		picker.setCurrentHour(lastHour);
-		picker.setCurrentMinute(lastMinute);
-	}
+        picker.setCurrentHour(lastHour);
+        picker.setCurrentMinute(lastMinute);
+    }
 
-	@Override
-	protected void onDialogClosed(boolean positiveResult)
-	{
-		picker.clearFocus(); // Force reading of values input by keyboard
-		super.onDialogClosed(positiveResult);
+    @Override
+    protected void onDialogClosed(boolean positiveResult) {
+        picker.clearFocus(); // Force reading of values input by keyboard
+        super.onDialogClosed(positiveResult);
 
-		if (positiveResult)
-		{
-			lastHour = picker.getCurrentHour();
-			lastMinute = picker.getCurrentMinute();
+        if (positiveResult) {
+            lastHour = picker.getCurrentHour();
+            lastMinute = picker.getCurrentMinute();
 
-			String time = String.valueOf(lastHour) + ":" + String.valueOf(lastMinute);
+            String time = String.valueOf(lastHour) + ":" + String.valueOf(lastMinute);
 
-			if (callChangeListener(time))
-				persistString(time);
-		}
-	}
+            if (callChangeListener(time))
+                persistString(time);
+        }
+    }
 
-	@Override
-	protected Object onGetDefaultValue(TypedArray a, int index)
-	{
-		return (a.getString(index));
-	}
+    @Override
+    protected Object onGetDefaultValue(TypedArray a, int index) {
+        return (a.getString(index));
+    }
 
-	@Override
-	protected void onSetInitialValue(boolean restoreValue, Object defaultValue)
-	{
-		String time = null;
+    @Override
+    protected void onSetInitialValue(boolean restoreValue, Object defaultValue) {
+        String time = null;
 
-		if (restoreValue)
-		{
-			if (defaultValue == null)
-				time = getPersistedString("00:00");
-			else
-				time = getPersistedString(defaultValue.toString());
-		}
-		else
-		{
-			time = defaultValue.toString();
-		}
-		lastHour = getHour(time);
-		lastMinute = getMinute(time);
-	}
+        if (restoreValue) {
+            if (defaultValue == null)
+                time = getPersistedString("00:00");
+            else
+                time = getPersistedString(defaultValue.toString());
+        } else {
+            time = defaultValue.toString();
+        }
+        lastHour = getHour(time);
+        lastMinute = getMinute(time);
+    }
 }

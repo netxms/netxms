@@ -1,11 +1,10 @@
 /**
- * 
+ *
  */
 package org.netxms.ui.android.main.dashboards.elements;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
+import android.content.Context;
+import android.util.Log;
 
 import org.achartengine.ChartFactory;
 import org.achartengine.model.CategorySeries;
@@ -16,157 +15,134 @@ import org.netxms.ui.android.helpers.Colors;
 import org.netxms.ui.android.main.dashboards.configs.TablePieChartConfig;
 import org.netxms.ui.android.service.ClientConnectorService;
 
-import android.content.Context;
-import android.util.Log;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Pie chart element for table DCI
  */
-public class TablePieChartElement extends AbstractDashboardElement
-{
-	private static final String TAG = "nxclient/TablePieChartElement";
+public class TablePieChartElement extends AbstractDashboardElement {
+    private static final String TAG = "nxclient/TablePieChartElement";
+    private final CategorySeries dataset;
+    private final Map<String, Integer> instanceMap = new HashMap<String, Integer>(MAX_CHART_ITEMS);
+    private TablePieChartConfig config;
 
-	private TablePieChartConfig config;
-	private final CategorySeries dataset;
-	private final Map<String, Integer> instanceMap = new HashMap<String, Integer>(MAX_CHART_ITEMS);
+    /**
+     * @param context
+     * @param xmlConfig
+     */
+    public TablePieChartElement(Context context, String xmlConfig, ClientConnectorService service, ScheduledExecutorService scheduleTaskExecutor) {
+        super(context, xmlConfig, service, scheduleTaskExecutor);
+        try {
+            config = TablePieChartConfig.createFromXml(xmlConfig);
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing element config", e);
+            config = new TablePieChartConfig();
+        }
 
-	/**
-	 * @param context
-	 * @param xmlConfig
-	 */
-	public TablePieChartElement(Context context, String xmlConfig, ClientConnectorService service, ScheduledExecutorService scheduleTaskExecutor)
-	{
-		super(context, xmlConfig, service, scheduleTaskExecutor);
-		try
-		{
-			config = TablePieChartConfig.createFromXml(xmlConfig);
-		}
-		catch (Exception e)
-		{
-			Log.e(TAG, "Error parsing element config", e);
-			config = new TablePieChartConfig();
-		}
+        dataset = buildDataset();
+    }
 
-		dataset = buildDataset();
-	}
+    /* (non-Javadoc)
+     * @see android.view.View#onAttachedToWindow()
+     */
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        startRefreshTask(config.getRefreshRate());
+    }
 
-	/* (non-Javadoc)
-	 * @see android.view.View#onAttachedToWindow()
-	 */
-	@Override
-	protected void onAttachedToWindow()
-	{
-		super.onAttachedToWindow();
-		startRefreshTask(config.getRefreshRate());
-	}
+    /**
+     * @return
+     */
+    private CategorySeries buildDataset() {
+        CategorySeries series = new CategorySeries(config.getTitle());
 
-	/**
-	 * @return
-	 */
-	private CategorySeries buildDataset()
-	{
-		CategorySeries series = new CategorySeries(config.getTitle());
+        return series;
+    }
 
-		return series;
-	}
+    /**
+     * @return
+     */
+    private DefaultRenderer buildRenderer(int count) {
+        DefaultRenderer renderer = new DefaultRenderer();
+        renderer.setLabelsTextSize(15);
+        renderer.setLegendTextSize(15);
+        renderer.setShowLegend(config.isShowLegend());
+        renderer.setMargins(new int[]{20, 30, 15, 0});
+        renderer.setPanEnabled(false);
+        renderer.setZoomEnabled(false);
+        renderer.setAntialiasing(true);
+        renderer.setChartTitle(config.getTitle());
 
-	/**
-	 * @return
-	 */
-	private DefaultRenderer buildRenderer(int count)
-	{
-		DefaultRenderer renderer = new DefaultRenderer();
-		renderer.setLabelsTextSize(15);
-		renderer.setLegendTextSize(15);
-		renderer.setShowLegend(config.isShowLegend());
-		renderer.setMargins(new int[] { 20, 30, 15, 0 });
-		renderer.setPanEnabled(false);
-		renderer.setZoomEnabled(false);
-		renderer.setAntialiasing(true);
-		renderer.setChartTitle(config.getTitle());
+        renderer.setApplyBackgroundColor(true);
+        renderer.setBackgroundColor(Colors.BACKGROUND_COLOR);
+        renderer.setAxesColor(Colors.LABEL_COLOR);
+        renderer.setLabelsColor(Colors.LABEL_COLOR);
 
-		renderer.setApplyBackgroundColor(true);
-		renderer.setBackgroundColor(Colors.BACKGROUND_COLOR);
-		renderer.setAxesColor(Colors.LABEL_COLOR);
-		renderer.setLabelsColor(Colors.LABEL_COLOR);
+        for (int i = 0; i < count && i < Colors.DEFAULT_ITEM_COLORS.length; i++) {
+            XYSeriesRenderer r = new XYSeriesRenderer();
+            r.setColor(Colors.DEFAULT_ITEM_COLORS[i] | 0xFF000000);
+            renderer.addSeriesRenderer(r);
+        }
 
-		for (int i = 0; i < count && i < Colors.DEFAULT_ITEM_COLORS.length; i++)
-		{
-			XYSeriesRenderer r = new XYSeriesRenderer();
-			r.setColor(Colors.DEFAULT_ITEM_COLORS[i] | 0xFF000000);
-			renderer.addSeriesRenderer(r);
-		}
+        return renderer;
+    }
 
-		return renderer;
-	}
+    /* (non-Javadoc)
+     * @see org.netxms.ui.android.main.dashboards.elements.AbstractDashboardElement#refresh()
+     */
+    @Override
+    public void refresh() {
+        try {
+            final Table data = service.getSession().getTableLastValues(config.getNodeId(), config.getDciId());
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.android.main.dashboards.elements.AbstractDashboardElement#refresh()
-	 */
-	@Override
-	public void refresh()
-	{
-		try
-		{
-			final Table data = service.getSession().getTableLastValues(config.getNodeId(), config.getDciId());
+            post(new Runnable() {
+                @Override
+                public void run() {
+                    String instanceColumn = (config.getInstanceColumn() != null) ? config.getInstanceColumn() : "";  // FIXME
+                    if (instanceColumn == null)
+                        return;
 
-			post(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					String instanceColumn = (config.getInstanceColumn() != null) ? config.getInstanceColumn() : "";  // FIXME
-					if (instanceColumn == null)
-						return;
+                    int icIndex = data.getColumnIndex(instanceColumn);
+                    int dcIndex = data.getColumnIndex(config.getDataColumn());
+                    if ((icIndex == -1) || (dcIndex == -1))
+                        return;    // at least one column is missing
 
-					int icIndex = data.getColumnIndex(instanceColumn);
-					int dcIndex = data.getColumnIndex(config.getDataColumn());
-					if ((icIndex == -1) || (dcIndex == -1))
-						return;	// at least one column is missing
+                    for (int i = 0; i < data.getRowCount(); i++) {
+                        String instance = data.getCell(i, icIndex).getValue();
+                        if (instance == null)
+                            continue;
 
-					for (int i = 0; i < data.getRowCount(); i++)
-					{
-						String instance = data.getCell(i, icIndex).getValue();
-						if (instance == null)
-							continue;
+                        double value;
+                        try {
+                            value = Double.parseDouble(data.getCell(i, dcIndex).getValue());
+                        } catch (NumberFormatException e) {
+                            value = 0.0;
+                        }
 
-						double value;
-						try
-						{
-							value = Double.parseDouble(data.getCell(i, dcIndex).getValue());
-						}
-						catch (NumberFormatException e)
-						{
-							value = 0.0;
-						}
+                        Integer index = instanceMap.get(instance);
+                        if (config.isIgnoreZeroValues() && (value == 0) && (index == null))
+                            continue;
 
-						Integer index = instanceMap.get(instance);
-						if (config.isIgnoreZeroValues() && (value == 0) && (index == null))
-							continue;
+                        if (index != null) {
+                            dataset.set(index, instance, value);
+                        } else {
+                            index = dataset.getItemCount();
+                            if (index < MAX_CHART_ITEMS) {
+                                instanceMap.put(instance, index);
+                                dataset.add(instance, value);
+                            }
+                        }
+                    }
 
-						if (index != null)
-						{
-							dataset.set(index, instance, value);
-						}
-						else
-						{
-							index = dataset.getItemCount();
-							if (index < MAX_CHART_ITEMS)
-							{
-								instanceMap.put(instance, index);
-								dataset.add(instance, value);
-							}
-						}
-					}
-
-					removeAllViews();
-					addView(ChartFactory.getPieChartView(getContext(), dataset, buildRenderer(dataset.getItemCount())));
-				}
-			});
-		}
-		catch (Exception e)
-		{
-			Log.e("nxclient/BarChartElement", "Exception while reading data from server", e);
-		}
-	}
+                    removeAllViews();
+                    addView(ChartFactory.getPieChartView(getContext(), dataset, buildRenderer(dataset.getItemCount())));
+                }
+            });
+        } catch (Exception e) {
+            Log.e("nxclient/BarChartElement", "Exception while reading data from server", e);
+        }
+    }
 }
