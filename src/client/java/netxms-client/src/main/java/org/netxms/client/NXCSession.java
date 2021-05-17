@@ -1543,6 +1543,7 @@ public class NXCSession
       }
       catch(Exception e)
       {
+         logger.error("Failed to create encryption context", e);
          response.setFieldInt32(NXCPCodes.VID_RCC, RCC.NO_CIPHERS);
       }
 
