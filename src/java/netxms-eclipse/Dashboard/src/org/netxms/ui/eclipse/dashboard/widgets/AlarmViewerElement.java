@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ public class AlarmViewerElement extends ElementWidget
 {
 	private AlarmList viewer;
 	private AlarmViewerConfig config;
-	
+
 	/**
 	 * Create new alarm viewer element
 	 * 
@@ -64,6 +64,7 @@ public class AlarmViewerElement extends ElementWidget
       viewer = new AlarmList(viewPart, this, SWT.NONE, "Dashboard.AlarmList", null); //$NON-NLS-1$
 		viewer.setRootObject(config.getObjectId());
 		viewer.setSeverityFilter(config.getSeverityFilter());
+      viewer.setStateFilter(config.getStateFilter());
       viewer.setIsLocalSoundEnabled(config.getIsLocalSoundEnabled());
 		viewer.getViewer().getControl().addFocusListener(new FocusListener() {
          @Override

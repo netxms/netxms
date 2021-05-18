@@ -300,11 +300,12 @@ public class AlarmList extends CompositeWithMessageBar
                      newAlarmList.add((Alarm)n.getObject()); // Add to this list only new alarms to be able to notify with sound
                   }
                case SessionNotification.ALARM_CHANGED:
+                  Alarm oldAlarm;
                   synchronized(alarmList)
                   {
-                     alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
+                     oldAlarm = alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
                   }
-                  if (alarmFilter.filter((Alarm)n.getObject()))
+                  if (alarmFilter.filter((Alarm)n.getObject()) || ((oldAlarm != null) && alarmFilter.filter(oldAlarm)))
                      refreshTimer.execute();
                   break;
                case SessionNotification.ALARM_TERMINATED:
@@ -970,8 +971,7 @@ public class AlarmList extends CompositeWithMessageBar
             alarmViewer.setInput(filteredAlarms);
             if ((session.getAlarmListDisplayLimit() > 0) && (selectedAlarms.size() >= session.getAlarmListDisplayLimit()))
             {
-               showMessage(MessageBar.INFORMATION,
-                     String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarms.size()));
+               showMessage(MessageBar.INFORMATION, String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarms.size()));
             }
             else
             {

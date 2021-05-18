@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,15 +38,18 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class AlarmViewer extends PropertyPage
 {
+   private static final String[] STATE_NAME = { "Outstanding", "Acknowledged", "Resolved" };
+
 	private AlarmViewerConfig config;
 	private ObjectSelector objectSelector;
 	private LabeledText title;
 	private Button[] checkSeverity;
+   private Button[] checkState;
    private Button checkEnableLocalSound;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -93,7 +96,27 @@ public class AlarmViewer extends PropertyPage
 			checkSeverity[severity].setText(StatusDisplayInfo.getStatusText(severity));
 			checkSeverity[severity].setSelection((config.getSeverityFilter() & (1 << severity)) != 0);
 		}
-		
+
+      Group stateGroup = new Group(dialogArea, SWT.NONE);
+      stateGroup.setText("State Filter");
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      stateGroup.setLayoutData(gd);
+
+      layout = new GridLayout();
+      layout.numColumns = 3;
+      layout.makeColumnsEqualWidth = true;
+      stateGroup.setLayout(layout);
+
+      checkState = new Button[3];
+      for(int i = 0; i < 3; i++)
+      {
+         checkState[i] = new Button(stateGroup, SWT.CHECK);
+         checkState[i].setText(STATE_NAME[i]);
+         checkState[i].setSelection((config.getStateFilter() & (1 << i)) != 0);
+      }
+
 		checkEnableLocalSound  = new Button(dialogArea, SWT.CHECK);
 		checkEnableLocalSound.setText("Play alarm sounds when active");
 		checkEnableLocalSound.setSelection(config.getIsLocalSoundEnabled());
@@ -101,9 +124,9 @@ public class AlarmViewer extends PropertyPage
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -115,8 +138,14 @@ public class AlarmViewer extends PropertyPage
 			if (checkSeverity[i].getSelection())
 				severityFilter |= (1 << i);
 		config.setSeverityFilter(severityFilter);
+
+      int stateFilter = 0;
+      for(int i = 0; i < checkState.length; i++)
+         if (checkState[i].getSelection())
+            stateFilter |= (1 << i);
+      config.setStateFilter(stateFilter);
+
 		config.setIsLocalSoundEnabled(checkEnableLocalSound.getSelection());
-		
 		return true;
 	}
 }
