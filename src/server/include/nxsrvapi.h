@@ -512,6 +512,7 @@ struct CustomAttribute
 #ifdef _WIN32
 class NObject;
 template class LIBNXSRV_EXPORTABLE shared_ptr<NObject>;
+template class LIBNXSRV_EXPORTABLE weak_ptr<NObject>;
 template class LIBNXSRV_EXPORTABLE ObjectMemoryPool<shared_ptr<NObject>>;
 template class LIBNXSRV_EXPORTABLE SharedObjectArray<NObject>;
 template class LIBNXSRV_EXPORTABLE StringObjectMap<CustomAttribute>;
@@ -784,6 +785,8 @@ public:
 class AgentConnectionReceiver;
 
 #ifdef _WIN32
+class AgentConnection;
+template class LIBNXSRV_EXPORTABLE weak_ptr<AgentConnection>;
 template class LIBNXSRV_EXPORTABLE shared_ptr<AgentConnectionReceiver>;
 #endif
 
