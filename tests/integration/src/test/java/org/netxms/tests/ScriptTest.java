@@ -266,7 +266,10 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
             continue;
          params.add(Long.toString(alarm.getId()));
          params.add(alarmKey);
-         params.add(".*" + alarmKey.substring(1));
+         //Escape special regexp characters
+         alarmKey.replace("(", "\\(");
+         alarmKey.replace(")", "\\)");      
+         params.add(".*" + alarmKey.substring(1));   
          break;
       }
       System.out.println("Check that at least one alarm was found");
