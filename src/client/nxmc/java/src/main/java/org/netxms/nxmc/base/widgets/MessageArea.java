@@ -46,7 +46,7 @@ public class MessageArea extends Canvas implements MessageAreaHolder
 {
    private static final I18n i18n = LocalizationHelper.getI18n(MessageArea.class);
 
-   public static final int INFO = 0;
+   public static final int INFORMATION = 0;
    public static final int SUCCESS = 1;
    public static final int WARNING = 2;
    public static final int ERROR = 3;
@@ -63,6 +63,14 @@ public class MessageArea extends Canvas implements MessageAreaHolder
 
    private int nextMessageId = 1;
    private List<Message> messages = new ArrayList<>(0);
+   private long messageTimeout = 60000; // 1 minute by default
+   private Runnable timer = new Runnable() {
+      @Override
+      public void run()
+      {
+         onTimer();
+      }
+   };
 
    /**
     * Create message area.
@@ -77,7 +85,7 @@ public class MessageArea extends Canvas implements MessageAreaHolder
       if (icons == null)
       {
          icons = new Image[4];
-         icons[INFO] = ResourceManager.getImage("icons/messages/info.png");
+         icons[INFORMATION] = ResourceManager.getImage("icons/messages/info.png");
          icons[SUCCESS] = ResourceManager.getImage("icons/messages/success.png");
          icons[WARNING] = ResourceManager.getImage("icons/messages/warning.png");
          icons[ERROR] = ResourceManager.getImage("icons/messages/error.png");
@@ -99,7 +107,16 @@ public class MessageArea extends Canvas implements MessageAreaHolder
    @Override
    public int addMessage(int level, String text)
    {
-      Message m = new Message(nextMessageId++, level, text);
+      return addMessage(level, text, false);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String, boolean)
+    */
+   @Override
+   public int addMessage(int level, String text, boolean sticky)
+   {
+      Message m = new Message(nextMessageId++, level, text, sticky);
 
       if (messages.size() >= MAX_ROWS)
          messages.get(MAX_ROWS - 1).disposeControl();
@@ -108,6 +125,9 @@ public class MessageArea extends Canvas implements MessageAreaHolder
       m.control = new MessageComposite(m);
       m.control.moveAbove(null);
       m.control.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      if (messages.size() == 1)
+         getDisplay().timerExec(1000, timer); // First message, start expiration check timer
 
       getParent().layout(true, true);
       return m.id;
@@ -158,6 +178,45 @@ public class MessageArea extends Canvas implements MessageAreaHolder
    }
 
    /**
+    * @return the messageTimeout
+    */
+   public long getMessageTimeout()
+   {
+      return messageTimeout;
+   }
+
+   /**
+    * @param messageTimeout the messageTimeout to set
+    */
+   public void setMessageTimeout(long messageTimeout)
+   {
+      this.messageTimeout = messageTimeout;
+   }
+
+   /**
+    * Process fired timer
+    */
+   private void onTimer()
+   {
+      if (isDisposed())
+         return;
+
+      long now = System.currentTimeMillis();
+      for(int i = 0; i < messages.size(); i++)
+      {
+         Message m = messages.get(i);
+         if (!m.sticky && (m.timestamp + messageTimeout < now))
+         {
+            deleteMessage(m.id);
+            i--;
+         }
+      }
+
+      if (!messages.isEmpty())
+         getDisplay().timerExec(1000, timer);
+   }
+
+   /**
     * @see org.eclipse.swt.widgets.Control#computeSize(int, int, boolean)
     */
    @Override
@@ -174,15 +233,29 @@ public class MessageArea extends Canvas implements MessageAreaHolder
       int id;
       int level;
       String text;
+      long timestamp;
+      boolean sticky;
       MessageComposite control;
 
-      Message(int id, int level, String text)
+      /**
+       * Create new message.
+       *
+       * @param id assigned message ID
+       * @param level message level
+       * @param text message text
+       */
+      Message(int id, int level, String text, boolean sticky)
       {
          this.id = id;
          this.level = level;
          this.text = text;
+         this.timestamp = System.currentTimeMillis();
+         this.sticky = sticky;
       }
 
+      /**
+       * Dispose control displaying this message, if any
+       */
       void disposeControl()
       {
          if (control != null)
@@ -192,6 +265,11 @@ public class MessageArea extends Canvas implements MessageAreaHolder
          }
       }
 
+      /**
+       * Get background color for this message.
+       *
+       * @return background color for this message
+       */
       Color getBackgroundColor()
       {
          switch(level)
@@ -207,6 +285,11 @@ public class MessageArea extends Canvas implements MessageAreaHolder
          }
       }
 
+      /**
+       * Get border color for this message.
+       *
+       * @return border color for this message
+       */
       Color getBorderColor()
       {
          switch(level)

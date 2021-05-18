@@ -217,7 +217,7 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
 
       String motd = session.getMessageOfTheDay();
       if ((motd != null) && !motd.isEmpty())
-         addMessage(MessageArea.INFO, session.getMessageOfTheDay());
+         addMessage(MessageArea.INFORMATION, session.getMessageOfTheDay());
 
       return windowContent;
    }
@@ -346,6 +346,15 @@ public class MainWindow extends ApplicationWindow implements MessageAreaHolder
     */
    @Override
    public int addMessage(int level, String text)
+   {
+      return messageArea.addMessage(level, text);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String, boolean)
+    */
+   @Override
+   public int addMessage(int level, String text, boolean sticky)
    {
       return messageArea.addMessage(level, text);
    }

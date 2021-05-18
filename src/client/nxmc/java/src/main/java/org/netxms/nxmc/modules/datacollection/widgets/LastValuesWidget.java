@@ -51,7 +51,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewerFilterInternal;
-import org.netxms.nxmc.base.widgets.CompositeWithMessageBar;
+import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -70,7 +70,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Viewer for last values of given object
  */
-public class LastValuesWidget extends CompositeWithMessageBar
+public class LastValuesWidget extends CompositeWithMessageArea
 {
 	// Columns
 	public static final int COLUMN_ID = 0;
@@ -352,7 +352,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
                   if (!isDisposed() && (dcTarget != null) && (dcTarget.getObjectId() == jobTarget.getObjectId()))
                   {
                      dataViewer.setInput(data);
-                     hideMessage();
+                     clearMessages();
                   }
                }
             });

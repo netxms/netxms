@@ -33,6 +33,16 @@ public interface MessageAreaHolder
    public int addMessage(int level, String text);
 
    /**
+    * Add message to message area.
+    *
+    * @param level message level (one of MessageArea.INFO, MessageArea.SUCCESS, MessageArea.WARNING, MessageArea.ERROR)
+    * @param text message text
+    * @param sticky true to add sticky message (one that will not be dismissed by timeout)
+    * @return ID assigned to added message
+    */
+   public int addMessage(int level, String text, boolean sticky);
+
+   /**
     * Delete message from message area.
     *
     * @param id message ID

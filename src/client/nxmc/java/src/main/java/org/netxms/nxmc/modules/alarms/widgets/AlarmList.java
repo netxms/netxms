@@ -61,8 +61,8 @@ import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewerFilterInternal;
-import org.netxms.nxmc.base.widgets.CompositeWithMessageBar;
-import org.netxms.nxmc.base.widgets.MessageBar;
+import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.AlarmNotifier;
@@ -87,7 +87,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Alarm list widget
  */
-public class AlarmList extends CompositeWithMessageBar
+public class AlarmList extends CompositeWithMessageArea
 {
    // Columns
    public static final int COLUMN_SEVERITY = 0;
@@ -847,12 +847,11 @@ public class AlarmList extends CompositeWithMessageBar
 
             if ((session.getAlarmListDisplayLimit() > 0) && (selectedAlarms.size() >= session.getAlarmListDisplayLimit()))
             {
-               showMessage(MessageBar.INFORMATION,
-                     String.format(i18n.tr("Only %d most recent alarms shown"), filteredAlarms.size()));
+               addMessage(MessageArea.INFORMATION, String.format(i18n.tr("Only %d most recent alarms shown"), filteredAlarms.size()), true);
             }
             else
             {
-               hideMessage();
+               clearMessages();
             }
 
             // Mark job end and check if another filter run is needed

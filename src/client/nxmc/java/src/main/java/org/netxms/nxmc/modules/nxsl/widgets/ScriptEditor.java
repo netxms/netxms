@@ -60,7 +60,8 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ScriptCompilationResult;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.CompositeWithMessageBar;
+import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.nxsl.widgets.helpers.NXSLDocument;
 import org.netxms.nxmc.modules.nxsl.widgets.helpers.NXSLSourceViewerConfiguration;
@@ -72,7 +73,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * NXSL script editor
  */
-public class ScriptEditor extends CompositeWithMessageBar
+public class ScriptEditor extends CompositeWithMessageArea
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ScriptEditor.class);
 
@@ -601,11 +602,13 @@ public class ScriptEditor extends CompositeWithMessageBar
                   s.setLineBackground(0, s.getLineCount(), null);
                   if (result.success)
                   {
-                     showMessage(INFORMATION, i18n.tr("Script compiled successfully"));
+                     clearMessages();
+                     addMessage(MessageArea.SUCCESS, i18n.tr("Script compiled successfully"), true);
                   }
                   else
                   {
-                     showMessage(WARNING, result.errorMessage);
+                     clearMessages();
+                     addMessage(MessageArea.WARNING, result.errorMessage, true);
                      s.setLineBackground(result.errorLine - 1, 1, ERROR_COLOR);
                   }
                   editor.setEditable(true);

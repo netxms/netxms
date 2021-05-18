@@ -223,6 +223,15 @@ public abstract class View implements MessageAreaHolder
    }
 
    /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String, boolean)
+    */
+   @Override
+   public int addMessage(int level, String text, boolean sticky)
+   {
+      return messageArea.addMessage(level, text, sticky);
+   }
+
+   /**
     * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#deleteMessage(int)
     */
    @Override
