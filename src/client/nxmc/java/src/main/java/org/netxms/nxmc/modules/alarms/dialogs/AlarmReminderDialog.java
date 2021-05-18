@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ public class AlarmReminderDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		AlarmList list = new AlarmList(null, dialogArea, SWT.BORDER, "AlarmReminderDialog", null); //$NON-NLS-1$
-		list.setStateFilter(Alarm.STATE_OUTSTANDING);
+      list.setStateFilter(Alarm.STATE_BIT_OUTSTANDING);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

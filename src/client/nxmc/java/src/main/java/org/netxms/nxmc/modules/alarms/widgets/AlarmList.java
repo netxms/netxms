@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -259,11 +259,12 @@ public class AlarmList extends CompositeWithMessageArea
                      newAlarmList.add((Alarm)n.getObject()); // Add to this list only new alarms to be able to notify with sound
                   }
                case SessionNotification.ALARM_CHANGED:
+                  Alarm oldAlarm;
                   synchronized(alarmList)
                   {
-                     alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
+                     oldAlarm = alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
                   }
-                  if (alarmFilter.filter((Alarm)n.getObject()))
+                  if (alarmFilter.filter((Alarm)n.getObject()) || ((oldAlarm != null) && alarmFilter.filter(oldAlarm)))
                      refreshTimer.execute();
                   break;
                case SessionNotification.ALARM_TERMINATED:

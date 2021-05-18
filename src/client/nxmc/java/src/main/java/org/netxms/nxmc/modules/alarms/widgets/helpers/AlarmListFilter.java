@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ public class AlarmListFilter extends ViewerFilter implements ViewerFilterInterna
    private static final String[] stateText = { i18n.tr("Outstanding"), i18n.tr("Acknowledged"), i18n.tr("Resolved"), i18n.tr("Terminated") };
    
    private Set<Long> rootObjects = new HashSet<Long>();
-   private int stateFilter = -1;
+   private int stateFilter = 0xFF;
    private int severityFilter = 0xFF;
    private NXCSession session = Registry.getSession();
    private String filterString = null;
@@ -161,7 +161,7 @@ public class AlarmListFilter extends ViewerFilter implements ViewerFilterInterna
     */
    public boolean filter(Alarm alarm)
    {
-      if ((stateFilter != -1) && (alarm.getState() != stateFilter))
+      if ((alarm.getStateBit() & stateFilter) == 0)
          return false;
 
       if (((1 << alarm.getCurrentSeverity().getValue()) & severityFilter) == 0)
