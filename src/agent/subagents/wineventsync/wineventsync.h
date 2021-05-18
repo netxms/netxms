@@ -55,6 +55,7 @@ private:
    StringList m_excludedSources;
    StructArray<Range> m_includedEvents;
    StructArray<Range> m_excludedEvents;
+   uint32_t m_severityFilter;
 
    void run();
    static DWORD WINAPI subscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID context, EVT_HANDLE event);

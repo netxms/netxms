@@ -135,6 +135,42 @@ EventLogReader::EventLogReader(const TCHAR *name, Config *config)
    path.shrink(12);
    path.append(_T("ExcludeEvent"));
    ParseEvents(m_name, config, path, false, &m_excludedEvents);
+   path.shrink(12);
+
+   path.append(_T("SeverityFilter"));
+   const TCHAR *severityFilter = config->getValue(path);
+   if (severityFilter != nullptr)
+   {
+      TCHAR *eptr;
+      m_severityFilter = _tcstol(severityFilter, &eptr, 0);
+      if (*eptr != 0)
+      {
+         // Cannot parser severity filter as number, try to parse as text
+         m_severityFilter = 0;
+         StringList *parts = String(severityFilter).split(_T(","));
+         for (int i = 0; i < parts->size(); i++)
+         {
+            const TCHAR *p = parts->get(i);
+            if (!_tcsicmp(p, _T("critical")))
+               m_severityFilter |= 0x100;
+            else if (!_tcsicmp(p, _T("error")))
+               m_severityFilter |= EVENTLOG_ERROR_TYPE;
+            else if (!_tcsicmp(p, _T("warning")))
+               m_severityFilter |= EVENTLOG_WARNING_TYPE;
+            else if (!_tcsicmp(p, _T("info")) || !_tcsicmp(p, _T("information")))
+               m_severityFilter |= EVENTLOG_INFORMATION_TYPE;
+            else if (!_tcsicmp(p, _T("AuditSuccess")))
+               m_severityFilter |= EVENTLOG_AUDIT_SUCCESS;
+            else if (!_tcsicmp(p, _T("AuditFailure")))
+               m_severityFilter |= EVENTLOG_AUDIT_FAILURE;
+         }
+      }
+   }
+   else
+   {
+      m_severityFilter = 0xFFF;
+   }
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Using severity filter 0x%03X for reader \"%s\""), m_severityFilter, m_name);
 }
 
 /**
@@ -358,6 +394,12 @@ DWORD WINAPI EventLogReader::subscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION actio
       level = EVENTLOG_AUDIT_SUCCESS;
    else if (values[3].UInt64Val & WINEVENT_KEYWORD_AUDIT_FAILURE)
       level = EVENTLOG_AUDIT_FAILURE;
+
+   if ((level & reader->m_severityFilter) == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Event severity level 0x%03X filtered"), level);
+      goto cleanup;
+   }
 
    // Time created
    time_t timestamp;
