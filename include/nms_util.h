@@ -1595,10 +1595,10 @@ public:
    SharedObjectArray(const SharedObjectArray& src) :
       m_pool(src.m_pool.getRegionCapacity()), m_data(src.m_data.size(), src.m_data.sizeIncrement(), Ownership::True, SharedObjectArray<T>::destructor)
    {
+      m_data.setContext(this);
       for(int i = 0; i < src.m_data.size(); i++)
          add(*static_cast<shared_ptr<T>*>(src.m_data.get(i)));
    }
-   virtual ~SharedObjectArray() { }
 
    int add(shared_ptr<T> element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
    int add(T *element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
@@ -1872,25 +1872,25 @@ public:
    T *get(const TCHAR *key) const
    {
       auto p = m_data.get(key);
-      return (p != NULL) ? p->get() : NULL;
+      return (p != nullptr) ? p->get() : nullptr;
    }
 
    T *get(const TCHAR *key, size_t len) const
    {
       auto p = m_data.get(key, len);
-      return (p != NULL) ? p->get() : NULL;
+      return (p != nullptr) ? p->get() : nullptr;
    }
 
    shared_ptr<T> getShared(const TCHAR *key) const
    {
       auto p = m_data.get(key);
-      return (p != NULL) ? *p : m_null;
+      return (p != nullptr) ? *p : m_null;
    }
 
    shared_ptr<T> getShared(const TCHAR *key, size_t len) const
    {
       auto p = m_data.get(key, len);
-      return (p != NULL) ? *p : m_null;
+      return (p != nullptr) ? *p : m_null;
    }
 
    void clear() { m_data.clear(); }
@@ -1900,7 +1900,7 @@ public:
    shared_ptr<T> unlink(const TCHAR *key)
    {
       auto p = m_data.unlink(key);
-      return (p != NULL) ? *p : m_null;
+      return (p != nullptr) ? *p : m_null;
    }
 
    Iterator<std::pair<const TCHAR*, shared_ptr<T>*>> *iterator() { return m_data.iterator(); }
