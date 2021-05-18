@@ -37,6 +37,8 @@ public class LogColumn
 	public static final int LC_ALARM_HD_STATE = 8;
    public static final int LC_ZONE_UIN       = 9;
    public static final int LC_EVENT_ORIGIN   = 10;
+   public static final int LC_TEXT_DETAILS   = 11;
+   public static final int LC_JSON_DETAILS   = 12;
 
 	private String name;
 	private String description;

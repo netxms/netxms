@@ -44,7 +44,8 @@ private:
    TCHAR *m_rcaScriptName;   // Name of root cause analysis script
    time_t m_creationTime;    // Alarm creation time in UNIX time format
    time_t m_lastChangeTime;  // Alarm's last change time in UNIX time format
-   uuid m_rule;              // GUID of EPP rule that generates this alarm
+   uuid m_ruleGuid;  // GUID of EPP rule that generates this alarm
+   TCHAR m_ruleDescription[MAX_DB_STRING];   // Description of EPP rule that generates this alarm
    uint32_t m_sourceObject;    // Source object ID
    int32_t m_zoneUIN;        // Zone UIN for source object
    uint32_t m_sourceEventCode; // Originating event code
@@ -76,7 +77,7 @@ private:
    void executeHookScript();
 
 public:
-   Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& rule, const TCHAR *message, const TCHAR *key, const TCHAR *impact,
+   Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription, const TCHAR *message, const TCHAR *key, const TCHAR *impact,
             int state, int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList);
    Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row);
    Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode = 0);
@@ -88,7 +89,8 @@ public:
    const TCHAR *getRcaScriptName() const { return CHECK_NULL_EX(m_rcaScriptName); }
    time_t getCreationTime() const { return m_creationTime; }
    time_t getLastChangeTime() const { return m_lastChangeTime; }
-   const uuid& getRule() const { return m_rule; }
+   const uuid& getRuleGuid() const { return m_ruleGuid; }
+   const TCHAR *getRuleDescription() const { return m_ruleDescription; }
    uint32_t getSourceObject() const { return m_sourceObject; }
    uint32_t getSourceEventCode() const { return m_sourceEventCode; }
    const TCHAR *getEventTags() const { return m_eventTags; }
@@ -123,7 +125,7 @@ public:
    void addRelatedEvent(UINT64 eventId) { if (m_relatedEvents != NULL) m_relatedEvents->add(eventId); }
    bool isEventRelated(UINT64 eventId) const { return (m_relatedEvents != NULL) && m_relatedEvents->contains(eventId); }
 
-   void updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, int state, int severity, uint32_t timeout,
+   void updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription, int state, int severity, uint32_t timeout,
             uint32_t timeoutEvent, uint32_t ackTimeout, const TCHAR *message, const TCHAR *impact, const IntegerArray<uint32_t>& alarmCategoryList);
    void updateParentAlarm(uint32_t parentAlarmId);
    uint32_t acknowledge(ClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates);
@@ -212,7 +214,7 @@ int GetAlarmCount();
 uint64_t GetAlarmMemoryUsage();
 Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(UINT32 alarmId);
 
-uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state,
+uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *rule_description, const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state,
          int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t parentAlarmId, const TCHAR *rcaScriptName, Event *event,
          uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue);
 uint32_t NXCORE_EXPORTABLE AckAlarmById(uint32_t dwAlarmId, ClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates);

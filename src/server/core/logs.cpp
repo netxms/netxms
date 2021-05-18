@@ -47,6 +47,7 @@ static NXCORE_LOG s_logs[] =
 			{ _T("resolved_by"), _T("Resolved by"), LC_USER_ID, 0 },
 			{ _T("term_by"), _T("Terminated by"), LC_USER_ID, 0 },
          { _T("rule_guid"), _T("Rule"), LC_TEXT, 0 },
+         { _T("rule_description"), _T("Rule Description"), LC_TEXT, 0 },
 			{ _T("alarm_key"), _T("Key"), LC_TEXT, 0 },
          { _T("event_tags"), _T("Event Tags"), LC_TEXT, 0 },
 			{ nullptr, nullptr, 0, 0 }

@@ -1357,6 +1357,7 @@ CREATE TABLE alarms
   creation_time integer not null,
   last_change_time integer not null,
   rule_guid varchar(36) null,
+  rule_description varchar(255) null,
   source_object_id integer not null,
   zone_uin integer not null,
   source_event_code integer not null,
