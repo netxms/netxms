@@ -1426,6 +1426,7 @@ typedef struct
 #define VID_SSH_KEY_COUNT           ((UINT32)746)
 #define VID_SSH_KEY_ID              ((UINT32)747)
 #define VID_DATA_DIRECTORY          ((UINT32)748)
+#define VID_RULE_DESCRIPTION        ((UINT32)749)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

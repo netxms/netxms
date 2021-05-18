@@ -24,11 +24,39 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 38.16 to 40.0
+ * Upgrade from 38.17 to 40.0
+ */
+static bool H_UpgradeFromV17()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 38.16 to 38.17
  */
 static bool H_UpgradeFromV16()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE alarms ADD rule_description varchar(255) null")));
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE alarms SET rule_description=(SELECT REPLACE (REPLACE (REPLACE (REPLACE (comments, ?, ' '), ?, ' '), ?, ' '), '  ', ' ') FROM event_policy WHERE event_policy.rule_guid=alarms.rule_guid)"), false);
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, _T("\n"), DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, _T("\r"), DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, _T("\t"), DB_BIND_STATIC);
+      if (!SQLExecute(hStmt) && !g_ignoreErrors)
+      {
+         DBFreeStatement(hStmt);
+         return false;
+      }
+      DBFreeStatement(hStmt);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(17));
    return true;
 }
 
@@ -56,7 +84,6 @@ static bool H_UpgradeFromV15()
 
    _sntprintf(query, 256, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_TUNNEL_SETUP_ERROR);
    CHK_EXEC(SQLQuery(query));
-
 
    CHK_EXEC(SetMinorSchemaVersion(16));
    return true;
@@ -366,7 +393,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 16, 40, 0,  H_UpgradeFromV16 },
+   { 17, 40, 0,  H_UpgradeFromV17 },
+   { 16, 38, 17, H_UpgradeFromV16 },
    { 15, 38, 16, H_UpgradeFromV15 },
    { 14, 38, 15, H_UpgradeFromV14 },
    { 13, 38, 14, H_UpgradeFromV13 },

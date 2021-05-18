@@ -133,6 +133,7 @@ public class AlarmDetails extends ViewPart
 	private CLabel alarmSource;
    private CLabel alarmDCI;
    private CLabel alarmKey;
+   private CLabel alarmRule;
 	private Text alarmText;
 	private Composite editorsArea;
 	private ImageHyperlink linkAddComment;
@@ -270,14 +271,14 @@ public class AlarmDetails extends ViewPart
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.TOP;
 		alarmSeverity.setLayoutData(gd);
-		
+
 		Label sep = new Label(clientArea, SWT.VERTICAL | SWT.SEPARATOR);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
-		gd.verticalSpan = 4;
+      gd.verticalSpan = 4;
 		sep.setLayoutData(gd);
-		
+
 		final ScrolledComposite textContainer = new ScrolledComposite(clientArea, SWT.H_SCROLL | SWT.V_SCROLL) {
 			@Override
 			public Point computeSize(int wHint, int hHint, boolean changed)
@@ -296,7 +297,7 @@ public class AlarmDetails extends ViewPart
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
-		gd.verticalSpan = 3;
+      gd.verticalSpan = 4;
 		textContainer.setLayoutData(gd);
 		textContainer.addControlListener(new ControlAdapter() {
 			@Override
@@ -322,20 +323,13 @@ public class AlarmDetails extends ViewPart
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.TOP;
 		alarmState.setLayoutData(gd);
-		
+
 		alarmSource = new CLabel(clientArea, SWT.NONE);
 		toolkit.adapt(alarmSource);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.TOP;
 		alarmSource.setLayoutData(gd);
-
-      alarmDCI = new CLabel(clientArea, SWT.NONE);
-      toolkit.adapt(alarmDCI);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.verticalAlignment = SWT.TOP;
-      alarmDCI.setLayoutData(gd);
 
       alarmKey = new CLabel(clientArea, SWT.NONE);
       toolkit.adapt(alarmKey);
@@ -353,8 +347,26 @@ public class AlarmDetails extends ViewPart
             keyImage.dispose();
          }
       });
+
+      alarmRule = new CLabel(clientArea, SWT.NONE);
+      toolkit.adapt(alarmRule);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.BOTTOM;
+      gd.horizontalSpan = 3;
+      alarmRule.setLayoutData(gd);
+
+      final Image eppImage = Activator.getImageDescriptor("icons/epp.png").createImage();
+      alarmRule.setImage(eppImage);
+      alarmRule.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            eppImage.dispose();
+         }
+      });
 	}
-	
+
 	/**
 	 * Create comment section
 	 */
@@ -471,6 +483,14 @@ public class AlarmDetails extends ViewPart
 		dataArea = toolkit.createComposite(dataSection);
 		dataSection.setClient(dataArea);
 		dataArea.setLayout(new FillLayout());
+
+      final Composite clientArea = toolkit.createComposite(dataSection);
+      alarmDCI = new CLabel(clientArea, SWT.NONE);
+      toolkit.adapt(alarmDCI);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.TOP;
+      alarmDCI.setLayoutData(gd);
 	}
 
 	/* (non-Javadoc)
@@ -778,20 +798,22 @@ public class AlarmDetails extends ViewPart
 	{
 		alarmSeverity.setImage(StatusDisplayInfo.getStatusImage(alarm.getCurrentSeverity()));
 		alarmSeverity.setText(StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()));
-		
+
 		int state = alarm.getState();
 		if ((state == Alarm.STATE_ACKNOWLEDGED) && alarm.isSticky())
 			state = Alarm.STATE_TERMINATED + 1;
 		alarmState.setImage(imageCache.add(Activator.getImageDescriptor(stateImage[state])));
 		alarmState.setText(stateText[alarm.getState()]);
-		
+
 		AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
 		alarmSource.setImage((object != null) ? wbLabelProvider.getImage(object) : SharedIcons.IMG_UNKNOWN_OBJECT);
 		alarmSource.setText((object != null) ? object.getObjectName() : ("[" + Long.toString(alarm.getSourceObjectId()) + "]")); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
       alarmKey.setText(alarm.getKey());
 
 		alarmText.setText(alarm.getMessage());
+
+      alarmRule.setText(alarm.getRuleDescription() + "(" + alarm.getRuleId() + ")");
 	}
 
 	/* (non-Javadoc)

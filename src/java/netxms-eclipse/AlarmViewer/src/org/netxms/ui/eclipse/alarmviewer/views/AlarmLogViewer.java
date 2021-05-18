@@ -197,5 +197,5 @@ public class AlarmLogViewer extends LogViewer
             return "Cannot unlink alarm from helpdesk ticket";
          }
       }.start();
-   }   
+   }
 }

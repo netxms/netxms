@@ -3511,7 +3511,11 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *object, const char *attr)
    else if (compareAttributeName(attr, "ruleGuid"))
    {
       TCHAR buffer[64];
-      value = vm->createValue(alarm->getRule().toString(buffer));
+      value = vm->createValue(alarm->getRuleGuid().toString(buffer));
+   }
+   else if (compareAttributeName(attr, "ruleDescription"))
+   {
+      value = vm->createValue(alarm->getRuleDescription());
    }
    else if (compareAttributeName(attr, "severity"))
    {

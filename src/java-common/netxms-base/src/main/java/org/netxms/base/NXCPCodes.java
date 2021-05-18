@@ -1198,6 +1198,8 @@ public class NXCPCodes
    public static final long VID_INCLUDE_PUBLIC_KEY = 745;
    public static final long VID_SSH_KEY_COUNT = 746;
    public static final long VID_SSH_KEY_ID = 747;
+   public static final long VID_DATA_DIRECTORY = 748;
+   public static final long VID_RULE_DESCRIPTION = 749;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

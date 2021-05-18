@@ -24,6 +24,38 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.54 to 40.55
+ */
+static bool H_UpgradeFromV54()
+{
+   if (GetSchemaLevelForMajorVersion(38) < 17)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE alarms ADD rule_description varchar(255) null")));
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE alarms SET rule_description=(SELECT REPLACE (REPLACE (REPLACE (REPLACE (comments, ?, ' '), ?, ' '), ?, ' '), '  ', ' ') FROM event_policy WHERE event_policy.rule_guid=alarms.rule_guid)"), false);
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, _T("\n"), DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, _T("\r"), DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, _T("\t"), DB_BIND_STATIC);
+         if (!SQLExecute(hStmt) && !g_ignoreErrors)
+         {
+            DBFreeStatement(hStmt);
+            return false;
+         }
+         DBFreeStatement(hStmt);
+      }
+      else if (!g_ignoreErrors)
+      {
+         return false;
+      }
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(38, 17));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(55));
+   return true;
+}
+
+/**
  * Upgrade from 40.53 to 40.54
  */
 static bool H_UpgradeFromV53()
@@ -1403,6 +1435,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 54, 40, 55, H_UpgradeFromV54 },
    { 53, 40, 54, H_UpgradeFromV53 },
    { 52, 40, 53, H_UpgradeFromV52 },
    { 51, 40, 52, H_UpgradeFromV51 },

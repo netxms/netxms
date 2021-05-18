@@ -35,7 +35,7 @@
    _T("hd_state,hd_ref,ack_by,repeat_count,") \
    _T("alarm_state,timeout,timeout_event,resolved_by,") \
    _T("ack_timeout,dci_id,alarm_category_ids,") \
-   _T("rule_guid,parent_alarm_id,event_tags,") \
+   _T("rule_guid,rule_description,parent_alarm_id,event_tags,") \
    _T("rca_script_name,impact")
 
 /**
@@ -255,7 +255,7 @@ static uint32_t GetCommentCount(DB_HANDLE hdb, uint32_t alarmId)
 /**
  * Create new alarm from event
  */
-Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& rule, const TCHAR *message, const TCHAR *key,
+Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR* ruleDescription, const TCHAR *message, const TCHAR *key,
          const TCHAR *impact, int state, int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t ackTimeout,
          const IntegerArray<uint32_t>& alarmCategoryList) : m_alarmCategoryList(alarmCategoryList)
 {
@@ -265,7 +265,13 @@ Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, c
    m_sourceEventId = event->getId();
    m_sourceEventCode = event->getCode();
    m_eventTags = MemCopyString(event->getTagsAsList());
-   m_rule = rule;
+   m_ruleGuid = ruleGuid;
+   StringBuffer buffer = StringBuffer(ruleDescription);
+   buffer.replace(_T("\n"), _T(" "));
+   buffer.replace(_T("\r"), _T(" "));
+   buffer.replace(_T("\t"), _T(" "));
+   buffer.replace(_T("  "), _T(" "));
+   _tcslcpy(m_ruleDescription, buffer, MAX_DB_STRING);
    m_sourceObject = event->getSourceId();
    m_zoneUIN = event->getZoneUIN();
    m_dciId = event->getDciId();
@@ -332,11 +338,12 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
    }
    MemFree(ids);
 
-   m_rule = DBGetFieldGUID(hResult, row, 22);
-   m_parentAlarmId = DBGetFieldULong(hResult, row, 23);
-   m_eventTags = DBGetField(hResult, row, 24, nullptr, 0);
-   m_rcaScriptName = DBGetField(hResult, row, 25, nullptr, 0);
-   m_impact = DBGetField(hResult, row, 26, nullptr, 0);
+   m_ruleGuid = DBGetFieldGUID(hResult, row, 22);
+   DBGetField(hResult, row, 23, m_ruleDescription, MAX_DB_STRING);
+   m_parentAlarmId = DBGetFieldULong(hResult, row, 24);
+   m_eventTags = DBGetField(hResult, row, 25, nullptr, 0);
+   m_rcaScriptName = DBGetField(hResult, row, 26, nullptr, 0);
+   m_impact = DBGetField(hResult, row, 27, nullptr, 0);
    m_notificationCode = 0;
 
    m_commentCount = GetCommentCount(hdb, m_alarmId);
@@ -371,7 +378,8 @@ Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode) : m_a
    m_rcaScriptName = MemCopyString(src->m_rcaScriptName);
    m_creationTime = src->m_creationTime;
    m_lastChangeTime = src->m_lastChangeTime;
-   m_rule = src->m_rule;
+   m_ruleGuid = src->m_ruleGuid;
+   _tcscpy(m_ruleDescription, src->m_ruleDescription);
    m_sourceObject = src->m_sourceObject;
    m_zoneUIN = src->m_zoneUIN;
    m_sourceEventCode = src->m_sourceEventCode;
@@ -526,9 +534,9 @@ void Alarm::createInDatabase()
               _T("source_object_id,zone_uin,source_event_code,message,original_severity,")
               _T("current_severity,alarm_key,alarm_state,ack_by,resolved_by,hd_state,")
               _T("hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id,")
-              _T("ack_timeout,dci_id,alarm_category_ids,rule_guid,event_tags,rca_script_name,")
-              _T("impact) ")
-              _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+              _T("ack_timeout,dci_id,alarm_category_ids,rule_guid,rule_description,event_tags,")
+              _T("rca_script_name,impact) ")
+              _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_alarmId);
@@ -555,13 +563,19 @@ void Alarm::createInDatabase()
       DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, (UINT32)m_ackTimeout);
       DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_dciId);
       DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, categoryListToString(), DB_BIND_TRANSIENT);
-      if (!m_rule.isNull())
-         DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_rule);
+      if (!m_ruleGuid.isNull())
+      {
+         DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_ruleGuid);
+         DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_ruleDescription, MAX_DB_STRING);
+      }
       else
+      {
          DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-      DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_eventTags, DB_BIND_STATIC, 2000);
-      DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
-      DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, m_impact, DB_BIND_STATIC, 1000);
+         DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+      }
+      DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_eventTags, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
+      DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_impact, DB_BIND_STATIC, 1000);
 
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -582,7 +596,7 @@ void Alarm::updateInDatabase()
             _T("last_change_time=?,current_severity=?,repeat_count=?,")
             _T("hd_state=?,hd_ref=?,timeout=?,timeout_event=?,")
             _T("message=?,resolved_by=?,ack_timeout=?,source_object_id=?,")
-            _T("dci_id=?,alarm_category_ids=?,rule_guid=?,event_tags=?,")
+            _T("dci_id=?,alarm_category_ids=?,rule_guid=?,rule_description=?,event_tags=?,")
             _T("parent_alarm_id=?,rca_script_name=?,impact=? WHERE alarm_id=?"));
    if (hStmt != nullptr)
    {
@@ -602,15 +616,21 @@ void Alarm::updateInDatabase()
       DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_sourceObject);
       DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dciId);
       DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, categoryListToString(), DB_BIND_TRANSIENT);
-      if (!m_rule.isNull())
-         DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_rule);
+      if (!m_ruleGuid.isNull())
+      {
+         DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_ruleGuid);
+         DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_ruleDescription, MAX_DB_STRING);
+      }
       else
+      {
          DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-      DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_eventTags, DB_BIND_STATIC, 2000);
-      DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_parentAlarmId);
-      DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
-      DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_impact, DB_BIND_STATIC, 1000);
-      DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_alarmId);
+         DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+      }
+      DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_eventTags, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_parentAlarmId);
+      DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
+      DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_impact, DB_BIND_STATIC, 1000);
+      DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_alarmId);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -637,7 +657,8 @@ void Alarm::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_ACK_BY_USER, m_ackByUser);
    msg->setField(VID_RESOLVED_BY_USER, m_resolvedByUser);
    msg->setField(VID_TERMINATED_BY_USER, m_termByUser);
-   msg->setField(VID_RULE_ID, m_rule);
+   msg->setField(VID_RULE_ID, m_ruleGuid);
+   msg->setField(VID_RULE_DESCRIPTION, m_ruleDescription);
    msg->setField(VID_EVENT_CODE, m_sourceEventCode);
    msg->setField(VID_EVENT_ID, m_sourceEventId);
    msg->setField(VID_TAGS, m_eventTags);
@@ -791,13 +812,20 @@ static void FillAlarmEventsMessage(NXCPMessage *msg, uint32_t alarmId)
 /**
  * Update existing alarm from event
  */
-void Alarm::updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, int state, int severity, uint32_t timeout, uint32_t timeoutEvent,
+void Alarm::updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR* ruleDescription, int state, int severity, uint32_t timeout, uint32_t timeoutEvent,
          uint32_t ackTimeout, const TCHAR *message, const TCHAR *impact, const IntegerArray<uint32_t>& alarmCategoryList)
 {
    m_repeatCount++;
    m_parentAlarmId = parentAlarmId;
    MemFree(m_rcaScriptName);
    m_rcaScriptName = MemCopyString(rcaScriptName);
+   m_ruleGuid = ruleGuid;
+   StringBuffer buffer = StringBuffer(ruleDescription);
+   buffer.replace(_T("\n"), _T(" "));
+   buffer.replace(_T("\r"), _T(" "));
+   buffer.replace(_T("\t"), _T(" "));
+   buffer.replace(_T("  "), _T(" "));
+   _tcslcpy(m_ruleDescription, buffer, MAX_DB_STRING);
    m_lastChangeTime = time(nullptr);
    m_sourceObject = event->getSourceId();
    m_dciId = event->getDciId();
@@ -849,7 +877,7 @@ void Alarm::updateParentAlarm(uint32_t parentAlarmId)
 /**
  * Create new alarm
  */
-uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state,
+uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *ruleDescription, const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state,
          int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t parentAlarmId, const TCHAR *rcaScriptName, Event *event,
          uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue)
 {
@@ -875,7 +903,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message
             if (parent != nullptr)
                parent->addSubordinateAlarm(alarm->getAlarmId());
          }
-         alarm->updateFromEvent(event, parentAlarmId, rcaScriptName, state, severity, timeout, timeoutEvent, ackTimeout, message, impact, alarmCategoryList);
+         alarm->updateFromEvent(event, parentAlarmId, rcaScriptName, ruleGuid, ruleDescription, state, severity, timeout, timeoutEvent, ackTimeout, message, impact, alarmCategoryList);
          if (!alarm->isEventRelated(event->getId()))
          {
             alarmId = alarm->getAlarmId();      // needed for correct update of related events
@@ -895,7 +923,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *message
    if (newAlarm)
    {
       // Create new alarm structure
-      Alarm *alarm = new Alarm(event, parentAlarmId, rcaScriptName, rule, message, key, impact, state, severity, timeout, timeoutEvent, ackTimeout, alarmCategoryList);
+      Alarm *alarm = new Alarm(event, parentAlarmId, rcaScriptName, ruleGuid, ruleDescription, message, key, impact, state, severity, timeout, timeoutEvent, ackTimeout, alarmCategoryList);
       alarmId = alarm->getAlarmId();
 
       // Open helpdesk issue

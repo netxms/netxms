@@ -20,6 +20,7 @@ package org.netxms.client.events;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.UUID;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -75,6 +76,8 @@ public class Alarm
    private int ackTime;
    private long[] categories;
    private long[] subordinateAlarms;
+   private UUID ruleId;
+   private String ruleDescription;
 
    /**
     * @param msg Source NXCP message
@@ -107,6 +110,8 @@ public class Alarm
       ackTime = msg.getFieldAsInt32(NXCPCodes.VID_TIMESTAMP);
       categories = msg.getFieldAsUInt32Array(NXCPCodes.VID_CATEGORY_LIST);
       subordinateAlarms = msg.getFieldAsUInt32Array(NXCPCodes.VID_SUBORDINATE_ALARMS);
+      ruleId = msg.getFieldAsUUID(NXCPCodes.VID_RULE_ID);
+      ruleDescription = msg.getFieldAsString(NXCPCodes.VID_RULE_DESCRIPTION);
    }
 
    /**
@@ -379,6 +384,26 @@ public class Alarm
    }
 
    /**
+    * Get unique ID of Event Processing Policy rule that caused the alarm
+    *
+    * @return the rule UUID
+    */
+   public UUID getRuleId()
+   {
+      return ruleId;
+   }
+
+   /**
+    * Get description of Event Processing Policy rule that caused the alarm
+    *
+    * @return the rule Description
+    */
+   public String getRuleDescription()
+   {
+      return ruleDescription;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -392,6 +417,6 @@ public class Alarm
             + ", message=" + message + ", key=" + key + ", helpdeskState=" + helpdeskState + ", helpdeskReference="
             + helpdeskReference + ", timeout=" + timeout + ", timeoutEvent=" + timeoutEvent + ", commentsCount=" + commentsCount
             + ", ackTime=" + ackTime + ", categories=" + Arrays.toString(categories) + ", subordinateAlarms="
-            + Arrays.toString(subordinateAlarms) + "]";
+            + Arrays.toString(subordinateAlarms) + ", eppGuid=" + ruleId + ", eppDescription=" + ruleDescription + "]";
    }
 }
