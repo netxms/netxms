@@ -1134,6 +1134,9 @@ void DCObject::setTransformationScript(const TCHAR *source)
          m_transformationScript = NXSLCompile(m_transformationScriptSource, errorText, 1024, nullptr);
          if (m_transformationScript == nullptr)
          {
+            TCHAR buffer[1024];
+            _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
+            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, errorText, m_id);
             nxlog_write(NXLOG_WARNING, _T("Failed to compile transformation script for object %s [%u] DCI %s [%u] (%s)"),
                      getOwnerName(), getOwnerId(), m_name.cstr(), m_id, errorText);
          }
