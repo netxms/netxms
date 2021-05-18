@@ -973,10 +973,10 @@ public:
    uint32_t setServerId(uint64_t serverId);
    uint32_t executeCommand(const TCHAR *command, const StringList &args, bool withOutput = false,
          void (*outputCallback)(ActionCallbackEvent, const TCHAR*, void*) = nullptr, void *cbData = nullptr);
-   UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
-            void (* progressCallback)(INT64, void *) = nullptr, void *cbArg = nullptr,
+   uint32_t uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
+            void (* progressCallback)(size_t, void *) = nullptr, void *cbArg = nullptr,
             NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
-   UINT32 downloadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
+   uint32_t downloadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
             void (* progressCallback)(size_t, void *) = nullptr, void *cbArg = nullptr,
             NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
    uint32_t getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **info);

@@ -207,10 +207,10 @@ ServerJobResult FileUploadJob::run()
 /**
  * Upload progress callback
  */
-void FileUploadJob::uploadCallback(INT64 size, void *arg)
+void FileUploadJob::uploadCallback(size_t size, void *arg)
 {
 	if (static_cast<FileUploadJob*>(arg)->m_fileSize > 0)
-	   static_cast<FileUploadJob*>(arg)->markProgress((int)(size * _LL(100) / static_cast<FileUploadJob*>(arg)->m_fileSize));
+	   static_cast<FileUploadJob*>(arg)->markProgress(static_cast<int>((size * _LL(100) / static_cast<FileUploadJob*>(arg)->m_fileSize)));
 	else
 	   static_cast<FileUploadJob*>(arg)->markProgress(100);
 }

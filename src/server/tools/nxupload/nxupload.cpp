@@ -110,13 +110,9 @@ static int UpgradeAgent(AgentConnection *conn, const TCHAR *pszPkgName, RSA *ser
 /**
  * Upload progress callback
  */
-static void ProgressCallback(INT64 bytesTransferred, void *cbArg)
+static void ProgressCallback(size_t bytesTransferred, void *cbArg)
 {
-#ifdef _WIN32
-	_tprintf(_T("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%-16I64d"), bytesTransferred);
-#else
-	_tprintf(_T("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%-16lld"), bytesTransferred);
-#endif
+	_tprintf(_T("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b") UINT64_FMT_ARGS(_T("-16")), static_cast<uint64_t>(bytesTransferred));
 }
 
 /**
