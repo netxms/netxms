@@ -1694,21 +1694,15 @@ uint32_t AgentConnection::executeCommand(const TCHAR *command, const StringList 
 /**
  * Upload file to agent
  */
-UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
-         void (* progressCallback)(INT64, void *), void *cbArg, NXCPStreamCompressionMethod compMethod)
+uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
+         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod)
 {
-   UINT32 dwRqId, dwResult;
-   NXCPMessage msg(m_nProtocolVersion);
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
 
    // Disable compression if it is disabled on connection level or if agent do not support it
    if (!m_allowCompression || (m_nProtocolVersion < 4))
       compMethod = NXCP_STREAM_COMPRESSION_NONE;
-
-   if (!m_isConnected)
-      return ERR_NOT_CONNECTED;
-
-   dwRqId = generateRequestId();
-   msg.setId(dwRqId);
 
    time_t lastModTime = 0;
    NX_STAT_STRUCT st;
@@ -1716,6 +1710,10 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    {
       lastModTime = st.st_mtime;
    }
+
+   NXCPMessage msg(m_nProtocolVersion);
+   uint32_t requestId = generateRequestId();
+   msg.setId(requestId);
 
    // Use core agent if destination file name is not set and file manager subagent otherwise
    if ((destinationFile == nullptr) || (*destinationFile == 0))
@@ -1735,16 +1733,17 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    }
    msg.setFieldFromTime(VID_MODIFICATION_TIME, lastModTime);
 
+   uint32_t rcc;
    if (sendMessage(&msg))
    {
-      dwResult = waitForRCC(dwRqId, m_commandTimeout);
+      rcc = waitForRCC(requestId, m_commandTimeout);
    }
    else
    {
-      dwResult = ERR_CONNECTION_BROKEN;
+      rcc = ERR_CONNECTION_BROKEN;
    }
 
-   if (dwResult == ERR_SUCCESS)
+   if (rcc == ERR_SUCCESS)
    {
       shared_ptr<AbstractCommChannel> channel = acquireChannel();
       if (channel != nullptr)
@@ -1753,56 +1752,53 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
                   localFile, (compMethod == NXCP_STREAM_COMPRESSION_NONE) ? _T("without") : _T("with"));
          m_fileUploadInProgress = true;
          shared_ptr<NXCPEncryptionContext> ctx = acquireEncryptionContext();
-         if (SendFileOverNXCP(channel.get(), dwRqId, localFile, ctx.get(), 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
-            dwResult = waitForRCC(dwRqId, m_commandTimeout);
+         if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
+            rcc = waitForRCC(requestId, std::max(m_commandTimeout, static_cast<uint32_t>(30000)));  // Wait at least 30 seconds for file transfer confirmation
          else
-            dwResult = ERR_IO_FAILURE;
+            rcc = ERR_IO_FAILURE;
          m_fileUploadInProgress = false;
       }
       else
       {
-         dwResult = ERR_CONNECTION_BROKEN;
+         rcc = ERR_CONNECTION_BROKEN;
       }
    }
 
-   return dwResult;
+   return rcc;
 }
 
 /**
  * Download file from agent
  */
-UINT32 AgentConnection::downloadFile(const TCHAR *sourceFile, const TCHAR *destinationFile, bool allowPathExpansion,
+uint32_t AgentConnection::downloadFile(const TCHAR *sourceFile, const TCHAR *destinationFile, bool allowPathExpansion,
          void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod)
 {
-   NXCPMessage msg(m_nProtocolVersion);
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
 
    // Disable compression if it is disabled on connection level or if agent do not support it
    if (!m_allowCompression || (m_nProtocolVersion < 4))
       compMethod = NXCP_STREAM_COMPRESSION_NONE;
 
-   if (!m_isConnected)
-      return ERR_NOT_CONNECTED;
-
-   msg.setId(generateRequestId());
-   msg.setCode(CMD_GET_AGENT_FILE);
+   NXCPMessage msg(CMD_GET_AGENT_FILE, generateRequestId(), m_nProtocolVersion);
    msg.setField(VID_FILE_NAME, sourceFile);
    msg.setField(VID_ALLOW_PATH_EXPANSION, allowPathExpansion);
    msg.setField(VID_FILE_OFFSET, 0);
 
    NXCPMessage *response = customRequest(&msg, destinationFile, false, progressCallback, nullptr, nullptr);
-   UINT32 dwResult;
+   uint32_t rcc;
    if (response != nullptr)
    {
-      dwResult = response->getFieldAsUInt32(VID_RCC);
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Download request for file %s RCC=%u (%s)"), sourceFile, dwResult, AgentErrorCodeToText(dwResult));
+      rcc = response->getFieldAsUInt32(VID_RCC);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Download request for file %s RCC=%u (%s)"), sourceFile, rcc, AgentErrorCodeToText(rcc));
       delete response;
    }
    else
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Download request for file %s timeout"), sourceFile);
-      dwResult = ERR_REQUEST_TIMEOUT;
+      rcc = ERR_REQUEST_TIMEOUT;
    }
-   return dwResult;
+   return rcc;
 }
 
 /**

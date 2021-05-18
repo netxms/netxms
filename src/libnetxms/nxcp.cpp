@@ -601,7 +601,7 @@ NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(uint16_t code, uint32_t 
  * Send file over NXCP
  */
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, const TCHAR *fileName, NXCPEncryptionContext *ectx, off_t offset,
-         void (* progressCallback)(int64_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
+         void (* progressCallback)(size_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
 {
    SocketCommChannel ch(hSocket, nullptr, Ownership::False);
    bool result = SendFileOverNXCP(&ch, requestId, fileName, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag);
@@ -612,7 +612,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, c
  * Send file over NXCP
  */
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_t requestId, const TCHAR *fileName, NXCPEncryptionContext *ectx, off_t offset,
-         void (* progressCallback)(int64_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
+         void (* progressCallback)(size_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
 {
    std::ifstream s;
 #ifdef UNICODE
@@ -635,7 +635,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
  * Send file over NXCP
  */
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, std::istream *stream, NXCPEncryptionContext *ectx, off_t offset,
-         void (* progressCallback)(int64_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
+         void (* progressCallback)(size_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
 {
    SocketCommChannel ch(hSocket, nullptr, Ownership::False);
    bool result = SendFileOverNXCP(&ch, requestId, stream, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag);
@@ -646,10 +646,10 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, s
  * Send file over NXCP
  */
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_t requestId, std::istream *stream, NXCPEncryptionContext *ectx, off_t offset,
-         void (* progressCallback)(int64_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
+         void (* progressCallback)(size_t, void *), void *cbArg, MUTEX mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
 {
    bool success = false;
-   int64_t bytesTransferred = 0;
+   size_t bytesTransferred = 0;
 
    stream->seekg(offset, (offset < 0) ? std::ios_base::end : std::ios_base::beg);
    if (!stream->fail())

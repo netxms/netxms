@@ -199,7 +199,7 @@ private:
 
    void setLocalFileFullPath();
 
-   static void uploadCallback(INT64 size, void *arg);
+   static void uploadCallback(size_t size, void *arg);
 
 protected:
 	virtual ServerJobResult run() override;

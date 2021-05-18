@@ -996,7 +996,7 @@ uint32_t CommSession::openFile(TCHAR *szFullPath, uint32_t requestId, time_t fil
 /**
  * Progress callback for file sending
  */
-static void SendFileProgressCallback(INT64 bytesTransferred, void *cbArg)
+static void SendFileProgressCallback(size_t bytesTransferred, void *cbArg)
 {
 	static_cast<CommSession*>(cbArg)->updateTimeStamp();
 }
