@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,11 @@ public class Alarm
    public static final int STATE_ACKNOWLEDGED = 1;
    public static final int STATE_RESOLVED = 2;
    public static final int STATE_TERMINATED = 3;
+
+   public static final int STATE_BIT_OUTSTANDING = 0x01;
+   public static final int STATE_BIT_ACKNOWLEDGED = 0x02;
+   public static final int STATE_BIT_RESOLVED = 0x04;
+   public static final int STATE_BIT_TERMINATED = 0x08;
 
    public static final int STATE_MASK = 0x0F;
 
@@ -160,11 +165,35 @@ public class Alarm
    }
 
    /**
-    * @return the state
+    * Get alarm state.
+    *
+    * @return alarm state
     */
    public int getState()
    {
       return state;
+   }
+
+   /**
+    * Get alarm state bit. It can be used to match against state filter bit mask.
+    *
+    * @return alarm state bit
+    */
+   public int getStateBit()
+   {
+      switch(state)
+      {
+         case STATE_ACKNOWLEDGED:
+            return STATE_BIT_ACKNOWLEDGED;
+         case STATE_OUTSTANDING:
+            return STATE_BIT_OUTSTANDING;
+         case STATE_RESOLVED:
+            return STATE_BIT_RESOLVED;
+         case STATE_TERMINATED:
+            return STATE_BIT_TERMINATED;
+         default:
+            return 0;
+      }
    }
 
    /**

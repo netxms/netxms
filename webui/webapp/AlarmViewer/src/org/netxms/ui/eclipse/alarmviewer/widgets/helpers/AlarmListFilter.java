@@ -37,14 +37,14 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class AlarmListFilter extends ViewerFilter
 {
    private static final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Resolved, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };
-   
+
    private Set<Long> rootObjects = new HashSet<Long>();
-   private int stateFilter = -1;
+   private int stateFilter = 0xFF;
    private int severityFilter = 0xFF;
    private NXCSession session = ConsoleSharedData.getSession();
    private String filterString = null;
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
@@ -186,7 +186,7 @@ public class AlarmListFilter extends ViewerFilter
     */
    public boolean filter(Alarm alarm)
    {
-      if ((stateFilter != -1) && (alarm.getState() != stateFilter))
+      if ((alarm.getStateBit() & stateFilter) == 0)
          return false;
 
       if (((1 << alarm.getCurrentSeverity().getValue()) & severityFilter) == 0)

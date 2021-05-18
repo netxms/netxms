@@ -32,16 +32,19 @@ import org.simpleframework.xml.Serializer;
  */
 public class AlarmViewerConfig extends DashboardElementConfig
 {
-	@Element(required=true)
+   @Element(required = true)
 	private long objectId = 0;
 
-	@Element(required=false)
+   @Element(required = false)
 	private String title = ""; //$NON-NLS-1$
 	
-	@Element(required=false)
+   @Element(required = false)
 	private int severityFilter = 0xFF;
-   
-   @Element(required=false)
+
+   @Element(required = false)
+   private int stateFilter = 0xFF;
+
+   @Element(required = false)
    private boolean isLocalSoundEnabled = false;
 
 	/**
@@ -57,9 +60,9 @@ public class AlarmViewerConfig extends DashboardElementConfig
 		return serializer.read(AlarmViewerConfig.class, xml);
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#createXml()
+    */
 	@Override
 	public String createXml() throws Exception
 	{
@@ -69,9 +72,9 @@ public class AlarmViewerConfig extends DashboardElementConfig
 		return writer.toString();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
+    */
 	@Override
 	public Set<Long> getObjects()
 	{
@@ -80,9 +83,9 @@ public class AlarmViewerConfig extends DashboardElementConfig
 		return objects;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
+    */
 	@Override
 	public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
 	{
@@ -139,6 +142,26 @@ public class AlarmViewerConfig extends DashboardElementConfig
 	{
 		this.severityFilter = severityFilter;
 	}
+
+   /**
+    * Get alarm state filter.
+    *
+    * @return alarm state filter
+    */
+   public int getStateFilter()
+   {
+      return stateFilter;
+   }
+
+   /**
+    * Set alarm state filter.
+    *
+    * @param stateFilter new alarm state filter
+    */
+   public void setStateFilter(int stateFilter)
+   {
+      this.stateFilter = stateFilter;
+   }
 
    public boolean getIsLocalSoundEnabled()
    {
