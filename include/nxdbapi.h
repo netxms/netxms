@@ -208,8 +208,8 @@ bool LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn);
 StringList LIBNXDB_EXPORTABLE *DBGetTableList(DB_HANDLE hdb);
 int LIBNXDB_EXPORTABLE DBIsTableExist(DB_HANDLE conn, const TCHAR *table);
 
-bool LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn, INT32 *major, INT32 *minor);
-int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn, const TCHAR *fallback = NULL);
+bool LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn, int32_t *major, int32_t *minor);
+int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn, const TCHAR *fallback = nullptr);
 void LIBNXDB_EXPORTABLE DBSetSyntaxReader(bool (*reader)(DB_HANDLE, TCHAR *));
 
 StringBuffer LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int maxSize = -1);

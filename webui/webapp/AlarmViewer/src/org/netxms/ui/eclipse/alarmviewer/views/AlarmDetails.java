@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -151,17 +151,17 @@ public class AlarmDetails extends ViewPart
 	private long dciId;
 	private ViewRefreshController refreshController = null;
 	private boolean updateInProgress = false;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 		wbLabelProvider = new WorkbenchLabelProvider();
-		
+
 		try
 		{
 			alarmId = Long.parseLong(site.getSecondaryId());
@@ -174,9 +174,9 @@ public class AlarmDetails extends ViewPart
 		setPartName(getPartName() + " [" + Long.toString(alarmId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -200,7 +200,6 @@ public class AlarmDetails extends ViewPart
 
 		refresh();
 	}
-	
 
 	/**
 	 * Create actions
@@ -428,14 +427,14 @@ public class AlarmDetails extends ViewPart
 			{
 			}
 		});
-		
+
       final Composite content = toolkit.createComposite(section);
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
       content.setLayout(layout);
       section.setClient(content);
-      
+
 		final String[] names = { Messages.get().AlarmDetails_Column_Severity, Messages.get().AlarmDetails_Column_Source, Messages.get().AlarmDetails_Column_Name, Messages.get().AlarmDetails_Column_Message, Messages.get().AlarmDetails_Column_Timestamp };
 		final int[] widths = { 130, 160, 160, 400, 150 };
 		eventViewer = new SortableTreeViewer(content, names, widths, EV_COLUMN_TIMESTAMP, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION);
@@ -443,7 +442,7 @@ public class AlarmDetails extends ViewPart
 		eventViewer.setLabelProvider(new EventTreeLabelProvider());
 		eventViewer.setComparator(new EventTreeComparator());
 		eventViewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		
+
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		WidgetHelper.restoreTreeViewerSettings(eventViewer, settings, "AlarmDetails.Events"); //$NON-NLS-1$
 		eventViewer.getControl().addDisposeListener(new DisposeListener() {
@@ -491,9 +490,9 @@ public class AlarmDetails extends ViewPart
       alarmDCI.setLayoutData(gd);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
@@ -575,7 +574,7 @@ public class AlarmDetails extends ViewPart
                            Threshold t = dci.getActiveThreshold();
    						      alarmDCI.setText(dci.getDescription() + ((t != null) ? (" (" + t.getTextualRepresentation() + ")") : " (OK)"));
    						      alarmDCI.setImage(imageCache.add(Activator.getImageDescriptor(dciStatusImage[dci.getStatus()])));
-   						      
+
    						      createDataAreaElements(alarm, dci);
       				         refreshData();
    						   }
@@ -608,7 +607,7 @@ public class AlarmDetails extends ViewPart
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -808,15 +807,13 @@ public class AlarmDetails extends ViewPart
 		alarmSource.setText((object != null) ? object.getObjectName() : ("[" + Long.toString(alarm.getSourceObjectId()) + "]")); //$NON-NLS-1$ //$NON-NLS-2$
 
       alarmKey.setText(alarm.getKey());
-
 		alarmText.setText(alarm.getMessage());
-
-      alarmRule.setText(alarm.getRuleDescription() + "(" + alarm.getRuleId() + ")");
+      alarmRule.setText(String.format("Created by rule \"%s\" (%s)", alarm.getRuleDescription(), alarm.getRuleId().toString()));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{

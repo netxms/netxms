@@ -58,10 +58,10 @@ void ReindexIData();
 bool ExecSQLBatch(const char *pszFile, bool showOutput);
 bool ValidateDatabase();
 
-bool SetMajorSchemaVersion(INT32 nextMajor, INT32 nextMinor);
-bool SetMinorSchemaVersion(INT32 nextMinor);
-INT32 GetSchemaLevelForMajorVersion(INT32 major);
-bool SetSchemaLevelForMajorVersion(INT32 major, INT32 level);
+bool SetMajorSchemaVersion(int32_t nextMajor, int32_t nextMinor);
+bool SetMinorSchemaVersion(int32_t nextMinor);
+INT32 GetSchemaLevelForMajorVersion(int32_t major);
+bool SetSchemaLevelForMajorVersion(int32_t major, int32_t level);
 
 void RegisterOnlineUpgrade(int major, int minor);
 void UnregisterOnlineUpgrade(int major, int minor);

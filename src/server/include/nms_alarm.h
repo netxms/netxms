@@ -77,8 +77,9 @@ private:
    void executeHookScript();
 
 public:
-   Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription, const TCHAR *message, const TCHAR *key, const TCHAR *impact,
-            int state, int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList);
+   Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription,
+            const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state, int severity, uint32_t timeout,
+            uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList);
    Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row);
    Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode = 0);
    ~Alarm();
