@@ -111,7 +111,7 @@ bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table,
  * Get database schema version
  * Will return false if version cannot be determined
  */
-bool LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn, INT32 *major, INT32 *minor)
+bool LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn, int32_t *major, int32_t *minor)
 {
 	DB_RESULT hResult;
 

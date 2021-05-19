@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,9 +43,9 @@ bool MajorSchemaUpgrade_V40();
 /**
  * Move to next major version of DB schema
  */
-bool SetMajorSchemaVersion(INT32 nextMajor, INT32 nextMinor)
+bool SetMajorSchemaVersion(int32_t nextMajor, int32_t nextMinor)
 {
-   INT32 currMajor, currMinor;
+   int32_t currMajor, currMinor;
    if (!DBGetSchemaVersion(g_dbHandle, &currMajor, &currMinor))
       return false;
 
@@ -72,7 +72,7 @@ bool SetMajorSchemaVersion(INT32 nextMajor, INT32 nextMinor)
 /**
  * Move to next minor version of DB schema
  */
-bool SetMinorSchemaVersion(INT32 nextMinor)
+bool SetMinorSchemaVersion(int32_t nextMinor)
 {
    TCHAR query[256];
    _sntprintf(query, 256, _T("UPDATE metadata SET var_value='%d' WHERE var_name='SchemaVersionMinor'"), nextMinor);
@@ -82,17 +82,17 @@ bool SetMinorSchemaVersion(INT32 nextMinor)
 /**
  * Get last used schema level for given major version
  */
-INT32 GetSchemaLevelForMajorVersion(INT32 major)
+int32_t GetSchemaLevelForMajorVersion(int32_t major)
 {
    TCHAR var[64];
    _sntprintf(var, 64, _T("SchemaVersionLevel.%d"), major);
-   return DBMgrMetaDataReadInt32(var, -1);
+   return DBMgrMetaDataReadInt32(var, INT_MAX);
 }
 
 /**
  * Set last used schema level for given major version
  */
-bool SetSchemaLevelForMajorVersion(INT32 major, INT32 level)
+bool SetSchemaLevelForMajorVersion(int32_t major, int32_t level)
 {
    TCHAR var[64], query[256];
    _sntprintf(var, 64, _T("SchemaVersionLevel.%d"), major);

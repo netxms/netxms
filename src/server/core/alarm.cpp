@@ -28,14 +28,9 @@
  * Column list for loading alarms from database
  */
 #define ALARM_LOAD_COLUMN_LIST \
-   _T("alarm_id,source_object_id,zone_uin,") \
-   _T("source_event_code,source_event_id,message,") \
-   _T("original_severity,current_severity,") \
-   _T("alarm_key,creation_time,last_change_time,") \
-   _T("hd_state,hd_ref,ack_by,repeat_count,") \
-   _T("alarm_state,timeout,timeout_event,resolved_by,") \
-   _T("ack_timeout,dci_id,alarm_category_ids,") \
-   _T("rule_guid,rule_description,parent_alarm_id,event_tags,") \
+   _T("alarm_id,source_object_id,zone_uin,source_event_code,source_event_id,message,original_severity,current_severity,") \
+   _T("alarm_key,creation_time,last_change_time,hd_state,hd_ref,ack_by,repeat_count,alarm_state,timeout,timeout_event,") \
+   _T("resolved_by,ack_timeout,dci_id,alarm_category_ids,rule_guid,rule_description,parent_alarm_id,event_tags,") \
    _T("rca_script_name,impact")
 
 /**
@@ -255,9 +250,9 @@ static uint32_t GetCommentCount(DB_HANDLE hdb, uint32_t alarmId)
 /**
  * Create new alarm from event
  */
-Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR* ruleDescription, const TCHAR *message, const TCHAR *key,
-         const TCHAR *impact, int state, int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t ackTimeout,
-         const IntegerArray<uint32_t>& alarmCategoryList) : m_alarmCategoryList(alarmCategoryList)
+Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription,
+         const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state, int severity, uint32_t timeout,
+         uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList) : m_alarmCategoryList(alarmCategoryList)
 {
    m_alarmId = CreateUniqueId(IDG_ALARM);
    m_parentAlarmId = parentAlarmId;
@@ -266,12 +261,14 @@ Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, c
    m_sourceEventCode = event->getCode();
    m_eventTags = MemCopyString(event->getTagsAsList());
    m_ruleGuid = ruleGuid;
+
    StringBuffer buffer = StringBuffer(ruleDescription);
    buffer.replace(_T("\n"), _T(" "));
    buffer.replace(_T("\r"), _T(" "));
    buffer.replace(_T("\t"), _T(" "));
    buffer.replace(_T("  "), _T(" "));
    _tcslcpy(m_ruleDescription, buffer, MAX_DB_STRING);
+
    m_sourceObject = event->getSourceId();
    m_zoneUIN = event->getZoneUIN();
    m_dciId = event->getDciId();
@@ -530,12 +527,10 @@ void Alarm::createInDatabase()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb,
-              _T("INSERT INTO alarms (alarm_id,parent_alarm_id,creation_time,last_change_time,")
-              _T("source_object_id,zone_uin,source_event_code,message,original_severity,")
-              _T("current_severity,alarm_key,alarm_state,ack_by,resolved_by,hd_state,")
-              _T("hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id,")
-              _T("ack_timeout,dci_id,alarm_category_ids,rule_guid,rule_description,event_tags,")
-              _T("rca_script_name,impact) ")
+              _T("INSERT INTO alarms (alarm_id,parent_alarm_id,creation_time,last_change_time,source_object_id,zone_uin,")
+              _T("source_event_code,message,original_severity,current_severity,alarm_key,alarm_state,ack_by,resolved_by,")
+              _T("hd_state,hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id,ack_timeout,dci_id,")
+              _T("alarm_category_ids,rule_guid,rule_description,event_tags,rca_script_name,impact) ")
               _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
@@ -566,13 +561,12 @@ void Alarm::createInDatabase()
       if (!m_ruleGuid.isNull())
       {
          DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_ruleGuid);
-         DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_ruleDescription, MAX_DB_STRING);
       }
       else
       {
          DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-         DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
       }
+      DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_ruleDescription, DB_BIND_STATIC);
       DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_eventTags, DB_BIND_STATIC, 2000);
       DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
       DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_impact, DB_BIND_STATIC, 1000);
@@ -592,12 +586,10 @@ void Alarm::updateInDatabase()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb,
-            _T("UPDATE alarms SET alarm_state=?,ack_by=?,term_by=?,")
-            _T("last_change_time=?,current_severity=?,repeat_count=?,")
-            _T("hd_state=?,hd_ref=?,timeout=?,timeout_event=?,")
-            _T("message=?,resolved_by=?,ack_timeout=?,source_object_id=?,")
-            _T("dci_id=?,alarm_category_ids=?,rule_guid=?,rule_description=?,event_tags=?,")
-            _T("parent_alarm_id=?,rca_script_name=?,impact=? WHERE alarm_id=?"));
+            _T("UPDATE alarms SET alarm_state=?,ack_by=?,term_by=?,last_change_time=?,current_severity=?,repeat_count=?,")
+            _T("hd_state=?,hd_ref=?,timeout=?,timeout_event=?,message=?,resolved_by=?,ack_timeout=?,source_object_id=?,")
+            _T("dci_id=?,alarm_category_ids=?,rule_guid=?,rule_description=?,event_tags=?,parent_alarm_id=?,rca_script_name=?,")
+            _T("impact=? WHERE alarm_id=?"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_state);
@@ -619,13 +611,12 @@ void Alarm::updateInDatabase()
       if (!m_ruleGuid.isNull())
       {
          DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_ruleGuid);
-         DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_ruleDescription, MAX_DB_STRING);
       }
       else
       {
          DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-         DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
       }
+      DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_ruleDescription, DB_BIND_STATIC);
       DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_eventTags, DB_BIND_STATIC, 2000);
       DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_parentAlarmId);
       DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
