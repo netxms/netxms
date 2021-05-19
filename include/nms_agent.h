@@ -765,6 +765,7 @@ public:
    virtual int getProtocolVersion() = 0;
    virtual uint32_t openFile(TCHAR *nameOfFile, uint32_t requestId, time_t fileModTime = 0) = 0;
    virtual void debugPrintf(int level, const TCHAR *format, ...) = 0;
+   virtual void writeLog(int16_t severity, const TCHAR *format, ...) = 0;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) = 0;
 };
 

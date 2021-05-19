@@ -1138,7 +1138,7 @@ static void WriteLogToFileAsJSON(INT16 severity, const TCHAR *tag, const TCHAR *
 /**
  * Write record to log file (JSON format)
  */
-static inline void WriteLogToFile(INT16 severity, const TCHAR *tag, const TCHAR *message)
+static inline void WriteLogToFile(int16_t severity, const TCHAR *tag, const TCHAR *message)
 {
    if (s_flags & NXLOG_JSON_FORMAT)
       WriteLogToFileAsJSON(severity, tag, message);
@@ -1149,7 +1149,7 @@ static inline void WriteLogToFile(INT16 severity, const TCHAR *tag, const TCHAR 
 /**
  * Write log record - internal implementation
  */
-static void WriteLog(INT16 severity, const TCHAR *tag, const TCHAR *format, va_list args)
+static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va_list args)
 {
    if ((severity == NXLOG_DEBUG) && (s_debugWriter != NULL))
    {
@@ -1270,7 +1270,7 @@ static void WriteLog(INT16 severity, const TCHAR *tag, const TCHAR *format, va_l
 /**
  * Write message to log with tag
  */
-void LIBNETXMS_EXPORTABLE nxlog_write(INT16 severity, const TCHAR *format, ...)
+void LIBNETXMS_EXPORTABLE nxlog_write(int16_t severity, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
@@ -1281,7 +1281,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(INT16 severity, const TCHAR *format, ...)
 /**
  * Write message to log with tag
  */
-void LIBNETXMS_EXPORTABLE nxlog_write2(INT16 severity, const TCHAR *format, va_list args)
+void LIBNETXMS_EXPORTABLE nxlog_write2(int16_t severity, const TCHAR *format, va_list args)
 {
    WriteLog(severity, NULL, format, args);
 }
@@ -1289,7 +1289,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write2(INT16 severity, const TCHAR *format, va_l
 /**
  * Write message to log with tag
  */
-void LIBNETXMS_EXPORTABLE nxlog_write_tag(INT16 severity, const TCHAR *tag, const TCHAR *format, ...)
+void LIBNETXMS_EXPORTABLE nxlog_write_tag(int16_t severity, const TCHAR *tag, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
@@ -1300,7 +1300,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write_tag(INT16 severity, const TCHAR *tag, cons
 /**
  * Write message to log with tag
  */
-void LIBNETXMS_EXPORTABLE nxlog_write_tag2(INT16 severity, const TCHAR *tag, const TCHAR *format, va_list args)
+void LIBNETXMS_EXPORTABLE nxlog_write_tag2(int16_t severity, const TCHAR *tag, const TCHAR *format, va_list args)
 {
    WriteLog(severity, tag, format, args);
 }

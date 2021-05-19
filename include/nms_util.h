@@ -4295,10 +4295,10 @@ TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f);
 
 bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags);
 void LIBNETXMS_EXPORTABLE nxlog_close();
-void LIBNETXMS_EXPORTABLE nxlog_write(INT16 severity, const TCHAR *format, ...);
-void LIBNETXMS_EXPORTABLE nxlog_write2(INT16 severity, const TCHAR *format, va_list args);
-void LIBNETXMS_EXPORTABLE nxlog_write_tag(INT16 severity, const TCHAR *tag, const TCHAR *format, ...);
-void LIBNETXMS_EXPORTABLE nxlog_write_tag2(INT16 severity, const TCHAR *tag, const TCHAR *format, va_list args);
+void LIBNETXMS_EXPORTABLE nxlog_write(int16_t severity, const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE nxlog_write2(int16_t severity, const TCHAR *format, va_list args);
+void LIBNETXMS_EXPORTABLE nxlog_write_tag(int16_t severity, const TCHAR *tag, const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE nxlog_write_tag2(int16_t severity, const TCHAR *tag, const TCHAR *format, va_list args);
 void LIBNETXMS_EXPORTABLE nxlog_report_event(DWORD msg, int level, int stringCount, const TCHAR *altMessage, ...);
 void LIBNETXMS_EXPORTABLE nxlog_debug(int level, const TCHAR *format, ...);
 void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list args);
