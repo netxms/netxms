@@ -390,6 +390,7 @@ public:
    virtual uint32_t openFile(TCHAR *nameOfFile, uint32_t requestId, time_t fileModTime = 0) override;
 
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
+   virtual void writeLog(int16_t severity, const TCHAR *format, ...) override;
 
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override;
 
@@ -438,6 +439,7 @@ public:
    virtual int getProtocolVersion() override { return NXCP_VERSION; }
    virtual uint32_t openFile(TCHAR *fileName, uint32_t requestId, time_t fileModTime = 0) override { return ERR_INTERNAL_ERROR; }
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
+   virtual void writeLog(int16_t severity, const TCHAR *format, ...) override;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override { }
 };
 
@@ -486,6 +488,7 @@ public:
    virtual int getProtocolVersion() override { return NXCP_VERSION; }
    virtual uint32_t openFile(TCHAR *fileName, uint32_t requestId, time_t fileModTime = 0) override { return ERR_INTERNAL_ERROR; }
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
+   virtual void writeLog(int16_t severity, const TCHAR *format, ...) override;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override { }
 };
 

@@ -164,6 +164,19 @@ void CommSession::debugPrintf(int level, const TCHAR *format, ...)
 }
 
 /**
+ * Write log in session context
+ */
+void CommSession::writeLog(int16_t severity, const TCHAR *format, ...)
+{
+   TCHAR tag[32];
+   _sntprintf(tag, 32, _T("comm.cs.%u"), m_id);
+   va_list args;
+   va_start(args, format);
+   nxlog_write_tag2(severity, tag, format, args);
+   va_end(args);
+}
+
+/**
  * Start all threads
  */
 void CommSession::run()
@@ -421,7 +434,7 @@ void CommSession::readThread()
    MutexUnlock(m_tcpProxyLock);
    ThreadJoin(m_tcpProxyReadThread);
 
-   debugPrintf(5, _T("Session with %s closed"), m_serverAddr.toString().cstr());
+   debugPrintf(4, _T("Session with %s closed"), m_serverAddr.toString().cstr());
 
    UnregisterSession(m_id);
    debugPrintf(6, _T("Receiver thread stopped"));
@@ -682,14 +695,14 @@ void CommSession::processingThread()
                m_allowCompression = request->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
                response.setField(VID_RCC, ERR_SUCCESS);
                response.setField(VID_FLAGS, static_cast<uint16_t>((m_controlServer ? 0x01 : 0x00) | (m_masterServer ? 0x02 : 0x00)));
-               debugPrintf(1, _T("Server capabilities: IPv6: %s; bulk reconciliation: %s; compression: %s"),
+               debugPrintf(4, _T("Server capabilities: IPv6: %s; bulk reconciliation: %s; compression: %s"),
                            m_ipv6Aware ? _T("yes") : _T("no"),
                            m_bulkReconciliationSupported ? _T("yes") : _T("no"),
                            m_allowCompression ? _T("yes") : _T("no"));
                break;
             case CMD_SET_SERVER_ID:
                m_serverId = request->getFieldAsUInt64(VID_SERVER_ID);
-               debugPrintf(1, _T("Server ID set to ") UINT64X_FMT(_T("016")), m_serverId);
+               debugPrintf(4, _T("Server ID set to ") UINT64X_FMT(_T("016")), m_serverId);
                response.setField(VID_RCC, ERR_SUCCESS);
                break;
             case CMD_DATA_COLLECTION_CONFIG:
@@ -701,7 +714,7 @@ void CommSession::processingThread()
                }
                else
                {
-                  debugPrintf(1, _T("Data collection configuration command received but server ID is not set"));
+                  writeLog(NXLOG_WARNING, _T("Data collection configuration command received but server ID is not set"));
                   response.setField(VID_RCC, ERR_SERVER_ID_UNSET);
                }
                break;
@@ -983,7 +996,7 @@ uint32_t CommSession::openFile(TCHAR *szFullPath, uint32_t requestId, time_t fil
    if (!fInfo->open())
    {
       delete fInfo;
-      debugPrintf(2, _T("CommSession::openFile(): Error opening file \"%s\" for writing (%s)"), szFullPath, _tcserror(errno));
+      debugPrintf(3, _T("CommSession::openFile(): Error opening file \"%s\" for writing (%s)"), szFullPath, _tcserror(errno));
       return ERR_IO_FAILURE;
    }
    else
@@ -1024,7 +1037,7 @@ UINT32 CommSession::upgrade(NXCPMessage *request)
             
       // Store upgrade file name to delete it after system start
       WriteRegistry(_T("upgrade.file"), packageName);
-      debugPrintf(3, _T("Starting agent upgrade using package %s"), packageName);
+      writeLog(NXLOG_INFO, _T("Starting agent upgrade using package %s"), packageName);
 
       TCHAR fullPath[MAX_PATH];
       BuildFullPath(packageName, fullPath);
@@ -1032,7 +1045,7 @@ UINT32 CommSession::upgrade(NXCPMessage *request)
    }
    else
    {
-      debugPrintf(3, _T("Upgrade request from server which is not master (upgrade will not start)"));
+      writeLog(NXLOG_WARNING, _T("Upgrade request from server which is not master (upgrade will not start)"));
       return ERR_ACCESS_DENIED;
    }
 }
@@ -1070,28 +1083,28 @@ void CommSession::updateConfig(NXCPMessage *request, NXCPMessage *response)
          {
             response->setField(VID_RCC, ERR_SUCCESS);
             g_restartPending = true;
-            debugPrintf(2, _T("CommSession::updateConfig(): agent configuration file replaced"));
+            writeLog(NXLOG_INFO, _T("CommSession::updateConfig(): agent configuration file replaced"));
          }
          else if ((status == SaveFileStatus::OPEN_ERROR) || (status == SaveFileStatus::RENAME_ERROR))
          {
-            debugPrintf(2, _T("CommSession::updateConfig(): cannot opening file \"%s\" for writing (%s)"), g_szConfigFile, _tcserror(errno));
+            writeLog(NXLOG_WARNING, _T("CommSession::updateConfig(): cannot opening file \"%s\" for writing (%s)"), g_szConfigFile, _tcserror(errno));
             response->setField(VID_RCC, ERR_FILE_OPEN_ERROR);
          }
          else
          {
-            debugPrintf(2, _T("CommSession::updateConfig(): error writing file (%s)"), _tcserror(errno));
+            writeLog(NXLOG_WARNING, _T("CommSession::updateConfig(): error writing file (%s)"), _tcserror(errno));
             response->setField(VID_RCC, ERR_IO_FAILURE);
          }
       }
       else
       {
-         debugPrintf(2, _T("CommSession::updateConfig(): file content not provided in request"));
+         writeLog(NXLOG_WARNING, _T("CommSession::updateConfig(): file content not provided in request"));
          response->setField(VID_RCC, ERR_MALFORMED_COMMAND);
       }
    }
    else
    {
-      debugPrintf(2, _T("CommSession::updateConfig(): access denied"));
+      writeLog(NXLOG_WARNING, _T("CommSession::updateConfig(): access denied"));
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
 }
@@ -1191,8 +1204,8 @@ uint32_t CommSession::doRequest(NXCPMessage *msg, uint32_t timeout)
       return ERR_CONNECTION_BROKEN;
 
    NXCPMessage *response = m_responseQueue->waitForMessage(CMD_REQUEST_COMPLETED, msg->getId(), timeout);
-   UINT32 rcc;
-   if (response != NULL)
+   uint32_t rcc;
+   if (response != nullptr)
    {
       rcc = response->getFieldAsUInt32(VID_RCC);
       delete response;
@@ -1210,7 +1223,7 @@ uint32_t CommSession::doRequest(NXCPMessage *msg, uint32_t timeout)
 NXCPMessage *CommSession::doRequestEx(NXCPMessage *msg, uint32_t timeout)
 {
    if (!sendMessage(msg))
-      return NULL;
+      return nullptr;
    return m_responseQueue->waitForMessage(CMD_REQUEST_COMPLETED, msg->getId(), timeout);
 }
 
@@ -1385,6 +1398,19 @@ void VirtualSession::debugPrintf(int level, const TCHAR *format, ...)
 }
 
 /**
+ * Write log in virtual session context
+ */
+void VirtualSession::writeLog(int16_t severity, const TCHAR *format, ...)
+{
+   TCHAR tag[32];
+   _sntprintf(tag, 32, _T("comm.vs.%u"), m_id);
+   va_list args;
+   va_start(args, format);
+   nxlog_write_tag2(severity, tag, format, args);
+   va_end(args);
+}
+
+/**
  * Proxy session constructor
  */
 ProxySession::ProxySession(NXCPMessage *msg)
@@ -1417,6 +1443,19 @@ void ProxySession::debugPrintf(int level, const TCHAR *format, ...)
    va_list args;
    va_start(args, format);
    nxlog_debug_tag_object2(_T("comm.ps"), m_id, level, format, args);
+   va_end(args);
+}
+
+/**
+ * Write log in proxy session context
+ */
+void ProxySession::writeLog(int16_t severity, const TCHAR *format, ...)
+{
+   TCHAR tag[32];
+   _sntprintf(tag, 32, _T("comm.ps.%u"), m_id);
+   va_list args;
+   va_start(args, format);
+   nxlog_write_tag2(severity, tag, format, args);
    va_end(args);
 }
 
