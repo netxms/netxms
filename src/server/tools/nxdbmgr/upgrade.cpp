@@ -85,7 +85,33 @@ int32_t GetSchemaLevelForMajorVersion(int32_t major)
 {
    TCHAR var[64];
    _sntprintf(var, 64, _T("SchemaVersionLevel.%d"), major);
-   return DBMgrMetaDataReadInt32(var, INT_MAX);
+   int32_t minor = DBMgrMetaDataReadInt32(var, -1);
+   if (minor != -1)
+      return minor;
+
+   // Missing minor version for requested major could mean two different scenarios:
+   // 1. Initial installation was on newer version
+   // 2. We didn't upgrade up to that major version yet
+   // Attempt to deduce most recent major version by scanning all SchemaVersionLevel.* variables
+   DB_RESULT hResult = SQLSelect(_T("SELECT var_name FROM metadata WHERE var_name LIKE 'SchemaVersionLevel.%'"));
+   if (hResult == nullptr)
+      return -1;  // Unexpected SQL error, assume that changes for requested major version was not made
+
+   int32_t lastMajor = 0;
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+   {
+      TCHAR name[256];
+      DBGetField(hResult, i, 0, name, 256);
+      int32_t version = _tcstol(&name[19], nullptr, 10);
+      if (version > lastMajor)
+         lastMajor = version;
+   }
+   DBFreeResult(hResult);
+
+   // Presence of SchemaVersionLevel for major version higher than requested indicates that
+   // all changes for requested version was already included at database initialization
+   return (lastMajor > major) ? INT_MAX : -1;
 }
 
 /**
