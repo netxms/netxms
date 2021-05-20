@@ -1566,7 +1566,7 @@ public:
 /**
  * Shared object array
  */
-template <class T> class SharedObjectArray
+template <class T> class SharedObjectArray final
 {
    // Note: member order is important because m_data allocates memory from m_pool
 private:
@@ -1841,7 +1841,7 @@ public:
 /**
  * String to object map that holds shared pointers
  */
-template <class T> class SharedStringObjectMap
+template <class T> class SharedStringObjectMap final
 {
    DISABLE_COPY_CTOR(SharedStringObjectMap)
 
@@ -2450,7 +2450,7 @@ public:
 /**
  * Shared hash map
  */
-template <class K, class V> class SharedHashMap
+template <class K, class V> class SharedHashMap final
 {
    DISABLE_COPY_CTOR(SharedHashMap)
 
@@ -2511,7 +2511,7 @@ template <class K, class V> shared_ptr<V> SharedHashMap<K, V>::m_null = shared_p
 /**
  * Synchronized shared hash map
  */
-template <class K, class V> class SynchronizedSharedHashMap
+template <class K, class V> class SynchronizedSharedHashMap final
 {
    DISABLE_COPY_CTOR(SynchronizedSharedHashMap)
 

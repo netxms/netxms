@@ -1895,6 +1895,21 @@ public:
 	AC_DEFINE(HAVE_OVERRIDE_SPECIFIER,0,Define to 1 if C++ compiler supports "override" specifier)
 ])
 
+AC_MSG_CHECKING(whether C++ compiler supports "final" specifier)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+class A final {
+public:
+   int x;
+};
+]],[[ ]])
+],[
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_FINAL_SPECIFIER,1,Define to 1 if C++ compiler supports "final" specifier)
+],[
+	AC_MSG_RESULT(no)
+	AC_DEFINE(HAVE_FINAL_SPECIFIER,0,Define to 1 if C++ compiler supports "final" specifier)
+])
+
 AC_MSG_CHECKING(whether C++ compiler supports std::make_unique)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <memory>

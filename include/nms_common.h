@@ -185,6 +185,7 @@ typedef int bool;
 #define _Noreturn __declspec(noreturn)
 
 #define CAN_DELETE_COPY_CTOR      1
+#define HAVE_FINAL_SPECIFIER      1
 #define HAVE_OVERRIDE_SPECIFIER   1
 #define HAVE_THREAD_LOCAL_STORAGE 1
 #define HAVE_STD_MAKE_UNIQUE      1
@@ -1566,7 +1567,14 @@ enum class Ownership : bool
 #endif
 
 /**
- * Override specifier if compiler supports it
+ * "final" specifier if compiler does not support it
+ */
+#if !HAVE_FINAL_SPECIFIER
+#define final
+#endif
+
+/**
+ * "override" specifier if compiler does not support it
  */
 #if !HAVE_OVERRIDE_SPECIFIER
 #define override
