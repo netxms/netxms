@@ -1409,7 +1409,6 @@ static bool H_UpgradeFromV1()
    return true;
 }
 
-
 /**
  * Upgrade from 40.0 to 40.1
  */
