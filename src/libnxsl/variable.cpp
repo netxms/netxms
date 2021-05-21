@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -62,10 +62,10 @@ NXSL_Variable::~NXSL_Variable()
 /**
  * Set variable's value
  */
-void NXSL_Variable::setValue(NXSL_Value *pValue)
+void NXSL_Variable::setValue(NXSL_Value *value)
 {
    m_vm->destroyValue(m_value);
-   m_value = pValue;
+   m_value = value;
    m_value->onVariableSet();
 }
 
@@ -220,12 +220,12 @@ void NXSL_VariableSystem::restoreVariableReferences(StructArray<NXSL_Instruction
 /**
  * Enumerate all variables
  */
-void NXSL_VariableSystem::forEach(void (*callback)(const NXSL_Variable&, void*), void *context) const
+void NXSL_VariableSystem::forEach(void (*callback)(const NXSL_Identifier&, NXSL_Value*, void*), void *context) const
 {
    NXSL_VariablePtr *var, *tmp;
    HASH_ITER(hh, m_variables, var, tmp)
    {
-      callback(var->v, context);
+      callback(var->v.getName(), var->v.getValue(), context);
    }
 }
 

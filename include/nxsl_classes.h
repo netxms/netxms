@@ -849,10 +849,10 @@ protected:
    ~NXSL_Variable();
 
 public:
-   const NXSL_Identifier& getName() { return m_name; }
+   const NXSL_Identifier& getName() const { return m_name; }
    NXSL_Value *getValue() { return m_value; }
    void setValue(NXSL_Value *value);
-	bool isConstant() { return m_constant; }
+	bool isConstant() const { return m_constant; }
 };
 
 
@@ -918,10 +918,10 @@ public:
    bool createVariableReferenceRestorePoint(uint32_t addr, NXSL_Identifier *identifier);
    void restoreVariableReferences(StructArray<NXSL_Instruction> *instructions);
 
-   void forEach(void (*callback)(const NXSL_Variable&, void*), void *context) const;
-   template<typename T> void forEach(void (*callback)(const NXSL_Variable&, T*), T *context) const
+   void forEach(void (*callback)(const NXSL_Identifier&, NXSL_Value*, void*), void *context) const;
+   template<typename T> void forEach(void (*callback)(const NXSL_Identifier&, NXSL_Value*, T*), T *context) const
    {
-      forEach(reinterpret_cast<void (*)(const NXSL_Variable&, void*)>(callback), (void*)context);
+      forEach(reinterpret_cast<void (*)(const NXSL_Identifier&, NXSL_Value*, void*)>(callback), (void*)context);
    }
 
    void dump(FILE *fp) const;
