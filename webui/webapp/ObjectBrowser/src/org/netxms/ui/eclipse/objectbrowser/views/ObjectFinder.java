@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,6 +67,7 @@ import org.netxms.base.InetAddressEx;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ObjectFilter;
+import org.netxms.client.ObjectQueryResult;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
@@ -278,8 +279,8 @@ public class ObjectFinder extends ViewPart
    private Action actionStartSearch;
    private Action actionShowObjectDetails;
    private NXCSession session;
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -678,8 +679,8 @@ public class ObjectFinder extends ViewPart
       // Register menu for extension.
       getSite().registerContextMenu(manager, results);
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
@@ -712,7 +713,7 @@ public class ObjectFinder extends ViewPart
 
             try
             {
-               final List<AbstractObject> objects = session.queryObjects(query);
+               final List<ObjectQueryResult> objects = session.queryObjectDetails(query, null, null, true, 0);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()

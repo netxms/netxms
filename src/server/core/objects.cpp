@@ -2716,18 +2716,18 @@ static bool FilterAccessibleObjects(NetObj *object, void *data)
 struct ObjectQueryComparatorData
 {
    const StringList *orderBy;
-   const StringList *fields;
+   const StringMap *fields;
 };
 
 /**
  * Query result comparator
  */
-static int ObjectQueryComparator(ObjectQueryComparatorData *data, const ObjectQueryResult **object1, const ObjectQueryResult **object2)
+static int ObjectQueryComparator(const StringList *orderBy, const ObjectQueryResult **object1, const ObjectQueryResult **object2)
 {
-   for(int i = 0; i < data->orderBy->size(); i++)
+   for(int i = 0; i < orderBy->size(); i++)
    {
       bool descending = false;
-      const TCHAR *attr = data->orderBy->get(i);
+      const TCHAR *attr = orderBy->get(i);
       if (*attr == _T('-'))
       {
          descending = true;
@@ -2738,15 +2738,8 @@ static int ObjectQueryComparator(ObjectQueryComparatorData *data, const ObjectQu
          attr++;
       }
 
-      int attrIndex = data->fields->indexOf(attr);
-      if (attrIndex < 0)
-      {
-         nxlog_debug(7, _T("ObjectQueryComparator: invalid attribute \"%s\""), attr);
-         continue;
-      }
-
-      const TCHAR *v1 = (*object1)->values->get(attrIndex);
-      const TCHAR *v2 = (*object2)->values->get(attrIndex);
+      const TCHAR *v1 = (*object1)->values->get(attr);
+      const TCHAR *v2 = (*object2)->values->get(attr);
 
       // Try to compare as numbers
       if ((v1 != nullptr) && (v2 != nullptr))
@@ -2776,16 +2769,28 @@ static int ObjectQueryComparator(ObjectQueryComparatorData *data, const ObjectQu
 }
 
 /**
+ * Set object data from NXSL variable
+ */
+static void SetDataFromVariable(const NXSL_Identifier& name, NXSL_Value *value, StringMap *objectData)
+{
+#ifdef UNICODE
+   objectData->setPreallocated(WideStringFromUTF8String(name.value), MemCopyString(value->getValueAsCString()));
+#else
+   objectData->set(name.value, value->getValueAsCString());
+#endif
+}
+
+/**
  * Query objects
  */
-ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage,
-         size_t errorMessageLen, const StringList *fields, const StringList *orderBy, uint32_t limit)
+ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
+         bool readAllComputedFields, const StringList *fields, const StringList *orderBy, uint32_t limit)
 {
    NXSL_VM *vm = NXSLCompileAndCreateVM(query, errorMessage, errorMessageLen, new NXSL_ServerEnv());
    if (vm == nullptr)
       return nullptr;
 
-   bool readFields = (fields != nullptr);
+   bool readFields = readAllComputedFields || (fields != nullptr);
 
    // Set class constants
    vm->addConstant("ACCESSPOINT", vm->createValue(OBJECT_ACCESSPOINT));
@@ -2836,46 +2841,57 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId
 
       if (rc > 0)
       {
-         StringList *objectData;
+         StringMap *objectData;
          if (readFields)
          {
-            objectData = new StringList();
-            NXSL_Value *objectValue = curr->createNXSLObject(vm);
-            NXSL_Object *object = objectValue->getValueAsObject();
-            for(int j = 0; j < fields->size(); j++)
+            objectData = new StringMap();
+
+            if (fields != nullptr)
             {
-               NXSL_Variable *v = globals->find(fields->get(j));
-               if (v != nullptr)
+               NXSL_Value *objectValue = curr->createNXSLObject(vm);
+               NXSL_Object *object = objectValue->getValueAsObject();
+               for(int j = 0; j < fields->size(); j++)
                {
-                  objectData->add(v->getValue()->getValueAsCString());
-               }
-               else
-               {
-#ifdef UNICODE
-                  char attr[MAX_IDENTIFIER_LENGTH];
-                  WideCharToMultiByte(CP_UTF8, 0, fields->get(j), -1, attr, MAX_IDENTIFIER_LENGTH - 1, nullptr, nullptr);
-                  attr[MAX_IDENTIFIER_LENGTH - 1] = 0;
-                  NXSL_Value *av = object->getClass()->getAttr(object, attr);
-#else
-                  NXSL_Value *av = object->getClass()->getAttr(object, fields->get(j));
-#endif
-                  if (av != nullptr)
+                  const TCHAR *fieldName = fields->get(j);
+                  NXSL_Variable *v = globals->find(fieldName);
+                  if (v != nullptr)
                   {
-                     objectData->add(av->getValueAsCString());
-                     vm->destroyValue(av);
+                     objectData->set(fieldName, v->getValue()->getValueAsCString());
                   }
                   else
                   {
-                     objectData->add(_T(""));
+#ifdef UNICODE
+                     char attr[MAX_IDENTIFIER_LENGTH];
+                     WideCharToMultiByte(CP_UTF8, 0, fields->get(j), -1, attr, MAX_IDENTIFIER_LENGTH - 1, nullptr, nullptr);
+                     attr[MAX_IDENTIFIER_LENGTH - 1] = 0;
+                     NXSL_Value *av = object->getClass()->getAttr(object, attr);
+#else
+                     NXSL_Value *av = object->getClass()->getAttr(object, fields->get(j));
+#endif
+                     if (av != nullptr)
+                     {
+                        objectData->set(fieldName, av->getValueAsCString());
+                        vm->destroyValue(av);
+                     }
+                     else
+                     {
+                        objectData->set(fieldName, _T(""));
+                     }
                   }
                }
+               vm->destroyValue(objectValue);
             }
-            vm->destroyValue(objectValue);
+
+            if (readAllComputedFields)
+            {
+               globals->forEach(SetDataFromVariable, objectData);
+            }
          }
          else
          {
             objectData = nullptr;
          }
+
          resultSet->add(new ObjectQueryResult(curr, objectData));
       }
       delete globals;
@@ -2889,10 +2905,7 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId
    {
       if ((orderBy != nullptr) && !orderBy->isEmpty())
       {
-         ObjectQueryComparatorData cd;
-         cd.fields = fields;
-         cd.orderBy = orderBy;
-         resultSet->sort(ObjectQueryComparator, &cd);
+         resultSet->sort(ObjectQueryComparator, orderBy);
       }
       if (limit > 0)
       {

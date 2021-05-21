@@ -3709,23 +3709,27 @@ public class NXCSession
    }
 
    /**
-    * Query objects on server side and read certain object properties. Available properties are the same as
-    * in corresponding NXSL objects or calculated properties set using "with" statement in query.
+    * Query objects on server side and read certain object properties. Available properties are the same as in corresponding NXSL
+    * objects or computed properties set using "with" statement in query. If <code>readAllComputedProperties</code> is set to
+    * <code>true</code> then all computed properties will be retrieved in addition to those explicitly listed.
     *
-    * @param query      query to execute
+    * @param query query to execute
     * @param properties object properties to read
-    * @param orderBy    list of properties for ordering result set (can be null)
-    * @param limit      limit number of records (0 for unlimited)
+    * @param orderBy list of properties for ordering result set (can be null)
+    * @param readAllComputedProperties if set to <code>true</code>, query will return all computed properties in addition to
+    *           properties explicitly listed in <code>properties</code> parameter
+    * @param limit limit number of records (0 for unlimited)
     * @return list of matching objects
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<ObjectQueryResult> queryObjectDetails(String query, List<String> properties, List<String> orderBy, int limit)
+   public List<ObjectQueryResult> queryObjectDetails(String query, List<String> properties, List<String> orderBy, boolean readAllComputedProperties, int limit)
          throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_OBJECT_DETAILS);
       msg.setField(NXCPCodes.VID_QUERY, query);
-      msg.setFieldsFromStringCollection(properties, NXCPCodes.VID_FIELD_LIST_BASE, NXCPCodes.VID_FIELDS);
+      if (properties != null)
+         msg.setFieldsFromStringCollection(properties, NXCPCodes.VID_FIELD_LIST_BASE, NXCPCodes.VID_FIELDS);
       if (orderBy != null)
          msg.setFieldsFromStringCollection(orderBy, NXCPCodes.VID_ORDER_FIELD_LIST_BASE, NXCPCodes.VID_ORDER_FIELDS);
       msg.setFieldInt32(NXCPCodes.VID_RECORD_LIMIT, limit);
@@ -3737,13 +3741,13 @@ public class NXCSession
       long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < objects.length; i++)
       {
-         List<String> values = response.getStringListFromFields(fieldId + 1, fieldId);
+         Map<String, String> values = response.getStringMapFromFields(fieldId + 1, fieldId);
          AbstractObject object = findObjectById(objects[i]);
-         if ((object != null) && (properties.size() == values.size()))
+         if (object != null)
          {
-            results.add(new ObjectQueryResult(object, properties, values));
+            results.add(new ObjectQueryResult(object, values));
          }
-         fieldId += values.size() + 1;
+         fieldId += values.size() * 2 + 1;
       }
       return results;
    }

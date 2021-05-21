@@ -4471,8 +4471,8 @@ public:
  */
 struct DependentNode
 {
-   UINT32 nodeId;
-   UINT32 dependencyType;
+   uint32_t nodeId;
+   uint32_t dependencyType;
 };
 
 /**
@@ -4481,9 +4481,9 @@ struct DependentNode
 struct ObjectQueryResult
 {
    shared_ptr<NetObj> object;
-   StringList *values;
+   StringMap *values;
 
-   ObjectQueryResult(const shared_ptr<NetObj>& _object, StringList *_values) : object(_object)
+   ObjectQueryResult(const shared_ptr<NetObj>& _object, StringMap *_values) : object(_object)
    {
       values = _values;
    }
@@ -4588,9 +4588,8 @@ shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByProxyId(uint32_t proxyId);
 int32_t FindUnusedZoneUIN();
 bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr);
 bool NXCORE_EXPORTABLE IsParentObject(uint32_t object1, uint32_t object2);
-ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage,
-         size_t errorMessageLen, const StringList *fields = nullptr, const StringList *orderBy = nullptr,
-         uint32_t limit = 0);
+ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
+         bool readAllComputedFields = false, const StringList *fields = nullptr, const StringList *orderBy = nullptr, uint32_t limit = 0);
 StructArray<DependentNode> *GetNodeDependencies(uint32_t nodeId);
 
 BOOL LoadObjects();
