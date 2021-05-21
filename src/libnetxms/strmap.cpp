@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -173,9 +173,9 @@ UINT64 StringMap::getUInt64(const TCHAR *key, UINT64 defaultValue) const
 double StringMap::getDouble(const TCHAR *key, double defaultValue) const
 {
    const TCHAR *value = get(key);
-   if (value == NULL)
+   if (value == nullptr)
       return defaultValue;
-   return _tcstod(value, NULL);
+   return _tcstod(value, nullptr);
 }
 
 /**
@@ -184,22 +184,22 @@ double StringMap::getDouble(const TCHAR *key, double defaultValue) const
 bool StringMap::getBoolean(const TCHAR *key, bool defaultValue) const
 {
 	const TCHAR *value = get(key);
-	if (value == NULL)
+	if (value == nullptr)
 		return defaultValue;
 	if (!_tcsicmp(value, _T("false")))
 		return false;
 	if (!_tcsicmp(value, _T("true")))
 		return true;
-	return (_tcstoul(value, NULL, 0) != 0) ? true : false;
+	return _tcstoul(value, nullptr, 0) != 0;
 }
 
 /**
  * Fill NXCP message with map data
  */
-void StringMap::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const
+void StringMap::fillMessage(NXCPMessage *msg, uint32_t sizeFieldId, uint32_t baseFieldId) const
 {
-   msg->setField(sizeFieldId, (UINT32)size());
-   UINT32 id = baseFieldId;
+   msg->setField(sizeFieldId, static_cast<uint32_t>(size()));
+   uint32_t id = baseFieldId;
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
@@ -211,10 +211,10 @@ void StringMap::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFie
 /**
  * Load data from NXCP message
  */
-void StringMap::loadMessage(const NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId)
+void StringMap::loadMessage(const NXCPMessage *msg, uint32_t sizeFieldId, uint32_t baseFieldId)
 {
    int count = msg->getFieldAsInt32(sizeFieldId);
-   UINT32 id = baseFieldId;
+   uint32_t id = baseFieldId;
    for(int i = 0; i < count; i++)
    {
       TCHAR *key = msg->getFieldAsString(id++);
