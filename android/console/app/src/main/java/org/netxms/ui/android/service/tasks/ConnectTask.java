@@ -100,6 +100,7 @@ public class ConnectTask extends Thread {
                         Log.d(TAG, "calling session.subscribe()");
                         session.subscribe(NXCSession.CHANNEL_ALARMS);
                         session.subscribe(NXCSession.CHANNEL_OBJECTS);
+                        session.syncObjects(); // TODO: remove full sync
                         service.onConnect(session, session.getAlarms());
                         service.loadTools();
                     } catch (Exception e) {
