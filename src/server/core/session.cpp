@@ -2602,7 +2602,7 @@ void ClientSession::queryObjectDetails(NXCPMessage *request)
    StringList orderBy(request, VID_ORDER_FIELD_LIST_BASE, VID_ORDER_FIELDS);
    TCHAR errorMessage[1024];
    unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, m_dwUserId, errorMessage, 1024,
-            &fields, &orderBy, request->getFieldAsUInt32(VID_RECORD_LIMIT));
+            request->getFieldAsBoolean(VID_READ_ALL_FIELDS), &fields, &orderBy, request->getFieldAsUInt32(VID_RECORD_LIMIT));
    if (objects != nullptr)
    {
       uint32_t *idList = static_cast<uint32_t*>MemAllocLocal(objects->size() * sizeof(uint32_t));
@@ -2612,7 +2612,7 @@ void ClientSession::queryObjectDetails(NXCPMessage *request)
          ObjectQueryResult *curr = objects->get(i);
          idList[i] = curr->object->getId();
          curr->values->fillMessage(&msg, fieldId + 1, fieldId);
-         fieldId += curr->values->size() + 1;
+         fieldId += curr->values->size() * 2 + 1;
       }
       msg.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);
       MemFreeLocal(idList);

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,7 @@
  */
 package org.netxms.client;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
 import org.netxms.client.objects.AbstractObject;
 
 /**
@@ -33,20 +30,15 @@ public class ObjectQueryResult
    private Map<String, String> properties;
 
    /**
-    * Create new result
+    * Create new object query result.
     *
-    * @param object     TODO
-    * @param properties TODO
-    * @param values     TODO
+    * @param object object
+    * @param properties retrieved properties
     */
-   protected ObjectQueryResult(AbstractObject object, List<String> properties, List<String> values)
+   protected ObjectQueryResult(AbstractObject object, Map<String, String> properties)
    {
       this.object = object;
-      this.properties = new HashMap<>();
-      for(int i = 0; i < properties.size(); i++)
-      {
-         this.properties.put(properties.get(i), values.get(i));
-      }
+      this.properties = properties;
    }
 
    /**
@@ -80,7 +72,7 @@ public class ObjectQueryResult
       return properties.get(name);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#toString()
     */
    @Override

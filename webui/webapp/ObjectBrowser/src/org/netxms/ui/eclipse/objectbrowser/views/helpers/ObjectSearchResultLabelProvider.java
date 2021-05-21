@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.objectbrowser.views.helpers;
 
@@ -8,6 +23,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.base.InetAddressEx;
+import org.netxms.client.ObjectQueryResult;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
@@ -25,25 +41,26 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class ObjectSearchResultLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    WorkbenchLabelProvider wbLabelProvider = new WorkbenchLabelProvider();
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
    @Override
    public Image getColumnImage(Object element, int columnIndex)
    {
-      return (columnIndex == 0) ? wbLabelProvider.getImage(element) : null;
+      if (columnIndex != 0)
+         return null;
+      AbstractObject object = (element instanceof ObjectQueryResult) ? ((ObjectQueryResult)element).getObject() : (AbstractObject)element;
+      return wbLabelProvider.getImage(object);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
     */
    @Override
    public String getColumnText(Object element, int columnIndex)
    {
-      if (!(element instanceof AbstractObject))
-         return null;
-      AbstractObject object = (AbstractObject)element;
+      AbstractObject object = (element instanceof ObjectQueryResult) ? ((ObjectQueryResult)element).getObject() : (AbstractObject)element;
       switch(columnIndex)
       {
          case ObjectFinder.COL_CLASS:
@@ -67,9 +84,9 @@ public class ObjectSearchResultLabelProvider extends LabelProvider implements IT
             }
             return null;
          case ObjectFinder.COL_NAME:
-            return wbLabelProvider.getText(element);
+            return wbLabelProvider.getText(object);
          case ObjectFinder.COL_PARENT:
-            return getParentNames((AbstractObject)element);
+            return getParentNames(object);
          case ObjectFinder.COL_ZONE:
             if (object instanceof AbstractNode)
             {
@@ -87,7 +104,7 @@ public class ObjectSearchResultLabelProvider extends LabelProvider implements IT
       }
       return null;
    }
-   
+
    /**
     * Get list of parent object names
     * 
@@ -109,7 +126,7 @@ public class ObjectSearchResultLabelProvider extends LabelProvider implements IT
       return sb.toString();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
     */
    @Override
