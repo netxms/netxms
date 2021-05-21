@@ -218,6 +218,18 @@ void NXSL_VariableSystem::restoreVariableReferences(StructArray<NXSL_Instruction
 }
 
 /**
+ * Enumerate all variables
+ */
+void NXSL_VariableSystem::forEach(void (*callback)(const NXSL_Variable&, void*), void *context) const
+{
+   NXSL_VariablePtr *var, *tmp;
+   HASH_ITER(hh, m_variables, var, tmp)
+   {
+      callback(var->v, context);
+   }
+}
+
+/**
  * Dump all variables
  */
 void NXSL_VariableSystem::dump(FILE *fp) const
