@@ -1783,8 +1783,8 @@ public:
       return StringMapBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, const void*, void*)>(cb), (void *)context);
    }
 
-   void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;
-   void loadMessage(const NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId);
+   void fillMessage(NXCPMessage *msg, uint32_t sizeFieldId, uint32_t baseFieldId) const;
+   void loadMessage(const NXCPMessage *msg, uint32_t sizeFieldId, uint32_t baseFieldId);
 
    json_t *toJson() const;
 };
