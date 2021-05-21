@@ -28,7 +28,6 @@ import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.NodePollType;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.android.NXApplication;
@@ -38,8 +37,11 @@ import org.netxms.ui.android.main.fragments.AlarmBrowserFragment;
 import org.netxms.ui.android.main.fragments.NodeInfoFragment;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 /**
@@ -47,22 +49,20 @@ import java.util.Stack;
  *
  * @author Victor Kirhenshtein
  * @author Marco Incalcaterra (marco.incalcaterra@thinksoft.it)
- *
  */
 
 public class NodeBrowser extends AbstractClientActivity {
-    private static final String TAG = "nxclient/NodeBrowser";
+    private static final String TAG = NodeBrowser.class.getName();
+    public static final int DUMMY_ROOT_OBJECT_ID = -100;
     private final Stack<AbstractObject> containerPath = new Stack<AbstractObject>();
     private ObjectListAdapter adapter;
+    private int[] rootObjectFilter;
     private long initialParent;
     private AbstractObject currentParent = null;
     private long[] savedPath = null;
     private AbstractObject selectedObject = null;
     private ProgressDialog dialog;
 
-    /* (non-Javadoc)
-     * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
-     */
     @Override
     protected void onCreateStep2(Bundle savedInstanceState) {
         dialog = new ProgressDialog(this);
@@ -71,7 +71,11 @@ public class NodeBrowser extends AbstractClientActivity {
         TextView title = findViewById(R.id.ScreenTitlePrimary);
         title.setText(R.string.nodes_title);
 
-        initialParent = getIntent().getIntExtra("parentId", GenericObject.SERVICEROOT);
+        rootObjectFilter = getIntent().getIntArrayExtra("rootObjectFilter");
+        Log.d(TAG, "onCreateStep2: filters=" + Arrays.toString(rootObjectFilter));
+
+        initialParent = DUMMY_ROOT_OBJECT_ID;
+        currentParent = createDummyRoot();
 
         // keeps current list of nodes as datasource for listview
         adapter = new ObjectListAdapter(this);
@@ -80,12 +84,19 @@ public class NodeBrowser extends AbstractClientActivity {
         listView.setAdapter(adapter);
         listView.setOnItemClickListener((parent, v, position, id) -> {
             AbstractObject obj = (AbstractObject) adapter.getItem(position);
-            if ((obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER) || (obj.getObjectClass() == AbstractObject.OBJECT_SUBNET) || (obj.getObjectClass() == AbstractObject.OBJECT_CLUSTER) || (obj.getObjectClass() == AbstractObject.OBJECT_ZONE)) {
-                containerPath.push(currentParent);
-                currentParent = obj;
-                refreshList();
-            } else if (obj.getObjectClass() == AbstractObject.OBJECT_NODE || obj.getObjectClass() == AbstractObject.OBJECT_MOBILEDEVICE) {
-                showNodeInfo(obj.getObjectId());
+            switch (obj.getObjectClass()) {
+                case AbstractObject.OBJECT_CONTAINER:
+                case AbstractObject.OBJECT_SUBNET:
+                case AbstractObject.OBJECT_CLUSTER:
+                case AbstractObject.OBJECT_ZONE:
+                    containerPath.push(currentParent);
+                    currentParent = obj;
+                    refreshList();
+                    break;
+                case AbstractObject.OBJECT_NODE:
+                case AbstractObject.OBJECT_MOBILEDEVICE:
+                    showNodeInfo(obj.getObjectId());
+                    break;
             }
         });
 
@@ -96,9 +107,43 @@ public class NodeBrowser extends AbstractClientActivity {
             savedPath = savedInstanceState.getLongArray("currentPath");
     }
 
-    /* (non-Javadoc)
-     * @see android.app.Activity#onSaveInstanceState(android.os.Bundle)
-     */
+    private AbstractObject createDummyRoot() {
+        return new AbstractObject(DUMMY_ROOT_OBJECT_ID, null) {
+            @Override
+            public AbstractObject[] getChildrenAsArray() {
+                updateSessionAndChildren();
+                return super.getChildrenAsArray();
+            }
+
+            @Override
+            public long[] getChildIdList() {
+                updateSessionAndChildren();
+                return super.getChildIdList();
+            }
+
+            @Override
+            public String getObjectName() {
+                return "ROOT";
+            }
+
+            private void updateSessionAndChildren() {
+                if (service != null) {
+                    setSession(service.getSession());
+                    if (children.isEmpty() && session != null) {
+                        Set<Integer> filter = new HashSet<>();
+                        for (int objectType : rootObjectFilter) {
+                            filter.add(objectType);
+                        }
+                        AbstractObject[] topLevelObjects = session.getTopLevelObjects(filter);
+                        for (AbstractObject topLevelObject : topLevelObjects) {
+                            children.add(topLevelObject.getObjectId());
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         savedPath = getFullPathAsId();
@@ -106,9 +151,6 @@ public class NodeBrowser extends AbstractClientActivity {
         super.onSaveInstanceState(outState);
     }
 
-    /* (non-Javadoc)
-     * @see android.app.Activity#onResume()
-     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -128,12 +170,6 @@ public class NodeBrowser extends AbstractClientActivity {
         startActivity(newIntent);
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see android.content.ServiceConnection#onServiceConnected(android.content.
-     * ComponentName, android.os.IBinder)
-     */
     @Override
     public void onServiceConnected(ComponentName name, IBinder binder) {
         super.onServiceConnected(name, binder);
@@ -142,9 +178,6 @@ public class NodeBrowser extends AbstractClientActivity {
         rescanSavedPath();
     }
 
-    /* (non-Javadoc)
-     * @see android.app.Activity#onCreateContextMenu(android.view.ContextMenu, android.view.View, android.view.ContextMenu.ContextMenuInfo)
-     */
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
         android.view.MenuInflater inflater = getMenuInflater();
@@ -206,7 +239,7 @@ public class NodeBrowser extends AbstractClientActivity {
                 startActivity(fspIntent);
                 break;
             case R.id.view_alarms:
-                new SyncMissingChildsTask().execute((int) selectedObject.getObjectId());
+                new ViewAlarmsTask().execute((int) selectedObject.getObjectId());
                 break;
             case R.id.unmanage:
                 service.setObjectMgmtState(selectedObject.getObjectId(), false);
@@ -277,19 +310,18 @@ public class NodeBrowser extends AbstractClientActivity {
         return super.onContextItemSelected(item);
     }
 
-    /* (non-Javadoc)
-     * @see android.app.Activity#onBackPressed()
-     */
     @Override
     public void onBackPressed() {
         if (this.currentParent == null) {
             super.onBackPressed();
             return;
         }
+
         if (this.currentParent.getObjectId() == this.initialParent) {
             super.onBackPressed();
             return;
         }
+
         if (containerPath.empty()) {
             super.onBackPressed();
             return;
@@ -297,7 +329,6 @@ public class NodeBrowser extends AbstractClientActivity {
 
         this.currentParent = containerPath.pop();
         this.refreshList();
-        return;
     }
 
     /**
@@ -325,7 +356,12 @@ public class NodeBrowser extends AbstractClientActivity {
         if ((savedPath != null) && (savedPath.length > 0)) {
             containerPath.clear();
             for (int i = 0; i < savedPath.length - 1; i++) {
-                AbstractObject object = service.findObjectById(savedPath[i]);
+                final AbstractObject object;
+                if (savedPath[i] == DUMMY_ROOT_OBJECT_ID) {
+                    object = createDummyRoot();
+                } else {
+                    object = service.findObjectById(savedPath[i]);
+                }
                 if (object == null)
                     break;
                 containerPath.push(object);
@@ -344,13 +380,17 @@ public class NodeBrowser extends AbstractClientActivity {
      */
     private String getFullPath() {
         StringBuilder sb = new StringBuilder();
-        for (AbstractObject o : containerPath) {
-            sb.append('/');
-            sb.append(o.getObjectName());
+        if (containerPath.size() > 1) {
+            for (AbstractObject o : containerPath.subList(1, containerPath.size())) {
+                sb.append('/');
+                sb.append(o.getObjectName());
+            }
         }
         if (currentParent != null) {
             sb.append('/');
-            sb.append(currentParent.getObjectName());
+            if (currentParent.getObjectId() != DUMMY_ROOT_OBJECT_ID) {
+                sb.append(currentParent.getObjectName());
+            }
         }
         return sb.toString();
     }
@@ -372,11 +412,6 @@ public class NodeBrowser extends AbstractClientActivity {
         return path;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see android.app.Activity#onDestroy()
-     */
     @Override
     protected void onDestroy() {
         service.registerNodeBrowser(null);
@@ -454,12 +489,8 @@ public class NodeBrowser extends AbstractClientActivity {
     /**
      * Internal task for synching missing objects
      */
-    private class SyncMissingChildsTask extends AsyncTask<Integer, Void, Integer> {
-        private final ArrayList<Integer> childIdList;
-
-        protected SyncMissingChildsTask() {
-            childIdList = new ArrayList<Integer>();
-        }
+    private class ViewAlarmsTask extends AsyncTask<Integer, Void, Integer> {
+        private final ArrayList<Integer> childIdList = new ArrayList<>();
 
         @Override
         protected void onPreExecute() {
@@ -472,15 +503,20 @@ public class NodeBrowser extends AbstractClientActivity {
         }
 
         protected void getChildsList(long[] list) {
-            for (int i = 0; i < list.length; i++) {
-                childIdList.add((int) list[i]);
-                AbstractObject obj = service.findObjectById(list[i]);
-                if (obj != null && (obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER || obj.getObjectClass() == AbstractObject.OBJECT_CLUSTER)) {
-                    try {
-                        service.getSession().syncMissingObjects(obj.getChildIdList(), false, NXCSession.OBJECT_SYNC_WAIT);
-                        getChildsList(obj.getChildIdList());
-                    } catch (Exception e) {
-                        Log.e(TAG, "Exception while executing service.getSession().syncMissingObjects in SyncMissingChildsTask", e);
+            for (long l : list) {
+                childIdList.add((int) l);
+                AbstractObject obj = service.findObjectById(l);
+                if (obj != null) {
+                    int objectClass = obj.getObjectClass();
+                    if (objectClass == AbstractObject.OBJECT_CONTAINER || objectClass == AbstractObject.OBJECT_CLUSTER) {
+                        try {
+                            long[] childIdList = obj.getChildIdList();
+                            NXCSession session = service.getSession();
+                            session.syncMissingObjects(childIdList, false, NXCSession.OBJECT_SYNC_WAIT);
+                            getChildsList(childIdList);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Exception while executing service.getSession().syncMissingObjects in SyncMissingChildsTask", e);
+                        }
                     }
                 }
             }

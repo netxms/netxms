@@ -47,11 +47,6 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
     private ActivityListAdapter adapter;
     private TextView statusText;
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onCreateStep2(android.os.Bundle)
-     */
     @Override
     public void onCreateStep2(Bundle savedInstanceState) {
         setIntentionalExit(false);// Allow autorestart on change connectivity status for premature exit
@@ -72,12 +67,6 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
         buildName.setText(String.format("%s %s (%s)", getString(R.string.version), VersionInfo.version(), getString(R.string.build_number)));
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.netxms.ui.android.main.activities.AbstractClientActivity#onServiceConnected(android.content.ComponentName,
-     * android.os.IBinder)
-     */
     @Override
     public void onServiceConnected(ComponentName name, IBinder binder) {
         super.onServiceConnected(name, binder);
@@ -86,11 +75,6 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
         refreshActivityStatus();
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
-     */
     @SuppressLint("InlinedApi")
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -101,11 +85,6 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
-     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.string.reconnect) {
@@ -119,11 +98,6 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
         return super.onOptionsItemSelected(item);
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see android.widget.AdapterView.OnItemClickListener#onItemClick(android.widget.AdapterView, android.view.View, int, long)
-     */
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         // Avoid starting activity if no connection
@@ -133,10 +107,23 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
                     startActivity(new Intent(this, AlarmBrowserFragment.class));
                     break;
                 case ACTIVITY_NODES:
-                    startActivity(new Intent(this, NodeBrowser.class).putExtra("parentId", GenericObject.SERVICEROOT));
+                    startActivity(new Intent(this, NodeBrowser.class).putExtra("rootObjectFilter", new int[]{
+                            AbstractObject.OBJECT_NODE,
+                            AbstractObject.OBJECT_CONTAINER,
+//                            AbstractObject.OBJECT_SERVICEROOT,
+                            AbstractObject.OBJECT_CLUSTER,
+                            AbstractObject.OBJECT_MOBILEDEVICE,
+                            AbstractObject.OBJECT_RACK,
+                            AbstractObject.OBJECT_CHASSIS,
+                            AbstractObject.OBJECT_SENSOR
+                    }));
                     break;
                 case ACTIVITY_ENTIRENETWORK:
-                    startActivity(new Intent(this, NodeBrowser.class).putExtra("parentId", GenericObject.NETWORK));
+                    startActivity(new Intent(this, NodeBrowser.class).putExtra("rootObjectFilter", new int[]{
+                            AbstractObject.OBJECT_SUBNET,
+//                            AbstractObject.OBJECT_NETWORK,
+                            AbstractObject.OBJECT_ZONE
+                    }));
                     break;
                 case ACTIVITY_GRAPHS:
                     startActivity(new Intent(this, GraphBrowser.class));

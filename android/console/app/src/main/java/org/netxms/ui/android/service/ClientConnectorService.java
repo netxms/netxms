@@ -74,7 +74,7 @@ public class ClientConnectorService extends Service implements SessionListener {
     public static final String ACTION_ALARM_TERMINATE = "org.netxms.ui.android.ACTION_ALARM_TERMINATE";
     public static final String ACTION_EXIT = "org.netxms.ui.android.ACTION_EXIT";
     public static final String INTENTIONAL_EXIT_KEY = "IntentionalExit";
-    private static final String TAG = "nxclient/ClientConnectorService";
+    private static final String TAG = ClientConnectorService.class.getName();
     private static final String LASTALARM_KEY = "LastALarmIdNotified";
     private static final int NOTIFY_ALARM = 1;
     private static final int NOTIFY_STATUS = 2;
@@ -178,38 +178,50 @@ public class ClientConnectorService extends Service implements SessionListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if ((intent != null) && (intent.getAction() != null)) {
             Log.d(TAG, "onStartCommand: " + intent.getAction());
-            if (intent.getAction().equals(ACTION_CONNECT))
-                reconnect(false);
-            else if (intent.getAction().equals(ACTION_FORCE_CONNECT))
-                reconnect(true);
-            else if (intent.getAction().equals(ACTION_DISCONNECT))
-                disconnect(false);
-            else if (intent.getAction().equals(ACTION_FORCE_DISCONNECT))
-                disconnect(true);
-            else if (intent.getAction().equals(ACTION_RESCHEDULE))
-                if (NXApplication.isActivityVisible())
+            switch (intent.getAction()) {
+                case ACTION_CONNECT:
                     reconnect(false);
-                else
-                    disconnect(false);
-            else if (intent.getAction().equals(ACTION_RECONNECT_ON_CONFIGURE)) {
-                if (hasToReconnect()) {
-                    // Reset last alarm notified in case of app reconfiguration and force reconnection
-                    lastAlarmIdNotified = 0;
-                    clearNotifications();
+                    break;
+                case ACTION_FORCE_CONNECT:
                     reconnect(true);
-                } else
-                    reconnect(false);
-            } else if (intent.getAction().equals(ACTION_ALARM_ACKNOWLEDGE)) {
-                acknowledgeAlarm(intent.getLongExtra("alarmId", 0), false);
-                hideNotification(NOTIFY_ALARM);
-            } else if (intent.getAction().equals(ACTION_ALARM_RESOLVE)) {
-                resolveAlarm(intent.getLongExtra("alarmId", 0));
-                hideNotification(NOTIFY_ALARM);
-            } else if (intent.getAction().equals(ACTION_ALARM_TERMINATE)) {
-                terminateAlarm(intent.getLongExtra("alarmId", 0));
-                hideNotification(NOTIFY_ALARM);
-            } else if (intent.getAction().equals(ACTION_EXIT))
-                exitApp();
+                    break;
+                case ACTION_DISCONNECT:
+                    disconnect(false);
+                    break;
+                case ACTION_FORCE_DISCONNECT:
+                    disconnect(true);
+                    break;
+                case ACTION_RESCHEDULE:
+                    if (NXApplication.isActivityVisible())
+                        reconnect(false);
+                    else
+                        disconnect(false);
+                    break;
+                case ACTION_RECONNECT_ON_CONFIGURE:
+                    if (hasToReconnect()) {
+                        // Reset last alarm notified in case of app reconfiguration and force reconnection
+                        lastAlarmIdNotified = 0;
+                        clearNotifications();
+                        reconnect(true);
+                    } else
+                        reconnect(false);
+                    break;
+                case ACTION_ALARM_ACKNOWLEDGE:
+                    acknowledgeAlarm(intent.getLongExtra("alarmId", 0), false);
+                    hideNotification(NOTIFY_ALARM);
+                    break;
+                case ACTION_ALARM_RESOLVE:
+                    resolveAlarm(intent.getLongExtra("alarmId", 0));
+                    hideNotification(NOTIFY_ALARM);
+                    break;
+                case ACTION_ALARM_TERMINATE:
+                    terminateAlarm(intent.getLongExtra("alarmId", 0));
+                    hideNotification(NOTIFY_ALARM);
+                    break;
+                case ACTION_EXIT:
+                    exitApp();
+                    break;
+            }
         }
         return super.onStartCommand(intent, flags, startId);
     }
@@ -252,7 +264,7 @@ public class ClientConnectorService extends Service implements SessionListener {
         SharedPreferences.Editor editor = sp.edit();
         editor.putInt(LASTALARM_KEY, (int) lastAlarmIdNotified);
         editor.putBoolean(ClientConnectorService.INTENTIONAL_EXIT_KEY, true);
-        editor.commit();
+        editor.apply();
     }
 
     /**
@@ -609,7 +621,7 @@ public class ClientConnectorService extends Service implements SessionListener {
         Editor e = sp.edit();
         e.putLong("global.scheduler.last_activation", last);
         e.putLong("global.scheduler.next_activation", milliseconds);
-        e.commit();
+        e.apply();
     }
 
     /**
@@ -622,7 +634,7 @@ public class ClientConnectorService extends Service implements SessionListener {
         if (sp.getLong("global.scheduler.next_activation", 0) != 0) {
             Editor e = sp.edit();
             e.putLong("global.scheduler.next_activation", 0);
-            e.commit();
+            e.apply();
         }
     }
 
@@ -942,7 +954,7 @@ public class ClientConnectorService extends Service implements SessionListener {
             int short_gap = 100;// Length of Gap Between dots/dashes (real is 200)
             int medium_gap = 250;// Length of Gap Between Letters (real is 500)
             //int long_gap = 500;// Length of Gap Between Words (real is 1000)
-            long[] pattern = {
+            return new long[]{
                     0, // Start immediately
                     dot,
                     short_gap,
@@ -962,7 +974,6 @@ public class ClientConnectorService extends Service implements SessionListener {
                     short_gap,
                     dot// s
             };
-            return pattern;
         }
         return null;
     }
@@ -1065,7 +1076,7 @@ public class ClientConnectorService extends Service implements SessionListener {
         Alarm[] a;
         synchronized (mutex) {
             if (alarms != null)
-                a = alarms.values().toArray(new Alarm[alarms.size()]);
+                a = alarms.values().toArray(new Alarm[0]);
             else
                 a = new Alarm[0];
         }
@@ -1089,8 +1100,9 @@ public class ClientConnectorService extends Service implements SessionListener {
      * @param ids    list of id
      */
     public void acknowledgeAlarms(ArrayList<Long> ids, boolean sticky) {
-        for (int i = 0; i < ids.size(); i++)
-            acknowledgeAlarm(ids.get(i).longValue(), sticky);
+        for (Long id : ids) {
+            acknowledgeAlarm(id, sticky);
+        }
     }
 
     /**
@@ -1109,8 +1121,9 @@ public class ClientConnectorService extends Service implements SessionListener {
      * @param ids    list of id
      */
     public void resolveAlarms(ArrayList<Long> ids) {
-        for (int i = 0; i < ids.size(); i++)
-            resolveAlarm(ids.get(i).longValue());
+        for (Long id : ids) {
+            resolveAlarm(id);
+        }
     }
 
     /**
@@ -1118,8 +1131,9 @@ public class ClientConnectorService extends Service implements SessionListener {
      */
     public void terminateAlarm(long id) {
         try {
-            if (session != null)
+            if (session != null) {
                 session.terminateAlarm(id);
+            }
         } catch (Exception e) {
             Log.e(TAG, "Exception while executing session.terminateAlarm", e);
         }
