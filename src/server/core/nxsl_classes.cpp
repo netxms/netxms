@@ -1056,6 +1056,14 @@ NXSL_METHOD_DEFINITION(Node, createSNMPTransport)
 }
 
 /**
+ * enable8021x(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Node, enable8021xStatusPolling)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_8021X_STATUS_POLL, true);
+}
+
+/**
  * enableAgent(enabled) method
  */
 NXSL_METHOD_DEFINITION(Node, enableAgent)
@@ -1392,6 +1400,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    setName(_T("Node"));
 
    NXSL_REGISTER_METHOD(Node, createSNMPTransport, -1);
+   NXSL_REGISTER_METHOD(Node, enable8021xStatusPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableAgent, 1);
    NXSL_REGISTER_METHOD(Node, enableConfigurationPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableDiscoveryPolling, 1);
