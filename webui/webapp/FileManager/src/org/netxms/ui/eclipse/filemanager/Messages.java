@@ -26,6 +26,7 @@ public class Messages extends NLS
    public String AgentFileManager_DownloadJobTitle;
    public String AgentFileManager_Error;
    public String AgentFileManager_FileDownloadError;
+   public String AgentFileManager_Fingerprint;
    public String AgentFileManager_FolderCreationError;
    public String AgentFileManager_FollowChanges;
    public String AgentFileManager_MoveError;
@@ -107,6 +108,8 @@ public class Messages extends NLS
 	public String UploadFileToServer_JobError;
 	public String UploadFileToServer_JobTitle;
 	public String UploadFileToServer_TaskNamePrefix;
+   public String ViewAgentFileFingerprint_JobError;
+	public String ViewAgentFileFingerprint_JobTitle;
 	public String ViewAgentFilesProvider_JobError;
    public String ViewAgentFilesProvider_JobTitle;
    public String ViewAgentFilesProvider_Loading;

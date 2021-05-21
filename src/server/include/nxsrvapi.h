@@ -812,6 +812,19 @@ public:
 };
 
 /**
+ * Fingerprint of remote file
+ */
+struct RemoteFileFingerprint
+{
+   uint64_t size;
+   uint32_t crc32;
+   BYTE md5[MD5_DIGEST_SIZE];
+   BYTE sha256[SHA256_DIGEST_SIZE];
+   size_t dataLength;
+   BYTE data[64];
+};
+
+/**
  * Receiver for agent connection
  */
 class AgentConnectionReceiver;
@@ -985,12 +998,13 @@ public:
    uint32_t downloadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
             void (* progressCallback)(size_t, void *) = nullptr, void *cbArg = nullptr,
             NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
-   uint32_t changeFileOwner(const TCHAR *destinationFile, const TCHAR *newOwner, const TCHAR *newGroup);
-   uint32_t changeFilePermissions(const TCHAR *destinationFile, uint32_t permissions, const TCHAR *newOwner, const TCHAR *newGroup);
+   uint32_t getFileFingerprint(const TCHAR *file, RemoteFileFingerprint *fp);
+   uint32_t changeFileOwner(const TCHAR *file, const TCHAR *newOwner, const TCHAR *newGroup);
+   uint32_t changeFilePermissions(const TCHAR *file, uint32_t permissions, const TCHAR *newOwner, const TCHAR *newGroup);
    uint32_t getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **info);
    uint32_t startUpgrade(const TCHAR *pkgName);
-   UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType, WORD wPort = 0,
-                              WORD wProto = 0, const TCHAR *pszRequest = nullptr, const TCHAR *pszResponse = nullptr, UINT32 *responseTime = nullptr);
+   uint32_t checkNetworkService(uint32_t *status, const InetAddress& addr, int serviceType, uint16_t port = 0, uint16_t proto = 0,
+            const TCHAR *serviceRequest = nullptr, const TCHAR *serviceResponse = nullptr, uint32_t *responseTime = nullptr);
    UINT32 getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);
    uint32_t readConfigFile(TCHAR **content, size_t *size);
    uint32_t writeConfigFile(const TCHAR *content);

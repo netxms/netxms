@@ -78,6 +78,7 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.AgentFileData;
+import org.netxms.client.AgentFileFingerprint;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
@@ -90,6 +91,7 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.filemanager.Activator;
 import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.dialogs.CreateFolderDialog;
+import org.netxms.ui.eclipse.filemanager.dialogs.FileFingerprintDialog;
 import org.netxms.ui.eclipse.filemanager.dialogs.StartClientToServerFileUploadDialog;
 import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileComparator;
 import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileFilter;
@@ -137,6 +139,7 @@ public class AgentFileManager extends ViewPart
    private Action actionShowFilter;
    private Action actionDownloadFile;
    private Action actionTailFile;
+   private Action actionFingerprintFile;
    private Action actionShowFile;
    private Action actionCreateDirectory;
    private Action actionCalculateFolderSize;
@@ -513,7 +516,18 @@ public class AgentFileManager extends ViewPart
             tailFile(false, 0);
          }
       };
-      
+
+      actionFingerprintFile = new Action(Messages.get().AgentFileManager_Fingerprint)
+      {
+         @Override
+         public void run()
+         {
+            fingerprintFile();
+         }
+      };
+      actionFingerprintFile.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.fingerprint");
+      handlerService.activateHandler(actionFingerprintFile.getActionDefinitionId(), new ActionHandler(actionFingerprintFile));
+
       actionCreateDirectory = new Action(Messages.get().AgentFileManager_CreateFolder) {
          @Override
          public void run()
@@ -631,6 +645,7 @@ public class AgentFileManager extends ViewPart
          else
          {
             mgr.add(actionTailFile);
+            mgr.add(actionFingerprintFile);
             mgr.add(actionShowFile);
          }
       }
@@ -947,6 +962,39 @@ public class AgentFileManager extends ViewPart
          }
       };
       job.start();
+   }
+
+   /**
+    * Acquire file fingerprint with its size, hash and hex dump
+    */
+   private void fingerprintFile()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final AgentFile file = (AgentFile)selection.getFirstElement();
+      new ConsoleJob(Messages.get().ViewAgentFileFingerprint_JobTitle, null, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final AgentFileFingerprint fingerprint = session.getAgentFileFingerprint(objectId, file.getFullName());
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  FileFingerprintDialog dlg = new FileFingerprintDialog(getSite().getShell(), fingerprint);
+                  dlg.open();
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().ViewAgentFileFingerprint_JobError;
+         }
+      }.start();
    }
 
    /**

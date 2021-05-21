@@ -203,6 +203,10 @@
             id="org.netxms.ui.eclipse.filemanager.commands.calculateFolderSize"
             name="Calculate folder size">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.filemanager.commands.fingerprint"
+            name="Get file fingerprint">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -327,6 +331,12 @@
             contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+S">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.fingerprint"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+P">
       </key>
    </extension>
    <extension

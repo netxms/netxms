@@ -1781,7 +1781,7 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
 /**
  * Change file owner
  */
-uint32_t AgentConnection::changeFileOwner(const TCHAR *destinationFile, const TCHAR *newOwner, const TCHAR *newGroup)
+uint32_t AgentConnection::changeFileOwner(const TCHAR *file, const TCHAR *newOwner, const TCHAR *newGroup)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1789,7 +1789,7 @@ uint32_t AgentConnection::changeFileOwner(const TCHAR *destinationFile, const TC
    uint32_t requestId = generateRequestId();
    NXCPMessage msg(CMD_FILEMGR_CHOWN, requestId, m_nProtocolVersion);
 
-   msg.setField(VID_FILE_NAME, destinationFile);
+   msg.setField(VID_FILE_NAME, file);
    if (newOwner != nullptr)
       msg.setField(VID_USER_NAME, newOwner);
    if (newGroup != nullptr)
@@ -1810,7 +1810,7 @@ uint32_t AgentConnection::changeFileOwner(const TCHAR *destinationFile, const TC
 /**
  * Change file permissions
  */
-uint32_t AgentConnection::changeFilePermissions(const TCHAR *destinationFile, uint32_t permissions, const TCHAR *newOwner, const TCHAR *newGroup)
+uint32_t AgentConnection::changeFilePermissions(const TCHAR *file, uint32_t permissions, const TCHAR *newOwner, const TCHAR *newGroup)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1818,7 +1818,7 @@ uint32_t AgentConnection::changeFilePermissions(const TCHAR *destinationFile, ui
    uint32_t requestId = generateRequestId();
    NXCPMessage msg(CMD_FILEMGR_CHMOD, requestId, m_nProtocolVersion);
 
-   msg.setField(VID_FILE_NAME, destinationFile);
+   msg.setField(VID_FILE_NAME, file);
    msg.setField(VID_FILE_PERMISSIONS, permissions);
 
    //For Windows agents
@@ -1872,24 +1872,71 @@ uint32_t AgentConnection::downloadFile(const TCHAR *sourceFile, const TCHAR *des
 }
 
 /**
- * Send upgrade command
+ * Get file fingerprint
  */
-UINT32 AgentConnection::startUpgrade(const TCHAR *pkgName)
+uint32_t AgentConnection::getFileFingerprint(const TCHAR *file, RemoteFileFingerprint *fp)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   uint32_t requestId = generateRequestId();
-   NXCPMessage msg(CMD_UPGRADE_AGENT, requestId, m_nProtocolVersion);
+   NXCPMessage request(CMD_FILEMGR_GET_FILE_FINGERPRINT, generateRequestId(), m_nProtocolVersion);
+   request.setField(VID_FILE_NAME, file);
+
+   uint32_t rcc;
+   if (sendMessage(&request))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), m_commandTimeout);
+      if (response != nullptr)
+      {
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
+         {
+            fp->size = response->getFieldAsUInt64(VID_FILE_SIZE);
+            fp->crc32 = static_cast<uint32_t>(response->getFieldAsUInt64(VID_HASH_CRC32));
+            response->getFieldAsBinary(VID_HASH_MD5, fp->md5, MD5_DIGEST_SIZE);
+            response->getFieldAsBinary(VID_HASH_SHA256, fp->sha256, SHA256_DIGEST_SIZE);
+            const BYTE *data = response->getBinaryFieldPtr(VID_FILE_DATA, &fp->dataLength);
+            if ((data != nullptr) && (fp->dataLength > 0))
+            {
+               memcpy(fp->data, data, fp->dataLength);
+            }
+            else
+            {
+               fp->dataLength = 0;
+            }
+         }
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+   return rcc;
+}
+
+/**
+ * Send upgrade command
+ */
+uint32_t AgentConnection::startUpgrade(const TCHAR *pkgName)
+{
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   NXCPMessage request(CMD_UPGRADE_AGENT, generateRequestId(), m_nProtocolVersion);
    int i;
    for(i = (int)_tcslen(pkgName) - 1;
        (i >= 0) && (pkgName[i] != '\\') && (pkgName[i] != '/'); i--);
-   msg.setField(VID_FILE_NAME, &pkgName[i + 1]);
+   request.setField(VID_FILE_NAME, &pkgName[i + 1]);
 
    uint32_t rcc;
-   if (sendMessage(&msg))
+   if (sendMessage(&request))
    {
-      rcc = waitForRCC(requestId, m_commandTimeout);
+      rcc = waitForRCC(request.getId(), m_commandTimeout);
    }
    else
    {
@@ -1901,59 +1948,54 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pkgName)
 /**
  * Check status of network service via agent
  */
-UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType,
-                                            WORD wPort, WORD wProto, const TCHAR *pszRequest,
-                                            const TCHAR *pszResponse, UINT32 *responseTime)
+uint32_t AgentConnection::checkNetworkService(uint32_t *status, const InetAddress& addr, int serviceType, uint16_t port,
+         uint16_t proto, const TCHAR *serviceRequest, const TCHAR *serviceResponse, uint32_t *responseTime)
 {
-   UINT32 dwRqId, dwResult;
-   NXCPMessage msg(m_nProtocolVersion), *pResponse;
-   static WORD m_wDefaultPort[] = { 7, 22, 110, 25, 21, 80, 443, 23 };
-
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   dwRqId = generateRequestId();
+   static uint16_t defaultPort[] = { 7, 22, 110, 25, 21, 80, 443, 23 };
 
-   msg.setCode(CMD_CHECK_NETWORK_SERVICE);
-   msg.setId(dwRqId);
-   msg.setField(VID_IP_ADDRESS, addr);
-   msg.setField(VID_SERVICE_TYPE, (WORD)iServiceType);
-   msg.setField(VID_IP_PORT,
-      (wPort != 0) ? wPort :
-         m_wDefaultPort[((iServiceType >= NETSRV_CUSTOM) &&
-                         (iServiceType <= NETSRV_TELNET)) ? iServiceType : 0]);
-   msg.setField(VID_IP_PROTO, (wProto != 0) ? wProto : (WORD)IPPROTO_TCP);
-   msg.setField(VID_SERVICE_REQUEST, pszRequest);
-   msg.setField(VID_SERVICE_RESPONSE, pszResponse);
+   NXCPMessage request(CMD_CHECK_NETWORK_SERVICE, generateRequestId(), m_nProtocolVersion);
+   request.setField(VID_IP_ADDRESS, addr);
+   request.setField(VID_SERVICE_TYPE, (WORD)serviceType);
+   request.setField(VID_IP_PORT,
+      (port != 0) ? port :
+         defaultPort[((serviceType >= NETSRV_CUSTOM) &&
+                         (serviceType <= NETSRV_TELNET)) ? serviceType : 0]);
+   request.setField(VID_IP_PROTO, (proto != 0) ? proto : (uint16_t)IPPROTO_TCP);
+   request.setField(VID_SERVICE_REQUEST, serviceRequest);
+   request.setField(VID_SERVICE_RESPONSE, serviceResponse);
 
-   if (sendMessage(&msg))
+   uint32_t rcc;
+   if (sendMessage(&request))
    {
       // Wait up to 90 seconds for results
-      pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 90000);
-      if (pResponse != nullptr)
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), 90000);
+      if (response != nullptr)
       {
-         dwResult = pResponse->getFieldAsUInt32(VID_RCC);
-         if (dwResult == ERR_SUCCESS)
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
          {
-            *pdwStatus = pResponse->getFieldAsUInt32(VID_SERVICE_STATUS);
+            *status = response->getFieldAsUInt32(VID_SERVICE_STATUS);
             if (responseTime != nullptr)
             {
-               *responseTime = pResponse->getFieldAsUInt32(VID_RESPONSE_TIME);
+               *responseTime = response->getFieldAsUInt32(VID_RESPONSE_TIME);
             }
          }
-         delete pResponse;
+         delete response;
       }
       else
       {
-         dwResult = ERR_REQUEST_TIMEOUT;
+         rcc = ERR_REQUEST_TIMEOUT;
       }
    }
    else
    {
-      dwResult = ERR_CONNECTION_BROKEN;
+      rcc = ERR_CONNECTION_BROKEN;
    }
 
-   return dwResult;
+   return rcc;
 }
 
 /**
@@ -2501,7 +2543,7 @@ uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rq
       if (m_hCurrFile != -1)
          return ERR_RESOURCE_BUSY;
 
-      nx_strncpy(m_currentFileName, fileName, MAX_PATH);
+      _tcslcpy(m_currentFileName, fileName, MAX_PATH);
       ConditionReset(m_condFileDownload);
       m_hCurrFile = _topen(fileName, (append ? 0 : (O_CREAT | O_TRUNC)) | O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
       if (m_hCurrFile == -1)
