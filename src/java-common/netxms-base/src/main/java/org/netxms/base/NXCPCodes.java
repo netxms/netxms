@@ -351,9 +351,9 @@ public class NXCPCodes
    public static final int CMD_GET_OBJECT_QUERIES = 0x0149;
    public static final int CMD_MODIFY_OBJECT_QUERY = 0x014A;
    public static final int CMD_DELETE_OBJECT_QUERY = 0x014B;
-   //public static final int CMD_ZMQ_UNSUBSCRIBE_DATA = 0x014C;
-   //public static final int CMD_ZMQ_GET_EVT_SUBSCRIPTIONS = 0x014D;
-   //public static final int CMD_ZMQ_GET_DATA_SUBSCRIPTIONS = 0x014E;
+   public static final int CMD_FILEMGR_CHMOD = 0x014C;
+   public static final int CMD_FILEMGR_CHOWN = 0x014D;
+   public static final int CMD_FILEMGR_GET_FILE_FINGERPRINT = 0x014E;
    public static final int CMD_GET_REPOSITORIES = 0x014F;
    public static final int CMD_ADD_REPOSITORY = 0x0150;
    public static final int CMD_MODIFY_REPOSITORY = 0x0151;
@@ -443,6 +443,7 @@ public class NXCPCodes
    public static final int CMD_GENERATE_SSH_KEYS = 0x01AA;
    public static final int CMD_GET_SSH_KEYS = 0x01AB;
    public static final int CMD_GET_TOOLTIP_LAST_VALUES = 0x01AC;
+   public static final int CMD_SYNC_AGENT_POLICIES = 0x01AD;
    public static final int CMD_2FA_PREPARE_CHALLENGE = 0x01AE;
    public static final int CMD_2FA_VALIDATE_RESPONSE = 0x01AF;
    public static final int CMD_2FA_GET_METHODS = 0x01B0;
@@ -453,8 +454,6 @@ public class NXCPCodes
    public static final int CMD_2FA_GET_USER_BINDING_INFO = 0x01B5;
    public static final int CMD_2FA_MODIFY_USER_BINDING = 0x01B6;
    public static final int CMD_2FA_DELETE_USER_BINDING = 0x01B7;
-   public static final int CMD_FILEMGR_CHMOD = 0x01B8;
-   public static final int CMD_FILEMGR_CHOWN = 0x01B9;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1220,6 +1219,10 @@ public class NXCPCodes
    public static final long VID_QUERY_ID = 755;
    public static final long VID_FILE_PERMISSIONS = 756;
    public static final long VID_GROUP_NAME = 757;
+   public static final long VID_ERROR_INDICATOR = 758;
+   public static final long VID_HASH_CRC32 = 759;
+   public static final long VID_HASH_MD5 = 760;
+   public static final long VID_HASH_SHA256 = 761;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

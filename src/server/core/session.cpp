@@ -1547,13 +1547,14 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_EFFECTIVE_RIGHTS:
          getEffectiveRights(request);
          break;
-      case CMD_GET_FOLDER_SIZE:
       case CMD_GET_FOLDER_CONTENT:
-      case CMD_FILEMGR_DELETE_FILE:
-      case CMD_FILEMGR_RENAME_FILE:
-      case CMD_FILEMGR_MOVE_FILE:
-      case CMD_FILEMGR_CREATE_FOLDER:
+      case CMD_GET_FOLDER_SIZE:
       case CMD_FILEMGR_COPY_FILE:
+      case CMD_FILEMGR_CREATE_FOLDER:
+      case CMD_FILEMGR_DELETE_FILE:
+      case CMD_FILEMGR_GET_FILE_FINGERPRINT:
+      case CMD_FILEMGR_MOVE_FILE:
+      case CMD_FILEMGR_RENAME_FILE:
          fileManagerControl(request);
          break;
       case CMD_FILEMGR_UPLOAD:
@@ -13382,25 +13383,22 @@ void ClientSession::getEffectiveRights(NXCPMessage *request)
  */
 void ClientSession::fileManagerControl(NXCPMessage *request)
 {
-   NXCPMessage msg, *response = nullptr, *responseMessage;
-	UINT32 rcc = RCC_INTERNAL_ERROR;
-   responseMessage = &msg;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage *response = nullptr, *responseMessage = &msg;
+   uint32_t rcc = RCC_INTERNAL_ERROR;
 
    TCHAR fileName[MAX_PATH];
    request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
-   UINT32 objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
-	shared_ptr<NetObj> object = FindObjectById(objectId);
+   uint32_t objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+   shared_ptr<NetObj> object = FindObjectById(objectId);
 	if (object != nullptr)
 	{
-		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MANAGE_FILES) ||
-         (request->getCode() == CMD_GET_FOLDER_CONTENT && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) ||
-		 (request->getCode() == CMD_GET_FOLDER_SIZE && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
+	   if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MANAGE_FILES) ||
+          ((request->getCode() == CMD_GET_FOLDER_CONTENT || request->getCode() == CMD_GET_FOLDER_SIZE) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) ||
+          (request->getCode() == CMD_FILEMGR_GET_FILE_FINGERPRINT && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_DOWNLOAD)))
 		{
-			if (object->getObjectClass() == OBJECT_NODE)
-			{
+		   if (object->getObjectClass() == OBJECT_NODE)
+		   {
             shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*object).createAgentConnection();
             if (conn != nullptr)
             {
@@ -13496,6 +13494,11 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                            request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
                            writeAuditLog(AUDIT_OBJECTS, true, objectId,
                                          _T("Copy file \"%s\" to \"%s\" on node %s"), fileName, newFileName, object->getName());
+                           break;
+                        }
+                        case CMD_FILEMGR_GET_FILE_FINGERPRINT:
+                        {
+                           writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Get fingerprint for file \"%s\" on node %s"), fileName, object->getName());
                            break;
                         }
                      }

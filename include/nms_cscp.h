@@ -568,9 +568,9 @@ typedef struct
 #define CMD_GET_OBJECT_QUERIES            0x0149
 #define CMD_MODIFY_OBJECT_QUERY           0x014A
 #define CMD_DELETE_OBJECT_QUERY           0x014B
-//#define CMD_ZMQ_UNSUBSCRIBE_DATA          0x014C
-//#define CMD_ZMQ_GET_EVT_SUBSCRIPTIONS     0x014D
-//#define CMD_ZMQ_GET_DATA_SUBSCRIPTIONS    0x014E
+#define CMD_FILEMGR_CHMOD                 0x014C
+#define CMD_FILEMGR_CHOWN                 0x014D
+#define CMD_FILEMGR_GET_FILE_FINGERPRINT  0x014E
 #define CMD_GET_REPOSITORIES              0x014F
 #define CMD_ADD_REPOSITORY                0x0150
 #define CMD_MODIFY_REPOSITORY             0x0151
@@ -676,8 +676,6 @@ typedef struct
 #define CMD_2FA_GET_USER_BINDING_DETAILS  0x01B5
 #define CMD_2FA_MODIFY_USER_BINDING       0x01B6
 #define CMD_2FA_DELETE_USER_BINDING       0x01B7
-#define CMD_FILEMGR_CHMOD                 0x01B8
-#define CMD_FILEMGR_CHOWN                 0x01B9
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1448,6 +1446,9 @@ typedef struct
 #define VID_FILE_PERMISSIONS        ((uint32_t)756)
 #define VID_GROUP_NAME              ((uint32_t)757)
 #define VID_ERROR_INDICATOR         ((uint32_t)758)
+#define VID_HASH_CRC32              ((uint32_t)759)
+#define VID_HASH_MD5                ((uint32_t)760)
+#define VID_HASH_SHA256             ((uint32_t)761)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -31,6 +31,7 @@ NETXMS_EXECUTABLE_HEADER(nxdownload)
 /**
  * Static fields
  */
+static bool s_fingerprintMode = false;
 static bool s_verbose = true;
 static NXCPStreamCompressionMethod s_compression = NXCP_STREAM_COMPRESSION_NONE;
 
@@ -49,6 +50,9 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
 {
    switch(ch)
    {
+      case 'F':   // Fingerprint mode
+         s_fingerprintMode = true;
+         break;
       case 'q':   // Quiet mode
          s_verbose = false;
          break;
@@ -69,7 +73,56 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
  */
 static bool IsArgMissingCb(int currentCount)
 {
-   return currentCount < 3;
+   return currentCount < 2;
+}
+
+/**
+ * Get file fingerprints
+ */
+static int GetFileFingerprints(AgentConnection *conn, const TCHAR *file)
+{
+   RemoteFileFingerprint fp;
+   uint32_t rcc = conn->getFileFingerprint(file, &fp);
+   if (rcc != ERR_SUCCESS)
+   {
+      _tprintf(_T("%u: %s\n"), rcc, AgentErrorCodeToText(rcc));
+      return 1;
+   }
+
+   TCHAR hashText[128];
+   _tprintf(_T("Size.....: ") UINT64_FMT _T(" bytes\n"), fp.size);
+   _tprintf(_T("CRC32....: %u (0x%08X)\n"), fp.crc32, fp.crc32);
+   _tprintf(_T("MD5......: %s\n"), BinToStr(fp.md5, MD5_DIGEST_SIZE, hashText));
+   _tprintf(_T("SHA256...: %s\n"), BinToStr(fp.sha256, SHA256_DIGEST_SIZE, hashText));
+
+   if (fp.dataLength > 0)
+   {
+      _tprintf(_T("\nFirst %u bytes of file:\n"), static_cast<uint32_t>(fp.dataLength));
+      for(size_t offset = 0; offset < fp.dataLength;)
+      {
+         _tprintf(_T("   %04X | "), offset);
+
+         TCHAR text[17];
+         int b;
+         for(b = 0; (b < 16) && (offset < fp.dataLength); b++, offset++)
+         {
+            BYTE ch = fp.data[offset];
+            _tprintf(_T("%02X "), ch);
+            text[b] = ((ch < ' ') || (ch >= 127)) ? '.' : ch;
+         }
+
+         for(; b < 16; b++)
+         {
+            _tprintf(_T("   "));
+            text[b] = ' ';
+         }
+         text[16] = 0;
+
+         _tprintf(_T("| %s\n"), text);
+      }
+   }
+
+   return 0;
 }
 
 /**
@@ -77,31 +130,52 @@ static bool IsArgMissingCb(int currentCount)
  */
 static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA *pServerKey)
 {
-   int64_t nElapsedTime = GetCurrentTimeMs();
+   if (s_fingerprintMode)
+      return GetFileFingerprints(conn, argv[optind + 1]);
+
+   const TCHAR *localFile;
+   if (argc - optind > 2)
+   {
+      localFile = argv[optind + 2];
+   }
+   else
+   {
+      TCHAR *remoteFile = argv[optind + 1];
+      TCHAR *p = remoteFile + _tcslen(remoteFile);
+      while((p > remoteFile) && (*p != '/') && (*p != '\\'))
+         p--;
+      if ((*p == '/') || (*p == '\\'))
+         p++;
+      localFile = p;
+   }
+   if (s_verbose)
+      _tprintf(_T("Downloading to %s\n"), localFile);
+
+   int64_t elapsedTime = GetCurrentTimeMs();
    if (s_verbose)
       _tprintf(_T("<Download>:                 "));
-   uint32_t dwError = conn->downloadFile(argv[optind + 1], argv[optind + 2], false, s_verbose ? ProgressCallback : nullptr, nullptr, s_compression);
+   uint32_t rcc = conn->downloadFile(argv[optind + 1], localFile, false, s_verbose ? ProgressCallback : nullptr, nullptr, s_compression);
    if (s_verbose)
       _tprintf(_T("\r                        \r"));
-   nElapsedTime = GetCurrentTimeMs() - nElapsedTime;
+   elapsedTime = GetCurrentTimeMs() - elapsedTime;
    if (s_verbose)
    {
-      if (dwError == ERR_SUCCESS)
+      if (rcc == ERR_SUCCESS)
       {
          uint64_t fileSize = FileSize(argv[optind + 1]);
          _tprintf(_T("File transferred successfully\n") UINT64_FMT _T(" bytes in ") INT64_FMT _T(".%03d seconds (%.2f KB/sec)\n"),
                   fileSize,
-                  nElapsedTime / 1000,
-                  (int32_t)(nElapsedTime % 1000),
-                  ((double)((int64_t)fileSize / 1024) / (double)nElapsedTime) * 1000);
+                  elapsedTime / 1000,
+                  (int32_t)(elapsedTime % 1000),
+                  ((double)((int64_t)fileSize / 1024) / (double)elapsedTime) * 1000);
       }
       else
       {
-         _tprintf(_T("%u: %s\n"), dwError, AgentErrorCodeToText(dwError));
+         _tprintf(_T("%u: %s\n"), rcc, AgentErrorCodeToText(rcc));
       }
    }
 
-   return dwError == ERR_SUCCESS ? 0 : 1;
+   return rcc == ERR_SUCCESS ? 0 : 1;
 }
 
 /**
@@ -116,12 +190,13 @@ int main(int argc, char *argv[])
    ServerCommandLineTool tool;
    tool.argc = argc;
    tool.argv = argv;
-   tool.mainHelpText = _T("Usage: nxdownload [<options>] <host> <path to source file> <path to destination file>\n")
+   tool.mainHelpText = _T("Usage: nxdownload [<options>] <host> <path to source file> [<path to destination file>]\n")
                        _T("Tool specific options are:\n")
+                       _T("   -F           : Get file fingerprints instead of download.\n")
                        _T("   -q           : Quiet mode.\n")
                        _T("   -z           : Compress data stream with LZ4.\n")
                        _T("   -Z           : Compress data stream with DEFLATE.\n");
-   tool.additionalOptions = "qzZ";
+   tool.additionalOptions = "FqzZ";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
    tool.isArgMissingCb = &IsArgMissingCb;

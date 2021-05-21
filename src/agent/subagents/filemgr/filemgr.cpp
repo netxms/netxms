@@ -29,40 +29,40 @@
 
 bool SetPrivilege(HANDLE hToken, const TCHAR* privilege, bool enabled)
 {
-	LUID luid;
-	if (!LookupPrivilegeValue(NULL, privilege, &luid))
-	{
+   LUID luid;
+   if (!LookupPrivilegeValue(NULL, privilege, &luid))
+   {
       TCHAR errorText[1024];
       nxlog_debug_tag(DEBUG_TAG, 4, _T("LookupPrivilegeValue error: %s"), GetSystemErrorText(GetLastError(), errorText, 1024));
-		return false;
-	}
-
-	TOKEN_PRIVILEGES tp;
-	tp.PrivilegeCount = 1;
-	tp.Privileges[0].Luid = luid;
-	if (enabled)
-   {
-		tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-   }
-	else
-   {
-		tp.Privileges[0].Attributes = 0;
+      return false;
    }
 
-	if (!AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), (PTOKEN_PRIVILEGES)NULL, (PDWORD)NULL))
-	{
+   TOKEN_PRIVILEGES tp;
+   tp.PrivilegeCount = 1;
+   tp.Privileges[0].Luid = luid;
+   if (enabled)
+   {
+      tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+   }
+   else
+   {
+      tp.Privileges[0].Attributes = 0;
+   }
+
+   if (!AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), (PTOKEN_PRIVILEGES)NULL, (PDWORD)NULL))
+   {
       TCHAR errorText[1024];
       nxlog_debug_tag(DEBUG_TAG, 4, _T("AdjustTokenPrivileges error:  %s"), GetSystemErrorText(GetLastError(), errorText, 1024));
-		return false;
-	}
+      return false;
+   }
 
-	if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
-	{
+   if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+   {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("The token does not have the specified privilege."));
-		return false;
-	}
+      return false;
+   }
 
-	return true;
+   return true;
 }
 
 #else
@@ -99,6 +99,9 @@ static inline void ConvertPathToHost(TCHAR *path, bool allowPathExpansion, bool 
 
 #else
 
+/**
+ * Convert path from UNIX to local format and do macro expansion
+ */
 static inline void ConvertPathToHost(TCHAR *path, bool allowPathExpansion, bool allowShellCommands)
 {
    if (allowPathExpansion)
@@ -121,6 +124,9 @@ static void ConvertPathToNetwork(TCHAR *path)
 
 #else
 
+/**
+ * Convert path from local to UNIX format
+ */
 #define ConvertPathToNetwork(x)
 
 #endif
@@ -1523,6 +1529,60 @@ static void CH_CancelFileMonitoring(NXCPMessage *request, NXCPMessage *response)
 }
 
 /**
+ * Handler for "get file fingerprint" command
+ */
+static void CH_GetFileFingerprint(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+{
+   TCHAR fileName[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
+   ConvertPathToHost(fileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
+
+   TCHAR *fullPath;
+   if (CheckFullPath(fileName, &fullPath, false))
+   {
+      NX_STAT_STRUCT fs;
+      if (CALL_STAT(fullPath, &fs) == 0)
+      {
+         response->setField(VID_FILE_SIZE, static_cast<uint64_t>(fs.st_size));
+
+         uint32_t crc32;
+         CalculateFileCRC32(fullPath, &crc32);
+         response->setField(VID_HASH_CRC32, static_cast<uint64_t>(crc32)); // Pass as 64 bit to avoid signed/unsigned issues on Java side
+
+         BYTE md5[MD5_DIGEST_SIZE];
+         CalculateFileMD5Hash(fullPath, md5);
+         response->setField(VID_HASH_MD5, md5, MD5_DIGEST_SIZE);
+
+         BYTE sha256[SHA256_DIGEST_SIZE];
+         CalculateFileSHA256Hash(fullPath, sha256);
+         response->setField(VID_HASH_SHA256, sha256, SHA256_DIGEST_SIZE);
+
+         int fh = _topen(fullPath, O_RDONLY);
+         if (fh != -1)
+         {
+            BYTE buffer[64];
+            int bytes = _read(fh, buffer, 64);
+            _close(fh);
+            if (bytes > 0)
+            {
+               response->setField(VID_FILE_DATA, buffer, bytes);
+            }
+         }
+         response->setField(VID_RCC, ERR_SUCCESS);
+      }
+      else
+      {
+         response->setField(VID_RCC, ERR_IO_FAILURE);
+      }
+      MemFree(fullPath);
+   }
+   else
+   {
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+}
+
+/**
  * Process commands like get files in folder, delete file/folder, copy file/folder, move file/folder
  */
 static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
@@ -1574,6 +1634,9 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
       case CMD_FILEMGR_CHOWN:
          CH_ChangeFileOwner(request, response, session);
          break;
+      case CMD_FILEMGR_GET_FILE_FINGERPRINT:
+         CH_GetFileFingerprint(request, response, session);
+         break;
       default:
          return false;
    }
@@ -1588,12 +1651,12 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("FILEMGR"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, ProcessCommands, NULL,
-   0, NULL, // parameters
-   0, NULL, // lists
-   0, NULL, // tables
-   0, NULL, // actions
-   0, NULL  // push parameters
+   SubagentInit, SubagentShutdown, ProcessCommands, nullptr,
+   0, nullptr, // parameters
+   0, nullptr, // lists
+   0, nullptr, // tables
+   0, nullptr, // actions
+   0, nullptr  // push parameters
 };
 
 /**

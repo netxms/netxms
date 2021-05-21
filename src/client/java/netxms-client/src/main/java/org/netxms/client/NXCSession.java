@@ -9976,6 +9976,24 @@ public class NXCSession
    }
 
    /**
+    * Get file fingerprint from remote host via agent.
+    *
+    * @param nodeId node object ID
+    * @param remoteFileName fully qualified file name on remote system
+    * @return agent file fingerprint which contains size, hashes and partial data for the file
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public AgentFileFingerprint getAgentFileFingerprint(long nodeId, String remoteFileName) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_GET_FILE_FINGERPRINT);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
+      sendMessage(msg);
+      return new AgentFileFingerprint(waitForRCC(msg.getMessageId()));
+   }
+
+   /**
     * Delete file from server's file store
     *
     * @param serverFileName name of server file

@@ -375,9 +375,9 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_OBJECT_QUERIES"),
       _T("CMD_MODIFY_OBJECT_QUERY"),
       _T("CMD_DELETE_OBJECT_QUERY"),
-      _T("UNUSED_0x014C"),
-      _T("UNUSED_0x014D"),
-      _T("UNUSED_0x014E"),
+      _T("CMD_FILEMGR_CHMOD"),
+      _T("CMD_FILEMGR_CHOWN")
+      _T("CMD_FILEMGR_GET_FILE_FINGERPRINT"),
       _T("CMD_GET_REPOSITORIES"),
       _T("CMD_ADD_REPOSITORY"),
       _T("CMD_MODIFY_REPOSITORY"),
@@ -482,9 +482,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_2FA_GET_USER_BINDINGS"),
       _T("CMD_2FA_GET_USER_BINDING_DETAILS"),
       _T("CMD_2FA_MODIFY_USER_BINDING"),
-      _T("CMD_2FA_DELETE_USER_BINDING"),
-      _T("CMD_FILEMGR_CHMOD"),
-      _T("CMD_FILEMGR_CHOWN")
+      _T("CMD_2FA_DELETE_USER_BINDING")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -497,7 +495,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_FILEMGR_CHOWN))
+   if ((code >= CMD_LOGIN) && (code <= CMD_2FA_DELETE_USER_BINDING))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }
