@@ -203,5 +203,8 @@ public:
    bool isExpansionAllowed() const { return m_allowMacroExpansion; }
 };
 
+#ifdef _WIN32
+template class LIBNETXMS_EXPORTABLE shared_ptr<Config>;
+#endif
 
 #endif
