@@ -24,43 +24,43 @@
 /**
  * Handler for Net.IP.Forwarding and Net.IP6.Forwarding parameters
  */
-LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_NetIpForwarding(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   int nVer = CAST_FROM_POINTER(pArg, int);
-   int nRet = SYSINFO_RC_ERROR;
-   FILE *hFile;
-   const char *pFileName = NULL;
+   int rc = SYSINFO_RC_ERROR;
 
-   switch (nVer)
+   const char *procFileName;
+   switch (CAST_FROM_POINTER(arg, int))
    {
       case 4:
-         pFileName = "/proc/sys/net/ipv4/conf/all/forwarding";
+         procFileName = "/proc/sys/net/ipv4/conf/all/forwarding";
          break;
       case 6:
-         pFileName = "/proc/sys/net/ipv6/conf/all/forwarding";
+         procFileName = "/proc/sys/net/ipv6/conf/all/forwarding";
+         break;
+      default:
+         procFileName = nullptr;
          break;
    }
 
-   if (pFileName != NULL)
+   if (procFileName != nullptr)
    {
-      hFile = fopen(pFileName, "r");
-      if (hFile != NULL)
+      FILE *hFile = fopen(procFileName, "r");
+      if (hFile != nullptr)
       {
-         char szBuff[4];
-
-         if (fgets(szBuff, sizeof(szBuff), hFile) != NULL)
+         char buffer[4];
+         if (fgets(buffer, sizeof(buffer), hFile) != nullptr)
          {
-            nRet = SYSINFO_RC_SUCCESS;
-            switch (szBuff[0])
+            rc = SYSINFO_RC_SUCCESS;
+            switch (buffer[0])
             {
                case '0':
-                  ret_int(pValue, 0);
+                  ret_boolean(value, false);
                   break;
                case '1':
-                  ret_int(pValue, 1);
+                  ret_boolean(value, true);
                   break;
                default:
-                  nRet = SYSINFO_RC_ERROR;
+                  rc = SYSINFO_RC_ERROR;
                   break;
             }
          }
@@ -68,17 +68,17 @@ LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
       }
    }
 
-   return nRet;
+   return rc;
 }
 
 /**
  * Handler for Net.ArpCache list
  */
-LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
+LONG H_NetArpCache(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   int nRet = SYSINFO_RC_ERROR;
+   int rc = SYSINFO_RC_ERROR;
    FILE *hFile = fopen("/proc/net/arp", "r");
-   if (hFile != NULL)
+   if (hFile != nullptr)
    {
       char szBuff[256];
       if (fgets(szBuff, sizeof(szBuff), hFile) != nullptr) // skip first line
@@ -86,7 +86,7 @@ LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
          int nFd = socket(AF_INET, SOCK_DGRAM, 0);
          if (nFd > 0)
          {
-            nRet = SYSINFO_RC_SUCCESS;
+            rc = SYSINFO_RC_SUCCESS;
 
             while(fgets(szBuff, sizeof(szBuff), hFile) != nullptr)
             {
@@ -128,7 +128,7 @@ LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
                      nIP1, nIP2, nIP3, nIP4,
                      nIndex);
 
-                  pValue->add(output);
+                  value->add(output);
                }
                else
                {
@@ -149,7 +149,7 @@ LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
       nxlog_debug_tag(DEBUG_TAG, 6, _T("H_NetArpCache: cannot open cache file (%s)"), _tcserror(errno));
    }
 
-   return nRet;
+   return rc;
 }
 
 /**
@@ -317,7 +317,7 @@ static LinuxInterfaceInfo *ParseInterfaceMessage(nlmsghdr *messageHeader)
 {
    LinuxInterfaceInfo *ifInfo = new LinuxInterfaceInfo();
 
-   struct ifinfomsg *interface = (ifinfomsg *)NLMSG_DATA(messageHeader);
+   auto interface = reinterpret_cast<ifinfomsg*>(NLMSG_DATA(messageHeader));
    int len = messageHeader->nlmsg_len - NLMSG_LENGTH(sizeof(struct ifinfomsg));
 
    for(struct rtattr *attribute = IFLA_RTA(interface); RTA_OK(attribute, len); attribute = RTA_NEXT(attribute, len))
@@ -363,7 +363,7 @@ static void ParseAddressMessage(nlmsghdr *messageHeader, ObjectArray<LinuxInterf
       return;  // protocol not supported
 
    // Find interface by index
-   LinuxInterfaceInfo *iface = NULL;
+   LinuxInterfaceInfo *iface = nullptr;
    for(int i = 0; i < ifList->size(); i++)
    {
       if (ifList->get(i)->index == addrMsg->ifa_index)
@@ -372,14 +372,13 @@ static void ParseAddressMessage(nlmsghdr *messageHeader, ObjectArray<LinuxInterf
          break;
       }
    }
-   if (iface == NULL)
+   if (iface == nullptr)
    {
-      AgentWriteDebugLog(5, _T("ParseInterfaceMessage: cannot find interface with index %d"), addrMsg->ifa_index);
+      AgentWriteDebugLog(5, _T("ParseInterfaceMessage: cannot find interface with index %u"), addrMsg->ifa_index);
       return;  // interface not found
    }
 
-   //int len = messageHeader->nlmsg_len - NLMSG_LENGTH(sizeof(struct ifaddrmsg));
-   InetAddress *addr = NULL;
+   InetAddress *addr = nullptr;
    int len = IFA_PAYLOAD(messageHeader);
    for(struct rtattr *attribute = IFA_RTA(addrMsg); RTA_OK(attribute, len); attribute = RTA_NEXT(attribute, len))
    {
@@ -391,14 +390,14 @@ static void ParseAddressMessage(nlmsghdr *messageHeader, ObjectArray<LinuxInterf
       {
          delete addr;  // if it was created from IFA_ADDRESS
          addr = (addrMsg->ifa_family == AF_INET) ? 
-            new InetAddress(ntohl(*((UINT32 *)RTA_DATA(attribute)))) :
-            new InetAddress((BYTE *)RTA_DATA(attribute));
+               new InetAddress(ntohl(*static_cast<uint32_t*>(RTA_DATA(attribute)))) :
+               new InetAddress(static_cast<BYTE*>(RTA_DATA(attribute)));
          if (attribute->rta_type == IFA_LOCAL)
             break;
       }
    }
-   
-   if (addr != NULL)
+
+   if (addr != nullptr)
    {
       addr->setMaskBits(addrMsg->ifa_prefixlen);
       iface->addrList.add(addr);
@@ -426,7 +425,7 @@ static ObjectArray<LinuxInterfaceInfo> *GetInterfaces()
    local.nl_pid = getpid();
 
    bool done;
-   ObjectArray<LinuxInterfaceInfo> *ifList = NULL;
+   ObjectArray<LinuxInterfaceInfo> *ifList = nullptr;
 
    if (bind(netlinkSocket, (struct sockaddr *)&local, sizeof(local)) == -1)
    {
@@ -455,13 +454,13 @@ static ObjectArray<LinuxInterfaceInfo> *GetInterfaces()
          goto failure_2;
       }
 
-      for(struct nlmsghdr *msg_ptr = (struct nlmsghdr *)replyBuffer; NLMSG_OK(msg_ptr, msgLen); msg_ptr = NLMSG_NEXT(msg_ptr, msgLen))
+      for(auto mptr = reinterpret_cast<struct nlmsghdr*>(replyBuffer); NLMSG_OK(mptr, msgLen); mptr = NLMSG_NEXT(mptr, msgLen))
       {
-         if (msg_ptr->nlmsg_type == RTM_NEWLINK)
+         if (mptr->nlmsg_type == RTM_NEWLINK)
          {
-            ifList->add(ParseInterfaceMessage(msg_ptr));
+            ifList->add(ParseInterfaceMessage(mptr));
          }
-         else if (msg_ptr->nlmsg_type == NLMSG_DONE)
+         else if (mptr->nlmsg_type == NLMSG_DONE)
          {
             done = true;
          }
@@ -508,16 +507,16 @@ failure_2:
 
 failure_1:
    close(netlinkSocket);
-   return NULL;
+   return nullptr;
 }
 
 /**
  * Handler for Net.InterfaceList list
  */
-LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, AbstractCommSession *session)
+LONG H_NetIfList(const TCHAR *param, const TCHAR *arg, StringList* value, AbstractCommSession *session)
 {
    ObjectArray<LinuxInterfaceInfo> *ifList = GetInterfaces();
-   if (ifList == NULL)
+   if (ifList == nullptr)
    {
       AgentWriteDebugLog(4, _T("H_NetIfList: failed to get interface list"));
       return SYSINFO_RC_ERROR;
@@ -532,27 +531,29 @@ LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, A
          for(int j = 0; j < iface->addrList.size(); j++)
          {
             const InetAddress *addr = iface->addrList.get(j);
-            if ((addr->getFamily() == AF_INET) || (session == NULL) || session->isIPv6Aware())
+            if ((addr->getFamily() == AF_INET) || (session == nullptr) || session->isIPv6Aware())
             {
-               _sntprintf(infoString, 1024, _T("%d %s/%d %d %s %hs"),
-                  iface->index,
-                  addr->toString(ipAddr),
-                  addr->getMaskBits(),
-                  iface->type,
-                  BinToStr(iface->macAddr, 6, macAddr),
-                  iface->name);
-               pValue->add(infoString);
+               _sntprintf(infoString, 1024, _T("%d %s/%d %d(%d) %s %hs"),
+                     iface->index,
+                     addr->toString(ipAddr),
+                     addr->getMaskBits(),
+                     iface->type,
+                     iface->mtu,
+                     BinToStr(iface->macAddr, 6, macAddr),
+                     iface->name);
+               value->add(infoString);
             }
          }
       }
       else
       {
-			_sntprintf(infoString, 1024, _T("%d 0.0.0.0/0 %d %s %hs"),
-				iface->index,
-				iface->type,
-				BinToStr(iface->macAddr, 6, macAddr),
-				iface->name);
-         pValue->add(infoString);
+			_sntprintf(infoString, 1024, _T("%d 0.0.0.0/0 %d(%d) %s %hs"),
+               iface->index,
+               iface->type,
+               iface->mtu,
+               BinToStr(iface->macAddr, 6, macAddr),
+               iface->name);
+         value->add(infoString);
       }
    }
 
@@ -563,10 +564,10 @@ LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, A
 /**
  * Handler for Net.InterfaceNames list
  */
-LONG H_NetIfNames(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, AbstractCommSession *session)
+LONG H_NetIfNames(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    ObjectArray<LinuxInterfaceInfo> *ifList = GetInterfaces();
-   if (ifList == NULL)
+   if (ifList == nullptr)
    {
       AgentWriteDebugLog(4, _T("H_NetIfNames: failed to get interface list"));
       return SYSINFO_RC_ERROR;
@@ -575,9 +576,9 @@ LONG H_NetIfNames(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, 
    for(int i = 0; i < ifList->size(); i++)
    {
 #ifdef UNICODE
-      pValue->addPreallocated(WideStringFromMBString(ifList->get(i)->name));
+      value->addMBString(ifList->get(i)->name);
 #else
-      pValue->add(ifList->get(i)->name);
+      value->add(ifList->get(i)->name);
 #endif
    }
 
@@ -713,13 +714,12 @@ static LONG ValueFromLine64(char *pszLine, int nPos, TCHAR *pValue)
 /**
  * Handler for interface parameters (using /proc file system)
  */
-LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_NetIfInfoFromProc(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    char *ptr, szBuffer[256], szName[IFNAMSIZ];
    LONG nIndex, nRet = SYSINFO_RC_SUCCESS;
-   FILE *fp;
 
-   if (!AgentGetParameterArgA(pszParam, 1, szBuffer, 256))
+   if (!AgentGetParameterArgA(param, 1, szBuffer, 256))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Check if we have interface name or index
@@ -744,7 +744,7 @@ LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
       if (ptr != nullptr)
          *ptr = 0;
 
-      fp = fopen("/proc/net/dev", "r");
+      FILE *fp = fopen("/proc/net/dev", "r");
       if (fp != nullptr)
       {
          while(1)
@@ -779,43 +779,43 @@ LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
       if (nRet == SYSINFO_RC_SUCCESS)
       {
          TrimA(ptr);
-         switch ((long) pArg)
+         switch ((long) arg)
          {
             case IF_INFO_BYTES_IN:
-               nRet = ValueFromLine(ptr, 0, pValue);
+               nRet = ValueFromLine(ptr, 0, value);
                break;
             case IF_INFO_BYTES_IN_64:
-               nRet = ValueFromLine64(ptr, 0, pValue);
+               nRet = ValueFromLine64(ptr, 0, value);
                break;
             case IF_INFO_PACKETS_IN:
-               nRet = ValueFromLine(ptr, 1, pValue);
+               nRet = ValueFromLine(ptr, 1, value);
                break;
             case IF_INFO_PACKETS_IN_64:
-               nRet = ValueFromLine64(ptr, 1, pValue);
+               nRet = ValueFromLine64(ptr, 1, value);
                break;
             case IF_INFO_ERRORS_IN:
-               nRet = ValueFromLine(ptr, 2, pValue);
+               nRet = ValueFromLine(ptr, 2, value);
                break;
             case IF_INFO_ERRORS_IN_64:
-               nRet = ValueFromLine64(ptr, 2, pValue);
+               nRet = ValueFromLine64(ptr, 2, value);
                break;
             case IF_INFO_BYTES_OUT:
-               nRet = ValueFromLine(ptr, 8, pValue);
+               nRet = ValueFromLine(ptr, 8, value);
                break;
             case IF_INFO_BYTES_OUT_64:
-               nRet = ValueFromLine64(ptr, 8, pValue);
+               nRet = ValueFromLine64(ptr, 8, value);
                break;
             case IF_INFO_PACKETS_OUT:
-               nRet = ValueFromLine(ptr, 9, pValue);
+               nRet = ValueFromLine(ptr, 9, value);
                break;
             case IF_INFO_PACKETS_OUT_64:
-               nRet = ValueFromLine64(ptr, 9, pValue);
+               nRet = ValueFromLine64(ptr, 9, value);
                break;
             case IF_INFO_ERRORS_OUT:
-               nRet = ValueFromLine(ptr, 10, pValue);
+               nRet = ValueFromLine(ptr, 10, value);
                break;
             case IF_INFO_ERRORS_OUT_64:
-               nRet = ValueFromLine64(ptr, 10, pValue);
+               nRet = ValueFromLine64(ptr, 10, value);
                break;
             default:
                nRet = SYSINFO_RC_UNSUPPORTED;
