@@ -1,10 +1,12 @@
 ; NetXMS SDK installation script
-; Copyright (c)
+; Copyright (c) 2009-2021 Raden Solutions
+
+#include "..\..\build\netxms-build-tag.iss"
 
 [Setup]
 AppName=NetXMS SDK
-AppVerName=NetXMS SDK 3.5.152
-AppVersion=3.5.152
+AppVerName=NetXMS SDK {#VersionString}
+AppVersion={#VersionString}
 AppPublisher=Raden Solutions
 AppPublisherURL=http://www.radensolutions.com
 AppSupportURL=http://www.radensolutions.com
@@ -16,7 +18,7 @@ LicenseFile=..\..\LGPL.txt
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
-OutputBaseFilename=netxms-sdk-3.5.152
+OutputBaseFilename=netxms-sdk-{#VersionString}
 
 [Files]
 ; Header files
@@ -34,6 +36,7 @@ Source: "..\..\release\libnxclient.lib"; DestDir: "{app}\lib\x86"; Flags: ignore
 Source: "..\..\release\libnxdb.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libnxlp.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libnxmb.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
+Source: "..\..\release\libnxsnmp.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libstrophe.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\nxsqlite.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\nxzlib.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
@@ -57,12 +60,12 @@ Source: "..\..\x64\release\nxcore.lib"; DestDir: "{app}\lib\x64"; Flags: ignorev
 Source: "..\..\x64\release\nxsqlite.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\nxzlib.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 ; Java API
-Source: "..\..\src\agent\subagents\java\java\target\netxms-agent.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-;Source: "..\..\src\agent\subagents\java\java\target\netxms-agent-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-Source: "..\..\src\java-common\netxms-base\target\netxms-base-3.5.152.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-Source: "..\..\src\java-common\netxms-base\target\netxms-base-3.5.152-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-Source: "..\..\src\client\java\netxms-client\target\netxms-client-3.5.152.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-Source: "..\..\src\client\java\netxms-client\target\netxms-client-3.5.152-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\agent\subagents\java\java\target\netxms-agent-{#VersionString}.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+;Source: "..\..\src\agent\subagents\java\java\target\netxms-agent-{#VersionString}-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java-common\netxms-base\target\netxms-base-{#VersionString}.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java-common\netxms-base\target\netxms-base-{#VersionString}-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\client\java\netxms-client\target\netxms-client-{#VersionString}.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\client\java\netxms-client\target\netxms-client-{#VersionString}-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
 ; Documentation
 Source: "..\..\doc\internal\event_code_ranges.txt"; DestDir: "{app}\doc"; Flags: ignoreversion;
 Source: "..\..\doc\internal\nxcp_command_ranges.txt"; DestDir: "{app}\doc"; Flags: ignoreversion;
