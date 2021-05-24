@@ -996,6 +996,7 @@ BOOL Initialize()
 	nxlog_write(NXLOG_INFO, _T("Data directory: %s"), g_szDataDirectory);
    CreateFolder(g_szDataDirectory);
 
+#ifdef _WIN32
    if (s_startupFlags & SF_CATCH_EXCEPTIONS)
    {
       nxlog_write(NXLOG_INFO, _T("Crash dump generation is enabled (dump directory is %s)"), s_dumpDirectory);
@@ -1005,6 +1006,7 @@ BOOL Initialize()
    {
       nxlog_write(NXLOG_INFO, _T("Crash dump generation is disabled"));
    }
+#endif
 
    nxlog_write(NXLOG_INFO, _T("File store: %s"), g_szFileStore);
    CreateFolder(g_szFileStore);
