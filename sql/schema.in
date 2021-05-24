@@ -2239,21 +2239,21 @@ CREATE TABLE nc_persistent_storage
 CREATE TABLE two_factor_auth_methods
 (
    name varchar(63) not null,
-   type varchar(63) null,
-   description  varchar(255) null,
+   driver varchar(63) null,
+   description varchar(255) null,
    configuration SQL_TEXT null,
    PRIMARY KEY(name)
 ) TABLE_TYPE;
 
 /**
- * 2FA user configurations
+ * 2FA method bindings
  */
-CREATE TABLE user_two_factor_auth_bindings
+CREATE TABLE two_factor_auth_bindings
 (
-   uid integer not null,
+   user_id integer not null,
    name varchar(63) not null,
    configuration SQL_TEXT null,
-   PRIMARY KEY(uid,name)
+   PRIMARY KEY(user_id,name)
 ) TABLE_TYPE;
 
 /**

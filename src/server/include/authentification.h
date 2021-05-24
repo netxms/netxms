@@ -20,6 +20,9 @@
 **
 **/
 
+#ifndef _authentication_h_
+#define _authentication_h_
+
 #include "nms_common.h"
 
 /**
@@ -28,14 +31,16 @@
 class AuthentificationToken
 {
 private:
-   TCHAR* m_methodName;
+   TCHAR m_methodName[MAX_OBJECT_NAME];
 
 public:
-   AuthentificationToken(TCHAR* methodName) : m_methodName(methodName) {};
+   AuthentificationToken(const TCHAR* methodName)
+   {
+      _tcslcpy(m_methodName, methodName, MAX_OBJECT_NAME);
+   }
    virtual ~AuthentificationToken()
    {
-      MemFree(m_methodName);
-   };
+   }
 
    virtual const TCHAR *getChallenge() const { return nullptr; }
 
@@ -52,10 +57,13 @@ private:
    uint32_t m_secretLength;
 
 public:
-   TOTPToken(TCHAR* methodName, uint8_t* secret, uint32_t secretLength)
-      : AuthentificationToken(methodName), m_secret(secret), m_secretLength(secretLength) {};
-
-   ~TOTPToken()
+   TOTPToken(const TCHAR* methodName, uint8_t* secret, uint32_t secretLength)
+      : AuthentificationToken(methodName)
+   {
+      m_secret = secret;
+      m_secretLength = secretLength;
+   }
+   virtual ~TOTPToken()
    {
       MemFree(m_secret);
    };
@@ -73,10 +81,13 @@ private:
    uint32_t m_secret;
 
 public:
-   MessageToken(TCHAR* methodName, uint32_t secret)
-      : AuthentificationToken(methodName), m_secret(secret) {};
-
-   ~MessageToken() {};
+   MessageToken(const TCHAR* methodName, uint32_t secret)
+      : AuthentificationToken(methodName), m_secret(secret)
+   {
+   }
+   virtual ~MessageToken()
+   {
+   }
 
    uint32_t getSecret() const { return m_secret; };
 };
@@ -88,3 +99,5 @@ void Get2FAMethodInfo(const TCHAR* methodInfo, NXCPMessage& msg);
 void Get2FAMethods(NXCPMessage& msg);
 uint32_t Modify2FAMethod(const TCHAR* name, const TCHAR* methodType, const TCHAR* description, char* configuration);
 uint32_t Delete2FAMethod(const TCHAR* name);
+
+#endif   /* _authentication_h_ */

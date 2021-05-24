@@ -908,7 +908,7 @@ NXSL_Value *User::createNXSLObject(NXSL_VM *vm)
 void User::load2FABindings(DB_HANDLE hdb)
 {
    int numberOfAddedBindings = 0;
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,configuration FROM user_two_factor_auth_bindings WHERE uid=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,configuration FROM two_factor_auth_bindings WHERE user_id=?"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1005,12 +1005,12 @@ bool User::saveBindingInDB(const TCHAR* methodName, char* configuration, bool ex
    if (exists)
    {
       DB_STATEMENT hStmt = DBPrepare(hdb,
-         _T("UPDATE user_two_factor_auth_bindings SET configuration=? WHERE id=?,name=?"));
+         _T("UPDATE two_factor_auth_bindings SET configuration=? WHERE user_id=? AND name=?"));
    }
    else
    {
       DB_STATEMENT hStmt = DBPrepare(hdb,
-         _T("INSERT INTO user_two_factor_auth_bindings (configuration,id,name) VALUES (?,?,?)"));
+         _T("INSERT INTO two_factor_auth_bindings (configuration,user_id,name) VALUES (?,?,?)"));
    }
 
 
@@ -1041,9 +1041,10 @@ bool User::saveBindingInDB(const TCHAR* methodName, char* configuration, bool ex
 bool User::delete2FABinding(const TCHAR* methodName)
 {
    m_2FABindings.remove(methodName);
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb,
-         _T("DELETE FROM user_two_factor_auth_bindings WHERE id=?,name=?"));
+         _T("DELETE FROM two_factor_auth_bindings WHERE user_id=? AND name=?"));
 
    if (hStmt != nullptr)
    {
@@ -1233,29 +1234,25 @@ bool Group::deleteFromDatabase(DB_HANDLE hdb)
 {
 	bool success = DBBegin(hdb);
 	if (success)
-	{
 	   success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM user_groups WHERE id=?"));
-	}
 
    if (success)
-   {
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM user_group_members WHERE group_id=?"));
-   }
 
    if (success)
-   {
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM userdb_custom_attributes WHERE object_id=?"));
-   }
 
    if (success)
-   {
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dci_access WHERE user_id=?"));
-   }
+
+   if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM two_factor_auth_bindings WHERE user_id=?"));
 
    if (success)
       DBCommit(hdb);
    else
       DBRollback(hdb);
+
 	return success;
 }
 

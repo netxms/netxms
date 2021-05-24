@@ -31,26 +31,29 @@ static bool H_UpgradeFromV55()
    CHK_EXEC(CreateTable(
          _T("CREATE TABLE two_factor_auth_methods (")
          _T("  name varchar(63) not null,")
-         _T("  type varchar(63) null,")
-         _T("  description  varchar(255) null,")
+         _T("  driver varchar(63) null,")
+         _T("  description varchar(255) null,")
          _T("  configuration $SQL:TEXT null,")
          _T("PRIMARY KEY(name))")));
 
    CHK_EXEC(CreateTable(
-         _T("CREATE TABLE user_two_factor_auth_bindings (")
-         _T("  uid integer not null,")
+         _T("CREATE TABLE two_factor_auth_bindings (")
+         _T("  user_id integer not null,")
          _T("  name varchar(63) not null,")
          _T("  configuration $SQL:TEXT null,")
-         _T("PRIMARY KEY(uid,name))")));
+         _T("PRIMARY KEY(user_id,name))")));
 
    if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(_T("UPDATE users SET system_access=system_access+140737488355328 WHERE (BITAND(system_access, 1) = 1)")));
+      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+140737488355328 WHERE (BITAND(system_access, 1) = 1)")));
    }
    else
    {
       CHK_EXEC(SQLQuery(_T("UPDATE users SET system_access=system_access+140737488355328 WHERE ((system_access & 1) = 1)")));
+      CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+140737488355328 WHERE ((system_access & 1) = 1)")));
    }
+
    CHK_EXEC(SetMinorSchemaVersion(56));
    return true;
 }

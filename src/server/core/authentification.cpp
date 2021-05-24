@@ -113,10 +113,10 @@ AuthentificationToken* TOTPAuthMethod::prepareChallenge(uint32_t userId)
       const TCHAR* secret = binding->getValue(_T("/2FA/Secret"));
       if (secret != nullptr)
       {
-         uint32_t secretLength = _tcslen(secret) / 2;
-         uint8_t* secretData = (uint8_t*)MemAlloc(secretLength);
+         uint32_t secretLength = static_cast<uint32_t>(_tcslen(secret) / 2);
+         uint8_t *secretData = MemAllocArray<uint8_t>(secretLength);
          StrToBin(secret, secretData, secretLength);
-         token = new TOTPToken(MemCopyString(m_methodName), secretData, secretLength);
+         token = new TOTPToken(m_methodName, secretData, secretLength);
       }
    }
    return token;
@@ -186,20 +186,19 @@ MessageAuthMethod::MessageAuthMethod(const TCHAR* name, const TCHAR* description
 AuthentificationToken* MessageAuthMethod::prepareChallenge(uint32_t userId)
 {
    shared_ptr<Config> binding = GetUser2FABindingInfo(userId, m_methodName);
-   if (binding != nullptr && m_channelName != nullptr)
-   {
-      uint32_t challenge;
-      GenerateRandomBytes((uint8_t*)&challenge, sizeof(uint32_t));
-      challenge = challenge % 1000000; //We will use 6 digits code
-      TCHAR* phone = MemCopyString(binding->getValue(_T("/2FA/PhoneNumber")));
-      const TCHAR* subject = binding->getValue(_T("/2FA/Subject"));
-      TCHAR challengeStr[7];
-      _sntprintf(challengeStr, 7, _T("%u"), challenge);
-      SendNotification(m_channelName, phone, subject, challengeStr);
-      MemFree(phone);
-      return new MessageToken(MemCopyString(m_methodName), challenge);
-   }
-   return nullptr;
+   if (binding == nullptr || m_channelName == nullptr)
+      return nullptr;
+
+   uint32_t challenge;
+   GenerateRandomBytes((uint8_t*)&challenge, sizeof(uint32_t));
+   challenge = challenge % 1000000; //We will use 6 digits code
+   TCHAR* phone = MemCopyString(binding->getValue(_T("/2FA/PhoneNumber")));
+   const TCHAR* subject = binding->getValue(_T("/2FA/Subject"));
+   TCHAR challengeStr[7];
+   _sntprintf(challengeStr, 7, _T("%u"), challenge);
+   SendNotification(m_channelName, phone, subject, challengeStr);
+   MemFree(phone);
+   return new MessageToken(m_methodName, challenge);
 }
 
 /**
@@ -292,7 +291,7 @@ unique_ptr<ObjectArray<TwoFactorAuthMethodInfo>> Load2FAMethodsInfoFromDB()
 {
    auto array = make_unique<ObjectArray<TwoFactorAuthMethodInfo>>();
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT result = DBSelect(hdb, _T("SELECT name,type,description,configuration FROM two_factor_auth_methods"));
+   DB_RESULT result = DBSelect(hdb, _T("SELECT name,driver,description,configuration FROM two_factor_auth_methods"));
    if (result != nullptr)
    {
       int numRows = DBGetNumRows(result);
@@ -362,7 +361,6 @@ AuthentificationToken* Prepare2FAChallenge( const TCHAR* methodName, uint32_t us
       token = am->prepareChallenge(userId);
    }
    s_authMethodListLock.unlock();
-
    return token;
 }
 
@@ -373,7 +371,7 @@ bool Validate2FAChallenge(AuthentificationToken* token, TCHAR *challenge)
 {
    bool success = false;
    s_authMethodListLock.lock();
-   if(token != nullptr)
+   if (token != nullptr)
    {
       AuthentificationMethod *am = s_authMethodList.get(token->getMethodName());
       if (am != nullptr)
@@ -391,19 +389,16 @@ bool Validate2FAChallenge(AuthentificationToken* token, TCHAR *challenge)
 void Get2FAMethodInfo(const TCHAR* methodInfo, NXCPMessage& msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT result = DBSelectFormatted(hdb, _T("SELECT name,type,description,configuration FROM two_factor_auth_methods WHERE name=%s"), methodInfo);
+   DB_RESULT result = DBSelectFormatted(hdb, _T("SELECT name,driver,description,configuration FROM two_factor_auth_methods WHERE name=%s"), DBPrepareString(hdb, methodInfo).cstr());
    if (result != nullptr)
    {
       if (DBGetNumRows(result) > 0)
       {
-         TCHAR name[MAX_OBJECT_NAME];
+         TCHAR name[MAX_OBJECT_NAME], driver[MAX_OBJECT_NAME], description[MAX_2FA_DESCRIPTION];
          DBGetField(result, 0, 0, name, MAX_OBJECT_NAME);
-         TCHAR type[MAX_OBJECT_NAME];
-         DBGetField(result, 0, 1, name, MAX_OBJECT_NAME);
-         TCHAR description[MAX_2FA_DESCRIPTION];
+         DBGetField(result, 0, 1, driver, MAX_OBJECT_NAME);
          DBGetField(result, 0, 2, description, MAX_2FA_DESCRIPTION);
          char* configuration = DBGetFieldUTF8(result, 0, 3, nullptr, 0);
-
       }
       DBFreeResult(result);
    }

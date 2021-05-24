@@ -331,6 +331,12 @@ public:
    const char* getConfiguration() { return m_configuration; };
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE ObjectMemoryPool<shared_ptr<Config>>;
+template class NXCORE_EXPORTABLE StringObjectMap<shared_ptr<Config>>;
+template class NXCORE_EXPORTABLE SharedStringObjectMap<Config>;
+#endif
+
 /**
  * User object
  */
@@ -355,7 +361,6 @@ protected:
 
    void load2FABindings(DB_HANDLE hdb);
    bool saveBindingInDB(const TCHAR* methodName, char* configuration, bool exists);
-   bool deleteBindingInDB(const TCHAR* methodName);
 
 public:
 	User();
