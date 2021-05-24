@@ -311,16 +311,16 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
 	   }
       msg.setField(VID_CLIENT_INFO, (clientInfo != NULL) ? clientInfo : _T("Unnamed Client"));
       msg.setField(VID_LIBNXCL_VERSION, NETXMS_VERSION_STRING);
-		msg.setField(VID_ENABLE_COMPRESSION, true);
-      
+      msg.setField(VID_ENABLE_COMPRESSION, true);
+
       TCHAR buffer[64];
       GetOSVersionString(buffer, 64);
       msg.setField(VID_OS_INFO, buffer);
 
       if (sendMessage(&msg))
       {
-         NXCPMessage *response = waitForMessage(CMD_LOGIN_RESP, msg.getId());
-         if (response != NULL)
+         NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
+         if (response != nullptr)
          {
             rcc = response->getFieldAsUInt32(VID_RCC);
             if (rcc == RCC_SUCCESS)
