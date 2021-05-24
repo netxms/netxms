@@ -1859,7 +1859,7 @@ public:
    int size() const { return m_data.size(); }
    bool isEmpty() const { return m_data.isEmpty(); }
    bool contains(const TCHAR *key) const { return m_data.contains(key); }
-   bool contains(const TCHAR *key, size_t len) const { return m_data.containes(key, len); }
+   bool contains(const TCHAR *key, size_t len) const { return m_data.contains(key, len); }
 
    T *get(const TCHAR *key) const
    {
