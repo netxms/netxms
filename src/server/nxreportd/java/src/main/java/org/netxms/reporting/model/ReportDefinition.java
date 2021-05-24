@@ -18,12 +18,15 @@
  */
 package org.netxms.reporting.model;
 
-import org.netxms.base.NXCPCodes;
-import org.netxms.base.NXCPMessage;
-
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
+import org.netxms.base.NXCPCodes;
+import org.netxms.base.NXCPMessage;
+import net.sf.jasperreports.engine.JRParameter;
+import net.sf.jasperreports.engine.JRPropertiesMap;
+import net.sf.jasperreports.engine.JasperReport;
 
 /**
  * Report definition
@@ -31,52 +34,86 @@ import java.util.Set;
 public class ReportDefinition
 {
    private String name;
+   private boolean requiresDataView = false;
    private int numberOfColumns = 1;
    private Map<String, ReportParameter> parameters = new HashMap<String, ReportParameter>(0);
 
+   /**
+    * Create report definition object from JasperReport object and localization bundle.
+    *
+    * @param jasperReport JasperReport object
+    * @param labels localization bundle
+    */
+   public ReportDefinition(JasperReport jasperReport, ResourceBundle labels)
+   {
+      name = jasperReport.getName();
+      numberOfColumns = getPropertyFromMap(jasperReport.getPropertiesMap(), "org.netxms.reporting.numberOfColumns", 1);
+      requiresDataView = getPropertyFromMap(jasperReport.getPropertiesMap(), "org.netxms.reporting.requiresDataView", false);
+
+      int index = 0;
+      for(JRParameter jrParameter : jasperReport.getParameters())
+      {
+         if (jrParameter.isSystemDefined() || jrParameter.isForPrompting())
+            continue;
+
+         final ReportParameter parameter = new ReportParameter(jrParameter, labels, index++);
+         parameters.put(parameter.getName(), parameter);
+      }
+   }
+
+   /**
+    * Get report name
+    *
+    * @return report name
+    */
    public String getName()
    {
       return name;
    }
 
-   public void setName(String name)
-   {
-      this.name = name;
-   }
-
+   /**
+    * Get report parameters.
+    *
+    * @return report parameters
+    */
    public Map<String, ReportParameter> getParameters()
    {
       return parameters;
    }
 
-   public void putParameter(ReportParameter parameter)
-   {
-      this.parameters.put(parameter.getName(), parameter);
-   }
-
+   /**
+    * Get number of columns in parameter query form.
+    *
+    * @return number of columns in parameter query form
+    */
    public int getNumberOfColumns()
    {
       return numberOfColumns;
    }
 
-   public void setNumberOfColumns(int numberOfColumns)
+   /**
+    * Check if DCI data view is required for this report.
+    *
+    * @return true if DCI data view is required for this report
+    */
+   public boolean isDataViewRequired()
    {
-      if (numberOfColumns > 0)
-      {
-         this.numberOfColumns = numberOfColumns;
-      }
-      else
-      {
-         this.numberOfColumns = 1;
-      }
+      return requiresDataView;
    }
 
+   /**
+    * Fill NXCP message.
+    *
+    * @param message NXCP message
+    */
    public void fillMessage(NXCPMessage message)
    {
       message.setField(NXCPCodes.VID_NAME, name);
       final int size = parameters.size();
       message.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, size);
       message.setFieldInt32(NXCPCodes.VID_NUM_COLUMNS, numberOfColumns);
+      message.setField(NXCPCodes.VID_REQUIRES_DATA_VIEW, requiresDataView);
+
       final Set<Map.Entry<String, ReportParameter>> entries = parameters.entrySet();
       long index = NXCPCodes.VID_ROW_DATA_BASE;
       for(Map.Entry<String, ReportParameter> entry : entries)
@@ -102,10 +139,77 @@ public class ReportDefinition
       }
    }
 
+   /**
+    * @see java.lang.Object#toString()
+    */
    @Override
    public String toString()
    {
-      return "ReportDefinition{" + "name='" + name + '\'' + ", numberOfColumns=" + numberOfColumns + ", parameters=" + parameters
-            + '}';
+      return "ReportDefinition [name=" + name + ", requiresDataView=" + requiresDataView + ", numberOfColumns=" + numberOfColumns + ", parameters=" + parameters + "]";
+   }
+
+   /**
+    * Get integer property from map.
+    *
+    * @param map map to use
+    * @param key key name
+    * @param defaultValue default value
+    * @return property value or default value
+    */
+   protected static int getPropertyFromMap(JRPropertiesMap map, String key, int defaultValue)
+   {
+      if (map.containsProperty(key))
+      {
+         try
+         {
+            return Integer.parseInt(map.getProperty(key));
+         }
+         catch(NumberFormatException e)
+         {
+            return defaultValue;
+         }
+      }
+      return defaultValue;
+   }
+
+   /**
+    * Get integer property from map.
+    *
+    * @param map map to use
+    * @param key key name
+    * @param defaultValue default value
+    * @return property value or default value
+    */
+   protected static boolean getPropertyFromMap(JRPropertiesMap map, String key, boolean defaultValue)
+   {
+      if (map.containsProperty(key))
+      {
+         try
+         {
+            return Boolean.parseBoolean(map.getProperty(key));
+         }
+         catch(NumberFormatException e)
+         {
+            return defaultValue;
+         }
+      }
+      return defaultValue;
+   }
+
+   /**
+    * Get string property from map.
+    *
+    * @param map map to use
+    * @param key key name
+    * @param defaultValue default value
+    * @return property value or default value
+    */
+   protected static String getPropertyFromMap(JRPropertiesMap map, String key, String defaultValue)
+   {
+      if (map.containsProperty(key))
+      {
+         return map.getProperty(key);
+      }
+      return defaultValue;
    }
 }

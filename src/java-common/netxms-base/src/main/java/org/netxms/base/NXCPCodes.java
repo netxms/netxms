@@ -1214,6 +1214,7 @@ public class NXCPCodes
    public static final long VID_2FA_METHODS_COUNT = 751;
    public static final long VID_2FA_METHOD = 752;
    public static final long VID_2FA_RESPONSE = 753;
+   public static final long VID_REQUIRES_DATA_VIEW = 754;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

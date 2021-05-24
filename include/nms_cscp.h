@@ -1441,6 +1441,7 @@ typedef struct
 #define VID_2FA_METHODS_COUNT       ((uint32_t)751)
 #define VID_2FA_METHOD              ((uint32_t)752)
 #define VID_2FA_RESPONSE            ((uint32_t)753)
+#define VID_REQUIRES_DATA_VIEW      ((uint32_t)754)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

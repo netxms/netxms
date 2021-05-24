@@ -358,11 +358,16 @@ public class CommunicationManager
       reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
    }
 
-   private void getReportDefinition(NXCPMessage request, NXCPMessage reply)
+   /**
+    * Get report definition.
+    *
+    * @param request request message
+    * @param response response message
+    */
+   private void getReportDefinition(NXCPMessage request, NXCPMessage response)
    {
       final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
-      final String localeString = request.getFieldAsString(NXCPCodes.VID_LOCALE);
-      final Locale locale = new Locale(localeString);
+      final Locale locale = new Locale(request.getFieldAsString(NXCPCodes.VID_LOCALE));
       final ReportDefinition definition;
       if (reportId != null)
       {
@@ -375,12 +380,13 @@ public class CommunicationManager
 
       if (definition != null)
       {
-         reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
-         definition.fillMessage(reply);
+         logger.debug("Successfully retrieved report definition: " + definition);
+         response.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+         definition.fillMessage(response);
       }
       else
       {
-         reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.INTERNAL_ERROR);
+         response.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.INTERNAL_ERROR);
       }
    }
 
