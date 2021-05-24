@@ -38,10 +38,10 @@ protected:
 public:
    virtual ~AuthentificationMethod() {};
    virtual AuthentificationToken* prepareChallenge(uint32_t userId) = 0;
-   virtual bool validateChallenge(AuthentificationToken* token, const TCHAR* response) = 0;
-   bool isValid() { return m_isValid; };
-   const TCHAR* getName() { return m_methodName; };
-   const TCHAR* getDescription() { return m_description; };
+   virtual bool validateResponse(AuthentificationToken *token, const TCHAR *response) = 0;
+   bool isValid() const { return m_isValid; };
+   const TCHAR* getName() const { return m_methodName; };
+   const TCHAR* getDescription() const { return m_description; };
    bool saveToDatabase(char* configuration);
 };
 
@@ -98,7 +98,7 @@ public:
    TOTPAuthMethod(const TCHAR* name, const TCHAR* description, const Config& config) : AuthentificationMethod(name, description, config) { m_isValid = true; };
    ~TOTPAuthMethod() {};
    AuthentificationToken* prepareChallenge(uint32_t userId) override;
-   bool validateChallenge(AuthentificationToken* token, const TCHAR* response) override;
+   bool validateResponse(AuthentificationToken* token, const TCHAR* response) override;
 };
 
 /**
@@ -125,7 +125,7 @@ AuthentificationToken* TOTPAuthMethod::prepareChallenge(uint32_t userId)
 /**
  * Validate response from user
  */
-bool TOTPAuthMethod::validateChallenge(AuthentificationToken* token, const TCHAR* response)
+bool TOTPAuthMethod::validateResponse(AuthentificationToken* token, const TCHAR* response)
 {
    if (!_tcscmp(token->getMethodName(), m_methodName))
    {
@@ -153,7 +153,7 @@ bool TOTPAuthMethod::validateChallenge(AuthentificationToken* token, const TCHAR
 }
 
 /**
- * Notification channel authentification class
+ * Notification channel authentication class
  */
 class MessageAuthMethod : public AuthentificationMethod
 {
@@ -164,11 +164,11 @@ public:
    MessageAuthMethod(const TCHAR* name, const TCHAR* description, const Config& config);
    ~MessageAuthMethod() {};
    AuthentificationToken* prepareChallenge(uint32_t userId) override;
-   bool validateChallenge(AuthentificationToken* token, const TCHAR* response) override;
+   bool validateResponse(AuthentificationToken* token, const TCHAR* response) override;
 };
 
 /**
- * Notification channel authentification class constructor
+ * Notification channel authentication class constructor
  */
 MessageAuthMethod::MessageAuthMethod(const TCHAR* name, const TCHAR* description, const Config& config) : AuthentificationMethod(name, description, config)
 {
@@ -204,7 +204,7 @@ AuthentificationToken* MessageAuthMethod::prepareChallenge(uint32_t userId)
 /**
  * Validate response from user
  */
-bool MessageAuthMethod::validateChallenge(AuthentificationToken* token, const TCHAR* response)
+bool MessageAuthMethod::validateResponse(AuthentificationToken *token, const TCHAR *response)
 {
    return static_cast<MessageToken*>(token)->getSecret() == _tcstol(response, nullptr, 10);
 }
@@ -365,9 +365,9 @@ AuthentificationToken* Prepare2FAChallenge( const TCHAR* methodName, uint32_t us
 }
 
 /**
- * Validate 2FA challenge
+ * Validate 2FA response
  */
-bool Validate2FAChallenge(AuthentificationToken* token, TCHAR *challenge)
+bool Validate2FAResponse(AuthentificationToken* token, TCHAR *response)
 {
    bool success = false;
    s_authMethodListLock.lock();
@@ -376,7 +376,7 @@ bool Validate2FAChallenge(AuthentificationToken* token, TCHAR *challenge)
       AuthentificationMethod *am = s_authMethodList.get(token->getMethodName());
       if (am != nullptr)
       {
-         success = am->validateChallenge(token, challenge);
+         success = am->validateResponse(token, response);
       }
    }
    s_authMethodListLock.unlock();

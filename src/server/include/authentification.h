@@ -93,8 +93,8 @@ public:
 };
 
 void LoadAuthentificationMethods();
-AuthentificationToken* Prepare2FAChallenge( const TCHAR* methodName, uint32_t userId);
-bool Validate2FAChallenge(AuthentificationToken* token, TCHAR *challenge);
+AuthentificationToken* Prepare2FAChallenge(const TCHAR *methodName, uint32_t userId);
+bool Validate2FAResponse(AuthentificationToken *token, TCHAR *response);
 void Get2FAMethodInfo(const TCHAR* methodInfo, NXCPMessage& msg);
 void Get2FAMethods(NXCPMessage& msg);
 uint32_t Modify2FAMethod(const TCHAR* name, const TCHAR* methodType, const TCHAR* description, char* configuration);

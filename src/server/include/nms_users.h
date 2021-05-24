@@ -519,8 +519,8 @@ void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups);
 void DumpUsers(CONSOLE_CTX pCtx);
 ObjectArray<UserDatabaseObject> *FindUserDBObjects(const IntegerArray<uint32_t>& ids);
 
-shared_ptr<Config> GetUser2FABindingInfo(int userId, const TCHAR* method);
-void GetUser2FABindingNames(uint32_t userId, NXCPMessage& response);
+shared_ptr<Config> GetUser2FABindingInfo(int userId, const TCHAR *method);
+void GetUser2FABindingNames(uint32_t userId, NXCPMessage *response);
 uint32_t ModifyUser2FABinding(uint32_t userId, const TCHAR* methodName, char* configuration);
 uint32_t DeleteUser2FABinding(uint32_t userId, const TCHAR* methodName);
 

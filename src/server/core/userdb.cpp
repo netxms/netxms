@@ -1563,14 +1563,13 @@ ObjectArray<UserDatabaseObject> *FindUserDBObjects(const IntegerArray<uint32_t>&
 /**
  * Get 2FA method binding names for specific user
  */
-void GetUser2FABindingNames(uint32_t userId, NXCPMessage& response)
+void GetUser2FABindingNames(uint32_t userId, NXCPMessage *response)
 {
    RWLockReadLock(s_userDatabaseLock);
    UserDatabaseObject *object = s_userDatabase.get(userId);
-   if (object != NULL && !object->isGroup())
+   if ((object != nullptr) && !object->isGroup())
    {
-      User* user = static_cast<User*>(object);
-      user->get2FABindings()->fillMessage(&response, VID_2FA_METHODS_LIST_BASE, VID_2FA_METHODS_COUNT);
+      static_cast<User*>(object)->get2FABindings()->fillMessage(response, VID_2FA_METHODS_LIST_BASE, VID_2FA_METHODS_COUNT);
    }
    RWLockUnlock(s_userDatabaseLock);
 }

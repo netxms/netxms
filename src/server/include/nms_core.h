@@ -884,7 +884,7 @@ private:
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);
 #endif
    void prepare2FAChallenge(NXCPMessage *request);
-   void validate2FAChallenge(NXCPMessage *request);
+   void validate2FAResponse(NXCPMessage *request);
    void get2FAMethods(NXCPMessage *request);
    void get2FAMethodInfo(NXCPMessage *request);
    void modify2FAMethod(NXCPMessage *request);

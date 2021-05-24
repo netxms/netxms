@@ -962,7 +962,7 @@ shared_ptr<Config> User::get2FABindingInfo(const TCHAR* method)
  */
 unique_ptr<StringList> User::get2FABindings()
 {
-   auto bindings = new StringList();
+   auto bindings = make_unique<StringList>();
    auto it = m_2FABindings.iterator();
    while (it->hasNext())
    {
@@ -970,7 +970,7 @@ unique_ptr<StringList> User::get2FABindings()
       bindings->add(value->first);
    }
    delete it;
-   return make_unique<StringList>(bindings);
+   return bindings;
 }
 
 /**

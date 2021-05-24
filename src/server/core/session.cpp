@@ -1705,7 +1705,7 @@ void ClientSession::processRequest(NXCPMessage *request)
          prepare2FAChallenge(request);
          break;
       case CMD_2FA_VALIDATE_RESPONSE:
-         validate2FAChallenge(request);
+         validate2FAResponse(request);
          break;
       case CMD_2FA_GET_METHODS:
          get2FAMethods(request);
@@ -2184,7 +2184,7 @@ void ClientSession::login(NXCPMessage *request)
 
       if (rcc == RCC_SUCCESS)
       {
-         GetUser2FABindingNames(m_dwUserId, response);
+         GetUser2FABindingNames(m_dwUserId, &response);
          if (response.getFieldAsInt32(VID_2FA_METHODS_COUNT) > 0)
          {
             response.setField(VID_RCC, RCC_NEED_2FA);
@@ -15601,13 +15601,14 @@ void ClientSession::prepare2FAChallenge(NXCPMessage *request)
 /**
  * Validating user 2FA response
  */
-void ClientSession::validate2FAChallenge(NXCPMessage *request)
+void ClientSession::validate2FAResponse(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (_tcslen(m_loginInfo.szLogin) != 0)
    {
-      TCHAR *challenge = request->getFieldAsString(VID_2FA_RESPONSE);
-      if (Validate2FAChallenge(m_token, challenge))
+      TCHAR response[1024];
+      request->getFieldAsString(VID_2FA_RESPONSE, response, 1024);
+      if (Validate2FAResponse(m_token, response))
       {
          delete_and_null(m_token);
          finalizeLogin(*request, &msg);
@@ -15616,7 +15617,6 @@ void ClientSession::validate2FAChallenge(NXCPMessage *request)
       {
          msg.setField(VID_RCC, RCC_2FA_FAILED);
       }
-      MemFree(challenge);
    }
    else
    {
@@ -15713,14 +15713,14 @@ void ClientSession::getUser2FABindings(NXCPMessage *request)
    request->getFieldAsString(VID_USER_ID, userIdStr, MAX_USER_NAME);
    int userId = _tcstol(userIdStr, nullptr, 10);
 
-   if (userId == m_dwUserId || m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
+   if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
-      GetUser2FABindingNames(userId, msg);
+      GetUser2FABindingNames(userId, &msg);
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on getting 2FA methods bindings"));
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on getting 2FA method bindings"));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);
@@ -15735,7 +15735,7 @@ void ClientSession::getUser2FABindingInfo(NXCPMessage *request)
    TCHAR userIdStr[MAX_USER_NAME];
    request->getFieldAsString(VID_USER_ID, userIdStr, MAX_USER_NAME);
    int userId = _tcstol(userIdStr, nullptr, 10);
-   if (userId == m_dwUserId || m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
+   if ((userId == m_dwUserId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
       TCHAR methodName[MAX_OBJECT_NAME];
       request->getFieldAsString(VID_2FA_METHOD, methodName, MAX_OBJECT_NAME);
@@ -15752,7 +15752,7 @@ void ClientSession::getUser2FABindingInfo(NXCPMessage *request)
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on getting 2FA methods bindings"));
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on getting 2FA method binding"));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);
@@ -15775,7 +15775,7 @@ void ClientSession::modifyUser2FABinding(NXCPMessage *request)
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on modify 2FA method"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on modify 2FA method binding"));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);
