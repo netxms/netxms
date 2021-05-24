@@ -18,6 +18,11 @@
  */
 package org.netxms.reporting.model;
 
+import java.util.ResourceBundle;
+import net.sf.jasperreports.engine.JRExpression;
+import net.sf.jasperreports.engine.JRParameter;
+import net.sf.jasperreports.engine.JRPropertiesMap;
+
 /**
  * Report parameter
  */
@@ -31,14 +36,33 @@ public class ReportParameter
    private String defaultValue;
    private int span;
 
+   /**
+    * Create parameter definition from JRParameter object and localization bundle.
+    *
+    * @param jrParameter JRParameter object
+    * @param labels localization bundle
+    * @param index default index
+    */
+   public ReportParameter(JRParameter jrParameter, ResourceBundle labels, int index)
+   {
+      name = jrParameter.getName();
+      description = getTranslation(labels, name);
+
+      final JRPropertiesMap propertiesMap = jrParameter.getPropertiesMap();
+      type = ReportDefinition.getPropertyFromMap(propertiesMap, "logicalType", jrParameter.getValueClass().getName());
+      this.index = ReportDefinition.getPropertyFromMap(propertiesMap, "index", index);
+      dependsOn = ReportDefinition.getPropertyFromMap(propertiesMap, "dependsOn", "");
+      span = ReportDefinition.getPropertyFromMap(propertiesMap, "span", 1);
+      if (span < 1)
+         span = 1;
+
+      final JRExpression defaultValue = jrParameter.getDefaultValueExpression();
+      this.defaultValue = (defaultValue != null) ? defaultValue.getText() : null;
+   }
+
    public int getIndex()
    {
       return index;
-   }
-
-   public void setIndex(int index)
-   {
-      this.index = index;
    }
 
    public String getName()
@@ -46,19 +70,9 @@ public class ReportParameter
       return name;
    }
 
-   public void setName(String name)
-   {
-      this.name = name;
-   }
-
    public String getDependsOn()
    {
       return dependsOn;
-   }
-
-   public void setDependsOn(String dependsOn)
-   {
-      this.dependsOn = dependsOn;
    }
 
    public String getDescription()
@@ -66,19 +80,9 @@ public class ReportParameter
       return description;
    }
 
-   public void setDescription(String description)
-   {
-      this.description = description;
-   }
-
    public String getType()
    {
       return type;
-   }
-
-   public void setType(String type)
-   {
-      this.type = type;
    }
 
    public String getDefaultValue()
@@ -86,19 +90,9 @@ public class ReportParameter
       return defaultValue;
    }
 
-   public void setDefaultValue(String defaultValue)
-   {
-      this.defaultValue = defaultValue;
-   }
-
    public int getSpan()
    {
       return span;
-   }
-
-   public void setSpan(int span)
-   {
-      this.span = span;
    }
 
    @Override
@@ -107,5 +101,21 @@ public class ReportParameter
       return "ReportParameter{" + "index=" + index + ", name='" + name + '\'' + ", dependsOn='" + dependsOn + '\''
             + ", description='" + description + '\'' + ", type='" + type + '\'' + ", defaultValue='" + defaultValue + '\''
             + ", span=" + span + '}';
+   }
+
+   /**
+    * Get translation for given string
+    *
+    * @param bundle bundle to use
+    * @param name string name
+    * @return translated string or same string if translation not found
+    */
+   private static String getTranslation(ResourceBundle bundle, String name)
+   {
+      if (bundle.containsKey(name))
+      {
+         return bundle.getString(name);
+      }
+      return name;
    }
 }

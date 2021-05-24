@@ -190,7 +190,7 @@ void RSConnector::sendConfiguration()
 /**
  * Reporting server connector instance
  */
-static RSConnector *m_connector = nullptr;
+static RSConnector *s_connector = nullptr;
 
 /**
  * Reporting server connection manager
@@ -204,21 +204,20 @@ void ReportingServerConnector()
 	nxlog_debug_tag(DEBUG_TAG, 1, _T("Reporting Server connector started (%s:%d)"), hostname, port);
 
    // Keep connection open
-   m_connector = new RSConnector(InetAddress::resolveHostName(hostname), port);
+   s_connector = new RSConnector(InetAddress::resolveHostName(hostname), port);
    while(!SleepAndCheckForShutdown(15))
    {
-      if (m_connector->nop() != ISC_ERR_SUCCESS)
+      if (s_connector->nop() != ISC_ERR_SUCCESS)
       {
-         if (m_connector->connect(0) == ISC_ERR_SUCCESS)
+         if (s_connector->connect(0) == ISC_ERR_SUCCESS)
          {
             nxlog_debug_tag(DEBUG_TAG, 2, _T("Connection to Reporting Server restored"));
-            m_connector->sendConfiguration();
+            s_connector->sendConfiguration();
          }
       }
 	}
-   m_connector->disconnect();
-	delete m_connector;
-   m_connector = NULL;
+   s_connector->disconnect();
+	delete_and_null(s_connector);
 
 	nxlog_debug_tag(DEBUG_TAG, 1, _T("Reporting Server connector stopped"));
 }
@@ -280,15 +279,42 @@ static bool PrepareReportingDataView(uint32_t userId, TCHAR *viewName)
 }
 
 /**
+ * Check if data view is required for this report
+ */
+static bool IsDataViewRequired(const uuid& reportId)
+{
+   NXCPMessage request(CMD_RS_GET_REPORT_DEFINITION, s_connector->generateMessageId());
+   request.setField(VID_REPORT_DEFINITION, reportId);
+   if (!s_connector->sendMessage(&request))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IsDataViewRequired(%s): cannot send request to reporting server"), reportId.toString().cstr());
+      return false;
+   }
+
+   NXCPMessage *response = s_connector->waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), 10000);
+   if (response == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IsDataViewRequired(%s): request timeout"), reportId.toString().cstr());
+      return false;
+   }
+
+   bool required = response->getFieldAsBoolean(VID_REQUIRES_DATA_VIEW);
+   delete response;
+
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("IsDataViewRequired(%s): data view is%s required"), reportId.toString().cstr(), required ? _T("") : _T(" not"));
+   return required;
+}
+
+/**
  * Forward client message to reporting server
  */
 NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession *session)
 {
-   if ((m_connector == nullptr) || !m_connector->connected())
+   if ((s_connector == nullptr) || !s_connector->connected())
       return nullptr;
 
    uint32_t originalId = request->getId();
-   uint32_t rqId = m_connector->generateMessageId();
+   uint32_t rqId = s_connector->generateMessageId();
    request->setId(rqId);
    request->setField(VID_USER_ID, session->getUserId());
 
@@ -301,7 +327,7 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
          MutexUnlock(s_fileRequestLock);
          break;
       case CMD_RS_EXECUTE_REPORT:
-         if (PrepareReportingDataView(session->getUserId(), viewName))
+         if (IsDataViewRequired(request->getFieldAsGUID(VID_REPORT_DEFINITION)) && PrepareReportingDataView(session->getUserId(), viewName))
          {
             request->setField(VID_VIEW_NAME, viewName);
          }
@@ -309,9 +335,9 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
    }
 
    NXCPMessage *reply = nullptr;
-   if (m_connector->sendMessage(request))
+   if (s_connector->sendMessage(request))
    {
-      reply = m_connector->waitForMessage(CMD_REQUEST_COMPLETED, request->getId(), 600000);
+      reply = s_connector->waitForMessage(CMD_REQUEST_COMPLETED, request->getId(), 600000);
    }
 
    if (reply != nullptr)
@@ -327,13 +353,13 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
  */
 void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
-   if ((m_connector == nullptr) || !m_connector->connected())
+   if ((s_connector == nullptr) || !s_connector->connected())
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot execute scheduled report \"%s\" (no connection with reporting server)"), parameters->m_comments);
       return;
    }
 
-   NXCPMessage request(CMD_RS_EXECUTE_REPORT, m_connector->generateMessageId());
+   NXCPMessage request(CMD_RS_EXECUTE_REPORT, s_connector->generateMessageId());
    request.setField(VID_USER_ID, parameters->m_userId);
    request.setField(VID_EXECUTION_PARAMETERS, parameters->m_persistentData);
 
@@ -341,9 +367,9 @@ void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters)
    if (PrepareReportingDataView(parameters->m_userId, viewName))
       request.setField(VID_VIEW_NAME, viewName);
 
-   if (m_connector->sendMessage(&request))
+   if (s_connector->sendMessage(&request))
    {
-      NXCPMessage *response = m_connector->waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), 5000);
+      NXCPMessage *response = s_connector->waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), 5000);
       if (response != nullptr)
       {
          uint32_t rcc = response->getFieldAsUInt32(VID_RCC);

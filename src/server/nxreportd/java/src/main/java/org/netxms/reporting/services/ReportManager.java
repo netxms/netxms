@@ -56,16 +56,13 @@ import org.netxms.reporting.Server;
 import org.netxms.reporting.ServerException;
 import org.netxms.reporting.extensions.ExecutionHook;
 import org.netxms.reporting.model.ReportDefinition;
-import org.netxms.reporting.model.ReportParameter;
 import org.netxms.reporting.tools.DateParameterParser;
 import org.netxms.reporting.tools.ThreadLocalReportInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.sf.jasperreports.engine.DefaultJasperReportsContext;
 import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRExpression;
 import net.sf.jasperreports.engine.JRParameter;
-import net.sf.jasperreports.engine.JRPropertiesMap;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperReport;
@@ -136,49 +133,12 @@ public class ReportManager
    public ReportDefinition getReportDefinition(UUID reportId, Locale locale)
    {
       ReportDefinition definition = null;
-
       final JasperReport jasperReport = loadReport(reportId);
       if (jasperReport != null)
       {
          final File reportDirectory = getReportDirectory(reportId);
          ResourceBundle labels = loadReportTranslation(reportDirectory, locale);
-
-         definition = new ReportDefinition();
-         definition.setName(jasperReport.getName());
-         final int numberOfColumns = getPropertyFromMap(jasperReport.getPropertiesMap(), "numberOfColumns", 1);
-         definition.setNumberOfColumns(numberOfColumns);
-
-         final JRParameter[] parameters = jasperReport.getParameters();
-         int index = 0;
-         for(JRParameter jrParameter : parameters)
-         {
-            if (!jrParameter.isSystemDefined() && jrParameter.isForPrompting())
-            {
-               final JRPropertiesMap propertiesMap = jrParameter.getPropertiesMap();
-               final String type = jrParameter.getValueClass().getName();
-               String logicalType = getPropertyFromMap(propertiesMap, "logicalType", type);
-               index = getPropertyFromMap(propertiesMap, "index", index);
-               final JRExpression defaultValue = jrParameter.getDefaultValueExpression();
-               String dependsOn = getPropertyFromMap(propertiesMap, "dependsOn", "");
-               int span = getPropertyFromMap(propertiesMap, "span", 1);
-               if (span < 1)
-               {
-                  span = 1;
-               }
-
-               final ReportParameter parameter = new ReportParameter();
-               final String name = jrParameter.getName();
-               parameter.setName(name);
-               parameter.setType(logicalType);
-               parameter.setIndex(index);
-               parameter.setDescription(getTranslation(labels, name));
-               parameter.setDefaultValue(defaultValue == null ? null : defaultValue.getText());
-               parameter.setDependsOn(dependsOn);
-               parameter.setSpan(span);
-               definition.putParameter(parameter);
-               index++;
-            }
-         }
+         definition = new ReportDefinition(jasperReport, labels);
       }
       return definition;
    }
@@ -460,15 +420,17 @@ public class ReportManager
          return;
       }
 
-      if ((idataView == null) || idataView.isEmpty())
+      final File reportDirectory = getReportDirectory(jobConfiguration.reportId);
+      final ResourceBundle translations = loadReportTranslation(reportDirectory, locale);
+      final ReportDefinition reportDefinition = new ReportDefinition(report, translations);
+      logger.debug("Report definition: " + reportDefinition);
+
+      if (reportDefinition.isDataViewRequired() && ((idataView == null) || idataView.isEmpty()))
       {
          logger.error("Error executing report " + jobConfiguration.reportId + " " + report.getName() + ": DCI data view not provided");
          saveResult(new ReportResult(jobId, jobConfiguration.reportId, new Date(), userId, false));
          return;
       }
-
-      final File reportDirectory = getReportDirectory(jobConfiguration.reportId);
-      final ResourceBundle translations = loadReportTranslation(reportDirectory, locale);
 
       // fill report parameters
       final HashMap<String, Object> localParameters = new HashMap<String, Object>(jobConfiguration.executionParameters);
@@ -584,7 +546,7 @@ public class ReportManager
     */
    private void dropDataView(Connection dbConnection, String viewName)
    {
-      if (viewName == null)
+      if ((viewName == null) || viewName.isEmpty())
          return;
 
       logger.debug("Drop data view " + viewName);
@@ -1012,63 +974,6 @@ public class ReportManager
          }
       }
       return stringBuilder.toString();
-   }
-
-   /**
-    * Get translation for given string
-    *
-    * @param bundle bundle to use
-    * @param name string name
-    * @return translated string or same string if translation not found
-    */
-   private static String getTranslation(ResourceBundle bundle, String name)
-   {
-      if (bundle.containsKey(name))
-      {
-         return bundle.getString(name);
-      }
-      return name;
-   }
-
-   /**
-    * Get integer property from map.
-    *
-    * @param map map to use
-    * @param key key name
-    * @param defaultValue default value
-    * @return property value or default value
-    */
-   private static int getPropertyFromMap(JRPropertiesMap map, String key, int defaultValue)
-   {
-      if (map.containsProperty(key))
-      {
-         try
-         {
-            return Integer.parseInt(map.getProperty(key));
-         }
-         catch(NumberFormatException e)
-         {
-            return defaultValue;
-         }
-      }
-      return defaultValue;
-   }
-
-   /**
-    * Get string property from map.
-    *
-    * @param map map to use
-    * @param key key name
-    * @param defaultValue default value
-    * @return property value or default value
-    */
-   private static String getPropertyFromMap(JRPropertiesMap map, String key, String defaultValue)
-   {
-      if (map.containsProperty(key))
-      {
-         return map.getProperty(key);
-      }
-      return defaultValue;
    }
 
    /**
