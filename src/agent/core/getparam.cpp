@@ -133,31 +133,29 @@ static LONG H_IsAgentRestartPending(const TCHAR *cmd, const TCHAR *arg, TCHAR *v
 /**
  * Handler for Agent.SupportedCiphers
  */
-static LONG H_SupportedCiphers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+static LONG H_SupportedCiphers(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   UINT32 dwCiphers;
-
-   dwCiphers = NXCPGetSupportedCiphers();
-   if (dwCiphers == 0)
+   uint32_t ciphers = NXCPGetSupportedCiphers();
+   if (ciphers == 0)
    {
-      ret_string(pValue, _T("NONE"));
+      ret_string(value, _T("NONE"));
    }
    else
    {
-      *pValue = 0;
-      if (dwCiphers & NXCP_SUPPORT_AES_256)
-         _tcscat(pValue, _T("AES-256 "));
-      if (dwCiphers & NXCP_SUPPORT_AES_128)
-         _tcscat(pValue, _T("AES-128 "));
-      if (dwCiphers & NXCP_SUPPORT_BLOWFISH_256)
-         _tcscat(pValue, _T("BF-256 "));
-      if (dwCiphers & NXCP_SUPPORT_BLOWFISH_128)
-         _tcscat(pValue, _T("BF-128 "));
-      if (dwCiphers & NXCP_SUPPORT_IDEA)
-         _tcscat(pValue, _T("IDEA "));
-      if (dwCiphers & NXCP_SUPPORT_3DES)
-         _tcscat(pValue, _T("3DES "));
-      pValue[_tcslen(pValue) - 1] = 0;
+      *value = 0;
+      if (ciphers & NXCP_SUPPORT_AES_256)
+         _tcscat(value, _T("AES-256 "));
+      if (ciphers & NXCP_SUPPORT_AES_128)
+         _tcscat(value, _T("AES-128 "));
+      if (ciphers & NXCP_SUPPORT_BLOWFISH_256)
+         _tcscat(value, _T("BF-256 "));
+      if (ciphers & NXCP_SUPPORT_BLOWFISH_128)
+         _tcscat(value, _T("BF-128 "));
+      if (ciphers & NXCP_SUPPORT_IDEA)
+         _tcscat(value, _T("IDEA "));
+      if (ciphers & NXCP_SUPPORT_3DES)
+         _tcscat(value, _T("3DES "));
+      value[_tcslen(value) - 1] = 0;
    }
    return SYSINFO_RC_SUCCESS;
 }

@@ -235,7 +235,7 @@ uint32_t g_dwIdleTimeout = 120;   // Session idle timeout
 uint32_t g_webSvcCacheExpirationTime = 600;  // 10 minutes by default
 bool g_restartPending = false;   // Restart pending flag
 
-#if !defined(_WIN32)
+#ifndef _WIN32
 TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxagentd.pid");
 #endif
 
@@ -243,7 +243,7 @@ TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxagentd.pid");
  * Static variables
  */
 #ifdef _WIN32
-static uint32_t s_startupFlags = SF_ENABLE_AUTOLOAD | SF_WRITE_FULL_DUMP | SF_ENABLE_CONTROL_CONNECTOR | SF_ENABLE_PUSH_CONNECTOR | SF_ENABLE_EVENT_CONNECTOR;
+static uint32_t s_startupFlags = SF_ENABLE_AUTOLOAD | SF_CATCH_EXCEPTIONS | SF_WRITE_FULL_DUMP | SF_ENABLE_CONTROL_CONNECTOR | SF_ENABLE_PUSH_CONNECTOR | SF_ENABLE_EVENT_CONNECTOR;
 #else
 static uint32_t s_startupFlags = SF_ENABLE_AUTOLOAD | SF_ENABLE_PUSH_CONNECTOR | SF_ENABLE_EVENT_CONNECTOR;
 #endif
@@ -271,7 +271,6 @@ static THREAD s_syslogReceiverThread = INVALID_THREAD_HANDLE;
 static THREAD s_masterAgentListenerThread = INVALID_THREAD_HANDLE;
 static THREAD s_tunnelManagerThread = INVALID_THREAD_HANDLE;
 static TCHAR s_processToWaitFor[MAX_PATH] = _T("");
-static TCHAR s_dumpDir[MAX_PATH] = _T("C:\\");
 static uint64_t s_maxLogSize = 16384 * 1024;
 static uint32_t s_logHistorySize = 4;
 static uint32_t s_logRotationMode = NXLOG_ROTATION_BY_SIZE;
@@ -282,7 +281,8 @@ static TCHAR *s_debugTags = nullptr;
 static uint32_t s_maxWebSvcPoolSize = 64;
 static uint32_t s_defaultExecutionTimeout = 0;  // Default execution timeout for external processes (0 = unset)
 
-#if defined(_WIN32)
+#ifdef _WIN32
+static TCHAR s_dumpDirectory[MAX_PATH] = _T("{default}");
 static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
 #endif
 
@@ -314,7 +314,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DefaultExecutionTimeout"), CT_LONG, 0, 0, 0, 0, &s_defaultExecutionTimeout, nullptr },
    { _T("DisableIPv4"), CT_BOOLEAN_FLAG_32, 0, 0, AF_DISABLE_IPV4, 0, &g_dwFlags, nullptr },
    { _T("DisableIPv6"), CT_BOOLEAN_FLAG_32, 0, 0, AF_DISABLE_IPV6, 0, &g_dwFlags, nullptr },
-   { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, s_dumpDir, nullptr },
+#ifdef _WIN32
+   { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, s_dumpDirectory, nullptr },
+#endif
    { _T("EnableActions"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags, nullptr },
    { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &s_enabledCiphers, nullptr },
    { _T("EnableControlConnector"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_CONTROL_CONNECTOR, 0, &s_startupFlags, nullptr },
@@ -963,7 +965,7 @@ BOOL Initialize()
    }
 	nxlog_write(NXLOG_INFO, _T("Core agent version ") NETXMS_BUILD_TAG);
 	nxlog_write(NXLOG_INFO, _T("Additional configuration files was loaded from %s"), g_szConfigIncludeDir);
-	nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level set to %d"), s_debugLevel);
+   nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level set to %d"), s_debugLevel);
 
    if (s_debugTags != nullptr)
    {
@@ -1000,6 +1002,16 @@ BOOL Initialize()
       nxlog_write(NXLOG_INFO, _T("Data directory recovered from %s"), g_dataDirRecoveryPath);
 	nxlog_write(NXLOG_INFO, _T("Data directory: %s"), g_szDataDirectory);
    CreateFolder(g_szDataDirectory);
+
+   if (s_startupFlags & SF_CATCH_EXCEPTIONS)
+   {
+      nxlog_write(NXLOG_INFO, _T("Crash dump generation is enabled (dump directory is %s)"), s_dumpDirectory);
+      CreateFolder(s_dumpDirectory);
+   }
+   else
+   {
+      nxlog_write(NXLOG_INFO, _T("Crash dump generation is disabled"));
+   }
 
    nxlog_write(NXLOG_INFO, _T("File store: %s"), g_szFileStore);
    CreateFolder(g_szFileStore);
@@ -2175,7 +2187,7 @@ int main(int argc, char *argv[])
 
                // try to guess executable path
 #ifdef _WIN32
-               GetModuleFileName(GetModuleHandle(NULL), s_executableName, MAX_PATH);
+               GetModuleFileName(GetModuleHandle(nullptr), s_executableName, MAX_PATH);
 #else
 #ifdef UNICODE
                char __buffer[MAX_PATH];
@@ -2198,11 +2210,18 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef _WIN32
+               // Set default dump directory
+               if (!_tcscmp(s_dumpDirectory, _T("{default}")))
+               {
+                  GetNetXMSDirectory(nxDirData, s_dumpDirectory);
+                  _tcslcat(s_dumpDirectory, _T("\\dump"), MAX_PATH);
+               }
+
                // Configure exception handling
                if (s_startupFlags & SF_FATAL_EXIT_ON_CRT_ERROR)
                   EnableFatalExitOnCRTError(true);
                if (s_startupFlags & SF_CATCH_EXCEPTIONS)
-						SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, s_dumpDir,
+						SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, s_dumpDirectory,
 												  _T("nxagentd"), s_startupFlags & SF_WRITE_FULL_DUMP, !(g_dwFlags & AF_DAEMON));
 					__try {
 #endif
