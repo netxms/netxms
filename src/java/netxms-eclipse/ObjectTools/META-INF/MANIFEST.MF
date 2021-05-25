@@ -16,7 +16,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.eclipse.objectbrowser;bundle-version="4.0.0",
  org.netxms.ui.eclipse.filemanager;bundle-version="4.0.0",
  org.slf4j.api;bundle-version="1.7.30"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objecttools.api,
  org.netxms.ui.eclipse.objecttools.propertypages,
