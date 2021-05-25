@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.rfelements</groupId>
     <artifactId>ubntlw</artifactId>
-    <version>${revision}</version>
+    <version>3.9-SNAPSHOT</version>
 
     <properties>
         <revision>3.8-SNAPSHOT</revision>

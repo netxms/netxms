@@ -6,7 +6,7 @@
 
     <groupId>org.netxms</groupId>
     <artifactId>netxms-subagent-jmx</artifactId>
-    <version>${revision}</version>
+    <version>3.9-SNAPSHOT</version>
 
     <properties>
         <revision>3.8-SNAPSHOT</revision>

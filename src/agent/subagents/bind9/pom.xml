@@ -6,7 +6,7 @@
 
     <groupId>com.github.tomaskir</groupId>
     <artifactId>netxms-subagent-bind9</artifactId>
-    <version>${revision}</version>
+    <version>3.9-SNAPSHOT</version>
 
     <properties>
         <revision>3.8-SNAPSHOT</revision>
