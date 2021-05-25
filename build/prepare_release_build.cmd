@@ -1,7 +1,7 @@
 @ECHO OFF
 
 SET POM_FILES_INSTALL=src/java-common/netxms-base/pom.xml;src/libnxjava/java/pom.xml;src/client/java/netxms-client/pom.xml;src/agent/subagents/java/java/pom.xml;src/mobile-agent/java;src/server/nxreportd/java/pom.xml
-SET POM_FILES_PACKAGE=src/agent/subagents/bind9/pom.xml;src/agent/subagents/jmx/pom.xml;src/agent/subagents/ubntlw/pom.xml;src/client/nxapisrv/java/pom.xml;src/client/nxshell/java/pom.xml;src/client/nxtcpproxy/pom.xml;tests/integration/pom.xml
+SET POM_FILES_PACKAGE=src/agent/subagents/jmx/pom.xml;src/agent/subagents/ubntlw/pom.xml;src/client/nxapisrv/java/pom.xml;src/client/nxshell/java/pom.xml;src/client/nxtcpproxy/pom.xml;tests/integration/pom.xml
 
 cd build
 perl updatetag.pl
