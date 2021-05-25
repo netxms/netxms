@@ -66,7 +66,10 @@ static bool H_UpgradeFromV54()
    if (GetSchemaLevelForMajorVersion(38) < 17)
    {
       CHK_EXEC(SQLQuery(_T("ALTER TABLE alarms ADD rule_description varchar(255)")));
-      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE alarms SET rule_description=(SELECT REPLACE(REPLACE(REPLACE(REPLACE(comments, ?, ' '), ?, ' '), ?, ' '), '  ', ' ') FROM event_policy WHERE event_policy.rule_guid=alarms.rule_guid)"));
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle,
+         (g_dbSyntax == DB_SYNTAX_MSSQL) ?
+            _T("UPDATE alarms SET rule_description=(SELECT REPLACE(REPLACE(REPLACE(REPLACE(CONVERT(varchar(255), comments), ?, ' '), ?, ' '), ?, ' '), '  ', ' ') FROM event_policy WHERE event_policy.rule_guid=alarms.rule_guid)") :
+            _T("UPDATE alarms SET rule_description=(SELECT REPLACE(REPLACE(REPLACE(REPLACE(comments, ?, ' '), ?, ' '), ?, ' '), '  ', ' ') FROM event_policy WHERE event_policy.rule_guid=alarms.rule_guid)"));
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, _T("\n"), DB_BIND_STATIC);
