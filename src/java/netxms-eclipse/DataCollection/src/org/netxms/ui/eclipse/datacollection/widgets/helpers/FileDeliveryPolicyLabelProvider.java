@@ -80,6 +80,12 @@ public class FileDeliveryPolicyLabelProvider extends LabelProvider implements IT
             if (!((PathElement)element).isFile())
                return null;
             return ((PathElement)element).getCreationTime() != null ? RegionalSettings.getDateTimeFormat().format(((PathElement)element).getCreationTime()) : null;
+         case FileDeliveryPolicyEditor.COLUMN_USER:
+             return ((PathElement)element).getOwner();
+         case FileDeliveryPolicyEditor.COLUMN_GROUP:
+             return ((PathElement)element).getOwnerGroup();
+         case FileDeliveryPolicyEditor.COLUMN_PERMISSIONS:
+             return ((PathElement)element).getPermissionsAsString();
       }
       return null;
    }

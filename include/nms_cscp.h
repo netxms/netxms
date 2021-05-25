@@ -676,6 +676,8 @@ typedef struct
 #define CMD_2FA_GET_USER_BINDING_DETAILS  0x01B5
 #define CMD_2FA_MODIFY_USER_BINDING       0x01B6
 #define CMD_2FA_DELETE_USER_BINDING       0x01B7
+#define CMD_FILEMGR_CHMOD                 0x01B8
+#define CMD_FILEMGR_CHOWN                 0x01B9
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1443,6 +1445,8 @@ typedef struct
 #define VID_2FA_RESPONSE            ((uint32_t)753)
 #define VID_REQUIRES_DATA_VIEW      ((uint32_t)754)
 #define VID_QUERY_ID                ((uint32_t)755)
+#define VID_FILE_PERMISSIONS        ((uint32_t)756)
+#define VID_GROUP_NAME              ((uint32_t)757)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

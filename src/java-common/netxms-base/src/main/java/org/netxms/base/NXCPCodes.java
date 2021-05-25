@@ -453,6 +453,8 @@ public class NXCPCodes
    public static final int CMD_2FA_GET_USER_BINDING_INFO = 0x01B5;
    public static final int CMD_2FA_MODIFY_USER_BINDING = 0x01B6;
    public static final int CMD_2FA_DELETE_USER_BINDING = 0x01B7;
+   public static final int CMD_FILEMGR_CHMOD = 0x01B8;
+   public static final int CMD_FILEMGR_CHOWN = 0x01B9;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1216,6 +1218,8 @@ public class NXCPCodes
    public static final long VID_2FA_RESPONSE = 753;
    public static final long VID_REQUIRES_DATA_VIEW = 754;
    public static final long VID_QUERY_ID = 755;
+   public static final long VID_FILE_PERMISSIONS = 756;
+   public static final long VID_GROUP_NAME = 757;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

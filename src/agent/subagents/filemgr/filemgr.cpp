@@ -24,6 +24,47 @@
 #ifdef _WIN32
 #include <accctrl.h>
 #include <aclapi.h>
+#include <windows.h>
+#include <Lmcons.h>
+
+bool SetPrivilege(HANDLE hToken, const TCHAR* privilege, bool enabled)
+{
+	LUID luid;
+	if (!LookupPrivilegeValue(NULL, privilege, &luid))
+	{
+      TCHAR errorText[1024];
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("LookupPrivilegeValue error: %s"), GetSystemErrorText(GetLastError(), errorText, 1024));
+		return false;
+	}
+
+	TOKEN_PRIVILEGES tp;
+	tp.PrivilegeCount = 1;
+	tp.Privileges[0].Luid = luid;
+	if (enabled)
+   {
+		tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+   }
+	else
+   {
+		tp.Privileges[0].Attributes = 0;
+   }
+
+	if (!AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), (PTOKEN_PRIVILEGES)NULL, (PDWORD)NULL))
+	{
+      TCHAR errorText[1024];
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("AdjustTokenPrivileges error:  %s"), GetSystemErrorText(GetLastError(), errorText, 1024));
+		return false;
+	}
+
+	if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+	{
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("The token does not have the specified privilege."));
+		return false;
+	}
+
+	return true;
+}
+
 #else
 #include <pwd.h>
 #include <grp.h>
@@ -1023,6 +1064,82 @@ static void CH_GetFileDetails(NXCPMessage *request, NXCPMessage *response, Abstr
    }
 }
 
+void AddFileOwner(NXCPMessage *response, uint32_t fieldId, const TCHAR* filePath, uint32_t uid)
+{
+#ifdef _WIN32
+   TCHAR *owner = GetFileOwnerWin(filePath);
+   response->setField(fieldId, owner);
+   free(owner);
+#else //POSIX
+#if HAVE_GETPWUID_R
+   struct passwd *pw, pwbuf;
+   char pwtxt[4096];
+   getpwuid_r(uid, &pwbuf, pwtxt, 4096, &pw);
+#else
+   struct passwd *pw = getpwuid(uid);
+#endif
+   if (pw != nullptr)
+   {
+      response->setFieldFromMBString(fieldId, pw->pw_name);
+   }
+   else
+   {
+      TCHAR id[32];
+      _sntprintf(id, 32, _T("[%lu]"), (unsigned long)uid);
+      response->setField(fieldId, id);
+   }
+#endif //end of POSIX
+}
+
+void AddFileOwnerGroup(NXCPMessage *response, uint32_t fieldId, const TCHAR* filePath, uint32_t gid)
+{
+#ifdef _WIN32
+   response->setField(fieldId, _T(""));
+#else  //POSIX
+#if HAVE_GETGRGID_R
+      struct group *gr, grbuf;
+      char grtxt[4096];
+      getgrgid_r(gid, &grbuf, grtxt, 4096, &gr);
+#else
+      struct group *gr = getgrgid(gid);
+#endif
+      if (gr != nullptr)
+      {
+         response->setFieldFromMBString(fieldId, gr->gr_name);
+      }
+      else
+      {
+         TCHAR id[32];
+         _sntprintf(id, 32, _T("[%lu]"), (unsigned long)gid);
+         response->setField(fieldId, id);
+      }
+#endif //end of POSIX
+}
+
+#ifdef WIN32
+#define mode_t unsigned short
+#endif
+
+void AddFilePermissions(NXCPMessage *response, uint32_t fieldId, mode_t mode)
+{
+#ifdef _WIN32
+   response->setField(fieldId, _T(""));
+#else
+   uint16_t accessRights;
+
+   if((S_IRUSR & mode) > 0) accessRights |= (1 << 0);
+   if((S_IWUSR & mode) > 0) accessRights |= (1 << 1);
+   if((S_IXUSR & mode) > 0) accessRights |= (1 << 2);
+   if((S_IRGRP & mode) > 0) accessRights |= (1 << 3);
+   if((S_IWGRP & mode) > 0) accessRights |= (1 << 4);
+   if((S_IXGRP & mode) > 0) accessRights |= (1 << 5);
+   if((S_IROTH & mode) > 0) accessRights |= (1 << 6);
+   if((S_IWOTH & mode) > 0) accessRights |= (1 << 7);
+   if((S_IXOTH & mode) > 0) accessRights |= (1 << 8);
+   response->setField(fieldId, accessRights);
+#endif
+}
+
 /**
  * Handler for "get file set details" command
  */
@@ -1031,6 +1148,7 @@ static void CH_GetFileSetDetails(NXCPMessage *request, NXCPMessage *response, Ab
    bool allowPathExpansion = request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION);
    StringList files(request, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+
    for(int i = 0; i < files.size(); i++)
    {
       TCHAR fileName[MAX_PATH];
@@ -1050,7 +1168,10 @@ static void CH_GetFileSetDetails(NXCPMessage *request, NXCPMessage *response, Ab
             if (!CalculateFileMD5Hash(fullPath, hash))
                memset(hash, 0, MD5_DIGEST_SIZE);
             response->setField(fieldId++, hash, MD5_DIGEST_SIZE);
-            fieldId += 6;
+            AddFilePermissions(response, fieldId++, fs.st_mode);
+            AddFileOwner(response, fieldId++, fileName, fs.st_uid);
+            AddFileOwnerGroup(response, fieldId++, fileName, fs.st_gid);
+            fieldId += 3;
          }
          else
          {
@@ -1099,6 +1220,267 @@ static void CH_GetFile(NXCPMessage *request, NXCPMessage *response, AbstractComm
       ThreadCreateEx(SendFile, data);
 
       response->setField(VID_RCC, ERR_SUCCESS);
+   }
+   else
+   {
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+}
+
+/**
+ * Handler for "change file accessRights" command.
+ */
+static void CH_ChangeFilePermissions(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+{
+   if (!session->isMasterServer())
+   {
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+      return;
+   }
+
+   TCHAR fileName[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
+   ConvertPathToHost(fileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
+
+   TCHAR *fullPath;
+   if (CheckFullPath(fileName, &fullPath, false))
+   {
+      uint16_t accessRights = request->getFieldAsUInt16(VID_FILE_PERMISSIONS);
+      if (accessRights != 0)
+      {
+#if defined(_WIN32)
+         PACL pOldDACL = nullptr;
+         PSECURITY_DESCRIPTOR pSD = nullptr;
+         GetNamedSecurityInfo(fullPath, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, nullptr, nullptr, &pOldDACL, nullptr, &pSD);
+
+         uint32_t accessCount = 1;
+         TCHAR username[UNLEN + 1] = {};
+         request->getFieldAsString(VID_USER_NAME, username, UNLEN+1);
+         if (username[0] != 0)
+         {
+            accessCount += 1;
+         }
+
+         TCHAR group[GNLEN + 1] = {};
+         request->getFieldAsString(VID_GROUP_NAME, group, GNLEN + 1);
+         if (group[0] != 0)
+         {
+            accessCount += 1;
+         }
+
+         EXPLICIT_ACCESS* ea = (EXPLICIT_ACCESS*)MemAlloc(accessCount * sizeof(EXPLICIT_ACCESS));
+         memset(ea, 0, accessCount * sizeof(EXPLICIT_ACCESS));
+
+         //Add User
+         int counter = 0;
+         DWORD UserAccessPermissions = 0;
+         if (accessRights & 0x0001)
+            UserAccessPermissions |= FILE_GENERIC_READ;
+         if (accessRights & 0x0002)
+            UserAccessPermissions |= FILE_GENERIC_WRITE;
+         if (accessRights & 0x0004)
+            UserAccessPermissions |= FILE_GENERIC_EXECUTE;
+         if (username[0] && UserAccessPermissions)
+         {
+            ea[counter].grfAccessPermissions = UserAccessPermissions;
+            ea[counter].grfAccessMode = SET_ACCESS;
+            ea[counter].grfInheritance = NO_INHERITANCE;
+            ea[counter].Trustee.TrusteeForm = TRUSTEE_IS_NAME;
+            ea[counter].Trustee.TrusteeType = TRUSTEE_IS_USER;
+            ea[counter].Trustee.ptstrName = username;
+            counter++;
+         }
+
+         // Add Group
+         DWORD GroupAccessPermissions = 0;
+         if (accessRights & 0x0008)
+            GroupAccessPermissions |= FILE_GENERIC_READ;
+         if (accessRights & 0x0010)
+            GroupAccessPermissions |= FILE_GENERIC_WRITE;
+         if (accessRights & 0x0020)
+            GroupAccessPermissions |= FILE_GENERIC_EXECUTE;
+         if (group[0] && GroupAccessPermissions)
+         {
+            ea[counter].grfAccessPermissions = GroupAccessPermissions;
+            ea[counter].grfAccessMode = SET_ACCESS;
+            ea[counter].grfInheritance = NO_INHERITANCE;
+            ea[counter].Trustee.TrusteeForm = TRUSTEE_IS_NAME;
+            ea[counter].Trustee.TrusteeType = TRUSTEE_IS_GROUP;
+            ea[counter].Trustee.ptstrName = group;
+            counter++;
+         }
+
+         //Add Everyone
+         DWORD EveryoneAccessPermissions = 0;
+         if (accessRights & 0x0040)
+            EveryoneAccessPermissions |= FILE_GENERIC_READ;
+         if (accessRights & 0x0080)
+            EveryoneAccessPermissions |= FILE_GENERIC_WRITE;
+         if (accessRights & 0x0100)
+            EveryoneAccessPermissions |= FILE_GENERIC_EXECUTE;
+         PSID pEveryoneSID = nullptr;
+         if (EveryoneAccessPermissions)
+         {
+            SID_IDENTIFIER_AUTHORITY SIDAuthWorld = SECURITY_WORLD_SID_AUTHORITY;
+            AllocateAndInitializeSid(&SIDAuthWorld, 1,
+               SECURITY_WORLD_RID,
+               0, 0, 0, 0, 0, 0, 0,
+               &pEveryoneSID);
+            ea[counter].grfAccessPermissions = EveryoneAccessPermissions;
+            ea[counter].grfAccessMode = SET_ACCESS;
+            ea[counter].grfInheritance = NO_INHERITANCE;
+            ea[counter].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+            ea[counter].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+            ea[counter].Trustee.ptstrName = (LPTSTR)pEveryoneSID;
+            counter++;
+         }
+
+         bool success = false;
+         PACL pACL = nullptr;
+         if (counter)
+         {
+            success = SetEntriesInAcl(counter, ea, pOldDACL, &pACL) == ERROR_SUCCESS;
+         }
+
+         if (success && counter)
+         {
+            success = SetNamedSecurityInfo(fullPath, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, nullptr, nullptr, pACL, nullptr);
+         }
+
+         if (pEveryoneSID != nullptr)
+         {
+            FreeSid(pEveryoneSID);
+         }
+         LocalFree(pACL);
+         MemFree(ea);
+
+         if (success)
+         {
+            response->setField(VID_RCC, ERR_SUCCESS);
+         }
+         else
+         {
+            response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+         }
+#else
+         mode_t mode = 0;
+         if(accessRights & (1 << 0))
+            mode |= S_IRUSR;
+         if(accessRights & (1 << 1))
+            mode |= S_IWUSR;
+         if(accessRights & (1 << 2))
+            mode |= S_IXUSR;
+         if(accessRights & (1 << 3))
+            mode |= S_IRGRP;
+         if(accessRights & (1 << 4))
+            mode |= S_IWGRP;
+         if(accessRights & (1 << 5))
+            mode |= S_IXGRP;
+         if(accessRights & (1 << 6))
+            mode |= S_IROTH;
+         if(accessRights & (1 << 7))
+            mode |= S_IWOTH;
+         if(accessRights & (1 << 8))
+            mode |= S_IXOTH;
+
+         if(_tchmod(fullPath, mode) == 0)
+         {
+            response->setField(VID_RCC, ERR_SUCCESS);
+         }
+         else
+         {
+            response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+         }
+#endif
+      }
+      else
+      {
+         response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
+      }
+      MemFree(fullPath);
+   }
+   else
+   {
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+}
+
+/**
+ * Handler for "change file owner" command.
+ */
+static void CH_ChangeFileOwner(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+{
+   if (!session->isMasterServer())
+   {
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+      return;
+   }
+
+   TCHAR fileName[MAX_PATH];
+   request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
+   ConvertPathToHost(fileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
+
+   TCHAR *fullPath;
+   if (CheckFullPath(fileName, &fullPath, false))
+   {
+#if defined(_WIN32)
+      response->setField(VID_RCC, ERR_SUCCESS);
+#else // POSIX
+      char* userName = request->getFieldAsMBString(VID_USER_NAME);
+      char* groupName = request->getFieldAsMBString(VID_GROUP_NAME);
+      uid_t newOwner = -1;
+      gid_t newGroup = -1;
+      if (userName != nullptr)
+      {
+#if HAVE_GETPWUID_R
+         struct passwd *pw, pwbuf;
+         char pwtxt[4096];
+         getpwnam_r(userName, &pwbuf, pwtxt, 4096, &pw);
+#else
+         struct passwd *pw = getpwnam(userName);
+#endif
+         MemFree(userName);
+         newOwner = pw->pw_uid;
+      }
+
+      if (groupName != nullptr)
+      {
+#if HAVE_GETGRGID_R
+         struct group *gr, grbuf;
+         char grtxt[4096];
+         getgrnam_r(groupName, &grbuf, grtxt, 4096, &gr);
+#else
+         struct group *gr = getgrnam(groupName);
+#endif
+         MemFree(groupName);
+         newGroup = gr->gr_gid;
+      }
+
+      if (newOwner != -1 || newGroup != -1)
+      {
+         bool success = false;
+#ifdef UNICODE
+         char *fullPathStr = MBStringFromWideString(fullPath);
+         success = !chown(fullPathStr, newOwner, newGroup);
+         MemFree(fullPathStr);
+#else
+         success = chown(fullPath, newOwner, newGroup) == 0;
+#endif
+         if (success)
+         {
+            response->setField(VID_RCC, ERR_SUCCESS);
+         }
+         else
+         {
+            response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+         }
+      }
+      else
+      {
+         response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
+      }
+#endif // POSIX
+      MemFree(fullPath);
    }
    else
    {
@@ -1185,6 +1567,12 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          break;
       case CMD_CANCEL_FILE_MONITORING:
          CH_CancelFileMonitoring(request, response);
+         break;
+      case CMD_FILEMGR_CHMOD:
+         CH_ChangeFilePermissions(request, response, session);
+         break;
+      case CMD_FILEMGR_CHOWN:
+         CH_ChangeFileOwner(request, response, session);
          break;
       default:
          return false;

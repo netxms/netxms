@@ -49,6 +49,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.dialogs.FilePermissionsSelectionDialog;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicy;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyComparator;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FileDeliveryPolicyContentProvider;
@@ -68,6 +69,9 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_GUID = 1;
    public static final int COLUMN_DATE = 2;
+   public static final int COLUMN_USER = 3;
+   public static final int COLUMN_GROUP = 4;
+   public static final int COLUMN_PERMISSIONS = 5;
    
    private SortableTreeViewer fileTree;
    private Set<PathElement> rootElements = new HashSet<PathElement>();
@@ -77,6 +81,9 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    private Action actionDelete;
    private Action actionRename;
    private Action actionUpdate;
+   private Action actionChangePermissions;
+   private Action actionChangeOwner;
+   private Action actionChangeOwnerGroup;
    private Set<String> filesForDeletion = new HashSet<String>();
    private Set<String> notSavedFiles = new HashSet<String>();
 
@@ -91,8 +98,8 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       setLayout(new FillLayout());
       
 
-      final String[] columnNames = { "Name", "Guid", "Date" };
-      final int[] columnWidths = { 300, 300, 300 };         
+      final String[] columnNames = { "Name", "Guid", "Date", "User", "Group", "Permissions" };
+      final int[] columnWidths = { 300, 300, 200, 150, 150, 200 };
       fileTree = new SortableTreeViewer(this, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
       fileTree.setContentProvider(new FileDeliveryPolicyContentProvider());
       fileTree.setLabelProvider(new FileDeliveryPolicyLabelProvider());
@@ -146,6 +153,30 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
       };
       
+      actionChangePermissions = new Action("Change &permissions") {
+         @Override
+         public void run()
+         {
+            changePermissions();
+         }
+      };
+
+      actionChangeOwner = new Action("Change &owner") {
+         @Override
+         public void run()
+         {
+            changeOwner();
+         }
+      };
+
+      actionChangeOwnerGroup = new Action("Change owner &group") {
+         @Override
+         public void run()
+         {
+            changeOwnerGroup();
+         }
+      };
+
       createPopupMenu();
       
       fileTree.setInput(rootElements);
@@ -198,6 +229,9 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
          manager.add(actionRename);
          manager.add(actionDelete);
+         manager.add(actionChangePermissions);
+         manager.add(actionChangeOwner);
+         manager.add(actionChangeOwnerGroup);
       }
       else
       {
@@ -531,6 +565,66 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          fileTree.update(element, null);
       }
       
+      fireModifyListeners();
+   }
+
+   /**
+    * Change file permissions
+    */
+   private void changePermissions()
+   {
+      IStructuredSelection selection = fileTree.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      PathElement element = (PathElement)selection.getFirstElement();
+      FilePermissionsSelectionDialog dlg = new FilePermissionsSelectionDialog(getShell(), element.getPermissions());
+      if (dlg.open() != Window.OK)
+         return;
+
+      element.setPermissions(dlg.getValue());
+      fileTree.update(element, null);
+
+      fireModifyListeners();
+   }
+
+   /**
+    * Change file owner
+    */
+   private void changeOwner()
+   {
+      IStructuredSelection selection = fileTree.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      PathElement element = (PathElement)selection.getFirstElement();
+      InputDialog dlg = new InputDialog(getShell(), "Set new file owner user name", "Enter owner", element.getOwner(), null);
+      if (dlg.open() != Window.OK)
+         return;
+
+      element.setOwner(dlg.getValue());
+      fileTree.update(element, null);
+
+      fireModifyListeners();
+   }
+
+   /**
+    * Change file owner group
+    */
+   private void changeOwnerGroup()
+   {
+      IStructuredSelection selection = fileTree.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      PathElement element = (PathElement)selection.getFirstElement();
+      InputDialog dlg = new InputDialog(getShell(), "Set new file owner group name", "Enter owner group name", element.getOwnerGroup(), null);
+      if (dlg.open() != Window.OK)
+         return;
+
+      element.setOwnerGroup(dlg.getValue());
+      fileTree.update(element, null);
+
       fireModifyListeners();
    }
 

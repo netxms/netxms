@@ -766,6 +766,9 @@ private:
    time_t m_mtime;
    BYTE m_hash[MD5_DIGEST_SIZE];
    uint32_t m_status;
+   uint32_t m_permissions;
+   TCHAR *m_ownerUser;
+   TCHAR *m_ownerGroup;
 
 public:
    RemoteFileInfo(NXCPMessage *msg, uint32_t baseId, const TCHAR *name);
@@ -777,6 +780,9 @@ public:
    uint64_t size() const { return m_size; }
    time_t modificationTime() const { return m_mtime; }
    const BYTE *hash() const { return m_hash; }
+   const uint32_t permissions() const { return m_permissions; }
+   const TCHAR *ownerUser() const { return m_ownerUser; }
+   const TCHAR *ownerGroup() const { return m_ownerGroup; }
 };
 
 /**
@@ -932,6 +938,8 @@ public:
    uint32_t downloadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
             void (* progressCallback)(size_t, void *) = nullptr, void *cbArg = nullptr,
             NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
+   uint32_t changeFileOwner(const TCHAR *destinationFile, const TCHAR *newOwner, const TCHAR *newGroup);
+   uint32_t changeFilePermissions(const TCHAR *destinationFile, uint32_t permissions, const TCHAR *newOwner, const TCHAR *newGroup);
    uint32_t getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **info);
    uint32_t startUpgrade(const TCHAR *pkgName);
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType, WORD wPort = 0,
