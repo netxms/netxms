@@ -58,8 +58,8 @@
 
     <repositories>     
         <repository>  
-            <id>rap-3.14</id>
-            <url>http://download.eclipse.org/rt/rap/3.14</url>
+            <id>rap-3.16</id>
+            <url>http://download.eclipse.org/rt/rap/3.16</url>
             <layout>p2</layout>
         </repository>   
         <repository>
@@ -69,7 +69,7 @@
         </repository>
         <repository>
             <id>Babel Language Pack</id>
-            <url>http://archive.eclipse.org/technology/babel/update-site/R0.18.1/2020-09</url>
+            <url>http://archive.eclipse.org/technology/babel/update-site/R0.18.3/2021-03</url>
             <layout>p2</layout>
         </repository> 
         <repository>
