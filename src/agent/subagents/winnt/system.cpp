@@ -1,6 +1,6 @@
 /* 
 ** Windows 2000+ NetXMS subagent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,21 +37,20 @@ LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
    if (!AgentGetParameterArg(cmd, 1, szServiceName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
-   hManager = OpenSCManager(NULL, NULL, GENERIC_READ);
-   if (hManager == NULL)
+   hManager = OpenSCManager(nullptr, nullptr, GENERIC_READ);
+   if (hManager == nullptr)
    {
       return SYSINFO_RC_ERROR;
    }
 
    hService = OpenService(hManager, szServiceName, SERVICE_QUERY_STATUS);
-   if (hService == NULL)
+   if (hService == nullptr)
    {
       iResult = SYSINFO_RC_UNSUPPORTED;
    }
    else
    {
       SERVICE_STATUS status;
-
       if (QueryServiceStatus(hService, &status))
       {
          int i;
@@ -80,25 +79,25 @@ LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
  */
 LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
-   SC_HANDLE hManager = OpenSCManager(NULL, NULL, GENERIC_READ);
-   if (hManager == NULL)
+   SC_HANDLE hManager = OpenSCManager(nullptr, nullptr, GENERIC_READ);
+   if (hManager == nullptr)
    {
       return SYSINFO_RC_ERROR;
    }
 
    LONG rc = SYSINFO_RC_ERROR;
    DWORD bytes, count;
-   EnumServicesStatusEx(hManager, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, NULL, 0, &bytes, &count, NULL, NULL);
+   EnumServicesStatusEx(hManager, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, nullptr, 0, &bytes, &count, nullptr, nullptr);
    if (GetLastError() == ERROR_MORE_DATA)
    {
-      ENUM_SERVICE_STATUS_PROCESS *services = (ENUM_SERVICE_STATUS_PROCESS *)malloc(bytes);
-      if (EnumServicesStatusEx(hManager, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, (BYTE *)services, bytes, &bytes, &count, NULL, NULL))
+      auto services = static_cast<ENUM_SERVICE_STATUS_PROCESS*>(MemAlloc(bytes));
+      if (EnumServicesStatusEx(hManager, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, (BYTE *)services, bytes, &bytes, &count, nullptr, nullptr))
       {
          for(DWORD i = 0; i < count; i++)
             value->add(services[i].lpServiceName);
          rc = SYSINFO_RC_SUCCESS;
       }
-      free(services);
+      MemFree(services);
    }
 
    CloseServiceHandle(hManager);
@@ -110,28 +109,33 @@ LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, Ab
  */
 LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, AbstractCommSession *session)
 {
-   SC_HANDLE hManager = OpenSCManager(NULL, NULL, GENERIC_READ);
-   if (hManager == NULL)
+   SC_HANDLE hManager = OpenSCManager(nullptr, nullptr, GENERIC_READ);
+   if (hManager == nullptr)
    {
       return SYSINFO_RC_ERROR;
    }
 
    LONG rc = SYSINFO_RC_ERROR;
    DWORD bytes, count;
-   EnumServicesStatusEx(hManager, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, NULL, 0, &bytes, &count, NULL, NULL);
+   EnumServicesStatusEx(hManager, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, nullptr, 0, &bytes, &count, nullptr, nullptr);
    if (GetLastError() == ERROR_MORE_DATA)
    {
-      ENUM_SERVICE_STATUS_PROCESS *services = (ENUM_SERVICE_STATUS_PROCESS *)malloc(bytes);
-      if (EnumServicesStatusEx(hManager, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, (BYTE *)services, bytes, &bytes, &count, NULL, NULL))
+      auto services = static_cast<ENUM_SERVICE_STATUS_PROCESS*>(MemAlloc(bytes));
+      if (EnumServicesStatusEx(hManager, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, (BYTE *)services, bytes, &bytes, &count, nullptr, nullptr))
       {
          value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
          value->addColumn(_T("DISPNAME"), DCI_DT_STRING, _T("Display name"));
          value->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"));
          value->addColumn(_T("STATE"), DCI_DT_STRING, _T("State"));
          value->addColumn(_T("STARTUP"), DCI_DT_STRING, _T("Startup"));
+         value->addColumn(_T("RUN_AS"), DCI_DT_STRING, _T("Run As"));
          value->addColumn(_T("PID"), DCI_DT_UINT, _T("PID"));
          value->addColumn(_T("BINARY"), DCI_DT_STRING, _T("Binary"));
          value->addColumn(_T("DEPENDENCIES"), DCI_DT_STRING, _T("Dependencies"));
+
+         SERVICE_DELAYED_AUTO_START_INFO delayedStartInfo;
+         auto triggerInfo = static_cast<SERVICE_TRIGGER_INFO*>(alloca(8192));
+
          for(DWORD i = 0; i < count; i++)
          {
             value->addRow();
@@ -166,45 +170,69 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
                   break;
             }
             if (services[i].ServiceStatusProcess.dwProcessId != 0)
-               value->set(5, (UINT32)services[i].ServiceStatusProcess.dwProcessId);
+               value->set(6, static_cast<uint32_t>(services[i].ServiceStatusProcess.dwProcessId));
 
             SC_HANDLE hService = OpenService(hManager, services[i].lpServiceName, SERVICE_QUERY_CONFIG);
-            if (hService != NULL)
+            if (hService != nullptr)
             {
                BYTE buffer[8192];
-               QUERY_SERVICE_CONFIG *cfg = (QUERY_SERVICE_CONFIG *)&buffer;
+               auto cfg = reinterpret_cast<QUERY_SERVICE_CONFIG*>(&buffer);
                if (QueryServiceConfig(hService, cfg, 8192, &bytes))
                {
+                  StringBuffer startType;
+                  DWORD bytesNeeded;
+
+                  delayedStartInfo.fDelayedAutostart = FALSE;
+                  triggerInfo->cTriggers = 0;
+                  QueryServiceConfig2(hService, SERVICE_CONFIG_TRIGGER_INFO, reinterpret_cast<BYTE*>(triggerInfo), 8192, &bytesNeeded);
+
                   switch(cfg->dwStartType)
                   {
                      case SERVICE_AUTO_START:
-                        value->set(4, _T("Auto"));
+                        QueryServiceConfig2(hService, SERVICE_CONFIG_DELAYED_AUTO_START_INFO, reinterpret_cast<BYTE*>(&delayedStartInfo), sizeof(delayedStartInfo), &bytesNeeded);
+                        startType = _T("Auto");
                         break;
                      case SERVICE_BOOT_START:
-                        value->set(4, _T("Boot"));
+                        startType = _T("Boot");
                         break;
                      case SERVICE_DEMAND_START:
-                        value->set(4, _T("Manual"));
+                        startType = _T("Manual");
                         break;
                      case SERVICE_DISABLED:
-                        value->set(4, _T("Disabled"));
+                        startType = _T("Disabled");
                         break;
                      case SERVICE_SYSTEM_START:
-                        value->set(4, _T("System"));
+                        startType = _T("System");
                         break;
                      default:
-                        value->set(4, (UINT32)cfg->dwStartType);
+                        startType.append(static_cast<uint32_t>(cfg->dwStartType));
                         break;
                   }
-                  value->set(6, cfg->lpBinaryPathName);
-                  value->set(7, cfg->lpDependencies);
+                  if (delayedStartInfo.fDelayedAutostart || (triggerInfo->cTriggers > 0))
+                  {
+                     startType.append(_T(" ("));
+                     if (delayedStartInfo.fDelayedAutostart)
+                        startType.append(_T("Delayed Start"));
+                     if (triggerInfo->cTriggers > 0)
+                     {
+                        if (delayedStartInfo.fDelayedAutostart)
+                           startType.append(_T(", "));
+                        startType.append(_T("Trigger Start"));
+                     }
+                     startType.append(_T(")"));
+                  }
+                  value->set(4, startType);
+
+                  value->set(5, cfg->lpServiceStartName);
+                  value->set(7, cfg->lpBinaryPathName);
+                  value->set(8, cfg->lpDependencies);
                }
                CloseServiceHandle(hService);
             }
          }
          rc = SYSINFO_RC_SUCCESS;
       }
-      free(services);
+      MemFree(services);
    }
 
    CloseServiceHandle(hManager);
