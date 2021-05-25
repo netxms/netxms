@@ -23,7 +23,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.116.0",
  org.netxms.ui.eclipse.perfview;bundle-version="3.9.0",
  org.netxms.ui.eclipse.objectview;bundle-version="3.9.0",
  org.slf4j.api;bundle-version="1.7.30"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.networkmaps.algorithms,
  org.netxms.ui.eclipse.networkmaps.api,
