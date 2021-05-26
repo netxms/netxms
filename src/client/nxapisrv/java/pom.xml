@@ -4,12 +4,12 @@
    <groupId>org.netxms</groupId>
    <artifactId>netxms-websvc</artifactId>
    <packaging>war</packaging>
-   <version>3.9-SNAPSHOT</version>
+   <version>${revision}</version>
    <name>NetXMS REST API Server</name>
    <url>http://netxms.org</url>
 
    <properties>
-     <revision>3.8-SNAPSHOT</revision>
+     <revision>3.9-SNAPSHOT</revision>
      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
    </properties>
 
