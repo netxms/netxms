@@ -19,6 +19,7 @@
 package org.netxms.client;
 
 import java.util.Map;
+import java.util.Set;
 import org.netxms.client.objects.AbstractObject;
 
 /**
@@ -59,6 +60,16 @@ public class ObjectQueryResult
    public Map<String, String> getProperties()
    {
       return properties;
+   }
+
+   /**
+    * Get all property names
+    *
+    * @return property names
+    */
+   public Set<String> getPropertyNames()
+   {
+      return properties.keySet();
    }
 
    /**

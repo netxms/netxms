@@ -2776,11 +2776,14 @@ static int ObjectQueryComparator(const StringList *orderBy, const ObjectQueryRes
  */
 static void SetDataFromVariable(const NXSL_Identifier& name, NXSL_Value *value, StringMap *objectData)
 {
+   if (name.value[0] != '$')  // Ignore global variables set by system
+   {
 #ifdef UNICODE
-   objectData->setPreallocated(WideStringFromUTF8String(name.value), MemCopyString(value->getValueAsCString()));
+      objectData->setPreallocated(WideStringFromUTF8String(name.value), MemCopyString(value->getValueAsCString()));
 #else
-   objectData->set(name.value, value->getValueAsCString());
+      objectData->set(name.value, value->getValueAsCString());
 #endif
+   }
 }
 
 /**
