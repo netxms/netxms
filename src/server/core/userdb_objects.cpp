@@ -1004,17 +1004,15 @@ bool User::saveBindingInDB(const TCHAR* methodName, char* configuration, bool ex
    DB_STATEMENT hStmt;
    if (exists)
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb,
-         _T("UPDATE two_factor_auth_bindings SET configuration=? WHERE user_id=? AND name=?"));
+      hStmt = DBPrepare(hdb, _T("UPDATE two_factor_auth_bindings SET configuration=? WHERE user_id=? AND name=?"));
    }
    else
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb,
-         _T("INSERT INTO two_factor_auth_bindings (configuration,user_id,name) VALUES (?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO two_factor_auth_bindings (configuration,user_id,name) VALUES (?,?,?)"));
    }
 
 
-   if(hStmt != nullptr)
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, configuration, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_CTYPE_UINT32, m_id);

@@ -496,15 +496,6 @@ struct AgentFileTransfer
    }
 };
 
-struct LoginInfo
-{
-   TCHAR szLogin[MAX_USER_NAME];
-   bool changePasswd;
-   uint32_t graceLogins;
-   bool closeOtherSessions;
-   bool intruderLockout;
-};
-
 // Explicit instantiation of template classes
 #ifdef _WIN32
 template class NXCORE_EXPORTABLE HashMap<uint32_t, ServerDownloadFileInfo>;
@@ -522,6 +513,32 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 class SyslogMessage;
 
 /**
+ * Client login information
+ */
+struct LoginInfo
+{
+   AuthentificationToken *token;
+   TCHAR loginName[MAX_USER_NAME];
+   uint32_t graceLogins;
+   bool changePassword;
+   bool closeOtherSessions;
+   bool intruderLockout;
+
+   LoginInfo()
+   {
+      token = nullptr;
+      graceLogins = 0;
+      changePassword = false;
+      closeOtherSessions = false;
+      intruderLockout = false;
+   }
+   ~LoginInfo()
+   {
+      delete token;
+   }
+};
+
+/**
  * Client (user) session
  */
 class NXCORE_EXPORTABLE ClientSession
@@ -531,6 +548,7 @@ private:
    SOCKET m_socket;
    BackgroundSocketPollerHandle *m_socketPoller;
    SocketMessageReceiver *m_messageReceiver;
+   LoginInfo *m_loginInfo;
    uint32_t m_dwUserId;
    uint64_t m_systemAccessRights; // User's system access rights
    VolatileCounter m_flags;       // Session flags
@@ -573,8 +591,6 @@ private:
    bool m_objectNotificationScheduled;
    uint32_t m_objectNotificationDelay;
    size_t m_objectNotificationBatchSize;
-   AuthentificationToken* m_token;
-   LoginInfo m_loginInfo;
 
    static void socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, ClientSession *session);
    static void terminate(ClientSession *session);
@@ -599,9 +615,9 @@ private:
 
    void setupEncryption(NXCPMessage *request);
    void login(NXCPMessage *request);
-   uint32_t authenticateUserByPassword(NXCPMessage *pRequest, LoginInfo& loginInfo);
-   uint32_t authenticateUserByCertificate(NXCPMessage *pRequest, LoginInfo& loginInfo);
-   uint32_t authenticateUserBySSOTicket(NXCPMessage *pRequest, LoginInfo& loginInfo);
+   uint32_t authenticateUserByPassword(NXCPMessage *request, LoginInfo *loginInfo);
+   uint32_t authenticateUserByCertificate(NXCPMessage *request, LoginInfo *loginInfo);
+   uint32_t authenticateUserBySSOTicket(NXCPMessage *request, LoginInfo *loginInfo);
 
    void respondToKeepalive(UINT32 dwRqId);
    void onFileUpload(BOOL bSuccess);

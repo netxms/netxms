@@ -162,6 +162,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
    m_socket = hSocket;
    m_socketPoller = nullptr;
    m_messageReceiver = nullptr;
+   m_loginInfo = nullptr;
 	m_mutexSocketWrite = MutexCreate();
    m_mutexSendAlarms = MutexCreate();
    m_mutexSendActions = MutexCreate();
@@ -197,8 +198,6 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
    m_objectNotificationScheduled = false;
    m_objectNotificationBatchSize = 500;
    m_objectNotificationDelay = 200;
-   m_token = nullptr;
-   memset(&m_loginInfo, 0, sizeof(LoginInfo));
 }
 
 /**
@@ -243,7 +242,7 @@ ClientSession::~ClientSession()
    delete m_pendingObjectNotifications;
    MutexDestroy(m_pendingObjectNotificationsLock);
 
-   delete m_token;
+   delete m_loginInfo;
 
    debugPrintf(5, _T("Session object destroyed"));
 }
@@ -2050,41 +2049,43 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 
 	FillComponentsMessage(&msg);
 
-   // Send response
    sendMessage(msg);
 }
 
 /**
  * Authenticate user by password
  */
-uint32_t ClientSession::authenticateUserByPassword(NXCPMessage *request, LoginInfo& loginInfo)
+uint32_t ClientSession::authenticateUserByPassword(NXCPMessage *request, LoginInfo *loginInfo)
 {
-   request->getFieldAsString(VID_LOGIN_NAME, loginInfo.szLogin, MAX_USER_NAME);
-   TCHAR szPassword[1024];
+   request->getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
+   TCHAR password[1024];
 #ifdef UNICODE
-	request->getFieldAsString(VID_PASSWORD, szPassword, 256);
+	request->getFieldAsString(VID_PASSWORD, password, 256);
 #else
-	request->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
+	request->getFieldAsUtf8String(VID_PASSWORD, password, 1024);
 #endif
-	return AuthenticateUser(loginInfo.szLogin, szPassword, 0, nullptr, nullptr, &m_dwUserId, &m_systemAccessRights, &loginInfo.changePasswd, &loginInfo.intruderLockout,
-													 &loginInfo.closeOtherSessions, false, &loginInfo.graceLogins);
+	return AuthenticateUser(loginInfo->loginName, password, 0, nullptr, nullptr, &m_dwUserId, &m_systemAccessRights, &loginInfo->changePassword,
+         &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, false, &loginInfo->graceLogins);
 }
 
-uint32_t ClientSession::authenticateUserByCertificate(NXCPMessage *pRequest, LoginInfo& loginInfo)
+/**
+ * Authenticate user by certificate
+ */
+uint32_t ClientSession::authenticateUserByCertificate(NXCPMessage *request, LoginInfo *loginInfo)
 {
    uint32_t rcc;
 #ifdef _WITH_ENCRYPTION
-   pRequest->getFieldAsString(VID_LOGIN_NAME, loginInfo.szLogin, MAX_USER_NAME);
-   X509 *pCert = CertificateFromLoginMessage(pRequest);
+   request->getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
+   X509 *pCert = CertificateFromLoginMessage(request);
    if (pCert != nullptr)
    {
       size_t sigLen;
-      const BYTE *signature = pRequest->getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
+      const BYTE *signature = request->getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
       if (signature != nullptr)
       {
-         rcc = AuthenticateUser(loginInfo.szLogin, reinterpret_cast<const TCHAR*>(signature), sigLen,
-               pCert, m_challenge, &m_dwUserId, &m_systemAccessRights, &loginInfo.changePasswd, &loginInfo.intruderLockout,
-													 &loginInfo.closeOtherSessions, false, &loginInfo.graceLogins);
+         rcc = AuthenticateUser(loginInfo->loginName, reinterpret_cast<const TCHAR*>(signature), sigLen,
+               pCert, m_challenge, &m_dwUserId, &m_systemAccessRights, &loginInfo->changePassword, &loginInfo->intruderLockout,
+               &loginInfo->closeOtherSessions, false, &loginInfo->graceLogins);
       }
       else
       {
@@ -2102,18 +2103,20 @@ uint32_t ClientSession::authenticateUserByCertificate(NXCPMessage *pRequest, Log
    return rcc;
 }
 
-uint32_t ClientSession::authenticateUserBySSOTicket(NXCPMessage *pRequest, LoginInfo& loginInfo)
+/**
+ * Authenticate user by SSO ticket
+ */
+uint32_t ClientSession::authenticateUserBySSOTicket(NXCPMessage *request, LoginInfo *loginInfo)
 {
    uint32_t rcc;
    char ticket[1024];
-   pRequest->getFieldAsMBString(VID_PASSWORD, ticket, 1024);
-   pRequest->getFieldAsString(VID_LOGIN_NAME, loginInfo.szLogin, MAX_USER_NAME);
-   if (CASAuthenticate(ticket, loginInfo.szLogin))
+   request->getFieldAsMBString(VID_PASSWORD, ticket, 1024);
+   request->getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
+   if (CASAuthenticate(ticket, loginInfo->loginName))
    {
-      debugPrintf(5, _T("SSO ticket %hs is valid, login name %s"), ticket, loginInfo.szLogin);
-      rcc = AuthenticateUser(loginInfo.szLogin, nullptr, 0, nullptr, nullptr, &m_dwUserId,
-                                    &m_systemAccessRights, &loginInfo.changePasswd, &loginInfo.intruderLockout,
-													 &loginInfo.closeOtherSessions, true, &loginInfo.graceLogins);
+      debugPrintf(5, _T("SSO ticket %hs is valid, login name %s"), ticket, loginInfo->loginName);
+      rcc = AuthenticateUser(loginInfo->loginName, nullptr, 0, nullptr, nullptr, &m_dwUserId, &m_systemAccessRights,
+            &loginInfo->changePassword, &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, true, &loginInfo->graceLogins);
    }
    else
    {
@@ -2163,10 +2166,10 @@ void ClientSession::login(NXCPMessage *request)
    if (!(m_flags & CSF_AUTHENTICATED))
    {
       uint32_t rcc;
-      memset(&m_loginInfo, 0, sizeof(LoginInfo));
-      int nAuthType = (int)request->getFieldAsUInt16(VID_AUTH_TYPE);
-      debugPrintf(6, _T("authentication type %d"), nAuthType);
-		switch(nAuthType)
+      m_loginInfo = new LoginInfo();
+      int authType = request->getFieldAsInt16(VID_AUTH_TYPE);
+      debugPrintf(6, _T("Selected authentication type %d"), authType);
+		switch(authType)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:
             rcc = authenticateUserByPassword(request, m_loginInfo);
@@ -2187,14 +2190,15 @@ void ClientSession::login(NXCPMessage *request)
          GetUser2FABindingNames(m_dwUserId, &response);
          if (response.getFieldAsInt32(VID_2FA_METHODS_COUNT) > 0)
          {
-            response.setField(VID_RCC, RCC_NEED_2FA);
+            rcc = RCC_NEED_2FA;
          }
          else
          {
             finalizeLogin(*request, &response);
-            memset(&m_loginInfo, 0, sizeof(LoginInfo));
+            delete_and_null(m_loginInfo);
          }
       }
+      response.setField(VID_RCC, rcc);
    }
    else
    {
@@ -2225,14 +2229,14 @@ void ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *respo
    if (rcc == RCC_SUCCESS)
    {
       InterlockedOr(&m_flags, CSF_AUTHENTICATED);
-      _tcslcpy(m_loginName, m_loginInfo.szLogin, MAX_USER_NAME);
-      _sntprintf(m_sessionName, MAX_SESSION_NAME, _T("%s@%s"), m_loginInfo.szLogin, m_workstation);
+      _tcslcpy(m_loginName, m_loginInfo->loginName, MAX_USER_NAME);
+      _sntprintf(m_sessionName, MAX_SESSION_NAME, _T("%s@%s"), m_loginName, m_workstation);
       m_loginTime = time(nullptr);
       response->setField(VID_RCC, RCC_SUCCESS);
       response->setField(VID_USER_SYS_RIGHTS, m_systemAccessRights);
       response->setField(VID_USER_ID, m_dwUserId);
       response->setField(VID_SESSION_ID, (uint32_t)m_id);
-      response->setField(VID_CHANGE_PASSWD_FLAG, (uint16_t)m_loginInfo.changePasswd);
+      response->setField(VID_CHANGE_PASSWD_FLAG, (uint16_t)m_loginInfo->changePassword);
       response->setField(VID_DBCONN_STATUS, (uint16_t)((g_flags & AF_DB_CONNECTION_LOST) ? 0 : 1));
       response->setField(VID_ZONING_ENABLED, (uint16_t)((g_flags & AF_ENABLE_ZONING) ? 1 : 0));
       response->setField(VID_POLLING_INTERVAL, (int32_t)DCObject::m_defaultPollingInterval);
@@ -2243,7 +2247,7 @@ void ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *respo
       response->setField(VID_HELPDESK_LINK_ACTIVE, (uint16_t)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
       response->setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("Client.AlarmList.DisplayLimit"), 4096));
       response->setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("ServerCommandOutputTimeout"), 60));
-      response->setField(VID_GRACE_LOGINS, m_loginInfo.graceLogins);
+      response->setField(VID_GRACE_LOGINS, m_loginInfo->graceLogins);
 
       GetClientConfigurationHints(response);
       FillLicenseProblemsMessage(response);
@@ -2270,9 +2274,9 @@ void ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *respo
       response->setField(VID_MESSAGE_OF_THE_DAY, buffer);
 
       debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
-      writeAuditLog(AUDIT_SECURITY, true, 0, _T("User \"%s\" logged in (language: %s; client info: %s)"), m_loginInfo.szLogin, m_language, m_clientInfo);
+      writeAuditLog(AUDIT_SECURITY, true, 0, _T("User \"%s\" logged in (language: %s; client info: %s)"), m_loginInfo->loginName, m_language, m_clientInfo);
 
-      if (m_loginInfo.closeOtherSessions)
+      if (m_loginInfo->closeOtherSessions)
       {
          debugPrintf(5, _T("Closing other sessions for user %s"), m_loginName);
          CloseOtherSessions(m_dwUserId, m_id);
@@ -2281,13 +2285,10 @@ void ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *respo
    else
    {
       response->setField(VID_RCC, rcc);
-      writeAuditLog(AUDIT_SECURITY, false, 0,
-                     _T("User \"%s\" login failed with error code %d (client info: %s)"),
-                     m_loginInfo.szLogin, rcc, m_clientInfo);
-      if (m_loginInfo.intruderLockout)
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" login failed with error code %d (client info: %s)"), m_loginInfo->loginName, rcc, m_clientInfo);
+      if (m_loginInfo->intruderLockout)
       {
-         writeAuditLog(AUDIT_SECURITY, false, 0,
-                        _T("User account \"%s\" temporary disabled due to excess count of failed authentication attempts"), m_loginInfo.szLogin);
+         writeAuditLog(AUDIT_SECURITY, false, 0, _T("User account \"%s\" temporary disabled due to excess count of failed authentication attempts"), m_loginInfo->loginName);
       }
       m_dwUserId = INVALID_INDEX;   // reset user ID to avoid incorrect count of logged in sessions for that user
    }
@@ -15575,25 +15576,18 @@ void ClientSession::generateSshKey(NXCPMessage *request)
 void ClientSession::prepare2FAChallenge(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   TCHAR *method = request->getFieldAsString(VID_2FA_METHOD);
-   if (method != nullptr)
+   TCHAR method[MAX_OBJECT_NAME];
+   request->getFieldAsString(VID_2FA_METHOD, method, MAX_OBJECT_NAME);
+   delete m_loginInfo->token;
+   m_loginInfo->token = Prepare2FAChallenge(method, m_dwUserId);
+   if (m_loginInfo->token != nullptr)
    {
-      delete_and_null(m_token);
-      m_token = Prepare2FAChallenge(method, m_dwUserId);
-      if (m_token != nullptr)
-      {
-         msg.setField(VID_CHALLENGE, m_token->getChallenge());
-         msg.setField(VID_RCC, RCC_SUCCESS);
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_2FA_CHALLENGE_ERROR); //can't prepare 2FA challenge
-      }
-      MemFree(method);
+      msg.setField(VID_CHALLENGE, m_loginInfo->token->getChallenge());
+      msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_2FA_NO_SUCH_METHOD);
+      msg.setField(VID_RCC, RCC_2FA_CHALLENGE_ERROR); // can't prepare 2FA challenge
    }
    sendMessage(&msg);
 }
@@ -15604,25 +15598,24 @@ void ClientSession::prepare2FAChallenge(NXCPMessage *request)
 void ClientSession::validate2FAResponse(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   if (_tcslen(m_loginInfo.szLogin) != 0)
+   if (m_loginInfo != nullptr)
    {
       TCHAR response[1024];
       request->getFieldAsString(VID_2FA_RESPONSE, response, 1024);
-      if (Validate2FAResponse(m_token, response))
+      if (Validate2FAResponse(m_loginInfo->token, response))
       {
-         delete_and_null(m_token);
          finalizeLogin(*request, &msg);
       }
       else
       {
          msg.setField(VID_RCC, RCC_2FA_FAILED);
       }
+      delete_and_null(m_loginInfo);
    }
    else
    {
       msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
    }
-   memset(&m_loginInfo, 0, sizeof(LoginInfo));
    sendMessage(&msg);
 }
 
