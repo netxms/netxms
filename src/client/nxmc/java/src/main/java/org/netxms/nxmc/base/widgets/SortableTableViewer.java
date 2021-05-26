@@ -119,6 +119,7 @@ public class SortableTableViewer extends TableViewer
       TableColumn c = new TableColumn(getTable(), SWT.LEFT);
       columns.add(c);
       c.setText(name);
+      c.pack();
       if (width > 0)
          c.setWidth(width);
       c.setData("ID", Integer.valueOf(index)); //$NON-NLS-1$
