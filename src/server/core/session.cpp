@@ -2648,7 +2648,7 @@ void ClientSession::queryObjectDetails(NXCPMessage *request)
       {
          ObjectQueryResult *curr = objects->get(i);
          idList[i] = curr->object->getId();
-         curr->values->fillMessage(&msg, fieldId + 1, fieldId);
+         curr->values->fillMessage(&msg, fieldId, fieldId + 1);
          fieldId += curr->values->size() * 2 + 1;
       }
       msg.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);

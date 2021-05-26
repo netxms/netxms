@@ -21,6 +21,8 @@ package org.netxms.ui.eclipse.objectbrowser.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.base.InetAddressEx;
 import org.netxms.client.ObjectQueryResult;
@@ -40,7 +42,18 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ObjectSearchResultLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   WorkbenchLabelProvider wbLabelProvider = new WorkbenchLabelProvider();
+   private WorkbenchLabelProvider wbLabelProvider = new WorkbenchLabelProvider();
+   private Table table;
+
+   /**
+    * Create label provider for object query results.
+    *
+    * @param table underlying table control
+    */
+   public ObjectSearchResultLabelProvider(Table table)
+   {
+      this.table = table;
+   }
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -88,21 +101,43 @@ public class ObjectSearchResultLabelProvider extends LabelProvider implements IT
          case ObjectFinder.COL_PARENT:
             return getParentNames(object);
          case ObjectFinder.COL_ZONE:
-            if (object instanceof AbstractNode)
+            if (ConsoleSharedData.getSession().isZoningEnabled())
             {
-               int zoneId = ((AbstractNode)object).getZoneId();
-               Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
-               return (zone != null) ? zone.getObjectName() + " (" + Integer.toString(zoneId) + ")" : Integer.toString(zoneId); 
+               if (object instanceof AbstractNode)
+               {
+                  int zoneId = ((AbstractNode)object).getZoneId();
+                  Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
+                  return (zone != null) ? zone.getObjectName() + " (" + Integer.toString(zoneId) + ")" : Integer.toString(zoneId);
+               }
+               else if (object instanceof Interface)
+               {
+                  int zoneId = ((Interface)object).getZoneId();
+                  Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
+                  return (zone != null) ? zone.getObjectName() + " (" + Integer.toString(zoneId) + ")" : Integer.toString(zoneId);
+               }
             }
-            else if (object instanceof Interface)
+            /* no break */
+         default:
+            if (element instanceof ObjectQueryResult)
             {
-               int zoneId = ((Interface)object).getZoneId();
-               Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
-               return (zone != null) ? zone.getObjectName() + " (" + Integer.toString(zoneId) + ")" : Integer.toString(zoneId); 
+               String propertyName = getPropertyName(columnIndex);
+               if (propertyName != null)
+                  return ((ObjectQueryResult)element).getPropertyValue(propertyName);
             }
             return null;
       }
-      return null;
+   }
+
+   /**
+    * Get property name for given column index
+    *
+    * @param columnIndex column index
+    * @return property name or null
+    */
+   private String getPropertyName(int columnIndex)
+   {
+      TableColumn c = table.getColumn(columnIndex);
+      return (c != null) ? (String)c.getData("propertyName") : null;
    }
 
    /**

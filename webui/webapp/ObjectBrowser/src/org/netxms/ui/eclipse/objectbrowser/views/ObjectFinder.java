@@ -22,7 +22,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -54,6 +56,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.PartInitException;
@@ -527,7 +530,7 @@ public class ObjectFinder extends ViewPart
       if (!ConsoleSharedData.getSession().isZoningEnabled())
          results.removeColumnById(COL_ZONE);
       results.setContentProvider(new ArrayContentProvider());
-      results.setLabelProvider(new ObjectSearchResultLabelProvider());
+      results.setLabelProvider(new ObjectSearchResultLabelProvider(results.getTable()));
       results.setComparator(new ObjectSearchResultComparator());
       results.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       final IDialogSettings settings = Activator.getDefault().getDialogSettings();
@@ -719,7 +722,7 @@ public class ObjectFinder extends ViewPart
                   public void run()
                   {
                      queryEditorMessage.hideMessage();
-                     results.setInput(objects);
+                     updateResultTable(objects);
                      queryEditor.setFocus();
                   }
                });
@@ -905,6 +908,7 @@ public class ObjectFinder extends ViewPart
                @Override
                public void run()
                {
+                  resetResultTable();
                   results.setInput(objects);
                }
             });
@@ -979,6 +983,42 @@ public class ObjectFinder extends ViewPart
       }
    }
    
+   /**
+    * Remove all columns except standard
+    */
+   private void resetResultTable()
+   {
+      TableColumn[] columns = results.getTable().getColumns();
+      for(int i = ConsoleSharedData.getSession().isZoningEnabled() ? 6 : 5; i < columns.length; i++)
+         columns[i].dispose();
+   }
+
+   /**
+    * Update result table
+    *
+    * @param objects query result
+    */
+   private void updateResultTable(List<ObjectQueryResult> objects)
+   {
+      resetResultTable();
+
+      Set<String> registeredProperties = new HashSet<>();
+      for(ObjectQueryResult r : objects)
+      {
+         for(String n : r.getPropertyNames())
+         {
+            if (!registeredProperties.contains(n))
+            {
+               TableColumn tc = results.addColumn(n, 200);
+               tc.setData("propertyName", n);
+               registeredProperties.add(n);
+            }
+         }
+      }
+
+      results.setInput(objects);
+   }
+
    /**
     * Object class ID to name mapping
     */

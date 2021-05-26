@@ -3733,6 +3733,7 @@ public class NXCSession
       if (orderBy != null)
          msg.setFieldsFromStringCollection(orderBy, NXCPCodes.VID_ORDER_FIELD_LIST_BASE, NXCPCodes.VID_ORDER_FIELDS);
       msg.setFieldInt32(NXCPCodes.VID_RECORD_LIMIT, limit);
+      msg.setField(NXCPCodes.VID_READ_ALL_FIELDS, readAllComputedProperties);
       sendMessage(msg);
 
       NXCPMessage response = waitForRCC(msg.getMessageId());

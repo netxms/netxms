@@ -192,6 +192,7 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManag
    m_localVariables = nullptr;
    m_expressionVariables = nullptr;
    m_exportedExpressionVariables = nullptr;
+   m_contextVariables = nullptr;
    m_context = nullptr;
    m_securityContext = nullptr;
    m_subLevel = 0;    // Level of current subroutine
@@ -227,6 +228,7 @@ NXSL_VM::~NXSL_VM()
    delete m_globalVariables;
    delete m_localVariables;
    delete m_expressionVariables;
+   delete m_contextVariables;
    destroyValue(m_context);
    delete m_securityContext;
 
@@ -542,9 +544,13 @@ NXSL_Variable *NXSL_VM::findVariable(const NXSL_Identifier& name, NXSL_VariableS
       NXSL_Value *value = object->getClass()->getAttr(object, name.value);
       if (value != nullptr)
       {
-         var = m_globalVariables->create(name, value);
+         var = m_contextVariables->find(name);
+         if (var != nullptr)
+            var->setValue(value);
+         else
+            var = m_contextVariables->create(name, value);
          if (vs != nullptr)
-            *vs = m_globalVariables;
+            *vs = m_contextVariables;
          return var;
       }
    }
@@ -2871,14 +2877,19 @@ void NXSL_VM::pushProperty(const NXSL_Identifier& name)
 void NXSL_VM::setContextObject(NXSL_Value *value)
 {
    destroyValue(m_context);
-   if (value->isObject())
+   if ((value != nullptr) && value->isObject())
    {
       m_context = value;
+      if (m_contextVariables == nullptr)
+         m_contextVariables = new NXSL_VariableSystem(this, NXSL_VariableSystemType::CONTEXT);
+      else
+         m_contextVariables->clear();
    }
    else
    {
       m_context = nullptr;
       destroyValue(value);
+      delete_and_null(m_contextVariables);
    }
 }
 

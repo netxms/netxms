@@ -888,6 +888,7 @@ enum class NXSL_VariableSystemType
    GLOBAL,
    LOCAL,
    EXPRESSION,
+   CONTEXT,
    CONSTANT
 };
 
@@ -1136,6 +1137,7 @@ protected:
    NXSL_VariableSystem *m_localVariables;
    NXSL_VariableSystem *m_expressionVariables;
    NXSL_VariableSystem **m_exportedExpressionVariables;
+   NXSL_VariableSystem *m_contextVariables;
    NXSL_Value *m_context;
 
    NXSL_Storage *m_storage;

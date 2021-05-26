@@ -198,7 +198,7 @@ NXSL_Variable *NXSL_VariableSystem::create(const NXSL_Identifier& name, NXSL_Val
  */
 bool NXSL_VariableSystem::createVariableReferenceRestorePoint(uint32_t addr, NXSL_Identifier *identifier)
 {
-   if (m_restorePointCount >= MAX_VREF_RESTORE_POINTS)
+   if ((m_restorePointCount >= MAX_VREF_RESTORE_POINTS) || (m_type == NXSL_VariableSystemType::CONTEXT))
       return false;
 
    m_restorePoints[m_restorePointCount].addr = addr;
