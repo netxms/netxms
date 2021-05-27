@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -41,6 +41,9 @@ using std::atomic;
 #endif
 
 #ifdef _WIN32
+
+// DLL implementations of atomic<> for standard types (int32_t, double, etc.) should be placed here
+template struct LIBNETXMS_EXPORTABLE atomic<double>;
 
 typedef volatile LONG VolatileCounter;
 typedef volatile LONGLONG VolatileCounter64;

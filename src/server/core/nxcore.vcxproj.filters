@@ -477,7 +477,7 @@
     <ClCompile Include="topology_builder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="authentification.cpp">
+    <ClCompile Include="2fa.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

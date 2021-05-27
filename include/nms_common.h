@@ -260,6 +260,8 @@ typedef int bool;
 #define HAVE_WCSDUP             1
 #define HAVE_WUTIME             1
 
+#define HAVE_STD_ATOMIC         1
+
 #define HAVE_LIBCURL                      1
 
 #define HAVE_DIRENT_D_TYPE                1

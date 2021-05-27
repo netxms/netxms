@@ -196,6 +196,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="2fa.cpp" />
     <ClCompile Include="abind_target.cpp" />
     <ClCompile Include="accesspoint.cpp" />
     <ClCompile Include="acl.cpp" />
@@ -207,7 +208,6 @@
     <ClCompile Include="alarm.cpp" />
     <ClCompile Include="alarm_category.cpp" />
     <ClCompile Include="audit.cpp" />
-    <ClCompile Include="authentification.cpp" />
     <ClCompile Include="beacon.cpp" />
     <ClCompile Include="bizservice.cpp" />
     <ClCompile Include="bizsvcroot.cpp" />
