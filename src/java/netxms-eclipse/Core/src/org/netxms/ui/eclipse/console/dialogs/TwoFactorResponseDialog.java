@@ -37,6 +37,12 @@ public class TwoFactorResponseDialog extends Dialog
    private String response;
    private LabeledText responseText;
 
+   /**
+    * Create two-factor response dialog.
+    *
+    * @param parentShell parent shell
+    * @param challenge challenge provided by server
+    */
    public TwoFactorResponseDialog(Shell parentShell, String challenge)
    {
       super(parentShell);

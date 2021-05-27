@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.dialogs;
+package org.netxms.nxmc.base.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
@@ -25,14 +25,18 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for entering user response for selected two factor authentication method
  */
 public class TwoFactorResponseDialog extends Dialog
 {
+   private static final I18n i18n = LocalizationHelper.getI18n(TwoFactorResponseDialog.class);
+
    private String challenge;
    private String response;
    private LabeledText responseText;
@@ -56,7 +60,7 @@ public class TwoFactorResponseDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Two-factor Authentication");
+      newShell.setText(i18n.tr("Two-factor Authentication"));
    }
 
    /**
@@ -76,7 +80,7 @@ public class TwoFactorResponseDialog extends Dialog
       if (challenge != null)
       {
          LabeledText challengeText = new LabeledText(dialogArea, SWT.NONE);
-         challengeText.setLabel("Challenge");
+         challengeText.setLabel(i18n.tr("Challenge"));
          challengeText.setText(challenge);
          challengeText.getTextControl().setEditable(false);
          challengeText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));

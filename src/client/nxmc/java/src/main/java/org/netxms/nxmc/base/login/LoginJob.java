@@ -21,10 +21,12 @@ package org.netxms.nxmc.base.login;
 import java.lang.reflect.InvocationTargetException;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.util.List;
 import java.util.Locale;
 import java.util.ServiceLoader;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCException;
@@ -32,10 +34,13 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ProtocolVersion;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.TwoFactorAuthenticationCallback;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.dialogs.TwoFactorMetodSelectionDialog;
+import org.netxms.nxmc.base.dialogs.TwoFactorResponseDialog;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.services.LoginListener;
 import org.slf4j.Logger;
@@ -118,7 +123,40 @@ public class LoginJob implements IRunnableWithProgress
          session.connect(new int[] { ProtocolVersion.INDEX_FULL });
          monitor.worked(1);
 
-         session.login(authMethod, loginName, password, certificate, signature);
+         session.login(authMethod, loginName, password, certificate, signature, new TwoFactorAuthenticationCallback() {
+            @Override
+            public int selectAuthentificationMethod(final List<String> methods)
+            {
+               final int[] selection = new int[1];
+               selection[0] = -1;
+               display.syncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     TwoFactorMetodSelectionDialog dlg = new TwoFactorMetodSelectionDialog(null, methods);
+                     if (dlg.open() == Window.OK)
+                        selection[0] = dlg.getSelectedMethod();
+                  }
+               });
+               return selection[0];
+            }
+
+            @Override
+            public String getUserResponse(final String challenge)
+            {
+               final String[] response = new String[1];
+               display.syncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     TwoFactorResponseDialog dlg = new TwoFactorResponseDialog(null, challenge);
+                     if (dlg.open() == Window.OK)
+                        response[0] = dlg.getResponse();
+                  }
+               });
+               return response[0];
+            }
+         });
          monitor.worked(1);
          
          monitor.setTaskName(i18n.tr("Synchronizing objects..."));
