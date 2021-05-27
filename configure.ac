@@ -1375,6 +1375,22 @@ public:
 	AC_DEFINE(HAVE_OVERRIDE_SPECIFIER,0,Define to 1 if C++ compiler supports "override" specifier)
 ])
 
+AC_MSG_CHECKING(whether C++ compiler supports std::atomic)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <atomic>
+std::atomic<int> a;
+]],[[
+	a.store(1);
+	return 0;
+]])
+],[
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(HAVE_STD_ATOMIC,1,Define to 1 if std::atomic is available)
+],[
+        AC_MSG_RESULT(no)
+        AC_DEFINE(HAVE_STD_ATOMIC,0,Define to 1 if std::atomic is available)
+])
+
 AC_LANG_POP([C++])
 
 AC_MSG_CHECKING(whether C compiler supports "unused" attribute)

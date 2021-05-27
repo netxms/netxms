@@ -2072,7 +2072,7 @@ protected:
    PollState m_configurationPollState;
    PollState m_instancePollState;
    MUTEX m_hPollerMutex;
-   double m_proxyLoadFactor;
+   atomic<double> m_proxyLoadFactor;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual void fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId) override;
@@ -2161,7 +2161,7 @@ public:
    UINT32 getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId);
    void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
    UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId);
-   double getProxyLoadFactor() const { return GetAttributeWithLock(m_proxyLoadFactor, m_mutexProperties); }
+   double getProxyLoadFactor() const { return m_proxyLoadFactor.load(); }
 
    void updateDciCache();
    void updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId = 0);

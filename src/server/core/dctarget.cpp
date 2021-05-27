@@ -59,10 +59,9 @@ extern ThreadPool *g_pollerThreadPool;
  */
 DataCollectionTarget::DataCollectionTarget() : super(), m_statusPollState(_T("status")),
          m_configurationPollState(_T("configuration")), m_instancePollState(_T("instance")),
-         m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16)
+         m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16), m_proxyLoadFactor(0)
 {
    m_hPollerMutex = MutexCreate();
-   m_proxyLoadFactor = 0;
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
    m_geoLocationRestrictionsViolated = false;
    m_instanceDiscoveryPending = false;
@@ -73,10 +72,9 @@ DataCollectionTarget::DataCollectionTarget() : super(), m_statusPollState(_T("st
  */
 DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : super(name), m_statusPollState(_T("status")),
          m_configurationPollState(_T("configuration")), m_instancePollState(_T("instance")),
-         m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16)
+         m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16), m_proxyLoadFactor(0)
 {
    m_hPollerMutex = MutexCreate();
-   m_proxyLoadFactor = 0;
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
    m_geoLocationRestrictionsViolated = false;
    m_instanceDiscoveryPending = false;
@@ -2530,9 +2528,7 @@ void DataCollectionTarget::calculateProxyLoad()
    }
    unlockDciAccess();
 
-   lockProperties();
-   m_proxyLoadFactor = loadFactor;
-   unlockProperties();
+   m_proxyLoadFactor.store(loadFactor);
 }
 
 /**

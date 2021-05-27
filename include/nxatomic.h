@@ -27,6 +27,11 @@
 
 #ifdef __cplusplus
 
+#if HAVE_STD_ATOMIC
+#include <atomic>
+using std::atomic;
+#endif
+
 #ifdef __sun
 #include <sys/atomic.h>
 #endif
