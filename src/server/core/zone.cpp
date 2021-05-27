@@ -622,9 +622,9 @@ void Zone::updateProxyLoadData(shared_ptr<Node> node)
 /**
  * Filter nodes by assigned proxy ID
  */
-static bool ProxyFilter(NetObj *object, void *context)
+static bool ProxyFilter(NetObj *object, uint32_t *proxyId)
 {
-   return object->getAssignedZoneProxyId(false) == CAST_FROM_POINTER(context, UINT32);
+   return object->getAssignedZoneProxyId(false) == *proxyId;
 }
 
 /**
@@ -649,7 +649,7 @@ static void UpdateNodeBackupProxy(void *node)
  */
 void Zone::migrateProxyLoad(ZoneProxy *source, ZoneProxy *target)
 {
-   unique_ptr<SharedObjectArray<NetObj>> nodes = g_idxNodeById.getObjects(ProxyFilter, CAST_TO_POINTER(source->nodeId, void*));
+   unique_ptr<SharedObjectArray<NetObj>> nodes = g_idxNodeById.getObjects(ProxyFilter, &source->nodeId);
    nodes->sort(CompareNodesByProxyLoad);
 
    double loadFactor = 0;
@@ -701,7 +701,7 @@ void Zone::healthCheck(PollerInfo *poller)
    // Calculate average load
    int count = 0;
    double dataSenderLoad = 0, dataCollectorLoad = 0, cpuLoad = 0;
-   UINT32 assignments = 0;
+   uint32_t assignments = 0;
    for(int i = 0; i < m_proxyNodes->size(); i++)
    {
       ZoneProxy *p = m_proxyNodes->get(i);
