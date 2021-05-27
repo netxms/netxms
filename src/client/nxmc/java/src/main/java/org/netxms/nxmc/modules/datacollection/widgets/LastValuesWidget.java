@@ -56,6 +56,7 @@ import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
+import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionCommon;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.LastValuesComparator;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.LastValuesFilter;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.LastValuesLabelProvider;
@@ -70,7 +71,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Viewer for last values of given object
  */
-public class LastValuesWidget extends CompositeWithMessageArea
+public class LastValuesWidget extends CompositeWithMessageArea implements DataCollectionCommon
 {
 	// Columns
 	public static final int COLUMN_ID = 0;
@@ -644,5 +645,11 @@ public class LastValuesWidget extends CompositeWithMessageArea
    public ViewerFilterInternal getFilter()
    {
       return filter;
+   }
+
+   @Override
+   public void postContentCreate()
+   {
+      refresh();
    }
 }

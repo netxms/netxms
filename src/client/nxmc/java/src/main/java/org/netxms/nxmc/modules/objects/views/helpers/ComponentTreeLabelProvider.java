@@ -36,7 +36,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ComponentTreeLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   private static I18n i18n = LocalizationHelper.getI18n(ComponentTreeContentProvider.class);
+   private static I18n i18n = LocalizationHelper.getI18n(ComponentTreeLabelProvider.class);
 	private static final String[] className = { 
 	   null, 
 	   i18n.tr("Other"), 

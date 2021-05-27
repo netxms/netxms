@@ -18,14 +18,20 @@
  */
 package org.netxms.nxmc.modules.datacollection.views;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.text.templates.Template;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.widgets.DataCollectionWidget;
 import org.netxms.nxmc.modules.datacollection.widgets.LastValuesWidget;
+import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionCommon;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.VisibilityValidator;
 import org.xnap.commons.i18n.I18n;
 
@@ -36,7 +42,10 @@ public class LastValuesView extends ObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(LastValuesView.class);
 
-   private LastValuesWidget dataView;
+   private DataCollectionCommon dataView = null;
+   private Action actionEnableSaveMode;
+   private boolean editModeEnabled;
+   private Composite parent;
 
    /**
     * @param name
@@ -44,7 +53,7 @@ public class LastValuesView extends ObjectView
     */
    public LastValuesView()
    {
-      super(i18n.tr("Last Values"), ResourceManager.getImageDescriptor("icons/object-views/last_values.png"), "LastValues", true); 
+      super(i18n.tr("Data Collection"), ResourceManager.getImageDescriptor("icons/object-views/last_values.png"), "DataCollection", true); 
    }
 
    /**
@@ -53,15 +62,72 @@ public class LastValuesView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      dataView = new LastValuesWidget(this, parent, SWT.NONE, getObject(), "LastValuesView", new VisibilityValidator() { //$NON-NLS-1$
-         @Override
-         public boolean isVisible()
-         {
-            return LastValuesView.this.isActive();
-         }
-      });
-      setViewerAndFilter(dataView.getViewer(), dataView.getFilter());
+      this.parent = parent;
+      if (editModeEnabled)
+      {
+         dataView = new DataCollectionWidget(this, parent, SWT.NONE, getObject(), "LastValuesView", new VisibilityValidator() { //$NON-NLS-1$
+            @Override
+            public boolean isVisible()
+            {
+               return LastValuesView.this.isActive();
+            }
+         });    
+      }
+      else 
+      {
+         dataView = new LastValuesWidget(this, parent, SWT.NONE, getObject(), "LastValuesView", new VisibilityValidator() { //$NON-NLS-1$
+            @Override
+            public boolean isVisible()
+            {
+               return LastValuesView.this.isActive();
+            }
+         });    
+      }
+      setViewerAndFilter(dataView.getViewer(), dataView.getFilter()); 
+      createAction();
    }
+   
+   private void createView()
+   {
+      if (dataView != null)
+         dataView.dispose();
+
+      if (editModeEnabled)
+      {
+         dataView = new DataCollectionWidget(this, parent, SWT.NONE, getObject(), "LastValuesView", new VisibilityValidator() { //$NON-NLS-1$
+            @Override
+            public boolean isVisible()
+            {
+               return LastValuesView.this.isActive();
+            }
+         });    
+      }
+      else 
+      {
+         dataView = new LastValuesWidget(this, parent, SWT.NONE, getObject(), "LastValuesView", new VisibilityValidator() { //$NON-NLS-1$
+            @Override
+            public boolean isVisible()
+            {
+               return LastValuesView.this.isActive();
+            }
+         });    
+      }
+      setViewerAndFilter(dataView.getViewer(), dataView.getFilter()); 
+
+      dataView.postContentCreate(); 
+      dataView.layout();    
+      parent.layout();       
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {  
+      dataView.postContentCreate();
+   }
+   
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
@@ -69,7 +135,19 @@ public class LastValuesView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof DataCollectionTarget);
+      if (context == null)
+         return false;
+      
+      if (context instanceof DataCollectionTarget)
+         return true;
+      
+      if (context instanceof Template)
+      {
+         editModeEnabled = true;
+         return true;
+      }
+      
+      return false;
    }
 
    /**
@@ -79,8 +157,8 @@ public class LastValuesView extends ObjectView
    protected void onObjectChange(AbstractObject object)
    {
       dataView.setDataCollectionTarget(object);
-      if (isActive())
-         dataView.refresh();
+         if (isActive())
+            dataView.refresh();
    }
 
    /**
@@ -89,7 +167,34 @@ public class LastValuesView extends ObjectView
    @Override
    public void refresh()
    {
-      dataView.refresh();
+      dataView.refresh(); 
+         
+   }
+   
+   /**
+    * Create mode change action
+    */
+   private void createAction()
+   {
+      actionEnableSaveMode = new Action(i18n.tr("Edit mode"), SharedIcons.EDIT) {
+         @Override
+         public void run()
+         {
+            editModeEnabled = actionEnableSaveMode.isChecked();
+            createView();
+         }
+      }; 
+      actionEnableSaveMode.setChecked(editModeEnabled); 
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
+   {
+      super.fillLocalToolbar(manager);
+      manager.add(actionEnableSaveMode);
    }
 
    /**

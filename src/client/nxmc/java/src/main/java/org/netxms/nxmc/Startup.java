@@ -48,7 +48,9 @@ import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.objects.ObjectToolsCache;
+import org.netxms.nxmc.modules.snmp.shared.MibCache;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -98,6 +100,8 @@ public class Startup
 
       doLogin(display, args);
 
+      DataCollectionDisplayInfo.init();
+      MibCache.init(Registry.getSession(), display);
       ObjectToolsCache.init();
       ObjectToolsCache.attachSession(Registry.getSession());
 
@@ -108,7 +112,7 @@ public class Startup
       display.dispose();
       logger.info("Application exit");
       System.exit(0);
-   }
+}
 
    /**
     * Show login dialog and perform login

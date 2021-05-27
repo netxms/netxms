@@ -59,13 +59,13 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Thresholds extends AbstractDCIPropertyPage
 {
+   private static final I18n i18n = LocalizationHelper.getI18n(Thresholds.class);
 	public static final int COLUMN_OPERATION = 0;
 	public static final int COLUMN_EVENT = 1;
    public static final int COLUMN_DEACTIVATION_EVENT = 2;
 
 	private static final String COLUMN_SETTINGS_PREFIX = "Thresholds.ThresholdList"; //$NON-NLS-1$
 
-   private static final I18n i18n = LocalizationHelper.getI18n(Thresholds.class);
 
 	private DataCollectionItem dci;
 	private List<Threshold> thresholds;

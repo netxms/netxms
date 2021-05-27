@@ -18,13 +18,18 @@
  */
 package org.netxms.nxmc.modules.datacollection.propertypages.helpers;
 
+import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.User;
+import org.netxms.client.users.UserGroup;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.resources.SharedIcons;
 
@@ -32,8 +37,10 @@ import org.netxms.nxmc.resources.SharedIcons;
  * Label provider for NetXMS objects access lists
  *
  */
-public class AccessListLabelProvider extends LabelProvider implements ITableLabelProvider
+public class AccessListLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
+   private static final Color HINT_FOREGROUND = new Color(Display.getDefault(), 192, 192, 192);
+   
    private NXCSession session = Registry.getSession();
 
    /**
@@ -43,7 +50,14 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
    public Image getColumnImage(Object element, int columnIndex)
 	{
 		if (columnIndex == 0)
-         return ((((AccessListElement)element).getUserId() & 0x40000000L) == 0) ? SharedIcons.IMG_USER : SharedIcons.IMG_GROUP;
+		{
+         if (element instanceof AccessListElement)
+            return ((((AccessListElement)element).getUserId() & 0x40000000L) == 0) ? SharedIcons.IMG_USER : SharedIcons.IMG_GROUP;
+         if (element instanceof User)
+            return SharedIcons.IMG_USER; 
+         if (element instanceof UserGroup)
+            return SharedIcons.IMG_GROUP; 
+		}
 		return null;
 	}
 
@@ -56,7 +70,14 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
 		switch(columnIndex)
 		{
 			case 0:
-            return getUserName((AccessListElement)element);
+			   if (element instanceof AccessListElement)
+			      return getUserName((AccessListElement)element);
+            if (element instanceof String)
+               return (String)element;
+            if (element instanceof User)
+               return getUserName((User)element);
+            if (element instanceof UserGroup)
+               return getUserName((UserGroup)element);
 			case 1:
 				AccessListElement e = (AccessListElement)element;
 				StringBuilder sb = new StringBuilder(4);
@@ -78,5 +99,59 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
       long userId = element.getUserId();
       AbstractUserObject dbo = session.findUserDBObjectById(userId, null);
       return (dbo != null) ? dbo.getName() : ("{" + Long.toString(userId) + "}");
+   }
+
+   /**
+    * Get user name from element
+    *
+    * @param element user element
+    * @return user name
+    */
+   private String getUserName(User element)
+   {
+      StringBuilder sb = new StringBuilder();
+      if (element.getFullName().isEmpty())
+         sb.append(element.getName());
+      else
+         sb.append(String.format("%s <%s>", element.getName(), element.getFullName()));
+      
+      if (!element.getDescription().isEmpty())
+         sb.append(String.format(" (%s)", element.getDescription()));
+      
+      return sb.toString();
+   }
+
+   /**
+    * Get user name from element
+    *
+    * @param element group element
+    * @return user name
+    */
+   private String getUserName(UserGroup element)
+   {
+      StringBuilder sb = new StringBuilder();
+      sb.append(element.getName());
+      
+      if (!element.getDescription().isEmpty())
+         sb.append(String.format(" (%s)", element.getDescription()));
+      
+      return sb.toString();
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
+    */
+   @Override
+   public Color getForeground(Object element)
+   {
+      if (element instanceof String)
+         return HINT_FOREGROUND;
+      return null;
+   }
+
+   @Override
+   public Color getBackground(Object arg0)
+   {
+      return null;
    }
 }
