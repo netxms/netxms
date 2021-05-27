@@ -1688,7 +1688,7 @@ class LIBNETXMS_EXPORTABLE StringMapBase
 
 private:
    StringMapEntry *find(const TCHAR *key, size_t keyLen) const;
-   void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object, this); }
+   void destroyObject(void *object) { if (object != nullptr) m_objectDestructor(object, this); }
 
 protected:
    StringMapEntry *m_data;
@@ -1703,9 +1703,10 @@ protected:
    void fillValues(Array *a) const;
    void *unlink(const TCHAR *key);
 
+   ~StringMapBase();
+
 public:
-   StringMapBase(Ownership objectOwner, void (*destructor)(void *, StringMapBase *) = NULL);
-   virtual ~StringMapBase();
+   StringMapBase(Ownership objectOwner, void (*destructor)(void *, StringMapBase *) = nullptr);
 
    void setOwner(Ownership owner) { m_objectOwner = (owner == Ownership::True); }
    void setIgnoreCase(bool ignore);
@@ -1742,7 +1743,6 @@ class LIBNETXMS_EXPORTABLE StringMap : public StringMapBase
 public:
 	StringMap() : StringMapBase(Ownership::True) { }
 	StringMap(const StringMap &src);
-	virtual ~StringMap();
 
 	StringMap& operator =(const StringMap &src);
 

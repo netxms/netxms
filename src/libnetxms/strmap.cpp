@@ -42,14 +42,6 @@ StringMap::StringMap(const StringMap &src) : StringMapBase(Ownership::True)
 }
 
 /**
- * Destructor
- */
-
-StringMap::~StringMap()
-{
-}
-
-/**
  * Assignment
  */
 StringMap& StringMap::operator =(const StringMap &src)
