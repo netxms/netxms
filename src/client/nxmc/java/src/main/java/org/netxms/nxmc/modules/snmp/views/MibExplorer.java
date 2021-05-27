@@ -26,7 +26,6 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -58,6 +57,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.actions.CreateSnmpDci;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.snmp.helpers.SnmpValueLabelProvider;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
@@ -100,6 +100,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	private Action actionCopyValue;
 	private Action actionSelect;
 	private Action actionExportToCsv;
+	private CreateSnmpDci actionCreateSnmpDci;
 
 	private Composite resultArea;
 	private SnmpWalkFilter filter;
@@ -185,6 +186,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 			{
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 				actionSelect.setEnabled(selection.size() == 1);
+				actionCreateSnmpDci.selectionChanged(viewer.getSelection());
 			}
 		});
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
@@ -298,6 +300,8 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		actionSelect.setEnabled(false);
 
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
+		
+		actionCreateSnmpDci = new CreateSnmpDci(this);
 	}
 	
 	/**
@@ -369,8 +373,6 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		manager.add(new Separator());
 		manager.add(actionCopyObjectName);
 		manager.add(new Separator());
-		//manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		//TODO: add menu extensions
 	}
 
 	/**
@@ -412,8 +414,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		manager.add(new Separator());
 		manager.add(actionSelect);
 		manager.add(new Separator());
-		//manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-      //TODO: add menu extensions
+      manager.add(actionCreateSnmpDci);
 	}
 
 	/**
