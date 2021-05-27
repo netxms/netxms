@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
-import org.netxms.ui.eclipse.serverconfig.dialogs.NotificationChannelDialog;
+import org.netxms.ui.eclipse.serverconfig.dialogs.NotificationChannelEditDialog;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.NotificationChannelLabelProvider;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.NotificationChannelListComparator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -66,14 +66,13 @@ public class NotificationChannels extends ViewPart
 {
    public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.NotificationChannels"; //$NON-NLS-1$
 
-	// Columns
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_DESCRIPTION = 1;
 	public static final int COLUMN_DRIVER = 2;
 	public static final int COLUMN_LAST_STATUS = 3;
 	public static final int COLUMN_ERROR_MESSAGE = 4;
 	
-	private NXCSession session;
+   private NXCSession session = ConsoleSharedData.getSession();
 	private SessionListener listener;
 	private List<NotificationChannel> notificationChannelList;
 	private SortableTableViewer viewer;
@@ -81,11 +80,10 @@ public class NotificationChannels extends ViewPart
 	private Action actionNewChannel;
 	private Action actionEditChannel;
 	private Action actionDeleteChannel;
-	private NotificationChannel selectedChannel;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -121,12 +119,11 @@ public class NotificationChannels extends ViewPart
 				WidgetHelper.saveTableViewerSettings(viewer, settings, "NotificationChannelList"); //$NON-NLS-1$
 			}
 		});
-		
+
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
-		
-		session = ConsoleSharedData.getSession();
+
 		refresh();
 
 		final Display display = getSite().getShell().getDisplay();
@@ -149,20 +146,20 @@ public class NotificationChannels extends ViewPart
 		session.addListener(listener);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{
-		if ((listener != null) && (session != null))
+      if (listener != null)
 			session.removeListener(listener);
 		super.dispose();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
@@ -182,15 +179,15 @@ public class NotificationChannels extends ViewPart
 			}
 		};
 		
-		actionNewChannel = new Action("Create new channel", SharedIcons.ADD_OBJECT) {
+      actionNewChannel = new Action("&New channel...", SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
 				createNewChannel();
 			}
 		};
-		
-		actionEditChannel = new Action("Edit", SharedIcons.EDIT) {
+
+      actionEditChannel = new Action("&Edit...", SharedIcons.EDIT) {
 			@Override
 			public void run()
 			{
@@ -198,8 +195,8 @@ public class NotificationChannels extends ViewPart
 			}
 		};
 		actionEditChannel.setEnabled(false);
-		
-		actionDeleteChannel = new Action("Delete", SharedIcons.DELETE_OBJECT) {
+
+      actionDeleteChannel = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -306,19 +303,18 @@ public class NotificationChannels extends ViewPart
 	 */
 	private void createNewChannel()
 	{
-	   final NotificationChannelDialog dlg = new NotificationChannelDialog(getSite().getShell(), null);
+	   final NotificationChannelEditDialog dlg = new NotificationChannelEditDialog(getSite().getShell(), null);
       if (dlg.open() != Window.OK)
          return;
 		
-      selectedChannel = dlg.getNotificaiotnChannel();
-      
+      final NotificationChannel channel = dlg.getChannel();
 		new ConsoleJob("Create notification channel", this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.createNotificationChannel(selectedChannel);
+				session.createNotificationChannel(channel);
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -326,59 +322,59 @@ public class NotificationChannels extends ViewPart
 			}
 		}.start();
 	}
-	
-	/**
-	 * Edit selected table
-	 */
-	private void editChannel()
-	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		if ((selection == null) || (selection.size() != 1))
-			return;
-		
-		selectedChannel = (NotificationChannel)selection.getFirstElement();
-      final NotificationChannelDialog dlg = new NotificationChannelDialog(getSite().getShell(), selectedChannel);
+
+   /**
+    * Edit selected table
+    */
+   private void editChannel()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if ((selection == null) || (selection.size() != 1))
+         return;
+
+      final NotificationChannel channel = (NotificationChannel)selection.getFirstElement();
+      final NotificationChannelEditDialog dlg = new NotificationChannelEditDialog(getSite().getShell(), channel);
       if (dlg.open() != Window.OK)
          return;
-      
+
       new ConsoleJob("Update notification channel", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.updateNotificationChannel(selectedChannel);
-            if(dlg.isNameChanged())
+            session.updateNotificationChannel(channel);
+            if (dlg.isNameChanged())
             {
-               session.renameNotificaiotnChannel(selectedChannel.getName(), dlg.getNewName());
+               session.renameNotificaiotnChannel(channel.getName(), dlg.getNewName());
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
             return "Error updating notifiction channel";
          }
       }.start();
-	}
-	
-	/**
-	 * Delete selected tables
-	 */
-	private void deleteChannel()
-	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		if ((selection == null) || (selection.size() == 0))
-			return;
+   }
 
-		if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete notification channels", "Are you sure you want to delete notification channels?"))
-			return;
-		
-		final List<String> channels = new ArrayList<String>(selection.size());
-		for(Object o : selection.toList())
-		{
-			if (o instanceof NotificationChannel)
-				channels.add(((NotificationChannel)o).getName());
-		}
-		
+   /**
+    * Delete selected tables
+    */
+   private void deleteChannel()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if ((selection == null) || selection.isEmpty())
+         return;
+
+      if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete notification channels", "Are you sure you want to delete selected notification channels?"))
+         return;
+
+      final List<String> channels = new ArrayList<String>(selection.size());
+      for(Object o : selection.toList())
+      {
+         if (o instanceof NotificationChannel)
+            channels.add(((NotificationChannel)o).getName());
+      }
+
       new ConsoleJob("Delete notification channel", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -386,12 +382,12 @@ public class NotificationChannels extends ViewPart
             for(String name : channels)
                session.deleteNotificationChannel(name);
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
             return "Error deleting notifiction channel";
          }
       }.start();
-	}
+   }
 }
