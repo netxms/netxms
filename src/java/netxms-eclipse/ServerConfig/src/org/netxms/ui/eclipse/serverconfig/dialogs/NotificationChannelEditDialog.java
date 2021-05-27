@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2021 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.serverconfig.dialogs;
 
 import java.util.Collections;
@@ -21,11 +39,11 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Notification channel dialog
+ * Notification channel edit dialog
  */
-public class NotificationChannelDialog extends Dialog
+public class NotificationChannelEditDialog extends Dialog
 {
-   private NotificationChannel nc;
+   private NotificationChannel channel;
    private LabeledText textName;
    private LabeledText textDescription;
    private LabeledText textConfiguraiton;
@@ -33,13 +51,19 @@ public class NotificationChannelDialog extends Dialog
    private boolean isNameChangeds;
    private String newName;
 
-   public NotificationChannelDialog(Shell parentShell, NotificationChannel nc)
+   /**
+    * Create notification channel edit dialog.
+    *
+    * @param parentShell parent shell
+    * @param channel notification channel to edit
+    */
+   public NotificationChannelEditDialog(Shell parentShell, NotificationChannel channel)
    {
       super(parentShell);
-      this.nc = nc;
+      this.channel = channel;
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -84,13 +108,13 @@ public class NotificationChannelDialog extends Dialog
       gd.widthHint = 900;
       textConfiguraiton.setLayoutData(gd);          
 
-      if(nc != null)
+      if(channel != null)
       {
-         textName.setText(nc.getName());
-         textDescription.setText(nc.getDescription());
-         textConfiguraiton.setText(nc.getConfiguration());
+         textName.setText(channel.getName());
+         textDescription.setText(channel.getDescription());
+         textConfiguraiton.setText(channel.getConfiguration());
       }
-      
+
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       new ConsoleJob("Get driver names", null, Activator.PLUGIN_ID, null) {
          @Override
@@ -116,69 +140,69 @@ public class NotificationChannelDialog extends Dialog
       
       return dialogArea;
    }
-   
+
    private void updateUI(List<String> ncList)
    {
       for(int i = 0; i < ncList.size(); i++)
       {
          comboDriverName.add(ncList.get(i));
-         if(nc != null && ncList.get(i).equals(nc.getDriverName()))
+         if (channel != null && ncList.get(i).equals(channel.getDriverName()))
             comboDriverName.select(i);
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText(nc != null ? "Update notification channel" : "Create notification channel");
+      newShell.setText(channel != null ? "Edit Notification Channel" : "Create Notification Channel");
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
    @Override
    protected void okPressed()
    {
-      if(textName.getText().isEmpty())
+      if (textName.getText().isEmpty())
       {
          MessageDialogHelper.openWarning(getShell(), "Warning", "Notification channel name should not be empty");
          return;
       }
-      
-      if(comboDriverName.getSelectionIndex() == -1)
+
+      if (comboDriverName.getSelectionIndex() == -1)
       {
          MessageDialogHelper.openWarning(getShell(), "Warning", "Notification driver should be selected");
          return;
       }
-      
-      if(nc == null)
+
+      if (channel == null)
       {
-         nc = new NotificationChannel();
-         nc.setName(textName.getText());
+         channel = new NotificationChannel();
+         channel.setName(textName.getText());
       }
-      else if(!nc.getName().equals(textName.getText()))
+      else if (!channel.getName().equals(textName.getText()))
       {
          isNameChangeds = true;
          newName = textName.getText();
       }
-      nc.setDescription(textDescription.getText());
-      nc.setDriverName(comboDriverName.getItem(comboDriverName.getSelectionIndex()));
-      nc.setConfiguration(textConfiguraiton.getText());      
+      channel.setDescription(textDescription.getText());
+      channel.setDriverName(comboDriverName.getItem(comboDriverName.getSelectionIndex()));
+      channel.setConfiguration(textConfiguraiton.getText());
       super.okPressed();
    }
-   
+
    /**
     * Return updated notification channel
     */
-   public NotificationChannel getNotificaiotnChannel()
+   public NotificationChannel getChannel()
    {
-      return nc;
+      return channel;
    }
-   
+
    /**
     * Returns if name is changed
     */
@@ -186,7 +210,7 @@ public class NotificationChannelDialog extends Dialog
    {
       return isNameChangeds;
    }
-   
+
    /**
     * Get new name
     */
