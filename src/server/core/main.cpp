@@ -28,6 +28,7 @@
 #include <nxcore_websvc.h>
 #include <nxcore_logs.h>
 #include <nxcore_ps.h>
+#include <nxcore_2fa.h>
 #include <netxms-version.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
@@ -1151,7 +1152,7 @@ retry_db_lock:
    LoadNotificationChannels();
 
    // Initialize 2FA methods
-   LoadAuthentificationMethods();
+   LoadTwoFactorAuthenticationMethods();
 
    // Initialize objects infrastructure and load objects from database
    LoadGeoAreas();

@@ -11,7 +11,6 @@
 serverincludedir = $(includedir)/server
 serverinclude_HEADERS = \
 	agent_tunnel.h \
-	authentification.h \
 	entity_mib.h \
 	hdlink.h \
 	local_admin.h \
@@ -30,6 +29,7 @@ serverinclude_HEADERS = \
 	nms_topo.h \
 	nms_users.h \
 	npe.h \
+	nxcore_2fa.h \
 	nxcore_jobs.h \
 	nxcore_logs.h \
 	nxcore_schedule.h \

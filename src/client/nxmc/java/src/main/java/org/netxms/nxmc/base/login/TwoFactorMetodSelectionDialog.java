@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.base.dialogs;
+package org.netxms.nxmc.base.login;
 
 import java.util.List;
 import org.eclipse.jface.dialogs.Dialog;
@@ -42,7 +42,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Method selection dialog for two factor authentication
+ * Method selection dialog for two-factor authentication
  */
 public class TwoFactorMetodSelectionDialog extends Dialog
 {
@@ -53,7 +53,10 @@ public class TwoFactorMetodSelectionDialog extends Dialog
    private int selectedMethod = -1;
 
    /**
-    * @param parentShell
+    * Create two-factor authentication method selection dialog.
+    *
+    * @param parentShell parent shell
+    * @param methods list of available methods
     */
    public TwoFactorMetodSelectionDialog(Shell parentShell, List<String> methods)
    {

@@ -131,7 +131,7 @@ public class LoginJob implements IRunnableWithProgress
          session.connect(new int[] { ProtocolVersion.INDEX_FULL });
          session.login(authMethod, (loginName != null) ? loginName : "?", password, certificate, signature, new TwoFactorAuthenticationCallback() {
             @Override
-            public int selectAuthentificationMethod(final List<String> methods)
+            public int selectMethod(final List<String> methods)
             {
                final int[] selection = new int[1];
                selection[0] = -1;

@@ -92,7 +92,6 @@
 #include "nms_script.h"
 #include "nxcore_jobs.h"
 #include "nxcore_schedule.h"
-#include "authentification.h"
 #ifdef WITH_ZMQ
 #include "zeromq.h"
 #endif
@@ -515,28 +514,7 @@ class SyslogMessage;
 /**
  * Client login information
  */
-struct LoginInfo
-{
-   AuthentificationToken *token;
-   TCHAR loginName[MAX_USER_NAME];
-   uint32_t graceLogins;
-   bool changePassword;
-   bool closeOtherSessions;
-   bool intruderLockout;
-
-   LoginInfo()
-   {
-      token = nullptr;
-      graceLogins = 0;
-      changePassword = false;
-      closeOtherSessions = false;
-      intruderLockout = false;
-   }
-   ~LoginInfo()
-   {
-      delete token;
-   }
-};
+struct LoginInfo;
 
 /**
  * Client (user) session

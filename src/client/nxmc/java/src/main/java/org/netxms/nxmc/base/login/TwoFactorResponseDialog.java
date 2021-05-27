@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.base.dialogs;
+package org.netxms.nxmc.base.login;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;

@@ -16,29 +16,29 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: authentification.h
+** File: nxcore_2fa.h
 **
 **/
 
-#ifndef _authentication_h_
-#define _authentication_h_
+#ifndef _nxcore_2fa_h_
+#define _nxcore_2fa_h_
 
 #include "nms_common.h"
 
 /**
- * Authentification token base class
+ * Two-factor authentication token base class
  */
-class AuthentificationToken
+class TwoFactorAuthenticationToken
 {
 private:
    TCHAR m_methodName[MAX_OBJECT_NAME];
 
 public:
-   AuthentificationToken(const TCHAR* methodName)
+   TwoFactorAuthenticationToken(const TCHAR* methodName)
    {
       _tcslcpy(m_methodName, methodName, MAX_OBJECT_NAME);
    }
-   virtual ~AuthentificationToken()
+   virtual ~TwoFactorAuthenticationToken()
    {
    }
 
@@ -48,17 +48,16 @@ public:
 };
 
 /**
- * TOTP authentification token class
+ * TOTP authentication token class
  */
-class TOTPToken : public AuthentificationToken
+class TOTPToken : public TwoFactorAuthenticationToken
 {
 private:
    uint8_t* m_secret;
    uint32_t m_secretLength;
 
 public:
-   TOTPToken(const TCHAR* methodName, uint8_t* secret, uint32_t secretLength)
-      : AuthentificationToken(methodName)
+   TOTPToken(const TCHAR* methodName, uint8_t* secret, uint32_t secretLength) : TwoFactorAuthenticationToken(methodName)
    {
       m_secret = secret;
       m_secretLength = secretLength;
@@ -73,16 +72,15 @@ public:
 };
 
 /**
- * Message authentification token class
+ * Message authentication token class
  */
-class MessageToken : public AuthentificationToken
+class MessageToken : public TwoFactorAuthenticationToken
 {
 private:
    uint32_t m_secret;
 
 public:
-   MessageToken(const TCHAR* methodName, uint32_t secret)
-      : AuthentificationToken(methodName), m_secret(secret)
+   MessageToken(const TCHAR* methodName, uint32_t secret) : TwoFactorAuthenticationToken(methodName), m_secret(secret)
    {
    }
    virtual ~MessageToken()
@@ -92,12 +90,12 @@ public:
    uint32_t getSecret() const { return m_secret; };
 };
 
-void LoadAuthentificationMethods();
-AuthentificationToken* Prepare2FAChallenge(const TCHAR *methodName, uint32_t userId);
-bool Validate2FAResponse(AuthentificationToken *token, TCHAR *response);
-void Get2FAMethodInfo(const TCHAR* methodInfo, NXCPMessage& msg);
-void Get2FAMethods(NXCPMessage& msg);
+void LoadTwoFactorAuthenticationMethods();
+TwoFactorAuthenticationToken* Prepare2FAChallenge(const TCHAR *methodName, uint32_t userId);
+bool Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response);
+void Get2FAMethodInfo(const TCHAR* methodInfo, NXCPMessage *msg);
+void Get2FAMethods(NXCPMessage *msg);
 uint32_t Modify2FAMethod(const TCHAR* name, const TCHAR* methodType, const TCHAR* description, char* configuration);
 uint32_t Delete2FAMethod(const TCHAR* name);
 
-#endif   /* _authentication_h_ */
+#endif   /* _nxcore_2fa_h_ */

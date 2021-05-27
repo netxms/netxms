@@ -2225,17 +2225,18 @@ public class NXCSession
    /**
     * Login to server.
     *
-    * @param authType    authentication type
-    * @param login       login name
-    * @param password    password
+    * @param authType authentication type
+    * @param login login name
+    * @param password password
     * @param certificate user's certificate
-    * @param signature   user's digital signature
-    * @throws IOException           if socket I/O error occurs
-    * @throws NXCException          if NetXMS server returns an error or operation was timed out
+    * @param signature user's digital signature
+    * @param twoFactorAuthenticationCallback callback for handling two-factor authentication if requested by server
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @throws IllegalStateException if the state is illegal
     */
    public void login(AuthenticationType authType, String login, String password, Certificate certificate,
-		 Signature signature, TwoFactorAuthenticationCallback twoFactorAuthentificationCallback)
+		 Signature signature, TwoFactorAuthenticationCallback twoFactorAuthenticationCallback)
 		 throws NXCException, IOException, IllegalStateException
    {
       if (!connected)
@@ -2291,12 +2292,12 @@ public class NXCSession
       int rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
       logger.debug("CMD_LOGIN_RESP received, RCC=" + rcc);
 
-      if ((rcc == RCC.NEED_2FA) && (twoFactorAuthentificationCallback != null))
+      if ((rcc == RCC.NEED_2FA) && (twoFactorAuthenticationCallback != null))
       {
          logger.info("Two factor authentication requested by server");
 
          List<String> methods = response.getStringListFromFields(NXCPCodes.VID_2FA_METHODS_LIST_BASE, NXCPCodes.VID_2FA_METHODS_COUNT);
-         int selectedMethod = twoFactorAuthentificationCallback.selectAuthentificationMethod(methods);
+         int selectedMethod = twoFactorAuthenticationCallback.selectMethod(methods);
          logger.debug("Selected method " + selectedMethod);
 
          if ((selectedMethod >= 0) && (selectedMethod < methods.size()))
@@ -2312,7 +2313,7 @@ public class NXCSession
             if (rcc == RCC.SUCCESS)
             {
                String challenge = response.getFieldAsString(NXCPCodes.VID_CHALLENGE);
-               String userResponse = twoFactorAuthentificationCallback.getUserResponse(challenge);
+               String userResponse = twoFactorAuthenticationCallback.getUserResponse(challenge);
                request = newMessage(NXCPCodes.CMD_2FA_VALIDATE_RESPONSE);
                request.setField(NXCPCodes.VID_2FA_RESPONSE, userResponse);
                sendMessage(request);

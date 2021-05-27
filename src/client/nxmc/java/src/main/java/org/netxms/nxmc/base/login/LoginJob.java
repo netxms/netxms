@@ -39,8 +39,6 @@ import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.dialogs.TwoFactorMetodSelectionDialog;
-import org.netxms.nxmc.base.dialogs.TwoFactorResponseDialog;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.services.LoginListener;
 import org.slf4j.Logger;
@@ -125,7 +123,7 @@ public class LoginJob implements IRunnableWithProgress
 
          session.login(authMethod, loginName, password, certificate, signature, new TwoFactorAuthenticationCallback() {
             @Override
-            public int selectAuthentificationMethod(final List<String> methods)
+            public int selectMethod(final List<String> methods)
             {
                final int[] selection = new int[1];
                selection[0] = -1;

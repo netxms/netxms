@@ -26,12 +26,12 @@ import java.util.List;
 public interface TwoFactorAuthenticationCallback
 {
    /**
-    * Select two factor authentication method.
+    * Select two-factor authentication method.
     *
-    * @param methods list of available methods
+    * @param methods list of available two-factor authentication methods
     * @return index of selected method or -1 to cancel login procedure
     */
-   public int selectAuthentificationMethod(List<String> methods);
+   public int selectMethod(List<String> methods);
 
    /**
     * Get user response with selected authentication method.

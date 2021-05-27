@@ -30,6 +30,7 @@
 #include <nxcore_syslog.h>
 #include <nxcore_ps.h>
 #include <nms_pkg.h>
+#include <nxcore_2fa.h>
 #include <netxms-version.h>
 
 #ifdef _WIN32
@@ -48,6 +49,32 @@
 #define MAX_MSG_SIZE    4194304
 
 #define DEBUG_TAG _T("client.session")
+
+/**
+ * Client login information
+ */
+struct LoginInfo
+{
+   TwoFactorAuthenticationToken *token;
+   TCHAR loginName[MAX_USER_NAME];
+   uint32_t graceLogins;
+   bool changePassword;
+   bool closeOtherSessions;
+   bool intruderLockout;
+
+   LoginInfo()
+   {
+      token = nullptr;
+      graceLogins = 0;
+      changePassword = false;
+      closeOtherSessions = false;
+      intruderLockout = false;
+   }
+   ~LoginInfo()
+   {
+      delete token;
+   }
+};
 
 /**
  * Externals
@@ -15625,7 +15652,7 @@ void ClientSession::validate2FAResponse(NXCPMessage *request)
 void ClientSession::get2FAMethods(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   Get2FAMethods(msg);
+   Get2FAMethods(&msg);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
@@ -15640,7 +15667,7 @@ void ClientSession::get2FAMethodInfo(NXCPMessage *request)
    {
       TCHAR name[MAX_OBJECT_NAME];
       request->getFieldAsString(VID_2FA_RESPONSE, name, MAX_OBJECT_NAME);
-      Get2FAMethodInfo(name, msg);
+      Get2FAMethodInfo(name, &msg);
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
