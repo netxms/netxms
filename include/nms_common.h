@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -257,6 +257,8 @@ typedef int bool;
 #define HAVE_WCSNCPY            1
 #define HAVE_WCSDUP             1
 #define HAVE_WUTIME             1
+
+#define HAVE_STD_ATOMIC         1
 
 #define HAVE_LIBCURL                      1
 
