@@ -68,7 +68,6 @@ import org.netxms.nxmc.modules.datacollection.propertypages.OtherOptionsTable;
 import org.netxms.nxmc.modules.datacollection.propertypages.TableColumns;
 import org.netxms.nxmc.modules.datacollection.propertypages.Thresholds;
 import org.netxms.nxmc.modules.datacollection.propertypages.Transformation;
-import org.netxms.nxmc.modules.datacollection.views.PerformanceView;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionCommon;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DciComparator;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DciFilter;
@@ -270,7 +269,7 @@ public class DataCollectionWidget extends Composite implements DataCollectionCom
       manager.add(actionDelete);
       manager.add(actionCopy);
       manager.add(actionMove);
-      if(!(object instanceof Template))
+      if (!(object instanceof Template))
          manager.add(actionConvert);
       manager.add(actionDuplicate);
       manager.add(actionExportToCsv);
@@ -291,7 +290,7 @@ public class DataCollectionWidget extends Composite implements DataCollectionCom
     */
    private void createActions()
    {
-      actionCreateItem = new Action(i18n.tr("&New parameter..."), ResourceManager.getImageDescriptor("icons/dci/new.png")) { //$NON-NLS-1$
+      actionCreateItem = new Action(i18n.tr("&New parameter..."), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
@@ -314,8 +313,6 @@ public class DataCollectionWidget extends Composite implements DataCollectionCom
             editSelectedObject();
          }
       };
-      actionEdit.setText(i18n.tr("&Edit..."));
-      actionEdit.setImageDescriptor(ResourceManager.getImageDescriptor("icons/dci/edit.png")); //$NON-NLS-1$
       actionEdit.setEnabled(false);
       
       actionBulkUpdate = new Action("Bulk update...") {
@@ -326,7 +323,7 @@ public class DataCollectionWidget extends Composite implements DataCollectionCom
          }
       };
 
-      actionDelete = new Action(i18n.tr("&Delete"), ResourceManager.getImageDescriptor("icons/dci/delete.png")) { //$NON-NLS-1$
+      actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
@@ -396,7 +393,7 @@ public class DataCollectionWidget extends Composite implements DataCollectionCom
       actionExportToCsv = new ExportToCsvAction(view, viewer, true); 
       actionExportAllToCsv = new ExportToCsvAction(view, viewer, false);
    }
-   
+
    /**
     * Refresh DCI list
     */
