@@ -25,7 +25,7 @@ import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.nxmc.modules.snmp.SnmpConstants;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
-import org.netxms.ui.eclipse.snmp.views.MibExplorer;
+import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 
 /**
  * Label provider for SNMP values

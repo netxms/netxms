@@ -26,8 +26,6 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Template;
-import org.netxms.nxmc.localization.LocalizationHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for selecting parameters with "Internal" source

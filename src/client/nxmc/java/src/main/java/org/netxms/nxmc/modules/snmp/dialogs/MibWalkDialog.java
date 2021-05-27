@@ -23,7 +23,6 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -47,6 +46,7 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.snmp.helpers.SnmpValueLabelProvider;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -111,7 +111,7 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 		viewer.getTable().setHeaderVisible(true);
 		setupViewerColumns();
 		viewer.setContentProvider(new ArrayContentProvider());
-		//viewer.setLabelProvider(new SnmpValueLabelProvider()); TODO: move mib explorer
+		viewer.setLabelProvider(new SnmpValueLabelProvider()); 
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
