@@ -62,6 +62,7 @@ DataCollectionTarget::DataCollectionTarget() : super(), m_statusPollState(_T("st
          m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16)
 {
    m_hPollerMutex = MutexCreate();
+   m_mutexProxyLoadFactor = MutexCreate();
    m_proxyLoadFactor = 0;
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
    m_geoLocationRestrictionsViolated = false;
@@ -76,6 +77,7 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : super(name), m_s
          m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16)
 {
    m_hPollerMutex = MutexCreate();
+   m_mutexProxyLoadFactor = MutexCreate();
    m_proxyLoadFactor = 0;
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
    m_geoLocationRestrictionsViolated = false;
@@ -88,6 +90,7 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : super(name), m_s
 DataCollectionTarget::~DataCollectionTarget()
 {
    MutexDestroy(m_hPollerMutex);
+   MutexDestroy(m_mutexProxyLoadFactor);
 }
 
 /**
@@ -2530,9 +2533,9 @@ void DataCollectionTarget::calculateProxyLoad()
    }
    unlockDciAccess();
 
-   lockProperties();
+   MutexLock(m_mutexProxyLoadFactor);
    m_proxyLoadFactor = loadFactor;
-   unlockProperties();
+   MutexUnlock(m_mutexProxyLoadFactor);
 }
 
 /**
