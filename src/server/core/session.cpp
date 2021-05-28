@@ -2236,6 +2236,55 @@ void ClientSession::login(NXCPMessage *request)
 }
 
 /**
+ * Prepares 2FA challenge for user
+ */
+void ClientSession::prepare2FAChallenge(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   TCHAR method[MAX_OBJECT_NAME];
+   request->getFieldAsString(VID_2FA_METHOD, method, MAX_OBJECT_NAME);
+   delete m_loginInfo->token;
+   m_loginInfo->token = Prepare2FAChallenge(method, m_dwUserId);
+   if (m_loginInfo->token != nullptr)
+   {
+      msg.setField(VID_CHALLENGE, m_loginInfo->token->getChallenge());
+      msg.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_2FA_CHALLENGE_ERROR); // can't prepare 2FA challenge
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Validating user 2FA response
+ */
+void ClientSession::validate2FAResponse(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_loginInfo != nullptr)
+   {
+      TCHAR response[1024];
+      request->getFieldAsString(VID_2FA_RESPONSE, response, 1024);
+      if (Validate2FAResponse(m_loginInfo->token, response))
+      {
+         finalizeLogin(*request, &msg);
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_2FA_FAILED);
+      }
+      delete_and_null(m_loginInfo);
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+   sendMessage(&msg);
+}
+
+/**
  * Finalize login
  */
 void ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *response)
@@ -15594,55 +15643,6 @@ void ClientSession::generateSshKey(NXCPMessage *request)
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   sendMessage(&msg);
-}
-
-/**
- * Prepares 2FA challenge for user
- */
-void ClientSession::prepare2FAChallenge(NXCPMessage *request)
-{
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   TCHAR method[MAX_OBJECT_NAME];
-   request->getFieldAsString(VID_2FA_METHOD, method, MAX_OBJECT_NAME);
-   delete m_loginInfo->token;
-   m_loginInfo->token = Prepare2FAChallenge(method, m_dwUserId);
-   if (m_loginInfo->token != nullptr)
-   {
-      msg.setField(VID_CHALLENGE, m_loginInfo->token->getChallenge());
-      msg.setField(VID_RCC, RCC_SUCCESS);
-   }
-   else
-   {
-      msg.setField(VID_RCC, RCC_2FA_CHALLENGE_ERROR); // can't prepare 2FA challenge
-   }
-   sendMessage(&msg);
-}
-
-/**
- * Validating user 2FA response
- */
-void ClientSession::validate2FAResponse(NXCPMessage *request)
-{
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   if (m_loginInfo != nullptr)
-   {
-      TCHAR response[1024];
-      request->getFieldAsString(VID_2FA_RESPONSE, response, 1024);
-      if (Validate2FAResponse(m_loginInfo->token, response))
-      {
-         finalizeLogin(*request, &msg);
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_2FA_FAILED);
-      }
-      delete_and_null(m_loginInfo);
-   }
-   else
-   {
-      msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-   }
    sendMessage(&msg);
 }
 

@@ -259,16 +259,16 @@ class TwoFactorAuthMethodInfo
 private:
    TCHAR m_name[MAX_OBJECT_NAME];
    TCHAR m_description[MAX_2FA_DESCRIPTION];
-   TCHAR m_type[MAX_OBJECT_NAME];
-   char* m_configuration;
+   TCHAR m_driver[MAX_OBJECT_NAME];
+   char *m_configuration;
 
 public:
-   TwoFactorAuthMethodInfo(TCHAR* name, TCHAR* type, TCHAR* description, char* configuration)
+   TwoFactorAuthMethodInfo(DB_RESULT hResult, int row)
    {
-      _tcslcpy(m_name, name, MAX_OBJECT_NAME);
-      _tcslcpy(m_description, description, MAX_2FA_DESCRIPTION);
-      _tcslcpy(m_type, m_type, MAX_OBJECT_NAME);
-      m_configuration = configuration;
+      DBGetField(hResult, row, 0, m_name, MAX_OBJECT_NAME);
+      DBGetField(hResult, row, 1, m_description, MAX_2FA_DESCRIPTION);
+      DBGetField(hResult, row, 2, m_driver, MAX_OBJECT_NAME);
+      m_configuration = DBGetFieldUTF8(hResult, row, 3, nullptr, 0);
    }
 
    ~TwoFactorAuthMethodInfo()
@@ -276,10 +276,10 @@ public:
       MemFree(m_configuration);
    }
 
-   TCHAR* getName() { return m_name; };
-   TCHAR* getDescription() { return m_description; };
-   char* getConfiguration() { return m_configuration; };
-   TCHAR* getType() { return m_type; };
+   const TCHAR *getName() const { return m_name; };
+   const TCHAR *getDescription() const { return m_description; };
+   const TCHAR *getDriver() const { return m_driver; };
+   const char *getConfiguration() const { return m_configuration; };
 };
 
 /**
@@ -287,7 +287,7 @@ public:
  */
 unique_ptr<ObjectArray<TwoFactorAuthMethodInfo>> Load2FAMethodsInfoFromDB()
 {
-   auto array = make_unique<ObjectArray<TwoFactorAuthMethodInfo>>();
+   auto methods = make_unique<ObjectArray<TwoFactorAuthMethodInfo>>(0, 32, Ownership::True);
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT result = DBSelect(hdb, _T("SELECT name,driver,description,configuration FROM two_factor_auth_methods"));
    if (result != nullptr)
@@ -295,21 +295,12 @@ unique_ptr<ObjectArray<TwoFactorAuthMethodInfo>> Load2FAMethodsInfoFromDB()
       int numRows = DBGetNumRows(result);
       for (int i = 0; i < numRows; i++)
       {
-         TCHAR name[MAX_OBJECT_NAME];
-         DBGetField(result, i, 0, name, MAX_OBJECT_NAME);
-         TCHAR type[MAX_OBJECT_NAME];
-         DBGetField(result, i, 1, name, MAX_OBJECT_NAME);
-         TCHAR description[MAX_2FA_DESCRIPTION];
-         DBGetField(result, i, 2, description, MAX_2FA_DESCRIPTION);
-         char* configuration = DBGetFieldUTF8(result, i, 3, nullptr, 0);
-         auto info = new TwoFactorAuthMethodInfo(name, type, description, configuration);
-         array->add(info);
+         methods->add(new TwoFactorAuthMethodInfo(result, i));
       }
       DBFreeResult(result);
    }
    DBConnectionPoolReleaseConnection(hdb);
-
-   return array;
+   return methods;
 }
 
 /**
@@ -321,10 +312,10 @@ void LoadTwoFactorAuthenticationMethods()
    unique_ptr<ObjectArray<TwoFactorAuthMethodInfo>> methodsInfo = Load2FAMethodsInfoFromDB();
    for (int i = 0; i < methodsInfo->size(); i++)
    {
-      TwoFactorAuthMethodInfo* info = methodsInfo->get(i);
+      TwoFactorAuthMethodInfo *info = methodsInfo->get(i);
       if (info->getConfiguration() != nullptr)
       {
-         TwoFactorAuthenticationMethod *am = CreateAuthenticationMethod(info->getName(), info->getType(), info->getDescription(), info->getConfiguration());
+         TwoFactorAuthenticationMethod *am = CreateAuthenticationMethod(info->getName(), info->getDriver(), info->getDescription(), info->getConfiguration());
          if (am != nullptr)
          {
             s_authMethodListLock.lock();
@@ -384,23 +375,22 @@ bool Validate2FAResponse(TwoFactorAuthenticationToken* token, TCHAR *response)
 /**
  * Adds 2FA method info from DB to message
  */
-void Get2FAMethodInfo(const TCHAR* methodInfo, NXCPMessage *msg)
+void Get2FAMethodInfo(const TCHAR* name, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT result = DBSelectFormatted(hdb, _T("SELECT name,driver,description,configuration FROM two_factor_auth_methods WHERE name=%s"), DBPrepareString(hdb, methodInfo).cstr());
+   DB_RESULT result = DBSelectFormatted(hdb, _T("SELECT driver,description,configuration FROM two_factor_auth_methods WHERE name=%s"), DBPrepareString(hdb, name).cstr());
    if (result != nullptr)
    {
       if (DBGetNumRows(result) > 0)
       {
-         TCHAR name[MAX_OBJECT_NAME], driver[MAX_OBJECT_NAME], description[MAX_2FA_DESCRIPTION];
-         DBGetField(result, 0, 0, name, MAX_OBJECT_NAME);
-         DBGetField(result, 0, 1, driver, MAX_OBJECT_NAME);
-         DBGetField(result, 0, 2, description, MAX_2FA_DESCRIPTION);
-         char* configuration = DBGetFieldUTF8(result, 0, 3, nullptr, 0);
-         msg->setField(VID_2FA_METHOD + 0, name);
-         msg->setField(VID_2FA_METHOD + 1, driver);
-         msg->setField(VID_2FA_METHOD + 2, description);
-         msg->setFieldFromUtf8String(VID_2FA_METHOD + 3, configuration);
+         TCHAR driver[MAX_OBJECT_NAME], description[MAX_2FA_DESCRIPTION];
+         DBGetField(result, 0, 0, driver, MAX_OBJECT_NAME);
+         DBGetField(result, 0, 1, description, MAX_2FA_DESCRIPTION);
+         TCHAR *configuration = DBGetField(result, 0, 2, nullptr, 0);
+         msg->setField(VID_2FA_METHOD, name);
+         msg->setField(VID_DRIVER_NAME, driver);
+         msg->setField(VID_DESCRIPTION, description);
+         msg->setField(VID_CONFIG_FILE, configuration);
          MemFree(configuration);
       }
       DBFreeResult(result);
@@ -414,14 +404,15 @@ void Get2FAMethodInfo(const TCHAR* methodInfo, NXCPMessage *msg)
 void Get2FAMethods(NXCPMessage *msg)
 {
    unique_ptr<ObjectArray<TwoFactorAuthMethodInfo>> methodsInfo = Load2FAMethodsInfoFromDB();
+   uint32_t fieldId = VID_2FA_METHODS_LIST_BASE;
    s_authMethodListLock.lock();
-   StringList* keys = s_methods.keys();
    for (int i = 0; i < methodsInfo->size(); i++)
    {
-      msg->setField(VID_2FA_METHODS_LIST_BASE + (i * 10), methodsInfo->get(i)->getName());
-      msg->setField(VID_2FA_METHODS_LIST_BASE + (i * 10) + 1, methodsInfo->get(i)->getType());
-      msg->setField(VID_2FA_METHODS_LIST_BASE + (i * 10) + 2, methodsInfo->get(i)->getDescription());
-      msg->setField(VID_2FA_METHODS_LIST_BASE + (i * 10) + 3, keys->contains(methodsInfo->get(i)->getName()));
+      msg->setField(fieldId++, methodsInfo->get(i)->getName());
+      msg->setField(fieldId++, methodsInfo->get(i)->getDriver());
+      msg->setField(fieldId++, methodsInfo->get(i)->getDescription());
+      msg->setField(fieldId++, s_methods.contains(methodsInfo->get(i)->getName()));
+      fieldId += 6;
    }
    s_authMethodListLock.unlock();
    msg->setField(VID_2FA_METHODS_COUNT, methodsInfo->size());
