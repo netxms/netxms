@@ -192,6 +192,7 @@ import org.netxms.client.topology.Route;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.client.topology.WirelessStation;
 import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.TwoFactorAuthenticationMethod;
 import org.netxms.client.users.User;
 import org.netxms.client.users.UserGroup;
 import org.slf4j.Logger;
@@ -12364,14 +12365,14 @@ public class NXCSession
       
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_SSH_KEY_COUNT);
-      List<SshKeyPair> sshCertificateList = new ArrayList<SshKeyPair>(count);
+      List<SshKeyPair> sshKeys = new ArrayList<SshKeyPair>(count);
       long fieldId = NXCPCodes.VID_SSH_KEY_LIST_BASE;
       for (int i = 0; i < count; i++, fieldId += 5)
       {
-         sshCertificateList.add(new SshKeyPair(response, fieldId));
+         sshKeys.add(new SshKeyPair(response, fieldId));
       }
       
-      return sshCertificateList;
+      return sshKeys;
    }
 
    /**
@@ -12415,6 +12416,76 @@ public class NXCSession
    public void generateSshKeys(String name) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GENERATE_SSH_KEYS);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get list of configured two-factor authentication methods.
+    *
+    * @return list of configured two-factor authentication methods
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<TwoFactorAuthenticationMethod> getConfigured2FAMethods() throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_2FA_GET_METHODS);
+      sendMessage(msg);
+
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_2FA_METHODS_COUNT);
+      List<TwoFactorAuthenticationMethod> methods = new ArrayList<TwoFactorAuthenticationMethod>(count);
+      long fieldId = NXCPCodes.VID_2FA_METHODS_LIST_BASE;
+      for(int i = 0; i < count; i++, fieldId += 10)
+      {
+         methods.add(new TwoFactorAuthenticationMethod(response, fieldId));
+      }
+
+      return methods;
+   }
+
+   /**
+    * Get details of configured two-factor authentication method.
+    *
+    * @param name method name
+    * @return details of configured two-factor authentication method
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public TwoFactorAuthenticationMethod get2FAMethodDetails(String name) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_2FA_GET_METHOD_DETAILS);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      sendMessage(msg);
+      return new TwoFactorAuthenticationMethod(waitForRCC(msg.getMessageId()));
+   }
+
+   /**
+    * Modify existing two-factor authentication method or create new one.
+    *
+    * @param method method definition
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void modify2FAMethod(TwoFactorAuthenticationMethod method) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_2FA_MODIFY_METHOD);
+      method.fillMessage(msg);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Delete two-factor authentication method.
+    *
+    * @param name method name
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void delete2FAMethod(String name) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_2FA_DELETE_METHOD);
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());

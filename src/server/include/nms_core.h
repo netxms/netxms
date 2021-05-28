@@ -593,12 +593,18 @@ private:
 
    void setupEncryption(NXCPMessage *request);
    void login(NXCPMessage *request);
+   void finalizeLogin(const NXCPMessage& request, NXCPMessage *response);
    uint32_t authenticateUserByPassword(NXCPMessage *request, LoginInfo *loginInfo);
    uint32_t authenticateUserByCertificate(NXCPMessage *request, LoginInfo *loginInfo);
    uint32_t authenticateUserBySSOTicket(NXCPMessage *request, LoginInfo *loginInfo);
 
-   void respondToKeepalive(UINT32 dwRqId);
-   void onFileUpload(BOOL bSuccess);
+   void respondToKeepalive(uint32_t requestId)
+   {
+      NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
+      msg.setField(VID_RCC, RCC_SUCCESS);
+      postMessage(msg);
+   }
+
    void sendServerInfo(UINT32 dwRqId);
    void getObjects(NXCPMessage *request);
    void getSelectedObjects(NXCPMessage *request);
@@ -880,14 +886,13 @@ private:
    void prepare2FAChallenge(NXCPMessage *request);
    void validate2FAResponse(NXCPMessage *request);
    void get2FAMethods(NXCPMessage *request);
-   void get2FAMethodInfo(NXCPMessage *request);
+   void get2FAMethodDetails(NXCPMessage *request);
    void modify2FAMethod(NXCPMessage *request);
    void delete2FAMethod(NXCPMessage *request);
    void getUser2FABindings(NXCPMessage *request);
    void getUser2FABindingInfo(NXCPMessage *request);
    void modifyUser2FABinding(NXCPMessage *request);
    void deleteUser2FABinding(NXCPMessage *request);
-   void finalizeLogin(const NXCPMessage& request, NXCPMessage *response);
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
    void sendObjectUpdates();

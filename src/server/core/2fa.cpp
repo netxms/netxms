@@ -373,9 +373,9 @@ bool Validate2FAResponse(TwoFactorAuthenticationToken* token, TCHAR *response)
 }
 
 /**
- * Adds 2FA method info from DB to message
+ * Adds 2FA method details info from DB to message
  */
-void Get2FAMethodInfo(const TCHAR* name, NXCPMessage *msg)
+void Get2FAMethodDetails(const TCHAR* name, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT result = DBSelectFormatted(hdb, _T("SELECT driver,description,configuration FROM two_factor_auth_methods WHERE name=%s"), DBPrepareString(hdb, name).cstr());
@@ -387,10 +387,16 @@ void Get2FAMethodInfo(const TCHAR* name, NXCPMessage *msg)
          DBGetField(result, 0, 0, driver, MAX_OBJECT_NAME);
          DBGetField(result, 0, 1, description, MAX_2FA_DESCRIPTION);
          TCHAR *configuration = DBGetField(result, 0, 2, nullptr, 0);
-         msg->setField(VID_2FA_METHOD, name);
+
+         msg->setField(VID_NAME, name);
          msg->setField(VID_DRIVER_NAME, driver);
          msg->setField(VID_DESCRIPTION, description);
-         msg->setField(VID_CONFIG_FILE, configuration);
+         msg->setField(VID_CONFIG_FILE_DATA, configuration);
+
+         s_authMethodListLock.lock();
+         msg->setField(VID_IS_ACTIVE, s_methods.contains(name));
+         s_authMethodListLock.unlock();
+
          MemFree(configuration);
       }
       DBFreeResult(result);
@@ -409,8 +415,8 @@ void Get2FAMethods(NXCPMessage *msg)
    for (int i = 0; i < methodsInfo->size(); i++)
    {
       msg->setField(fieldId++, methodsInfo->get(i)->getName());
-      msg->setField(fieldId++, methodsInfo->get(i)->getDriver());
       msg->setField(fieldId++, methodsInfo->get(i)->getDescription());
+      msg->setField(fieldId++, methodsInfo->get(i)->getDriver());
       msg->setField(fieldId++, s_methods.contains(methodsInfo->get(i)->getName()));
       fieldId += 6;
    }

@@ -1736,8 +1736,8 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_2FA_GET_METHODS:
          get2FAMethods(request);
          break;
-      case CMD_2FA_GET_METHOD_INFO:
-         get2FAMethodInfo(request);
+      case CMD_2FA_GET_METHOD_DETAILS:
+         get2FAMethodDetails(request);
          break;
       case CMD_2FA_MODIFY_METHOD:
          modify2FAMethod(request);
@@ -1791,16 +1791,6 @@ void ClientSession::processRequest(NXCPMessage *request)
    }
    delete request;
    decRefCount();
-}
-
-/**
- * Respond to client's keepalive message
- */
-void ClientSession::respondToKeepalive(UINT32 dwRqId)
-{
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, dwRqId);
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   postMessage(msg);
 }
 
 /**
@@ -15660,14 +15650,14 @@ void ClientSession::get2FAMethods(NXCPMessage *request)
 /**
  * Returns 2FA method with method name, description, configuration and method loading status
  */
-void ClientSession::get2FAMethodInfo(NXCPMessage *request)
+void ClientSession::get2FAMethodDetails(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
    {
       TCHAR name[MAX_OBJECT_NAME];
-      request->getFieldAsString(VID_2FA_RESPONSE, name, MAX_OBJECT_NAME);
-      Get2FAMethodInfo(name, &msg);
+      request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      Get2FAMethodDetails(name, &msg);
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
@@ -15686,14 +15676,12 @@ void ClientSession::modify2FAMethod(NXCPMessage *request)
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
    {
-      TCHAR name[MAX_OBJECT_NAME];
-      request->getFieldAsString(VID_2FA_RESPONSE, name, MAX_OBJECT_NAME);
-      TCHAR methodType[MAX_OBJECT_NAME];
-      request->getFieldAsString(VID_2FA_RESPONSE + 1, methodType, MAX_OBJECT_NAME);
-      TCHAR description[MAX_2FA_DESCRIPTION];
-      request->getFieldAsString(VID_2FA_RESPONSE + 2, description, MAX_2FA_DESCRIPTION);
-      char* configuration = request->getFieldAsUtf8String(VID_2FA_RESPONSE + 3);
-      msg.setField(VID_RCC, Modify2FAMethod(name, methodType, description, configuration));
+      TCHAR name[MAX_OBJECT_NAME], driver[MAX_OBJECT_NAME], description[MAX_2FA_DESCRIPTION];
+      request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      request->getFieldAsString(VID_DRIVER_NAME, driver, MAX_OBJECT_NAME);
+      request->getFieldAsString(VID_DESCRIPTION, description, MAX_2FA_DESCRIPTION);
+      char* configuration = request->getFieldAsUtf8String(VID_CONFIG_FILE_DATA);
+      msg.setField(VID_RCC, Modify2FAMethod(name, driver, description, configuration));
    }
    else
    {
@@ -15712,7 +15700,7 @@ void ClientSession::delete2FAMethod(NXCPMessage *request)
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
    {
       TCHAR name[MAX_OBJECT_NAME];
-      request->getFieldAsString(VID_2FA_RESPONSE, name, MAX_OBJECT_NAME);
+      request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
       msg.setField(VID_RCC, Delete2FAMethod(name));
    }
    else
@@ -15724,7 +15712,7 @@ void ClientSession::delete2FAMethod(NXCPMessage *request)
 }
 
 /**
- * Returns list of configured 2FA methods bindings with method name and description
+ * Returns list of configured 2FA method bindings with method name and description
  */
 void ClientSession::getUser2FABindings(NXCPMessage *request)
 {
@@ -15744,7 +15732,7 @@ void ClientSession::getUser2FABindings(NXCPMessage *request)
 }
 
 /**
- * Returns list of configured 2FA methods bindings with method name and description
+ * Returns list of configured 2FA method bindings with method name and description
  */
 void ClientSession::getUser2FABindingInfo(NXCPMessage *request)
 {
@@ -15773,9 +15761,8 @@ void ClientSession::getUser2FABindingInfo(NXCPMessage *request)
    sendMessage(&msg);
 }
 
-
 /**
- * API call for creating or modifying 2FA method
+ * API call for creating or modifying 2FA method binding
  */
 void ClientSession::modifyUser2FABinding(NXCPMessage *request)
 {
