@@ -35,7 +35,7 @@
 #elif GLOBAL_SPECIFIER_SUPPORTED
 #define __EXPORT __global
 #define __IMPORT __global
-#elif (__GNUC__ >= 4) || VISIBILITY_ATTRIBUTE_SUPPORTED
+#elif (__GNUC__ >= 4) || __ibmxl__ || VISIBILITY_ATTRIBUTE_SUPPORTED
 #define __EXPORT __attribute__ ((visibility ("default")))
 #define __IMPORT __attribute__ ((visibility ("default")))
 #else

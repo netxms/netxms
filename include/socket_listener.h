@@ -45,7 +45,7 @@ enum ConnectionProcessingResult
 class LIBNETXMS_EXPORTABLE GenericSocketListener
 {
 private:
-   UINT16 m_port;
+   uint16_t m_port;
    TCHAR *m_listenAddress;
    bool m_allowV4;
    bool m_allowV6;
@@ -55,15 +55,15 @@ protected:
    SOCKET m_socketV6;
    bool m_stop;
    TCHAR m_name[MAX_LISTENER_NAME_LEN];
-   UINT32 m_acceptErrors;
-   UINT32 m_acceptedConnections;
-   UINT32 m_rejectedConnections;
+   uint32_t m_acceptErrors;
+   uint32_t m_acceptedConnections;
+   uint32_t m_rejectedConnections;
    int m_type;
 
    virtual bool isStopConditionReached();
 
 public:
-   GenericSocketListener(int type, UINT16 port, bool allowV4, bool allowV6);
+   GenericSocketListener(int type, uint16_t port, bool allowV4, bool allowV6);
    virtual ~GenericSocketListener();
 
    void enableIPv4(bool enabled) { m_allowV4 = enabled; }
@@ -71,9 +71,9 @@ public:
    void setName(const TCHAR *name) { _tcslcpy(m_name, name, MAX_LISTENER_NAME_LEN); }
    void setListenAddress(const TCHAR *addr) { MemFree(m_listenAddress); m_listenAddress = MemCopyString(addr); }
 
-   UINT32 getAcceptErrors() const { return m_acceptErrors; }
-   UINT32 getAcceptedConnections() const { return m_acceptedConnections; }
-   UINT32 getRejectedConnections() const { return m_rejectedConnections; }
+   uint32_t getAcceptErrors() const { return m_acceptErrors; }
+   uint32_t getAcceptedConnections() const { return m_acceptedConnections; }
+   uint32_t getRejectedConnections() const { return m_rejectedConnections; }
 
    bool initialize();
    virtual void mainLoop() = 0;
@@ -90,7 +90,7 @@ protected:
    virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer) = 0;
 
 public:
-   StreamSocketListener(UINT16 port, bool allowV4 = true, bool allowV6 = true) : GenericSocketListener(SOCK_STREAM, port, allowV4, allowV6) { }
+   StreamSocketListener(uint16_t port, bool allowV4 = true, bool allowV6 = true) : GenericSocketListener(SOCK_STREAM, port, allowV4, allowV6) { }
 
    virtual void mainLoop() override;
 };
@@ -104,7 +104,7 @@ protected:
    virtual ConnectionProcessingResult processDatagram(SOCKET s) = 0;
 
 public:
-   DatagramSocketListener(UINT16 port, bool allowV4 = true, bool allowV6 = true) : GenericSocketListener(SOCK_DGRAM, port, allowV4, allowV6) { }
+   DatagramSocketListener(uint16_t port, bool allowV4 = true, bool allowV6 = true) : GenericSocketListener(SOCK_DGRAM, port, allowV4, allowV6) { }
 
    virtual void mainLoop() override;
 };

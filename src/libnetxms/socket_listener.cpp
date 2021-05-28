@@ -26,9 +26,9 @@
 /**
  * Constructor
  */
-GenericSocketListener::GenericSocketListener(int type, UINT16 port, bool allowV4, bool allowV6)
+GenericSocketListener::GenericSocketListener(int type, uint16_t port, bool allowV4, bool allowV6)
 {
-   m_listenAddress = NULL;
+   m_listenAddress = nullptr;
    m_port = port;
    m_allowV4 = allowV4;
    m_allowV6 = allowV6;
@@ -57,7 +57,7 @@ GenericSocketListener::~GenericSocketListener()
       closesocket(m_socketV6);
       m_socketV6 = INVALID_SOCKET;
    }
-   free(m_listenAddress);
+   MemFree(m_listenAddress);
 }
 
 /**
@@ -116,7 +116,7 @@ bool GenericSocketListener::initialize()
    servAddr6.sin6_family = AF_INET6;
 #endif
 
-   if ((m_listenAddress == NULL) || (*m_listenAddress == 0) || !_tcscmp(m_listenAddress, _T("*")))
+   if ((m_listenAddress == nullptr) || (*m_listenAddress == 0) || !_tcscmp(m_listenAddress, _T("*")))
    {
       servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 #ifdef WITH_IPV6

@@ -367,7 +367,8 @@ protected:
    virtual bool isStopConditionReached();
 
 public:
-   ProxyConnectionListener(UINT16 port,  bool allowV4, bool allowV6) : DatagramSocketListener(port, allowV4, allowV6) { setName(_T("ProxyHeartbeat")); }
+   ProxyConnectionListener(uint16_t port, bool allowV4, bool allowV6) : DatagramSocketListener(port, allowV4, allowV6) { setName(_T("ProxyHeartbeat")); }
+   virtual ~ProxyConnectionListener() { }
 };
 
 /**

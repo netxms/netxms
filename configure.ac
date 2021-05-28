@@ -1249,9 +1249,9 @@ if test "x$PLATFORM" = "xHP-UX"; then
 	AC_CHECK_PROG([CCC], [aCC], [aCC])
 fi
 if test "x$PLATFORM" = "xAIX"; then
-#	AC_CHECK_PROG([CC], [xlclang], [xlclang])
+	AC_CHECK_PROG([CC], [xlclang], [xlclang])
 	AC_CHECK_PROG([CC], [xlc_r], [xlc_r])
-#	AC_CHECK_PROG([CCC], [xlclang++], [xlclang++])
+	AC_CHECK_PROG([CCC], [xlclang++], [xlclang++])
 	AC_CHECK_PROG([CCC], [xlC_r], [xlC_r])
 fi
 if test "x$PLATFORM" = "xSunOS"; then
@@ -1475,8 +1475,14 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	AC_CPP_CHECK_OPTION(-Werror=return-type)
 	AC_CXX_CHECK_OPTION(-fno-rtti)
 	AC_CXX_CHECK_OPTION(-fno-exceptions)
-	AC_CXX_CHECK_OPTION(-fvisibility-inlines-hidden)
-	AC_CPP_CHECK_OPTION(-fvisibility=hidden)
+
+	# Symbol visibility control on AIX aith xlclang++ hides vtables for classes
+	# even when visibility "default" is set for class explicitly which
+	# leads to "undefined vtable for ..." linker errors
+	if test "x$CXX" != "xxlclang++"; then
+		AC_CXX_CHECK_OPTION(-fvisibility-inlines-hidden)
+		AC_CPP_CHECK_OPTION(-fvisibility=hidden)
+	fi
 
 	AC_MSG_CHECKING(whether C compiler accepts -Wno-invalid-pp-token)
 	OLD_CPPFLAGS="$CPPFLAGS"
@@ -1684,21 +1690,6 @@ if test "x$CXX" = "xaCC" ; then
 		])
 
 	AC_CXX_CHECK_OPTION(+std=c++11)
-fi
-
-if test "x$CXX" = "xxlclang++" ; then
-	AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
-	OLD_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS -qvisibility=hidden"
-	AC_RUN_IFELSE([AC_LANG_PROGRAM([[ int __attribute__ ((visibility ("default"))) z = 0; ]], [[ ]])],
-		[ 
-			AC_DEFINE(VISIBILITY_ATTRIBUTE_SUPPORTED, 1, Define to 1 if compiler supports visibility attribute)
-			AC_MSG_RESULT(yes) 
-		], 
-		[ 
-			CPPFLAGS="$OLD_CPPFLAGS"
-			AC_MSG_RESULT(no)
-		])
 fi
 
 if test "x$CXX" = "xxlC_r" ; then
