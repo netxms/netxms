@@ -11925,17 +11925,17 @@ public class NXCSession
     */
    public List<NotificationChannel> getNotificationChannels() throws NXCException, IOException
    {
-      List<NotificationChannel> ncList = new ArrayList<NotificationChannel>();
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NOTIFICATION_CHANNELS);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_CHANNEL_COUNT);
-      long base = NXCPCodes.VID_NOTIFICATION_CHANNEL_BASE;
-      for (int i = 0 ; i < count; i++, base+=20)
-         ncList.add(new NotificationChannel(response, base));            
-      return ncList;
+      List<NotificationChannel> channels = new ArrayList<NotificationChannel>(count);
+      long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++, base += 20)
+         channels.add(new NotificationChannel(response, base));            
+      return channels;
    }
-   
+
    /**
     * Create notification channel 
     * 
@@ -11999,19 +11999,19 @@ public class NXCSession
    }
 
    /**
-    * Get driver name list
+    * Get list of available notification channel drivers.
     * 
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
-    * @return driver name list
+    * @return list of available notification channel drivers
     */
-   public List<String> getDriverNames() throws NXCException, IOException
+   public List<String> getNotificationDrivers() throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NOTIFICATION_DRIVERS);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      List<String> list = response.getStringListFromFields(NXCPCodes.VID_NOTIFICATION_DRIVER_BASE, NXCPCodes.VID_DRIVER_COUNT);
-      return list;
+      List<String> drivers = response.getStringListFromFields(NXCPCodes.VID_ELEMENT_LIST_BASE, NXCPCodes.VID_DRIVER_COUNT);
+      return drivers;
    }
 
    /**

@@ -586,8 +586,14 @@ private:
    void debugPrintf(int level, const TCHAR *format, ...);
 
    void setupEncryption(NXCPMessage *request);
-   void respondToKeepalive(UINT32 dwRqId);
-   void onFileUpload(BOOL bSuccess);
+
+   void respondToKeepalive(uint32_t requestId)
+   {
+      NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
+      msg.setField(VID_RCC, RCC_SUCCESS);
+      postMessage(msg);
+   }
+
    void sendServerInfo(UINT32 dwRqId);
    void login(NXCPMessage *pRequest);
    void getObjects(NXCPMessage *request);
@@ -842,7 +848,7 @@ private:
    void updateNotificationChannel(NXCPMessage *request);
    void removeNotificationChannel(NXCPMessage *request);
    void renameNotificationChannel(NXCPMessage *request);
-   void getNotificationDriverNames(UINT32 requestId);
+   void getNotificationDrivers(NXCPMessage *request);
    void startActiveDiscovery(NXCPMessage *request);
    void getPhysicalLinks(NXCPMessage *request);
    void updatePhysicalLink(NXCPMessage *request);

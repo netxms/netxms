@@ -60,8 +60,8 @@ public class NXCPCodes
 	public static final int CMD_UPDATE_USER = 0x0022;
 	public static final int CMD_DELETE_USER = 0x0023;
 	public static final int CMD_CREATE_USER = 0x0024;
-	public static final int CMD_LOCK_USER_DB = 0x0025;
-	public static final int CMD_UNLOCK_USER_DB = 0x0026;
+//	public static final int CMD_LOCK_USER_DB = 0x0025;
+//	public static final int CMD_UNLOCK_USER_DB = 0x0026;
 	public static final int CMD_USER_DB_UPDATE = 0x0027;
 	public static final int CMD_SET_PASSWORD = 0x0028;
 	public static final int CMD_GET_NODE_DCI_LIST = 0x0029;
@@ -1309,8 +1309,6 @@ public class NXCPCodes
    public static final long VID_AGENT_POLICY_BASE = 0x10000000L;
    public static final long VID_ZONE_PROXY_BASE = 0x70000000L;
    public static final long VID_UA_NOTIFICATION_BASE = 0x10000000L;
-   public static final long VID_NOTIFICATION_CHANNEL_BASE = 0x10000000L;
-   public static final long VID_NOTIFICATION_DRIVER_BASE = 0x10000000L;
    public static final long VID_HEADERS_BASE = 0x20000000L;
    public static final long VID_SHARED_SECRET_LIST_BASE = 0x10000000L;
    public static final long VID_WEB_SERVICE_DEF_LIST_BASE = 0x10000000L;

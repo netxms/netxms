@@ -1643,7 +1643,7 @@ void ClientSession::processRequest(NXCPMessage *request)
          renameNotificationChannel(request);
          break;
       case CMD_GET_NOTIFICATION_DRIVERS:
-         getNotificationDriverNames(request->getId());
+         getNotificationDrivers(request);
          break;
       case CMD_START_ACTIVE_DISCOVERY:
          startActiveDiscovery(request);
@@ -1756,16 +1756,6 @@ void ClientSession::processRequest(NXCPMessage *request)
    }
    delete request;
    decRefCount();
-}
-
-/**
- * Respond to client's keepalive message
- */
-void ClientSession::respondToKeepalive(UINT32 dwRqId)
-{
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, dwRqId);
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   postMessage(msg);
 }
 
 /**
@@ -15009,13 +14999,11 @@ void ClientSession::renameNotificationChannel(NXCPMessage *request)
 }
 
 /**
- * Get notification driver names
+ * Get list of available notification drivers
  */
-void ClientSession::getNotificationDriverNames(UINT32 requestId)
+void ClientSession::getNotificationDrivers(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(requestId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       GetNotificationDrivers(&msg);

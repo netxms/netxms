@@ -120,7 +120,7 @@ public class NotificationChannelEditDialog extends Dialog
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final List<String> ncList = session.getDriverNames();
+            final List<String> ncList = session.getNotificationDrivers();
             Collections.sort(ncList, String.CASE_INSENSITIVE_ORDER);
             runInUIThread(new Runnable() {
                @Override
