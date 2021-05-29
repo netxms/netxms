@@ -652,7 +652,7 @@ void RenameNotificationChannel(TCHAR *name, TCHAR *newName)
 void GetNotificationChannels(NXCPMessage *msg)
 {
    s_channelListLock.lock();
-   uint32_t base = VID_NOTIFICATION_CHANNEL_BASE;
+   uint32_t base = VID_ELEMENT_LIST_BASE;
    Iterator<std::pair<const TCHAR*, NotificationChannel*>> *it = s_channelList.iterator();
    msg->setField(VID_CHANNEL_COUNT, s_channelList.size());
    while(it->hasNext())
@@ -666,11 +666,11 @@ void GetNotificationChannels(NXCPMessage *msg)
 }
 
 /**
- * Get notification channel list
+ * Get notification driver list
  */
 void GetNotificationDrivers(NXCPMessage *msg)
 {
-   uint32_t base = VID_NOTIFICATION_DRIVER_BASE;
+   uint32_t base = VID_ELEMENT_LIST_BASE;
    StringList *keyList = s_driverList.keys();
    for(int i = 0; i < keyList->size(); i++)
    {

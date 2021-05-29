@@ -1320,12 +1320,10 @@ public class NXCPCodes
    public static final long VID_AGENT_POLICY_BASE = 0x10000000L;
    public static final long VID_ZONE_PROXY_BASE = 0x70000000L;
    public static final long VID_UA_NOTIFICATION_BASE = 0x10000000L;
-   public static final long VID_NOTIFICATION_CHANNEL_BASE = 0x10000000L;
-   public static final long VID_NOTIFICATION_DRIVER_BASE = 0x10000000L;
    public static final long VID_HEADERS_BASE = 0x20000000L;
    public static final long VID_SHARED_SECRET_LIST_BASE = 0x10000000L;
    public static final long VID_WEB_SERVICE_DEF_LIST_BASE = 0x10000000L;
    public static final long VID_MASKED_FIELD_LIST_BASE = 0x10000000L;
    public static final long VID_SSH_KEY_LIST_BASE = 0x10000000L;
-   public static final long VID_2FA_METHODS_LIST_BASE = 0x10000000L;
+   public static final long VID_2FA_METHOD_LIST_BASE = 0x10000000L;
 }

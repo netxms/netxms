@@ -1668,7 +1668,7 @@ void ClientSession::processRequest(NXCPMessage *request)
          renameNotificationChannel(request);
          break;
       case CMD_GET_NOTIFICATION_DRIVERS:
-         getNotificationDriverNames(request->getId());
+         getNotificationDrivers(request);
          break;
       case CMD_START_ACTIVE_DISCOVERY:
          startActiveDiscovery(request);
@@ -1733,6 +1733,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_2FA_VALIDATE_RESPONSE:
          validate2FAResponse(request);
          break;
+      case CMD_2FA_GET_DRIVERS:
+         get2FADrivers(request);
+         break;
       case CMD_2FA_GET_METHODS:
          get2FAMethods(request);
          break;
@@ -1748,8 +1751,8 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_2FA_GET_USER_BINDINGS:
          getUser2FABindings(request);
          break;
-      case CMD_2FA_GET_USER_BINDING_INFO:
-         getUser2FABindingInfo(request);
+      case CMD_2FA_GET_USER_BINDING_DETAILS:
+         getUser2FABindingDetails(request);
          break;
       case CMD_2FA_MODIFY_USER_BINDING:
          modifyUser2FABinding(request);
@@ -15044,13 +15047,11 @@ void ClientSession::renameNotificationChannel(NXCPMessage *request)
 }
 
 /**
- * Get notification driver names
+ * Get list of available notification drivers
  */
-void ClientSession::getNotificationDriverNames(UINT32 requestId)
+void ClientSession::getNotificationDrivers(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(requestId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       GetNotificationDrivers(&msg);
@@ -15637,6 +15638,25 @@ void ClientSession::generateSshKey(NXCPMessage *request)
 }
 
 /**
+ * Get notification driver names
+ */
+void ClientSession::get2FADrivers(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
+   {
+      Get2FADrivers(&msg);
+      msg.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading two-factor authentication driver list"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
  * Returns list of configured 2FA methods with method name, description and method loading status
  */
 void ClientSession::get2FAMethods(NXCPMessage *request)
@@ -15732,9 +15752,9 @@ void ClientSession::getUser2FABindings(NXCPMessage *request)
 }
 
 /**
- * Returns list of configured 2FA method bindings with method name and description
+ * Get details of specific 2FA methid binding
  */
-void ClientSession::getUser2FABindingInfo(NXCPMessage *request)
+void ClientSession::getUser2FABindingDetails(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    uint32_t userId = request->getFieldAsUInt32(VID_USER_ID);
@@ -15743,9 +15763,9 @@ void ClientSession::getUser2FABindingInfo(NXCPMessage *request)
       TCHAR methodName[MAX_OBJECT_NAME];
       request->getFieldAsString(VID_2FA_METHOD, methodName, MAX_OBJECT_NAME);
       shared_ptr<Config> binding = GetUser2FABindingInfo(userId, methodName);
-      if(binding != nullptr)
+      if (binding != nullptr)
       {
-         msg.setField(VID_2FA_METHOD, binding->createXml());
+         msg.setField(VID_CONFIG_FILE_DATA, binding->createXml());
          msg.setField(VID_RCC, RCC_SUCCESS);
       }
       else
@@ -15755,7 +15775,8 @@ void ClientSession::getUser2FABindingInfo(NXCPMessage *request)
    }
    else
    {
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on getting 2FA method binding"));
+      TCHAR buffer[MAX_USER_NAME];
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on getting 2FA method binding details for user \"%s\""), ResolveUserId(userId, buffer, true));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);
@@ -15778,7 +15799,8 @@ void ClientSession::modifyUser2FABinding(NXCPMessage *request)
    }
    else
    {
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on modify 2FA method binding"));
+      TCHAR buffer[MAX_USER_NAME];
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on modify 2FA method binding for user \"%s\""), ResolveUserId(userId, buffer, true));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);
@@ -15799,7 +15821,8 @@ void ClientSession::deleteUser2FABinding(NXCPMessage *request)
    }
    else
    {
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on deleting 2FA method"));
+      TCHAR buffer[MAX_USER_NAME];
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on deleting 2FA method for user \"%s\""), ResolveUserId(userId, buffer, true));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);

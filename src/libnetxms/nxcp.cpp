@@ -80,8 +80,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_UPDATE_USER"),
       _T("CMD_DELETE_USER"),
       _T("CMD_CREATE_USER"),
-      _T("CMD_LOCK_USER_DB"),
-      _T("CMD_UNLOCK_USER_DB"),
+      _T("CMD_2FA_GET_DRIVERS"),
+      _T("UNUSED_0x0026"),
       _T("CMD_USER_DB_UPDATE"),
       _T("CMD_SET_PASSWORD"),
       _T("CMD_GET_NODE_DCI_LIST"),
@@ -480,7 +480,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_2FA_MODIFY_METHOD"),
       _T("CMD_2FA_DELETE_METHOD"),
       _T("CMD_2FA_GET_USER_BINDINGS"),
-      _T("CMD_2FA_GET_USER_BINDING_INFO"),
+      _T("CMD_2FA_GET_USER_BINDING_DETAILS"),
       _T("CMD_2FA_MODIFY_USER_BINDING"),
       _T("CMD_2FA_DELETE_USER_BINDING")
    };

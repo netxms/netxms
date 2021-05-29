@@ -277,7 +277,7 @@ typedef struct
 #define CMD_UPDATE_USER                   0x0022
 #define CMD_DELETE_USER                   0x0023
 #define CMD_CREATE_USER                   0x0024
-//#define CMD_LOCK_USER_DB                  0x0025 unused commands
+#define CMD_2FA_GET_DRIVERS               0x0025
 //#define CMD_UNLOCK_USER_DB                0x0026
 #define CMD_USER_DB_UPDATE                0x0027
 #define CMD_SET_PASSWORD                  0x0028
@@ -673,7 +673,7 @@ typedef struct
 #define CMD_2FA_MODIFY_METHOD             0x01B2
 #define CMD_2FA_DELETE_METHOD             0x01B3
 #define CMD_2FA_GET_USER_BINDINGS         0x01B4
-#define CMD_2FA_GET_USER_BINDING_INFO     0x01B5
+#define CMD_2FA_GET_USER_BINDING_DETAILS  0x01B5
 #define CMD_2FA_MODIFY_USER_BINDING       0x01B6
 #define CMD_2FA_DELETE_USER_BINDING       0x01B7
 
@@ -1665,10 +1665,6 @@ typedef struct
 #define VID_ZONE_PROXY_BASE         ((UINT32)0x70000000)
 
 #define VID_UA_NOTIFICATION_BASE    ((UINT32)0x10000000)
-
-#define VID_NOTIFICATION_CHANNEL_BASE ((UINT32)0x10000000)
-
-#define VID_NOTIFICATION_DRIVER_BASE ((UINT32)0x10000000)
 
 #define VID_HEADERS_BASE            ((UINT32)0x20000000)
 

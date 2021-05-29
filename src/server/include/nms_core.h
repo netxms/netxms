@@ -597,6 +597,8 @@ private:
    uint32_t authenticateUserByPassword(NXCPMessage *request, LoginInfo *loginInfo);
    uint32_t authenticateUserByCertificate(NXCPMessage *request, LoginInfo *loginInfo);
    uint32_t authenticateUserBySSOTicket(NXCPMessage *request, LoginInfo *loginInfo);
+   void prepare2FAChallenge(NXCPMessage *request);
+   void validate2FAResponse(NXCPMessage *request);
 
    void respondToKeepalive(uint32_t requestId)
    {
@@ -858,7 +860,7 @@ private:
    void updateNotificationChannel(NXCPMessage *request);
    void removeNotificationChannel(NXCPMessage *request);
    void renameNotificationChannel(NXCPMessage *request);
-   void getNotificationDriverNames(UINT32 requestId);
+   void getNotificationDrivers(NXCPMessage *request);
    void startActiveDiscovery(NXCPMessage *request);
    void getPhysicalLinks(NXCPMessage *request);
    void updatePhysicalLink(NXCPMessage *request);
@@ -883,14 +885,13 @@ private:
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);
 #endif
-   void prepare2FAChallenge(NXCPMessage *request);
-   void validate2FAResponse(NXCPMessage *request);
+   void get2FADrivers(NXCPMessage *request);
    void get2FAMethods(NXCPMessage *request);
    void get2FAMethodDetails(NXCPMessage *request);
    void modify2FAMethod(NXCPMessage *request);
    void delete2FAMethod(NXCPMessage *request);
    void getUser2FABindings(NXCPMessage *request);
-   void getUser2FABindingInfo(NXCPMessage *request);
+   void getUser2FABindingDetails(NXCPMessage *request);
    void modifyUser2FABinding(NXCPMessage *request);
    void deleteUser2FABinding(NXCPMessage *request);
    void alarmUpdateWorker(Alarm *alarm);

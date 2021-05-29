@@ -476,3 +476,15 @@ uint32_t Delete2FAMethod(const TCHAR* name)
    DBConnectionPoolReleaseConnection(hdb);
    return rcc;
 }
+
+/**
+ * Fills message with 2FA driver list
+ */
+void Get2FADrivers(NXCPMessage *msg)
+{
+   // Currently driver list is hard-coded
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   msg->setField(fieldId++, _T("TOTP"));
+   msg->setField(fieldId++, _T("Message"));
+   msg->setField(VID_DRIVER_COUNT, 2);
+}
