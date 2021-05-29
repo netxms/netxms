@@ -394,7 +394,7 @@ public class Session
 			request.setField(NXCPCodes.VID_LIBNXCL_VERSION, VersionInfo.version());
 			request.setField(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
 			sendMessage(request);
-			response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
+			response = waitForMessage(NXCPCodes.CMD_LOGIN_RESPONSE, request.getMessageId());
 			int rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
          logger.debug("CMD_LOGIN_RESP received, RCC=" + rcc);
 			if (rcc != RCC.SUCCESS)
