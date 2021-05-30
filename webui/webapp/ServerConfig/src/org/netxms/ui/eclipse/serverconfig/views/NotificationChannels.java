@@ -74,7 +74,6 @@ public class NotificationChannels extends ViewPart
 	
    private NXCSession session = ConsoleSharedData.getSession();
 	private SessionListener listener;
-	private List<NotificationChannel> notificationChannelList;
 	private SortableTableViewer viewer;
 	private Action actionRefresh;
 	private Action actionNewChannel;
@@ -271,33 +270,33 @@ public class NotificationChannels extends ViewPart
 		mgr.add(actionDeleteChannel);
 	}
 	
-	/**
-	 * Refresh
-	 */
-	private void refresh()
-	{
-		new ConsoleJob("Get notification channels", this, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				notificationChannelList = session.getNotificationChannels();
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						viewer.setInput(notificationChannelList);
-					}
-				});
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
-            return "Cannot get list of notificaiton channels";
-			}
-		}.start();
-	}
-	
+   /**
+    * Refresh
+    */
+   private void refresh()
+   {
+      new ConsoleJob("Get notification channels", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final List<NotificationChannel> channels = session.getNotificationChannels();
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.setInput(channels);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot get list of notification channels";
+         }
+      }.start();
+   }
+
 	/**
 	 * Create new table
 	 */
