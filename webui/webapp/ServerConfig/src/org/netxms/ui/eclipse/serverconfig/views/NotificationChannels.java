@@ -179,7 +179,7 @@ public class NotificationChannels extends ViewPart
 			}
 		};
 		
-      actionNewChannel = new Action("&New channel...", SharedIcons.ADD_OBJECT) {
+      actionNewChannel = new Action("&New...", SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -200,7 +200,7 @@ public class NotificationChannels extends ViewPart
 			@Override
 			public void run()
 			{
-				deleteChannel();
+				deleteChannels();
 			}
 		};
 		actionDeleteChannel.setEnabled(false);
@@ -293,7 +293,7 @@ public class NotificationChannels extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Error while getting notificaiton channels";
+            return "Cannot get list of notificaiton channels";
 			}
 		}.start();
 	}
@@ -318,7 +318,7 @@ public class NotificationChannels extends ViewPart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Error creating notifiction channel";
+            return "Cannot create notification channel";
 			}
 		}.start();
 	}
@@ -329,7 +329,7 @@ public class NotificationChannels extends ViewPart
    private void editChannel()
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
-      if ((selection == null) || (selection.size() != 1))
+      if (selection.size() != 1)
          return;
 
       final NotificationChannel channel = (NotificationChannel)selection.getFirstElement();
@@ -351,21 +351,21 @@ public class NotificationChannels extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Error updating notifiction channel";
+            return "Cannot update notification channel";
          }
       }.start();
    }
 
    /**
-    * Delete selected tables
+    * Delete selected channels
     */
-   private void deleteChannel()
+   private void deleteChannels()
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
-      if ((selection == null) || selection.isEmpty())
+      if (selection.isEmpty())
          return;
 
-      if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete notification channels", "Are you sure you want to delete selected notification channels?"))
+      if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Channels", "Are you sure you want to delete selected notification channels?"))
          return;
 
       final List<String> channels = new ArrayList<String>(selection.size());
@@ -386,7 +386,7 @@ public class NotificationChannels extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Error deleting notifiction channel";
+            return "Cannot delete notification channel";
          }
       }.start();
    }
