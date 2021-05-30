@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -262,14 +262,12 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       for(Alarm alarm : alarms.values())
       {
          String alarmKey = alarm.getKey();
-         if(alarmKey.isEmpty())
+         if (alarmKey.length() < 2)
             continue;
          params.add(Long.toString(alarm.getId()));
          params.add(alarmKey);
-         //Escape special regexp characters
-         alarmKey.replace("(", "\\(");
-         alarmKey.replace(")", "\\)");      
-         params.add(".*" + alarmKey.substring(1));   
+         // Escape special regexp characters
+         params.add(".*" + alarmKey.substring(1).replace("(", "\\(").replace(")", "\\)").replace("[", "\\[").replace("]", "\\]"));
          break;
       }
       System.out.println("Check that at least one alarm was found");
