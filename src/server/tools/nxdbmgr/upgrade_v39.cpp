@@ -16,19 +16,20 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: upgrade_v38.cpp
+** File: upgrade_v39.cpp
 **
 **/
 
 #include "nxdbmgr.h"
-#include <nxevent.h>
 
 /**
- * Upgrade from 39.1 to 40.0
+ * Upgrade from 39.1 to 39.2
  */
 static bool H_UpgradeFromV1()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   if (DBIsTableExist(g_dbHandle, _T("zmq_subscription")) == DBIsTableExist_Found)
+      CHK_EXEC(SQLQuery(_T("DROP TABLE zmq_subscription")));
+   CHK_EXEC(SetMinorSchemaVersion(2));
    return true;
 }
 
@@ -69,7 +70,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 1,  40, 0,  H_UpgradeFromV1  },
+   { 1,  32, 2,  H_UpgradeFromV1  },
    { 0,  39, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }
 };

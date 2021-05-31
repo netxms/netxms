@@ -38,10 +38,6 @@
 #include <dirent.h>
 #endif
 
-#ifdef WITH_ZMQ
-#include "zeromq.h"
-#endif
-
 /**
  * Constants
  */
@@ -1702,26 +1698,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GENERATE_SSH_KEYS:
          generateSshKey(request);
          break;
-#ifdef WITH_ZMQ
-      case CMD_ZMQ_SUBSCRIBE_EVENT:
-         zmqManageSubscription(request, zmq::EVENT, true);
-         break;
-      case CMD_ZMQ_UNSUBSCRIBE_EVENT:
-         zmqManageSubscription(request, zmq::EVENT, false);
-         break;
-      case CMD_ZMQ_SUBSCRIBE_DATA:
-         zmqManageSubscription(request, zmq::DATA, true);
-         break;
-      case CMD_ZMQ_UNSUBSCRIBE_DATA:
-         zmqManageSubscription(request, zmq::DATA, false);
-         break;
-      case CMD_ZMQ_GET_EVT_SUBSCRIPTIONS:
-         zmqListSubscriptions(request, zmq::EVENT);
-         break;
-      case CMD_ZMQ_GET_DATA_SUBSCRIPTIONS:
-         zmqListSubscriptions(request, zmq::DATA);
-         break;
-#endif
       default:
          if ((code >> 8) == 0x11)
          {
@@ -15588,68 +15564,3 @@ void ClientSession::generateSshKey(NXCPMessage *request)
 
    sendMessage(&msg);
 }
-
-#ifdef WITH_ZMQ
-
-/**
- * Manage subscription for ZMQ forwarder
- */
-void ClientSession::zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe)
-{
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-
-   UINT32 objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
-   shared_ptr<NetObj> object = FindObjectById(objectId);
-   if ((object != nullptr) && !object->isDeleted())
-   {
-      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-      {
-         UINT32 dciId = request->getFieldAsUInt32(VID_DCI_ID);
-         UINT32 eventCode = request->getFieldAsUInt32(VID_EVENT_CODE);
-         bool success;
-         switch (type)
-         {
-            case zmq::EVENT:
-               if (subscribe)
-               {
-                  success = ZmqSubscribeEvent(objectId, eventCode, dciId);
-               }
-               else
-               {
-                  success = ZmqUnsubscribeEvent(objectId, eventCode, dciId);
-               }
-               break;
-            case zmq::DATA:
-               if (subscribe)
-               {
-                  success = ZmqSubscribeData(objectId, dciId);
-               }
-               else
-               {
-                  success = ZmqUnsubscribeData(objectId, dciId);
-               }
-               break;
-         }
-         msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INTERNAL_ERROR);
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      }
-   }
-   else
-   {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-   }
-   sendMessage(&msg);
-}
-
-void ClientSession::zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type)
-{
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   ZmqFillSubscriptionListMessage(&msg, type);
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
-}
-
-#endif

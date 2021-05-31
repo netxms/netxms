@@ -23,10 +23,6 @@
 #include "nxcore.h"
 #include <npe.h>
 
-#ifdef WITH_ZMQ
-#include "zeromq.h"
-#endif
-
 /**
  * Event parameter names
  */
@@ -716,10 +712,6 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *upda
 	   QueueIDataInsert(tmTimeStamp, owner->getId(), m_id, static_cast<TCHAR*>(originalValue), pValue->getString(), getStorageClass());
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
-
-#ifdef WITH_ZMQ
-   ZmqPublishData(owner->getId(), m_id, m_name, pValue->getString());
-#endif
 
    // Update prediction engine
    if (m_predictionEngine[0] != 0)

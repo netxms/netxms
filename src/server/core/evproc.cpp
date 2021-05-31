@@ -23,10 +23,6 @@
 #include "nxcore.h"
 #include <uthash.h>
 
-#if WITH_ZMQ
-#include "zeromq.h"
-#endif
-
 #define DEBUG_TAG _T("event.proc")
 
 #define MAX_DB_QUERY_FAILED_EVENTS     30
@@ -308,9 +304,6 @@ static void ProcessEvent(Event *event, int processorId)
    // Pass event through event processing policy if it is not correlated
    if (event->getRootId() == 0)
    {
-#ifdef WITH_ZMQ
-      ZmqPublishEvent(event);
-#endif
       g_pEventPolicy->processEvent(event);
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Event ") UINT64_FMT _T(" with code %d passed event processing policy"), event->getId(), event->getCode());
    }

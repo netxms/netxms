@@ -92,9 +92,6 @@
 #include "nms_script.h"
 #include "nxcore_jobs.h"
 #include "nxcore_schedule.h"
-#ifdef WITH_ZMQ
-#include "zeromq.h"
-#endif
 
 /**
  * Common constants and macros
@@ -869,10 +866,6 @@ private:
    void deleteSshKey(NXCPMessage *request);
    void updateSshKey(NXCPMessage *request);
    void generateSshKey(NXCPMessage *request);
-#ifdef WITH_ZMQ
-   void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
-   void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);
-#endif
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
