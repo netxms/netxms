@@ -14831,7 +14831,7 @@ void ClientSession::addNotificationChannel(NXCPMessage *request)
                char *configuration = request->getFieldAsMBString(VID_XML_CONFIG, nullptr, 0);
                CreateNotificationChannelAndSave(name, description, driverName, configuration);
                msg.setField(VID_RCC, RCC_SUCCESS);
-               NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
+               NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
                writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Created new notification channel %s"), name);
             }
             else
@@ -14882,7 +14882,7 @@ void ClientSession::updateNotificationChannel(NXCPMessage *request)
                char *configuration = request->getFieldAsMBString(VID_XML_CONFIG, nullptr, 0);
                UpdateNotificationChannel(name, description, driverName, configuration);
                msg.setField(VID_RCC, RCC_SUCCESS);
-               NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
+               NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
                MemFree(configuration);
                writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Updated configuration of notification channel %s"), name);
             }
@@ -14926,7 +14926,7 @@ void ClientSession::removeNotificationChannel(NXCPMessage *request)
       {
          if (DeleteNotificationChannel(name))
          {
-            NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
+            NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
             msg.setField(VID_RCC, RCC_SUCCESS);
             writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Notification channel %s deleted"), name);
          }

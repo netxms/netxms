@@ -343,7 +343,7 @@ public class NotificationChannels extends ViewPart
             session.updateNotificationChannel(channel);
             if (dlg.isNameChanged())
             {
-               session.renameNotificaiotnChannel(channel.getName(), dlg.getNewName());
+               session.renameNotificationChannel(channel.getName(), dlg.getNewName());
             }
          }
 

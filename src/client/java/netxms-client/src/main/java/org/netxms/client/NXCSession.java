@@ -11984,15 +11984,15 @@ public class NXCSession
    /**
     * Rename notification channel
     * 
-    * @param name old notification channel name
+    * @param oldName old notification channel name
     * @param newName new notification channel name
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void renameNotificaiotnChannel(String name, String newName) throws NXCException, IOException
+   public void renameNotificationChannel(String oldName, String newName) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RENAME_NOTIFICATION_CHANNEL);
-      msg.setField(NXCPCodes.VID_NAME, name);
+      msg.setField(NXCPCodes.VID_NAME, oldName);
       msg.setField(NXCPCodes.VID_NEW_NAME, newName);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
