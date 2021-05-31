@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,27 +36,62 @@ public class IntermediateSelectionProvider implements IPostSelectionProvider
 {
 	private final ListenerList<ISelectionChangedListener> selectionListeners = new ListenerList<ISelectionChangedListener>();
 	private final ListenerList<ISelectionChangedListener> postSelectionListeners = new ListenerList<ISelectionChangedListener>();
-	private ISelectionProvider delegate;
+   private ISelectionProvider delegate = null;
+   private SelectionTransformation transformation;
 
-	private ISelectionChangedListener selectionListener = new ISelectionChangedListener() {
-		public void selectionChanged(SelectionChangedEvent event)
-		{
-			if (event.getSelectionProvider() == delegate)
-			{
-				fireSelectionChanged(event.getSelection());
-			}
-		}
-	};
+   private ISelectionChangedListener selectionListener = new ISelectionChangedListener() {
+      public void selectionChanged(SelectionChangedEvent event)
+      {
+         if (event.getSelectionProvider() == delegate)
+         {
+            fireSelectionChanged(transformation.transform(event.getSelection()));
+         }
+      }
+   };
 
-	private ISelectionChangedListener postSelectionListener = new ISelectionChangedListener() {
-		public void selectionChanged(SelectionChangedEvent event)
-		{
-			if (event.getSelectionProvider() == delegate)
-			{
-				firePostSelectionChanged(event.getSelection());
-			}
-		}
-	};
+   private ISelectionChangedListener postSelectionListener = new ISelectionChangedListener() {
+      public void selectionChanged(SelectionChangedEvent event)
+      {
+         if (event.getSelectionProvider() == delegate)
+         {
+            firePostSelectionChanged(transformation.transform(event.getSelection()));
+         }
+      }
+   };
+
+   /**
+    * Default constructor
+    */
+   public IntermediateSelectionProvider()
+   {
+      this.transformation = new DummyTransformation();
+   }
+
+   /**
+    * Create provider with given delegate
+    */
+   public IntermediateSelectionProvider(ISelectionProvider delegate)
+   {
+      this.transformation = new DummyTransformation();
+      setSelectionProviderDelegate(delegate);
+   }
+
+   /**
+    * Create provider with given transformation
+    */
+   public IntermediateSelectionProvider(SelectionTransformation transformation)
+   {
+      this.transformation = transformation;
+   }
+
+   /**
+    * Create provider with given transformation
+    */
+   public IntermediateSelectionProvider(ISelectionProvider delegate, SelectionTransformation transformation)
+   {
+      this.transformation = transformation;
+      setSelectionProviderDelegate(delegate);
+   }
 
 	/**
 	 * Sets a new selection provider to delegate to. Selection listeners registered with the previous delegate are removed before.
@@ -85,8 +120,9 @@ public class IntermediateSelectionProvider implements IPostSelectionProvider
 			{
 				((IPostSelectionProvider)newDelegate).addPostSelectionChangedListener(postSelectionListener);
 			}
-			fireSelectionChanged(newDelegate.getSelection());
-			firePostSelectionChanged(newDelegate.getSelection());
+         ISelection selection = transformation.transform(newDelegate.getSelection());
+         fireSelectionChanged(selection);
+         firePostSelectionChanged(selection);
 		}
 	}
 
@@ -135,7 +171,7 @@ public class IntermediateSelectionProvider implements IPostSelectionProvider
 
 	public ISelection getSelection()
 	{
-		return delegate == null ? null : delegate.getSelection();
+      return delegate == null ? null : transformation.transform(delegate.getSelection());
 	}
 
 	public void setSelection(ISelection selection)
@@ -145,4 +181,13 @@ public class IntermediateSelectionProvider implements IPostSelectionProvider
 			delegate.setSelection(selection);
 		}
 	}
+
+   private class DummyTransformation implements SelectionTransformation
+   {
+      @Override
+      public ISelection transform(ISelection input)
+      {
+         return input;
+      }
+   }
 }

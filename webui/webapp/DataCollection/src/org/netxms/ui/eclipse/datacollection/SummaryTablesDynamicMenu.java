@@ -39,6 +39,7 @@ import org.eclipse.ui.menus.IWorkbenchContribution;
 import org.eclipse.ui.services.IEvaluationService;
 import org.eclipse.ui.services.IServiceLocator;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ObjectQueryResult;
 import org.netxms.client.Table;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.objects.AbstractObject;
@@ -79,18 +80,18 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 		super(id);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.menus.IWorkbenchContribution#initialize(org.eclipse.ui.services.IServiceLocator)
-	 */
+   /**
+    * @see org.eclipse.ui.menus.IWorkbenchContribution#initialize(org.eclipse.ui.services.IServiceLocator)
+    */
 	@Override
 	public void initialize(IServiceLocator serviceLocator)
 	{
 		evalService = (IEvaluationService)serviceLocator.getService(IEvaluationService.class);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.action.ContributionItem#fill(org.eclipse.swt.widgets.Menu, int)
-	 */
+   /**
+    * @see org.eclipse.jface.action.ContributionItem#fill(org.eclipse.swt.widgets.Menu, int)
+    */
 	@Override
 	public void fill(Menu menu, int index)
 	{
@@ -98,7 +99,8 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 		if ((selection == null) || !(selection instanceof IStructuredSelection))
 			return;
 		
-		final AbstractObject baseObject = (AbstractObject)((IStructuredSelection)selection).getFirstElement();
+      final Object selectedElement = ((IStructuredSelection)selection).getFirstElement();
+      final AbstractObject baseObject = (selectedElement instanceof ObjectQueryResult) ? ((ObjectQueryResult)selectedElement).getObject() : (AbstractObject)selectedElement;
 		if (!(baseObject instanceof Container) && 
 		    !(baseObject instanceof Cluster) && 
 		    !(baseObject instanceof ServiceRoot) && 
@@ -108,13 +110,13 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 			return;
 
 		final Menu tablesMenu = new Menu(menu);
-		
-		DciSummaryTableDescriptor[] tables = SummaryTablesCache.getInstance().getTables();
+
+		DciSummaryTableDescriptor[] tables = SummaryTablesCache.getTables();
 		Arrays.sort(tables, new Comparator<DciSummaryTableDescriptor>() {
 			@Override
-			public int compare(DciSummaryTableDescriptor arg0, DciSummaryTableDescriptor arg1)
+			public int compare(DciSummaryTableDescriptor d1, DciSummaryTableDescriptor d2)
 			{
-				return arg0.getMenuPath().replace("&", "").compareToIgnoreCase(arg1.getMenuPath().replace("&", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+				return d1.getMenuPath().replace("&", "").compareToIgnoreCase(d2.getMenuPath().replace("&", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			}
 		});
 		

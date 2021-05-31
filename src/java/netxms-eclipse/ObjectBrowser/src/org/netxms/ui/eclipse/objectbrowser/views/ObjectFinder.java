@@ -36,7 +36,9 @@ import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -94,7 +96,9 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.CommandBridge;
 import org.netxms.ui.eclipse.tools.ComparatorHelper;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
+import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.SelectionTransformation;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -268,6 +272,7 @@ public class ObjectFinder extends ViewPart
    }
    
    private SortableTableViewer results;
+   private IntermediateSelectionProvider resultSelectionProvider;
    private CTabFolder tabFolder;
    private LabeledText text;
    private Button radioPlainText;
@@ -542,10 +547,22 @@ public class ObjectFinder extends ViewPart
             WidgetHelper.saveTableViewerSettings(results, settings, "ResultTable");
          }
       });
-      
-      getSite().setSelectionProvider(results);
+
+      resultSelectionProvider = new IntermediateSelectionProvider(results, new SelectionTransformation() {
+         @Override
+         public ISelection transform(ISelection input)
+         {
+            if (!(input instanceof IStructuredSelection) || input.isEmpty() || !(((IStructuredSelection)input).getFirstElement() instanceof ObjectQueryResult))
+               return input;
+            List<AbstractObject> objects = new ArrayList<>(((IStructuredSelection)input).size());
+            for(Object o : ((IStructuredSelection)input).toList())
+               objects.add(((ObjectQueryResult)o).getObject());
+            return new StructuredSelection(objects);
+         }
+      });
+      getSite().setSelectionProvider(resultSelectionProvider);
       createResultsContextMenu();
-      
+
       activateContext();
       createActions();
       contributeToActionBars();
@@ -667,7 +684,7 @@ public class ObjectFinder extends ViewPart
       manager.addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager mgr)
          {
-            ObjectContextMenu.fill(mgr, getSite(), results);
+            ObjectContextMenu.fill(mgr, getSite(), resultSelectionProvider);
             if (((IStructuredSelection)results.getSelection()).size() == 1)
             {
                mgr.insertAfter(GroupMarkers.MB_PROPERTIES, actionShowObjectDetails);
@@ -680,7 +697,7 @@ public class ObjectFinder extends ViewPart
       results.getTable().setMenu(menu);
 
       // Register menu for extension.
-      getSite().registerContextMenu(manager, results);
+      getSite().registerContextMenu(manager, resultSelectionProvider);
    }
 
    /**
@@ -965,11 +982,12 @@ public class ObjectFinder extends ViewPart
     */
    private void showObjectDetails()
    {
-      IStructuredSelection selection = (IStructuredSelection)results.getSelection();
+      IStructuredSelection selection = results.getStructuredSelection();
       if (selection.size() != 1)
          return;
 
-      AbstractObject object = (AbstractObject)selection.getFirstElement();
+      final Object selectedElement = selection.getFirstElement();
+      final AbstractObject object = (selectedElement instanceof ObjectQueryResult) ? ((ObjectQueryResult)selectedElement).getObject() : (AbstractObject)selectedElement;
       try
       {
          PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
@@ -982,7 +1000,7 @@ public class ObjectFinder extends ViewPart
                String.format("Cannot open object details view (%s)", e.getLocalizedMessage()));
       }
    }
-   
+
    /**
     * Remove all columns except standard
     */
