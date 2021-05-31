@@ -91,6 +91,7 @@ public class SessionNotification
    public static final int GEO_AREA_DELETED = 1051;
    public static final int OBJECTS_IN_SYNC = 1052;
    public static final int SSH_KEY_DATA_CHANGED = 1053;
+   public static final int TWO_FACTOR_AUTH_METHOD_CHANGED = 1054;
 
 	public static final int CUSTOM_MESSAGE = 2000;
    public static final int OBJECT_SYNC_COMPLETED = 2001;

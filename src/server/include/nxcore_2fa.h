@@ -97,6 +97,8 @@ void Get2FADrivers(NXCPMessage *msg);
 void Get2FAMethods(NXCPMessage *msg);
 void Get2FAMethodDetails(const TCHAR* methodInfo, NXCPMessage *msg);
 uint32_t Modify2FAMethod(const TCHAR* name, const TCHAR* methodType, const TCHAR* description, char* configuration);
+uint32_t Rename2FAMethod(const TCHAR *oldName, const TCHAR *newName);
 uint32_t Delete2FAMethod(const TCHAR* name);
+bool Is2FAMethodExists(const TCHAR* name);
 
 #endif   /* _nxcore_2fa_h_ */

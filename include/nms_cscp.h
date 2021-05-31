@@ -278,7 +278,7 @@ typedef struct
 #define CMD_DELETE_USER                   0x0023
 #define CMD_CREATE_USER                   0x0024
 #define CMD_2FA_GET_DRIVERS               0x0025
-//#define CMD_UNLOCK_USER_DB                0x0026
+#define CMD_2FA_RENAME_METHOD             0x0026
 #define CMD_USER_DB_UPDATE                0x0027
 #define CMD_SET_PASSWORD                  0x0028
 #define CMD_GET_NODE_DCI_LIST             0x0029

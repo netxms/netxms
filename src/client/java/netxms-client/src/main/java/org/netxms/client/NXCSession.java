@@ -12430,7 +12430,7 @@ public class NXCSession
     */
    public List<String> get2FADrivers() throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_2FA_GET_METHODS);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_2FA_GET_DRIVERS);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       List<String> drivers = response.getStringListFromFields(NXCPCodes.VID_ELEMENT_LIST_BASE, NXCPCodes.VID_DRIVER_COUNT);
@@ -12438,13 +12438,13 @@ public class NXCSession
    }
 
    /**
-    * Get list of configured two-factor authentication methods.
+    * Get list of configured two-factor authentication methods. Depending on user access method configuration may not be returned.
     *
     * @return list of configured two-factor authentication methods
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<TwoFactorAuthenticationMethod> getConfigured2FAMethods() throws IOException, NXCException
+   public List<TwoFactorAuthenticationMethod> get2FAMethods() throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_2FA_GET_METHODS);
       sendMessage(msg);
@@ -12488,6 +12488,23 @@ public class NXCSession
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_2FA_MODIFY_METHOD);
       method.fillMessage(msg);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Rename two-factor authentication method
+    * 
+    * @param oldName old method name
+    * @param newName new method name
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void rename2FAMethod(String oldName, String newName) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_2FA_RENAME_METHOD);
+      msg.setField(NXCPCodes.VID_NAME, oldName);
+      msg.setField(NXCPCodes.VID_NEW_NAME, newName);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

@@ -512,7 +512,7 @@ enum SessionState
 #define NX_NOTIFY_POLICY_MODIFIED            39
 #define NX_NOTIFY_POLICY_DELETED             40
 #define NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED 41
-#define NX_NOTIFICATION_CHANNEL_CHANGED      42
+#define NX_NOTIFY_NC_CHANNEL_CHANGED         42
 #define NX_NOTIFY_PHYSICAL_LINK_UPDATE       43
 #define NX_NOTIFY_COMMUNITIES_CONFIG_CHANGED 44
 #define NX_NOTIFY_USM_CONFIG_CHANGED         45
@@ -524,6 +524,7 @@ enum SessionState
 #define NX_NOTIFY_GEO_AREA_DELETED           51
 #define NX_NOTIFY_OBJECTS_IN_SYNC            52
 #define NX_NOTIFY_SSH_KEY_DATA_CHAGED        53
+#define NX_NOTIFY_2FA_METHOD_CHANGED         54
 
 /**
  * Request completion codes

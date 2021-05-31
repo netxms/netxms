@@ -50,7 +50,7 @@ public class TwoFactorAuthenticationMethod
    }
 
    /**
-    * Get method definition (with configuration) from NXCP message.
+    * Get method definition from NXCP message.
     *
     * @param msg NXCP message
     */
@@ -64,7 +64,7 @@ public class TwoFactorAuthenticationMethod
    }
 
    /**
-    * Get method definition (without configuration) from NXCP message.
+    * Get method definition from NXCP message.
     *
     * @param msg NXCP message
     * @param baseId base field ID
@@ -74,8 +74,8 @@ public class TwoFactorAuthenticationMethod
       name = msg.getFieldAsString(baseId);
       description = msg.getFieldAsString(baseId + 1);
       driver = msg.getFieldAsString(baseId + 2);
-      loaded = msg.getFieldAsBoolean(baseId + 3);
-      configuration = null;
+      configuration = msg.getFieldAsString(baseId + 3);
+      loaded = msg.getFieldAsBoolean(baseId + 4);
    }
 
    /**

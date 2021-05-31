@@ -1745,6 +1745,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_2FA_MODIFY_METHOD:
          modify2FAMethod(request);
          break;
+      case CMD_2FA_RENAME_METHOD:
+         rename2FAMethod(request);
+         break;
       case CMD_2FA_DELETE_METHOD:
          delete2FAMethod(request);
          break;
@@ -14879,7 +14882,7 @@ void ClientSession::addNotificationChannel(NXCPMessage *request)
                char *configuration = request->getFieldAsMBString(VID_XML_CONFIG, nullptr, 0);
                CreateNotificationChannelAndSave(name, description, driverName, configuration);
                msg.setField(VID_RCC, RCC_SUCCESS);
-               NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
+               NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
                writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Created new notification channel %s"), name);
             }
             else
@@ -14930,7 +14933,7 @@ void ClientSession::updateNotificationChannel(NXCPMessage *request)
                char *configuration = request->getFieldAsMBString(VID_XML_CONFIG, nullptr, 0);
                UpdateNotificationChannel(name, description, driverName, configuration);
                msg.setField(VID_RCC, RCC_SUCCESS);
-               NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
+               NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
                MemFree(configuration);
                writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Updated configuration of notification channel %s"), name);
             }
@@ -14974,7 +14977,7 @@ void ClientSession::removeNotificationChannel(NXCPMessage *request)
       {
          if (DeleteNotificationChannel(name))
          {
-            NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
+            NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
             msg.setField(VID_RCC, RCC_SUCCESS);
             writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Notification channel %s deleted"), name);
          }
@@ -15706,6 +15709,51 @@ void ClientSession::modify2FAMethod(NXCPMessage *request)
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on modify 2FA method"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Rename two-factor authentication method
+ */
+void ClientSession::rename2FAMethod(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
+   {
+      TCHAR *name = request->getFieldAsString(VID_NAME);
+      if ((name != nullptr) && (name[0] != 0))
+      {
+         if (Is2FAMethodExists(name))
+         {
+            TCHAR *newName = request->getFieldAsString(VID_NEW_NAME);
+            if ((newName != nullptr) && (newName[0] != 0) && !Is2FAMethodExists(newName))
+            {
+               writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Two-factor authentication method \"%s\" renamed to \"%s\""), name, newName);
+               Rename2FAMethod(name, newName);
+               msg.setField(VID_RCC, RCC_SUCCESS);
+            }
+            else
+            {
+               msg.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
+            }
+            MemFree(newName);
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+         }
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME);
+      }
+      MemFree(name);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on two-factor authentication method rename"));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);

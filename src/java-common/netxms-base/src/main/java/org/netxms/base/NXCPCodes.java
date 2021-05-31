@@ -60,8 +60,8 @@ public class NXCPCodes
 	public static final int CMD_UPDATE_USER = 0x0022;
 	public static final int CMD_DELETE_USER = 0x0023;
 	public static final int CMD_CREATE_USER = 0x0024;
-	public static final int CMD_LOCK_USER_DB = 0x0025;
-	public static final int CMD_UNLOCK_USER_DB = 0x0026;
+   public static final int CMD_2FA_GET_DRIVERS = 0x0025;
+   public static final int CMD_2FA_RENAME_METHOD = 0x0026;
 	public static final int CMD_USER_DB_UPDATE = 0x0027;
 	public static final int CMD_SET_PASSWORD = 0x0028;
 	public static final int CMD_GET_NODE_DCI_LIST = 0x0029;

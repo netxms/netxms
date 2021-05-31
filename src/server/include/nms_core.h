@@ -889,6 +889,7 @@ private:
    void get2FAMethods(NXCPMessage *request);
    void get2FAMethodDetails(NXCPMessage *request);
    void modify2FAMethod(NXCPMessage *request);
+   void rename2FAMethod(NXCPMessage *request);
    void delete2FAMethod(NXCPMessage *request);
    void getUser2FABindings(NXCPMessage *request);
    void getUser2FABindingDetails(NXCPMessage *request);

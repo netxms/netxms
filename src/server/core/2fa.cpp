@@ -454,9 +454,17 @@ uint32_t Modify2FAMethod(const TCHAR* name, const TCHAR* methodType, const TCHAR
 }
 
 /**
+ * Rename 2FA method
+ */
+uint32_t Rename2FAMethod(const TCHAR *oldName, const TCHAR *newName)
+{
+   return RCC_NOT_IMPLEMENTED;
+}
+
+/**
  * Deletes 2FA method
  */
-uint32_t Delete2FAMethod(const TCHAR* name) 
+uint32_t Delete2FAMethod(const TCHAR* name)
 {
    uint32_t rcc = RCC_DB_FAILURE;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -475,6 +483,17 @@ uint32_t Delete2FAMethod(const TCHAR* name)
    }
    DBConnectionPoolReleaseConnection(hdb);
    return rcc;
+}
+
+/**
+ * Check if 2FA method with given name exists
+ */
+bool Is2FAMethodExists(const TCHAR* name)
+{
+   s_authMethodListLock.lock();
+   bool result = s_methods.contains(name);
+   s_authMethodListLock.unlock();
+   return result;
 }
 
 /**
