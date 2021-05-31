@@ -2350,6 +2350,7 @@ CREATE TABLE ssh_keys
 CREATE TABLE object_queries
 (
    id integer not null,
+   guid varchar(36) not null,
    name varchar(63) not null,
    description varchar(255) null,
    script SQL_TEXT null,

@@ -888,6 +888,12 @@ typedef struct hostent HOSTENT;
 #define CAST_TO_POINTER(v, t) ((t)((uintptr_t)(v)))
 
 /**
+ * Macros for defining bit masks
+ */
+#define MASK_BIT(n)     static_cast<uint32_t>(1 << (n))
+#define MASK_BIT64(n)   static_cast<uint64_t>(_ULL(1) << (n))
+
+/**
  * open() flags compatibility
  */
 #ifndef O_BINARY

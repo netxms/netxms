@@ -41,6 +41,7 @@ static bool H_UpgradeFromV0()
    CHK_EXEC(CreateTable(
          _T("CREATE TABLE object_queries (")
          _T("   id integer not null,")
+         _T("   guid varchar(36) not null,")
          _T("   name varchar(63) not null,")
          _T("   description varchar(255) null,")
          _T("   script $SQL:TEXT null,")

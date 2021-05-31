@@ -8889,76 +8889,72 @@ void ClientSession::startSnmpWalk(NXCPMessage *request)
 /**
  * Resolve single DCI name
  */
-UINT32 ClientSession::resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR *ppszName)
+uint32_t ClientSession::resolveDCIName(uint32_t nodeId, uint32_t dciId, TCHAR *name)
 {
-   UINT32 dwResult;
-
-   shared_ptr<NetObj> object = FindObjectById(dwNode);
+   uint32_t rcc;
+   shared_ptr<NetObj> object = FindObjectById(nodeId);
    if (object != nullptr)
    {
 		if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
 		{
 			if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 			{
-				shared_ptr<DCObject> pItem = static_cast<DataCollectionOwner&>(*object).getDCObjectById(dwItem, m_dwUserId);
-				if (pItem != nullptr)
+				shared_ptr<DCObject> dci = static_cast<DataCollectionOwner&>(*object).getDCObjectById(dciId, m_dwUserId);
+				if (dci != nullptr)
 				{
-               _tcsncpy(ppszName, pItem->getDescription(), MAX_DB_STRING);
-					dwResult = RCC_SUCCESS;
+               _tcsncpy(name, dci->getDescription(), MAX_DB_STRING);
+					rcc = RCC_SUCCESS;
 				}
 				else
 				{
-               _sntprintf(ppszName, MAX_DB_STRING, _T("[%d]"), dwItem);
-					dwResult = RCC_SUCCESS;
+               _sntprintf(name, MAX_DB_STRING, _T("[%d]"), dciId);
+					rcc = RCC_SUCCESS;
 				}
 			}
 			else
 			{
-				dwResult = RCC_ACCESS_DENIED;
+				rcc = RCC_ACCESS_DENIED;
 			}
 		}
 		else
 		{
-	      dwResult = RCC_INCOMPATIBLE_OPERATION;
+	      rcc = RCC_INCOMPATIBLE_OPERATION;
 		}
    }
    else
    {
-      dwResult = RCC_INVALID_OBJECT_ID;
+      rcc = RCC_INVALID_OBJECT_ID;
    }
-   return dwResult;
+   return rcc;
 }
 
 /**
  * Resolve DCI identifiers to names
  */
-void ClientSession::resolveDCINames(NXCPMessage *pRequest)
+void ClientSession::resolveDCINames(NXCPMessage *request)
 {
-   UINT32 i, dwId, dwNumDCI, *pdwNodeList, *pdwDCIList, dwResult = RCC_INVALID_ARGUMENT;
-   NXCPMessage msg;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   uint32_t count = request->getFieldAsUInt32(VID_NUM_ITEMS);
+   uint32_t *nodeList = MemAllocArray<uint32_t>(count);
+   uint32_t *dciList = MemAllocArray<uint32_t>(count);
+   request->getFieldAsInt32Array(VID_NODE_LIST, count, nodeList);
+   request->getFieldAsInt32Array(VID_DCI_LIST, count, dciList);
 
-   dwNumDCI = pRequest->getFieldAsUInt32(VID_NUM_ITEMS);
-   pdwNodeList = MemAllocArray<UINT32>(dwNumDCI);
-   pdwDCIList = MemAllocArray<UINT32>(dwNumDCI);
-   pRequest->getFieldAsInt32Array(VID_NODE_LIST, dwNumDCI, pdwNodeList);
-   pRequest->getFieldAsInt32Array(VID_DCI_LIST, dwNumDCI, pdwDCIList);
-
-   for(i = 0, dwId = VID_DCI_LIST_BASE; i < dwNumDCI; i++)
+   UINT32 rcc = RCC_INVALID_ARGUMENT;
+   for(uint32_t i = 0, fieldId = VID_DCI_LIST_BASE; i < count; i++)
    {
       TCHAR m_description[MAX_DB_STRING];
-      dwResult = resolveDCIName(pdwNodeList[i], pdwDCIList[i], m_description);
-      if (dwResult != RCC_SUCCESS)
+      rcc = resolveDCIName(nodeList[i], dciList[i], m_description);
+      if (rcc != RCC_SUCCESS)
          break;
-      msg.setField(dwId++, m_description);
+      msg.setField(fieldId++, m_description);
    }
 
-   free(pdwNodeList);
-   free(pdwDCIList);
+   MemFree(nodeList);
+   MemFree(dciList);
 
-   msg.setField(VID_RCC, dwResult);
+   msg.setField(VID_RCC, rcc);
    sendMessage(&msg);
 }
 
