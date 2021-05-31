@@ -16,12 +16,11 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: upgrade_v38.cpp
+** File: upgrade_v39.cpp
 **
 **/
 
 #include "nxdbmgr.h"
-#include <nxevent.h>
 
 /**
  * Upgrade from 39.2 to 40.0

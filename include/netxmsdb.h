@@ -22,6 +22,7 @@
 
 #ifndef _netxmsdb_h
 #define _netxmsdb_h
+
 #define DB_LEGACY_SCHEMA_VERSION       700
 #define DB_SCHEMA_VERSION_MAJOR        40
 #define DB_SCHEMA_VERSION_MINOR        58
