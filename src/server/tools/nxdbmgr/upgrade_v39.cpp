@@ -24,11 +24,22 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 39.1 to 40.0
+ * Upgrade from 39.2 to 40.0
+ */
+static bool H_UpgradeFromV2()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 39.1 to 39.2
  */
 static bool H_UpgradeFromV1()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   if (DBIsTableExist(g_dbHandle, _T("zmq_subscription")) == DBIsTableExist_Found)
+      CHK_EXEC(SQLQuery(_T("DROP TABLE zmq_subscription")));
+   CHK_EXEC(SetMinorSchemaVersion(2));
    return true;
 }
 
@@ -69,7 +80,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 1,  40, 0,  H_UpgradeFromV1  },
+   { 2,  40, 0,  H_UpgradeFromV2  },
+   { 1,  39, 2,  H_UpgradeFromV1  },
    { 0,  39, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }
 };

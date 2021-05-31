@@ -46,10 +46,6 @@
 #include <sys/wait.h>
 #endif
 
-#if WITH_ZMQ
-#include "zeromq.h"
-#endif
-
 #ifdef CUSTOM_INIT_CODE
 #include <server_custom_init.cpp>
 #endif
@@ -1311,10 +1307,6 @@ retry_db_lock:
    }
 #endif
 
-#if WITH_ZMQ
-   StartZMQConnector();
-#endif
-
    ExecuteStartupScripts();
 
    // Internal stat collector should be started last when all queues
@@ -1378,28 +1370,24 @@ void NXCORE_EXPORTABLE Shutdown()
    StopWindowsEventProcessing();
 
    nxlog_debug(2, _T("Waiting for event processor to stop"));
-	g_eventQueue.put(INVALID_POINTER_VALUE);
-	ThreadJoin(s_eventProcessorThread);
+   g_eventQueue.put(INVALID_POINTER_VALUE);
+   ThreadJoin(s_eventProcessorThread);
 
 #if XMPP_SUPPORTED
    StopXMPPConnector();
 #endif
 
-#if WITH_ZMQ
-   StopZMQConnector();
-#endif
-
-	ThreadSleep(1);     // Give other threads a chance to terminate in a safe way
-	nxlog_debug(2, _T("All threads were notified, continue with shutdown"));
+   ThreadSleep(1);     // Give other threads a chance to terminate in a safe way
+   nxlog_debug(2, _T("All threads were notified, continue with shutdown"));
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	SaveObjects(hdb, INVALID_INDEX, true);
-	nxlog_debug(2, _T("All objects saved to database"));
-	SaveUsers(hdb, INVALID_INDEX);
-	nxlog_debug(2, _T("All users saved to database"));
+   SaveObjects(hdb, INVALID_INDEX, true);
+   nxlog_debug(2, _T("All objects saved to database"));
+   SaveUsers(hdb, INVALID_INDEX);
+   nxlog_debug(2, _T("All users saved to database"));
    UpdatePStorageDatabase(hdb, INVALID_INDEX);
-	nxlog_debug(2, _T("All persistent storage values saved"));
-	DBConnectionPoolReleaseConnection(hdb);
+   nxlog_debug(2, _T("All persistent storage values saved"));
+   DBConnectionPoolReleaseConnection(hdb);
 
 	if (g_syncerThreadPool != NULL)
 	   ThreadPoolDestroy(g_syncerThreadPool);
@@ -1407,11 +1395,11 @@ void NXCORE_EXPORTABLE Shutdown()
    if (g_discoveryThreadPool != NULL)
       ThreadPoolDestroy(g_discoveryThreadPool);
 
-	StopDBWriter();
-	nxlog_debug(1, _T("Database writer stopped"));
+   StopDBWriter();
+   nxlog_debug(1, _T("Database writer stopped"));
 
-	CleanupUsers();
-	PersistentStorageDestroy();
+   CleanupUsers();
+   PersistentStorageDestroy();
 
    ShutdownPerfDataStorageDrivers();
 
