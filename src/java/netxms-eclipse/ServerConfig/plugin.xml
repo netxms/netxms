@@ -93,6 +93,15 @@
             name="SSH Key Configuration"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.serverconfig.views.TwoFactorAuthenticationMethods"
+            icon="icons/2fa.png"
+            id="org.netxms.ui.eclipse.serverconfig.views.TwoFactorAuthenticationMethods"
+            name="Two-Factor Authentication Methods"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -206,6 +215,10 @@
             id="org.netxms.ui.eclipse.serverconfig.commands.open_ssh_configuration"
             name="Open SSH key configuration">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.open_2fa_methods"
+            name="Two-factor authentication methods">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -281,7 +294,7 @@
            label="Notification channels"
            menubarPath="config/additions"
            style="push"
-           tooltip="Persistent storage">
+           tooltip="Notification channels">
      </action>
      <action
            allowLabelUpdate="true"
@@ -301,6 +314,16 @@
            menubarPath="config/additions"
            style="push"
            tooltip="SSH Key Configuration">
+     </action>
+     <action
+           class="org.netxms.ui.eclipse.serverconfig.actions.OpenTwoFactorAuthMethodList"
+           definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_2fa_methods"
+           icon="icons/2fa.png"
+           id="org.netxms.ui.eclipse.serverconfig.actions.open_2fa_methods"
+           label="Two-factor authentication methods"
+           menubarPath="config/additions"
+           style="push"
+           tooltip="Two-factor authentication methods">
      </action>
 	   </actionSet>
 	   <actionSet id="org.netxms.ui.eclipse.action_set.export_import_configuration"

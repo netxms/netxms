@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,9 +63,4 @@ public class CommonRCC
 	public static final int CLIENT_LICENSE_EXCEEDED = 106;
 	public static final int OBJECT_ALREADY_EXISTS = 107;
 	public static final int OBJECT_IN_USE = 116;
-	public static final int NEED_2FA = 145;
-	public static final int FAILED_2FA = 146;
-	public static final int CHALLENGE_ERROR_2FA = 147;
-	public static final int NO_SUCH_METHOD_2FA = 148;
-	public static final int INVALID_METHOD_2FA = 149;
 }

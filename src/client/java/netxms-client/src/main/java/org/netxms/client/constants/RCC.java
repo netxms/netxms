@@ -138,6 +138,13 @@ public final class RCC extends CommonRCC
    public static final int INVALID_SSH_KEY_ID = 142;
    public static final int SSH_KEY_IN_USE = 143;
    public static final int SUBNET_OVERLAP = 144;
+   public static final int NEED_2FA = 145;
+   public static final int FAILED_2FA_VALIDATION = 146;
+   public static final int FAILED_2FA_PREPARATION = 147;
+   public static final int NO_SUCH_2FA_METHOD = 148;
+   public static final int NO_SUCH_2FA_DRIVER = 149;
+   public static final int INVALID_2FA_BINDING_CONFIG = 150;
+   public static final int NO_SUCH_2FA_BINDING = 151;
 
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

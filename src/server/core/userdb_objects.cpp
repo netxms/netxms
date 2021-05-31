@@ -979,7 +979,7 @@ unique_ptr<StringList> User::get2FABindings()
 uint32_t User::modify2FABinding(const TCHAR* methodName, char* configuration)
 {
    auto config = make_shared<Config>();
-   uint32_t rcc = RCC_2FA_INVALID_CONFIG;
+   uint32_t rcc = RCC_INVALID_2FA_BINDING_CONFIG;
    if (config->loadConfigFromMemory(configuration, strlen(configuration), _T("2FA"), nullptr, true, false))
    {
       if (saveBindingInDB(methodName, configuration, m_2FABindings.contains(methodName)))

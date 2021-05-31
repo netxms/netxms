@@ -43,7 +43,7 @@ public:
    bool isValid() const { return m_isValid; };
    const TCHAR* getName() const { return m_methodName; };
    const TCHAR* getDescription() const { return m_description; };
-   bool saveToDatabase(char* configuration);
+   bool saveToDatabase(const char *configuration);
 };
 
 static StringObjectMap<TwoFactorAuthenticationMethod> s_methods(Ownership::True);
@@ -62,7 +62,7 @@ TwoFactorAuthenticationMethod::TwoFactorAuthenticationMethod(const TCHAR* name, 
 /**
  * Save 2FA method to database
  */
-bool TwoFactorAuthenticationMethod::saveToDatabase(char* configuration)
+bool TwoFactorAuthenticationMethod::saveToDatabase(const char *configuration)
 {
    bool success = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -427,9 +427,9 @@ void Get2FAMethods(NXCPMessage *msg)
 /**
  * Updates or creates new authentication method
  */
-uint32_t Modify2FAMethod(const TCHAR* name, const TCHAR* methodType, const TCHAR* description, char* configuration)
+uint32_t Modify2FAMethod(const TCHAR* name, const TCHAR* methodType, const TCHAR* description, const char *configuration)
 {
-   uint32_t rcc = RCC_2FA_INVALID_METHOD;
+   uint32_t rcc = RCC_NO_SUCH_2FA_DRIVER;
    TwoFactorAuthenticationMethod* am = CreateAuthenticationMethod(name, methodType, description, configuration);
    if (am != nullptr)
    {

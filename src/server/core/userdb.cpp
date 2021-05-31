@@ -1599,7 +1599,7 @@ uint32_t ModifyUser2FABinding(uint32_t userId, const TCHAR* methodName, char* co
    uint32_t rcc = RCC_INVALID_USER_ID;
    RWLockReadLock(s_userDatabaseLock);
    UserDatabaseObject *object = s_userDatabase.get(userId);
-   if (object != NULL && !object->isGroup())
+   if ((object != nullptr) && !object->isGroup())
    {
       User* user = static_cast<User*>(object);
       rcc = user->modify2FABinding(methodName, configuration);
@@ -1616,10 +1616,10 @@ uint32_t DeleteUser2FABinding(uint32_t userId, const TCHAR* methodName)
    uint32_t rcc = RCC_INVALID_USER_ID;
    RWLockReadLock(s_userDatabaseLock);
    UserDatabaseObject *object = s_userDatabase.get(userId);
-   if (object != NULL && !object->isGroup())
+   if ((object != nullptr) && !object->isGroup())
    {
       User* user = static_cast<User*>(object);
-      if(user->has2FABinding(methodName))
+      if (user->has2FABinding(methodName))
       {
          if(user->delete2FABinding(methodName))
          {
@@ -1632,7 +1632,7 @@ uint32_t DeleteUser2FABinding(uint32_t userId, const TCHAR* methodName)
       }
       else
       {
-         rcc = RCC_2FA_NO_SUCH_METHOD;
+         rcc = RCC_NO_SUCH_2FA_BINDING;
       }
    }
    RWLockUnlock(s_userDatabaseLock);

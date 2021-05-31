@@ -2248,7 +2248,7 @@ void ClientSession::prepare2FAChallenge(NXCPMessage *request)
    }
    else
    {
-      msg.setField(VID_RCC, RCC_2FA_CHALLENGE_ERROR); // can't prepare 2FA challenge
+      msg.setField(VID_RCC, RCC_FAILED_2FA_PREPARATION);
    }
    sendMessage(&msg);
 }
@@ -2269,7 +2269,7 @@ void ClientSession::validate2FAResponse(NXCPMessage *request)
       }
       else
       {
-         msg.setField(VID_RCC, RCC_2FA_FAILED);
+         msg.setField(VID_RCC, RCC_FAILED_2FA_VALIDATION);
       }
       delete_and_null(m_loginInfo);
    }
@@ -15703,8 +15703,9 @@ void ClientSession::modify2FAMethod(NXCPMessage *request)
       request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
       request->getFieldAsString(VID_DRIVER_NAME, driver, MAX_OBJECT_NAME);
       request->getFieldAsString(VID_DESCRIPTION, description, MAX_2FA_DESCRIPTION);
-      char* configuration = request->getFieldAsUtf8String(VID_CONFIG_FILE_DATA);
+      char *configuration = request->getFieldAsUtf8String(VID_CONFIG_FILE_DATA);
       msg.setField(VID_RCC, Modify2FAMethod(name, driver, description, configuration));
+      MemFree(configuration);
    }
    else
    {
@@ -15818,7 +15819,7 @@ void ClientSession::getUser2FABindingDetails(NXCPMessage *request)
       }
       else
       {
-         msg.setField(VID_RCC, RCC_2FA_NO_SUCH_METHOD);
+         msg.setField(VID_RCC, RCC_NO_SUCH_2FA_BINDING);
       }
    }
    else
