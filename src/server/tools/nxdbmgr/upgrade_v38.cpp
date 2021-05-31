@@ -24,11 +24,11 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 38.17 to 40.0
+ * Upgrade from 38.17 to 39.0
  */
 static bool H_UpgradeFromV17()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(SetMajorSchemaVersion(39, 0));
    return true;
 }
 
@@ -396,7 +396,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 17, 40, 0,  H_UpgradeFromV17 },
+   { 17, 39, 0,  H_UpgradeFromV17 },
    { 16, 38, 17, H_UpgradeFromV16 },
    { 15, 38, 16, H_UpgradeFromV15 },
    { 14, 38, 15, H_UpgradeFromV14 },

@@ -24,6 +24,36 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.56 to 40.57
+ */
+static bool H_UpgradeFromV56()
+{
+   if (GetSchemaLevelForMajorVersion(39) < 1)
+   {
+      CHK_EXEC(CreateTable(
+            _T("CREATE TABLE object_queries (")
+            _T("   id integer not null,")
+            _T("   name varchar(63) not null,")
+            _T("   description varchar(255) null,")
+            _T("   script $SQL:TEXT null,")
+            _T("PRIMARY KEY(id))")));
+
+      CHK_EXEC(CreateTable(
+            _T("CREATE TABLE object_queries_input_fields (")
+            _T("   query_id integer not null,")
+            _T("   name varchar(31) not null,")
+            _T("   input_type char(1) not null,")
+            _T("   display_name varchar(127) null,")
+            _T("   sequence_num integer not null,")
+            _T("   PRIMARY KEY(query_id,name))")));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(39, 1));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(57));
+   return true;
+}
+
+/**
  * Upgrade from 40.55 to 40.56
  */
 static bool H_UpgradeFromV55()
@@ -1474,6 +1504,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 56, 40, 57, H_UpgradeFromV56 },
    { 55, 40, 56, H_UpgradeFromV55 },
    { 54, 40, 55, H_UpgradeFromV54 },
    { 53, 40, 54, H_UpgradeFromV53 },

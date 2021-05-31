@@ -2371,9 +2371,34 @@ CREATE TABLE dc_targets
  */
 CREATE TABLE ssh_keys 
 (
-  id integer not null,
-  name varchar(255) not null,
-  public_key varchar(700) null,
-  private_key varchar(1710) null,
-  PRIMARY KEY(id)
+   id integer not null,
+   name varchar(255) not null,
+   public_key varchar(700) null,
+   private_key varchar(1710) null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Predefined object queries
+ */
+CREATE TABLE object_queries
+(
+   id integer not null,
+   name varchar(63) not null,
+   description varchar(255) null,
+   script SQL_TEXT null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Input fields for object queries
+ */
+CREATE TABLE object_queries_input_fields
+(
+  query_id integer not null,
+  name varchar(31) not null,
+  input_type char(1) not null,
+  display_name varchar(127) null,
+  sequence_num integer not null,
+  PRIMARY KEY(query_id,name)
 ) TABLE_TYPE;
