@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,16 +34,17 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
  */
 public class IntermediateSelectionProvider implements IPostSelectionProvider
 {
-   private final ListenerList<ISelectionChangedListener> selectionListeners = new ListenerList<ISelectionChangedListener>();
-   private final ListenerList<ISelectionChangedListener> postSelectionListeners = new ListenerList<ISelectionChangedListener>();
-   private ISelectionProvider delegate;
+	private final ListenerList<ISelectionChangedListener> selectionListeners = new ListenerList<ISelectionChangedListener>();
+	private final ListenerList<ISelectionChangedListener> postSelectionListeners = new ListenerList<ISelectionChangedListener>();
+   private ISelectionProvider delegate = null;
+   private SelectionTransformation transformation;
 
    private ISelectionChangedListener selectionListener = new ISelectionChangedListener() {
       public void selectionChanged(SelectionChangedEvent event)
       {
          if (event.getSelectionProvider() == delegate)
          {
-            fireSelectionChanged(event.getSelection());
+            fireSelectionChanged(transformation.transform(event.getSelection()));
          }
       }
    };
@@ -53,92 +54,140 @@ public class IntermediateSelectionProvider implements IPostSelectionProvider
       {
          if (event.getSelectionProvider() == delegate)
          {
-            firePostSelectionChanged(event.getSelection());
+            firePostSelectionChanged(transformation.transform(event.getSelection()));
          }
       }
    };
 
    /**
-    * Sets a new selection provider to delegate to. Selection listeners registered with the previous delegate are removed before.
-    * 
-    * @param newDelegate new selection provider
+    * Default constructor
     */
-   public void setSelectionProviderDelegate(ISelectionProvider newDelegate)
+   public IntermediateSelectionProvider()
    {
-      if (delegate == newDelegate)
+      this.transformation = new DummyTransformation();
+   }
+
+   /**
+    * Create provider with given delegate
+    */
+   public IntermediateSelectionProvider(ISelectionProvider delegate)
+   {
+      this.transformation = new DummyTransformation();
+      setSelectionProviderDelegate(delegate);
+   }
+
+   /**
+    * Create provider with given transformation
+    */
+   public IntermediateSelectionProvider(SelectionTransformation transformation)
+   {
+      this.transformation = transformation;
+   }
+
+   /**
+    * Create provider with given transformation
+    */
+   public IntermediateSelectionProvider(ISelectionProvider delegate, SelectionTransformation transformation)
+   {
+      this.transformation = transformation;
+      setSelectionProviderDelegate(delegate);
+   }
+
+	/**
+	 * Sets a new selection provider to delegate to. Selection listeners registered with the previous delegate are removed before.
+	 * 
+	 * @param newDelegate new selection provider
+	 */
+	public void setSelectionProviderDelegate(ISelectionProvider newDelegate)
+	{
+		if (delegate == newDelegate)
+		{
+			return;
+		}
+		if (delegate != null)
+		{
+			delegate.removeSelectionChangedListener(selectionListener);
+			if (delegate instanceof IPostSelectionProvider)
+			{
+				((IPostSelectionProvider)delegate).removePostSelectionChangedListener(postSelectionListener);
+			}
+		}
+		delegate = newDelegate;
+		if (newDelegate != null)
+		{
+			newDelegate.addSelectionChangedListener(selectionListener);
+			if (newDelegate instanceof IPostSelectionProvider)
+			{
+				((IPostSelectionProvider)newDelegate).addPostSelectionChangedListener(postSelectionListener);
+			}
+         ISelection selection = transformation.transform(newDelegate.getSelection());
+         fireSelectionChanged(selection);
+         firePostSelectionChanged(selection);
+		}
+	}
+
+	protected void fireSelectionChanged(ISelection selection)
+	{
+		fireSelectionChanged(selectionListeners, selection);
+	}
+
+	protected void firePostSelectionChanged(ISelection selection)
+	{
+		fireSelectionChanged(postSelectionListeners, selection);
+	}
+
+	private void fireSelectionChanged(ListenerList<ISelectionChangedListener> list, ISelection selection)
+	{
+		SelectionChangedEvent event = new SelectionChangedEvent(delegate, selection);
+		Object[] listeners = list.getListeners();
+		for(int i = 0; i < listeners.length; i++)
+		{
+			ISelectionChangedListener listener = (ISelectionChangedListener)listeners[i];
+			listener.selectionChanged(event);
+		}
+	}
+
+	// IPostSelectionProvider Implementation
+
+	public void addSelectionChangedListener(ISelectionChangedListener listener)
+	{
+		selectionListeners.add(listener);
+	}
+
+	public void removeSelectionChangedListener(ISelectionChangedListener listener)
+	{
+		selectionListeners.remove(listener);
+	}
+
+	public void addPostSelectionChangedListener(ISelectionChangedListener listener)
+	{
+		postSelectionListeners.add(listener);
+	}
+
+	public void removePostSelectionChangedListener(ISelectionChangedListener listener)
+	{
+		postSelectionListeners.remove(listener);
+	}
+
+	public ISelection getSelection()
+	{
+      return delegate == null ? null : transformation.transform(delegate.getSelection());
+	}
+
+	public void setSelection(ISelection selection)
+	{
+		if (delegate != null)
+		{
+			delegate.setSelection(selection);
+		}
+	}
+
+   private class DummyTransformation implements SelectionTransformation
+   {
+      @Override
+      public ISelection transform(ISelection input)
       {
-         return;
-      }
-      if (delegate != null)
-      {
-         delegate.removeSelectionChangedListener(selectionListener);
-         if (delegate instanceof IPostSelectionProvider)
-         {
-            ((IPostSelectionProvider)delegate).removePostSelectionChangedListener(postSelectionListener);
-         }
-      }
-      delegate = newDelegate;
-      if (newDelegate != null)
-      {
-         newDelegate.addSelectionChangedListener(selectionListener);
-         if (newDelegate instanceof IPostSelectionProvider)
-         {
-            ((IPostSelectionProvider)newDelegate).addPostSelectionChangedListener(postSelectionListener);
-         }
-         fireSelectionChanged(newDelegate.getSelection());
-         firePostSelectionChanged(newDelegate.getSelection());
-      }
-   }
-
-   protected void fireSelectionChanged(ISelection selection)
-   {
-      fireSelectionChanged(selectionListeners, selection);
-   }
-
-   protected void firePostSelectionChanged(ISelection selection)
-   {
-      fireSelectionChanged(postSelectionListeners, selection);
-   }
-
-   private void fireSelectionChanged(ListenerList<ISelectionChangedListener> list, ISelection selection)
-   {
-      SelectionChangedEvent event = new SelectionChangedEvent(delegate, selection);
-      for(ISelectionChangedListener listener : list)
-         listener.selectionChanged(event);
-   }
-
-   // IPostSelectionProvider Implementation
-
-   public void addSelectionChangedListener(ISelectionChangedListener listener)
-   {
-      selectionListeners.add(listener);
-   }
-
-   public void removeSelectionChangedListener(ISelectionChangedListener listener)
-   {
-      selectionListeners.remove(listener);
-   }
-
-   public void addPostSelectionChangedListener(ISelectionChangedListener listener)
-   {
-      postSelectionListeners.add(listener);
-   }
-
-   public void removePostSelectionChangedListener(ISelectionChangedListener listener)
-   {
-      postSelectionListeners.remove(listener);
-   }
-
-   public ISelection getSelection()
-   {
-      return delegate == null ? null : delegate.getSelection();
-   }
-
-   public void setSelection(ISelection selection)
-   {
-      if (delegate != null)
-      {
-         delegate.setSelection(selection);
+         return input;
       }
    }
 }

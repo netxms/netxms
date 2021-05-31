@@ -36,6 +36,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.IWorkbenchContribution;
 import org.eclipse.ui.services.IEvaluationService;
 import org.eclipse.ui.services.IServiceLocator;
+import org.netxms.client.ObjectQueryResult;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
@@ -75,26 +76,27 @@ public class DashboardsDynamicMenu extends ContributionItem implements IWorkbenc
 		super(id);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.menus.IWorkbenchContribution#initialize(org.eclipse.ui.services.IServiceLocator)
-	 */
+   /**
+    * @see org.eclipse.ui.menus.IWorkbenchContribution#initialize(org.eclipse.ui.services.IServiceLocator)
+    */
 	@Override
 	public void initialize(IServiceLocator serviceLocator)
 	{
 		evalService = (IEvaluationService)serviceLocator.getService(IEvaluationService.class);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.action.ContributionItem#fill(org.eclipse.swt.widgets.Menu, int)
-	 */
+   /**
+    * @see org.eclipse.jface.action.ContributionItem#fill(org.eclipse.swt.widgets.Menu, int)
+    */
 	@Override
 	public void fill(Menu menu, int index)
 	{
 		final Object selection = evalService.getCurrentState().getVariable(ISources.ACTIVE_MENU_SELECTION_NAME);
 		if ((selection == null) || !(selection instanceof IStructuredSelection))
 			return;
-		
-		final AbstractObject object = (AbstractObject)((IStructuredSelection)selection).getFirstElement();
+
+      final Object selectedElement = ((IStructuredSelection)selection).getFirstElement();
+      final AbstractObject object = (selectedElement instanceof ObjectQueryResult) ? ((ObjectQueryResult)selectedElement).getObject() : (AbstractObject)selectedElement;
 		if (!(object instanceof Container) && 
 		    !(object instanceof Cluster) && 
           !(object instanceof Node) && 
@@ -106,7 +108,7 @@ public class DashboardsDynamicMenu extends ContributionItem implements IWorkbenc
 		    !(object instanceof EntireNetwork) &&
 		    !(object instanceof Sensor))
 			return;
-		
+
 		List<AbstractObject> dashboards = object.getDashboards(true);
 		if (dashboards.isEmpty())
 		   return;
