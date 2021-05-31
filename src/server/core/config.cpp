@@ -349,13 +349,13 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int buf
 /**
  * Read integer value from metadata table
  */
-INT32 NXCORE_EXPORTABLE MetaDataReadInt32(const TCHAR *variable, INT32 defaultValue)
+int32_t NXCORE_EXPORTABLE MetaDataReadInt32(const TCHAR *variable, int32_t defaultValue)
 {
    TCHAR buffer[256];
    if (MetaDataReadStr(variable, buffer, 256, _T("")))
    {
       TCHAR *eptr;
-      INT32 value = _tcstol(buffer, &eptr, 0);
+      int32_t value = _tcstol(buffer, &eptr, 0);
       return (*eptr == 0) ? value : defaultValue;
    }
    else
@@ -428,7 +428,7 @@ bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *variable, const TCHAR *valu
 /**
  * Write integer value to metadata table
  */
-bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *variable, INT32 value)
+bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *variable, int32_t value)
 {
    TCHAR buffer[32];
    _sntprintf(buffer, 32, _T("%d"), value);

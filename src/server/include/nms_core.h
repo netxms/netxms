@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -92,9 +92,6 @@
 #include "nms_script.h"
 #include "nxcore_jobs.h"
 #include "nxcore_schedule.h"
-#ifdef WITH_ZMQ
-#include "zeromq.h"
-#endif
 
 /**
  * Common constants and macros
@@ -725,7 +722,6 @@ private:
    void killSession(NXCPMessage *request);
    void startSnmpWalk(NXCPMessage *request);
    void resolveDCINames(NXCPMessage *request);
-   uint32_t resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR *ppszName);
    void sendConfigForAgent(NXCPMessage *pRequest);
    void getAgentConfigurationList(uint32_t requestId);
    void getAgentConfiguration(NXCPMessage *request);
@@ -881,10 +877,6 @@ private:
    void deleteSshKey(NXCPMessage *request);
    void updateSshKey(NXCPMessage *request);
    void generateSshKey(NXCPMessage *request);
-#ifdef WITH_ZMQ
-   void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
-   void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);
-#endif
    void get2FADrivers(NXCPMessage *request);
    void get2FAMethods(NXCPMessage *request);
    void get2FAMethodDetails(NXCPMessage *request);
@@ -900,6 +892,7 @@ private:
    void sendObjectUpdates();
 
    void finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId);
+   uint32_t resolveDCIName(uint32_t nodeId, uint32_t dciId, TCHAR *name);
 
 public:
    ClientSession(SOCKET hSocket, const InetAddress& addr);
@@ -986,9 +979,9 @@ public:
  */
 struct GRAPH_ACL_ENTRY
 {
-   UINT32 dwGraphId;
-   UINT32 dwUserId;
-   UINT32 dwAccess;
+   uint32_t dwGraphId;
+   uint32_t dwUserId;
+   uint32_t dwAccess;
 };
 
 /**
@@ -1036,8 +1029,8 @@ class SNMPTrapParameterMapping
 {
 private:
    SNMP_ObjectId *m_objectId;           // Trap OID
-   UINT32 m_position;                   // Trap position
-   UINT32 m_flags;
+   uint32_t m_position;                 // Trap position
+   uint32_t m_flags;
    TCHAR *m_description;
 
 public:
@@ -1052,9 +1045,9 @@ public:
 
    SNMP_ObjectId *getOid() const { return m_objectId; }
    int getPosition() const { return m_position; }
-   bool isPositional() const { return m_objectId == NULL; }
+   bool isPositional() const { return m_objectId == nullptr; }
 
-   UINT32 getFlags() const { return m_flags; }
+   uint32_t getFlags() const { return m_flags; }
 
    const TCHAR *getDescription() const { return m_description; }
 };
@@ -1089,12 +1082,12 @@ public:
    bool saveParameterMapping(DB_HANDLE hdb);
    void notifyOnTrapCfgChange(UINT32 code);
 
-   UINT32 getId() const { return m_id; }
+   uint32_t getId() const { return m_id; }
    const uuid& getGuid() const { return m_guid; }
    const SNMP_ObjectId& getOid() const { return m_objectId; }
    const SNMPTrapParameterMapping *getParameterMapping(int index) const { return m_mappings.get(index); }
    int getParameterMappingCount() const { return m_mappings.size(); }
-   UINT32 getEventCode() const { return m_eventCode; }
+   uint32_t getEventCode() const { return m_eventCode; }
    const TCHAR *getEventTag() const { return m_eventTag; }
    const TCHAR *getDescription() const { return m_description; }
    const TCHAR *getScriptSource() const { return m_scriptSource; }
@@ -1203,9 +1196,9 @@ bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *variable);
 
 void MetaDataPreLoad();
 bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *variable, TCHAR *buffer, int size, const TCHAR *defaultValue);
-INT32 NXCORE_EXPORTABLE MetaDataReadInt32(const TCHAR *variable, INT32 defaultValue);
+int32_t NXCORE_EXPORTABLE MetaDataReadInt32(const TCHAR *variable, int32_t defaultValue);
 bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *variable, const TCHAR *value);
-bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *variable, INT32 value);
+bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *variable, int32_t value);
 
 void NXCORE_EXPORTABLE FindConfigFile();
 bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel);

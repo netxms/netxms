@@ -13,24 +13,23 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			dcithreshold.cpp dcivalue.cpp dcobject.cpp dcowner.cpp dcst.cpp dctable.cpp \
 			dctarget.cpp dctcolumn.cpp dctthreshold.cpp debug.cpp devdb.cpp \
 			dfile_info.cpp download_task.cpp ef.cpp entirenet.cpp epp.cpp events.cpp \
-			evproc.cpp fdb.cpp filemonitoring.cpp geo_areas.cpp \
-			graph.cpp hash_index.cpp hdlink.cpp hk.cpp hwcomponent.cpp icmpscan.cpp \
+			evproc.cpp fdb.cpp filemonitoring.cpp geo_areas.cpp graph.cpp \
+			hash_index.cpp hdlink.cpp hk.cpp hwcomponent.cpp icmpscan.cpp \
 			icmpstat.cpp id.cpp import.cpp inaddr_index.cpp index.cpp interface.cpp \
-			isc.cpp job.cpp jobmgr.cpp jobqueue.cpp layer2.cpp \
-			ldap.cpp lln.cpp lldp.cpp locks.cpp logfilter.cpp \
-			loghandle.cpp logs.cpp macdb.cpp main.cpp maint.cpp \
-			market.cpp mdconn.cpp mdsession.cpp mobile.cpp \
-			modules.cpp mt.cpp ndd.cpp ndp.cpp \
-			netinfo.cpp netmap.cpp netmap_element.cpp netmap_link.cpp \
-			netmap_objlist.cpp netobj.cpp netsrv.cpp network_cred.cpp \
-			node.cpp nodelink.cpp notification_channel.cpp np.cpp npe.cpp nxsl_classes.cpp \
-			nxslext.cpp object_categories.cpp objects.cpp objtools.cpp package.cpp \
+			isc.cpp job.cpp jobmgr.cpp jobqueue.cpp layer2.cpp ldap.cpp lln.cpp \
+			lldp.cpp locks.cpp logfilter.cpp loghandle.cpp logs.cpp macdb.cpp main.cpp \
+			maint.cpp market.cpp mdconn.cpp mdsession.cpp mobile.cpp \
+			modules.cpp mt.cpp ndd.cpp ndp.cpp netinfo.cpp netmap.cpp \
+			netmap_element.cpp netmap_link.cpp netmap_objlist.cpp netobj.cpp \
+			netsrv.cpp network_cred.cpp node.cpp nodelink.cpp notification_channel.cpp \
+			np.cpp npe.cpp nxsl_classes.cpp nxslext.cpp object_categories.cpp \
+			object_queries.cpp objects.cpp objtools.cpp package.cpp \
 			pds.cpp physical_link.cpp poll.cpp ps.cpp rack.cpp \
 			radius.cpp reporting.cpp rootobj.cpp schedule.cpp script.cpp \
 			sensor.cpp server_stats.cpp session.cpp slmcheck.cpp smclp.cpp \
 			snmp.cpp snmptrap.cpp sshkeys.cpp stp.cpp subnet.cpp summary_email.cpp \
-			svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp \
-			template.cpp tools.cpp topology_builder.cpp tracert.cpp tunnel.cpp ua_notification_item.cpp \
+			svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp template.cpp tools.cpp \
+			topology_builder.cpp tracert.cpp tunnel.cpp ua_notification_item.cpp \
 			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
 			userdb_objects.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			websvc.cpp winevent.cpp winperf.cpp xmpp.cpp zone.cpp

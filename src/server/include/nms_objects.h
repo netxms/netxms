@@ -4510,6 +4510,44 @@ struct ObjectQueryResult
    }
 };
 
+/**
+ * Object query parameter
+ */
+struct ObjectQueryParameter
+{
+   TCHAR name[32];
+   TCHAR displayName[128];
+   int16_t type;
+};
+
+/**
+ * Predefined object query
+ */
+class ObjectQuery
+{
+private:
+   uint32_t m_id;
+   uuid m_guid;
+   TCHAR m_name[MAX_OBJECT_NAME];
+   String m_description;
+   String m_source;
+   NXSL_Program *m_script;
+   StructArray<ObjectQueryParameter> m_parameters;
+
+public:
+   ObjectQuery(const NXCPMessage& msg);
+   ObjectQuery(DB_RESULT hResult, int row);
+   ~ObjectQuery()
+   {
+      delete m_script;
+   }
+
+   bool saveToDatabase(DB_HANDLE hdb) const;
+   bool deleteFromDatabase(DB_HANDLE hdb);
+
+   uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+};
+
 #define MAX_USER_AGENT_MESSAGE_SIZE 1024
 
 /**
