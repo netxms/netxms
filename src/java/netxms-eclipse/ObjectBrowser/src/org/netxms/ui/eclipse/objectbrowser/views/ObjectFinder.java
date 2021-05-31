@@ -32,6 +32,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -84,6 +85,7 @@ import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objects.ZoneMember;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -271,6 +273,7 @@ public class ObjectFinder extends ViewPart
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_ZONE, "Zone"));
    }
    
+   private NXCSession session = ConsoleSharedData.getSession();
    private SortableTableViewer results;
    private IntermediateSelectionProvider resultSelectionProvider;
    private CTabFolder tabFolder;
@@ -286,7 +289,8 @@ public class ObjectFinder extends ViewPart
    private ScriptEditor queryEditor;
    private Action actionStartSearch;
    private Action actionShowObjectDetails;
-   private NXCSession session;
+   private Action actionExportToCSV;
+   private Action actionExportAllToCSV;
 
    /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -294,8 +298,6 @@ public class ObjectFinder extends ViewPart
    @Override
    public void createPartControl(Composite parent)
    {
-      session = ConsoleSharedData.getSession();
-      
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
@@ -643,6 +645,9 @@ public class ObjectFinder extends ViewPart
             showObjectDetails();
          }
       };
+
+      actionExportToCSV = new ExportToCsvAction(this, results, true);
+      actionExportAllToCSV = new ExportToCsvAction(this, results, false);
    }
    
    /**
@@ -662,6 +667,8 @@ public class ObjectFinder extends ViewPart
    private void fillLocalPullDown(IMenuManager manager)
    {
       manager.add(actionStartSearch);
+      manager.add(new Separator());
+      manager.add(actionExportAllToCSV);
    }
 
    /**
@@ -671,6 +678,8 @@ public class ObjectFinder extends ViewPart
    private void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionStartSearch);
+      manager.add(new Separator());
+      manager.add(actionExportAllToCSV);
    }
    
    /**
@@ -689,6 +698,9 @@ public class ObjectFinder extends ViewPart
             {
                mgr.insertAfter(GroupMarkers.MB_PROPERTIES, actionShowObjectDetails);
             }
+            manager.add(new Separator());
+            manager.add(actionExportToCSV);
+            manager.add(actionExportAllToCSV);
          }
       });
 
