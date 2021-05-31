@@ -1266,7 +1266,7 @@ const TCHAR LIBNXDB_EXPORTABLE *DBGetStatementSource(DB_STATEMENT hStmt)
  */
 bool LIBNXDB_EXPORTABLE DBOpenBatch(DB_STATEMENT hStmt)
 {
-   if (!IS_VALID_STATEMENT_HANDLE(hStmt) || (hStmt->m_driver->m_fpDrvOpenBatch == NULL))
+   if (!IS_VALID_STATEMENT_HANDLE(hStmt) || (hStmt->m_driver->m_fpDrvOpenBatch == nullptr))
       return false;
    return hStmt->m_driver->m_fpDrvOpenBatch(hStmt->m_statement);
 }
@@ -1276,14 +1276,14 @@ bool LIBNXDB_EXPORTABLE DBOpenBatch(DB_STATEMENT hStmt)
  */
 void LIBNXDB_EXPORTABLE DBNextBatchRow(DB_STATEMENT hStmt)
 {
-   if (IS_VALID_STATEMENT_HANDLE(hStmt) && (hStmt->m_driver->m_fpDrvNextBatchRow != NULL))
+   if (IS_VALID_STATEMENT_HANDLE(hStmt) && (hStmt->m_driver->m_fpDrvNextBatchRow != nullptr))
       hStmt->m_driver->m_fpDrvNextBatchRow(hStmt->m_statement);
 }
 
 /**
  * Bind parameter (generic)
  */
-void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cType, const void *buffer, int allocType)
 {
 	if ((pos <= 0) || !IS_VALID_STATEMENT_HANDLE(hStmt))
 		return;
@@ -1304,19 +1304,19 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 			switch(cType)
 			{
 				case DB_CTYPE_INT32:
-					_sntprintf(text, 64, _T("%d"), *((INT32 *)buffer));
+					_sntprintf(text, 64, _T("%d"), *static_cast<const int32_t*>(buffer));
 					break;
 				case DB_CTYPE_UINT32:
-					_sntprintf(text, 64, _T("%u"), *((UINT32 *)buffer));
+					_sntprintf(text, 64, _T("%u"), *static_cast<const uint32_t*>(buffer));
 					break;
 				case DB_CTYPE_INT64:
-					_sntprintf(text, 64, INT64_FMT, *((INT64 *)buffer));
+					_sntprintf(text, 64, INT64_FMT, *static_cast<const int64_t*>(buffer));
 					break;
 				case DB_CTYPE_UINT64:
-					_sntprintf(text, 64, UINT64_FMT, *((UINT64 *)buffer));
+					_sntprintf(text, 64, UINT64_FMT, *static_cast<const uint64_t*>(buffer));
 					break;
 				case DB_CTYPE_DOUBLE:
-					_sntprintf(text, 64, _T("%f"), *((double *)buffer));
+					_sntprintf(text, 64, _T("%f"), *static_cast<const double*>(buffer));
 					break;
 			}
 			nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("{%p} bind at pos %d: \"%s\""), hStmt, pos, text);
@@ -1324,21 +1324,21 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 	}
 
 #ifdef UNICODE
-#define wBuffer buffer
+#define wBuffer ((void*)(buffer))
 #define realAllocType allocType
 #else
 	void *wBuffer;
 	int realAllocType = allocType;
 	if (cType == DB_CTYPE_STRING)
 	{
-		wBuffer = (void *)WideStringFromMBString((char *)buffer);
+		wBuffer = (void*)WideStringFromMBString(*static_cast<const char*>(buffer));
 		if (allocType == DB_BIND_DYNAMIC)
-			free(buffer);
+			MemFree(buffer);
 		realAllocType = DB_BIND_DYNAMIC;
 	}
 	else
 	{
-		wBuffer = buffer;
+		wBuffer = (void*)buffer;
 	}
 #endif
 	hStmt->m_driver->m_fpDrvBind(hStmt->m_statement, pos, sqlType, cType, wBuffer, realAllocType);
@@ -1392,7 +1392,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const T
 /**
  * Bind 32 bit integer parameter
  */
-void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, INT32 value)
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int32_t value)
 {
 	DBBind(hStmt, pos, sqlType, DB_CTYPE_INT32, &value, DB_BIND_TRANSIENT);
 }
@@ -1400,7 +1400,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, INT32 v
 /**
  * Bind 32 bit unsigned integer parameter
  */
-void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, UINT32 value)
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, uint32_t value)
 {
 	// C type intentionally set to INT32 - unsigned numbers will be written as negatives
 	// and correctly parsed on read by DBGetFieldULong
@@ -1411,7 +1411,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, UINT32 
 /**
  * Bind 64 bit integer parameter
  */
-void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, INT64 value)
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int64_t value)
 {
 	DBBind(hStmt, pos, sqlType, DB_CTYPE_INT64, &value, DB_BIND_TRANSIENT);
 }
@@ -1419,7 +1419,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, INT64 v
 /**
  * Bind 64 bit unsigned integer parameter
  */
-void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, UINT64 value)
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, uint64_t value)
 {
 	DBBind(hStmt, pos, sqlType, DB_CTYPE_UINT64, &value, DB_BIND_TRANSIENT);
 }
