@@ -308,7 +308,7 @@ public class NotificationChannels extends ConfigurationView
             session.updateNotificationChannel(selectedChannel);
             if(dlg.isNameChanged())
             {
-               session.renameNotificaiotnChannel(selectedChannel.getName(), dlg.getNewName());
+               session.renameNotificationChannel(selectedChannel.getName(), dlg.getNewName());
             }
          }
          
