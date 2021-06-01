@@ -4534,9 +4534,11 @@ private:
    NXSL_Program *m_script;
    StructArray<ObjectQueryParameter> m_parameters;
 
+   void compile();
+
 public:
    ObjectQuery(const NXCPMessage& msg);
-   ObjectQuery(DB_RESULT hResult, int row);
+   ObjectQuery(DB_HANDLE hdb, DB_RESULT hResult, int row);
    ~ObjectQuery()
    {
       delete m_script;

@@ -392,22 +392,26 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
 #undef wcErrorText
 }
 
+/**
+ * Perform SELECT query
+ */
 DB_RESULT LIBNXDB_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *query)
 {
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-
 	return DBSelectEx(hConn, query, errorText);
 }
 
+/**
+ * Perform SELECT query built from formatted string
+ */
 DB_RESULT LIBNXDB_EXPORTABLE DBSelectFormatted(DB_HANDLE hConn, const TCHAR *query, ...)
 {
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   TCHAR formattedQuery[MAX_DB_STRING];
+   TCHAR formattedQuery[4096];
    va_list args;
    va_start(args, query);
-   _vsntprintf(formattedQuery, MAX_DB_STRING, query, args);
+   _vsntprintf(formattedQuery, 4096, query, args);
    va_end(args);
-
    return DBSelectEx(hConn, query, errorText);
 }
 
