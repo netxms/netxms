@@ -1324,21 +1324,21 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 	}
 
 #ifdef UNICODE
-#define wBuffer ((void*)(buffer))
+#define wBuffer const_cast<void*>(buffer)
 #define realAllocType allocType
 #else
 	void *wBuffer;
 	int realAllocType = allocType;
 	if (cType == DB_CTYPE_STRING)
 	{
-		wBuffer = (void*)WideStringFromMBString(*static_cast<const char*>(buffer));
+		wBuffer = WideStringFromMBString(static_cast<const char*>(buffer));
 		if (allocType == DB_BIND_DYNAMIC)
-			MemFree(buffer);
+			MemFree(const_cast<void*>(buffer));
 		realAllocType = DB_BIND_DYNAMIC;
 	}
 	else
 	{
-		wBuffer = (void*)buffer;
+		wBuffer = const_cast<void*>(buffer);
 	}
 #endif
 	hStmt->m_driver->m_fpDrvBind(hStmt->m_statement, pos, sqlType, cType, wBuffer, realAllocType);
