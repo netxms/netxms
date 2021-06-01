@@ -39,16 +39,6 @@ ObjectQuery::ObjectQuery(const NXCPMessage& msg) :
    m_guid = msg.getFieldAsGUID(VID_GUID);
    msg.getFieldAsString(VID_NAME, m_name, MAX_OBJECT_NAME);
 
-   TCHAR errorMessage[256];
-   m_script = NXSLCompile(m_source, errorMessage, 256, nullptr);
-   if (m_script == nullptr)
-   {
-      TCHAR buffer[1024];
-      _sntprintf(buffer, 1024, _T("ObjectQuery::%s"), m_name);
-      PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, errorMessage, 0);
-      nxlog_write(NXLOG_WARNING, _T("Failed to compile script for predefined object query %s [%u] (%s)"), m_name, m_id, errorMessage);
-   }
-
    int count = msg.getFieldAsInt32(VID_NUM_PARAMETERS);
    uint32_t fieldId = VID_PARAM_LIST_BASE;
    for(int i = 0; i < count; i++)
@@ -59,6 +49,127 @@ ObjectQuery::ObjectQuery(const NXCPMessage& msg) :
       p->type = msg.getFieldAsInt16(fieldId++);
       fieldId += 2;
    }
+
+   compile();
+}
+
+/**
+ * Create object query from database.
+ * Expected field order: id, guid, name, description, script
+ */
+ObjectQuery::ObjectQuery(DB_HANDLE hdb, DB_RESULT hResult, int row) :
+         m_description(DBGetField(hResult, row, 3, nullptr, 0), -1, Ownership::True),
+         m_source(DBGetField(hResult, row, 4, nullptr, 0), -1, Ownership::True)
+{
+   m_id = DBGetFieldULong(hResult, row, 0);
+   m_guid = DBGetFieldGUID(hResult, row, 1);
+   DBGetField(hResult, row, 2, m_name, MAX_OBJECT_NAME);
+
+   DB_RESULT hParams = DBSelectFormatted(hdb, _T("SELECT name,display_name,input_type FROM object_queries_input_fields WHERE query_id=%u ORDER_BY sequence_num"), m_id);
+   if (hParams != nullptr)
+   {
+      int count = DBGetNumRows(hParams);
+      for (int i = 0; i < count; i++)
+      {
+         ObjectQueryParameter *p = m_parameters.addPlaceholder();
+         DBGetField(hParams, i, 0, p->name, 32);
+         DBGetField(hParams, i, 1, p->displayName, 128);
+         TCHAR type[2];
+         DBGetField(hParams, i, 2, type, 2);
+         p->type = static_cast<int16_t>(type[0]);
+      }
+      DBFreeResult(hParams);
+   }
+
+   compile();
+}
+
+/**
+ * Compile query
+ */
+void ObjectQuery::compile()
+{
+   TCHAR errorMessage[256];
+   m_script = NXSLCompile(m_source, errorMessage, 256, nullptr);
+   if (m_script == nullptr)
+   {
+      TCHAR buffer[1024];
+      _sntprintf(buffer, 1024, _T("ObjectQuery::%s"), m_name);
+      PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, errorMessage, 0);
+      nxlog_write(NXLOG_WARNING, _T("Failed to compile script for predefined object query %s [%u] (%s)"), m_name, m_id, errorMessage);
+   }
+}
+
+/**
+ * Save object query to database
+ */
+bool ObjectQuery::saveToDatabase(DB_HANDLE hdb) const
+{
+   if (!DBBegin(hdb))
+      return false;
+
+   static const TCHAR *columns[] = { _T("guid"), _T("name"), _T("description"), _T("script"), nullptr };
+   DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_queries"), _T("id"), m_id, columns);
+   if (hStmt == nullptr)
+   {
+      DBRollback(hdb);
+      return false;
+   }
+
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_guid);
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, 255);
+   DBBind(hStmt, 4, DB_SQLTYPE_TEXT, m_source, DB_BIND_STATIC);
+   bool success = DBExecute(hStmt);
+   DBFreeStatement(hStmt);
+
+   if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_queries_input_fields WHERE query_id=?"));
+
+   if (success && !m_parameters.isEmpty())
+   {
+      hStmt = DBPrepare(hdb, _T("INSERT INTO object_queries_input_fields (query_id,name,display_name,input_type,sequence_num) VALUES (?,?,?,?,?)"));
+      if (hStmt != nullptr)
+      {
+         TCHAR type[2];
+         type[1] = 0;
+
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         for (int i = 0; (i < m_parameters.size()) && success; i++)
+         {
+            ObjectQueryParameter *p = m_parameters.get(i);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, p->name, DB_BIND_STATIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, p->displayName, DB_BIND_STATIC);
+            type[0] = p->type;
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, type, DB_BIND_STATIC);
+            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, i);
+            success = DBExecute(hStmt);
+         }
+
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
+   if (success)
+      success = DBCommit(hdb);
+   else
+      DBRollback(hdb);
+   return success;
+}
+
+/**
+ * Delete query from database
+ */
+bool ObjectQuery::deleteFromDatabase(DB_HANDLE hdb)
+{
+   bool success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_queries WHERE id=?"));
+   if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_queries_input_fields WHERE query_id=?"));
+   return success;
 }
 
 /**
