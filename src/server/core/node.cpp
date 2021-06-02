@@ -3710,6 +3710,36 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          modified |= MODIFY_NODE_PROPERTIES;
       }
 
+      // Update system description
+      TCHAR buffer[MAX_RESULT_LENGTH] = { 0 };
+      if ((m_capabilities & NC_IS_NATIVE_AGENT) && !(m_flags & NF_DISABLE_NXCP))
+      {
+         getMetricFromAgent(_T("System.Uname"), buffer, MAX_RESULT_LENGTH);
+      }
+      else if ((m_capabilities & NC_IS_SNMP) && !(m_flags & NF_DISABLE_SNMP))
+      {
+         getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.1.0"), buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE);
+      }
+
+      if (buffer[0] != _T('\0'))
+      {
+         TranslateStr(buffer, _T("\r\n"), _T(" "));
+         TranslateStr(buffer, _T("\n"), _T(" "));
+         TranslateStr(buffer, _T("\r"), _T(" "));
+
+         lockProperties();
+
+         if ((m_sysDescription == nullptr) || _tcscmp(m_sysDescription, buffer))
+         {
+            MemFree(m_sysDescription);
+            m_sysDescription = MemCopyString(buffer);
+            modified |= MODIFY_NODE_PROPERTIES;
+            sendPollerMsg(_T("   System description changed to %s\r\n"), m_sysDescription);
+         }
+
+         unlockProperties();
+      }
+
       // Retrieve interface list
       poller->setStatus(_T("interface check"));
       sendPollerMsg(_T("Capability check finished\r\n"));
@@ -3745,36 +3775,6 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
             reconcileWithDuplicateNode(duplicateNode.get());
             ThreadPoolExecute(g_pollerThreadPool, DeleteDuplicateNode, new DeleteDuplicateNodeData(self(), duplicateNode, reason));
          }
-      }
-
-      // Update system description
-      TCHAR buffer[MAX_RESULT_LENGTH] = { 0 };
-      if ((m_capabilities & NC_IS_NATIVE_AGENT) && !(m_flags & NF_DISABLE_NXCP))
-      {
-         getMetricFromAgent(_T("System.Uname"), buffer, MAX_RESULT_LENGTH);
-      }
-      else if ((m_capabilities & NC_IS_SNMP) && !(m_flags & NF_DISABLE_SNMP))
-      {
-         getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.1.0"), buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE);
-      }
-
-      if (buffer[0] != _T('\0'))
-      {
-         TranslateStr(buffer, _T("\r\n"), _T(" "));
-         TranslateStr(buffer, _T("\n"), _T(" "));
-         TranslateStr(buffer, _T("\r"), _T(" "));
-
-         lockProperties();
-
-         if ((m_sysDescription == nullptr) || _tcscmp(m_sysDescription, buffer))
-         {
-            free(m_sysDescription);
-            m_sysDescription = MemCopyString(buffer);
-            modified |= MODIFY_NODE_PROPERTIES;
-            sendPollerMsg(_T("   System description changed to %s\r\n"), m_sysDescription);
-         }
-
-         unlockProperties();
       }
 
       // Check node name
