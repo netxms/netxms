@@ -474,8 +474,30 @@ public class DataCollectionConfiguration
       return session;
    }
 
+   /**
+    * Set local change cllback 
+    * 
+    * @param localChangeListener
+    */
    public void setLocalChangeCallback(LocalChangeListener localChangeListener)
    {
       this.localChangeListener = localChangeListener;
+   }
+   
+   /**
+    * Remove remote change listener
+    */
+   public void clearViewData()
+   {
+      remoteChangeListener = null;
+      userData = null;
+   }
+   
+   /**
+    * Set remote change listener
+    */
+   public void setRemoteListener(RemoteChangeListener listener)
+   {
+      remoteChangeListener = listener;
    }
 }

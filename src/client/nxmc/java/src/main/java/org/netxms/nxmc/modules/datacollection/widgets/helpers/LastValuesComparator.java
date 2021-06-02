@@ -26,7 +26,7 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.datacollection.widgets.LastValuesWidget;
+import org.netxms.nxmc.modules.datacollection.views.LastValuesView;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -51,16 +51,16 @@ public class LastValuesComparator extends ViewerComparator
 
       switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
-			case LastValuesWidget.COLUMN_ID:
+			case LastValuesView.LV_COLUMN_ID:
 				result = (int)(v1.getId() - v2.getId());
 				break;
-			case LastValuesWidget.COLUMN_DESCRIPTION:
+			case LastValuesView.LV_COLUMN_DESCRIPTION:
 				result = v1.getDescription().compareToIgnoreCase(v2.getDescription());
 				break;
-			case LastValuesWidget.COLUMN_VALUE:
+			case LastValuesView.LV_COLUMN_VALUE:
 				result = compareValue(v1, v2);
 				break;
-			case LastValuesWidget.COLUMN_TIMESTAMP:
+			case LastValuesView.LV_COLUMN_TIMESTAMP:
 				result = v1.getTimestamp().compareTo(v2.getTimestamp());
 				break;
 			default:

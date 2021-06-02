@@ -184,6 +184,9 @@ public class ClusterOptions extends AbstractDCIPropertyPage
 	 */
 	protected boolean applyChanges(final boolean isApply)
 	{
+	   if (checkAggregate == null)
+	      return true;
+	   
 		if (cluster != null)
 		{
 			editor.getObject().setResourceId(clusterResourceMap.get(clusterResource.getSelectionIndex()));

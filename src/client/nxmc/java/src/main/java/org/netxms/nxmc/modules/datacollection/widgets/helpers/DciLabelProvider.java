@@ -40,7 +40,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.datacollection.widgets.DataCollectionWidget;
+import org.netxms.nxmc.modules.datacollection.views.LastValuesView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
@@ -65,9 +65,9 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 		session = Registry.getSession();
 		
 		statusImages = new Image[3];
-		statusImages[DataCollectionItem.ACTIVE] = ResourceManager.getImageDescriptor("icons/active.gif").createImage(); //$NON-NLS-1$
-		statusImages[DataCollectionItem.DISABLED] = ResourceManager.getImageDescriptor("icons/disabled.gif").createImage(); //$NON-NLS-1$
-		statusImages[DataCollectionItem.NOT_SUPPORTED] = ResourceManager.getImageDescriptor("icons/unsupported.gif").createImage(); //$NON-NLS-1$
+		statusImages[DataCollectionItem.ACTIVE] = ResourceManager.getImageDescriptor("icons/dci/active.gif").createImage(); //$NON-NLS-1$
+		statusImages[DataCollectionItem.DISABLED] = ResourceManager.getImageDescriptor("icons/dci/disabled.gif").createImage(); //$NON-NLS-1$
+		statusImages[DataCollectionItem.NOT_SUPPORTED] = ResourceManager.getImageDescriptor("icons/dci/unsupported.gif").createImage(); //$NON-NLS-1$
 		
       originTexts.put(DataOrigin.AGENT, i18n.tr("NetXMS Agent"));
       originTexts.put(DataOrigin.DEVICE_DRIVER, i18n.tr("Network Device Driver"));
@@ -107,25 +107,25 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 		DataCollectionObject dci = (DataCollectionObject)element;
 		switch(columnIndex)
 		{
-			case DataCollectionWidget.COLUMN_ID:
+			case LastValuesView.DC_COLUMN_ID:
 				return Long.toString(dci.getId());
-			case DataCollectionWidget.COLUMN_ORIGIN:
+			case LastValuesView.DC_COLUMN_ORIGIN:
 				return originTexts.get(dci.getOrigin());
-			case DataCollectionWidget.COLUMN_DESCRIPTION:
+			case LastValuesView.DC_COLUMN_DESCRIPTION:
 				return dci.getDescription();
-			case DataCollectionWidget.COLUMN_PARAMETER:
+			case LastValuesView.DC_COLUMN_PARAMETER:
 				return dci.getName();
-			case DataCollectionWidget.COLUMN_DATATYPE:
+			case LastValuesView.DC_COLUMN_DATATYPE:
 				if (dci instanceof DataCollectionItem)
 					return DataCollectionDisplayInfo.getDataTypeName(((DataCollectionItem)dci).getDataType());
 				return i18n.tr("<< TABLE >>");
-			case DataCollectionWidget.COLUMN_INTERVAL:
+			case LastValuesView.DC_COLUMN_INTERVAL:
 				if (dci.isUseAdvancedSchedule())
 					return i18n.tr("custom schedule");
 				if (dci.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_DEFAULT)
 				   return i18n.tr("default");
 				return dci.getPollingInterval();
-			case DataCollectionWidget.COLUMN_RETENTION:
+			case LastValuesView.DC_COLUMN_RETENTION:
 			   if (dci.getRetentionType() == DataCollectionObject.RETENTION_NONE)
 			      return i18n.tr("none");
 			   if (dci.getRetentionType() == DataCollectionObject.RETENTION_DEFAULT)
@@ -141,9 +141,9 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 			   {
 			      return dci.getRetentionTime();
 			   }
-			case DataCollectionWidget.COLUMN_STATUS:
+			case LastValuesView.DC_COLUMN_STATUS:
 				return statusTexts.get(dci.getStatus());
-			case DataCollectionWidget.COLUMN_THRESHOLD:
+			case LastValuesView.DC_COLUMN_THRESHOLD:
 			   StringBuilder thresholds = new StringBuilder();
 			   if((dci instanceof DataCollectionItem))
 			   {
@@ -168,7 +168,7 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
                }
 			   }
 			   return thresholds.toString();
-			case DataCollectionWidget.COLUMN_TEMPLATE:
+			case LastValuesView.DC_COLUMN_TEMPLATE:
 				if (dci.getTemplateId() == 0)
 					return null;
 				AbstractObject object = session.findObjectById(dci.getTemplateId());
@@ -186,14 +186,14 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 				}
 				sb.append(object.getObjectName());
 				return sb.toString();
-			case DataCollectionWidget.COLUMN_RELATEDOBJ:
+			case LastValuesView.DC_COLUMN_RELATEDOBJ:
             if (dci.getRelatedObject() == 0)
                return null;
             AbstractObject obj = session.findObjectById(dci.getRelatedObject());
             if (obj == null)
                return "[" + dci.getRelatedObject() + "]";
             return obj.getObjectName();
-         case DataCollectionWidget.COLUMN_STATUSCALC:
+         case LastValuesView.DC_COLUMN_STATUSCALC:
             if (dci instanceof DataCollectionItem)
                return ((DataCollectionItem)dci).isUsedForNodeStatusCalculation() ? "Yes" : "No";
             return i18n.tr("No");

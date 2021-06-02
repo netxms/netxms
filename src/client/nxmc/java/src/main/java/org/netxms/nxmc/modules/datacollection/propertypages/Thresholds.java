@@ -501,6 +501,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 	 */
 	private void saveSettings()
 	{
-      WidgetHelper.saveColumnSettings(thresholdList.getTable(), COLUMN_SETTINGS_PREFIX);
+	   if (thresholdList != null)
+	      WidgetHelper.saveColumnSettings(thresholdList.getTable(), COLUMN_SETTINGS_PREFIX);
 	}
 }

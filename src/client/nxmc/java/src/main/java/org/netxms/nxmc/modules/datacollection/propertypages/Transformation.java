@@ -146,6 +146,9 @@ public class Transformation extends AbstractDCIPropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
+	   if(editor == null)
+	      return;
+	   
 		if (editor.getObject() instanceof DataCollectionItem)
 			editor.getObjectAsItem().setDeltaCalculation(deltaCalculation.getSelectionIndex());
 		editor.getObject().setTransformationScript(transformationScript.getText());

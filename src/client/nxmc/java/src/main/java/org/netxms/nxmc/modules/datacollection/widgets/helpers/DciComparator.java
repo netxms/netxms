@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
-import org.netxms.nxmc.modules.datacollection.widgets.DataCollectionWidget;
+import org.netxms.nxmc.modules.datacollection.views.LastValuesView;
 
 /**
  * DCI comparator
@@ -54,27 +54,27 @@ public class DciComparator extends ViewerComparator
 		int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
 		switch(column)
 		{
-			case DataCollectionWidget.COLUMN_ID:
+			case LastValuesView.DC_COLUMN_ID:
 				result = (int)(dci1.getId() - dci2.getId());
 				break;
-			case DataCollectionWidget.COLUMN_DESCRIPTION:
+			case LastValuesView.DC_COLUMN_DESCRIPTION:
 				result = dci1.getDescription().compareToIgnoreCase(dci2.getDescription());
 				break;
-			case DataCollectionWidget.COLUMN_PARAMETER:
+			case LastValuesView.DC_COLUMN_PARAMETER:
 				result = dci1.getName().compareToIgnoreCase(dci2.getName());
 				break;
-			case DataCollectionWidget.COLUMN_INTERVAL:
+			case LastValuesView.DC_COLUMN_INTERVAL:
 				result = (int)(dci1.getComparablePollingInterval() - dci2.getComparablePollingInterval());
 				break;
-			case DataCollectionWidget.COLUMN_RETENTION:
+			case LastValuesView.DC_COLUMN_RETENTION:
 				result = (int)(dci1.getComparableRetentionTime() - dci2.getComparableRetentionTime());
 				break;
-			case DataCollectionWidget.COLUMN_ORIGIN:
-			case DataCollectionWidget.COLUMN_DATATYPE:
-			case DataCollectionWidget.COLUMN_STATUS:
-			case DataCollectionWidget.COLUMN_TEMPLATE:
-         case DataCollectionWidget.COLUMN_RELATEDOBJ:
-         case DataCollectionWidget.COLUMN_STATUSCALC:
+			case LastValuesView.DC_COLUMN_ORIGIN:
+			case LastValuesView.DC_COLUMN_DATATYPE:
+			case LastValuesView.DC_COLUMN_STATUS:
+			case LastValuesView.DC_COLUMN_TEMPLATE:
+         case LastValuesView.DC_COLUMN_RELATEDOBJ:
+         case LastValuesView.DC_COLUMN_STATUSCALC:
 				final String text1 = labelProvider.getColumnText(e1, column);
 				final String text2 = labelProvider.getColumnText(e2, column);
 				if (text1 != null && text2 != null)
