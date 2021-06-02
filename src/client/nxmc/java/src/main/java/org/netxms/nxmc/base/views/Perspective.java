@@ -52,8 +52,8 @@ public abstract class Perspective
    private ViewStack navigationFolder;
    private ViewStack mainFolder;
    private ViewStack supplementaryFolder;
-   private Composite navigationArea;
    private Composite headerArea;
+   private ViewContainer navigationArea;
    private ViewContainer mainArea;
    private Composite supplementalArea;
    private ISelectionProvider navigationSelectionProvider;
@@ -181,9 +181,7 @@ public abstract class Perspective
          }
          else
          {
-            navigationArea = new Composite(verticalSplitter, SWT.BORDER);
-            navigationArea.setLayout(new FillLayout());
-            createNavigationArea(navigationArea);
+            navigationArea = new ViewContainer(window, this, verticalSplitter, false, false);
          }
       }
       if (configuration.hasSupplementalArea)
@@ -267,15 +265,6 @@ public abstract class Perspective
    {
       if (!content.isDisposed())
          content.dispose();
-   }
-
-   /**
-    * Create navigation area for single view perspectives
-    *
-    * @param parent
-    */
-   protected void createNavigationArea(Composite parent)
-   {
    }
 
    /**
@@ -441,7 +430,28 @@ public abstract class Perspective
    public void addNavigationView(NavigationView view)
    {
       if (navigationFolder != null)
+      {
          navigationFolder.addView(view);
+      }
+      else if (navigationArea != null)
+      {
+         navigationArea.setView(view);
+         setNavigationSelectionProvider(((view != null) && (view instanceof NavigationView)) ? ((NavigationView)view).getSelectionProvider() : null);
+      }
+   }
+
+   /**
+    * Set navigation view for single-view perspectives. Has no effect for multi-view perspectives.
+    *
+    * @param view new navigation view
+    */
+   public void setNavigationView(NavigationView view)
+   {
+      if (navigationArea != null)
+      {
+         navigationArea.setView(view);
+         setNavigationSelectionProvider(((view != null) && (view instanceof NavigationView)) ? ((NavigationView)view).getSelectionProvider() : null);
+      }
    }
 
    /**

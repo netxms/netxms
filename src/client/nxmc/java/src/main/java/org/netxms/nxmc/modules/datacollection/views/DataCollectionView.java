@@ -108,48 +108,21 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * "Last Values" view
+ * "Data Collection" view
  */
-public class LastValuesView extends ObjectView
+public class DataCollectionView extends ObjectView
 {
    public static final String JOB_FAMILY = "DataCollectionEditorJob"; //$NON-NLS-1$
-   private static final I18n i18n = LocalizationHelper.getI18n(LastValuesView.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(DataCollectionView.class);
 
-   private Action actionEnableEditMode;
-   private boolean editModeEnabled;
-   private Composite parent;
-   private NXCSession session;
-   private AbstractObject object;
-   private SortableTableViewer viewer; 
-   private SessionListener clientListener = null;
-   private DataCollectionConfiguration dciConfig = null;
-   
-   // Columns
+   // Columns for "last values" mode
    public static final int LV_COLUMN_ID = 0;
    public static final int LV_COLUMN_DESCRIPTION = 1;
    public static final int LV_COLUMN_VALUE = 2;
    public static final int LV_COLUMN_TIMESTAMP = 3;
    public static final int LV_COLUMN_THRESHOLD = 4;
    
-   private LastValuesLabelProvider labelProvider;
-   private LastValuesComparator comparator;
-   private LastValuesFilter lvFilter;
-   private boolean autoRefreshEnabled = false;
-   private int autoRefreshInterval = 30;  // in seconds
-   private ViewRefreshController refreshController;
-   private Action actionLineChart;
-   private Action actionUseMultipliers;
-   private Action actionShowErrors;
-   private Action actionShowDisabled;
-   private Action actionShowUnsupported;
-   private Action actionShowHidden;
-   private Action actionExportToCsv;
-   private Action actionExportAllToCsv;
-   private Action actionCopyToClipboard;
-   private Action actionCopyDciName;
-   
-
-   // Columns
+   // Columns for "data collection configuration" mode
    public static final int DC_COLUMN_ID = 0;
    public static final int DC_COLUMN_ORIGIN = 1;
    public static final int DC_COLUMN_DESCRIPTION = 2;
@@ -163,7 +136,26 @@ public class LastValuesView extends ObjectView
    public static final int DC_COLUMN_RELATEDOBJ = 10;
    public static final int DC_COLUMN_STATUSCALC = 11;
 
+   private boolean editMode;
+   private Composite parent;
+   private NXCSession session;
+   private AbstractObject object;
+   private SortableTableViewer viewer;
+   private SessionListener clientListener = null;
+   private DataCollectionConfiguration dciConfig = null;
+
+   private LastValuesLabelProvider labelProvider;
+   private LastValuesComparator comparator;
+   private LastValuesFilter lvFilter;
+   private boolean autoRefreshEnabled = false;
+   private int autoRefreshInterval = 30;  // in seconds
+   private ViewRefreshController refreshController;
+
    private DciFilter dcFilter;
+   private boolean hideModificationWarnings;
+   private RemoteChangeListener changeListener;
+
+   private Action actionEnableEditMode;
    private Action actionCreateItem;
    private Action actionCreateTable;
    private Action actionEdit;
@@ -175,14 +167,22 @@ public class LastValuesView extends ObjectView
    private Action actionActivate;
    private Action actionDisable;
    private Action actionBulkUpdate;
-   private boolean hideModificationWarnings;
-   private RemoteChangeListener changeListener;
+   private Action actionLineChart;
+   private Action actionUseMultipliers;
+   private Action actionShowErrors;
+   private Action actionShowDisabled;
+   private Action actionShowUnsupported;
+   private Action actionShowHidden;
+   private Action actionExportToCsv;
+   private Action actionExportAllToCsv;
+   private Action actionCopyToClipboard;
+   private Action actionCopyDciName;
 
    /**
     * @param name
     * @param image
     */
-   public LastValuesView()
+   public DataCollectionView()
    {
       super(i18n.tr("Data Collection"), ResourceManager.getImageDescriptor("icons/object-views/last_values.png"), "DataCollection", true); 
    }
@@ -195,24 +195,23 @@ public class LastValuesView extends ObjectView
    {
       this.parent = parent;
       session = Registry.getSession();
+
       VisibilityValidator validator = new VisibilityValidator() { 
          @Override
          public boolean isVisible()
          {
-            return LastValuesView.this.isActive();
+            return DataCollectionView.this.isActive();
          }
       };
-      if (editModeEnabled)
-      {
+
+      if (editMode)
          createDataCollectionViewer(parent);  
-      }
       else 
-      {
          createLastValuesViewer(parent, validator);
-      }
+
       createActions();
    }
-   
+
    /**
     * Create 
     */
@@ -325,7 +324,6 @@ public class LastValuesView extends ObjectView
          }
       };   
    }
-   
 
    /**
     * Create pop-up menu
@@ -354,10 +352,15 @@ public class LastValuesView extends ObjectView
     */
    protected void fillContextMenu(final IMenuManager manager)
    {
-      if (!editModeEnabled)
+      boolean isTemplate = object instanceof Template;
+
+      if (!editMode)
       {
-         manager.add(actionLineChart);
-         manager.add(new Separator());
+         if (!isTemplate)
+         {
+            manager.add(actionLineChart);
+            manager.add(new Separator());
+         }
          manager.add(actionCopyToClipboard);
          manager.add(actionCopyDciName);
          manager.add(actionExportToCsv);
@@ -377,19 +380,23 @@ public class LastValuesView extends ObjectView
       manager.add(actionDelete);
       manager.add(actionCopy);
       manager.add(actionMove);
-      if (!(object instanceof Template))
+      if (!isTemplate)
          manager.add(actionConvert);
       manager.add(actionDuplicate);
       manager.add(new Separator());
       manager.add(actionActivate);
       manager.add(actionDisable);
-      //TODO: check how to corectly add menu items form the groups
-      /*
-      manager.add(new Separator());
-      manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-      manager.add(new Separator());
-      manager.add(new GroupMarker(GroupMarkers.MB_SECONDARY));
-      */
+      if (editMode)
+      {
+         if (!isTemplate)
+         {
+            manager.add(new Separator());
+            manager.add(actionLineChart);
+         }
+         manager.add(new Separator());
+         manager.add(actionExportToCsv);
+         manager.add(actionExportAllToCsv);
+      }
    }
 
    /**
@@ -575,11 +582,11 @@ public class LastValuesView extends ObjectView
          @Override
          public void run()
          {
-            editModeEnabled = actionEnableEditMode.isChecked();
-            createView();
+            editMode = actionEnableEditMode.isChecked();
+            switchMode();
          }
       }; 
-      actionEnableEditMode.setChecked(editModeEnabled); 
+      actionEnableEditMode.setChecked(editMode); 
    }
 
    /**
@@ -588,7 +595,7 @@ public class LastValuesView extends ObjectView
    @Override
    public void refresh()
    {
-      if (editModeEnabled)
+      if (editMode)
       {
          new Job(String.format(i18n.tr("Reftesh data collection configuration for %s"), object.getObjectName()), this) {
             @Override
@@ -607,7 +614,7 @@ public class LastValuesView extends ObjectView
             @Override
             protected String getErrorMessage()
             {
-               return String.format("Cannot refresh data collection configuration for %s", object.getObjectName());
+               return String.format(i18n.tr("Cannot refresh data collection configuration for %s"), object.getObjectName());
             }
          }.start();  
       }
@@ -617,15 +624,15 @@ public class LastValuesView extends ObjectView
       }
    }
 
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+   /**
+    * @see org.netxms.nxmc.base.views.View#dispose()
     */
    @Override
    public void dispose()
    {
       if (dciConfig != null)
       {
-         new Job(String.format(i18n.tr("Unlock data collection configuration for "), object.getObjectName()), this) {
+         new Job(String.format(i18n.tr("Unlock data collection configuration for %s"), object.getObjectName()), this) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -636,7 +643,7 @@ public class LastValuesView extends ObjectView
             @Override
             protected String getErrorMessage()
             {
-               return String.format(i18n.tr("Cannot unlock data collection configuration for ") + object.getObjectName());
+               return String.format(i18n.tr("Cannot unlock data collection configuration for %s"), object.getObjectName());
             }
          }.start();
       }
@@ -648,13 +655,13 @@ public class LastValuesView extends ObjectView
     */
    private long getObjectId(Object dci)
    {
-      return editModeEnabled ? ((DataCollectionObject)dci).getId() : ((DciValue)dci).getId();
+      return editMode ? ((DataCollectionObject)dci).getId() : ((DciValue)dci).getId();
    }
 
    private DataCollectionObject getDataCollectionObject(Object dci)
    {
       DataCollectionObject dco;
-      if (editModeEnabled)
+      if (editMode)
       {
          dco = (DataCollectionObject)dci;
       }
@@ -673,11 +680,11 @@ public class LastValuesView extends ObjectView
     */
    private void setItemStatus(final int newStatus)
    {
-      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.size() <= 0)
+      final IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
          return;
       
-      new Job(String.format(i18n.tr("Change status of data collection items for "), object.getObjectName()), this) {
+      new Job(String.format(i18n.tr("Change status of data collection items for %s"), object.getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -705,7 +712,7 @@ public class LastValuesView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot change status of data collection items for "), object.getObjectName());
+            return String.format(i18n.tr("Cannot change status of data collection items for %s"), object.getObjectName());
          }
       }.start();
    }
@@ -715,15 +722,14 @@ public class LastValuesView extends ObjectView
     */
    private void deleteItems()
    {
-      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.size() <= 0)
+      final IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
          return;
       
-      if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Delete Data Collection Items"),
-                                     i18n.tr("Do you really want to delete selected data collection items?")))
+      if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Delete Data Collection Items"), i18n.tr("Do you really want to delete selected data collection items?")))
          return;
-      
-      new Job(i18n.tr(String.format("Delete data collection items for "), object.getObjectName()), this) {
+
+      new Job(i18n.tr(String.format("Delete data collection items for %s"), object.getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -736,7 +742,7 @@ public class LastValuesView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot delete data collection items for "), object.getObjectName());
+            return String.format(i18n.tr("Cannot delete data collection items for %s"), object.getObjectName());
          }
       }.start();
    }
@@ -798,7 +804,7 @@ public class LastValuesView extends ObjectView
          String message = DataCollectionObjectEditor.createModificationWarningMessage(dco);
          if (message != null)
          {
-            data = MessageDialogHelper.openWarningWithCheckbox(getWindow().getShell(), "Warning", "Don't show this message again", message);
+            data = MessageDialogHelper.openWarningWithCheckbox(getWindow().getShell(), i18n.tr("Warning"), i18n.tr("Don't show this message again"), message);
             hideModificationWarnings = data.getSaveSelection();
          }
       }
@@ -820,7 +826,7 @@ public class LastValuesView extends ObjectView
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
          dciList[i] = getObjectId(it.next());
       
-      new Job(String.format(i18n.tr("Duplicate data collection items for "), object.getObjectName()), this) {
+      new Job(String.format(i18n.tr("Duplicate data collection items for %s"), object.getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -832,7 +838,7 @@ public class LastValuesView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot duplicate data collection item for "), object.getObjectName());
+            return String.format(i18n.tr("Cannot duplicate data collection item for %s"), object.getObjectName());
          }
       }.start();
    }
@@ -853,7 +859,7 @@ public class LastValuesView extends ObjectView
             targets.add(o);
       if (targets.isEmpty())
       {
-         MessageDialogHelper.openWarning(getWindow().getShell(), "Warning", "Target selection is invalid or empty!");
+         MessageDialogHelper.openWarning(getWindow().getShell(), i18n.tr("Warning"), i18n.tr("Target selection is invalid or empty!"));
          return;
       }
 
@@ -863,7 +869,7 @@ public class LastValuesView extends ObjectView
       for(int i = 0; (i < dciList.length) && it.hasNext(); i++)
          dciList[i] = getObjectId(it.next());
 
-      new Job(String.format(i18n.tr("Copy data collection items from "), object.getObjectName()), this) {
+      new Job(String.format(i18n.tr("Copy data collection items from %s"), object.getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -879,7 +885,7 @@ public class LastValuesView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot copy data collection item from ") + object.getObjectName();
+            return String.format(i18n.tr("Cannot copy data collection item from %s"), object.getObjectName());
          }
       }.start();
    }
@@ -921,7 +927,7 @@ public class LastValuesView extends ObjectView
       if (!changed)
          return;
 
-      new Job("Bulk DCI update", this) {
+      new Job(i18n.tr("Executing bulk DCI update"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -931,7 +937,7 @@ public class LastValuesView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return "Failed to bulk update DCIs";
+            return i18n.tr("Failed to execute bulk DCI update");
          }
       }.start();
    }
@@ -1213,8 +1219,8 @@ public class LastValuesView extends ObjectView
                   (n.getCode() == SessionNotification.DCI_UPDATE) ||
                   (n.getCode() == SessionNotification.DCI_DELETE) ||
                   (n.getCode() == SessionNotification.DCI_STATE_CHANGE) ) &&
-                (LastValuesView.this.object != null) &&
-                (n.getSubCode() == LastValuesView.this.object.getObjectId()))
+                (DataCollectionView.this.object != null) &&
+                (n.getSubCode() == DataCollectionView.this.object.getObjectId()))
             {
                display.asyncExec(new Runnable() {
                   @Override
@@ -1230,9 +1236,11 @@ public class LastValuesView extends ObjectView
       session.addListener(clientListener);
    }
    
-   private void createView()
+   /**
+    * Switch between "data collection configuration" and "last values" modes
+    */
+   private void switchMode()
    {
-      
       if (viewer != null)
       {
          viewer.getControl().dispose();
@@ -1244,10 +1252,10 @@ public class LastValuesView extends ObjectView
          @Override
          public boolean isVisible()
          {
-            return LastValuesView.this.isActive();
+            return DataCollectionView.this.isActive();
          }
       };
-      if (editModeEnabled)
+      if (editMode)
       {
          createDataCollectionViewer(parent);  
          if (object != null)
@@ -1280,7 +1288,7 @@ public class LastValuesView extends ObjectView
       
       if (context instanceof Template)
       {
-         editModeEnabled = true;
+         editMode = true;
          return true;
       }
       
@@ -1315,7 +1323,7 @@ public class LastValuesView extends ObjectView
                         @Override
                         public void run()
                         {
-                           LastValuesView.this.showInformationMessage();
+                           DataCollectionView.this.showInformationMessage();
                         }
                      });
                   }
@@ -1342,7 +1350,7 @@ public class LastValuesView extends ObjectView
                @Override
                public void run()
                {
-                  if (editModeEnabled)
+                  if (editMode)
                   {
                      dciConfig.setUserData(viewer);
                      dciConfig.setRemoteListener(changeListener);  
@@ -1610,7 +1618,7 @@ public class LastValuesView extends ObjectView
       List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(selection.size());
       for(Object o : selection.toList())
       {
-         items.add(new ChartDciConfig((DciValue)o));
+         items.add(editMode ? new ChartDciConfig((DataCollectionObject)o) : new ChartDciConfig((DciValue)o));
       }
 
       AbstractObject object = getObject();
@@ -1671,12 +1679,13 @@ public class LastValuesView extends ObjectView
       WidgetHelper.copyToClipboard(dciName.toString());
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#activate()
+    */
    @Override
    public void activate()
    {
       refresh();
       super.activate();
    }
-   
-   
 }

@@ -46,7 +46,6 @@ public class TableConditionsEditor extends Composite
 {
    private static I18n i18n = LocalizationHelper.getI18n(TableConditionsEditor.class);
    
-	private Composite toolkit;
 	private ScrolledComposite scroller;
 	private ImageHyperlink addColumnLink;
 	private List<GroupEditor> groups = new ArrayList<GroupEditor>();
@@ -63,10 +62,10 @@ public class TableConditionsEditor extends Composite
       this.columnEnumerator = columnEnumerator;
 
 		setLayout(new FillLayout());
-		
+
 		scroller = new ScrolledComposite(this, SWT.NONE);
 		scroller.setLayout(new GridLayout());
-		
+
 		addColumnLink = new ImageHyperlink(scroller, SWT.NONE);
 		addColumnLink.setText(i18n.tr("Add..."));
 		addColumnLink.setImage(SharedIcons.IMG_ADD_OBJECT);

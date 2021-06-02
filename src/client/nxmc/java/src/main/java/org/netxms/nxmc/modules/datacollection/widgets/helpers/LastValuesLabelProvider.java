@@ -31,7 +31,7 @@ import org.netxms.client.datacollection.Threshold;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.propertypages.Thresholds;
-import org.netxms.nxmc.modules.datacollection.views.LastValuesView;
+import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.xnap.commons.i18n.I18n;
@@ -69,9 +69,9 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	{
 		switch(columnIndex)
 		{
-			case LastValuesView.LV_COLUMN_ID:
+			case DataCollectionView.LV_COLUMN_ID:
 				return stateImages[((DciValue)element).getStatus()];
-			case LastValuesView.LV_COLUMN_THRESHOLD:
+			case DataCollectionView.LV_COLUMN_THRESHOLD:
 				Threshold threshold = ((DciValue)element).getActiveThreshold();
 				return (threshold != null) ? thresholdLabelProvider.getColumnImage(threshold, Thresholds.COLUMN_EVENT) : StatusDisplayInfo.getStatusImage(Severity.NORMAL);
 		}
@@ -86,11 +86,11 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	{
 		switch(columnIndex)
 		{
-			case LastValuesView.LV_COLUMN_ID:
+			case DataCollectionView.LV_COLUMN_ID:
 				return Long.toString(((DciValue)element).getId());
-			case LastValuesView.LV_COLUMN_DESCRIPTION:
+			case DataCollectionView.LV_COLUMN_DESCRIPTION:
 				return ((DciValue)element).getDescription();
-			case LastValuesView.LV_COLUMN_VALUE:
+			case DataCollectionView.LV_COLUMN_VALUE:
 				if (showErrors && ((DciValue)element).getErrorCount() > 0)
                return i18n.tr("<< ERROR >>");
 				if (((DciValue)element).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
@@ -102,11 +102,11 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 				   return ((DciValue)element).format("%*s");
 				else
                return ((DciValue)element).getValue();				   
-			case LastValuesView.LV_COLUMN_TIMESTAMP:
+			case DataCollectionView.LV_COLUMN_TIMESTAMP:
 				if (((DciValue)element).getTimestamp().getTime() <= 1000)
 					return null;
             return DateFormatFactory.getDateTimeFormat().format(((DciValue)element).getTimestamp());
-			case LastValuesView.LV_COLUMN_THRESHOLD:
+			case DataCollectionView.LV_COLUMN_THRESHOLD:
 				return formatThreshold(((DciValue)element).getActiveThreshold());
 		}
 		return null;

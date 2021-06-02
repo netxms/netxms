@@ -23,16 +23,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ServiceLoader;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
@@ -50,10 +47,6 @@ public class ConfigurationPerspective extends Perspective
    private static final I18n i18n = LocalizationHelper.getI18n(ConfigurationPerspective.class);
 
    private List<ConfigurationPerspectiveElement> elements = new ArrayList<ConfigurationPerspectiveElement>();
-   private ImageCache imageCache;
-   private FilterText filter;
-   private TableViewer viewer;
-   private ConfigurationPerspectiveElement currentElement;
 
    /**
     * The constructor.
@@ -92,55 +85,63 @@ public class ConfigurationPerspective extends Perspective
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.Perspective#createNavigationArea(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.nxmc.base.views.Perspective#configureViews()
     */
    @Override
-   protected void createNavigationArea(Composite parent)
+   protected void configureViews()
    {
-      imageCache = new ImageCache(parent);
+      addNavigationView(new NavigationView("Configuration", null, "Configuration", true) {
+         private ImageCache imageCache;
+         private TableViewer viewer;
 
-      GridLayout layout = new GridLayout();
-      layout.verticalSpacing = 0;
-      layout.marginHeight = 0;
-      layout.marginWidth = 0;
-      parent.setLayout(layout);
-
-      filter = new FilterText(parent, SWT.NONE, null, false);
-      filter.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-
-      viewer = new TableViewer(parent, SWT.NONE);
-      viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new LabelProvider() {
          @Override
-         public Image getImage(Object element)
+         protected void createContent(Composite parent)
          {
-            return imageCache.create(((ConfigurationPerspectiveElement)element).getImage());
+            imageCache = new ImageCache(parent);
+
+            viewer = new TableViewer(parent, SWT.NONE);
+            viewer.setContentProvider(new ArrayContentProvider());
+            viewer.setLabelProvider(new LabelProvider() {
+               @Override
+               public Image getImage(Object element)
+               {
+                  return imageCache.create(((ConfigurationPerspectiveElement)element).getImage());
+               }
+
+               @Override
+               public String getText(Object element)
+               {
+                  return ((ConfigurationPerspectiveElement)element).getName();
+               }
+            });
+            viewer.setInput(elements);
          }
 
          @Override
-         public String getText(Object element)
+         public ISelectionProvider getSelectionProvider()
          {
-            return ((ConfigurationPerspectiveElement)element).getName();
+            return viewer;
          }
-      });
-      viewer.setInput(elements);
 
-      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+         /**
+          * @see org.netxms.nxmc.base.views.View#dispose()
+          */
          @Override
-         public void selectionChanged(SelectionChangedEvent event)
+         public void dispose()
          {
-            changeView();
+            imageCache.dispose();
+            super.dispose();
          }
       });
    }
 
    /**
-    * Change configuration view
+    * @see org.netxms.nxmc.base.views.Perspective#navigationSelectionChanged(org.eclipse.jface.viewers.IStructuredSelection)
     */
-   private void changeView()
+   @Override
+   protected void navigationSelectionChanged(IStructuredSelection selection)
    {
-      currentElement = (ConfigurationPerspectiveElement)viewer.getStructuredSelection().getFirstElement();
+      ConfigurationPerspectiveElement currentElement = (ConfigurationPerspectiveElement)selection.getFirstElement();
       if (currentElement != null)
       {
          setMainView(currentElement.createView());

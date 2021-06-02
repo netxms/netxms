@@ -40,7 +40,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.datacollection.views.LastValuesView;
+import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
@@ -107,25 +107,25 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 		DataCollectionObject dci = (DataCollectionObject)element;
 		switch(columnIndex)
 		{
-			case LastValuesView.DC_COLUMN_ID:
+			case DataCollectionView.DC_COLUMN_ID:
 				return Long.toString(dci.getId());
-			case LastValuesView.DC_COLUMN_ORIGIN:
+			case DataCollectionView.DC_COLUMN_ORIGIN:
 				return originTexts.get(dci.getOrigin());
-			case LastValuesView.DC_COLUMN_DESCRIPTION:
+			case DataCollectionView.DC_COLUMN_DESCRIPTION:
 				return dci.getDescription();
-			case LastValuesView.DC_COLUMN_PARAMETER:
+			case DataCollectionView.DC_COLUMN_PARAMETER:
 				return dci.getName();
-			case LastValuesView.DC_COLUMN_DATATYPE:
+			case DataCollectionView.DC_COLUMN_DATATYPE:
 				if (dci instanceof DataCollectionItem)
 					return DataCollectionDisplayInfo.getDataTypeName(((DataCollectionItem)dci).getDataType());
 				return i18n.tr("<< TABLE >>");
-			case LastValuesView.DC_COLUMN_INTERVAL:
+			case DataCollectionView.DC_COLUMN_INTERVAL:
 				if (dci.isUseAdvancedSchedule())
 					return i18n.tr("custom schedule");
 				if (dci.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_DEFAULT)
 				   return i18n.tr("default");
 				return dci.getPollingInterval();
-			case LastValuesView.DC_COLUMN_RETENTION:
+			case DataCollectionView.DC_COLUMN_RETENTION:
 			   if (dci.getRetentionType() == DataCollectionObject.RETENTION_NONE)
 			      return i18n.tr("none");
 			   if (dci.getRetentionType() == DataCollectionObject.RETENTION_DEFAULT)
@@ -141,9 +141,9 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 			   {
 			      return dci.getRetentionTime();
 			   }
-			case LastValuesView.DC_COLUMN_STATUS:
+			case DataCollectionView.DC_COLUMN_STATUS:
 				return statusTexts.get(dci.getStatus());
-			case LastValuesView.DC_COLUMN_THRESHOLD:
+			case DataCollectionView.DC_COLUMN_THRESHOLD:
 			   StringBuilder thresholds = new StringBuilder();
 			   if((dci instanceof DataCollectionItem))
 			   {
@@ -168,7 +168,7 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
                }
 			   }
 			   return thresholds.toString();
-			case LastValuesView.DC_COLUMN_TEMPLATE:
+			case DataCollectionView.DC_COLUMN_TEMPLATE:
 				if (dci.getTemplateId() == 0)
 					return null;
 				AbstractObject object = session.findObjectById(dci.getTemplateId());
@@ -186,14 +186,14 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 				}
 				sb.append(object.getObjectName());
 				return sb.toString();
-			case LastValuesView.DC_COLUMN_RELATEDOBJ:
+			case DataCollectionView.DC_COLUMN_RELATEDOBJ:
             if (dci.getRelatedObject() == 0)
                return null;
             AbstractObject obj = session.findObjectById(dci.getRelatedObject());
             if (obj == null)
                return "[" + dci.getRelatedObject() + "]";
             return obj.getObjectName();
-         case LastValuesView.DC_COLUMN_STATUSCALC:
+         case DataCollectionView.DC_COLUMN_STATUSCALC:
             if (dci instanceof DataCollectionItem)
                return ((DataCollectionItem)dci).isUsedForNodeStatusCalculation() ? "Yes" : "No";
             return i18n.tr("No");

@@ -51,7 +51,7 @@ public class YAxisRangeEditor extends Composite
    private LabeledText from;
    private LabeledText to;
    private Color errorBackground;
-   
+
    /**
     * @param parent
     * @param style

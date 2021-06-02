@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import org.simpleframework.xml.Root;
 @Root(name="dci", strict=false)
 public class ChartDciConfig
 {
-	public static final String UNSET_COLOR = "UNSET"; //$NON-NLS-1$
+   public static final String UNSET_COLOR = "UNSET";
 	
 	public static final int ITEM = DataCollectionObject.DCO_TYPE_ITEM;
 	public static final int TABLE = DataCollectionObject.DCO_TYPE_TABLE;
@@ -96,20 +96,20 @@ public class ChartDciConfig
 	{
 		nodeId = 0;
 		dciId = 0;
-		dciName = ""; //$NON-NLS-1$
-		dciDescription = ""; //$NON-NLS-1$
+      dciName = "";
+      dciDescription = "";
 		type = ITEM;
 		color = UNSET_COLOR;
-		name = ""; //$NON-NLS-1$
+      name = "";
 		lineWidth = 2;
 		displayType = DEFAULT;
 		area = false;
 		showThresholds = false;
 		invertValues = false;
 		multiMatch = false;
-		instance = ""; //$NON-NLS-1$
-		column = ""; //$NON-NLS-1$
-      displayFormat = "%s"; //$NON-NLS-1$
+      instance = "";
+      column = "";
+      displayFormat = "%s";
 	}
 
 	/**
@@ -158,10 +158,35 @@ public class ChartDciConfig
 		invertValues = false;
 		useRawValues = false;
 		multiMatch = false;
-		instance = ""; //$NON-NLS-1$
-		column = ""; //$NON-NLS-1$
-      displayFormat = "%s"; //$NON-NLS-1$
+      instance = "";
+      column = "";
+      displayFormat = "%s";
 	}
+
+   /**
+    * Create DCI info from DataCollectionObject object
+    * 
+    * @param dci DCI to use as source
+    */
+   public ChartDciConfig(DataCollectionObject dci)
+   {
+      nodeId = dci.getNodeId();
+      dciId = dci.getId();
+      dciName = dci.getName();
+      dciDescription = dci.getDescription();
+      type = (dci instanceof DataCollectionItem) ? ITEM : TABLE;
+      name = dci.getDescription();
+      color = UNSET_COLOR;
+      lineWidth = 2;
+      area = false;
+      showThresholds = false;
+      invertValues = false;
+      useRawValues = false;
+      multiMatch = false;
+      instance = "";
+      column = "";
+      displayFormat = "%s";
+   }
 
 	/**
 	 * @return the color
@@ -170,7 +195,7 @@ public class ChartDciConfig
 	{
 		if (color.equals(UNSET_COLOR))
 			return -1;
-		if (color.startsWith("0x")) //$NON-NLS-1$
+      if (color.startsWith("0x"))
 			return Integer.parseInt(color.substring(2), 16);
 		return Integer.parseInt(color, 10);
 	}
@@ -180,16 +205,16 @@ public class ChartDciConfig
 	 */
 	public void setColor(int value)
 	{
-		color = "0x" + Integer.toHexString(value); //$NON-NLS-1$
+      color = "0x" + Integer.toHexString(value);
 	}
-	
+
 	/**
 	 * Get DCI name. Always returns non-empty string.
 	 * @return The name
 	 */
 	public String getName()
 	{
-		return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(dciId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+      return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(dciId) + "]");
 	}
 	
 	/**
@@ -199,7 +224,7 @@ public class ChartDciConfig
 	 */
 	public String getDisplayFormat()
 	{
-	   return ((displayFormat != null) && !displayFormat.isEmpty()) ? displayFormat : "%s"; //$NON-NLS-1$
+      return ((displayFormat != null) && !displayFormat.isEmpty()) ? displayFormat : "%s";
 	}
 	
 	/**

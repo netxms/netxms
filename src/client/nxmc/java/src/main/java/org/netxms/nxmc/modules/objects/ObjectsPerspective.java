@@ -40,11 +40,12 @@ import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.views.AlarmsView;
-import org.netxms.nxmc.modules.datacollection.views.LastValuesView;
+import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
 import org.netxms.nxmc.modules.datacollection.views.PerformanceView;
 import org.netxms.nxmc.modules.objects.views.Dot1xStatusView;
 import org.netxms.nxmc.modules.objects.views.EntityMIBView;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
+import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.modules.objects.views.ObjectOverviewView;
 import org.netxms.nxmc.modules.objects.views.SwitchForwardingDatabaseView;
 import org.netxms.nxmc.modules.objects.widgets.ObjectTree;
@@ -102,27 +103,16 @@ public abstract class ObjectsPerspective extends Perspective
    @Override
    protected void configureViews()
    {
+      addNavigationView(new ObjectBrowser("Objects", null, subtreeType));
       addMainView(new ObjectOverviewView());
       addMainView(new AlarmsView());
-      addMainView(new LastValuesView());
+      addMainView(new DataCollectionView());
       addMainView(new InterfacesView());
       addMainView(new EntityMIBView());
       addMainView(new PerformanceView());
       addMainView(new Dot1xStatusView());
       addMainView(new SwitchForwardingDatabaseView());
       addMainView(new MibExplorer());
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.Perspective#createNavigationArea(org.eclipse.swt.widgets.Composite)
-    */
-   @Override
-   protected void createNavigationArea(Composite parent)
-   {
-      objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, calculateClassFilter(), true, false);
-      Menu menu = new ObjectContextMenuManager(null, objectTree.getSelectionProvider()).createContextMenu(objectTree.getTreeControl());
-      objectTree.getTreeControl().setMenu(menu);
-      setNavigationSelectionProvider(objectTree.getSelectionProvider());
    }
 
    /**

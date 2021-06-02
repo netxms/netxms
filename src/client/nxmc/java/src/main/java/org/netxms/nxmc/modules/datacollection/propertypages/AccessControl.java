@@ -47,7 +47,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.propertypages.helpers.AccessListComparator;
 import org.netxms.nxmc.modules.datacollection.propertypages.helpers.AccessListLabelProvider;
-import org.netxms.nxmc.modules.datacollection.views.LastValuesView;
+import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
 import org.netxms.nxmc.modules.users.dialogs.SelectUserDialog;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
