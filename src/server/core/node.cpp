@@ -1738,6 +1738,7 @@ shared_ptr<Interface> Node::createInterfaceObject(InterfaceInfo *info, bool manu
                 m_name, m_id, iface->getName(), info->index, pass ? _T("accepted") : _T("rejected"));
       if (!pass)
       {
+         sendPollerMsg(POLLER_WARNING _T("   Creation of interface object \"%s\" blocked by filter\r\n"), iface->getName());
          iface.reset();
       }
    }
@@ -5401,10 +5402,6 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId, int maskBits)
             if (createNewInterface(ifInfo, false, false) != nullptr)
             {
                hasChanges = true;
-            }
-            else
-            {
-               sendPollerMsg(POLLER_WARNING _T("   Creation of interface object \"%s\" blocked by filter\r\n"), ifInfo->name);
             }
          }
          else if (interfaceUpdated)
