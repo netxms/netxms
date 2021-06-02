@@ -53,7 +53,7 @@ public class ReportDefinition
       int index = 0;
       for(JRParameter jrParameter : jasperReport.getParameters())
       {
-         if (jrParameter.isSystemDefined() || jrParameter.isForPrompting())
+         if (jrParameter.isSystemDefined() || !jrParameter.isForPrompting())
             continue;
 
          final ReportParameter parameter = new ReportParameter(jrParameter, labels, index++);
