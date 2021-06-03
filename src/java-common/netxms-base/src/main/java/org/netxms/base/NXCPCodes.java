@@ -348,9 +348,9 @@ public class NXCPCodes
    public static final int CMD_LEAVE_MAINT_MODE = 0x0146;   
    public static final int CMD_JOIN_CLUSTER = 0x0147;   
    public static final int CMD_CLUSTER_NOTIFY = 0x0148;   
-   //public static final int CMD_ZMQ_SUBSCRIBE_EVENT = 0x0149;
-   //public static final int CMD_ZMQ_UNSUBSCRIBE_EVENT = 0x014A;
-   //public static final int CMD_ZMQ_SUBSCRIBE_DATA = 0x014B;
+   public static final int CMD_GET_OBJECT_QUERIES = 0x0149;
+   public static final int CMD_MODIFY_OBJECT_QUERY = 0x014A;
+   public static final int CMD_DELETE_OBJECT_QUERY = 0x014B;
    //public static final int CMD_ZMQ_UNSUBSCRIBE_DATA = 0x014C;
    //public static final int CMD_ZMQ_GET_EVT_SUBSCRIPTIONS = 0x014D;
    //public static final int CMD_ZMQ_GET_DATA_SUBSCRIPTIONS = 0x014E;
@@ -1215,6 +1215,7 @@ public class NXCPCodes
    public static final long VID_2FA_METHOD = 752;
    public static final long VID_2FA_RESPONSE = 753;
    public static final long VID_REQUIRES_DATA_VIEW = 754;
+   public static final long VID_QUERY_ID = 755;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ GeoArea::GeoArea(const NXCPMessage& msg) : m_border(64, 64, Ownership::True)
 {
    m_id = msg.getFieldAsUInt32(VID_AREA_ID);
    if (m_id == 0)
-      m_id = CreateUniqueId(IDG_GEO_AREAS);
+      m_id = CreateUniqueId(IDG_GEO_AREA);
    msg.getFieldAsString(VID_NAME, m_name, 128);
    m_comments = msg.getFieldAsString(VID_COMMENTS);
 

@@ -145,9 +145,10 @@
 #define IDG_RACK_ELEMENT      22
 #define IDG_PHYSICAL_LINK     23
 #define IDG_WEBSVC_DEFINITION 24
-#define IDG_OBJECT_CATEGORIES 25
-#define IDG_GEO_AREAS         26
-#define IDG_SSH_KEYS          27
+#define IDG_OBJECT_CATEGORY   25
+#define IDG_GEO_AREA          26
+#define IDG_SSH_KEY           27
+#define IDG_OBJECT_QUERY      28
 
 /**
  * Exit codes for console commands
@@ -609,6 +610,9 @@ private:
    void getSelectedObjects(NXCPMessage *request);
    void queryObjects(NXCPMessage *request);
    void queryObjectDetails(NXCPMessage *request);
+   void getObjectQueries(NXCPMessage *request);
+   void modifyObjectQuery(NXCPMessage *request);
+   void deleteObjectQuery(NXCPMessage *request);
    void getConfigurationVariables(UINT32 dwRqId);
    void getPublicConfigurationVariable(NXCPMessage *request);
    void setDefaultConfigurationVariableValues(NXCPMessage *pRequest);

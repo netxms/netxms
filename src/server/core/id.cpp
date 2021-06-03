@@ -35,7 +35,7 @@ void LoadLastEventId(DB_HANDLE hdb);
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   28
+#define NUMBER_OF_GROUPS   29
 
 /**
  * Static data
@@ -49,7 +49,8 @@ static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
       10000, 10000, 1, 1,
       1, 1, 1, 1,
       1, 1, 1, 1,
-      1, 1, 1, 1
+      1, 1, 1, 1,
+      1
    };
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
    {
@@ -59,9 +60,10 @@ static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+      0xFFFFFFFE
    };
-static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
+static const TCHAR *s_groupNames[NUMBER_OF_GROUPS] =
 {
    _T("Network Objects"),
    _T("Events"),
@@ -74,10 +76,10 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
    _T("Alarms"),
    _T("Alarm Notes"),
    _T("Packages"),
-   _T("SLM Ticket"),
+   _T("SLM Tickets"),
    _T("Object Tools"),
    _T("Scripts"),
-   _T("Agent Configs"),
+   _T("Agent Configurations"),
    _T("Graphs"),
    _T("Table Columns"),
    _T("Mapping Tables"),
@@ -90,7 +92,8 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
    _T("Web Service Definitions"),
    _T("Object Categories"),
    _T("Geographical Areas"),
-   _T("SSH Key id")
+   _T("SSH Keys"),
+   _T("Object Queries")
 };
 
 /**
@@ -488,8 +491,7 @@ bool InitIdTable()
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_WEBSVC_DEFINITION] = std::max(s_freeIdTable[IDG_WEBSVC_DEFINITION],
-                                                      DBGetFieldULong(hResult, 0, 0) + 1);
+         s_freeIdTable[IDG_WEBSVC_DEFINITION] = std::max(s_freeIdTable[IDG_WEBSVC_DEFINITION], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 
@@ -498,8 +500,7 @@ bool InitIdTable()
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_OBJECT_CATEGORIES] = std::max(s_freeIdTable[IDG_OBJECT_CATEGORIES],
-                                                      DBGetFieldULong(hResult, 0, 0) + 1);
+         s_freeIdTable[IDG_OBJECT_CATEGORY] = std::max(s_freeIdTable[IDG_OBJECT_CATEGORY], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 
@@ -508,7 +509,7 @@ bool InitIdTable()
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_GEO_AREAS] = std::max(s_freeIdTable[IDG_GEO_AREAS], DBGetFieldULong(hResult, 0, 0) + 1);
+         s_freeIdTable[IDG_GEO_AREA] = std::max(s_freeIdTable[IDG_GEO_AREA], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 
@@ -517,7 +518,16 @@ bool InitIdTable()
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_SSH_KEYS] = std::max(s_freeIdTable[IDG_SSH_KEYS], DBGetFieldULong(hResult, 0, 0) + 1);
+         s_freeIdTable[IDG_SSH_KEY] = std::max(s_freeIdTable[IDG_SSH_KEY], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available object query id
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM object_queries"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_OBJECT_QUERY] = std::max(s_freeIdTable[IDG_OBJECT_QUERY], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 
@@ -530,19 +540,19 @@ bool InitIdTable()
 /**
  * Create unique ID
  */
-uint32_t CreateUniqueId(int iGroup)
+uint32_t CreateUniqueId(int group)
 {
    uint32_t id;
    MutexLock(s_mutexTableAccess);
-   if (s_freeIdTable[iGroup] == s_idLimits[iGroup])
+   if (s_freeIdTable[group] == s_idLimits[group])
    {
       id = 0;   // ID zero means _T("no unique ID available")
-      nxlog_write(NXLOG_ERROR, _T("Unable to assign unique ID to object in group \"%s\". You should perform database optimization to fix that."), m_pszGroupNames[iGroup]);
+      nxlog_write(NXLOG_ERROR, _T("Unable to assign unique ID to object in group \"%s\". You should perform database optimization to fix that."), s_groupNames[group]);
    }
    else
    {
-      id = s_freeIdTable[iGroup];
-      s_freeIdTable[iGroup]++;
+      id = s_freeIdTable[group];
+      s_freeIdTable[group]++;
    }
    MutexUnlock(s_mutexTableAccess);
    return id;

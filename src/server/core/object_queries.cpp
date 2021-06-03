@@ -35,8 +35,12 @@ ObjectQuery::ObjectQuery(const NXCPMessage& msg) :
          m_source(msg.getFieldAsString(VID_SCRIPT_CODE), -1, Ownership::True),
          m_parameters(msg.getFieldAsInt32(VID_NUM_PARAMETERS))
 {
-   m_id = msg.getFieldAsUInt32(VID_OBJECT_ID);
+   m_id = msg.getFieldAsUInt32(VID_QUERY_ID);
+   if (m_id == 0)
+      m_id = CreateUniqueId(IDG_OBJECT_QUERY);
    m_guid = msg.getFieldAsGUID(VID_GUID);
+   if (m_guid.isNull())
+      m_guid = uuid::generate();
    msg.getFieldAsString(VID_NAME, m_name, MAX_OBJECT_NAME);
 
    int count = msg.getFieldAsInt32(VID_NUM_PARAMETERS);
@@ -195,6 +199,85 @@ uint32_t ObjectQuery::fillMessage(NXCPMessage *msg, uint32_t baseId) const
       fieldId += 2;
    }
    return fieldId;
+}
+
+/**
+ * Context for GetObjectQueriesCallback
+ */
+struct GetObjectQueriesCallbackContext
+{
+   NXCPMessage *msg;
+   uint32_t fieldId;
+   uint32_t count;
+};
+
+/**
+ * Callback for getting configured object queries into NXCP message
+ */
+static void GetObjectQueriesCallback(ObjectQuery *query, GetObjectQueriesCallbackContext *context)
+{
+   context->fieldId = query->fillMessage(context->msg, context->fieldId);
+   context->count++;
+}
+
+/**
+ * Get all configured object queries
+ */
+uint32_t GetObjectQueries(NXCPMessage *msg)
+{
+   GetObjectQueriesCallbackContext context;
+   context.msg = msg;
+   context.fieldId = VID_ELEMENT_LIST_BASE;
+   context.count = 0;
+   s_objectQueries.forEach(GetObjectQueriesCallback, &context);
+   msg->setField(VID_NUM_ELEMENTS, context.count);
+   return RCC_SUCCESS;
+}
+
+/**
+ * Create or modify object query from message
+ */
+uint32_t ModifyObjectQuery(const NXCPMessage& msg, uint32_t *queryId)
+{
+   auto query = make_shared<ObjectQuery>(msg);
+   uint32_t rcc;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (query->saveToDatabase(hdb))
+   {
+      s_objectQueries.put(query->getId(), query);
+      *queryId = query->getId();
+      rcc = RCC_SUCCESS;
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}
+
+/**
+ * Delete object query
+ */
+uint32_t DeleteObjectQuery(uint32_t queryId)
+{
+   shared_ptr<ObjectQuery> query = s_objectQueries.get(queryId);
+   if (query == nullptr)
+      return RCC_INVALID_OBJECT_QUERY_ID;
+
+   uint32_t rcc;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (query->deleteFromDatabase(hdb))
+   {
+      s_objectQueries.remove(queryId);
+      rcc = RCC_SUCCESS;
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
 }
 
 /**
