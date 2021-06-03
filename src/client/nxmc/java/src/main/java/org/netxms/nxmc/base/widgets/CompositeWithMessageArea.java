@@ -20,9 +20,8 @@ package org.netxms.nxmc.base.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 
 /**
@@ -41,24 +40,20 @@ public class CompositeWithMessageArea extends Composite implements MessageAreaHo
    public CompositeWithMessageArea(Composite parent, int style)
    {
       super(parent, style);
-      
-      setLayout(new FormLayout());
+
+      GridLayout layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.verticalSpacing = 0;
+      setLayout(layout);
       
       messageArea = new MessageArea(this, SWT.NONE);
-      FormData fd = new FormData();
-      fd.top = new FormAttachment(0, 0);
-      fd.left = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      
+      messageArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+
       content = createContent(this);
-      fd = new FormData();
-      fd.top = new FormAttachment(messageArea, 0, SWT.BOTTOM);
-      fd.left = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-      content.setLayoutData(fd);
+      content.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
    }
-   
+
    /**
     * Create content. Default implementation creates empty composite.
     * 
@@ -81,12 +76,7 @@ public class CompositeWithMessageArea extends Composite implements MessageAreaHo
       if (content != null)
          content.dispose();
       content = c;
-      FormData fd = new FormData();
-      fd.top = new FormAttachment(messageArea, 0, SWT.BOTTOM);
-      fd.left = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-      content.setLayoutData(fd);
+      content.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
    }
 
    /**

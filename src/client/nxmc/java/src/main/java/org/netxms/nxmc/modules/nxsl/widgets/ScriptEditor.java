@@ -23,17 +23,14 @@ import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.jface.text.IFindReplaceTarget;
-import org.eclipse.jface.text.ITextOperationTarget;
-import org.eclipse.jface.text.TextViewerUndoManager;
-import org.eclipse.jface.text.source.CompositeRuler;
-import org.eclipse.jface.text.source.ISourceViewer;
-import org.eclipse.jface.text.source.LineNumberRulerColumn;
-import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.Bullet;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.custom.LineStyleEvent;
+import org.eclipse.swt.custom.LineStyleListener;
+import org.eclipse.swt.custom.ST;
+import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.custom.VerifyKeyListener;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.DisposeEvent;
@@ -43,15 +40,14 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.GlyphMetrics;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ScrollBar;
@@ -63,8 +59,6 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.nxsl.widgets.helpers.NXSLDocument;
-import org.netxms.nxmc.modules.nxsl.widgets.helpers.NXSLSourceViewerConfiguration;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.ThemeEngine;
@@ -80,15 +74,14 @@ public class ScriptEditor extends CompositeWithMessageArea
    private static final Color ERROR_COLOR = new Color(Display.getDefault(), 255, 0, 0);
 
    private Composite content;
-	private SourceViewer editor;
-	private CompositeRuler ruler;
+   private StyledText editor;
+   private LineStyleListener lineNumberingStyleListener;
 	private Set<String> functions = new HashSet<String>(0);
 	private Set<String> variables = new HashSet<String>(0);
    private Set<String> constants = new HashSet<String>(0);
 	private String[] functionsCache = new String[0];
 	private String[] variablesCache = new String[0];
    private String[] constantsCache = new String[0];
-	private Image[] proposalIcons = new Image[4];
 	private String hintText;
 	private Composite hintArea;
 	private Text hintTextControl = null;
@@ -170,80 +163,28 @@ public class ScriptEditor extends CompositeWithMessageArea
       {
          createHintsArea();
       }
-		
-      proposalIcons[0] = ResourceManager.getImageDescriptor("icons/nxsl/function.gif").createImage();
-      proposalIcons[1] = ResourceManager.getImageDescriptor("icons/nxsl/var_global.gif").createImage();
-      proposalIcons[2] = ResourceManager.getImageDescriptor("icons/nxsl/var_local.gif").createImage();
-      proposalIcons[3] = ResourceManager.getImageDescriptor("icons/nxsl/constant.gif").createImage();
-		
-		ruler = new CompositeRuler();
-      editor = new SourceViewer(content, ruler, editorStyle | SWT.MULTI);
-		editor.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		editor.configure(new NXSLSourceViewerConfiguration(this));
+      
+      editor = new StyledText(content, editorStyle | SWT.MULTI);
+      editor.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+      lineNumberingStyleListener = new LineStyleListener() {
+         public void lineGetStyle(LineStyleEvent e)
+         {
+            e.bulletIndex = editor.getLineAtOffset(e.lineOffset);
+
+            // Set the style, 12 pixels wide for each digit
+            StyleRange style = new StyleRange();
+            style.metrics = new GlyphMetrics(0, 0, Integer.toString(Math.max(editor.getLineCount(), 999)).length() * 12);
+
+            // Create and set the bullet
+            e.bullet = new Bullet(ST.BULLET_NUMBER, style);
+         }
+      };
 		if (showLineNumbers)
-		   ruler.addDecorator(0, new LineNumberRulerColumn());
+         editor.addLineStyleListener(lineNumberingStyleListener);
 
-		final TextViewerUndoManager undoManager = new TextViewerUndoManager(50);
-		editor.setUndoManager(undoManager);
-		undoManager.connect(editor);
-
-		editor.getFindReplaceTarget();
-
-		editor.prependVerifyKeyListener(new VerifyKeyListener() {
-			@Override
-			public void verifyKey(VerifyEvent event)
-			{
-				if (!event.doit)
-					return;
-				
-				if (event.stateMask == SWT.MOD1)
-				{
-					switch(event.character)
-					{
-						case ' ':
-							editor.doOperation(ISourceViewer.CONTENTASSIST_PROPOSALS);
-							event.doit = false;
-							break;
-						case 0x19:	// Ctrl+Y
-							undoManager.redo();
-							event.doit = false;
-							break;
-						case 0x1A:	// Ctrl+Z
-							undoManager.undo();
-							event.doit = false;
-							break;
-					}
-				}
-				else if (event.stateMask == SWT.NONE)
-				{
-					if (event.character == 0x09)
-					{
-						if (editor.getSelectedRange().y > 0)
-						{
-							editor.doOperation(ITextOperationTarget.SHIFT_RIGHT);
-							event.doit = false;
-						}
-					}
-				}
-				else if (event.stateMask == SWT.SHIFT)
-				{
-					if (event.character == 0x09)
-					{
-						if (editor.getSelectedRange().y > 0)
-						{
-							editor.doOperation(ITextOperationTarget.SHIFT_LEFT);
-							event.doit = false;
-						}
-					}
-				}
-			}
-		});
-
-		StyledText control = editor.getTextWidget();
-		control.setFont(JFaceResources.getTextFont());
-		control.setWordWrap(false);
-
-		editor.setDocument(new NXSLDocument("")); //$NON-NLS-1$
+      editor.setFont(JFaceResources.getTextFont());
+      editor.setWordWrap(false);
 
       if (showCompileButton)
       {
@@ -263,7 +204,7 @@ public class ScriptEditor extends CompositeWithMessageArea
          gd.exclude = true;
          compileButton.setLayoutData(gd);
 
-         editor.getTextWidget().addControlListener(new ControlListener() {
+         editor.addControlListener(new ControlListener() {
             @Override
             public void controlResized(ControlEvent e)
             {
@@ -302,10 +243,9 @@ public class ScriptEditor extends CompositeWithMessageArea
    private void positionCompileButton()
    {
       compileButton.moveAbove(null);
-      Control textControl = editor.getControl();
-      Point location = textControl.getLocation();
-      int editorWidth = textControl.getSize().x;
-      ScrollBar sb = editor.getTextWidget().getVerticalBar();
+      Point location = editor.getLocation();
+      int editorWidth = editor.getSize().x;
+      ScrollBar sb = editor.getVerticalBar();
       if (sb != null)
          editorWidth -= sb.getSize().x;
       compileButton.setLocation(location.x + editorWidth - compileButton.getSize().x - 3, location.y + 3);
@@ -325,7 +265,7 @@ public class ScriptEditor extends CompositeWithMessageArea
       hintArea.setLayout(layout);
       hintArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
       hintArea.setBackground(ThemeEngine.getBackgroundColor("MessageBar"));
-      
+
       CLabel hintsTitle = new CLabel(hintArea, SWT.NONE);
       hintsTitle.setBackground(hintArea.getBackground());
       hintsTitle.setForeground(ThemeEngine.getForegroundColor("MessageBar"));
@@ -376,26 +316,15 @@ public class ScriptEditor extends CompositeWithMessageArea
       
       Label separator = new Label(content, SWT.SEPARATOR | SWT.HORIZONTAL);
       separator.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-	}
+   }
 
-   /**
-    * @see org.eclipse.swt.widgets.Widget#dispose()
-    */
-	@Override
-	public void dispose()
-	{
-		for(int i = 0; i < proposalIcons.length; i++)
-			proposalIcons[i].dispose();
-		super.dispose();
-	}
-	
 	/**
 	 * Get underlying text widget
 	 * @return text widget
 	 */
 	public StyledText getTextWidget()
 	{
-		return editor.getTextWidget();
+      return editor;
 	}
 	
 	/**
@@ -404,7 +333,7 @@ public class ScriptEditor extends CompositeWithMessageArea
 	 */
 	public void setText(String text)
 	{
-		editor.setDocument(new NXSLDocument(text));
+      editor.setText(text);
 	}
 
 	/**
@@ -413,7 +342,7 @@ public class ScriptEditor extends CompositeWithMessageArea
 	 */
 	public String getText()
 	{
-		return editor.getDocument().get();
+      return editor.getText();
 	}
 
 	/**
@@ -500,44 +429,17 @@ public class ScriptEditor extends CompositeWithMessageArea
       return constantsCache;
    }
 
-	/**
-	 * Get icon for given autocompletion proposal type. Proposal types defined in NXSLProposalProcessor.
-	 * 
-	 * @param type proposal type
-	 * @return image for given proposal type or null
-	 */
-	public Image getProposalIcon(int type)
-	{
-		try
-		{
-			return proposalIcons[type];
-		}
-		catch(ArrayIndexOutOfBoundsException e)
-		{
-			return null;
-		}
-	}
-
-	/**
-	 * Returns the find/replace target of underlying source viewer
-	 * @return the find/replace target of underlying source viewer
-	 */
-	public IFindReplaceTarget getFindReplaceTarget()
-	{
-		return editor.getFindReplaceTarget();
-	}
-
    /**
     * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
     */
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
-		Point p = editor.getTextWidget().computeSize(wHint, hHint, changed);
+      Point p = editor.computeSize(wHint, hHint, changed);
 		p.y += 4;
 		return p;
 	}
-	
+
 	/**
 	 * Show/hide line numbers in editor
 	 * 
@@ -546,17 +448,12 @@ public class ScriptEditor extends CompositeWithMessageArea
 	public void showLineNumbers(boolean show)
 	{
 	   if (show)
-	   {
-         if (!ruler.getDecoratorIterator().hasNext())
-            ruler.addDecorator(0, new LineNumberRulerColumn());
-	   }
+         editor.addLineStyleListener(lineNumberingStyleListener);
 	   else
-	   {
-   	   if (ruler.getDecoratorIterator().hasNext())
-   	      ruler.removeDecorator(0);
-	   }
+         editor.removeLineStyleListener(lineNumberingStyleListener);
+      editor.redraw();
 	}
-	
+
 	/**
 	 * Toggle hints area
 	 */
@@ -598,8 +495,7 @@ public class ScriptEditor extends CompositeWithMessageArea
                @Override
                public void run()
                {
-                  StyledText s = editor.getTextWidget();
-                  s.setLineBackground(0, s.getLineCount(), null);
+                  editor.setLineBackground(0, editor.getLineCount(), null);
                   if (result.success)
                   {
                      clearMessages();
@@ -608,8 +504,8 @@ public class ScriptEditor extends CompositeWithMessageArea
                   else
                   {
                      clearMessages();
-                     addMessage(MessageArea.WARNING, result.errorMessage, true);
-                     s.setLineBackground(result.errorLine - 1, 1, ERROR_COLOR);
+                     addMessage(MessageArea.ERROR, result.errorMessage, true);
+                     editor.setLineBackground(result.errorLine - 1, 1, ERROR_COLOR);
                   }
                   editor.setEditable(true);
                }

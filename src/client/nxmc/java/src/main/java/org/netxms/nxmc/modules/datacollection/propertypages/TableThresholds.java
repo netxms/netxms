@@ -46,7 +46,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.TableThreshold;
-import org.netxms.client.events.EventTemplate;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.dialogs.EditTableThresholdDialog;
@@ -82,9 +81,9 @@ public class TableThresholds extends AbstractDCIPropertyPage
       super(i18n.tr("Table Thresholds"), editor);
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.propertypages.AbstractDCIPropertyPage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -95,9 +94,6 @@ public class TableThresholds extends AbstractDCIPropertyPage
 		for(TableThreshold t : dci.getThresholds())
 			thresholds.add(new TableThreshold(t));
 
-		// Initiate loading of event manager plugin if it was not loaded before TODO: check if requi
-		//Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
-		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
@@ -459,9 +455,9 @@ public class TableThresholds extends AbstractDCIPropertyPage
 		editor.modify();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
@@ -469,9 +465,9 @@ public class TableThresholds extends AbstractDCIPropertyPage
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -480,9 +476,9 @@ public class TableThresholds extends AbstractDCIPropertyPage
 		return true;
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performCancel()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performCancel()
+    */
 	@Override
 	public boolean performCancel()
 	{

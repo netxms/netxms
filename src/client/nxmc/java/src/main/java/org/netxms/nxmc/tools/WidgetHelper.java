@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -134,12 +134,8 @@ public class WidgetHelper
 		Text text = new Text(group, flags);
 		if (initialText != null)
 			text.setText(initialText);
-		GridData gridData = new GridData();
-		gridData.horizontalAlignment = GridData.FILL;
-		gridData.grabExcessHorizontalSpace = true;
-		gridData.widthHint = widthHint;
-		text.setLayoutData(gridData);		
-		
+      text.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
 		return text;
 	}
 
@@ -184,10 +180,7 @@ public class WidgetHelper
 		StyledText text = new StyledText(group, flags);
 		if (initialText != null)
 			text.setText(initialText);
-		GridData gridData = new GridData();
-		gridData.horizontalAlignment = GridData.FILL;
-		gridData.grabExcessHorizontalSpace = true;
-		text.setLayoutData(gridData);		
+      text.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
 		return text;
 	}
@@ -253,7 +246,7 @@ public class WidgetHelper
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.grabExcessHorizontalSpace = true;
 		combo.setLayoutData(gridData);
-		
+
 		return combo;
 	}
 
@@ -306,7 +299,7 @@ public class WidgetHelper
 		
 		return spinner;
 	}
-	
+
 	/**
     * Create pair of label and color selector, with label above
 	 * 
@@ -346,10 +339,10 @@ public class WidgetHelper
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.grabExcessHorizontalSpace = true;
 		cs.getButton().setLayoutData(gridData);		
-		
+
 		return cs;
 	}
-	
+
 	/**
 	 * Create labeled control using factory.
 	 * 
@@ -383,19 +376,16 @@ public class WidgetHelper
 			gridData.grabExcessHorizontalSpace = true;
 			group.setLayoutData(gridData);
 		}
-		
+
 		Label label = new Label(group, SWT.NONE);
 		label.setText(labelText);
 
 		final Control widget = factory.createControl(group, flags);
-		GridData gridData = new GridData();
-		gridData.horizontalAlignment = GridData.FILL;
-		gridData.grabExcessHorizontalSpace = true;
-		widget.setLayoutData(gridData);		
+      widget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		return widget;
 	}
-	
+
 	/**
 	 * Save settings of table viewer columns
 	 * 

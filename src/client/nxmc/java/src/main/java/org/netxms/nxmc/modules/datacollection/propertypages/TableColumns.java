@@ -67,7 +67,6 @@ import org.netxms.nxmc.modules.datacollection.TableColumnEnumerator;
 import org.netxms.nxmc.modules.datacollection.dialogs.EditColumnDialog;
 import org.netxms.nxmc.modules.datacollection.propertypages.helpers.TableColumnLabelProvider;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
-import org.netxms.nxmc.modules.snmp.shared.MibCache;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
