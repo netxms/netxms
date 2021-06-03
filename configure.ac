@@ -137,6 +137,7 @@ DISABLE_SSH="no"
 ENABLE_DEBUG="no"
 ENABLE_SANITIZER="no"
 ENABLE_WERROR="no"
+ENABLE_RTTI="no"
 STATIC_BUILD="no"
 ALL_STATIC="no"
 DBDRIVER_SELECTED="no"
@@ -860,6 +861,14 @@ AC_ARG_ENABLE(werror,
 	fi
 ])
 
+AC_ARG_ENABLE(rtti,
+[AS_HELP_STRING(--enable-rtti,enable RTTI)],
+[
+	if test "x$enableval" = "xyes"; then
+		ENABLE_RTTI="yes"
+	fi
+])
+
 AC_ARG_ENABLE(64bit,
 [AS_HELP_STRING(--disable-64bit,disable 64bit build (force 32bit build on 64bit machine))],
 [
@@ -1430,8 +1439,10 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	AC_CPP_CHECK_OPTION(-Wno-format-truncation)
 	AC_CPP_CHECK_OPTION(-Wuseless-cast)
 	AC_CPP_CHECK_OPTION(-Werror=return-type)
-	AC_CXX_CHECK_OPTION(-fno-rtti)
 	AC_CXX_CHECK_OPTION(-fno-exceptions)
+	if test "x$ENABLE_RTTI" != "xyes"; then
+		AC_CXX_CHECK_OPTION(-fno-rtti)
+	fi
 
 	# Symbol visibility control on AIX aith xlclang++ hides vtables for classes
 	# even when visibility "default" is set for class explicitly which
@@ -1830,8 +1841,10 @@ if test "x$CXX" = "xCC" ; then
 	AC_CXX_CHECK_OPTION(-std=c++11)
 	AC_LD_CHECK_OPTION(-std=c++11)
 	AC_CXX_CHECK_OPTION(-features=no%except)
-	AC_CXX_CHECK_OPTION(-features=no%rtti)
 	AC_LD_CHECK_OPTION(-xatomic=studio)
+	if test "x$ENABLE_RTTI" != "xyes"; then
+		AC_CXX_CHECK_OPTION(-features=no%rtti)
+	fi
 
 	AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
 	OLD_CPPFLAGS="$CPPFLAGS"
