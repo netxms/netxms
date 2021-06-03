@@ -87,6 +87,7 @@ import org.netxms.nxmc.modules.datacollection.propertypages.GeneralTable;
 import org.netxms.nxmc.modules.datacollection.propertypages.InstanceDiscovery;
 import org.netxms.nxmc.modules.datacollection.propertypages.OtherOptions;
 import org.netxms.nxmc.modules.datacollection.propertypages.OtherOptionsTable;
+import org.netxms.nxmc.modules.datacollection.propertypages.PerfTab;
 import org.netxms.nxmc.modules.datacollection.propertypages.TableColumns;
 import org.netxms.nxmc.modules.datacollection.propertypages.Thresholds;
 import org.netxms.nxmc.modules.datacollection.propertypages.Transformation;
@@ -1071,7 +1072,8 @@ public class DataCollectionView extends ObjectView
       pm.addToRoot(new PreferenceNode("transformation", new Transformation(dce)));             
       pm.addToRoot(new PreferenceNode("thresholds", new Thresholds(dce)));        
       pm.addToRoot(new PreferenceNode("instanceDiscovery", new InstanceDiscovery(dce)));
-      //TODO: missing performance tab only for DCI
+      if (dce.getObject() instanceof DataCollectionItem)
+         pm.addToRoot(new PreferenceNode("performanceTab", new PerfTab(dce)));
       pm.addToRoot(new PreferenceNode("accessControl", new AccessControl(dce)));
       if (dce.getObject() instanceof DataCollectionItem)
          pm.addToRoot(new PreferenceNode("otherOptions", new OtherOptions(dce)));             
