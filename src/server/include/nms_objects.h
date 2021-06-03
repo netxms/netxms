@@ -4532,6 +4532,8 @@ public:
    bool deleteFromDatabase(DB_HANDLE hdb);
 
    uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+
+   uint32_t getId() const { return m_id; }
 };
 
 #define MAX_USER_AGENT_MESSAGE_SIZE 1024
@@ -4628,9 +4630,13 @@ shared_ptr<Zone> NXCORE_EXPORTABLE FindZoneByProxyId(uint32_t proxyId);
 int32_t FindUnusedZoneUIN();
 bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr);
 bool NXCORE_EXPORTABLE IsParentObject(uint32_t object1, uint32_t object2);
+StructArray<DependentNode> *GetNodeDependencies(uint32_t nodeId);
+
 ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
          bool readAllComputedFields = false, const StringList *fields = nullptr, const StringList *orderBy = nullptr, uint32_t limit = 0);
-StructArray<DependentNode> *GetNodeDependencies(uint32_t nodeId);
+uint32_t GetObjectQueries(NXCPMessage *msg);
+uint32_t ModifyObjectQuery(const NXCPMessage& msg, uint32_t *queryId);
+uint32_t DeleteObjectQuery(uint32_t queryId);
 
 BOOL LoadObjects();
 void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter);

@@ -183,7 +183,7 @@ ObjectCategory::ObjectCategory(const NXCPMessage& msg)
 {
    m_id = msg.getFieldAsUInt32(VID_CATEGORY_ID);
    if (m_id == 0)
-      m_id = CreateUniqueId(IDG_OBJECT_CATEGORIES);
+      m_id = CreateUniqueId(IDG_OBJECT_CATEGORY);
    msg.getFieldAsString(VID_NAME, m_name, MAX_OBJECT_NAME);
    m_icon = msg.getFieldAsGUID(VID_ICON);
    m_mapImage = msg.getFieldAsGUID(VID_IMAGE);

@@ -565,9 +565,9 @@ typedef struct
 #define CMD_LEAVE_MAINT_MODE              0x0146
 #define CMD_JOIN_CLUSTER                  0x0147
 #define CMD_CLUSTER_NOTIFY                0x0148
-//#define CMD_ZMQ_SUBSCRIBE_EVENT           0x0149
-//#define CMD_ZMQ_UNSUBSCRIBE_EVENT         0x014A
-//#define CMD_ZMQ_SUBSCRIBE_DATA            0x014B
+#define CMD_GET_OBJECT_QUERIES            0x0149
+#define CMD_MODIFY_OBJECT_QUERY           0x014A
+#define CMD_DELETE_OBJECT_QUERY           0x014B
 //#define CMD_ZMQ_UNSUBSCRIBE_DATA          0x014C
 //#define CMD_ZMQ_GET_EVT_SUBSCRIPTIONS     0x014D
 //#define CMD_ZMQ_GET_DATA_SUBSCRIPTIONS    0x014E
@@ -1432,6 +1432,7 @@ typedef struct
 #define VID_2FA_METHOD              ((uint32_t)752)
 #define VID_2FA_RESPONSE            ((uint32_t)753)
 #define VID_REQUIRES_DATA_VIEW      ((uint32_t)754)
+#define VID_QUERY_ID                ((uint32_t)755)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

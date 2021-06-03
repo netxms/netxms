@@ -62,7 +62,7 @@ static SynchronizedSharedHashMap<uint32_t, SshKeyPair> s_sshKeys;
  */
 SshKeyPair::SshKeyPair()
 {
-   m_id = CreateUniqueId(IDG_SSH_KEYS);
+   m_id = CreateUniqueId(IDG_SSH_KEY);
    m_name[0] = 0;
    m_publicKey = nullptr;
    m_privateKey = nullptr;
@@ -76,7 +76,7 @@ SshKeyPair::SshKeyPair(NXCPMessage *msg)
    if (msg->getFieldAsInt32(VID_SSH_KEY_ID) != 0)
       m_id = msg->getFieldAsInt32(VID_SSH_KEY_ID);
    else
-      m_id = CreateUniqueId(IDG_SSH_KEYS);
+      m_id = CreateUniqueId(IDG_SSH_KEY);
    msg->getFieldAsString(VID_NAME, m_name, MAX_SSH_KEY_NAME);
    m_publicKey = msg->getFieldAsString(VID_PUBLIC_KEY);
    m_privateKey = msg->getFieldAsMBString(VID_PRIVATE_KEY);

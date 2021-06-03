@@ -890,6 +890,15 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_QUERY_OBJECT_DETAILS:
          queryObjectDetails(request);
          break;
+      case CMD_GET_OBJECT_QUERIES:
+         getObjectQueries(request);
+         break;
+      case CMD_MODIFY_OBJECT_QUERY:
+         modifyObjectQuery(request);
+         break;
+      case CMD_DELETE_OBJECT_QUERY:
+         deleteObjectQuery(request);
+         break;
       case CMD_GET_CONFIG_VARLIST:
          getConfigurationVariables(request->getId());
          break;
@@ -2598,7 +2607,7 @@ void ClientSession::queryObjects(NXCPMessage *request)
  */
 void ClientSession::queryObjectDetails(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
    TCHAR *query = request->getFieldAsString(VID_QUERY);
    StringList fields(request, VID_FIELD_LIST_BASE, VID_FIELDS);
@@ -2614,21 +2623,78 @@ void ClientSession::queryObjectDetails(NXCPMessage *request)
       {
          ObjectQueryResult *curr = objects->get(i);
          idList[i] = curr->object->getId();
-         curr->values->fillMessage(&msg, fieldId, fieldId + 1);
+         curr->values->fillMessage(&response, fieldId, fieldId + 1);
          fieldId += curr->values->size() * 2 + 1;
       }
-      msg.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);
+      response.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);
       delete[] idList;
       delete objects;
    }
    else
    {
-      msg.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
-      msg.setField(VID_ERROR_TEXT, errorMessage);
+      response.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
+      response.setField(VID_ERROR_TEXT, errorMessage);
    }
    MemFree(query);
 
-   sendMessage(&msg);
+   sendMessage(response);
+}
+
+/**
+ * Get object queries
+ */
+void ClientSession::getObjectQueries(NXCPMessage *request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   response.setField(VID_RCC, GetObjectQueries(&response));
+   sendMessage(response);
+}
+
+/**
+ * Create or modify object query
+ */
+void ClientSession::modifyObjectQuery(NXCPMessage *request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES)
+   {
+      uint32_t queryId;
+      uint32_t rcc = ModifyObjectQuery(*request, &queryId);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+      {
+         response.setField(VID_QUERY_ID, queryId);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Object query [%u] modified"), queryId);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on modify object query"));
+   }
+   sendMessage(response);
+}
+
+/**
+ * Delete object query
+ */
+void ClientSession::deleteObjectQuery(NXCPMessage *request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES)
+   {
+      uint32_t queryId = request->getFieldAsUInt32(VID_QUERY_ID);
+      uint32_t rcc = DeleteObjectQuery(queryId);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Object query [%u] deleted"), queryId);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on delete object query"));
+   }
+   sendMessage(response);
 }
 
 /**
@@ -2699,8 +2765,7 @@ void ClientSession::getConfigurationVariables(UINT32 dwRqId)
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
@@ -8478,9 +8543,9 @@ void ClientSession::changeSubscription(NXCPMessage *request)
 /**
  * Callback for counting DCIs in the system
  */
-static void DciCountCallback(NetObj *object, void *data)
+static void DciCountCallback(NetObj *object, uint32_t *count)
 {
-	*((UINT32 *)data) += ((Node *)object)->getItemCount();
+	*count += static_cast<DataCollectionTarget*>(object)->getItemCount();
 }
 
 /**
@@ -8500,10 +8565,10 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
 
    // Server version, etc.
    msg.setField(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
-   msg.setField(VID_SERVER_UPTIME, (UINT32)(time(nullptr) - g_serverStartTime));
+   msg.setField(VID_SERVER_UPTIME, static_cast<uint32_t>(time(nullptr) - g_serverStartTime));
 
    // Number of objects and DCIs
-	UINT32 dciCount = 0;
+	uint32_t dciCount = 0;
 	g_idxNodeById.forEach(DciCountCallback, &dciCount);
    msg.setField(VID_NUM_ITEMS, dciCount);
 	msg.setField(VID_NUM_OBJECTS, (UINT32)g_idxObjectById.size());
@@ -8562,13 +8627,11 @@ void ClientSession::sendScriptList(UINT32 dwRqId)
  */
 void ClientSession::sendScript(NXCPMessage *pRequest)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      UINT32 id = pRequest->getFieldAsUInt32(VID_SCRIPT_ID);
+      uint32_t id = pRequest->getFieldAsUInt32(VID_SCRIPT_ID);
       NXSL_LibraryScript *script = GetServerScriptLibrary()->findScript(id);
       if (script != nullptr)
          script->fillMessage(&msg);
@@ -8576,7 +8639,10 @@ void ClientSession::sendScript(NXCPMessage *pRequest)
          msg.setField(VID_RCC, RCC_INVALID_SCRIPT_ID);
    }
    else
+   {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
    sendMessage(&msg);
 }
 
