@@ -27,6 +27,8 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.objects.interfaces.AutoBindObject;
+import org.netxms.client.objects.interfaces.PollingTarget;
+import org.netxms.client.objects.interfaces.ZoneMember;
 
 /**
  * Cluster object
@@ -120,7 +122,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
 	}
 
    /**
-    * @see org.netxms.client.objects.ZoneMember#getZoneId()
+    * @see org.netxms.client.objects.interfaces.ZoneMember#getZoneId()
     */
    @Override
    public int getZoneId()
@@ -129,7 +131,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
    }
 
    /**
-    * @see org.netxms.client.objects.ZoneMember#getZoneName()
+    * @see org.netxms.client.objects.interfaces.ZoneMember#getZoneName()
     */
    @Override
    public String getZoneName()
@@ -139,7 +141,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#getIfXTablePolicy()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getIfXTablePolicy()
     */
    @Override
    public int getIfXTablePolicy()
@@ -148,7 +150,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#getAgentCacheMode()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getAgentCacheMode()
     */
    @Override
    public AgentCacheMode getAgentCacheMode()
@@ -157,7 +159,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#getFlags()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getFlags()
     */
    @Override
    public int getFlags()
@@ -166,7 +168,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#getPollerNodeId()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollerNodeId()
     */
    @Override
    public long getPollerNodeId()
@@ -175,7 +177,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#canHaveAgent()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveAgent()
     */
    @Override
    public boolean canHaveAgent()
@@ -184,7 +186,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#canHaveInterfaces()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveInterfaces()
     */
    @Override
    public boolean canHaveInterfaces()
@@ -193,7 +195,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#canHavePollerNode()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHavePollerNode()
     */
    @Override
    public boolean canHavePollerNode()
@@ -202,7 +204,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#canUseEtherNetIP()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseEtherNetIP()
     */
    @Override
    public boolean canUseEtherNetIP()

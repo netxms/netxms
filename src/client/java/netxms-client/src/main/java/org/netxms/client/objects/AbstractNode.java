@@ -36,6 +36,9 @@ import org.netxms.client.constants.IcmpStatCollectionMode;
 import org.netxms.client.constants.NodeType;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.objects.configs.ChassisPlacement;
+import org.netxms.client.objects.interfaces.HardwareEntity;
+import org.netxms.client.objects.interfaces.PollingTarget;
+import org.netxms.client.objects.interfaces.ZoneMember;
 import org.netxms.client.snmp.SnmpVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +46,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Abstract base class for node objects.
  */
-public abstract class AbstractNode extends DataCollectionTarget implements ElementForPhysicalPlacment, ZoneMember, PollingTarget
+public abstract class AbstractNode extends DataCollectionTarget implements HardwareEntity, ZoneMember, PollingTarget
 {
 	// Agent authentication methods
 	public static final int AGENT_AUTH_NONE = 0;
@@ -1218,7 +1221,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Eleme
    }
 
    /**
-    * @see org.netxms.client.objects.ElementForPhysicalPlacment#getChassisPlacement()
+    * @see org.netxms.client.objects.interfaces.HardwareEntity#getChassisPlacement()
     */
    @Override
    public ChassisPlacement getChassisPlacement()

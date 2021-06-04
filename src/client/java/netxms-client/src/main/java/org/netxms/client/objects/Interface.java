@@ -31,6 +31,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.LinkLayerDiscoveryProtocol;
+import org.netxms.client.objects.interfaces.ZoneMember;
 import org.netxms.client.snmp.SnmpObjectId;
 
 /**

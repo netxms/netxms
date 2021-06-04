@@ -27,7 +27,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.constants.NodePollType;
-import org.netxms.client.objects.PollingTarget;
+import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.views.NodePollerView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;

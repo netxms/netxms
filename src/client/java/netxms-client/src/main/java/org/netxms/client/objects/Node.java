@@ -76,7 +76,7 @@ public class Node extends AbstractNode
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#canHaveAgent()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveAgent()
     */
    @Override
    public boolean canHaveAgent()
@@ -85,7 +85,7 @@ public class Node extends AbstractNode
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#canHaveInterfaces()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveInterfaces()
     */
    @Override
    public boolean canHaveInterfaces()
@@ -94,7 +94,7 @@ public class Node extends AbstractNode
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#canHavePollerNode()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHavePollerNode()
     */
    @Override
    public boolean canHavePollerNode()
@@ -103,7 +103,7 @@ public class Node extends AbstractNode
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#canUseEtherNetIP()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseEtherNetIP()
     */
    @Override
    public boolean canUseEtherNetIP()

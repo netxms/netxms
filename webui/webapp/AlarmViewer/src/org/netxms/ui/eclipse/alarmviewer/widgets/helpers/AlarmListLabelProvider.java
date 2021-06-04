@@ -29,7 +29,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.ZoneMember;
+import org.netxms.client.objects.interfaces.ZoneMember;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;

@@ -25,6 +25,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.client.sensor.configs.DlmsConfig;
 import org.netxms.client.sensor.configs.LoraWanConfig;
 import org.netxms.client.sensor.configs.LoraWanRegConfig;
@@ -360,7 +361,7 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#getAgentCacheMode()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getAgentCacheMode()
     */
    @Override
    public AgentCacheMode getAgentCacheMode()
@@ -369,7 +370,7 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#getPollerNodeId()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollerNodeId()
     */
    @Override
    public long getPollerNodeId()
@@ -378,7 +379,7 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#canHaveAgent()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveAgent()
     */
    @Override
    public boolean canHaveAgent()
@@ -387,7 +388,7 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#canHaveInterfaces()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveInterfaces()
     */
    @Override
    public boolean canHaveInterfaces()
@@ -396,7 +397,7 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#canHavePollerNode()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHavePollerNode()
     */
    @Override
    public boolean canHavePollerNode()
@@ -405,7 +406,7 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
    }
 
    /**
-    * @see org.netxms.client.objects.PollingTarget#canUseEtherNetIP()
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseEtherNetIP()
     */
    @Override
    public boolean canUseEtherNetIP()
