@@ -194,8 +194,6 @@ import org.netxms.client.topology.WirelessStation;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
 import org.netxms.client.users.UserGroup;
-import org.netxms.client.zeromq.ZmqSubscription;
-import org.netxms.client.zeromq.ZmqSubscriptionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.jcraft.jzlib.Deflater;
@@ -11266,94 +11264,6 @@ public class NXCSession
    public void setObjectMaintenanceMode(long objectId, boolean inMaintenance) throws NXCException, IOException
    {
       setObjectMaintenanceMode(objectId, inMaintenance, null);
-   }
-
-   /**
-    * Manage subscription for ZMQ event forwarder
-    *
-    * @param objectId  Node id
-    * @param dciId     DCI ID. 0 means "disabled DCI source filter for events"
-    * @param subscribe If true, the event will be subscribed to
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void updateZmqEventSubscription(final long objectId, final long dciId, boolean subscribe) throws IOException, NXCException
-   {
-      final NXCPMessage msg;
-      if (subscribe)
-      {
-         msg = newMessage(NXCPCodes.CMD_ZMQ_SUBSCRIBE_EVENT);
-      }
-      else
-      {
-         msg = newMessage(NXCPCodes.CMD_ZMQ_UNSUBSCRIBE_EVENT);
-      }
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
-      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
-    * Manage subscription for ZMQ data forwarder
-    *
-    * @param objectId  The object ID
-    * @param dciId     The DCI ID
-    * @param subscribe If true, the event will be subscribed to
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void updateZmqDataSubscription(final long objectId, final long dciId, boolean subscribe) throws IOException, NXCException
-   {
-      final NXCPMessage msg;
-      if (subscribe)
-      {
-         msg = newMessage(NXCPCodes.CMD_ZMQ_SUBSCRIBE_DATA);
-      }
-      else
-      {
-         msg = newMessage(NXCPCodes.CMD_ZMQ_UNSUBSCRIBE_DATA);
-      }
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
-      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
-    * Get subscriptions for ZMQ data forwarder
-    *
-    * @param type Subscription type
-    * @return List of subscriptions
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public List<ZmqSubscription> getZmqSubscriptions(ZmqSubscriptionType type) throws IOException, NXCException
-   {
-      final NXCPMessage msg = newMessage(
-            type == ZmqSubscriptionType.EVENT ? NXCPCodes.CMD_ZMQ_GET_EVT_SUBSCRIPTIONS : NXCPCodes.CMD_ZMQ_GET_DATA_SUBSCRIPTIONS);
-      sendMessage(msg);
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
-
-      final List<ZmqSubscription> subscriptions = new ArrayList<ZmqSubscription>();
-
-      long baseId = NXCPCodes.VID_ZMQ_SUBSCRIPTION_BASE;
-      while(true)
-      {
-         long objectId = response.getFieldAsInt32(baseId);
-         if (objectId == 0)
-         {
-            break;
-         }
-         boolean ignoreItems = response.getFieldAsBoolean(baseId + 1);
-         long[] dciElements = response.getFieldAsUInt32Array(baseId + 2);
-
-         subscriptions.add(new ZmqSubscription(objectId, ignoreItems, dciElements));
-
-         baseId += 10;
-      }
-
-      return subscriptions;
    }
 
    /**
