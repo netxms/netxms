@@ -46,7 +46,7 @@ public class InputField
       this.sequence = 0;
       this.options = InputFieldOptions.createFromXml(config);
    }
-   
+
    /**
     * Copy constructor
     * 
@@ -75,7 +75,7 @@ public class InputField
       options = InputFieldOptions.createFromXml(msg.getFieldAsString(baseId + 3));
       sequence = msg.getFieldAsInt32(baseId + 4);
    }
-   
+
    /**
     * Fill NXCP message with field data
     * 

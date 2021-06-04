@@ -1,4 +1,4 @@
-package org.netxms.client.objects;
+package org.netxms.client.objects.interfaces;
 
 import org.netxms.client.constants.AgentCacheMode;
 

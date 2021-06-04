@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client;
+package org.netxms.client.objects.queries;
 
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +36,7 @@ public class ObjectQueryResult
     * @param object object
     * @param properties retrieved properties
     */
-   protected ObjectQueryResult(AbstractObject object, Map<String, String> properties)
+   public ObjectQueryResult(AbstractObject object, Map<String, String> properties)
    {
       this.object = object;
       this.properties = properties;

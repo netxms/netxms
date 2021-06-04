@@ -39,9 +39,9 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Chassis;
-import org.netxms.client.objects.ElementForPhysicalPlacment;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.configs.ChassisPlacement;
+import org.netxms.client.objects.interfaces.HardwareEntity;
 import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -67,7 +67,7 @@ public class PhysicalContainerPlacement extends PropertyPage
    private final static String[] HORIZONTAL_UNITS = { "HP", "mm" };
 
    private Composite dialogArea;
-	private ElementForPhysicalPlacment object;
+	private HardwareEntity object;
 	
 	private Composite rackElements;
 	private ObjectSelector objectSelector;
@@ -98,7 +98,7 @@ public class PhysicalContainerPlacement extends PropertyPage
 	{
 		dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (ElementForPhysicalPlacment)getElement().getAdapter(ElementForPhysicalPlacment.class);
+		object = (HardwareEntity)getElement().getAdapter(HardwareEntity.class);
 
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;

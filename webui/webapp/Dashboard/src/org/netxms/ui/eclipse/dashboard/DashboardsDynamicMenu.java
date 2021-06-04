@@ -36,7 +36,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.IWorkbenchContribution;
 import org.eclipse.ui.services.IEvaluationService;
 import org.eclipse.ui.services.IServiceLocator;
-import org.netxms.client.ObjectQueryResult;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
@@ -48,6 +47,7 @@ import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
+import org.netxms.client.objects.queries.ObjectQueryResult;
 import org.netxms.ui.eclipse.dashboard.views.DashboardView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 

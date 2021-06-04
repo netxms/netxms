@@ -26,6 +26,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.configs.PassiveRackElement;
+import org.netxms.client.objects.interfaces.HardwareEntity;
 
 /**
  * Rack object
@@ -113,17 +114,17 @@ public class Rack extends GenericObject
 	 * 
 	 * @return rack units, ordered by unit numbers
 	 */
-	public List<ElementForPhysicalPlacment> getUnits()
+	public List<HardwareEntity> getUnits()
 	{
-	   List<ElementForPhysicalPlacment> units = new ArrayList<ElementForPhysicalPlacment>();
+	   List<HardwareEntity> units = new ArrayList<HardwareEntity>();
 	   for(AbstractObject o : getChildrenAsArray())
 	   {
-	      if (o instanceof ElementForPhysicalPlacment)
-	         units.add((ElementForPhysicalPlacment)o);
+	      if (o instanceof HardwareEntity)
+	         units.add((HardwareEntity)o);
 	   }
-	   Collections.sort(units, new Comparator<ElementForPhysicalPlacment>() {
+	   Collections.sort(units, new Comparator<HardwareEntity>() {
          @Override
-         public int compare(ElementForPhysicalPlacment e1, ElementForPhysicalPlacment e2)
+         public int compare(HardwareEntity e1, HardwareEntity e2)
          {
             return e1.getRackPosition() - e2.getRackPosition();
          }

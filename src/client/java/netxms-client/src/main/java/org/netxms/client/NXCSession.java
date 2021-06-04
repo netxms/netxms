@@ -163,6 +163,7 @@ import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.objects.configs.PassiveRackElement;
+import org.netxms.client.objects.queries.ObjectQueryResult;
 import org.netxms.client.objecttools.ObjectContextBase;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;

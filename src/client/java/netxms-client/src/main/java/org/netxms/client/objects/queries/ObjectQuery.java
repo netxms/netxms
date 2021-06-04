@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,24 +16,26 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client.objects;
+package org.netxms.client.objects.queries;
+
+import java.util.UUID;
 
 /**
- * Common interface for objects that can be zone members
+ * Predefined object query
  */
-public interface ZoneMember
+public class ObjectQuery
 {
+   private int id;
+   private UUID guid;
+   private String name;
+   private String description;
+
    /**
-    * Get ID of the zone this object belongs to
     * 
-    * @return zone ID
     */
-   abstract public int getZoneId();
-   
-   /**
-    * Get name of the zone this object belongs to
-    * 
-    * @return zone name
-    */
-   abstract public String getZoneName();
+   public ObjectQuery()
+   {
+      // TODO Auto-generated constructor stub
+   }
+
 }

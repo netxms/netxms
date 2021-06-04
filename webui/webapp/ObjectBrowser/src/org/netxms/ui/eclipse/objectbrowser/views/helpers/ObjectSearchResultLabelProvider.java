@@ -25,7 +25,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.base.InetAddressEx;
-import org.netxms.client.ObjectQueryResult;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
@@ -34,6 +33,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Zone;
+import org.netxms.client.objects.queries.ObjectQueryResult;
 import org.netxms.ui.eclipse.objectbrowser.views.ObjectFinder;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 

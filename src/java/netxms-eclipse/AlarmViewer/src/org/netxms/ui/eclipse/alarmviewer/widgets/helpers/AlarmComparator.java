@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.TreeColumn;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.ZoneMember;
+import org.netxms.client.objects.interfaces.ZoneMember;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;

@@ -24,8 +24,8 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.netxms.client.ObjectQueryResult;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.queries.ObjectQueryResult;
 import org.netxms.ui.eclipse.tools.TransformationSelectionProvider;
 
 /**

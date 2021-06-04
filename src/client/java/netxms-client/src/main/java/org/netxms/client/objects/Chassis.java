@@ -24,11 +24,12 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.objects.configs.ChassisPlacement;
+import org.netxms.client.objects.interfaces.HardwareEntity;
 
 /**
  * Chassis object
  */
-public class Chassis extends DataCollectionTarget implements ElementForPhysicalPlacment
+public class Chassis extends DataCollectionTarget implements HardwareEntity
 {
    protected long controllerId;
    protected long rackId;
