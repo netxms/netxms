@@ -842,6 +842,6 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(const shared_ptr<AbstractCo
 bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET s, int *pnVersion, MUTEX mutex)
 {
    auto channel = make_shared<SocketCommChannel>(s, nullptr, Ownership::False);
-   bool success = NXCPGetPeerProtocolVersion(channel, pnVersion, mutex);
+   bool success = NXCPGetPeerProtocolVersion(static_pointer_cast<AbstractCommChannel>(channel), pnVersion, mutex);
    return success;
 }
