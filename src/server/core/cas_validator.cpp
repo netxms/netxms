@@ -126,7 +126,7 @@ static X509 *ReadCertificateFromFile(const char *filename)
    if (f == nullptr)
       return nullptr;
 
-   X509 *c = PEM_read_X509(f, NULL, NULL, NULL);
+   X509 *c = PEM_read_X509(f, nullptr, nullptr, nullptr);
    fclose(f);
    return c;
 }
@@ -138,47 +138,44 @@ static X509 *ReadCertificateFromFile(const char *filename)
  */
 static char *element_body(const char *doc, const char *tagname, int n, char *buf, int buflen)
 {
-   char *start_tag_pattern = (char *)malloc(strlen(tagname) + strlen("<") + strlen(">") + 1);
-   char *end_tag_pattern = (char *)malloc(strlen(tagname) + strlen("<") + strlen("/") + strlen(">") + 1);
-   const char *body_start, *body_end;
-   char *ret = NULL;
+   const char *body_end;
+   char *ret = nullptr;
 
    buf[0] = 0;
 
-   if (start_tag_pattern != NULL && end_tag_pattern != NULL)
+   char start_tag_pattern[256];
+   snprintf(start_tag_pattern, 256, "<%s>", tagname);
+
+   char end_tag_pattern[256];
+   snprintf(end_tag_pattern, 256, "</%s>", tagname);
+
+   const char *body_start = doc;
+   while (n-- > 0)
    {
-      sprintf(start_tag_pattern, "<%s>", tagname);
-      sprintf(end_tag_pattern, "</%s>", tagname);
-      body_start = doc;
-      while (n-- > 0)
+      body_start = strstr(body_start, start_tag_pattern);
+      if (!body_start)
       {
-         body_start = strstr(body_start, start_tag_pattern);
-         if (!body_start)
-         {
-            SET_RET_AND_GOTO_END(NULL);
-         }
-         body_start += strlen(start_tag_pattern);
+         SET_RET_AND_GOTO_END(nullptr);
       }
-      body_end = strstr(body_start, end_tag_pattern);
-      if (!body_end)
-      {
-         SET_RET_AND_GOTO_END(NULL);
-      }
-      if (body_end - body_start < buflen - 1)
-      {
-         strncpy(buf, body_start, body_end - body_start);
-         buf[body_end - body_start] = 0;
-      }
-      else
-      {
-         strlcpy(buf, body_start, buflen);
-      }
-      SET_RET_AND_GOTO_END(buf);
+      body_start += strlen(start_tag_pattern);
    }
+   body_end = strstr(body_start, end_tag_pattern);
+   if (!body_end)
+   {
+      SET_RET_AND_GOTO_END(nullptr);
+   }
+   if (body_end - body_start < buflen - 1)
+   {
+      strncpy(buf, body_start, body_end - body_start);
+      buf[body_end - body_start] = 0;
+   }
+   else
+   {
+      strlcpy(buf, body_start, buflen);
+   }
+   SET_RET_AND_GOTO_END(buf);
 
 end:
-   if (start_tag_pattern) free(start_tag_pattern);
-   if (end_tag_pattern) free(end_tag_pattern);
    return ret;
 }
 
@@ -228,10 +225,10 @@ static int CASValidate(const char *ticket, char *loginName)
    SOCKET s = INVALID_SOCKET;
    int err, b, ret;
    size_t total;
-   SSL *ssl = NULL;
-   X509 *s_cert = NULL;
+   SSL *ssl = nullptr;
+   X509 *s_cert = nullptr;
    char buf[4096];
-   char *full_request = NULL, *str;
+   char *full_request = nullptr, *str;
    char parsebuf[MAX_DNS_NAME];
 
    SSL_CTX *ctx = SSL_CTX_new(SSLv23_client_method());
@@ -278,7 +275,7 @@ static int CASValidate(const char *ticket, char *loginName)
    X509_free(s_cert);
 
    full_request = MemAllocStringA(4096);
-   if (snprintf(full_request, 4096, "GET %s?ticket=%s&service=%s HTTP/1.0\n\n", s_validateURL, ticket, s_service) >= 4096)
+   if (snprintf(full_request, 4096, "GET %s?ticket=%s&service=%s HTTP/1.0\r\n\r\n", s_validateURL, ticket, s_service) >= 4096)
    {
       SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);
    }
