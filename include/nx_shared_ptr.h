@@ -16,6 +16,10 @@
 #include <algorithm>    // std::swap
 #include <nxatomic.h>
 
+#if defined(__HP_aCC)
+typedef decltype(nullptr) nullptr_t;
+#endif
+
 /**
  * @brief implementation of reference counter for the following minimal smart pointer.
  *
@@ -23,32 +27,23 @@
  */
 class shared_ptr_count
 {
+private:
+    VolatileCounter useCount;
+    VolatileCounter weakCount;
+    VolatileCounter spinLock;
+
 public:
     shared_ptr_count()
     {
-       refcount = NULL;
-    }
-
-    shared_ptr_count(const shared_ptr_count& count)
-    {
-       refcount = count.refcount;
-    }
-
-    /// @brief Swap method for the copy-and-swap idiom (copy constructor and swap method)
-    void swap(shared_ptr_count& lhs)
-    {
-        std::swap(refcount, lhs.refcount);
+       useCount = 0;
+       weakCount = 0;
+       spinLock = 0;
     }
 
     /// @brief getter of the underlying reference counter
     long use_count(void) const
     {
-        long count = 0;
-        if (NULL != refcount)
-        {
-            count = *refcount;
-        }
-        return count;
+	return useCount;
     }
 
     /// @brief acquire/share the ownership of the pointer, initializing the reference counter
@@ -57,33 +52,56 @@ public:
     {
         if (NULL != p)
         {
-            if (NULL == refcount)
-            {
-               refcount = new VolatileCounter(1);
-            }
-            else
-            {
-               InterlockedIncrement(refcount);
-            }
+            InterlockedIncrement(&useCount);
+            InterlockedIncrement(&weakCount);
         }
     }
     /// @brief release the ownership of the px pointer, destroying the object when appropriate
     template<class U>
     void release(U* p)
     {
-        if (refcount != NULL)
+        if (InterlockedDecrement(&useCount) == 0)
         {
-            if (InterlockedDecrement(refcount) == 0)
+            delete p;
+            if (InterlockedDecrement(&weakCount) == 0)
             {
-                delete p;
-                delete refcount;
-            }
-            refcount = NULL;
+		delete this;
+	    }
         }
     }
 
-private:
-    VolatileCounter *refcount;
+    void weakAcquire()
+    {
+	InterlockedIncrement(&weakCount);
+    }
+
+    bool weakLock()
+    {
+	while(InterlockedIncrement(&spinLock) != 1)
+	    InterlockedDecrement(&spinLock);
+	bool success;
+	if (InterlockedIncrement(&useCount) > 1)
+	{
+	    InterlockedIncrement(&weakCount);
+	    success = true;
+	}
+	else
+	{
+	    // Use count 1 after increment indicates no more owning shared pointers
+            InterlockedDecrement(&useCount);
+	    success = false;
+	}
+	InterlockedDecrement(&spinLock);
+	return success;
+    }
+
+    void weakRelease()
+    {
+        if (InterlockedDecrement(&weakCount) == 0)
+        {
+            delete this;
+        }
+    }
 };
 
 
@@ -97,6 +115,17 @@ private:
 template<class T>
 class shared_ptr
 {
+private:
+    T*                  px; //!< Native pointer
+    shared_ptr_count*   pn; //!< Reference counter
+
+    // For use by weak_ptr
+    shared_ptr(T *p, shared_ptr_count* c)
+    {
+	pn = c;
+	px = p;
+    }
+
 public:
     /// The type of the managed object, aliased as member type
     typedef T element_type;
@@ -104,20 +133,18 @@ public:
     /// @brief Default constructor
     shared_ptr(void) : // never throws
         px(NULL),
-        pn()
+        pn(NULL)
     {
     }
     /// @brief Constructor with the provided pointer to manage
-    explicit shared_ptr(T* p) : // may throw std::bad_alloc
-      //px(p), would be unsafe as acquire() may throw, which would call release() in destructor
-        pn()
+    explicit shared_ptr(T* p)
     {
+	pn = new shared_ptr_count();
         acquire(p);   // may throw std::bad_alloc
     }
     /// @brief Constructor to share ownership. Warning : to be used for pointer_cast only ! (does not manage two separate <T> and <U> pointers)
     template <class U>
     shared_ptr(const shared_ptr<U>& ptr, T* p) :
-     //px(p), would be unsafe as acquire() may throw, which would call release() in destructor
        pn(ptr.pn)
     {
        acquire(p);   // may throw std::bad_alloc
@@ -125,14 +152,12 @@ public:
     /// @brief Copy constructor to convert from another pointer type
     template <class U>
     shared_ptr(const shared_ptr<U>& ptr) :
-      //px(ptr.px),
         pn(ptr.pn)
     {
         acquire(static_cast<typename shared_ptr<T>::element_type*>(ptr.px));   // will never throw std::bad_alloc
     }
     /// @brief Copy constructor (used by the copy-and-swap idiom)
     shared_ptr(const shared_ptr& ptr) :
-       //px(ptr.px),
         pn(ptr.pn)
     {
         acquire(ptr.px);   // will never throw std::bad_alloc
@@ -164,21 +189,21 @@ public:
     void swap(shared_ptr& lhs)
     {
         std::swap(px, lhs.px);
-        pn.swap(lhs.pn);
+        std::swap(pn, lhs.pn);
     }
 
     // reference counter operations :
+    long use_count(void) const
+    {
+        return (pn != NULL) ? pn->use_count() : 0;
+    }
     operator bool() const
     {
-        return (0 < pn.use_count());
+        return use_count() > 0;
     }
     bool unique(void) const
     {
-        return (1 == pn.use_count());
-    }
-    long use_count(void) const
-    {
-        return pn.use_count();
+        return use_count() == 1;
     }
 
     // underlying pointer operations :
@@ -199,25 +224,76 @@ private:
     /// @brief acquire/share the ownership of the px pointer, initializing the reference counter
     void acquire(T* p)
     {
-        pn.acquire(p);
+	if (pn == NULL)
+	    pn = new shared_ptr_count();
+        pn->acquire(p);
         px = p; // here it is safe to acquire the ownership of the provided raw pointer, where exception cannot be thrown any more
     }
 
     /// @brief release the ownership of the px pointer, destroying the object when appropriate
     void release(void)
     {
-        pn.release(px);
+        pn->release(px);
+	pn = NULL;
         px = NULL;
     }
 
 private:
     // This allow pointer_cast functions to share the reference counter between different shared_ptr types
-    template<class U>
+    template<class _Ts>
     friend class shared_ptr;
 
+    template<class _Tw>
+    friend class weak_ptr;
+};
+
+
+template<class T>
+class weak_ptr
+{
 private:
-    T*                  px; //!< Native pointer
-    shared_ptr_count    pn; //!< Reference counter
+    T *px;
+    shared_ptr_count *pn;
+
+public:
+    weak_ptr()
+    {
+	px = NULL;
+	pn = NULL;
+    }
+
+    weak_ptr(const shared_ptr<T>& sptr)
+    {
+	pn = sptr.pn;
+	px = sptr.px;
+	if (pn != NULL)
+	    pn->weakAcquire();
+    }
+
+    ~weak_ptr()
+    {
+	if (pn != NULL)
+	    pn->weakRelease();
+    }
+
+    void reset()
+    {
+	if (pn != NULL)
+	{
+	    pn->weakRelease();
+	    pn = NULL;
+        }
+	px = NULL;
+    }
+
+    shared_ptr<T> lock() const
+    {
+	if ((pn != NULL) && pn->weakLock())
+	{
+	    return shared_ptr<T>(px, pn);
+	}
+        return shared_ptr<T>();
+    }
 };
 
 
@@ -226,9 +302,17 @@ template<class T, class U> bool operator==(const shared_ptr<T>& l, const shared_
 {
     return (l.get() == r.get());
 }
+template<class T> bool operator==(const shared_ptr<T>& l, nullptr_t r)
+{
+    return l.get() == NULL;
+}
 template<class T, class U> bool operator!=(const shared_ptr<T>& l, const shared_ptr<U>& r)
 {
     return (l.get() != r.get());
+}
+template<class T> bool operator!=(const shared_ptr<T>& l, nullptr_t r)
+{
+    return l.get() != NULL;
 }
 template<class T, class U> bool operator<=(const shared_ptr<T>& l, const shared_ptr<U>& r)
 {
