@@ -530,7 +530,7 @@ bool EPRule::matchScript(Event *event) const
    vm->setGlobalVariable("SEVERITY", vm->createValue(event->getSeverity()));
    vm->setGlobalVariable("SEVERITY_TEXT", vm->createValue(GetStatusAsText(event->getSeverity(), true)));
    vm->setGlobalVariable("OBJECT_ID", vm->createValue(event->getSourceId()));
-   vm->setGlobalVariable("EVENT_TEXT", vm->createValue((TCHAR *)event->getMessage()));
+   vm->setGlobalVariable("EVENT_TEXT", vm->createValue(event->getMessage()));
 
    // Pass event's parameters as arguments and
    // other information as variables

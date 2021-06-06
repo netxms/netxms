@@ -62,6 +62,7 @@ int F_mktime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_ord(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_replace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_round(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -161,6 +162,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "ord", F_ord, 1 },
    { "pow", F_pow, 2 },
    { "random", F_random, 2 },
+   { "replace", F_replace, 3 },
    { "right", F_right, -1 },
    { "rindex", F_rindex, -1 },
    { "round", F_round, -1 },
