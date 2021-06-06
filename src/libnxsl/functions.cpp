@@ -1135,7 +1135,7 @@ int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 /**
  * Trace
  */
-int F_trace(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_trace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isInteger())
 		return NXSL_ERR_NOT_INTEGER;
@@ -1144,14 +1144,14 @@ int F_trace(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		return NXSL_ERR_NOT_STRING;
 
 	vm->trace(argv[0]->getValueAsInt32(), argv[1]->getValueAsCString());
-	*ppResult = vm->createValue();
+	*result = vm->createValue();
 	return 0;
 }
 
 /**
  * Common implementation for index and rindex functions
  */
-static int F_index_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm, bool reverse)
+static int F_index_rindex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm, bool reverse)
 {
 	if ((argc != 2) && (argc != 3))
 		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -1217,7 +1217,7 @@ static int F_index_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		index = !memcmp(str, substr, substrLength * sizeof(TCHAR)) ? 1 : 0;
 	}
 
-	*ppResult = vm->createValue((LONG)index);
+	*result = vm->createValue((LONG)index);
 	return 0;
 }
 
@@ -1227,9 +1227,9 @@ static int F_index_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  * If you don't specify POSITION, the search starts at the beginning of STRING. If SUBSTRING
  * is not found, returns 0.
  */
-int F_index(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_index(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-	return F_index_rindex(argc, argv, ppResult, vm, false);
+	return F_index_rindex(argc, argv, result, vm, false);
 }
 
 
@@ -1239,21 +1239,38 @@ int F_index(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
  * If you don't specify POSITION, the search starts at the end of STRING. If SUBSTRING
  * is not found, returns 0.
  */
-int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-	return F_index_rindex(argc, argv, ppResult, vm, true);
+	return F_index_rindex(argc, argv, result, vm, true);
+}
+
+/**
+ * replace(string, target, replacement)
+ * Replaces each substring of this string that matches the literal target sequence with the specified literal replacement
+ * sequence. The replacement proceeds from the beginning of the string to the end, for example, replacing "aa" with "b"
+ * in the string "aaa" will result in "ba" rather than "ab".
+ */
+int F_replace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString() || !argv[1]->isString() || !argv[2]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   StringBuffer sb(argv[0]->getValueAsCString());
+   sb.replace(argv[1]->getValueAsCString(), argv[2]->getValueAsCString());
+   *result = vm->createValue(sb);
+   return 0;
 }
 
 /**
  * NXSL function: Generate random number in given range
  */
-int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_random(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isInteger() || !argv[1]->isInteger())
 		return NXSL_ERR_NOT_INTEGER;
 
 	int range = argv[1]->getValueAsInt32() - argv[0]->getValueAsInt32() + 1;
-	*ppResult = vm->createValue((rand() % range) + argv[0]->getValueAsInt32());
+	*result = vm->createValue((rand() % range) + argv[0]->getValueAsInt32());
 	return 0;
 }
 
