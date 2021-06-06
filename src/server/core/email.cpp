@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@
 **/
 
 #include "nxcore.h"
+
+#define DEBUG_TAG _T("smtp")
 
 /**
  * Receive buffer size
@@ -169,6 +171,27 @@ static char *EncodeHeader(const char *header, const char *encoding, const char *
 }
 
 /**
+ * Send command to server
+ */
+static inline void SmtpSend(SOCKET hSocket, char *command)
+{
+   SendEx(hSocket, command, strlen(command), 0, nullptr);
+   char *cr = strchr(command, '\r');
+   if (cr != nullptr)
+      *cr = 0;
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("SMTP SEND: %hs"), command);
+}
+
+/**
+ * Send command to server
+ */
+static inline void SmtpSend2(SOCKET hSocket, const char *command, const TCHAR *displayText)
+{
+   SendEx(hSocket, command, strlen(command), 0, nullptr);
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("SMTP SEND: %s"), displayText);
+}
+
+/**
  * Send e-mail
  */
 static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *pszText, const char *encoding, bool isHtml, bool isUtf8)
@@ -216,7 +239,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
    while((iState != STATE_FINISHED) && (iState != STATE_ERROR))
    {
       int iResp = GetSMTPResponse(hSocket, szBuffer, &nBufPos);
-      DbgPrintf(8, _T("SMTP RESPONSE: %03d (state=%d)"), iResp, iState);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("SMTP RESPONSE: %03d (state=%d)"), iResp, iState);
       if (iResp > 0)
       {
          switch(iState)
@@ -228,7 +251,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
                   iState = STATE_HELLO;
                   char command[280];
                   snprintf(command, 280, "HELO %s\r\n", localHostName);
-                  SendEx(hSocket, command, strlen(command), 0, nullptr);
+                  SmtpSend(hSocket, command);
                }
                else
                {
@@ -241,7 +264,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
                {
                   iState = STATE_FROM;
                   snprintf(szBuffer, SMTP_BUFFER_SIZE, "MAIL FROM: <%s>\r\n", fromAddr);
-                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  SmtpSend(hSocket, szBuffer);
                }
                else
                {
@@ -254,7 +277,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
                {
                   iState = STATE_RCPT;
                   snprintf(szBuffer, SMTP_BUFFER_SIZE, "RCPT TO: <%s>\r\n", pszRcpt);
-                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  SmtpSend(hSocket, szBuffer);
                }
                else
                {
@@ -266,7 +289,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
                if (iResp == 250)
                {
                   iState = STATE_DATA;
-                  SendEx(hSocket, "DATA\r\n", 6, 0, NULL);
+                  SmtpSend2(hSocket, "DATA\r\n", _T("DATA"));
                }
                else
                {
@@ -283,13 +306,13 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
                   // from
                   char from[512];
                   snprintf(szBuffer, SMTP_BUFFER_SIZE, "From: \"%s\" <%s>\r\n", EncodeHeader(NULL, encoding, fromName, from, 512), fromAddr);
-                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  SmtpSend(hSocket, szBuffer);
                   // to
                   snprintf(szBuffer, SMTP_BUFFER_SIZE, "To: <%s>\r\n", pszRcpt);
-                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  SmtpSend(hSocket, szBuffer);
                   // subject
                   EncodeHeader("Subject", encoding, pszSubject, szBuffer, SMTP_BUFFER_SIZE);
-                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  SmtpSend(hSocket, szBuffer);
 
                   // date
                   time_t currentTime;
@@ -321,7 +344,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
                         break;
                      default:		// error
                         effectiveBias = 0;
-                        DbgPrintf(4, _T("GetTimeZoneInformation() call failed"));
+                        nxlog_debug_tag(DEBUG_TAG, 4, _T("GetTimeZoneInformation() call failed"));
                         break;
                   }
                   int offset = abs(effectiveBias);
@@ -330,7 +353,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
                   strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
 #endif
 
-                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  SmtpSend(hSocket, szBuffer);
                   // content-type
                   snprintf(szBuffer, SMTP_BUFFER_SIZE,
                                     "Content-Type: text/%s; charset=%s\r\n"
@@ -351,7 +374,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
                if (iResp == 250)
                {
                   iState = STATE_QUIT;
-                  SendEx(hSocket, "QUIT\r\n", 6, 0, NULL);
+                  SmtpSend2(hSocket, "QUIT\r\n", _T("QUIT"));
                }
                else
                {
@@ -401,20 +424,20 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
    };
 
    ThreadSetName("Mailer");
-	DbgPrintf(1, _T("SMTP mailer thread started"));
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("SMTP mailer thread started"));
    while(1)
    {
       MAIL_ENVELOPE *pEnvelope = s_mailerQueue.getOrBlock();
       if (pEnvelope == INVALID_POINTER_VALUE)
          break;
 
-		nxlog_debug(6, _T("SMTP(%p): new envelope, rcpt=%hs"), pEnvelope, pEnvelope->rcptAddr);
+		nxlog_debug_tag(DEBUG_TAG, 6, _T("SMTP(%p): new envelope, rcpt=%hs"), pEnvelope, pEnvelope->rcptAddr);
 
       UINT32 dwResult = SendMail(pEnvelope->rcptAddr, pEnvelope->subject, pEnvelope->text, pEnvelope->encoding, pEnvelope->isHtml, pEnvelope->isUtf8);
       if (dwResult != SMTP_ERR_SUCCESS)
 		{
 			pEnvelope->retryCount--;
-			DbgPrintf(6, _T("SMTP(%p): Failed to send e-mail, remaining retries: %d"), pEnvelope, pEnvelope->retryCount);
+			nxlog_debug_tag(DEBUG_TAG, 6, _T("SMTP(%p): Failed to send e-mail, remaining retries: %d"), pEnvelope, pEnvelope->retryCount);
 			if (pEnvelope->retryCount > 0)
 			{
 				// Try posting again
@@ -430,7 +453,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 		}
 		else
 		{
-			DbgPrintf(6, _T("SMTP(%p): mail sent successfully"), pEnvelope);
+			nxlog_debug_tag(DEBUG_TAG, 6, _T("SMTP(%p): mail sent successfully"), pEnvelope);
 			MemFree(pEnvelope->text);
 			MemFree(pEnvelope);
 		}
