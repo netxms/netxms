@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.objecttools.propertypages.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.objecttools.InputField;
+import org.netxms.client.InputField;
 import org.netxms.ui.eclipse.objecttools.Messages;
 
 /**

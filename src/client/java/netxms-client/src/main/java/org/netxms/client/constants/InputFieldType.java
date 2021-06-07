@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client.objecttools;
+package org.netxms.client.constants;
 
 import java.util.HashMap;
 import java.util.Map;

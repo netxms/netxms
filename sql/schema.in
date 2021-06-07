@@ -1544,7 +1544,7 @@ CREATE TABLE input_fields
   input_type char(1) not null,
   display_name varchar(127) null,
   sequence_num integer not null,
-  config SQL_TEXT null,
+  flags integer not null,
   PRIMARY KEY(category,owner_id,name)
 ) TABLE_TYPE;
 

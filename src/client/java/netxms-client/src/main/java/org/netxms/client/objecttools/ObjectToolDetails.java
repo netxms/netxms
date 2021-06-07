@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.InputField;
 import org.netxms.client.ObjectMenuFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
