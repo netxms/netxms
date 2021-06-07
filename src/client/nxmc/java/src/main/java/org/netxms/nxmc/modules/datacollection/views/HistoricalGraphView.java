@@ -193,7 +193,7 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
          if (object != null)
          {
             fullName = object.getObjectName() + ": " + item.name;
-            if (!item.useRawValues)
+            if (item.useRawValues)
                fullName += " (raw)";
             setName(item.name);
          }
