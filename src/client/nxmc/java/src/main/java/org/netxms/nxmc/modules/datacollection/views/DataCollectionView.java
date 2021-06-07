@@ -169,6 +169,7 @@ public class DataCollectionView extends ObjectView
    private Action actionDisable;
    private Action actionBulkUpdate;
    private Action actionLineChart;
+   private Action actionRawLineChart;
    private Action actionUseMultipliers;
    private Action actionShowErrors;
    private Action actionShowDisabled;
@@ -360,6 +361,7 @@ public class DataCollectionView extends ObjectView
          if (!isTemplate)
          {
             manager.add(actionLineChart);
+            manager.add(actionRawLineChart);
             manager.add(new Separator());
          }
          manager.add(actionCopyToClipboard);
@@ -393,6 +395,7 @@ public class DataCollectionView extends ObjectView
          {
             manager.add(new Separator());
             manager.add(actionLineChart);
+            manager.add(actionRawLineChart);
          }
          manager.add(new Separator());
          manager.add(actionExportToCsv);
@@ -575,7 +578,15 @@ public class DataCollectionView extends ObjectView
          @Override
          public void run()
          {
-            showLineChart();
+            showLineChart(false);
+         }
+      };
+
+      actionRawLineChart = new Action(i18n.tr("&Raw Data Line chart"), ResourceManager.getImageDescriptor("icons/chart_line.png")) {
+         @Override
+         public void run()
+         {
+            showLineChart(true);
          }
       };
       
@@ -1611,7 +1622,7 @@ public class DataCollectionView extends ObjectView
    /**
     * Show line chart for selected items
     */
-   private void showLineChart()
+   private void showLineChart(boolean useRawValues)
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
@@ -1620,7 +1631,9 @@ public class DataCollectionView extends ObjectView
       List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(selection.size());
       for(Object o : selection.toList())
       {
-         items.add(editMode ? new ChartDciConfig((DataCollectionObject)o) : new ChartDciConfig((DciValue)o));
+         ChartDciConfig config = editMode ? new ChartDciConfig((DataCollectionObject)o) : new ChartDciConfig((DciValue)o);
+         config.useRawValues = useRawValues;
+         items.add(config);
       }
 
       AbstractObject object = getObject();

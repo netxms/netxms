@@ -157,6 +157,8 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
       {
          sb.append('#');
          sb.append(dci.dciId);
+         sb.append('#');
+         sb.append(dci.useRawValues);
       }
       return sb.toString();
    }
@@ -170,7 +172,6 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
    public HistoricalGraphView(AbstractObject contextObject, List<ChartDciConfig> items)
    {
       super(i18n.tr("Graph"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"), buildId(contextObject, items), false);
-
       objectId = contextObject.getObjectId();
 
       refreshController = new ViewRefreshController(this, -1, new Runnable() {
@@ -192,6 +193,8 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
          if (object != null)
          {
             fullName = object.getObjectName() + ": " + item.name;
+            if (!item.useRawValues)
+               fullName += " (raw)";
             setName(item.name);
          }
       }

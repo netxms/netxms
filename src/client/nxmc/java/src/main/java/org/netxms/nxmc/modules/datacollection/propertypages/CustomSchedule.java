@@ -256,6 +256,8 @@ public class CustomSchedule extends AbstractDCIPropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
+	   if (schedules == null)
+	      return;
 		dci.setSchedules(schedules);
 		editor.modify();
 	}
