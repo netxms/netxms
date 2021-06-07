@@ -2,7 +2,7 @@
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
 ** Copyright (C) 2008 Mark Ibell
-** Copyright (C) 2016 Raden Solutions
+** Copyright (C) 2016-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,8 +40,13 @@
 #include <ifaddrs.h>
 #include <arpa/inet.h>
 #include <net/ethernet.h>
+
+#if __FreeBSD__ >= 13
+#include <net/if_mib.h>
+#else
 #include <kvm.h>
 #include <nlist.h>
+#endif
 
 #if HAVE_NET_ISO88025_H
 #include <net/iso88025.h>
@@ -187,7 +192,7 @@ LONG H_NetIfOperStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, A
 				struct ifmediareq ifmr;
 
 				memset(&ifmr, 0, sizeof(ifmr));
-				strncpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
+				strlcpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
 				if (ioctl(nSocket, SIOCGIFMEDIA, (caddr_t)&ifmr) >= 0)
 				{
 					if ((ifmr.ifm_status & IFM_AVALID) == IFM_AVALID &&
@@ -345,12 +350,11 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *val
 				}
 			}
 
-			if (rti_info[RTAX_DST] != NULL
+			if ((rti_info[RTAX_DST] != NULL)
 #if HAVE_DECL_RTF_WASCLONED
-			    && !(rtm->rtm_flags & RTF_WASCLONED))
-#else
-                            )
+			    && !(rtm->rtm_flags & RTF_WASCLONED)
 #endif
+            )
 			{
 				char szOut[1024];
 				char szTmp[64];
@@ -585,47 +589,132 @@ LONG H_NetIfNames(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, A
    return GetInterfaceList(value, true);
 }
 
+#if __FreeBSD__ >= 13
+
+/**
+ * Handler for interface statistics parameters (retrieved via sysctl)
+ */
+LONG H_NetIfInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char ifName[256];
+   if (!AgentGetParameterArgA(param, 1, ifName, sizeof(ifName)))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (ifName[0] == 0)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   int ifIndex;
+   if ((ifName[0] >= '0') && (ifName[0] <= '9'))
+   {
+      ifIndex = atoi(ifName);
+   }
+   else
+   {
+      ifIndex = if_nametoindex(ifName);
+      if (ifIndex == 0)
+      {
+         nxlog_debug(7, _T("H_NetIfInfo: cannot find interface index for name %hs"), ifName);
+         return SYSINFO_RC_UNSUPPORTED;
+      }
+   }
+
+   struct ifmibdata ifData;
+   size_t len = sizeof(ifData);
+   int name[] = { CTL_NET, PF_LINK, NETLINK_GENERIC, IFMIB_IFDATA, ifIndex, IFDATA_GENERAL };
+   if (sysctl(name, 6, &ifData, &len, nullptr, 0) != 0)
+   {
+      nxlog_debug(7, _T("H_NetIfInfo: sysctl error for interface %hs index %d"), ifName, ifIndex);
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   switch(CAST_FROM_POINTER(arg, int))
+   {
+      case IF_INFO_BYTES_IN:
+         ret_uint(value, static_cast<uint32_t>(ifData.ifmd_data.ifi_ibytes));
+         break;
+      case IF_INFO_BYTES_IN_64:
+         ret_uint64(value, ifData.ifmd_data.ifi_ibytes);
+         break;
+      case IF_INFO_BYTES_OUT:
+         ret_uint(value, static_cast<uint32_t>(ifData.ifmd_data.ifi_obytes));
+         break;
+      case IF_INFO_BYTES_OUT_64:
+         ret_uint64(value, ifData.ifmd_data.ifi_obytes);
+         break;
+      case IF_INFO_IN_ERRORS:
+         ret_uint(value, static_cast<uint32_t>(ifData.ifmd_data.ifi_ierrors));
+         break;
+      case IF_INFO_IN_ERRORS_64:
+         ret_uint64(value, ifData.ifmd_data.ifi_ierrors);
+         break;
+      case IF_INFO_OUT_ERRORS:
+         ret_uint(value, static_cast<uint32_t>(ifData.ifmd_data.ifi_oerrors));
+         break;
+      case IF_INFO_OUT_ERRORS_64:
+         ret_uint64(value, ifData.ifmd_data.ifi_oerrors);
+         break;
+      case IF_INFO_PACKETS_IN:
+         ret_uint(value, static_cast<uint32_t>(ifData.ifmd_data.ifi_ipackets));
+         break;
+      case IF_INFO_PACKETS_IN_64:
+         ret_uint64(value, ifData.ifmd_data.ifi_ipackets);
+         break;
+      case IF_INFO_PACKETS_OUT:
+         ret_uint(value, static_cast<uint32_t>(ifData.ifmd_data.ifi_opackets));
+         break;
+      case IF_INFO_PACKETS_OUT_64:
+         ret_uint64(value, ifData.ifmd_data.ifi_opackets);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   return SYSINFO_RC_SUCCESS;
+}
+
+#else /* not __FreeBSD__ >= 13 */
+
 /**
  * KVM name list
  */
 struct nlist s_nl[] = 
 {
-	{ (char *)"_ifnet" },
-	{ NULL }
+   { (char *)"_ifnet" },
+   { nullptr }
 };
 
 /**
  * KVM handle
  */
-static kvm_t *s_kvmd = NULL;
+static kvm_t *s_kvmd = nullptr;
 
 /**
  * KVM lock
  */
- static Mutex s_kvmLock;
+static Mutex s_kvmLock;
 
 #if __FreeBSD__ >= 10
 
 /**
  * Read kernel counter
  */
-inline UINT64 ReadKernelCounter64(counter_u64_t cnt)
+inline uint64_t ReadKernelCounter64(counter_u64_t cnt)
 {
-	UINT64 value;
-	if (kvm_read(s_kvmd, (u_long)cnt, &value, sizeof(UINT64)) != sizeof(UINT64))
-	{
-		nxlog_debug(7, _T("ReadKernelCounter64: kvm_read failed (%hs)"), kvm_geterr(s_kvmd));
-	   return 0;
-	}
+   uint64_t value;
+   if (kvm_read(s_kvmd, (u_long)cnt, &value, sizeof(uint64_t)) != sizeof(uint64_t))
+   {
+      nxlog_debug(7, _T("ReadKernelCounter64: kvm_read failed (%hs) at address %p"), kvm_geterr(s_kvmd), cnt);
+      return 0;
+   }
    return value;
 }
 
 #endif
 
 /**
- * Handler for interface statistics parameters
+ * Handler for interface statistics parameters (retrieved via KVM)
  */
-LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_NetIfInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	char ifName[256];
 	if (!AgentGetParameterArgA(param, 1, ifName, sizeof(ifName)))
@@ -639,7 +728,7 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 		int ifIndex = atoi(ifName);
 		if (if_indextoname(ifIndex, ifName) != ifName)
 		{
-			nxlog_debug(7, _T("H_NetIfInfoFromKVM: cannot find interface name for index %d"), ifIndex);
+			nxlog_debug(7, _T("H_NetIfInfo: cannot find interface name for index %d"), ifIndex);
 			return SYSINFO_RC_UNSUPPORTED;
 		}
 	}
@@ -651,13 +740,13 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 		s_kvmd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, errmsg);
 		if (s_kvmd == NULL)
 		{
-			nxlog_debug(7, _T("H_NetIfInfoFromKVM: kvm_openfiles failed (%hs)"), errmsg);
+			nxlog_debug(7, _T("H_NetIfInfo: kvm_openfiles failed (%hs)"), errmsg);
 			s_kvmLock.unlock();
 			return SYSINFO_RC_ERROR;
 		}
 		if (kvm_nlist(s_kvmd, s_nl) < 0)
 		{
-			nxlog_debug(7, _T("H_NetIfInfoFromKVM: kvm_nlist failed (%hs)"), kvm_geterr(s_kvmd));
+			nxlog_debug(7, _T("H_NetIfInfo: kvm_nlist failed (%hs)"), kvm_geterr(s_kvmd));
 			kvm_close(s_kvmd);
 			s_kvmd = NULL;
 			s_kvmLock.unlock();
@@ -665,7 +754,7 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 		}
 		if (s_nl[0].n_type == 0)
 		{
-			nxlog_debug(7, _T("H_NetIfInfoFromKVM: symbol %hs not found in kernel symbol table"), s_nl[0].n_name);
+			nxlog_debug(7, _T("H_NetIfInfo: symbol %hs not found in kernel symbol table"), s_nl[0].n_name);
 			kvm_close(s_kvmd);
 			s_kvmd = NULL;
 			s_kvmLock.unlock();
@@ -679,7 +768,7 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 	struct ifnethead head;
 	if (kvm_read(s_kvmd, curr, &head, sizeof(head)) != sizeof(head))
 	{
-		nxlog_debug(7, _T("H_NetIfInfoFromKVM: kvm_read failed (%hs)"), kvm_geterr(s_kvmd));
+		nxlog_debug(7, _T("H_NetIfInfo: kvm_read failed (%hs)"), kvm_geterr(s_kvmd));
 		s_kvmLock.unlock();
 		return SYSINFO_RC_ERROR;
 	}
@@ -693,7 +782,7 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 		struct ifnet ifnet;
 		if (kvm_read(s_kvmd, curr, &ifnet, sizeof(ifnet)) != sizeof(ifnet))
 		{
-			nxlog_debug(7, _T("H_NetIfInfoFromKVM: kvm_read failed (%hs)"), kvm_geterr(s_kvmd));
+			nxlog_debug(7, _T("H_NetIfInfo: kvm_read failed (%hs)"), kvm_geterr(s_kvmd));
 			rc = SYSINFO_RC_ERROR;
 			break;
 		}
@@ -709,7 +798,7 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 		char currName[IFNAMSIZ];
 		if (kvm_read(s_kvmd, ifnet.if_name, currName, sizeof(currName)) != sizeof(currName))
 		{
-			nxlog_debug(7, _T("H_NetIfInfoFromKVM: kvm_read failed (%hs)"), kvm_geterr(s_kvmd));
+			nxlog_debug(7, _T("H_NetIfInfo: kvm_read failed (%hs)"), kvm_geterr(s_kvmd));
 			rc = SYSINFO_RC_ERROR;
 			break;
 		}
@@ -795,6 +884,8 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 	s_kvmLock.unlock();
 	return rc;
 }
+
+#endif /* __FreeBSD__ >= 13 */
 
 /**
  * Handler for Net.Interface.64BitCounters
