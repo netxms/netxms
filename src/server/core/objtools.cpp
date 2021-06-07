@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Raden Solutions
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -665,7 +665,7 @@ UINT32 DeleteObjectToolFromDB(UINT32 toolId)
       return ReturnDBFailure(hdb, hStmt);
    DBFreeStatement(hStmt);
 
-   hStmt = DBPrepare(hdb, _T("DELETE FROM object_tools_input_fields WHERE tool_id=?"));
+   hStmt = DBPrepare(hdb, _T("DELETE FROM input_fields WHERE category='T' AND owner_id=?"));
    if (hStmt == nullptr)
       return ReturnDBFailure(hdb, hStmt);
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
@@ -880,7 +880,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
       }
    }
 
-   hStmt = DBPrepare(hdb, _T("DELETE FROM object_tools_input_fields WHERE tool_id=?"));
+   hStmt = DBPrepare(hdb, _T("DELETE FROM input_fields WHERE category='T' AND owner_id=?"));
    if (hStmt == nullptr)
       return ReturnDBFailure(hdb, hStmt);
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
@@ -892,7 +892,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
    uint32_t numFields = pMsg->getFieldAsUInt16(VID_NUM_FIELDS);
    if (numFields > 0)
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_input_fields (tool_id,name,input_type,display_name,config,sequence_num) VALUES (?,?,?,?,?,?)"), numFields > 1);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,input_type,display_name,config,sequence_num) VALUES ('T',?,?,?,?,?,?)"), numFields > 1);
       if (hStmt == nullptr)
          return ReturnDBFailure(hdb, hStmt);
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
@@ -1085,7 +1085,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite)
    }
 
    // Update input fields
-   if (!ExecuteQueryOnObject(hdb, toolId, _T("DELETE FROM object_tools_input_fields WHERE tool_id=?")))
+   if (!ExecuteQueryOnObject(hdb, toolId, _T("DELETE FROM input_fields WHERE category='T' AND owner_id=?")))
       return ImportFailure(hdb, nullptr);
 
 	ConfigEntry *inputFieldsRoot = config->findEntry(_T("inputFields"));
@@ -1094,7 +1094,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite)
 	   ObjectArray<ConfigEntry> *inputFields = inputFieldsRoot->getOrderedSubEntries(_T("inputField#*"));
       if (inputFields->size() > 0)
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_input_fields (tool_id,name,input_type,display_name,config,sequence_num) VALUES (?,?,?,?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,input_type,display_name,config,sequence_num) VALUES ('T',?,?,?,?,?,?)"));
          if (hStmt == nullptr)
             return ImportFailure(hdb, nullptr);
 
@@ -1169,7 +1169,7 @@ static void CreateObjectToolColumnExportRecords(DB_HANDLE hdb, StringBuffer &xml
  */
 static void CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, StringBuffer &xml, uint32_t id)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,config FROM object_tools_input_fields WHERE tool_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,config FROM input_fields WHERE category='T' AND owner_id=?"));
    if (hStmt == nullptr)
       return;
 
@@ -1264,7 +1264,7 @@ void CreateObjectToolExportRecord(StringBuffer &xml, UINT32 id)
  */
 static bool LoadInputFieldDefinitions(UINT32 toolId, DB_HANDLE hdb, NXCPMessage *msg, UINT32 countFieldId, UINT32 baseFieldId)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,config,sequence_num FROM object_tools_input_fields WHERE tool_id=? ORDER BY name"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,config,sequence_num FROM input_fields WHERE category='T' AND owner_id=? ORDER BY name"));
    if (hStmt == nullptr)
       return false;
 
