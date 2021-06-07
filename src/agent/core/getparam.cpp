@@ -850,8 +850,9 @@ uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession
 		}
    }
 
-	session->debugPrintf(7, _T("GetParameterValue(): result is %d (%s)"), (int)dwErrorCode,
-		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : _T("INTERNAL_ERROR")));
+	session->debugPrintf(7, _T("GetParameterValue(\"%s\"): %d (%s) value = \"%s\""), param, (int)dwErrorCode,
+		   (dwErrorCode == ERR_SUCCESS) ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : (dwErrorCode == ERR_NO_SUCH_INSTANCE ? _T("NO_SUCH_INSTANCE")  : _T("INTERNAL_ERROR"))),
+         (dwErrorCode == ERR_SUCCESS) ? value : _T(""));
    return dwErrorCode;
 }
 
