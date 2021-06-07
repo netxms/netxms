@@ -18,7 +18,9 @@
  */
 package org.netxms.client.objects.queries;
 
+import java.util.Map;
 import java.util.UUID;
+import org.netxms.client.InputField;
 
 /**
  * Predefined object query
@@ -29,13 +31,14 @@ public class ObjectQuery
    private UUID guid;
    private String name;
    private String description;
+   private String source;
+   private Map<String, InputField> inputFields;
 
    /**
     * 
     */
    public ObjectQuery()
    {
-      // TODO Auto-generated constructor stub
    }
 
 }

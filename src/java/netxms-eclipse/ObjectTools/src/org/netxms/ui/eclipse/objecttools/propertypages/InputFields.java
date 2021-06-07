@@ -44,7 +44,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.TableColumn;
-import org.netxms.client.objecttools.InputField;
+import org.netxms.client.InputField;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;

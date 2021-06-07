@@ -892,7 +892,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
    uint32_t numFields = pMsg->getFieldAsUInt16(VID_NUM_FIELDS);
    if (numFields > 0)
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,input_type,display_name,config,sequence_num) VALUES ('T',?,?,?,?,?,?)"), numFields > 1);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,input_type,display_name,flags,sequence_num) VALUES ('T',?,?,?,?,?,?)"), numFields > 1);
       if (hStmt == nullptr)
          return ReturnDBFailure(hdb, hStmt);
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
@@ -903,7 +903,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt16(fieldId++));
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
-         DBBind(hStmt, 5, DB_SQLTYPE_TEXT, pMsg->getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt32(fieldId++));
          DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, pMsg->getFieldAsInt16(fieldId++));
          fieldId += 5;
 
@@ -1094,7 +1094,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite)
 	   ObjectArray<ConfigEntry> *inputFields = inputFieldsRoot->getOrderedSubEntries(_T("inputField#*"));
       if (inputFields->size() > 0)
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,input_type,display_name,config,sequence_num) VALUES ('T',?,?,?,?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,input_type,display_name,flags,sequence_num) VALUES ('T',?,?,?,?,?,?)"));
          if (hStmt == nullptr)
             return ImportFailure(hdb, nullptr);
 
@@ -1103,10 +1103,10 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite)
          {
             ConfigEntry *c = inputFields->get(i);
             DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, c->getSubEntryValue(_T("name")), DB_BIND_STATIC);
-            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)c->getSubEntryValueAsInt(_T("type")));
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, c->getSubEntryValueAsInt(_T("type")));
             DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, c->getSubEntryValue(_T("displayName")), DB_BIND_STATIC);
-            DBBind(hStmt, 5, DB_SQLTYPE_TEXT, c->getSubEntryValue(_T("config")), DB_BIND_STATIC);
-            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)(i + 1));
+            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, c->getSubEntryValueAsInt(_T("flags")));
+            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, i + 1);
 
             if (!DBExecute(hStmt))
             {
@@ -1169,7 +1169,7 @@ static void CreateObjectToolColumnExportRecords(DB_HANDLE hdb, StringBuffer &xml
  */
 static void CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, StringBuffer &xml, uint32_t id)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,config FROM input_fields WHERE category='T' AND owner_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,flags FROM input_fields WHERE category='T' AND owner_id=?"));
    if (hStmt == nullptr)
       return;
 
@@ -1191,9 +1191,9 @@ static void CreateObjectToolInputFieldExportRecords(DB_HANDLE hdb, StringBuffer 
             xml.append(DBGetFieldLong(hResult, i, 1));
             xml.append(_T("</type>\n\t\t\t\t\t<displayName>"));
             xml.appendPreallocated(DBGetFieldForXML(hResult, i, 2));
-            xml.append(_T("</displayName>\n\t\t\t\t\t<config>"));
-            xml.appendPreallocated(DBGetFieldForXML(hResult, i, 3));
-            xml.append(_T("</config>\n\t\t\t\t</inputField>\n"));
+            xml.append(_T("</displayName>\n\t\t\t\t\t<flags>"));
+            xml.append(DBGetFieldLong(hResult, i, 3));
+            xml.append(_T("</flags>\n\t\t\t\t</inputField>\n"));
          }
          xml.append(_T("\t\t\t</inputFields>\n"));
       }
@@ -1262,9 +1262,9 @@ void CreateObjectToolExportRecord(StringBuffer &xml, UINT32 id)
 /**
  * Load object tool's input field definitions
  */
-static bool LoadInputFieldDefinitions(UINT32 toolId, DB_HANDLE hdb, NXCPMessage *msg, UINT32 countFieldId, UINT32 baseFieldId)
+static bool LoadInputFieldDefinitions(uint32_t toolId, DB_HANDLE hdb, NXCPMessage *msg, uint32_t countFieldId, uint32_t baseFieldId)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,config,sequence_num FROM input_fields WHERE category='T' AND owner_id=? ORDER BY name"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,flags,sequence_num FROM input_fields WHERE category='T' AND owner_id=? ORDER BY name"));
    if (hStmt == nullptr)
       return false;
 
@@ -1284,19 +1284,17 @@ static bool LoadInputFieldDefinitions(UINT32 toolId, DB_HANDLE hdb, NXCPMessage 
          DBGetField(hResult, i, 0, buffer, 128);
          msg->setField(fieldId++, buffer);
 
-         msg->setField(fieldId++, (INT16)DBGetFieldLong(hResult, i, 1));
+         msg->setField(fieldId++, static_cast<int16_t>(DBGetFieldLong(hResult, i, 1)));
 
          DBGetField(hResult, i, 2, buffer, 128);
          msg->setField(fieldId++, buffer);
 
-         TCHAR *cfg = DBGetField(hResult, i, 3, nullptr, 0);
-         msg->setField(fieldId++, cfg);
-         free(cfg);
+         msg->setField(fieldId++, DBGetFieldLong(hResult, i, 3));
 
          int seq = DBGetFieldLong(hResult, i, 4);
          if (seq == -1)
             seq = i;
-         msg->setField(fieldId++, (INT16)seq);
+         msg->setField(fieldId++, static_cast<int16_t>(seq));
 
          fieldId += 5;
       }

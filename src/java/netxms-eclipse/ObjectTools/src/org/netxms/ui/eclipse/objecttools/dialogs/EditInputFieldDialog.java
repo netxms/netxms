@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,9 +29,8 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.objecttools.InputField;
-import org.netxms.client.objecttools.InputFieldOptions;
-import org.netxms.client.objecttools.InputFieldType;
+import org.netxms.client.InputField;
+import org.netxms.client.constants.InputFieldType;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -63,9 +62,9 @@ public class EditInputFieldDialog extends Dialog
 		this.field = field;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -73,9 +72,9 @@ public class EditInputFieldDialog extends Dialog
 		newShell.setText(create ? Messages.get().EditInputFieldDialog_AddInputField : Messages.get().EditInputFieldDialog_EditInputField);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -123,18 +122,18 @@ public class EditInputFieldDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 350;
 		displayName.setLayoutData(gd);
-		
+
 		checkValidatePassword = new Button(dialogArea, SWT.CHECK);
 		checkValidatePassword.setText(Messages.get().EditInputFieldDialog_ValidatePassword);
 		checkValidatePassword.setVisible(field.getType() == InputFieldType.PASSWORD);
-		checkValidatePassword.setSelection(field.getOptions().validatePassword);
-		
+      checkValidatePassword.setSelection(field.isPasswordValidationNeeded());
+
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
@@ -145,11 +144,14 @@ public class EditInputFieldDialog extends Dialog
 	   
 	   if (field.getType() == InputFieldType.PASSWORD)
 	   {
-	      InputFieldOptions o = new InputFieldOptions();
-	      o.validatePassword = checkValidatePassword.getSelection();
-	      field.setOptions(o);
+         int flags = field.getFlags();
+         if (checkValidatePassword.getSelection())
+            flags |= InputField.VALIDATE_PASSWORD;
+         else
+            flags &= ~InputField.VALIDATE_PASSWORD;
+         field.setFlags(flags);
 	   }
-	   
+
 		super.okPressed();
 	}
 }

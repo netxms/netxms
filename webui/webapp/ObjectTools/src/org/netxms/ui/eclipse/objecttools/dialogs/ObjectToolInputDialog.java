@@ -27,7 +27,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.objecttools.InputField;
+import org.netxms.client.InputField;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledControl;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;

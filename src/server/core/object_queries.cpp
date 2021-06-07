@@ -33,7 +33,7 @@ static SharedPointerIndex<ObjectQuery> s_objectQueries;
 ObjectQuery::ObjectQuery(const NXCPMessage& msg) :
          m_description(msg.getFieldAsString(VID_DESCRIPTION), -1, Ownership::True),
          m_source(msg.getFieldAsString(VID_SCRIPT_CODE), -1, Ownership::True),
-         m_parameters(msg.getFieldAsInt32(VID_NUM_PARAMETERS))
+         m_inputFields(msg.getFieldAsInt32(VID_NUM_PARAMETERS))
 {
    m_id = msg.getFieldAsUInt32(VID_QUERY_ID);
    if (m_id == 0)
@@ -47,11 +47,13 @@ ObjectQuery::ObjectQuery(const NXCPMessage& msg) :
    uint32_t fieldId = VID_PARAM_LIST_BASE;
    for(int i = 0; i < count; i++)
    {
-      ObjectQueryParameter *p = m_parameters.addPlaceholder();
-      msg.getFieldAsString(fieldId++, p->name, 32);
-      msg.getFieldAsString(fieldId++, p->displayName, 128);
-      p->type = msg.getFieldAsInt16(fieldId++);
-      fieldId += 2;
+      InputField *f = m_inputFields.addPlaceholder();
+      msg.getFieldAsString(fieldId++, f->name, 32);
+      f->type = msg.getFieldAsInt16(fieldId++);
+      msg.getFieldAsString(fieldId++, f->displayName, 128);
+      f->flags = msg.getFieldAsUInt32(fieldId++);
+      f->orderNumber = msg.getFieldAsInt16(fieldId++);
+      fieldId += 5;
    }
 
    compile();
@@ -69,18 +71,18 @@ ObjectQuery::ObjectQuery(DB_HANDLE hdb, DB_RESULT hResult, int row) :
    m_guid = DBGetFieldGUID(hResult, row, 1);
    DBGetField(hResult, row, 2, m_name, MAX_OBJECT_NAME);
 
-   DB_RESULT hParams = DBSelectFormatted(hdb, _T("SELECT name,display_name,input_type FROM input_fields WHERE category='Q' AND owner_id=%u ORDER_BY sequence_num"), m_id);
+   DB_RESULT hParams = DBSelectFormatted(hdb, _T("SELECT name,input_type,display_name,flags,sequence_num FROM input_fields WHERE category='Q' AND owner_id=%u ORDER_BY sequence_num"), m_id);
    if (hParams != nullptr)
    {
       int count = DBGetNumRows(hParams);
       for (int i = 0; i < count; i++)
       {
-         ObjectQueryParameter *p = m_parameters.addPlaceholder();
+         InputField *p = m_inputFields.addPlaceholder();
          DBGetField(hParams, i, 0, p->name, 32);
-         DBGetField(hParams, i, 1, p->displayName, 128);
-         TCHAR type[2];
-         DBGetField(hParams, i, 2, type, 2);
-         p->type = static_cast<int16_t>(type[0]);
+         p->type = static_cast<int16_t>(DBGetFieldLong(hResult, i, 1));
+         DBGetField(hParams, i, 2, p->displayName, 128);
+         p->flags = DBGetFieldULong(hResult, i, 3);
+         p->orderNumber = static_cast<int16_t>(DBGetFieldLong(hResult, i, 4));
       }
       DBFreeResult(hParams);
    }
@@ -130,23 +132,24 @@ bool ObjectQuery::saveToDatabase(DB_HANDLE hdb) const
    if (success)
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM input_fields WHERE category='Q' AND owner_id=?"));
 
-   if (success && !m_parameters.isEmpty())
+   if (success && !m_inputFields.isEmpty())
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,display_name,input_type,sequence_num) VALUES ('Q',?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,display_name,input_type,flags,sequence_num) VALUES ('Q',?,?,?,?,?,?)"));
       if (hStmt != nullptr)
       {
          TCHAR type[2];
          type[1] = 0;
 
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         for (int i = 0; (i < m_parameters.size()) && success; i++)
+         for (int i = 0; (i < m_inputFields.size()) && success; i++)
          {
-            ObjectQueryParameter *p = m_parameters.get(i);
+            InputField *p = m_inputFields.get(i);
             DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, p->name, DB_BIND_STATIC);
             DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, p->displayName, DB_BIND_STATIC);
-            type[0] = p->type;
+            type[0] = p->type + '0';
             DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, type, DB_BIND_STATIC);
-            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, i);
+            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, p->flags);
+            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, i);
             success = DBExecute(hStmt);
          }
 
@@ -189,14 +192,16 @@ uint32_t ObjectQuery::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(fieldId++, m_source);
    msg->setField(fieldId++, m_script != nullptr);
    fieldId += 3;
-   msg->setField(fieldId++, m_parameters.size());
-   for(int i = 0; i < m_parameters.size(); i++)
+   msg->setField(fieldId++, m_inputFields.size());
+   for(int i = 0; i < m_inputFields.size(); i++)
    {
-      ObjectQueryParameter *p = m_parameters.get(i);
-      msg->setField(fieldId++, p->name);
-      msg->setField(fieldId++, p->displayName);
-      msg->setField(fieldId++, p->type);
-      fieldId += 2;
+      InputField *f = m_inputFields.get(i);
+      msg->setField(fieldId++, f->name);
+      msg->setField(fieldId++, f->type);
+      msg->setField(fieldId++, f->displayName);
+      msg->setField(fieldId++, f->flags);
+      msg->setField(fieldId++, f->orderNumber);
+      fieldId += 5;
    }
    return fieldId;
 }

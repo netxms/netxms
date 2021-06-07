@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,10 +37,10 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.AgentFileData;
+import org.netxms.client.InputField;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
-import org.netxms.client.objecttools.InputField;
-import org.netxms.client.objecttools.InputFieldType;
+import org.netxms.client.constants.InputFieldType;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.filemanager.views.AgentFileViewer;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -209,7 +209,7 @@ public final class ObjectToolExecutor
             // Check if password validation needed
             boolean validationNeeded = false;
             for(int i = 0; i < fields.length; i++)
-               if (fields[i].getOptions().validatePassword)
+               if (fields[i].isPasswordValidationNeeded())
                {
                   validationNeeded = true;
                   break;
@@ -219,7 +219,7 @@ public final class ObjectToolExecutor
             {
                for(int i = 0; i < fields.length; i++)
                {
-                  if ((fields[i].getType() == InputFieldType.PASSWORD) && (fields[i].getOptions().validatePassword))
+                  if ((fields[i].getType() == InputFieldType.PASSWORD) && fields[i].isPasswordValidationNeeded())
                   {
                      boolean valid = session.validateUserPassword(inputValues.get(fields[i].getName()));
                      if (!valid)

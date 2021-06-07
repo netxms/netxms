@@ -4432,7 +4432,7 @@ protected:
    typedef ServiceContainer super;
 
 protected:
-   UINT32 m_nodeId;
+   uint32_t m_nodeId;
 
    virtual void onObjectDelete(UINT32 dwObjectId) override;
 
@@ -4455,7 +4455,7 @@ public:
    void execute();
    void applyTemplates();
 
-   UINT32 getNodeId() { return m_nodeId; }
+   uint32_t getNodeId() const { return m_nodeId; }
 };
 
 /**
@@ -4473,6 +4473,18 @@ struct DependentNode
 {
    uint32_t nodeId;
    uint32_t dependencyType;
+};
+
+/**
+ * Input field
+ */
+struct InputField
+{
+   TCHAR name[32];
+   TCHAR displayName[128];
+   uint32_t flags;
+   int16_t type;
+   int16_t orderNumber;
 };
 
 /**
@@ -4495,16 +4507,6 @@ struct ObjectQueryResult
 };
 
 /**
- * Object query parameter
- */
-struct ObjectQueryParameter
-{
-   TCHAR name[32];
-   TCHAR displayName[128];
-   int16_t type;
-};
-
-/**
  * Predefined object query
  */
 class ObjectQuery
@@ -4516,7 +4518,7 @@ private:
    String m_description;
    String m_source;
    NXSL_Program *m_script;
-   StructArray<ObjectQueryParameter> m_parameters;
+   StructArray<InputField> m_inputFields;
 
    void compile();
 

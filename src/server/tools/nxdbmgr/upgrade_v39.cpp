@@ -23,6 +23,50 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 39.3 to 39.4
+ */
+static bool H_UpgradeFromV3()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE input_fields ADD flags integer")));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT category,owner_id,name,config FROM input_fields"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         TCHAR category[2], name[MAX_OBJECT_NAME];
+         DBGetField(hResult, i, 0, category, 2);
+         uint32_t ownerId = DBGetFieldLong(hResult, i, 1);
+         DBGetField(hResult, i, 2, name, MAX_OBJECT_NAME);
+         TCHAR *config = DBGetField(hResult, i, 3, nullptr, 0);
+
+         TCHAR query[1024];
+         _sntprintf(query, 1024, _T("UPDATE input_fields SET flags=%d WHERE category='%s' AND owner_id=%u AND name=%s"),
+                  (_tcsstr(config, _T("<validatePassword>true</validatePassword>")) != nullptr) ? 1 : 0, category, ownerId, DBPrepareString(g_dbHandle, name).cstr());
+         MemFree(config);
+
+         if (!SQLQuery(query) && !g_ignoreErrors)
+         {
+            DBFreeResult(hResult);
+            return false;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("input_fields"), _T("flags")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("input_fields"), _T("config")));
+
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 39.2 to 39.3
  */
 static bool H_UpgradeFromV2()
@@ -78,6 +122,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 3,  39, 4,  H_UpgradeFromV3  },
    { 2,  39, 3,  H_UpgradeFromV2  },
    { 1,  39, 2,  H_UpgradeFromV1  },
    { 0,  39, 1,  H_UpgradeFromV0  },
