@@ -30,9 +30,9 @@ import java.util.Set;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.window.Window;
+import org.netxms.client.InputField;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objecttools.InputField;
-import org.netxms.client.objecttools.InputFieldType;
+import org.netxms.client.constants.InputFieldType;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -201,7 +201,7 @@ public final class ObjectToolExecutor
             // Check if password validation needed
             boolean validationNeeded = false;
             for(int i = 0; i < fields.length; i++)
-               if (fields[i].getOptions().validatePassword)
+               if (fields[i].isPasswordValidationNeeded())
                {
                   validationNeeded = true;
                   break;
@@ -211,7 +211,7 @@ public final class ObjectToolExecutor
             {
                for(int i = 0; i < fields.length; i++)
                {
-                  if ((fields[i].getType() == InputFieldType.PASSWORD) && (fields[i].getOptions().validatePassword))
+                  if ((fields[i].getType() == InputFieldType.PASSWORD) && fields[i].isPasswordValidationNeeded())
                   {
                      boolean valid = session.validateUserPassword(inputValues.get(fields[i].getName()));
                      if (!valid)
