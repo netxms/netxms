@@ -23,11 +23,27 @@
 #include "nxdbmgr.h"
 
 /**
- * Upgrade from 39.2 to 40.0
+ * Upgrade from 39.3 to 40.0
+ */
+static bool H_UpgradeFromV3()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 39.2 to 39.3
  */
 static bool H_UpgradeFromV2()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("object_tools_input_fields")));
+   CHK_EXEC(DBRenameTable(g_dbHandle, _T("object_tools_input_fields"), _T("input_fields")));
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("input_fields"), _T("tool_id"), _T("owner_id")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE input_fields ADD category char(1)")));
+   CHK_EXEC(SQLQuery(_T("UPDATE input_fields SET category='T'")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("input_fields"), _T("category")));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("input_fields"), _T("category,owner_id,name")));
+   CHK_EXEC(SetMinorSchemaVersion(3));
    return true;
 }
 
@@ -56,15 +72,6 @@ static bool H_UpgradeFromV0()
          _T("   script $SQL:TEXT null,")
          _T("PRIMARY KEY(id))")));
 
-   CHK_EXEC(CreateTable(
-         _T("CREATE TABLE object_queries_input_fields (")
-         _T("   query_id integer not null,")
-         _T("   name varchar(31) not null,")
-         _T("   input_type char(1) not null,")
-         _T("   display_name varchar(127) null,")
-         _T("   sequence_num integer not null,")
-         _T("   PRIMARY KEY(query_id,name))")));
-
    CHK_EXEC(SetMinorSchemaVersion(1));
    return true;
 }
@@ -80,7 +87,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 2,  40, 0,  H_UpgradeFromV2  },
+   { 3,  40, 0,  H_UpgradeFromV3  },
+   { 2,  39, 3,  H_UpgradeFromV2  },
    { 1,  39, 2,  H_UpgradeFromV1  },
    { 0,  39, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr          }

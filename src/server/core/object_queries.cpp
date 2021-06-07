@@ -69,7 +69,7 @@ ObjectQuery::ObjectQuery(DB_HANDLE hdb, DB_RESULT hResult, int row) :
    m_guid = DBGetFieldGUID(hResult, row, 1);
    DBGetField(hResult, row, 2, m_name, MAX_OBJECT_NAME);
 
-   DB_RESULT hParams = DBSelectFormatted(hdb, _T("SELECT name,display_name,input_type FROM object_queries_input_fields WHERE query_id=%u ORDER_BY sequence_num"), m_id);
+   DB_RESULT hParams = DBSelectFormatted(hdb, _T("SELECT name,display_name,input_type FROM input_fields WHERE category='Q' AND owner_id=%u ORDER_BY sequence_num"), m_id);
    if (hParams != nullptr)
    {
       int count = DBGetNumRows(hParams);
@@ -128,11 +128,11 @@ bool ObjectQuery::saveToDatabase(DB_HANDLE hdb) const
    DBFreeStatement(hStmt);
 
    if (success)
-      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_queries_input_fields WHERE query_id=?"));
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM input_fields WHERE category='Q' AND owner_id=?"));
 
    if (success && !m_parameters.isEmpty())
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO object_queries_input_fields (query_id,name,display_name,input_type,sequence_num) VALUES (?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO input_fields (category,owner_id,name,display_name,input_type,sequence_num) VALUES ('Q',?,?,?,?,?)"));
       if (hStmt != nullptr)
       {
          TCHAR type[2];
@@ -172,7 +172,7 @@ bool ObjectQuery::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_queries WHERE id=?"));
    if (success)
-      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_queries_input_fields WHERE query_id=?"));
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM input_fields WHERE category='Q' AND owner_id=?"));
    return success;
 }
 

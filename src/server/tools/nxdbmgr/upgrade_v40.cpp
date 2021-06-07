@@ -24,11 +24,31 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.58 to 40.59
+ */
+static bool H_UpgradeFromV58()
+{
+   if (GetSchemaLevelForMajorVersion(39) < 3)
+   {
+      CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("object_tools_input_fields")));
+      CHK_EXEC(DBRenameTable(g_dbHandle, _T("object_tools_input_fields"), _T("input_fields")));
+      CHK_EXEC(DBRenameColumn(g_dbHandle, _T("input_fields"), _T("tool_id"), _T("owner_id")));
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE input_fields ADD category char(1)")));
+      CHK_EXEC(SQLQuery(_T("UPDATE input_fields SET category='T'")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("input_fields"), _T("category")));
+      CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("input_fields"), _T("category,owner_id,name")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(39, 3));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(59));
+   return true;
+}
+
+/**
  * Upgrade from 40.57 to 40.58
  */
 static bool H_UpgradeFromV57()
 {
-   if (GetSchemaLevelForMajorVersion(39) < 1)
+   if (GetSchemaLevelForMajorVersion(39) < 2)
    {
       if (DBIsTableExist(g_dbHandle, _T("zmq_subscription")) == DBIsTableExist_Found)
          CHK_EXEC(SQLQuery(_T("DROP TABLE zmq_subscription")));
@@ -53,15 +73,6 @@ static bool H_UpgradeFromV56()
             _T("   description varchar(255) null,")
             _T("   script $SQL:TEXT null,")
             _T("PRIMARY KEY(id))")));
-
-      CHK_EXEC(CreateTable(
-            _T("CREATE TABLE object_queries_input_fields (")
-            _T("   query_id integer not null,")
-            _T("   name varchar(31) not null,")
-            _T("   input_type char(1) not null,")
-            _T("   display_name varchar(127) null,")
-            _T("   sequence_num integer not null,")
-            _T("   PRIMARY KEY(query_id,name))")));
 
       CHK_EXEC(SetSchemaLevelForMajorVersion(39, 1));
    }
@@ -1520,6 +1531,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 58, 40, 59, H_UpgradeFromV58 },
    { 57, 40, 58, H_UpgradeFromV57 },
    { 56, 40, 57, H_UpgradeFromV56 },
    { 55, 40, 56, H_UpgradeFromV55 },

@@ -15,7 +15,7 @@ public class InputField
    private String displayName;
    private int sequence;
    private InputFieldOptions options;
-   
+
    /**
     * Create text input field with default settings
     * 

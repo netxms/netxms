@@ -1534,17 +1534,18 @@ CREATE TABLE object_tools_table_columns
 ) TABLE_TYPE;
 
 /**
- * Input fields for object tools
+ * Input fields (used by object tools and object queries)
  */
-CREATE TABLE object_tools_input_fields
+CREATE TABLE input_fields
 (
-  tool_id integer not null,
+  category char(1) not null, /* 'T' for object tools, 'Q' for object queries */
+  owner_id integer not null, /* owning entity ID (object tool, object query, etc.)
   name varchar(31) not null,
   input_type char(1) not null,
   display_name varchar(127) null,
   sequence_num integer not null,
   config SQL_TEXT null,
-  PRIMARY KEY(tool_id,name)
+  PRIMARY KEY(category,owner_id,name)
 ) TABLE_TYPE;
 
 /*
@@ -2389,17 +2390,4 @@ CREATE TABLE object_queries
    description varchar(255) null,
    script SQL_TEXT null,
    PRIMARY KEY(id)
-) TABLE_TYPE;
-
-/**
- * Input fields for object queries
- */
-CREATE TABLE object_queries_input_fields
-(
-  query_id integer not null,
-  name varchar(31) not null,
-  input_type char(1) not null,
-  display_name varchar(127) null,
-  sequence_num integer not null,
-  PRIMARY KEY(query_id,name)
 ) TABLE_TYPE;

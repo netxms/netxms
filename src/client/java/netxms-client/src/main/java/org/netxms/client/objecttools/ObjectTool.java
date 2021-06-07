@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ public class ObjectTool implements ObjectAction
 	   filter = new ObjectMenuFilter();
 	   inputFields = new HashMap<String, InputField>(0);
 	}
-	
+
 	/**
 	 * Create object tool from NXCP message. Intended to be called only by NXCSession methods.
 	 * 
@@ -127,7 +127,7 @@ public class ObjectTool implements ObjectAction
 		}
 		createDisplayName();
 	}
-	
+
 	/**
 	 * Check if all input fields referenced in tool have definitions
 	 */
@@ -179,7 +179,7 @@ public class ObjectTool implements ObjectAction
 	      }
 	   }
 	}
-	
+
 	/**
 	 * Create display name
 	 */
@@ -195,7 +195,7 @@ public class ObjectTool implements ObjectAction
 			displayName = name.replace("&", "").trim();
 		}
 	}
-	
+
 	/**
 	 * Check if tool is applicable for given node.
 	 * 
@@ -217,7 +217,7 @@ public class ObjectTool implements ObjectAction
 	{
 	   return inputFields.get(name);
 	}
-	
+
 	/**
 	 * Get all input fields
 	 * 
@@ -227,7 +227,7 @@ public class ObjectTool implements ObjectAction
 	{
 	   return inputFields.values().toArray(new InputField[inputFields.size()]);
 	}
-	
+
    /**
     * Get tool ID
     * 
