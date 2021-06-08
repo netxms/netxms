@@ -1072,7 +1072,7 @@ Case:
 	$2 = nullptr;
 } 
 	':' StatementList
-|	T_CASE T_IDENTIFIER
+|	T_CASE AnyIdentifier
 {
 	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CASE_CONST, $2);
 	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS);
@@ -1100,7 +1100,7 @@ CaseRangeLeft:
 	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CASE_LT, $1);
 	$1 = nullptr;
 }
-|	T_IDENTIFIER
+|	AnyIdentifier
 {
 	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CASE_CONST_LT, $1);
 }
@@ -1112,7 +1112,7 @@ CaseRangeRight:
 	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CASE_GT, $1);
 	$1 = nullptr;
 }
-|	T_IDENTIFIER
+|	AnyIdentifier
 {
 	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_CASE_CONST_GT, $1);
 }
@@ -1134,7 +1134,7 @@ SelectStatement:
 	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_SELECT, $3, $6);
 	pCompiler->closeBreakLevel(pScript);
 
-	UINT32 addr = pCompiler->popSelectJumpAddr();
+	uint32_t addr = pCompiler->popSelectJumpAddr();
 	if (addr != INVALID_ADDRESS)
 	{
 		pScript->createJumpAt(addr, pScript->getCodeSize());
@@ -1170,7 +1170,7 @@ SelectEntry:
 {
 	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PUSHCP, static_cast<int16_t>(2));
 	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
-	UINT32 addr = pCompiler->popSelectJumpAddr();
+	uint32_t addr = pCompiler->popSelectJumpAddr();
 	if (addr != INVALID_ADDRESS)
 	{
 		pScript->createJumpAt(addr, pScript->getCodeSize());
