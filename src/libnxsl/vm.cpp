@@ -418,6 +418,8 @@ resume:
    m_globalVariables->restoreVariableReferences(&m_instructionSet);
    if (m_constants != nullptr)
       m_constants->restoreVariableReferences(&m_instructionSet);
+   if (m_expressionVariables != nullptr)
+      m_expressionVariables->restoreVariableReferences(&m_instructionSet);
 
    // Restore global variables
    if (globals == nullptr)
@@ -438,8 +440,23 @@ resume:
    while(m_subLevel > 0)
    {
       m_subLevel--;
-      delete (NXSL_VariableSystem *)m_codeStack->pop();
-      delete (NXSL_VariableSystem *)m_codeStack->pop();
+
+      // Expression variables
+      auto variableSystem = static_cast<NXSL_VariableSystem*>(m_codeStack->pop());
+      if (variableSystem != nullptr)
+      {
+         variableSystem->restoreVariableReferences(&m_instructionSet);
+         delete variableSystem;
+      }
+
+      // Local variables
+      variableSystem = static_cast<NXSL_VariableSystem*>(m_codeStack->pop());
+      if (variableSystem != nullptr)
+      {
+         variableSystem->restoreVariableReferences(&m_instructionSet);
+         delete variableSystem;
+      }
+
       m_codeStack->pop();
    }
 
@@ -783,6 +800,8 @@ void NXSL_VM::execute()
          }
          break;
       case OPCODE_CLEAR_EXPRVARS:
+         if (m_expressionVariables != nullptr)
+            m_expressionVariables->restoreVariableReferences(&m_instructionSet);
          if (m_exportedExpressionVariables != nullptr)
          {
             delete *m_exportedExpressionVariables;
