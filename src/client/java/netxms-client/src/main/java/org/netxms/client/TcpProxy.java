@@ -158,6 +158,16 @@ public class TcpProxy
    }
 
    /**
+    * Get last exception generated when flushing output buffer.
+    *
+    * @return last exception generated when flushing output buffer or null
+    */
+   public Exception getFlushException()
+   {
+      return flushException;
+   }
+
+   /**
     * Get current size threshold.
     *
     * @return current size threshold
