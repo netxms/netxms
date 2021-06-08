@@ -44,11 +44,11 @@ class InfluxDBStorageDriver : public PerfDataStorageDriver
 {
 private:
    const TCHAR *m_hostname;
-   UINT16 m_port;
+   uint16_t m_port;
    SOCKET m_socket;
    std::string m_queuedMessages;
-   UINT32 m_queuedMessageCount;
-   UINT32 m_maxQueueSize;
+   uint32_t m_queuedMessageCount;
+   uint32_t m_maxQueueSize;
    Mutex m_mutex;
 
    void queuePush(const std::string& data);
@@ -137,7 +137,7 @@ std::string InfluxDBStorageDriver::getString(const TCHAR *tstr)
 #else
    char *buffer = static_cast<char*>(MemAlloc(len + 1));
 #endif
-   WideCharToMultiByte(CP_UTF8, 0, tstr, -1, buffer, (int)len + 1, nullptr, nullptr);
+   wchar_to_utf8(tstr, -1, buffer, len + 1);
 #if HAVE_ALLOCA
    return std::string(buffer);
 #else
@@ -175,8 +175,9 @@ void InfluxDBStorageDriver::queuePush(const std::string& data)
 {
    m_mutex.lock();
 
-   bool flushNow = data.empty();
-   if (!flushNow)
+   bool bufferOverflow = false;
+   bool forceFlush = data.empty();
+   if (!forceFlush)
    {
       // Check that packet is not longer than 64K
       if (data.length() + m_queuedMessages.length() < 65534)
@@ -186,11 +187,11 @@ void InfluxDBStorageDriver::queuePush(const std::string& data)
       }
       else
       {
-         flushNow = true;
+         bufferOverflow = true;
       }
    }
 
-   if ((m_queuedMessageCount >= m_maxQueueSize) || flushNow)
+   if ((m_queuedMessageCount >= m_maxQueueSize) || forceFlush || bufferOverflow)
    {
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Queue size: %u / %u (sending)"), m_queuedMessageCount, m_maxQueueSize);
 
@@ -206,16 +207,18 @@ void InfluxDBStorageDriver::queuePush(const std::string& data)
             // Data sent - empty queue
             m_queuedMessages.clear();
             m_queuedMessageCount = 0;
+            if (bufferOverflow)
+            {
+               m_queuedMessages += data + "\n";
+               m_queuedMessageCount++;
+            }
          }
       }
    }
    else
    {
-      if (flushNow && !data.empty())
-      {
-         m_queuedMessages += data + "\n";
-         m_queuedMessageCount++;
-      }
+      m_queuedMessages += data + "\n";
+      m_queuedMessageCount++;
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Queue size: %u / %u"), m_queuedMessageCount, m_maxQueueSize);
    }
 
