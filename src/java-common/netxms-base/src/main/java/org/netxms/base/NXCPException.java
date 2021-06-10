@@ -27,9 +27,10 @@ public class NXCPException extends Exception
 	public static final int SESSION_CLOSED = 2; 
 	public static final int NO_CIPHER = 3; 
 	public static final int DECRYPTION_ERROR = 4; 
+   public static final int FATAL_PROTOCOL_ERROR = 5;
 	
 	private static final long serialVersionUID = -1220864361254471L;
-	private static final String[] errorText = { "", "Message is too large", "Underlying communication session closed", "No cipher", "Decryption error" };
+   private static final String[] errorText = { "", "Message is too large", "Underlying communication session closed", "No cipher", "Decryption error", "Fatal protocol error" };
 
 	private int errorCode;
 	

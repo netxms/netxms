@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ public class NXCPMsgWaitQueue
 			}
 		}
 	}
-	
+
 	/**
     * Create message wait queue.
     * 
@@ -96,16 +96,7 @@ public class NXCPMsgWaitQueue
 	{
       this(defaultTimeout, 60000);
 	}
-	
-   /**
-    * @see java.lang.Object#finalize()
-    */
-	@Override
-	protected void finalize()
-	{
-		shutdown();
-	}
-	
+
 	/**
 	 * Put message into queue.
 	 * 
@@ -120,7 +111,7 @@ public class NXCPMsgWaitQueue
 			messageList.notifyAll();
 		}
 	}
-	
+
 	/**
 	 * Wait for message.
 	 * 
@@ -133,8 +124,8 @@ public class NXCPMsgWaitQueue
 	{
 		NXCPMessage msg = null;
 		int actualTimeout = timeout;
-		
-		while(actualTimeout > 0)
+
+      while((actualTimeout > 0) && isActive)
 		{
 			synchronized(messageList)
 			{
@@ -179,11 +170,11 @@ public class NXCPMsgWaitQueue
 	{
 		return waitForMessage(code, id, defaultTimeout);
 	}
-	
+
 	/**
 	 * Shutdown wait queue.
 	 */
-	public void shutdown()
+   public synchronized void shutdown()
 	{
 		isActive = false;
 		if (housekeeperThread != null)
@@ -201,6 +192,10 @@ public class NXCPMsgWaitQueue
 			}
 			housekeeperThread = null;
 		}
+      synchronized(messageList)
+      {
+         messageList.notifyAll();
+      }
 	}
 
 	/**
