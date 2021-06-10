@@ -274,7 +274,7 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
       }
       else if (msg->getCode() == CMD_TCP_PROXY_DATA)
       {
-         connection->processTcpProxyData(msg->getId(), msg->getBinaryData(), msg->getBinaryDataSize());
+         connection->processTcpProxyData(msg->getId(), msg->getBinaryData(), msg->getBinaryDataSize(), false);
       }
       delete msg;
    }
@@ -391,7 +391,7 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
             }
             break;
          case CMD_CLOSE_TCP_PROXY:
-            connection->processTcpProxyData(msg->getFieldAsUInt32(VID_CHANNEL_ID), nullptr, 0);
+            connection->processTcpProxyData(msg->getFieldAsUInt32(VID_CHANNEL_ID), nullptr, 0, msg->getFieldAsBoolean(VID_ERROR_INDICATOR));
             delete msg;
             break;
          case CMD_NOTIFY:
@@ -2795,7 +2795,7 @@ UINT32 AgentConnection::closeTcpProxy(UINT32 channelId)
 /**
  * Process data received from TCP proxy
  */
-void AgentConnection::processTcpProxyData(uint32_t channelId, const void *data, size_t size)
+void AgentConnection::processTcpProxyData(uint32_t channelId, const void *data, size_t size, bool errorIndicator)
 {
 }
 

@@ -972,7 +972,7 @@ public:
    void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
    void onActionDBUpdate(UINT32 dwCode, const Action *action);
    void onLibraryImageChange(const uuid& guid, bool removed = false);
-   void processTcpProxyData(AgentConnectionEx *conn, uint32_t agentChannelId, const void *data, size_t size);
+   void processTcpProxyData(AgentConnectionEx *conn, uint32_t agentChannelId, const void *data, size_t size, bool errorIndicator);
    void processTcpProxyAgentDisconnect(AgentConnectionEx *conn);
 
    void unregisterServerCommand(pid_t taskId);

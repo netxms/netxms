@@ -608,6 +608,7 @@ private:
    uint32_t m_id;
    CommSession *m_session;
    SOCKET m_socket;
+   bool m_readError;
 
 public:
    TcpProxy(CommSession *session, SOCKET s);
@@ -615,6 +616,7 @@ public:
 
    uint32_t getId() const { return m_id; }
    SOCKET getSocket() const { return m_socket; }
+   bool isReadError() const { return m_readError; }
 
    bool readSocket();
    void writeSocket(const BYTE *data, size_t size);
