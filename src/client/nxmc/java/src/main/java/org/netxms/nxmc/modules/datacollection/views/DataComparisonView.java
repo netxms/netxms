@@ -1,0 +1,584 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.nxmc.modules.datacollection.views;
+
+import java.util.ArrayList;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.ImageTransfer;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Widget;
+import org.netxms.client.NXCSession;
+import org.netxms.client.constants.HistoricalDataType;
+import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.Threshold;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.actions.RefreshAction;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.charts.api.ChartFactory;
+import org.netxms.nxmc.modules.charts.api.DataComparisonChart;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.ViewRefreshController;
+import org.xnap.commons.i18n.I18n;
+
+/**
+ * View for comparing DCI values visually using charts.
+ *
+ */
+public class DataComparisonView extends ObjectView
+{
+   private static final I18n i18n = LocalizationHelper.getI18n(DataComparisonView.class);
+	
+	private DataComparisonChart chart;
+	protected NXCSession session;
+	private boolean updateInProgress = false;
+	protected ArrayList<GraphItem> items = new ArrayList<GraphItem>(8);
+	private ViewRefreshController refreshController;
+	private boolean autoRefreshEnabled = true;
+	private boolean useLogScale = false;
+	private boolean showIn3D = true;
+	private int autoRefreshInterval = 30;	// 30 seconds
+	private int chartType = DataComparisonChart.BAR_CHART;
+	private boolean transposed = false;
+	private boolean showLegend = true;
+	private int legendPosition = GraphSettings.POSITION_BOTTOM;
+	private boolean translucent = false;
+	private Image[] titleImages = new Image[5];
+
+	private RefreshAction actionRefresh;
+	private Action actionAutoRefresh;
+	private Action actionShowBarChart;
+	private Action actionShowTubeChart;
+	private Action actionShowPieChart;
+	private Action actionShowIn3D;
+	private Action actionShowTranslucent;
+	private Action actionUseLogScale;
+	private Action actionHorizontal;
+	private Action actionVertical;
+	private Action actionShowLegend;
+	private Action actionLegendLeft;
+	private Action actionLegendRight;
+	private Action actionLegendTop;
+	private Action actionLegendBottom;
+	private Action actionCopyImage;
+	private Action actionSaveAsImage;
+
+   /**
+    * Build view ID
+    *
+    * @param object context object
+    * @param items list of DCIs to show
+    * @return view ID
+    */
+   private static String buildId(ArrayList<GraphItem> items, int type)
+   {
+      StringBuilder sb = new StringBuilder("DataComparisonView");
+      sb.append('#');
+      sb.append(type);
+      for (GraphItem item : items)
+      {
+         sb.append('#');
+         sb.append(item.getNodeId());
+         sb.append('#');
+         sb.append(item.getDciId());
+      }
+      
+      return sb.toString();
+   }  
+   
+   private static ImageDescriptor getImage(int type)
+   {
+      switch(type)
+      {
+         case DataComparisonChart.BAR_CHART:
+            return ResourceManager.getImageDescriptor("icons/object-views/chart_bar.png"); 
+         case DataComparisonChart.PIE_CHART:
+            return ResourceManager.getImageDescriptor("icons/object-views/chart_pie.png"); 
+         case DataComparisonChart.RADAR_CHART:
+            return ResourceManager.getImageDescriptor("icons/object-views/graph.png"); 
+         case DataComparisonChart.TUBE_CHART:
+            return ResourceManager.getImageDescriptor("icons/object-views/chart_tube.png"); 
+         case DataComparisonChart.GAUGE_CHART:
+            return ResourceManager.getImageDescriptor("icons/object-views/chart_dial.png");             
+      }
+      
+      return ResourceManager.getImageDescriptor("icons/chart_bar.png");
+   }
+	
+	public DataComparisonView(ArrayList<GraphItem> items, int chartType)
+	{      
+      super(i18n.tr("Last Values Chart"), getImage(chartType), buildId(items, chartType), false);    
+
+      session = Registry.getSession();
+      this.chartType = chartType;
+      this.items = items;
+	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected void createContent(Composite parent)
+   {
+		switch(chartType)
+		{
+			case DataComparisonChart.BAR_CHART:
+				chart = ChartFactory.createBarChart(parent, SWT.NONE);
+				break;
+			case DataComparisonChart.TUBE_CHART:
+				chart = ChartFactory.createTubeChart(parent, SWT.NONE);
+				break;
+			case DataComparisonChart.PIE_CHART:
+				chart = ChartFactory.createPieChart(parent, SWT.NONE);
+				break;
+		}
+		
+		chart.setLegendPosition(legendPosition);
+		chart.setLegendVisible(showLegend);
+		chart.set3DModeEnabled(showIn3D);
+		chart.setTransposed(transposed);
+		chart.setTranslucent(translucent);
+		
+		for(GraphItem item : items)
+			chart.addParameter(item, 0);
+		
+		chart.initializationComplete();	
+		
+		createActions();
+		createPopupMenu();
+		
+		updateChart();
+
+		refreshController = new ViewRefreshController(this, autoRefreshEnabled ? autoRefreshInterval : -1, new Runnable() {
+			@Override
+			public void run()
+			{
+				if (((Widget)chart).isDisposed())
+					return;
+
+				updateChart();
+			}
+		});
+	}
+	
+	/**
+	 * Create pop-up menu for user list
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager.
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener() {
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu.
+		Menu menu = menuMgr.createContextMenu((Control)chart);
+		((Control)chart).setMenu(menu);
+	}
+
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionRefresh = new RefreshAction(this) {
+			@Override
+			public void run()
+			{
+				updateChart();
+			}
+		};
+		
+		actionAutoRefresh = new Action(i18n.tr("Refresh &automatically")) {
+			@Override
+			public void run()
+			{
+				autoRefreshEnabled = !autoRefreshEnabled;
+				setChecked(autoRefreshEnabled);
+				refreshController.setInterval(autoRefreshEnabled ? autoRefreshInterval : -1);
+			}
+		};
+		actionAutoRefresh.setChecked(autoRefreshEnabled);
+		
+		actionUseLogScale = new Action(i18n.tr("&Logarithmic scale")) {
+			@Override
+			public void run()
+			{
+				useLogScale = !useLogScale;
+				setChecked(useLogScale);
+				chart.setLogScaleEnabled(useLogScale);
+			}
+		};
+		actionUseLogScale.setChecked(useLogScale);
+		
+		actionShowIn3D = new Action(i18n.tr("&3D view")) {
+			@Override
+			public void run()
+			{
+				showIn3D = !showIn3D;
+				setChecked(showIn3D);
+				chart.set3DModeEnabled(showIn3D);
+			}
+		};
+		actionShowIn3D.setChecked(showIn3D);
+		//actionShowIn3D.setImageDescriptor(Activator.getImageDescriptor("icons/view3d.png"));
+		
+		actionShowTranslucent = new Action(i18n.tr("T&ranslucent")) {
+			@Override
+			public void run()
+			{
+				translucent = !translucent;
+				setChecked(translucent);
+				chart.setTranslucent(translucent);
+			}
+		};
+		actionShowTranslucent.setChecked(translucent);
+		
+		actionShowLegend = new Action(i18n.tr("&Show legend")) {
+			@Override
+			public void run()
+			{
+				showLegend = !showLegend;
+				setChecked(showLegend);
+				chart.setLegendVisible(showLegend);
+			}
+		};
+		actionShowLegend.setChecked(showLegend);
+		
+		actionLegendLeft = new Action(i18n.tr("Place on &left"), Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				legendPosition = GraphSettings.POSITION_LEFT;
+				chart.setLegendPosition(legendPosition);
+			}
+		};
+		actionLegendLeft.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
+		
+		actionLegendRight = new Action(i18n.tr("Place on &right"), Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				legendPosition = GraphSettings.POSITION_RIGHT;
+				chart.setLegendPosition(legendPosition);
+			}
+		};
+		actionLegendRight.setChecked(legendPosition == GraphSettings.POSITION_RIGHT);
+		
+		actionLegendTop = new Action(i18n.tr("Place on &top"), Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				legendPosition = GraphSettings.POSITION_TOP;
+				chart.setLegendPosition(legendPosition);
+			}
+		};
+		actionLegendTop.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
+		
+		actionLegendBottom = new Action(i18n.tr("Place on &bottom"), Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				legendPosition = GraphSettings.POSITION_BOTTOM;
+				chart.setLegendPosition(legendPosition);
+			}
+		};
+		actionLegendBottom.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
+		
+		actionShowBarChart = new Action(i18n.tr("&Bar chart"), Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				setChartType(DataComparisonChart.BAR_CHART);
+			}
+		};
+		actionShowBarChart.setChecked(chart.getChartType() == DataComparisonChart.BAR_CHART);
+		actionShowBarChart.setImageDescriptor(ResourceManager.getImageDescriptor("icons/chart_bar.png")); 
+		
+		actionShowTubeChart = new Action(i18n.tr("&Tube chart"), Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				setChartType(DataComparisonChart.TUBE_CHART);
+			}
+		};
+		actionShowTubeChart.setChecked(chart.getChartType() == DataComparisonChart.TUBE_CHART);
+		actionShowTubeChart.setImageDescriptor(ResourceManager.getImageDescriptor("icons/chart_tube.png")); 
+		
+		actionShowPieChart = new Action(i18n.tr("&Pie chart"), Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				setChartType(DataComparisonChart.PIE_CHART);
+			}
+		};
+		actionShowPieChart.setChecked(chart.getChartType() == DataComparisonChart.PIE_CHART);
+		actionShowPieChart.setImageDescriptor(ResourceManager.getImageDescriptor("icons/chart_pie.png")); 
+
+		actionHorizontal = new Action(i18n.tr("Show &horizontally"), Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				transposed = true;
+				chart.setTransposed(true);
+			}
+		};
+		actionHorizontal.setChecked(transposed);
+		actionHorizontal.setEnabled(chart.hasAxes());
+		actionHorizontal.setImageDescriptor(ResourceManager.getImageDescriptor("icons/bar_horizontal.png")); 
+		
+		actionVertical = new Action(i18n.tr("Show &vertically"), Action.AS_RADIO_BUTTON) {
+			@Override
+			public void run()
+			{
+				transposed = false;
+				chart.setTransposed(false);
+			}
+		};
+		actionVertical.setChecked(!transposed);
+		actionVertical.setEnabled(chart.hasAxes());
+		actionVertical.setImageDescriptor(ResourceManager.getImageDescriptor("icons/bar_vertical.png")); 
+		
+		if (!System.getProperty("os.name").toLowerCase().contains("linux"))
+   	{
+   		actionCopyImage = new Action(i18n.tr("Copy to clipboard"), SharedIcons.COPY) {
+   		   @Override
+   		   public void run()
+   		   {
+               Image image = chart.takeSnapshot();
+               ImageTransfer imageTransfer = ImageTransfer.getInstance();
+               final Clipboard clipboard = new Clipboard(getWindow().getShell().getDisplay());
+               clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+   		   }
+   		};
+   	}
+
+		actionSaveAsImage = new Action("Save as image", SharedIcons.SAVE_AS_IMAGE) {
+			@Override
+			public void run()
+			{
+			   saveAsImage();
+			}
+		};
+	}
+
+	/**
+	 * Fill context menu
+	 * @param manager
+	 */
+	private void fillContextMenu(IMenuManager manager)
+	{
+		MenuManager legend = new MenuManager(i18n.tr("&Legend"));
+		legend.add(actionShowLegend);
+		legend.add(new Separator());
+		legend.add(actionLegendLeft);
+		legend.add(actionLegendRight);
+		legend.add(actionLegendTop);
+		legend.add(actionLegendBottom);
+		
+		manager.add(actionShowBarChart);
+		manager.add(actionShowTubeChart);
+		manager.add(actionShowPieChart);
+		manager.add(new Separator());
+		manager.add(actionVertical);
+		manager.add(actionHorizontal);
+		manager.add(new Separator());
+		manager.add(actionShowIn3D);
+		manager.add(actionShowTranslucent);
+		manager.add(actionUseLogScale);
+		manager.add(actionAutoRefresh);
+		manager.add(legend);
+		manager.add(new Separator());
+		manager.add(actionRefresh);
+      manager.add(new Separator());
+      if (actionCopyImage != null)
+         manager.add(actionCopyImage);
+      manager.add(actionSaveAsImage);  
+	}
+	
+	/**
+	 * Set new chart type
+	 * @param newType
+	 */
+	private void setChartType(int newType)
+	{
+		chartType = newType;
+		chart.setLabelsVisible(chartType == DataComparisonChart.PIE_CHART);
+		chart.setChartType(newType);
+		actionHorizontal.setEnabled(chart.hasAxes());
+		actionVertical.setEnabled(chart.hasAxes());
+		try
+		{
+		   //TODO: make image update
+			//setTitleImage(titleImages[chartType]);
+			//firePropertyChange(IWorkbenchPart.PROP_TITLE);
+		}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+		}
+	}
+
+	/**
+	 * Get DCI data from server
+	 */
+	private void updateChart()
+	{
+		if (updateInProgress)
+			return;
+		
+		updateInProgress = true;
+		Job job = new Job(i18n.tr("Get DCI values for chart"), this) {
+			@Override
+			protected String getErrorMessage()
+			{
+				return i18n.tr("Cannot get DCI data");
+			}
+
+			@Override
+			protected void run(IProgressMonitor monitor) throws Exception
+			{
+				final double[] values = new double[items.size()];
+				for(int i = 0; i < items.size(); i++)
+				{
+					GraphItem item = items.get(i);
+					DciData data = (item.getType() == DataCollectionObject.DCO_TYPE_ITEM) ? 
+							session.getCollectedData(item.getNodeId(), item.getDciId(), null, null, 1, HistoricalDataType.PROCESSED) :
+							session.getCollectedTableData(item.getNodeId(), item.getDciId(), item.getInstance(), item.getDataColumn(), null, null, 1);
+					DciDataRow value = data.getLastValue();
+					values[i] = (value != null) ? value.getValueAsDouble() : 0.0;
+				}
+				
+				final Threshold[][] thresholds = new Threshold[items.size()][];
+				if (chartType == DataComparisonChart.GAUGE_CHART)
+				{
+					for(int i = 0; i < items.size(); i++)
+					{
+						GraphItem item = items.get(i);
+						thresholds[i] = session.getThresholds(item.getNodeId(), item.getDciId());
+					}
+				}
+
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						if (chartType == DataComparisonChart.GAUGE_CHART)
+							for(int i = 0; i < thresholds.length; i++)
+								chart.updateParameterThresholds(i, thresholds[i]);
+						setChartData(values);
+						chart.clearErrors();
+						updateInProgress = false;
+					}
+				});
+			}
+
+			@Override
+			protected void jobFailureHandler(Exception e)
+			{
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")"); 
+					}
+				});
+			}
+		};
+		job.setUser(false);
+		job.start();
+	}
+	
+	/**
+    * Copy graph as image
+    */
+   private void saveAsImage()
+   {
+      Image image = chart.takeSnapshot();
+      
+      FileDialog fd = new FileDialog(getWindow().getShell(), SWT.SAVE);
+      fd.setText("Save graph as image");
+      String[] filterExtensions = { "*.*" }; 
+      fd.setFilterExtensions(filterExtensions);
+      String[] filterNames = { ".png" };
+      fd.setFilterNames(filterNames);
+      fd.setFileName("graph.png");
+      final String selected = fd.open();
+      if (selected == null)
+         return;
+      
+      ImageLoader saver = new ImageLoader();
+      saver.data = new ImageData[] { image.getImageData() };
+      saver.save(selected, SWT.IMAGE_PNG);
+
+      image.dispose();
+   }
+	
+	/**
+	 * Set new data for chart items
+	 * 
+	 * @param values new values
+	 */
+	private void setChartData(double[] values)
+	{
+		for(int i = 0; i < values.length; i++)
+			chart.updateParameter(i, values[i], false);
+		chart.refresh();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+	   refreshController.dispose();
+		for(Image i : titleImages)
+		{
+			if (i != null)
+				i.dispose();
+		}		
+		super.dispose();
+	}
+}

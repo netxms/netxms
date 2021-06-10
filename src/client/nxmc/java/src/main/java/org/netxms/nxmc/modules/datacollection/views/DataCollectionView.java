@@ -179,6 +179,7 @@ public class DataCollectionView extends ObjectView
    private Action actionExportAllToCsv;
    private Action actionCopyToClipboard;
    private Action actionCopyDciName;
+   private Action actionShowHistoryData;
 
    /**
     * @param name
@@ -362,6 +363,7 @@ public class DataCollectionView extends ObjectView
          {
             manager.add(actionLineChart);
             manager.add(actionRawLineChart);
+            manager.add(actionShowHistoryData); 
             manager.add(new Separator());
          }
          manager.add(actionCopyToClipboard);
@@ -396,6 +398,7 @@ public class DataCollectionView extends ObjectView
             manager.add(new Separator());
             manager.add(actionLineChart);
             manager.add(actionRawLineChart);
+            manager.add(actionShowHistoryData);  
          }
          manager.add(new Separator());
          manager.add(actionExportToCsv);
@@ -587,6 +590,14 @@ public class DataCollectionView extends ObjectView
          public void run()
          {
             showLineChart(true);
+         }
+      };
+      
+      actionShowHistoryData = new Action(i18n.tr("History data"), SharedIcons.EDIT) {
+         @Override
+         public void run()
+         {
+            showHistoryData();
          }
       };
       
@@ -1646,6 +1657,47 @@ public class DataCollectionView extends ObjectView
       {
          PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(object, items));
          window.open();
+      }
+   }
+
+   /**
+    * Show line chart for selected items
+    */
+   private void showHistoryData()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      AbstractObject object = getObject();
+      Perspective p = getPerspective();      
+      for(Object o : selection.toList())
+      {
+         if ((o instanceof DataCollectionTable) || ((o instanceof DciValue) &&
+               ((DciValue)o).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE))
+         {
+            if (p != null)
+            {
+               p.addMainView(new TableLastValuesView(object, getObjectId(o)), true, false);
+            }
+            else
+            {
+               PopOutViewWindow window = new PopOutViewWindow(new TableLastValuesView(object, getObjectId(o)));
+               window.open();
+            }
+         }
+         else 
+         {
+            if (p != null)
+            {
+               p.addMainView(new HistoricalDataView(object, getObjectId(o), null, null, null), true, false);
+            }
+            else
+            {
+               PopOutViewWindow window = new PopOutViewWindow(new HistoricalDataView(object, getObjectId(o), null, null, null));
+               window.open();
+            }
+         }
       }
    }
 

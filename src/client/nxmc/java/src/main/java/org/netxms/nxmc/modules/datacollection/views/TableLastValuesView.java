@@ -1,0 +1,183 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package org.netxms.nxmc.modules.datacollection.views;
+
+import java.util.UUID;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.actions.ExportToCsvAction;
+import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.widgets.TableValueViewer;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.xnap.commons.i18n.I18n;
+
+/**
+ * Display last value of table DCI
+ */
+public class TableLastValuesView extends ObjectView
+{
+   private static final I18n i18n = LocalizationHelper.getI18n(TableLastValuesView.class);
+	
+	private long objectId;
+	private long dciId;
+   private String fullName;
+   private TableValueViewer viewer;
+   private Action actionExportAllToCsv;
+
+   /**
+    * Build view ID
+    *
+    * @param object context object
+    * @param items list of DCIs to show
+    * @return view ID
+    */
+   private static String buildId(AbstractObject object, long dciId)
+   {
+      StringBuilder sb = new StringBuilder("TableLastValuesView");
+      if (object != null)
+      {
+         sb.append('#');
+         sb.append(object.getObjectId());
+      }
+      sb.append('#');
+      sb.append(dciId);
+      
+      return sb.toString();
+   }  
+
+   public TableLastValuesView(AbstractObject contextObject, long dciId)
+   {
+      super(i18n.tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/object-views/table.gif"), 
+            buildId(contextObject, dciId), true);
+      
+      objectId = contextObject.getObjectId();
+      this.dciId = dciId;
+      
+      String nodeName = contextObject.getObjectName();
+      fullName = nodeName + ": [" + Long.toString(dciId) + "]";
+      setName(Long.toString(dciId));
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      TableLastValuesView view = (TableLastValuesView)super.cloneView();
+      view.objectId = objectId;
+      view.dciId = dciId;
+      view.fullName = fullName;
+      return view;
+   }
+
+   /**
+    * Default constructor for use by cloneView()
+    */
+   public TableLastValuesView()
+   {
+      super(i18n.tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/object-views/table.gif"), UUID.randomUUID().toString(), true); 
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#getFullName()
+    */
+   @Override
+   public String getFullName()
+   {
+      return fullName;
+   }
+
+
+   @Override
+   protected void createContent(Composite parent)
+	{
+		viewer = new TableValueViewer(parent, SWT.NONE, this, null);
+		setViewerAndFilter(viewer.getViewer(), viewer.getFilter());
+		createActions();
+	
+		viewer.setObject(objectId, dciId);
+		refresh();
+	}
+
+	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+		actionExportAllToCsv = new ExportToCsvAction(this, viewer.getViewer(), false);
+	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
+   {
+		manager.add(actionExportAllToCsv);
+	}
+	
+	/**
+	 * Refresh table
+	 */
+	@Override
+	public void refresh()
+	{
+		viewer.refresh(new Runnable() {	
+			@Override
+			public void run()
+			{
+				setName(viewer.getTitle()); 
+				fullName = viewer.getObjectName() + ": " + viewer.getTitle();
+			}
+		});
+	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      return (context != null) && (context instanceof AbstractObject) && (((AbstractObject)context).getObjectId() == objectId);
+   }
+
+   @Override
+   protected void contextChanged(Object oldContext, Object newContext)
+   {
+      if ((newContext == null) || !(newContext instanceof AbstractObject) || (((AbstractObject)newContext).getObjectId() != objectId))
+         return;
+      
+      refresh();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#isCloseable()
+    */
+   @Override
+   public boolean isCloseable()
+   {
+      return true;
+   }
+}
