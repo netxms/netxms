@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,9 @@
 package org.netxms.tests;
 
 import java.util.List;
+import org.netxms.client.InputField;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objecttools.InputField;
-import org.netxms.client.objecttools.InputFieldType;
+import org.netxms.client.constants.InputFieldType;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 
@@ -44,11 +44,11 @@ public class ObjectToolsTest extends AbstractSessionTest
 		
 		session.disconnect();
 	}
-	
+
 	public void testGetDetails() throws Exception
 	{
 		final NXCSession session = connect();
-		
+
 		ObjectToolDetails td = session.getObjectToolDetails(1);
 		System.out.println("Object tool details:");
 		System.out.println("   id = " + td.getId());
@@ -83,16 +83,16 @@ public class ObjectToolsTest extends AbstractSessionTest
       
       ObjectToolDetails td = new ObjectToolDetails(id, ObjectTool.TYPE_LOCAL_COMMAND, "UnitTest");
       td.setData("ping %{10%(not a field)} -t %(address) -s %(size)");
-      td.addInputField(new InputField("size", InputFieldType.NUMBER, "Size (bytes)", null));
-      td.addInputField(new InputField("unused", InputFieldType.PASSWORD, "Unused field", null));
+      td.addInputField(new InputField("size", InputFieldType.NUMBER, "Size (bytes)", 0));
+      td.addInputField(new InputField("unused", InputFieldType.PASSWORD, "Unused field", 0));
       session.modifyObjectTool(td);
-      
+
       td = session.getObjectToolDetails(id);
       for(InputField f : td.getInputFields())
          System.out.println(f);
-      
+
       session.deleteObjectTool(id);
-      
+
       session.disconnect();
 	}
 }
