@@ -8,9 +8,9 @@
                <maxHistory>30</maxHistory>
                <totalSizeCap>2GB</totalSizeCap>
             </rollingPolicy>
-            <layout class="ch.qos.logback.classic.PatternLayout">
-               <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
-            </layout>
+            <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+               <pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
          </appender>
          <root level="debug">
             <appender-ref ref="LOGFILE"/>
@@ -18,9 +18,9 @@
       </then>
       <else>
          <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-            <layout class="ch.qos.logback.classic.PatternLayout">
-               <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
-            </layout>
+            <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+               <pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
          </appender>
          <root level="debug">
             <appender-ref ref="CONSOLE"/>
