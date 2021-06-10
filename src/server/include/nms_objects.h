@@ -1044,6 +1044,7 @@ public:
 
    const GeoLocation& getGeoLocation() const { return m_geoLocation; }
    void setGeoLocation(const GeoLocation& geoLocation);
+   void cleanGeoLocationHistoryTable(DB_HANDLE hdb, int64_t retentionTime);
 
    PostalAddress getPostalAddress() const { return GetAttributeWithLock(m_postalAddress, m_mutexProperties); }
    void setPostalAddress(const PostalAddress& addr) { lockProperties(); m_postalAddress = addr; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }

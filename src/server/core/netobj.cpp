@@ -2320,6 +2320,19 @@ bool NetObj::createGeoLocationHistoryTable(DB_HANDLE hdb)
 }
 
 /**
+ * Clean geolocation historical data
+ */
+void NetObj::cleanGeoLocationHistoryTable(DB_HANDLE hdb, int64_t retentionTime)
+{
+   if (isGeoLocationHistoryTableExists(hdb))
+   {
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("DELETE FROM gps_history_%u WHERE start_timestamp<") INT64_FMT, m_id, retentionTime);
+      DBQuery(hdb, query);
+   }
+}
+
+/**
  * Set status calculation method
  */
 void NetObj::setStatusCalculation(int method, int arg1, int arg2, int arg3, int arg4)
@@ -2381,6 +2394,9 @@ void NetObj::setGeoLocation(const GeoLocation& geoLocation)
    if (!m_geoLocation.equals(geoLocation))
    {
       m_geoLocation = geoLocation;
+      TCHAR key[32];
+      _sntprintf(key, 32, _T("GLupd-%u"), m_id);
+      ThreadPoolExecuteSerialized(g_mainThreadPool, key, self(), &NetObj::updateGeoLocationHistory, m_geoLocation);
       setModified(MODIFY_COMMON_PROPERTIES);
    }
    unlockProperties();

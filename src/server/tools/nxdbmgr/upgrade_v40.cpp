@@ -24,6 +24,29 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.60 to 40.61
+ */
+static bool H_UpgradeFromV60()
+{
+   if (GetSchemaLevelForMajorVersion(39) < 5)
+   {
+      CHK_EXEC(CreateConfigParam(_T("Geolocation.History.RetentionTime"),
+            _T("90"),
+            _T("Retention time in days for objet's geolocation history. All records older than specified will be deleted by housekeeping process."),
+            _T("days"),
+            'I',
+            true,
+            false,
+            false,
+            false));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(39, 5));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(61));
+   return true;
+}
+
+/**
  * Upgrade from 40.59 to 40.60
  */
 static bool H_UpgradeFromV59()
@@ -1578,6 +1601,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 60, 40, 61, H_UpgradeFromV60 },
    { 59, 40, 60, H_UpgradeFromV59 },
    { 58, 40, 59, H_UpgradeFromV58 },
    { 57, 40, 58, H_UpgradeFromV57 },
