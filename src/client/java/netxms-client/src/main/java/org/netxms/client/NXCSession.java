@@ -297,6 +297,7 @@ public class NXCSession
    private boolean serverConsoleConnected = false;
    private boolean allowCompression = false;
    private EncryptionContext encryptionContext = null;
+   private Throwable receiverStopCause = null;
 
    // Communication parameters
    private int defaultRecvBufferSize = 4194304; // Default is 4MB
@@ -464,12 +465,13 @@ public class NXCSession
             return; // Stop receiver thread if input stream cannot be obtained
          }
 
-         Throwable cause = null;
+         int errorCount = 0;
          while(socket.isConnected())
          {
             try
             {
                NXCPMessage msg = receiver.receiveMessage(in, encryptionContext);
+               errorCount = 0;
                switch(msg.getMessageCode())
                {
                   case NXCPCodes.CMD_REQUEST_SESSION_KEY:
@@ -709,36 +711,46 @@ public class NXCSession
             }
             catch(IOException e)
             {
-               cause = e;
+               logger.debug("Receiver error", e);
+               receiverStopCause = e;
                break; // Stop on read errors
             }
             catch(NXCPException e)
             {
+               logger.debug("Receiver error", e);
                if (e.getErrorCode() == NXCPException.SESSION_CLOSED)
                {
-                  cause = e;
+                  receiverStopCause = e;
                   break;
                }
+               errorCount++;
             }
             catch(NXCException e)
             {
+               logger.debug("Receiver error", e);
                if (e.getErrorCode() == RCC.ENCRYPTION_ERROR)
                {
-                  cause = e;
+                  receiverStopCause = e;
                   break;
                }
+               errorCount++;
+            }
+            if (errorCount > 100)
+            {
+               receiverStopCause = new NXCPException(NXCPException.FATAL_PROTOCOL_ERROR);
+               break;
             }
          }
 
          synchronized(tcpProxies)
          {
-            if (cause == null)
-               cause = new NXCPException(NXCPException.SESSION_CLOSED);
+            Throwable cause = (receiverStopCause != null) ? receiverStopCause : new NXCPException(NXCPException.SESSION_CLOSED);
             for(TcpProxy p : tcpProxies.values())
                p.abort(cause);
          }
 
          logger.info("Network receiver thread stopped");
+         msgWaitQueue.shutdown();
       }
 
       /**
@@ -1876,7 +1888,9 @@ public class NXCSession
    {
       final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id, timeout);
       if (msg == null)
-         throw new NXCException(RCC.TIMEOUT);
+      {
+         throw (receiverStopCause != null) ? new NXCException(RCC.COMM_FAILURE, receiverStopCause) : new NXCException(RCC.TIMEOUT);
+      }
       return msg;
    }
 
@@ -1890,10 +1904,7 @@ public class NXCSession
     */
    public NXCPMessage waitForMessage(final int code, final long id) throws NXCException
    {
-      final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id);
-      if (msg == null)
-         throw new NXCException(RCC.TIMEOUT);
-      return msg;
+      return waitForMessage(code, id, msgWaitQueue.getDefaultTimeout());
    }
 
    /**

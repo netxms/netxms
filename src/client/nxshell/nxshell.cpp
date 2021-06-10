@@ -73,8 +73,8 @@ static int StartApp(int argc, char *argv[])
    snprintf(buffer, 256, "-Dnetxms.syncObjects=%s", s_optSync ? "true" : "false");
    vmOptions.addMBString(buffer);
 
-	if (s_optPassword == nullptr)
-	{
+   if (s_optPassword == nullptr)
+   {
       TCHAR prompt[256], passwordBuffer[256];
       _sntprintf(prompt, 256, _T("%hs@%hs password: "), s_optUser, s_optHost);
       if (ReadPassword(prompt, passwordBuffer, 256))
@@ -96,11 +96,15 @@ static int StartApp(int argc, char *argv[])
    snprintf(buffer, 256, "-Dnetxms.password=%s", clearPassword);
    vmOptions.addMBString(buffer);
 
-   bool verboseVM = (nxlog_get_debug_level() > 0);
-   if (verboseVM)
+   int debugLevel = nxlog_get_debug_level();
+   if (debugLevel > 0)
    {
-      vmOptions.add(_T("-verbose:jni"));
-      vmOptions.add(_T("-verbose:class"));
+      vmOptions.add(_T("-Dnxshell.debug=true"));
+      if (debugLevel > 7)
+      {
+         vmOptions.add(_T("-verbose:jni"));
+         vmOptions.add(_T("-verbose:class"));
+      }
    }
 
    int rc = 0;
@@ -171,13 +175,13 @@ static void ShowUsage(bool showVersion)
          _T("Copyright (c) 2006-2021 Raden Solutions\n\n"));
    }
 
-	_tprintf(
+   _tprintf(
       _T("Usage: nxshell [OPTIONS] [script]\n")
       _T("  \n")
       _T("Options:\n")
 #if HAVE_GETOPT_LONG
       _T("  -C, --classpath <path>      Additional Java class path.\n")
-      _T("  -D, --debug                 Show additional debug output.\n")
+      _T("  -D, --debug                 Show additional debug output (use twice for extra output).\n")
       _T("  -h, --help                  Display this help message.\n")
       _T("  -H, --host <hostname>       Specify host name or IP address. Could be in host:port form.\n")
       _T("  -j, --jre <path>            Specify JRE location.\n")
@@ -207,9 +211,9 @@ static void ShowUsage(bool showVersion)
 static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
    if (tag == nullptr)
-      _tprintf(_T("DBG: "));
+      _tprintf(_T("[nxshell] "));
    else
-      _tprintf(_T("DBG: <%s> "), tag);
+      _tprintf(_T("[%s] "), tag);
    _vtprintf(format, args);
    _fputtc(_T('\n'), stdout);
 }
@@ -219,24 +223,25 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
  */
 int main(int argc, char *argv[])
 {
-	InitNetXMSProcess(true);
+   InitNetXMSProcess(true);
 
-	opterr = 0;
-   int c;
+   opterr = 0;
+   int c, debug = 0;
 #if HAVE_DECL_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, SHORT_OPTIONS, longOptions, NULL)) != -1)
+   while ((c = getopt_long(argc, argv, SHORT_OPTIONS, longOptions, NULL)) != -1)
 #else
-	while ((c = getopt(argc, argv, SHORT_OPTIONS)) != -1)
+   while ((c = getopt(argc, argv, SHORT_OPTIONS)) != -1)
 #endif
-	{
+   {
 		switch(c)
 		{
 		   case 'C': // classpath
 			   s_optClassPath = optarg;
 			   break;
          case 'D': // Additional debug
+            debug++;
             nxlog_set_debug_writer(DebugWriter);
-            nxlog_set_debug_level(9);
+            nxlog_set_debug_level(debug == 1 ? 5 : 9);
             break;
 		   case 'h': // help
 		      ShowUsage(true);

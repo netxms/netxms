@@ -255,7 +255,6 @@ public class Shell
       console.exec("from org.netxms.client.topology import *");
       console.exec("from org.netxms.client.users import *");
       console.exec("from org.netxms.client.xml import *");
-      console.exec("from org.netxms.client.zeromq import *");
 
       console.set("__name__", "__nxshell__");
 
