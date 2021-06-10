@@ -106,7 +106,7 @@ private:
    void processArchiveTelemetry();
    void processCurrentTelemetry();
    void processExtraordinaryTelemetry();
-   bool readTelemetryRecord();
+   bool readTelemetryRecord(bool archived);
 
    void sendNTCBMessage(const void *data, size_t size);
 
@@ -132,12 +132,13 @@ class TelemetryRecord
 {
 private:
    time_t m_timestamp;
+   bool m_archived;
    MobileDeviceStatus m_deviceStatus;
    shared_ptr<MobileDevice> m_device;
    StringMap m_pushList;
 
 public:
-   TelemetryRecord(const shared_ptr<MobileDevice>& device);
+   TelemetryRecord(const shared_ptr<MobileDevice>& device, bool archived);
 
    void processField(NTCBDeviceSession *session, int fieldIndex, const TelemetryField *field, const TelemetryValue& value);
    void updateDevice();

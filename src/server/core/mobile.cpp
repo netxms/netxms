@@ -21,6 +21,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG_MOBILE   _T("mobile")
+
 /**
  * Default constructor
  */
@@ -63,7 +65,7 @@ bool MobileDevice::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    if (!loadCommonProperties(hdb) || !super::loadFromDatabase(hdb, dwId))
    {
-      DbgPrintf(2, _T("Cannot load common properties for mobile device object %d"), dwId);
+      nxlog_debug_tag(DEBUG_TAG_MOBILE, 2, _T("Cannot load common properties for mobile device object %u"), dwId);
       return false;
    }
 
@@ -198,8 +200,7 @@ UINT32 MobileDevice::modifyFromMessageInternal(NXCPMessage *pRequest)
 void MobileDevice::updateSystemInfo(const MobileDeviceInfo& deviceInfo)
 {
 	lockProperties();
-
-	m_lastReportTime = time(nullptr);
+   m_lastReportTime = time(nullptr);
    _tcslcpy(m_commProtocol, deviceInfo.commProtocol, MAX_OBJECT_NAME);
 	m_vendor = deviceInfo.vendor;
 	m_model = deviceInfo.model;
@@ -219,7 +220,16 @@ void MobileDevice::updateStatus(const MobileDeviceStatus& status)
 {
 	lockProperties();
 
-	m_lastReportTime = time(nullptr);
+	if (status.timestamp != 0)
+	{
+	   if (status.timestamp > m_lastReportTime)
+	      m_lastReportTime = status.timestamp;
+	}
+	else
+	{
+	   m_lastReportTime = time(nullptr);
+	}
+
 	_tcslcpy(m_commProtocol, status.commProtocol, MAX_OBJECT_NAME);
 	m_batteryLevel = status.batteryLevel;
    m_speed = status.speed;
@@ -236,9 +246,9 @@ void MobileDevice::updateStatus(const MobileDeviceStatus& status)
 	}
 
 	TCHAR temp[64];
-	DbgPrintf(5, _T("Mobile device %s [%u] status update (battery=%d addr=%s loc=[%s %s])"),
-	          m_name, m_id, m_batteryLevel, m_ipAddress.toString(temp),
-				 m_geoLocation.getLatitudeAsString(), m_geoLocation.getLongitudeAsString());
+	nxlog_debug_tag(DEBUG_TAG_MOBILE, 5, _T("Mobile device %s [%u] status update (battery=%d addr=%s timestamp=%u loc=[%s %s])"),
+	      m_name, m_id, m_batteryLevel, m_ipAddress.toString(temp), static_cast<uint32_t>(status.geoLocation.getTimestamp()),
+			status.geoLocation.getLatitudeAsString(), status.geoLocation.getLongitudeAsString());
 
 	setModified(MODIFY_OTHER);
 	unlockProperties();

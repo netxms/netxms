@@ -400,7 +400,7 @@ void NTCBDeviceSession::processArchiveTelemetry()
 
    for(int i = 0; i < static_cast<int>(count); i++)
    {
-      if (!readTelemetryRecord())
+      if (!readTelemetryRecord(true))
       {
          debugPrintf(5, _T("processArchiveTelemetry: failed to read record #%d"), i + 1);
          return;
@@ -421,7 +421,7 @@ void NTCBDeviceSession::processArchiveTelemetry()
  */
 void NTCBDeviceSession::processCurrentTelemetry()
 {
-   if (!readTelemetryRecord())
+   if (!readTelemetryRecord(false))
    {
       debugPrintf(5, _T("processCurrentTelemetry: failed to read record"));
       return;
@@ -447,7 +447,7 @@ void NTCBDeviceSession::processExtraordinaryTelemetry()
       return;
    }
 
-   if (!readTelemetryRecord())
+   if (!readTelemetryRecord(false))
    {
       debugPrintf(5, _T("processExtraordinaryTelemetry: failed to read record"));
       return;

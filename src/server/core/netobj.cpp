@@ -2194,7 +2194,7 @@ void NetObj::updateGeoLocationHistory(GeoLocation location)
    double latitude = 0;
    double longitude = 0;
    uint32_t accuracy = 0;
-   uint32_t startTimestamp = 0;
+   time_t startTimestamp = 0;
    DB_RESULT hResult;
 
 	const TCHAR *query;
@@ -2228,7 +2228,7 @@ void NetObj::updateGeoLocationHistory(GeoLocation location)
       latitude = DBGetFieldDouble(hResult, 0, 0);
       longitude = DBGetFieldDouble(hResult, 0, 1);
       accuracy = DBGetFieldLong(hResult, 0, 2);
-      startTimestamp = DBGetFieldULong(hResult, 0, 3);
+      startTimestamp = static_cast<time_t>(DBGetFieldUInt64(hResult, 0, 3));
       isSamePlace = location.sameLocation(latitude, longitude, accuracy);
    }
    else
@@ -2238,43 +2238,50 @@ void NetObj::updateGeoLocationHistory(GeoLocation location)
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
 
-   if (isSamePlace)
+   if (location.getTimestamp() > startTimestamp)
    {
-      TCHAR query[256];
-      _sntprintf(query, 256, _T("UPDATE gps_history_%u SET end_timestamp=? WHERE start_timestamp=?"), m_id);
-      hStmt = DBPrepare(hdb, query);
-      if (hStmt == NULL)
-         goto onFail;
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, startTimestamp);
+      if (isSamePlace)
+      {
+         TCHAR query[256];
+         _sntprintf(query, 256, _T("UPDATE gps_history_%u SET end_timestamp=? WHERE start_timestamp=?"), m_id);
+         hStmt = DBPrepare(hdb, query);
+         if (hStmt == nullptr)
+            goto onFail;
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(location.getTimestamp()));
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(startTimestamp));
+      }
+      else
+      {
+         TCHAR query[256];
+         _sntprintf(query, 256, _T("INSERT INTO gps_history_%u (latitude,longitude,accuracy,start_timestamp,end_timestamp) VALUES (?,?,?,?,?)"), m_id);
+         hStmt = DBPrepare(hdb, query);
+         if (hStmt == nullptr)
+            goto onFail;
+
+         TCHAR lat[32], lon[32];
+         _sntprintf(lat, 32, _T("%f"), location.getLatitude());
+         _sntprintf(lon, 32, _T("%f"), location.getLongitude());
+
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, location.getAccuracy());
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(location.getTimestamp()));
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(location.getTimestamp()));
+      }
+
+      if (!DBExecute(hStmt))
+      {
+         nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 1, _T("NetObj::updateGeoLocationHistory(%s [%d]): Failed to add location to history (new=[%f, %f, %u, %u] last=[%f, %f, %u, %u])"),
+               m_name, m_id, location.getLatitude(), location.getLongitude(), location.getAccuracy(), static_cast<uint32_t>(location.getTimestamp()), latitude, longitude, accuracy, startTimestamp);
+      }
+      DBFreeStatement(hStmt);
    }
    else
    {
-      TCHAR query[256];
-      _sntprintf(query, 256, _T("INSERT INTO gps_history_%u (latitude,longitude,")
-                       _T("accuracy,start_timestamp,end_timestamp) VALUES (?,?,?,?,?)"), m_id);
-      hStmt = DBPrepare(hdb, query);
-      if (hStmt == nullptr)
-         goto onFail;
-
-      TCHAR lat[32], lon[32];
-      _sntprintf(lat, 32, _T("%f"), m_geoLocation.getLatitude());
-      _sntprintf(lon, 32, _T("%f"), m_geoLocation.getLongitude());
-
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_geoLocation.getAccuracy());
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_geoLocation.getTimestamp()));
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_geoLocation.getTimestamp()));
-	}
-
-   if (!DBExecute(hStmt))
-   {
-      nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 1, _T("NetObj::updateGeoLocationHistory(%s [%d]): Failed to add location to history (new = [%f, %f, %u, %u] old = [%f, %f, %u, %u])"),
-            m_name, m_id, m_geoLocation.getLatitude(), m_geoLocation.getLongitude(), m_geoLocation.getAccuracy(),
-            static_cast<uint32_t>(m_geoLocation.getTimestamp()), latitude, longitude, accuracy, startTimestamp);
+      nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 1, _T("NetObj::updateGeoLocationHistory(%s [%d]): location ignored because it is older then last known position (new=[%f, %f, %u, %u] last=[%f, %f, %u, %u])"),
+            m_name, m_id, location.getLatitude(), location.getLongitude(), location.getAccuracy(), static_cast<uint32_t>(location.getTimestamp()), latitude, longitude, accuracy, startTimestamp);
    }
-   DBFreeStatement(hStmt);
+
    DBConnectionPoolReleaseConnection(hdb);
    return;
 

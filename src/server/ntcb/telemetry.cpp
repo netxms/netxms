@@ -813,10 +813,11 @@ static TCHAR *TelemetryFieldToString(const TelemetryField *field, const Telemetr
 /**
  * Constructor for telemetry record structure
  */
-TelemetryRecord::TelemetryRecord(const shared_ptr<MobileDevice>& device) : m_device(device)
+TelemetryRecord::TelemetryRecord(const shared_ptr<MobileDevice>& device, bool archived) : m_device(device)
 {
    m_timestamp = time(nullptr);
    m_deviceStatus.commProtocol = _T("NTCB/FLEX");
+   m_archived = archived;
 }
 
 /**
@@ -836,6 +837,7 @@ void TelemetryRecord::processField(NTCBDeviceSession *session, int fieldIndex, c
    {
       case 3:
          m_timestamp = value.u32;
+         m_deviceStatus.timestamp = value.u32;
          break;
       case 9:
          m_deviceStatus.geoLocation.setTimestamp(value.u32);
@@ -874,6 +876,16 @@ void TelemetryRecord::processField(NTCBDeviceSession *session, int fieldIndex, c
  */
 void TelemetryRecord::updateDevice()
 {
+   nxlog_debug_tag(DEBUG_TAG_NTCB, 5, _T("Processing %s telemetry record from device %s [%u]"), m_archived ? _T("archived") : _T("current"), m_device->getName(), m_device->getId());
+
+   if (!m_archived && (m_timestamp <= m_device->getLastReportTime()))
+   {
+      nxlog_debug_tag(DEBUG_TAG_NTCB, 5, _T("Telemetry record from device %s [%u] ignored"), m_device->getName(), m_device->getId());
+      return;
+   }
+
+   if ((m_deviceStatus.geoLocation.getTimestamp() > m_timestamp) || (m_deviceStatus.geoLocation.getTimestamp() == 0))
+      m_deviceStatus.geoLocation.setTimestamp(m_timestamp);
    m_device->updateStatus(m_deviceStatus);
 
    shared_ptr<Table> tableValue; // Empty pointer for processNewDCValue()
@@ -896,9 +908,9 @@ void TelemetryRecord::updateDevice()
 /**
  * Read single FLEX telemetry record
  */
-bool NTCBDeviceSession::readTelemetryRecord()
+bool NTCBDeviceSession::readTelemetryRecord(bool archived)
 {
-   shared_ptr<TelemetryRecord> record = make_shared<TelemetryRecord>(m_device);
+   shared_ptr<TelemetryRecord> record = make_shared<TelemetryRecord>(m_device, archived);
 
    int fieldIndex = 0;
    int maskByte = 0;
