@@ -664,7 +664,8 @@ enum SessionState
 #define RCC_GEO_AREA_IN_USE               ((uint32_t)141)
 #define RCC_INVALID_SSH_KEY_ID            ((uint32_t)142)
 #define RCC_SSH_KEY_IN_USE                ((uint32_t)143)
-#define RCC_INVALID_OBJECT_QUERY_ID       ((uint32_t)144)
+#define RCC_REMOTE_SOCKET_READ_ERROR      ((uint32_t)144)
+#define RCC_INVALID_OBJECT_QUERY_ID       ((uint32_t)145)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

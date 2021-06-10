@@ -35,6 +35,7 @@ TcpProxy::TcpProxy(CommSession *session, SOCKET s)
    m_id = InterlockedIncrement(&m_nextId);
    m_session = session;
    m_socket = s;
+   m_readError = false;
 }
 
 /**
@@ -47,6 +48,7 @@ TcpProxy::~TcpProxy()
 
    NXCPMessage msg(CMD_CLOSE_TCP_PROXY, 0, m_session->getProtocolVersion());
    msg.setField(VID_CHANNEL_ID, m_id);
+   msg.setField(VID_ERROR_INDICATOR, m_readError);
    m_session->postMessage(&msg);
 }
 
@@ -58,7 +60,10 @@ bool TcpProxy::readSocket()
    BYTE buffer[65536];
    int bytes = recv(m_socket, (char *)buffer + NXCP_HEADER_SIZE, 65536 - NXCP_HEADER_SIZE, 0);
    if (bytes <= 0)
+   {
+      m_readError = (bytes < 0);
       return false;
+   }
 
    NXCP_MESSAGE *header = reinterpret_cast<NXCP_MESSAGE*>(buffer);
    header->code = htons(CMD_TCP_PROXY_DATA);
@@ -66,7 +71,7 @@ bool TcpProxy::readSocket()
    header->flags = htons(MF_BINARY);
    header->numFields = htonl(static_cast<UINT32>(bytes));
 
-   UINT32 size = NXCP_HEADER_SIZE + bytes;
+   uint32_t size = NXCP_HEADER_SIZE + bytes;
    if ((size % 8) != 0)
       size += 8 - size % 8;
    header->size = htonl(size);

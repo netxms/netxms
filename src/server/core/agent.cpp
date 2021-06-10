@@ -923,10 +923,10 @@ void AgentConnectionEx::setTcpProxySession(ClientSession *session)
 /**
  * Process TCP proxy message
  */
-void AgentConnectionEx::processTcpProxyData(uint32_t channelId, const void *data, size_t size)
+void AgentConnectionEx::processTcpProxyData(uint32_t channelId, const void *data, size_t size, bool errorIndicator)
 {
    if (m_tcpProxySession != nullptr)
-      m_tcpProxySession->processTcpProxyData(this, channelId, data, size);
+      m_tcpProxySession->processTcpProxyData(this, channelId, data, size, errorIndicator);
 }
 
 /**

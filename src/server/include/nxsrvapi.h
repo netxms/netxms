@@ -905,7 +905,7 @@ protected:
    virtual UINT32 processCollectedData(NXCPMessage *msg);
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *pMsg);
-   virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size);
+   virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size, bool errorIndicator);
    virtual void getSshKeys(NXCPMessage *msg, NXCPMessage *response);
 
    const InetAddress& getIpAddr() const { return m_addr; }

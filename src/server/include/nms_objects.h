@@ -151,7 +151,7 @@ protected:
    virtual UINT32 processCollectedData(NXCPMessage *msg) override;
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response) override;
    virtual bool processCustomMessage(NXCPMessage *msg) override;
-   virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size) override;
+   virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size, bool errorIndicator) override;
    virtual void getSshKeys(NXCPMessage *msg, NXCPMessage *response) override;
 
    AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr, uint16_t port, const TCHAR *secret, bool allowCompression);
