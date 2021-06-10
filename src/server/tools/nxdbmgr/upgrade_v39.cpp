@@ -23,6 +23,25 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 39.4 to 39.5
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(CreateConfigParam(_T("Geolocation.History.RetentionTime"),
+         _T("90"),
+         _T("Retention time in days for objet's geolocation history. All records older than specified will be deleted by housekeeping process."),
+         _T("days"),
+         'I',
+         true,
+         false,
+         false,
+         false));
+
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 39.3 to 39.4
  */
 static bool H_UpgradeFromV3()
@@ -122,6 +141,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 4,  39, 5,  H_UpgradeFromV4  },
    { 3,  39, 4,  H_UpgradeFromV3  },
    { 2,  39, 3,  H_UpgradeFromV2  },
    { 1,  39, 2,  H_UpgradeFromV1  },

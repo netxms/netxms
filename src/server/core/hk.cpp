@@ -476,12 +476,25 @@ static void HouseKeeper()
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Collected DCI data cleanup disabled"));
       }
 
+      //Get objects array
+	   SharedObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
+
+      // Clean geo location data
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing geolocation data"));
+      retentionTime = ConfigReadULong(_T("Geolocation.History.RetentionTime"), 90);
+      retentionTime *= 86400;   // Convert days to seconds
+      int64_t latestTimestamp = static_cast<int64_t>(cycleStartTime - retentionTime);
+      for(int i = 0; i < objects->size(); i++)
+      {
+         objects->get(i)->cleanGeoLocationHistoryTable(hdb, latestTimestamp);
+         ThrottleHousekeeper();
+      }
+
       // Call policy validation for templates
       g_idxObjectById.forEach(InitiatePolicyValidation, nullptr);
 
 	   // Save object runtime data
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Saving object runtime data"));
-	   SharedObjectArray<NetObj> *objects = g_idxObjectById.getObjects();
 	   for(int i = 0; i < objects->size(); i++)
 	   {
 	      objects->get(i)->saveRuntimeData(hdb);
