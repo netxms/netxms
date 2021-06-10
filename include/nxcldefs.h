@@ -520,6 +520,7 @@ enum SessionState
 /**
  * Request completion codes
  */
+<<<<<<< HEAD
 #define RCC_SUCCESS                    ((uint32_t)0)
 #define RCC_COMPONENT_LOCKED           ((uint32_t)1)
 #define RCC_ACCESS_DENIED              ((uint32_t)2)
@@ -664,6 +665,7 @@ enum SessionState
 #define RCC_GEO_AREA_IN_USE            ((uint32_t)141)
 #define RCC_INVALID_SSH_KEY_ID         ((uint32_t)142)
 #define RCC_SSH_KEY_IN_USE             ((uint32_t)143)
+#define RCC_REMOTE_SOCKET_READ_ERROR   ((uint32_t)144)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

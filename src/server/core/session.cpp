@@ -14239,7 +14239,7 @@ void ClientSession::closeTcpProxy(NXCPMessage *request)
 /**
  * Process TCP proxy data (in direction from from agent to client)
  */
-void ClientSession::processTcpProxyData(AgentConnectionEx *conn, uint32_t agentChannelId, const void *data, size_t size)
+void ClientSession::processTcpProxyData(AgentConnectionEx *conn, uint32_t agentChannelId, const void *data, size_t size, bool errorIndicator)
 {
    uint32_t clientChannelId = 0;
    MutexLock(m_tcpProxyLock);
@@ -14279,7 +14279,7 @@ void ClientSession::processTcpProxyData(AgentConnectionEx *conn, uint32_t agentC
       {
          NXCPMessage msg(CMD_CLOSE_TCP_PROXY, 0);
          msg.setField(VID_CHANNEL_ID, clientChannelId);
-         msg.setField(VID_RCC, RCC_SUCCESS); // Normal closure
+         msg.setField(VID_RCC, errorIndicator ? RCC_REMOTE_SOCKET_READ_ERROR : RCC_SUCCESS);
          postMessage(msg);
       }
    }

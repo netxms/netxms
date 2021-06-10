@@ -1432,6 +1432,10 @@ typedef struct
 #define VID_2FA_METHOD              ((uint32_t)752)
 #define VID_2FA_RESPONSE            ((uint32_t)753)
 #define VID_REQUIRES_DATA_VIEW      ((uint32_t)754)
+#define VID_QUERY_ID                ((uint32_t)755)
+#define VID_FILE_PERMISSIONS        ((uint32_t)756)
+#define VID_GROUP_NAME              ((uint32_t)757)
+#define VID_ERROR_INDICATOR         ((uint32_t)758)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

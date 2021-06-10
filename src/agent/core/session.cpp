@@ -1333,7 +1333,7 @@ void CommSession::tcpProxyReadThread()
                if (!p->readSocket())
                {
                   // Socket read error, close proxy
-                  debugPrintf(5, _T("TCP proxy %d closed because of socket read error"), p->getId());
+                  debugPrintf(5, _T("TCP proxy %d closed because of %s"), p->getId(), p->isReadError() ? _T("socket read error") : _T("socket closure"));
                   m_tcpProxies.remove(i);
                   i--;
                }
