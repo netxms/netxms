@@ -95,7 +95,7 @@ public class NXCPMessageReceiver
 				{
 					System.arraycopy(recvBuffer, (int)size, recvBuffer, 0, bufferPos - (int)size);
 					bufferPos -= size;
-					
+
 					// Shrink buffer if possible
 					if ((recvBuffer.length > defaultBufferSize) && (bufferPos < defaultBufferSize))
 					{
@@ -117,7 +117,7 @@ public class NXCPMessageReceiver
 		}
 		return msg;
 	}
-	
+
 	/**
     * Receive NXCP message from input stream
     * 
@@ -130,7 +130,7 @@ public class NXCPMessageReceiver
 	public NXCPMessage receiveMessage(final InputStream in, EncryptionContext ectx) throws IOException, NXCPException
 	{
 		NXCPMessage msg = null;
-		
+
 		// Receive bytes from network if we don't have full message in buffer 
 		while(true)
 		{
@@ -142,7 +142,7 @@ public class NXCPMessageReceiver
 				throw new NXCPException(NXCPException.SESSION_CLOSED);
 			bufferPos += bytes;
 		}
-		
+
 		return msg;
 	}
 }

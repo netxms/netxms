@@ -1,0 +1,39 @@
+<configuration debug="false">
+   <if condition='isDefined("nxshell.logfile")'>
+      <then>
+         <appender name="LOGFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${nxshell.logfile}</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+               <fileNamePattern>${nxshell.logfile}.%d{yyyy-MM-dd}</fileNamePattern>
+               <maxHistory>30</maxHistory>
+               <totalSizeCap>2GB</totalSizeCap>
+            </rollingPolicy>
+            <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+               <pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+         </appender>
+         <root level="debug">
+            <appender-ref ref="LOGFILE"/>
+         </root>
+      </then>
+      <else>
+         <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+               <pattern>[%t] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+         </appender>
+         <if condition='isDefined("nxshell.debug")'>
+            <then>
+               <root level="debug">
+                  <appender-ref ref="CONSOLE"/>
+               </root>
+            </then>
+            <else>
+               <root level="info">
+                  <appender-ref ref="CONSOLE"/>
+               </root>
+            </else>
+         </if>
+      </else>
+   </if>
+</configuration>
