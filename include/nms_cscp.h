@@ -666,6 +666,18 @@ typedef struct
 #define CMD_GET_SSH_KEYS                  0x01AB
 #define CMD_GET_TOOLTIP_LAST_VALUES       0x01AC
 #define CMD_SYNC_AGENT_POLICIES           0x01AD
+#define CMD_2FA_PREPARE_CHALLENGE         0x01AE
+#define CMD_2FA_VALIDATE_RESPONSE         0x01AF
+#define CMD_2FA_GET_METHODS               0x01B0
+#define CMD_2FA_GET_METHOD_DETAILS        0x01B1
+#define CMD_2FA_MODIFY_METHOD             0x01B2
+#define CMD_2FA_DELETE_METHOD             0x01B3
+#define CMD_2FA_GET_USER_BINDINGS         0x01B4
+#define CMD_2FA_GET_USER_BINDING_DETAILS  0x01B5
+#define CMD_2FA_MODIFY_USER_BINDING       0x01B6
+#define CMD_2FA_DELETE_USER_BINDING       0x01B7
+#define CMD_FILEMGR_CHMOD                 0x01B8
+#define CMD_FILEMGR_CHOWN                 0x01B9
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1433,6 +1445,8 @@ typedef struct
 #define VID_2FA_RESPONSE            ((uint32_t)753)
 #define VID_REQUIRES_DATA_VIEW      ((uint32_t)754)
 #define VID_QUERY_ID                ((uint32_t)755)
+#define VID_FILE_PERMISSIONS        ((uint32_t)756)
+#define VID_GROUP_NAME              ((uint32_t)757)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -48,6 +48,15 @@ public class PathElement
    @Element(required = false)
    private Date creationTime;
    
+   @Element(required = false)
+   private Integer permissions;
+
+   @Element(required = false)
+   private String owner;
+
+   @Element(required = false)
+   private String ownerGroup;
+
    private File localFile = null;
    
    /**
@@ -67,6 +76,9 @@ public class PathElement
       this.name = name;
       this.guid = guid;
       this.localFile = localFile;
+      this.permissions = 0;
+      this.owner = "";
+      this.ownerGroup = "";
       this.creationTime = creationDate;
       children = new HashSet<PathElement>();
       if (parent != null)
@@ -86,6 +98,9 @@ public class PathElement
       parent = null;
       children = new HashSet<PathElement>();
       guid = null;
+      permissions = 0;
+      owner = "";
+      ownerGroup = "";
    }
    
    /**
@@ -244,8 +259,17 @@ public class PathElement
    @Override
    public String toString()
    {
-      return "PathElement [name=" + name + ", parent=" + ((parent != null) ? parent.getName() : "(null)") + ", childrenCount="
-            + children.size() + ", guid=" + guid + ", creationTime=" + creationTime + ", localFile=" + localFile + "]";
+      return "PathElement [" +
+             "name=" + name +
+           ", parent=" + ((parent != null) ? parent.getName() : "(null)") +
+           ", childrenCount=" + children.size() +
+           ", guid=" + guid +
+           ", creationTime=" + creationTime +
+           ", localFile=" + localFile +
+           ", permissions=" + permissions +
+           ", owner=" + owner +
+           ", ownerGroup=" + ownerGroup +
+           "]";
    }
 
    /**
@@ -274,5 +298,75 @@ public class PathElement
    public void updateCreationTime()
    {
       creationTime = new Date();
+   }
+
+   /**
+    * Update file's access rights
+    */
+   public void setPermissions(Integer r)
+   {
+      permissions = r;
+   }
+
+   /**
+    * Get file's access rights
+    */
+   public Integer getPermissions()
+   {
+      return permissions;
+   }
+   
+   /**
+    * Get file's access rights
+    */
+   public String getPermissionsAsString()
+   {
+      String retVal = "";
+      if(permissions > 0)
+      {
+         retVal += isFile() ? "-" : "d";
+         retVal += (permissions & (1 << 0)) > 0 ? "r" : "-";
+         retVal += (permissions & (1 << 1)) > 0 ? "w" : "-";
+         retVal += (permissions & (1 << 2)) > 0 ? "x" : "-";
+         retVal += (permissions & (1 << 3)) > 0 ? "r" : "-";
+         retVal += (permissions & (1 << 4)) > 0 ? "w" : "-";
+         retVal += (permissions & (1 << 5)) > 0 ? "x" : "-";
+         retVal += (permissions & (1 << 6)) > 0 ? "r" : "-";
+         retVal += (permissions & (1 << 7)) > 0 ? "w" : "-";
+         retVal += (permissions & (1 << 8)) > 0 ? "x" : "-";
+      }
+      return retVal;
+   }
+
+   /**
+    * Set file owner
+    */
+   public void setOwner(String newOwner)
+   {
+      owner = newOwner;
+   }
+
+   /**
+    * Get file owner
+    */
+   public String getOwner()
+   {
+      return owner;
+   }
+
+   /**
+    * Set file owner group
+    */
+   public void setOwnerGroup(String newOwnerGroup)
+   {
+      ownerGroup = newOwnerGroup;
+   }
+
+   /**
+    * Get file owner group
+    */
+   public String getOwnerGroup()
+   {
+      return ownerGroup;
    }
 }

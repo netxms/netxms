@@ -1779,6 +1779,65 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
 }
 
 /**
+ * Change file owner
+ */
+uint32_t AgentConnection::changeFileOwner(const TCHAR *destinationFile, const TCHAR *newOwner, const TCHAR *newGroup)
+{
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_FILEMGR_CHOWN, requestId, m_nProtocolVersion);
+
+   msg.setField(VID_FILE_NAME, destinationFile);
+   if (newOwner != nullptr)
+      msg.setField(VID_USER_NAME, newOwner);
+   if (newGroup != nullptr)
+      msg.setField(VID_GROUP_NAME, newGroup);
+
+   uint32_t rcc;
+   if (sendMessage(&msg))
+   {
+      rcc = waitForRCC(requestId, m_commandTimeout);
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+   return rcc;
+}
+
+/**
+ * Change file permissions
+ */
+uint32_t AgentConnection::changeFilePermissions(const TCHAR *destinationFile, uint32_t permissions, const TCHAR *newOwner, const TCHAR *newGroup)
+{
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_FILEMGR_CHMOD, requestId, m_nProtocolVersion);
+
+   msg.setField(VID_FILE_NAME, destinationFile);
+   msg.setField(VID_FILE_PERMISSIONS, permissions);
+
+   //For Windows agents
+   msg.setField(VID_USER_NAME, newOwner);
+   msg.setField(VID_GROUP_NAME, newGroup);
+
+   uint32_t rcc;
+   if (sendMessage(&msg))
+   {
+      rcc = waitForRCC(requestId, m_commandTimeout);
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+   return rcc;
+}
+
+/**
  * Download file from agent
  */
 uint32_t AgentConnection::downloadFile(const TCHAR *sourceFile, const TCHAR *destinationFile, bool allowPathExpansion,
@@ -2933,12 +2992,18 @@ RemoteFileInfo::RemoteFileInfo(NXCPMessage *msg, uint32_t baseId, const TCHAR *n
       m_size = msg->getFieldAsUInt64(baseId + 1);
       m_mtime = msg->getFieldAsTime(baseId + 2);
       msg->getFieldAsBinary(baseId + 3, m_hash, MD5_DIGEST_SIZE);
+      m_permissions = msg->getFieldAsUInt32(baseId + 4);
+      m_ownerUser = msg->getFieldAsString(baseId + 5);
+      m_ownerGroup = msg->getFieldAsString(baseId + 6);
    }
    else
    {
       m_size = 0;
       m_mtime = 0;
       memset(m_hash, 0, MD5_DIGEST_SIZE);
+      m_permissions = 0;
+      m_ownerUser = nullptr;
+      m_ownerGroup = nullptr;
    }
 }
 
@@ -2948,4 +3013,6 @@ RemoteFileInfo::RemoteFileInfo(NXCPMessage *msg, uint32_t baseId, const TCHAR *n
 RemoteFileInfo::~RemoteFileInfo()
 {
    MemFree(m_name);
+   MemFree(m_ownerUser);
+   MemFree(m_ownerGroup);
 }
