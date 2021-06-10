@@ -2305,6 +2305,7 @@ struct MobileDeviceStatus
    int16_t direction;
    int8_t batteryLevel;
    InetAddress ipAddress;
+   time_t timestamp;
 
    MobileDeviceStatus()
    {
@@ -2313,6 +2314,7 @@ struct MobileDeviceStatus
       speed = -1;
       direction = -1;
       batteryLevel = -1;
+      timestamp = 0;
    }
 };
 

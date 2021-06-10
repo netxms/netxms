@@ -2613,6 +2613,12 @@ uint32_t DataCollectionTarget::getEffectiveWebServiceProxy()
  */
 void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
 {
+   if (geoLocation.getTimestamp() <= m_geoLocation.getTimestamp())
+   {
+      nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 4, _T("Location update for device %s [%u] ignored because it is older than last known location"), m_name, m_id);
+      return;
+   }
+
    if ((m_flags & DCF_LOCATION_CHANGE_EVENT) && m_geoLocation.isValid() && geoLocation.isValid() && !m_geoLocation.equals(geoLocation))
    {
       PostSystemEvent(EVENT_GEOLOCATION_CHANGED, m_id, "ffssffss", geoLocation.getLatitude(), geoLocation.getLongitude(),
@@ -2626,8 +2632,7 @@ void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
    _sntprintf(key, 32, _T("GLupd-%u"), m_id);
    ThreadPoolExecuteSerialized(g_mainThreadPool, key, self(), &NetObj::updateGeoLocationHistory, m_geoLocation);
 
-   nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 4, _T("Location for device %s [%u] set to %s %s)"),
-            m_name, m_id, geoLocation.getLatitude(), geoLocation.getLongitude());
+   nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 4, _T("Location for device %s [%u] set to %s %s)"), m_name, m_id, geoLocation.getLatitude(), geoLocation.getLongitude());
 
    if (m_geoLocationControlMode == GEOLOCATION_RESTRICTED_AREAS)
    {
