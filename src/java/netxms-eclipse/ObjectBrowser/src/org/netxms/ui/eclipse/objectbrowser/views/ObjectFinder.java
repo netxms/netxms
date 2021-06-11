@@ -35,11 +35,14 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -84,6 +87,7 @@ import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objects.interfaces.ZoneMember;
+import org.netxms.client.objects.queries.ObjectQuery;
 import org.netxms.client.objects.queries.ObjectQueryResult;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
@@ -237,9 +241,9 @@ public class ObjectFinder extends ViewPart
          "VPNCONNECTOR",
          "ZONE"
       };
-   
+
    private static final List<ObjectClass> OBJECT_CLASSES;
-   
+
    static
    {
       OBJECT_CLASSES = new ArrayList<ObjectClass>();
@@ -272,7 +276,7 @@ public class ObjectFinder extends ViewPart
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_VPNCONNECTOR, "VPN Connector"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_ZONE, "Zone"));
    }
-   
+
    private NXCSession session = ConsoleSharedData.getSession();
    private SortableTableViewer results;
    private IntermediateSelectionProvider resultSelectionProvider;
@@ -289,6 +293,7 @@ public class ObjectFinder extends ViewPart
    private ScriptEditor queryEditor;
    private Action actionStartSearch;
    private Action actionShowObjectDetails;
+   private Action actionSaveAs;
    private Action actionExportToCSV;
    private Action actionExportAllToCSV;
 
@@ -308,7 +313,7 @@ public class ObjectFinder extends ViewPart
       CTabItem filterTab = new CTabItem(tabFolder, SWT.NONE);
       filterTab.setText("Filter");
       filterTab.setImage(SharedIcons.IMG_FILTER);
-      
+
       Composite conditionGroup = new Composite(tabFolder, SWT.NONE);
       layout = new GridLayout();
       layout.numColumns = session.isZoningEnabled() ? 3 : 2;
@@ -453,7 +458,7 @@ public class ObjectFinder extends ViewPart
             }
          });
       }
-      
+
       /*** IP filter ***/
       Group ipFilterGroup = new Group(conditionGroup, SWT.NONE);
       ipFilterGroup.setText("IP Range");
@@ -461,17 +466,17 @@ public class ObjectFinder extends ViewPart
       layout = new GridLayout();
       layout.numColumns = 3;
       ipFilterGroup.setLayout(layout);
-      
+
       ipRangeStart = new Text(ipFilterGroup, SWT.BORDER);
       ipRangeStart.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
       ipRangeStart.addTraverseListener(traverseListener);
-      
+
       new Label(ipFilterGroup, SWT.NONE).setText(" - ");
 
       ipRangeEnd = new Text(ipFilterGroup, SWT.BORDER);
       ipRangeEnd.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
       ipRangeEnd.addTraverseListener(traverseListener);
-      
+
       /*** Search button ***/
       Button searchButtonFilter = new Button(conditionGroup, SWT.PUSH);
       searchButtonFilter.setText("&Search");
@@ -484,14 +489,14 @@ public class ObjectFinder extends ViewPart
          {
             startSearch();
          }
-         
+
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
             widgetSelected(e);
          }
       });
-      
+
       /*** Query ***/
       CTabItem queryTab = new CTabItem(tabFolder, SWT.NONE);
       queryTab.setText("Query");
@@ -501,16 +506,16 @@ public class ObjectFinder extends ViewPart
       layout = new GridLayout();
       queryArea.setLayout(layout);
       queryTab.setControl(queryArea);
-      
+
       queryEditorMessage = new CompositeWithMessageBar(queryArea, SWT.BORDER);
       queryEditorMessage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      
+
       queryEditor = new ScriptEditor(queryEditorMessage, SWT.NONE, SWT.MULTI, true);
       queryEditorMessage.setContent(queryEditor);
-      
+
       queryEditor.addVariables(Arrays.asList(OBJECT_ATTRIBUTES));
       queryEditor.addConstants(Arrays.asList(OBJECT_CONSTANTS));
-      
+
       Button searchButtonQuery = new Button(queryArea, SWT.PUSH);
       searchButtonQuery.setText("&Search");
       gd = new GridData(SWT.LEFT, SWT.BOTTOM, true, false);
@@ -602,7 +607,7 @@ public class ObjectFinder extends ViewPart
          tabFolder.setSelection(0);
       }
    }
-   
+
    /**
     * Activate context
     */
@@ -614,7 +619,7 @@ public class ObjectFinder extends ViewPart
          contextService.activateContext("org.netxms.ui.eclipse.objectbrowser.context.ObjectFinder"); //$NON-NLS-1$
       }
    }
-   
+
    /**
     * Create actions
     */
@@ -646,10 +651,18 @@ public class ObjectFinder extends ViewPart
          }
       };
 
+      actionSaveAs = new Action("&Save as predefined query...", SharedIcons.SAVE_AS) {
+         @Override
+         public void run()
+         {
+            saveQuery();
+         }
+      };
+
       actionExportToCSV = new ExportToCsvAction(this, results, true);
       actionExportAllToCSV = new ExportToCsvAction(this, results, false);
    }
-   
+
    /**
     * Fill action bars
     */
@@ -667,6 +680,7 @@ public class ObjectFinder extends ViewPart
    private void fillLocalPullDown(IMenuManager manager)
    {
       manager.add(actionStartSearch);
+      manager.add(actionSaveAs);
       manager.add(new Separator());
       manager.add(actionExportAllToCSV);
    }
@@ -678,6 +692,7 @@ public class ObjectFinder extends ViewPart
    private void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionStartSearch);
+      manager.add(actionSaveAs);
       manager.add(new Separator());
       manager.add(actionExportAllToCSV);
    }
@@ -736,7 +751,7 @@ public class ObjectFinder extends ViewPart
    {
       final NXCSession session = ConsoleSharedData.getSession();
       final String query = queryEditor.getText();
-      new ConsoleJob("Query objects", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Query objects", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -836,7 +851,7 @@ public class ObjectFinder extends ViewPart
    private void doSearch(final String searchString, final int mode, final List<Integer> classFilter, final List<Integer> zoneFilter, final InetAddress addrStart, final InetAddress addrEnd)
    {
       final NXCSession session = ConsoleSharedData.getSession();
-      new ConsoleJob("Find objects", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Find objects", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -1047,6 +1062,42 @@ public class ObjectFinder extends ViewPart
       }
 
       results.setInput(objects);
+   }
+
+   /**
+    * Save query as predefined
+    */
+   private void saveQuery()
+   {
+      if (tabFolder.getSelectionIndex() != 1)
+         return;
+
+      InputDialog dlg = new InputDialog(getSite().getShell(), "Save Object Query", "Query name", "", new IInputValidator() {
+         @Override
+         public String isValid(String newText)
+         {
+            if (newText.trim().isEmpty())
+               return "Query name must not be empty";
+            return null;
+         }
+      });
+      if (dlg.open() != Window.OK)
+         return;
+      
+      final ObjectQuery query = new ObjectQuery(dlg.getValue(), "", queryEditor.getText());
+      new ConsoleJob("Save object query", this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyObjectQuery(query);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot save object query";
+         }
+      }.start();
    }
 
    /**

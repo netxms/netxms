@@ -516,6 +516,8 @@ enum SessionState
 #define NX_NOTIFY_GEO_AREA_DELETED           51
 #define NX_NOTIFY_OBJECTS_IN_SYNC            52
 #define NX_NOTIFY_SSH_KEY_DATA_CHAGED        53
+#define NX_NOTIFY_OBJECT_QUERY_UPDATED       54
+#define NX_NOTIFY_OBJECT_QUERY_DELETED       55
 
 /**
  * Request completion codes
