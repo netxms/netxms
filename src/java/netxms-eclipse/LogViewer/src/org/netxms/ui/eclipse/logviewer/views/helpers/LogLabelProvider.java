@@ -27,6 +27,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TableRow;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.Log;
@@ -114,6 +115,16 @@ public class LogLabelProvider implements ITableLabelProvider
 				catch(NumberFormatException e)
 				{
 					return null;
+				}
+			case LogColumn.LC_STATUS:
+				try
+				{
+				   int status = Integer.parseInt(value);
+				   return StatusDisplayInfo.getStatusImage(status > 0 ? ObjectStatus.NORMAL.getValue() : ObjectStatus.MAJOR.getValue());
+				}
+				catch(NumberFormatException e)
+				{
+				   return null;
 				}
 			case LogColumn.LC_USER_ID:
 				try
@@ -204,6 +215,16 @@ public class LogLabelProvider implements ITableLabelProvider
 				{
 					return Messages.get().LogLabelProvider_Error;
 				}
+         case LogColumn.LC_STATUS:
+            try
+            {
+               int status = Integer.parseInt(value);
+               return status > 0 ? "Success" : "Failure";
+            }
+            catch(NumberFormatException e)
+            {
+               return Messages.get().LogLabelProvider_Error;
+            }
          case LogColumn.LC_TIMESTAMP:
             try
             {

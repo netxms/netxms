@@ -41,6 +41,8 @@
 #define LC_EVENT_ORIGIN    10
 #define LC_TEXT_DETAILS    11
 #define LC_JSON_DETAILS    12
+#define LC_STATUS          13
+#define LC_ACTION_CODE     14
 
 /**
  * Column filter types

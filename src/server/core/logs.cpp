@@ -130,6 +130,32 @@ static NXCORE_LOG s_logs[] =
          { nullptr, nullptr, 0, 0 }
       }
    },
+	{ _T("NotificationLog"), _T("notification_log"), _T("id"), nullptr, SYSTEM_ACCESS_VIEW_EVENT_LOG,
+      {
+			{ _T("id"), _T("ID"), LC_INTEGER, 0 },
+			{ _T("notification_channel"), _T("Channel"), LC_TEXT, 0 },
+			{ _T("notification_timestamp"), _T("Time"), LC_TIMESTAMP, 0 },
+			{ _T("recipient"), _T("Recipient"), LC_TEXT, 0 },
+			{ _T("subject"), _T("Subject"), LC_TEXT, 0 },
+			{ _T("message"), _T("Message"), LC_TEXT, 0 },
+			{ _T("success"), _T("Status"), LC_STATUS, 0 },
+			{ nullptr, nullptr, 0, 0 }
+      }
+   },
+	{ _T("ServerActionExecutionLog"), _T("server_action_execution_log"), _T("id"), nullptr, SYSTEM_ACCESS_VIEW_EVENT_LOG,
+      {
+			{ _T("id"), _T("ID"), LC_INTEGER, 0 },
+			{ _T("action_timestamp"), _T("Time"), LC_TIMESTAMP, 0 },
+			{ _T("action_code"), _T("Action code"), LC_INTEGER, 0 },
+			{ _T("action_name"), _T("Action name"), LC_TEXT, 0 },
+			{ _T("channel_name"), _T("Channel name"), LC_TEXT, 0 },
+			{ _T("recipient"), _T("Recipient"), LC_TEXT, 0 },
+			{ _T("subject"), _T("Subject"), LC_TEXT, 0 },
+			{ _T("action_data"), _T("Action data"), LC_TEXT, 0 },
+			{ _T("success"), _T("Status"), LC_STATUS, 0 },
+			{ nullptr, nullptr, 0, 0 }
+      }
+   },
 	{ nullptr, nullptr, nullptr, nullptr, 0 }
 };
 

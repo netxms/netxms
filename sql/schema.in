@@ -1245,6 +1245,38 @@ SELECT create_hypertable('event_log', 'event_timestamp', chunk_time_interval => 
 #endif
 
 /**
+ * Notification log
+ */
+CREATE TABLE notification_log
+(
+  id SQL_INT64 not null,
+  notification_channel varchar(63) not null,
+  notification_timestamp integer not null,
+  recipient varchar(2000) null,
+  subject varchar(2000) null,
+  message varchar(2000) null,
+  success integer not null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Server action execution log
+ */
+CREATE TABLE server_action_execution_log
+(
+  id SQL_INT64 not null,
+  action_timestamp integer not null,
+  action_code integer not null,
+  action_name varchar(63) null,
+  channel_name varchar(63) null,
+  recipient varchar(2000) null,
+  subject varchar(2000) null,
+  action_data varchar(2000) null,
+  success integer not null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
  * Actions on events
  */
 CREATE TABLE actions

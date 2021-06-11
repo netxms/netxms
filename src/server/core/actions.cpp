@@ -375,6 +375,41 @@ static bool ExecuteActionScript(const TCHAR *script, const Event *event)
 }
 
 /**
+ * Saves server action execution log message to DB
+ */
+static void SaveServerActionExecutionLog(uint64_t id, uint32_t code, const TCHAR* action, const TCHAR* channelName, const TCHAR* recipient, const TCHAR* subject, const TCHAR* body, bool success)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt;
+
+   hStmt = DBPrepare(hdb,
+               _T("INSERT INTO server_action_execution_log (id,action_timestamp,action_code,action_name,channel_name,recipient,subject,action_data,success) VALUES (?,?,?,?,?,?,?,?,?)"));
+
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (uint32_t)time(nullptr));
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, code);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, action, DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, channelName, DB_BIND_STATIC);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, recipient, DB_BIND_STATIC);
+      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, subject, DB_BIND_STATIC);
+      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, body, DB_BIND_STATIC);
+      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, success ? 1 : 0);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ServerActionExecutionLog:")
+                                 _T(" action id %u, action timestamp %u, action code %u, action name %s,")
+                                 _T(" channel name %s, recipient %s, subject %s, action data %s, success %s"),
+                                 id, time(nullptr), code, action, 
+                                 channelName, recipient, subject, body, success ? _T("True") : _T("False"));
+}
+
+/**
  * Execute action on specific event
  */
 bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
@@ -402,6 +437,8 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
          StringBuffer expandedRcpt = event->expandText(action->rcptAddr, alarm);
          expandedRcpt.trim();
 
+         String expandedSubject = event->expandText(action->emailSubject, alarm);
+
          switch(action->type)
          {
             case ACTION_EXEC:
@@ -423,7 +460,6 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
 
                   else
                      nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s to %s: \"%s\""), action->channelName, (const TCHAR *)expandedRcpt, (const TCHAR *)expandedData);
-                  String expandedSubject = event->expandText(action->emailSubject, alarm);
                   SendNotification(action->channelName, expandedRcpt.getBuffer(), expandedSubject, expandedData);
                }
                else
@@ -496,6 +532,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
             default:
                break;
          }
+         SaveServerActionExecutionLog(event->getId(), event->getCode(), action->name, action->channelName, expandedRcpt, expandedSubject, expandedData, success);
       }
    }
    return success;
