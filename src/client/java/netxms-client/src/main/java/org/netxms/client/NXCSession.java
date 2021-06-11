@@ -163,6 +163,7 @@ import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.objects.configs.PassiveRackElement;
+import org.netxms.client.objects.queries.ObjectQuery;
 import org.netxms.client.objects.queries.ObjectQueryResult;
 import org.netxms.client.objecttools.ObjectContextBase;
 import org.netxms.client.objecttools.ObjectTool;
@@ -3749,10 +3750,10 @@ public class NXCSession
     */
    public List<AbstractObject> queryObjects(String query) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_OBJECTS);
-      msg.setField(NXCPCodes.VID_QUERY, query);
-      sendMessage(msg);
-      NXCPMessage response = waitForRCC(msg.getMessageId());
+      NXCPMessage request = newMessage(NXCPCodes.CMD_QUERY_OBJECTS);
+      request.setField(NXCPCodes.VID_QUERY, query);
+      sendMessage(request);
+      NXCPMessage response = waitForRCC(request.getMessageId());
       return findMultipleObjects(response.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST), false);
    }
 
@@ -3774,17 +3775,17 @@ public class NXCSession
    public List<ObjectQueryResult> queryObjectDetails(String query, List<String> properties, List<String> orderBy, boolean readAllComputedProperties, int limit)
          throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_OBJECT_DETAILS);
-      msg.setField(NXCPCodes.VID_QUERY, query);
+      NXCPMessage request = newMessage(NXCPCodes.CMD_QUERY_OBJECT_DETAILS);
+      request.setField(NXCPCodes.VID_QUERY, query);
       if (properties != null)
-         msg.setFieldsFromStringCollection(properties, NXCPCodes.VID_FIELD_LIST_BASE, NXCPCodes.VID_FIELDS);
+         request.setFieldsFromStringCollection(properties, NXCPCodes.VID_FIELD_LIST_BASE, NXCPCodes.VID_FIELDS);
       if (orderBy != null)
-         msg.setFieldsFromStringCollection(orderBy, NXCPCodes.VID_ORDER_FIELD_LIST_BASE, NXCPCodes.VID_ORDER_FIELDS);
-      msg.setFieldInt32(NXCPCodes.VID_RECORD_LIMIT, limit);
-      msg.setField(NXCPCodes.VID_READ_ALL_FIELDS, readAllComputedProperties);
-      sendMessage(msg);
+         request.setFieldsFromStringCollection(orderBy, NXCPCodes.VID_ORDER_FIELD_LIST_BASE, NXCPCodes.VID_ORDER_FIELDS);
+      request.setFieldInt32(NXCPCodes.VID_RECORD_LIMIT, limit);
+      request.setField(NXCPCodes.VID_READ_ALL_FIELDS, readAllComputedProperties);
+      sendMessage(request);
 
-      NXCPMessage response = waitForRCC(msg.getMessageId());
+      NXCPMessage response = waitForRCC(request.getMessageId());
       long[] objects = response.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
       List<ObjectQueryResult> results = new ArrayList<ObjectQueryResult>(objects.length);
       long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
@@ -3802,6 +3803,60 @@ public class NXCSession
    }
 
    /**
+    * Get list of configured object queries.
+    *
+    * @return list of configured object queries
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<ObjectQuery> getObjectQueries() throws IOException, NXCException
+   {
+      NXCPMessage request = newMessage(NXCPCodes.CMD_GET_OBJECT_QUERIES);
+      sendMessage(request);
+
+      NXCPMessage response = waitForRCC(request.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<ObjectQuery> queries = new ArrayList<ObjectQuery>(count);
+      long[] fieldId = new long[] { NXCPCodes.VID_ELEMENT_LIST_BASE };
+      for(int i = 0; i < count; i++)
+         queries.add(new ObjectQuery(response, fieldId));
+      return queries;
+   }
+
+   /**
+    * Modify object query. If query ID is 0 new query object will be created and assigned ID will be returned.
+    *
+    * @param query query to create or modify
+    * @return assigned query ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public int modifyObjectQuery(ObjectQuery query) throws IOException, NXCException
+   {
+      NXCPMessage request = newMessage(NXCPCodes.CMD_MODIFY_OBJECT_QUERY);
+      query.fillMessage(request);
+      sendMessage(request);
+      NXCPMessage response = waitForRCC(request.getMessageId());
+      return response.getFieldAsInt32(NXCPCodes.VID_QUERY_ID);
+   }
+
+   /**
+    * Delete predefined object query.
+    *
+    * @param queryId query ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteObjectQuery(int queryId) throws IOException, NXCException
+   {
+      NXCPMessage request = newMessage(NXCPCodes.CMD_DELETE_OBJECT_QUERY);
+      request.setFieldInt32(NXCPCodes.VID_QUERY_ID, queryId);
+      sendMessage(request);
+      waitForRCC(request.getMessageId());
+   }
+
+   /**
     * Get list of active alarms. For accessing terminated alarms log view API should be used.
     *
     * @return Hash map containing alarms
@@ -3810,18 +3865,18 @@ public class NXCSession
     */
    public HashMap<Long, Alarm> getAlarms() throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ALL_ALARMS);
-      final long rqId = msg.getMessageId();
-      sendMessage(msg);
+      NXCPMessage request = newMessage(NXCPCodes.CMD_GET_ALL_ALARMS);
+      final long rqId = request.getMessageId();
+      sendMessage(request);
 
       final HashMap<Long, Alarm> alarmList = new HashMap<Long, Alarm>(0);
       while(true)
       {
-         msg = waitForMessage(NXCPCodes.CMD_ALARM_DATA, rqId);
-         long alarmId = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_ID);
+         request = waitForMessage(NXCPCodes.CMD_ALARM_DATA, rqId);
+         long alarmId = request.getFieldAsInt32(NXCPCodes.VID_ALARM_ID);
          if (alarmId == 0)
             break; // ALARM_ID == 0 indicates end of list
-         alarmList.put(alarmId, new Alarm(msg));
+         alarmList.put(alarmId, new Alarm(request));
       }
 
       return alarmList;

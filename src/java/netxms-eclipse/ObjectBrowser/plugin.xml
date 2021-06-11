@@ -26,6 +26,14 @@
             name="Find Object"
             restorable="true">
       </view>
+      <view
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.objectbrowser.views.ObjectQueryManager"
+            icon="icons/find.gif"
+            id="org.netxms.ui.eclipse.objectbrowser.views.ObjectQueryManager"
+            name="Object Queries"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -60,6 +68,12 @@
             id="org.netxms.ui.eclipse.objectbrowser.commands.start_search"
             name="Start search">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open object query manager"
+            id="org.netxms.ui.eclipse.objectbrowser.commands.open_object_query_manager"
+            name="ObjectQueries">
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -89,6 +103,15 @@
              menubarPath="tools/additions"
              style="push"
              tooltip="Open object finder">
+       </action>
+       <action
+             class="org.netxms.ui.eclipse.objectbrowser.actions.OpenObjectQueryManager"
+             definitionId="org.netxms.ui.eclipse.objectbrowser.commands.open_object_query_manager"
+             icon="icons/find.gif"
+             id="ObjectBrowser.action1"
+             label="Object queries"
+             menubarPath="config/additions"
+             style="push">
        </action>
     </actionSet>
    </extension>

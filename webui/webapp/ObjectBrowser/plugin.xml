@@ -26,6 +26,14 @@
             name="Find Object"
             restorable="true">
       </view>
+      <view
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.objectbrowser.views.ObjectQueryManager"
+            icon="icons/find.gif"
+            id="org.netxms.ui.eclipse.objectbrowser.views.ObjectQueryManager"
+            name="Object Queries"
+            restorable="true">
+      </view>
    </extension>
 
    <extension

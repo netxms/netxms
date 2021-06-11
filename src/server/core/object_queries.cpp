@@ -126,6 +126,7 @@ bool ObjectQuery::saveToDatabase(DB_HANDLE hdb) const
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
    DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, 255);
    DBBind(hStmt, 4, DB_SQLTYPE_TEXT, m_source, DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_id);
    bool success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
 
@@ -149,7 +150,7 @@ bool ObjectQuery::saveToDatabase(DB_HANDLE hdb) const
             type[0] = p->type + '0';
             DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, type, DB_BIND_STATIC);
             DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, p->flags);
-            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, i);
+            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, p->orderNumber);
             success = DBExecute(hStmt);
          }
 
@@ -252,6 +253,7 @@ uint32_t ModifyObjectQuery(const NXCPMessage& msg, uint32_t *queryId)
       s_objectQueries.put(query->getId(), query);
       *queryId = query->getId();
       rcc = RCC_SUCCESS;
+      NotifyClientSessions(NX_NOTIFY_OBJECT_QUERY_UPDATED, query->getId());
    }
    else
    {
@@ -276,6 +278,7 @@ uint32_t DeleteObjectQuery(uint32_t queryId)
    {
       s_objectQueries.remove(queryId);
       rcc = RCC_SUCCESS;
+      NotifyClientSessions(NX_NOTIFY_OBJECT_QUERY_DELETED, queryId);
    }
    else
    {
