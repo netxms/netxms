@@ -77,5 +77,6 @@ assert(replace("one two three", " ", "") == "onetwothree");
 assert(replace("one,two,three", ",", "--") == "one--two--three");
 assert(replace("one,two,three", "two", "forty two") == "one,forty two,three");
 assert(replace("aaa", "aaa", "") == "");
+assert(replace("aaa", "", "-") == "aaa");
 
 return 0;
