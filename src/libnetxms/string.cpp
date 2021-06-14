@@ -823,7 +823,7 @@ void StringBuffer::setBuffer(TCHAR *buffer)
 void StringBuffer::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
 {
    size_t lenSrc = _tcslen(pszSrc);
-   if (lenSrc > m_length)
+   if ((lenSrc > m_length) || (lenSrc == 0))
       return;
 
    size_t lenDst = _tcslen(pszDst);
