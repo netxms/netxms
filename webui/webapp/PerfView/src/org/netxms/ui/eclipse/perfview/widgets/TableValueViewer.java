@@ -60,9 +60,9 @@ public class TableValueViewer extends BaseTableValueViewer
     * @param style
     * @param viewPart
     */
-   public TableValueViewer(Composite parent, int style, IViewPart viewPart, String configSubId)
+   public TableValueViewer(Composite parent, int style, IViewPart viewPart, String configSubId, boolean saveTableSettings)
    {
-      super(parent, style, viewPart, configSubId);
+      super(parent, style, viewPart, configSubId, saveTableSettings);
    }
    
    /* (non-Javadoc)
