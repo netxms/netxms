@@ -50,6 +50,7 @@ public abstract class BaseTableValueViewer extends Composite
    protected CellSelectionManager cellSelectionManager;
    protected Action actionUseMultipliers;
    protected Action actionShowFilter;
+   protected boolean saveTableSettings;
 
    /**
     * @param parent
@@ -57,8 +58,18 @@ public abstract class BaseTableValueViewer extends Composite
     */
    public BaseTableValueViewer(Composite parent, int style, ObjectView viewPart, String configSubId)
    {
+      this(parent, style, viewPart, configSubId, false);
+   }
+
+   /**
+    * @param parent
+    * @param style
+    */
+   public BaseTableValueViewer(Composite parent, int style, ObjectView viewPart, String configSubId, boolean saveTableSettings)
+   {
       super(parent, style);
       this.viewPart = viewPart;
+      this.saveTableSettings = saveTableSettings;
       
       configId = buildConfigId(configSubId);
       session = Registry.getSession();
@@ -76,13 +87,16 @@ public abstract class BaseTableValueViewer extends Composite
       final PreferenceStore ds = PreferenceStore.getInstance(); 
       labelProvider.setUseMultipliers(ds.getAsBoolean(configId + ".useMultipliers", false));
       
-      viewer.getTable().addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            WidgetHelper.saveTableViewerSettings(viewer, configId);
-         }
-      });
+      if (saveTableSettings)
+      {
+         viewer.getTable().addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent e)
+            {
+               WidgetHelper.saveTableViewerSettings(viewer, configId);
+            }
+         });
+      }
       
       createActions();
       createPopupMenu();
@@ -162,12 +176,14 @@ public abstract class BaseTableValueViewer extends Composite
          Arrays.fill(widths, 150);
          viewer.createColumns(names, widths, 0, SWT.UP);
          
-         WidgetHelper.restoreTableViewerSettings(viewer, configId); 
+         if (saveTableSettings)
+            WidgetHelper.restoreTableViewerSettings(viewer, configId); 
          viewer.getTable().addDisposeListener(new DisposeListener() {
             @Override
             public void widgetDisposed(DisposeEvent e)
             {
-               WidgetHelper.saveTableViewerSettings(viewer, configId); 
+               if (saveTableSettings)
+                  WidgetHelper.saveTableViewerSettings(viewer, configId); 
                ds.set(configId + ".useMultipliers", labelProvider.areMultipliersUsed());
             }
          });
@@ -176,6 +192,8 @@ public abstract class BaseTableValueViewer extends Composite
       
       labelProvider.setColumns(table.getColumns());
       viewer.setInput(table);
+      if (!saveTableSettings)
+         viewer.packColumns();
       currentData = table;
    }
 

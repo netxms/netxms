@@ -113,7 +113,7 @@ public class TableLastValuesView extends ObjectView
    @Override
    protected void createContent(Composite parent)
 	{
-		viewer = new TableValueViewer(parent, SWT.NONE, this, null);
+		viewer = new TableValueViewer(parent, SWT.NONE, this, null, false);
 		setViewerAndFilter(viewer.getViewer(), viewer.getFilter());
 		createActions();
 	
