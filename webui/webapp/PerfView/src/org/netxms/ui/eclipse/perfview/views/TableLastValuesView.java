@@ -85,7 +85,7 @@ public class TableLastValuesView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		viewer = new TableValueViewer(parent, SWT.NONE, this, null);
+		viewer = new TableValueViewer(parent, SWT.NONE, this, null, false);
 
 		createActions();
 		contributeToActionBars();
