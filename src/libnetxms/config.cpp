@@ -1218,10 +1218,19 @@ bool Config::setValue(const TCHAR *path, const uuid& value)
  */
 static TCHAR *FindComment(TCHAR *str)
 {
-   TCHAR *curr;
-   bool quotes;
+   TCHAR *curr = str;
+   while(_istspace(*curr))
+      curr++;
 
-   for(curr = str, quotes = false; *curr != 0; curr++)
+   if (*curr == _T('['))
+   {
+      curr = _tcschr(curr, _T(']'));
+      if (curr == nullptr)
+         return nullptr;
+   }
+
+   bool quotes = false;
+   for(; *curr != 0; curr++)
    {
       if (*curr == _T('"'))
       {
@@ -1234,8 +1243,6 @@ static TCHAR *FindComment(TCHAR *str)
    }
    return nullptr;
 }
-
-
 
 /**
  * Load INI-style config
