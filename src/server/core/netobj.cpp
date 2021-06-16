@@ -1493,14 +1493,14 @@ UINT32 NetObj::modifyFromMessageInternalStage2(NXCPMessage *pRequest)
       setCustomAttributesFromMessage(pRequest);
    }
 
-   if (pRequest->isFieldExist(VID_RESPONSIBLE_USERS))
+   size_t count = 0;
+   if (pRequest->getBinaryFieldPtr(VID_RESPONSIBLE_USERS, &count) != nullptr)
    {
-      int count = pRequest->getFieldAsInt32(VID_RESPONSIBLE_USERS);
       lockResponsibleUsersList();
       if (count > 0)
       {
          if (m_responsibleUsers == nullptr)
-            m_responsibleUsers = new IntegerArray<uint32_t>(count);
+            m_responsibleUsers = new IntegerArray<uint32_t>(count / sizeof(uint32_t));
          pRequest->getFieldAsInt32Array(VID_RESPONSIBLE_USERS, m_responsibleUsers);
       }
       else
