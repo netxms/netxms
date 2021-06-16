@@ -1,6 +1,6 @@
 /*
 ** NetXMS platform subagent for Windows
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -99,12 +99,12 @@ static bool ReadProductsFromRegistry(Table *table, bool reg32)
  */
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *)
 {
-	value->addColumn(_T("NAME"));
-	value->addColumn(_T("VERSION"));
-	value->addColumn(_T("VENDOR"));
-	value->addColumn(_T("DATE"));
-	value->addColumn(_T("URL"));
-	value->addColumn(_T("DESCRIPTION"));
+   value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
+   value->addColumn(_T("VERSION"), DCI_DT_STRING, _T("Version"), true);
+   value->addColumn(_T("VENDOR"), DCI_DT_STRING, _T("Vendor"));
+   value->addColumn(_T("DATE"), DCI_DT_STRING, _T("Install Date"));
+   value->addColumn(_T("URL"), DCI_DT_STRING, _T("URL"));
+   value->addColumn(_T("DESCRIPTION"), DCI_DT_STRING, _T("Description"));
 
    bool success64 = ReadProductsFromRegistry(value, false);
    bool success32 = ReadProductsFromRegistry(value, true);

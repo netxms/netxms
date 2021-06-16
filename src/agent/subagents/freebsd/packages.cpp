@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2013 Victor Kirhenshtein
+** Copyright (C) 2013-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,15 +29,15 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
       return SYSINFO_RC_UNSUPPORTED;
 
    FILE *pipe = popen("/usr/sbin/pkg query '@@@ #%n:%q|%v||%t|%w|%c'", "r");
-   if (pipe == NULL)
+   if (pipe == nullptr)
       return SYSINFO_RC_ERROR;
 
-   value->addColumn(_T("NAME"));
-   value->addColumn(_T("VERSION"));
-   value->addColumn(_T("VENDOR"));
-   value->addColumn(_T("DATE"));
-   value->addColumn(_T("URL"));
-   value->addColumn(_T("DESCRIPTION"));
+   value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
+   value->addColumn(_T("VERSION"), DCI_DT_STRING, _T("Version"), true);
+   value->addColumn(_T("VENDOR"), DCI_DT_STRING, _T("Vendor"));
+   value->addColumn(_T("DATE"), DCI_DT_STRING, _T("Install Date"));
+   value->addColumn(_T("URL"), DCI_DT_STRING, _T("URL"));
+   value->addColumn(_T("DESCRIPTION"), DCI_DT_STRING, _T("Description"));
 
    struct utsname un;
    const char *arch;

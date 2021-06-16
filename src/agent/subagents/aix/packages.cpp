@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,18 +29,18 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
       return SYSINFO_RC_UNSUPPORTED;
 
    FILE *pipe = popen("/usr/bin/lslpp -Lqc", "r");
-   if (pipe == NULL)
+   if (pipe == nullptr)
       return SYSINFO_RC_ERROR;
 
-   value->addColumn(_T("NAME"));
-   value->addColumn(_T("VERSION"));
-   value->addColumn(_T("VENDOR"));
-   value->addColumn(_T("DATE"));
-   value->addColumn(_T("URL"));
-   value->addColumn(_T("DESCRIPTION"));
+   value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
+   value->addColumn(_T("VERSION"), DCI_DT_STRING, _T("Version"), true);
+   value->addColumn(_T("VENDOR"), DCI_DT_STRING, _T("Vendor"));
+   value->addColumn(_T("DATE"), DCI_DT_STRING, _T("Install Date"));
+   value->addColumn(_T("URL"), DCI_DT_STRING, _T("URL"));
+   value->addColumn(_T("DESCRIPTION"), DCI_DT_STRING, _T("Description"));
 
    const char *data[8];
-   while(1)
+   while(true)
    {
       char line[1024];
       if (fgets(line, 1024, pipe) == NULL)
