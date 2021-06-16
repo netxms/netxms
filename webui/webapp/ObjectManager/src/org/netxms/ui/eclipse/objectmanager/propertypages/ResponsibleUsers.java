@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,19 @@
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -39,6 +43,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
@@ -47,12 +52,9 @@ import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
-import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.ResponsibleUsersComparator;
-import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.ResponsibleUsersLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Object`s "responsible users" property page
@@ -60,41 +62,44 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class ResponsibleUsers extends PropertyPage
 {
    private AbstractObject object;
-   private SortableTableViewer userTable;
-   private List<AbstractUserObject> userList;
-   private NXCSession session;
+   private TableViewer viewer;
+   private Map<Long, AbstractUserObject> users = new HashMap<>();
+   private NXCSession session = ConsoleSharedData.getSession();
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected Control createContents(Composite parent)
    {
-      session = ConsoleSharedData.getSession();
       object = (AbstractObject)getElement().getAdapter(AbstractObject.class);      
-      userList = session.findUserDBObjectsByIds(object.getResponsibleUsers());
-      
+      for(AbstractUserObject u : session.findUserDBObjectsByIds(object.getResponsibleUsers()))
+         users.put(u.getId(), u);
+
       // Initiate loading of user manager plugin if it was not loaded before
       Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
-      
+
       Composite dialogArea = new Composite(parent, SWT.NONE);
       dialogArea.setLayout(new GridLayout());
-      
-      final String[] columnNames = { "Login Name" };
-      final int[] columnWidths = { 150 };
-      userTable = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
-                                          SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-      userTable.setContentProvider(new ArrayContentProvider());
-      userTable.setLabelProvider(new ResponsibleUsersLabelProvider());
-      userTable.setComparator(new ResponsibleUsersComparator());
-      userTable.setInput(userList.toArray());
-      
+
+      viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      viewer.setContentProvider(new ArrayContentProvider());
+      viewer.setLabelProvider(new WorkbenchLabelProvider());
+      viewer.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            return ((AbstractUserObject)e1).getName().compareToIgnoreCase(((AbstractUserObject)e2).getName());
+         }
+      });
+      viewer.setInput(users.values().toArray());
+
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
-      userTable.getControl().setLayoutData(gd);
+      viewer.getControl().setLayoutData(gd);
       
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       FillLayout buttonsLayout = new FillLayout();
@@ -122,8 +127,8 @@ public class ResponsibleUsers extends PropertyPage
             {
                AbstractUserObject[] selection = dlg.getSelection();
                for(AbstractUserObject user : selection)
-                  userList.add(user);
-               userTable.setInput(userList.toArray());
+                  users.put(user.getId(), user);
+               viewer.setInput(users.values().toArray());
             }
          }
       });
@@ -142,18 +147,18 @@ public class ResponsibleUsers extends PropertyPage
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            IStructuredSelection selection = (IStructuredSelection)userTable.getSelection();
+            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
             Iterator<AbstractUserObject> it = selection.iterator();
             while(it.hasNext())
             {
                AbstractUserObject element = it.next();
-               userList.remove(element);
+               users.remove(element.getId());
             }
-            userTable.setInput(userList.toArray());
+            viewer.setInput(users.values().toArray());
          }
       });
-      
-      userTable.addSelectionChangedListener(new ISelectionChangedListener() {
+
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
@@ -172,11 +177,9 @@ public class ResponsibleUsers extends PropertyPage
    void syncUsersAndRefresh()
    {
       if (session.isUserDatabaseSynchronized())
-      {
          return;
-      }
 
-      ConsoleJob syncUsersJob = new ConsoleJob("Synchronize users", null, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob("Synchronize users", null, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -186,8 +189,10 @@ public class ResponsibleUsers extends PropertyPage
                   @Override
                   public void run()
                   {
-                     userList = session.findUserDBObjectsByIds(object.getResponsibleUsers());
-                     userTable.refresh(true);
+                     users.clear();
+                     for(AbstractUserObject u : session.findUserDBObjectsByIds(object.getResponsibleUsers()))
+                        users.put(u.getId(), u);
+                     viewer.setInput(users.values().toArray());
                   }
                });
             }
@@ -199,8 +204,8 @@ public class ResponsibleUsers extends PropertyPage
             return "Cannot synchronize users";
          }
       };
-      syncUsersJob.setUser(false);
-      syncUsersJob.start();
+      job.setUser(false);
+      job.start();
    }
 
    /**
@@ -213,13 +218,8 @@ public class ResponsibleUsers extends PropertyPage
       if (isApply)
          setValid(false);
       
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-      
-      List<Long> userIds = new ArrayList<Long>(userList.size());
-      for(AbstractUserObject o : userList)
-         userIds.add(o.getId());
-      md.setResponsibleUsers(userIds);
+      md.setResponsibleUsers(new ArrayList<Long>(users.keySet()));
 
       new ConsoleJob(String.format(Messages.get().AccessControl_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
          @Override
@@ -251,7 +251,7 @@ public class ResponsibleUsers extends PropertyPage
       }.start();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
    @Override
@@ -261,7 +261,7 @@ public class ResponsibleUsers extends PropertyPage
       return true;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performApply()
     */
    @Override
@@ -270,14 +270,14 @@ public class ResponsibleUsers extends PropertyPage
       applyChanges(true);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
     */
    @Override
    protected void performDefaults()
    {
       super.performDefaults();
-      userList.clear();
-      userTable.setInput(userList.toArray());
+      users.clear();
+      viewer.setInput(new AbstractUserObject[0]);
    }
 }

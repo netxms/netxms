@@ -6313,8 +6313,7 @@ public class NXCSession
 
       if (data.isFieldSet(NXCObjectModificationData.RESPONSIBLE_USERS))
       {
-         Long[] users = data.getResponsibleUsers().toArray(new Long[data.getResponsibleUsers().size()]);
-         msg.setField(NXCPCodes.VID_RESPONSIBLE_USERS, users);
+         msg.setField(NXCPCodes.VID_RESPONSIBLE_USERS, data.getResponsibleUsers());
       }
 
       if (data.isFieldSet(NXCObjectModificationData.ICMP_POLL_MODE))
