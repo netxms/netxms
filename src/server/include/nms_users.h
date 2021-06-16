@@ -50,21 +50,34 @@ typedef int ber_int_t;
 
 #endif /* WITH_LDAP */
 
+#define MAX_LDAP_ATTR_NAME_LEN
+
+/**
+ * LDAP object type
+ */
+enum class LDAP_ObjectType
+{
+   OTHER = 0,
+   USER = 1,
+   GROUP = 2
+};
+
 /**
  * LDAP entry (object)
  */
-class LDAP_Entry
+struct LDAP_Object
 {
-public:
-   uint32_t m_type;
+   LDAP_ObjectType m_type;
+   TCHAR *m_id;
    TCHAR *m_loginName;
    TCHAR *m_fullName;
    TCHAR *m_description;
-   TCHAR *m_id;
+   TCHAR *m_email;
+   TCHAR *m_phoneNumber;
    StringSet m_memberList;
 
-   LDAP_Entry();
-   ~LDAP_Entry();
+   LDAP_Object();
+   ~LDAP_Object();
 };
 
 #if WITH_LDAP
@@ -118,26 +131,27 @@ private:
    LDAP_CHAR m_searchFilter[MAX_CONFIG_VALUE];
    LDAP_CHAR m_userDN[MAX_CONFIG_VALUE];
    LDAP_CHAR m_userPassword[MAX_PASSWORD];
-   char m_ldapFullNameAttr[MAX_CONFIG_VALUE];
-   char m_ldapUserLoginNameAttr[MAX_CONFIG_VALUE];
-   char m_ldapGroupLoginNameAttr[MAX_CONFIG_VALUE];
-   char m_ldapDescriptionAttr[MAX_CONFIG_VALUE];
-   char m_ldapUsreIdAttr[MAX_CONFIG_VALUE];
-   char m_ldapGroupIdAttr[MAX_CONFIG_VALUE];
-   TCHAR m_userClass[MAX_CONFIG_VALUE];
-   TCHAR m_groupClass[MAX_CONFIG_VALUE];
+   char *m_ldapFullNameAttr;
+   char *m_ldapUserLoginNameAttr;
+   char *m_ldapGroupLoginNameAttr;
+   char *m_ldapDescriptionAttr;
+   char *m_ldapEmailAttr;
+   char *m_ldapPhoneNumberAttr;
+   char *m_ldapUserIdAttr;
+   char *m_ldapGroupIdAttr;
+   TCHAR *m_userClass;
+   TCHAR *m_groupClass;
    int m_action;
    int m_secure;
    int m_pageSize;
-   StringObjectMap<LDAP_Entry> *m_userIdEntryList;
-   StringObjectMap<LDAP_Entry> *m_userDnEntryList;
-   StringObjectMap<LDAP_Entry> *m_groupIdEntryList;
-   StringObjectMap<LDAP_Entry> *m_groupDnEntryList;
+   StringObjectMap<LDAP_Object> *m_userIdEntryList;
+   StringObjectMap<LDAP_Object> *m_userDnEntryList;
+   StringObjectMap<LDAP_Object> *m_groupIdEntryList;
+   StringObjectMap<LDAP_Object> *m_groupDnEntryList;
 
-   void closeLDAPConnection();
-   void initLDAP();
-   uint32_t loginLDAP();
-   void getAllSyncParameters();
+   void open();
+   void close();
+   uint32_t login();
    void compareGroupList();
    void compareUserLists();
    TCHAR *getAttrValue(LDAPMessage *entry, const char *attr, int index = 0);
@@ -369,6 +383,8 @@ public:
 	void updateLastLogin() { m_lastLogin = time(nullptr); m_flags |= UF_MODIFIED; }
 	void updatePasswordChangeTime() { m_lastPasswordChange = time(nullptr); m_flags |= UF_MODIFIED; }
 	void setFullName(const TCHAR *fullName);
+   void setEmail(const TCHAR *email);
+   void setPhoneNumber(const TCHAR *phoneNumber);
 	void enable();
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
@@ -473,10 +489,10 @@ const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name)
 UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name);
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value);
 TCHAR NXCORE_EXPORTABLE *ResolveUserId(uint32_t id, TCHAR *buffer, bool noFail = false);
-void UpdateLDAPUser(const TCHAR *dn, const LDAP_Entry *ldapObject);
-void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Entry> *entryListDn, StringObjectMap<LDAP_Entry> *entryListId, uint32_t m_action, bool isUser);
-void UpdateLDAPGroup(const TCHAR* dn, const LDAP_Entry *ldapObject);
-void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Entry *ldapObject);
+void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject);
+void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringObjectMap<LDAP_Object> *entryListId, uint32_t m_action, bool isUser);
+void UpdateLDAPGroup(const TCHAR* dn, const LDAP_Object *ldapObject);
+void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject);
 void FillGroupMembershipInfo(NXCPMessage *msg, uint32_t userId);
 void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups);
 void DumpUsers(CONSOLE_CTX pCtx);

@@ -323,7 +323,7 @@ uint32_t UserDatabaseObject::getAttributeAsUInt32(const TCHAR *name) const
  */
 void UserDatabaseObject::setDescription(const TCHAR *description)
 {
-   if (_tcscmp(CHECK_NULL_EX(m_description), CHECK_NULL_EX(description)))
+   if (_tcscmp(m_description, CHECK_NULL_EX(description)))
    {
       _tcslcpy(m_description, CHECK_NULL_EX(description), MAX_USER_DESCR);
       m_flags |= UF_MODIFIED;
@@ -335,7 +335,7 @@ void UserDatabaseObject::setDescription(const TCHAR *description)
  */
 void UserDatabaseObject::setName(const TCHAR *name)
 {
-   if (_tcscmp(CHECK_NULL_EX(m_name), CHECK_NULL_EX(name)))
+   if (_tcscmp(m_name, CHECK_NULL_EX(name)))
    {
       _tcslcpy(m_name, CHECK_NULL_EX(name), MAX_USER_NAME);
       m_flags |= UF_MODIFIED;
@@ -852,11 +852,40 @@ void User::enable()
    SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
 }
 
+/**
+ * Set user's full name
+ */
 void User::setFullName(const TCHAR *fullName)
 {
-   if (_tcscmp(CHECK_NULL_EX(m_fullName), CHECK_NULL_EX(fullName)))
+   if (_tcscmp(m_fullName, CHECK_NULL_EX(fullName)))
    {
       _tcslcpy(m_fullName, CHECK_NULL_EX(fullName), MAX_USER_FULLNAME);
+      m_flags |= UF_MODIFIED;
+   }
+}
+
+/**
+ * Set user's email
+ */
+void User::setEmail(const TCHAR *email)
+{
+   if (_tcscmp(CHECK_NULL_EX(m_email), CHECK_NULL_EX(email)))
+   {
+      MemFree(m_email);
+      m_email = MemCopyString(email);
+      m_flags |= UF_MODIFIED;
+   }
+}
+
+/**
+ * Set user's phone number
+ */
+void User::setPhoneNumber(const TCHAR *phoneNumber)
+{
+   if (_tcscmp(CHECK_NULL_EX(m_phoneNumber), CHECK_NULL_EX(phoneNumber)))
+   {
+      MemFree(m_phoneNumber);
+      m_phoneNumber = MemCopyString(phoneNumber);
       m_flags |= UF_MODIFIED;
    }
 }

@@ -873,7 +873,7 @@ static inline TCHAR *GenerateUniqueName(const TCHAR *ldapName, uint32_t userId, 
 /**
  * Update/Add LDAP user
  */
-void UpdateLDAPUser(const TCHAR *dn, const LDAP_Entry *ldapObject)
+void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
 {
    RWLockWriteLock(s_userDatabaseLock);
 
@@ -924,6 +924,8 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Entry *ldapObject)
 
          user->setFullName(ldapObject->m_fullName);
          user->setDescription(ldapObject->m_description);
+         user->setEmail(ldapObject->m_email);
+         user->setPhoneNumber(ldapObject->m_phoneNumber);
          if (_tcscmp(user->getDN(), dn))
          {
             s_ldapNames.remove(user->getDN());
@@ -961,6 +963,8 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Entry *ldapObject)
       User *user = new User(userId, userName, UserAuthenticationMethodFromInt(method));
       user->setFullName(ldapObject->m_fullName);
       user->setDescription(ldapObject->m_description);
+      user->setEmail(ldapObject->m_email);
+      user->setPhoneNumber(ldapObject->m_phoneNumber);
       if ((method == static_cast<int>(UserAuthenticationMethod::LOCAL)) || (method == static_cast<int>(UserAuthenticationMethod::CERTIFICATE_OR_LOCAL)))
          user->setFlags(UF_MODIFIED | UF_LDAP_USER | UF_CHANGE_PASSWORD);
       else
@@ -988,7 +992,7 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Entry *ldapObject)
  * Goes through all existing LDAP entries and check that in newly gotten list they also exist.
  * If LDAP entries does not exists in new list - it will be disabled or removed depending on action parameter.
  */
-void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Entry> *entryListDn, StringObjectMap<LDAP_Entry> *entryListId, uint32_t m_action, bool isUser)
+void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringObjectMap<LDAP_Object> *entryListId, uint32_t m_action, bool isUser)
 {
    RWLockWriteLock(s_userDatabaseLock);
    Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
@@ -1024,7 +1028,7 @@ void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Entry> *entryListDn, StringOb
  * Synchronize new user/group list with old user/group list of given group.
  * Note: none LDAP users and groups will not be changed.
  */
-void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Entry *ldapObject)
+void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
 {
    RWLockWriteLock(s_userDatabaseLock);
 
@@ -1083,7 +1087,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Entry *ldapObject)
    {
       const TCHAR *dn = it->next();
       UserDatabaseObject *user = s_ldapNames.get(dn);
-      if (user == NULL)
+      if (user == nullptr)
          continue;
 
       if (!group->isMember(user->getId()))
@@ -1100,7 +1104,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Entry *ldapObject)
 /**
  * Update/Add LDAP group
  */
-void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Entry *ldapObject) //no full name, add users inside group, and delete removed from the group
+void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full name, add users inside group, and delete removed from the group
 {
    RWLockWriteLock(s_userDatabaseLock);
 
@@ -1110,7 +1114,7 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Entry *ldapObject) //no full na
    TCHAR guid[64];
 
    // Check existing user with same DN
-   UserDatabaseObject *object = NULL;
+   UserDatabaseObject *object = nullptr;
 
    if (ldapObject->m_id != nullptr)
       object = s_ldapGroupId.get(ldapObject->m_id);
