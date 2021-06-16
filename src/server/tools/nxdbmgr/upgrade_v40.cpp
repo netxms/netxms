@@ -24,6 +24,39 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.61 to 40.62
+ */
+static bool H_UpgradeFromV61()
+{
+   if (GetSchemaLevelForMajorVersion(39) < 6)
+   {
+      CHK_EXEC(CreateConfigParam(_T("LDAP.Mapping.Email"),
+            _T(""),
+            _T("The name of an attribute whose value will be used as a user's email."),
+            nullptr, 'S', true, false, false, false));
+      CHK_EXEC(CreateConfigParam(_T("LDAP.Mapping.PhoneNumber"),
+            _T(""),
+            _T("The name of an attribute whose value will be used as a user's phone number."),
+            nullptr, 'S', true, false, false, false));
+
+      static const TCHAR *batch =
+            _T("UPDATE config SET var_name='LDAP.Mapping.Description' WHERE var_name='LDAP.MappingDescription'\n")
+            _T("UPDATE config SET var_name='LDAP.Mapping.FullName' WHERE var_name='LDAP.MappingFullName'\n")
+            _T("UPDATE config SET var_name='LDAP.Mapping.GroupName' WHERE var_name='LDAP.GroupMappingName'\n")
+            _T("UPDATE config SET var_name='LDAP.Mapping.UserName' WHERE var_name='LDAP.UserMappingName'\n")
+            _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+
+      CHK_EXEC(SQLQuery(_T("INSERT INTO script_library (guid,script_id,script_name,script_code) ")
+            _T("VALUES ('4fae91b5-8802-4f6c-aace-a03f9f7fa8ef',25,'Hook::LDAPSynchronization','/* Available global variables:\r\n *  $ldapObject - LDAP object being synchronized (object of ''LDAPObject'' class)\r\n *\r\n * Expected return value:\r\n *  true/false - boolean - whether processing of this LDAP object should continue\r\n */\r\n')")));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(39, 6));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(62));
+   return true;
+}
+
+/**
  * Upgrade from 40.60 to 40.61
  */
 static bool H_UpgradeFromV60()
@@ -32,13 +65,8 @@ static bool H_UpgradeFromV60()
    {
       CHK_EXEC(CreateConfigParam(_T("Geolocation.History.RetentionTime"),
             _T("90"),
-            _T("Retention time in days for objet's geolocation history. All records older than specified will be deleted by housekeeping process."),
-            _T("days"),
-            'I',
-            true,
-            false,
-            false,
-            false));
+            _T("Retention time in days for object's geolocation history. All records older than specified will be deleted by housekeeping process."),
+            _T("days"), 'I', true, false, false, false));
 
       CHK_EXEC(SetSchemaLevelForMajorVersion(39, 5));
    }
@@ -1601,6 +1629,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 61, 40, 62, H_UpgradeFromV61 },
    { 60, 40, 61, H_UpgradeFromV60 },
    { 59, 40, 60, H_UpgradeFromV59 },
    { 58, 40, 59, H_UpgradeFromV58 },

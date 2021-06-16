@@ -730,6 +730,16 @@ bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *variable, TCHAR *buffer, size_
 }
 
 /**
+ * Read string value from configuration table. Returns dynamically allocated string.
+ */
+TCHAR NXCORE_EXPORTABLE *ConfigReadStr(const TCHAR *variable, const TCHAR *defaultValue)
+{
+   TCHAR buffer[MAX_CONFIG_VALUE];
+   bool success = ConfigReadStrEx(nullptr, variable, buffer, MAX_CONFIG_VALUE, nullptr);
+   return success ? MemCopyString(buffer) : MemCopyString(defaultValue);
+}
+
+/**
  * Read multibyte string from configuration table
  */
 #ifdef UNICODE
@@ -759,7 +769,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *variable, char *buffer, size_
 bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *variable, char *buffer, size_t size, const char *defaultValue)
 {
    if (defaultValue != nullptr)
-      strncpy(buffer, defaultValue, size);
+      strlcpy(buffer, defaultValue, size);
    if (_tcslen(variable) > 127)
       return false;
 
@@ -784,6 +794,16 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *variable, char *buffer, si
    DBConnectionPoolReleaseConnection(hdb);
 
    return success;
+}
+
+/**
+ * Read string value from configuration table as UTF8 string. Returns dynamically allocated string.
+ */
+char NXCORE_EXPORTABLE *ConfigReadStrUTF8(const TCHAR *variable, const char *defaultValue)
+{
+   char buffer[MAX_CONFIG_VALUE * 3];
+   bool success = ConfigReadStrUTF8(variable, buffer, sizeof(buffer), nullptr);
+   return success ? MemCopyStringA(buffer) : MemCopyStringA(defaultValue);
 }
 
 /**

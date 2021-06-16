@@ -1174,6 +1174,7 @@ enum class ShutdownReason
  */
 void ConfigPreLoad();
 bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *variable, TCHAR *buffer, size_t size, const TCHAR *defaultValue);
+TCHAR NXCORE_EXPORTABLE *ConfigReadStr(const TCHAR *variable, const TCHAR *defaultValue);
 bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE hdb, const TCHAR *variable, TCHAR *buffer, size_t size, const TCHAR *defaultValue);
 #ifdef UNICODE
 bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *variable, char *buffer, size_t size, const char *defaultValue);
@@ -1181,6 +1182,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *variable, char *buffer, size_
 #define ConfigReadStrA ConfigReadStr
 #endif
 bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *variable, char *buffer, size_t size, const char *defaultValue);
+char NXCORE_EXPORTABLE *ConfigReadStrUTF8(const TCHAR *variable, const char *defaultValue);
 int32_t NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *variable, int32_t defaultValue);
 int32_t NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const TCHAR *variable, int32_t defaultValue);
 uint32_t NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *variable, uint32_t defaultValue);
