@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2013-2019 Victor Kirhenshtein
+** Copyright (C) 2013-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -64,20 +64,20 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
    }
 
 	FILE *pipe = popen(command, "r");
-	if (pipe == NULL)
+	if (pipe == nullptr)
 		return SYSINFO_RC_ERROR;
 
-	value->addColumn(_T("NAME"));
-	value->addColumn(_T("VERSION"));
-	value->addColumn(_T("VENDOR"));
-	value->addColumn(_T("DATE"));
-	value->addColumn(_T("URL"));
-	value->addColumn(_T("DESCRIPTION"));
+	value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
+	value->addColumn(_T("VERSION"), DCI_DT_STRING, _T("Version"), true);
+	value->addColumn(_T("VENDOR"), DCI_DT_STRING, _T("Vendor"));
+	value->addColumn(_T("DATE"), DCI_DT_STRING, _T("Install Date"));
+	value->addColumn(_T("URL"), DCI_DT_STRING, _T("URL"));
+	value->addColumn(_T("DESCRIPTION"), DCI_DT_STRING, _T("Description"));
 
-	while(1)
+	while(true)
 	{
 		char line[1024];
-		if (fgets(line, 1024, pipe) == NULL)
+		if (fgets(line, 1024, pipe) == nullptr)
 			break;
 
 		if (memcmp(line, "@@@", 3))
@@ -85,24 +85,24 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 
 		value->addRow();
 		char *curr = strchr(&line[3], '#');
-		if (curr != NULL)
+		if (curr != nullptr)
 			curr++;
 		else
 			curr = &line[3];
 		for(int i = 0; i < 6; i++)
 		{
 			char *ptr = strchr(curr, '|');
-			if (ptr != NULL)
+			if (ptr != nullptr)
 			{
 				*ptr = 0;
 			}
 			else
 			{
 				ptr = strchr(curr, '\n');
-				if (ptr != NULL)
+				if (ptr != nullptr)
 				{
 					*ptr = 0;
-					ptr = NULL;
+					ptr = nullptr;
 				}
 			}
 
@@ -111,9 +111,9 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 			if (i == 0)
 			{
 			   char *pa = strrchr(curr, ':');
-			   if (pa != NULL)
+			   if (pa != nullptr)
 			   {
-			      if (!strcmp(pa, ":all") || !strcmp(pa, ":noarch") || !strcmp(pa, ":(none)") || (strstr(arch, pa) != NULL))
+			      if (!strcmp(pa, ":all") || !strcmp(pa, ":noarch") || !strcmp(pa, ":(none)") || (strstr(arch, pa) != nullptr))
 			         *pa = 0;
 			   }
 			}
@@ -123,7 +123,7 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 #else
 			value->set(i, curr);
 #endif
-			if (ptr == NULL)
+			if (ptr == nullptr)
 				break;
 			curr = ptr + 1;
 		}
