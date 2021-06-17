@@ -37,6 +37,7 @@ static SharedHashMap<session_id_t, NTCBDeviceSession> s_sessions;
 static RWLOCK s_sessionListLock = nullptr;
 static session_id_t *s_freeList = nullptr;
 static size_t s_freePos = 0;
+static uint16_t s_listenerPort = 2000;
 
 /**
  * Register new session in list
@@ -144,7 +145,7 @@ static THREAD s_listenerThread = INVALID_THREAD_HANDLE;
  */
 static bool InitModule(Config *config)
 {
-   uint16_t listenerPort = static_cast<uint16_t>(config->getValueAsInt(_T("/NTCB/ListenerPort"), 2000));
+   s_listenerPort = static_cast<uint16_t>(config->getValueAsInt(_T("/NTCB/ListenerPort"), 2000));
    s_maxDeviceSessions = config->getValueAsInt(_T("/NTCB/MaxDeviceSessions"), 256);
 
    s_sessionListLock = RWLockCreate();
@@ -152,8 +153,16 @@ static bool InitModule(Config *config)
    for(int i = 0; i < s_maxDeviceSessions; i++)
       s_freeList[i] = i;
 
-   s_listenerThread = ThreadCreateEx(ListenerThread, listenerPort);
    return true;
+}
+
+/**
+ * Server start handler
+ */
+static void OnServerStart()
+{
+   nxlog_debug_tag(DEBUG_TAG_NTCB, 2, _T("Starting NTCB listener"));
+   s_listenerThread = ThreadCreateEx(ListenerThread, s_listenerPort);
 }
 
 /**
@@ -233,6 +242,7 @@ extern "C" bool __EXPORT NXM_Register(NXMODULE *module, Config *config)
    module->dwSize = sizeof(NXMODULE);
    _tcscpy(module->szName, _T("NTCB"));
    module->pfInitialize = InitModule;
+   module->pfServerStarted = OnServerStart;
    module->pfShutdown = ShutdownModule;
    module->pfProcessServerConsoleCommand = ConsoleCommandHandler;
    return true;
