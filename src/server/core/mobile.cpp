@@ -246,9 +246,9 @@ void MobileDevice::updateStatus(const MobileDeviceStatus& status)
 	}
 
 	TCHAR temp[64];
-	nxlog_debug_tag(DEBUG_TAG_MOBILE, 5, _T("Mobile device %s [%u] status update (battery=%d addr=%s timestamp=%u loc=[%s %s])"),
+	nxlog_debug_tag(DEBUG_TAG_MOBILE, 5, _T("Mobile device %s [%u] status update (battery=%d addr=%s timestamp=%u loc=[%s %s] accuracy=%d)"),
 	      m_name, m_id, m_batteryLevel, m_ipAddress.toString(temp), static_cast<uint32_t>(status.geoLocation.getTimestamp()),
-			status.geoLocation.getLatitudeAsString(), status.geoLocation.getLongitudeAsString());
+			status.geoLocation.getLatitudeAsString(), status.geoLocation.getLongitudeAsString(), status.geoLocation.getAccuracy());
 
 	setModified(MODIFY_OTHER);
 	unlockProperties();
