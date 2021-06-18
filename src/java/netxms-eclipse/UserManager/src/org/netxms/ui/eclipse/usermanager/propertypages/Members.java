@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,9 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -35,6 +38,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
@@ -46,22 +50,20 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.Messages;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
-import org.netxms.ui.eclipse.usermanager.views.helpers.UserComparator;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * "Members" page for user group
  */
 public class Members extends PropertyPage
 {
-	private SortableTableViewer userList;
+   private TableViewer userList;
 	private NXCSession session;
 	private UserGroup object;
 	private HashMap<Long, AbstractUserObject> members = new HashMap<Long, AbstractUserObject>(0);
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -70,18 +72,31 @@ public class Members extends PropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		object = (UserGroup)getElement().getAdapter(UserGroup.class);
 
+      if (object.getId() == AbstractUserObject.WELL_KNOWN_ID_EVERYONE)
+      {
+         GridLayout layout = new GridLayout();
+         dialogArea.setLayout(layout);
+         Label label = new Label(dialogArea, SWT.CENTER | SWT.WRAP);
+         label.setText("This built-in group contains all the users in the system and\nis populated automatically. You can’t add or remove users here.");
+         label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
+         return dialogArea;
+      }
+
 		GridLayout layout = new GridLayout();
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		dialogArea.setLayout(layout);
 
-      final String[] columnNames = { Messages.get().Members_LoginName };
-      final int[] columnWidths = { 300 };
-      userList = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
-                                         SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      userList = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
 		userList.setContentProvider(new ArrayContentProvider());
 		userList.setLabelProvider(new WorkbenchLabelProvider());
-		userList.setComparator(new UserComparator());
+      userList.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            return ((AbstractUserObject)e1).getName().compareToIgnoreCase(((AbstractUserObject)e2).getName());
+         }
+      });
 
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -89,7 +104,7 @@ public class Members extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       userList.getControl().setLayoutData(gd);
-      
+
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       FillLayout buttonsLayout = new FillLayout();
       buttonsLayout.spacing = WidgetHelper.INNER_SPACING;

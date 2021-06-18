@@ -67,6 +67,10 @@ public abstract class AbstractUserObject
    public static final int MODIFY_EMAIL             = 0x00002000;
    public static final int MODIFY_PHONE_NUMBER      = 0x00004000;
 
+   // Well-known IDs
+   public static final long WELL_KNOWN_ID_SYSTEM = 0;
+   public static final long WELL_KNOWN_ID_EVERYONE = 1073741824L;
+
    protected String type;  // "user" or "group", used by REST API
 	protected long id;
 	protected String name;
