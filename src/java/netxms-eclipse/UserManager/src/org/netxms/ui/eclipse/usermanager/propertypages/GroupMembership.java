@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,9 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -47,22 +50,20 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.Messages;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
-import org.netxms.ui.eclipse.usermanager.views.helpers.UserComparator;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * "Group Membership" page for user
  */
 public class GroupMembership extends PropertyPage
 {
-	private SortableTableViewer groupList;
+   private TableViewer groupList;
 	private NXCSession session;
 	private User object;
 	private HashMap<Long, AbstractUserObject> groups = new HashMap<Long, AbstractUserObject>(0);
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -76,13 +77,16 @@ public class GroupMembership extends PropertyPage
 		layout.marginHeight = 0;
 		dialogArea.setLayout(layout);
 
-      final String[] columnNames = { Messages.get().GroupMembership_ColName };
-      final int[] columnWidths = { 300 };
-      groupList = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
-                                         SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      groupList = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
 		groupList.setContentProvider(new ArrayContentProvider());
 		groupList.setLabelProvider(new WorkbenchLabelProvider());
-		groupList.setComparator(new UserComparator());
+      groupList.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            return ((AbstractUserObject)e1).getName().compareToIgnoreCase(((AbstractUserObject)e2).getName());
+         }
+      });
 
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -90,7 +94,7 @@ public class GroupMembership extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       groupList.getControl().setLayoutData(gd);
-      
+
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       FillLayout buttonsLayout = new FillLayout();
       buttonsLayout.spacing = WidgetHelper.INNER_SPACING;
@@ -99,7 +103,7 @@ public class GroupMembership extends PropertyPage
       gd.horizontalAlignment = SWT.RIGHT;
       gd.widthHint = 184;
       buttons.setLayoutData(gd);
-      
+
       final Button addButton = new Button(buttons, SWT.PUSH);
       addButton.setText(Messages.get().Members_Add);
       addButton.addSelectionListener(new SelectionListener() {
@@ -137,12 +141,13 @@ public class GroupMembership extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				IStructuredSelection sel = (IStructuredSelection)groupList.getSelection();
-				Iterator<AbstractUserObject> it = sel.iterator();
+            IStructuredSelection selection = groupList.getStructuredSelection();
+				Iterator<AbstractUserObject> it = selection.iterator();
 				while(it.hasNext())
 				{
 					AbstractUserObject element = it.next();
-					groups.remove(element.getId());
+               if (element.getId() != AbstractUserObject.WELL_KNOWN_ID_EVERYONE)
+                  groups.remove(element.getId());
 				}
 				groupList.setInput(groups.values().toArray());
 			}
@@ -152,7 +157,8 @@ public class GroupMembership extends PropertyPage
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				deleteButton.setEnabled(!groupList.getSelection().isEmpty());
+            IStructuredSelection selection = groupList.getStructuredSelection();
+            deleteButton.setEnabled(!selection.isEmpty() && !((selection.size() == 1) && (((AbstractUserObject)selection.getFirstElement()).getId() == AbstractUserObject.WELL_KNOWN_ID_EVERYONE)));
 			}
       });
 
@@ -165,11 +171,16 @@ public class GroupMembership extends PropertyPage
 				groups.put(group.getId(), group);
 			}
 		}
+      final AbstractUserObject group = session.findUserDBObjectById(AbstractUserObject.WELL_KNOWN_ID_EVERYONE, null);
+      if (group != null)
+      {
+         groups.put(group.getId(), group);
+      }
 		groupList.setInput(groups.values().toArray());
 
 		return dialogArea;
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 
@@ -180,12 +191,12 @@ public class GroupMembership extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		long[] groupIds = new long[groups.size()];
+      long[] groupIds = new long[groups.size()];
 		int i = 0;
 		for(Long id : groups.keySet())
 			groupIds[i++] = id;
 		object.setGroups(groupIds);
-		
+
 		new ConsoleJob(Messages.get().Members_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -216,9 +227,9 @@ public class GroupMembership extends PropertyPage
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -226,9 +237,9 @@ public class GroupMembership extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
