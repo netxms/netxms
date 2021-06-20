@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,13 +16,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objecttools.propertypages.helpers;
+package org.netxms.ui.eclipse.objectbrowser.dialogs.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.InputField;
-import org.netxms.ui.eclipse.objecttools.Messages;
+import org.netxms.ui.eclipse.objectbrowser.Messages;
 
 /**
  * Label provider for input field list
@@ -31,7 +31,7 @@ public class InputFieldLabelProvider extends LabelProvider implements ITableLabe
 {
    private final String[] typeNames = { Messages.get().InputFieldLabelProvider_Text, Messages.get().InputFieldLabelProvider_Password, Messages.get().InputFieldLabelProvider_Number };
    
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
    @Override
@@ -40,7 +40,7 @@ public class InputFieldLabelProvider extends LabelProvider implements ITableLabe
       return null;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
     */
    @Override

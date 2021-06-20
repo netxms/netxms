@@ -28,8 +28,11 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -43,6 +46,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectQueryEditDialog;
 import org.netxms.ui.eclipse.objectbrowser.views.helpers.ObjectQueryComparator;
 import org.netxms.ui.eclipse.objectbrowser.views.helpers.ObjectQueryLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -83,6 +87,13 @@ public class ObjectQueryManager extends ViewPart
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ObjectQueryLabelProvider());
       viewer.setComparator(new ObjectQueryComparator());
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            editQuery();
+         }
+      });
 
       createActions();
       contributeToActionBars();
@@ -134,6 +145,7 @@ public class ObjectQueryManager extends ViewPart
          @Override
          public void run()
          {
+            editQuery();
          }
       };
 
@@ -277,7 +289,53 @@ public class ObjectQueryManager extends ViewPart
     */
    private void createQuery()
    {
+      ObjectQueryEditDialog dlg = new ObjectQueryEditDialog(getSite().getShell(), null);
+      if (dlg.open() != Window.OK)
+         return;
 
+      final ObjectQuery query = dlg.getQuery();
+      new ConsoleJob("Create object query", this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyObjectQuery(query);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot create object query";
+         }
+      }.start();
+   }
+
+   /**
+    * Edit selected query
+    */
+   private void editQuery()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final ObjectQuery query = (ObjectQuery)selection.getFirstElement();
+      ObjectQueryEditDialog dlg = new ObjectQueryEditDialog(getSite().getShell(), query);
+      if (dlg.open() != Window.OK)
+         return;
+
+      new ConsoleJob("Modify object query", this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyObjectQuery(query);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot modify object query";
+         }
+      }.start();
    }
 
    /**

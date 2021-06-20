@@ -289,6 +289,28 @@ uint32_t DeleteObjectQuery(uint32_t queryId)
 }
 
 /**
+ * Load object queries from database
+ */
+void LoadObjectQueries()
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,guid,name,description,script FROM object_queries"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         auto query = make_shared<ObjectQuery>(hdb, hResult, i);
+         s_objectQueries.put(query->getId(), query);
+      }
+      DBFreeResult(hResult);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
  * Filter object
  */
 static int FilterObject(NXSL_VM *vm, shared_ptr<NetObj> object, NXSL_VariableSystem **globalVariables)

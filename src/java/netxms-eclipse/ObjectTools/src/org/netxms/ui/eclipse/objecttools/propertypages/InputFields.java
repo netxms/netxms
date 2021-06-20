@@ -46,10 +46,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.InputField;
 import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.EditInputFieldDialog;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.helpers.InputFieldLabelProvider;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
-import org.netxms.ui.eclipse.objecttools.dialogs.EditInputFieldDialog;
-import org.netxms.ui.eclipse.objecttools.propertypages.helpers.InputFieldLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**

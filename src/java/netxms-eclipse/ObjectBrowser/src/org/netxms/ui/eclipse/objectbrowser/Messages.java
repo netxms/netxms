@@ -12,6 +12,18 @@ public class Messages extends NLS
    public static String CreateObjectDialog_Title;
    public static String CreateObjectDialog_Warning;
    public static String CreateObjectDialog_WarningText;
+   public static String EditInputFieldDialog_AddInputField;
+   public static String EditInputFieldDialog_DisplayName;
+   public static String EditInputFieldDialog_EditInputField;
+   public static String EditInputFieldDialog_Name;
+   public static String EditInputFieldDialog_Number;
+   public static String EditInputFieldDialog_Password;
+   public static String EditInputFieldDialog_Text;
+   public static String EditInputFieldDialog_Type;
+   public static String EditInputFieldDialog_ValidatePassword;
+   public static String InputFieldLabelProvider_Number;
+   public static String InputFieldLabelProvider_Password;
+   public static String InputFieldLabelProvider_Text;
    public static String IPAddressSelectionDialog_Interface;
    public static String IPAddressSelectionDialog_IPAddress;
    public static String IPAddressSelectionDialog_Title;
