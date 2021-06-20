@@ -72,6 +72,7 @@ void CloseAgentTunnels();
 void StopDataCollection();
 void StopObjectMaintenanceThreads();
 bool LoadPhysicalLinks();
+void LoadObjectQueries();
 THREAD StartEventProcessor();
 
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
@@ -1193,6 +1194,8 @@ retry_db_lock:
    LoadPerfDataStorageDrivers();
    LoadWebServiceDefinitions();
    InitDataCollector();
+
+   LoadObjectQueries();
 
    int importMode = ConfigReadInt(_T("ImportConfigurationOnStartup"), 1);
    if (importMode > 0)

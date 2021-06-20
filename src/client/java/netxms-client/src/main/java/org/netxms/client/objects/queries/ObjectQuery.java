@@ -19,6 +19,7 @@
 package org.netxms.client.objects.queries;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -233,5 +234,17 @@ public class ObjectQuery
    public void removeInputField(String name)
    {
       inputFields.remove(name);
+   }
+
+   /**
+    * Replace existing definitions of input fields with newly provided set.
+    *
+    * @param fields new set of input field definitions
+    */
+   public void setInputFileds(Collection<InputField> fields)
+   {
+      inputFields.clear();
+      for(InputField f : fields)
+         inputFields.put(f.getName(), f);
    }
 }

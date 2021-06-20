@@ -35,15 +35,6 @@ public class Messages extends NLS
    public String EditColumnDialog_SNMP_OID;
    public String EditColumnDialog_SubstrIndex;
    public String EditColumnDialog_Warning;
-   public String EditInputFieldDialog_AddInputField;
-   public String EditInputFieldDialog_DisplayName;
-   public String EditInputFieldDialog_EditInputField;
-   public String EditInputFieldDialog_Name;
-   public String EditInputFieldDialog_Number;
-   public String EditInputFieldDialog_Password;
-   public String EditInputFieldDialog_Text;
-   public String EditInputFieldDialog_Type;
-   public String EditInputFieldDialog_ValidatePassword;
    public String Filter_AgentNeeded;
    public String Filter_OIDShouldMatch;
    public String Filter_OSShouldMatch;
@@ -85,9 +76,6 @@ public class Messages extends NLS
    public String General_Title;
    public String General_URL;
    public String General_UseAsIndex;
-   public String InputFieldLabelProvider_Number;
-   public String InputFieldLabelProvider_Password;
-   public String InputFieldLabelProvider_Text;
    public String InputFields_DisplayName;
    public String InputFields_Down;
    public String InputFields_Name;
