@@ -191,6 +191,36 @@ uint32_t WebServiceDefinition::query(DataCollectionTarget *object, WebServiceReq
 }
 
 /**
+ * Make custom web service request using this definition. Returns agent WebServiceCallResult object.
+ */
+WebServiceCallResult *WebServiceDefinition::makeCustomRequest(shared_ptr<Node> node, const WebServiceHTTPRequestType requestType,
+      const StringList& args, const TCHAR *data, const TCHAR *contentType) const
+{
+   shared_ptr<AgentConnectionEx> conn = node->getAgentConnection();
+   if (conn == nullptr)
+   {
+      WebServiceCallResult *result = new WebServiceCallResult();
+      result->success = false;
+      _tcsncpy(result->errorMessage, _T("No connection with agent"), WEB_SWC_ERROR_TEXT_MAX_SIZE);
+      return result;
+   }
+   StringBuffer url = node->expandText(m_url, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, &args);
+
+   StringMap headers;
+   ExpandHeadersContext context;
+   context.headers = &headers;
+   context.object = node.get();
+   context.args = &args;
+   m_headers.forEach(ExpandHeaders, &context);
+   if (contentType != nullptr)
+      headers.set(_T("Content-Type"), contentType);
+
+   //Make class that will contain result
+   return conn->webServiceCustomRequest(requestType, url, m_requestTimeout, m_login, m_password, m_authType, headers, isVerifyCertificate(),
+         isVerifyHost(), data);
+}
+
+/**
  * Fill NXCP message
  */
 void WebServiceDefinition::fillMessage(NXCPMessage *msg) const
@@ -600,4 +630,24 @@ bool ImportWebServiceDefinition(ConfigEntry *config, bool overwrite)
    }
 
    return rcc == RCC_SUCCESS;
+}
+
+/**
+ * Web service custom request result constructor
+ */
+WebServiceCallResult::WebServiceCallResult()
+{
+   success = false;
+   agentErrorCode = ERR_SUCCESS;
+   httpResponseCode = 0;
+   errorMessage[0] = 0;
+   document = NULL;
+}
+
+/**
+ * Web service custom request result destructor
+ */
+WebServiceCallResult::~WebServiceCallResult()
+{
+   MemFree(document);
 }

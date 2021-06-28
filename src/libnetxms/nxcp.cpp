@@ -482,7 +482,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_2FA_GET_USER_BINDINGS"),
       _T("CMD_2FA_GET_USER_BINDING_DETAILS"),
       _T("CMD_2FA_MODIFY_USER_BINDING"),
-      _T("CMD_2FA_DELETE_USER_BINDING")
+      _T("CMD_2FA_DELETE_USER_BINDING"),
+      _T("CMD_WEB_SERVICE_CUSTOM_REQEST")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -495,7 +496,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_2FA_DELETE_USER_BINDING))
+   if ((code >= CMD_LOGIN) && (code <= CMD_WEB_SERVICE_CUSTOM_REQEST))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }
