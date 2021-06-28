@@ -616,6 +616,59 @@ uint32_t AgentConnectionEx::uninstallPolicy(uuid guid, const TCHAR *type, bool n
 }
 
 /**
+ * Make web service custom request
+ */
+WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(const WebServiceHTTPRequestType requestType, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
+         const WebServiceAuthType authType, const StringMap& headers, bool verifyCert, bool verifyHost, const TCHAR *data)
+{
+   WebServiceCallResult *result = new WebServiceCallResult();
+   NXCPMessage msg(getProtocolVersion());
+   uint32_t requestId = generateRequestId();
+   msg.setCode(CMD_WEB_SERVICE_CUSTOM_REQEST);
+   msg.setId(requestId);
+   msg.setField(VID_URL, url);
+   msg.setField(VID_HTTP_REQUEST_TYPE, static_cast<uint16_t>(requestType));
+   msg.setField(VID_TIMEOUT, requestTimeout);
+   msg.setField(VID_LOGIN_NAME, login);
+   msg.setField(VID_PASSWORD, password);
+   msg.setField(VID_AUTH_TYPE, static_cast<uint16_t>(authType));
+   msg.setField(VID_VERIFY_CERT, verifyCert);
+   msg.setField(VID_VERIFY_HOST, verifyHost);
+   headers.fillMessage(&msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
+   msg.setField(VID_REQEST_DATA, data);
+
+   uint32_t rcc;
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, getCommandTimeout());
+      if (response != nullptr)
+      {
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
+         {
+            result->httpResponseCode = response->getFieldAsUInt32(VID_WEB_SWC_RESPONSE_CODE);
+            result->document = response->getFieldAsString(VID_WEB_SWC_RESPONSE);
+            result->success = true;
+         }
+         response->getFieldAsString(VID_WEB_SWC_ERROR_TEXT, result->errorMessage, WEB_SWC_ERROR_TEXT_MAX_SIZE);
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_REQUEST_TIMEOUT;
+         _tcsncpy(result->errorMessage, _T("Agent request timeout"), WEB_SWC_ERROR_TEXT_MAX_SIZE);
+      }
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+      _tcsncpy(result->errorMessage, _T("Agent connection broken"), WEB_SWC_ERROR_TEXT_MAX_SIZE);
+   }
+   result->agentErrorCode = rcc;
+   return result;
+}
+
+/**
  * Process collected data information (for DCI with agent-side cache)
  */
 UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)

@@ -394,6 +394,19 @@ void CommSession::readThread()
                      delete msg;
                   }
                   break;
+               case CMD_WEB_SERVICE_CUSTOM_REQEST:
+                  if (g_dwFlags & AF_ENABLE_WEBSVC_PROXY)
+                  {
+                     webServiceCustomRequest(msg);
+                  }
+                  else
+                  {
+                     NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
+                     response.setField(VID_RCC, ERR_ACCESS_DENIED);
+                     sendMessage(&response);
+                     delete msg;
+                  }
+                  break;
                default:
                   m_processingQueue->put(msg);
                   break;
@@ -950,6 +963,17 @@ void CommSession::queryWebService(NXCPMessage *request)
    ThreadPoolExecuteSerialized(g_webSvcThreadPool, url, QueryWebService, request, static_cast<AbstractCommSession*>(this));
    MemFree(url);
 }
+
+/**
+ * Make web service custom request
+ */
+void CommSession::webServiceCustomRequest(NXCPMessage *request)
+{
+   TCHAR *url = request->getFieldAsString(VID_URL);
+   ThreadPoolExecuteSerialized(g_webSvcThreadPool, url, WebServiceCustomRequest, request, static_cast<AbstractCommSession*>(this));
+   MemFree(url);
+}
+
 
 /**
  * Perform action on request

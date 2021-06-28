@@ -123,6 +123,7 @@
 #define ERR_FOLDER_ALREADY_EXISTS   ((UINT32)927)
 #define ERR_INVALID_SSH_KEY_ID      ((UINT32)928)
 #define ERR_AGENT_DB_FAILURE        ((UINT32)929)
+#define ERR_INVALID_HTTP_REQEST_CODE ((uint32_t)930)
 
 /**
  * Bulk data reconciliation DCI processing status codes
@@ -180,6 +181,19 @@ enum class WebServiceRequestType
 {
    PARAMETER = 0,
    LIST = 1
+};
+
+/**
+ * Web service request type
+ */
+enum class WebServiceHTTPRequestType
+{
+   GET = 0,
+   POST = 1,
+   PUT = 2,
+   DELETE = 3,
+   PATCH = 4,
+   MAX_TYPE = PATCH
 };
 
 /**

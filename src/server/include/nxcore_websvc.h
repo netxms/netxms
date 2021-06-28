@@ -23,6 +23,8 @@
 #ifndef _nxcore_websvc_h_
 #define _nxcore_websvc_h_
 
+#include <nms_objects.h>
+
 /**
  * Web service flags
  */
@@ -57,6 +59,8 @@ public:
 
    uint32_t query(DataCollectionTarget *object, WebServiceRequestType requestType, const TCHAR *path,
             const StringList& args, AgentConnection *conn, void *result) const;
+   WebServiceCallResult *makeCustomRequest(shared_ptr<Node> node, const WebServiceHTTPRequestType requestType,
+         const StringList& args, const TCHAR *data, const TCHAR *contentType) const;
    void fillMessage(NXCPMessage *msg) const;
    void createExportRecord(StringBuffer &xml) const;
    json_t *toJson() const;

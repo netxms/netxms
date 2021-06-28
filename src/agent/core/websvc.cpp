@@ -672,6 +672,166 @@ void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
    delete request;
 }
 
+static const char *s_httpReqestTypes[] = {"GET", "POST", "PUT", "DELETE", "PATCH"};
+
+/**
+ * Web service cusom request command executer
+ */
+void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
+{
+   uint16_t requestTypeCode = request->getFieldAsInt16(VID_HTTP_REQUEST_TYPE);
+   if (requestTypeCode > static_cast<uint16_t>(WebServiceHTTPRequestType::MAX_TYPE))
+   {
+      NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+      response.setField(VID_RCC, ERR_INVALID_HTTP_REQEST_CODE);
+      session->sendMessage(&response);
+      delete request;
+   }
+
+   TCHAR *url = request->getFieldAsString(VID_URL);
+   char *login = request->getFieldAsUtf8String(VID_LOGIN_NAME);
+   char *password = request->getFieldAsUtf8String(VID_PASSWORD);
+   char *data = request->getFieldAsUtf8String(VID_REQEST_DATA);
+   bool hostVerify = request->getFieldAsBoolean(VID_VERIFY_HOST);
+   bool peerVerify = request->getFieldAsBoolean(VID_VERIFY_CERT);
+   WebServiceAuthType authType = WebServiceAuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
+   uint32_t requestTimeout = request->getFieldAsUInt32(VID_TIMEOUT);
+   const char *requestType = s_httpReqestTypes[requestTypeCode];
+
+   struct curl_slist *headers = nullptr;
+   uint32_t headerCount = request->getFieldAsUInt32(VID_NUM_HEADERS);
+   uint32_t fieldId = VID_HEADERS_BASE;
+   char header[2048];
+   for(uint32_t i = 0; i < headerCount; i++)
+   {
+      request->getFieldAsUtf8String(fieldId++, header, sizeof(header) - 4);   // header name
+      size_t len = strlen(header);
+      header[len++] = ':';
+      header[len++] = ' ';
+      request->getFieldAsUtf8String(fieldId++, &header[len], sizeof(header) - len); // value
+      headers = curl_slist_append(headers, header);
+   }
+
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   uint32_t rcc = ERR_SUCCESS;
+   const TCHAR *errorText = _T("Curl request failure");
+   CURL *curl = curl_easy_init();
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("WebServiceCustomRequest(): Request \"%s\" url, request type \"%hs\""), url, requestType);
+   if (curl != nullptr)
+   {
+      char errbuf[CURL_ERROR_SIZE];
+      curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+      curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+      curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+      curl_easy_setopt(curl, CURLOPT_HEADER, static_cast<long>(0));
+      curl_easy_setopt(curl, CURLOPT_TIMEOUT, static_cast<long>((requestTimeout != 0) ? requestTimeout : 10));
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+      curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, peerVerify ? 1 : 0);
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, hostVerify ? 2 : 0);
+      curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, requestType);
+      if (data != nullptr)
+      {
+         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(data));
+         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+      }
+      else if (requestTypeCode == static_cast<uint16_t>(WebServiceHTTPRequestType::POST))
+      {
+         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, 0);
+         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
+      }
+
+      if (authType == WebServiceAuthType::NONE)
+      {
+         curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_NONE);
+      }
+      else if (authType == WebServiceAuthType::BEARER)
+      {
+#if HAVE_DECL_CURLOPT_XOAUTH2_BEARER
+         curl_easy_setopt(curl, CURLOPT_USERNAME, login);
+         curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, password);
+#else
+         curl_easy_cleanup(curl);
+         return ERR_NOT_IMPLEMENTED;
+#endif
+      }
+      else
+      {
+         curl_easy_setopt(curl, CURLOPT_USERNAME, login);
+         curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+         curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CurlAuthType(authType));
+      }
+
+      // Receiving buffer
+      ByteStream data(32768);
+      data.setAllocationStep(32768);
+      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+
+#ifdef UNICODE
+      char *urlUtf8 = UTF8StringFromWideString(url);
+#else
+      char *urlUtf8 = UTF8StringFromMBString(url);
+#endif
+      if (curl_easy_setopt(curl, CURLOPT_URL, urlUtf8) == CURLE_OK)
+      {
+         if (curl_easy_perform(curl) == CURLE_OK)
+         {
+            long response_code;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+            response.setField(VID_WEB_SWC_RESPONSE_CODE, response_code);
+
+            data.write('\0');
+            size_t size;
+            const char *text = reinterpret_cast<const char*>(data.buffer(&size));
+            response.setFieldFromMBString(VID_WEB_SWC_RESPONSE, text);
+            errorText = _T("");
+
+            if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
+            {
+#ifdef UNICODE
+               WCHAR *responseText = WideStringFromUTF8String(reinterpret_cast<const char*>(data.buffer()));
+#else
+               char *responseText = MBStringFromUTF8String(reinterpret_cast<const char*>(data.buffer()));
+#endif
+               for(TCHAR *s = responseText; *s != 0; s++)
+                  if (*s < ' ')
+                     *s = ' ';
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceCustomRequest(): response data: %s"), responseText);
+               MemFree(responseText);
+            }
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceCustomRequest(): error making curl request: %hs"), errbuf);
+            rcc = ERR_MALFORMED_RESPONSE;
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceCustomRequest(): curl_easy_setopt failed for CURLOPT_URL"));
+         rcc = ERR_UNKNOWN_PARAMETER;
+      }
+      MemFree(urlUtf8);
+      curl_easy_cleanup(curl);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceCustomRequest(): Get data from service: curl_init failed"));
+      rcc = ERR_INTERNAL_ERROR;
+   }
+
+   response.setField(VID_WEB_SWC_ERROR_TEXT, errorText);
+   response.setField(VID_RCC, rcc);
+
+   curl_slist_free_all(headers);
+   MemFree(login);
+   MemFree(password);
+   MemFree(data);
+   MemFree(url);
+   session->sendMessage(&response);
+   delete request;
+}
+
 /**
  * Web service housekeeper
  */

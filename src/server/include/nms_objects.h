@@ -102,6 +102,28 @@ template class NXCORE_EXPORTABLE ObjectArray<GeoLocation>;
 template class NXCORE_EXPORTABLE shared_ptr<AgentTunnel>;
 #endif
 
+
+/**
+ * Error message max field lenght
+ */
+#define WEB_SWC_ERROR_TEXT_MAX_SIZE 256
+
+/**
+ * Web service custom request result data
+ */
+struct WebServiceCallResult
+{
+   bool success;
+   uint32_t agentErrorCode;
+   uint32_t httpResponseCode;
+   TCHAR errorMessage[WEB_SWC_ERROR_TEXT_MAX_SIZE];
+   TCHAR *document;
+
+public:
+   WebServiceCallResult();
+   ~WebServiceCallResult();
+};
+
 /**
  * Geo area
  */
@@ -164,6 +186,9 @@ public:
 
    uint32_t deployPolicy(NXCPMessage *msg);
    uint32_t uninstallPolicy(uuid guid, const TCHAR *type, bool newTypeFormatSupported);
+
+   WebServiceCallResult *webServiceCustomRequest(const WebServiceHTTPRequestType requestType, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
+         const WebServiceAuthType authType, const StringMap& headers, bool verifyCert, bool verifyHost, const TCHAR *data);
 
    void setTunnel(const shared_ptr<AgentTunnel>& tunnel) { m_tunnel = tunnel; }
 
