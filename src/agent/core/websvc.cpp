@@ -76,7 +76,7 @@ private:
             delete m_content.xml;
             break;
          default:
-	    break;
+       break;
       }
    }
 
@@ -680,7 +680,7 @@ static const char *s_httpReqestTypes[] = {"GET", "POST", "PUT", "DELETE", "PATCH
 void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
 {
    uint16_t requestTypeCode = request->getFieldAsInt16(VID_HTTP_REQUEST_TYPE);
-   if (requestTypeCode > static_cast<uint16_t>(WebServiceHTTPRequestType::MAX_TYPE))
+   if (requestTypeCode > static_cast<uint16_t>(WebServiceHTTPRequestType::_MAX_TYPE))
    {
       NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
       response.setField(VID_RCC, ERR_INVALID_HTTP_REQEST_CODE);
@@ -735,7 +735,7 @@ void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
          curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(data));
          curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
       }
-      else if (requestTypeCode == static_cast<uint16_t>(WebServiceHTTPRequestType::POST))
+      else if (requestTypeCode == static_cast<uint16_t>(WebServiceHTTPRequestType::_POST))
       {
          curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, 0);
          curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
@@ -751,8 +751,8 @@ void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
          curl_easy_setopt(curl, CURLOPT_USERNAME, login);
          curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, password);
 #else
-         curl_easy_cleanup(curl);
-         return ERR_NOT_IMPLEMENTED;
+       rcc = ERR_NOT_IMPLEMENTED;
+       errorText = _T("OAuth 2.0 Bearer Access Token not implemented");
 #endif
       }
       else
@@ -762,56 +762,59 @@ void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
          curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CurlAuthType(authType));
       }
 
-      // Receiving buffer
-      ByteStream data(32768);
-      data.setAllocationStep(32768);
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+     if (rcc == ERR_SUCCESS)
+     {
+        // Receiving buffer
+        ByteStream data(32768);
+        data.setAllocationStep(32768);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
 
 #ifdef UNICODE
-      char *urlUtf8 = UTF8StringFromWideString(url);
+        char *urlUtf8 = UTF8StringFromWideString(url);
 #else
-      char *urlUtf8 = UTF8StringFromMBString(url);
+        char *urlUtf8 = UTF8StringFromMBString(url);
 #endif
-      if (curl_easy_setopt(curl, CURLOPT_URL, urlUtf8) == CURLE_OK)
-      {
-         if (curl_easy_perform(curl) == CURLE_OK)
-         {
-            long response_code;
-            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-            response.setField(VID_WEB_SWC_RESPONSE_CODE, response_code);
+        if (curl_easy_setopt(curl, CURLOPT_URL, urlUtf8) == CURLE_OK)
+        {
+           if (curl_easy_perform(curl) == CURLE_OK)
+           {
+              long response_code;
+              curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+              response.setField(VID_WEB_SWC_RESPONSE_CODE, response_code);
 
-            data.write('\0');
-            size_t size;
-            const char *text = reinterpret_cast<const char*>(data.buffer(&size));
-            response.setFieldFromMBString(VID_WEB_SWC_RESPONSE, text);
-            errorText = _T("");
+              data.write('\0');
+              size_t size;
+              const char *text = reinterpret_cast<const char*>(data.buffer(&size));
+              response.setFieldFromMBString(VID_WEB_SWC_RESPONSE, text);
+              errorText = _T("");
 
-            if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
-            {
+              if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
+              {
 #ifdef UNICODE
-               WCHAR *responseText = WideStringFromUTF8String(reinterpret_cast<const char*>(data.buffer()));
+                 WCHAR *responseText = WideStringFromUTF8String(reinterpret_cast<const char*>(data.buffer()));
 #else
-               char *responseText = MBStringFromUTF8String(reinterpret_cast<const char*>(data.buffer()));
+                 char *responseText = MBStringFromUTF8String(reinterpret_cast<const char*>(data.buffer()));
 #endif
-               for(TCHAR *s = responseText; *s != 0; s++)
-                  if (*s < ' ')
-                     *s = ' ';
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceCustomRequest(): response data: %s"), responseText);
-               MemFree(responseText);
-            }
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceCustomRequest(): error making curl request: %hs"), errbuf);
-            rcc = ERR_MALFORMED_RESPONSE;
-         }
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceCustomRequest(): curl_easy_setopt failed for CURLOPT_URL"));
-         rcc = ERR_UNKNOWN_PARAMETER;
-      }
-      MemFree(urlUtf8);
+                 for (TCHAR *s = responseText; *s != 0; s++)
+                    if (*s < ' ')
+                       *s = ' ';
+                 nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceCustomRequest(): response data: %s"), responseText);
+                 MemFree(responseText);
+              }
+           }
+           else
+           {
+              nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceCustomRequest(): error making curl request: %hs"), errbuf);
+              rcc = ERR_MALFORMED_RESPONSE;
+           }
+        }
+        else
+        {
+           nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceCustomRequest(): curl_easy_setopt failed for CURLOPT_URL"));
+           rcc = ERR_UNKNOWN_PARAMETER;
+        }
+        MemFree(urlUtf8);
+     }
       curl_easy_cleanup(curl);
    }
    else

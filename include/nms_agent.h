@@ -188,12 +188,12 @@ enum class WebServiceRequestType
  */
 enum class WebServiceHTTPRequestType
 {
-   GET = 0,
-   POST = 1,
-   PUT = 2,
-   DELETE = 3,
-   PATCH = 4,
-   MAX_TYPE = PATCH
+   _GET = 0,
+   _POST = 1,
+   _PUT = 2,
+   _DELETE = 3,
+   _PATCH = 4,
+   _MAX_TYPE = _PATCH
 };
 
 /**
