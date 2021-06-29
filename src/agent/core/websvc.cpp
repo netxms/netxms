@@ -780,7 +780,7 @@ void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
            {
               long response_code;
               curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-              response.setField(VID_WEB_SWC_RESPONSE_CODE, response_code);
+              response.setField(VID_WEB_SWC_RESPONSE_CODE, static_cast<uint32_t>(response_code));
 
               data.write('\0');
               size_t size;
