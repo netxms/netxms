@@ -1,0 +1,30 @@
+name: Build and run basic unit tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  Build-and-Run-Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Install dependencies
+        run: sudo apt-get install -y libpq-dev libcurl4-openssl-dev libssh-dev libmosquitto-dev
+      - name: Prepare release build
+        run: ./build/prepare_release_build.sh
+      - name: autoconf
+        run: ./reconf
+      - name: configure
+        run: ./configure --prefix=/tmp/build --with-server --with-agent --with-pgsql --with-tests
+      - name: make
+        run: make -j$(nproc)
+      - name: make install
+        run: make install
+      - name: Run tests
+        run: |
+          /tmp/build/bin/netxmsd -v || true
+          /tmp/build/bin/nxagentd -v || true
+          /tmp/build/bin/netxms-test-suite
