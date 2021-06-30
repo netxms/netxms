@@ -27,6 +27,7 @@ import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
+import org.netxms.ui.eclipse.charts.widgets.GenericChart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TubeChartConfig;
 
 /**
@@ -64,6 +65,7 @@ public class TubeChartElement extends ComparisonChartElement
 		chart.set3DModeEnabled(config.isShowIn3D());
 		chart.setTransposed(config.isTransposed());
 		chart.setTranslucent(config.isTranslucent());
+      ((GenericChart)chart).setDrillDownObjectId(config.getDrillDownObjectId());
 		if (!config.isAutoScale())
          chart.setYAxisRange(config.getMinYScaleValue(), config.getMaxYScaleValue());
 		

@@ -29,11 +29,14 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableBarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableComparisonChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TablePieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableTubeChartConfig;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -53,6 +56,7 @@ public class TableComparisonChart extends PropertyPage
 	private Button checkTranslucent;
 	private Button checkTransposed;
    private YAxisRangeEditor yAxisRange;
+   private ObjectSelector drillDownObject;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -156,6 +160,17 @@ public class TableComparisonChart extends PropertyPage
          yAxisRange.setSelection(config.isAutoScale(), config.modifyYBase(),
                                  config.getMinYScaleValue(), config.getMaxYScaleValue());
       }
+      
+      drillDownObject = new ObjectSelector(dialogArea, SWT.NONE, true);
+      drillDownObject.setLabel("Drill-down object");
+      drillDownObject.setObjectClass(AbstractObject.class);
+      drillDownObject.setClassFilter(ObjectSelectionDialog.createDashboardAndNetworkMapSelectionFilter());
+      drillDownObject.setObjectId(config.getDrillDownObjectId());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      drillDownObject.setLayoutData(gd);
 		
 		return dialogArea;
 	}
@@ -193,6 +208,7 @@ public class TableComparisonChart extends PropertyPage
 		config.setShowLegend(checkShowLegend.getSelection());
 		config.setShowIn3D(checkShowIn3D.getSelection());
 		config.setTranslucent(checkTranslucent.getSelection());	
+      config.setDrillDownObjectId(drillDownObject.getObjectId());
 		
 		if(!(config instanceof TablePieChartConfig))
       {

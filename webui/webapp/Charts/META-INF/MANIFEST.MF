@@ -18,5 +18,6 @@ Require-Bundle: org.eclipse.rap.ui;bundle-version="3.1.0",
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.charts.api,
- org.netxms.ui.eclipse.charts.figures
+ org.netxms.ui.eclipse.charts.figures,
+ org.netxms.ui.eclipse.charts.widgets
 Automatic-Module-Name: org.netxms.ui.eclipse.charts
