@@ -90,7 +90,6 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
    protected long drillDownObjectId = 0;
 
    private boolean fontsCreated = false;
-   private boolean mouseDown = false;
 
    /**
     * @param parent
@@ -118,31 +117,6 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
          @Override
          public void controlMoved(ControlEvent e)
          {
-         }
-      });
-      addMouseListener(new MouseListener() {
-         @Override
-         public void mouseDown(MouseEvent e)
-         {
-            if (e.button == 1)
-               mouseDown = true;
-         }
-
-         @Override
-         public void mouseUp(MouseEvent e)
-         {
-            if ((e.button == 1) && mouseDown)
-            {
-               mouseDown = false;
-               if (drillDownObjectId != 0)
-                  openDrillDownObject();
-            }
-         }
-
-         @Override
-         public void mouseDoubleClick(MouseEvent e)
-         {
-            mouseDown = false;
          }
       });
    }
@@ -823,52 +797,5 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
    public void setCustomColor(RGB color)
    {
       customColor = color;
-   }
-
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.charts.api.Gauge#getDrillDownObjectId()
-    */
-   @Override
-   public long getDrillDownObjectId()
-   {
-      return drillDownObjectId;
-   }
-
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.charts.api.Gauge#setDrillDownObjectId(long)
-    */
-   @Override
-   public void setDrillDownObjectId(long drillDownObjectId)
-   {
-      this.drillDownObjectId = drillDownObjectId;
-      setCursor(getDisplay().getSystemCursor((drillDownObjectId != 0) ? SWT.CURSOR_HAND : SWT.CURSOR_ARROW));
-   }
-   
-   /**
-    * Open drill-down object
-    */
-   void openDrillDownObject()
-   {
-      AbstractObject object = ConsoleSharedData.getSession().findObjectById(drillDownObjectId);
-      if (object == null)
-         return;
-      
-      if (!(object instanceof Dashboard) && !(object instanceof NetworkMap))
-         return;
-      
-      final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-      try
-      {
-         window.getActivePage().showView(
-               (object instanceof Dashboard) ? "org.netxms.ui.eclipse.dashboard.views.DashboardView" : "org.netxms.ui.eclipse.networkmaps.views.PredefinedMap",
-                     Long.toString(object.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
-      }
-      catch(PartInitException e)
-      {
-         MessageDialogHelper.openError(window.getShell(), "Error", 
-               String.format("Cannot open %s view \"%s\" (%s)",
-                     (object instanceof Dashboard) ? "dashboard" : "network map",
-                     object.getObjectName(), e.getMessage()));
-      }
    }
 }

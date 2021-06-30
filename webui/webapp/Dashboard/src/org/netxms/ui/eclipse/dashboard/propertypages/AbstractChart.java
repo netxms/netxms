@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
@@ -36,6 +37,8 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.ComparisonChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TubeChartConfig;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
@@ -66,6 +69,7 @@ public class AbstractChart extends PropertyPage
    private Button checkInteractive;
    private LabeledSpinner lineWidth;
    private YAxisRangeEditor yAxisRange;   
+   private ObjectSelector drillDownObject;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -281,6 +285,20 @@ public class AbstractChart extends PropertyPage
 	      yAxisRange.setSelection(config.isAutoScale(), config.modifyYBase(),
 	                              config.getMinYScaleValue(), config.getMaxYScaleValue());
       }
+      
+      if (!(config instanceof LineChartConfig))
+      {
+         drillDownObject = new ObjectSelector(dialogArea, SWT.NONE, true);
+         drillDownObject.setLabel("Drill-down object");
+         drillDownObject.setObjectClass(AbstractObject.class);
+         drillDownObject.setClassFilter(ObjectSelectionDialog.createDashboardAndNetworkMapSelectionFilter());
+         drillDownObject.setObjectId(config.getDrillDownObjectId());
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalSpan = 2;
+         drillDownObject.setLayoutData(gd);
+      }
 		
 		return dialogArea;
 	}
@@ -352,6 +370,11 @@ public class AbstractChart extends PropertyPage
          ((LineChartConfig)config).setInteractive(checkInteractive.getSelection());
          ((LineChartConfig)config).setLineWidth(lineWidth.getSelection());
 		}
+
+      if (!(config instanceof LineChartConfig))
+      {
+         config.setDrillDownObjectId(drillDownObject.getObjectId());
+      }
 		return true;
 	}
 }

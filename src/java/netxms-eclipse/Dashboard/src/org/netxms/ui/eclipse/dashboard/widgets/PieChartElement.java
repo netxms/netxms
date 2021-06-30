@@ -28,6 +28,7 @@ import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
+import org.netxms.ui.eclipse.charts.widgets.GenericChart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
 
 /**
@@ -66,6 +67,7 @@ public class PieChartElement extends ComparisonChartElement
 		chart.setLegendVisible(config.isShowLegend());
 		chart.set3DModeEnabled(config.isShowIn3D());
 		chart.setTranslucent(config.isTranslucent());
+      ((GenericChart)chart).setDrillDownObjectId(config.getDrillDownObjectId());
 		
 		int index = 0;
 		for(ChartDciConfig dci : config.getDciList())

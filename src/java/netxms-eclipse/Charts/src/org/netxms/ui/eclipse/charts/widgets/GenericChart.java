@@ -19,12 +19,24 @@
 package org.netxms.ui.eclipse.charts.widgets;
 
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DataChart;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Abstract base class for charts
@@ -40,6 +52,9 @@ public abstract class GenericChart extends Canvas implements DataChart
 	protected ChartColor[] palette = null;
 	protected IPreferenceStore preferenceStore;
 	protected int legendPosition;
+   protected long drillDownObjectId = 0;
+   
+   private boolean mouseDown = false;
 
 	/**
 	 * Generic constructor.
@@ -53,6 +68,32 @@ public abstract class GenericChart extends Canvas implements DataChart
 
 		preferenceStore = Activator.getDefault().getPreferenceStore();
 		createDefaultPalette();
+		
+      addMouseListener(new MouseListener() {
+         @Override
+         public void mouseDown(MouseEvent e)
+         {
+            if (e.button == 1)
+               mouseDown = true;
+         }
+
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+            if ((e.button == 1) && mouseDown)
+            {
+               mouseDown = false;
+               if (drillDownObjectId != 0)
+                  openDrillDownObject();
+            }
+         }
+
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+            mouseDown = false;
+         }
+      });
 	}
 
 	/* (non-Javadoc)
@@ -187,4 +228,52 @@ public abstract class GenericChart extends Canvas implements DataChart
 	{
 		this.translucent = translucent;
 	}
+
+   
+   /**
+    * Get ID of drill-down object for this gauge (dashboard or network map)
+    */
+   public long getDrillDownObjectId()
+   {
+      return drillDownObjectId;
+   }
+   
+   /**
+    * Set ID of drill-down object for this gauge (dashboard or network map)
+    * 
+    * @param objectId ID of drill-down object or 0 to disable drill-down functionality
+    */
+   public void setDrillDownObjectId(long drillDownObjectId)
+   {
+      this.drillDownObjectId = drillDownObjectId;
+      setCursor(getDisplay().getSystemCursor((drillDownObjectId != 0) ? SWT.CURSOR_HAND : SWT.CURSOR_ARROW));
+   }
+   
+   /**
+    * Open drill-down object
+    */
+   void openDrillDownObject()
+   {
+      AbstractObject object = ConsoleSharedData.getSession().findObjectById(drillDownObjectId);
+      if (object == null)
+         return;
+      
+      if (!(object instanceof Dashboard) && !(object instanceof NetworkMap))
+         return;
+      
+      final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+      try
+      {
+         window.getActivePage().showView(
+               (object instanceof Dashboard) ? "org.netxms.ui.eclipse.dashboard.views.DashboardView" : "org.netxms.ui.eclipse.networkmaps.views.PredefinedMap",
+                     Long.toString(object.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
+      }
+      catch(PartInitException e)
+      {
+         MessageDialogHelper.openError(window.getShell(), "Error", 
+               String.format("Cannot open %s view \"%s\" (%s)",
+                     (object instanceof Dashboard) ? "dashboard" : "network map",
+                     object.getObjectName(), e.getMessage()));
+      }
+   }
 }

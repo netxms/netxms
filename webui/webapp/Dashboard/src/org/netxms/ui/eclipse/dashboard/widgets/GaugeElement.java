@@ -29,6 +29,7 @@ import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.Gauge;
 import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
+import org.netxms.ui.eclipse.charts.widgets.GenericChart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
@@ -88,7 +89,7 @@ public class GaugeElement extends ComparisonChartElement
 		((Gauge)chart).setFontName(config.getFontName());
 		((Gauge)chart).setColorMode(GaugeColorMode.getByValue(config.getColorMode()));
 		((Gauge)chart).setCustomColor(ColorConverter.rgbFromInt(config.getCustomColor()));
-      ((Gauge)chart).setDrillDownObjectId(config.getDrillDownObjectId());
+      ((GenericChart)chart).setDrillDownObjectId(config.getDrillDownObjectId());
 		
 		int index = 0;
 		for(ChartDciConfig dci : config.getDciList())

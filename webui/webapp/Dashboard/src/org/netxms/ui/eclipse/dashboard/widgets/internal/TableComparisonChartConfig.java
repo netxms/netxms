@@ -84,6 +84,9 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
 
    @Element(required = false)
    private boolean modifyYBase = false;
+   
+   @Element(required=false)
+   private long drillDownObjectId = 0;
 	
 	/**
 	 * @return the showIn3D
@@ -424,5 +427,21 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
    public boolean modifyYBase()
    {
       return modifyYBase;
+   }
+
+   /**
+    * @return the drillDownObjectId
+    */
+   public long getDrillDownObjectId()
+   {
+      return drillDownObjectId;
+   }
+
+   /**
+    * @param drillDownObjectId the drillDownObjectId to set
+    */
+   public void setDrillDownObjectId(long drillDownObjectId)
+   {
+      this.drillDownObjectId = drillDownObjectId;
    }
 }
