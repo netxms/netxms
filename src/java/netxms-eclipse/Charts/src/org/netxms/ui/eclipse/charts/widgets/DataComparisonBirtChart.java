@@ -25,6 +25,8 @@ import org.eclipse.birt.chart.model.ChartWithAxes;
 import org.eclipse.birt.chart.model.ChartWithoutAxes;
 import org.eclipse.birt.chart.model.attribute.AxisType;
 import org.eclipse.birt.chart.model.attribute.ChartDimension;
+import org.eclipse.birt.chart.model.attribute.DataPointComponent;
+import org.eclipse.birt.chart.model.attribute.DataPointComponentType;
 import org.eclipse.birt.chart.model.attribute.LeaderLineStyle;
 import org.eclipse.birt.chart.model.attribute.LegendItemType;
 import org.eclipse.birt.chart.model.attribute.LineStyle;
@@ -32,6 +34,8 @@ import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.attribute.RiserType;
 import org.eclipse.birt.chart.model.attribute.Text;
 import org.eclipse.birt.chart.model.attribute.TickStyle;
+import org.eclipse.birt.chart.model.attribute.impl.DataPointComponentImpl;
+import org.eclipse.birt.chart.model.attribute.impl.JavaNumberFormatSpecifierImpl;
 import org.eclipse.birt.chart.model.attribute.impl.LineAttributesImpl;
 import org.eclipse.birt.chart.model.component.Axis;
 import org.eclipse.birt.chart.model.component.Series;
@@ -287,6 +291,11 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 					ps.getLabel().getCaption().getFont().setName(CHART_FONT_NAME);
 					ps.getLabel().getCaption().getFont().setSize(CHART_FONT_SIZE_AXIS);
 				}
+		      DataPointComponent dpc = DataPointComponentImpl.create( DataPointComponentType.PERCENTILE_ORTHOGONAL_VALUE_LITERAL,
+		            JavaNumberFormatSpecifierImpl.create( "(##.##%)" )); //$NON-NLS-1$
+		      ps.getDataPoint( ).getComponents( ).add( dpc );
+		      ps.getDataPoint( ).setSeparator(" "); //$NON-NLS-1$
+		      
 				return ps;
 			default:
 				return null;
