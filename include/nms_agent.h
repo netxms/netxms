@@ -123,7 +123,7 @@
 #define ERR_FOLDER_ALREADY_EXISTS   ((UINT32)927)
 #define ERR_INVALID_SSH_KEY_ID      ((UINT32)928)
 #define ERR_AGENT_DB_FAILURE        ((UINT32)929)
-#define ERR_INVALID_HTTP_REQEST_CODE ((uint32_t)930)
+#define ERR_INVALID_HTTP_REQUEST_CODE ((uint32_t)930)
 
 /**
  * Bulk data reconciliation DCI processing status codes

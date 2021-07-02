@@ -79,7 +79,7 @@ static struct
    { ERR_FOLDER_ALREADY_EXISTS, _T("Folder already exist") },
    { ERR_INVALID_SSH_KEY_ID, _T("Invalid SSH key") },
    { ERR_AGENT_DB_FAILURE, _T("Agent database failure") },
-   { ERR_INVALID_HTTP_REQEST_CODE, _T("Invalid HTTP request code") },
+   { ERR_INVALID_HTTP_REQUEST_CODE, _T("Invalid HTTP request code") },
    { -1, NULL }
 };
 

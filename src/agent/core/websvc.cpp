@@ -672,7 +672,7 @@ void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
    delete request;
 }
 
-static const char *s_httpReqestTypes[] = {"GET", "POST", "PUT", "DELETE", "PATCH"};
+static const char *s_httpRequestTypes[] = {"GET", "POST", "PUT", "DELETE", "PATCH"};
 
 /**
  * Web service cusom request command executer
@@ -683,7 +683,7 @@ void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
    if (requestTypeCode > static_cast<uint16_t>(WebServiceHTTPRequestType::_MAX_TYPE))
    {
       NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-      response.setField(VID_RCC, ERR_INVALID_HTTP_REQEST_CODE);
+      response.setField(VID_RCC, ERR_INVALID_HTTP_REQUEST_CODE);
       session->sendMessage(&response);
       delete request;
    }
@@ -691,12 +691,12 @@ void WebServiceCustomRequest(NXCPMessage *request, AbstractCommSession *session)
    TCHAR *url = request->getFieldAsString(VID_URL);
    char *login = request->getFieldAsUtf8String(VID_LOGIN_NAME);
    char *password = request->getFieldAsUtf8String(VID_PASSWORD);
-   char *data = request->getFieldAsUtf8String(VID_REQEST_DATA);
+   char *data = request->getFieldAsUtf8String(VID_REQUEST_DATA);
    bool hostVerify = request->getFieldAsBoolean(VID_VERIFY_HOST);
    bool peerVerify = request->getFieldAsBoolean(VID_VERIFY_CERT);
    WebServiceAuthType authType = WebServiceAuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
    uint32_t requestTimeout = request->getFieldAsUInt32(VID_TIMEOUT);
-   const char *requestType = s_httpReqestTypes[requestTypeCode];
+   const char *requestType = s_httpRequestTypes[requestTypeCode];
 
    struct curl_slist *headers = nullptr;
    uint32_t headerCount = request->getFieldAsUInt32(VID_NUM_HEADERS);
