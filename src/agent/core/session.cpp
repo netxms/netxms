@@ -394,7 +394,7 @@ void CommSession::readThread()
                      delete msg;
                   }
                   break;
-               case CMD_WEB_SERVICE_CUSTOM_REQEST:
+               case CMD_WEB_SERVICE_CUSTOM_REQUEST:
                   if (g_dwFlags & AF_ENABLE_WEBSVC_PROXY)
                   {
                      webServiceCustomRequest(msg);

@@ -624,7 +624,7 @@ WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(const WebServic
    WebServiceCallResult *result = new WebServiceCallResult();
    NXCPMessage msg(getProtocolVersion());
    uint32_t requestId = generateRequestId();
-   msg.setCode(CMD_WEB_SERVICE_CUSTOM_REQEST);
+   msg.setCode(CMD_WEB_SERVICE_CUSTOM_REQUEST);
    msg.setId(requestId);
    msg.setField(VID_URL, url);
    msg.setField(VID_HTTP_REQUEST_TYPE, static_cast<uint16_t>(requestType));
@@ -635,7 +635,7 @@ WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(const WebServic
    msg.setField(VID_VERIFY_CERT, verifyCert);
    msg.setField(VID_VERIFY_HOST, verifyHost);
    headers.fillMessage(&msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
-   msg.setField(VID_REQEST_DATA, data);
+   msg.setField(VID_REQUEST_DATA, data);
 
    uint32_t rcc;
    if (sendMessage(&msg))

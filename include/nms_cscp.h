@@ -676,7 +676,7 @@ typedef struct
 #define CMD_2FA_GET_USER_BINDING_DETAILS  0x01B5
 #define CMD_2FA_MODIFY_USER_BINDING       0x01B6
 #define CMD_2FA_DELETE_USER_BINDING       0x01B7
-#define CMD_WEB_SERVICE_CUSTOM_REQEST     0x01B8
+#define CMD_WEB_SERVICE_CUSTOM_REQUEST     0x01B8
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1454,7 +1454,7 @@ typedef struct
 #define VID_WEB_SWC_RESPONSE_CODE   ((uint32_t)763)
 #define VID_WEB_SWC_RESPONSE        ((uint32_t)764)
 #define VID_WEB_SWC_ERROR_TEXT      ((uint32_t)765)
-#define VID_REQEST_DATA             ((uint32_t)766)
+#define VID_REQUEST_DATA             ((uint32_t)766)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
