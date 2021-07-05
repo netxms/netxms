@@ -1583,6 +1583,103 @@ static void CH_GetFileFingerprint(NXCPMessage *request, NXCPMessage *response, A
 }
 
 /**
+ * Handler for "merge files" command
+ */
+static void CH_MergeFiles(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+{
+   if (!session->isMasterServer())
+   {
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+      return;
+   }
+
+   TCHAR destinationFileName[MAX_PATH];
+   request->getFieldAsString(VID_DESTINATION_FILE_NAME, destinationFileName, MAX_PATH);
+   ConvertPathToHost(destinationFileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
+
+   TCHAR *destinationFullPath;
+   if (CheckFullPath(destinationFileName, &destinationFullPath, false))
+   {
+      BYTE md5[MD5_DIGEST_SIZE];
+      if(request->getFieldAsBinary(VID_HASH_MD5, md5, MD5_DIGEST_SIZE) != MD5_DIGEST_SIZE)
+      {
+         response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
+      }
+      else
+      {
+         StringList temp_files(request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
+         if(temp_files.size() == 0)
+         {
+            response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
+         }
+         else
+         {
+            bool success = true;
+            for(int i = 0; i < temp_files.size(); i++)
+            {
+               TCHAR sourceFileName[MAX_PATH];
+               _tcsncpy(sourceFileName, temp_files.get(i), MAX_PATH);
+               ConvertPathToHost(sourceFileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
+               TCHAR *sourceFullPath;
+               if (CheckFullPath(sourceFileName, &sourceFullPath, false))
+               {
+                  if(!MergeFiles(sourceFullPath, destinationFullPath))
+                  {
+                     response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+                     success = false;
+                  }
+                  MemFree(sourceFullPath);
+                  if(!success)
+                  {
+                     break;
+                  }
+               }
+               else
+               {
+                  response->setField(VID_RCC, ERR_ACCESS_DENIED);
+                  success = false;
+                  break;
+               }
+
+            }
+
+            if(success)
+            {
+               for(int i = 0; i < temp_files.size(); i++)
+               {
+                  TCHAR sourceFileName[MAX_PATH];
+                  _tcsncpy(sourceFileName, temp_files.get(i), MAX_PATH);
+                  ConvertPathToHost(sourceFileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
+                  TCHAR *sourceFullPath;
+                  if (CheckFullPath(sourceFileName, &sourceFullPath, false))
+                  {
+                     Delete(sourceFullPath);
+                     MemFree(sourceFullPath);
+                  }
+               }
+
+               BYTE hash[MD5_DIGEST_SIZE];
+               CalculateFileMD5Hash(destinationFullPath, hash);
+               if(memcmp(md5, hash, MD5_DIGEST_SIZE) == 0)
+               {
+                  response->setField(VID_RCC, ERR_SUCCESS);
+               }
+               else
+               {
+                  response->setField(VID_RCC, ERR_MD5_HASH_MISMATCH);
+               }
+            }
+         }
+      }
+      MemFree(destinationFullPath);
+   }
+   else
+   {
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+}
+
+/**
  * Process commands like get files in folder, delete file/folder, copy file/folder, move file/folder
  */
 static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
@@ -1636,6 +1733,9 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          break;
       case CMD_FILEMGR_GET_FILE_FINGERPRINT:
          CH_GetFileFingerprint(request, response, session);
+         break;
+      case CMD_FILEMGR_MERGE_FILES:
+         CH_MergeFiles(request, response, session);
          break;
       default:
          return false;

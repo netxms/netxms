@@ -21,6 +21,7 @@
 **/
 
 #include "nxagentd.h"
+#include <nxstat.h>
 
 /**
  * Externals
@@ -607,6 +608,9 @@ void CommSession::processingThread()
             case CMD_TRANSFER_FILE:
                recvFile(request, &response);
                break;
+            case CMD_MERGE_FILES:
+               mergeFiles(request, &response);
+               break;
             case CMD_UPGRADE_AGENT:
                response.setField(VID_RCC, upgrade(request));
                break;
@@ -709,6 +713,7 @@ void CommSession::processingThread()
                m_allowCompression = request->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
                response.setField(VID_RCC, ERR_SUCCESS);
                response.setField(VID_FLAGS, static_cast<uint16_t>((m_controlServer ? 0x01 : 0x00) | (m_masterServer ? 0x02 : 0x00)));
+               response.setField(VID_ENABLE_FILE_UPLOAD_RESUMING, 1);
                debugPrintf(4, _T("Server capabilities: IPv6: %s; bulk reconciliation: %s; compression: %s"),
                            m_ipv6Aware ? _T("yes") : _T("no"),
                            m_bulkReconciliationSupported ? _T("yes") : _T("no"),
@@ -1008,6 +1013,71 @@ void CommSession::recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg)
 	{
 		pMsg->setField(VID_RCC, ERR_ACCESS_DENIED);
 	}
+}
+
+/**
+ * Handler for "merge files" command
+ */
+void CommSession::mergeFiles(NXCPMessage *request, NXCPMessage *response)
+{
+   if (m_masterServer)
+   {
+      TCHAR destinationFileName[MAX_PATH], destinationFullPath[MAX_PATH];
+      request->getFieldAsString(VID_DESTINATION_FILE_NAME, destinationFileName, MAX_PATH);
+      BuildFullPath(destinationFileName, destinationFullPath);
+      BYTE md5[MD5_DIGEST_SIZE];
+      if(request->getFieldAsBinary(VID_HASH_MD5, md5, MD5_DIGEST_SIZE) != MD5_DIGEST_SIZE)
+      {
+         response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
+      }
+      else
+      {
+         StringList temp_files(request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
+         if(temp_files.size() == 0)
+         {
+            response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
+         }
+         else
+         {
+            bool success = true;
+            for(int i = 0; i < temp_files.size(); i++)
+            {
+               TCHAR sourceFullPath[MAX_PATH];
+               BuildFullPath(temp_files.get(i), sourceFullPath);
+               if(!MergeFiles(sourceFullPath, destinationFullPath))
+               {
+                  response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+                  success = false;
+                  break;
+               }
+            }
+            if(success)
+            {
+               for(int i = 0; i < temp_files.size(); i++)
+               {
+                  TCHAR sourceFullPath[MAX_PATH];
+                  BuildFullPath(temp_files.get(i), sourceFullPath);
+                  _tremove(sourceFullPath);
+               }
+
+               BYTE hash[MD5_DIGEST_SIZE];
+               CalculateFileMD5Hash(destinationFullPath, hash);
+               if(memcmp(md5, hash, MD5_DIGEST_SIZE) == 0)
+               {
+                  response->setField(VID_RCC, ERR_SUCCESS);
+               }
+               else
+               {
+                  response->setField(VID_RCC, ERR_MD5_HASH_MISMATCH);
+               }
+            }
+         }
+      }
+   }
+   else
+   {
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
 }
 
 /**

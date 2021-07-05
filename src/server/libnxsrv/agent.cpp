@@ -514,6 +514,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_bulkDataProcessing = 0;
    m_controlServer = false;
    m_masterServer = false;
+   m_fileResumingEnabled = false;
 }
 
 /**
@@ -1253,6 +1254,7 @@ uint32_t AgentConnection::setServerCapabilities()
          m_controlServer = true;
          m_masterServer = true;
       }
+      m_fileResumingEnabled = response->isFieldExist(VID_ENABLE_FILE_UPLOAD_RESUMING);
    }
    delete response;
    return rcc;
@@ -1705,8 +1707,8 @@ uint32_t AgentConnection::executeCommand(const TCHAR *command, const StringList 
 /**
  * Upload file to agent
  */
-uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
-         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod)
+uint32_t AgentConnection::uploadFileInternal(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
+         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod, off_t offset, size_t size, bool useFileTransfer)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1715,16 +1717,16 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
    if (!m_allowCompression || (m_nProtocolVersion < 4))
       compMethod = NXCP_STREAM_COMPRESSION_NONE;
 
+   NXCPMessage msg(m_nProtocolVersion);
+   uint32_t requestId = generateRequestId();
+   msg.setId(requestId);
+
    time_t lastModTime = 0;
    NX_STAT_STRUCT st;
    if (CALL_STAT(localFile, &st) == 0)
    {
       lastModTime = st.st_mtime;
    }
-
-   NXCPMessage msg(m_nProtocolVersion);
-   uint32_t requestId = generateRequestId();
-   msg.setId(requestId);
 
    // Use core agent if destination file name is not set and file manager subagent otherwise
    if ((destinationFile == nullptr) || (*destinationFile == 0))
@@ -1734,6 +1736,14 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
       for(i = (int)_tcslen(localFile) - 1;
           (i >= 0) && (localFile[i] != '\\') && (localFile[i] != '/'); i--);
       msg.setField(VID_FILE_NAME, &localFile[i + 1]);
+   }
+   else if(useFileTransfer)
+   {
+      msg.setCode(CMD_TRANSFER_FILE);
+      int i;
+      for(i = (int)_tcslen(destinationFile) - 1;
+          (i >= 0) && (destinationFile[i] != '\\') && (destinationFile[i] != '/'); i--);
+      msg.setField(VID_FILE_NAME, &destinationFile[i + 1]);
    }
    else
    {
@@ -1763,16 +1773,147 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
                   localFile, (compMethod == NXCP_STREAM_COMPRESSION_NONE) ? _T("without") : _T("with"));
          m_fileUploadInProgress = true;
          shared_ptr<NXCPEncryptionContext> ctx = acquireEncryptionContext();
-         if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
+         if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), offset, progressCallback, cbArg, m_mutexSocketWrite, compMethod, nullptr, size))
+         {
             rcc = waitForRCC(requestId, std::max(m_commandTimeout, static_cast<uint32_t>(30000)));  // Wait at least 30 seconds for file transfer confirmation
+         }
          else
+         {
             rcc = ERR_IO_FAILURE;
+         }
          m_fileUploadInProgress = false;
       }
       else
       {
          rcc = ERR_CONNECTION_BROKEN;
       }
+   }
+
+   return rcc;
+}
+
+struct FileInfo {
+   TCHAR *m_name;
+   uint64_t m_size;
+   BYTE m_hash[MD5_DIGEST_SIZE];
+   uint64_t m_offset;
+};
+
+static void prepareFilePartsList(StringList &fileSet, const TCHAR *localFile, const TCHAR *destinationFile, 
+StructArray<FileInfo> &fileInfo)
+{
+   uint64_t sz = FileSize(localFile);
+   const TCHAR* fileName = (destinationFile == nullptr) || (*destinationFile == 0) ? localFile : destinationFile;
+   for(int i = 0; sz > 0; i++)
+   {
+      struct FileInfo info;
+      StringBuffer partFileName;
+      partFileName.appendFormattedString(_T("%s%s%d"), fileName, _T(".part"), i);
+      info.m_name = MemCopyString(partFileName.getBuffer());
+      fileSet.add(partFileName.getBuffer());
+      const uint32_t FILE_PART_SIZE = 1024 * 1024;
+      info.m_offset = FILE_PART_SIZE * i;
+      if(sz > FILE_PART_SIZE)
+      {
+         info.m_size = FILE_PART_SIZE;
+         sz-= FILE_PART_SIZE;
+      }
+      else
+      {
+         info.m_size = sz;
+         sz = 0;
+      }
+      fileInfo.add(info);
+   }
+}
+
+/**
+ * Upload file to agent
+ */
+uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
+         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod)
+{
+   uint32_t rcc;
+   if(m_fileResumingEnabled)
+   {
+      StringList fileSet;
+      StructArray<FileInfo> fileInfo;
+      ObjectArray<RemoteFileInfo> *remoteFiles;
+      prepareFilePartsList(fileSet, localFile, destinationFile, fileInfo);
+      rcc = getFileSetInfo(fileSet, allowPathExpansion, &remoteFiles);
+      if(rcc == ERR_SUCCESS)
+      {
+         for(int i = 0; i < fileSet.size(); i++)
+         {
+            bool found = false;
+            for(int y = 0; i < remoteFiles->size(); y++)
+            {
+               if(_tcscmp(fileInfo.get(i)->m_name, remoteFiles->get(y)->name()) == 0)
+               {
+                  if(fileInfo.get(i)->m_size == remoteFiles->get(y)->size() &&
+                  memcmp(fileInfo.get(i)->m_hash, remoteFiles->get(y)->hash(), MD5_DIGEST_SIZE) == 0)
+                  {
+                     found = true;
+                  }
+                  break;
+               }
+            }
+            if(!found)
+            {
+               rcc = uploadFileInternal(localFile, fileInfo.get(i)->m_name, allowPathExpansion, progressCallback, cbArg, compMethod, fileInfo.get(i)->m_offset, fileInfo.get(i)->m_size, true);
+               if(rcc != ERR_SUCCESS)
+               {
+                  break;
+               }
+            }
+         }
+         delete remoteFiles;
+      }
+      for(int i = 0; i < fileInfo.size(); i++)
+      {
+         MemFree(fileInfo.get(i)->m_name);
+      }
+      if(rcc == ERR_SUCCESS)
+      {
+         NXCPMessage request(m_nProtocolVersion);
+         request.setId(generateRequestId());
+
+         // Use core agent if destination file name is not set and file manager subagent otherwise
+         if ((destinationFile == nullptr) || (*destinationFile == 0))
+         {
+            request.setCode(CMD_MERGE_FILES);
+            int i;
+            for(i = (int)_tcslen(localFile) - 1;
+               (i >= 0) && (localFile[i] != '\\') && (localFile[i] != '/'); i--);
+            request.setField(VID_DESTINATION_FILE_NAME, &localFile[i + 1]);
+         }
+         else
+         {
+            request.setCode(CMD_FILEMGR_MERGE_FILES);
+            request.setField(VID_DESTINATION_FILE_NAME, destinationFile);
+         }
+
+         fileSet.fillMessage(&request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
+         BYTE hash[MD5_DIGEST_SIZE];
+         CalculateFileMD5Hash(localFile, hash);
+         request.setField(VID_HASH_MD5, hash, MD5_DIGEST_SIZE);
+         if (sendMessage(&request))
+         {
+            rcc = waitForRCC(request.getId(), m_commandTimeout);
+         }
+         else
+         {
+            rcc = ERR_CONNECTION_BROKEN;
+         }
+
+      }
+
+      return rcc;
+   }
+   else
+   {
+      //backwards compatibility
+      rcc = uploadFileInternal(localFile, destinationFile, allowPathExpansion, progressCallback, cbArg, compMethod);
    }
 
    return rcc;

@@ -80,6 +80,7 @@ static struct
    { ERR_INVALID_SSH_KEY_ID, _T("Invalid SSH key") },
    { ERR_AGENT_DB_FAILURE, _T("Agent database failure") },
    { ERR_INVALID_HTTP_REQUEST_CODE, _T("Invalid HTTP request code") },
+   { ERR_MD5_HASH_MISMATCH, _T("MD5 hash mismatch") },
    { -1, NULL }
 };
 
