@@ -853,6 +853,7 @@ private:
 	bool m_fileUpdateConnection;
 	bool m_allowCompression;
 	VolatileCounter m_bulkDataProcessing;
+   bool m_fileResumingEnabled;
 
    void receiverThread();
 
@@ -863,6 +864,8 @@ private:
          void (*downloadProgressCallback)(size_t, void*), void (*fileResendCallback)(NXCPMessage*, void*), void *cbArg);
    void processFileData(NXCPMessage *msg);
    void processFileTransferAbort(NXCPMessage *msg);
+   uint32_t uploadFileInternal(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
+         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod, off_t offset = 0, size_t size = 0, bool useFileTransfer = false);
 
    void processCollectedDataCallback(NXCPMessage *msg);
    void onDataPushCallback(NXCPMessage *msg);

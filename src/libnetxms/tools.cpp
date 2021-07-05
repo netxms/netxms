@@ -3755,13 +3755,14 @@ int LIBNETXMS_EXPORTABLE _statw32(const WCHAR *file, struct _stati64 *st)
 /**
  * Copy file
  */
-static BOOL CopyFileInternal(const TCHAR *src, const TCHAR *dst, int mode)
+static BOOL CopyFileInternal(const TCHAR *src, const TCHAR *dst, int mode, bool append = false)
 {
    int oldFile = _topen(src, O_RDONLY | O_BINARY);
    if (oldFile == -1)
       return FALSE;
 
-   int newFile = _topen(dst, O_CREAT | O_WRONLY | O_BINARY, mode); // should be copied with the same access rights
+   int appendMode = append ? O_APPEND : 0;
+   int newFile = _topen(dst, O_CREAT | O_WRONLY | O_BINARY | appendMode, mode); // should be copied with the same access rights
    if (newFile == -1)
    {
       _close(oldFile);
@@ -3787,6 +3788,50 @@ static BOOL CopyFileInternal(const TCHAR *src, const TCHAR *dst, int mode)
 }
 
 #endif
+
+bool LIBNETXMS_EXPORTABLE MergeFiles(const TCHAR *source, const TCHAR *destination)
+{
+   bool success = false;
+#ifdef _WIN32
+   HANDLE sourceFile = CreateFile(source,
+        FILE_APPEND_DATA, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    if (sourceFile == INVALID_HANDLE_VALUE)
+    {
+        return false;
+    }
+
+    HANDLE destinationFile = CreateFile(destination,
+       FILE_APPEND_DATA, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    if (destinationFile == INVALID_HANDLE_VALUE)
+    {
+       CloseHandle(sourceFile);
+       return false;
+    }
+
+    BYTE buffer[4096];
+    DWORD bytesRead = 0;
+    DWORD bytesWritten = 0;
+    ReadFile(sourceFile, buffer, 4096, &bytesRead, NULL);
+
+    while (bytesRead > 0)
+    {
+       success = WriteFile( destinationFile, buffer, bytesRead, &bytesWritten, NULL);
+       if (!success)
+       {
+          break;
+       }
+       ReadFile(sourceFile, buffer, 4096, &bytesRead, NULL);
+    }
+
+    CloseHandle(sourceFile);
+    CloseHandle(destinationFile);
+#else
+   success = CopyFileInternal(source, destination, 0, true);
+#endif
+   return success;
+}
 
 /**
  * Copy file/folder

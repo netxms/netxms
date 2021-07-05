@@ -776,7 +776,7 @@ uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession
    int i, rc;
    uint32_t dwErrorCode;
 
-   session->debugPrintf(5, _T("Requesting metric \"%s\""), param);
+   //session->debugPrintf(5, _T("Requesting metric \"%s\""), param);
    for(i = 0; i < s_metrics.size(); i++)
 	{
       NETXMS_SUBAGENT_PARAM *p = s_metrics.get(i);

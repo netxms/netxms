@@ -339,6 +339,7 @@ private:
    void getTable(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void action(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg);
+   void mergeFiles(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void getLocalFile(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void cancelFileMonitoring(NXCPMessage *pRequest, NXCPMessage *pMsg);
    UINT32 upgrade(NXCPMessage *request);
@@ -739,7 +740,7 @@ void ConsolePrintf(const TCHAR *format, ...);
 void ConsolePrintf2(const TCHAR *format, va_list args);
 void DebugPrintf(int level, const TCHAR *format, ...);
 
-void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
+void BuildFullPath(const TCHAR *pszFileName, TCHAR *pszFullPath);
 
 bool DownloadConfig(const TCHAR *server);
 

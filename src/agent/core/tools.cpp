@@ -60,7 +60,7 @@ void DebugPrintf(int level, const TCHAR *format, ...)
 /**
  * Build full path for file in file store
  */
-void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath)
+void BuildFullPath(const TCHAR *pszFileName, TCHAR *pszFullPath)
 {
    int i, nLen;
 
