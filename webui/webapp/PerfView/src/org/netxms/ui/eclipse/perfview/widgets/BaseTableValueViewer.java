@@ -64,7 +64,6 @@ public abstract class BaseTableValueViewer extends Composite
    protected Action actionUseMultipliers;
    protected Action actionShowFilter;
    protected boolean saveTableSettings;
-   
 
    /**
     * @param parent
@@ -242,7 +241,7 @@ public abstract class BaseTableValueViewer extends Composite
    protected void updateViewer(final Table table)
    {
       final IDialogSettings ds = Activator.getDefault().getDialogSettings();
-      
+
       if (!viewer.isInitialized())
       {
          final String[] names = table.getColumnDisplayNames();
@@ -402,7 +401,7 @@ public abstract class BaseTableValueViewer extends Composite
                {
                   if (viewer.getControl().isDisposed())
                      return;
-                  
+
                   if (errorLabel != null)
                   {
                      errorLabel.dispose();
@@ -459,7 +458,7 @@ public abstract class BaseTableValueViewer extends Composite
       job.setUser(false);
       job.start();
    }
-   
+
    /**
     * Read data to display
     * 
