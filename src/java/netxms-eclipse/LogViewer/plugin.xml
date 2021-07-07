@@ -129,6 +129,26 @@
            toolbarPath="logs/additions"
            tooltip="Windows event log">
      </action>
+     <action
+           class="org.netxms.ui.eclipse.logviewer.actions.OpenNotificationLog"
+           definitionId="org.netxms.ui.eclipse.logviewer.commands.openNotificationLog"
+           icon="icons/EventLog.png"
+           id="org.netxms.ui.eclipse.logviewer.actions.openNotificationLog"
+           label="Notification log"
+           menubarPath="view/logs"
+           toolbarPath="logs/additions"
+           tooltip="Notification log">
+     </action>
+     <action
+           class="org.netxms.ui.eclipse.logviewer.actions.OpenServerActionExecutionLog"
+           definitionId="org.netxms.ui.eclipse.logviewer.commands.openServerActionExecutionLog"
+           icon="icons/EventLog.png"
+           id="org.netxms.ui.eclipse.logviewer.actions.openServerActionExecutionLog"
+           label="Server action execution log"
+           menubarPath="view/logs"
+           toolbarPath="logs/additions"
+           tooltip="Server action execution log">
+     </action>
 	   </actionSet>
    </extension>
 

@@ -105,6 +105,11 @@ void StartWindowsEventProcessing();
 void StopWindowsEventProcessing();
 
 /**
+ * Notification logging initialisation
+ */
+void InitNotificationLogs();
+
+/**
  * Thread functions
  */
 void Syncer();
@@ -1245,6 +1250,7 @@ retry_db_lock:
 
    StartSyslogServer();
    StartWindowsEventProcessing();
+   InitNotificationLogs();
 
    // Start beacon host poller
    ThreadCreate(BeaconPoller);

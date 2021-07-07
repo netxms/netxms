@@ -39,6 +39,7 @@ public class LogColumn
    public static final int LC_EVENT_ORIGIN   = 10;
    public static final int LC_TEXT_DETAILS   = 11;
    public static final int LC_JSON_DETAILS   = 12;
+   public static final int LC_STATUS         = 13;
 
 	private String name;
 	private String description;

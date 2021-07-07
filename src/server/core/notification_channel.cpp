@@ -27,6 +27,11 @@
 #define NC_THREAD_KEY _T("NotificationChannel")
 
 /**
+ * Static data
+ */
+static uint64_t s_notificationId = 1;  // Next available notification ID
+
+/**
  * Class to store in queued notification message
  */
 class NotificationMessage
@@ -219,6 +224,7 @@ private:
    }
 
    void workerThread();
+   void writeNotificationLog(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool success);
 
 public:
    NotificationChannel(NCDriver *driver, NCDriverServerStorageManager *storageManager, const TCHAR *name,
@@ -317,7 +323,8 @@ void NotificationChannel::workerThread()
       MutexLock(m_driverLock);
       if (m_driver != nullptr)
       {
-         if (m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody()))
+         bool success = m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody());
+         if (success)
          {
             clearError();
          }
@@ -326,6 +333,7 @@ void NotificationChannel::workerThread()
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel %s, message dropped"), m_name);
             setError(_T("Driver error"));
          }
+         writeNotificationLog(notification->getRecipient(), notification->getSubject(), notification->getBody(), success);
       }
       else
       {
@@ -442,6 +450,36 @@ void NotificationChannel::saveToDatabase()
    }
 
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Save notification log to database
+ */
+void NotificationChannel::writeNotificationLog(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool success)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt;
+
+   hStmt = DBPrepare(hdb,
+               _T("INSERT INTO notification_log (id,notification_channel,notification_timestamp,recipient,subject,message,success) VALUES (?,?,?,?,?,?,?)"));
+
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, s_notificationId++);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (uint32_t)time(nullptr));
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, recipient, DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, subject, DB_BIND_STATIC);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, body, DB_BIND_STATIC);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, success ? 1 : 0);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("NotificationLog: id %u, channel %s, timestamp %u, recipient %s, subject %s, message %s, success %s"),
+    s_notificationId - 1, m_name, time(nullptr), recipient, subject, body, success ? _T("True") : _T("False"));
 }
 
 /**
@@ -855,4 +893,23 @@ void ShutdownNotificationChannels()
    s_channelListLock.lock();
    s_channelList.clear();  // This will delete all channels and destructors will handle correct shutdown
    s_channelListLock.unlock();
+}
+
+/**
+ * Notification logging initialisation
+ */
+void InitNotificationLogs()
+{
+   // Determine first available event id
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(id) FROM notification_log"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         s_notificationId = DBGetFieldUInt64(hResult, 0, 0) + 1;
+      }
+      DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
 }
