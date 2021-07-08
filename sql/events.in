@@ -1444,6 +1444,16 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   2) Error message (error)' 
    );
 
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_DUPLICATE_MAC_ADDRESS, 'SYS_DUPLICATE_MAC_ADDRESS', 'c19fbb37-98c9-43a5-90f2-7a54ba9116fa',
+      EVENT_SEVERITY_MAJOR, 1,
+      'Duplicate MAC address found %1',
+      'Generated when duplicate MAC address found.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) MAC address '
+   );
+
 /*
 ** SNMP traps
 */

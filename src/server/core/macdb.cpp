@@ -30,7 +30,7 @@ struct MacDbEntry
 {
    UT_hash_handle hh;
    MacAddress macAddr;
-   shared_ptr<NetObj> object;
+   SharedObjectArray<NetObj> objects;
 
    MacDbEntry()
    {
@@ -70,18 +70,38 @@ void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, const shared_pt
       entry = new MacDbEntry();
       entry->macAddr = macAddr;
       HASH_ADD_KEYPTR(hh, s_data, entry->macAddr.value(), entry->macAddr.length(), entry);
+      entry->objects.add(object);
    }
    else
    {
-      if (entry->object->getId() != object->getId())
+      bool found = false;
+      for(int i  = 0; i < entry->objects.size(); i++)
       {
+         if(entry->objects.get(i)->getId() == object->getId())
+         {
+            found = true;
+            break;
+         }
+      }
+      if(!found)
+      {
+         StringBuffer objects;
+         for(int i  = 0; i < entry->objects.size(); i++)
+         {
+            objects.appendFormattedString(_T("%s [%d]%s "), entry->objects.get(i)->getName(), entry->objects.get(i)->getId(), (i+1) == entry->objects.size() ? _T("") : _T(","));
+         }
+         entry->objects.add(object);
          TCHAR macAddrStr[64];
-         nxlog_debug(5, _T("MacDbAddObject: MAC address %s already known (%s [%d] -> %s [%d])"),
-                     macAddr.toString(macAddrStr), entry->object->getName(), entry->object->getId(),
+         nxlog_debug(5, _T("MacDbAddObject: MAC address %s already known (%s -> %s [%d])"),
+                     macAddr.toString(macAddrStr), objects.getBuffer(),
                      object->getName(), object->getId());
+
+         if(g_flags & AF_SERVER_INITIALIZED)
+         {
+            PostSystemEvent(EVENT_DUPLICATE_MAC_ADDRESS, object->getId(), "H", &macAddr);
+         }
       }
    }
-   entry->object = object;
    RWLockUnlock(s_lock);
 }
 
@@ -104,30 +124,35 @@ void NXCORE_EXPORTABLE MacDbAddAccessPoint(const shared_ptr<AccessPoint>& ap)
 /**
  * Delete entry
  */
-void NXCORE_EXPORTABLE MacDbRemove(const BYTE *macAddr)
+void NXCORE_EXPORTABLE MacDbRemoveObject(const MacAddress& macAddr, const uint32_t objectId)
 {
-   if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
+   if (!macAddr.isValid() || macAddr.isBroadcast() || macAddr.isMulticast() || (macAddr.length() != MAC_ADDR_LENGTH))
+      return;
+
+   if (!memcmp(macAddr.value(), "\x00\x00\x00\x00\x00\x00", 6))
       return;
 
    RWLockWriteLock(s_lock);
    MacDbEntry *entry;
-   HASH_FIND(hh, s_data, macAddr, MAC_ADDR_LENGTH, entry);
+   HASH_FIND(hh, s_data, macAddr.value(), MAC_ADDR_LENGTH, entry);
    if (entry != nullptr)
    {
-      HASH_DEL(s_data, entry);
-      delete entry;
+      for(int i = 0; i < entry->objects.size(); i++)
+      {
+         uint32_t id = entry->objects.get(i)->getId();
+         if(id == objectId)
+         {
+            entry->objects.remove(i);
+            break;
+         }
+      }
+      if(entry->objects.size() == 0)
+      {
+         HASH_DEL(s_data, entry);
+         delete entry;
+      }
    }
    RWLockUnlock(s_lock);
-}
-
-/**
- * Delete entry
- */
-void NXCORE_EXPORTABLE MacDbRemove(const MacAddress& macAddr)
-{
-   if (!macAddr.isValid() || macAddr.isBroadcast() || macAddr.isMulticast() || (macAddr.length() != MAC_ADDR_LENGTH))
-      return;
-   MacDbRemove(macAddr.value());
 }
 
 /**
@@ -138,7 +163,7 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const BYTE *macAddr)
    RWLockReadLock(s_lock);
    MacDbEntry *entry;
    HASH_FIND(hh, s_data, macAddr, MAC_ADDR_LENGTH, entry);
-   shared_ptr<NetObj> object = (entry != nullptr) ? entry->object : shared_ptr<NetObj>();
+   shared_ptr<NetObj> object = (entry != nullptr) ? entry->objects.getShared(entry->objects.size() - 1) : shared_ptr<NetObj>();
    RWLockUnlock(s_lock);
    return object;
 }

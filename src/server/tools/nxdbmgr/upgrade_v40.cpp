@@ -23,7 +23,37 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+/**
+ * Upgrade from 40.63 to 40.64
+ */
+static bool H_UpgradeFromV63()
+{
+   if (GetSchemaLevelForMajorVersion(39) < 8)
+   {
+      CHK_EXEC(CreateEventTemplate(EVENT_DUPLICATE_MAC_ADDRESS, _T("SYS_DUPLICATE_MAC_ADDRESS"),
+               EVENT_SEVERITY_MAJOR, EF_LOG, _T("c19fbb37-98c9-43a5-90f2-7a54ba9116fa"),
+               _T("Duplicate MAC address found %1"),
+               _T("Generated when duplicate MAC address found.\r\n")
+               _T("Parameters:\r\n")
+               _T("   1) MAC address \r\n")
+               ));
 
+      int ruleId = NextFreeEPPruleID();
+
+      TCHAR query[1024];
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
+               _T("VALUES (%d,'c19fbb37-98c9-43a5-90f2-7a54ba9116fa',7944,'Generate alarm when duplicate MAC address detected','%%m',5,'DUPLICATE_MAC_ADDRESS_%%1','',0,%d)"),
+               ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+
+      _sntprintf(query, 256, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_DUPLICATE_MAC_ADDRESS);
+      CHK_EXEC(SQLQuery(query));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(39, 8));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(64));
+   return true;
+}
 
 /**
  * Upgrade from 40.62 to 40.63
@@ -1668,6 +1698,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 63, 40, 64, H_UpgradeFromV63 },
    { 62, 40, 63, H_UpgradeFromV62 },
    { 61, 40, 62, H_UpgradeFromV61 },
    { 60, 40, 61, H_UpgradeFromV60 },

@@ -1194,7 +1194,7 @@ void Interface::setMacAddr(const MacAddress& macAddr, bool updateMacDB)
 {
    lockProperties();
    if (updateMacDB)
-      MacDbRemove(m_macAddr);
+      MacDbRemoveObject(m_macAddr, m_id);
    m_macAddr = macAddr;
    if (updateMacDB)
       MacDbAddInterface(self());
