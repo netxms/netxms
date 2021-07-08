@@ -1,7 +1,8 @@
-/*
+/**
  ** NetXMS - Network Management System
  ** Performance Data Storage Driver for InfluxDB
  ** Copyright (C) 2019 Sebastian YEPES FERNANDEZ & Julien DERIVIERE
+ ** Copyright (C) 2021 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published by
@@ -27,47 +28,9 @@
  ** Armadillo, The Metric Eater - https://www.nationalgeographic.com/animals/mammals/group/armadillos/
  **
  ** File: influxdb.cpp
-  */
+ **/
 
-#include <nms_core.h>
-#include <pdsdrv.h>
-
-#include <string>
-
-// debug pdsdrv.influxdb 1-8
-#define DEBUG_TAG _T("pdsdrv.influxdb")
-
-/**
- * Driver class definition
- */
-class InfluxDBStorageDriver : public PerfDataStorageDriver
-{
-private:
-   const TCHAR *m_hostname;
-   uint16_t m_port;
-   SOCKET m_socket;
-   std::string m_queuedMessages;
-   uint32_t m_queuedMessageCount;
-   uint32_t m_maxQueueSize;
-   Mutex m_mutex;
-
-   void queuePush(const std::string& data);
-
-   static std::string normalizeString(std::string str);
-   static std::string getString(const TCHAR *tstr);
-   static void findAndReplaceAll(std::string& data, const std::string& toSearch, const std::string& replaceStr);
-   static void toLowerCase(std::string& data);
-
-public:
-   InfluxDBStorageDriver();
-   virtual ~InfluxDBStorageDriver();
-
-   virtual const TCHAR *getName() override;
-   virtual bool init(Config *config) override;
-   virtual void shutdown() override;
-   virtual bool saveDCItemValue(DCItem *dcObject, time_t timestamp, const TCHAR *value) override;
-   virtual bool saveDCTableValue(DCTable *dcObject, time_t timestamp, Table *value) override;
-};
+#include "influxdb.h"
 
 /**
  * Driver name
@@ -77,14 +40,8 @@ static const TCHAR *s_driverName = _T("InfluxDB");
 /**
  * Constructor
  */
-InfluxDBStorageDriver::InfluxDBStorageDriver()
+InfluxDBStorageDriver::InfluxDBStorageDriver() : m_senders(0, 16, Ownership::True)
 {
-   m_hostname = _T("localhost");
-   m_port = 8189;
-   m_socket = INVALID_SOCKET;
-   m_queuedMessageCount = 0;
-   m_queuedMessages = "";
-   m_maxQueueSize = 100;
 }
 
 /**
@@ -92,137 +49,6 @@ InfluxDBStorageDriver::InfluxDBStorageDriver()
  */
 InfluxDBStorageDriver::~InfluxDBStorageDriver()
 {
-}
-
-/**
- * Normalize all the metric and tag names
- */
-std::string InfluxDBStorageDriver::normalizeString(std::string str)
-{
-   toLowerCase(str);
-   str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end());
-   std::replace(str.begin(), str.end(), ':', '_');
-   std::replace(str.begin(), str.end(), '.', '_');
-   std::replace(str.begin(), str.end(), '-', '_');
-   std::replace(str.begin(), str.end(), ',', '_');
-   std::replace(str.begin(), str.end(), '#', '_');
-   std::replace(str.begin(), str.end(), '\\', '/');
-   size_t index = str.find('(');
-   if (index != std::string::npos)
-      str.resize(index);
-   return str;
-}
-
-/**
- * Convert string to lower case
- */
-inline void InfluxDBStorageDriver::toLowerCase(std::string& data)
-{
-   std::transform(data.begin(), data.end(), data.begin(), ::tolower);
-}
-
-/**
- * Get std::string from TCHAR (will return UTF-8 string in Unicode builds)
- */
-std::string InfluxDBStorageDriver::getString(const TCHAR *tstr)
-{
-#ifdef UNICODE
-#ifdef UNICODE_UCS4
-   size_t len = ucs4_utf8len(tstr, -1);
-#else
-   size_t len = ucs2_utf8len(tstr, -1);
-#endif
-#if HAVE_ALLOCA
-   char *buffer = static_cast<char*>(alloca(len + 1));
-#else
-   char *buffer = static_cast<char*>(MemAlloc(len + 1));
-#endif
-   wchar_to_utf8(tstr, -1, buffer, len + 1);
-#if HAVE_ALLOCA
-   return std::string(buffer);
-#else
-   std::string result(buffer);
-   MemFree(buffer);
-   return result;
-#endif
-#else
-   return std::string(tstr);
-#endif
-}
-
-/**
- * Find and replace all occurrences of given sub-string
- */
-void InfluxDBStorageDriver::findAndReplaceAll(std::string& data, const std::string& toSearch, const std::string& replaceStr)
-{
-   // Get the first occurrence
-   size_t pos = data.find(toSearch);
-
-   // Repeat till end is reached
-   while (pos != std::string::npos)
-   {
-      // Replace this occurrence of Sub String
-      data.replace(pos, toSearch.size(), replaceStr);
-      // Get the next occurrence from the current position
-      pos = data.find(toSearch, pos + replaceStr.size());
-   }
-}
-
-/**
- * Metric Queuing and Packet sending
- */
-void InfluxDBStorageDriver::queuePush(const std::string& data)
-{
-   m_mutex.lock();
-
-   bool bufferOverflow = false;
-   bool forceFlush = data.empty();
-   if (!forceFlush)
-   {
-      // Check that packet is not longer than 64K
-      if (data.length() + m_queuedMessages.length() < 65534)
-      {
-         m_queuedMessages += data + "\n";
-         m_queuedMessageCount++;
-      }
-      else
-      {
-         bufferOverflow = true;
-      }
-   }
-
-   if ((m_queuedMessageCount >= m_maxQueueSize) || forceFlush || bufferOverflow)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Queue size: %u / %u (sending)"), m_queuedMessageCount, m_maxQueueSize);
-
-      if (m_queuedMessages.size() > 0)
-      {
-         if (SendEx(m_socket, m_queuedMessages.c_str(), m_queuedMessages.size(), 0, INVALID_MUTEX_HANDLE) <= 0)
-         {
-            nxlog_debug_tag(DEBUG_TAG, 8, _T("socket error: %s"), _tcserror(errno));
-            // Ignore; will be re-sent with the next message
-         }
-         else
-         {
-            // Data sent - empty queue
-            m_queuedMessages.clear();
-            m_queuedMessageCount = 0;
-            if (bufferOverflow)
-            {
-               m_queuedMessages += data + "\n";
-               m_queuedMessageCount++;
-            }
-         }
-      }
-   }
-   else
-   {
-      m_queuedMessages += data + "\n";
-      m_queuedMessageCount++;
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Queue size: %u / %u"), m_queuedMessageCount, m_maxQueueSize);
-   }
-
-   m_mutex.unlock();
 }
 
 /**
@@ -238,26 +64,52 @@ const TCHAR *InfluxDBStorageDriver::getName()
  */
 bool InfluxDBStorageDriver::init(Config *config)
 {
-   m_hostname = config->getValue(_T("/InfluxDB/Hostname"), m_hostname);
-   m_port = static_cast<UINT16>(config->getValueAsUInt(_T("/InfluxDB/Port"), m_port));
-   m_maxQueueSize = config->getValueAsUInt(_T("/InfluxDB/MaxQueueSize"), m_maxQueueSize);
-
-   InetAddress addr = InetAddress::resolveHostName(m_hostname);
-   if (!addr.isValidUnicast())
+   const TCHAR *protocol = config->getValue(_T("/InfluxDB/Protocol"), _T("udp"));
+   if (_tcsicmp(protocol, _T("udp")) && _tcsicmp(protocol, _T("api-v1")) && _tcsicmp(protocol, _T("api-v2")))
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("InfluxDB: invalid hostname %s"), m_hostname);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Invalid protocol specification %s"), protocol);
       return false;
    }
 
-   m_socket = ConnectToHostUDP(addr, m_port);
-   if (m_socket == INVALID_SOCKET)
+   if (!_tcsnicmp(protocol, _T("api"), 3))
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("InfluxDB: cannot create UDP socket"));
+#if HAVE_LIBCURL
+      if (!InitializeLibCURL())
+      {
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("cURL initialization failed"));
+         return false;
+      }
+#else
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Driver built without libcurl, API protocols are not supported"));
       return false;
+#endif
    }
 
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Using destination address %s:%u"), (const TCHAR *)addr.toString(), m_port);
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("Max queue size set to %u"), m_maxQueueSize);
+   m_enableUnsignedType = config->getValueAsBoolean(_T("/InfluxDB/EnableUnsignedType"), false);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Unsigned integer data type is %s"), m_enableUnsignedType ? _T("enabled") : _T("disabled"));
+
+   int queueCount = config->getValueAsInt(_T("/InfluxDB/Queues"), 1);
+   if (queueCount < 1)
+      queueCount = 1;
+   else if (queueCount > 32)
+      queueCount = 32;
+
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Using %d queue%s"), queueCount, queueCount > 1 ? _T("s") : _T(""));
+   for(int i = 0; i < queueCount; i++)
+   {
+      InfluxDBSender *sender;
+      if (!_tcsicmp(protocol, _T("udp")))
+         sender = new UDPSender(*config);
+#if HAVE_LIBCURL
+      else if (!_tcsicmp(protocol, _T("api-v1")))
+         sender = new APIv1Sender(*config);
+      else if (!_tcsicmp(protocol, _T("api-v2")))
+         sender = new APIv2Sender(*config);
+#endif
+      sender->start();
+      m_senders.add(sender);
+   }
+
    return true;
 }
 
@@ -266,9 +118,97 @@ bool InfluxDBStorageDriver::init(Config *config)
  */
 void InfluxDBStorageDriver::shutdown()
 {
-   queuePush("");
-   closesocket(m_socket);
+   for(int i = 0; i < m_senders.size(); i++)
+      m_senders.get(i)->stop();
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Shutdown completed"));
+}
+
+/**
+ * Normalize all the metric and tag names
+ */
+static StringBuffer NormalizeString(const TCHAR *src)
+{
+   StringBuffer dst(src);
+   dst.toLowercase();
+   dst.trim();
+   dst.replace(_T(":"), _T("_"));
+   dst.replace(_T("-"), _T("_"));
+   dst.replace(_T("."), _T("_"));
+   dst.replace(_T(","), _T("_"));
+   dst.replace(_T("#"), _T("_"));
+   dst.replace(_T("\\"), _T("/"));
+   ssize_t index = dst.find(_T("("));
+   if (index != String::npos)
+      dst.shrink(dst.length() - index);
+   return dst;
+}
+
+/**
+ * Find and replace all occurrences of given sub-string
+ */
+static void FindAndReplaceAll(StringBuffer *data, const TCHAR *toSearch, const TCHAR *replaceStr)
+{
+   // Get the first occurrence
+   ssize_t pos = data->find(toSearch);
+
+   // Repeat till end is reached
+   while (pos != String::npos)
+   {
+      // Replace this occurrence of Sub String
+      data->replace(toSearch, replaceStr);
+      // Get the next occurrence from the current position
+      pos = pos = data->find(toSearch);
+   }
+}
+
+/**
+ * Get tags from given object. Returns true if
+ */
+static bool GetTagsFromObject(const NetObj& object, StringBuffer *tags)
+{
+   StringMap *ca = object.getCustomAttributes();
+   if (ca == nullptr)
+      return false;
+
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Object: %s - CMA: #%d"), object.getName(), ca->size());
+
+   bool ignoreMetric = false;
+   StringList *keys = ca->keys();
+   for (int i = 0; i < keys->size(); i++)
+   {
+      const TCHAR *key = keys->get(i);
+      if (!_tcsnicmp(_T("ignore_influxdb"), key, 15))
+      {
+         ignoreMetric = true;
+         break;
+      }
+
+      // Only include CA's with the prefix tag_
+      if (!_tcsnicmp(_T("tag_"), key, 4))
+      {
+         StringBuffer value = NormalizeString(ca->get(keys->get(i)));
+         if (!value.isEmpty())
+         {
+            StringBuffer name = NormalizeString(&key[4]);
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("Object: %s - CA: K:%s = V:%s"), object.getName(), name.cstr(), value.cstr());
+            tags->append(_T(','));
+            tags->append(key);
+            tags->append(_T('='));
+            tags->append(value);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("Object: %s - CA: K:%s (Ignored)"), object.getName(), key);
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Object: %s - CA: K:%s (Ignored)"), object.getName(), key);
+      }
+   }
+   delete keys;
+   delete ca;
+   return ignoreMetric;
 }
 
 /**
@@ -289,309 +229,212 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
       return true;
    }
 
-   const char *ds = ""; // Data sources
+   const TCHAR *ds; // Data sources
    switch (dci->getDataSource())
    {
       case DS_DEVICE_DRIVER:
-         ds = "device";
+         ds = _T("device");
          break;
       case DS_INTERNAL:
-         ds = "internal";
+         ds = _T("internal");
          break;
       case DS_MQTT:
-         ds = "mqtt";
+         ds = _T("mqtt");
          break;
       case DS_NATIVE_AGENT:
-         ds = "agent";
+         ds = _T("agent");
          break;
       case DS_PUSH_AGENT:
-         ds = "push";
+         ds = _T("push");
          break;
       case DS_SCRIPT:
-         ds = "script";
+         ds = _T("script");
          break;
       case DS_SMCLP:
-         ds = "smclp";
+         ds = _T("smclp");
          break;
       case DS_SNMP_AGENT:
-         ds = "snmp";
+         ds = _T("snmp");
          break;
       case DS_SSH:
-         ds = "ssh";
+         ds = _T("ssh");
          break;
       case DS_WEB_SERVICE:
-         ds = "websvc";
+         ds = _T("websvc");
          break;
       case DS_WINPERF:
-         ds = "wmi";
+         ds = _T("wmi");
          break;
       default:
-         ds = "unknown";
+         ds = _T("unknown");
          break;
    }
 
-   const char *dc = ""; // Data collection object types
-   switch (dci->getType())
-   {
-      case DCO_TYPE_GENERIC:
-         dc = "generic";
-         break;
-      case DCO_TYPE_ITEM:
-         dc = "item";
-         break;
-      case DCO_TYPE_TABLE:
-         dc = "table";
-         break;
-      default:
-         dc = "unknown";
-         break;
-   }
-
-   const char *dct = ""; // Data Calculation types
+   const TCHAR *dct; // Delta Calculation types
    switch (dci->getDeltaCalculationMethod())
    {
       case DCM_ORIGINAL_VALUE:
-         dct = "original";
+         dct = _T("original");
          break;
       case DCM_SIMPLE:
-         dct = "simple";
+         dct = _T("simple");
          break;
       case DCM_AVERAGE_PER_SECOND:
-         dct = "avg_sec";
+         dct = _T("avg_sec");
          break;
       case DCM_AVERAGE_PER_MINUTE:
-         dct = "avg_min";
+         dct = _T("avg_min");
          break;
       default:
-         dct = "unknown";
+         dct = _T("unknown");
          break;
    }
 
-   const char *dt = ""; // DCI (data collection item) data types
-   bool isInteger;
+   const TCHAR *dt; // DCI (data collection item) data types
+   bool isInteger, isUnsigned = false;
    switch (dci->getDataType())
    {
       case DCI_DT_INT:
-         dt = "signed-integer32";
+         dt = _T("signed-integer32");
          isInteger = true;
          break;
       case DCI_DT_UINT:
-         dt = "unsigned-integer32";
+         dt = _T("unsigned-integer32");
          isInteger = true;
+         isUnsigned = true;
          break;
       case DCI_DT_INT64:
-         dt = "signed-integer64";
+         dt = _T("signed-integer64");
          isInteger = true;
          break;
       case DCI_DT_UINT64:
-         dt = "unsigned-integer64";
+         dt = _T("unsigned-integer64");
          isInteger = true;
+         isUnsigned = true;
          break;
       case DCI_DT_FLOAT:
-         dt = "float";
+         dt = _T("float");
          isInteger = false;
          break;
       case DCI_DT_STRING:
-         dt = "string";
+         dt = _T("string");
          isInteger = false;
          break;
       case DCI_DT_NULL:
-         dt = "null";
+         dt = _T("null");
          isInteger = false;
          break;
       case DCI_DT_COUNTER32:
-         dt = "counter32";
+         dt = _T("counter32");
          isInteger = true;
+         isUnsigned = true;
          break;
       case DCI_DT_COUNTER64:
-         dt = "counter64";
+         dt = _T("counter64");
          isInteger = true;
+         isUnsigned = true;
          break;
       default:
-         dt = "unknown";
+         dt = _T("unknown");
          isInteger = false;
          break;
    }
 
-   // Metric name
-   std::string name = "";
+   // Get Host CA's
+   StringBuffer tags;
+   if (GetTagsFromObject(static_cast<NetObj&>(*dci->getOwner()), &tags))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: ignore flag set on owner object"));
+      return true;
+   }
 
+   // Get RelatedObject (Interface) CA's
+   const TCHAR *relatedObject_type = _T("none");
+
+   shared_ptr<NetObj> relatedObject = FindObjectById(dci->getRelatedObject());
+   if (relatedObject != nullptr)
+   {
+      if (GetTagsFromObject(static_cast<NetObj&>(*relatedObject), &tags))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: ignore flag set on related object %s"), relatedObject->getName());
+         return true;
+      }
+   }
+
+   // Metric name
    // If it's a MIB or Dummy metric use the Description if not use the Name
+   StringBuffer name;
    if ((dci->getDataSource() == DS_SNMP_AGENT) ||
        ((dci->getDataSource() == DS_INTERNAL) && !_tcsnicmp(dci->getName(), _T("Dummy"), 5)))
    {
-      name = normalizeString(getString(dci->getDescription()));
+      name = NormalizeString(dci->getDescription());
    }
    else
    {
-      name = normalizeString(getString(dci->getName()));
+      name = NormalizeString(dci->getName());
    }
 
    // Instance
-   std::string instance = normalizeString(getString(dci->getInstance()));
-   if (instance.empty())
+   StringBuffer instance = NormalizeString(dci->getInstance());
+   if (instance.isEmpty())
    {
-      instance = "none";
+      instance = _T("none");
    }
    else
    {
       // Remove instance from the metric name
-      std::string::size_type i = name.find(instance);
-      if (i != std::string::npos)
+      ssize_t i = name.find(instance);
+      if (i != String::npos)
       {
-         name.erase(i, instance.length());
-         findAndReplaceAll(name, "__", "_");
+         name.shrink(instance.length() - i);
+         FindAndReplaceAll(&name, _T("__"), _T("_"));
       }
    }
 
    // Host
-   std::string host = getString(dci->getOwner()->getName());
-   std::replace(host.begin(), host.end(), ' ', '_');
-   std::replace(host.begin(), host.end(), ',', '_');
-   std::replace(host.begin(), host.end(), ':', '_');
-   findAndReplaceAll(host, "__", "_");
-   toLowerCase(host);
-
-   if (host.empty())
-   {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: empty host"));
-      return true;
-   }
-
-   // Get Host CA's
-   bool ignoreMetric = false;
-   std::string m_tags = "";
-   StringMap *ca = dci->getOwner()->getCustomAttributes();
-   if (ca != nullptr)
-   {
-      StringList *ca_key = ca->keys();
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - CMA: #%d"), host.c_str(), ca->size());
-
-      for (int i = 0; i < ca_key->size(); i++)
-      {
-         std::string ca_key_name = getString(ca_key->get(i));
-         std::string ca_value = getString(ca->get(ca_key->get(i)));
-         ca_value = normalizeString(ca_value);
-
-         if (!ca_value.empty() && !strnicmp("ignore_influxdb", ca_key_name.c_str(), 15))
-         {
-            ignoreMetric = true;
-         }
-
-         // Only include CA's with the prefix tag_
-         if (!ca_value.empty() && !strnicmp("tag_", ca_key_name.c_str(), 4))
-         {
-            ca_key_name = normalizeString(ca_key_name.substr(4));
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - CA: K:%hs = V:%hs"),
-                  host.c_str(), ca_key_name.c_str(), ca_value.c_str());
-
-            if (m_tags.empty())
-            {
-               m_tags = ca_key_name + '=' + ca_value;
-            }
-            else
-            {
-               m_tags = m_tags + ',' + ca_key_name + '=' + ca_value;
-            }
-
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - CA: K:%hs (Ignored)"), host.c_str(), ca_key_name.c_str());
-         }
-      }
-      delete ca_key;
-   }
-   delete ca;
-
-   // Get RelatedObject (Interface) CA's
-   const char *relatedObject_type = "none";
-
-   shared_ptr<NetObj> relatedObject_iface = FindObjectById(dci->getRelatedObject(), OBJECT_INTERFACE);
-   if (relatedObject_iface != nullptr)
-   {
-      relatedObject_type = relatedObject_iface->getObjectClassNameA();
-      StringMap *ca = relatedObject_iface->getCustomAttributes();
-      if (ca != nullptr)
-      {
-         StringList *ca_key = ca->keys();
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - RelatedObject: %s [%u] - RelatedObjectType: %s - CMA: #%d"),
-                  host.c_str(), relatedObject_iface->getName(), relatedObject_iface->getId(), relatedObject_iface->getObjectClassName(), ca->size());
-
-         for (int i = 0; i < ca_key->size(); i++)
-         {
-            std::string ca_key_name = getString(ca_key->get(i));
-            std::string ca_value = getString(ca->get(ca_key->get(i)));
-            ca_value = normalizeString(ca_value);
-
-            if (!ca_value.empty() && !strnicmp("ignore_influxdb", ca_key_name.c_str(), 15))
-            {
-               ignoreMetric = true;
-            }
-
-            // Only include CA's with the prefix tag_
-            if (!ca_value.empty() && !strnicmp("tag_", ca_key_name.c_str(), 4))
-            {
-               ca_key_name = normalizeString(ca_key_name.substr(4));
-               nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - RelatedObject %s [%u] - CA: K:%hs = V:%hs"),
-                     host.c_str(), relatedObject_iface->getName(), relatedObject_iface->getId(), ca_key_name.c_str(), ca_value.c_str());
-
-               if (m_tags.empty())
-               {
-                  m_tags = ca_key_name + '=' + ca_value;
-               }
-               else
-               {
-                  m_tags = m_tags + ',' + ca_key_name + '=' + ca_value;
-               }
-
-            }
-            else
-            {
-               nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - RelatedObject %s [%u] - CA: K:%hs (Ignored)"), host.c_str(), relatedObject_iface->getName(), relatedObject_iface->getId(), ca_key_name.c_str());
-            }
-         }
-         delete ca_key;
-      }
-      delete ca;
-   }
-
-   if (ignoreMetric)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: has ignore flag"));
-      return true;
-   }
-
-   // Formatted timestamp
-   char ts[32];
-   snprintf(ts, 32, INT64_FMTA "000000000", static_cast<INT64>(timestamp));
-
-   // Value
-   std::string fvalue = getString(value);
-
-   // String formating
-   if (dci->getDataType() == DCI_DT_STRING)
-      fvalue = '"' + fvalue + '"';
-
-   // Integer formating
-   if (isInteger)
-      fvalue = fvalue + "i";
+   StringBuffer host(dci->getOwner()->getName());
+   host.replace(_T(" "), _T("_"));
+   host.replace(_T(","), _T("_"));
+   host.replace(_T(":"), _T("_"));
+   FindAndReplaceAll(&host, _T("__"), _T("_"));
+   host.toLowercase();
 
    // Build final metric structure
-   std::string data = "";
-   if (m_tags.empty())
+   StringBuffer data(name);
+   data.append(_T(",host="));
+   data.append(host);
+   data.append(_T(",instance="));
+   data.append(instance);
+   data.append(_T(",datasource="));
+   data.append(ds);
+   data.append(_T(",dataclass=item,datatype="));
+   data.append(dt);
+   data.append(_T(",deltatype="));
+   data.append(dct);
+   data.append(_T(",relatedobjecttype="));
+   data.append((relatedObject != nullptr) ? relatedObject->getObjectClassName() : _T("none"));
+   data.append(tags);
+   if (dci->getDataType() == DCI_DT_STRING)
    {
-      data = name + ",host=" + host + ",instance=" + instance + ",datasource=" + ds + ",dataclass=" + dc + ",datatype="
-               + dt + ",deltatype=" + dct + ",relatedobjecttype=" + relatedObject_type + " value=" + fvalue + " " + ts;
+      data.append(_T(" value=\""));
+      data.append(value);
+      data.append(_T("\" "));
    }
    else
    {
-      data = name + ",host=" + host + ",instance=" + instance + ",datasource=" + ds + ",dataclass=" + dc + ",datatype="
-               + dt + ",deltatype=" + dct + ",relatedobjecttype=" + relatedObject_type + "," + m_tags + " value=" + fvalue + " " + ts;
+      data.append(_T(" value="));
+      data.append(value);
+      if (isInteger)
+         data.append((isUnsigned && m_enableUnsignedType) ? _T("u ") : _T("i "));
+      else
+         data.append(_T(' '));
    }
+   data.append(timestamp);
+   data.append(_T("000000000")); // Use nanosecond precision
 
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("Processing metric: %hs"), data.c_str());
-   queuePush(data);
+   int senderIndex = dci->getId() % m_senders.size();
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Queuing data to sender #%d: %s"), senderIndex, data.cstr());
+   m_senders.get(senderIndex)->enqueue(data);
 
    return true;
 }

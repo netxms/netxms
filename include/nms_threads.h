@@ -739,8 +739,8 @@ struct netxms_condition_t
 };
 typedef struct netxms_condition_t * CONDITION;
 
-#define INVALID_MUTEX_HANDLE        (NULL)
-#define INVALID_CONDITION_HANDLE    (NULL)
+#define INVALID_MUTEX_HANDLE        (nullptr)
+#define INVALID_CONDITION_HANDLE    (nullptr)
 #define INVALID_THREAD_HANDLE       0
 
 #ifndef INFINITE

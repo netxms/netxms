@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,10 +35,10 @@ class InstanceDiscoveryData
 {
 private:
    TCHAR *m_instance;
-   UINT32 m_relatedObjectId;
+   uint32_t m_relatedObjectId;
 
 public:
-   InstanceDiscoveryData(const TCHAR *instance, UINT32 relatedObject)
+   InstanceDiscoveryData(const TCHAR *instance, uint32_t relatedObject)
    {
       m_instance = MemCopyString(instance);
       m_relatedObjectId = relatedObject;
@@ -49,7 +49,7 @@ public:
    }
 
    const TCHAR *getInstance() const { return m_instance; }
-   UINT32 getRelatedObject() const { return m_relatedObjectId; }
+   uint32_t getRelatedObject() const { return m_relatedObjectId; }
 };
 
 /**

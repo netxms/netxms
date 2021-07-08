@@ -36,7 +36,7 @@ extern Config g_serverConfig;
 /**
  * Drivers to load
  */
-TCHAR *g_pdsLoadList = NULL;
+TCHAR *g_pdsLoadList = nullptr;
 
 /**
  * List of loaded drivers
