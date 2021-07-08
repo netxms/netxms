@@ -52,7 +52,7 @@ static bool H_UpgradeFromV62()
       _T("   channel_name varchar(63) null,")
       _T("   recipient varchar(2000) null,")
       _T("   subject varchar(2000) null,")
-      _T("   message varchar(2000) null,")
+      _T("   action_data varchar(2000) null,")
       _T("   success integer not null,")
       _T("PRIMARY KEY(id))")));
       CHK_EXEC(SetSchemaLevelForMajorVersion(39, 7));
