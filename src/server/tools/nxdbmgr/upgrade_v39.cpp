@@ -23,13 +23,47 @@
 #include "nxdbmgr.h"
 
 /**
- * Upgrade from 39.6 to 40.0
+ * Upgrade from 39.7 to 40.0
  */
-static bool H_UpgradeFromV6()
+static bool H_UpgradeFromV7()
 {
    CHK_EXEC(SetMajorSchemaVersion(40, 0));
    return true;
 }
+
+/**
+ * Upgrade from 39.6 to 39.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE notification_log (")
+      _T("   id $SQL:INT64 not null,")
+      _T("   notification_channel varchar(63) not null,")
+      _T("   notification_timestamp integer not null,")
+      _T("   recipient varchar(2000) null,")
+      _T("   subject varchar(2000) null,")
+      _T("   message varchar(2000) null,")
+      _T("   success integer not null,")
+      _T("PRIMARY KEY(id))")));
+
+      CHK_EXEC(CreateTable(
+      _T("CREATE TABLE server_action_execution_log (")
+      _T("   id $SQL:INT64 not null,")
+      _T("   action_timestamp integer not null,")
+      _T("   action_code integer not null,")
+      _T("   action_name varchar(63) null,")
+      _T("   channel_name varchar(63) null,")
+      _T("   recipient varchar(2000) null,")
+      _T("   subject varchar(2000) null,")
+      _T("   action_data varchar(2000) null,")
+      _T("   success integer not null,")
+      _T("PRIMARY KEY(id))")));
+
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
 /**
  * Upgrade from 39.5 to 39.6
  */
@@ -174,7 +208,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 6,  40, 0,  H_UpgradeFromV6  },
+   { 7,  40, 0,  H_UpgradeFromV7  },
+   { 6,  39, 7,  H_UpgradeFromV6  },
    { 5,  39, 6,  H_UpgradeFromV5  },
    { 4,  39, 5,  H_UpgradeFromV4  },
    { 3,  39, 4,  H_UpgradeFromV3  },
