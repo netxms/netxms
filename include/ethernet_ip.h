@@ -76,7 +76,7 @@ struct EIP_EncapsulationHeader
    uint16_t length;
    uint32_t sessionHandle;
    uint32_t status;
-   uint64_t context;
+   BYTE context[8];
    uint32_t options;
 };
 
