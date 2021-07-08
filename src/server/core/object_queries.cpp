@@ -71,7 +71,7 @@ ObjectQuery::ObjectQuery(DB_HANDLE hdb, DB_RESULT hResult, int row) :
    m_guid = DBGetFieldGUID(hResult, row, 1);
    DBGetField(hResult, row, 2, m_name, MAX_OBJECT_NAME);
 
-   DB_RESULT hParams = DBSelectFormatted(hdb, _T("SELECT name,input_type,display_name,flags,sequence_num FROM input_fields WHERE category='Q' AND owner_id=%u ORDER_BY sequence_num"), m_id);
+   DB_RESULT hParams = DBSelectFormatted(hdb, _T("SELECT name,input_type,display_name,flags,sequence_num FROM input_fields WHERE category='Q' AND owner_id=%u ORDER BY sequence_num"), m_id);
    if (hParams != nullptr)
    {
       int count = DBGetNumRows(hParams);

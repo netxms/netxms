@@ -412,7 +412,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectFormatted(DB_HANDLE hConn, const TCHAR *que
    va_start(args, query);
    _vsntprintf(formattedQuery, 4096, query, args);
    va_end(args);
-   return DBSelectEx(hConn, query, errorText);
+   return DBSelectEx(hConn, formattedQuery, errorText);
 }
 
 /**
