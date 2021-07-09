@@ -1001,9 +1001,9 @@ static CodeLookupElement s_firewallProfiles[] =
 };
 
 /**
- * Get state of Windows Firewall
+ * Get state of Windows Firewall for specific profile
  */
-LONG H_WindowsFirewallState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_WindowsFirewallProfileState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR profileName[64];
    if (!AgentGetParameterArg(cmd, 1, profileName, 64))
@@ -1016,7 +1016,42 @@ LONG H_WindowsFirewallState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Ab
 
    HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
    if ((hr != S_OK) && (hr != S_FALSE))
-      return -1;
+      return SYSINFO_RC_ERROR;
+
+   INetFwPolicy2 *fwPolicy;
+   hr = CoCreateInstance(__uuidof(NetFwPolicy2), NULL, CLSCTX_INPROC_SERVER, __uuidof(INetFwPolicy2), (void**)&fwPolicy);
+   if (hr != S_OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("H_WindowsFirewallProfileState: call to CoCreateInstance(NetFwPolicy2) failed"));
+      CoUninitialize();
+      return SYSINFO_RC_ERROR;
+   }
+
+   long profiles;
+   fwPolicy->get_CurrentProfileTypes(&profiles);
+
+   bool enabled = false;
+   VARIANT_BOOL v = FALSE;
+   fwPolicy->get_FirewallEnabled((NET_FW_PROFILE_TYPE2)profile, &v);
+   if (v)
+   {
+      enabled = true;
+   }
+
+   fwPolicy->Release();
+   CoUninitialize();
+   ret_boolean(value, enabled);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Get state of Windows Firewall for current profile(s)
+ */
+LONG H_WindowsFirewallState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+   if ((hr != S_OK) && (hr != S_FALSE))
+      return SYSINFO_RC_ERROR;
 
    INetFwPolicy2 *fwPolicy;
    hr = CoCreateInstance(__uuidof(NetFwPolicy2), NULL, CLSCTX_INPROC_SERVER, __uuidof(INetFwPolicy2), (void**)&fwPolicy);
@@ -1030,23 +1065,68 @@ LONG H_WindowsFirewallState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Ab
    long profiles;
    fwPolicy->get_CurrentProfileTypes(&profiles);
 
-   bool enabled = false;
+   bool selected = false;
+   bool enabled = true;
    for (int i = 1; i < 8; i = i << 1)
    {
       if ((profiles & i) == 0)
          continue;
 
+      selected = true;  // At least one profile set as current
+
       VARIANT_BOOL v = FALSE;
       fwPolicy->get_FirewallEnabled((NET_FW_PROFILE_TYPE2)i, &v);
-      if (v)
+      if (!v)
       {
-         enabled = true;
+         enabled = false;
          break;
       }
    }
 
    fwPolicy->Release();
    CoUninitialize();
-   ret_boolean(value, enabled);
+   ret_boolean(value, selected && enabled);  // TRUE if all selected profiles are enabled
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Get current profile of Windows Firewall
+ */
+LONG H_WindowsFirewallCurrentProfile(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+   if ((hr != S_OK) && (hr != S_FALSE))
+      return -1;
+
+   INetFwPolicy2 *fwPolicy;
+   hr = CoCreateInstance(__uuidof(NetFwPolicy2), NULL, CLSCTX_INPROC_SERVER, __uuidof(INetFwPolicy2), (void**)&fwPolicy);
+   if (hr != S_OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("H_WindowsFirewallCurrentProfile: call to CoCreateInstance(NetFwPolicy2) failed"));
+      CoUninitialize();
+      return SYSINFO_RC_ERROR;
+   }
+
+   long profiles;
+   fwPolicy->get_CurrentProfileTypes(&profiles);
+
+   StringBuffer sb;
+   for (int i = 1; i < 8; i = i << 1)
+   {
+      if ((profiles & i) == 0)
+         continue;
+
+      const TCHAR *pn = CodeToText(i, s_firewallProfiles, _T(""));
+      if (*pn != 0)
+      {
+         if (!sb.isEmpty())
+            sb.append(_T(','));
+         sb.append(pn);
+      }
+   }
+
+   fwPolicy->Release();
+   CoUninitialize();
+   ret_string(value, sb);
    return SYSINFO_RC_SUCCESS;
 }
