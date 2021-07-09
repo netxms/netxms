@@ -236,7 +236,7 @@
               name="%page.name.Polling">
            <enabledWhen>
               <instanceof
-                    value="org.netxms.client.objects.PollingTarget">
+                    value="org.netxms.client.objects.interfaces.PollingTarget">
               </instanceof>
            </enabledWhen>
         </page>
@@ -296,7 +296,7 @@
               name="Rack or Chassis">
            <enabledWhen>
               <instanceof
-                    value="org.netxms.client.objects.ElementForPhysicalPlacment">
+                    value="org.netxms.client.objects.interfaces.HardwareEntity">
               </instanceof>
            </enabledWhen>
         </page>

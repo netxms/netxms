@@ -75,6 +75,16 @@
             id="org.netxms.ui.eclipse.logviewer.commands.windowsEventLog"
             name="Windows event log">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.logviewer.commands.openNotificationLog"
+            name="Open notification log">
+      </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.logviewer.commands.openServerActionExecutionLog"
+            name="Open server action execution log">
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
