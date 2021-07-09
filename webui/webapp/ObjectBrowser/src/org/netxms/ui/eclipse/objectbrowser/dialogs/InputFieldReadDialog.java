@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,17 +16,19 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objecttools.dialogs;
+package org.netxms.ui.eclipse.objectbrowser.dialogs;
 
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 import org.netxms.client.InputField;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledControl;
@@ -34,20 +36,35 @@ import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Object tool input dialog - collects input for all configured input fields.
+ * This dialog collects input for provided input fields.
  */
-public class ObjectToolInputDialog extends Dialog
+public class InputFieldReadDialog extends Dialog
 {
    private String title;
    private InputField[] fields;
    private LabeledControl[] controls;
    private Map<String, String> values;
-   
+
+   /**
+    * Helper method for reading input fields.
+    * 
+    * @param title dialog title
+    * @param fields input field set
+    * @return set of read values or null if user cancelled dialog
+    */
+   public static Map<String, String> readInputFields(String title, InputField[] fields)
+   {
+      InputFieldReadDialog dlg = new InputFieldReadDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), title, fields);
+      if (dlg.open() != Window.OK)
+         return null;
+      return dlg.getValues();
+   }
+
    /**
     * @param parentShell
     * @param fields
     */
-   public ObjectToolInputDialog(Shell parentShell, String title, InputField[] fields)
+   public InputFieldReadDialog(Shell parentShell, String title, InputField[] fields)
    {
       super(parentShell);
       this.title = title;
@@ -107,7 +124,7 @@ public class ObjectToolInputDialog extends Dialog
       return dialogArea;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
    @Override

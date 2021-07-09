@@ -19,7 +19,12 @@
 package org.netxms.ui.eclipse.objectbrowser.views;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -37,15 +42,21 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.InputField;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.InputFieldType;
 import org.netxms.client.objects.queries.ObjectQuery;
+import org.netxms.client.objects.queries.ObjectQueryResult;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.InputFieldReadDialog;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectQueryEditDialog;
 import org.netxms.ui.eclipse.objectbrowser.views.helpers.ObjectQueryComparator;
 import org.netxms.ui.eclipse.objectbrowser.views.helpers.ObjectQueryLabelProvider;
@@ -73,6 +84,7 @@ public class ObjectQueryManager extends ViewPart
    private Action actionCreate;
    private Action actionEdit;
    private Action actionDelete;
+   private Action actionExecute;
    private Action actionRefresh;
 
    /**
@@ -156,6 +168,14 @@ public class ObjectQueryManager extends ViewPart
             deleteQueries();
          }
       };
+
+      actionExecute = new Action("E&xecute", SharedIcons.EXECUTE) {
+         @Override
+         public void run()
+         {
+            executeQuery();
+         }
+      };
    }
 
    /**
@@ -208,15 +228,17 @@ public class ObjectQueryManager extends ViewPart
                manager.add(actionEdit);
             if (!selection.isEmpty())
                manager.add(actionDelete);
+            if (selection.size() == 1)
+            {
+               manager.add(new Separator());
+               manager.add(actionExecute);
+            }
          }
       });
 
       // Create menu.
       Menu menu = manager.createContextMenu(viewer.getTable());
       viewer.getTable().setMenu(menu);
-
-      // Register menu for extension.
-      getSite().registerContextMenu(manager, viewer);
    }
 
    /**
@@ -366,6 +388,67 @@ public class ObjectQueryManager extends ViewPart
          protected String getErrorMessage()
          {
             return "Cannot delete object query";
+         }
+      }.start();
+   }
+
+   /**
+    * Execute selected query
+    */
+   private void executeQuery()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final ObjectQuery query = (ObjectQuery)selection.getFirstElement();
+
+      final Map<String, String> inputValues;
+      final List<InputField> fields = query.getInputFields();
+      if (!fields.isEmpty())
+      {
+         fields.sort(new Comparator<InputField>() {
+            @Override
+            public int compare(InputField f1, InputField f2)
+            {
+               return f1.getSequence() - f2.getSequence();
+            }
+         });
+         inputValues = InputFieldReadDialog.readInputFields(query.getName(), fields.toArray(new InputField[fields.size()]));
+         if (inputValues == null)
+            return; // cancelled
+      }
+      else
+      {
+         inputValues = new HashMap<String, String>(0);
+      }
+
+      new ConsoleJob("Execute object query", this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final List<ObjectQueryResult> resultSet = session.queryObjectDetails(query.getSource(), null, null, true, 0);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  try
+                  {
+                     ObjectQueryResultView view = (ObjectQueryResultView)getSite().getPage().showView(ObjectQueryResultView.ID, UUID.randomUUID().toString(), IWorkbenchPage.VIEW_ACTIVATE);
+                     view.setContent(resultSet, query.getName());
+                  }
+                  catch(PartInitException e)
+                  {
+                     MessageDialogHelper.openError(getSite().getShell(), "Error", String.format("Cannot open result view (%s)", e.getLocalizedMessage()));
+                  }
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot execute object query";
          }
       }.start();
    }
