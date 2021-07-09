@@ -246,7 +246,8 @@ bool LoadUsers()
    {
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Caching user configuration tables"));
       if (!DBCacheTable(cachedb, hdb, _T("userdb_custom_attributes"), _T("object_id,attr_name"), _T("*")) ||
-          !DBCacheTable(cachedb, hdb, _T("user_group_members"), _T("group_id,user_id"), _T("*")))
+          !DBCacheTable(cachedb, hdb, _T("user_group_members"), _T("group_id,user_id"), _T("*")) ||
+          !DBCacheTable(cachedb, hdb, _T("two_factor_auth_bindings"), _T("user_id,name"), _T("*")))
       {
          DBCloseInMemoryDatabase(cachedb);
          cachedb = nullptr;

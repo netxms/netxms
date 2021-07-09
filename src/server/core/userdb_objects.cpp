@@ -936,7 +936,6 @@ NXSL_Value *User::createNXSLObject(NXSL_VM *vm)
  */
 void User::load2FABindings(DB_HANDLE hdb)
 {
-   int numberOfAddedBindings = 0;
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,configuration FROM two_factor_auth_bindings WHERE user_id=?"));
    if (hStmt != nullptr)
    {
@@ -944,6 +943,7 @@ void User::load2FABindings(DB_HANDLE hdb)
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
       {
+         int bindingCount = 0;
          int rowCount = DBGetNumRows(hResult);
          for (int i = 0; i < rowCount; i++)
          {
@@ -954,27 +954,19 @@ void User::load2FABindings(DB_HANDLE hdb)
             if (binding->loadConfigFromMemory(configuration, strlen(configuration), _T("2FA"), nullptr, true, false))
             {
                m_2FABindings.set(methodName, binding);
-               numberOfAddedBindings++;
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("Loaded binding for authentification method %s for user %s"), methodName, m_name);
+               bindingCount++;
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Loaded binding for authentication method %s for user %s"), methodName, m_name);
             }
             else
             {
-               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Binding for authentification method %s for user %s failed to load"), methodName, m_name);
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Binding for authentication method %s for user %s failed to load"), methodName, m_name);
             }
             MemFree(configuration);
          }
          DBFreeResult(hResult);
-         nxlog_debug_tag(DEBUG_TAG, 2, _T("%d authentification methods bindings added for user %s"), numberOfAddedBindings, m_name);
-      }
-      else
-      {
-         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to load authentification method bindings for user %s. Database error."), m_name);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("%d authentication method binding%s added for user %s"), bindingCount, (bindingCount == 1) ? _T("") : _T("s"), m_name);
       }
       DBFreeStatement(hStmt);
-   }
-   else
-   {
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to prepare db select for authentification methods bindings for user %s."), m_name);
    }
 }
 
