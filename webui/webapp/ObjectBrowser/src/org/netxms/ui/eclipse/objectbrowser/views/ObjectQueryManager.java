@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.objectbrowser.views;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +48,6 @@ import org.netxms.client.InputField;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
-import org.netxms.client.constants.InputFieldType;
 import org.netxms.client.objects.queries.ObjectQuery;
 import org.netxms.client.objects.queries.ObjectQueryResult;
 import org.netxms.ui.eclipse.actions.RefreshAction;

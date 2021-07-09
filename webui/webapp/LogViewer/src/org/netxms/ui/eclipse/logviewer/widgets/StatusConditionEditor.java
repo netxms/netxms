@@ -20,16 +20,11 @@ package org.netxms.ui.eclipse.logviewer.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.constants.ColumnFilterType;
-import org.netxms.client.constants.ObjectStatus;
-import org.netxms.client.events.Alarm;
 import org.netxms.client.log.ColumnFilter;
-import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.logviewer.Messages;
-import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
-import org.netxms.ui.eclipse.widgets.ImageCombo;
 
 /**
  * Condition editor for notification status columns
@@ -38,7 +33,7 @@ public class StatusConditionEditor extends ConditionEditor
 {
    private static final String[] OPERATIONS = { "IS", "IS NOT" };
    
-   private ImageCombo state;
+   private Combo state;
    
    /**
     * @param parent
@@ -51,7 +46,7 @@ public class StatusConditionEditor extends ConditionEditor
       super(parent, toolkit);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#getOperations()
     */
    @Override
@@ -60,16 +55,16 @@ public class StatusConditionEditor extends ConditionEditor
       return OPERATIONS;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected void createContent(Composite parent, ColumnFilter initialFilter)
    {
-      state = new ImageCombo(this, SWT.READ_ONLY | SWT.BORDER);
+      state = new Combo(this, SWT.READ_ONLY | SWT.BORDER);
       toolkit.adapt(state);
-      state.add(StatusDisplayInfo.getStatusImage(ObjectStatus.MAJOR.getValue()), "Failure");
-      state.add(StatusDisplayInfo.getStatusImage(ObjectStatus.NORMAL.getValue()), "Success");
+      state.add("Failure");
+      state.add("Success");
       state.select(0);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -83,7 +78,7 @@ public class StatusConditionEditor extends ConditionEditor
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createFilter()
     */
    @Override
