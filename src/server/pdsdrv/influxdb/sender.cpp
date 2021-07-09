@@ -43,6 +43,8 @@ InfluxDBSender::InfluxDBSender(const Config& config) : m_hostname(config.getValu
    m_port = static_cast<uint16_t>(config.getValueAsUInt(_T("/InfluxDB/Port"), 0));
    m_lastConnect = 0;
 #ifdef _WIN32
+   InitializeCriticalSectionAndSpinCount(&m_mutex, 4000);
+   InitializeConditionVariable(&m_condition);
 #else
 #if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
    pthread_mutexattr_t a;
@@ -66,6 +68,7 @@ InfluxDBSender::~InfluxDBSender()
 {
    stop();
 #ifdef _WIN32
+   DeleteCriticalSection(&m_mutex);
 #else
    pthread_mutex_destroy(&m_mutex);
    pthread_cond_destroy(&m_condition);
@@ -82,6 +85,21 @@ void InfluxDBSender::workerThread()
    while(!m_shutdown)
    {
 #ifdef _WIN32
+      EnterCriticalSection(&m_mutex);
+      if (m_queue.length() < m_queueFlushThreshold)
+      {
+         // SleepConditionVariableCS is subject to spurious wakeups so we need a loop here
+         BOOL signalled = FALSE;
+         uint32_t timeout = m_maxCacheWaitTime;
+         do
+         {
+            int64_t startTime = GetCurrentTimeMs();
+            signalled = SleepConditionVariableCS(&m_condition, &m_mutex, timeout);
+            if (signalled)
+               break;
+            timeout -= std::min(timeout, static_cast<uint32_t>(GetCurrentTimeMs() - startTime));
+         } while (timeout > 0);
+      }
 #else
       pthread_mutex_lock(&m_mutex);
       if (m_queue.length() < m_queueFlushThreshold)
@@ -108,6 +126,7 @@ void InfluxDBSender::workerThread()
       if (m_queue.isEmpty())
       {
 #ifdef _WIN32
+         LeaveCriticalSection(&m_mutex);
 #else
          pthread_mutex_unlock(&m_mutex);
 #endif
@@ -118,6 +137,7 @@ void InfluxDBSender::workerThread()
       m_queue.clear();
 
 #ifdef _WIN32
+      LeaveCriticalSection(&m_mutex);
 #else
       pthread_mutex_unlock(&m_mutex);
 #endif
@@ -154,6 +174,7 @@ void InfluxDBSender::stop()
 {
    m_shutdown = true;
 #ifdef _WIN32
+   WakeAllConditionVariable(&m_condition);
 #else
    pthread_cond_broadcast(&m_condition);
 #endif
@@ -167,6 +188,7 @@ void InfluxDBSender::stop()
 void InfluxDBSender::enqueue(const TCHAR *data)
 {
 #ifdef _WIN32
+   EnterCriticalSection(&m_mutex);
 #else
    pthread_mutex_lock(&m_mutex);
 #endif
@@ -178,6 +200,7 @@ void InfluxDBSender::enqueue(const TCHAR *data)
       if (m_queue.length() >= m_queueFlushThreshold)
       {
 #ifdef _WIN32
+         WakeAllConditionVariable(&m_condition);
 #else
          pthread_cond_broadcast(&m_condition);
 #endif
@@ -185,6 +208,7 @@ void InfluxDBSender::enqueue(const TCHAR *data)
    }
 
 #ifdef _WIN32
+   LeaveCriticalSection(&m_mutex);
 #else
    pthread_mutex_unlock(&m_mutex);
 #endif

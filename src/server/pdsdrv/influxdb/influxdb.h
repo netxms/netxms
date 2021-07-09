@@ -58,6 +58,8 @@ protected:
    uint16_t m_port;
    time_t m_lastConnect;
 #ifdef _WIN32
+   CRITICAL_SECTION m_mutex;
+   CONDITION_VARIABLE m_condition;
 #else
    pthread_mutex_t m_mutex;
    pthread_cond_t m_condition;
