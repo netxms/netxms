@@ -32,7 +32,6 @@ import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.views.Perspective;
-import org.netxms.nxmc.base.views.ViewerFilterInternal;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.DataComparisonChart;
