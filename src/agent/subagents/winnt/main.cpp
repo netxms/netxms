@@ -80,6 +80,8 @@ LONG H_SystemVersionInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
 LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_Uptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_WindowsFirewallCurrentProfile(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_WindowsFirewallProfileState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowsFirewallState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 
@@ -408,7 +410,9 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("System.Update.LastInstallTime"), H_SysUpdateTime, _T("Install"), DCI_DT_INT64, _T("System update: last install time") },
    { _T("System.Uptime"), H_Uptime, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME },
 
-   { _T("WindowsFirewall.State(*)"), H_WindowsFirewallState, nullptr, DCI_DT_INT, _T("Windows firewall: state of {instance} profile") }
+   { _T("WindowsFirewall.CurrentProfile"), H_WindowsFirewallCurrentProfile, nullptr, DCI_DT_STRING, _T("Windows firewall: current profile") },
+   { _T("WindowsFirewall.State"), H_WindowsFirewallState, nullptr, DCI_DT_INT, _T("Windows firewall: state of current profile") },
+   { _T("WindowsFirewall.State(*)"), H_WindowsFirewallProfileState, nullptr, DCI_DT_INT, _T("Windows firewall: state of {instance} profile") }
 };
 
 /**
