@@ -45,10 +45,10 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.filemanager.views.AgentFileViewer;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.jobs.ConsoleJobCallingServerJob;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.InputFieldReadDialog;
 import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
-import org.netxms.ui.eclipse.objecttools.dialogs.ObjectToolInputDialog;
 import org.netxms.ui.eclipse.objecttools.views.AgentActionResults;
 import org.netxms.ui.eclipse.objecttools.views.MultiNodeCommandExecutor;
 import org.netxms.ui.eclipse.objecttools.views.ServerCommandResults;
@@ -144,7 +144,7 @@ public final class ObjectToolExecutor
                return f1.getSequence() - f2.getSequence();
             }
          });
-         inputValues = readInputFields(tool.getDisplayName(), fields);
+         inputValues = InputFieldReadDialog.readInputFields(tool.getDisplayName(), fields);
          if (inputValues == null)
             return;  // cancelled
          for (int i = 0; i < fields.length; i++)
@@ -313,20 +313,6 @@ public final class ObjectToolExecutor
       }.start();
    }
    
-   /**
-    * Read input fields
-    * 
-    * @param fields
-    * @return
-    */
-   private static Map<String, String> readInputFields(String title, InputField[] fields)
-   {
-      ObjectToolInputDialog dlg = new ObjectToolInputDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), title, fields);
-      if (dlg.open() != Window.OK)
-         return null;
-      return dlg.getValues();
-   }
-
    /**
     * Execute object tool on single node
     * 

@@ -34,6 +34,13 @@
             name="Object Queries"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objectbrowser.views.ObjectQueryResultView"
+            id="org.netxms.ui.eclipse.objectbrowser.views.ObjectQueryResultView"
+            name="Object Query Results"
+            restorable="false">
+      </view>
    </extension>
 
    <extension
