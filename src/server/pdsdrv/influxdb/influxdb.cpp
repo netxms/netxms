@@ -42,6 +42,7 @@ static const TCHAR *s_driverName = _T("InfluxDB");
  */
 InfluxDBStorageDriver::InfluxDBStorageDriver() : m_senders(0, 16, Ownership::True)
 {
+   m_enableUnsignedType = false;
 }
 
 /**
@@ -85,7 +86,7 @@ bool InfluxDBStorageDriver::init(Config *config)
 #endif
    }
 
-   m_enableUnsignedType = config->getValueAsBoolean(_T("/InfluxDB/EnableUnsignedType"), false);
+   m_enableUnsignedType = config->getValueAsBoolean(_T("/InfluxDB/EnableUnsignedType"), m_enableUnsignedType);
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Unsigned integer data type is %s"), m_enableUnsignedType ? _T("enabled") : _T("disabled"));
 
    int queueCount = config->getValueAsInt(_T("/InfluxDB/Queues"), 1);
