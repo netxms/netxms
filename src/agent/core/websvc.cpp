@@ -23,6 +23,18 @@
 #include "nxagentd.h"
 #include <netxms-version.h>
 
+
+#ifdef HAVE_LIBJQ
+
+extern "C" {
+#include <jq.h>
+}
+
+#else
+typedef int jv;
+#define jv_free(p)
+#endif
+
 #define DEBUG_TAG _T("websvc")
 
 #if HAVE_LIBCURL
@@ -47,6 +59,20 @@ enum class DocumentType
 };
 
 /**
+ * Function to replace new line to space
+ */
+char *RemoveNewLines(char* str)
+{
+    char *currentPos = strchr(str,'\n');
+    while (currentPos != nullptr)
+    {
+        *currentPos = ' ';
+        currentPos = strchr(currentPos,'\n');
+    }
+    return str;
+}
+
+/**
  * One cached service entry
  */
 class ServiceEntry
@@ -58,7 +84,7 @@ private:
    union
    {
       Config *xml;
-      json_t *json;
+      jv jvData;
       TCHAR *text;
    } m_content;
 
@@ -67,7 +93,7 @@ private:
       switch(m_type)
       {
          case DocumentType::JSON:
-            json_decref(m_content.json);
+            jv_free(m_content.jvData);
             break;
          case DocumentType::TEXT:
             MemFree(m_content.text);
@@ -92,7 +118,7 @@ public:
    ServiceEntry();
    ~ServiceEntry();
 
-   void getParams(StringList *params, NXCPMessage *response);
+   uint32_t getParams(StringList *params, NXCPMessage *response);
    uint32_t getList(const TCHAR *path, NXCPMessage *response);
    bool isDataExpired(uint32_t retentionTime) { return (time(nullptr) - m_lastRequestTime) >= retentionTime; }
    uint32_t updateData(const TCHAR *url, const char *userName, const char *password, WebServiceAuthType authType,
@@ -151,34 +177,71 @@ void ServiceEntry::getParamsFromXML(StringList *params, NXCPMessage *response)
    response->setField(VID_NUM_PARAMETERS, resultCount);
 }
 
+#ifdef HAVE_LIBJQ
+
 /**
- * Set NXCP message field from JSON value
+ * JQ logging callback
  */
-static bool SetFieldFromJson(NXCPMessage *msg, uint32_t fieldId, json_t *json)
+void JqMessageCallback(void *data, jv error)
+{
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Message called"));
+   char *msg = MemCopyStringA(jv_string_value(error));
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("%s: %hs"), data, RemoveNewLines(msg));
+   MemFree(msg);
+   jv_free(error);
+}
+
+/**
+ * Convert old request format to new format if required
+ * replace '/' to '.'
+ */
+String ConvertRequestToJqFormat(const TCHAR *originalValue)
+{
+   StringBuffer result;
+   if (originalValue[0] == _T('/'))
+   {
+      result.append(_T(".\""));
+      const TCHAR *wordFistLetter = originalValue+1;
+      const TCHAR *currentPos = _tcschr(wordFistLetter, _T('/'));
+      while (currentPos != nullptr)
+      {
+         result.append(wordFistLetter, currentPos - wordFistLetter);
+         if (currentPos[1] != _T('\0'))
+         {
+            result.append(_T("\".\""));
+         }
+         wordFistLetter = currentPos + 1;
+         currentPos = _tcschr(wordFistLetter, _T('/'));
+      }
+      result.append(wordFistLetter);
+      result.append(_T("\""));
+   }
+   else
+   {
+      result = StringBuffer(originalValue);
+   }
+
+   return result;
+}
+
+/**
+ * Set NXCP message field from jv object value
+ */
+static bool SetFieldFromJVObject(NXCPMessage *msg, uint32_t fieldId, jv jvResult)
 {
    bool skip = false;
-   TCHAR result[MAX_RESULT_LENGTH];
-   switch(json_typeof(json))
+   switch(jv_get_kind(jvResult))
    {
-      case JSON_STRING:
-         msg->setFieldFromUtf8String(fieldId, json_string_value(json));
+      case JV_KIND_STRING:
+         msg->setFieldFromUtf8String(fieldId, jv_string_value(jvResult));
          break;
-      case JSON_INTEGER:
-         ret_int64(result, static_cast<int64_t>(json_integer_value(json)));
-         msg->setField(fieldId, result);
-         break;
-      case JSON_REAL:
-         ret_double(result, json_real_value(json));
-         msg->setField(fieldId, result);
-         break;
-      case JSON_TRUE:
-         msg->setField(fieldId, _T("true"));
-         break;
-      case JSON_FALSE:
-         msg->setField(fieldId, _T("false"));
+      case JV_KIND_NULL://Valid request - nothing found
+         skip = true;
          break;
       default:
-         skip = true;
+         jv jvValueAsString = jv_dump_string(jv_copy(jvResult), 0);
+         msg->setFieldFromUtf8String(fieldId, jv_string_value(jvValueAsString));
+         jv_free(jvValueAsString);
          break;
    }
    return !skip;
@@ -191,26 +254,174 @@ void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
 {
    uint32_t fieldId = VID_PARAM_LIST_BASE;
    int resultCount = 0;
+   jq_state *jqState = jq_init();
+   jq_set_error_cb(jqState, JqMessageCallback, const_cast<TCHAR *>(_T("ServiceEntry::getParamsFromJSON()")));
    for (int i = 0; i < params->size(); i++)
    {
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromJSON(): get parameter \"%s\""), params->get(i));
-      json_t *object = json_object_get_by_path(m_content.json, params->get(i));
-      if (object != nullptr)
+      String param = ConvertRequestToJqFormat(params->get(i));
+      char *programm;
+#ifdef UNICODE
+      programm = MBStringFromWideString(param);
+#else
+      programm = MemCopyString(param);
+#endif
+      if (jv_is_valid(m_content.jvData) && jq_compile(jqState, programm))
       {
-         response->setField(fieldId++, params->get(i));
-         if (SetFieldFromJson(response, fieldId, object))
+         jq_start(jqState, jv_copy(m_content.jvData), 0);
+         jv result = jq_next(jqState);
+         if (jv_is_valid(result))
          {
-            fieldId++;
-            resultCount++;
+            if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
+            {
+               jv resultAsText = jv_dump_string(jv_copy(result), 0);
+               nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromJSON(): request query: %hs"), programm);
+               nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromJSON(): result kind: %d"), jv_get_kind(result));
+               nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getParamsFromJSON(): result: %hs"), jv_string_value(resultAsText));
+               jv_free(resultAsText);
+            }
+
+            response->setField(fieldId++, params->get(i));
+            if (SetFieldFromJVObject(response, fieldId, result))
+            {
+               fieldId++;
+               resultCount++;
+            }
+            else
+            {
+               fieldId--;
+            }
          }
-         else
-         {
-            fieldId--;
-         }
+         jv_free(result);
       }
+      MemFree(programm);
    }
+   jq_teardown(&jqState);
    response->setField(VID_NUM_PARAMETERS, resultCount);
 }
+
+void GetStirngFromJvArrayElement(jv jvResult, StringList *resultList)
+{
+   switch(jv_get_kind(jvResult))
+   {
+      case JV_KIND_STRING:
+         resultList->addUTF8String(jv_string_value(jvResult));
+         break;
+      case JV_KIND_ARRAY: //do nothing for array in array
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::getListFromJSON(): skip array as element of array"));
+         break;
+      case JV_KIND_NULL://Valid request - nothing found
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::getListFromJSON(): array element is empty"));
+         break;
+      case JV_KIND_OBJECT:
+         jv_object_foreach(jvResult, key, val)
+         {
+            resultList->addUTF8String(jv_string_value(key));
+            jv_free(key);
+            jv_free(val);
+         }
+         break;
+      default:
+         jv jvValueAsString = jv_dump_string(jv_copy(jvResult), 0);
+         resultList->addUTF8String(jv_string_value(jvValueAsString));
+         jv_free(jvValueAsString);
+         break;
+   }
+
+}
+
+/**
+ * Get list from JSON cached data
+ */
+void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *resultList)
+{
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromJSON(): Get child object list for JSON path \"%s\""), path);
+   jq_state *jqState = jq_init();
+   jq_set_error_cb(jqState, JqMessageCallback, const_cast<TCHAR *>(_T("ServiceEntry::getListFromJSON()")));
+   String param = ConvertRequestToJqFormat(path);
+   char *programm;
+#ifdef UNICODE
+   programm = MBStringFromWideString(param);
+#else
+   programm = MemCopyString(param);
+#endif
+   if (jv_is_valid(m_content.jvData) && jq_compile(jqState, programm))
+   {
+      jq_start(jqState, jv_copy(m_content.jvData), 0);
+      jv result = jq_next(jqState);
+      for (;jv_is_valid(result);result = jq_next(jqState))
+      {
+         if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
+         {
+            jv resultAsText = jv_dump_string(jv_copy(result), 0);
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromJSON(): request query: %hs"), programm);
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromJSON(): result kind: %d"), jv_get_kind(result));
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromJSON(): result: %hs"), jv_string_value(resultAsText));
+            jv_free(resultAsText);
+         }
+
+         switch(jv_get_kind(result))
+         {
+            case JV_KIND_STRING:
+               resultList->addUTF8String(jv_string_value(jv_copy(result)));
+               break;
+            case JV_KIND_OBJECT:
+               jv_object_foreach(result, key, val)
+               {
+                  resultList->addUTF8String(jv_string_value(key));
+                  jv_free(key);
+                  jv_free(val);
+               }
+               break;
+            case JV_KIND_ARRAY:
+               jv_array_foreach(result, i, elem)
+               {
+                  GetStirngFromJvArrayElement(elem, resultList);
+                  jv_free(elem);
+               }
+               break;
+            case JV_KIND_NUMBER:
+            {
+               jv jvValueAsString = jv_dump_string(jv_copy(result), 0);
+               resultList->addUTF8String(jv_string_value(jvValueAsString));
+               break;
+            }
+            case JV_KIND_NULL://Valid request - nothing found
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::getListFromJSON(): for \"%hs\" request result is empty"), programm);
+               break;
+            default://Valid request - nothing found
+               if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 7)
+               {
+                  jv jvValueAsString = jv_dump_string(jv_copy(result), 0);
+                  nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getListFromJSON(): invalid object: \"%s\", type: %d"), jv_string_value(jvValueAsString), jv_get_kind(result));
+               }
+               break;
+         }
+         jv_free(result);
+      }
+      jv_free(result);
+   }
+   jq_teardown(&jqState);
+   MemFree(programm);
+}
+#else
+/**
+ * Default implementation for build without libjq
+ */
+void ServiceEntry::getParamsFromJSON(StringList *params, NXCPMessage *response)
+{
+   //do nothing
+}
+
+
+
+/**
+ * Get list from JSON cached data
+ */
+void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *result)
+{
+   //do nothing
+}
+#endif
 
 /**
  * Get parameters from Text cached data
@@ -272,8 +483,9 @@ void ServiceEntry::getParamsFromText(StringList *params, NXCPMessage *response)
 /**
  * Get parameters from cached data
  */
-void ServiceEntry::getParams(StringList *params, NXCPMessage *response)
+uint32_t ServiceEntry::getParams(StringList *params, NXCPMessage *response)
 {
+   uint32_t result = ERR_SUCCESS;
    switch(m_type)
    {
       case DocumentType::XML:
@@ -283,12 +495,16 @@ void ServiceEntry::getParams(StringList *params, NXCPMessage *response)
       case DocumentType::JSON:
          nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get parameter from JSON"));
          getParamsFromJSON(params, response);
+#ifndef HAVE_LIBJQ
+         result = ERR_FUNCTION_NOT_SUPPORTED;
+#endif
          break;
       default:
          nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getParams(): get parameter from Text"));
          getParamsFromText(params, response);
          break;
    }
+   return result;
 }
 
 /**
@@ -309,26 +525,6 @@ void ServiceEntry::getListFromXML(const TCHAR *path, StringList *result)
          result->add(elements->get(i)->getName());
       }
       delete elements;
-   }
-}
-
-/**
- * Get list from JSON cached data
- */
-void ServiceEntry::getListFromJSON(const TCHAR *path, StringList *result)
-{
-   uint32_t fieldId = VID_PARAM_LIST_BASE;
-   nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromJSON(): Get child object list for JSON path \"%s\""), path);
-
-   json_t *object = json_object_get_by_path(m_content.json, path);
-   if (object != nullptr)
-   {
-      void *it = json_object_iter(object);
-      while(it != nullptr)
-      {
-         result->addUTF8String(json_object_iter_key(it));
-         it = json_object_iter_next(object, it);
-      }
    }
 }
 
@@ -397,6 +593,9 @@ uint32_t ServiceEntry::getList(const TCHAR *path, NXCPMessage *response)
       case DocumentType::JSON:
          nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getList(): get list from JSON"));
          getListFromJSON(correctPath, &list);
+#ifndef HAVE_LIBJQ
+         result = ERR_FUNCTION_NOT_SUPPORTED;
+#endif
          break;
       case DocumentType::TEXT:
          nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::getList(): get list from TEXT"));
@@ -525,14 +724,21 @@ uint32_t ServiceEntry::updateData(const TCHAR *url, const char *userName, const 
                else if (!forcePlainTextParser && (*text == '{'))
                {
                   m_type = DocumentType::JSON;
-                  json_error_t error;
-                  m_content.json = json_loads(text, 0, &error);
-                  if (m_content.json == nullptr)
+#ifdef HAVE_LIBJQ
+                  m_content.jvData = jv_parse(text);
+                  if (!jv_is_valid(m_content.jvData))
                   {
                      rcc = ERR_MALFORMED_RESPONSE;
-                     nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): Failed to load parse json. Error: \"%hs\" on line %d column %d"), error.text, error.line, error.column);
+                     jv error = jv_invalid_get_msg(jv_copy(m_content.jvData));
+                     char *msg = MemCopyStringA(jv_string_value(error));
+                     nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): Failed to parse json. Error: \"%hs\""), RemoveNewLines(msg));
+                     MemFree(msg);
 
                   }
+#else
+                  rcc = ERR_FUNCTION_NOT_SUPPORTED;
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::updateData(): libjq missing. Please install libjq to parse json."));
+#endif
                }
                else
                {
@@ -653,7 +859,7 @@ void QueryWebService(NXCPMessage *request, AbstractCommSession *session)
          case WebServiceRequestType::PARAMETER:
          {
             StringList params(request, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
-            cachedEntry->getParams(&params, &response);
+            result = cachedEntry->getParams(&params, &response);
             break;
          }
          case WebServiceRequestType::LIST:

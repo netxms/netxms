@@ -134,6 +134,7 @@ DISABLE_ICONV="no"
 DISABLE_ENCRYPTION="no"
 DISABLE_LMSENSORS="no"
 DISABLE_SSH="no"
+DISABLE_JQ="no"
 ENABLE_DEBUG="no"
 ENABLE_SANITIZER="no"
 ENABLE_WERROR="no"
@@ -742,6 +743,24 @@ AC_ARG_WITH(libssh,
 		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 		LIBSSH_LDFLAGS="$LDFLAGS -L${withval}/lib"
 		LIBSSH_CPPFLAGS="$CPPFLAGS -I${withval}/include"
+	fi
+])
+
+AC_ARG_ENABLE(jq,
+[AS_HELP_STRING(--disable-jq,disable jq support)],
+[
+	if test "x$enableval" = "xno"; then
+		DISABLE_JQ="yes"
+	fi
+])
+
+AC_ARG_WITH(libjq,
+[AS_HELP_STRING(--with-libjq,specify libjq location)],
+[
+	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+		LIBJQ_LDFLAGS="$LDFLAGS -L${withval}/lib"
+		LIBJQ_CPPFLAGS="$CPPFLAGS -I${withval}/include"
 	fi
 ])
 
@@ -2561,6 +2580,27 @@ if test "x$DISABLE_SSH" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	LDFLAGS="$OLD_LDFLAGS"
 else
 	HAVE_LIBSSH=no
+fi
+
+if test "x$DISABLE_JQ" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	CPPFLAGS="$LIBJQ_CPPFLAGS $CPPFLAGS"
+	LDFLAGS="$LIBJQ_LDFLAGS $LDFLAGS"
+	AC_CHECK_HEADER(jq.h,HAVE_LIBJQ=yes,HAVE_LIBJQ=no)
+	if test "x$HAVE_LIBJQ" = "xyes"; then
+		AC_CHECK_LIB(jq, jq_init, [ HAVE_LIBJQ=yes ], [ HAVE_LIBJQ=no ])
+	fi
+
+	if test "x$HAVE_LIBJQ" = "xyes"; then
+		AC_DEFINE(HAVE_LIBJQ, 1, Define to 1 if libjq is available)
+	else
+		AC_MSG_ERROR(libjq is required for JQ support. Check that it is installed or use --disable-jq option)
+	fi
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+else
+	HAVE_LIBJQ=no
 fi
 
 
@@ -4456,6 +4496,7 @@ if test "x$ENABLE_DEBUG" = "xno"; then
 fi
 
 AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
+AM_CONDITIONAL([USE_LIBJQ], [test "x$HAVE_LIBJQ" = "xyes"])
 AM_CONDITIONAL([JAR_BUILD], [test "x$JAR_BUILD" = "xyes"])
 AM_CONDITIONAL([MQTT_SUPPORT], [test "x$MQTT_SUPPORT" = "xyes"])
 AM_CONDITIONAL([PYTHON_SUPPORT], [test "x$PYTHON_SUPPORT" = "xyes"])
@@ -4533,6 +4574,8 @@ AC_SUBST(INSTALL_LIBPATH)
 AC_SUBST(LIBNXAGENT_LIBS)
 AC_SUBST(LIBSSH_CPPFLAGS)
 AC_SUBST(LIBSSH_LDFLAGS)
+AC_SUBST(LIBJQ_CPPFLAGS)
+AC_SUBST(LIBJQ_LDFLAGS)
 AC_SUBST(MARIADB_CPPFLAGS)
 AC_SUBST(MARIADB_LDFLAGS)
 AC_SUBST(MARIADB_LIBS)
@@ -4928,6 +4971,11 @@ if test "x${HAVE_LIBSSH}" = "xyes"; then
 	echo "SSH support enabled     : YES"
 else
 	echo "SSH support enabled     : NO"
+fi
+if test "x${HAVE_LIBJQ}" = "xyes"; then
+	echo "JQ support enabled      : YES"
+else
+	echo "JQ support enabled      : NO"
 fi
 if test "x${DB_DRIVERS}" != "x"; then
 	echo "Build DB-Drivers        :${DB_DRIVERS}"

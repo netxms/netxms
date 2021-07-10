@@ -125,6 +125,7 @@
 #define ERR_AGENT_DB_FAILURE           ((uint32_t)929)
 #define ERR_INVALID_HTTP_REQUEST_CODE  ((uint32_t)930)
 #define ERR_FILE_HASH_MISMATCH         ((uint32_t)931)
+#define ERR_FUNCTION_NOT_SUPPORTED     ((uint32_t)932)
 
 /**
  * Bulk data reconciliation DCI processing status codes

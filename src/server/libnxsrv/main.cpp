@@ -81,6 +81,7 @@ static struct
    { ERR_AGENT_DB_FAILURE, _T("Agent database failure") },
    { ERR_INVALID_HTTP_REQUEST_CODE, _T("Invalid HTTP request code") },
    { ERR_FILE_HASH_MISMATCH, _T("File hash mismatch") },
+   { ERR_FUNCTION_NOT_SUPPORTED, _T("Function not supported") },
    { -1, NULL }
 };
 
