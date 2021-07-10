@@ -31,6 +31,10 @@ else
 nxagentd_LDADD += -ljansson
 endif
 
+if USE_LIBJQ
+nxagentd_LDADD += -ljq
+endif
+
 CLEANFILES = static_subagents.cpp
 
 static_subagents.cpp: @top_srcdir@/config.h Makefile

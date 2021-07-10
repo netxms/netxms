@@ -150,7 +150,7 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password, const shared_
          nxlog_debug_tag(DEBUG_TAG, 7, _T("SSHSession::connect: try to login with password"));
 #ifdef UNICODE
          char mbpassword[256];
-         wchar_to_utf8(password, -1, mbpassword, 256);;
+         wchar_to_utf8(password, -1, mbpassword, 256);
          if (ssh_userauth_password(m_session, NULL, mbpassword) == SSH_AUTH_SUCCESS)
 #else
             if (ssh_userauth_password(m_session, NULL, password) == SSH_AUTH_SUCCESS)
