@@ -168,6 +168,10 @@ static LONG H_ComponentStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
    uint32_t result = 0;
    switch(*pArg)
    {
+      case 'C':
+         if ((g_failFlags & FAIL_LOAD_CONFIG) != 0)
+            result++;
+         break;
       case 'D':
          if ((g_failFlags & FAIL_OPEN_DATABASE) != 0)
             result++;
@@ -354,6 +358,7 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Agent.AcceptErrors"), H_UIntPtr, (TCHAR *)&g_acceptErrors, DCI_DT_COUNTER32, DCIDESC_AGENT_ACCEPTERRORS },
    { _T("Agent.ActiveConnections"), H_ActiveConnections, nullptr, DCI_DT_UINT, DCIDESC_AGENT_ACTIVECONNECTIONS },
    { _T("Agent.AuthenticationFailures"), H_UIntPtr, (TCHAR *)&g_authenticationFailures, DCI_DT_COUNTER32, DCIDESC_AGENT_AUTHENTICATIONFAILURES },
+   { _T("Agent.ConfigurationLoadStatus"), H_ComponentStatus, _T("C"), DCI_DT_UINT, DCIDESC_AGENT_CONFIG_LOAD_STATUS },
    { _T("Agent.ConfigurationServer"), H_StringConstant, g_szConfigServer, DCI_DT_STRING, DCIDESC_AGENT_CONFIG_SERVER },
    { _T("Agent.DataCollectorQueueSize"), H_DataCollectorQueueSize, nullptr, DCI_DT_UINT, DCIDESC_AGENT_DATACOLLQUEUESIZE },
    { _T("Agent.Events.Generated"), H_AgentEventSender, _T("G"), DCI_DT_COUNTER64, DCIDESC_AGENT_EVENTS_GENERATED },

@@ -960,6 +960,11 @@ BOOL Initialize()
 	nxlog_write(NXLOG_INFO, _T("Additional configuration files was loaded from %s"), g_szConfigIncludeDir);
    nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level set to %d"), s_debugLevel);
 
+   if (g_failFlags & FAIL_LOAD_CONFIG)
+      nxlog_write_tag(NXLOG_WARNING, _T("config"), _T("Configuration loaded with errors"));
+   nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Configuration tree:"));
+   g_config->print(nullptr);
+
    if (s_debugTags != nullptr)
    {
       int count;
@@ -2120,6 +2125,7 @@ int main(int argc, char *argv[])
       DoRestartActions(dwOldPID);
 
    // Do requested action
+   shared_ptr<Config> config;
    switch(command)
    {
       case Command::RUN_AGENT:
@@ -2154,207 +2160,202 @@ int main(int argc, char *argv[])
             }
          }
 
-			if (LoadConfig(configSection, true))
+			if (!LoadConfig(configSection, true))
 			{
-			   shared_ptr<Config> config = g_config;
-            // Check if master section starts with EXT:
-            // If yes, switch to external subagent mode
-            if (!_tcsnicmp(configSection, _T("EXT:"), 4))
-            {
-               _tcslcpy(g_masterAgent, &configSection[4], MAX_PATH);
-            }
+            _tprintf(_T("WARNING: configuration loaded with errors\n"));
+		      g_failFlags |= FAIL_LOAD_CONFIG;
+			}
 
-				if (config->parseTemplate(configSection, m_cfgTemplate))
-				{
-				   DecryptPassword(_T("netxms"), g_szSharedSecret, g_szSharedSecret, MAX_SECRET_LENGTH);
+         config = g_config;
+         // Check if master section starts with EXT:
+         // If yes, switch to external subagent mode
+         if (!_tcsnicmp(configSection, _T("EXT:"), 4))
+         {
+            _tcslcpy(g_masterAgent, &configSection[4], MAX_PATH);
+         }
 
-               // try to guess executable path
+         if (!config->parseTemplate(configSection, m_cfgTemplate))
+         {
+            _tprintf(_T("WARNING: configuration loaded with errors\n"));
+            g_failFlags |= FAIL_LOAD_CONFIG;
+         }
+         DecryptPassword(_T("netxms"), g_szSharedSecret, g_szSharedSecret, MAX_SECRET_LENGTH);
+
+         // try to guess executable path
 #ifdef _WIN32
-               GetModuleFileName(GetModuleHandle(nullptr), s_executableName, MAX_PATH);
+         GetModuleFileName(GetModuleHandle(nullptr), s_executableName, MAX_PATH);
 #else
 #ifdef UNICODE
-               char __buffer[MAX_PATH];
+         char __buffer[MAX_PATH];
 #else
 #define __buffer s_executableName
 #endif
-               if (realpath(argv[0], __buffer) == nullptr)
-               {
-                  // fallback
-                  GetNetXMSDirectory(nxDirBin, s_executableName);
-                  _tcslcat(s_executableName, _T("/nxagentd"), sizeof(s_executableName) / sizeof(s_executableName[0]));
-               }
-               else
-               {
-#ifdef UNICODE
-                  size_t len = strlen(__buffer);
-                  mb_to_wchar(__buffer, len, s_executableName, MAX_PATH);
-#endif
-               }
-#endif
-
-#ifdef _WIN32
-               // Set default dump directory
-               if (!_tcscmp(s_dumpDirectory, _T("{default}")))
-               {
-                  GetNetXMSDirectory(nxDirData, s_dumpDirectory);
-                  _tcslcat(s_dumpDirectory, _T("\\dump"), MAX_PATH);
-               }
-
-               // Configure exception handling
-               if (s_startupFlags & SF_FATAL_EXIT_ON_CRT_ERROR)
-                  EnableFatalExitOnCRTError(true);
-               if (s_startupFlags & SF_CATCH_EXCEPTIONS)
-						SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, s_dumpDirectory,
-												  _T("nxagentd"), s_startupFlags & SF_WRITE_FULL_DUMP, !(g_dwFlags & AF_DAEMON));
-					__try {
-#endif
-
-					if ((!_tcsicmp(g_szLogFile, _T("{syslog}"))) ||
-						 (!_tcsicmp(g_szLogFile, _T("{eventlog}"))))
-					{
-					   s_startupFlags |= SF_USE_SYSLOG;
-					   s_startupFlags &= ~(SF_USE_SYSTEMD_JOURNAL | SF_LOG_TO_STDOUT);
-					}
-					else if (!_tcsicmp(g_szLogFile, _T("{systemd}")))
-					{
-					   s_startupFlags |= SF_USE_SYSTEMD_JOURNAL;
-					   s_startupFlags &= ~(SF_USE_SYSLOG | SF_LOG_TO_STDOUT);
-					}
-               else if (!_tcsicmp(g_szLogFile, _T("{stdout}")))
-               {
-                  s_startupFlags |= SF_LOG_TO_STDOUT;
-                  s_startupFlags &= ~(SF_USE_SYSLOG | SF_USE_SYSTEMD_JOURNAL);
-               }
-               else
-               {
-                  s_startupFlags &= ~(SF_USE_SYSLOG | SF_USE_SYSTEMD_JOURNAL | SF_LOG_TO_STDOUT);
-               }
-#ifdef _WIN32
-               UpdateEnvironment();
-               if (g_dwFlags & AF_DAEMON)
-					{
-						InitService();
-					}
-					else
-					{
-						if (Initialize())
-						{
-							Main();
-						}
-						else
-						{
-							ConsolePrintf(_T("Agent initialization failed\n"));
-							nxlog_close();
-							exitCode = 3;
-						}
-					}
-#else    /* _WIN32 */
-					if ((g_dwFlags & AF_DAEMON) && !(g_dwFlags & AF_SYSTEMD_DAEMON))
-               {
-						if (daemon(0, 0) == -1)
-						{
-							perror("Unable to setup itself as a daemon");
-							exitCode = 4;
-						}
-               }
-					if (exitCode == 0)
-               {
-#ifndef _WIN32
-					   if (gid == 0)
-					   {
-					      const TCHAR *v = config->getValue(_T("/%agent/GroupId"));
-					      if (v != NULL)
-					      {
-#ifdef UNICODE
-					         char vmb[64];
-					         WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, v, -1, vmb, 64, NULL, NULL);
-					         vmb[63] = 0;
-					         gid = GetGroupId(vmb);
-#else
-					         gid = GetGroupId(v);
-#endif
-					      }
-					   }
-                  if (uid == 0)
-                  {
-                     const TCHAR *v = config->getValue(_T("/%agent/UserId"));
-                     if (v != NULL)
-                     {
-#ifdef UNICODE
-                        char vmb[64];
-                        WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, v, -1, vmb, 64, NULL, NULL);
-                        vmb[63] = 0;
-                        uid = GetUserId(vmb);
-#else
-                        uid = GetUserId(v);
-#endif
-                     }
-                  }
-
-                  if (gid > 0)
-                  {
-                     if (setgid(gid) != 0)
-                        _tprintf(_T("setgid(%d) call failed (%s)\n"), gid, _tcserror(errno));
-                  }
-                  if (uid > 0)
-                  {
-                     if (setuid(uid) != 0)
-                        _tprintf(_T("setuid(%d) call failed (%s)\n"), uid, _tcserror(errno));
-                  }
-#endif
-
-                  UpdateEnvironment();
-
-						s_pid = getpid();
-						if (Initialize())
-						{
-						   FILE *fp;
-
-							// Write PID file
-							fp = _tfopen(g_szPidFile, _T("w"));
-							if (fp != NULL)
-							{
-								_ftprintf(fp, _T("%d"), s_pid);
-								fclose(fp);
-							}
-							Main();
-							Shutdown();
-						}
-						else
-						{
-							ConsolePrintf(_T("Agent initialization failed\n"));
-							nxlog_close();
-							exitCode = 3;
-						}
-	            }
-#endif   /* _WIN32 */
-
-#if defined(_WIN32)
-					if (s_shutdownCondition != INVALID_CONDITION_HANDLE)
-						ConditionDestroy(s_shutdownCondition);
-#endif
-#ifdef _WIN32
-					LIBNETXMS_EXCEPTION_HANDLER
-#endif
-				}
-				else
-				{
-					ConsolePrintf(_T("Error parsing configuration file\n"));
-					exitCode = 2;
-				}
+         if (realpath(argv[0], __buffer) == nullptr)
+         {
+            // fallback
+            GetNetXMSDirectory(nxDirBin, s_executableName);
+            _tcslcat(s_executableName, _T("/nxagentd"), sizeof(s_executableName) / sizeof(s_executableName[0]));
          }
          else
          {
-            ConsolePrintf(_T("Error loading configuration file\n"));
-            exitCode = 2;
+#ifdef UNICODE
+            size_t len = strlen(__buffer);
+            mb_to_wchar(__buffer, len, s_executableName, MAX_PATH);
+#endif
          }
+#endif
+
+#ifdef _WIN32
+         // Set default dump directory
+         if (!_tcscmp(s_dumpDirectory, _T("{default}")))
+         {
+            GetNetXMSDirectory(nxDirData, s_dumpDirectory);
+            _tcslcat(s_dumpDirectory, _T("\\dump"), MAX_PATH);
+         }
+
+         // Configure exception handling
+         if (s_startupFlags & SF_FATAL_EXIT_ON_CRT_ERROR)
+            EnableFatalExitOnCRTError(true);
+         if (s_startupFlags & SF_CATCH_EXCEPTIONS)
+            SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, s_dumpDirectory,
+                                _T("nxagentd"), s_startupFlags & SF_WRITE_FULL_DUMP, !(g_dwFlags & AF_DAEMON));
+         __try {
+#endif
+
+         if ((!_tcsicmp(g_szLogFile, _T("{syslog}"))) ||
+             (!_tcsicmp(g_szLogFile, _T("{eventlog}"))))
+         {
+            s_startupFlags |= SF_USE_SYSLOG;
+            s_startupFlags &= ~(SF_USE_SYSTEMD_JOURNAL | SF_LOG_TO_STDOUT);
+         }
+         else if (!_tcsicmp(g_szLogFile, _T("{systemd}")))
+         {
+            s_startupFlags |= SF_USE_SYSTEMD_JOURNAL;
+            s_startupFlags &= ~(SF_USE_SYSLOG | SF_LOG_TO_STDOUT);
+         }
+         else if (!_tcsicmp(g_szLogFile, _T("{stdout}")))
+         {
+            s_startupFlags |= SF_LOG_TO_STDOUT;
+            s_startupFlags &= ~(SF_USE_SYSLOG | SF_USE_SYSTEMD_JOURNAL);
+         }
+         else
+         {
+            s_startupFlags &= ~(SF_USE_SYSLOG | SF_USE_SYSTEMD_JOURNAL | SF_LOG_TO_STDOUT);
+         }
+#ifdef _WIN32
+         UpdateEnvironment();
+         if (g_dwFlags & AF_DAEMON)
+         {
+            InitService();
+         }
+         else
+         {
+            if (Initialize())
+            {
+               Main();
+            }
+            else
+            {
+               ConsolePrintf(_T("Agent initialization failed\n"));
+               nxlog_close();
+               exitCode = 3;
+            }
+         }
+#else    /* _WIN32 */
+         if ((g_dwFlags & AF_DAEMON) && !(g_dwFlags & AF_SYSTEMD_DAEMON))
+         {
+            if (daemon(0, 0) == -1)
+            {
+               perror("Unable to setup itself as a daemon");
+               exitCode = 4;
+            }
+         }
+         if (exitCode == 0)
+         {
+#ifndef _WIN32
+            if (gid == 0)
+            {
+               const TCHAR *v = config->getValue(_T("/%agent/GroupId"));
+               if (v != NULL)
+               {
+#ifdef UNICODE
+                  char vmb[64];
+                  WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, v, -1, vmb, 64, NULL, NULL);
+                  vmb[63] = 0;
+                  gid = GetGroupId(vmb);
+#else
+                  gid = GetGroupId(v);
+#endif
+               }
+            }
+            if (uid == 0)
+            {
+               const TCHAR *v = config->getValue(_T("/%agent/UserId"));
+               if (v != NULL)
+               {
+#ifdef UNICODE
+                  char vmb[64];
+                  WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, v, -1, vmb, 64, NULL, NULL);
+                  vmb[63] = 0;
+                  uid = GetUserId(vmb);
+#else
+                  uid = GetUserId(v);
+#endif
+               }
+            }
+
+            if (gid > 0)
+            {
+               if (setgid(gid) != 0)
+                  _tprintf(_T("setgid(%d) call failed (%s)\n"), gid, _tcserror(errno));
+            }
+            if (uid > 0)
+            {
+               if (setuid(uid) != 0)
+                  _tprintf(_T("setuid(%d) call failed (%s)\n"), uid, _tcserror(errno));
+            }
+#endif
+
+            UpdateEnvironment();
+
+            s_pid = getpid();
+            if (Initialize())
+            {
+               FILE *fp;
+
+               // Write PID file
+               fp = _tfopen(g_szPidFile, _T("w"));
+               if (fp != NULL)
+               {
+                  _ftprintf(fp, _T("%d"), s_pid);
+                  fclose(fp);
+               }
+               Main();
+               Shutdown();
+            }
+            else
+            {
+               ConsolePrintf(_T("Agent initialization failed\n"));
+               nxlog_close();
+               exitCode = 3;
+            }
+         }
+#endif   /* _WIN32 */
+
+#if defined(_WIN32)
+         if (s_shutdownCondition != INVALID_CONDITION_HANDLE)
+            ConditionDestroy(s_shutdownCondition);
+#endif
+#ifdef _WIN32
+         LIBNETXMS_EXCEPTION_HANDLER
+#endif
          break;
       case Command::CHECK_CONFIG:
          {
             bool validConfig = LoadConfig(configSection, true);
             if (validConfig)
             {
-               shared_ptr<Config> config = g_config;
+               config = g_config;
                config->print(stdout);
                validConfig = config->parseTemplate(configSection, m_cfgTemplate);
             }

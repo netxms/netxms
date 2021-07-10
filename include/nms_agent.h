@@ -226,6 +226,7 @@ struct PolicyChangeNotification
 #define DCIDESC_AGENT_ACCEPTERRORS                   _T("Number of accept() call errors")
 #define DCIDESC_AGENT_ACTIVECONNECTIONS              _T("Number of active connections to agent")
 #define DCIDESC_AGENT_AUTHENTICATIONFAILURES         _T("Number of authentication failures")
+#define DCIDESC_AGENT_CONFIG_LOAD_STATUS             _T("Agent configuration load status")
 #define DCIDESC_AGENT_CONFIG_SERVER                  _T("Configuration server address set on agent startup")
 #define DCIDESC_AGENT_DATACOLLQUEUESIZE              _T("Agent data collector queue size")
 #define DCIDESC_AGENT_FAILEDREQUESTS                 _T("Number of failed requests to agent")

@@ -612,10 +612,24 @@ void ConfigEntry::addSubTree(const ConfigEntry *root, bool merge)
  */
 void ConfigEntry::print(FILE *file, int level, TCHAR *prefix) const
 {
-   if (_isatty(_fileno(file)))
-      WriteToTerminalEx(_T("%s\x1b[32;1m%s\x1b[0m\n"), prefix, m_name);
+   bool maskValue;
+   if (file != nullptr)
+   {
+      if (_isatty(_fileno(file)))
+         WriteToTerminalEx(_T("%s\x1b[32;1m%s\x1b[0m\n"), prefix, m_name);
+      else
+         _tprintf(_T("%s%s\n"), prefix, m_name);
+      maskValue = false;
+   }
    else
-      _tprintf(_T("%s%s\n"), prefix, m_name);
+   {
+      nxlog_write_tag(NXLOG_INFO, _T("config"), _T("%s%s"), prefix, m_name);
+
+      TCHAR name[256];
+      _tcslcpy(name, m_name, 256);
+      _tcslwr(name);
+      maskValue = (_tcsstr(name, _T("password")) != nullptr) || (_tcsstr(name, _T("secret")) != nullptr);
+   }
 
    if (level > 0)
    {
@@ -628,10 +642,21 @@ void ConfigEntry::print(FILE *file, int level, TCHAR *prefix) const
    {
       for(int i = 0; i < m_values.size(); i++)
       {
-         if (_isatty(_fileno(file)))
-            WriteToTerminalEx(_T("%s  value: \x1b[1m%s\x1b[0m\n"), prefix, m_values.get(i));
+         if (file != nullptr)
+         {
+            if (_isatty(_fileno(file)))
+               WriteToTerminalEx(_T("%s  value: \x1b[1m%s\x1b[0m\n"), prefix, m_values.get(i));
+            else
+               _tprintf(_T("%s  value: %s\n"), prefix, m_values.get(i));
+         }
          else
-            _tprintf(_T("%s  value: %s\n"), prefix, m_values.get(i));
+         {
+            // Mask values likely containing passwords
+            if (maskValue)
+               nxlog_write_tag(NXLOG_INFO, _T("config"), _T("%s  value: ********"), prefix);
+            else
+               nxlog_write_tag(NXLOG_INFO, _T("config"), _T("%s  value: %s"), prefix, m_values.get(i));
+         }
       }
    }
 
