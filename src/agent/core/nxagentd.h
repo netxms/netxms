@@ -101,6 +101,7 @@
 #define FAIL_OPEN_LOG               0x00000001
 #define FAIL_OPEN_DATABASE          0x00000002
 #define FAIL_UPGRADE_DATABASE       0x00000004
+#define FAIL_LOAD_CONFIG            0x00000008
 
 /**
  * Thread pool stats
