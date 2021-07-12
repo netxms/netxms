@@ -339,6 +339,7 @@ protected:
 	time_t m_disabledUntil;
 	time_t m_lastPasswordChange;
 	time_t m_lastLogin;
+	time_t m_enableTime;
 	int m_minPasswordLength;
 	int m_authFailures;
    TCHAR *m_xmppId;
@@ -365,6 +366,7 @@ public:
 	UserAuthenticationMethod getAuthMethod() const { return m_authMethod; }
 	CertificateMappingMethod getCertMappingMethod() const { return m_certMappingMethod; }
 	time_t getLastLoginTime() const { return m_lastLogin; }
+   time_t getEnableTime() const { return m_enableTime; }
 	time_t getPasswordChangeTime() const { return m_lastPasswordChange; }
 	const TCHAR *getCertMappingData() const { return m_certMappingData; }
 	bool isIntruderLockoutActive() const { return (m_flags & UF_INTRUDER_LOCKOUT) != 0; }

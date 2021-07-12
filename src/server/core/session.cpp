@@ -3388,67 +3388,58 @@ void ClientSession::createUser(NXCPMessage *pRequest)
 /**
  * Update existing user's data
  */
-void ClientSession::updateUser(NXCPMessage *pRequest)
+void ClientSession::updateUser(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
    // Check user rights
    if (!(m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    else if (!(m_flags & CSF_USER_DB_LOCKED))
    {
       // User database have to be locked before any
       // changes to user database can be made
-      msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
    }
    else
    {
       json_t *oldData = nullptr, *newData = nullptr;
-      UINT32 result = ModifyUserDatabaseObject(pRequest, &oldData, &newData);
+      uint32_t result = ModifyUserDatabaseObject(request, &oldData, &newData);
       if (result == RCC_SUCCESS)
       {
          TCHAR name[MAX_USER_NAME];
-         UINT32 id = pRequest->getFieldAsUInt32(VID_USER_ID);
+         uint32_t id = request->getFieldAsUInt32(VID_USER_ID);
          writeAuditLogWithValues(AUDIT_SECURITY, true, 0, oldData, newData,
-            _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), ResolveUserId(id, name, true));
+               _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), ResolveUserId(id, name, true));
       }
-      msg.setField(VID_RCC, result);
+      response.setField(VID_RCC, result);
       json_decref(oldData);
       json_decref(newData);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
- * Delete user
+ * Detach LDAP user
  */
-void ClientSession::detachLdapUser(NXCPMessage *pRequest)
+void ClientSession::detachLdapUser(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-   UINT32 id = pRequest->getFieldAsUInt32(VID_USER_ID);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   uint32_t id = request->getFieldAsUInt32(VID_USER_ID);
 
    // Check user rights
    if (!(m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    else if (!(m_flags & CSF_USER_DB_LOCKED))
    {
       // User database have to be locked before any
       // changes to user database can be made
-      msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
    }
    else
    {
@@ -3457,13 +3448,12 @@ void ClientSession::detachLdapUser(NXCPMessage *pRequest)
       {
          TCHAR name[MAX_DB_STRING];
          writeAuditLog(AUDIT_SECURITY, true, 0,
-            _T("%s %s detached from LDAP account"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), ResolveUserId(id, name, true));
+               _T("%s %s detached from LDAP account"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), ResolveUserId(id, name, true));
       }
-      msg.setField(VID_RCC, rcc);
+      response.setField(VID_RCC, rcc);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
