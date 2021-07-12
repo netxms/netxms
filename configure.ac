@@ -831,6 +831,14 @@ AC_ARG_ENABLE(unicode,
 	fi
 ])
 
+AC_ARG_ENABLE(visibility-control,
+[AS_HELP_STRING(--disable-visibility-control,disable symbol visibility control)],
+[
+	if test "x$enableval" = "xno"; then
+		DISABLE_VISIBILITY_CONTROL="yes"
+	fi
+])
+
 AC_ARG_ENABLE(debug,
 [AS_HELP_STRING(--enable-debug,enable additional debugging functionality)],
 [
@@ -1487,10 +1495,10 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 		AC_CXX_CHECK_OPTION(-fno-rtti)
 	fi
 
-	# Symbol visibility control on AIX aith xlclang++ hides vtables for classes
+	# Symbol visibility control on AIX with xlclang++ hides vtables for classes
 	# even when visibility "default" is set for class explicitly which
 	# leads to "undefined vtable for ..." linker errors
-	if test "x$CXX" != "xxlclang++"; then
+	if test "x$CXX" != "xxlclang++" -a "x$DISABLE_VISIBILITY_CONTROL" != "xyes"; then
 		AC_CXX_CHECK_OPTION(-fvisibility-inlines-hidden)
 		AC_CPP_CHECK_OPTION(-fvisibility=hidden)
 	fi
@@ -1686,19 +1694,21 @@ if test "x$CXX" = "xaCC" ; then
 			])
 	fi
 
-	AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
-	OLD_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS -Bhidden_def"
-	AC_RUN_IFELSE([AC_LANG_PROGRAM([[ int __declspec(dllexport) z = 0; ]], [[ ]])],
-		[ 
-			AC_DEFINE(DLL_DECLSPEC_SUPPORTED, 1, Define to 1 if compiler supports MSVC compatible __declspec dllexport/dllimport attributes)
-			LDFLAGS="$LDFLAGS -Wl,-ashared_archive"
-			AC_MSG_RESULT(yes) 
-		], 
-		[ 
-			CPPFLAGS="$OLD_CPPFLAGS"
-			AC_MSG_RESULT(no)
-		])
+	if test "x$DISABLE_VISIBILITY_CONTROL" != "xyes"; then
+		AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
+		OLD_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS -Bhidden_def"
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[ int __declspec(dllexport) z = 0; ]], [[ ]])],
+			[ 
+				AC_DEFINE(DLL_DECLSPEC_SUPPORTED, 1, Define to 1 if compiler supports MSVC compatible __declspec dllexport/dllimport attributes)
+				LDFLAGS="$LDFLAGS -Wl,-ashared_archive"
+				AC_MSG_RESULT(yes) 
+			], 
+			[ 
+				CPPFLAGS="$OLD_CPPFLAGS"
+				AC_MSG_RESULT(no)
+			])
+	fi
 
 	AC_CXX_CHECK_OPTION(+std=c++11)
 fi
@@ -1735,18 +1745,20 @@ if test "x$CXX" = "xxlC_r" ; then
                         ])
         fi
 
-	AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
-	OLD_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS -qvisibility=hidden"
-	AC_RUN_IFELSE([AC_LANG_PROGRAM([[ int __attribute__ ((visibility ("default"))) z = 0; ]], [[ ]])],
-		[ 
-			AC_DEFINE(VISIBILITY_ATTRIBUTE_SUPPORTED, 1, Define to 1 if compiler supports visibility attribute)
-			AC_MSG_RESULT(yes) 
-		], 
-		[ 
-			CPPFLAGS="$OLD_CPPFLAGS"
-			AC_MSG_RESULT(no)
-		])
+	if test "x$DISABLE_VISIBILITY_CONTROL" != "xyes"; then
+		AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
+		OLD_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS -qvisibility=hidden"
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[ int __attribute__ ((visibility ("default"))) z = 0; ]], [[ ]])],
+			[ 
+				AC_DEFINE(VISIBILITY_ATTRIBUTE_SUPPORTED, 1, Define to 1 if compiler supports visibility attribute)
+				AC_MSG_RESULT(yes) 
+			], 
+			[ 
+				CPPFLAGS="$OLD_CPPFLAGS"
+				AC_MSG_RESULT(no)
+			])
+	fi
 
 	AC_CXX_CHECK_OPTION(-qlanglvl=extended0x)
 	AC_CXX_CHECK_OPTION(-qnoeh)
@@ -1863,18 +1875,20 @@ if test "x$CXX" = "xCC" ; then
 		AC_CXX_CHECK_OPTION(-features=no%rtti)
 	fi
 
-	AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
-	OLD_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS -xldscope=hidden"
-	AC_RUN_IFELSE([AC_LANG_PROGRAM([[ int __global z = 0; ]], [[ ]])],
-		[ 
-			AC_DEFINE(GLOBAL_SPECIFIER_SUPPORTED, 1, Define to 1 if compiler supports scoping specifier __global)
-			AC_MSG_RESULT(yes) 
-		], 
-		[ 
-			CPPFLAGS="$OLD_CPPFLAGS"
-			AC_MSG_RESULT(no)
-		])
+	if test "x$DISABLE_VISIBILITY_CONTROL" != "xyes"; then
+		AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
+		OLD_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS -xldscope=hidden"
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[ int __global z = 0; ]], [[ ]])],
+			[ 
+				AC_DEFINE(GLOBAL_SPECIFIER_SUPPORTED, 1, Define to 1 if compiler supports scoping specifier __global)
+				AC_MSG_RESULT(yes) 
+			], 
+			[ 
+				CPPFLAGS="$OLD_CPPFLAGS"
+				AC_MSG_RESULT(no)
+			])
+	fi
 
 	# The following is needed to avoid load errors for modules (subagents, drivers, etc.)
 	LIBS="$LIBS -lCrunG3"
