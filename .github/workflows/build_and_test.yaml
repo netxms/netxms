@@ -12,7 +12,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Install dependencies
-        run: sudo apt-get install -y libpq-dev libcurl4-openssl-dev libssh-dev libmosquitto-dev
+        run: sudo apt-get install -y libpq-dev libcurl4-openssl-dev libssh-dev libmosquitto-dev libjq-dev
       - name: Prepare release build
         run: ./build/prepare_release_build.sh
       - name: autoconf
