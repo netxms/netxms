@@ -188,7 +188,8 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 				nxlog_debug_tag(DEBUG_TAG, 3, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
 			}
 
-			if (!user->isDisabled() && (blockInactiveAccounts > 0) && (user->getLastLoginTime() > 0) && (user->getLastLoginTime() + blockInactiveAccounts < now))
+			if (!user->isDisabled() && (blockInactiveAccounts > 0) && (user->getLastLoginTime() > 0) && (user->getLastLoginTime() + blockInactiveAccounts < now) &&
+			    ((user->getEnableTime() == 0) || (user->getEnableTime() + blockInactiveAccounts < now)))
 			{
 				user->disable();
             WriteAuditLog(AUDIT_SECURITY, TRUE, user->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("User account \"%s\" disabled by system due to inactivity"), user->getName());

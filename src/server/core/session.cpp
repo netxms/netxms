@@ -3512,70 +3512,58 @@ void ClientSession::createUser(NXCPMessage *pRequest)
 /**
  * Update existing user's data
  */
-void ClientSession::updateUser(NXCPMessage *pRequest)
+void ClientSession::updateUser(NXCPMessage *request)
 {
-   NXCPMessage msg;
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
-   // Check user rights
-   if (!(m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
-   {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   else
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
    {
       json_t *oldData = nullptr, *newData = nullptr;
-      UINT32 result = ModifyUserDatabaseObject(pRequest, &oldData, &newData);
+      uint32_t result = ModifyUserDatabaseObject(request, &oldData, &newData);
       if (result == RCC_SUCCESS)
       {
          TCHAR name[MAX_USER_NAME];
-         UINT32 id = pRequest->getFieldAsUInt32(VID_USER_ID);
+         uint32_t id = request->getFieldAsUInt32(VID_USER_ID);
          writeAuditLogWithValues(AUDIT_SECURITY, true, 0, oldData, newData,
-            _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), ResolveUserId(id, name, true));
+               _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), ResolveUserId(id, name, true));
       }
-      msg.setField(VID_RCC, result);
+      response.setField(VID_RCC, result);
       json_decref(oldData);
       json_decref(newData);
    }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
- * Delete user
+ * Detach LDAP user
  */
-void ClientSession::detachLdapUser(NXCPMessage *pRequest)
+void ClientSession::detachLdapUser(NXCPMessage *request)
 {
-   NXCPMessage msg;
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   uint32_t id = request->getFieldAsUInt32(VID_USER_ID);
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-   UINT32 id = pRequest->getFieldAsUInt32(VID_USER_ID);
-
-   // Check user rights
-   if (!(m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
-   {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   else
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
    {
       uint32_t rcc = DetachLDAPUser(id);
       if (rcc == RCC_SUCCESS)
       {
          TCHAR name[MAX_DB_STRING];
          writeAuditLog(AUDIT_SECURITY, true, 0,
-            _T("%s %s detached from LDAP account"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), ResolveUserId(id, name, true));
+               _T("%s %s detached from LDAP account"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), ResolveUserId(id, name, true));
       }
-      msg.setField(VID_RCC, rcc);
+      response.setField(VID_RCC, rcc);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**

@@ -187,9 +187,7 @@ void UserDatabaseObject::fillMessage(NXCPMessage *msg)
  */
 void UserDatabaseObject::modifyFromMessage(NXCPMessage *msg)
 {
-	UINT32 flags, fields;
-
-	fields = msg->getFieldAsUInt32(VID_FIELDS);
+	uint32_t fields = msg->getFieldAsUInt32(VID_FIELDS);
 	nxlog_debug_tag(DEBUG_TAG, 5, _T("UserDatabaseObject::modifyFromMessage(): id=%d fields=%08X"), m_id, fields);
 
 	if (fields & USER_MODIFY_DESCRIPTION)
@@ -219,7 +217,7 @@ void UserDatabaseObject::modifyFromMessage(NXCPMessage *msg)
 
 	if (fields & USER_MODIFY_FLAGS)
 	{
-	   flags = msg->getFieldAsUInt16(VID_USER_FLAGS);
+	   uint32_t flags = msg->getFieldAsUInt16(VID_USER_FLAGS);
 		// Modify only UF_DISABLED, UF_CHANGE_PASSWORD, UF_CANNOT_CHANGE_PASSWORD and UF_CLOSE_OTHER_SESSIONS flags from message
 		// Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
 		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
@@ -512,6 +510,8 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
    m_email = DBGetField(hResult, row, 21, nullptr, 0);
    m_phoneNumber = DBGetField(hResult, row, 22, nullptr, 0);
 
+   m_enableTime = 0;
+
 	// Set full system access for superuser
 	if (m_id == 0)
 		m_systemRights = SYSTEM_ACCESS_FULL;
@@ -542,6 +542,7 @@ User::User() : UserDatabaseObject()
 	m_minPasswordLength = -1;	// Use system-wide default
 	m_disabledUntil = 0;
 	m_lastLogin = 0;
+	m_enableTime = 0;
    m_xmppId = nullptr;
    m_email = nullptr;
    m_phoneNumber = nullptr;
@@ -563,6 +564,7 @@ User::User(uint32_t id, const TCHAR *name, UserAuthenticationMethod authMethod) 
 	m_minPasswordLength = -1;	// Use system-wide default
 	m_disabledUntil = 0;
 	m_lastLogin = 0;
+   m_enableTime = 0;
    m_xmppId = nullptr;
    m_email = nullptr;
    m_phoneNumber = nullptr;
@@ -594,6 +596,7 @@ User::User(const User *src) : UserDatabaseObject(src)
    m_disabledUntil = src->m_disabledUntil;
    m_lastPasswordChange = src->m_lastPasswordChange;
    m_lastLogin = src->m_lastLogin;
+   m_enableTime = src->m_enableTime;
    m_minPasswordLength = src->m_minPasswordLength;
    m_authFailures = src->m_authFailures;
    m_xmppId = MemCopyString(src->m_xmppId);
@@ -792,9 +795,18 @@ void User::fillMessage(NXCPMessage *msg)
  */
 void User::modifyFromMessage(NXCPMessage *msg)
 {
-	UserDatabaseObject::modifyFromMessage(msg);
+   uint32_t fields = msg->getFieldAsUInt32(VID_FIELDS);
+   if (fields & USER_MODIFY_FLAGS)
+   {
+      uint32_t flags = msg->getFieldAsUInt16(VID_USER_FLAGS);
+      if (((m_flags & UF_DISABLED) != 0) && ((flags & UF_DISABLED) == 0))
+      {
+         // user is being enabled, update enable time so it will not be disabled again immediately by inactivity timer
+         m_enableTime = time(nullptr);
+      }
+   }
 
-	uint32_t fields = msg->getFieldAsUInt32(VID_FIELDS);
+	UserDatabaseObject::modifyFromMessage(msg);
 
 	if (fields & USER_MODIFY_FULL_NAME)
 		msg->getFieldAsString(VID_USER_FULL_NAME, m_fullName, MAX_USER_FULLNAME);
