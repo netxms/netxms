@@ -975,6 +975,7 @@ private:
    StructArray<NXSL_ModuleImport> m_requiredModules;
    NXSL_ValueHashMap<NXSL_Identifier> m_constants;
    StructArray<NXSL_Function> m_functions;
+   StringMap m_metadata;
 
 public:
    NXSL_Program(size_t valueRegionSize = 0, size_t identifierRegionSize = 0);
@@ -984,6 +985,8 @@ public:
    uint32_t getCodeSize() const { return m_instructionSet.size(); }
    bool isEmpty() const;
    StringList *getRequiredModules() const;
+   const TCHAR *getMetadataEntry(const TCHAR *key) const { return m_metadata.get(key); }
+   const StringMap& getMetadata() const { return m_metadata; }
 
    virtual uint64_t getMemoryUsage() const;
 
@@ -1120,6 +1123,7 @@ private:
 
 protected:
    NXSL_Environment *m_env;
+   StringMap m_metadata;
 	void *m_userData;
 
    StructArray<NXSL_Instruction> m_instructionSet;
@@ -1214,6 +1218,8 @@ public:
    int getErrorLine() const { return m_errorLine; }
    const TCHAR *getErrorText() const { return CHECK_NULL_EX(m_errorText); }
    NXSL_Value *getResult() { return m_pRetValue; }
+   const TCHAR *getMetadataEntry(const TCHAR *key) const { return m_metadata.get(key); }
+   const StringMap& getMetadata() const { return m_metadata; }
 
    void setSecurityContext(NXSL_SecurityContext *context);
    bool validateAccess(int accessType, const void *object) { return (m_securityContext != nullptr) ? m_securityContext->validateAccess(accessType, object) : false; }

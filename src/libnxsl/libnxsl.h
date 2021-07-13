@@ -220,6 +220,8 @@ protected:
    NXSL_ValueHashMap<NXSL_Identifier> m_constants;
    StructArray<NXSL_Function> m_functions;
    StructArray<NXSL_IdentifierLocation> *m_expressionVariables;
+   NXSL_Identifier m_currentExpressionVariable;
+   StringMap m_metadata;
 
    uint32_t getFinalJumpDestination(uint32_t addr, int srcJump);
    uint32_t getExpressionVariableCodeBlock(const NXSL_Identifier& identifier);
@@ -278,10 +280,12 @@ public:
    void enableExpressionVariables();
    void disableExpressionVariables(int line);
    void registerExpressionVariable(const NXSL_Identifier& identifier);
+   void setMetadata(const TCHAR *key, const TCHAR *value) { m_metadata.set(key, value); }
 
    uint32_t getCodeSize() const { return m_instructionSet.size(); }
    bool isEmpty() const { return m_instructionSet.isEmpty() || ((m_instructionSet.size() == 1) && (m_instructionSet.get(0)->m_opCode == 28)); }
    StringList *getRequiredModules() const;
+   const NXSL_Identifier& getCurrentExpressionVariable() const { return m_currentExpressionVariable; }
 
    virtual uint64_t getMemoryUsage() const override;
 
