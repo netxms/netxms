@@ -127,6 +127,7 @@ void NXSL_ProgramBuilder::registerExpressionVariable(const NXSL_Identifier& iden
 {
    if (m_expressionVariables != nullptr)
       m_expressionVariables->add(NXSL_IdentifierLocation(identifier, m_instructionSet.size()));
+   m_currentExpressionVariable = identifier;
 }
 
 /**
@@ -650,7 +651,8 @@ NXSL_Program::NXSL_Program(NXSL_ProgramBuilder *builder) :
          m_instructionSet(builder->m_instructionSet.size(), 256),
          m_constants(this, Ownership::True),
          m_functions(builder->m_functions.getBuffer(), builder->m_functions.size()),
-         m_requiredModules(builder->m_requiredModules.getBuffer(), builder->m_requiredModules.size())
+         m_requiredModules(builder->m_requiredModules.getBuffer(), builder->m_requiredModules.size()),
+         m_metadata(builder->m_metadata)
 {
    for(int i = 0; i < builder->m_instructionSet.size(); i++)
       m_instructionSet.addPlaceholder()->copyFrom(builder->m_instructionSet.get(i), this);

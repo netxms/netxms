@@ -1752,6 +1752,15 @@ public:
    {
       addAll(src, reinterpret_cast<bool (*)(const TCHAR *, const TCHAR *, void *)>(filter), context);
    }
+   void addAll(const StringMap& src, bool (*filter)(const TCHAR *, const TCHAR *, void *) = nullptr, void *context = nullptr)
+   {
+      addAll(&src, filter, context);
+   }
+   template<typename C>
+   void addAll(const StringMap& src, bool (*filter)(const TCHAR *, const TCHAR *, C *), C *context)
+   {
+      addAll(&src, reinterpret_cast<bool (*)(const TCHAR *, const TCHAR *, void *)>(filter), context);
+   }
 
 	const TCHAR *get(const TCHAR *key) const { return (const TCHAR *)getObject(key); }
    const TCHAR *get(const TCHAR *key, size_t len) const { return (const TCHAR *)getObject(key, len); }

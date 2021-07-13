@@ -257,6 +257,10 @@ bool NXSL_VM::load(const NXSL_Program *program)
 {
    bool success = true;
 
+   // Copy metadata
+   m_metadata.clear();
+   m_metadata.addAll(program->m_metadata);
+
    // Copy instructions
    for(int i = 0; i < m_instructionSet.size(); i++)
       m_instructionSet.get(i)->dispose(this);

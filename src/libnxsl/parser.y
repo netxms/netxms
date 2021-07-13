@@ -319,11 +319,40 @@ WithAssignment:
 {
 	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
 	pScript->registerExpressionVariable($1);
-}	 
-	'=' WithCalculationBlock
+}
+	WithMetadata '=' WithCalculationBlock
 {
 	pScript->resolveLastJump(OPCODE_JMP);
 }	
+;
+
+WithMetadata:
+	'(' WithMetadataValues ')'
+|
+;
+
+WithMetadataValues:
+	WithMetadataValue ',' WithMetadataValue
+|	WithMetadataValue
+;
+
+WithMetadataValue:
+	T_IDENTIFIER '=' Constant
+{
+   TCHAR key[1024];
+#ifdef UNICODE
+   size_t l = utf8_to_wchar(pScript->getCurrentExpressionVariable().value, -1, key, 1024);
+	key[l - 1] = L'.';
+   utf8_to_wchar($1.v, -1, &key[l], 1024 - l);
+#else
+	strlcpy(key, pScript->getCurrentExpressionVariable().value, 1024);
+	strlcat(key, ".", 1024);
+	strlcat(key, $1.v, 1024);
+#endif
+   pScript->setMetadata(key, $3->getValueAsCString());
+	pScript->destroyValue($3);
+	$3 = nullptr;
+}
 ;
 
 WithCalculationBlock:
@@ -716,7 +745,7 @@ Operand:
 |	Constant
 {
 	pScript->addInstruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, $1);
-	$1 = NULL;
+	$1 = nullptr;
 }
 ;
 

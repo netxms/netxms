@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -37,11 +37,11 @@ static void ObjectDestructor(void *object, StringMapBase *map)
  */
 StringMapBase::StringMapBase(Ownership objectOwner, void (*destructor)(void *, StringMapBase *))
 {
-	m_data = NULL;
+	m_data = nullptr;
 	m_objectOwner = (objectOwner == Ownership::True);
    m_ignoreCase = true;
-   m_context = NULL;
-	m_objectDestructor = (destructor != NULL) ? destructor : ObjectDestructor;
+   m_context = nullptr;
+	m_objectDestructor = (destructor != nullptr) ? destructor : ObjectDestructor;
 }
 
 /**
@@ -74,8 +74,8 @@ void StringMapBase::clear()
  */
 StringMapEntry *StringMapBase::find(const TCHAR *key, size_t keyLen) const
 {
-	if (key == NULL)
-		return NULL;
+	if (key == nullptr)
+		return nullptr;
 
    StringMapEntry *entry;
    if (m_ignoreCase)
@@ -99,7 +99,7 @@ StringMapEntry *StringMapBase::find(const TCHAR *key, size_t keyLen) const
  */
 void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
 {
-   if (key == NULL)
+   if (key == nullptr)
    {
       if (m_objectOwner)
          destroyObject(value);
@@ -107,7 +107,7 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
    }
 
 	StringMapEntry *entry = find(key, _tcslen(key) * sizeof(TCHAR));
-	if (entry != NULL)
+	if (entry != nullptr)
 	{
 		if (keyPreAllocated)
       {
@@ -141,7 +141,7 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
       }
       else
       {
-         entry->originalKey = NULL;
+         entry->originalKey = nullptr;
       }
       int keyLen = (int)(_tcslen(key) * sizeof(TCHAR));
       entry->value = value;
@@ -154,10 +154,10 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
  */
 void *StringMapBase::getObject(const TCHAR *key) const
 {
-   if (key == NULL)
-      return NULL;
+   if (key == nullptr)
+      return nullptr;
 	StringMapEntry *entry = find(key, _tcslen(key) * sizeof(TCHAR));
-   return (entry != NULL) ? entry->value : NULL;
+   return (entry != nullptr) ? entry->value : nullptr;
 }
 
 /**
@@ -165,10 +165,10 @@ void *StringMapBase::getObject(const TCHAR *key) const
  */
 void *StringMapBase::getObject(const TCHAR *key, size_t len) const
 {
-   if (key == NULL)
-      return NULL;
+   if (key == nullptr)
+      return nullptr;
    StringMapEntry *entry = find(key, len * sizeof(TCHAR));
-   return (entry != NULL) ? entry->value : NULL;
+   return (entry != nullptr) ? entry->value : nullptr;
 }
 
 /**
@@ -177,7 +177,7 @@ void *StringMapBase::getObject(const TCHAR *key, size_t len) const
 void StringMapBase::remove(const TCHAR *key)
 {
    StringMapEntry *entry = find(key, _tcslen(key) * sizeof(TCHAR));
-   if (entry != NULL)
+   if (entry != nullptr)
    {
       HASH_DEL(m_data, entry);
       MemFree(entry->key);
@@ -195,7 +195,7 @@ void *StringMapBase::unlink(const TCHAR *key)
 {
    StringMapEntry *entry = find(key, _tcslen(key) * sizeof(TCHAR));
    void *value;
-   if (entry != NULL)
+   if (entry != nullptr)
    {
       HASH_DEL(m_data, entry);
       MemFree(entry->key);
@@ -205,7 +205,7 @@ void *StringMapBase::unlink(const TCHAR *key)
    }
    else
    {
-      value = NULL;
+      value = nullptr;
    }
    return value;
 }
@@ -234,7 +234,7 @@ EnumerationCallbackResult StringMapBase::forEach(EnumerationCallbackResult (*cb)
  */
 const void *StringMapBase::findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData) const
 {
-   const void *result = NULL;
+   const void *result = nullptr;
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
@@ -276,7 +276,7 @@ StructArray<KeyValuePair<void>> *StringMapBase::toArray(bool (*filter)(const TCH
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if ((filter == NULL) || filter(m_ignoreCase ? entry->originalKey : entry->key, entry->value, userData))
+      if ((filter == nullptr) || filter(m_ignoreCase ? entry->originalKey : entry->key, entry->value, userData))
       {
          KeyValuePair<void> p;
          p.key = m_ignoreCase ? entry->originalKey : entry->key;
@@ -330,10 +330,10 @@ void StringMapBase::setIgnoreCase(bool ignore)
       return;  // No change required
 
    m_ignoreCase = ignore;
-   if (m_data == NULL)
+   if (m_data == nullptr)
       return;  // Empty set
 
-   StringMapEntry *data = NULL;
+   StringMapEntry *data = nullptr;
    StringMapEntry *entry, *tmp;
    if (m_ignoreCase)
    {
@@ -355,7 +355,7 @@ void StringMapBase::setIgnoreCase(bool ignore)
          HASH_DEL(m_data, entry);
          MemFree(entry->key);
          entry->key = entry->originalKey;
-         entry->originalKey = NULL;
+         entry->originalKey = nullptr;
          int keyLen = (int)(_tcslen(entry->key) * sizeof(TCHAR));
          HASH_ADD_KEYPTR(hh, data, entry->key, keyLen, entry);
       }
@@ -369,8 +369,8 @@ void StringMapBase::setIgnoreCase(bool ignore)
 StringMapIterator::StringMapIterator(StringMapBase *map)
 {
    m_map = map;
-   m_curr = NULL;
-   m_next = NULL;
+   m_curr = nullptr;
+   m_next = nullptr;
 }
 
 /**
@@ -378,10 +378,10 @@ StringMapIterator::StringMapIterator(StringMapBase *map)
  */
 bool StringMapIterator::hasNext()
 {
-   if (m_map->m_data == NULL)
+   if (m_map->m_data == nullptr)
       return false;
 
-   return (m_curr != NULL) ? (m_next != NULL) : true;
+   return (m_curr != nullptr) ? (m_next != nullptr) : true;
 }
 
 /**
@@ -389,17 +389,17 @@ bool StringMapIterator::hasNext()
  */
 void *StringMapIterator::next()
 {
-   if (m_map->m_data == NULL)
-      return NULL;
+   if (m_map->m_data == nullptr)
+      return nullptr;
 
-   if (m_curr == NULL)  // iteration not started
+   if (m_curr == nullptr)  // iteration not started
    {
       m_curr = m_map->m_data;
    }
    else
    {
-      if (m_next == NULL)
-         return NULL;
+      if (m_next == nullptr)
+         return nullptr;
       m_curr = m_next;
    }
    m_next = static_cast<StringMapEntry*>(m_curr->hh.next);
@@ -413,7 +413,7 @@ void *StringMapIterator::next()
  */
 void StringMapIterator::remove()
 {
-   if (m_curr == NULL)
+   if (m_curr == nullptr)
       return;
 
    HASH_DEL(m_map->m_data, m_curr);
@@ -429,7 +429,7 @@ void StringMapIterator::remove()
  */
 void StringMapIterator::unlink()
 {
-   if (m_curr == NULL)
+   if (m_curr == nullptr)
       return;
 
    HASH_DEL(m_map->m_data, m_curr);

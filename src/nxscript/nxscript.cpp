@@ -42,6 +42,15 @@ void NXSL_TestEnv::configureVM(NXSL_VM *vm)
 }
 
 /**
+ * Print metadata entry
+ */
+static EnumerationCallbackResult PrintMetadataEntry(const TCHAR *key, const void *value, void *context)
+{
+   _tprintf(_T("   %s = %s\n"), key, value);
+   return _CONTINUE;
+}
+
+/**
  * Entry point
  */
 int main(int argc, char *argv[])
@@ -53,7 +62,7 @@ int main(int argc, char *argv[])
    NXSL_Environment *pEnv;
    NXSL_Value **ppArgs;
    int i, ch;
-   bool dump = false, printResult = false, compileOnly = false, binary = false, showExprVars = false, showMemoryUsage = false;
+   bool dump = false, printResult = false, compileOnly = false, binary = false, showExprVars = false, showMemoryUsage = false, showMetadata = false;
    int runCount = 1, rc = 0;
 
    InitNetXMSProcess(true);
@@ -63,7 +72,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "bcC:de:Emo:r")) != -1)
+   while((ch = getopt(argc, argv, "bcC:de:EmMo:r")) != -1)
    {
       switch(ch)
       {
@@ -87,6 +96,9 @@ int main(int argc, char *argv[])
 				break;
          case 'm':
             showMemoryUsage = true;
+            break;
+         case 'M':
+            showMetadata = true;
             break;
          case 'o':
 				strncpy(outFile, optarg, MAX_PATH - 1);
@@ -113,6 +125,7 @@ int main(int argc, char *argv[])
 				   _T("   -e <name>  Entry point\n")
                _T("   -E         Show expression variables on exit\n")
                _T("   -m         Show memory usage information\n")
+               _T("   -M         Show program metadata\n")
                _T("   -o <file>  Write compiled script\n")
                _T("   -r         Print script return value\n")
                _T("\n"));
@@ -165,6 +178,13 @@ int main(int argc, char *argv[])
 	{
 	   if (showMemoryUsage)
 	      _tprintf(_T("Compiled object memory usage: %u KBytes\n\n"), static_cast<uint32_t>(pScript->getMemoryUsage() / 1024));
+
+      if (showMetadata)
+      {
+         _tprintf(_T("Program metadata:\n"));
+         pScript->getMetadata().forEach(PrintMetadataEntry, nullptr);
+         _tprintf(_T("\n"));
+      }
 
       if (outFile[0] != 0)
       {
