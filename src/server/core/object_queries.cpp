@@ -562,6 +562,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint
             }
          }
       }
+      delete columns;
 
       if (!realOrderBy.isEmpty())
       {
