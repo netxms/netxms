@@ -4622,8 +4622,7 @@ void UpdateNodeIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr,
 void NXCORE_EXPORTABLE MacDbAddAccessPoint(const shared_ptr<AccessPoint>& ap);
 void NXCORE_EXPORTABLE MacDbAddInterface(const shared_ptr<Interface>& iface);
 void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, const shared_ptr<NetObj>& object);
-void NXCORE_EXPORTABLE MacDbRemove(const BYTE *macAddr);
-void NXCORE_EXPORTABLE MacDbRemove(const MacAddress& macAddr);
+void NXCORE_EXPORTABLE MacDbRemoveObject(const MacAddress& macAddr, const uint32_t objectId);
 shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const BYTE *macAddr);
 shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const MacAddress& macAddr);
 
