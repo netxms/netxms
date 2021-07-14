@@ -8,7 +8,7 @@ nxagentd_SOURCES = actions.cpp appagent.cpp comm.cpp config.cpp ctrl.cpp \
                    sysinfo.cpp syslog.cpp systemd.cpp tcpproxy.cpp \
                    tools.cpp tunnel.cpp upgrade.cpp watchdog.cpp websvc.cpp
 
-nxagentd_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
+nxagentd_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build @LIBJQ_CPPFLAGS@
 
 nxagentd_LDFLAGS = @EXEC_LDFLAGS@
 if STATIC_BUILD

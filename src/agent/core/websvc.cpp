@@ -184,7 +184,6 @@ void ServiceEntry::getParamsFromXML(StringList *params, NXCPMessage *response)
  */
 void JqMessageCallback(void *data, jv error)
 {
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Message called"));
    char *msg = MemCopyStringA(jv_string_value(error));
    nxlog_debug_tag(DEBUG_TAG, 6, _T("%s: %hs"), data, RemoveNewLines(msg));
    MemFree(msg);
