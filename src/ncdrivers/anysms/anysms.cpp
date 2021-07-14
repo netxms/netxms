@@ -33,16 +33,6 @@
 #define DEBUG_TAG _T("ncd.anysms")
 
 /**
- * Request data for cURL call
- */
-struct RequestData
-{
-   size_t size;
-   size_t allocated;
-   char *data;
-};
-
-/**
  * Any SMS driver class
  */
 class AnySMSDriver : public NCDriver
@@ -97,24 +87,11 @@ AnySMSDriver::AnySMSDriver(Config *config)
 /**
  * Callback for processing data received from cURL
  */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
+static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
 {
-   RequestData *data = (RequestData *)userdata;
-   if ((data->allocated - data->size) < (size * nmemb))
-   {
-      char *newData = (char *)realloc(data->data, data->allocated + CURL_MAX_HTTP_HEADER);
-      if (newData == NULL)
-      {
-         return 0;
-      }
-      data->data = newData;
-      data->allocated += CURL_MAX_HTTP_HEADER;
-   }
-
-   memcpy(data->data + data->size, ptr, size * nmemb);
-   data->size += size * nmemb;
-
-   return size * nmemb;
+   size_t bytes = size * nmemb;
+   static_cast<ByteStream*>(context)->write(ptr, bytes);
+   return bytes;
 }
 
 /**
@@ -138,9 +115,9 @@ bool AnySMSDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
 
-      RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-      memset(data, 0, sizeof(RequestData));
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, data);
+      ByteStream responseData(32768);
+      responseData.setAllocationStep(32768);
+      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
 #ifdef UNICODE
       char *mbphone = MBStringFromWideString(recipient);
@@ -166,13 +143,14 @@ bool AnySMSDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
       {
          if (curl_easy_perform(curl) == CURLE_OK)
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("%d bytes received"), data->size);
-            if (data->allocated > 0)
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("%d bytes received"), static_cast<int>(responseData.size()));
+            if (responseData.size() > 0)
             {
-               data->data[data->size] = 0;
-               if (!strncmp(data->data, "Err:", 4))
+               responseData.write('\0');
+               const char* data = reinterpret_cast<const char*>(responseData.buffer());
+               if (!strncmp(data, "Err:", 4))
                {
-                  int code = strtol(data->data + 4, NULL, 10);
+                  int code = strtol(data + 4, NULL, 10);
                   if (code == 0)
                   {
                	   nxlog_debug_tag(DEBUG_TAG, 4, _T("Success"));
@@ -185,7 +163,7 @@ bool AnySMSDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
                }
                else
                {
-               	nxlog_debug_tag(DEBUG_TAG, 4, _T("Unexpected response (%hs)"), data->data);
+               	nxlog_debug_tag(DEBUG_TAG, 4, _T("Unexpected response (%hs)"), data);
                }
             }
          }
@@ -198,8 +176,6 @@ bool AnySMSDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
       {
       	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
       }
-      MemFree(data->data);
-      MemFree(data);
       curl_easy_cleanup(curl);
    }
    else

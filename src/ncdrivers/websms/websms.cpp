@@ -33,16 +33,6 @@
 #define DEBUG_TAG _T("ncd.websms")
 
 /**
- * Request data for cURL call
- */
-struct RequestData
-{
-   size_t size;
-   size_t allocated;
-   char *data;
-};
-
-/**
  * WebSMS driver class
  */
 class WebSMSDriver : public NCDriver
@@ -95,24 +85,11 @@ WebSMSDriver::WebSMSDriver(Config *config)
 /**
  * Callback for processing data received from cURL
  */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
+static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
 {
-   RequestData *data = (RequestData *)userdata;
-   if ((data->allocated - data->size) < (size * nmemb))
-   {
-      char *newData = (char *)realloc(data->data, data->allocated + CURL_MAX_HTTP_HEADER);
-      if (newData == NULL)
-      {
-         return 0;
-      }
-      data->data = newData;
-      data->allocated += CURL_MAX_HTTP_HEADER;
-   }
-
-   memcpy(data->data + data->size, ptr, size * nmemb);
-   data->size += size * nmemb;
-
-   return size * nmemb;
+   size_t bytes = size * nmemb;
+   static_cast<ByteStream*>(context)->write(ptr, bytes);
+   return bytes;
 }
 
 /**
@@ -137,9 +114,9 @@ bool WebSMSDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
 
-      RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-      memset(data, 0, sizeof(RequestData));
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, data);
+      ByteStream responseData(32768);
+      responseData.setAllocationStep(32768);
+      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
 #ifdef UNICODE
       char *mbphone = MBStringFromWideString(recipient);
@@ -165,13 +142,13 @@ bool WebSMSDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
       {
          if (curl_easy_perform(curl) == CURLE_OK)
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("%d bytes received"), data->size);
-            if (data->allocated > 0)
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("%d bytes received"), static_cast<int>(responseData.size()));
+            if (responseData.size() > 0)
             {
-               data->data[data->size] = 0;
-
+               responseData.write('\0');
+               const char* data = reinterpret_cast<const char*>(responseData.buffer());
                Config *response = new Config;
-               response->loadXmlConfigFromMemory(data->data, (int)strlen(data->data), _T("WEBSMS"), "XML");
+               response->loadXmlConfigFromMemory(data, (int)strlen(data), _T("WEBSMS"), "XML");
                ConfigEntry *e = response->getEntry(_T("/httpIn"));
                if (e != NULL)
                {
@@ -188,7 +165,7 @@ bool WebSMSDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
                }
                else
                {
-                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed response\n%hs"), data->data);
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed response\n%hs"), data);
                }
             }
          }
@@ -201,8 +178,6 @@ bool WebSMSDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHA
       {
       	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
       }
-      MemFree(data->data);
-      free(data);
       curl_easy_cleanup(curl);
    }
    else

@@ -32,16 +32,6 @@
 #define DEBUG_TAG _T("ncd.text2reach")
 
 /**
- * Request data for cURL call
- */
-struct RequestData
-{
-   size_t size;
-   size_t allocated;
-   char *data;
-};
-
-/**
  * Text2Reach driver class
  */
 class Text2ReachDriver : public NCDriver
@@ -102,24 +92,11 @@ Text2ReachDriver::Text2ReachDriver(Config *config)
 /**
  * Callback for processing data received from cURL
  */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
+static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
 {
-   RequestData *data = (RequestData *)userdata;
-   if ((data->allocated - data->size) < (size * nmemb))
-   {
-      char *newData = (char *)realloc(data->data, data->allocated + CURL_MAX_HTTP_HEADER);
-      if (newData == NULL)
-      {
-         return 0;
-      }
-      data->data = newData;
-      data->allocated += CURL_MAX_HTTP_HEADER;
-   }
-
-   memcpy(data->data + data->size, ptr, size * nmemb);
-   data->size += size * nmemb;
-
-   return size * nmemb;
+   size_t bytes = size * nmemb;
+   static_cast<ByteStream*>(context)->write(ptr, bytes);
+   return bytes;
 }
 
 /**
@@ -140,9 +117,9 @@ bool Text2ReachDriver::send(const TCHAR *recipient, const TCHAR *subject, const 
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, (long)0);
 
-      RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-      memset(data, 0, sizeof(RequestData));
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, data);
+      ByteStream responseData(32768);
+      responseData.setAllocationStep(32768);
+      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
 #ifdef UNICODE
       char *mbphone = MBStringFromWideString(recipient);
@@ -174,10 +151,11 @@ bool Text2ReachDriver::send(const TCHAR *recipient, const TCHAR *subject, const 
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
             if (response == 200)
             {
-               if (data->allocated > 0)
+               if (responseData.size() > 0)
                {
-                  data->data[data->size] = 0;
-                  long messageId = strtol(data->data, NULL, 0);
+                  responseData.write('\0');
+                  const char* data = reinterpret_cast<const char*>(responseData.buffer());
+                  long messageId = strtol(data, NULL, 0);
                   if (messageId > 0)
                   {
                      nxlog_debug_tag(DEBUG_TAG, 4, _T("SMS successfully sent"));
@@ -185,7 +163,7 @@ bool Text2ReachDriver::send(const TCHAR *recipient, const TCHAR *subject, const 
                   }
                   else if (messageId == 0)
                   {
-                     nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed response %hs"), data->data);
+                     nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed response %hs"), data);
                   }
                   else
                   {
@@ -207,8 +185,6 @@ bool Text2ReachDriver::send(const TCHAR *recipient, const TCHAR *subject, const 
       {
       	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed: %s"), errorBuffer);
       }
-      MemFree(data->data);
-      free(data);
       curl_easy_cleanup(curl);
    }
    else

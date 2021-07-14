@@ -34,16 +34,6 @@
 #define DEBUG_TAG _T("ncd.slack")
 
 /**
- * Request data for cURL call
- */
-struct RequestData
-{
-   size_t size;
-   size_t allocated;
-   char *data;
-};
-
-/**
  * Slack driver class
  */
 class SlackDriver : public NCDriver
@@ -93,24 +83,11 @@ SlackDriver::SlackDriver(Config *config)
 /**
  * Callback for processing data received from cURL
  */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
+static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
 {
-   RequestData *data = (RequestData *)userdata;
-   if ((data->allocated - data->size) < (size * nmemb))
-   {
-      char *newData = (char *)realloc(data->data, data->allocated + CURL_MAX_HTTP_HEADER);
-      if (newData == NULL)
-      {
-         return 0;
-      }
-      data->data = newData;
-      data->allocated += CURL_MAX_HTTP_HEADER;
-   }
-
-   memcpy(data->data + data->size, ptr, size * nmemb);
-   data->size += size * nmemb;
-
-   return size * nmemb;
+   size_t bytes = size * nmemb;
+   static_cast<ByteStream*>(context)->write(ptr, bytes);
+   return bytes;
 }
 
 /**
@@ -134,9 +111,9 @@ bool SlackDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
 
-      RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-      memset(data, 0, sizeof(RequestData));
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, data);
+      ByteStream responseData(32768);
+      responseData.setAllocationStep(32768);
+      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
 #ifdef UNICODE
       char *_channel = MBStringFromWideString(recipient);
@@ -172,19 +149,19 @@ bool SlackDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
       {
          if (curl_easy_perform(curl) == CURLE_OK)
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Got %d bytes"), data->size);
-            if (data->allocated > 0)
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Got %d bytes"), static_cast<int>(responseData.size()));
+            if (responseData.size() > 0)
             {
-               data->data[data->size] = 0;
-
-               if (!strcmp(data->data, "ok"))
+               responseData.write('\0');
+               const char* data = reinterpret_cast<const char*>(responseData.buffer());
+               if (!strcmp(data, "ok"))
                {
                   nxlog_debug_tag(DEBUG_TAG, 4, _T("message successfully sent"));
                   success = true;
                }
                else
                {
-                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Got error: %hs"), data->data);
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Got error: %hs"), data);
                }
             }
          }
@@ -197,8 +174,6 @@ bool SlackDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
       }
-      MemFree(data->data);
-      MemFree(data);
       curl_easy_cleanup(curl);
    }
    else

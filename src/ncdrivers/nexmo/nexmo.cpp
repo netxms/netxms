@@ -34,16 +34,6 @@
 #define DEBUG_TAG _T("ncd.nexmo")
 
 /**
- * Request data for cURL call
- */
-struct RequestData
-{
-   size_t size;
-   size_t allocated;
-   char *data;
-};
-
-/**
  * Nexmo driver class
  */
 class NexmoDriver : public NCDriver
@@ -96,24 +86,11 @@ NexmoDriver::NexmoDriver(Config *config)
 /**
  * Callback for processing data received from cURL
  */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
+static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
 {
-   RequestData *data = (RequestData *)userdata;
-   if ((data->allocated - data->size) < (size * nmemb))
-   {
-      char *newData = (char *)realloc(data->data, data->allocated + CURL_MAX_HTTP_HEADER);
-      if (newData == NULL)
-      {
-         return 0;
-      }
-      data->data = newData;
-      data->allocated += CURL_MAX_HTTP_HEADER;
-   }
-
-   memcpy(data->data + data->size, ptr, size * nmemb);
-   data->size += size * nmemb;
-
-   return size * nmemb;
+   size_t bytes = size * nmemb;
+   static_cast<ByteStream*>(context)->write(ptr, bytes);
+   return bytes;
 }
 
 /**
@@ -204,9 +181,9 @@ bool NexmoDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
 
-      RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-      memset(data, 0, sizeof(RequestData));
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, data);
+      ByteStream responseData(32768);
+      responseData.setAllocationStep(32768);
+      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
 #ifdef UNICODE
       char *mbphone = MBStringFromWideString(recipient);
@@ -235,16 +212,16 @@ bool NexmoDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
       {
          if (curl_easy_perform(curl) == CURLE_OK)
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("%d bytes received"), data->size);
-            if (data->allocated > 0)
-               data->data[data->size] = 0;
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("%d bytes received"), static_cast<int>(responseData.size()));
+            if (responseData.size() > 0)
+               responseData.write('\0');
 
             long response = 500;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Response code %03d"), (int)response);
             if (response == 200)
             {
-               success = ParseResponse(data->data);
+               success = ParseResponse(reinterpret_cast<const char*>(responseData.buffer()));
             }
          }
          else
@@ -256,8 +233,6 @@ bool NexmoDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR
       {
       	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
       }
-      MemFree(data->data);
-      free(data);
       curl_easy_cleanup(curl);
    }
    else
