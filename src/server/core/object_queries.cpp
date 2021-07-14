@@ -562,6 +562,7 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId
             }
          }
       }
+      delete columns;
 
       if (!realOrderBy.isEmpty())
       {
