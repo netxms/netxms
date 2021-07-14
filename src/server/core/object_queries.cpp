@@ -341,18 +341,9 @@ static bool FilterAccessibleObjects(NetObj *object, void *data)
 }
 
 /**
- * Query result comparator data
- */
-struct ObjectQueryComparatorData
-{
-   const StringList *orderBy;
-   const StringMap *fields;
-};
-
-/**
  * Query result comparator
  */
-static int ObjectQueryComparator(const StringList *orderBy, const ObjectQueryResult **object1, const ObjectQueryResult **object2)
+static int ObjectQueryComparator(StringList *orderBy, const ObjectQueryResult **object1, const ObjectQueryResult **object2)
 {
    for(int i = 0; i < orderBy->size(); i++)
    {
@@ -401,16 +392,28 @@ static int ObjectQueryComparator(const StringList *orderBy, const ObjectQueryRes
 /**
  * Set object data from NXSL variable
  */
-static void SetDataFromVariable(const NXSL_Identifier& name, NXSL_Value *value, StringMap *objectData)
+static void SetDataFromVariable(const NXSL_Identifier& name, NXSL_Value *value, std::pair<StringMap*, NXSL_VM*> *context)
 {
-   if (name.value[0] != '$')  // Ignore global variables set by system
-   {
+   if (name.value[0] == '$')  // Ignore global variables set by system
+      return;
+
+   TCHAR key[256];
 #ifdef UNICODE
-      objectData->setPreallocated(WideStringFromUTF8String(name.value), MemCopyString(value->getValueAsCString()));
+   size_t l = utf8_to_wchar(name.value, -1, key, 256);
+   wcslcpy(&key[l - 1], L".visible", 256 - l);
 #else
-      objectData->set(name.value, value->getValueAsCString());
+   strlcpy(key, name.value, 256);
+   strlcat(key, ".visible", 256);
 #endif
-   }
+   const TCHAR *visible = context->second->getMetadataEntry(key);
+   if ((visible != nullptr) && (!_tcsicmp(visible, _T("false")) || !_tcsicmp(visible, _T("0"))))
+      return;  // Visibility attribute set to FALSE
+
+#ifdef UNICODE
+   context->first->setPreallocated(WideStringFromUTF8String(name.value), MemCopyString(value->getValueAsCString()));
+#else
+   context->first->set(name.value, value->getValueAsCString());
+#endif
 }
 
 /**
@@ -517,7 +520,8 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId
 
             if (readAllComputedFields)
             {
-               globals->forEach(SetDataFromVariable, objectData);
+               std::pair<StringMap*, NXSL_VM*> context(objectData, vm);
+               globals->forEach(SetDataFromVariable, &context);
             }
          }
          else
@@ -530,21 +534,47 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId
       delete globals;
    }
 
-   delete vm;
-   delete objects;
-
    // Sort result set and apply limit
-   if (resultSet != nullptr)
+   if ((resultSet != nullptr) && !resultSet->isEmpty())
    {
-      if ((orderBy != nullptr) && !orderBy->isEmpty())
+      StringList realOrderBy;
+      if (orderBy != nullptr)
+         realOrderBy.addAll(orderBy);
+
+      StringList *columns = resultSet->get(0)->values->keys();
+      for(int i = 0; i < columns->size(); i++)
       {
-         resultSet->sort(ObjectQueryComparator, orderBy);
+         TCHAR key[256];
+         _sntprintf(key, 256, _T("%s.order"), columns->get(i));
+         const TCHAR *order = vm->getMetadataEntry(key);
+         if (order != nullptr)
+         {
+            if (!_tcsicmp(order, _T("asc")) || !_tcsicmp(order, _T("ascending")))
+            {
+               realOrderBy.add(columns->get(i));
+            }
+            else if (!_tcsicmp(order, _T("desc")) || !_tcsicmp(order, _T("descending")))
+            {
+               TCHAR c[256];
+               c[0] = _T('-');
+               _tcscpy(&c[1], columns->get(i));
+               realOrderBy.add(c);
+            }
+         }
+      }
+
+      if (!realOrderBy.isEmpty())
+      {
+         resultSet->sort(ObjectQueryComparator, &realOrderBy);
       }
       if (limit > 0)
       {
          resultSet->shrinkTo((int)limit);
       }
    }
+
+   delete vm;
+   delete objects;
 
    return resultSet;
 }
