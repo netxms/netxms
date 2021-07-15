@@ -2750,9 +2750,10 @@ void ClientSession::queryObjectDetails(NXCPMessage *request)
    TCHAR *query = request->getFieldAsString(VID_QUERY);
    StringList fields(request, VID_FIELD_LIST_BASE, VID_FIELDS);
    StringList orderBy(request, VID_ORDER_FIELD_LIST_BASE, VID_ORDER_FIELDS);
+   StringMap inputFields(request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
    TCHAR errorMessage[1024];
    unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, m_dwUserId, errorMessage, 1024,
-            request->getFieldAsBoolean(VID_READ_ALL_FIELDS), &fields, &orderBy, request->getFieldAsUInt32(VID_RECORD_LIMIT));
+            request->getFieldAsBoolean(VID_READ_ALL_FIELDS), &fields, &orderBy, &inputFields, request->getFieldAsUInt32(VID_RECORD_LIMIT));
    if (objects != nullptr)
    {
       uint32_t *idList = static_cast<uint32_t*>MemAllocLocal(objects->size() * sizeof(uint32_t));
@@ -8305,7 +8306,7 @@ void ClientSession::executeAction(NXCPMessage *request)
                Alarm *alarm = nullptr;
                if (expandString)
                {
-                  inputFields.loadMessage(request, VID_INPUT_FIELD_COUNT, VID_INPUT_FIELD_BASE);
+                  inputFields.loadMessage(*request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
                   alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
                   if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
                   {
@@ -10761,7 +10762,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
             if (request->getFieldAsBoolean(VID_EXPAND_STRING))
             {
                StringMap inputFields;
-               inputFields.loadMessage(request, VID_INPUT_FIELD_COUNT, VID_INPUT_FIELD_BASE);
+               inputFields.loadMessage(*request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
                Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
                if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
                {
@@ -14424,8 +14425,7 @@ void ClientSession::expandMacros(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   StringMap inputFields;
-   inputFields.loadMessage(request, VID_INPUT_FIELD_COUNT, VID_INPUT_FIELD_BASE);
+   StringMap inputFields(*request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
 
    int fieldCount = request->getFieldAsUInt32(VID_STRING_COUNT);
    uint32_t inFieldId = VID_EXPAND_STRING_BASE;

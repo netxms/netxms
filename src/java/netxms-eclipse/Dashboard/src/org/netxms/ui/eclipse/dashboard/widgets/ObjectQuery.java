@@ -253,7 +253,7 @@ public class ObjectQuery extends ElementWidget
             List<String> names = new ArrayList<String>(properties.size());
             for(ObjectProperty p : properties)
                names.add(p.name);
-            final List<ObjectQueryResult> objects = session.queryObjectDetails(config.getQuery(), names, config.getOrderingProperties(), false, config.getRecordLimit());
+            final List<ObjectQueryResult> objects = session.queryObjectDetails(config.getQuery(), names, config.getOrderingProperties(), null, false, config.getRecordLimit());
             runInUIThread(new Runnable() {
                @Override
                public void run()

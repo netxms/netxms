@@ -3765,6 +3765,7 @@ public class NXCSession
     * @param query query to execute
     * @param properties object properties to read
     * @param orderBy list of properties for ordering result set (can be null)
+    * @param inputFields set of input fields provided by user (can be null)
     * @param readAllComputedProperties if set to <code>true</code>, query will return all computed properties in addition to
     *           properties explicitly listed in <code>properties</code> parameter
     * @param limit limit number of records (0 for unlimited)
@@ -3772,7 +3773,7 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<ObjectQueryResult> queryObjectDetails(String query, List<String> properties, List<String> orderBy, boolean readAllComputedProperties, int limit)
+   public List<ObjectQueryResult> queryObjectDetails(String query, List<String> properties, List<String> orderBy, Map<String, String> inputFields, boolean readAllComputedProperties, int limit)
          throws IOException, NXCException
    {
       NXCPMessage request = newMessage(NXCPCodes.CMD_QUERY_OBJECT_DETAILS);
@@ -3781,6 +3782,8 @@ public class NXCSession
          request.setFieldsFromStringCollection(properties, NXCPCodes.VID_FIELD_LIST_BASE, NXCPCodes.VID_FIELDS);
       if (orderBy != null)
          request.setFieldsFromStringCollection(orderBy, NXCPCodes.VID_ORDER_FIELD_LIST_BASE, NXCPCodes.VID_ORDER_FIELDS);
+      if (inputFields != null)
+         request.setFieldsFromStringMap(inputFields, NXCPCodes.VID_INPUT_FIELD_BASE, NXCPCodes.VID_INPUT_FIELD_COUNT);
       request.setFieldInt32(NXCPCodes.VID_RECORD_LIMIT, limit);
       request.setField(NXCPCodes.VID_READ_ALL_FIELDS, readAllComputedProperties);
       sendMessage(request);

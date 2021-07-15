@@ -42,6 +42,14 @@ StringMap::StringMap(const StringMap &src) : StringMapBase(Ownership::True)
 }
 
 /**
+ * Create string map from NXCP message
+ */
+StringMap::StringMap(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId) : StringMapBase(Ownership::True)
+{
+   loadMessage(msg, baseFieldId, sizeFieldId);
+}
+
+/**
  * Assignment
  */
 StringMap& StringMap::operator =(const StringMap &src)
@@ -203,14 +211,14 @@ void StringMap::fillMessage(NXCPMessage *msg, uint32_t sizeFieldId, uint32_t bas
 /**
  * Load data from NXCP message
  */
-void StringMap::loadMessage(const NXCPMessage *msg, uint32_t sizeFieldId, uint32_t baseFieldId)
+void StringMap::loadMessage(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId)
 {
-   int count = msg->getFieldAsInt32(sizeFieldId);
+   int count = msg.getFieldAsInt32(sizeFieldId);
    uint32_t id = baseFieldId;
    for(int i = 0; i < count; i++)
    {
-      TCHAR *key = msg->getFieldAsString(id++);
-      TCHAR *value = msg->getFieldAsString(id++);
+      TCHAR *key = msg.getFieldAsString(id++);
+      TCHAR *value = msg.getFieldAsString(id++);
       setPreallocated(key, value);
    }
 }

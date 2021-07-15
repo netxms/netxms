@@ -44,7 +44,7 @@ WebServiceDefinition::WebServiceDefinition(const NXCPMessage *msg)
    m_password = msg->getFieldAsString(VID_PASSWORD);
    m_cacheRetentionTime = msg->getFieldAsUInt32(VID_RETENTION_TIME);
    m_requestTimeout = msg->getFieldAsUInt32(VID_TIMEOUT);
-   m_headers.loadMessage(msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
+   m_headers.loadMessage(*msg, VID_HEADERS_BASE, VID_NUM_HEADERS);
    m_flags = msg->getFieldAsUInt32(VID_FLAGS);
 }
 

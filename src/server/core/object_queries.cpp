@@ -420,7 +420,7 @@ static void SetDataFromVariable(const NXSL_Identifier& name, NXSL_Value *value, 
  * Query objects
  */
 unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
-         bool readAllComputedFields, const StringList *fields, const StringList *orderBy, uint32_t limit)
+         bool readAllComputedFields, const StringList *fields, const StringList *orderBy, const StringMap *inputFields, uint32_t limit)
 {
    NXSL_VM *vm = NXSLCompileAndCreateVM(query, errorMessage, errorMessageLen, new NXSL_ServerEnv());
    if (vm == nullptr)
