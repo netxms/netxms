@@ -38,26 +38,25 @@ static bool H_UpgradeFromV8()
 static bool H_UpgradeFromV7()
 {
    CHK_EXEC(CreateEventTemplate(EVENT_DUPLICATE_MAC_ADDRESS, _T("SYS_DUPLICATE_MAC_ADDRESS"),
-            EVENT_SEVERITY_MAJOR, EF_LOG, _T("c19fbb37-98c9-43a5-90f2-7a54ba9116fa"),
-            _T("Duplicate MAC address found %1"),
-            _T("Generated when duplicate MAC address found.\r\n")
-            _T("Parameters:\r\n")
-            _T("   1) MAC address \r\n")
-            ));
+         EVENT_SEVERITY_MAJOR, EF_LOG, _T("c19fbb37-98c9-43a5-90f2-7a54ba9116fa"),
+         _T("Duplicate MAC address found (%1on %2)"),
+         _T("Generated when duplicate MAC address found.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) MAC address\r\n")
+         _T("   2) List of interfaces where MAC address was found")));
 
    int ruleId = NextFreeEPPruleID();
 
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
-            _T("VALUES (%d,'c19fbb37-98c9-43a5-90f2-7a54ba9116fa',7944,'Generate alarm when duplicate MAC address detected','%%m',5,'DUPLICATE_MAC_ADDRESS_%%1','',0,%d)"),
-            ruleId, EVENT_ALARM_TIMEOUT);
+                           _T("VALUES (%d,'fb915441-f9d8-4dab-b9e6-1296f3f8ec9f',7944,'Generate alarm when duplicate MAC address detected','%%m',5,'DUPLICATE_MAC_ADDRESS_%%1','',0,%d)"),
+         ruleId, EVENT_ALARM_TIMEOUT);
    CHK_EXEC(SQLQuery(query));
 
-   _sntprintf(query, 256, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_DUPLICATE_MAC_ADDRESS);
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_DUPLICATE_MAC_ADDRESS);
    CHK_EXEC(SQLQuery(query));
 
    CHK_EXEC(SetMinorSchemaVersion(8));
-
    return true;
 }
 

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,6 +49,18 @@ static MacDbEntry *s_data = nullptr;
 static RWLOCK s_lock = RWLockCreate();
 
 /**
+ * Get parent object name for diagnostic messages
+ */
+static inline String GetParentName(const NetObj& object)
+{
+   if (object.getObjectClass() == OBJECT_INTERFACE)
+      return static_cast<const Interface&>(object).getParentNodeName();
+   if (object.getObjectClass() == OBJECT_ACCESSPOINT)
+      return static_cast<const AccessPoint&>(object).getParentNodeName();
+   return String();
+}
+
+/**
  * Add interface
  */
 void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, const shared_ptr<NetObj>& object)
@@ -77,28 +89,33 @@ void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, const shared_pt
       bool found = false;
       for(int i  = 0; i < entry->objects.size(); i++)
       {
-         if(entry->objects.get(i)->getId() == object->getId())
+         if (entry->objects.get(i)->getId() == object->getId())
          {
             found = true;
             break;
          }
       }
-      if(!found)
+      if (!found)
       {
+         entry->objects.add(object);
+
          StringBuffer objects;
          for(int i  = 0; i < entry->objects.size(); i++)
          {
-            objects.appendFormattedString(_T("%s [%d]%s "), entry->objects.get(i)->getName(), entry->objects.get(i)->getId(), (i+1) == entry->objects.size() ? _T("") : _T(","));
+            NetObj *o = entry->objects.get(i);
+            objects.append(GetParentName(*o));
+            objects.append(_T("/"));
+            objects.append(o->getName());
+            objects.append(_T(", "));
          }
-         entry->objects.add(object);
-         TCHAR macAddrStr[64];
-         nxlog_debug(5, _T("MacDbAddObject: MAC address %s already known (%s -> %s [%d])"),
-                     macAddr.toString(macAddrStr), objects.getBuffer(),
-                     object->getName(), object->getId());
+         objects.shrink(2);
 
-         if(g_flags & AF_SERVER_INITIALIZED)
+         TCHAR macAddrStr[64];
+         nxlog_debug(5, _T("MacDbAddObject: MAC address %s known on multiple interfaces (%s)"), macAddr.toString(macAddrStr), objects.cstr());
+
+         if (g_flags & AF_SERVER_INITIALIZED)
          {
-            PostSystemEvent(EVENT_DUPLICATE_MAC_ADDRESS, object->getId(), "H", &macAddr);
+            PostSystemEvent(EVENT_DUPLICATE_MAC_ADDRESS, object->getId(), "Hs", &macAddr, objects.cstr());
          }
       }
    }
@@ -153,6 +170,22 @@ void NXCORE_EXPORTABLE MacDbRemoveObject(const MacAddress& macAddr, const uint32
       }
    }
    RWLockUnlock(s_lock);
+}
+
+/**
+ * Remove access point
+ */
+void NXCORE_EXPORTABLE MacDbRemoveAccessPoint(const AccessPoint& ap)
+{
+   MacDbRemoveObject(ap.getMacAddr(), ap.getId());
+}
+
+/**
+ * Remove interface
+ */
+void NXCORE_EXPORTABLE MacDbRemoveInterface(const Interface& iface)
+{
+   MacDbRemoveObject(iface.getMacAddr(), iface.getId());
 }
 
 /**

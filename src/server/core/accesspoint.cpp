@@ -348,6 +348,15 @@ shared_ptr<Node> AccessPoint::getParentNode() const
 }
 
 /**
+ * Get name of parent node object
+ */
+String AccessPoint::getParentNodeName() const
+{
+   shared_ptr<NetObj> node = FindObjectById(m_nodeId, OBJECT_NODE);
+   return (node != nullptr) ? String(node->getName()) : String(_T("<none>"));
+}
+
+/**
  * Update access point information
  */
 void AccessPoint::updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber)

@@ -2468,6 +2468,7 @@ public:
    void getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize);
    AccessPointState getApState() const { return m_apState; }
    shared_ptr<Node> getParentNode() const;
+   String getParentNodeName() const;
    bool isIncludedInIcmpPoll() const { return (m_flags & APF_INCLUDE_IN_ICMP_POLL) ? true : false; }
    const TCHAR *getVendor() const { return CHECK_NULL_EX(m_vendor); }
    const TCHAR *getModel() const { return CHECK_NULL_EX(m_model); }
@@ -4622,6 +4623,8 @@ void UpdateNodeIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr,
 void NXCORE_EXPORTABLE MacDbAddAccessPoint(const shared_ptr<AccessPoint>& ap);
 void NXCORE_EXPORTABLE MacDbAddInterface(const shared_ptr<Interface>& iface);
 void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, const shared_ptr<NetObj>& object);
+void NXCORE_EXPORTABLE MacDbRemoveAccessPoint(const AccessPoint& ap);
+void NXCORE_EXPORTABLE MacDbRemoveInterface(const Interface& iface);
 void NXCORE_EXPORTABLE MacDbRemoveObject(const MacAddress& macAddr, const uint32_t objectId);
 shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const BYTE *macAddr);
 shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const MacAddress& macAddr);
