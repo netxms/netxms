@@ -1734,7 +1734,8 @@ class LIBNETXMS_EXPORTABLE StringMap : public StringMapBase
 {
 public:
 	StringMap() : StringMapBase(Ownership::True) { }
-	StringMap(const StringMap &src);
+   StringMap(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId);
+	StringMap(const StringMap& src);
 
 	StringMap& operator =(const StringMap &src);
 
@@ -1793,7 +1794,7 @@ public:
    }
 
    void fillMessage(NXCPMessage *msg, uint32_t sizeFieldId, uint32_t baseFieldId) const;
-   void loadMessage(const NXCPMessage *msg, uint32_t sizeFieldId, uint32_t baseFieldId);
+   void loadMessage(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId);
 
    json_t *toJson() const;
 };

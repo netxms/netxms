@@ -4665,7 +4665,8 @@ bool NXCORE_EXPORTABLE IsParentObject(uint32_t object1, uint32_t object2);
 StructArray<DependentNode> *GetNodeDependencies(uint32_t nodeId);
 
 ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, uint32_t userId, TCHAR *errorMessage, size_t errorMessageLen,
-         bool readAllComputedFields = false, const StringList *fields = nullptr, const StringList *orderBy = nullptr, uint32_t limit = 0);
+         bool readAllComputedFields = false, const StringList *fields = nullptr, const StringList *orderBy = nullptr,
+         const StringMap *inputFields = nullptr, uint32_t limit = 0);
 uint32_t GetObjectQueries(NXCPMessage *msg);
 uint32_t ModifyObjectQuery(const NXCPMessage& msg, uint32_t *queryId);
 uint32_t DeleteObjectQuery(uint32_t queryId);

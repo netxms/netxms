@@ -1098,7 +1098,7 @@ uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, con
          {
             if ((requestType == WebServiceRequestType::PARAMETER) && response->isFieldExist(VID_NUM_PARAMETERS))
             {
-               static_cast<StringMap*>(results)->loadMessage(response, VID_NUM_PARAMETERS, VID_PARAM_LIST_BASE);
+               static_cast<StringMap*>(results)->loadMessage(*response, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
             }
             else if ((requestType == WebServiceRequestType::LIST) && response->isFieldExist(VID_NUM_ELEMENTS))
             {
