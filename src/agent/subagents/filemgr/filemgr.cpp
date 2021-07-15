@@ -364,7 +364,7 @@ static bool ValidateFileChangeOperation(const TCHAR *fileName, bool allowOverwri
    return true;
 }
 
-#ifndef __WIN32
+#ifndef _WIN32
 
 /**
  * File file owner fields in given NXCP message with data from given stat struct
@@ -408,7 +408,7 @@ static void FillFileOwnerFields(NXCPMessage *msg, uint32_t fieldId, const NX_STA
    }
 }
 
-#endif
+#endif   /* _WIN32 */
 
 static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileName, NXCPMessage *msg, uint32_t varId)
 {
