@@ -315,9 +315,9 @@ void CommSession::readThread()
                m_protocolVersion = (peerNXCPVersion == 0) ? 4 : MIN(peerNXCPVersion, NXCP_VERSION);
                debugPrintf(4, _T("Using protocol version %d"), m_protocolVersion);
 
-               NXCP_MESSAGE *response = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE);
+               NXCP_MESSAGE *response = (NXCP_MESSAGE *)MemAlloc(NXCP_HEADER_SIZE);
                response->id = htonl(msg->getId());
-               response->code = htons((WORD)CMD_NXCP_CAPS);
+               response->code = htons((uint16_t)CMD_NXCP_CAPS);
                response->flags = htons(MF_CONTROL | MF_NXCP_VERSION(m_protocolVersion));
                response->numFields = htonl(m_protocolVersion << 24);
                response->size = htonl(NXCP_HEADER_SIZE);
@@ -1021,56 +1021,56 @@ void CommSession::mergeFiles(NXCPMessage *request, NXCPMessage *response)
 {
    if (m_masterServer)
    {
-      TCHAR destinationFileName[MAX_PATH], destinationFullPath[MAX_PATH];
-      request->getFieldAsString(VID_DESTINATION_FILE_NAME, destinationFileName, MAX_PATH);
-      BuildFullPath(destinationFileName, destinationFullPath);
-      BYTE md5[MD5_DIGEST_SIZE];
-      if(request->getFieldAsBinary(VID_HASH_MD5, md5, MD5_DIGEST_SIZE) != MD5_DIGEST_SIZE)
+      size_t size;
+      const BYTE *md5 = request->getBinaryFieldPtr(VID_HASH_MD5, &size);
+      if ((md5 != nullptr) && (size == MD5_DIGEST_SIZE))
       {
-         response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
-      }
-      else
-      {
-         StringList temp_files(request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
-         if(temp_files.size() == 0)
-         {
-            response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
-         }
-         else
+         TCHAR destinationFileName[MAX_PATH], destinationFullPath[MAX_PATH];
+         request->getFieldAsString(VID_DESTINATION_FILE_NAME, destinationFileName, MAX_PATH);
+         BuildFullPath(destinationFileName, destinationFullPath);
+         StringList partFiles(request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
+         if (!partFiles.isEmpty())
          {
             bool success = true;
-            for(int i = 0; i < temp_files.size(); i++)
+            for(int i = 0; (i < partFiles.size()) && success; i++)
             {
                TCHAR sourceFullPath[MAX_PATH];
-               BuildFullPath(temp_files.get(i), sourceFullPath);
-               if(!MergeFiles(sourceFullPath, destinationFullPath))
+               BuildFullPath(partFiles.get(i), sourceFullPath);
+               if (!MergeFiles(sourceFullPath, destinationFullPath))
                {
-                  response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+                  response->setField(VID_RCC, ERR_IO_FAILURE);
                   success = false;
-                  break;
                }
             }
-            if(success)
+            if (success)
             {
-               for(int i = 0; i < temp_files.size(); i++)
+               for(int i = 0; i < partFiles.size(); i++)
                {
                   TCHAR sourceFullPath[MAX_PATH];
-                  BuildFullPath(temp_files.get(i), sourceFullPath);
+                  BuildFullPath(partFiles.get(i), sourceFullPath);
                   _tremove(sourceFullPath);
                }
 
                BYTE hash[MD5_DIGEST_SIZE];
                CalculateFileMD5Hash(destinationFullPath, hash);
-               if(memcmp(md5, hash, MD5_DIGEST_SIZE) == 0)
+               if (!memcmp(md5, hash, MD5_DIGEST_SIZE))
                {
                   response->setField(VID_RCC, ERR_SUCCESS);
                }
                else
                {
-                  response->setField(VID_RCC, ERR_MD5_HASH_MISMATCH);
+                  response->setField(VID_RCC, ERR_FILE_HASH_MISMATCH);
                }
             }
          }
+         else
+         {
+            response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
+         }
+      }
+      else
+      {
+         response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
       }
    }
    else
@@ -1111,7 +1111,7 @@ static void SendFileProgressCallback(size_t bytesTransferred, void *cbArg)
 /**
  * Send file to server
  */
-bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancellationFlag)
+bool CommSession::sendFile(uint32_t requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancellationFlag)
 {
    if (m_disconnected)
       return false;
@@ -1448,7 +1448,7 @@ void CommSession::prepareProxySessionSetupMsg(NXCPMessage *msg)
    msg->setField(VID_SERVER_ID, m_serverId);
    msg->setField(VID_IP_ADDRESS, m_serverAddr);
 
-   UINT32 flags = 0;
+   uint32_t flags = 0;
    if (m_masterServer)
       flags |= 0x01;
    if (m_controlServer)

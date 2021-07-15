@@ -30,7 +30,7 @@ static void (* s_fpPostEvent1)(uint32_t, const TCHAR *, time_t, const char *, va
 static void (* s_fpPostEvent2)(uint32_t, const TCHAR *, time_t, int, const TCHAR **) = nullptr;
 static shared_ptr<AbstractCommSession> (* s_fpFindServerSession)(uint64_t) = nullptr;
 static bool (* s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = nullptr;
-static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *) = nullptr;
+static bool (* s_fpSendFile)(void *, uint32_t, const TCHAR *, off_t, bool, VolatileCounter *) = nullptr;
 static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32, time_t) = nullptr;
 static const TCHAR *s_dataDirectory = nullptr;
 static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = nullptr;
@@ -47,7 +47,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void (*postEvent2)(uint32_t, const TCHAR *, time_t, int, const TCHAR **),
       bool (*enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
       shared_ptr<AbstractCommSession> (*findServerSession)(uint64_t),
-      bool (*sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
+      bool (*sendFile)(void *, uint32_t, const TCHAR *, off_t, bool, VolatileCounter *),
       bool (*pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
       DB_HANDLE (*getLocalDatabaseHandle)(),
       const TCHAR *dataDirectory,
@@ -172,11 +172,11 @@ bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* c
 /**
  * Send file to server
  */
-bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, 
-                                                 bool allowCompression, VolatileCounter *cancellationFlag)
+bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, uint32_t requestId, const TCHAR *file,
+         off_t offset, bool allowCompression, VolatileCounter *cancellationFlag)
 {
 	if ((s_fpSendFile == nullptr) || (session == nullptr) || (file == nullptr))
-		return FALSE;
+		return false;
 	return s_fpSendFile(session, requestId, file, offset, allowCompression, cancellationFlag);
 }
 
@@ -204,10 +204,9 @@ bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, L
 /**
  * Push parameter's value
  */
-bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, UINT32 value)
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, uint32_t value)
 {
 	TCHAR buffer[64];
-
 	_sntprintf(buffer, sizeof(buffer), _T("%u"), (unsigned int)value);
 	return AgentPushParameterData(parameter, buffer);
 }

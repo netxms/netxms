@@ -132,7 +132,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void (*postEvent2)(uint32_t, const TCHAR *, time_t, int, const TCHAR **),
       bool (*enumerateSessions)(EnumerationCallbackResult(*)(AbstractCommSession *, void *), void*),
       shared_ptr<AbstractCommSession> (*findServerSession)(uint64_t),
-      bool (*sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
+      bool (*sendFile)(void *, uint32_t, const TCHAR *, off_t, bool, VolatileCounter *),
       bool (*pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
       DB_HANDLE (*getLocalDatabaseHandle)(),
       const TCHAR *dataDirectory,
@@ -862,7 +862,7 @@ static void LoadPlatformSubagent()
 /**
  * Send file to server (subagent API)
  */
-static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancellationFlag)
+static bool SendFileToServer(void *session, uint32_t requestId, const TCHAR *file, off_t offset, bool allowCompression, VolatileCounter *cancellationFlag)
 {
 	if (session == nullptr)
 		return false;

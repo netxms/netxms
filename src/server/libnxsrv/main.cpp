@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -80,7 +80,7 @@ static struct
    { ERR_INVALID_SSH_KEY_ID, _T("Invalid SSH key") },
    { ERR_AGENT_DB_FAILURE, _T("Agent database failure") },
    { ERR_INVALID_HTTP_REQUEST_CODE, _T("Invalid HTTP request code") },
-   { ERR_MD5_HASH_MISMATCH, _T("MD5 hash mismatch") },
+   { ERR_FILE_HASH_MISMATCH, _T("File hash mismatch") },
    { -1, NULL }
 };
 

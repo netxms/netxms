@@ -4552,6 +4552,8 @@ String LIBNETXMS_EXPORTABLE FormatTimestamp(time_t t);
 
 String LIBNETXMS_EXPORTABLE GetEnvironmentVariableEx(const TCHAR *var);
 
+TCHAR LIBNETXMS_EXPORTABLE *GetFileOwner(const TCHAR *file, TCHAR *buffer, size_t size);
+
 bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const WCHAR *option, WCHAR *buffer, size_t bufSize);
 bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolW(const WCHAR *optString, const WCHAR *option, bool defVal);
 int32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntW(const WCHAR *optString, const WCHAR *option, int32_t defVal);

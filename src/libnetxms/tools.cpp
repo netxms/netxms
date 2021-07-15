@@ -36,6 +36,8 @@
 #include <psapi.h>
 #include <wintrust.h>
 #include <Softpub.h>
+#else
+#include <pwd.h>
 #endif
 
 #if !defined(_WIN32) && !defined(UNDER_CE)
@@ -3789,21 +3791,18 @@ static BOOL CopyFileInternal(const TCHAR *src, const TCHAR *dst, int mode, bool 
 
 #endif
 
+/**
+ * Merge files
+ */
 bool LIBNETXMS_EXPORTABLE MergeFiles(const TCHAR *source, const TCHAR *destination)
 {
    bool success = false;
 #ifdef _WIN32
-   HANDLE sourceFile = CreateFile(source,
-        FILE_APPEND_DATA, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-
+   HANDLE sourceFile = CreateFile(source, FILE_APPEND_DATA, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (sourceFile == INVALID_HANDLE_VALUE)
-    {
         return false;
-    }
 
-    HANDLE destinationFile = CreateFile(destination,
-       FILE_APPEND_DATA, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-
+    HANDLE destinationFile = CreateFile(destination, FILE_APPEND_DATA, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (destinationFile == INVALID_HANDLE_VALUE)
     {
        CloseHandle(sourceFile);
@@ -3813,16 +3812,13 @@ bool LIBNETXMS_EXPORTABLE MergeFiles(const TCHAR *source, const TCHAR *destinati
     BYTE buffer[4096];
     DWORD bytesRead = 0;
     DWORD bytesWritten = 0;
-    ReadFile(sourceFile, buffer, 4096, &bytesRead, NULL);
-
+    ReadFile(sourceFile, buffer, 4096, &bytesRead, nullptr);
     while (bytesRead > 0)
     {
-       success = WriteFile( destinationFile, buffer, bytesRead, &bytesWritten, NULL);
+       success = WriteFile( destinationFile, buffer, bytesRead, &bytesWritten, nullptr);
        if (!success)
-       {
           break;
-       }
-       ReadFile(sourceFile, buffer, 4096, &bytesRead, NULL);
+       ReadFile(sourceFile, buffer, 4096, &bytesRead, nullptr);
     }
 
     CloseHandle(sourceFile);
@@ -4147,4 +4143,61 @@ String LIBNETXMS_EXPORTABLE GetEnvironmentVariableEx(const TCHAR *var)
    const TCHAR *value = _tgetenv(var);
    return (value != nullptr) ? String(value) : String();
 #endif
+}
+
+/**
+ * Get file owner information. Returns provided buffer on success and null on failure.
+ */
+TCHAR LIBNETXMS_EXPORTABLE *GetFileOwner(const TCHAR *file, TCHAR *buffer, size_t size)
+{
+   buffer[0] = 0;
+
+#ifdef _WIN32
+   HANDLE hFile = CreateFile(file, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+   if (hFile == INVALID_HANDLE_VALUE)
+      return nullptr;
+
+   // Get the owner SID of the file.
+   PSID owner = nullptr;
+   PSECURITY_DESCRIPTOR sd = nullptr;
+   if (GetSecurityInfo(hFile, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION, &owner, NULL, NULL, NULL, &sd) != ERROR_SUCCESS)
+   {
+      CloseHandle(hFile);
+      return nullptr;
+   }
+   CloseHandle(hFile);
+
+   // Resolve account and domain name
+   TCHAR acctName[256], domainName[256];
+   DWORD acctNameSize = 256, domainNameSize = 256;
+   SID_NAME_USE use = SidTypeUnknown;
+   if (!LookupAccountSid(nullptr, owner, acctName, &acctNameSize, domainName, &domainNameSize, &use))
+      return nullptr;
+
+   _tcslcpy(buffer, domainName, size);
+   _tcslcat(buffer, _T("\\"), size);
+   _tcslcat(buffer, acctName, size);
+#else
+   NX_STAT_STRUCT st;
+   if (CALL_STAT(file, &st) != 0)
+      return nullptr;
+
+#if HAVE_GETPWUID_R
+   struct passwd *pw, pwbuf;
+   char pwtxt[4096];
+   getpwuid_r(st.st_uid, &pwbuf, pwtxt, 4096, &pw);
+#else
+   struct passwd *pw = getpwuid(st.st_uid);
+#endif
+   if (pw != nullptr)
+   {
+      mb_to_wchar(pw->pw_name, -1, buffer, size);
+   }
+   else
+   {
+      _sntprintf(buffer, size, _T("[%lu]"), (unsigned long)st.st_uid);
+   }
+#endif // _WIN32
+
+   return buffer;
 }

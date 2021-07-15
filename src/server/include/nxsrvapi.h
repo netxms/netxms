@@ -865,7 +865,8 @@ private:
    void processFileData(NXCPMessage *msg);
    void processFileTransferAbort(NXCPMessage *msg);
    uint32_t uploadFileInternal(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
-         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod, off_t offset = 0, size_t size = 0, bool useFileTransfer = false);
+         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod, off_t offset = 0,
+         size_t chunkSize = 0, bool forceBasicTransfer = false);
 
    void processCollectedDataCallback(NXCPMessage *msg);
    void onDataPushCallback(NXCPMessage *msg);

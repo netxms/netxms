@@ -774,9 +774,9 @@ bool AddExternalTable(TCHAR *config)
 uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session)
 {
    int i, rc;
-   uint32_t dwErrorCode;
+   uint32_t errorCode;
 
-   //session->debugPrintf(5, _T("Requesting metric \"%s\""), param);
+   session->debugPrintf(5, _T("Requesting metric \"%s\""), param);
    for(i = 0; i < s_metrics.size(); i++)
 	{
       NETXMS_SUBAGENT_PARAM *p = s_metrics.get(i);
@@ -786,24 +786,24 @@ uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
-               dwErrorCode = ERR_SUCCESS;
+               errorCode = ERR_SUCCESS;
                InterlockedIncrement(&s_processedRequests);
                break;
             case SYSINFO_RC_ERROR:
-               dwErrorCode = ERR_INTERNAL_ERROR;
+               errorCode = ERR_INTERNAL_ERROR;
                InterlockedIncrement(&s_failedRequests);
                break;
             case SYSINFO_RC_NO_SUCH_INSTANCE:
-               dwErrorCode = ERR_NO_SUCH_INSTANCE;
+               errorCode = ERR_NO_SUCH_INSTANCE;
                InterlockedIncrement(&s_failedRequests);
                break;
             case SYSINFO_RC_UNSUPPORTED:
-               dwErrorCode = ERR_UNKNOWN_PARAMETER;
+               errorCode = ERR_UNKNOWN_PARAMETER;
                InterlockedIncrement(&s_unsupportedRequests);
                break;
             default:
                nxlog_write(NXLOG_ERROR, _T("Internal error: unexpected return code %d in GetParameterValue(\"%s\")"), rc, param);
-               dwErrorCode = ERR_INTERNAL_ERROR;
+               errorCode = ERR_INTERNAL_ERROR;
                InterlockedIncrement(&s_failedRequests);
                break;
          }
@@ -816,36 +816,36 @@ uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession
 		rc = GetParameterValueFromExtProvider(param, value);
 		if (rc == SYSINFO_RC_SUCCESS)
 		{
-         dwErrorCode = ERR_SUCCESS;
+         errorCode = ERR_SUCCESS;
          InterlockedIncrement(&s_processedRequests);
 		}
 		else
 		{
-			dwErrorCode = ERR_UNKNOWN_PARAMETER;
+			errorCode = ERR_UNKNOWN_PARAMETER;
 		}
    }
 
-   if ((dwErrorCode == ERR_UNKNOWN_PARAMETER) && (i == s_metrics.size()))
+   if ((errorCode == ERR_UNKNOWN_PARAMETER) && (i == s_metrics.size()))
    {
-		dwErrorCode = GetParameterValueFromAppAgent(param, value);
-		if (dwErrorCode == ERR_SUCCESS)
+		errorCode = GetParameterValueFromAppAgent(param, value);
+		if (errorCode == ERR_SUCCESS)
 		{
          InterlockedIncrement(&s_processedRequests);
 		}
-		else if (dwErrorCode != ERR_UNKNOWN_PARAMETER)
+		else if (errorCode != ERR_UNKNOWN_PARAMETER)
 		{
          InterlockedIncrement(&s_failedRequests);
 		}
    }
 
-   if ((dwErrorCode == ERR_UNKNOWN_PARAMETER) && (i == s_metrics.size()))
+   if ((errorCode == ERR_UNKNOWN_PARAMETER) && (i == s_metrics.size()))
    {
-		dwErrorCode = GetParameterValueFromExtSubagent(param, value);
-		if (dwErrorCode == ERR_SUCCESS)
+		errorCode = GetParameterValueFromExtSubagent(param, value);
+		if (errorCode == ERR_SUCCESS)
 		{
          InterlockedIncrement(&s_processedRequests);
 		}
-		else if (dwErrorCode == ERR_UNKNOWN_PARAMETER)
+		else if (errorCode == ERR_UNKNOWN_PARAMETER)
 		{
          InterlockedIncrement(&s_unsupportedRequests);
 		}
@@ -855,10 +855,10 @@ uint32_t GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession
 		}
    }
 
-	session->debugPrintf(7, _T("GetParameterValue(\"%s\"): %d (%s) value = \"%s\""), param, (int)dwErrorCode,
-		   (dwErrorCode == ERR_SUCCESS) ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : (dwErrorCode == ERR_NO_SUCH_INSTANCE ? _T("NO_SUCH_INSTANCE")  : _T("INTERNAL_ERROR"))),
-         (dwErrorCode == ERR_SUCCESS) ? value : _T(""));
-   return dwErrorCode;
+	session->debugPrintf(7, _T("GetParameterValue(\"%s\"): %d (%s) value = \"%s\""), param, (int)errorCode,
+		   (errorCode == ERR_SUCCESS) ? _T("SUCCESS") : (errorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : (errorCode == ERR_NO_SUCH_INSTANCE ? _T("NO_SUCH_INSTANCE")  : _T("INTERNAL_ERROR"))),
+         (errorCode == ERR_SUCCESS) ? value : _T(""));
+   return errorCode;
 }
 
 /**
