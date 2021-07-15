@@ -80,51 +80,51 @@
 /**
  * Error codes
  */
-#define ERR_SUCCESS                 ((UINT32)0)
-#define ERR_PROCESSING              ((UINT32)102)
-#define ERR_UNKNOWN_COMMAND         ((UINT32)400)
-#define ERR_AUTH_REQUIRED           ((UINT32)401)
-#define ERR_ACCESS_DENIED           ((UINT32)403)
-#define ERR_UNKNOWN_PARAMETER       ((UINT32)404)
-#define ERR_REQUEST_TIMEOUT         ((UINT32)408)
-#define ERR_AUTH_FAILED             ((UINT32)440)
-#define ERR_ALREADY_AUTHENTICATED   ((UINT32)441)
-#define ERR_AUTH_NOT_REQUIRED       ((UINT32)442)
-#define ERR_INTERNAL_ERROR          ((UINT32)500)
-#define ERR_NOT_IMPLEMENTED         ((UINT32)501)
-#define ERR_OUT_OF_RESOURCES        ((UINT32)503)
-#define ERR_NOT_CONNECTED           ((UINT32)900)
-#define ERR_CONNECTION_BROKEN       ((UINT32)901)
-#define ERR_BAD_RESPONSE            ((UINT32)902)
-#define ERR_IO_FAILURE              ((UINT32)903)
-#define ERR_RESOURCE_BUSY           ((UINT32)904)
-#define ERR_EXEC_FAILED             ((UINT32)905)
-#define ERR_ENCRYPTION_REQUIRED     ((UINT32)906)
-#define ERR_NO_CIPHERS              ((UINT32)907)
-#define ERR_INVALID_PUBLIC_KEY      ((UINT32)908)
-#define ERR_INVALID_SESSION_KEY     ((UINT32)909)
-#define ERR_CONNECT_FAILED          ((UINT32)910)
-#define ERR_MALFORMED_COMMAND       ((UINT32)911)
-#define ERR_SOCKET_ERROR            ((UINT32)912)
-#define ERR_BAD_ARGUMENTS           ((UINT32)913)
-#define ERR_SUBAGENT_LOAD_FAILED    ((UINT32)914)
-#define ERR_FILE_OPEN_ERROR         ((UINT32)915)
-#define ERR_FILE_STAT_FAILED        ((UINT32)916)
-#define ERR_MEM_ALLOC_FAILED        ((UINT32)917)
-#define ERR_FILE_DELETE_FAILED      ((UINT32)918)
-#define ERR_NO_SESSION_AGENT        ((UINT32)919)
-#define ERR_SERVER_ID_UNSET         ((UINT32)920)
-#define ERR_NO_SUCH_INSTANCE        ((UINT32)921)
-#define ERR_OUT_OF_STATE_REQUEST    ((UINT32)922)
-#define ERR_ENCRYPTION_ERROR        ((UINT32)923)
-#define ERR_MALFORMED_RESPONSE      ((UINT32)924)
-#define ERR_INVALID_OBJECT          ((UINT32)925)
-#define ERR_FILE_ALREADY_EXISTS     ((UINT32)926)
-#define ERR_FOLDER_ALREADY_EXISTS   ((UINT32)927)
-#define ERR_INVALID_SSH_KEY_ID      ((UINT32)928)
-#define ERR_AGENT_DB_FAILURE        ((UINT32)929)
-#define ERR_INVALID_HTTP_REQUEST_CODE ((uint32_t)930)
-#define ERR_MD5_HASH_MISMATCH       ((uint32_t)931)
+#define ERR_SUCCESS                    ((uint32_t)0)
+#define ERR_PROCESSING                 ((uint32_t)102)
+#define ERR_UNKNOWN_COMMAND            ((uint32_t)400)
+#define ERR_AUTH_REQUIRED              ((uint32_t)401)
+#define ERR_ACCESS_DENIED              ((uint32_t)403)
+#define ERR_UNKNOWN_PARAMETER          ((uint32_t)404)
+#define ERR_REQUEST_TIMEOUT            ((uint32_t)408)
+#define ERR_AUTH_FAILED                ((uint32_t)440)
+#define ERR_ALREADY_AUTHENTICATED      ((uint32_t)441)
+#define ERR_AUTH_NOT_REQUIRED          ((uint32_t)442)
+#define ERR_INTERNAL_ERROR             ((uint32_t)500)
+#define ERR_NOT_IMPLEMENTED            ((uint32_t)501)
+#define ERR_OUT_OF_RESOURCES           ((uint32_t)503)
+#define ERR_NOT_CONNECTED              ((uint32_t)900)
+#define ERR_CONNECTION_BROKEN          ((uint32_t)901)
+#define ERR_BAD_RESPONSE               ((uint32_t)902)
+#define ERR_IO_FAILURE                 ((uint32_t)903)
+#define ERR_RESOURCE_BUSY              ((uint32_t)904)
+#define ERR_EXEC_FAILED                ((uint32_t)905)
+#define ERR_ENCRYPTION_REQUIRED        ((uint32_t)906)
+#define ERR_NO_CIPHERS                 ((uint32_t)907)
+#define ERR_INVALID_PUBLIC_KEY         ((uint32_t)908)
+#define ERR_INVALID_SESSION_KEY        ((uint32_t)909)
+#define ERR_CONNECT_FAILED             ((uint32_t)910)
+#define ERR_MALFORMED_COMMAND          ((uint32_t)911)
+#define ERR_SOCKET_ERROR               ((uint32_t)912)
+#define ERR_BAD_ARGUMENTS              ((uint32_t)913)
+#define ERR_SUBAGENT_LOAD_FAILED       ((uint32_t)914)
+#define ERR_FILE_OPEN_ERROR            ((uint32_t)915)
+#define ERR_FILE_STAT_FAILED           ((uint32_t)916)
+#define ERR_MEM_ALLOC_FAILED           ((uint32_t)917)
+#define ERR_FILE_DELETE_FAILED         ((uint32_t)918)
+#define ERR_NO_SESSION_AGENT           ((uint32_t)919)
+#define ERR_SERVER_ID_UNSET            ((uint32_t)920)
+#define ERR_NO_SUCH_INSTANCE           ((uint32_t)921)
+#define ERR_OUT_OF_STATE_REQUEST       ((uint32_t)922)
+#define ERR_ENCRYPTION_ERROR           ((uint32_t)923)
+#define ERR_MALFORMED_RESPONSE         ((uint32_t)924)
+#define ERR_INVALID_OBJECT             ((uint32_t)925)
+#define ERR_FILE_ALREADY_EXISTS        ((uint32_t)926)
+#define ERR_FOLDER_ALREADY_EXISTS      ((uint32_t)927)
+#define ERR_INVALID_SSH_KEY_ID         ((uint32_t)928)
+#define ERR_AGENT_DB_FAILURE           ((uint32_t)929)
+#define ERR_INVALID_HTTP_REQUEST_CODE  ((uint32_t)930)
+#define ERR_FILE_HASH_MISMATCH         ((uint32_t)931)
 
 /**
  * Bulk data reconciliation DCI processing status codes
@@ -149,8 +149,8 @@
 /**
  * WinPerf features
  */
-#define WINPERF_AUTOMATIC_SAMPLE_COUNT    ((UINT32)0x00000001)
-#define WINPERF_REMOTE_COUNTER_CONFIG     ((UINT32)0x00000002)
+#define WINPERF_AUTOMATIC_SAMPLE_COUNT    ((uint32_t)0x00000001)
+#define WINPERF_REMOTE_COUNTER_CONFIG     ((uint32_t)0x00000002)
 
 /**
  * User session states (used by session agents)
@@ -773,7 +773,7 @@ public:
    virtual void postMessage(const NXCPMessage *msg) = 0;
    virtual bool sendRawMessage(const NXCP_MESSAGE *msg) = 0;
    virtual void postRawMessage(const NXCP_MESSAGE *msg) = 0;
-	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) = 0;
+	virtual bool sendFile(uint32_t requestId, const TCHAR *file, off_t offset, bool allowCompression, VolatileCounter *cancelationFlag) = 0;
    virtual uint32_t doRequest(NXCPMessage *msg, uint32_t timeout) = 0;
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, uint32_t timeout) = 0;
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) = 0;
@@ -946,7 +946,7 @@ static inline void ret_int(TCHAR *rbuf, LONG value)
 #endif
 }
 
-static inline void ret_uint(TCHAR *rbuf, UINT32 value)
+static inline void ret_uint(TCHAR *rbuf, uint32_t value)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300) && !defined(__clang__)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%lu"), (unsigned long)value);
@@ -1048,16 +1048,16 @@ private:
    INT32 m_rssi;
    double m_snr;
    double m_freq;
-   UINT32 m_fcnt;
-   UINT32 m_port;
+   uint32_t m_fcnt;
+   uint32_t m_port;
    time_t m_lastContact;
 
 public:
    LoraDeviceData(NXCPMessage *request);
    LoraDeviceData(DB_RESULT result, int row);
 
-   UINT32 saveToDB(bool isNew = false) const;
-   UINT32 deleteFromDB() const;
+   uint32_t saveToDB(bool isNew = false) const;
+   uint32_t deleteFromDB() const;
 
    bool isOtaa() const { return (m_devEui.length() > 0) ? true : false; }
 
@@ -1070,7 +1070,7 @@ public:
    const BYTE *getPayload() const { return m_payload; }
    void setPayload(const char *payload) { StrToBinA(payload, m_payload, 36); }
 
-   UINT32 getDecoder() { return m_decoder; }
+   uint32_t getDecoder() { return m_decoder; }
 
    const char *getDataRate() const { return m_dataRate; }
    void setDataRate(const char *dataRate) { strlcpy(m_dataRate, dataRate, 24); }
@@ -1084,11 +1084,11 @@ public:
    double getFreq() const { return m_freq; }
    void setFreq(double freq) { m_freq = freq; }
 
-   UINT32 getFcnt() const { return m_fcnt; }
-   void setFcnt(UINT32 fcnt) { m_fcnt = fcnt; }
+   uint32_t getFcnt() const { return m_fcnt; }
+   void setFcnt(uint32_t fcnt) { m_fcnt = fcnt; }
 
-   UINT32 getPort() const { return m_port; }
-   void setPort(UINT32 port) { m_port = port; }
+   uint32_t getPort() const { return m_port; }
+   void setPort(uint32_t port) { m_port = port; }
 
    INT32 getLastContact() const { return (INT32)m_lastContact; }
    void updateLastContact() { m_lastContact = time(NULL); }
@@ -1182,12 +1182,12 @@ void LIBNXAGENT_EXPORTABLE AgentQueueNotifictionMessage(NXCPMessage *msg);
 bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void *), void *data);
 shared_ptr<AbstractCommSession> LIBNXAGENT_EXPORTABLE AgentFindServerSession(uint64_t serverId);
 
-bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, 
-                                                 bool allowCompression, VolatileCounter *cancellationFlag);
+bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, uint32_t requestId, const TCHAR *file,
+         off_t offset, bool allowCompression, VolatileCounter *cancellationFlag);
 
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value);
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LONG value);
-bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, UINT32 value);
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, uint32_t value);
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, INT64 value);
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, QWORD value);
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, double value);

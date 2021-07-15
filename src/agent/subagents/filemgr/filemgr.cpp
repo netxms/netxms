@@ -24,7 +24,6 @@
 #ifdef _WIN32
 #include <accctrl.h>
 #include <aclapi.h>
-#include <windows.h>
 #include <Lmcons.h>
 
 bool SetPrivilege(HANDLE hToken, const TCHAR* privilege, bool enabled)
@@ -365,40 +364,51 @@ static bool ValidateFileChangeOperation(const TCHAR *fileName, bool allowOverwri
    return true;
 }
 
-#ifdef _WIN32
+#ifndef __WIN32
 
 /**
- * Get file owner information on Windows
+ * File file owner fields in given NXCP message with data from given stat struct
  */
-TCHAR *GetFileOwnerWin(const TCHAR *file)
+static void FillFileOwnerFields(NXCPMessage *msg, uint32_t fieldId, const NX_STAT_STRUCT& st)
 {
-   HANDLE hFile = CreateFile(file, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-   if (hFile == INVALID_HANDLE_VALUE)
-      return _tcsdup(_T(""));
+#if HAVE_GETPWUID_R
+   struct passwd *pw, pwbuf;
+   char pwtxt[4096];
+   getpwuid_r(st.st_uid, &pwbuf, pwtxt, 4096, &pw);
+#else
+   struct passwd *pw = getpwuid(st.st_uid);
+#endif
+#if HAVE_GETGRGID_R
+   struct group *gr, grbuf;
+   char grtxt[4096];
+   getgrgid_r(st.st_gid, &grbuf, grtxt, 4096, &gr);
+#else
+   struct group *gr = getgrgid(st.st_gid);
+#endif
 
-   // Get the owner SID of the file.
-   PSID owner = NULL;
-   PSECURITY_DESCRIPTOR sd = NULL;
-   if (GetSecurityInfo(hFile, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION, &owner, NULL, NULL, NULL, &sd) != ERROR_SUCCESS)
+   if (pw != nullptr)
    {
-      CloseHandle(hFile);
-      return _tcsdup(_T(""));
+      msg->setFieldFromMBString(fieldId, pw->pw_name);
    }
-   CloseHandle(hFile);
-
-   // Resolve account and domain name
-   TCHAR acctName[256], domainName[256];
-   DWORD acctNameSize = 256, domainNameSize = 256;
-   SID_NAME_USE use = SidTypeUnknown;
-   if (!LookupAccountSid(NULL, owner, acctName, &acctNameSize, domainName, &domainNameSize, &use))
-      return _tcsdup(_T(""));
-
-   TCHAR *name = (TCHAR *)malloc(512 * sizeof(TCHAR));
-   _sntprintf(name, 512, _T("%s\\%s"), domainName, acctName);
-   return name;
+   else
+   {
+      TCHAR id[32];
+      _sntprintf(id, 32, _T("[%lu]"), (unsigned long)st.st_uid);
+      msg->setField(fieldId, id);
+   }
+   if (gr != nullptr)
+   {
+      msg->setFieldFromMBString(fieldId + 1, gr->gr_name);
+   }
+   else
+   {
+      TCHAR id[32];
+      _sntprintf(id, 32, _T("[%lu]"), (unsigned long)st.st_gid);
+      msg->setField(fieldId + 1, id);
+   }
 }
 
-#endif // _WIN32
+#endif
 
 static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileName, NXCPMessage *msg, uint32_t varId)
 {
@@ -451,42 +461,8 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
       msg->setField(varId++, fullName);
 
 #ifndef _WIN32
-#if HAVE_GETPWUID_R
-      struct passwd *pw, pwbuf;
-      char pwtxt[4096];
-      getpwuid_r(st.st_uid, &pwbuf, pwtxt, 4096, &pw);
-#else
-      struct passwd *pw = getpwuid(st.st_uid);
-#endif
-#if HAVE_GETGRGID_R
-      struct group *gr, grbuf;
-      char grtxt[4096];
-      getgrgid_r(st.st_gid, &grbuf, grtxt, 4096, &gr);
-#else
-      struct group *gr = getgrgid(st.st_gid);
-#endif
-
-      if (pw != nullptr)
-      {
-         msg->setFieldFromMBString(varId++, pw->pw_name);
-      }
-      else
-      {
-         TCHAR id[32];
-         _sntprintf(id, 32, _T("[%lu]"), (unsigned long)st.st_uid);
-         msg->setField(varId++, id);
-      }
-      if (gr != nullptr)
-      {
-         msg->setFieldFromMBString(varId++, gr->gr_name);
-      }
-      else
-      {
-         TCHAR id[32];
-         _sntprintf(id, 32, _T("[%lu]"), (unsigned long)st.st_gid);
-         msg->setField(varId++, id);
-      }
-
+      FillFileOwnerFields(msg, varId, st);
+      varId += 2;
       accessRights[1] = (S_IRUSR & st.st_mode) > 0 ? _T('r') : _T('-');
       accessRights[2] = (S_IWUSR & st.st_mode) > 0 ? _T('w') : _T('-');
       accessRights[3] = (S_IXUSR & st.st_mode) > 0 ? _T('x') : _T('-');
@@ -499,9 +475,8 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
       accessRights[10] = 0;
       msg->setField(varId++, accessRights);
 #else	/* _WIN32 */
-      TCHAR *owner = GetFileOwnerWin(filePath);
-      msg->setField(varId++, owner);
-      free(owner);
+      TCHAR owner[1024];
+      msg->setField(varId++, GetFileOwner(filePath, owner, 1024));
       msg->setField(varId++, _T(""));
       msg->setField(varId++, _T(""));
 #endif // _WIN32
@@ -1070,79 +1045,38 @@ static void CH_GetFileDetails(NXCPMessage *request, NXCPMessage *response, Abstr
    }
 }
 
-void AddFileOwner(NXCPMessage *response, uint32_t fieldId, const TCHAR* filePath, uint32_t uid)
-{
-#ifdef _WIN32
-   TCHAR *owner = GetFileOwnerWin(filePath);
-   response->setField(fieldId, owner);
-   free(owner);
-#else //POSIX
-#if HAVE_GETPWUID_R
-   struct passwd *pw, pwbuf;
-   char pwtxt[4096];
-   getpwuid_r(uid, &pwbuf, pwtxt, 4096, &pw);
-#else
-   struct passwd *pw = getpwuid(uid);
-#endif
-   if (pw != nullptr)
-   {
-      response->setFieldFromMBString(fieldId, pw->pw_name);
-   }
-   else
-   {
-      TCHAR id[32];
-      _sntprintf(id, 32, _T("[%lu]"), (unsigned long)uid);
-      response->setField(fieldId, id);
-   }
-#endif //end of POSIX
-}
-
-void AddFileOwnerGroup(NXCPMessage *response, uint32_t fieldId, const TCHAR* filePath, uint32_t gid)
-{
-#ifdef _WIN32
-   response->setField(fieldId, _T(""));
-#else  //POSIX
-#if HAVE_GETGRGID_R
-      struct group *gr, grbuf;
-      char grtxt[4096];
-      getgrgid_r(gid, &grbuf, grtxt, 4096, &gr);
-#else
-      struct group *gr = getgrgid(gid);
-#endif
-      if (gr != nullptr)
-      {
-         response->setFieldFromMBString(fieldId, gr->gr_name);
-      }
-      else
-      {
-         TCHAR id[32];
-         _sntprintf(id, 32, _T("[%lu]"), (unsigned long)gid);
-         response->setField(fieldId, id);
-      }
-#endif //end of POSIX
-}
-
 #ifdef WIN32
 #define mode_t unsigned short
 #endif
 
-void AddFilePermissions(NXCPMessage *response, uint32_t fieldId, mode_t mode)
+/**
+ * Convert file permissions into internal format
+ */
+static uint16_t ConvertFilePermissions(mode_t mode)
 {
 #ifdef _WIN32
-   response->setField(fieldId, _T(""));
+   return 0;   // FIXME: how to return correct permissions?
 #else
-   uint16_t accessRights;
-
-   if((S_IRUSR & mode) > 0) accessRights |= (1 << 0);
-   if((S_IWUSR & mode) > 0) accessRights |= (1 << 1);
-   if((S_IXUSR & mode) > 0) accessRights |= (1 << 2);
-   if((S_IRGRP & mode) > 0) accessRights |= (1 << 3);
-   if((S_IWGRP & mode) > 0) accessRights |= (1 << 4);
-   if((S_IXGRP & mode) > 0) accessRights |= (1 << 5);
-   if((S_IROTH & mode) > 0) accessRights |= (1 << 6);
-   if((S_IWOTH & mode) > 0) accessRights |= (1 << 7);
-   if((S_IXOTH & mode) > 0) accessRights |= (1 << 8);
-   response->setField(fieldId, accessRights);
+   uint16_t accessRights = 0;
+   if (S_IRUSR & mode)
+      accessRights |= (1 << 0);
+   if (S_IWUSR & mode)
+      accessRights |= (1 << 1);
+   if (S_IXUSR & mode)
+      accessRights |= (1 << 2);
+   if (S_IRGRP & mode)
+      accessRights |= (1 << 3);
+   if (S_IWGRP & mode)
+      accessRights |= (1 << 4);
+   if (S_IXGRP & mode)
+      accessRights |= (1 << 5);
+   if (S_IROTH & mode)
+      accessRights |= (1 << 6);
+   if (S_IWOTH & mode)
+      accessRights |= (1 << 7);
+   if (S_IXOTH & mode)
+      accessRights |= (1 << 8);
+   return accessRights;
 #endif
 }
 
@@ -1174,9 +1108,15 @@ static void CH_GetFileSetDetails(NXCPMessage *request, NXCPMessage *response, Ab
             if (!CalculateFileMD5Hash(fullPath, hash))
                memset(hash, 0, MD5_DIGEST_SIZE);
             response->setField(fieldId++, hash, MD5_DIGEST_SIZE);
-            AddFilePermissions(response, fieldId++, fs.st_mode);
-            AddFileOwner(response, fieldId++, fileName, fs.st_uid);
-            AddFileOwnerGroup(response, fieldId++, fileName, fs.st_gid);
+            response->setField(fieldId++, ConvertFilePermissions(fs.st_mode));
+#ifdef _WIN32
+            TCHAR owner[1024];
+            response->setField(fieldId++, GetFileOwner(fileName, owner, 1024));
+            response->setField(fieldId++, _T("")); // Do not set group on Windows
+#else
+            FillFileOwnerFields(response, fieldId, fs);
+            fieldId += 2;
+#endif
             fieldId += 3;
          }
          else
@@ -1600,55 +1540,42 @@ static void CH_MergeFiles(NXCPMessage *request, NXCPMessage *response, AbstractC
    TCHAR *destinationFullPath;
    if (CheckFullPath(destinationFileName, &destinationFullPath, false))
    {
-      BYTE md5[MD5_DIGEST_SIZE];
-      if(request->getFieldAsBinary(VID_HASH_MD5, md5, MD5_DIGEST_SIZE) != MD5_DIGEST_SIZE)
+      size_t size;
+      const BYTE *md5 = request->getBinaryFieldPtr(VID_HASH_MD5, &size);
+      if ((md5 != nullptr) && (size ==  MD5_DIGEST_SIZE))
       {
-         response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
-      }
-      else
-      {
-         StringList temp_files(request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
-         if(temp_files.size() == 0)
-         {
-            response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
-         }
-         else
+         StringList partFiles(request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
+         if (!partFiles.isEmpty())
          {
             bool success = true;
-            for(int i = 0; i < temp_files.size(); i++)
+            for(int i = 0; (i < partFiles.size()) && success; i++)
             {
                TCHAR sourceFileName[MAX_PATH];
-               _tcsncpy(sourceFileName, temp_files.get(i), MAX_PATH);
+               _tcslcpy(sourceFileName, partFiles.get(i), MAX_PATH);
                ConvertPathToHost(sourceFileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
                TCHAR *sourceFullPath;
                if (CheckFullPath(sourceFileName, &sourceFullPath, false))
                {
-                  if(!MergeFiles(sourceFullPath, destinationFullPath))
+                  if (!MergeFiles(sourceFullPath, destinationFullPath))
                   {
-                     response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+                     response->setField(VID_RCC, ERR_IO_FAILURE);
                      success = false;
                   }
                   MemFree(sourceFullPath);
-                  if(!success)
-                  {
-                     break;
-                  }
                }
                else
                {
                   response->setField(VID_RCC, ERR_ACCESS_DENIED);
                   success = false;
-                  break;
                }
-
             }
 
-            if(success)
+            if (success)
             {
-               for(int i = 0; i < temp_files.size(); i++)
+               for(int i = 0; i < partFiles.size(); i++)
                {
                   TCHAR sourceFileName[MAX_PATH];
-                  _tcsncpy(sourceFileName, temp_files.get(i), MAX_PATH);
+                  _tcslcpy(sourceFileName, partFiles.get(i), MAX_PATH);
                   ConvertPathToHost(sourceFileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
                   TCHAR *sourceFullPath;
                   if (CheckFullPath(sourceFileName, &sourceFullPath, false))
@@ -1660,16 +1587,24 @@ static void CH_MergeFiles(NXCPMessage *request, NXCPMessage *response, AbstractC
 
                BYTE hash[MD5_DIGEST_SIZE];
                CalculateFileMD5Hash(destinationFullPath, hash);
-               if(memcmp(md5, hash, MD5_DIGEST_SIZE) == 0)
+               if (!memcmp(md5, hash, MD5_DIGEST_SIZE))
                {
                   response->setField(VID_RCC, ERR_SUCCESS);
                }
                else
                {
-                  response->setField(VID_RCC, ERR_MD5_HASH_MISMATCH);
+                  response->setField(VID_RCC, ERR_FILE_HASH_MISMATCH);
                }
             }
          }
+         else
+         {
+            response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
+         }
+      }
+      else
+      {
+         response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
       }
       MemFree(destinationFullPath);
    }
