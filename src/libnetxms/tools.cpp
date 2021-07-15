@@ -35,6 +35,8 @@
 #ifdef _WIN32
 #include <psapi.h>
 #include <wintrust.h>
+#include <accctrl.h>
+#include <aclapi.h>
 #include <Softpub.h>
 #else
 #include <pwd.h>
