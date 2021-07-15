@@ -10,7 +10,7 @@ nxagentd_SOURCES = actions.cpp appagent.cpp comm.cpp config.cpp ctrl.cpp \
 
 nxagentd_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build @LIBJQ_CPPFLAGS@
 
-nxagentd_LDFLAGS = @EXEC_LDFLAGS@
+nxagentd_LDFLAGS = @EXEC_LDFLAGS@ @LIBJQ_LDFLAGS@
 if STATIC_BUILD
 if ALL_STATIC
 nxagentd_LDFLAGS += -all-static
