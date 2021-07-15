@@ -506,7 +506,7 @@ void NetObjDeleteFromIndexes(const NetObj& object)
          break;
 		case OBJECT_ACCESSPOINT:
 			g_idxAccessPointById.remove(object.getId());
-         MacDbRemoveObject(static_cast<const AccessPoint&>(object).getMacAddr(), static_cast<const AccessPoint&>(object).getId());
+         MacDbRemoveAccessPoint(static_cast<const AccessPoint&>(object));
          break;
 		case OBJECT_CHASSIS:
          g_idxChassisById.remove(object.getId());
@@ -564,7 +564,7 @@ void NetObjDeleteFromIndexes(const NetObj& object)
                }
             }
 			}
-         MacDbRemoveObject(static_cast<const Interface&>(object).getMacAddr(), static_cast<const Interface&>(object).getId());
+         MacDbRemoveInterface(static_cast<const Interface&>(object));
          break;
       case OBJECT_ZONE:
 			g_idxZoneByUIN.remove(static_cast<const Zone&>(object).getUIN());
