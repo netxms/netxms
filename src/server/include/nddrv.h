@@ -292,11 +292,11 @@ enum HostMibStorageType
 struct LIBNXSRV_EXPORTABLE HostMibStorageEntry
 {
    TCHAR name[128];
-   UINT32 unitSize;
-   UINT32 size;
-   UINT32 used;
+   uint32_t unitSize;
+   uint32_t size;
+   uint32_t used;
    HostMibStorageType type;
-   UINT32 oid[12];
+   uint32_t oid[12];
    time_t lastUpdate;
 
    void getFree(TCHAR *buffer, size_t len) const;
@@ -304,7 +304,7 @@ struct LIBNXSRV_EXPORTABLE HostMibStorageEntry
    void getTotal(TCHAR *buffer, size_t len) const;
    void getUsed(TCHAR *buffer, size_t len) const;
    void getUsedPerc(TCHAR *buffer, size_t len) const;
-   bool getMetric(const TCHAR *name, TCHAR *buffer, size_t len) const;
+   bool getMetric(const TCHAR *metric, TCHAR *buffer, size_t len) const;
 };
 
 /**

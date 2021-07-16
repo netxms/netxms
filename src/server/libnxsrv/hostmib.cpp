@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,7 @@
  */
 void HostMibStorageEntry::getFree(TCHAR *buffer, size_t len) const
 {
-   _sntprintf(buffer, len, UINT64_FMT, static_cast<UINT64>(size - used) * static_cast<UINT64>(unitSize));
+   _sntprintf(buffer, len, UINT64_FMT, static_cast<UINT64>(size - used) * static_cast<uint64_t>(unitSize));
 }
 
 /**
@@ -45,7 +45,7 @@ void HostMibStorageEntry::getFreePerc(TCHAR *buffer, size_t len) const
  */
 void HostMibStorageEntry::getTotal(TCHAR *buffer, size_t len) const
 {
-   _sntprintf(buffer, len, UINT64_FMT, static_cast<UINT64>(size) * static_cast<UINT64>(unitSize));
+   _sntprintf(buffer, len, UINT64_FMT, static_cast<UINT64>(size) * static_cast<uint64_t>(unitSize));
 }
 
 /**
@@ -53,7 +53,7 @@ void HostMibStorageEntry::getTotal(TCHAR *buffer, size_t len) const
  */
 void HostMibStorageEntry::getUsed(TCHAR *buffer, size_t len) const
 {
-   _sntprintf(buffer, len, UINT64_FMT, static_cast<UINT64>(used) * static_cast<UINT64>(unitSize));
+   _sntprintf(buffer, len, UINT64_FMT, static_cast<UINT64>(used) * static_cast<uint64_t>(unitSize));
 }
 
 /**
@@ -67,7 +67,7 @@ void HostMibStorageEntry::getUsedPerc(TCHAR *buffer, size_t len) const
 /**
  * Storage entry helper - get metric by name
  */
-bool HostMibStorageEntry::getMetric(const TCHAR *name, TCHAR *buffer, size_t len) const
+bool HostMibStorageEntry::getMetric(const TCHAR *metric, TCHAR *buffer, size_t len) const
 {
    if (!_tcsicmp(name, _T("Free")))
       getFree(buffer, len);
