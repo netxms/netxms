@@ -1890,9 +1890,6 @@ if test "x$CXX" = "xCC" ; then
 				AC_MSG_RESULT(no)
 			])
 	fi
-
-	# The following is needed to avoid load errors for modules (subagents, drivers, etc.)
-	LIBS="$LIBS -lCrunG3"
 fi
 
 
@@ -4454,6 +4451,12 @@ AC_DEFINE_UNQUOTED([SYSTEM_SHLIB_SUFFIX_A], "$SYSTEM_SHLIB_SUFFIX", [Define to p
 
 if test "x$ENABLE_DEBUG" = "xno"; then
 	CPPFLAGS="$CPPFLAGS -DNDEBUG"
+fi
+
+if test "x$CXX" = "xCC" ; then
+	# The following is needed to avoid load errors for modules (subagents, drivers, etc.)
+	# Add it here to avoid breaking configure tests
+	LIBS="$LIBS -lCrunG3"
 fi
 
 AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
