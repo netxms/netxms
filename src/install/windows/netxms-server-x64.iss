@@ -104,6 +104,8 @@ Source: "..\..\..\x64\Release\anysms.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ig
 Source: "..\..\..\x64\Release\anysms.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\dbtable.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\dbtable.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\googlechat.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\googlechat.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\gsm.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\gsm.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\kannel.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
