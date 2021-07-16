@@ -25,8 +25,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.netxms.base.Glob;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
@@ -95,28 +97,35 @@ public class Alarms extends AbstractHandler
       {
          stateMask = new boolean[] { true, true, true, true };
       }
-      
+
       Date createdBefore = parseTimestamp(query.get("createdBefore"));
       Date createdAfter = parseTimestamp(query.get("createdAfter"));
       Date updatedBefore = parseTimestamp(query.get("updatedBefore"));
       Date updatedAfter = parseTimestamp(query.get("updatedAfter"));
-      
+
+      String keyFilter = query.get("key");
+      String keyRegexFilter = query.get("keyRegex");
+      String messageFilter = query.get("message");
+
       if ((rootObject != null) || (stateFilter != null) || (createdBefore != null) ||
-          (createdAfter != null) || (updatedBefore != null) || (updatedAfter != null))
+          (createdAfter != null) || (updatedBefore != null) || (updatedAfter != null) ||
+          (keyFilter != null) || (keyRegexFilter != null) || (messageFilter != null))
       {
          boolean includeChildren = Boolean.parseBoolean(query.getOrDefault("includeChildObjects", "false"));
-         
+         Pattern keyPattern = (keyRegexFilter != null) ? Pattern.compile(keyRegexFilter, Pattern.CASE_INSENSITIVE) : null;
+         Pattern messagePattern = (messageFilter != null) ? Pattern.compile(messageFilter, Pattern.CASE_INSENSITIVE) : null;
+
          Iterator<Alarm> iterator =  alarms.iterator();
          while(iterator.hasNext())
          {
             Alarm alarm = iterator.next();
-            
+
             if (!stateMask[alarm.getState() & Alarm.STATE_MASK])
             {
                iterator.remove();
                continue;
             }
-            
+
             if (((createdBefore != null) && alarm.getCreationTime().after(createdBefore)) ||
                 ((createdAfter != null) && alarm.getCreationTime().before(createdAfter)) ||
                 ((updatedBefore != null) && alarm.getLastChangeTime().after(updatedBefore)) ||
@@ -125,16 +134,31 @@ public class Alarms extends AbstractHandler
                iterator.remove();
                continue;
             }
-            
+
             if ((rootObject != null) &&
                 (alarm.getSourceObjectId() != rootObject.getObjectId()) &&
                 (!includeChildren || !rootObject.isParentOf(alarm.getSourceObjectId())))
             {
                iterator.remove();
             }
+
+            if ((keyFilter != null) && (alarm.getKey() != null) && !Glob.matchIgnoreCase(keyFilter, alarm.getKey()))
+            {
+               iterator.remove();
+            }
+
+            if ((keyPattern != null) && (alarm.getKey() != null) && !keyPattern.matcher(alarm.getKey()).matches())
+            {
+               iterator.remove();
+            }
+
+            if ((messagePattern != null) && !messagePattern.matcher(alarm.getMessage()).matches())
+            {
+               iterator.remove();
+            }
          }
       }
-      
+
       if (!Boolean.parseBoolean(query.getOrDefault("resolveReferences", "false")) || alarms.isEmpty())
          return new ResponseContainer("alarms", alarms);
 
@@ -146,7 +170,7 @@ public class Alarms extends AbstractHandler
          session.syncAlarmCategories();
       if (!session.isEventObjectsSynchronized())
          session.syncEventTemplates();
-      
+
       List<JsonObject> serializedAlarms = new ArrayList<JsonObject>();
       Map<Long, DciValue[]> cachedValues = null;
       Gson gson = JsonTools.createGsonInstance();
