@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for Microsoft Teams
-** Copyright (C) 2014-2019 Raden Solutions
+** Copyright (C) 2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: msteams.cpp
+** File: googlechat.cpp
 **
 **/
 
@@ -32,35 +32,23 @@
 #define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
 #endif
 
-#define DEBUG_TAG _T("ncd.msteams")
+#define DEBUG_TAG _T("ncd.googlechat")
 
 static const NCConfigurationTemplate s_config(true, true); 
 
 /**
- * Flags
+ * Google Chat driver class
  */
-#define MST_USE_CARDS   0x0001
-
-/**
- * Microsoft Teams driver class
- */
-class MicrosoftTeamsDriver : public NCDriver
+class GoogleChatDriver : public NCDriver
 {
 private:
-   UINT32 m_flags;
-   StringMap m_channels;
-   TCHAR m_themeColor[8];
-
-   MicrosoftTeamsDriver(UINT32 flags, const TCHAR *themeColor) : NCDriver()
-   {
-      m_flags = flags;
-      _tcslcpy(m_themeColor, themeColor, 8);
-   }
+   StringMap m_rooms;
+   GoogleChatDriver(){};
 
 public:
    virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
 
-   static MicrosoftTeamsDriver *createInstance(Config *config);
+   static GoogleChatDriver *createInstance(Config *config);
 };
 
 /**
@@ -76,39 +64,22 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
 /**
  * Create driver instance
  */
-MicrosoftTeamsDriver *MicrosoftTeamsDriver::createInstance(Config *config)
+GoogleChatDriver *GoogleChatDriver::createInstance(Config *config)
 {
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new driver instance"));
+   GoogleChatDriver *driver = new GoogleChatDriver();
 
-   UINT32 flags = 0;
-   TCHAR themeColor[8] = _T("FF6A00");
-   NX_CFG_TEMPLATE configTemplate[] = 
-	{
-		{ _T("ThemeColor"), CT_STRING, 0, 0, sizeof(themeColor)/sizeof(TCHAR), 0, themeColor },
-      { _T("UseMessageCards"), CT_BOOLEAN_FLAG_32, 0, 0, MST_USE_CARDS, 0, &flags },
-		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
-	};
-
-	if (!config->parseTemplate(_T("MicrosoftTeams"), configTemplate))
-	{
-	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Error parsing driver configuration"));
-	   return NULL;
-	}
-
-   MicrosoftTeamsDriver *driver = new MicrosoftTeamsDriver(flags, themeColor);
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Microsoft Teams driver instantiated"));
-
-	ObjectArray<ConfigEntry> *channels = config->getSubEntries(_T("/Channels"), _T("*"));
-	if (channels != NULL)
-	{
-	   for(int i = 0; i < channels->size(); i++)
-	   {
-	      ConfigEntry *channel = channels->get(i);
-	      driver->m_channels.set(channel->getName(), channel->getValue());
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Added channel mapping %s = %s"), channel->getName(), channel->getValue());
-	   }
-	   delete channels;
-	}
+   ObjectArray<ConfigEntry> *rooms = config->getSubEntries(_T("/Rooms"), nullptr);
+   if (rooms != NULL)
+   {
+      for (int i = 0; i < rooms->size(); i++)
+      {
+         ConfigEntry *room = rooms->get(i);
+         driver->m_rooms.set(room->getName(), room->getValue());
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Added room mapping %s = %s"), room->getName(), room->getValue());
+      }
+      delete rooms;
+   }
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Google Chat driver instantiated"));
 
 	return driver;
 }
@@ -116,47 +87,19 @@ MicrosoftTeamsDriver *MicrosoftTeamsDriver::createInstance(Config *config)
 /**
  * Send notification
  */
-bool MicrosoftTeamsDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+bool GoogleChatDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
 {
    String jsubject = EscapeStringForJSON(subject);
    String jbody = EscapeStringForJSON(body);
 
-   StringBuffer request(_T("{ "));
-   if (m_flags & MST_USE_CARDS)
-   {
-      request.append(_T("\"@type\":\"MessageCard\", \"@context\":\"https://schema.org/extensions\", \"themeColor\":\""));
-      request.append(m_themeColor);
-      request.append(_T("\", \"summary\":\""));
-      if (jsubject.isEmpty())
-      {
-         request.append(jbody);
-      }
-      else
-      {
-         request.append(jsubject);
-         request.append(_T("\", \"title\":\""));
-         request.append(jsubject);
-      }
-      request.append(_T("\", \"text\":\""));
-      request.append(jbody);
-      request.append(_T("\""));
-   }
-   else
-   {
-      request.append(_T("\"text\":\""));
-      request.append(jsubject);
-      if (!jsubject.isEmpty() && !jbody.isEmpty())
-         request.append(_T("\\n\\n"));
-      request.append(jbody);
-      request.append(_T("\""));
-   }
-   request.append(_T(" }"));
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("Prepared request: %s"), request.cstr());
+   StringBuffer request(_T("{ \"text\":\""));
+   request.append(jsubject);
+   if (!jsubject.isEmpty() && !jbody.isEmpty())
+      request.append(_T("\\n\\n"));
+   request.append(jbody);
+   request.append(_T("\" }"));
 
-   // Attempt to lookup URL alias
-   const TCHAR *url = m_channels.get(recipient);
-   if (url == NULL)
-      url = recipient;
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Prepared request: %s"), request.cstr());
 
    CURL *curl = curl_easy_init();
    if (curl == NULL)
@@ -173,7 +116,7 @@ bool MicrosoftTeamsDriver::send(const TCHAR *recipient, const TCHAR *subject, co
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
-   curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Microsoft Teams Driver/" NETXMS_VERSION_STRING_A);
+   curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Google Chat Driver/" NETXMS_VERSION_STRING_A);
 
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
@@ -187,9 +130,14 @@ bool MicrosoftTeamsDriver::send(const TCHAR *recipient, const TCHAR *subject, co
 
    bool success = false;
 
+   // Attempt to lookup URL alias
+   const TCHAR *url = m_rooms.get(recipient);
+   if (url == NULL)
+      url = recipient;
+
    char utf8url[256];
 #ifdef UNICODE
-   WideCharToMultiByte(CP_UTF8, 0, url, -1, utf8url, 256, NULL, NULL);
+   wchar_to_utf8(url, -1, utf8url, 256);
 #else
    mb_to_utf8(url, -1, utf8url, 256);
 #endif
@@ -235,14 +183,14 @@ bool MicrosoftTeamsDriver::send(const TCHAR *recipient, const TCHAR *subject, co
 /**
  * Driver entry point
  */
-DECLARE_NCD_ENTRY_POINT(MicrosoftTeams, &s_config)
+DECLARE_NCD_ENTRY_POINT(GoogleChat, &s_config)
 {
    if (!InitializeLibCURL())
    {
       nxlog_debug_tag(DEBUG_TAG, 1, _T("cURL initialization failed"));
       return NULL;
    }
-   return MicrosoftTeamsDriver::createInstance(config);
+   return GoogleChatDriver::createInstance(config);
 }
 
 #ifdef _WIN32

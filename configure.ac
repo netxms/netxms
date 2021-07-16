@@ -905,7 +905,7 @@ AC_ARG_WITH(dist,
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxtux"
-	NCDRV_MODULES="anysms kannel msteams mymobile nexmo nxagent slack smseagle telegram text2reach websms"
+	NCDRV_MODULES="anysms googlechat kannel msteams mymobile nexmo nxagent slack smseagle telegram text2reach websms"
    HDLINK_DIRS="jira redmine"
    PDSDRV_DIRS="influxdb rrdtool"
 	TOP_LEVEL_MODULES="include sql images tests"
@@ -2555,7 +2555,7 @@ if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 	fi
 
 	SUBAGENT_DIRS="$SUBAGENT_DIRS bind9 netsvc"
-	NCDRV_MODULES="$NCDRV_MODULES anysms kannel msteams mymobile nexmo slack smseagle telegram text2reach websms"
+	NCDRV_MODULES="$NCDRV_MODULES anysms googlechat kannel msteams mymobile nexmo slack smseagle telegram text2reach websms"
 	HDLINK_DIRS="$HDLINK_DIRS jira redmine"
 	AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
@@ -4781,6 +4781,7 @@ AC_CONFIG_FILES([
 	src/ncdrivers/dbtable/Makefile
 	src/ncdrivers/dummy/Makefile
 	src/ncdrivers/gsm/Makefile
+	src/ncdrivers/googlechat/Makefile
 	src/ncdrivers/kannel/Makefile
 	src/ncdrivers/msteams/Makefile
 	src/ncdrivers/mymobile/Makefile
