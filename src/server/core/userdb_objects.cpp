@@ -427,22 +427,6 @@ NXSL_Value *UserDatabaseObject::getCustomAttributeForNXSL(NXSL_VM *vm, const TCH
 }
 
 /**
- * Get all custom attributes as NXSL hash map
- */
-NXSL_Value *UserDatabaseObject::getCustomAttributesForNXSL(NXSL_VM *vm) const
-{
-   NXSL_HashMap *map = new NXSL_HashMap(vm);
-   StructArray<KeyValuePair<TCHAR>> *attributes = m_attributes.toArray();
-   for(int i = 0; i < attributes->size(); i++)
-   {
-      KeyValuePair<TCHAR> *p = attributes->get(i);
-      map->set(p->key, vm->createValue(p->value));
-   }
-   delete attributes;
-   return vm->createValue(map);
-}
-
-/**
  * Create NXSL object
  */
 NXSL_Value *UserDatabaseObject::createNXSLObject(NXSL_VM *vm)
