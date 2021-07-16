@@ -4193,7 +4193,11 @@ TCHAR LIBNETXMS_EXPORTABLE *GetFileOwner(const TCHAR *file, TCHAR *buffer, size_
 #endif
    if (pw != nullptr)
    {
+#ifdef UNICODE
       mb_to_wchar(pw->pw_name, -1, buffer, size);
+#else
+      strlcpy(buffer, pw->pw_name, size);
+#endif
    }
    else
    {
