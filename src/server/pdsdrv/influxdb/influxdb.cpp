@@ -430,7 +430,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
       else
          data.append(_T(' '));
    }
-   data.append(timestamp);
+   data.append(static_cast<uint64_t>(timestamp));
    data.append(_T("000000000")); // Use nanosecond precision
 
    int senderIndex = dci->getId() % m_senders.size();
