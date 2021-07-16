@@ -385,7 +385,7 @@ private:
    NXSL_StringValueMap *m_values;
 
 public:
-	NXSL_HashMap(NXSL_ValueManager *vm);
+   NXSL_HashMap(NXSL_ValueManager *vm, const StringMap *values = nullptr);
 	NXSL_HashMap(const NXSL_HashMap& src);
 	virtual ~NXSL_HashMap();
 

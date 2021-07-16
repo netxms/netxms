@@ -32,11 +32,21 @@ void NXSL_StringValueMap::destructor(void *object, StringMapBase *map)
 }
 
 /**
- * Create empty hash map
+ * Create new hash map, optionally filled with provided values
  */
-NXSL_HashMap::NXSL_HashMap(NXSL_ValueManager *vm) : NXSL_HandleCountObject(vm)
+NXSL_HashMap::NXSL_HashMap(NXSL_ValueManager *vm, const StringMap *values) : NXSL_HandleCountObject(vm)
 {
    m_values = new NXSL_StringValueMap(vm, Ownership::True);
+   if (values != nullptr)
+   {
+      auto it = values->constIterator();
+      while(it->hasNext())
+      {
+         auto p = it->next();
+         m_values->set(p->first, vm->createValue(p->second));
+      }
+      delete it;
+   }
 }
 
 /**

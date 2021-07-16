@@ -313,10 +313,14 @@ void LoadObjectQueries()
 /**
  * Filter object
  */
-static int FilterObject(NXSL_VM *vm, shared_ptr<NetObj> object, NXSL_VariableSystem **globalVariables)
+static int FilterObject(NXSL_VM *vm, shared_ptr<NetObj> object, const StringMap *inputFields, NXSL_VariableSystem **globalVariables)
 {
    SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
    vm->setContextObject(object->createNXSLObject(vm));
+   if (inputFields != nullptr)
+   {
+      vm->setGlobalVariable("$INPUT", vm->createValue(new NXSL_HashMap(vm, inputFields)));
+   }
    NXSL_VariableSystem *expressionVariables = nullptr;
    ObjectRefArray<NXSL_Value> args(0);
    if (!vm->run(args, globalVariables, &expressionVariables))
@@ -466,7 +470,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint
       shared_ptr<NetObj> curr = objects->getShared(i);
 
       NXSL_VariableSystem *globals = nullptr;
-      int rc = FilterObject(vm, curr, readFields ? &globals : nullptr);
+      int rc = FilterObject(vm, curr, inputFields, readFields ? &globals : nullptr);
       if (rc < 0)
       {
          _tcslcpy(errorMessage, vm->getErrorText(), errorMessageLen);

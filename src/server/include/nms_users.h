@@ -291,7 +291,7 @@ public:
    void detachLdapUser();
 
    NXSL_Value *getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const;
-   NXSL_Value *getCustomAttributesForNXSL(NXSL_VM *vm) const;
+   NXSL_Value *getCustomAttributesForNXSL(NXSL_VM *vm) const { return vm->createValue(new NXSL_HashMap(vm, &m_attributes)); }
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 };
 
