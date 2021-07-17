@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.IPostSelectionProvider;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
 /**
@@ -126,5 +127,19 @@ public abstract class TransformationSelectionProvider implements IPostSelectionP
    public void removePostSelectionChangedListener(ISelectionChangedListener listener)
    {
       postSelectionListeners.remove(listener);
+   }
+
+   /**
+    * Get selection as structured selection
+    * 
+    * @return selection as structured selection
+    * @throws ClassCastException
+    */
+   public IStructuredSelection getStructuredSelection() throws ClassCastException
+   {
+      ISelection selection = getSelection();
+      if (selection instanceof IStructuredSelection)
+         return (IStructuredSelection)selection;
+      throw new ClassCastException("StructuredViewer should return an instance of IStructuredSelection from its getSelection() method."); //$NON-NLS-1$
    }
 }
