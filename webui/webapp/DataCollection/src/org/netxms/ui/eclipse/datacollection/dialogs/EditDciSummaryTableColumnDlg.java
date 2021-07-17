@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,8 @@ public class EditDciSummaryTableColumnDlg extends Dialog
 	private DciSummaryTableColumn column;
 	private LabeledText name;
 	private LabeledText dciName;
-	private Button checkRegexpMatch;
+   private Button checkDescriptionMatch;
+   private Button checkRegexpMatch;
    private Button checkMultivalued;
    private LabeledText separator;
 
@@ -55,9 +56,9 @@ public class EditDciSummaryTableColumnDlg extends Dialog
 		this.column = column;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -88,10 +89,14 @@ public class EditDciSummaryTableColumnDlg extends Dialog
       dciName.setLayoutData(gd);
       dciName.setText(column.getDciName());
       
+      checkDescriptionMatch = new Button(dialogArea, SWT.CHECK);
+      checkDescriptionMatch.setText("Match by description instead of name");
+      checkDescriptionMatch.setSelection(column.isDescriptionMatch());
+
       checkRegexpMatch = new Button(dialogArea, SWT.CHECK);
       checkRegexpMatch.setText(Messages.get().EditDciSummaryTableColumnDlg_UseRegExp);
       checkRegexpMatch.setSelection(column.isRegexpMatch());
-      
+
       checkMultivalued = new Button(dialogArea, SWT.CHECK);
       checkMultivalued.setText("&Multivalued column");
       checkMultivalued.setSelection(column.isMultivalued());
@@ -116,24 +121,25 @@ public class EditDciSummaryTableColumnDlg extends Dialog
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
 		newShell.setText(Messages.get().EditDciSummaryTableColumnDlg_EditColumn);
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
 		column.setName(name.getText());
 		column.setDciName(dciName.getText());
+      column.setDescriptionMatch(checkDescriptionMatch.getSelection());
 		column.setRegexpMatch(checkRegexpMatch.getSelection());
       column.setMultivalued(checkMultivalued.getSelection());
       column.setSeparator(separator.getText().trim());

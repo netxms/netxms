@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -102,6 +102,9 @@ public class SummaryTableManager extends ViewPart
 	private boolean initShowFilter = true;
    private IDialogSettings settings;
 	
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
    public void init(IViewSite site) throws PartInitException
    {
@@ -120,9 +123,9 @@ public class SummaryTableManager extends ViewPart
       return (s != null) ? b : defval;
    }
    
-   /* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -148,17 +151,17 @@ public class SummaryTableManager extends ViewPart
          }
          
       });
-	   
+
 		final String[] names = { Messages.get().SummaryTableManager_ID, Messages.get().SummaryTableManager_MenuPath, Messages.get().SummaryTableManager_Title };
 		final int[] widths = { 90, 250, 200 };
 		viewer = new SortableTableViewer(tableArea, names, widths, COLUMN_MENU_PATH, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SummaryTableLabelProvider());
 		viewer.setComparator(new SummaryTableComparator());
-		
+
 		filter = new SummaryTableFilter();
 		viewer.addFilter(filter);
-		
+
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)

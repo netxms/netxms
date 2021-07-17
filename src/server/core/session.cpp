@@ -13091,21 +13091,20 @@ void ClientSession::getSummaryTableDetails(NXCPMessage *request)
  */
 void ClientSession::modifySummaryTable(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
 	{
-		LONG id;
-		msg.setField(VID_RCC, ModifySummaryTable(request, &id));
-		msg.setField(VID_SUMMARY_TABLE_ID, (UINT32)id);
+		uint32_t id;
+		response.setField(VID_RCC, ModifySummaryTable(request, &id));
+		response.setField(VID_SUMMARY_TABLE_ID, (UINT32)id);
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -13113,19 +13112,18 @@ void ClientSession::modifySummaryTable(NXCPMessage *request)
  */
 void ClientSession::deleteSummaryTable(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
 	{
-		msg.setField(VID_RCC, DeleteSummaryTable((LONG)request->getFieldAsUInt32(VID_SUMMARY_TABLE_ID)));
+		response.setField(VID_RCC, DeleteSummaryTable((LONG)request->getFieldAsUInt32(VID_SUMMARY_TABLE_ID)));
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -13133,30 +13131,24 @@ void ClientSession::deleteSummaryTable(NXCPMessage *request)
  */
 void ClientSession::querySummaryTable(NXCPMessage *request)
 {
-   NXCPMessage msg;
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
-
-   UINT32 rcc;
-   Table *result = QuerySummaryTable((LONG)request->getFieldAsUInt32(VID_SUMMARY_TABLE_ID), nullptr,
-                                      request->getFieldAsUInt32(VID_OBJECT_ID),
-                                      m_dwUserId, &rcc);
+   uint32_t rcc;
+   Table *result = QuerySummaryTable(request->getFieldAsUInt32(VID_SUMMARY_TABLE_ID), nullptr,
+         request->getFieldAsUInt32(VID_OBJECT_ID), m_dwUserId, &rcc);
    if (result != nullptr)
    {
       debugPrintf(6, _T("querySummaryTable: %d rows in resulting table"), result->getNumRows());
-      msg.setField(VID_RCC, RCC_SUCCESS);
-      result->fillMessage(msg, 0, -1);
+      response.setField(VID_RCC, RCC_SUCCESS);
+      result->fillMessage(response, 0, -1);
       delete result;
    }
    else
    {
-      msg.setField(VID_RCC, rcc);
+      response.setField(VID_RCC, rcc);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -13164,28 +13156,25 @@ void ClientSession::querySummaryTable(NXCPMessage *request)
  */
 void ClientSession::queryAdHocSummaryTable(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
    SummaryTable *tableDefinition = new SummaryTable(request);
 
-   UINT32 rcc;
-   Table *result = QuerySummaryTable(0, tableDefinition,
-                                      request->getFieldAsUInt32(VID_OBJECT_ID),
-                                      m_dwUserId, &rcc);
+   uint32_t rcc;
+   Table *result = QuerySummaryTable(0, tableDefinition, request->getFieldAsUInt32(VID_OBJECT_ID), m_dwUserId, &rcc);
    if (result != nullptr)
    {
       debugPrintf(6, _T("querySummaryTable: %d rows in resulting table"), result->getNumRows());
-      msg.setField(VID_RCC, RCC_SUCCESS);
-      result->fillMessage(msg, 0, -1);
+      response.setField(VID_RCC, RCC_SUCCESS);
+      result->fillMessage(response, 0, -1);
       delete result;
    }
    else
    {
-      msg.setField(VID_RCC, rcc);
+      response.setField(VID_RCC, rcc);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**

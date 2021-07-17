@@ -809,6 +809,7 @@ struct NXCORE_EXPORTABLE NewNodeData
  */
 #define COLUMN_DEFINITION_REGEXP_MATCH    0x0001
 #define COLUMN_DEFINITION_MULTIVALUED     0x0002
+#define COLUMN_DEFINITION_BY_DESCRIPTION  0x0004
 
 /**
  * Object modification flags
@@ -842,13 +843,13 @@ class NXCORE_EXPORTABLE SummaryTableColumn
 public:
    TCHAR m_name[MAX_DB_STRING];
    TCHAR m_dciName[MAX_PARAM_NAME];
-   UINT32 m_flags;
+   uint32_t m_flags;
    TCHAR m_separator[16];
 
-   SummaryTableColumn(NXCPMessage *msg, UINT32 baseId);
+   SummaryTableColumn(const NXCPMessage& msg, uint32_t baseId);
    SummaryTableColumn(TCHAR *configStr);
 
-   void createExportRecord(StringBuffer &xml, int id);
+   void createExportRecord(StringBuffer &xml, uint32_t id) const;
 };
 
 /**
@@ -857,10 +858,10 @@ public:
 class NXCORE_EXPORTABLE SummaryTable
 {
 private:
-   INT32 m_id;
+   uint32_t m_id;
    uuid m_guid;
    TCHAR m_title[MAX_DB_STRING];
-   UINT32 m_flags;
+   uint32_t m_flags;
    ObjectArray<SummaryTableColumn> *m_columns;
    TCHAR *m_filterSource;
    NXSL_VM *m_filter;
@@ -870,12 +871,12 @@ private:
    TCHAR m_menuPath[MAX_DB_STRING];
    TCHAR m_tableDciName[MAX_PARAM_NAME];
 
-   SummaryTable(INT32 id, DB_RESULT hResult);
+   SummaryTable(uint32_t id, DB_RESULT hResult);
 
 public:
-   static SummaryTable *loadFromDB(INT32 id, UINT32 *rcc);
+   static SummaryTable *loadFromDB(uint32_t id, uint32_t *rcc);
 
-   SummaryTable(NXCPMessage *msg);
+   SummaryTable(const NXCPMessage& msg);
    ~SummaryTable();
 
    bool filter(const shared_ptr<DataCollectionTarget>& node);

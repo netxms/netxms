@@ -1563,6 +1563,15 @@ void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Ta
 }
 
 /**
+ * Match data collection object to column definition
+ */
+static inline bool MatchDCItem(SummaryTableColumn *tc, DCObject *dci)
+{
+   const TCHAR *text = (tc->m_flags & COLUMN_DEFINITION_BY_DESCRIPTION) ? dci->getDescription() : dci->getName();
+   return (tc->m_flags & COLUMN_DEFINITION_REGEXP_MATCH) ? RegexpMatch(text, tc->m_dciName, false) : (_tcsicmp(text, tc->m_dciName) == 0);
+}
+
+/**
  * Get last (current) DCI values for summary table using single-value DCIs
  */
 void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId)
@@ -1577,12 +1586,8 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
       for(int j = 0; j < m_dcObjects->size(); j++)
 	   {
 		   DCObject *object = m_dcObjects->get(j);
-         if ((object->getType() == DCO_TYPE_ITEM) && object->hasValue() &&
-             (object->getStatus() == ITEM_STATUS_ACTIVE) &&
-             ((tc->m_flags & COLUMN_DEFINITION_REGEXP_MATCH) ?
-               RegexpMatch(object->getName(), tc->m_dciName, FALSE) :
-               !_tcsicmp(object->getName(), tc->m_dciName)
-             ) && object->hasAccess(userId))
+         if ((object->getType() == DCO_TYPE_ITEM) && object->hasValue() && object->hasAccess(userId) &&
+             (object->getStatus() == ITEM_STATUS_ACTIVE) && MatchDCItem(tc, object))
          {
             int row;
             if (tableDefinition->isMultiInstance())
