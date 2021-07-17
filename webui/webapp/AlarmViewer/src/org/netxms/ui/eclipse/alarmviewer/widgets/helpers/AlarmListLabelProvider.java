@@ -183,7 +183,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
    @Override
    public Color getForeground(Object element)
    {
-      return showColor ? FOREGROUND_COLORS[((Alarm)element).getCurrentSeverity().getValue()] : null;
+      return showColor ? FOREGROUND_COLORS[((AlarmHandle)element).alarm.getCurrentSeverity().getValue()] : null;
    }
 
    /**
@@ -192,7 +192,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
    @Override
    public Color getBackground(Object element)
    {
-      return showColor ? StatusDisplayInfo.getStatusColor(((Alarm)element).getCurrentSeverity()) : null;
+      return showColor ? StatusDisplayInfo.getStatusColor(((AlarmHandle)element).alarm.getCurrentSeverity()) : null;
    }
 
    /**
