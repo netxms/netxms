@@ -28,6 +28,7 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -52,66 +53,66 @@ public class AlarmListFilter extends ViewerFilter
    {
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
-      else if (checkSeverity(element))
+
+      Alarm alarm = ((AlarmHandle)element).alarm;
+      if (checkSeverity(alarm))
          return true;
-      else if (checkState(element))
+      if (checkState(alarm))
          return true;
-      else if (checkSource(element))
+      if (checkSource(alarm))
          return true;
-      else if (checkMessage(element))
+      if (checkMessage(alarm))
          return true;
-      else if (checkCount(element))
+      if (checkCount(alarm))
          return true;
-      else if (checkComments(element))
+      if (checkComments(alarm))
          return true;
-      else if (checkHelpdeskId(element))
+      if (checkHelpdeskId(alarm))
          return true;
-      else if (checkResolvedBy(element))
+      if (checkResolvedBy(alarm))
          return true;
-      else if (checkCreated(element))
+      if (checkCreated(alarm))
          return true;
-      else if (checkChanged(element))
+      if (checkChanged(alarm))
          return true;
       return false;
    }
    
    /**
-    * @param element Alarm selected
+    * @param alarm Alarm selected
     * @return true if matches filter string
     */
-   private boolean checkSeverity(Object element)
+   private boolean checkSeverity(Alarm alarm)
    {
-      return StatusDisplayInfo.getStatusText(((Alarm)element).getCurrentSeverity())
-             .toLowerCase().contains(filterString);
+      return StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()).toLowerCase().contains(filterString);
    }
    
    /**
-    * @param element Alarm selected
+    * @param alarm Alarm selected
     * @return true if matches filter string
     */
-   private boolean checkState(Object element)
+   private boolean checkState(Alarm alarm)
    {
-      return stateText[((Alarm)element).getState()].toLowerCase().contains(filterString);
+      return stateText[alarm.getState()].toLowerCase().contains(filterString);
    }
    
    /**
-    * @param element Alarm selected
+    * @param alarm Alarm selected
     * @return true if matches filter string
     */
-   private boolean checkSource(Object element)
+   private boolean checkSource(Alarm alarm)
    {
-      AbstractObject object = session.findObjectById(((Alarm)element).getSourceObjectId());
-      return object != null ? object.getObjectName().toLowerCase().contains(filterString) : 
-                              false;
+      AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
+      return object != null ? object.getObjectName().toLowerCase().contains(filterString) : false;
    }
    
    /**
-    * @param element Alarm selected
+    * @param alarm Alarm selected
     * @return true if matches filter string
     */
-   private boolean checkMessage(Object element)
+   private boolean checkMessage(Alarm alarm)
    {
-      return ((Alarm)element).getMessage().toLowerCase().contains(filterString);
+      return alarm.getMessage().toLowerCase().contains(filterString);
    }
    
    /**
@@ -124,61 +125,57 @@ public class AlarmListFilter extends ViewerFilter
    }
    
    /**
-    * @param element Alarm selected
+    * @param alarm Alarm selected
     * @return true if matches filter string
     */
-   private boolean checkComments(Object element)
+   private boolean checkComments(Alarm alarm)
    {
-      return Integer.toString(((Alarm)element).getCommentsCount()).contains(filterString);
+      return Integer.toString(alarm.getCommentsCount()).contains(filterString);
    }
    
    /**
-    * @param element Alarm selected
+    * @param alarm Alarm selected
     * @return true if matches filter string
     */
-   private boolean checkHelpdeskId(Object element)
+   private boolean checkHelpdeskId(Alarm alarm)
    {            
-      switch(((Alarm)element).getHelpdeskState())
+      switch(alarm.getHelpdeskState())
       {
          case Alarm.HELPDESK_STATE_OPEN:
-            return ((Alarm)element).getHelpdeskReference().toLowerCase().contains(filterString);
+            return alarm.getHelpdeskReference().toLowerCase().contains(filterString);
          case Alarm.HELPDESK_STATE_CLOSED:
-            return (((Alarm)element).getHelpdeskReference() + 
-                   Messages.get().AlarmListLabelProvider_Closed).toLowerCase().contains(filterString);
+            return (alarm.getHelpdeskReference() + Messages.get().AlarmListLabelProvider_Closed).toLowerCase().contains(filterString);
          default:
             return false;
       }
    }
-   
+
    /**
-    * @param element Alarm selected
+    * @param alarm Alarm selected
     * @return true if matches filter string
     */
-   private boolean checkResolvedBy(Object element)
+   private boolean checkResolvedBy(Alarm alarm)
    {
-      AbstractUserObject user = session.findUserDBObjectById(((Alarm)element).getAcknowledgedByUser(), null);
-      return user != null ? user.getName().toLowerCase().contains(filterString) : 
-                            false;
+      AbstractUserObject user = session.findUserDBObjectById(alarm.getAcknowledgedByUser(), null);
+      return user != null ? user.getName().toLowerCase().contains(filterString) : false;
+   }
+
+   /**
+    * @param alarm Alarm selected
+    * @return true if matches filter string
+    */
+   private boolean checkCreated(Alarm alarm)
+   {
+      return RegionalSettings.getDateTimeFormat().format(alarm.getCreationTime()).contains(filterString);
    }
    
    /**
-    * @param element Alarm selected
+    * @param alarm Alarm selected
     * @return true if matches filter string
     */
-   @SuppressWarnings("deprecation")
-   private boolean checkCreated(Object element)
+   private boolean checkChanged(Alarm alarm)
    {
-      return ((Alarm)element).getCreationTime().toLocaleString().contains(filterString);
-   }
-   
-   /**
-    * @param element Alarm selected
-    * @return true if matches filter string
-    */
-   @SuppressWarnings("deprecation")
-   private boolean checkChanged(Object element)
-   {
-      return ((Alarm)element).getLastChangeTime().toLocaleString().contains(filterString);
+      return RegionalSettings.getDateTimeFormat().format(alarm.getLastChangeTime()).contains(filterString);
    }
 
    /**
