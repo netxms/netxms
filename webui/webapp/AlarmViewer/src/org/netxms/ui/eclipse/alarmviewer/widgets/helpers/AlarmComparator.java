@@ -36,50 +36,50 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class AlarmComparator extends ViewerComparator
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
 		TreeColumn sortColumn = ((TreeViewer)viewer).getTree().getSortColumn();
 		if (sortColumn == null)
 			return 0;
-		
+
 		int rc;
 		switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
 		{
 			case AlarmList.COLUMN_SEVERITY:
-				rc = ((Alarm)e1).getCurrentSeverity().compareTo(((Alarm)e2).getCurrentSeverity());
+            rc = ((AlarmHandle)e1).alarm.getCurrentSeverity().compareTo(((AlarmHandle)e2).alarm.getCurrentSeverity());
 				break;
 			case AlarmList.COLUMN_STATE:
 				rc = Integer.signum(((Alarm)e1).getState() - ((Alarm)e2).getState());
 				break;
 			case AlarmList.COLUMN_SOURCE:
-				AbstractObject obj1 = ConsoleSharedData.getSession().findObjectById(((Alarm)e1).getSourceObjectId());
-				AbstractObject obj2 = ConsoleSharedData.getSession().findObjectById(((Alarm)e2).getSourceObjectId());
+            AbstractObject obj1 = ConsoleSharedData.getSession().findObjectById(((AlarmHandle)e1).alarm.getSourceObjectId());
+            AbstractObject obj2 = ConsoleSharedData.getSession().findObjectById(((AlarmHandle)e2).alarm.getSourceObjectId());
 				String name1 = (obj1 != null) ? obj1.getObjectName() : Messages.get().AlarmComparator_Unknown;
 				String name2 = (obj2 != null) ? obj2.getObjectName() : Messages.get().AlarmComparator_Unknown;
 				rc = name1.compareToIgnoreCase(name2);
 				break;
 			case AlarmList.COLUMN_MESSAGE:
-				rc = ((Alarm)e1).getMessage().compareToIgnoreCase(((Alarm)e2).getMessage());
+            rc = ((AlarmHandle)e1).alarm.getMessage().compareToIgnoreCase(((AlarmHandle)e2).alarm.getMessage());
 				break;
 			case AlarmList.COLUMN_COUNT:
-				rc = Integer.signum(((Alarm)e1).getRepeatCount() - ((Alarm)e2).getRepeatCount());
+            rc = Integer.signum(((AlarmHandle)e1).alarm.getRepeatCount() - ((AlarmHandle)e2).alarm.getRepeatCount());
 				break;
 			case AlarmList.COLUMN_CREATED:
-				rc = ((Alarm)e1).getCreationTime().compareTo(((Alarm)e2).getCreationTime());
+            rc = ((AlarmHandle)e1).alarm.getCreationTime().compareTo(((AlarmHandle)e2).alarm.getCreationTime());
 				break;
 			case AlarmList.COLUMN_LASTCHANGE:
-				rc = ((Alarm)e1).getLastChangeTime().compareTo(((Alarm)e2).getLastChangeTime());
+            rc = ((AlarmHandle)e1).alarm.getLastChangeTime().compareTo(((AlarmHandle)e2).alarm.getLastChangeTime());
 				break;
          case AlarmList.COLUMN_ZONE:
             NXCSession session = ConsoleSharedData.getSession();
             if (session.isZoningEnabled())
             {
-               ZoneMember o1 = session.findObjectById(((Alarm)e1).getSourceObjectId(), ZoneMember.class);
-               ZoneMember o2 = session.findObjectById(((Alarm)e2).getSourceObjectId(), ZoneMember.class);
+               ZoneMember o1 = session.findObjectById(((AlarmHandle)e1).alarm.getSourceObjectId(), ZoneMember.class);
+               ZoneMember o2 = session.findObjectById(((AlarmHandle)e2).alarm.getSourceObjectId(), ZoneMember.class);
                String n1 = (o1 != null) ? o1.getZoneName() : "";
                String n2 = (o2 != null) ? o2.getZoneName() : "";
                rc = n1.compareToIgnoreCase(n2);
