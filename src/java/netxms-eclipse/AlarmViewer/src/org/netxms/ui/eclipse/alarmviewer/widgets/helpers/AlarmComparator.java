@@ -24,7 +24,6 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ZoneMember;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
@@ -53,7 +52,7 @@ public class AlarmComparator extends ViewerComparator
             rc = ((AlarmHandle)e1).alarm.getCurrentSeverity().compareTo(((AlarmHandle)e2).alarm.getCurrentSeverity());
 				break;
 			case AlarmList.COLUMN_STATE:
-				rc = Integer.signum(((Alarm)e1).getState() - ((Alarm)e2).getState());
+            rc = Integer.signum(((AlarmHandle)e1).alarm.getState() - ((AlarmHandle)e2).alarm.getState());
 				break;
 			case AlarmList.COLUMN_SOURCE:
             AbstractObject obj1 = ConsoleSharedData.getSession().findObjectById(((AlarmHandle)e1).alarm.getSourceObjectId());
