@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.interfaces.ZoneMember;
 import org.netxms.nxmc.Registry;
@@ -48,41 +47,41 @@ public class AlarmComparator extends ViewerComparator
 		TreeColumn sortColumn = ((TreeViewer)viewer).getTree().getSortColumn();
 		if (sortColumn == null)
 			return 0;
-		
+
 		int rc;
 		switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
 		{
 			case AlarmList.COLUMN_SEVERITY:
-				rc = ((Alarm)e1).getCurrentSeverity().compareTo(((Alarm)e2).getCurrentSeverity());
+            rc = ((AlarmHandle)e1).alarm.getCurrentSeverity().compareTo(((AlarmHandle)e2).alarm.getCurrentSeverity());
 				break;
 			case AlarmList.COLUMN_STATE:
-				rc = Integer.signum(((Alarm)e1).getState() - ((Alarm)e2).getState());
+            rc = Integer.signum(((AlarmHandle)e1).alarm.getState() - ((AlarmHandle)e2).alarm.getState());
 				break;
 			case AlarmList.COLUMN_SOURCE:
-            AbstractObject obj1 = Registry.getSession().findObjectById(((Alarm)e1).getSourceObjectId());
-            AbstractObject obj2 = Registry.getSession().findObjectById(((Alarm)e2).getSourceObjectId());
+            AbstractObject obj1 = Registry.getSession().findObjectById(((AlarmHandle)e1).alarm.getSourceObjectId());
+            AbstractObject obj2 = Registry.getSession().findObjectById(((AlarmHandle)e2).alarm.getSourceObjectId());
             String name1 = (obj1 != null) ? obj1.getObjectName() : i18n.tr("Unknown");
             String name2 = (obj2 != null) ? obj2.getObjectName() : i18n.tr("Unknown");
 				rc = name1.compareToIgnoreCase(name2);
 				break;
 			case AlarmList.COLUMN_MESSAGE:
-				rc = ((Alarm)e1).getMessage().compareToIgnoreCase(((Alarm)e2).getMessage());
+            rc = ((AlarmHandle)e1).alarm.getMessage().compareToIgnoreCase(((AlarmHandle)e2).alarm.getMessage());
 				break;
 			case AlarmList.COLUMN_COUNT:
-				rc = Integer.signum(((Alarm)e1).getRepeatCount() - ((Alarm)e2).getRepeatCount());
+            rc = Integer.signum(((AlarmHandle)e1).alarm.getRepeatCount() - ((AlarmHandle)e2).alarm.getRepeatCount());
 				break;
 			case AlarmList.COLUMN_CREATED:
-				rc = ((Alarm)e1).getCreationTime().compareTo(((Alarm)e2).getCreationTime());
+            rc = ((AlarmHandle)e1).alarm.getCreationTime().compareTo(((AlarmHandle)e2).alarm.getCreationTime());
 				break;
 			case AlarmList.COLUMN_LASTCHANGE:
-				rc = ((Alarm)e1).getLastChangeTime().compareTo(((Alarm)e2).getLastChangeTime());
+            rc = ((AlarmHandle)e1).alarm.getLastChangeTime().compareTo(((AlarmHandle)e2).alarm.getLastChangeTime());
 				break;
          case AlarmList.COLUMN_ZONE:
             NXCSession session = Registry.getSession();
             if (session.isZoningEnabled())
             {
-               ZoneMember o1 = session.findObjectById(((Alarm)e1).getSourceObjectId(), ZoneMember.class);
-               ZoneMember o2 = session.findObjectById(((Alarm)e2).getSourceObjectId(), ZoneMember.class);
+               ZoneMember o1 = session.findObjectById(((AlarmHandle)e1).alarm.getSourceObjectId(), ZoneMember.class);
+               ZoneMember o2 = session.findObjectById(((AlarmHandle)e2).alarm.getSourceObjectId(), ZoneMember.class);
                String n1 = (o1 != null) ? o1.getZoneName() : "";
                String n2 = (o2 != null) ? o2.getZoneName() : "";
                rc = n1.compareToIgnoreCase(n2);

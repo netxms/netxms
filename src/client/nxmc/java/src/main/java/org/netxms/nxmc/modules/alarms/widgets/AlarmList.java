@@ -34,8 +34,10 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -58,6 +60,7 @@ import org.netxms.client.events.BulkAlarmStateChangeData;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
+import org.netxms.nxmc.base.helpers.TransformationSelectionProvider;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewerFilterInternal;
@@ -70,6 +73,7 @@ import org.netxms.nxmc.modules.alarms.dialogs.AcknowledgeCustomTimeDialog;
 import org.netxms.nxmc.modules.alarms.dialogs.AlarmStateChangeFailureDialog;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmAcknowledgeTimeFunctions;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmComparator;
+import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmHandle;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmListFilter;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmListLabelProvider;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmToolTip;
@@ -112,10 +116,12 @@ public class AlarmList extends CompositeWithMessageArea
 	private SortableTreeViewer alarmViewer;
    private AlarmListLabelProvider labelProvider;
 	private AlarmListFilter alarmFilter;
+   private TransformationSelectionProvider alarmSelectionProvider;
 	private Point toolTipLocation;
 	private Alarm toolTipObject;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
    private List<Alarm> newAlarmList = new ArrayList<Alarm>();
+   private Map<Long, AlarmHandle> displayList = new HashMap<Long, AlarmHandle>();
    private VisibilityValidator visibilityValidator;
    private boolean needInitialRefresh = false;
    private boolean filterRunning = false;
@@ -368,8 +374,23 @@ public class AlarmList extends CompositeWithMessageArea
             ps.set("AlarmList.ShowFilter", initShowfilter);
          }
       });
+
+      alarmSelectionProvider = new TransformationSelectionProvider(alarmViewer) {
+         @Override
+         protected ISelection transformSelection(ISelection selection)
+         {
+            if (!(selection instanceof IStructuredSelection))
+               return selection;
+            List<Alarm> alarms = new ArrayList<Alarm>(((IStructuredSelection)selection).size());
+            for(Object o : ((IStructuredSelection)selection).toList())
+               alarms.add(((AlarmHandle)o).alarm);
+            return new StructuredSelection(alarms);
+         }
+      };
+
+      alarmViewer.setInput(displayList);
    }
-	
+
    /**
     * Get selection provider of alarm list
     * 
@@ -377,7 +398,7 @@ public class AlarmList extends CompositeWithMessageArea
     */
    public ISelectionProvider getSelectionProvider()
    {
-      return alarmViewer;
+      return alarmSelectionProvider;
    }
 
    /**
@@ -625,12 +646,11 @@ public class AlarmList extends CompositeWithMessageArea
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-      IStructuredSelection selection = alarmViewer.getStructuredSelection();
-		if (selection.size() == 0)
+      IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
+      if (selection.isEmpty())
 			return;
-		
+
 		int states = getSelectionType(selection.toArray());
-		
 		if (states == 2)
 		{
    		manager.add(actionAcknowledge);
@@ -649,7 +669,7 @@ public class AlarmList extends CompositeWithMessageArea
       		manager.add(timeAcknowledgeMenu);
 		   }
 		}
-		
+
 		if (states < 4)
 		   manager.add(actionResolve);
 		if (states == 4 || !session.isStrictAlarmStatusFlow())
@@ -805,21 +825,22 @@ public class AlarmList extends CompositeWithMessageArea
    private void filterAndLimit()
    {
       // filter
-      final List<Alarm> selectedAlarms = new ArrayList<Alarm>();
+      final Map<Long, Alarm> selectedAlarms = new HashMap<Long, Alarm>();
       for(Alarm alarm : alarmList.values())
       {
          if (alarmFilter.filter(alarm))
          {
-            selectedAlarms.add(alarm);
+            selectedAlarms.put(alarm.getId(), alarm);
          }
       }
 
       // limit number of alarms to display
-      final List<Alarm> filteredAlarms;
+      final Map<Long, Alarm> filteredAlarms;
       if ((session.getAlarmListDisplayLimit() > 0) && (selectedAlarms.size() > session.getAlarmListDisplayLimit()))
       {
          // sort by last change - newest first
-         Collections.sort(selectedAlarms, new Comparator<Alarm>() {
+         List<Alarm> l = new ArrayList<Alarm>(selectedAlarms.values());
+         Collections.sort(l, new Comparator<Alarm>() {
             @Override
             public int compare(Alarm alarm1, Alarm alarm2)
             {
@@ -827,7 +848,9 @@ public class AlarmList extends CompositeWithMessageArea
             }
          });
 
-         filteredAlarms = selectedAlarms.subList(0, session.getAlarmListDisplayLimit());
+         filteredAlarms = new HashMap<Long, Alarm>(session.getAlarmListDisplayLimit());
+         for(Alarm a : l.subList(0, session.getAlarmListDisplayLimit()))
+            filteredAlarms.put(a.getId(), a);
       }
       else
       {
@@ -841,11 +864,20 @@ public class AlarmList extends CompositeWithMessageArea
             if (alarmViewer.getControl().isDisposed())
                return;
 
-            alarmViewer.setInput(filteredAlarms);
+            // Remove from display alarms that are no longer visible
+            displayList.entrySet().removeIf(e -> (!filteredAlarms.containsKey(e.getKey())));
 
-            // For some unknown reason setInput may remove sort indicator from column - this call will restore it
-            alarmViewer.getTree().setSortColumn(alarmViewer.getTree().getSortColumn());
+            // Add or update alarms in display list
+            for(Alarm a : filteredAlarms.values())
+            {
+               AlarmHandle h = displayList.get(a.getId());
+               if (h != null)
+                  h.alarm = a;
+               else
+                  displayList.put(a.getId(), new AlarmHandle(a));
+            }
 
+            alarmViewer.refresh();
             if ((session.getAlarmListDisplayLimit() > 0) && (selectedAlarms.size() >= session.getAlarmListDisplayLimit()))
             {
                addMessage(MessageArea.INFORMATION, String.format(i18n.tr("Only %d most recent alarms shown"), filteredAlarms.size()), true);
@@ -871,7 +903,7 @@ public class AlarmList extends CompositeWithMessageArea
          {
             for(Alarm a : newAlarmList)
             {
-               if (filteredAlarms.contains(a))
+               if (filteredAlarms.containsKey(a.getId()))
                   AlarmNotifier.playSounOnAlarm(a);
             }
          }
@@ -934,8 +966,8 @@ public class AlarmList extends CompositeWithMessageArea
     */
 	private void acknowledgeAlarms(final boolean sticky, final int time)
 	{
-		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
-		if (selection.size() == 0)
+      IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
+      if (selection.isEmpty())
 			return;
 
 		final Object[] alarms = selection.toArray();
@@ -968,7 +1000,7 @@ public class AlarmList extends CompositeWithMessageArea
 	 */
 	private void resolveAlarms()
 	{
-		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.isEmpty())
 			return;
 		
@@ -1007,7 +1039,7 @@ public class AlarmList extends CompositeWithMessageArea
     */
    private void terminateAlarms()
    {
-      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.isEmpty())
          return;     
 
@@ -1046,7 +1078,7 @@ public class AlarmList extends CompositeWithMessageArea
     */
    private void createIssue()
    {
-      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.size() != 1)
          return;
       
@@ -1071,7 +1103,7 @@ public class AlarmList extends CompositeWithMessageArea
     */
    private void showIssue()
    {
-      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.size() != 1)
          return;
       
@@ -1122,7 +1154,7 @@ public class AlarmList extends CompositeWithMessageArea
     */
    private void unlinkIssue()
    {
-      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.size() != 1)
          return;
 

@@ -59,8 +59,8 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	private boolean blinkState = true;
    private boolean showColor = true;
 	private TreeViewer viewer;
-   private BaseObjectLabelProvider objectLabelProvier;
-	
+   private BaseObjectLabelProvider objectLabelProvider;
+
 	/**
 	 * Default constructor 
 	 */
@@ -68,7 +68,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	{
 	   this.viewer = viewer;
       session = Registry.getSession();
-      objectLabelProvier = new BaseObjectLabelProvider();
+      objectLabelProvider = new BaseObjectLabelProvider();
 
       stateImages[0] = ResourceManager.getImageDescriptor("icons/alarms/outstanding.png").createImage(); //$NON-NLS-1$
       stateImages[1] = ResourceManager.getImageDescriptor("icons/alarms/acknowledged.png").createImage(); //$NON-NLS-1$
@@ -83,21 +83,22 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
+      Alarm alarm = ((AlarmHandle)element).alarm;
 		switch((Integer)viewer.getTree().getColumn(columnIndex).getData("ID"))
 		{
 			case AlarmList.COLUMN_SEVERITY:
-				return StatusDisplayInfo.getStatusImage(((Alarm)element).getCurrentSeverity());
+            return StatusDisplayInfo.getStatusImage(alarm.getCurrentSeverity());
 			case AlarmList.COLUMN_STATE:
-				if (((Alarm)element).getState() == Alarm.STATE_OUTSTANDING)
+            if (alarm.getState() == Alarm.STATE_OUTSTANDING)
 					return blinkState ? stateImages[Alarm.STATE_OUTSTANDING] : SharedIcons.IMG_EMPTY;
-				if ((((Alarm)element).getState() == Alarm.STATE_ACKNOWLEDGED) && ((Alarm)element).isSticky())
+            if ((alarm.getState() == Alarm.STATE_ACKNOWLEDGED) && alarm.isSticky())
 					return stateImages[4];
-				return stateImages[((Alarm)element).getState()];
+            return stateImages[alarm.getState()];
 			case AlarmList.COLUMN_SOURCE:
-			   AbstractObject object = session.findObjectById(((Alarm)element).getSourceObjectId());
-            return (object != null) ? objectLabelProvier.getImage(object) : null;
+            AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
+            return (object != null) ? objectLabelProvider.getImage(object) : null;
 			case AlarmList.COLUMN_COMMENTS:
-            return (((Alarm)element).getCommentsCount() > 0) ? SharedIcons.IMG_COMMENTS : null;
+            return (alarm.getCommentsCount() > 0) ? SharedIcons.IMG_COMMENTS : null;
 		}
 		return null;
 	}
@@ -108,49 +109,50 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
+      Alarm alarm = ((AlarmHandle)element).alarm;
       switch((Integer)viewer.getTree().getColumn(columnIndex).getData("ID"))
 		{
 			case AlarmList.COLUMN_SEVERITY:
-				return StatusDisplayInfo.getStatusText(((Alarm)element).getCurrentSeverity());
+            return StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity());
 			case AlarmList.COLUMN_STATE:
-			   int time = ((Alarm)element).getAckTime();
+            int time = alarm.getAckTime();
             String timeString = time > 0
                   ? " (" + DateFormatFactory.getDateTimeFormat().format(System.currentTimeMillis() + time * 1000) + ")" //$NON-NLS-1$ //$NON-NLS-2$
                   : ""; //$NON-NLS-1$
-				return stateText[((Alarm)element).getState()] + timeString;
+            return stateText[alarm.getState()] + timeString;
 			case AlarmList.COLUMN_SOURCE:
-				AbstractObject object = session.findObjectById(((Alarm)element).getSourceObjectId());
-				return (object != null) ? object.getObjectName() : ("[" + Long.toString(((Alarm)element).getSourceObjectId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+            AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
+            return (object != null) ? object.getObjectName() : ("[" + Long.toString(alarm.getSourceObjectId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
          case AlarmList.COLUMN_ZONE:
             if (session.isZoningEnabled())
             {
-               ZoneMember zm = session.findObjectById(((Alarm)element).getSourceObjectId(), ZoneMember.class);
+               ZoneMember zm = session.findObjectById(alarm.getSourceObjectId(), ZoneMember.class);
                return (zm != null) ? zm.getZoneName() : "";
             }
             return "";
 			case AlarmList.COLUMN_MESSAGE:
-				return ((Alarm)element).getMessage();
+            return alarm.getMessage();
 			case AlarmList.COLUMN_COUNT:
-				return Integer.toString(((Alarm)element).getRepeatCount());
+            return Integer.toString(alarm.getRepeatCount());
 			case AlarmList.COLUMN_COMMENTS:
-				return (((Alarm)element).getCommentsCount() > 0) ? Integer.toString(((Alarm)element).getCommentsCount()) : null;
+            return (alarm.getCommentsCount() > 0) ? Integer.toString(alarm.getCommentsCount()) : null;
 			case AlarmList.COLUMN_ACK_BY:
-				if (((Alarm)element).getState() == Alarm.STATE_OUTSTANDING)
+            if (alarm.getState() == Alarm.STATE_OUTSTANDING)
 					return null;
-				long userId = (((Alarm)element).getState() == Alarm.STATE_ACKNOWLEDGED) ? ((Alarm)element).getAcknowledgedByUser() : ((Alarm)element).getResolvedByUser();
+            long userId = (alarm.getState() == Alarm.STATE_ACKNOWLEDGED) ? alarm.getAcknowledgedByUser() : alarm.getResolvedByUser();
 				AbstractUserObject user = session.findUserDBObjectById(userId, new ViewerElementUpdater(viewer, element)); 
             return (user != null) ? user.getName() : ("[" + Long.toString(userId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case AlarmList.COLUMN_CREATED:
-				return DateFormatFactory.getDateTimeFormat().format(((Alarm)element).getCreationTime());
+            return DateFormatFactory.getDateTimeFormat().format(alarm.getCreationTime());
 			case AlarmList.COLUMN_LASTCHANGE:
-				return DateFormatFactory.getDateTimeFormat().format(((Alarm)element).getLastChangeTime());
+            return DateFormatFactory.getDateTimeFormat().format(alarm.getLastChangeTime());
          case AlarmList.COLUMN_HELPDESK_REF:
-            switch(((Alarm)element).getHelpdeskState())
+            switch(alarm.getHelpdeskState())
             {
                case Alarm.HELPDESK_STATE_OPEN:
-                  return ((Alarm)element).getHelpdeskReference();
+                  return alarm.getHelpdeskReference();
                case Alarm.HELPDESK_STATE_CLOSED:
-                  return ((Alarm)element).getHelpdeskReference() + i18n.tr(" (closed)");
+                  return alarm.getHelpdeskReference() + i18n.tr(" (closed)");
             }
             return null;
 		}
@@ -165,7 +167,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	{
 		for(int i = 0; i < stateImages.length; i++)
 			stateImages[i].dispose();
-      objectLabelProvier.dispose();
+      objectLabelProvider.dispose();
 		super.dispose();
 	}
 
@@ -183,7 +185,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
    @Override
    public Color getForeground(Object element)
    {
-      return showColor ? FOREGROUND_COLORS[((Alarm)element).getCurrentSeverity().getValue()] : null;
+      return showColor ? FOREGROUND_COLORS[((AlarmHandle)element).alarm.getCurrentSeverity().getValue()] : null;
    }
 
    /**
@@ -192,7 +194,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
    @Override
    public Color getBackground(Object element)
    {
-      return showColor ? StatusDisplayInfo.getStatusColor(((Alarm)element).getCurrentSeverity()) : null;
+      return showColor ? StatusDisplayInfo.getStatusColor(((AlarmHandle)element).alarm.getCurrentSeverity()) : null;
    }
 
    /**

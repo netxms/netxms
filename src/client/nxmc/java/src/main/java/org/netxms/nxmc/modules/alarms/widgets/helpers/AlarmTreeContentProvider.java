@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,32 +24,20 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
-import org.netxms.client.events.Alarm;
 
 /**
  * Content provider for alarm tree
  */
 public class AlarmTreeContentProvider implements ITreeContentProvider
 {
-   private Map<Long, Alarm> alarms;
-   
+   private Map<Long, AlarmHandle> alarms;
+
    /**
     * Create alarm tree content provider 
     */
    public AlarmTreeContentProvider()
    {
-      alarms = new HashMap<Long, Alarm>();
-   }
-   
-   /**
-    * Get alarm object from local cache
-    * 
-    * @param id alarm ID
-    * @return alarm object
-    */
-   private Alarm getAlarm(long id)
-   {
-      return alarms.get(id);
+      alarms = new HashMap<Long, AlarmHandle>();
    }
 
    /**
@@ -60,14 +48,14 @@ public class AlarmTreeContentProvider implements ITreeContentProvider
    public Object[] getElements(Object inputElement)
    {
       alarms.clear();
-      for(Alarm a : (List<Alarm>)inputElement)
+      for(AlarmHandle a : ((Map<Long, AlarmHandle>)inputElement).values())
       {
-         alarms.put(a.getId(), a);
+         alarms.put(a.id, a);
       }
-      List<Alarm> rootElements = new ArrayList<Alarm>(alarms.size());
-      for(Alarm a : (List<Alarm>)inputElement)
+      List<AlarmHandle> rootElements = new ArrayList<AlarmHandle>(alarms.size());
+      for(AlarmHandle a : ((Map<Long, AlarmHandle>)inputElement).values())
       {
-         if ((a.getParentId() == 0) || !alarms.containsKey(a.getParentId()))
+         if ((a.alarm.getParentId() == 0) || !alarms.containsKey(a.alarm.getParentId()))
             rootElements.add(a);
       }
       return rootElements.toArray();
@@ -79,10 +67,10 @@ public class AlarmTreeContentProvider implements ITreeContentProvider
    @Override
    public Object[] getChildren(Object parentElement)
    {
-      List<Alarm> children = new ArrayList<Alarm>();
-      for(long id : ((Alarm)parentElement).getSubordinateAlarms())
+      List<AlarmHandle> children = new ArrayList<AlarmHandle>();
+      for(long id : ((AlarmHandle)parentElement).alarm.getSubordinateAlarms())
       {
-         Alarm a = getAlarm(id);
+         AlarmHandle a = alarms.get(id);
          if (a != null)
             children.add(a);
       }
@@ -95,7 +83,7 @@ public class AlarmTreeContentProvider implements ITreeContentProvider
    @Override
    public Object getParent(Object element)
    {
-      return (((Alarm)element).getParentId() != 0) ? getAlarm(((Alarm)element).getParentId()) : null;
+      return (((AlarmHandle)element).alarm.getParentId() != 0) ? alarms.get(((AlarmHandle)element).alarm.getParentId()) : null;
    }
 
    /**
@@ -104,7 +92,7 @@ public class AlarmTreeContentProvider implements ITreeContentProvider
    @Override
    public boolean hasChildren(Object element)
    {
-      return ((Alarm)element).hasSubordinatedAlarms();
+      return ((AlarmHandle)element).alarm.hasSubordinatedAlarms();
    }
 
    /**
