@@ -1348,10 +1348,10 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite);
 UINT32 GetObjectToolsIntoMessage(NXCPMessage *msg, UINT32 userId, bool fullAccess);
 UINT32 GetObjectToolDetailsIntoMessage(UINT32 toolId, NXCPMessage *msg);
 
-UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId);
-UINT32 DeleteSummaryTable(LONG tableId);
-Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc);
-bool CreateSummaryTableExportRecord(INT32 id, StringBuffer &xml);
+uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId);
+uint32_t DeleteSummaryTable(uint32_t tableId);
+Table *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc);
+bool CreateSummaryTableExportRecord(uint32_t id, StringBuffer &xml);
 bool ImportSummaryTable(ConfigEntry *config, bool overwrite);
 
 void GetFullCommunityList(NXCPMessage *msg);

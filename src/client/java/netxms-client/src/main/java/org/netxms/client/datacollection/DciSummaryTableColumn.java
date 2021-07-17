@@ -27,7 +27,8 @@ public class DciSummaryTableColumn
 {
 	public static int REGEXP_MATCH = 0x0001;
    public static int MULTIVALUED = 0x0002;
-	
+   public static int DESCRIPTION_MATCH = 0x0004;
+
 	private String name;
 	private String dciName;
 	private int flags;
@@ -146,21 +147,40 @@ public class DciSummaryTableColumn
    /**
 	 * @return true if match
 	 */
-	public boolean isRegexpMatch()
+   public boolean isDescriptionMatch()
 	{
-		return (flags & REGEXP_MATCH) != 0;
+      return (flags & DESCRIPTION_MATCH) != 0;
 	}
 	
 	/**
 	 * @param enable true to enable
 	 */
-	public void setRegexpMatch(boolean enable)
+   public void setDescriptionMatch(boolean enable)
 	{
 		if (enable)
-			flags |= REGEXP_MATCH;
+         flags |= DESCRIPTION_MATCH;
 		else
-			flags &= ~REGEXP_MATCH;
+         flags &= ~DESCRIPTION_MATCH;
 	}
+
+   /**
+    * @return true if match
+    */
+   public boolean isRegexpMatch()
+   {
+      return (flags & REGEXP_MATCH) != 0;
+   }
+
+   /**
+    * @param enable true to enable
+    */
+   public void setRegexpMatch(boolean enable)
+   {
+      if (enable)
+         flags |= REGEXP_MATCH;
+      else
+         flags &= ~REGEXP_MATCH;
+   }
 
    /**
     * @return true if column is multivalued
@@ -189,7 +209,7 @@ public class DciSummaryTableColumn
 		return flags;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
