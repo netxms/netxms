@@ -39,7 +39,7 @@ public class SummaryTableAdHoc  extends AbstractHandler
 {
    private Logger log = LoggerFactory.getLogger(AbstractHandler.class);
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.websvc.handlers.AbstractHandler#create(org.json.JSONObject)
     */
    @Override
@@ -48,11 +48,11 @@ public class SummaryTableAdHoc  extends AbstractHandler
       NXCSession session = getSession();
       if (!session.areObjectsSynchronized())
          session.syncObjects();
-      
+
       String objectFilter = JsonTools.getStringFromJson(data, "baseObject", null);
       log.debug("POST adhoc summaryTable: baseObject = " + objectFilter);
-      JSONArray columnFilter = JsonTools.getJsonArrayFromJson(data, "columns", null);
-      if(objectFilter == null || objectFilter.isEmpty() || columnFilter == null)
+      JSONArray columnDefinitions = JsonTools.getJsonArrayFromJson(data, "columns", null);
+      if ((objectFilter == null) || objectFilter.isEmpty() || (columnDefinitions == null))
       {
          log.warn("POST adhoc summaryTable: no DciSummaryTableColumn table or no value for BaseObject");
          return createErrorResponse(RCC.INVALID_ARGUMENT);
@@ -60,60 +60,59 @@ public class SummaryTableAdHoc  extends AbstractHandler
       long baseObjectId;
       try
       {
-         baseObjectId = Long.parseLong(objectFilter);            
+         baseObjectId = Long.parseLong(objectFilter);
       }
       catch(NumberFormatException ex)
       {
-         AbstractObject obj = session.findObjectByName(objectFilter); 
-         if(obj != null)
-            baseObjectId = obj.getObjectId();
+         AbstractObject object = session.findObjectByName(objectFilter); 
+         if (object != null)
+            baseObjectId = object.getObjectId();
          else
             baseObjectId = 0;
       }
-      
+
       List<DciSummaryTableColumn> columns = new ArrayList<DciSummaryTableColumn>();
-      for(int i = 0; i < columnFilter.length(); i++)
+      for(int i = 0; i < columnDefinitions.length(); i++)
       {
-         JSONObject obj = columnFilter.getJSONObject(i);
-         columns.add(new DciSummaryTableColumn(JsonTools.getStringFromJson(obj, "columnName", ""), 
-                                               JsonTools.getStringFromJson(obj, "dciName", ""), 
-                                               JsonTools.getBooleanFromJson(obj, "isRegexp", false) ? DciSummaryTableColumn.REGEXP_MATCH : 0));
+         JSONObject columnDefinition = columnDefinitions.getJSONObject(i);
+         int flags = 0;
+         if (JsonTools.getBooleanFromJson(columnDefinition, "isRegexp", false) || JsonTools.getBooleanFromJson(columnDefinition, "useRegexp", false))
+            flags |= DciSummaryTableColumn.REGEXP_MATCH;
+         if (JsonTools.getBooleanFromJson(columnDefinition, "matchByDescription", false))
+            flags |= DciSummaryTableColumn.DESCRIPTION_MATCH;
+         columns.add(new DciSummaryTableColumn(JsonTools.getStringFromJson(columnDefinition, "columnName", ""), JsonTools.getStringFromJson(columnDefinition, "dciName", ""), flags));
       }
-      
+
       AggregationFunction agrFunc = JsonTools.getEnumFromJson(data, AggregationFunction.class, "aggregationFunction", null);   
-      
+
       Date startDate;
       Date endDate;
       long date = JsonTools.getLongFromJson(data, "startDate", -1);
       startDate = date > 0 ? new Date(date * 1000) : null;
       date = JsonTools.getLongFromJson(data, "endDate", -1);
       endDate = date > 0 ? new Date(date * 1000) : null;
-      //end date
-      
+
       boolean multiInstance = JsonTools.getBooleanFromJson(data, "multiInstance", true);
       
       Table table = session.queryAdHocDciSummaryTable(baseObjectId, columns, agrFunc, startDate, endDate, multiInstance);
       
-      //create json
       JSONObject root = new JSONObject();
-      JSONArray columnList = new JSONArray();
-      JSONArray rowList = new JSONArray();
+      JSONArray resultColumns = new JSONArray();
+      JSONArray resultRows = new JSONArray();
       String names[] = table.getColumnDisplayNames();
       for(int i = 0; i < names.length; i++)
-         columnList.put(names[i]);
-      root.put("columns", columnList);
-      
+         resultColumns.put(names[i]);
+      root.put("columns", resultColumns);
+
       TableRow rows[] = table.getAllRows();
       for(int i = 0; i < rows.length; i++)
       {
          JSONArray row = new JSONArray();
          for(int j = 0; j < rows[i].size(); j++)
             row.put(rows[i].get(j).getValue());
-         rowList.put(row);
+         resultRows.put(row);
       }
-      root.put("rows", rowList);
-      
-      
+      root.put("rows", resultRows);
       return new ResponseContainer("table", root);
    }
 }
