@@ -483,6 +483,9 @@
     <ClCompile Include="object_queries.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="authtokens.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\dbdrv.h">
