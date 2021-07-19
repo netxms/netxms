@@ -33,6 +33,7 @@ static const char *s_optHost = "127.0.0.1";
 static const char *s_optPort = "";
 static const char *s_optUser = "admin";
 static const char *s_optPassword = nullptr;
+static const char *s_optToken = nullptr;
 static const char *s_optJre = nullptr;
 static const char *s_optClassPath = nullptr;
 static bool s_optSync = true;
@@ -68,33 +69,42 @@ static int StartApp(int argc, char *argv[])
    vmOptions.addMBString(buffer);
    snprintf(buffer, 256, "-Dnetxms.port=%s", s_optPort);
    vmOptions.addMBString(buffer);
-   snprintf(buffer, 256, "-Dnetxms.login=%s", s_optUser);
-   vmOptions.addMBString(buffer);
    snprintf(buffer, 256, "-Dnetxms.syncObjects=%s", s_optSync ? "true" : "false");
    vmOptions.addMBString(buffer);
 
-   if (s_optPassword == nullptr)
+   if (s_optToken != nullptr)
    {
-      TCHAR prompt[256], passwordBuffer[256];
-      _sntprintf(prompt, 256, _T("%hs@%hs password: "), s_optUser, s_optHost);
-      if (ReadPassword(prompt, passwordBuffer, 256))
-      {
-#ifdef UNICODE
-         s_optPassword = MBStringFromWideString(passwordBuffer);
-#else
-         s_optPassword = MemCopyStringA(passwordBuffer);
-#endif
-      }
-		else
-      {
-         s_optPassword = "";
-      }
-	}
+      snprintf(buffer, 256, "-Dnetxms.token=%s", s_optToken);
+      vmOptions.addMBString(buffer);
+   }
+   else
+   {
+      snprintf(buffer, 256, "-Dnetxms.login=%s", s_optUser);
+      vmOptions.addMBString(buffer);
 
-   char clearPassword[128];
-   DecryptPasswordA(s_optUser, s_optPassword, clearPassword, 128);
-   snprintf(buffer, 256, "-Dnetxms.password=%s", clearPassword);
-   vmOptions.addMBString(buffer);
+      if (s_optPassword == nullptr)
+      {
+         TCHAR prompt[256], passwordBuffer[256];
+         _sntprintf(prompt, 256, _T("%hs@%hs password: "), s_optUser, s_optHost);
+         if (ReadPassword(prompt, passwordBuffer, 256))
+         {
+#ifdef UNICODE
+            s_optPassword = MBStringFromWideString(passwordBuffer);
+#else
+            s_optPassword = MemCopyStringA(passwordBuffer);
+#endif
+         }
+         else
+         {
+            s_optPassword = "";
+         }
+      }
+
+      char clearPassword[128];
+      DecryptPasswordA(s_optUser, s_optPassword, clearPassword, 128);
+      snprintf(buffer, 256, "-Dnetxms.password=%s", clearPassword);
+      vmOptions.addMBString(buffer);
+   }
 
    int debugLevel = nxlog_get_debug_level();
    if (debugLevel > 0)
@@ -155,13 +165,14 @@ static struct option longOptions[] =
 	{ (char *)"no-sync",        required_argument, nullptr,        'n' },
 	{ (char *)"password",       required_argument, nullptr,        'P' },
    { (char *)"port",           required_argument, nullptr,        'p' },
+   { (char *)"token",          required_argument, nullptr,        't' },
 	{ (char *)"user",           required_argument, nullptr,        'u' },
 	{ (char *)"version",        no_argument,       nullptr,        'v' },
 	{ nullptr, 0, nullptr, 0 }
 };
 #endif
 
-#define SHORT_OPTIONS "C:DhH:j:np:P:u:v"
+#define SHORT_OPTIONS "C:DhH:j:np:P:t:u:v"
 
 /**
  * Print usage info
@@ -188,6 +199,7 @@ static void ShowUsage(bool showVersion)
       _T("  -n, --no-sync               Do not synchronize objects on connect.\n")
       _T("  -p, --port <port>           Specify TCP port for connection. Default is 4701.\n")
       _T("  -P, --password <password>   Specify user's password. Default is empty.\n")
+      _T("  -t, --token <token>         Login to server using given authentication token.\n")
       _T("  -u, --user <user>           Login to server as user. Default is \"admin\".\n")
       _T("  -v, --version               Display version information.\n\n")
 #else
@@ -199,6 +211,7 @@ static void ShowUsage(bool showVersion)
       _T("  -n             Do not synchronize objects on connect.\n")
       _T("  -p <port>      Specify TCP port for connection. Default is 4701.\n")
       _T("  -P <password>  Specify user's password. If not given, password will be read from terminal.\n")
+      _T("  -t <token>     Login to server using given authentication token.\n")
       _T("  -u <user>      Login to server as user. Default is \"admin\".\n")
       _T("  -v             Display version information.\n\n")
 #endif
@@ -228,7 +241,7 @@ int main(int argc, char *argv[])
    opterr = 0;
    int c, debug = 0;
 #if HAVE_DECL_GETOPT_LONG
-   while ((c = getopt_long(argc, argv, SHORT_OPTIONS, longOptions, NULL)) != -1)
+   while ((c = getopt_long(argc, argv, SHORT_OPTIONS, longOptions, nullptr)) != -1)
 #else
    while ((c = getopt(argc, argv, SHORT_OPTIONS)) != -1)
 #endif
@@ -262,9 +275,12 @@ int main(int argc, char *argv[])
 		   case 'P': // password
 			   s_optPassword = optarg;
 			   break;
-		   case 'u': // user
-			   s_optUser = optarg;
+		   case 't': // token
+			   s_optToken = optarg;
 			   break;
+         case 'u': // user
+            s_optUser = optarg;
+            break;
 		   case 'v': // version
             _tprintf(
                _T("NetXMS Interactive Shell  Version ") NETXMS_VERSION_STRING _T("\n")

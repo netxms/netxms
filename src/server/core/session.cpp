@@ -870,7 +870,7 @@ void ClientSession::processRequest(NXCPMessage *request)
    switch(code)
    {
       case CMD_LOGIN:
-         login(request);
+         login(*request);
          break;
       case CMD_GET_SERVER_INFO:
          sendServerInfo(request->getId());
@@ -2024,7 +2024,7 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 /**
  * Authenticate client
  */
-void ClientSession::login(NXCPMessage *pRequest)
+void ClientSession::login(const NXCPMessage& request)
 {
    NXCPMessage msg;
    TCHAR szLogin[MAX_USER_NAME], szPassword[1024];
@@ -2037,52 +2037,53 @@ void ClientSession::login(NXCPMessage *pRequest)
 
    // Prepare response message
    msg.setCode(CMD_LOGIN_RESP);
-   msg.setId(pRequest->getId());
+   msg.setId(request.getId());
 
    // Get client info string
-   if (pRequest->isFieldExist(VID_CLIENT_INFO))
+   if (request.isFieldExist(VID_CLIENT_INFO))
    {
       TCHAR szClientInfo[32], szOSInfo[32], szLibVersion[16];
 
-      pRequest->getFieldAsString(VID_CLIENT_INFO, szClientInfo, 32);
-      pRequest->getFieldAsString(VID_OS_INFO, szOSInfo, 32);
-      pRequest->getFieldAsString(VID_LIBNXCL_VERSION, szLibVersion, 16);
+      request.getFieldAsString(VID_CLIENT_INFO, szClientInfo, 32);
+      request.getFieldAsString(VID_OS_INFO, szOSInfo, 32);
+      request.getFieldAsString(VID_LIBNXCL_VERSION, szLibVersion, 16);
       _sntprintf(m_clientInfo, 96, _T("%s (%s; libnxcl %s)"), szClientInfo, szOSInfo, szLibVersion);
    }
 
-	m_clientType = pRequest->getFieldAsUInt16(VID_CLIENT_TYPE);
+	m_clientType = request.getFieldAsUInt16(VID_CLIENT_TYPE);
 	if ((m_clientType < 0) || (m_clientType > CLIENT_TYPE_APPLICATION))
 		m_clientType = CLIENT_TYPE_DESKTOP;
 
    if (m_clientType == CLIENT_TYPE_WEB)
    {
       _tcscpy(m_webServerAddress, m_workstation);
-      if (pRequest->isFieldExist(VID_CLIENT_ADDRESS))
+      if (request.isFieldExist(VID_CLIENT_ADDRESS))
       {
-         pRequest->getFieldAsString(VID_CLIENT_ADDRESS, m_workstation, 256);
+         request.getFieldAsString(VID_CLIENT_ADDRESS, m_workstation, 256);
          debugPrintf(5, _T("Real web client address is %s"), m_workstation);
       }
    }
 
-   if (pRequest->isFieldExist(VID_LANGUAGE))
+   if (request.isFieldExist(VID_LANGUAGE))
    {
-      pRequest->getFieldAsString(VID_LANGUAGE, m_language, 8);
+      request.getFieldAsString(VID_LANGUAGE, m_language, 8);
    }
 
    if (!(m_flags & CSF_AUTHENTICATED))
    {
+      UserAuthenticationToken token;
       uint32_t graceLogins = 0;
       bool closeOtherSessions = false;
-      pRequest->getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
-		nAuthType = (int)pRequest->getFieldAsUInt16(VID_AUTH_TYPE);
+      request.getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
+		nAuthType = (int)request.getFieldAsUInt16(VID_AUTH_TYPE);
       debugPrintf(6, _T("authentication type %d"), nAuthType);
 		switch(nAuthType)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:
 #ifdef UNICODE
-				pRequest->getFieldAsString(VID_PASSWORD, szPassword, 256);
+				request.getFieldAsString(VID_PASSWORD, szPassword, 256);
 #else
-				pRequest->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
+				request.getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
 #endif
 				rcc = AuthenticateUser(szLogin, szPassword, 0, nullptr, nullptr, &m_dwUserId,
 													 &m_systemAccessRights, &changePasswd, &intruderLockout,
@@ -2090,11 +2091,11 @@ void ClientSession::login(NXCPMessage *pRequest)
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
 #ifdef _WITH_ENCRYPTION
-				pCert = CertificateFromLoginMessage(pRequest);
+				pCert = CertificateFromLoginMessage(request);
 				if (pCert != nullptr)
 				{
                size_t sigLen;
-					const BYTE *signature = pRequest->getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
+					const BYTE *signature = request.getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
                if (signature != nullptr)
                {
                   rcc = AuthenticateUser(szLogin, reinterpret_cast<const TCHAR*>(signature), sigLen,
@@ -2117,17 +2118,48 @@ void ClientSession::login(NXCPMessage *pRequest)
 				break;
          case NETXMS_AUTH_TYPE_SSO_TICKET:
             char ticket[1024];
-            pRequest->getFieldAsMBString(VID_PASSWORD, ticket, 1024);
+            request.getFieldAsMBString(VID_PASSWORD, ticket, 1024);
             if (CASAuthenticate(ticket, szLogin))
             {
                debugPrintf(5, _T("SSO ticket %hs is valid, login name %s"), ticket, szLogin);
 				   rcc = AuthenticateUser(szLogin, nullptr, 0, nullptr, nullptr, &m_dwUserId,
-													    &m_systemAccessRights, &changePasswd, &intruderLockout,
-													    &closeOtherSessions, true, &graceLogins);
+                     &m_systemAccessRights, &changePasswd, &intruderLockout, &closeOtherSessions, true, &graceLogins);
             }
             else
             {
                debugPrintf(5, _T("SSO ticket %hs is invalid"), ticket);
+               rcc = RCC_ACCESS_DENIED;
+            }
+            break;
+         case NETXMS_AUTH_TYPE_TOKEN:
+            request.getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
+            token = UserAuthenticationToken::parse(szLogin);
+            if (!token.isNull())
+            {
+               uint32_t userId;
+               if (ValidateAuthenticationToken(token, &userId))
+               {
+                  if (ResolveUserId(userId, szLogin) != nullptr)
+                  {
+                     debugPrintf(5, _T("Authentication token is valid, login name %s"), szLogin);
+                     rcc = AuthenticateUser(szLogin, nullptr, 0, nullptr, nullptr, &m_dwUserId, &m_systemAccessRights,
+                           &changePasswd, &intruderLockout, &closeOtherSessions, true, &graceLogins);
+                  }
+                  else
+                  {
+                     debugPrintf(5, _T("Provided authentication token is valid but associated login is not"));
+                     rcc = RCC_ACCESS_DENIED;
+                  }
+               }
+               else
+               {
+                  debugPrintf(5, _T("Provided authentication token is invalid"));
+                  rcc = RCC_ACCESS_DENIED;
+               }
+            }
+            else
+            {
+               debugPrintf(5, _T("Provided authentication token has invalid format"));
                rcc = RCC_ACCESS_DENIED;
             }
             break;
@@ -2141,7 +2173,7 @@ void ClientSession::login(NXCPMessage *pRequest)
       {
          ENUMERATE_MODULES(pfAdditionalLoginCheck)
          {
-            rcc = CURRENT_MODULE.pfAdditionalLoginCheck(m_dwUserId, pRequest);
+            rcc = CURRENT_MODULE.pfAdditionalLoginCheck(m_dwUserId, request);
             if (rcc != RCC_SUCCESS)
             {
                debugPrintf(4, _T("Login blocked by module %s (rcc=%d)"), CURRENT_MODULE.szName, rcc);
@@ -2159,7 +2191,8 @@ void ClientSession::login(NXCPMessage *pRequest)
          msg.setField(VID_RCC, RCC_SUCCESS);
          msg.setField(VID_USER_SYS_RIGHTS, m_systemAccessRights);
          msg.setField(VID_USER_ID, m_dwUserId);
-			msg.setField(VID_SESSION_ID, (UINT32)m_id);
+         msg.setField(VID_USER_NAME, m_loginName);
+         msg.setField(VID_SESSION_ID, (UINT32)m_id);
 			msg.setField(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
          msg.setField(VID_DBCONN_STATUS, (UINT16)((g_flags & AF_DB_CONNECTION_LOST) ? 0 : 1));
 			msg.setField(VID_ZONING_ENABLED, (UINT16)((g_flags & AF_ENABLE_ZONING) ? 1 : 0));
@@ -2176,7 +2209,7 @@ void ClientSession::login(NXCPMessage *pRequest)
          GetClientConfigurationHints(&msg);
          FillLicenseProblemsMessage(&msg);
 
-         if (pRequest->getFieldAsBoolean(VID_ENABLE_COMPRESSION))
+         if (request.getFieldAsBoolean(VID_ENABLE_COMPRESSION))
          {
             debugPrintf(3, _T("Protocol level compression is supported by client"));
             InterlockedOr(&m_flags, CSF_COMPRESSION_ENABLED);

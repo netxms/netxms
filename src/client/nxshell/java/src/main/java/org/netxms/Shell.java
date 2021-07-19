@@ -25,6 +25,7 @@ public class Shell
    private String optPort;
    private String optLogin;
    private String optPassword;
+   private String optToken;
 
    /**
     * @param args
@@ -82,6 +83,7 @@ public class Shell
       optPort = System.getProperty("netxms.port");
       optLogin = System.getProperty("netxms.login");
       optPassword = System.getProperty("netxms.password");
+      optToken = System.getProperty("netxms.token");
 
       if (interactive)
       {
@@ -94,11 +96,11 @@ public class Shell
                optPort = console.readLine("Server TCP port [4701]: ");
             }
          }
-         if (optLogin == null)
+         if ((optLogin == null) && (optToken == null))
          {
             optLogin = console.readLine("Login [admin]: ");
          }
-         if (optPassword == null)
+         if ((optPassword == null) && (optToken == null))
          {
             final char[] passwordChars = console.readPassword("Password: ");
             if (passwordChars == null)
@@ -190,7 +192,10 @@ public class Shell
 
       final NXCSession session = new NXCSession(hostName, port, encrypt);
       session.connect();
-      session.login(optLogin, optPassword);
+      if (optToken != null)
+         session.login(optToken);
+      else
+         session.login(optLogin, optPassword);
       if (sync)
       {
          session.syncObjects();

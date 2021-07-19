@@ -207,6 +207,7 @@
     <ClCompile Include="alarm.cpp" />
     <ClCompile Include="alarm_category.cpp" />
     <ClCompile Include="audit.cpp" />
+    <ClCompile Include="authtokens.cpp" />
     <ClCompile Include="beacon.cpp" />
     <ClCompile Include="bizservice.cpp" />
     <ClCompile Include="bizsvcroot.cpp" />

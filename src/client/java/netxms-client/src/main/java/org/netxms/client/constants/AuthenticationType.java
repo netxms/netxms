@@ -30,7 +30,8 @@ public enum AuthenticationType
 {
    PASSWORD(0),
    CERTIFICATE(1),
-   SSO_TICKET(2);
+   SSO_TICKET(2),
+   TOKEN(3);
 
    private static Logger logger = LoggerFactory.getLogger(AuthenticationType.class);
    private static Map<Integer, AuthenticationType> lookupTable = new HashMap<Integer, AuthenticationType>();

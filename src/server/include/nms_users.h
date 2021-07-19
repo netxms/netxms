@@ -325,6 +325,34 @@ struct PasswordHash
 };
 
 /**
+ * User authentication token length
+ */
+#define USER_AUTHENTICATION_TOKEN_LENGTH  16
+
+/**
+ * User authentication token
+ */
+class UserAuthenticationToken : public GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>
+{
+public:
+   UserAuthenticationToken() : GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>(USER_AUTHENTICATION_TOKEN_LENGTH) { }
+   UserAuthenticationToken(const BYTE *value) : GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>(value, USER_AUTHENTICATION_TOKEN_LENGTH) { }
+   UserAuthenticationToken(const UserAuthenticationToken& src) : GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>(src) { }
+
+   bool equals(const UserAuthenticationToken &a) const { return GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>::equals(a); }
+   bool equals(const BYTE *value) const { return GenericId<USER_AUTHENTICATION_TOKEN_LENGTH>::equals(value, USER_AUTHENTICATION_TOKEN_LENGTH); }
+
+   TCHAR *toString(TCHAR *buffer) const { return BinToStr(m_value, USER_AUTHENTICATION_TOKEN_LENGTH, buffer); }
+   String toString() const
+   {
+      TCHAR buffer[USER_AUTHENTICATION_TOKEN_LENGTH * 2 + 1];
+      return String(BinToStr(m_value, USER_AUTHENTICATION_TOKEN_LENGTH, buffer));
+   }
+
+   static UserAuthenticationToken parse(const TCHAR *s);
+};
+
+/**
  * User object
  */
 class NXCORE_EXPORTABLE User : public UserDatabaseObject
@@ -499,6 +527,10 @@ void FillGroupMembershipInfo(NXCPMessage *msg, uint32_t userId);
 void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups);
 void DumpUsers(CONSOLE_CTX pCtx);
 ObjectArray<UserDatabaseObject> *FindUserDBObjects(const IntegerArray<uint32_t>& ids);
+
+UserAuthenticationToken IssueAuthenticationToken(uint32_t userId, uint32_t validFor);
+void RevokeAuthenticationToken(const UserAuthenticationToken& token);
+bool ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId);
 
 /**
  * CAS API

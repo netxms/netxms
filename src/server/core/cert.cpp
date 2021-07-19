@@ -275,11 +275,11 @@ bool GetServerCertificateOrganization(TCHAR *buffer, size_t size)
 /**
  * Create X509 certificate structure from login message
  */
-X509 *CertificateFromLoginMessage(const NXCPMessage *msg)
+X509 *CertificateFromLoginMessage(const NXCPMessage& msg)
 {
 	X509 *cert = nullptr;
    size_t len;
-   const BYTE *data = msg->getBinaryFieldPtr(VID_CERTIFICATE, &len);
+   const BYTE *data = msg.getBinaryFieldPtr(VID_CERTIFICATE, &len);
 	if ((data != nullptr) && (len > 0))
 	{
       OPENSSL_CONST BYTE *p = (OPENSSL_CONST BYTE *)data;

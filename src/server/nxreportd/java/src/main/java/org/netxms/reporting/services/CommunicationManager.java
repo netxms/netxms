@@ -437,12 +437,13 @@ public class CommunicationManager
       final UUID jobId = getOrCreateJobId(request);
       final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
       final String idataView = request.getFieldAsString(NXCPCodes.VID_VIEW_NAME);
+      final String authToken = request.getFieldAsString(NXCPCodes.VID_AUTH_TOKEN);
       requestObjectAccessSnapshotUpdate(userId);
       server.executeBackgroundTask(new Runnable() {
          @Override
          public void run()
          {
-            server.getReportManager().execute(userId, jobId, jobConfiguration, idataView, Locale.US);
+            server.getReportManager().execute(userId, authToken, jobId, jobConfiguration, idataView, Locale.US);
          }
       });
       response.setField(NXCPCodes.VID_JOB_ID, jobId);

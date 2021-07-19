@@ -526,7 +526,7 @@ void FileDeliveryPolicy::validate()
    nxlog_debug_tag(DEBUG_TAG, 6, _T("FileDeliveryPolicy::validate(): preparing file list"));
    ObjectArray<FileInfo> files(64, 64, Ownership::True);
    Config content;
-   content.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), nullptr, "FileDeliveryPolicy", false);
+   content.loadXmlConfigFromMemory(m_content, strlen(m_content), nullptr, "FileDeliveryPolicy", false);
    MutexUnlock(m_contentLock);
 
    ObjectArray<ConfigEntry> *rootElements = content.getSubEntries(_T("/elements"), _T("*"));
@@ -565,7 +565,7 @@ void FileDeliveryPolicy::validate()
  */
 void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
 {
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s):)"), data->debugId);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): start deployment"), data->debugId);
 
    if (!data->newTypeFormat)
    {

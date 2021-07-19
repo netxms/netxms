@@ -2220,13 +2220,26 @@ public class NXCSession
    }
 
    /**
+    * Login to server using authentication token.
+    *
+    * @param token authentication token
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @throws IllegalStateException if the state is illegal
+    */
+   public void login(String token) throws NXCException, IOException, IllegalStateException
+   {
+      login(AuthenticationType.TOKEN, token, null, null, null, null);
+   }
+
+   /**
     * Login to server using certificate.
     *
-    * @param login       login name
+    * @param login login name
     * @param certificate user's certificate
-    * @param signature   user's digital signature
-    * @throws IOException           if socket I/O error occurs
-    * @throws NXCException          if NetXMS server returns an error or operation was timed out
+    * @param signature user's digital signature
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @throws IllegalStateException if the state is illegal
     */
    public void login(String login, Certificate certificate, Signature signature)
@@ -2314,6 +2327,10 @@ public class NXCSession
       graceLogins = response.getFieldAsInt32(NXCPCodes.VID_GRACE_LOGINS);
       zoningEnabled = response.getFieldAsBoolean(NXCPCodes.VID_ZONING_ENABLED);
       helpdeskLinkActive = response.getFieldAsBoolean(NXCPCodes.VID_HELPDESK_LINK_ACTIVE);
+
+      // Server may send updated user name
+      if (response.isFieldPresent(NXCPCodes.VID_USER_NAME))
+         userName = response.getFieldAsString(NXCPCodes.VID_USER_NAME);
 
       defaultDciPollingInterval = response.getFieldAsInt32(NXCPCodes.VID_POLLING_INTERVAL);
       if (defaultDciPollingInterval == 0)
