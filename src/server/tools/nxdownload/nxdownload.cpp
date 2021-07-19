@@ -100,7 +100,7 @@ static int GetFileFingerprints(AgentConnection *conn, const TCHAR *file)
       _tprintf(_T("\nFirst %u bytes of file:\n"), static_cast<uint32_t>(fp.dataLength));
       for(size_t offset = 0; offset < fp.dataLength;)
       {
-         _tprintf(_T("   %04X | "), offset);
+         _tprintf(_T("   %04X | "), static_cast<unsigned int>(offset));
 
          TCHAR text[17];
          int b;
