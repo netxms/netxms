@@ -48,7 +48,7 @@ public abstract class NXCLDataSource implements JRDataSource
    }
 
    /**
-    * Connect to NetXMS server.
+    * Connect to NetXMS server using login and password authentication.
     *
     * @param server server host name
     * @param login login name
@@ -56,19 +56,47 @@ public abstract class NXCLDataSource implements JRDataSource
     */
    public void connect(String server, String login, String password)
    {
-      log.debug("Connecting to NetXMS server at " + server + " as " + login);
+      log.debug("Connecting to NetXMS server " + server + " as " + login);
+      connect(server, null, login, password);
+   }
+
+   /**
+    * Connect to NetXMS server using login/password or authentication token.
+    *
+    * @param server server host name
+    * @param token authentication token
+    */
+   public void connect(String server, String token)
+   {
+      log.debug("Connecting to NetXMS server " + server + " using authentication token");
+      connect(server, token, null, null);
+   }
+
+   /**
+    * Connect to NetXMS server using login/password or authentication token.
+    *
+    * @param server server host name
+    * @param token authentication token
+    * @param login login name
+    * @param password password
+    */
+   private void connect(String server, String token, String login, String password)
+   {
       NXCSession session = new NXCSession(server);
       try
       {
          session.connect(PROTOCOL_COMPONENTS);
-         session.login(login, password);
+         if (token != null)
+            session.login(token);
+         else
+            session.login(login, password);
          session.syncEventTemplates();
          session.syncObjects();
          loadData(session);
       }
       catch(Exception e)
       {
-         log.error("Cannot connect to NetXMS", e);
+         log.error("Cannot connect to NetXMS server", e);
       }
    }
 

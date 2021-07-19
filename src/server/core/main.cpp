@@ -76,6 +76,7 @@ bool LoadPhysicalLinks();
 void LoadObjectQueries();
 THREAD StartEventProcessor();
 
+void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledAction(const shared_ptr<ScheduledTaskParameters>& parameters);
 void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameters);
 void MaintenanceModeEnter(const shared_ptr<ScheduledTaskParameters>& parameters);
@@ -1265,6 +1266,7 @@ retry_db_lock:
    ConditionDestroy(pollManagerInitialized);
    nxlog_debug(2, _T("Poll manager initialized"));
 
+   RegisterSchedulerTaskHandler(_T("System.CheckUserAuthTokens"), CheckUserAuthenticationTokens, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(_T("Execute.Action"), ExecuteScheduledAction, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
    RegisterSchedulerTaskHandler(_T("Execute.Script"), ExecuteScheduledScript, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
    RegisterSchedulerTaskHandler(_T("Maintenance.Enter"), MaintenanceModeEnter, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
@@ -1280,8 +1282,8 @@ retry_db_lock:
    InitializeTaskScheduler();
 
    // Schedule unbound agent tunnel processing and automatic agent certificate renewal
-   AddUniqueRecurrentScheduledTask(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, _T("*/5 * * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
-   AddUniqueRecurrentScheduledTask(RENEW_AGENT_CERTIFICATES_TASK_ID, _T("0 12 * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
+   AddUniqueRecurrentScheduledTask(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, _T("*/5 * * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Process unbound agent tunnels"), nullptr, true);
+   AddUniqueRecurrentScheduledTask(RENEW_AGENT_CERTIFICATES_TASK_ID, _T("0 12 * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Renew agent certificates"), nullptr, true);
 
    // Send summary emails
    if (ConfigReadBoolean(_T("EnableAlarmSummaryEmails"), false))
@@ -1290,10 +1292,13 @@ retry_db_lock:
       DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
 
    // Schedule automatic CRL reload
-   AddUniqueRecurrentScheduledTask(RELOAD_CRLS_TASK_ID, _T("0 */4 * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
+   AddUniqueRecurrentScheduledTask(RELOAD_CRLS_TASK_ID, _T("0 */4 * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Reload certificate revocation lists"), nullptr, true);
 
    // Schedule poll timers reset
    AddUniqueRecurrentScheduledTask(DCT_RESET_POLL_TIMERS_TASK_ID, _T("0 0 1 * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T(""), nullptr, true);
+
+   // Schedule checks of user authentication tokens
+   AddUniqueRecurrentScheduledTask(_T("System.CheckUserAuthTokens"), _T("0 * * * *"), _T(""), nullptr, 0, 0, SYSTEM_ACCESS_FULL, _T("Check for expired user authentication tokens"), nullptr, true);
 
    // Start listeners
    s_tunnelListenerThread = ThreadCreateEx(TunnelListenerThread);

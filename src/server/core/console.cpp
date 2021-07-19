@@ -45,6 +45,7 @@ void DiscoveryPoller(PollerInfo *poller);
 void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, ServerConsole *console, void *context);
 void CheckRange(const InetAddressListElement& range, void(*callback)(const InetAddress&, int32_t, const Node *, uint32_t, ServerConsole *, void *), ServerConsole *console, void *context);
 void ShowSyncerStats(ServerConsole *console);
+void ShowAuthenticationTokens(ServerConsole *console);
 
 /**
  * Format string to show value of global flag
@@ -757,6 +758,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
          }
+      }
+      else if (IsCommand(_T("AUTHTOKENS"), szBuffer, 4))
+      {
+         ShowAuthenticationTokens(pCtx);
       }
       else if (IsCommand(_T("COMPONENTS"), szBuffer, 1))
       {
@@ -1661,6 +1666,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("                                     - Manual active discovery scan for given range. Without 'discovery' parameter prints results only\n")
             _T("   set <variable> <value>            - Set value of server configuration variable\n")
             _T("   show arp <node>                   - Show ARP cache for node\n")
+            _T("   show authtokens                   - Show user authentication tokens\n")
             _T("   show components <node>            - Show physical components of given node\n")
             _T("   show dbcp                         - Show active sessions in database connection pool\n")
             _T("   show dbstats                      - Show DB library statistics\n")

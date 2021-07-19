@@ -97,7 +97,6 @@
  * Common constants and macros
  */
 #define MAX_LINE_SIZE            4096
-#define GROUP_FLAG_BIT           ((UINT32)0x80000000)
 #define CHECKPOINT_SNMP_PORT     260
 #define DEFAULT_AFFINITY_MASK    0xFFFFFFFF
 
@@ -591,11 +590,12 @@ private:
    void debugPrintf(int level, const TCHAR *format, ...);
 
    void setupEncryption(NXCPMessage *request);
-   void login(NXCPMessage *request);
+   void login(const NXCPMessage& request);
    void finalizeLogin(const NXCPMessage& request, NXCPMessage *response);
-   uint32_t authenticateUserByPassword(NXCPMessage *request, LoginInfo *loginInfo);
-   uint32_t authenticateUserByCertificate(NXCPMessage *request, LoginInfo *loginInfo);
-   uint32_t authenticateUserBySSOTicket(NXCPMessage *request, LoginInfo *loginInfo);
+   uint32_t authenticateUserByPassword(const NXCPMessage& request, LoginInfo *loginInfo);
+   uint32_t authenticateUserByCertificate(const NXCPMessage& request, LoginInfo *loginInfo);
+   uint32_t authenticateUserBySSOTicket(const NXCPMessage& request, LoginInfo *loginInfo);
+   uint32_t authenticateUserByToken(const NXCPMessage& request, LoginInfo *loginInfo);
    void prepare2FAChallenge(NXCPMessage *request);
    void validate2FAResponse(NXCPMessage *request);
 
@@ -1399,7 +1399,7 @@ bool ValidateConfig(const Config& config, uint32_t flags, TCHAR *errorText, int 
 uint32_t ImportConfig(const Config& config, uint32_t flags);
 
 #ifdef _WITH_ENCRYPTION
-X509 *CertificateFromLoginMessage(const NXCPMessage *pMsg);
+X509 *CertificateFromLoginMessage(const NXCPMessage& msg);
 bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challenge, const BYTE *signature,
       size_t sigLen, CertificateMappingMethod mappingMethod, const TCHAR *mappingData);
 void ReloadCertificates();

@@ -18,6 +18,16 @@
  */
 package org.netxms.reporting.nxcl;
 
+import java.lang.reflect.Constructor;
+import java.net.URL;
+import java.util.Map;
+import org.netxms.reporting.ReportClassLoader;
+import org.netxms.reporting.Server;
+import org.netxms.reporting.extensions.NXCLDataSource;
+import org.netxms.reporting.services.ReportManager;
+import org.netxms.reporting.tools.ThreadLocalReportInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRDataset;
 import net.sf.jasperreports.engine.JRException;
@@ -25,17 +35,6 @@ import net.sf.jasperreports.engine.JRQueryChunk;
 import net.sf.jasperreports.engine.JRValueParameter;
 import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.query.JRQueryExecuter;
-import org.netxms.reporting.ReportClassLoader;
-import org.netxms.reporting.Server;
-import org.netxms.reporting.extensions.NXCLDataSource;
-import org.netxms.reporting.tools.ThreadLocalReportInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Map;
 
 /**
  * Custom query executor for reading data from NetXMS server via API
@@ -71,39 +70,40 @@ public class NXCLQueryExecutor implements JRQueryExecuter
          Class<NXCLDataSource> aClass = (Class<NXCLDataSource>)classLoader.loadClass("report.DataSource");
          Constructor<NXCLDataSource> constructor = aClass.getConstructor(JRDataset.class, Map.class);
          NXCLDataSource dataSource = constructor.newInstance(dataset, parametersMap);
+
          JRQueryChunk chunk = dataset.getQuery().getChunks()[0];
          dataSource.setQuery(chunk.getText().trim());
+
          Server server = ThreadLocalReportInfo.getServer();
-         dataSource.connect(server.getConfigurationProperty("netxms.server.hostname", "localhost"),
-               server.getConfigurationProperty("netxms.server.login", "admin"),
-               server.getConfigurationProperty("netxms.server.password", ""));
+         String authToken = getAuthToken();
+         if (authToken != null)
+            dataSource.connect(server.getConfigurationProperty("netxms.server.hostname", "localhost"), authToken);
+         else
+            dataSource.connect(server.getConfigurationProperty("netxms.server.hostname", "localhost"),
+                  server.getConfigurationProperty("netxms.server.login", "admin"),
+                  server.getConfigurationProperty("netxms.server.password", ""));
+
          return dataSource;
       }
-      catch(ClassNotFoundException e)
+      catch(Exception e)
       {
-         // ignore
-      }
-      catch(MalformedURLException e)
-      {
-         log.error("Can't load report data source", e);
-      }
-      catch(InstantiationException e)
-      {
-         log.error("Can't load report data source", e);
-      }
-      catch(IllegalAccessException e)
-      {
-         log.error("Can't load report data source", e);
-      }
-      catch(NoSuchMethodException e)
-      {
-         log.error("Can't load report data source", e);
-      }
-      catch(InvocationTargetException e)
-      {
-         log.error("Can't load report data source", e);
+         log.error("Cannot load report data source", e);
       }
       return null;
+   }
+
+   /**
+    * Get authenticatrion token from report parameters.
+    *
+    * @return authentication token or null
+    */
+   private String getAuthToken()
+   {
+      JRValueParameter p = parametersMap.get(ReportManager.AUTH_TOKEN_KEY);
+      if (p == null)
+         return null;
+      Object v = p.getValue();
+      return (v instanceof String) ? (String)v : null;
    }
 
    /**
@@ -120,7 +120,7 @@ public class NXCLQueryExecutor implements JRQueryExecuter
    @Override
    public boolean cancelQuery() throws JRException
    {
-      System.out.println("cancelQuery");
+      log.warn("Query cancellation requested");
       return false;
    }
 }

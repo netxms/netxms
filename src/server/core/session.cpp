@@ -902,7 +902,7 @@ void ClientSession::processRequest(NXCPMessage *request)
    switch(code)
    {
       case CMD_LOGIN:
-         login(request);
+         login(*request);
          break;
       case CMD_GET_SERVER_INFO:
          sendServerInfo(request->getId());
@@ -2088,14 +2088,14 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 /**
  * Authenticate user by password
  */
-uint32_t ClientSession::authenticateUserByPassword(NXCPMessage *request, LoginInfo *loginInfo)
+uint32_t ClientSession::authenticateUserByPassword(const NXCPMessage& request, LoginInfo *loginInfo)
 {
-   request->getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
+   request.getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
    TCHAR password[1024];
 #ifdef UNICODE
-	request->getFieldAsString(VID_PASSWORD, password, 256);
+	request.getFieldAsString(VID_PASSWORD, password, 256);
 #else
-	request->getFieldAsUtf8String(VID_PASSWORD, password, 1024);
+	request.getFieldAsUtf8String(VID_PASSWORD, password, 1024);
 #endif
 	return AuthenticateUser(loginInfo->loginName, password, 0, nullptr, nullptr, &m_dwUserId, &m_systemAccessRights, &loginInfo->changePassword,
          &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, false, &loginInfo->graceLogins);
@@ -2104,16 +2104,16 @@ uint32_t ClientSession::authenticateUserByPassword(NXCPMessage *request, LoginIn
 /**
  * Authenticate user by certificate
  */
-uint32_t ClientSession::authenticateUserByCertificate(NXCPMessage *request, LoginInfo *loginInfo)
+uint32_t ClientSession::authenticateUserByCertificate(const NXCPMessage& request, LoginInfo *loginInfo)
 {
    uint32_t rcc;
 #ifdef _WITH_ENCRYPTION
-   request->getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
+   request.getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
    X509 *pCert = CertificateFromLoginMessage(request);
    if (pCert != nullptr)
    {
       size_t sigLen;
-      const BYTE *signature = request->getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
+      const BYTE *signature = request.getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
       if (signature != nullptr)
       {
          rcc = AuthenticateUser(loginInfo->loginName, reinterpret_cast<const TCHAR*>(signature), sigLen,
@@ -2139,12 +2139,12 @@ uint32_t ClientSession::authenticateUserByCertificate(NXCPMessage *request, Logi
 /**
  * Authenticate user by SSO ticket
  */
-uint32_t ClientSession::authenticateUserBySSOTicket(NXCPMessage *request, LoginInfo *loginInfo)
+uint32_t ClientSession::authenticateUserBySSOTicket(const NXCPMessage& request, LoginInfo *loginInfo)
 {
    uint32_t rcc;
    char ticket[1024];
-   request->getFieldAsMBString(VID_PASSWORD, ticket, 1024);
-   request->getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
+   request.getFieldAsMBString(VID_PASSWORD, ticket, 1024);
+   request.getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
    if (CASAuthenticate(ticket, loginInfo->loginName))
    {
       debugPrintf(5, _T("SSO ticket %hs is valid, login name %s"), ticket, loginInfo->loginName);
@@ -2160,47 +2160,87 @@ uint32_t ClientSession::authenticateUserBySSOTicket(NXCPMessage *request, LoginI
 }
 
 /**
+ * Authenticate user by token
+ */
+uint32_t ClientSession::authenticateUserByToken(const NXCPMessage& request, LoginInfo *loginInfo)
+{
+   TCHAR buffer[64];
+   request.getFieldAsString(VID_LOGIN_NAME, buffer, 64);
+   UserAuthenticationToken token = UserAuthenticationToken::parse(buffer);
+
+   uint32_t rcc;
+   if (!token.isNull())
+   {
+      uint32_t userId;
+      if (ValidateAuthenticationToken(token, &userId))
+      {
+         if (ResolveUserId(userId, loginInfo->loginName) != nullptr)
+         {
+            debugPrintf(5, _T("Authentication token is valid, login name %s"), loginInfo->loginName);
+            rcc = AuthenticateUser(loginInfo->loginName, nullptr, 0, nullptr, nullptr, &m_dwUserId, &m_systemAccessRights,
+                  &loginInfo->changePassword, &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, true, &loginInfo->graceLogins);
+         }
+         else
+         {
+            debugPrintf(5, _T("Provided authentication token is valid but associated login is not"));
+            rcc = RCC_ACCESS_DENIED;
+         }
+      }
+      else
+      {
+         debugPrintf(5, _T("Provided authentication token is invalid"));
+         rcc = RCC_ACCESS_DENIED;
+      }
+   }
+   else
+   {
+      debugPrintf(5, _T("Provided authentication token has invalid format"));
+      rcc = RCC_ACCESS_DENIED;
+   }
+   return rcc;
+}
+
+/**
  * Authenticate client
  */
-void ClientSession::login(NXCPMessage *request)
+void ClientSession::login(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get client info string
-   if (request->isFieldExist(VID_CLIENT_INFO))
+   if (request.isFieldExist(VID_CLIENT_INFO))
    {
-      TCHAR szClientInfo[32], szOSInfo[32], szLibVersion[16];
-
-      request->getFieldAsString(VID_CLIENT_INFO, szClientInfo, 32);
-      request->getFieldAsString(VID_OS_INFO, szOSInfo, 32);
-      request->getFieldAsString(VID_LIBNXCL_VERSION, szLibVersion, 16);
-      _sntprintf(m_clientInfo, 96, _T("%s (%s; libnxcl %s)"), szClientInfo, szOSInfo, szLibVersion);
+      TCHAR clientInfo[32], osInfo[32], libVersion[16];
+      request.getFieldAsString(VID_CLIENT_INFO, clientInfo, 32);
+      request.getFieldAsString(VID_OS_INFO, osInfo, 32);
+      request.getFieldAsString(VID_LIBNXCL_VERSION, libVersion, 16);
+      _sntprintf(m_clientInfo, 96, _T("%s (%s; libnxcl %s)"), clientInfo, osInfo, libVersion);
    }
 
-	m_clientType = request->getFieldAsUInt16(VID_CLIENT_TYPE);
+	m_clientType = request.getFieldAsUInt16(VID_CLIENT_TYPE);
 	if ((m_clientType < 0) || (m_clientType > CLIENT_TYPE_APPLICATION))
 		m_clientType = CLIENT_TYPE_DESKTOP;
 
    if (m_clientType == CLIENT_TYPE_WEB)
    {
       _tcscpy(m_webServerAddress, m_workstation);
-      if (request->isFieldExist(VID_CLIENT_ADDRESS))
+      if (request.isFieldExist(VID_CLIENT_ADDRESS))
       {
-         request->getFieldAsString(VID_CLIENT_ADDRESS, m_workstation, 256);
+         request.getFieldAsString(VID_CLIENT_ADDRESS, m_workstation, 256);
          debugPrintf(5, _T("Real web client address is %s"), m_workstation);
       }
    }
 
-   if (request->isFieldExist(VID_LANGUAGE))
+   if (request.isFieldExist(VID_LANGUAGE))
    {
-      request->getFieldAsString(VID_LANGUAGE, m_language, 8);
+      request.getFieldAsString(VID_LANGUAGE, m_language, 8);
    }
 
    if (!(m_flags & CSF_AUTHENTICATED))
    {
       uint32_t rcc;
       m_loginInfo = new LoginInfo();
-      int authType = request->getFieldAsInt16(VID_AUTH_TYPE);
+      int authType = request.getFieldAsInt16(VID_AUTH_TYPE);
       debugPrintf(6, _T("Selected authentication type %d"), authType);
 		switch(authType)
 		{
@@ -2212,6 +2252,9 @@ void ClientSession::login(NXCPMessage *request)
 				break;
          case NETXMS_AUTH_TYPE_SSO_TICKET:
             rcc = authenticateUserBySSOTicket(request, m_loginInfo);
+            break;
+         case NETXMS_AUTH_TYPE_TOKEN:
+            rcc = authenticateUserByToken(request, m_loginInfo);
             break;
 			default:
 				rcc = RCC_UNSUPPORTED_AUTH_TYPE;
@@ -2227,7 +2270,7 @@ void ClientSession::login(NXCPMessage *request)
          }
          else
          {
-            finalizeLogin(*request, &response);
+            finalizeLogin(request, &response);
             delete_and_null(m_loginInfo);
          }
       }
@@ -2317,6 +2360,7 @@ void ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *respo
       response->setField(VID_RCC, RCC_SUCCESS);
       response->setField(VID_USER_SYS_RIGHTS, m_systemAccessRights);
       response->setField(VID_USER_ID, m_dwUserId);
+      response->setField(VID_USER_NAME, m_loginName);
       response->setField(VID_SESSION_ID, (uint32_t)m_id);
       response->setField(VID_CHANGE_PASSWD_FLAG, (uint16_t)m_loginInfo->changePassword);
       response->setField(VID_DBCONN_STATUS, (uint16_t)((g_flags & AF_DB_CONNECTION_LOST) ? 0 : 1));

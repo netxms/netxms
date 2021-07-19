@@ -79,9 +79,11 @@ import net.sf.jasperreports.export.SimpleXlsReportConfiguration;
  */
 public class ReportManager
 {
-   private static final String IDATA_VIEW_KEY = "IDATA_VIEW";
-   private static final String SUBREPORT_DIR_KEY = "SUBREPORT_DIR";
-   private static final String USER_ID_KEY = "SYS_USER_ID";
+   public static final String AUTH_TOKEN_KEY = "AUTH_TOKEN";
+   public static final String IDATA_VIEW_KEY = "IDATA_VIEW";
+   public static final String SUBREPORT_DIR_KEY = "SUBREPORT_DIR";
+   public static final String USER_ID_KEY = "SYS_USER_ID";
+
    private static final String DEFINITIONS_DIRECTORY = "definitions";
    private static final String FILE_SUFFIX_DEFINITION = ".jrxml";
    private static final String FILE_SUFFIX_COMPILED = ".jasper";
@@ -411,7 +413,7 @@ public class ReportManager
     * @param locale locale for translation
     * @return true on success and false otherwise
     */
-   public void execute(int userId, UUID jobId, ReportingJobConfiguration jobConfiguration, String idataView, Locale locale)
+   public void execute(int userId, String authToken, UUID jobId, ReportingJobConfiguration jobConfiguration, String idataView, Locale locale)
    {
       final JasperReport report = loadReport(jobConfiguration.reportId);
       if (report == null)
@@ -439,6 +441,7 @@ public class ReportManager
       String subrepoDirectory = reportDirectory.getPath() + File.separatorChar;
       localParameters.put(SUBREPORT_DIR_KEY, subrepoDirectory);
       localParameters.put(USER_ID_KEY, userId);
+      localParameters.put(AUTH_TOKEN_KEY, authToken);
       localParameters.put(IDATA_VIEW_KEY, idataView);
 
       URLClassLoader reportClassLoader = new URLClassLoader(new URL[] {}, getClass().getClassLoader());

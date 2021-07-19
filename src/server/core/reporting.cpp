@@ -351,6 +351,13 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
          {
             request->setField(VID_VIEW_NAME, viewName);
          }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Data view is not required or cannot be prepared for report %s"), request->getFieldAsGUID(VID_REPORT_DEFINITION).toString().cstr());
+         }
+
+         // Issue authentication token for reporting server (valid for 5 minutes)
+         request->setField(VID_AUTH_TOKEN, IssueAuthenticationToken(session->getUserId(), 300).toString());
          break;
    }
 
@@ -383,9 +390,27 @@ void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters)
    request.setField(VID_USER_ID, parameters->m_userId);
    request.setField(VID_EXECUTION_PARAMETERS, parameters->m_persistentData);
 
+   // Extract report ID from job configuration
+   Config jobConfig;
+#ifdef UNICODE
+   char *xml = UTF8StringFromWideString(parameters->m_persistentData);
+#else
+   char *xml = UTF8StringFromMBString(parameters->m_persistentData);
+#endif
+   jobConfig.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "job", false);
+   MemFree(xml);
+   uuid reportId = jobConfig.getValueAsUUID(_T("/reportId"));
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Preparing execution of report %s (%s)"), reportId.toString().cstr(), parameters->m_comments);
+
+   // Prepare data view if needed
    TCHAR viewName[MAX_OBJECT_NAME] = _T("");
-   if (PrepareReportingDataView(parameters->m_userId, viewName))
+   if (IsDataViewRequired(reportId) && PrepareReportingDataView(parameters->m_userId, viewName))
       request.setField(VID_VIEW_NAME, viewName);
+   else
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Data view is not required or cannot be prepared for report %s"), reportId.toString().cstr());
+
+   // Issue authentication token for reporting server (valid for 5 minutes)
+   request.setField(VID_AUTH_TOKEN, IssueAuthenticationToken(parameters->m_userId, 300).toString());
 
    if (s_connector->sendMessage(&request))
    {
