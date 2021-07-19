@@ -2229,7 +2229,7 @@ public class NXCSession
     */
    public void login(String token) throws NXCException, IOException, IllegalStateException
    {
-      login(AuthenticationType.TOKEN, token, null, null, null, null);
+      login(AuthenticationType.TOKEN, token, null, null, null);
    }
 
    /**
