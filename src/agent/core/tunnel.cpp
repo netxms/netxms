@@ -276,7 +276,7 @@ void Tunnel::recvThread()
          if (nxlog_get_debug_level() >= 6)
          {
             TCHAR buffer[64];
-            debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+            debugPrintf(6, _T("Received message %s (%u)"), NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
          }
 
          if (msg->getCode() == CMD_RESET_TUNNEL)
@@ -381,7 +381,7 @@ bool Tunnel::sendMessage(const NXCPMessage& msg)
    if (nxlog_get_debug_level() >= 6)
    {
       TCHAR buffer[64];
-      debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg.getCode(), buffer));
+      debugPrintf(6, _T("Sending message %s (%u)"), NXCPMessageCodeName(msg.getCode(), buffer), msg.getId());
    }
    NXCP_MESSAGE *data = msg.serialize(false);
    bool success = (sslWrite(data, ntohl(data->size)) == ntohl(data->size));
