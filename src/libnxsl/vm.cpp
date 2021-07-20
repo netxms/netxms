@@ -187,6 +187,7 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManag
    m_errorCode = 0;
    m_errorLine = 0;
    m_errorText = nullptr;
+   m_assertMessage = nullptr;
    m_constants = nullptr;
    m_globalVariables = new NXSL_VariableSystem(this, NXSL_VariableSystemType::GLOBAL);
    m_localVariables = nullptr;
@@ -238,6 +239,7 @@ NXSL_VM::~NXSL_VM()
    destroyValue(m_pRetValue);
 
    MemFree(m_errorText);
+   MemFree(m_assertMessage);
 }
 
 /**
@@ -2783,10 +2785,13 @@ void NXSL_VM::error(int errorCode, int sourceLine)
             (((m_cp == INVALID_ADDRESS) || (m_cp >= static_cast<UINT32>(m_instructionSet.size()))) ?
                      0 : m_instructionSet.get(m_cp)->m_sourceLine) : sourceLine;
 
-   TCHAR szBuffer[1024];
-   _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"), errorCode, m_errorLine, GetErrorMessage(errorCode));
+   TCHAR buffer[1024];
+   if ((errorCode == NXSL_ERR_ASSERTION_FAILED) && (m_assertMessage != nullptr) && (*m_assertMessage != 0))
+      _sntprintf(buffer, 1024, _T("Error %d in line %d: %s (%s)"), errorCode, m_errorLine, GetErrorMessage(errorCode), m_assertMessage);
+   else
+      _sntprintf(buffer, 1024, _T("Error %d in line %d: %s"), errorCode, m_errorLine, GetErrorMessage(errorCode));
    MemFree(m_errorText);
-   m_errorText = MemCopyString(szBuffer);
+   m_errorText = MemCopyString(buffer);
 
    m_cp = INVALID_ADDRESS;
 }

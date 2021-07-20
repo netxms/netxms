@@ -1156,6 +1156,7 @@ protected:
    int m_errorCode;
    int m_errorLine;
    TCHAR *m_errorText;
+   TCHAR *m_assertMessage;
 
    void execute();
    bool unwind();
@@ -1217,12 +1218,15 @@ public:
    int getErrorCode() const { return m_errorCode; }
    int getErrorLine() const { return m_errorLine; }
    const TCHAR *getErrorText() const { return CHECK_NULL_EX(m_errorText); }
+   const TCHAR *getAssertMessage() const { return CHECK_NULL_EX(m_assertMessage); }
    NXSL_Value *getResult() { return m_pRetValue; }
    const TCHAR *getMetadataEntry(const TCHAR *key) const { return m_metadata.get(key); }
    const StringMap& getMetadata() const { return m_metadata; }
 
    void setSecurityContext(NXSL_SecurityContext *context);
    bool validateAccess(int accessType, const void *object) { return (m_securityContext != nullptr) ? m_securityContext->validateAccess(accessType, object) : false; }
+
+   void setAssertMessage(const TCHAR *msg) { MemFree(m_assertMessage); m_assertMessage = MemCopyString(msg); }
 
 	void *getUserData() { return m_userData; }
 	void setUserData(void *data) { m_userData = data; }

@@ -59,11 +59,21 @@ int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
  */
 int F_assert(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (!argv[0]->isBoolean())
       return NXSL_ERR_NOT_BOOLEAN;
 
+   if ((argc > 1) && !argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
    if (argv[0]->isFalse())
+   {
+      if (argc > 1)
+         vm->setAssertMessage(argv[1]->getValueAsCString());
       return NXSL_ERR_ASSERTION_FAILED;
+   }
 
    *result = vm->createValue();
    return 0;
@@ -300,51 +310,43 @@ int F_atan2(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 }
 
 /**
+ * Common string transformation code for upper/lower
+ */
+template<typename T, T Transform(T)> int TransformString(NXSL_Value *v, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!v->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   *result = vm->createValue(v);
+   uint32_t len;
+   TCHAR *s = (TCHAR *)(*result)->getValueAsString(&len);
+   for(uint32_t i = 0; i < len; i++, s++)
+      *s = Transform(*s);
+   return 0;
+}
+
+/**
  * Convert string to uppercase
  */
-int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_upper(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   int nRet;
-   UINT32 i, dwLen;
-   TCHAR *pStr;
-
-   if (argv[0]->isString())
-   {
-      *ppResult = vm->createValue(argv[0]);
-      pStr = (TCHAR *)(*ppResult)->getValueAsString(&dwLen);
-      for(i = 0; i < dwLen; i++, pStr++)
-         *pStr = toupper(*pStr);
-      nRet = 0;
-   }
-   else
-   {
-      nRet = NXSL_ERR_NOT_STRING;
-   }
-   return nRet;
+#ifdef UNICODE
+   return TransformString<wint_t, towupper>(argv[0], result, vm);
+#else
+   return TransformString<int, toupper>(argv[0], result, vm);
+#endif
 }
 
 /**
  * Convert string to lowercase
  */
-int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_lower(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   int nRet;
-   UINT32 i, dwLen;
-   TCHAR *pStr;
-
-   if (argv[0]->isString())
-   {
-      *ppResult = vm->createValue(argv[0]);
-      pStr = (TCHAR *)(*ppResult)->getValueAsString(&dwLen);
-      for(i = 0; i < dwLen; i++, pStr++)
-         *pStr = tolower(*pStr);
-      nRet = 0;
-   }
-   else
-   {
-      nRet = NXSL_ERR_NOT_STRING;
-   }
-   return nRet;
+#ifdef UNICODE
+   return TransformString<wint_t, towlower>(argv[0], result, vm);
+#else
+   return TransformString<int, tolower>(argv[0], result, vm);
+#endif
 }
 
 /**
