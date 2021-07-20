@@ -25,14 +25,13 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
+import org.netxms.base.NXCommon;
 import org.netxms.base.PostalAddress;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.AgentCompressionMode;
@@ -57,220 +56,123 @@ import org.netxms.client.snmp.SnmpVersion;
  */
 public class NXCObjectModificationData
 {
-   // Modification flags
-   public static final int NAME                   = 1;
-   public static final int ACL                    = 2;
-   public static final int CUSTOM_ATTRIBUTES      = 3;
-   public static final int AUTOBIND_FILTER        = 4;
-   public static final int LINK_COLOR             = 5;
-   public static final int AUTOBIND_FLAGS         = 6;
-   public static final int VERSION                = 7;
-   public static final int DESCRIPTION            = 8;
-   public static final int AGENT_PORT             = 9;
-   public static final int AGENT_SECRET           = 10;
-   public static final int SNMP_VERSION           = 11;
-   public static final int SNMP_AUTH              = 12;
-   public static final int AGENT_PROXY            = 13;
-   public static final int SNMP_PROXY             = 14;
-   public static final int TRUSTED_NODES          = 15;
-   public static final int GEOLOCATION            = 16;
-   public static final int PRIMARY_IP             = 17;
-   public static final int SNMP_PORT              = 18;
-   public static final int MAP_LAYOUT             = 19;
-   public static final int MAP_BACKGROUND         = 20;
-   public static final int MAP_CONTENT            = 21;
-   public static final int MAP_IMAGE              = 22;
-   public static final int ICMP_PROXY             = 23;
-   public static final int COLUMN_COUNT           = 24;
-   public static final int DASHBOARD_ELEMENTS     = 25;
-   public static final int SCRIPT                 = 26;
-   public static final int ACTIVATION_EVENT       = 27;
-   public static final int DEACTIVATION_EVENT     = 28;
-   public static final int SOURCE_OBJECT          = 29;
-   public static final int ACTIVE_STATUS          = 30;
-   public static final int INACTIVE_STATUS        = 31;
-   public static final int DCI_LIST               = 32;
-   public static final int DRILL_DOWN_OBJECT_ID   = 33;
-   public static final int IP_ADDRESS             = 34;
-   public static final int IP_PROTOCOL            = 35;
-   public static final int IP_PORT                = 36;
-   public static final int SERVICE_TYPE           = 37;
-   public static final int POLLER_NODE            = 38;
-   public static final int REQUIRED_POLLS         = 39;
-   public static final int REQUEST                = 40;
-   public static final int RESPONSE               = 41;
-   public static final int OBJECT_FLAGS           = 42;
-   public static final int IFXTABLE_POLICY        = 43;
-   public static final int REPORT_DEFINITION      = 44;
-   public static final int CLUSTER_RESOURCES      = 45;
-   public static final int PRIMARY_NAME           = 46;
-   public static final int STATUS_CALCULATION     = 47;
-   public static final int CLUSTER_NETWORKS       = 48;
-   public static final int EXPECTED_STATE         = 49;
-   public static final int CONNECTION_ROUTING     = 50;
-   public static final int DISCOVERY_RADIUS       = 51;
-   public static final int HEIGHT                 = 52;
-   public static final int FILTER                 = 53;
-   public static final int PEER_GATEWAY           = 54;
-   public static final int VPN_NETWORKS           = 55;
-   public static final int POSTAL_ADDRESS         = 56;
-   public static final int AGENT_CACHE_MODE       = 57;
-   public static final int MAPOBJ_DISP_MODE       = 58;
-   public static final int RACK_PLACEMENT         = 59;
-   public static final int DASHBOARD_LIST         = 60;
-   public static final int RACK_NUMB_SCHEME       = 61;
-   public static final int CONTROLLER_ID          = 62;
-   public static final int CHASSIS_ID             = 63;
-   public static final int SSH_PROXY              = 64;
-   public static final int SSH_LOGIN              = 65;
-   public static final int SSH_PASSWORD           = 66;
-   public static final int ZONE_PROXY_LIST        = 67;
-   public static final int AGENT_COMPRESSION_MODE = 68;
-   public static final int URL_LIST               = 69;
-   public static final int SEED_OBJECTS           = 70;
-   public static final int MAC_ADDRESS            = 71;
-   public static final int DEVICE_CLASS           = 72;
-   public static final int VENDOR                 = 73;
-   public static final int SERIAL_NUMBER          = 74;
-   public static final int DEVICE_ADDRESS         = 75;
-   public static final int META_TYPE              = 76;
-   public static final int SENSOR_PROXY           = 77;
-   public static final int XML_CONFIG             = 78;
-   public static final int SNMP_PORT_LIST         = 79;
-   public static final int PASSIVE_ELEMENTS       = 80;
-   public static final int RESPONSIBLE_USERS      = 81;
-   public static final int ICMP_POLL_MODE         = 82;
-   public static final int ICMP_POLL_TARGETS      = 83;
-   public static final int CHASSIS_PLACEMENT      = 84;
-   public static final int ETHERNET_IP_PORT       = 85;
-   public static final int ETHERNET_IP_PROXY      = 86;
-   public static final int ALIAS                  = 87;
-   public static final int NAME_ON_MAP            = 88;
-   public static final int CERT_MAPPING           = 89;
-   public static final int CATEGORY_ID            = 90;
-   public static final int GEO_AREAS              = 91;
-   public static final int GEOLOCATION_CTRL_MODE  = 92;
-   public static final int SSH_PORT               = 93;
-   public static final int SSH_KEY_ID             = 94;
-
-   private Set<Integer> fieldSet;
-   private long objectId;
+   private Long objectId;
    private String name;
    private String primaryName;
    private String alias;
    private String nameOnMap;
    private AccessListElement[] acl;
-   private boolean inheritAccessRights;
+   private Boolean inheritAccessRights;
    private Map<String, CustomAttribute> customAttributes;
    private String autoBindFilter;
-   private int version;
+   private Integer version;
    private String description;
-   private int agentPort;
+   private Integer agentPort;
    private String agentSecret;
-   private long agentProxy;
-   private int snmpPort;
+   private Long agentProxy;
+   private Integer snmpPort;
    private SnmpVersion snmpVersion;
-   private int snmpAuthMethod;
-   private int snmpPrivMethod;
+   private Integer snmpAuthMethod;
+   private Integer snmpPrivMethod;
    private String snmpAuthName;
    private String snmpAuthPassword;
    private String snmpPrivPassword;
-   private long snmpProxy;
-   private long icmpProxy;
+   private Long snmpProxy;
+   private Long icmpProxy;
    private Long[] trustedNodes;
    private GeoLocation geolocation;
    private InetAddress primaryIpAddress;
    private MapLayoutAlgorithm mapLayout;
    private UUID mapBackground;
    private GeoLocation mapBackgroundLocation;
-   private int mapBackgroundZoom;
-   private int mapBackgroundColor;
+   private Integer mapBackgroundZoom;
+   private Integer mapBackgroundColor;
    private UUID mapImage;
    private Collection<NetworkMapElement> mapElements;
    private Collection<NetworkMapLink> mapLinks;
-   private int columnCount;
+   private Integer columnCount;
    private Collection<DashboardElement> dashboardElements;
    private String script;
-   private int activationEvent;
-   private int deactivationEvent;
-   private long sourceObject;
-   private int activeStatus;
-   private int inactiveStatus;
+   private Integer activationEvent;
+   private Integer deactivationEvent;
+   private Long sourceObject;
+   private Integer activeStatus;
+   private Integer inactiveStatus;
    private List<ConditionDciInfo> dciList;
-   private long drillDownObjectId;
-   private long pollerNode;
-   private int requiredPolls;
-   private int serviceType;
-   private int ipProtocol;
-   private int ipPort;
+   private Long drillDownObjectId;
+   private Long pollerNode;
+   private Integer requiredPolls;
+   private Integer serviceType;
+   private Integer ipProtocol;
+   private Integer ipPort;
    private InetAddressEx ipAddress;
    private String request;
    private String response;
-   private int objectFlags;
-   private int objectFlagsMask;
-   private int ifXTablePolicy;
+   private Integer objectFlags;
+   private Integer objectFlagsMask;
+   private Integer ifXTablePolicy;
    private String reportDefinition;
    private List<ClusterResource> resourceList;
    private List<InetAddressEx> networkList;
-   private int statusCalculationMethod;
-   private int statusPropagationMethod;
+   private Integer statusCalculationMethod;
+   private Integer statusPropagationMethod;
    private ObjectStatus fixedPropagatedStatus;
-   private int statusShift;
+   private Integer statusShift;
    private ObjectStatus[] statusTransformation;
-   private int statusSingleThreshold;
+   private Integer statusSingleThreshold;
    private int[] statusThresholds;
-   private int expectedState;
-   private int linkColor;
-   private int connectionRouting;
-   private int discoveryRadius;
-   private int height;
+   private Integer expectedState;
+   private Integer linkColor;
+   private Integer connectionRouting;
+   private Integer discoveryRadius;
+   private Integer height;
    private String filter;
-   private long peerGatewayId;
+   private Long peerGatewayId;
    private List<InetAddressEx> localNetworks;
    private List<InetAddressEx> remoteNetworks;
    private PostalAddress postalAddress;
    private AgentCacheMode agentCacheMode;
    private AgentCompressionMode agentCompressionMode;
    private MapObjectDisplayMode mapObjectDisplayMode;
-   private long physicalContainerObjectId;
+   private Long physicalContainerObjectId;
    private UUID rackImageFront;
    private UUID rackImageRear;
-   private short rackPosition;
-   private short rackHeight;
+   private Short rackPosition;
+   private Short rackHeight;
    private RackOrientation rackOrientation;
    private Long[] dashboards;
-   private boolean rackNumberingTopBottom;
-   private long controllerId;
-   private long chassisId;
-   private long sshProxy;
+   private Boolean rackNumberingTopBottom;
+   private Long controllerId;
+   private Long chassisId;
+   private Long sshProxy;
    private String sshLogin;
    private String sshPassword;
-   private int sshPort;
-   private int sshKeyId;
+   private Integer sshPort;
+   private Integer sshKeyId;
    private Long[] zoneProxies;
    private List<ObjectUrl> urls;
    private List<Long> seedObjectIds;
    private MacAddress macAddress;
-   private int deviceClass;
+   private Integer deviceClass;
    private String vendor;
    private String serialNumber;
    private String deviceAddress;
    private String metaType;
-   private long sensorProxy;
+   private Long sensorProxy;
    private String xmlConfig;
    private List<String> snmpPorts;
    private List<PassiveRackElement> passiveElements;
    private List<Long> responsibleUsers;
-   private boolean isAutoBindEnabled;
-   private boolean isAutoUnbindEnabled;
+   private Boolean isAutoBindEnabled;
+   private Boolean isAutoUnbindEnabled;
    private IcmpStatCollectionMode icmpStatCollectionMode;
    private List<InetAddress> icmpTargets;
    private String chassisPlacement;
-   private int etherNetIPPort;
-   private long etherNetIPProxy;
+   private Integer etherNetIPPort;
+   private Long etherNetIPProxy;
    private CertificateMappingMethod certificateMappingMethod;
    private String certificateMappingData;
-   private int categoryId;
+   private Integer categoryId;
    private GeoLocationControlMode geoLocationControlMode;
    private long[] geoAreas;
 
@@ -282,7 +184,6 @@ public class NXCObjectModificationData
    public NXCObjectModificationData(long objectId)
    {
       this.objectId = objectId;
-      fieldSet = new HashSet<Integer>(128);
    }
 
    /**
@@ -315,7 +216,6 @@ public class NXCObjectModificationData
    public void setName(final String name)
    {
       this.name = name;
-      fieldSet.add(NAME);
    }
 
    /**
@@ -332,7 +232,6 @@ public class NXCObjectModificationData
    public void setAlias(String alias)
    {
       this.alias = alias;
-      fieldSet.add(ALIAS);
    }
 
    /**
@@ -353,18 +252,6 @@ public class NXCObjectModificationData
    public void setNameOnMap(String name)
    {
       this.nameOnMap = name;
-      fieldSet.add(NAME_ON_MAP);
-   }
-
-   /**
-    * Check if given field is set for modification.
-    *
-    * @param field field code
-    * @return true if given field is set
-    */
-   public boolean isFieldSet(int field)
-   {
-      return fieldSet.contains(field);
    }
 
    /**
@@ -372,7 +259,7 @@ public class NXCObjectModificationData
     */
    public AccessListElement[] getACL()
    {
-      return (acl != null) ? acl : new AccessListElement[0];
+      return acl;
    }
 
    /**
@@ -380,14 +267,13 @@ public class NXCObjectModificationData
     */
    public void setACL(AccessListElement[] acl)
    {
-      this.acl = acl;
-      fieldSet.add(ACL);
+      this.acl = (acl == null) ? new AccessListElement[0] : acl;
    }
 
    /**
     * @return the inheritAccessRights
     */
-   public boolean isInheritAccessRights()
+   public Boolean isInheritAccessRights()
    {
       return inheritAccessRights;
    }
@@ -398,7 +284,6 @@ public class NXCObjectModificationData
    public void setInheritAccessRights(boolean inheritAccessRights)
    {
       this.inheritAccessRights = inheritAccessRights;
-      fieldSet.add(ACL);
    }
 
    /**
@@ -415,7 +300,6 @@ public class NXCObjectModificationData
    public void setCustomAttributes(Map<String, CustomAttribute> customAttributes)
    {
       this.customAttributes = customAttributes;
-      fieldSet.add(CUSTOM_ATTRIBUTES);
    }
 
    /**
@@ -432,13 +316,12 @@ public class NXCObjectModificationData
    public void setAutoBindFilter(String autoBindFilter)
    {
       this.autoBindFilter = autoBindFilter;
-      fieldSet.add(AUTOBIND_FILTER);
    }
 
    /**
     * @return the version
     */
-   public int getVersion()
+   public Integer getVersion()
    {
       return version;
    }
@@ -449,7 +332,6 @@ public class NXCObjectModificationData
    public void setVersion(int version)
    {
       this.version = version;
-      fieldSet.add(VERSION);
    }
 
    /**
@@ -466,10 +348,9 @@ public class NXCObjectModificationData
    public void setDescription(String description)
    {
       this.description = description;
-      fieldSet.add(DESCRIPTION);
    }
 
-   public int getAgentPort()
+   public Integer getAgentPort()
    {
       return agentPort;
    }
@@ -477,7 +358,6 @@ public class NXCObjectModificationData
    public void setAgentPort(int agentPort)
    {
       this.agentPort = agentPort;
-      fieldSet.add(AGENT_PORT);
    }
 
    /**
@@ -494,13 +374,12 @@ public class NXCObjectModificationData
    public void setAgentSecret(String agentSecret)
    {
       this.agentSecret = agentSecret;
-      fieldSet.add(AGENT_SECRET);
    }
 
    /**
     * @return the agentProxy
     */
-   public long getAgentProxy()
+   public Long getAgentProxy()
    {
       return agentProxy;
    }
@@ -511,7 +390,6 @@ public class NXCObjectModificationData
    public void setAgentProxy(long agentProxy)
    {
       this.agentProxy = agentProxy;
-      fieldSet.add(AGENT_PROXY);
    }
 
    /**
@@ -528,13 +406,12 @@ public class NXCObjectModificationData
    public void setSnmpVersion(SnmpVersion snmpVersion)
    {
       this.snmpVersion = snmpVersion;
-      fieldSet.add(SNMP_VERSION);
    }
 
    /**
     * @return the snmpAuthMethod
     */
-   public int getSnmpAuthMethod()
+   public Integer getSnmpAuthMethod()
    {
       return snmpAuthMethod;
    }
@@ -545,13 +422,12 @@ public class NXCObjectModificationData
    public void setSnmpAuthMethod(int snmpAuthMethod)
    {
       this.snmpAuthMethod = snmpAuthMethod;
-      fieldSet.add(SNMP_AUTH);
    }
 
    /**
     * @return the snmpPrivMethod
     */
-   public int getSnmpPrivMethod()
+   public Integer getSnmpPrivMethod()
    {
       return snmpPrivMethod;
    }
@@ -562,7 +438,6 @@ public class NXCObjectModificationData
    public void setSnmpPrivMethod(int snmpPrivMethod)
    {
       this.snmpPrivMethod = snmpPrivMethod;
-      fieldSet.add(SNMP_AUTH);
    }
 
    /**
@@ -579,7 +454,6 @@ public class NXCObjectModificationData
    public void setSnmpAuthName(String snmpAuthName)
    {
       this.snmpAuthName = snmpAuthName;
-      fieldSet.add(SNMP_AUTH);
    }
 
    /**
@@ -596,7 +470,6 @@ public class NXCObjectModificationData
    public void setSnmpAuthPassword(String snmpAuthPassword)
    {
       this.snmpAuthPassword = snmpAuthPassword;
-      fieldSet.add(SNMP_AUTH);
    }
 
    /**
@@ -613,13 +486,12 @@ public class NXCObjectModificationData
    public void setSnmpPrivPassword(String snmpPrivPassword)
    {
       this.snmpPrivPassword = snmpPrivPassword;
-      fieldSet.add(SNMP_AUTH);
    }
 
    /**
     * @return the snmpProxy
     */
-   public long getSnmpProxy()
+   public Long getSnmpProxy()
    {
       return snmpProxy;
    }
@@ -630,13 +502,12 @@ public class NXCObjectModificationData
    public void setSnmpProxy(long snmpProxy)
    {
       this.snmpProxy = snmpProxy;
-      fieldSet.add(SNMP_PROXY);
    }
 
    /**
     * @return the icmpProxy
     */
-   public long getIcmpProxy()
+   public Long getIcmpProxy()
    {
       return icmpProxy;
    }
@@ -647,7 +518,6 @@ public class NXCObjectModificationData
    public void setIcmpProxy(long icmpProxy)
    {
       this.icmpProxy = icmpProxy;
-      fieldSet.add(ICMP_PROXY);
    }
 
    /**
@@ -664,7 +534,6 @@ public class NXCObjectModificationData
    public void setTrustedNodes(Long[] trustedNodes)
    {
       this.trustedNodes = trustedNodes;
-      fieldSet.add(TRUSTED_NODES);
    }
 
    /**
@@ -681,7 +550,6 @@ public class NXCObjectModificationData
    public void setGeolocation(GeoLocation geolocation)
    {
       this.geolocation = geolocation;
-      fieldSet.add(GEOLOCATION);
    }
 
    /**
@@ -698,13 +566,12 @@ public class NXCObjectModificationData
    public void setPrimaryIpAddress(InetAddress primaryIpAddress)
    {
       this.primaryIpAddress = primaryIpAddress;
-      fieldSet.add(PRIMARY_IP);
    }
 
    /**
     * @return the snmpPort
     */
-   public int getSnmpPort()
+   public Integer getSnmpPort()
    {
       return snmpPort;
    }
@@ -715,7 +582,6 @@ public class NXCObjectModificationData
    public void setSnmpPort(int snmpPort)
    {
       this.snmpPort = snmpPort;
-      fieldSet.add(SNMP_PORT);
    }
 
    /**
@@ -732,7 +598,6 @@ public class NXCObjectModificationData
    public void setMapLayout(MapLayoutAlgorithm mapLayout)
    {
       this.mapLayout = mapLayout;
-      fieldSet.add(MAP_LAYOUT);
    }
 
    /**
@@ -755,11 +620,10 @@ public class NXCObjectModificationData
    public void setMapBackground(UUID mapBackground, GeoLocation mapBackgroundLocation, int mapBackgroundZoom,
          int mapBackgroundColor)
    {
-      this.mapBackground = mapBackground;
+      this.mapBackground = mapBackground == null ? NXCommon.EMPTY_GUID : mapBackground;
       this.mapBackgroundLocation = mapBackgroundLocation;
       this.mapBackgroundZoom = mapBackgroundZoom;
       this.mapBackgroundColor = mapBackgroundColor;
-      fieldSet.add(MAP_BACKGROUND);
    }
 
    /**
@@ -788,7 +652,6 @@ public class NXCObjectModificationData
    {
       mapElements = elements;
       mapLinks = links;
-      fieldSet.add(MAP_CONTENT);
    }
 
    /**
@@ -808,14 +671,13 @@ public class NXCObjectModificationData
     */
    public void setMapImage(UUID image)
    {
-      mapImage = image;
-      fieldSet.add(MAP_IMAGE);
+      mapImage = image == null ? NXCommon.EMPTY_GUID : image;
    }
 
    /**
     * @return the columnCount
     */
-   public int getColumnCount()
+   public Integer getColumnCount()
    {
       return columnCount;
    }
@@ -826,7 +688,6 @@ public class NXCObjectModificationData
    public void setColumnCount(int columnCount)
    {
       this.columnCount = columnCount;
-      fieldSet.add(COLUMN_COUNT);
    }
 
    /**
@@ -843,7 +704,6 @@ public class NXCObjectModificationData
    public void setDashboardElements(Collection<DashboardElement> dashboardElements)
    {
       this.dashboardElements = dashboardElements;
-      fieldSet.add(DASHBOARD_ELEMENTS);
    }
 
    /**
@@ -860,13 +720,12 @@ public class NXCObjectModificationData
    public void setScript(String script)
    {
       this.script = script;
-      fieldSet.add(SCRIPT);
    }
 
    /**
     * @return the activationEvent
     */
-   public int getActivationEvent()
+   public Integer getActivationEvent()
    {
       return activationEvent;
    }
@@ -877,13 +736,12 @@ public class NXCObjectModificationData
    public void setActivationEvent(int activationEvent)
    {
       this.activationEvent = activationEvent;
-      fieldSet.add(ACTIVATION_EVENT);
    }
 
    /**
     * @return the deactivationEvent
     */
-   public int getDeactivationEvent()
+   public Integer getDeactivationEvent()
    {
       return deactivationEvent;
    }
@@ -894,13 +752,12 @@ public class NXCObjectModificationData
    public void setDeactivationEvent(int deactivationEvent)
    {
       this.deactivationEvent = deactivationEvent;
-      fieldSet.add(DEACTIVATION_EVENT);
    }
 
    /**
     * @return the sourceObject
     */
-   public long getSourceObject()
+   public Long getSourceObject()
    {
       return sourceObject;
    }
@@ -911,13 +768,12 @@ public class NXCObjectModificationData
    public void setSourceObject(long sourceObject)
    {
       this.sourceObject = sourceObject;
-      fieldSet.add(SOURCE_OBJECT);
    }
 
    /**
     * @return the activeStatus
     */
-   public int getActiveStatus()
+   public Integer getActiveStatus()
    {
       return activeStatus;
    }
@@ -928,13 +784,12 @@ public class NXCObjectModificationData
    public void setActiveStatus(int activeStatus)
    {
       this.activeStatus = activeStatus;
-      fieldSet.add(ACTIVE_STATUS);
    }
 
    /**
     * @return the inactiveStatus
     */
-   public int getInactiveStatus()
+   public Integer getInactiveStatus()
    {
       return inactiveStatus;
    }
@@ -945,7 +800,6 @@ public class NXCObjectModificationData
    public void setInactiveStatus(int inactiveStatus)
    {
       this.inactiveStatus = inactiveStatus;
-      fieldSet.add(INACTIVE_STATUS);
    }
 
    /**
@@ -962,13 +816,12 @@ public class NXCObjectModificationData
    public void setDciList(List<ConditionDciInfo> dciList)
    {
       this.dciList = dciList;
-      fieldSet.add(DCI_LIST);
    }
 
    /**
     * @return the submapId
     */
-   public long getDrillDownObjectId()
+   public Long getDrillDownObjectId()
    {
       return drillDownObjectId;
    }
@@ -979,7 +832,6 @@ public class NXCObjectModificationData
    public void setDrillDownObjectId(long drillDownObjectId)
    {
       this.drillDownObjectId = drillDownObjectId;
-      fieldSet.add(DRILL_DOWN_OBJECT_ID);
    }
 
    /**
@@ -993,7 +845,7 @@ public class NXCObjectModificationData
    /**
     * @return the mapBackgroundZoom
     */
-   public int getMapBackgroundZoom()
+   public Integer getMapBackgroundZoom()
    {
       return mapBackgroundZoom;
    }
@@ -1001,7 +853,7 @@ public class NXCObjectModificationData
    /**
     * @return the pollerNode
     */
-   public long getPollerNode()
+   public Long getPollerNode()
    {
       return pollerNode;
    }
@@ -1012,13 +864,12 @@ public class NXCObjectModificationData
    public void setPollerNode(long pollerNode)
    {
       this.pollerNode = pollerNode;
-      fieldSet.add(POLLER_NODE);
    }
 
    /**
     * @return the requiredPolls
     */
-   public int getRequiredPolls()
+   public Integer getRequiredPolls()
    {
       return requiredPolls;
    }
@@ -1029,13 +880,12 @@ public class NXCObjectModificationData
    public void setRequiredPolls(int requiredPolls)
    {
       this.requiredPolls = requiredPolls;
-      fieldSet.add(REQUIRED_POLLS);
    }
 
    /**
     * @return the serviceType
     */
-   public int getServiceType()
+   public Integer getServiceType()
    {
       return serviceType;
    }
@@ -1046,13 +896,12 @@ public class NXCObjectModificationData
    public void setServiceType(int serviceType)
    {
       this.serviceType = serviceType;
-      fieldSet.add(SERVICE_TYPE);
    }
 
    /**
     * @return the ipProtocol
     */
-   public int getIpProtocol()
+   public Integer getIpProtocol()
    {
       return ipProtocol;
    }
@@ -1063,13 +912,12 @@ public class NXCObjectModificationData
    public void setIpProtocol(int ipProtocol)
    {
       this.ipProtocol = ipProtocol;
-      fieldSet.add(IP_PROTOCOL);
    }
 
    /**
     * @return the ipPort
     */
-   public int getIpPort()
+   public Integer getIpPort()
    {
       return ipPort;
    }
@@ -1080,7 +928,6 @@ public class NXCObjectModificationData
    public void setIpPort(int ipPort)
    {
       this.ipPort = ipPort;
-      fieldSet.add(IP_PORT);
    }
 
    /**
@@ -1097,7 +944,6 @@ public class NXCObjectModificationData
    public void setIpAddress(InetAddressEx ipAddress)
    {
       this.ipAddress = ipAddress;
-      fieldSet.add(IP_ADDRESS);
    }
 
    /**
@@ -1114,7 +960,6 @@ public class NXCObjectModificationData
    public void setRequest(String request)
    {
       this.request = request;
-      fieldSet.add(REQUEST);
    }
 
    /**
@@ -1131,7 +976,6 @@ public class NXCObjectModificationData
    public void setResponse(String response)
    {
       this.response = response;
-      fieldSet.add(RESPONSE);
    }
 
    /**
@@ -1139,7 +983,7 @@ public class NXCObjectModificationData
     *
     * @return object flags
     */
-   public int getObjectFlags()
+   public Integer getObjectFlags()
    {
       return objectFlags;
    }
@@ -1149,7 +993,7 @@ public class NXCObjectModificationData
     *
     * @return the object flags mask
     */
-   public int getObjectFlagsMask()
+   public Integer getObjectFlagsMask()
    {
       return objectFlagsMask;
    }
@@ -1174,13 +1018,12 @@ public class NXCObjectModificationData
    {
       this.objectFlags = objectFlags;
       this.objectFlagsMask = objectFlagsMask;
-      fieldSet.add(OBJECT_FLAGS);
    }
 
    /**
     * @return the ifXTablePolicy
     */
-   public int getIfXTablePolicy()
+   public Integer getIfXTablePolicy()
    {
       return ifXTablePolicy;
    }
@@ -1191,7 +1034,6 @@ public class NXCObjectModificationData
    public void setIfXTablePolicy(int ifXTablePolicy)
    {
       this.ifXTablePolicy = ifXTablePolicy;
-      fieldSet.add(IFXTABLE_POLICY);
    }
 
    /**
@@ -1208,7 +1050,6 @@ public class NXCObjectModificationData
    public void setReportDefinition(String reportDefinition)
    {
       this.reportDefinition = reportDefinition;
-      fieldSet.add(REPORT_DEFINITION);
    }
 
    /**
@@ -1248,7 +1089,6 @@ public class NXCObjectModificationData
    public void setResourceList(List<ClusterResource> resourceList)
    {
       this.resourceList = resourceList;
-      fieldSet.add(CLUSTER_RESOURCES);
    }
 
    /**
@@ -1265,7 +1105,6 @@ public class NXCObjectModificationData
    public void setNetworkList(List<InetAddressEx> networkList)
    {
       this.networkList = networkList;
-      fieldSet.add(CLUSTER_NETWORKS);
    }
 
    /**
@@ -1282,13 +1121,12 @@ public class NXCObjectModificationData
    public void setPrimaryName(String primaryName)
    {
       this.primaryName = primaryName;
-      fieldSet.add(PRIMARY_NAME);
    }
 
    /**
     * @return the statusCalculationMethod
     */
-   public int getStatusCalculationMethod()
+   public Integer getStatusCalculationMethod()
    {
       return statusCalculationMethod;
    }
@@ -1299,13 +1137,12 @@ public class NXCObjectModificationData
    public void setStatusCalculationMethod(int statusCalculationMethod)
    {
       this.statusCalculationMethod = statusCalculationMethod;
-      fieldSet.add(STATUS_CALCULATION);
    }
 
    /**
     * @return the statusPropagationMethod
     */
-   public int getStatusPropagationMethod()
+   public Integer getStatusPropagationMethod()
    {
       return statusPropagationMethod;
    }
@@ -1316,7 +1153,6 @@ public class NXCObjectModificationData
    public void setStatusPropagationMethod(int statusPropagationMethod)
    {
       this.statusPropagationMethod = statusPropagationMethod;
-      fieldSet.add(STATUS_CALCULATION);
    }
 
    /**
@@ -1333,13 +1169,12 @@ public class NXCObjectModificationData
    public void setFixedPropagatedStatus(ObjectStatus fixedPropagatedStatus)
    {
       this.fixedPropagatedStatus = fixedPropagatedStatus;
-      fieldSet.add(STATUS_CALCULATION);
    }
 
    /**
     * @return the statusShift
     */
-   public int getStatusShift()
+   public Integer getStatusShift()
    {
       return statusShift;
    }
@@ -1350,7 +1185,6 @@ public class NXCObjectModificationData
    public void setStatusShift(int statusShift)
    {
       this.statusShift = statusShift;
-      fieldSet.add(STATUS_CALCULATION);
    }
 
    /**
@@ -1367,13 +1201,12 @@ public class NXCObjectModificationData
    public void setStatusTransformation(ObjectStatus[] statusTransformation)
    {
       this.statusTransformation = statusTransformation;
-      fieldSet.add(STATUS_CALCULATION);
    }
 
    /**
     * @return the statusSingleThreshold
     */
-   public int getStatusSingleThreshold()
+   public Integer getStatusSingleThreshold()
    {
       return statusSingleThreshold;
    }
@@ -1384,7 +1217,6 @@ public class NXCObjectModificationData
    public void setStatusSingleThreshold(int statusSingleThreshold)
    {
       this.statusSingleThreshold = statusSingleThreshold;
-      fieldSet.add(STATUS_CALCULATION);
    }
 
    /**
@@ -1401,13 +1233,12 @@ public class NXCObjectModificationData
    public void setStatusThresholds(int[] statusThresholds)
    {
       this.statusThresholds = statusThresholds;
-      fieldSet.add(STATUS_CALCULATION);
    }
 
    /**
     * @return the expectedState
     */
-   public int getExpectedState()
+   public Integer getExpectedState()
    {
       return expectedState;
    }
@@ -1418,13 +1249,12 @@ public class NXCObjectModificationData
    public void setExpectedState(int expectedState)
    {
       this.expectedState = expectedState;
-      fieldSet.add(EXPECTED_STATE);
    }
 
    /**
     * @return the linkColor
     */
-   public int getLinkColor()
+   public Integer getLinkColor()
    {
       return linkColor;
    }
@@ -1435,13 +1265,12 @@ public class NXCObjectModificationData
    public void setLinkColor(int linkColor)
    {
       this.linkColor = linkColor;
-      fieldSet.add(LINK_COLOR);
    }
 
    /**
     * @return the connectionRouting
     */
-   public int getConnectionRouting()
+   public Integer getConnectionRouting()
    {
       return connectionRouting;
    }
@@ -1452,13 +1281,12 @@ public class NXCObjectModificationData
    public void setConnectionRouting(int connectionRouting)
    {
       this.connectionRouting = connectionRouting;
-      fieldSet.add(CONNECTION_ROUTING);
    }
 
    /**
     * @return the mapBackgroundColor
     */
-   public int getMapBackgroundColor()
+   public Integer getMapBackgroundColor()
    {
       return mapBackgroundColor;
    }
@@ -1466,7 +1294,7 @@ public class NXCObjectModificationData
    /**
     * @return the discoveryRadius
     */
-   public final int getDiscoveryRadius()
+   public final Integer getDiscoveryRadius()
    {
       return discoveryRadius;
    }
@@ -1477,13 +1305,12 @@ public class NXCObjectModificationData
    public final void setDiscoveryRadius(int discoveryRadius)
    {
       this.discoveryRadius = discoveryRadius;
-      fieldSet.add(DISCOVERY_RADIUS);
    }
 
    /**
     * @return the height
     */
-   public int getHeight()
+   public Integer getHeight()
    {
       return height;
    }
@@ -1494,7 +1321,6 @@ public class NXCObjectModificationData
    public void setHeight(int height)
    {
       this.height = height;
-      fieldSet.add(HEIGHT);
    }
 
    /**
@@ -1511,13 +1337,12 @@ public class NXCObjectModificationData
    public void setFilter(String filter)
    {
       this.filter = filter;
-      fieldSet.add(FILTER);
    }
 
    /**
     * @return the peerGatewayId
     */
-   public long getPeerGatewayId()
+   public Long getPeerGatewayId()
    {
       return peerGatewayId;
    }
@@ -1528,7 +1353,6 @@ public class NXCObjectModificationData
    public void setPeerGatewayId(long peerGatewayId)
    {
       this.peerGatewayId = peerGatewayId;
-      fieldSet.add(PEER_GATEWAY);
    }
 
    /**
@@ -1555,7 +1379,6 @@ public class NXCObjectModificationData
    {
       this.localNetworks = localNetworks;
       this.remoteNetworks = remoteNetworks;
-      fieldSet.add(VPN_NETWORKS);
    }
 
    /**
@@ -1572,7 +1395,6 @@ public class NXCObjectModificationData
    public void setPostalAddress(PostalAddress postalAddress)
    {
       this.postalAddress = postalAddress;
-      fieldSet.add(POSTAL_ADDRESS);
    }
 
    /**
@@ -1593,7 +1415,6 @@ public class NXCObjectModificationData
    public void setAgentCacheMode(AgentCacheMode agentCacheMode)
    {
       this.agentCacheMode = agentCacheMode;
-      fieldSet.add(AGENT_CACHE_MODE);
    }
 
    /**
@@ -1614,7 +1435,6 @@ public class NXCObjectModificationData
    public void setAgentCompressionMode(AgentCompressionMode agentCompressionMode)
    {
       this.agentCompressionMode = agentCompressionMode;
-      fieldSet.add(AGENT_COMPRESSION_MODE);
    }
 
    /**
@@ -1631,13 +1451,12 @@ public class NXCObjectModificationData
    public void setMapObjectDisplayMode(MapObjectDisplayMode mapObjectDisplayMode)
    {
       this.mapObjectDisplayMode = mapObjectDisplayMode;
-      fieldSet.add(MAPOBJ_DISP_MODE);
    }
 
    /**
     * @return the physicalContainerObjectId
     */
-   public long getPhysicalContainerObjectId()
+   public Long getPhysicalContainerObjectId()
    {
       return physicalContainerObjectId;
    }
@@ -1661,7 +1480,7 @@ public class NXCObjectModificationData
    /**
     * @return the rackPosition
     */
-   public short getRackPosition()
+   public Short getRackPosition()
    {
       return rackPosition;
    }
@@ -1669,7 +1488,7 @@ public class NXCObjectModificationData
    /**
     * @return the rackHeight
     */
-   public short getRackHeight()
+   public Short getRackHeight()
    {
       return rackHeight;
    }
@@ -1696,12 +1515,11 @@ public class NXCObjectModificationData
    public void setRackPlacement(UUID rackImageFront, UUID rackImageRear, short rackPosition, short rackHeight,
          RackOrientation rackOrientation)
    {
-      this.rackImageFront = rackImageFront;
-      this.rackImageRear = rackImageRear;
+      this.rackImageFront = rackImageFront == null ? NXCommon.EMPTY_GUID : rackImageFront;
+      this.rackImageRear = rackImageRear == null ? NXCommon.EMPTY_GUID : rackImageRear;
       this.rackPosition = rackPosition;
       this.rackHeight = rackHeight;
       this.rackOrientation = rackOrientation;
-      fieldSet.add(RACK_PLACEMENT);
    }
 
    /**
@@ -1718,13 +1536,12 @@ public class NXCObjectModificationData
    public void setDashboards(Long[] dashboards)
    {
       this.dashboards = dashboards;
-      fieldSet.add(DASHBOARD_LIST);
    }
 
    /**
     * @return the rackNumberingTopBottom
     */
-   public boolean isRackNumberingTopBottom()
+   public Boolean isRackNumberingTopBottom()
    {
       return rackNumberingTopBottom;
    }
@@ -1735,13 +1552,12 @@ public class NXCObjectModificationData
    public void setRackNumberingTopBottom(boolean rackNumberingTopBottom)
    {
       this.rackNumberingTopBottom = rackNumberingTopBottom;
-      fieldSet.add(RACK_NUMB_SCHEME);
    }
 
    /**
     * @return the controllerId
     */
-   public long getControllerId()
+   public Long getControllerId()
    {
       return controllerId;
    }
@@ -1752,13 +1568,12 @@ public class NXCObjectModificationData
    public void setControllerId(long controllerId)
    {
       this.controllerId = controllerId;
-      fieldSet.add(CONTROLLER_ID);
    }
 
    /**
     * @return the chassisId
     */
-   public long getChassisId()
+   public Long getChassisId()
    {
       return chassisId;
    }
@@ -1769,13 +1584,12 @@ public class NXCObjectModificationData
    public void setChassisId(long chassisId)
    {
       this.chassisId = chassisId;
-      fieldSet.add(CHASSIS_ID);
    }
 
    /**
     * @return the sshProxy
     */
-   public long getSshProxy()
+   public Long getSshProxy()
    {
       return sshProxy;
    }
@@ -1786,13 +1600,12 @@ public class NXCObjectModificationData
    public void setSshProxy(long sshProxy)
    {
       this.sshProxy = sshProxy;
-      fieldSet.add(SSH_PROXY);
    }
 
    /**
     * @return the sshKeyId
     */
-   public int getSshKeyId()
+   public Integer getSshKeyId()
    {
       return sshKeyId;
    }
@@ -1803,7 +1616,6 @@ public class NXCObjectModificationData
    public void setSshKeyId(int sshKeyId)
    {
       this.sshKeyId = sshKeyId;
-      fieldSet.add(SSH_KEY_ID);
    }
 
    /**
@@ -1820,7 +1632,6 @@ public class NXCObjectModificationData
    public void setSshLogin(String sshLogin)
    {
       this.sshLogin = sshLogin;
-      fieldSet.add(SSH_LOGIN);
    }
 
    /**
@@ -1837,10 +1648,9 @@ public class NXCObjectModificationData
    public void setSshPassword(String sshPassword)
    {
       this.sshPassword = sshPassword;
-      fieldSet.add(SSH_PASSWORD);
    }
 
-   public int getSshPort()
+   public Integer getSshPort()
    {
       return sshPort;
    }
@@ -1848,7 +1658,6 @@ public class NXCObjectModificationData
    public void setSshPort(int sshPort)
    {
       this.sshPort = sshPort;
-      fieldSet.add(SSH_PORT);
    }
 
    /**
@@ -1865,7 +1674,6 @@ public class NXCObjectModificationData
    public void setZoneProxies(Long[] zoneProxies)
    {
       this.zoneProxies = zoneProxies;
-      fieldSet.add(ZONE_PROXY_LIST);
    }
 
    /**
@@ -1884,7 +1692,6 @@ public class NXCObjectModificationData
    public void setUrls(List<ObjectUrl> urls)
    {
       this.urls = urls;
-      fieldSet.add(URL_LIST);
    }
 
    /**
@@ -1892,7 +1699,15 @@ public class NXCObjectModificationData
     */
    public Long[] getSeedObjectIds()
    {
-      return seedObjectIds.toArray(new Long[seedObjectIds.size()]);
+      return seedObjectIds == null ? null : seedObjectIds.toArray(new Long[seedObjectIds.size()]);
+   }
+
+   /**
+    * @return the seedObjectIds
+    */
+   public List<Long> getSeedObjectIdsAsList()
+   {
+      return seedObjectIds;
    }
 
    /**
@@ -1901,7 +1716,6 @@ public class NXCObjectModificationData
    public void setSeedObjectIds(List<Long> seedObjectIds)
    {
       this.seedObjectIds = seedObjectIds;
-      fieldSet.add(SEED_OBJECTS);
    }
 
    /**
@@ -1918,13 +1732,12 @@ public class NXCObjectModificationData
    public void setMacAddress(MacAddress macAddress)
    {
       this.macAddress = macAddress;
-      fieldSet.add(MAC_ADDRESS);
    }
 
    /**
     * @return the deviceClass
     */
-   public int getDeviceClass()
+   public Integer getDeviceClass()
    {
       return deviceClass;
    }
@@ -1935,7 +1748,6 @@ public class NXCObjectModificationData
    public void setDeviceClass(int deviceClass)
    {
       this.deviceClass = deviceClass;
-      fieldSet.add(DEVICE_CLASS);
    }
 
    /**
@@ -1952,7 +1764,6 @@ public class NXCObjectModificationData
    public void setVendor(String vendor)
    {
       this.vendor = vendor;
-      fieldSet.add(VENDOR);
    }
 
    /**
@@ -1969,7 +1780,6 @@ public class NXCObjectModificationData
    public void setSerialNumber(String serialNumber)
    {
       this.serialNumber = serialNumber;
-      fieldSet.add(SERIAL_NUMBER);
    }
 
    /**
@@ -1986,7 +1796,6 @@ public class NXCObjectModificationData
    public void setDeviceAddress(String deviceAddress)
    {
       this.deviceAddress = deviceAddress;
-      fieldSet.add(DEVICE_ADDRESS);
    }
 
    /**
@@ -2003,16 +1812,14 @@ public class NXCObjectModificationData
    public void setMetaType(String metaType)
    {
       this.metaType = metaType;
-      fieldSet.add(META_TYPE);
    }
 
    public void setSensorProxy(long proxyNode)
    {
       this.sensorProxy = proxyNode;
-      fieldSet.add(SENSOR_PROXY);
    }
 
-   public long getSensorProxy()
+   public Long getSensorProxy()
    {
       return sensorProxy;
    }
@@ -2031,7 +1838,6 @@ public class NXCObjectModificationData
    public void setXmlConfig(String xmlConfig)
    {
       this.xmlConfig = xmlConfig;
-      fieldSet.add(XML_CONFIG);
    }
 
    /**
@@ -2042,7 +1848,6 @@ public class NXCObjectModificationData
    public void setSnmpPorts(List<String> snmpPorts)
    {
       this.snmpPorts = snmpPorts;
-      fieldSet.add(SNMP_PORT_LIST);
    }
 
    /**
@@ -2071,7 +1876,6 @@ public class NXCObjectModificationData
    public void setPassiveElements(List<PassiveRackElement> passiveElements)
    {
       this.passiveElements = passiveElements;
-      fieldSet.add(PASSIVE_ELEMENTS);
    }
 
    /**
@@ -2090,7 +1894,6 @@ public class NXCObjectModificationData
    public void setResponsibleUsers(List<Long> responsibleUsers)
    {
       this.responsibleUsers = responsibleUsers;
-      fieldSet.add(RESPONSIBLE_USERS);
    }
 
    /**
@@ -2103,13 +1906,12 @@ public class NXCObjectModificationData
    {
       isAutoBindEnabled = autoApply;
       isAutoUnbindEnabled = autoUnbind;
-      fieldSet.add(AUTOBIND_FLAGS);
    }
 
    /**
     * @return if auto bind is enabled
     */
-   public boolean isAutoBindEnabled()
+   public Boolean isAutoBindEnabled()
    {
       return isAutoBindEnabled;
    }
@@ -2117,7 +1919,7 @@ public class NXCObjectModificationData
    /**
     * @return if auto remove is enabled
     */
-   public boolean isAutoUnbindEnabled()
+   public Boolean isAutoUnbindEnabled()
    {
       return isAutoUnbindEnabled;
    }
@@ -2140,7 +1942,6 @@ public class NXCObjectModificationData
    public void setIcmpStatCollectionMode(IcmpStatCollectionMode mode)
    {
       this.icmpStatCollectionMode = mode;
-      fieldSet.add(ICMP_POLL_MODE);
    }
 
    /**
@@ -2161,7 +1962,6 @@ public class NXCObjectModificationData
    public void setIcmpTargets(Collection<InetAddress> icmpTargets)
    {
       this.icmpTargets = new ArrayList<InetAddress>(icmpTargets);
-      fieldSet.add(ICMP_POLL_TARGETS);
    }
 
    /**
@@ -2183,7 +1983,6 @@ public class NXCObjectModificationData
    public void setChassisPlacement(String placementConfig)
    {
       chassisPlacement = placementConfig;
-      fieldSet.add(CHASSIS_PLACEMENT);
    }
 
    /**
@@ -2197,7 +1996,7 @@ public class NXCObjectModificationData
    /**
     * @return the etherNetIPPort
     */
-   public int getEtherNetIPPort()
+   public Integer getEtherNetIPPort()
    {
       return etherNetIPPort;
    }
@@ -2208,13 +2007,12 @@ public class NXCObjectModificationData
    public void setEtherNetIPPort(int etherNetIPPort)
    {
       this.etherNetIPPort = etherNetIPPort;
-      fieldSet.add(ETHERNET_IP_PORT);
    }
 
    /**
     * @return the etherNetIPProxy
     */
-   public long getEtherNetIPProxy()
+   public Long getEtherNetIPProxy()
    {
       return etherNetIPProxy;
    }
@@ -2225,7 +2023,6 @@ public class NXCObjectModificationData
    public void setEtherNetIPProxy(long etherNetIPProxy)
    {
       this.etherNetIPProxy = etherNetIPProxy;
-      fieldSet.add(ETHERNET_IP_PROXY);
    }
 
    /**
@@ -2238,7 +2035,6 @@ public class NXCObjectModificationData
    {
       certificateMappingMethod = method;
       certificateMappingData = data;
-      fieldSet.add(CERT_MAPPING);
    }
 
    /**
@@ -2266,7 +2062,7 @@ public class NXCObjectModificationData
     * 
     * @return category ID
     */
-   public int getCategoryId()
+   public Integer getCategoryId()
    {
       return categoryId;
    }
@@ -2279,7 +2075,6 @@ public class NXCObjectModificationData
    public void setCategoryId(int categoryId)
    {
       this.categoryId = categoryId;
-      fieldSet.add(CATEGORY_ID);
    }
 
    /**
@@ -2300,7 +2095,6 @@ public class NXCObjectModificationData
    public void setGeoLocationControlMode(GeoLocationControlMode geoLocationControlMode)
    {
       this.geoLocationControlMode = geoLocationControlMode;
-      fieldSet.add(GEOLOCATION_CTRL_MODE);
    }
 
    /**
@@ -2321,6 +2115,5 @@ public class NXCObjectModificationData
    public void setGeoAreas(long[] geoAreas)
    {
       this.geoAreas = geoAreas;
-      fieldSet.add(GEO_AREAS);
    }
 }

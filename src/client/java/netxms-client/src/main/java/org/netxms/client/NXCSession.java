@@ -5828,32 +5828,35 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)data.getObjectId());
 
       // Object name
-      if (data.isFieldSet(NXCObjectModificationData.NAME))
+      if (data.getName() != null)
       {
          msg.setField(NXCPCodes.VID_OBJECT_NAME, data.getName());
       }
 
       // Object alias
-      if (data.isFieldSet(NXCObjectModificationData.ALIAS))
+      if (data.getAlias() != null)
       {
          msg.setField(NXCPCodes.VID_ALIAS, data.getAlias());
       }
 
       // Object name on network map
-      if (data.isFieldSet(NXCObjectModificationData.NAME_ON_MAP))
+      if (data.getNameOnMap() != null)
       {
          msg.setField(NXCPCodes.VID_NAME_ON_MAP, data.getNameOnMap());
       }
 
       // Primary IP
-      if (data.isFieldSet(NXCObjectModificationData.PRIMARY_IP))
+      if (data.getPrimaryIpAddress() != null)
       {
          msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getPrimaryIpAddress());
       }
 
       // Access control list
-      if (data.isFieldSet(NXCObjectModificationData.ACL))
+      if (data.getACL() != null)
       {
+         if (data.isInheritAccessRights() == null)
+            new NXCException(RCC.VARIABLE_NOT_FOUND);
+         
          final AccessListElement[] acl = data.getACL();
          msg.setFieldInt32(NXCPCodes.VID_ACL_SIZE, acl.length);
          msg.setFieldInt16(NXCPCodes.VID_INHERIT_RIGHTS, data.isInheritAccessRights() ? 1 : 0);
@@ -5867,7 +5870,7 @@ public class NXCSession
          }
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.CUSTOM_ATTRIBUTES))
+      if (data.getCustomAttributes() != null)
       {
          Map<String, CustomAttribute> attrList = data.getCustomAttributes();
          Iterator<String> it = attrList.keySet().iterator();
@@ -5887,61 +5890,70 @@ public class NXCSession
          msg.setFieldInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES, count);
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.AUTOBIND_FILTER))
+      if (data.getAutoBindFilter() != null)
       {
          msg.setField(NXCPCodes.VID_AUTOBIND_FILTER, data.getAutoBindFilter());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.AUTOBIND_FLAGS))
+      if (data.isAutoBindEnabled() != null || data.isAutoUnbindEnabled() != null)
       {
+         if (data.isAutoBindEnabled() == null || data.isAutoUnbindEnabled() == null)
+            new NXCException(RCC.VARIABLE_NOT_FOUND);
          msg.setField(NXCPCodes.VID_AUTOBIND_FLAG, data.isAutoBindEnabled());
          msg.setField(NXCPCodes.VID_AUTOUNBIND_FLAG, data.isAutoUnbindEnabled());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.FILTER))
+      if (data.getFilter() != null)
       {
          msg.setField(NXCPCodes.VID_FILTER, data.getFilter());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.DESCRIPTION))
+      if (data.getDescription() != null)
       {
          msg.setField(NXCPCodes.VID_DESCRIPTION, data.getDescription());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.VERSION))
+      if (data.getVersion() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_VERSION, data.getVersion());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.AGENT_PORT))
+      if (data.getAgentPort() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_AGENT_PORT, data.getAgentPort());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.AGENT_PROXY))
+      if (data.getAgentProxy() != null)
       {
-         msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int)data.getAgentProxy());
+         msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, data.getAgentProxy().intValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.AGENT_SECRET))
+      if (data.getAgentSecret() != null)
       {
          msg.setField(NXCPCodes.VID_SHARED_SECRET, data.getAgentSecret());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.TRUSTED_NODES))
+      if (data.getTrustedNodes() != null)
       {
          final Long[] nodes = data.getTrustedNodes();
          msg.setFieldInt32(NXCPCodes.VID_NUM_TRUSTED_NODES, nodes.length);
          msg.setField(NXCPCodes.VID_TRUSTED_NODES, nodes);
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SNMP_VERSION))
+      if (data.getSnmpVersion() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_SNMP_VERSION, data.getSnmpVersion().getValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SNMP_AUTH))
+      if (data.getSnmpAuthName() != null || data.getSnmpAuthPassword() != null || 
+            data.getSnmpPrivPassword() != null || data.getSnmpAuthMethod() != null ||
+            data.getSnmpPrivMethod() != null)         
       {
+         if (data.getSnmpAuthName() == null || data.getSnmpAuthPassword() == null || 
+               data.getSnmpPrivPassword() == null || data.getSnmpAuthMethod() == null ||
+               data.getSnmpPrivMethod() == null) 
+            new NXCException(RCC.VARIABLE_NOT_FOUND);
+         
          msg.setField(NXCPCodes.VID_SNMP_AUTH_OBJECT, data.getSnmpAuthName());
          msg.setField(NXCPCodes.VID_SNMP_AUTH_PASSWORD, data.getSnmpAuthPassword());
          msg.setField(NXCPCodes.VID_SNMP_PRIV_PASSWORD, data.getSnmpPrivPassword());
@@ -5949,22 +5961,22 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_SNMP_USM_METHODS, methods);
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SNMP_PROXY))
+      if (data.getSnmpProxy() != null)
       {
-         msg.setFieldInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxy());
+         msg.setFieldInt32(NXCPCodes.VID_SNMP_PROXY, data.getSnmpProxy().intValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SNMP_PORT))
+      if (data.getSnmpPort() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_SNMP_PORT, data.getSnmpPort());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.ICMP_PROXY))
+      if (data.getIcmpProxy() != null)
       {
-         msg.setFieldInt32(NXCPCodes.VID_ICMP_PROXY, (int)data.getIcmpProxy());
+         msg.setFieldInt32(NXCPCodes.VID_ICMP_PROXY, data.getIcmpProxy().intValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.GEOLOCATION))
+      if (data.getGeolocation() != null)
       {
          final GeoLocation gl = data.getGeolocation();
          msg.setFieldInt16(NXCPCodes.VID_GEOLOCATION_TYPE, gl.getType());
@@ -5977,13 +5989,20 @@ public class NXCSession
          }
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.MAP_LAYOUT))
+      if (data.getMapLayout() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_LAYOUT, data.getMapLayout().getValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.MAP_BACKGROUND))
+      if (data.getMapBackground() != null || data.getMapBackgroundLocation() != null ||
+         data.getMapBackgroundLocation() != null || data.getMapBackgroundZoom() != null ||
+               data.getMapBackgroundColor() != null)
       {
+         if (data.getMapBackground() == null || data.getMapBackgroundLocation() == null ||
+            data.getMapBackgroundLocation() == null || data.getMapBackgroundZoom() == null ||
+                  data.getMapBackgroundColor() == null)
+            new NXCException(RCC.VARIABLE_NOT_FOUND);
+
          msg.setField(NXCPCodes.VID_BACKGROUND, data.getMapBackground());
          msg.setField(NXCPCodes.VID_BACKGROUND_LATITUDE, data.getMapBackgroundLocation().getLatitude());
          msg.setField(NXCPCodes.VID_BACKGROUND_LONGITUDE, data.getMapBackgroundLocation().getLongitude());
@@ -5991,13 +6010,16 @@ public class NXCSession
          msg.setFieldInt32(NXCPCodes.VID_BACKGROUND_COLOR, data.getMapBackgroundColor());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.MAP_IMAGE))
+      if (data.getMapImage() != null)
       {
          msg.setField(NXCPCodes.VID_IMAGE, data.getMapImage());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.MAP_CONTENT))
+      if (data.getMapElements() != null || data.getMapLinks() != null)
       {
+         if (data.getMapElements() == null || data.getMapLinks() == null)
+            new NXCException(RCC.VARIABLE_NOT_FOUND);
+            
          msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, data.getMapElements().size());
          long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
          for(NetworkMapElement e : data.getMapElements())
@@ -6015,12 +6037,12 @@ public class NXCSession
          }
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.COLUMN_COUNT))
+      if (data.getColumnCount() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_NUM_COLUMNS, data.getColumnCount());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.DASHBOARD_ELEMENTS))
+      if (data.getDashboardElements() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, data.getDashboardElements().size());
          long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
@@ -6031,7 +6053,7 @@ public class NXCSession
          }
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.URL_LIST))
+      if (data.getUrls() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_NUM_URLS, data.getUrls().size());
          long fieldId = NXCPCodes.VID_URL_LIST_BASE;
@@ -6042,37 +6064,37 @@ public class NXCSession
          }
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SCRIPT))
+      if (data.getScript() != null)
       {
          msg.setField(NXCPCodes.VID_SCRIPT, data.getScript());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.ACTIVATION_EVENT))
+      if (data.getActivationEvent() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_ACTIVATION_EVENT, data.getActivationEvent());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.DEACTIVATION_EVENT))
+      if (data.getDeactivationEvent() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_DEACTIVATION_EVENT, data.getDeactivationEvent());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SOURCE_OBJECT))
+      if (data.getSourceObject() != null)
       {
-         msg.setFieldInt32(NXCPCodes.VID_SOURCE_OBJECT, (int)data.getSourceObject());
+         msg.setFieldInt32(NXCPCodes.VID_SOURCE_OBJECT, data.getSourceObject().intValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.ACTIVE_STATUS))
+      if (data.getActiveStatus() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_ACTIVE_STATUS, data.getActiveStatus());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.INACTIVE_STATUS))
+      if (data.getInactiveStatus() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_INACTIVE_STATUS, data.getInactiveStatus());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.DCI_LIST))
+      if (data.getDciList() != null)
       {
          List<ConditionDciInfo> dciList = data.getDciList();
          msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, dciList.size());
@@ -6087,68 +6109,71 @@ public class NXCSession
          }
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.DRILL_DOWN_OBJECT_ID))
+      if (data.getDrillDownObjectId() != null)
       {
-         msg.setFieldInt32(NXCPCodes.VID_DRILL_DOWN_OBJECT_ID, (int)data.getDrillDownObjectId());
+         msg.setFieldInt32(NXCPCodes.VID_DRILL_DOWN_OBJECT_ID, data.getDrillDownObjectId().intValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SERVICE_TYPE))
+      if (data.getServiceType() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_SERVICE_TYPE, data.getServiceType());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.IP_ADDRESS))
+      if (data.getIpAddress() != null)
       {
          msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.IP_PROTOCOL))
+      if (data.getIpProtocol() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_IP_PROTO, data.getIpProtocol());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.IP_PORT))
+      if (data.getIpPort() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_IP_PORT, data.getIpPort());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.POLLER_NODE))
+      if (data.getPollerNode() != null)
       {
-         msg.setFieldInt32(NXCPCodes.VID_POLLER_NODE_ID, (int)data.getPollerNode());
+         msg.setFieldInt32(NXCPCodes.VID_POLLER_NODE_ID, data.getPollerNode().intValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.REQUIRED_POLLS))
+      if (data.getRequiredPolls() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_REQUIRED_POLLS, data.getRequiredPolls());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.REQUEST))
+      if (data.getRequest() != null)
       {
          msg.setField(NXCPCodes.VID_SERVICE_REQUEST, data.getRequest());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.RESPONSE))
+      if (data.getResponse() != null)
       {
          msg.setField(NXCPCodes.VID_SERVICE_RESPONSE, data.getResponse());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.OBJECT_FLAGS))
+      if (data.getObjectFlags() != null || data.getObjectFlagsMask() != null)
       {
+         if (data.getObjectFlags() == null || data.getObjectFlagsMask() == null)
+            new NXCException(RCC.VARIABLE_NOT_FOUND);
+            
          msg.setFieldInt32(NXCPCodes.VID_FLAGS, data.getObjectFlags());
          msg.setFieldInt32(NXCPCodes.VID_FLAGS_MASK, data.getObjectFlagsMask());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.IFXTABLE_POLICY))
+      if (data.getIfXTablePolicy() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_USE_IFXTABLE, data.getIfXTablePolicy());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.REPORT_DEFINITION))
+      if (data.getReportDefinition() != null)
       {
          msg.setField(NXCPCodes.VID_REPORT_DEFINITION, data.getReportDefinition());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.CLUSTER_RESOURCES))
+      if (data.getResourceList() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_NUM_RESOURCES, data.getResourceList().size());
          long varId = NXCPCodes.VID_RESOURCE_LIST_BASE;
@@ -6161,7 +6186,7 @@ public class NXCSession
          }
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.CLUSTER_NETWORKS))
+      if (data.getNetworkList() != null)
       {
          int count = data.getNetworkList().size();
          msg.setFieldInt32(NXCPCodes.VID_NUM_SYNC_SUBNETS, count);
@@ -6172,12 +6197,15 @@ public class NXCSession
          }
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.PRIMARY_NAME))
+      if (data.getPrimaryName() != null)
       {
          msg.setField(NXCPCodes.VID_PRIMARY_NAME, data.getPrimaryName());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.STATUS_CALCULATION))
+      if (data.getStatusCalculationMethod() != null || data.getStatusPropagationMethod() != null ||
+            data.getFixedPropagatedStatus() != null || data.getStatusShift() != null ||
+            data.getStatusTransformation() != null || data.getStatusSingleThreshold() != null ||
+            data.getStatusThresholds() != null)         
       {
          msg.setFieldInt16(NXCPCodes.VID_STATUS_CALCULATION_ALG, data.getStatusCalculationMethod());
          msg.setFieldInt16(NXCPCodes.VID_STATUS_PROPAGATION_ALG, data.getStatusPropagationMethod());
@@ -6196,43 +6224,46 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_STATUS_THRESHOLD_4, thresholds[3]);
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.EXPECTED_STATE))
+      if (data.getExpectedState() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_EXPECTED_STATE, data.getExpectedState());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.LINK_COLOR))
+      if (data.getLinkColor() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_LINK_COLOR, data.getLinkColor());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.CONNECTION_ROUTING))
+      if (data.getConnectionRouting() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_LINK_ROUTING, data.getConnectionRouting());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.DISCOVERY_RADIUS))
+      if (data.getDiscoveryRadius() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_DISCOVERY_RADIUS, data.getDiscoveryRadius());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.HEIGHT))
+      if (data.getHeight() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_HEIGHT, data.getHeight());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.RACK_NUMB_SCHEME))
+      if (data.isRackNumberingTopBottom() != null)
       {
          msg.setField(NXCPCodes.VID_TOP_BOTTOM, data.isRackNumberingTopBottom());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.PEER_GATEWAY))
+      if (data.getPeerGatewayId() != null)
       {
-         msg.setFieldInt32(NXCPCodes.VID_PEER_GATEWAY, (int)data.getPeerGatewayId());
+         msg.setFieldInt32(NXCPCodes.VID_PEER_GATEWAY, data.getPeerGatewayId().intValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.VPN_NETWORKS))
+      if (data.getLocalNetworks() != null || data.getRemoteNetworks() != null)
       {
+         if (data.getLocalNetworks() == null || data.getRemoteNetworks() == null)
+            new NXCException(RCC.VARIABLE_NOT_FOUND);
+         
          long fieldId = NXCPCodes.VID_VPN_NETWORK_BASE;
 
          msg.setFieldInt32(NXCPCodes.VID_NUM_LOCAL_NETS, data.getLocalNetworks().size());
@@ -6248,29 +6279,36 @@ public class NXCSession
          }
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.POSTAL_ADDRESS))
+      if (data.getPostalAddress() != null)
       {
          data.getPostalAddress().fillMessage(msg);
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.AGENT_CACHE_MODE))
+      if (data.getAgentCacheMode() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_AGENT_CACHE_MODE, data.getAgentCacheMode().getValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.AGENT_COMPRESSION_MODE))
+      if (data.getAgentCompressionMode() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_AGENT_COMPRESSION_MODE, data.getAgentCompressionMode().getValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.MAPOBJ_DISP_MODE))
+      if (data.getMapObjectDisplayMode() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_DISPLAY_MODE, data.getMapObjectDisplayMode().getValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.RACK_PLACEMENT))
+      if (data.getPhysicalContainerObjectId() != null || data.getFrontRackImage() != null || 
+            data.getRearRackImage() != null || data.getRackPosition() != null ||
+            data.getRackHeight() != null || data.getRackOrientation() != null)
       {
-         msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_CONTAINER_ID, (int)data.getPhysicalContainerObjectId());
+         if (data.getPhysicalContainerObjectId() == null || data.getFrontRackImage() == null || 
+               data.getRearRackImage() == null || data.getRackPosition() == null ||
+               data.getRackHeight() == null || data.getRackOrientation() == null)
+            new NXCException(RCC.VARIABLE_NOT_FOUND);
+         
+         msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_CONTAINER_ID, data.getPhysicalContainerObjectId().intValue());
          msg.setField(NXCPCodes.VID_RACK_IMAGE_FRONT, data.getFrontRackImage());
          msg.setField(NXCPCodes.VID_RACK_IMAGE_REAR, data.getRearRackImage());
          msg.setFieldInt16(NXCPCodes.VID_RACK_POSITION, data.getRackPosition());
@@ -6278,98 +6316,101 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_RACK_ORIENTATION, data.getRackOrientation().getValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.CHASSIS_PLACEMENT))
+      if (data.getPhysicalContainerObjectId() != null || data.getChassisPlacement() != null)
       {
-         msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_CONTAINER_ID, (int)data.getPhysicalContainerObjectId());
+         if (data.getPhysicalContainerObjectId() == null || data.getChassisPlacement() == null)
+            new NXCException(RCC.VARIABLE_NOT_FOUND);
+         
+         msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_CONTAINER_ID, data.getPhysicalContainerObjectId().intValue());
          msg.setField(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG, data.getChassisPlacement());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.DASHBOARD_LIST))
+      if (data.getDashboards() != null)
       {
          msg.setField(NXCPCodes.VID_DASHBOARDS, data.getDashboards());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.CONTROLLER_ID))
+      if (data.getControllerId() != null)
       {
-         msg.setFieldInt32(NXCPCodes.VID_CONTROLLER_ID, (int)data.getControllerId());
+         msg.setFieldInt32(NXCPCodes.VID_CONTROLLER_ID, data.getControllerId().intValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SSH_PROXY))
+      if (data.getSshProxy() != null)
       {
-         msg.setFieldInt32(NXCPCodes.VID_SSH_PROXY, (int)data.getSshProxy());
+         msg.setFieldInt32(NXCPCodes.VID_SSH_PROXY, data.getSshProxy().intValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SSH_KEY_ID))
+      if (data.getSshKeyId() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_SSH_KEY_ID, data.getSshKeyId());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SSH_LOGIN))
+      if (data.getSshLogin() != null)
       {
          msg.setField(NXCPCodes.VID_SSH_LOGIN, data.getSshLogin());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SSH_PASSWORD))
+      if (data.getSshPassword() != null)
       {
          msg.setField(NXCPCodes.VID_SSH_PASSWORD, data.getSshPassword());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SSH_PORT))
+      if (data.getSshPort() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_SSH_PORT, data.getSshPort());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.ZONE_PROXY_LIST))
+      if (data.getZoneProxies() != null)
       {
          msg.setField(NXCPCodes.VID_ZONE_PROXY_LIST, data.getZoneProxies());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SEED_OBJECTS))
+      if (data.getSeedObjectIds() != null)
       {
          msg.setField(NXCPCodes.VID_SEED_OBJECTS, data.getSeedObjectIds());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.MAC_ADDRESS))
+      if (data.getMacAddress() != null)
       {
          msg.setField(NXCPCodes.VID_MAC_ADDR, data.getMacAddress());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.DEVICE_CLASS))
+      if (data.getDeviceClass() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_DEVICE_CLASS, data.getDeviceClass());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.VENDOR))
+      if (data.getVendor() != null)
       {
          msg.setField(NXCPCodes.VID_VENDOR, data.getVendor());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SERIAL_NUMBER))
+      if (data.getSerialNumber() != null)
       {
          msg.setField(NXCPCodes.VID_SERIAL_NUMBER, data.getSerialNumber());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.DEVICE_ADDRESS))
+      if (data.getDeviceAddress() != null)
       {
          msg.setField(NXCPCodes.VID_DEVICE_ADDRESS, data.getDeviceAddress());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.META_TYPE))
+      if (data.getMetaType() != null)
       {
          msg.setField(NXCPCodes.VID_META_TYPE, data.getMetaType());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SENSOR_PROXY))
+      if (data.getSensorProxy() != null)
       {
-         msg.setFieldInt32(NXCPCodes.VID_SENSOR_PROXY, (int)data.getSensorProxy());
+         msg.setFieldInt32(NXCPCodes.VID_SENSOR_PROXY, data.getSensorProxy().intValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.XML_CONFIG))
+      if (data.getXmlConfig() != null)
       {
          msg.setField(NXCPCodes.VID_XML_CONFIG, data.getXmlConfig());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SNMP_PORT_LIST))
+      if (data.getSnmpPorts() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_ZONE_SNMP_PORT_COUNT, data.getSnmpPorts().size());
          for(int i = 0; i < data.getSnmpPorts().size(); i++)
@@ -6378,7 +6419,7 @@ public class NXCSession
          }
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.PASSIVE_ELEMENTS))
+      if (data.getPassiveElements() != null)
       {
          List<PassiveRackElement> elements = data.getPassiveElements();
          msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, elements.size());
@@ -6390,17 +6431,17 @@ public class NXCSession
          }
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.RESPONSIBLE_USERS))
+      if (data.getResponsibleUsers() != null)
       {
          msg.setField(NXCPCodes.VID_RESPONSIBLE_USERS, data.getResponsibleUsers());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.ICMP_POLL_MODE))
+      if (data.getIcmpStatCollectionMode() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_ICMP_COLLECTION_MODE, data.getIcmpStatCollectionMode().getValue());
       }
       
-      if (data.isFieldSet(NXCObjectModificationData.ICMP_POLL_TARGETS))
+      if (data.getIcmpTargets() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_ICMP_TARGET_COUNT, data.getIcmpTargets().size());
          long fieldId = NXCPCodes.VID_ICMP_TARGET_LIST_BASE;
@@ -6408,33 +6449,35 @@ public class NXCSession
             msg.setField(fieldId++, a);
       }
       
-      if (data.isFieldSet(NXCObjectModificationData.ETHERNET_IP_PORT))
+      if (data.getEtherNetIPPort() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_ETHERNET_IP_PORT, data.getEtherNetIPPort());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.ETHERNET_IP_PROXY))
+      if (data.getEtherNetIPProxy() != null)
       {
-         msg.setFieldInt32(NXCPCodes.VID_ETHERNET_IP_PROXY, (int)data.getEtherNetIPProxy());
+         msg.setFieldInt32(NXCPCodes.VID_ETHERNET_IP_PROXY, data.getEtherNetIPProxy().intValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.CERT_MAPPING))
+      if (data.getCertificateMappingData() != null || data.getCertificateMappingMethod() != null)
       {
+         if (data.getCertificateMappingData() == null || data.getCertificateMappingMethod() == null)
+            new NXCException(RCC.VARIABLE_NOT_FOUND);
          msg.setFieldInt16(NXCPCodes.VID_CERT_MAPPING_METHOD, data.getCertificateMappingMethod().getValue());
          msg.setField(NXCPCodes.VID_CERT_MAPPING_DATA, data.getCertificateMappingData());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.CATEGORY_ID))
+      if (data.getCategoryId() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_CATEGORY_ID, data.getCategoryId());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.GEOLOCATION_CTRL_MODE))
+      if (data.getGeoLocationControlMode() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_GEOLOCATION_CTRL_MODE, data.getGeoLocationControlMode().getValue());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.GEO_AREAS))
+      if (data.getGeoAreas() != null)
       {
          msg.setField(NXCPCodes.VID_GEO_AREAS, data.getGeoAreas());
       }

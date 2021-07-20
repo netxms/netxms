@@ -25,7 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
+import org.json.JSONObject;
 import org.netxms.base.Glob;
+import org.netxms.client.NXCException;
+import org.netxms.client.NXCObjectCreationData;
+import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractNode;
@@ -36,6 +40,7 @@ import org.netxms.client.objects.NetworkService;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.websvc.WebSvcException;
+import org.netxms.websvc.json.JsonTools;
 import org.netxms.websvc.json.ResponseContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -304,5 +309,63 @@ public class Objects extends AbstractObjectHandler
    protected String getEntityIdFieldName()
    {
       return "object-id";
+   }
+
+   /**
+    * @see org.netxms.websvc.handlers.AbstractHandler#create(org.json.JSONObject)
+    */
+   @Override
+   protected Object create(JSONObject data) throws Exception
+   {      
+      int type = JsonTools.getIntFromJson(data, "objectType", -1);
+      String name = JsonTools.getStringFromJson(data, "name", null);
+      long parentId = JsonTools.getLongFromJson(data, "parentId", -1);      
+      if (type == -1 || name == null || parentId == 1) 
+         throw new NXCException(RCC.INVALID_ARGUMENT, "Object type, name and parent id should be set for new object");
+      
+      NXCObjectCreationData createData = new NXCObjectCreationData(type, name, parentId);    
+      createData.setComments(JsonTools.getStringFromJson(data, "comments", createData.getComments()));
+      createData.setCreationFlags(JsonTools.getIntFromJson(data, "creationFlags", createData.getFlags()));
+      createData.setMapType(JsonTools.getIntFromJson(data, "mapType", createData.getMapType()));
+      createData.setZoneUIN(JsonTools.getIntFromJson(data, "zoneUIN", createData.getZoneUIN()));
+      createData.setLinkedNodeId(JsonTools.getLongFromJson(data, "linkedNodeId", createData.getLinkedNodeId()));
+      createData.setTemplate(JsonTools.getBooleanFromJson(data, "template", createData.isTemplate()));
+      createData.setIfIndex(JsonTools.getIntFromJson(data, "ifIndex", createData.getIfIndex()));
+      createData.setIfIndex(JsonTools.getIntFromJson(data, "ifType", createData.getIfType()));
+      createData.setChassis(JsonTools.getIntFromJson(data, "chassis", createData.getChassis()));
+      createData.setModule(JsonTools.getIntFromJson(data, "module", createData.getModule()));
+      createData.setPIC(JsonTools.getIntFromJson(data, "pic", createData.getPIC()));
+      createData.setPort(JsonTools.getIntFromJson(data, "port", createData.getPort()));
+      createData.setPhysicalPort(JsonTools.getBooleanFromJson(data, "physicalPort", createData.isPhysicalPort()));
+      createData.setCreateStatusDci(JsonTools.getBooleanFromJson(data, "createStatusDci", createData.isCreateStatusDci()));
+      createData.setDeviceId(JsonTools.getStringFromJson(data, "deviceId", createData.getDeviceId()));
+      createData.setFlags(JsonTools.getIntFromJson(data, "flags", createData.getFlags()));
+      createData.setXmlRegConfig(JsonTools.getStringFromJson(data, "xmlRegConfig", createData.getXmlRegConfig()));
+      createData.setCommProtocol(JsonTools.getIntFromJson(data, "commProtocol", createData.getCommProtocol()));   
+            
+      NXCObjectModificationData mdObject = JsonTools.createGsonInstance().fromJson(data.toString(), NXCObjectModificationData.class);
+      createData.updateFromMofidyData(mdObject);
+      
+      NXCSession session = getSession();
+      long nodeId = session.createObject(createData);
+      mdObject.setObjectId(nodeId);         
+      session.modifyObject(mdObject);        
+      
+      JSONObject result = new JSONObject();
+      result.append("id", nodeId);
+      return result;
+   }
+
+   /**
+    * @see org.netxms.websvc.handlers.AbstractHandler#update(java.lang.String, org.json.JSONObject)
+    */
+   @Override
+   protected Object update(String id, JSONObject data) throws Exception
+   {
+      NXCSession session = getSession();
+      NXCObjectModificationData mdObject = JsonTools.createGsonInstance().fromJson(data.toString(), NXCObjectModificationData.class);
+      mdObject.setObjectId(getObjectId());           
+      session.modifyObject(mdObject);      
+      return null;
    }
 }
