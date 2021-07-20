@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.websvc.handlers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
@@ -54,6 +55,43 @@ public class LastValues extends AbstractObjectHandler
                values.add(session.getLastValues(child.getObjectId()));
          }
       }
+      
+      String dciName = query.containsKey("dciName") ? query.get("dciName").toUpperCase() : null;
+      String dciNameRegexp = query.get("dciNameRegexp");
+      String dciDescription = query.containsKey("dciDescription") ? query.get("dciDescription").toUpperCase() : null;
+      String dciDescriptionRegexp = query.get("dciDescriptionRegexp");
+      
+      Pattern nameRegex = null;
+      if ((dciNameRegexp != null) && !dciNameRegexp.isEmpty())
+         nameRegex = Pattern.compile(dciNameRegexp, Pattern.CASE_INSENSITIVE);
+      
+      Pattern descriptionRegex = null;
+      if ((dciDescriptionRegexp != null) && !dciDescriptionRegexp.isEmpty())
+         descriptionRegex = Pattern.compile(dciDescriptionRegexp, Pattern.CASE_INSENSITIVE);
+      
+      if ((dciName != null) || (dciNameRegexp != null) || (dciDescription != null) || 
+            (dciDescriptionRegexp != null))
+      {
+         List<DciValue[]> newValues = new ArrayList<DciValue[]>();
+         for (DciValue[] valArray : values)
+         {
+            List<DciValue> tmp = new ArrayList<DciValue>();
+            for (DciValue v : valArray)
+            {
+               if ((dciName != null && v.getName().toUpperCase().contains(dciName)) ||
+                     (nameRegex != null && nameRegex.matcher(v.getName()).matches()) ||
+                     (dciDescription != null && v.getDescription().toUpperCase().contains(dciDescription)) ||
+                     (descriptionRegex != null && descriptionRegex.matcher(v.getDescription()).matches()))
+                  tmp.add(v);
+            }
+            if (!tmp.isEmpty())
+            {
+               newValues.add(tmp.toArray(new DciValue[tmp.size()]));
+            }
+         }
+            values = newValues;
+      }
+      
       return new ResponseContainer("lastValues", values.toArray());
    }
 }

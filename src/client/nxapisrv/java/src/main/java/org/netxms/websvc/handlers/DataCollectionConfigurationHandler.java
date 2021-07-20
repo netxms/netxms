@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,9 +18,11 @@
  */
 package org.netxms.websvc.handlers;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.json.JSONObject;
 import org.netxms.client.NXCException;
 import org.netxms.client.constants.RCC;
@@ -42,6 +44,35 @@ public class DataCollectionConfigurationHandler extends AbstractObjectHandler
    {
       DataCollectionConfiguration dc = getSession().openDataCollectionConfiguration(getObjectId());
       List<DataCollectionObject> dcObjects = Arrays.asList(dc.getItems());
+      
+      String dciName = query.containsKey("dciName") ? query.get("dciName").toUpperCase() : null;
+      String dciNameRegexp = query.get("dciNameRegexp");
+      String dciDescription = query.containsKey("dciDescription") ? query.get("dciDescription").toUpperCase() : null;
+      String dciDescriptionRegexp = query.get("dciDescriptionRegexp");
+      
+      Pattern nameRegex = null;
+      if ((dciNameRegexp != null) && !dciNameRegexp.isEmpty())
+         nameRegex = Pattern.compile(dciNameRegexp, Pattern.CASE_INSENSITIVE);
+      
+      Pattern descriptionRegex = null;
+      if ((dciDescriptionRegexp != null) && !dciDescriptionRegexp.isEmpty())
+         descriptionRegex = Pattern.compile(dciDescriptionRegexp, Pattern.CASE_INSENSITIVE);
+      
+      if ((dciName != null) || (dciNameRegexp != null) || (dciDescription != null) || 
+            (dciDescriptionRegexp != null))
+      {
+         List<DataCollectionObject> newValues = new ArrayList<DataCollectionObject>();
+         for (DataCollectionObject obj : dcObjects)
+         {
+            if ((dciName != null && obj.getName().toUpperCase().contains(dciName)) ||
+                  (nameRegex != null && nameRegex.matcher(obj.getName()).matches()) ||
+                  (dciDescription != null && obj.getDescription().toUpperCase().contains(dciDescription)) ||
+                  (descriptionRegex != null && descriptionRegex.matcher(obj.getDescription()).matches()))
+               newValues.add(obj);
+         }
+         dcObjects = newValues;
+      }
+      
       dc.close();
       return new ResponseContainer("dataCollectionObjects", dcObjects);
    }

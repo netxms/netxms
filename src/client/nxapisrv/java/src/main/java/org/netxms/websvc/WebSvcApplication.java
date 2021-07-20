@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import org.netxms.websvc.handlers.AccessIntegrationTools;
 import org.netxms.websvc.handlers.Alarms;
+import org.netxms.websvc.handlers.BindHandler;
+import org.netxms.websvc.handlers.BindToHandler;
 import org.netxms.websvc.handlers.DCObjectLastValue;
 import org.netxms.websvc.handlers.DataCollectionConfigurationHandler;
 import org.netxms.websvc.handlers.DataCollectionObjectHandler;
@@ -38,6 +40,8 @@ import org.netxms.websvc.handlers.PredefinedGraphs;
 import org.netxms.websvc.handlers.RootHandler;
 import org.netxms.websvc.handlers.Sessions;
 import org.netxms.websvc.handlers.SummaryTableAdHoc;
+import org.netxms.websvc.handlers.UnbindFromHandler;
+import org.netxms.websvc.handlers.UnbindHandler;
 import org.netxms.websvc.handlers.UserAgentNotifications;
 import org.netxms.websvc.handlers.UserPassword;
 import org.netxms.websvc.handlers.Users;
@@ -90,6 +94,8 @@ public class WebSvcApplication extends Application
       router.attach("/notifications", NotificationHandler.class);
       router.attach("/objects", Objects.class);
       router.attach("/objects/{object-id}", Objects.class);
+      router.attach("/objects/{object-id}/bind", BindHandler.class);
+      router.attach("/objects/{object-id}/bindTo", BindToHandler.class);
       router.attach("/objects/{object-id}/lastvalues", LastValues.class);
       router.attach("/objects/{object-id}/datacollection", DataCollectionConfigurationHandler.class);
       router.attach("/objects/{object-id}/datacollection/{id}", DataCollectionObjectHandler.class);
@@ -97,6 +103,8 @@ public class WebSvcApplication extends Application
       router.attach("/objects/{object-id}/datacollection/{id}/lastvalue", DCObjectLastValue.class);
       router.attach("/objects/{object-id}/objecttools", ObjectTools.class);
       router.attach("/objects/{object-id}/objecttools/output/{id}", ObjectToolOutputHandler.class);
+      router.attach("/objects/{object-id}/unbind", UnbindHandler.class);
+      router.attach("/objects/{object-id}/unbindFrom", UnbindFromHandler.class);
       router.attach("/predefinedgraphs", PredefinedGraphs.class);
       router.attach("/sessions", Sessions.class);
       router.attach("/sessions/{id}", Sessions.class);
