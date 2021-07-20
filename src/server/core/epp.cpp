@@ -725,7 +725,7 @@ uint32_t EPRule::generateAlarm(Event *event) const
 	   String message = event->expandText(m_alarmMessage);
 	   String impact = event->expandText(m_alarmImpact);
 
-	   alarmId = CreateNewAlarm(m_guid, m_comments, message, key, impact, ALARM_STATE_OUTSTANDING,
+	   alarmId = CreateNewAlarm(m_guid, m_comments, message, key, impact,
                      (m_alarmSeverity == SEVERITY_FROM_EVENT) ? event->getSeverity() : m_alarmSeverity,
                      m_alarmTimeout, m_alarmTimeoutEvent, parentAlarmId, m_rcaScriptName, event, 0, &m_alarmCategoryList,
                      ((m_flags & RF_CREATE_TICKET) != 0) ? true : false);

@@ -251,7 +251,7 @@ static uint32_t GetCommentCount(DB_HANDLE hdb, uint32_t alarmId)
  * Create new alarm from event
  */
 Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription,
-         const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state, int severity, uint32_t timeout,
+         const TCHAR *message, const TCHAR *key, const TCHAR *impact, int severity, uint32_t timeout,
          uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList) : m_alarmCategoryList(alarmCategoryList)
 {
    m_alarmId = CreateUniqueId(IDG_ALARM);
@@ -274,7 +274,7 @@ Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, c
    m_dciId = event->getDciId();
    m_creationTime = time(nullptr);
    m_lastChangeTime = m_creationTime;
-   m_state = state;
+   m_state = ALARM_STATE_OUTSTANDING;
    m_originalSeverity = severity;
    m_currentSeverity = severity;
    m_repeatCount = 1;
@@ -285,9 +285,9 @@ Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, c
    m_timeoutEvent = timeoutEvent;
    m_commentCount = 0;
    m_ackTimeout = 0;
-   m_ackByUser = 0;
-   m_resolvedByUser = 0;
-   m_termByUser = 0;
+   m_ackByUser = INVALID_UID;
+   m_resolvedByUser = INVALID_UID;
+   m_termByUser = INVALID_UID;
    m_relatedEvents = new IntegerArray<uint64_t>(16, 16);
    m_relatedEvents->add(event->getId());
    _tcslcpy(m_message, message, MAX_EVENT_MSG_LENGTH);
@@ -536,26 +536,26 @@ void Alarm::createInDatabase()
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_alarmId);
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_parentAlarmId);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)m_creationTime);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_lastChangeTime);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastChangeTime));
       DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_sourceObject);
       DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_zoneUIN);
       DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_sourceEventCode);
       DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_message, DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
-      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_originalSeverity);
-      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_currentSeverity);
+      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_originalSeverity));
+      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_currentSeverity));
       DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_key, DB_BIND_STATIC, MAX_DB_STRING);
-      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (INT32)m_state);
-      DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_ackByUser);
-      DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_resolvedByUser);
-      DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (INT32)m_helpDeskState);
+      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_state));
+      DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_ackByUser));  // cast to signed to save -1 for invalid UID
+      DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_resolvedByUser));  // cast to signed to save -1 for invalid UID
+      DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_helpDeskState));
       DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, m_helpDeskRef, DB_BIND_STATIC, MAX_HELPDESK_REF_LEN);
       DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_repeatCount);
-      DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_termByUser);
+      DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_termByUser));  // cast to signed to save -1 for invalid UID
       DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_timeout);
       DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_timeoutEvent);
       DBBind(hStmt, 21, DB_SQLTYPE_BIGINT, m_sourceEventId);
-      DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, (UINT32)m_ackTimeout);
+      DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_ackTimeout));
       DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_dciId);
       DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, categoryListToString(), DB_BIND_TRANSIENT);
       if (!m_ruleGuid.isNull())
@@ -592,19 +592,19 @@ void Alarm::updateInDatabase()
             _T("impact=? WHERE alarm_id=?"));
    if (hStmt != nullptr)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_state);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_ackByUser);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_termByUser);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_lastChangeTime);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)m_currentSeverity);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_state));
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_ackByUser));  // cast to signed to save -1 for invalid UID
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_termByUser));  // cast to signed to save -1 for invalid UID
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastChangeTime));
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_currentSeverity));
       DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_repeatCount);
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_helpDeskState);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_helpDeskState));
       DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_helpDeskRef, DB_BIND_STATIC, MAX_HELPDESK_REF_LEN);
       DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_timeout);
       DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_timeoutEvent);
       DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_message, DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
-      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_resolvedByUser);
-      DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (UINT32)m_ackTimeout);
+      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_resolvedByUser));  // cast to signed to save -1 for invalid UID
+      DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_ackTimeout));
       DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_sourceObject);
       DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dciId);
       DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, categoryListToString(), DB_BIND_TRANSIENT);
@@ -691,7 +691,7 @@ static void UpdateObjectStatus(UINT32 objectId)
  * Fill NXCP message with event data from SQL query
  * Expected field order: event_id,event_code,event_name,severity,source_object_id,event_timestamp,message
  */
-static void FillEventData(NXCPMessage *msg, UINT32 baseId, DB_RESULT hResult, int row, QWORD rootId)
+static void FillEventData(NXCPMessage *msg, uint32_t baseId, DB_RESULT hResult, int row, uint64_t rootId)
 {
 	TCHAR buffer[MAX_EVENT_MSG_LENGTH];
 
@@ -699,7 +699,7 @@ static void FillEventData(NXCPMessage *msg, UINT32 baseId, DB_RESULT hResult, in
 	msg->setField(baseId + 1, rootId);
 	msg->setField(baseId + 2, DBGetFieldULong(hResult, row, 1));
 	msg->setField(baseId + 3, DBGetField(hResult, row, 2, buffer, MAX_DB_STRING));
-	msg->setField(baseId + 4, (WORD)DBGetFieldLong(hResult, row, 3));	// severity
+	msg->setField(baseId + 4, static_cast<uint16_t>(DBGetFieldLong(hResult, row, 3)));	// severity
 	msg->setField(baseId + 5, DBGetFieldULong(hResult, row, 4));  // source object
 	msg->setField(baseId + 6, DBGetFieldULong(hResult, row, 5));  // timestamp
 	msg->setField(baseId + 7, DBGetField(hResult, row, 6, buffer, MAX_EVENT_MSG_LENGTH));
@@ -868,7 +868,7 @@ void Alarm::updateParentAlarm(uint32_t parentAlarmId)
 /**
  * Create new alarm
  */
-uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *ruleDescription, const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state,
+uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *ruleDescription, const TCHAR *message, const TCHAR *key, const TCHAR *impact,
          int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t parentAlarmId, const TCHAR *rcaScriptName, Event *event,
          uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue)
 {
@@ -877,7 +877,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
    bool updateRelatedEvent = false;
 
    // Check if we have a duplicate alarm
-   if (((state & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED) && (key[0] != 0))
+   if (key[0] != 0)
    {
       s_alarmList.lock();
 
@@ -894,7 +894,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
             if (parent != nullptr)
                parent->addSubordinateAlarm(alarm->getAlarmId());
          }
-         alarm->updateFromEvent(event, parentAlarmId, rcaScriptName, ruleGuid, ruleDescription, state, severity, timeout, timeoutEvent, ackTimeout, message, impact, alarmCategoryList);
+         alarm->updateFromEvent(event, parentAlarmId, rcaScriptName, ruleGuid, ruleDescription, ALARM_STATE_OUTSTANDING, severity, timeout, timeoutEvent, ackTimeout, message, impact, alarmCategoryList);
          if (!alarm->isEventRelated(event->getId()))
          {
             alarmId = alarm->getAlarmId();      // needed for correct update of related events
@@ -914,7 +914,7 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
    if (newAlarm)
    {
       // Create new alarm structure
-      Alarm *alarm = new Alarm(event, parentAlarmId, rcaScriptName, ruleGuid, ruleDescription, message, key, impact, state, severity, timeout, timeoutEvent, ackTimeout, alarmCategoryList);
+      Alarm *alarm = new Alarm(event, parentAlarmId, rcaScriptName, ruleGuid, ruleDescription, message, key, impact, severity, timeout, timeoutEvent, ackTimeout, alarmCategoryList);
       alarmId = alarm->getAlarmId();
 
       // Open helpdesk issue
@@ -947,9 +947,8 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
       NotifyClients(NX_NOTIFY_NEW_ALARM, alarm);
    }
 
-   // Update status of related object if needed
-   if ((state & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED)
-		UpdateObjectStatus(event->getSourceId());
+   // Update status of related object
+   UpdateObjectStatus(event->getSourceId());
 
    if (updateRelatedEvent)
    {

@@ -3604,7 +3604,8 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *object, const char *attr)
 
    if (compareAttributeName(attr, "ackBy"))
    {
-      value = vm->createValue(alarm->getAckByUser());
+      // Cast UID to signed to represent invalid UID as -1
+      value = vm->createValue(static_cast<int32_t>(alarm->getAckByUser()));
    }
    else if (compareAttributeName(attr, "creationTime"))
    {
@@ -3668,7 +3669,8 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (compareAttributeName(attr, "resolvedBy"))
    {
-      value = vm->createValue(alarm->getResolvedByUser());
+      // Cast UID to signed to represent invalid UID as -1
+      value = vm->createValue(static_cast<int32_t>(alarm->getResolvedByUser()));
    }
    else if (compareAttributeName(attr, "rcaScriptName"))
    {
