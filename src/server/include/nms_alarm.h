@@ -74,7 +74,7 @@ private:
 
 public:
    Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription,
-            const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state, int severity, uint32_t timeout,
+            const TCHAR *message, const TCHAR *key, const TCHAR *impact, int severity, uint32_t timeout,
             uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList);
    Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row);
    Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode = 0);
@@ -211,7 +211,7 @@ int GetAlarmCount();
 uint64_t GetAlarmMemoryUsage();
 Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(UINT32 alarmId);
 
-uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *rule_description, const TCHAR *message, const TCHAR *key, const TCHAR *impact, int state,
+uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *rule_description, const TCHAR *message, const TCHAR *key, const TCHAR *impact,
          int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t parentAlarmId, const TCHAR *rcaScriptName, Event *event,
          uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue);
 uint32_t NXCORE_EXPORTABLE AckAlarmById(uint32_t dwAlarmId, ClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates);
