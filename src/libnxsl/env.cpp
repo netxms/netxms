@@ -131,7 +131,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "abs", F_abs, 1 },
    { "asin", F_asin, 1 },
    { "acos", F_acos, 1 },
-   { "assert", F_assert, 1 },
+   { "assert", F_assert, -1 },
    { "atan", F_atan, 1 },
    { "atan2", F_atan2, 2 },
    { "ceil", F_ceil, 1 },
