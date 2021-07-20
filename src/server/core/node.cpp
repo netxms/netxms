@@ -3180,7 +3180,10 @@ void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
             sendPollerMsg(_T("      Removing policy %s from agent\r\n"), guid.toString().cstr());
             auto data = make_shared<AgentPolicyRemovalData>(self(), guid, ap->getType(i), isNewPolicyTypeFormatSupported());
             _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), getName(), getId(), _T("unknown"), guid.toString().cstr());
-            ThreadPoolExecute(g_agentConnectionThreadPool, RemoveAgentPolicy, data);
+
+            TCHAR key[64];
+            _sntprintf(key, 64, _T("AgentPolicyDeployment_%u"), m_id);
+            ThreadPoolExecuteSerialized(g_pollerThreadPool, key, RemoveAgentPolicy, data);
          }
 
          unlockParentList();

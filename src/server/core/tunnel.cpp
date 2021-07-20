@@ -438,7 +438,7 @@ MessageReceiverResult AgentTunnel::readMessage(bool allowSocketRead)
    if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 6)
    {
       TCHAR buffer[64];
-      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+      debugPrintf(6, _T("Received message %s (%u)"), NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
    }
 
    if (msg->getCode() == CMD_CHANNEL_DATA)
@@ -590,7 +590,7 @@ bool AgentTunnel::sendMessage(NXCPMessage *msg)
    if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 6)
    {
       TCHAR buffer[64];
-      debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+      debugPrintf(6, _T("Sending message %s (%u)"), NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
    }
    NXCP_MESSAGE *data = msg->serialize(true);
    bool success = (sslWrite(data, ntohl(data->size)) == static_cast<int>(ntohl(data->size)));

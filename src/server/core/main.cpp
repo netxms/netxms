@@ -1114,7 +1114,7 @@ retry_db_lock:
          ConfigReadInt(_T("ThreadPool.Main.BaseSize"), 8),
          ConfigReadInt(_T("ThreadPool.Main.MaxSize"), 256));
    g_agentConnectionThreadPool = ThreadPoolCreate(_T("AGENT"),
-         ConfigReadInt(_T("ThreadPool.Agent.BaseSize"), 4),
+         ConfigReadInt(_T("ThreadPool.Agent.BaseSize"), 32),
          ConfigReadInt(_T("ThreadPool.Agent.MaxSize"), 256));
 
    // Setup unique identifiers table
