@@ -133,8 +133,11 @@ COMPONENTS=""
 DISABLE_ICONV="no"
 DISABLE_ENCRYPTION="no"
 DISABLE_LMSENSORS="no"
+REQUIRE_LMSENSORS="no"
 DISABLE_SSH="no"
+REQUIRE_SSH="no"
 DISABLE_JQ="no"
+REQUIRE_JQ="no"
 ENABLE_DEBUG="no"
 ENABLE_SANITIZER="no"
 ENABLE_WERROR="no"
@@ -180,13 +183,17 @@ LTINIT_CXX=""
 SQLFLAGS=""
 RUNTIME_PREFIX=""
 RUNTIME_STATE_DIR=""
-XMPP_SUPPORT="yes"
+XMPP_SUPPORT="no"
+DISABLE_XMPP="no"
+REQUIRE_XMPP="no"
+DISABLE_ZEROMQ="no"
+REQUIRE_ZEROMQ="no"
 ZEROMQ_SUPPORT="no"
-ZEROMQ_REQUIRED="no"
 ZEROMQ_CPPFLAGS=""
 ZEROMQ_LDFLAGS=""
 MQTT_SUPPORT="no"
 DISABLE_MQTT="no"
+REQUIRE_MQTT="no"
 MQTT_CPPFLAGS=""
 MQTT_LDFLAGS=""
 MQTT_LIBS=""
@@ -195,7 +202,10 @@ PYTHON_CPPFLAGS=""
 PYTHON_LDFLAGS=""
 PYTHON_LIBS=""
 DISABLE_CURL="no"
-LDAP_SUPPORT="yes"
+REQUIRE_CURL="no"
+LDAP_SUPPORT="no"
+DISABLE_LDAP="no"
+REQUIRE_LDAP="no"
 DISABLE_READLINE="yes"
 TUXEDO_LIBS=""
 TUXEDO_TPINIT=""
@@ -390,49 +400,60 @@ AC_ARG_WITH(static-subagents,
 
 AC_ARG_WITH(jdk,
 [AS_HELP_STRING(--with-jdk,build Java-dependent components)],
-[ if test "x$withval" != "xno" ; then
-	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		JDK_LOCATION="$withval"
-		AC_DEFINE_UNQUOTED([JDK_LOCATION],["$withval"],[JDK location])
-	fi
-	COMPONENTS="$COMPONENTS java"
-fi ])
+[
+   if test "x$withval" != "xno" ; then
+	   if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		   JDK_LOCATION="$withval"
+		   AC_DEFINE_UNQUOTED([JDK_LOCATION],["$withval"],[JDK location])
+	   fi
+	   COMPONENTS="$COMPONENTS java"
+   fi
+])
 
 AC_ARG_WITH(tuxedo,
 [AS_HELP_STRING(--with-tuxedo,build Tuxedo-dependent components)],
-[ if test "x$withval" != "xno" ; then
-	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		TUXEDO_BASE="$withval"
-	fi
-	COMPONENTS="$COMPONENTS tuxedo"
-fi ])
+[
+   if test "x$withval" != "xno" ; then
+	   if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		   TUXEDO_BASE="$withval"
+	   fi
+	   COMPONENTS="$COMPONENTS tuxedo"
+fi
+])
 
 AC_ARG_WITH(zeromq,
-[AS_HELP_STRING(--with-zeromq,build with ZeroMQ)],
-[ if test "x$withval" != "xno" ; then
-	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		ZEROMQ_BASE="$withval"
-		ZEROMQ_REQUIRED=yes
-	fi
-	COMPONENTS="$COMPONENTS zeromq"
-	ZEROMQ_SUPPORT=yes
-else
-	ZEROMQ_SUPPORT=no
-fi ])
+[AS_HELP_STRING(--with-zeromq,build ZeroMQ-dependent components)],
+[
+   if test "x$withval" != "xno" ; then
+	   REQUIRE_ZEROMQ=yes
+	   if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		   ZEROMQ_BASE="$withval"
+	   fi
+   else
+	   DISABLE_ZEROMQ=yes
+	   REQUIRE_ZEROMQ=no
+   fi
+])
 
 AC_ARG_WITH(mosquitto,
 [AS_HELP_STRING(--with-mosquitto,specify mosquitto library location)],
-[ if test "x$withval" != "xno" ; then
-	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		MOSQUITTO_BASE="$withval"
-	fi
-fi ])
+[
+   if test "x$withval" != "xno" ; then
+	   if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		   MOSQUITTO_BASE="$withval"
+	   fi
+   fi
+])
 
 AC_ARG_ENABLE(mqtt,
 [AS_HELP_STRING(--disable-mqtt,disable MQTT support)],
 [
 	if test "x$enableval" = "xno"; then
 		DISABLE_MQTT="yes"
+	fi
+	if test "x$enableval" = "xyes"; then
+		DISABLE_MQTT="no"
+		REQUIRE_MQTT="yes"
 	fi
 ])
 
@@ -442,6 +463,8 @@ AC_ARG_WITH(curl,
 	if test "x$withval" = "xno"; then
 		DISABLE_CURL="yes"
 	else
+		DISABLE_CURL="no"
+		REQUIRE_CURL="yes"
 		if test "x$withval" != "xyes"; then
 			CPPFLAGS="$CPPFLAGS -I$withval/include"
 			LDFLAGS="$LDFLAGS -L$withval/lib"
@@ -734,6 +757,10 @@ AC_ARG_ENABLE(ssh,
 	if test "x$enableval" = "xno"; then
 		DISABLE_SSH="yes"
 	fi
+	if test "x$enableval" = "xyes"; then
+		DISABLE_SSH="no"
+		REQUIRE_SSH="yes"
+	fi
 ])
 
 AC_ARG_WITH(libssh,
@@ -751,6 +778,10 @@ AC_ARG_ENABLE(jq,
 [
 	if test "x$enableval" = "xno"; then
 		DISABLE_JQ="yes"
+	fi
+	if test "x$enableval" = "xyes"; then
+		DISABLE_JQ="no"
+		REQUIRE_JQ="yes"
 	fi
 ])
 
@@ -807,7 +838,7 @@ AC_ARG_ENABLE(encryption,
 [
 	if test "x$enableval" = "xno"; then
 		DISABLE_ENCRYPTION="yes"
-		XMPP_SUPPORT="no"
+		DISABLE_XMPP="yes"
 	fi
 ])
 
@@ -817,13 +848,21 @@ AC_ARG_ENABLE(lmsensors,
 	if test "x$enableval" = "xno"; then
 		DISABLE_LMSENSORS="yes"
 	fi
+	if test "x$enableval" = "xyes"; then
+		DISABLE_LMSENSORS="no"
+		REQUIRE_LMSENSORS="yes"
+	fi
 ])
 
 AC_ARG_ENABLE(xmpp,
 [AS_HELP_STRING(--disable-xmpp,disable XMPP support)],
 [
 	if test "x$enableval" = "xno"; then
-		XMPP_SUPPORT="no"
+		DISABLE_XMPP="yes"
+	fi
+	if test "x$enableval" = "xyes"; then
+		DISABLE_XMPP="no"
+		REQUIRE_XMPP="yes"
 	fi
 ])
 
@@ -837,7 +876,11 @@ AC_ARG_ENABLE(ldap,
 [AS_HELP_STRING(--disable-ldap,disable LDAP support)],
 [
 	if test "x$enableval" = "xno"; then
-		LDAP_SUPPORT="no"
+		DISABLE_LDAP="yes"
+	fi
+	if test "x$enableval" = "xyes"; then
+		DISABLE_LDAP="no"
+		REQUIRE_LDAP="yes"
 	fi
 ])
 
@@ -1168,9 +1211,10 @@ if test $? = 0; then
 	NCDRV_MODULES="$NCDRV_MODULES nxagent"
 	PDSDRV_DIRS="influxdb"
 
-	if test "x$XMPP_SUPPORT" = "xyes"; then
+	if test "x$DISABLE_XMPP" != "xyes"; then
 		MODULES="libstrophe $MODULES"
 		AC_DEFINE(XMPP_SUPPORTED, 1, Define to 1 if XMPP is supported)
+      XMPP_SUPPORT="yes"
 	fi
 
 	check_substr "$COMPONENTS" "java"
@@ -2532,6 +2576,10 @@ if test "x$DISABLE_LMSENSORS" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 	fi
 	if test "x$HAVE_LMSENSORS" = "xyes"; then
 		SUBAGENT_DIRS="$SUBAGENT_DIRS lmsensors"
+   else
+      if test "x$REQUIRE_LMSENSORS" = "xyes"; then
+   		AC_MSG_ERROR(libsensors is required for lmsensors support)
+      fi
 	fi
 fi
 
@@ -2547,14 +2595,16 @@ if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 		])
 	fi
 
-	if test "x$HAVE_LIBCURL" != "xyes"; then
+	if test "x$HAVE_LIBCURL" != "xyes" -a "x$REQUIRE_CURL" = "xyes"; then
 		AC_MSG_ERROR(libcurl is required. Check that it is installed or use --without-curl option)
 	fi
 
-	SUBAGENT_DIRS="$SUBAGENT_DIRS bind9 netsvc"
-	NCDRV_MODULES="$NCDRV_MODULES anysms googlechat kannel msteams mymobile nexmo slack smseagle telegram text2reach websms"
-	HDLINK_DIRS="$HDLINK_DIRS jira redmine"
-	AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
+	if test "x$HAVE_LIBCURL" = "xyes"; then
+	   SUBAGENT_DIRS="$SUBAGENT_DIRS bind9 netsvc"
+	   NCDRV_MODULES="$NCDRV_MODULES anysms googlechat kannel msteams mymobile nexmo slack smseagle telegram text2reach websms"
+	   HDLINK_DIRS="$HDLINK_DIRS jira redmine"
+	   AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
+   fi
 fi
 
 if test "x$DISABLE_SSH" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
@@ -2571,7 +2621,9 @@ if test "x$DISABLE_SSH" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 		SUBAGENT_DIRS="$SUBAGENT_DIRS ssh"
 		AC_DEFINE(HAVE_LIBSSH, 1, Define to 1 if libssh is available)
 	else
-		AC_MSG_ERROR(libssh is required for SSH support. Check that it is installed or use --disable-ssh option)
+      if test "x$REQUIRE_SSH" = "xyes"; then
+		   AC_MSG_ERROR(libssh is required for SSH support)
+      fi
 	fi
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
@@ -2593,7 +2645,9 @@ if test "x$DISABLE_JQ" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	if test "x$HAVE_LIBJQ" = "xyes"; then
 		AC_DEFINE(HAVE_LIBJQ, 1, Define to 1 if libjq is available)
 	else
-		AC_MSG_ERROR(libjq is required for JQ support. Check that it is installed or use --disable-jq option)
+      if test "x$REQUIRE_JQ" = "xyes"; then
+   		AC_MSG_ERROR(libjq is required for JQ support)
+      fi
 	fi
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
@@ -2607,7 +2661,7 @@ fi
 # Checks for LDAP libraries
 #--------------------------------------------------------------------
 
-if test "x$LDAP_SUPPORT" = "xyes" -a "x$DIST_BUILD" != "xyes"; then
+if test "x$DISABLE_LDAP" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	if test "$PLATFORM" = "SunOS" -a -d /usr/include/openldap; then
 		# Check for OpenLDAP in Solaris 11
 		OLD_CPPFLAGS="$CPPFLAGS"
@@ -2684,6 +2738,10 @@ if test "x$LDAP_SUPPORT" = "xyes" -a "x$DIST_BUILD" != "xyes"; then
 				])
 		fi
 	fi
+
+   if test "x$HAVE_LDAP" != "xyes" -a "x$REQUIRE_LDAP" = "xyes"; then
+      AC_MSG_ERROR(OpenLDAP is required for LDAP support)
+   fi
 	LDAP_SUPPORT="$HAVE_LDAP"
 fi
 
@@ -4118,8 +4176,7 @@ fi
 # ZeroMQ
 #--------------------------------------------------------------------
 
-check_substr "$COMPONENTS" "zeromq"
-if test $? = 0; then
+if test "x$DISABLE_ZERMQ" != "xyes"; then
 	OLD_CPPFLAGS="$CPPFLAGS"
 	OLD_LDFLAGS="$LDFLAGS"
 	OLD_LIBS="$LIBS"
@@ -4131,15 +4188,16 @@ if test $? = 0; then
 		LDFLAGS="$LDFLAGS $ZEROMQ_LDFLAGS"
 	fi
 	
+   ZEROMQ_SUPPORT="yes"
 	AC_CHECK_HEADER(zmq.h,,[
-		if test "x$ZEROMQ_REQUIRED" = "xyes"; then
+		if test "x$REQUIRE_ZEROMQ" = "xyes"; then
 			AC_MSG_ERROR([*** Cannot find zmq.h - check your ZeroMQ installation ***])
 		else
 			ZEROMQ_SUPPORT="no"
 		fi
 	])
-	AC_CHECK_LIB(zmq, zmq_ctx_new, [ SERVER_LIBS="$SERVER_LIBS -lzmq" ], [
-		if test "x$ZEROMQ_REQUIRED" = "xyes"; then
+	AC_CHECK_LIB(zmq, zmq_ctx_new, [], [
+		if test "x$REQUIRE_ZEROMQ" = "xyes"; then
 			AC_MSG_ERROR([*** libzmq is missing or too old - check your ZeroMQ installation ***])
 		else
 			ZEROMQ_SUPPORT="no"
@@ -4148,6 +4206,7 @@ if test $? = 0; then
     
 	if test "x$ZEROMQ_SUPPORT" = "xyes"; then
 		AC_DEFINE(WITH_ZMQ, 1, Define to 1 if ZeroMQ is supported)
+	   COMPONENTS="$COMPONENTS zeromq"
 	fi
 
 	CPPFLAGS="$OLD_CPPFLAGS"
@@ -4172,19 +4231,25 @@ if test "x$DISABLE_MQTT" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 		LDFLAGS="$LDFLAGS $MQTT_LDFLAGS"
 	fi
 	
-	AC_CHECK_HEADER(mosquitto.h,,[
-		AC_MSG_ERROR([*** Cannot find mosquitto.h - check your libmosquitto installation or disable MQTT support with --disable-mqtt ***])
-	])
-	AC_CHECK_LIB(mosquitto, mosquitto_lib_init, [ MQTT_LIBS="-lmosquitto" ], [
-		AC_MSG_ERROR([*** libmosquitto is missing - check your libmosquitto installation or disable MQTT support with --disable-mqtt ***])
-	])
-    
-	MQTT_SUPPORT="yes"
-	AC_DEFINE(WITH_MQTT, 1, Define to 1 if MQTT is supported)
-	SUBAGENT_DIRS="$SUBAGENT_DIRS mqtt"
+	AC_CHECK_HEADER(mosquitto.h,[
+      AC_CHECK_LIB(mosquitto, mosquitto_lib_init, [
+         MQTT_LIBS="-lmosquitto"
+         MQTT_SUPPORT="yes"
+         AC_DEFINE(WITH_MQTT, 1, Define to 1 if MQTT is supported)
+         SUBAGENT_DIRS="$SUBAGENT_DIRS mqtt"
 
-	LIBS="$LIBS $MQTT_LIBS"
-	AC_CHECK_FUNCS([mosquitto_threaded_set])
+         LIBS="$LIBS $MQTT_LIBS"
+         AC_CHECK_FUNCS([mosquitto_threaded_set])
+      ],[
+         if test "x$REQUIRE_MQTT" = "xyes"; then
+            AC_MSG_ERROR([*** libmosquitto is missing - check your libmosquitto installation ***])
+         fi
+	])
+   ],[
+      if test "x$REQUIRE_MQTT" = "xyes"; then
+		   AC_MSG_ERROR([*** Cannot find mosquitto.h - check your libmosquitto installation ***])
+      fi
+	])
 
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
@@ -4916,16 +4981,20 @@ echo "Prefix                  : ${prefix}"
 echo "Platform                : ${PLATFORM}"
 echo "Shared library suffix   : ${SHLIB_SUFFIX}"
 echo "Shared library version  : ${NETXMS_LIBRARY_VERSION}"
+if test "x${WITH_ENCRYPTION}" = "xyes"; then
+	echo "Encryption enabled      : YES"
+else
+	echo "Encryption enabled      : NO"
+fi
 if test "x$IPV6_SUPPORT" = "xyes"; then
 	echo "IPv6 support            : YES"
 else
 	echo "IPv6 support            : NO"
 fi
-if test "x${MQTT_SUPPORT}" = "xyes"; then
-	echo "MQTT support            : YES"
-else
-	echo "MQTT support            : NO"
+if test "x${JDK_LOCATION}" != "x"; then
+	echo "JDK location            : ${JDK_LOCATION}"
 fi
+
 if test "x${BUILD_SERVER}" = "xyes"; then
 	echo "Build Server            : YES"
 	echo "Server libs             : ${SERVER_LIBS}"
@@ -4948,10 +5017,6 @@ else
 	echo "Build Server            : NO"
 fi
 
-if test "x${JDK_LOCATION}" != "x"; then
-	echo "JDK location            : ${JDK_LOCATION}"
-fi
-
 if test "x${PYTHON_SUPPORT}" = "xyes"; then
 	echo "Python support          : YES"
 	echo "Python version          : $PYTHON_VERSION"
@@ -4968,20 +5033,36 @@ if test "x${PYTHON_LIBS}" != "x"; then
 	echo "Python LIBS             : ${PYTHON_LIBS}"
 fi
 
-if test "x${WITH_ENCRYPTION}" = "xyes"; then
-	echo "Encryption enabled      : YES"
+if test "x${HAVE_LIBCURL}" = "xyes"; then
+	echo "cURL support            : YES"
 else
-	echo "Encryption enabled      : NO"
-fi
-if test "x${HAVE_LIBSSH}" = "xyes"; then
-	echo "SSH support enabled     : YES"
-else
-	echo "SSH support enabled     : NO"
+	echo "cURL support            : NO"
 fi
 if test "x${HAVE_LIBJQ}" = "xyes"; then
-	echo "JQ support enabled      : YES"
+	echo "JQ support              : YES"
 else
-	echo "JQ support enabled      : NO"
+	echo "JQ support              : NO"
+fi
+if test "x${HAVE_LIBSSH}" = "xyes"; then
+	echo "SSH support             : YES"
+else
+	echo "SSH support             : NO"
+fi
+if test "x${MQTT_SUPPORT}" = "xyes"; then
+	echo "MQTT support            : YES"
+else
+	echo "MQTT support            : NO"
+fi
+if test "x${ZEROMQ_SUPPORT}" = "xyes"; then
+	echo "ZeroMQ support          : YES"
+   if test "x${ZEROMQ_CPPFLAGS}" != "x"; then
+      echo "ZeroMQ CPPFLAGS         : ${ZEROMQ_CPPFLAGS}"
+   fi
+   if test "x${ZEROMQ_LDFLAGS}" != "x"; then
+      echo "ZeroMQ LDFLAGS          : ${ZEROMQ_LDFLAGS}"
+   fi
+else
+	echo "ZeroMQ support          : NO"
 fi
 if test "x${DB_DRIVERS}" != "x"; then
 	echo "Build DB-Drivers        :${DB_DRIVERS}"
@@ -5147,13 +5228,6 @@ if test "x${MONGODB_CPPFLAGS}" != "x"; then
 fi
 if test "x${MONGODB_LDFLAGS}" != "x"; then
 	echo "MongoDB LDFLAGS         : ${MONGODB_LDFLAGS}"
-fi
-
-if test "x${ZEROMQ_CPPFLAGS}" != "x"; then
-	echo "ZeroMQ CPPFLAGS         : ${ZEROMQ_CPPFLAGS}"
-fi
-if test "x${ZEROMQ_LDFLAGS}" != "x"; then
-	echo "ZeroMQ LDFLAGS          : ${ZEROMQ_LDFLAGS}"
 fi
 
 if test "x${ASTERISK_LIBS}" != "x"; then
