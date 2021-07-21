@@ -1,6 +1,6 @@
 /*
 ** NetXMS GPS receiver subagent
-** Copyright (C) 2006-2016 Raden Solutions
+** Copyright (C) 2006-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,6 +26,8 @@
 #include <math.h>
 #include "nmea.h"
 
+#define DEBUG_TAG _T("gps")
+
 /**
  * Port name
  */
@@ -34,7 +36,7 @@ static TCHAR s_device[MAX_PATH];
 /**
  * UERE (User Equivalent Range Error)
  */
-static INT32 s_uere = 32;
+static int32_t s_uere = 32;
 
 /**
  * NMEA info
@@ -64,22 +66,22 @@ static Serial s_serial;
 static bool InitSerialPort()
 {
    bool success = false;
-   TCHAR *portName;
 
+   TCHAR *portName;
    if (s_device[0] == 0)
    {
 #ifdef _WIN32
-      portName = _tcsdup(_T("COM1:"));
+      portName = MemCopyString(_T("COM1:"));
 #else
-      portName = _tcsdup(_T("/dev/ttyS0"));
+      portName = MemCopyString(_T("/dev/ttyS0"));
 #endif
    }
    else
    {
-      portName = _tcsdup(s_device);
+      portName = MemCopyString(s_device);
    }
 
-   AgentWriteDebugLog(1, _T("GPS: using serial port configuration \"%s\""), portName);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Using serial port configuration \"%s\" for GPS receiver"), portName);
 
    TCHAR *p;
    const TCHAR *parityAsText;
@@ -88,24 +90,24 @@ static bool InitSerialPort()
    int parity = NOPARITY;
    int stopBits = ONESTOPBIT;
 
-   if ((p = _tcschr(portName, _T(','))) != NULL)
+   if ((p = _tcschr(portName, _T(','))) != nullptr)
    {
       *p = 0; p++;
-      int tmp = _tcstol(p, NULL, 10);
+      int tmp = _tcstol(p, nullptr, 10);
       if (tmp != 0)
       {
          portSpeed = tmp;
 
-         if ((p = _tcschr(p, _T(','))) != NULL)
+         if ((p = _tcschr(p, _T(','))) != nullptr)
          {
             *p = 0; p++;
-            tmp = _tcstol(p, NULL, 10);
+            tmp = _tcstol(p, nullptr, 10);
             if (tmp >= 5 && tmp <= 8)
             {
                dataBits = tmp;
 
                // parity
-               if ((p = _tcschr(p, _T(','))) != NULL)
+               if ((p = _tcschr(p, _T(','))) != nullptr)
                {
                   *p = 0; p++;
                   switch (tolower((char)*p))
@@ -122,7 +124,7 @@ static bool InitSerialPort()
                   }
 
                   // stop bits
-                  if ((p = _tcschr(p, _T(','))) != NULL)
+                  if ((p = _tcschr(p, _T(','))) != nullptr)
                   {
                      *p = 0; p++;
 
@@ -149,12 +151,12 @@ static bool InitSerialPort()
          parityAsText = _T("NONE");
          break;
    }
-   AgentWriteDebugLog(1, _T("GPS: initialize for port=\"%s\", speed=%d, data=%d, parity=%s, stop=%d"),
-                      portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Initialize serial communications for GPS receiver: port=\"%s\", speed=%d, data=%d, parity=%s, stop=%d"),
+         portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1);
 
    if (s_serial.open(portName))
    {
-      AgentWriteDebugLog(5, _T("GPS: port opened"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("GPS receiver serial port opened"));
       s_serial.setTimeout(2000);
 
       if (s_serial.set(portSpeed, dataBits, parity, stopBits))
@@ -163,14 +165,14 @@ static bool InitSerialPort()
       }
       else
       {
-         AgentWriteDebugLog(5, _T("GPS: cannot set port parameters"));
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Cannot set serial port parameters for GPS receiver"));
       }
 
-      AgentWriteLog(NXLOG_INFO, _T("GPS: serial port initialized"));
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("GPS receiver serial port initialized"));
    }
    else
    {
-      AgentWriteLog(NXLOG_WARNING, _T("GPS: Unable to open serial port"));
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Unable to open GPS receiver serial port"));
    }
 
    free(portName);
@@ -193,9 +195,9 @@ inline double NMEA_TO_DEG(double nm)
 /**
  * Poller thread
  */
-static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
+static void PollerThread()
 {
-   AgentWriteDebugLog(3, _T("GPS: poller thread started"));
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("GPS poller thread started"));
 
    nmeaPARSER parser;
    nmea_zero_INFO(&s_nmeaInfo);
@@ -205,28 +207,28 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
    {
       if (!s_serial.restart())
       {
-         AgentWriteDebugLog(7, _T("GPS: cannot open serial port"));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Cannot open GPS receiver serial port"));
          continue;
       }
 
       while(!AgentSleepAndCheckForShutdown(0))
       {
-         static const char *marks[] = { "\r\n", NULL };
+         static const char *marks[] = { "\r\n", nullptr };
          char *occ, buffer[128];
          if (s_serial.readToMark(buffer, 128, marks, &occ) <= 0)
          {
-            AgentWriteDebugLog(8, _T("GPS: serial port read failure"));
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("GPS receiver serial port read failure"));
             break;
          }
 
-         if (occ != NULL)
+         if (occ != nullptr)
          {
             MutexLock(s_nmeaInfoLock);
             int count = nmea_parse(&parser, buffer, (int)strlen(buffer), &s_nmeaInfo);
             if (count > 0)
             {
                s_geolocation = GeoLocation(GL_GPS, NMEA_TO_DEG(s_nmeaInfo.lat), NMEA_TO_DEG(s_nmeaInfo.lon),
-                                           (int)(s_nmeaInfo.HDOP * s_uere), time(NULL));
+                                           (int)(s_nmeaInfo.HDOP * s_uere), time(nullptr));
             }
             MutexUnlock(s_nmeaInfoLock);
          }
@@ -234,8 +236,7 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
    }
 
    nmea_parser_destroy(&parser);
-   AgentWriteDebugLog(3, _T("GPS: poller thread stopped"));
-   return THREAD_OK;
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("GPS poller thread stopped"));
 }
 
 /**
@@ -251,18 +252,18 @@ static bool SubAgentInit(Config *config)
 	// Parse configuration
    s_uere = config->getValueAsInt(_T("/GPS/UERE"), s_uere);
 	const TCHAR *value = config->getValue(_T("/GPS/Device"));
-	if (value != NULL)
+	if (value != nullptr)
 	{
-		nx_strncpy(s_device, value, MAX_PATH);
+		_tcslcpy(s_device, value, MAX_PATH);
 		InitSerialPort();
-		s_pollerThread = ThreadCreateEx(PollerThread, 0, NULL);
+		s_pollerThread = ThreadCreateEx(PollerThread);
 	}
 	else
 	{
-		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("GPS: device not specified"));
+		nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("GPS receiver device not specified"));
 	}
 
-	return value != NULL;
+	return value != nullptr;
 }
 
 /**
@@ -317,7 +318,7 @@ static LONG H_LocationInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
          _sntprintf(value, MAX_RESULT_LENGTH, _T("%d,%d,%f,%f,%d,%f,%f,%f,%f,") INT64_FMT,
                     s_nmeaInfo.sig, s_nmeaInfo.fix, s_geolocation.getLatitude(), s_geolocation.getLongitude(),
                     s_geolocation.getAccuracy(), s_nmeaInfo.elv, s_nmeaInfo.speed, s_nmeaInfo.direction,
-                    s_nmeaInfo.HDOP, (INT64)s_geolocation.getTimestamp());
+                    s_nmeaInfo.HDOP, static_cast<int64_t>(s_geolocation.getTimestamp()));
          break;
       case 'O': // longitude as text
          ret_string(value, s_geolocation.getLongitudeAsString());
@@ -367,7 +368,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("GPS.Satellites.InUse"), H_LocationInfo, _T("S"), DCI_DT_INT, _T("GPS: satellites in use") },
    { _T("GPS.Satellites.InView"), H_LocationInfo, _T("s"), DCI_DT_INT, _T("GPS: satellites in view") },
    { _T("GPS.Speed"), H_LocationInfo, _T("X"), DCI_DT_FLOAT, _T("GPS: ground speed") },
-	{ _T("GPS.SerialConfig"), H_Config, NULL, DCI_DT_STRING, _T("GPS: serial port configuration") },
+	{ _T("GPS.SerialConfig"), H_Config, nullptr, DCI_DT_STRING, _T("GPS: serial port configuration") },
    { _T("GPS.VDOP"), H_LocationInfo, _T("V"), DCI_DT_FLOAT, _T("GPS: vertical delusion of precision") }
 };
 
@@ -378,13 +379,13 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("GPS"), NETXMS_VERSION_STRING,
-	SubAgentInit, SubAgentShutdown, NULL, NULL,
+	SubAgentInit, SubAgentShutdown, nullptr, nullptr,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	0, NULL,	// lists
-	0, NULL,	// tables
-   0, NULL, // actions
-	0, NULL	// push parameters
+	0, nullptr,	// lists
+	0, nullptr,	// tables
+   0, nullptr, // actions
+	0, nullptr	// push parameters
 };
 
 /**
