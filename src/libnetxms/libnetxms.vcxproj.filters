@@ -323,7 +323,7 @@
     <ClInclude Include="StackWalker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="strmap-internal.h">
+    <ClInclude Include="..\..\include\strmap-internal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\unicode.h">

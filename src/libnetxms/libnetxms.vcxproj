@@ -298,7 +298,7 @@
     <ClInclude Include="sha1.h" />
     <ClInclude Include="sha2.h" />
     <ClInclude Include="StackWalker.h" />
-    <ClInclude Include="strmap-internal.h" />
+    <ClInclude Include="..\..\include\strmap-internal.h" />
     <ClInclude Include="unicode_cc.h" />
   </ItemGroup>
   <ItemGroup>

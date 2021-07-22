@@ -29,6 +29,7 @@
 #include <nms_threads.h>
 #include <time.h>
 #include <jansson.h>
+#include <strmap-internal.h>
 
 // JSON_EMBED was added in jansson 2.10 - ignore it for older version
 #ifndef JSON_EMBED
@@ -1728,6 +1729,72 @@ public:
 
    void setContext(void *context) { m_context = context; }
    void *getContext() const { return m_context; }
+
+   class iterator
+   {
+      StringMapEntry *m_currentData;
+
+   public:
+
+      std::pair<const TCHAR*, void*> operator* ()
+      {
+         static const TCHAR* key = _T("key");
+         static int value = 10;
+         return std::pair<const TCHAR*, void*>(this->key(), this->value());
+      }
+
+      iterator() { m_currentData = nullptr; }
+      iterator(StringMapEntry *firstElement) { m_currentData = firstElement; }
+      bool operator==(const iterator& other) 
+      {
+         if(this->key() == nullptr && other.key() == nullptr)
+         {
+            return true;
+         }
+         else if(this->key() == nullptr || other.key() == nullptr)
+         {
+            return false;
+         }
+         return (_tcscmp(this->key(), other.key()) == 0) ? true : false; 
+      }
+      bool operator!=(const iterator& other) { return !(*this == other); }
+
+      // Prefix increment operator.
+      iterator& operator++()
+      {
+         //some incrementing
+         m_currentData = (StringMapEntry *)m_currentData->hh.next;
+         return *this;
+      }
+
+      // Postfix increment operator.
+      iterator operator++(int)
+      {
+         iterator temp = *this;
+         ++*this;
+         return temp;
+      }
+
+      const TCHAR* key() const
+      {
+         return m_currentData == nullptr ? nullptr : m_currentData->originalKey != nullptr ? m_currentData->originalKey : m_currentData->key;
+      }
+
+      void* value()
+      {
+         return m_currentData == nullptr ? nullptr : m_currentData->value;
+      }     
+   };
+
+   iterator begin()
+   {
+      return iterator(m_data);
+   }
+
+   iterator end()
+   {
+      return iterator();
+   }
 };
 
 /**
@@ -1989,6 +2056,9 @@ public:
    void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) const;
    void loadMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 countId);
    json_t *toJson() const;
+
+   TCHAR ** begin() { return &m_values[0]; }
+   TCHAR ** end() { return &m_values[m_count]; }
 };
 
 /**
