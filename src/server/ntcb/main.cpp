@@ -175,12 +175,11 @@ static void ShutdownModule()
 
    nxlog_debug_tag(DEBUG_TAG_NTCB, 2, _T("Terminating active NTCB sessions"));
    RWLockReadLock(s_sessionListLock);
-   auto it = s_sessions.iterator();
-   while(it->hasNext())
+   auto it = s_sessions.begin();
+   while(it.hasNext())
    {
-      it->next()->get()->terminate();
+      it.next()->get()->terminate();
    }
-   delete it;
    RWLockUnlock(s_sessionListLock);
 
    while(true)
@@ -216,15 +215,14 @@ static bool ConsoleCommandHandler(const TCHAR *command, ServerConsole *console)
       console->print(_T(" ID  | Address         | Device\n"));
       console->print(_T("-----+-----------------+-----------------------------------------------\n"));
       RWLockReadLock(s_sessionListLock);
-      auto it = s_sessions.iterator();
-      while(it->hasNext())
+      auto it = s_sessions.begin();
+      while(it.hasNext())
       {
-         NTCBDeviceSession *session = it->next()->get();
+         NTCBDeviceSession *session = it.next()->get();
          shared_ptr<MobileDevice> device = session->getDevice();
          console->printf(_T(" %3d | %-15s | %s\n"), session->getId(), session->getAddress().toString().cstr(),
                   (device != nullptr) ? device->getName() : _T(""));
       }
-      delete it;
       RWLockUnlock(s_sessionListLock);
    }
    else

@@ -205,6 +205,14 @@ int HashMapBase::size() const
 }
 
 /**
+ * ********************************************************
+ * 
+ * Hash map iterator
+ * 
+ * ********************************************************
+ */
+
+/**
  * Hash map iterator
  */
 HashMapIterator::HashMapIterator(HashMapBase *hashMap)
@@ -212,6 +220,16 @@ HashMapIterator::HashMapIterator(HashMapBase *hashMap)
    m_hashMap = hashMap;
    m_curr = nullptr;
    m_next = nullptr;
+}
+
+/**
+ * Hash map iterator copy constructor
+ */
+HashMapIterator::HashMapIterator(const HashMapIterator& other)
+{
+   m_hashMap = other.m_hashMap;
+   m_curr = other.m_curr;
+   m_next = other.m_next;
 }
 
 /**
@@ -273,4 +291,75 @@ void HashMapIterator::unlink()
    HASH_DEL(m_hashMap->m_data, m_curr);
    DELETE_KEY(m_hashMap, m_curr);
    MemFree(m_curr);
+}
+
+/**
+ * Check iterators equality
+ */
+bool HashMapIterator::equal(AbstractIterator* other)
+{
+   if (other != nullptr)
+   {
+      auto otherIterator = static_cast<HashMapIterator*>(other);
+      void* data = key();
+      void* otherData = otherIterator->key();
+      if (data == nullptr && otherData == nullptr)
+      {
+         return true;
+      }
+      else if (data == nullptr || otherData == nullptr)
+      {
+         return false;
+      }
+      if(m_hashMap->m_keylen != otherIterator->m_hashMap->m_keylen)
+      {
+         return false;
+      }
+      return memcmp(data, otherData, m_hashMap->m_keylen) == 0;
+   }
+   return false;
+}
+
+/**
+ * Get current value
+ */
+void* HashMapIterator::value()
+{
+   void* retVal = nullptr;
+   if (m_hashMap->m_data == nullptr) //no data
+      return retVal;
+
+   if (m_curr == nullptr)  // iteration not started
+   {
+      retVal = m_hashMap->m_data->value;
+   }
+   else
+   {
+      if (m_next == nullptr)
+         return retVal;
+      retVal = m_next->value;
+   }
+   return retVal;
+}
+
+/**
+ * Get current key
+ */
+void* HashMapIterator::key()
+{
+   void* retVal = nullptr;
+   if (m_hashMap == nullptr || m_hashMap->m_data == nullptr) //no data
+      return retVal;
+
+   if (m_curr == nullptr)  // iteration not started
+   {
+      retVal = m_hashMap->m_keylen <= 16 ? m_hashMap->m_data->key.d : m_hashMap->m_data->key.p;
+   }
+   else
+   {
+      if (m_next == nullptr)
+         return retVal;
+      retVal = m_hashMap->m_keylen <= 16 ? m_next->key.d : m_next->key.p;
+   }
+   return retVal;
 }

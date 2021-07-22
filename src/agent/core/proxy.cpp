@@ -95,17 +95,16 @@ static void SaveProxyConfiguration(UINT64 serverId, HashMap<ServerObjectKey, Dat
    }
 
    bool success = true;
-   Iterator<DataCollectionProxy> *it = proxyList->iterator();
-   while(it->hasNext() && success)
+   Iterator<DataCollectionProxy> it = proxyList->begin();
+   while(it.hasNext() && success)
    {
-      DataCollectionProxy *dcp = it->next();
+      DataCollectionProxy *dcp = it.next();
       DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, dcp->getServerId());
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dcp->getProxyId());
       DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, dcp->getAddress());
       success = DBExecute(hStmt);
    }
    DBFreeStatement(hStmt);
-   delete it;
 
    if(success)
    {
@@ -284,17 +283,16 @@ void ProxyConnectionChecker()
    bool reschedule = false;
    g_proxyListMutex.lock();
 
-   Iterator<DataCollectionProxy> *it = g_proxyList.iterator();
-   while (it->hasNext())
+   Iterator<DataCollectionProxy> it = g_proxyList.begin();
+   while (it.hasNext())
    {
-      DataCollectionProxy *dcProxy = it->next();
+      DataCollectionProxy *dcProxy = it.next();
       if (dcProxy->isInUse())
       {
          reschedule = true;
          dcProxy->checkConnection();
       }
    }
-   delete it;
 
    s_proxyConnectionCheckScheduled = reschedule;
    if (reschedule)
@@ -309,10 +307,10 @@ void ProxyConnectionChecker()
 void UpdateProxyConfiguration(uint64_t serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone)
 {
    g_proxyListMutex.lock();
-   Iterator<DataCollectionProxy> *it = proxyList->iterator();
-   while(it->hasNext())
+   Iterator<DataCollectionProxy> it = proxyList->begin();
+   while(it.hasNext())
    {
-      DataCollectionProxy *dcpNew = it->next();
+      DataCollectionProxy *dcpNew = it.next();
       DataCollectionProxy *dcpOld = g_proxyList.get(dcpNew->getKey());
       if (dcpOld != NULL)
       {
@@ -323,22 +321,20 @@ void UpdateProxyConfiguration(uint64_t serverId, HashMap<ServerObjectKey, DataCo
          g_proxyList.set(dcpNew->getKey(), new DataCollectionProxy(dcpNew));
       }
    }
-   delete it;
 
-   it = g_proxyList.iterator();
-   while(it->hasNext())
+   it = g_proxyList.begin();
+   while(it.hasNext())
    {
-      DataCollectionProxy *dcpOld = it->next();
+      DataCollectionProxy *dcpOld = it.next();
       if (dcpOld->getServerId() == serverId)
       {
          DataCollectionProxy *dcpNew = proxyList->get(dcpOld->getKey());
          if(dcpNew == NULL)
          {
-            it->remove();
+            it.remove();
          }
       }
    }
-   delete it;
    if (!s_proxyConnectionCheckScheduled)
       ThreadPoolScheduleRelative(g_dataCollectorPool, 0, ProxyConnectionChecker);
 
@@ -456,10 +452,10 @@ LONG H_ZoneProxies(const TCHAR *param, const TCHAR *arg, Table *value, AbstractC
    value->addColumn(_T("IN_USE"), DCI_DT_STRING, _T("In use"));
 
    g_proxyListMutex.lock();
-   Iterator<DataCollectionProxy> *it = g_proxyList.iterator();
-   while(it->hasNext())
+   Iterator<DataCollectionProxy> it = g_proxyList.begin();
+   while(it.hasNext())
    {
-      DataCollectionProxy *proxy = it->next();
+      DataCollectionProxy *proxy = it.next();
 
       TCHAR serverId[20];
       _sntprintf(serverId, 20, UINT64X_FMT(_T("016")), proxy->getServerId());
@@ -471,7 +467,6 @@ LONG H_ZoneProxies(const TCHAR *param, const TCHAR *arg, Table *value, AbstractC
       value->set(3, proxy->isConnected() ? _T("YES") : _T("NO"));
       value->set(4, proxy->isInUse() ? _T("YES") : _T("NO"));
    }
-   delete it;
    g_proxyListMutex.unlock();
 
    return SYSINFO_RC_SUCCESS;
@@ -488,10 +483,10 @@ LONG H_ZoneConfigurations(const TCHAR *param, const TCHAR *arg, Table *value, Ab
    value->addColumn(_T("SECRET"), DCI_DT_STRING, _T("Secret"));
 
    g_proxyListMutex.lock();
-   Iterator<ZoneConfiguration> *it = g_proxyserverConfList->iterator();
-   while(it->hasNext())
+   Iterator<ZoneConfiguration> it = g_proxyserverConfList->begin();
+   while(it.hasNext())
    {
-      ZoneConfiguration *zone = it->next();
+      ZoneConfiguration *zone = it.next();
 
       TCHAR serverId[20];
       _sntprintf(serverId, 20, UINT64X_FMT(_T("016")), zone->getServerId());
@@ -506,7 +501,6 @@ LONG H_ZoneConfigurations(const TCHAR *param, const TCHAR *arg, Table *value, Ab
          value->set(3, BinToStr(zone->getSharedSecret(), ZONE_PROXY_KEY_LENGTH, text));
       }
    }
-   delete it;
    g_proxyListMutex.unlock();
 
    return SYSINFO_RC_SUCCESS;

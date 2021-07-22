@@ -1349,14 +1349,13 @@ DataCollectionError DataCollectionTarget::queryWebService(const TCHAR *param, We
    StringBuffer url = expandText(d->getUrl(), nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, &args);
 
    StringMap headers;
-   auto it = d->getHeaders().constIterator();
-   while(it->hasNext())
+   auto it = d->getHeaders().begin();
+   while(it.hasNext())
    {
-      auto h = it->next();
+      auto h = it.next();
       StringBuffer value = expandText(h->second, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, &args);
       headers.set(h->first, value);
    }
-   delete it;
 
    StringList pathList;
    pathList.add(path);

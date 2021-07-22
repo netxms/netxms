@@ -192,14 +192,13 @@ void GetAlarmCategories(NXCPMessage *msg)
    s_lock.readLock();
    msg->setField(VID_NUM_ELEMENTS, s_categories.size());
    UINT32 fieldId = VID_ELEMENT_LIST_BASE;
-   Iterator<AlarmCategory> *it = s_categories.iterator();
-   while(it->hasNext())
+   Iterator<AlarmCategory> it = s_categories.begin();
+   while(it.hasNext())
    {
-      AlarmCategory *c = it->next();
+      AlarmCategory *c = it.next();
       c->fillMessage(msg, fieldId);
       fieldId += 10;
    }
-   delete it;
    s_lock.unlock();
 }
 
@@ -396,10 +395,10 @@ uint32_t UpdateAlarmCategoryDescription(const TCHAR *name, const TCHAR *descript
 {
    uint32_t id = 0;
    s_lock.readLock();
-   Iterator<AlarmCategory> *it = s_categories.iterator();
-   while(it->hasNext())
+   Iterator<AlarmCategory> it = s_categories.begin();
+   while(it.hasNext())
    {
-     AlarmCategory *c = it->next();
+     AlarmCategory *c = it.next();
      if (!_tcscmp(c->getName(), name))
      {
         c->updateDescription(description);
@@ -407,7 +406,6 @@ uint32_t UpdateAlarmCategoryDescription(const TCHAR *name, const TCHAR *descript
         break;
      }
    }
-   delete it;
    s_lock.unlock();
    return id;
 }

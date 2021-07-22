@@ -383,6 +383,14 @@ void *Array::find(const void *key, int (*cb)(const void *, const void *)) const
 }
 
 /**
+ * ********************************************************
+ * 
+ * Array iterator
+ * 
+ * ********************************************************
+ */
+
+/**
  * Array iterator
  */
 ArrayIterator::ArrayIterator(Array *array)
@@ -433,4 +441,24 @@ void ArrayIterator::unlink()
 
    m_array->unlink(m_pos);
    m_pos--;
+}
+
+/**
+ * Check iterators equality
+ */
+bool ArrayIterator::equal(AbstractIterator* other)
+{
+   if(other != nullptr)
+   {
+      return m_pos == static_cast<ArrayIterator*>(other)->m_pos;
+   }
+   return false;
+}
+
+/**
+ * Get current value
+ */
+void* ArrayIterator::value()
+{
+   return m_array->get(m_pos);
 }

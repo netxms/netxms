@@ -53,17 +53,16 @@ void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb, UINT32 retentionTime)
 {
    g_userAgentNotificationListMutex.lock();
    time_t now = time(nullptr);
-   Iterator<UserAgentNotificationItem> *it = g_userAgentNotificationList.iterator();
-   while (it->hasNext())
+   Iterator<UserAgentNotificationItem> it = g_userAgentNotificationList.begin();
+   while (it.hasNext())
    {
-      UserAgentNotificationItem *uan = it->next();
+      UserAgentNotificationItem *uan = it.next();
       if((now - uan->getEndTime()) >= retentionTime && uan->hasNoRef())
       {
-         it->remove();
+         it.remove();
          break;
       }
    }
-   delete it;
    g_userAgentNotificationListMutex.unlock();
 
    TCHAR query[256];

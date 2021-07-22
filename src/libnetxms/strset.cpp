@@ -305,56 +305,31 @@ String StringSet::join(const TCHAR *separator)
 }
 
 /**
+ * ********************************************************
+ * 
+ * String set iterator
+ * 
+ * ********************************************************
+ */
+
+/**
  * String set iterator
  */
-StringSetConstIterator::StringSetConstIterator(const StringSet *stringSet)
+StringSetIterator::StringSetIterator(const StringSet *stringSet)
 {
-   m_stringSet = stringSet;
+   m_stringSet = const_cast<StringSet *>(stringSet);
    m_curr = nullptr;
    m_next = nullptr;
 }
 
 /**
- * Next element availability indicator
+ * Hash map iterator copy constructor
  */
-bool StringSetConstIterator::hasNext()
+StringSetIterator::StringSetIterator(const StringSetIterator& other)
 {
-   if (m_stringSet->m_data == nullptr)
-      return false;
-
-   return (m_curr != nullptr) ? (m_next != nullptr) : true;
-}
-
-/**
- * Get next element
- */
-void *StringSetConstIterator::next()
-{
-   if (m_stringSet->m_data == nullptr)
-      return nullptr;
-
-   if (m_curr == nullptr)  // iteration not started
-   {
-      m_curr = m_stringSet->m_data;
-   }
-   else
-   {
-      if (m_next == nullptr)
-         return nullptr;
-      m_curr = m_next;
-   }
-   m_next = static_cast<StringSetEntry*>(m_curr->hh.next);
-   return m_curr->str;
-}
-
-/**
- * String set iterator
- */
-StringSetIterator::StringSetIterator(StringSet *stringSet)
-{
-   m_stringSet = stringSet;
-   m_curr = nullptr;
-   m_next = nullptr;
+   m_stringSet = other.m_stringSet;
+   m_curr = other.m_curr;
+   m_next = other.m_next;
 }
 
 /**
@@ -413,4 +388,54 @@ void StringSetIterator::unlink()
 
    HASH_DEL(m_stringSet->m_data, m_curr);
    MemFree(m_curr);
+}
+
+/**
+ * Check iterators equality
+ */
+bool StringSetIterator::equal(AbstractIterator* other)
+{
+   if (other != nullptr)
+   {
+      auto otherIterator = static_cast<StringSetIterator*>(other);
+      const TCHAR* data = (const TCHAR*)value();
+      const TCHAR* otherData = (const TCHAR*)otherIterator->value();
+      if (data == nullptr && otherData == nullptr)
+      {
+         return true;
+      }
+      else if (data == nullptr || otherData == nullptr)
+      {
+         return false;
+      }
+      size_t sz = _tcslen(data);
+      if(sz != _tcslen(otherData))
+      {
+         return false;
+      }
+      return _tcsncmp(data, otherData, sz) == 0;
+   }
+   return false;
+}
+
+/**
+ * Get current value
+ */
+void* StringSetIterator::value()
+{
+   void* retVal = nullptr;
+   if (m_stringSet == nullptr || m_stringSet->m_data == nullptr) //no data
+      return retVal;
+
+   if (m_curr == nullptr)  // iteration not started
+   {
+      retVal = m_stringSet->m_data->str;
+   }
+   else
+   {
+      if (m_next == nullptr)
+         return retVal;
+      retVal = m_next->str;
+   }
+   return retVal;
 }

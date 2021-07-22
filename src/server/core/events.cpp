@@ -532,14 +532,13 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
          uint32_t dciId, const StringMap& args)
 {
    init(eventTemplate, origin, originTimestamp, sourceId, dciId);
-   auto it = args.constIterator();
-   while(it->hasNext())
+   auto it = args.begin();
+   while(it.hasNext())
    {
-      auto p = it->next();
+      auto p = it.next();
       m_parameterNames.add(p->first);
       m_parameters.add(MemCopyString(p->second));
    }
-   delete it;
 }
 
 /**
@@ -739,14 +738,13 @@ void Event::getTagsAsList(StringBuffer *sb) const
    if (m_tags.isEmpty())
       return;
 
-   ConstIterator<const TCHAR> *it = m_tags.constIterator();
-   sb->append(it->next());
-   while(it->hasNext())
+   auto it = m_tags.begin();
+   sb->append(it.next());
+   while(it.hasNext())
    {
       sb->append(_T(','));
-      sb->append(it->next());
+      sb->append(it.next());
    }
-   delete it;
 }
 
 /**
@@ -773,12 +771,11 @@ json_t *Event::toJson()
    if (!m_tags.isEmpty())
    {
       json_t *tags = json_array();
-      ConstIterator<const TCHAR> *it = m_tags.constIterator();
-      while(it->hasNext())
+      auto it = m_tags.begin();
+      while(it.hasNext())
       {
-         json_array_append_new(tags, json_string_t(it->next()));
+         json_array_append_new(tags, json_string_t(it.next()));
       }
-      delete it;
       json_object_set_new(root, "tags", tags);
    }
    else
@@ -1793,13 +1790,12 @@ void GetEventConfiguration(NXCPMessage *msg)
    RWLockWriteLock(s_eventTemplatesLock);
    UINT32 base = VID_ELEMENT_LIST_BASE;
    msg->setField(VID_NUM_EVENTS, s_eventTemplates.size());
-   auto it = s_eventTemplates.iterator();
-   while(it->hasNext())
+   auto it = s_eventTemplates.begin();
+   while(it.hasNext())
    {
-      auto e = it->next();
+      auto e = it.next();
       (*e)->fillMessage(msg, base);
       base += 10;
    }
-   delete it;
    RWLockUnlock(s_eventTemplatesLock);
 }

@@ -255,18 +255,16 @@ static void PrintConfig(const TCHAR *pattern)
    }
 
    int flen = 0;
-   auto it = variables->iterator();
-   while(it->hasNext())
-      flen = std::max(flen, static_cast<int>(_tcslen(it->next()->first)));
-   delete it;
+   auto it = variables->begin();
+   while(it.hasNext())
+      flen = std::max(flen, static_cast<int>(_tcslen(it.next()->first)));
 
-   it = variables->iterator();
-   while(it->hasNext())
+   it = variables->begin();
+   while(it.hasNext())
    {
-      auto v = it->next();
+      auto v = it.next();
       _tprintf(_T("%*s = %s\n"), -flen, v->first, v->second);
    }
-   delete it;
    delete variables;
 }
 

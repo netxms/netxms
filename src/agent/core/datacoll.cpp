@@ -997,16 +997,15 @@ static void ReconciliationThread()
          {
             DBBegin(hdb);
             TCHAR query[256];
-            auto it = s_items.iterator();
-            while(it->hasNext())
+            auto it = s_items.begin();
+            while(it.hasNext())
             {
-               DataCollectionItem *dci = it->next()->get();
+               DataCollectionItem *dci = it.next()->get();
                _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"),
                           (UINT64)dci->getLastPollTime(), (UINT64)dci->getServerId(), dci->getId());
                DBQuery(hdb, query);
             }
             DBCommit(hdb);
-            delete it;
             s_pollTimeChanged = false;
          }
          s_itemLock.unlock();
@@ -1331,10 +1330,10 @@ static uint32_t DataCollectionSchedulerRun()
 
    s_itemLock.lock();
    time_t now = time(nullptr);
-   auto it = s_items.iterator();
-   while(it->hasNext())
+   auto it = s_items.begin();
+   while(it.hasNext())
    {
-      DataCollectionItem *dci = it->next()->get();
+      DataCollectionItem *dci = it.next()->get();
       uint32_t timeToPoll = dci->getTimeToNextPoll(now);
       if (timeToPoll == 0)
       {
@@ -1378,7 +1377,6 @@ static uint32_t DataCollectionSchedulerRun()
       if (sleepTime > timeToPoll)
          sleepTime = timeToPoll;
    }
-   delete it;
    s_itemLock.unlock();
    return sleepTime;
 }
@@ -1472,10 +1470,10 @@ void ConfigureDataCollection(uint64_t serverId, const NXCPMessage& request)
    s_itemLock.lock();
 
    // Update and add new
-   auto it = config.iterator();
-   while(it->hasNext())
+   auto it = config.begin();
+   while(it.hasNext())
    {
-      shared_ptr<DataCollectionItem> item(*it->next());
+      shared_ptr<DataCollectionItem> item(*it.next());
       shared_ptr<DataCollectionItem> existingItem = s_items.getShared(item->getKey());
       if (existingItem != nullptr)
       {
@@ -1506,13 +1504,12 @@ void ConfigureDataCollection(uint64_t serverId, const NXCPMessage& request)
          }
       }
    }
-   delete it;
 
    // Remove non-existing configuration
-   it = s_items.iterator();
-   while(it->hasNext())
+   it = s_items.begin();
+   while(it.hasNext())
    {
-      shared_ptr<DataCollectionItem> item(*it->next());
+      shared_ptr<DataCollectionItem> item(*it.next());
       if (item->getServerId() != serverId)
          continue;
 
@@ -1524,10 +1521,9 @@ void ConfigureDataCollection(uint64_t serverId, const NXCPMessage& request)
             txnOpen = true;
          }
          item->deleteFromDatabase(hdb, &statements);
-         it->remove();
+         it.remove();
       }
    }
-   delete it;
 
    if (txnOpen)
       DBCommit(hdb);
@@ -1625,18 +1621,17 @@ static void ClearStalledOfflineData(void *arg)
 
    s_serverSyncStatusLock.lock();
    time_t expirationTime = time(nullptr) - g_dcOfflineExpirationTime * 86400;
-   Iterator<ServerSyncStatus> *it = s_serverSyncStatus.iterator();
-   while(it->hasNext())
+   Iterator<ServerSyncStatus> it = s_serverSyncStatus.begin();
+   while(it.hasNext())
    {
-      ServerSyncStatus *status = it->next();
+      ServerSyncStatus *status = it.next();
       if ((status->queueSize > 0) && (status->lastSync < expirationTime))
       {
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Offline data for server ID ") UINT64X_FMT(_T("016")) _T(" expired"), status->serverId);
          deleteList.add(status->serverId);
-         it->remove();
+         it.remove();
       }
    }
-   delete it;
    s_serverSyncStatusLock.unlock();
 
    if (deleteList.size() > 0)
@@ -1662,16 +1657,15 @@ static void ClearStalledOfflineData(void *arg)
          DBCommit(hdb);
 
          s_itemLock.lock();
-         auto it = s_items.iterator();
-         while(it->hasNext())
+         auto it = s_items.begin();
+         while(it.hasNext())
          {
-            shared_ptr<DataCollectionItem> item(*it->next());
+            shared_ptr<DataCollectionItem> item(*it.next());
             if (item->getServerId() == serverId)
             {
-               it->remove();
+               it.remove();
             }
          }
-         delete it;
          s_itemLock.unlock();
 
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Offline data collection configuration for server ID ") UINT64X_FMT(_T("016")) _T(" deleted"), serverId);
@@ -1802,10 +1796,9 @@ LONG H_DataCollectorQueueSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, 
 
    UINT32 count = 0;
    s_serverSyncStatusLock.lock();
-   Iterator<ServerSyncStatus> *it = s_serverSyncStatus.iterator();
-   while(it->hasNext())
-      count += (UINT32)it->next()->queueSize;
-   delete it;
+   Iterator<ServerSyncStatus> it = s_serverSyncStatus.begin();
+   while(it.hasNext())
+      count += (UINT32)it.next()->queueSize;
    s_serverSyncStatusLock.unlock();
 
    ret_uint(value, count);

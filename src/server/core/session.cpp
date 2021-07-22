@@ -3233,13 +3233,12 @@ void ClientSession::sendObjectUpdates()
    size_t count = 0;
 
    MutexLock(m_pendingObjectNotificationsLock);
-   auto it = m_pendingObjectNotifications->iterator();
-   while(it->hasNext() && (count < m_objectNotificationBatchSize))
+   auto it = m_pendingObjectNotifications->begin();
+   while(it.hasNext() && (count < m_objectNotificationBatchSize))
    {
-      idList[count++] = *it->next();
-      it->remove();
+      idList[count++] = *it.next();
+      it.remove();
    }
-   delete it;
    MutexUnlock(m_pendingObjectNotificationsLock);
 
    int64_t startTime = GetCurrentTimeMs();
@@ -3460,16 +3459,16 @@ void ClientSession::sendUserDB(UINT32 dwRqId)
 	msg.deleteAllFields();
 
    // Send user database
-	Iterator<UserDatabaseObject> *users = OpenUserDatabase();
-	while(users->hasNext())
+	Iterator<UserDatabaseObject> users = OpenUserDatabase();
+	while(users.hasNext())
    {
-	   UserDatabaseObject *object = users->next();
+	   UserDatabaseObject *object = users.next();
 		msg.setCode(object->isGroup() ? CMD_GROUP_DATA : CMD_USER_DATA);
 		object->fillMessage(&msg);
       sendMessage(&msg);
       msg.deleteAllFields();
    }
-	CloseUserDatabase(users);
+	CloseUserDatabase();
 
    // Send end-of-database notification
    msg.setCode(CMD_USER_DB_EOF);

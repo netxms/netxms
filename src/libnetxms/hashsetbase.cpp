@@ -150,54 +150,19 @@ int HashSetBase::size() const
 }
 
 /**
+ * ********************************************************
+ * 
  * Hash set iterator
+ * 
+ * ********************************************************
  */
-HashSetConstIterator::HashSetConstIterator(const HashSetBase *hashSet)
-{
-   m_hashSet = hashSet;
-   m_curr = NULL;
-   m_next = NULL;
-}
-
-/**
- * Next element availability indicator
- */
-bool HashSetConstIterator::hasNext()
-{
-   if (m_hashSet->m_data == NULL)
-      return false;
-
-   return (m_curr != NULL) ? (m_next != NULL) : true;
-}
-
-/**
- * Get next element
- */
-void *HashSetConstIterator::next()
-{
-   if (m_hashSet->m_data == NULL)
-      return NULL;
-
-   if (m_curr == NULL)  // iteration not started
-   {
-      m_curr = m_hashSet->m_data;
-   }
-   else
-   {
-      if (m_next == NULL)
-         return NULL;
-      m_curr = m_next;
-   }
-   m_next = static_cast<HashSetEntry*>(m_curr->hh.next);
-   return GET_KEY(m_hashSet, m_curr);
-}
 
 /**
  * Hash set iterator
  */
-HashSetIterator::HashSetIterator(HashSetBase *hashSet)
+HashSetIterator::HashSetIterator(const HashSetBase *hashSet)
 {
-   m_hashSet = hashSet;
+   m_hashSet = const_cast<HashSetBase *>(hashSet);
    m_curr = NULL;
    m_next = NULL;
 }
@@ -260,3 +225,51 @@ void HashSetIterator::unlink()
    MemFree(m_curr);
 }
 
+/**
+ * Check iterators equality
+ */
+bool HashSetIterator::equal(AbstractIterator* other)
+{
+   if (other != nullptr)
+   {
+      auto otherIterator = static_cast<HashSetIterator*>(other);
+      void* data = value();
+      void* otherData = otherIterator->value();
+      if (data == nullptr && otherData == nullptr)
+      {
+         return true;
+      }
+      else if (data == nullptr || otherData == nullptr)
+      {
+         return false;
+      }
+      if(m_hashSet->m_keylen != otherIterator->m_hashSet->m_keylen)
+      {
+         return false;
+      }
+      return memcmp(data, otherData, m_hashSet->m_keylen) == 0;
+   }
+   return false;
+}
+
+/**
+ * Get current value
+ */
+void* HashSetIterator::value()
+{
+   void* retVal = nullptr;
+   if (m_hashSet == nullptr || m_hashSet->m_data == nullptr) //no data
+      return retVal;
+
+   if (m_curr == nullptr)  // iteration not started
+   {
+      retVal = GET_KEY(m_hashSet, m_hashSet->m_data);
+   }
+   else
+   {
+      if (m_next == nullptr)
+         return retVal;
+      retVal = GET_KEY(m_hashSet, m_next);
+   }
+   return retVal;
+}

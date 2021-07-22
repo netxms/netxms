@@ -390,15 +390,14 @@ void SessionAgentConnector::updateUserAgentNotifications()
    msg.setId(nextRequestId());
 
    UINT32 count = 0, baseId = VID_UA_NOTIFICATION_BASE;
-   Iterator<UserAgentNotification> *it = s_userAgentNotifications.iterator();
-   while (it->hasNext())
+   Iterator<UserAgentNotification> it = s_userAgentNotifications.begin();
+   while (it.hasNext())
    {
-      UserAgentNotification *n = it->next();
+      UserAgentNotification *n = it.next();
       n->fillMessage(&msg, baseId);
       baseId += 10;
       count++;
    }
-   delete it;
    msg.setField(VID_UA_NOTIFICATION_COUNT, count);
    sendMessage(&msg);
 }

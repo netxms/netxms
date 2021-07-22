@@ -820,7 +820,7 @@ public:
    static SNMP_Snapshot *create(SNMP_Transport *transport, const TCHAR *baseOid);
    static SNMP_Snapshot *create(SNMP_Transport *transport, const UINT32 *baseOid, size_t oidLen);
 
-   Iterator<SNMP_Variable> *iterator() { return m_values->iterator(); }
+   Iterator<SNMP_Variable> begin() { return m_values->begin(); }
    EnumerationCallbackResult walk(const TCHAR *baseOid, EnumerationCallbackResult (*handler)(const SNMP_Variable *, const SNMP_Snapshot *, void *), void *userArg) const;
    EnumerationCallbackResult walk(const UINT32 *baseOid, size_t baseOidLen, EnumerationCallbackResult (*handler)(const SNMP_Variable *, const SNMP_Snapshot *, void *), void *userArg) const;
 

@@ -889,10 +889,10 @@ void TelemetryRecord::updateDevice()
    m_device->updateStatus(m_deviceStatus);
 
    shared_ptr<Table> tableValue; // Empty pointer for processNewDCValue()
-   auto it = m_pushList.iterator();
-   while(it->hasNext())
+   auto it = m_pushList.begin();
+   while(it.hasNext())
    {
-      auto data = it->next();
+      auto data = it.next();
       shared_ptr<DCObject> dci = m_device->getDCObjectByName(data->first, 0);
       if ((dci == nullptr) || (dci->getDataSource() != DS_PUSH_AGENT) || (dci->getType() != DCO_TYPE_ITEM))
       {
@@ -902,7 +902,6 @@ void TelemetryRecord::updateDevice()
       }
       m_device->processNewDCValue(dci, m_timestamp, const_cast<TCHAR*>(data->second), tableValue);
    }
-   delete it;
 }
 
 /**

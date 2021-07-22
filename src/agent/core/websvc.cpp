@@ -1048,18 +1048,17 @@ static void WebServiceHousekeeper()
    nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceHousekeeper(): running cache entry check"));
 
    s_serviceCacheLock.lock();
-   auto it = s_serviceCache.iterator();
-   while(it->hasNext())
+   auto it = s_serviceCache.begin();
+   while(it.hasNext())
    {
-      auto entry = it->next();
+      auto entry = it.next();
       shared_ptr<ServiceEntry> svc = *entry->second;
       if (svc->isDataExpired(g_webSvcCacheExpirationTime))
       {
          nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceHousekeeper(): Cache entry for URL \"%s\" removed because of inactivity"), entry->first);
-         it->remove();
+         it.remove();
       }
    }
-   delete it;
    s_serviceCacheLock.unlock();
 
    ThreadPoolScheduleRelative(g_webSvcThreadPool, (MAX(g_webSvcCacheExpirationTime, 60) / 2) * 1000, WebServiceHousekeeper);

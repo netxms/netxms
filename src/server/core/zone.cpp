@@ -258,10 +258,10 @@ UINT32 Zone::modifyFromMessageInternal(NXCPMessage *request)
             m_proxyNodes->add(new ZoneProxy(newProxyList.get(i)));
       }
 
-      Iterator<ZoneProxy> *it = m_proxyNodes->iterator();
-      while(it->hasNext())
+      Iterator<ZoneProxy> it = m_proxyNodes->begin();
+      while(it.hasNext())
       {
-         ZoneProxy *proxy = it->next();
+         ZoneProxy *proxy = it.next();
 
          int j;
          for(j = 0; j < newProxyList.size(); j++)
@@ -270,9 +270,8 @@ UINT32 Zone::modifyFromMessageInternal(NXCPMessage *request)
                break;
          }
          if (j == newProxyList.size())
-            it->remove();
+            it.remove();
       }
-      delete it;
    }
 
    return super::modifyFromMessageInternal(request);

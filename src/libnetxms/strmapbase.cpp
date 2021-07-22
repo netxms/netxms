@@ -364,14 +364,33 @@ void StringMapBase::setIgnoreCase(bool ignore)
 }
 
 /**
+ * ********************************************************
+ * 
  * String map iterator
+ * 
+ * ********************************************************
  */
-StringMapIterator::StringMapIterator(StringMapBase *map)
+
+/**
+ * String map iterator constructor
+ */
+StringMapIterator::StringMapIterator(StringMapBase * map)
 {
    m_map = map;
    m_curr = nullptr;
    m_next = nullptr;
 }
+
+/**
+ * String map iterator copy constructor
+ */
+StringMapIterator::StringMapIterator(const StringMapIterator& other)
+{
+   m_map = other.m_map;
+   m_curr = other.m_curr;
+   m_next = other.m_next;
+}
+
 
 /**
  * Next element availability indicator
@@ -436,4 +455,80 @@ void StringMapIterator::unlink()
    MemFree(m_curr->key);
    MemFree(m_curr->originalKey);
    MemFree(m_curr);
+}
+
+/**
+ * Check iterators equality
+ */
+bool StringMapIterator::equal(AbstractIterator* other)
+{
+   if (other != nullptr)
+   {
+      auto otherIterator = static_cast<StringMapIterator*>(other);
+      const TCHAR* data = key();
+      const TCHAR* otherData = otherIterator->key();
+      if (data == nullptr && otherData == nullptr)
+      {
+         return true;
+      }
+      else if (data == nullptr || otherData == nullptr)
+      {
+         return false;
+      }
+      size_t sz = _tcslen(data);
+      if(sz != _tcslen(otherData))
+      {
+         return false;
+      }
+      return _tcsncmp(data, otherData, sz) == 0;
+   }
+   return false;
+}
+
+/**
+ * Get current value
+ */
+void* StringMapIterator::value()
+{
+   m_element.first = nullptr;
+   m_element.second = nullptr;
+   if (m_map == nullptr || m_map->m_data == nullptr) //no data
+      return &m_element;
+
+   if (m_curr == nullptr)  // iteration not started
+   {
+      m_element.first = m_map->m_data->originalKey != nullptr ? m_map->m_data->originalKey : m_map->m_data->key;
+      m_element.second = m_map->m_data->value;
+   }
+   else
+   {
+      if (m_next != nullptr)
+      {
+         m_element.first = m_next->originalKey != nullptr ? m_next->originalKey : m_next->key;
+         m_element.second = m_next->value;
+      }
+   }
+   return &m_element;
+}
+
+/**
+ * Get current key
+ */
+const TCHAR* StringMapIterator::key()
+{
+   const TCHAR* retVal = nullptr;
+   if (m_map == nullptr || m_map->m_data == nullptr) //no data
+      return retVal;
+
+   if (m_curr == nullptr)  // iteration not started
+   {
+      retVal = m_map->m_data->originalKey != nullptr ? m_map->m_data->originalKey : m_map->m_data->key;
+   }
+   else
+   {
+      if (m_next == nullptr)
+         return retVal;
+      retVal = m_next->originalKey != nullptr ? m_next->originalKey : m_next->key;
+   }
+   return retVal;
 }

@@ -1256,33 +1256,30 @@ public:
 /**
  * Abstract const iterator class (to be implemented by actual iterable class)
  */
-class LIBNETXMS_EXPORTABLE AbstractConstIterator
+class LIBNETXMS_EXPORTABLE AbstractIterator
 {
-   DISABLE_COPY_CTOR(AbstractConstIterator)
-
 protected:
-   AbstractConstIterator() { }
-
-public:
-   virtual ~AbstractConstIterator() { }
-
-   virtual bool hasNext() = 0;
-   virtual void *next() = 0;
-};
-
-/**
- * Abstract iterator class (to be implemented by actual iterable class)
- */
-class LIBNETXMS_EXPORTABLE AbstractIterator : public AbstractConstIterator
-{
-   DISABLE_COPY_CTOR(AbstractIterator)
-
-protected:
-   AbstractIterator() : AbstractConstIterator() { }
+   AbstractIterator()
+   {
+      m_refCounter = 1;
+   }
+   int m_refCounter;
 
 public:
    virtual ~AbstractIterator() { }
 
+   void incRefCount() { m_refCounter++; }
+   void decRefCount()
+   {
+      m_refCounter--;
+      if (m_refCounter == 0)
+         delete this;
+   }
+
+   virtual bool hasNext() = 0;
+   virtual void *next() = 0;
+   virtual void *value() = 0;
+   virtual bool equal(AbstractIterator* other) = 0;
    virtual void remove() = 0;
    virtual void unlink() = 0;
 };
@@ -1292,17 +1289,47 @@ public:
  */
 template <class T> class ConstIterator
 {
-   DISABLE_COPY_CTOR(ConstIterator)
-
 protected:
-   AbstractConstIterator *m_worker;
+   AbstractIterator *m_worker;
 
 public:
-   ConstIterator(AbstractConstIterator *worker) { m_worker = worker; }
-   virtual ~ConstIterator() { delete m_worker; }
+   ConstIterator(AbstractIterator *worker) { m_worker = worker; }
+   ConstIterator(const ConstIterator& other)
+   {
+      m_worker = other.m_worker;
+      m_worker->incRefCount();
+   }
+   virtual ~ConstIterator()
+   {
+      m_worker->decRefCount();
+   }
 
    bool hasNext() { return m_worker->hasNext(); }
    T *next() { return (T *)m_worker->next(); }
+   T *value() { return (T *)m_worker->value(); }
+
+   ConstIterator& operator=(const ConstIterator& other)
+   {
+      m_worker->decRefCount(); 
+      m_worker = other.m_worker;
+      m_worker->incRefCount();
+      return *this; 
+   }
+
+   bool operator==(const ConstIterator& other) { return m_worker->equal(other.m_worker); }
+   bool operator!=(const ConstIterator& other) { return !(*this == other); }
+   ConstIterator& operator++()   // Prefix increment operator.
+   {
+      m_worker->next();
+      return *this;
+   }
+   ConstIterator operator++(int) // Postfix increment operator.
+   {  
+      ConstIterator temp = *this;
+      ++*this;
+      return temp;
+   }
+   T operator* () { return *(T *)m_worker->value(); }
 };
 
 /**
@@ -1310,14 +1337,18 @@ public:
  */
 template <class T> class Iterator : public ConstIterator<T>
 {
-   DISABLE_COPY_CTOR(Iterator)
-
 public:
    Iterator(AbstractIterator *worker) : ConstIterator<T>(worker) { }
+   Iterator(const Iterator& other) : ConstIterator<T>(other) { }
+   Iterator& operator=(const Iterator& other)
+   {
+      ConstIterator<T>::operator = (other);
+      return *this;
+   }
    virtual ~Iterator() { }
 
-   void remove() { static_cast<AbstractIterator*>(this->m_worker)->remove(); }
-   void unlink() { static_cast<AbstractIterator*>(this->m_worker)->unlink(); }
+   void remove() { this->m_worker->remove(); }
+   void unlink() { this->m_worker->unlink(); }
 };
 
 /**
@@ -1395,19 +1426,19 @@ public:
  */
 class LIBNETXMS_EXPORTABLE ArrayIterator : public AbstractIterator
 {
-   DISABLE_COPY_CTOR(ArrayIterator)
-
 private:
    Array *m_array;
    int m_pos;
 
 public:
-   ArrayIterator(Array *array);
+   ArrayIterator(Array *array = nullptr);
 
    virtual bool hasNext() override;
    virtual void *next() override;
    virtual void remove() override;
    virtual void unlink() override;
+   virtual void *value() override;
+   virtual bool equal(AbstractIterator* other) override;
 };
 
 /**
@@ -1448,7 +1479,15 @@ public:
 
    const T * const *getBuffer() const { return static_cast<const T * const *>(__getBuffer()); }
 
-   Iterator<T> *iterator() { return new Iterator<T>(new ArrayIterator(this)); }
+   Iterator<T> begin()
+   {
+      return Iterator<T>(new ArrayIterator(this));
+   }
+
+   Iterator<T> end()
+   {
+      return Iterator<T>(new ArrayIterator());
+   }
 };
 
 /**
@@ -1476,7 +1515,15 @@ public:
 	void unlink(int index) { Array::unlink(index); }
    void unlink(T *object) { Array::unlink((void *)object); }
 
-   Iterator<T> *iterator() { return new Iterator<T>(new ArrayIterator(this)); }
+   Iterator<T> begin()
+   {
+      return Iterator<T>(new ArrayIterator(this));
+   }
+
+   Iterator<T> end()
+   {
+      return Iterator<T>(new ArrayIterator());
+   }
 };
 
 /**
@@ -1632,7 +1679,15 @@ public:
 
    void sort(int (*cb)(const T&, const T&)) { m_data.sort(reinterpret_cast<int (*)(void *, const void *, const void *)>(sortCallback), (void *)cb); }
 
-   Iterator<shared_ptr<T>> *iterator() { return new Iterator<shared_ptr<T>>(new ArrayIterator(&m_data)); }
+   Iterator<shared_ptr<T>> begin()
+   {
+      return Iterator<shared_ptr<T>>(new ArrayIterator(&m_data));
+   }
+
+   Iterator<shared_ptr<T>> end()
+   {
+      return Iterator<shared_ptr<T>>(new ArrayIterator());
+   }
 };
 
 template <class T> shared_ptr<T> SharedObjectArray<T>::m_null = shared_ptr<T>();
@@ -1662,21 +1717,24 @@ template struct LIBNETXMS_EXPORTABLE std::pair<const TCHAR*, const TCHAR*>;
  */
 class LIBNETXMS_EXPORTABLE StringMapIterator : public AbstractIterator
 {
-   DISABLE_COPY_CTOR(StringMapIterator)
-
 private:
    StringMapBase *m_map;
    StringMapEntry *m_curr;
    StringMapEntry *m_next;
-   std::pair<const TCHAR*, const TCHAR*> m_element;
+   std::pair<const TCHAR*, void*> m_element;
 
 public:
-   StringMapIterator(StringMapBase *map);
+   StringMapIterator(StringMapBase *map = nullptr);   //Constructor
+   StringMapIterator(const StringMapIterator& other); //Copy constructor
 
    virtual bool hasNext() override;
    virtual void *next() override;
    virtual void remove() override;
    virtual void unlink() override;
+   virtual void *value() override;
+   virtual bool equal(AbstractIterator* other) override;
+
+   const TCHAR* key();
 };
 
 /**
@@ -1780,9 +1838,6 @@ public:
    double getDouble(const TCHAR *key, double defaultValue) const;
 	bool getBoolean(const TCHAR *key, bool defaultValue) const;
 
-   Iterator<std::pair<const TCHAR*, const TCHAR*>> *iterator() { return new Iterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator(this)); }
-   ConstIterator<std::pair<const TCHAR*, const TCHAR*>> *constIterator() const { return new ConstIterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator(const_cast<StringMap*>(this))); }
-
    template <typename C>
    StructArray<KeyValuePair<TCHAR>> *toArray(bool (*filter)(const TCHAR *, const TCHAR *, C *), C *context = NULL) const
    {
@@ -1805,6 +1860,26 @@ public:
    void loadMessage(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId);
 
    json_t *toJson() const;
+
+   Iterator<std::pair<const TCHAR*, const TCHAR*>> begin()
+   {
+      return Iterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator(this));
+   }
+
+   ConstIterator<std::pair<const TCHAR*, const TCHAR*>> begin() const
+   {
+      return ConstIterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator(const_cast<StringMap*>(this)));
+   }
+
+   Iterator<std::pair<const TCHAR*, const TCHAR*>> end()
+   {
+      return Iterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator());
+   }
+
+   ConstIterator<std::pair<const TCHAR*, const TCHAR*>> end() const
+   {
+      return ConstIterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator());
+   }
 };
 
 /**
@@ -1827,8 +1902,6 @@ public:
    ObjectArray<T> *values() const { ObjectArray<T> *v = new ObjectArray<T>(size()); fillValues(v); return v; }
    T *unlink(const TCHAR *key) { return (T*)StringMapBase::unlink(key); }
 
-   Iterator<std::pair<const TCHAR*, T*>> *iterator() { return new Iterator<std::pair<const TCHAR*, T*>>(new StringMapIterator(this)); }
-
    template <typename C>
    StructArray<KeyValuePair<T>> *toArray(bool (*filter)(const TCHAR *, const T *, C *), C *context = NULL) const
    {
@@ -1845,6 +1918,16 @@ public:
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const T *, C *), C *context) const
    {
       return StringMapBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, const void*, void*)>(cb), (void *)context);
+   }
+
+   Iterator<std::pair<const TCHAR*, T*>> begin()
+   {
+      return Iterator<std::pair<const TCHAR*, T*>>(new StringMapIterator(this));
+   }
+
+   Iterator<std::pair<const TCHAR*, T*>> end()
+   {
+      return Iterator<std::pair<const TCHAR*, T*>>(new StringMapIterator());
    }
 };
 
@@ -1913,12 +1996,20 @@ public:
       return (p != nullptr) ? *p : m_null;
    }
 
-   Iterator<std::pair<const TCHAR*, shared_ptr<T>*>> *iterator() { return m_data.iterator(); }
-
    template <typename C>
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const shared_ptr<T> *, C *), C *context) const
    {
       return m_data.forEach(cb, context);
+   }
+
+   Iterator<std::pair<const TCHAR*, shared_ptr<T>*>> begin()
+   {
+      return m_data.begin();
+   }
+
+   Iterator<std::pair<const TCHAR*, shared_ptr<T>*>> end()
+   {
+      return m_data.end();
    }
 };
 
@@ -2009,39 +2100,21 @@ class StringSet;
 /**
  * String set const iterator
  */
-class LIBNETXMS_EXPORTABLE StringSetConstIterator : public AbstractConstIterator
-{
-   DISABLE_COPY_CTOR(StringSetConstIterator)
-
-private:
-   const StringSet *m_stringSet;
-   StringSetEntry *m_curr;
-   StringSetEntry *m_next;
-
-public:
-   StringSetConstIterator(const StringSet *stringSet);
-
-   virtual bool hasNext() override;
-   virtual void *next() override;
-};
-
-/**
- * String set iterator
- */
 class LIBNETXMS_EXPORTABLE StringSetIterator : public AbstractIterator
 {
-   DISABLE_COPY_CTOR(StringSetIterator)
-
-private:
+protected:
    StringSet *m_stringSet;
    StringSetEntry *m_curr;
    StringSetEntry *m_next;
 
 public:
-   StringSetIterator(StringSet *stringSet);
+   StringSetIterator(const StringSet *stringSet = nullptr);
+   StringSetIterator(const StringSetIterator& other); //Copy constructor
 
    virtual bool hasNext() override;
    virtual void *next() override;
+   virtual void *value() override;
+   virtual bool equal(AbstractIterator* other) override;
    virtual void remove() override;
    virtual void unlink() override;
 };
@@ -2052,7 +2125,6 @@ public:
 class LIBNETXMS_EXPORTABLE StringSet
 {
    friend class StringSetIterator;
-   friend class StringSetConstIterator;
 
 private:
    StringSetEntry *m_data;
@@ -2090,8 +2162,25 @@ public:
 
    String join(const TCHAR *separator);
 
-   Iterator<const TCHAR> *iterator() { return new Iterator<const TCHAR>(new StringSetIterator(this)); }
-   ConstIterator<const TCHAR> *constIterator() const { return new ConstIterator<const TCHAR>(new StringSetConstIterator(this)); }
+   Iterator<const TCHAR> begin()
+   {
+      return Iterator<const TCHAR>(new StringSetIterator(this));
+   }
+
+   ConstIterator<const TCHAR> begin() const
+   {
+      return ConstIterator<const TCHAR>(new StringSetIterator(this));
+   }
+
+   Iterator<const TCHAR> end()
+   {
+      return Iterator<const TCHAR>(new StringSetIterator());
+   }
+
+   ConstIterator<const TCHAR> end() const
+   {
+      return ConstIterator<const TCHAR>(new StringSetIterator());
+   }
 };
 
 /**
@@ -2107,39 +2196,21 @@ class HashSetBase;
 /**
  * Hash set const iterator
  */
-class LIBNETXMS_EXPORTABLE HashSetConstIterator : public AbstractConstIterator
-{
-   DISABLE_COPY_CTOR(HashSetConstIterator)
-
-private:
-   const HashSetBase *m_hashSet;
-   HashSetEntry *m_curr;
-   HashSetEntry *m_next;
-
-public:
-   HashSetConstIterator(const HashSetBase *hashSet);
-
-   virtual bool hasNext() override;
-   virtual void *next() override;
-};
-
-/**
- * Hash set iterator
- */
 class LIBNETXMS_EXPORTABLE HashSetIterator : public AbstractIterator
 {
-   DISABLE_COPY_CTOR(HashSetIterator)
-
-private:
+protected:
    HashSetBase *m_hashSet;
    HashSetEntry *m_curr;
    HashSetEntry *m_next;
 
 public:
-   HashSetIterator(HashSetBase *hashSet);
+   HashSetIterator(const HashSetBase *hashSet = nullptr);
+   HashSetIterator(const HashSetIterator& other);    //Copy constructor
 
    virtual bool hasNext() override;
    virtual void *next() override;
+   virtual void *value() override;
+   virtual bool equal(AbstractIterator* other) override;
    virtual void remove() override;
    virtual void unlink() override;
 };
@@ -2150,7 +2221,6 @@ public:
 class LIBNETXMS_EXPORTABLE HashSetBase
 {
    friend class HashSetIterator;
-   friend class HashSetConstIterator;
 
 private:
    HashSetEntry *m_data;
@@ -2190,8 +2260,25 @@ public:
       return HashSetBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const void *, void *)>(cb), context);
    }
 
-   Iterator<const K> *iterator() { return new Iterator<const K>(new HashSetIterator(this)); }
-   ConstIterator<const K> *constIterator() const { return new ConstIterator<const K>(new HashSetConstIterator(this)); }
+   Iterator<const K> begin()
+   {
+      return Iterator<const K>(new HashSetIterator(this));
+   }
+
+   ConstIterator<const K> begin() const
+   {
+      return ConstIterator<const K>(new HashSetIterator(this));
+   }
+
+   Iterator<const K> end()
+   {
+      return Iterator<const K>(new HashSetIterator());
+   }
+
+   ConstIterator<const K> end() const
+   {
+      return ConstIterator<const K>(new HashSetIterator());
+   }
 };
 
 /**
@@ -2294,20 +2381,23 @@ public:
  */
 class LIBNETXMS_EXPORTABLE HashMapIterator : public AbstractIterator
 {
-   DISABLE_COPY_CTOR(HashMapIterator)
-
 private:
    HashMapBase *m_hashMap;
    HashMapEntry *m_curr;
    HashMapEntry *m_next;
 
 public:
-   HashMapIterator(HashMapBase *hashMap);
+   HashMapIterator(HashMapBase *hashMap = nullptr);
+   HashMapIterator(const HashMapIterator& other);  
 
    virtual bool hasNext() override;
    virtual void *next() override;
    virtual void remove() override;
    virtual void unlink() override;
+   virtual void *value() override;
+   virtual bool equal(AbstractIterator* other) override;
+
+   void* key();
 };
 
 /**
@@ -2346,8 +2436,6 @@ public:
    void unlink(const K& key) { _remove(&key, false); }
    bool contains(const K& key) { return _contains(&key); }
 
-   Iterator<V> *iterator() { return new Iterator<V>(new HashMapIterator(this)); }
-
    template<typename C> EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K&, V*, C*), C *context) const
    {
       std::pair<EnumerationCallbackResult (*)(const K&, V*, C*), C*> _context(cb, context);
@@ -2363,6 +2451,16 @@ public:
    {
       std::pair<bool (*)(const K&, const V&, C*), C*> _context(comparator, context);
       return static_cast<const V*>(HashMapBase::findElement(&HashMap<K, V>::findElementWrapper<C>, &_context));
+   }
+
+   Iterator<V> begin()
+   {
+      return Iterator<V>(new HashMapIterator(this));
+   }
+
+   Iterator<V> end()
+   {
+      return Iterator<V>(new HashMapIterator());
    }
 };
 
@@ -2504,8 +2602,6 @@ public:
    void clear() { m_data.clear(); }
    bool contains(const K& key) { return m_data.contains(key); }
 
-   Iterator<shared_ptr<V>> *iterator() { return m_data.iterator(); }
-
    int size() const { return m_data.size(); }
 
    template <typename C>
@@ -2513,6 +2609,16 @@ public:
    {
       std::pair<EnumerationCallbackResult (*)(const K&, const shared_ptr<V>&, C*), C*> _context(cb, context);
       return m_data.forEach(&SharedHashMap<K, V>::forEachCallbackWrapper<C>, &_context);
+   }
+
+   Iterator<shared_ptr<V>> begin()
+   {
+      return m_data.begin();
+   }
+
+   Iterator<shared_ptr<V>> end()
+   {
+      return m_data.end();
    }
 };
 

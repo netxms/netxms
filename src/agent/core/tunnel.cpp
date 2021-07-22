@@ -236,10 +236,9 @@ void Tunnel::disconnect()
 
    SharedObjectArray<TunnelCommChannel> channels(g_maxCommSessions, 16);
    MutexLock(m_channelLock);
-   auto it = m_channels.iterator();
-   while(it->hasNext())
-      channels.add(*it->next());
-   delete it;
+   auto it = m_channels.begin();
+   while(it.hasNext())
+      channels.add(*it.next());
    MutexUnlock(m_channelLock);
 
    for(int i = 0; i < channels.size(); i++)
@@ -1786,10 +1785,10 @@ static ObjectArray<Tunnel> s_tunnels(0, 8, Ownership::True);
 void ParseTunnelList(const StringSet& tunnels)
 {
 #ifdef _WITH_ENCRYPTION
-   auto it = tunnels.constIterator();
-   while(it->hasNext())
+   auto it = tunnels.begin();
+   while(it.hasNext())
    {
-      const TCHAR *config = it->next();
+      const TCHAR *config = it.next();
       Tunnel *t = Tunnel::createFromConfig(config);
       if (t != nullptr)
       {
@@ -1801,7 +1800,6 @@ void ParseTunnelList(const StringSet& tunnels)
          nxlog_write(NXLOG_ERROR, _T("Invalid server connection configuration record \"%s\""), config);
       }
    }
-   delete it;
 #endif
 }
 

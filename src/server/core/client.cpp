@@ -131,17 +131,16 @@ static void ClientSessionManager()
       msg.setFieldFromTime(VID_TIMESTAMP, time(nullptr));
 
       RWLockReadLock(s_sessionListLock);
-      auto it = s_sessions.iterator();
-      while(it->hasNext())
+      auto it = s_sessions.begin();
+      while(it.hasNext())
       {
-         ClientSession *session = it->next();
+         ClientSession *session = it.next();
          if (session->isAuthenticated())
          {
             session->postMessage(&msg);
             session->runHousekeeper();
          }
       }
-      delete it;
       RWLockUnlock(s_sessionListLock);
    }
 
@@ -230,12 +229,11 @@ void ClientListenerThread()
 
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Terminating client sessions that are still active..."));
    RWLockReadLock(s_sessionListLock);
-   auto it = s_sessions.iterator();
-   while(it->hasNext())
+   auto it = s_sessions.begin();
+   while(it.hasNext())
    {
-      it->next()->terminate();
+      it.next()->terminate();
    }
-   delete it;
    RWLockUnlock(s_sessionListLock);
 
    while(GetSessionCount(true, true, -1, nullptr) > 0)
@@ -254,10 +252,10 @@ void DumpClientSessions(ServerConsole *pCtx)
 
    ConsolePrintf(pCtx, _T("ID  CIPHER   CLTYPE  USER [CLIENT]\n"));
    RWLockReadLock(s_sessionListLock);
-   auto it = s_sessions.iterator();
-   while(it->hasNext())
+   auto it = s_sessions.begin();
+   while(it.hasNext())
    {
-      ClientSession *session = it->next();
+      ClientSession *session = it.next();
       TCHAR webServer[256] = _T("");
       if (session->getClientType() == CLIENT_TYPE_WEB)
       {
@@ -267,7 +265,6 @@ void DumpClientSessions(ServerConsole *pCtx)
             pszCipherName[session->getCipher() + 1], pszClientType[session->getClientType()],
                     session->getSessionName(), webServer, session->getClientInfo());
    }
-   delete it;
    int count = s_sessions.size();
    RWLockUnlock(s_sessionListLock);
    ConsolePrintf(pCtx, _T("\n%d active session%s\n\n"), count, count == 1 ? _T("") : _T("s"));
@@ -332,14 +329,13 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
    }
 
    RWLockReadLock(s_sessionListLock);
-   auto it = s_sessions.iterator();
-   while(it->hasNext())
+   auto it = s_sessions.begin();
+   while(it.hasNext())
    {
-      ClientSession *session = it->next();
+      ClientSession *session = it.next();
       if (session->isAuthenticated() && !session->isTerminated() && session->isSubscribedTo(NXC_CHANNEL_USERDB))
          session->postMessage(msg);
    }
-   delete it;
    RWLockUnlock(s_sessionListLock);
 }
 
@@ -349,14 +345,13 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
 void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(const NXCPMessage& msg, uint32_t graphId)
 {
    RWLockReadLock(s_sessionListLock);
-   auto it = s_sessions.iterator();
-   while(it->hasNext())
+   auto it = s_sessions.begin();
+   while(it.hasNext())
    {
-      ClientSession *session = it->next();
+      ClientSession *session = it.next();
       if (session->isAuthenticated() && !session->isTerminated() && (GetGraphAccessCheckResult(graphId, session->getUserId()) == RCC_SUCCESS))
          session->postMessage(msg);
    }
-   delete it;
    RWLockUnlock(s_sessionListLock);
 }
 
@@ -366,14 +361,13 @@ void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(const NXCPMessage& msg, uint32
 void NotifyClientsOnPolicyUpdate(const NXCPMessage& msg, const Template& object)
 {
    RWLockReadLock(s_sessionListLock);
-   auto it = s_sessions.iterator();
-   while(it->hasNext())
+   auto it = s_sessions.begin();
+   while(it.hasNext())
    {
-      ClientSession *session = it->next();
+      ClientSession *session = it.next();
       if (session->isAuthenticated() && !session->isTerminated() && object.checkAccessRights(session->getUserId(), OBJECT_ACCESS_MODIFY))
          session->postMessage(msg);
    }
-   delete it;
    RWLockUnlock(s_sessionListLock);
 }
 
@@ -433,10 +427,10 @@ void NotifyClientsOnDCIStatusChange(const DataCollectionOwner& object, uint32_t 
 void NotifyClientsOnDCIUpdate(const NXCPMessage& msg, const NetObj& object)
 {
    RWLockReadLock(s_sessionListLock);
-   auto it = s_sessions.iterator();
-   while(it->hasNext())
+   auto it = s_sessions.begin();
+   while(it.hasNext())
    {
-      ClientSession *session = it->next();
+      ClientSession *session = it.next();
       if (session->isAuthenticated() && !session->isTerminated() &&
           object.checkAccessRights(session->getUserId(), OBJECT_ACCESS_MODIFY) &&
           session->isDataCollectionConfigurationOpen(object.getId()))
@@ -444,7 +438,6 @@ void NotifyClientsOnDCIUpdate(const NXCPMessage& msg, const NetObj& object)
          session->postMessage(msg);
       }
    }
-   delete it;
    RWLockUnlock(s_sessionListLock);
 }
 
@@ -466,10 +459,10 @@ void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresh
    msg.setField(VID_STATE, change == ThresholdCheckResult::ACTIVATED);
 
    RWLockReadLock(s_sessionListLock);
-   auto it = s_sessions.iterator();
-   while(it->hasNext())
+   auto it = s_sessions.begin();
+   while(it.hasNext())
    {
-      ClientSession *session = it->next();
+      ClientSession *session = it.next();
       if (session->isAuthenticated() && !session->isTerminated() &&
           object->checkAccessRights(session->getUserId(), OBJECT_ACCESS_MODIFY) &&
           session->isSubscribedTo(NXC_CHANNEL_DC_THRESHOLDS))
@@ -477,7 +470,6 @@ void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresh
          session->postMessage(msg);
       }
    }
-   delete it;
    RWLockUnlock(s_sessionListLock);
 }
 
@@ -487,16 +479,15 @@ void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresh
 void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, const TCHAR *channel)
 {
    RWLockReadLock(s_sessionListLock);
-   auto it = s_sessions.iterator();
-   while(it->hasNext())
+   auto it = s_sessions.begin();
+   while(it.hasNext())
    {
-      ClientSession *session = it->next();
+      ClientSession *session = it.next();
       if (session->isAuthenticated() && !session->isTerminated() && ((channel == nullptr) || session->isSubscribedTo(channel)))
       {
          session->postMessage(msg);
       }
    }
-   delete it;
    RWLockUnlock(s_sessionListLock);
 }
 
@@ -506,16 +497,15 @@ void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, const TCHAR 
 void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data)
 {
    RWLockReadLock(s_sessionListLock);
-   auto it = s_sessions.iterator();
-   while(it->hasNext())
+   auto it = s_sessions.begin();
+   while(it.hasNext())
    {
-      ClientSession *session = it->next();
+      ClientSession *session = it.next();
       if (session->isAuthenticated() && !session->isTerminated())
       {
          session->notify(code, data);
       }
    }
-   delete it;
    RWLockUnlock(s_sessionListLock);
 }
 
@@ -539,10 +529,10 @@ int GetSessionCount(bool includeSystemAccount, bool includeNonAuthenticated, int
    int count = 0;
 
    RWLockReadLock(s_sessionListLock);
-   auto it = s_sessions.iterator();
-   while(it->hasNext())
+   auto it = s_sessions.begin();
+   while(it.hasNext())
    {
-      ClientSession *session = it->next();
+      ClientSession *session = it.next();
       if ((includeSystemAccount || (session->getUserId() != 0)) &&
           (includeNonAuthenticated || session->isAuthenticated()) &&
           ((typeFilter == -1) || (session->getClientType() == typeFilter)) &&
@@ -551,7 +541,6 @@ int GetSessionCount(bool includeSystemAccount, bool includeNonAuthenticated, int
          count++;
       }
    }
-   delete it;
    RWLockUnlock(s_sessionListLock);
    return count;
 }
@@ -563,17 +552,16 @@ bool IsLoggedIn(uint32_t userId)
 {
    bool result = false;
    RWLockReadLock(s_sessionListLock);
-   auto it = s_sessions.iterator();
-   while(it->hasNext())
+   auto it = s_sessions.begin();
+   while(it.hasNext())
    {
-      ClientSession *session = it->next();
+      ClientSession *session = it.next();
       if (session->getUserId() == userId)
       {
          result = true;
          break;
       }
    }
-   delete it;
    RWLockUnlock(s_sessionListLock);
    return result;
 }
@@ -584,16 +572,15 @@ bool IsLoggedIn(uint32_t userId)
 void CloseOtherSessions(uint32_t userId, session_id_t thisSession)
 {
    RWLockReadLock(s_sessionListLock);
-   auto it = s_sessions.iterator();
-   while(it->hasNext())
+   auto it = s_sessions.begin();
+   while(it.hasNext())
    {
-      ClientSession *session = it->next();
+      ClientSession *session = it.next();
       if ((session->getUserId() == userId) && (session->getId() != thisSession))
       {
          nxlog_debug(4, _T("CloseOtherSessions(%u,%u): disconnecting session %u"), userId, thisSession, session->getId());
          session->terminate();
       }
    }
-   delete it;
    RWLockUnlock(s_sessionListLock);
 }

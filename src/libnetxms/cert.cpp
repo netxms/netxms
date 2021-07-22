@@ -375,10 +375,10 @@ X509_STORE LIBNETXMS_EXPORTABLE *CreateTrustedCertificatesStore(const StringSet&
 
    if (!trustedCertificates.isEmpty())
    {
-      auto it = trustedCertificates.constIterator();
-      while(it->hasNext())
+      auto it = trustedCertificates.begin();
+      while(it.hasNext())
       {
-         const TCHAR *trustedRoot = it->next();
+         const TCHAR *trustedRoot = it.next();
          NX_STAT_STRUCT st;
          if (CALL_STAT(trustedRoot, &st) != 0)
             continue;
@@ -395,7 +395,6 @@ X509_STORE LIBNETXMS_EXPORTABLE *CreateTrustedCertificatesStore(const StringSet&
          if (added)
             nxlog_debug_tag(DEBUG_TAG, 6, _T("CreateTrustedCertificatesStore: trusted %s \"%s\" added"), S_ISDIR(st.st_mode) ? _T("certificate directory") : _T("certificate"), trustedRoot);
       }
-      delete it;
    }
 
    if (useSystemStore)

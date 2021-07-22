@@ -39,13 +39,12 @@ NXSL_HashMap::NXSL_HashMap(NXSL_ValueManager *vm, const StringMap *values) : NXS
    m_values = new NXSL_StringValueMap(vm, Ownership::True);
    if (values != nullptr)
    {
-      auto it = values->constIterator();
-      while(it->hasNext())
+      auto it = values->begin();
+      while(it.hasNext())
       {
-         auto p = it->next();
+         auto p = it.next();
          m_values->set(p->first, vm->createValue(p->second));
       }
-      delete it;
    }
 }
 

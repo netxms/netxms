@@ -980,13 +980,12 @@ shared_ptr<Config> User::get2FABindingInfo(const TCHAR* method)
 unique_ptr<StringList> User::get2FABindings()
 {
    auto bindings = make_unique<StringList>();
-   auto it = m_2FABindings.iterator();
-   while (it->hasNext())
+   auto it = m_2FABindings.begin();
+   while (it.hasNext())
    {
-      auto value = it->next();
+      auto value = it.next();
       bindings->add(value->first);
    }
-   delete it;
    return bindings;
 }
 

@@ -1338,10 +1338,9 @@ void NXCPMessage::setFieldFromInt32Array(uint32_t fieldId, const HashSet<uint32_
    if (buffer != nullptr)
    {
       buffer++;   // First UINT32 is a length field
-      ConstIterator<const uint32_t> *it = data.constIterator();
+      auto it = data.begin();
       for(int i = 0; i < data.size(); i++)  // Convert UINT32s to network byte order
-         buffer[i] = htonl(*(it->next()));
-      delete it;
+         buffer[i] = htonl(*(it.next()));
    }
 }
 

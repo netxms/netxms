@@ -1114,10 +1114,10 @@ BOOL Initialize()
 	   g_webSvcThreadPool = ThreadPoolCreate(_T("WEBSVC"), 4, s_maxWebSvcPoolSize);
 
 		// Load local CRLs
-		auto it = s_crlList.iterator();
-		while(it->hasNext())
+		auto it = s_crlList.begin();
+		while(it.hasNext())
 		{
-		   const TCHAR *location = it->next();
+		   const TCHAR *location = it.next();
 		   if (!_tcsncmp(location, _T("http://"), 7) || !_tcsncmp(location, _T("https://"), 8))
 		   {
 #ifdef UNICODE
@@ -1133,7 +1133,6 @@ BOOL Initialize()
 		      AddLocalCRL(location);
 		   }
 		}
-		delete it;
 		s_crlList.clear();
 
 		// Parse outgoing server connection (tunnel) list

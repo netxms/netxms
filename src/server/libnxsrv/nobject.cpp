@@ -80,14 +80,13 @@ void NObject::addChild(const shared_ptr<NObject>& object)
    // Update custom attribute inheritance
    ObjectArray<std::pair<String, UINT32>> updateList(0, 16, Ownership::True);
    lockCustomAttributes();
-   Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes.iterator();
-   while(iterator->hasNext())
+   Iterator<std::pair<const TCHAR*, CustomAttribute*>> iterator = m_customAttributes.begin();
+   while(iterator.hasNext())
    {
-      std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
+      std::pair<const TCHAR*, CustomAttribute*> *pair = iterator.next();
       if(pair->second->isInheritable())
          updateList.add(new std::pair<String, UINT32>(pair->first, pair->second->isRedefined() || pair->second->sourceObject == 0 ? m_id : pair->second->sourceObject));
    }
-   delete iterator;
    unlockCustomAttributes();
 
    for(int i = 0; i < updateList.size(); i++)
@@ -145,14 +144,13 @@ void NObject::deleteParent(uint32_t objectId)
       StringList removeList;
 
       lockCustomAttributes();
-      Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes.iterator();
-      while(iterator->hasNext())
+      Iterator<std::pair<const TCHAR*, CustomAttribute*>> iterator = m_customAttributes.begin();
+      while(iterator.hasNext())
       {
-         std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
+         std::pair<const TCHAR*, CustomAttribute*> *pair = iterator.next();
          if (pair->second->isInherited() && !isParent(pair->second->sourceObject))
             removeList.add(pair->first);
       }
-      delete iterator;
       unlockCustomAttributes();
 
       for(int i = 0; i < removeList.size(); i++)
@@ -520,10 +518,10 @@ void NObject::setCustomAttributesFromMessage(const NXCPMessage *msg)
    }
 
    lockCustomAttributes();
-   Iterator<std::pair<const TCHAR*, CustomAttribute*>> *iterator = m_customAttributes.iterator();
-   while(iterator->hasNext())
+   auto iterator = m_customAttributes.begin();
+   while(iterator.hasNext())
    {
-      std::pair<const TCHAR*, CustomAttribute*> *pair = iterator->next();
+      std::pair<const TCHAR*, CustomAttribute*> *pair = iterator.next();
       if ((pair->second->isInherited() == pair->second->isRedefined()) && !existingAttibutes.contains(pair->first))
       {
          if (pair->second->isRedefined())
@@ -534,10 +532,9 @@ void NObject::setCustomAttributesFromMessage(const NXCPMessage *msg)
          {
             deletionList.add(pair->first);
          }
-         iterator->remove();
+         iterator.remove();
       }
    }
-   delete iterator;
    unlockCustomAttributes();
 
    for(int i = 0; i < deletionList.size(); i++)

@@ -109,10 +109,10 @@ static uint64_t GetEffectiveSystemRights(User *user)
 {
    uint64_t systemRights = user->getSystemRights();
    IntegerArray<uint32_t> searchPath(32, 32);
-   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
-   while(it->hasNext())
+   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+   while(it.hasNext())
    {
-      UserDatabaseObject *object = it->next();
+      UserDatabaseObject *object = it.next();
       if (object->isDeleted() || object->isDisabled())
          continue;
 
@@ -136,7 +136,6 @@ static uint64_t GetEffectiveSystemRights(User *user)
          searchPath.clear();
       }
    }
-   delete it;
    return systemRights;
 }
 
@@ -171,10 +170,10 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 
 		RWLockWriteLock(s_userDatabaseLock);
 		time_t now = time(NULL);
-		Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
-		while(it->hasNext())
+		Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+		while(it.hasNext())
 		{
-		   UserDatabaseObject *object = it->next();
+		   UserDatabaseObject *object = it.next();
 			if (object->isDeleted() || object->isGroup())
 				continue;
 
@@ -196,7 +195,6 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 				nxlog_debug_tag(DEBUG_TAG, 3, _T("User account \"%s\" disabled due to inactivity"), user->getName());
 			}
 		}
-		delete it;
 		RWLockUnlock(s_userDatabaseLock);
 	}
 
@@ -315,23 +313,22 @@ void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId)
 {
    // Save users
    RWLockWriteLock(s_userDatabaseLock);
-   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
-   while(it->hasNext())
+   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+   while(it.hasNext())
    {
       WatchdogNotify(watchdogId);
-      UserDatabaseObject *object = it->next();
+      UserDatabaseObject *object = it.next();
       if (object->isDeleted())
       {
 			object->deleteFromDatabase(hdb);
 			RemoveDatabaseObject(object);
-			it->remove();
+			it.remove();
       }
 		else if (object->isModified())
       {
 			object->saveToDatabase(hdb);
       }
    }
-   delete it;
    RWLockUnlock(s_userDatabaseLock);
 }
 
@@ -585,16 +582,15 @@ bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId)
 void FillGroupMembershipInfo(NXCPMessage *msg, uint32_t userId)
 {
    IntegerArray<uint32_t> list;
-   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
-   while(it->hasNext())
+   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+   while(it.hasNext())
    {
-      UserDatabaseObject *object = it->next();
+      UserDatabaseObject *object = it.next();
 		if (object->isGroup() && (object->getId() != GROUP_EVERYONE) && ((Group *)object)->isMember(userId))
 		{
          list.add(object->getId());
 		}
    }
-   delete it;
    msg->setField(VID_NUM_GROUPS, list.size());
    if (list.size() > 0)
       msg->setFieldFromInt32Array(VID_GROUPS, &list);
@@ -605,10 +601,10 @@ void FillGroupMembershipInfo(NXCPMessage *msg, uint32_t userId)
  */
 void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups)
 {
-   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
-   while(it->hasNext())
+   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+   while(it.hasNext())
    {
-      UserDatabaseObject *object = it->next();
+      UserDatabaseObject *object = it.next();
 		if (object->isGroup() && (object->getId() != GROUP_EVERYONE))
 		{
          bool found = false;
@@ -630,7 +626,6 @@ void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups)
          }
 		}
    }
-   delete it;
 }
 
 /**
@@ -703,16 +698,15 @@ static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked
       object->setDeleted();
       if (!(id & GROUP_FLAG))
       {
-         Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
-         while(it->hasNext())
+         Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+         while(it.hasNext())
          {
-            UserDatabaseObject *group = it->next();
+            UserDatabaseObject *group = it.next();
             if (group->getId() & GROUP_FLAG)
             {
                static_cast<Group*>(group)->deleteUser(id);
             }
          }
-         delete it;
       }
    }
 
@@ -999,10 +993,10 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
 void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringObjectMap<LDAP_Object> *entryListId, uint32_t m_action, bool isUser)
 {
    RWLockWriteLock(s_userDatabaseLock);
-   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
-   while(it->hasNext())
+   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+   while(it.hasNext())
    {
-      UserDatabaseObject *object = it->next();
+      UserDatabaseObject *object = it.next();
       if (!object->isLDAPUser() || object->isDeleted())
          continue;
 
@@ -1024,7 +1018,6 @@ void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringO
          }
 		}
    }
-   delete it;
    RWLockUnlock(s_userDatabaseLock);
 }
 
@@ -1086,10 +1079,10 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
     * Go through newly received group member list checking each LDAP user/group by DN
     * with existing group member list and adding users/groups not existing in last list.
     */
-   ConstIterator<const TCHAR> *it = newMembers.constIterator();
-   while(it->hasNext())
+   auto it = newMembers.begin();
+   while(it.hasNext())
    {
-      const TCHAR *dn = it->next();
+      const TCHAR *dn = it.next();
       UserDatabaseObject *user = s_ldapNames.get(dn);
       if (user == nullptr)
          continue;
@@ -1100,7 +1093,6 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
          group->addUser(user->getId());
       }
    }
-   delete it;
 
    RWLockUnlock(s_userDatabaseLock);
 }
@@ -1222,10 +1214,10 @@ void DumpUsers(CONSOLE_CTX pCtx)
                        _T("-----------------------------------------------------------------------\n"));
 
    RWLockReadLock(s_userDatabaseLock);
-   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
-   while(it->hasNext())
+   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+   while(it.hasNext())
    {
-      UserDatabaseObject *object = it->next();
+      UserDatabaseObject *object = it.next();
 		if (!object->isGroup())
       {
          TCHAR szGUID[64];
@@ -1233,7 +1225,6 @@ void DumpUsers(CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, _T("%-20s %-36s 0x") UINT64X_FMT(_T("016")) _T("\n"), object->getName(), object->getGuidAsText(szGUID), systemRights);
 		}
 	}
-   delete it;
    RWLockUnlock(s_userDatabaseLock);
    ConsolePrintf(pCtx, _T("\n"));
 }
@@ -1529,18 +1520,17 @@ uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const TCHAR *lo
 /**
  * Open user database
  */
-Iterator<UserDatabaseObject> NXCORE_EXPORTABLE *OpenUserDatabase()
+Iterator<UserDatabaseObject> NXCORE_EXPORTABLE OpenUserDatabase()
 {
    RWLockReadLock(s_userDatabaseLock);
-	return s_userDatabase.iterator();
+	return s_userDatabase.begin();
 }
 
 /**
  * Close user database
  */
-void NXCORE_EXPORTABLE CloseUserDatabase(Iterator<UserDatabaseObject> *it)
+void NXCORE_EXPORTABLE CloseUserDatabase()
 {
-   delete it;
    RWLockUnlock(s_userDatabaseLock);
 }
 
@@ -1709,10 +1699,10 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId)
       *sep = 0;
 
    RWLockReadLock(s_userDatabaseLock);
-   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
-   while(it->hasNext())
+   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+   while(it.hasNext())
    {
-      UserDatabaseObject *object = it->next();
+      UserDatabaseObject *object = it.next();
 		if (!object->isGroup() &&
           !object->isDisabled() && !object->isDeleted() &&
 			 !_tcsicmp(_xmppId, ((User *)object)->getXmppId()))
@@ -1728,7 +1718,6 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId)
          break;
       }
    }
-   delete it;
    RWLockUnlock(s_userDatabaseLock);
 
    MemFree(_xmppId);
@@ -1757,10 +1746,10 @@ bool AuthenticateUserForXMPPCommands(const char *xmppId)
       *sep = 0;
 
    RWLockReadLock(s_userDatabaseLock);
-   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
-   while(it->hasNext())
+   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+   while(it.hasNext())
    {
-      UserDatabaseObject *object = it->next();
+      UserDatabaseObject *object = it.next();
       if (!object->isGroup() &&
           !object->isDisabled() && !object->isDeleted() &&
           !_tcsicmp(_xmppId, ((User *)object)->getXmppId()))
@@ -1785,7 +1774,6 @@ bool AuthenticateUserForXMPPCommands(const char *xmppId)
          break;
       }
    }
-   delete it;
    RWLockUnlock(s_userDatabaseLock);
 
    MemFree(_xmppId);

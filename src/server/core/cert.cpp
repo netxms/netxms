@@ -431,10 +431,10 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
  */
 void ReloadCertificates()
 {
-   auto it = g_crlList.iterator();
-   while(it->hasNext())
+   auto it = g_crlList.begin();
+   while(it.hasNext())
    {
-      const TCHAR *location = it->next();
+      const TCHAR *location = it.next();
       if (!_tcsncmp(location, _T("http://"), 7) || !_tcsncmp(location, _T("https://"), 8))
       {
 #ifdef UNICODE
@@ -450,7 +450,6 @@ void ReloadCertificates()
          AddLocalCRL(location);
       }
    }
-   delete it;
 
 	s_certificateStoreLock.lock();
 

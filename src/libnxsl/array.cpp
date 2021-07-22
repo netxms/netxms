@@ -85,14 +85,13 @@ NXSL_Array::NXSL_Array(NXSL_ValueManager *vm, const StringSet& values) : NXSL_Ha
    {
       m_data = MemAllocArrayNoInit<NXSL_ArrayElement>(m_size);
       int index = 0;
-      auto it = values.constIterator();
-      while(it->hasNext())
+      auto it = values.begin();
+      while(it.hasNext())
       {
          m_data[index].index = index;
-         m_data[index].value = m_vm->createValue(it->next());
+         m_data[index].value = m_vm->createValue(it.next());
          index++;
       }
-      delete it;
    }
    else
    {

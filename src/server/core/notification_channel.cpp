@@ -691,15 +691,14 @@ void GetNotificationChannels(NXCPMessage *msg)
 {
    s_channelListLock.lock();
    uint32_t base = VID_ELEMENT_LIST_BASE;
-   Iterator<std::pair<const TCHAR*, NotificationChannel*>> *it = s_channelList.iterator();
+   Iterator<std::pair<const TCHAR*, NotificationChannel*>> it = s_channelList.begin();
    msg->setField(VID_CHANNEL_COUNT, s_channelList.size());
-   while(it->hasNext())
+   while(it.hasNext())
    {
-      NotificationChannel *nc = it->next()->second;
+      NotificationChannel *nc = it.next()->second;
       nc->fillMessage(msg, base);
       base += 20;
    }
-   delete it;
    s_channelListLock.unlock();
 }
 

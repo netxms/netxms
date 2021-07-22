@@ -261,13 +261,12 @@ void GetAgentTunnels(NXCPMessage *msg)
       fieldId += 64;
    }
 
-   auto it = s_boundTunnels.iterator();
-   while(it->hasNext())
+   auto it = s_boundTunnels.begin();
+   while(it.hasNext())
    {
-      (*it->next())->fillMessage(msg, fieldId);
+      (*it.next())->fillMessage(msg, fieldId);
       fieldId += 64;
    }
-   delete it;
 
    msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(s_unboundTunnels.size() + s_boundTunnels.size()));
    s_tunnelListLock.unlock();
@@ -284,16 +283,15 @@ void ShowAgentTunnels(CONSOLE_CTX console)
             _T("\n\x1b[1mBOUND TUNNELS\x1b[0m\n")
             _T(" ID  | Node ID | EP  | Chan. | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
             _T("-----+---------+-----+-------+--------------------------+--------------------------+--------------------------+------------------+---------------+--------------------------\n"));
-   auto it = s_boundTunnels.iterator();
-   while(it->hasNext())
+   auto it = s_boundTunnels.begin();
+   while(it.hasNext())
    {
-      AgentTunnel *t = it->next()->get();
+      AgentTunnel *t = it.next()->get();
       TCHAR ipAddrBuffer[64];
       ConsolePrintf(console, _T("%4d | %7u | %-3s | %5d | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->getNodeId(),
                t->isExtProvCertificate() ? _T("YES") : _T("NO"), t->getChannelCount(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(),
                t->getHostname(), t->getPlatformName(), t->getAgentVersion(), t->getAgentBuildTag());
    }
-   delete it;
 
    ConsolePrintf(console,
             _T("\n\x1b[1mUNBOUND TUNNELS\x1b[0m\n")
@@ -506,14 +504,13 @@ void AgentTunnel::finalize()
 
    // shutdown all channels
    MutexLock(m_channelLock);
-   auto it = m_channels.iterator();
-   while(it->hasNext())
+   auto it = m_channels.begin();
+   while(it.hasNext())
    {
-      AgentTunnelCommChannel *channel = it->next()->get();
+      AgentTunnelCommChannel *channel = it.next()->get();
       channel->shutdown();
       channel->detach();
    }
-   delete it;
    m_channels.clear();
    MutexUnlock(m_channelLock);
 
@@ -1776,12 +1773,11 @@ void CloseAgentTunnels()
    s_tunnelListenerLock.unlock();
 
    s_tunnelListLock.lock();
-   auto it = s_boundTunnels.iterator();
-   while(it->hasNext())
+   auto it = s_boundTunnels.begin();
+   while(it.hasNext())
    {
-      (*it->next())->shutdown();
+      (*it.next())->shutdown();
    }
-   delete it;
    for(int i = 0; i < s_unboundTunnels.size(); i++)
       s_unboundTunnels.get(i)->shutdown();
    s_tunnelListLock.unlock();
@@ -2087,16 +2083,15 @@ void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameter
 
    s_tunnelListLock.lock();
    time_t now = time(nullptr);
-   auto it = s_boundTunnels.iterator();
-   while(it->hasNext())
+   auto it = s_boundTunnels.begin();
+   while(it.hasNext())
    {
-      shared_ptr<AgentTunnel> t = *it->next();
+      shared_ptr<AgentTunnel> t = *it.next();
       if (!t->isExtProvCertificate() && (t->getCertificateExpirationTime() - now <= 2592000))  // 30 days
       {
          processingList.add(t);
       }
    }
-   delete it;
    s_tunnelListLock.unlock();
 
    if (processingList.isEmpty())
@@ -2137,10 +2132,10 @@ int GetTunnelCount(TunnelCapabilityFilter filter, bool boundTunnels)
    else
    {
       s_tunnelListLock.lock();
-      Iterator<shared_ptr<AgentTunnel>> *it = boundTunnels ? s_boundTunnels.iterator() : s_unboundTunnels.iterator();
-      while (it->hasNext())
+      Iterator<shared_ptr<AgentTunnel>> it = boundTunnels ? s_boundTunnels.begin() : s_unboundTunnels.begin();
+      while (it.hasNext())
       {
-         AgentTunnel *t = it->next()->get();
+         AgentTunnel *t = it.next()->get();
          if ((filter == TunnelCapabilityFilter::AGENT_PROXY && t->isAgentProxy()) ||
              (filter == TunnelCapabilityFilter::SNMP_PROXY && t->isSnmpProxy()) ||
              (filter == TunnelCapabilityFilter::SNMP_TRAP_PROXY && t->isSnmpTrapProxy()) ||
@@ -2150,7 +2145,6 @@ int GetTunnelCount(TunnelCapabilityFilter filter, bool boundTunnels)
             count++;
          }
       }
-      delete it;
       s_tunnelListLock.unlock();
    }
 
