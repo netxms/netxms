@@ -1162,7 +1162,7 @@ public class DataCollectionEditor extends ViewPart
       if (!viewerContainer.isDisposed())
       {
          viewerContainer.showMessage(CompositeWithMessageBar.INFORMATION,
-               "Changes in data collection will be deployed to nodes the moment when the tab is closed");
+               "Changes in data collection configuration will be deployed to nodes the moment when the tab is closed");
       }
    }
 }
