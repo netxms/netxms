@@ -29,6 +29,7 @@
  * Configured parsers
  */
 static ObjectArray<LogParser> s_parsers(16, 16, Ownership::True);
+static ObjectArray<LogParser> s_templateParsers(16, 16, Ownership::True);
 static Mutex s_parserLock;
 
 /**
@@ -128,6 +129,9 @@ static void SubagentShutdown()
    for(int i = 0; i < s_parsers.size(); i++)
       s_parsers.get(i)->stop();
 
+   for(int i = 0; i < s_templateParsers.size(); i++)
+      s_templateParsers.get(i)->stop();
+
    CleanupLogParserLibrary();
 }
 
@@ -185,6 +189,99 @@ static void ExecuteAction(const TCHAR *action, const StringList& args, void *use
 }
 
 /**
+ * File template watching thread
+ */
+static void ParserThreadTemplate(LogParser *parser)
+{
+   const TCHAR * last_separator = _tcsrchr(parser->getFileName(), FS_PATH_SEPARATOR_CHAR);
+   TCHAR dirPath[256];
+   memset(dirPath, 0, sizeof dirPath);
+   memcpy(dirPath, parser->getFileName(), ((last_separator - (parser->getFileName())) + 1) * sizeof(TCHAR));
+   TCHAR *fileTemplate = MemCopyString(last_separator + 1);
+
+   StringObjectMap<LogParser> currentWatchedFiles(Ownership::False);
+
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Starting file template log watching: dir:%s file template:%s"), dirPath, fileTemplate);
+
+   while(true)
+   {
+      StringList matchingFileList;
+      StringList* previousWatchedFiles = currentWatchedFiles.keys();
+
+      _TDIR *dir = _topendir(dirPath);
+      if (dir != NULL)
+      {
+         struct _tdirent *d;
+         while((d = _treaddir(dir)) != NULL)
+         {
+            if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+            {
+               continue;
+            }
+
+#if defined(__APPLE__) || defined(_WIN32) //Case insensitive
+            if(MatchString(fileTemplate, d->d_name, false))
+#else
+            if(MatchString(fileTemplate, d->d_name, true))
+#endif
+            {
+               matchingFileList.add(d->d_name);
+            }
+         }
+         _tclosedir(dir);
+      }
+
+      for(int i = 0; i < previousWatchedFiles->size(); )
+      {
+         int index = matchingFileList.indexOf(previousWatchedFiles->get(i));
+         if(index != -1)
+         {
+            matchingFileList.remove(index);
+            previousWatchedFiles->remove(i);
+         }
+         else
+         {
+            i++;
+         }
+      }
+
+      for(int i = 0; i < matchingFileList.size(); i++)
+      {
+         LogParser *p = new LogParser(parser);
+         StringBuffer path;
+         path.appendFormattedString(_T("%s%s"), dirPath, matchingFileList.get(i));
+         p->setFileName(path.getBuffer());
+         p->setCallback(LogParserMatch);
+         p->setActionCallback(ExecuteAction);
+         p->setThread(ThreadCreateEx(ParserThreadFile, p));
+         currentWatchedFiles.set(matchingFileList.get(i), p);
+      }
+
+      for(int i = 0; i < previousWatchedFiles->size(); i++)
+      {
+         LogParser *p = currentWatchedFiles.unlink(previousWatchedFiles->get(i));
+         p->stop();
+         delete p;
+      }
+
+      delete previousWatchedFiles;
+
+      if (ConditionWait(parser->getStopCondition(), 10000))
+         break;
+   }
+
+   ObjectArray<LogParser> * parsers = currentWatchedFiles.values();
+   for(int i = 0; i < parsers->size(); i++)
+   {
+      LogParser *p = parsers->get(i);
+      p->stop();
+      delete p;
+   }
+   delete parsers;
+   MemFree(fileTemplate);
+}
+
+/**
  * Add parser from config parameter
  */
 static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
@@ -202,15 +299,25 @@ static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
 				LogParser *parser = parsers->get(i);
 				if (parser->getFileName() != nullptr)
 				{
-					parser->setCallback(LogParserMatch);
-               parser->setActionCallback(ExecuteAction);
-               parser->setGuid(guid);
-               s_parsers.add(parser);
-               nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file \"%s\", GUID %s, trace level %d"),
+               if (_tcscspn(parser->getFileName() + 1, _T("*?")) != _tcslen(parser->getFileName() + 1))
+               {
+                  parser->setGuid(guid);
+                  s_templateParsers.add(parser);
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file template \"%s\", GUID %s, trace level %d"),
+						parser->getFileName(), (const TCHAR *)guid.toString(), parser->getTraceLevel());
+               }
+               else
+               {
+                  parser->setCallback(LogParserMatch);
+                  parser->setActionCallback(ExecuteAction);
+                  parser->setGuid(guid);
+                  s_parsers.add(parser);
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file \"%s\", GUID %s, trace level %d"),
 						parser->getFileName(), (const TCHAR *)guid.toString(), parser->getTraceLevel());
 #ifdef _WIN32
-					nxlog_debug_tag(DEBUG_TAG, 5, _T("Process RSS after parser creation is ") INT64_FMT _T(" bytes"), GetProcessRSS());
+                  nxlog_debug_tag(DEBUG_TAG, 5, _T("Process RSS after parser creation is ") INT64_FMT _T(" bytes"), GetProcessRSS());
 #endif
+               }
 				}
 				else
 				{
@@ -306,9 +413,8 @@ static bool SubagentInit(Config *config)
 			AddParserFromConfig(parsers->getValue(i), uuid::NULL_UUID);
 	}
    AddLogwatchPolicyFiles();
-
 	// Start parsing threads
-   for(int i = 0; i < s_parsers.size(); i++)
+   for (int i = 0; i < s_parsers.size(); i++)
 	{
       LogParser *p = s_parsers.get(i);
 #ifdef _WIN32
@@ -327,6 +433,12 @@ static bool SubagentInit(Config *config)
 		p->setThread(ThreadCreateEx(ParserThreadFile, p));
 #endif
 	}
+
+   for (int i = 0; i < s_templateParsers.size(); i++)
+   {
+      LogParser *p = s_templateParsers.get(i);
+      p->setThread(ThreadCreateEx(ParserThreadTemplate, p));
+   }
 
 	return true;
 }
@@ -356,6 +468,15 @@ static void OnAgentNotify(UINT32 code, void *data)
       s_parsers.remove(i);
       i--;
    }
+
+   for (int i = 0; i < s_templateParsers.size(); i++)
+   {
+      LogParser *p = s_templateParsers.get(i);
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Reloading parser for file %s"), p->getFileName());
+      p->stop();
+      delete p;
+   }
+   s_templateParsers.clear();
 
    const TCHAR *dataDir = AgentGetDataDirectory();
    TCHAR tail = dataDir[_tcslen(dataDir) - 1];
@@ -388,6 +509,12 @@ static void OnAgentNotify(UINT32 code, void *data)
 #else
       p->setThread(ThreadCreateEx(ParserThreadFile, p));
 #endif
+   }
+
+   for (int i = 0; i < s_templateParsers.size(); i++)
+   {
+      LogParser *p = s_templateParsers.get(i);
+      p->setThread(ThreadCreateEx(ParserThreadTemplate, p));
    }
 
    s_parserLock.unlock();
