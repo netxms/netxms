@@ -210,6 +210,46 @@ bool CambiumEPMPDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *no
 }
 
 /**
+ * Get device geographical location.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @return device geographical location or "UNSET" type location object
+ */
+GeoLocation CambiumEPMPDriver::getGeoLocation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+{
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.1.1.18.0")));   // cambiumDeviceLatitude
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.1.1.19.0")));  // cambiumDeviceLongitude
+
+   SNMP_PDU *response;
+   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) != SNMP_ERR_SUCCESS)
+      return GeoLocation();
+
+   if (response->getNumVariables() != request.getNumVariables())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Malformed device response in CambiumEPMPDriver::getGeoLocation"));
+      delete response;
+      return GeoLocation();
+   }
+
+   TCHAR latitudeString[64], longitudeString[64], *eptrLat, *eptrLon;
+   response->getVariable(0)->getValueAsString(latitudeString, 64);
+   response->getVariable(1)->getValueAsString(longitudeString, 64);
+   double latitude = _tcstod(latitudeString, &eptrLat);
+   double longitude = _tcstod(longitudeString, &eptrLon);
+
+   if ((*eptrLat != 0) || (*eptrLon != 0) || ((latitude == 0) && (longitude == 0)))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("CambiumEPMPDriver::getGeoLocation: invalid coordinates %s %s"), latitudeString, longitudeString);
+      return GeoLocation();
+   }
+
+   return GeoLocation(GL_GPS, latitude, longitude);
+}
+
+/**
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
