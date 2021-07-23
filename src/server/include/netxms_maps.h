@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -300,44 +300,65 @@ public:
 };
 
 /**
+ * Network map link color source
+ */
+enum MapLinkColorSource
+{
+   MAP_LINK_COLOR_SOURCE_UNDEFINED = -1,
+   MAP_LINK_COLOR_SOURCE_DEFAULT = 0,
+   MAP_LINK_COLOR_SOURCE_OBJECT_STATUS = 1,
+   MAP_LINK_COLOR_SOURCE_CUSTOM_COLOR = 2,
+   MAP_LINK_COLOR_SOURCE_SCRIPT = 3
+};
+
+/**
  * Link on map
  */
 class NetworkMapLink
 {
 protected:
-	UINT32 m_element1;
-	UINT32 m_element2;
+	uint32_t m_element1;
+	uint32_t m_element2;
 	int m_type;
 	TCHAR *m_name;
 	TCHAR *m_connectorName1;
 	TCHAR *m_connectorName2;
-	UINT32 m_flags;
+	uint32_t m_flags;
+	MapLinkColorSource m_colorSource;
+	uint32_t m_color;
+	TCHAR *m_colorProvider;
 	TCHAR *m_config;
 
 public:
-	NetworkMapLink(UINT32 e1, UINT32 e2, int type);
-	NetworkMapLink(NXCPMessage *msg, UINT32 baseId);
+	NetworkMapLink(uint32_t e1, uint32_t e2, int type);
+	NetworkMapLink(NXCPMessage *msg, uint32_t baseId);
 	virtual ~NetworkMapLink();
 
-	void fillMessage(NXCPMessage *msg, UINT32 baseId);
+	void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    json_t *toJson() const;
 
-	UINT32 getElement1() const { return m_element1; }
-	UINT32 getElement2() const { return m_element2; }
+   uint32_t getElement1() const { return m_element1; }
+   uint32_t getElement2() const { return m_element2; }
 
 	const TCHAR *getName() const { return CHECK_NULL_EX(m_name); }
 	const TCHAR *getConnector1Name() const { return CHECK_NULL_EX(m_connectorName1); }
 	const TCHAR *getConnector2Name() const { return CHECK_NULL_EX(m_connectorName2); }
 	int getType() const { return m_type; }
-	UINT32 getFlags() const { return m_flags; }
-	const TCHAR *getConfig() const { return CHECK_NULL_EX(m_config); }
-	bool checkFlagSet(UINT32 flag) const { return (m_flags & flag) != 0; }
+	uint32_t getFlags() const { return m_flags; }
+	bool checkFlagSet(uint32_t flag) const { return (m_flags & flag) != 0; }
+	MapLinkColorSource getColorSource() const { return m_colorSource; }
+	uint32_t getColor() const { return m_color; }
+   const TCHAR *getColorProvider() const { return CHECK_NULL_EX(m_colorProvider); }
+   const TCHAR *getConfig() const { return CHECK_NULL_EX(m_config); }
 
 	void setName(const TCHAR *name);
 	void setConnector1Name(const TCHAR *name);
 	void setConnector2Name(const TCHAR *name);
-	void setFlags(UINT32 flags) { m_flags = flags; }
-	void setConfig(const TCHAR *name);
+	void setFlags(uint32_t flags) { m_flags = flags; }
+   void setColorSource(MapLinkColorSource colorSource) { m_colorSource = colorSource; }
+   void setColor(uint32_t color) { m_color = color; }
+   void setColorProvider(const TCHAR *colorProvider);
+	void setConfig(const TCHAR *config);
 	void swap();
 };
 

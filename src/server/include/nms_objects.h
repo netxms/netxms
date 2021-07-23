@@ -4177,8 +4177,8 @@ protected:
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
    void updateObjects(NetworkMapObjectList *objects);
-   UINT32 objectIdFromElementId(UINT32 eid);
-   UINT32 elementIdFromObjectId(UINT32 eid);
+   uint32_t objectIdFromElementId(uint32_t eid);
+   uint32_t elementIdFromObjectId(uint32_t eid);
 
    void setFilter(const TCHAR *filter);
    bool isAllowedOnMap(const shared_ptr<NetObj>& object);

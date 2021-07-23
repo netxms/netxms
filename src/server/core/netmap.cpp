@@ -77,7 +77,9 @@ NetworkMap::NetworkMap(int type, IntegerArray<UINT32> *seeds) : super()
 	   m_seedObjects->add(FindLocalMgmtNode());
 	}
 	else
+	{
 	   m_seedObjects = new IntegerArray<UINT32>(seeds);
+	}
 	m_discoveryRadius = -1;
 	m_flags = MF_SHOW_STATUS_ICON;
    m_layout = (type == NETMAP_USER_DEFINED) ? MAP_LAYOUT_MANUAL : MAP_LAYOUT_SPRING;
@@ -96,7 +98,6 @@ NetworkMap::NetworkMap(int type, IntegerArray<UINT32> *seeds) : super()
    m_filter = nullptr;
 	m_isHidden = true;
    setCreationTime();
-
 }
 
 /**
@@ -330,7 +331,9 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       lockProperties();
       if (success && !m_links->isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags) VALUES (?,?,?,?,?,?,?,?,?)"));
+         DB_STATEMENT hStmt = DBPrepare(hdb,
+                  _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags,color_source,color,color_provider) ")
+                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"), m_links->size() > 1);
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -339,12 +342,15 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
                NetworkMapLink *l = m_links->get(i);
                DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, l->getElement1());
                DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, l->getElement2());
-               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)l->getType());
+               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, l->getType());
                DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, l->getName(), DB_BIND_STATIC);
                DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, l->getConnector1Name(), DB_BIND_STATIC);
                DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, l->getConnector2Name(), DB_BIND_STATIC);
                DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, l->getConfig(), DB_BIND_STATIC);
                DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, l->getFlags());
+               DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, static_cast<int32_t>(l->getColorSource()));
+               DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, l->getColor());
+               DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, l->getColorProvider(), DB_BIND_STATIC);
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);
@@ -504,7 +510,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
 
 		// Load links
-      _sntprintf(query, 256, _T("SELECT element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags FROM network_map_links WHERE map_id=%d"), m_id);
+      _sntprintf(query, 256, _T("SELECT element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags,color_source,color,color_provider FROM network_map_links WHERE map_id=%u"), m_id);
       hResult = DBSelect(hdb, query);
       if (hResult != nullptr)
       {
@@ -519,6 +525,9 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 				l->setConnector2Name(DBGetField(hResult, i, 5, buffer, 256));
 				l->setConfig(DBGetField(hResult, i, 6, buffer, 4096));
 				l->setFlags(DBGetFieldULong(hResult, i, 7));
+            l->setColorSource(static_cast<MapLinkColorSource>(DBGetFieldLong(hResult, i, 8)));
+            l->setColor(DBGetFieldULong(hResult, i, 9));
+            l->setColorProvider(DBGetField(hResult, i, 10, buffer, 4096));
 				m_links->add(l);
 			}
          DBFreeResult(hResult);
@@ -570,19 +579,19 @@ void NetworkMap::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    msg->setField(VID_FILTER, CHECK_NULL_EX(m_filterSource));
 
 	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
-	UINT32 varId = VID_ELEMENT_LIST_BASE;
+	uint32_t fieldId = VID_ELEMENT_LIST_BASE;
 	for(int i = 0; i < m_elements->size(); i++)
 	{
-		m_elements->get(i)->fillMessage(msg, varId);
-		varId += 100;
+		m_elements->get(i)->fillMessage(msg, fieldId);
+		fieldId += 100;
 	}
 
 	msg->setField(VID_NUM_LINKS, (UINT32)m_links->size());
-	varId = VID_LINK_LIST_BASE;
+	fieldId = VID_LINK_LIST_BASE;
 	for(int i = 0; i < m_links->size(); i++)
 	{
-		m_links->get(i)->fillMessage(msg, varId);
-		varId += 20;
+		m_links->get(i)->fillMessage(msg, fieldId);
+		fieldId += 20;
 	}
 }
 
@@ -940,7 +949,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
  * Get object ID from map element ID
  * Assumes that object data already locked
  */
-UINT32 NetworkMap::objectIdFromElementId(UINT32 eid)
+uint32_t NetworkMap::objectIdFromElementId(uint32_t eid)
 {
 	for(int i = 0; i < m_elements->size(); i++)
 	{
@@ -964,7 +973,7 @@ UINT32 NetworkMap::objectIdFromElementId(UINT32 eid)
  * Get map element ID from object ID
  * Assumes that object data already locked
  */
-UINT32 NetworkMap::elementIdFromObjectId(UINT32 oid)
+uint32_t NetworkMap::elementIdFromObjectId(uint32_t oid)
 {
 	for(int i = 0; i < m_elements->size(); i++)
 	{

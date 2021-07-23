@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,6 +49,13 @@ public class NetworkMapLink
    public static final int ROUTING_MANHATTAN = 2;
    public static final int ROUTING_BENDPOINTS = 3;
 
+   // Color sources
+   public static final int COLOR_SOURCE_UNDEFINED = -1;
+   public static final int COLOR_SOURCE_DEFAULT = 0;
+   public static final int COLOR_SOURCE_OBJECT_STATUS = 1;
+   public static final int COLOR_SOURCE_CUSTOM_COLOR = 2;
+   public static final int COLOR_SOURCE_SCRIPT = 3;
+
    private static Logger logger = LoggerFactory.getLogger(NetworkMapLink.class);
 
    private String name;
@@ -57,6 +64,9 @@ public class NetworkMapLink
    private long element2;
    private String connectorName1;
    private String connectorName2;
+   private int colorSource;
+   private int color;
+   private String colorProvider;
    private LinkConfig config = new LinkConfig();
    private int flags;
    private int duplicateCount = 0;
@@ -75,38 +85,6 @@ public class NetworkMapLink
    public NetworkMapLink(String name, int type, long element1, long element2, String connectorName1, String connectorName2,
          SingleDciConfig[] dciList, int flags, boolean isLocked)
    {
-      config.setDciList(dciList);
-      config.setLocked(isLocked);
-      initData(name, type, element1, element2, connectorName1, connectorName2, flags);
-   }
-
-   /**
-    * @param name
-    * @param type
-    * @param element1 network map internal element id
-    * @param element2 network map internal element id
-    * @param connectorName1
-    * @param connectorName2
-    * @param flags
-    */
-   public NetworkMapLink(String name, int type, long element1, long element2, String connectorName1, String connectorName2,
-         int flags)
-   {
-      initData(name, type, element1, element2, connectorName1, connectorName2, flags);
-   }
-
-   /**
-    * @param name
-    * @param type
-    * @param element1 network map internal element id
-    * @param element2 network map internal element id
-    * @param connectorName1
-    * @param connectorName2
-    * @param flags
-    */
-   public void initData(String name, int type, long element1, long element2, String connectorName1, String connectorName2,
-         int flags)
-   {
       this.name = name;
       this.type = type;
       this.element1 = element1;
@@ -114,6 +92,25 @@ public class NetworkMapLink
       this.connectorName1 = connectorName1;
       this.connectorName2 = connectorName2;
       this.flags = flags;
+      this.colorSource = COLOR_SOURCE_DEFAULT;
+      this.color = 0;
+      this.colorProvider = null;
+      config.setDciList(dciList);
+      config.setLocked(isLocked);
+   }
+
+   /**
+    * @param name
+    * @param type
+    * @param element1 network map internal element id
+    * @param element2 network map internal element id
+    * @param connectorName1
+    * @param connectorName2
+    * @param flags
+    */
+   public NetworkMapLink(String name, int type, long element1, long element2, String connectorName1, String connectorName2, int flags)
+   {
+      this(name, type, element1, element2, connectorName1, connectorName2, null, flags, false);
    }
 
    /**
@@ -123,13 +120,7 @@ public class NetworkMapLink
     */
    public NetworkMapLink(int type, long element1, long element2)
    {
-      this.name = "";
-      this.type = type;
-      this.element1 = element1;
-      this.element2 = element2;
-      this.connectorName1 = "";
-      this.connectorName2 = "";
-      this.flags = 0;
+      this("", type, element1, element2, "", "", null, 0, false);
    }
 
    /**
@@ -147,6 +138,9 @@ public class NetworkMapLink
       connectorName1 = msg.getFieldAsString(baseId + 2);
       connectorName2 = msg.getFieldAsString(baseId + 3);
       flags = msg.getFieldAsInt32(baseId + 7);
+      colorSource = msg.getFieldAsInt32(baseId + 8);
+      color = msg.getFieldAsInt32(baseId + 9);
+      colorProvider = msg.getFieldAsString(baseId + 10);
 
       String xml = msg.getFieldAsString(baseId + 6);
       try
@@ -186,6 +180,9 @@ public class NetworkMapLink
       msg.setFieldInt32(baseId + 5, (int)element2);
       msg.setField(baseId + 6, xml);
       msg.setFieldInt32(baseId + 7, flags);
+      msg.setFieldInt16(baseId + 8, colorSource);
+      msg.setFieldInt32(baseId + 9, color);
+      msg.setField(baseId + 10, colorProvider);
    }
 
    /**
@@ -314,7 +311,7 @@ public class NetworkMapLink
     */
    public int getColor()
    {
-      return config.getColor();
+      return color;
    }
 
    /**
@@ -322,7 +319,7 @@ public class NetworkMapLink
     */
    public void setColor(int color)
    {
-      config.setColor(color);
+      this.color = color;
    }
 
    /**
@@ -332,7 +329,7 @@ public class NetworkMapLink
     */
    public int getColorSource()
    {
-      return config.getColorSource();
+      return colorSource;
    }
 
    /**
@@ -342,7 +339,23 @@ public class NetworkMapLink
     */
    public void setColorSource(int colorSource)
    {
-      config.setColorSource(colorSource);
+      this.colorSource = colorSource;
+   }
+
+   /**
+    * @return the colorProvider
+    */
+   public String getColorProvider()
+   {
+      return (colorProvider != null) ? colorProvider : "";
+   }
+
+   /**
+    * @param colorProvider the colorProvider to set
+    */
+   public void setColorProvider(String colorProvider)
+   {
+      this.colorProvider = colorProvider;
    }
 
    /**
@@ -543,14 +556,14 @@ public class NetworkMapLink
       return config;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
       return "NetworkMapLink [name=" + name + ", type=" + type + ", element1=" + element1 + ", element2=" + element2
-            + ", connectorName1=" + connectorName1 + ", connectorName2=" + connectorName2 + ", color=" + config.getColor()
-            + ", statusObject=" + config.getObjectStatusList() + ", routing=" + config.getRouting() + ", flags=" + flags + "]";
+            + ", connectorName1=" + connectorName1 + ", connectorName2=" + connectorName2 + ", colorSource=" + colorSource + ", color=" +
+            color + ", statusObject=" + config.getObjectStatusList() + ", routing=" + config.getRouting() + ", flags=" + flags + "]";
    }
 }

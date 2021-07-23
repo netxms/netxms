@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,11 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import org.eclipse.gef4.zest.core.viewers.IGraphEntityRelationshipContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.widgets.Display;
@@ -39,6 +41,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -49,7 +52,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	private ExtendedGraphViewer viewer;
 	private NetworkMapPage page;
 	private Map<Long, DciValue[]> cachedDciValues = new HashMap<Long, DciValue[]>();
-	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+   private NXCSession session = ConsoleSharedData.getSession();
 	private Thread syncThread = null;
 	private volatile boolean syncRunning = true;
 	private MapLabelProvider labelProvider;
@@ -67,92 +70,100 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 			@Override
 			public void run()
 			{
-				syncLastValues(display);
+				syncData(display);
 			}
 		});
 		syncThread.setDaemon(true);
 		syncThread.start();
 	}
-	
+
 	/**
-	 * Synchronize last values in background
-	 */
-	private void syncLastValues(Display display)
+    * Synchronize data in background
+    */
+	private void syncData(Display display)
 	{
 		try
 		{
 			Thread.sleep(1000);
 		}
-		catch(InterruptedException e3)
+      catch(InterruptedException e)
 		{
 			return;
 		}
+
 		while(syncRunning)
 		{
+         Set<Long> dataSyncSet = new HashSet<Long>();
 			synchronized(cachedDciValues)
 			{
-			   try 
-			   {
-			      if(labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL && cachedDciValues.size() > 0)
-			         cachedDciValues.putAll(session.getTooltipLastValues(cachedDciValues.keySet()));
-			   }
-            catch(Exception e2)
+            if ((labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL) && !cachedDciValues.isEmpty())
+               dataSyncSet.addAll(cachedDciValues.keySet());
+         }
+         if (!dataSyncSet.isEmpty())
+         {
+            try
             {
-               e2.printStackTrace();   // for debug
-            }
-				display.asyncExec(new Runnable() {
-					@Override
-					public void run()
-					{
-						if (viewer.getControl().isDisposed())
-							return;
-						
-						synchronized(cachedDciValues)
-						{
-						   if(labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL)
-						   {
-   							for(Entry<Long, DciValue[]> e : cachedDciValues.entrySet())
-   							{
-   								if ((e.getValue() == null) || (e.getValue().length == 0))
-   									continue;
-   								NetworkMapObject o = page.findObjectElement(e.getKey());
-   								if (o != null)
-   									viewer.refresh(o);
-   							}
-						   }
-							if(page != null && page.getLinks() != null)
-							{
-   							for(NetworkMapLink e : page.getLinks())
-                        {
-                           if (!e.hasDciData())
-                              continue;
-                           viewer.refresh(e);
-                        }
-							}
-							if(page != null && page.getElements() != null)
+               final Map<Long, DciValue[]> values = session.getTooltipLastValues(cachedDciValues.keySet());
+               display.asyncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     if (viewer.getControl().isDisposed())
+                        return;
+
+                     synchronized(cachedDciValues)
                      {
-                        for(NetworkMapElement e : page.getElements())
+                        cachedDciValues.putAll(values);
+
+                        if (labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL)
                         {
-                           if ((!(e instanceof NetworkMapDCIContainer) || !((NetworkMapDCIContainer)e).hasDciData()) && !(e instanceof NetworkMapDCIImage))
-                              continue;
-                           viewer.updateDecorationFigure(e);
+                           for(Entry<Long, DciValue[]> e : cachedDciValues.entrySet())
+                           {
+                              if ((e.getValue() == null) || (e.getValue().length == 0))
+                                 continue;
+                              NetworkMapObject o = page.findObjectElement(e.getKey());
+                              if (o != null)
+                                 viewer.refresh(o);
+                           }
+                        }
+                        if (page != null && page.getLinks() != null)
+                        {
+                           for(NetworkMapLink e : page.getLinks())
+                           {
+                              if (!e.hasDciData())
+                                 continue;
+                              viewer.refresh(e);
+                           }
+                        }
+                        if (page != null && page.getElements() != null)
+                        {
+                           for(NetworkMapElement e : page.getElements())
+                           {
+                              if ((!(e instanceof NetworkMapDCIContainer) || !((NetworkMapDCIContainer)e).hasDciData()) && !(e instanceof NetworkMapDCIImage))
+                                 continue;
+                              viewer.updateDecorationFigure(e);
+                           }
                         }
                      }
-						}
-					}
-				});
-			}
+                  }
+               });
+            }
+            catch(Exception e)
+            {
+               Activator.logError("Exception in map data synchronization task", e);
+            }
+         }
 			try
 			{
 				Thread.sleep(30000); 
 			}
-			catch(InterruptedException e1)
+         catch(InterruptedException e)
 			{
 				break;
 			}
 		}
 	}
-	
+
 	/**
 	 * Get last DCI values for given node
 	 * 
@@ -161,17 +172,15 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	 */
 	public DciValue[] getNodeLastValues(long nodeId)
 	{
-		DciValue[] values;
 		synchronized(cachedDciValues)
 		{
-			values = cachedDciValues.get(nodeId);
+         return cachedDciValues.get(nodeId);
 		}
-		return values;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IStructuredContentProvider#getElements(java.lang.Object)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.IStructuredContentProvider#getElements(java.lang.Object)
+    */
 	@Override
 	public Object[] getElements(Object inputElement)
 	{
@@ -185,18 +194,18 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 		return elements.toArray();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.gef4.zest.core.viewers.IGraphEntityRelationshipContentProvider#getRelationships(java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.gef4.zest.core.viewers.IGraphEntityRelationshipContentProvider#getRelationships(java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public Object[] getRelationships(Object source, Object dest)
 	{
 	   return page.findLinks((NetworkMapElement)source, (NetworkMapElement)dest).toArray();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IContentProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IContentProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -204,9 +213,9 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 		syncThread.interrupt();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 	{

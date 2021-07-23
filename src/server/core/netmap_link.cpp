@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -25,23 +25,25 @@
 /**
  * Constructor
  */
-NetworkMapLink::NetworkMapLink(UINT32 e1, UINT32 e2, int type)
+NetworkMapLink::NetworkMapLink(uint32_t e1, uint32_t e2, int type)
 {
 	m_element1 = e1;
 	m_element2 = e2;
 	m_type = type;
-	m_name = NULL;
-	m_connectorName1 = NULL;
-	m_connectorName2 = NULL;
-	m_config = _tcsdup(_T("\0"));
+	m_name = nullptr;
+	m_connectorName1 = nullptr;
+	m_connectorName2 = nullptr;
+	m_colorSource = MAP_LINK_COLOR_SOURCE_DEFAULT;
+	m_color = 0;
+	m_colorProvider = nullptr;
+	m_config = nullptr;
 	m_flags = 0;
 }
-
 
 /**
  * Constuctor: create link object from NXCP message
  */
-NetworkMapLink::NetworkMapLink(NXCPMessage *msg, UINT32 baseId)
+NetworkMapLink::NetworkMapLink(NXCPMessage *msg, uint32_t baseId)
 {
 	m_type = msg->getFieldAsUInt16(baseId);
 	m_name = msg->getFieldAsString(baseId + 1);
@@ -51,20 +53,22 @@ NetworkMapLink::NetworkMapLink(NXCPMessage *msg, UINT32 baseId)
 	m_element2 = msg->getFieldAsUInt32(baseId + 5);
 	m_config = msg->getFieldAsString(baseId + 6);
 	m_flags = msg->getFieldAsUInt32(baseId + 7);
+   m_colorSource = static_cast<MapLinkColorSource>(msg->getFieldAsInt16(baseId + 8));
+   m_color = msg->getFieldAsUInt32(baseId + 9);
+   m_colorProvider = msg->getFieldAsString(baseId + 10);
 }
-
 
 /**
  * Map link destructor
  */
 NetworkMapLink::~NetworkMapLink()
 {
-	free(m_name);
-	free(m_connectorName1);
-	free(m_connectorName2);
-	free(m_config);
+	MemFree(m_name);
+	MemFree(m_connectorName1);
+	MemFree(m_connectorName2);
+   MemFree(m_colorProvider);
+	MemFree(m_config);
 }
-
 
 /**
  * Set name
@@ -72,9 +76,8 @@ NetworkMapLink::~NetworkMapLink()
 void NetworkMapLink::setName(const TCHAR *name)
 {
 	MemFree(m_name);
-	m_name = (name != NULL) ? _tcsdup(name) : NULL;
+	m_name = MemCopyString(name);
 }
-
 
 /**
  * Set connector 1 name
@@ -82,16 +85,7 @@ void NetworkMapLink::setName(const TCHAR *name)
 void NetworkMapLink::setConnector1Name(const TCHAR *name)
 {
 	MemFree(m_connectorName1);
-	m_connectorName1 = (name != NULL) ? _tcsdup(name) : NULL;
-}
-
-/**
- * Set config(color, bendPoints, dciList, objectStatusList, routing)
- */
-void NetworkMapLink::setConfig(const TCHAR *name)
-{
-	MemFree(m_config);
-	m_config = (name != NULL) ? _tcsdup(name) : NULL;
+	m_connectorName1 = MemCopyString(name);
 }
 
 /**
@@ -100,7 +94,25 @@ void NetworkMapLink::setConfig(const TCHAR *name)
 void NetworkMapLink::setConnector2Name(const TCHAR *name)
 {
 	MemFree(m_connectorName2);
-	m_connectorName2 = (name != NULL) ? _tcsdup(name) : NULL;
+	m_connectorName2 = MemCopyString(name);
+}
+
+/**
+ * Set color provider
+ */
+void NetworkMapLink::setColorProvider(const TCHAR *colorProvider)
+{
+   MemFree(m_colorProvider);
+   m_colorProvider = MemCopyString(colorProvider);
+}
+
+/**
+ * Set config(bendPoints, dciList, objectStatusList, routing)
+ */
+void NetworkMapLink::setConfig(const TCHAR *config)
+{
+   MemFree(m_config);
+   m_config = MemCopyString(config);
 }
 
 /**
@@ -108,7 +120,7 @@ void NetworkMapLink::setConnector2Name(const TCHAR *name)
  */
 void NetworkMapLink::swap()
 {
-   UINT32 te = m_element1;
+   uint32_t te = m_element1;
    m_element1 = m_element2;
    m_element2 = te;
 
@@ -120,9 +132,9 @@ void NetworkMapLink::swap()
 /**
  * Fill NXCP message
  */
-void NetworkMapLink::fillMessage(NXCPMessage *msg, UINT32 baseId)
+void NetworkMapLink::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
-	msg->setField(baseId, (WORD)m_type);
+	msg->setField(baseId, static_cast<int16_t>(m_type));
 	msg->setField(baseId + 1, getName());
 	msg->setField(baseId + 2, getConnector1Name());
 	msg->setField(baseId + 3, getConnector2Name());
@@ -130,6 +142,9 @@ void NetworkMapLink::fillMessage(NXCPMessage *msg, UINT32 baseId)
 	msg->setField(baseId + 5, m_element2);
 	msg->setField(baseId + 6, m_config);
    msg->setField(baseId + 7, m_flags);
+   msg->setField(baseId + 8, static_cast<int16_t>(m_colorSource));
+   msg->setField(baseId + 9, m_color);
+   msg->setField(baseId + 10, getColorProvider());
 }
 
 /**
@@ -145,6 +160,9 @@ json_t *NetworkMapLink::toJson() const
    json_object_set_new(root, "connectorName1", json_string_t(m_connectorName1));
    json_object_set_new(root, "connectorName2", json_string_t(m_connectorName2));
    json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "colorSource", json_integer(static_cast<int32_t>(m_colorSource)));
+   json_object_set_new(root, "color", json_integer(m_color));
+   json_object_set_new(root, "colorProvider", json_string_t(m_colorProvider));
    json_object_set_new(root, "config", json_string_t(m_config));
    return root;
 }
