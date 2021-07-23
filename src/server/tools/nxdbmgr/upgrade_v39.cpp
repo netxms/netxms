@@ -24,11 +24,58 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 39.8 to 40.0
+ * Upgrade from 39.8 to 39.9
  */
 static bool H_UpgradeFromV8()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   static const TCHAR *batch =
+      _T("ALTER TABLE network_map_links ADD color_source integer\n")
+      _T("ALTER TABLE network_map_links ADD color integer\n")
+      _T("ALTER TABLE network_map_links ADD color_provider varchar(255)\n")
+      _T("UPDATE network_map_links SET color_source=0,color=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_map_links"), _T("color_source")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_map_links"), _T("color")));
+
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(g_dbHandle, _T("SELECT map_id,element1,element2,link_type,element_data FROM network_map_links"));
+   if (hResult != nullptr)
+   {
+      StringList updates;
+      while(DBFetch(hResult))
+      {
+         char *xml = DBGetFieldUTF8(hResult, 4, nullptr, 0);
+         if (xml != nullptr)
+         {
+            Config config;
+            if (config.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "config", false))
+            {
+               int color = config.getValueAsInt(_T("/color"), -1);
+               int colorSource = config.getValueAsInt(_T("/colorSource"), 0);
+               if ((color != -1) || (colorSource > 0))
+               {
+                  TCHAR query[256];
+                  _sntprintf(query, 256, _T("UPDATE network_map_links SET color=%d,color_source=%d WHERE map_id=%u AND element1=%u AND element2=%u AND link_type=%u"),
+                        color, colorSource, DBGetFieldULong(hResult, 0), DBGetFieldULong(hResult, 1), DBGetFieldULong(hResult, 2), DBGetFieldULong(hResult, 3));
+                  updates.add(query);
+               }
+            }
+            MemFree(xml);
+         }
+      }
+      DBFreeResult(hResult);
+
+      for(int i = 0; i < updates.size(); i++)
+      {
+         CHK_EXEC(SQLQuery(updates.get(i)));
+      }
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(9));
    return true;
 }
 
@@ -238,7 +285,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 8,  40, 0,  H_UpgradeFromV8  },
+   { 8,  39, 9,  H_UpgradeFromV8  },
    { 7,  39, 8,  H_UpgradeFromV7  },
    { 6,  39, 7,  H_UpgradeFromV6  },
    { 5,  39, 6,  H_UpgradeFromV5  },

@@ -57,7 +57,6 @@ import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
-import org.netxms.client.maps.configs.LinkConfig;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
@@ -447,13 +446,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		return (selection != null) ? selection.toList().contains(element) : false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider#selfStyleConnection(java
-	 * .lang.Object, org.eclipse.gef4.zest.core.widgets.GraphConnection)
-	 */
+   /**
+    * @see org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider#selfStyleConnection(java.lang.Object,
+    *      org.eclipse.gef4.zest.core.widgets.GraphConnection)
+    */
 	@Override
 	public void selfStyleConnection(Object element, GraphConnection connection)
 	{
@@ -494,7 +490,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		boolean hasDciData = link.hasDciData();
       boolean hasName = link.hasName();
       
-      if (link.getColorSource() == LinkConfig.COLOR_SOURCE_OBJECT_STATUS)
+      if (link.getColorSource() == NetworkMapLink.COLOR_SOURCE_OBJECT_STATUS)
       {
          ObjectStatus status = ObjectStatus.UNKNOWN;
          ObjectStatus altStatus = ObjectStatus.UNKNOWN;
@@ -540,10 +536,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             if ((severity != Severity.UNKNOWN) && ((severity.getValue() > status.getValue()) || (status.compareTo(ObjectStatus.UNKNOWN) >= 0)))
                status = ObjectStatus.getByValue(severity.getValue());
          }
-         
          connection.setLineColor(StatusDisplayInfo.getStatusColor((status != ObjectStatus.UNKNOWN) ? status : altStatus));            
       }
-      else if (link.getColorSource() == LinkConfig.COLOR_SOURCE_CUSTOM_COLOR)
+      else if ((link.getColorSource() == NetworkMapLink.COLOR_SOURCE_CUSTOM_COLOR) || (link.getColorSource() == NetworkMapLink.COLOR_SOURCE_SCRIPT))
       {
          connection.setLineColor(colors.create(ColorConverter.rgbFromInt(link.getColor())));
       }
@@ -575,18 +570,20 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       {
          connection.setLineColor(defaultLinkColor);
       }
-      
+
       if ((hasName || hasDciData) && connectionLabelsVisible)
       {
          ConnectionLocator nameLocator;
-         if(link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS && link.getBendPoints() != null && link.getBendPoints().length > 0)
+         if (link.getRouting() == NetworkMapLink.ROUTING_BENDPOINTS && link.getBendPoints() != null && link.getBendPoints().length > 0)
          {
             nameLocator = new ConnectionLocator(connection.getConnectionFigure());
             nameLocator.setRelativePosition(PositionConstants.CENTER);
          }
          else
+         {
             nameLocator = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link);
-         
+         }
+
          String labelString = ""; //$NON-NLS-1$
          if (hasName)
             labelString += link.getName();
@@ -613,7 +610,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
          label.setFont(fontLabel);
          connection.getConnectionFigure().add(label, nameLocator);
       }
-		
+
 		switch(link.getRouting())
 		{
 			case NetworkMapLink.ROUTING_DIRECT:

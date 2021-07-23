@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.networkmaps.propertypages;
 
@@ -18,7 +33,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
-import org.netxms.client.maps.configs.LinkConfig;
+import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
@@ -47,9 +62,9 @@ public class MapLinkGeneral extends PropertyPage
 	private Combo routingAlgorithm;
 	private Button checkUseThresholds;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -118,14 +133,14 @@ public class MapLinkGeneral extends PropertyPage
 		
 		radioColorDefault = new Button(colorGroup, SWT.RADIO);
 		radioColorDefault.setText(Messages.get().MapLinkGeneral_DefColor);
-		radioColorDefault.setSelection(object.getColorSource() == LinkConfig.COLOR_SOURCE_DEFAULT);
+      radioColorDefault.setSelection(object.getColorSource() == NetworkMapLink.COLOR_SOURCE_DEFAULT);
 		radioColorDefault.addSelectionListener(listener);
 
 		radioColorObject = new Button(colorGroup, SWT.RADIO);
 		radioColorObject.setText(Messages.get().MapLinkGeneral_BasedOnObjStatus);
-		radioColorObject.setSelection(object.getColorSource() == LinkConfig.COLOR_SOURCE_OBJECT_STATUS);
+      radioColorObject.setSelection(object.getColorSource() == NetworkMapLink.COLOR_SOURCE_OBJECT_STATUS);
 		radioColorObject.addSelectionListener(listener);
-		
+
 		final Composite nodeSelectionGroup = new Composite(colorGroup, SWT.NONE);
       layout = new GridLayout();
       layout.numColumns = 2;
@@ -205,7 +220,7 @@ public class MapLinkGeneral extends PropertyPage
 
 		radioColorCustom = new Button(colorGroup, SWT.RADIO);
 		radioColorCustom.setText(Messages.get().MapLinkGeneral_CustomColor);
-		radioColorCustom.setSelection(object.getColorSource() == LinkConfig.COLOR_SOURCE_CUSTOM_COLOR);
+      radioColorCustom.setSelection(object.getColorSource() == NetworkMapLink.COLOR_SOURCE_CUSTOM_COLOR);
 		radioColorCustom.addSelectionListener(listener);
 
 		color = new ColorSelector(colorGroup);
@@ -274,16 +289,16 @@ public class MapLinkGeneral extends PropertyPage
 		if (radioColorCustom.getSelection())
 		{
 			object.setColor(ColorConverter.rgbToInt(color.getColorValue()));
-			object.setColorSource(LinkConfig.COLOR_SOURCE_CUSTOM_COLOR);
+         object.setColorSource(NetworkMapLink.COLOR_SOURCE_CUSTOM_COLOR);
 		}
 		else if (radioColorObject.getSelection())
 		{
-         object.setColorSource(LinkConfig.COLOR_SOURCE_OBJECT_STATUS);
+         object.setColorSource(NetworkMapLink.COLOR_SOURCE_OBJECT_STATUS);
 			//status objects already set
 		}
 		else
 		{
-         object.setColorSource(LinkConfig.COLOR_SOURCE_DEFAULT);
+         object.setColorSource(NetworkMapLink.COLOR_SOURCE_DEFAULT);
 		}
       object.setUseActiveThresholds(checkUseThresholds.getSelection());
 		object.setRoutingAlgorithm(routingAlgorithm.getSelectionIndex());

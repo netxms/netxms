@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,45 +31,32 @@ import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
-@Root(name="config", strict=false)
+@Root(name = "config", strict = false)
 public class LinkConfig
 {
-   public static final int COLOR_SOURCE_UNDEFINED = -1;
-   public static final int COLOR_SOURCE_DEFAULT = 0;
-   public static final int COLOR_SOURCE_OBJECT_STATUS = 1;
-   public static final int COLOR_SOURCE_CUSTOM_COLOR = 2;
-   
-   @ElementArray(required=false)
+   @ElementArray(required = false)
    private SingleDciConfig[] dciList;
 
-   @ElementList(required=false)
+   @ElementList(required = false)
    private List<Long> objectStatusList = new ArrayList<Long>();
-   
-   @Element(required=false)
-   private int color;
-   
-   @Element(required=false)
+
+   @Element(required = false)
    private int routing;
-   
-   @Element(required=false)
+
+   @Element(required = false)
    private long[] bendPoints;
-   
-   @Element(required=false)
+
+   @Element(required = false)
    private boolean useActiveThresholds;
 
-   @Element(required=false)
+   @Element(required = false)
    private boolean isLocked;
-   
-   @Element(required=false)
-   private int colorSource;
 
    /**
     * Default constructor
     */
    public LinkConfig()
    {           
-      color = -1;
-      colorSource = COLOR_SOURCE_UNDEFINED;
       routing = NetworkMapLink.ROUTING_DEFAULT;
       bendPoints = null;
       dciList = null;
@@ -82,21 +69,15 @@ public class LinkConfig
     *
     * @param dciList
     * @param objectStatusList
-    * @param colorSource
-    * @param color
     * @param routing
     * @param bendPoints
     * @param useActiveThresholds
     * @param isLocked
     */
-   public LinkConfig(SingleDciConfig[] dciList, List<Long> objectStatusList,
-         int colorSource, int color, int routing,
-         long[] bendPoints, boolean useActiveThresholds, boolean isLocked)
+   public LinkConfig(SingleDciConfig[] dciList, List<Long> objectStatusList, int routing, long[] bendPoints, boolean useActiveThresholds, boolean isLocked)
    {
       this.dciList = dciList;
       this.objectStatusList = objectStatusList;
-      this.colorSource = colorSource;
-      this.color = color;
       this.routing = routing;
       this.bendPoints = bendPoints;
       this.useActiveThresholds = useActiveThresholds;
@@ -160,22 +141,6 @@ public class LinkConfig
    public void setDciList(SingleDciConfig[] dciList)
    {
       this.dciList = dciList;
-   }
-
-   /**
-    * @return the color
-    */
-   public int getColor()
-   {
-      return color;
-   }
-
-   /**
-    * @param color the color to set
-    */
-   public void setColor(int color)
-   {
-      this.color = color;
    }
 
    /**
@@ -243,36 +208,12 @@ public class LinkConfig
    }
 
    /**
-    * @return the colorSource
-    */
-   public int getColorSource()
-   {
-      if (colorSource == COLOR_SOURCE_UNDEFINED)
-      {
-         // Old configuration version, calculate source from other settings
-         if ((objectStatusList != null) && !objectStatusList.isEmpty())
-            return COLOR_SOURCE_OBJECT_STATUS;
-         return (color >= 0) ? COLOR_SOURCE_CUSTOM_COLOR : COLOR_SOURCE_DEFAULT;
-      }
-      return colorSource;
-   }
-
-   /**
-    * @param colorSource the colorSource to set
-    */
-   public void setColorSource(int colorSource)
-   {
-      this.colorSource = colorSource;
-   }
-
-   /* (non-Javadoc)
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return "LinkConfig [dciList=" + Arrays.toString(dciList) + ", objectStatusList=" + objectStatusList.toString()
-            + ", color=" + color + ", routing=" + routing + ", bendPoints=" + Arrays.toString(bendPoints) + "]"
-            + ", isLocked=" + isLocked;
+      return "LinkConfig [dciList=" + Arrays.toString(dciList) + ", objectStatusList=" + objectStatusList.toString() +
+            ", routing=" + routing + ", bendPoints=" + Arrays.toString(bendPoints) + ", isLocked=" + isLocked + "]";
    }
 }
