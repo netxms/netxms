@@ -29,7 +29,6 @@
 #include <nms_threads.h>
 #include <time.h>
 #include <jansson.h>
-#include <strmap-internal.h>
 
 // JSON_EMBED was added in jansson 2.10 - ignore it for older version
 #ifndef JSON_EMBED
@@ -1389,6 +1388,9 @@ public:
 
 	void setContext(void *context) { m_context = context; }
 	void *getContext() const { return m_context; }
+
+   void** begin() { return &m_data[0]; }
+   void** end() { return &m_data[m_size]; }
 };
 
 /**
@@ -1450,6 +1452,9 @@ public:
    const T * const *getBuffer() const { return static_cast<const T * const *>(__getBuffer()); }
 
    Iterator<T> *iterator() { return new Iterator<T>(new ArrayIterator(this)); }
+
+   T ** begin() { (T **)Array::begin(); }
+   T ** end() { (T **)Array::end(); }
 };
 
 /**
@@ -1478,6 +1483,9 @@ public:
    void unlink(T *object) { Array::unlink((void *)object); }
 
    Iterator<T> *iterator() { return new Iterator<T>(new ArrayIterator(this)); }
+
+   T ** begin() { (T **)Array::begin(); }
+   T ** end() { (T **)Array::end(); }
 };
 
 /**
@@ -1516,6 +1524,9 @@ public:
             return false;
       return true;
    }
+
+   T ** begin() { (T **)Array::begin(); }
+   T ** end() { (T **)Array::end(); }
 };
 
 #ifdef _WIN32
@@ -1562,6 +1573,9 @@ public:
    void unlink(const T &element) { Array::unlink((void *)&element); }
 
    T *getBuffer() const { return (T*)__getBuffer(); }
+
+   T ** begin() { (T **)Array::begin(); }
+   T ** end() { (T **)Array::end(); }
 };
 
 /**
@@ -1634,6 +1648,9 @@ public:
    void sort(int (*cb)(const T&, const T&)) { m_data.sort(reinterpret_cast<int (*)(void *, const void *, const void *)>(sortCallback), (void *)cb); }
 
    Iterator<shared_ptr<T>> *iterator() { return new Iterator<shared_ptr<T>>(new ArrayIterator(&m_data)); }
+
+   T ** begin() { (T **)m_data.begin(); }
+   T ** end() { (T **)m_data.end(); }
 };
 
 template <class T> shared_ptr<T> SharedObjectArray<T>::m_null = shared_ptr<T>();
@@ -1730,70 +1747,35 @@ public:
    void setContext(void *context) { m_context = context; }
    void *getContext() const { return m_context; }
 
+   //iterator class for range based for loop
+   template <class T>
    class iterator
    {
       StringMapEntry *m_currentData;
 
    public:
+      iterator();
+      iterator(StringMapEntry *firstElement);
+      iterator(const iterator& other);
 
-      std::pair<const TCHAR*, void*> operator* ()
-      {
-         static const TCHAR* key = _T("key");
-         static int value = 10;
-         return std::pair<const TCHAR*, void*>(this->key(), this->value());
-      }
+      bool operator==(const iterator& other);
+      bool operator!=(const iterator& other);
+      iterator& operator++();   // Prefix increment operator.
+      iterator operator++(int); // Postfix increment operator.
+      std::pair<const TCHAR*, T*> operator* ();
 
-      iterator() { m_currentData = nullptr; }
-      iterator(StringMapEntry *firstElement) { m_currentData = firstElement; }
-      bool operator==(const iterator& other) 
-      {
-         if(this->key() == nullptr && other.key() == nullptr)
-         {
-            return true;
-         }
-         else if(this->key() == nullptr || other.key() == nullptr)
-         {
-            return false;
-         }
-         return (_tcscmp(this->key(), other.key()) == 0) ? true : false; 
-      }
-      bool operator!=(const iterator& other) { return !(*this == other); }
-
-      // Prefix increment operator.
-      iterator& operator++()
-      {
-         //some incrementing
-         m_currentData = (StringMapEntry *)m_currentData->hh.next;
-         return *this;
-      }
-
-      // Postfix increment operator.
-      iterator operator++(int)
-      {
-         iterator temp = *this;
-         ++*this;
-         return temp;
-      }
-
-      const TCHAR* key() const
-      {
-         return m_currentData == nullptr ? nullptr : m_currentData->originalKey != nullptr ? m_currentData->originalKey : m_currentData->key;
-      }
-
-      void* value()
-      {
-         return m_currentData == nullptr ? nullptr : m_currentData->value;
-      }     
+      const TCHAR* key() const;
+      T* value();
    };
 
-   iterator begin()
+   iterator<void> begin()
    {
-      return iterator(m_data);
+      return iterator<void>(m_data);
    }
 
-   iterator end()
+   iterator<void> end()
    {
-      return iterator();
+      return iterator<void>();
    }
 };
 
@@ -1872,6 +1854,9 @@ public:
    void loadMessage(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId);
 
    json_t *toJson() const;
+
+   StringMapBase::iterator<const TCHAR *> begin() { return StringMapBase::iterator<const TCHAR *>(m_data); }
+   StringMapBase::iterator<const TCHAR *> end() { return StringMapBase::iterator<const TCHAR *>(); }
 };
 
 /**
@@ -1913,6 +1898,9 @@ public:
    {
       return StringMapBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, const void*, void*)>(cb), (void *)context);
    }
+
+   StringMapBase::iterator<T> begin() { return StringMapBase::iterator<T>(m_data); }
+   StringMapBase::iterator<T> end() { return StringMapBase::iterator<T>(); }
 };
 
 /**
@@ -1987,6 +1975,9 @@ public:
    {
       return m_data.forEach(cb, context);
    }
+
+   StringMapBase::iterator<T> begin() { return m_data.begin(); }
+   StringMapBase::iterator<T> end() { return m_data.end(); }
 };
 
 template <class T> shared_ptr<T> SharedStringObjectMap<T>::m_null = shared_ptr<T>();
@@ -2057,8 +2048,11 @@ public:
    void loadMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 countId);
    json_t *toJson() const;
 
-   TCHAR ** begin() { return &m_values[0]; }
-   TCHAR ** end() { return &m_values[m_count]; }
+   typedef const TCHAR* constString;
+   typedef const constString* const_iterator;
+
+   const_iterator begin() const { return &m_values[0]; }
+   const_iterator end() const { return &m_values[m_count]; }
 };
 
 /**

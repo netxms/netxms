@@ -22,7 +22,7 @@
 **/
 
 #include "libnetxms.h"
-#include <strmap-internal.h>
+#include "strmap-internal.h"
 #include <nxcpapi.h>
 
 /**

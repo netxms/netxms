@@ -62,7 +62,6 @@ include_HEADERS = \
 	unicode.h \
 	uthash.h \
 	uuid.h \
-	winmutex.h \
-	strmap-internal.h
+	winmutex.h
 
 SUBDIRS = msvc

@@ -22,7 +22,7 @@
 **/
 
 #include "libnetxms.h"
-#include <strmap-internal.h>
+#include "strmap-internal.h"
 
 /**
  * Standard object destructor
@@ -436,4 +436,80 @@ void StringMapIterator::unlink()
    MemFree(m_curr->key);
    MemFree(m_curr->originalKey);
    MemFree(m_curr);
+}
+
+/**
+ * Basic string map iterator
+ */
+template <class T>
+StringMapBase::iterator<T>::iterator()
+{
+   m_currentData = nullptr;
+}
+
+template <class T>
+StringMapBase::iterator<T>::iterator(StringMapEntry *firstElement)
+{
+   m_currentData = firstElement;
+}
+
+template <class T>
+StringMapBase::iterator<T>::iterator(const iterator<T>& other)
+{
+   m_currentData = other.m_currentData;
+}
+
+template <class T>
+bool StringMapBase::iterator<T>::operator==(const iterator<T>& other)
+{
+   if (this->key() == nullptr && other.key() == nullptr)
+   {
+      return true;
+   }
+   else if (this->key() == nullptr || other.key() == nullptr)
+   {
+      return false;
+   }
+   return (_tcscmp(this->key(), other.key()) == 0) ? true : false;
+}
+
+template <class T>
+bool StringMapBase::iterator<T>::operator!=(const iterator<T>& other)
+{
+   return !(*this == other);
+}
+
+// Prefix increment operator.
+template <class T>
+StringMapBase::iterator<T>& StringMapBase::iterator<T>::operator++()
+{
+   m_currentData = (StringMapEntry *)m_currentData->hh.next;
+   return *this;
+}
+
+// Postfix increment operator.
+template <class T>
+StringMapBase::iterator<T> StringMapBase::iterator<T>::operator++(int)
+{
+   iterator temp = *this;
+   ++*this;
+   return temp;
+}
+
+template <class T>
+std::pair<const TCHAR*, T*> StringMapBase::iterator<T>::operator*()
+{
+   return std::pair<const TCHAR*, T*>(this->key(), (T*)this->value());
+}
+
+template <class T>
+const TCHAR* StringMapBase::iterator<T>::key() const
+{
+   return m_currentData == nullptr ? nullptr : m_currentData->originalKey != nullptr ? m_currentData->originalKey : m_currentData->key;
+}
+
+template <class T>
+T* StringMapBase::iterator<T>::value()
+{
+   return (T*)(m_currentData == nullptr ? nullptr : m_currentData->value);
 }
