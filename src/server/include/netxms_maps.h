@@ -309,6 +309,7 @@ enum MapLinkColorSource
 class NetworkMapLink
 {
 protected:
+   uint32_t m_id;
 	uint32_t m_element1;
 	uint32_t m_element2;
 	int m_type;
@@ -322,13 +323,14 @@ protected:
 	TCHAR *m_config;
 
 public:
-	NetworkMapLink(uint32_t e1, uint32_t e2, int type);
+	NetworkMapLink(uint32_t id, uint32_t e1, uint32_t e2, int type);
 	NetworkMapLink(NXCPMessage *msg, uint32_t baseId);
 	virtual ~NetworkMapLink();
 
 	void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    json_t *toJson() const;
 
+   uint32_t getId() const { return m_id; }
    uint32_t getElement1() const { return m_element1; }
    uint32_t getElement2() const { return m_element2; }
 

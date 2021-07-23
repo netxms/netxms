@@ -6766,7 +6766,7 @@ public class NXCSession
          int flags = response.getFieldAsInt32(varId++);
          if ((obj1 != null) && (obj2 != null))
          {
-            page.addLink(new NetworkMapLink(name, type, obj1.getId(), obj2.getId(), port1, port2, flags));
+            page.addLink(new NetworkMapLink(page.createLinkId(), name, type, obj1.getId(), obj2.getId(), port1, port2, flags));
          }
       }
       return page;
@@ -6812,7 +6812,7 @@ public class NXCSession
          int flags = response.getFieldAsInt32(varId++);
          if ((obj1 != null) && (obj2 != null))
          {
-            page.addLink(new NetworkMapLink(name, type, obj1.getId(), obj2.getId(), port1, port2, flags));
+            page.addLink(new NetworkMapLink(page.createLinkId(), name, type, obj1.getId(), obj2.getId(), port1, port2, flags));
          }
       }
       return page;

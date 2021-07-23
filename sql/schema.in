@@ -1852,6 +1852,7 @@ CREATE TABLE network_map_elements
 CREATE TABLE network_map_links
 (
   map_id integer not null,
+  link_id integer not null,
   element1 integer not null,
   element2 integer not null,
   link_type integer not null,
@@ -1862,7 +1863,8 @@ CREATE TABLE network_map_links
   flags integer not null,
   color_source integer not null,
   color integer not null,
-  color_provider varchar(255) null
+  color_provider varchar(255) null,
+  PRIMARY KEY(map_id,link_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id);

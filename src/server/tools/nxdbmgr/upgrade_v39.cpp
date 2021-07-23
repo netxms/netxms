@@ -28,47 +28,90 @@
  */
 static bool H_UpgradeFromV8()
 {
-   static const TCHAR *batch =
-      _T("ALTER TABLE network_map_links ADD color_source integer\n")
-      _T("ALTER TABLE network_map_links ADD color integer\n")
-      _T("ALTER TABLE network_map_links ADD color_provider varchar(255)\n")
-      _T("UPDATE network_map_links SET color_source=0,color=0\n")
-      _T("<END>");
-   CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_map_links"), _T("color_source")));
-   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("network_map_links"), _T("color")));
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE new_network_map_links (")
+      _T("   map_id integer not null,")
+      _T("   link_id integer not null,")
+      _T("   element1 integer not null,")
+      _T("   element2 integer not null,")
+      _T("   link_type integer not null,")
+      _T("   link_name varchar(255) null,")
+      _T("   connector_name1 varchar(255) null,")
+      _T("   connector_name2 varchar(255) null,")
+      _T("   element_data $SQL:TEXT null,")
+      _T("   flags integer not null,")
+      _T("   color_source integer not null,")
+      _T("   color integer not null,")
+      _T("   color_provider varchar(255) null,")
+      _T("   PRIMARY KEY(map_id,link_id))")));
 
-   DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(g_dbHandle, _T("SELECT map_id,element1,element2,link_type,element_data FROM network_map_links"));
-   if (hResult != nullptr)
+   // Open second connection to database to allow unbuffered query in parallel with inserts
+   DB_HANDLE hdb = ConnectToDatabase();
+   if (hdb != nullptr)
    {
-      StringList updates;
-      while(DBFetch(hResult))
+      DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, _T("SELECT map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,flags,element_data FROM network_map_links"));
+      if (hResult != nullptr)
       {
-         char *xml = DBGetFieldUTF8(hResult, 4, nullptr, 0);
-         if (xml != nullptr)
+         DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO new_network_map_links (map_id,link_id,element1,element2,link_type,link_name,connector_name1,connector_name2,flags,color_source,color,element_data) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"), true);
+         if (hStmt != nullptr)
          {
-            Config config;
-            if (config.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "config", false))
+            uint32_t id = 1;
+            while(DBFetch(hResult))
             {
-               int color = config.getValueAsInt(_T("/color"), -1);
-               int colorSource = config.getValueAsInt(_T("/colorSource"), 0);
-               if ((color != -1) || (colorSource > 0))
+               int32_t color = 0, colorSource = 0;
+               char *xml = DBGetFieldUTF8(hResult, 8, nullptr, 0);
+               if (xml != nullptr)
                {
-                  TCHAR query[256];
-                  _sntprintf(query, 256, _T("UPDATE network_map_links SET color=%d,color_source=%d WHERE map_id=%u AND element1=%u AND element2=%u AND link_type=%u"),
-                        color, colorSource, DBGetFieldULong(hResult, 0), DBGetFieldULong(hResult, 1), DBGetFieldULong(hResult, 2), DBGetFieldULong(hResult, 3));
-                  updates.add(query);
+                  Config config;
+                  if (config.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "config", false))
+                  {
+                     color = config.getValueAsInt(_T("/color"), 0);
+                     colorSource = config.getValueAsInt(_T("/colorSource"), 0);
+                  }
+                  MemFree(xml);
+               }
+
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 0));
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, id++);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 1));
+               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 2));
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 3));
+               DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 4, nullptr, 0), DB_BIND_DYNAMIC);
+               DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 5, nullptr, 0), DB_BIND_DYNAMIC);
+               DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 6, nullptr, 0), DB_BIND_DYNAMIC);
+               DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 7));
+               DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, colorSource);
+               DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, color);
+               DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 8, nullptr, 0), DB_BIND_DYNAMIC);
+
+               if (!DBExecute(hStmt) && !g_ignoreErrors)
+               {
+                  DBFreeStatement(hStmt);
+                  DBFreeResult(hResult);
+                  DBDisconnect(hdb);
+                  return false;
                }
             }
-            MemFree(xml);
+            DBFreeStatement(hStmt);
          }
+         else if (!g_ignoreErrors)
+         {
+            DBFreeResult(hResult);
+            DBDisconnect(hdb);
+            return false;
+         }
+         DBFreeResult(hResult);
       }
-      DBFreeResult(hResult);
-
-      for(int i = 0; i < updates.size(); i++)
+      else if (!g_ignoreErrors)
       {
-         CHK_EXEC(SQLQuery(updates.get(i)));
+         DBDisconnect(hdb);
+         return false;
       }
+      DBDisconnect(hdb);
+
+      CHK_EXEC(SQLQuery(_T("DROP TABLE network_map_links")));
+      CHK_EXEC(DBRenameTable(g_dbHandle, _T("new_network_map_links"), _T("network_map_links")));
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id)")));
    }
    else if (!g_ignoreErrors)
    {

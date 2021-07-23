@@ -58,6 +58,7 @@ NetworkMap::NetworkMap() : super()
    m_defaultLinkRouting = 1;  // default routing type "direct"
    m_objectDisplayMode = 0;  // default display mode "icons"
 	m_nextElementId = 1;
+	m_nextLinkId = 1;
 	m_elements = new ObjectArray<NetworkMapElement>(0, 32, Ownership::True);
 	m_links = new ObjectArray<NetworkMapLink>(0, 32, Ownership::True);
    m_filterSource = nullptr;
@@ -92,6 +93,7 @@ NetworkMap::NetworkMap(int type, IntegerArray<UINT32> *seeds) : super()
    m_defaultLinkRouting = 1;  // default routing type "direct"
    m_objectDisplayMode = 0;  // default display mode "icons"
 	m_nextElementId = 1;
+   m_nextLinkId = 1;
 	m_elements = new ObjectArray<NetworkMapElement>(0, 32, Ownership::True);
 	m_links = new ObjectArray<NetworkMapLink>(0, 32, Ownership::True);
    m_filterSource = nullptr;
@@ -332,25 +334,26 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       if (success && !m_links->isEmpty())
       {
          DB_STATEMENT hStmt = DBPrepare(hdb,
-                  _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags,color_source,color,color_provider) ")
-                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"), m_links->size() > 1);
+                  _T("INSERT INTO network_map_links (map_id,link_id,element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags,color_source,color,color_provider) ")
+                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"), m_links->size() > 1);
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             for(int i = 0; success && (i < m_links->size()); i++)
             {
                NetworkMapLink *l = m_links->get(i);
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, l->getElement1());
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, l->getElement2());
-               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, l->getType());
-               DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, l->getName(), DB_BIND_STATIC);
-               DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, l->getConnector1Name(), DB_BIND_STATIC);
-               DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, l->getConnector2Name(), DB_BIND_STATIC);
-               DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, l->getConfig(), DB_BIND_STATIC);
-               DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, l->getFlags());
-               DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, static_cast<int32_t>(l->getColorSource()));
-               DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, l->getColor());
-               DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, l->getColorProvider(), DB_BIND_STATIC);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, l->getId());
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, l->getElement1());
+               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, l->getElement2());
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, l->getType());
+               DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, l->getName(), DB_BIND_STATIC);
+               DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, l->getConnector1Name(), DB_BIND_STATIC);
+               DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, l->getConnector2Name(), DB_BIND_STATIC);
+               DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, l->getConfig(), DB_BIND_STATIC);
+               DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, l->getFlags());
+               DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, static_cast<int32_t>(l->getColorSource()));
+               DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, l->getColor());
+               DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, l->getColorProvider(), DB_BIND_STATIC);
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);
@@ -510,7 +513,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
 
 		// Load links
-      _sntprintf(query, 256, _T("SELECT element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags,color_source,color,color_provider FROM network_map_links WHERE map_id=%u"), m_id);
+      _sntprintf(query, 256, _T("SELECT link_id,element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags,color_source,color,color_provider FROM network_map_links WHERE map_id=%u"), m_id);
       hResult = DBSelect(hdb, query);
       if (hResult != nullptr)
       {
@@ -519,16 +522,18 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 			{
 				TCHAR buffer[4096];
 
-				NetworkMapLink *l = new NetworkMapLink(DBGetFieldLong(hResult, i, 0), DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2));
-				l->setName(DBGetField(hResult, i, 3, buffer, 256));
-				l->setConnector1Name(DBGetField(hResult, i, 4, buffer, 256));
-				l->setConnector2Name(DBGetField(hResult, i, 5, buffer, 256));
-				l->setConfig(DBGetField(hResult, i, 6, buffer, 4096));
-				l->setFlags(DBGetFieldULong(hResult, i, 7));
-            l->setColorSource(static_cast<MapLinkColorSource>(DBGetFieldLong(hResult, i, 8)));
-            l->setColor(DBGetFieldULong(hResult, i, 9));
-            l->setColorProvider(DBGetField(hResult, i, 10, buffer, 4096));
+				NetworkMapLink *l = new NetworkMapLink(DBGetFieldLong(hResult, i, 0), DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2), DBGetFieldLong(hResult, i, 3));
+				l->setName(DBGetField(hResult, i, 4, buffer, 256));
+				l->setConnector1Name(DBGetField(hResult, i, 5, buffer, 256));
+				l->setConnector2Name(DBGetField(hResult, i, 6, buffer, 256));
+				l->setConfig(DBGetField(hResult, i, 7, buffer, 4096));
+				l->setFlags(DBGetFieldULong(hResult, i, 8));
+            l->setColorSource(static_cast<MapLinkColorSource>(DBGetFieldLong(hResult, i, 9)));
+            l->setColor(DBGetFieldULong(hResult, i, 10));
+            l->setColorProvider(DBGetField(hResult, i, 11, buffer, 4096));
 				m_links->add(l);
+            if (m_nextLinkId <= l->getId())
+               m_nextLinkId = l->getId() + 1;
 			}
          DBFreeResult(hResult);
       }
@@ -696,8 +701,12 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 			UINT32 varId = VID_LINK_LIST_BASE;
 			for(int i = 0; i < numLinks; i++)
 			{
-				m_links->add(new NetworkMapLink(request, varId));
+			   auto l = new NetworkMapLink(request, varId);
+				m_links->add(l);
 				varId += 20;
+
+            if (m_nextLinkId <= l->getId())
+               m_nextLinkId = l->getId() + 1;
 			}
 		}
 	}
@@ -711,7 +720,7 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 void NetworkMap::updateContent()
 {
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): map type %d"), m_name, m_id, m_mapType);
-   if (m_mapType != MAP_TYPE_CUSTOM && m_status != STATUS_UNMANAGED)
+   if ((m_mapType != MAP_TYPE_CUSTOM) && (m_status != STATUS_UNMANAGED))
    {
       NetworkMapObjectList objects;
       bool topologyRecieved = true;
@@ -758,6 +767,10 @@ void NetworkMap::updateContent()
       {
          updateObjects(&objects);
       }
+   }
+   if (m_status != STATUS_UNMANAGED)
+   {
+      updateLinks();
    }
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): completed"), m_name, m_id);
 }
@@ -884,7 +897,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
          // Element ID can be 0 if link points to object removed by filter
          if ((e1 != 0) && (e2 != 0))
          {
-            NetworkMapLink *l = new NetworkMapLink(e1, e2, newLink->type);
+            NetworkMapLink *l = new NetworkMapLink(m_nextLinkId++, e1, e2, newLink->type);
             l->setConnector1Name(newLink->port1);
             l->setConnector2Name(newLink->port2);
             l->setName(newLink->name);
@@ -947,6 +960,23 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
 
    unlockProperties();
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s): updateObjects completed"), m_name);
+}
+
+/**
+ * Update links that have computed attributes (color, text, etc.)
+ */
+void NetworkMap::updateLinks()
+{
+   lockProperties();
+   for(int i = 0; i < m_links->size(); i++)
+   {
+      NetworkMapLink *link = m_links->get(i);
+      if (link->getColorSource() == MAP_LINK_COLOR_SOURCE_SCRIPT)
+      {
+
+      }
+   }
+   unlockProperties();
 }
 
 /**

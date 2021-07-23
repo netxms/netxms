@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,9 +38,9 @@ public class IPNeighbors extends AbstractNetworkMapView
 {
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.view.ip_neighbors"; //$NON-NLS-1$
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -70,7 +70,7 @@ public class IPNeighbors extends AbstractNetworkMapView
             {
                long elementId = mapPage.createElementId();
                mapPage.addElement(new NetworkMapObject(elementId, peer.getObjectId()));
-               NetworkMapLink link = new NetworkMapLink(NetworkMapLink.VPN, rootElementId, elementId);
+               NetworkMapLink link = new NetworkMapLink(mapPage.createLinkId(), NetworkMapLink.VPN, rootElementId, elementId);
                link.setName(object.getObjectName());
                mapPage.addLink(link);
                addSubnets(peer, elementId);
@@ -96,7 +96,7 @@ public class IPNeighbors extends AbstractNetworkMapView
          {
             long elementId = mapPage.createElementId();
             mapPage.addElement(new NetworkMapObject(elementId, objectId));
-            mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, rootElementId, elementId));
+            mapPage.addLink(new NetworkMapLink(mapPage.createLinkId(), NetworkMapLink.NORMAL, rootElementId, elementId));
             addNodesFromSubnet((Subnet)object, elementId, root.getObjectId());
          }
       }  
@@ -120,7 +120,7 @@ public class IPNeighbors extends AbstractNetworkMapView
 				{
 					long elementId = mapPage.createElementId();
 					mapPage.addElement(new NetworkMapObject(elementId, objectId));
-					mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, subnetElementId, elementId));
+               mapPage.addLink(new NetworkMapLink(mapPage.createLinkId(), NetworkMapLink.NORMAL, subnetElementId, elementId));
 				}
 			}
 		}

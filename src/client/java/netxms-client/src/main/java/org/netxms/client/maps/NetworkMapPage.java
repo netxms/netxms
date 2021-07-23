@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -37,8 +38,9 @@ public class NetworkMapPage
 {
 	private String id;
 	private long nextElementId;
+   private long nextLinkId;
 	private Map<Long, NetworkMapElement> elements = new HashMap<Long, NetworkMapElement>(0);
-	private Set<NetworkMapLink> links = new HashSet<NetworkMapLink>(0);
+   private Map<Long, NetworkMapLink> links = new HashMap<Long, NetworkMapLink>(0);
 
 	/**
 	 * Create empty named page
@@ -47,6 +49,7 @@ public class NetworkMapPage
 	{
 		this.id = id;
 		nextElementId = 1;
+      nextLinkId = 1;
 	}
 	
 	/**
@@ -58,7 +61,7 @@ public class NetworkMapPage
 		if (element.getId() >= nextElementId)
 			nextElementId = element.getId() + 1;
 	}
-	
+
 	/**
 	 * Add all elements from given collection
 	 * @param set
@@ -75,18 +78,21 @@ public class NetworkMapPage
 	public void addLink(final NetworkMapLink link)
 	{
 	   link.resetPosition();
-	   for(NetworkMapLink l : links)
+      for(NetworkMapLink l : links.values())
 	   {
-	      if ((l.getElement1() == link.getElement1() && l.getElement2() == link.getElement2()) ||
-	          (l.getElement1() == link.getElement2() && l.getElement2() == link.getElement1()))
+	      if (((l.getElement1() == link.getElement1() && l.getElement2() == link.getElement2()) ||
+	           (l.getElement1() == link.getElement2() && l.getElement2() == link.getElement1())) &&
+	          (l.getId() != link.getId()))
 	      {
 	         l.updatePosition();
 	         link.setDuplicateCount(l.getDuplicateCount());
 	      }
 	   }
-		links.add(link);
+      links.put(link.getId(), link);
+      if (link.getId() >= nextLinkId)
+         nextLinkId = link.getId() + 1;
 	}
-	
+
 	/**
 	 * Add all links from given collection
 	 * 
@@ -97,7 +103,7 @@ public class NetworkMapPage
 	   for(NetworkMapLink l : set)
 	      addLink(l);
 	}
-	
+
 	/**
 	 * Get map element by element ID.
 	 * 
@@ -112,7 +118,7 @@ public class NetworkMapPage
 			return e;
 		return requiredClass.isInstance(e) ? e : null;
 	}
-	
+
 	/**
 	 * Remove element from map
 	 * 
@@ -122,17 +128,17 @@ public class NetworkMapPage
 	{
 		elements.remove(elementId);
 
-		Iterator<NetworkMapLink> it = links.iterator();
+      Iterator<Entry<Long, NetworkMapLink>> it = links.entrySet().iterator();
 		while(it.hasNext())
 		{
-			NetworkMapLink l = it.next();
+         NetworkMapLink l = it.next().getValue();
 			if ((l.getElement1() == elementId) || (l.getElement2() == elementId))
 			{
 				it.remove();
 			}
 		}
 	}
-	
+
 	/**
 	 * Remove map element representing NetXMS object by NetXMS object ID.
 	 * 
@@ -158,7 +164,7 @@ public class NetworkMapPage
 			removeElement(elementId);
 		}
 	}
-	
+
 	/**
 	 * Remove link between objects
 	 * 
@@ -166,8 +172,18 @@ public class NetworkMapPage
 	 */
 	public void removeLink(NetworkMapLink link)
 	{
-		links.remove(link);
+      links.remove(link.getId());
 	}
+
+   /**
+    * Remove link between objects
+    * 
+    * @param id link id
+    */
+   public void removeLink(long id)
+   {
+      links.remove(id);
+   }
 
 	/**
 	 * @return the name
@@ -198,9 +214,9 @@ public class NetworkMapPage
 	 */
 	public Collection<NetworkMapLink> getLinks()
 	{
-		return links;
+      return links.values();
 	}
-	
+
 	/**
 	 * Get IDs of all objects on map
 	 * 
@@ -243,12 +259,22 @@ public class NetworkMapPage
 		return nextElementId++;
 	}
 	
+   /**
+    * Create new unique link ID
+    * 
+    * @return new unique link ID
+    */
+   public long createLinkId()
+   {
+      return nextLinkId++;
+   }
+
 	/**
-	 * Find object element by NeTXMS object ID.
-	 * 
-	 * @param objectId NetXMS object ID
-	 * @return object element or null
-	 */
+    * Find object element by NetXMS object ID.
+    * 
+    * @param objectId NetXMS object ID
+    * @return object element or null
+    */
 	public NetworkMapObject findObjectElement(long objectId)
 	{
 		for(NetworkMapElement e : elements.values())
@@ -267,12 +293,12 @@ public class NetworkMapPage
 	public List<NetworkMapLink> findLinks(NetworkMapElement source, NetworkMapElement destination)
 	{
 	   List<NetworkMapLink> result = new ArrayList<NetworkMapLink>();
-		for(NetworkMapLink l : links)
+      for(NetworkMapLink l : links.values())
 			if ((l.getElement1() == source.getId()) && (l.getElement2() == destination.getId()))
 				result.add(l);
 		return result;
 	}
-	
+
 	/**
 	 * Find all links using given object as status source
 	 * 
@@ -282,7 +308,7 @@ public class NetworkMapPage
 	public List<NetworkMapLink> findLinksWithStatusObject(long objectId)
 	{
 		List<NetworkMapLink> list = null;
-		for(NetworkMapLink l : links)
+      for(NetworkMapLink l : links.values())
 		{
 		   for(Long obj : l.getStatusObjects())
 			if (obj == objectId)
@@ -303,7 +329,7 @@ public class NetworkMapPage
    public List<Long> getAllLinkStatusObjects()
    {
       List<Long> list = new ArrayList<Long>();
-      for(NetworkMapLink l : links)
+      for(NetworkMapLink l : links.values())
       {
          for(Long obj : l.getStatusObjects())
          {
@@ -322,7 +348,7 @@ public class NetworkMapPage
 	 */
 	public boolean areObjectsConnected(long elementId1, long elementId2)
 	{
-		for(NetworkMapLink l : links)
+      for(NetworkMapLink l : links.values())
 			if (((l.getElement1() == elementId1) && (l.getElement2() == elementId2)) ||
 			    ((l.getElement1() == elementId2) && (l.getElement2() == elementId1)))
 				return true;
@@ -340,7 +366,7 @@ public class NetworkMapPage
 		
 		for(NetworkMapElement e : elements.values())
 			list[i++] = e;
-		for(NetworkMapLink l : links)
+      for(NetworkMapLink l : links.values())
 			list[i++] = l;
 
 		return list;
@@ -355,10 +381,8 @@ public class NetworkMapPage
 	{
 		Set<NetworkMapElement> result = new HashSet<NetworkMapElement>(0);
 		
-		Iterator<NetworkMapLink> it = links.iterator();
-		while(it.hasNext())
+      for(NetworkMapLink link : links.values())
 		{
-			NetworkMapLink link = it.next();
 			if (link.getElement1() == root)
 			{
 				long id = link.getElement2();

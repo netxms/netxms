@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -109,9 +109,9 @@ public class ClusterTab extends ObjectTab
 		getClientArea().layout(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
+    */
 	@Override
 	public boolean showForObject(AbstractObject object)
 	{
@@ -133,7 +133,7 @@ public class ClusterTab extends ObjectTab
 		for(AbstractObject o : cluster.getAllChildren(AbstractObject.OBJECT_NODE))
 		{
 			page.addElement(new NetworkMapObject(id, o.getObjectId()));
-			page.addLink(new NetworkMapLink(0, 1, id));
+         page.addLink(new NetworkMapLink(page.createLinkId(), 0, 1, id));
 			addOwnedResources(page, id, o.getObjectId(), cluster.getResources());
 			id++;
 		}
@@ -154,7 +154,7 @@ public class ClusterTab extends ObjectTab
 			if (r.getCurrentOwner() == objectId)
 			{
 				page.addElement(new NetworkMapResource(elementId, NetworkMapResource.CLUSTER_RESOURCE, r));
-				page.addLink(new NetworkMapLink(0, rootElementId, elementId));
+            page.addLink(new NetworkMapLink(page.createLinkId(), 0, rootElementId, elementId));
 				elementId++;
 			}
 		}
