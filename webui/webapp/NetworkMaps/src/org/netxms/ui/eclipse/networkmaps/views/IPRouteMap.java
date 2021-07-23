@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,9 +42,9 @@ public class IPRouteMap extends AbstractNetworkMapView
 	
 	private AbstractObject targetObject;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -52,9 +52,9 @@ public class IPRouteMap extends AbstractNetworkMapView
 		setPartName(Messages.get().IPRouteMap_PartTitle + " - [" + rootObject.getObjectName() + " - " + targetObject.getObjectName() + "]"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#parseSecondaryId(java.lang.String[])
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#parseSecondaryId(java.lang.String[])
+    */
 	@Override
 	protected void parseSecondaryId(String[] parts) throws PartInitException
 	{
@@ -128,7 +128,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 			page.addElement(new NetworkMapObject(elementId, h.getNodeId()));
 			if (prevElementId != 0)
 			{
-			   NetworkMapLink link = new NetworkMapLink(prevHop.isVpn() ? NetworkMapLink.VPN : NetworkMapLink.NORMAL, prevElementId, elementId);
+            NetworkMapLink link = new NetworkMapLink(page.createLinkId(), prevHop.isVpn() ? NetworkMapLink.VPN : NetworkMapLink.NORMAL, prevElementId, elementId);
 			   if (!prevHop.getName().isEmpty())
 			      link.setName(prevHop.getName());
 				page.addLink(link);

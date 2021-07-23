@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,9 +45,9 @@ public class VlanMap extends AbstractNetworkMapView
 	
 	private int vlanId;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -157,7 +157,7 @@ public class VlanMap extends AbstractNetworkMapView
 					if (nodeElementId != -1)
 					{
 						Interface peerIf = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
-						page.addLink(new NetworkMapLink(null, NetworkMapLink.NORMAL, rootElementId, nodeElementId,
+                  page.addLink(new NetworkMapLink(page.createLinkId(), null, NetworkMapLink.NORMAL, rootElementId, nodeElementId,
 								       iface.getObjectName(), (peerIf != null) ? peerIf.getObjectName() : "???", 0)); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 				}

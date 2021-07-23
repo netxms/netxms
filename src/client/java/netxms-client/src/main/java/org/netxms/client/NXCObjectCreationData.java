@@ -21,7 +21,6 @@ package org.netxms.client;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;

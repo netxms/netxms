@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,9 +40,9 @@ public class ServiceComponents extends AbstractNetworkMapView
 {
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.ServiceComponents"; //$NON-NLS-1$
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -50,9 +50,9 @@ public class ServiceComponents extends AbstractNetworkMapView
 		setPartName(Messages.get().ServiceComponents_PartName + ((rootObject != null) ? rootObject.getObjectName() : Messages.get().ServiceComponents_Error));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#buildMapPage()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#buildMapPage()
+    */
 	@Override
 	protected void buildMapPage()
 	{
@@ -83,15 +83,15 @@ public class ServiceComponents extends AbstractNetworkMapView
 			{
 				long elementId = mapPage.createElementId();
 				mapPage.addElement(new NetworkMapObject(elementId, objectId));
-				mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, parentElementId, elementId));
+            mapPage.addLink(new NetworkMapLink(mapPage.createLinkId(), NetworkMapLink.NORMAL, parentElementId, elementId));
 				addServiceComponents(child, elementId);
 			}
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.AbstractNetworkMapView#setupMapControl()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.networkmaps.views.AbstractNetworkMapView#setupMapControl()
+    */
 	@Override
 	public void setupMapControl()
 	{

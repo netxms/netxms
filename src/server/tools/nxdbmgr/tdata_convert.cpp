@@ -92,15 +92,15 @@ static bool ConvertTData(UINT32 id, int *skippedRecords)
 
    // Open second connection to database to allow unbuffered query in parallel with inserts
    DB_HANDLE hdb = ConnectToDatabase();
-   if (hdb != NULL)
+   if (hdb != nullptr)
    {
       _sntprintf(query, 256, _T("SELECT item_id,tdata_timestamp,record_id FROM tdata_temp_%d"), id);
       DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, query);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          _sntprintf(query, 256, _T("INSERT INTO tdata_%d (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)"), id);
          DB_STATEMENT hStmt = DBPrepare(g_dbHandle, query);
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             success = true;
             int converted = 0;

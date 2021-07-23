@@ -58,6 +58,7 @@ public class NetworkMapLink
 
    private static Logger logger = LoggerFactory.getLogger(NetworkMapLink.class);
 
+   private long id;
    private String name;
    private int type;
    private long element1;
@@ -73,6 +74,7 @@ public class NetworkMapLink
    private int position = 0;
 
    /**
+    * @param id
     * @param name
     * @param type
     * @param element1 network map internal element id
@@ -81,10 +83,12 @@ public class NetworkMapLink
     * @param connectorName2
     * @param dciList
     * @param flags
+    * @param locked
     */
-   public NetworkMapLink(String name, int type, long element1, long element2, String connectorName1, String connectorName2,
+   public NetworkMapLink(long id, String name, int type, long element1, long element2, String connectorName1, String connectorName2,
          SingleDciConfig[] dciList, int flags, boolean isLocked)
    {
+      this.id = id;
       this.name = name;
       this.type = type;
       this.element1 = element1;
@@ -100,6 +104,7 @@ public class NetworkMapLink
    }
 
    /**
+    * @param id
     * @param name
     * @param type
     * @param element1 network map internal element id
@@ -108,19 +113,20 @@ public class NetworkMapLink
     * @param connectorName2
     * @param flags
     */
-   public NetworkMapLink(String name, int type, long element1, long element2, String connectorName1, String connectorName2, int flags)
+   public NetworkMapLink(long id, String name, int type, long element1, long element2, String connectorName1, String connectorName2, int flags)
    {
-      this(name, type, element1, element2, connectorName1, connectorName2, null, flags, false);
+      this(id, name, type, element1, element2, connectorName1, connectorName2, null, flags, false);
    }
 
    /**
+    * @param id
     * @param type
     * @param element1 network map internal element id
     * @param element2 network map internal element id
     */
-   public NetworkMapLink(int type, long element1, long element2)
+   public NetworkMapLink(long id, int type, long element1, long element2)
    {
-      this("", type, element1, element2, "", "", null, 0, false);
+      this(id, "", type, element1, element2, "", "", null, 0, false);
    }
 
    /**
@@ -131,18 +137,19 @@ public class NetworkMapLink
     */
    public NetworkMapLink(NXCPMessage msg, long baseId)
    {
+      id = msg.getFieldAsInt64(baseId);
       name = msg.getFieldAsString(baseId + 1);
-      type = msg.getFieldAsInt32(baseId);
-      element1 = msg.getFieldAsInt64(baseId + 4);
-      element2 = msg.getFieldAsInt64(baseId + 5);
-      connectorName1 = msg.getFieldAsString(baseId + 2);
-      connectorName2 = msg.getFieldAsString(baseId + 3);
+      type = msg.getFieldAsInt32(baseId + 2);
+      element1 = msg.getFieldAsInt64(baseId + 3);
+      element2 = msg.getFieldAsInt64(baseId + 4);
+      connectorName1 = msg.getFieldAsString(baseId + 5);
+      connectorName2 = msg.getFieldAsString(baseId + 6);
       flags = msg.getFieldAsInt32(baseId + 7);
       colorSource = msg.getFieldAsInt32(baseId + 8);
       color = msg.getFieldAsInt32(baseId + 9);
       colorProvider = msg.getFieldAsString(baseId + 10);
 
-      String xml = msg.getFieldAsString(baseId + 6);
+      String xml = msg.getFieldAsString(baseId + 11);
       try
       {
          config = ((xml != null) && !xml.isEmpty()) ? LinkConfig.createFromXml(xml) : new LinkConfig();
@@ -172,17 +179,27 @@ public class NetworkMapLink
       {
          logger.warn("Cannot create XML from LinkConfig object (" + config.toString() + ")", e);
       }
-      msg.setFieldInt16(baseId, type);
+
+      msg.setFieldInt32(baseId, (int)id);
       msg.setField(baseId + 1, name);
-      msg.setField(baseId + 2, connectorName1);
-      msg.setField(baseId + 3, connectorName2);
-      msg.setFieldInt32(baseId + 4, (int)element1);
-      msg.setFieldInt32(baseId + 5, (int)element2);
-      msg.setField(baseId + 6, xml);
+      msg.setFieldInt16(baseId + 2, type);
+      msg.setField(baseId + 3, connectorName1);
+      msg.setField(baseId + 4, connectorName2);
+      msg.setFieldInt32(baseId + 5, (int)element1);
+      msg.setFieldInt32(baseId + 6, (int)element2);
       msg.setFieldInt32(baseId + 7, flags);
       msg.setFieldInt16(baseId + 8, colorSource);
       msg.setFieldInt32(baseId + 9, color);
       msg.setField(baseId + 10, colorProvider);
+      msg.setField(baseId + 11, xml);
+   }
+
+   /**
+    * @return the id
+    */
+   public long getId()
+   {
+      return id;
    }
 
    /**

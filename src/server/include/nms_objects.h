@@ -4168,6 +4168,7 @@ protected:
    double m_backgroundLongitude;
    int m_backgroundZoom;
    uint32_t m_nextElementId;
+   uint32_t m_nextLinkId;
    ObjectArray<NetworkMapElement> *m_elements;
    ObjectArray<NetworkMapLink> *m_links;
    TCHAR *m_filterSource;
@@ -4177,6 +4178,7 @@ protected:
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
    void updateObjects(NetworkMapObjectList *objects);
+   void updateLinks();
    uint32_t objectIdFromElementId(uint32_t eid);
    uint32_t elementIdFromObjectId(uint32_t eid);
 
