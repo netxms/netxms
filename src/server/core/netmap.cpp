@@ -23,6 +23,7 @@
 #include "nxcore.h"
 
 #define DEBUG_TAG_NETMAP   _T("obj.netmap")
+#define MAX_DELETED_OBJECT_COUNT 1000
 
 /**
  * Redefined status calculation for network maps group
@@ -64,6 +65,7 @@ NetworkMap::NetworkMap() : super()
    m_filterSource = nullptr;
    m_filter = nullptr;
    m_seedObjects = new IntegerArray<UINT32>();
+   m_deletedObjects = new StructArray<DeletedObjectLocation>();
 }
 
 /**
@@ -99,6 +101,7 @@ NetworkMap::NetworkMap(int type, IntegerArray<UINT32> *seeds) : super()
    m_filterSource = nullptr;
    m_filter = nullptr;
 	m_isHidden = true;
+   m_deletedObjects = new StructArray<DeletedObjectLocation>();
    setCreationTime();
 }
 
@@ -111,6 +114,7 @@ NetworkMap::~NetworkMap()
 	delete m_links;
    delete m_filter;
    delete m_seedObjects;
+   delete m_deletedObjects;
    MemFree(m_filterSource);
 }
 
@@ -393,6 +397,37 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       unlockProperties();
    }
 
+   // Save deleted nodes location
+   if (success && (m_modified & MODIFY_MAP_CONTENT))
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_deleted_nodes WHERE map_id=?"));
+
+      lockProperties();
+      if (success && (m_seedObjects->size() > 0))
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_deleted_nodes (map_id,object_id,element_index,position_x,position_y) VALUES (?,?,?,?,?)"));
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; success && (i < m_deletedObjects->size()); i++)
+            {
+               DeletedObjectLocation *loc = m_deletedObjects->get(i);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, loc->objectId);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, i);
+               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, loc->posX);
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, loc->posY);
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      unlockProperties();
+   }
+
 	return success;
 }
 
@@ -410,6 +445,8 @@ bool NetworkMap::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_links WHERE map_id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_seed_nodes WHERE map_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_deleted_nodes WHERE map_id=?"));
    return success;
 }
 
@@ -555,6 +592,28 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          }
       }
       DBFreeStatement(hStmt);
+
+      // Load deleted nodes positions
+      hStmt = DBPrepare(hdb, _T("SELECT object_id,position_x,position_y FROM network_map_deleted_nodes WHERE map_id=? ORDER BY element_index"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         hResult = DBSelectPrepared(hStmt);
+         if (hResult != nullptr)
+         {
+            int nRows = DBGetNumRows(hResult);
+            for(int i = 0; i < nRows; i++)
+            {
+               DeletedObjectLocation loc;
+               loc.objectId = DBGetFieldULong(hResult, i, 0);
+               loc.posX = DBGetFieldULong(hResult, i, 1);
+               loc.posY = DBGetFieldULong(hResult, i, 2);
+               m_deletedObjects->set(i, loc);
+            }
+            DBFreeResult(hResult);
+         }
+      }
+      DBFreeStatement(hStmt);
 	}
 
 	m_status = STATUS_NORMAL;
@@ -655,7 +714,7 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 
 	if (request->isFieldExist(VID_NUM_ELEMENTS))
 	{
-		m_elements->clear();
+	   ObjectArray<NetworkMapElement> *newElements = new ObjectArray<NetworkMapElement>(0, 23, Ownership::True);
 
 		int numElements = (int)request->getFieldAsUInt32(VID_NUM_ELEMENTS);
 		if (numElements > 0)
@@ -686,13 +745,72 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 						e = new NetworkMapElement(request, varId);
 						break;
 				}
-				m_elements->add(e);
+				newElements->add(e);
 				varId += 100;
 
 				if (m_nextElementId <= e->getId())
 					m_nextElementId = e->getId() + 1;
 			}
 		}
+		for(int i = 0; i < newElements->size(); i++)
+		{
+		   NetworkMapElement *newElement = newElements->get(i);
+
+		   bool found = false;
+		   for(int j = 0; j < m_elements->size(); j++)
+		   {
+	         NetworkMapElement *oldElement = m_elements->get(j);
+		      if (newElement->getId() == oldElement->getId() && newElement->getType() == oldElement->getType())
+		      {
+		         newElement->updateInternalFields(oldElement);
+		         found = true;
+		         break;
+		      }
+		   }
+
+         if (newElement->getType() != MAP_ELEMENT_OBJECT)
+            continue;
+
+		   if (!found)
+		   {
+	         for (int i = 0; i < m_deletedObjects->size(); i++)
+	         {
+	            if (m_deletedObjects->get(i)->objectId == static_cast<NetworkMapObject*>(newElement)->getObjectId())
+	            {
+	               static_cast<NetworkMapObject*>(newElement)->updateLocation(m_deletedObjects->get(i)->posX, m_deletedObjects->get(i)->posY);
+	               m_deletedObjects->remove(i);
+	               break;
+	            }
+	         }
+		   }
+		}
+
+		for(int j = 0; j < m_elements->size(); j++)
+      {
+         NetworkMapElement *oldElement = m_elements->get(j);
+         if (oldElement->getType() != MAP_ELEMENT_OBJECT)
+            continue;
+
+         bool found = false;
+		   for(int i = 0; i < newElements->size(); i++)
+         {
+		      if (newElements->get(i)->getId() == oldElement->getId() )
+            {
+               found = true;
+               break;
+            }
+         }
+         if (!found)
+         {
+            DeletedObjectLocation loc;
+            loc.objectId = static_cast<NetworkMapObject*>(oldElement)->getObjectId();
+            loc.posX = oldElement->getPosX();
+            loc.posY = oldElement->getPosY();
+            m_deletedObjects->insert(m_deletedObjects->size() % MAX_DELETED_OBJECT_COUNT, &loc);
+         }
+      }
+		delete m_elements;
+		m_elements = newElements;
 
 		m_links->clear();
 		int numLinks = request->getFieldAsUInt32(VID_NUM_LINKS);
@@ -838,10 +956,16 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       if ((e->getType() != MAP_ELEMENT_OBJECT) || !(e->getFlags() & AUTO_GENERATED))
          continue;
 
-      uint32_t objectId = static_cast<NetworkMapObject*>(e)->getObjectId();
+      NetworkMapObject *netMapObject = static_cast<NetworkMapObject*>(e);
+      uint32_t objectId = netMapObject->getObjectId();
       if (!objects->isObjectExist(objectId))
       {
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: object element %u (object %u) removed"), m_name, m_id, e->getId(), objectId);
+         DeletedObjectLocation loc;
+         loc.objectId = objectId;
+         loc.posX = netMapObject->getPosX();
+         loc.posY = netMapObject->getPosY();
+         m_deletedObjects->insert(m_deletedObjects->size() % MAX_DELETED_OBJECT_COUNT, &loc);
          m_elements->remove(i);
          i--;
          modified = true;
@@ -852,9 +976,10 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
    for(int i = 0; i < objects->getNumObjects(); i++)
    {
       bool found = false;
+      NetworkMapElement *e = nullptr;
       for(int j = 0; j < m_elements->size(); j++)
       {
-         NetworkMapElement *e = m_elements->get(j);
+         e = m_elements->get(j);
          if (e->getType() != MAP_ELEMENT_OBJECT)
             continue;
          if (static_cast<NetworkMapObject*>(e)->getObjectId() == objects->getObjects().get(i))
@@ -866,7 +991,16 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       if (!found)
       {
          uint32_t objectId = objects->getObjects().get(i);
-         NetworkMapElement *e = new NetworkMapObject(m_nextElementId++, objectId, 1);
+         NetworkMapObject *e = new NetworkMapObject(m_nextElementId++, objectId, 1);
+         for (int i = 0; i < m_deletedObjects->size(); i++)
+         {
+            if (m_deletedObjects->get(i)->objectId == objectId)
+            {
+               e->updateLocation(m_deletedObjects->get(i)->posX, m_deletedObjects->get(i)->posY);
+               m_deletedObjects->remove(i);
+               break;
+            }
+         }
          m_elements->add(e);
          modified = true;
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: new object %u (element ID %u) added"), m_name, m_id, objectId, e->getId());

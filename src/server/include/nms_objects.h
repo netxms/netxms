@@ -4131,6 +4131,13 @@ public:
    virtual bool showThresholdSummary() const override;
 };
 
+struct DeletedObjectLocation
+{
+   uint32_t objectId;
+   int32_t posX;
+   int32_t posY;
+};
+
 /**
  * Network map object
  */
@@ -4158,6 +4165,7 @@ protected:
    ObjectArray<NetworkMapLink> *m_links;
    TCHAR *m_filterSource;
    NXSL_VM *m_filter;
+   StructArray<DeletedObjectLocation> *m_deletedObjects;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;

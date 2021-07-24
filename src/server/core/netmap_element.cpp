@@ -59,7 +59,7 @@ NetworkMapElement::NetworkMapElement(NXCPMessage *msg, UINT32 baseId)
 	m_type = (LONG)msg->getFieldAsUInt16(baseId + 1);
 	m_posX = (LONG)msg->getFieldAsUInt32(baseId + 2);
 	m_posY = (LONG)msg->getFieldAsUInt32(baseId + 3);
-	m_flags = (LONG)msg->getFieldAsUInt32(baseId + 4);
+   m_flags = 0;
 }
 
 /**
@@ -88,7 +88,7 @@ void NetworkMapElement::fillMessage(NXCPMessage *msg, UINT32 baseId)
 	msg->setField(baseId + 1, (WORD)m_type);
 	msg->setField(baseId + 2, (UINT32)m_posX);
 	msg->setField(baseId + 3, (UINT32)m_posY);
-	msg->setField(baseId + 4, m_flags);
+   msg->setField(baseId + 4, m_flags);
 }
 
 /**
@@ -98,6 +98,14 @@ void NetworkMapElement::setPosition(LONG x, LONG y)
 {
 	m_posX = x;
 	m_posY = y;
+}
+
+/**
+ * Update internal fields form previous object
+ */
+void NetworkMapElement::updateInternalFields(NetworkMapElement *e)
+{
+   m_flags = e->m_flags;
 }
 
 /**
