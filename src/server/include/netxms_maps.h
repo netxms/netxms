@@ -170,6 +170,7 @@ public:
 	NetworkMapElement(NXCPMessage *msg, UINT32 baseId);
 	virtual ~NetworkMapElement();
 
+   virtual void updateInternalFields(NetworkMapElement *e);
 	virtual void updateConfig(Config *config);
 	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
 	virtual json_t *toJson() const;
@@ -202,6 +203,8 @@ public:
 	virtual void updateConfig(Config *config);
 	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
    virtual json_t *toJson() const;
+
+   void updateLocation(int64_t posX, int64_t posY) { m_posX = posX; m_posY = posY; }
 
 	UINT32 getObjectId() const { return m_objectId; }
 };

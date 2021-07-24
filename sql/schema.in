@@ -1879,6 +1879,19 @@ CREATE TABLE network_map_seed_nodes
 ) TABLE_TYPE;
 
 /**
+ * Object location for deleted nodes
+ */
+CREATE TABLE network_map_deleted_nodes 
+(
+  map_id integer not null,
+  object_id integer not null,
+  element_index integer not null,
+  position_x integer not null,
+  position_y integer not null,
+  PRIMARY KEY(map_id, object_id))
+) TABLE_TYPE;
+
+/**
  * Image Library
  */
 CREATE TABLE images

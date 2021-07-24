@@ -24,6 +24,27 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.65 to 40.66
+ */
+static bool H_UpgradeFromV65()
+{
+   if (GetSchemaLevelForMajorVersion(39) < 10)
+   {
+      CHK_EXEC(CreateTable(
+         _T("CREATE TABLE network_map_deleted_nodes (")
+         _T("   map_id integer not null,")
+         _T("   object_id integer not null,")
+         _T("   element_index integer not null,")
+         _T("   position_x integer not null,")
+         _T("   position_y integer not null,")
+         _T("PRIMARY KEY(map_id, object_id))")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(39, 10));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(66));
+   return true;
+}
+
+/**
  * Upgrade from 40.64 to 40.65
  */
 static bool H_UpgradeFromV64()
@@ -1801,6 +1822,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 65, 40, 66, H_UpgradeFromV65 },
    { 64, 40, 65, H_UpgradeFromV64 },
    { 63, 40, 64, H_UpgradeFromV63 },
    { 62, 40, 63, H_UpgradeFromV62 },

@@ -26,9 +26,27 @@
 /**
  * Upgrade from 39.9 to 40.0
  */
-static bool H_UpgradeFromV9()
+static bool H_UpgradeFromV10()
 {
    CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 39.8 to 39.9
+ */
+static bool H_UpgradeFromV9()
+{
+   CHK_EXEC(CreateTable(
+   _T("CREATE TABLE network_map_deleted_nodes (")
+   _T("   map_id integer not null,")
+   _T("   object_id integer not null,")
+   _T("   element_index integer not null,")
+   _T("   position_x integer not null,")
+   _T("   position_y integer not null,")
+   _T("PRIMARY KEY(map_id, object_id))")));
+
+   CHK_EXEC(SetSchemaLevelForMajorVersion(39, 10));
    return true;
 }
 
@@ -336,7 +354,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 9,  40, 0,  H_UpgradeFromV9  },
+   { 10,  40, 0,  H_UpgradeFromV10  },
+   { 9,  39, 10,  H_UpgradeFromV9  },
    { 8,  39, 9,  H_UpgradeFromV8  },
    { 7,  39, 8,  H_UpgradeFromV7  },
    { 6,  39, 7,  H_UpgradeFromV6  },
