@@ -1888,7 +1888,7 @@ CREATE TABLE network_map_deleted_nodes
   element_index integer not null,
   position_x integer not null,
   position_y integer not null,
-  PRIMARY KEY(map_id, object_id))
+  PRIMARY KEY(map_id, object_id)
 ) TABLE_TYPE;
 
 /**
