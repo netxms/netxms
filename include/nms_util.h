@@ -4667,7 +4667,7 @@ public:
 /**
  * Java UI compatibe color manipulations
  */
-struct LIBNETXMS_EXPORTABLE RGB
+struct LIBNETXMS_EXPORTABLE Color
 {
    BYTE red;
    BYTE green;
@@ -4676,7 +4676,7 @@ struct LIBNETXMS_EXPORTABLE RGB
    /**
     * Default constructor - create black color
     */
-   RGB()
+   Color()
    {
       red = 0;
       green = 0;
@@ -4686,7 +4686,7 @@ struct LIBNETXMS_EXPORTABLE RGB
    /**
     * Create from separate red/green/blue values
     */
-   RGB(BYTE red, BYTE green, BYTE blue)
+   Color(BYTE red, BYTE green, BYTE blue)
    {
       this->red = red;
       this->green = green;
@@ -4696,7 +4696,7 @@ struct LIBNETXMS_EXPORTABLE RGB
    /**
     * Create from Java UI compatible integer value
     */
-   RGB(uint32_t ivalue)
+   Color(uint32_t ivalue)
    {
       red = static_cast<BYTE>(ivalue & 0xFF);
       green = static_cast<BYTE>((ivalue >> 8) & 0xFF);
@@ -4724,7 +4724,7 @@ struct LIBNETXMS_EXPORTABLE RGB
    /**
     * Parse color definition in CSS compatible format
     */
-   static RGB parseCSS(const TCHAR *css);
+   static Color parseCSS(const TCHAR *css);
 };
 
 #endif   /* __cplusplus */
