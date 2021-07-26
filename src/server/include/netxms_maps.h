@@ -158,30 +158,30 @@ template class NXCORE_EXPORTABLE shared_ptr<NetworkMapObjectList>;
 class NetworkMapElement
 {
 protected:
-	UINT32 m_id;
-	LONG m_type;
-	LONG m_posX;
-	LONG m_posY;
-	UINT32 m_flags;
+   uint32_t m_id;
+	int32_t m_type;
+   int32_t m_posX;
+   int32_t m_posY;
+   uint32_t m_flags;
 
 public:
-	NetworkMapElement(UINT32 id, UINT32 flags = 0);
-	NetworkMapElement(UINT32 id, Config *config, UINT32 flags = 0);
-	NetworkMapElement(NXCPMessage *msg, UINT32 baseId);
+	NetworkMapElement(uint32_t id, uint32_t flags = 0);
+	NetworkMapElement(uint32_t id, Config *config, uint32_t flags = 0);
+	NetworkMapElement(NXCPMessage *msg, uint32_t baseId);
 	virtual ~NetworkMapElement();
 
    virtual void updateInternalFields(NetworkMapElement *e);
 	virtual void updateConfig(Config *config);
-	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
+	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId);
 	virtual json_t *toJson() const;
 
-	UINT32 getId() const { return m_id; }
-	LONG getType() const { return m_type; }
-	LONG getPosX() const { return m_posX; }
-	LONG getPosY() const { return m_posY; }
-	UINT32 getFlags() const { return m_flags; }
+   uint32_t getId() const { return m_id; }
+   int32_t getType() const { return m_type; }
+   int32_t getPosX() const { return m_posX; }
+   int32_t getPosY() const { return m_posY; }
+   uint32_t getFlags() const { return m_flags; }
 
-	void setPosition(LONG x, LONG y);
+	void setPosition(int32_t x, int32_t y);
 };
 
 /**
@@ -190,23 +190,21 @@ public:
 class NetworkMapObject : public NetworkMapElement
 {
 protected:
-	UINT32 m_objectId;
-   UINT32 m_width;
-   UINT32 m_height;
+	uint32_t m_objectId;
+   uint32_t m_width;
+   uint32_t m_height;
 
 public:
-	NetworkMapObject(UINT32 id, UINT32 objectId, UINT32 flags = 0);
-	NetworkMapObject(UINT32 id, Config *config, UINT32 flags = 0);
-	NetworkMapObject(NXCPMessage *msg, UINT32 baseId);
+	NetworkMapObject(uint32_t id, uint32_t objectId, uint32_t flags = 0);
+	NetworkMapObject(uint32_t id, Config *config, uint32_t flags = 0);
+	NetworkMapObject(NXCPMessage *msg, uint32_t baseId);
 	virtual ~NetworkMapObject();
 
-	virtual void updateConfig(Config *config);
-	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
-   virtual json_t *toJson() const;
+	virtual void updateConfig(Config *config) override;
+	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
+   virtual json_t *toJson() const override;
 
-   void updateLocation(int64_t posX, int64_t posY) { m_posX = posX; m_posY = posY; }
-
-	UINT32 getObjectId() const { return m_objectId; }
+	uint32_t getObjectId() const { return m_objectId; }
 };
 
 /**
@@ -215,28 +213,28 @@ public:
 class NetworkMapDecoration : public NetworkMapElement
 {
 protected:
-	LONG m_decorationType;
+   int32_t m_decorationType;
 	UINT32 m_color;
 	TCHAR *m_title;
-	LONG m_width;
-	LONG m_height;
+   int32_t m_width;
+   int32_t m_height;
 
 public:
-	NetworkMapDecoration(UINT32 id, LONG decorationType, UINT32 flags = 0);
-	NetworkMapDecoration(UINT32 id, Config *config, UINT32 flags = 0);
-	NetworkMapDecoration(NXCPMessage *msg, UINT32 baseId);
+	NetworkMapDecoration(uint32_t id, LONG decorationType, uint32_t flags = 0);
+	NetworkMapDecoration(uint32_t id, Config *config, uint32_t flags = 0);
+	NetworkMapDecoration(NXCPMessage *msg, uint32_t baseId);
 	virtual ~NetworkMapDecoration();
 
-	virtual void updateConfig(Config *config);
-	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
-   virtual json_t *toJson() const;
+	virtual void updateConfig(Config *config) override;
+	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
+   virtual json_t *toJson() const override;
 
-	LONG getDecorationType() const { return m_decorationType; }
-	UINT32 getColor() const { return m_color; }
+   int32_t getDecorationType() const { return m_decorationType; }
+   uint32_t getColor() const { return m_color; }
 	const TCHAR *getTitle() const { return CHECK_NULL_EX(m_title); }
 
-	LONG getWidth() const { return m_width; }
-	LONG getHeight() const { return m_height; }
+   int32_t getWidth() const { return m_width; }
+   int32_t getHeight() const { return m_height; }
 };
 
 /**
@@ -248,14 +246,14 @@ protected:
 	TCHAR *m_xmlDCIList;
 
 public:
-	NetworkMapDCIContainer(UINT32 id, TCHAR* objectDCIList, UINT32 flags = 0);
-	NetworkMapDCIContainer(UINT32 id, Config *config, UINT32 flags = 0);
-	NetworkMapDCIContainer(NXCPMessage *msg, UINT32 baseId);
+	NetworkMapDCIContainer(uint32_t id, TCHAR* objectDCIList, uint32_t flags = 0);
+	NetworkMapDCIContainer(uint32_t id, Config *config, uint32_t flags = 0);
+	NetworkMapDCIContainer(NXCPMessage *msg, uint32_t baseId);
 	virtual ~NetworkMapDCIContainer();
 
-	virtual void updateConfig(Config *config);
-	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
-   virtual json_t *toJson() const;
+	virtual void updateConfig(Config *config) override;
+	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
+   virtual json_t *toJson() const override;
 
 	const TCHAR *getObjectDCIList() const { return m_xmlDCIList; }
 };
@@ -269,16 +267,16 @@ protected:
 	TCHAR *m_config;
 
 public:
-	NetworkMapTextBox(UINT32 id, TCHAR* objectDCIList, UINT32 flags = 0);
-	NetworkMapTextBox(UINT32 id, Config *config, UINT32 flags = 0);
-	NetworkMapTextBox(NXCPMessage *msg, UINT32 baseId);
+	NetworkMapTextBox(uint32_t id, TCHAR* objectDCIList, uint32_t flags = 0);
+	NetworkMapTextBox(uint32_t id, Config *config, uint32_t flags = 0);
+	NetworkMapTextBox(NXCPMessage *msg, uint32_t baseId);
 	virtual ~NetworkMapTextBox();
 
-	virtual void updateConfig(Config *config);
-	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
-   virtual json_t *toJson() const;
+	virtual void updateConfig(Config *config) override;
+	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
+   virtual json_t *toJson() const override;
 
-	TCHAR *getObjectDCIList() const { return m_config; }
+	const TCHAR *getObjectDCIList() const { return m_config; }
 };
 
 /**
@@ -290,16 +288,16 @@ protected:
    TCHAR *m_config;
 
 public:
-   NetworkMapDCIImage(UINT32 id, TCHAR* objectDCIList, UINT32 flags = 0);
-   NetworkMapDCIImage(UINT32 id, Config *config, UINT32 flags = 0);
-   NetworkMapDCIImage(NXCPMessage *msg, UINT32 baseId);
+   NetworkMapDCIImage(uint32_t id, TCHAR* objectDCIList, uint32_t flags = 0);
+   NetworkMapDCIImage(uint32_t id, Config *config, uint32_t flags = 0);
+   NetworkMapDCIImage(NXCPMessage *msg, uint32_t baseId);
    virtual ~NetworkMapDCIImage();
 
-   virtual void updateConfig(Config *config);
-   virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
-   virtual json_t *toJson() const;
+   virtual void updateConfig(Config *config) override;
+   virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
+   virtual json_t *toJson() const override;
 
-   TCHAR *getObjectDCIList() const { return m_config; }
+   const TCHAR *getObjectDCIList() const { return m_config; }
 };
 
 /**

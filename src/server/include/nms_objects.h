@@ -2057,10 +2057,6 @@ enum GeoLocationControlMode
    GEOLOCATION_ALLOWED_AREAS = 2
 };
 
-#ifdef _WIN32
-template class NXCORE_EXPORTABLE IntegerArray<uint32_t>;
-#endif
-
 /**
  * Common base class for all objects capable of collecting data
  */
@@ -4155,6 +4151,12 @@ struct NetworkMapObjectLocation
    int32_t posX;
    int32_t posY;
 };
+
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE ObjectArray<NetworkMapElement>;
+template class NXCORE_EXPORTABLE ObjectArray<NetworkMapLink>;
+template class NXCORE_EXPORTABLE StructArray<NetworkMapObjectLocation>;
+#endif
 
 /**
  * Network map object

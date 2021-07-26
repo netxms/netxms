@@ -760,7 +760,7 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 	            NetworkMapObjectLocation *l = m_deletedObjects.get(i);
 	            if (l->objectId == static_cast<NetworkMapObject*>(newElement)->getObjectId())
 	            {
-	               static_cast<NetworkMapObject*>(newElement)->updateLocation(l->posX, l->posY);
+	               static_cast<NetworkMapObject*>(newElement)->setPosition(l->posX, l->posY);
 	               m_deletedObjects.remove(i);
 	               break;
 	            }
@@ -978,7 +978,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
             NetworkMapObjectLocation *l = m_deletedObjects.get(i);
             if (l->objectId == objectId)
             {
-               e->updateLocation(l->posX, l->posY);
+               e->setPosition(l->posX, l->posY);
                m_deletedObjects.remove(i);
                break;
             }
@@ -1121,13 +1121,13 @@ void NetworkMap::updateLinks()
             NXSL_Value *result = vm->getResult();
             if (result->isInteger())
             {
-               RGB color(result->getValueAsUInt32());
+               Color color(result->getValueAsUInt32());
                color.swap();  // Assume color returned as 0xRRGGBB, but Java UI expects 0xBBGGRR
                link->setColor(color.toInteger());
             }
             else if (result->isString())
             {
-               link->setColor(RGB::parseCSS(result->getValueAsCString()).toInteger());
+               link->setColor(Color::parseCSS(result->getValueAsCString()).toInteger());
             }
          }
          else
