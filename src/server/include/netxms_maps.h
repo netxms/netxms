@@ -325,6 +325,7 @@ protected:
 public:
 	NetworkMapLink(uint32_t id, uint32_t e1, uint32_t e2, int type);
 	NetworkMapLink(NXCPMessage *msg, uint32_t baseId);
+   NetworkMapLink(const NetworkMapLink& src);
 	virtual ~NetworkMapLink();
 
 	void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
@@ -346,6 +347,7 @@ public:
    const TCHAR *getConfig() const { return CHECK_NULL_EX(m_config); }
 
 	void setName(const TCHAR *name);
+	void setConnectedElements(uint32_t e1, uint32_t e2) { m_element1 = e1; m_element2 = e2; }
 	void setConnector1Name(const TCHAR *name);
 	void setConnector2Name(const TCHAR *name);
 	void setFlags(uint32_t flags) { m_flags = flags; }

@@ -61,6 +61,25 @@ NetworkMapLink::NetworkMapLink(NXCPMessage *msg, uint32_t baseId)
 }
 
 /**
+ * Map link copy constructor
+ */
+NetworkMapLink::NetworkMapLink(const NetworkMapLink& src)
+{
+   m_id = src.m_id;
+   m_element1 = src.m_element1;
+   m_element2 = src.m_element2;
+   m_type = src.m_type;
+   m_name = MemCopyString(src.m_name);
+   m_connectorName1 = MemCopyString(src.m_connectorName1);
+   m_connectorName2 = MemCopyString(src.m_connectorName2);
+   m_colorSource = src.m_colorSource;
+   m_color = src.m_color;
+   m_colorProvider = MemCopyString(src.m_colorProvider);
+   m_config = MemCopyString(src.m_config);
+   m_flags = src.m_flags;
+}
+
+/**
  * Map link destructor
  */
 NetworkMapLink::~NetworkMapLink()

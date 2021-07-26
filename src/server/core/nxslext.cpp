@@ -2175,6 +2175,17 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
    NXSL_ENV_CONSTANT("Status::DISABLED", STATUS_DISABLED);
    NXSL_ENV_CONSTANT("Status::TESTING", STATUS_TESTING);
 
+   // Status colors
+   NXSL_ENV_CONSTANT("StatusColor::NORMAL", _T("rgb(0, 192, 0)"));
+   NXSL_ENV_CONSTANT("StatusColor::WARNING", _T("rgb(0, 255, 255)"));
+   NXSL_ENV_CONSTANT("StatusColor::MINOR", _T("rgb(231, 226, 0)"));
+   NXSL_ENV_CONSTANT("StatusColor::MAJOR", _T("rgb(255, 128, 0)"));
+   NXSL_ENV_CONSTANT("StatusColor::CRITICAL", _T("rgb(192, 0, 0)"));
+   NXSL_ENV_CONSTANT("StatusColor::UNKNOWN", _T("rgb(0, 0, 128)"));
+   NXSL_ENV_CONSTANT("StatusColor::UNMANAGED", _T("rgb(192, 192, 192)"));
+   NXSL_ENV_CONSTANT("StatusColor::DISABLED", _T("rgb(128, 64, 0)"));
+   NXSL_ENV_CONSTANT("StatusColor::TESTING", _T("rgb(255, 128, 255)"));
+
    // DCI data types
    NXSL_ENV_CONSTANT("DCI::INT32", DCI_DT_INT);
    NXSL_ENV_CONSTANT("DCI::UINT32", DCI_DT_UINT);

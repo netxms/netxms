@@ -37,6 +37,7 @@ public class LinkEditor
 	private String connectorName2;
 	private int color;
 	private int colorSource;
+   private String colorProvider;
 	private List<Long> statusObjects;
 	private int routingAlgorithm;
 	private boolean modified = false;
@@ -57,6 +58,7 @@ public class LinkEditor
 		connectorName2 = link.getConnectorName2();
 		color = link.getColor();
 		colorSource = link.getColorSource();
+      colorProvider = link.getColorProvider();
 		statusObjects = link.getStatusObjects();
 		routingAlgorithm = link.getRouting();
 		dciList = link.getDciAsList();
@@ -73,6 +75,7 @@ public class LinkEditor
 		link = new NetworkMapLink(link.getId(), name, type, link.getElement1(), link.getElement2(), connectorName1, connectorName2, dciList.toArray(new SingleDciConfig[dciList.size()]), link.getFlags(), link.isLocked()); 
 		link.setColor(color);
 		link.setColorSource(colorSource);
+      link.setColorProvider(colorProvider);
 		link.setStatusObjects(statusObjects);
 		link.setRouting(routingAlgorithm);
 		link.setBendPoints(bp);
@@ -178,8 +181,24 @@ public class LinkEditor
    }
 
    /**
-	 * @return the statusObject
-	 */
+    * @return the colorProvider
+    */
+   public String getColorProvider()
+   {
+      return colorProvider;
+   }
+
+   /**
+    * @param colorProvider the colorProvider to set
+    */
+   public void setColorProvider(String colorProvider)
+   {
+      this.colorProvider = colorProvider;
+   }
+
+   /**
+    * @return the statusObject
+    */
 	public List<Long> getStatusObjects()
 	{
 		return statusObjects;
