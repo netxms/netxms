@@ -37,6 +37,7 @@ import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
+import org.netxms.ui.eclipse.nxsl.widgets.ScriptSelector;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -54,7 +55,9 @@ public class MapLinkGeneral extends PropertyPage
 	private LabeledText connector2;
 	private Button radioColorDefault;
 	private Button radioColorObject;
+   private Button radioColorScript;
 	private Button radioColorCustom;
+   private ScriptSelector script;
 	private ColorSelector color;
 	private List list;
 	private Button add;
@@ -118,19 +121,20 @@ public class MapLinkGeneral extends PropertyPage
 			public void widgetSelected(SelectionEvent e)
 			{
 				color.setEnabled(radioColorCustom.getSelection());
+            script.setEnabled(radioColorScript.getSelection());
 				list.setEnabled(radioColorObject.getSelection()); 
 				add.setEnabled(radioColorObject.getSelection());
 				remove.setEnabled(radioColorObject.getSelection());
 				checkUseThresholds.setEnabled(radioColorObject.getSelection());
 			}
-			
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
 				widgetSelected(e);
 			}
 		};
-		
+
 		radioColorDefault = new Button(colorGroup, SWT.RADIO);
 		radioColorDefault.setText(Messages.get().MapLinkGeneral_DefColor);
       radioColorDefault.setSelection(object.getColorSource() == NetworkMapLink.COLOR_SOURCE_DEFAULT);
@@ -144,6 +148,8 @@ public class MapLinkGeneral extends PropertyPage
 		final Composite nodeSelectionGroup = new Composite(colorGroup, SWT.NONE);
       layout = new GridLayout();
       layout.numColumns = 2;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
       nodeSelectionGroup.setLayout(layout);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -159,16 +165,16 @@ public class MapLinkGeneral extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalIndent = 20;
       list.setLayoutData(gd);
-		if(object.getStatusObjects() != null)
+      if (object.getStatusObjects() != null)
 		{
-		   for(int i = 0; i < object.getStatusObjects().size(); i++)
+         NXCSession session = ConsoleSharedData.getSession();
+         for(Long id : object.getStatusObjects())
 		   {
-		      final AbstractObject obj = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(object.getStatusObjects().get(i));
-	         list.add((obj != null) ? obj.getObjectName() : ("<" + Long.toString(object.getStatusObjects().get(i)) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
+            list.add(session.getObjectName(id));
 		   }
 		}
       list.setEnabled(radioColorObject.getSelection());
-      
+
       add = new Button(nodeSelectionGroup, SWT.PUSH);
       add.setText(Messages.get().MapLinkGeneral_Add);
       gd = new GridData();
@@ -189,7 +195,7 @@ public class MapLinkGeneral extends PropertyPage
          }
       });
       add.setEnabled(radioColorObject.getSelection());
-      
+
       remove = new Button(nodeSelectionGroup, SWT.PUSH);
       remove.setText(Messages.get().MapLinkGeneral_Delete);
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
@@ -218,6 +224,24 @@ public class MapLinkGeneral extends PropertyPage
       gd.horizontalIndent = 17;
       checkUseThresholds.setLayoutData(gd);
 
+      radioColorScript = new Button(colorGroup, SWT.RADIO);
+      radioColorScript.setText("Script");
+      radioColorScript.setSelection(object.getColorSource() == NetworkMapLink.COLOR_SOURCE_SCRIPT);
+      radioColorScript.addSelectionListener(listener);
+
+      script = new ScriptSelector(colorGroup, SWT.NONE, false, false);
+      script.setScriptName(object.getColorProvider());
+      if (radioColorScript.getSelection())
+         script.setScriptName(object.getColorProvider());
+      else
+         script.setEnabled(false);
+      gd = new GridData();
+      gd.horizontalIndent = 20;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      script.setLayoutData(gd);
+
 		radioColorCustom = new Button(colorGroup, SWT.RADIO);
 		radioColorCustom.setText(Messages.get().MapLinkGeneral_CustomColor);
       radioColorCustom.setSelection(object.getColorSource() == NetworkMapLink.COLOR_SOURCE_CUSTOM_COLOR);
@@ -231,7 +255,7 @@ public class MapLinkGeneral extends PropertyPage
 		gd = new GridData();
 		gd.horizontalIndent = 20;
 		color.getButton().setLayoutData(gd);
-		
+
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -296,6 +320,11 @@ public class MapLinkGeneral extends PropertyPage
          object.setColorSource(NetworkMapLink.COLOR_SOURCE_OBJECT_STATUS);
 			//status objects already set
 		}
+      else if (radioColorScript.getSelection())
+      {
+         object.setColorSource(NetworkMapLink.COLOR_SOURCE_SCRIPT);
+         object.setColorProvider(script.getScriptName());
+      }
 		else
 		{
          object.setColorSource(NetworkMapLink.COLOR_SOURCE_DEFAULT);
@@ -306,9 +335,9 @@ public class MapLinkGeneral extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{

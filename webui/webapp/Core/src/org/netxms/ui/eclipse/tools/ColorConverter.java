@@ -444,7 +444,7 @@ public class ColorConverter
 	   int v = rgbToInt(rgb); // value is in BGR format
 	   return String.format("#%02x%02x%02x", v & 0xFF, (v >> 8) & 0xFF, v >> 16);
 	}
-	
+
 	/**
 	 * Parse CSS compatible color definition
 	 * 
@@ -455,7 +455,7 @@ public class ColorConverter
 	{
 	   if ((cdef == null) || cdef.isEmpty())
 	      return null;
-	   
+
 	   if (cdef.startsWith("0x"))
       {
          try
@@ -468,7 +468,7 @@ public class ColorConverter
             return null;
          }
       }
-	   
+
       if (cdef.charAt(0) == '#')
       {
          try

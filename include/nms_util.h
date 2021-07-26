@@ -4643,6 +4643,69 @@ public:
    void setPostCode(const TCHAR *postcode) { setField(&m_postcode, postcode); }
 };
 
+/**
+ * Java UI compatibe color manipulations
+ */
+struct LIBNETXMS_EXPORTABLE RGB
+{
+   BYTE red;
+   BYTE green;
+   BYTE blue;
+
+   /**
+    * Default constructor - create black color
+    */
+   RGB()
+   {
+      red = 0;
+      green = 0;
+      blue = 0;
+   }
+
+   /**
+    * Create from separate red/green/blue values
+    */
+   RGB(BYTE red, BYTE green, BYTE blue)
+   {
+      this->red = red;
+      this->green = green;
+      this->blue = blue;
+   }
+
+   /**
+    * Create from Java UI compatible integer value
+    */
+   RGB(uint32_t ivalue)
+   {
+      red = static_cast<BYTE>(ivalue & 0xFF);
+      green = static_cast<BYTE>((ivalue >> 8) & 0xFF);
+      blue = static_cast<BYTE>((ivalue >> 16) & 0xFF);
+   }
+
+   /**
+    * Convert to Java UI compatible integer
+    */
+   uint32_t toInteger()
+   {
+      return static_cast<uint32_t>(red) | (static_cast<uint32_t>(green) << 8) | (static_cast<uint32_t>(blue) << 16);
+   }
+
+   /**
+    * Swap red and blue
+    */
+   void swap()
+   {
+      BYTE t = red;
+      red = blue;
+      blue = t;
+   }
+
+   /**
+    * Parse color definition in CSS compatible format
+    */
+   static RGB parseCSS(const TCHAR *css);
+};
+
 #endif   /* __cplusplus */
 
 #endif   /* _nms_util_h_ */

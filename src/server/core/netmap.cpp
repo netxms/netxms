@@ -963,15 +963,83 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
  */
 void NetworkMap::updateLinks()
 {
+   ObjectArray<NetworkMapLink> updateList(0, 64, Ownership::True);
+
    lockProperties();
    for(int i = 0; i < m_links->size(); i++)
    {
       NetworkMapLink *link = m_links->get(i);
       if (link->getColorSource() == MAP_LINK_COLOR_SOURCE_SCRIPT)
       {
-
+         // Replace element IDs with actual object IDs in temporary link object
+         auto temp = new NetworkMapLink(*link);
+         temp->setConnectedElements(objectIdFromElementId(link->getElement1()), objectIdFromElementId(link->getElement2()));
+         updateList.add(temp);
       }
    }
+   unlockProperties();
+
+   if (updateList.isEmpty())
+      return;
+
+   for(int i = 0; i < updateList.size(); i++)
+   {
+      NetworkMapLink *link = updateList.get(i);
+      ScriptVMHandle vm = CreateServerScriptVM(link->getColorProvider(), self());
+      if (vm.isValid())
+      {
+         const shared_ptr<NetObj> endpoint1 = FindObjectById(link->getElement1());
+         const shared_ptr<NetObj> endpoint2 = FindObjectById(link->getElement2());
+         if (endpoint1 != nullptr)
+            vm->setGlobalVariable("$endpoint1", endpoint1->createNXSLObject(vm));
+         if (endpoint2 != nullptr)
+            vm->setGlobalVariable("$endpoint2", endpoint2->createNXSLObject(vm));
+         if (vm->run())
+         {
+            NXSL_Value *result = vm->getResult();
+            if (result->isInteger())
+            {
+               RGB color(result->getValueAsUInt32());
+               color.swap();  // Assume color returned as 0xRRGGBB, but Java UI expects 0xBBGGRR
+               link->setColor(color.toInteger());
+            }
+            else if (result->isString())
+            {
+               link->setColor(RGB::parseCSS(result->getValueAsCString()).toInteger());
+            }
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_NETMAP, 4, _T("NetworkMap::updateLinks(%s [%u]): color provider script \"%s\" execution error: %s"),
+                      m_name, m_id, link->getColorProvider(), vm->getErrorText());
+            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", link->getColorProvider(), vm->getErrorText(), 0);
+         }
+         vm.destroy();
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_NETMAP, 7, _T("NetworkMap::updateLinks(%s [%u]): color provider script \"%s\" %s"), m_name, m_id,
+                  link->getColorProvider(), (vm.failureReason() == ScriptVMFailureReason::SCRIPT_IS_EMPTY) ? _T("is empty") : _T("not found"));
+      }
+   }
+
+   bool modified = false;
+   lockProperties();
+   for(int i = 0; i < updateList.size(); i++)
+   {
+      NetworkMapLink *linkUpdate = updateList.get(i);
+      for(int j = 0; j < m_links->size(); j++)
+      {
+         NetworkMapLink *link = m_links->get(j);
+         if ((link->getId() == linkUpdate->getId()) && (link->getColorSource() == MAP_LINK_COLOR_SOURCE_SCRIPT) && (link->getColor() != linkUpdate->getColor()))
+         {
+            link->setColor(linkUpdate->getColor());
+            modified = true;
+         }
+      }
+   }
+   if (modified)
+      setModified(MODIFY_MAP_CONTENT);
    unlockProperties();
 }
 
