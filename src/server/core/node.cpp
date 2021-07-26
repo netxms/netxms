@@ -68,6 +68,11 @@ ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareCom
 int64_t GetSyncerRunTime(StatisticType statType);
 
 /**
+ * Get internal metric from performance data storage driver
+ */
+DataCollectionError GetPerfDataStorageDriverMetric(const TCHAR *driver, const TCHAR *metric, TCHAR *value);
+
+/**
  * Poll cancellation checkpoint
  */
 #define POLL_CANCELLATION_CHECKPOINT() \
@@ -6922,7 +6927,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       }
       else if (!_tcsicmp(name, _T("Server.Heap.Active")))
       {
-         INT64 bytes = GetActiveHeapMemory();
+         int64_t bytes = GetActiveHeapMemory();
          if (bytes != -1)
             _sntprintf(buffer, size, UINT64_FMT, bytes);
          else
@@ -6930,7 +6935,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       }
       else if (!_tcsicmp(name, _T("Server.Heap.Allocated")))
       {
-         INT64 bytes = GetAllocatedHeapMemory();
+         int64_t bytes = GetAllocatedHeapMemory();
          if (bytes != -1)
             _sntprintf(buffer, size, UINT64_FMT, bytes);
          else
@@ -6938,7 +6943,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       }
       else if (!_tcsicmp(name, _T("Server.Heap.Mapped")))
       {
-         INT64 bytes = GetMappedHeapMemory();
+         int64_t bytes = GetMappedHeapMemory();
          if (bytes != -1)
             _sntprintf(buffer, size, UINT64_FMT, bytes);
          else
@@ -6971,6 +6976,13 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       else if (!_tcsicmp(name, _T("Server.ObjectCount.Total")))
       {
          ret_uint(buffer, static_cast<uint32_t>(g_idxObjectById.size()));
+      }
+      else if (MatchString(_T("Server.PDS.DriverStat(*)"), name, false))
+      {
+         TCHAR driver[64], metric[64];
+         AgentGetParameterArg(name, 1, driver, 64);
+         AgentGetParameterArg(name, 2, metric, 64);
+         rc = GetPerfDataStorageDriverMetric(driver, metric, buffer);
       }
       else if (MatchString(_T("Server.QueueSize.Average(*)"), name, false))
       {

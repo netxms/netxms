@@ -449,6 +449,54 @@ bool InfluxDBStorageDriver::saveDCTableValue(DCTable *dcObject, time_t timestamp
 }
 
 /**
+ * Get driver's internal metrics
+ */
+DataCollectionError InfluxDBStorageDriver::getInternalMetric(const TCHAR *metric, TCHAR *value)
+{
+   DataCollectionError rc = DCE_SUCCESS;
+   if (!_tcsicmp(metric, _T("senders")))
+   {
+      ret_int(value, m_senders.size());
+   }
+   else if (!_tcsicmp(metric, _T("overflowQueues")))
+   {
+      uint32_t count = 0;
+      for(int i = 0; i < m_senders.size(); i++)
+         if (m_senders.get(i)->isFull())
+            count++;
+      ret_uint(value, count);
+   }
+   else if (!_tcsicmp(metric, _T("messageDrops")))
+   {
+      uint64_t count = 0;
+      for(int i = 0; i < m_senders.size(); i++)
+         count += m_senders.get(i)->getMessageDrops();
+      ret_uint64(value, count);
+   }
+   else if (!_tcsicmp(metric, _T("queueSize.bytes")))
+   {
+      uint64_t size = 0;
+      for(int i = 0; i < m_senders.size(); i++)
+         size += m_senders.get(i)->getQueueSizeInBytes();
+      ret_uint64(value, size);
+   }
+   else if (!_tcsicmp(metric, _T("queueSize.messages")))
+   {
+      uint32_t size = 0;
+      for(int i = 0; i < m_senders.size(); i++)
+         size += m_senders.get(i)->getQueueSizeInMessages();
+      ret_uint(value, size);
+   }
+   else
+   {
+      value[0] = 0;
+      rc = DCE_NOT_SUPPORTED;
+   }
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("getInternalMetric(%s): rc=%d, value=%s"), metric, rc, value);
+   return rc;
+}
+
+/**
  * Driver entry point
  */
 DECLARE_PDSDRV_ENTRY_POINT(s_driverName, InfluxDBStorageDriver);

@@ -106,6 +106,14 @@ bool PerfDataStorageDriver::saveDCTableValue(DCTable *dcObject, time_t timestamp
 }
 
 /**
+ * Get internal metric
+ */
+DataCollectionError PerfDataStorageDriver::getInternalMetric(const TCHAR *metric, TCHAR *value)
+{
+   return DCE_NOT_SUPPORTED;
+}
+
+/**
  * Storage request
  */
 void PerfDataStorageRequest(DCItem *dci, time_t timestamp, const TCHAR *value)
@@ -243,4 +251,21 @@ void ShutdownPerfDataStorageDrivers()
       delete s_drivers[i];
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("All performance data storage drivers unloaded"));
+}
+
+/**
+ * Get internal metric from performance data storage driver
+ */
+DataCollectionError GetPerfDataStorageDriverMetric(const TCHAR *driver, const TCHAR *metric, TCHAR *value)
+{
+   DataCollectionError rc = DCE_NO_SUCH_INSTANCE;
+   for(int i = 0; i < s_numDrivers; i++)
+   {
+      if (!_tcsicmp(s_drivers[i]->getName(), driver))
+      {
+         rc = s_drivers[i]->getInternalMetric(metric, value);
+         break;
+      }
+   }
+   return rc;
 }

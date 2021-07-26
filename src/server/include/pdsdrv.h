@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -58,6 +58,8 @@ public:
 
    virtual bool saveDCItemValue(DCItem *dcObject, time_t timestamp, const TCHAR *value);
    virtual bool saveDCTableValue(DCTable *dcObject, time_t timestamp, Table *value);
+
+   virtual DataCollectionError getInternalMetric(const TCHAR *metric, TCHAR *value);
 };
 
 #endif   /* _pdsdrv_h_ */

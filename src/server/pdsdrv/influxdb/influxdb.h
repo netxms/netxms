@@ -66,6 +66,26 @@ protected:
 #endif
    bool m_shutdown;
    THREAD m_workerThread;
+   uint64_t m_messageDrops;
+   uint32_t m_queuedMessages;
+
+   void lock()
+   {
+#ifdef _WIN32
+      EnterCriticalSection(&m_mutex);
+#else
+      pthread_mutex_lock(&m_mutex);
+#endif
+   }
+
+   void unlock()
+   {
+#ifdef _WIN32
+   LeaveCriticalSection(&m_mutex);
+#else
+   pthread_mutex_unlock(&m_mutex);
+#endif
+   }
 
    void workerThread();
 
@@ -78,6 +98,11 @@ public:
    void start();
    void stop();
    void enqueue(const TCHAR *data);
+
+   uint64_t getQueueSizeInBytes();
+   uint32_t getQueueSizeInMessages();
+   uint64_t getMessageDrops();
+   bool isFull();
 };
 
 /**
@@ -173,6 +198,7 @@ public:
    virtual void shutdown() override;
    virtual bool saveDCItemValue(DCItem *dcObject, time_t timestamp, const TCHAR *value) override;
    virtual bool saveDCTableValue(DCTable *dcObject, time_t timestamp, Table *value) override;
+   virtual DataCollectionError getInternalMetric(const TCHAR *metric, TCHAR *value) override;
 };
 
 #endif   /* _influxdb_h_ */
