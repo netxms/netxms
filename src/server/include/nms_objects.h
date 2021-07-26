@@ -2167,9 +2167,9 @@ public:
    UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId, UINT32 userId);
    UINT32 getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId);
    void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
-   UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId);
+   uint32_t getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId);
+   void getTooltipLastValues(NXCPMessage *msg, uint32_t userId, uint32_t *index);
    double getProxyLoadFactor() const { return m_proxyLoadFactor.load(); }
-   void getTooltipLastValues(NXCPMessage &msg, uint32_t userId, uint32_t *index);
 
    void updateDciCache();
    void updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId = 0);

@@ -5278,7 +5278,7 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
  */
 void ClientSession::getTooltipLastValues(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
    IntegerArray<uint32_t> nodes;
    request->getFieldAsInt32Array(VID_OBJECT_LIST, &nodes);
@@ -5292,16 +5292,16 @@ void ClientSession::getTooltipLastValues(NXCPMessage *request)
          {
             if (object->isDataCollectionTarget())
             {
-               static_cast<DataCollectionTarget&>(*object).getTooltipLastValues(msg, m_dwUserId, &index);
+               static_cast<DataCollectionTarget&>(*object).getTooltipLastValues(&response, m_dwUserId, &index);
             }
          }
       }
    }
 
-   msg.setField(VID_NUM_ITEMS, (index - VID_DCI_VALUES_BASE) / 10);
-   msg.setField(VID_RCC, RCC_SUCCESS);
+   response.setField(VID_NUM_ITEMS, (index - VID_DCI_VALUES_BASE) / 10);
+   response.setField(VID_RCC, RCC_SUCCESS);
 
-   sendMessage(&msg);
+   sendMessage(&response);
 }
 
 /**
@@ -5309,7 +5309,7 @@ void ClientSession::getTooltipLastValues(NXCPMessage *request)
  */
 void ClientSession::getTableLastValue(NXCPMessage *request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
 
    // Get node id and check object class and access rights
    shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
@@ -5319,25 +5319,25 @@ void ClientSession::getTableLastValue(NXCPMessage *request)
       {
          if (object->isDataCollectionTarget())
          {
-				msg.setField(VID_RCC, static_cast<DataCollectionTarget&>(*object).getTableLastValue(request->getFieldAsUInt32(VID_DCI_ID), &msg));
+				response.setField(VID_RCC, static_cast<DataCollectionTarget&>(*object).getTableLastValue(request->getFieldAsUInt32(VID_DCI_ID), &response));
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    // Send response
-   sendMessage(&msg);
+   sendMessage(&response);
 }
 
 /**

@@ -2488,11 +2488,11 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
 /**
  * Get last (current) DCI values.
  */
-UINT32 DataCollectionTarget::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId)
+uint32_t DataCollectionTarget::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId)
 {
    readLockDciAccess();
 
-   UINT32 dwId = VID_DCI_VALUES_BASE, dwCount = 0;
+   uint32_t fieldId = VID_DCI_VALUES_BASE, dwCount = 0;
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *object = m_dcObjects->get(i);
@@ -2503,14 +2503,14 @@ UINT32 DataCollectionTarget::getLastValues(NXCPMessage *msg, bool objectTooltipO
       {
          if (object->getType() == DCO_TYPE_ITEM)
          {
-            ((DCItem *)object)->fillLastValueMessage(msg, dwId);
-            dwId += 50;
+            static_cast<DCItem*>(object)->fillLastValueMessage(msg, fieldId);
+            fieldId += 50;
             dwCount++;
          }
          else if (object->getType() == DCO_TYPE_TABLE)
          {
-            ((DCTable *)object)->fillLastValueSummaryMessage(msg, dwId);
-            dwId += 50;
+            static_cast<DCTable*>(object)->fillLastValueSummaryMessage(msg, fieldId);
+            fieldId += 50;
             dwCount++;
          }
       }
@@ -2524,7 +2524,7 @@ UINT32 DataCollectionTarget::getLastValues(NXCPMessage *msg, bool objectTooltipO
 /**
  * Get last (current) DCI values that should be shown on tooltip
  */
-void DataCollectionTarget::getTooltipLastValues(NXCPMessage &msg, uint32_t userId, uint32_t *index)
+void DataCollectionTarget::getTooltipLastValues(NXCPMessage *msg, uint32_t userId, uint32_t *index)
 {
    readLockDciAccess();
 
@@ -2536,15 +2536,15 @@ void DataCollectionTarget::getTooltipLastValues(NXCPMessage &msg, uint32_t userI
       {
          if (object->getType() == DCO_TYPE_ITEM)
          {
-            msg.setField(*index + 1, object->getId());
-            msg.setField(*index + 2, CHECK_NULL_EX(((DCItem *)object)->getLastValue()));
-            msg.setField(*index + 3, ((DCItem *)object)->getDataType());
-            msg.setField(*index + 4, static_cast<INT16>(object->getStatus()));
-            msg.setField(*index + 5, getId());
-            msg.setField(*index + 6, static_cast<INT16>(object->getDataSource()));
-            msg.setField(*index + 7, object->getName());
-            msg.setField(*index + 8, object->getDescription());
-            msg.setField(*index + 9, ((DCItem *)object)->getThresholdSeverity());
+            msg->setField(*index + 1, object->getId());
+            msg->setField(*index + 2, CHECK_NULL_EX(static_cast<DCItem*>(object)->getLastValue()));
+            msg->setField(*index + 3, static_cast<DCItem*>(object)->getDataType());
+            msg->setField(*index + 4, static_cast<int16_t>(object->getStatus()));
+            msg->setField(*index + 5, getId());
+            msg->setField(*index + 6, static_cast<int16_t>(object->getDataSource()));
+            msg->setField(*index + 7, object->getName());
+            msg->setField(*index + 8, object->getDescription());
+            msg->setField(*index + 9, static_cast<DCItem*>(object)->getThresholdSeverity());
             *index += 10;
          }
       }
