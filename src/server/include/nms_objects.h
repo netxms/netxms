@@ -4146,7 +4146,10 @@ public:
    virtual bool showThresholdSummary() const override;
 };
 
-struct DeletedObjectLocation
+/**
+ * Network map object location
+ */
+struct NetworkMapObjectLocation
 {
    uint32_t objectId;
    int32_t posX;
@@ -4163,7 +4166,7 @@ protected:
 
 protected:
    int m_mapType;
-   IntegerArray<UINT32> *m_seedObjects;
+   IntegerArray<uint32_t> m_seedObjects;
    int m_discoveryRadius;
    int m_layout;
    int m_backgroundColor;
@@ -4174,13 +4177,13 @@ protected:
    double m_backgroundLatitude;
    double m_backgroundLongitude;
    int m_backgroundZoom;
-   uint32_t m_nextElementId;
-   uint32_t m_nextLinkId;
-   ObjectArray<NetworkMapElement> *m_elements;
-   ObjectArray<NetworkMapLink> *m_links;
    TCHAR *m_filterSource;
    NXSL_VM *m_filter;
-   StructArray<DeletedObjectLocation> *m_deletedObjects;
+   uint32_t m_nextElementId;
+   uint32_t m_nextLinkId;
+   ObjectArray<NetworkMapElement> m_elements;
+   ObjectArray<NetworkMapLink> m_links;
+   StructArray<NetworkMapObjectLocation> m_deletedObjects;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
@@ -4197,7 +4200,7 @@ protected:
 
 public:
    NetworkMap();
-   NetworkMap(int type, IntegerArray<UINT32> *seeds);
+   NetworkMap(int type, const IntegerArray<uint32_t>& seeds);
    virtual ~NetworkMap();
 
    virtual int getObjectClass() const override { return OBJECT_NETWORKMAP; }

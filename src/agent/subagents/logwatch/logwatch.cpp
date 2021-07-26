@@ -28,8 +28,8 @@
 /**
  * Configured parsers
  */
-static ObjectArray<LogParser> s_parsers(16, 16, Ownership::True);
-static ObjectArray<LogParser> s_templateParsers(16, 16, Ownership::True);
+static ObjectArray<LogParser> s_parsers(0, 16, Ownership::True);
+static ObjectArray<LogParser> s_templateParsers(0, 16, Ownership::True);
 static Mutex s_parserLock;
 
 /**
@@ -193,31 +193,35 @@ static void ExecuteAction(const TCHAR *action, const StringList& args, void *use
  */
 static void ParserThreadTemplate(LogParser *parser)
 {
-   const TCHAR * last_separator = _tcsrchr(parser->getFileName(), FS_PATH_SEPARATOR_CHAR);
-   TCHAR dirPath[256];
+   const TCHAR *fileTemplate = _tcsrchr(parser->getFileName(), FS_PATH_SEPARATOR_CHAR);
+   if (fileTemplate == nullptr)
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot start file template log monitoring: no path in file name template \"%s\""), parser->getFileName());
+      return;
+   }
+
+   TCHAR dirPath[MAX_PATH];
    memset(dirPath, 0, sizeof dirPath);
-   memcpy(dirPath, parser->getFileName(), ((last_separator - (parser->getFileName())) + 1) * sizeof(TCHAR));
-   TCHAR *fileTemplate = MemCopyString(last_separator + 1);
+   memcpy(dirPath, parser->getFileName(), ((fileTemplate - (parser->getFileName())) + 1) * sizeof(TCHAR));
+   fileTemplate++;
 
    StringObjectMap<LogParser> currentWatchedFiles(Ownership::False);
 
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Starting file template log watching: dir:%s file template:%s"), dirPath, fileTemplate);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Starting file template log watching: path=%s file template=%s"), dirPath, fileTemplate);
 
-   while(true)
+   do
    {
       StringList matchingFileList;
-      StringList* previousWatchedFiles = currentWatchedFiles.keys();
+      StringList *previousWatchedFiles = currentWatchedFiles.keys();
 
       _TDIR *dir = _topendir(dirPath);
-      if (dir != NULL)
+      if (dir != nullptr)
       {
          struct _tdirent *d;
-         while((d = _treaddir(dir)) != NULL)
+         while((d = _treaddir(dir)) != nullptr)
          {
             if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
-            {
                continue;
-            }
 
 #if defined(__APPLE__) || defined(_WIN32) //Case insensitive
             if(MatchString(fileTemplate, d->d_name, false))
@@ -234,7 +238,7 @@ static void ParserThreadTemplate(LogParser *parser)
       for(int i = 0; i < previousWatchedFiles->size(); )
       {
          int index = matchingFileList.indexOf(previousWatchedFiles->get(i));
-         if(index != -1)
+         if (index != -1)
          {
             matchingFileList.remove(index);
             previousWatchedFiles->remove(i);
@@ -248,9 +252,10 @@ static void ParserThreadTemplate(LogParser *parser)
       for(int i = 0; i < matchingFileList.size(); i++)
       {
          LogParser *p = new LogParser(parser);
-         StringBuffer path;
-         path.appendFormattedString(_T("%s%s"), dirPath, matchingFileList.get(i));
-         p->setFileName(path.getBuffer());
+         TCHAR path[MAX_PATH];
+         _tcscpy(path, dirPath);
+         _tcslcat(path, matchingFileList.get(i), MAX_PATH);
+         p->setFileName(path);
          p->setCallback(LogParserMatch);
          p->setActionCallback(ExecuteAction);
          p->setThread(ThreadCreateEx(ParserThreadFile, p));
@@ -266,9 +271,7 @@ static void ParserThreadTemplate(LogParser *parser)
 
       delete previousWatchedFiles;
 
-      if (ConditionWait(parser->getStopCondition(), 10000))
-         break;
-   }
+   } while(!ConditionWait(parser->getStopCondition(), 10000));
 
    ObjectArray<LogParser> * parsers = currentWatchedFiles.values();
    for(int i = 0; i < parsers->size(); i++)
@@ -278,7 +281,6 @@ static void ParserThreadTemplate(LogParser *parser)
       delete p;
    }
    delete parsers;
-   MemFree(fileTemplate);
 }
 
 /**
