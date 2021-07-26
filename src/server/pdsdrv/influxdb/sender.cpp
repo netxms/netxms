@@ -37,6 +37,8 @@
  */
 InfluxDBSender::InfluxDBSender(const Config& config) : m_hostname(config.getValue(_T("/InfluxDB/Hostname"), _T("localhost")))
 {
+   m_queuedMessages = 0;
+   m_messageDrops = 0;
    m_queueFlushThreshold = config.getValueAsUInt(_T("/InfluxDB/QueueFlushThreshold"), 32768);   // Flush after 32K
    m_queueSizeLimit = config.getValueAsUInt(_T("/InfluxDB/QueueSizeLimit"), 4194304);  // 4MB upper limit on queue size
    m_maxCacheWaitTime = config.getValueAsUInt(_T("/InfluxDB/MaxCacheWaitTime"), 30000);
@@ -135,6 +137,7 @@ void InfluxDBSender::workerThread()
 
       char *data = m_queue.getUTF8String();
       m_queue.clear();
+      m_queuedMessages = 0;
 
 #ifdef _WIN32
       LeaveCriticalSection(&m_mutex);
@@ -187,16 +190,13 @@ void InfluxDBSender::stop()
  */
 void InfluxDBSender::enqueue(const TCHAR *data)
 {
-#ifdef _WIN32
-   EnterCriticalSection(&m_mutex);
-#else
-   pthread_mutex_lock(&m_mutex);
-#endif
+   lock();
 
    if (m_queue.length() < m_queueSizeLimit)
    {
       m_queue.append(data);
       m_queue.append(_T('\n'));
+      m_queuedMessages++;
       if (m_queue.length() >= m_queueFlushThreshold)
       {
 #ifdef _WIN32
@@ -206,10 +206,54 @@ void InfluxDBSender::enqueue(const TCHAR *data)
 #endif
       }
    }
+   else
+   {
+      m_messageDrops++;
+   }
 
-#ifdef _WIN32
-   LeaveCriticalSection(&m_mutex);
-#else
-   pthread_mutex_unlock(&m_mutex);
-#endif
+   unlock();
+}
+
+/**
+ * Get queue size in bytes
+ */
+uint64_t InfluxDBSender::getQueueSizeInBytes()
+{
+   lock();
+   uint64_t s = m_queue.length();
+   unlock();
+   return s;
+}
+
+/**
+ * Get queue size in messages
+ */
+uint32_t InfluxDBSender::getQueueSizeInMessages()
+{
+   lock();
+   uint32_t s = m_queuedMessages;
+   unlock();
+   return s;
+}
+
+/**
+ * Check if queue is full and cannot accept new messages
+ */
+bool InfluxDBSender::isFull()
+{
+   lock();
+   bool result = (m_queue.length() >= m_queueSizeLimit);
+   unlock();
+   return result;
+}
+
+/**
+ * Get number of dropped messages
+ */
+uint64_t InfluxDBSender::getMessageDrops()
+{
+   lock();
+   uint64_t count = m_messageDrops;
+   unlock();
+   return count;
 }
