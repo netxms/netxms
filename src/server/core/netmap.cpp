@@ -897,6 +897,8 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
             l->setConnector1Name(newLink->port1);
             l->setConnector2Name(newLink->port2);
             l->setName(newLink->name);
+            l->setColorSource(MAP_LINK_COLOR_SOURCE_OBJECT_STATUS);
+
             StringBuffer config;
             config.append(_T("<config>\n"));
             config.append(_T("\t<dciList length=\"0\"/>\n"));
@@ -933,10 +935,10 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
             }
 
             config.append(_T("\t</objectStatusList>\n"));
-            config.append(_T("\t<color>-1</color>\n"));
             config.append(_T("\t<routing>0</routing>\n"));
             config.append(_T("</config>"));
             l->setConfig(config);
+
             l->setFlags(AUTO_GENERATED);
             m_links->add(l);
             modified = true;
