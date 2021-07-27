@@ -24,7 +24,7 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 39.8 to 39.9
+ * Upgrade from 39.9 to 39.10
  */
 static bool H_UpgradeFromV9()
 {
@@ -37,7 +37,7 @@ static bool H_UpgradeFromV9()
    _T("   position_y integer not null,")
    _T("PRIMARY KEY(map_id, object_id))")));
 
-   CHK_EXEC(SetSchemaLevelForMajorVersion(39, 10));
+   CHK_EXEC(SetMinorSchemaVersion(10));
    return true;
 }
 
