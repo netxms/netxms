@@ -37,6 +37,7 @@ import org.netxms.websvc.handlers.ObjectToolOutputHandler;
 import org.netxms.websvc.handlers.ObjectTools;
 import org.netxms.websvc.handlers.Objects;
 import org.netxms.websvc.handlers.PredefinedGraphs;
+import org.netxms.websvc.handlers.PushDataHandler;
 import org.netxms.websvc.handlers.RootHandler;
 import org.netxms.websvc.handlers.Sessions;
 import org.netxms.websvc.handlers.SummaryTableAdHoc;
@@ -106,6 +107,7 @@ public class WebSvcApplication extends Application
       router.attach("/objects/{object-id}/unbind", UnbindHandler.class);
       router.attach("/objects/{object-id}/unbindFrom", UnbindFromHandler.class);
       router.attach("/predefinedgraphs", PredefinedGraphs.class);
+      router.attach("/pushData", PushDataHandler.class);
       router.attach("/sessions", Sessions.class);
       router.attach("/sessions/{id}", Sessions.class);
       router.attach("/summaryTable/adHoc", SummaryTableAdHoc.class);
