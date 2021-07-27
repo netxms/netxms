@@ -789,7 +789,9 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
             loc.objectId = static_cast<NetworkMapObject*>(oldElement)->getObjectId();
             loc.posX = oldElement->getPosX();
             loc.posY = oldElement->getPosY();
-            m_deletedObjects.insert(m_deletedObjects.size() % MAX_DELETED_OBJECT_COUNT, &loc);
+            m_deletedObjects.insert(0, &loc);
+            if (m_deletedObjects.size() > MAX_DELETED_OBJECT_COUNT)
+               m_deletedObjects.remove(MAX_DELETED_OBJECT_COUNT);
          }
       }
 		m_elements.clear();
@@ -946,7 +948,9 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
          loc.objectId = objectId;
          loc.posX = netMapObject->getPosX();
          loc.posY = netMapObject->getPosY();
-         m_deletedObjects.insert(m_deletedObjects.size() % MAX_DELETED_OBJECT_COUNT, &loc);
+         m_deletedObjects.insert(0, &loc);
+         if (m_deletedObjects.size() > MAX_DELETED_OBJECT_COUNT)
+            m_deletedObjects.remove(MAX_DELETED_OBJECT_COUNT);
          m_elements.remove(i);
          i--;
          modified = true;
