@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** Subagent for Oracle monitoring
- ** Copyright (C) 2009-2020 Raden Solutions
+ ** Copyright (C) 2009-2021 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -32,9 +32,9 @@ DB_DRIVER g_oracleDriver = nullptr;
 DatabaseQuery g_queries[] =
 {
    { _T("ASM_DISKGROUP"), MAKE_ORACLE_VERSION(11, 1), 1,
-       _T("SELECT name,state,type,(total_mb * 1024 * 1024) AS total,(free_mb * 1024 * 1024) AS free,")
-         _T("round(100 * free_mb / total_mb, 2) AS freepct,round(100 * (total_mb - free_mb) / total_mb, 2) AS usedpct,")
-         _T("((total_mb - free_mb) * 1024 * 1024) AS used,offline_disks FROM v$asm_diskgroup")
+       _T("SELECT name, state, type, (total_mb * 1024 * 1024) AS total, (free_mb * 1024 * 1024) AS free,")
+         _T("round(100 * free_mb / total_mb, 2) AS freepct, round(100 * (total_mb - free_mb) / total_mb, 2) AS usedpct,")
+         _T("((total_mb - free_mb) * 1024 * 1024) AS used, offline_disks FROM v$asm_diskgroup")
    },
    { _T("DATAFILE"), MAKE_ORACLE_VERSION(10, 2), 1,
       _T("SELECT regexp_substr(regexp_substr(f.name, '[/\\][^/\\]+$'), '[^/\\]+') AS name,")
@@ -56,45 +56,45 @@ DatabaseQuery g_queries[] =
             _T("(SELECT s.value FROM v$sysstat s, v$statname n WHERE n.name='physical reads' AND n.statistic#=s.statistic#) PhysReads, ")
             _T("(SELECT s.value FROM v$sysstat s, v$statname n WHERE n.name='physical writes' AND n.statistic#=s.statistic#) PhysWrites, ")
             _T("(SELECT s.value FROM v$sysstat s, v$statname n WHERE n.name='session logical reads' AND n.statistic#=s.statistic#) LogicReads, ")
-            _T("(SELECT round((sum(decode(name,'consistent gets',value,0))+sum(decode(name,'db block gets',value,0))-sum(decode(name,'physical reads',value, 0)))/(sum(decode(name,'consistent gets',value,0))+sum(decode(name,'db block gets',value,0)))*100,2) FROM v$sysstat) CacheHitRatio, ")
-            _T("(SELECT round(sum(waits)*100/sum(gets),2) FROM v$rollstat) RollbackWaitRatio, ")
-            _T("(SELECT round((1-(sum(getmisses)/sum(gets)))*100,2) FROM v$rowcache) DictCacheHitRatio, ")
-            _T("(SELECT round(sum(pins)/(sum(pins)+sum(reloads))*100,2) FROM v$librarycache) LibCacheHitRatio, ")
-            _T("(SELECT round((100*b.value)/decode((a.value+b.value),0,1,(a.value+b.value)),2) FROM v$sysstat a,v$sysstat b WHERE a.name='sorts (disk)' AND b.name='sorts (memory)') MemorySortRatio, ")
-            _T("(SELECT round(nvl((sum(busy)/(sum(busy)+sum(idle)))*100,0),2) FROM v$dispatcher) DispatcherWorkload, ")
-            _T("(SELECT bytes	FROM v$sgastat WHERE name='free memory' AND pool='shared pool') FreeSharedPool, ")
+            _T("(SELECT round((sum(decode(name, 'consistent gets', value, 0)) + sum(decode(name, 'db block gets', value, 0)) - sum(decode(name, 'physical reads', value, 0))) / (sum(decode(name, 'consistent gets', value, 0)) + sum(decode(name, 'db block gets', value, 0))) * 100, 2) FROM v$sysstat) CacheHitRatio, ")
+            _T("(SELECT CASE WHEN sum(gets) = 0 THEN 0 ELSE round(sum(waits) * 100 / sum(gets), 2) END FROM v$rollstat) RollbackWaitRatio, ")
+            _T("(SELECT CASE WHEN sum(gets) = 0 THEN 0 ELSE round((1 - (sum(getmisses) / sum(gets))) * 100, 2) END FROM v$rowcache) DictCacheHitRatio, ")
+            _T("(SELECT CASE WHEN sum(pins) + sum(reloads) = 0 THEN 0 ELSE round(sum(pins) / (sum(pins) + sum(reloads)) * 100, 2) END FROM v$librarycache) LibCacheHitRatio, ")
+            _T("(SELECT round((100 * b.value) / decode((a.value + b.value), 0, 1, (a.value + b.value)), 2) FROM v$sysstat a,v$sysstat b WHERE a.name = 'sorts (disk)' AND b.name = 'sorts (memory)') MemorySortRatio, ")
+            _T("(SELECT CASE WHEN sum(busy) + sum(idle) = 0 THEN 0 ELSE round(nvl((sum(busy) / (sum(busy) + sum(idle))) * 100, 0), 2) END FROM v$dispatcher) DispatcherWorkload, ")
+            _T("(SELECT bytes	FROM v$sgastat WHERE name = 'free memory' AND pool = 'shared pool') FreeSharedPool, ")
             _T("(SELECT count(*) FROM dba_tablespaces WHERE status <> 'ONLINE') TSOffCount, ")
-            _T("(SELECT count(*) FROM v$datafile WHERE status NOT IN ('ONLINE','SYSTEM')) DFOffCount, ")
+            _T("(SELECT count(*) FROM v$datafile WHERE status NOT IN ('ONLINE', 'SYSTEM')) DFOffCount, ")
             _T("(SELECT count(*) FROM dba_segments WHERE max_extents = extents) FullSegCnt, ")
             _T("(SELECT count(*) FROM dba_rollback_segs WHERE status <> 'ONLINE') RBSNotOnline,")
-            _T("decode(sign(decode((SELECT upper(log_mode) FROM v$database),'ARCHIVELOG',1,0)-")
-            _T("   decode((SELECT upper(value) FROM v$parameter WHERE upper(name)='LOG_ARCHIVE_START'),'TRUE',1,0)),1, 1, 0) AAOff,")
-            _T("(SELECT count(file#) FROM v$datafile_header WHERE recover ='YES') DFNeedRec,")
-            _T("(SELECT count(*) FROM dba_jobs WHERE nvl(failures,0) <> 0) FailedJobs,")
-      		_T("(SELECT sum(a.value) FROM v$sesstat a, v$statname b, v$session s WHERE a.statistic#=b.statistic# AND s.sid=a.sid AND b.name='opened cursors current') OpenCursors,")
+            _T("decode(sign(decode((SELECT upper(log_mode) FROM v$database), 'ARCHIVELOG', 1, 0) -")
+            _T("   decode((SELECT upper(value) FROM v$parameter WHERE upper(name) = 'LOG_ARCHIVE_START'), 'TRUE', 1, 0)), 1, 1, 0) AAOff,")
+            _T("(SELECT count(file#) FROM v$datafile_header WHERE recover = 'YES') DFNeedRec,")
+            _T("(SELECT count(*) FROM dba_jobs WHERE nvl(failures, 0) <> 0) FailedJobs,")
+            _T("(SELECT sum(a.value) FROM v$sesstat a, v$statname b, v$session s WHERE a.statistic# = b.statistic# AND s.sid = a.sid AND b.name = 'opened cursors current') OpenCursors,")
             _T("(SELECT count(*) FROM dba_objects WHERE status!='VALID') InvalidObjects,")
-            _T("(SELECT coalesce(sum(bytes),0) FROM v$log) RedoTotal,")
-            _T("(SELECT coalesce(sum(blocks * block_size),0) FROM v$archived_log WHERE deleted='NO') ArchivedTotal,")
+            _T("(SELECT coalesce(sum(bytes), 0) FROM v$log) RedoTotal,")
+            _T("(SELECT coalesce(sum(blocks * block_size), 0) FROM v$archived_log WHERE deleted='NO') ArchivedTotal,")
             _T("(SELECT /*+ cardinality(l.s 3000) cardinality(l.r 13000) */ count(*) FROM v$lock l) Locks,")
             _T("(SELECT count(*) FROM v$session) SessionCount ")
          _T("FROM dual")
    },
-   { _T("SESSIONS_BY_PROGRAM"), MAKE_ORACLE_VERSION(7, 0), 1, _T("SELECT program,count(*) AS count FROM v$session GROUP BY program") },
-   { _T("SESSIONS_BY_SCHEMA"), MAKE_ORACLE_VERSION(7, 0), 1, _T("SELECT schemaname,count(*) AS count FROM v$session GROUP BY schemaname") },
-   { _T("SESSIONS_BY_USER"), MAKE_ORACLE_VERSION(7, 0), 1, _T("SELECT username,count(*) AS count FROM v$session WHERE username IS NOT NULL GROUP BY username") },
+   { _T("SESSIONS_BY_PROGRAM"), MAKE_ORACLE_VERSION(7, 0), 1, _T("SELECT program, count(*) AS count FROM v$session GROUP BY program") },
+   { _T("SESSIONS_BY_SCHEMA"), MAKE_ORACLE_VERSION(7, 0), 1, _T("SELECT schemaname, count(*) AS count FROM v$session GROUP BY schemaname") },
+   { _T("SESSIONS_BY_USER"), MAKE_ORACLE_VERSION(7, 0), 1, _T("SELECT username, count(*) AS count FROM v$session WHERE username IS NOT NULL GROUP BY username") },
    { _T("TABLESPACE"), MAKE_ORACLE_VERSION(10, 0), 1,
       _T("SELECT d.tablespace_name, d.status AS Status, d.contents AS Type, d.block_size AS BlockSize, d.logging AS Logging,")
          _T("m.tablespace_size * d.block_size AS TotalSpace,")
          _T("m.used_space * d.block_size AS UsedSpace,")
-         _T("trim(to_char(round(m.used_percent,2), '990.99')) AS UsedSpacePct,")
+         _T("trim(to_char(round(m.used_percent, 2), '990.99')) AS UsedSpacePct,")
          _T("(m.tablespace_size - m.used_space) * d.block_size AS FreeSpace,")
-         _T("trim(to_char(round((100 - m.used_percent),2), '990.99')) AS FreeSpacePct,")
+         _T("trim(to_char(round((100 - m.used_percent), 2), '990.99')) AS FreeSpacePct,")
          _T("(SELECT count(*) FROM v$datafile df WHERE df.ts#=v.ts#) AS DataFiles ")
          _T("FROM dba_tablespaces d ")
-         _T("INNER JOIN dba_tablespace_usage_metrics m ON m.tablespace_name=d.tablespace_name ")
-         _T("INNER JOIN v$tablespace v ON v.name=d.tablespace_name")
+         _T("INNER JOIN dba_tablespace_usage_metrics m ON m.tablespace_name = d.tablespace_name ")
+         _T("INNER JOIN v$tablespace v ON v.name = d.tablespace_name")
    },
-   { NULL, 0, 0, NULL }
+   { nullptr, 0, 0, nullptr }
 };
 
 /**
@@ -198,7 +198,7 @@ static DatabaseInstance *FindInstance(const TCHAR *id)
       if (!_tcsicmp(db->getId(), id))
          return db;
    }
-   return NULL;
+   return nullptr;
 }
 
 /**
@@ -227,7 +227,7 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
       return SYSINFO_RC_UNSUPPORTED;
 
    DatabaseInstance *db = FindInstance(id);
-   if (db == NULL)
+   if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
    TCHAR instance[MAX_STR];
@@ -266,7 +266,7 @@ static LONG H_DatabaseVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value
       return SYSINFO_RC_UNSUPPORTED;
 
    DatabaseInstance *db = FindInstance(id);
-   if (db == NULL)
+   if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
    int version = db->getVersion();
@@ -284,7 +284,7 @@ static LONG H_DatabaseConnectionStatus(const TCHAR *param, const TCHAR *arg, TCH
       return SYSINFO_RC_UNSUPPORTED;
 
    DatabaseInstance *db = FindInstance(id);
-   if (db == NULL)
+   if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
    ret_string(value, db->isConnected() ? _T("YES") : _T("NO"));
@@ -301,7 +301,7 @@ static LONG H_TagList(const TCHAR *param, const TCHAR *arg, StringList *value, A
       return SYSINFO_RC_UNSUPPORTED;
 
    DatabaseInstance *db = FindInstance(id);
-   if (db == NULL)
+   if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
    return db->getTagList(arg, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
@@ -317,7 +317,7 @@ static LONG H_TableQuery(const TCHAR *param, const TCHAR *arg, Table *value, Abs
       return SYSINFO_RC_UNSUPPORTED;
 
    DatabaseInstance *db = FindInstance(id);
-   if (db == NULL)
+   if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
    return db->queryTable((TableDescriptor *)arg, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
@@ -344,11 +344,9 @@ static NX_CFG_TEMPLATE s_configTemplate[] =
  */
 static bool SubAgentInit(Config *config)
 {
-   int i;
-
 	// Init db driver
-   g_oracleDriver = DBLoadDriver(_T("oracle.ddr"), NULL, NULL, NULL);
-	if (g_oracleDriver == NULL)
+   g_oracleDriver = DBLoadDriver(_T("oracle.ddr"), nullptr, nullptr, nullptr);
+	if (g_oracleDriver == nullptr)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load database driver"), MYNAMESTR);
 		return false;
@@ -373,7 +371,7 @@ static bool SubAgentInit(Config *config)
 	}
 
 	// Load full-featured XML configuration
-	for(i = 1; i <= 64; i++)
+	for(int i = 1; i <= 64; i++)
 	{
 		TCHAR section[MAX_STR];
 		memset(&s_dbInfo, 0, sizeof(s_dbInfo));
@@ -403,7 +401,7 @@ static bool SubAgentInit(Config *config)
 	}
 
 	// Run query thread for each configured database
-   for(i = 0; i < s_instances->size(); i++)
+   for(int i = 0; i < s_instances->size(); i++)
       s_instances->get(i)->run();
 
 	return true;
