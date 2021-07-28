@@ -34,8 +34,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.ChartConfig;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
@@ -53,7 +53,7 @@ public class General extends PreferencePage
 {
    private static final I18n i18n = LocalizationHelper.getI18n(General.class);
 
-	private ChartConfig config;
+   private ChartConfiguration config;
 	private LabeledText title;
 	private Button checkShowGrid;
 	private Button checkShowLegend;
@@ -77,7 +77,7 @@ public class General extends PreferencePage
     * Constructor
     * @param settings
     */
-   public General(GraphSettings settings, boolean saveToDatabase)
+   public General(ChartConfiguration settings, boolean saveToDatabase)
    {
       super("General");
       config = settings;     
@@ -369,7 +369,7 @@ public class General extends PreferencePage
 				@Override
             protected void run(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph((GraphSettings)config, false);
+               session.saveGraph((GraphDefinition)config, false);
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()
@@ -378,7 +378,7 @@ public class General extends PreferencePage
 						}
 					});
 				}
-				
+
 				@Override
 				protected String getErrorMessage()
 				{

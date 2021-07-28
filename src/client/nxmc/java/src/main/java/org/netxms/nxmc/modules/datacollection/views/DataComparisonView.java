@@ -40,11 +40,11 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Widget;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
@@ -78,7 +78,7 @@ public class DataComparisonView extends ObjectView
 	private int chartType = DataComparisonChart.BAR_CHART;
 	private boolean transposed = false;
 	private boolean showLegend = true;
-	private int legendPosition = GraphSettings.POSITION_BOTTOM;
+   private int legendPosition = ChartConfiguration.POSITION_BOTTOM;
 	private boolean translucent = false;
 	private Image[] titleImages = new Image[5];
 
@@ -291,41 +291,41 @@ public class DataComparisonView extends ObjectView
 			@Override
 			public void run()
 			{
-				legendPosition = GraphSettings.POSITION_LEFT;
+            legendPosition = ChartConfiguration.POSITION_LEFT;
 				chart.setLegendPosition(legendPosition);
 			}
 		};
-		actionLegendLeft.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
+      actionLegendLeft.setChecked(legendPosition == ChartConfiguration.POSITION_LEFT);
 		
 		actionLegendRight = new Action(i18n.tr("Place on &right"), Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendPosition = GraphSettings.POSITION_RIGHT;
+            legendPosition = ChartConfiguration.POSITION_RIGHT;
 				chart.setLegendPosition(legendPosition);
 			}
 		};
-		actionLegendRight.setChecked(legendPosition == GraphSettings.POSITION_RIGHT);
+      actionLegendRight.setChecked(legendPosition == ChartConfiguration.POSITION_RIGHT);
 		
 		actionLegendTop = new Action(i18n.tr("Place on &top"), Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendPosition = GraphSettings.POSITION_TOP;
+            legendPosition = ChartConfiguration.POSITION_TOP;
 				chart.setLegendPosition(legendPosition);
 			}
 		};
-		actionLegendTop.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
+      actionLegendTop.setChecked(legendPosition == ChartConfiguration.POSITION_LEFT);
 		
 		actionLegendBottom = new Action(i18n.tr("Place on &bottom"), Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				legendPosition = GraphSettings.POSITION_BOTTOM;
+            legendPosition = ChartConfiguration.POSITION_BOTTOM;
 				chart.setLegendPosition(legendPosition);
 			}
 		};
-		actionLegendBottom.setChecked(legendPosition == GraphSettings.POSITION_LEFT);
+      actionLegendBottom.setChecked(legendPosition == ChartConfiguration.POSITION_LEFT);
 		
 		actionShowBarChart = new Action(i18n.tr("&Bar chart"), Action.AS_RADIO_BUTTON) {
 			@Override

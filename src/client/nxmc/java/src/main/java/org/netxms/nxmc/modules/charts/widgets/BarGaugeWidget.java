@@ -26,8 +26,8 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataFormatter;
-import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.netxms.nxmc.modules.charts.widgets.internal.DataComparisonElement;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
@@ -107,21 +107,21 @@ public class BarGaugeWidget extends GaugeWidget
          Point legendExt = gc.textExtent(dci.getName());
          switch(legendPosition)
          {
-            case GraphSettings.POSITION_TOP:
+            case ChartConfiguration.POSITION_TOP:
                gc.drawText(dci.getName(), rect.x + ((rect.width - legendExt.x) / 2), rect.y + 4, true);
                rect.y += legendExt.y + 8;
                rect.height -= legendExt.y + 8;
                break;
-            case GraphSettings.POSITION_BOTTOM:
+            case ChartConfiguration.POSITION_BOTTOM:
                rect.height -= legendExt.y + 8;
                gc.drawText(dci.getName(), rect.x + ((rect.width - legendExt.x) / 2), rect.y + rect.height + 4, true);
                break;
-            case GraphSettings.POSITION_LEFT:
+            case ChartConfiguration.POSITION_LEFT:
                gc.drawText(dci.getName(), rect.x + 4, rect.y + ((rect.height - legendExt.y) / 2), true);
                rect.x += legendExt.x + 8;
                rect.width -= legendExt.x + 8;
                break;
-            case GraphSettings.POSITION_RIGHT:
+            case ChartConfiguration.POSITION_RIGHT:
                rect.width -= legendExt.x + 8;
                gc.drawText(dci.getName(), rect.x + rect.width + 4, rect.y + ((rect.height - legendExt.y) / 2), true);
                break;

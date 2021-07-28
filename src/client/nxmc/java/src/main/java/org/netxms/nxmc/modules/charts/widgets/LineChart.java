@@ -59,12 +59,12 @@ import org.eclipse.swtchart.ISeriesSet;
 import org.eclipse.swtchart.ITitle;
 import org.eclipse.swtchart.LineStyle;
 import org.eclipse.swtchart.Range;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
-import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
@@ -86,7 +86,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private static final int MAX_ZOOM_LEVEL = 16;
 
 	private List<GraphItem> items = new ArrayList<GraphItem>();
-	private List<GraphItemStyle> itemStyles = new ArrayList<GraphItemStyle>(GraphSettings.MAX_GRAPH_ITEM_COUNT);
+   private List<GraphItemStyle> itemStyles = new ArrayList<GraphItemStyle>(ChartConfiguration.MAX_GRAPH_ITEM_COUNT);
 	private long timeFrom;
 	private long timeTo;
 	private boolean showToolTips;
@@ -98,7 +98,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private boolean modifyYBase = false;
 	private int lineWidth = 2;
 	private int zoomLevel = 0;
-	private int legendPosition = GraphSettings.POSITION_BOTTOM;
+   private int legendPosition = ChartConfiguration.POSITION_BOTTOM;
 	private MouseMoveListener moveListener;
 	private SelectionRectangle selection = new SelectionRectangle();
    private PreferenceStore preferenceStore;
@@ -130,7 +130,7 @@ public class LineChart extends Chart implements HistoricalDataChart
       selection.setColor(getColorFromPreferences("Chart.Colors.Selection"));
 
 		// Create default item styles
-		for(int i = 0; i < GraphSettings.MAX_GRAPH_ITEM_COUNT; i++)
+      for(int i = 0; i < ChartConfiguration.MAX_GRAPH_ITEM_COUNT; i++)
       {
          itemStyles.add(new GraphItemStyle(GraphItemStyle.LINE,
                ColorConverter.rgbToInt(preferenceStore.getAsColor("Chart.Colors.Data." + i)), 0, 0));
@@ -398,13 +398,13 @@ public class LineChart extends Chart implements HistoricalDataChart
 	{
 		switch(value)
 		{
-			case GraphSettings.POSITION_LEFT:
+         case ChartConfiguration.POSITION_LEFT:
 				return SWT.LEFT;
-			case GraphSettings.POSITION_RIGHT:
+         case ChartConfiguration.POSITION_RIGHT:
 				return SWT.RIGHT;
-			case GraphSettings.POSITION_TOP:
+         case ChartConfiguration.POSITION_TOP:
 				return SWT.TOP;
-			case GraphSettings.POSITION_BOTTOM:
+         case ChartConfiguration.POSITION_BOTTOM:
 				return SWT.BOTTOM;
 		}
 		return SWT.BOTTOM;

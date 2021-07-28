@@ -46,10 +46,9 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.ChartConfig;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -75,7 +74,7 @@ public class TemplateDataSources extends PreferencePage
 	public static final int COLUMN_LABEL = 3;
 	public static final int COLUMN_COLOR = 4;
 	
-	private ChartConfig config;
+   private GraphDefinition config;
 	private DciTemplateListLabelProvider labelProvider;
 	private SortableTableViewer viewer;
 	private Button addButton;
@@ -92,7 +91,7 @@ public class TemplateDataSources extends PreferencePage
     * Constructor
     * @param settings
     */
-   public TemplateDataSources(GraphSettings settings, boolean saveToDatabase)
+   public TemplateDataSources(GraphDefinition settings, boolean saveToDatabase)
    {
       super("Template Data Source");
       config = settings; 
@@ -107,13 +106,13 @@ public class TemplateDataSources extends PreferencePage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		colorCache = new ColorCache(dialogArea);
-		
+
       dciList = new ArrayList<ChartDciConfig>();
       for(ChartDciConfig dci : config.getDciList())
       	dciList.add(new ChartDciConfig(dci));
-      
+
 		labelProvider = new DciTemplateListLabelProvider(dciList);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
@@ -445,10 +444,8 @@ public class TemplateDataSources extends PreferencePage
 	protected void applyChanges(final boolean isApply)
 	{
       if (!isControlCreated())
-      {
          return;
-      }
-      
+
 		config.setDciList(dciList.toArray(new ChartDciConfig[dciList.size()]));
 		if (saveToDatabase && isApply)
 		{
@@ -458,7 +455,7 @@ public class TemplateDataSources extends PreferencePage
 				@Override
             protected void run(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph((GraphSettings)config, false);
+               session.saveGraph(config, false);
 				}
 	
 				@Override

@@ -54,13 +54,13 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.constants.TimeUnit;
-import org.netxms.client.datacollection.ChartConfig;
+import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.ChartConfigurationChangeListener;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
-import org.netxms.client.datacollection.GraphSettings;
-import org.netxms.client.datacollection.GraphSettingsChangeListener;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
@@ -88,7 +88,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * History graph view
  */
-public class HistoricalGraphView extends ViewWithContext implements GraphSettingsChangeListener
+public class HistoricalGraphView extends ViewWithContext implements ChartConfigurationChangeListener
 {
    private static final I18n i18n = LocalizationHelper.getI18n(HistoricalGraphView.class);
    private static final Logger logger = LoggerFactory.getLogger(HistoricalGraphView.class);
@@ -110,7 +110,7 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
    private boolean updateInProgress = false;
    private ViewRefreshController refreshController;
    private Composite chartParent = null;
-   private GraphSettings settings = new GraphSettings();
+   private GraphDefinition settings = new GraphDefinition();
    private boolean multipleSourceNodes = false;
 
    private Action actionRefresh;
@@ -251,7 +251,7 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
       view.objectId = objectId;
       view.fullName = fullName;
       view.multipleSourceNodes = multipleSourceNodes;
-      view.settings = new GraphSettings(settings);
+      view.settings = new GraphDefinition(settings);
       return view;
    }
 
@@ -302,9 +302,9 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
     * 
     * @param gs graph settings
     */
-   public void initPredefinedGraph(GraphSettings gs)
+   public void initPredefinedGraph(GraphDefinition gs)
    {
-      settings = new GraphSettings(gs);
+      settings = new GraphDefinition(gs);
       settings.addChangeListener(this);
       configureGraphFromSettings();
    }
@@ -607,41 +607,41 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
          @Override
          public void run()
          {
-            settings.setLegendPosition(GraphSettings.POSITION_LEFT);
+            settings.setLegendPosition(ChartConfiguration.POSITION_LEFT);
             chart.setLegendPosition(settings.getLegendPosition());
          }
       };
-      actionLegendLeft.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_LEFT);
+      actionLegendLeft.setChecked(settings.getLegendPosition() == ChartConfiguration.POSITION_LEFT);
 
       actionLegendRight = new Action(i18n.tr("Place on the &right"), Action.AS_RADIO_BUTTON) {
          @Override
          public void run()
          {
-            settings.setLegendPosition(GraphSettings.POSITION_RIGHT);
+            settings.setLegendPosition(ChartConfiguration.POSITION_RIGHT);
             chart.setLegendPosition(settings.getLegendPosition());
          }
       };
-      actionLegendRight.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_RIGHT);
+      actionLegendRight.setChecked(settings.getLegendPosition() == ChartConfiguration.POSITION_RIGHT);
 
       actionLegendTop = new Action(i18n.tr("Place on the &top"), Action.AS_RADIO_BUTTON) {
          @Override
          public void run()
          {
-            settings.setLegendPosition(GraphSettings.POSITION_TOP);
+            settings.setLegendPosition(ChartConfiguration.POSITION_TOP);
             chart.setLegendPosition(settings.getLegendPosition());
          }
       };
-      actionLegendTop.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_TOP);
+      actionLegendTop.setChecked(settings.getLegendPosition() == ChartConfiguration.POSITION_TOP);
 
       actionLegendBottom = new Action(i18n.tr("Place on the &bottom"), Action.AS_RADIO_BUTTON) {
          @Override
          public void run()
          {
-            settings.setLegendPosition(GraphSettings.POSITION_BOTTOM);
+            settings.setLegendPosition(ChartConfiguration.POSITION_BOTTOM);
             chart.setLegendPosition(settings.getLegendPosition());
          }
       };
-      actionLegendBottom.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_BOTTOM);
+      actionLegendBottom.setChecked(settings.getLegendPosition() == ChartConfiguration.POSITION_BOTTOM);
 
       actionSave = new Action(i18n.tr("Save"), SharedIcons.SAVE) {
          @Override
@@ -750,10 +750,10 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
       actionTranslucent.setChecked(settings.isTranslucent());
       actionAreaChart.setChecked(settings.isArea());
 
-      actionLegendLeft.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_LEFT);
-      actionLegendRight.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_RIGHT);
-      actionLegendTop.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_TOP);
-      actionLegendBottom.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_BOTTOM);
+      actionLegendLeft.setChecked(settings.getLegendPosition() == ChartConfiguration.POSITION_LEFT);
+      actionLegendRight.setChecked(settings.getLegendPosition() == ChartConfiguration.POSITION_RIGHT);
+      actionLegendTop.setChecked(settings.getLegendPosition() == ChartConfiguration.POSITION_TOP);
+      actionLegendBottom.setChecked(settings.getLegendPosition() == ChartConfiguration.POSITION_BOTTOM);
    }
 
    /**
@@ -881,10 +881,10 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
    }
 
    /**
-    * @see org.netxms.client.datacollection.GraphSettingsChangeListener#onGraphSettingsChange(org.netxms.client.datacollection.ChartConfig)
+    * @see org.netxms.client.datacollection.ChartConfigurationChangeListener#onChartConfigurationChange(org.netxms.client.datacollection.ChartConfiguration)
     */
    @Override
-   public void onGraphSettingsChange(ChartConfig settings)
+   public void onChartConfigurationChange(ChartConfiguration settings)
    {
       if (this.settings == settings)
          configureGraphFromSettings();
@@ -902,18 +902,18 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
       }
 
       int result = SaveGraphDlg.OK;
-      GraphSettings templateGS = null;
+      GraphDefinition templateGS = null;
       final long oldGraphId = settings.getId();
       if (asTemplate)
       {
-         templateGS = new GraphSettings(0, session.getUserId(), 0, new ArrayList<AccessListElement>(0));
+         templateGS = new GraphDefinition(0, session.getUserId(), 0, new ArrayList<AccessListElement>(0));
          SaveGraphDlg dlg = new SaveGraphDlg(getWindow().getShell(), graphName, errorMessage, canBeOverwritten);
          result = dlg.open();
          if (result == Window.CANCEL)
             return;
          templateGS.setName(dlg.getName());
          templateGS.update(settings);
-         templateGS.setFlags(GraphSettings.GRAPH_FLAG_TEMPLATE);
+         templateGS.setFlags(GraphDefinition.GF_TEMPLATE);
       }
       else
       {
@@ -931,7 +931,7 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
             settings.setName(graphName);
       }    
 
-      final GraphSettings gs = asTemplate ? templateGS : settings;
+      final GraphDefinition gs = asTemplate ? templateGS : settings;
       if (result == SaveGraphDlg.OVERRIDE)
       {
          new Job(i18n.tr("Save graph settings"), this) {
@@ -1110,7 +1110,7 @@ public class HistoricalGraphView extends ViewWithContext implements GraphSetting
     * @param trap Object tool details object
     * @return true if OK was pressed
     */
-   private boolean showGraphPropertyPages(final GraphSettings settings)
+   private boolean showGraphPropertyPages(final GraphDefinition settings)
    {
       PreferenceManager pm = new PreferenceManager();    
       pm.addToRoot(new PreferenceNode("graph", new Graph(settings, false)));

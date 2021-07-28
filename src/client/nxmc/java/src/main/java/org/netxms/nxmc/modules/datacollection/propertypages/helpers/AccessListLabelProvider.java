@@ -26,7 +26,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
 import org.netxms.client.users.UserGroup;
@@ -81,8 +81,8 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
 			case 1:
 				AccessListElement e = (AccessListElement)element;
 				StringBuilder sb = new StringBuilder(4);
-				sb.append(((e.getAccessRights() & GraphSettings.ACCESS_READ)  != 0) ? 'R' : '-');
-				sb.append(((e.getAccessRights() & GraphSettings.ACCESS_WRITE)  != 0) ? 'W' : '-');
+            sb.append(((e.getAccessRights() & GraphDefinition.ACCESS_READ) != 0) ? 'R' : '-');
+            sb.append(((e.getAccessRights() & GraphDefinition.ACCESS_WRITE) != 0) ? 'W' : '-');
 				return sb.toString();
 		}
 		return null;
