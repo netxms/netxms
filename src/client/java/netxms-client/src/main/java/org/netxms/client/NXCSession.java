@@ -5898,7 +5898,7 @@ public class NXCSession
       if (data.getACL() != null)
       {
          if (data.isInheritAccessRights() == null)
-            new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
          
          final AccessListElement[] acl = data.getACL();
          msg.setFieldInt32(NXCPCodes.VID_ACL_SIZE, acl.length);
@@ -5941,7 +5941,7 @@ public class NXCSession
       if (data.isAutoBindEnabled() != null || data.isAutoUnbindEnabled() != null)
       {
          if (data.isAutoBindEnabled() == null || data.isAutoUnbindEnabled() == null)
-            new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
          msg.setField(NXCPCodes.VID_AUTOBIND_FLAG, data.isAutoBindEnabled());
          msg.setField(NXCPCodes.VID_AUTOUNBIND_FLAG, data.isAutoUnbindEnabled());
       }
@@ -5995,7 +5995,7 @@ public class NXCSession
          if (data.getSnmpAuthName() == null || data.getSnmpAuthPassword() == null || 
                data.getSnmpPrivPassword() == null || data.getSnmpAuthMethod() == null ||
                data.getSnmpPrivMethod() == null) 
-            new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
          
          msg.setField(NXCPCodes.VID_SNMP_AUTH_OBJECT, data.getSnmpAuthName());
          msg.setField(NXCPCodes.VID_SNMP_AUTH_PASSWORD, data.getSnmpAuthPassword());
@@ -6044,7 +6044,7 @@ public class NXCSession
          if (data.getMapBackground() == null || data.getMapBackgroundLocation() == null ||
             data.getMapBackgroundLocation() == null || data.getMapBackgroundZoom() == null ||
                   data.getMapBackgroundColor() == null)
-            new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
 
          msg.setField(NXCPCodes.VID_BACKGROUND, data.getMapBackground());
          msg.setField(NXCPCodes.VID_BACKGROUND_LATITUDE, data.getMapBackgroundLocation().getLatitude());
@@ -6061,7 +6061,7 @@ public class NXCSession
       if (data.getMapElements() != null || data.getMapLinks() != null)
       {
          if (data.getMapElements() == null || data.getMapLinks() == null)
-            new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
             
          msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, data.getMapElements().size());
          long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
@@ -6200,7 +6200,7 @@ public class NXCSession
       if (data.getObjectFlags() != null || data.getObjectFlagsMask() != null)
       {
          if (data.getObjectFlags() == null || data.getObjectFlagsMask() == null)
-            new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
             
          msg.setFieldInt32(NXCPCodes.VID_FLAGS, data.getObjectFlags());
          msg.setFieldInt32(NXCPCodes.VID_FLAGS_MASK, data.getObjectFlagsMask());
@@ -6305,7 +6305,7 @@ public class NXCSession
       if (data.getLocalNetworks() != null || data.getRemoteNetworks() != null)
       {
          if (data.getLocalNetworks() == null || data.getRemoteNetworks() == null)
-            new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
          
          long fieldId = NXCPCodes.VID_VPN_NETWORK_BASE;
 
@@ -6349,7 +6349,7 @@ public class NXCSession
          if (data.getPhysicalContainerObjectId() == null || data.getFrontRackImage() == null || 
                data.getRearRackImage() == null || data.getRackPosition() == null ||
                data.getRackHeight() == null || data.getRackOrientation() == null)
-            new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
          
          msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_CONTAINER_ID, data.getPhysicalContainerObjectId().intValue());
          msg.setField(NXCPCodes.VID_RACK_IMAGE_FRONT, data.getFrontRackImage());
@@ -6362,7 +6362,7 @@ public class NXCSession
       if (data.getPhysicalContainerObjectId() != null || data.getChassisPlacement() != null)
       {
          if (data.getPhysicalContainerObjectId() == null || data.getChassisPlacement() == null)
-            new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
          
          msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_CONTAINER_ID, data.getPhysicalContainerObjectId().intValue());
          msg.setField(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG, data.getChassisPlacement());
@@ -6505,7 +6505,7 @@ public class NXCSession
       if (data.getCertificateMappingData() != null || data.getCertificateMappingMethod() != null)
       {
          if (data.getCertificateMappingData() == null || data.getCertificateMappingMethod() == null)
-            new NXCException(RCC.VARIABLE_NOT_FOUND);
+            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
          msg.setFieldInt16(NXCPCodes.VID_CERT_MAPPING_METHOD, data.getCertificateMappingMethod().getValue());
          msg.setField(NXCPCodes.VID_CERT_MAPPING_DATA, data.getCertificateMappingData());
       }
