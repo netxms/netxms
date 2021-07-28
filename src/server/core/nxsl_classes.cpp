@@ -4626,7 +4626,7 @@ NXSL_Value *NXSL_WebService::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue(websvc->first->getName());
    }
-   else if (compareAttributeName(attr, "discription"))
+   else if (compareAttributeName(attr, "description"))
    {
       value = vm->createValue(websvc->first->getDescription());
    }
