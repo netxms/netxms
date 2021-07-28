@@ -1024,7 +1024,7 @@ DataCollectionError NetworkDeviceDriver::getHostMibMetric(SNMP_Transport *snmp, 
       return DCE_NOT_SUPPORTED;
    }
 
-   return ((e != NULL) && e->getMetric(suffix, value, size)) ? DCE_SUCCESS : DCE_NOT_SUPPORTED;
+   return ((e != nullptr) && e->getMetric(suffix, value, size)) ? DCE_SUCCESS : DCE_NOT_SUPPORTED;
 }
 
 /**

@@ -69,15 +69,15 @@ void HostMibStorageEntry::getUsedPerc(TCHAR *buffer, size_t len) const
  */
 bool HostMibStorageEntry::getMetric(const TCHAR *metric, TCHAR *buffer, size_t len) const
 {
-   if (!_tcsicmp(name, _T("Free")))
+   if (!_tcsicmp(metric, _T("Free")))
       getFree(buffer, len);
-   else if (!_tcsicmp(name, _T("FreePerc")))
+   else if (!_tcsicmp(metric, _T("FreePerc")))
       getFreePerc(buffer, len);
-   else if (!_tcsicmp(name, _T("Total")))
+   else if (!_tcsicmp(metric, _T("Total")))
       getTotal(buffer, len);
-   else if (!_tcsicmp(name, _T("Used")))
+   else if (!_tcsicmp(metric, _T("Used")))
       getUsed(buffer, len);
-   else if (!_tcsicmp(name, _T("UsedPerc")))
+   else if (!_tcsicmp(metric, _T("UsedPerc")))
       getUsedPerc(buffer, len);
    else
       return false;
