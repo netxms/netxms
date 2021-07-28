@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,16 @@
  */
 package org.netxms.ui.eclipse.perfview.actions;
 
-import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
+import org.netxms.ui.eclipse.charts.api.ChartType;
 
 public class ShowPieChart extends ShowDataComparisonChart
 {
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.actions.ShowDataComparisonChart#getChartType()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.perfview.actions.ShowDataComparisonChart#getChartType()
+    */
 	@Override
-	protected int getChartType()
+   protected ChartType getChartType()
 	{
-		return DataComparisonChart.PIE_CHART;
+      return ChartType.PIE;
 	}
 }

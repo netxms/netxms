@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.perfview;
 import java.io.StringWriter;
 import java.io.Writer;
 import org.netxms.client.constants.TimeUnit;
-import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
@@ -68,7 +67,7 @@ public class PerfTabGraphSettings
    private int timeUnits = 1;
 
 	@Element(required=false)
-	private int type = GraphItemStyle.LINE;
+   private int type = 0;
 	
 	@Element(required=false)
 	private String color = "0x00C000"; //$NON-NLS-1$
@@ -114,7 +113,7 @@ public class PerfTabGraphSettings
 		Serializer serializer = new Persister();
 		return serializer.read(PerfTabGraphSettings.class, xml);
 	}
-	
+
 	/**
 	 * Create XML document from object
 	 * 
@@ -142,7 +141,7 @@ public class PerfTabGraphSettings
 	 */
 	public int getType()
 	{
-		return type;
+      return type;
 	}
 
 	/**
@@ -204,7 +203,7 @@ public class PerfTabGraphSettings
 	 */
 	public void setType(int type)
 	{
-		this.type = type;
+      this.type = type;
 	}
 
 	/**
@@ -555,5 +554,18 @@ public class PerfTabGraphSettings
    public void setTranslucent(boolean translucent)
    {
       this.translucent = translucent;
+   }
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "PerfTabGraphSettings [enabled=" + enabled + ", autoScale=" + autoScale + ", logScaleEnabled=" + logScaleEnabled + ", stacked=" + stacked + ", showLegendAlways=" + showLegendAlways +
+            ", extendedLegend=" + extendedLegend + ", useMultipliers=" + useMultipliers + ", minYScaleValue=" + minYScaleValue + ", maxYScaleValue=" + maxYScaleValue + ", timeRange=" + timeRange +
+            ", timeUnits=" + timeUnits + ", type=" + type + ", color=" + color + ", title=" + title + ", name=" + name + ", showThresholds=" + showThresholds + ", groupName=" + groupName +
+            ", order=" + order + ", parentDciId=" + parentDciId + ", modifyYBase=" + modifyYBase + ", invertedValues=" + invertedValues + ", translucent=" + translucent + ", runtimeDciInfo=" +
+            runtimeDciInfo + "]";
    }
 }

@@ -13,7 +13,7 @@
  */
 package org.netxms.ui.eclipse.perfview.actions;
 
-import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
+import org.netxms.ui.eclipse.charts.api.ChartType;
 
 /**
  * Show bar chart for selected DCIs
@@ -21,12 +21,12 @@ import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
  */
 public class ShowBarChart extends ShowDataComparisonChart
 {
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.actions.ShowDataComparisonChart#getChartType()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.perfview.actions.ShowDataComparisonChart#getChartType()
+    */
 	@Override
-	protected int getChartType()
+   protected ChartType getChartType()
 	{
-		return DataComparisonChart.BAR_CHART;
+      return ChartType.BAR;
 	}
 }

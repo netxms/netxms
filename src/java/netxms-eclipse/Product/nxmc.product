@@ -76,11 +76,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.ant.core.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.ant.core.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.ant.core.nl_ru" fragment="true"/>
-      <plugin id="org.eclipse.birt.chart.device.extension"/>
-      <plugin id="org.eclipse.birt.chart.device.swt"/>
-      <plugin id="org.eclipse.birt.chart.engine"/>
-      <plugin id="org.eclipse.birt.chart.engine.extension"/>
-      <plugin id="org.eclipse.birt.core"/>
       <plugin id="org.eclipse.compare.core"/>
       <plugin id="org.eclipse.compare.core.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.compare.core.nl_cs" fragment="true"/>

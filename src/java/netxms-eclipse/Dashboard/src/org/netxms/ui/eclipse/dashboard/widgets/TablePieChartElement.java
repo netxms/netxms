@@ -22,7 +22,9 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.ui.eclipse.charts.api.ChartFactory;
+import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.ui.eclipse.charts.api.ChartType;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TablePieChartConfig;
 
 /**
@@ -50,14 +52,15 @@ public class TablePieChartElement extends TableComparisonChartElement
 
 		setLayout(new FillLayout());
 		
-		chart = ChartFactory.createPieChart(this, SWT.NONE);
-		chart.setTitleVisible(config.isShowTitle());
-		chart.setChartTitle(config.getTitle());
-		chart.setLegendPosition(config.getLegendPosition());
-		chart.setLegendVisible(config.isShowLegend());
-		chart.set3DModeEnabled(config.isShowIn3D());
-		chart.setTranslucent(config.isTranslucent());
-		
+      ChartConfiguration chartConfig = new ChartConfiguration();
+      chartConfig.setTitleVisible(config.isShowTitle());
+      chartConfig.setTitle(config.getTitle());
+      chartConfig.setLegendPosition(config.getLegendPosition());
+      chartConfig.setLegendVisible(config.isShowLegend());
+      chartConfig.setShowIn3D(config.isShowIn3D());
+      chartConfig.setTranslucent(config.isTranslucent());
+
+      chart = new Chart(this, SWT.NONE, ChartType.PIE, chartConfig);
 		startRefreshTimer();
 	}
 }

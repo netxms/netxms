@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.perfview.objecttabs.internal;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -32,11 +31,11 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -51,14 +50,14 @@ import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.TimeUnit;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.charts.api.ChartFactory;
-import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
+import org.netxms.ui.eclipse.charts.api.ChartType;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
@@ -80,7 +79,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 {
 	private long nodeId;
 	private List<PerfTabDci> items = new ArrayList<PerfTabDci>(4);
-	private HistoricalDataChart chart;
+   private Chart chart;
 	private ViewRefreshController refreshController = null;
 	private boolean updateInProgress = false;
 	private NXCSession session;
@@ -109,28 +108,29 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 
 		setLayout(new FillLayout());
 
-		chart = ChartFactory.createLineChart(this, SWT.NONE);
-		chart.setZoomEnabled(false);
-		chart.setTitleVisible(true);
-		chart.setChartTitle(settings.getRuntimeTitle());
-		chart.setLegendVisible(settings.isShowLegendAlways());
-		chart.setExtendedLegend(settings.isExtendedLegend());
-		chart.setLogScaleEnabled(settings.isLogScaleEnabled());
-      chart.setUseMultipliers(settings.isUseMultipliers());
-		chart.setStacked(settings.isStacked());
-      chart.setTranslucent(settings.isTranslucent());
+      ChartConfiguration chartConfiguration = new ChartConfiguration();
+      chartConfiguration.setZoomEnabled(false);
+      chartConfiguration.setTitleVisible(true);
+      chartConfiguration.setTitle(settings.getRuntimeTitle());
+      chartConfiguration.setLegendVisible(settings.isShowLegendAlways());
+      chartConfiguration.setExtendedLegend(settings.isExtendedLegend());
+      chartConfiguration.setLogScale(settings.isLogScaleEnabled());
+      chartConfiguration.setUseMultipliers(settings.isUseMultipliers());
+      chartConfiguration.setStacked(settings.isStacked());
+      chartConfiguration.setTranslucent(settings.isTranslucent());
+      chartConfiguration.setAutoScale(settings.isAutoScale());
+      chartConfiguration.setMinYScaleValue(settings.getMinYScaleValue());
+      chartConfiguration.setMaxYScaleValue(settings.getMaxYScaleValue());
+
+      chart = new Chart(this, SWT.NONE, ChartType.LINE, chartConfiguration);
 
       final Date from = new Date(System.currentTimeMillis() - settings.getTimeRangeMillis());
       final Date to = new Date(System.currentTimeMillis());
       chart.setTimeRange(from, to);
 		
-		GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, settings.isInvertedValues() ? GraphItemStyle.INVERTED : 0);
-		chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
-		if (!settings.isAutoScale())
-      {
-		   chart.setYAxisRange(settings.getMinYScaleValue(), settings.getMaxYScaleValue());
-      }
-		chart.addParameter(new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s")); //$NON-NLS-1$ //$NON-NLS-2$
+      GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(), settings.getColorAsInt());
+      item.setInverted(settings.isInvertedValues());
+      chart.addParameter(item);
 
 		addDisposeListener(new DisposeListener() {
          @Override
@@ -141,46 +141,9 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
          }
       });
 		
-		chart.addMouseListener(new MouseListener() {
+      chart.addDoubleClickListener(new IDoubleClickListener() {
          @Override
-         public void mouseUp(MouseEvent e)
-         {
-         }
-         
-         @Override
-         public void mouseDown(MouseEvent e)
-         {
-         }
-         
-         @Override
-         public void mouseDoubleClick(MouseEvent e)
-         {
-            openHistoryGraph();
-         }
-      });
-		
-		chart.getPlotArea().addMouseListener(new MouseListener() {
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
-          */
-         @Override
-         public void mouseUp(MouseEvent e)
-         {
-         }
-         
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
-          */
-         @Override
-         public void mouseDown(MouseEvent e)
-         {
-         }
-         
-         /* (non-Javadoc)
-          * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
-          */
-         @Override
-         public void mouseDoubleClick(MouseEvent e)
+         public void doubleClick(DoubleClickEvent event)
          {
             openHistoryGraph();
          }
@@ -233,13 +196,13 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       });
       
       Menu menu = manager.createContextMenu((Control)chart);
-      ((Control)chart).setMenu(menu);
+      chart.setMenu(menu);
       for(Control ch : ((Composite)chart).getChildren())
       {
          ch.setMenu(menu);
       }
    }
-   
+
    /**
     * Fill context menu
     * 
@@ -268,35 +231,31 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 	 */
 	public void addItem(PerfTabDci dci, PerfTabGraphSettings settings)
 	{
-		chart.setLegendVisible(true);
+      chart.getConfiguration().setLegendVisible(true);
 		if (settings.isExtendedLegend())
-		   chart.setExtendedLegend(true);
+         chart.getConfiguration().setExtendedLegend(true);
 		synchronized(items)
 		{
 			items.add(dci);
-			GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, settings.isInvertedValues() ? GraphItemStyle.INVERTED : 0);
-			List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(chart.getItemStyles());
-			if (styles.size() < items.size())
-				styles.add(style);
-			else
-				styles.set(items.size() - 1, style);
-			chart.setItemStyles(styles);
-			chart.addParameter(new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s")); //$NON-NLS-1$ //$NON-NLS-2$
+         GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, "", settings.getRuntimeName(), "%s", settings.getType(), settings.getColorAsInt());
+         item.setInverted(settings.isInvertedValues());
+         chart.addParameter(item);
 		}
 	}
-	
+
 	/**
 	 * Start chart update
 	 */
 	public void start()
 	{
+      chart.rebuild();
 		refreshController = new ViewRefreshController(viewPart, 30, new Runnable() {
 			@Override
 			public void run()
 			{
 				if (PerfTabGraph.this.isDisposed())
 					return;
-				
+
 				refreshData();
 			}
 		}, validator);
@@ -311,13 +270,13 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 	{
 		if (updateInProgress)
 			return;
-		
+
 		updateInProgress = true;
 		chart.clearErrors();
-		
+
 		ConsoleJob job = new ConsoleJob(Messages.get().PerfTabGraph_JobTitle, null, Activator.PLUGIN_ID) {
 			private PerfTabDci currentDci;
-			
+
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -335,11 +294,12 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 						@Override
 						public void run()
 						{
-							if (!((Widget)chart).isDisposed())
+                     if (!chart.isDisposed())
 							{
 								chart.setTimeRange(from, to);
 								for(int i = 0; i < data.length; i++)
-									chart.updateParameter(i, data[i], true);
+                           chart.updateParameter(i, data[i], false);
+                        chart.refresh();
 							}
 							updateInProgress = false;
 						}
@@ -377,7 +337,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		job.setUser(false);
 		job.start();
 	}
-	
+
 	/**
 	 * Open history graph of dci
 	 */
@@ -407,15 +367,15 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
          sb.append("@");
          sb.append(false);
          sb.append("@");
-         sb.append(chart.getItemStyles().get(i).getFlags());
+         sb.append(chart.getItem(i).isInverted());
          sb.append("@");
-         sb.append(chart.getItemStyles().get(i).getType());
+         sb.append(chart.getItem(i).isArea(false) ? ChartDciConfig.AREA : ChartDciConfig.LINE);
          sb.append("@");
-         sb.append(chart.getItemStyles().get(i).getColor());
+         sb.append(chart.getItem(i).getColor());
          sb.append("@");
          sb.append(settings.isStacked());
 	   }
-	   
+
 	   IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 	   try
 	   {
@@ -432,7 +392,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
     * @see org.netxms.ui.eclipse.perfview.views.HistoricalGraphView.HistoricalChartOwner#getChart()
     */
    @Override
-   public HistoricalDataChart getChart()
+   public Chart getChart()
    {
       return chart;
    }

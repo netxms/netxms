@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,11 @@ public class GraphItem
    private String displayFormat;
 	private String dataColumn;
 	private String instance;
+   private int lineChartType; // Line or area
+   private int color;
+   private int lineWidth;
+   private boolean showThresholds;
+   private boolean inverted;
 
 	/**
 	 * Create graph item object with default values
@@ -52,21 +57,27 @@ public class GraphItem
       displayFormat = "%s";
 		dataColumn = "";
 		instance = "";
+      lineChartType = ChartDciConfig.DEFAULT;
+      color = -1; // Use palette default
+      lineWidth = 0;
+      showThresholds = false;
+      inverted = false;
 	}
 
 	/**
-	 * Constructor for ITEM type
-	 * 
-	 * @param nodeId The node ID
-	 * @param dciId The dci ID
-	 * @param source The source
-	 * @param dataType The data type
-	 * @param name The name
-	 * @param description The description
-	 * @param displayFormat The display format
-	 */
-   public GraphItem(long nodeId, long dciId, DataOrigin source, DataType dataType, String name, String description,
-         String displayFormat)
+    * Constructor for ITEM type
+    * 
+    * @param nodeId The node ID
+    * @param dciId The dci ID
+    * @param source The source
+    * @param dataType The data type
+    * @param name The name
+    * @param description The description
+    * @param displayFormat The display format
+    * @param lineChartType item line chart type (line or area)
+    * @param color item color (-1 to use palette default)
+    */
+   public GraphItem(long nodeId, long dciId, DataOrigin source, DataType dataType, String name, String description, String displayFormat, int lineChartType, int color)
 	{
 		this.nodeId = nodeId;
 		this.dciId = dciId;
@@ -78,7 +89,66 @@ public class GraphItem
       this.displayFormat = displayFormat;
 		this.dataColumn = "";
 		this.instance = "";
+      this.lineChartType = lineChartType;
+      this.color = color;
+      this.lineWidth = 0;
+      this.showThresholds = false;
+      this.inverted = false;
 	}
+
+   /**
+    * Constructor for ad-hoc ITEM type (without related server-side DCI)
+    * 
+    * @param dataType The data type
+    * @param name The name
+    * @param description The description
+    * @param displayFormat The display format
+    */
+   public GraphItem(DataType dataType, String name, String description, String displayFormat)
+   {
+      this(0, 0, DataOrigin.INTERNAL, dataType, name, description, displayFormat, ChartDciConfig.DEFAULT, -1);
+   }
+
+   /**
+    * Constructor for ITEM type from existing DCI value
+    * 
+    * @param dciValue DCI value
+    * @param source The source
+    * @param displayFormat The display format
+    */
+   public GraphItem(DciValue dciValue, DataOrigin source, String displayFormat)
+   {
+      this(dciValue, source, displayFormat, ChartDciConfig.DEFAULT, -1);
+   }
+
+   /**
+    * Constructor for ITEM type from existing DCI value and applied styling
+    * 
+    * @param dciValue DCI value
+    * @param source The source
+    * @param displayFormat The display format
+    * @param lineChartType item line chart type (line or area)
+    * @param color item color (-1 to use palette default)
+    */
+   public GraphItem(DciValue dciValue, DataOrigin source, String displayFormat, int lineChartType, int color)
+   {
+      this(dciValue.getNodeId(), dciValue.getId(), source, dciValue.getDataType(), dciValue.getName(), dciValue.getDescription(), displayFormat, lineChartType, color);
+   }
+
+   /**
+    * Constructor for ITEM type from chart DCI configuration
+    * 
+    * @param dciConfig DCI value
+    * @param source The source
+    * @param displayFormat The display format
+    */
+   public GraphItem(ChartDciConfig dciConfig, DataOrigin source, DataType dataType)
+   {
+      this(dciConfig.nodeId, dciConfig.dciId, source, dataType, dciConfig.getDciName(), dciConfig.getDciDescription(), dciConfig.getDisplayFormat(), dciConfig.getLineChartType(), dciConfig.getColorAsInt());
+      this.instance = dciConfig.instance;
+      this.inverted = dciConfig.invertValues;
+      this.lineWidth = dciConfig.lineWidth;
+   }
 
 	/**
 	 * Constructor for TABLE type
@@ -106,6 +176,11 @@ public class GraphItem
       this.displayFormat = displayFormat;
 		this.dataColumn = dataColumn;
 		this.instance = instance;
+      this.lineChartType = ChartDciConfig.DEFAULT;
+      this.color = -1; // Use palette default
+      this.lineWidth = 0;
+      this.showThresholds = false;
+      this.inverted = false;
 	}
 
 	/**
@@ -269,13 +344,104 @@ public class GraphItem
    }
 
    /**
+    * @return the displayType
+    */
+   public int getLineChartType()
+   {
+      return lineChartType;
+   }
+
+   /**
+    * @param lineChartType new line chart type
+    */
+   public void setLineChartType(int lineChartType)
+   {
+      this.lineChartType = lineChartType;
+   }
+
+   /**
+    * Check if display type set to "area".
+    *
+    * @param defaultIsArea true if chart's default line chart type is AREA
+    * @return true if display type set to "area".
+    */
+   public boolean isArea(boolean defaultIsArea)
+   {
+      return (lineChartType == ChartDciConfig.AREA) || ((lineChartType == ChartDciConfig.DEFAULT) && defaultIsArea);
+   }
+
+   /**
+    * @return the color
+    */
+   public int getColor()
+   {
+      return color;
+   }
+
+   /**
+    * @param color the color to set
+    */
+   public void setColor(int color)
+   {
+      this.color = color;
+   }
+
+   /**
+    * @return the lineWidth
+    */
+   public int getLineWidth()
+   {
+      return lineWidth;
+   }
+
+   /**
+    * @param lineWidth the lineWidth to set
+    */
+   public void setLineWidth(int lineWidth)
+   {
+      this.lineWidth = lineWidth;
+   }
+
+   /**
+    * @return the showThresholds
+    */
+   public boolean isShowThresholds()
+   {
+      return showThresholds;
+   }
+
+   /**
+    * @param showThresholds the showThresholds to set
+    */
+   public void setShowThresholds(boolean showThresholds)
+   {
+      this.showThresholds = showThresholds;
+   }
+
+   /**
+    * @return the inverted
+    */
+   public boolean isInverted()
+   {
+      return inverted;
+   }
+
+   /**
+    * @param inverted the inverted to set
+    */
+   public void setInverted(boolean inverted)
+   {
+      this.inverted = inverted;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return "GraphItem [nodeId=" + nodeId + ", dciId=" + dciId + ", type=" + type + ", source=" + source + ", dataType=" + dataType
-            + ", name=" + name + ", description=" + description + ", displayFormat=" + displayFormat + ", dataColumn=" + dataColumn
-            + ", instance=" + instance + "]";
+      return "GraphItem [nodeId=" + nodeId + ", dciId=" + dciId + ", type=" + type + ", source=" + source + ", dataType=" + dataType + ", name=" + name + ", description=" + description +
+            ", displayFormat=" + displayFormat + ", dataColumn=" + dataColumn + ", instance=" + instance + ", lineChartType=" + lineChartType + ", color=" + color + ", lineWidth=" + lineWidth +
+            ", showThresholds=" + showThresholds + ", inverted=" + inverted + "]";
    }
 }

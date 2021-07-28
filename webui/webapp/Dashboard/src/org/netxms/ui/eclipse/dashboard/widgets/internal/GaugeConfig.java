@@ -46,7 +46,7 @@ public class GaugeConfig extends AbstractChartConfig
 	private double rightRedZone = 90.0;
 	
 	@Element(required = false)
-	private String fontName = ""; //$NON-NLS-1$
+   private String fontName = ""; //$NON-NLS-1$
 	
 	@Element(required=false)
 	private boolean elementBordersVisible = false;

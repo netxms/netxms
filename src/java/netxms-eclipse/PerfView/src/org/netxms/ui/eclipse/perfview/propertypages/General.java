@@ -120,7 +120,7 @@ public class General extends PreferencePage
       
       checkShowGrid = new Button(optionsGroup, SWT.CHECK);
       checkShowGrid.setText(Messages.get().General_ShowGridLines);
-      checkShowGrid.setSelection(config.isShowGrid());
+      checkShowGrid.setSelection(config.isGridVisible());
 
       checkLogScale = new Button(optionsGroup, SWT.CHECK);
       checkLogScale.setText(Messages.get().General_LogScale);
@@ -145,7 +145,7 @@ public class General extends PreferencePage
       
       checkShowLegend = new Button(optionsGroup, SWT.CHECK);
       checkShowLegend.setText(Messages.get().General_ShowLegend);
-      checkShowLegend.setSelection(config.isShowLegend());
+      checkShowLegend.setSelection(config.isLegendVisible());
       checkShowLegend.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -165,8 +165,8 @@ public class General extends PreferencePage
       checkShowHostNames = new Button(optionsGroup, SWT.CHECK);
       checkShowHostNames.setText(Messages.get().General_ShowHostNames);
       checkShowHostNames.setSelection(config.isShowHostNames());
-      checkShowHostNames.setEnabled(config.isShowLegend());
-      
+      checkShowHostNames.setEnabled(config.isLegendVisible());
+
       gd = new GridData();
       gd.horizontalAlignment = GridData.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -178,21 +178,21 @@ public class General extends PreferencePage
       legendLocation.add(Messages.get().General_Top);
       legendLocation.add(Messages.get().General_Bottom);
       legendLocation.select(31 - Integer.numberOfLeadingZeros(config.getLegendPosition()));      
-      legendLocation.setEnabled(config.isShowLegend()); 
+      legendLocation.setEnabled(config.isLegendVisible()); 
       
       checkExtendedLegend = new Button(optionsGroup, SWT.CHECK);
       checkExtendedLegend.setText(Messages.get().General_8);
       checkExtendedLegend.setSelection(config.isExtendedLegend());         
-      checkExtendedLegend.setEnabled(config.isShowLegend());   
+      checkExtendedLegend.setEnabled(config.isLegendVisible());   
       
       checkAreaChart = new Button(optionsGroup, SWT.CHECK);
       checkAreaChart.setText("Area chart");
       checkAreaChart.setSelection(config.isArea());         
-      
+
       checkUseMultipliers = new Button(optionsGroup, SWT.CHECK);
       checkUseMultipliers.setText("Use multipliers");
       checkUseMultipliers.setSelection(config.isUseMultipliers());
-      
+
       Composite refreshGroup = new Composite(optionsGroup, SWT.NONE);
       layout = new GridLayout();
       layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
@@ -298,7 +298,7 @@ public class General extends PreferencePage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       yAxisRange.setLayoutData(gd);
-      yAxisRange.setSelection(config.isAutoScale(),  config.modifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue());
+      yAxisRange.setSelection(config.isAutoScale(), config.isModifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue());
       
       return dialogArea;
 	}
@@ -340,8 +340,8 @@ public class General extends PreferencePage
 	protected void applyChanges(final boolean isApply)
 	{
 		config.setTitle(title.getText());
-		config.setShowGrid(checkShowGrid.getSelection());
-		config.setShowLegend(checkShowLegend.getSelection());
+		config.setGridVisible(checkShowGrid.getSelection());
+		config.setLegendVisible(checkShowLegend.getSelection());
 		config.setAutoScale(yAxisRange.isAuto());
 		config.setShowHostNames(checkShowHostNames.getSelection());
 		config.setAutoRefresh(checkAutoRefresh.getSelection());

@@ -23,11 +23,11 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.ui.eclipse.charts.api.ChartColor;
-import org.netxms.ui.eclipse.charts.api.ChartFactory;
-import org.netxms.ui.eclipse.charts.widgets.GenericChart;
+import org.netxms.ui.eclipse.charts.api.ChartType;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 
 /**
@@ -35,7 +35,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
  */
 public class BarChartElement extends ComparisonChartElement
 {
-	private BarChartConfig config;
+	private BarChartConfig elementConfig;
 	
 	/**
 	 * @param parent
@@ -47,48 +47,44 @@ public class BarChartElement extends ComparisonChartElement
 		
 		try
 		{
-			config = BarChartConfig.createFromXml(element.getData());
+			elementConfig = BarChartConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
-			config = new BarChartConfig();
+			elementConfig = new BarChartConfig();
 		}
 
-		refreshInterval = config.getRefreshRate();
-		chart = ChartFactory.createBarChart(this, SWT.NONE);
-		chart.setTitleVisible(config.isShowTitle());
-		chart.setChartTitle(config.getTitle());
-		chart.setLegendPosition(config.getLegendPosition());
-		chart.setLegendVisible(config.isShowLegend());
-		chart.set3DModeEnabled(config.isShowIn3D());
-		chart.setTransposed(config.isTransposed());
-		chart.setTranslucent(config.isTranslucent());
-		if (!config.isAutoScale())
-         chart.setYAxisRange(config.getMinYScaleValue(), config.getMaxYScaleValue());
-      ((GenericChart)chart).setDrillDownObjectId(config.getDrillDownObjectId());
+		refreshInterval = elementConfig.getRefreshRate();
+
+      ChartConfiguration chartConfig = new ChartConfiguration();
+      chartConfig.setTitleVisible(elementConfig.isShowTitle());
+      chartConfig.setTitle(elementConfig.getTitle());
+      chartConfig.setLegendPosition(elementConfig.getLegendPosition());
+      chartConfig.setLegendVisible(elementConfig.isShowLegend());
+      chartConfig.setShowIn3D(elementConfig.isShowIn3D());
+      chartConfig.setTransposed(elementConfig.isTransposed());
+      chartConfig.setTranslucent(elementConfig.isTranslucent());
+      chartConfig.setAutoScale(elementConfig.isAutoScale());
+      chartConfig.setMinYScaleValue(elementConfig.getMinYScaleValue());
+      chartConfig.setMaxYScaleValue(elementConfig.getMaxYScaleValue());
+
+      chart = new Chart(this, SWT.NONE, ChartType.BAR, chartConfig);
+      chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
 		
-		int index = 0;
-		for(ChartDciConfig dci : config.getDciList())
-		{
-         chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, DataOrigin.INTERNAL, DataType.INT32, Long.toString(dci.dciId),
-               dci.getName(), dci.getDisplayFormat()), 0.0);
-			int color = dci.getColorAsInt();
-			if (color != -1)
-				chart.setPaletteEntry(index, new ChartColor(color));
-			index++;
-		}
-		chart.initializationComplete();
+		for(ChartDciConfig dci : elementConfig.getDciList())
+         chart.addParameter(new GraphItem(dci, DataOrigin.INTERNAL, DataType.INT32));
+      chart.rebuild();
 
 		startRefreshTimer();
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()
-	 */
+
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()
+    */
 	@Override
 	protected ChartDciConfig[] getDciList()
 	{
-		return config.getDciList();
+		return elementConfig.getDciList();
 	}
 }

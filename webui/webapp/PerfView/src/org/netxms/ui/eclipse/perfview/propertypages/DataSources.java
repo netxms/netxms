@@ -34,6 +34,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -42,8 +43,9 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphDefinition;
@@ -54,6 +56,8 @@ import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.propertypages.helpers.DciListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ColorCache;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -68,7 +72,7 @@ public class DataSources extends PreferencePage
 	public static final int COLUMN_LABEL = 3;
 	public static final int COLUMN_COLOR = 4;
 	
-	private ChartConfiguration config;
+   private GraphDefinition config;
 	private DciListLabelProvider labelProvider;
 	private SortableTableViewer viewer;
 	private Button addButton;
@@ -77,6 +81,7 @@ public class DataSources extends PreferencePage
 	private Button upButton;
 	private Button downButton;
 	private List<ChartDciConfig> dciList = null;
+	private ColorCache colorCache;
 	private boolean graphIsTemplate = false;
 	private boolean saveToDatabase;
    
@@ -85,7 +90,7 @@ public class DataSources extends PreferencePage
     * Constructor
     * @param settings
     */
-   public DataSources(ChartConfiguration settings, boolean saveToDatabase)
+   public DataSources(GraphDefinition settings, boolean saveToDatabase)
    {
       super("Data Source");
       config = settings;     
@@ -98,10 +103,10 @@ public class DataSources extends PreferencePage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-      if (config instanceof GraphDefinition)
-		   graphIsTemplate = ((GraphDefinition)config).isTemplate();
+      graphIsTemplate = config.isTemplate();
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+		colorCache = new ColorCache(dialogArea);
+
       dciList = new ArrayList<ChartDciConfig>();
       for(ChartDciConfig dci : config.getDciList())
       	dciList.add(new ChartDciConfig(dci));
@@ -123,6 +128,14 @@ public class DataSources extends PreferencePage
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(labelProvider);
       viewer.disableSorting();
+      viewer.getTable().addListener(SWT.PaintItem, new Listener() {
+			@Override
+			public void handleEvent(Event event)
+			{
+				if (event.index == COLUMN_COLOR)
+					drawColorCell(event);
+			}
+		});
       viewer.setInput(dciList.toArray());
       
       GridData gridData = new GridData();
@@ -278,6 +291,25 @@ public class DataSources extends PreferencePage
 		});
 		
 		return dialogArea;
+	}
+
+	/**
+	 * @param event
+	 */
+	private void drawColorCell(Event event)
+	{
+		TableItem item = (TableItem)event.item;
+		ChartDciConfig dci = (ChartDciConfig)item.getData();
+		if (dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR))
+			return;
+		
+		int width = viewer.getTable().getColumn(COLUMN_COLOR).getWidth();
+		Color color = ColorConverter.colorFromInt(dci.getColorAsInt(), colorCache);
+		event.gc.setForeground(colorCache.create(0, 0, 0));
+		event.gc.setBackground(color);
+		event.gc.setLineWidth(1);
+		event.gc.fillRectangle(event.x + 3, event.y + 2, width - 7, event.height - 5);
+		event.gc.drawRectangle(event.x + 3, event.y + 2, width - 7, event.height - 5);
 	}
 
 	/**

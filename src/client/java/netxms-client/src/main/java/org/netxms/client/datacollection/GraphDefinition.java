@@ -29,6 +29,7 @@ import org.netxms.client.AccessListElement;
 import org.netxms.client.ObjectMenuFilter;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectAction;
+import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.convert.AnnotationStrategy;
 import org.simpleframework.xml.core.Persister;
@@ -60,6 +61,9 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
    private String displayName;
    private List<AccessListElement> accessList;
    private ObjectMenuFilter filter;
+
+   @ElementArray(required = true)
+   protected ChartDciConfig[] dciList = new ChartDciConfig[0];
 
    /**
     * Create default settings
@@ -115,6 +119,10 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
       parent = null;
       if (title != null)
          this.title = title;
+
+      dciList = new ChartDciConfig[src.dciList.length];
+      for(int i = 0; i < dciList.length; i++)
+         dciList[i] = new ChartDciConfig(src.dciList[i]);
    }
 
    /**
@@ -135,6 +143,10 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
       this.accessList.addAll(src.accessList);
       filter = src.filter;
       parent = null;
+
+      dciList = new ChartDciConfig[src.dciList.length];
+      for(int i = 0; i < dciList.length; i++)
+         dciList[i] = new ChartDciConfig(src.dciList[i]);
    }
 
    /**
@@ -270,6 +282,14 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
    }
 
    /**
+    * @param accessList the accessList to set
+    */
+   public void setAccessList(Collection<AccessListElement> accessList)
+   {
+      this.accessList = new ArrayList<AccessListElement>(accessList);
+   }
+
+   /**
     * Get short name (last part of full path separated by "-&gt;")
     *
     * @return short name
@@ -392,6 +412,30 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
    public void setId(long id)
    {
       this.id = id;
+   }
+
+   /**
+    * @param ownerId the ownerId to set
+    */
+   public void setOwnerId(long ownerId)
+   {
+      this.ownerId = ownerId;
+   }
+
+   /**
+    * @return the dciList
+    */
+   public ChartDciConfig[] getDciList()
+   {
+      return dciList;
+   }
+
+   /**
+    * @param dciList the dciList to set
+    */
+   public void setDciList(ChartDciConfig[] dciList)
+   {
+      this.dciList = dciList;
    }
 
    /**

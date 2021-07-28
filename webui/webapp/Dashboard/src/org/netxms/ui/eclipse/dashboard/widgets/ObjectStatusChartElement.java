@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,15 +21,16 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import java.util.Arrays;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IViewPart;
-import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
-import org.netxms.ui.eclipse.charts.api.ChartFactory;
+import org.netxms.ui.eclipse.charts.api.ChartType;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
 
@@ -38,7 +39,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
  */
 public class ObjectStatusChartElement extends ComparisonChartElement
 {
-	private ObjectStatusChartConfig config;
+	private ObjectStatusChartConfig elementConfig;
 	
 	/**
 	 * @param parent
@@ -50,55 +51,55 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 		
 		try
 		{
-			config = ObjectStatusChartConfig.createFromXml(element.getData());
+			elementConfig = ObjectStatusChartConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
-			config = new ObjectStatusChartConfig();
+			elementConfig = new ObjectStatusChartConfig();
 		}
 
-		refreshInterval = config.getRefreshRate();
-		
-		chart = ChartFactory.createBarChart(this, SWT.NONE);
-		chart.setTitleVisible(true);
-		chart.setChartTitle(config.getTitle());
-		chart.setLegendPosition(config.getLegendPosition());
-		chart.setLegendVisible(config.isShowLegend());
-		chart.set3DModeEnabled(config.isShowIn3D());
-		chart.setTransposed(config.isTransposed());
-		chart.setTranslucent(config.isTranslucent());
+		refreshInterval = elementConfig.getRefreshRate();
+
+      ChartConfiguration chartConfig = new ChartConfiguration();
+      chartConfig.setTitleVisible(true);
+      chartConfig.setTitle(elementConfig.getTitle());
+      chartConfig.setLegendPosition(ChartConfiguration.POSITION_RIGHT);
+      chartConfig.setLegendVisible(elementConfig.isShowLegend());
+      chartConfig.setShowIn3D(elementConfig.isShowIn3D());
+      chartConfig.setTransposed(elementConfig.isTransposed());
+      chartConfig.setTranslucent(elementConfig.isTranslucent());
+      chart = new Chart(this, SWT.NONE, ChartType.BAR, chartConfig);
 
 		for(int i = 0; i <= ObjectStatus.UNKNOWN.getValue(); i++)
 		{
-         chart.addParameter(new GraphItem(0, 0, DataOrigin.INTERNAL, DataType.INT32, StatusDisplayInfo.getStatusText(i),
-               StatusDisplayInfo.getStatusText(i), "%s"), 0.0); //$NON-NLS-1$
+         chart.addParameter(new GraphItem(DataType.INT32, StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i), "%s")); //$NON-NLS-1$
 			chart.setPaletteEntry(i, new ChartColor(StatusDisplayInfo.getStatusColor(i).getRGB()));
 		}
-		chart.initializationComplete();
+      chart.rebuild();
 
 		startRefreshTimer();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()
+    */
 	@Override
 	protected ChartDciConfig[] getDciList()
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#refreshData(org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo[])
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#refreshData(org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo[])
+    */
 	@Override
 	protected void refreshData(ChartDciConfig[] dciList)
 	{
 		int[] objectCount = new int[6];
 		Arrays.fill(objectCount, 0);
 
-		AbstractObject root = session.findObjectById(config.getRootObject());
+		AbstractObject root = session.findObjectById(elementConfig.getRootObject());
 		if (root != null)
 			collectData(objectCount, root);
 
@@ -126,7 +127,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 	 */
 	private boolean filterObject(AbstractObject o)
 	{
-		int[] cf = config.getClassFilter();
+		int[] cf = elementConfig.getClassFilter();
 		for(int i = 0; i < cf.length; i++)
 			if (o.getObjectClass() == cf[i])
 				return true;

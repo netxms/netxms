@@ -29,18 +29,21 @@ import org.simpleframework.xml.Root;
 public class ChartDciConfig
 {
    public static final String UNSET_COLOR = "UNSET";
-	
+
 	public static final int ITEM = DataCollectionObject.DCO_TYPE_ITEM;
 	public static final int TABLE = DataCollectionObject.DCO_TYPE_TABLE;
-	
-	// display types
-	public static final int DEFAULT = 0;
-   public static final int LINE = 1;
-   public static final int AREA = 2;
-	
+
+   // line chart types
+   public static final int DEFAULT = -1;
+   public static final int LINE = 0;
+   public static final int AREA = 1;
+
+   // Unset integer field indicator
+   private static final int UNSET = -99;
+
 	@Attribute
 	public long nodeId;
-	
+
 	@Attribute
 	public long dciId;
 
@@ -49,7 +52,7 @@ public class ChartDciConfig
 
    @Element(required=false)
    public String dciDescription;
-	
+
 	@Element(required=false)
 	public int type;
 
@@ -58,16 +61,16 @@ public class ChartDciConfig
 
 	@Element(required=false)
 	public String name;
-	
+
 	@Element(required=false)
 	public int lineWidth;
-	
-	@Element(required=false)
-	public int displayType;
-	
-	@Element(required=false)
-	public boolean area;
-	
+
+   @Element(required = false)
+   public int lineChartType;
+
+   @Element(required = false)
+   protected int displayType;    // For compatibility, new configurations use lineChartType
+
 	@Element(required=false)
 	public boolean showThresholds;
 
@@ -82,13 +85,13 @@ public class ChartDciConfig
 
 	@Element(required=false)
 	public String instance;
-	
+
 	@Element(required=false)
 	public String column;
-	
+
    @Element(required=false)
    public String displayFormat;
-   
+
 	/**
 	 * Default constructor
 	 */
@@ -102,8 +105,8 @@ public class ChartDciConfig
 		color = UNSET_COLOR;
       name = "";
 		lineWidth = 2;
-		displayType = DEFAULT;
-		area = false;
+      lineChartType = DEFAULT;
+      displayType = UNSET;
 		showThresholds = false;
 		invertValues = false;
 		multiMatch = false;
@@ -127,8 +130,8 @@ public class ChartDciConfig
 		this.color = src.color;
 		this.name = src.name;
 		this.lineWidth = src.lineWidth;
-		this.displayType = src.displayType;
-		this.area = src.area;
+      this.lineChartType = src.lineChartType;
+      this.displayType = src.displayType;
 		this.showThresholds = src.showThresholds;
 		this.invertValues = src.invertValues;
 		this.useRawValues = src.useRawValues;
@@ -153,7 +156,8 @@ public class ChartDciConfig
 		name = dci.getDescription();
 		color = UNSET_COLOR;
 		lineWidth = 2;
-		area = false;
+      lineChartType = DEFAULT;
+      displayType = UNSET;
 		showThresholds = false;
 		invertValues = false;
 		useRawValues = false;
@@ -178,7 +182,8 @@ public class ChartDciConfig
       name = dci.getDescription();
       color = UNSET_COLOR;
       lineWidth = 2;
-      area = false;
+      lineChartType = DEFAULT;
+      displayType = UNSET;
       showThresholds = false;
       invertValues = false;
       useRawValues = false;
@@ -216,7 +221,7 @@ public class ChartDciConfig
 	{
       return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(dciId) + "]");
 	}
-	
+
 	/**
 	 * Get display format
 	 * 
@@ -226,15 +231,15 @@ public class ChartDciConfig
 	{
       return ((displayFormat != null) && !displayFormat.isEmpty()) ? displayFormat : "%s";
 	}
-	
+
 	/**
-	 * Get display type
-	 * 
-	 * @return The display type
-	 */
-	public int getDisplayType()
+    * Get line chart type
+    * 
+    * @return The display type
+    */
+   public int getLineChartType()
 	{
-	   return ((displayType == DEFAULT) && area) ? AREA : displayType;
+      return (displayType != UNSET) ? displayType - 1 : lineChartType; // old configuration format
 	}
 
    /**
@@ -298,10 +303,8 @@ public class ChartDciConfig
    @Override
    public String toString()
    {
-      return "ChartDciConfig [nodeId=" + nodeId + ", dciId=" + dciId + ", dciName=" + dciName + ", dciDescription=" + dciDescription
-            + ", type=" + type + ", color=" + color + ", name=" + name + ", lineWidth=" + lineWidth + ", displayType=" + displayType
-            + ", area=" + area + ", showThresholds=" + showThresholds + ", invertValues=" + invertValues + ", useRawValues="
-            + useRawValues + ", multiMatch=" + multiMatch + ", instance=" + instance + ", column=" + column + ", displayFormat="
-            + displayFormat + "]";
+      return "ChartDciConfig [nodeId=" + nodeId + ", dciId=" + dciId + ", dciName=" + dciName + ", dciDescription=" + dciDescription + ", type=" + type + ", color=" + color + ", name=" + name +
+            ", lineWidth=" + lineWidth + ", lineChartType=" + lineChartType + ", displayType=" + displayType + ", showThresholds=" + showThresholds + ", invertValues=" +
+            invertValues + ", useRawValues=" + useRawValues + ", multiMatch=" + multiMatch + ", instance=" + instance + ", column=" + column + ", displayFormat=" + displayFormat + "]";
    }
 }

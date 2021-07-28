@@ -44,7 +44,7 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	private boolean showLegend = true;
 	
 	@Element(required = false)
-	private boolean showTitle = true;
+   private boolean showTitle = true;
 
    @Element(required = false)
    private boolean autoScale = true;
@@ -194,15 +194,15 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	 */
 	public boolean isShowTitle()
 	{
-		return showTitle;
+      return showTitle;
 	}
 
 	/**
-	 * @param showTitle the showTitle to set
-	 */
-	public void setShowTitle(boolean showTitle)
+    * @param showTitle the showTitle to set
+    */
+   public void setShowTitle(boolean showTitle)
 	{
-		this.showTitle = showTitle;
+      this.showTitle = showTitle;
 	}
 	
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,17 +20,11 @@ package org.netxms.ui.eclipse.charts.widgets;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseMoveListener;
@@ -39,111 +33,81 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataFormatter;
-import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.DataPoint;
-import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.charts.widgets.internal.SelectionRectangle;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
-import org.swtchart.Chart;
 import org.swtchart.IAxis;
 import org.swtchart.IAxis.Direction;
 import org.swtchart.IAxisSet;
 import org.swtchart.IAxisTick;
 import org.swtchart.ICustomPaintListener;
-import org.swtchart.ILegend;
 import org.swtchart.ILineSeries;
 import org.swtchart.ILineSeries.PlotSymbolType;
 import org.swtchart.IPlotArea;
 import org.swtchart.ISeries;
 import org.swtchart.ISeries.SeriesType;
 import org.swtchart.ISeriesSet;
-import org.swtchart.ITitle;
 import org.swtchart.LineStyle;
 import org.swtchart.Range;
 
 /**
  * Line chart widget
  */
-public class LineChart extends Chart implements HistoricalDataChart
+public class LineChart extends org.swtchart.Chart implements PlotArea
 {
 	private static final int MAX_ZOOM_LEVEL = 16;
-	
-	private List<GraphItem> items = new ArrayList<GraphItem>();
-	private List<GraphItemStyle> itemStyles = new ArrayList<GraphItemStyle>(ChartConfiguration.MAX_GRAPH_ITEM_COUNT);
+
+   private Chart chart;
+   private ChartConfiguration configuration;
+   private ColorCache colorCache;
+   private IPreferenceStore preferenceStore;
 	private long timeFrom;
 	private long timeTo;
 	private boolean showToolTips;
-	private boolean zoomEnabled;
-	private boolean gridVisible;
-	private boolean stacked;
 	private boolean selectionActive = false;
-	private boolean adjustYAxis = true;
-	private boolean modifyYBase = false;
-	private int lineWidth = 2;
 	private int zoomLevel = 0;
-	private int legendPosition = ChartConfiguration.POSITION_BOTTOM;
 	private MouseMoveListener moveListener;
 	private SelectionRectangle selection = new SelectionRectangle();
-	private IPreferenceStore preferenceStore;
 	private MouseListener zoomMouseListener = null;
 	private PaintListener zoomPaintListener = null;
-	private ColorCache colors;
-	private Set<String> errors = new HashSet<String>(0);
-	private Image errorImage = null;
 	private boolean tooltipShown = false;
 	private boolean zoomedToSelectionX = false;
    private boolean zoomedToSelectionY = false;
    private Date delayedRangeFrom;
    private Date delayedRangeTo;
-	
+
 	/**
 	 * @param parent
-	 * @param style
 	 */
-	public LineChart(Composite parent, int style)
+   public LineChart(Chart parent)
 	{
-		super(parent, style);
-		
-		colors = new ColorCache(this);
-		
-		preferenceStore = Activator.getDefault().getPreferenceStore();
+      super(parent, SWT.NONE);
+
+      chart = parent;
+      configuration = chart.getConfiguration();
+      colorCache = chart.getColorCache();
+
+      preferenceStore = Activator.getDefault().getPreferenceStore();
 		showToolTips = preferenceStore.getBoolean("Chart.ShowToolTips"); //$NON-NLS-1$
-		zoomEnabled = preferenceStore.getBoolean("Chart.EnableZoom"); //$NON-NLS-1$
-		setBackground(getColorFromPreferences("Chart.Colors.Background")); //$NON-NLS-1$
+      setBackground(parent.getBackground());
 		selection.setColor(getColorFromPreferences("Chart.Colors.Selection")); //$NON-NLS-1$
 
-		// Create default item styles
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		for(int i = 0; i < ChartConfiguration.MAX_GRAPH_ITEM_COUNT; i++)
-			itemStyles.add(new GraphItemStyle(GraphItemStyle.LINE, ColorConverter.getColorFromPreferencesAsInt(preferenceStore, "Chart.Colors.Data." + i), 0, 0)); //$NON-NLS-1$
-		
-		// Setup title
-		ITitle title = getTitle();
-		title.setVisible(preferenceStore.getBoolean("Chart.ShowTitle")); //$NON-NLS-1$
-		title.setForeground(getColorFromPreferences("Chart.Colors.Title")); //$NON-NLS-1$
-		title.setFont(Activator.getDefault().getChartTitleFont());
-		
-		// Setup legend
-		ILegend legend = getLegend();
-		legend.setPosition(swtPositionFromInternal(legendPosition));
-		legend.setFont(Activator.getDefault().getChartFont());
-		legend.setForeground(getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
-		
+      getTitle().setVisible(false);
+      getLegend().setVisible(false);
+
 		// Default time range
 		timeTo = System.currentTimeMillis();
 		timeFrom = timeTo - 3600000;
@@ -163,12 +127,18 @@ public class LineChart extends Chart implements HistoricalDataChart
 		yAxis.getTitle().setVisible(false);
 		yAxis.getTick().setForeground(getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
 		yAxis.getTick().setFont(Activator.getDefault().getChartFont());
+      yAxis.enableLogScale(configuration.isLogScale());
+      if (!configuration.isAutoScale())
+      {
+         yAxis.setRange(new Range(configuration.getMinYScaleValue(), configuration.getMaxYScaleValue()));
+      }
 		
 		// Setup grid
 		xAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.X.Style")); //$NON-NLS-1$
 		xAxis.getGrid().setForeground(getColorFromPreferences("Chart.Grid.X.Color")); //$NON-NLS-1$
 		yAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.Y.Style")); //$NON-NLS-1$
 		yAxis.getGrid().setForeground(getColorFromPreferences("Chart.Grid.Y.Color")); //$NON-NLS-1$
+      setGridVisible(configuration.isGridVisible());
 		
 		// Setup plot area
 		setBackgroundInPlotArea(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
@@ -207,7 +177,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 				   }
 				}
 			});
-			
+
 			plotArea.addMouseMoveListener(new MouseMoveListener() {
             @Override
             public void mouseMove(MouseEvent e)
@@ -220,7 +190,7 @@ public class LineChart extends Chart implements HistoricalDataChart
             }
          });
 		}
-		
+
 		zoomMouseListener = new MouseListener() {
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
@@ -241,7 +211,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 					endSelection();
 			}
 		};
-		
+
 		zoomPaintListener = new PaintListener() {
 			@Override
 			public void paintControl(PaintEvent e)
@@ -250,15 +220,14 @@ public class LineChart extends Chart implements HistoricalDataChart
 					selection.draw(e.gc);
 			}
 		};
-		
-		setZoomEnabled(zoomEnabled);
-		
+
+      setZoomEnabled(parent.getConfiguration().isZoomEnabled());
+
 		((IPlotArea)plotArea).addCustomPaintListener(new ICustomPaintListener() {
 			@Override
 			public void paintControl(PaintEvent e)
 			{
 				paintThresholds(e, yAxis);
-				paintErrorIndicator(e.gc);
 			}
 
 			@Override
@@ -267,17 +236,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 				return true;
 			}
 		});
-		
-		addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				if (errorImage != null)
-					errorImage.dispose();
-			}
-		});
 	}
-	
+
 	/**
 	 * Selection start handler
 	 * @param e
@@ -310,7 +270,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	{
 		if (!selectionActive)
 			return;
-		
+
 		selectionActive = false;
 		final Composite plotArea = getPlotArea();
 		plotArea.removeMouseMoveListener(moveListener);
@@ -355,7 +315,6 @@ public class LineChart extends Chart implements HistoricalDataChart
 	{
 		double min = axis.getDataCoordinate(range.x);
 		double max = axis.getDataCoordinate(range.y);
-
 		axis.setRange(new Range(min, max));
 	}
 
@@ -367,9 +326,9 @@ public class LineChart extends Chart implements HistoricalDataChart
 	 */
 	private Color getColorFromPreferences(final String name)
 	{
-		return colors.create(PreferenceConverter.getColor(preferenceStore, name));
+      return colorCache.create(PreferenceConverter.getColor(preferenceStore, name));
 	}
-	
+
 	/**
 	 * Return line style object matching given label. If no match found, LineStyle.NONE is returned.
 	 * 
@@ -386,65 +345,43 @@ public class LineChart extends Chart implements HistoricalDataChart
 	}
 
 	/**
-	 * Convert GraphSettings position representation to SWT
-	 * @param value position representation in GraphSettings
-	 * @return position representation in SWT
-	 */
-	private int swtPositionFromInternal(int value)
-	{
-		switch(value)
-		{
-			case ChartConfiguration.POSITION_LEFT:
-				return SWT.LEFT;
-			case ChartConfiguration.POSITION_RIGHT:
-				return SWT.RIGHT;
-			case ChartConfiguration.POSITION_TOP:
-				return SWT.TOP;
-			case ChartConfiguration.POSITION_BOTTOM:
-				return SWT.BOTTOM;
-		}
-		return SWT.BOTTOM;
-	}
-
-	/**
 	 * Add line series to chart
 	 * 
 	 * @param description Description
 	 * @param xSeries X axis data
 	 * @param ySeries Y axis data
 	 */
-	private ILineSeries addLineSeries(int index, String description, Date[] xSeries, double[] ySeries, boolean updateChart)
+   private ILineSeries addLineSeries(int index, String description, Date[] xSeries, double[] ySeries)
 	{
 		ISeriesSet seriesSet = getSeriesSet();
-		ILineSeries series = (ILineSeries)seriesSet.createSeries(SeriesType.LINE, Integer.toString(index), updateChart);
+      ILineSeries series = (ILineSeries)seriesSet.createSeries(SeriesType.LINE, Integer.toString(index), false);
 
 		series.setName(description);
 		series.setSymbolType(PlotSymbolType.NONE);
-		series.setLineWidth(lineWidth);
+      series.setLineWidth(configuration.getLineWidth());
 		series.setLineColor(getColorFromPreferences("Chart.Colors.Data." + index)); //$NON-NLS-1$
-		
+
 		series.setXDateSeries(xSeries);
 		series.setYSeries(ySeries);
-		
+
 		try
 		{
-		   series.enableStack(stacked, updateChart);
+         series.enableStack(configuration.isStacked(), false);
 		}
 		catch(IllegalStateException e)
 		{
-		   Activator.logError("Exception while addig chart series", e); //$NON-NLS-1$
+         Activator.logError("Exception while adding chart series", e); //$NON-NLS-1$
 		}
-		
-		if (updateChart)
-		   updateLayout();
-		
+
 		return series;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#setTimeRange(java.util.Date, java.util.Date)
-	 */
-	@Override
+
+   /**
+    * Set time range
+    *
+    * @param from start time
+    * @param to end time
+    */
 	public void setTimeRange(final Date from, final Date to)
 	{
 	   if (zoomedToSelectionX)
@@ -490,7 +427,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		xTick.setFormat(format);
 		xTick.setTickLabelAngle(angle);
 	}
-	
+
 	/**
 	 * Paint DCI thresholds
 	 */
@@ -498,13 +435,13 @@ public class LineChart extends Chart implements HistoricalDataChart
 	{
 		GC gc = e.gc;
 		Rectangle clientArea = getPlotArea().getClientArea();
-		
-		for(GraphItemStyle style : itemStyles)
+
+      for(GraphItem item : chart.getItems())
 		{
-			if (style.isShowThresholds())
+         if (item.isShowThresholds())
 			{
 				int y = axis.getPixelCoordinate(10);
-				gc.setForeground(ColorConverter.colorFromInt(style.getColor(), colors));
+            gc.setForeground(ColorConverter.colorFromInt(item.getColor(), colorCache));
 				gc.setLineStyle(SWT.LINE_DOT);
 				gc.setLineWidth(3);
 				gc.drawLine(0, y, clientArea.width, y);
@@ -512,233 +449,33 @@ public class LineChart extends Chart implements HistoricalDataChart
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#initializationComplete()
-	 */
-	@Override
-	public void initializationComplete()
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setTitle(java.lang.String)
-	 */
-	@Override
-	public void setChartTitle(String title)
-	{
-		getTitle().setText(title);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setTitleVisible(boolean)
-	 */
-	@Override
-	public void setTitleVisible(boolean visible)
-	{
-		getTitle().setVisible(visible);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#isTitleVisible()
-	 */
-	@Override
-	public boolean isTitleVisible()
-	{
-		return getTitle().isVisible();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#getChartTitle()
-	 */
-	@Override
-	public String getChartTitle()
-	{
-		return getTitle().getText();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLegendVisible(boolean)
-	 */
-	@Override
-	public void setLegendVisible(boolean visible)
-	{
-		getLegend().setVisible(visible);
-		redraw();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#isLegendVisible()
-	 */
-	@Override
-	public boolean isLegendVisible()
-	{
-		return getLegend().isVisible();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLegendPosition(int)
-	 */
-	@Override
-	public void setLegendPosition(int position)
-	{
-		legendPosition = position;
-		getLegend().setPosition(swtPositionFromInternal(position));
-		redraw();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#getLegendPosition()
-	 */
-	@Override
-	public int getLegendPosition()
-	{
-		return legendPosition;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setPalette(org.netxms.ui.eclipse.charts.api.ChartColor[])
-	 */
-	@Override
-	public void setPalette(ChartColor[] colors)
-	{
-		// TODO Auto-generated method stub
-		
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setPaletteEntry(int, org.netxms.ui.eclipse.charts.api.ChartColor)
-	 */
-	@Override
-	public void setPaletteEntry(int index, ChartColor color)
-	{
-		// TODO Auto-generated method stub
-		
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#getPaletteEntry(int)
-	 */
-	@Override
-	public ChartColor getPaletteEntry(int index)
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#set3DModeEnabled(boolean)
-	 */
-	@Override
-	public void set3DModeEnabled(boolean enabled)
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#is3DModeEnabled()
-	 */
-	@Override
-	public boolean is3DModeEnabled()
-	{
-		return false;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLogScaleEnabled(boolean)
-	 */
-	@Override
-	public void setLogScaleEnabled(boolean enabled)
-	{
-		getAxisSet().getYAxis(0).enableLogScale(enabled);
-		redraw();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#isLogScaleEnabled()
-	 */
-	@Override
-	public boolean isLogScaleEnabled()
-	{
-		return getAxisSet().getYAxis(0).isLogScaleEnabled();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setTranslucent(boolean)
-	 */
-	@Override
-	public void setTranslucent(boolean translucent)
-	{
-	   super.setTranslucent(translucent);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#isTranslucent()
-	 */
-	@Override
-	public boolean isTranslucent()
-	{
-		return super.isTranslucent();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#refresh()
-	 */
-	@Override
+   /**
+    * @see org.netxms.ui.eclipse.charts.widgets.PlotArea#refresh()
+    */
 	public void refresh()
 	{
+      List<GraphItem> items = chart.getItems();
+      for(int i = 0; i < items.size(); i++)
+         updateSeries(i, items.get(i));
+
 	   updateLayout();
 	   updateStackAndRiserData();
-	   if (adjustYAxis && !zoomedToSelectionY)
+      if (configuration.isAutoScale() && !zoomedToSelectionY)
 	      adjustYAxis(true);
 	   else
 	      redraw();
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#rebuild()
-	 */
-	@Override
-	public void rebuild()
-	{
-	   zoomedToSelectionX = false;
-	   zoomedToSelectionY = false;
-      updateStackAndRiserData();
-      if (adjustYAxis)
-         adjustYAxis(true);
-      else
-         redraw();
-	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#hasAxes()
-	 */
-	@Override
-	public boolean hasAxes()
+   /**
+    * Update data series on chart
+    *
+    * @param index item index
+    * @param item graph item
+    */
+   private void updateSeries(int index, GraphItem item)
 	{
-		return true;
-	}
+      final DciDataRow[] values = chart.getDataSeries().get(index).getValues();
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#addParameter(org.netxms.client.datacollection.GraphItem)
-	 */
-	@Override
-	public int addParameter(GraphItem item)
-	{
-		items.add(item);
-		return items.size() - 1;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#updateParameter(int, org.netxms.client.datacollection.DciData, boolean)
-	 */
-	@Override
-	public void updateParameter(int index, DciData data, boolean updateChart)
-	{
-		if ((index < 0) || (index >= items.size()))
-			return;
-		
-		final GraphItem item = items.get(index);
-		final DciDataRow[] values = data.getValues();
-		
 		// Create series
 		Date[] xSeries = new Date[values.length];
 		double[] ySeries = new double[values.length];
@@ -747,74 +484,19 @@ public class LineChart extends Chart implements HistoricalDataChart
 			xSeries[i] = values[i].getTimestamp();
 			ySeries[i] = values[i].getValueAsDouble();
 		}
-		
-		ILineSeries series = addLineSeries(index, item.getDescription(), xSeries, ySeries, updateChart);
-		applyItemStyle(index, series);
-		
-		if (updateChart)
-		{
-		   if (adjustYAxis && !zoomedToSelectionY)
-   		{
-   			adjustYAxis(true);
-   		}
-		   else
-		   {
-		      redraw();
-		   }
-		}
+
+      ILineSeries series = addLineSeries(index, item.getDescription(), xSeries, ySeries);
+      if (item.getColor() != -1)
+         series.setLineColor(ColorConverter.colorFromInt(item.getColor(), colorCache));
+      series.enableArea(item.isArea(configuration.isArea()));
+      series.setInverted(item.isInverted());
 	}
 
-	/**
-	 * Apply graph item style
-	 * 
-	 * @param index item index
-	 * @param series added series
-	 */
-	private void applyItemStyle(int index, ILineSeries series)
+   /**
+    * @param enableZoom
+    */
+   private void setZoomEnabled(boolean enableZoom)
 	{
-		if ((index < 0) || (index >= itemStyles.size()))
-			return;
-
-		GraphItemStyle style = itemStyles.get(index);
-		series.setLineColor(ColorConverter.colorFromInt(style.getColor(), colors));
-		series.enableArea(style.getType() == GraphItemStyle.AREA);
-		series.setInverted(style.isInverted());
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#getItemStyles()
-	 */
-	@Override
-	public List<GraphItemStyle> getItemStyles()
-	{
-		return itemStyles;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#setItemStyles(java.util.List)
-	 */
-	@Override
-	public void setItemStyles(List<GraphItemStyle> itemStyles)
-	{
-		this.itemStyles = itemStyles;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#isZoomEnabled()
-	 */
-	@Override
-	public boolean isZoomEnabled()
-	{
-		return zoomEnabled;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#setZoomEnabled(boolean)
-	 */
-	@Override
-	public void setZoomEnabled(boolean enableZoom)
-	{
-		this.zoomEnabled = enableZoom;
 		final Canvas plotArea = getPlotArea();
 		if (enableZoom)
 		{
@@ -827,7 +509,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 			plotArea.removePaintListener(zoomPaintListener);
 		}
 	}
-	
+
 	/**
 	 * Adjust upper border of current range
 	 * 
@@ -849,31 +531,18 @@ public class LineChart extends Chart implements HistoricalDataChart
       return adjustedUpper;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#isGridVisible()
-	 */
-	@Override
-	public boolean isGridVisible()
+   /**
+    * Set grid visible
+    *
+    * @param visible true to set grid visible
+    */
+   private void setGridVisible(boolean visible)
 	{
-		return gridVisible;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setGridVisible(boolean)
-	 */
-	@Override
-	public void setGridVisible(boolean visible)
-	{
-		gridVisible = visible;
 		final LineStyle ls = visible ? LineStyle.DOT : LineStyle.NONE;
 		getAxisSet().getXAxis(0).getGrid().setStyle(ls);
 		getAxisSet().getYAxis(0).getGrid().setStyle(ls);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#adjustXAxis()
-	 */
-	@Override
 	public void adjustXAxis(boolean repaint)
 	{
       zoomedToSelectionX = false;
@@ -892,18 +561,13 @@ public class LineChart extends Chart implements HistoricalDataChart
 			redraw();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#adjustYAxis(boolean)
-	 */
-	@Override
 	public void adjustYAxis(boolean repaint)
 	{
       zoomedToSelectionY = false;
-	   adjustYAxis = true;
 		final IAxis yAxis = getAxisSet().getYAxis(0);
 		yAxis.adjustRange();
 		final Range range = yAxis.getRange();
-      if (!modifyYBase && range.lower > 0)
+      if (!configuration.isModifyYBase() && (range.lower > 0))
          range.lower = 0;
       else if (range.lower < 0)
          range.lower = - adjustRange(Math.abs(range.lower));
@@ -913,218 +577,37 @@ public class LineChart extends Chart implements HistoricalDataChart
 			redraw();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#zoomIn()
-	 */
-	@Override
+   /**
+    * Zoom in
+    */
 	public void zoomIn()
 	{
 		getAxisSet().zoomIn();
 		redraw();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#zoomOut()
-	 */
-	@Override
+   /**
+    * Zoom out
+    */
 	public void zoomOut()
 	{
 		getAxisSet().zoomOut();
 		redraw();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLegendColor(org.netxms.ui.eclipse.charts.api.ChartColor, org.netxms.ui.eclipse.charts.api.ChartColor)
-	 */
-	@Override
-	public void setLegendColor(ChartColor foreground, ChartColor background)
-	{
-		getLegend().setForeground(colors.create(foreground.getRGBObject()));
-		getLegend().setBackground(colors.create(background.getRGBObject()));
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setAxisColor(org.netxms.ui.eclipse.charts.api.ChartColor)
-	 */
-	@Override
 	public void setAxisColor(ChartColor color)
 	{
-		final Color c = colors.create(color.getRGBObject());
+      final Color c = colorCache.create(color.getRGBObject());
 		getAxisSet().getXAxis(0).getTick().setForeground(c);
 		getAxisSet().getYAxis(0).getTick().setForeground(c);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setGridColor(org.netxms.ui.eclipse.charts.api.ChartColor)
-	 */
-	@Override
 	public void setGridColor(ChartColor color)
 	{
-		final Color c = colors.create(color.getRGBObject());
+      final Color c = colorCache.create(color.getRGBObject());
 		getAxisSet().getXAxis(0).getGrid().setForeground(c);
 		getAxisSet().getYAxis(0).getGrid().setForeground(c);
 	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setBackgroundColor(org.netxms.ui.eclipse.charts.api.ChartColor)
-	 */
-	@Override
-	public void setBackgroundColor(ChartColor color)
-	{
-		setBackground(colors.create(color.getRGBObject()));
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setPlotAreaColor(org.netxms.ui.eclipse.charts.api.ChartColor)
-	 */
-	@Override
-	public void setPlotAreaColor(ChartColor color)
-	{
-		setBackgroundInPlotArea(colors.create(color.getRGBObject()));
-	}
-
-   /**
-    * @see org.netxms.ui.eclipse.charts.api.DataChart#addError(java.lang.String)
-    */
-	@Override
-	public void addError(String message)
-	{
-		if (errors.add(message))
-			redraw();
-	}
-
-   /**
-    * @see org.netxms.ui.eclipse.charts.api.DataChart#clearErrors()
-    */
-	@Override
-	public void clearErrors()
-	{
-		if (errors.size() > 0)
-		{
-			errors.clear();
-			redraw();
-		}
-	}
-	
-	/**
-	 * Draw error indicator if needed
-	 * 
-	 * @param gc
-	 */
-	private void paintErrorIndicator(GC gc)
-	{
-		if (errors.size() == 0)
-			return;
-
-		if (errorImage == null)
-			errorImage = Activator.getImageDescriptor("icons/chart_error.png").createImage(); //$NON-NLS-1$
-
-		gc.setAlpha(127);
-		gc.setBackground(colors.create(127, 127, 127));
-		gc.fillRectangle(getPlotArea().getClientArea());
-		gc.setAlpha(255);
-		gc.drawImage(errorImage, 10, 10);
-		
-		gc.setForeground(colors.create(192, 0, 0));
-		Iterator<String> it = errors.iterator();
-		int y = 12;
-		int h = gc.textExtent("X").y; //$NON-NLS-1$
-		while(it.hasNext())
-		{
-			gc.drawText(it.next(), 40, y, true);
-			y += h + 5;
-		}
-	}
-
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#setStacked(boolean)
-    */
-   @Override
-   public void setStacked(boolean stacked)
-   {
-      this.stacked = stacked;
-      redraw();
-   }
-
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#isStacked()
-    */
-   @Override
-   public boolean isStacked()
-   {
-      return stacked;
-   }
-
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#setExtendedLegend(boolean)
-    */
-   @Override
-   public void setExtendedLegend(boolean extended)
-   {
-      getLegend().setExtended(extended);
-      if (isLegendVisible())
-      {
-         updateLayout();
-         redraw();
-      }
-   }
-
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#isExtendedLegend()
-    */
-   @Override
-   public boolean isExtendedLegend()
-   {
-      return getLegend().isExtended();
-   }
-
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.charts.api.DataChart#setYAxisRange(double, double)
-    */
-   @Override
-   public void setYAxisRange(double from, double to)
-   {
-      getAxisSet().getYAxis(0).setRange(new Range(from, to));
-      adjustYAxis = false;
-   }
-   
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#setLineWidth(int)
-    */
-   @Override
-   public void setLineWidth(int width)
-   {
-      lineWidth = width;
-
-      // update existing series
-      for(ISeries s : getSeriesSet().getSeries())
-      {
-         if (s instanceof ILineSeries)
-            ((ILineSeries)s).setLineWidth(lineWidth);
-      }
-   }
-
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#getLineWidth()
-    */
-   @Override
-   public int getLineWidth()
-   {
-      return lineWidth;
-   }
-
-   /**
-    * @see org.netxms.ui.eclipse.charts.api.DataChart#takeSnapshot()
-    */
-   public Image takeSnapshot()
-   {
-      Rectangle rect = getClientArea();
-      Image image = new Image(getDisplay(), rect.width, rect.height);
-      GC gc = new GC(image);
-      this.print(gc);
-      gc.dispose();
-      return image;
-   }
 
    /**
     * Get data point closest to given point in plot area
@@ -1217,13 +700,5 @@ public class LineChart extends Chart implements HistoricalDataChart
       double area2 = (double)Math.abs(dy * x - dx * y + p2.x * p1.y - p2.y * p1.x);
       double dist = Math.sqrt(dx * dx + dy * dy);
       return area2 / dist;
-   }
-   
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#modifyYBase(boolean)
-    */
-   public void modifyYBase(boolean modifyYBase)
-   {
-      this.modifyYBase = modifyYBase;
    }
 }

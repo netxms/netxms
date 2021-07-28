@@ -45,14 +45,13 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.charts.api.ChartColor;
-import org.netxms.ui.eclipse.charts.api.ChartFactory;
-import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
+import org.netxms.ui.eclipse.charts.api.ChartType;
+import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
@@ -68,7 +67,7 @@ import org.netxms.ui.eclipse.tools.ViewRefreshController;
  */
 public class LineChartElement extends ElementWidget implements HistoricalChartOwner
 {
-	private HistoricalDataChart chart;
+   private Chart chart;
 	private LineChartConfig config;
 	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
@@ -101,37 +100,28 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 
 		setLayout(new FillLayout());
 		
-		chart = ChartFactory.createLineChart(this, SWT.NONE);
-		chart.setZoomEnabled(config.isInteractive());
-		chart.setTitleVisible(config.isShowTitle());
-		chart.setChartTitle(config.getTitle());
-		chart.setLegendVisible(config.isShowLegend());
-		chart.setLegendPosition(config.getLegendPosition());
-		chart.setExtendedLegend(config.isExtendedLegend());
-		chart.setGridVisible(config.isShowGrid());
-		chart.setLogScaleEnabled(config.isLogScaleEnabled());
-		chart.setStacked(config.isStacked());
-		chart.setLineWidth(config.getLineWidth());
-		chart.setTranslucent(config.isTranslucent());
-      chart.setUseMultipliers(config.isUseMultipliers());
-		if (!config.isAutoScale())
-		   chart.setYAxisRange(config.getMinYScaleValue(), config.getMaxYScaleValue());
-      else
-         chart.modifyYBase(config.modifyYBase());
-		
-		final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(config.getDciList().length);
-		int index = 0;
+      ChartConfiguration chartConfig = new ChartConfiguration();
+      chartConfig.setZoomEnabled(config.isInteractive());
+      chartConfig.setTitleVisible(config.isShowTitle());
+      chartConfig.setTitle(config.getTitle());
+      chartConfig.setLegendVisible(config.isShowLegend());
+      chartConfig.setLegendPosition(config.getLegendPosition());
+      chartConfig.setExtendedLegend(config.isExtendedLegend());
+      chartConfig.setGridVisible(config.isShowGrid());
+      chartConfig.setLogScale(config.isLogScaleEnabled());
+      chartConfig.setStacked(config.isStacked());
+      chartConfig.setLineWidth(config.getLineWidth());
+      chartConfig.setTranslucent(config.isTranslucent());
+      chartConfig.setUseMultipliers(config.isUseMultipliers());
+      chartConfig.setAutoScale(config.isAutoScale());
+      chartConfig.setMinYScaleValue(config.getMinYScaleValue());
+      chartConfig.setMaxYScaleValue(config.getMaxYScaleValue());
+      chartConfig.setModifyYBase(config.modifyYBase());
+
+      chart = new Chart(this, SWT.NONE, ChartType.LINE, chartConfig);
 		for(ChartDciConfig dci : config.getDciList())
-		{
-         chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, DataOrigin.INTERNAL, DataType.INT32, Long.toString(dci.dciId),
-               dci.getName(), dci.getDisplayFormat()));
-			int color = dci.getColorAsInt();
-			if (color == -1)
-				color = ChartColor.getDefaultColor(index).getRGB();
-			styles.add(new GraphItemStyle(getDisplayType(dci), color, 2, dci.invertValues ? GraphItemStyle.INVERTED : 0));
-			index++;
-		}
-		chart.setItemStyles(styles);
+         chart.addParameter(new GraphItem(dci, DataOrigin.INTERNAL, DataType.INT32));
+      chart.rebuild();
 
 		refreshController = new ViewRefreshController(viewPart, config.getRefreshRate(), new Runnable() {
 			@Override
@@ -230,24 +220,6 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
       manager.add(actionRefresh);
 	}
 
-   /**
-    * @param dci
-    * @return
-    */
-   private int getDisplayType(ChartDciConfig dci)
-   {
-      int type = dci.getDisplayType();
-      switch(type)
-      {
-         case ChartDciConfig.AREA:
-            return GraphItemStyle.AREA;
-         case ChartDciConfig.LINE:
-            return GraphItemStyle.LINE;
-         default:
-            return config.isArea() ? GraphItemStyle.AREA : GraphItemStyle.LINE;
-      } 
-   }
-	
 	/**
 	 * Refresh graph's data
 	 */
@@ -327,9 +299,9 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 		job.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+    */
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
@@ -368,7 +340,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
     * @see org.netxms.ui.eclipse.perfview.views.HistoricalGraphView.HistoricalChartOwner#getChart()
     */
    @Override
-   public HistoricalDataChart getChart()
+   public Chart getChart()
    {
       return chart;
    }

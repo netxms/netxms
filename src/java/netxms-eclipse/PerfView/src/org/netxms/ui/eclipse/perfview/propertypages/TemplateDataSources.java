@@ -46,7 +46,6 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphDefinition;
@@ -73,7 +72,7 @@ public class TemplateDataSources extends PreferencePage
 	public static final int COLUMN_LABEL = 3;
 	public static final int COLUMN_COLOR = 4;
 	
-	private ChartConfiguration config;
+   private GraphDefinition config;
 	private DciTemplateListLabelProvider labelProvider;
 	private SortableTableViewer viewer;
 	private Button addButton;
@@ -91,7 +90,7 @@ public class TemplateDataSources extends PreferencePage
     * Constructor
     * @param settings
     */
-   public TemplateDataSources(ChartConfiguration settings, boolean saveToDatabase)
+   public TemplateDataSources(GraphDefinition settings, boolean saveToDatabase)
    {
       super("Template Data Source");
       config = settings; 
@@ -458,7 +457,7 @@ public class TemplateDataSources extends PreferencePage
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph((GraphDefinition)config, false);
+               session.saveGraph(config, false);
 				}
 	
 				@Override
@@ -482,9 +481,9 @@ public class TemplateDataSources extends PreferencePage
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -492,9 +491,9 @@ public class TemplateDataSources extends PreferencePage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{

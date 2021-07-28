@@ -184,7 +184,7 @@ public class DataSourceEditDlg extends Dialog
       displayType.add("Default");
       displayType.add("Line");
       displayType.add("Area");
-      displayType.select(dci.getDisplayType());
+      displayType.select(dci.getLineChartType());
             
       /*** Options group ***/
       Group optionsGroup = new Group(dialogArea, SWT.NONE);
@@ -259,8 +259,7 @@ public class DataSourceEditDlg extends Dialog
 		{
          dci.color = "0x" + Integer.toHexString(ColorConverter.rgbToInt(color)); //$NON-NLS-1$
 		}
-		dci.area = false;
-		dci.displayType = displayType.getSelectionIndex();
+      dci.lineChartType = displayType.getSelectionIndex();
 		dci.showThresholds = checkShowThresholds.getSelection();
 		dci.invertValues = checkInvertValues.getSelection();
       dci.useRawValues = checkRawValues.getSelection();

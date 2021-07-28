@@ -32,7 +32,7 @@ import org.netxms.client.Table;
 import org.netxms.client.TableColumnDefinition;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
+import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.views.DataComparisonView;
@@ -65,7 +65,7 @@ public class TableValueViewer extends BaseTableValueViewer
       super(parent, style, viewPart, configSubId, saveTableSettings);
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#buildConfigId(java.lang.String)
     */
    @Override
@@ -81,7 +81,7 @@ public class TableValueViewer extends BaseTableValueViewer
       return sb.toString();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#createActions()
     */
    @Override
@@ -109,7 +109,7 @@ public class TableValueViewer extends BaseTableValueViewer
          @Override
          public void run()
          {
-            showDataComparisonChart(DataComparisonChart.BAR_CHART);
+            showDataComparisonChart(ChartType.BAR);
          }
       };
 
@@ -117,12 +117,12 @@ public class TableValueViewer extends BaseTableValueViewer
          @Override
          public void run()
          {
-            showDataComparisonChart(DataComparisonChart.PIE_CHART);
+            showDataComparisonChart(ChartType.PIE);
          }
       };
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#fillContextMenu(org.eclipse.jface.action.IMenuManager)
     */
    @Override
@@ -231,7 +231,7 @@ public class TableValueViewer extends BaseTableValueViewer
    /**
     * Show line chart
     */
-   private void showDataComparisonChart(int chartType)
+   private void showDataComparisonChart(ChartType chartType)
    {
       if (currentData == null)
          return;
@@ -240,7 +240,7 @@ public class TableValueViewer extends BaseTableValueViewer
       if (cells.length == 0)
          return;
 
-      String id = Long.toString(uniqueId++) + "&" + Integer.toString(chartType); //$NON-NLS-1$
+      String id = Long.toString(uniqueId++) + "&" + Integer.toString(chartType.getValue()); //$NON-NLS-1$
       for(int i = 0; i < cells.length; i++)
       {
          TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
