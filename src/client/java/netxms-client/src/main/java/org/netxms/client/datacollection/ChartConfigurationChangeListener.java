@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,14 @@
 package org.netxms.client.datacollection;
 
 /**
- * Interface for graph settings change listeners
- *
+ * Interface for chart configuration change listeners
  */
-public interface GraphSettingsChangeListener
+public interface ChartConfigurationChangeListener
 {
 	/**
 	 * Handler for graph settings change event.
 	 * 
 	 * @param settings graph settings object
 	 */
-	public abstract void onGraphSettingsChange(ChartConfig settings);
+	public abstract void onChartConfigurationChange(ChartConfiguration settings);
 }

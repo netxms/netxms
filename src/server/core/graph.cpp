@@ -215,24 +215,26 @@ static std::pair<uint32_t, uint32_t> IsGraphNameExists(const TCHAR *graphName, U
  */
 void FillGraphListMsg(NXCPMessage *msg, UINT32 userId, bool templageGraphs, UINT32 graphId)
 {
-	int nACLSize;
-	TCHAR *pszStr;
-	TCHAR szQuery[512];
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 	UINT32 dwId, numGraphs;
 
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   int nACLSize;
 	GRAPH_ACL_ENTRY *pACL = LoadAllGraphACL(hdb, &nACLSize);
 	if (nACLSize != -1)
 	{
-	   DB_RESULT hResult = NULL;
-	   if(graphId != 0)
+	   DB_RESULT hResult;
+	   if (graphId != 0)
 	   {
-	      _sntprintf(szQuery, 512, _T("SELECT graph_id,owner_id,flags,name,config,filters FROM graphs WHERE graph_id=%d"), graphId);
-	      hResult = DBSelect(hdb, szQuery);
+	      TCHAR query[256];
+	      _sntprintf(query, 256, _T("SELECT graph_id,owner_id,flags,name,config,filters FROM graphs WHERE graph_id=%u"), graphId);
+	      hResult = DBSelect(hdb, query);
 	   }
 	   else
+	   {
 	      hResult = DBSelect(hdb, _T("SELECT graph_id,owner_id,flags,name,config,filters FROM graphs"));
-		if (hResult != NULL)
+	   }
+		if (hResult != nullptr)
 		{
 			UINT32 *pdwUsers = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
 			UINT32 *pdwRights = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
@@ -252,7 +254,7 @@ void FillGraphListMsg(NXCPMessage *msg, UINT32 userId, bool templageGraphs, UINT
 					msg->setField(dwId++, dwOwner);
                msg->setField(dwId++, flags);
 
-					pszStr = DBGetField(hResult, i, 3, NULL, 0);
+					TCHAR *pszStr = DBGetField(hResult, i, 3, NULL, 0);
                msg->setField(dwId++, CHECK_NULL_EX(pszStr));
                MemFree(pszStr);
 

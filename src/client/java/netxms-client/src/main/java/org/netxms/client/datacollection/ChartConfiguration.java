@@ -38,16 +38,23 @@ import org.simpleframework.xml.convert.Convert;
  * Base class for all chart widget configs
  */
 @Root(name="chart", strict=false)
-public class ChartConfig
+public class ChartConfiguration
 {
-	@ElementArray(required = true)
+	public static final int MAX_GRAPH_ITEM_COUNT = 16;
+
+   public static final int POSITION_LEFT = 1;
+   public static final int POSITION_RIGHT = 2;
+   public static final int POSITION_TOP = 4;
+   public static final int POSITION_BOTTOM = 8;
+
+   @ElementArray(required = true)
 	protected ChartDciConfig[] dciList = new ChartDciConfig[0];
-	
+
 	@Element(required = false)
 	protected String title = ""; //$NON-NLS-1$
 	
 	@Element(required = false)
-	protected int legendPosition = GraphSettings.POSITION_BOTTOM;
+   protected int legendPosition = POSITION_BOTTOM;
 	
 	@Element(required = false)
 	protected boolean showLegend = true;
@@ -115,12 +122,12 @@ public class ChartConfig
    protected Date timeTo = null; // For reading old format configuration, new format will use TimePeriod
 
    @Element(required = false)
-   private boolean modifyYBase = false;
+   protected boolean modifyYBase = false;
    
    @Element(required = false)
-   private boolean useMultipliers = true;
+   protected boolean useMultipliers = true;
 
-   private Set<GraphSettingsChangeListener> changeListeners = new HashSet<GraphSettingsChangeListener>(0);
+   private Set<ChartConfigurationChangeListener> changeListeners = new HashSet<ChartConfigurationChangeListener>(0);
 
 	/**
 	 * Create chart settings object from XML document
@@ -129,10 +136,10 @@ public class ChartConfig
 	 * @return deserialized object
 	 * @throws Exception if the object cannot be fully deserialized
 	 */
-   public static ChartConfig createFromXml(final String xml) throws Exception
+   public static ChartConfiguration createFromXml(final String xml) throws Exception
    {
       Serializer serializer = XMLTools.createSerializer();
-      ChartConfig config = serializer.read(ChartConfig.class, xml);
+      ChartConfiguration config = serializer.read(ChartConfiguration.class, xml);
       if (config.timeFrameType != null)
       {
          // Old format, create TimePeriod object
@@ -147,6 +154,55 @@ public class ChartConfig
          config.timeTo = null;
       }
       return config;
+   }
+
+   /**
+    * Default constructor
+    */
+   public ChartConfiguration()
+   {
+   }
+
+   /**
+    * Copy constructor
+    *
+    * @param src source object
+    */
+   public ChartConfiguration(ChartConfiguration src)
+   {
+      update(src);
+   }
+
+   /**
+    * Update from another configuration.
+    *
+    * @param src source configuration
+    */
+   public void update(ChartConfiguration src)
+   {
+      dciList = new ChartDciConfig[src.dciList.length];
+      for(int i = 0; i < dciList.length; i++)
+         dciList[i] = new ChartDciConfig(src.dciList[i]);
+      title = src.title;
+      legendPosition = src.legendPosition;
+      showLegend = src.showLegend;
+      extendedLegend = src.extendedLegend;
+      showTitle = src.showTitle;
+      showGrid = src.showGrid;
+      showHostNames = src.showHostNames;
+      autoRefresh = src.autoRefresh;
+      logScale = src.logScale;
+      stacked = src.stacked;
+      translucent = src.translucent;
+      area = src.area;
+      lineWidth = src.lineWidth;
+      autoScale = src.autoScale;
+      minYScaleValue = src.minYScaleValue;
+      maxYScaleValue = src.maxYScaleValue;
+      refreshRate = src.refreshRate;
+      timePeriod = src.timePeriod;
+      modifyYBase = src.modifyYBase;
+      useMultipliers = src.useMultipliers;
    }
 
 	/**
@@ -533,7 +589,7 @@ public class ChartConfig
     * 
     * @param listener change listener
     */
-   public void addChangeListener(GraphSettingsChangeListener listener)
+   public void addChangeListener(ChartConfigurationChangeListener listener)
    {
       changeListeners.add(listener);
    }
@@ -543,7 +599,7 @@ public class ChartConfig
     * 
     * @param listener change listener to remove
     */
-   public void removeChangeListener(GraphSettingsChangeListener listener)
+   public void removeChangeListener(ChartConfigurationChangeListener listener)
    {
       changeListeners.remove(listener);
    }
@@ -553,8 +609,8 @@ public class ChartConfig
     */
    public void fireChangeNotification()
    {
-      for(GraphSettingsChangeListener l : changeListeners)
-         l.onGraphSettingsChange(this);
+      for(ChartConfigurationChangeListener l : changeListeners)
+         l.onChartConfigurationChange(this);
    }
   
    /**
@@ -575,36 +631,6 @@ public class ChartConfig
    public boolean modifyYBase()
    {
       return modifyYBase;
-   }
-
-   /**
-    * Update from another configuration.
-    *
-    * @param src source configuration
-    */
-   public void update(ChartConfig src)
-   {
-      dciList = src.dciList.clone();
-      title = src.title; 
-      legendPosition = src.legendPosition; 
-      showLegend = src.showLegend; 
-      extendedLegend = src.extendedLegend; 
-      showTitle = src.showTitle; 
-      showGrid = src.showGrid; 
-      showHostNames = src.showHostNames; 
-      autoRefresh = src.autoRefresh; 
-      logScale = src.logScale; 
-      stacked = src.stacked; 
-      translucent = src.translucent; 
-      area = src.area;
-      lineWidth = src.lineWidth;
-      autoScale = src.autoScale; 
-      minYScaleValue = src.minYScaleValue; 
-      maxYScaleValue = src.maxYScaleValue; 
-      refreshRate = src.refreshRate;
-      timePeriod = src.timePeriod;
-      modifyYBase = src.modifyYBase;
-      useMultipliers = src.useMultipliers;
    }
 
    /**

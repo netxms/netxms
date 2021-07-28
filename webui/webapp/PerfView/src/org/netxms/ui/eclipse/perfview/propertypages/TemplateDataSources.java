@@ -43,10 +43,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.ChartConfig;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.ui.eclipse.datacollection.dialogs.DataSourceEditDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -68,7 +68,7 @@ public class TemplateDataSources extends PreferencePage
 	public static final int COLUMN_LABEL = 3;
 	public static final int COLUMN_COLOR = 4;
 	
-	private ChartConfig config;
+	private ChartConfiguration config;
 	private DciTemplateListLabelProvider labelProvider;
 	private SortableTableViewer viewer;
 	private Button addButton;
@@ -85,7 +85,7 @@ public class TemplateDataSources extends PreferencePage
     * Constructor
     * @param settings
     */
-   public TemplateDataSources(GraphSettings settings, boolean saveToDatabase)
+   public TemplateDataSources(ChartConfiguration settings, boolean saveToDatabase)
    {
       super("Template Data Source");
       config = settings; 
@@ -424,7 +424,7 @@ public class TemplateDataSources extends PreferencePage
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph((GraphSettings)config, false);
+					session.saveGraph((GraphDefinition)config, false);
 				}
 	
 				@Override

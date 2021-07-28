@@ -34,9 +34,9 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
@@ -288,7 +288,7 @@ public class ObjectTooltip extends Figure
 
 		chart.setTitleVisible(true);
 		chart.setChartTitle(Messages.get().ObjectTooltip_ChartTitle);
-		chart.setLegendPosition(GraphSettings.POSITION_RIGHT);
+		chart.setLegendPosition(ChartConfiguration.POSITION_RIGHT);
 		chart.setLegendVisible(true);
 		chart.set3DModeEnabled(true);
 		chart.setTransposed(false);

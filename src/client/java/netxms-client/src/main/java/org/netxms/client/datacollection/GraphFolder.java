@@ -33,7 +33,7 @@ public class GraphFolder
    private String name;
    private String displayName;
    private Map<String, GraphFolder> subfolders;
-   private Map<Long, GraphSettings> graphs;
+   private Map<Long, GraphDefinition> graphs;
 
    /**
     * Create new graph folder
@@ -46,7 +46,7 @@ public class GraphFolder
       displayName = name.replace("&", "");
       this.parent = null;
       this.subfolders = new HashMap<String, GraphFolder>();
-      this.graphs = new HashMap<Long, GraphSettings>();
+      this.graphs = new HashMap<Long, GraphDefinition>();
    }
 
    /**
@@ -117,7 +117,7 @@ public class GraphFolder
       int index = 0;
       for(GraphFolder f : subfolders.values())
          objects[index++] = f;
-      for(GraphSettings s : graphs.values())
+      for(ChartConfiguration s : graphs.values())
          objects[index++] = s;
       return objects;
    }
@@ -137,7 +137,7 @@ public class GraphFolder
     *
     * @param g graph to add
     */
-   public void addGraph(GraphSettings g)
+   public void addGraph(GraphDefinition g)
    {
       g.setParent(this);
       graphs.put(g.getId(), g);
@@ -161,7 +161,7 @@ public class GraphFolder
     * @param path  prepared path
     * @param level current tree level
     */
-   private void updateGraphInternal(GraphSettings graph, String[] path, int level)
+   private void updateGraphInternal(GraphDefinition graph, String[] path, int level)
    {
       if (level == path.length - 1)
       {
@@ -184,7 +184,7 @@ public class GraphFolder
     *
     * @param graph new graph settings
     */
-   public void updateGraph(GraphSettings graph)
+   public void updateGraph(GraphDefinition graph)
    {
       if (parent != null)
          return; // should be called only on root

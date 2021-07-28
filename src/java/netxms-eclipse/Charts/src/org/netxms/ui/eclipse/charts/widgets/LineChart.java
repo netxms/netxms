@@ -44,12 +44,12 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
-import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
@@ -84,7 +84,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private static final int MAX_ZOOM_LEVEL = 16;
 	
 	private List<GraphItem> items = new ArrayList<GraphItem>();
-	private List<GraphItemStyle> itemStyles = new ArrayList<GraphItemStyle>(GraphSettings.MAX_GRAPH_ITEM_COUNT);
+	private List<GraphItemStyle> itemStyles = new ArrayList<GraphItemStyle>(ChartConfiguration.MAX_GRAPH_ITEM_COUNT);
 	private long timeFrom;
 	private long timeTo;
 	private boolean showToolTips;
@@ -96,7 +96,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private boolean modifyYBase = false;
 	private int lineWidth = 2;
 	private int zoomLevel = 0;
-	private int legendPosition = GraphSettings.POSITION_BOTTOM;
+	private int legendPosition = ChartConfiguration.POSITION_BOTTOM;
 	private MouseMoveListener moveListener;
 	private SelectionRectangle selection = new SelectionRectangle();
 	private IPreferenceStore preferenceStore;
@@ -129,7 +129,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 
 		// Create default item styles
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		for(int i = 0; i < GraphSettings.MAX_GRAPH_ITEM_COUNT; i++)
+		for(int i = 0; i < ChartConfiguration.MAX_GRAPH_ITEM_COUNT; i++)
 			itemStyles.add(new GraphItemStyle(GraphItemStyle.LINE, ColorConverter.getColorFromPreferencesAsInt(preferenceStore, "Chart.Colors.Data." + i), 0, 0)); //$NON-NLS-1$
 		
 		// Setup title
@@ -394,13 +394,13 @@ public class LineChart extends Chart implements HistoricalDataChart
 	{
 		switch(value)
 		{
-			case GraphSettings.POSITION_LEFT:
+			case ChartConfiguration.POSITION_LEFT:
 				return SWT.LEFT;
-			case GraphSettings.POSITION_RIGHT:
+			case ChartConfiguration.POSITION_RIGHT:
 				return SWT.RIGHT;
-			case GraphSettings.POSITION_TOP:
+			case ChartConfiguration.POSITION_TOP:
 				return SWT.TOP;
-			case GraphSettings.POSITION_BOTTOM:
+			case ChartConfiguration.POSITION_BOTTOM:
 				return SWT.BOTTOM;
 		}
 		return SWT.BOTTOM;
@@ -983,9 +983,9 @@ public class LineChart extends Chart implements HistoricalDataChart
 		setBackgroundInPlotArea(colors.create(color.getRGBObject()));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#addError(java.lang.String)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.charts.api.DataChart#addError(java.lang.String)
+    */
 	@Override
 	public void addError(String message)
 	{
@@ -993,9 +993,9 @@ public class LineChart extends Chart implements HistoricalDataChart
 			redraw();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#clearErrors()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.charts.api.DataChart#clearErrors()
+    */
 	@Override
 	public void clearErrors()
 	{
@@ -1114,9 +1114,7 @@ public class LineChart extends Chart implements HistoricalDataChart
    }
 
    /**
-    * Take snapshot of network map
-    * 
-    * @return
+    * @see org.netxms.ui.eclipse.charts.api.DataChart#takeSnapshot()
     */
    public Image takeSnapshot()
    {

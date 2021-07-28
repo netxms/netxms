@@ -72,9 +72,9 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
-import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
@@ -403,13 +403,13 @@ public class BirtChartFigure extends GenericChartFigure implements DataCompariso
 	{
 		switch(value)
 		{
-			case GraphSettings.POSITION_LEFT:
+			case ChartConfiguration.POSITION_LEFT:
 				return Position.LEFT_LITERAL;
-			case GraphSettings.POSITION_RIGHT:
+			case ChartConfiguration.POSITION_RIGHT:
 				return Position.RIGHT_LITERAL;
-			case GraphSettings.POSITION_TOP:
+			case ChartConfiguration.POSITION_TOP:
 				return Position.ABOVE_LITERAL;
-			case GraphSettings.POSITION_BOTTOM:
+			case ChartConfiguration.POSITION_BOTTOM:
 				return Position.BELOW_LITERAL;
 		}
 		return Position.RIGHT_LITERAL;

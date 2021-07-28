@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.perfview.views.helpers;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.datacollection.GraphFolder;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.ui.eclipse.perfview.Activator;
 
 /**
@@ -50,7 +50,7 @@ public class GraphTreeLabelProvider extends LabelProvider
 	{
 		if (element instanceof GraphFolder)
 			return imgFolder;
-		if (element instanceof GraphSettings)
+		if (element instanceof GraphDefinition)
 			return imgGraph;
 		return null;
 	}
@@ -63,8 +63,8 @@ public class GraphTreeLabelProvider extends LabelProvider
 	{
 		if (element instanceof GraphFolder)
 			return ((GraphFolder)element).getDisplayName();
-		if (element instanceof GraphSettings)
-			return ((GraphSettings)element).getDisplayName();
+		if (element instanceof GraphDefinition)
+			return ((GraphDefinition)element).getDisplayName();
 		return null;
 	}
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,8 +65,8 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphFolder;
-import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -121,9 +121,9 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
    private Action actionShowFilter;
    private GraphTreeFilter filter; 
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -158,7 +158,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
          {
             return (e1 instanceof GraphFolder) ?
                   ((e2 instanceof GraphFolder) ? ((GraphFolder)e1).getDisplayName().compareToIgnoreCase(((GraphFolder)e2).getDisplayName()) : -1) :
-                  ((e2 instanceof GraphSettings) ? ((GraphSettings)e1).getDisplayName().compareToIgnoreCase(((GraphSettings)e2).getDisplayName()) : 1);
+                  ((e2 instanceof GraphDefinition) ? ((GraphDefinition)e1).getDisplayName().compareToIgnoreCase(((GraphDefinition)e2).getDisplayName()) : 1);
          }
 		});
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
@@ -173,12 +173,12 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            IStructuredSelection selection = viewer.getStructuredSelection();
 				Iterator it = selection.iterator();
 				boolean enabled = false;
 				while(it.hasNext())
 				{
-					if (it.next() instanceof GraphSettings)
+               if (it.next() instanceof GraphDefinition)
 					{
 						enabled = true;
 						break;
@@ -277,9 +277,9 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 				while(it.hasNext())
 				{
 					Object o = it.next();
-					if (o instanceof GraphSettings)
+					if (o instanceof GraphDefinition)
 					{
-						showPredefinedGraph((GraphSettings)o);
+						showPredefinedGraph((GraphDefinition)o);
 					}
 					else if (o instanceof GraphFolder)
 					{
@@ -439,7 +439,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 	 * 
 	 * @param gs graph settings
 	 */
-	private void showPredefinedGraph(GraphSettings gs)
+	private void showPredefinedGraph(GraphDefinition gs)
 	{
 		String encodedName;
 		try
@@ -472,10 +472,10 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 		if (selection.size() != 1)
 			return;
 		
-		GraphSettings settings = (GraphSettings)selection.getFirstElement();
+		GraphDefinition settings = (GraphDefinition)selection.getFirstElement();
 		if (showGraphPropertyPages(settings))
 		{
-	      final GraphSettings newSettings = settings;
+	      final GraphDefinition newSettings = settings;
 			try
 			{
 				new ConsoleJob(Messages.get().PredefinedGraphTree_UpdateJobName, null, Activator.PLUGIN_ID, null) {
@@ -520,14 +520,14 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 		
 		for(final Object o : selection.toList())
 		{
-			if (!(o instanceof GraphSettings))
+			if (!(o instanceof GraphDefinition))
 				continue;
 			
-			new ConsoleJob(String.format(Messages.get().PredefinedGraphTree_DeleteJobName, ((GraphSettings)o).getShortName()), null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob(String.format(Messages.get().PredefinedGraphTree_DeleteJobName, ((GraphDefinition)o).getShortName()), null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.deletePredefinedGraph(((GraphSettings)o).getId());
+					session.deletePredefinedGraph(((GraphDefinition)o).getId());
 				}
 				
 				@Override
@@ -558,7 +558,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
             });
             break;
          case SessionNotification.PREDEFINED_GRAPHS_CHANGED:            
-            if (((GraphSettings)n.getObject()).isTemplate())
+            if (((GraphDefinition)n.getObject()).isTemplate())
                return;
             
             viewer.getControl().getDisplay().asyncExec(new Runnable() {
@@ -567,14 +567,14 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
                {
                   final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();  
                   
-                  root.updateGraph((GraphSettings)n.getObject());
+                  root.updateGraph((GraphDefinition)n.getObject());
                   viewer.refresh();
                   
-                  if ((selection.size() == 1) && (selection.getFirstElement() instanceof GraphSettings))
+                  if ((selection.size() == 1) && (selection.getFirstElement() instanceof GraphDefinition))
                   {
-                     GraphSettings element = (GraphSettings)selection.getFirstElement();
+                     GraphDefinition element = (GraphDefinition)selection.getFirstElement();
                      if (element.getId() == n.getSubCode())
-                        viewer.setSelection(new StructuredSelection((GraphSettings)n.getObject()), true);
+                        viewer.setSelection(new StructuredSelection((GraphDefinition)n.getObject()), true);
                   }
                }
             });
@@ -620,7 +620,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
       filter.setFilterString(text);
       viewer.refresh(false);
       
-      GraphSettings s = filter.getLastMatch();
+      GraphDefinition s = filter.getLastMatch();
       if (s != null)
       {
          viewer.expandToLevel(s, 1);
@@ -634,7 +634,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
     * @param trap Object tool details object
     * @return true if OK was pressed
     */
-   private boolean showGraphPropertyPages(final GraphSettings settings)
+   private boolean showGraphPropertyPages(GraphDefinition settings)
    {
       PreferenceManager pm = new PreferenceManager();    
       pm.addToRoot(new PreferenceNode("graph", new Graph(settings, true)));

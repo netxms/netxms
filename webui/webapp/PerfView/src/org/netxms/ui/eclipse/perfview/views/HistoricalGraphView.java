@@ -55,13 +55,13 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.constants.TimeUnit;
-import org.netxms.client.datacollection.ChartConfig;
+import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
-import org.netxms.client.datacollection.GraphSettings;
-import org.netxms.client.datacollection.GraphSettingsChangeListener;
+import org.netxms.client.datacollection.GraphDefinition;
+import org.netxms.client.datacollection.ChartConfigurationChangeListener;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -83,7 +83,7 @@ import org.netxms.ui.eclipse.tools.ViewRefreshController;
 /**
  * History graph view
  */
-public class HistoricalGraphView extends ViewPart implements GraphSettingsChangeListener
+public class HistoricalGraphView extends ViewPart implements ChartConfigurationChangeListener
 {
    public static final String ID = "org.netxms.ui.eclipse.perfview.views.HistoryGraph"; //$NON-NLS-1$
    public static final String PREDEFINED_GRAPH_SUBID = "org.netxms.ui.eclipse.charts.predefinedGraph"; //$NON-NLS-1$
@@ -100,7 +100,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private boolean updateInProgress = false;
    private ViewRefreshController refreshController;
    private Composite chartParent = null;
-   private GraphSettings settings = new GraphSettings();
+   private GraphDefinition configuration = new GraphDefinition();
    private boolean multipleSourceNodes = false;
 
    private Action actionRefresh;
@@ -148,10 +148,10 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 
       session = ConsoleSharedData.getSession();
 
-      if (settings.getTimePeriod().isBackFromNow())
+      if (configuration.getTimePeriod().isBackFromNow())
       {
-         settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
-         settings.setTimeTo(new Date(System.currentTimeMillis()));
+         configuration.setTimeFrom(new Date(System.currentTimeMillis() - configuration.getTimeRangeMillis()));
+         configuration.setTimeTo(new Date(System.currentTimeMillis()));
       }
 
       // Extract DCI ids from view id
@@ -188,7 +188,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                   if (subfields.length >= 9)
                      dci.color = "0x" + Integer.toHexString(Integer.parseInt(subfields[8]));
                   if (subfields.length >= 10)
-                     settings.setStacked(Boolean.parseBoolean(subfields[9]));
+                     configuration.setStacked(Boolean.parseBoolean(subfields[9]));
                   
                   items.add(dci);
                }
@@ -256,8 +256,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                }
             }
          }
-         settings.setTitle(getPartName());
-         settings.setDciList(items.toArray(new ChartDciConfig[items.size()]));
+         configuration.setTitle(getPartName());
+         configuration.setDciList(items.toArray(new ChartDciConfig[items.size()]));
       }
    }
 
@@ -288,14 +288,14 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               final GraphSettings s = session.getPredefinedGraph(id);
+               final GraphDefinition s = session.getPredefinedGraph(id);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
-                     settings = s;
+                     configuration = s;
                      configureGraphFromSettings();
-                     settings.addChangeListener(HistoricalGraphView.this);
+                     configuration.addChangeListener(HistoricalGraphView.this);
                   }
                });
             }
@@ -321,7 +321,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    {
       try
       {
-         memento.putTextData(Long.toString(settings.getId()));
+         memento.putTextData(Long.toString(configuration.getId()));
       }
       catch(Exception e)
       {
@@ -331,12 +331,12 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    /**
     * Initialize this view with predefined graph settings
     * 
-    * @param gs graph settings
+    * @param definition graph settings
     */
-   public void initPredefinedGraph(GraphSettings gs)
+   public void initPredefinedGraph(GraphDefinition definition)
    {
-      settings = new GraphSettings(gs);
-      settings.addChangeListener(this);
+      configuration = new GraphDefinition(definition);
+      configuration.addChangeListener(this);
       configureGraphFromSettings();
    }
 
@@ -351,32 +351,32 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       createPopupMenu();
 
       // General settings
-      setPartName(settings.getTitle());
-      chart.setChartTitle(settings.getTitle());
+      setPartName(configuration.getTitle());
+      chart.setChartTitle(configuration.getTitle());
 
       // Chart visual settings
-      chart.setLogScaleEnabled(settings.isLogScale());
-      chart.setGridVisible(settings.isShowGrid());
-      chart.setLegendVisible(settings.isShowLegend());
-      chart.setLegendPosition(settings.getLegendPosition());
-      chart.setExtendedLegend(settings.isExtendedLegend());
-      chart.setStacked(settings.isStacked());
-      chart.setTranslucent(settings.isTranslucent());
-      chart.setLineWidth(settings.getLineWidth());
-      chart.setUseMultipliers(settings.isUseMultipliers());
-      if (!settings.isAutoScale())
-         chart.setYAxisRange(settings.getMinYScaleValue(), settings.getMaxYScaleValue());
+      chart.setLogScaleEnabled(configuration.isLogScale());
+      chart.setGridVisible(configuration.isShowGrid());
+      chart.setLegendVisible(configuration.isShowLegend());
+      chart.setLegendPosition(configuration.getLegendPosition());
+      chart.setExtendedLegend(configuration.isExtendedLegend());
+      chart.setStacked(configuration.isStacked());
+      chart.setTranslucent(configuration.isTranslucent());
+      chart.setLineWidth(configuration.getLineWidth());
+      chart.setUseMultipliers(configuration.isUseMultipliers());
+      if (!configuration.isAutoScale())
+         chart.setYAxisRange(configuration.getMinYScaleValue(), configuration.getMaxYScaleValue());
       else
-         chart.modifyYBase(settings.modifyYBase());
+         chart.modifyYBase(configuration.modifyYBase());
 
       // Data
-      final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(settings.getDciList().length);
+      final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(configuration.getDciList().length);
       int index = 0;
       int nodeId = 0;
-      for(ChartDciConfig dci : settings.getDciList())
+      for(ChartDciConfig dci : configuration.getDciList())
       {
          nodeId |= dci.nodeId; // Check that all DCI's are form one node
-         final String name = settings.isShowHostNames() ? (session.getObjectName(dci.nodeId) + " - " + dci.getName()) : dci.getName(); //$NON-NLS-1$
+         final String name = configuration.isShowHostNames() ? (session.getObjectName(dci.nodeId) + " - " + dci.getName()) : dci.getName(); //$NON-NLS-1$
          chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, DataOrigin.INTERNAL, DataType.INT32, Long.toString(dci.dciId), name, dci.getDisplayFormat()));
          int color = dci.getColorAsInt();
          if (color == -1)
@@ -387,16 +387,16 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 
       // Check that all DCI's are form one node
       if (index > 0)
-         multipleSourceNodes = (nodeId != settings.getDciList()[0].nodeId);
+         multipleSourceNodes = (nodeId != configuration.getDciList()[0].nodeId);
 
       chart.setItemStyles(styles);
 
       updateChart();
 
       // Automatic refresh
-      actionAutoRefresh.setChecked(settings.isAutoRefresh());
+      actionAutoRefresh.setChecked(configuration.isAutoRefresh());
       refreshMenuSelection();
-      refreshController.setInterval(settings.isAutoRefresh() ? settings.getRefreshRate() : -1);
+      refreshController.setInterval(configuration.isAutoRefresh() ? configuration.getRefreshRate() : -1);
    }
    
    /**
@@ -413,7 +413,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          case ChartDciConfig.LINE:
             return GraphItemStyle.LINE;
          default:
-            return settings.isArea() ? GraphItemStyle.AREA : GraphItemStyle.LINE;
+            return configuration.isArea() ? GraphItemStyle.AREA : GraphItemStyle.LINE;
       } 
    }
 
@@ -431,7 +431,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       contributeToActionBars();
 
       configureGraphFromSettings();
-      settings.addChangeListener(this);
+      configuration.addChangeListener(this);
    }
 
    /**
@@ -463,7 +463,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
     */
    private void getDataFromServer()
    {
-      final ChartDciConfig[] dciList = settings.getDciList();
+      final ChartDciConfig[] dciList = configuration.getDciList();
       if (dciList.length == 0)
       {
          updateInProgress = false;
@@ -485,14 +485,14 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                currentItem = dciList[i];
                if (currentItem.type == ChartDciConfig.ITEM)
                {
-                  data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, settings.getTimeFrom(),
-                        settings.getTimeTo(), 0, currentItem.useRawValues ? HistoricalDataType.RAW : HistoricalDataType.PROCESSED);
+                  data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, configuration.getTimeFrom(),
+                        configuration.getTimeTo(), 0, currentItem.useRawValues ? HistoricalDataType.RAW : HistoricalDataType.PROCESSED);
                   thresholds[i] = session.getThresholds(currentItem.nodeId, currentItem.dciId);
                }
                else
                {
                   data[i] = session.getCollectedTableData(currentItem.nodeId, currentItem.dciId, currentItem.instance,
-                        currentItem.column, settings.getTimeFrom(), settings.getTimeTo(), 0);
+                        currentItem.column, configuration.getTimeFrom(), configuration.getTimeTo(), 0);
                   thresholds[i] = null;
                }
                monitor.worked(1);
@@ -504,7 +504,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                {
                   if (!((Widget)chart).isDisposed())
                   {
-                     chart.setTimeRange(settings.getTimeFrom(), settings.getTimeTo());
+                     chart.setTimeRange(configuration.getTimeFrom(), configuration.getTimeTo());
                      setChartData(data);
                      chart.clearErrors();
                   }
@@ -569,7 +569,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          @Override
          public void run()
          {
-            showGraphPropertyPages(settings);
+            showGraphPropertyPages(configuration);
             configureGraphFromSettings(); // Always refresh graph (last action was cancel, but before could have been apply actions)
          }
       };
@@ -578,12 +578,12 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          @Override
          public void run()
          {
-            settings.setAutoRefresh(!settings.isAutoRefresh());
-            setChecked(settings.isAutoRefresh());
-            refreshController.setInterval(settings.isAutoRefresh() ? settings.getRefreshRate() : -1);
+            configuration.setAutoRefresh(!configuration.isAutoRefresh());
+            setChecked(configuration.isAutoRefresh());
+            refreshController.setInterval(configuration.isAutoRefresh() ? configuration.getRefreshRate() : -1);
          }
       };
-      actionAutoRefresh.setChecked(settings.isAutoRefresh());
+      actionAutoRefresh.setChecked(configuration.isAutoRefresh());
 
       actionLogScale = new Action(Messages.get().HistoricalGraphView_LogScale) {
          @Override
@@ -591,8 +591,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          {
             try
             {
-               chart.setLogScaleEnabled(!settings.isLogScale());
-               settings.setLogScale(!settings.isLogScale());
+               chart.setLogScaleEnabled(!configuration.isLogScale());
+               configuration.setLogScale(!configuration.isLogScale());
             }
             catch(IllegalStateException e)
             {
@@ -600,10 +600,10 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                      String.format(Messages.get().HistoricalGraphView_LogScaleSwitchError, e.getLocalizedMessage()));
                Activator.logError("Cannot change log scale mode", e); //$NON-NLS-1$
             }
-            setChecked(settings.isLogScale());
+            setChecked(configuration.isLogScale());
          }
       };
-      actionLogScale.setChecked(settings.isLogScale());
+      actionLogScale.setChecked(configuration.isLogScale());
 
       actionZoomIn = new Action(Messages.get().HistoricalGraphView_ZoomIn) {
          @Override
@@ -638,73 +638,73 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          @Override
          public void run()
          {
-            settings.setShowLegend(actionShowLegend.isChecked());
-            chart.setLegendVisible(settings.isShowLegend());
+            configuration.setShowLegend(actionShowLegend.isChecked());
+            chart.setLegendVisible(configuration.isShowLegend());
          }
       };
-      actionShowLegend.setChecked(settings.isShowLegend());
+      actionShowLegend.setChecked(configuration.isShowLegend());
 
       actionExtendedLegend = new Action(Messages.get().HistoricalGraphView_ExtendedLegend) {
          @Override
          public void run()
          {
-            settings.setExtendedLegend(actionExtendedLegend.isChecked());
-            chart.setExtendedLegend(settings.isExtendedLegend());
+            configuration.setExtendedLegend(actionExtendedLegend.isChecked());
+            chart.setExtendedLegend(configuration.isExtendedLegend());
          }
       };
-      actionExtendedLegend.setChecked(settings.isExtendedLegend());
+      actionExtendedLegend.setChecked(configuration.isExtendedLegend());
       
       actionLegendLeft = new Action(Messages.get().HistoricalGraphView_PlaceOnLeft, Action.AS_RADIO_BUTTON) {
          @Override
          public void run()
          {
-            settings.setLegendPosition(GraphSettings.POSITION_LEFT);
-            chart.setLegendPosition(settings.getLegendPosition());
+            configuration.setLegendPosition(ChartConfiguration.POSITION_LEFT);
+            chart.setLegendPosition(configuration.getLegendPosition());
          }
       };
-      actionLegendLeft.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_LEFT);
+      actionLegendLeft.setChecked(configuration.getLegendPosition() == ChartConfiguration.POSITION_LEFT);
 
       actionLegendRight = new Action(Messages.get().HistoricalGraphView_PlaceOnRight, Action.AS_RADIO_BUTTON) {
          @Override
          public void run()
          {
-            settings.setLegendPosition(GraphSettings.POSITION_RIGHT);
-            chart.setLegendPosition(settings.getLegendPosition());
+            configuration.setLegendPosition(ChartConfiguration.POSITION_RIGHT);
+            chart.setLegendPosition(configuration.getLegendPosition());
          }
       };
-      actionLegendRight.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_RIGHT);
+      actionLegendRight.setChecked(configuration.getLegendPosition() == ChartConfiguration.POSITION_RIGHT);
 
       actionLegendTop = new Action(Messages.get().HistoricalGraphView_PlaceOnTop, Action.AS_RADIO_BUTTON) {
          @Override
          public void run()
          {
-            settings.setLegendPosition(GraphSettings.POSITION_TOP);
-            chart.setLegendPosition(settings.getLegendPosition());
+            configuration.setLegendPosition(ChartConfiguration.POSITION_TOP);
+            chart.setLegendPosition(configuration.getLegendPosition());
          }
       };
-      actionLegendTop.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_TOP);
+      actionLegendTop.setChecked(configuration.getLegendPosition() == ChartConfiguration.POSITION_TOP);
 
       actionLegendBottom = new Action(Messages.get().HistoricalGraphView_PlaceOnBottom, Action.AS_RADIO_BUTTON) {
          @Override
          public void run()
          {
-            settings.setLegendPosition(GraphSettings.POSITION_BOTTOM);
-            chart.setLegendPosition(settings.getLegendPosition());
+            configuration.setLegendPosition(ChartConfiguration.POSITION_BOTTOM);
+            chart.setLegendPosition(configuration.getLegendPosition());
          }
       };
-      actionLegendBottom.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_BOTTOM);
+      actionLegendBottom.setChecked(configuration.getLegendPosition() == ChartConfiguration.POSITION_BOTTOM);
 
       actionSave = new Action("Save", SharedIcons.SAVE) {
          @Override
          public void run()
          {
-            if(settings.getId() == 0)
+            if(configuration.getId() == 0)
             {
-               String initalName = settings.getName().compareTo("noname") == 0 ? settings.getTitle() : settings.getName();
+               String initalName = configuration.getName().compareTo("noname") == 0 ? configuration.getTitle() : configuration.getName();
                saveGraph(initalName, null, false, false, true);
             }
             else
-               saveGraph(settings.getName(), null, false, false, false);
+               saveGraph(configuration.getName(), null, false, false, false);
          }
       };     
 
@@ -712,7 +712,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          @Override
          public void run()
          {
-            String initalName = settings.getName().compareTo("noname") == 0 ? settings.getTitle() : settings.getName();
+            String initalName = configuration.getName().compareTo("noname") == 0 ? configuration.getTitle() : configuration.getName();
             saveGraph(initalName, null, false, false, true);
          }
       };  
@@ -721,7 +721,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          @Override
          public void run()
          {
-            String initalName = settings.getName().compareTo("noname") == 0 ? settings.getTitle() : settings.getName();
+            String initalName = configuration.getName().compareTo("noname") == 0 ? configuration.getTitle() : configuration.getName();
             saveGraph(initalName, null, false, true, true);
          }
       };
@@ -730,38 +730,38 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          @Override
          public void run()
          {
-            settings.setStacked(actionStacked.isChecked());
+            configuration.setStacked(actionStacked.isChecked());
             configureGraphFromSettings();
          }
       };
-      actionStacked.setChecked(settings.isStacked());
+      actionStacked.setChecked(configuration.isStacked());
 
       actionTranslucent = new Action(Messages.get().HistoricalGraphView_Translucent, Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
-            settings.setTranslucent(actionTranslucent.isChecked());
+            configuration.setTranslucent(actionTranslucent.isChecked());
             configureGraphFromSettings();
          }
       };
-      actionTranslucent.setChecked(settings.isTranslucent());
+      actionTranslucent.setChecked(configuration.isTranslucent());
       
       actionAreaChart = new Action("Area chart", Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
-            settings.setArea(actionAreaChart.isChecked());
+            configuration.setArea(actionAreaChart.isChecked());
             configureGraphFromSettings();
          }
       };
-      actionAreaChart.setChecked(settings.isArea());
+      actionAreaChart.setChecked(configuration.isArea());
 
       presetActions = createPresetActions(new PresetHandler() {
          @Override
          public void onPresetSelected(TimeUnit unit, int range)
          {
-            settings.getTimePeriod().setTimeUnit(unit);
-            settings.getTimePeriod().setTimeRange(range);
+            configuration.getTimePeriod().setTimeUnit(unit);
+            configuration.getTimePeriod().setTimeRange(range);
             updateChart();
          }
       });
@@ -780,18 +780,18 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
     */
    protected void refreshMenuSelection()
    {
-      actionAutoRefresh.setChecked(settings.isAutoRefresh());
-      actionLogScale.setChecked(settings.isLogScale());
-      actionShowLegend.setChecked(settings.isShowLegend());
-      actionExtendedLegend.setChecked(settings.isExtendedLegend());
-      actionStacked.setChecked(settings.isStacked());
-      actionTranslucent.setChecked(settings.isTranslucent());
-      actionAreaChart.setChecked(settings.isArea());
+      actionAutoRefresh.setChecked(configuration.isAutoRefresh());
+      actionLogScale.setChecked(configuration.isLogScale());
+      actionShowLegend.setChecked(configuration.isShowLegend());
+      actionExtendedLegend.setChecked(configuration.isExtendedLegend());
+      actionStacked.setChecked(configuration.isStacked());
+      actionTranslucent.setChecked(configuration.isTranslucent());
+      actionAreaChart.setChecked(configuration.isArea());
 
-      actionLegendLeft.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_LEFT);
-      actionLegendRight.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_RIGHT);
-      actionLegendTop.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_TOP);
-      actionLegendBottom.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_BOTTOM);
+      actionLegendLeft.setChecked(configuration.getLegendPosition() == ChartConfiguration.POSITION_LEFT);
+      actionLegendRight.setChecked(configuration.getLegendPosition() == ChartConfiguration.POSITION_RIGHT);
+      actionLegendTop.setChecked(configuration.getLegendPosition() == ChartConfiguration.POSITION_TOP);
+      actionLegendBottom.setChecked(configuration.getLegendPosition() == ChartConfiguration.POSITION_BOTTOM);
    }
 
    /**
@@ -931,10 +931,10 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          return;
 
       updateInProgress = true;
-      if (settings.getTimePeriod().isBackFromNow())
+      if (configuration.getTimePeriod().isBackFromNow())
       {
-         settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
-         settings.setTimeTo(new Date(System.currentTimeMillis()));
+         configuration.setTimeFrom(new Date(System.currentTimeMillis() - configuration.getTimeRangeMillis()));
+         configuration.setTimeTo(new Date(System.currentTimeMillis()));
       }
       getDataFromServer();
    }
@@ -959,9 +959,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
     * )
     */
    @Override
-   public void onGraphSettingsChange(ChartConfig settings)
+   public void onChartConfigurationChange(ChartConfiguration settings)
    {
-      if (this.settings == settings)
+      if (this.configuration == settings)
          configureGraphFromSettings();
    }
 
@@ -977,18 +977,18 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       }
       
       int result = SaveGraphDlg.OK;
-      GraphSettings tamplateGs = null;
-      final long oldGraphId = settings.getId();
-      if(asTemplate)
+      GraphDefinition template = null;
+      final long oldGraphId = configuration.getId();
+      if (asTemplate)
       {
-         tamplateGs = new GraphSettings(0, session.getUserId(), 0, new ArrayList<AccessListElement>(0));
+         template = new GraphDefinition(0, session.getUserId(), 0, new ArrayList<AccessListElement>(0));
          SaveGraphDlg dlg = new SaveGraphDlg(getSite().getShell(), graphName, errorMessage, canBeOverwritten);
          result = dlg.open();
          if (result == Window.CANCEL)
             return;
-         tamplateGs.setName(dlg.getName());
-         tamplateGs.update(settings);
-         tamplateGs.setFlags(GraphSettings.GRAPH_FLAG_TEMPLATE);
+         template.setName(dlg.getName());
+         template.update(configuration);
+         template.setFlags(GraphDefinition.GF_TEMPLATE);
       }
       else
       {
@@ -998,15 +998,15 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             result = dlg.open();
             if (result == Window.CANCEL)
                return;
-            settings.setName(dlg.getName());
+            configuration.setName(dlg.getName());
             if(!canBeOverwritten)
-               settings.setId(0);
+               configuration.setId(0);
          }
          else
-            settings.setName(graphName);
+            configuration.setName(graphName);
       }    
       
-      final GraphSettings gs = asTemplate ? tamplateGs : settings;
+      final GraphDefinition gs = asTemplate ? template : configuration;
 
       if (result == SaveGraphDlg.OVERRIDE)
       {
@@ -1015,14 +1015,14 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
                long id = session.saveGraph(gs, canBeOverwritten);
-               if(!asTemplate)
-                  settings.setId(id);
+               if (!asTemplate)
+                  configuration.setId(id);
             }
 
             @Override
             protected String getErrorMessage()
             {
-               settings.setId(oldGraphId);
+               configuration.setId(oldGraphId);
                return Messages.get().HistoricalGraphView_SaveSettingsError;               
             }
          }.start();
@@ -1037,7 +1037,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                {
                   long id = session.saveGraph(gs, canBeOverwritten);
                   if(!asTemplate)
-                     settings.setId(id);
+                     configuration.setId(id);
                }
                catch(NXCException e)
                {
@@ -1048,7 +1048,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                         @Override
                         public void run()
                         {
-                           settings.setId(oldGraphId);
+                           configuration.setId(oldGraphId);
                            saveGraph(gs.getName(), Messages.get().HistoricalGraphView_NameAlreadyExist, true, asTemplate, true);
                         }
 
@@ -1063,7 +1063,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                            @Override
                            public void run()
                            {
-                              settings.setId(oldGraphId);
+                              configuration.setId(oldGraphId);
                               saveGraph(gs.getName(), Messages.get().HistoricalGraphView_NameAlreadyExistNoOverwrite, false, asTemplate, true);
                            }
 
@@ -1071,7 +1071,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                      }
                      else
                      {
-                        settings.setId(oldGraphId);
+                        configuration.setId(oldGraphId);
                         throw e;
                      }
                   }
@@ -1201,7 +1201,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
     * @param trap Object tool details object
     * @return true if OK was pressed
     */
-   private boolean showGraphPropertyPages(final GraphSettings settings)
+   private boolean showGraphPropertyPages(final GraphDefinition settings)
    {
       PreferenceManager pm = new PreferenceManager();    
       pm.addToRoot(new PreferenceNode("graph", new Graph(settings, false)));

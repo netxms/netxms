@@ -22,7 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.ui.eclipse.perfview.views.TemplateGraphView;
 
 /**
@@ -48,10 +48,10 @@ public class TemplateGraphLabelProvider extends LabelProvider implements ITableL
 		switch(columnIndex)
 		{
 			case TemplateGraphView.COLUMN_NAME:
-				return ((GraphSettings)element).getName();
+				return ((GraphDefinition)element).getName();
 			case TemplateGraphView.COLUMN_DCI_NAME:
 			   StringBuilder names = new StringBuilder();
-			   ChartDciConfig[] configs = ((GraphSettings)element).getDciList();
+			   ChartDciConfig[] configs = ((GraphDefinition)element).getDciList();
 			   for(int i = 0; i < configs.length; i++)
 			   {
 			      names.append(configs[i].dciName);
@@ -61,7 +61,7 @@ public class TemplateGraphLabelProvider extends LabelProvider implements ITableL
             return names.toString();
          case TemplateGraphView.COLUMN_DCI_DESCRIPTION:
             StringBuilder description = new StringBuilder();
-            ChartDciConfig[] config = ((GraphSettings)element).getDciList();
+            ChartDciConfig[] config = ((GraphDefinition)element).getDciList();
             for(int i = 0; i < config.length; i++)
             {
                description.append(config[i].dciDescription);

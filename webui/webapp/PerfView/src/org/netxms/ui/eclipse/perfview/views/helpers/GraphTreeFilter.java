@@ -20,8 +20,8 @@ package org.netxms.ui.eclipse.perfview.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphFolder;
-import org.netxms.client.datacollection.GraphSettings;
 
 /**
  * Filter for graph tree
@@ -29,9 +29,9 @@ import org.netxms.client.datacollection.GraphSettings;
 public class GraphTreeFilter extends ViewerFilter
 {
    private String filterString = null;
-   private GraphSettings lastMatch = null;
-   
-   /* (non-Javadoc)
+   private GraphDefinition lastMatch = null;
+
+   /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
@@ -40,11 +40,11 @@ public class GraphTreeFilter extends ViewerFilter
       if ((filterString == null) || filterString.isEmpty())
          return true;
       
-      if (element instanceof GraphSettings)
+      if (element instanceof GraphDefinition)
       {
-         if (((GraphSettings)element).getName().toLowerCase().contains(filterString))
+         if (((GraphDefinition)element).getName().toLowerCase().contains(filterString))
          {
-            lastMatch = (GraphSettings)element;
+            lastMatch = (GraphDefinition)element;
             return true;
          }
          return false;
@@ -75,7 +75,7 @@ public class GraphTreeFilter extends ViewerFilter
    /**
     * @return the lastMatch
     */
-   public GraphSettings getLastMatch()
+   public GraphDefinition getLastMatch()
    {
       return lastMatch;
    }

@@ -34,8 +34,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.ChartConfig;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
@@ -51,7 +51,7 @@ import org.netxms.ui.eclipse.widgets.TimePeriodSelector;
  */
 public class General extends PreferencePage
 {
-	private ChartConfig config;
+	private ChartConfiguration config;
 	private LabeledText title;
 	private Button checkShowGrid;
 	private Button checkShowLegend;
@@ -75,7 +75,7 @@ public class General extends PreferencePage
     * Constructor
     * @param settings
     */
-   public General(GraphSettings settings, boolean saveToDatabase)
+   public General(ChartConfiguration settings, boolean saveToDatabase)
    {
       super("General");
       config = settings;     
@@ -367,7 +367,7 @@ public class General extends PreferencePage
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph((GraphSettings)config, false);
+					session.saveGraph((GraphDefinition)config, false);
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()

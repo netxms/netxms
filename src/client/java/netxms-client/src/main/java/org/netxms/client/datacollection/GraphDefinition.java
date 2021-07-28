@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,34 +38,19 @@ import org.slf4j.LoggerFactory;
 /**
  * Settings for predefined graph
  */
-public class GraphSettings extends ChartConfig implements ObjectAction
+public class GraphDefinition extends ChartConfiguration implements ObjectAction
 {
-   public static final int MAX_GRAPH_ITEM_COUNT = 16;
+   private static Logger logger = LoggerFactory.getLogger(GraphDefinition.class);
 
-   public static final int GF_AUTO_UPDATE         = 0x000001;
-   public static final int GF_AUTO_SCALE          = 0x000100;
-   public static final int GF_SHOW_GRID           = 0x000200;
-   public static final int GF_SHOW_LEGEND         = 0x000400;
-   public static final int GF_SHOW_RULER          = 0x000800;
-   public static final int GF_SHOW_HOST_NAMES     = 0x001000;
-   public static final int GF_LOG_SCALE           = 0x002000;
-   public static final int GF_SHOW_TOOLTIPS       = 0x004000;
-   public static final int GF_ENABLE_ZOOM         = 0x008000;
-   public static final int GF_DISABLE_MULTIPLIERS = 0x010000;
-
-   public static final int POSITION_LEFT = 1;
-   public static final int POSITION_RIGHT = 2;
-   public static final int POSITION_TOP = 4;
-   public static final int POSITION_BOTTOM = 8;
-
+   // Access rights
    public static final int ACCESS_READ  = 0x01;
    public static final int ACCESS_WRITE = 0x02;
 
-   public static final int GRAPH_FLAG_TEMPLATE = 1;
+   // Flags
+   public static final int GF_TEMPLATE = 0x0001;
 
-   private static Logger logger = LoggerFactory.getLogger(GraphSettings.class);
-
-   @Internal private GraphFolder parent;  // Used by predefined graph tree
+   @Internal
+   private GraphFolder parent; // Used by predefined graph tree
 
    private long id;
    private long ownerId;
@@ -79,7 +64,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
    /**
     * Create default settings
     */
-   public GraphSettings()
+   public GraphDefinition()
    {
       id = 0;
       ownerId = 0;
@@ -95,7 +80,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
    /**
     * Create settings
     */
-   public GraphSettings(long id, long ownerId, int flags, Collection<AccessListElement> accessList)
+   public GraphDefinition(long id, long ownerId, int flags, Collection<AccessListElement> accessList)
    {
       this.id = id;
       this.ownerId = ownerId;
@@ -110,25 +95,26 @@ public class GraphSettings extends ChartConfig implements ObjectAction
    }
 
    /**
-    * Create copy of provided settings
+    * Create copy of provided graph definition (with template flag removed if set in source).
     *
-    * @param src  source object
-    * @param name new name
+    * @param src source definition
+    * @param title new title (or null to keep original)
     */
-   public GraphSettings(GraphSettings src, String name)
+   public GraphDefinition(GraphDefinition src, String title)
    {
+      super(src);
       id = src.id;
       ownerId = src.ownerId;
       this.name = src.name;
       shortName = src.shortName;
       displayName = src.displayName;
-      flags = src.flags & ~GRAPH_FLAG_TEMPLATE;
+      flags = src.flags & ~GF_TEMPLATE;
       this.accessList = new ArrayList<AccessListElement>(src.accessList.size());
       this.accessList.addAll(src.accessList);
       filter = src.filter;
-      update(src);
-      setTitle(name);
       parent = null;
+      if (title != null)
+         this.title = title;
    }
 
    /**
@@ -136,19 +122,18 @@ public class GraphSettings extends ChartConfig implements ObjectAction
     *
     * @param src  source object
     */
-   public GraphSettings(GraphSettings src)
+   public GraphDefinition(GraphDefinition src)
    {
+      super(src);
       id = src.id;
       ownerId = src.ownerId;
       this.name = src.name;
       shortName = src.shortName;
       displayName = src.displayName;
-      flags = src.flags & ~GRAPH_FLAG_TEMPLATE;
+      flags = src.flags & ~GF_TEMPLATE;
       this.accessList = new ArrayList<AccessListElement>(src.accessList.size());
       this.accessList.addAll(src.accessList);
       filter = src.filter;
-      update(src);
-      setTitle(src.getTitle());
       parent = null;
    }
 
@@ -159,10 +144,10 @@ public class GraphSettings extends ChartConfig implements ObjectAction
     * @return deserialized object
     * @throws Exception if the object cannot be fully deserialized
     */
-   public static GraphSettings createFromXml(final String xml) throws Exception
+   public static GraphDefinition createFromXml(final String xml) throws Exception
    {
       Serializer serializer = new Persister(new AnnotationStrategy());
-      return serializer.read(GraphSettings.class, xml);
+      return serializer.read(GraphDefinition.class, xml);
    }
 
    /**
@@ -172,16 +157,16 @@ public class GraphSettings extends ChartConfig implements ObjectAction
     * @param baseId base variable id
     * @return The graph settings object
     */
-   public static GraphSettings createGraphSettings(final NXCPMessage msg, long baseId)
+   public static GraphDefinition createGraphSettings(final NXCPMessage msg, long baseId)
    {
-      GraphSettings gs;
+      GraphDefinition gs;
       try
       {
-         gs = GraphSettings.createFromXml(msg.getFieldAsString(baseId + 4));
+         gs = GraphDefinition.createFromXml(msg.getFieldAsString(baseId + 4));
       }
       catch(Exception e)
       {
-         gs = new GraphSettings();
+         gs = new GraphDefinition();
          logger.debug("Cannot create GraphSettings object from XML", e);
       }
       gs.id = msg.getFieldAsInt64(baseId);
@@ -316,15 +301,9 @@ public class GraphSettings extends ChartConfig implements ObjectAction
    }
 
    /**
-    * @return the flags
-    */
-   public int getFlags()
-   {
-      return flags;
-   }
-
-   /**
-    * @param flags the flags to set
+    * Set predefined graph flags.
+    *
+    * @param flags new predefined graph flags
     */
    public void setFlags(int flags)
    {
@@ -332,13 +311,23 @@ public class GraphSettings extends ChartConfig implements ObjectAction
    }
 
    /**
-    * Checks if this graph is template
+    * Get predefined graph flags.
+    *
+    * @return predefined graph flags
+    */
+   public int getFlags()
+   {
+      return flags;
+   }
+
+   /**
+    * Checks if this graph definition is template
     *
     * @return isTemplate
     */
    public boolean isTemplate()
    {
-      return (flags & GRAPH_FLAG_TEMPLATE) > 0;
+      return (flags & GF_TEMPLATE) != 0;
    }
 
    /**

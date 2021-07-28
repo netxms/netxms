@@ -22,7 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.AccessListElement;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 
 /**
  * Label provider for NetXMS objects access lists
@@ -54,8 +54,8 @@ public class AccessListLabelProvider extends WorkbenchLabelProvider implements I
 			case 1:
 				AccessListElement e = (AccessListElement)element;
 				StringBuilder sb = new StringBuilder(4);
-				sb.append(((e.getAccessRights() & GraphSettings.ACCESS_READ)  != 0) ? 'R' : '-');
-				sb.append(((e.getAccessRights() & GraphSettings.ACCESS_WRITE)  != 0) ? 'W' : '-');
+				sb.append(((e.getAccessRights() & GraphDefinition.ACCESS_READ)  != 0) ? 'R' : '-');
+				sb.append(((e.getAccessRights() & GraphDefinition.ACCESS_WRITE)  != 0) ? 'W' : '-');
 				return sb.toString();
 		}
 		return null;

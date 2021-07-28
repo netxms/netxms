@@ -20,7 +20,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.perfview.Activator;
@@ -36,7 +36,7 @@ public class GraphTemplateCache
    private static GraphTemplateCache instance = null;
 
    private NXCSession session = null;
-   private List<GraphSettings> templateList= new ArrayList<GraphSettings>();
+   private List<GraphDefinition> templateList= new ArrayList<GraphDefinition>();
    
    /**
     * GraphTemplateCache constructor
@@ -50,54 +50,46 @@ public class GraphTemplateCache
       reload();
       
       session.addListener(new SessionListener() {
-         
          @Override
          public void notificationHandler(SessionNotification n)
          {
             switch(n.getCode())
             {
                case SessionNotification.PREDEFINED_GRAPHS_DELETED:
-               {
-                  
                   for(int i = 0; i < templateList.size(); i++)
-                     if(templateList.get(i).getId() == n.getSubCode())
+                  {
+                     GraphDefinition o = templateList.get(i);
+                     if (o.getId() == n.getSubCode())
                      {
-                        Object o = templateList.get(i);
-                        templateList.remove(o);
+                        templateList.remove(i);
                         break;
                      }
+                  }
                   break;
-               }
                case SessionNotification.PREDEFINED_GRAPHS_CHANGED:
-               {                  
-                  if(!(n.getObject() instanceof GraphSettings) || !((GraphSettings)n.getObject()).isTemplate())
-                  {
-                     return;
-                  }      
-                  
-                  boolean objectUpdated = false;
-                        
-                  for(int i = 0; i < templateList.size(); i++)
-                  {
-                     if(templateList.get(i).getId() == n.getSubCode())
+                  if ((n.getObject() instanceof GraphDefinition) && ((GraphDefinition)n.getObject()).isTemplate())
+                  {                  
+                     boolean objectUpdated = false;
+                     for(int i = 0; i < templateList.size(); i++)
                      {
-                        templateList.set(i, (GraphSettings)n.getObject());
-                        objectUpdated = true;
-                        break;
+                        if(templateList.get(i).getId() == n.getSubCode())
+                        {
+                           templateList.set(i, (GraphDefinition)n.getObject());
+                           objectUpdated = true;
+                           break;
+                        }
+                     }
+                     if (!objectUpdated)
+                     {
+                        templateList.add((GraphDefinition)n.getObject());
                      }
                   }
-                        
-                  if(!objectUpdated)
-                  {
-                     templateList.add((GraphSettings)n.getObject());
-                  }
                   break;
-               }
             }
          }
       });
    }
-   
+
    /**
     * Attach session to cache
     * 
@@ -142,12 +134,12 @@ public class GraphTemplateCache
     * 
     * @return
     */
-   public GraphSettings[] getGraphTemplates()
+   public GraphDefinition[] getGraphTemplates()
    {
-      GraphSettings[] graphs = templateList.toArray(new GraphSettings[templateList.size()]);
-      Arrays.sort(graphs, new Comparator<GraphSettings>() {
+      GraphDefinition[] graphs = templateList.toArray(new GraphDefinition[templateList.size()]);
+      Arrays.sort(graphs, new Comparator<GraphDefinition>() {
          @Override
-         public int compare(GraphSettings arg0, GraphSettings arg1)
+         public int compare(GraphDefinition arg0, GraphDefinition arg1)
          {
             return arg0.getName().replace("&", "").compareToIgnoreCase(arg1.getName().replace("&", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
          }
@@ -160,21 +152,21 @@ public class GraphTemplateCache
     * Instantiate graph template.
     *
     * @param node
-    * @param data
+    * @param template
     * @param values
     * @param session
     * @param display
     * @throws IOException
     * @throws NXCException
     */
-   public static void instantiate(final AbstractNode node, GraphSettings data, final DciValue[] values, NXCSession session, Display display) throws IOException, NXCException
+   public static void instantiate(final AbstractNode node, GraphDefinition template, final DciValue[] values, NXCSession session, Display display) throws IOException, NXCException
    {
       List<String> textsToExpand = new ArrayList<String>();
-      textsToExpand.add(data.getTitle());
+      textsToExpand.add(template.getTitle());
       String name = session.substituteMacros(new ObjectContext(node, null), textsToExpand, new HashMap<String, String>()).get(0);
-      final GraphSettings result = new GraphSettings(data, name);
+      final GraphDefinition graphDefinition = new GraphDefinition(template, name);
  
-      ChartDciConfig[] conf = result.getDciList();
+      ChartDciConfig[] conf = graphDefinition.getDciList();
       final HashSet<ChartDciConfig> newList = new HashSet<ChartDciConfig>();
       int foundByDescription = -1;
       int foundDCICount = 0;
@@ -216,8 +208,8 @@ public class GraphTemplateCache
             @Override
             public void run()
             {
-               result.setDciList(newList.toArray(new ChartDciConfig[newList.size()]));
-               showPredefinedGraph(result, node.getObjectId());               
+               graphDefinition.setDciList(newList.toArray(new ChartDciConfig[newList.size()]));
+               showPredefinedGraph(graphDefinition, node.getObjectId());               
             }
          });
       }
@@ -227,23 +219,23 @@ public class GraphTemplateCache
             @Override
             public void run()
             {  
-               MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Graph creation from template error", "None of template graphs DCI were found on a node.");
+               MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "None of template DCI were found on a node.");
             }
          });
        }
    }
-   
+
    /**
     * Show predefined graph view
     * 
-    * @param gs graph settings
+    * @param graphDefinition graph definition
     */
-   private static void showPredefinedGraph(GraphSettings gs, long objectId)
+   private static void showPredefinedGraph(GraphDefinition graphDefinition, long objectId)
    {
       String encodedName;
       try
       {
-         encodedName = URLEncoder.encode(gs.getName(), "UTF-8"); //$NON-NLS-1$
+         encodedName = URLEncoder.encode(graphDefinition.getName(), "UTF-8"); //$NON-NLS-1$
       }
       catch(UnsupportedEncodingException e1)
       {
@@ -254,7 +246,7 @@ public class GraphTemplateCache
       {
          HistoricalGraphView g = (HistoricalGraphView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(HistoricalGraphView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
          if (g != null)
-            g.initPredefinedGraph(gs);
+            g.initPredefinedGraph(graphDefinition);
       }
       catch(PartInitException e)
       {

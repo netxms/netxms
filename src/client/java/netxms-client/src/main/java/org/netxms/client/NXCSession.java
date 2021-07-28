@@ -94,7 +94,7 @@ import org.netxms.client.datacollection.DciSummaryTableColumn;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphFolder;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.PredictionEngine;
 import org.netxms.client.datacollection.SimpleDciValue;
@@ -620,7 +620,7 @@ public class NXCSession
                      processImageLibraryUpdate(msg);
                      break;
                   case NXCPCodes.CMD_GRAPH_UPDATE:
-                     GraphSettings graph = GraphSettings.createGraphSettings(msg, NXCPCodes.VID_GRAPH_LIST_BASE);
+                     GraphDefinition graph = GraphDefinition.createGraphSettings(msg, NXCPCodes.VID_GRAPH_LIST_BASE);
                      sendNotification(new SessionNotification(SessionNotification.PREDEFINED_GRAPHS_CHANGED, graph.getId(), graph));
                      break;
                   case NXCPCodes.CMD_ALARM_CATEGORY_UPDATE:
@@ -9101,20 +9101,20 @@ public class NXCSession
    }
 
    /**
-    * Get predefined graph infromation by graph id
+    * Get predefined graph information by graph id
     *
     * @param graphId graph id
-    * @return TODO
-    * @throws IOException  TODO
-    * @throws NXCException TODO
+    * @return predefined chart object
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public GraphSettings getPredefinedGraph(long graphId) throws IOException, NXCException
+   public GraphDefinition getPredefinedGraph(long graphId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_GRAPH);
       msg.setFieldInt32(NXCPCodes.VID_GRAPH_ID, (int)graphId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      return GraphSettings.createGraphSettings(response, NXCPCodes.VID_GRAPH_LIST_BASE);
+      return GraphDefinition.createGraphSettings(response, NXCPCodes.VID_GRAPH_LIST_BASE);
    }
 
    /**
@@ -9125,18 +9125,18 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<GraphSettings> getPredefinedGraphs(boolean graphTemplates) throws IOException, NXCException
+   public List<GraphDefinition> getPredefinedGraphs(boolean graphTemplates) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_GRAPH_LIST);
       msg.setField(NXCPCodes.VID_GRAPH_TEMPALTE, graphTemplates);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_GRAPHS);
-      List<GraphSettings> list = new ArrayList<GraphSettings>(count);
+      List<GraphDefinition> list = new ArrayList<GraphDefinition>(count);
       long fieldId = NXCPCodes.VID_GRAPH_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         list.add(GraphSettings.createGraphSettings(response, fieldId));
+         list.add(GraphDefinition.createGraphSettings(response, fieldId));
          fieldId += 10;
       }
       return list;
@@ -9148,11 +9148,11 @@ public class NXCSession
     * @param graphs list of predefined graphs
     * @return graph tree
     */
-   public GraphFolder createGraphTree(List<GraphSettings> graphs)
+   public static GraphFolder createGraphTree(List<GraphDefinition> graphs)
    {
       GraphFolder root = new GraphFolder("[root]");
       Map<String, GraphFolder> folders = new HashMap<String, GraphFolder>();
-      for(GraphSettings s : graphs)
+      for(GraphDefinition s : graphs)
       {
          GraphFolder folder = root;
          String[] path = s.getName().split("\\-\\>");
@@ -9202,7 +9202,7 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public long saveGraph(GraphSettings graph, boolean overwrite) throws IOException, NXCException
+   public long saveGraph(GraphDefinition graph, boolean overwrite) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SAVE_GRAPH);
       graph.fillMessage(msg);
