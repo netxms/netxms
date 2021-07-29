@@ -7370,32 +7370,35 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *request)
       TCHAR primaryName[MAX_DNS_NAME];
       request->getFieldAsString(VID_PRIMARY_NAME, primaryName, MAX_DNS_NAME);
 
-      InetAddress ipAddr = ResolveHostName(m_zoneUIN, primaryName);
-      if (ipAddr.isValid() && !(m_flags & NF_EXTERNAL_GATEWAY))
+      if (_tcscmp(m_primaryHostName, primaryName))
       {
-         // Check if received IP address is one of node's interface addresses
-         readLockChildList();
-         int i, count = getChildList().size();
-         for(i = 0; i < count; i++)
+         InetAddress ipAddr = ResolveHostName(m_zoneUIN, primaryName);
+         if (ipAddr.isValid() && !(m_flags & NF_EXTERNAL_GATEWAY))
          {
-            NetObj *curr = getChildList().get(i);
-            if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
-                static_cast<Interface*>(curr)->getIpAddressList()->hasAddress(ipAddr))
-               break;
-         }
-         unlockChildList();
-         if (i == count)
-         {
-            // Check that there is no node with same IP as we try to change
-            if ((FindNodeByIP(m_zoneUIN, ipAddr) != nullptr) || (FindSubnetByIP(m_zoneUIN, ipAddr) != nullptr))
+            // Check if received IP address is one of node's interface addresses
+            readLockChildList();
+            int i, count = getChildList().size();
+            for(i = 0; i < count; i++)
             {
-               return RCC_ALREADY_EXIST;
+               NetObj *curr = getChildList().get(i);
+               if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
+                   static_cast<Interface*>(curr)->getIpAddressList()->hasAddress(ipAddr))
+                  break;
+            }
+            unlockChildList();
+            if (i == count)
+            {
+               // Check that there is no node with same IP as we try to change
+               if ((FindNodeByIP(m_zoneUIN, ipAddr) != nullptr) || (FindSubnetByIP(m_zoneUIN, ipAddr) != nullptr))
+               {
+                  return RCC_ALREADY_EXIST;
+               }
             }
          }
-      }
 
-      m_primaryHostName = primaryName;
-      m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
+         m_primaryHostName = primaryName;
+         m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
+      }
    }
 
    // Poller node ID
