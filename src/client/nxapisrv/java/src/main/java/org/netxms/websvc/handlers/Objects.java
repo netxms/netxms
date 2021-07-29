@@ -368,4 +368,15 @@ public class Objects extends AbstractObjectHandler
       session.modifyObject(mdObject);      
       return null;
    }
+
+   /* (non-Javadoc)
+    * @see org.netxms.websvc.handlers.AbstractHandler#delete(java.lang.String)
+    */
+   @Override
+   protected Object delete(String id) throws Exception
+   {  
+      NXCSession session = getSession();
+      session.deleteObject(getObjectId());      
+      return null;      
+   }
 }
