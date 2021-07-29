@@ -352,7 +352,7 @@ public class Objects extends AbstractObjectHandler
       session.modifyObject(mdObject);        
       
       JSONObject result = new JSONObject();
-      result.append("id", nodeId);
+      result.put("id", nodeId);
       return result;
    }
 
