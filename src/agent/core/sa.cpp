@@ -398,6 +398,7 @@ void SessionAgentConnector::updateUserAgentNotifications()
       baseId += 10;
       count++;
    }
+   delete it;
    msg.setField(VID_UA_NOTIFICATION_COUNT, count);
    sendMessage(&msg);
 }
