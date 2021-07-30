@@ -3800,11 +3800,11 @@ bool LIBNETXMS_EXPORTABLE MergeFiles(const TCHAR *source, const TCHAR *destinati
 {
    bool success = false;
 #ifdef _WIN32
-   HANDLE sourceFile = CreateFile(source, FILE_APPEND_DATA, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+   HANDLE sourceFile = CreateFile(source, FILE_READ_DATA, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (sourceFile == INVALID_HANDLE_VALUE)
         return false;
 
-    HANDLE destinationFile = CreateFile(destination, FILE_APPEND_DATA, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    HANDLE destinationFile = CreateFile(destination, FILE_APPEND_DATA, 0, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (destinationFile == INVALID_HANDLE_VALUE)
     {
        CloseHandle(sourceFile);

@@ -1825,36 +1825,43 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
    {
       StringList partNames;
       StructArray<FilePartInfo> partInfo;
-      ObjectArray<RemoteFileInfo> *remoteFiles;
+      ObjectArray<RemoteFileInfo> *remoteFiles = nullptr;
       PrepareFilePartsList(localFile, destinationFile, &partNames, &partInfo);
       rcc = getFileSetInfo(partNames, allowPathExpansion, &remoteFiles);
-      if (rcc == ERR_SUCCESS)
+      bool forceBasicUpload = rcc == ERR_UNKNOWN_COMMAND;
+      if (rcc == ERR_SUCCESS || forceBasicUpload)
       {
-         for(int i = 0; i < partNames.size(); i++)
+         for (int i = 0; i < partNames.size(); i++)
          {
             bool found = false;
-            for(int y = 0; i < remoteFiles->size(); y++)
+            FilePartInfo* localFilePart = partInfo.get(i);
+            if (remoteFiles != nullptr)
             {
-               if (!_tcscmp(partInfo.get(i)->m_name, remoteFiles->get(y)->name()))
+               for (int y = 0; y < remoteFiles->size(); y++)
                {
-                  if(partInfo.get(i)->m_size == remoteFiles->get(y)->size() &&
-                  memcmp(partInfo.get(i)->m_hash, remoteFiles->get(y)->hash(), MD5_DIGEST_SIZE) == 0)
+                  RemoteFileInfo* remoteFilePart = remoteFiles->get(y);
+                  if (!_tcscmp(localFilePart->m_name, remoteFilePart->name()))
                   {
-                     found = true;
+                     if (localFilePart->m_size == remoteFilePart->size() &&
+                        memcmp(localFilePart->m_hash, remoteFilePart->hash(), MD5_DIGEST_SIZE) == 0)
+                     {
+                        found = true;
+                     }
+                     break;
                   }
-                  break;
                }
             }
             if (!found)
             {
-               rcc = uploadFileInternal(localFile, partInfo.get(i)->m_name, allowPathExpansion, progressCallback, cbArg, compMethod, partInfo.get(i)->m_offset, partInfo.get(i)->m_size, true);
+               rcc = uploadFileInternal(localFile, partInfo.get(i)->m_name, allowPathExpansion, progressCallback, cbArg, compMethod, partInfo.get(i)->m_offset, partInfo.get(i)->m_size, forceBasicUpload);
                if (rcc != ERR_SUCCESS)
                   break;
             }
          }
-         delete remoteFiles;
+         if (remoteFiles != nullptr)
+            delete remoteFiles;
       }
-      for(int i = 0; i < partInfo.size(); i++)
+      for (int i = 0; i < partInfo.size(); i++)
       {
          MemFree(partInfo.get(i)->m_name);
       }
@@ -1868,7 +1875,7 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
          {
             request.setCode(CMD_MERGE_FILES);
             int i;
-            for(i = (int)_tcslen(localFile) - 1;
+            for (i = (int)_tcslen(localFile) - 1;
                (i >= 0) && (localFile[i] != '\\') && (localFile[i] != '/'); i--);
             request.setField(VID_DESTINATION_FILE_NAME, &localFile[i + 1]);
          }
