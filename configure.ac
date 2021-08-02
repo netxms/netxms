@@ -3998,15 +3998,8 @@ if test $? = 0; then
 	fi
 
 	AC_CHECK_HEADER(oci.h,,AC_MSG_ERROR([*** Cannot find oci.h - check your Oracle client installation ***]))
-	AC_CHECK_LIB(nnz12, nzstrcpy, [NNZ_LIB=-lnnz12],
-		[
-			AC_CHECK_LIB(nnz11, nzstrcpy, [NNZ_LIB=-lnnz11],
-				[
-					AC_CHECK_LIB(nnz10, nzstrcpy, [NNZ_LIB=-lnnz10], [], [-lclntsh])
-				], [-lclntsh])
-		], [-lclntsh])
-	AC_CHECK_LIB(clntsh, OCIHandleAlloc, [ORACLE_LIBS="-lclntsh $NNZ_LIB"],
-		[AC_MSG_ERROR(libclntsh is required for Oracle support)], [$NNZ_LIB])
+	AC_CHECK_LIB(clntsh, OCIHandleAlloc, [ORACLE_LIBS="-lclntsh"],
+		[AC_MSG_ERROR(libclntsh is required for Oracle support)])
 	AC_CHECK_LIB(rt, sem_destroy, [ORACLE_LIBS="$ORACLE_LIBS -lrt"], [])
 	if test "x$BUILD_STATIC_AGENT" = "xyes"; then
 		SUBAGENT_LIBS="$SUBAGENT_LIBS $ORACLE_LIBS"
