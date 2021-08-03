@@ -37,6 +37,7 @@ int LIBNETXMS_EXPORTABLE _statw32(const WCHAR *file, struct _stati64 *st);
 
 #define NX_STAT _statw32
 #define NX_FSTAT _fstati64
+#define NX_STAT_FOLLOW_SYMLINK _statw32
 #define NX_STAT_STRUCT struct _stati64
 
 #elif HAVE_LSTAT64 && HAVE_STRUCT_STAT64
