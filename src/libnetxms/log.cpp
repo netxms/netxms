@@ -1151,7 +1151,7 @@ static inline void WriteLogToFile(int16_t severity, const TCHAR *tag, const TCHA
  */
 static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va_list args)
 {
-   if ((severity == NXLOG_DEBUG) && (s_debugWriter != NULL))
+   if (s_debugWriter != nullptr)
    {
       va_list args2;
       va_copy(args2, args);
