@@ -749,7 +749,7 @@ Config::~Config()
  */
 void Config::onError(const TCHAR *errorMessage)
 {
-   nxlog_debug(1, _T("Configuration loading error: %s"), errorMessage);
+   nxlog_write_tag(NXLOG_ERROR, _T("config"), _T("Configuration loading error: %s"), errorMessage);
 }
 
 /**
@@ -1635,7 +1635,7 @@ bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag, bool merg
 bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, const char *topLevelTag, bool ignoreErrors, bool merge)
 {
    NX_STAT_STRUCT fileStats;
-   int ret = CALL_STAT(file, &fileStats);
+   int ret = CALL_STAT_FOLLOW_SYMLINK(file, &fileStats);
    if (ret != 0)
    {
       error(_T("Could not process \"%s\"!"), file);

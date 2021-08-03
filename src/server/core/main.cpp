@@ -807,7 +807,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 {
 	s_components.add(_T("CORE"));
 
-	INT64 initStartTime = GetCurrentTimeMs();
+	int64_t initStartTime = GetCurrentTimeMs();
 	g_serverStartTime = static_cast<time_t>(initStartTime / 1000);
 
 	if (!(g_flags & AF_USE_SYSLOG))
@@ -826,6 +826,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
       return FALSE;
    }
 	nxlog_set_console_writer(LogConsoleWriter);
+	nxlog_set_debug_writer(nullptr);
 
    if (g_netxmsdLibDir[0] == 0)
    {

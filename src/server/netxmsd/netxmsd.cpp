@@ -398,6 +398,17 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 }
 
 /**
+ * Debug writer used during process startup
+ */
+static void StartupDebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
+{
+   if (tag != nullptr)
+      _tprintf(_T("[%s] "), tag);
+   _vtprintf(format, args);
+   _tprintf(_T("\n"));
+}
+
+/**
  * Startup code
  */
 int main(int argc, char* argv[])
@@ -423,6 +434,9 @@ int main(int argc, char* argv[])
 
    if (!ParseCommandLine(argc, argv))
       return 1;
+
+   if (IsStandalone())
+      nxlog_set_debug_writer(StartupDebugWriter);
 
    if (s_generateConfig)
    {
