@@ -367,7 +367,7 @@ bool LIBNXAGENT_EXPORTABLE CheckCertificateRevocation(X509 *cert, const X509 *is
    auto it = s_crls.begin();
    while(it.hasNext() && !revoked)
    {
-      CRL *crl = it.next()->second;
+      CRL *crl = it.next()->value;
       revoked = crl->isCertificateRevoked(cert, issuer);
    }
    s_crlLock.unlock();
@@ -382,6 +382,6 @@ void LIBNXAGENT_EXPORTABLE ReloadAllCRLs()
    s_crlLock.lock();
    auto it = s_crls.begin();
    while(it.hasNext())
-      it.next()->second->reload();
+      it.next()->value->reload();
    s_crlLock.unlock();
 }

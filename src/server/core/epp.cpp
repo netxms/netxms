@@ -416,17 +416,17 @@ void EPRule::createExportRecord(StringBuffer &xml) const
    }
 
    xml.append(_T("\t\t\t</timerCancellations>\n\t\t\t<pStorageActions>\n"));
-   StructArray<KeyValuePair<TCHAR>> *arr = m_pstorageSetActions.toArray();
-   for(int i = 0; i < arr->size(); i++)
+   int id = 0;
+   for(KeyValuePair<const TCHAR> *action : m_pstorageSetActions)
    {
-      xml.appendFormattedString(_T("\t\t\t\t<set id=\"%d\" key=\"%s\">%s</set>\n"), i+1, arr->get(i)->key, arr->get(i)->value);
+      xml.appendFormattedString(_T("\t\t\t\t<set id=\"%d\" key=\"%s\">%s</set>\n"), ++id, action->key, action->value);
    }
-   delete arr;
    for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
    {
-      xml.appendFormattedString(_T("\t\t\t\t<delete id=\"%d\" key=\"%s\"/>\n"), i+1, m_pstorageDeleteActions.get(i));
+      xml.appendFormattedString(_T("\t\t\t\t<delete id=\"%d\" key=\"%s\"/>\n"), i + 1, m_pstorageDeleteActions.get(i));
    }
-   xml += _T("\t\t\t</pStorageActions>\n\t\t\t<alarmCategories>\n");
+
+   xml.append(_T("\t\t\t</pStorageActions>\n\t\t\t<alarmCategories>\n"));
    for(int i = 0; i < m_alarmCategoryList.size(); i++)
    {
       AlarmCategory *category = GetAlarmCategory(m_alarmCategoryList.get(i));
@@ -435,6 +435,7 @@ void EPRule::createExportRecord(StringBuffer &xml) const
       xml.append(_T("</category>\n"));
       delete category;
    }
+
    xml.append(_T("\t\t\t</alarmCategories>\n\t\t</rule>\n"));
 }
 

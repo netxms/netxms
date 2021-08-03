@@ -165,10 +165,10 @@ static void TestStringMap()
          TCHAR key[64];
          _sntprintf(key, 64, _T("key-%d"), i++);
          auto pair = it.next();
-         AssertNotNull(pair->first);
-         AssertNotNull(pair->second);
-         AssertTrue(!_tcscmp(pair->first, key));
-         AssertTrue(!_tcscmp(pair->second, _T("consectetur adipiscing elit")));
+         AssertNotNull(pair->key);
+         AssertNotNull(pair->value);
+         AssertTrue(!_tcscmp(pair->key, key));
+         AssertTrue(!_tcscmp(pair->value, _T("consectetur adipiscing elit")));
       }
       AssertEquals(i, m->size());
    }
@@ -182,10 +182,10 @@ static void TestStringMap()
       {
          TCHAR key[64];
          _sntprintf(key, 64, _T("key-%d"), i++);
-         AssertNotNull(it.value()->first);
-         AssertNotNull(it.value()->second);
-         AssertTrue(!_tcscmp(it.value()->first, key));
-         AssertTrue(!_tcscmp((TCHAR*)it.value()->second, _T("consectetur adipiscing elit")));
+         AssertNotNull(it.value()->key);
+         AssertNotNull(it.value()->value);
+         AssertTrue(!_tcscmp(it.value()->key, key));
+         AssertTrue(!_tcscmp((TCHAR*)it.value()->value, _T("consectetur adipiscing elit")));
       }
    }
    EndTest(GetCurrentTimeMs() - start);
@@ -194,14 +194,14 @@ static void TestStringMap()
    start = GetCurrentTimeMs();
    {
       int i = 0;
-      for(auto it : *m)
+      for(auto p : *m)
       {
          TCHAR key[64];
          _sntprintf(key, 64, _T("key-%d"), i++);
-         AssertNotNull(it->first);
-         AssertNotNull(it->second);
-         AssertTrue(!_tcscmp(it->first, key));
-         AssertTrue(!_tcscmp(it->second, _T("consectetur adipiscing elit")));
+         AssertNotNull(p->key);
+         AssertNotNull(p->value);
+         AssertTrue(!_tcscmp(p->key, key));
+         AssertTrue(!_tcscmp(p->value, _T("consectetur adipiscing elit")));
       }
    }
    EndTest(GetCurrentTimeMs() - start);

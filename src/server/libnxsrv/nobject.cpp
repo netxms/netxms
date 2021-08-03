@@ -78,14 +78,14 @@ void NObject::addChild(const shared_ptr<NObject>& object)
    unlockChildList();
 
    // Update custom attribute inheritance
-   ObjectArray<std::pair<String, UINT32>> updateList(0, 16, Ownership::True);
+   ObjectArray<std::pair<String, uint32_t>> updateList(0, 16, Ownership::True);
    lockCustomAttributes();
-   Iterator<std::pair<const TCHAR*, CustomAttribute*>> iterator = m_customAttributes.begin();
-   while(iterator.hasNext())
+   auto it = m_customAttributes.begin();
+   while(it.hasNext())
    {
-      std::pair<const TCHAR*, CustomAttribute*> *pair = iterator.next();
-      if(pair->second->isInheritable())
-         updateList.add(new std::pair<String, UINT32>(pair->first, pair->second->isRedefined() || pair->second->sourceObject == 0 ? m_id : pair->second->sourceObject));
+      KeyValuePair<CustomAttribute> *pair = it.next();
+      if (pair->value->isInheritable())
+         updateList.add(new std::pair<String, UINT32>(pair->key, pair->value->isRedefined() || pair->value->sourceObject == 0 ? m_id : pair->value->sourceObject));
    }
    unlockCustomAttributes();
 
@@ -144,12 +144,12 @@ void NObject::deleteParent(uint32_t objectId)
       StringList removeList;
 
       lockCustomAttributes();
-      Iterator<std::pair<const TCHAR*, CustomAttribute*>> iterator = m_customAttributes.begin();
-      while(iterator.hasNext())
+      auto it = m_customAttributes.begin();
+      while(it.hasNext())
       {
-         std::pair<const TCHAR*, CustomAttribute*> *pair = iterator.next();
-         if (pair->second->isInherited() && !isParent(pair->second->sourceObject))
-            removeList.add(pair->first);
+         KeyValuePair<CustomAttribute> *pair = it.next();
+         if (pair->value->isInherited() && !isParent(pair->value->sourceObject))
+            removeList.add(pair->key);
       }
       unlockCustomAttributes();
 
@@ -507,7 +507,7 @@ void NObject::setCustomAttributesFromMessage(const NXCPMessage *msg)
 {
    StringList existingAttibutes;
    StringList deletionList;
-   ObjectArray<std::pair<String, UINT32>> updateList(0, 16, Ownership::True);
+   ObjectArray<std::pair<String, uint32_t>> updateList(0, 16, Ownership::True);
 
    int count = msg->getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
    uint32_t fieldId = VID_CUSTOM_ATTRIBUTES_BASE;
@@ -518,21 +518,21 @@ void NObject::setCustomAttributesFromMessage(const NXCPMessage *msg)
    }
 
    lockCustomAttributes();
-   auto iterator = m_customAttributes.begin();
-   while(iterator.hasNext())
+   auto it = m_customAttributes.begin();
+   while(it.hasNext())
    {
-      std::pair<const TCHAR*, CustomAttribute*> *pair = iterator.next();
-      if ((pair->second->isInherited() == pair->second->isRedefined()) && !existingAttibutes.contains(pair->first))
+      KeyValuePair<CustomAttribute> *pair = it.next();
+      if ((pair->value->isInherited() == pair->value->isRedefined()) && !existingAttibutes.contains(pair->key))
       {
-         if (pair->second->isRedefined())
+         if (pair->value->isRedefined())
          {
-            updateList.add(new std::pair<String, UINT32>(pair->first, pair->second->sourceObject));
+            updateList.add(new std::pair<String, uint32_t>(pair->key, pair->value->sourceObject));
          }
-         else if (pair->second->isInheritable())
+         else if (pair->value->isInheritable())
          {
-            deletionList.add(pair->first);
+            deletionList.add(pair->key);
          }
-         iterator.remove();
+         it.remove();
       }
    }
    unlockCustomAttributes();

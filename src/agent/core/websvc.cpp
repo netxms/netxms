@@ -1052,10 +1052,10 @@ static void WebServiceHousekeeper()
    while(it.hasNext())
    {
       auto entry = it.next();
-      shared_ptr<ServiceEntry> svc = *entry->second;
+      shared_ptr<ServiceEntry> svc = *entry->value;
       if (svc->isDataExpired(g_webSvcCacheExpirationTime))
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceHousekeeper(): Cache entry for URL \"%s\" removed because of inactivity"), entry->first);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceHousekeeper(): Cache entry for URL \"%s\" removed because of inactivity"), entry->key);
          it.remove();
       }
    }

@@ -43,7 +43,7 @@ NXSL_HashMap::NXSL_HashMap(NXSL_ValueManager *vm, const StringMap *values) : NXS
       while(it.hasNext())
       {
          auto p = it.next();
-         m_values->set(p->first, vm->createValue(p->second));
+         m_values->set(p->key, vm->createValue(p->value));
       }
    }
 }

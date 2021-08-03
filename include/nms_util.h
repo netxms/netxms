@@ -1740,7 +1740,7 @@ struct StringMapEntry;
 template <typename T> struct KeyValuePair
 {
    const TCHAR *key;
-   const T *value;
+   T *value;
 };
 
 class StringMapBase;
@@ -1758,7 +1758,7 @@ private:
    StringMapBase *m_map;
    StringMapEntry *m_curr;
    StringMapEntry *m_next;
-   std::pair<const TCHAR*, void*> m_element;
+   KeyValuePair<void> m_element;
 
 public:
    StringMapIterator(StringMapBase *map = nullptr);   //Constructor
@@ -1875,14 +1875,14 @@ public:
 	bool getBoolean(const TCHAR *key, bool defaultValue) const;
 
    template <typename C>
-   StructArray<KeyValuePair<TCHAR>> *toArray(bool (*filter)(const TCHAR *, const TCHAR *, C *), C *context = NULL) const
+   StructArray<KeyValuePair<const TCHAR>> *toArray(bool (*filter)(const TCHAR *, const TCHAR *, C *), C *context = nullptr) const
    {
-      return reinterpret_cast<StructArray<KeyValuePair<TCHAR>>*>(StringMapBase::toArray(reinterpret_cast<bool (*)(const TCHAR*, const void*, void*)>(filter), (void *)context));
+      return reinterpret_cast<StructArray<KeyValuePair<const TCHAR>>*>(StringMapBase::toArray(reinterpret_cast<bool (*)(const TCHAR*, const void*, void*)>(filter), (void *)context));
    }
 
-   StructArray<KeyValuePair<TCHAR>> *toArray() const
+   StructArray<KeyValuePair<const TCHAR>> *toArray() const
    {
-      return reinterpret_cast<StructArray<KeyValuePair<TCHAR>>*>(StringMapBase::toArray(NULL, NULL));
+      return reinterpret_cast<StructArray<KeyValuePair<const TCHAR>>*>(StringMapBase::toArray(nullptr, nullptr));
    }
 
    using StringMapBase::forEach;
@@ -1897,24 +1897,24 @@ public:
 
    json_t *toJson() const;
 
-   Iterator<std::pair<const TCHAR*, const TCHAR*>> begin()
+   Iterator<KeyValuePair<const TCHAR>> begin()
    {
-      return Iterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator(this));
+      return Iterator<KeyValuePair<const TCHAR>>(new StringMapIterator(this));
    }
 
-   ConstIterator<std::pair<const TCHAR*, const TCHAR*>> begin() const
+   ConstIterator<KeyValuePair<const TCHAR>> begin() const
    {
-      return ConstIterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator(const_cast<StringMap*>(this)));
+      return ConstIterator<KeyValuePair<const TCHAR>>(new StringMapIterator(const_cast<StringMap*>(this)));
    }
 
-   Iterator<std::pair<const TCHAR*, const TCHAR*>> end()
+   Iterator<KeyValuePair<const TCHAR>> end()
    {
-      return Iterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator());
+      return Iterator<KeyValuePair<const TCHAR>>(new StringMapIterator());
    }
 
-   ConstIterator<std::pair<const TCHAR*, const TCHAR*>> end() const
+   ConstIterator<KeyValuePair<const TCHAR>> end() const
    {
-      return ConstIterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator());
+      return ConstIterator<KeyValuePair<const TCHAR>>(new StringMapIterator());
    }
 };
 
@@ -1956,14 +1956,24 @@ public:
       return StringMapBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, const void*, void*)>(cb), (void *)context);
    }
 
-   Iterator<std::pair<const TCHAR*, T*>> begin()
+   Iterator<KeyValuePair<T>> begin()
    {
-      return Iterator<std::pair<const TCHAR*, T*>>(new StringMapIterator(this));
+      return Iterator<KeyValuePair<T>>(new StringMapIterator(this));
    }
 
-   Iterator<std::pair<const TCHAR*, T*>> end()
+   ConstIterator<KeyValuePair<T>> begin() const
    {
-      return Iterator<std::pair<const TCHAR*, T*>>(new StringMapIterator());
+      return ConstIterator<KeyValuePair<T>>(new StringMapIterator(const_cast<StringObjectMap<T>*>(this)));
+   }
+
+   Iterator<KeyValuePair<T>> end()
+   {
+      return Iterator<KeyValuePair<T>>(new StringMapIterator());
+   }
+
+   ConstIterator<KeyValuePair<T>> end() const
+   {
+      return ConstIterator<KeyValuePair<T>>(new StringMapIterator());
    }
 };
 
@@ -2038,12 +2048,12 @@ public:
       return m_data.forEach(cb, context);
    }
 
-   Iterator<std::pair<const TCHAR*, shared_ptr<T>*>> begin()
+   Iterator<KeyValuePair<shared_ptr<T>>> begin()
    {
       return m_data.begin();
    }
 
-   Iterator<std::pair<const TCHAR*, shared_ptr<T>*>> end()
+   Iterator<KeyValuePair<shared_ptr<T>>> end()
    {
       return m_data.end();
    }

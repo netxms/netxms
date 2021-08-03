@@ -984,7 +984,7 @@ unique_ptr<StringList> User::get2FABindings()
    while (it.hasNext())
    {
       auto value = it.next();
-      bindings->add(value->first);
+      bindings->add(value->key);
    }
    return bindings;
 }

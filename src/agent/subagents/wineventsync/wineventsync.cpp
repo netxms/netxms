@@ -42,15 +42,14 @@ static bool SubAgentInit(Config *config)
       return false;
    }
 
-   auto it = s_eventLogs.iterator();
-   while (it->hasNext())
+   auto it = s_eventLogs.begin();
+   while (it.hasNext())
    {
-      const TCHAR *log = it->next();
+      const TCHAR *log = it.next();
       auto reader = new EventLogReader(log, config);
       s_readers.add(reader);
       reader->start();
    }
-   delete it;
    return true;
 }
 

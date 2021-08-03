@@ -257,13 +257,13 @@ static void PrintConfig(const TCHAR *pattern)
    int flen = 0;
    auto it = variables->begin();
    while(it.hasNext())
-      flen = std::max(flen, static_cast<int>(_tcslen(it.next()->first)));
+      flen = std::max(flen, static_cast<int>(_tcslen(it.next()->key)));
 
    it = variables->begin();
    while(it.hasNext())
    {
       auto v = it.next();
-      _tprintf(_T("%*s = %s\n"), -flen, v->first, v->second);
+      _tprintf(_T("%*s = %s\n"), -flen, v->key, v->value);
    }
    delete variables;
 }

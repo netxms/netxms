@@ -1353,8 +1353,8 @@ DataCollectionError DataCollectionTarget::queryWebService(const TCHAR *param, We
    while(it.hasNext())
    {
       auto h = it.next();
-      StringBuffer value = expandText(h->second, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, &args);
-      headers.set(h->first, value);
+      StringBuffer value = expandText(h->value, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, &args);
+      headers.set(h->key, value);
    }
 
    StringList pathList;

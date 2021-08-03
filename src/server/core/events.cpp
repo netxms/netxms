@@ -536,8 +536,8 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
    while(it.hasNext())
    {
       auto p = it.next();
-      m_parameterNames.add(p->first);
-      m_parameters.add(MemCopyString(p->second));
+      m_parameterNames.add(p->key);
+      m_parameters.add(MemCopyString(p->value));
    }
 }
 

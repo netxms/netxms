@@ -203,10 +203,10 @@ static THREAD_RESULT THREAD_CALL IOStatColector(void *arg)
       memset(&rawDataTotal, 0, sizeof(rawDataTotal));
 
       LockMutex(&s_diskPerfStatsLock, INFINITE);
-      Iterator<DiskPerfStats> *it = s_diskPerfStats.iterator();
-      while (it->hasNext())
+      auto it = s_diskPerfStats.begin();
+      while (it.hasNext())
       {
-         DiskPerfStats *ps = it->next();
+         DiskPerfStats *ps = it.next();
          DISK_PERFORMANCE rawData;
          if (GetDiskPerformanceData(ps->device, &rawData))
          {
@@ -227,11 +227,10 @@ static THREAD_RESULT THREAD_CALL IOStatColector(void *arg)
             {
                // Performance data cannot be collected for more than 10 minutes
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Physical disk %u removed from I/O stat collector"), ps->device);
-               it->remove();
+               it.remove();
             }
          }
       }
-      delete it;
 
       s_globalDiskPerfStats.update(rawDataTotal);
 
@@ -337,7 +336,7 @@ LONG H_IoStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
    LockMutex(&s_diskPerfStatsLock, INFINITE);
    DiskPerfStats *ps = s_diskPerfStats.get(device);
    LONG rc;
-   if (ps != NULL)
+   if (ps != nullptr)
    {
       rc = GetMetricValue(ps, CAST_FROM_POINTER(arg, IOInfoType), value);
    }
@@ -364,13 +363,8 @@ LONG H_IoStatsTotal(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
 LONG H_IoDeviceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    LockMutex(&s_diskPerfStatsLock, INFINITE);
-   Iterator<DiskPerfStats> *it = s_diskPerfStats.iterator();
-   while (it->hasNext())
-   {
-      DiskPerfStats *ps = it->next();
+   for (DiskPerfStats *ps : s_diskPerfStats)
       value->add(ps->device);
-   }
-   delete it;
    UnlockMutex(&s_diskPerfStatsLock);
    return SYSINFO_RC_SUCCESS;
 }

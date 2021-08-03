@@ -411,8 +411,8 @@ void *StringMapIterator::next()
       m_curr = m_next;
    }
    m_next = static_cast<StringMapEntry*>(m_curr->hh.next);
-   m_element.first = (m_map->m_ignoreCase ? m_curr->originalKey : m_curr->key);
-   m_element.second = static_cast<TCHAR*>(m_curr->value);
+   m_element.key = (m_map->m_ignoreCase ? m_curr->originalKey : m_curr->key);
+   m_element.value = m_curr->value;
    return &m_element;
 }
 
@@ -472,22 +472,22 @@ bool StringMapIterator::equals(AbstractIterator* other)
  */
 void *StringMapIterator::value()
 {
-   m_element.first = nullptr;
-   m_element.second = nullptr;
+   m_element.key = nullptr;
+   m_element.value = nullptr;
    if (m_map == nullptr || m_map->m_data == nullptr) //no data
       return &m_element;
 
    if (m_curr == nullptr)  // iteration not started
    {
-      m_element.first = m_map->m_data->originalKey != nullptr ? m_map->m_data->originalKey : m_map->m_data->key;
-      m_element.second = m_map->m_data->value;
+      m_element.key = m_map->m_data->originalKey != nullptr ? m_map->m_data->originalKey : m_map->m_data->key;
+      m_element.value = m_map->m_data->value;
    }
    else
    {
       if (m_next != nullptr)
       {
-         m_element.first = m_next->originalKey != nullptr ? m_next->originalKey : m_next->key;
-         m_element.second = m_next->value;
+         m_element.key = m_next->originalKey != nullptr ? m_next->originalKey : m_next->key;
+         m_element.value = m_next->value;
       }
    }
    return &m_element;

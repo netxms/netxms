@@ -598,7 +598,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info)
    MutexLock(p->serializationLock);
    auto it = p->serializationQueues.begin();
    while(it.hasNext())
-      info->serializedRequests += static_cast<int>(it.next()->second->size());
+      info->serializedRequests += static_cast<int>(it.next()->value->size());
    MutexUnlock(p->serializationLock);
 }
 
