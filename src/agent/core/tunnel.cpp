@@ -238,7 +238,7 @@ void Tunnel::disconnect()
    MutexLock(m_channelLock);
    auto it = m_channels.begin();
    while(it.hasNext())
-      channels.add(*it.next());
+      channels.add(it.next());
    MutexUnlock(m_channelLock);
 
    for(int i = 0; i < channels.size(); i++)

@@ -1788,13 +1788,12 @@ uint32_t DeleteEventTemplate(uint32_t eventCode)
 void GetEventConfiguration(NXCPMessage *msg)
 {
    RWLockWriteLock(s_eventTemplatesLock);
-   UINT32 base = VID_ELEMENT_LIST_BASE;
+   uint32_t base = VID_ELEMENT_LIST_BASE;
    msg->setField(VID_NUM_EVENTS, s_eventTemplates.size());
    auto it = s_eventTemplates.begin();
    while(it.hasNext())
    {
-      auto e = it.next();
-      (*e)->fillMessage(msg, base);
+      it.next()->fillMessage(msg, base);
       base += 10;
    }
    RWLockUnlock(s_eventTemplatesLock);

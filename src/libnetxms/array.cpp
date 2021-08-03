@@ -393,10 +393,10 @@ void *Array::find(const void *key, int (*cb)(const void *, const void *)) const
 /**
  * Array iterator
  */
-ArrayIterator::ArrayIterator(Array *array)
+ArrayIterator::ArrayIterator(Array *array, int pos)
 {
    m_array = array;
-   m_pos = -1;
+   m_pos = pos;
 }
 
 /**
@@ -408,15 +408,11 @@ bool ArrayIterator::hasNext()
 }
 
 /**
- * Get next element
+ * Get next element and advance iterator
  */
 void *ArrayIterator::next()
 {
-   if ((m_pos + 1) >= m_array->size())
-      return NULL;
-
-   m_pos++;
-   return m_array->get(m_pos);
+   return m_array->get(++m_pos);
 }
 
 /**
@@ -446,19 +442,15 @@ void ArrayIterator::unlink()
 /**
  * Check iterators equality
  */
-bool ArrayIterator::equal(AbstractIterator* other)
+bool ArrayIterator::equals(AbstractIterator *other)
 {
-   if(other != nullptr)
-   {
-      return m_pos == static_cast<ArrayIterator*>(other)->m_pos;
-   }
-   return false;
+   return (other != nullptr) ? (m_pos == static_cast<ArrayIterator*>(other)->m_pos) : false;
 }
 
 /**
- * Get current value
+ * Get current value in C++ semantics (next value in Java semantics)
  */
-void* ArrayIterator::value()
+void *ArrayIterator::value()
 {
-   return m_array->get(m_pos);
+   return m_array->get(m_pos + 1);
 }

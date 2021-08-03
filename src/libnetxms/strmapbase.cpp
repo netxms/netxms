@@ -382,17 +382,6 @@ StringMapIterator::StringMapIterator(StringMapBase * map)
 }
 
 /**
- * String map iterator copy constructor
- */
-StringMapIterator::StringMapIterator(const StringMapIterator& other)
-{
-   m_map = other.m_map;
-   m_curr = other.m_curr;
-   m_next = other.m_next;
-}
-
-
-/**
  * Next element availability indicator
  */
 bool StringMapIterator::hasNext()
@@ -460,35 +449,28 @@ void StringMapIterator::unlink()
 /**
  * Check iterators equality
  */
-bool StringMapIterator::equal(AbstractIterator* other)
+bool StringMapIterator::equals(AbstractIterator* other)
 {
-   if (other != nullptr)
-   {
-      auto otherIterator = static_cast<StringMapIterator*>(other);
-      const TCHAR* data = key();
-      const TCHAR* otherData = otherIterator->key();
-      if (data == nullptr && otherData == nullptr)
-      {
-         return true;
-      }
-      else if (data == nullptr || otherData == nullptr)
-      {
-         return false;
-      }
-      size_t sz = _tcslen(data);
-      if(sz != _tcslen(otherData))
-      {
-         return false;
-      }
-      return _tcsncmp(data, otherData, sz) == 0;
-   }
-   return false;
+   if (other == nullptr)
+      return false;
+
+   auto otherIterator = static_cast<StringMapIterator*>(other);
+   const TCHAR *data = key();
+   const TCHAR *otherData = otherIterator->key();
+
+   if (data == nullptr && otherData == nullptr)
+      return true;
+
+   if (data == nullptr || otherData == nullptr)
+      return false;
+
+   return _tcscmp(data, otherData) == 0;
 }
 
 /**
  * Get current value
  */
-void* StringMapIterator::value()
+void *StringMapIterator::value()
 {
    m_element.first = nullptr;
    m_element.second = nullptr;
@@ -514,21 +496,16 @@ void* StringMapIterator::value()
 /**
  * Get current key
  */
-const TCHAR* StringMapIterator::key()
+const TCHAR *StringMapIterator::key()
 {
-   const TCHAR* retVal = nullptr;
    if (m_map == nullptr || m_map->m_data == nullptr) //no data
-      return retVal;
+      return nullptr;
 
    if (m_curr == nullptr)  // iteration not started
-   {
-      retVal = m_map->m_data->originalKey != nullptr ? m_map->m_data->originalKey : m_map->m_data->key;
-   }
-   else
-   {
-      if (m_next == nullptr)
-         return retVal;
-      retVal = m_next->originalKey != nullptr ? m_next->originalKey : m_next->key;
-   }
-   return retVal;
+      return m_map->m_data->originalKey != nullptr ? m_map->m_data->originalKey : m_map->m_data->key;
+
+   if (m_next == nullptr)
+      return nullptr;
+
+   return m_next->originalKey != nullptr ? m_next->originalKey : m_next->key;
 }

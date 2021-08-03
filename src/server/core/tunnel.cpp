@@ -264,7 +264,7 @@ void GetAgentTunnels(NXCPMessage *msg)
    auto it = s_boundTunnels.begin();
    while(it.hasNext())
    {
-      (*it.next())->fillMessage(msg, fieldId);
+      it.next()->fillMessage(msg, fieldId);
       fieldId += 64;
    }
 
@@ -283,10 +283,8 @@ void ShowAgentTunnels(CONSOLE_CTX console)
             _T("\n\x1b[1mBOUND TUNNELS\x1b[0m\n")
             _T(" ID  | Node ID | EP  | Chan. | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
             _T("-----+---------+-----+-------+--------------------------+--------------------------+--------------------------+------------------+---------------+--------------------------\n"));
-   auto it = s_boundTunnels.begin();
-   while(it.hasNext())
+   for(shared_ptr<AgentTunnel> t : s_boundTunnels)
    {
-      AgentTunnel *t = it.next()->get();
       TCHAR ipAddrBuffer[64];
       ConsolePrintf(console, _T("%4d | %7u | %-3s | %5d | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->getNodeId(),
                t->isExtProvCertificate() ? _T("YES") : _T("NO"), t->getChannelCount(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(),
@@ -297,9 +295,8 @@ void ShowAgentTunnels(CONSOLE_CTX console)
             _T("\n\x1b[1mUNBOUND TUNNELS\x1b[0m\n")
             _T(" ID  | EP  | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
             _T("-----+-----+--------------------------+--------------------------+--------------------------+------------------+---------------+------------------------------------\n"));
-   for(int i = 0; i < s_unboundTunnels.size(); i++)
+   for(shared_ptr<AgentTunnel> t : s_unboundTunnels)
    {
-      const AgentTunnel *t = s_unboundTunnels.get(i);
       TCHAR ipAddrBuffer[64];
       ConsolePrintf(console, _T("%4d | %-3s | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->isExtProvCertificate() ? _T("YES") : _T("NO"),
                t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getHostname(), t->getPlatformName(), t->getAgentVersion(), t->getAgentBuildTag());
@@ -507,7 +504,7 @@ void AgentTunnel::finalize()
    auto it = m_channels.begin();
    while(it.hasNext())
    {
-      AgentTunnelCommChannel *channel = it.next()->get();
+      AgentTunnelCommChannel *channel = it.next().get();
       channel->shutdown();
       channel->detach();
    }
@@ -1776,7 +1773,7 @@ void CloseAgentTunnels()
    auto it = s_boundTunnels.begin();
    while(it.hasNext())
    {
-      (*it.next())->shutdown();
+      it.next()->shutdown();
    }
    for(int i = 0; i < s_unboundTunnels.size(); i++)
       s_unboundTunnels.get(i)->shutdown();
@@ -2086,7 +2083,7 @@ void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameter
    auto it = s_boundTunnels.begin();
    while(it.hasNext())
    {
-      shared_ptr<AgentTunnel> t = *it.next();
+      shared_ptr<AgentTunnel> t = it.next();
       if (!t->isExtProvCertificate() && (t->getCertificateExpirationTime() - now <= 2592000))  // 30 days
       {
          processingList.add(t);
@@ -2132,10 +2129,10 @@ int GetTunnelCount(TunnelCapabilityFilter filter, bool boundTunnels)
    else
    {
       s_tunnelListLock.lock();
-      Iterator<shared_ptr<AgentTunnel>> it = boundTunnels ? s_boundTunnels.begin() : s_unboundTunnels.begin();
+      auto it = boundTunnels ? s_boundTunnels.begin() : s_unboundTunnels.begin();
       while (it.hasNext())
       {
-         AgentTunnel *t = it.next()->get();
+         shared_ptr<AgentTunnel> t = it.next();
          if ((filter == TunnelCapabilityFilter::AGENT_PROXY && t->isAgentProxy()) ||
              (filter == TunnelCapabilityFilter::SNMP_PROXY && t->isSnmpProxy()) ||
              (filter == TunnelCapabilityFilter::SNMP_TRAP_PROXY && t->isSnmpTrapProxy()) ||

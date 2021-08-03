@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -52,7 +52,7 @@ struct HashSetEntry
  */
 HashSetBase::HashSetBase(unsigned int keylen)
 {
-	m_data = NULL;
+	m_data = nullptr;
    m_keylen = keylen;
 }
 
@@ -83,7 +83,7 @@ void HashSetBase::clear()
  */
 bool HashSetBase::_contains(const void *key) const
 {
-	if (key == NULL)
+	if (key == nullptr)
 		return false;
 
    HashSetEntry *entry;
@@ -96,7 +96,7 @@ bool HashSetBase::_contains(const void *key) const
  */
 void HashSetBase::_put(const void *key)
 {
-   if ((key == NULL) || _contains(key))
+   if ((key == nullptr) || _contains(key))
       return;
 
    HashSetEntry *entry = MemAllocStruct<HashSetEntry>();
@@ -114,7 +114,7 @@ void HashSetBase::_remove(const void *key)
 {
    HashSetEntry *entry;
    HASH_FIND(hh, m_data, key, m_keylen, entry);
-   if (entry != NULL)
+   if (entry != nullptr)
    {
       HASH_DEL(m_data, entry);
       DELETE_KEY(this, entry);
@@ -162,9 +162,9 @@ int HashSetBase::size() const
  */
 HashSetIterator::HashSetIterator(const HashSetBase *hashSet)
 {
-   m_hashSet = const_cast<HashSetBase *>(hashSet);
-   m_curr = NULL;
-   m_next = NULL;
+   m_hashSet = const_cast<HashSetBase*>(hashSet);
+   m_curr = nullptr;
+   m_next = nullptr;
 }
 
 /**
@@ -172,28 +172,28 @@ HashSetIterator::HashSetIterator(const HashSetBase *hashSet)
  */
 bool HashSetIterator::hasNext()
 {
-   if (m_hashSet->m_data == NULL)
+   if (m_hashSet->m_data == nullptr)
       return false;
 
-   return (m_curr != NULL) ? (m_next != NULL) : true;
+   return (m_curr != nullptr) ? (m_next != nullptr) : true;
 }
 
 /**
- * Get next element
+ * Get next element and advance iterator
  */
 void *HashSetIterator::next()
 {
-   if (m_hashSet->m_data == NULL)
-      return NULL;
+   if (m_hashSet->m_data == nullptr)
+      return nullptr;
 
-   if (m_curr == NULL)  // iteration not started
+   if (m_curr == nullptr)  // iteration not started
    {
       m_curr = m_hashSet->m_data;
    }
    else
    {
-      if (m_next == NULL)
-         return NULL;
+      if (m_next == nullptr)
+         return nullptr;
       m_curr = m_next;
    }
    m_next = static_cast<HashSetEntry*>(m_curr->hh.next);
@@ -205,7 +205,7 @@ void *HashSetIterator::next()
  */
 void HashSetIterator::remove()
 {
-   if (m_curr == NULL)
+   if (m_curr == nullptr)
       return;
 
    HASH_DEL(m_hashSet->m_data, m_curr);
@@ -218,7 +218,7 @@ void HashSetIterator::remove()
  */
 void HashSetIterator::unlink()
 {
-   if (m_curr == NULL)
+   if (m_curr == nullptr)
       return;
 
    HASH_DEL(m_hashSet->m_data, m_curr);
@@ -228,48 +228,40 @@ void HashSetIterator::unlink()
 /**
  * Check iterators equality
  */
-bool HashSetIterator::equal(AbstractIterator* other)
+bool HashSetIterator::equals(AbstractIterator* other)
 {
-   if (other != nullptr)
-   {
-      auto otherIterator = static_cast<HashSetIterator*>(other);
-      void* data = value();
-      void* otherData = otherIterator->value();
-      if (data == nullptr && otherData == nullptr)
-      {
-         return true;
-      }
-      else if (data == nullptr || otherData == nullptr)
-      {
-         return false;
-      }
-      if(m_hashSet->m_keylen != otherIterator->m_hashSet->m_keylen)
-      {
-         return false;
-      }
-      return memcmp(data, otherData, m_hashSet->m_keylen) == 0;
-   }
-   return false;
+   if (other == nullptr)
+      return false;
+
+   auto otherIterator = static_cast<HashSetIterator*>(other);
+   void *data = value();
+   void *otherData = otherIterator->value();
+
+   if (data == nullptr && otherData == nullptr)
+      return true;
+
+   if (data == nullptr || otherData == nullptr)
+      return false;
+
+   if (m_hashSet->m_keylen != otherIterator->m_hashSet->m_keylen)
+      return false;
+
+   return memcmp(data, otherData, m_hashSet->m_keylen) == 0;
 }
 
 /**
- * Get current value
+ * Get current value in C++ semantics (next value in Java semantics)
  */
-void* HashSetIterator::value()
+void *HashSetIterator::value()
 {
-   void* retVal = nullptr;
-   if (m_hashSet == nullptr || m_hashSet->m_data == nullptr) //no data
-      return retVal;
+   if (m_hashSet == nullptr || m_hashSet->m_data == nullptr) // no data
+      return nullptr;
 
    if (m_curr == nullptr)  // iteration not started
-   {
-      retVal = GET_KEY(m_hashSet, m_hashSet->m_data);
-   }
-   else
-   {
-      if (m_next == nullptr)
-         return retVal;
-      retVal = GET_KEY(m_hashSet, m_next);
-   }
-   return retVal;
+      return GET_KEY(m_hashSet, m_hashSet->m_data);
+
+   if (m_next == nullptr)
+      return nullptr;
+
+   return GET_KEY(m_hashSet, m_next);
 }

@@ -108,11 +108,20 @@ static void TestStringList()
  */
 static void TestStringMap()
 {
+   const int mapSize = 100000;
+
    StringMap *m = new StringMap();
-   const int mapSize = 1000000;
+
+   StartTest(_T("String map - iterator on empty map"));
+   {
+      auto it = m->begin();
+      AssertFalse(it.hasNext());
+      AssertNull(it.next());
+   }
+   EndTest();
 
    StartTest(_T("String map - insert"));
-   INT64 start = GetCurrentTimeMs();
+   int64_t start = GetCurrentTimeMs();
    for(int i = 0; i < mapSize; i++)
    {
       TCHAR key[64];
@@ -146,21 +155,7 @@ static void TestStringMap()
    AssertTrue(!_tcscmp(v, _T("consectetur adipiscing elit")));
    EndTest(GetCurrentTimeMs() - start);
 
-   StartTest(_T("String Map - iterator"));
-   auto it = m->begin();
-   for(int i = 0; i < (mapSize - 1); i++)
-   {
-      AssertTrue(it.hasNext());
-      auto pair = it.next();
-      AssertNotNull(pair);
-   }
-   AssertNotNull(it.next());
-   AssertFalse(it.hasNext());
-   AssertNull(it.next());
-   AssertFalse(it.hasNext());
-   EndTest();
-
-   StartTest(_T("String map - hasNext loop"));
+   StartTest(_T("String map - iterator"));
    start = GetCurrentTimeMs();
    {
       auto it = m->begin();
@@ -175,10 +170,11 @@ static void TestStringMap()
          AssertTrue(!_tcscmp(pair->first, key));
          AssertTrue(!_tcscmp(pair->second, _T("consectetur adipiscing elit")));
       }
+      AssertEquals(i, m->size());
    }
    EndTest(GetCurrentTimeMs() - start);
 
-   StartTest(_T("String map - new iterator"));
+   StartTest(_T("String map - iterator for loop"));
    start = GetCurrentTimeMs();
    {
       int i = 0;
@@ -194,7 +190,7 @@ static void TestStringMap()
    }
    EndTest(GetCurrentTimeMs() - start);
 
-   StartTest(_T("String map - range based for")); //C++ 11 only
+   StartTest(_T("String map - range based for"));
    start = GetCurrentTimeMs();
    {
       int i = 0;
@@ -202,10 +198,10 @@ static void TestStringMap()
       {
          TCHAR key[64];
          _sntprintf(key, 64, _T("key-%d"), i++);
-         AssertNotNull(it.first);
-         AssertNotNull(it.second);
-         AssertTrue(!_tcscmp(it.first, key));
-         AssertTrue(!_tcscmp((TCHAR*)it.second, _T("consectetur adipiscing elit")));
+         AssertNotNull(it->first);
+         AssertNotNull(it->second);
+         AssertTrue(!_tcscmp(it->first, key));
+         AssertTrue(!_tcscmp(it->second, _T("consectetur adipiscing elit")));
       }
    }
    EndTest(GetCurrentTimeMs() - start);
@@ -218,8 +214,8 @@ static void TestStringMap()
    delete keys;
    EndTest();
 
-   StartTest(_T("String Map - iterator remove"));
-   it = m->begin();
+   StartTest(_T("String map - iterator remove"));
+   auto it = m->begin();
    AssertTrue(it.hasNext());
    AssertNotNull(it.next());
    auto pair2 = it.next();
@@ -262,29 +258,31 @@ static void TestStringMap()
  */
 static void TestStringSet()
 {
+   const int setSize = 100000;
+
    StringSet *s = new StringSet();
 
    StartTest(_T("String set - insert"));
-   INT64 start = GetCurrentTimeMs();
-   for(int i = 0; i < 10000; i++)
+   int64_t start = GetCurrentTimeMs();
+   for(int i = 0; i < setSize; i++)
    {
       TCHAR key[64];
       _sntprintf(key, 64, _T("key-%d lorem ipsum"), i);
       s->add(key);
    }
-   AssertEquals(s->size(), 10000);
+   AssertEquals(s->size(), setSize);
    AssertTrue(s->contains(_T("key-42 lorem ipsum")));
    EndTest(GetCurrentTimeMs() - start);
 
    StartTest(_T("String set - replace"));
    start = GetCurrentTimeMs();
-   for(int i = 0; i < 10000; i++)
+   for(int i = 0; i < setSize; i++)
    {
       TCHAR key[64];
       _sntprintf(key, 64, _T("key-%d lorem ipsum"), i);
       s->add(key);
    }
-   AssertEquals(s->size(), 10000);
+   AssertEquals(s->size(), setSize);
    AssertTrue(s->contains(_T("key-42 lorem ipsum")));
    EndTest(GetCurrentTimeMs() - start);
 
@@ -293,7 +291,7 @@ static void TestStringSet()
    AssertTrue(s->contains(_T("key-888 lorem ipsum")));
    EndTest(GetCurrentTimeMs() - start);
 
-   StartTest(_T("String set - new iterator"));
+   StartTest(_T("String set - iterator for loop"));
    start = GetCurrentTimeMs();
    {
       int i = 0;
@@ -303,10 +301,40 @@ static void TestStringSet()
          _sntprintf(value, 64, _T("key-%d lorem ipsum"), i++);
          AssertTrue(!_tcscmp(it.value(), value));
       }
+      AssertEquals(i, setSize);
+   }
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("String set - range for"));
+   start = GetCurrentTimeMs();
+   {
+      int i = 0;
+      for(const TCHAR *v : *s)
+      {
+         TCHAR value[64];
+         _sntprintf(value, 64, _T("key-%d lorem ipsum"), i++);
+         AssertTrue(!_tcscmp(v, value));
+      }
+      AssertEquals(i, setSize);
    }
    EndTest(GetCurrentTimeMs() - start);
 
    StartTest(_T("String set - iterator"));
+   start = GetCurrentTimeMs();
+   {
+      int i = 0;
+      auto it = s->begin();
+      while(it.hasNext())
+      {
+         TCHAR value[64];
+         _sntprintf(value, 64, _T("key-%d lorem ipsum"), i++);
+         AssertTrue(!_tcscmp(it.next(), value));
+      }
+      AssertEquals(i, setSize);
+   }
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("String set - iterator remove"));
    auto it = s->begin();
    AssertTrue(it.hasNext());
    bool found = false;
@@ -322,7 +350,7 @@ static void TestStringSet()
    }
    AssertTrue(found);
    it.remove();
-   AssertEquals(s->size(), 9999);
+   AssertEquals(s->size(), setSize - 1);
    AssertFalse(s->contains(_T("key-42 lorem ipsum")));
    EndTest();
 
@@ -862,6 +890,12 @@ static void TestHashMap()
    AssertEquals(hashMap->size(), 0);
    EndTest();
 
+   StartTest(_T("HashMap - iterator on empty map"));
+   auto it = hashMap->begin();
+   AssertFalse(it.hasNext());
+   AssertNull(it.next());
+   EndTest();
+
    HASH_KEY k1 = { '1', '2', '3', '4', '5', '6' };
    HASH_KEY k2 = { '0', '0', 'a', 'b', 'c', 'd' };
    HASH_KEY k3 = { '0', '0', '3', 'X', '1', '1' };
@@ -894,7 +928,7 @@ static void TestHashMap()
    EndTest();
 
    StartTest(_T("HashMap - iterator"));
-   Iterator<String> it = hashMap->begin();
+   it = hashMap->begin();
    AssertTrue(it.hasNext());
    s = it.next();
    AssertNotNull(s);
@@ -905,7 +939,7 @@ static void TestHashMap()
    AssertFalse(it.hasNext());
    EndTest();
 
-   StartTest(_T("HashMap - new iterator"));
+   StartTest(_T("HashMap - iterator for loop"));
    int64_t start = GetCurrentTimeMs();
    {
       int i = 0;
@@ -928,23 +962,23 @@ static void TestHashMap()
    }
    EndTest(GetCurrentTimeMs() - start);
 
-   StartTest(_T("HashMap - range based for")); //C++ 11 only
+   StartTest(_T("HashMap - range based for"));
    start = GetCurrentTimeMs();
    {
       int i = 0;
-      for(auto it : *hashMap)
+      for(String *str : *hashMap)
       {
-         if(i == 0)
+         if (i == 0)
          {
-            AssertTrue(it.equals(_T("String 1")));
+            AssertTrue(str->equals(_T("String 1")));
          }
-         if(i == 1)
+         else if (i == 1)
          {
-            AssertTrue(it.equals(_T("REPLACE")));
+            AssertTrue(str->equals(_T("REPLACE")));
          }
-         if(i == 2)
+         else if (i == 2)
          {
-            AssertTrue(it.equals(_T("String 3")));   
+            AssertTrue(str->equals(_T("String 3")));
          }
          i++;
       }
@@ -1169,8 +1203,14 @@ static void TestSynchronizedSharedHashMap()
 static void TestHashSet()
 {
    StartTest(_T("HashSet - create"));
-   HashSet<INT32> *s1 = new HashSet<INT32>();
+   HashSet<int32_t> *s1 = new HashSet<int32_t>();
    AssertEquals(s1->size(), 0);
+   EndTest();
+
+   StartTest(_T("HashSet - iterator on empty set"));
+   auto it = s1->begin();
+   AssertFalse(it.hasNext());
+   AssertNull(it.next());
    EndTest();
 
    StartTest(_T("HashSet - put/contains"));
@@ -1185,14 +1225,31 @@ static void TestHashSet()
    AssertFalse(s1->contains(12));
    EndTest();
 
-   StartTest(_T("HashSet - new iterator"));
+   StartTest(_T("HashSet - iterator"));
    int64_t start = GetCurrentTimeMs();
+   {
+      int i = 0;
+      auto it = s1->begin();
+      AssertTrue(it.hasNext());
+      while(it.hasNext())
+      {
+         AssertTrue(*it.next() != 0);
+         i++;
+      }
+      AssertEquals(i, s1->size());
+   }
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("HashSet - iterator for loop"));
+   start = GetCurrentTimeMs();
    {
       int i = 0;
       for(auto it = s1->begin(); it != s1->end(); it++)
       {
          AssertTrue(*it.value() != 0);
+         i++;
       }
+      AssertEquals(i, s1->size());
    }
    EndTest(GetCurrentTimeMs() - start);
 
@@ -1203,7 +1260,9 @@ static void TestHashSet()
       for(auto it : *s1)
       {
          AssertTrue(it != 0);
+         i++;
       }
+      AssertEquals(i, s1->size());
    }
    EndTest(GetCurrentTimeMs() - start);
 
@@ -1272,6 +1331,12 @@ static void TestObjectArray()
    AssertEquals(array->size(), 0);
    EndTest();
 
+   StartTest(_T("ObjectArray: iterator on empty array"));
+   auto it = array->begin();
+   AssertFalse(it.hasNext());
+   AssertNull(it.next());
+   EndTest();
+
    StartTest(_T("ObjectArray: add/get"));
    array->add(new String(_T("value 1")));
    array->add(new String(_T("value 2")));
@@ -1300,7 +1365,7 @@ static void TestObjectArray()
    EndTest();
 
    StartTest(_T("ObjectArray: iterator"));
-   Iterator<String> it = array->begin();
+   it = array->begin();
    AssertTrue(it.hasNext());
    String *s = it.next();
    AssertTrue(!_tcscmp(s->cstr(), _T("value 2")));
@@ -1312,29 +1377,32 @@ static void TestObjectArray()
    AssertNull(s);
    EndTest();
 
-   StartTest(_T("ObjectArray: new iterator"));
+   StartTest(_T("ObjectArray: iterator for loop"));
    int64_t start = GetCurrentTimeMs();
    {
       int i = 2;
       for(auto it = array->begin(); it != array->end(); it++)
       {
+         AssertNotNull(it.value());
          TCHAR value[64];
          _sntprintf(value, 64, _T("value %d"), i++);
          AssertTrue(!_tcscmp(it.value()->cstr(), value));
       }
+      AssertEquals(i, 5);
    }
    EndTest(GetCurrentTimeMs() - start);
 
-   StartTest(_T("ObjectArray: range based for")); //C++ 11 only
+   StartTest(_T("ObjectArray: range for")); //C++ 11 only
    start = GetCurrentTimeMs();
    {
       int i = 2;
-      for(auto it : *array)
+      for(auto s : *array)
       {
          TCHAR value[64];
          _sntprintf(value, 64, _T("value %d"), i++);
-         AssertTrue(!_tcscmp(it.cstr(), value));
+         AssertTrue(!_tcscmp(s->cstr(), value));
       }
+      AssertEquals(i, 5);
    }
    EndTest(GetCurrentTimeMs() - start);
 
@@ -1394,41 +1462,48 @@ static void TestSharedObjectArray()
    AssertTrue(!_tcscmp(array->get(2)->cstr(), _T("value 4")));
    EndTest();
 
-   /*
    StartTest(_T("SharedObjectArray: iterator"));
-   Iterator<String> *it = array->iterator();
-   AssertTrue(it->hasNext());
-   String *s = it->next();
+   SharedPtrIterator<String> it = array->begin();
+   AssertTrue(it.hasNext());
+   shared_ptr<String> s = it.next();
    AssertTrue(!_tcscmp(s->cstr(), _T("value 2")));
-   s = it->next();
+   s = it.next();
    AssertTrue(!_tcscmp(s->cstr(), _T("value 3")));
-   s = it->next();
+   s = it.next();
    AssertTrue(!_tcscmp(s->cstr(), _T("value 4")));
-   s = it->next();
+   s = it.next();
    AssertNull(s);
-   delete it;
+   EndTest();
+
+   StartTest(_T("SharedObjectArray: range for"));
+   int index = 2;
+   for(shared_ptr<String> sp : *array)
+   {
+      TCHAR testValue[16];
+      _sntprintf(testValue, 16, _T("value %d"), index++);
+      AssertTrue(!_tcscmp(sp->cstr(), testValue));
+   }
+   AssertEquals(index, 5);
    EndTest();
 
    StartTest(_T("SharedObjectArray: remove with iterator"));
-   it = array->iterator();
-   AssertTrue(it->hasNext());
-   while(it->hasNext())
+   it = array->begin();
+   AssertTrue(it.hasNext());
+   while(it.hasNext())
    {
-      String *s = it->next();
+      shared_ptr<String> s = it.next();
       if (!_tcscmp(s->cstr(), _T("value 4")))
       {
-         it->remove();
+         it.remove();
       }
    }
-   delete it;
    AssertEquals(array->size(), 2);
    AssertTrue(!_tcscmp(array->get(0)->cstr(), _T("value 2")));
    AssertTrue(!_tcscmp(array->get(1)->cstr(), _T("value 3")));
    EndTest();
-   */
 
    StartTest(_T("SharedObjectArray: get shared"));
-   shared_ptr<String> s = array->getShared(0);
+   s = array->getShared(0);
    AssertEquals(s.use_count(), 2);
    SharedObjectArray<String> *array2 = new SharedObjectArray<String>(16, 16);
    array2->add(array->getShared(0));

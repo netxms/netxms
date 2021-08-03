@@ -998,11 +998,10 @@ static void ReconciliationThread()
             DBBegin(hdb);
             TCHAR query[256];
             auto it = s_items.begin();
-            while(it.hasNext())
+            for(shared_ptr<DataCollectionItem> dci : s_items)
             {
-               DataCollectionItem *dci = it.next()->get();
                _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"),
-                          (UINT64)dci->getLastPollTime(), (UINT64)dci->getServerId(), dci->getId());
+                          (uint64_t)dci->getLastPollTime(), (uint64_t)dci->getServerId(), dci->getId());
                DBQuery(hdb, query);
             }
             DBCommit(hdb);
@@ -1333,7 +1332,7 @@ static uint32_t DataCollectionSchedulerRun()
    auto it = s_items.begin();
    while(it.hasNext())
    {
-      DataCollectionItem *dci = it.next()->get();
+      DataCollectionItem *dci = it.next().get();
       uint32_t timeToPoll = dci->getTimeToNextPoll(now);
       if (timeToPoll == 0)
       {
@@ -1470,10 +1469,8 @@ void ConfigureDataCollection(uint64_t serverId, const NXCPMessage& request)
    s_itemLock.lock();
 
    // Update and add new
-   auto it = config.begin();
-   while(it.hasNext())
+   for(shared_ptr<DataCollectionItem> item : config)
    {
-      shared_ptr<DataCollectionItem> item(*it.next());
       shared_ptr<DataCollectionItem> existingItem = s_items.getShared(item->getKey());
       if (existingItem != nullptr)
       {
@@ -1506,10 +1503,10 @@ void ConfigureDataCollection(uint64_t serverId, const NXCPMessage& request)
    }
 
    // Remove non-existing configuration
-   it = s_items.begin();
+   auto it = s_items.begin();
    while(it.hasNext())
    {
-      shared_ptr<DataCollectionItem> item(*it.next());
+      shared_ptr<DataCollectionItem> item = it.next();
       if (item->getServerId() != serverId)
          continue;
 
@@ -1660,7 +1657,7 @@ static void ClearStalledOfflineData(void *arg)
          auto it = s_items.begin();
          while(it.hasNext())
          {
-            shared_ptr<DataCollectionItem> item(*it.next());
+            shared_ptr<DataCollectionItem> item = it.next();
             if (item->getServerId() == serverId)
             {
                it.remove();

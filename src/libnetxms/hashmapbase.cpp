@@ -244,7 +244,7 @@ bool HashMapIterator::hasNext()
 }
 
 /**
- * Get next element
+ * Get next element and advance iterator
  */
 void *HashMapIterator::next()
 {
@@ -296,70 +296,57 @@ void HashMapIterator::unlink()
 /**
  * Check iterators equality
  */
-bool HashMapIterator::equal(AbstractIterator* other)
+bool HashMapIterator::equals(AbstractIterator *other)
 {
-   if (other != nullptr)
-   {
-      auto otherIterator = static_cast<HashMapIterator*>(other);
-      void* data = key();
-      void* otherData = otherIterator->key();
-      if (data == nullptr && otherData == nullptr)
-      {
-         return true;
-      }
-      else if (data == nullptr || otherData == nullptr)
-      {
-         return false;
-      }
-      if(m_hashMap->m_keylen != otherIterator->m_hashMap->m_keylen)
-      {
-         return false;
-      }
-      return memcmp(data, otherData, m_hashMap->m_keylen) == 0;
-   }
-   return false;
+   if (other == nullptr)
+      return false;
+
+   auto otherIterator = static_cast<HashMapIterator*>(other);
+   void *data = key();
+   void *otherData = otherIterator->key();
+
+   if (data == nullptr && otherData == nullptr)
+      return true;
+
+   if (data == nullptr || otherData == nullptr)
+      return false;
+
+   if (m_hashMap->m_keylen != otherIterator->m_hashMap->m_keylen)
+      return false;
+
+   return memcmp(data, otherData, m_hashMap->m_keylen) == 0;
 }
 
 /**
- * Get current value
+ * Get current value in C++ semantics (next value in Java semantics)
  */
-void* HashMapIterator::value()
+void *HashMapIterator::value()
 {
-   void* retVal = nullptr;
    if (m_hashMap->m_data == nullptr) //no data
-      return retVal;
+      return nullptr;
 
    if (m_curr == nullptr)  // iteration not started
-   {
-      retVal = m_hashMap->m_data->value;
-   }
-   else
-   {
-      if (m_next == nullptr)
-         return retVal;
-      retVal = m_next->value;
-   }
-   return retVal;
+      return m_hashMap->m_data->value;
+
+   if (m_next == nullptr)
+      return nullptr;
+
+   return m_next->value;
 }
 
 /**
- * Get current key
+ * Get current key in C++ semantics (next key in Java semantics)
  */
-void* HashMapIterator::key()
+void *HashMapIterator::key()
 {
-   void* retVal = nullptr;
    if (m_hashMap == nullptr || m_hashMap->m_data == nullptr) //no data
-      return retVal;
+      return nullptr;
 
    if (m_curr == nullptr)  // iteration not started
-   {
-      retVal = m_hashMap->m_keylen <= 16 ? m_hashMap->m_data->key.d : m_hashMap->m_data->key.p;
-   }
-   else
-   {
-      if (m_next == nullptr)
-         return retVal;
-      retVal = m_hashMap->m_keylen <= 16 ? m_next->key.d : m_next->key.p;
-   }
-   return retVal;
+      return m_hashMap->m_keylen <= 16 ? m_hashMap->m_data->key.d : m_hashMap->m_data->key.p;
+
+   if (m_next == nullptr)
+      return nullptr;
+
+   return m_hashMap->m_keylen <= 16 ? m_next->key.d : m_next->key.p;
 }

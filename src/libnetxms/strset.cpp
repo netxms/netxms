@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -39,7 +39,7 @@ struct StringSetEntry
  */
 StringSet::StringSet()
 {
-   m_data = NULL;
+   m_data = nullptr;
 }
 
 /**
@@ -58,9 +58,9 @@ void StringSet::add(const TCHAR *str)
    StringSetEntry *entry;
    int keyLen = static_cast<int>(_tcslen(str) * sizeof(TCHAR));
    HASH_FIND(hh, m_data, str, keyLen, entry);
-   if (entry == NULL)
+   if (entry == nullptr)
    {
-      entry = (StringSetEntry *)malloc(sizeof(StringSetEntry));
+      entry = MemAllocStruct<StringSetEntry>();
       entry->str = MemCopyString(str);
       HASH_ADD_KEYPTR(hh, m_data, entry->str, keyLen, entry);
    }
@@ -74,9 +74,9 @@ void StringSet::addPreallocated(TCHAR *str)
    StringSetEntry *entry;
    int keyLen = static_cast<int>(_tcslen(str) * sizeof(TCHAR));
    HASH_FIND(hh, m_data, str, keyLen, entry);
-   if (entry == NULL)
+   if (entry == nullptr)
    {
-      entry = (StringSetEntry *)malloc(sizeof(StringSetEntry));
+      entry = MemAllocStruct<StringSetEntry>();
       entry->str = str;
       HASH_ADD_KEYPTR(hh, m_data, entry->str, keyLen, entry);
    }
@@ -94,7 +94,7 @@ void StringSet::remove(const TCHAR *str)
    StringSetEntry *entry;
    int keyLen = static_cast<int>(_tcslen(str) * sizeof(TCHAR));
    HASH_FIND(hh, m_data, str, keyLen, entry);
-   if (entry != NULL)
+   if (entry != nullptr)
    {
       HASH_DEL(m_data, entry);
       MemFree(entry->str);
@@ -124,7 +124,7 @@ bool StringSet::contains(const TCHAR *str) const
    StringSetEntry *entry;
    int keyLen = (int)(_tcslen(str) * sizeof(TCHAR));
    HASH_FIND(hh, m_data, str, keyLen, entry);
-   return entry != NULL;
+   return entry != nullptr;
 }
 
 /**
@@ -178,10 +178,10 @@ void StringSet::splitAndAdd(const TCHAR *src, const TCHAR *separator)
    }
 
    const TCHAR *curr = src;
-   while(curr != NULL)
+   while(curr != nullptr)
    {
       const TCHAR *next = _tcsstr(curr, separator);
-      if (next != NULL)
+      if (next != nullptr)
       {
          int len = (int)(next - curr);
          TCHAR *value = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
@@ -225,7 +225,7 @@ void StringSet::addAll(const StringList *src)
 void StringSet::addAll(TCHAR **strings, int count)
 {
    for(int i = 0; i < count; i++)
-      if (strings[i] != NULL)
+      if (strings[i] != nullptr)
          add(strings[i]);
 }
 
@@ -235,7 +235,7 @@ void StringSet::addAll(TCHAR **strings, int count)
 void StringSet::addAllPreallocated(TCHAR **strings, int count)
 {
    for(int i = 0; i < count; i++)
-      if (strings[i] != NULL)
+      if (strings[i] != nullptr)
          addPreallocated(strings[i]);
 }
 
@@ -297,9 +297,9 @@ String StringSet::join(const TCHAR *separator)
    StringSetEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if ((separator != NULL) && (result.length() > 0))
-         result += separator;
-      result += entry->str;
+      if ((separator != nullptr) && (result.length() > 0))
+         result.append(separator);
+      result.append(entry->str);
    }
    return result;
 }
@@ -317,7 +317,7 @@ String StringSet::join(const TCHAR *separator)
  */
 StringSetIterator::StringSetIterator(const StringSet *stringSet)
 {
-   m_stringSet = const_cast<StringSet *>(stringSet);
+   m_stringSet = const_cast<StringSet*>(stringSet);
    m_curr = nullptr;
    m_next = nullptr;
 }
@@ -370,7 +370,7 @@ void *StringSetIterator::next()
  */
 void StringSetIterator::remove()
 {
-   if (m_curr == NULL)
+   if (m_curr == nullptr)
       return;
 
    HASH_DEL(m_stringSet->m_data, m_curr);
@@ -383,7 +383,7 @@ void StringSetIterator::remove()
  */
 void StringSetIterator::unlink()
 {
-   if (m_curr == NULL)
+   if (m_curr == nullptr)
       return;
 
    HASH_DEL(m_stringSet->m_data, m_curr);
@@ -393,49 +393,37 @@ void StringSetIterator::unlink()
 /**
  * Check iterators equality
  */
-bool StringSetIterator::equal(AbstractIterator* other)
+bool StringSetIterator::equals(AbstractIterator *other)
 {
-   if (other != nullptr)
-   {
-      auto otherIterator = static_cast<StringSetIterator*>(other);
-      const TCHAR* data = (const TCHAR*)value();
-      const TCHAR* otherData = (const TCHAR*)otherIterator->value();
-      if (data == nullptr && otherData == nullptr)
-      {
-         return true;
-      }
-      else if (data == nullptr || otherData == nullptr)
-      {
-         return false;
-      }
-      size_t sz = _tcslen(data);
-      if(sz != _tcslen(otherData))
-      {
-         return false;
-      }
-      return _tcsncmp(data, otherData, sz) == 0;
-   }
-   return false;
+   if (other == nullptr)
+      return false;
+
+   auto otherIterator = static_cast<StringSetIterator*>(other);
+   const TCHAR *data = static_cast<const TCHAR*>(value());
+   const TCHAR *otherData = static_cast<const TCHAR*>(otherIterator->value());
+
+   if (data == nullptr && otherData == nullptr)
+      return true;
+
+   if (data == nullptr || otherData == nullptr)
+      return false;
+
+   return _tcscmp(data, otherData) == 0;
 }
 
 /**
  * Get current value
  */
-void* StringSetIterator::value()
+void *StringSetIterator::value()
 {
-   void* retVal = nullptr;
    if (m_stringSet == nullptr || m_stringSet->m_data == nullptr) //no data
-      return retVal;
+      return nullptr;
 
    if (m_curr == nullptr)  // iteration not started
-   {
-      retVal = m_stringSet->m_data->str;
-   }
-   else
-   {
-      if (m_next == nullptr)
-         return retVal;
-      retVal = m_next->str;
-   }
-   return retVal;
+      return m_stringSet->m_data->str;
+
+   if (m_next == nullptr)
+      return nullptr;
+
+   return m_next->str;
 }

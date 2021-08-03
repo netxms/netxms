@@ -1258,28 +1258,30 @@ public:
  */
 class LIBNETXMS_EXPORTABLE AbstractIterator
 {
+private:
+   int m_refCount;
+
 protected:
    AbstractIterator()
    {
-      m_refCounter = 1;
+      m_refCount = 1;
    }
-   int m_refCounter;
 
 public:
    virtual ~AbstractIterator() { }
 
-   void incRefCount() { m_refCounter++; }
+   void incRefCount() { m_refCount++; }
    void decRefCount()
    {
-      m_refCounter--;
-      if (m_refCounter == 0)
+      m_refCount--;
+      if (m_refCount == 0)
          delete this;
    }
 
    virtual bool hasNext() = 0;
    virtual void *next() = 0;
    virtual void *value() = 0;
-   virtual bool equal(AbstractIterator* other) = 0;
+   virtual bool equals(AbstractIterator* other) = 0;
    virtual void remove() = 0;
    virtual void unlink() = 0;
 };
@@ -1287,7 +1289,7 @@ public:
 /**
  * Const iterator class (public interface for iteration over const object)
  */
-template <class T> class ConstIterator
+template<class T> class ConstIterator
 {
 protected:
    AbstractIterator *m_worker;
@@ -1299,14 +1301,16 @@ public:
       m_worker = other.m_worker;
       m_worker->incRefCount();
    }
-   virtual ~ConstIterator()
+   ~ConstIterator()
    {
       m_worker->decRefCount();
    }
 
    bool hasNext() { return m_worker->hasNext(); }
-   T *next() { return (T *)m_worker->next(); }
-   T *value() { return (T *)m_worker->value(); }
+   T *next() { return static_cast<T*>(m_worker->next()); }
+
+   T *value() { return static_cast<T*>(m_worker->value()); }
+   T* operator* () { return static_cast<T*>(m_worker->value()); }
 
    ConstIterator& operator=(const ConstIterator& other)
    {
@@ -1316,8 +1320,8 @@ public:
       return *this; 
    }
 
-   bool operator==(const ConstIterator& other) { return m_worker->equal(other.m_worker); }
-   bool operator!=(const ConstIterator& other) { return !(*this == other); }
+   bool operator==(const ConstIterator& other) { return m_worker->equals(other.m_worker); }
+   bool operator!=(const ConstIterator& other) { return !m_worker->equals(other.m_worker); }
    ConstIterator& operator++()   // Prefix increment operator.
    {
       m_worker->next();
@@ -1326,16 +1330,15 @@ public:
    ConstIterator operator++(int) // Postfix increment operator.
    {  
       ConstIterator temp = *this;
-      ++*this;
+      m_worker->next();
       return temp;
    }
-   T operator* () { return *(T *)m_worker->value(); }
 };
 
 /**
  * Iterator class (public interface for iteration)
  */
-template <class T> class Iterator : public ConstIterator<T>
+template<class T> class Iterator : public ConstIterator<T>
 {
 public:
    Iterator(AbstractIterator *worker) : ConstIterator<T>(worker) { }
@@ -1345,11 +1348,45 @@ public:
       ConstIterator<T>::operator = (other);
       return *this;
    }
-   virtual ~Iterator() { }
 
    void remove() { this->m_worker->remove(); }
    void unlink() { this->m_worker->unlink(); }
 };
+
+/**
+ * Iterator class (public interface for iteration)
+ */
+template<class T> class SharedPtrIterator : public Iterator<T>
+{
+   static shared_ptr<T> m_null;
+
+public:
+   SharedPtrIterator(AbstractIterator *worker) : Iterator<T>(worker) { }
+   SharedPtrIterator(const SharedPtrIterator& other) : Iterator<T>(other) { }
+   SharedPtrIterator& operator=(const SharedPtrIterator& other)
+   {
+      Iterator<T>::operator = (other);
+      return *this;
+   }
+
+   const shared_ptr<T>& next()
+   {
+      auto p = static_cast<shared_ptr<T>*>(this->m_worker->next());
+      return (p != nullptr) ? *p : m_null;
+   }
+   const shared_ptr<T>& value()
+   {
+      auto p = static_cast<shared_ptr<T>*>(this->m_worker->value());
+      return (p != nullptr) ? *p : m_null;
+   }
+   const shared_ptr<T>& operator* ()
+   {
+      auto p = static_cast<shared_ptr<T>*>(this->m_worker->value());
+      return (p != nullptr) ? *p : m_null;
+   }
+};
+
+template<class T> shared_ptr<T> SharedPtrIterator<T>::m_null = shared_ptr<T>();
 
 /**
  * Dynamic array class
@@ -1431,14 +1468,14 @@ private:
    int m_pos;
 
 public:
-   ArrayIterator(Array *array = nullptr);
+   ArrayIterator(Array *array, int pos = -1);
 
    virtual bool hasNext() override;
    virtual void *next() override;
    virtual void remove() override;
    virtual void unlink() override;
    virtual void *value() override;
-   virtual bool equal(AbstractIterator* other) override;
+   virtual bool equals(AbstractIterator* other) override;
 };
 
 /**
@@ -1474,7 +1511,7 @@ public:
    T *find(const T *key, int (*cb)(const T **, const T **)) const
    {
       T **result = (T **)Array::find(&key, (int (*)(const void *, const void *))cb);
-      return (result != NULL) ? *result : NULL;
+      return (result != nullptr) ? *result : nullptr;
    }
 
    const T * const *getBuffer() const { return static_cast<const T * const *>(__getBuffer()); }
@@ -1486,7 +1523,7 @@ public:
 
    Iterator<T> end()
    {
-      return Iterator<T>(new ArrayIterator());
+      return Iterator<T>(new ArrayIterator(this, size() - 1));
    }
 };
 
@@ -1522,7 +1559,7 @@ public:
 
    Iterator<T> end()
    {
-      return Iterator<T>(new ArrayIterator());
+      return Iterator<T>(new ArrayIterator(this, m_size - 1));
    }
 };
 
@@ -1679,14 +1716,14 @@ public:
 
    void sort(int (*cb)(const T&, const T&)) { m_data.sort(reinterpret_cast<int (*)(void *, const void *, const void *)>(sortCallback), (void *)cb); }
 
-   Iterator<shared_ptr<T>> begin()
+   SharedPtrIterator<T> begin()
    {
-      return Iterator<shared_ptr<T>>(new ArrayIterator(&m_data));
+      return SharedPtrIterator<T>(new ArrayIterator(&m_data));
    }
 
-   Iterator<shared_ptr<T>> end()
+   SharedPtrIterator<T> end()
    {
-      return Iterator<shared_ptr<T>>(new ArrayIterator());
+      return SharedPtrIterator<T>(new ArrayIterator(&m_data, m_data.size() - 1));
    }
 };
 
@@ -1725,16 +1762,15 @@ private:
 
 public:
    StringMapIterator(StringMapBase *map = nullptr);   //Constructor
-   StringMapIterator(const StringMapIterator& other); //Copy constructor
 
    virtual bool hasNext() override;
    virtual void *next() override;
    virtual void remove() override;
    virtual void unlink() override;
    virtual void *value() override;
-   virtual bool equal(AbstractIterator* other) override;
+   virtual bool equals(AbstractIterator* other) override;
 
-   const TCHAR* key();
+   const TCHAR *key();
 };
 
 /**
@@ -1903,14 +1939,14 @@ public:
    T *unlink(const TCHAR *key) { return (T*)StringMapBase::unlink(key); }
 
    template <typename C>
-   StructArray<KeyValuePair<T>> *toArray(bool (*filter)(const TCHAR *, const T *, C *), C *context = NULL) const
+   StructArray<KeyValuePair<T>> *toArray(bool (*filter)(const TCHAR *, const T *, C *), C *context = nullptr) const
    {
       return reinterpret_cast<StructArray<KeyValuePair<T>>*>(StringMapBase::toArray(reinterpret_cast<bool (*)(const TCHAR*, const void*, void*)>(filter), (void *)context));
    }
 
    StructArray<KeyValuePair<T>> *toArray() const
    {
-      return reinterpret_cast<StructArray<KeyValuePair<T>>*>(StringMapBase::toArray(NULL, NULL));
+      return reinterpret_cast<StructArray<KeyValuePair<T>>*>(StringMapBase::toArray(nullptr, nullptr));
    }
 
    using StringMapBase::forEach;
@@ -2114,7 +2150,7 @@ public:
    virtual bool hasNext() override;
    virtual void *next() override;
    virtual void *value() override;
-   virtual bool equal(AbstractIterator* other) override;
+   virtual bool equals(AbstractIterator* other) override;
    virtual void remove() override;
    virtual void unlink() override;
 };
@@ -2205,12 +2241,11 @@ protected:
 
 public:
    HashSetIterator(const HashSetBase *hashSet = nullptr);
-   HashSetIterator(const HashSetIterator& other);    //Copy constructor
 
    virtual bool hasNext() override;
    virtual void *next() override;
    virtual void *value() override;
-   virtual bool equal(AbstractIterator* other) override;
+   virtual bool equals(AbstractIterator* other) override;
    virtual void remove() override;
    virtual void unlink() override;
 };
@@ -2386,6 +2421,9 @@ private:
    HashMapEntry *m_curr;
    HashMapEntry *m_next;
 
+protected:
+   void *key();
+
 public:
    HashMapIterator(HashMapBase *hashMap = nullptr);
    HashMapIterator(const HashMapIterator& other);  
@@ -2395,9 +2433,7 @@ public:
    virtual void remove() override;
    virtual void unlink() override;
    virtual void *value() override;
-   virtual bool equal(AbstractIterator* other) override;
-
-   void* key();
+   virtual bool equals(AbstractIterator* other) override;
 };
 
 /**
@@ -2590,12 +2626,12 @@ public:
    V *get(const K& key) const
    {
       auto p = m_data.get(key);
-      return (p != NULL) ? p->get() : NULL;
+      return (p != nullptr) ? p->get() : nullptr;
    }
    const shared_ptr<V>& getShared(const K& key) const
    {
       auto p = m_data.get(key);
-      return (p != NULL) ? *p : m_null;
+      return (p != nullptr) ? *p : m_null;
    }
    void remove(const K& key) { m_data.remove(key); }
    void unlink(const K& key) { m_data.unlink(key); }
@@ -2611,14 +2647,14 @@ public:
       return m_data.forEach(&SharedHashMap<K, V>::forEachCallbackWrapper<C>, &_context);
    }
 
-   Iterator<shared_ptr<V>> begin()
+   SharedPtrIterator<V> begin()
    {
-      return m_data.begin();
+      return SharedPtrIterator<V>(new HashMapIterator(&m_data));
    }
 
-   Iterator<shared_ptr<V>> end()
+   SharedPtrIterator<V> end()
    {
-      return m_data.end();
+      return SharedPtrIterator<V>(new HashMapIterator());
    }
 };
 
