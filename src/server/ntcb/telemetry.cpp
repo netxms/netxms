@@ -889,18 +889,16 @@ void TelemetryRecord::updateDevice()
    m_device->updateStatus(m_deviceStatus);
 
    shared_ptr<Table> tableValue; // Empty pointer for processNewDCValue()
-   auto it = m_pushList.begin();
-   while(it.hasNext())
+   for (KeyValuePair<const TCHAR>* data : m_pushList)
    {
-      auto data = it.next();
-      shared_ptr<DCObject> dci = m_device->getDCObjectByName(data->first, 0);
+      shared_ptr<DCObject> dci = m_device->getDCObjectByName(data->key, 0);
       if ((dci == nullptr) || (dci->getDataSource() != DS_PUSH_AGENT) || (dci->getType() != DCO_TYPE_ITEM))
       {
-         nxlog_debug_tag(DEBUG_TAG_NTCB, 5, _T("DCI %s on device %s [%u] %s"), data->first, m_device->getName(), m_device->getId(),
+         nxlog_debug_tag(DEBUG_TAG_NTCB, 5, _T("DCI %s on device %s [%u] %s"), data->key, m_device->getName(), m_device->getId(),
                   (dci == nullptr) ? _T("does not exist") : _T("is of incompatible type"));
          continue;
       }
-      m_device->processNewDCValue(dci, m_timestamp, const_cast<TCHAR*>(data->second), tableValue);
+      m_device->processNewDCValue(dci, m_timestamp, data->value, tableValue);
    }
 }
 

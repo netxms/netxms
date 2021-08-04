@@ -283,7 +283,7 @@ void ShowAgentTunnels(CONSOLE_CTX console)
             _T("\n\x1b[1mBOUND TUNNELS\x1b[0m\n")
             _T(" ID  | Node ID | EP  | Chan. | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
             _T("-----+---------+-----+-------+--------------------------+--------------------------+--------------------------+------------------+---------------+--------------------------\n"));
-   for(shared_ptr<AgentTunnel> t : s_boundTunnels)
+   for(const shared_ptr<AgentTunnel>& t : s_boundTunnels)
    {
       TCHAR ipAddrBuffer[64];
       ConsolePrintf(console, _T("%4d | %7u | %-3s | %5d | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->getNodeId(),
@@ -295,7 +295,7 @@ void ShowAgentTunnels(CONSOLE_CTX console)
             _T("\n\x1b[1mUNBOUND TUNNELS\x1b[0m\n")
             _T(" ID  | EP  | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
             _T("-----+-----+--------------------------+--------------------------+--------------------------+------------------+---------------+------------------------------------\n"));
-   for(shared_ptr<AgentTunnel> t : s_unboundTunnels)
+   for(const shared_ptr<AgentTunnel>& t : s_unboundTunnels)
    {
       TCHAR ipAddrBuffer[64];
       ConsolePrintf(console, _T("%4d | %-3s | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->isExtProvCertificate() ? _T("YES") : _T("NO"),

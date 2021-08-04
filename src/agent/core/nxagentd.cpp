@@ -1777,6 +1777,53 @@ static void UpdateEnvironment()
 }
 
 /**
+ * Search for given configuration file and place result into provided buffer (should at least MAX_PATH in size)
+ */
+static void SearchConfig(const TCHAR *file, TCHAR *buffer)
+{
+#ifdef _WIN32
+   TCHAR path[MAX_PATH];
+   GetNetXMSDirectory(nxDirEtc, path);
+   _tcscat(path, _T("\\"));
+   _tcscat(path, file);
+   if (_taccess(path, 4) == 0)
+   {
+      _tcscpy(buffer, path);
+   }
+   else
+   {
+      _tcscpy(buffer, _T("C:\\"));
+      _tcscat(buffer, file);
+   }
+#else
+   TCHAR path[MAX_PATH] = _T("");
+   String homeDir = GetEnvironmentVariableEx(_T("NETXMS_HOME"));
+   if (!homeDir.isEmpty())
+   {
+      _sntprintf(path, MAX_PATH, _T("%s/etc/%s"), homeDir.cstr(), file);
+   }
+   if ((path[0] != 0) && (_taccess(path, 4) == 0))
+   {
+      _tcscpy(buffer, path);
+   }
+   else
+   {
+      _tcscpy(path, SYSCONFDIR _T("/"));
+      _tcscat(path, file);
+      if (_taccess(path, 4) == 0)
+      {
+         _tcscpy(buffer, path);
+      }
+      else
+      {
+         _tcscpy(buffer, _T("/etc/"));
+         _tcscat(buffer, file);
+      }
+   }
+#endif
+}
+
+/**
  * Application entry point
  */
 int main(int argc, char *argv[])
@@ -2045,87 +2092,10 @@ int main(int argc, char *argv[])
       }
    }
 
-#if !defined(_WIN32)
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
-	{
-      TCHAR path[MAX_PATH] = _T("");
-      String homeDir = GetEnvironmentVariableEx(_T("NETXMS_HOME"));
-      if (!homeDir.isEmpty())
-      {
-         _sntprintf(path, MAX_PATH, _T("%s/etc/nxagentd.conf"), homeDir.cstr());
-      }
-		if ((path[0] != 0) && (_taccess(path, 4) == 0))
-		{
-			_tcscpy(g_szConfigFile, path);
-		}
-		else if (_taccess(SYSCONFDIR _T("/nxagentd.conf"), 4) == 0)
-		{
-			_tcscpy(g_szConfigFile, SYSCONFDIR _T("/nxagentd.conf"));
-		}
-		else if (_taccess(_T("/Database/etc/nxagentd.conf"), 4) == 0)	// for ZeroShell
-		{
-			_tcscpy(g_szConfigFile, _T("/Database/etc/nxagentd.conf"));
-		}
-		else
-		{
-			_tcscpy(g_szConfigFile, _T("/etc/nxagentd.conf"));
-		}
-	}
+	   SearchConfig(_T("nxagentd.conf"), g_szConfigFile);
 	if (!_tcscmp(g_szConfigIncludeDir, _T("{search}")))
-	{
-      TCHAR path[MAX_PATH] = _T("");
-      String homeDir = GetEnvironmentVariableEx(_T("NETXMS_HOME"));
-      if (!homeDir.isEmpty())
-      {
-         _sntprintf(path, MAX_PATH, _T("%s/etc/nxagentd.conf.d"), homeDir.cstr());
-      }
-		if ((path[0] != 0) && (_taccess(path, 4) == 0))
-		{
-			_tcscpy(g_szConfigIncludeDir, path);
-		}
-		else if (_taccess(SYSCONFDIR _T("/nxagentd.conf.d"), 4) == 0)
-		{
-			_tcscpy(g_szConfigIncludeDir, SYSCONFDIR _T("/nxagentd.conf.d"));
-		}
-		else if (_taccess(_T("/Database/etc/nxagentd.conf.d"), 4) == 0)
-		{
-			_tcscpy(g_szConfigIncludeDir, _T("/Database/etc/nxagentd.conf.d"));
-		}
-		else
-		{
-			_tcscpy(g_szConfigIncludeDir, _T("/etc/nxagentd.conf.d"));
-		}
-	}
-#else
-	if (!_tcscmp(g_szConfigFile, _T("{search}")))
-	{
-      TCHAR path[MAX_PATH];
-      GetNetXMSDirectory(nxDirEtc, path);
-      _tcscat(path, _T("\\nxagentd.conf"));
-      if (_taccess(path, 4) == 0)
-      {
-         _tcscpy(g_szConfigFile, path);
-      }
-      else
-      {
-         _tcscpy(g_szConfigFile, _T("C:\\nxagentd.conf"));
-      }
-   }
-	if (!_tcscmp(g_szConfigIncludeDir, _T("{search}")))
-	{
-      TCHAR path[MAX_PATH];
-      GetNetXMSDirectory(nxDirEtc, path);
-      _tcscat(path, _T("\\nxagentd.conf.d"));
-      if (_taccess(path, 4) == 0)
-      {
-         _tcscpy(g_szConfigIncludeDir, path);
-      }
-      else
-      {
-         _tcscpy(g_szConfigIncludeDir, _T("C:\\nxagentd.conf.d"));
-      }
-   }
-#endif
+      SearchConfig(_T("nxagentd.conf.d"), g_szConfigIncludeDir);
 
    if (bRestart)
       DoRestartActions(dwOldPID);

@@ -1636,9 +1636,9 @@ static void ClearStalledOfflineData(void *arg)
       TCHAR query[256];
       DB_HANDLE hdb = GetLocalDatabaseHandle();
 
-      for(int i = 0; i < deleteList.size(); i++)
+      for (int i = 0; i < deleteList.size(); i++)
       {
-         UINT64 serverId = deleteList.get(i);
+         uint64_t serverId = deleteList.get(i);
 
          DBBegin(hdb);
 
