@@ -962,6 +962,7 @@ BOOL Initialize()
 
    if (g_failFlags & FAIL_LOAD_CONFIG)
       nxlog_write_tag(NXLOG_WARNING, _T("config"), _T("Configuration loaded with errors"));
+   nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Main configuration file: %s"), g_szConfigFile);
    nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Configuration tree:"));
    g_config->print(nullptr);
 
