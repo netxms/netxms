@@ -628,7 +628,7 @@ void ConfigEntry::print(FILE *file, int level, TCHAR *prefix) const
       TCHAR name[256];
       _tcslcpy(name, m_name, 256);
       _tcslwr(name);
-      maskValue = (_tcsstr(name, _T("password")) != nullptr) || (_tcsstr(name, _T("secret")) != nullptr);
+      maskValue = (_tcsstr(name, _T("password")) != nullptr) || (_tcsstr(name, _T("secret")) != nullptr) || (_tcsstr(name, _T("token")) != nullptr);
    }
 
    if (level > 0)
