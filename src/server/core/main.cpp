@@ -49,12 +49,16 @@
 #include <server_custom_init.cpp>
 #endif
 
+#define DEBUG_TAG_STARTUP  _T("startup")
+
 /**
  * Externals
  */
 extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_syncerThreadPool;
 extern ThreadPool *g_discoveryThreadPool;
+
+extern Config g_serverConfig;
 
 void InitClientListeners();
 void InitMobileDeviceListeners();
@@ -829,21 +833,26 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	nxlog_set_console_writer(LogConsoleWriter);
 	nxlog_set_debug_writer(nullptr);
 
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Starting NetXMS server version ") NETXMS_VERSION_STRING _T(" build tag ") NETXMS_BUILD_TAG);
+   nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level set to %d"), nxlog_get_debug_level());
+   nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Configuration tree:"));
+   g_serverConfig.print(nullptr);
+
    if (g_netxmsdLibDir[0] == 0)
    {
       GetNetXMSDirectory(nxDirLib, g_netxmsdLibDir);
-      nxlog_debug(1, _T("LIB directory set to %s"), g_netxmsdLibDir);
+      nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("LIB directory set to %s"), g_netxmsdLibDir);
    }
 
 	// Set code page
 #ifndef _WIN32
 	if (SetDefaultCodepage(g_szCodePage))
 	{
-		nxlog_write(NXLOG_INFO, _T("Code page set to %hs"), g_szCodePage);
+		nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Code page set to %hs"), g_szCodePage);
 	}
 	else
 	{
-		nxlog_write(NXLOG_WARNING, _T("Unable to set codepage to %hs"), g_szCodePage);
+		nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to set codepage to %hs"), g_szCodePage);
 	}
 #endif
 
@@ -852,9 +861,9 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	{
 #ifdef _WIN32
 		if (SetProcessAffinityMask(GetCurrentProcess(), g_processAffinityMask))
-		   nxlog_write(NXLOG_INFO, _T("Process affinity mask set to 0x%08X"), g_processAffinityMask);
+		   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Process affinity mask set to 0x%08X"), g_processAffinityMask);
 #else
-		nxlog_write(NXLOG_WARNING, _T("Setting process CPU affinity is not supported on this operating system"));
+		nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Setting process CPU affinity is not supported on this operating system"));
 #endif
 	}
 
@@ -864,7 +873,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	if (wrc != 0)
 	{
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Call to WSAStartup() failed (%s)"), GetSystemErrorText(wrc, buffer, 1024));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Call to WSAStartup() failed (%s)"), GetSystemErrorText(wrc, buffer, 1024));
 		return FALSE;
 	}
 #endif
@@ -1310,8 +1319,6 @@ retry_db_lock:
    // Start uptime calculator for SLM
    ThreadCreate(UptimeCalculator);
 
-   nxlog_debug(2, _T("LIBDIR: %s"), g_netxmsdLibDir);
-
    // Call startup functions for the modules
    CALL_ALL_MODULES(pfServerStarted, ());
 
@@ -1329,8 +1336,8 @@ retry_db_lock:
    s_statCollectorThread = ThreadCreateEx(ServerStatCollector);
 
    g_flags |= AF_SERVER_INITIALIZED;
-   PostSystemEvent(EVENT_SERVER_STARTED, g_dwMgmtNode, NULL);
-   nxlog_debug(1, _T("Server initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
+   PostSystemEvent(EVENT_SERVER_STARTED, g_dwMgmtNode, nullptr);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Server initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
    return TRUE;
 }
 
