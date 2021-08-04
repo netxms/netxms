@@ -27,11 +27,6 @@
 #define NC_THREAD_KEY _T("NotificationChannel")
 
 /**
- * Static data
- */
-static uint64_t s_notificationId = 1;  // Next available notification ID
-
-/**
  * Class to store in queued notification message
  */
 class NotificationMessage
@@ -251,9 +246,25 @@ struct NCDriverDescriptor
    TCHAR name[MAX_OBJECT_NAME];
 };
 
+/**
+ * Configured drivers and channels
+ */
 static StringObjectMap<NCDriverDescriptor> s_driverList(Ownership::True);
 static StringObjectMap<NotificationChannel> s_channelList(Ownership::True);
 static Mutex s_channelListLock;
+
+/**
+ * Last used notification ID
+ */
+static VolatileCounter64 s_notificationId = 0;
+
+/**
+ * Get last used notification ID
+ */
+int64_t GetLastNotificationId()
+{
+   return s_notificationId;
+}
 
 /**
  * Notification message constructor
@@ -458,16 +469,16 @@ void NotificationChannel::saveToDatabase()
 void NotificationChannel::writeNotificationLog(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool success)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt;
 
-   hStmt = DBPrepare(hdb,
-               _T("INSERT INTO notification_log (id,notification_channel,notification_timestamp,recipient,subject,message,success) VALUES (?,?,?,?,?,?,?)"));
-
+   DB_STATEMENT hStmt = DBPrepare(hdb,
+         (g_dbSyntax == DB_SYNTAX_TSDB) ?
+            _T("INSERT INTO notification_log (id,notification_timestamp,notification_channel,recipient,subject,message,success) VALUES (?,to_timestamp(?),?,?,?,?,?)") :
+            _T("INSERT INTO notification_log (id,notification_timestamp,notification_channel,recipient,subject,message,success) VALUES (?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, s_notificationId++);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (uint32_t)time(nullptr));
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, InterlockedIncrement64(&s_notificationId));
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (uint32_t)time(nullptr));
+      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
       DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, recipient, DB_BIND_STATIC);
       DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, subject, DB_BIND_STATIC);
       DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, body, DB_BIND_STATIC);
@@ -477,9 +488,6 @@ void NotificationChannel::writeNotificationLog(const TCHAR *recipient, const TCH
    }
 
    DBConnectionPoolReleaseConnection(hdb);
-
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("NotificationLog: id %u, channel %s, timestamp %u, recipient %s, subject %s, message %s, success %s"),
-    s_notificationId - 1, m_name, time(nullptr), recipient, subject, body, success ? _T("True") : _T("False"));
 }
 
 /**
@@ -847,7 +855,7 @@ void LoadNotificationChannelDrivers()
       _tclosedir(dir);
    }
 #ifdef _WIN32
-   SetDllDirectory(NULL);
+   SetDllDirectory(nullptr);
 #endif
    nxlog_debug_tag(DEBUG_TAG, 1, _T("%d notification channel drivers loaded"), s_driverList.size());
 }
@@ -859,19 +867,31 @@ void LoadNotificationChannels()
 {
    int numberOfAddedDrivers = 0;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT result = DBSelect(hdb, _T("SELECT name,driver_name,description,configuration FROM notification_channels"));
-   if (result != nullptr)
+
+   int64_t id = ConfigReadInt64(_T("LastNotificationId"), 0);
+   if (id > s_notificationId)
+      s_notificationId = id;
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(id) FROM notification_log"));
+   if (hResult != nullptr)
    {
-      int numRows = DBGetNumRows(result);
+      if (DBGetNumRows(hResult) > 0)
+         s_notificationId = std::max(DBGetFieldInt64(hResult, 0, 0), static_cast<int64_t>(s_notificationId));
+      DBFreeResult(hResult);
+   }
+
+   hResult = DBSelect(hdb, _T("SELECT name,driver_name,description,configuration FROM notification_channels"));
+   if (hResult != nullptr)
+   {
+      int numRows = DBGetNumRows(hResult);
       for (int i = 0; i < numRows; i++)
       {
          TCHAR name[MAX_OBJECT_NAME];
          TCHAR driverName[MAX_OBJECT_NAME];
          TCHAR description[MAX_NC_DESCRIPTION];
-         DBGetField(result, i, 0, name, MAX_OBJECT_NAME);
-         DBGetField(result, i, 1, driverName, MAX_OBJECT_NAME);
-         DBGetField(result, i, 2, description, MAX_NC_DESCRIPTION);
-         char *configuration = DBGetFieldA(result, i, 3, nullptr, 0);
+         DBGetField(hResult, i, 0, name, MAX_OBJECT_NAME);
+         DBGetField(hResult, i, 1, driverName, MAX_OBJECT_NAME);
+         DBGetField(hResult, i, 2, description, MAX_NC_DESCRIPTION);
+         char *configuration = DBGetFieldA(hResult, i, 3, nullptr, 0);
          NotificationChannel *nc = CreateNotificationChannel(name, description, driverName, configuration);
          s_channelListLock.lock();
          s_channelList.set(name, nc);
@@ -879,9 +899,10 @@ void LoadNotificationChannels()
          numberOfAddedDrivers++;
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Notification channel %s successfully created"), name);
       }
-      DBFreeResult(result);
+      DBFreeResult(hResult);
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("%d notification channels added"), numberOfAddedDrivers);
+
    DBConnectionPoolReleaseConnection(hdb);
 }
 
@@ -893,23 +914,4 @@ void ShutdownNotificationChannels()
    s_channelListLock.lock();
    s_channelList.clear();  // This will delete all channels and destructors will handle correct shutdown
    s_channelListLock.unlock();
-}
-
-/**
- * Notification logging initialisation
- */
-void InitNotificationLogs()
-{
-   // Determine first available event id
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(id) FROM notification_log"));
-   if (hResult != nullptr)
-   {
-      if (DBGetNumRows(hResult) > 0)
-      {
-         s_notificationId = DBGetFieldUInt64(hResult, 0, 0) + 1;
-      }
-      DBFreeResult(hResult);
-   }
-   DBConnectionPoolReleaseConnection(hdb);
 }

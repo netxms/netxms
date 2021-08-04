@@ -290,6 +290,27 @@ static void BuildDropChunksQuery(const TCHAR *table, time_t cutoffTime, TCHAR *q
 }
 
 /**
+ * Delete expired log records and throttle housekeeper if needed. Returns false if shutdown time has arrived and housekeeper process should be aborted.
+ */
+static bool DeleteExpiredLogRecords(const TCHAR *logName, const TCHAR *logTable, const TCHAR *timestampColumn, const TCHAR *retentionParameter, DB_HANDLE hdb, time_t cycleStartTime)
+{
+   uint32_t retentionTime = ConfigReadULong(retentionParameter, 90);
+   if (retentionTime <= 0)
+      return true;
+
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing %s (retention time %d days)"), logName, retentionTime);
+   retentionTime *= 86400; // Convert days to seconds
+   TCHAR query[256];
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+      BuildDropChunksQuery(logTable, cycleStartTime - retentionTime, query, sizeof(query) / sizeof(TCHAR));
+   else
+      _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM %s WHERE %s<") INT64_FMT, logTable, timestampColumn, static_cast<int64_t>(cycleStartTime - retentionTime));
+   DBQuery(hdb, query);
+
+   return ThrottleHousekeeper();
+}
+
+/**
  * Housekeeper thread
  */
 static void HouseKeeper()
@@ -348,78 +369,28 @@ static void HouseKeeper()
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		CleanAlarmHistory(hdb);
 
-		// Remove outdated event log records
-		uint32_t retentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);
-		if (retentionTime > 0)
-		{
-	      nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing event log (retention time %d days)"), retentionTime);
-			retentionTime *= 86400;	// Convert days to seconds
-         TCHAR query[256];
-         if (g_dbSyntax == DB_SYNTAX_TSDB)
-            BuildDropChunksQuery(_T("event_log"), cycleStartTime - retentionTime, query, sizeof(query) / sizeof(TCHAR));
-         else
-            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
-			DBQuery(hdb, query);
-			if (!ThrottleHousekeeper())
-			   break;
-		}
-
-      // Remove outdated syslog records
-      retentionTime = ConfigReadULong(_T("Syslog.RetentionTime"), 90);
-      if (retentionTime > 0)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing syslog (retention time %d days)"), retentionTime);
-			retentionTime *= 86400;	// Convert days to seconds
-         TCHAR query[256];
-         if (g_dbSyntax == DB_SYNTAX_TSDB)
-            BuildDropChunksQuery(_T("syslog"), cycleStartTime - retentionTime, query, sizeof(query) / sizeof(TCHAR));
-         else
-            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
-			DBQuery(hdb, query);
-         if (!ThrottleHousekeeper())
-            break;
-		}
-
-      // Remove outdated windows event log records
-      retentionTime = ConfigReadULong(_T("WindowsEvents.LogRetentionTime"), 90);
-      if (retentionTime > 0)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing windows event log (retention time %d days)"), retentionTime);
-         retentionTime *= 86400; // Convert days to seconds
-         TCHAR query[256];
-         if (g_dbSyntax == DB_SYNTAX_TSDB)
-            BuildDropChunksQuery(_T("win_event_log"), cycleStartTime - retentionTime, query, sizeof(query) / sizeof(TCHAR));
-         else
-            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM win_event_log WHERE event_timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
-         DBQuery(hdb, query);
-         if (!ThrottleHousekeeper())
-            break;
-      }
+		// Remove expired log records
+		if (!DeleteExpiredLogRecords(_T("event log"), _T("event_log"), _T("event_timestamp"), _T("EventLogRetentionTime"), hdb, cycleStartTime))
+		   break;
+      if (!DeleteExpiredLogRecords(_T("syslog"), _T("syslog"), _T("msg_timestamp"), _T("Syslog.RetentionTime"), hdb, cycleStartTime))
+         break;
+      if (!DeleteExpiredLogRecords(_T("windows event log"), _T("win_event_log"), _T("event_timestamp"), _T("WindowsEvents.LogRetentionTime"), hdb, cycleStartTime))
+         break;
+      if (!DeleteExpiredLogRecords(_T("SNMP trap log"), _T("snmp_trap_log"), _T("trap_timestamp"), _T("SNMPTrapLogRetentionTime"), hdb, cycleStartTime))
+         break;
+      if (!DeleteExpiredLogRecords(_T("server action execution log"), _T("server_action_execution_log"), _T("action_timestamp"), _T("ActionExecutionLog.RetentionTime"), hdb, cycleStartTime))
+         break;
+      if (!DeleteExpiredLogRecords(_T("notification log"), _T("notification_log"), _T("notification_timestamp"), _T("NotificationLog.RetentionTime"), hdb, cycleStartTime))
+         break;
 
 		// Remove outdated audit log records
-		retentionTime = ConfigReadULong(_T("AuditLogRetentionTime"), 90);
+		int32_t retentionTime = ConfigReadULong(_T("AuditLogRetentionTime"), 90);
 		if (retentionTime > 0)
 		{
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing audit log (retention time %d days)"), retentionTime);
 			retentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
 			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
-			DBQuery(hdb, query);
-         if (!ThrottleHousekeeper())
-            break;
-		}
-
-		// Remove outdated SNMP trap log records
-		retentionTime = ConfigReadULong(_T("SNMPTrapLogRetentionTime"), 90);
-		if (retentionTime > 0)
-		{
-         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing SNMP trap log (retention time %d days)"), retentionTime);
-			retentionTime *= 86400;	// Convert days to seconds
-         TCHAR query[256];
-         if (g_dbSyntax == DB_SYNTAX_TSDB)
-            BuildDropChunksQuery(_T("snmp_trap_log"), cycleStartTime - retentionTime, query, sizeof(query) / sizeof(TCHAR));
-         else
-            _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_log WHERE trap_timestamp<") INT64_FMT, static_cast<int64_t>(cycleStartTime - retentionTime));
 			DBQuery(hdb, query);
          if (!ThrottleHousekeeper())
             break;

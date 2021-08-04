@@ -25,8 +25,10 @@
 /**
  * External functions
  */
+int64_t GetLastActionExecutionLogId();
 int32_t GetLastAuditRecordId();
 int64_t GetLastEventId();
+int64_t GetLastNotificationId();
 int64_t GetLastSnmpTrapId();
 uint64_t GetNextSyslogId();
 uint64_t GetNextWinEventId();
@@ -576,4 +578,6 @@ void SaveCurrentFreeId()
    ConfigWriteInt64(_T("LastSNMPTrapId"), GetLastSnmpTrapId(), true, false, true);
    ConfigWriteUInt64(_T("FirstFreeSyslogId"), GetNextSyslogId(), true, false, true);
    ConfigWriteUInt64(_T("FirstFreeWinEventId"), GetNextWinEventId(), true, false, true);
+   ConfigWriteInt64(_T("LastActionExecutionLogRecordId"), GetLastActionExecutionLogId(), true, false, true);
+   ConfigWriteInt64(_T("LastNotificationId"), GetLastNotificationId(), true, false, true);
 }

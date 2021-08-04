@@ -1251,14 +1251,28 @@ SELECT create_hypertable('event_log', 'event_timestamp', chunk_time_interval => 
 CREATE TABLE notification_log
 (
   id SQL_INT64 not null,
-  notification_channel varchar(63) not null,
+#ifdef DB_TSDB
+  notification_timestamp timestamptz not null,
+#else
   notification_timestamp integer not null,
+#endif
+  notification_channel varchar(63) not null,
   recipient varchar(2000) null,
   subject varchar(2000) null,
   message varchar(2000) null,
-  success integer not null,
+  success char(1) not null,
+#ifdef DB_TSDB
+  PRIMARY KEY(id,notification_timestamp)
+#else
   PRIMARY KEY(id)
+#endif
 ) TABLE_TYPE;
+
+CREATE INDEX idx_notification_log_timestamp ON notification_log(notification_timestamp);
+
+#ifdef DB_TSDB
+SELECT create_hypertable('notification_log', 'notification_timestamp', chunk_time_interval => interval '86400 seconds');
+#endif
 
 /**
  * Server action execution log
@@ -1266,16 +1280,32 @@ CREATE TABLE notification_log
 CREATE TABLE server_action_execution_log
 (
   id SQL_INT64 not null,
+#ifdef DB_TSDB
+  action_timestamp timestamptz not null,
+#else
   action_timestamp integer not null,
-  action_code integer not null,
+#endif
+  action_id integer not null,
   action_name varchar(63) null,
   channel_name varchar(63) null,
   recipient varchar(2000) null,
   subject varchar(2000) null,
   action_data varchar(2000) null,
-  success integer not null,
+  event_id SQL_INT64 not null,
+  event_code integer not null,
+  success char(1) not null,
+#ifdef DB_TSDB
+  PRIMARY KEY(id,action_timestamp)
+#else
   PRIMARY KEY(id)
+#endif
 ) TABLE_TYPE;
+
+CREATE INDEX idx_server_action_log_timestamp ON server_action_execution_log(action_timestamp);
+
+#ifdef DB_TSDB
+SELECT create_hypertable('server_action_execution_log', 'action_timestamp', chunk_time_interval => interval '86400 seconds');
+#endif
 
 /**
  * Actions on events
