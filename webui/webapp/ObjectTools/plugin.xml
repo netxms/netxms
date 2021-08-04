@@ -36,6 +36,9 @@
                      <instanceof
                            value="org.netxms.ui.eclipse.objects.ObjectWrapper">
                      </instanceof>
+                     <instanceof
+                           value="org.netxms.client.events.AlarmHandle">
+                     </instanceof>
                   </or>
                </iterate>
             </visibleWhen>

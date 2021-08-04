@@ -176,7 +176,7 @@ public class AlarmList extends CompositeWithMessageBar
       notifier = AlarmNotifier.getInstance();
 
       getContent().setLayout(new FormLayout());
-		
+
       // Create filter area
       filterText = new FilterText(getContent(), SWT.NONE, null, true);
       filterText.addModifyListener(new ModifyListener() {

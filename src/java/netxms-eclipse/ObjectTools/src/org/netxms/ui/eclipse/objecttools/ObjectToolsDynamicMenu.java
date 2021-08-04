@@ -40,6 +40,7 @@ import org.eclipse.ui.services.IEvaluationService;
 import org.eclipse.ui.services.IServiceLocator;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.events.AlarmHandle;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
@@ -60,7 +61,7 @@ import org.netxms.ui.eclipse.tools.ImageCache;
 public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkbenchContribution
 {
 	private IEvaluationService evalService;
-	
+
 	/**
 	 * Creates a contribution item with a null id.
 	 */
@@ -100,7 +101,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 
 		final Set<ObjectContext> nodes = buildNodeSet((IStructuredSelection)selection);
 		final Menu toolsMenu = new Menu(menu);
-		
+
 		final ImageCache imageCache = new ImageCache();
 		toolsMenu.addDisposeListener(new DisposeListener() {
          @Override
@@ -109,7 +110,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
             imageCache.dispose();
          }
       });
-		
+
 		ObjectTool[] tools = ObjectToolsCache.getInstance().getTools();
 		Arrays.sort(tools, new Comparator<ObjectTool>() {
 			@Override
@@ -118,7 +119,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 				return arg0.getName().replace("&", "").compareToIgnoreCase(arg1.getName().replace("&", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			}
 		});
-		
+
 		Map<String, Menu> menus = new HashMap<String, Menu>();
 		int added = 0;
 		for(int i = 0; i < tools.length; i++)
@@ -173,7 +174,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			toolsMenu.dispose();
 		}
 	}
-	
+
 	/**
 	 * Build node set from selection
 	 * 
@@ -183,8 +184,8 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	private Set<ObjectContext> buildNodeSet(IStructuredSelection selection)
 	{
 		final Set<ObjectContext> nodes = new HashSet<ObjectContext>();
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		
+      final NXCSession session = ConsoleSharedData.getSession();
+
 		for(Object o : selection.toList())
 		{
 			if (o instanceof AbstractNode)
@@ -194,14 +195,23 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			else if ((o instanceof Container) || (o instanceof ServiceRoot) || (o instanceof Subnet) || (o instanceof Cluster))
 			{
 				for(AbstractObject n : ((AbstractObject)o).getAllChildren(AbstractObject.OBJECT_NODE))
-					nodes.add(new ObjectContext((AbstractNode)n, null));
+               nodes.add(new ObjectContext((AbstractNode)n, null));
 			}
 			else if (o instanceof Alarm)
 			{
-				AbstractNode n = (AbstractNode)session.findObjectById(((Alarm)o).getSourceObjectId(), AbstractNode.class);
+            AbstractNode n = session.findObjectById(((Alarm)o).getSourceObjectId(), AbstractNode.class);
 				if (n != null)
 					nodes.add(new ObjectContext(n, (Alarm)o));
 			} 
+         else if (o instanceof AlarmHandle)
+         {
+            if (((AlarmHandle)o).alarm != null)
+            {
+               AbstractNode n = session.findObjectById(((AlarmHandle)o).alarm.getSourceObjectId(), AbstractNode.class);
+               if (n != null)
+                  nodes.add(new ObjectContext(n, ((AlarmHandle)o).alarm));
+            }
+         }
 			else if (o instanceof ObjectWrapper)
 			{
 			   AbstractObject n = ((ObjectWrapper)o).getObject();
