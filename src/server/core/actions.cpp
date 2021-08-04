@@ -133,6 +133,19 @@ static SynchronizedSharedHashMap<uint32_t, Action> s_actions;
 static uint32_t s_updateCode;
 
 /**
+ * Action execution log record ID
+ */
+static VolatileCounter64 s_logRecordId = 0;
+
+/**
+ * Get last used actin execution log record ID
+ */
+int64_t GetLastActionExecutionLogId()
+{
+   return s_logRecordId;
+}
+
+/**
  * Send updates to all connected clients
  */
 static void SendActionDBUpdate(ClientSession *session, const Action *action)
@@ -148,10 +161,9 @@ bool LoadActions()
    bool success = false;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT action_id,guid,action_name,action_type,")
-                                     _T("is_disabled,rcpt_addr,email_subject,action_data,")
-                                     _T("channel_name FROM actions ORDER BY action_id"));
-   if (hResult != NULL)
+
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT action_id,guid,action_name,action_type,is_disabled,rcpt_addr,email_subject,action_data,channel_name FROM actions ORDER BY action_id"));
+   if (hResult != nullptr)
    {
       s_actions.clear();
 
@@ -171,6 +183,18 @@ bool LoadActions()
    {
       nxlog_write(NXLOG_ERROR, _T("Error loading server action configuration from database"));
    }
+
+   int64_t id = ConfigReadInt64(_T("LastActionExecutionLogRecordId"), 0);
+   if (id > s_logRecordId)
+      s_logRecordId = id;
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM server_action_execution_log"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_logRecordId = std::max(DBGetFieldInt64(hResult, 0, 0), static_cast<int64_t>(s_logRecordId));
+      DBFreeResult(hResult);
+   }
+
    DBConnectionPoolReleaseConnection(hdb);
    return success;
 }
@@ -375,38 +399,34 @@ static bool ExecuteActionScript(const TCHAR *script, const Event *event)
 }
 
 /**
- * Saves server action execution log message to DB
+ * Saves server action execution log record to DB
  */
-static void SaveServerActionExecutionLog(uint64_t id, uint32_t code, const TCHAR* action, const TCHAR* channelName, const TCHAR* recipient, const TCHAR* subject, const TCHAR* body, bool success)
+static void WriteServerActionExecutionLog(uint64_t eventId, uint32_t eventCode, uint32_t actionId, const TCHAR* actionName, const TCHAR* channelName, const TCHAR* recipient, const TCHAR* subject, const TCHAR* body, bool success)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt;
-
-   hStmt = DBPrepare(hdb,
-               _T("INSERT INTO server_action_execution_log (id,action_timestamp,action_code,action_name,channel_name,recipient,subject,action_data,success) VALUES (?,?,?,?,?,?,?,?,?)"));
+   DB_STATEMENT hStmt = DBPrepare(hdb,
+         g_dbSyntax == DB_SYNTAX_TSDB ?
+            _T("INSERT INTO server_action_execution_log (id,action_timestamp,action_id,action_name,channel_name,recipient,subject,action_data,event_id,event_code,success) VALUES (?,to_timestamp(?),?,?,?,?,?,?,?,?,?)") :
+            _T("INSERT INTO server_action_execution_log (id,action_timestamp,action_id,action_name,channel_name,recipient,subject,action_data,event_id,event_code,success) VALUES (?,?,?,?,?,?,?,?,?,?,?)"));
 
    if (hStmt != nullptr)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (uint32_t)time(nullptr));
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, code);
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, action, DB_BIND_STATIC);
+      DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, InterlockedIncrement64(&s_logRecordId));
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr)));
+      DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, actionId);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, actionName, DB_BIND_STATIC);
       DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, channelName, DB_BIND_STATIC);
       DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, recipient, DB_BIND_STATIC);
       DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, subject, DB_BIND_STATIC);
       DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, body, DB_BIND_STATIC);
-      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, success ? 1 : 0);
+      DBBind(hStmt, 9, DB_SQLTYPE_BIGINT, eventId);
+      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, eventCode);
+      DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, success ? _T("1") : _T("0"), DB_BIND_STATIC);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
 
    DBConnectionPoolReleaseConnection(hdb);
-
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("ServerActionExecutionLog:")
-                                 _T(" action id %u, action timestamp %u, action code %u, action name %s,")
-                                 _T(" channel name %s, recipient %s, subject %s, action data %s, success %s"),
-                                 id, time(nullptr), code, action, 
-                                 channelName, recipient, subject, body, success ? _T("True") : _T("False"));
 }
 
 /**
@@ -532,7 +552,7 @@ bool ExecuteAction(uint32_t actionId, const Event *event, const Alarm *alarm)
             default:
                break;
          }
-         SaveServerActionExecutionLog(event->getId(), event->getCode(), action->name, action->channelName, expandedRcpt, expandedSubject, expandedData, success);
+         WriteServerActionExecutionLog(event->getId(), event->getCode(), action->id, action->name, action->channelName, expandedRcpt, expandedSubject, expandedData, success);
       }
    }
    return success;
@@ -760,7 +780,7 @@ void CreateActionExportRecord(StringBuffer &xml, uint32_t id)
  */
 bool IsValidActionId(uint32_t id)
 {
-   return s_actions.getShared(id) != NULL;
+   return s_actions.getShared(id) != nullptr;
 }
 
 /**

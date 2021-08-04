@@ -24,29 +24,124 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 39.9 to 40.0
+ * Upgrade from 39.11 to 40.0
  */
-static bool H_UpgradeFromV10()
+static bool H_UpgradeFromV11()
 {
    CHK_EXEC(SetMajorSchemaVersion(40, 0));
    return true;
 }
 
 /**
- * Upgrade from 39.8 to 39.9
+ * Upgrade from 39.10 to 39.11
+ */
+static bool H_UpgradeFromV10()
+{
+   // Drop incorrectly created notification and action execution log tables in upgrade for version 39.6
+   if (DBIsTableExist(g_dbHandle, _T("notification_log")) == DBIsTableExist_Found)
+      CHK_EXEC_NO_SP(SQLQuery(_T("DROP TABLE notification_log")));
+
+   if (DBIsTableExist(g_dbHandle, _T("server_action_execution_log")) == DBIsTableExist_Found)
+      CHK_EXEC_NO_SP(SQLQuery(_T("DROP TABLE server_action_execution_log")));
+
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      CHK_EXEC(CreateTable(
+         _T("CREATE TABLE notification_log (")
+         _T("   id $SQL:INT64 not null,")
+         _T("   notification_timestamp timestamptz not null,")
+         _T("   notification_channel varchar(63) not null,")
+         _T("   recipient varchar(2000) null,")
+         _T("   subject varchar(2000) null,")
+         _T("   message varchar(2000) null,")
+         _T("   success char(1) not null,")
+         _T("PRIMARY KEY(id,notification_timestamp))")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('notification_log', 'notification_timestamp', chunk_time_interval => interval '86400 seconds')")));
+   }
+   else
+   {
+      CHK_EXEC(CreateTable(
+         _T("CREATE TABLE notification_log (")
+         _T("   id $SQL:INT64 not null,")
+         _T("   notification_channel varchar(63) not null,")
+         _T("   notification_timestamp integer not null,")
+         _T("   recipient varchar(2000) null,")
+         _T("   subject varchar(2000) null,")
+         _T("   message varchar(2000) null,")
+         _T("   success char(1) not null,")
+         _T("PRIMARY KEY(id))")));
+   }
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_notification_log_timestamp ON notification_log(notification_timestamp)")));
+
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      CHK_EXEC(CreateTable(
+         _T("CREATE TABLE server_action_execution_log (")
+         _T("   id $SQL:INT64 not null,")
+         _T("   action_timestamp timestamptz not null,")
+         _T("   action_id integer not null,")
+         _T("   action_name varchar(63) null,")
+         _T("   channel_name varchar(63) null,")
+         _T("   recipient varchar(2000) null,")
+         _T("   subject varchar(2000) null,")
+         _T("   action_data varchar(2000) null,")
+         _T("   event_id $SQL:INT64 not null,")
+         _T("   event_code integer not null,")
+         _T("   success char(1) not null,")
+         _T("PRIMARY KEY(id,action_timestamp))")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('server_action_execution_log', 'action_timestamp', chunk_time_interval => interval '86400 seconds')")));
+   }
+   else
+   {
+      CHK_EXEC(CreateTable(
+         _T("CREATE TABLE server_action_execution_log (")
+         _T("   id $SQL:INT64 not null,")
+         _T("   action_timestamp integer not null,")
+         _T("   action_id integer not null,")
+         _T("   action_name varchar(63) null,")
+         _T("   channel_name varchar(63) null,")
+         _T("   recipient varchar(2000) null,")
+         _T("   subject varchar(2000) null,")
+         _T("   action_data varchar(2000) null,")
+         _T("   event_id $SQL:INT64 not null,")
+         _T("   event_code integer not null,")
+         _T("   success char(1) not null,")
+         _T("PRIMARY KEY(id))")));
+   }
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_server_action_log_timestamp ON server_action_execution_log(action_timestamp)")));
+
+   CHK_EXEC(CreateConfigParam(_T("ActionExecutionLog.RetentionTime"),
+         _T("90"),
+         _T("Retention time in days for the records in server action execution log. All records older than specified will be deleted by housekeeping process."),
+         _T("days"),
+         'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("NotificationLog.RetentionTime"),
+         _T("90"),
+         _T("Retention time in days for the records in notification log. All records older than specified will be deleted by housekeeping process."),
+         _T("days"),
+         'I', true, false, false, false));
+
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='JobHistoryRetentionTime'")));
+
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
+ * Upgrade from 39.9 to 39.10
  */
 static bool H_UpgradeFromV9()
 {
    CHK_EXEC(CreateTable(
-   _T("CREATE TABLE network_map_deleted_nodes (")
-   _T("   map_id integer not null,")
-   _T("   object_id integer not null,")
-   _T("   element_index integer not null,")
-   _T("   position_x integer not null,")
-   _T("   position_y integer not null,")
-   _T("PRIMARY KEY(map_id, object_id))")));
+         _T("CREATE TABLE network_map_deleted_nodes (")
+         _T("   map_id integer not null,")
+         _T("   object_id integer not null,")
+         _T("   element_index integer not null,")
+         _T("   position_x integer not null,")
+         _T("   position_y integer not null,")
+         _T("PRIMARY KEY(map_id, object_id))")));
 
-   CHK_EXEC(SetSchemaLevelForMajorVersion(39, 10));
+   CHK_EXEC(SetMinorSchemaVersion(10));
    return true;
 }
 
@@ -182,30 +277,8 @@ static bool H_UpgradeFromV7()
  */
 static bool H_UpgradeFromV6()
 {
-   CHK_EXEC(CreateTable(
-      _T("CREATE TABLE notification_log (")
-      _T("   id $SQL:INT64 not null,")
-      _T("   notification_channel varchar(63) not null,")
-      _T("   notification_timestamp integer not null,")
-      _T("   recipient varchar(2000) null,")
-      _T("   subject varchar(2000) null,")
-      _T("   message varchar(2000) null,")
-      _T("   success integer not null,")
-      _T("PRIMARY KEY(id))")));
-
-      CHK_EXEC(CreateTable(
-      _T("CREATE TABLE server_action_execution_log (")
-      _T("   id $SQL:INT64 not null,")
-      _T("   action_timestamp integer not null,")
-      _T("   action_code integer not null,")
-      _T("   action_name varchar(63) null,")
-      _T("   channel_name varchar(63) null,")
-      _T("   recipient varchar(2000) null,")
-      _T("   subject varchar(2000) null,")
-      _T("   action_data varchar(2000) null,")
-      _T("   success integer not null,")
-      _T("PRIMARY KEY(id))")));
-
+   // This upgrade was creating notification and server action logs with incorrect structure
+   // Now those tables created in upgrade procedure for version 39.10
    CHK_EXEC(SetMinorSchemaVersion(7));
    return true;
 }
@@ -354,8 +427,9 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 10,  40, 0,  H_UpgradeFromV10  },
-   { 9,  39, 10,  H_UpgradeFromV9  },
+   { 11, 40, 0,  H_UpgradeFromV11 },
+   { 10, 39, 11, H_UpgradeFromV10 },
+   { 9,  39, 10, H_UpgradeFromV9  },
    { 8,  39, 9,  H_UpgradeFromV8  },
    { 7,  39, 8,  H_UpgradeFromV7  },
    { 6,  39, 7,  H_UpgradeFromV6  },
