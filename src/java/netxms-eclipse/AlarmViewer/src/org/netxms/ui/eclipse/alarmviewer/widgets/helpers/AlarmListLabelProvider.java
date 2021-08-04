@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.events.AlarmHandle;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ZoneMember;
 import org.netxms.client.users.AbstractUserObject;

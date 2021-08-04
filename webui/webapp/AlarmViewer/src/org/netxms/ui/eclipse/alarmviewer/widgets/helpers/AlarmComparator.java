@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.netxms.client.NXCSession;
+import org.netxms.client.events.AlarmHandle;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ZoneMember;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
