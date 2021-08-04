@@ -16,12 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.alarmviewer.widgets.helpers;
-
-import org.netxms.client.events.Alarm;
+package org.netxms.client.events;
 
 /**
- * Handle for alarms selected for display
+ * Helper class to maintain persistent object for alarm with given ID.
  */
 public class AlarmHandle
 {
@@ -32,5 +30,14 @@ public class AlarmHandle
    {
       this.id = alarm.getId();
       this.alarm = alarm;
+   }
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "AlarmHandle [id=" + id + ", alarm=" + alarm + "]";
    }
 }
