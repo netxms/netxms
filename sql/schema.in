@@ -1301,7 +1301,7 @@ CREATE TABLE server_action_execution_log
 #endif
 ) TABLE_TYPE;
 
-CREATE INDEX idx_server_action_log_timestamp ON server_action_execution_log(action_timestamp);
+CREATE INDEX idx_srv_action_log_timestamp ON server_action_execution_log(action_timestamp);
 
 #ifdef DB_TSDB
 SELECT create_hypertable('server_action_execution_log', 'action_timestamp', chunk_time_interval => interval '86400 seconds');
