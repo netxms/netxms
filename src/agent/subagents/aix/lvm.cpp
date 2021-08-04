@@ -375,7 +375,8 @@ static ObjectArray<VolumeGroup> *ReadVolumeGroups()
 {
    ObjectArray<VolumeGroup> *vgs = new ObjectArray<VolumeGroup>(16, 16, Ownership::True);
    struct CuAt object;
-   long rc = CAST_FROM_POINTER(odm_get_obj(CuAt_CLASS, "attribute='vgserial_id'", &object, ODM_FIRST), long);
+   char query[] = "attribute='vgserial_id'";
+   long rc = CAST_FROM_POINTER(odm_get_obj(CuAt_CLASS, query, &object, ODM_FIRST), long);
    while((rc != 0) && (rc != -1))
    {
       // Sanity check - some versions of AIX return all attributes despite filter in odm_get_obj
@@ -385,7 +386,7 @@ static ObjectArray<VolumeGroup> *ReadVolumeGroups()
          if (vg != NULL)
             vgs->add(vg);
       }
-      rc = CAST_FROM_POINTER(odm_get_obj(CuAt_CLASS, "attribute='vgserial_id'", &object, ODM_NEXT), long);
+      rc = CAST_FROM_POINTER(odm_get_obj(CuAt_CLASS, query, &object, ODM_NEXT), long);
    }
    return vgs;
 }

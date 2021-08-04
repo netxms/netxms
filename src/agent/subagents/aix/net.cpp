@@ -246,12 +246,8 @@ retry_ifconf:
 #endif
       }
 
-      auto it = ifnames.iterator();
-      while(it->hasNext())
-      {
-         value->add(it->next());
-      }
-      delete it;
+      for(const TCHAR* n : ifnames)
+         value->add(n);
 
       nRet = SYSINFO_RC_SUCCESS;
    }

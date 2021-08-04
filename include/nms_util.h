@@ -1559,7 +1559,7 @@ public:
 
    Iterator<T> end()
    {
-      return Iterator<T>(new ArrayIterator(this, m_size - 1));
+      return Iterator<T>(new ArrayIterator(this, size() - 1));
    }
 };
 
