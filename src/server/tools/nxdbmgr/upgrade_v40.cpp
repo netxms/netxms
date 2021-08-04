@@ -101,7 +101,7 @@ static bool H_UpgradeFromV66()
             _T("   success char(1) not null,")
             _T("PRIMARY KEY(id))")));
       }
-      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_server_action_log_timestamp ON server_action_execution_log(action_timestamp)")));
+      CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_srv_action_log_timestamp ON server_action_execution_log(action_timestamp)")));
 
       CHK_EXEC(CreateConfigParam(_T("ActionExecutionLog.RetentionTime"),
             _T("90"),
