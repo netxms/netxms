@@ -456,6 +456,7 @@ Var
   dbInitCheckCreateDB: TNewCheckBox;
   dbInitType: TNewComboBox;
   dbInitServerLabel: TNewStaticText;
+  taskPageShown, serverWasConfigured: Boolean;
 
 #include "firewall.iss"
 
@@ -469,10 +470,21 @@ Begin
 End;
 
 Function InitializeSetup(): Boolean;
+Var
+  flag: Cardinal;
 Begin
+  serverWasConfigured := False;
+  If RegQueryDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\NetXMS\Server', 'ServerIsConfigured', flag) Then Begin
+    Log('Server configuration flag from pre-3.9 version is present: ' + IntToStr(flag));
+    If flag <> 0 Then Begin
+      serverWasConfigured := True;
+    End;
+  End;
+
   // Common suffix for backup files
   backupFileSuffix := '.bak.' + GetDateTimeString('yyyymmddhhnnss', #0, #0);
-  Result := TRUE
+  taskPageShown := False;
+  Result := True;
 End;
 
 Procedure OnDatabaseSelectionChange(Sender: TObject);
@@ -644,6 +656,16 @@ End;
 Procedure InitializeWizard;
 Begin
   CreateDatabaseInitPage;
+End;
+
+Procedure CurPageChanged(CurPageID: Integer);
+Begin
+  If (CurPageID = wpSelectTasks) And Not taskPageShown Then Begin
+    taskPageShown := True;
+    If serverWasConfigured Then Begin
+      WizardSelectTasks('!initializeDatabase');
+    End;
+  End;
 End;
 
 Function ShouldSkipPage(PageID: Integer): Boolean;
