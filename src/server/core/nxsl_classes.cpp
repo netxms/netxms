@@ -983,24 +983,22 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
    if (compareAttributeName(attr, "proxyNodes"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
-      IntegerArray<UINT32> *proxies = zone->getAllProxyNodes();
-      for(int i = 0; i < proxies->size(); i++)
+      IntegerArray<uint32_t> proxies = zone->getAllProxyNodes();
+      for(int i = 0; i < proxies.size(); i++)
       {
-         shared_ptr<NetObj> node = FindObjectById(proxies->get(i), OBJECT_NODE);
+         shared_ptr<NetObj> node = FindObjectById(proxies.get(i), OBJECT_NODE);
          if (node != nullptr)
             array->append(node->createNXSLObject(vm));
       }
       value = vm->createValue(array);
-      delete proxies;
    }
    else if (compareAttributeName(attr, "proxyNodeIds"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
-      IntegerArray<UINT32> *proxies = zone->getAllProxyNodes();
-      for(int i = 0; i < proxies->size(); i++)
-         array->append(vm->createValue(proxies->get(i)));
+      IntegerArray<uint32_t> proxies = zone->getAllProxyNodes();
+      for(int i = 0; i < proxies.size(); i++)
+         array->append(vm->createValue(proxies.get(i)));
       value = vm->createValue(array);
-      delete proxies;
    }
    else if (compareAttributeName(attr, "uin"))
    {

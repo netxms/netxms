@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 40.67 to 40.68
+ */
+static bool H_UpgradeFromV67()
+{
+   if (GetSchemaLevelForMajorVersion(39) < 12)
+   {
+      CHK_EXEC_NO_SP(DBDropColumn(g_dbHandle, _T("nodes"), _T("status_poll_type")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(39, 12));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(68));
+   return true;
+}
+
+/**
  * Upgrade from 40.66 to 40.67
  */
 static bool H_UpgradeFromV66()
@@ -1899,6 +1913,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 67, 40, 68, H_UpgradeFromV67 },
    { 66, 40, 67, H_UpgradeFromV66 },
    { 65, 40, 66, H_UpgradeFromV65 },
    { 64, 40, 65, H_UpgradeFromV64 },

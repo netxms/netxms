@@ -365,7 +365,6 @@ CREATE TABLE nodes
   snmp_engine_id varchar(255) null,
   secret varchar(88) null,
   agent_port integer not null,
-  status_poll_type integer not null,
   agent_version varchar(63) null,
   agent_id varchar(36) null,
   hardware_id varchar(40) null,

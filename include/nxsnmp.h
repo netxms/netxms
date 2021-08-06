@@ -870,6 +870,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *tran
          const uint32_t *oidBinary, size_t oidLen, void *value, size_t bufferSize, uint32_t dwFlags);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR *oidStr,
          const UINT32 *oidBinary, size_t oidLen, void *value, size_t bufferSize, uint32_t flags, uint32_t *dataLen);
+bool LIBNXSNMP_EXPORTABLE CheckSNMPIntegerValue(SNMP_Transport *snmpTransport, const TCHAR *oid, int32_t value);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid,
          uint32_t (* handler)(SNMP_Variable *, SNMP_Transport *, void *), void *context, bool logErrors = false, bool failOnShutdown = false);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen,

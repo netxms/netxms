@@ -98,6 +98,27 @@ Array::Array(const Array *src)
 }
 
 /**
+ * Move constructor
+ */
+Array::Array(Array&& src)
+{
+   m_size = src.m_size;
+   m_grow = src.m_grow;
+   m_allocated = src.m_allocated;
+   m_elementSize = src.m_elementSize;
+   m_data = src.m_data;
+   m_objectOwner = src.m_objectOwner;
+   m_objectDestructor = src.m_objectDestructor;
+   m_storePointers = src.m_storePointers;
+   m_context = src.m_context;
+
+   // Reset source object
+   src.m_size = 0;
+   src.m_allocated = 0;
+   src.m_data = nullptr;
+}
+
+/**
  * Destructor
  */
 Array::~Array()
