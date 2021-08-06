@@ -1345,6 +1345,7 @@ protected:
 
    Array(const void *data, int initial, int grow, size_t elementSize);
    Array(const Array *src);
+   Array(Array&& src);
 
    void *__getBuffer() const { return m_data; }
 
@@ -1422,6 +1423,7 @@ private:
 
 public:
 	ObjectArray(int initial = 0, int grow = 16, Ownership owner = Ownership::False) : Array(initial, grow, owner) { m_objectDestructor = destructor; }
+	ObjectArray(ObjectArray&& src) : Array(std::move(src)) { }
 	virtual ~ObjectArray() { }
 
 	int add(T *object) { return Array::add((void *)object); }
@@ -1463,6 +1465,7 @@ private:
 
 public:
 	ObjectRefArray(int initial = 0, int grow = 16) : Array(initial, grow, Ownership::False) { m_objectDestructor = destructor; }
+	ObjectRefArray(ObjectRefArray&& src) : Array(std::move(src)) { }
 	virtual ~ObjectRefArray() { }
 
 	int add(T *object) { return Array::add((void *)object); }
@@ -1491,6 +1494,7 @@ public:
 	IntegerArray(int initial = 0, int grow = 16) : Array(nullptr, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
 	IntegerArray(const IntegerArray<T> *src) : Array(src) { }
    IntegerArray(const IntegerArray<T>& src) : Array(&src) { }
+   IntegerArray(IntegerArray<T>&& src) : Array(std::move(src)) { }
 	virtual ~IntegerArray() { }
 
    int add(T value) { return Array::add(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
@@ -1531,6 +1535,7 @@ public:
 	StructArray(int initial = 0, int grow = 16) : Array(nullptr, initial, grow, sizeof(T)) { m_objectDestructor = destructor; }
 	StructArray(const T *data, int size, int grow = 16) : Array(data, size, grow, sizeof(T)) { m_objectDestructor = destructor; }
 	StructArray(const StructArray<T> *src) : Array(src) { }
+	StructArray(StructArray<T>&& src) : Array(std::move(src)) { }
 	virtual ~StructArray() { }
 
 	int add(const T *element) { return Array::add((void *)element); }

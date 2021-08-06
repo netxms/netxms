@@ -27,7 +27,7 @@
  */
 struct INDEX_ELEMENT
 {
-   UINT64 key;
+   uint64_t key;
    void *object;
 };
 
@@ -39,10 +39,18 @@ struct INDEX_HEAD
    INDEX_ELEMENT *elements;
    size_t size;
    size_t allocated;
-   UINT64 maxKey;
+   uint64_t maxKey;
    VolatileCounter readers;
    VolatileCounter writers;
 };
+
+/**
+ * Default object destructor
+ */
+static void DefaultObjectDestructor(void *object, AbstractIndexBase *index)
+{
+   MemFree(object);
+}
 
 /**
  * Constructor for object index
@@ -55,7 +63,7 @@ AbstractIndexBase::AbstractIndexBase(Ownership owner)
 	m_owner = static_cast<bool>(owner);
 	m_startupMode = false;
 	m_dirty = false;
-	m_objectDestructor = free;
+	m_objectDestructor = DefaultObjectDestructor;
 }
 
 /**
@@ -116,7 +124,7 @@ void AbstractIndexBase::setStartupMode(bool startupMode)
       }
       else
       {
-         m_secondary->elements = NULL;
+         m_secondary->elements = nullptr;
       }
    }
    m_dirty = false;
@@ -136,7 +144,7 @@ void AbstractIndexBase::swapAndWait()
 /**
  * Acquire index
  */
-INDEX_HEAD *AbstractIndexBase::acquireIndex()
+INDEX_HEAD *AbstractIndexBase::acquireIndex() const
 {
    INDEX_HEAD *h;
    while(true)
@@ -165,7 +173,7 @@ static inline void ReleaseIndex(INDEX_HEAD *h)
  * @param object object
  * @return true if existing object was replaced
  */
-bool AbstractIndexBase::put(UINT64 key, void *object)
+bool AbstractIndexBase::put(uint64_t key, void *object)
 {
    if (m_startupMode)
    {
@@ -255,7 +263,7 @@ bool AbstractIndexBase::put(UINT64 key, void *object)
  *
  * @param key object's key
  */
-void AbstractIndexBase::remove(UINT64 key)
+void AbstractIndexBase::remove(uint64_t key)
 {
    if (m_startupMode)
    {
@@ -337,7 +345,7 @@ void AbstractIndexBase::clear()
  * @param key object's key
  * @return element index or -1 if not found
  */
-ssize_t AbstractIndexBase::findElement(INDEX_HEAD *index, UINT64 key)
+ssize_t AbstractIndexBase::findElement(INDEX_HEAD *index, uint64_t key)
 {
    size_t first, last, mid;
 
@@ -373,25 +381,38 @@ ssize_t AbstractIndexBase::findElement(INDEX_HEAD *index, UINT64 key)
  * @param key key
  * @return object with given key or NULL
  */
-void *AbstractIndexBase::get(UINT64 key)
+void *AbstractIndexBase::get(uint64_t key) const
 {
    if (m_startupMode && m_dirty)
    {
       qsort(m_primary->elements, m_primary->size, sizeof(INDEX_ELEMENT), IndexCompare);
       m_primary->maxKey = (m_primary->size > 0) ? m_primary->elements[m_primary->size - 1].key : 0;
-      m_dirty = false;
+      const_cast<AbstractIndexBase*>(this)->m_dirty = false;   // This is internal marker, changing it does not break const contract
    }
    INDEX_HEAD *index = acquireIndex();
 	ssize_t pos = findElement(index, key);
-	void *object = (pos == -1) ? NULL : index->elements[pos].object;
+	void *object = (pos == -1) ? nullptr : index->elements[pos].object;
    ReleaseIndex(index);
 	return object;
 }
 
 /**
+ * Get all keys in index
+ */
+IntegerArray<uint64_t> AbstractIndexBase::keys() const
+{
+   INDEX_HEAD *index = acquireIndex();
+   IntegerArray<uint64_t> result(index->size);
+   for(size_t i = 0; i < index->size; i++)
+      result.add(index->elements[i].key);
+   ReleaseIndex(index);
+   return result;
+}
+
+/**
  * Get index size
  */
-size_t AbstractIndexBase::size()
+size_t AbstractIndexBase::size() const
 {
    INDEX_HEAD *index = acquireIndex();
 	size_t s = index->size;
@@ -405,9 +426,9 @@ size_t AbstractIndexBase::size()
  * @param comparator comparing function (must return true for object to be found)
  * @param data user data passed to comparator
  */
-void *AbstractIndexBase::find(bool (*comparator)(void *, void *), void *data)
+void *AbstractIndexBase::find(bool (*comparator)(void *, void *), void *data) const
 {
-	void *result = NULL;
+	void *result = nullptr;
 
    INDEX_HEAD *index = acquireIndex();
 	for(size_t i = 0; i < index->size; i++)
@@ -427,7 +448,7 @@ void *AbstractIndexBase::find(bool (*comparator)(void *, void *), void *data)
  * @param comparator comparing function (must return true for object to be found)
  * @param data user data passed to comparator
  */
-void AbstractIndexBase::findAll(Array *resultSet, bool (*comparator)(void *, void *), void *data)
+void AbstractIndexBase::findAll(Array *resultSet, bool (*comparator)(void *, void *), void *data) const
 {
    INDEX_HEAD *index = acquireIndex();
    for(size_t i = 0; i < index->size; i++)
@@ -444,7 +465,7 @@ void AbstractIndexBase::findAll(Array *resultSet, bool (*comparator)(void *, voi
  * @param callback
  * @param data user data passed to callback
  */
-void AbstractIndexBase::forEach(void (*callback)(void *, void *), void *data)
+void AbstractIndexBase::forEach(void (*callback)(void *, void *), void *data) const
 {
    INDEX_HEAD *index = acquireIndex();
 	for(size_t i = 0; i < index->size; i++)

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -238,6 +238,18 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR 
    }
 
    return result;
+}
+
+/**
+ * Check if specified SNMP variable set to specified value.
+ * If variable doesn't exist at all, will return false
+ */
+bool LIBNXSNMP_EXPORTABLE CheckSNMPIntegerValue(SNMP_Transport *snmpTransport, const TCHAR *oid, int32_t value)
+{
+   int32_t buffer;
+   if (SnmpGet(snmpTransport->getSnmpVersion(), snmpTransport, oid, nullptr, 0, &buffer, sizeof(int32_t), 0) == SNMP_ERR_SUCCESS)
+      return buffer == value;
+   return false;
 }
 
 /**

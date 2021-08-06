@@ -270,16 +270,6 @@ public:
 };
 
 /**
- * Status poll types
- */
-enum StatusPollType
-{
-   POLL_ICMP_PING = 0,
-   POLL_SNMP = 1,
-   POLL_NATIVE_AGENT =2
-};
-
-/**
  * Auto bind/apply decisions
  */
 enum AutoBindDecision
@@ -348,33 +338,36 @@ protected:
    bool m_owner;
    bool m_startupMode;
    bool m_dirty;
-   void (*m_objectDestructor)(void *);
+   void (*m_objectDestructor)(void*, AbstractIndexBase*);
 
    void destroyObject(void *object)
    {
       if (object != nullptr)
-         m_objectDestructor(object);
+         m_objectDestructor(object, this);
    }
 
-   INDEX_HEAD *acquireIndex();
+   INDEX_HEAD *acquireIndex() const;
    void swapAndWait();
 
-   static ssize_t findElement(INDEX_HEAD *index, UINT64 key);
-   void findAll(Array *resultSet, bool (*comparator)(void *, void *), void *data);
+   static ssize_t findElement(INDEX_HEAD *index, uint64_t key);
+
+   void findAll(Array *resultSet, bool (*comparator)(void *, void *), void *data) const;
 
 public:
    AbstractIndexBase(Ownership owner);
    ~AbstractIndexBase();
 
-   size_t size();
-   bool put(UINT64 key, void *object);
-   void remove(UINT64 key);
+   size_t size() const;
+   bool put(uint64_t key, void *object);
+   void remove(uint64_t key);
    void clear();
-   void *get(UINT64 key);
+   void *get(uint64_t key) const;
+   bool contains(uint64_t key) const { return get(key) != nullptr; }
+   IntegerArray<uint64_t> keys() const;
 
-   void *find(bool (*comparator)(void *, void *), void *data);
+   void *find(bool (*comparator)(void *, void *), void *data) const;
 
-   void forEach(void (*callback)(void *, void *), void *data);
+   void forEach(void (*callback)(void *, void *), void *data) const;
 
    bool isOwner() const
    {
@@ -397,9 +390,11 @@ template<typename T> class SharedPointerIndex : public AbstractIndexBase
    DISABLE_COPY_CTOR(SharedPointerIndex)
 
 private:
-   static void destructor(void *object)
+   ObjectMemoryPool<shared_ptr<T>> m_pool;
+
+   static void destructor(void *object, AbstractIndexBase *index)
    {
-      delete static_cast<shared_ptr<T>*>(object);
+      static_cast<SharedPointerIndex<T>*>(index)->m_pool.destroy(static_cast<shared_ptr<T>*>(object));
    }
 
    static bool comparatorWrapper(shared_ptr<T> *element, std::pair<bool (*)(T*, void*), void*> *context)
@@ -412,41 +407,57 @@ private:
       context->first(element->get(), context->second);
    }
 
+   static void getAllCallaback(shared_ptr<T> *element, SharedObjectArray<T> *resultSet)
+   {
+      resultSet->add(*element);
+   }
+
 public:
    SharedPointerIndex<T>() : AbstractIndexBase(Ownership::True)
    {
       this->m_objectDestructor = destructor;
    }
-
-   bool put(UINT64 key, T *object)
+   ~SharedPointerIndex<T>()
    {
-      return AbstractIndexBase::put(key, new shared_ptr<T>(object));
+      clear(); // Delete all entries before memory pool is destroyed
    }
 
-   bool put(UINT64 key, const shared_ptr<T>& object)
+   bool put(uint64_t key, T *object)
    {
-      return AbstractIndexBase::put(key, new shared_ptr<T>(object));
+      return AbstractIndexBase::put(key, new(m_pool.allocate()) shared_ptr<T>(object));
    }
 
-   shared_ptr<T> get(UINT64 key)
+   bool put(uint64_t key, const shared_ptr<T>& object)
+   {
+      return AbstractIndexBase::put(key, new(m_pool.allocate()) shared_ptr<T>(object));
+   }
+
+   shared_ptr<T> get(uint64_t key) const
    {
       auto v = static_cast<shared_ptr<T>*>(AbstractIndexBase::get(key));
       return (v != nullptr) ? shared_ptr<T>(*v) : shared_ptr<T>();
    }
 
-   shared_ptr<T> find(bool (*comparator)(T *, void *), void *context)
+   SharedObjectArray<T>* getAll() const
+   {
+      auto resultSet = new SharedObjectArray<T>();
+      AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(getAllCallaback), resultSet);
+      return resultSet;
+   }
+
+   shared_ptr<T> find(bool (*comparator)(T *, void *), void *context) const
    {
       std::pair<bool (*)(T*, void*), void*> wrapperData(comparator, context);
       auto v = static_cast<shared_ptr<T>*>(AbstractIndexBase::find(reinterpret_cast<bool (*)(void*, void*)>(comparatorWrapper), &wrapperData));
       return (v != nullptr) ? shared_ptr<T>(*v) : shared_ptr<T>();
    }
 
-   template<typename P> shared_ptr<T> find(bool (*comparator)(T *, P *), P *context)
+   template<typename P> shared_ptr<T> find(bool (*comparator)(T *, P *), P *context) const
    {
       return find(reinterpret_cast<bool (*)(T *, void *)>(comparator), (void *)context);
    }
 
-   SharedObjectArray<T> *findAll(bool (*comparator)(T *, void *), void *context)
+   SharedObjectArray<T> *findAll(bool (*comparator)(T *, void *), void *context) const
    {
       std::pair<bool (*)(T*, void*), void*> wrapperData(comparator, context);
       ObjectArray<shared_ptr<T>> tempResultSet;
@@ -457,18 +468,18 @@ public:
       return resultSet;
    }
 
-   template<typename P> SharedObjectArray<T> *findAll(bool (*comparator)(T *, P *), P *context)
+   template<typename P> SharedObjectArray<T> *findAll(bool (*comparator)(T *, P *), P *context) const
    {
       return findAll(reinterpret_cast<bool (*)(T *, void *)>(comparator), (void *)context);
    }
 
-   void forEach(void (*callback)(T *, void *), void *context)
+   void forEach(void (*callback)(T *, void *), void *context) const
    {
       std::pair<void (*)(T*, void*), void*> wrapperData(callback, context);
       AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(enumeratorWrapper), &wrapperData);
    }
 
-   template<typename P> void forEach(void (*callback)(T *, P *), P *context)
+   template<typename P> void forEach(void (*callback)(T *, P *), P *context) const
    {
       std::pair<void (*)(T*, void*), void*> wrapperData(reinterpret_cast<void (*)(T*, void*)>(callback), context);
       AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(enumeratorWrapper), &wrapperData);
@@ -487,12 +498,12 @@ public:
    {
    }
 
-   bool put(UINT64 key, T *object)
+   bool put(uint64_t key, T *object)
    {
       return AbstractIndexBase::put(key, object);
    }
 
-   T *get(UINT64 key)
+   T *get(uint64_t key)
    {
       return static_cast<T*>(AbstractIndexBase::get(key));
    }
@@ -538,7 +549,7 @@ template<typename T> class AbstractIndexWithDestructor : public AbstractIndex<T>
    DISABLE_COPY_CTOR(AbstractIndexWithDestructor)
 
 private:
-   static void destructor(void *object)
+   static void destructor(void *object, AbstractIndexBase *index)
    {
       delete static_cast<T*>(object);
    }
@@ -2240,7 +2251,7 @@ inline bool DataCollectionTarget::lockForInstancePoll()
        (m_status != STATUS_UNMANAGED) &&
        (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (m_instanceDiscoveryPending || (static_cast<UINT32>(time(nullptr) - m_instancePollState.getLastCompleted()) > g_instancePollingInterval)))
+       (m_instanceDiscoveryPending || (static_cast<uint32_t>(time(nullptr) - m_instancePollState.getLastCompleted()) > g_instancePollingInterval)))
    {
       success = m_instancePollState.schedule();
       m_instanceDiscoveryPending = false;
@@ -2266,7 +2277,7 @@ inline bool DataCollectionTarget::lockForConfigurationPoll()
       }
       else if ((m_status != STATUS_UNMANAGED) &&
                (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
-               (static_cast<UINT32>(time(nullptr) - m_configurationPollState.getLastCompleted()) > g_configurationPollingInterval))
+               (static_cast<uint32_t>(time(nullptr) - m_configurationPollState.getLastCompleted()) > g_configurationPollingInterval))
       {
          success = m_configurationPollState.schedule();
       }
@@ -2971,7 +2982,6 @@ protected:
    int16_t m_agentCacheMode;
    int16_t m_agentCompressionMode;  // agent compression mode (enabled/disabled/default)
    TCHAR m_agentSecret[MAX_SECRET_LENGTH];
-   int16_t m_iStatusPollType;
    SNMP_Version m_snmpVersion;
    uint16_t m_snmpPort;
    uint16_t m_nUseIfXTable;
@@ -3104,7 +3114,6 @@ protected:
    void routingTableLock() { MutexLock(m_mutexRTAccess); }
    void routingTableUnlock() { MutexUnlock(m_mutexRTAccess); }
 
-   BOOL checkSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID, int nValue);
    void checkOSPFSupport(SNMP_Transport *pTransport);
    void addVrrpInterfaces(InterfaceList *ifList);
    BOOL resolveName(BOOL useOnlyDNS);
@@ -3274,8 +3283,8 @@ public:
    const TCHAR *getAgentSecret() const { return m_agentSecret; }
    uint32_t getAgentProxy() const { return m_agentProxy; }
    uint32_t getPhysicalContainerId() const { return m_physicalContainer; }
-   INT16 getRackHeight() const { return m_rackHeight; }
-   INT16 getRackPosition() const { return m_rackPosition; }
+   int16_t getRackHeight() const { return m_rackHeight; }
+   int16_t getRackPosition() const { return m_rackPosition; }
    bool hasFileUpdateConnection() const { lockProperties(); bool result = (m_fileUpdateConnection != nullptr); unlockProperties(); return result; }
    uint32_t getIcmpProxy() const { return m_icmpProxy; }
    const TCHAR *getSshLogin() const { return m_sshLogin; }
@@ -3906,6 +3915,10 @@ struct ZoneProxy
    }
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE AbstractIndexWithDestructor<ZoneProxy>;
+#endif
+
 /**
  * Zone object
  */
@@ -3916,7 +3929,7 @@ protected:
 
 protected:
    int32_t m_uin;
-   ObjectArray<ZoneProxy> *m_proxyNodes;
+   SharedPointerIndex<ZoneProxy> m_proxyNodes;
    BYTE m_proxyAuthKey[ZONE_PROXY_KEY_LENGTH];
    InetAddressIndex *m_idxNodeByAddr;
    InetAddressIndex *m_idxInterfaceByAddr;
@@ -3925,7 +3938,9 @@ protected:
    bool m_lockedForHealthCheck;
 
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
+   virtual UINT32 modifyFromMessageInternalStage2(NXCPMessage *request) override;
 
    void updateProxyLoadData(shared_ptr<Node> node);
    void migrateProxyLoad(ZoneProxy *source, ZoneProxy *target);
@@ -3951,11 +3966,11 @@ public:
 
    int32_t getUIN() const { return m_uin; }
 
-   UINT32 getProxyNodeId(NetObj *object, bool backup = false);
-   bool isProxyNode(UINT32 nodeId) const;
-   UINT32 getProxyNodeAssignments(UINT32 nodeId) const;
-   bool isProxyNodeAvailable(UINT32 nodeId) const;
-   IntegerArray<UINT32> *getAllProxyNodes() const;
+   uint32_t getProxyNodeId(NetObj *object, bool backup = false);
+   bool isProxyNode(uint32_t nodeId) const { return m_proxyNodes.contains(nodeId); }
+   uint32_t getProxyNodeAssignments(uint32_t nodeId) const;
+   bool isProxyNodeAvailable(uint32_t nodeId) const;
+   IntegerArray<uint32_t> getAllProxyNodes() const;
    void fillAgentConfigurationMessage(NXCPMessage *msg) const;
 
    shared_ptr<AgentConnectionEx> acquireConnectionToProxy(bool validate = false);
