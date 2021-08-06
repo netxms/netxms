@@ -357,14 +357,20 @@ static EnumerationCallbackResult ForceConfigurationSync(const uint32_t *nodeId, 
    return _CONTINUE;
 }
 
-struct ZoneProxyFinderContext
+/**
+ * Context for zone proxy comparator
+ */
+struct ZoneProxyComparatorContext
 {
    NetObj* object;
    HashSet<uint32_t>* syncSet;
    bool backup;
 };
 
-static bool ZoneProxyFinder(ZoneProxy *p, ZoneProxyFinderContext* context)
+/**
+ * Zone proxy comparator for finding proxy assigned to given node
+ */
+static bool ZoneProxyComparator(ZoneProxy *p, ZoneProxyComparatorContext* context)
 {
    if (p->nodeId == context->object->getAssignedZoneProxyId(context->backup))
    {
@@ -396,11 +402,11 @@ uint32_t Zone::getProxyNodeId(NetObj *object, bool backup)
 
    if ((object != nullptr) && (object->getAssignedZoneProxyId(backup) != 0))
    {
-      ZoneProxyFinderContext context;
+      ZoneProxyComparatorContext context;
       context.object = object;
       context.syncSet = &syncSet;
       context.backup = backup;
-      proxy = m_proxyNodes.find(ZoneProxyFinder, &context);
+      proxy = m_proxyNodes.find(ZoneProxyComparator, &context);
    }
 
    if (proxy == nullptr)

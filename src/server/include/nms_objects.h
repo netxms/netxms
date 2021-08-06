@@ -3780,6 +3780,9 @@ public:
    virtual bool showThresholdSummary() const override;
 };
 
+/**
+ * Rack element type
+ */
 enum RackElementType
 {
    PATCH_PANEL = 0,
@@ -3787,29 +3790,36 @@ enum RackElementType
    ORGANISER = 2
 };
 
+/**
+ * Passive rack element
+ */
 class NXCORE_EXPORTABLE RackPassiveElement
 {
 private:
-   UINT32 m_id;
+   uint32_t m_id;
    TCHAR *m_name;
    RackElementType m_type;
-   UINT32 m_position;
+   uint32_t m_position;
    RackOrientation m_orientation;
-   UINT32 m_portCount;
+   uint32_t m_portCount;
 
 public:
-   RackPassiveElement(DB_RESULT hResult, int row);
    RackPassiveElement();
-   RackPassiveElement(NXCPMessage *pRequest, UINT32 base);
-   ~RackPassiveElement() { MemFree(m_name); }
+   RackPassiveElement(DB_RESULT hResult, int row);
+   RackPassiveElement(const NXCPMessage& request, uint32_t base);
+   ~RackPassiveElement()
+   {
+      MemFree(m_name);
+   }
 
-   json_t *toJson();
-   bool saveToDatabase(DB_HANDLE hdb, UINT32 parentId);
-   bool deleteChildren(DB_HANDLE hdb, UINT32 parentId);
-   void fillMessage(NXCPMessage *pMsg, UINT32 base);
+   bool deleteChildren(DB_HANDLE hdb, uint32_t parentId);
+
+   bool saveToDatabase(DB_HANDLE hdb, uint32_t parentId) const;
+   void fillMessage(NXCPMessage *pMsg, uint32_t base) const;
+   json_t *toJson() const;
 
    RackElementType getType() const { return m_type; }
-   UINT32 getId() const { return m_id; }
+   uint32_t getId() const { return m_id; }
 };
 
 /**

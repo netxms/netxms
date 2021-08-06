@@ -193,7 +193,7 @@ UINT32 Rack::modifyFromMessageInternal(NXCPMessage *request)
       UINT32 fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         newElements.add(new RackPassiveElement(request, fieldId));
+         newElements.add(new RackPassiveElement(*request, fieldId));
          fieldId += 10;
       }
 
@@ -276,24 +276,27 @@ RackPassiveElement::RackPassiveElement(DB_RESULT hResult, int row)
    m_portCount = DBGetFieldLong(hResult, row, 5);
 }
 
-RackPassiveElement::RackPassiveElement(NXCPMessage *pRequest, UINT32 base)
+/**
+ * Create passive rack element from NXCP message
+ */
+RackPassiveElement::RackPassiveElement(const NXCPMessage& request, uint32_t base)
 {
-   m_id = pRequest->getFieldAsInt32(base++);
+   m_id = request.getFieldAsInt32(base++);
    if (m_id == 0)
    {
       m_id = CreateUniqueId(IDG_RACK_ELEMENT);
    }
-   m_name = pRequest->getFieldAsString(base++);
-   m_type = (RackElementType)pRequest->getFieldAsInt32(base++);
-   m_position = pRequest->getFieldAsInt32(base++);
-   m_orientation = (RackOrientation)pRequest->getFieldAsInt32(base++);
-   m_portCount = pRequest->getFieldAsInt32(base++);
+   m_name = request.getFieldAsString(base++);
+   m_type = (RackElementType)request.getFieldAsInt32(base++);
+   m_position = request.getFieldAsInt32(base++);
+   m_orientation = (RackOrientation)request.getFieldAsInt32(base++);
+   m_portCount = request.getFieldAsInt32(base++);
 }
 
 /**
  * To JSON method for rack passive element
  */
-json_t *RackPassiveElement::toJson()
+json_t *RackPassiveElement::toJson() const
 {
    json_t *root = json_object();
    json_object_set_new(root, "id", json_integer(m_id));
@@ -312,10 +315,10 @@ json_t *RackPassiveElement::toJson()
 /**
  * Saves rack passive element to database
  */
-bool RackPassiveElement::saveToDatabase(DB_HANDLE hdb, UINT32 parentId)
+bool RackPassiveElement::saveToDatabase(DB_HANDLE hdb, uint32_t parentId) const
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO rack_passive_elements (name,type,position,orientation,port_count,id,rack_id) VALUES (?,?,?,?,?,?,?)"));
-   if (hStmt == NULL)
+   if (hStmt == nullptr)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
@@ -335,7 +338,7 @@ bool RackPassiveElement::saveToDatabase(DB_HANDLE hdb, UINT32 parentId)
 /**
  * Delete child objects from database like patch panel port inventory
  */
-bool RackPassiveElement::deleteChildren(DB_HANDLE hdb, UINT32 parentId)
+bool RackPassiveElement::deleteChildren(DB_HANDLE hdb, uint32_t parentId)
 {
    bool success = true;
    if(m_type == PATCH_PANEL)
@@ -348,7 +351,7 @@ bool RackPassiveElement::deleteChildren(DB_HANDLE hdb, UINT32 parentId)
 /**
  * Fill message for rack passive element
  */
-void RackPassiveElement::fillMessage(NXCPMessage *pMsg, UINT32 base)
+void RackPassiveElement::fillMessage(NXCPMessage *pMsg, uint32_t base) const
 {
    pMsg->setField(base++, m_id);
    pMsg->setField(base++, m_name);
