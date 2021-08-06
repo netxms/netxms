@@ -281,7 +281,6 @@ UINT32 Zone::modifyFromMessageInternalStage2(NXCPMessage *request)
          if (j == newProxyList.size())
             m_proxyNodes.remove(proxyId);
       }
-      delete it;
    }
    return super::modifyFromMessageInternalStage2(request);
 }
