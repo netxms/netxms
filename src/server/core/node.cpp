@@ -10605,7 +10605,9 @@ void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topo
 	   topology->linkObjects(m_id, FindLocalMgmtNode(), LINK_TYPE_AGENT_TUNNEL, _T("Agent tunnel"));
 	}
 	else if (!checkProxyAndLink(topology, seedNode, getEffectiveAgentProxy(), LINK_TYPE_AGENT_PROXY, _T("Agent proxy"), checkAllProxies))
+	{
 	   protocols.append(_T("Agent "));
+	}
 
 	// Only agent connection necessary for proxy nodes
 	// Only if IP is set while using agent tunnel
