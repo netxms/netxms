@@ -466,6 +466,10 @@
             id="org.netxms.ui.eclipse.dashboard.commands.full_screen"
             name="Full screen display">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.dashboard.commands.save_as_image"
+            name="Save dashboard as image">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -480,6 +484,12 @@
             contextId="org.netxms.ui.eclipse.dashboard.context.DashboardView"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M3+F11">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.dashboard.commands.save_as_image"
+            contextId="org.netxms.ui.eclipse.dashboard.context.DashboardView"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+I">
       </key>
    </extension>
    <extension

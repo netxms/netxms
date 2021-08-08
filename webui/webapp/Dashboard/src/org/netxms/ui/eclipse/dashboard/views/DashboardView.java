@@ -111,29 +111,29 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		session = (NXCSession)ConsoleSharedData.getSession();
-		dashboard = (Dashboard)session.findObjectById(Long.parseLong(site.getSecondaryId()));
+      session = ConsoleSharedData.getSession();
+      dashboard = session.findObjectById(Long.parseLong(site.getSecondaryId()), Dashboard.class);
 		if (dashboard == null)
 			throw new PartInitException(Messages.get().DashboardView_InitError);
 		setPartName(Messages.get().DashboardView_PartNamePrefix + dashboard.getObjectName());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
 	   selectionProvider = new IntermediateSelectionProvider();
 	   getSite().setSelectionProvider(selectionProvider);
-	   
+
 	   ConsoleJob job = new ConsoleJob(Messages.get().DashboardView_GetEffectiveRights, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             readOnly = ((dashboard.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_MODIFY) == 0);
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -141,7 +141,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
          }
       };
       job.start();
-      
+
       // FIXME: rewrite waiting
       try
       {
@@ -150,7 +150,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
       catch(InterruptedException e)
       {
       }
-	   
+
 		parentComposite = parent;
 		dbc = new DashboardControl(parent, SWT.NONE, dashboard, this, selectionProvider, false);
 		if (!readOnly)
@@ -210,7 +210,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
       });
 	}
 
-	/* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override
