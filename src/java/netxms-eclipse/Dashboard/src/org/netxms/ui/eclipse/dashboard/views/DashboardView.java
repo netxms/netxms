@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.dashboard.views;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -35,6 +36,11 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -102,37 +108,38 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private Action actionAddSnmpTrapMonitor;
 	private Action actionAddSyslogMonitor;
 	private Action actionFullScreenDisplay;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   private Action actionSaveAsImage;
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		session = (NXCSession)ConsoleSharedData.getSession();
-		dashboard = (Dashboard)session.findObjectById(Long.parseLong(site.getSecondaryId()));
+      session = ConsoleSharedData.getSession();
+      dashboard = session.findObjectById(Long.parseLong(site.getSecondaryId()), Dashboard.class);
 		if (dashboard == null)
 			throw new PartInitException(Messages.get().DashboardView_InitError);
 		setPartName(Messages.get().DashboardView_PartNamePrefix + dashboard.getObjectName());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
 	   selectionProvider = new IntermediateSelectionProvider();
 	   getSite().setSelectionProvider(selectionProvider);
-	   
+
 	   ConsoleJob job = new ConsoleJob(Messages.get().DashboardView_GetEffectiveRights, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             readOnly = ((dashboard.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_MODIFY) == 0);
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -140,7 +147,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
          }
       };
       job.start();
-      
+
       // FIXME: rewrite waiting
       try
       {
@@ -149,7 +156,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
       catch(InterruptedException e)
       {
       }
-	   
+
 		parentComposite = parent;
 		dbc = new DashboardControl(parent, SWT.NONE, dashboard, this, selectionProvider, false);
 		if (!readOnly)
@@ -209,7 +216,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
       });
 	}
 
-	/* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
     */
    @Override
@@ -276,7 +283,17 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 		actionExportValues.setActionDefinitionId("org.netxms.ui.eclipse.dashboard.commands.export_line_chart_values"); //$NON-NLS-1$
       handlerService.activateHandler(actionExportValues.getActionDefinitionId(), new ActionHandler(actionExportValues));
-		
+
+      actionSaveAsImage = new Action("Save as &image", SharedIcons.SAVE_AS_IMAGE) {
+         @Override
+         public void run()
+         {
+            saveAsImage();
+         }
+      };
+      actionSaveAsImage.setActionDefinitionId("org.netxms.ui.eclipse.dashboard.commands.save_as_image"); //$NON-NLS-1$
+      handlerService.activateHandler(actionSaveAsImage.getActionDefinitionId(), new ActionHandler(actionSaveAsImage));
+
 		actionEditMode = new Action(Messages.get().DashboardView_EditMode, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -436,6 +453,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
    		manager.add(new Separator());
 	   }
       manager.add(actionExportValues);
+      manager.add(actionSaveAsImage);
       manager.add(new Separator());
       manager.add(actionFullScreenDisplay);
       manager.add(new Separator());
@@ -457,6 +475,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
    		manager.add(new Separator());
 	   }
 	   manager.add(actionExportValues);
+      manager.add(actionSaveAsImage);
       manager.add(new Separator());
       manager.add(actionFullScreenDisplay);
       manager.add(new Separator());
@@ -749,5 +768,37 @@ public class DashboardView extends ViewPart implements ISaveablePart
       rebuildDashboard(false);
       if (!enable)
          parentComposite.setFocus();
+   }
+
+   /**
+    * Take snapshot of the dashboard
+    *
+    * @return snapshot of the dashboard
+    */
+   public void saveAsImage()
+   {
+      Rectangle rect = dbc.getClientArea();
+      Image image = new Image(dbc.getDisplay(), rect.width, rect.height);
+      GC gc = new GC(image);
+      dbc.print(gc);
+      gc.dispose();
+
+      FileDialog fd = new FileDialog(getSite().getShell(), SWT.SAVE);
+      fd.setText("Save dashboard as image");
+      String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
+      fd.setFilterExtensions(filterExtensions);
+      String[] filterNames = { ".png" };
+      fd.setFilterNames(filterNames);
+      String dateTime = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
+      fd.setFileName(dashboard.getObjectName() + "_" + dateTime + ".png");
+      final String selected = fd.open();
+      if (selected == null)
+         return;
+
+      ImageLoader saver = new ImageLoader();
+      saver.data = new ImageData[] { image.getImageData() };
+      saver.save(selected, SWT.IMAGE_PNG);
+
+      image.dispose();
    }
 }
