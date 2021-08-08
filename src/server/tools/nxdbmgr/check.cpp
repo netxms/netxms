@@ -1350,6 +1350,7 @@ void CheckDatabase()
       {
          CheckZones();
          CheckNodes();
+         CheckComponents(_T("Access point"), _T("access_points"));
          CheckComponents(_T("Interface"), _T("interfaces"));
          CheckComponents(_T("Network service"), _T("network_services"));
          CheckClusters();
