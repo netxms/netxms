@@ -2478,6 +2478,7 @@ public:
    AccessPointState getApState() const { return m_apState; }
    shared_ptr<Node> getParentNode() const;
    String getParentNodeName() const;
+   uint32_t getParentNodeId() const { return m_nodeId; }
    bool isIncludedInIcmpPoll() const { return (m_flags & APF_INCLUDE_IN_ICMP_POLL) ? true : false; }
    const TCHAR *getVendor() const { return CHECK_NULL_EX(m_vendor); }
    const TCHAR *getModel() const { return CHECK_NULL_EX(m_model); }

@@ -49,6 +49,18 @@ static MacDbEntry *s_data = nullptr;
 static RWLOCK s_lock = RWLockCreate();
 
 /**
+ * Get parent object
+ */
+static inline uint32_t GetParentId(const NetObj& object)
+{
+   if (object.getObjectClass() == OBJECT_INTERFACE)
+      return static_cast<const Interface&>(object).getParentNodeId();
+   if (object.getObjectClass() == OBJECT_ACCESSPOINT)
+      return static_cast<const AccessPoint&>(object).getParentNodeId();
+   return 0;
+}
+
+/**
  * Get parent object name for diagnostic messages
  */
 static inline String GetParentName(const NetObj& object)
@@ -97,25 +109,37 @@ void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, const shared_pt
       }
       if (!found)
       {
+         // Only generate event if duplicate MAC address is not from already added node
+         uint32_t nodeId = GetParentId(*object);
+         bool nodeAlreadyKnown = false;
+         for(int i = 0; i < entry->objects.size(); i++)
+            if (GetParentId(*entry->objects.get(i)) == nodeId)
+            {
+               nodeAlreadyKnown = true;
+               break;
+            }
          entry->objects.add(object);
 
-         StringBuffer objects;
-         for(int i  = 0; i < entry->objects.size(); i++)
+         if (!nodeAlreadyKnown)
          {
-            NetObj *o = entry->objects.get(i);
-            objects.append(GetParentName(*o));
-            objects.append(_T("/"));
-            objects.append(o->getName());
-            objects.append(_T(", "));
-         }
-         objects.shrink(2);
+            StringBuffer objects;
+            for(int i  = 0; i < entry->objects.size(); i++)
+            {
+               NetObj *o = entry->objects.get(i);
+               objects.append(GetParentName(*o));
+               objects.append(_T("/"));
+               objects.append(o->getName());
+               objects.append(_T(", "));
+            }
+            objects.shrink(2);
 
-         TCHAR macAddrStr[64];
-         nxlog_debug(5, _T("MacDbAddObject: MAC address %s known on multiple interfaces (%s)"), macAddr.toString(macAddrStr), objects.cstr());
+            TCHAR macAddrStr[64];
+            nxlog_debug(5, _T("MacDbAddObject: MAC address %s is known on multiple interfaces (%s)"), macAddr.toString(macAddrStr), objects.cstr());
 
-         if (g_flags & AF_SERVER_INITIALIZED)
-         {
-            PostSystemEvent(EVENT_DUPLICATE_MAC_ADDRESS, object->getId(), "Hs", &macAddr, objects.cstr());
+            if (g_flags & AF_SERVER_INITIALIZED)
+            {
+               PostSystemEvent(EVENT_DUPLICATE_MAC_ADDRESS, nodeId, "Hs", &macAddr, objects.cstr());
+            }
          }
       }
    }
