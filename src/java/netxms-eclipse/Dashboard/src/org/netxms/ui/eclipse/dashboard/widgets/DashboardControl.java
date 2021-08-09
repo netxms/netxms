@@ -141,9 +141,6 @@ public class DashboardControl extends Composite
          case DashboardElement.ALARM_VIEWER:
             w = new AlarmViewerElement(this, e, viewPart);
             break;
-         case DashboardElement.AVAILABLITY_CHART:
-            w = new AvailabilityChartElement(this, e, viewPart);
-            break;
          case DashboardElement.BAR_CHART:
          case DashboardElement.TUBE_CHART:
          	w = new BarChartElement(this, e, viewPart);

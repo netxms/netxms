@@ -22,6 +22,7 @@ import java.util.Set;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.interfaces.AutoBindObject;
 
 /**
  * This class represents NetXMS TEMPLATE objects.
@@ -29,8 +30,7 @@ import org.netxms.client.NXCSession;
 public class Template extends GenericObject
 {	
 	private int version;
-	private boolean autoBind;
-	private boolean autoUnbind;
+	private int autoApplyFlags;
 	private String autoApplyFilter;
 
 	/**
@@ -45,8 +45,7 @@ public class Template extends GenericObject
 		
 		version = msg.getFieldAsInt32(NXCPCodes.VID_VERSION);
 		autoApplyFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
-		autoBind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOBIND_FLAG);
-		autoUnbind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOUNBIND_FLAG);
+		autoApplyFlags = msg.getFieldAsInt32(NXCPCodes.VID_AUTOBIND_FLAGS);
 	}
 
 	/**
@@ -65,21 +64,26 @@ public class Template extends GenericObject
 		return Integer.toString(version);
 	}
 
-	/**
-	 * @return true if automatic apply is enabled
-	 */
-	public boolean isAutoApplyEnabled()
-	{
-		return autoBind;
-	}
+   /**
+    * @return true if automatic bind is enabled
+    */
+   public boolean isAutoApplyEnabled()
+   {
+      return (autoApplyFlags & AutoBindObject.OBJECT_BIND_FLAG) > 0;
+   }
 
-	/**
-	 * @return true if automatic removal is enabled
-	 */
-	public boolean isAutoRemoveEnabled()
-	{
-		return autoUnbind;
-	}
+   /**
+    * @return true if automatic unbind is enabled
+    */
+   public boolean isAutoRemoveEnabled()
+   {
+      return (autoApplyFlags & AutoBindObject.OBJECT_UNBIND_FLAG) > 0;
+   }
+   
+   public int getAutoApplyFlags()
+   {
+      return autoApplyFlags;
+   }
 
 	/**
 	 * @return Filter script for automatic apply

@@ -37,7 +37,7 @@ void LoadLastEventId(DB_HANDLE hdb);
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   29
+#define NUMBER_OF_GROUPS   31
 
 /**
  * Static data
@@ -52,7 +52,7 @@ static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
       1, 1, 1, 1,
       1, 1, 1, 1,
       1, 1, 1, 1,
-      1
+      1, 1, 1
    };
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
    {
@@ -63,7 +63,7 @@ static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
       0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
    };
 static const TCHAR *s_groupNames[NUMBER_OF_GROUPS] =
 {
@@ -95,7 +95,9 @@ static const TCHAR *s_groupNames[NUMBER_OF_GROUPS] =
    _T("Object Categories"),
    _T("Geographical Areas"),
    _T("SSH Keys"),
-   _T("Object Queries")
+   _T("Object Queries"),
+   _T("SLM Checks"),
+   _T("SLM Downtime Records")
 };
 
 /**
@@ -186,14 +188,6 @@ bool InitIdTable()
       DBFreeResult(hResult);
    }
    hResult = DBSelect(hdb, _T("SELECT max(id) FROM dashboards"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_NETWORK_OBJECT] = std::max(s_freeIdTable[IDG_NETWORK_OBJECT],
-                                                   DBGetFieldULong(hResult, 0, 0) + 1);
-      DBFreeResult(hResult);
-   }
-   hResult = DBSelect(hdb, _T("SELECT max(id) FROM slm_checks"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -399,7 +393,7 @@ bool InitIdTable()
    }
 
    // Get first available SLM ticket id
-   hResult = DBSelect(hdb, _T("SELECT max(ticket_id) FROM slm_tickets"));
+   hResult = DBSelect(hdb, _T("SELECT max(ticket_id) FROM business_service_tickets"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -530,6 +524,24 @@ bool InitIdTable()
    {
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_OBJECT_QUERY] = std::max(s_freeIdTable[IDG_OBJECT_QUERY], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available object in slm checks
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM business_service_checks"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_SLM_CHECK] = std::max(s_freeIdTable[IDG_SLM_CHECK], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available object in slm downtime records
+   hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM business_service_downtime"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_SLM_RECORD] = std::max(s_freeIdTable[IDG_SLM_RECORD], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

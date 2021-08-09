@@ -123,7 +123,6 @@ void LocalAdminListener();
 void SNMPTrapReceiver();
 void BeaconPoller();
 void JobManagerThread();
-void UptimeCalculator();
 void ReportingServerConnector();
 void ServerStatCollector();
 void TunnelListenerThread();
@@ -1310,9 +1309,6 @@ retry_db_lock:
    s_clientListenerThread = ThreadCreateEx(ClientListenerThread);
    InitMobileDeviceListeners();
    s_mobileDeviceListenerThread = ThreadCreateEx(MobileDeviceListenerThread);
-
-   // Start uptime calculator for SLM
-   ThreadCreate(UptimeCalculator);
 
    // Call startup functions for the modules
    CALL_ALL_MODULES(pfServerStarted, ());

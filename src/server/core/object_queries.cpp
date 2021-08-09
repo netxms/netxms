@@ -434,8 +434,9 @@ unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint
 
    // Set class constants
    vm->addConstant("ACCESSPOINT", vm->createValue(OBJECT_ACCESSPOINT));
-   vm->addConstant("BUSINESSSERVICE", vm->createValue(OBJECT_BUSINESSSERVICE));
-   vm->addConstant("BUSINESSSERVICEROOT", vm->createValue(OBJECT_BUSINESSSERVICEROOT));
+   vm->addConstant("BUSINESSSERVICE", vm->createValue(OBJECT_BUSINESS_SERVICE));
+   vm->addConstant("BUSINESSSERVICEPROTOTYPE", vm->createValue(OBJECT_BUSINESS_SERVICE_PROTOTYPE));
+   vm->addConstant("BUSINESSSERVICEROOT", vm->createValue(OBJECT_BUSINESS_SERVICE_ROOT));
    vm->addConstant("CHASSIS", vm->createValue(OBJECT_CHASSIS));
    vm->addConstant("CLUSTER", vm->createValue(OBJECT_CLUSTER));
    vm->addConstant("CONDITION", vm->createValue(OBJECT_CONDITION));
@@ -451,11 +452,9 @@ unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint
    vm->addConstant("NETWORKMAPROOT", vm->createValue(OBJECT_NETWORKMAPROOT));
    vm->addConstant("NETWORKSERVICE", vm->createValue(OBJECT_NETWORKSERVICE));
    vm->addConstant("NODE", vm->createValue(OBJECT_NODE));
-   vm->addConstant("NODELINK", vm->createValue(OBJECT_NODELINK));
    vm->addConstant("RACK", vm->createValue(OBJECT_RACK));
    vm->addConstant("SENSOR", vm->createValue(OBJECT_SENSOR));
    vm->addConstant("SERVICEROOT", vm->createValue(OBJECT_SERVICEROOT));
-   vm->addConstant("SLMCHECK", vm->createValue(OBJECT_SLMCHECK));
    vm->addConstant("SUBNET", vm->createValue(OBJECT_SUBNET));
    vm->addConstant("TEMPLATE", vm->createValue(OBJECT_TEMPLATE));
    vm->addConstant("TEMPLATEGROUP", vm->createValue(OBJECT_TEMPLATEGROUP));

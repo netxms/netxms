@@ -1773,6 +1773,21 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_2FA_DELETE_USER_BINDING:
          deleteUser2FABinding(request);
          break;
+      case CMD_GET_BUSINESS_CHECK_LIST:
+         businessServiceGetCheckList(request);
+         break;
+      case CMD_UPDATE_BUSINESS_CHECK:
+         businessServiceModifyCheck(request);
+         break;
+      case CMD_DELETE_BUSINESS_CHECK:
+         businessServiceDeleteCheck(request);
+         break;
+      case CMD_GET_BUSINESS_UPTIME:
+         getSLMData(request);
+         break;
+      case CMD_GET_BUSINESS_TICKETS:
+         getSLMTickets(request);
+         break;
       default:
          if ((code >> 8) == 0x11)
          {
@@ -5738,7 +5753,11 @@ void ClientSession::createObject(NXCPMessage *request)
                   TCHAR deviceId[MAX_OBJECT_NAME];
                   switch(objectClass)
                   {
-                     case OBJECT_BUSINESSSERVICE:
+                     case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
+                        object = make_shared<BusinessServicePrototype>(objectName, request->getFieldAsUInt32(VID_INSTD_METHOD));
+                        NetObjInsert(object, true, false);
+                        break;
+                     case OBJECT_BUSINESS_SERVICE:
                         object = make_shared<BusinessService>(objectName);
                         NetObjInsert(object, true, false);
                         break;
@@ -5832,20 +5851,8 @@ void ClientSession::createObject(NXCPMessage *request)
                         }
                         break;
                      }
-                     case OBJECT_NODELINK:
-                        nodeId = request->getFieldAsUInt32(VID_NODE_ID);
-                        if (nodeId > 0)
-                        {
-                           object = make_shared<NodeLink>(objectName, nodeId);
-                           NetObjInsert(object, true, false);
-                        }
-                        break;
                      case OBJECT_RACK:
                         object = make_shared<Rack>(objectName, (int)request->getFieldAsUInt16(VID_HEIGHT));
-                        NetObjInsert(object, true, false);
-                        break;
-                     case OBJECT_SLMCHECK:
-                        object = make_shared<SlmCheck>(objectName, request->getFieldAsBoolean(VID_IS_TEMPLATE));
                         NetObjInsert(object, true, false);
                         break;
                      case OBJECT_SUBNET:
@@ -5914,10 +5921,6 @@ void ClientSession::createObject(NXCPMessage *request)
                         if (parent->getObjectClass() == OBJECT_CLUSTER)
                         {
                            static_cast<Cluster&>(*parent).applyToTarget(static_pointer_cast<DataCollectionTarget>(object));
-                        }
-                        if (object->getObjectClass() == OBJECT_NODELINK)
-                        {
-                           static_cast<NodeLink&>(*object).applyTemplates();
                         }
                         else if ((object->getObjectClass() == OBJECT_NETWORKSERVICE) && request->getFieldAsBoolean(VID_CREATE_STATUS_DCI))
                         {
@@ -6083,11 +6086,6 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
                   ObjectTransactionEnd();
                   pParent->calculateCompoundStatus();
                   msg.setField(VID_RCC, RCC_SUCCESS);
-
-						if ((pParent->getObjectClass() == OBJECT_BUSINESSSERVICEROOT) || (pParent->getObjectClass() == OBJECT_BUSINESSSERVICE))
-						{
-							static_cast<ServiceContainer&>(*pParent).initUptimeStats();
-						}
                }
                else
                {
@@ -6109,10 +6107,6 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
                {
                   static_pointer_cast<Cluster>(pParent)->removeNode(static_pointer_cast<Node>(pChild));
                }
-					else if ((pParent->getObjectClass() == OBJECT_BUSINESSSERVICEROOT) || (pParent->getObjectClass() == OBJECT_BUSINESSSERVICE))
-					{
-						static_cast<ServiceContainer&>(*pParent).initUptimeStats();
-					}
                msg.setField(VID_RCC, RCC_SUCCESS);
             }
          }
@@ -6922,14 +6916,11 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
    if (object != nullptr)
    {
       // We can do polls for node, sensor, cluster objects
-      if (((object->getObjectClass() == OBJECT_NODE) &&
-          ((pollType == POLL_CONFIGURATION_FULL) ||
-			  (pollType == POLL_TOPOLOGY) ||
-			  (pollType == POLL_INTERFACE_NAMES)))
-			  || (object->isDataCollectionTarget() &&
-          ((pollType == POLL_STATUS) ||
-			  (pollType == POLL_CONFIGURATION_NORMAL) ||
-			  (pollType == POLL_INSTANCE_DISCOVERY))))
+      bool isValidNodePoll = object->getObjectClass() == OBJECT_NODE && (pollType == POLL_CONFIGURATION_FULL || pollType == POLL_TOPOLOGY || pollType == POLL_INTERFACE_NAMES);
+      bool isValidDataCollectionTargetPoll = object->isDataCollectionTarget() && (pollType == POLL_STATUS || pollType == POLL_CONFIGURATION_NORMAL || pollType == POLL_INSTANCE_DISCOVERY);
+      bool isValidBusinessServicePoll = object->getObjectClass() == OBJECT_BUSINESS_SERVICE && (pollType == POLL_STATUS || pollType == POLL_CONFIGURATION_NORMAL);
+      bool isValidBusinessServicePrototypePoll = object->getObjectClass() == OBJECT_BUSINESS_SERVICE_PROTOTYPE && pollType == POLL_INSTANCE_DISCOVERY;
+      if (isValidNodePoll || isValidDataCollectionTargetPoll || isValidBusinessServicePoll || isValidBusinessServicePrototypePoll)
       {
          // Check access rights
          if (((pollType == POLL_CONFIGURATION_FULL) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)) ||
@@ -6937,8 +6928,17 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
          {
             InterlockedIncrement(&m_refCount);
 
-            ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::pollerThread,
-                     static_pointer_cast<DataCollectionTarget>(object), pollType, pRequest->getId());
+            if (isValidNodePoll || isValidDataCollectionTargetPoll)
+            {
+               ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::pollerThread,
+                     object, pollType, pRequest->getId());
+            }
+            else
+            {
+               ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::pollerThread,
+                     object, pollType, pRequest->getId());
+            }
+
 
             NXCPMessage msg(CMD_POLLING_INFO, pRequest->getId());
             msg.setField(VID_RCC, RCC_OPERATION_IN_PROGRESS);
@@ -6981,29 +6981,52 @@ void ClientSession::sendPollerMsg(uint32_t requestId, const TCHAR *text)
 /**
  * Node poller thread
  */
-void ClientSession::pollerThread(shared_ptr<DataCollectionTarget> object, int pollType, uint32_t requestId)
+void ClientSession::pollerThread(shared_ptr<NetObj> object, int pollType, uint32_t requestId)
 {
    // Wait while parent thread finishes initialization
    MutexLock(m_mutexPollerInit);
    MutexUnlock(m_mutexPollerInit);
-
    switch(pollType)
    {
       case POLL_STATUS:
-         object->startForcedStatusPoll();
-         object->statusPollWorkerEntry(RegisterPoller(PollerType::STATUS, object), this, requestId);
+         if (object->getObjectClass() == OBJECT_BUSINESS_SERVICE)
+         {
+            static_cast<BusinessService&>(*object).startForcedStatusPoll();
+            static_cast<BusinessService&>(*object).statusPollWorkerEntry(RegisterPoller(PollerType::STATUS, object), this, requestId);
+         }
+         else
+         {
+            static_cast<DataCollectionTarget&>(*object).startForcedStatusPoll();
+            static_cast<DataCollectionTarget&>(*object).statusPollWorkerEntry(RegisterPoller(PollerType::STATUS, object), this, requestId);
+         }
          break;
       case POLL_CONFIGURATION_FULL:
          if (object->getObjectClass() == OBJECT_NODE)
             static_cast<Node&>(*object).setRecheckCapsFlag();
          // intentionally no break here
       case POLL_CONFIGURATION_NORMAL:
-         object->startForcedConfigurationPoll();
-         object->configurationPollWorkerEntry(RegisterPoller(PollerType::CONFIGURATION, object), this, requestId);
+         if (object->getObjectClass() == OBJECT_BUSINESS_SERVICE)
+         {
+            static_cast<BusinessService&>(*object).startForcedConfigurationPoll();
+            static_cast<BusinessService&>(*object).configurationPollWorkerEntry(RegisterPoller(PollerType::CONFIGURATION, object), this, requestId);
+         }
+         else
+         {
+            static_cast<DataCollectionTarget&>(*object).startForcedConfigurationPoll();
+            static_cast<DataCollectionTarget&>(*object).configurationPollWorkerEntry(RegisterPoller(PollerType::CONFIGURATION, object), this, requestId);
+         }
          break;
       case POLL_INSTANCE_DISCOVERY:
-         object->startForcedInstancePoll();
-         object->instanceDiscoveryPollWorkerEntry(RegisterPoller(PollerType::INSTANCE_DISCOVERY, object), this, requestId);
+         if (object->getObjectClass() == OBJECT_BUSINESS_SERVICE_PROTOTYPE)
+         {
+            static_cast<BusinessServicePrototype&>(*object).startForcedDiscoveryPoll();
+            static_cast<BusinessServicePrototype&>(*object).instanceDiscoveryPoll(RegisterPoller(PollerType::INSTANCE_DISCOVERY, object), this, requestId);
+         }
+         else
+         {
+            static_cast<DataCollectionTarget&>(*object).startForcedInstancePoll();
+            static_cast<DataCollectionTarget&>(*object).instanceDiscoveryPollWorkerEntry(RegisterPoller(PollerType::INSTANCE_DISCOVERY, object), this, requestId);
+         }
          break;
       case POLL_TOPOLOGY:
          if (object->getObjectClass() == OBJECT_NODE)
@@ -9891,13 +9914,12 @@ void ClientSession::getDCIScriptList(NXCPMessage *request)
       {
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
-            StringSet *scripts = static_cast<DataCollectionOwner&>(*object).getDCIScriptList();
+            unique_ptr<StringSet> scripts = static_cast<DataCollectionOwner&>(*object).getDCIScriptList();
             msg.setField(VID_NUM_SCRIPTS, (INT32)scripts->size());
             ScriptNamesCallbackData data;
             data.msg = &msg;
             data.fieldId = VID_SCRIPT_LIST_BASE;
             scripts->forEach(ScriptNamesCallback, &data);
-            delete scripts;
             msg.setField(VID_RCC, RCC_SUCCESS);
          }
          else
@@ -15947,6 +15969,184 @@ void ClientSession::deleteUser2FABinding(NXCPMessage *request)
    {
       TCHAR buffer[MAX_USER_NAME];
       writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on deleting 2FA method for user \"%s\""), ResolveUserId(userId, buffer, true));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Get business service SLM check list
+ * Expected input parameters:
+ * VID_OBJECT_ID                 id of business service
+ *
+ * Return values:
+ * VID_SLMCHECKS_COUNT                    Number of checks. List offset is 10.
+ * VID_SLM_CHECKS_LIST_BASE + offset      id of SLM check
+ * VID_SLM_CHECKS_LIST_BASE + offset + 1  SLM check violation reason
+ * VID_SLM_CHECKS_LIST_BASE + offset + 2  Related data collection item id in related data collection target object
+ * VID_SLM_CHECKS_LIST_BASE + offset + 3  Related NetObj object id
+ * VID_SLM_CHECKS_LIST_BASE + offset + 4  Threshold for object check and DCI check
+ * VID_SLM_CHECKS_LIST_BASE + offset + 5  SLM check name
+ * VID_SLM_CHECKS_LIST_BASE + offset + 6  Script text for script check
+ * VID_RCC                                Request Completion Code
+ */
+void ClientSession::businessServiceGetCheckList(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   shared_ptr<NetObj> obj = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+   {
+      GetCheckList(request->getFieldAsUInt32(VID_OBJECT_ID), &msg);
+      msg.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      TCHAR buffer[MAX_USER_NAME];
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on Business Service Get Check List method for user \"%s\""), ResolveUserId(m_dwUserId, buffer, true));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Modify business service SLM check
+ * Expected input parameters:
+ * VID_OBJECT_ID                 id of business service
+ * VID_SLMCHECK_ID               id of SLM check
+ * VID_SLMCHECK_TYPE             SLM check type. Object = 0, Script = 1, DCI = 2
+ * VID_SLMCHECK_RELATED_OBJECT   Related NetObj object id. Mandatory in object and DCI checks, optional in script check
+ * VID_SLMCHECK_RELATED_DCI      Related data collection item id in related data collection target object. Mandatory in DCI checks
+ * VID_SCRIPT                    Script text for script check. Optional, without it script check just do nothing and stays in NORMAL state.
+ * VID_DESCRIPTION               SLM check name
+ * VID_THRESHOLD                 Threshold for object check and DCI check. If not set, default threshold will be used instead
+ *
+ * Return values:
+ * VID_RCC                       Request Completion Code
+ */
+void ClientSession::businessServiceModifyCheck(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   shared_ptr<NetObj> obj = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+   {
+      msg.setField(VID_RCC, ModifyCheck(request));
+   }
+   else
+   {
+      TCHAR buffer[MAX_USER_NAME];
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on Business Service Modify Check method for user \"%s\""), ResolveUserId(m_dwUserId, buffer, true));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Delete SLM check from business service
+ * Expected input parameters:
+ * VID_OBJECT_ID                 id of business service
+ * VID_SLMCHECK_ID               id of SLM check
+ *
+ * Return values:
+ * VID_RCC                       Request Completion Code
+ */
+void ClientSession::businessServiceDeleteCheck(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   shared_ptr<NetObj> obj = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+   {
+      msg.setField(VID_RCC, DeleteCheck(request->getFieldAsUInt32(VID_OBJECT_ID), request->getFieldAsUInt32(VID_SLMCHECK_ID)));
+   }
+   else
+   {
+      TCHAR buffer[MAX_USER_NAME];
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on Business Service Delete Check method for user \"%s\""), ResolveUserId(m_dwUserId, buffer, true));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Get business service uptime
+ * Expected input parameters:
+ * VID_OBJECT_ID                 id of business service
+ * VID_TIME_FROM                 Make uptime calculation from this time. Seconds since the Epoch.
+ * VID_TIME_TO                   Make uptime calculation to this time. Seconds since the Epoch.
+ *
+ * Return values:
+ * VID_BUSINESS_SERVICE_UPTIME   Business service uptime in percents. Double.
+ * VID_RCC                       Request Completion Code
+ */
+void ClientSession::getSLMData(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   shared_ptr<NetObj> obj = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+   {
+      time_t from = 0;
+      if (request->isFieldExist(VID_TIME_FROM))
+      {
+         from = request->getFieldAsUInt64(VID_TIME_FROM);
+      }
+      time_t to = time(nullptr);
+      if (request->isFieldExist(VID_TIME_TO))
+      {
+         to = request->getFieldAsUInt64(VID_TIME_TO);
+      }
+
+      msg.setField(VID_BUSINESS_SERVICE_UPTIME, GetServiceUptime(obj->getId(), from, to));
+      msg.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      TCHAR buffer[MAX_USER_NAME];
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on Get Business service Uptime data method for user \"%s\""), ResolveUserId(m_dwUserId, buffer, true));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Get SLM tickets list for business service
+ * Expected input parameters:
+ * VID_OBJECT_ID                 Id of business service
+ * VID_TIME_FROM                 Get valid tickets from this time. Seconds since the Epoch.
+ * VID_TIME_TO                   Get valid tickets to this time. Seconds since the Epoch.
+ *
+ * Return values:
+ * VID_BUSINESS_TICKETS_COUNT                  Number of tickets. List offset is 10.
+ * VID_BUSINESS_TICKETS_LIST_BASE + offset     Id of SLM ticket
+ * VID_BUSINESS_TICKETS_LIST_BASE + offset + 1 Id of business service
+ * VID_BUSINESS_TICKETS_LIST_BASE + offset + 2 Id of SLM check
+ * VID_BUSINESS_TICKETS_LIST_BASE + offset + 3 Ticket creation timestamp
+ * VID_BUSINESS_TICKETS_LIST_BASE + offset + 4 Ticket closing timestamp
+ * VID_BUSINESS_TICKETS_LIST_BASE + offset + 5 Reason
+ * VID_BUSINESS_TICKETS_LIST_BASE + offset + 6 SLM check description
+ * VID_RCC                                     Request Completion Code
+ */
+void ClientSession::getSLMTickets(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   shared_ptr<NetObj> obj = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+   {
+      time_t from = 0;
+      if (request->isFieldExist(VID_TIME_FROM))
+      {
+         from = request->getFieldAsUInt64(VID_TIME_FROM);
+      }
+      time_t to = time(nullptr);
+      if (request->isFieldExist(VID_TIME_TO))
+      {
+         to = request->getFieldAsUInt64(VID_TIME_TO);
+      }
+      GetServiceTickets(obj->getId(), from, to, &msg);
+      msg.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      TCHAR buffer[MAX_USER_NAME];
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on Get Business Service tickets method for user \"%s\""), ResolveUserId(m_dwUserId, buffer, true));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);

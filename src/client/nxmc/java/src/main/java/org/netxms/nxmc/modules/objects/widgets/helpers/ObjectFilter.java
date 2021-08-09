@@ -33,7 +33,6 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
-import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
@@ -151,9 +150,6 @@ public class ObjectFilter extends ViewerFilter
 		}
 
 		if (hideUnmanaged && (((AbstractObject)element).getStatus() == ObjectStatus.UNMANAGED))
-			return false;
-
-		if (hideTemplateChecks && (element instanceof ServiceCheck) && ((ServiceCheck)element).isTemplate())
 			return false;
 
       if (hideSubInterfaces && (element instanceof Interface) && (((Interface)element).getParentInterfaceId() != 0))

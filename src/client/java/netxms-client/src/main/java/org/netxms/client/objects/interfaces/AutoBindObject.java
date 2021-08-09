@@ -23,6 +23,9 @@ package org.netxms.client.objects.interfaces;
  */
 public interface AutoBindObject
 {   
+   final static int OBJECT_BIND_FLAG = 1;
+   final static int OBJECT_UNBIND_FLAG = 2;
+   
    /**
     * @return true if automatic bind is enabled
     */
@@ -37,5 +40,10 @@ public interface AutoBindObject
     * @return Filter script for automatic bind
     */
    public String getAutoBindFilter();
+   
 
+   /**
+    * @return auto bind flags
+    */
+   public int getAutoBindFlags();
 }

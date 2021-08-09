@@ -51,9 +51,6 @@
     <ClCompile Include="bizservice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bizsvcroot.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="bridge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -282,9 +279,6 @@
     <ClCompile Include="node.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="nodelink.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="np.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -360,9 +354,6 @@
     <ClCompile Include="summary_email.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="svccontainer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="swpkg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -388,9 +379,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="upload_job.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="uptimecalc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="userdb.cpp">

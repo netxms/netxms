@@ -937,7 +937,7 @@ HashSet<uint32_t> *DataCollectionOwner::getRelatedEventsList() const
 /**
  * Get list of scripts used by DCIs
  */
-StringSet *DataCollectionOwner::getDCIScriptList() const
+unique_ptr<StringSet> DataCollectionOwner::getDCIScriptList() const
 {
    StringSet *scripts = new StringSet();
    readLockDciAccess();
@@ -946,7 +946,19 @@ StringSet *DataCollectionOwner::getDCIScriptList() const
       m_dcObjects->get(i)->getScriptDependencies(scripts);
    }
    unlockDciAccess();
-   return scripts;
+   return unique_ptr<StringSet>(scripts);
+}
+
+unique_ptr<IntegerArray<uint32_t>> DataCollectionOwner::getDCIIds()
+{
+   IntegerArray<uint32_t>* arr = new IntegerArray<uint32_t>();
+   readLockDciAccess();
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      arr->add(m_dcObjects->get(i)->getId());
+   }
+   unlockDciAccess();
+   return unique_ptr<IntegerArray<uint32_t>>(arr);
 }
 
 /**

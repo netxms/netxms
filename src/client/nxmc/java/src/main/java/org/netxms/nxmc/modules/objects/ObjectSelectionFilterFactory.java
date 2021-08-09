@@ -228,6 +228,7 @@ public class ObjectSelectionFilterFactory
    {
       HashSet<Integer> classFilter = new HashSet<Integer>(2);
       classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICE_PROTOTYPE);
       classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICE);
       return classFilter;
    }

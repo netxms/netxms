@@ -77,14 +77,14 @@ public class PieChart extends GenericComparisonChart
       for(int i = 0; i < series.size(); i++)
       {
          values[i] = series.get(i).getCurrentValue();
-         total += values[i];
+         total += values[i] < 0 ? 0 : values[i];
       }
       if (total == 0)
          return;
 
       double[] angularSize = new double[series.size()];
       for(int i = 0; i < values.length; i++)
-         angularSize[i] = values[i] / total * 360.0;
+         angularSize[i] = (values[i] < 0 ? 0 : values[i]) / total * 360.0;
 
       if (chart.getConfiguration().isTranslucent())
          gc.setAlpha(127);

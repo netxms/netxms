@@ -2179,6 +2179,15 @@ bool NetObj::isDataCollectionTarget() const
 }
 
 /**
+ * Must return true if object is possible to poll
+ */
+bool NetObj::isPollable() const
+{
+   return getObjectClass() == OBJECT_BUSINESS_SERVICE;
+}
+
+
+/**
  * Get module data
  */
 ModuleData *NetObj::getModuleData(const TCHAR *module)

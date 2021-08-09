@@ -155,6 +155,8 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define IDG_GEO_AREA          26
 #define IDG_SSH_KEY           27
 #define IDG_OBJECT_QUERY      28
+#define IDG_SLM_CHECK         29
+#define IDG_SLM_RECORD        30
 
 /**
  * Exit codes for console commands
@@ -577,7 +579,8 @@ private:
    bool readSocket();
    MessageReceiverResult readMessage(bool allowSocketRead);
    void finalize();
-   void pollerThread(shared_ptr<DataCollectionTarget> object, int pollType, uint32_t requestId);
+   //void pollerThread(shared_ptr<DataCollectionTarget> object, int pollType, uint32_t requestId);
+   void pollerThread(shared_ptr<NetObj> object, int pollType, uint32_t requestId);
 
    void processRequest(NXCPMessage *request);
    void processFileTransferMessage(NXCPMessage *msg);
@@ -893,6 +896,11 @@ private:
    void getUser2FABindingDetails(NXCPMessage *request);
    void modifyUser2FABinding(NXCPMessage *request);
    void deleteUser2FABinding(NXCPMessage *request);
+   void businessServiceGetCheckList(NXCPMessage *request);
+   void businessServiceModifyCheck(NXCPMessage *request);
+   void businessServiceDeleteCheck(NXCPMessage *request);
+   void getSLMData(NXCPMessage *request);
+   void getSLMTickets(NXCPMessage *request);
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
    void sendObjectUpdates();
@@ -1304,6 +1312,8 @@ void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, uint32_t code
 void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(const NXCPMessage& msg, uint32_t graphId);
 void NotifyClientsOnPolicyUpdate(const NXCPMessage& msg, const Template& object);
 void NotifyClientsOnPolicyDelete(uuid guid, const Template& object);
+void NotifyClientsOnSlmCheckUpdate(const NetObj& service, SlmCheck* check);
+void NotifyClientsOnSlmCheckDelete(const NetObj& service, uint32_t checkId);
 void NotifyClientsOnDCIUpdate(const DataCollectionOwner& object, DCObject *dco);
 void NotifyClientsOnDCIDelete(const DataCollectionOwner& object, uint32_t dcoId);
 void NotifyClientsOnDCIStatusChange(const DataCollectionOwner& object, uint32_t dcoId, int status);

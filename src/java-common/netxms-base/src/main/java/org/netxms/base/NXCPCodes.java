@@ -112,7 +112,7 @@ public class NXCPCodes
 	public static final int CMD_GET_PREDICTION_ENGINES = 0x0056;
 	public static final int CMD_GET_PREDICTED_DATA = 0x0057;
 	public static final int CMD_STOP_SERVER_COMMAND = 0x0058;
-	public static final int CMD_POLL_NODE = 0x0059;
+	public static final int CMD_POLL_OBJECT = 0x0059;
 	public static final int CMD_POLLING_INFO = 0x005A;
 	public static final int CMD_COPY_DCI = 0x005B;
 	public static final int CMD_WAKEUP_NODE = 0x005C;
@@ -454,6 +454,14 @@ public class NXCPCodes
    public static final int CMD_2FA_GET_USER_BINDING_INFO = 0x01B5;
    public static final int CMD_2FA_MODIFY_USER_BINDING = 0x01B6;
    public static final int CMD_2FA_DELETE_USER_BINDING = 0x01B7;
+   public static final int CMD_WEB_SERVICE_CUSTOM_REQUEST = 0x01B8;
+   public static final int CMD_MERGE_FILES = 0x01B9;
+   public static final int CMD_FILEMGR_MERGE_FILES = 0x01BA;
+   public static final int CMD_GET_BUSINESS_CHECK_LIST = 0x01BB;
+   public static final int CMD_UPDATE_BUSINESS_CHECK = 0x01BC;
+   public static final int CMD_DELETE_BUSINESS_CHECK = 0x01BD;
+   public static final int CMD_GET_BUSINESS_UPTIME = 0x01BE;
+   public static final int CMD_GET_BUSINESS_TICKETS = 0x01BF;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1088,8 +1096,8 @@ public class NXCPCodes
    public static final long VID_VLAN_LIST = 622;
    public static final long VID_TASK_KEY = 623;
    public static final long VID_TIMER_COUNT = 624;
-   public static final long VID_AUTOBIND_FLAG = 625;
-   public static final long VID_AUTOUNBIND_FLAG = 626;
+   public static final long VID_AUTOBIND_FLAGS = 625;
+   public static final long VID_AUTOBIND_FILTER_2 = 626;
    public static final long VID_TIMEOUT = 627;
    public static final long VID_PROGRESS = 628;
    public static final long VID_POLICY_COUNT = 629;
@@ -1223,6 +1231,21 @@ public class NXCPCodes
    public static final long VID_HASH_CRC32 = 759;
    public static final long VID_HASH_MD5 = 760;
    public static final long VID_HASH_SHA256 = 761;
+   public static final long VID_HTTP_REQUEST_TYPE = 762;
+   public static final long VID_WEB_SWC_RESPONSE_CODE = 763;
+   public static final long VID_WEB_SWC_RESPONSE = 764;
+   public static final long VID_WEB_SWC_ERROR_TEXT = 765;
+   public static final long VID_REQUEST_DATA = 766;
+   public static final long VID_ENABLE_FILE_UPLOAD_RESUMING = 767;
+   public static final long VID_SLMCHECKS_COUNT = 768;
+   public static final long VID_SLMCHECK_ID  = 769;
+   public static final long VID_SLMCHECK_RELATED_OBJECT = 770;
+   public static final long VID_SLMCHECK_RELATED_DCI = 771;
+   public static final long VID_THRESHOLD = 772;
+   public static final long VID_OBJECT_STATUS_THRESHOLD = 773;
+   public static final long VID_DCI_STATUS_THRESHOLD = 774;
+   public static final long VID_BUSINESS_SERVICE_UPTIME = 775;
+   public static final long VID_BUSINESS_TICKETS_COUNT = 776;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1335,4 +1358,6 @@ public class NXCPCodes
    public static final long VID_MASKED_FIELD_LIST_BASE = 0x10000000L;
    public static final long VID_SSH_KEY_LIST_BASE = 0x10000000L;
    public static final long VID_2FA_METHOD_LIST_BASE = 0x10000000L;
+   public static final long VID_SLM_CHECKS_LIST_BASE = 0x10000000L;
+   public static final long VID_BUSINESS_TICKETS_LIST_BASE = 0x10000000L;
 }

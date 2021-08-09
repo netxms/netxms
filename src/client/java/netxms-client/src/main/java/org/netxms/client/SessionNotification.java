@@ -94,6 +94,8 @@ public class SessionNotification
    public static final int OBJECT_QUERY_UPDATED = 1054;
    public static final int OBJECT_QUERY_DELETED = 1055;
    public static final int TWO_FACTOR_AUTH_METHOD_CHANGED = 1056;
+   public static final int BUSINESS_SERVICE_CHECK_MODIFY = 1057;
+   public static final int BUSINESS_SERVICE_CHECK_DELETE = 1058;
 
 	public static final int CUSTOM_MESSAGE = 2000;
    public static final int OBJECT_SYNC_COMPLETED = 2001;

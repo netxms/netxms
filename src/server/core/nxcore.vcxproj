@@ -211,7 +211,6 @@
     <ClCompile Include="authtokens.cpp" />
     <ClCompile Include="beacon.cpp" />
     <ClCompile Include="bizservice.cpp" />
-    <ClCompile Include="bizsvcroot.cpp" />
     <ClCompile Include="bridge.cpp" />
     <ClCompile Include="cas_validator.cpp" />
     <ClCompile Include="ccy.cpp" />
@@ -297,7 +296,6 @@
     <ClCompile Include="netsrv.cpp" />
     <ClCompile Include="network_cred.cpp" />
     <ClCompile Include="node.cpp" />
-    <ClCompile Include="nodelink.cpp" />
     <ClCompile Include="notification_channel.cpp" />
     <ClCompile Include="np.cpp" />
     <ClCompile Include="npe.cpp" />
@@ -329,7 +327,6 @@
     <ClCompile Include="stp.cpp" />
     <ClCompile Include="subnet.cpp" />
     <ClCompile Include="summary_email.cpp" />
-    <ClCompile Include="svccontainer.cpp" />
     <ClCompile Include="swpkg.cpp" />
     <ClCompile Include="syncer.cpp" />
     <ClCompile Include="syslogd.cpp" />
@@ -341,7 +338,6 @@
     <ClCompile Include="ua_notification_item.cpp" />
     <ClCompile Include="uniroot.cpp" />
     <ClCompile Include="upload_job.cpp" />
-    <ClCompile Include="uptimecalc.cpp" />
     <ClCompile Include="userdb.cpp" />
     <ClCompile Include="userdb_objects.cpp" />
     <ClCompile Include="vobject.cpp" />

@@ -164,8 +164,6 @@ public class NXCObjectModificationData
    private List<String> snmpPorts;
    private List<PassiveRackElement> passiveElements;
    private List<ResponsibleUser> responsibleUsers;
-   private Boolean isAutoBindEnabled;
-   private Boolean isAutoUnbindEnabled;
    private IcmpStatCollectionMode icmpStatCollectionMode;
    private List<InetAddress> icmpTargets;
    private String chassisPlacement;
@@ -176,6 +174,14 @@ public class NXCObjectModificationData
    private Integer categoryId;
    private GeoLocationControlMode geoLocationControlMode;
    private long[] geoAreas;
+   private Integer instanceDiscoveryMethod;
+   private String instanceDiscoveryData;
+   private String instanceDiscoveryFilter;
+   private String autoBindFilter2;
+   private Integer autoBindFlags;
+   private Integer objectStatusThreshold;
+   private Integer dciStatusThreshold;
+   private Long seourceNode;
 
    /**
     * Constructor for creating modification data for given object
@@ -1898,34 +1904,6 @@ public class NXCObjectModificationData
    }
 
    /**
-    * Set abuto bind/remove options
-    *
-    * @param autoApply  TODO
-    * @param autoUnbind TODO
-    */
-   public void setAutoBindFlags(boolean autoApply, boolean autoUnbind)
-   {
-      isAutoBindEnabled = autoApply;
-      isAutoUnbindEnabled = autoUnbind;
-   }
-
-   /**
-    * @return if auto bind is enabled
-    */
-   public Boolean isAutoBindEnabled()
-   {
-      return isAutoBindEnabled;
-   }
-
-   /**
-    * @return if auto remove is enabled
-    */
-   public Boolean isAutoUnbindEnabled()
-   {
-      return isAutoUnbindEnabled;
-   }
-
-   /**
     * Get ICMP statistic collection mode
     * 
     * @return ICMP statistic collection mode
@@ -2118,5 +2096,133 @@ public class NXCObjectModificationData
    public void setGeoAreas(long[] geoAreas)
    {
       this.geoAreas = geoAreas;
+   }
+
+   /**
+    * @return the instanceDiscoveryMethod
+    */
+   public final Integer getInstanceDiscoveryMethod()
+   {
+      return instanceDiscoveryMethod;
+   }
+
+   /**
+    * @param instanceDiscoveryMethod the instanceDiscoveryMethod to set
+    */
+   public final void setInstanceDiscoveryMethod(int instanceDiscoveryMethod)
+   {
+      this.instanceDiscoveryMethod = instanceDiscoveryMethod;
+   }
+
+   /**
+    * @return the instanceDiscoveryData
+    */
+   public final String getInstanceDiscoveryData()
+   {
+      return instanceDiscoveryData;
+   }
+
+   /**
+    * @param instanceDiscoveryData the instanceDiscoveryData to set
+    */
+   public final void setInstanceDiscoveryData(String instanceDiscoveryData)
+   {
+      this.instanceDiscoveryData = instanceDiscoveryData;
+   }
+
+   /**
+    * @return the instanceDiscoveryFilter
+    */
+   public final String getInstanceDiscoveryFilter()
+   {
+      return instanceDiscoveryFilter;
+   }
+
+   /**
+    * @param instanceDiscoveryFilter the instanceDiscoveryFilter to set
+    */
+   public final void setInstanceDiscoveryFilter(String instanceDiscoveryFilter)
+   {
+      this.instanceDiscoveryFilter = instanceDiscoveryFilter;
+   }
+
+   /**
+    * @return the autoBindFilter2
+    */
+   public String getAutoBindFilter2()
+   {
+      return autoBindFilter2;
+   }
+
+   /**
+    * @param autoBindFilter2 the autoBindFilter2 to set
+    */
+   public void setAutoBindFilter2(String autoBindFilter2)
+   {
+      this.autoBindFilter2 = autoBindFilter2;
+   }
+
+   /**
+    * @return the autoBindFlags
+    */
+   public Integer getAutoBindFlags()
+   {
+      return autoBindFlags;
+   }
+
+   /**
+    * @param autoBindFlags the autoBindFlags to set
+    */
+   public void setAutoBindFlags(Integer autoBindFlags)
+   {
+      this.autoBindFlags = autoBindFlags;
+   }
+
+   /**
+    * @param objectStatusThreshold the objectStatusThreshold to set
+    */
+   public void setObjectStatusThreshold(Integer objectStatusThreshold)
+   {
+      this.objectStatusThreshold = objectStatusThreshold;
+   }
+
+   /**
+    * @return the objectStatusThreshold
+    */
+   public Integer getObjectStatusThreshold()
+   {
+      return objectStatusThreshold;
+   }
+
+   /**
+    * @return the dciStatusThreshold
+    */
+   public Integer getDciStatusThreshold()
+   {
+      return dciStatusThreshold;
+   }
+
+   /**
+    * @param dciStatusThreshold the dciStatusThreshold to set
+    */
+   public void setDciStatusThreshold(Integer dciStatusThreshold)
+   {
+      this.dciStatusThreshold = dciStatusThreshold;
+   }
+
+   /**
+    * @param sourceNode the sourceNode to set
+    */
+   public void setSourceNode(Long sourceNode)
+   {
+      this.seourceNode = sourceNode;
+   }
+
+   /**
+    * @return the dciStatusThreshold
+    */
+   public Long getSourceNode()
+   {
+      return seourceNode;
    }
 }

@@ -230,4 +230,17 @@ public class TimePeriodSelector extends Composite
       timeFrom.setEnabled(false);
       timeTo.setEnabled(false);
    }
+   
+   /**
+    * Update time period
+    * 
+    * @param timeRange
+    * @param unit
+    */
+   public void updateTimeperiod(int range, TimeUnit unit)
+   {
+      radioBackFromNow.setSelection(true);
+      timeRange.setSelection(range);
+      timeUnits.select(unit.getValue());
+   }
 }

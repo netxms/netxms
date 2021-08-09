@@ -1190,6 +1190,7 @@ public:
    virtual bool showThresholdSummary() const;
    virtual bool isEventSource() const;
    virtual bool isDataCollectionTarget() const;
+   virtual bool isPollable() const;
 
    void setStatusCalculation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
    void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
@@ -1257,8 +1258,9 @@ private:
 protected:
    TCHAR *m_bindFilterSource;
    NXSL_Program *m_bindFilter;
-   bool m_autoBindFlag;
-   bool m_autoUnbindFlag;
+   TCHAR *m_bindFilterSourceDCI;
+   NXSL_Program *m_bindFilterDCI;
+   uint32_t m_autoBindFlags;
 
    void modifyFromMessage(NXCPMessage *request);
    void fillMessage(NXCPMessage *msg);
@@ -1270,18 +1272,27 @@ protected:
 
    void toJson(json_t *root);
    void createExportRecord(StringBuffer &str);
+   void setAutoBindFlag(bool value, uint32_t flag);
 
 public:
    AutoBindTarget(NetObj *_this);
    virtual ~AutoBindTarget();
 
-   AutoBindDecision isApplicable(const shared_ptr<DataCollectionTarget>& object);
-   bool isAutoBindEnabled() { return m_autoBindFlag; }
-   bool isAutoUnbindEnabled() { return m_autoBindFlag && m_autoUnbindFlag; }
+   AutoBindDecision isApplicable(const shared_ptr<NetObj>& object, const shared_ptr<DCObject>& dci = shared_ptr<DCObject>());
+   bool isAutoBindEnabled() { return m_autoBindFlags & AAF_AUTO_APPLY_1; }
+   bool isAutoUnbindEnabled() { return isAutoBindEnabled() && m_autoBindFlags & AAF_AUTO_REMOVE_1; }
    void setAutoBindFilter(const TCHAR *filter);
    void setAutoBindMode(bool doBind, bool doUnbind);
 
    const TCHAR *getAutoBindScriptSource() const { return m_bindFilterSource; }
+
+   bool isAutoBindDCIEnabled() { return m_autoBindFlags & AAF_AUTO_APPLY_2; }
+   bool isAutoUnbindDCIEnabled() { return isAutoBindDCIEnabled() && m_autoBindFlags & AAF_AUTO_REMOVE_2; }
+   void setAutoBindDCIFilter(const TCHAR *filter);
+   void setAutoBindDCIMode(bool doBind, bool doUnbind);
+   void setAutoBindFlags(uint32_t flags) { m_autoBindFlags = flags; }
+
+   const TCHAR *getAutoBindDCIScriptSource() const { return m_bindFilterSourceDCI; }
 };
 
 /**
@@ -1386,7 +1397,8 @@ public:
    void setDCIModificationFlag() { lockProperties(); m_dciListModified = true; unlockProperties(); }
    void sendItemsToClient(ClientSession *pSession, UINT32 dwRqId) const;
    virtual HashSet<uint32_t> *getRelatedEventsList() const;
-   StringSet *getDCIScriptList() const;
+   unique_ptr<StringSet> getDCIScriptList() const;
+   unique_ptr<IntegerArray<uint32_t>> getDCIIds();
    bool isDataCollectionSource(UINT32 nodeId) const;
 
    virtual void applyDCIChanges(bool forcedChange);
@@ -2228,6 +2240,8 @@ public:
    uint64_t getCacheMemoryUsage();
 
    static void removeTemplate(const shared_ptr<ScheduledTaskParameters>& parameters);
+
+   int getDciThreshold(uint32_t dciId);
 };
 
 /**
@@ -4345,209 +4359,197 @@ public:
 };
 
 /**
- * SLM check object
+ * SLM ticket data
  */
-class NXCORE_EXPORTABLE SlmCheck : public NetObj
-{
-protected:
-   typedef NetObj super;
-
-protected:
-   Threshold *m_threshold;
-   enum CheckType { check_undefined = 0, check_script = 1, check_threshold = 2 } m_type;
-   TCHAR *m_script;
-   NXSL_VM *m_pCompiledScript;
-   TCHAR m_reason[256];
-   bool m_isTemplate;
-   UINT32 m_templateId;
-   UINT32 m_currentTicketId;
-
-   virtual void onObjectDelete(UINT32 objectId) override;
-
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
-
-   void setScript(const TCHAR *script);
-   UINT32 getOwnerId();
-   NXSL_Value *getNodeObjectForNXSL(NXSL_VM *vm);
-   bool insertTicket();
-   void closeTicket();
-   void setReason(const TCHAR *reason) { nx_strncpy(m_reason, CHECK_NULL_EX(reason), 256); }
-   void compileScript();
-
-public:
-   SlmCheck();
-   SlmCheck(const TCHAR *name, bool isTemplate);
-   SlmCheck(SlmCheck *tmpl);
-   virtual ~SlmCheck();
-
-   shared_ptr<SlmCheck> self() { return static_pointer_cast<SlmCheck>(NObject::self()); }
-   shared_ptr<const SlmCheck> self() const { return static_pointer_cast<const SlmCheck>(NObject::self()); }
-
-   virtual int getObjectClass() const override { return OBJECT_SLMCHECK; }
-
-   virtual bool saveToDatabase(DB_HANDLE hdb) override;
-   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
-
-   virtual void postModify() override;
-
-   void execute();
-   void updateFromTemplate(SlmCheck *tmpl);
-
-   bool isTemplate() { return m_isTemplate; }
-   UINT32 getTemplateId() { return m_templateId; }
-   const TCHAR *getReason() { return m_reason; }
-};
+typedef struct{
+   uint32_t ticket_id;
+   uint32_t check_id;
+   TCHAR description[1023];
+   uint32_t service_id;
+   time_t create_timestamp;
+   TCHAR reason[256];
+} SlmTicketData;
 
 /**
- * Service container - common logic for BusinessService, NodeLink and BusinessServiceRoot
+ * SLM check object
  */
-class NXCORE_EXPORTABLE ServiceContainer : public AbstractContainer
+class NXCORE_EXPORTABLE SlmCheck
 {
-   enum Period { DAY, WEEK, MONTH };
-
 protected:
-   typedef AbstractContainer super;
+   uint32_t m_status;
+   int m_type;
+   TCHAR *m_script;
+   NXSL_Program *m_pCompiledScript;
+   TCHAR m_reason[256];
+   uint32_t m_id;
+   TCHAR m_name[1023];
+   uint32_t m_relatedObject;
+   uint32_t m_relatedDCI;
+   uint32_t m_currentTicket;
+   int m_statusThreshold;
+   uint32_t m_serviceId;
 
-protected:
-   time_t m_prevUptimeUpdateTime;
-   int m_prevUptimeUpdateStatus;
-   double m_uptimeDay;
-   double m_uptimeWeek;
-   double m_uptimeMonth;
-   INT32 m_downtimeDay;
-   INT32 m_downtimeWeek;
-   INT32 m_downtimeMonth;
-   INT32 m_prevDiffDay;
-   INT32 m_prevDiffWeek;
-   INT32 m_prevDiffMonth;
-
-   static INT32 logRecordId;
-   static INT32 getSecondsInMonth();
-   static INT32 getSecondsInPeriod(Period period) { return period == MONTH ? getSecondsInMonth() : (period == WEEK ? (3600 * 24 * 7) : (3600 * 24)); }
-   static INT32 getSecondsSinceBeginningOf(Period period, time_t *beginTime = nullptr);
-
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
-
-   void initServiceContainer();
-   BOOL addHistoryRecord();
-   double getUptimeFromDBFor(Period period, INT32 *downtime);
+   bool insertTicket(SlmTicketData* ticket);
+   void closeTicket();
+   void compileScript();
+   const TCHAR* getReason();
 
 public:
-   ServiceContainer();
-   ServiceContainer(const TCHAR *pszName);
+   SlmCheck(uint32_t serviceId = 0);
+   virtual ~SlmCheck();
 
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
-   virtual bool saveToDatabase(DB_HANDLE hdb) override;
-   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   int getType() { return m_type; }
+   void setType( int type ) { if ( type >= OBJECT && type <= DCI ) m_type = type; }
+   const TCHAR* getScript() { return m_script; } const
+   void setScript(const TCHAR* script) { m_script = MemCopyString(script); }
+   uint32_t getId() { return m_id; }
+   void generateId();
+   uint32_t getRelatedObject() { return m_relatedObject; }
+   void setRelatedObject(uint32_t object) { m_relatedObject = object; }
+   uint32_t getRelatedDCI() { return m_relatedDCI; }
+   void setRelatedDCI(uint32_t dci) { m_relatedDCI = dci; }
+   uint32_t getCurrentTicket() { return m_currentTicket; }
+   uint32_t getStatus() { return m_status; }
+   void setName(const TCHAR* name) { _tcslcpy(m_name, name, 1023); }
+   const TCHAR* getName() { return m_name; } const
+   void setThreshold(int threshold) { m_statusThreshold = threshold; }
+   int getThreshold() { return m_statusThreshold; }
 
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   uint32_t execute(SlmTicketData* ticket);
 
-   virtual bool showThresholdSummary() const override;
+   void modifyFromMessage(NXCPMessage *pRequest);
+   void loadFromSelect(DB_RESULT hResult, int row);
+   void fillMessage(NXCPMessage *msg, uint64_t baseId);
+   bool saveToDatabase();
+   bool deleteFromDatabase();
 
-   void setStatus(int newStatus);
-
-   void initUptimeStats();
-   void updateUptimeStats(time_t currentTime = 0, BOOL updateChilds = FALSE);
+   enum {
+      OBJECT = 0,
+      SCRIPT = 1,
+      DCI = 2
+   };
 };
 
 /**
  * Business service root
  */
-class NXCORE_EXPORTABLE BusinessServiceRoot : public ServiceContainer
+class NXCORE_EXPORTABLE BusinessServiceRoot : public UniversalRoot
 {
-   using ServiceContainer::loadFromDatabase;
-
 protected:
-   typedef ServiceContainer super;
+  typedef UniversalRoot super;
 
 public:
    BusinessServiceRoot();
    virtual ~BusinessServiceRoot();
 
-   virtual int getObjectClass() const override { return OBJECT_BUSINESSSERVICEROOT; }
+   virtual int getObjectClass() const override { return OBJECT_BUSINESS_SERVICE_ROOT; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+};
 
+/**
+ * Business service base class
+ */
+class NXCORE_EXPORTABLE BaseBusinessService : public AbstractContainer, public AutoBindTarget
+{
+  typedef AbstractContainer super;
+protected:
+   ObjectArray<SlmCheck> m_checks;
+   bool m_busy;
+   bool m_pollingDisabled;
+   time_t m_lastPollTime;
+   uint32_t m_objectStatusThreshhold;
+   uint32_t m_dciStatusThreshhold;
+   uint32_t m_prototypeId;
+   TCHAR *m_instance;
+   uint32_t m_instanceDiscoveryMethod;
+   TCHAR* m_instanceDiscoveryData;
+   TCHAR* m_instanceDiscoveryFilter;
+   uint32_t m_instanceSource;
+
+   bool loadChecksFromDatabase(DB_HANDLE hdb);
+   void deleteCheckFromDatabase(uint32_t checkId);
+   virtual uint32_t modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+
+public:
+   BaseBusinessService(const TCHAR* name);
+   BaseBusinessService();
+   virtual ~BaseBusinessService();
+   ObjectArray<SlmCheck> *getChecks() { return &m_checks; }
+   void deleteCheck(uint32_t checkId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
-   void loadFromDatabase(DB_HANDLE hdb);
-
-   virtual void linkObjects() override;
-
-   void linkObject(const shared_ptr<NetObj>& object) { addChild(object); object->addParent(self()); }
+   void copyChecks(const ObjectArray<SlmCheck>& checks);
+   void modifyCheckFromMessage(NXCPMessage *pRequest);
 };
 
 /**
  * Business service object
  */
-class NXCORE_EXPORTABLE BusinessService : public ServiceContainer
+class NXCORE_EXPORTABLE BusinessService : public BaseBusinessService
 {
+   typedef BaseBusinessService super;
 protected:
-   typedef ServiceContainer super;
+   PollState m_statusPollState;
+   PollState m_configurationPollState;
+   uint32_t m_lastPollStatus;
+   MUTEX m_hPollerMutex;
 
-protected:
-   bool m_busy;
-   bool m_pollingDisabled;
-   time_t m_lastPollTime;
-   int m_lastPollStatus;
-
-   virtual void prepareForDeletion() override;
-
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   void updateSLMChecks();
+   void objectCheckAutoBinding();
+   void dciCheckAutoBinding();
+   void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   void _pollerLock() { MutexLock(m_hPollerMutex); }
+   void _pollerUnlock() { MutexUnlock(m_hPollerMutex); }
 
 public:
-   BusinessService();
    BusinessService(const TCHAR *name);
+   BusinessService();
    virtual ~BusinessService();
 
-   virtual int getObjectClass() const override { return OBJECT_BUSINESSSERVICE; }
-
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
-   virtual bool saveToDatabase(DB_HANDLE hdb) override;
-   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
-
-   bool isReadyForPolling();
-   void lockForPolling();
-   void poll(PollerInfo *poller);
-   void poll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
-
-   void getApplicableTemplates(ServiceContainer *target, SharedObjectArray<SlmCheck> *templates);
+   virtual int getObjectClass() const override { return OBJECT_BUSINESS_SERVICE; }
+   uint32_t getPrototypeId() { return m_prototypeId; }
+   void setPrototypeId(uint32_t id) { m_prototypeId = id; }
+   const TCHAR* getInstance() { return m_instance; } const
+   void setInstance(const TCHAR* instance) { MemFree(m_instance); m_instance = MemCopyString(instance); }
+   void startForcedStatusPoll() { m_statusPollState.manualStart(); }
+   void statusPollWorkerEntry(PollerInfo *poller) { statusPollWorkerEntry(poller, nullptr, 0); }
+   void statusPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   void startForcedConfigurationPoll() { m_configurationPollState.manualStart(); }
+   void configurationPollWorkerEntry(PollerInfo *poller) { configurationPollWorkerEntry(poller, nullptr, 0); }
+   void configurationPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   bool lockForStatusPoll();
+   bool lockForConfigurationPoll();
+   void addChildTicket(SlmTicketData* data);
 };
 
 /**
- * Node link object for business service
+ * Business service prototype
  */
-class NXCORE_EXPORTABLE NodeLink : public ServiceContainer
+class NXCORE_EXPORTABLE BusinessServicePrototype : public BaseBusinessService
 {
+   typedef BaseBusinessService super;
 protected:
-   typedef ServiceContainer super;
+   NXSL_Program *m_pCompiledInstanceDiscoveryFilterScript;
+   PollState m_discoveryPollState;
 
-protected:
-   uint32_t m_nodeId;
-
-   virtual void onObjectDelete(UINT32 dwObjectId) override;
-
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
-
-   void applyTemplate(SlmCheck *tmpl);
+   virtual uint32_t modifyFromMessageInternal(NXCPMessage *pRequest) override;
+   void compileInstanceDiscoveryFilterScript();
+   unique_ptr<StringMap> getInstances();
+   unique_ptr<SharedObjectArray<BusinessService>> getServices();
 
 public:
-   NodeLink();
-   NodeLink(const TCHAR *name, UINT32 nodeId);
-   virtual ~NodeLink();
+   BusinessServicePrototype(const TCHAR *name, uint32_t method);
+   BusinessServicePrototype();
+   virtual ~BusinessServicePrototype();
 
-   virtual int getObjectClass() const override { return OBJECT_NODELINK; }
-
-   virtual bool saveToDatabase(DB_HANDLE hdb) override;
-   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual int getObjectClass() const override { return OBJECT_BUSINESS_SERVICE_PROTOTYPE; }
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
-
-   void execute();
-   void applyTemplates();
-
-   uint32_t getNodeId() const { return m_nodeId; }
+   void startForcedDiscoveryPoll() { m_discoveryPollState.manualStart(); }
+   void instanceDiscoveryPollWorkerEntry(PollerInfo *poller) { instanceDiscoveryPoll(poller, nullptr, 0); }
+   void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   bool lockForDiscoveryPoll();
 };
 
 /**
@@ -4779,6 +4781,12 @@ void DeleteSshKey(NXCPMessage *response, uint32_t id, bool forceDelete);
 void FindSshKeyById(uint32_t id, NXCPMessage *msg);
 void LoadSshKeys();
 
+void GetCheckList(uint32_t serviceId, NXCPMessage *response);
+uint32_t ModifyCheck(NXCPMessage *request);
+uint32_t DeleteCheck(uint32_t serviceId, uint32_t checkId);
+double GetServiceUptime(uint32_t serviceId, time_t from, time_t to);
+void GetServiceTickets(uint32_t serviceId, time_t from, time_t to, NXCPMessage* msg);
+
 /**
  * Global variables
  */
@@ -4806,7 +4814,7 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxClusterById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxMobileDeviceById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxAccessPointById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxConditionById;
-extern ObjectIndex NXCORE_EXPORTABLE g_idxServiceCheckById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxBusinessServicesById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxSensorById;
 
 //User agent messages

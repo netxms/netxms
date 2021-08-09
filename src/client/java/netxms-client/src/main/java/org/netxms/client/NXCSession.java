@@ -69,6 +69,8 @@ import org.netxms.base.NXCPMsgWaitQueue;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.agent.config.AgentConfiguration;
 import org.netxms.client.agent.config.AgentConfigurationHandle;
+import org.netxms.client.businessservices.ServiceCheck;
+import org.netxms.client.businessservices.BusinessServiceTicket;
 import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.DataOrigin;
@@ -81,7 +83,6 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DCOStatusHolder;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
-import org.netxms.client.datacollection.RemoteChangeListener;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
@@ -93,10 +94,11 @@ import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.client.datacollection.DciSummaryTableColumn;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.client.datacollection.GraphDefinition;
+import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.PredictionEngine;
+import org.netxms.client.datacollection.RemoteChangeListener;
 import org.netxms.client.datacollection.SimpleDciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.datacollection.ThresholdStateChange;
@@ -128,6 +130,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.BusinessService;
+import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
@@ -148,11 +151,9 @@ import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.NetworkService;
 import org.netxms.client.objects.Node;
-import org.netxms.client.objects.NodeLink;
 import org.netxms.client.objects.ObjectCategory;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
-import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
@@ -683,6 +684,14 @@ public class NXCSession
                   case NXCPCodes.CMD_UPDATE_SYSTEM_ACCESS_RIGHTS:
                      userSystemRights = msg.getFieldAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
                      sendNotification(new SessionNotification(SessionNotification.SYSTEM_ACCESS_CHANGED, userSystemRights));
+                     break;
+                  case NXCPCodes.CMD_UPDATE_BUSINESS_CHECK:
+                     sendNotification(new SessionNotification(SessionNotification.BUSINESS_SERVICE_CHECK_MODIFY,
+                           msg.getFieldAsInt64(NXCPCodes.VID_SLM_CHECKS_LIST_BASE), new ServiceCheck(msg, NXCPCodes.VID_SLM_CHECKS_LIST_BASE)));
+                     break;
+                  case NXCPCodes.CMD_DELETE_BUSINESS_CHECK:
+                     sendNotification(new SessionNotification(SessionNotification.BUSINESS_SERVICE_CHECK_DELETE,
+                           msg.getFieldAsInt64(NXCPCodes.VID_SLMCHECK_ID)));
                      break;
                   default:
                      // Check subscriptions
@@ -1442,6 +1451,9 @@ public class NXCSession
          case AbstractObject.OBJECT_BUSINESSSERVICE:
             object = new BusinessService(msg, this);
             break;
+         case AbstractObject.OBJECT_BUSINESSSERVICE_PROTOTYPE:
+            object = new BusinessServicePrototype(msg, this);
+            break;
          case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
             object = new BusinessServiceRoot(msg, this);
             break;
@@ -1490,9 +1502,6 @@ public class NXCSession
          case AbstractObject.OBJECT_NODE:
             object = new Node(msg, this);
             break;
-         case AbstractObject.OBJECT_NODELINK:
-            object = new NodeLink(msg, this);
-            break;
          case AbstractObject.OBJECT_RACK:
             object = new Rack(msg, this);
             break;
@@ -1501,9 +1510,6 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_SERVICEROOT:
             object = new ServiceRoot(msg, this);
-            break;
-         case AbstractObject.OBJECT_SLMCHECK:
-            object = new ServiceCheck(msg, this);
             break;
          case AbstractObject.OBJECT_SUBNET:
             object = new Subnet(msg, this);
@@ -5716,14 +5722,8 @@ public class NXCSession
             msg.setField(NXCPCodes.VID_SERVICE_RESPONSE, data.getResponse());
             msg.setFieldInt16(NXCPCodes.VID_CREATE_STATUS_DCI, data.isCreateStatusDci() ? 1 : 0);
             break;
-         case AbstractObject.OBJECT_NODELINK:
-            msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)data.getLinkedNodeId());
-            break;
          case AbstractObject.OBJECT_RACK:
             msg.setFieldInt16(NXCPCodes.VID_HEIGHT, data.getHeight());
-            break;
-         case AbstractObject.OBJECT_SLMCHECK:
-            msg.setFieldInt16(NXCPCodes.VID_IS_TEMPLATE, data.isTemplate() ? 1 : 0);
             break;
          case AbstractObject.OBJECT_SENSOR:
             msg.setFieldInt32(NXCPCodes.VID_SENSOR_FLAGS, data.getFlags());
@@ -5741,6 +5741,9 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_SUBNET:
             msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
+            break;
+         case AbstractObject.OBJECT_BUSINESSSERVICE_PROTOTYPE:
+            msg.setFieldInt16(NXCPCodes.VID_INSTD_METHOD, data.getInstanceDiscoveryMethod());
             break;
       }
 
@@ -5957,12 +5960,14 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_AUTOBIND_FILTER, data.getAutoBindFilter());
       }
 
-      if (data.isAutoBindEnabled() != null || data.isAutoUnbindEnabled() != null)
+      if (data.getAutoBindFilter2() != null)
       {
-         if (data.isAutoBindEnabled() == null || data.isAutoUnbindEnabled() == null)
-            throw new NXCException(RCC.VARIABLE_NOT_FOUND);
-         msg.setField(NXCPCodes.VID_AUTOBIND_FLAG, data.isAutoBindEnabled());
-         msg.setField(NXCPCodes.VID_AUTOUNBIND_FLAG, data.isAutoUnbindEnabled());
+         msg.setField(NXCPCodes.VID_AUTOBIND_FILTER_2, data.getAutoBindFilter2());
+      }
+
+      if (data.getAutoBindFlags() != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_AUTOBIND_FLAGS, data.getAutoBindFlags());
       }
 
       if (data.getFilter() != null)
@@ -6548,6 +6553,36 @@ public class NXCSession
       if (data.getGeoAreas() != null)
       {
          msg.setField(NXCPCodes.VID_GEO_AREAS, data.getGeoAreas());
+      }
+
+      if (data.getInstanceDiscoveryMethod() != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_INSTD_METHOD, data.getInstanceDiscoveryMethod());
+      }
+
+      if (data.getInstanceDiscoveryData() != null)
+      {
+         msg.setField(NXCPCodes.VID_INSTD_DATA, data.getInstanceDiscoveryData());
+      }
+
+      if (data.getInstanceDiscoveryFilter() != null)
+      {
+         msg.setField(NXCPCodes.VID_INSTD_FILTER, data.getInstanceDiscoveryFilter());
+      }
+
+      if (data.getObjectStatusThreshold() != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_OBJECT_STATUS_THRESHOLD, data.getObjectStatusThreshold());
+      }
+
+      if (data.getDciStatusThreshold() != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_DCI_STATUS_THRESHOLD, data.getDciStatusThreshold());
+      }
+
+      if (data.getSourceNode() != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_NODE_ID, data.getSourceNode().intValue());
       }
 
       modifyCustomObject(data, userData, msg);
@@ -9593,7 +9628,7 @@ public class NXCSession
     */
    public void pollNode(long nodeId, NodePollType pollType, final TextOutputListener listener) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLL_NODE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLL_OBJECT);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setFieldInt16(NXCPCodes.VID_POLL_TYPE, pollType.getValue());
 
@@ -12682,4 +12717,114 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
+
+   /**    
+    * Get list business service checks
+    * 
+    * @param serviceId business service id 
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @return list of business service checks
+    */
+   public Map<Long, ServiceCheck> getBusinessServiceChecks(long serviceId) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_BUSINESS_CHECK_LIST);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)serviceId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      Map<Long, ServiceCheck> checks = new HashMap<Long, ServiceCheck>();
+      int count = response.getFieldAsInt32(NXCPCodes.VID_SLMCHECKS_COUNT);
+      long base = NXCPCodes.VID_SLM_CHECKS_LIST_BASE;      
+      for (int i= 0; i < count; i ++)
+      {
+         ServiceCheck check = new ServiceCheck(response, base);
+         checks.put(check.getId(), check);
+         base +=10;
+      }
+      return checks;
+   }
+   
+   /**  
+    * Delete check form businsess service
+    * 
+    * @param businessServiceid business service id 
+    * @param checkId cehck id
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteBusinessServiceCheck(long businessServiceid, long checkId) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_BUSINESS_CHECK);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)businessServiceid);
+      msg.setFieldInt32(NXCPCodes.VID_SLMCHECK_ID, (int)checkId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**  
+    * Modify check form businsess service
+    * 
+    * @param businessServiceid business service id 
+    * @param check cehck id
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void modifyBusinessServiceCheck(long businessServiceid, ServiceCheck check) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_BUSINESS_CHECK);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)businessServiceid);
+      check.fillMessage(msg);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }  
+   
+   /**  
+    * Get business service availability
+    * 
+    * @param businessServiceid business service id 
+    * @param timePeriod time period
+    * @return uptime for selected period 
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public double getBusinessServiceAvailablity(long businessServiceid, TimePeriod timePeriod) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_BUSINESS_UPTIME);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)businessServiceid);
+      msg.setField(NXCPCodes.VID_TIME_FROM, timePeriod.getPeriodStart());
+      msg.setField(NXCPCodes.VID_TIME_TO, timePeriod.getPeriodEnd());
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsDouble(NXCPCodes.VID_BUSINESS_SERVICE_UPTIME);
+   }  
+   
+   /**  
+    * Get business service tickets
+    * 
+    * @param businessServiceid business service id 
+    * @param timePeriod time period
+    * @return list of tickets for business service
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<BusinessServiceTicket> getBusinessServiceTickets(long businessServiceid, TimePeriod timePeriod) throws NXCException, IOException
+   {
+
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_BUSINESS_TICKETS);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)businessServiceid);
+      msg.setField(NXCPCodes.VID_TIME_FROM, timePeriod.getPeriodStart());
+      msg.setField(NXCPCodes.VID_TIME_TO, timePeriod.getPeriodEnd());
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      List<BusinessServiceTicket> tickets = new ArrayList<BusinessServiceTicket>();
+      int count = response.getFieldAsInt32(NXCPCodes.VID_BUSINESS_TICKETS_COUNT);
+      long base = NXCPCodes.VID_BUSINESS_TICKETS_LIST_BASE;      
+      for (int i= 0; i < count; i++)
+      {
+         BusinessServiceTicket ticket = new BusinessServiceTicket(response, base);
+         tickets.add(ticket);
+         base +=10;
+      }
+      return tickets;
+   } 
 }

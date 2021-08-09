@@ -97,8 +97,8 @@ public abstract class AbstractObject
 	public static final int OBJECT_DASHBOARD = 23;
 	public static final int OBJECT_BUSINESSSERVICEROOT = 27;
 	public static final int OBJECT_BUSINESSSERVICE = 28;
-	public static final int OBJECT_NODELINK = 29;
-	public static final int OBJECT_SLMCHECK = 30;
+	//public static final int OBJECT_NODELINK = 29;
+	//public static final int OBJECT_SLMCHECK = 30;
 	public static final int OBJECT_MOBILEDEVICE = 31;
 	public static final int OBJECT_RACK = 32;
 	public static final int OBJECT_ACCESSPOINT = 33;
@@ -106,6 +106,7 @@ public abstract class AbstractObject
    public static final int OBJECT_CHASSIS = 35;
    public static final int OBJECT_DASHBOARDGROUP = 36;
    public static final int OBJECT_SENSOR = 37;
+   public static final int OBJECT_BUSINESSSERVICE_PROTOTYPE = 38;
 	public static final int OBJECT_CUSTOM = 10000;
 	
 	// Status calculation methods

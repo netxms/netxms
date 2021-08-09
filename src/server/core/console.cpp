@@ -534,21 +534,41 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             if (id != 0)
             {
                shared_ptr<NetObj> object = FindObjectById(id);
-               if ((object != nullptr) && object->isDataCollectionTarget())
+               if ((object != nullptr) && (object->isDataCollectionTarget() || object->isPollable()))
                {
                   switch(pollType)
                   {
                      case 1:
+                        if (object->getObjectClass() == OBJECT_BUSINESS_SERVICE)
+                        {
+                        static_cast<BusinessService*>(object.get())->startForcedConfigurationPoll();
+                        ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<BusinessService>(object),
+                                 &BusinessService::configurationPollWorkerEntry,
+                                 RegisterPoller(PollerType::CONFIGURATION, object));
+                        }
+                        else
+                        {
                         static_cast<DataCollectionTarget*>(object.get())->startForcedConfigurationPoll();
                         ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<DataCollectionTarget>(object),
                                  &DataCollectionTarget::configurationPollWorkerEntry,
                                  RegisterPoller(PollerType::CONFIGURATION, object));
+                        }
                         break;
                      case 2:
+                        if (object->getObjectClass() == OBJECT_BUSINESS_SERVICE)
+                        {
+                        static_cast<BusinessService*>(object.get())->startForcedStatusPoll();
+                        ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<BusinessService>(object),
+                                 &BusinessService::statusPollWorkerEntry,
+                                 RegisterPoller(PollerType::STATUS, object));
+                        }
+                        else
+                        {
                         static_cast<DataCollectionTarget*>(object.get())->startForcedStatusPoll();
                         ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<DataCollectionTarget>(object),
                                  &DataCollectionTarget::statusPollWorkerEntry,
                                  RegisterPoller(PollerType::STATUS, object));
+                        }
                         break;
                      case 3:
                         if (object->getObjectClass() == OBJECT_NODE)
@@ -577,10 +597,21 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                         }
                         break;
                      case 5:
+                        if (object->getObjectClass() == OBJECT_BUSINESS_SERVICE)
+                        {
+                        static_cast<BusinessServicePrototype*>(object.get())->startForcedDiscoveryPoll();
+                        ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<BusinessServicePrototype>(object),
+                                 &BusinessServicePrototype::instanceDiscoveryPollWorkerEntry,
+                                 RegisterPoller(PollerType::INSTANCE_DISCOVERY, object));
+                        }
+                        else
+                        {
                         static_cast<DataCollectionTarget*>(object.get())->startForcedInstancePoll();
                         ThreadPoolExecute(g_pollerThreadPool, static_pointer_cast<DataCollectionTarget>(object),
                                  &DataCollectionTarget::instanceDiscoveryPollWorkerEntry,
                                  RegisterPoller(PollerType::INSTANCE_DISCOVERY, object));
+                        }
+
                         break;
                      case 6:
                         if (object->getObjectClass() == OBJECT_NODE)

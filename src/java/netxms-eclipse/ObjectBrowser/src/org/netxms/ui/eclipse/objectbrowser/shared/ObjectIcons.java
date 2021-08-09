@@ -71,10 +71,6 @@ public class ObjectIcons
 			case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
 			case AbstractObject.OBJECT_BUSINESSSERVICE:
 				return Activator.getImageDescriptor("icons/business_service.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_NODELINK:
-				return Activator.getImageDescriptor("icons/node_link.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_SLMCHECK:
-				return Activator.getImageDescriptor("icons/service_check.gif"); //$NON-NLS-1$
 			default:
 				return SharedIcons.UNKNOWN_OBJECT;
 		}

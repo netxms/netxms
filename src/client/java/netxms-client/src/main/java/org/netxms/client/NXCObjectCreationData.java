@@ -95,6 +95,7 @@ public class NXCObjectCreationData
    private String metaType;
    private String description;
    private long sensorProxy;
+   private int instanceDiscoveryMethod;
 	
 	/**
 	 * Constructor.
@@ -1040,5 +1041,21 @@ public class NXCObjectCreationData
    public void setSshPort(int sshPort)
    {
       this.sshPort = sshPort;
+   }
+
+   /**
+    * @return the instanceDiscoveryMethod
+    */
+   public int getInstanceDiscoveryMethod()
+   {
+      return instanceDiscoveryMethod;
+   }
+
+   /**
+    * @param instanceDiscoveryMethod the instanceDiscoveryMethod to set
+    */
+   public void setInstanceDiscoveryMethod(int instanceDiscoveryMethod)
+   {
+      this.instanceDiscoveryMethod = instanceDiscoveryMethod;
    }
 }

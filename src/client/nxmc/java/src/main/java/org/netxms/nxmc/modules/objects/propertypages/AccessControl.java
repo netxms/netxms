@@ -407,4 +407,13 @@ public class AccessControl extends ObjectPropertyPage
 		acl.clear();
 		userList.setInput(acl.values().toArray());
 	}
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 11;
+   }
 }

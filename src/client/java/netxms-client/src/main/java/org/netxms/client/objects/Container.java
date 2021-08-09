@@ -29,8 +29,7 @@ import org.netxms.client.objects.interfaces.AutoBindObject;
  */
 public class Container extends GenericObject implements AutoBindObject
 {	
-   private boolean autoBind;
-   private boolean autoUnbind;
+   private int autoBindFlags;
 	private String autoBindFilter;
 	
 	/**
@@ -43,8 +42,7 @@ public class Container extends GenericObject implements AutoBindObject
 	{
 		super(msg, session);
 		autoBindFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
-      autoBind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOBIND_FLAG);
-      autoUnbind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOUNBIND_FLAG);
+      autoBindFlags = msg.getFieldAsInt32(NXCPCodes.VID_AUTOBIND_FLAGS);
 	}
 
 	/**
@@ -65,21 +63,21 @@ public class Container extends GenericObject implements AutoBindObject
       return true;
    }
 
-	/**
-	 * @return true if automatic bind is enabled
-	 */
-	public boolean isAutoBindEnabled()
-	{
-		return autoBind;
-	}
+   /**
+    * @return true if automatic bind is enabled
+    */
+   public boolean isAutoBindEnabled()
+   {
+      return (autoBindFlags & OBJECT_BIND_FLAG) > 0;
+   }
 
-	/**
-	 * @return true if automatic unbind is enabled
-	 */
-	public boolean isAutoUnbindEnabled()
-	{
-		return autoUnbind;
-	}
+   /**
+    * @return true if automatic unbind is enabled
+    */
+   public boolean isAutoUnbindEnabled()
+   {
+      return (autoBindFlags & OBJECT_UNBIND_FLAG) > 0;
+   }
 
 	/**
 	 * @return Filter script for automatic bind
@@ -115,5 +113,11 @@ public class Container extends GenericObject implements AutoBindObject
       Set<String> strings = super.getStrings();
       addString(strings, autoBindFilter);
       return strings;
+   }
+
+   @Override
+   public int getAutoBindFlags()
+   {
+      return autoBindFlags;
    }
 }

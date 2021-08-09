@@ -120,3 +120,28 @@ void DashboardRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_status = STATUS_NORMAL;
 }
+
+/**
+ * Dashboard tree root class default constructor
+ */
+BusinessServiceRoot::BusinessServiceRoot() : super()
+{
+   m_id = BUILTIN_OID_BUSINESSSERVICEROOT;
+	_tcscpy(m_name, _T("Business Services"));
+	m_status = STATUS_NORMAL;
+}
+
+/**
+ * Dashboard tree root class destructor
+ */
+BusinessServiceRoot::~BusinessServiceRoot()
+{
+}
+
+/**
+ * Redefined status calculation for dashboard tree root
+ */
+void BusinessServiceRoot::calculateCompoundStatus(BOOL bForcedRecalc)
+{
+   m_status = STATUS_NORMAL;
+}

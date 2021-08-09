@@ -63,8 +63,6 @@ public class ObjectTreeComparator extends ViewerComparator
           (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_NETWORKMAPGROUP) ||
 		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_BUSINESSSERVICE))
 			return CATEGORY_CONTAINER;
-		if (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_NODELINK)
-		   return CATEGORY_NODELINK;
 		return CATEGORY_OTHER;
 	}
 

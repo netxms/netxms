@@ -18,7 +18,6 @@
  */
 package org.netxms.nxmc.modules.objects.views.elements;
 
-import java.text.NumberFormat;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
@@ -29,11 +28,8 @@ import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
-import org.netxms.client.objects.NodeLink;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
-import org.netxms.client.objects.ServiceCheck;
-import org.netxms.client.objects.ServiceContainer;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.users.AbstractUserObject;
@@ -279,29 +275,11 @@ public class GeneralInfo extends TableElement
 				Zone zone = (Zone)object;
             addPair(i18n.tr("Zone UIN"), Long.toString(zone.getUIN()));
 				break;
-			case AbstractObject.OBJECT_NODELINK:
-				AbstractNode linkedNode = (AbstractNode)session.findObjectById(((NodeLink)object).getNodeId(), AbstractNode.class);
-				if (linkedNode != null)
-               addPair(i18n.tr("Linked node"), linkedNode.getObjectName());
+			case AbstractObject.OBJECT_BUSINESSSERVICE_PROTOTYPE:
+            addPair(i18n.tr("Is Prototype"), i18n.tr("Yes"));
+            break;
 			case AbstractObject.OBJECT_BUSINESSSERVICE:
-			case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
-				ServiceContainer service = (ServiceContainer)object;
-				NumberFormat nf = NumberFormat.getNumberInstance();
-				nf.setMinimumFractionDigits(3);
-				nf.setMaximumFractionDigits(3);
-            addPair(i18n.tr("Uptime for day"), nf.format(service.getUptimeForDay()) + "%");
-            addPair(i18n.tr("Uptime for week"), nf.format(service.getUptimeForWeek()) + "%");
-            addPair(i18n.tr("Uptime for month"), nf.format(service.getUptimeForMonth()) + "%");
-				break;
-			case AbstractObject.OBJECT_SLMCHECK:
-				ServiceCheck check = (ServiceCheck)object;
-            addPair(i18n.tr("Is template"), check.isTemplate() ? i18n.tr("Yes") : i18n.tr("No"));
-				if (check.getTemplateId() != 0)
-				{
-					ServiceCheck tmpl = (ServiceCheck)session.findObjectById(check.getTemplateId(), ServiceCheck.class);
-					if (tmpl != null)
-                  addPair(i18n.tr("Template"), tmpl.getObjectName());
-				}
+            addPair(i18n.tr("Is Prototype"), i18n.tr("No"));
 				break;
 			default:
 				break;

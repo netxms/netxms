@@ -39,8 +39,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
 	private List<InetAddressEx> syncNetworks = new ArrayList<InetAddressEx>(1);
 	private List<ClusterResource> resources = new ArrayList<ClusterResource>();
 	private int zoneId;
-   private boolean autoBind;
-   private boolean autoUnbind;
+   private int autoBindFlags;
    private String autoBindFilter;
 	
 	/**
@@ -71,8 +70,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
 		}
 		
       autoBindFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
-      autoBind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOBIND_FLAG);
-      autoUnbind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOUNBIND_FLAG);
+      autoBindFlags = msg.getFieldAsInt32(NXCPCodes.VID_AUTOBIND_FLAGS);
 	}
 
 	/**
@@ -219,7 +217,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
     */
    public boolean isAutoBindEnabled()
    {
-      return autoBind;
+      return (autoBindFlags & OBJECT_BIND_FLAG) > 0;
    }
 
    /**
@@ -227,7 +225,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
     */
    public boolean isAutoUnbindEnabled()
    {
-      return autoUnbind;
+      return (autoBindFlags & OBJECT_UNBIND_FLAG) > 0;
    }
 
    /**
@@ -248,5 +246,11 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
       Set<String> strings = super.getStrings();
       addString(strings, autoBindFilter);
       return strings;
+   }
+
+   @Override
+   public int getAutoBindFlags()
+   {
+      return autoBindFlags;
    }
 }

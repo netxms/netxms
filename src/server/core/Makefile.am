@@ -6,7 +6,7 @@ radius_DATA = radius.dict
 lib_LTLIBRARIES = libnxcore.la
 libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			admin.cpp agent.cpp agent_policy.cpp alarm.cpp alarm_category.cpp audit.cpp \
-			authtokens.cpp beacon.cpp bizservice.cpp bizsvcroot.cpp bridge.cpp \
+			authtokens.cpp beacon.cpp bizservice.cpp bridge.cpp \
 			cas_validator.cpp ccy.cpp cdp.cpp cert.cpp chassis.cpp client.cpp \
 			cluster.cpp columnfilter.cpp condition.cpp config.cpp console.cpp \
 			container.cpp correlate.cpp dashboard.cpp datacoll.cpp dbwrite.cpp \
@@ -22,16 +22,16 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			maint.cpp market.cpp mdconn.cpp mdsession.cpp mobile.cpp \
 			modules.cpp mt.cpp ndd.cpp ndp.cpp netinfo.cpp netmap.cpp \
 			netmap_element.cpp netmap_link.cpp netmap_objlist.cpp netobj.cpp \
-			netsrv.cpp network_cred.cpp node.cpp nodelink.cpp notification_channel.cpp \
+			netsrv.cpp network_cred.cpp node.cpp notification_channel.cpp \
 			np.cpp npe.cpp nxsl_classes.cpp nxslext.cpp object_categories.cpp \
 			object_queries.cpp objects.cpp objtools.cpp package.cpp \
 			pds.cpp physical_link.cpp poll.cpp ps.cpp rack.cpp \
 			radius.cpp reporting.cpp rootobj.cpp schedule.cpp script.cpp \
 			sensor.cpp server_stats.cpp session.cpp slmcheck.cpp smclp.cpp \
 			snmp.cpp snmptrap.cpp sshkeys.cpp stp.cpp subnet.cpp summary_email.cpp \
-			svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp template.cpp tools.cpp \
+			swpkg.cpp syncer.cpp syslogd.cpp template.cpp tools.cpp \
 			topology_builder.cpp tracert.cpp tunnel.cpp ua_notification_item.cpp \
-			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
+			uniroot.cpp upload_job.cpp userdb.cpp \
 			userdb_objects.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			websvc.cpp winevent.cpp winperf.cpp xmpp.cpp zone.cpp
 libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS \

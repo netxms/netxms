@@ -52,7 +52,7 @@ ObjectIndex g_idxClusterById;
 ObjectIndex g_idxMobileDeviceById;
 ObjectIndex g_idxAccessPointById;
 ObjectIndex g_idxConditionById;
-ObjectIndex g_idxServiceCheckById;
+ObjectIndex g_idxBusinessServicesById;
 ObjectIndex g_idxNetMapById;
 ObjectIndex g_idxChassisById;
 ObjectIndex g_idxSensorById;
@@ -305,9 +305,7 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
 			case OBJECT_DASHBOARDROOT:
          case OBJECT_DASHBOARDGROUP:
 			case OBJECT_DASHBOARD:
-			case OBJECT_BUSINESSSERVICEROOT:
-			case OBJECT_BUSINESSSERVICE:
-			case OBJECT_NODELINK:
+			case OBJECT_BUSINESS_SERVICE_ROOT:
 			case OBJECT_RACK:
             break;
          case OBJECT_NODE:
@@ -335,6 +333,10 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
             }
             if (static_cast<Node&>(*object).getAgentCertificateMappingData() != nullptr)
                UpdateAgentCertificateMappingIndex(static_pointer_cast<Node>(object), nullptr, static_cast<Node&>(*object).getAgentCertificateMappingData());
+            break;
+         case OBJECT_BUSINESS_SERVICE:
+         case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
+            g_idxBusinessServicesById.put(object->getId(), object);
             break;
 			case OBJECT_CLUSTER:
             g_idxClusterById.put(object->getId(), object);
@@ -406,9 +408,6 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
          case OBJECT_CONDITION:
 				g_idxConditionById.put(object->getId(), object);
             break;
-			case OBJECT_SLMCHECK:
-				g_idxServiceCheckById.put(object->getId(), object);
-            break;
 			case OBJECT_NETWORKMAP:
 				g_idxNetMapById.put(object->getId(), object);
             break;
@@ -467,9 +466,7 @@ void NetObjDeleteFromIndexes(const NetObj& object)
 		case OBJECT_DASHBOARDROOT:
       case OBJECT_DASHBOARDGROUP:
 		case OBJECT_DASHBOARD:
-		case OBJECT_BUSINESSSERVICEROOT:
-		case OBJECT_BUSINESSSERVICE:
-		case OBJECT_NODELINK:
+		case OBJECT_BUSINESS_SERVICE_ROOT:
 		case OBJECT_RACK:
 			break;
       case OBJECT_NODE:
@@ -497,6 +494,10 @@ void NetObjDeleteFromIndexes(const NetObj& object)
          }
          if (static_cast<const Node&>(object).getAgentCertificateMappingData() != nullptr)
             UpdateAgentCertificateMappingIndex(const_cast<Node&>(static_cast<const Node&>(object)).self(), static_cast<const Node&>(object).getAgentCertificateMappingData(), nullptr);
+         break;
+		case OBJECT_BUSINESS_SERVICE:
+      case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
+			g_idxBusinessServicesById.remove(object.getId());
          break;
 		case OBJECT_CLUSTER:
 			g_idxClusterById.remove(object.getId());
@@ -571,9 +572,6 @@ void NetObjDeleteFromIndexes(const NetObj& object)
          break;
       case OBJECT_CONDITION:
 			g_idxConditionById.remove(object.getId());
-         break;
-      case OBJECT_SLMCHECK:
-			g_idxServiceCheckById.remove(object.getId());
          break;
 		case OBJECT_NETWORKMAP:
 			g_idxNetMapById.remove(object.getId());
@@ -1451,9 +1449,8 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("dashboards"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dashboard_elements"), _T("dashboard_id,element_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dashboard_associations"), _T("object_id,dashboard_id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("slm_checks"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("business_service_checks"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("business_services"), _T("service_id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("node_links"), _T("nodelink_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("acl"), _T("object_id,user_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("trusted_nodes"), _T("source_object_id,target_node_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("auto_bind_target"), _T("object_id"), _T("*")) &&
@@ -1493,7 +1490,7 @@ BOOL LoadObjects()
 	g_idxMobileDeviceById.setStartupMode(true);
 	g_idxAccessPointById.setStartupMode(true);
 	g_idxConditionById.setStartupMode(true);
-	g_idxServiceCheckById.setStartupMode(true);
+	g_idxBusinessServicesById.setStartupMode(true);
 	g_idxNetMapById.setStartupMode(true);
 	g_idxChassisById.setStartupMode(true);
 	g_idxSensorById.setStartupMode(true);
@@ -2014,79 +2011,53 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
-   // Loading business service objects
+   // Loading business services
    DbgPrintf(2, _T("Loading business services..."));
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_BUSINESSSERVICE);
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_BUSINESS_SERVICE);
    hResult = DBSelect(hdb, query);
    if (hResult != nullptr)
    {
 	   int count = DBGetNumRows(hResult);
-	   for(int i = 0; i < count; i++)
+	   for (int i = 0; i < count; i++)
 	   {
-		   UINT32 id = DBGetFieldULong(hResult, i, 0);
-		   auto service = make_shared<BusinessService>();
+		   uint32_t id = DBGetFieldULong(hResult, i, 0);
+         auto service = shared_ptr<BusinessService>();
 		   if (service->loadFromDatabase(hdb, id))
 		   {
 			   NetObjInsert(service, false, false);  // Insert into indexes
 		   }
 		   else     // Object load failed
 		   {
-			   service->destroy();
 			   nxlog_write(NXLOG_ERROR, _T("Failed to load business service object with ID %u from database"), id);
 		   }
 	   }
 	   DBFreeResult(hResult);
    }
 
-   // Loading business service objects
-   DbgPrintf(2, _T("Loading node links..."));
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_NODELINK);
+   // Loading business services prototypes
+   DbgPrintf(2, _T("Loading business services prototypes..."));
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_BUSINESS_SERVICE_PROTOTYPE);
    hResult = DBSelect(hdb, query);
    if (hResult != nullptr)
    {
 	   int count = DBGetNumRows(hResult);
-	   for(int i = 0; i < count; i++)
+	   for (int i = 0; i < count; i++)
 	   {
-		   UINT32 id = DBGetFieldULong(hResult, i, 0);
-		   auto nl = make_shared<NodeLink>();
-		   if (nl->loadFromDatabase(hdb, id))
+		   uint32_t id = DBGetFieldULong(hResult, i, 0);
+         auto prototype = shared_ptr<BusinessServicePrototype>();
+		   if (prototype->loadFromDatabase(hdb, id))
 		   {
-			   NetObjInsert(nl, false, false);  // Insert into indexes
+			   NetObjInsert(prototype, false, false);  // Insert into indexes
 		   }
 		   else     // Object load failed
 		   {
-			   nl->destroy();
-			   nxlog_write(NXLOG_ERROR, _T("Failed to load node link object with ID %u from database"), id);
+			   nxlog_write(NXLOG_ERROR, _T("Failed to load business service prototype object with ID %u from database"), id);
 		   }
 	   }
 	   DBFreeResult(hResult);
    }
 
-   // Load service check objects
-   DbgPrintf(2, _T("Loading service checks..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM slm_checks"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto check = make_shared<SlmCheck>();
-         if (check->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(check, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            check->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load service check object with ID %u from database"), id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
    g_idxObjectById.setStartupMode(false);
-   g_idxServiceCheckById.setStartupMode(false);
 
 	// Load custom object classes provided by modules
    CALL_ALL_MODULES(pfLoadObjects, ());
@@ -2426,19 +2397,13 @@ bool IsValidParentClass(int childClass, int parentClass)
          if (childClass == OBJECT_NODE)
             return true;
          break;
-		case OBJECT_BUSINESSSERVICEROOT:
-			if ((childClass == OBJECT_BUSINESSSERVICE) ||
-			    (childClass == OBJECT_NODELINK))
+		case OBJECT_BUSINESS_SERVICE_ROOT:
+			if (childClass == OBJECT_BUSINESS_SERVICE ||
+             childClass == OBJECT_BUSINESS_SERVICE_PROTOTYPE)
             return true;
          break;
-		case OBJECT_BUSINESSSERVICE:
-			if ((childClass == OBJECT_BUSINESSSERVICE) ||
-			    (childClass == OBJECT_NODELINK) ||
-			    (childClass == OBJECT_SLMCHECK))
-            return true;
-         break;
-		case OBJECT_NODELINK:
-			if (childClass == OBJECT_SLMCHECK)
+		case OBJECT_BUSINESS_SERVICE:
+			if (childClass == OBJECT_BUSINESS_SERVICE)
             return true;
          break;
       case OBJECT_ZONE:

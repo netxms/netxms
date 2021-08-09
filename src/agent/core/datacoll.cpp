@@ -997,7 +997,6 @@ static void ReconciliationThread()
          {
             DBBegin(hdb);
             TCHAR query[256];
-            auto it = s_items.begin();
             for(shared_ptr<DataCollectionItem> dci : s_items)
             {
                _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"),
@@ -1801,3 +1800,4 @@ LONG H_DataCollectorQueueSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, 
    ret_uint(value, count);
    return SYSINFO_RC_SUCCESS;
 }
+

@@ -469,6 +469,15 @@ public class Chart extends Composite
    }
 
    /**
+    * Remove data metrics from chart
+    */
+   public void clearParameters()
+   {
+      for (int i = 0; i < dataSeries.size(); i++)
+         dataSeries.set(i, new DataSeries(0));
+   }
+
+   /**
     * Update values for parameter
     * 
     * @param index parameter's index (0 .. MAX_CHART_ITEMS-1)

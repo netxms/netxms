@@ -620,6 +620,36 @@ uint32_t DataCollectionTarget::getDciLastValue(uint32_t dciId, NXCPMessage *msg)
 }
 
 /**
+ * 
+ */
+int DataCollectionTarget::getDciThreshold(uint32_t dciId)
+{
+   int threshold = 0;
+
+   readLockDciAccess();
+
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *object = m_dcObjects->get(i);
+      if (object->getId() == dciId)
+      {
+         if (object->getType() == DCO_TYPE_TABLE)
+         {
+            //TODO: add DCTable support
+         }
+         else
+         {
+            threshold = static_cast<DCItem*>(object)->getThresholdSeverity();
+         }
+         break;
+      }
+   }
+
+   unlockDciAccess();
+   return threshold;
+}
+
+/**
  * Get last collected values of given table
  */
 uint32_t DataCollectionTarget::getTableLastValue(uint32_t dciId, NXCPMessage *msg)

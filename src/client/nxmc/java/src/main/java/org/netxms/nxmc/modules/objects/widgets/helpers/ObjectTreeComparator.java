@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.objects.widgets.helpers;
 
 import java.util.Comparator;
-
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.netxms.client.objects.AbstractObject;
@@ -32,7 +31,6 @@ public class ObjectTreeComparator extends ViewerComparator
 {
 	// Categories
 	private static final int CATEGORY_CONTAINER = 10;
-	private static final int CATEGORY_NODELINK = 100;
 	private static final int CATEGORY_OTHER = 255;
 
 	/**
@@ -63,8 +61,6 @@ public class ObjectTreeComparator extends ViewerComparator
           (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_NETWORKMAPGROUP) ||
 		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_BUSINESSSERVICE))
 			return CATEGORY_CONTAINER;
-		if (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_NODELINK)
-		   return CATEGORY_NODELINK;
 		return CATEGORY_OTHER;
 	}
 

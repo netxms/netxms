@@ -384,6 +384,49 @@ void NotifyClientsOnPolicyDelete(uuid guid, const Template& object)
 }
 
 /**
+ * Send SLM checks update/delete to all active sessions
+ */
+void NotifyClientsOnSlmCheckUpdate(const NXCPMessage& msg, const NetObj& object)
+{
+   RWLockReadLock(s_sessionListLock);
+   auto it = s_sessions.begin();
+   while(it.hasNext())
+   {
+      ClientSession *session = it.next();
+      if (session->isAuthenticated() && !session->isTerminated() &&
+          object.checkAccessRights(session->getUserId(), OBJECT_ACCESS_MODIFY) /*&&
+          session->isDataCollectionConfigurationOpen(object.getId())*/)
+      {
+         session->postMessage(msg);
+      }
+   }
+   RWLockUnlock(s_sessionListLock);
+}
+
+/**
+ * Send SLM check update to all active sessions
+ */
+void NotifyClientsOnSlmCheckUpdate(const NetObj& service, SlmCheck* check)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_UPDATE_BUSINESS_CHECK);
+   check->fillMessage(&msg, VID_SLM_CHECKS_LIST_BASE);
+   NotifyClientsOnSlmCheckUpdate(msg, service);
+}
+
+/**
+ * Send SLM check delete to all active sessions
+ */
+void NotifyClientsOnSlmCheckDelete(const NetObj& service, uint32_t checkId)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_DELETE_BUSINESS_CHECK);
+   msg.setField(VID_OBJECT_ID, service.getId());
+   msg.setField(VID_SLMCHECK_ID, checkId);
+   NotifyClientsOnSlmCheckUpdate(msg, service);
+}
+
+/**
  * Send DCI update to all active sessions
  */
 void NotifyClientsOnDCIUpdate(const DataCollectionOwner& object, DCObject *dco)

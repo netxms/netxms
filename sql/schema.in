@@ -1974,33 +1974,33 @@ CREATE TABLE dashboard_associations
 CREATE TABLE business_services
 (
   service_id integer not null,
+  is_prototype char(1) not null,
+  prototype_id integer not null,
+  instance varchar(1023),
+  instance_method integer not null,
+  instance_data varchar(1023),
+  instance_filter SQL_TEXT,
+  instance_source integer not null,
+  object_status_threshold integer not null,
+  dci_status_threshold integer not null,
   PRIMARY KEY(service_id)
 ) TABLE_TYPE;
 
 /**
  * SLA service checks
  */
-CREATE TABLE slm_checks
+CREATE TABLE business_service_checks
 (
   id integer not null,
-  type integer not null, // 1 - threshold, 2 - script
-  content SQL_TEXT null, // if type == 2
-  threshold_id integer not null, // if type == 1; refers to thresholds.id
-  reason varchar(255) null,
-  is_template integer not null,
-  template_id integer not null,  // template check ID
+  service_id integer not null,  
+  type integer not null, // 2 - threshold, 1 - script, 0 - node
+  description varchar(1023),
+  related_object integer not null,
+  related_dci integer not null,  // threshold_id => related_dci
+  status_threshold integer not null,
+  content SQL_TEXT null, // if type == 1
   current_ticket integer not null,
   PRIMARY KEY(id)
-) TABLE_TYPE;
-
-/*
-** SLA node links
-*/
-CREATE TABLE node_links
-(
-  nodelink_id integer not null,
-  node_id integer not null, // refers to node.id
-  PRIMARY KEY(nodelink_id)
 ) TABLE_TYPE;
 
 /*
@@ -2021,12 +2021,14 @@ CREATE TABLE slm_agreements
 /*
 ** SLA tickets
 */
-
-CREATE TABLE slm_tickets
+CREATE TABLE business_service_tickets
 (
   ticket_id integer not null,
   service_id integer not null,
+  original_ticket_id not null,
+  original_service_id not null,
   check_id integer not null,
+  check_description varchar(1023),
   create_timestamp integer not null,
   close_timestamp integer not null,
   reason varchar(255) null,
@@ -2036,13 +2038,12 @@ CREATE TABLE slm_tickets
 /*
 ** SLA service change log
 */
-
-CREATE TABLE slm_service_history
+CREATE TABLE business_service_downtime
 (
   record_id integer not null,
   service_id integer not null,
-  change_timestamp integer not null,
-  new_status integer not null,
+  from_timestamp integer not null,
+  to_timestamp integer not null,
   PRIMARY KEY(record_id)
 ) TABLE_TYPE;
 
@@ -2258,9 +2259,9 @@ CREATE TABLE responsible_users
 CREATE TABLE auto_bind_target 
 (
    object_id integer not null,
-   bind_filter SQL_TEXT null,
-   bind_flag char(1) not null,
-   unbind_flag char(1) not null,
+   bind_filter_1 SQL_TEXT null,
+   bind_filter_2 SQL_TEXT null,
+   flags integer not null,
    PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 

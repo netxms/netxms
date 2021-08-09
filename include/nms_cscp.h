@@ -679,6 +679,11 @@ typedef struct
 #define CMD_WEB_SERVICE_CUSTOM_REQUEST    0x01B8
 #define CMD_MERGE_FILES                   0x01B9
 #define CMD_FILEMGR_MERGE_FILES           0x01BA
+#define CMD_GET_BUSINESS_CHECK_LIST       0x01BB
+#define CMD_UPDATE_BUSINESS_CHECK         0x01BC
+#define CMD_DELETE_BUSINESS_CHECK         0x01BD
+#define CMD_GET_BUSINESS_UPTIME           0x01BE
+#define CMD_GET_BUSINESS_TICKETS          0x01BF
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1315,8 +1320,8 @@ typedef struct
 #define VID_VLAN_LIST               ((UINT32)622)
 #define VID_TASK_KEY                ((UINT32)623)
 #define VID_TIMER_COUNT             ((UINT32)624)
-#define VID_AUTOBIND_FLAG           ((UINT32)625)
-#define VID_AUTOUNBIND_FLAG         ((UINT32)626)
+#define VID_AUTOBIND_FLAGS          ((UINT32)625)
+#define VID_AUTOBIND_FILTER_2       ((UINT32)626)
 #define VID_TIMEOUT                 ((UINT32)627)
 #define VID_PROGRESS                ((UINT32)628)
 #define VID_POLICY_COUNT            ((UINT32)629)
@@ -1458,6 +1463,15 @@ typedef struct
 #define VID_WEB_SWC_ERROR_TEXT      ((uint32_t)765)
 #define VID_REQUEST_DATA            ((uint32_t)766)
 #define VID_ENABLE_FILE_UPLOAD_RESUMING ((uint32_t)767)
+#define VID_SLMCHECKS_COUNT         ((uint32_t)768)
+#define VID_SLMCHECK_ID             ((uint32_t)769)
+#define VID_SLMCHECK_RELATED_OBJECT ((uint32_t)770)
+#define VID_SLMCHECK_RELATED_DCI    ((uint32_t)771)
+#define VID_THRESHOLD               ((uint32_t)772)
+#define VID_OBJECT_STATUS_THRESHOLD ((uint32_t)773)
+#define VID_DCI_STATUS_THRESHOLD    ((uint32_t)774)
+#define VID_BUSINESS_SERVICE_UPTIME ((uint32_t)775)
+#define VID_BUSINESS_TICKETS_COUNT  ((uint32_t)776)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1702,6 +1716,10 @@ typedef struct
 #define VID_ZONE_SNMP_PORT_LIST_BASE         ((UINT32)0x10000000)
 
 #define VID_2FA_METHODS_LIST_BASE   ((uint32_t)0x10000000)
+
+#define VID_SLM_CHECKS_LIST_BASE   ((uint32_t)0x10000000)
+
+#define VID_BUSINESS_TICKETS_LIST_BASE   ((uint32_t)0x10000000)
 
 #ifdef __cplusplus
 

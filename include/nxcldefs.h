@@ -117,7 +117,7 @@
 #define OBJECT_VPNCONNECTOR          12
 #define OBJECT_CONDITION             13
 #define OBJECT_CLUSTER			       14
-//#define OBJECT_POLICYGROUP           15
+#define OBJECT_BUSINESS_SERVICE_PROTOTYPE 15
 //#define OBJECT_POLICYROOT            16
 //#define OBJECT_AGENTPOLICY           17
 //#define OBJECT_AGENTPOLICY_CONFIG    18
@@ -126,10 +126,10 @@
 #define OBJECT_NETWORKMAP            21
 #define OBJECT_DASHBOARDROOT         22
 #define OBJECT_DASHBOARD             23
-#define OBJECT_BUSINESSSERVICEROOT   27
-#define OBJECT_BUSINESSSERVICE       28
-#define OBJECT_NODELINK              29
-#define OBJECT_SLMCHECK              30
+#define OBJECT_BUSINESS_SERVICE_ROOT 27
+#define OBJECT_BUSINESS_SERVICE      28
+//#define OBJECT_NODELINK              29
+//#define OBJECT_SLMCHECK              30
 #define OBJECT_MOBILEDEVICE          31
 #define OBJECT_RACK                  32
 #define OBJECT_ACCESSPOINT           33
@@ -294,10 +294,11 @@
 
 /**
  * Auto apply flags
- * Depricated flags for Container, Template and Policy
  */
-#define AAF_AUTO_APPLY            0x00000001
-#define AAF_AUTO_REMOVE           0x00000002
+#define AAF_AUTO_APPLY_1            0x00000001
+#define AAF_AUTO_REMOVE_1           0x00000002
+#define AAF_AUTO_APPLY_2            0x00000004
+#define AAF_AUTO_REMOVE_2           0x00000008
 
 /**
  * Chassis flags
