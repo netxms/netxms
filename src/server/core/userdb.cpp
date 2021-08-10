@@ -883,7 +883,13 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
    // Check existing user with same DN
    UserDatabaseObject *object = nullptr;
    if (ldapObject->m_id != nullptr)
-      object = s_ldapUserId.get(ldapObject->m_id);
+   {
+      object = s_ldapGroupId.get(ldapObject->m_id);
+      if (object == nullptr)
+      {
+         object = s_ldapUserId.get(ldapObject->m_id);
+      }
+   }
    else
       object = s_ldapNames.get(dn);
 
@@ -1113,9 +1119,16 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full n
    UserDatabaseObject *object = nullptr;
 
    if (ldapObject->m_id != nullptr)
-      object = s_ldapGroupId.get(ldapObject->m_id);
+   {
+      object = s_ldapUserId.get(ldapObject->m_id);
+      if (object == nullptr)
+      {
+         object = s_ldapGroupId.get(ldapObject->m_id);
+      }
+   }
    else
       object = s_ldapNames.get(dn);
+
    if ((object != nullptr) && !object->isGroup())
    {
       _sntprintf(description, MAX_USER_DESCR, _T("Got group with DN=%s but found existing user %s with same DN"), dn, object->getName());
