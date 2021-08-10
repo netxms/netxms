@@ -3199,7 +3199,7 @@ void Node::checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn)
    }
    else
    {
-      sendPollerMsg(POLLER_WARNING _T("      Cannot get policy inventory form agent (%s)\r\n"), AgentErrorCodeToText(rcc));
+      sendPollerMsg(POLLER_WARNING _T("      Cannot get policy inventory from agent (%s)\r\n"), AgentErrorCodeToText(rcc));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): AgentConnection::getPolicyInventory() failed: rcc=%d"), m_name, rcc);
    }
 }
