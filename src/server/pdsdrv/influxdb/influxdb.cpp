@@ -132,6 +132,7 @@ static StringBuffer NormalizeString(const TCHAR *src)
    StringBuffer dst(src);
    dst.toLowercase();
    dst.trim();
+   dst.replace(_T(" "), _T(""));
    dst.replace(_T(":"), _T("_"));
    dst.replace(_T("-"), _T("_"));
    dst.replace(_T("."), _T("_"));
@@ -193,7 +194,7 @@ static bool GetTagsFromObject(const NetObj& object, StringBuffer *tags)
             StringBuffer name = NormalizeString(&key[4]);
             nxlog_debug_tag(DEBUG_TAG, 7, _T("Object: %s - CA: K:%s = V:%s"), object.getName(), name.cstr(), value.cstr());
             tags->append(_T(','));
-            tags->append(key);
+            tags->append(name);
             tags->append(_T('='));
             tags->append(value);
          }
