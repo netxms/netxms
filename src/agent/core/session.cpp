@@ -1033,6 +1033,7 @@ void CommSession::mergeFiles(NXCPMessage *request, NXCPMessage *response)
          if (!partFiles.isEmpty())
          {
             bool success = true;
+            _tremove(destinationFullPath);
             for(int i = 0; (i < partFiles.size()) && success; i++)
             {
                TCHAR sourceFullPath[MAX_PATH];
