@@ -469,7 +469,7 @@ public class PhysicalContainerPlacement extends PropertyPage
 
          md.setPhysicalContainer(0);
          md.setRackPlacement(NXCommon.EMPTY_GUID, NXCommon.EMPTY_GUID, (short)0, (short)0, RackOrientation.getByValue(0));
-         md.setChassisPlacement(null);
+         md.setChassisPlacement("");
       }
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
