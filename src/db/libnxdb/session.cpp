@@ -934,7 +934,11 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
       {
          nLen++;
          pszTemp = MemAllocStringW(nLen);
-         hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pszTemp, nLen);
+         if (hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pszTemp, nLen) == nullptr)
+         {
+            MemFree(pszTemp);
+            pszTemp = nullptr;
+         }
       }
       return pszTemp;
    }
