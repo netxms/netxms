@@ -695,9 +695,9 @@ extern "C" WCHAR __EXPORT *DrvGetFieldUnbuffered(SQLITE_UNBUFFERED_RESULT *resul
       if (data != nullptr)
       {
          utf8_to_wchar(data, -1, pBuffer, iBufSize);
-         pBuffer[iBufSize - 1] = 0;
-         value = pBuffer;
       }
+      pBuffer[iBufSize - 1] = 0;
+      value = pBuffer;
    }
    return value;
 }
