@@ -942,7 +942,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
       WCHAR *pszTemp;
 
       nLen = hResult->m_driver->m_fpDrvGetFieldLengthUnbuffered(hResult->m_data, iColumn);
-      if (nLen == -1 || nLen == 0)
+      if (nLen == -1)
       {
          pszTemp = NULL;
       }
@@ -950,7 +950,11 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
       {
          nLen++;
          pszTemp = MemAllocStringW(nLen);
-         hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pszTemp, nLen);
+         if (hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pszTemp, nLen) == nullptr)
+         {
+            MemFree(pszTemp);
+            pszTemp = nullptr;
+         }
       }
       return pszTemp;
    }
@@ -977,7 +981,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
    else
    {
 		nLen = hResult->m_driver->m_fpDrvGetFieldLengthUnbuffered(hResult->m_data, iColumn);
-      if (nLen == -1 || nLen == 0)
+      if (nLen == -1)
       {
          pszRet = NULL;
       }
@@ -1020,7 +1024,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColum
       {
          char *pszTemp;
          LONG nLen = hResult->m_driver->m_fpDrvGetFieldLengthUnbuffered(hResult->m_data, iColumn);
-         if (nLen == -1 || nLen == 0)
+         if (nLen == -1)
          {
             pszTemp = NULL;
          }
@@ -1036,7 +1040,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColum
    else
    {
       LONG nLen = hResult->m_driver->m_fpDrvGetFieldLengthUnbuffered(hResult->m_data, iColumn);
-      if (nLen == -1 || nLen == 0)
+      if (nLen == -1)
          return NULL;
       nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
 
