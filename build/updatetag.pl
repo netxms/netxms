@@ -7,7 +7,7 @@ my $iss_file = shift || $file_prefix . "-build-tag.iss";
 my $property_file = shift || $file_prefix . "-build-tag.properties";
 my $rc_file = shift || $file_prefix . "-build-tag.rc";
 
-my $tag = `git describe --always`;
+my $tag = `git describe --always --long`;
 chomp $tag;
 if ($tag eq "")
 {
