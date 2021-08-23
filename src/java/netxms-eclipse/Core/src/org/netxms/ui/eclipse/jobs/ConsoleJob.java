@@ -155,15 +155,15 @@ public abstract class ConsoleJob extends Job
    protected abstract void runInternal(IProgressMonitor monitor) throws Exception;
 
    /**
-    * Should return error message which will be shown in case of job failure. Result of exception's getMessage() will be appended to
-    * this message.
+    * Should return error message which will be shown in case of job failure.
+    * Result of exception's getMessage() will be appended to this message.
     * 
     * @return Error message
     */
    protected abstract String getErrorMessage();
 
    /**
-    * Called from within Job.run() if job has failed to create failure status. Subclasses may override and return IStatus.OK_STATUS
+    * Called from within Job.run() if job has failed to create failure status. Subclasses may override and return Status.OK_STATUS
     * to avoid standard job failure message to pop up.
     */
    protected IStatus createFailureStatus(Exception e)
