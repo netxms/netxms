@@ -385,12 +385,8 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    else
    {
       // Remove instance from the metric name
-      ssize_t i = name.find(instance);
-      if (i != String::npos)
-      {
-         name.replace(instance, _T(""));
-         FindAndReplaceAll(&name, _T("__"), _T("_"));
-      }
+      name.replace(instance, _T(""));
+      FindAndReplaceAll(&name, _T("__"), _T("_"));
    }
 
    // Host
