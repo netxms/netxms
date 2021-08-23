@@ -28,6 +28,8 @@
 #include <sys/wait.h>
 #endif
 
+#define DEBUG_TAG _T("procexec")
+
 #ifdef _WIN32
 
 /**
@@ -58,7 +60,7 @@ static bool CreatePipeEx(LPHANDLE lpReadPipe, LPHANDLE lpWritePipe, bool asyncRe
       60000,       // Timeout in ms
       &sa
    );
-   if (readHandle == NULL)
+   if (readHandle == INVALID_HANDLE_VALUE)
       return false;
 
    HANDLE writeHandle = CreateFile(
@@ -134,7 +136,7 @@ ProcessExecutor::~ProcessExecutor()
 /**
  * Set explicit list of inherited handles
  */
-static bool SetInheritedHandle(STARTUPINFOEX *si, HANDLE handle)
+static bool SetInheritedHandle(STARTUPINFOEX *si, HANDLE *handle)
 {
    SIZE_T size;
    if (!InitializeProcThreadAttributeList(nullptr, 1, 0, &size))
@@ -142,7 +144,7 @@ static bool SetInheritedHandle(STARTUPINFOEX *si, HANDLE handle)
       if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
       {
          TCHAR buffer[1024];
-         nxlog_debug(4, _T("ProcessExecutor::execute(): InitializeProcThreadAttributeList failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessExecutor::execute(): InitializeProcThreadAttributeList failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
          return false;
       }
    }
@@ -151,16 +153,15 @@ static bool SetInheritedHandle(STARTUPINFOEX *si, HANDLE handle)
    if (!InitializeProcThreadAttributeList(si->lpAttributeList, 1, 0, &size))
    {
       TCHAR buffer[1024];
-      nxlog_debug(4, _T("ProcessExecutor::execute(): InitializeProcThreadAttributeList failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessExecutor::execute(): InitializeProcThreadAttributeList failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
       MemFree(si->lpAttributeList);
       return false;
    }
 
-   HANDLE handles[1] = { handle };
-   if (!UpdateProcThreadAttribute(si->lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, handles, sizeof(HANDLE), nullptr, nullptr))
+   if (!UpdateProcThreadAttribute(si->lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, handle, sizeof(HANDLE), nullptr, nullptr))
    {
       TCHAR buffer[1024];
-      nxlog_debug(4, _T("ProcessExecutor::execute(): UpdateProcThreadAttribute failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessExecutor::execute(): UpdateProcThreadAttribute failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
       MemFree(si->lpAttributeList);
       return false;
    }
@@ -204,7 +205,7 @@ bool ProcessExecutor::execute()
    if (!CreatePipeEx(&stdoutRead, &stdoutWrite, true))
    {
       TCHAR buffer[1024];
-      nxlog_debug(4, _T("ProcessExecutor::execute(): cannot create pipe (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessExecutor::execute(): cannot create pipe (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
       return false;
    }
 
@@ -219,13 +220,13 @@ bool ProcessExecutor::execute()
    si.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
    si.StartupInfo.hStdOutput = stdoutWrite;
    si.StartupInfo.hStdError = stdoutWrite;
-   SetInheritedHandle(&si, stdoutWrite);
+   SetInheritedHandle(&si, &stdoutWrite);
 
    StringBuffer cmdLine = m_shellExec ? _T("CMD.EXE /C ") : _T("");
    cmdLine.append(m_cmd);
    if (CreateProcess(nullptr, cmdLine.getBuffer(), nullptr, nullptr, TRUE, EXTENDED_STARTUPINFO_PRESENT, nullptr, nullptr, &si.StartupInfo, &pi))
    {
-      nxlog_debug(5, _T("ProcessExecutor::execute(): process \"%s\" started"), cmdLine.getBuffer());
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessExecutor::execute(): process \"%s\" started"), cmdLine.getBuffer());
 
       m_phandle = pi.hProcess;
       CloseHandle(pi.hThread);
@@ -244,8 +245,8 @@ bool ProcessExecutor::execute()
    else
    {
       TCHAR buffer[1024];
-      nxlog_debug(4, _T("ProcessExecutor::execute(): cannot create process \"%s\" (%s)"),
-         cmdLine.getBuffer(), GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessExecutor::execute(): cannot create process \"%s\" (Error 0x%08x: %s)"),
+         cmdLine.getBuffer(), GetLastError(), GetSystemErrorText(GetLastError(), buffer, 1024));
 
       CloseHandle(stdoutRead);
       CloseHandle(stdoutWrite);
@@ -258,7 +259,7 @@ bool ProcessExecutor::execute()
 
    if (pipe(m_pipe) == -1)
    {
-      nxlog_debug(4, _T("ProcessExecutor::execute(): pipe() call failed (%s)"), _tcserror(errno));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessExecutor::execute(): pipe() call failed (%s)"), _tcserror(errno));
       return false;
    }
 
@@ -266,7 +267,7 @@ bool ProcessExecutor::execute()
    switch(m_pid)
    {
       case -1: // error
-         nxlog_debug(4, _T("ProcessExecutor::execute(): fork() call failed (%s)"), _tcserror(errno));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessExecutor::execute(): fork() call failed (%s)"), _tcserror(errno));
          close(m_pipe[0]);
          close(m_pipe[1]);
          break;
@@ -393,7 +394,7 @@ THREAD_RESULT THREAD_CALL ProcessExecutor::readOutput(void *arg)
          if (GetLastError() != ERROR_IO_PENDING)
          {
             TCHAR emsg[1024];
-            nxlog_debug(6, _T("ProcessExecutor::readOutput(): stopped on ReadFile (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessExecutor::readOutput(): stopped on ReadFile (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
             break;
          }
       }
@@ -413,7 +414,7 @@ do_wait:
       }
       if (rc == WAIT_OBJECT_0 + 1)
       {
-         nxlog_debug(6, _T("ProcessExecutor::readOutput(): process termination detected"));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessExecutor::readOutput(): process termination detected"));
          break;   // Process terminated
       }
       if (rc == WAIT_OBJECT_0)
@@ -427,7 +428,7 @@ do_wait:
          else
          {
             TCHAR emsg[1024];
-            nxlog_debug(6, _T("ProcessExecutor::readOutput(): stopped on GetOverlappedResult (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessExecutor::readOutput(): stopped on GetOverlappedResult (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
             break;
          }
       }
@@ -462,7 +463,7 @@ do_wait:
                static_cast<ProcessExecutor*>(arg)->onOutput("");
                continue;
             }
-            nxlog_debug(6, _T("ProcessExecutor::readOutput(): stopped on read (rc=%d err=%s)"), rc, _tcserror(errno));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessExecutor::readOutput(): stopped on read (rc=%d err=%s)"), rc, _tcserror(errno));
             break;
          }
       }
@@ -473,7 +474,7 @@ do_wait:
       }
       else
       {
-         nxlog_debug(6, _T("ProcessExecutor::readOutput(): stopped on poll (%s)"), _tcserror(errno));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessExecutor::readOutput(): stopped on poll (%s)"), _tcserror(errno));
          break;
       }
    }
