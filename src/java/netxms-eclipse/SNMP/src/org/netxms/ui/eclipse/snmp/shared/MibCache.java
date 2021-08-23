@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,9 @@ import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
@@ -47,16 +49,17 @@ public final class MibCache implements ConsoleLoginListener
 {	
 	private static MibTree mibTree = null;
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.console.api.ConsoleLoginListener#afterLogin(org.netxms.client.NXCSession, org.eclipse.swt.widgets.Display)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.console.api.ConsoleLoginListener#afterLogin(org.netxms.client.NXCSession,
+    *      org.eclipse.swt.widgets.Display)
+    */
 	@Override
 	public void afterLogin(final NXCSession session, Display display)
 	{
 	   Boolean slowLink = (Boolean)ConsoleSharedData.getProperty("SlowLink"); //$NON-NLS-1$
 	   if ((slowLink != null) && slowLink.booleanValue())
 	      return;
-	   
+
 		ConsoleJob job = new ConsoleJob(Messages.get().LoginListener_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -116,7 +119,17 @@ public final class MibCache implements ConsoleLoginListener
 				}
 			}
 
-			@Override
+         /**
+          * @see org.netxms.ui.eclipse.jobs.ConsoleJob#createFailureStatus(java.lang.Exception)
+          */
+         @Override
+         protected IStatus createFailureStatus(Exception e)
+         {
+            Activator.logError("MIB file download error", e);
+            return Status.OK_STATUS;
+         }
+
+         @Override
 			protected String getErrorMessage()
 			{
 				return Messages.get().LoginListener_JobError;

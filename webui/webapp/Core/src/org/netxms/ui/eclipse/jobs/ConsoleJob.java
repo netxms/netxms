@@ -208,7 +208,7 @@ public abstract class ConsoleJob extends Job
 
 	/**
 	 * Called from within Job.run() if job has failed to create failure status. Subclasses may override
-	 * and return IStatus.OK_STATUS to avoid standard job failure message to pop up.
+	 * and return Status.OK_STATUS to avoid standard job failure message to pop up.
 	 */
 	protected IStatus createFailureStatus(final Exception e)
 	{
