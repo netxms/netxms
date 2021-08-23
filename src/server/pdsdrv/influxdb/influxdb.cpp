@@ -388,7 +388,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
       ssize_t i = name.find(instance);
       if (i != String::npos)
       {
-         name.shrink(instance.length() - i);
+         name.replace(instance, _T(""));
          FindAndReplaceAll(&name, _T("__"), _T("_"));
       }
    }
