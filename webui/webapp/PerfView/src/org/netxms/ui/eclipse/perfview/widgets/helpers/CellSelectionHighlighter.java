@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,23 +19,23 @@
 package org.netxms.ui.eclipse.perfview.widgets.helpers;
 
 import org.eclipse.jface.viewers.ViewerCell;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
+import org.eclipse.rap.rwt.internal.theme.CssColor;
+import org.eclipse.rap.rwt.internal.theme.SimpleSelector;
+import org.eclipse.rap.rwt.internal.theme.ThemeUtil;
+import org.eclipse.swt.graphics.Color;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Cell selection highlighter
  */
+@SuppressWarnings("restriction")
 public class CellSelectionHighlighter
 {
-   private Display display;
-
 	/**
 	 * @param viewer
 	 */
 	public CellSelectionHighlighter(SortableTableViewer viewer, CellSelectionManager manager)
 	{
-	   display = viewer.getControl().getDisplay();
 	}
 
 	/**
@@ -54,8 +54,8 @@ public class CellSelectionHighlighter
 		if (cell == null)
 			return;
 		
-	   cell.setBackground(display.getSystemColor(SWT.COLOR_LIST_SELECTION));
-	   cell.setForeground(display.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT));
+	   cell.setBackground(getCellColor(true));
+	   cell.setForeground(getCellColor(false));
 	}
 
 	/**
@@ -69,4 +69,17 @@ public class CellSelectionHighlighter
 	   cell.setBackground(null);
 	   cell.setForeground(null);
 	}	
+
+   /**
+    * Get selection colors directly with theme util istead of using Display.getSystemColor to avoid
+    * spurious "transparent system color" exceptions.
+    *
+    * @param background true to retrieve background color
+    * @return color
+    */
+   static Color getCellColor(boolean background)
+   {
+      CssColor css = (CssColor)ThemeUtil.getCssValue("List-Item", background ? "background-color" : "color", SimpleSelector.SELECTED);
+      return (css != null) ? CssColor.createColor(css) : null;
+   }
 }
