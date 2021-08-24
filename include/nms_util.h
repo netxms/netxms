@@ -2102,6 +2102,7 @@ public:
 	void addMBString(const char *value) { add(value); }
 #endif
    void addAll(const StringList *src);
+   void addAll(const StringList& src) { addAll(&src); }
 
    void insert(int pos, const TCHAR *value);
 #ifdef UNICODE
@@ -2110,6 +2111,7 @@ public:
    void insertMBString(int pos, const char *value) { insert(pos, value); }
 #endif
    void insertAll(int pos, const StringList *src);
+   void insertAll(int pos, const StringList& src) { insertAll(pos, &src); }
 
    void merge(const StringList *src, bool matchCase);
    void splitAndAdd(const TCHAR *src, const TCHAR *separator);

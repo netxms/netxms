@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,11 +33,7 @@
 /**
  * Static data
  */
-#ifdef _WIN32
-static HANDLE m_hWatchdogProcess = INVALID_HANDLE_VALUE;
-#else
-static pid_t m_pidWatchdogProcess = -1;
-#endif
+static ProcessExecutor *s_watchdog = nullptr;
 
 /**
  * Start watchdog process
@@ -87,27 +83,6 @@ void StartWatchdog()
 				  nxlog_get_debug_level(), szPlatformSuffixOption,
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
 	nxlog_debug_tag(DEBUG_TAG, 1, _T("Starting agent watchdog with command line '%s'"), szCmdLine);
-
-   // Fill in process startup info structure
-   memset(&si, 0, sizeof(STARTUPINFO));
-   si.cb = sizeof(STARTUPINFO);
-
-   // Create new process
-   if (!CreateProcess(NULL, szCmdLine, NULL, NULL, FALSE, 
-                      (g_dwFlags & AF_DAEMON) ? (CREATE_NO_WINDOW | DETACHED_PROCESS) : (CREATE_NEW_CONSOLE),
-                      NULL, NULL, &si, &pi))
-   {
-      TCHAR buffer[1024];
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create process \"%s\" (%s)"),
-            szCmdLine, GetSystemErrorText(GetLastError(), buffer, 1024));
-   }
-   else
-   {
-      // Close main thread handle
-      CloseHandle(pi.hThread);
-      m_hWatchdogProcess = pi.hProcess;
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Watchdog process started"));
-   }
 #else
    _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s-D %d %s-W %lu"), szExecName,
               g_szConfigFile, configSectionOption,
@@ -117,7 +92,10 @@ void StartWatchdog()
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
 				  nxlog_get_debug_level(), szPlatformSuffixOption,
               (unsigned long)getpid());
-   if (ExecuteCommand(szCmdLine, NULL, &m_pidWatchdogProcess) == ERR_SUCCESS)
+#endif
+
+   s_watchdog = new ProcessExecutor(szCmdLine);
+   if (s_watchdog->execute())
 	{
 	   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Watchdog process started"));
 	}
@@ -125,7 +103,6 @@ void StartWatchdog()
 	{
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create process \"%s\""), szCmdLine);
 	}
-#endif
 }
 
 /**
@@ -133,12 +110,8 @@ void StartWatchdog()
  */
 void StopWatchdog()
 {
-#ifdef _WIN32
-	TerminateProcess(m_hWatchdogProcess, 0);
-   WaitForSingleObject(m_hWatchdogProcess, 10000);
-#else
-	kill(m_pidWatchdogProcess, SIGKILL);
-#endif
+   s_watchdog->stop();
+   delete_and_null(s_watchdog);
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Watchdog process stopped"));
 }
 
@@ -211,7 +184,7 @@ int WatchdogMain(DWORD pid, const TCHAR *configSection)
 #else
 	syslog(LOG_INFO, "command line: %s", cmdLine);
 #endif
-   if (ExecuteCommand(cmdLine, NULL, NULL) != ERR_SUCCESS)
+   if (!ProcessExecutor::execute(cmdLine))
 	{
 #ifdef UNICODE
 		syslog(LOG_ERR, "failed to restart agent (command line: %ls)", cmdLine);

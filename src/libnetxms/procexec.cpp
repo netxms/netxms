@@ -282,15 +282,15 @@ bool ProcessExecutor::execute()
          if (m_shellExec)
          {
 #ifdef UNICODE
-            execl("/bin/sh", "/bin/sh", "-c", UTF8StringFromWideString(m_cmd), NULL);
+            execl("/bin/sh", "/bin/sh", "-c", MBStringFromWideStringSysLocale(m_cmd), nullptr);
 #else
-            execl("/bin/sh", "/bin/sh", "-c", m_cmd, NULL);
+            execl("/bin/sh", "/bin/sh", "-c", m_cmd, nullptr);
 #endif
          }
          else
          {
 #ifdef UNICODE
-            char *tmp = UTF8StringFromWideString(m_cmd);
+            char *tmp = MBStringFromWideStringSysLocale(m_cmd);
 #else
             char *tmp = m_cmd;
 #endif
@@ -494,7 +494,7 @@ do_wait:
 }
 
 /**
- * kill command
+ * Force stop process
  */
 void ProcessExecutor::stop()
 {
@@ -507,12 +507,15 @@ void ProcessExecutor::stop()
 #endif
    waitForCompletion(INFINITE);
    m_started = false;
+   m_running = false;
 #ifdef _WIN32
    if (m_phandle != INVALID_HANDLE_VALUE)
    {
       CloseHandle(m_phandle);
       m_phandle = INVALID_HANDLE_VALUE;
    }
+#else
+   m_pid = 0;
 #endif
 }
 
@@ -575,5 +578,21 @@ pid_t ProcessExecutor::getProcessId() const
    return GetProcessId(m_phandle);
 #else
    return m_pid;
+#endif
+}
+
+/**
+ * Execute command and forget
+ */
+bool ProcessExecutor::execute(const TCHAR *cmdLine, bool shellExec)
+{
+#ifdef _WIN32
+   return ProcessExecutor(cmdLine, shellExec).execute();
+#else
+   auto executor = new ProcessExecutor(cmdLine, shellExec, true);
+   if (executor->execute())
+      return true;   // Executor object will be destroyed by wait thread
+   delete executor;
+   return false;
 #endif
 }

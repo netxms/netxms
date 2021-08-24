@@ -139,6 +139,8 @@ public:
    bool isStarted() const { return m_started; }
    bool isRunning();
    bool waitForCompletion(uint32_t timeout);
+
+   static bool execute(const TCHAR *cmdLine, bool shellExec = true);
 };
 
 /**
