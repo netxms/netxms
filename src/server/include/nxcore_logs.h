@@ -43,6 +43,7 @@
 #define LC_JSON_DETAILS    12
 #define LC_STATUS          13
 #define LC_ACTION_CODE     14
+#define LC_ATM_TXN_CODE    15
 
 /**
  * Column filter types
