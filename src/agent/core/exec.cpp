@@ -74,7 +74,7 @@ static LONG RunExternal(const TCHAR *param, const TCHAR *arg, StringList *value)
       return SYSINFO_RC_ERROR;
    }
 
-   if (!executor.waitForCompletion(g_externalParameterTimeout))
+   if (!executor.waitForCompletion(g_execTimeout))
    {
       nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal: external process execution timeout (command line \"%s\")"), cmdLine.cstr());
       return SYSINFO_RC_ERROR;
