@@ -32,7 +32,6 @@ uint32_t UpgradeAgent(const TCHAR *pkgFile)
    TCHAR cmdLine[1024];
 #if defined(_WIN32)
    _sntprintf(cmdLine, 1024, _T("\"%s\" /VERYSILENT /SUPPRESSMSGBOXES /LOG /FORCECLOSEAPPLICATIONS /NORESTART"), pkgFile);
-   return ExecuteCommand(cmdLine, nullptr, nullptr);
 #else
    _tchmod(pkgFile, 0700);   // Set execute permissions on package file
    _sntprintf(cmdLine, 1024, _T("\"%s\" version=") NETXMS_VERSION_STRING
@@ -41,6 +40,6 @@ uint32_t UpgradeAgent(const TCHAR *pkgFile)
                              _T(" opt=--disable-iconv")
 #endif
                              _T(" config=%s"), pkgFile, g_szConfigFile);
-   return ExecuteCommand(cmdLine, nullptr, nullptr);
 #endif
+   return ProcessExecutor::execute(cmdLine) ? ERR_SUCCESS : ERR_EXEC_FAILED;
 }

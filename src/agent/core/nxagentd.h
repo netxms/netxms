@@ -753,7 +753,6 @@ void NotifySubAgents(uint32_t code, void *data);
 bool AddAction(const TCHAR *name, bool isExternal, const TCHAR *arg, LONG (*handler)(const TCHAR*, const StringList*, const TCHAR*, AbstractCommSession *session),
          const TCHAR *subAgent, const TCHAR *description);
 bool AddActionFromConfig(const TCHAR *config);
-UINT32 ExecuteCommand(TCHAR *pszCommand, const StringList *pArgs, pid_t *pid);
 
 void StartExternalParameterProviders();
 void StopExternalParameterProviders();

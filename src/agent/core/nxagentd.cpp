@@ -716,7 +716,7 @@ LONG RestartAgent()
    return dwResult;
 #else
 	nxlog_debug(1, _T("Restarting agent with command line '%s'"), command.cstr());
-   return ExecuteCommand(command.getBuffer(), NULL, NULL);
+	return ProcessExecutor::execute(command) ? ERR_SUCCESS : ERR_EXEC_FAILED;
 #endif
 }
 
