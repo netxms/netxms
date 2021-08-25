@@ -46,17 +46,22 @@ struct PING_TARGET
    InetAddress ipAddr;
    TCHAR dnsName[MAX_DB_STRING];
    TCHAR name[MAX_DB_STRING];
-   UINT32 packetSize;
-   UINT32 avgRTT;
-   UINT32 lastRTT;
-   UINT32 minRTT;
-   UINT32 maxRTT;
-   UINT32 stdDevRTT;
-   UINT32 packetLoss;
-   UINT32 cumulativeMinRTT;
-   UINT32 cumulativeMaxRTT;
-   UINT32 movingAvgRTT;
-   UINT32 history[MAX_POLLS_PER_MINUTE];
+   uint32_t packetSize;
+   uint32_t averageRTT;
+   uint32_t lastRTT;
+   uint32_t prevRTT;
+   uint32_t minRTT;
+   uint32_t maxRTT;
+   uint32_t stdDevRTT;
+   uint32_t packetLoss;
+   uint32_t cumulativeMinRTT;
+   uint32_t cumulativeMaxRTT;
+   uint32_t movingAverageRTT;
+   uint32_t movingAverageExp;
+   uint32_t averageJitter;
+   uint32_t movingAverageJitter;
+   uint32_t rttHistory[MAX_POLLS_PER_MINUTE];
+   uint32_t jitterHistory[MAX_POLLS_PER_MINUTE];
    int bufPos;
 	int ipAddrAge;
 	bool dontFragment;
@@ -64,6 +69,6 @@ struct PING_TARGET
 	time_t lastDataRead;
 };
 
-StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetAddress& end, UINT32 timeout);
+StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetAddress& end, uint32_t timeout);
 
 #endif

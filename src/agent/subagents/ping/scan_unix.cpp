@@ -1,6 +1,6 @@
 /*
 ** NetXMS PING subagent
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ static void AddResult(StructArray<InetAddress> *results, const InetAddress& addr
 /**
  * Check for responses
  */
-static void CheckForResponses(const InetAddress& start, const InetAddress& end, StructArray<InetAddress> *results, SOCKET s, UINT32 timeout)
+static void CheckForResponses(const InetAddress& start, const InetAddress& end, StructArray<InetAddress> *results, SOCKET s, uint32_t timeout)
 {
    SocketPoller sp;
    for(UINT32 timeLeft = timeout; timeLeft > 0;)
@@ -99,7 +99,7 @@ static void CheckForResponses(const InetAddress& start, const InetAddress& end, 
 /**
  * Scan IP address range and return list of responding addresses
  */
-StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetAddress& end, UINT32 timeout)
+StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetAddress& end, uint32_t timeout)
 {
    if ((start.getFamily() != AF_INET) || (end.getFamily() != AF_INET) ||
        (start.getAddressV4() > end.getAddressV4()))
@@ -124,7 +124,7 @@ StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetA
    ECHOREQUEST request;
    request.m_icmpHdr.m_cType = 8;   // ICMP ECHO REQUEST
    request.m_icmpHdr.m_cCode = 0;
-   request.m_icmpHdr.m_wId = (WORD)GetCurrentThreadId();
+   request.m_icmpHdr.m_wId = static_cast<uint16_t>(GetCurrentThreadId());
    request.m_icmpHdr.m_wSeq = 0;
    memcpy(request.m_data, "NetXMS Scan Ping", 16);
 
@@ -133,7 +133,7 @@ StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetA
    saDest.sin_family = AF_INET;
    saDest.sin_port = 0;
 
-   for(UINT32 a = start.getAddressV4(); a <= end.getAddressV4(); a++)
+   for(uint32_t a = start.getAddressV4(); a <= end.getAddressV4(); a++)
    {
       saDest.sin_addr.s_addr = htonl(a);
 

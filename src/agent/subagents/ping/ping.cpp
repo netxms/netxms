@@ -29,19 +29,12 @@
 static ThreadPool *s_pollers = NULL;
 static ObjectArray<PING_TARGET> s_targets(16, 16, Ownership::True);
 static Mutex s_targetLock;
-static UINT32 s_timeout = 3000;    // Default timeout is 3 seconds
-static UINT32 s_defaultPacketSize = 46;
-static UINT32 s_pollsPerMinute = 4;
-static UINT32 s_maxTargetInactivityTime = 86400;
-static UINT32 s_options = PING_OPT_ALLOW_AUTOCONFIGURE;
-
-/**
- * Exponential moving average calculation
- */
-#define FP_SHIFT  11              /* nr of bits of precision */
-#define FP_1      (1 << FP_SHIFT) /* 1.0 as fixed-point */
-#define EXP       2037            /* 1/exp(5sec/15min) */
-#define CALC_EMA(s, y) do { s *= EXP; s += y * (FP_1 - EXP); s >>= FP_SHIFT; } while(0)
+static uint32_t s_timeout = 3000;    // Default timeout is 3 seconds
+static uint32_t s_defaultPacketSize = 46;
+static uint32_t s_pollsPerMinute = 4;
+static uint32_t s_maxTargetInactivityTime = 86400;
+static uint32_t s_movingAverageTimePeriod = 3600;
+static uint32_t s_options = PING_OPT_ALLOW_AUTOCONFIGURE;
 
 /**
  * Poller
@@ -60,6 +53,21 @@ static void Poller(PING_TARGET *target)
       return;
    }
 
+   // recheck IP every 5 minutes
+   target->ipAddrAge++;
+   if (target->ipAddrAge >= s_pollsPerMinute * 5)
+   {
+      InetAddress ip = InetAddress::resolveHostName(target->dnsName);
+      if (!ip.equals(target->ipAddr))
+      {
+         TCHAR ip1[64], ip2[64];
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("IP address for target %s changed from %s to %s"), target->name,
+                         target->ipAddr.toString(ip1), ip.toString(ip2));
+         target->ipAddr = ip;
+      }
+      target->ipAddrAge = 0;
+   }
+
 retry:
    if (IcmpPing(target->ipAddr, 1, s_timeout, &target->lastRTT, target->packetSize, target->dontFragment) != ICMP_SUCCESS)
    {
@@ -76,44 +84,25 @@ retry:
       unreachable = TRUE;
    }
 
-   target->history[target->bufPos++] = target->lastRTT;
-   if (target->bufPos == (int)s_pollsPerMinute)
-   {
-      target->bufPos = 0;
+   target->rttHistory[target->bufPos] = target->lastRTT;
 
-      // recheck IP every 5 minutes
-      target->ipAddrAge++;
-      if (target->ipAddrAge >= 1)
-      {
-         InetAddress ip = InetAddress::resolveHostName(target->dnsName);
-         if (!ip.equals(target->ipAddr))
-         {
-            TCHAR ip1[64], ip2[64];
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("IP address for target %s changed from %s to %s"), target->name,
-                            target->ipAddr.toString(ip1), ip.toString(ip2));
-            target->ipAddr = ip;
-         }
-         target->ipAddrAge = 0;
-      }
-   }
-
-   UINT32 sum = 0, count = 0, lost = 0, stdDev = 0, localMin = 0x7FFFFFFF, localMax = 0;
-   for(UINT32 i = 0; i < s_pollsPerMinute; i++)
+   uint32_t sum = 0, count = 0, lost = 0, stdDev = 0, localMin = 0x7FFFFFFF, localMax = 0;
+   for(uint32_t i = 0; i < s_pollsPerMinute; i++)
    {
-      if (target->history[i] < 10000)
+      if (target->rttHistory[i] < 10000)
       {
-         sum += target->history[i];
-         if (target->history[i] > 0)
+         sum += target->rttHistory[i];
+         if (target->rttHistory[i] > 0)
          {
-            stdDev += (target->avgRTT - target->history[i]) * (target->avgRTT - target->history[i]);
+            stdDev += (target->averageRTT - target->rttHistory[i]) * (target->averageRTT - target->rttHistory[i]);
          }
-         if (target->history[i] < localMin)
+         if (target->rttHistory[i] < localMin)
          {
-            localMin = target->history[i];
+            localMin = target->rttHistory[i];
          }
-         if (target->history[i] > localMax)
+         if (target->rttHistory[i] > localMax)
          {
-            localMax = target->history[i];
+            localMax = target->rttHistory[i];
          }
          count++;
       }
@@ -122,7 +111,8 @@ retry:
          lost++;
       }
    }
-   target->avgRTT = unreachable ? 10000 : (sum / count);
+   target->averageRTT = unreachable ? 10000 : (sum / count);
+_tprintf(_T("sum=%u count=%u avg=%u\n"), sum, count, target->averageRTT);
    target->minRTT = localMin;
    target->maxRTT = localMax;
    target->packetLoss = lost * 100 / s_pollsPerMinute;
@@ -138,7 +128,7 @@ retry:
 
    if (count > 0)
    {
-      target->stdDevRTT = (UINT32)sqrt((double)stdDev / (double)count);
+      target->stdDevRTT = static_cast<uint32_t>(sqrt((double)stdDev / (double)count));
    }
    else
    {
@@ -147,18 +137,47 @@ retry:
 
    if (target->lastRTT != 10000)
    {
-      if (target->movingAvgRTT == 0x7FFFFFFF)
+      if (target->movingAverageRTT == 0xFFFFFFFF)
       {
-         target->movingAvgRTT = target->lastRTT;
+         target->movingAverageRTT = target->lastRTT * EMA_FP_1;
       }
       else
       {
-         CALC_EMA(target->movingAvgRTT, target->lastRTT);
+         UpdateExpMovingAverage(target->movingAverageRTT, target->movingAverageExp, target->lastRTT);
       }
+
+      if (target->prevRTT != 0xFFFFFFFF)
+      {
+         uint32_t jitter = abs(static_cast<int32_t>(target->lastRTT) - static_cast<int32_t>(target->prevRTT));
+         target->jitterHistory[target->bufPos] = jitter;
+         sum = 0;
+         for(uint32_t i = 0; i < s_pollsPerMinute; i++)
+            sum += target->jitterHistory[i];
+         target->averageJitter = sum / s_pollsPerMinute;
+
+         if (target->movingAverageJitter == 0xFFFFFFFF)
+         {
+            target->movingAverageJitter = jitter * EMA_FP_1;
+         }
+         else
+         {
+            UpdateExpMovingAverage(target->movingAverageJitter, target->movingAverageExp, jitter);
+         }
+      }
+      target->prevRTT = target->lastRTT;
+   }
+   else
+   {
+      // Keep jitter value when target is unreachable
+      target->jitterHistory[target->bufPos] = target->averageJitter;
    }
 
-   UINT32 elapsedTime = static_cast<UINT32>(GetCurrentTimeMs() - startTime);
-   UINT32 interval = 60000 / s_pollsPerMinute;
+   target->bufPos++;
+   if (target->bufPos == (int)s_pollsPerMinute)
+      target->bufPos = 0;
+
+   uint32_t elapsedTime = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
+   uint32_t interval = 60000 / s_pollsPerMinute;
 
    ThreadPoolScheduleRelative(s_pollers, (interval > elapsedTime) ? interval - elapsedTime : 1, Poller, target);
 }
@@ -169,7 +188,7 @@ retry:
 static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	TCHAR szHostName[256], szTimeOut[32], szPacketSize[32], dontFragmentFlag[32], retryCountText[32];
-	UINT32 dwTimeOut = s_timeout, dwRTT, dwPacketSize = s_defaultPacketSize;
+	uint32_t dwTimeOut = s_timeout, dwRTT, dwPacketSize = s_defaultPacketSize;
 	bool dontFragment = ((s_options & PING_OPT_DONT_FRAGMENT) != 0);
 
 	if (!AgentGetParameterArg(pszParam, 1, szHostName, 256))
@@ -191,7 +210,7 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
    InetAddress addr = InetAddress::resolveHostName(szHostName);
 	if (szTimeOut[0] != 0)
 	{
-		dwTimeOut = _tcstoul(szTimeOut, NULL, 0);
+		dwTimeOut = _tcstoul(szTimeOut, nullptr, 0);
 		if (dwTimeOut < 100)
 			dwTimeOut = 100;
 		if (dwTimeOut > 5000)
@@ -199,20 +218,20 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 	}
 	if (szPacketSize[0] != 0)
 	{
-		dwPacketSize = _tcstoul(szPacketSize, NULL, 0);
+		dwPacketSize = _tcstoul(szPacketSize, nullptr, 0);
 	}
 	if (dontFragmentFlag[0] != 0)
 	{
-	   dontFragment = (_tcstol(dontFragmentFlag, NULL, 0) != 0);
+	   dontFragment = (_tcstol(dontFragmentFlag, nullptr, 0) != 0);
 	}
 
-	int retryCount = (retryCountText[0] != 0) ? _tcstol(retryCountText, NULL, 0) : 1;
+	int retryCount = (retryCountText[0] != 0) ? _tcstol(retryCountText, nullptr, 0) : 1;
 	if (retryCount < 1)
 	   retryCount = 1;
 
 	TCHAR ipAddrText[64];
 	nxlog_debug_tag(DEBUG_TAG, 7, _T("IcmpPing: start for host=%s addr=%s retryCount=%d"), szHostName, addr.toString(ipAddrText), retryCount);
-	UINT32 result = IcmpPing(addr, retryCount, dwTimeOut, &dwRTT, dwPacketSize, dontFragment);
+	uint32_t result = IcmpPing(addr, retryCount, dwTimeOut, &dwRTT, dwPacketSize, dontFragment);
 	nxlog_debug_tag(DEBUG_TAG, 7, _T("IcmpPing: completed for host=%s timeout=%d packetSize=%d dontFragment=%s result=%d time=%d"),
 	      szHostName, dwTimeOut, dwPacketSize, dontFragment ? _T("true") : _T("false"), result, dwRTT);
 
@@ -232,18 +251,15 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 /**
  * Handler for poller information
  */
-static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+static LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	TCHAR szTarget[MAX_DB_STRING];
-	BOOL bUseName = FALSE;
-
-	if (!AgentGetParameterArg(pszParam, 1, szTarget, MAX_DB_STRING))
+   TCHAR target[MAX_DB_STRING];
+	if (!AgentGetParameterArg(param, 1, target, MAX_DB_STRING))
 		return SYSINFO_RC_UNSUPPORTED;
-	StrStrip(szTarget);
+	Trim(target);
 
-   InetAddress ipAddr = InetAddress::parse(szTarget);
-   if (!ipAddr.isValid())
-		bUseName = TRUE;
+   InetAddress ipAddr = InetAddress::parse(target);
+   bool useName = !ipAddr.isValid();
 
    int i;
    PING_TARGET *t = NULL;
@@ -251,9 +267,9 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
    for(i = 0; i < s_targets.size(); i++)
 	{
       t = s_targets.get(i);
-		if (bUseName)
+		if (useName)
 		{
-			if (!_tcsicmp(t->name, szTarget) || !_tcsicmp(t->dnsName, szTarget))
+			if (!_tcsicmp(t->name, target) || !_tcsicmp(t->dnsName, target))
 				break;
 		}
 		else
@@ -268,7 +284,7 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
       s_targetLock.unlock();
       if (s_options & PING_OPT_ALLOW_AUTOCONFIGURE)
       {
-         InetAddress addr = bUseName ? InetAddress::resolveHostName(szTarget) : ipAddr;
+         InetAddress addr = useName ? InetAddress::resolveHostName(target) : ipAddr;
          if (!addr.isValid())
          {
             return SYSINFO_RC_UNSUPPORTED;   // Invalid hostname
@@ -277,12 +293,15 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
          t = new PING_TARGET;
          memset(t, 0, sizeof(PING_TARGET));
          t->ipAddr = addr;
-         _tcslcpy(t->dnsName, szTarget, MAX_DB_STRING);
-         _tcslcpy(t->name, szTarget, MAX_DB_STRING);
+         _tcslcpy(t->dnsName, target, MAX_DB_STRING);
+         _tcslcpy(t->name, target, MAX_DB_STRING);
          t->packetSize = s_defaultPacketSize;
          t->dontFragment = ((s_options & PING_OPT_DONT_FRAGMENT) != 0);
+         t->prevRTT = 0xFFFFFFFF;
          t->cumulativeMinRTT = 0x7FFFFFFF;
-         t->movingAvgRTT = 0x7FFFFFFF;
+         t->movingAverageRTT = 0xFFFFFFFF;
+         t->movingAverageExp = EMA_EXP(60 / s_pollsPerMinute, s_movingAverageTimePeriod);
+         t->movingAverageJitter = 0xFFFFFFFF;
          t->automatic = true;
          t->lastDataRead = time(NULL);
 
@@ -300,35 +319,45 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
    }
    s_targetLock.unlock();
 
-   t->lastDataRead = time(NULL);
-	switch(*pArg)
+   t->lastDataRead = time(nullptr);
+	switch(*arg)
 	{
 		case _T('A'):
-			ret_uint(pValue, t->avgRTT);
+			ret_uint(value, t->averageRTT);
 			break;
       case _T('a'):
-         ret_uint(pValue, t->movingAvgRTT);
+         if (t->movingAverageRTT == 0xFFFFFFFF)
+            return SYSINFO_RC_ERROR;   // No data yet
+         ret_uint(value, static_cast<uint32_t>(round(GetExpMovingAverageValue(t->movingAverageRTT))));
          break;
       case _T('c'):
-         ret_uint(pValue, t->cumulativeMinRTT);
+         ret_uint(value, t->cumulativeMinRTT);
          break;
       case _T('C'):
-         ret_uint(pValue, t->cumulativeMaxRTT);
+         ret_uint(value, t->cumulativeMaxRTT);
          break;
       case _T('D'):
-         ret_uint(pValue, t->stdDevRTT);
+         ret_uint(value, t->stdDevRTT);
+         break;
+      case _T('J'):
+         ret_uint(value, t->averageJitter);
+         break;
+      case _T('j'):
+         if (t->movingAverageJitter == 0xFFFFFFFF)
+            return SYSINFO_RC_ERROR;   // No data yet
+         ret_uint(value, static_cast<uint32_t>(round(GetExpMovingAverageValue(t->movingAverageJitter))));
          break;
 		case _T('L'):
-			ret_uint(pValue, t->lastRTT);
+			ret_uint(value, t->lastRTT);
 			break;
       case _T('m'):
-         ret_uint(pValue, t->minRTT);
+         ret_uint(value, t->minRTT);
          break;
       case _T('M'):
-         ret_uint(pValue, t->maxRTT);
+         ret_uint(value, t->maxRTT);
          break;
 		case _T('P'):
-			ret_uint(pValue, t->packetLoss);
+			ret_uint(value, t->packetLoss);
 			break;
 		default:
 			return SYSINFO_RC_UNSUPPORTED;
@@ -367,6 +396,8 @@ static LONG H_TargetTable(const TCHAR *pszParam, const TCHAR *pArg, Table *value
     value->addColumn(_T("MIN_RTT"), DCI_DT_UINT, _T("Minimum response time"));
     value->addColumn(_T("MAX_RTT"), DCI_DT_UINT, _T("Maximum response time"));
     value->addColumn(_T("MOVING_AVERAGE_RTT"), DCI_DT_UINT, _T("Moving average of response time"));
+    value->addColumn(_T("JITTER"), DCI_DT_UINT, _T("Jitter"));
+    value->addColumn(_T("MOVING_AVERAGE_JITTER"), DCI_DT_UINT, _T("Moving average of jitter"));
     value->addColumn(_T("CMIN_RTT"), DCI_DT_UINT, _T("Cumulative minimum response time"));
     value->addColumn(_T("CMAX_RTT"), DCI_DT_UINT, _T("Cumulative maximum response time"));
     value->addColumn(_T("PACKET_LOSS"), DCI_DT_UINT, _T("Packet loss"));
@@ -382,17 +413,19 @@ static LONG H_TargetTable(const TCHAR *pszParam, const TCHAR *pArg, Table *value
         PING_TARGET *t = s_targets.get(i);
         value->set(0, t->ipAddr.toString());
         value->set(1, t->lastRTT);
-        value->set(2, t->avgRTT);
+        value->set(2, t->averageRTT);
         value->set(3, t->minRTT);
         value->set(4, t->maxRTT);
-        value->set(5, t->movingAvgRTT);
-        value->set(6, t->cumulativeMinRTT);
-        value->set(7, t->cumulativeMaxRTT);
-        value->set(8, t->packetLoss);
-        value->set(9, t->packetSize);
-        value->set(10, t->name);
-        value->set(11, t->dnsName);
-        value->set(12, t->automatic);
+        value->set(5, (t->movingAverageRTT == 0xFFFFFFFF) ? 0 : static_cast<uint32_t>(round(GetExpMovingAverageValue(t->movingAverageRTT))));
+        value->set(6, t->averageJitter);
+        value->set(7, (t->movingAverageJitter == 0xFFFFFFFF) ? 0 : static_cast<uint32_t>(round(GetExpMovingAverageValue(t->movingAverageJitter))));
+        value->set(8, t->cumulativeMinRTT);
+        value->set(9, t->cumulativeMaxRTT);
+        value->set(10, t->packetLoss);
+        value->set(11, t->packetSize);
+        value->set(12, t->name);
+        value->set(13, t->dnsName);
+        value->set(14, t->automatic);
     }
     s_targetLock.unlock();
     return SYSINFO_RC_SUCCESS;
@@ -516,8 +549,11 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
          addr.toString(t->name);
 		t->packetSize = dwPacketSize;
 		t->dontFragment = dontFragment;
+      t->prevRTT = 0xFFFFFFFF;
 		t->cumulativeMinRTT = 0x7FFFFFFF;
-		t->movingAvgRTT = 0x7FFFFFFF;
+		t->movingAverageRTT = 0xFFFFFFFF;
+      t->movingAverageExp = EMA_EXP(60 / s_pollsPerMinute, s_movingAverageTimePeriod);
+      t->movingAverageJitter = 0xFFFFFFFF;
       s_targets.add(t);
 		bResult = TRUE;
 	}
@@ -534,16 +570,17 @@ UINT32 s_poolMaxSize = 1024;
 UINT32 s_poolMinSize = 1;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("AutoConfigureTargets"), CT_BOOLEAN_FLAG_32, 0, 0, PING_OPT_ALLOW_AUTOCONFIGURE, 0, &s_options, NULL },
-	{ _T("DefaultPacketSize"), CT_LONG, 0, 0, 0, 0, &s_defaultPacketSize, NULL },
-   { _T("DefaultDoNotFragmentFlag"), CT_BOOLEAN_FLAG_32, 0, 0, PING_OPT_DONT_FRAGMENT, 0, &s_options, NULL },
-   { _T("MaxTargetInactivityTime"), CT_LONG, 0, 0, 0, 0, &s_maxTargetInactivityTime, NULL },
-	{ _T("PacketRate"), CT_LONG, 0, 0, 0, 0, &s_pollsPerMinute, NULL },
-	{ _T("Target"), CT_STRING_CONCAT, _T('\n'), 0, 0, 0, &m_pszTargetList, NULL },
-   { _T("ThreadPoolMaxSize"), CT_LONG, 0, 0, 0, 0, &s_poolMaxSize, NULL },
-   { _T("ThreadPoolMinSize"), CT_LONG, 0, 0, 0, 0, &s_poolMinSize, NULL },
-	{ _T("Timeout"), CT_LONG, 0, 0, 0, 0, &s_timeout, NULL },
-	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
+   { _T("AutoConfigureTargets"), CT_BOOLEAN_FLAG_32, 0, 0, PING_OPT_ALLOW_AUTOCONFIGURE, 0, &s_options, nullptr },
+	{ _T("DefaultPacketSize"), CT_LONG, 0, 0, 0, 0, &s_defaultPacketSize, nullptr },
+   { _T("DefaultDoNotFragmentFlag"), CT_BOOLEAN_FLAG_32, 0, 0, PING_OPT_DONT_FRAGMENT, 0, &s_options, nullptr },
+   { _T("MaxTargetInactivityTime"), CT_LONG, 0, 0, 0, 0, &s_maxTargetInactivityTime, nullptr },
+   { _T("MovingAverageTimePeriod"), CT_LONG, 0, 0, 0, 0, &s_movingAverageTimePeriod, nullptr },
+	{ _T("PacketRate"), CT_LONG, 0, 0, 0, 0, &s_pollsPerMinute, nullptr },
+	{ _T("Target"), CT_STRING_CONCAT, _T('\n'), 0, 0, 0, &m_pszTargetList, nullptr },
+   { _T("ThreadPoolMaxSize"), CT_LONG, 0, 0, 0, 0, &s_poolMaxSize, nullptr },
+   { _T("ThreadPoolMinSize"), CT_LONG, 0, 0, 0, 0, &s_poolMinSize, nullptr },
+	{ _T("Timeout"), CT_LONG, 0, 0, 0, 0, &s_timeout, nullptr },
+	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
 };
 
 /**
@@ -604,9 +641,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Icmp.AvgPingTime(*)"), H_PollResult, _T("A"), DCI_DT_UINT, _T("Average response time of ICMP ping to {instance} for last minute") },
    { _T("Icmp.CumulativeMaxPingTime(*)"), H_PollResult, _T("M"), DCI_DT_UINT, _T("Cumulative maximum response time of ICMP ping to {instance}") },
    { _T("Icmp.CumulativeMinPingTime(*)"), H_PollResult, _T("M"), DCI_DT_UINT, _T("Cumulative minimum response time of ICMP ping to {instance}") },
+   { _T("Icmp.Jitter(*)"), H_PollResult, _T("J"), DCI_DT_UINT, _T("Jitter of ICMP ping to {instance}") },
    { _T("Icmp.LastPingTime(*)"), H_PollResult, _T("L"), DCI_DT_UINT, _T("Response time of last ICMP ping to {instance}") },
    { _T("Icmp.MaxPingTime(*)"), H_PollResult, _T("M"), DCI_DT_UINT, _T("Maximum response time of ICMP ping to {instance} for last minute") },
    { _T("Icmp.MinPingTime(*)"), H_PollResult, _T("M"), DCI_DT_UINT, _T("Minimum response time of ICMP ping to {instance} for last minute") },
+   { _T("Icmp.MovingAvgJitter(*)"), H_PollResult, _T("j"), DCI_DT_UINT, _T("Moving average of jitter of ICMP ping to {instance}") },
    { _T("Icmp.MovingAvgPingTime(*)"), H_PollResult, _T("a"), DCI_DT_UINT, _T("Moving average of response time of ICMP ping to {instance}") },
    { _T("Icmp.PacketLoss(*)"), H_PollResult, _T("P"), DCI_DT_UINT, _T("Packet loss for ICMP ping to {instance} for last minute") },
    { _T("Icmp.PingStdDev(*)"), H_PollResult, _T("D"), DCI_DT_UINT, _T("Standard deviation for ICMP ping to {instance} for last minute") },
@@ -618,8 +657,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-   { _T("Icmp.ScanRange(*)"), H_ScanRange, NULL },
-	{ _T("Icmp.Targets"), H_TargetList, NULL }
+   { _T("Icmp.ScanRange(*)"), H_ScanRange, nullptr },
+	{ _T("Icmp.Targets"), H_TargetList, nullptr }
 };
 
 /**
@@ -627,7 +666,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE m_table[] =
 {
-    { _T("Icmp.Targets"), H_TargetTable, NULL, _T("IP"), _T("ICMP ping targets") }
+    { _T("Icmp.Targets"), H_TargetTable, nullptr, _T("IP"), _T("ICMP ping targets") }
 };
 
 /**
@@ -637,15 +676,15 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("PING"), NETXMS_VERSION_STRING,
-	SubagentInit, SubagentShutdown, NULL, NULL,
+	SubagentInit, SubagentShutdown, nullptr, nullptr,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_lists,
 	sizeof(m_table) / sizeof(NETXMS_SUBAGENT_TABLE),
 	m_table,	// tables
-   0, NULL,	// actions
-	0, NULL	// push parameters
+   0, nullptr,	// actions
+	0, nullptr	// push parameters
 };
 
 /**
