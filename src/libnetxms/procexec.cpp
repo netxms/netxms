@@ -274,10 +274,11 @@ bool ProcessExecutor::execute()
       case 0: // child
          setpgid(0, 0); // new process group
          close(m_pipe[0]);
-         close(1);
-         close(2);
-         dup2(m_pipe[1], 1);
-         dup2(m_pipe[1], 2);
+         close(STDIN_FILENO);
+         close(STDOUT_FILENO);
+         close(STDERR_FILENO);
+         dup2(m_pipe[1], STDOUT_FILENO);
+         dup2(m_pipe[1], STDERR_FILENO);
          close(m_pipe[1]);
          if (m_shellExec)
          {
@@ -347,7 +348,7 @@ bool ProcessExecutor::execute()
          // exec failed
          char errorMessage[1024];
          snprintf(errorMessage, 1024, "Cannot start process (%s)\n", strerror(errno));
-         write(1, errorMessage, strlen(errorMessage));
+         write(STDERR_FILENO, errorMessage, strlen(errorMessage));
          _exit(127);
          break;
       default: // parent
