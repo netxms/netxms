@@ -595,7 +595,7 @@ public class RuleEditor extends Composite
          final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleFilterScript#30"); //$NON-NLS-1$
          addConditionGroupLabel(clientArea, Messages.get().RuleEditor_ScriptIs, needAnd, false, listener);
 
-         ScriptEditor scriptEditor = new ScriptEditor(clientArea, SWT.BORDER, SWT.NONE);
+         ScriptEditor scriptEditor = new ScriptEditor(clientArea, SWT.BORDER, SWT.NONE, true, false);
          GridData gd = new GridData();
          gd.horizontalIndent = INDENT * 2;
          gd.horizontalAlignment = SWT.FILL;
