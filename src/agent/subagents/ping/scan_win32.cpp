@@ -74,7 +74,7 @@ static int WINAPI EchoCallback(void *context)
 /**
   * Scan IP address range and return list of responding addresses
   */
-StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetAddress& end, UINT32 timeout)
+StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetAddress& end, uint32_t timeout)
 {
    static char payload[64] = "NetXMS Scan Ping";
 
