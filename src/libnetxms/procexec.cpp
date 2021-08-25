@@ -300,7 +300,7 @@ bool ProcessExecutor::execute()
 
             int index = 1;
             bool squotes = false, dquotes = false;
-            for(char *p = tmp; *p != 0; p++)
+            for(char *p = tmp; *p != 0;)
             {
                if ((*p == ' ') && !squotes && !dquotes)
                {
@@ -314,13 +314,29 @@ bool ProcessExecutor::execute()
                {
                   squotes = !squotes;
                   memmove(p, p + 1, strlen(p));
-                  p--;
                }
                else if ((*p == '"') && !squotes)
                {
                   dquotes = !dquotes;
                   memmove(p, p + 1, strlen(p));
-                  p--;
+               }
+               else if ((*p == '\\') && !squotes)
+               {
+                  // Follow shell convention for backslash:
+                  // A backslash preserves the literal meaning of the following character, with the exception of ⟨newline⟩.
+                  // Enclosing characters within double quotes preserves the literal meaning of all characters except dollarsign ($), backquote (`), and backslash (\).
+                  // The backslash inside double quotes is historically weird, and serves to quote only the following characters:
+                  //          $ ` " \ <newline>.
+                  // Otherwise it remains literal.
+                  if (!dquotes || ((*(p + 1) == '"') || (*(p + 1) == '\\') || (*(p + 1) == '`') || (*(p + 1) == '$')))
+                  {
+                     memmove(p, p + 1, strlen(p));
+                     p++;
+                  }
+               }
+               else
+               {
+                  p++;
                }
             }
             argv[index] = nullptr;
