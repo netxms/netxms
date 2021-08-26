@@ -628,7 +628,7 @@ bool LogParser::monitorFile(off_t startOffset)
 
 		while(true)
 		{
-			if (ConditionWait(m_stopCondition, 5000))
+			if (ConditionWait(m_stopCondition, m_fileCheckInterval))
 			{
 			   _close(fh);
 				goto stop_parser;
@@ -807,7 +807,7 @@ bool LogParser::monitorFile2(off_t startOffset)
              (!m_ignoreMTime && (size == st.st_size) && (mtime == st.st_mtime)))
 #endif
          {
-            if (ConditionWait(m_stopCondition, 10000))
+            if (ConditionWait(m_stopCondition, m_fileCheckInterval))
                break;
             continue;
          }
@@ -910,7 +910,7 @@ bool LogParser::monitorFile2(off_t startOffset)
       size = static_cast<size_t>(st.st_size);
       mtime = st.st_mtime;
 
-      if (ConditionWait(m_stopCondition, 10000))
+      if (ConditionWait(m_stopCondition, m_fileCheckInterval))
          break;
    }
 
@@ -1019,7 +1019,7 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
 
       if ((size == st.st_size) && (mtime == st.st_mtime) && (ctime == st.st_ctime) && !readFromStart)
       {
-         if (ConditionWait(m_stopCondition, 10000))
+         if (ConditionWait(m_stopCondition, m_fileCheckInterval))
             break;
          continue;
       }
@@ -1092,7 +1092,7 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
       mtime = st.st_mtime;
 
       DestroyFileSnapshot(snapshot);
-      if (ConditionWait(m_stopCondition, 10000))
+      if (ConditionWait(m_stopCondition, m_fileCheckInterval))
          break;
    }
 
