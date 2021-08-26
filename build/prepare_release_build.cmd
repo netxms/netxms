@@ -11,6 +11,10 @@ copy build\netxms-build-tag.properties src\java-common\netxms-base\src\main\reso
 for /f "delims=" %%a in ('cat build/netxms-build-tag.properties ^| grep NETXMS_VERSION ^| cut -d^= -f2') do @set VERSION=%%a
 echo VERSION=%VERSION%
 
+type src\java\netxms-eclipse\Core\plugin.xml | sed -r "s,^(.*;Version) [0-9.]+(&#x0A.*)$,\1 %VERSION%\2," > plugin.xml
+copy /Y plugin.xml src\java\netxms-eclipse\Core\plugin.xml
+del plugin.xml
+
 for %%p in (%POM_FILES_INSTALL%) do cmd /C mvn -f %%p -Dmaven.test.skip=true -Drevision=%VERSION% clean install
 for %%p in (%POM_FILES_PACKAGE%) do cmd /C mvn -f %%p -Dmaven.test.skip=true -Drevision=%VERSION% clean package
 
