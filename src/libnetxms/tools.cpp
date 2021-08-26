@@ -2378,6 +2378,41 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordA(const char *login, const char *encryp
 }
 
 /**
+ * Scan file for specific data block
+ */
+bool LIBNETXMS_EXPORTABLE ScanFile(const TCHAR *fileName, const void *data, size_t size)
+{
+   int fh = _topen(fileName, O_RDONLY);
+   if (fh == -1)
+      return false;
+
+   bool found = false;
+   char buffer[8192];
+   size_t offset = 0;
+   while(true)
+   {
+      int bytes = _read(fh, &buffer[offset], 8192 - offset);
+      if (bytes <= 0)
+         break;
+
+      if (bytes < size)
+         break;
+
+      if (memmem(buffer, bytes, data, size) != nullptr)
+      {
+         found = true;
+         break;
+      }
+
+      memmove(buffer, &buffer[bytes - size + 1], size - 1);
+      offset = size - 1;
+   }
+
+   _close(fh);
+   return found;
+}
+
+/**
  * Load file content into memory (internal implementation)
  */
 static BYTE *LoadFileContent(int fd, size_t *fileSize, bool kernelFS, bool stdInput)
@@ -3074,34 +3109,34 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue
 	memset(&t, 0, sizeof(struct tm));
 	t.tm_isdst = -1;
 
-	t.tm_sec = strtol(curr, NULL, 10);
+	t.tm_sec = strtol(curr, nullptr, 10);
 	*curr = 0;
 	curr -= 2;
 
-	t.tm_min = strtol(curr, NULL, 10);
+	t.tm_min = strtol(curr, nullptr, 10);
 	*curr = 0;
 	curr -= 2;
 
-	t.tm_hour = strtol(curr, NULL, 10);
+	t.tm_hour = strtol(curr, nullptr, 10);
 	*curr = 0;
 	curr -= 2;
 
-	t.tm_mday = strtol(curr, NULL, 10);
+	t.tm_mday = strtol(curr, nullptr, 10);
 	*curr = 0;
 	curr -= 2;
 
-	t.tm_mon = strtol(curr, NULL, 10) - 1;
+	t.tm_mon = strtol(curr, nullptr, 10) - 1;
 	*curr = 0;
 
 	if (len == 12)
 	{
 		curr -= 2;
-		t.tm_year = strtol(curr, NULL, 10) + 100;	// Assuming XXI century
+		t.tm_year = strtol(curr, nullptr, 10) + 100;	// Assuming XXI century
 	}
 	else
 	{
 		curr -= 4;
-		t.tm_year = strtol(curr, NULL, 10) - 1900;
+		t.tm_year = strtol(curr, nullptr, 10) - 1900;
 	}
 
 	return mktime(&t);

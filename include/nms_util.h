@@ -4763,6 +4763,7 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *fileName, size_t *fileSize);
 #define LoadFileA LoadFile
 #endif
 char LIBNETXMS_EXPORTABLE *LoadFileAsUTF8String(const TCHAR *fileName);
+bool LIBNETXMS_EXPORTABLE ScanFile(const TCHAR *fileName, const void *data, size_t size);
 
 /**
  * Postal address representation
