@@ -79,7 +79,7 @@ public class BarChart extends GenericComparisonChart
       if (series.isEmpty())
          return;
 
-      // Calculate vertical scale
+      // Calculate min and max values
       double minValue = series.get(0).getCurrentValue();
       double maxValue = minValue;
       for(DataSeries s : series)
@@ -107,6 +107,24 @@ public class BarChart extends GenericComparisonChart
          minValue = -adjustRange(Math.abs(minValue));
       }
       
+      if (chart.getConfiguration().isTransposed())
+         renderHorizontal(gc, size, items, series, minValue, maxValue);
+      else
+         renderVertical(gc, size, items, series, minValue, maxValue);
+   }
+
+   /**
+    * Render vertical bar chart
+    *
+    * @param gc graphical context
+    * @param size size
+    * @param items graph items
+    * @param series data series
+    * @param minValue adjusted minimal value
+    * @param maxValue adjusted maximal value
+    */
+   private void renderVertical(GC gc, Point size, List<GraphItem> items, List<DataSeries> series, double minValue, double maxValue)
+   {
       Color axisColor = getColorFromPreferences("Chart.Axis.Y.Color"); //$NON-NLS-1$
       gc.setForeground(axisColor);
 
@@ -175,8 +193,92 @@ public class BarChart extends GenericComparisonChart
             {
                int color = items.get(i).getColor();
                gc.setBackground(chart.getColorCache().create((color == -1) ? chart.getPaletteEntry(i).getRGBObject() : ColorConverter.rgbFromInt(color)));
-               int h = (int)(value / pixelValue);
+               int h = (int)Math.abs(value / pixelValue);
                gc.fillRectangle(x + margin, (value > 0) ? baseLine - h : baseLine, itemWidth - margin * 2, h);
+            }
+         }
+      }
+   }
+
+   /**
+    * Render horizontal bar chart
+    *
+    * @param gc graphical context
+    * @param size size
+    * @param items graph items
+    * @param series data series
+    * @param minValue adjusted minimal value
+    * @param maxValue adjusted maximal value
+    */
+   private void renderHorizontal(GC gc, Point size, List<GraphItem> items, List<DataSeries> series, double minValue, double maxValue)
+   {
+      Color axisColor = getColorFromPreferences("Chart.Axis.X.Color"); //$NON-NLS-1$
+      gc.setForeground(axisColor);
+
+      // Value of single pixel
+      double pixelValue = (maxValue - minValue) / (size.x - MARGIN_WIDTH * 2);
+      double step = getStepMagnitude(Math.max(Math.abs(minValue), Math.abs(maxValue)));
+      float pointsStep = (float)(step / pixelValue);
+
+      int baseLine; // Position of Y axis
+      if (minValue == 0)
+         baseLine = MARGIN_WIDTH;
+      else if (maxValue == 0)
+         baseLine = size.x - MARGIN_WIDTH;
+      else
+         baseLine = MARGIN_WIDTH + (int)(minValue / pixelValue);
+
+      // Prepare Y axis labels
+      int labelHeight = gc.textExtent("000").y + MARGIN_LABELS;
+      ChartConfiguration config = chart.getConfiguration();
+      List<Label> labels = new ArrayList<>();
+      for(double v = minValue; v <= maxValue; v += step)
+      {
+         Label label = new Label(gc, config.isUseMultipliers() ? DataFormatter.roundDecimalValue(v, step, 5) : Double.toString(v));
+         labels.add(label);
+      }
+
+      // Draw Y axis
+      int itemHeight = (size.y - MARGIN_HEIGHT * 2 - labelHeight - 1) / items.size();
+      gc.drawLine(baseLine, MARGIN_HEIGHT, baseLine, size.y - MARGIN_HEIGHT - labelHeight);
+      for(int i = 1, y = MARGIN_HEIGHT + itemHeight; i < items.size(); i++, y += itemHeight)
+         gc.drawLine(baseLine - 2, y, baseLine + 2, y);
+
+      // Draw X axis
+      gc.drawLine(MARGIN_WIDTH, size.y - MARGIN_HEIGHT - labelHeight, size.x - MARGIN_WIDTH, size.y - MARGIN_HEIGHT - labelHeight);
+
+      // Draw labels and grid
+      gc.setLineStyle(SWT.LINE_DOT);
+      Color gridColor = getColorFromPreferences("Chart.Grid.X.Color"); //$NON-NLS-1$
+      float x = MARGIN_WIDTH;
+      for(int i = 0; i < labels.size(); i++, x += pointsStep)
+      {
+         Label label = labels.get(i);
+         gc.setForeground(axisColor);
+         gc.drawText(label.text, (int)x - label.size.x / 2, size.y - MARGIN_HEIGHT - labelHeight, true);
+         if (config.isGridVisible() && ((int)x != baseLine))
+         {
+            gc.setForeground(gridColor);
+            gc.drawLine((int)x, MARGIN_HEIGHT, (int)x, size.y - MARGIN_HEIGHT - labelHeight);
+         }
+      }
+      gc.setLineStyle(SWT.LINE_SOLID);
+
+      // Draw data blocks
+      if (itemHeight >= 4)
+      {
+         if (config.isTranslucent())
+            gc.setAlpha(127);
+         int margin = Math.max(Math.min(10, itemHeight / 10), 1);
+         for(int i = 0, y = MARGIN_HEIGHT; i < items.size(); i++, y += itemHeight)
+         {
+            double value = series.get(i).getCurrentValue();
+            if (value != 0)
+            {
+               int color = items.get(i).getColor();
+               gc.setBackground(chart.getColorCache().create((color == -1) ? chart.getPaletteEntry(i).getRGBObject() : ColorConverter.rgbFromInt(color)));
+               int w = (int)Math.abs(value / pixelValue);
+               gc.fillRectangle(((value < 0) ? baseLine - w : baseLine) + 1, y + margin, w, itemHeight - margin * 2);
             }
          }
       }
