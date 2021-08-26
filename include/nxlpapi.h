@@ -267,6 +267,7 @@ private:
 	void *m_userData;
 	TCHAR *m_fileName;
 	int m_fileEncoding;
+   uint32_t m_fileCheckInterval;
 	StringList m_exclusionSchedules;
 	TCHAR *m_name;
 	CodeLookupElement *m_eventNameList;
@@ -320,6 +321,7 @@ public:
    const uuid& getGuid() const { return m_guid;  }
 	const TCHAR *getFileName() const { return m_fileName; }
 	int getFileEncoding() const { return m_fileEncoding; }
+   uint32_t getFileCheckInterval() const { return m_fileCheckInterval; }
    LogParserStatus getStatus() const { return m_status; }
    const TCHAR *getStatusText() const;
    bool isFilePreallocated() const { return m_preallocatedFile; }
@@ -330,6 +332,7 @@ public:
 	void setName(const TCHAR *name);
    void setFileName(const TCHAR *name);
    void setFileEncoding(int encoding) { m_fileEncoding = encoding; }
+   void setFileCheckInterval(uint32_t interval) { m_fileCheckInterval = interval; }
    void setGuid(const uuid& guid);
 
 	void setThread(THREAD thread) { m_thread = thread; }
