@@ -83,7 +83,7 @@ int LIBNETXMS_EXPORTABLE DeflateFileStream(FILE *source, FILE *dest, bool gzipFo
 bool LIBNETXMS_EXPORTABLE DeflateFile(const TCHAR *inputFile, const TCHAR *outputFile)
 {
    TCHAR realOutputFile[MAX_PATH];
-   if (outputFile != NULL)
+   if (outputFile != nullptr)
       _tcslcpy(realOutputFile, outputFile, MAX_PATH);
    else
       _sntprintf(realOutputFile, MAX_PATH, _T("%s.gz"), inputFile);
@@ -93,7 +93,7 @@ bool LIBNETXMS_EXPORTABLE DeflateFile(const TCHAR *inputFile, const TCHAR *outpu
 #else
    FILE *in = _tfopen(inputFile, _T("r"));
 #endif
-   if (in == NULL)
+   if (in == nullptr)
       return false;
 
 #ifdef _WIN32
@@ -101,7 +101,7 @@ bool LIBNETXMS_EXPORTABLE DeflateFile(const TCHAR *inputFile, const TCHAR *outpu
 #else
    FILE *out = _tfopen(realOutputFile, _T("w"));
 #endif
-   if (out == NULL)
+   if (out == nullptr)
    {
       fclose(in);
       return false;
