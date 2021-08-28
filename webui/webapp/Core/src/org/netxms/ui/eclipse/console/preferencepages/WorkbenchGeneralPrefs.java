@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.console.preferencepages;
 
+import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.ICoolBarManager;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
@@ -85,28 +86,35 @@ public class WorkbenchGeneralPrefs extends PreferencePage implements	IWorkbenchP
 		cbShowServerClock.setSelection(false);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
 		Activator.getDefault().getPreferenceStore().setValue("SHOW_HIDDEN_ATTRIBUTES", cbShowHiddenAttributes.getSelection()); //$NON-NLS-1$
       Activator.getDefault().getPreferenceStore().setValue("SHOW_SERVER_CLOCK", cbShowServerClock.getSelection()); //$NON-NLS-1$
-		
+
       ICoolBarManager coolBar = (ICoolBarManager)ConsoleSharedData.getProperty("CoolBarManager"); //$NON-NLS-1$
-      coolBar.remove(ServerClockContributionItem.ID);
 		if (cbShowServerClock.getSelection())
 		{
-		   coolBar.add(new ServerClockContributionItem());
-	      coolBar.update(true);
-	      PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().layout(true, true);
+         if (coolBar.find(ServerClockContributionItem.ID) == null)
+         {
+            coolBar.add(new ServerClockContributionItem());
+            coolBar.update(true);
+            PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().layout(true, true);
+         }
 		}
 		else
 		{
-         coolBar.update(true);
+         IContributionItem item = coolBar.find(ServerClockContributionItem.ID);
+         if (item != null)
+         {
+            coolBar.remove(item);
+            coolBar.update(true);
+         }
 		}
-		
+
 		return super.performOk();
 	}
 }

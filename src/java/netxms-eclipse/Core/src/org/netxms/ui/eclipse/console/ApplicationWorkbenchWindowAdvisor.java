@@ -37,6 +37,7 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.ActionBarAdvisor;
@@ -69,6 +70,7 @@ import org.netxms.ui.eclipse.jobs.LoginJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.Command;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.PerspectiveSwitcher;
 
 /**
  * Workbench window advisor
@@ -112,7 +114,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       configurer.setShowCoolBar(ps.getBoolean("SHOW_COOLBAR")); //$NON-NLS-1$
       configurer.setShowStatusLine(true);
       configurer.setShowProgressIndicator(true);
-      configurer.setShowPerspectiveBar(true);
+      configurer.setShowPerspectiveBar(false);
 
       TweakletManager.preWindowOpen(configurer);
    }
@@ -172,6 +174,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       });
 
       TweakletManager.postWindowCreate(configurer);
+
+      for(final IWorkbenchWindow w : PlatformUI.getWorkbench().getWorkbenchWindows())
+         new PerspectiveSwitcher(w);
    }
 
    /**
@@ -240,7 +245,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 	   if (parts.length != 2)
 	      return;
 	   
-      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      NXCSession session = ConsoleSharedData.getSession();
       
       long objectId;
       try

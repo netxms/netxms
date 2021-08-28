@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,9 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
@@ -46,6 +48,7 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.PerspectiveSwitcher;
 
 /**
  * Workbench window advisor
@@ -61,9 +64,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       super(configurer);
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#createActionBarAdvisor(org.eclipse.ui.application.IActionBarConfigurer)
     */
    @Override
@@ -72,7 +73,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       return new ApplicationActionBarAdvisor(configurer);
    }
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#preWindowOpen()
 	 */
 	@Override
@@ -81,13 +82,13 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       RegionalSettings.updateFromPreferences();
       
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-		configurer.setShowPerspectiveBar(true);
+		configurer.setShowPerspectiveBar(false);
 		configurer.setShowStatusLine(false);
 		configurer.setTitle(Messages.get().ApplicationWorkbenchWindowAdvisor_AppTitle);
 		configurer.setShellStyle(SWT.NO_TRIM);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowCreate()
 	 */
 	@Override
@@ -131,9 +132,12 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		Menu menuBar = shell.getMenuBar();
 		if (menuBar != null)
 		   menuBar.setData(RWT.CUSTOM_VARIANT, "menuBar"); //$NON-NLS-1$
+
+      for(final IWorkbenchWindow w : PlatformUI.getWorkbench().getWorkbenchWindows())
+         new PerspectiveSwitcher(w);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowOpen()
 	 */
 	@Override
