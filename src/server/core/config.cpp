@@ -1155,15 +1155,14 @@ struct GetClientConfigurationHints_CallbackData
 /**
  * Enumeration callback for GetClientConfigurationHints
  */
-static EnumerationCallbackResult GetClientConfigurationHints_Callback(const TCHAR *key, const void *value, void *userArg)
+static EnumerationCallbackResult GetClientConfigurationHints_Callback(const TCHAR *key, const TCHAR *value, GetClientConfigurationHints_CallbackData *context)
 {
    if (_tcsncmp(key, _T("Client."), 7))
       return _CONTINUE;
 
-   GetClientConfigurationHints_CallbackData *data = static_cast<GetClientConfigurationHints_CallbackData*>(userArg);
-   data->msg->setField(data->fieldId++, &key[7]);
-   data->msg->setField(data->fieldId++, static_cast<const TCHAR*>(value));
-   data->count++;
+   context->msg->setField(context->fieldId++, &key[7]);
+   context->msg->setField(context->fieldId++, value);
+   context->count++;
    return _CONTINUE;
 }
 

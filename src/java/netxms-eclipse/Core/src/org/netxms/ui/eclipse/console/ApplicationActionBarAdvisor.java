@@ -36,7 +36,6 @@ import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.ICoolBarManager;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IStatusLineManager;
-import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarContributionItem;
@@ -426,19 +425,25 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		helpMenu.add((BrandingManager.getInstance().getAboutDialog(null) != null) ? actionAboutCustom : actionAbout);
 	}
 	
+   /**
+    * Add toolbar.
+    *
+    * @param coolBar
+    * @param id
+    */
 	private void addToolBar(ICoolBarManager coolBar, String id)
 	{
 	   if (coolBar.find(id) != null)
 	      return;
 	   
-      IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
+      ToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
       toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
       coolBar.add(new ToolBarContributionItem(toolbar, id));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.application.ActionBarAdvisor#fillCoolBar(org.eclipse.jface.action.ICoolBarManager)
-	 */
+   /**
+    * @see org.eclipse.ui.application.ActionBarAdvisor#fillCoolBar(org.eclipse.jface.action.ICoolBarManager)
+    */
 	@Override
 	protected void fillCoolBar(ICoolBarManager coolBar)
 	{
