@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,8 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IPerspectiveDescriptor;
+import org.eclipse.ui.IPerspectiveListener;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -65,6 +67,7 @@ import org.netxms.ui.eclipse.console.dialogs.LoginDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordRequestDialog;
 import org.netxms.ui.eclipse.console.dialogs.SecurityWarningDialog;
+import org.netxms.ui.eclipse.console.dialogs.SelectPerspectiveDialog;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.jobs.LoginJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -78,6 +81,8 @@ import org.netxms.ui.eclipse.widgets.PerspectiveSwitcher;
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implements KeyStoreRequestListener, KeyStoreEntryPasswordRequestListener
 {
    private IDialogSettings settings;
+   private IPerspectiveDescriptor selectedPerspective = null;
+
    /**
     * @param configurer
     */
@@ -86,9 +91,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       super(configurer);
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#createActionBarAdvisor(org.eclipse.ui.application.IActionBarConfigurer)
     */
    @Override
@@ -97,9 +100,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       return new ApplicationActionBarAdvisor(configurer);
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#preWindowOpen()
     */
    @Override
@@ -177,6 +178,13 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 
       for(final IWorkbenchWindow w : PlatformUI.getWorkbench().getWorkbenchWindows())
          new PerspectiveSwitcher(w);
+      
+      if (session.getClientConfigurationHintAsBoolean("ShowPerspectiveSelectorOnStartup", false))
+      {
+         SelectPerspectiveDialog dlg = new SelectPerspectiveDialog(null);
+         dlg.open();
+         selectedPerspective = dlg.getSelectedPerspective();
+      }
    }
 
    /**
@@ -230,10 +238,37 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       }
       else
       {
+         if (selectedPerspective != null)
+         {
+            // Eclipse will switch perspective to last known even if we call setPerspective here.
+            // To circumvent this, we add perspective listener that detects first perspective switch
+            // and switch back to selected perspective
+            Activator.logInfo("Selecting perspective " + selectedPerspective.getLabel());
+            final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+            if (window.getActivePage().getPerspective() != selectedPerspective)
+            {
+               window.getActivePage().setPerspective(selectedPerspective);
+               window.addPerspectiveListener(new IPerspectiveListener() {
+                  @Override
+                  public void perspectiveChanged(IWorkbenchPage page, IPerspectiveDescriptor perspective, String changeId)
+                  {
+                  }
+
+                  @Override
+                  public void perspectiveActivated(IWorkbenchPage page, IPerspectiveDescriptor perspective)
+                  {
+                     window.removePerspectiveListener(this);
+                     window.getActivePage().closePerspective(perspective, false, false);
+                     window.getActivePage().setPerspective(selectedPerspective);
+                     window.getActivePage().resetPerspective();
+                  }
+               });
+            }
+         }
          showMessageOfTheDay();
       }
-	}
-	
+   }
+
 	/**
 	 * Take snapshot of network map
 	 * 
@@ -289,7 +324,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       {
          MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format("Cannot open network map view %s (%s)", parts[0], e.getLocalizedMessage()));
       }
-	}
+   }
 
    /**
     * Show dashboard
@@ -623,7 +658,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       
       return null;
    }
-   
+
    /**
     * Show the message of the day message box
     */
