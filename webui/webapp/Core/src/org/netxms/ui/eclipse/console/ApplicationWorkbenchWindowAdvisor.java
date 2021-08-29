@@ -27,6 +27,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IPerspectiveDescriptor;
+import org.eclipse.ui.IPerspectiveListener;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -45,6 +47,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ObjectFilter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.ui.eclipse.console.dialogs.SelectPerspectiveDialog;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -56,6 +59,8 @@ import org.netxms.ui.eclipse.widgets.PerspectiveSwitcher;
 @SuppressWarnings("restriction")
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 {
+   private IPerspectiveDescriptor selectedPerspective = null;
+
    /**
     * @param configurer
     */
@@ -73,32 +78,32 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       return new ApplicationActionBarAdvisor(configurer);
    }
 
-	/**
-	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#preWindowOpen()
-	 */
-	@Override
-	public void preWindowOpen()
-	{
+   /**
+    * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#preWindowOpen()
+    */
+   @Override
+   public void preWindowOpen()
+   {
       RegionalSettings.updateFromPreferences();
       
-		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-		configurer.setShowPerspectiveBar(false);
-		configurer.setShowStatusLine(false);
-		configurer.setTitle(Messages.get().ApplicationWorkbenchWindowAdvisor_AppTitle);
-		configurer.setShellStyle(SWT.NO_TRIM);
-	}
+      IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
+      configurer.setShowPerspectiveBar(false);
+      configurer.setShowStatusLine(false);
+      configurer.setTitle(Messages.get().ApplicationWorkbenchWindowAdvisor_AppTitle);
+      configurer.setShellStyle(SWT.NO_TRIM);
+   }
 
-	/**
-	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowCreate()
-	 */
-	@Override
-	public void postWindowCreate()
-	{
-		super.postWindowCreate();
+   /**
+    * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowCreate()
+    */
+   @Override
+   public void postWindowCreate()
+   {
+      super.postWindowCreate();
+
+      NXCSession session = ConsoleSharedData.getSession();
 		
-		NXCSession session = ConsoleSharedData.getSession();
-		
-		// Changes the page title at runtime
+      // Changes the page title at runtime
       JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
       if (executor != null)
       {
@@ -135,7 +140,14 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 
       for(final IWorkbenchWindow w : PlatformUI.getWorkbench().getWorkbenchWindows())
          new PerspectiveSwitcher(w);
-	}
+
+      if (session.getClientConfigurationHintAsBoolean("ShowPerspectiveSelectorOnStartup", false))
+      {
+         SelectPerspectiveDialog dlg = new SelectPerspectiveDialog(null);
+         dlg.open();
+         selectedPerspective = dlg.getSelectedPerspective();
+      }
+   }
 
 	/**
 	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowOpen()
@@ -143,7 +155,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	@Override
    public void postWindowOpen()
    {
-	   ((WorkbenchWindow)getWindowConfigurer().getWindow()).getCoolBarManager2().setLockLayout(true);
+      ((WorkbenchWindow)getWindowConfigurer().getWindow()).getCoolBarManager2().setLockLayout(true);
+
       String dashboardId = Application.getParameter("dashboard"); //$NON-NLS-1$
       if (dashboardId != null)
       {
@@ -157,8 +170,37 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
             showDashboard(dashboardId, true);
          }
       }
+
+      if (selectedPerspective != null)
+      {
+         // Eclipse will switch perspective to last known even if we call setPerspective here.
+         // To circumvent this, we add perspective listener that detects first perspective switch
+         // and switch back to selected perspective
+         Activator.logInfo("Selecting perspective " + selectedPerspective.getLabel());
+         final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+         if (window.getActivePage().getPerspective() != selectedPerspective)
+         {
+            window.getActivePage().setPerspective(selectedPerspective);
+            window.addPerspectiveListener(new IPerspectiveListener() {
+               @Override
+               public void perspectiveChanged(IWorkbenchPage page, IPerspectiveDescriptor perspective, String changeId)
+               {
+               }
+
+               @Override
+               public void perspectiveActivated(IWorkbenchPage page, IPerspectiveDescriptor perspective)
+               {
+                  window.removePerspectiveListener(this);
+                  window.getActivePage().closePerspective(perspective, false, false);
+                  window.getActivePage().setPerspective(selectedPerspective);
+                  window.getActivePage().resetPerspective();
+               }
+            });
+         }
+      }
+
       showMessageOfTheDay();
-	}
+   }
 
    /**
     * Show dashboard
@@ -218,22 +260,22 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
    }
 
    /* (non-Javadoc)
-	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowClose()
-	 */
-	@Override
-	public void postWindowClose()
-	{
-		super.postWindowClose();
+    * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowClose()
+    */
+   @Override
+   public void postWindowClose()
+   {
+      super.postWindowClose();
       if (RWT.getUISession().getAttribute("NoPageReload") == null)
       {
          JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
          if (executor != null)
             executor.execute("location.reload(true);");
       }
-	}
-	
-	/**
-    * Show the message of the day messagebox
+   }
+
+   /**
+    * Show the message of the day message box
     */
    private void showMessageOfTheDay()
    {   
