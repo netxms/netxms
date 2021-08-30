@@ -973,10 +973,14 @@ public class AlarmList extends CompositeWithMessageBar
             }
             else
             {
-               AlarmHandle[] updatedElements = new AlarmHandle[updatedAlarms.size()];
+               List<AlarmHandle> updatedElements = new ArrayList<AlarmHandle>(updatedAlarms.size());
                for(int i = 0; i < updatedAlarms.size(); i++)
-                  updatedElements[i] = displayList.get(updatedAlarms.get(i));
-               alarmViewer.update(updatedElements, null);
+               {
+                  AlarmHandle h = displayList.get(updatedAlarms.get(i));
+                  if (h != null)
+                     updatedElements.add(h);
+               }
+               alarmViewer.update(updatedElements.toArray(), new String[] { "message" });
             }
 
             if ((session.getAlarmListDisplayLimit() > 0) && (selectedAlarms.size() >= session.getAlarmListDisplayLimit()))

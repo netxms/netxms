@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -96,4 +96,13 @@ public class AlarmComparator extends ViewerComparator
 		int dir = ((TreeViewer)viewer).getTree().getSortDirection();
 		return (dir == SWT.UP) ? rc : -rc;
 	}
+
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#isSorterProperty(java.lang.Object, java.lang.String)
+    */
+   @Override
+   public boolean isSorterProperty(Object element, String property)
+   {
+      return true;
+   }
 }
