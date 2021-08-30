@@ -22,8 +22,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -56,6 +58,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.events.AlarmHandle;
 import org.netxms.client.events.BulkAlarmStateChangeData;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
@@ -73,7 +76,6 @@ import org.netxms.nxmc.modules.alarms.dialogs.AcknowledgeCustomTimeDialog;
 import org.netxms.nxmc.modules.alarms.dialogs.AlarmStateChangeFailureDialog;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmAcknowledgeTimeFunctions;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmComparator;
-import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmHandle;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmListFilter;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmListLabelProvider;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmToolTip;
@@ -121,6 +123,7 @@ public class AlarmList extends CompositeWithMessageArea
 	private Alarm toolTipObject;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
    private List<Alarm> newAlarmList = new ArrayList<Alarm>();
+   private Set<Long> updateList = new HashSet<Long>();
    private Map<Long, AlarmHandle> displayList = new HashMap<Long, AlarmHandle>();
    private VisibilityValidator visibilityValidator;
    private boolean needInitialRefresh = false;
@@ -244,19 +247,23 @@ public class AlarmList extends CompositeWithMessageArea
       else
          needInitialRefresh = true;
 
-      refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), alarmViewer.getControl(), new Runnable() {
+      // Do not allow less than 500 milliseconds interval between refresh and set minimal delay to 100 milliseconds
+      refreshTimer = new RefreshTimer(Math.max(session.getMinViewRefreshInterval(), 500), alarmViewer.getControl(), new Runnable() {
          @Override
          public void run()
          {
             startFilterAndLimit();
          }
       });
+      refreshTimer.setMinimalDelay(100);
 
       // Add client library listener
       clientListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {
+            Alarm oldAlarm;
+            boolean changed;
             switch(n.getCode())
             {
                case SessionNotification.NEW_ALARM:
@@ -265,23 +272,29 @@ public class AlarmList extends CompositeWithMessageArea
                      newAlarmList.add((Alarm)n.getObject()); // Add to this list only new alarms to be able to notify with sound
                   }
                case SessionNotification.ALARM_CHANGED:
-                  Alarm oldAlarm;
                   synchronized(alarmList)
                   {
                      oldAlarm = alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
+                     updateList.add(((Alarm)n.getObject()).getId());
                   }
                   if (alarmFilter.filter((Alarm)n.getObject()) || ((oldAlarm != null) && alarmFilter.filter(oldAlarm)))
+                  {
                      refreshTimer.execute();
+                  }
                   break;
                case SessionNotification.ALARM_TERMINATED:
                case SessionNotification.ALARM_DELETED:
                   synchronized(alarmList)
                   {
-                     alarmList.remove(((Alarm)n.getObject()).getId());
+                     oldAlarm = alarmList.remove(((Alarm)n.getObject()).getId());
                   }
-                  refreshTimer.execute();
+                  if ((oldAlarm != null) && alarmFilter.filter(oldAlarm))
+                  {
+                     refreshTimer.execute();
+                  }
                   break;
                case SessionNotification.MULTIPLE_ALARMS_RESOLVED:
+                  changed = false;
                   synchronized(alarmList)
                   {
                      BulkAlarmStateChangeData d = (BulkAlarmStateChangeData)n.getObject();
@@ -291,20 +304,26 @@ public class AlarmList extends CompositeWithMessageArea
                         if (a != null)
                         {
                            a.setResolved(d.getUserId(), d.getChangeTime());
+                           updateList.add(a.getId());
+                           changed = true;
                         }
                      }
                   }
-                  refreshTimer.execute();
+                  if (changed)
+                     refreshTimer.execute();
                   break;
                case SessionNotification.MULTIPLE_ALARMS_TERMINATED:
+                  changed = false;
                   synchronized(alarmList)
                   {
                      for(Long id : ((BulkAlarmStateChangeData)n.getObject()).getAlarms())
                      {
-                        alarmList.remove(id);
+                        if (alarmList.remove(id) != null)
+                           changed = true;
                      }
                   }
-                  refreshTimer.execute();
+                  if (changed)
+                     refreshTimer.execute();
                   break;
                default:
                   break;
@@ -857,6 +876,10 @@ public class AlarmList extends CompositeWithMessageArea
          filteredAlarms = selectedAlarms;
       }
 
+      final List<Long> updatedAlarms = new ArrayList<Long>(updateList.size());
+      updatedAlarms.addAll(updateList);
+      updateList.clear();
+
       alarmViewer.getControl().getDisplay().asyncExec(new Runnable() {
          @Override
          public void run()
@@ -865,19 +888,46 @@ public class AlarmList extends CompositeWithMessageArea
                return;
 
             // Remove from display alarms that are no longer visible
+            int initialSize = displayList.size();
             displayList.entrySet().removeIf(e -> (!filteredAlarms.containsKey(e.getKey())));
+            boolean structuralChanges = (displayList.size() != initialSize);
 
             // Add or update alarms in display list
             for(Alarm a : filteredAlarms.values())
             {
                AlarmHandle h = displayList.get(a.getId());
                if (h != null)
+               {
                   h.alarm = a;
+               }
                else
+               {
                   displayList.put(a.getId(), new AlarmHandle(a));
+                  structuralChanges = true;
+               }
             }
 
-            alarmViewer.refresh();
+            if (structuralChanges)
+            {
+               alarmViewer.getControl().setRedraw(false);
+               TreeItem topItem = alarmViewer.getTree().getTopItem();
+               alarmViewer.refresh();
+               if ((topItem != null) && !topItem.isDisposed())
+                  alarmViewer.getTree().setTopItem(topItem);
+               alarmViewer.getControl().setRedraw(true);
+            }
+            else
+            {
+               List<AlarmHandle> updatedElements = new ArrayList<AlarmHandle>(updatedAlarms.size());
+               for(int i = 0; i < updatedAlarms.size(); i++)
+               {
+                  AlarmHandle h = displayList.get(updatedAlarms.get(i));
+                  if (h != null)
+                     updatedElements.add(h);
+               }
+               alarmViewer.update(updatedElements.toArray(), new String[] { "message" });
+            }
+
             if ((session.getAlarmListDisplayLimit() > 0) && (selectedAlarms.size() >= session.getAlarmListDisplayLimit()))
             {
                addMessage(MessageArea.INFORMATION, String.format(i18n.tr("Only %d most recent alarms shown"), filteredAlarms.size()), true);

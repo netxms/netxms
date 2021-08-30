@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.nxmc.tools;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 
 /**
  * Refresh timer helper class - calls given runnable on demand,
@@ -30,10 +31,12 @@ public class RefreshTimer
 {
    private static ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(4);
    
+   private Display display;
    private Control control;
    private Runnable callback;
    private long interval;
    private long lastRun = 0;
+   private long minimalDelay = 0;
    private boolean scheduled = false;
    private boolean refreshDisabled = false;
    private boolean updateMissed = false;
@@ -49,13 +52,28 @@ public class RefreshTimer
    {
       this.interval = interval;
       this.control = control;
+      this.display = control.getDisplay();
       this.callback = callback;
    }
    
    /**
-    * Execute runnable if possible. If last execution was later than current time minus
-    * interval, runnable execution will be delayed. Multiple delayed execution requests will
-    * be reduced into one.
+    * Create new refresh timer
+    * 
+    * @param interval minimal interval between executions (in milliseconds)
+    * @param display managing display
+    * @param callback callback to run
+    */
+   public RefreshTimer(int interval, Display display, Runnable callback)
+   {
+      this.interval = interval;
+      this.control = null;
+      this.display = display;
+      this.callback = callback;
+   }
+
+   /**
+    * Execute runnable if possible. If last execution was later than current time minus interval, runnable execution will be
+    * delayed. Multiple delayed execution requests will be reduced into one.
     */
    public synchronized void execute()
    {
@@ -64,23 +82,23 @@ public class RefreshTimer
          updateMissed = true;
          return;
       }
-      
+
       long curr = System.currentTimeMillis();
-      if ((interval <= 0) || (curr - lastRun >= interval))
+      if (((interval <= 0) || (curr - lastRun >= interval)) && (minimalDelay == 0))
       {
          lastRun = curr;
-         control.getDisplay().asyncExec(new Runnable() {
+         display.asyncExec(new Runnable() {
             @Override
             public void run()
             {
-               if (!control.isDisposed())
+               if ((control == null) || !control.isDisposed())
                   callback.run();
             }
          });
       }
       else if (!scheduled)
       {
-         final int delay = (int)(interval - (curr - lastRun));
+         final int delay = (int)Math.max(interval - (curr - lastRun), minimalDelay);
          scheduled = true;
          executor.schedule(new Runnable() {
             @Override
@@ -91,13 +109,13 @@ public class RefreshTimer
                   updateMissed = true;
                   return;
                }
-               
-               control.getDisplay().asyncExec(new Runnable() {
+
+               display.asyncExec(new Runnable() {
                   @Override
                   public void run()
                   {
                      onTimer();
-                     if (!control.isDisposed())
+                     if ((control == null) || !control.isDisposed())
                         callback.run();
                   }
                });
@@ -105,7 +123,7 @@ public class RefreshTimer
          }, delay, TimeUnit.MILLISECONDS);
       }
    }
-   
+
    /**
     * Update state after scheduled runnable finishes
     */
@@ -114,7 +132,7 @@ public class RefreshTimer
       lastRun = System.currentTimeMillis();
       scheduled = false;
    }
-   
+
    /**
     * Disables refresh 
     */
@@ -131,5 +149,15 @@ public class RefreshTimer
       refreshDisabled = false;
       if (updateMissed)
          execute();
+   }
+
+   /**
+    * Set minimal delay in milliseconds. If greater than 0, call to execute() will execute runnable after at least given number of milliseconds.
+    *
+    * @param minimalDelay minimal delay in milliseconds
+    */
+   public void setMinimalDelay(long minimalDelay)
+   {
+      this.minimalDelay = minimalDelay;
    }
 }

@@ -27,6 +27,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.events.AlarmHandle;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.interfaces.ZoneMember;
 import org.netxms.client.users.AbstractUserObject;

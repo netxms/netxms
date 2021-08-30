@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.netxms.client.NXCSession;
+import org.netxms.client.events.AlarmHandle;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.interfaces.ZoneMember;
 import org.netxms.nxmc.Registry;
@@ -98,4 +99,13 @@ public class AlarmComparator extends ViewerComparator
 		int dir = ((TreeViewer)viewer).getTree().getSortDirection();
 		return (dir == SWT.UP) ? rc : -rc;
 	}
+
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#isSorterProperty(java.lang.Object, java.lang.String)
+    */
+   @Override
+   public boolean isSorterProperty(Object element, String property)
+   {
+      return true;
+   }
 }
