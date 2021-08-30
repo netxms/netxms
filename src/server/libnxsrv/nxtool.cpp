@@ -29,8 +29,7 @@
  */
 static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
-   if (tag != NULL)
-      _tprintf(_T("<%s> "), tag);
+   _tprintf(_T("[%-19s] "), (tag != nullptr) ? tag : _T(""));
    _vtprintf(format, args);
    _fputtc(_T('\n'), stdout);
 }
@@ -45,7 +44,6 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
 {
    InitNetXMSProcess(true);
-   nxlog_set_debug_writer(DebugWriter);
 
    TCHAR keyFile[MAX_PATH];
    GetNetXMSDirectory(nxDirData, keyFile);
@@ -87,7 +85,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
          case 'h':   // Display help and exit
             _tprintf(_T("%s\n")
                      _T("Common options:\n")
-                     _T("   -D level     : Set debug level (default is 0).\n")
+                     _T("   -D level     : Set debug level (0..9 or off, default is off).\n")
 #ifdef _WITH_ENCRYPTION
                      _T("   -e policy    : Set encryption policy. Possible values are:\n")
                      _T("                    0 = Encryption disabled;\n")
@@ -118,7 +116,16 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
             start = false;
             break;
          case 'D':   // debug level
-            nxlog_set_debug_level((int)_tcstol(_toptarg, nullptr, 0));
+            if (!_tcsicmp(_toptarg, _T("off")))
+            {
+               nxlog_set_debug_writer(nullptr);
+               nxlog_set_debug_level(0);
+            }
+            else
+            {
+               nxlog_set_debug_writer(DebugWriter);
+               nxlog_set_debug_level((int)_tcstol(_toptarg, nullptr, 0));
+            }
             break;
          case 'p':   // Agent's port number
          case 'O':   // Proxy agent's port number
@@ -176,7 +183,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
             if ((iEncryptionPolicy < 0) ||
                 (iEncryptionPolicy > 3))
             {
-               _tprintf(_T("Invalid encryption policy %d\n"), iEncryptionPolicy);
+               _tprintf(_T("ERROR: Invalid encryption policy %d\n"), iEncryptionPolicy);
                start = false;
             }
             break;
