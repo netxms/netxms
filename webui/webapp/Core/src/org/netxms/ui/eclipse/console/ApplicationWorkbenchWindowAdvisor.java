@@ -141,7 +141,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       for(final IWorkbenchWindow w : PlatformUI.getWorkbench().getWorkbenchWindows())
          new PerspectiveSwitcher(w);
 
-      if (session.getClientConfigurationHintAsBoolean("ShowPerspectiveSelectorOnStartup", false))
+      if (session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.ShowOnStartup", false))
       {
          SelectPerspectiveDialog dlg = new SelectPerspectiveDialog(null);
          dlg.open();
@@ -149,10 +149,10 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       }
    }
 
-	/**
-	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowOpen()
-	 */
-	@Override
+   /**
+    * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowOpen()
+    */
+   @Override
    public void postWindowOpen()
    {
       ((WorkbenchWindow)getWindowConfigurer().getWindow()).getCoolBarManager2().setLockLayout(true);
