@@ -46,7 +46,6 @@ public class PerspectiveSwitcher extends Composite
    private IWorkbenchWindow window;
    private Label currentPerspective;
    private ToolBar toolbar;
-   private List<String> allowedPerspectives;
 
    /**
     * @param window
@@ -69,22 +68,6 @@ public class PerspectiveSwitcher extends Composite
       if (p != null)
          currentPerspective.setText(p.getLabel());
 
-      String v = ConsoleSharedData.getSession().getClientConfigurationHint("AllowedPerspectives");
-      if ((v != null) && !v.isEmpty())
-      {
-         String[] parts = v.split(",");
-         allowedPerspectives = new ArrayList<String>(parts.length);
-         for(String s : parts)
-         {
-            if (!s.isBlank())
-               allowedPerspectives.add(s.trim().toLowerCase());
-         }
-      }
-      else
-      {
-         allowedPerspectives = null;
-      }
-
       toolbar = new ToolBar(this, SWT.FLAT);
       buildToolbar();
 
@@ -97,25 +80,6 @@ public class PerspectiveSwitcher extends Composite
          @Override
          public void perspectiveActivated(IWorkbenchPage page, IPerspectiveDescriptor perspective)
          {
-            if ((allowedPerspectives == null) || allowedPerspectives.contains(perspective.getLabel().toLowerCase()))
-            {
-               boolean found = false;
-               for(ToolItem i : toolbar.getItems())
-               {
-                  if (perspective.getId().equals(i.getData("perspective")))
-                  {
-                     found = true;
-                     break;
-                  }
-               }
-               if (!found)
-               {
-                  for(ToolItem i : toolbar.getItems())
-                     i.dispose();
-                  buildToolbar();
-               }
-            }
-
             currentPerspective.setText(perspective.getLabel());
             window.getShell().layout(true, true);
          }
@@ -127,23 +91,8 @@ public class PerspectiveSwitcher extends Composite
     */
    private void buildToolbar()
    {
-      IPerspectiveDescriptor[] perspectives = PlatformUI.getWorkbench().getPerspectiveRegistry().getPerspectives();
-      if (allowedPerspectives != null)
+      for(final IPerspectiveDescriptor p : getVisiblePerspectives())
       {
-         Arrays.sort(perspectives, new Comparator<IPerspectiveDescriptor>() {
-            @Override
-            public int compare(IPerspectiveDescriptor p1, IPerspectiveDescriptor p2)
-            {
-               return allowedPerspectives.indexOf(p1.getLabel().toLowerCase()) - allowedPerspectives.indexOf(p2.getLabel().toLowerCase());
-            }
-         });
-      }
-
-      for(final IPerspectiveDescriptor p : perspectives)
-      {
-         if ((allowedPerspectives != null) && !allowedPerspectives.contains(p.getLabel().toLowerCase()))
-            continue;
-
          ToolItem item = new ToolItem(toolbar, SWT.PUSH);
          item.setImage(p.getImageDescriptor().createImage());
          item.setText(p.getLabel());
@@ -157,5 +106,77 @@ public class PerspectiveSwitcher extends Composite
             }
          });
       }
+   }
+
+   /**
+    * Get list of perspectives that should be visible, in correct order for display.
+    *
+    * @return list of perspectives that should be visible
+    */
+   public static List<IPerspectiveDescriptor> getVisiblePerspectives()
+   {
+      List<IPerspectiveDescriptor> visiblePerspectives = new ArrayList<IPerspectiveDescriptor>();
+
+      List<String> enabledPerspectives;
+      String v = ConsoleSharedData.getSession().getClientConfigurationHint("PerspectiveSwitcher.EnabledPerspectives");
+      if ((v != null) && !v.isEmpty())
+      {
+         String[] parts = v.split(",");
+         enabledPerspectives = new ArrayList<String>(parts.length);
+         for(String s : parts)
+         {
+            if (!s.isBlank())
+               enabledPerspectives.add(s.trim().toLowerCase());
+         }
+      }
+      else
+      {
+         enabledPerspectives = null;
+      }
+
+      List<String> disabledPerspectives;
+      v = ConsoleSharedData.getSession().getClientConfigurationHint("PerspectiveSwitcher.DisabledPerspectives");
+      if ((v != null) && !v.isEmpty())
+      {
+         String[] parts = v.split(",");
+         disabledPerspectives = new ArrayList<String>(parts.length);
+         for(String s : parts)
+         {
+            if (!s.isBlank())
+               disabledPerspectives.add(s.trim().toLowerCase());
+         }
+      }
+      else
+      {
+         disabledPerspectives = null;
+      }
+
+      IPerspectiveDescriptor[] perspectives = PlatformUI.getWorkbench().getPerspectiveRegistry().getPerspectives();
+      if (enabledPerspectives != null)
+      {
+         Arrays.sort(perspectives, new Comparator<IPerspectiveDescriptor>() {
+            @Override
+            public int compare(IPerspectiveDescriptor p1, IPerspectiveDescriptor p2)
+            {
+               return enabledPerspectives.indexOf(p1.getLabel().toLowerCase()) - enabledPerspectives.indexOf(p2.getLabel().toLowerCase());
+            }
+         });
+      }
+
+      String customizationId = ConsoleSharedData.getSession().getClientConfigurationHint("CustomizationId");
+
+      for(final IPerspectiveDescriptor p : perspectives)
+      {
+         if ((enabledPerspectives != null) && !enabledPerspectives.contains(p.getLabel().toLowerCase()))
+            continue;
+         if ((disabledPerspectives != null) && disabledPerspectives.contains(p.getLabel().toLowerCase()))
+            continue;
+         if (p.getId().startsWith("com.radensolutions.netxms.ui.perspective.custom.") &&
+               ((customizationId == null) || !p.getId().startsWith("com.radensolutions.netxms.ui.perspective.custom." + customizationId + ".")))
+            continue;
+         visiblePerspectives.add(p);
+      }
+
+      return visiblePerspectives;
    }
 }

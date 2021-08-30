@@ -18,10 +18,6 @@
  */
 package org.netxms.ui.eclipse.console.dialogs;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
@@ -34,8 +30,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IPerspectiveDescriptor;
-import org.eclipse.ui.PlatformUI;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.PerspectiveSwitcher;
 
 /**
  * Perspective selection dialog
@@ -76,40 +71,8 @@ public class SelectPerspectiveDialog extends Dialog
       layout.marginWidth = 30;
       dialogArea.setLayout(layout);
 
-      List<String> allowedPerspectives;
-      String v = ConsoleSharedData.getSession().getClientConfigurationHint("AllowedPerspectives");
-      if ((v != null) && !v.isEmpty())
+      for(final IPerspectiveDescriptor p : PerspectiveSwitcher.getVisiblePerspectives())
       {
-         String[] parts = v.split(",");
-         allowedPerspectives = new ArrayList<String>(parts.length);
-         for(String s : parts)
-         {
-            if (!s.isBlank())
-               allowedPerspectives.add(s.trim().toLowerCase());
-         }
-      }
-      else
-      {
-         allowedPerspectives = null;
-      }
-
-      IPerspectiveDescriptor[] perspectives = PlatformUI.getWorkbench().getPerspectiveRegistry().getPerspectives();
-      if (allowedPerspectives != null)
-      {
-         Arrays.sort(perspectives, new Comparator<IPerspectiveDescriptor>() {
-            @Override
-            public int compare(IPerspectiveDescriptor p1, IPerspectiveDescriptor p2)
-            {
-               return allowedPerspectives.indexOf(p1.getLabel().toLowerCase()) - allowedPerspectives.indexOf(p2.getLabel().toLowerCase());
-            }
-         });
-      }
-
-      for(final IPerspectiveDescriptor p : perspectives)
-      {
-         if ((allowedPerspectives != null) && !allowedPerspectives.contains(p.getLabel().toLowerCase()))
-            continue;
-
          Button button = new Button(dialogArea, SWT.PUSH | SWT.FLAT);
          button.setImage(p.getImageDescriptor().createImage());
          button.setText(p.getLabel());

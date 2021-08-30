@@ -121,7 +121,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
    }
 
    /**
-    * Overridden to maximize the window when shown.
+    * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowCreate()
     */
    @Override
    public void postWindowCreate()
@@ -178,8 +178,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 
       for(final IWorkbenchWindow w : PlatformUI.getWorkbench().getWorkbenchWindows())
          new PerspectiveSwitcher(w);
-      
-      if (session.getClientConfigurationHintAsBoolean("ShowPerspectiveSelectorOnStartup", false))
+
+      if (session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.ShowOnStartup", false))
       {
          SelectPerspectiveDialog dlg = new SelectPerspectiveDialog(null);
          dlg.open();
@@ -190,12 +190,12 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
    /**
     * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#postWindowOpen()
     */
-	@Override
-	public void postWindowOpen()
-	{
-		super.postWindowOpen();
-		
-		boolean exitAfterOpen = false;
+   @Override
+   public void postWindowOpen()
+   {
+      super.postWindowOpen();
+
+      boolean exitAfterOpen = false;
       for(String s : Platform.getCommandLineArgs())
       {
          if (s.equals("-fullscreen")) //$NON-NLS-1$
