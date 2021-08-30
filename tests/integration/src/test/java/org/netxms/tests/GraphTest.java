@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package org.netxms.tests;
 
 import java.util.List;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.GraphDefinition;
 
 /**
  * Graph configuration test
@@ -32,10 +32,10 @@ public class GraphTest extends AbstractSessionTest
 	{
 		final NXCSession session = connect();
 		
-		List<GraphSettings> graphs = session.getPredefinedGraphs(false);
-		System.out.println(graphs.size() + " graphs retrieved");
-		for(GraphSettings gs : graphs)
-			System.out.println(">>> " + gs.getName());
+      List<GraphDefinition> graphs = session.getPredefinedGraphs(false);
+      System.out.println(graphs.size() + " predefined graphs retrieved");
+      for(GraphDefinition g : graphs)
+         System.out.println(">>> " + g.getName());
 		
 		session.disconnect();
 	}
