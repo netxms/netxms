@@ -289,7 +289,7 @@ public class AlarmList extends CompositeWithMessageBar
       else
          needInitialRefresh = true;
 
-      // Do not allow less than 500 milliseconds interval between refresh and set minimal delay to 500 milliseconds as well
+      // Do not allow less than 500 milliseconds interval between refresh and set minimal delay to 100 milliseconds
       refreshTimer = new RefreshTimer(Math.max(session.getMinViewRefreshInterval(), 500), alarmViewer.getControl(), new Runnable() {
          @Override
          public void run()
@@ -297,7 +297,7 @@ public class AlarmList extends CompositeWithMessageBar
             startFilterAndLimit();
          }
       });
-      refreshTimer.setMinimalDelay(500);
+      refreshTimer.setMinimalDelay(100);
 
       // Add client library listener
       clientListener = new SessionListener() {
@@ -346,6 +346,7 @@ public class AlarmList extends CompositeWithMessageBar
                         if (a != null)
                         {
                            a.setResolved(d.getUserId(), d.getChangeTime());
+                           updateList.add(a.getId());
                            changed = true;
                         }
                      }
@@ -621,7 +622,7 @@ public class AlarmList extends CompositeWithMessageBar
 		actionShowObjectDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectDetails"); //$NON-NLS-1$
 		
 		actionExportToCsv = new ExportToCsvAction(viewPart, alarmViewer, true);
-		
+
 		//time based sticky acknowledgement	
 		timeAcknowledgeOther = new Action("Other...", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
          @Override
@@ -1004,7 +1005,7 @@ public class AlarmList extends CompositeWithMessageBar
       final List<Long> updatedAlarms = new ArrayList<Long>(updateList.size());
       updatedAlarms.addAll(updateList);
       updateList.clear();
-      
+
       alarmViewer.getControl().getDisplay().asyncExec(new Runnable() {
          @Override
          public void run()
@@ -1037,7 +1038,7 @@ public class AlarmList extends CompositeWithMessageBar
                alarmViewer.getControl().setRedraw(false);
                TreeItem topItem = alarmViewer.getTree().getTopItem();
                alarmViewer.refresh();
-               if (topItem != null)
+               if ((topItem != null) && !topItem.isDisposed())
                   alarmViewer.getTree().setTopItem(topItem);
                alarmViewer.getControl().setRedraw(true);
             }

@@ -22,8 +22,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -131,6 +133,7 @@ public class AlarmList extends CompositeWithMessageBar
    private FilterText filterText;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
    private List<Alarm> newAlarmList = new ArrayList<Alarm>();
+   private Set<Long> updateList = new HashSet<Long>();
    private Map<Long, AlarmHandle> displayList = new HashMap<Long, AlarmHandle>();
    private VisibilityValidator visibilityValidator;
    private boolean needInitialRefresh = false;
@@ -250,19 +253,23 @@ public class AlarmList extends CompositeWithMessageBar
       else
          needInitialRefresh = true;
 
-      refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), alarmViewer.getControl(), new Runnable() {
+      // Do not allow less than 500 milliseconds interval between refresh and set minimal delay to 100 milliseconds
+      refreshTimer = new RefreshTimer(Math.max(session.getMinViewRefreshInterval(), 500), alarmViewer.getControl(), new Runnable() {
          @Override
          public void run()
          {
             startFilterAndLimit();
          }
       });
+      refreshTimer.setMinimalDelay(100);
 
       // Add client library listener
       clientListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {
+            Alarm oldAlarm;
+            boolean changed;
             switch(n.getCode())
             {
                case SessionNotification.NEW_ALARM:
@@ -271,23 +278,29 @@ public class AlarmList extends CompositeWithMessageBar
                      newAlarmList.add((Alarm)n.getObject()); // Add to this list only new alarms to be able to notify with sound
                   }
                case SessionNotification.ALARM_CHANGED:
-                  Alarm oldAlarm;
                   synchronized(alarmList)
                   {
                      oldAlarm = alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
+                     updateList.add(((Alarm)n.getObject()).getId());
                   }
                   if (alarmFilter.filter((Alarm)n.getObject()) || ((oldAlarm != null) && alarmFilter.filter(oldAlarm)))
+                  {
                      refreshTimer.execute();
+                  }
                   break;
                case SessionNotification.ALARM_TERMINATED:
                case SessionNotification.ALARM_DELETED:
                   synchronized(alarmList)
                   {
-                     alarmList.remove(((Alarm)n.getObject()).getId());
+                     oldAlarm = alarmList.remove(((Alarm)n.getObject()).getId());
                   }
-                  refreshTimer.execute();
+                  if ((oldAlarm != null) && alarmFilter.filter(oldAlarm))
+                  {
+                     refreshTimer.execute();
+                  }
                   break;
                case SessionNotification.MULTIPLE_ALARMS_RESOLVED:
+                  changed = false;
                   synchronized(alarmList)
                   {
                      BulkAlarmStateChangeData d = (BulkAlarmStateChangeData)n.getObject();
@@ -297,20 +310,26 @@ public class AlarmList extends CompositeWithMessageBar
                         if (a != null)
                         {
                            a.setResolved(d.getUserId(), d.getChangeTime());
+                           updateList.add(a.getId());
+                           changed = true;
                         }
                      }
                   }
-                  refreshTimer.execute();
+                  if (changed)
+                     refreshTimer.execute();
                   break;
                case SessionNotification.MULTIPLE_ALARMS_TERMINATED:
+                  changed = false;
                   synchronized(alarmList)
                   {
                      for(Long id : ((BulkAlarmStateChangeData)n.getObject()).getAlarms())
                      {
-                        alarmList.remove(id);
+                        if (alarmList.remove(id) != null)
+                           changed = true;
                      }
                   }
-                  refreshTimer.execute();
+                  if (changed)
+                     refreshTimer.execute();
                   break;
                default:
                   break;
@@ -537,7 +556,7 @@ public class AlarmList extends CompositeWithMessageBar
 		actionShowObjectDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectDetails"); //$NON-NLS-1$
 		
 		actionExportToCsv = new ExportToCsvAction(viewPart, alarmViewer, true);
-		
+
 		//time based sticky acknowledgement	
 		timeAcknowledgeOther = new Action("Other...", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
          @Override
@@ -917,6 +936,10 @@ public class AlarmList extends CompositeWithMessageBar
          filteredAlarms = selectedAlarms;
       }
 
+      final List<Long> updatedAlarms = new ArrayList<Long>(updateList.size());
+      updatedAlarms.addAll(updateList);
+      updateList.clear();
+
       alarmViewer.getControl().getDisplay().asyncExec(new Runnable() {
          @Override
          public void run()
@@ -925,19 +948,37 @@ public class AlarmList extends CompositeWithMessageBar
                return;
 
             // Remove from display alarms that are no longer visible
+            int initialSize = displayList.size();
             displayList.entrySet().removeIf(e -> (!filteredAlarms.containsKey(e.getKey())));
+            boolean structuralChanges = (displayList.size() != initialSize);
 
             // Add or update alarms in display list
             for(Alarm a : filteredAlarms.values())
             {
                AlarmHandle h = displayList.get(a.getId());
                if (h != null)
+               {
                   h.alarm = a;
+               }
                else
+               {
                   displayList.put(a.getId(), new AlarmHandle(a));
+                  structuralChanges = true;
+               }
             }
 
-            alarmViewer.refresh();
+            if (structuralChanges)
+            {
+               alarmViewer.refresh();
+            }
+            else
+            {
+               AlarmHandle[] updatedElements = new AlarmHandle[updatedAlarms.size()];
+               for(int i = 0; i < updatedAlarms.size(); i++)
+                  updatedElements[i] = displayList.get(updatedAlarms.get(i));
+               alarmViewer.update(updatedElements, null);
+            }
+
             if ((session.getAlarmListDisplayLimit() > 0) && (selectedAlarms.size() >= session.getAlarmListDisplayLimit()))
             {
                showMessage(MessageBar.INFORMATION, String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarms.size()));
