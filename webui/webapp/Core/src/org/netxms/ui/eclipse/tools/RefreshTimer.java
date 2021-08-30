@@ -36,6 +36,7 @@ public class RefreshTimer
    private Runnable callback;
    private long interval;
    private long lastRun = 0;
+   private long minimalDelay = 0;
    private boolean scheduled = false;
    private boolean refreshDisabled = false;
    private boolean updateMissed = false;
@@ -81,9 +82,9 @@ public class RefreshTimer
          updateMissed = true;
          return;
       }
-      
+
       long curr = System.currentTimeMillis();
-      if ((interval <= 0) || (curr - lastRun >= interval))
+      if (((interval <= 0) || (curr - lastRun >= interval)) && (minimalDelay == 0))
       {
          lastRun = curr;
          display.asyncExec(new Runnable() {
@@ -97,7 +98,7 @@ public class RefreshTimer
       }
       else if (!scheduled)
       {
-         final int delay = (int)(interval - (curr - lastRun));
+         final int delay = (int)Math.max(interval - (curr - lastRun), minimalDelay);
          scheduled = true;
          executor.schedule(new Runnable() {
             @Override
@@ -108,7 +109,7 @@ public class RefreshTimer
                   updateMissed = true;
                   return;
                }
-               
+
                display.asyncExec(new Runnable() {
                   @Override
                   public void run()
@@ -122,7 +123,7 @@ public class RefreshTimer
          }, delay, TimeUnit.MILLISECONDS);
       }
    }
-   
+
    /**
     * Update state after scheduled runnable finishes
     */
@@ -131,7 +132,7 @@ public class RefreshTimer
       lastRun = System.currentTimeMillis();
       scheduled = false;
    }
-   
+
    /**
     * Disables refresh 
     */
@@ -148,5 +149,15 @@ public class RefreshTimer
       refreshDisabled = false;
       if (updateMissed)
          execute();
+   }
+
+   /**
+    * Set minimal delay in milliseconds. If greater than 0, call to execute() will execute runnable after at least given number of milliseconds.
+    *
+    * @param minimalDelay minimal delay in milliseconds
+    */
+   public void setMinimalDelay(long minimalDelay)
+   {
+      this.minimalDelay = minimalDelay;
    }
 }
