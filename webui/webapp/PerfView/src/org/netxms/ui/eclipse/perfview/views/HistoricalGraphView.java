@@ -745,14 +745,6 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
             updateChart();
          }
       });
-      
-      actionSaveAsImage = new Action("Save as image", SharedIcons.SAVE_AS_IMAGE) {
-         @Override
-         public void run()
-         {
-            chart.saveAsImage();
-         }
-      };
    }
    
    /**
