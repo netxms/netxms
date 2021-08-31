@@ -20,11 +20,20 @@ package org.netxms.ui.eclipse.console;
 
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
+import java.util.HashSet;
+import java.util.Set;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IPerspectiveDescriptor;
+import org.eclipse.ui.IWindowListener;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
@@ -32,27 +41,30 @@ import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.eclipse.ui.model.ContributionComparator;
 import org.eclipse.ui.model.IContributionService;
+import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.ui.eclipse.console.dialogs.SelectPerspectiveDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.PerspectiveSwitcher;
 
 /**
  * Workbench advisor for NetXMS console application
  */
 public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.application.WorkbenchAdvisor#createWorkbenchWindowAdvisor(org.eclipse.ui.application.IWorkbenchWindowConfigurer)
-	 */
+   /**
+    * @see org.eclipse.ui.application.WorkbenchAdvisor#createWorkbenchWindowAdvisor(org.eclipse.ui.application.IWorkbenchWindowConfigurer)
+    */
 	public WorkbenchWindowAdvisor createWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
 	{
 		return new ApplicationWorkbenchWindowAdvisor(configurer);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.application.WorkbenchAdvisor#getInitialWindowPerspectiveId()
-	 */
+   /**
+    * @see org.eclipse.ui.application.WorkbenchAdvisor#getInitialWindowPerspectiveId()
+    */
 	public String getInitialWindowPerspectiveId()
 	{
 		String p = BrandingManager.getInstance().getDefaultPerspective();
@@ -61,9 +73,9 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 		return Activator.getDefault().getPreferenceStore().getString("INITIAL_PERSPECTIVE"); //$NON-NLS-1$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.application.WorkbenchAdvisor#initialize(org.eclipse.ui.application.IWorkbenchConfigurer)
-	 */
+   /**
+    * @see org.eclipse.ui.application.WorkbenchAdvisor#initialize(org.eclipse.ui.application.IWorkbenchConfigurer)
+    */
 	@Override
 	public void initialize(IWorkbenchConfigurer configurer)
 	{
@@ -106,11 +118,66 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
          System.clearProperty("https.proxyPort"); //$NON-NLS-1$
          System.clearProperty("https.noProxyHosts"); //$NON-NLS-1$
 		}
+
+      PlatformUI.getWorkbench().addWindowListener(new IWindowListener() {
+         private Set<IWorkbenchWindow> windows = new HashSet<>();
+
+         @Override
+         public void windowOpened(IWorkbenchWindow window)
+         {
+            NXCSession session = ConsoleSharedData.getSession();
+            if (session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", false) && session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.ShowOnStartup", false))
+            {
+               new UIJob("Select perspective") {
+                  @Override
+                  public IStatus runInUIThread(IProgressMonitor monitor)
+                  {
+                     IPerspectiveDescriptor currPerspective = window.getActivePage().getPerspective();
+                     IPerspectiveDescriptor p = PlatformUI.getWorkbench().getPerspectiveRegistry().findPerspectiveWithId("org.netxms.ui.eclipse.console.SwitcherPerspective");
+                     if (p != null)
+                        window.getActivePage().setPerspective(p);
+                     SelectPerspectiveDialog dlg = new SelectPerspectiveDialog(null);
+                     if (dlg.open() == Window.OK)
+                     {
+                        window.getActivePage().setPerspective(dlg.getSelectedPerspective());
+                     }
+                     else
+                     {
+                        window.getActivePage().setPerspective(currPerspective);
+                     }
+                     return Status.OK_STATUS;
+                  }
+               }.schedule();
+            }
+         }
+
+         @Override
+         public void windowDeactivated(IWorkbenchWindow window)
+         {
+         }
+
+         @Override
+         public void windowClosed(IWorkbenchWindow window)
+         {
+            windows.remove(window);
+         }
+
+         @Override
+         public void windowActivated(IWorkbenchWindow window)
+         {
+            NXCSession session = ConsoleSharedData.getSession();
+            if (!windows.contains(window) && session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", false))
+            {
+               new PerspectiveSwitcher(window);
+               windows.add(window);
+            }
+         }
+      });
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.application.WorkbenchAdvisor#getComparatorFor(java.lang.String)
-	 */
+   /**
+    * @see org.eclipse.ui.application.WorkbenchAdvisor#getComparatorFor(java.lang.String)
+    */
 	@Override
 	public ContributionComparator getComparatorFor(String contributionType)
 	{
@@ -119,9 +186,9 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 		return super.getComparatorFor(contributionType);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.application.WorkbenchAdvisor#postStartup()
-	 */
+   /**
+    * @see org.eclipse.ui.application.WorkbenchAdvisor#postStartup()
+    */
 	@Override
 	public void postStartup()
 	{
@@ -135,7 +202,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			}
 		});
 		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
 		session.addListener(new SessionListener() {
 			@Override
 			public void notificationHandler(final SessionNotification n)

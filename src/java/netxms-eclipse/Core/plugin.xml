@@ -27,6 +27,12 @@
             class="org.netxms.ui.eclipse.console.perspectives.ManagementPerspective"
             id="org.netxms.ui.eclipse.console.ManagementPerspective">
       </perspective>
+      <perspective
+            class="org.netxms.ui.eclipse.console.perspectives.SwitcherPerspective"
+            fixed="true"
+            id="org.netxms.ui.eclipse.console.SwitcherPerspective"
+            name="Switcher">
+      </perspective>
    </extension>
    
    <extension

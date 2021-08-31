@@ -27,13 +27,9 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IPerspectiveDescriptor;
-import org.eclipse.ui.IPerspectiveListener;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
@@ -47,11 +43,9 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ObjectFilter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
-import org.netxms.ui.eclipse.console.dialogs.SelectPerspectiveDialog;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.widgets.PerspectiveSwitcher;
 
 /**
  * Workbench window advisor
@@ -59,8 +53,6 @@ import org.netxms.ui.eclipse.widgets.PerspectiveSwitcher;
 @SuppressWarnings("restriction")
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 {
-   private IPerspectiveDescriptor selectedPerspective = null;
-
    /**
     * @param configurer
     */
@@ -87,7 +79,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       RegionalSettings.updateFromPreferences();
       
       IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-      configurer.setShowPerspectiveBar(false);
+      configurer.setShowPerspectiveBar(!ConsoleSharedData.getSession().getClientConfigurationHintAsBoolean("PerspectiveSwitcher.Enable", false));
       configurer.setShowStatusLine(false);
       configurer.setTitle(Messages.get().ApplicationWorkbenchWindowAdvisor_AppTitle);
       configurer.setShellStyle(SWT.NO_TRIM);
@@ -137,16 +129,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		Menu menuBar = shell.getMenuBar();
 		if (menuBar != null)
 		   menuBar.setData(RWT.CUSTOM_VARIANT, "menuBar"); //$NON-NLS-1$
-
-      for(final IWorkbenchWindow w : PlatformUI.getWorkbench().getWorkbenchWindows())
-         new PerspectiveSwitcher(w);
-
-      if (session.getClientConfigurationHintAsBoolean("PerspectiveSwitcher.ShowOnStartup", false))
-      {
-         SelectPerspectiveDialog dlg = new SelectPerspectiveDialog(null);
-         dlg.open();
-         selectedPerspective = dlg.getSelectedPerspective();
-      }
    }
 
    /**
@@ -168,34 +150,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
          if (dashboardId != null)
          {
             showDashboard(dashboardId, true);
-         }
-      }
-
-      if (selectedPerspective != null)
-      {
-         // Eclipse will switch perspective to last known even if we call setPerspective here.
-         // To circumvent this, we add perspective listener that detects first perspective switch
-         // and switch back to selected perspective
-         Activator.logInfo("Selecting perspective " + selectedPerspective.getLabel());
-         final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-         if (window.getActivePage().getPerspective() != selectedPerspective)
-         {
-            window.getActivePage().setPerspective(selectedPerspective);
-            window.addPerspectiveListener(new IPerspectiveListener() {
-               @Override
-               public void perspectiveChanged(IWorkbenchPage page, IPerspectiveDescriptor perspective, String changeId)
-               {
-               }
-
-               @Override
-               public void perspectiveActivated(IWorkbenchPage page, IPerspectiveDescriptor perspective)
-               {
-                  window.removePerspectiveListener(this);
-                  window.getActivePage().closePerspective(perspective, false, false);
-                  window.getActivePage().setPerspective(selectedPerspective);
-                  window.getActivePage().resetPerspective();
-               }
-            });
          }
       }
 
