@@ -240,6 +240,65 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
 }
 
 /**
+ * Handler for service control actions
+ */
+LONG H_ServiceControl(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
+{
+   if (args->isEmpty())
+      return ERR_BAD_ARGUMENTS;
+
+   SC_HANDLE hManager = OpenSCManager(nullptr, nullptr, GENERIC_READ);
+   if (hManager == nullptr)
+      return ERR_INTERNAL_ERROR;
+
+   LONG rc;
+   SC_HANDLE hService = OpenService(hManager, args->get(0), SERVICE_START | SERVICE_STOP);
+   if (hService != nullptr)
+   {
+      SERVICE_STATUS ss;
+      switch (*data)
+      {
+         case 's':
+            if (StartService(hService, 0, nullptr))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: service \"%s\" started"), args->get(0));
+               rc = ERR_SUCCESS;
+            }
+            else
+            {
+               TCHAR buffer[1024];
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: cannot start service \"%s\" (%s)"), args->get(0), GetSystemErrorText(GetLastError(), buffer, 1024));
+               rc = ERR_INTERNAL_ERROR;
+            }
+            break;
+         case 'S':
+            if (ControlService(hService, SERVICE_CONTROL_STOP, &ss))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: service \"%s\" stopped"), args->get(0));
+               rc = ERR_SUCCESS;
+            }
+            else
+            {
+               TCHAR buffer[1024];
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: cannot stop service \"%s\" (%s)"), args->get(0), GetSystemErrorText(GetLastError(), buffer, 1024));
+               rc = ERR_INTERNAL_ERROR;
+            }
+            break;
+      }
+      CloseServiceHandle(hService);
+   }
+   else
+   {
+      TCHAR buffer[1024];
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("H_ServiceControl: cannot open service \"%s\" (%s)"), args->get(0), GetSystemErrorText(GetLastError(), buffer, 1024));
+      rc = ERR_INTERNAL_ERROR;
+   }
+
+   CloseServiceHandle(hManager);
+   return rc;
+}
+
+/**
  * Handler for System.ThreadCount
  */
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)

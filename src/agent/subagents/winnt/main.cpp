@@ -1,6 +1,6 @@
 /*
 ** Windows platform subagent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,6 +66,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
 LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ServiceControl(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session);
 LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session);
 LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, AbstractCommSession *session);
@@ -78,6 +79,7 @@ LONG H_SystemProductInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
 LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemVersionInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_TerminateProcess(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_Uptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowsFirewallCurrentProfile(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -458,8 +460,11 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
  */
 static NETXMS_SUBAGENT_ACTION s_actions[] =
 {
-	{ _T("System.Restart"), H_ActionShutdown, _T("R"), _T("Restart system") },
-	{ _T("System.Shutdown"), H_ActionShutdown, _T("S"), _T("Shutdown system") },
+	{ _T("Process.Terminate"), H_TerminateProcess, nullptr, _T("Terminate process") },
+   { _T("Service.Start"), H_ServiceControl, _T("s"), _T("Start service") },
+   { _T("Service.Stop"), H_ServiceControl, _T("S"), _T("Stop service") },
+   { _T("System.Restart"), H_ActionShutdown, _T("R"), _T("Restart system") },
+   { _T("System.Shutdown"), H_ActionShutdown, _T("S"), _T("Shutdown system") },
 	{ _T("User.ChangePassword"), H_ChangeUserPassword, NULL, _T("Change password for given user") }
 };
 
