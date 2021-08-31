@@ -606,3 +606,24 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
    free(pdwProcList);
    return iResult;
 }
+
+/**
+ * Handler for Process.Terminate action
+ */
+LONG H_TerminateProcess(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
+{
+   if (args->isEmpty())
+      return ERR_BAD_ARGUMENTS;
+
+   DWORD pid = _tcstoul(args->get(0), nullptr, 0);
+   if (pid == 0)
+      return ERR_BAD_ARGUMENTS;
+
+   HANDLE hp = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+   if (hp == nullptr)
+      return ERR_INTERNAL_ERROR;
+
+   BOOL success = TerminateProcess(hp, 127);
+   CloseHandle(hp);
+   return success ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+}

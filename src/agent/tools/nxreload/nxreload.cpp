@@ -1,6 +1,6 @@
 /* 
 ** nxreload - helper tool for restarting session agents
-** Copyright (C) 2006-2019 Raden Solutions
+** Copyright (C) 2006-2021 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,19 +18,50 @@
 **
 **/
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <windows.h>
 #include <tchar.h>
 #include <Psapi.h>
 #include <strsafe.h>
+#include <Shlobj.h>
 
 #define MAX_PROCESSES   4096
+
+/**
+ * Log file
+ */
+static TCHAR s_logFile[MAX_PATH];
+
+/**
+ * Write debug output
+ */
+static void DebugPrintf(const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   if (s_logFile[0] != 0)
+   {
+      FILE *fp = _tfopen(s_logFile, _T("a"));
+      if (fp != nullptr)
+      {
+         va_list logArgs;
+         va_copy(logArgs, args);
+         _vftprintf(fp, format, logArgs);
+         va_end(logArgs);
+         fclose(fp);
+      }
+   }
+   _vtprintf(format, args);
+   va_end(args);
+}
 
 /**
  * Wait for reload flag and run command
  */
 static void WaitForReloadAndRun()
 {
-   _tprintf(_T("Waiting for reload flag\n"));
+   DebugPrintf(_T("Waiting for reload flag\n"));
 
    int retryCount = 3600;
    DWORD flag = 0;
@@ -42,20 +73,20 @@ static void WaitForReloadAndRun()
       if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Agent"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
       {
          DWORD size = sizeof(DWORD);
-         RegQueryValueEx(hKey, _T("ReloadFlag"), NULL, NULL, (BYTE *)&flag, &size);
+         RegQueryValueEx(hKey, _T("ReloadFlag"), nullptr, nullptr, (BYTE *)&flag, &size);
          RegCloseKey(hKey);
       }
    } while ((flag == 0) && (retryCount-- > 0));
 
-   _tprintf(_T("Reload flag set to %d\n"), flag);
+   DebugPrintf(_T("Reload flag set to %d\n"), flag);
    if (flag)
    {
       TCHAR *cmdLine = GetCommandLine();
       TCHAR *start = _tcsstr(cmdLine, _T("-- "));
-      if (start != NULL)
+      if (start != nullptr)
       {
          start += 3;
-         _tprintf(_T("Starting: %s\n"), start);
+         DebugPrintf(_T("Starting: %s\n"), start);
 
          STARTUPINFO si;
          memset(&si, 0, sizeof(STARTUPINFO));
@@ -67,11 +98,11 @@ static void WaitForReloadAndRun()
          {
             CloseHandle(pi.hThread);
             CloseHandle(pi.hProcess);
-            _tprintf(_T("Process created\n"));
+            DebugPrintf(_T("Process created\n"));
          }
          else
          {
-            _tprintf(_T("Create process failed\n"));
+            DebugPrintf(_T("Create process failed\n"));
          }
       }
    }
@@ -111,7 +142,7 @@ static int GetProcessCount()
       }
    }
    free(procList);
-   _tprintf(_T("%d running processes\n"), count);
+   DebugPrintf(_T("%d running processes\n"), count);
    return count;
 }
 
@@ -129,13 +160,13 @@ static void FinishReload()
    }
    else
    {
-      _tprintf(_T("RegCreateKeyEx failed\n"));
+      DebugPrintf(_T("RegCreateKeyEx failed\n"));
    }
 
-   _tprintf(_T("Waiting for outstanding requests\n"));
+   DebugPrintf(_T("Waiting for outstanding requests\n"));
    while(GetProcessCount() > 0)
       Sleep(2000);
-   _tprintf(_T("All reload requests completed"));
+   DebugPrintf(_T("All reload requests completed"));
 }
 
 /**
@@ -143,6 +174,18 @@ static void FinishReload()
  */
 int main(int argc, char *argv[])
 {
+   if (SHGetFolderPath(nullptr, CSIDL_LOCAL_APPDATA, nullptr, SHGFP_TYPE_CURRENT, s_logFile) == S_OK)
+   {
+      size_t l = _tcslen(s_logFile);
+      _sntprintf(&s_logFile[l], MAX_PATH - l, _T("\\nxreload.%u.log"), GetCurrentProcessId());
+   }
+   else
+   {
+      s_logFile[0] = 0;
+   }
+
+   DebugPrintf(_T("Command line: %s\n"), GetCommandLine());
+
    if ((argc > 1) && !strcmp(argv[1], "-finish"))
       FinishReload();
    else
