@@ -198,6 +198,11 @@
             id="org.netxms.ui.eclipse.console.factory.clarity"
             name="Clarity Presentation Factory">
       </factory>
+      <factory
+            class="org.netxms.ui.eclipse.console.themes.ClassicPresentationFactory"
+            id="org.netxms.ui.eclipse.console.factory.compactclassic"
+            name="Compact Classic Presentation Factory">
+      </factory>
    </extension>
    <extension
          point="org.eclipse.core.runtime.adapters">
@@ -427,6 +432,11 @@
             file="theme/clarity.css"
             id="org.netxms.webui.design.theme.clarity"
             name="Clarity Theme">
+      </theme>
+      <theme
+            file="theme/classic-compact.css"
+            id="org.netxms.webui.design.theme.compactclassic"
+            name="Compact Classic Theme">
       </theme>
    </extension>
    <extension

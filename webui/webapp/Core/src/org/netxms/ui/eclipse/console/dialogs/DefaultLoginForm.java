@@ -434,6 +434,22 @@ public class DefaultLoginForm extends Window implements LoginForm
          }
       });
       
+      item = new MenuItem(menu, SWT.PUSH);
+      item.setText("Classic (compact)");
+      item.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            switchTheme("classic-compact");
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+      
 	   Point loc = button.getLocation();
       Rectangle rect = button.getBounds();
       menu.setLocation(getShell().getDisplay().map(button.getParent(), null, new Point(loc.x - 1, loc.y + rect.height + 1)));
