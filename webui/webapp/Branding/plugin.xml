@@ -28,6 +28,12 @@
             id="org.netxms.webui.entrypoint.classic"
             path="/nxmc-classic">
       </entrypoint>
+      <entrypoint
+            applicationId="org.netxms.ui.eclipse.branding.nxmc"
+            brandingId="org.netxms.webui.design.branding.compactclassic"
+            id="org.netxms.webui.entrypoint.compactclassic"
+            path="/nxmc-classic-compact">
+      </entrypoint>
    </extension>
    <extension
          id="nxmc"
@@ -61,6 +67,16 @@
             title="NetXMS Management Console">
          <presentationFactory
                id="org.netxms.ui.eclipse.console.factory.clarity"
+               viewActionsVisible="true">
+         </presentationFactory>
+      </branding>
+      <branding
+            favicon="icons/favicon.png"
+            id="org.netxms.webui.design.branding.compactclassic"
+            themeId="org.netxms.webui.design.theme.compactclassic"
+            title="NetXMS Management Console">
+         <presentationFactory
+               id="org.netxms.ui.eclipse.console.factory.compactclassic"
                viewActionsVisible="true">
          </presentationFactory>
       </branding>
