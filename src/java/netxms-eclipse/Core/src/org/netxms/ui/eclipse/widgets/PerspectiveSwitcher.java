@@ -167,6 +167,8 @@ public class PerspectiveSwitcher extends Composite
 
       for(final IPerspectiveDescriptor p : perspectives)
       {
+         if (p.getLabel().startsWith("<") || p.getId().equals("org.netxms.ui.eclipse.console.SwitcherPerspective"))
+            continue;
          if ((enabledPerspectives != null) && !enabledPerspectives.contains(p.getLabel().toLowerCase()))
             continue;
          if ((disabledPerspectives != null) && disabledPerspectives.contains(p.getLabel().toLowerCase()))
