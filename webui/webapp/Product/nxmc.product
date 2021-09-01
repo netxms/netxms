@@ -5,7 +5,6 @@
    <plugins>
       <plugin id="com.ibm.icu"/>
       <plugin id="javax.servlet"/>
-      <plugin id="javax.xml"/>
       <plugin id="org.apache.commons.codec"/>
       <plugin id="org.apache.commons.fileupload"/>
       <plugin id="org.apache.commons.io"/>
@@ -366,7 +365,6 @@
 
    <configurations>
       <plugin id="com.ibm.icu" autoStart="true" startLevel="0" />
-      <plugin id="javax.xml" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.codec" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.fileupload" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.io" autoStart="true" startLevel="0" />
