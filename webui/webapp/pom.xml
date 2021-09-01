@@ -69,14 +69,9 @@
         </repository>
         <repository>
             <id>Babel Language Pack</id>
-            <url>http://archive.eclipse.org/technology/babel/update-site/R0.18.3/2021-03</url>
+            <url>http://archive.eclipse.org/technology/babel/update-site/R0.19.0/2021-03</url>
             <layout>p2</layout>
         </repository> 
-        <repository>
-            <id>eclipse</id>
-            <url>http://download.eclipse.org/releases/2019-06</url>
-            <layout>p2</layout>
-        </repository>
         <repository>
             <id>zest</id>
             <url>http://www.netxms.org/eclipse/zest-rap</url>
