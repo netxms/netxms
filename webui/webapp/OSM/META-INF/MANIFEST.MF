@@ -12,7 +12,7 @@ Require-Bundle: org.eclipse.rap.ui;bundle-version="3.14.0",
  org.netxms.ui.eclipse.objectbrowser;bundle-version="4.0.0",
  org.netxms.rap.draw2d.compatibility;bundle-version="1.5.3",
  org.eclipse.rap.filedialog;bundle-version="3.14.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.osm.actions,
  org.netxms.ui.eclipse.osm.dialogs,
