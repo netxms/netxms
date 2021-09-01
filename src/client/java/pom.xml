@@ -4,14 +4,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.netxms.nxmc</groupId>
   <artifactId>org.netxms.ui.eclipse.clientlibrary</artifactId>
-  <version>3.6.0</version>
+  <version>3.9.0</version>
   <packaging>eclipse-plugin</packaging>
   <build>
     <plugins>
       <plugin>
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-maven-plugin</artifactId>
-        <version>1.4.0</version>
+        <version>2.4.0</version>
         <extensions>true</extensions>
       </plugin>
     </plugins>
@@ -22,13 +22,13 @@
      <id>console</id>
      <repositories>
         <repository>
-            <id>eclipse-4.17</id>
-            <url>http://download.eclipse.org/eclipse/updates/4.17</url>
+            <id>eclipse-2021-03-updates</id>
+            <url>http://download.eclipse.org/eclipse/updates/4.19</url>
             <layout>p2</layout>
         </repository>
         <repository>
-            <id>eclipse-2020-09</id>
-            <url>http://download.eclipse.org/releases/2020-09</url>
+            <id>eclipse-2021-03</id>
+            <url>http://download.eclipse.org/releases/2021-03</url>
             <layout>p2</layout>
         </repository> 
      </repositories>
@@ -36,14 +36,9 @@
    <profile>
      <id>web</id>
      <repositories>
-        <repository>
-            <id>eclipse</id>
-            <url>http://download.eclipse.org/releases/2020-09</url>
-            <layout>p2</layout>
-        </repository>
         <repository>  
-            <id>rap-3.14</id>
-            <url>http://download.eclipse.org/rt/rap/3.14</url>
+            <id>rap-3.16</id>
+            <url>http://download.eclipse.org/rt/rap/3.16</url>
             <layout>p2</layout>
         </repository>
         <repository>
