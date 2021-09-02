@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,12 +28,10 @@
 ItemValue::ItemValue()
 {
    m_string[0] = 0;
-   m_int32 = 0;
    m_int64 = 0;
-   m_uint32 = 0;
    m_uint64 = 0;
    m_double = 0;
-   m_timestamp = time(NULL);
+   m_timestamp = time(nullptr);
 }
 
 /**
@@ -42,12 +40,10 @@ ItemValue::ItemValue()
 ItemValue::ItemValue(const TCHAR *value, time_t timestamp)
 {
    _tcslcpy(m_string, value, MAX_DB_STRING);
-   m_int32 = _tcstol(m_string, NULL, 0);
-   m_int64 = _tcstoll(m_string, NULL, 0);
-   m_uint32 = _tcstoul(m_string, NULL, 0);
-   m_uint64 = _tcstoull(m_string, NULL, 0);
-   m_double = _tcstod(m_string, NULL);
-   m_timestamp = (timestamp == 0) ? time(NULL) : timestamp;
+   m_int64 = _tcstoll(m_string, nullptr, 0);
+   m_uint64 = _tcstoull(m_string, nullptr, 0);
+   m_double = _tcstod(m_string, nullptr);
+   m_timestamp = (timestamp == 0) ? time(nullptr) : timestamp;
 }
 
 /**
@@ -56,19 +52,10 @@ ItemValue::ItemValue(const TCHAR *value, time_t timestamp)
 ItemValue::ItemValue(const ItemValue *value)
 {
    _tcscpy(m_string, value->m_string);
-   m_int32 = value->m_int32;
    m_int64 = value->m_int64;
-   m_uint32 = value->m_uint32;
    m_uint64 = value->m_uint64;
    m_double = value->m_double;
    m_timestamp = value->m_timestamp;
-}
-
-/**
- * Destructor
- */
-ItemValue::~ItemValue()
-{
 }
 
 /**
@@ -77,9 +64,7 @@ ItemValue::~ItemValue()
 const ItemValue& ItemValue::operator=(const ItemValue &src)
 {
    memcpy(m_string, src.m_string, sizeof(TCHAR) * MAX_DB_STRING);
-   m_int32 = src.m_int32;
    m_int64 = src.m_int64;
-   m_uint32 = src.m_uint32;
    m_uint64 = src.m_uint64;
    m_double = src.m_double;
    return *this;
@@ -88,11 +73,9 @@ const ItemValue& ItemValue::operator=(const ItemValue &src)
 const ItemValue& ItemValue::operator=(const TCHAR *value)
 {
    _tcslcpy(m_string, CHECK_NULL_EX(value), MAX_DB_STRING);
-   m_int32 = _tcstol(m_string, NULL, 0);
-   m_int64 = _tcstoll(m_string, NULL, 0);
-   m_uint32 = _tcstoul(m_string, NULL, 0);
-   m_uint64 = _tcstoull(m_string, NULL, 0);
-   m_double = _tcstod(m_string, NULL);
+   m_int64 = _tcstoll(m_string, nullptr, 0);
+   m_uint64 = _tcstoull(m_string, nullptr, 0);
+   m_double = _tcstod(m_string, nullptr);
    return *this;
 }
 
@@ -100,70 +83,61 @@ const ItemValue& ItemValue::operator=(double value)
 {
    m_double = value;
    _sntprintf(m_string, MAX_DB_STRING, _T("%f"), m_double);
-   m_int32 = (INT32)m_double;
-   m_int64 = (INT64)m_double;
-   m_uint32 = (UINT32)m_double;
-   m_uint64 = (UINT64)m_double;
+   m_int64 = static_cast<int64_t>(m_double);
+   m_uint64 = static_cast<uint64_t>(m_double);
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(INT32 value)
+const ItemValue& ItemValue::operator=(int32_t value)
 {
-   m_int32 = value;
-   _sntprintf(m_string, MAX_DB_STRING, _T("%d"), m_int32);
-   m_double = (double)m_int32;
-   m_int64 = (INT64)m_int32;
-   m_uint32 = (UINT32)m_int32;
-   m_uint64 = (UINT64)m_int32;
+   m_int64 = value;
+   _sntprintf(m_string, MAX_DB_STRING, _T("%d"), value);
+   m_double = value;
+   m_uint64 = value;
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(INT64 value)
+const ItemValue& ItemValue::operator=(int64_t value)
 {
    m_int64 = value;
    _sntprintf(m_string, MAX_DB_STRING, INT64_FMT, m_int64);
-   m_double = (double)m_int64;
-   m_int32 = (INT32)m_int64;
-   m_uint32 = (UINT32)m_int64;
-   m_uint64 = (UINT64)m_int64;
+   m_double = m_int64;
+   m_uint64 = static_cast<uint64_t>(m_int64);
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(UINT32 value)
+const ItemValue& ItemValue::operator=(uint32_t value)
 {
-   m_uint32 = value;
-   _sntprintf(m_string, MAX_DB_STRING, _T("%u"), m_uint32);
-   m_double = (double)m_uint32;
-   m_int32 = (INT32)m_uint32;
-   m_int64 = (INT64)m_uint32;
-   m_uint64 = (UINT64)m_uint32;
+   m_uint64 = value;
+   _sntprintf(m_string, MAX_DB_STRING, _T("%u"), value);
+   m_double = value;
+   m_int64 = value;
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(UINT64 value)
+const ItemValue& ItemValue::operator=(uint64_t value)
 {
    m_uint64 = value;
    _sntprintf(m_string, MAX_DB_STRING, UINT64_FMT, m_uint64);
-   m_double = (double)((INT64)m_uint64);
-   m_int32 = (INT32)m_uint64;
-   m_int64 = (INT64)m_uint64;
+   m_double = static_cast<double>(static_cast<int64_t>(m_uint64));
+   m_int64 = static_cast<int64_t>(m_uint64);
    return *this;
 }
 
 /**
  * Signed diff for unsigned int32 values
  */
-inline INT64 diff_uint32(UINT32 curr, UINT32 prev)
+inline int64_t diff_uint32(uint32_t curr, uint32_t prev)
 {
-   return (curr >= prev) ? (INT64)(curr - prev) : -((INT64)(prev - curr));
+   return (curr >= prev) ? (int64_t)(curr - prev) : -((int64_t)(prev - curr));
 }
 
 /**
  * Signed diff for unsigned int64 values
  */
-inline INT64 diff_uint64(UINT64 curr, UINT64 prev)
+inline int64_t diff_uint64(uint64_t curr, uint64_t prev)
 {
-   return (curr >= prev) ? (INT64)(curr - prev) : -((INT64)(prev - curr));
+   return (curr >= prev) ? (int64_t)(curr - prev) : -((int64_t)(prev - curr));
 }
 
 /**
