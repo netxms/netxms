@@ -22,6 +22,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CBanner;
@@ -37,6 +41,7 @@ import org.eclipse.ui.IPerspectiveListener;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
+import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -44,7 +49,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class PerspectiveSwitcher extends Composite
 {
-   private IWorkbenchWindow window;
    private Label currentPerspective;
    private ToolBar toolbar;
 
@@ -55,8 +59,6 @@ public class PerspectiveSwitcher extends Composite
    {
       super((Composite)window.getShell().getChildren()[0], SWT.NONE);
       ((CBanner)window.getShell().getChildren()[0]).setRight(this);
-
-      this.window = window;
 
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
@@ -72,7 +74,35 @@ public class PerspectiveSwitcher extends Composite
          currentPerspective.setText(p.getLabel());
 
       toolbar = new ToolBar(this, SWT.FLAT);
-      buildToolbar();
+
+      ToolItem selectorButton = new ToolItem(toolbar, SWT.PUSH);
+      selectorButton.setImage(Activator.getImageDescriptor("icons/perspectives-menu.png").createImage());
+      final MenuManager manager = new MenuManager();
+      manager.setRemoveAllWhenShown(true);
+      manager.addMenuListener(new IMenuListener() {
+         @Override
+         public void menuAboutToShow(IMenuManager manager)
+         {
+            for(final IPerspectiveDescriptor p : getVisiblePerspectives())
+            {
+               manager.add(new Action(p.getLabel(), p.getImageDescriptor()) {
+                  @Override
+                  public void run()
+                  {
+                     window.getActivePage().setPerspective(p);
+                  }
+               });
+            }
+         }
+      });
+      manager.createContextMenu(toolbar);
+      selectorButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            manager.getMenu().setVisible(true);
+         }
+      });
 
       window.addPerspectiveListener(new IPerspectiveListener() {
          @Override
@@ -87,28 +117,6 @@ public class PerspectiveSwitcher extends Composite
             window.getShell().layout(true, true);
          }
       });
-   }
-
-   /**
-    * Build toolbar
-    */
-   private void buildToolbar()
-   {
-      for(final IPerspectiveDescriptor p : getVisiblePerspectives())
-      {
-         ToolItem item = new ToolItem(toolbar, SWT.PUSH);
-         item.setImage(p.getImageDescriptor().createImage());
-         //item.setText(p.getLabel());
-         item.setToolTipText(p.getLabel());
-         item.setData("perspective", p.getId());
-         item.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e)
-            {
-               window.getActivePage().setPerspective(p);
-            }
-         });
-      }
    }
 
    /**
