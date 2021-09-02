@@ -19,7 +19,7 @@ POM_FILES="src/java-common/netxms-base/pom.xml src/libnxjava/java/pom.xml src/cl
 
 ### Code
 for pom in $POM_FILES; do
-	mvn -f $pom versions:set -DnewVersion=$VERSION-SNAPSHOT
+	mvn -f $pom versions:set-property -Dproperty=revision -DnewVersion=$VERSION-SNAPSHOT
 done
 
 ./build/update_plugin_versions.py . $VERSION.0
