@@ -50,6 +50,7 @@ import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.client.snmp.SnmpVersion;
+import org.netxms.client.users.ResponsibleUser;
 
 /**
  * This class is used to hold data for NXCSession.modifyObject()
@@ -162,7 +163,7 @@ public class NXCObjectModificationData
    private String xmlConfig;
    private List<String> snmpPorts;
    private List<PassiveRackElement> passiveElements;
-   private List<Long> responsibleUsers;
+   private List<ResponsibleUser> responsibleUsers;
    private Boolean isAutoBindEnabled;
    private Boolean isAutoUnbindEnabled;
    private IcmpStatCollectionMode icmpStatCollectionMode;
@@ -1881,7 +1882,7 @@ public class NXCObjectModificationData
    /**
     * @return responsible users list
     */
-   public List<Long> getResponsibleUsers()
+   public List<ResponsibleUser> getResponsibleUsers()
    {
       return responsibleUsers;
    }
@@ -1891,7 +1892,7 @@ public class NXCObjectModificationData
     *
     * @param responsibleUsers to set
     */
-   public void setResponsibleUsers(List<Long> responsibleUsers)
+   public void setResponsibleUsers(List<ResponsibleUser> responsibleUsers)
    {
       this.responsibleUsers = responsibleUsers;
    }

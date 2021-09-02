@@ -194,6 +194,7 @@ import org.netxms.client.topology.Route;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.client.topology.WirelessStation;
 import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.ResponsibleUser;
 import org.netxms.client.users.TwoFactorAuthenticationMethod;
 import org.netxms.client.users.User;
 import org.netxms.client.users.UserGroup;
@@ -4618,7 +4619,7 @@ public class NXCSession
     * @param ids of user DBObjects to find
     * @return list of found users
     */
-   public List<AbstractUserObject> findUserDBObjectsByIds(final List<Long> ids)
+   public List<AbstractUserObject> findUserDBObjectsByIds(final Collection<Long> ids)
    {
       List<AbstractUserObject> users = new ArrayList<AbstractUserObject>();
       synchronized(userDatabase)
@@ -6491,7 +6492,13 @@ public class NXCSession
 
       if (data.getResponsibleUsers() != null)
       {
-         msg.setField(NXCPCodes.VID_RESPONSIBLE_USERS, data.getResponsibleUsers());
+         msg.setFieldInt32(NXCPCodes.VID_RESPONSIBLE_USERS_COUNT, data.getResponsibleUsers().size());
+         long fieldId = NXCPCodes.VID_RESPONSIBLE_USERS_BASE;
+         for(ResponsibleUser r : data.getResponsibleUsers())
+         {
+            r.fillMessage(msg, fieldId);
+            fieldId += 10;
+         }
       }
 
       if (data.getIcmpStatCollectionMode() != null)

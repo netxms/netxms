@@ -42,6 +42,7 @@ import org.netxms.client.ObjectUrl;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.services.ServiceManager;
+import org.netxms.client.users.ResponsibleUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -158,7 +159,7 @@ public abstract class AbstractObject
 	protected final List<Long> dashboards = new ArrayList<Long>(0);
 	protected final Map<String, CustomAttribute> customAttributes = new HashMap<String, CustomAttribute>(0);
 	protected final List<ObjectUrl> urls = new ArrayList<ObjectUrl>(0);
-   protected final List<Long> responsibleUsers = new ArrayList<Long>(0);
+   protected final List<ResponsibleUser> responsibleUsers = new ArrayList<ResponsibleUser>(0);
 	protected Map<String, Object> moduleData = null;
 	
 	@Internal private int effectiveRights = 0;
@@ -322,11 +323,10 @@ public abstract class AbstractObject
 		}
 		
 		// Responsible users
-		Long[] users = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RESPONSIBLE_USERS);
-		for(i = 0; i < users.length; i++)
-		{
-		   responsibleUsers.add(users[i]);
-		}
+      count = msg.getFieldAsInt32(NXCPCodes.VID_RESPONSIBLE_USERS_COUNT);
+      id = NXCPCodes.VID_RESPONSIBLE_USERS_BASE;
+      for(i = 0; i < count; i++, id += 10)
+         responsibleUsers.add(new ResponsibleUser(msg, id));
 	}
 
 	/**
@@ -1192,7 +1192,7 @@ public abstract class AbstractObject
     * 
     * @return responsible users list
     */
-   public List<Long> getResponsibleUsers()
+   public List<ResponsibleUser> getResponsibleUsers()
    {
       return responsibleUsers;
    }

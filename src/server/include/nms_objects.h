@@ -1015,7 +1015,7 @@ protected:
    StringObjectMap<ModuleData> *m_moduleData;
    MUTEX m_moduleDataLock;
 
-   IntegerArray<uint32_t> *m_responsibleUsers;
+   StructArray<ResponsibleUser> *m_responsibleUsers;
    MUTEX m_mutexResponsibleUsers;
 
    const SharedObjectArray<NetObj> &getChildList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getChildList()); }
@@ -1046,7 +1046,7 @@ protected:
    bool isGeoLocationHistoryTableExists(DB_HANDLE hdb) const;
    bool createGeoLocationHistoryTable(DB_HANDLE hdb);
 
-   void getAllResponsibleUsersInternal(IntegerArray<uint32_t> *list) const;
+   void getAllResponsibleUsersInternal(StructArray<ResponsibleUser> *list, uint32_t escalationLevel) const;
 
 public:
    NetObj();
@@ -1201,7 +1201,7 @@ public:
 
    void updateGeoLocationHistory(GeoLocation location);
 
-   unique_ptr<IntegerArray<uint32_t>> getAllResponsibleUsers() const;
+   unique_ptr<StructArray<ResponsibleUser>> getAllResponsibleUsers(uint32_t escalationLevel = 0xFFFFFFFF) const;
 
    virtual json_t *toJson();
 

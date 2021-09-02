@@ -24,11 +24,23 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 39.12 to 40.0
+ * Upgrade from 39.13 to 40.0
+ */
+static bool H_UpgradeFromV13()
+{
+   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 39.12 to 39.13
  */
 static bool H_UpgradeFromV12()
 {
-   CHK_EXEC(SetMajorSchemaVersion(40, 0));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE responsible_users ADD escalation_level integer")));
+   CHK_EXEC(SQLQuery(_T("UPDATE responsible_users SET escalation_level=0")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("responsible_users"), _T("escalation_level")));
+   CHK_EXEC(SetMinorSchemaVersion(13));
    return true;
 }
 
@@ -437,7 +449,8 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 12, 40, 0,  H_UpgradeFromV12 },
+   { 13, 40, 0,  H_UpgradeFromV13 },
+   { 12, 39, 13, H_UpgradeFromV12 },
    { 11, 39, 12, H_UpgradeFromV11 },
    { 10, 39, 11, H_UpgradeFromV10 },
    { 9,  39, 10, H_UpgradeFromV9  },

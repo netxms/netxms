@@ -1078,7 +1078,7 @@ public class NXCPCodes
    public static final long VID_PASSIVE_ELEMENTS = 612;
    public static final long VID_RACK_IMAGE_REAR = 613;
    public static final long VID_INCLUDE_THRESHOLDS = 614;
-   public static final long VID_RESPONSIBLE_USERS = 615;
+   public static final long VID_RESPONSIBLE_USERS_COUNT = 615;
    public static final long VID_AGENT_ID = 616;
    public static final long VID_QUERY = 617;
    public static final long VID_CONFIG_HINT_COUNT = 618;
@@ -1265,6 +1265,7 @@ public class NXCPCodes
 	public static final long VID_COLUMN_NAME_BASE = 0x10000000L;
 	public static final long VID_COLUMN_FMT_BASE = 0x20000000L;
 	public static final long VID_ROW_DATA_BASE = 0x30000000L;
+   public static final long VID_RESPONSIBLE_USERS_BASE = 0x69000000L;
    public static final long VID_FIELD_LIST_BASE = 0x70000000L;
    public static final long VID_ORDER_FIELD_LIST_BASE = 0x78000000L;
 	public static final long VID_LPP_RULE_BASE = 0x10000000L;

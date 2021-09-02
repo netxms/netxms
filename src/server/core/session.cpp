@@ -3443,7 +3443,7 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
    }
 
    // Send response
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
@@ -3451,11 +3451,9 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
  */
 void ClientSession::sendUserDB(UINT32 dwRqId)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, dwRqId);
    msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
+   sendMessage(msg);
 	msg.deleteAllFields();
 
    // Send user database
@@ -3465,14 +3463,14 @@ void ClientSession::sendUserDB(UINT32 dwRqId)
 	   UserDatabaseObject *object = users.next();
 		msg.setCode(object->isGroup() ? CMD_GROUP_DATA : CMD_USER_DATA);
 		object->fillMessage(&msg);
-      sendMessage(&msg);
+      sendMessage(msg);
       msg.deleteAllFields();
    }
 	CloseUserDatabase();
 
    // Send end-of-database notification
    msg.setCode(CMD_USER_DB_EOF);
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
@@ -3480,21 +3478,19 @@ void ClientSession::sendUserDB(UINT32 dwRqId)
  */
 void ClientSession::getSelectedUsers(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
+   sendMessage(msg);
    msg.deleteAllFields();
 
-   IntegerArray<UINT32> userIds;
+   IntegerArray<uint32_t> userIds;
    request->getFieldAsInt32Array(VID_OBJECT_LIST, &userIds);
 
    // Prepare message
    msg.setCode(CMD_USER_DATA);
 
    // Send user database
-   ObjectArray<UserDatabaseObject> *users = FindUserDBObjects(&userIds);
+   unique_ptr<ObjectArray<UserDatabaseObject>> users = FindUserDBObjects(&userIds);
    for (int i = 0; i < users->size(); i++)
    {
       UserDatabaseObject *object = users->get(i);
@@ -3503,23 +3499,18 @@ void ClientSession::getSelectedUsers(NXCPMessage *request)
       sendMessage(&msg);
       msg.deleteAllFields();
    }
-   delete users;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
  * Create new user
  */
-void ClientSession::createUser(NXCPMessage *pRequest)
+void ClientSession::createUser(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    // Check user rights
    if (!(m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
@@ -3528,18 +3519,17 @@ void ClientSession::createUser(NXCPMessage *pRequest)
    }
    else
    {
-      UINT32 rcc, dwUserId;
       TCHAR szUserName[MAX_USER_NAME];
-
-      pRequest->getFieldAsString(VID_USER_NAME, szUserName, MAX_USER_NAME);
+      request->getFieldAsString(VID_USER_NAME, szUserName, MAX_USER_NAME);
       if (IsValidObjectName(szUserName))
       {
-         bool isGroup = pRequest->getFieldAsBoolean(VID_IS_GROUP);
-         rcc = CreateNewUser(szUserName, isGroup, &dwUserId);
+         bool isGroup = request->getFieldAsBoolean(VID_IS_GROUP);
+         uint32_t userId;
+         uint32_t rcc = CreateNewUser(szUserName, isGroup, &userId);
          msg.setField(VID_RCC, rcc);
          if (rcc == RCC_SUCCESS)
          {
-            msg.setField(VID_USER_ID, dwUserId);   // Send id of new user to client
+            msg.setField(VID_USER_ID, userId);   // Send id of new user to client
             writeAuditLog(AUDIT_SECURITY, true, 0, _T("%s %s created"), isGroup ? _T("Group") : _T("User"), szUserName);
          }
       }
@@ -3549,8 +3539,7 @@ void ClientSession::createUser(NXCPMessage *pRequest)
       }
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**

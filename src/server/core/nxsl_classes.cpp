@@ -207,6 +207,26 @@ NXSL_METHOD_DEFINITION(NetObj, getCustomAttribute)
 }
 
 /**
+ * NetObj::getResponsibleUsers(escalationLevel)
+ */
+NXSL_METHOD_DEFINITION(NetObj, getResponsibleUsers)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   NXSL_Array *array = new NXSL_Array(vm);
+   unique_ptr<StructArray<ResponsibleUser>> responsibleUsers = static_cast<shared_ptr<NetObj>*>(object->getData())->get()->getAllResponsibleUsers(argv[0]->getValueAsUInt32());
+   unique_ptr<ObjectArray<UserDatabaseObject>> userDB = FindUserDBObjects(*responsibleUsers);
+   userDB->setOwner(Ownership::False);
+   for(int i = 0; i < userDB->size(); i++)
+   {
+      array->append(userDB->get(i)->createNXSLObject(vm));
+   }
+   *result = vm->createValue(array);
+   return 0;
+}
+
+/**
  * Generic implementation for NetObj methods isParent, isChild, isDirectParent, isDirectChild
  */
 template<bool (NObject::*method)(uint32_t) const> int TestObjectRelation(NXSL_VM *vm, NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result)
@@ -602,6 +622,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(NetObj, enterMaintenance, -1);
    NXSL_REGISTER_METHOD(NetObj, expandString, 1);
    NXSL_REGISTER_METHOD(NetObj, getCustomAttribute, 1);
+   NXSL_REGISTER_METHOD(NetObj, getResponsibleUsers, 1);
    NXSL_REGISTER_METHOD(NetObj, isChild, 1);
    NXSL_REGISTER_METHOD(NetObj, isParent, 1);
    NXSL_REGISTER_METHOD(NetObj, leaveMaintenance, 0);
@@ -779,15 +800,14 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    else if (compareAttributeName(attr, "responsibleUsers"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
-      unique_ptr<IntegerArray<uint32_t>> responsibleUsers = object->getAllResponsibleUsers();
-      ObjectArray<UserDatabaseObject> *userDB = FindUserDBObjects(*responsibleUsers);
+      unique_ptr<StructArray<ResponsibleUser>> responsibleUsers = object->getAllResponsibleUsers();
+      unique_ptr<ObjectArray<UserDatabaseObject>> userDB = FindUserDBObjects(*responsibleUsers);
       userDB->setOwner(Ownership::False);
       for(int i = 0; i < userDB->size(); i++)
       {
          array->append(userDB->get(i)->createNXSLObject(vm));
       }
       value = vm->createValue(array);
-      delete userDB;
    }
    else if (compareAttributeName(attr, "state"))
    {
@@ -4409,7 +4429,7 @@ NXSL_Value *NXSL_UserGroupClass::getAttr(NXSL_Object *object, const char *attr)
    else if (compareAttributeName(attr, "members"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
-      ObjectArray<UserDatabaseObject> *userDB = FindUserDBObjects(group->getMembers());
+      unique_ptr<ObjectArray<UserDatabaseObject>> userDB = FindUserDBObjects(group->getMembers());
       userDB->setOwner(Ownership::False);
       for(int i = 0; i < userDB->size(); i++)
       {
@@ -4419,7 +4439,6 @@ NXSL_Value *NXSL_UserGroupClass::getAttr(NXSL_Object *object, const char *attr)
             array->append(vm->createValue(new NXSL_Object(vm, &g_nxslUserClass, userDB->get(i))));
       }
       value = vm->createValue(array);
-      delete userDB;
    }
 
    return value;

@@ -22,33 +22,45 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Item;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.ResponsibleUser;
+import org.netxms.client.users.UserGroup;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
@@ -63,7 +75,7 @@ public class ResponsibleUsers extends PropertyPage
 {
    private AbstractObject object;
    private TableViewer viewer;
-   private Map<Long, AbstractUserObject> users = new HashMap<>();
+   private Map<Long, ResponsibleUserInfo> users = new HashMap<>();
    private NXCSession session = ConsoleSharedData.getSession();
 
    /**
@@ -73,8 +85,8 @@ public class ResponsibleUsers extends PropertyPage
    protected Control createContents(Composite parent)
    {
       object = (AbstractObject)getElement().getAdapter(AbstractObject.class);      
-      for(AbstractUserObject u : session.findUserDBObjectsByIds(object.getResponsibleUsers()))
-         users.put(u.getId(), u);
+      for(ResponsibleUser r : object.getResponsibleUsers())
+         users.put(r.userId, new ResponsibleUserInfo(r));
 
       // Initiate loading of user manager plugin if it was not loaded before
       Platform.getAdapterManager().loadAdapter(new AccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
@@ -84,14 +96,64 @@ public class ResponsibleUsers extends PropertyPage
 
       viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new WorkbenchLabelProvider());
+      viewer.setLabelProvider(new ResponsibleUsersLabelProvider());
       viewer.setComparator(new ViewerComparator() {
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
-            return ((AbstractUserObject)e1).getName().compareToIgnoreCase(((AbstractUserObject)e2).getName());
+            return ((ResponsibleUserInfo)e1).getName().compareToIgnoreCase(((ResponsibleUserInfo)e2).getName());
          }
       });
+
+      TableColumn column = new TableColumn(viewer.getTable(), SWT.NONE);
+      column.setText("User");
+      column.setWidth(300);
+      column = new TableColumn(viewer.getTable(), SWT.NONE);
+      column.setText("Level");
+      column.setWidth(80);
+
+      viewer.setColumnProperties(new String[] { "name", "level" }); //$NON-NLS-1$
+      viewer.setCellEditors(new CellEditor[] { null, new TextCellEditor(viewer.getTable()) {
+         @Override
+         protected Control createControl(Composite parent)
+         {
+            Control c = super.createControl(parent);
+            ((Text)c).setTextLimit(5);
+            return c;
+         }
+      } });
+      viewer.setCellModifier(new ICellModifier() {
+         @Override
+         public void modify(Object element, String property, Object value)
+         {
+            if (element instanceof Item)
+               element = ((Item)element).getData();
+            if (property.equals("level"))
+            {
+               try
+               {
+                  ((ResponsibleUserInfo)element).escalationLevel = Integer.parseInt((String)value);
+                  viewer.update(element, new String[] { property });
+               }
+               catch(NumberFormatException e)
+               {
+               }
+            }
+         }
+
+         @Override
+         public Object getValue(Object element, String property)
+         {
+            return Integer.toString(((ResponsibleUserInfo)element).escalationLevel);
+         }
+
+         @Override
+         public boolean canModify(Object element, String property)
+         {
+            return property.equals("level");
+         }
+      });
+
       viewer.setInput(users.values().toArray());
 
       GridData gd = new GridData();
@@ -127,7 +189,7 @@ public class ResponsibleUsers extends PropertyPage
             {
                AbstractUserObject[] selection = dlg.getSelection();
                for(AbstractUserObject user : selection)
-                  users.put(user.getId(), user);
+                  users.put(user.getId(), new ResponsibleUserInfo(user));
                viewer.setInput(users.values().toArray());
             }
          }
@@ -183,15 +245,18 @@ public class ResponsibleUsers extends PropertyPage
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            if (session.syncMissingUsers(new HashSet<Long>(object.getResponsibleUsers())))
+            HashSet<Long> uids = new HashSet<Long>();
+            for(ResponsibleUser r : object.getResponsibleUsers())
+               uids.add(r.userId);
+            if (session.syncMissingUsers(uids))
             {
                runInUIThread(new Runnable() {               
                   @Override
                   public void run()
                   {
                      users.clear();
-                     for(AbstractUserObject u : session.findUserDBObjectsByIds(object.getResponsibleUsers()))
-                        users.put(u.getId(), u);
+                     for(ResponsibleUser r : object.getResponsibleUsers())
+                        users.put(r.userId, new ResponsibleUserInfo(r));
                      viewer.setInput(users.values().toArray());
                   }
                });
@@ -219,7 +284,10 @@ public class ResponsibleUsers extends PropertyPage
          setValid(false);
       
       final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-      md.setResponsibleUsers(new ArrayList<Long>(users.keySet()));
+      List<ResponsibleUser> list = new ArrayList<ResponsibleUser>(users.size());
+      for(ResponsibleUserInfo ri : users.values())
+         list.add(new ResponsibleUser(ri.userId, ri.escalationLevel));
+      md.setResponsibleUsers(list);
 
       new ConsoleJob(String.format(Messages.get().AccessControl_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
          @Override
@@ -279,5 +347,77 @@ public class ResponsibleUsers extends PropertyPage
       super.performDefaults();
       users.clear();
       viewer.setInput(new AbstractUserObject[0]);
+   }
+
+   /**
+    * Local information for responsible user
+    */
+   private class ResponsibleUserInfo
+   {
+      long userId;
+      AbstractUserObject user;
+      int escalationLevel;
+
+      ResponsibleUserInfo(ResponsibleUser r)
+      {
+         userId = r.userId;
+         user = session.findUserDBObjectById(userId, null);
+         escalationLevel = r.escalationLevel;
+      }
+
+      public ResponsibleUserInfo(AbstractUserObject user)
+      {
+         userId = user.getId();
+         this.user = user;
+         escalationLevel = 0;
+      }
+
+      public String getName()
+      {
+         return (user != null) ? user.getName() : "[" + userId + "]";
+      }
+   }
+
+   /**
+    * Label provider for responsible users list
+    */
+   private static class ResponsibleUsersLabelProvider extends LabelProvider implements ITableLabelProvider
+   {
+      private Image imageUser = Activator.getImageDescriptor("icons/user.png").createImage();
+      private Image imageGroup = Activator.getImageDescriptor("icons/group.png").createImage();
+
+      /**
+       * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+       */
+      @Override
+      public Image getColumnImage(Object element, int columnIndex)
+      {
+         if (columnIndex != 0)
+            return null;
+
+         ResponsibleUserInfo r = (ResponsibleUserInfo)element;
+         return (r.user != null) ? ((r.user instanceof UserGroup) ? imageGroup : imageUser) : SharedIcons.IMG_UNKNOWN_OBJECT;
+      }
+
+      /**
+       * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+       */
+      @Override
+      public String getColumnText(Object element, int columnIndex)
+      {
+         ResponsibleUserInfo r = (ResponsibleUserInfo)element;
+         return (columnIndex == 0) ? r.getName() : Integer.toString(r.escalationLevel);
+      }
+
+      /**
+       * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+       */
+      @Override
+      public void dispose()
+      {
+         imageUser.dispose();
+         imageGroup.dispose();
+         super.dispose();
+      }
    }
 }
