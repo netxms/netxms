@@ -189,6 +189,15 @@ public:
 #define MAX_XMPP_ID_LEN          128
 
 /**
+ * Responsible user information
+ */
+struct ResponsibleUser
+{
+   uint32_t userId;
+   uint32_t escalationLevel;
+};
+
+/**
  * Authentication methods
  */
 enum class UserAuthenticationMethod
@@ -527,6 +536,7 @@ void FillGroupMembershipInfo(NXCPMessage *msg, uint32_t userId);
 void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups);
 void DumpUsers(CONSOLE_CTX pCtx);
 ObjectArray<UserDatabaseObject> *FindUserDBObjects(const IntegerArray<uint32_t>& ids);
+ObjectArray<UserDatabaseObject> *FindUserDBObjects(const StructArray<ResponsibleUser>& ids);
 
 UserAuthenticationToken IssueAuthenticationToken(uint32_t userId, uint32_t validFor);
 void RevokeAuthenticationToken(const UserAuthenticationToken& token);

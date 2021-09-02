@@ -1305,7 +1305,7 @@ typedef struct
 #define VID_PASSIVE_ELEMENTS        ((UINT32)612)
 #define VID_RACK_IMAGE_REAR         ((UINT32)613)
 #define VID_INCLUDE_THRESHOLDS      ((UINT32)614)
-#define VID_RESPONSIBLE_USERS       ((UINT32)615)
+#define VID_RESPONSIBLE_USERS_COUNT ((UINT32)615)
 #define VID_AGENT_ID                ((UINT32)616)
 #define VID_QUERY                   ((UINT32)617)
 #define VID_CONFIG_HINT_COUNT       ((UINT32)618)
@@ -1501,36 +1501,39 @@ typedef struct
 #define VID_PARENT_ID_LAST          ((UINT32)0x00003FFF)
 
 // Reservation of 0x7FFFFFFF ids for child object's list
-#define VID_CHILD_ID_BASE           ((UINT32)0x80000000)
-#define VID_CHILD_ID_LAST           ((UINT32)0xFFFFFFFE)
+#define VID_CHILD_ID_BASE           ((uint32_t)0x80000000)
+#define VID_CHILD_ID_LAST           ((uint32_t)0xFFFFFFFE)
+
+// Base value for responsible users
+#define VID_RESPONSIBLE_USERS_BASE  ((uint32_t)0x69000000)
 
 // Base value for custom attributes and module data
-#define VID_CUSTOM_ATTRIBUTES_BASE  ((UINT32)0x70000000)
-#define VID_MODULE_DATA_BASE        ((UINT32)0x71000000)
+#define VID_CUSTOM_ATTRIBUTES_BASE  ((uint32_t)0x70000000)
+#define VID_MODULE_DATA_BASE        ((uint32_t)0x71000000)
 
 // Base value for overview DCI list
-#define VID_OVERVIEW_DCI_LIST_BASE  ((UINT32)0x72000000)
+#define VID_OVERVIEW_DCI_LIST_BASE  ((uint32_t)0x72000000)
 
 // Base value for tooltip DCI list
-#define VID_TOOLTIP_DCI_LIST_BASE   ((UINT32)0x73000000)
+#define VID_TOOLTIP_DCI_LIST_BASE   ((uint32_t)0x73000000)
 
 // Base value for URL list
-#define VID_URL_LIST_BASE           ((UINT32)0x74000000)
+#define VID_URL_LIST_BASE           ((uint32_t)0x74000000)
 
 // Base value for ICMP target list
-#define VID_ICMP_TARGET_LIST_BASE   ((UINT32)0x75000000)
+#define VID_ICMP_TARGET_LIST_BASE   ((uint32_t)0x75000000)
 
 // IP address list base
-#define VID_IP_ADDRESS_LIST_BASE    ((UINT32)0x7F000000)
+#define VID_IP_ADDRESS_LIST_BASE    ((uint32_t)0x7F000000)
 
 // Base value for cluster resource list
-#define VID_RESOURCE_LIST_BASE      ((UINT32)0x20000000)
+#define VID_RESOURCE_LIST_BASE      ((uint32_t)0x20000000)
 
 // Base value for cluster sync network list
-#define VID_SYNC_SUBNETS_BASE       ((UINT32)0x28000000)
+#define VID_SYNC_SUBNETS_BASE       ((uint32_t)0x28000000)
 
 // Base value for agent's enum values
-#define VID_ENUM_VALUE_BASE         ((UINT32)0x10000000)
+#define VID_ENUM_VALUE_BASE         ((uint32_t)0x10000000)
 
 // Base value for agent's action arguments
 #define VID_ACTION_ARG_BASE         ((UINT32)0x10000000)

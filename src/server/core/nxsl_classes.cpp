@@ -207,6 +207,28 @@ NXSL_METHOD_DEFINITION(NetObj, getCustomAttribute)
 }
 
 /**
+ * NetObj::getResponsibleUsers(escalationLevel)
+ */
+NXSL_METHOD_DEFINITION(NetObj, getResponsibleUsers)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   NXSL_Array *array = new NXSL_Array(vm);
+   StructArray<ResponsibleUser> *responsibleUsers = static_cast<shared_ptr<NetObj>*>(object->getData())->get()->getAllResponsibleUsers(argv[0]->getValueAsUInt32());
+   ObjectArray<UserDatabaseObject> *userDB = FindUserDBObjects(*responsibleUsers);
+   userDB->setOwner(Ownership::False);
+   for(int i = 0; i < userDB->size(); i++)
+   {
+      array->append(userDB->get(i)->createNXSLObject(vm));
+   }
+   *result = vm->createValue(array);
+   delete userDB;
+   delete responsibleUsers;
+   return 0;
+}
+
+/**
  * Generic implementation for NetObj methods isParent, isChild, isDirectParent, isDirectChild
  */
 template<bool (NObject::*method)(uint32_t) const> int TestObjectRelation(NXSL_VM *vm, NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result)
@@ -602,6 +624,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(NetObj, enterMaintenance, -1);
    NXSL_REGISTER_METHOD(NetObj, expandString, 1);
    NXSL_REGISTER_METHOD(NetObj, getCustomAttribute, 1);
+   NXSL_REGISTER_METHOD(NetObj, getResponsibleUsers, 1);
    NXSL_REGISTER_METHOD(NetObj, isChild, 1);
    NXSL_REGISTER_METHOD(NetObj, isParent, 1);
    NXSL_REGISTER_METHOD(NetObj, leaveMaintenance, 0);
@@ -779,8 +802,8 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    else if (compareAttributeName(attr, "responsibleUsers"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
-      IntegerArray<UINT32> *responsibleUsers = object->getAllResponsibleUsers();
-      ObjectArray<UserDatabaseObject> *userDB = FindUserDBObjects(responsibleUsers);
+      StructArray<ResponsibleUser> *responsibleUsers = object->getAllResponsibleUsers();
+      ObjectArray<UserDatabaseObject> *userDB = FindUserDBObjects(*responsibleUsers);
       userDB->setOwner(Ownership::False);
       for(int i = 0; i < userDB->size(); i++)
       {

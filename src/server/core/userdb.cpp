@@ -1546,12 +1546,34 @@ void NXCORE_EXPORTABLE CloseUserDatabase(Iterator<UserDatabaseObject> *it)
  */
 ObjectArray<UserDatabaseObject> *FindUserDBObjects(const IntegerArray<uint32_t>& ids)
 {
-   ObjectArray<UserDatabaseObject> *userDB = new ObjectArray<UserDatabaseObject>(ids.size(), 16, Ownership::True);
+   auto userDB = new ObjectArray<UserDatabaseObject>(ids.size(), 16, Ownership::True);
    RWLockReadLock(s_userDatabaseLock);
    for(int i = 0; i < ids.size(); i++)
    {
       UserDatabaseObject *object = s_userDatabase.get(ids.get(i));
-      if (object != NULL)
+      if (object != nullptr)
+      {
+         if (object->isGroup())
+            userDB->add(new Group(static_cast<Group*>(object)));
+         else
+            userDB->add(new User(static_cast<User*>(object)));
+      }
+   }
+   RWLockUnlock(s_userDatabaseLock);
+   return userDB;
+}
+
+/**
+ * Find a list of UserDatabaseObjects of specific id`s
+ */
+ObjectArray<UserDatabaseObject> *FindUserDBObjects(const StructArray<ResponsibleUser>& ids)
+{
+   auto userDB = new ObjectArray<UserDatabaseObject>(ids.size(), 16, Ownership::True);
+   RWLockReadLock(s_userDatabaseLock);
+   for(int i = 0; i < ids.size(); i++)
+   {
+      UserDatabaseObject *object = s_userDatabase.get(ids.get(i)->userId);
+      if (object != nullptr)
       {
          if (object->isGroup())
             userDB->add(new Group(static_cast<Group*>(object)));

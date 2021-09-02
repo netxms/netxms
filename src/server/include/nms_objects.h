@@ -1027,8 +1027,8 @@ protected:
    StringObjectMap<ModuleData> *m_moduleData;
    MUTEX m_moduleDataLock;
 
-   IntegerArray<uint32_t> *m_responsibleUsers;
-   RWLOCK m_rwlockResponsibleUsers;
+   StructArray<ResponsibleUser> *m_responsibleUsers;
+   MUTEX m_mutexResponsibleUsers;
 
    const SharedObjectArray<NetObj> &getChildList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getChildList()); }
    const SharedObjectArray<NetObj> &getParentList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getParentList()); }
@@ -1037,14 +1037,8 @@ protected:
    void unlockProperties() const { MutexUnlock(m_mutexProperties); }
    void lockACL() const { MutexLock(m_mutexACL); }
    void unlockACL() const { MutexUnlock(m_mutexACL); }
-   void lockResponsibleUsersList(bool writeLock)
-   {
-      if (writeLock)
-         RWLockWriteLock(m_rwlockResponsibleUsers);
-      else
-         RWLockReadLock(m_rwlockResponsibleUsers);
-   }
-   void unlockResponsibleUsersList() { RWLockUnlock(m_rwlockResponsibleUsers); }
+   void lockResponsibleUsersList() const {MutexLock(m_mutexResponsibleUsers); }
+   void unlockResponsibleUsersList() const { MutexUnlock(m_mutexResponsibleUsers); }
 
    void setModified(uint32_t flags, bool notify = true);                  // Used to mark object as modified
 
@@ -1064,7 +1058,7 @@ protected:
    bool isGeoLocationHistoryTableExists(DB_HANDLE hdb) const;
    bool createGeoLocationHistoryTable(DB_HANDLE hdb);
 
-   void getAllResponsibleUsersInternal(IntegerArray<uint32_t> *list);
+   void getAllResponsibleUsersInternal(StructArray<ResponsibleUser> *list, uint32_t escalationLevel) const;
 
 public:
    NetObj();
@@ -1218,7 +1212,7 @@ public:
 
    void updateGeoLocationHistory(GeoLocation location);
 
-   IntegerArray<uint32_t> *getAllResponsibleUsers();
+   StructArray<ResponsibleUser> *getAllResponsibleUsers(uint32_t escalationLevel = 0xFFFFFFFF) const;
 
    virtual json_t *toJson();
 
