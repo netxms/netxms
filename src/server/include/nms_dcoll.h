@@ -78,43 +78,40 @@ class NXCORE_EXPORTABLE ItemValue
 {
 private:
    double m_double;
-   INT32 m_int32;
-   INT64 m_int64;
-   UINT32 m_uint32;
-   UINT64 m_uint64;
-   TCHAR m_string[MAX_DB_STRING];
+   int64_t m_int64;
+   uint64_t m_uint64;
    time_t m_timestamp;
+   TCHAR m_string[MAX_DB_STRING];
 
 public:
    ItemValue();
    ItemValue(const TCHAR *value, time_t timestamp);
    ItemValue(const ItemValue *value);
-   ~ItemValue();
 
    void setTimeStamp(time_t timestamp) { m_timestamp = timestamp; }
    time_t getTimeStamp() const { return m_timestamp; }
 
-   INT32 getInt32() const { return m_int32; }
-   UINT32 getUInt32() const { return m_uint32; }
-   INT64 getInt64() const { return m_int64; }
-   UINT64 getUInt64() const { return m_uint64; }
+   int32_t getInt32() const { return static_cast<int32_t>(m_int64); }
+   uint32_t getUInt32() const { return static_cast<uint32_t>(m_uint64); }
+   int64_t getInt64() const { return m_int64; }
+   uint64_t getUInt64() const { return m_uint64; }
    double getDouble() const { return m_double; }
    const TCHAR *getString() const { return m_string; }
 
    operator double() const { return m_double; }
-   operator UINT32() const { return m_uint32; }
-   operator UINT64() const { return m_uint64; }
-   operator INT32() const { return m_int32; }
-   operator INT64() const { return m_int64; }
+   operator uint32_t() const { return static_cast<uint32_t>(m_uint64); }
+   operator uint64_t() const { return m_uint64; }
+   operator int32_t() const { return static_cast<int32_t>(m_int64); }
+   operator int64_t() const { return m_int64; }
    operator const TCHAR*() const { return m_string; }
 
    const ItemValue& operator=(const ItemValue &src);
    const ItemValue& operator=(const TCHAR *value);
    const ItemValue& operator=(double value);
-   const ItemValue& operator=(INT32 value);
-   const ItemValue& operator=(INT64 value);
-   const ItemValue& operator=(UINT32 value);
-   const ItemValue& operator=(UINT64 value);
+   const ItemValue& operator=(int32_t value);
+   const ItemValue& operator=(int64_t value);
+   const ItemValue& operator=(uint32_t value);
+   const ItemValue& operator=(uint64_t value);
 };
 
 
