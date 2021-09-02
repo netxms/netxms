@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,47 +25,48 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataFormatter;
+import org.netxms.client.datacollection.GraphItem;
+import org.netxms.nxmc.modules.charts.api.DataSeries;
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
-import org.netxms.nxmc.modules.charts.widgets.internal.DataComparisonElement;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Bar gauge widget implementation
  */
-public class BarGaugeWidget extends GaugeWidget
+public class BarGauge extends GenericGauge
 {
    private static final int MAX_BAR_THICKNESS = 40;
    private static final int SCALE_TEXT_HEIGHT = 16;
    private static final int SCALE_TEXT_WIDTH = 20;
-   
+
    private Font[] scaleFonts = null;
-   
+
    /**
     * @param parent
     * @param style
     */
-   public BarGaugeWidget(Composite parent, int style)
+   public BarGauge(Chart parent)
    {
-      super(parent, style);
+      super(parent);
    }
 
    /**
-    * @see org.netxms.nxmc.modules.charts.widgets.GaugeWidget#createFonts()
+    * @see org.netxms.ui.eclipse.charts.widgets.GenericGauge#createFonts()
     */
    @Override
    protected void createFonts()
    {
+      String fontName = chart.getConfiguration().getFontName();
       scaleFonts = new Font[16];
       for(int i = 0; i < scaleFonts.length; i++)
          scaleFonts[i] = new Font(getDisplay(), fontName, i + 6, SWT.NORMAL); //$NON-NLS-1$
    }
 
    /**
-    * @see org.netxms.nxmc.modules.charts.widgets.GaugeWidget#disposeFonts()
+    * @see org.netxms.ui.eclipse.charts.widgets.GenericGauge#disposeFonts()
     */
    @Override
    protected void disposeFonts()
@@ -80,18 +81,19 @@ public class BarGaugeWidget extends GaugeWidget
    }
 
    /**
-    * @see org.netxms.nxmc.modules.charts.widgets.GaugeWidget#renderElement(org.eclipse.swt.graphics.GC,
-    *      org.netxms.nxmc.modules.charts.widgets.internal.DataComparisonElement, int, int, int, int)
+    * @see org.netxms.ui.eclipse.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
+    *      org.netxms.client.datacollection.ChartConfiguration, org.netxms.client.datacollection.GraphItem,
+    *      org.netxms.ui.eclipse.charts.api.DataSeries, int, int, int, int)
     */
    @Override
-   protected void renderElement(GC gc, DataComparisonElement dci, int x, int y, int w, int h)
+   protected void renderElement(GC gc, ChartConfiguration config, GraphItem dci, DataSeries data, int x, int y, int w, int h)
    {
       Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
       gc.setAntialias(SWT.ON);
-      
-      if (elementBordersVisible)
+
+      if (config.isElementBordersVisible())
       {
-         gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
+         gc.setForeground(chart.getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
          gc.drawRectangle(rect);
          rect.x += INNER_MARGIN_WIDTH;
          rect.y += INNER_MARGIN_HEIGHT;
@@ -100,12 +102,12 @@ public class BarGaugeWidget extends GaugeWidget
       }
 
       // Draw legend
-      if (legendVisible)
+      if (config.areLabelsVisible())
       {
-         gc.setForeground(getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
+         gc.setForeground(chart.getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
          gc.setFont(null);
          Point legendExt = gc.textExtent(dci.getName());
-         switch(legendPosition)
+         switch(config.getLegendPosition())
          {
             case ChartConfiguration.POSITION_TOP:
                gc.drawText(dci.getName(), rect.x + ((rect.width - legendExt.x) / 2), rect.y + 4, true);
@@ -128,7 +130,7 @@ public class BarGaugeWidget extends GaugeWidget
          }
       }
       
-      if (isVertical())
+      if (config.isTransposed())
       {
          if (rect.height > MAX_BAR_THICKNESS)
          {
@@ -149,8 +151,8 @@ public class BarGaugeWidget extends GaugeWidget
          rect.x -= SCALE_TEXT_WIDTH / 2;
       }
       
-      gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
-      gc.setForeground(getColorFromPreferences("Chart.Colors.DialScale")); //$NON-NLS-1$
+      gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
+      gc.setForeground(chart.getColorFromPreferences("Chart.Colors.DialScale")); //$NON-NLS-1$
       gc.fillRectangle(rect);
       gc.drawRectangle(rect);
 
@@ -159,41 +161,43 @@ public class BarGaugeWidget extends GaugeWidget
       rect.width -= 3;
       rect.height -= 3;
       
-      final double pointValue = isVertical() ? (maxValue - minValue) / rect.width : (maxValue - minValue) / rect.height;
-      if (dci.getValue() > minValue)
+      double maxValue = config.getMaxYScaleValue();
+      double minValue = config.getMinYScaleValue();
+      final double pointValue = config.isTransposed() ? (maxValue - minValue) / rect.width : (maxValue - minValue) / rect.height;
+      if (data.getCurrentValue() > minValue)
       {
-         if (colorMode == GaugeColorMode.ZONE)
+         if (config.getGaugeColorMode() == GaugeColorMode.ZONE.getValue())
          {
             double left, right = minValue;
             
-            if (leftRedZone > minValue)
+            if (config.getLeftRedZone() > minValue)
             {
-               right = leftRedZone + (leftYellowZone - leftRedZone) / 2;
-               drawZone(gc, rect, minValue, right, pointValue, RED_ZONE_COLOR, YELLOW_ZONE_COLOR);
+               right = config.getLeftRedZone() + (config.getLeftYellowZone() - config.getLeftRedZone()) / 2;
+               drawZone(gc, rect, minValue, right, minValue, pointValue, RED_ZONE_COLOR, YELLOW_ZONE_COLOR, config.isTransposed());
             }
             
             left = right;
-            right = leftYellowZone + (rightYellowZone - leftYellowZone) / 2;
-            drawZone(gc, rect, left, right, pointValue, (leftYellowZone > minValue) ? YELLOW_ZONE_COLOR : GREEN_ZONE_COLOR, GREEN_ZONE_COLOR);
+            right = config.getLeftYellowZone() + (config.getRightYellowZone() - config.getLeftYellowZone()) / 2;
+            drawZone(gc, rect, left, right, minValue, pointValue, (config.getLeftYellowZone() > minValue) ? YELLOW_ZONE_COLOR : GREEN_ZONE_COLOR, GREEN_ZONE_COLOR, config.isTransposed());
             
             left = right;
-            right = rightYellowZone + (rightRedZone - rightYellowZone) / 2;
-            if (rightYellowZone < rightRedZone)
+            right = config.getRightYellowZone() + (config.getRightRedZone() - config.getRightYellowZone()) / 2;
+            if (config.getRightYellowZone() < config.getRightRedZone())
             {
-               drawZone(gc, rect, left, right, pointValue, GREEN_ZONE_COLOR, YELLOW_ZONE_COLOR);
+               drawZone(gc, rect, left, right, minValue, pointValue, GREEN_ZONE_COLOR, YELLOW_ZONE_COLOR, config.isTransposed());
                left = right;
-               drawZone(gc, rect, left, maxValue, pointValue, YELLOW_ZONE_COLOR, (rightRedZone < maxValue) ? RED_ZONE_COLOR : YELLOW_ZONE_COLOR);
+               drawZone(gc, rect, left, maxValue, minValue, pointValue, YELLOW_ZONE_COLOR, (config.getRightRedZone() < maxValue) ? RED_ZONE_COLOR : YELLOW_ZONE_COLOR, config.isTransposed());
             }
-            else if (rightRedZone < maxValue)
+            else if (config.getRightRedZone() < maxValue)
             {
-               drawZone(gc, rect, left, right, pointValue, GREEN_ZONE_COLOR, RED_ZONE_COLOR);
+               drawZone(gc, rect, left, right, minValue, pointValue, GREEN_ZONE_COLOR, RED_ZONE_COLOR, config.isTransposed());
             }
             
-            double v = dci.getValue();
+            double v = data.getCurrentValue();
             if (v < maxValue)
             {
-               gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
-               if (isVertical())
+               gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
+               if (config.isTransposed())
                {
                   int points = (int)((v - minValue) / pointValue);
                   gc.fillRectangle(rect.x + points, rect.y, rect.width - points, rect.height);
@@ -207,12 +211,12 @@ public class BarGaugeWidget extends GaugeWidget
          }
          else
          {
-            if (colorMode == GaugeColorMode.THRESHOLD)
-               gc.setBackground(StatusDisplayInfo.getStatusColor(dci.getActiveThresholdSeverity()));
+            if (config.getGaugeColorMode() == GaugeColorMode.THRESHOLD.getValue())
+               gc.setBackground(StatusDisplayInfo.getStatusColor(data.getActiveThresholdSeverity()));
             else
-               gc.setBackground(colors.create(customColor));
-            int points = (int)((dci.getValue() - minValue) / pointValue);
-            if (isVertical())
+               gc.setBackground(chart.getColorCache().create(chart.getPaletteEntry(0).getRGBObject()));
+            int points = (int)((data.getCurrentValue() - minValue) / pointValue);
+            if (config.isTransposed())
             {
                if (points > rect.width)
                   points = rect.width;
@@ -227,34 +231,35 @@ public class BarGaugeWidget extends GaugeWidget
          }
       }
 
-      drawScale(gc, rect, pointValue);
+      drawScale(gc, rect, minValue, maxValue, pointValue, config.isTransposed(), config.isGridVisible());
    }
-   
+
    /**
     * Draw colored zone
     * 
     * @param gc
     * @param rect
-    * @param zoneStartValue
+    * @param startValue
+    * @param endValue
     * @param pointValue
-    * @param value
-    * @param color
-    * @param prevColor
+    * @param startColor
+    * @param endColor
+    * @param config
     */
-   private void drawZone(GC gc, Rectangle rect, double startValue, double endValue, double pointValue, RGB startColor, RGB endColor)
+   private void drawZone(GC gc, Rectangle rect, double startValue, double endValue, double minValue, double pointValue, RGB startColor, RGB endColor, boolean isTransposed)
    {
       int start = (int)((startValue - minValue) / pointValue);
       int points = (int)((endValue - startValue) / pointValue) + 1;
-      if (isVertical())
+      if (isTransposed)
       {
-         gc.setForeground(colors.create(startColor));
-         gc.setBackground(colors.create(endColor));
+         gc.setForeground(chart.getColorCache().create(startColor));
+         gc.setBackground(chart.getColorCache().create(endColor));
          gc.fillGradientRectangle(rect.x + start, rect.y, points, rect.height, false);
       }
       else
       {
-         gc.setBackground(colors.create(startColor));
-         gc.setForeground(colors.create(endColor));
+         gc.setBackground(chart.getColorCache().create(startColor));
+         gc.setForeground(chart.getColorCache().create(endColor));
          int y = rect.y + rect.height - start - points + 1;
          if (y + points >= rect.y + rect.height)
             points--;
@@ -269,17 +274,17 @@ public class BarGaugeWidget extends GaugeWidget
     * @param rect
     * @param pointValue
     */
-   private void drawScale(GC gc, Rectangle rect, double pointValue)
+   private void drawScale(GC gc, Rectangle rect, double minValue, double maxValue, double pointValue, boolean isTransposed, boolean gridVisible)
    {
-      Color scaleColor = getColorFromPreferences("Chart.Colors.DialScale"); //$NON-NLS-1$
-      Color scaleTextColor = getColorFromPreferences("Chart.Colors.DialScaleText"); //$NON-NLS-1$
+      Color scaleColor = chart.getColorFromPreferences("Chart.Colors.DialScale"); //$NON-NLS-1$
+      Color scaleTextColor = chart.getColorFromPreferences("Chart.Colors.DialScaleText"); //$NON-NLS-1$
       final Font markFont = WidgetHelper.getBestFittingFont(gc, scaleFonts, "900MM", SCALE_TEXT_WIDTH, SCALE_TEXT_HEIGHT); //$NON-NLS-1$
       gc.setFont(markFont);
 
       double step = getStepMagnitude(Math.max(Math.abs(minValue), Math.abs(maxValue)));
       double value = minValue;
       float pointsStep = (float)(step / pointValue);
-      if (isVertical())
+      if (isTransposed)
       {
          for(float x = 0; x < rect.width; x += pointsStep, value += step)
          {

@@ -49,9 +49,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * "General" property page for chart
  */
-public class General extends PreferencePage
+public class GeneralChart extends PreferencePage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(General.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(GeneralChart.class);
 
    private ChartConfiguration config;
 	private LabeledText title;
@@ -77,7 +77,7 @@ public class General extends PreferencePage
     * Constructor
     * @param settings
     */
-   public General(ChartConfiguration settings, boolean saveToDatabase)
+   public GeneralChart(ChartConfiguration settings, boolean saveToDatabase)
    {
       super("General");
       config = settings;     
@@ -122,7 +122,7 @@ public class General extends PreferencePage
       
       checkShowGrid = new Button(optionsGroup, SWT.CHECK);
       checkShowGrid.setText(i18n.tr("Show &grid lines"));
-      checkShowGrid.setSelection(config.isShowGrid());
+      checkShowGrid.setSelection(config.isGridVisible());
 
       checkLogScale = new Button(optionsGroup, SWT.CHECK);
       checkLogScale.setText(i18n.tr("L&ogarithmic scale"));
@@ -147,7 +147,7 @@ public class General extends PreferencePage
       
       checkShowLegend = new Button(optionsGroup, SWT.CHECK);
       checkShowLegend.setText(i18n.tr("Show &legend"));
-      checkShowLegend.setSelection(config.isShowLegend());
+      checkShowLegend.setSelection(config.isLegendVisible());
       checkShowLegend.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -167,7 +167,7 @@ public class General extends PreferencePage
       checkShowHostNames = new Button(optionsGroup, SWT.CHECK);
       checkShowHostNames.setText(i18n.tr("Show &host names"));
       checkShowHostNames.setSelection(config.isShowHostNames());
-      checkShowHostNames.setEnabled(config.isShowLegend());
+      checkShowHostNames.setEnabled(config.isLegendVisible());
       
       gd = new GridData();
       gd.horizontalAlignment = GridData.FILL;
@@ -180,12 +180,12 @@ public class General extends PreferencePage
       legendLocation.add(i18n.tr("Top"));
       legendLocation.add(i18n.tr("Bottom"));
       legendLocation.select(31 - Integer.numberOfLeadingZeros(config.getLegendPosition()));      
-      legendLocation.setEnabled(config.isShowLegend()); 
+      legendLocation.setEnabled(config.isLegendVisible());
       
       checkExtendedLegend = new Button(optionsGroup, SWT.CHECK);
       checkExtendedLegend.setText(i18n.tr("Show extended legend"));
       checkExtendedLegend.setSelection(config.isExtendedLegend());         
-      checkExtendedLegend.setEnabled(config.isShowLegend());   
+      checkExtendedLegend.setEnabled(config.isLegendVisible());
       
       checkAreaChart = new Button(optionsGroup, SWT.CHECK);
       checkAreaChart.setText(i18n.tr("Area chart"));
@@ -300,7 +300,7 @@ public class General extends PreferencePage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       yAxisRange.setLayoutData(gd);
-      yAxisRange.setSelection(config.isAutoScale(),  config.modifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue());
+      yAxisRange.setSelection(config.isAutoScale(), config.isModifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue());
       
       return dialogArea;
 	}
@@ -342,8 +342,8 @@ public class General extends PreferencePage
 	protected void applyChanges(final boolean isApply)
 	{
 		config.setTitle(title.getText());
-		config.setShowGrid(checkShowGrid.getSelection());
-		config.setShowLegend(checkShowLegend.getSelection());
+      config.setGridVisible(checkShowGrid.getSelection());
+      config.setLegendVisible(checkShowLegend.getSelection());
 		config.setAutoScale(yAxisRange.isAuto());
 		config.setShowHostNames(checkShowHostNames.getSelection());
 		config.setAutoRefresh(checkAutoRefresh.getSelection());
@@ -374,7 +374,7 @@ public class General extends PreferencePage
 						@Override
 						public void run()
 						{
-							General.this.setValid(true);
+							GeneralChart.this.setValid(true);
 						}
 					});
 				}

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.ImageTransfer;
@@ -50,8 +49,8 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.charts.api.ChartFactory;
-import org.netxms.nxmc.modules.charts.api.DataComparisonChart;
+import org.netxms.nxmc.modules.charts.api.ChartType;
+import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -66,7 +65,7 @@ public class DataComparisonView extends ObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(DataComparisonView.class);
 	
-	private DataComparisonChart chart;
+   private Chart chart;
 	protected NXCSession session;
 	private boolean updateInProgress = false;
 	protected ArrayList<GraphItem> items = new ArrayList<GraphItem>(8);
@@ -75,17 +74,16 @@ public class DataComparisonView extends ObjectView
 	private boolean useLogScale = false;
 	private boolean showIn3D = true;
 	private int autoRefreshInterval = 30;	// 30 seconds
-	private int chartType = DataComparisonChart.BAR_CHART;
+   private ChartType chartType = ChartType.BAR;
 	private boolean transposed = false;
 	private boolean showLegend = true;
-   private int legendPosition = ChartConfiguration.POSITION_BOTTOM;
+	private int legendPosition = ChartConfiguration.POSITION_BOTTOM;
 	private boolean translucent = false;
-	private Image[] titleImages = new Image[5];
+   private Image[] titleImages = new Image[4];
 
 	private RefreshAction actionRefresh;
 	private Action actionAutoRefresh;
 	private Action actionShowBarChart;
-	private Action actionShowTubeChart;
 	private Action actionShowPieChart;
 	private Action actionShowIn3D;
 	private Action actionShowTranslucent;
@@ -107,7 +105,7 @@ public class DataComparisonView extends ObjectView
     * @param items list of DCIs to show
     * @return view ID
     */
-   private static String buildId(ArrayList<GraphItem> items, int type)
+   private static String buildId(ArrayList<GraphItem> items, ChartType type)
    {
       StringBuilder sb = new StringBuilder("DataComparisonView");
       sb.append('#');
@@ -122,29 +120,11 @@ public class DataComparisonView extends ObjectView
       
       return sb.toString();
    }  
-   
-   private static ImageDescriptor getImage(int type)
-   {
-      switch(type)
-      {
-         case DataComparisonChart.BAR_CHART:
-            return ResourceManager.getImageDescriptor("icons/object-views/chart_bar.png"); 
-         case DataComparisonChart.PIE_CHART:
-            return ResourceManager.getImageDescriptor("icons/object-views/chart_pie.png"); 
-         case DataComparisonChart.RADAR_CHART:
-            return ResourceManager.getImageDescriptor("icons/object-views/graph.png"); 
-         case DataComparisonChart.TUBE_CHART:
-            return ResourceManager.getImageDescriptor("icons/object-views/chart_tube.png"); 
-         case DataComparisonChart.GAUGE_CHART:
-            return ResourceManager.getImageDescriptor("icons/object-views/chart_dial.png");             
-      }
-      
-      return ResourceManager.getImageDescriptor("icons/chart_bar.png");
-   }
-	
-	public DataComparisonView(ArrayList<GraphItem> items, int chartType)
+
+   public DataComparisonView(ArrayList<GraphItem> items, ChartType chartType)
 	{      
-      super(i18n.tr("Last Values Chart"), getImage(chartType), buildId(items, chartType), false);    
+      super(i18n.tr("Last Values Chart"),
+            ResourceManager.getImageDescriptor((chartType == ChartType.PIE) ? "icons/object-views/chart_pie.png" : "icons/chart_bar.png"), buildId(items, chartType), false);
 
       session = Registry.getSession();
       this.chartType = chartType;
@@ -157,33 +137,21 @@ public class DataComparisonView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-		switch(chartType)
-		{
-			case DataComparisonChart.BAR_CHART:
-				chart = ChartFactory.createBarChart(parent, SWT.NONE);
-				break;
-			case DataComparisonChart.TUBE_CHART:
-				chart = ChartFactory.createTubeChart(parent, SWT.NONE);
-				break;
-			case DataComparisonChart.PIE_CHART:
-				chart = ChartFactory.createPieChart(parent, SWT.NONE);
-				break;
-		}
-		
-		chart.setLegendPosition(legendPosition);
-		chart.setLegendVisible(showLegend);
-		chart.set3DModeEnabled(showIn3D);
-		chart.setTransposed(transposed);
-		chart.setTranslucent(translucent);
-		
+      ChartConfiguration chartConfiguration = new ChartConfiguration();
+      chartConfiguration.setLegendPosition(legendPosition);
+      chartConfiguration.setLegendVisible(showLegend);
+      chartConfiguration.setShowIn3D(showIn3D);
+      chartConfiguration.setTransposed(transposed);
+      chartConfiguration.setTranslucent(translucent);
+
+      chart = new Chart(parent, SWT.NONE, chartType, chartConfiguration);
 		for(GraphItem item : items)
-			chart.addParameter(item, 0);
-		
-		chart.initializationComplete();	
-		
-		createActions();
+         chart.addParameter(item);
+      chart.rebuild();
+
+      createActions();
 		createPopupMenu();
-		
+
 		updateChart();
 
 		refreshController = new ViewRefreshController(this, autoRefreshEnabled ? autoRefreshInterval : -1, new Runnable() {
@@ -248,7 +216,8 @@ public class DataComparisonView extends ObjectView
 			{
 				useLogScale = !useLogScale;
 				setChecked(useLogScale);
-				chart.setLogScaleEnabled(useLogScale);
+            chart.getConfiguration().setLogScale(useLogScale);
+            chart.rebuild();
 			}
 		};
 		actionUseLogScale.setChecked(useLogScale);
@@ -259,7 +228,8 @@ public class DataComparisonView extends ObjectView
 			{
 				showIn3D = !showIn3D;
 				setChecked(showIn3D);
-				chart.set3DModeEnabled(showIn3D);
+            chart.getConfiguration().setShowIn3D(showIn3D);
+            chart.rebuild();
 			}
 		};
 		actionShowIn3D.setChecked(showIn3D);
@@ -271,7 +241,8 @@ public class DataComparisonView extends ObjectView
 			{
 				translucent = !translucent;
 				setChecked(translucent);
-				chart.setTranslucent(translucent);
+            chart.getConfiguration().setTranslucent(translucent);
+            chart.rebuild();
 			}
 		};
 		actionShowTranslucent.setChecked(translucent);
@@ -282,7 +253,8 @@ public class DataComparisonView extends ObjectView
 			{
 				showLegend = !showLegend;
 				setChecked(showLegend);
-				chart.setLegendVisible(showLegend);
+            chart.getConfiguration().setLegendVisible(showLegend);
+            chart.rebuild();
 			}
 		};
 		actionShowLegend.setChecked(showLegend);
@@ -291,70 +263,64 @@ public class DataComparisonView extends ObjectView
 			@Override
 			public void run()
 			{
-            legendPosition = ChartConfiguration.POSITION_LEFT;
-				chart.setLegendPosition(legendPosition);
+				legendPosition = ChartConfiguration.POSITION_LEFT;
+            chart.getConfiguration().setLegendPosition(legendPosition);
+            chart.rebuild();
 			}
 		};
-      actionLegendLeft.setChecked(legendPosition == ChartConfiguration.POSITION_LEFT);
+		actionLegendLeft.setChecked(legendPosition == ChartConfiguration.POSITION_LEFT);
 		
 		actionLegendRight = new Action(i18n.tr("Place on &right"), Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-            legendPosition = ChartConfiguration.POSITION_RIGHT;
-				chart.setLegendPosition(legendPosition);
+				legendPosition = ChartConfiguration.POSITION_RIGHT;
+            chart.getConfiguration().setLegendPosition(legendPosition);
+            chart.rebuild();
 			}
 		};
-      actionLegendRight.setChecked(legendPosition == ChartConfiguration.POSITION_RIGHT);
+		actionLegendRight.setChecked(legendPosition == ChartConfiguration.POSITION_RIGHT);
 		
 		actionLegendTop = new Action(i18n.tr("Place on &top"), Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-            legendPosition = ChartConfiguration.POSITION_TOP;
-				chart.setLegendPosition(legendPosition);
+				legendPosition = ChartConfiguration.POSITION_TOP;
+            chart.getConfiguration().setLegendPosition(legendPosition);
+            chart.rebuild();
 			}
 		};
-      actionLegendTop.setChecked(legendPosition == ChartConfiguration.POSITION_LEFT);
+		actionLegendTop.setChecked(legendPosition == ChartConfiguration.POSITION_LEFT);
 		
 		actionLegendBottom = new Action(i18n.tr("Place on &bottom"), Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-            legendPosition = ChartConfiguration.POSITION_BOTTOM;
-				chart.setLegendPosition(legendPosition);
+				legendPosition = ChartConfiguration.POSITION_BOTTOM;
+            chart.getConfiguration().setLegendPosition(legendPosition);
+            chart.rebuild();
 			}
 		};
-      actionLegendBottom.setChecked(legendPosition == ChartConfiguration.POSITION_LEFT);
+		actionLegendBottom.setChecked(legendPosition == ChartConfiguration.POSITION_LEFT);
 		
 		actionShowBarChart = new Action(i18n.tr("&Bar chart"), Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				setChartType(DataComparisonChart.BAR_CHART);
+            setChartType(ChartType.BAR);
 			}
 		};
-		actionShowBarChart.setChecked(chart.getChartType() == DataComparisonChart.BAR_CHART);
+      actionShowBarChart.setChecked(chartType == ChartType.BAR);
 		actionShowBarChart.setImageDescriptor(ResourceManager.getImageDescriptor("icons/chart_bar.png")); 
 		
-		actionShowTubeChart = new Action(i18n.tr("&Tube chart"), Action.AS_RADIO_BUTTON) {
+      actionShowPieChart = new Action(i18n.tr("&Pie chart"), Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				setChartType(DataComparisonChart.TUBE_CHART);
+            setChartType(ChartType.PIE);
 			}
 		};
-		actionShowTubeChart.setChecked(chart.getChartType() == DataComparisonChart.TUBE_CHART);
-		actionShowTubeChart.setImageDescriptor(ResourceManager.getImageDescriptor("icons/chart_tube.png")); 
-		
-		actionShowPieChart = new Action(i18n.tr("&Pie chart"), Action.AS_RADIO_BUTTON) {
-			@Override
-			public void run()
-			{
-				setChartType(DataComparisonChart.PIE_CHART);
-			}
-		};
-		actionShowPieChart.setChecked(chart.getChartType() == DataComparisonChart.PIE_CHART);
+      actionShowPieChart.setChecked(chartType == ChartType.PIE);
 		actionShowPieChart.setImageDescriptor(ResourceManager.getImageDescriptor("icons/chart_pie.png")); 
 
 		actionHorizontal = new Action(i18n.tr("Show &horizontally"), Action.AS_RADIO_BUTTON) {
@@ -362,7 +328,8 @@ public class DataComparisonView extends ObjectView
 			public void run()
 			{
 				transposed = true;
-				chart.setTransposed(true);
+            chart.getConfiguration().setTransposed(true);
+            chart.rebuild();
 			}
 		};
 		actionHorizontal.setChecked(transposed);
@@ -374,13 +341,14 @@ public class DataComparisonView extends ObjectView
 			public void run()
 			{
 				transposed = false;
-				chart.setTransposed(false);
+            chart.getConfiguration().setTransposed(false);
+            chart.rebuild();
 			}
 		};
 		actionVertical.setChecked(!transposed);
 		actionVertical.setEnabled(chart.hasAxes());
 		actionVertical.setImageDescriptor(ResourceManager.getImageDescriptor("icons/bar_vertical.png")); 
-		
+
 		if (!System.getProperty("os.name").toLowerCase().contains("linux"))
    	{
    		actionCopyImage = new Action(i18n.tr("Copy to clipboard"), SharedIcons.COPY) {
@@ -419,7 +387,6 @@ public class DataComparisonView extends ObjectView
 		legend.add(actionLegendBottom);
 		
 		manager.add(actionShowBarChart);
-		manager.add(actionShowTubeChart);
 		manager.add(actionShowPieChart);
 		manager.add(new Separator());
 		manager.add(actionVertical);
@@ -442,18 +409,18 @@ public class DataComparisonView extends ObjectView
 	 * Set new chart type
 	 * @param newType
 	 */
-	private void setChartType(int newType)
+   private void setChartType(ChartType newType)
 	{
 		chartType = newType;
-		chart.setLabelsVisible(chartType == DataComparisonChart.PIE_CHART);
-		chart.setChartType(newType);
+      chart.getConfiguration().setLabelsVisible(chartType == ChartType.PIE);
+      chart.setType(chartType);
+      chart.rebuild();
+
 		actionHorizontal.setEnabled(chart.hasAxes());
 		actionVertical.setEnabled(chart.hasAxes());
 		try
 		{
-		   //TODO: make image update
-			//setTitleImage(titleImages[chartType]);
-			//firePropertyChange(IWorkbenchPart.PROP_TITLE);
+         // FIXME: setTitleImage(getIconByChartType(chartType));
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
@@ -467,7 +434,7 @@ public class DataComparisonView extends ObjectView
 	{
 		if (updateInProgress)
 			return;
-		
+
 		updateInProgress = true;
 		Job job = new Job(i18n.tr("Get DCI values for chart"), this) {
 			@Override
@@ -491,7 +458,7 @@ public class DataComparisonView extends ObjectView
 				}
 				
 				final Threshold[][] thresholds = new Threshold[items.size()][];
-				if (chartType == DataComparisonChart.GAUGE_CHART)
+            if ((chartType == ChartType.DIAL) || (chartType == ChartType.GAUGE) || (chartType == ChartType.TEXT))
 				{
 					for(int i = 0; i < items.size(); i++)
 					{
@@ -504,7 +471,7 @@ public class DataComparisonView extends ObjectView
 					@Override
 					public void run()
 					{
-						if (chartType == DataComparisonChart.GAUGE_CHART)
+                  if ((chartType == ChartType.DIAL) || (chartType == ChartType.GAUGE) || (chartType == ChartType.TEXT))
 							for(int i = 0; i < thresholds.length; i++)
 								chart.updateParameterThresholds(i, thresholds[i]);
 						setChartData(values);
@@ -578,7 +545,7 @@ public class DataComparisonView extends ObjectView
 		{
 			if (i != null)
 				i.dispose();
-		}		
+		}
 		super.dispose();
 	}
 }

@@ -46,7 +46,6 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphDefinition;
@@ -75,7 +74,7 @@ public class DataSources extends PreferencePage
 	public static final int COLUMN_LABEL = 3;
 	public static final int COLUMN_COLOR = 4;
 	
-   private ChartConfiguration config;
+   private GraphDefinition config;
 	private DciListLabelProvider labelProvider;
 	private SortableTableViewer viewer;
 	private Button addButton;
@@ -92,7 +91,7 @@ public class DataSources extends PreferencePage
     * Constructor
     * @param settings
     */
-   public DataSources(ChartConfiguration settings, boolean saveToDatabase)
+   public DataSources(GraphDefinition settings, boolean saveToDatabase)
    {
       super("Data Source");
       config = settings;     
@@ -105,8 +104,7 @@ public class DataSources extends PreferencePage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-      if (config instanceof GraphDefinition)
-         graphIsTemplate = ((GraphDefinition)config).isTemplate();
+      graphIsTemplate = config.isTemplate();
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		colorCache = new ColorCache(dialogArea);
 

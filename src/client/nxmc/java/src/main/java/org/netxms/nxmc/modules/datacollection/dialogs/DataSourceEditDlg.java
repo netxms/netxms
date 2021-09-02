@@ -131,7 +131,7 @@ public class DataSourceEditDlg extends Dialog
       gd.horizontalSpan = 2;
       displayFormat.setLayoutData(gd);
       
-		if(graphIsTemplate)
+      if (graphIsTemplate)
 		{
 		   dciName = new LabeledText(dialogArea, SWT.NONE);
 		   dciName.setLabel("DCI Name");
@@ -190,7 +190,7 @@ public class DataSourceEditDlg extends Dialog
       displayType.add("Default");
       displayType.add("Line");
       displayType.add("Area");
-      displayType.select(dci.getDisplayType());
+      displayType.select(dci.getLineChartType());
             
       /*** Options group ***/
       Group optionsGroup = new Group(dialogArea, SWT.NONE);
@@ -285,9 +285,9 @@ public class DataSourceEditDlg extends Dialog
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
@@ -312,8 +312,7 @@ public class DataSourceEditDlg extends Dialog
 		{
 			dci.color = "0x" + Integer.toHexString(ColorConverter.rgbToInt(colorSelector.getColorValue())); //$NON-NLS-1$
 		}
-		dci.area = false;
-		dci.displayType = displayType.getSelectionIndex();
+      dci.lineChartType = displayType.getSelectionIndex();
 		dci.showThresholds = checkShowThresholds.getSelection();
 		dci.invertValues = checkInvertValues.getSelection();
       dci.useRawValues = checkRawValues.getSelection();

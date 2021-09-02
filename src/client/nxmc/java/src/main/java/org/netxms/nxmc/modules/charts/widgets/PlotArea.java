@@ -16,17 +16,15 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.charts.api;
+package org.netxms.nxmc.modules.charts.widgets;
 
 /**
- * Generic owner of historical chart
+ * Interface for plot area widgets
  */
-public interface HistoricalChartOwner
+public interface PlotArea
 {
    /**
-    * Get owned chart object
-    * 
-    * @return current chart object
+    * Refresh chart with current data from owning chart widget
     */
-   public HistoricalDataChart getChart();
+   public void refresh();
 }

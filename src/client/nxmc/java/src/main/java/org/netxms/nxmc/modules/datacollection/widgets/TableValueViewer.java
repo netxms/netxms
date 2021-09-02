@@ -34,7 +34,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.charts.api.DataComparisonChart;
+import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.datacollection.views.DataComparisonView;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalDataView;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
@@ -68,7 +68,7 @@ public class TableValueViewer extends BaseTableValueViewer
       super(parent, style, viewPart, configSubId, saveTableSettings);
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#buildConfigId(java.lang.String)
     */
    @Override
@@ -84,7 +84,7 @@ public class TableValueViewer extends BaseTableValueViewer
       return sb.toString();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#createActions()
     */
    @Override
@@ -112,7 +112,7 @@ public class TableValueViewer extends BaseTableValueViewer
          @Override
          public void run()
          {
-            showDataComparisonChart(DataComparisonChart.BAR_CHART);
+            showDataComparisonChart(ChartType.BAR);
          }
       };
 
@@ -120,7 +120,7 @@ public class TableValueViewer extends BaseTableValueViewer
          @Override
          public void run()
          {
-            showDataComparisonChart(DataComparisonChart.PIE_CHART);
+            showDataComparisonChart(ChartType.PIE);
          }
       };
    }
@@ -133,11 +133,8 @@ public class TableValueViewer extends BaseTableValueViewer
    {
       manager.add(actionShowHistory);
       manager.add(actionShowLineChart);
-      /*
-       * TODO: fix chart and uncomment
       manager.add(actionShowBarChart);
       manager.add(actionShowPieChart);
-      */
       manager.add(new Separator());
       super.fillContextMenu(manager);
    }
@@ -234,7 +231,7 @@ public class TableValueViewer extends BaseTableValueViewer
    /**
     * Show line chart
     */
-   private void showDataComparisonChart(int chartType)
+   private void showDataComparisonChart(ChartType chartType)
    {
       if (currentData == null)
          return;

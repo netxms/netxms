@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,15 +23,17 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.widgets.Composite;
-import org.netxms.nxmc.modules.charts.widgets.internal.DataComparisonElement;
+import org.netxms.client.datacollection.ChartConfiguration;
+import org.netxms.client.datacollection.GraphItem;
+import org.netxms.nxmc.modules.charts.api.DataSeries;
+import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Current value pseudo-chart implementation
  */
-public class CurrentValueWidget extends GaugeWidget
+public class TextGauge extends GenericGauge
 {
 	private Font[] valueFonts = null;
 	
@@ -39,24 +41,25 @@ public class CurrentValueWidget extends GaugeWidget
 	 * @param parent
 	 * @param style
 	 */
-	public CurrentValueWidget(Composite parent, int style)
+   public TextGauge(Chart parent)
 	{
-		super(parent, style);
+      super(parent);
 	}
-	
+
    /**
-    * @see org.netxms.nxmc.modules.charts.widgets.GaugeWidget#createFonts()
+    * @see org.netxms.ui.eclipse.charts.widgets.GenericGauge#createFonts()
     */
 	@Override
 	protected void createFonts()
 	{
+      String fontName = chart.getConfiguration().getFontName();
 		valueFonts = new Font[32];
 		for(int i = 0; i < valueFonts.length; i++)
 			valueFonts[i] = new Font(getDisplay(), fontName, i * 6 + 12, SWT.BOLD); //$NON-NLS-1$
 	}
-	
+
    /**
-    * @see org.netxms.nxmc.modules.charts.widgets.GaugeWidget#disposeFonts()
+    * @see org.netxms.ui.eclipse.charts.widgets.GenericGauge#disposeFonts()
     */
 	@Override
 	protected void disposeFonts()
@@ -69,18 +72,19 @@ public class CurrentValueWidget extends GaugeWidget
 	}
 
    /**
-    * @see org.netxms.nxmc.modules.charts.widgets.GaugeWidget#renderElement(org.eclipse.swt.graphics.GC,
-    *      org.netxms.nxmc.modules.charts.widgets.internal.DataComparisonElement, int, int, int, int)
+    * @see org.netxms.ui.eclipse.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
+    *      org.netxms.client.datacollection.ChartConfiguration, org.netxms.client.datacollection.GraphItem,
+    *      org.netxms.ui.eclipse.charts.api.DataSeries, int, int, int, int)
     */
 	@Override
-	protected void renderElement(GC gc, DataComparisonElement dci, int x, int y, int w, int h)
+   protected void renderElement(GC gc, ChartConfiguration config, GraphItem dci, DataSeries data, int x, int y, int w, int h)
 	{
 		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
 		gc.setAntialias(SWT.ON);
-		
-		if (elementBordersVisible)
+
+      if (config.isElementBordersVisible())
 		{
-         gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
+         gc.setForeground(chart.getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
 		   gc.drawRectangle(rect);
 		   rect.x += INNER_MARGIN_WIDTH;
 		   rect.y += INNER_MARGIN_HEIGHT;
@@ -88,35 +92,35 @@ public class CurrentValueWidget extends GaugeWidget
          rect.height -= INNER_MARGIN_HEIGHT * 2;
 		}
 		
-		if (legendVisible)
+      if (config.areLabelsVisible())
 		{
 			rect.height -= gc.textExtent("MMM").y + 8; //$NON-NLS-1$
 		}
 		
-		final String value = getValueAsDisplayString(dci);
+      final String value = getValueAsDisplayString(dci, data);
 		final Font font = WidgetHelper.getBestFittingFont(gc, valueFonts, value, rect.width, rect.height); //$NON-NLS-1$
 		gc.setFont(font);
-		switch(colorMode)
+      switch(GaugeColorMode.getByValue(config.getGaugeColorMode()))
 		{
 		   case ZONE:
-      		if ((dci.getValue() <= leftRedZone) || (dci.getValue() >= rightRedZone))
+            if ((data.getCurrentValue() <= config.getLeftRedZone()) || (data.getCurrentValue() >= config.getRightRedZone()))
       		{
-      			gc.setForeground(colors.create(RED_ZONE_COLOR));
+               gc.setForeground(chart.getColorCache().create(RED_ZONE_COLOR));
       		}
-      		else if ((dci.getValue() <= leftYellowZone) || (dci.getValue() >= rightYellowZone))
+            else if ((data.getCurrentValue() <= config.getLeftYellowZone()) || (data.getCurrentValue() >= config.getRightYellowZone()))
       		{
-      			gc.setForeground(colors.create(YELLOW_ZONE_COLOR));
+               gc.setForeground(chart.getColorCache().create(YELLOW_ZONE_COLOR));
       		}
       		else
       		{
-      			gc.setForeground(colors.create(GREEN_ZONE_COLOR));
+               gc.setForeground(chart.getColorCache().create(GREEN_ZONE_COLOR));
       		}
       		break;
 		   case CUSTOM:
-   		   gc.setForeground(colors.create(customColor));
+            gc.setForeground(chart.getColorCache().create(chart.getPaletteEntry(0).getRGBObject()));
    		   break;
 		   case THRESHOLD:
-		      gc.setForeground(StatusDisplayInfo.getStatusColor(dci.getActiveThresholdSeverity()));
+            gc.setForeground(StatusDisplayInfo.getStatusColor(data.getActiveThresholdSeverity()));
 		      break;
          default:
             gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_BLACK));
@@ -124,13 +128,13 @@ public class CurrentValueWidget extends GaugeWidget
 		}
 		Point ext = gc.textExtent(value, SWT.DRAW_TRANSPARENT);
 		gc.drawText(value, rect.x + rect.width / 2 - ext.x / 2, rect.y + rect.height / 2 - ext.y / 2, SWT.DRAW_TRANSPARENT);
-		
-		// Draw legend, ignore legend position
-		if (legendVisible)
+
+      // Draw label
+      if (config.areLabelsVisible())
 		{
          gc.setFont(null);
 			ext = gc.textExtent(dci.getName(), SWT.DRAW_TRANSPARENT);
-			gc.setForeground(getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
+         gc.setForeground(chart.getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
 			gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 		}
 	}

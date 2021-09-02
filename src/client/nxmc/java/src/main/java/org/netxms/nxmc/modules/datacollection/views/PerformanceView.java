@@ -40,7 +40,7 @@ import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.charts.api.PerfTabGraphSettings;
+import org.netxms.nxmc.modules.datacollection.views.helpers.PerfTabGraphSettings;
 import org.netxms.nxmc.modules.datacollection.widgets.PerfTabGraph;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
