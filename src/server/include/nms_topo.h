@@ -288,7 +288,7 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool
 ForwardingDatabase *GetSwitchForwardingDatabase(Node *node);
 shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
 
-ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp);
+ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(const Node& node, SNMP_Transport *snmp);
 
 shared_ptr<LinkLayerNeighbors> BuildLinkLayerNeighborList(Node *node);
 void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
