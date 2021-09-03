@@ -41,24 +41,30 @@ static char *FindServiceName(UINT32 pid)
    char path[64];
    snprintf(path, 64, "/proc/%d/cgroup", pid);
    FILE *cgroup = fopen(path, "r");
-   char *serviceName = NULL;
-   if (cgroup != NULL)
+   char *serviceName = nullptr;
+   if (cgroup != nullptr)
    {
-     char fileBuffer[255];
-     while(fgets(fileBuffer, 255, cgroup) != NULL)
-     {
-        serviceName = strstr(fileBuffer, ".service");
-        if (serviceName != NULL)
-        {
-           serviceName[8] = 0;
-           while(*serviceName != '/')
-              serviceName--;
-           serviceName++;
-           serviceName = strdup(serviceName);
-           break;
-        }
-     }
-     fclose(cgroup);
+      char fileBuffer[255];
+      while (fgets(fileBuffer, 255, cgroup) != nullptr)
+      {
+         serviceName = strstr(fileBuffer, ".service");
+         if (serviceName != nullptr)
+         {
+            serviceName[8] = 0;
+            while (*serviceName != '/')
+               serviceName--;
+            serviceName++;
+            if (!strncmp(serviceName, "user@", 5))
+            {
+               // Process is running within user session
+               serviceName = nullptr;
+               break;
+            }
+            serviceName = MemCopyStringA(serviceName);
+            break;
+         }
+      }
+      fclose(cgroup);
    }
 
    return serviceName;
@@ -70,7 +76,7 @@ static char *FindServiceName(UINT32 pid)
 bool RestartService(UINT32 pid)
 {
    char *serviceName = FindServiceName(pid);
-   if (serviceName == NULL)
+   if (serviceName == nullptr)
       return false;  // Not a systemd service
 
    // If -S option was given just terminate old process - systemd will restart it
@@ -89,7 +95,7 @@ bool RestartService(UINT32 pid)
       if (i == 30)
          kill(pid, SIGKILL);
 
-      free(serviceName);
+      MemFree(serviceName);
       return true;
    }
 
@@ -144,7 +150,7 @@ finish:
    sd_bus_error_free(&error);
    sd_bus_message_unref(m);
    sd_bus_unref(bus);
-   free(serviceName);
+   MemFree(serviceName);
 
    return result;
 
@@ -152,6 +158,7 @@ finish:
 
    char command[1024];
    snprintf(command, 1024, "systemctl restart %s", serviceName);
+   MemFree(serviceName);
    return system(command) == 0;
 
 #endif

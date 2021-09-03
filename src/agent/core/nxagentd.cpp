@@ -276,6 +276,7 @@ static uint32_t s_logRotationMode = NXLOG_ROTATION_BY_SIZE;
 static TCHAR s_dailyLogFileSuffix[64] = _T("");
 static TCHAR s_executableName[MAX_PATH];
 static int s_debugLevel = NXCONFIG_UNINITIALIZED_VALUE;
+static int s_debugLevelOverride = NXCONFIG_UNINITIALIZED_VALUE; // Debug level set from command line
 static TCHAR *s_debugTags = nullptr;
 static uint32_t s_maxWebSvcPoolSize = 64;
 
@@ -561,8 +562,15 @@ static StringBuffer BuildRestartCommandLine(bool withWaitPid)
    command.append(s_executableName);
    command.append(_T("\" -c \""));
    command.append(g_szConfigFile);
-   command.append(_T("\" -D "));
-   command.append(s_debugLevel);
+   if (s_debugLevelOverride != NXCONFIG_UNINITIALIZED_VALUE)
+   {
+      command.append(_T("\" -D "));
+      command.append(s_debugLevelOverride);
+   }
+   else
+   {
+      command.append(_T("\""));
+   }
 
 #if !defined(_WIN32)
    command.append(_T(" -p \""));
@@ -591,6 +599,9 @@ static StringBuffer BuildRestartCommandLine(bool withWaitPid)
 #endif
    if (g_dwFlags & AF_DAEMON)
       command.append(_T(" -d"));
+   else
+      command.append(_T(" -f"));
+
    if (g_dwFlags & AF_CENTRAL_CONFIG)
    {
       command.append(_T(" -M "));
@@ -1854,7 +1865,7 @@ int main(int argc, char *argv[])
          }
          case 'c':   // Configuration file
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigFile, MAX_PATH);
+            MultiByteToWideCharSysLocale(optarg, g_szConfigFile, MAX_PATH);
 				g_szConfigFile[MAX_PATH - 1] = 0;
 #else
             strlcpy(g_szConfigFile, optarg, MAX_PATH);
@@ -1867,13 +1878,14 @@ int main(int argc, char *argv[])
             g_dwFlags |= AF_DAEMON;
             break;
          case 'D':   // Turn on debug output
-				s_debugLevel = strtol(optarg, &eptr, 0);
+				s_debugLevelOverride = strtol(optarg, &eptr, 0);
 				if ((*eptr != 0) || (s_debugLevel > 9))
 				{
 					fprintf(stderr, "Invalid debug level: %s\n", optarg);
 					command = Command::NONE;
 					exitCode = 1;
 				}
+				s_debugLevel = s_debugLevelOverride;
             break;
 			case 'f':	// Run in foreground
             g_dwFlags &= ~AF_DAEMON;
@@ -1888,7 +1900,7 @@ int main(int argc, char *argv[])
 #endif
          case 'G':
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, configSection, MAX_DB_STRING);
+            MultiByteToWideCharSysLocale(optarg, configSection, MAX_DB_STRING);
 				configSection[MAX_DB_STRING - 1] = 0;
 #else
             strlcpy(configSection, optarg, MAX_DB_STRING);
@@ -1915,7 +1927,7 @@ int main(int argc, char *argv[])
 #ifndef _WIN32
          case 'p':   // PID file
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szPidFile, MAX_PATH);
+				MultiByteToWideCharSysLocale(optarg, g_szPidFile, MAX_PATH);
 				g_szPidFile[MAX_PATH - 1] = 0;
 #else
             strlcpy(g_szPidFile, optarg, MAX_PATH);
@@ -1925,7 +1937,7 @@ int main(int argc, char *argv[])
          case 'M':
             g_dwFlags |= AF_CENTRAL_CONFIG;
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigServer, MAX_DB_STRING);
+            MultiByteToWideCharSysLocale(optarg, g_szConfigServer, MAX_DB_STRING);
 				g_szConfigServer[MAX_DB_STRING - 1] = 0;
 #else
             strlcpy(g_szConfigServer, optarg, MAX_DB_STRING);
@@ -1934,7 +1946,7 @@ int main(int argc, char *argv[])
          case 'r':
             s_startupFlags |= SF_REGISTER;
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szRegistrar, MAX_DB_STRING);
+            MultiByteToWideCharSysLocale(optarg, g_szRegistrar, MAX_DB_STRING);
 				g_szRegistrar[MAX_DB_STRING - 1] = 0;
 #else
             strlcpy(g_szRegistrar, optarg, MAX_DB_STRING);
@@ -1942,7 +1954,7 @@ int main(int argc, char *argv[])
             break;
          case 'P':   // Platform suffix
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szPlatformSuffix, MAX_PSUFFIX_LENGTH);
+            MultiByteToWideCharSysLocale(optarg, g_szPlatformSuffix, MAX_PSUFFIX_LENGTH);
 				g_szPlatformSuffix[MAX_PSUFFIX_LENGTH - 1] = 0;
 #else
             strlcpy(g_szPlatformSuffix, optarg, MAX_PSUFFIX_LENGTH);
@@ -1962,16 +1974,16 @@ int main(int argc, char *argv[])
             break;
          case 'W':   // Watchdog process
             command = Command::RUN_WATCHDOG;
-            dwMainPID = strtoul(optarg, NULL, 10);
+            dwMainPID = strtoul(optarg, nullptr, 10);
             break;
          case 'X':   // Agent is being restarted
             bRestart = TRUE;
-            dwOldPID = strtoul(optarg, NULL, 10);
+            dwOldPID = strtoul(optarg, nullptr, 10);
             break;
          case 'Z':   // Create configuration file
             command = Command::CREATE_CONFIG;
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigFile, MAX_PATH);
+            MultiByteToWideCharSysLocale(optarg, g_szConfigFile, MAX_PATH);
 				g_szConfigFile[MAX_PATH - 1] = 0;
 #else
             strlcpy(g_szConfigFile, optarg, MAX_PATH);
@@ -2004,7 +2016,7 @@ int main(int argc, char *argv[])
             break;
          case 'e':   // Event source name
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_windowsEventSourceName, MAX_PATH);
+            MultiByteToWideCharSysLocale(optarg, g_windowsEventSourceName, MAX_PATH);
 				g_windowsEventSourceName[MAX_PATH - 1] = 0;
 #else
             strlcpy(g_windowsEventSourceName, optarg, MAX_PATH);
@@ -2012,7 +2024,7 @@ int main(int argc, char *argv[])
             break;
          case 'n':   // Service name
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_windowsServiceName, MAX_PATH);
+            MultiByteToWideCharSysLocale(optarg, g_windowsServiceName, MAX_PATH);
 				g_windowsServiceName[MAX_PATH - 1] = 0;
 #else
             strlcpy(g_windowsServiceName, optarg, MAX_PATH);
@@ -2020,7 +2032,7 @@ int main(int argc, char *argv[])
             break;
          case 'N':   // Service display name
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_windowsServiceDisplayName, MAX_PATH);
+            MultiByteToWideCharSysLocale(optarg, g_windowsServiceDisplayName, MAX_PATH);
 				g_windowsServiceDisplayName[MAX_PATH - 1] = 0;
 #else
             strlcpy(g_windowsServiceDisplayName, optarg, MAX_PATH);
