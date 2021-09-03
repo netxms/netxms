@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,8 @@ import org.slf4j.LoggerFactory;
  */
 public class SessionStore
 {
+   private static ApiProperties properties = new ApiProperties();
+
    private Map<UUID, SessionToken> sessions = new HashMap<UUID, SessionToken>();
    private Logger log = LoggerFactory.getLogger(SessionStore.class);
    private Thread sessionManager = null;
@@ -142,7 +144,7 @@ public class SessionStore
       List<UUID> disconnectedSessions = new ArrayList<UUID>();
       for(SessionToken s : sessions.values())
       {
-         if (now - s.getActivityTimestamp() > 300000) // 5 minutes inactivity timeout
+         if (now - s.getActivityTimestamp() > properties.getSessionTimeout())
          {
             log.info("Session " + s.getSessionHandle() + " disconnected by inactivity timeout");
             s.getSession().disconnect();
