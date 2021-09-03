@@ -195,25 +195,27 @@ struct LL_NEIGHBOR_INFO
 class NXCORE_EXPORTABLE LinkLayerNeighbors
 {
 private:
-   int m_count;
-   int m_allocated;
-   LL_NEIGHBOR_INFO *m_connections;
+   StructArray<LL_NEIGHBOR_INFO> m_connections;
+   HashSet<uint32_t> m_multipointInterfaces;  // List of interfaces where more than one MAC was found
    void *m_data[4];
 
    bool isDuplicate(LL_NEIGHBOR_INFO *info);
 
 public:
    LinkLayerNeighbors();
-   virtual ~LinkLayerNeighbors();
 
    void addConnection(LL_NEIGHBOR_INFO *info);
-   LL_NEIGHBOR_INFO *getConnection(int index) { return ((index >= 0) && (index < m_count)) ? &m_connections[index] : NULL; }
+   LL_NEIGHBOR_INFO *getConnection(int index) const { return m_connections.get(index); }
 
    void setData(int index, void *data) { if ((index >= 0) && (index < 4)) m_data[index] = data; }
-   void *getData(int index) { return ((index >= 0) && (index < 4)) ? m_data[index] : NULL; }
+   void *getData(int index) const { return ((index >= 0) && (index < 4)) ? m_data[index] : nullptr; }
    void setData(void *data) { setData(0, data); }
-   void *getData() { return getData(0); }
-   int size() { return m_count; }
+   void *getData() const { return getData(0); }
+
+   int size() const { return m_connections.size(); }
+
+   void markMultipointInterface(uint32_t ifIndex) { m_multipointInterfaces.put(ifIndex); }
+   bool isMultipointInterface(uint32_t ifIndex) const { return m_multipointInterfaces.contains(ifIndex); }
 };
 
 #ifdef _WIN32
