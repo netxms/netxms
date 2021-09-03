@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,20 +25,9 @@
 /**
  * Constructor
  */
-LinkLayerNeighbors::LinkLayerNeighbors()
+LinkLayerNeighbors::LinkLayerNeighbors() : m_connections(0, 16)
 {
-	m_connections = NULL;
-	m_count = 0;
-	m_allocated = 0;
 	memset(m_data, 0, sizeof(m_data));
-}
-
-/**
- * Destructor
- */
-LinkLayerNeighbors::~LinkLayerNeighbors()
-{
-	free(m_connections);
 }
 
 /**
@@ -46,15 +35,15 @@ LinkLayerNeighbors::~LinkLayerNeighbors()
  */
 bool LinkLayerNeighbors::isDuplicate(LL_NEIGHBOR_INFO *info)
 {
-	for(int i = 0; i < m_count; i++)
+	for(int i = 0; i < m_connections.size(); i++)
 	{
-		if (m_connections[i].ifLocal == info->ifLocal)
+	   LL_NEIGHBOR_INFO *n = m_connections.get(i);
+		if (n->ifLocal == info->ifLocal)
 		{
-		   if ((m_connections[i].ifRemote != info->ifRemote) ||
-		       (m_connections[i].objectId != info->objectId))
+		   if ((n->ifRemote != info->ifRemote) || (n->objectId != info->objectId))
 		   {
 		      nxlog_debug(5, _T("LinkLayerNeighbors::isDuplicate: inconsistent data: %s(ifLocal=%d remote=%d/%d) %s(ifLocal=%d remote=%d/%d)"),
-		                  GetLinkLayerProtocolName(m_connections[i].protocol), m_connections[i].ifLocal, m_connections[i].objectId, m_connections[i].ifRemote,
+		                  GetLinkLayerProtocolName(n->protocol), n->ifLocal, n->objectId, n->ifRemote,
                         GetLinkLayerProtocolName(info->protocol), info->ifLocal, info->objectId, info->ifRemote);
 		   }
          return true;
@@ -74,13 +63,7 @@ void LinkLayerNeighbors::addConnection(LL_NEIGHBOR_INFO *info)
 	if (isDuplicate(info))
 		return;
 
-	if (m_count == m_allocated)
-	{
-		m_allocated += 32;
-		m_connections = (LL_NEIGHBOR_INFO *)realloc(m_connections, sizeof(LL_NEIGHBOR_INFO) * m_allocated);
-	}
-	memcpy(&m_connections[m_count], info, sizeof(LL_NEIGHBOR_INFO));
-	m_count++;
+	m_connections.add(info);
 }
 
 /**

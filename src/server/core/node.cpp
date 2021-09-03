@@ -9097,22 +9097,9 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
                continue;
             }
 
-            if (peerNode->isDown())
-               continue; // Don't change information about down peers
-
-            bool ifaceFound = false;
-            for(int j = 0; j < nbs->size(); j++)
-            {
-               LL_NEIGHBOR_INFO *ni = nbs->getConnection(j);
-               if ((ni->objectId == iface->getPeerNodeId()) && (ni->ifLocal == iface->getIfIndex()))
-               {
-                  bool reflection = (iface->getFlags() & IF_PEER_REFLECTION) ? true : false;
-                  ifaceFound = !ni->isCached || (((ni->protocol == LL_PROTO_FDB) || (ni->protocol == LL_PROTO_STP)) && reflection);
-                  break;
-               }
-            }
-
-            if (!ifaceFound)
+            // Remove peer information if more than one MAC address detected on port
+            // Do not change information when interface is down
+            if ((iface->getConfirmedOperState() == IF_OPER_STATE_UP) && nbs->isMultipointInterface(iface->getIfIndex()))
             {
                shared_ptr<Interface> ifPeer = static_pointer_cast<Interface>(FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE));
                if (ifPeer != nullptr)
@@ -9244,7 +9231,7 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
       if (getChildList().get(i)->getObjectClass() != OBJECT_INTERFACE)
          continue;
 
-      Interface *ifLocal = (Interface *)getChildList().get(i);
+      Interface *ifLocal = static_cast<Interface*>(getChildList().get(i));
       BYTE macAddr[MAC_ADDR_LENGTH];
       if (fdb->isSingleMacOnPort(ifLocal->getIfIndex(), macAddr))
       {
@@ -9269,6 +9256,10 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
                nbs->addConnection(&info);
             }
          }
+      }
+      else
+      {
+         nbs->markMultipointInterface(ifLocal->getIfIndex());
       }
    }
    unlockChildList();
