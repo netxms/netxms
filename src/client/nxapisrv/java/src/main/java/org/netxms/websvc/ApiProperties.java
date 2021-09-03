@@ -31,6 +31,7 @@ public class ApiProperties
    private String host = "127.0.0.1";
    private int port = 4701;
    private boolean encryptedSession;
+   private long sessionTimeout = 300000;
    
    /**
     * Class for reading API properties file
@@ -48,6 +49,7 @@ public class ApiProperties
             host = properties.getProperty("netxms.server.address", "127.0.0.1");
             port = getIntProperty("netxms.server.port", 4701);
             encryptedSession = getBooleanProperty("netxms.server.useEncryption", true);
+            sessionTimeout = getIntProperty("session.timeout", 300) * 1000;
          }
       }
       catch(Exception e)
@@ -132,5 +134,15 @@ public class ApiProperties
    public boolean isEncryptedSession()
    {
       return encryptedSession;
+   }
+
+   /**
+    * Get session inactivity timeout in milliseconds.
+    *
+    * @return session inactivity timeout in milliseconds
+    */
+   public long getSessionTimeout()
+   {
+      return sessionTimeout;
    }
 }

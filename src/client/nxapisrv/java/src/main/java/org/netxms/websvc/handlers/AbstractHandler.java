@@ -58,7 +58,7 @@ import com.google.gson.JsonObject;
  */
 public abstract class AbstractHandler extends ServerResource
 {
-   static ApiProperties properties = new ApiProperties();
+   protected static ApiProperties properties = new ApiProperties();
    
    private Logger log = LoggerFactory.getLogger(AbstractHandler.class);
    private SessionToken sessionToken = null;
