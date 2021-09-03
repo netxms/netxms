@@ -231,18 +231,18 @@ static bool CreateDatabase_Oracle(const TCHAR *dbLogin, const TCHAR *dbPassword)
 static bool CreateDatabase_PostgreSQL(const TCHAR *dbName, const TCHAR *dbLogin, const TCHAR *dbPassword)
 {
    TCHAR query[256];
-   _sntprintf(query, 256, _T("CREATE DATABASE %s"), dbName);
+   _sntprintf(query, 256, _T("CREATE DATABASE \"%s\""), dbName);
    bool success = SQLQuery(query);
 
    if (success)
    {
-      _sntprintf(query, 256, _T("CREATE USER %s WITH PASSWORD '%s'"), dbLogin, dbPassword);
+      _sntprintf(query, 256, _T("CREATE USER \"%s\" WITH PASSWORD '%s'"), dbLogin, dbPassword);
       success = SQLQuery(query);
    }
 
    if (success)
    {
-      _sntprintf(query, 256, _T("GRANT ALL PRIVILEGES ON DATABASE %s TO %s"), dbName, dbLogin);
+      _sntprintf(query, 256, _T("GRANT ALL PRIVILEGES ON DATABASE \"%s\" TO \"%s\""), dbName, dbLogin);
       success = SQLQuery(query);
    }
 
