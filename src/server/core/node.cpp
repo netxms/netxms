@@ -4847,7 +4847,7 @@ bool Node::confPollSnmp(uint32_t rqId)
          unlockProperties();
       }
 
-      ObjectArray<LLDP_LOCAL_PORT_INFO> *lldpPorts = GetLLDPLocalPortInfo(pTransport);
+      ObjectArray<LLDP_LOCAL_PORT_INFO> *lldpPorts = GetLLDPLocalPortInfo(*this, pTransport);
       lockProperties();
       delete m_lldpLocalPortInfo;
       m_lldpLocalPortInfo = lldpPorts;
@@ -9911,9 +9911,8 @@ void Node::showLLDPInfo(CONSOLE_CTX console)
       for(int i = 0; i < m_lldpLocalPortInfo->size(); i++)
       {
          LLDP_LOCAL_PORT_INFO *port = m_lldpLocalPortInfo->get(i);
-         ConsolePrintf(console, _T("   %4d | %2d | %3d | %-24s | %s\n"),
-                       port->portNumber, port->localIdSubtype, (int)port->localIdLen,
-                       BinToStr(port->localId, port->localIdLen, buffer), port->ifDescr);
+         ConsolePrintf(console, _T("   %4u | %2u | %3d | %-24s | %s\n"), port->portNumber,
+                  port->localIdSubtype, (int)port->localIdLen, BinToStr(port->localId, port->localIdLen, buffer), port->ifDescr);
       }
    }
    else

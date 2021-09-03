@@ -43,7 +43,7 @@ static UINT32 PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport
    request.bindVariable(new SNMP_Variable(newOid, oid.length()));
 
 	SNMP_PDU *pRespPDU = nullptr;
-   UINT32 rcc = transport->doRequest(&request, &pRespPDU, SnmpGetDefaultTimeout(), 3);
+   uint32_t rcc = transport->doRequest(&request, &pRespPDU, SnmpGetDefaultTimeout(), 3);
 	if (rcc == SNMP_ERR_SUCCESS)
    {
 	   if (pRespPDU->getNumVariables() >= 2)
@@ -66,14 +66,26 @@ static UINT32 PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport
 /**
  * Get information about LLDP local ports
  */
-ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp)
+ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(const Node& node, SNMP_Transport *snmp)
 {
-   nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("Reading LLDP local port information"));
+   nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("Reading LLDP local port information from node %s [%u]"), node.getName(), node.getId());
 	ObjectArray<LLDP_LOCAL_PORT_INFO> *ports = new ObjectArray<LLDP_LOCAL_PORT_INFO>(64, 64, Ownership::True);
 	if (SnmpWalk(snmp, _T(".1.0.8802.1.1.2.1.3.7.1.3"), PortLocalInfoHandler, ports) != SNMP_ERR_SUCCESS)
 	{
 		delete ports;
 		return nullptr;
+	}
+	if (nxlog_get_debug_level_tag(DEBUG_TAG_TOPO_LLDP) >= 6)
+	{
+	   nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 6, _T("GetLLDPLocalPortInfo(%s [%u]): %d ports"), node.getName(), node.getId(), ports->size());
+
+	   TCHAR buffer[512];
+	   for(int i = 0; i < ports->size(); i++)
+	   {
+	      LLDP_LOCAL_PORT_INFO *p = ports->get(i);
+	      nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 6, _T("GetLLDPLocalPortInfo(%s [%u]): port=%u, idSubType=%u, idLen=%d, id=%s, ifDescr=\"%s\""), node.getName(), node.getId(),
+	               p->portNumber, p->localIdSubtype, (int)p->localIdLen, BinToStr(p->localId, p->localIdLen, buffer), p->ifDescr);
+	   }
 	}
 	return ports;
 }
@@ -420,8 +432,7 @@ static void ProcessLLDPConnectionEntry(Node *node, StringObjectMap<SNMP_Variable
             if (node->isBridge())
             {
                shared_ptr<Interface> localIf = node->findBridgePort(localPort);
-               if (localIf != nullptr)
-                  info.ifLocal = localIf->getIfIndex();
+               info.ifLocal = (localIf != nullptr) ? localIf->getIfIndex() : 0;
                nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u]): lookup bridge port: localPort=%u iface=%s"), node->getName(), node->getId(), localPort, (localIf != nullptr) ? localIf->getName() : _T("(null)"));
             }
             else
