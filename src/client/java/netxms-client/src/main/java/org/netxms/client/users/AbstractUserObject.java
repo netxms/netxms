@@ -84,8 +84,10 @@ public abstract class AbstractUserObject
    private Date created = null;
 
 	/**
-	 * Default constructor
+	 * Create new user object.
+	 *
 	 * @param name object name
+	 * @param type object type for REST API (should be "user" or "group")
 	 */
 	public AbstractUserObject(String name, String type)
 	{

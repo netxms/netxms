@@ -44,6 +44,8 @@ public class SshKeyPair
 
    /**
     * Copy constructor
+    * 
+    * @param src source object
     */
    public SshKeyPair(SshKeyPair src)
    {

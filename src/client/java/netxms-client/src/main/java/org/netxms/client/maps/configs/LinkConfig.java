@@ -65,14 +65,14 @@ public class LinkConfig
    }
 
    /**
-    * Constructor for creating XML
+    * Create link object from scratch.
     *
-    * @param dciList
-    * @param objectStatusList
-    * @param routing
-    * @param bendPoints
-    * @param useActiveThresholds
-    * @param isLocked
+    * @param dciList DCI list
+    * @param objectStatusList list of object identifiers for status calculation (can be null)
+    * @param routing routing type
+    * @param bendPoints list of bend points (can be null)
+    * @param useActiveThresholds true to use active DCI thresholds for status calculation
+    * @param isLocked true if link is locked
     */
    public LinkConfig(SingleDciConfig[] dciList, List<Long> objectStatusList, int routing, long[] bendPoints, boolean useActiveThresholds, boolean isLocked)
    {
@@ -85,8 +85,8 @@ public class LinkConfig
    }   
    
    /**
-    * Create DCI list object from XML document
-    * 
+    * Create link object from XML document.
+    *
     * @param xml XML document
     * @return deserialized object
     * @throws Exception if the object cannot be fully deserialized
@@ -96,7 +96,7 @@ public class LinkConfig
       Serializer serializer = new Persister();
       return serializer.read(LinkConfig.class, xml);
    }
-   
+
    /**
     * Create XML from configuration.
     * 
@@ -191,7 +191,9 @@ public class LinkConfig
       return useActiveThresholds;
    }
 
-   /*
+   /**
+    * Check if link is locked.
+    *
     * @return true if link is locked
     */
    public boolean isLocked()
@@ -200,7 +202,9 @@ public class LinkConfig
    }
    
    /**
-    * @param isLocked set link locked or unlocked
+    * Set link's "locked" state.
+    *
+    * @param isLocked true to mark link as locked
     */
    public void setLocked(boolean isLocked)
    {

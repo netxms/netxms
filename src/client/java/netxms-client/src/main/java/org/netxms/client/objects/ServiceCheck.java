@@ -39,8 +39,10 @@ public class ServiceCheck extends GenericObject
 	private String failureReason;
 
 	/**
-	 * @param msg
-	 * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public ServiceCheck(NXCPMessage msg, NXCSession session)
 	{
@@ -53,8 +55,8 @@ public class ServiceCheck extends GenericObject
 		failureReason = msg.getFieldAsString(NXCPCodes.VID_REASON);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
 	 */
 	@Override
 	public String getObjectClassName()

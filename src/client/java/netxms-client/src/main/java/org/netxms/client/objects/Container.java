@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,10 @@ public class Container extends GenericObject implements AutoBindObject
 	private String autoBindFilter;
 	
 	/**
-	 * @param msg
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public Container(NXCPMessage msg, NXCSession session)
 	{
@@ -44,7 +47,7 @@ public class Container extends GenericObject implements AutoBindObject
       autoUnbind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOUNBIND_FLAG);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
 	 */
 	@Override
@@ -53,7 +56,7 @@ public class Container extends GenericObject implements AutoBindObject
 		return true;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
     */
    @Override
@@ -86,7 +89,7 @@ public class Container extends GenericObject implements AutoBindObject
 		return autoBindFilter;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
 	 */
 	@Override
@@ -103,8 +106,7 @@ public class Container extends GenericObject implements AutoBindObject
 		return flags;
 	}
 
-
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#getStrings()
     */
    @Override

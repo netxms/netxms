@@ -446,9 +446,11 @@ public class DataCollectionItem extends DataCollectionObject
    {
       this.predictionEngine = predictionEngine;
    }
-   
+
    /**
-    * Get multipliers selection
+    * Get multiplier usage mode (DEFAULT, YES, or NO).
+    * 
+    * @return multiplier usage mode (DEFAULT, YES, or NO).
     */
    public int getMultipliersSelection()
    {
@@ -456,11 +458,12 @@ public class DataCollectionItem extends DataCollectionObject
    }
 
    /**
-    * Set multiplier selection
-    * @param selection
+    * Set multiplier usage mode.
+    *
+    * @param mode multiplier usage mode (DEFAULT, YES, or NO).
     */
-   public void setMultiplierSelection(int selection)
+   public void setMultiplierSelection(int mode)
    {
-      flags = (flags & ~DCF_MULTIPLIERS_MASK) | ((selection & 0x03) << 16);
+      flags = (flags & ~DCF_MULTIPLIERS_MASK) | ((mode & 0x03) << 16);
    }
 }

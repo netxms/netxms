@@ -43,8 +43,10 @@ public enum ReportRenderFormat
 	}
 
 	/**
-	 * @param code
-	 * @param extenstion
+	 * Create enum value for given integer code and file extension.
+	 *
+	 * @param code integer code for this enum value
+	 * @param extenstion file extension
 	 */
 	ReportRenderFormat(int code, String extenstion)
 	{
@@ -61,7 +63,10 @@ public enum ReportRenderFormat
 	}
 
 	/**
-	 * Get by code
+	 * Get by code.
+	 * 
+	 * @param code integer code
+	 * @return enum value for given integer code or NONE if code is unknown
 	 */
 	public static final ReportRenderFormat valueOf(Integer code)
 	{
@@ -69,7 +74,9 @@ public enum ReportRenderFormat
 	}
 
 	/**
-	 * @return the extension
+	 * Get file extension.
+	 *
+	 * @return file extension
 	 */
 	public String getExtension()
 	{

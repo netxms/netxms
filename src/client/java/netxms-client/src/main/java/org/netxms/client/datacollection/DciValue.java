@@ -70,7 +70,7 @@ public abstract class DciValue
 				return null;
 		}
 	}
-	
+
 	/**
 	 * Simple constructor for DciValue
 	 */
@@ -243,7 +243,9 @@ public abstract class DciValue
    }
    
    /**
-    * Get multipliers selection
+    * Get multipliers selection.
+    * 
+    * @return multiplier usage mode (DEFAULT, YES, or NO)
     */
    public int getMultipliersSelection()
    {

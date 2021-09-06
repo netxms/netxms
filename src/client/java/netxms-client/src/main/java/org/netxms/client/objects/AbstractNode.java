@@ -193,8 +193,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	/**
 	 * Create new node object.
 	 * 
-	 * @param id
-	 * @param session
+	 * @param id object ID
+	 * @param session owning client session
 	 */
 	public AbstractNode(long id, NXCSession session)
 	{
@@ -202,10 +202,10 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	}
 
 	/**
-	 * Create node object from NXCP message.
-	 * 
-	 * @param msg
-	 * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public AbstractNode(NXCPMessage msg, NXCSession session)
 	{
@@ -851,8 +851,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       return primaryIP;
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#getRackId()
+   /**
+    * @see org.netxms.client.objects.interfaces.HardwareEntity#getPhysicalContainerId()
     */
    @Override
    public long getPhysicalContainerId()
@@ -860,8 +860,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       return physicalContainerId;
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#getFrontRackImage()
+   /**
+    * @see org.netxms.client.objects.interfaces.HardwareEntity#getFrontRackImage()
     */
    @Override
    public UUID getFrontRackImage()
@@ -869,8 +869,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       return rackImageFront;
    }
    
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#getRearRackImage()
+   /**
+    * @see org.netxms.client.objects.interfaces.HardwareEntity#getRearRackImage()
     */
    @Override
    public UUID getRearRackImage()
@@ -878,8 +878,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       return rackImageRear;
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#getRackPosition()
+   /**
+    * @see org.netxms.client.objects.interfaces.HardwareEntity#getRackPosition()
     */
    @Override
    public short getRackPosition()
@@ -887,8 +887,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       return rackPosition;
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#getRackHeight()
+   /**
+    * @see org.netxms.client.objects.interfaces.HardwareEntity#getRackHeight()
     */
    @Override
    public short getRackHeight()

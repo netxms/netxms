@@ -22,20 +22,23 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
 
 /**
- * Pseudo-object placeholder for unknown objects
+ * Pseudo-object placeholder for objects being loaded from server
  */
 public class LoadingObject extends GenericObject
 {
 	/**
-	 * Default constructor
+	 * Crate new placeholder.
+	 * 
+	 * @param id object ID
+	 * @param session owning client session
 	 */
 	public LoadingObject(final long id, final NXCSession session)
 	{
 		super(id, session);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.GenericObject#getObjectName()
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getObjectName()
 	 */
 	@Override
 	public String getObjectName()
@@ -43,8 +46,8 @@ public class LoadingObject extends GenericObject
 		return "Loading...";
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.GenericObject#getStatus()
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getStatus()
 	 */
 	@Override
 	public ObjectStatus getStatus()
@@ -52,8 +55,8 @@ public class LoadingObject extends GenericObject
 		return ObjectStatus.UNKNOWN;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
 	 */
 	@Override
 	public String getObjectClassName()

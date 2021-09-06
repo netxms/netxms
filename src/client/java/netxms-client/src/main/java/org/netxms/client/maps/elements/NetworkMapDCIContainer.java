@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import org.netxms.client.maps.configs.DciContainerConfiguration;
 import org.netxms.client.maps.configs.SingleDciConfig;
 
 /**
- * Network map element representing NetXMS DCI container
+ * Network map element representing NetXMS DCI container.
  */
 public class NetworkMapDCIContainer extends NetworkMapElement
 {
@@ -37,8 +37,10 @@ public class NetworkMapDCIContainer extends NetworkMapElement
 	private SingleDciConfig[] dciArray;
 	
 	/**
-	 * @param msg
-	 * @param baseId
+	 * Create DCI container from NXCP message.
+	 *
+	 * @param msg NXCP message
+	 * @param baseId base field ID
 	 */
 	protected NetworkMapDCIContainer(NXCPMessage msg, long baseId)
 	{
@@ -61,7 +63,7 @@ public class NetworkMapDCIContainer extends NetworkMapElement
 	}
 	
 	/**
-	 * Create new DCI container element
+	 * Create new DCI container element.
 	 * 
 	 * @param id element ID
 	 */
@@ -75,61 +77,64 @@ public class NetworkMapDCIContainer extends NetworkMapElement
 		borderColor = 0;//balck
 	}
 	
-	/**
-    * @return returns if DCI list is not empty
+   /**
+    * @see org.netxms.client.maps.elements.NetworkMapElement#fillMessage(org.netxms.base.NXCPMessage, long)
     */
-   public boolean hasDciData()
+   @Override
+   public void fillMessage(NXCPMessage msg, long baseId)
    {
-      if(dciArray != null && dciArray.length > 0)
-         return true;
-      return false;
-   }
-
-	/**
-	 * @return the objectDCIList
-	 */
-	public SingleDciConfig[] getObjectDCIArray()
-	{
-		return dciArray;
-	}
-	
-	
-	/**
-	 * Setter for dciList
-	 * 
-	 * @param dciArray
-	 */
-	public void setObjectDCIArray(SingleDciConfig[] dciArray)
-	{
-	   this.dciArray = dciArray;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.client.maps.elements.NetworkMapElement#fillMessage(org.netxms.base.NXCPMessage, long)
-	 */
-	@Override
-	public void fillMessage(NXCPMessage msg, long baseId)
-	{
-		super.fillMessage(msg, baseId);
-		DciContainerConfiguration dciList = new DciContainerConfiguration();
-		dciList.setDciList(dciArray);
-		dciList.setBackgroundColor(backgroundColor);
+      super.fillMessage(msg, baseId);
+      DciContainerConfiguration dciList = new DciContainerConfiguration();
+      dciList.setDciList(dciArray);
+      dciList.setBackgroundColor(backgroundColor);
       dciList.setTextColor(textColor);
       dciList.setBorderColor(borderColor);
       dciList.setBorderRequired(borderRequired);
-		try
+      try
       {
-		   DCIListXml = dciList.createXml();
+         DCIListXml = dciList.createXml();
       }
       catch(Exception e)
       {
          DCIListXml = "";
       }
       msg.setField(baseId + 10, DCIListXml);
-	}
-	
+   }
+
 	/**
-    * Returns DCI array as a list
+	 * Check if container has any data to display.
+	 *
+    * @return returns if DCI list is not empty
+    */
+   public boolean hasDciData()
+   {
+      return (dciArray != null) && (dciArray.length > 0);
+   }
+
+	/**
+	 * Get DCI list for this container. Returned array is owned by container and changes to it will be reflected in container.
+	 *
+	 * @return DCI list for this container
+	 */
+	public SingleDciConfig[] getObjectDCIArray()
+	{
+		return dciArray;
+	}
+
+	/**
+	 * Set DCI list for this container. Container will become owner of the list.
+	 *
+	 * @param dciArray DCI list for this container
+	 */
+	public void setObjectDCIArray(SingleDciConfig[] dciArray)
+	{
+	   this.dciArray = dciArray;
+	}
+
+	/**
+    * Get configured DCIs as list. Changes to returned list object will not affect container configuration. 
+    * 
+    * @return configured DCIs as list
     */
    public List<SingleDciConfig> getDciAsList()
    {
@@ -143,7 +148,9 @@ public class NetworkMapDCIContainer extends NetworkMapElement
    }
 
    /**
-    * @return the backgroundColor
+    * Get background color.
+    *
+    * @return background color in BGR format
     */
    public int getBackgroundColor()
    {
@@ -151,7 +158,9 @@ public class NetworkMapDCIContainer extends NetworkMapElement
    }
 
    /**
-    * @param backgroundColor the backgroundColor to set
+    * Set background color (in BGR format).
+    *
+    * @param backgroundColor new background color in BGR format
     */
    public void setBackgroundColor(int backgroundColor)
    {
@@ -159,7 +168,9 @@ public class NetworkMapDCIContainer extends NetworkMapElement
    }
 
    /**
-    * @return the textColor
+    * Get text color.
+    *
+    * @return text color in BGR format
     */
    public int getTextColor()
    {
@@ -167,7 +178,9 @@ public class NetworkMapDCIContainer extends NetworkMapElement
    }
 
    /**
-    * @param textColor the textColor to set
+    * Set text color (in BGR format).
+    *
+    * @param textColor new text color in BGR format
     */
    public void setTextColor(int textColor)
    {
@@ -175,7 +188,9 @@ public class NetworkMapDCIContainer extends NetworkMapElement
    }
 
    /**
-    * @return the borderColor
+    * Get border color.
+    *
+    * @return border color in BGR format
     */
    public int getBorderColor()
    {
@@ -183,7 +198,9 @@ public class NetworkMapDCIContainer extends NetworkMapElement
    }
 
    /**
-    * @param borderColor the borderColor to set
+    * Set border color (in BGR format).
+    *
+    * @param borderColor new border color in BGR format
     */
    public void setBorderColor(int borderColor)
    {
@@ -191,7 +208,9 @@ public class NetworkMapDCIContainer extends NetworkMapElement
    }
 
    /**
-    * @return the borderRequired
+    * Check if "show border" flag is set for this element.
+    *
+    * @return true if "show border" flag is set
     */
    public boolean isBorderRequired()
    {
@@ -199,7 +218,9 @@ public class NetworkMapDCIContainer extends NetworkMapElement
    }
 
    /**
-    * @param borderRequired the borderRequired to set
+    * Set "show border" flag.
+    *
+    * @param borderRequired true if border should be shown
     */
    public void setBorderRequired(boolean borderRequired)
    {

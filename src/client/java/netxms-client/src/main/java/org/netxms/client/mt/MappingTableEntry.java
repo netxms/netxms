@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,9 +30,11 @@ public class MappingTableEntry
 	private String description;
 	
 	/**
-	 * @param key
-	 * @param value
-	 * @param description
+	 * Create new entry.
+	 *
+	 * @param key key
+	 * @param value value
+	 * @param description description
 	 */
 	public MappingTableEntry(String key, String value, String description)
 	{
@@ -42,10 +44,10 @@ public class MappingTableEntry
 	}
 
 	/**
-	 * Create entry from NXCP message
+	 * Create entry from NXCP message.
 	 * 
-	 * @param msg
-	 * @param baseId
+	 * @param msg NXCP message
+	 * @param baseId base field ID
 	 */
 	protected MappingTableEntry(NXCPMessage msg, long baseId)
 	{

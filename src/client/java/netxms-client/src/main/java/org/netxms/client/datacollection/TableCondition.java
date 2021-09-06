@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,9 +32,9 @@ public class TableCondition
    /**
     * Create new condition object.
     *
-    * @param column
-    * @param operation
-    * @param value
+    * @param column column name
+    * @param operation operation
+    * @param value value for operation
     */
    public TableCondition(String column, int operation, String value)
    {
@@ -46,7 +46,7 @@ public class TableCondition
    /**
     * Copy constructor
     *
-    * @param src
+    * @param src source object
     */
    public TableCondition(TableCondition src)
    {
@@ -58,8 +58,8 @@ public class TableCondition
    /**
     * Create condition from NXCP message
     *
-    * @param msg
-    * @param baseId
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
    protected TableCondition(NXCPMessage msg, long baseId)
    {

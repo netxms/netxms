@@ -52,7 +52,7 @@ public class TableThreshold
    /**
     * Copy constructor
     *
-    * @param src
+    * @param src source object
     */
    public TableThreshold(TableThreshold src)
    {
@@ -73,8 +73,8 @@ public class TableThreshold
    /**
     * Create from NXCP message
     *
-    * @param msg
-    * @param baseId
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
    protected TableThreshold(NXCPMessage msg, long baseId)
    {

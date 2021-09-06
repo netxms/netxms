@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,9 +54,11 @@ public class OrderingColumn
    }
 
    /**
-    * @param name
-    * @param description
-    * @param descending
+    * Create ordering column object.
+    *
+    * @param name column name
+    * @param description column description
+    * @param descending true to use descending order
     */
    public OrderingColumn(String name, String description, boolean descending)
    {
@@ -117,7 +119,7 @@ public class OrderingColumn
       return description;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#equals(java.lang.Object)
     */
    @Override
@@ -128,7 +130,7 @@ public class OrderingColumn
       return super.equals(obj);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#hashCode()
     */
    @Override

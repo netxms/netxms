@@ -27,8 +27,10 @@ public class WinPerfCounter
    private String name;
 
    /**
-    * @param object
-    * @param name
+    * Create Windows Performance counter.
+    *
+    * @param object Windows Performance object
+    * @param name counter's name
     */
    protected WinPerfCounter(WinPerfObject object, String name)
    {
@@ -38,7 +40,9 @@ public class WinPerfCounter
    }
 
    /**
-    * @return the object
+    * Get parent object.
+    *
+    * @return parent object
     */
    public WinPerfObject getObject()
    {
@@ -46,7 +50,9 @@ public class WinPerfCounter
    }
 
    /**
-    * @return the name
+    * Get counter name.
+    *
+    * @return counter name
     */
    public String getName()
    {

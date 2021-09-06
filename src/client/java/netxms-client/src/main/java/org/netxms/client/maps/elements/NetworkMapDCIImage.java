@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,8 +30,10 @@ public class NetworkMapDCIImage  extends NetworkMapElement
    private DCIImageConfiguration imageOptions;
 	
 	/**
-	 * @param msg
-	 * @param baseId
+	 * Create DCI image element from NXCP message.
+	 *
+	 * @param msg NXCP message
+	 * @param baseId base field ID
 	 */
 	protected NetworkMapDCIImage(NXCPMessage msg, long baseId)
 	{
@@ -47,7 +49,7 @@ public class NetworkMapDCIImage  extends NetworkMapElement
       }
 		
 	}
-	
+
 	/**
 	 * Create new DCI image element
 	 * 
@@ -59,8 +61,8 @@ public class NetworkMapDCIImage  extends NetworkMapElement
 		type = MAP_ELEMENT_DCI_IMAGE;
 		imageOptions = new DCIImageConfiguration();
 	}
-	
-	/* (non-Javadoc)
+
+	/**
 	 * @see org.netxms.client.maps.elements.NetworkMapElement#fillMessage(org.netxms.base.NXCPMessage, long)
 	 */
 	@Override
@@ -80,7 +82,9 @@ public class NetworkMapDCIImage  extends NetworkMapElement
 	}
 
    /**
-    * @return the imageOptions
+    * Get image configuration.
+    *
+    * @return iamge configuration
     */
    public DCIImageConfiguration getImageOptions()
    {
@@ -88,7 +92,9 @@ public class NetworkMapDCIImage  extends NetworkMapElement
    }
 
    /**
-    * @param imageOptions the imageOptions to set
+    * Set image configuration.
+    *
+    * @param imageOptions new image configuration
     */
    public void setImageOptions(DCIImageConfiguration imageOptions)
    {

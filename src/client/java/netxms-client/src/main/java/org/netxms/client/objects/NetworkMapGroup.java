@@ -28,16 +28,18 @@ import org.netxms.client.NXCSession;
 public class NetworkMapGroup extends GenericObject
 {
 	/**
-	 * @param msg Message to create object from
-	 * @param session Associated client session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public NetworkMapGroup(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
 	 */
 	@Override
 	public String getObjectClassName()

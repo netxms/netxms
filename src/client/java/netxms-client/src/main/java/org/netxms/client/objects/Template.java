@@ -34,8 +34,10 @@ public class Template extends GenericObject
 	private String autoApplyFilter;
 
 	/**
-	 * @param msg
-	 * @param session
+	 * Create from NXCP message.
+	 *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public Template(NXCPMessage msg, NXCSession session)
 	{
@@ -87,8 +89,8 @@ public class Template extends GenericObject
 		return autoApplyFilter;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.NXCObject#getObjectClassName()
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
 	 */
 	@Override
 	public String getObjectClassName()
@@ -104,8 +106,7 @@ public class Template extends GenericObject
 		return flags;
 	}
 
-
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#getStrings()
     */
    @Override

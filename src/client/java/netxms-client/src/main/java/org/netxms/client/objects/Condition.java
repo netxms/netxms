@@ -41,8 +41,10 @@ public class Condition extends GenericObject
 	private List<ConditionDciInfo> dciList;
 	
 	/**
-	 * @param msg
-	 * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public Condition(NXCPMessage msg, NXCSession session)
 	{
@@ -66,8 +68,8 @@ public class Condition extends GenericObject
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.NXCObject#getObjectClassName()
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
 	 */
 	@Override
 	public String getObjectClassName()
@@ -75,7 +77,7 @@ public class Condition extends GenericObject
 		return "Condition";
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
 	 */
 	@Override
