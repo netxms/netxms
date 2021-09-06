@@ -138,9 +138,9 @@ public class GraphItem
    /**
     * Constructor for ITEM type from chart DCI configuration
     * 
-    * @param dciConfig DCI value
-    * @param source The source
-    * @param displayFormat The display format
+    * @param dciConfig DCI configuration
+    * @param source DCI source (origin)
+    * @param dataType DCI data type
     */
    public GraphItem(ChartDciConfig dciConfig, DataOrigin source, DataType dataType)
    {
@@ -150,13 +150,13 @@ public class GraphItem
       this.lineWidth = dciConfig.lineWidth;
    }
 
-	/**
-	 * Constructor for TABLE type
-	 * 
+   /**
+    * Constructor for TABLE type
+    * 
     * @param nodeId The node ID
     * @param dciId The dci ID
-    * @param source The source
-    * @param dataType The data type
+    * @param source DCI source (origin)
+    * @param dataType DCI data type
     * @param name The name
     * @param description The description
     * @param displayFormat The display format

@@ -66,7 +66,7 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
    protected ChartDciConfig[] dciList = new ChartDciConfig[0];
 
    /**
-    * Create default settings
+    * Create empty graph definition
     */
    public GraphDefinition()
    {
@@ -82,7 +82,12 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
    }
 
    /**
-    * Create settings
+    * Create graph definition
+    *
+    * @param id definition ID
+    * @param ownerId owning user ID
+    * @param flags flags
+    * @param accessList graph access list
     */
    public GraphDefinition(long id, long ownerId, int flags, Collection<AccessListElement> accessList)
    {
@@ -126,9 +131,9 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
    }
 
    /**
-    * Create copy of provided settings
+    * Create copy of provided graph definition
     *
-    * @param src  source object
+    * @param src source object
     */
    public GraphDefinition(GraphDefinition src)
    {
@@ -150,7 +155,7 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
    }
 
    /**
-    * Create chart settings object from XML document
+    * Create graph definition object from XML document
     *
     * @param xml XML document
     * @return deserialized object
