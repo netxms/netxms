@@ -1068,34 +1068,41 @@ int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 /**
  * Exit from script
  */
-int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_exit(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-	if (argc > 1)
-		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+   if (argc > 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-	*ppResult = (argc == 0) ? vm->createValue((LONG)0) : vm->createValue(argv[0]);
+   *result = (argc == 0) ? vm->createValue((LONG)0) : vm->createValue(argv[0]);
    return NXSL_STOP_SCRIPT_EXECUTION;
 }
 
 /**
  * Trim whitespace characters from the string
  */
-int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_trim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-	if (!argv[0]->isString())
-		return NXSL_ERR_NOT_STRING;
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
 
-	UINT32 len;
-	const TCHAR *string = argv[0]->getValueAsString(&len);
-	
-	int i;
-	for(i = 0; (i < (int)len) && (string[i] == _T(' ') || string[i] == _T('\t')); i++);
-	int startPos = i;
-	if (len > 0)
-		for(i = (int)len - 1; (i >= startPos) && (string[i] == _T(' ') || string[i] == _T('\t')); i--);
+   uint32_t len;
+   const TCHAR *string = argv[0]->getValueAsString(&len);
+   if (len > 0)
+   {
+      int i;
+      for(i = 0; (i < (int)len) && (string[i] == _T(' ') || string[i] == _T('\t')); i++);
 
-	*ppResult = vm->createValue(&string[startPos], i - startPos + 1);
-	return 0;
+      int startPos = i;
+      if (len > 0)
+         for(i = (int)len - 1; (i >= startPos) && (string[i] == _T(' ') || string[i] == _T('\t')); i--);
+
+      *result = vm->createValue(&string[startPos], i - startPos + 1);
+   }
+   else
+   {
+      *result = vm->createValue(argv[0]);
+   }
+   return 0;
 }
 
 /**
