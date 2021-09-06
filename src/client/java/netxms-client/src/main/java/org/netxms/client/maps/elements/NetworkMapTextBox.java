@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,10 +36,10 @@ public class NetworkMapTextBox extends NetworkMapElement
    private boolean borderRequired;
    
    /**
-    * Create new text box from NXCPMessgae
+    * Create new text box from NXCP messgae
     * 
-    * @param msg
-    * @param baseId
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
    protected NetworkMapTextBox(NXCPMessage msg, long baseId)
    {
@@ -68,7 +68,7 @@ public class NetworkMapTextBox extends NetworkMapElement
       }
       type = MAP_ELEMENT_TEXT_BOX;
    }
-   
+
    /**
     * Create new text box element
     * 
@@ -85,8 +85,8 @@ public class NetworkMapTextBox extends NetworkMapElement
       fontSize = 10;
       type = MAP_ELEMENT_TEXT_BOX;
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.netxms.client.maps.elements.NetworkMapElement#fillMessage(org.netxms.base.NXCPMessage, long)
     */
    @Override
@@ -113,6 +113,8 @@ public class NetworkMapTextBox extends NetworkMapElement
    }
 
    /**
+    * Get text.
+    *
     * @return text
     */
    public String getText()
@@ -121,9 +123,9 @@ public class NetworkMapTextBox extends NetworkMapElement
    }
    
    /**
-    * Set text
+    * Set text.
     * 
-    * @param text to set
+    * @param text new text
     */
    public void setText(String text)
    {
@@ -131,7 +133,9 @@ public class NetworkMapTextBox extends NetworkMapElement
    }
    
    /**
-    * @return the backgroundColor
+    * Get background color.
+    *
+    * @return background color in BGR format
     */
    public int getBackgroundColor()
    {
@@ -139,7 +143,9 @@ public class NetworkMapTextBox extends NetworkMapElement
    }
 
    /**
-    * @param backgroundColor the backgroundColor to set
+    * Set background color.
+    *
+    * @param backgroundColor new background color in BGR format
     */
    public void setBackgroundColor(int backgroundColor)
    {
@@ -147,7 +153,9 @@ public class NetworkMapTextBox extends NetworkMapElement
    }
 
    /**
-    * @return the textColor
+    * Get text color.
+    *
+    * @return text color in BGR format
     */
    public int getTextColor()
    {
@@ -155,7 +163,9 @@ public class NetworkMapTextBox extends NetworkMapElement
    }
 
    /**
-    * @param textColor the textColor to set
+    * Set text color.
+    *
+    * @param textColor new text color in BGR format
     */
    public void setTextColor(int textColor)
    {
@@ -163,7 +173,9 @@ public class NetworkMapTextBox extends NetworkMapElement
    }
 
    /**
-    * @return the borderColor
+    * Get border color.
+    *
+    * @return border color in BGR format
     */
    public int getBorderColor()
    {
@@ -171,7 +183,9 @@ public class NetworkMapTextBox extends NetworkMapElement
    }
 
    /**
-    * @param borderColor the borderColor to set
+    * Set border color.
+    *
+    * @param borderColor new border color in BGR format
     */
    public void setBorderColor(int borderColor)
    {

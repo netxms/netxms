@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,8 +69,8 @@ public class LibraryImage implements Comparable<LibraryImage>
    /**
     * Create library image object from NXCP message
     * 
-    * @param msg
-    * @param baseId
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
    public LibraryImage(NXCPMessage msg, long baseId)
 	{
@@ -197,8 +197,10 @@ public class LibraryImage implements Comparable<LibraryImage>
 	}
 
 	/**
-	 * @param binaryData
-	 *           the binaryData to set
+	 * Set image binary data.
+	 *
+	 * @param binaryData image binary data
+	 * @param mimeType image MIME type (will be set to "image/unknown" if mimeType is null)
 	 */
    public void setBinaryData(byte[] binaryData, String mimeType)
 	{
@@ -223,7 +225,9 @@ public class LibraryImage implements Comparable<LibraryImage>
 	}
 
 	/**
-	 * @return the mimeType
+	 * Get image MIME type.
+	 *
+	 * @return image MIME type
 	 */
 	public String getMimeType()
 	{

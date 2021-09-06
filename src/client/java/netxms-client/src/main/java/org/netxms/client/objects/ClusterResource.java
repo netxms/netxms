@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ public class ClusterResource
 	 * Create cluster resource object from NXCP message
 	 * 
 	 * @param msg NXCP message
-	 * @param baseId Base variable ID
+	 * @param baseId Base field ID
 	 */
 	protected ClusterResource(NXCPMessage msg, long baseId)
 	{
@@ -45,7 +45,7 @@ public class ClusterResource
 		virtualAddress = msg.getFieldAsInetAddress(baseId + 2);
 		currentOwner = msg.getFieldAsInt64(baseId + 3);
 	}
-	
+
 	/**
 	 * Copy constructor
 	 * 
@@ -62,9 +62,9 @@ public class ClusterResource
 	/**
 	 * Create new cluster resource object.
 	 * 
-	 * @param id
-	 * @param name
-	 * @param virtualAddress
+	 * @param id resource ID
+	 * @param name resource name
+	 * @param virtualAddress associated virtual IP address
 	 */
 	public ClusterResource(long id, String name, InetAddress virtualAddress)
 	{
@@ -75,7 +75,9 @@ public class ClusterResource
 	}
 
 	/**
-	 * @return the id
+	 * Get resource ID.
+	 *
+	 * @return resource ID
 	 */
 	public long getId()
 	{

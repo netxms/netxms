@@ -27,8 +27,10 @@ import org.netxms.client.NXCSession;
 public class BusinessService extends ServiceContainer
 {
 	/**
-	 * @param msg
-	 * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public BusinessService(NXCPMessage msg, NXCSession session)
 	{

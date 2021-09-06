@@ -47,8 +47,10 @@ public class NetworkService extends GenericObject
 	int pollCount;
 	
 	/**
-	 * @param msg
-	 * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public NetworkService(NXCPMessage msg, NXCSession session)
 	{
@@ -63,8 +65,8 @@ public class NetworkService extends GenericObject
 		pollCount = msg.getFieldAsInt32(NXCPCodes.VID_REQUIRED_POLLS);
 	}
 
-   /* (non-Javadoc)
-	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
 	 */
 	@Override
 	public String getObjectClassName()

@@ -3225,6 +3225,8 @@ public class NXCSession
     * Sync children of given object.
     * 
     * @param object parent object
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void syncChildren(AbstractObject object) throws NXCException, IOException
    {
@@ -3344,12 +3346,13 @@ public class NXCSession
     * Find NetXMS object by it's identifier and execute provided callback once found
     *
     * @param id Object identifier
+    * @param callback callback to be called when object is found
     */
    public void findObjectAsync(final long id, ObjectCreationListener callback)
    {
       if (callback == null)
          return;
-      
+
       synchronized(objectList)
       {
          AbstractObject object = objectList.get(id);
@@ -4875,13 +4878,13 @@ public class NXCSession
    }
    
    /**
-    * Resolve list of last values by regex
+    * Find all DCIs matching given creteria.
     * 
-    * @param objectId if specific object needed
-    * @param objectName as regex
-    * @param dciName as regex
-    * @param flags
-    * @return list of all resolved last values
+    * @param objectId if specific object needed (set to 0 if match by object name is needed)
+    * @param objectName regular expression to match object name (not used if object ID is not 0)
+    * @param dciName regular expression to match DCI name
+    * @param flags find flags
+    * @return list of all found DCIs and their last values
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -8196,9 +8199,9 @@ public class NXCSession
 
    /**
     * Get list of well-known SNMP communities configured on server.
-    * @param zoneUIN 
     *
-    * @return map of SNMP community strings
+    * @param zoneUIN Zone UIN (unique identification number)
+    * @return list of SNMP community strings
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -8220,31 +8223,29 @@ public class NXCSession
    }
 
    /**
-    * Update list of well-known SNMP community strings on server. Existing list
-    * will be replaced by given one.
-    * @param zoneUIN zone
-    * @param list New list of SNMP community strings
+    * Update list of well-known SNMP community strings on server. Existing list will be replaced by provided one.
     *
+    * @param zoneUIN Zone UIN (unique identification number)
+    * @param communityStrings New list of SNMP community strings
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void updateSnmpCommunities(int zoneUIN, List<String> list) throws IOException, NXCException
+   public void updateSnmpCommunities(int zoneUIN, List<String> communityStrings) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_COMMUNITY_LIST);
       msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, zoneUIN);
       long stringBase = NXCPCodes.VID_COMMUNITY_STRING_LIST_BASE;
-      for(String s : list)
+      for(String s : communityStrings)
       {
          msg.setField(stringBase++, s);
       }
-      msg.setFieldInt32(NXCPCodes.VID_NUM_STRINGS, list.size());
+      msg.setFieldInt32(NXCPCodes.VID_NUM_STRINGS, communityStrings.size());
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
 
    /**
-    * Get list of well-known SNMP USM (user security model) credentials
-    * configured on server.
+    * Get list of well-known SNMP USM (user security model) credentials configured on server.
     *
     * @return Map of SNMP USM credentials
     * @throws IOException  if socket I/O error occurs
@@ -8280,11 +8281,10 @@ public class NXCSession
    }
 
    /**
-    * Get list of well-known SNMP USM (user security model) credentials
-    * configured on server.
-    * @param zoneUIN 
+    * Get list of well-known SNMP USM (user security model) credentials configured on server.
     *
-    * @return Map of SNMP USM credentials
+    * @param zoneUIN Zone UIN (unique identification number)
+    * @return List of configured SNMP USM credentials
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -8307,26 +8307,25 @@ public class NXCSession
    }
 
    /**
-    * Update list of well-known SNMP USM credentials on server. Existing list
-    * will be replaced by given one.
-    * @param zoneUIN Zone unique idenetifier
-    * @param list List of SNMP credentials
+    * Update list of well-known SNMP USM credentials on server. Existing list will be replaced by provided one.
     *
+    * @param zoneUIN Zone UIN (unique identification number)
+    * @param usmCredentials List of SNMP credentials
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void updateSnmpUsmCredentials(int zoneUIN, List<SnmpUsmCredential> list) throws IOException, NXCException
+   public void updateSnmpUsmCredentials(int zoneUIN, List<SnmpUsmCredential> usmCredentials) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_USM_CREDENTIALS);
       msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, zoneUIN);
       long varId = NXCPCodes.VID_USM_CRED_LIST_BASE;
-      for(SnmpUsmCredential element : list)
+      for(SnmpUsmCredential element : usmCredentials)
       {
          element.fillMessage(msg, varId);
          varId += 10;
       }
 
-      msg.setFieldInt32(NXCPCodes.VID_NUM_RECORDS, list.size());
+      msg.setFieldInt32(NXCPCodes.VID_NUM_RECORDS, usmCredentials.size());
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -11901,17 +11900,18 @@ public class NXCSession
     * Saves new or updated policy
     * 
     * @param templateId id of template where policy is defined
-    * @param currentlySelectedElement policy data to be updated or created. For new policy GUID should be null
+    * @param policy policy data to be updated or created. For new policy GUID should be null
+    * @param duplicate if set to true server will make copy of existing policy instead of updating existing one 
     * @return UUID of saved policy
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public UUID savePolicy(long templateId, AgentPolicy currentlySelectedElement, boolean duplicate) throws NXCException, IOException
+   public UUID savePolicy(long templateId, AgentPolicy policy, boolean duplicate) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_AGENT_POLICY);
       msg.setFieldInt32(NXCPCodes.VID_TEMPLATE_ID, (int)templateId);
       msg.setField(NXCPCodes.VID_DUPLICATE, duplicate);
-      currentlySelectedElement.fillMessage(msg);
+      policy.fillMessage(msg);
       sendMessage(msg);
       return waitForRCC(msg.getMessageId()).getFieldAsUUID(NXCPCodes.VID_GUID);
    }
@@ -12003,20 +12003,21 @@ public class NXCSession
     * Create new user agent notifications
     * 
     * @param message notification message
-    * @param objects objects to show notifications
+    * @param objects objects to show notifications on
     * @param startTime notification's activation time
     * @param endTime notificaiton's display end time
+    * @param onStartup true if notification should be shown only after user agent startup (usually immediately after user login)
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void createUserAgentNotification(String message, long[] objects, Date startTime, Date endTime, boolean startup) throws NXCException, IOException
+   public void createUserAgentNotification(String message, long[] objects, Date startTime, Date endTime, boolean onStartup) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_UA_NOTIFICATION);
       msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE, message);
       msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 1, objects);
       msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 2, startTime);
       msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 3, endTime);
-      msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 4, startup);
+      msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 4, onStartup);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -12025,9 +12026,12 @@ public class NXCSession
     * Create new user agent notifications
     * 
     * @param message notification message
-    * @param objects objects to show notifications
+    * @param objects objects to show notifications on
     * @param startTime notification's activation time
     * @param endTime notificaiton's display end time
+    * @param onStartup true if notification should be shown only after user agent startup (usually immediately after user login)
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void createUserAgentNotification(String message, Collection<Long> objects, Date startTime, Date endTime, boolean onStartup) throws NXCException, IOException
    {
@@ -12139,16 +12143,16 @@ public class NXCSession
    /**
     * Start active discovery for provided list manually
     * 
-    * @param list list of ranges
-    * @throws NXCException
-    * @throws IOException
+    * @param ranges IP address ranges to scan
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void startManualActiveDiscovery(List<InetAddressListElement> list) throws NXCException, IOException
+   public void startManualActiveDiscovery(List<InetAddressListElement> ranges) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_START_ACTIVE_DISCOVERY);
-      msg.setFieldInt32(NXCPCodes.VID_NUM_RECORDS, list.size());
+      msg.setFieldInt32(NXCPCodes.VID_NUM_RECORDS, ranges.size());
       long fieldId = NXCPCodes.VID_ADDR_LIST_BASE;
-      for(InetAddressListElement e : list)
+      for(InetAddressListElement e : ranges)
       {
          e.fillMessage(msg, fieldId);
          fieldId += 10;
@@ -12530,9 +12534,10 @@ public class NXCSession
    }
 
    /**
-    * Delete SSH key 
+    * Delete SSH key. 
     * 
-    * @param id key id
+    * @param id key ID
+    * @param force if set to true key will be deleted even if it is in use
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -12561,7 +12566,7 @@ public class NXCSession
    }
 
    /**
-    * Generate new SSH keys 
+    * Generate new SSH keys .
     * 
     * @param name for new keys
     * @throws IOException if socket I/O error occurs

@@ -37,8 +37,8 @@ public class VPNConnector extends GenericObject
    /**
     * Create from NXCP message
     * 
-    * @param msg
-    * @param session
+    * @param msg NXCP message
+    * @param session owning client session
     */
    public VPNConnector(NXCPMessage msg, NXCSession session)
    {

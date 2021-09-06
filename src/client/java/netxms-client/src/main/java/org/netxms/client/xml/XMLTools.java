@@ -45,6 +45,7 @@ public final class XMLTools
    /**
     * Create serializer with registered converters using caller provided registry.
     * 
+    * @param registry registry to use for custom annotation strategy
     * @return serializer with registered converters
     * @throws Exception on XML library failures
     */

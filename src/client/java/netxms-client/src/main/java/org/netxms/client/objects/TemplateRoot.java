@@ -28,16 +28,18 @@ import org.netxms.client.NXCSession;
 public class TemplateRoot extends GenericObject
 {
 	/**
-	 * @param msg
-	 * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public TemplateRoot(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.NXCObject#getObjectClassName()
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
 	 */
 	@Override
 	public String getObjectClassName()

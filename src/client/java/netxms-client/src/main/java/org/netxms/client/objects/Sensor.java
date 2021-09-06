@@ -88,10 +88,10 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
    private long proxyId;
 	
 	/**
-	 * Object constructor from message
-	 * 
-	 * @param msg
-	 * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public Sensor(NXCPMessage msg, NXCSession session)
 	{
@@ -114,7 +114,7 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
 	   proxyId = msg.getFieldAsInt32(NXCPCodes.VID_SENSOR_PROXY);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
 	 */
 	@Override
@@ -123,7 +123,7 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
 		return true;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
     */
    @Override
@@ -132,8 +132,8 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
       return true;
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.GenericObject#getObjectClassName()
+   /**
+    * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
     */
    @Override
    public String getObjectClassName()
@@ -141,7 +141,7 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
       return "Sensor";
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#getStrings()
     */
    @Override

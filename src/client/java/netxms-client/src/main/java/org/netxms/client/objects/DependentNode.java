@@ -35,6 +35,9 @@ public final class DependentNode
 
    /**
     * Create from NXCP message
+    * 
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
    public DependentNode(final NXCPMessage msg, long baseId)
    {

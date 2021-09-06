@@ -33,7 +33,10 @@ public class LogRecordDetails
    private List<String> values;
 
    /**
-    * Create new object from server response
+    * Create new object from server response.
+    * 
+    * @param id record ID
+    * @param msg NXCP message
     */
    protected LogRecordDetails(long id, NXCPMessage msg)
    {

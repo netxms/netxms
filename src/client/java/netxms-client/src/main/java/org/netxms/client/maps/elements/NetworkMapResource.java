@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ package org.netxms.client.maps.elements;
 import org.netxms.base.NXCPMessage;
 
 /**
- * Resource (anything related to nodes but not NetXMS object - like cluster resources) displayed on map
+ * Resource (anything related to nodes but not NetXMS object - like cluster resources) displayed on map.
  */
 public class NetworkMapResource extends NetworkMapElement
 {
@@ -31,8 +31,10 @@ public class NetworkMapResource extends NetworkMapElement
 	private Object data;
 	
 	/**
-	 * @param msg
-	 * @param baseId
+	 * Create from NXCP message.
+	 *
+	 * @param msg NXCP message
+	 * @param baseId base field ID
 	 */
 	public NetworkMapResource(NXCPMessage msg, long baseId)
 	{
@@ -42,7 +44,9 @@ public class NetworkMapResource extends NetworkMapElement
 	}
 
 	/**
-	 * @param id
+	 * Create resource object from scratch.
+	 *
+	 * @param id element ID
 	 */
 	public NetworkMapResource(long id, int type, Object data)
 	{
@@ -51,7 +55,7 @@ public class NetworkMapResource extends NetworkMapElement
 		this.data = data;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.client.maps.elements.NetworkMapElement#fillMessage(org.netxms.base.NXCPMessage, long)
 	 */
 	@Override
@@ -62,7 +66,9 @@ public class NetworkMapResource extends NetworkMapElement
 	}
 
 	/**
-	 * @return the type
+	 * Get resource type.
+	 *
+	 * @return resource type
 	 */
 	public int getType()
 	{
@@ -70,7 +76,9 @@ public class NetworkMapResource extends NetworkMapElement
 	}
 
 	/**
-	 * @return the data
+	 * Get user-defined resource data.
+	 *
+	 * @return resource data
 	 */
 	public Object getData()
 	{

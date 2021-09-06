@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,8 +44,10 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
    private String autoBindFilter;
 	
 	/**
-	 * @param msg
-	 * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public Cluster(NXCPMessage msg, NXCSession session)
 	{
@@ -73,7 +75,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
       autoUnbind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOUNBIND_FLAG);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
 	 */
 	@Override
@@ -82,7 +84,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
 		return true;
 	}
 
-	/* (non-Javadoc)
+	/**
     * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
     */
    @Override

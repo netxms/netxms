@@ -26,12 +26,14 @@ import org.netxms.base.NXCPMessage;
 public class TableDciValue extends DciValue
 {
    /**
-    * @param nodeId
-    * @param msg
-    * @param base
+    * Create from NXCP message.
+    *
+    * @param nodeId owning node ID
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
-   protected TableDciValue(long nodeId, NXCPMessage msg, long base)
+   protected TableDciValue(long nodeId, NXCPMessage msg, long baseId)
    {
-      super(nodeId, msg, base);
+      super(nodeId, msg, baseId);
    }
 }

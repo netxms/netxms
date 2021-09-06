@@ -40,8 +40,10 @@ public class Chassis extends DataCollectionTarget implements HardwareEntity
    protected RackOrientation rackOrientation;
 
    /**
-    * @param msg
-    * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
     */
    public Chassis(NXCPMessage msg, NXCSession session)
    {
@@ -55,7 +57,7 @@ public class Chassis extends DataCollectionTarget implements HardwareEntity
       rackOrientation = RackOrientation.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_RACK_ORIENTATION));
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
     */
    @Override
@@ -63,8 +65,8 @@ public class Chassis extends DataCollectionTarget implements HardwareEntity
    {
       return "Chassis";
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
     */
    @Override
@@ -81,8 +83,8 @@ public class Chassis extends DataCollectionTarget implements HardwareEntity
       return controllerId;
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#getRackId()
+   /**
+    * @see org.netxms.client.objects.interfaces.HardwareEntity#getPhysicalContainerId()
     */
    @Override
    public long getPhysicalContainerId()
@@ -90,8 +92,8 @@ public class Chassis extends DataCollectionTarget implements HardwareEntity
       return rackId;
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#getFrontRackImage()
+   /**
+    * @see org.netxms.client.objects.interfaces.HardwareEntity#getFrontRackImage()
     */
    @Override
    public UUID getFrontRackImage()
@@ -99,8 +101,8 @@ public class Chassis extends DataCollectionTarget implements HardwareEntity
       return rackImageFront;
    }
    
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#getRearRackImage()
+   /**
+    * @see org.netxms.client.objects.interfaces.HardwareEntity#getRearRackImage()
     */
    @Override
    public UUID getRearRackImage()
@@ -108,8 +110,8 @@ public class Chassis extends DataCollectionTarget implements HardwareEntity
       return rackImageRear;
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#getRackPosition()
+   /**
+    * @see org.netxms.client.objects.interfaces.HardwareEntity#getRackPosition()
     */
    @Override
    public short getRackPosition()
@@ -117,8 +119,8 @@ public class Chassis extends DataCollectionTarget implements HardwareEntity
       return rackPosition;
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#getRackHeight()
+   /**
+    * @see org.netxms.client.objects.interfaces.HardwareEntity#getRackHeight()
     */
    @Override
    public short getRackHeight()
@@ -126,8 +128,8 @@ public class Chassis extends DataCollectionTarget implements HardwareEntity
       return rackHeight;
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#getRackOrientation()
+   /**
+    * @see org.netxms.client.objects.interfaces.HardwareEntity#getRackOrientation()
     */
    @Override
    public RackOrientation getRackOrientation()
@@ -135,6 +137,9 @@ public class Chassis extends DataCollectionTarget implements HardwareEntity
       return rackOrientation;
    }
 
+   /**
+    * @see org.netxms.client.objects.interfaces.HardwareEntity#getChassisPlacement()
+    */
    @Override
    public ChassisPlacement getChassisPlacement()
    {

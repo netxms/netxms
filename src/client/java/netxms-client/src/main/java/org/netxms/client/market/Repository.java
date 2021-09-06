@@ -34,9 +34,9 @@ public class Repository
    /**
     * Create new repository object
     * 
-    * @param url
-    * @param authToken
-    * @param description
+    * @param url repository URL
+    * @param authToken authentication token
+    * @param description description
     */
    public Repository(String url, String authToken, String description)
    {
@@ -49,8 +49,8 @@ public class Repository
    /**
     * Create repository object from NXCP message
     * 
-    * @param msg
-    * @param baseId
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
    public Repository(NXCPMessage msg, long baseId)
    {

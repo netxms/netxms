@@ -35,7 +35,10 @@ public class Subnet extends GenericObject implements ZoneMember
 	private InetAddressEx networkAddress;
 
 	/**
-	 * @param msg
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public Subnet(NXCPMessage msg, NXCSession session)
 	{

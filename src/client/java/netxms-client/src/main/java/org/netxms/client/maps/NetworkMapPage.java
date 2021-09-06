@@ -43,7 +43,9 @@ public class NetworkMapPage
    private Map<Long, NetworkMapLink> links = new HashMap<Long, NetworkMapLink>(0);
 
 	/**
-	 * Create empty named page
+	 * Create empty named page.
+	 * 
+	 * @param id page ID
 	 */
 	public NetworkMapPage(final String id)
 	{
@@ -54,6 +56,8 @@ public class NetworkMapPage
 	
 	/**
 	 * Add element to map
+	 * 
+	 * @param element element to add
 	 */
 	public void addElement(final NetworkMapElement element)
 	{
@@ -63,8 +67,9 @@ public class NetworkMapPage
 	}
 
 	/**
-	 * Add all elements from given collection
-	 * @param set
+	 * Add all elements from given collection.
+	 *
+	 * @param set set of elements to add
 	 */
 	public void addAllElements(Collection<NetworkMapElement> set)
 	{
@@ -74,6 +79,8 @@ public class NetworkMapPage
 
 	/**
 	 * Add link between elements to map
+	 * 
+	 * @param link link to add
 	 */
 	public void addLink(final NetworkMapLink link)
 	{
@@ -96,7 +103,7 @@ public class NetworkMapPage
 	/**
 	 * Add all links from given collection
 	 * 
-	 * @param set
+	 * @param set set of links to add
 	 */
 	public void addAllLinks(Collection<NetworkMapLink> set)
 	{
@@ -168,7 +175,7 @@ public class NetworkMapPage
 	/**
 	 * Remove link between objects
 	 * 
-	 * @param link
+	 * @param link link to be removed
 	 */
 	public void removeLink(NetworkMapLink link)
 	{
@@ -178,7 +185,7 @@ public class NetworkMapPage
    /**
     * Remove link between objects
     * 
-    * @param id link id
+    * @param id link ID
     */
    public void removeLink(long id)
    {
@@ -186,7 +193,9 @@ public class NetworkMapPage
    }
 
 	/**
-	 * @return the name
+	 * Get page ID.
+	 *
+	 * @return page ID
 	 */
 	public String getId()
 	{
@@ -194,7 +203,9 @@ public class NetworkMapPage
 	}
 
 	/**
-	 * @param id the id to set
+	 * Set page ID.
+	 *
+	 * @param id new page ID
 	 */
 	public void setId(String id)
 	{
@@ -202,7 +213,9 @@ public class NetworkMapPage
 	}
 
 	/**
-	 * @return the objects
+	 * Get map elements.
+	 *
+	 * @return map elements
 	 */
 	public Collection<NetworkMapElement> getElements()
 	{
@@ -210,7 +223,9 @@ public class NetworkMapPage
 	}
 
 	/**
-	 * @return the links
+	 * Get links between elements.
+	 *
+	 * @return links between elements
 	 */
 	public Collection<NetworkMapLink> getLinks()
 	{
@@ -232,7 +247,7 @@ public class NetworkMapPage
 	   }
 	   return objects;
 	}
-	
+
    /**
     * Get all object elements
     * 

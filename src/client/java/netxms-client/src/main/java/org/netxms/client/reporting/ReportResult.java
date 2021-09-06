@@ -155,6 +155,7 @@ public class ReportResult
    /**
     * Save object as XML file.
     * 
+    * @param file destination file
     * @throws Exception if the schema for the object is not valid or write operation failed
     */
    public void saveAsXml(File file) throws Exception
