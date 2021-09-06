@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.objectmanager.propertypages;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -205,16 +204,13 @@ public class ResponsibleUsers extends PropertyPage
             widgetSelected(e);
          }
 
-         @SuppressWarnings("unchecked")
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-            Iterator<AbstractUserObject> it = selection.iterator();
-            while(it.hasNext())
+            IStructuredSelection selection = viewer.getStructuredSelection();
+            for(Object o : selection.toList())
             {
-               AbstractUserObject element = it.next();
-               users.remove(element.getId());
+               users.remove(((ResponsibleUser)o).userId);
             }
             viewer.setInput(users.values().toArray());
          }
@@ -224,15 +220,14 @@ public class ResponsibleUsers extends PropertyPage
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-            deleteButton.setEnabled(!selection.isEmpty());
+            deleteButton.setEnabled(!event.getSelection().isEmpty());
          }
       });
 
       syncUsersAndRefresh();
       return dialogArea;
    }
-   
+
    /**
     * Synchronize users and refresh view
     */
