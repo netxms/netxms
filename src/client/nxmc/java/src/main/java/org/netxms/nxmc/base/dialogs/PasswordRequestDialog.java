@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -74,11 +74,11 @@ public class PasswordRequestDialog extends Dialog
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       container.setLayout(layout);
-      
+
       lblMessage = new Label(container, SWT.NONE | SWT.WRAP);
       lblMessage.setText(message);
       lblMessage.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      
+
 		textPassword = new LabeledText(container, SWT.NONE, SWT.BORDER | SWT.PASSWORD);
       textPassword.setLabel(i18n.tr("Password"));
 		GridData gd = new GridData();
@@ -86,7 +86,7 @@ public class PasswordRequestDialog extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		gd.widthHint = 400;
 		textPassword.setLayoutData(gd);
-		
+
 		return container;
 	}	
 

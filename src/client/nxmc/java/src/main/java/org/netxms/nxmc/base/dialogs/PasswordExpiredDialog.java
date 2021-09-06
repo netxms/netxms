@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-20201Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,10 +89,10 @@ public class PasswordExpiredDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		msg.setLayoutData(gd);
-      textPassword1 = new LabeledText(editArea, SWT.DEFAULT, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
+      textPassword1 = new LabeledText(editArea, SWT.NONE, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
       textPassword1.setLabel(i18n.tr("New password:"));
       textPassword1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      textPassword2 = new LabeledText(editArea, SWT.DEFAULT, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
+      textPassword2 = new LabeledText(editArea, SWT.NONE, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
       textPassword2.setLabel(i18n.tr("Confirm new password:"));
       textPassword2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
