@@ -142,6 +142,7 @@
         <version>3.3.0</version>
         <configuration>
           <doclint>all</doclint>
+          <source>8</source>
         </configuration>
         <executions>
           <execution>
