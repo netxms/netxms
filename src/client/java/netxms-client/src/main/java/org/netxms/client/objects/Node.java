@@ -29,8 +29,8 @@ public class Node extends AbstractNode
 	/**
 	 * Create new node object.
 	 * 
-	 * @param id
-	 * @param session
+	 * @param id object ID
+	 * @param session owning client session
 	 */
 	public Node(long id, NXCSession session)
 	{
@@ -38,10 +38,10 @@ public class Node extends AbstractNode
 	}
 
 	/**
-	 * Create node object from NXCP message.
-	 * 
-	 * @param msg
-	 * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public Node(NXCPMessage msg, NXCSession session)
 	{

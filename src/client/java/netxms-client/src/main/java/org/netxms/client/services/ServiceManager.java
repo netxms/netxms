@@ -31,6 +31,8 @@ public final class ServiceManager
    
    /**
     * Reload service providers
+    * 
+    * @param classLoader class loader to use
     */
    public static synchronized void registerClassLoader(ClassLoader classLoader)
    {

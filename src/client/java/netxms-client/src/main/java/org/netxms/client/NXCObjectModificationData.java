@@ -1968,7 +1968,7 @@ public class NXCObjectModificationData
     * Set physical container for object
     * Will be set together with CHASSIS_PLACEMENT or RACK_PLACEMENT so no need to set fields
     * 
-    * @param physicalContainerObjectId
+    * @param physicalContainerObjectId bject ID of physical container
     */
    public void setPhysicalContainer(long physicalContainerObjectId)
    {
@@ -1986,7 +1986,9 @@ public class NXCObjectModificationData
    }
 
    /**
-    * @return the chassisPlacement
+    * Get chassis placement configuration.
+    *
+    * @return chassis placement configuration
     */
    public String getChassisPlacement()
    {

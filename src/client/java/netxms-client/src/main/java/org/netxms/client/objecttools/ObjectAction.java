@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,16 +28,22 @@ public interface ObjectAction
 {
    /**
     * Get menu filter associated with the tool
+    * 
+    * @return menu filter associated with the tool
     */
    public ObjectMenuFilter getMenuFilter();
 
    /**
     * Sets menu filter for the tool
+    * 
+    * @param filter new menu filter
     */
    public void setMenuFilter(ObjectMenuFilter filter);
 
    /**
     * Get tool type
+    * 
+    * @return tool type
     */
    public int getToolType();
 

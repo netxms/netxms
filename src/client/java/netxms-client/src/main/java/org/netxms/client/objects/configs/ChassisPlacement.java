@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2021 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.client.objects.configs;
 
 import java.io.StringWriter;
@@ -94,7 +112,18 @@ public class ChassisPlacement
    }
    
    /**
-    * Constructor
+    * Create new placement definition from scratch.
+    *
+    * @param image GUID of representing image
+    * @param height height inside chassis
+    * @param heightUnits height units
+    * @param width width inside chassis 
+    * @param widthUnits width units
+    * @param positionHeight vertical position of top left corner
+    * @param positionHeightUnits height units for positioning
+    * @param positionWidth horizontal position of top left corner
+    * @param positionWidthUnits width units for positioning
+    * @param oritentaiton orientation
     */
    public ChassisPlacement(UUID image, int height, int heightUnits, int width, int widthUnits, int positionHeight, 
          int positionHeightUnits, int positionWidth, int positionWidthUnits, int oritentaiton)

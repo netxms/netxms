@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,22 +37,26 @@ public class NotificationChannel
 	private int lastStatus;
 	
 	/**
-	 * Create server action object from NXCP message
+	 * Create notification channel object from NXCP message
 	 * 
 	 * @param msg NXCP message
+	 * @param baseId base field ID
 	 */
-	protected NotificationChannel(final NXCPMessage msg, long base)
+	protected NotificationChannel(final NXCPMessage msg, long baseId)
 	{
-		name = msg.getFieldAsString(base);
-		description = msg.getFieldAsString(base+1);
-		driverName = msg.getFieldAsString(base+2);
-		configuration = msg.getFieldAsString(base+3);
-		isActive = msg.getFieldAsBoolean(base+4);
-		configurationTemplate = new NCConfigurationTemplate(msg, base+5);
-		errorMessage = msg.getFieldAsString(base+7);
-		lastStatus = msg.getFieldAsInt32(base+8);
+      name = msg.getFieldAsString(baseId);
+      description = msg.getFieldAsString(baseId + 1);
+      driverName = msg.getFieldAsString(baseId + 2);
+      configuration = msg.getFieldAsString(baseId + 3);
+      isActive = msg.getFieldAsBoolean(baseId + 4);
+      configurationTemplate = new NCConfigurationTemplate(msg, baseId + 5);
+      errorMessage = msg.getFieldAsString(baseId + 7);
+      lastStatus = msg.getFieldAsInt32(baseId + 8);
 	}
 	
+	/**
+	 * Create empty notification channel object.
+	 */
 	public NotificationChannel()
    {
 	   name = "";
@@ -65,6 +69,7 @@ public class NotificationChannel
 
    /**
 	 * Fill NXCP message with action's data
+	 *
 	 * @param msg NXCP message
 	 */
 	public void fillMessage(final NXCPMessage msg)
@@ -76,7 +81,9 @@ public class NotificationChannel
 	}
 
    /**
-    * @return the name
+    * Get channel name.
+    *
+    * @return channel name
     */
    public String getName()
    {

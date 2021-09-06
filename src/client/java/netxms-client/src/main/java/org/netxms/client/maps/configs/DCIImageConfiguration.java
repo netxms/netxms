@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,11 +47,14 @@ import org.simpleframework.xml.Serializer;
    public static final int OP_LIKE     = 6;
    public static final int OP_NOTLIKE  = 7;
 
-   @ElementArray(required = true) private DCIImageRule[] dciRuleList = new DCIImageRule[0];
+   @ElementArray(required = true) 
+   private DCIImageRule[] dciRuleList = new DCIImageRule[0];
 
-   @Element(required = true) private SingleDciConfig dci = new SingleDciConfig();
+   @Element(required = true)
+   private SingleDciConfig dci = new SingleDciConfig();
 
-   @Element(required = true) private UUID defaultImage = null;
+   @Element(required = true)
+   private UUID defaultImage = null;
 
    /**
     * Create DCI list object from XML document
@@ -144,6 +147,11 @@ import org.simpleframework.xml.Serializer;
       this.defaultImage = defaultImage;
    }
 
+   /**
+    * Check if this configuration has rule list.
+    *
+    * @return true if this configuration has rule list
+    */
    public boolean containRuleList()
    {
       if ((dciRuleList != null) && (dciRuleList.length > 0))
@@ -152,11 +160,9 @@ import org.simpleframework.xml.Serializer;
    }
 
    /**
-    * Checks is any rule applicable on last value
-    * All except line and not like are compared with help of T.compateTo(T).
-    * Like and not like values can be given with regular expressions
-    * so they are always compared as a strings and with help of 
-    * Glob.matchIgnoreCase(pattern, string).
+    * Checks is any rule applicable on last value. All except "like" and "not like" are compared with <code>T.compateTo(T)</code>.
+    * Values for "Like" and "not like" can be provided as regular expressions so they are always compared as a strings and with help
+    * of <code>Glob.matchIgnoreCase(pattern, string)</code>.
     *
     * @return correct image according to last value
     */

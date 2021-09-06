@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,8 +43,10 @@ public class AccessPoint extends DataCollectionTarget
 	private RadioInterface[] radios;
 	
 	/**
-	 * @param msg
-	 * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public AccessPoint(NXCPMessage msg, NXCSession session)
 	{
@@ -68,7 +70,7 @@ public class AccessPoint extends DataCollectionTarget
 		}
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
 	 */
 	@Override
@@ -77,7 +79,7 @@ public class AccessPoint extends DataCollectionTarget
 		return "AccessPoint";
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
 	 */
 	@Override
@@ -181,7 +183,7 @@ public class AccessPoint extends DataCollectionTarget
       return node;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#getStrings()
     */
    @Override

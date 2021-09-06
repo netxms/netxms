@@ -121,10 +121,11 @@ public class MibObject
 	}
 	
 	/**
-	 * Read MIB object from compiled MIB file
+	 * Read MIB object from compiled MIB file.
+	 *
 	 * @param in Input stream attached to MIB file
-	 * @throws IOException 
-	 * @throws NXCException 
+	 * @throws IOException if MIB file cannot be read 
+	 * @throws NXCException f MIB file cannot be parsed
 	 */
 	protected MibObject(NXCPDataInputStream in, MibObject parent) throws IOException, NXCException
 	{

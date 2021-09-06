@@ -7,22 +7,23 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 
 /**
- * @author Victor
- *
+ * Service root object
  */
 public class ServiceRoot extends GenericObject
 {
 	/**
-	 * @param msg Message to create object from
-	 * @param session Associated client session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public ServiceRoot(final NXCPMessage msg, final NXCSession session)
 	{
 		super(msg, session);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.NXCObject#getObjectClassName()
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
 	 */
 	@Override
 	public String getObjectClassName()
@@ -30,7 +31,7 @@ public class ServiceRoot extends GenericObject
 		return "ServiceRoot";
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
     */
    @Override

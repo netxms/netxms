@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ public class SingleDciConfig
 	/**
 	 * Create DCI info from DciValue object
 	 * 
-	 * @param dci
+	 * @param dci source DciValue object
 	 */
 	public SingleDciConfig(DciValue dci)
 	{
@@ -104,26 +104,25 @@ public class SingleDciConfig
 	}
 	
 	/**
-	 * Fill NXCPMessage with object data
-	 * 
-	 * @param msg
-	 * @param base
+	 * Fill NXCP message with object data
+	 *
+	 * @param msg NXCP message
+	 * @param baseId base field ID
 	 */
-	public void fillMessage(NXCPMessage msg, long base)
+	public void fillMessage(NXCPMessage msg, long baseId)
 	{
-	   if (type == DataCollectionItem.DCO_TYPE_TABLE && (column.isEmpty() || instance.isEmpty()))
-	   {
+	   if ((type == DataCollectionItem.DCO_TYPE_TABLE) && (column.isEmpty() || instance.isEmpty()))
 	      return;
-	   }
-	   msg.setFieldInt32(base++, (int)nodeId);
-	   msg.setFieldInt32(base++, (int)dciId);
+
+	   msg.setFieldInt32(baseId++, (int)nodeId);
+	   msg.setFieldInt32(baseId++, (int)dciId);
 	   if (type == DataCollectionItem.DCO_TYPE_TABLE)
 	   {
-	      msg.setField(base++, column);
-	      msg.setField(base++, instance);
+	      msg.setField(baseId++, column);
+	      msg.setField(baseId++, instance);
 	   }
 	}
-	
+
 	/**
 	 * Get DCI name. Always returns non-empty string.
 	 * 
@@ -131,11 +130,13 @@ public class SingleDciConfig
 	 */
 	public String getName()
 	{
-		return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(dciId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+		return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(dciId) + "]");
 	}
-	
+
    /**
-    * @return the formatString
+    * Get format string.
+    *
+    * @return format string
     */
    public String getFormatString()
    {
@@ -143,7 +144,9 @@ public class SingleDciConfig
    }
 
    /**
-    * @param formatString the formatString to set
+    * Set format string.
+    *
+    * @param formatString new format string
     */
    public void setFormatString(String formatString)
    {

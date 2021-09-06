@@ -430,7 +430,10 @@ public class Interface extends GenericObject implements ZoneMember
    private long[] vlans;
 
 	/**
-	 * @param msg
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public Interface(NXCPMessage msg, NXCSession session)
 	{

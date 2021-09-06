@@ -38,8 +38,10 @@ public class Rack extends GenericObject
    private List<PassiveRackElement> passiveElements;
 	
 	/**
-	 * @param msg
-	 * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public Rack(NXCPMessage msg, NXCSession session)
 	{
@@ -56,7 +58,7 @@ public class Rack extends GenericObject
 		}
 	}
 	
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
 	 */
 	@Override
@@ -65,7 +67,7 @@ public class Rack extends GenericObject
 		return "Rack";
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
 	 */
 	@Override
@@ -74,7 +76,7 @@ public class Rack extends GenericObject
 		return true;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
     */
    @Override
@@ -133,7 +135,10 @@ public class Rack extends GenericObject
 	}
 	
 	/**
-	 * Get passive element by id	 
+	 * Get passive element by id
+	 * 
+	 * @param id element ID
+	 * @return passive element with given ID or null if such element does not exist	 
 	 */
 	public PassiveRackElement getPassiveElement(long id)
 	{

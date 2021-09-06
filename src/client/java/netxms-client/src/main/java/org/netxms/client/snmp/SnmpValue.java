@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,9 +30,12 @@ public class SnmpValue
 	private long nodeId;
 	
 	/**
-	 * @param name
-	 * @param type
-	 * @param value
+	 * Create new SNMP value (varbind) object.
+	 *
+	 * @param name value name (OID in text form)
+	 * @param type data type
+	 * @param value value as string
+	 * @param nodeId source node ID
 	 */
 	public SnmpValue(String name, int type, String value, long nodeId)
 	{
@@ -44,9 +47,12 @@ public class SnmpValue
 	}
 	
 	/**
-	 * @param objectId
-	 * @param type
-	 * @param value
+    * Create new SNMP value (varbind) object.
+    *
+	 * @param objectId OID (will be converted to text form)
+    * @param type data type
+    * @param value value as string
+    * @param nodeId source node ID
 	 */
 	public SnmpValue(SnmpObjectId objectId, int type, String value, long nodeId)
 	{

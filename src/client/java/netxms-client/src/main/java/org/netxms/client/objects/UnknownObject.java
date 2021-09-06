@@ -27,15 +27,18 @@ import org.netxms.client.constants.ObjectStatus;
 public class UnknownObject extends GenericObject
 {
 	/**
-	 * Default constructor
+	 * Create new unknown object.
+	 * 
+	 * @param id object ID
+	 * @param session owning client session
 	 */
 	public UnknownObject(final long id, final NXCSession session)
 	{
 		super(id, session);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.GenericObject#getObjectName()
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getObjectName()
 	 */
 	@Override
 	public String getObjectName()
@@ -43,8 +46,8 @@ public class UnknownObject extends GenericObject
 		return "[" + Long.toString(getObjectId()) + "]";
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.GenericObject#getStatus()
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getStatus()
 	 */
 	@Override
 	public ObjectStatus getStatus()
@@ -52,8 +55,8 @@ public class UnknownObject extends GenericObject
 		return ObjectStatus.UNKNOWN;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
 	 */
 	@Override
 	public String getObjectClassName()

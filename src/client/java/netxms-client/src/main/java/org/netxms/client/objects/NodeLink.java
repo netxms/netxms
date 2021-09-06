@@ -30,8 +30,10 @@ public class NodeLink extends ServiceContainer
 	private long nodeId;
 	
 	/**
-	 * @param msg
-	 * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public NodeLink(NXCPMessage msg, NXCSession session)
 	{

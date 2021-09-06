@@ -34,14 +34,15 @@ public class SensorConfig
    /**
     * Create DCI list object from XML document
     * 
+    * @param configClass expected class of configuration object
     * @param xml XML document
     * @return deserialized object
     * @throws Exception if the object cannot be fully deserialized
     */
-   public static SensorConfig createFromXml(Class<? extends SensorConfig> retClass, final String xml) throws Exception
+   public static SensorConfig createFromXml(Class<? extends SensorConfig> configClass, final String xml) throws Exception
    {
       Serializer serializer = new Persister();
-      return serializer.read(retClass, xml);
+      return serializer.read(configClass, xml);
    }
    
    /**

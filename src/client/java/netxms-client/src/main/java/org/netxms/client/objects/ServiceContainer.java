@@ -31,6 +31,12 @@ public abstract class ServiceContainer extends GenericObject
 	private double uptimeForWeek;
 	private double uptimeForMonth;
 	
+	/**
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
+	 */
 	public ServiceContainer(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);

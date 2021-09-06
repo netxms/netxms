@@ -44,8 +44,10 @@ public class MobileDevice extends DataCollectionTarget
 	private Date lastReportTime;
 	
 	/**
-	 * @param msg
-	 * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public MobileDevice(NXCPMessage msg, NXCSession session)
 	{

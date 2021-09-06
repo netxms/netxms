@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Solutions
+ * Copyright (C) 2020-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,14 @@ package org.netxms.client;
 import org.netxms.client.objects.AbstractObject;
 
 /**
- * Interface to notify about new object creation
+ * Interface for object creation notification receivers.
  */
 public interface ObjectCreationListener
 {
    /**
-    * This method will be called when information about new object will come
+    * This method will be called when client receives information about newly created object.
+    * 
+    * @param object object that was created
     */
-   public void objectCreated(AbstractObject obj);
+   public void objectCreated(AbstractObject object);
 }

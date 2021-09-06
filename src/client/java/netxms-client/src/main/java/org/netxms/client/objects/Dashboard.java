@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,8 +38,10 @@ public class Dashboard extends GenericObject
 	private List<DashboardElement> elements;
 
 	/**
-	 * @param msg
-	 * @param session
+	 * Create from NXCP message.
+	 *
+	 * @param msg NXCP message
+	 * @param session owning client session
 	 */
 	public Dashboard(NXCPMessage msg, NXCSession session)
 	{

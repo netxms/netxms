@@ -39,6 +39,10 @@ import org.netxms.client.maps.elements.NetworkMapElement;
  * Network map object
  *
  */
+/**
+ * @author victor
+ *
+ */
 public class NetworkMap extends GenericObject
 {
 	public static final UUID GEOMAP_BACKGROUND = UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff"); 
@@ -72,8 +76,10 @@ public class NetworkMap extends GenericObject
 	private List<NetworkMapLink> links;
 	
 	/**
-	 * @param msg
-	 * @param session
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
 	 */
 	public NetworkMap(NXCPMessage msg, NXCSession session)
 	{
@@ -113,8 +119,8 @@ public class NetworkMap extends GenericObject
 	/**
 	 * Prepare object creation and modification data to create map copy
 	 * 
-	 * @param cd
-	 * @param md
+	 * @param cd object creation data
+	 * @param md object modification data
 	 */
 	public void prepareCopy(NXCObjectCreationData cd, NXCObjectModificationData md)
 	{
@@ -128,8 +134,8 @@ public class NetworkMap extends GenericObject
 	   md.setMapContent(elements, links);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
 	 */
 	@Override
 	public String getObjectClassName()
@@ -137,7 +143,7 @@ public class NetworkMap extends GenericObject
 		return "NetworkMap";
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
 	 */
 	@Override
@@ -263,8 +269,7 @@ public class NetworkMap extends GenericObject
       return objectDisplayMode;
    }
 
-
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#getStrings()
     */
    @Override

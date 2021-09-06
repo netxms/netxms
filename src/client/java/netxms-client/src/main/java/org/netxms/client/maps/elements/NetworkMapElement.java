@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import org.netxms.base.NXCPMessage;
 
 /**
  * Network map element.
- *
  */
 public class NetworkMapElement
 {
@@ -32,13 +31,13 @@ public class NetworkMapElement
 	public static final int MAP_ELEMENT_DCI_CONTAINER = 3;
    public static final int MAP_ELEMENT_DCI_IMAGE = 4;
    public static final int MAP_ELEMENT_TEXT_BOX = 5;
-	
+
 	protected long id;
 	protected int type;
 	protected int x;
 	protected int y;
 	private int flags;
-	
+
 	/**
 	 * Factory method for creating map element from NXCP message.
 	 * 
@@ -65,7 +64,7 @@ public class NetworkMapElement
 				return new NetworkMapElement(msg, baseId);
 		}
 	}
-	
+
 	/**
 	 * Create element from NXCP message.
 	 * 
@@ -82,7 +81,9 @@ public class NetworkMapElement
 	}
 	
 	/**
-	 * Create new generic element
+	 * Create new generic element.
+	 * 
+	 * @param id element ID
 	 */
 	public NetworkMapElement(long id)
 	{
@@ -109,7 +110,9 @@ public class NetworkMapElement
 	}
 
 	/**
-	 * @return the type
+	 * Get element type.
+	 *
+	 * @return element type
 	 */
 	public int getType()
 	{
@@ -117,7 +120,9 @@ public class NetworkMapElement
 	}
 
 	/**
-	 * @return the x
+	 * Get X (horizontal) coordinate.
+	 *
+	 * @return X (horizontal) coordinate
 	 */
 	public int getX()
 	{
@@ -125,7 +130,9 @@ public class NetworkMapElement
 	}
 
 	/**
-	 * @return the y
+	 * Get Y (vertical) coordinate.
+	 *
+	 * @return Y (vertical) coordinate
 	 */
 	public int getY()
 	{
@@ -133,7 +140,9 @@ public class NetworkMapElement
 	}
 
 	/**
-	 * @return the id
+	 * Get element ID.
+	 *
+	 * @return element ID
 	 */
 	public long getId()
 	{
@@ -143,8 +152,8 @@ public class NetworkMapElement
 	/**
 	 * Set elements's location
 	 * 
-	 * @param x
-	 * @param y
+	 * @param x new X (horizontal) coordinate
+	 * @param y new Y (vertical) coordinate
 	 */
 	public void setLocation(int x, int y)
 	{
@@ -152,7 +161,7 @@ public class NetworkMapElement
 		this.y = y;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -163,7 +172,7 @@ public class NetworkMapElement
 		return super.equals(obj);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override
@@ -173,7 +182,9 @@ public class NetworkMapElement
 	}
 
    /**
-    * @return the flags
+    * Get element flags.
+    *
+    * @return element flags
     */
    public int getFlags()
    {
@@ -181,7 +192,9 @@ public class NetworkMapElement
    }
 
    /**
-    * @param flags the flags to set
+    * Set element flags.
+    *
+    * @param flags new element flags
     */
    public void setFlags(int flags)
    {

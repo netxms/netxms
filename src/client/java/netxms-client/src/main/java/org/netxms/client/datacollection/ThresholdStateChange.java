@@ -33,7 +33,9 @@ public class ThresholdStateChange
    boolean activated;
    
    /**
-    * Create state change object from NXCP message 
+    * Create state change object from NXCP message.
+    * 
+    * @param msg NXCP message
     */
    public ThresholdStateChange(NXCPMessage msg)
    {

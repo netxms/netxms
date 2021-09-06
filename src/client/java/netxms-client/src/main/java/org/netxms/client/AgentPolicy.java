@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,9 @@ public class AgentPolicy
 	private int flags;
 	
 	/**
-	 * @param msg
+	 * Create from NXCP message.
+	 *
+	 * @param msg NXCP message
 	 */
 	public AgentPolicy(NXCPMessage msg)
 	{		
@@ -52,14 +54,26 @@ public class AgentPolicy
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 	}
 	
-	public AgentPolicy(String policyName, String policyType)
+	/**
+	 * Create policy object from scratch.
+	 *
+	 * @param name policy name
+	 * @param type policy type
+	 */
+	public AgentPolicy(String name, String type)
    {
-	   guid = null;
-	   name = policyName;
-	   this.policyType = policyType;
-	   content = "";
+	   this.guid = null;
+	   this.name = name;
+	   this.policyType = type;
+	   this.content = "";
    }
 	
+   /**
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param base base field ID
+    */
    public AgentPolicy(NXCPMessage msg, long base)
    {
       guid = msg.getFieldAsUUID(base);
@@ -69,18 +83,42 @@ public class AgentPolicy
       flags = msg.getFieldAsInt32(base+4);   
    }
 
-   public AgentPolicy(AgentPolicy policy)
+   /**
+    * Create copy of given policy object. All fields except GUID will be copied, and GUID will be set to null.
+    *
+    * @param src source policy object
+    */
+   public AgentPolicy(AgentPolicy src)
    {
       guid = null;
-      name = policy.name;
-      policyType = policy.policyType;
-      content = policy.content;
-      flags = policy.flags;
+      name = src.name;
+      policyType = src.policyType;
+      content = src.content;
+      flags = src.flags;
    }
 
+   /**
+    * Update all fields from given policy object.
+    *
+    * @param src source policy object
+    */
+   public void update(AgentPolicy src)
+   {
+      guid = src.guid;
+      name = src.name;
+      policyType = src.policyType;
+      content = src.content;
+      flags = src.flags;
+   }
+   
+   /**
+    * Fill NXCP message with polic data.
+    *
+    * @param msg NXCP message
+    */
    public void fillMessage(NXCPMessage msg)
    {
-      if(guid != null)
+      if (guid != null)
          msg.setField(NXCPCodes.VID_GUID, guid);
       msg.setField(NXCPCodes.VID_NAME, name);
       msg.setField(NXCPCodes.VID_POLICY_TYPE, policyType);
@@ -160,21 +198,12 @@ public class AgentPolicy
       this.flags = flags;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
       return name;
-   }
-
-   public void update(AgentPolicy object)
-   {
-      guid = object.guid;
-      name = object.name;
-      policyType = object.policyType;
-      content = object.content;
-      flags = object.flags;
    }
 }

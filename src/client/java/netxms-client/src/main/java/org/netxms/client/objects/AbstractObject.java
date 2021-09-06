@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -553,9 +553,10 @@ public abstract class AbstractObject
 	}
 
 	/**
-	 * Check if given object is direct parent
+	 * Check if given object is direct parent of this object.
 	 * 
 	 * @param objectId ID of object to check
+	 * @return true if this object is a direct child of given object
 	 */
 	public boolean isDirectChildOf(final long objectId)
 	{
@@ -702,7 +703,7 @@ public abstract class AbstractObject
    /**
     * Get number of child objects
     *
-    * @return
+    * @return number of child objects
     */
    public int getChildCount()
    {
@@ -902,6 +903,8 @@ public abstract class AbstractObject
 	}
 
 	/**
+	 * Get name of NetXMS object's class.
+	 *
 	 * @return Name of NetXMS object's class
 	 */
 	public String getObjectClassName()
@@ -910,7 +913,9 @@ public abstract class AbstractObject
 	}
 
 	/**
-	 * Get object's custom attributes
+	 * Get object's custom attributes.
+	 * 
+	 * @return object's custom attributes
 	 */
 	public Map<String, CustomAttribute> getCustomAttributes()
 	{
@@ -918,23 +923,25 @@ public abstract class AbstractObject
 	}
 
    /**
-    * Get object's custom attribute by key
+    * Get object's custom attribute by name
     * 
+    * @param name attribute's name
     * @return custom attribute object or null
     */
-   public CustomAttribute getCustomAttribute(String key)
+   public CustomAttribute getCustomAttribute(String name)
    {
-      return customAttributes.get(key);
+      return customAttributes.get(name);
    }
 
    /**
-    * Get object's custom attribute's value by key
+    * Get object's custom attribute's value by name
     * 
+    * @param name attribute's name
     * @return custom attribute's value or null
     */
-   public String getCustomAttributeValue(String key)
+   public String getCustomAttributeValue(String name)
    {
-      CustomAttribute a = customAttributes.get(key);
+      CustomAttribute a = customAttributes.get(name);
       return (a != null) ? a.getValue() : null;
    }
 
@@ -946,6 +953,9 @@ public abstract class AbstractObject
 		return geolocation;
 	}
 
+	/**
+	 * @see java.lang.Object#hashCode()
+	 */
 	@Override
 	public int hashCode()
 	{
