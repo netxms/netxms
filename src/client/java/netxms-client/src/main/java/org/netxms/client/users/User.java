@@ -203,6 +203,32 @@ public class User extends AbstractUserObject
 	}
 
    /**
+    * @see org.netxms.client.users.AbstractUserObject#getLabel()
+    */
+   @Override
+   public String getLabel()
+   {
+      if (fullName.isEmpty())
+         return super.getLabel();
+
+      StringBuilder sb = new StringBuilder();
+      sb.append(name);
+      sb.append(" <");
+      sb.append(fullName);
+      if (!description.isEmpty())
+      {
+         sb.append("> (");
+         sb.append(description);
+         sb.append(')');
+      }
+      else
+      {
+         sb.append('>');
+      }
+      return sb.toString();
+   }
+
+   /**
     * @see org.netxms.client.users.AbstractUserObject#clone()
     */
 	@Override

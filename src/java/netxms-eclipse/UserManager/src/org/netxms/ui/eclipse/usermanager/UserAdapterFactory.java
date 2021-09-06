@@ -41,9 +41,9 @@ public class UserAdapterFactory implements IAdapterFactory
 		IWorkbenchAdapter.class
 	};
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
-	 */
+   /**
+    * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
+    */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Class[] getAdapterList()
@@ -51,9 +51,9 @@ public class UserAdapterFactory implements IAdapterFactory
 		return supportedClasses;
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
-	 */
+   /**
+    * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
+    */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Object getAdapter(Object adaptableObject, Class adapterType)
@@ -79,16 +79,7 @@ public class UserAdapterFactory implements IAdapterFactory
 					@Override
 					public String getLabel(Object o)
 					{
-					   StringBuilder sb = new StringBuilder();
-					   if (((User)o).getFullName().isEmpty())
-					      sb.append(((User)o).getName());
-					   else
-                     sb.append(String.format("%s <%s>", ((User)o).getName(), ((User)o).getFullName()));
-					   
-					   if (!((User)o).getDescription().isEmpty())
-                     sb.append(String.format(" (%s)", ((User)o).getDescription()));
-					   
-					   return sb.toString();
+                  return ((User)o).getLabel();
 					}
 
 					@Override
@@ -122,13 +113,7 @@ public class UserAdapterFactory implements IAdapterFactory
 					@Override
 					public String getLabel(Object o)
 					{    
-                  StringBuilder sb = new StringBuilder();
-                  sb.append(((UserGroup)o).getName());
-                  
-                  if (!((UserGroup)o).getDescription().isEmpty())
-                     sb.append(String.format(" (%s)", ((UserGroup)o).getDescription()));
-                  
-                  return sb.toString();
+                  return ((UserGroup)o).getLabel();
 					}
 
 					@Override
