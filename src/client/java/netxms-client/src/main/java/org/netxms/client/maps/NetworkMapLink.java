@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Represents link between two elements on map
+ * Represents link between two elements on map.
  */
 public class NetworkMapLink
 {
@@ -74,16 +74,18 @@ public class NetworkMapLink
    private int position = 0;
 
    /**
-    * @param id
-    * @param name
-    * @param type
+    * Create link object from scratch.
+    *
+    * @param id link object ID
+    * @param name link name (will be displayed in the middle of the link)
+    * @param type link type
     * @param element1 network map internal element id
     * @param element2 network map internal element id
-    * @param connectorName1
-    * @param connectorName2
-    * @param dciList
-    * @param flags
-    * @param locked
+    * @param connectorName1 connector name 1 (will be displayed close to element 1)  
+    * @param connectorName2 connector name 2 (will be displayed close to element 2)
+    * @param dciList list of DCIs to be displayed on the link (can be null)
+    * @param flags link flags
+    * @param isLocked true if link is locked (cannot be moved)
     */
    public NetworkMapLink(long id, String name, int type, long element1, long element2, String connectorName1, String connectorName2,
          SingleDciConfig[] dciList, int flags, boolean isLocked)
@@ -104,14 +106,16 @@ public class NetworkMapLink
    }
 
    /**
-    * @param id
-    * @param name
-    * @param type
+    * Create link object from scratch.
+    *
+    * @param id link object ID
+    * @param name link name (will be displayed in the middle of the link)
+    * @param type link type
     * @param element1 network map internal element id
     * @param element2 network map internal element id
-    * @param connectorName1
-    * @param connectorName2
-    * @param flags
+    * @param connectorName1 connector name 1 (will be displayed close to element 1)  
+    * @param connectorName2 connector name 2 (will be displayed close to element 2)
+    * @param flags link flags
     */
    public NetworkMapLink(long id, String name, int type, long element1, long element2, String connectorName1, String connectorName2, int flags)
    {
@@ -119,8 +123,10 @@ public class NetworkMapLink
    }
 
    /**
-    * @param id
-    * @param type
+    * Create link object from scratch.
+    *
+    * @param id link object ID
+    * @param type link type
     * @param element1 network map internal element id
     * @param element2 network map internal element id
     */
@@ -130,10 +136,10 @@ public class NetworkMapLink
    }
 
    /**
-    * Create link object from NXCP message
+    * Create link object from NXCP message.
     *
-    * @param msg    NXCP message
-    * @param baseId base variable ID
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
    public NetworkMapLink(NXCPMessage msg, long baseId)
    {
