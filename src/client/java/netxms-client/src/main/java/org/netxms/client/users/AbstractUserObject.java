@@ -287,10 +287,22 @@ public abstract class AbstractUserObject
 	}
 
 	/**
-	 * Get custom attribute
-	 * @param name Name of the attribute
-	 * @return Custom attribute value
-	 */
+    * Get display label for this object. Label includes object name and description (if present). Subclasses may add additional
+    * fields to the label.
+    * 
+    * @return display label for this object
+    */
+   public String getLabel()
+   {
+      return description.isEmpty() ? name : (name + " (" + description + ")");
+   }
+
+   /**
+    * Get custom attribute
+    * 
+    * @param name Name of the attribute
+    * @return Custom attribute value
+    */
 	public String getCustomAttribute(final String name)
 	{
 		return customAttributes.get(name);
@@ -341,8 +353,7 @@ public abstract class AbstractUserObject
 	{
 		return ((flags & CANNOT_CHANGE_PASSWORD) == CANNOT_CHANGE_PASSWORD);
 	}
-	
-	
+
 	/**
 	 * Get creation date
 	 * @return creation date

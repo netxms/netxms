@@ -103,6 +103,7 @@ public class ResponsibleUsers extends PropertyPage
             return ((ResponsibleUserInfo)e1).getName().compareToIgnoreCase(((ResponsibleUserInfo)e2).getName());
          }
       });
+      viewer.getTable().setHeaderVisible(true);
 
       TableColumn column = new TableColumn(viewer.getTable(), SWT.NONE);
       column.setText("User");
@@ -210,7 +211,7 @@ public class ResponsibleUsers extends PropertyPage
             IStructuredSelection selection = viewer.getStructuredSelection();
             for(Object o : selection.toList())
             {
-               users.remove(((ResponsibleUser)o).userId);
+               users.remove(((ResponsibleUserInfo)o).userId);
             }
             viewer.setInput(users.values().toArray());
          }
@@ -371,6 +372,11 @@ public class ResponsibleUsers extends PropertyPage
       {
          return (user != null) ? user.getName() : "[" + userId + "]";
       }
+
+      public String getLabel()
+      {
+         return (user != null) ? user.getLabel() : "[" + userId + "]";
+      }
    }
 
    /**
@@ -401,7 +407,7 @@ public class ResponsibleUsers extends PropertyPage
       public String getColumnText(Object element, int columnIndex)
       {
          ResponsibleUserInfo r = (ResponsibleUserInfo)element;
-         return (columnIndex == 0) ? r.getName() : Integer.toString(r.escalationLevel);
+         return (columnIndex == 0) ? r.getLabel() : Integer.toString(r.escalationLevel);
       }
 
       /**
