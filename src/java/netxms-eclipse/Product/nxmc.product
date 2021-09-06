@@ -57,14 +57,10 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="com.ibm.icu"/>
       <plugin id="com.sun.jna"/>
       <plugin id="com.sun.jna.platform"/>
-      <plugin id="javax.activation"/>
       <plugin id="javax.annotation"/>
       <plugin id="javax.inject"/>
-      <plugin id="javax.mail"/>
       <plugin id="javax.servlet"/>
-      <plugin id="javax.transaction" fragment="true"/>
       <plugin id="javax.xml"/>
-      <plugin id="javax.xml.stream"/>
       <plugin id="org.apache.batik.constants"/>
       <plugin id="org.apache.batik.css"/>
       <plugin id="org.apache.batik.i18n"/>
@@ -73,8 +69,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.apache.commons.io"/>
       <plugin id="org.apache.commons.jxpath"/>
       <plugin id="org.apache.commons.logging"/>
-      <plugin id="org.apache.felix.gogo.runtime"/>
-      <plugin id="org.apache.felix.scr"/>
       <plugin id="org.apache.log4j"/>
       <plugin id="org.apache.xerces"/>
       <plugin id="org.apache.xml.resolver"/>
@@ -524,7 +518,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.emf.common.nl_de" fragment="true"/>
       <plugin id="org.eclipse.emf.common.nl_es" fragment="true"/>
       <plugin id="org.eclipse.emf.common.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.emf.common.nl_iw" fragment="true"/>
       <plugin id="org.eclipse.emf.common.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.emf.common.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.emf.common.nl_ru" fragment="true"/>
@@ -535,7 +528,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.emf.ecore.change.nl_de" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.change.nl_es" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.change.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.emf.ecore.change.nl_iw" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.change.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.change.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.change.nl_ru" fragment="true"/>
@@ -553,7 +545,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.emf.ecore.nl_de" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.nl_es" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.emf.ecore.nl_iw" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.nl_ru" fragment="true"/>
@@ -563,7 +554,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.emf.ecore.xmi.nl_de" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.xmi.nl_es" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.xmi.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.emf.ecore.xmi.nl_iw" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.xmi.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.xmi.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.emf.ecore.xmi.nl_ru" fragment="true"/>
@@ -606,17 +596,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.equinox.common.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.equinox.common.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.equinox.common.nl_ru" fragment="true"/>
-      <plugin id="org.eclipse.equinox.ds"/>
-      <plugin id="org.eclipse.equinox.event"/>
-      <plugin id="org.eclipse.equinox.event.nl_ar" fragment="true"/>
-      <plugin id="org.eclipse.equinox.event.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.equinox.event.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.equinox.event.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.equinox.event.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.equinox.event.nl_iw" fragment="true"/>
-      <plugin id="org.eclipse.equinox.event.nl_pt" fragment="true"/>
-      <plugin id="org.eclipse.equinox.event.nl_pt_BR" fragment="true"/>
-      <plugin id="org.eclipse.equinox.event.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.equinox.p2.core"/>
       <plugin id="org.eclipse.equinox.p2.core.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.equinox.p2.core.nl_cs" fragment="true"/>
@@ -1036,7 +1015,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.wst.sse.core"/>
       <plugin id="org.eclipse.wst.validation"/>
       <plugin id="org.eclipse.wst.xml.core"/>
-      <plugin id="org.mozilla.javascript"/>
       <plugin id="org.netxms.gef4.zest.core"/>
       <plugin id="org.netxms.gef4.zest.jface"/>
       <plugin id="org.netxms.gef4.zest.layouts"/>
@@ -1081,13 +1059,14 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.w3c.dom.events"/>
       <plugin id="org.w3c.dom.smil"/>
       <plugin id="org.w3c.dom.svg"/>
-      <plugin id="org.w3c.dom.svg.extension" fragment="true"/>
    </plugins>
 
    <configurations>
       <plugin id="org.apache.felix.scr" autoStart="true" startLevel="2" />
-      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="4" />
+      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.equinox.event" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.equinox.simpleconfigurator" autoStart="true" startLevel="1" />
    </configurations>
 
    <preferencesInfo>
