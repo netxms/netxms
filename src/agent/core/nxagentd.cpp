@@ -1210,16 +1210,25 @@ BOOL Initialize()
    delete s_actionList;
 
    // Parse external parameters list
-   if (s_externalParametersConfig != NULL)
+   if (s_externalParametersConfig != nullptr)
    {
       for(pItem = pEnd = s_externalParametersConfig; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = _tcschr(pItem, _T('\n'));
-         if (pEnd != NULL)
+         if (pEnd != nullptr)
             *pEnd = 0;
          Trim(pItem);
-         if (!AddExternalParameter(pItem, FALSE, FALSE))
+
+	 // Historically on UNIX all external parameters were run as shell command
+	 // Keep this behavior for compatibility
+#ifdef _WIN32
+         if (!AddExternalParameter(pItem, false, false))
+#else
+         if (!AddExternalParameter(pItem, true, false))
+#endif
+         {
             nxlog_write(NXLOG_WARNING, _T("Unable to add external parameter \"%s\""), pItem);
+         }
       }
       MemFree(s_externalParametersConfig);
    }
@@ -1231,7 +1240,7 @@ BOOL Initialize()
          if (pEnd != NULL)
             *pEnd = 0;
          Trim(pItem);
-         if (!AddExternalParameter(pItem, TRUE, FALSE))
+         if (!AddExternalParameter(pItem, true, false))
             nxlog_write(NXLOG_WARNING, _T("Unable to add external parameter \"%s\""), pItem);
       }
       MemFree(s_externalShellExecParametersConfig);
@@ -1246,7 +1255,7 @@ BOOL Initialize()
          if (pEnd != nullptr)
             *pEnd = 0;
          Trim(pItem);
-         if (!AddExternalParameter(pItem, FALSE, TRUE))
+         if (!AddExternalParameter(pItem, true, true))
             nxlog_write(NXLOG_WARNING, _T("Unable to add external list \"%s\""), pItem);
       }
       MemFree(s_externalListsConfig);
