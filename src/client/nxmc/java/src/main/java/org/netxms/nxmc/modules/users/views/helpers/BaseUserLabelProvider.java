@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,19 +16,18 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.users.dialogs.helpers;
+package org.netxms.nxmc.modules.users.views.helpers;
 
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
-import org.netxms.client.users.UserGroup;
 import org.netxms.nxmc.resources.SharedIcons;
 
 /**
- * Label provider for user list in user selection dialog
+ * Base user label provider
  */
-public class UserListLabelProvider extends LabelProvider
+public class BaseUserLabelProvider extends LabelProvider
 {
    /**
     * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
@@ -36,7 +35,7 @@ public class UserListLabelProvider extends LabelProvider
    @Override
    public Image getImage(Object element)
    {
-      return (element instanceof User) ? SharedIcons.IMG_USER : ((element instanceof UserGroup) ? SharedIcons.IMG_GROUP : null);
+      return (element instanceof User) ? SharedIcons.IMG_USER : SharedIcons.IMG_GROUP;
    }
 
    /**
@@ -45,6 +44,6 @@ public class UserListLabelProvider extends LabelProvider
    @Override
    public String getText(Object element)
    {
-      return (element instanceof String) ? (String)element : ((AbstractUserObject)element).getName();
+      return ((AbstractUserObject)element).getLabel();
    }
 }

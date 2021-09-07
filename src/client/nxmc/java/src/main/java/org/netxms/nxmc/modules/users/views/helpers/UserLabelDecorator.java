@@ -1,38 +1,24 @@
 /**
- * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * 
  */
-package org.netxms.nxmc.modules.objects.widgets.helpers;
+package org.netxms.nxmc.modules.users.views.helpers;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.DecorationOverlayIcon;
 import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.constants.ObjectStatus;
-import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 
 /**
- * Label decorator for objects
+ * Decorator for user/group labels
  */
-public class ObjectLabelDecorator implements ILabelDecorator
+public class UserLabelDecorator implements ILabelDecorator
 {
    private Map<Image, Image[]> imageCache = new HashMap<Image, Image[]>();
 
@@ -42,15 +28,19 @@ public class ObjectLabelDecorator implements ILabelDecorator
    @Override
    public Image decorateImage(Image image, Object element)
    {
-      if ((image == null) || !(element instanceof AbstractObject))
+      if ((image == null) || !(element instanceof AbstractUserObject))
          return null;
 
-      AbstractObject object = (AbstractObject)element;
-      if (object.getStatus() == ObjectStatus.NORMAL)
-         return null;
+      int state = 0;
+      if (((AbstractUserObject)element).isDisabled())
+         state |= 1;
+      if ((((AbstractUserObject)element).getFlags() & AbstractUserObject.SYNC_EXCEPTION) != 0)
+         state |= 2;
+      if (state == 0)
+         return null; // Decoration is not needed
 
+      int index = state - 1;
       Image[] decoratedImages = imageCache.get(image);
-      int index = object.getStatus().getValue();
       if (decoratedImages != null)
       {
          if (decoratedImages[index] != null)
@@ -58,14 +48,18 @@ public class ObjectLabelDecorator implements ILabelDecorator
       }
       else
       {
-         decoratedImages = new Image[9];
+         decoratedImages = new Image[3];
          imageCache.put(image, decoratedImages);
       }
 
-      DecorationOverlayIcon icon = new DecorationOverlayIcon(image, StatusDisplayInfo.getStatusOverlayImageDescriptor(object.getStatus()), IDecoration.BOTTOM_RIGHT);
+      ImageDescriptor[] overlays = new ImageDescriptor[6];
+      if ((state & 1) != 0)
+         overlays[IDecoration.BOTTOM_RIGHT] = StatusDisplayInfo.getStatusOverlayImageDescriptor(ObjectStatus.DISABLED);
+      if ((state & 2) != 0)
+         overlays[IDecoration.TOP_LEFT] = StatusDisplayInfo.getStatusOverlayImageDescriptor(ObjectStatus.MINOR);
+      DecorationOverlayIcon icon = new DecorationOverlayIcon(image, overlays);
       decoratedImages[index] = icon.createImage();
-
-      return decoratedImages[index];
+      return null;
    }
 
    /**
@@ -75,6 +69,18 @@ public class ObjectLabelDecorator implements ILabelDecorator
    public String decorateText(String text, Object element)
    {
       return null;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      for(Image[] images : imageCache.values())
+         for(Image image : images)
+            if (image != null)
+               image.dispose();
    }
 
    /**
@@ -100,17 +106,5 @@ public class ObjectLabelDecorator implements ILabelDecorator
    @Override
    public void removeListener(ILabelProviderListener listener)
    {
-   }
-
-   /**
-    * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      for(Image[] images : imageCache.values())
-         for(Image image : images)
-            if (image != null)
-               image.dispose();
    }
 }

@@ -92,6 +92,9 @@ public class ServerVariables extends ConfigurationView
       session = Registry.getSession();
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    protected void createContent(Composite parent)
    {

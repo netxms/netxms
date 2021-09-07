@@ -41,7 +41,7 @@ import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.users.dialogs.helpers.UserListLabelProvider;
+import org.netxms.nxmc.modules.users.views.helpers.BaseUserLabelProvider;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -101,7 +101,7 @@ public class SelectUserDialog extends Dialog
 		
       userList = new TableViewer(dialogArea, SWT.BORDER | (multiSelection ? SWT.MULTI : 0) | SWT.FULL_SELECTION);
       userList.setContentProvider(new ArrayContentProvider());
-      userList.setLabelProvider(new UserListLabelProvider());
+      userList.setLabelProvider(new BaseUserLabelProvider());
       userList.setComparator(new ViewerComparator() {
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)

@@ -355,12 +355,18 @@ public class NotificationChannels extends ConfigurationView
       }.start();
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
+    */
    @Override
    public boolean isModified()
    {
       return false;
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#save()
+    */
    @Override
    public void save()
    {
