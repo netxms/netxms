@@ -279,7 +279,7 @@ static void WriteInfoFile(const TCHAR *fileName, const ClientInfo *clientInfo, c
          if (ReadProcessMemory(clientInfo->process_handle(), exceptionPointers.ExceptionRecord, &exceptionRecord, sizeof(EXCEPTION_RECORD), &bytesRead))
          {
 #ifdef _M_IX86
-            _ftprintf(m_pExInfoFile, _T("EXCEPTION: %08X (%s) at %08X in %s\n"),
+            _ftprintf(fp, _T("EXCEPTION: %08X (%s) at %08X in %s\n"),
 #else
             _ftprintf(fp, _T("EXCEPTION: %08X (%s) at %016I64X in %s\n"),
 #endif
