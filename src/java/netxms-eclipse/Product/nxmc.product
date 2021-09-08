@@ -53,7 +53,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="ch.qos.logback.classic"/>
       <plugin id="ch.qos.logback.core"/>
       <plugin id="ch.qos.logback.slf4j" fragment="true"/>
-      <plugin id="com.google.guava"/>
       <plugin id="com.ibm.icu"/>
       <plugin id="com.sun.jna"/>
       <plugin id="com.sun.jna.platform"/>
@@ -432,15 +431,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.e4.ui.services.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.e4.ui.services.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.e4.ui.swt.gtk" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.swt.gtk.nl_ar" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.swt.gtk.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.swt.gtk.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.swt.gtk.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.swt.gtk.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.swt.gtk.nl_iw" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.swt.gtk.nl_pt" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.swt.gtk.nl_pt_BR" fragment="true"/>
-      <plugin id="org.eclipse.e4.ui.swt.gtk.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.e4.ui.swt.win32" fragment="true"/>
       <plugin id="org.eclipse.e4.ui.widgets"/>
       <plugin id="org.eclipse.e4.ui.widgets.nl_ar" fragment="true"/>
@@ -1066,7 +1056,6 @@ Copyright (c) 2003-2021 Raden Solutions
       <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
       <plugin id="org.eclipse.equinox.event" autoStart="true" startLevel="2" />
-      <plugin id="org.eclipse.equinox.simpleconfigurator" autoStart="true" startLevel="1" />
    </configurations>
 
    <preferencesInfo>
