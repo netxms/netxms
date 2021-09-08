@@ -440,9 +440,11 @@ public class PhysicalContainerPlacement extends PropertyPage
          {
             md.setRackPlacement(rackImageFrontSelector.getImageGuid(), rackImageRearSelector.getImageGuid(), (short)rackPosition.getSelection(), (short)rackHeight.getSelection(),
                   RackOrientation.getByValue(rackOrientation.getSelectionIndex()));
+            md.setChassisPlacement("");
          }
          else
          {
+            md.setRackPlacement(NXCommon.EMPTY_GUID, NXCommon.EMPTY_GUID, (short)0, (short)0, RackOrientation.getByValue(0));
             ChassisPlacement placement = new ChassisPlacement(chassisImageSelector.getImageGuid(), Integer.parseInt(chassisHeight.getText()), 
                   chassisHeightUnits.getSelectionIndex(), Integer.parseInt(chassisWidth.getText()), chassisWidthUnits.getSelectionIndex(), 
                   Integer.parseInt(chassisVerticalPosition.getText()), chassisVerticalPositionUnits.getSelectionIndex(), 
