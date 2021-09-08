@@ -561,6 +561,10 @@ public:
    }
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE ObjectMemoryPool<std::shared_ptr<NetObj>>;
+#endif
+
 /**
  * Object index
  */
@@ -3927,7 +3931,8 @@ struct ZoneProxy
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE AbstractIndexWithDestructor<ZoneProxy>;
+template class NXCORE_EXPORTABLE ObjectMemoryPool<std::shared_ptr<ZoneProxy>>;
+template class NXCORE_EXPORTABLE SharedPointerIndex<ZoneProxy>;
 #endif
 
 /**
