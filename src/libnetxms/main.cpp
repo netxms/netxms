@@ -239,10 +239,7 @@ void LIBNETXMS_EXPORTABLE __wcsupr(WCHAR *in)
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
-	{
       DisableThreadLibraryCalls(hInstance);
-		SEHInit();
-	}
    return TRUE;
 }
 

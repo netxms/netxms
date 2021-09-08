@@ -43,9 +43,6 @@ void StartWatchdog()
    TCHAR szCmdLine[4096], szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
 #ifdef _WIN32
    TCHAR szExecName[MAX_PATH];
-   STARTUPINFO si;
-   PROCESS_INFORMATION pi;
-
    GetModuleFileName(GetModuleHandle(NULL), szExecName, MAX_PATH);
 #else
    TCHAR szExecName[MAX_PATH] = PREFIX _T("/bin/nxagentd");
