@@ -383,7 +383,7 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Agent.Proxy.ConnectionRequests"), H_AgentProxyStats, _T("C"), DCI_DT_COUNTER64, DCIDESC_AGENT_PROXY_CONNECTIONREQUESTS },
    { _T("Agent.Proxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_PROXY_ISENABLED },
    { _T("Agent.PushValue(*)"), H_PushValue, nullptr, DCI_DT_STRING, DCIDESC_AGENT_PUSH_VALUE },
-   { _T("Agent.Registrar"), H_StringConstant, nullptr, DCI_DT_STRING, DCIDESC_AGENT_REGISTRAR },
+   { _T("Agent.Registrar"), H_StringConstant, g_szRegistrar, DCI_DT_STRING, DCIDESC_AGENT_REGISTRAR },
    { _T("Agent.RejectedConnections"), H_UIntPtr, (TCHAR *)&g_rejectedConnections, DCI_DT_COUNTER32, DCIDESC_AGENT_REJECTEDCONNECTIONS },
    { _T("Agent.SessionAgentCount"), H_SessionAgentCount, _T("*"), DCI_DT_UINT, DCIDESC_AGENT_SESSION_AGENTS_COUNT },
    { _T("Agent.SNMP.IsProxyEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_SNMP_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_SNMP_ISPROXYENABLED },
