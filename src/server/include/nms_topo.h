@@ -189,6 +189,10 @@ struct LL_NEIGHBOR_INFO
    bool isCached;              // true if this is cached information
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE StructArray<LL_NEIGHBOR_INFO>;
+#endif
+
 /**
  * link layer neighbors
  */
