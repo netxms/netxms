@@ -562,7 +562,7 @@ public:
 };
 
 #ifdef _WIN32
-template class NXCORE_EXPORTABLE ObjectMemoryPool<std::shared_ptr<NetObj>>;
+template class NXCORE_EXPORTABLE ObjectMemoryPool<shared_ptr<NetObj>>;
 #endif
 
 /**
