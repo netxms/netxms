@@ -44,5 +44,4 @@ EXTRA_DIST = \
 	libnetxms.h diff.h ice.h lz4.h md5.h sha1.h sha2.h strmap-internal.h unicode_cc.h \
 	debug_tag_tree.h \
 	dir.cpp dirw.cpp \
-	npipe_win32.cpp \
-	seh.cpp StackWalker.cpp StackWalker.h
+	npipe_win32.cpp

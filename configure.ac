@@ -5011,6 +5011,7 @@ AC_CONFIG_FILES([
 	src/snmp/nxsnmpwalk/Makefile
 	src/sqlite/Makefile
 	src/tools/Makefile
+	src/tools/nxcrashsrv/Makefile
 	src/tools/nxcsum/Makefile
 	src/tools/nxdevcfg/Makefile
 	src/tools/nxencpasswd/Makefile

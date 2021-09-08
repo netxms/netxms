@@ -27,6 +27,7 @@
 
 #ifdef _WIN32
 #include <conio.h>
+#include <client/windows/handler/exception_handler.h>
 #else
 #include <signal.h>
 #include <sys/wait.h>
@@ -1025,6 +1026,8 @@ BOOL Initialize()
    {
       nxlog_write(NXLOG_INFO, _T("Crash dump generation is enabled (dump directory is %s)"), s_dumpDirectory);
       CreateFolder(s_dumpDirectory);
+      if (g_failFlags & FAIL_CRASH_SERVER_START)
+         nxlog_write(NXLOG_ERROR, _T("Failed to start crash dump collector process"));
    }
    else
    {
@@ -1862,6 +1865,8 @@ int main(int argc, char *argv[])
    TCHAR szModuleName[MAX_PATH];
    HKEY hKey;
    DWORD dwSize;
+   ProcessExecutor *crashServer = nullptr;
+   google_breakpad::ExceptionHandler *exceptionHandler = nullptr;
 #else
    TCHAR *pszEnv;
 	int uid = 0, gid = 0;
@@ -2227,9 +2232,50 @@ int main(int argc, char *argv[])
          if (s_startupFlags & SF_FATAL_EXIT_ON_CRT_ERROR)
             EnableFatalExitOnCRTError(true);
          if (s_startupFlags & SF_CATCH_EXCEPTIONS)
-            SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, s_dumpDirectory,
-                                _T("nxagentd"), s_startupFlags & SF_WRITE_FULL_DUMP, !(g_dwFlags & AF_DAEMON));
-         __try {
+         {
+            TCHAR pipeName[64];
+            _sntprintf(pipeName, 64, _T("\\\\.\\pipe\\nxagentd-crashsrv-%u"), GetCurrentProcessId());
+
+            TCHAR crashServerCmdLine[256];
+            _sntprintf(crashServerCmdLine, 256, _T("nxcrashsrv.exe nxagentd-crashsrv-%u \"%s\""), GetCurrentProcessId(), s_dumpDirectory);
+            crashServer = new ProcessExecutor(crashServerCmdLine, false);
+            if (crashServer->execute())
+            {
+               // Wait for server's named pipe to appear
+               bool success = false;
+               uint32_t timeout = 2000;
+               while (timeout > 0)
+               {
+                  if (WaitNamedPipe(pipeName, timeout))
+                  {
+                     success = true;
+                     break;   // Success
+                  }
+                  if (GetLastError() != ERROR_FILE_NOT_FOUND)
+                     break;   // Unrecoverable error
+                  Sleep(200);
+                  timeout -= 200;
+               }
+               if (success)
+               {
+                  static google_breakpad::CustomInfoEntry clientInfoEntries[] = { { L"ProcessName", L"nxagentd" } };
+                  static google_breakpad::CustomClientInfo clientInfo = { clientInfoEntries, 1 };
+                  exceptionHandler = new google_breakpad::ExceptionHandler(s_dumpDirectory, nullptr, nullptr, nullptr, google_breakpad::ExceptionHandler::HANDLER_ALL,
+                     static_cast<MINIDUMP_TYPE>(((s_startupFlags & SF_WRITE_FULL_DUMP) ? MiniDumpWithFullMemory : MiniDumpNormal) | MiniDumpWithHandleData | MiniDumpWithProcessThreadData),
+                     pipeName, &clientInfo);
+               }
+               else
+               {
+                  g_failFlags |= FAIL_CRASH_SERVER_START;
+                  delete_and_null(crashServer);
+               }
+            }
+            else
+            {
+               g_failFlags |= FAIL_CRASH_SERVER_START;
+               delete_and_null(crashServer);
+            }
+         }
 #endif
 
          if ((!_tcsicmp(g_szLogFile, _T("{syslog}"))) ||
@@ -2352,12 +2398,9 @@ int main(int argc, char *argv[])
          }
 #endif   /* _WIN32 */
 
-#if defined(_WIN32)
+#ifdef _WIN32
          if (s_shutdownCondition != INVALID_CONDITION_HANDLE)
             ConditionDestroy(s_shutdownCondition);
-#endif
-#ifdef _WIN32
-         LIBNETXMS_EXCEPTION_HANDLER
 #endif
          break;
       case Command::CHECK_CONFIG:
@@ -2457,6 +2500,11 @@ int main(int argc, char *argv[])
       default:
          break;
    }
+
+#ifdef _WIN32
+   delete exceptionHandler;
+   delete crashServer;
+#endif
 
    return exitCode;
 }

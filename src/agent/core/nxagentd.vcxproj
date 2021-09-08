@@ -101,7 +101,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;wtsapi32.lib;pcre16.lib;libcurl.lib;libssl.lib;libcrypto.lib;crypt32.lib;ncrypt.lib;jq.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;wtsapi32.lib;pcre16.lib;libcurl.lib;libssl.lib;libcrypto.lib;crypt32.lib;ncrypt.lib;jq.lib;breakpad-client_dbg.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -130,7 +130,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;wtsapi32.lib;pcre16.lib;libcurl.lib;libssl.lib;libcrypto.lib;crypt32.lib;ncrypt.lib;jq.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;wtsapi32.lib;pcre16.lib;libcurl.lib;libssl.lib;libcrypto.lib;crypt32.lib;ncrypt.lib;jq.lib;breakpad-client_dbg.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
@@ -153,7 +153,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;wtsapi32.lib;pcre16.lib;libcurl.lib;libssl.lib;libcrypto.lib;crypt32.lib;ncrypt.lib;jq.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;wtsapi32.lib;pcre16.lib;libcurl.lib;libssl.lib;libcrypto.lib;crypt32.lib;ncrypt.lib;jq.lib;breakpad-client.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -181,7 +181,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;wtsapi32.lib;pcre16.lib;libcurl.lib;libssl.lib;libcrypto.lib;crypt32.lib;ncrypt.lib;jq.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;wtsapi32.lib;pcre16.lib;libcurl.lib;libssl.lib;libcrypto.lib;crypt32.lib;ncrypt.lib;jq.lib;breakpad-client.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
