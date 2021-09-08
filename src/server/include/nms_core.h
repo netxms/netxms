@@ -79,6 +79,13 @@
 #include <nxcore_smclp.h>
 #include <nxproc.h>
 
+// Explicit instantiation of template classes for some basic types
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE HashSet<uint32_t>;
+template class NXCORE_EXPORTABLE StringObjectMap<uint32_t>;
+template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
+#endif
+
 /**
  * Server includes
  */
@@ -495,12 +502,11 @@ struct AgentFileTransfer
 // Explicit instantiation of template classes
 #ifdef _WIN32
 template class NXCORE_EXPORTABLE HashMap<uint32_t, ServerDownloadFileInfo>;
-template class NXCORE_EXPORTABLE HashSet<uint32_t>;
+template class NXCORE_EXPORTABLE ObjectMemoryPool<shared_ptr<AgentFileTransfer>>;
 template class NXCORE_EXPORTABLE SharedPointerIndex<AgentFileTransfer>;
+template class NXCORE_EXPORTABLE ObjectMemoryPool<shared_ptr<ProcessExecutor>>;
 template class NXCORE_EXPORTABLE SharedPointerIndex<ProcessExecutor>;
-template class NXCORE_EXPORTABLE StringObjectMap<uint32_t>;
 template class NXCORE_EXPORTABLE SynchronizedHashMap<uint32_t, ServerDownloadFileInfo>;
-template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #endif
 
 /**
