@@ -126,9 +126,6 @@
     <ClCompile Include="scandir.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="seh.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="serial.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -139,9 +136,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="spoll.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="StackWalker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="streamcomp.cpp">
@@ -318,9 +312,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sha2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="StackWalker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="strmap-internal.h">

@@ -232,13 +232,11 @@
     <ClCompile Include="rbuffer.cpp" />
     <ClCompile Include="rwlock.cpp" />
     <ClCompile Include="scandir.c" />
-    <ClCompile Include="seh.cpp" />
     <ClCompile Include="serial.cpp" />
     <ClCompile Include="sha1.cpp" />
     <ClCompile Include="sha2.cpp" />
     <ClCompile Include="socket_listener.cpp" />
     <ClCompile Include="spoll.cpp" />
-    <ClCompile Include="StackWalker.cpp" />
     <ClCompile Include="streamcomp.cpp" />
     <ClCompile Include="string.cpp" />
     <ClCompile Include="stringlist.cpp" />
@@ -297,7 +295,6 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="sha1.h" />
     <ClInclude Include="sha2.h" />
-    <ClInclude Include="StackWalker.h" />
     <ClInclude Include="strmap-internal.h" />
     <ClInclude Include="unicode_cc.h" />
   </ItemGroup>

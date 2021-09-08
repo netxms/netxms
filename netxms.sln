@@ -372,6 +372,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxdownload", "src\server\to
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bind9", "src\agent\subagents\bind9\bind9.vcxproj", "{24C915CA-FEA7-8643-B6E9-13E37EB6611A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxcrashsrv", "src\tools\nxcrashsrv\nxcrashsrv.vcxproj", "{6BD8B5FE-5A72-4BD8-9948-6A7D4D85E04B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1442,6 +1444,14 @@ Global
 		{24C915CA-FEA7-8643-B6E9-13E37EB6611A}.Release|Win32.Build.0 = Release|Win32
 		{24C915CA-FEA7-8643-B6E9-13E37EB6611A}.Release|x64.ActiveCfg = Release|x64
 		{24C915CA-FEA7-8643-B6E9-13E37EB6611A}.Release|x64.Build.0 = Release|x64
+		{6BD8B5FE-5A72-4BD8-9948-6A7D4D85E04B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6BD8B5FE-5A72-4BD8-9948-6A7D4D85E04B}.Debug|Win32.Build.0 = Debug|Win32
+		{6BD8B5FE-5A72-4BD8-9948-6A7D4D85E04B}.Debug|x64.ActiveCfg = Debug|x64
+		{6BD8B5FE-5A72-4BD8-9948-6A7D4D85E04B}.Debug|x64.Build.0 = Debug|x64
+		{6BD8B5FE-5A72-4BD8-9948-6A7D4D85E04B}.Release|Win32.ActiveCfg = Release|Win32
+		{6BD8B5FE-5A72-4BD8-9948-6A7D4D85E04B}.Release|Win32.Build.0 = Release|Win32
+		{6BD8B5FE-5A72-4BD8-9948-6A7D4D85E04B}.Release|x64.ActiveCfg = Release|x64
+		{6BD8B5FE-5A72-4BD8-9948-6A7D4D85E04B}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1604,6 +1614,7 @@ Global
 		{22CFEF31-1E43-17B7-12C2-AD14E7C5441F} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
 		{793EA8FD-BD22-6447-9017-632F1630B62C} = {64482674-7B36-4A14-A612-247333174315}
 		{24C915CA-FEA7-8643-B6E9-13E37EB6611A} = {451F583D-C2DB-4414-870C-7FA0189BE7DD}
+		{6BD8B5FE-5A72-4BD8-9948-6A7D4D85E04B} = {3AB343C9-A67D-49F1-A8CD-EA0D9CA98467}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}

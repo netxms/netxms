@@ -102,6 +102,7 @@
 #define FAIL_OPEN_DATABASE          0x00000002
 #define FAIL_UPGRADE_DATABASE       0x00000004
 #define FAIL_LOAD_CONFIG            0x00000008
+#define FAIL_CRASH_SERVER_START     0x00000010
 
 /**
  * Thread pool stats

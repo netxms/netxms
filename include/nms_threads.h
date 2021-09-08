@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -41,23 +41,14 @@ extern LIBNETXMS_EXPORTABLE_VAR(int g_defaultThreadStackSize);
 // Related datatypes and constants
 //
 
-#define INVALID_MUTEX_HANDLE        (NULL)
-#define INVALID_CONDITION_HANDLE    (NULL)
-#define INVALID_THREAD_HANDLE       (NULL)
+#define INVALID_MUTEX_HANDLE        (nullptr)
+#define INVALID_CONDITION_HANDLE    (nullptr)
+#define INVALID_THREAD_HANDLE       (nullptr)
 
-#ifdef UNDER_CE
-typedef UINT32 THREAD_RESULT;
-typedef UINT32 THREAD_ID;
-#else
 typedef unsigned int THREAD_RESULT;
 typedef unsigned int THREAD_ID;
-#endif
 
 #define THREAD_OK       0
-
-#ifdef UNDER_CE
-#define THREAD_CALL
-#else
 #define THREAD_CALL     __stdcall
 
 extern "C" typedef THREAD_RESULT (THREAD_CALL *ThreadFunction)(void *);
@@ -80,32 +71,6 @@ struct netxms_thread_t
 };
 typedef struct netxms_thread_t *THREAD;
 
-typedef struct
-{
-	ThreadFunction start_address;
-	void *args;
-} THREAD_START_DATA;
-
-THREAD_RESULT LIBNETXMS_EXPORTABLE THREAD_CALL SEHThreadStarter(void *);
-int LIBNETXMS_EXPORTABLE ___ExceptionHandler(EXCEPTION_POINTERS *pInfo);
-
-void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTERS *),
-															 void (*pfWriter)(const TCHAR *), const TCHAR *pszDumpDir,
-															 const TCHAR *pszBaseProcessName,
-															 BOOL writeFullDump, BOOL printToScreen);
-BOOL LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo);
-TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(DWORD code);
-void LIBNETXMS_EXPORTABLE SEHShowCallStack(CONTEXT *pCtx);
-
-void LIBNETXMS_EXPORTABLE SEHServiceExceptionDataWriter(const TCHAR *pszText);
-BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo);
-
-#define LIBNETXMS_EXCEPTION_HANDLER \
-	} __except(___ExceptionHandler((EXCEPTION_POINTERS *)_exception_info())) { ExitProcess(99); }
-
-#endif
-
-
 //
 // Inline functions
 //
@@ -114,42 +79,31 @@ inline void InitThreadLibrary()
 {
 }
 
-inline void ThreadSleep(int iSeconds)
+inline void ThreadSleep(int seconds)
 {
-   Sleep((UINT32)iSeconds * 1000);   // Convert to milliseconds
+   Sleep(static_cast<uint32_t>(seconds) * 1000);   // Convert to milliseconds
 }
 
-inline void ThreadSleepMs(UINT32 dwMilliseconds)
+inline void ThreadSleepMs(uint32_t milliseconds)
 {
-   Sleep(dwMilliseconds);
+   Sleep(milliseconds);
 }
 
-inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
+inline bool ThreadCreate(ThreadFunction startAddress, int stackSize, void *args)
 {
-   HANDLE hThread;
    THREAD_ID dwThreadId;
-
-	THREAD_START_DATA *data = (THREAD_START_DATA *)MemAlloc(sizeof(THREAD_START_DATA));
-	data->start_address = start_address;
-	data->args = args;
-   hThread = (HANDLE)_beginthreadex(NULL, (stack_size != 0) ? stack_size : g_defaultThreadStackSize, SEHThreadStarter, data, 0, &dwThreadId);
-   if (hThread != NULL)
+   HANDLE hThread = (HANDLE)_beginthreadex(nullptr, (stackSize != 0) ? stackSize : g_defaultThreadStackSize, startAddress, args, 0, &dwThreadId);
+   if (hThread != nullptr)
       CloseHandle(hThread);
-   return (hThread != NULL);
+   return (hThread != nullptr);
 }
 
-inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void *args)
+inline THREAD ThreadCreateEx(ThreadFunction startAddress, int stackSize, void *args)
 {
-   THREAD thread;
-
-	thread = (THREAD)MemAlloc(sizeof(struct netxms_thread_t));
-	THREAD_START_DATA *data = (THREAD_START_DATA *)MemAlloc(sizeof(THREAD_START_DATA));
-	data->start_address = start_address;
-	data->args = args;
-   thread->handle = (HANDLE)_beginthreadex(NULL, (stack_size != 0) ? stack_size : g_defaultThreadStackSize, SEHThreadStarter, data, 0, &thread->id);
-	if ((thread->handle == (HANDLE)-1) || (thread->handle == 0))
+   THREAD thread = MemAllocStruct<netxms_thread_t>();
+   thread->handle = (HANDLE)_beginthreadex(nullptr, (stackSize != 0) ? stackSize : g_defaultThreadStackSize, startAddress, args, 0, &thread->id);
+	if ((thread->handle == (HANDLE)-1) || (thread->handle == nullptr))
 	{
-		MemFree(data);
 		MemFree(thread);
 		thread = INVALID_THREAD_HANDLE;
 	}
@@ -431,9 +385,9 @@ inline void ThreadSleep(int nSeconds)
    pth_sleep(nSeconds);
 }
 
-inline void ThreadSleepMs(UINT32 dwMilliseconds)
+inline void ThreadSleepMs(uint32_t milliseconds)
 {
-	pth_usleep(dwMilliseconds * 1000);
+	pth_usleep(milliseconds * 1000);
 }
 
 inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
@@ -771,26 +725,26 @@ inline void ThreadSleep(int nSeconds)
 	select(1, NULL, NULL, NULL, &tv);
 }
 
-inline void ThreadSleepMs(UINT32 dwMilliseconds)
+inline void ThreadSleepMs(uint32_t milliseconds)
 {
 #if HAVE_NANOSLEEP && HAVE_DECL_NANOSLEEP
 	struct timespec interval, remainder;
-	interval.tv_sec = dwMilliseconds / 1000;
-	interval.tv_nsec = (dwMilliseconds % 1000) * 1000000; // milli -> nano
+	interval.tv_sec = milliseconds / 1000;
+	interval.tv_nsec = (milliseconds % 1000) * 1000000; // milli -> nano
 	nanosleep(&interval, &remainder);
 #else
-	usleep(dwMilliseconds * 1000);   // Convert to microseconds
+	usleep(milliseconds * 1000);   // Convert to microseconds
 #endif
 }
 
-inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void *args)
+inline THREAD ThreadCreateEx(ThreadFunction startAddress, int stackSize, void *args)
 {
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
-	pthread_attr_setstacksize(&attr, (stack_size != 0) ? stack_size : g_defaultThreadStackSize);
+	pthread_attr_setstacksize(&attr, (stackSize != 0) ? stackSize : g_defaultThreadStackSize);
 
    THREAD id;
-   if (pthread_create(&id, &attr, start_address, args) != 0)
+   if (pthread_create(&id, &attr, startAddress, args) != 0)
    {
 		id = INVALID_THREAD_HANDLE;
    } 
@@ -800,9 +754,9 @@ inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void 
 	return id;
 }
 
-inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
+inline bool ThreadCreate(ThreadFunction startAddress, int stackSize, void *args)
 {
-	THREAD id = ThreadCreateEx(start_address, stack_size, args);
+	THREAD id = ThreadCreateEx(startAddress, stackSize, args);
 	if (id != INVALID_THREAD_HANDLE)
 	{
 		pthread_detach(id);
