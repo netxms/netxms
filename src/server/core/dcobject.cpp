@@ -1361,14 +1361,14 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
 
    NXSL_Value *argv[2];
    argv[0] = instanceFilter->createValue(key);
-   argv[1] = instanceFilter->createValue((const TCHAR *)value);
+   argv[1] = instanceFilter->createValue(value);
 
    if (instanceFilter->run(2, argv))
    {
       bool accepted;
       const TCHAR *instance = key;
-      const TCHAR *name = (const TCHAR *)value;
-      UINT32 relatedObject = 0;
+      const TCHAR *name = value;
+      uint32_t relatedObject = 0;
       NXSL_Value *result = instanceFilter->getResult();
       if (result != nullptr)
       {
