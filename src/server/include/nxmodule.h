@@ -44,6 +44,11 @@ class PredictionEngine;
 struct NXCORE_LOG;
 
 /**
+ * Session ID
+ */
+typedef int session_id_t;
+
+/**
  * Command handler return codes
  */
 #define NXMOD_COMMAND_IGNORED          -1
@@ -123,6 +128,8 @@ typedef struct
    bool (*pfOnAgentMessage)(NXCPMessage *msg, uint32_t nodeId);
    void (*pfHousekeeperHook)();
    bool (*pfProcessServerConsoleCommand)(const TCHAR *command, ServerConsole *console);
+   void (*pfProcessAuditRecord)(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+            session_id_t sessionId, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *text);
    ObjectArray<PredictionEngine> *(*pfGetPredictionEngines)();
    NXCORE_LOG *logs;
    HMODULE hModule;

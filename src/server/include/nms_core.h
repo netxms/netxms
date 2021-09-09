@@ -461,11 +461,6 @@ public:
 };
 
 /**
- * Session ID
- */
-typedef int session_id_t;
-
-/**
  * Agent file transfer
  */
 struct AgentFileTransfer
@@ -1361,28 +1356,18 @@ void OnWindowsEventsConfigurationChange(const TCHAR *name, const TCHAR *value);
 void EscapeString(StringBuffer &str);
 
 void InitAuditLog();
-void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, uint32_t userId,
-                                     const TCHAR *workstation, int sessionId, uint32_t objectId,
-                                     const TCHAR *format, ...);
-void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, uint32_t userId,
-                                      const TCHAR *workstation, int sessionId, uint32_t objectId,
-                                      const TCHAR *format, va_list args);
-void NXCORE_EXPORTABLE WriteAuditLogWithValues(const TCHAR *subsys, bool isSuccess, uint32_t userId,
-                                               const TCHAR *workstation, int sessionId, uint32_t objectId,
-                                               const TCHAR *oldValue, const TCHAR *newValue, char valueType,
-                                               const TCHAR *format, ...);
-void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues(const TCHAR *subsys, bool isSuccess, uint32_t userId,
-                                                   const TCHAR *workstation, int sessionId, uint32_t objectId,
-                                                   json_t *oldValue, json_t *newValue,
-                                                   const TCHAR *format, ...);
-void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSuccess, uint32_t userId,
-                                                const TCHAR *workstation, int sessionId, uint32_t objectId,
-                                                const TCHAR *oldValue, const TCHAR *newValue, char valueType,
-                                                const TCHAR *format, va_list args);
-void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool isSuccess, uint32_t userId,
-                                                    const TCHAR *workstation, int sessionId, uint32_t objectId,
-                                                    json_t *oldValue, json_t *newValue,
-                                                    const TCHAR *format, va_list args);
+void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+         session_id_t sessionId, uint32_t objectId, const TCHAR *format, ...);
+void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+         session_id_t sessionId, uint32_t objectId, const TCHAR *format, va_list args);
+void NXCORE_EXPORTABLE WriteAuditLogWithValues(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+         session_id_t sessionId, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...);
+void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+         session_id_t sessionId, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...);
+void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+         session_id_t sessionId, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, va_list args);
+void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+         session_id_t sessionId, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, va_list args);
 
 bool ValidateConfig(const Config& config, uint32_t flags, TCHAR *errorText, int errorTextLen);
 uint32_t ImportConfig(const Config& config, uint32_t flags);
