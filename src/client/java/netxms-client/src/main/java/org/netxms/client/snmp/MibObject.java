@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -124,6 +124,7 @@ public class MibObject
 	 * Read MIB object from compiled MIB file.
 	 *
 	 * @param in Input stream attached to MIB file
+	 * @param parent parent MIB object
 	 * @throws IOException if MIB file cannot be read 
 	 * @throws NXCException f MIB file cannot be parsed
 	 */

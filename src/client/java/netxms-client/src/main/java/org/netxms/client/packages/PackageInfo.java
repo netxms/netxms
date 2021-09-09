@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,8 +40,8 @@ public class PackageInfo
 	/**
 	 * Create package information from NPI file
 	 * 
-	 * @param npiFile
-	 * @throws IOException 
+	 * @param npiFile NPI file with package description
+	 * @throws IOException  if NPI file cannot be read
 	 */
 	public PackageInfo(File npiFile) throws IOException
 	{
@@ -89,7 +89,7 @@ public class PackageInfo
 	/**
 	 * Create package information from NXCP message
 	 * 
-	 * @param msg
+	 * @param msg NXCP message
 	 */
 	public PackageInfo(NXCPMessage msg)
 	{

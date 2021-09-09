@@ -47,6 +47,8 @@ public class NetworkMapResource extends NetworkMapElement
 	 * Create resource object from scratch.
 	 *
 	 * @param id element ID
+	 * @param type resource type (currently the only supported type is <code>CLUSTER_RESOURCE</code>)
+	 * @param data user-defined resource data
 	 */
 	public NetworkMapResource(long id, int type, Object data)
 	{

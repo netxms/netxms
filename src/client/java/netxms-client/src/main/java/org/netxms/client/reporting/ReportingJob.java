@@ -55,12 +55,12 @@ public class ReportingJob
 	/**
     * Create reporting job object from NXCP message
     * 
-    * @param msg
-    * @param varId base field id
+    * @param msg NXCP message
+    * @param baseId base field id
     */
-	public ReportingJob(NXCPMessage msg, long varId)
+	public ReportingJob(NXCPMessage msg, long baseId)
 	{
-      task = new ScheduledTask(msg, varId);
+      task = new ScheduledTask(msg, baseId);
       try
       {
          configuration = ReportingJobConfiguration.createFromXml(task.getParameters());

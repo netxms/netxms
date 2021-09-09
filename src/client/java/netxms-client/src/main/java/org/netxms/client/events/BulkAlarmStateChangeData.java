@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,9 @@ public class BulkAlarmStateChangeData
    private Date changeTime;
 
    /**
-    * @param msg
+    * Create from NXCP message
+    *
+    * @param msg NXCP message
     */
    public BulkAlarmStateChangeData(NXCPMessage msg)
    {

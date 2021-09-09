@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -198,7 +198,7 @@ public class ObjectToolDetails extends ObjectTool
 	/**
 	 * Add or replace input field definition.
 	 * 
-	 * @param f
+	 * @param f new input field
 	 */
 	public void addInputField(InputField f)
 	{
@@ -209,7 +209,7 @@ public class ObjectToolDetails extends ObjectTool
 	/**
 	 * Set input field definitions
 	 * 
-	 * @param fields
+	 * @param fields new set of input fields
 	 */
 	public void setInputFields(Collection<InputField> fields)
 	{
@@ -220,7 +220,9 @@ public class ObjectToolDetails extends ObjectTool
 	}
 
 	/**
-	 * @param id the id to set
+	 * Set tool ID.
+	 *
+	 * @param id new tool ID
 	 */
 	public void setId(long id)
 	{
@@ -229,7 +231,9 @@ public class ObjectToolDetails extends ObjectTool
 	}
 
 	/**
-	 * @param name the name to set
+	 * Set tool name.
+	 *
+	 * @param name new name
 	 */
 	public void setName(String name)
 	{
@@ -310,7 +314,9 @@ public class ObjectToolDetails extends ObjectTool
 	}
 	
 	/**
-	 * @param commandName
+	 * Set command name (to be displayed in command list).
+	 *
+	 * @param commandName new command name for this tool
 	 */
 	public void setCommandName(String commandName)
 	{
@@ -319,7 +325,9 @@ public class ObjectToolDetails extends ObjectTool
 	}
 	
    /**
-    * @param commandShortName
+    * Set short command name (to be displayed in command list when UI requires short name, usually on toolbars and buttons).
+    *
+    * @param commandShortName new short command name for this tool
     */
    public void setCommandShortName(String commandShortName)
    {
@@ -328,7 +336,9 @@ public class ObjectToolDetails extends ObjectTool
    }
    
 	/**
-	 * @param imageData
+	 * Set image data (for displaying tool icon).
+	 *
+	 * @param imageData new image data
 	 */
 	public void setImageData(byte[] imageData)
 	{

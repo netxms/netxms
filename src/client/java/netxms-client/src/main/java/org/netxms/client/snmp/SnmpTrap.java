@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,6 +73,7 @@ public class SnmpTrap
 	 * Create SNMP trap configuration object from summary NXCP message
 	 * 
 	 * @param msg NXCP message
+	 * @param baseId base field ID
 	 */
 	public SnmpTrap(NXCPMessage msg, long baseId)
 	{

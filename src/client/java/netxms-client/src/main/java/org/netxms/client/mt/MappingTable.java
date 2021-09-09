@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,8 +48,8 @@ public class MappingTable
 	/**
 	 * Create new empty mapping table with ID 0.
 	 * 
-	 * @param name
-	 * @param description
+	 * @param name mapping table name
+	 * @param description mapping table description
 	 */
 	public MappingTable(String name, String description)
 	{
