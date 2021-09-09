@@ -148,9 +148,8 @@ void InitAuditLog()
 /**
  * Write audit record
  */
-void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, uint32_t userId,
-                                     const TCHAR *workstation, int sessionId, uint32_t objectId,
-                                     const TCHAR *format, ...)
+void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+         session_id_t sessionId, uint32_t objectId, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
@@ -161,9 +160,8 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, uint32
 /**
  * Write audit record
  */
-void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, uint32_t userId,
-                                      const TCHAR *workstation, int sessionId, uint32_t objectId,
-                                      const TCHAR *format, va_list args)
+void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+         session_id_t sessionId, uint32_t objectId, const TCHAR *format, va_list args)
 {
    WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, nullptr, nullptr, 0, format, args);
 }
@@ -171,10 +169,8 @@ void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, uint3
 /**
  * Write audit record with old and new values
  */
-void NXCORE_EXPORTABLE WriteAuditLogWithValues(const TCHAR *subsys, bool isSuccess, uint32_t userId,
-                                               const TCHAR *workstation, int sessionId, uint32_t objectId,
-                                               const TCHAR *oldValue, const TCHAR *newValue, char valueType,
-                                               const TCHAR *format, ...)
+void NXCORE_EXPORTABLE WriteAuditLogWithValues(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+         session_id_t sessionId, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
@@ -185,10 +181,8 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues(const TCHAR *subsys, bool isSucce
 /**
  * Write audit record with old and new values in JSON format
  */
-void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues(const TCHAR *subsys, bool isSuccess, uint32_t userId,
-                                               const TCHAR *workstation, int sessionId, uint32_t objectId,
-                                               json_t *oldValue, json_t *newValue,
-                                               const TCHAR *format, ...)
+void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+         session_id_t sessionId, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
@@ -199,10 +193,8 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues(const TCHAR *subsys, bool isS
 /**
  * Write audit record with old and new values
  */
-void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSuccess, uint32_t userId,
-                                                const TCHAR *workstation, int sessionId, uint32_t objectId,
-                                                const TCHAR *oldValue, const TCHAR *newValue, char valueType,
-                                                const TCHAR *format, va_list args)
+void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+         session_id_t sessionId, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, va_list args)
 {
    StringBuffer text;
    text.appendFormattedStringV(format, args);
@@ -299,8 +291,7 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
 
    QueueSQLRequest(query, bindCount, sqlTypes, values);
 
-	NXCPMessage msg;
-	msg.setCode(CMD_AUDIT_RECORD);
+	NXCPMessage msg(CMD_AUDIT_RECORD, 0);
 	msg.setField(VID_SUBSYSTEM, subsys);
 	msg.setField(VID_SUCCESS_AUDIT, isSuccess);
 	msg.setField(VID_USER_ID, userId);
@@ -321,15 +312,15 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
 		extText.append(text);
 		SendSyslogRecord(extText);
 	}
+
+	CALL_ALL_MODULES(pfProcessAuditRecord, (subsys, isSuccess, userId, workstation, sessionId, objectId, oldValue, newValue, valueType, text));
 }
 
 /**
  * Write audit record with old and new values
  */
-void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool isSuccess, UINT32 userId,
-                                                    const TCHAR *workstation, int sessionId, UINT32 objectId,
-                                                    json_t *oldValue, json_t *newValue,
-                                                    const TCHAR *format, va_list args)
+void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+         session_id_t sessionId, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, va_list args)
 {
    char *js1 = (oldValue != nullptr) ? json_dumps(oldValue, JSON_SORT_KEYS | JSON_INDENT(3)) : MemCopyStringA("");
    char *js2 = (newValue != nullptr) ? json_dumps(newValue, JSON_SORT_KEYS | JSON_INDENT(3)) : MemCopyStringA("");

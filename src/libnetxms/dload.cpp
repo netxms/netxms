@@ -97,11 +97,11 @@ void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *symbol, 
 {
 #ifdef _WIN32
    void *addr = (void *)GetProcAddress(hModule, symbol);
-   if ((addr == NULL) && (errorText != NULL))
+   if ((addr == nullptr) && (errorText != nullptr))
       GetSystemErrorText(GetLastError(), errorText, 255);
 #else    /* _WIN32 */
    void *addr = dlsym(hModule, symbol);
-   if ((addr == NULL) && (errorText != NULL))
+   if ((addr == nullptr) && (errorText != nullptr))
 	{
 #ifdef UNICODE
    	WCHAR *wbuffer = WideStringFromMBString(dlerror());

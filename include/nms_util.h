@@ -4602,6 +4602,14 @@ enum class StateChange
    CLEAR = 2
 };
 
+/**
+ * Wrapper for DLGetSymbolAddr to get pointer to function
+ */
+template<typename T> static inline T DLGetFunctionAddr(HMODULE hModule, const char *symbol, TCHAR *errorText = nullptr)
+{
+   return reinterpret_cast<T>(DLGetSymbolAddr(hModule, symbol, errorText));
+}
+
 #define EMA_FP_SHIFT  11                  /* nr of bits of precision */
 #define EMA_FP_1      (1 << EMA_FP_SHIFT) /* 1.0 as fixed-point */
 #define EMA_EXP_12    1884                /* 1/exp(5sec/1min = 1/12 = 12 points) as fixed-point */
