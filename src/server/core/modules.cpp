@@ -63,7 +63,7 @@ static bool LoadNetXMSModule(const TCHAR *name)
 
    if (hModule != nullptr)
    {
-      bool (*RegisterModule)(NXMODULE *) = (bool (*)(NXMODULE *))DLGetSymbolAddr(hModule, "NXM_Register", errorText);
+      auto RegisterModule = DLGetFunctionAddr<bool (*)(NXMODULE*)>(hModule, "NXM_Register", errorText);
       if (RegisterModule != nullptr)
       {
          NXMODULE module;
@@ -76,7 +76,7 @@ static bool LoadNetXMSModule(const TCHAR *name)
                {
                   // Add module to module's list
                   module.hModule = hModule;
-                  module.metadata = (NXMODULE_METADATA*)DLGetSymbolAddr(hModule, "NXM_metadata", errorText);
+                  module.metadata = static_cast<NXMODULE_METADATA*>(DLGetSymbolAddr(hModule, "NXM_metadata", errorText));
                   g_moduleList.add(module);
                   nxlog_write(NXLOG_INFO, _T("Server module %s loaded successfully"), module.szName);
                   success = true;
