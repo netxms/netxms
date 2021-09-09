@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,8 +42,9 @@ public class EventInfo
    /**
     * Create from NXCP message.
     *
-    * @param msg
-    * @param baseId
+    * @param msg NXCP message
+    * @param baseId base field ID
+    * @param parent parent event (the one this event is correlated to) or null 
     */
    public EventInfo(NXCPMessage msg, long baseId, EventInfo parent)
    {
@@ -63,7 +64,7 @@ public class EventInfo
    /**
     * Add child event
     *
-    * @param e
+    * @param e child event (event correlated to this event)
     */
    private void addChild(EventInfo e)
    {
@@ -73,7 +74,9 @@ public class EventInfo
    }
 
    /**
-    * @return the id
+    * Get unique event ID.
+    *
+    * @return unique event ID
     */
    public long getId()
    {
@@ -81,6 +84,8 @@ public class EventInfo
    }
 
    /**
+    * Get parent event.
+    *
     * @return parent event or null
     */
    public EventInfo getParent()

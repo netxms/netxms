@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -97,6 +97,8 @@ public class EventProcessingPolicyRule
 
    /**
     * Copy constructor
+    * 
+    * @param src source rule
     */
    public EventProcessingPolicyRule(EventProcessingPolicyRule src)
    {
@@ -126,6 +128,7 @@ public class EventProcessingPolicyRule
     * Create rule from NXCP message.
     *
     * @param msg NXCP message
+    * @param ruleNumber this rule number
     */
    public EventProcessingPolicyRule(NXCPMessage msg, int ruleNumber)
    {

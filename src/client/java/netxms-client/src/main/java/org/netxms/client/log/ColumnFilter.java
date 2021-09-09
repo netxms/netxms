@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,8 @@ public class ColumnFilter
    /**
     * Create filter of type EQUALS, LESS, GREATER, or CHILDOF
     *
-    * @param value
+    * @param type filter type
+    * @param value value to compare with
     */
    public ColumnFilter(ColumnFilterType type, long value)
    {
@@ -53,8 +54,8 @@ public class ColumnFilter
    /**
     * Create filter of type RANGE
     *
-    * @param rangeFrom
-    * @param rangeTo
+    * @param rangeFrom start of the range
+    * @param rangeTo end of the range (inclusive)
     */
    public ColumnFilter(long rangeFrom, long rangeTo)
    {
@@ -66,7 +67,7 @@ public class ColumnFilter
    /**
     * Create filter of type LIKE
     *
-    * @param value
+    * @param value string value to compare with
     */
    public ColumnFilter(String value)
    {
@@ -87,7 +88,7 @@ public class ColumnFilter
    /**
     * Add new element to SET type filter
     *
-    * @param filter
+    * @param filter sub-filter
     */
    public void addSubFilter(ColumnFilter filter)
    {
@@ -244,7 +245,9 @@ public class ColumnFilter
    }
 
    /**
-    * @return the negated
+    * Check if filter has "negate" flag set.
+    *
+    * @return true if filter has "negate" flag set
     */
    public boolean isNegated()
    {

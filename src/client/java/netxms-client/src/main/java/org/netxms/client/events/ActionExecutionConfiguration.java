@@ -50,6 +50,7 @@ public class ActionExecutionConfiguration
     * 
     * @param actionId action ID
     * @param timerDelay timer delay in seconds
+    * @param snoozeTime snoozeTime in seconds
     * @param timerKey timer key
     * @param blockingTimerKey timer key for blocking the action
     */

@@ -164,6 +164,7 @@ import org.simpleframework.xml.Serializer;
     * Values for "Like" and "not like" can be provided as regular expressions so they are always compared as a strings and with help
     * of <code>Glob.matchIgnoreCase(pattern, string)</code>.
     *
+    * @param dciValue DCI value to check
     * @return correct image according to last value
     */
    public UUID getCorrectImage(DciValue dciValue)

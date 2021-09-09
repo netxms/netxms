@@ -476,7 +476,9 @@ public class NetworkMapLink
    }
 
    /**
-    * Returns DCI array as a list
+    * Get copy of DCIs configured on this link as list. Any changes to returned list will not affect link configuration.
+    * 
+    * @return copy of DCIs configured on this link as list
     */
    public List<SingleDciConfig> getDciAsList()
    {

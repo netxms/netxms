@@ -119,8 +119,8 @@ public class Alarm
     * actual alarm state on server. It can be used to update local alarm objects after
     * receiving bulk alarm state change notification.
     *
-    * @param userId
-    * @param changeTime
+    * @param userId ID of user that resolve this alarm
+    * @param changeTime time when alarm was resolved
     */
    public void setResolved(int userId, Date changeTime)
    {

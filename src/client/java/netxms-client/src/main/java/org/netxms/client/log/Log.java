@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@ public class Log
     *
     * @param session Client session
     * @param msg NXCP message with server's reply
+    * @param name log name
     */
    public Log(NXCSession session, NXCPMessage msg, String name)
    {
@@ -170,6 +171,8 @@ public class Log
     * Send query to server
     *
     * @param filter Log filter
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void query(LogFilter filter) throws IOException, NXCException
    {
@@ -187,8 +190,8 @@ public class Log
     * @param startRow start row to retrieve
     * @param rowCount number of rows to retrieve
     * @return data set
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public Table retrieveData(long startRow, long rowCount) throws IOException, NXCException
    {

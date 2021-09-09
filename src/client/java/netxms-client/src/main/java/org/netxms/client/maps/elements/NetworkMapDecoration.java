@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ public class NetworkMapDecoration extends NetworkMapElement
 {
 	public static final int GROUP_BOX = 0;
 	public static final int IMAGE = 1;
-	
+
 	private int decorationType;
 	private int color;
 	private String title;
@@ -36,8 +36,10 @@ public class NetworkMapDecoration extends NetworkMapElement
 	private int height;
 	
 	/**
-	 * @param msg
-	 * @param baseId
+	 * Create from NXCP message.
+	 *
+	 * @param msg NXCP message
+	 * @param baseId base field ID
 	 */
 	protected NetworkMapDecoration(NXCPMessage msg, long baseId)
 	{
@@ -50,10 +52,14 @@ public class NetworkMapDecoration extends NetworkMapElement
 	}
 	
 	/**
-	 * Create new decoration object
+	 * Create new decoration object.
 	 * 
-	 * @param id
-	 * @param decorationType
+	 * @param id map element ID
+	 * @param decorationType decoration type - one of<br>
+	 *   <ul>
+	 *   <li><code>GROUP_BOX</code> (show box with title that can be used for grouping map elements)
+	 *   <li><code>IMAGE</code> (arbitrary image)
+	 *   </ul>
 	 */
 	public NetworkMapDecoration(long id, int decorationType)
 	{
@@ -67,7 +73,9 @@ public class NetworkMapDecoration extends NetworkMapElement
 	}
 
 	/**
-	 * @return the decorationType
+	 * Get decoration type.
+	 *
+	 * @return decoration type
 	 */
 	public int getDecorationType()
 	{

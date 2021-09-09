@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ import org.netxms.client.datacollection.DataCollectionItem;
 /**
  * Class that stores data of map DCI that's last values should be requested from server
  */
-
 public class MapDCIInstance
 {
    private long dciID;
@@ -46,6 +45,7 @@ public class MapDCIInstance
     * @param column column if DCI is a table DCI
     * @param instance instance if DCI is a table DCI
     * @param type type of DCI
+    * @param mapId network map object ID
     */
    public MapDCIInstance(long dciID, long nodeID, String column, String instance, int type, String mapId)
    {
@@ -60,9 +60,10 @@ public class MapDCIInstance
    /**
     * Constructor for MapDCIInstance for simple DCI
     *
-    * @param dciID id of required DCI
-    * @param nodeID id of associated node. Is collected to fully fill DciValue instances
+    * @param dciID DCI ID
+    * @param nodeID ID of associated node (needed to complete DciValue instances)
     * @param type type of DCI
+    * @param mapId network map object ID
     */
    public MapDCIInstance(long dciID, long nodeID, int type, String mapId)
    {
