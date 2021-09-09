@@ -39,6 +39,7 @@ public class ReportDefinition
 	/**
 	 * Create report definition from NXCP message
 	 * 
+	 * @param id report definition ID
 	 * @param msg NXCP message
 	 */
 	public ReportDefinition(UUID id, NXCPMessage msg)

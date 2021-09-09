@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ public class Event
     * Create event object from NXCP message. Intended to be called only by NXCSession.
     *
     * @param msg NXCP message
+    * @param baseId base field ID
     */
    public Event(final NXCPMessage msg, final long baseId)
    {

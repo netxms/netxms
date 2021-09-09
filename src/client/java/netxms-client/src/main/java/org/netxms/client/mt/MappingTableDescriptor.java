@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,8 +36,8 @@ public class MappingTableDescriptor
 	/**
 	 * Create from NXCP message.
 	 * 
-	 * @param msg
-	 * @param baseId
+	 * @param msg NXCP message
+	 * @param baseId base field ID
 	 */
 	public MappingTableDescriptor(NXCPMessage msg, long baseId)
 	{
@@ -49,10 +49,12 @@ public class MappingTableDescriptor
 	}
 	
 	/**
-	 * @param id
-	 * @param name
-	 * @param description
-	 * @param flags
+	 * Create from scratch.
+	 *
+	 * @param id mapping table ID
+	 * @param name mapping table name
+	 * @param description mapping table description
+	 * @param flags mapping table flags (currently only <code>MappingTable.NUMERIC_KEYS</code> is supported)
 	 */
 	public MappingTableDescriptor(int id, String name, String description, int flags)
 	{
@@ -64,7 +66,9 @@ public class MappingTableDescriptor
 	}
 
 	/**
-	 * @return the id
+	 * Get mapping table ID.
+	 *
+	 * @return mapping table ID
 	 */
 	public final int getId()
 	{

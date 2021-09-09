@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -100,7 +100,12 @@ public class GraphSettings extends ChartConfig implements ObjectAction
    }
 
    /**
-    * Create settings
+    * Create new graph settings.
+    *
+    * @param id graph settings ID
+    * @param ownerId owner ID
+    * @param flags flags
+    * @param accessList access list
     */
    public GraphSettings(long id, long ownerId, int flags, Collection<AccessListElement> accessList)
    {

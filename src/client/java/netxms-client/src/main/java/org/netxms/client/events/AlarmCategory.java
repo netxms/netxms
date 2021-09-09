@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2016-2021 RadenSolutions
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ public class AlarmCategory
     * Create alarm category from NXCP message
     *
     * @param msg NXCP message
+    * @param baseId base field ID
     */
    public AlarmCategory(final NXCPMessage msg, long baseId)
    {
@@ -73,7 +74,9 @@ public class AlarmCategory
    }
 
    /**
-    * Fill NXCP message with alarm category data
+    * Fill NXCP message with alarm category data.
+    * 
+    * @param msg NXCP message
     */
    public void fillMessage(final NXCPMessage msg)
    {

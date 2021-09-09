@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2017 Victor Kirhenshtein
+ * Copyright (C) 2017-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,15 +35,16 @@ public class SensorRegistrationConfig
     * Create DCI list object from XML document
     * 
     * @param xml XML document
+    * @param expectedClass expected class for configuration object being deserialized
     * @return deserialized object
     * @throws Exception if the object cannot be fully deserialized
     */
-   public static SensorRegistrationConfig createFromXml(Class<? extends SensorRegistrationConfig> retClass, final String xml) throws Exception
+   public static SensorRegistrationConfig createFromXml(Class<? extends SensorRegistrationConfig> expectedClass, final String xml) throws Exception
    {
       Serializer serializer = new Persister();
-      return serializer.read(retClass, xml);
+      return serializer.read(expectedClass, xml);
    }
-   
+
    /**
     * Create XML from configuration.
     * 

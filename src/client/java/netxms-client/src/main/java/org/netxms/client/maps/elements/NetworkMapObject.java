@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,10 @@ public class NetworkMapObject extends NetworkMapElement
 	private int height;
 	
 	/**
-	 * @param msg
-	 * @param baseId
+	 * Create from NXCP message.
+	 *
+	 * @param msg NXCP message
+	 * @param baseId base field ID
 	 */
 	protected NetworkMapObject(NXCPMessage msg, long baseId)
 	{
@@ -58,14 +60,16 @@ public class NetworkMapObject extends NetworkMapElement
 	}
 
 	/**
-	 * @return the objectId
+	 * Get object ID.
+	 *
+	 * @return object ID
 	 */
 	public long getObjectId()
 	{
 		return objectId;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.client.maps.elements.NetworkMapElement#fillMessage(org.netxms.base.NXCPMessage, long)
 	 */
 	@Override
@@ -77,7 +81,7 @@ public class NetworkMapObject extends NetworkMapElement
       msg.setFieldInt32(baseId + 12, height);
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -87,7 +91,7 @@ public class NetworkMapObject extends NetworkMapElement
              ", type=" + type + ", x=" + x + ", y=" + y + " width: " +
              width + " height: " + height +"]";
    }
-   
+
    /**
     * Set object size (For floor plan view)
     * 
