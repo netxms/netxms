@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -325,7 +325,7 @@ public class DataCollectionEditor extends ViewPart
 				dciConfig.setUserData(viewer);
 				if (object instanceof Template)
 				{
-               dciConfig.setLocalChangeCallback(new LocalChangeListener() {                  
+               dciConfig.setLocalChangeListener(new LocalChangeListener() {
                   @Override
                   public void onObjectChange()
                   {         

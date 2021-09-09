@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -451,7 +451,9 @@ public class DataCollectionConfiguration
    }
 
    /**
-    * @return the userData
+    * Get user data previously stored with <code>setUserData</code>.
+    *
+    * @return user data
     */
    public Object getUserData()
    {
@@ -459,7 +461,9 @@ public class DataCollectionConfiguration
    }
 
    /**
-    * @param userData the userData to set
+    * Set user data.
+    *
+    * @param userData new user data
     */
    public void setUserData(Object userData)
    {
@@ -467,7 +471,9 @@ public class DataCollectionConfiguration
    }
 
    /**
-    * @return the session
+    * Get owning client session.
+    *
+    * @return owning client session
     */
    protected final NXCSession getSession()
    {
@@ -475,28 +481,21 @@ public class DataCollectionConfiguration
    }
 
    /**
-    * Set local change cllback 
+    * Set local change listener
     * 
-    * @param localChangeListener
+    * @param listener local change listener to add
     */
-   public void setLocalChangeCallback(LocalChangeListener localChangeListener)
+   public void setLocalChangeListener(LocalChangeListener listener)
    {
-      this.localChangeListener = localChangeListener;
+      localChangeListener = listener;
    }
-   
-   /**
-    * Remove remote change listener
-    */
-   public void clearViewData()
-   {
-      remoteChangeListener = null;
-      userData = null;
-   }
-   
+
    /**
     * Set remote change listener
+    * 
+    * @param listener remote change listener to add
     */
-   public void setRemoteListener(RemoteChangeListener listener)
+   public void setRemoteChangeListener(RemoteChangeListener listener)
    {
       remoteChangeListener = listener;
    }

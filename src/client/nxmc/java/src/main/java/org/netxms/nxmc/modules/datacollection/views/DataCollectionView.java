@@ -1269,7 +1269,8 @@ public class DataCollectionView extends ObjectView
       {
          viewer.getControl().dispose();
          session.removeListener(clientListener);
-         dciConfig.clearViewData();    
+         dciConfig.setRemoteChangeListener(null);
+         dciConfig.setUserData(null);
       }
 
       VisibilityValidator validator = new VisibilityValidator() { 
@@ -1285,7 +1286,7 @@ public class DataCollectionView extends ObjectView
          if (object != null)
          {
             dciConfig.setUserData(viewer);
-            dciConfig.setRemoteListener(changeListener);  
+            dciConfig.setRemoteChangeListener(changeListener);  
          }
       }
       else 
@@ -1327,7 +1328,7 @@ public class DataCollectionView extends ObjectView
    {
       this.object = ((object != null) && ((object instanceof DataCollectionTarget) || (object instanceof Template))) ? object : null;
       actionEnableEditMode.setEnabled(!(object instanceof Template));
-      
+
       // Request server to open data collection configuration
       new Job(String.format(i18n.tr("Open data collection configuration for %s"), object.getObjectName()), this) {
          @Override
@@ -1335,11 +1336,11 @@ public class DataCollectionView extends ObjectView
          {
             if (dciConfig != null)
                dciConfig.close();
-            
+
             dciConfig = session.openDataCollectionConfiguration(object.getObjectId(), changeListener);
             if (object instanceof Template)
             {
-               dciConfig.setLocalChangeCallback(new LocalChangeListener() {                  
+               dciConfig.setLocalChangeListener(new LocalChangeListener() {                  
                   @Override
                   public void onObjectChange()
                   {         
@@ -1353,7 +1354,7 @@ public class DataCollectionView extends ObjectView
                   }
                });
             }
-            
+
             //load all related objects
             if (!session.areObjectsSynchronized())
             {
@@ -1368,16 +1369,15 @@ public class DataCollectionView extends ObjectView
                   session.syncMissingObjects(relatedOpbjects, true, NXCSession.OBJECT_SYNC_WAIT);
                }
             }
-            
+
             runInUIThread(new Runnable() {
-               
                @Override
                public void run()
                {
                   if (editMode)
                   {
                      dciConfig.setUserData(viewer);
-                     dciConfig.setRemoteListener(changeListener);  
+                     dciConfig.setRemoteChangeListener(changeListener);  
                   }
                }
             });
