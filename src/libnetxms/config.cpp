@@ -250,7 +250,6 @@ void ConfigEntry::addEntry(ConfigEntry *entry)
 void ConfigEntry::unlinkEntry(ConfigEntry *entry)
 {
    ConfigEntry *curr, *prev;
-
    for(curr = m_first, prev = nullptr; curr != nullptr; curr = curr->m_next)
    {
       if (curr == entry)
@@ -278,7 +277,7 @@ void ConfigEntry::unlinkEntry(ConfigEntry *entry)
  */
 ObjectArray<ConfigEntry> *ConfigEntry::getSubEntries(const TCHAR *mask) const
 {
-   ObjectArray<ConfigEntry> *list = new ObjectArray<ConfigEntry>(16, 16, Ownership::False);
+   auto list = new ObjectArray<ConfigEntry>(16, 16, Ownership::False);
    for(ConfigEntry *e = m_first; e != nullptr; e = e->getNext())
       if ((mask == nullptr) || MatchString(mask, e->getName(), FALSE))
       {

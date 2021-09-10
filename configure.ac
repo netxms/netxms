@@ -4981,6 +4981,7 @@ AC_CONFIG_FILES([
 	src/server/hdlink/jira/Makefile
 	src/server/hdlink/redmine/Makefile
 	src/server/include/Makefile
+	src/server/leef/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
 	src/server/ntcb/Makefile
