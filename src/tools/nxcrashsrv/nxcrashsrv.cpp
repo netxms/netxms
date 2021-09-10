@@ -175,7 +175,7 @@ static void DumpProcessModules(FILE *fp, HANDLE hProcess, HMODULE *modules, int 
       if (!GetModuleInformation(hProcess, modules[i], &info, sizeof(info)))
          memset(&info, 0, sizeof(info));
 
-      _ftprintf(fp, _T("   %-30s %p %10u %s\n"), baseName, info.lpBaseOfDll, info.SizeOfImage, fileName);
+      _ftprintf(fp, _T("   %-48s %p %10u %s\n"), baseName, info.lpBaseOfDll, info.SizeOfImage, fileName);
    }
 }
 
