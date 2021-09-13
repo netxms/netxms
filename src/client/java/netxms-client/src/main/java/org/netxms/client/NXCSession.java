@@ -6344,25 +6344,25 @@ public class NXCSession
       {
          msg.setFieldInt16(NXCPCodes.VID_DISPLAY_MODE, data.getMapObjectDisplayMode().getValue());
       }
-
-      if (data.getPhysicalContainerObjectId() != null || data.getFrontRackImage() != null || 
+      
+      if (data.getFrontRackImage() != null || 
             data.getRearRackImage() != null || data.getRackPosition() != null ||
             data.getRackHeight() != null || data.getRackOrientation() != null)
       {
-         if (data.getPhysicalContainerObjectId() == null || data.getFrontRackImage() == null || 
+         if (data.getFrontRackImage() == null || 
                data.getRearRackImage() == null || data.getRackPosition() == null ||
                data.getRackHeight() == null || data.getRackOrientation() == null)
             throw new NXCException(RCC.VARIABLE_NOT_FOUND);
-         
-         msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_CONTAINER_ID, data.getPhysicalContainerObjectId().intValue());
+
+         msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_CONTAINER_ID, data.getPhysicalContainerObjectId()!= null ? data.getPhysicalContainerObjectId().intValue() : 0);
          msg.setField(NXCPCodes.VID_RACK_IMAGE_FRONT, data.getFrontRackImage());
          msg.setField(NXCPCodes.VID_RACK_IMAGE_REAR, data.getRearRackImage());
          msg.setFieldInt16(NXCPCodes.VID_RACK_POSITION, data.getRackPosition());
          msg.setFieldInt16(NXCPCodes.VID_RACK_HEIGHT, data.getRackHeight());
          msg.setFieldInt16(NXCPCodes.VID_RACK_ORIENTATION, data.getRackOrientation().getValue());
       }
-
-      if (data.getPhysicalContainerObjectId() != null || data.getChassisPlacement() != null)
+      
+      if (data.getChassisPlacement() != null)
       {
          if (data.getPhysicalContainerObjectId() == null || data.getChassisPlacement() == null)
             throw new NXCException(RCC.VARIABLE_NOT_FOUND);
