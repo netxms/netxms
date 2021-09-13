@@ -112,7 +112,6 @@ retry:
       }
    }
    target->averageRTT = unreachable ? 10000 : (sum / count);
-_tprintf(_T("sum=%u count=%u avg=%u\n"), sum, count, target->averageRTT);
    target->minRTT = localMin;
    target->maxRTT = localMax;
    target->packetLoss = lost * 100 / s_pollsPerMinute;
