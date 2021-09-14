@@ -81,9 +81,9 @@ public class InterfacesTab extends NodeComponentViewerTab
 	
 	private boolean hideSubInterfaces = false;
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected void createTabContent(Composite parent)
 	{
@@ -121,9 +121,9 @@ public class InterfacesTab extends NodeComponentViewerTab
 		ObjectContextMenu.fill(manager, getViewPart().getSite(), viewer);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
+    */
 	@Override
 	public void refresh()
 	{
