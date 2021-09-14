@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2019 Raden Solutions
+ * Copyright (C) 2019-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,23 +29,24 @@ public class AgentSessionFilter extends ViewerFilter
 {
    private String filterString = null;
 
+   /**
+    * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
       TableRow row = (TableRow)element;
-      boolean contains = false;
 
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
 
       for(int i = 0; i < row.size(); i++)
       {
-         row.get(i).getValue().toLowerCase().contains(filterString);
-         if (contains)
-            break;
+         if (row.get(i).getValue().toLowerCase().contains(filterString))
+            return true;
       }
 
-      return contains;
+      return false;
    }
 
    /**
@@ -57,5 +58,4 @@ public class AgentSessionFilter extends ViewerFilter
    {
       filterString = text;
    }
-
 }

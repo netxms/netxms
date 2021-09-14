@@ -80,7 +80,7 @@ public class UserSessionsTab extends ObjectTab
    private NXCSession session;
    private AbstractObject object;
    private Table sessionsTable = null;
-   private boolean initShowFilter = true;
+   private boolean showFilter = true;
    private CompositeWithMessageBar viewerContainer;
    private SortableTableViewer viewer;
    private FilterText filterText;
@@ -98,7 +98,7 @@ public class UserSessionsTab extends ObjectTab
       parent.setLayout(new FillLayout());
       session = ConsoleSharedData.getSession();
       final IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      initShowFilter = safeCast(settings.get("UserSessionsTab.showFilter"), settings.getBoolean("UserSessionsTab.showFilter"), initShowFilter);
+      showFilter = getBooleanFromSettings(settings, "UserSessionsTab.showFilter", showFilter);
 
       viewerContainer = new CompositeWithMessageBar(parent, SWT.NONE) {
          @Override
@@ -137,12 +137,12 @@ public class UserSessionsTab extends ObjectTab
       viewer.getTable().setLinesVisible(true);
       filter = new AgentSessionFilter();
       viewer.addFilter(filter);
-      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "NodeTable.V2"); //$NON-NLS-1$
+      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "UserSessions"); //$NON-NLS-1$
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "NodeTable.V2"); //$NON-NLS-1$
+            WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "UserSessions"); //$NON-NLS-1$
          }
       });
 
@@ -184,13 +184,13 @@ public class UserSessionsTab extends ObjectTab
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            settings.put("UserSessionsTab.showFilter", initShowFilter);
+            settings.put("UserSessionsTab.showFilter", showFilter);
             refreshController.dispose();
          }
       });
 
       // Set initial focus to filter input line
-      if (initShowFilter)
+      if (showFilter)
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
@@ -231,7 +231,7 @@ public class UserSessionsTab extends ObjectTab
     */
    protected void fillContextMenu(IMenuManager manager)
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if ((selection.size() >= 1))
       {
          manager.add(actionExportToCsv);
@@ -246,6 +246,7 @@ public class UserSessionsTab extends ObjectTab
    private void createActions()
    {
       actionExportToCsv = new ExportToCsvAction(getViewPart(), viewer, true);
+
       actionTakeScreenshot = new Action("Take screenshot") {
          @Override
          public void run()
@@ -260,7 +261,7 @@ public class UserSessionsTab extends ObjectTab
     */
    private void takeScreenshot()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if ((selection.size() >= 1))
       {
          int colIndexName = sessionsTable.getColumnIndex("SESSION_NAME"); //$NON-NLS-1$
@@ -290,11 +291,11 @@ public class UserSessionsTab extends ObjectTab
     */
    public void enableFilter(boolean enable)
    {
-      initShowFilter = enable;
-      filterText.setVisible(initShowFilter);
+      showFilter = enable;
+      filterText.setVisible(showFilter);
       FormData fd = (FormData)viewer.getControl().getLayoutData();
       fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
-      viewerContainer.layout();
+      viewerContainer.layout(true, true);
       if (enable)
          filterText.setFocus();
       else
@@ -323,13 +324,18 @@ public class UserSessionsTab extends ObjectTab
    }
 
    /**
-    * @param b
-    * @param defval
-    * @return
+    * Get boolean value from settings.
+    *
+    * @param settings settings
+    * @param name parameter name
+    * @param defaultValue default value
+    * @return parameter value or default if not found
     */
-   private static boolean safeCast(String s, boolean b, boolean defval)
+   private static boolean getBooleanFromSettings(IDialogSettings settings, String name, boolean defaultValue)
    {
-      return (s != null) ? b : defval;
+      if (settings.get(name) == null)
+         return defaultValue;
+      return settings.getBoolean(name);
    }
 
    /**
@@ -372,6 +378,8 @@ public class UserSessionsTab extends ObjectTab
                   @Override
                   public void run()
                   {
+                     if (viewer.getControl().isDisposed())
+                        return;
                      viewer.setInput(sessionsTable.getAllRows());
                      viewerContainer.hideMessage();
                   }
