@@ -65,9 +65,9 @@ public class NodesTab extends ObjectTab
 	private SortableTableViewer viewer;
 	private Action actionExportToCsv;
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected void createTabContent(Composite parent)
 	{

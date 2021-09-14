@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2016-2021 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,13 +30,16 @@ import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.commands.IElementUpdater;
 import org.eclipse.ui.menus.UIElement;
 import org.netxms.ui.eclipse.objectview.objecttabs.NodeComponentViewerTab;
+import org.netxms.ui.eclipse.objectview.objecttabs.ServicesTab;
 
 /**
  * Command handler for toggling interface tab filter state
  */
 public class ToggleFilterHandler extends AbstractHandler implements IElementUpdater
 {
-
+   /**
+    * @see org.eclipse.core.commands.IHandler#execute(org.eclipse.core.commands.ExecutionEvent)
+    */
    @Override
    public Object execute(ExecutionEvent event) throws ExecutionException
    {
@@ -44,23 +47,24 @@ public class ToggleFilterHandler extends AbstractHandler implements IElementUpda
       if (object instanceof IEvaluationContext)
       {
          Object tab = ((IEvaluationContext)object).getVariable("org.netxms.ui.eclipse.objectview.ActiveTab"); //$NON-NLS-1$
-         if ((tab != null) && (tab instanceof NodeComponentViewerTab))
+         if ((tab != null) && ((tab instanceof NodeComponentViewerTab) || (tab instanceof ServicesTab)))
          {
             ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
             Command command = service.getCommand("org.netxms.ui.eclipse.objectview.commands.show_filter"); //$NON-NLS-1$
             State state = command.getState("org.netxms.ui.eclipse.objectview.commands.show_filter.state"); //$NON-NLS-1$
             boolean isChecked = !(Boolean)state.getValue();
             state.setValue(isChecked);
-            ((NodeComponentViewerTab)tab).enableFilter(isChecked);
+            if (tab instanceof ServicesTab)
+               ((ServicesTab)tab).enableFilter(isChecked);
+            else
+               ((NodeComponentViewerTab)tab).enableFilter(isChecked);
             service.refreshElements(event.getCommand().getId(), null);
          }
       }
       return null;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.ui.commands.IElementUpdater#updateElement(org.eclipse.ui.menus.UIElement, java.util.Map)
     */
    @SuppressWarnings("rawtypes")

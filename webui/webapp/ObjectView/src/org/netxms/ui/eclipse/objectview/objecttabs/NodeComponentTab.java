@@ -61,7 +61,7 @@ public abstract class NodeComponentTab extends ObjectTab
       objectsFullySync = coreStore.getBoolean("ObjectsFullSync");
 
       // Create tab main area
-      mainArea = new Composite(parent, SWT.BORDER);
+      mainArea = new Composite(parent, SWT.NONE);
       mainArea.setLayout(new FormLayout());
 
       sessionListener = new SessionListener() {

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,9 +73,9 @@ public class ComponentsTab extends ObjectTab
 	private Action actionCollapseAll;
 	private Action actionExpandAll;
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected void createTabContent(Composite parent)
 	{
@@ -104,7 +104,7 @@ public class ComponentsTab extends ObjectTab
 		createActions();
 		createPopupMenu();
 	}
-	
+
 	/**
 	 * @param name
 	 */
@@ -155,7 +155,7 @@ public class ComponentsTab extends ObjectTab
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
-	
+
 	/**
 	 * Create actions
 	 */
@@ -209,7 +209,7 @@ public class ComponentsTab extends ObjectTab
 			}
 		};
 	}
-	
+
 	/**
 	 * Copy selected lines to clipboard
 	 */
