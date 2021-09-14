@@ -66,21 +66,21 @@ public:
 class Process
 {
 public:
-	uint32_t pid;
-	char name[MAX_PROCESS_NAME_LEN];
-	uint32_t parent;          // PID of parent process
-	uint32_t group;           // Group ID
-	char state;             // Process state
-	long threads;           // Number of threads
-	unsigned long ktime;    // Number of ticks spent in kernel mode
-	unsigned long utime;    // Number of ticks spent in user mode
-	unsigned long vmsize;   // Size of process's virtual memory in bytes
-	long rss;               // Process's resident set size in pages
-	unsigned long minflt;   // Number of minor page faults
-	unsigned long majflt;   // Number of major page faults
+   uint32_t pid;
+   char name[MAX_PROCESS_NAME_LEN];
+   uint32_t parent;          // PID of parent process
+   uint32_t group;           // Group ID
+   char state;             // Process state
+   long threads;           // Number of threads
+   unsigned long ktime;    // Number of ticks spent in kernel mode
+   unsigned long utime;    // Number of ticks spent in user mode
+   unsigned long vmsize;   // Size of process's virtual memory in bytes
+   long rss;               // Process's resident set size in pages
+   unsigned long minflt;   // Number of minor page faults
+   unsigned long majflt;   // Number of major page faults
    ObjectArray<FileDescriptor> *fd;
    char *cmdLine;          // Process command line
-   
+
    Process(uint32_t _pid, const char *_name, char *_cmdLine)
    {
       pid = _pid;
@@ -98,7 +98,7 @@ public:
       fd = nullptr;
       cmdLine = _cmdLine;
    }
-   
+
    ~Process()
    {
       delete fd;
