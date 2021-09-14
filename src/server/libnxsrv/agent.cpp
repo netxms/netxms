@@ -1785,90 +1785,52 @@ uint32_t AgentConnection::uploadFileInternal(const TCHAR *localFile, const TCHAR
 }
 
 /**
- * Information about file part
- */
-class FilePartInfo
-{
-public:
-   TCHAR *m_name;
-   uint64_t m_size;
-   BYTE m_hash[MD5_DIGEST_SIZE];
-   uint64_t m_offset;
-
-   FilePartInfo()
-   {
-      m_name = nullptr;
-      m_size = 0;
-      m_hash[0] = 0;
-      m_offset = 0;
-   }
-
-   ~FilePartInfo()
-   {
-      MemFree(m_name);
-   }
-
-   bool isFoundInRemoteFiles(ObjectArray<RemoteFileInfo> *remoteFiles)
-   {
-      if (remoteFiles != nullptr)
-      {
-         for (int i = 0; i < remoteFiles->size(); i++)
-         {
-            RemoteFileInfo* remoteFilePart = remoteFiles->get(i);
-            if (!_tcscmp(m_name, remoteFilePart->name()))
-            {
-               if (m_size == remoteFilePart->size() &&
-                  memcmp(m_hash, remoteFilePart->hash(), MD5_DIGEST_SIZE) == 0)
-               {
-                  return true;
-               }
-            }
-         }
-      }
-      return false;
-   }
-};
-
-/**
  * Prepare list of file parts
  */
-static void PrepareFilePartsList(const TCHAR *localFile, const TCHAR *destinationFile, StringList *partNames, ObjectArray<FilePartInfo> *fileInfo)
+void AgentConnection::prepareFilePartList(const TCHAR *localFile, const TCHAR *destinationFile, StringList *partNames, ObjectArray<FilePartInfo> *fileInfo)
 {
-   uint64_t sz = FileSize(localFile);
-   const uint32_t FILE_PART_SIZE = 1024 * 1024;
-   BYTE buffer[FILE_PART_SIZE];
-   FILE *handle = _tfopen(localFile, _T("rb"));
-   for(int i = 0; sz > 0; i++)
+   uint64_t localFileSize = FileSize(localFile);
+
+   int handle = _topen(localFile, O_RDONLY | O_BINARY);
+
+   const size_t FILE_PART_SIZE = 1024 * 1024;
+   BYTE *buffer = (handle != -1) ? MemAllocArrayNoInit<BYTE>(FILE_PART_SIZE) : nullptr;
+
+   for(int i = 0; localFileSize > 0; i++)
    {
-      FilePartInfo* info = new FilePartInfo();
       TCHAR partFileName[MAX_PATH];
-      _sntprintf(partFileName, MAX_PATH, _T("%s%s%d"), destinationFile, _T(".part"), i);
-      info->m_name = MemCopyString(partFileName);
+      _sntprintf(partFileName, MAX_PATH, _T("%s.part%d"), destinationFile, i);
       partNames->add(partFileName);
+
+      auto info = new FilePartInfo();
+      info->m_name = MemCopyString(partFileName);
       info->m_offset = FILE_PART_SIZE * i;
-      if (sz > FILE_PART_SIZE)
+      if (localFileSize > FILE_PART_SIZE)
       {
          info->m_size = FILE_PART_SIZE;
-         sz -= FILE_PART_SIZE;
+         localFileSize -= FILE_PART_SIZE;
       }
       else
       {
-         info->m_size = sz;
-         sz = 0;
+         info->m_size = localFileSize;
+         localFileSize = 0;
       }
-      if (handle != nullptr && fread(buffer, 1, info->m_size, handle) == info->m_size)
+
+      if ((handle != -1) && _read(handle, buffer, info->m_size) == info->m_size)
       {
          CalculateMD5Hash(buffer, info->m_size, info->m_hash);
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 2, _T("Cannot calculate MD5 for file chunks while uploading %s file"), localFile);
+         debugPrintf(4, _T("Cannot calculate MD5 for file chunks while uploading file %s"), localFile);
       }
+
       fileInfo->add(info);
    }
 
-   if (handle != nullptr)
-      fclose(handle);
+   if (handle != -1)
+      _close(handle);
+   MemFree(buffer);
 }
 
 /**
@@ -1914,7 +1876,7 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
       // We need to prepare expected file chunk list
       ObjectArray<FilePartInfo> partInfo(8, 8, Ownership::True);   // Will contain information about file chunks for upload, including file name, size, hash and offset.
       StringList partNames;                                        // Will contain only file chunks names, used only in getFileSetInfo()
-      PrepareFilePartsList(localFile, remoteFileName, &partNames, &partInfo);
+      prepareFilePartList(localFile, remoteFileName, &partNames, &partInfo);
 
       // If we can use File Manager on agent, we can get already uploaded file chunk list and skip upload for them.
       ObjectArray<RemoteFileInfo> *remoteFiles = nullptr;
