@@ -799,6 +799,49 @@ struct RemoteFileFingerprint
 };
 
 /**
+ * Information about file part
+ */
+struct FilePartInfo
+{
+   TCHAR *m_name;
+   uint64_t m_size;
+   uint64_t m_offset;
+   BYTE m_hash[MD5_DIGEST_SIZE];
+
+   FilePartInfo()
+   {
+      m_name = nullptr;
+      m_size = 0;
+      m_offset = 0;
+      memset(m_hash, 0, sizeof(m_hash));
+   }
+
+   ~FilePartInfo()
+   {
+      MemFree(m_name);
+   }
+
+   bool isFoundInRemoteFiles(ObjectArray<RemoteFileInfo> *remoteFiles)
+   {
+      if (remoteFiles != nullptr)
+      {
+         for (int i = 0; i < remoteFiles->size(); i++)
+         {
+            RemoteFileInfo* remoteFilePart = remoteFiles->get(i);
+            if (!_tcscmp(m_name, remoteFilePart->name()))
+            {
+               if (m_size == remoteFilePart->size() && !memcmp(m_hash, remoteFilePart->hash(), MD5_DIGEST_SIZE))
+               {
+                  return true;
+               }
+            }
+         }
+      }
+      return false;
+   }
+};
+
+/**
  * Receiver for agent connection
  */
 class AgentConnectionReceiver;
@@ -862,6 +905,7 @@ private:
    uint32_t setupProxyConnection();
    uint32_t prepareFileDownload(const TCHAR *fileName, uint32_t rqId, bool append,
          void (*downloadProgressCallback)(size_t, void*), void (*fileResendCallback)(NXCPMessage*, void*), void *cbArg);
+   void prepareFilePartList(const TCHAR *localFile, const TCHAR *destinationFile, StringList *partNames, ObjectArray<FilePartInfo> *fileInfo);
    void processFileData(NXCPMessage *msg);
    void processFileTransferAbort(NXCPMessage *msg);
    uint32_t uploadFileInternal(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
