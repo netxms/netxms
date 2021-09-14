@@ -79,8 +79,9 @@ public:
 	unsigned long minflt;   // Number of minor page faults
 	unsigned long majflt;   // Number of major page faults
    ObjectArray<FileDescriptor> *fd;
+   char *cmdLine;          // Process command line
    
-   Process(uint32_t _pid, const char *_name)
+   Process(uint32_t _pid, const char *_name, char *_cmdLine)
    {
       pid = _pid;
       strlcpy(name, _name, MAX_PROCESS_NAME_LEN);
@@ -95,11 +96,13 @@ public:
       minflt = 0;
       majflt = 0;
       fd = nullptr;
+      cmdLine = _cmdLine;
    }
    
    ~Process()
    {
       delete fd;
+      MemFree(cmdLine);
    }
 };
 
@@ -164,24 +167,24 @@ static ObjectArray<FileDescriptor> *ReadProcessHandles(UINT32 pid)
  *    procUser - If not NULL, only processes run by this user will be counted.
  * Return value: number of matched processes or -1 in case of error.
  */
-static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, const char *cmdLineFilter, const char *procUser, bool readHandles)
+static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, const char *cmdLineFilter, const char *procUser, bool readHandles, bool readCmdLine)
 {
-	AgentWriteDebugLog(5, _T("ProcRead(%p, \"%hs\",\"%hs\",\"%hs\")"), plist, CHECK_NULL_A(procNameFilter), CHECK_NULL_A(cmdLineFilter), CHECK_NULL_A(procUser));
+	nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcRead(%p, \"%hs\",\"%hs\",\"%hs\")"), plist, CHECK_NULL_A(procNameFilter), CHECK_NULL_A(cmdLineFilter), CHECK_NULL_A(procUser));
 
    uid_t procUid = -1;
-   if (procUser != NULL && *procUser != 0)
+   if ((procUser != nullptr) && (*procUser != 0))
    {
       struct passwd pwd;
       struct passwd *result;
-      char *buf = (char*)malloc(16384);
-
-      getpwnam_r(procUser, &pwd, buf, 16384, &result);
-      if (result == NULL)
+      char *buffer = MemAllocStringA(16384);
+      getpwnam_r(procUser, &pwd, buffer, 16384, &result);
+      if (result == nullptr)
       {
+         MemFree(buffer);
          return -2; //If user is set, but it's not found return unsupported
       }
       procUid = pwd.pw_uid;
-      free(buf);
+      MemFree(buffer);
    }
 
 	struct dirent **nameList;
@@ -195,7 +198,7 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
    }
    
    // get process count without filtering, we can skip long loop
-	if ((plist == NULL) && (procNameFilter == NULL) && (cmdLineFilter == NULL) && (procUser == NULL))
+	if ((plist == nullptr) && (procNameFilter == nullptr) && (cmdLineFilter == nullptr) && (procUser == nullptr))
 	{
       for(int i = 0; i < count; i++)
          free(nameList[i]);
@@ -209,8 +212,8 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
       bool procFound = false;
       bool cmdFound = false;
       bool uidFound = true;
-      char *pProcName = NULL;
-      char *pProcStat = NULL;
+      char *pProcName = nullptr;
+      char *pProcStat = nullptr;
       unsigned int nPid = 0;
 
       char fileName[MAX_PATH], procNameBuffer[MAX_PROCESS_NAME_LEN + 1];
@@ -227,30 +230,30 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
             if (sscanf(szProcStat, "%u ", &nPid) == 1)
             {
                char *procNamePos = strchr(szProcStat, '(');
-               if (procNamePos != NULL)
+               if (procNamePos != nullptr)
                {
                   pProcStat = strrchr(procNamePos, ')');
-                  if (pProcStat != NULL)
+                  if (pProcStat != nullptr)
                   {
                      pProcName = procNamePos + 1;
                      *pProcStat = 0;
                      pProcStat++;
                   }
-                  if (pProcName != NULL)
+                  if (pProcName != nullptr)
                   {
-                     if ((procNameFilter != NULL) && (*procNameFilter != 0))
+                     if ((procNameFilter != nullptr) && (*procNameFilter != 0))
                      {
-                        if (cmdLineFilter == NULL) // use old style compare
+                        if (cmdLineFilter == nullptr) // use old style compare
                            procFound = (strcmp(pProcName, procNameFilter) == 0);
                         else
-                           procFound = RegexpMatchA(pProcName, procNameFilter, FALSE);
+                           procFound = RegexpMatchA(pProcName, procNameFilter, false);
                      }
                      else
                      {
                         procFound = true;
                      }
                   }
-               } // pProcName != NULL
+               } // pProcName != nullptr
             }
          } // _read
          _close(hFile);
@@ -266,14 +269,15 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
             uidFound = false;
       }
 
-      if ((cmdLineFilter != NULL) && (*cmdLineFilter != 0))
+      char *processCmdLine = nullptr;
+      if (readCmdLine || ((cmdLineFilter != nullptr) && (*cmdLineFilter != 0)))
       {
          snprintf(fileName, MAX_PATH, "/proc/%s/cmdline", nameList[count]->d_name);
          hFile = _open(fileName, O_RDONLY);
          if (hFile != -1)
          {
             size_t len = 0, pos = 0;
-            char *processCmdLine = (char *)malloc(4096);
+            processCmdLine = MemAllocStringA(4096);
             while(true)
             {
                ssize_t bytes = _read(hFile, &processCmdLine[pos], 4096);
@@ -286,7 +290,7 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
                   break;
                }
                pos += bytes;
-               processCmdLine = (char *)realloc(processCmdLine, pos + 4096);
+               processCmdLine = MemRealloc(processCmdLine, pos + 4096);
             }
             if (len > 0)
             {
@@ -301,18 +305,23 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
                      processCmdLine[j] = ' ';
                   }
                }
-               cmdFound = RegexpMatchA(processCmdLine, cmdLineFilter, TRUE);
-            }
-            else
-            {
-               cmdFound = RegexpMatchA("", cmdLineFilter, TRUE);
             }
             _close(hFile);
-            free(processCmdLine);
-         } // hFile != -1
+         }
+
+         if ((cmdLineFilter != nullptr) && (*cmdLineFilter != 0))
+         {
+            if (processCmdLine != nullptr)
+               cmdFound = RegexpMatchA(processCmdLine, cmdLineFilter, true);
+            else
+               cmdFound = RegexpMatchA("", cmdLineFilter, false);
+
+            if (!readCmdLine)
+               MemFreeAndNull(processCmdLine);
+         }
          else
          {
-            cmdFound = RegexpMatchA("", cmdLineFilter, TRUE);
+            cmdFound = true;
          }
       } // cmdLineFilter
       else
@@ -322,20 +331,20 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
 
       if (procFound && cmdFound && uidFound)
       {
-         if ((plist != NULL) && (pProcName != NULL))
+         if ((plist != nullptr) && (pProcName != nullptr))
          {
-            Process *p = new Process(nPid, pProcName);
+            Process *p = new Process(nPid, pProcName, processCmdLine);
             // Parse rest of /proc/pid/stat file
-            if (pProcStat != NULL)
+            if (pProcStat != nullptr)
             {
                if (sscanf(pProcStat, " %c %d %d %*d %*d %*d %*u %lu %*u %lu %*u %lu %lu %*u %*u %*d %*d %ld %*d %*u %lu %ld ",
                           &p->state, &p->parent, &p->group, &p->minflt, &p->majflt,
                           &p->utime, &p->ktime, &p->threads, &p->vmsize, &p->rss) != 10)
                {
-                  AgentWriteDebugLog(2, _T("Error parsing /proc/%u/stat"), nPid);
+                  nxlog_debug_tag(DEBUG_TAG, 2, _T("Error parsing /proc/%u/stat"), nPid);
                }
             }
-            p->fd = readHandles ? ReadProcessHandles(nPid) : NULL;
+            p->fd = readHandles ? ReadProcessHandles(nPid) : nullptr;
             plist->add(p);
          }
          found++;
@@ -366,13 +375,13 @@ LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
 		}
 	}
 
-	nCount = ProcRead(NULL, (*pArg != _T('T')) ? procNameFilter : NULL, (*pArg == _T('E')) ? cmdLineFilter : NULL, (*pArg == _T('E')) ? userFilter : NULL, false);
+	nCount = ProcRead(nullptr, (*pArg != _T('T')) ? procNameFilter : nullptr, (*pArg == _T('E')) ? cmdLineFilter : nullptr, (*pArg == _T('E')) ? userFilter : nullptr, false, false);
 
 	if (nCount == -2)
    {
       nRet = SYSINFO_RC_UNSUPPORTED;
    }
-	if (nCount >= 0)
+	else if (nCount >= 0)
 	{
       ret_int(pValue, nCount);
       nRet = SYSINFO_RC_SUCCESS;
@@ -389,7 +398,7 @@ LONG H_ThreadCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 	int i, sum, count, ret = SYSINFO_RC_ERROR;
 	ObjectArray<Process> procList(128, 128, Ownership::True);
 
-	count = ProcRead(&procList, NULL, NULL, NULL, false);
+	count = ProcRead(&procList, nullptr, nullptr, nullptr, false, false);
 	if (count >= 0)
 	{
 		for(i = 0, sum = 0; i < procList.size(); i++)
@@ -409,7 +418,7 @@ LONG H_HandleCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 	int i, sum, count, ret = SYSINFO_RC_ERROR;
 	ObjectArray<Process> procList(128, 128, Ownership::True);
 
-	count = ProcRead(&procList, NULL, NULL, NULL, true);
+	count = ProcRead(&procList, nullptr, nullptr, nullptr, true, false);
 	if (count >= 0)
 	{
 		for(i = 0, sum = 0; i < procList.size(); i++)
@@ -427,7 +436,7 @@ LONG H_HandleCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 /**
  * Count VM regions within process
  */
-static INT64 CountVMRegions(UINT32 pid)
+static int64_t CountVMRegions(uint32_t pid)
 {
    char fname[128];
    sprintf(fname, "/proc/%u/maps", pid);
@@ -435,7 +444,7 @@ static INT64 CountVMRegions(UINT32 pid)
    if (f == -1)
       return 0;
 
-   INT64 count = 0;
+   int64_t count = 0;
    char buffer[16384];
    while(true)
    {
@@ -498,8 +507,8 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
 
 	ObjectArray<Process> procList(128, 128, Ownership::True);
 	count = ProcRead(&procList, procNameFilter, (cmdLineFilter[0] != 0) ? cmdLineFilter : nullptr,
-	         (userFilter[0] != 0) ? userFilter : nullptr, CAST_FROM_POINTER(arg, int) == PROCINFO_HANDLES);
-	AgentWriteDebugLog(5, _T("H_ProcessDetails(\"%hs\"): ProcRead() returns %d"), param, count);
+	         (userFilter[0] != 0) ? userFilter : nullptr, CAST_FROM_POINTER(arg, int) == PROCINFO_HANDLES, false);
+	nxlog_debug_tag(DEBUG_TAG, 5, _T("H_ProcessDetails(\"%hs\"): ProcRead() returns %d"), param, count);
 	if (count == -1)
 		return SYSINFO_RC_ERROR;
 	if (count == -2)
@@ -574,7 +583,7 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, 
    int nRet = SYSINFO_RC_ERROR;
 
 	ObjectArray<Process> procList(128, 128, Ownership::True);
-   int nCount = ProcRead(&procList, NULL, NULL, NULL, false);
+   int nCount = ProcRead(&procList, nullptr, nullptr, nullptr, false, false);
    if (nCount >= 0)
    {    
       nRet = SYSINFO_RC_SUCCESS;
@@ -609,13 +618,13 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
    int rc = SYSINFO_RC_ERROR;
 
 	ObjectArray<Process> procList(128, 128, Ownership::True);
-   int nCount = ProcRead(&procList, NULL, NULL, NULL, true);
+   int nCount = ProcRead(&procList, nullptr, nullptr, nullptr, true, true);
    if (nCount >= 0)
    {    
       rc = SYSINFO_RC_SUCCESS;
 
-      UINT64 pageSize = getpagesize();
-      UINT64 ticksPerSecond = sysconf(_SC_CLK_TCK);
+      uint64_t pageSize = getpagesize();
+      uint64_t ticksPerSecond = sysconf(_SC_CLK_TCK);
       for(int i = 0; i < procList.size(); i++)
       {         
          Process *p = procList.get(i);
@@ -626,13 +635,14 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
 #else
          value->set(1, p->name);
 #endif
-         value->set(2, (UINT32)p->threads);
-         value->set(3, (UINT32)((p->fd != NULL) ? p->fd->size() : 0));
-         value->set(4, (UINT64)p->ktime * 1000 / ticksPerSecond);
-         value->set(5, (UINT64)p->utime * 1000 / ticksPerSecond);
-         value->set(6, (UINT64)p->vmsize);
-         value->set(7, (UINT64)p->rss * pageSize);
-         value->set(8, (UINT64)p->minflt + (UINT64)p->majflt);
+         value->set(2, static_cast<uint32_t>(p->threads));
+         value->set(3, static_cast<uint32_t>((p->fd != nullptr) ? p->fd->size() : 0));
+         value->set(4, static_cast<uint64_t>(p->ktime) * 1000 / ticksPerSecond);
+         value->set(5, static_cast<uint64_t>(p->utime) * 1000 / ticksPerSecond);
+         value->set(6, static_cast<uint64_t>(p->vmsize));
+         value->set(7, static_cast<uint64_t>(p->rss) * pageSize);
+         value->set(8, static_cast<uint64_t>(p->minflt) + static_cast<uint64_t>(p->majflt));
+         value->set(9, p->cmdLine);
       }         
    }    
    return rc;
@@ -651,7 +661,7 @@ LONG H_OpenFilesTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstract
    int rc = SYSINFO_RC_ERROR;
 
 	ObjectArray<Process> procList(128, 128, Ownership::True);
-   int nCount = ProcRead(&procList, NULL, NULL, NULL, true);
+   int nCount = ProcRead(&procList, nullptr, nullptr, nullptr, true, false);
    if (nCount >= 0)
    {    
       rc = SYSINFO_RC_SUCCESS;
@@ -659,7 +669,7 @@ LONG H_OpenFilesTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstract
       for(int i = 0; i < procList.size(); i++)
       {         
          Process *p = procList.get(i);
-         if (p->fd != NULL)
+         if (p->fd != nullptr)
          {
             for(int j = 0; j < p->fd->size(); j++)
             {
