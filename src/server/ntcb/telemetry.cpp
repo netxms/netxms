@@ -156,7 +156,7 @@ static void FP_38_44(TelemetryDataType dataType, const TelemetryValue& value, co
       return;  // Sensor error
    TCHAR buffer[32], name[64];
    _sntprintf(buffer, 32, _T("%d.%d"), static_cast<int32_t>(value.u16) / 10, static_cast<int32_t>(value.u16) % 10);
-   _sntprintf(name, 64, _T("NTCB.FuelSensor%s.Amount"), options);
+   _sntprintf(name, 64, _T("NTCB.FuelSensor%s.Amount"), static_cast<const TCHAR*>(options));
    pushValues->set(name, buffer);
 }
 
@@ -272,10 +272,10 @@ static void FP_84_93(TelemetryDataType dataType, const TelemetryValue& value, co
 
    TCHAR buffer[32], name[64];
    _sntprintf(buffer, 32, _T("%d.%d"), static_cast<int32_t>(value.u16) / 10, static_cast<int32_t>(value.u16) % 10);
-   _sntprintf(name, 64, _T("NTCB.FuelSensor%s.Amount"), options);
+   _sntprintf(name, 64, _T("NTCB.FuelSensor%s.Amount"), static_cast<const TCHAR*>(options));
    pushValues->set(name, buffer);
 
-   _sntprintf(name, 64, _T("NTCB.FuelSensor%s.Temperature"), options);
+   _sntprintf(name, 64, _T("NTCB.FuelSensor%s.Temperature"), static_cast<const TCHAR*>(options));
    pushValues->set(name, static_cast<int32_t>(static_cast<int8_t>(value.raw[2])));
 }
 

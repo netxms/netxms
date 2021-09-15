@@ -93,7 +93,7 @@ static bool InitModule(Config *config)
       }
       else
       {
-         g_leefSeparatorChar = *separatorDefinition;
+         g_leefSeparatorChar = static_cast<BYTE>(*separatorDefinition);
       }
    }
 
