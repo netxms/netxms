@@ -775,6 +775,23 @@ static LONG H_SystemExecuteInAllSessions(const TCHAR *action, const StringList *
    return ExecuteInAllSessions(command) ? ERR_SUCCESS : ERR_EXEC_FAILED;
 }
 
+#else
+
+/**
+ * Handler for action Process.Terminate
+ */
+static LONG H_TerminateProcess(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
+{
+   if (args->isEmpty())
+      return ERR_BAD_ARGUMENTS;
+
+   pid_t pid = _tcstol(args->get(0), nullptr, 0);
+   if (pid <= 0)
+      return ERR_BAD_ARGUMENTS;
+
+   return (kill(pid, SIGKILL) == 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+}
+
 #endif
 
 /**
@@ -1158,6 +1175,9 @@ BOOL Initialize()
 		// Add built-in actions
 		AddAction(_T("Agent.Restart"), false, nullptr, H_RestartAgent, _T("CORE"), _T("Restart agent"));
       AddAction(_T("Agent.RotateLog"), false, nullptr, H_RotateLog, _T("CORE"), _T("Rotate agent log"));
+#ifndef _WIN32
+      AddAction(_T("Process.Terminate"), false, nullptr, H_TerminateProcess, _T("CORE"), _T("Terminate process"));
+#endif
       if (config->getValueAsBoolean(_T("/CORE/EnableArbitraryCommandExecution"), false))
       {
          nxlog_write(NXLOG_INFO, _T("Arbitrary command execution enabled"));
