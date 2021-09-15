@@ -61,25 +61,25 @@ import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Display and manage system services
+ * Display and manage processes
  */
-public class ServicesTab extends ObjectTab
+public class ProcessesTab extends ObjectTab
 {
-   public static final int COLUMN_NAME = 0;
-   public static final int COLUMN_DISPLAY_NAME = 1;
-   public static final int COLUMN_STATE = 2;
-   public static final int COLUMN_PID = 3;
-   public static final int COLUMN_TYPE = 4;
-   public static final int COLUMN_STARTUP = 5;
-   public static final int COLUMN_RUN_AS = 6;
-   public static final int COLUMN_CMDLINE = 7;
-   public static final int COLUMN_DEPENDENCIES = 8;
+   public static final int COLUMN_PID = 0;
+   public static final int COLUMN_NAME = 1;
+   public static final int COLUMN_THREADS = 2;
+   public static final int COLUMN_HANDLES = 3;
+   public static final int COLUMN_VMSIZE = 4;
+   public static final int COLUMN_RSS = 5;
+   public static final int COLUMN_PAGE_FAULTS = 6;
+   public static final int COLUMN_KTIME = 7;
+   public static final int COLUMN_UTIME = 8;
+   public static final int COLUMN_CMDLINE = 9;
 
    private Composite viewerContainer;
    private FilterText filterText;
    private SortableTableViewer viewer;
-   private Action actionStart;
-   private Action actionStop;
+   private Action actionTerminate;
    private boolean showFilter;
    private String filterString = null;
 
@@ -89,7 +89,7 @@ public class ServicesTab extends ObjectTab
    @Override
    public boolean showForObject(AbstractObject object)
    {
-      return (object instanceof Node) && ((Node)object).hasAgent() && ((Node)object).getPlatformName().startsWith("windows-");
+      return (object instanceof Node) && ((Node)object).hasAgent();
    }
 
    /**
@@ -99,7 +99,7 @@ public class ServicesTab extends ObjectTab
    protected void createTabContent(Composite parent)
    {
       final IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      showFilter = getBooleanFromSettings(settings, "ServicesTab.showFilter", true);
+      showFilter = getBooleanFromSettings(settings, "ProcessesTab.showFilter", true);
 
       viewerContainer = new Composite(parent, SWT.NONE);
       viewerContainer.setLayout(new FormLayout());
@@ -126,19 +126,19 @@ public class ServicesTab extends ObjectTab
          }
       });
 
-      final String[] names = { "Name", "Display name", "State", "PID", "Type", "Startup", "Run as", "Command line", "Dependencies" };
-      final int[] widths = { 180, 280, 90, 80, 100, 150, 300, 500, 200 };
+      final String[] names = { "PID", "Name", "Threads", "Handles", "VM Size", "RSS", "Page faults", "System time", "User time", "Command line" };
+      final int[] widths = { 90, 200, 90, 90, 90, 90, 90, 90, 90, 500 };
       viewer = new SortableTableViewer(viewerContainer, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new ServiceLabelProvider());
-      viewer.setComparator(new ServiceComparator());
-      viewer.addFilter(new ServiceFilter());
-      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "ServiceTable"); //$NON-NLS-1$
+      viewer.setLabelProvider(new ProcessLabelProvider());
+      viewer.setComparator(new ProcessComparator());
+      viewer.addFilter(new ProcessFilter());
+      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "ProcessTable"); //$NON-NLS-1$
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ServiceTable"); //$NON-NLS-1$
+            WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "ProcessTable"); //$NON-NLS-1$
          }
       });
 
@@ -160,7 +160,7 @@ public class ServicesTab extends ObjectTab
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            settings.put("ServicesTab.showFilter", showFilter);
+            settings.put("ProcessesTab.showFilter", showFilter);
          }
       });
 
@@ -179,19 +179,11 @@ public class ServicesTab extends ObjectTab
     */
    private void createActions()
    {
-      actionStart = new Action("&Start") {
+      actionTerminate = new Action("&Terminate") {
          @Override
          public void run()
          {
-            executeAgentAction("Service.Start");
-         }
-      };
-
-      actionStop = new Action("S&top") {
-         @Override
-         public void run()
-         {
-            executeAgentAction("Service.Stop");
+            terminateProcess();
          }
       };
    }
@@ -202,7 +194,7 @@ public class ServicesTab extends ObjectTab
    private void createPopupMenu()
    {
       // Create menu manager.
-      MenuManager menuMgr = new MenuManager(getViewPart().getSite().getId() + ".ServicesTab");
+      MenuManager menuMgr = new MenuManager(getViewPart().getSite().getId() + ".ProcessesTab");
       menuMgr.setRemoveAllWhenShown(true);
       menuMgr.addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager manager)
@@ -223,8 +215,7 @@ public class ServicesTab extends ObjectTab
     */
    protected void fillContextMenu(IMenuManager manager)
    {
-      manager.add(actionStart);
-      manager.add(actionStop);
+      manager.add(actionTerminate);
    }
 
    /**
@@ -270,27 +261,30 @@ public class ServicesTab extends ObjectTab
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final Table serviceTable = session.queryAgentTable(nodeId, "System.Services");
+            final Table processTable = session.queryAgentTable(nodeId, "System.Processes");
 
-            int[] indexes = new int[9];
-            indexes[COLUMN_NAME] = serviceTable.getColumnIndex("NAME");
-            indexes[COLUMN_DISPLAY_NAME] = serviceTable.getColumnIndex("DISPNAME");
-            indexes[COLUMN_STATE] = serviceTable.getColumnIndex("STATE");
-            indexes[COLUMN_PID] = serviceTable.getColumnIndex("PID");
-            indexes[COLUMN_TYPE] = serviceTable.getColumnIndex("TYPE");
-            indexes[COLUMN_STARTUP] = serviceTable.getColumnIndex("STARTUP");
-            indexes[COLUMN_RUN_AS] = serviceTable.getColumnIndex("RUN_AS");
-            indexes[COLUMN_CMDLINE] = serviceTable.getColumnIndex("BINARY");
-            indexes[COLUMN_DEPENDENCIES] = serviceTable.getColumnIndex("DEPENDENCIES");
+            int[] indexes = new int[10];
+            indexes[COLUMN_PID] = processTable.getColumnIndex("PID");
+            indexes[COLUMN_NAME] = processTable.getColumnIndex("NAME");
+            indexes[COLUMN_THREADS] = processTable.getColumnIndex("THREADS");
+            indexes[COLUMN_HANDLES] = processTable.getColumnIndex("HANDLES");
+            indexes[COLUMN_VMSIZE] = processTable.getColumnIndex("VMSIZE");
+            indexes[COLUMN_RSS] = processTable.getColumnIndex("RSS");
+            indexes[COLUMN_PAGE_FAULTS] = processTable.getColumnIndex("PAGE_FAULTS");
+            indexes[COLUMN_KTIME] = processTable.getColumnIndex("KTIME");
+            indexes[COLUMN_UTIME] = processTable.getColumnIndex("UTIME");
+            indexes[COLUMN_CMDLINE] = processTable.getColumnIndex("CMDLINE");
 
-            final Service[] services = new Service[serviceTable.getRowCount()];
-            for(int i = 0; i < serviceTable.getRowCount(); i++)
+            final Process[] processes = new Process[processTable.getRowCount()];
+            for(int i = 0; i < processTable.getRowCount(); i++)
             {
-               TableRow r = serviceTable.getRow(i);
-               Service service = new Service();
+               TableRow r = processTable.getRow(i);
+               Process process = new Process();
                for(int j = 0; j < indexes.length; j++)
-                  service.data[j] = r.getValue(indexes[j]);
-               services[i] = service;
+                  process.data[j] = r.getValueAsLong(indexes[j]);
+               process.name = r.getValue(indexes[COLUMN_NAME]);
+               process.commandLine = r.getValue(indexes[COLUMN_CMDLINE]);
+               processes[i] = process;
             }
 
             runInUIThread(new Runnable() {
@@ -298,7 +292,7 @@ public class ServicesTab extends ObjectTab
                public void run()
                {
                   if (!viewer.getControl().isDisposed())
-                     viewer.setInput(services);
+                     viewer.setInput(processes);
                }
             });
          }
@@ -306,34 +300,32 @@ public class ServicesTab extends ObjectTab
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get system service information";
+            return "Cannot get process information";
          }
       }.start();
    }
 
    /**
-    * Execute given action on agent for selected service(s)
-    *
-    * @param action action to execute
+    * Terminate selected process(es)
     */
-   private void executeAgentAction(final String action)
+   private void terminateProcess()
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
 
-      final List<String> services = new ArrayList<String>(selection.size());
+      final List<Long> processes = new ArrayList<Long>(selection.size());
       for(Object o : selection.toList())
-         services.add(((Service)o).data[COLUMN_NAME]);
+         processes.add(((Process)o).data[COLUMN_PID]);
 
       final long nodeId = getObject().getObjectId();
       final NXCSession session = ConsoleSharedData.getSession();
-      new ConsoleJob("Execute service control command", getViewPart(), Activator.PLUGIN_ID) {
+      new ConsoleJob("Terminate process", getViewPart(), Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            for(String s : services)
-               session.executeAction(nodeId, action, new String[] { s });
+            for(Long pid : processes)
+               session.executeAction(nodeId, "Process.Terminate", new String[] { Long.toString(pid) });
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -406,34 +398,19 @@ public class ServicesTab extends ObjectTab
    }
 
    /**
-    * Service representation
+    * Process representation
     */
-   private static class Service
+   private static class Process
    {
-      String[] data = new String[9];
-      Long pid = null;
-
-      long getPid()
-      {
-         if (pid != null)
-            return pid;
-
-         try
-         {
-            pid = Long.parseLong(data[COLUMN_PID]);
-         }
-         catch(NumberFormatException e)
-         {
-            pid = 0L;
-         }
-         return pid;
-      }
+      long[] data = new long[10];
+      String name;
+      String commandLine;
    }
 
    /**
-    * Service label provider
+    * Process label provider
     */
-   private static class ServiceLabelProvider extends LabelProvider implements ITableLabelProvider
+   private static class ProcessLabelProvider extends LabelProvider implements ITableLabelProvider
    {
       /**
        * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -450,14 +427,22 @@ public class ServicesTab extends ObjectTab
       @Override
       public String getColumnText(Object element, int columnIndex)
       {
-         return ((Service)element).data[columnIndex];
+         switch(columnIndex)
+         {
+            case COLUMN_CMDLINE:
+               return ((Process)element).commandLine;
+            case COLUMN_NAME:
+               return ((Process)element).name;
+            default:
+               return Long.toString(((Process)element).data[columnIndex]);
+         }
       }
    }
 
    /**
     * Comparator for service list
     */
-   private static class ServiceComparator extends ViewerComparator
+   private static class ProcessComparator extends ViewerComparator
    {
       /**
        * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -467,13 +452,17 @@ public class ServicesTab extends ObjectTab
       {
          final int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
          int result;
-         if (column == COLUMN_PID)
+         switch(column)
          {
-            result = Long.signum(((Service)e1).getPid() - ((Service)e2).getPid());
-         }
-         else
-         {
-            result = ((Service)e1).data[column].compareToIgnoreCase(((Service)e2).data[column]);
+            case COLUMN_CMDLINE:
+               result = ((Process)e1).commandLine.compareToIgnoreCase(((Process)e2).commandLine);
+               break;
+            case COLUMN_NAME:
+               result = ((Process)e1).name.compareToIgnoreCase(((Process)e2).name);
+               break;
+            default:
+               result = Long.signum(((Process)e1).data[column] - ((Process)e2).data[column]);
+               break;
          }
          return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
       }
@@ -482,7 +471,7 @@ public class ServicesTab extends ObjectTab
    /**
     * Filter for service list
     */
-   private class ServiceFilter extends ViewerFilter
+   private class ProcessFilter extends ViewerFilter
    {
       @Override
       public boolean select(Viewer viewer, Object parentElement, Object element)
@@ -490,14 +479,8 @@ public class ServicesTab extends ObjectTab
          if ((filterString == null) || (filterString.isEmpty()))
             return true;
 
-         Service service = (Service)element;
-         for(int i = 0; i < service.data.length; i++)
-         {
-            if (service.data[i].toLowerCase().contains(filterString))
-               return true;
-         }
-
-         return false;
+         Process process = (Process)element;
+         return process.name.toLowerCase().contains(filterString) || process.commandLine.toLowerCase().contains(filterString);
       }
    }
 }

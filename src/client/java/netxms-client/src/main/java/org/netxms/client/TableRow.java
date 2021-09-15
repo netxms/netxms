@@ -65,9 +65,9 @@ public class TableRow
     *
     * @param column Column index
     * @return table Cell at given index
-    * @throws ArrayIndexOutOfBoundsException If the index is out of bounds
+    * @throws IndexOutOfBoundsException If the index is out of bounds
     */
-   public TableCell get(int column) throws ArrayIndexOutOfBoundsException
+   public TableCell get(int column) throws IndexOutOfBoundsException
    {
       return cells.get(column);
    }
@@ -84,7 +84,7 @@ public class TableRow
       {
          return cells.get(column).getValue();
       }
-      catch(ArrayIndexOutOfBoundsException e)
+      catch(IndexOutOfBoundsException e)
       {
          return null;
       }
@@ -103,7 +103,7 @@ public class TableRow
       {
          return cells.get(column).getValueAsLong();
       }
-      catch(ArrayIndexOutOfBoundsException e)
+      catch(IndexOutOfBoundsException e)
       {
          return 0;
       }
@@ -121,7 +121,7 @@ public class TableRow
       {
          return cells.get(column).getValueAsInteger();
       }
-      catch(ArrayIndexOutOfBoundsException e)
+      catch(IndexOutOfBoundsException e)
       {
          return 0;
       }
@@ -140,7 +140,7 @@ public class TableRow
       {
          return cells.get(column).getValueAsDouble();
       }
-      catch(ArrayIndexOutOfBoundsException e)
+      catch(IndexOutOfBoundsException e)
       {
          return 0;
       }
@@ -218,7 +218,7 @@ public class TableRow
       this.baseRow = baseRow;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
