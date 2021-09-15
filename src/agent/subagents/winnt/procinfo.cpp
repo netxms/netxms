@@ -1,6 +1,6 @@
 /* 
 ** Windows NT+ NetXMS subagent
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,45 +21,39 @@
 **
 **/
 
+#define UMDF_USING_NTSTATUS
+#include <ntstatus.h>
+
 #include "winnt_subagent.h"
 #include <winternl.h>
 
 /**
  * Convert process time from FILETIME structure (100-nanosecond units) to __uint64 (milliseconds)
  */
-static unsigned __int64 ConvertProcessTime(FILETIME *lpft)
+static uint64_t ConvertProcessTime(FILETIME *lpft)
 {
-   unsigned __int64 i;
-
-   memcpy(&i, lpft, sizeof(unsigned __int64));
+   uint64_t i;
+   memcpy(&i, lpft, sizeof(uint64_t));
    i /= 10000;      // Convert 100-nanosecond units to milliseconds
    return i;
 }
 
 /**
- * Get specific process attribute
+ * Get process attribute by opening handle to process
  */
-static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type, int count,
-                                            unsigned __int64 lastValue)
+static uint64_t GetProcessAttributeFromHandle(DWORD pid, ProcessAttribute attr)
 {
-   unsigned __int64 value;  
+   HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+   if (hProcess == nullptr)
+      return 0;
+
+   uint64_t value;
    PROCESS_MEMORY_COUNTERS mc;
    IO_COUNTERS ioCounters;
    FILETIME ftCreate, ftExit, ftKernel, ftUser;
-   DWORD handles;
-
-   // Get value for current process instance
-   switch(attr)
+   switch (attr)
    {
-      case PROCINFO_VMSIZE:
-         GetProcessMemoryInfo(hProcess, &mc, sizeof(PROCESS_MEMORY_COUNTERS));
-         value = mc.PagefileUsage;
-         break;
-      case PROCINFO_WKSET:
-         GetProcessMemoryInfo(hProcess, &mc, sizeof(PROCESS_MEMORY_COUNTERS));
-         value = mc.WorkingSetSize;
-         break;
-      case PROCINFO_PF:
+      case PROCINFO_PAGE_FAULTS:
          GetProcessMemoryInfo(hProcess, &mc, sizeof(PROCESS_MEMORY_COUNTERS));
          value = mc.PageFaultCount;
          break;
@@ -100,36 +94,57 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
          GetProcessIoCounters(hProcess, &ioCounters);
          value = ioCounters.OtherOperationCount;
          break;
-      case PROCINFO_HANDLES:
-         if (GetProcessHandleCount(hProcess, &handles))
-            value = handles;
-         else
-            value = 0;
-         break;
-      default:       // Unknown attribute
-         AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("GetProcessAttribute(): Unexpected attribute: 0x%02X"), attr);
+      default:
          value = 0;
+         break;
+   }
+
+   CloseHandle(hProcess);
+   return value;
+}
+
+/**
+ * Get specific process attribute
+ */
+static uint64_t GetProcessAttribute(SYSTEM_PROCESS_INFORMATION *process, ProcessAttribute attr, ProcessInfoAgregationMethod aggregationMethod, int count, uint64_t lastValue)
+{
+   uint64_t value;
+
+   // Get value for current process instance
+   switch(attr)
+   {
+      case PROCINFO_VMSIZE:
+         value = process->VirtualSize;
+         break;
+      case PROCINFO_WKSET:
+         value = process->WorkingSetSize;
+         break;
+      case PROCINFO_HANDLES:
+         value = process->HandleCount;
+         break;
+      case PROCINFO_THREADS:
+         value = process->NumberOfThreads;
+         break;
+      default: // Other attributes require handle to process
+         value = GetProcessAttributeFromHandle(static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), attr);
          break;
    }
 
    // Recalculate final value according to selected type
    if (count == 1)     // First instance
-   {
       return value;
-   }
 
-   switch(type)
+   switch(aggregationMethod)
    {
-      case INFOTYPE_MIN:
+      case ProcessInfoAgregationMethod::MIN:
          return std::min(lastValue, value);
-      case INFOTYPE_MAX:
+      case ProcessInfoAgregationMethod::MAX:
          return std::max(lastValue, value);
-      case INFOTYPE_AVG:
+      case ProcessInfoAgregationMethod::AVG:
          return (lastValue * (count - 1) + value) / count;
-      case INFOTYPE_SUM:
+      case ProcessInfoAgregationMethod::SUM:
          return lastValue + value;
       default:
-         AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("GetProcessAttribute(): Unexpected type: 0x%02X"), type);
          return 0;
    }
 }
@@ -253,56 +268,45 @@ static StringList *GetProcessWindows(DWORD pid)
 /**
  * Match process to search criteria
  */
-static BOOL MatchProcess(DWORD pid, HANDLE hProcess, HMODULE hModule, BOOL bExtMatch,
-								 TCHAR *pszModName, TCHAR *pszCmdLine, TCHAR *pszWindowName)
+static bool MatchProcess(DWORD pid, const WCHAR *imageName, bool extendedMatch, TCHAR *moduleNamePattern, TCHAR *cmdLinePattern, TCHAR *windowNamePattern)
 {
-   TCHAR szBaseName[MAX_PATH];
-	int i;
-	BOOL bRet;
+   if (!extendedMatch)
+      return (imageName != nullptr) ? wcsicmp(imageName, moduleNamePattern) == 0 : false;
 
-   GetModuleBaseName(hProcess, hModule, szBaseName, MAX_PATH);
-	if (bExtMatch)	// Extended version
+	bool procMatch, cmdLineMatch, windowMatch;
+	procMatch = cmdLineMatch = windowMatch = true;
+
+	if (cmdLinePattern[0] != 0)		// not empty, check if match
 	{
-		TCHAR commandLine[8192];
-		BOOL bProcMatch, bCmdMatch, bWindowMatch;
+      TCHAR commandLine[8192];
+      memset(commandLine, 0, sizeof(commandLine));
+      if (GetProcessCommandLine(pid, commandLine, 8192))
+         cmdLineMatch = RegexpMatch(commandLine, cmdLinePattern, false);
+      else
+         cmdLineMatch = false;
+	}
 
-		bProcMatch = bCmdMatch = bWindowMatch = TRUE;
+	if (moduleNamePattern[0] != 0)
+	{
+		procMatch = (imageName != nullptr) ? RegexpMatch(imageName, moduleNamePattern, false) : false;
+	}
 
-		if (pszCmdLine[0] != 0)		// not empty, check if match
+	if (windowNamePattern[0] != 0)
+	{
+      windowMatch = false;
+		StringList *windowList = GetProcessWindows(pid);
+		for(int i = 0; i < windowList->size(); i++)
 		{
-			memset(commandLine, 0, sizeof(commandLine));	
-			GetProcessCommandLine(pid, commandLine, 8192);
-			bCmdMatch = RegexpMatch(commandLine, pszCmdLine, FALSE);
-		}
-
-		if (pszModName[0] != 0)
-		{
-			bProcMatch = RegexpMatch(szBaseName, pszModName, FALSE);
-		}
-
-		if (pszWindowName[0] != 0)
-		{
-			StringList *pWndList;
-
-			pWndList = GetProcessWindows(pid);
-			for(i = 0, bWindowMatch = FALSE; i < pWndList->size(); i++)
+			if (RegexpMatch(windowList->get(i), windowNamePattern, false))
 			{
-				if (RegexpMatch(pWndList->get(i), pszWindowName, FALSE))
-				{
-					bWindowMatch = TRUE;
-					break;
-				}
+				windowMatch = true;
+				break;
 			}
-			delete pWndList;
 		}
+		delete windowList;
+	}
 
-	   bRet = bProcMatch && bCmdMatch && bWindowMatch;
-	}
-	else
-	{
-		bRet = !_tcsicmp(szBaseName, pszModName);
-	}
-	return bRet;
+	return procMatch && cmdLineMatch && windowMatch;
 }
 
 /**
@@ -324,25 +328,27 @@ static BOOL MatchProcess(DWORD pid, HANDLE hProcess, HMODULE hModule, BOOL bExtM
 LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR buffer[256], procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
-   int attr, type, i, procCount, counter;
-   unsigned __int64 attrVal;
-   DWORD *pdwProcList, dwSize;
-   HMODULE *modList;
-   static TCHAR *typeList[]={ _T("min"), _T("max"), _T("avg"), _T("sum"), NULL };
 
    // Get parameter type arguments
    AgentGetParameterArg(cmd, 2, buffer, 255);
+   ProcessInfoAgregationMethod aggregationMethod;
    if (buffer[0] == 0)     // Omited type
    {
-      type = INFOTYPE_SUM;
+      aggregationMethod = ProcessInfoAgregationMethod::SUM;
    }
    else
    {
-      for(type = 0; typeList[type] != NULL; type++)
-         if (!_tcsicmp(typeList[type], buffer))
+      static TCHAR *typeList[] = { _T("min"), _T("max"), _T("avg"), _T("sum"), nullptr };
+      static ProcessInfoAgregationMethod methods[] = { ProcessInfoAgregationMethod::MIN, ProcessInfoAgregationMethod::MAX, ProcessInfoAgregationMethod::AVG, ProcessInfoAgregationMethod::SUM };
+      
+      int i;
+      for(i = 0; typeList[i] != nullptr; i++)
+         if (!_tcsicmp(typeList[i], buffer))
             break;
-      if (typeList[type] == NULL)
-         return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
+      if (typeList[i] == nullptr)
+         return SYSINFO_RC_UNSUPPORTED;     // Unsupported method
+
+      aggregationMethod = methods[i];
    }
 
    // Get process name
@@ -350,45 +356,44 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
 	AgentGetParameterArg(cmd, 3, cmdLine, MAX_PATH - 1);
 	AgentGetParameterArg(cmd, 4, windowTitle, MAX_PATH - 1);
 
-   // Gather information
-   attr = CAST_FROM_POINTER(arg, int);
-   attrVal = 0;
-   pdwProcList = (DWORD *)malloc(MAX_PROCESSES * sizeof(DWORD));
-   modList = (HMODULE *)malloc(MAX_MODULES * sizeof(HMODULE));
-   EnumProcesses(pdwProcList, sizeof(DWORD) * MAX_PROCESSES, &dwSize);
-   procCount = dwSize / sizeof(DWORD);
-   for(i = 0, counter = 0; i < procCount; i++)
+   ULONG allocated = 1024 * 1024;  // 1MB by default
+   void *processInfoBuffer = MemAlloc(allocated);
+   ULONG bytes;
+   NTSTATUS rc = NtQuerySystemInformation(SystemProcessInformation, processInfoBuffer, allocated, &bytes);
+   while (rc == STATUS_INFO_LENGTH_MISMATCH)
    {
-      HANDLE hProcess;
-
-      hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pdwProcList[i]);
-      if (hProcess != NULL)
-      {
-         if (EnumProcessModules(hProcess, modList, sizeof(HMODULE) * MAX_MODULES, &dwSize))
-         {
-            if (dwSize >= sizeof(HMODULE))     // At least one module exist
-            {
-					if (MatchProcess(pdwProcList[i], hProcess, modList[0],
-					                 (cmdLine[0] != 0) || (windowTitle[0] != 0),
-					                 procName, cmdLine, windowTitle))
-					{
-                  counter++;  // Number of processes with specific name
-                  attrVal = GetProcessAttribute(hProcess, attr, type, counter, attrVal);
-					}
-            }
-         }
-         CloseHandle(hProcess);
-      }
+      allocated += 10254 * 1024;
+      processInfoBuffer = MemRealloc(processInfoBuffer, allocated);
+      rc = NtQuerySystemInformation(SystemProcessInformation, processInfoBuffer, allocated, &bytes);
+   }
+   if (rc != STATUS_SUCCESS)
+   {
+      MemFree(processInfoBuffer);
+      return SYSINFO_RC_ERROR;
    }
 
-   // Cleanup
-   free(pdwProcList);
-   free(modList);
+   // Gather information
+   ProcessAttribute attribute = CAST_FROM_POINTER(arg, ProcessAttribute);
+   uint64_t attributeValue = 0;
+   int counter = 0;
+
+   SYSTEM_PROCESS_INFORMATION *process = static_cast<SYSTEM_PROCESS_INFORMATION*>(processInfoBuffer);
+   do
+   {
+      if (MatchProcess(static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), process->ImageName.Buffer, (cmdLine[0] != 0) || (windowTitle[0] != 0), procName, cmdLine, windowTitle))
+      {
+         counter++;  // Number of processes with specific name
+         attributeValue = GetProcessAttribute(process, attribute, aggregationMethod, counter, attributeValue);
+      }
+      process = reinterpret_cast<SYSTEM_PROCESS_INFORMATION*>(reinterpret_cast<char*>(process) + process->NextEntryOffset);
+   } while (process->NextEntryOffset != 0);
+
+   MemFree(processInfoBuffer);
 
    if (counter == 0)    // No processes with given name
       return SYSINFO_RC_ERROR;
 
-   ret_uint64(value, attrVal);
+   ret_uint64(value, attributeValue);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -423,31 +428,35 @@ LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
 			return SYSINFO_RC_UNSUPPORTED;
 	}
 
-   DWORD *procList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
-   DWORD size = 0;
-   EnumProcesses(procList, sizeof(DWORD) * MAX_PROCESSES, &size);
-   int procCount = (int)(size / sizeof(DWORD));
-   int count = 0;
-   for(int i = 0; i < procCount; i++)
+   ULONG allocated = 1024 * 1024;  // 1MB by default
+   void *processInfoBuffer = MemAlloc(allocated);
+   ULONG bytes;
+   NTSTATUS rc = NtQuerySystemInformation(SystemProcessInformation, processInfoBuffer, allocated, &bytes);
+   while (rc == STATUS_INFO_LENGTH_MISMATCH)
    {
-      HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, procList[i]);
-      if (hProcess != NULL)
-      {
-         HMODULE modList[MAX_MODULES];
-         if (EnumProcessModules(hProcess, modList, sizeof(HMODULE) * MAX_MODULES, &size))
-         {
-            if (size >= sizeof(HMODULE))     // At least one module exist
-            {
-					if (MatchProcess(procList[i], hProcess, modList[0], *arg == 'E',
-					                 procName, cmdLine, windowTitle))
-						count++;
-				}
-         }
-         CloseHandle(hProcess);
-      }
+      allocated += 10254 * 1024;
+      processInfoBuffer = MemRealloc(processInfoBuffer, allocated);
+      rc = NtQuerySystemInformation(SystemProcessInformation, processInfoBuffer, allocated, &bytes);
    }
+   if (rc != STATUS_SUCCESS)
+   {
+      MemFree(processInfoBuffer);
+      return SYSINFO_RC_ERROR;
+   }
+
+   int count = 0;
+
+   SYSTEM_PROCESS_INFORMATION *process = static_cast<SYSTEM_PROCESS_INFORMATION*>(processInfoBuffer);
+   do
+   {
+      if (MatchProcess(static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), process->ImageName.Buffer, *arg == 'E', procName, cmdLine, windowTitle))
+         count++;
+
+      process = reinterpret_cast<SYSTEM_PROCESS_INFORMATION*>(reinterpret_cast<char*>(process) + process->NextEntryOffset);
+   } while (process->NextEntryOffset != 0);
+
+   MemFree(processInfoBuffer);
    ret_int(value, count);
-   free(procList);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -456,72 +465,34 @@ LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
  */
 LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   DWORD i, dwSize, dwNumProc, *pdwProcList;
-   LONG iResult = SYSINFO_RC_SUCCESS;
-   TCHAR szBuffer[MAX_PATH + 64];
-   HMODULE phModList[MAX_MODULES];
-   HANDLE hProcess;
-
-   pdwProcList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
-   if (EnumProcesses(pdwProcList, sizeof(DWORD) * MAX_PROCESSES, &dwSize))
+   ULONG allocated = 1024 * 1024;  // 1MB by default
+   void *processInfoBuffer = MemAlloc(allocated);
+   ULONG bytes;
+   NTSTATUS rc = NtQuerySystemInformation(SystemProcessInformation, processInfoBuffer, allocated, &bytes);
+   while (rc == STATUS_INFO_LENGTH_MISMATCH)
    {
-      dwNumProc = dwSize / sizeof(DWORD);
-      for(i = 0; i < dwNumProc; i++)
-      {
-         hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pdwProcList[i]);
-         if (hProcess != NULL)
-         {
-            if (EnumProcessModules(hProcess, phModList, sizeof(HMODULE) * MAX_MODULES, &dwSize))
-            {
-               if (dwSize >= sizeof(HMODULE))     // At least one module exist
-               {
-                  TCHAR szBaseName[MAX_PATH];
-
-                  GetModuleBaseName(hProcess, phModList[0], szBaseName, MAX_PATH);
-                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%u %s"), pdwProcList[i], szBaseName);
-						value->add(szBuffer);
-               }
-               else
-               {
-                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%u <unknown>"), pdwProcList[i]);
-                  value->add(szBuffer);
-               }
-            }
-            else
-            {
-               if (pdwProcList[i] == 4)
-               {
-                  value->add(_T("4 System"));
-               }
-               else
-               {
-                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%u <unknown>"), pdwProcList[i]);
-                  value->add(szBuffer);
-               }
-            }
-            CloseHandle(hProcess);
-         }
-         else
-         {
-            if (pdwProcList[i] == 0)
-            {
-               value->add(_T("0 System Idle Process"));
-            }
-            else
-            {
-               _sntprintf(szBuffer, MAX_PATH + 64, _T("%lu <unaccessible>"), pdwProcList[i]);
-               value->add(szBuffer);
-            }
-         }
-      }
+      allocated += 10254 * 1024;
+      processInfoBuffer = MemRealloc(processInfoBuffer, allocated);
+      rc = NtQuerySystemInformation(SystemProcessInformation, processInfoBuffer, allocated, &bytes);
    }
-   else
+   if (rc != STATUS_SUCCESS)
    {
-      iResult = SYSINFO_RC_ERROR;
+      MemFree(processInfoBuffer);
+      return SYSINFO_RC_ERROR;
    }
 
-   free(pdwProcList);
-   return iResult;
+   WCHAR buffer[MAX_PATH + 64];
+   SYSTEM_PROCESS_INFORMATION *process = static_cast<SYSTEM_PROCESS_INFORMATION*>(processInfoBuffer);
+   do
+   {
+      snwprintf(buffer, MAX_PATH + 64, L"%u %s", static_cast<uint32_t>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), 
+            (process->ImageName.Buffer == nullptr) ? L"System Idle Process" : process->ImageName.Buffer);
+      value->add(buffer);
+      process = reinterpret_cast<SYSTEM_PROCESS_INFORMATION*>(reinterpret_cast<char*>(process) + process->NextEntryOffset);
+   } while (process->NextEntryOffset != 0);
+
+   MemFree(processInfoBuffer);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -529,82 +500,77 @@ LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
  */
 LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *)
 {
-   DWORD i, dwSize, dwNumProc, *pdwProcList;
-   LONG iResult = SYSINFO_RC_SUCCESS;
-   HMODULE phModList[MAX_MODULES];
-   HANDLE hProcess;
+   ULONG allocated = 1024 * 1024;  // 1MB by default
+   void *processInfoBuffer = MemAlloc(allocated);
+   ULONG bytes;
+   NTSTATUS rc = NtQuerySystemInformation(SystemProcessInformation, processInfoBuffer, allocated, &bytes);
+   while (rc == STATUS_INFO_LENGTH_MISMATCH)
+   {
+      allocated += 10254 * 1024;
+      processInfoBuffer = MemRealloc(processInfoBuffer, allocated);
+      rc = NtQuerySystemInformation(SystemProcessInformation, processInfoBuffer, allocated, &bytes);
+   }
+   if (rc != STATUS_SUCCESS)
+   {
+      MemFree(processInfoBuffer);
+      return SYSINFO_RC_ERROR;
+   }
 
    value->addColumn(_T("PID"), DCI_DT_UINT, _T("PID"), true);
-	value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
-	value->addColumn(_T("CMDLINE"), DCI_DT_STRING, _T("Command Line"));
+   value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+   value->addColumn(_T("THREADS"), DCI_DT_UINT, _T("Threads"));
+   value->addColumn(_T("HANDLES"), DCI_DT_UINT, _T("Handles"));
+   value->addColumn(_T("KTIME"), DCI_DT_UINT64, _T("Kernel Time"));
+   value->addColumn(_T("UTIME"), DCI_DT_UINT64, _T("User Time"));
+   value->addColumn(_T("VMSIZE"), DCI_DT_UINT64, _T("VM Size"));
+   value->addColumn(_T("RSS"), DCI_DT_UINT64, _T("RSS"));
+   value->addColumn(_T("PAGE_FAULTS"), DCI_DT_UINT64, _T("Page Faults"));
+   value->addColumn(_T("CMDLINE"), DCI_DT_STRING, _T("Command Line"));
 
-   pdwProcList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
-   if (EnumProcesses(pdwProcList, sizeof(DWORD) * MAX_PROCESSES, &dwSize))
+   SYSTEM_PROCESS_INFORMATION *process = static_cast<SYSTEM_PROCESS_INFORMATION*>(processInfoBuffer);
+   do
    {
-      dwNumProc = dwSize / sizeof(DWORD);
-      for(i = 0; i < dwNumProc; i++)
+      DWORD pid = static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId));
+
+		value->addRow();
+		value->set(0, static_cast<uint32_t>(pid));
+      value->set(1, (process->ImageName.Buffer == nullptr) ? L"System Idle Process" : process->ImageName.Buffer);
+      value->set(2, static_cast<uint32_t>(process->NumberOfThreads));
+      value->set(3, static_cast<uint32_t>(process->HandleCount));
+      value->set(6, static_cast<uint64_t>(process->VirtualSize));
+      value->set(7, static_cast<uint64_t>(process->WorkingSetSize));
+
+      HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+      if (hProcess != nullptr)
       {
-			value->addRow();
-			value->set(0, (UINT32)pdwProcList[i]);    // PID
-
-         // Get process name (executable name)
-         hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pdwProcList[i]);
-         if (hProcess != NULL)
+         FILETIME ftCreate, ftExit, ftKernel, ftUser;
+         if (GetProcessTimes(hProcess, &ftCreate, &ftExit, &ftKernel, &ftUser))
          {
-            if (EnumProcessModules(hProcess, phModList, sizeof(HMODULE) * MAX_MODULES, &dwSize))
-            {
-               if (dwSize >= sizeof(HMODULE))     // At least one module exist
-               {
-                  TCHAR szBaseName[MAX_PATH];
-
-                  GetModuleBaseName(hProcess, phModList[0], szBaseName, MAX_PATH);
-						value->set(1, szBaseName);
-               }
-               else
-               {
-						value->set(1, _T("<unknown>"));
-               }
-            }
-            else
-            {
-               if (pdwProcList[i] == 4)
-               {
-						value->set(1, _T("System"));
-               }
-               else
-               {
-						value->set(1, _T("<unknown>"));
-               }
-            }
-            CloseHandle(hProcess);
-         }
-         else
-         {
-            if (pdwProcList[i] == 0)
-            {
-					value->set(1, _T("System Idle Process"));
-            }
-            else
-            {
-					value->set(1, _T("<unaccessible>"));
-            }
+            value->set(4, ConvertProcessTime(&ftKernel));
+            value->set(5, ConvertProcessTime(&ftUser));
          }
 
-         // Get command line
-         TCHAR cmdLine[1024];
-         if (GetProcessCommandLine(pdwProcList[i], cmdLine, 1024))
+         PROCESS_MEMORY_COUNTERS mc;
+         if (GetProcessMemoryInfo(hProcess, &mc, sizeof(PROCESS_MEMORY_COUNTERS)))
          {
-            value->set(2, cmdLine);
+            value->set(8, static_cast<uint32_t>(mc.PageFaultCount));
          }
+
+         CloseHandle(hProcess);
       }
-   }
-   else
-   {
-      iResult = SYSINFO_RC_ERROR;
-   }
 
-   free(pdwProcList);
-   return iResult;
+      // Get command line
+      TCHAR cmdLine[4096];
+      if (GetProcessCommandLine(pid, cmdLine, 4096))
+      {
+         value->set(9, cmdLine);
+      }
+
+      process = reinterpret_cast<SYSTEM_PROCESS_INFORMATION*>(reinterpret_cast<char*>(process) + process->NextEntryOffset);
+   } while (process->NextEntryOffset != 0);
+
+   MemFree(processInfoBuffer);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**

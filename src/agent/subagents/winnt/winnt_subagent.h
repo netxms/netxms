@@ -1,6 +1,6 @@
 /*
 ** Windows XP/2003/Vista/2008/7/8 NetXMS subagent
-** Copyright (C) 2003-2019 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -59,9 +59,11 @@ enum IOInfoType
 /**
  * Attributes for H_ProcInfo
  */
-enum ProcessInfoType
+enum ProcessAttribute
 {
+   PROCINFO_CPUTIME,
    PROCINFO_GDI_OBJ,
+   PROCINFO_HANDLES,
    PROCINFO_IO_OTHER_B,
    PROCINFO_IO_OTHER_OP,
    PROCINFO_IO_READ_B,
@@ -69,19 +71,24 @@ enum ProcessInfoType
    PROCINFO_IO_WRITE_B,
    PROCINFO_IO_WRITE_OP,
    PROCINFO_KTIME,
-   PROCINFO_PF,
+   PROCINFO_PAGE_FAULTS,
+   PROCINFO_THREADS,
    PROCINFO_USER_OBJ,
    PROCINFO_UTIME,
    PROCINFO_VMSIZE,
-   PROCINFO_WKSET,
-   PROCINFO_CPUTIME,
-   PROCINFO_HANDLES
+   PROCINFO_WKSET
 };
 
-#define INFOTYPE_MIN             0
-#define INFOTYPE_MAX             1
-#define INFOTYPE_AVG             2
-#define INFOTYPE_SUM             3
+/**
+ * Process information aggregation method
+ */
+enum class ProcessInfoAgregationMethod
+{
+   MIN = 0,
+   MAX = 1,
+   AVG = 2,
+   SUM = 3
+};
 
 /**
  * Attributes for H_NetIPStats and H_NetInterfacStats
