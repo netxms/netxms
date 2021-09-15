@@ -322,7 +322,7 @@ public class ServicesTab extends ObjectTab
       if (selection.isEmpty())
          return;
 
-      final List<String> services = new ArrayList<String>();
+      final List<String> services = new ArrayList<String>(selection.size());
       for(Object o : selection.toList())
          services.add(((Service)o).data[COLUMN_NAME]);
 

@@ -30,6 +30,7 @@ import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.commands.IElementUpdater;
 import org.eclipse.ui.menus.UIElement;
 import org.netxms.ui.eclipse.objectview.objecttabs.NodeComponentViewerTab;
+import org.netxms.ui.eclipse.objectview.objecttabs.ProcessesTab;
 import org.netxms.ui.eclipse.objectview.objecttabs.ServicesTab;
 
 /**
@@ -47,7 +48,7 @@ public class ToggleFilterHandler extends AbstractHandler implements IElementUpda
       if (object instanceof IEvaluationContext)
       {
          Object tab = ((IEvaluationContext)object).getVariable("org.netxms.ui.eclipse.objectview.ActiveTab"); //$NON-NLS-1$
-         if ((tab != null) && ((tab instanceof NodeComponentViewerTab) || (tab instanceof ServicesTab)))
+         if ((tab != null) && ((tab instanceof NodeComponentViewerTab) || (tab instanceof ServicesTab) || (tab instanceof ProcessesTab)))
          {
             ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
             Command command = service.getCommand("org.netxms.ui.eclipse.objectview.commands.show_filter"); //$NON-NLS-1$
@@ -56,6 +57,8 @@ public class ToggleFilterHandler extends AbstractHandler implements IElementUpda
             state.setValue(isChecked);
             if (tab instanceof ServicesTab)
                ((ServicesTab)tab).enableFilter(isChecked);
+            else if (tab instanceof ProcessesTab)
+               ((ProcessesTab)tab).enableFilter(isChecked);
             else
                ((NodeComponentViewerTab)tab).enableFilter(isChecked);
             service.refreshElements(event.getCommand().getId(), null);
