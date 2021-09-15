@@ -231,6 +231,14 @@
             name="Services"
             order="45">
       </tab>
+      <tab
+            class="org.netxms.ui.eclipse.objectview.objecttabs.ProcessesTab"
+            contextId="org.netxms.ui.eclipse.objectview.context.ProcessesTab"
+            icon="icons/processes.png"
+            id="org.netxms.ui.eclipse.objectview.objecttabs.ProcessesTab"
+            name="Processes"
+            order="48">
+      </tab>
    </extension>
    <extension
          point="org.eclipse.ui.popupMenus">
@@ -332,6 +340,12 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F2">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objectview.commands.show_filter"
+            contextId="org.netxms.ui.eclipse.objectview.context.ProcessesTab"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
@@ -365,6 +379,11 @@
             name="Services Tab"
             parentId="org.eclipse.ui.contexts.window">
       </context>
+      <context
+            id="org.netxms.ui.eclipse.objectview.context.ProcessesTab"
+            name="Processes Tab"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -392,6 +411,9 @@
                      </instanceof>
                      <instanceof
                            value="org.netxms.ui.eclipse.objectview.objecttabs.ServicesTab">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.ui.eclipse.objectview.objecttabs.ProcessesTab">
                      </instanceof>
                   </or>
                </with>
