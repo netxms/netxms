@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 public class ObjectStatusWidget extends Canvas implements PaintListener
 {
 	private AbstractObject object;
-	
+
 	/**
 	 * @param parent
 	 */
@@ -50,9 +50,9 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
       setToolTipText(getObjectDisplayName());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
-	 */
+   /**
+    * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
+    */
 	@Override
 	public void paintControl(PaintEvent e)
 	{
@@ -91,7 +91,7 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
     */
    private String getObjectDisplayName()
    {
-      return object.isInMaintenanceMode() ? (object.getObjectName() + " [Maintenance]") : object.getObjectName();
+      return object.isInMaintenanceMode() ? (object.getNameWithAlias() + " [Maintenance]") : object.getNameWithAlias();
    }
 
    /**
