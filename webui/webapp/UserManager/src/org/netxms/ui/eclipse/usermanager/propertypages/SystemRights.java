@@ -112,6 +112,7 @@ public class SystemRights extends PropertyPage
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_OBJECT_CATEGORIES, "Manage object categories"));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_GEO_AREAS, "Manage geographical areas"));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_SSH_KEY_CONFIGURATION, "Manage SSH keys"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES, "Manage object queries"));
 
       Composite dialogArea = new Composite(parent, SWT.BORDER);
       dialogArea.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
