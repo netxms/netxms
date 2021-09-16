@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
 	private ObjectStatusRadialWidget widget;
 	private AbstractObject tooltipObject = null;
    private ObjectPopupDialog tooltipDialog = null;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -68,7 +68,7 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
       return acceptedlist.values();
    }
 	
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -160,7 +160,7 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
       return widget;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#refresh()
     */
    @Override
@@ -176,7 +176,7 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
 		   l.run();
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
@@ -186,7 +186,7 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
          refreshTimer.execute();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#onObjectDelete(long)
     */
    @Override

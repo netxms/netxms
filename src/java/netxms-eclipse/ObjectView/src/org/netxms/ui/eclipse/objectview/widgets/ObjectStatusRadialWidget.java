@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,9 +76,9 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
    private static final int SHIFT = 3;
    private boolean fitToScreen = true;
    private boolean needRender = false;
-	
+
 	private List<ObjectPosition> objectMap = new ArrayList<ObjectPosition>();
-	
+
 	/**
 	 * @param parent
 	 * @param aceptedlist 
@@ -202,16 +202,16 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
          }
         
          objectMap.add(new ObjectPosition(degree, degree + currObjsize, lvl, obj));
-	      
+
 	      Transform oldTransform = new Transform(gc.getDevice());  
 	      gc.getTransform(oldTransform);
-	      
+
          //draw text         
-         String text = obj.getObjectName();
-               
+         String text = obj.getNameWithAlias();
+
          Transform tr = new Transform(getDisplay());
          tr.translate(centerX, centerY);
-         
+
          //text centering
          float rotate = 0;
          float middle = degree + currObjsize / 2;
@@ -226,7 +226,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
 
          tr.rotate(rotate);
          gc.setTransform(tr);
-         
+
          // cut text function
          gc.setFont(valueFonts[fontSize.get(lvl-1)]);
          int l = gc.textExtent(text, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).x;
@@ -372,7 +372,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
     */
    private void calculateOptimalDiameter(AbstractObject obj, int lvl, int objCount, GC gc)
    {
-      String text = obj.getObjectName();
+      String text = obj.getNameWithAlias();
       int sectorHeight = (int)((Math.tan(Math.toRadians(leafObjectSize*objCount/2)))*((diameter * lvl) / 2)*2)-PADDING_VERTICAL*2;
       if(sectorHeight <= 0)
          sectorHeight = 1286;
@@ -435,7 +435,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
     */
    private Integer calculateOptimalFontsie(AbstractObject obj, int lvl, int objCount, GC gc)
    {
-      String text = obj.getObjectName();
+      String text = obj.getNameWithAlias();
       int sectorHeight = (int)((Math.tan(Math.toRadians(leafObjectSize * objCount / 2))) * ((diameter * lvl) / 2) * 2) - PADDING_VERTICAL * 2;
       if (sectorHeight < 0)
          sectorHeight = 1286;
@@ -470,7 +470,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
       if(!fitToScreen)
          calculateLayerSize(rootObject, 1, gc);   
    }
-	
+
 	/**
 	 * Draw radial map
 	 * 
@@ -507,7 +507,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
       fontSize = new ArrayList<Integer>(Collections.nCopies(maxLvl + 1, Integer.valueOf(100)));
       //font calculation for general container      
       final int squareSide = (int)(diameter / Math.sqrt(2));
-      fontSize.set(0, Integer.valueOf(WidgetHelper.getBestFittingFontMultiline(gc, valueFonts, rootObject.getObjectName(), squareSide, squareSide, 3)));
+      fontSize.set(0, Integer.valueOf(WidgetHelper.getBestFittingFontMultiline(gc, valueFonts, rootObject.getNameWithAlias(), squareSide, squareSide, 3)));
       //font calculation for sectors
       calculateLayerFontSize(rootObject, 1, gc);
       Integer prevLVL = 100;
@@ -535,8 +535,8 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
       gc.fillOval(centerX-diameter/2, centerY-diameter/2, diameter, diameter);
 
 		String text = (rootObject instanceof AbstractNode) ?
-		      (rootObject.getObjectName() + "\n" + ((AbstractNode)rootObject).getPrimaryIP().getHostAddress()) : //$NON-NLS-1$
-		      rootObject.getObjectName();
+            (rootObject.getNameWithAlias() + "\n" + ((AbstractNode)rootObject).getPrimaryIP().getHostAddress()) : //$NON-NLS-1$
+            rootObject.getNameWithAlias();
 
 	   gc.setFont(valueFonts[fontSize.get(0)]);
 
@@ -705,14 +705,14 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
       
       public ObjectData(AbstractObject object)
       {
-         name = object.getObjectName();
+         name = object.getNameWithAlias();
          status = object.getStatus();
          children = AbstractObjectStatusMap.isContainerObject(object) ? object.getChildIdList() : null;
       }
       
       public boolean isChanged(AbstractObject object)
       {
-         return (status != object.getStatus()) || !name.equals(object.getObjectName()) ||
+         return (status != object.getStatus()) || !name.equals(object.getNameWithAlias()) ||
                (AbstractObjectStatusMap.isContainerObject(object) && !Arrays.equals(children, object.getChildIdList()));
       }
    }

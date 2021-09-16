@@ -141,7 +141,7 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 			@Override
 			public int compare(AbstractObject o1, AbstractObject o2)
 			{
-				return o1.getObjectName().compareToIgnoreCase(o2.getObjectName());
+            return o1.getNameWithAlias().compareToIgnoreCase(o2.getNameWithAlias());
 			}
 		});
 
@@ -185,7 +185,7 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 			@Override
 			public int compare(AbstractObject o1, AbstractObject o2)
 			{
-				return o1.getObjectName().compareToIgnoreCase(o2.getObjectName());
+            return o1.getNameWithAlias().compareToIgnoreCase(o2.getNameWithAlias());
 			}
 		});
 		
@@ -218,7 +218,7 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 				final Label title = new Label(section, SWT.NONE);
 				title.setBackground(getBackground());
 				title.setFont(titleFont);
-				title.setText(namePrefix + root.getObjectName());
+            title.setText(namePrefix + root.getNameWithAlias());
 
 				clientArea = new Composite(section, SWT.NONE);
 				clientArea.setBackground(getBackground());
@@ -248,7 +248,7 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 			if (!(o instanceof Container) && !(o instanceof ServiceRoot) && !(o instanceof Cluster))
 				continue;
 			
-			buildSection(o.getObjectId(), namePrefix + root.getObjectName() + " / "); //$NON-NLS-1$
+         buildSection(o.getObjectId(), namePrefix + root.getNameWithAlias() + " / "); //$NON-NLS-1$
 		}
 	}
 	
