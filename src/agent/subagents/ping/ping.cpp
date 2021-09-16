@@ -106,7 +106,7 @@ retry:
          }
          count++;
       }
-      else
+      else if (target->rttHistory[i] == 10000)
       {
          lost++;
       }
@@ -116,13 +116,16 @@ retry:
    target->maxRTT = localMax;
    target->packetLoss = lost * 100 / s_pollsPerMinute;
 
-   if (target->cumulativeMinRTT > localMin)
+   if (target->lastRTT != 10000)
    {
-      target->cumulativeMinRTT = localMin;
-   }
-   if (target->cumulativeMaxRTT < localMax)
-   {
-      target->cumulativeMaxRTT = localMax;
+      if (target->cumulativeMinRTT > target->lastRTT)
+      {
+         target->cumulativeMinRTT = target->lastRTT;
+      }
+      if (target->cumulativeMaxRTT < target->lastRTT)
+      {
+         target->cumulativeMaxRTT = target->lastRTT;
+      }
    }
 
    if (count > 0)
@@ -303,6 +306,8 @@ static LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
          t->movingAverageJitter = 0xFFFFFFFF;
          t->automatic = true;
          t->lastDataRead = time(nullptr);
+         for(int i = 0; i < s_pollsPerMinute; i++)
+            t->rttHistory[i] = 10001;  // Indicate unused slot
 
          s_targetLock.lock();
          s_targets.add(t);
@@ -395,6 +400,7 @@ static LONG H_TargetTable(const TCHAR *pszParam, const TCHAR *pArg, Table *value
     value->addColumn(_T("MIN_RTT"), DCI_DT_UINT, _T("Minimum response time"));
     value->addColumn(_T("MAX_RTT"), DCI_DT_UINT, _T("Maximum response time"));
     value->addColumn(_T("MOVING_AVERAGE_RTT"), DCI_DT_UINT, _T("Moving average of response time"));
+    value->addColumn(_T("STD_DEV"), DCI_DT_UINT, _T("Standard deviation of response time"));
     value->addColumn(_T("JITTER"), DCI_DT_UINT, _T("Jitter"));
     value->addColumn(_T("MOVING_AVERAGE_JITTER"), DCI_DT_UINT, _T("Moving average of jitter"));
     value->addColumn(_T("CMIN_RTT"), DCI_DT_UINT, _T("Cumulative minimum response time"));
@@ -416,15 +422,16 @@ static LONG H_TargetTable(const TCHAR *pszParam, const TCHAR *pArg, Table *value
         value->set(3, t->minRTT);
         value->set(4, t->maxRTT);
         value->set(5, (t->movingAverageRTT == 0xFFFFFFFF) ? 0 : static_cast<uint32_t>(round(GetExpMovingAverageValue(t->movingAverageRTT))));
-        value->set(6, t->averageJitter);
-        value->set(7, (t->movingAverageJitter == 0xFFFFFFFF) ? 0 : static_cast<uint32_t>(round(GetExpMovingAverageValue(t->movingAverageJitter))));
-        value->set(8, t->cumulativeMinRTT);
-        value->set(9, t->cumulativeMaxRTT);
-        value->set(10, t->packetLoss);
-        value->set(11, t->packetSize);
-        value->set(12, t->name);
-        value->set(13, t->dnsName);
-        value->set(14, t->automatic);
+        value->set(6, t->stdDevRTT);
+        value->set(7, t->averageJitter);
+        value->set(8, (t->movingAverageJitter == 0xFFFFFFFF) ? 0 : static_cast<uint32_t>(round(GetExpMovingAverageValue(t->movingAverageJitter))));
+        value->set(9, t->cumulativeMinRTT);
+        value->set(10, t->cumulativeMaxRTT);
+        value->set(11, t->packetLoss);
+        value->set(12, t->packetSize);
+        value->set(13, t->name);
+        value->set(14, t->dnsName);
+        value->set(15, t->automatic);
     }
     s_targetLock.unlock();
     return SYSINFO_RC_SUCCESS;
@@ -552,6 +559,8 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 		t->movingAverageRTT = 0xFFFFFFFF;
       t->movingAverageExp = EMA_EXP(60 / s_pollsPerMinute, s_movingAverageTimePeriod);
       t->movingAverageJitter = 0xFFFFFFFF;
+      for(int i = 0; i < s_pollsPerMinute; i++)
+         t->rttHistory[i] = 10001;  // Indicate unused slot
       s_targets.add(t);
 		bResult = TRUE;
 	}
