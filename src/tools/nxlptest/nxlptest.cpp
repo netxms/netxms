@@ -64,6 +64,17 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 }
 
 /**
+ * Parser callback
+ */
+static void ParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
+         const TCHAR *text, const TCHAR *source, UINT32 eventId, UINT32 severity, const StringList *cgs,
+         const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount,
+         time_t timestamp, void *context)
+{
+   nxlog_debug_tag(_T("parser"), 3, _T("Parser match (eventCode=%u eventName=%s eventTag=%s) \"%s\""), eventCode, eventName, eventTag);
+}
+
+/**
  * File parsing thread
  */
 static void ParserThread(LogParser *parser, off_t startOffset)
@@ -103,7 +114,7 @@ int main(int argc, char *argv[])
 		switch(ch)
 		{
          case 'D':
-            nxlog_set_debug_level(strtol(optarg, NULL, 0));
+            nxlog_set_debug_level(strtol(optarg, nullptr, 0));
             break;
 			case 'h':
 				_tprintf(_T("%s"), m_helpText);
@@ -161,6 +172,7 @@ int main(int argc, char *argv[])
             delete parsers->get(i);
 			if (traceLevel != -1)
 				parser->setTraceLevel(traceLevel);
+			parser->setCallback(ParserCallback);
 			if (inputFile != nullptr)
 				parser->setFileName(inputFile);
 #ifdef _WIN32
