@@ -252,25 +252,25 @@ const TCHAR *LogParser::checkContext(LogParserRule *rule)
 
 	if (rule->getContext() == nullptr)
 	{
-		trace(5, _T("  rule has no context"));
+		trace(7, _T("  rule has no context"));
 		return s_states[CONTEXT_SET_MANUAL];
 	}
 
 	state = m_contexts.get(rule->getContext());
 	if (state == nullptr)
 	{
-		trace(5, _T("  context '%s' inactive, rule should be skipped"), rule->getContext());
+		trace(7, _T("  context '%s' inactive, rule should be skipped"), rule->getContext());
 		return nullptr;	// Context inactive, don't use this rule
 	}
 
 	if (!_tcscmp(state, s_states[CONTEXT_CLEAR]))
 	{
-		trace(5, _T("  context '%s' inactive, rule should be skipped"), rule->getContext());
+		trace(7, _T("  context '%s' inactive, rule should be skipped"), rule->getContext());
 		return nullptr;
 	}
 	else
 	{
-		trace(5, _T("  context '%s' active (mode=%s)"), rule->getContext(), state);
+		trace(7, _T("  context '%s' active (mode=%s)"), rule->getContext(), state);
 		return state;
 	}
 }
@@ -286,16 +286,16 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, uint32_t
 	bool matched = false;
 
 	if (hasAttributes)
-		trace(5, _T("Match event: source=\"%s\" id=%u level=%d text=\"%s\" recordId=") UINT64_FMT, source, eventId, level, line, recordId);
+		trace(6, _T("Match event: source=\"%s\" id=%u level=%d text=\"%s\" recordId=") UINT64_FMT, source, eventId, level, line, recordId);
 	else
-		trace(5, _T("Match line: \"%s\""), line);
+		trace(6, _T("Match line: \"%s\""), line);
 
 	m_recordsProcessed++;
 	int i;
 	for(i = 0; i < m_rules.size(); i++)
 	{
 	   LogParserRule *rule = m_rules.get(i);
-		trace(6, _T("checking rule %d \"%s\""), i + 1, rule->getDescription());
+		trace(7, _T("checking rule %d \"%s\""), i + 1, rule->getDescription());
 		if ((state = checkContext(rule)) != nullptr)
 		{
 			bool ruleMatched = hasAttributes ?
@@ -334,10 +334,10 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, uint32_t
 		}
 	}
 	if (i < m_rules.size())
-		trace(5, _T("processing stopped at rule %d \"%s\"; result = %s"), i + 1,
+		trace(6, _T("processing stopped at rule %d \"%s\"; result = %s"), i + 1,
 				m_rules.get(i)->getDescription(), matched ? _T("true") : _T("false"));
 	else
-		trace(5, _T("Processing stopped at end of rules list; result = %s"), matched ? _T("true") : _T("false"));
+		trace(6, _T("Processing stopped at end of rules list; result = %s"), matched ? _T("true") : _T("false"));
 
    if (m_cbCopy != nullptr)
    {

@@ -162,49 +162,49 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
    {
 	   if (m_source != nullptr)
 	   {
-		   m_parser->trace(6, _T("  matching source \"%s\" against pattern \"%s\""), source, m_source);
+		   m_parser->trace(7, _T("  matching source \"%s\" against pattern \"%s\""), source, m_source);
 		   if (!MatchString(m_source, source, false))
 		   {
-			   m_parser->trace(6, _T("  source: no match"));
+			   m_parser->trace(7, _T("  source: no match"));
 			   return false;
 		   }
 	   }
 
       if (m_logName != nullptr)
       {
-         m_parser->trace(6, _T("  matching file name \"%s\" against pattern \"%s\""), logName, m_logName);
+         m_parser->trace(7, _T("  matching file name \"%s\" against pattern \"%s\""), logName, m_logName);
          if (!MatchString(m_logName, logName, false))
          {
-            m_parser->trace(6, _T("  file name: no match"));
+            m_parser->trace(7, _T("  file name: no match"));
             return false;
          }
       }
 
 	   if ((eventId < m_idStart) || (eventId > m_idEnd))
 	   {
-		   m_parser->trace(6, _T("  event id 0x%08x not in range 0x%08x - 0x%08x"), eventId, m_idStart, m_idEnd);
+		   m_parser->trace(7, _T("  event id 0x%08x not in range 0x%08x - 0x%08x"), eventId, m_idStart, m_idEnd);
 		   return false;
 	   }
 
 	   if (!(m_level & level))
 	   {
-		   m_parser->trace(6, _T("  severity level 0x%04x not match mask 0x%04x"), level, m_level);
+		   m_parser->trace(7, _T("  severity level 0x%04x not match mask 0x%04x"), level, m_level);
 		   return false;
 	   }
    }
 
 	if (!isValid())
 	{
-		m_parser->trace(6, _T("  regexp is invalid: %s"), m_regexp);
+		m_parser->trace(7, _T("  regexp is invalid: %s"), m_regexp);
 		return false;
 	}
 
 	if (m_isInverted)
 	{
-		m_parser->trace(6, _T("  negated matching against regexp %s"), m_regexp);
+		m_parser->trace(7, _T("  negated matching against regexp %s"), m_regexp);
 		if ((_pcre_exec_t(m_preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3) < 0) && matchRepeatCount())
 		{
-			m_parser->trace(6, _T("  matched"));
+			m_parser->trace(7, _T("  matched"));
 			if ((cb != nullptr) && ((m_eventCode != 0) || (m_eventName != nullptr)))
 			{
             StringList captureGroups;
@@ -219,12 +219,12 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	}
 	else
 	{
-		m_parser->trace(6, _T("  matching against regexp %s"), m_regexp);
+		m_parser->trace(7, _T("  matching against regexp %s"), m_regexp);
 		int cgcount = _pcre_exec_t(m_preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3);
       m_parser->trace(7, _T("  pcre_exec returns %d"), cgcount);
 		if ((cgcount >= 0) && matchRepeatCount())
 		{
-			m_parser->trace(6, _T("  matched"));
+			m_parser->trace(7, _T("  matched"));
 			if ((cb != nullptr) && ((m_eventCode != 0) || (m_eventName != nullptr)))
 			{
 			   if (cgcount == 0)
@@ -253,7 +253,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 		}
 	}
 
-	m_parser->trace(6, _T("  no match"));
+	m_parser->trace(7, _T("  no match"));
 	return false;	// no match
 }
 
