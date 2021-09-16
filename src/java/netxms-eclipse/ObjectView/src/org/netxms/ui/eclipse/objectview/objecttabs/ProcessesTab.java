@@ -56,7 +56,9 @@ import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -76,7 +78,7 @@ public class ProcessesTab extends ObjectTab
    public static final int COLUMN_UTIME = 8;
    public static final int COLUMN_CMDLINE = 9;
 
-   private Composite viewerContainer;
+   private CompositeWithMessageBar viewerContainer;
    private FilterText filterText;
    private SortableTableViewer viewer;
    private Action actionTerminate;
@@ -101,11 +103,18 @@ public class ProcessesTab extends ObjectTab
       final IDialogSettings settings = Activator.getDefault().getDialogSettings();
       showFilter = getBooleanFromSettings(settings, "ProcessesTab.showFilter", true);
 
-      viewerContainer = new Composite(parent, SWT.NONE);
-      viewerContainer.setLayout(new FormLayout());
+      viewerContainer = new CompositeWithMessageBar(parent, SWT.NONE) {
+         @Override
+         protected Composite createContent(Composite parent)
+         {
+            Composite content = super.createContent(parent);
+            content.setLayout(new FormLayout());
+            return content;
+         }
+      };
 
       // Create filter area
-      filterText = new FilterText(viewerContainer, SWT.NONE, null, true);
+      filterText = new FilterText(viewerContainer.getContent(), SWT.NONE, null, true);
       filterText.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -128,7 +137,7 @@ public class ProcessesTab extends ObjectTab
 
       final String[] names = { "PID", "Name", "Threads", "Handles", "VM Size", "RSS", "Page faults", "System time", "User time", "Command line" };
       final int[] widths = { 90, 200, 90, 90, 90, 90, 90, 90, 90, 500 };
-      viewer = new SortableTableViewer(viewerContainer, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer = new SortableTableViewer(viewerContainer.getContent(), names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ProcessLabelProvider());
       viewer.setComparator(new ProcessComparator());
@@ -243,7 +252,7 @@ public class ProcessesTab extends ObjectTab
    @Override
    public void objectChanged(AbstractObject object)
    {
-      if (isVisible())
+      if (isActive())
          refresh();
       else
          viewer.setInput(new Object[0]);
@@ -257,7 +266,7 @@ public class ProcessesTab extends ObjectTab
    {
       final long nodeId = getObject().getObjectId();
       final NXCSession session = ConsoleSharedData.getSession();
-      new ConsoleJob("Get system services", getViewPart(), Activator.PLUGIN_ID) {
+      new ConsoleJob("Get process list", getViewPart(), Activator.PLUGIN_ID, viewerContainer) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -298,9 +307,21 @@ public class ProcessesTab extends ObjectTab
          }
 
          @Override
+         protected void jobFailureHandler()
+         {
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.setInput(new Object[0]);
+               }
+            });
+         }
+
+         @Override
          protected String getErrorMessage()
          {
-            return "Cannot get process information";
+            return "Cannot get process list";
          }
       }.start();
    }
@@ -312,6 +333,9 @@ public class ProcessesTab extends ObjectTab
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
+         return;
+
+      if (!MessageDialogHelper.openQuestion(getViewPart().getSite().getShell(), "Terminate Process", "Selected processes will be terminated. Are you sure?"))
          return;
 
       final List<Long> processes = new ArrayList<Long>(selection.size());
