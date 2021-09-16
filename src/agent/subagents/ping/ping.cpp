@@ -86,16 +86,12 @@ retry:
 
    target->rttHistory[target->bufPos] = target->lastRTT;
 
-   uint32_t sum = 0, count = 0, lost = 0, stdDev = 0, localMin = 0x7FFFFFFF, localMax = 0;
+   uint32_t sum = 0, count = 0, lost = 0, localMin = 0x7FFFFFFF, localMax = 0;
    for(uint32_t i = 0; i < s_pollsPerMinute; i++)
    {
       if (target->rttHistory[i] < 10000)
       {
          sum += target->rttHistory[i];
-         if (target->rttHistory[i] > 0)
-         {
-            stdDev += (target->averageRTT - target->rttHistory[i]) * (target->averageRTT - target->rttHistory[i]);
-         }
          if (target->rttHistory[i] < localMin)
          {
             localMin = target->rttHistory[i];
@@ -128,8 +124,17 @@ retry:
       }
    }
 
-   if (count > 0)
+   if (count > 1)
    {
+      uint32_t stdDev = 0;
+      for(uint32_t i = 0; i < s_pollsPerMinute; i++)
+      {
+         if ((target->rttHistory[i] > 0) && (target->rttHistory[i] < 10000))
+         {
+            uint32_t delta = target->averageRTT - target->rttHistory[i];
+            stdDev += delta * delta;
+         }
+      }
       target->stdDevRTT = static_cast<uint32_t>(sqrt((double)stdDev / (double)count));
    }
    else
