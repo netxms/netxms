@@ -32,7 +32,7 @@
 /**
  * Constants
  */
-#define READ_BUFFER_SIZE      4096
+#define READ_BUFFER_SIZE      8192
 
 /**
  * File encoding names
