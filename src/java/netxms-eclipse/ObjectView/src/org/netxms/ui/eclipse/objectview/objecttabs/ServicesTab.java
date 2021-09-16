@@ -57,6 +57,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -75,7 +76,7 @@ public class ServicesTab extends ObjectTab
    public static final int COLUMN_CMDLINE = 7;
    public static final int COLUMN_DEPENDENCIES = 8;
 
-   private Composite viewerContainer;
+   private CompositeWithMessageBar viewerContainer;
    private FilterText filterText;
    private SortableTableViewer viewer;
    private Action actionStart;
@@ -101,11 +102,18 @@ public class ServicesTab extends ObjectTab
       final IDialogSettings settings = Activator.getDefault().getDialogSettings();
       showFilter = getBooleanFromSettings(settings, "ServicesTab.showFilter", true);
 
-      viewerContainer = new Composite(parent, SWT.NONE);
-      viewerContainer.setLayout(new FormLayout());
+      viewerContainer = new CompositeWithMessageBar(parent, SWT.NONE) {
+         @Override
+         protected Composite createContent(Composite parent)
+         {
+            Composite content = super.createContent(parent);
+            content.setLayout(new FormLayout());
+            return content;
+         }
+      };
 
       // Create filter area
-      filterText = new FilterText(viewerContainer, SWT.NONE, null, true);
+      filterText = new FilterText(viewerContainer.getContent(), SWT.NONE, null, true);
       filterText.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -128,7 +136,7 @@ public class ServicesTab extends ObjectTab
 
       final String[] names = { "Name", "Display name", "State", "PID", "Type", "Startup", "Run as", "Command line", "Dependencies" };
       final int[] widths = { 180, 280, 90, 80, 100, 150, 300, 500, 200 };
-      viewer = new SortableTableViewer(viewerContainer, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer = new SortableTableViewer(viewerContainer.getContent(), names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ServiceLabelProvider());
       viewer.setComparator(new ServiceComparator());
@@ -252,7 +260,7 @@ public class ServicesTab extends ObjectTab
    @Override
    public void objectChanged(AbstractObject object)
    {
-      if (isVisible())
+      if (isActive())
          refresh();
       else
          viewer.setInput(new Object[0]);
@@ -266,7 +274,7 @@ public class ServicesTab extends ObjectTab
    {
       final long nodeId = getObject().getObjectId();
       final NXCSession session = ConsoleSharedData.getSession();
-      new ConsoleJob("Get system services", getViewPart(), Activator.PLUGIN_ID) {
+      new ConsoleJob("Get service list", getViewPart(), Activator.PLUGIN_ID, viewerContainer) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -304,9 +312,21 @@ public class ServicesTab extends ObjectTab
          }
 
          @Override
+         protected void jobFailureHandler()
+         {
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.setInput(new Object[0]);
+               }
+            });
+         }
+
+         @Override
          protected String getErrorMessage()
          {
-            return "Cannot get system service information";
+            return "Cannot get service list";
          }
       }.start();
    }
