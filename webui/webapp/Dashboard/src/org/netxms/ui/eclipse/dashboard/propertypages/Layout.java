@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,13 +24,11 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
-import org.netxms.ui.eclipse.tools.WidgetFactory;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 
 /**
  * "Layout" page for dashboard element
@@ -38,15 +36,15 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class Layout extends PropertyPage
 {
 	private Button checkGrabVerticalSpace;
-	private Spinner spinnerHorizontalSpan;
-	private Spinner spinnerVerticalSpan;
-	private Spinner spinnerHeightHint;
+   private LabeledSpinner spinnerHorizontalSpan;
+   private LabeledSpinner spinnerVerticalSpan;
+   private LabeledSpinner spinnerHeightHint;
 	private DashboardElementConfig elementConfig;
 	private DashboardElementLayout elementLayout;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -59,42 +57,35 @@ public class Layout extends PropertyPage
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		final WidgetFactory factory = new WidgetFactory() {
-			@Override
-			public Control createControl(Composite parent, int style)
-			{
-				Spinner spinner = new Spinner(parent, style);
-				spinner.setMinimum(1);
-				spinner.setMaximum(8);
-				return spinner;
-			}
-		};
-
-      spinnerHorizontalSpan = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
-            Messages.get().Layout_HSpan, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      spinnerHorizontalSpan = new LabeledSpinner(dialogArea, SWT.NONE);
+      spinnerHorizontalSpan.setLabel(Messages.get().Layout_HSpan);
+      spinnerHorizontalSpan.setRange(1, 128);
       spinnerHorizontalSpan.setSelection(elementLayout.horizontalSpan);
+      spinnerHorizontalSpan.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
 
-      spinnerHeightHint = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
-            Messages.get().Layout_HHint, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      spinnerHeightHint.setMinimum(-1);
-      spinnerHeightHint.setMaximum(8192);
+      spinnerHeightHint = new LabeledSpinner(dialogArea, SWT.NONE);
+      spinnerHeightHint.setLabel(Messages.get().Layout_HHint);
+      spinnerHeightHint.setRange(-1, 8192);
       spinnerHeightHint.setSelection(elementLayout.heightHint);
-      
-      spinnerVerticalSpan = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
-            Messages.get().Layout_VSpan, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      spinnerHeightHint.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
+
+      spinnerVerticalSpan = new LabeledSpinner(dialogArea, SWT.NONE);
+      spinnerVerticalSpan.setLabel(Messages.get().Layout_VSpan);
+      spinnerVerticalSpan.setRange(1, 128);
       spinnerVerticalSpan.setSelection(elementLayout.verticalSpan);
+      spinnerVerticalSpan.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
 
       checkGrabVerticalSpace = new Button(dialogArea, SWT.CHECK);
       checkGrabVerticalSpace.setText(Messages.get().Layout_GrapExtraV);
       checkGrabVerticalSpace.setSelection(elementLayout.grabVerticalSpace);
       checkGrabVerticalSpace.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 1, 1));
-      
+
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
