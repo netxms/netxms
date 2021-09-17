@@ -196,98 +196,98 @@ off_t LogParser::processNewRecords(int fh)
                   m_textBuffer = MemReallocArray(m_textBuffer, m_readBufferSize);
                }
                else if (remaining > 0)
-					{
-					   if (m_readBuffer != ptr)
-					      memmove(m_readBuffer, ptr, remaining);
+               {
+                  if (m_readBuffer != ptr)
+                     memmove(m_readBuffer, ptr, remaining);
                   if (m_preallocatedFile && !memcmp(m_readBuffer, "\x00\x00\x00\x00", std::min(remaining, 4)))
                   {
                      // Found zeroes in preallocated file, next read should be after last known EOL
                      return resetPos;
                   }
-					}
-					bufPos = remaining;
+               }
+               bufPos = remaining;
                nxlog_debug_tag(DEBUG_TAG, 7, _T("Last line in data block for file \"%s\", resetPos=") UINT64_FMT _T(", remaining=%d"),
                      m_fileName, static_cast<uint64_t>(resetPos), remaining);
                break;
             }
-				// remove possible CR character and put 0 to indicate end of line
-				switch(m_fileEncoding)
-				{
-					case LP_FCP_UCS2:
+            // remove possible CR character and put 0 to indicate end of line
+            switch(m_fileEncoding)
+            {
+               case LP_FCP_UCS2:
 #if WORDS_BIGENDIAN
                   if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\0\r", 2))
-							*(eptr - 1) = 0;
+                     *(eptr - 1) = 0;
                   else
-   						*(eptr + 1) = 0;
+                     *(eptr + 1) = 0;
 #else
-						if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\r\0", 2))
-							*(eptr - 2) = 0;
+                  if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\r\0", 2))
+                     *(eptr - 2) = 0;
                   else
-						   *eptr = 0;
+                     *eptr = 0;
 #endif
-						break;
-					case LP_FCP_UCS2_LE:
+                  break;
+               case LP_FCP_UCS2_LE:
                   if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\r\0", 2))
                      *(eptr - 2) = 0;
                   else
                      *eptr = 0;
                   break;
-					case LP_FCP_UCS2_BE:
+               case LP_FCP_UCS2_BE:
                   if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\0\r", 2))
                      *(eptr - 1) = 0;
                   else
                      *(eptr + 1) = 0;
                   break;
-					case LP_FCP_UCS4:
+               case LP_FCP_UCS4:
 #if WORDS_BIGENDIAN
-                 if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\0\0\0\r", 4))
-                    *(eptr - 1) = 0;
-                 else
-                    *(eptr + 3) = 0;
+                  if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\0\0\0\r", 4))
+                     *(eptr - 1) = 0;
+                  else
+                     *(eptr + 3) = 0;
 #else
-						if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\r\0\0\0", 4))
+                  if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\r\0\0\0", 4))
                      *(eptr - 4) = 0;
                   else
                      *eptr = 0;
 #endif
-						break;
-					case LP_FCP_UCS4_LE:
+                  break;
+               case LP_FCP_UCS4_LE:
                   if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\r\0\0\0", 4))
                      *(eptr - 4) = 0;
                   else
                      *eptr = 0;
                   break;
-					case LP_FCP_UCS4_BE:
+               case LP_FCP_UCS4_BE:
                   if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\0\0\0\r", 4))
                      *(eptr - 1) = 0;
                   else
                      *(eptr + 3) = 0;
                   break;
-					default:
-						if ((eptr - ptr >= 1) && *(eptr - 1) == '\r')
-							*(eptr - 1) = 0;
+               default:
+                  if ((eptr - ptr >= 1) && *(eptr - 1) == '\r')
+                     *(eptr - 1) = 0;
                   else
-						   *eptr = 0;
-						break;
-				}
+                     *eptr = 0;
+                  break;
+            }
 
-				// Now ptr points to null-terminated string in original encoding
-				// Do the conversion to platform encoding
+            // Now ptr points to null-terminated string in original encoding
+            // Do the conversion to platform encoding
 #ifdef UNICODE
-				switch(m_fileEncoding)
-				{
-					case LP_FCP_ACP:
-						mb_to_wchar(ptr, -1, m_textBuffer, m_readBufferSize);
-						break;
-					case LP_FCP_UTF8:
-						utf8_to_wchar(ptr, -1, m_textBuffer, m_readBufferSize);
-						break;
+            switch(m_fileEncoding)
+            {
+               case LP_FCP_ACP:
+                  mb_to_wchar(ptr, -1, m_textBuffer, m_readBufferSize);
+                  break;
+               case LP_FCP_UTF8:
+                  utf8_to_wchar(ptr, -1, m_textBuffer, m_readBufferSize);
+                  break;
                case LP_FCP_UCS2_LE:
 #if WORDS_BIGENDIAN
                   bswap_array_16((UINT16 *)ptr, -1);
 #endif
 #ifdef UNICODE_UCS2
-						wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
+                  wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
 #else
                   ucs2_to_ucs4((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
 #endif
@@ -297,14 +297,14 @@ off_t LogParser::processNewRecords(int fh)
                   bswap_array_16((UINT16 *)ptr, -1);
 #endif
 #ifdef UNICODE_UCS2
-						wcslcpy(m_textBuffer, (WCHAR *)ptr, READ_BUFFER_SIZE);
+                  wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
 #else
                   ucs2_to_ucs4((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
 #endif
                   break;
                case LP_FCP_UCS2:
 #ifdef UNICODE_UCS2
-						wcslcpy(m_textBuffer, (WCHAR *)ptr, READ_BUFFER_SIZE);
+                  wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
 #else
                   ucs2_to_ucs4((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
 #endif
@@ -336,15 +336,15 @@ off_t LogParser::processNewRecords(int fh)
                   wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
 #endif
                   break;
-					default:
-						break;
-				}
+               default:
+                  break;
+            }
 #else
-				switch(m_fileEncoding)
-				{
-					case LP_FCP_ACP:
-						_tcslcpy(m_textBuffer, ptr, m_readBufferSize);
-						break;
+            switch(m_fileEncoding)
+            {
+               case LP_FCP_ACP:
+                  _tcslcpy(m_textBuffer, ptr, m_readBufferSize);
+                  break;
                case LP_FCP_UTF8:
                   utf8_to_mb(ptr, -1, m_textBuffer, m_readBufferSize);
                   break;
@@ -378,11 +378,11 @@ off_t LogParser::processNewRecords(int fh)
                case LP_FCP_UCS4:
                   ucs4_to_mb((UCS4CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
                   break;
-					default:
-						break;
-				}
+               default:
+                  break;
+            }
 #endif
-				matchLine(m_textBuffer);
+            matchLine(m_textBuffer);
          }
       }
       else
