@@ -145,6 +145,9 @@ LogParser::LogParser() : m_rules(0, 16, Ownership::True)
 #ifdef _WIN32
    m_marker = nullptr;
 #endif
+   m_readBuffer = nullptr;
+   m_readBufferSize = 0;
+   m_textBuffer = nullptr;
 }
 
 /**
@@ -197,6 +200,9 @@ LogParser::LogParser(const LogParser *src) : m_rules(src->m_rules.size(), 16, Ow
 #ifdef _WIN32
    m_marker = MemCopyString(src->m_marker);
 #endif
+   m_readBuffer = nullptr;
+   m_readBufferSize = 0;
+   m_textBuffer = nullptr;
 }
 
 /**
@@ -209,6 +215,8 @@ LogParser::~LogParser()
 #ifdef _WIN32
    MemFree(m_marker);
 #endif
+   MemFree(m_readBuffer);
+   MemFree(m_textBuffer);
    ConditionDestroy(m_stopCondition);
 }
 
