@@ -30,11 +30,6 @@
 #endif
 
 /**
- * Constants
- */
-#define READ_BUFFER_SIZE      8192
-
-/**
  * File encoding names
  */
 static const TCHAR *s_encodingName[] =
@@ -168,30 +163,43 @@ off_t LogParser::processNewRecords(int fh)
          break;
    }
 
-   char buffer[READ_BUFFER_SIZE];
+   if (m_readBuffer == nullptr)
+   {
+      m_readBufferSize = 4096;
+      m_readBuffer = MemAllocStringA(m_readBufferSize);
+      m_textBuffer = MemAllocString(m_readBufferSize);
+   }
+
    int bytes, bufPos = 0;
    off_t resetPos = _lseek(fh, 0, SEEK_CUR);
    do
    {
-      if ((bytes = _read(fh, &buffer[bufPos], READ_BUFFER_SIZE - bufPos)) > 0)
+      if ((bytes = _read(fh, &m_readBuffer[bufPos], m_readBufferSize - bufPos)) > 0)
       {
          nxlog_debug_tag(DEBUG_TAG, 7, _T("Read %d bytes into buffer at offset %d"), bytes, bufPos);
          bytes += bufPos;
 
          char *ptr, *eptr;
-         for(ptr = buffer;; ptr = eptr + charSize)
+         for(ptr = m_readBuffer;; ptr = eptr + charSize)
          {
-            bufPos = (int)(ptr - buffer);
+            bufPos = (int)(ptr - m_readBuffer);
 				eptr = FindEOL(ptr, bytes - bufPos, m_fileEncoding);
             if (eptr == nullptr)
             {
 					int remaining = bytes - bufPos;
                resetPos = _lseek(fh, 0, SEEK_CUR) - remaining;
-					if (remaining > 0)
+               if (remaining == m_readBufferSize)
+               {
+                  // buffer is full, and no new line in buffer
+                  m_readBufferSize += 4096;
+                  m_readBuffer = MemRealloc(m_readBuffer, m_readBufferSize);
+                  m_textBuffer = MemReallocArray(m_textBuffer, m_readBufferSize);
+               }
+               else if (remaining > 0)
 					{
-					   if (buffer != ptr)
-					      memmove(buffer, ptr, remaining);
-                  if (m_preallocatedFile && !memcmp(buffer, "\x00\x00\x00\x00", std::min(remaining, 4)))
+					   if (m_readBuffer != ptr)
+					      memmove(m_readBuffer, ptr, remaining);
+                  if (m_preallocatedFile && !memcmp(m_readBuffer, "\x00\x00\x00\x00", std::min(remaining, 4)))
                   {
                      // Found zeroes in preallocated file, next read should be after last known EOL
                      return resetPos;
@@ -265,24 +273,23 @@ off_t LogParser::processNewRecords(int fh)
 
 				// Now ptr points to null-terminated string in original encoding
 				// Do the conversion to platform encoding
-            TCHAR text[READ_BUFFER_SIZE];
 #ifdef UNICODE
 				switch(m_fileEncoding)
 				{
 					case LP_FCP_ACP:
-						MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, ptr, -1, text, READ_BUFFER_SIZE);
+						mb_to_wchar(ptr, -1, m_textBuffer, m_readBufferSize);
 						break;
 					case LP_FCP_UTF8:
-						MultiByteToWideChar(CP_UTF8, 0, ptr, -1, text, READ_BUFFER_SIZE);
+						utf8_to_wchar(ptr, -1, m_textBuffer, m_readBufferSize);
 						break;
                case LP_FCP_UCS2_LE:
 #if WORDS_BIGENDIAN
                   bswap_array_16((UINT16 *)ptr, -1);
 #endif
 #ifdef UNICODE_UCS2
-						wcslcpy(text, (WCHAR *)ptr, READ_BUFFER_SIZE);
+						wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
 #else
-                  ucs2_to_ucs4((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs2_to_ucs4((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
 #endif
                   break;
                case LP_FCP_UCS2_BE:
@@ -290,16 +297,16 @@ off_t LogParser::processNewRecords(int fh)
                   bswap_array_16((UINT16 *)ptr, -1);
 #endif
 #ifdef UNICODE_UCS2
-						wcslcpy(text, (WCHAR *)ptr, READ_BUFFER_SIZE);
+						wcslcpy(m_textBuffer, (WCHAR *)ptr, READ_BUFFER_SIZE);
 #else
-                  ucs2_to_ucs4((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs2_to_ucs4((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
 #endif
                   break;
                case LP_FCP_UCS2:
 #ifdef UNICODE_UCS2
-						wcslcpy(text, (WCHAR *)ptr, READ_BUFFER_SIZE);
+						wcslcpy(m_textBuffer, (WCHAR *)ptr, READ_BUFFER_SIZE);
 #else
-                  ucs2_to_ucs4((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs2_to_ucs4((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
 #endif
                   break;
                case LP_FCP_UCS4_LE:
@@ -307,9 +314,9 @@ off_t LogParser::processNewRecords(int fh)
                   bswap_array_32((UINT32 *)ptr, -1);
 #endif
 #ifdef UNICODE_UCS2
-                  ucs4_to_ucs2((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs4_to_ucs2((UCS4CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
 #else
-                  wcslcpy(text, (WCHAR *)ptr, READ_BUFFER_SIZE);
+                  wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
 #endif
                   break;
                case LP_FCP_UCS4_BE:
@@ -317,16 +324,16 @@ off_t LogParser::processNewRecords(int fh)
                   bswap_array_32((UINT32 *)ptr, -1);
 #endif
 #ifdef UNICODE_UCS2
-                  ucs4_to_ucs2((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs4_to_ucs2((UCS4CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
 #else
-                  wcslcpy(text, (WCHAR *)ptr, READ_BUFFER_SIZE);
+                  wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
 #endif
                   break;
                case LP_FCP_UCS4:
 #ifdef UNICODE_UCS2
-                  ucs4_to_ucs2((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs4_to_ucs2((UCS4CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
 #else
-                  wcslcpy(text, (WCHAR *)ptr, READ_BUFFER_SIZE);
+                  wcslcpy(m_textBuffer, (WCHAR *)ptr, m_readBufferSize);
 #endif
                   break;
 					default:
@@ -336,46 +343,46 @@ off_t LogParser::processNewRecords(int fh)
 				switch(m_fileEncoding)
 				{
 					case LP_FCP_ACP:
-						_tcslcpy(text, ptr, READ_BUFFER_SIZE);
+						_tcslcpy(m_textBuffer, ptr, m_readBufferSize);
 						break;
                case LP_FCP_UTF8:
-                  utf8_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
+                  utf8_to_mb(ptr, -1, m_textBuffer, m_readBufferSize);
                   break;
                case LP_FCP_UCS2_LE:
 #if WORDS_BIGENDIAN
                   bswap_array_16((UINT16 *)ptr, -1);
 #endif
-                  ucs2_to_mb((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs2_to_mb((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
                   break;
                case LP_FCP_UCS2_BE:
 #if !WORDS_BIGENDIAN
                   bswap_array_16((UINT16 *)ptr, -1);
 #endif
-                  ucs2_to_mb((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs2_to_mb((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
                   break;
                case LP_FCP_UCS2:
-                  ucs2_to_mb((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs2_to_mb((UCS2CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
                   break;
                case LP_FCP_UCS4_LE:
 #if WORDS_BIGENDIAN
                   bswap_array_32((UINT32 *)ptr, -1);
 #endif
-                  ucs4_to_mb((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs4_to_mb((UCS4CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
                   break;
                case LP_FCP_UCS4_BE:
 #if !WORDS_BIGENDIAN
                   bswap_array_32((UINT32 *)ptr, -1);
 #endif
-                  ucs4_to_mb((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs4_to_mb((UCS4CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
                   break;
                case LP_FCP_UCS4:
-                  ucs4_to_mb((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs4_to_mb((UCS4CHAR *)ptr, -1, m_textBuffer, m_readBufferSize);
                   break;
 					default:
 						break;
 				}
 #endif
-				matchLine(text);
+				matchLine(m_textBuffer);
          }
       }
       else

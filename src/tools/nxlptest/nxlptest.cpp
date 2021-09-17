@@ -151,6 +151,9 @@ int main(int argc, char *argv[])
    if (argc - optind < 1)
    {
       _tprintf(_T("Required arguments missing\n"));
+#ifdef UNICODE
+      MemFree(inputFile);
+#endif
       return 1;
    }
 
@@ -223,5 +226,8 @@ int main(int argc, char *argv[])
 	}
 
    CleanupLogParserLibrary();
+#ifdef UNICODE
+      MemFree(inputFile);
+#endif
 	return rc;
 }
