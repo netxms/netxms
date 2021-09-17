@@ -290,6 +290,9 @@ private:
    bool m_useSnapshot;
 #endif
    uuid m_guid;
+   char *m_readBuffer;
+   size_t m_readBufferSize;
+   TCHAR *m_textBuffer;
 
 	const TCHAR *checkContext(LogParserRule *rule);
 	bool matchLogRecord(bool hasAttributes, const TCHAR *source, uint32_t eventId, uint32_t level, const TCHAR *line,
