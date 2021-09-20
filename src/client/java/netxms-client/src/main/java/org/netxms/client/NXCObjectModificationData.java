@@ -181,7 +181,7 @@ public class NXCObjectModificationData
    private Integer autoBindFlags;
    private Integer objectStatusThreshold;
    private Integer dciStatusThreshold;
-   private Long seourceNode;
+   private Long sourceNode;
 
    /**
     * Constructor for creating modification data for given object
@@ -2215,7 +2215,7 @@ public class NXCObjectModificationData
     */
    public void setSourceNode(Long sourceNode)
    {
-      this.seourceNode = sourceNode;
+      this.sourceNode = sourceNode;
    }
 
    /**
@@ -2223,6 +2223,6 @@ public class NXCObjectModificationData
     */
    public Long getSourceNode()
    {
-      return seourceNode;
+      return sourceNode;
    }
 }

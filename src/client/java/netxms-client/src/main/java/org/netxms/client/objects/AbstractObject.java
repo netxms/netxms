@@ -86,7 +86,7 @@ public abstract class AbstractObject
 	public static final int OBJECT_VPNCONNECTOR = 12;
 	public static final int OBJECT_CONDITION = 13;
 	public static final int OBJECT_CLUSTER = 14;
-   // public static final int OBJECT_POLICYGROUP = 15;
+   public static final int OBJECT_BUSINESSSERVICE_PROTOTYPE = 15;
    // public static final int OBJECT_POLICYROOT = 16;
    // public static final int OBJECT_AGENTPOLICY = 17;
    // public static final int OBJECT_AGENTPOLICY_CONFIG = 18;
@@ -106,7 +106,6 @@ public abstract class AbstractObject
    public static final int OBJECT_CHASSIS = 35;
    public static final int OBJECT_DASHBOARDGROUP = 36;
    public static final int OBJECT_SENSOR = 37;
-   public static final int OBJECT_BUSINESSSERVICE_PROTOTYPE = 38;
 	public static final int OBJECT_CUSTOM = 10000;
 	
 	// Status calculation methods

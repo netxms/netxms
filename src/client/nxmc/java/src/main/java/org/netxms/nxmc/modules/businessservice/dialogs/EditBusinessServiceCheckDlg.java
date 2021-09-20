@@ -11,6 +11,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.businessservices.ServiceCheck;
+import org.netxms.client.constants.BusinessChecksType;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.DciSelector;
@@ -23,9 +24,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Create or edit Business Service Check
  */
-public class EditBSCheckDlg extends Dialog
+public class EditBusinessServiceCheckDlg extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EditBSCheckDlg.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(EditBusinessServiceCheckDlg.class);
    private static final String[] TYPES = {i18n.tr("Object"), i18n.tr("Script"), i18n.tr("DCI")};
    
    private ServiceCheck check;
@@ -38,7 +39,7 @@ public class EditBSCheckDlg extends Dialog
    private DciSelector dciSelector;
    private ScriptEditor scriptEditor;
 
-   public EditBSCheckDlg(Shell parentShell, ServiceCheck check, boolean createNew)
+   public EditBusinessServiceCheckDlg(Shell parentShell, ServiceCheck check, boolean createNew)
    {
       super(parentShell);
       this.check = check;
@@ -95,7 +96,7 @@ public class EditBSCheckDlg extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      thresholdCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Status Threashold"), gd);
+      thresholdCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Status Threshold"), gd);
       thresholdCombo.add(i18n.tr("Default"));   
       for (int i = 1; i <= 4; i++)
          thresholdCombo.add(StatusDisplayInfo.getStatusText(i));   
@@ -128,7 +129,7 @@ public class EditBSCheckDlg extends Dialog
       
       //Set all values 
       descriptionText.setText(check.getDescription());
-      typeCombo.select(check.getCheckType());
+      typeCombo.select(check.getCheckType().getValue());
       thresholdCombo.select(check.getThreshold());
       objectSelector.setObjectId(check.getObjectId());;
       dciSelector.setDciId(check.getObjectId(), check.getDciId());;
@@ -140,15 +141,14 @@ public class EditBSCheckDlg extends Dialog
    
    private void updateEditableElements()
    {
-      objectSelector.setEnabled(typeCombo.getSelectionIndex() == ServiceCheck.CHECK_TYPE_NODE || 
-            typeCombo.getSelectionIndex() == ServiceCheck.CHECK_TYPE_SCRIPT);
-      dciSelector.setEnabled(typeCombo.getSelectionIndex() == ServiceCheck.CHECK_TYPE_DCI);
-      scriptEditor.setEnabled(typeCombo.getSelectionIndex() == ServiceCheck.CHECK_TYPE_SCRIPT);
-      thresholdCombo.setEnabled(typeCombo.getSelectionIndex() == ServiceCheck.CHECK_TYPE_NODE || 
-            typeCombo.getSelectionIndex() == ServiceCheck.CHECK_TYPE_DCI);
-      if (typeCombo.getSelectionIndex() == ServiceCheck.CHECK_TYPE_NODE)
+      BusinessChecksType type = BusinessChecksType.getByValue(typeCombo.getSelectionIndex());
+      objectSelector.setEnabled(type == BusinessChecksType.OBJECT || type == BusinessChecksType.SCRIPT);
+      dciSelector.setEnabled(type == BusinessChecksType.DCI);
+      scriptEditor.setEnabled(type == BusinessChecksType.SCRIPT);
+      thresholdCombo.setEnabled(type == BusinessChecksType.OBJECT || type == BusinessChecksType.DCI);
+      if (type == BusinessChecksType.OBJECT)
          objectSelector.setLabel(i18n.tr("Check object"));
-      else if (typeCombo.getSelectionIndex() == ServiceCheck.CHECK_TYPE_SCRIPT)
+      else if (type == BusinessChecksType.SCRIPT)
          objectSelector.setLabel(i18n.tr("Related object"));
    }
 
@@ -156,23 +156,24 @@ public class EditBSCheckDlg extends Dialog
    protected void okPressed()
    {
       check.setDescription(descriptionText.getText());
-      check.setCheckType(typeCombo.getSelectionIndex());
-      
-      if (typeCombo.getSelectionIndex() == ServiceCheck.CHECK_TYPE_DCI)
+      check.setCheckType(BusinessChecksType.getByValue(typeCombo.getSelectionIndex()));
+
+      BusinessChecksType type = BusinessChecksType.getByValue(typeCombo.getSelectionIndex());
+      if (type == BusinessChecksType.DCI)
       {
          check.setThreshold(thresholdCombo.getSelectionIndex());
          check.setObjectId(dciSelector.getNodeId());
          check.setDciId(dciSelector.getDciId());      
          check.setScript("");
       }
-      else if (typeCombo.getSelectionIndex() == ServiceCheck.CHECK_TYPE_NODE)
+      else if (type == BusinessChecksType.OBJECT)
       {
          check.setThreshold(thresholdCombo.getSelectionIndex());
          check.setObjectId(objectSelector.getObjectId());
          check.setDciId(0);         
          check.setScript("");
       }
-      else if (typeCombo.getSelectionIndex() == ServiceCheck.CHECK_TYPE_SCRIPT)
+      else if (type == BusinessChecksType.SCRIPT)
       {
          check.setObjectId(objectSelector.getObjectId());
          check.setDciId(0);         

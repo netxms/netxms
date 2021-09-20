@@ -233,7 +233,7 @@ public class ObjectPollerView extends AdHocObjectView
          {
             try
             {
-               session.pollNode(target.getObjectId(), pollType, listener);
+               session.pollObject(target.getObjectId(), pollType, listener);
                onPollComplete(true, null);
             }
             catch(Exception e)

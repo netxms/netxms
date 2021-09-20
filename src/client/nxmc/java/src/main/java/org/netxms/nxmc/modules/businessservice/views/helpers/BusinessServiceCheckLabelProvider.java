@@ -77,7 +77,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 	 */
 	public String getViolationStatus(ServiceCheck check)
 	{
-	   return check.isViolated() ? i18n.tr("Violated") : i18n.tr("Normal");
+	   return check.isViolated() ? i18n.tr("Failed") : i18n.tr("Normal");
 	}
    
    /**
@@ -87,7 +87,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
     */
    public String getTypeName(ServiceCheck check)
    {
-      return TYPES[check.getCheckType()];
+      return TYPES[check.getCheckType().getValue()];
    }
 
    /**

@@ -9626,7 +9626,7 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void pollNode(long nodeId, NodePollType pollType, final TextOutputListener listener) throws IOException, NXCException
+   public void pollObject(long nodeId, NodePollType pollType, final TextOutputListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLL_OBJECT);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);

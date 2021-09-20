@@ -47,7 +47,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.businessservice.dialogs.EditBSCheckDlg;
+import org.netxms.nxmc.modules.businessservice.dialogs.EditBusinessServiceCheckDlg;
 import org.netxms.nxmc.modules.businessservice.views.helpers.BusinessServiceCheckFilter;
 import org.netxms.nxmc.modules.businessservice.views.helpers.BusinessServiceCheckLabelProvider;
 import org.netxms.nxmc.modules.businessservice.views.helpers.BusinessServiceComparator;
@@ -118,7 +118,7 @@ public class BusinessServiceChecksView extends ObjectView
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+            IStructuredSelection selection = event.getStructuredSelection();
             actionEdit.setEnabled(selection.size() == 1);
             actionDelete.setEnabled(selection.size() > 0);
          }
@@ -167,7 +167,7 @@ public class BusinessServiceChecksView extends ObjectView
                      public void run()
                      {
                         checksList.remove(n.getSubCode());
-                        viewer.setInput(checksList.values());
+                        viewer.refresh();
                      }
                   });
                   break;
@@ -183,7 +183,7 @@ public class BusinessServiceChecksView extends ObjectView
    @Override
    public void refresh()
    {
-      new Job(i18n.tr("Get node components"), this) {
+      new Job(i18n.tr("Get business service checks"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -201,7 +201,7 @@ public class BusinessServiceChecksView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot get component information for node {0}", getObject().getObjectName());
+            return i18n.tr("Cannot get checks for business service {0}", getObject().getObjectName());
          }
       }.start();
    }
@@ -271,16 +271,16 @@ public class BusinessServiceChecksView extends ObjectView
 
    protected void deleteCheck()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
 
-      if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Confirm Delete"),
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Confirm Delete"),
             i18n.tr("Do you really want to delete selected check?")))
          return;
 
       final Object[] objects = selection.toArray();
-      new Job(i18n.tr("Delete actions"), this) {
+      new Job(i18n.tr("Delete business service check"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -300,15 +300,15 @@ public class BusinessServiceChecksView extends ObjectView
 
    protected void editCheck()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
 
       final ServiceCheck check = new ServiceCheck((ServiceCheck)selection.getFirstElement());
-      final EditBSCheckDlg dlg = new EditBSCheckDlg(getWindow().getShell(), check, false);
+      final EditBusinessServiceCheckDlg dlg = new EditBusinessServiceCheckDlg(getWindow().getShell(), check, false);
       if (dlg.open() == Window.OK)
       {
-         new Job(i18n.tr("Update action configuration"), this) {
+         new Job(i18n.tr("Update business service check"), this) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -318,7 +318,7 @@ public class BusinessServiceChecksView extends ObjectView
             @Override
             protected String getErrorMessage()
             {
-               return i18n.tr("Cannot update action configuration");
+               return i18n.tr("Cannot update business service check");
             }
          }.start();
       }
@@ -327,10 +327,10 @@ public class BusinessServiceChecksView extends ObjectView
    private void createCheck()
    {
       final ServiceCheck check = new ServiceCheck();
-      final EditBSCheckDlg dlg = new EditBSCheckDlg(getWindow().getShell(), check, false);
+      final EditBusinessServiceCheckDlg dlg = new EditBusinessServiceCheckDlg(getWindow().getShell(), check, false);
       if (dlg.open() == Window.OK)
       {
-         new Job(i18n.tr("Update action configuration"), this) {
+         new Job(i18n.tr("Create business service check"), this) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -340,7 +340,7 @@ public class BusinessServiceChecksView extends ObjectView
             @Override
             protected String getErrorMessage()
             {
-               return i18n.tr("Cannot update action configuration");
+               return i18n.tr("Cannot create business service check");
             }
          }.start();
       }
@@ -356,7 +356,7 @@ public class BusinessServiceChecksView extends ObjectView
       if (object == null)
          return;
 
-      Job job = new Job(i18n.tr("Get node components"), this) {
+      Job job = new Job(i18n.tr("Get business service checks"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -374,7 +374,7 @@ public class BusinessServiceChecksView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot get component information for node {0}", object.getObjectName());
+            return i18n.tr("Cannot get cehcks for business service {0}", object.getObjectName());
          }
       };
       job.setUser(false);

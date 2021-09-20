@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.businessservice.propertypages;
 
+import java.util.Arrays;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -29,6 +31,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.Node;
@@ -49,6 +52,11 @@ import org.xnap.commons.i18n.I18n;
 public class InstanceDiscovery extends ObjectPropertyPage
 {
    private static final I18n i18n = LocalizationHelper.getI18n(InstanceDiscovery.class);   
+   
+   public static final List<String> DISCOVERY_TYPES = Arrays.asList(null, i18n.tr("Agent List"), i18n.tr("Agent Table"), 
+         i18n.tr("SNMP Walk - Values"), i18n.tr("SNMP Walk - OIDs"), i18n.tr("Script"), i18n.tr("Windows Performance Counters"),
+         i18n.tr("Web Service"), i18n.tr("Internal Table"));
+   
 	private Combo discoveryMethod;
 	private LabeledText discoveryData;
 	private ObjectSelector instanceSourceSelector;
@@ -81,10 +89,13 @@ public class InstanceDiscovery extends ObjectPropertyPage
 
       discoveryMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, i18n.tr("Instance discovery method"),
                                                          WidgetHelper.DEFAULT_LAYOUT_DATA);
-      discoveryMethod.add(i18n.tr("Script"));
-      discoveryMethod.add(i18n.tr("Agent List"));
-      discoveryMethod.add(i18n.tr("Agent Table"));
-      discoveryMethod.select(prototype.getInstanceDiscoveryMethod());
+
+      for (String type : DISCOVERY_TYPES)
+      {
+         if (type != null)
+            discoveryMethod.add(type);            
+      }
+      discoveryMethod.setText(DISCOVERY_TYPES.get(prototype.getInstanceDiscoveryMethod()));
       discoveryMethod.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -152,13 +163,27 @@ public class InstanceDiscovery extends ObjectPropertyPage
 	 * @return
 	 */
 	private static String getDataLabel(int method)
-	{
-		switch(method)
-		{
-			case BusinessServicePrototype.IDM_SCRIPT:
-			   return "Script name";
-		}
-		return ""; //$NON-NLS-1$
+	{    
+	   switch(method)
+      {
+         case DataCollectionObject.IDM_NONE:
+            return i18n.tr("Discovery data");
+         case DataCollectionObject.IDM_AGENT_LIST:
+            return i18n.tr("List name");
+         case DataCollectionObject.IDM_AGENT_TABLE:
+         case DataCollectionObject.IDM_INTERNAL_TABLE:
+            return i18n.tr("Table name");
+         case DataCollectionObject.IDM_SNMP_WALK_VALUES:
+         case DataCollectionObject.IDM_SNMP_WALK_OIDS:
+            return i18n.tr("Base SNMP OID");
+         case DataCollectionObject.IDM_SCRIPT:
+            return i18n.tr("Script name");
+         case DataCollectionObject.IDM_WEB_SERVICE:
+            return i18n.tr("Web service request");
+         case DataCollectionObject.IDM_WINPERF:
+            return i18n.tr("Object name");
+      }
+      return ""; //$NON-NLS-1$
 	}
 
    /**
@@ -171,7 +196,7 @@ public class InstanceDiscovery extends ObjectPropertyPage
          setValid(false);
       NXCSession session = Registry.getSession();     
       final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-      md.setInstanceDiscoveryMethod(discoveryMethod.getSelectionIndex());
+      md.setInstanceDiscoveryMethod(DISCOVERY_TYPES.indexOf(discoveryMethod.getText()));
       md.setInstanceDiscoveryData(discoveryData.getText());
       md.setInstanceDiscoveryFilter(filterScript.getText());
       md.setSourceNode(instanceSourceSelector.getObjectId());

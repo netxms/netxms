@@ -176,7 +176,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
     */
    protected void querySelectedParameter()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
       

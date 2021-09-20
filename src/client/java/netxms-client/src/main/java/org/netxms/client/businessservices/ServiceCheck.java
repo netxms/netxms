@@ -20,18 +20,15 @@ package org.netxms.client.businessservices;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.BusinessChecksType;
 
 /**
  * Business service check
  */
 public class ServiceCheck 
-{
-   public static final int CHECK_TYPE_NODE = 0;
-	public static final int CHECK_TYPE_SCRIPT = 1;
-	public static final int CHECK_TYPE_DCI = 2;
-	
+{	
 	private long id;
-	private int checkType;
+	private BusinessChecksType checkType;
    private String description;
 	private String script;
    private long objectId;
@@ -46,7 +43,7 @@ public class ServiceCheck
    public ServiceCheck()
    {
       id = 0;
-      checkType = 0;
+      checkType = BusinessChecksType.DCI;
       description = null;
       script = null; 
       objectId = 0;
@@ -79,7 +76,7 @@ public class ServiceCheck
 	public ServiceCheck(NXCPMessage msg, long base)
 	{
 	   id = msg.getFieldAsInt64(base);
-		checkType = msg.getFieldAsInt32(base + 1);
+		checkType = BusinessChecksType.getByValue(msg.getFieldAsInt32(base + 1));
       failureReason = msg.getFieldAsString(base + 2);
       dciId = msg.getFieldAsInt64(base + 3);
       objectId = msg.getFieldAsInt64(base + 4);
@@ -101,7 +98,7 @@ public class ServiceCheck
 	{
 	   msg.setFieldInt32(NXCPCodes.VID_SLMCHECK_ID, (int)id);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
-	   msg.setFieldInt32(NXCPCodes.VID_SLMCHECK_TYPE, checkType);
+	   msg.setFieldInt32(NXCPCodes.VID_SLMCHECK_TYPE, checkType.getValue());
       msg.setFieldInt32(NXCPCodes.VID_SLMCHECK_RELATED_OBJECT, (int)objectId);
       msg.setFieldInt32(NXCPCodes.VID_SLMCHECK_RELATED_DCI, (int)dciId);
       msg.setField(NXCPCodes.VID_SCRIPT, script);
@@ -111,7 +108,7 @@ public class ServiceCheck
 	/**
 	 * @return the checkType
 	 */
-	public int getCheckType()
+	public BusinessChecksType getCheckType()
 	{
 		return checkType;
 	}
@@ -183,7 +180,7 @@ public class ServiceCheck
    /**
     * @param checkType the checkType to set
     */
-   public void setCheckType(int checkType)
+   public void setCheckType(BusinessChecksType checkType)
    {
       this.checkType = checkType;
    }
@@ -226,13 +223,5 @@ public class ServiceCheck
    public void setThreshold(int threshold)
    {
       this.threshold = threshold;
-   }
-   
-   /**
-    * @param failureReason the failureReason to set
-    */
-   public void setFailureReason(String failureReason)
-   {
-      this.failureReason = failureReason;
    }
 }

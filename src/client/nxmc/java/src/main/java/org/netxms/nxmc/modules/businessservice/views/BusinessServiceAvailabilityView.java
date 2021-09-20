@@ -253,7 +253,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
    
    private void updateTime(int timeRange, TimeUnit unit)
    {
-      dateTimeSelector.updateTimeperiod(timeRange, unit);
+      dateTimeSelector.setTimePeriod(new TimePeriod(TimeFrameType.BACK_FROM_NOW, timeRange, unit, null, null));
       refresh();
    }
    

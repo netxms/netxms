@@ -97,7 +97,7 @@ public class CustomSchedule extends AbstractDCIPropertyPage
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+				IStructuredSelection selection = event.getStructuredSelection();
 				if (selection != null)
 				{
 					editButton.setEnabled(selection.size() == 1);
@@ -220,7 +220,7 @@ public class CustomSchedule extends AbstractDCIPropertyPage
 	 */
 	private void editSchedule()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.size() != 1)
 			return;
 		
@@ -240,7 +240,7 @@ public class CustomSchedule extends AbstractDCIPropertyPage
 	 */
 	private void deleteSchedules()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		Iterator<?> it = selection.iterator();
 		while(it.hasNext())
 		{

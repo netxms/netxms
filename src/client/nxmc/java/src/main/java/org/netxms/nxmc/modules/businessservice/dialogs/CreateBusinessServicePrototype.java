@@ -10,6 +10,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.businessservice.propertypages.InstanceDiscovery;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -22,7 +23,7 @@ public class CreateBusinessServicePrototype extends Dialog
    private Combo instanceDiscoveyMethodCombo;
    
    private String name;
-   private int instanceDiscoveyMethod;
+   private String instanceDiscoveyMethod;
 
    public CreateBusinessServicePrototype(Shell parentShell)
    {
@@ -55,7 +56,7 @@ public class CreateBusinessServicePrototype extends Dialog
 
       nameField = new LabeledText(dialogArea, SWT.NONE);
       nameField.setLabel(i18n.tr("Name"));
-      nameField.getTextControl().setTextLimit(255);
+      nameField.getTextControl().setTextLimit(63);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -63,9 +64,12 @@ public class CreateBusinessServicePrototype extends Dialog
       nameField.setLayoutData(gd);
 
       instanceDiscoveyMethodCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Instance discovery type"), new GridData(SWT.FILL, SWT.CENTER, true, false));
-      instanceDiscoveyMethodCombo.add(i18n.tr("Script"));
-      instanceDiscoveyMethodCombo.add(i18n.tr("Agent List"));
-      instanceDiscoveyMethodCombo.add(i18n.tr("Agent Table"));
+
+      for (String type : InstanceDiscovery.DISCOVERY_TYPES)
+      {
+         if (type != null)
+            instanceDiscoveyMethodCombo.add(type);            
+      }
       instanceDiscoveyMethodCombo.select(0);
       
       return dialogArea;
@@ -77,7 +81,7 @@ public class CreateBusinessServicePrototype extends Dialog
    @Override
    protected void okPressed()
    {
-      instanceDiscoveyMethod = instanceDiscoveyMethodCombo.getSelectionIndex();
+      instanceDiscoveyMethod = instanceDiscoveyMethodCombo.getText();
       name = nameField.getText().trim();
       if (name.isEmpty())
       {
@@ -100,6 +104,6 @@ public class CreateBusinessServicePrototype extends Dialog
     */
    public int getInstanceDiscoveyMethod()
    {
-      return instanceDiscoveyMethod;
+      return InstanceDiscovery.DISCOVERY_TYPES.indexOf(instanceDiscoveyMethod);
    }
 }

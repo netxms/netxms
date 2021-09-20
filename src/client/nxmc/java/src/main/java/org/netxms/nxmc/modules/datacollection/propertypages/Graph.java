@@ -203,7 +203,7 @@ public class Graph extends PreferencePage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				IStructuredSelection sel = (IStructuredSelection)userList.getSelection();
+				IStructuredSelection sel = userList.getStructuredSelection();
 				Iterator<AccessListElement> it = sel.iterator();
 				while(it.hasNext())
 				{
@@ -230,7 +230,7 @@ public class Graph extends PreferencePage
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				IStructuredSelection sel = (IStructuredSelection)event.getSelection();
+				IStructuredSelection sel = event.getStructuredSelection();
 				if (sel.size() == 1)
 				{
 					enableAllChecks(true);
@@ -278,7 +278,7 @@ public class Graph extends PreferencePage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				IStructuredSelection sel = (IStructuredSelection)userList.getSelection();
+				IStructuredSelection sel = userList.getStructuredSelection();
 				AccessListElement element = (AccessListElement)sel.getFirstElement();
 				int rights = element.getAccessRights();
 				if (check.getSelection())

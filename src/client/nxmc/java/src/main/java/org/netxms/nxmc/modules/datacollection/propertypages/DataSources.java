@@ -288,7 +288,7 @@ public class DataSources extends PreferencePage
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				IStructuredSelection selection = viewer.getStructuredSelection();
 				editButton.setEnabled(selection.size() == 1);
 				deleteButton.setEnabled(selection.size() > 0);
 				upButton.setEnabled(selection.size() == 1);
@@ -347,7 +347,7 @@ public class DataSources extends PreferencePage
 	 */
 	private void editItem()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		ChartDciConfig dci = (ChartDciConfig)selection.getFirstElement();
 		if (dci == null)
 			return;
@@ -364,7 +364,7 @@ public class DataSources extends PreferencePage
 	 */
 	private void deleteItems()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		for(Object o : selection.toList())
 			dciList.remove(o);
       viewer.setInput(dciList.toArray());
@@ -375,7 +375,7 @@ public class DataSources extends PreferencePage
 	 */
 	private void moveUp()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		final IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.size() == 1)
 		{
 			Object element = selection.getFirstElement();
@@ -394,7 +394,7 @@ public class DataSources extends PreferencePage
 	 */
 	private void moveDown()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		final IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.size() == 1)
 		{
 			Object element = selection.getFirstElement();

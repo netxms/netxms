@@ -259,7 +259,7 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	@Override
 	protected void okPressed()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.isEmpty())
 		{
 			MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("You must select parameter from the list!"));

@@ -239,7 +239,7 @@ public class AccessControl extends AbstractDCIPropertyPage
 	 */
 	public void removeUsers()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		for(Object o : selection.toList())
 			acl.remove(o);
       setViewerInput();

@@ -179,7 +179,7 @@ public class SelectWebServiceDlg extends Dialog implements IParameterSelectionDi
    @Override
    protected void okPressed()
    {
-      IStructuredSelection viewerSelection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection viewerSelection = viewer.getStructuredSelection();
       if (viewerSelection.isEmpty())
       {
          MessageDialogHelper.openWarning(getShell(), "Warning", "Web service definition should be selected");

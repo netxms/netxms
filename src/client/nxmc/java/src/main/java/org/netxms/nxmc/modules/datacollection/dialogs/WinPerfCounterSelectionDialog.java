@@ -181,7 +181,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 	 */
 	private void onObjectSelection()
 	{
-		IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
+		IStructuredSelection selection = objectTree.getStructuredSelection();
 		if (selection.size() == 0)
 		{
 			instanceList.setInput(new String[0]);
@@ -208,7 +208,7 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 		
 		if (selectedCounter.getObject().hasInstances())
 		{
-			IStructuredSelection selection = (IStructuredSelection)instanceList.getSelection();
+			IStructuredSelection selection = instanceList.getStructuredSelection();
 			if (selection.size() != 1)
 			{
 				MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please select counter and instance and then press OK"));

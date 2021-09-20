@@ -88,9 +88,9 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
       discoveryMethod.add(i18n.tr("SNMP Walk - Values"));
       discoveryMethod.add(i18n.tr("SNMP Walk - OIDs"));
       discoveryMethod.add(i18n.tr("Script"));
-      discoveryMethod.add("Windows Performance Counters");
-      discoveryMethod.add("Web Service");
-      discoveryMethod.add("Internal Table");
+      discoveryMethod.add(i18n.tr("Windows Performance Counters"));
+      discoveryMethod.add(i18n.tr("Web Service"));
+      discoveryMethod.add(i18n.tr("Internal Table"));
       discoveryMethod.select(dco.getInstanceDiscoveryMethod());
       discoveryMethod.addSelectionListener(new SelectionListener() {
 			@Override
@@ -214,11 +214,11 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
 			case DataCollectionObject.IDM_SNMP_WALK_OIDS:
 				return i18n.tr("Base SNMP OID");
 			case DataCollectionObject.IDM_SCRIPT:
-			   return "Script name";
+			   return i18n.tr("Script name");
          case DataCollectionObject.IDM_WEB_SERVICE:
-            return "Web service request";
+            return i18n.tr("Web service request");
          case DataCollectionObject.IDM_WINPERF:
-            return "Object name";
+            return i18n.tr("Object name");
 		}
 		return ""; //$NON-NLS-1$
 	}

@@ -120,7 +120,7 @@ public class BusinessService extends GenericObject implements AutoBindObject, Au
    @Override
    public String getObjectClassName()
    {
-      return "Container";
+      return "BusinessService";
    }
 
    /* (non-Javadoc)
@@ -131,6 +131,7 @@ public class BusinessService extends GenericObject implements AutoBindObject, Au
    {
       Set<String> strings = super.getStrings();
       addString(strings, objectAutoBindFilter);
+      addString(strings, dciAutoBindFilter);
       return strings;
    }
 

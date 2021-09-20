@@ -111,7 +111,7 @@ public class ActionManager extends ConfigurationView
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+            IStructuredSelection selection = event.getStructuredSelection();
             if (selection != null)
             {
                actionEdit.setEnabled(selection.size() == 1);
@@ -325,7 +325,7 @@ public class ActionManager extends ConfigurationView
     */
    private void editAction()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
 
@@ -354,7 +354,7 @@ public class ActionManager extends ConfigurationView
     */
    private void deleteActions()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
 
