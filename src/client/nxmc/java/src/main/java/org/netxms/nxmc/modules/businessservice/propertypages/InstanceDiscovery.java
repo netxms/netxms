@@ -54,8 +54,7 @@ public class InstanceDiscovery extends ObjectPropertyPage
    private static final I18n i18n = LocalizationHelper.getI18n(InstanceDiscovery.class);   
    
    public static final List<String> DISCOVERY_TYPES = Arrays.asList(null, i18n.tr("Agent List"), i18n.tr("Agent Table"), 
-         i18n.tr("SNMP Walk - Values"), i18n.tr("SNMP Walk - OIDs"), i18n.tr("Script"), i18n.tr("Windows Performance Counters"),
-         i18n.tr("Web Service"), i18n.tr("Internal Table"));
+         null, null, i18n.tr("Script"), null, null, null);
    
 	private Combo discoveryMethod;
 	private LabeledText discoveryData;
