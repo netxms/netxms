@@ -17,6 +17,7 @@ include_HEADERS = \
 	gauge_helpers.h \
 	geolocation.h \
 	ieee8021x.h \
+	interface_types.h \
 	jansson.h \
 	jansson_config.h \
 	netxmsdb.h \
