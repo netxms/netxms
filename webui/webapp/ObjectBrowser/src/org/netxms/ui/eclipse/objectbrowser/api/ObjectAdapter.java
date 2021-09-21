@@ -25,7 +25,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.UnknownObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
@@ -100,16 +99,12 @@ public class ObjectAdapter implements IWorkbenchAdapter
             return Activator.getImageDescriptor("icons/network_service.png"); //$NON-NLS-1$
          case AbstractObject.OBJECT_NODE:
             return Activator.getImageDescriptor("icons/node.png"); //$NON-NLS-1$
-         case AbstractObject.OBJECT_NODELINK:
-            return Activator.getImageDescriptor("icons/node_link.png"); //$NON-NLS-1$
          case AbstractObject.OBJECT_RACK:
             return Activator.getImageDescriptor("icons/rack.gif"); //$NON-NLS-1$
          case AbstractObject.OBJECT_SENSOR:
             return Activator.getImageDescriptor("icons/sensor.gif"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_SERVICEROOT:
 				return Activator.getImageDescriptor("icons/service_root.png"); //$NON-NLS-1$
-         case AbstractObject.OBJECT_SLMCHECK:
-            return Activator.getImageDescriptor(((ServiceCheck)object).isTemplate() ? "icons/service_check_template.gif" : "icons/service_check.gif"); //$NON-NLS-1$ //$NON-NLS-2$
          case AbstractObject.OBJECT_SUBNET:
             return Activator.getImageDescriptor("icons/subnet.png"); //$NON-NLS-1$
          case AbstractObject.OBJECT_TEMPLATE:

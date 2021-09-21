@@ -34,7 +34,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Layout;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
-import org.netxms.ui.eclipse.objectview.objecttabs.elements.AvailabilityChart;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Capabilities;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Commands;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Comments;
@@ -109,8 +108,6 @@ public class ObjectOverview extends ObjectTab
       e = new LastValues(leftColumn, e, this);
       elements.add(e);
 		e = new Commands(leftColumn, e, this);
-		elements.add(e);
-		e = new AvailabilityChart(leftColumn, e, this);
 		elements.add(e);
       e = new ExternalResources(leftColumn, e, this);
       elements.add(e);

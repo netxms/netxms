@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.dashboard;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.AvailabilityChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.CustomWidgetConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
@@ -96,8 +95,6 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 				      return EventMonitorConfig.createFromXml(element.getData());
 					case DashboardElement.ALARM_VIEWER:
 						return AlarmViewerConfig.createFromXml(element.getData());
-					case DashboardElement.AVAILABLITY_CHART:
-						return AvailabilityChartConfig.createFromXml(element.getData());
 					case DashboardElement.BAR_CHART:
 						return BarChartConfig.createFromXml(element.getData());
 					case DashboardElement.CUSTOM:
