@@ -2025,8 +2025,8 @@ CREATE TABLE business_service_tickets
 (
   ticket_id integer not null,
   service_id integer not null,
-  original_ticket_id not null,
-  original_service_id not null,
+  original_ticket_id integer not null,
+  original_service_id integer not null,
   check_id integer not null,
   check_description varchar(1023),
   create_timestamp integer not null,
