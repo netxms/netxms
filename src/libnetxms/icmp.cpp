@@ -22,17 +22,12 @@
 
 #include "libnetxms.h"
 
-
-/**
- * Max size for ping packet
- */
-#define MAX_PING_SIZE      8192
-
-
 #ifdef _WIN32
 
 #include <iphlpapi.h>
 #include <icmpapi.h>
+
+#define MAX_PING_SIZE      8192
 
 /**
  * Do an ICMP ping to specific address
@@ -139,236 +134,599 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, UI
 
 #else	/* not _WIN32 */
 
+#include <nxnet.h>
+
 /**
- * ICMP echo request structure
+ * Ping request state
  */
-struct ECHOREQUEST
+enum PingRequestState
 {
-   ICMPHDR m_icmpHdr;
-   BYTE m_data[MAX_PING_SIZE - sizeof(ICMPHDR) - sizeof(IPHDR)];
+   PENDING = 0,
+   IN_PROGRESS = 1,
+   COMPLETED = 2
 };
 
 /**
- * ICMP echo reply structure
+ * Ping request
  */
-struct ECHOREPLY
+struct PingRequest
 {
-   IPHDR m_ipHdr;
-   ICMPHDR m_icmpHdr;
-   BYTE m_data[MAX_PING_SIZE - sizeof(ICMPHDR) - sizeof(IPHDR)];
+   PingRequest *next;
+   uint64_t timestamp;
+   InetAddress address;
+   uint32_t packetSize;
+   uint32_t timeout;
+   uint32_t result;
+   uint32_t rtt;
+   uint16_t sequence;
+   bool dontFragment;
+   PingRequestState state;
+   pthread_cond_t wakeupCondition;
 };
 
 /**
- * Checksum routine for Internet Protocol family headers (C Version)
- *
- * Author -
- *	Mike Muuss
- *	U. S. Army Ballistic Research Laboratory
- *	December, 1983
+ * Mark request as completed from processing thread
  */
-UINT16 LIBNETXMS_EXPORTABLE CalculateIPChecksum(const void *data, size_t len)
+static inline void CloseRequest(PingRequest *r, int32_t result)
 {
-   size_t nleft = len;
-   UINT32 sum = 0;
-   const BYTE *curr = static_cast<const BYTE*>(data);
-
-   /*
-    *  Our algorithm is simple, using a 32 bit accumulator (sum),
-    *  we add sequential 16 bit words to it, and at the end, fold
-    *  back all the carry bits from the top 16 bits into the lower
-    *  16 bits.
-    */
-   while(nleft > 1)
+   if (r->state != COMPLETED)
    {
-      sum += ((WORD)(*curr << 8) | (WORD)(*(curr + 1)));
-      curr += 2;
-      nleft -= 2;
+      r->state = COMPLETED;
+      r->result = result;
+      pthread_cond_signal(&r->wakeupCondition);
    }
-
-   /* mop up an odd byte, if necessary */
-   if (nleft == 1)
-      sum += (WORD)(*curr);
-
-   /*
-    * add back carry outs from top 16 bits to low 16 bits
-    */
-   while(sum >> 16)
-      sum = (sum >> 16) + (sum & 0xffff);   /* add hi 16 to low 16 */
-   return htons((WORD)(~sum));
 }
 
 /**
- * Wait for reply from given address
+ * Request processor
  */
-static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 id, UINT16 sequence, UINT32 timeout, UINT32 *prtt)
+class PingRequestProcessor
 {
-   UINT32 rtt = 0;
-   UINT32 result = ICMP_TIMEOUT;
+private:
+   PingRequest *m_head;
+   pthread_mutex_t m_mutex;
+   SOCKET m_dataSocket;
+   SOCKET m_controlSockets[2];
+   THREAD m_processingThread;
+   time_t m_lastSocketOpenAttempt;
+   uint16_t m_id;
+   uint16_t m_sequence;
+   int m_family;
+   bool m_shutdown;
 
+   bool openSocket();
+   void processingThread();
+
+   void receivePacketV4();
+   void receivePacketV6();
+   void processEchoReply(const InetAddress& addr, uint16_t sequence);
+   void processHostUnreachable(const InetAddress& addr);
+
+   void sendRequestV4(PingRequest *request);
+   void sendRequestV6(PingRequest *request);
+   bool sendRequest(PingRequest *request)
+   {
+      if (m_family == AF_INET)
+         sendRequestV4(request);
+      else
+         sendRequestV6(request);
+      return request->state == IN_PROGRESS;
+   }
+
+public:
+   PingRequestProcessor(int family);
+   ~PingRequestProcessor();
+
+   uint32_t ping(const InetAddress &addr, uint32_t timeout, uint32_t *rtt, uint32_t packetSize, bool dontFragment);
+};
+
+/**
+ * Constructor
+ */
+PingRequestProcessor::PingRequestProcessor(int family)
+{
+   m_head = MemAllocStruct<PingRequest>();
+   m_dataSocket = INVALID_SOCKET;
+   m_controlSockets[0] = INVALID_SOCKET;
+   m_controlSockets[1] = INVALID_SOCKET;
+   m_processingThread = INVALID_THREAD_HANDLE;
+   m_lastSocketOpenAttempt = 0;
+   m_id = static_cast<uint16_t>(GetCurrentProcessId());
+   m_sequence = 0;
+   m_family = family;
+   m_shutdown = false;
+#if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
+   pthread_mutexattr_t a;
+   pthread_mutexattr_init(&a);
+   MUTEXATTR_SETTYPE(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
+   pthread_mutex_init(&m_mutex, &a);
+   pthread_mutexattr_destroy(&a);
+#else
+   pthread_mutex_init(&m_mutex, nullptr);
+#endif
+}
+
+/**
+ * Destructor
+ */
+PingRequestProcessor::~PingRequestProcessor()
+{
+   pthread_mutex_lock(&m_mutex);
+   m_shutdown = true;
+   pthread_mutex_unlock(&m_mutex);
+
+   if (m_controlSockets[1] != INVALID_SOCKET)
+      write(m_controlSockets[1], "S", 1);
+
+   ThreadJoin(m_processingThread);
+   MemFree(m_head);
+   pthread_mutex_destroy(&m_mutex);
+
+   close(m_dataSocket);
+   close(m_controlSockets[0]);
+   close(m_controlSockets[1]);
+}
+
+/**
+ * Open sockets
+ */
+bool PingRequestProcessor::openSocket()
+{
+   time_t now = time(nullptr);
+   if (now - m_lastSocketOpenAttempt < 60)
+      return false;
+
+   if (m_dataSocket == INVALID_SOCKET)
+   {
+#ifdef WITH_IPV6
+      if (m_family == AF_INET6)
+         m_dataSocket = CreateSocket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
+      else
+         m_dataSocket = CreateSocket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+#else
+      m_dataSocket = CreateSocket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+#endif
+   }
+
+   m_lastSocketOpenAttempt = now;
+   return m_dataSocket != INVALID_SOCKET;
+}
+
+/**
+ * Receiver thread
+ */
+void PingRequestProcessor::processingThread()
+{
    SocketPoller sp;
-
-   // Wait for response
-   for(UINT32 timeLeft = timeout; timeLeft > 0;)
+   while(!m_shutdown)
    {
       sp.reset();
-      sp.add(sock);
+      sp.add(m_dataSocket);
+      sp.add(m_controlSockets[0]);
+      if (sp.poll(30000) <= 0)
+         continue;
 
-      UINT64 startTime = GetCurrentTimeMs();
-      if (sp.poll(timeLeft) > 0)
-		{
-			UINT32 elapsedTime = (UINT32)(GetCurrentTimeMs() - startTime);
-			timeLeft -= std::min(elapsedTime, timeLeft);
-			rtt += elapsedTime;
+      if (sp.isSet(m_controlSockets[0]))
+      {
+         char command = 0;
+         read(m_controlSockets[0], &command, 1);
+         if (command == 'S')
+            break;
+      }
 
-			// Receive reply
-			socklen_t addrLen = sizeof(struct sockaddr_in);
-		   struct sockaddr_in saSrc;
-		   ECHOREPLY reply;
-			if (recvfrom(sock, (char *)&reply, sizeof(ECHOREPLY), 0, (struct sockaddr *)&saSrc, &addrLen) > 0)
-			{
-				// Check response
-				if ((reply.m_ipHdr.m_iaSrc.s_addr == addr) && 
-					 (reply.m_icmpHdr.m_cType == 0) &&
-					 (reply.m_icmpHdr.m_wId == id) &&
-					 (reply.m_icmpHdr.m_wSeq == sequence))
-				{
-					result = ICMP_SUCCESS;   // We succeed
-					if (prtt != NULL)
-						*prtt = rtt;
-               break;
-				}
+      if (sp.isSet(m_dataSocket))
+      {
+         pthread_mutex_lock(&m_mutex);
+         if (m_family == AF_INET)
+            receivePacketV4();
+         else
+            receivePacketV6();
+         pthread_mutex_unlock(&m_mutex);
+      }
+   }
 
-				// Check for "destination unreachable" error
-				if ((reply.m_icmpHdr.m_cType == 3) &&
-					 (reply.m_icmpHdr.m_cCode == 1))    // code 1 is "host unreachable"
-				{
-					if (((IPHDR *)reply.m_data)->m_iaDst.s_addr == addr)
-					{
-						result = ICMP_UNREACHABLE;
-						break;
-					}
-				}
-			}
-		}
-		else     // select() or poll() ended on timeout
-		{
-			timeLeft = 0;
-		}
-	}
-   return result;
+   // Cancel all pending requests
+   pthread_mutex_lock(&m_mutex);
+   for(PingRequest *r = m_head->next; r != nullptr; r = r->next)
+      CloseRequest(r, ICMP_API_ERROR);
+   m_head->next = nullptr;
+   pthread_mutex_unlock(&m_mutex);
 }
 
 /**
- * Do an ICMP ping to specific IPv4 address
- * Return value: TRUE if host is alive and FALSE otherwise
- * Parameters: addr - IP address in network byte order
- *             iNumRetries - number of retries
- *             dwTimeout - Timeout waiting for response in milliseconds
+ * Process echo reply
  */
-static UINT32 IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize, bool dontFragment)
+void PingRequestProcessor::processEchoReply(const InetAddress& addr, uint16_t sequence)
 {
-   static char szPayload[64] = "NetXMS ICMP probe [01234567890]";
-
-   // Check packet size
-   if (packetSize < sizeof(ICMPHDR) + sizeof(IPHDR))
-      packetSize = sizeof(ICMPHDR) + sizeof(IPHDR);
-   else if (packetSize > MAX_PING_SIZE)
-      packetSize = MAX_PING_SIZE;
-
-   // Create raw socket
-   SOCKET sock = CreateSocket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-   if (sock == INVALID_SOCKET)
+   for(PingRequest *r = m_head->next; r != nullptr; r = r->next)
    {
-      return ICMP_RAW_SOCK_FAILED;
+      if (r->address.equals(addr) && (r->sequence == sequence))
+      {
+         r->rtt = GetCurrentTimeMs() - r->timestamp;
+         CloseRequest(r, ICMP_SUCCESS);
+         break;
+      }
    }
+}
 
-   if (dontFragment)
+/**
+ * Process "host unreachable" notification
+ */
+void PingRequestProcessor::processHostUnreachable(const InetAddress& addr)
+{
+   for(PingRequest *r = m_head->next; r != nullptr; r = r->next)
+      if (r->address.equals(addr))
+         CloseRequest(r, ICMP_UNREACHABLE);
+}
+
+/**
+ * Receive IPv4 packet
+ */
+void PingRequestProcessor::receivePacketV4()
+{
+   socklen_t addrLen = sizeof(struct sockaddr_in);
+   struct sockaddr_in saSrc;
+   ICMP_ECHO_REPLY reply;
+   if (recvfrom(m_dataSocket, (char *)&reply, sizeof(ICMP_ECHO_REPLY), 0, (struct sockaddr *)&saSrc, &addrLen) <= 0)
+      return;
+
+   if ((reply.m_icmpHdr.m_cType == 0) && (reply.m_icmpHdr.m_wId == m_id))
    {
-#if HAVE_DECL_IP_MTU_DISCOVER
-      int v = IP_PMTUDISC_DO;
-      setsockopt(sock, IPPROTO_IP, IP_MTU_DISCOVER, &v, sizeof(v));
-#elif HAVE_DECL_IP_DONTFRAG
-      int v = 1;
-      setsockopt(sock, IPPROTO_IP, IP_DONTFRAG, &v, sizeof(v));
-#else
-      close(sock);
-      return ICMP_API_ERROR;
+      processEchoReply(InetAddress(ntohl(reply.m_ipHdr.m_iaSrc.s_addr)), reply.m_icmpHdr.m_wSeq);
+   }
+   else if ((reply.m_icmpHdr.m_cType == 3) && (reply.m_icmpHdr.m_cCode == 1))    // code 1 is "host unreachable"
+   {
+      processHostUnreachable(InetAddress(ntohl(((IPHDR *)reply.m_data)->m_iaDst.s_addr)));
+   }
+}
+
+/**
+ * Receive IPv6 packet
+ */
+void PingRequestProcessor::receivePacketV6()
+{
+#ifdef WITH_IPV6
+   socklen_t addrLen = sizeof(struct sockaddr_in6);
+   struct sockaddr_in6 saSrc;
+   char buffer[MAX_PING_SIZE];
+   if (recvfrom(m_dataSocket, buffer, MAX_PING_SIZE, 0, (struct sockaddr *)&saSrc, &addrLen) <= 0)
+      return;
+
+   ICMP6_REPLY *reply = reinterpret_cast<ICMP6_REPLY*>(buffer);
+   if ((reply->type == 129) && (reply->id == static_cast<uint32_t>(m_id))) // ICMPv6 Echo Reply
+   {
+      processEchoReply(InetAddress(saSrc.sin6_addr.s6_addr), static_cast<uint16_t>(reply->sequence));
+   }
+   else if ((reply->type == 1) || (reply->type == 3))    // 1 = Destination Unreachable, 3 = Time Exceeded
+   {
+      processHostUnreachable(InetAddress(reinterpret_cast<ICMP6_ERROR_REPORT*>(reply)->destAddr));
+   }
 #endif
+}
+
+/**
+ * Set or clear "don't fragment" flag on socket
+ */
+static inline bool SetDontFragmentFlag(SOCKET s, bool enable)
+{
+#if HAVE_DECL_IP_MTU_DISCOVER
+   int v = enable ? IP_PMTUDISC_DO : IP_PMTUDISC_DONT;
+   return setsockopt(s, IPPROTO_IP, IP_MTU_DISCOVER, &v, sizeof(v)) == 0;
+#elif HAVE_DECL_IP_DONTFRAG
+   int v = enable ? 1 : 0;
+   return setsockopt(s, IPPROTO_IP, IP_DONTFRAG, &v, sizeof(v)) == 0;
+#else
+   return false;
+#endif
+}
+
+/**
+ * Send ICMPv4 packet
+ */
+void PingRequestProcessor::sendRequestV4(PingRequest *request)
+{
+   static char payload[64] = "NetXMS ICMP probe [01234567890]";
+
+   if (request->dontFragment && !SetDontFragmentFlag(m_dataSocket, true))
+   {
+      request->result = ICMP_SEND_FAILED;
+      request->state = COMPLETED;
+      return;
    }
 
    // Setup destination address structure
-   struct sockaddr_in saDest;
-   memset(&saDest, 0, sizeof(sockaddr_in));
-   saDest.sin_addr.s_addr = addr;
-   saDest.sin_family = AF_INET;
-   saDest.sin_port = 0;
+   SockAddrBuffer saDest;
+   request->address.fillSockAddr(&saDest);
 
    // Fill in request structure
-   ECHOREQUEST request;
-   request.m_icmpHdr.m_cType = 8;   // ICMP ECHO REQUEST
-   request.m_icmpHdr.m_cCode = 0;
-   request.m_icmpHdr.m_wId = (WORD)GetCurrentThreadId();
-   request.m_icmpHdr.m_wSeq = 0;
-   memcpy(request.m_data, szPayload, MIN(packetSize - sizeof(ICMPHDR) - sizeof(IPHDR), 64));
-
-   UINT32 result = ICMP_API_ERROR;
+   ICMP_ECHO_REQUEST packet;
+   packet.m_icmpHdr.m_cType = 8;   // ICMP ECHO REQUEST
+   packet.m_icmpHdr.m_cCode = 0;
+   packet.m_icmpHdr.m_wId = m_id;
+   packet.m_icmpHdr.m_wSeq = request->sequence;
+   memcpy(packet.m_data, payload, MIN(request->packetSize - sizeof(ICMPHDR) - sizeof(IPHDR), 64));
 
    // Do ping
-#if HAVE_RAND_R
-   unsigned int seed = (unsigned int)(time(NULL) * addr);
-#endif
-   int bytes = packetSize - sizeof(IPHDR);
-   for(int i = 0; i < retries; i++)
+   int bytes = request->packetSize - sizeof(IPHDR);
+   packet.m_icmpHdr.m_wChecksum = 0;
+   packet.m_icmpHdr.m_wChecksum = CalculateIPChecksum(&packet, bytes);
+   if (sendto(m_dataSocket, (char *)&packet, bytes, 0, (struct sockaddr *)&saDest.sa4, sizeof(struct sockaddr_in)) == bytes)
    {
-      request.m_icmpHdr.m_wSeq++;
-      request.m_icmpHdr.m_wChecksum = 0;
-      request.m_icmpHdr.m_wChecksum = CalculateIPChecksum(&request, bytes);
-      if (sendto(sock, (char *)&request, bytes, 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in)) == bytes)
+      request->state = IN_PROGRESS;
+   }
+   else
+   {
+      request->result = ICMP_SEND_FAILED;
+      request->state = COMPLETED;
+      if ((errno == EBADF) || (errno == ENOTSOCK))
       {
-          result = WaitForReply(sock, addr, request.m_icmpHdr.m_wId, request.m_icmpHdr.m_wSeq, timeout, rtt);
-          if (result != ICMP_TIMEOUT)
-             break;  // success or fatal error
+         close(m_dataSocket);
+         m_dataSocket = INVALID_SOCKET;
       }
-      else
-      {
-         result = ICMP_SEND_FAILED;
-      }
-
-      UINT32 minDelay = 500 * i; // min = 0 in first run, then wait longer and longer
-      UINT32 maxDelay = 200 + minDelay * 2;  // increased random window between retries
-#if HAVE_RAND_R
-      UINT32 delay = minDelay + (rand_r(&seed) % maxDelay);
-#else
-      UINT32 delay = minDelay + (UINT32)(GetCurrentTimeMs() % maxDelay);
-#endif
-      ThreadSleepMs(delay);
    }
 
-   closesocket(sock);
-   return result;
+   if (request->dontFragment && (m_dataSocket != INVALID_SOCKET))
+      SetDontFragmentFlag(m_dataSocket, false);
+}
+
+#ifdef WITH_IPV6
+
+/**
+ * Find source address for given destination
+ */
+static bool FindSourceAddress(struct sockaddr_in6 *dest, struct sockaddr_in6 *src)
+{
+   int sd = socket(AF_INET6, SOCK_DGRAM, 0);
+   if (sd < 0)
+      return false;
+
+   bool success = false;
+   dest->sin6_port = htons(1025);
+   if (connect(sd, (struct sockaddr *)dest, sizeof(struct sockaddr_in6)) != -1)
+   {
+      socklen_t len = sizeof(struct sockaddr_in6);
+      if (getsockname(sd, (struct sockaddr *)src, &len) != -1)
+      {
+         src->sin6_port = 0;
+         success = true;
+      }
+   }
+   dest->sin6_port = 0;
+   close(sd);
+   return success;
 }
 
 /**
- * Ping IPv6 address
+ * ICMPv6 checksum calculation
  */
-UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize, bool dontFragment);
+static uint16_t CalculateICMPv6Checksum(const uint16_t *addr, size_t len)
+{
+   size_t count = len;
+   uint32_t sum = 0;
+
+   // Sum up 2-byte values until none or only one byte left
+   while(count > 1)
+   {
+      sum += *(addr++);
+      count -= 2;
+   }
+
+   // Add left-over byte, if any
+   if (count > 0)
+   {
+      sum += *(BYTE *)addr;
+   }
+
+   // Fold 32-bit sum into 16 bits; we lose information by doing this,
+   // increasing the chances of a collision.
+   // sum = (lower 16 bits) + (upper 16 bits shifted right 16 bits)
+   while(sum >> 16)
+   {
+      sum = (sum & 0xffff) + (sum >> 16);
+   }
+
+   // Checksum is one's compliment of sum.
+   return (uint16_t)(~sum);
+}
+
+#endif   /* WITH_IPV6 */
+
+/**
+ * Send ICMPv6 packet
+ */
+void PingRequestProcessor::sendRequestV6(PingRequest *request)
+{
+#ifdef WITH_IPV6
+   struct sockaddr_in6 src, dest;
+   request->address.fillSockAddr((SockAddrBuffer *)&dest);
+   if (!FindSourceAddress(&dest, &src))
+   {
+      request->state = COMPLETED;
+      request->result = ICMP_UNREACHABLE;  // no route to host
+      return;
+   }
+
+   if (request->dontFragment && !SetDontFragmentFlag(m_dataSocket, true))
+   {
+      request->state = COMPLETED;
+      request->result = ICMP_SEND_FAILED;
+      return;
+   }
+
+   // Prepare packet and calculate checksum
+   static char payload[64] = "NetXMS ICMPv6 probe [01234567890]";
+   size_t size = MAX(sizeof(ICMP6_PACKET_HEADER), MIN(request->packetSize, MAX_PING_SIZE));
+   ICMP6_PACKET_HEADER *p = static_cast<ICMP6_PACKET_HEADER*>(MemAllocLocal(size));
+   memset(p, 0, size);
+   memcpy(p->srcAddr, src.sin6_addr.s6_addr, 16);
+   memcpy(p->destAddr, dest.sin6_addr.s6_addr, 16);
+   p->nextHeader = 58;
+   p->type = 128;  // ICMPv6 Echo Request
+   p->id = m_id;
+   p->sequence = request->sequence;
+   memcpy(p->data, payload, MIN(33, size - sizeof(ICMP6_PACKET_HEADER) + 8));
+   p->checksum = 0;
+   p->checksum = CalculateICMPv6Checksum(reinterpret_cast<uint16_t*>(p), size);
+
+   // Send packet
+   int bytes = size - 40;  // excluding IPv6 header
+   if (sendto(m_dataSocket, (char *)p + 40, bytes, 0, (struct sockaddr *)&dest, sizeof(struct sockaddr_in6)) == bytes)
+   {
+      request->state = IN_PROGRESS;
+   }
+   else
+   {
+      request->result = ICMP_SEND_FAILED;
+      request->state = COMPLETED;
+      if ((errno == EBADF) || (errno == ENOTSOCK))
+      {
+         close(m_dataSocket);
+         m_dataSocket = INVALID_SOCKET;
+      }
+   }
+
+   MemFreeLocal(p);
+   if (request->dontFragment && (m_dataSocket != INVALID_SOCKET))
+      SetDontFragmentFlag(m_dataSocket, false);
+#else
+   request->state = COMPLETED;
+   request->result = ICMP_API_ERROR;
+#endif
+}
+
+/**
+ * Do ping
+ */
+uint32_t PingRequestProcessor::ping(const InetAddress &addr, uint32_t timeout, uint32_t *rtt, uint32_t packetSize, bool dontFragment)
+{
+   PingRequest request;
+   memset(&request, 0, sizeof(request));
+   request.address = addr;
+   request.packetSize = packetSize;
+   request.dontFragment = dontFragment;
+   request.timeout = timeout;
+   request.timestamp = GetCurrentTimeMs();
+   pthread_cond_init(&request.wakeupCondition, nullptr);
+
+   pthread_mutex_lock(&m_mutex);
+   if (!m_shutdown)
+   {
+      if (m_dataSocket == INVALID_SOCKET)
+      {
+         if (!openSocket())
+         {
+            request.result = ICMP_RAW_SOCK_FAILED;
+         }
+      }
+      if (m_processingThread == INVALID_THREAD_HANDLE)
+      {
+         if (pipe(m_controlSockets) == 0)
+         {
+            m_processingThread = ThreadCreateEx(this, &PingRequestProcessor::processingThread);
+         }
+         else
+         {
+            request.result = ICMP_API_ERROR;
+         }
+      }
+
+      if (request.result == ICMP_SUCCESS) // Continue only if request processor is ready
+      {
+         request.sequence = m_sequence++;
+         if (sendRequest(&request))
+         {
+            // Only add request to list if request packet was sent successfully
+            request.next = m_head->next;
+            m_head->next = &request;
+
+#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
+            struct timespec ts;
+            ts.tv_sec = dwTimeOut / 1000;
+            ts.tv_nsec = (dwTimeOut % 1000) * 1000000;
+            int waitResult = pthread_cond_reltimedwait_np(&request.wakeupCondition, &m_mutex, &ts);
+#else
+            struct timeval now;
+            gettimeofday(&now, nullptr);
+            now.tv_usec += (timeout % 1000) * 1000;
+
+            struct timespec ts;
+            ts.tv_sec = now.tv_sec + (timeout / 1000) + now.tv_usec / 1000000;
+            ts.tv_nsec = (now.tv_usec % 1000000) * 1000;
+            int waitResult = pthread_cond_timedwait(&request.wakeupCondition, &m_mutex, &ts);
+#endif
+
+            // Check request state in addition to timeout for case when response was received and processed
+            // after pthread_cond_timedwait timeouts but before mutex was acquired by waiting thread
+            if ((waitResult != 0) && (request.state == IN_PROGRESS))
+            {
+               request.result = ICMP_TIMEOUT;
+            }
+
+            // Remove request from list
+            for(PingRequest *p = m_head; p->next != nullptr; p = p->next)
+            {
+               if (p->next == &request)
+               {
+                  p->next = request.next;
+                  break;
+               }
+            }
+         }
+      }
+   }
+   else
+   {
+      request.result = ICMP_API_ERROR;
+   }
+   pthread_mutex_unlock(&m_mutex);
+
+   pthread_cond_destroy(&request.wakeupCondition);
+   if (rtt != nullptr)
+      *rtt = request.rtt;
+   return request.result;
+}
+
+/**
+ * Request processor instances
+ */
+static PingRequestProcessor s_processorV4(AF_INET);
+#ifdef WITH_IPV6
+static PingRequestProcessor s_processorV6(AF_INET6);
+#endif
+
+/**
+ * Ping with retries
+ */
+static inline uint32_t PingLoop(PingRequestProcessor *p, const InetAddress &addr, int numRetries, uint32_t timeout, uint32_t *rtt, uint32_t packetSize, bool dontFragment)
+{
+   while(numRetries-- > 0)
+   {
+      uint32_t result = p->ping(addr, timeout, rtt, packetSize, dontFragment);
+      if (result != ICMP_TIMEOUT)
+         return result;
+   }
+   return ICMP_TIMEOUT;
+}
 
 /**
  * Do an ICMP ping to specific IP address
  * Return value: TRUE if host is alive and FALSE otherwise
  * Parameters: addr - IP address
- *             iNumRetries - number of retries
- *             dwTimeout - Timeout waiting for response in milliseconds
+ *             numRetries - number of retries
+ *             timeout - Timeout waiting for response in milliseconds
+ *             rtt - pointer to save round trip time
+ *             packetSize - ping packet size in bytes
+ *             dontFragment - if true "don't fragment" flag will be set on outgoing packet
  */
-UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize, bool dontFragment)
+uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, uint32_t timeout, uint32_t *rtt, uint32_t packetSize, bool dontFragment)
 {
    if (addr.getFamily() == AF_INET)
-      return IcmpPing4(htonl(addr.getAddressV4()), numRetries, timeout, rtt, packetSize, dontFragment);
+      return PingLoop(&s_processorV4, addr, numRetries, timeout, rtt, packetSize, dontFragment);
 #ifdef WITH_IPV6
    if (addr.getFamily() == AF_INET6)
-      return IcmpPing6(addr, numRetries, timeout, rtt, packetSize, dontFragment);
+      return PingLoop(&s_processorV6, addr, numRetries, timeout, rtt, packetSize, dontFragment);
 #endif
    return ICMP_API_ERROR;
 }
 
-#endif
+#endif   /* _WIN32 */
