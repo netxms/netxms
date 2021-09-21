@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2021 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -110,6 +110,8 @@ void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*cal
 
 #else /* _WIN32 */
 
+#include <nxnet.h>
+
 /**
  * ICMP echo request structure
  */
@@ -134,9 +136,9 @@ struct ECHOREPLY
  */
 struct ScanStatus
 {
-   INT64 startTime;
+   int64_t startTime;
    bool success;
-   UINT32 rtt;
+   uint32_t rtt;
 };
 
 /**
@@ -149,7 +151,7 @@ static void ProcessResponse(SOCKET sock, UINT32 baseAddr, UINT32 lastAddr, ScanS
    socklen_t addrLen = sizeof(struct sockaddr_in);
    if (recvfrom(sock, (char *)&reply, sizeof(ECHOREPLY), 0, (struct sockaddr *)&saSrc, &addrLen) > 0)
    {
-      UINT32 addr = ntohl(reply.m_ipHdr.m_iaSrc.s_addr);
+      uint32_t addr = ntohl(reply.m_ipHdr.m_iaSrc.s_addr);
       if ((addr >= baseAddr) && (addr <= lastAddr) &&
           (reply.m_icmpHdr.m_cType == 0) &&
           !status[addr - baseAddr].success)
@@ -183,8 +185,8 @@ void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*cal
 
    SocketPoller sp;
    ScanStatus *status = MemAllocArray<ScanStatus>(to.getAddressV4() - from.getAddressV4() + 1);
-   UINT32 baseAddr = from.getAddressV4();
-   for(UINT32 a = baseAddr, i = 0; a <= to.getAddressV4(); a++, i++)
+   uint32_t baseAddr = from.getAddressV4();
+   for(uint32_t a = baseAddr, i = 0; a <= to.getAddressV4(); a++, i++)
    {
       request.m_icmpHdr.m_wSeq++;
       request.m_icmpHdr.m_wChecksum = 0;
@@ -202,7 +204,7 @@ void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*cal
       }
    }
 
-   UINT32 elapsedTime = 0;
+   uint32_t elapsedTime = 0;
    while(elapsedTime < g_icmpPingTimeout)
    {
       sp.reset();
@@ -217,7 +219,7 @@ void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*cal
 
    closesocket(sock);
 
-   for(UINT32 a = baseAddr, i = 0; a <= to.getAddressV4(); a++, i++)
+   for(uint32_t a = baseAddr, i = 0; a <= to.getAddressV4(); a++, i++)
    {
       if (status[i].success)
          callback(a, 0, nullptr, status[i].rtt, console, context);
