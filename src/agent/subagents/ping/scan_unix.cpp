@@ -21,6 +21,7 @@
 **/
 
 #include "ping.h"
+#include <nxnet.h>
 
 /**
  * ICMP echo request structure

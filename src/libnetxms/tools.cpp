@@ -433,6 +433,45 @@ char LIBNETXMS_EXPORTABLE *Ip6ToStrA(const BYTE *addr, char *buffer)
 #endif
 
 /**
+ * Checksum routine for Internet Protocol family headers (C Version)
+ *
+ * Author -
+ * Mike Muuss
+ * U. S. Army Ballistic Research Laboratory
+ * December, 1983
+ */
+uint16_t LIBNETXMS_EXPORTABLE CalculateIPChecksum(const void *data, size_t len)
+{
+   size_t nleft = len;
+   uint32_t sum = 0;
+   const BYTE *curr = static_cast<const BYTE*>(data);
+
+   /*
+    *  Our algorithm is simple, using a 32 bit accumulator (sum),
+    *  we add sequential 16 bit words to it, and at the end, fold
+    *  back all the carry bits from the top 16 bits into the lower
+    *  16 bits.
+    */
+   while(nleft > 1)
+   {
+      sum += ((uint16_t)(*curr << 8) | (uint16_t)(*(curr + 1)));
+      curr += 2;
+      nleft -= 2;
+   }
+
+   /* mop up an odd byte, if necessary */
+   if (nleft == 1)
+      sum += (uint16_t)(*curr);
+
+   /*
+    * add back carry outs from top 16 bits to low 16 bits
+    */
+   while(sum >> 16)
+      sum = (sum >> 16) + (sum & 0xffff);   /* add hi 16 to low 16 */
+   return htons((uint16_t)(~sum));
+}
+
+/**
  * Duplicate memory block
  */
 LIBNETXMS_EXPORTABLE void *MemCopyBlock(const void *data, size_t size)

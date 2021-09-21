@@ -24,6 +24,7 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <nms_util.h>
+#include <nxnet.h>
 
 #include <locale.h>
 #include <sys/utsname.h>
