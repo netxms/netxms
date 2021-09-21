@@ -86,7 +86,6 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EnableAuditLog','1','1',1,1,'B','Enable/disable audit log.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EnableReportingServer','0','0',1,1,'B','Enable/disable reporting server.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EnableISCListener','0','0',1,1,'B','Enable/disable Inter-Server Communications Listener.','');
-INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EnableObjectTransactions','0','0',1,1,'B','','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EnableAlarmSummaryEmails','0','0',1,0,'B','Enable/disable alarm summary e-mails.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EnableTimedAlarmAck','1','1',1,1,'B','Enable/disable ability to acknowledge an alarm for a specific time.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EnableXMPPConnector','0','0',1,1,'B','Enable/disable XMPP connector (required to enable XMPP message sending).','');

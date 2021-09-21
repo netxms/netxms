@@ -421,8 +421,6 @@ static void LoadGlobalConfig()
       g_flags |= AF_ALLOW_TRAP_VARBIND_CONVERSION;
    if (ConfigReadBoolean(_T("EnableZoning"), false))
       g_flags |= AF_ENABLE_ZONING;
-   if (ConfigReadBoolean(_T("EnableObjectTransactions"), false))
-      g_flags |= AF_ENABLE_OBJECT_TRANSACTIONS;
    if (ConfigReadBoolean(_T("UseSNMPTrapsForDiscovery"), false))
       g_flags |= AF_SNMP_TRAP_DISCOVERY;
    if (ConfigReadBoolean(_T("UseSyslogForDiscovery"), false))

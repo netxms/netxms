@@ -37,11 +37,6 @@ ThreadPool *g_syncerThreadPool = nullptr;
 static VolatileCounter s_outstandingSaveRequests = 0;
 
 /**
- * Object transaction lock
- */
-static RWLOCK s_objectTxnLock = RWLockCreate();
-
-/**
  * Syncer run time statistic
  */
 static ManualGauge64 s_syncerRunTime(_T("Syncer"), 5, 900);
@@ -94,24 +89,6 @@ void ShowSyncerStats(ServerConsole *console)
 }
 
 /**
- * Start object transaction
- */
-void NXCORE_EXPORTABLE ObjectTransactionStart()
-{
-   if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
-      RWLockReadLock(s_objectTxnLock);
-}
-
-/**
- * End object transaction
- */
-void NXCORE_EXPORTABLE ObjectTransactionEnd()
-{
-   if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
-      RWLockUnlock(s_objectTxnLock);
-}
-
-/**
  * Save object to database on separate thread
  */
 static void SaveObject(NetObj *object)
@@ -137,9 +114,6 @@ static void SaveObject(NetObj *object)
 void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
 {
    s_outstandingSaveRequests = 0;
-
-   if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
-      RWLockWriteLock(s_objectTxnLock);
 
 	unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects();
    nxlog_debug_tag(DEBUG_TAG_SYNC, 5, _T("%d objects to process"), objects->size());
@@ -208,8 +182,6 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
 	   }
 	}
 
-   if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
-      RWLockUnlock(s_objectTxnLock);
 	nxlog_debug_tag(DEBUG_TAG_SYNC, 5, _T("Save objects completed"));
 }
 

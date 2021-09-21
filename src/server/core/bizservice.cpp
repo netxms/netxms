@@ -34,7 +34,7 @@
 /**
  * Base business service default constructor
  */
-BaseBusinessService::BaseBusinessService() : m_checks(10, 10, Ownership::True), super(), AutoBindTarget(this)
+BaseBusinessService::BaseBusinessService() : super(), AutoBindTarget(this), m_checks(10, 10, Ownership::True)
 {
    m_id = 0;
    m_busy = false;
@@ -45,6 +45,7 @@ BaseBusinessService::BaseBusinessService() : m_checks(10, 10, Ownership::True), 
    m_instanceDiscoveryMethod = 0;
    m_instanceDiscoveryData = nullptr;
    m_instanceDiscoveryFilter = nullptr;
+   m_instanceSource = 0;
    m_objectStatusThreshhold = 0;
    m_dciStatusThreshhold = 0;
 }
@@ -52,7 +53,7 @@ BaseBusinessService::BaseBusinessService() : m_checks(10, 10, Ownership::True), 
 /**
  * Base business service default constructor
  */
-BaseBusinessService::BaseBusinessService(const TCHAR *name) : m_checks(10, 10, Ownership::True), super(name, 0), AutoBindTarget(this)
+BaseBusinessService::BaseBusinessService(const TCHAR *name) : super(name, 0), AutoBindTarget(this), m_checks(10, 10, Ownership::True)
 {
    m_busy = false;
    m_pollingDisabled = false;
@@ -62,9 +63,9 @@ BaseBusinessService::BaseBusinessService(const TCHAR *name) : m_checks(10, 10, O
    m_instanceDiscoveryMethod = 0;
    m_instanceDiscoveryData = nullptr;
    m_instanceDiscoveryFilter = nullptr;
+   m_instanceSource = 0;
    m_objectStatusThreshhold = 0;
    m_dciStatusThreshhold = 0;
-   m_instanceSource = 0;
 }
 
 /**
@@ -495,9 +496,7 @@ void BusinessService::addChildTicket(BusinessServiceTicketData *data)
 void BusinessService::configurationPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 {
    poller->startExecution();
-   poller->startObjectTransaction();
    configurationPoll(poller, session, rqId);
-   poller->endObjectTransaction();
    delete poller;
 }
 
@@ -941,13 +940,13 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
    m_pollRequestor = session;
    m_pollRequestId = rqId;
 
-   sendPollerMsg(_T("   Started instance discovery poll for Business service prototype %s[%ld]\r\n"), m_name, m_id);
+   sendPollerMsg(_T("Started instance discovery poll for business service prototype \"%s\"\r\n"), m_name);
 
    poller->startExecution();
    unique_ptr<StringMap> instances = getInstances();
-   sendPollerMsg(_T("   Found %ld instances\r\n"), instances->size());
+   sendPollerMsg(_T("   Found %d instances\r\n"), instances->size());
    unique_ptr<SharedObjectArray<BusinessService>> services = getServices();
-   sendPollerMsg(_T("   Found %ld services\r\n"), services->size());
+   sendPollerMsg(_T("   Found %d services\r\n"), services->size());
 
    for (auto it = services->begin(); it.hasNext();)
    {
@@ -961,11 +960,9 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
 
    for (auto it = services->begin(); it.hasNext();)
    {
-      ObjectTransactionStart();
       auto service = it.next();
-      sendPollerMsg(_T("   Removing '%s' service\r\n"), service->getName());
+      sendPollerMsg(_T("   Service \"%s\" removed\r\n"), service->getName());
       service->deleteObject();
-      ObjectTransactionEnd();
       it.remove();
    }
 
@@ -985,7 +982,7 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
          service->addParent(getParents()->getShared(0));
          g_businessServiceRoot->calculateCompoundStatus();
          service->unhide();
-         sendPollerMsg(_T("   Created '%s' service\r\n"), service->getName());
+         sendPollerMsg(_T("   Service \"%s\" created\r\n"), service->getName());
       }
    }
 

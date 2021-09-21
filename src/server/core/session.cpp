@@ -5745,8 +5745,6 @@ void ClientSession::createObject(NXCPMessage *request)
 
                if (moduleRCC == RCC_SUCCESS)
                {
-                  ObjectTransactionStart();
-
                   // Create new object
                   shared_ptr<NetObj> object;
                   TCHAR deviceId[MAX_OBJECT_NAME];
@@ -5967,8 +5965,6 @@ void ClientSession::createObject(NXCPMessage *request)
                         msg.setField(VID_RCC, RCC_OBJECT_CREATION_FAILED);
                      }
                   }
-
-                  ObjectTransactionEnd();
                }
                else
                {
@@ -6079,10 +6075,8 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
                // Prevent loops
                if (!pChild->isChild(pParent->getId()))
                {
-                  ObjectTransactionStart();
                   pParent->addChild(pChild);
                   pChild->addParent(pParent);
-                  ObjectTransactionEnd();
                   pParent->calculateCompoundStatus();
                   msg.setField(VID_RCC, RCC_SUCCESS);
                }
@@ -6093,10 +6087,8 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
             }
             else
             {
-               ObjectTransactionStart();
                pParent->deleteChild(*pChild);
                pChild->deleteParent(*pParent);
-               ObjectTransactionEnd();
                pParent->calculateCompoundStatus();
                if ((pParent->getObjectClass() == OBJECT_TEMPLATE) && pChild->isDataCollectionTarget())
                {
@@ -6133,9 +6125,7 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
  */
 static void DeleteObjectWorker(const shared_ptr<NetObj>& object)
 {
-   ObjectTransactionStart();
 	object->deleteObject();
-   ObjectTransactionEnd();
 }
 
 /**
@@ -7683,9 +7673,7 @@ void ClientSession::applyTemplate(NXCPMessage *pRequest)
          if ((pSource->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
              (pDestination->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
          {
-            ObjectTransactionStart();
             bool bErrors = static_cast<Template&>(*pSource).applyToTarget(static_pointer_cast<DataCollectionTarget>(pDestination));
-            ObjectTransactionEnd();
             static_cast<DataCollectionOwner&>(*pDestination).applyDCIChanges(false);
             msg.setField(VID_RCC, bErrors ? RCC_DCI_COPY_ERRORS : RCC_SUCCESS);
          }

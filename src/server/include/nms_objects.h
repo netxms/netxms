@@ -59,8 +59,6 @@ extern int16_t g_defaultAgentCacheMode;
  * Utility functions used by inline methods
  */
 bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, const TCHAR *query);
-void NXCORE_EXPORTABLE ObjectTransactionStart();
-void NXCORE_EXPORTABLE ObjectTransactionEnd();
 
 /**
  * Constants
@@ -246,9 +244,6 @@ public:
    NetObj *getObject() const { return m_object.get(); }
    bool isObjectCreation() const { return m_objectCreation; }
    const TCHAR *getStatus() const { return m_status; }
-
-   void startObjectTransaction() { if (!m_objectCreation) ObjectTransactionStart(); }
-   void endObjectTransaction() { if (!m_objectCreation) ObjectTransactionEnd(); }
 
    void startExecution() { _tcscpy(m_status, _T("started")); }
    void setStatus(const TCHAR *status) { _tcslcpy(m_status, status, 128); }

@@ -23,8 +23,6 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
-
-
 /**
  * Delete all Netobj level information
  */
@@ -69,6 +67,16 @@ static bool BSCommonDeleteObject(uint32_t id)
 }
 
 /**
+ * Upgrade from 40.70 to 40.71
+ */
+static bool H_UpgradeFromV70()
+{
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='EnableObjectTransactions'")));
+   CHK_EXEC(SetMinorSchemaVersion(71));
+   return true;
+}
+
+/**
  * Upgrade from 40.69 to 40.70
  */
 static bool H_UpgradeFromV69()
@@ -101,7 +109,7 @@ static bool H_UpgradeFromV69()
       _T("<END>");
    CHK_EXEC(SQLBatch(configBatch));
 
-   //Business service
+   // Business service
    static const TCHAR *businessServiceBatch =
       _T("ALTER TABLE business_services ADD is_prototype char(1)\n")
       _T("ALTER TABLE business_services ADD prototype_id integer\n")
@@ -121,12 +129,12 @@ static bool H_UpgradeFromV69()
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("business_services"), _T("dci_status_threshold")));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("business_services"), _T("instance_source")));
 
-   //Delete all templates
+   // Delete all templates
    CHK_EXEC(SQLQuery(_T("DELETE FROM object_properties WHERE object_id IN (SELECT id FROM slm_checks WHERE is_template=1)")));
    CHK_EXEC(SQLQuery(_T("DELETE FROM container_members WHERE object_id IN (SELECT id FROM slm_checks WHERE is_template=1)")));
    CHK_EXEC(SQLQuery(_T("DELETE FROM slm_checks WHERE is_template=1")));
 
-   //SLM Checks
+   // SLM Checks
    static const TCHAR *slmCheckBatch =
       _T("ALTER TABLE slm_checks ADD service_id integer\n")
       _T("ALTER TABLE slm_checks ADD related_object integer\n")
@@ -146,8 +154,8 @@ static bool H_UpgradeFromV69()
    CHK_EXEC(DBDropColumn(g_dbHandle, _T("slm_checks"), _T("template_id")));
    CHK_EXEC(DBDropColumn(g_dbHandle, _T("slm_checks"), _T("threshold_id")));
 
-   //check if there are node links under business service parent
-   //change all node links to business services
+   // check if there are node links under business service parent
+   // change all node links to business services
    IntegerArray<uint32_t> convertedLinks;
    DB_RESULT linkUnderMainContainer = SQLSelect(_T("SELECT cm.object_id FROM container_members cm INNER JOIN node_links nl ON nl.nodelink_id=cm.object_id WHERE cm.container_id=9"));
    if (linkUnderMainContainer != nullptr)
@@ -318,7 +326,7 @@ static bool H_UpgradeFromV69()
       return false;
    }
 
-   //Delete all slm check object information
+   // Delete all slm check object information
    DB_RESULT slmCheckResult = SQLSelect(_T("SELECT id FROM slm_checks"));
    if (slmCheckResult != nullptr)
    {
@@ -335,16 +343,16 @@ static bool H_UpgradeFromV69()
    }
 
    CHK_EXEC(SQLQuery(_T("DROP TABLE node_links")));
-   //Update node links type that were converted to business services
+   // Update node links type that were converted to business services
    CHK_EXEC(SQLQuery(_T("UPDATE object_containers SET object_class=28 where object_class=29")));
 
-   //Delete status for business service root
+   // Delete status for business service root
    TCHAR query[1024];
    _sntprintf(query, 1024,  _T("DELETE FROM slm_service_history WHERE service_id=%d"), 9);
    if (!SQLQuery(query) && !g_ignoreErrors)
       return false;
 
-   //slm service history
+   // slm service history
    CHK_EXEC(CreateTable(
                _T("CREATE TABLE business_service_downtime (")
                _T("   record_id integer not null,")
@@ -437,7 +445,7 @@ static bool H_UpgradeFromV69()
    }
    CHK_EXEC(SQLQuery(_T("DROP TABLE slm_service_history")));
 
-   //Update auto apply table
+   // Update auto apply table
    static const TCHAR *autoBindBatch =
       _T("ALTER TABLE auto_bind_target ADD bind_filter_2 $SQL:TEXT\n")
       _T("ALTER TABLE auto_bind_target ADD flags integer\n")
@@ -450,15 +458,13 @@ static bool H_UpgradeFromV69()
    {
       int autoBindCount = DBGetNumRows(autoBindResult);
       DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE auto_bind_target SET flags=? WHERE object_id=?"), true);
-      if (hStmt != NULL)
+      if (hStmt != nullptr)
       {
          for(int i = 0; i < autoBindCount; i++)
          {
-            int flag = DBGetFieldLong(autoBindResult, 0, 2) ? AAF_AUTO_APPLY_1 : 0;
-            flag |= DBGetFieldLong(autoBindResult, 0, 3) ? AAF_AUTO_REMOVE_1 : 0;
-
+            int32_t flag = (DBGetFieldLong(autoBindResult, i, 2) ? AAF_AUTO_APPLY_1 : 0) | (DBGetFieldLong(autoBindResult, i, 3) ? AAF_AUTO_REMOVE_1 : 0);
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, flag);
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldLong(autoBindResult, 0, 1));
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(autoBindResult, i, 1));
             if (!SQLExecute(hStmt) && !g_ignoreErrors)
             {
                DBFreeStatement(hStmt);
@@ -2393,6 +2399,7 @@ static struct
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 70, 40, 71, H_UpgradeFromV70 },
    { 69, 40, 70, H_UpgradeFromV69 },
    { 68, 40, 69, H_UpgradeFromV68 },
    { 67, 40, 68, H_UpgradeFromV67 },

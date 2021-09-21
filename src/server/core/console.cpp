@@ -946,7 +946,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_FQDN_FOR_NODE_NAMES));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_CONSOLE_DISABLED));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_OBJECT_TRANSACTIONS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_WRITE_FULL_DUMP));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_RESOLVE_NODE_NAMES));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CATCH_EXCEPTIONS));

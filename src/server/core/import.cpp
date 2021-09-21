@@ -459,11 +459,7 @@ static void DeleteEmptyTemplateGroup(shared_ptr<NetObj> templateGroup)
       return;
 
    shared_ptr<NetObj> parent = templateGroup->getParents(OBJECT_TEMPLATEGROUP)->getShared(0);
-
-   ObjectTransactionStart();
    templateGroup->deleteObject();
-   ObjectTransactionEnd();
-
    if (parent != nullptr)
       DeleteEmptyTemplateGroup(parent);
 
@@ -555,7 +551,6 @@ uint32_t ImportConfig(const Config& config, uint32_t flags)
                if (!parent->isChild(object->getId()))
                {
                   nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): existing template %s [%d] with GUID %s moved to %s template group"), object->getName(), object->getId(), (const TCHAR *)guid.toString(), parent->getName());
-                  ObjectTransactionStart();
                   unique_ptr<SharedObjectArray<NetObj>> parents = object->getParents(OBJECT_TEMPLATEGROUP);
                   if (parents->size() > 0)
                   {
@@ -570,13 +565,11 @@ uint32_t ImportConfig(const Config& config, uint32_t flags)
                   }
                   object->addParent(parent);
                   parent->addChild(object);
-                  ObjectTransactionEnd();
                }
             }
 		   }
 		   else
 		   {
-            ObjectTransactionStart();
             nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): template with GUID %s not found"), (const TCHAR *)guid.toString());
             shared_ptr<NetObj> parent = FindTemplateRoot(tc);
             object = make_shared<Template>(tc->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), guid);
@@ -585,7 +578,6 @@ uint32_t ImportConfig(const Config& config, uint32_t flags)
             object->addParent(parent);
             parent->addChild(object);
             object->unhide();
-            ObjectTransactionEnd();
 		   }
 		}
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): templates imported"));

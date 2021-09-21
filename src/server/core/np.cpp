@@ -1023,9 +1023,7 @@ static void CreateDiscoveredNode(NewNodeData *newNodeData)
    if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) == nullptr) &&
        (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) == nullptr))
    {
-      ObjectTransactionStart();
       PollNewNode(newNodeData);
-      ObjectTransactionEnd();
    }
    else
    {

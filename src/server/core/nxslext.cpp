@@ -843,7 +843,7 @@ static int F_LoadEvent(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM
  * Return value:
  *     new node object or null on failure
  */
-static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if ((argc < 2) || (argc > 4))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -881,7 +881,6 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	newNodeData.zoneUIN = (argc > 3) ? argv[3]->getValueAsUInt32() : 0;
 	newNodeData.doConfPoll = true;
 
-	ObjectTransactionStart();
    shared_ptr<Node> node = PollNewNode(&newNodeData);
 	if (node != nullptr)
 	{
@@ -889,13 +888,12 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 		parent->addChild(node);
 		node->addParent(parent);
 		node->unhide();
-		*ppResult = node->createNXSLObject(vm);
+		*result = node->createNXSLObject(vm);
 	}
 	else
 	{
-		*ppResult = vm->createValue();
+		*result = vm->createValue();
 	}
-	ObjectTransactionEnd();
 	return 0;
 }
 
