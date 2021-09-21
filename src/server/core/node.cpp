@@ -4078,7 +4078,7 @@ void Node::reconcileWithDuplicateNode(Node *node)
       if (object->getObjectClass() != OBJECT_TEMPLATE)
          continue;
 
-      if (static_cast<Template*>(object)->isAutoBindEnabled())
+      if (static_cast<Template*>(object)->isFirstFilterBindingEnabled())
          continue;
 
       if (!object->isDirectChild(m_id))
@@ -11035,7 +11035,7 @@ bool Node::getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocate
  */
 static bool ClusterSelectionFilter(NetObj *object, void *userData)
 {
-   return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() && ((Cluster *)object)->isAutoBindEnabled();
+   return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() && ((Cluster *)object)->isFirstFilterBindingEnabled();
 }
 
 /**
@@ -11051,7 +11051,7 @@ void Node::updateClusterMembership()
    for(int i = 0; i < clusters->size(); i++)
    {
       Cluster *cluster = static_cast<Cluster*>(clusters->get(i));
-      AutoBindDecision decision = cluster->isApplicable(self());
+      AutoBindDecision decision = cluster->isFirstFilterApplicable(self());
       if (decision == AutoBindDecision_Bind)
       {
          if (!cluster->isDirectChild(m_id))
@@ -11067,7 +11067,7 @@ void Node::updateClusterMembership()
       }
       else if (decision == AutoBindDecision_Unbind)
       {
-         if (cluster->isAutoUnbindEnabled() && cluster->isDirectChild(m_id))
+         if (cluster->isFirstFilterUnbindingEnabled() && cluster->isDirectChild(m_id))
          {
             sendPollerMsg(_T("   Removing from cluster %s\r\n"), cluster->getName());
             nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateClusterMembership(): removing object %d \"%s\" from cluster %d \"%s\""),

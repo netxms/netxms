@@ -137,7 +137,7 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define IDG_ALARM             8
 #define IDG_ALARM_NOTE        9
 #define IDG_PACKAGE           10
-#define IDG_SLM_TICKET        11
+#define IDG_BUSINESS_SERVICE_TICKET 11
 #define IDG_OBJECT_TOOL       12
 #define IDG_SCRIPT            13
 #define IDG_AGENT_CONFIG      14
@@ -155,8 +155,8 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define IDG_GEO_AREA          26
 #define IDG_SSH_KEY           27
 #define IDG_OBJECT_QUERY      28
-#define IDG_SLM_CHECK         29
-#define IDG_SLM_RECORD        30
+#define IDG_BUSINESS_SERVICE_CHECK 29
+#define IDG_BUSINESS_SERVICE_RECORD 30
 
 /**
  * Exit codes for console commands
@@ -899,8 +899,8 @@ private:
    void businessServiceGetCheckList(NXCPMessage *request);
    void businessServiceModifyCheck(NXCPMessage *request);
    void businessServiceDeleteCheck(NXCPMessage *request);
-   void getSLMData(NXCPMessage *request);
-   void getSLMTickets(NXCPMessage *request);
+   void getBusinessServiceUptime(NXCPMessage *request);
+   void getBusinessServiceTickets(NXCPMessage *request);
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
    void sendObjectUpdates();
@@ -1312,8 +1312,8 @@ void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, uint32_t code
 void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(const NXCPMessage& msg, uint32_t graphId);
 void NotifyClientsOnPolicyUpdate(const NXCPMessage& msg, const Template& object);
 void NotifyClientsOnPolicyDelete(uuid guid, const Template& object);
-void NotifyClientsOnSlmCheckUpdate(const NetObj& service, SlmCheck* check);
-void NotifyClientsOnSlmCheckDelete(const NetObj& service, uint32_t checkId);
+void NotifyClientsOnBusinessServiceCheckUpdate(const NetObj& service, BusinessServiceCheck* check);
+void NotifyClientsOnBusinessServiceCheckDelete(const NetObj& service, uint32_t checkId);
 void NotifyClientsOnDCIUpdate(const DataCollectionOwner& object, DCObject *dco);
 void NotifyClientsOnDCIDelete(const DataCollectionOwner& object, uint32_t dcoId);
 void NotifyClientsOnDCIStatusChange(const DataCollectionOwner& object, uint32_t dcoId, int status);

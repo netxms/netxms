@@ -78,7 +78,7 @@ static const TCHAR *s_groupNames[NUMBER_OF_GROUPS] =
    _T("Alarms"),
    _T("Alarm Notes"),
    _T("Packages"),
-   _T("SLM Tickets"),
+   _T("Business Service Tickets"),
    _T("Object Tools"),
    _T("Scripts"),
    _T("Agent Configurations"),
@@ -96,8 +96,8 @@ static const TCHAR *s_groupNames[NUMBER_OF_GROUPS] =
    _T("Geographical Areas"),
    _T("SSH Keys"),
    _T("Object Queries"),
-   _T("SLM Checks"),
-   _T("SLM Downtime Records")
+   _T("Business Service Checks"),
+   _T("Business Service Downtime Records")
 };
 
 /**
@@ -392,12 +392,12 @@ bool InitIdTable()
       DBFreeResult(hResult);
    }
 
-   // Get first available SLM ticket id
+   // Get first available business service ticket id
    hResult = DBSelect(hdb, _T("SELECT max(ticket_id) FROM business_service_tickets"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_SLM_TICKET] = std::max(s_freeIdTable[IDG_SLM_TICKET],
+         s_freeIdTable[IDG_BUSINESS_SERVICE_TICKET] = std::max(s_freeIdTable[IDG_BUSINESS_SERVICE_TICKET],
                                                DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
@@ -527,21 +527,21 @@ bool InitIdTable()
       DBFreeResult(hResult);
    }
 
-   // Get first available object in slm checks
+   // Get first available object in business service checks
    hResult = DBSelect(hdb, _T("SELECT max(id) FROM business_service_checks"));
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_SLM_CHECK] = std::max(s_freeIdTable[IDG_SLM_CHECK], DBGetFieldULong(hResult, 0, 0) + 1);
+         s_freeIdTable[IDG_BUSINESS_SERVICE_CHECK] = std::max(s_freeIdTable[IDG_BUSINESS_SERVICE_CHECK], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 
-   // Get first available object in slm downtime records
+   // Get first available object in business service downtime records
    hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM business_service_downtime"));
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_SLM_RECORD] = std::max(s_freeIdTable[IDG_SLM_RECORD], DBGetFieldULong(hResult, 0, 0) + 1);
+         s_freeIdTable[IDG_BUSINESS_SERVICE_RECORD] = std::max(s_freeIdTable[IDG_BUSINESS_SERVICE_RECORD], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

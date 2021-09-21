@@ -384,9 +384,9 @@ void NotifyClientsOnPolicyDelete(uuid guid, const Template& object)
 }
 
 /**
- * Send SLM checks update/delete to all active sessions
+ * Send business service checks update/delete to all active sessions
  */
-void NotifyClientsOnSlmCheckUpdate(const NXCPMessage& msg, const NetObj& object)
+void NotifyClientsOnBusinessServiceCheckUpdate(const NXCPMessage& msg, const NetObj& object)
 {
    RWLockReadLock(s_sessionListLock);
    auto it = s_sessions.begin();
@@ -404,26 +404,26 @@ void NotifyClientsOnSlmCheckUpdate(const NXCPMessage& msg, const NetObj& object)
 }
 
 /**
- * Send SLM check update to all active sessions
+ * Send business service check update to all active sessions
  */
-void NotifyClientsOnSlmCheckUpdate(const NetObj& service, SlmCheck* check)
+void NotifyClientsOnBusinessServiceCheckUpdate(const NetObj& service, BusinessServiceCheck* check)
 {
    NXCPMessage msg;
    msg.setCode(CMD_UPDATE_BUSINESS_CHECK);
-   check->fillMessage(&msg, VID_SLM_CHECKS_LIST_BASE);
-   NotifyClientsOnSlmCheckUpdate(msg, service);
+   check->fillMessage(&msg, VID_BUSINESS_SERVICE_CHECK_LIST_BASE);
+   NotifyClientsOnBusinessServiceCheckUpdate(msg, service);
 }
 
 /**
- * Send SLM check delete to all active sessions
+ * Send business service check delete to all active sessions
  */
-void NotifyClientsOnSlmCheckDelete(const NetObj& service, uint32_t checkId)
+void NotifyClientsOnBusinessServiceCheckDelete(const NetObj& service, uint32_t checkId)
 {
    NXCPMessage msg;
    msg.setCode(CMD_DELETE_BUSINESS_CHECK);
    msg.setField(VID_OBJECT_ID, service.getId());
-   msg.setField(VID_SLMCHECK_ID, checkId);
-   NotifyClientsOnSlmCheckUpdate(msg, service);
+   msg.setField(VID_BUSINESS_SERVICE_CHECK_ID, checkId);
+   NotifyClientsOnBusinessServiceCheckUpdate(msg, service);
 }
 
 /**

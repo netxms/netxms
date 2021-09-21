@@ -2009,7 +2009,7 @@ uint32_t DataCollectionTarget::getEffectiveSourceNode(DCObject *dco)
  */
 static bool TemplateSelectionFilter(NetObj *object, void *userData)
 {
-   return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && static_cast<Template*>(object)->isAutoBindEnabled();
+   return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && static_cast<Template*>(object)->isFirstFilterBindingEnabled();
 }
 
 /**
@@ -2026,7 +2026,7 @@ void DataCollectionTarget::applyTemplates()
    for (int i = 0; i < templates->size(); i++)
    {
       Template *templateObject = static_cast<Template*>(templates->get(i));
-      AutoBindDecision decision = templateObject->isApplicable(self());
+      AutoBindDecision decision = templateObject->isFirstFilterApplicable(self());
       if (decision == AutoBindDecision_Bind)
       {
          TCHAR key[50];
@@ -2043,7 +2043,7 @@ void DataCollectionTarget::applyTemplates()
       }
       else if (decision == AutoBindDecision_Unbind)
       {
-         if (templateObject->isAutoUnbindEnabled() && templateObject->isDirectChild(m_id))
+         if (templateObject->isFirstFilterUnbindingEnabled() && templateObject->isDirectChild(m_id))
          {
             if (gracePeriod > 0)
             {
@@ -2097,7 +2097,7 @@ void DataCollectionTarget::removeTemplate(const shared_ptr<ScheduledTaskParamete
  */
 static bool ContainerSelectionFilter(NetObj *object, void *userData)
 {
-   return (object->getObjectClass() == OBJECT_CONTAINER) && !object->isDeleted() && ((Container *)object)->isAutoBindEnabled();
+   return (object->getObjectClass() == OBJECT_CONTAINER) && !object->isDeleted() && ((Container *)object)->isFirstFilterBindingEnabled();
 }
 
 /**
@@ -2113,7 +2113,7 @@ void DataCollectionTarget::updateContainerMembership()
    for(int i = 0; i < containers->size(); i++)
    {
       Container *container = static_cast<Container*>(containers->get(i));
-      AutoBindDecision decision = container->isApplicable(self());
+      AutoBindDecision decision = container->isFirstFilterApplicable(self());
       if (decision == AutoBindDecision_Bind)
       {
          if (!container->isDirectChild(m_id))
@@ -2129,7 +2129,7 @@ void DataCollectionTarget::updateContainerMembership()
       }
       else if (decision == AutoBindDecision_Unbind)
       {
-         if (container->isAutoUnbindEnabled() && container->isDirectChild(m_id))
+         if (container->isFirstFilterUnbindingEnabled() && container->isDirectChild(m_id))
          {
             sendPollerMsg(_T("   Removing from container %s\r\n"), container->getName());
             nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): removing object %d \"%s\" from container %d \"%s\""),

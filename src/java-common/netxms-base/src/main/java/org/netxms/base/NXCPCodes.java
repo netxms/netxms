@@ -862,7 +862,7 @@ public class NXCPCodes
 	public static final long VID_BRIDGE_BASE_ADDRESS = 388;
 	public static final long VID_DRILL_DOWN_OBJECT_ID = 389;
 	public static final long VID_REPORT_DEFINITION = 390;
-	public static final long VID_SLMCHECK_TYPE = 391;
+	public static final long VID_BUSINESS_SERVICE_CHECK_TYPE = 391;
 	public static final long VID_REASON = 392;
 	public static final long VID_NODE_ID = 393;
 	public static final long VID_UPTIME_DAY = 394;
@@ -1237,15 +1237,15 @@ public class NXCPCodes
    public static final long VID_WEB_SWC_ERROR_TEXT = 765;
    public static final long VID_REQUEST_DATA = 766;
    public static final long VID_ENABLE_FILE_UPLOAD_RESUMING = 767;
-   public static final long VID_SLMCHECKS_COUNT = 768;
-   public static final long VID_SLMCHECK_ID  = 769;
-   public static final long VID_SLMCHECK_RELATED_OBJECT = 770;
-   public static final long VID_SLMCHECK_RELATED_DCI = 771;
+   public static final long VID_BUSINESS_SERVICE_CHECK_COUNT = 768;
+   public static final long VID_BUSINESS_SERVICE_CHECK_ID  = 769;
+   public static final long VID_BUSINESS_SERVICE_CHECK_RELATED_OBJECT = 770;
+   public static final long VID_BUSINESS_SERVICE_CHECK_RELATED_DCI = 771;
    public static final long VID_THRESHOLD = 772;
    public static final long VID_OBJECT_STATUS_THRESHOLD = 773;
    public static final long VID_DCI_STATUS_THRESHOLD = 774;
    public static final long VID_BUSINESS_SERVICE_UPTIME = 775;
-   public static final long VID_BUSINESS_TICKETS_COUNT = 776;
+   public static final long VID_BUSINESS_TICKET_COUNT = 776;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1358,6 +1358,6 @@ public class NXCPCodes
    public static final long VID_MASKED_FIELD_LIST_BASE = 0x10000000L;
    public static final long VID_SSH_KEY_LIST_BASE = 0x10000000L;
    public static final long VID_2FA_METHOD_LIST_BASE = 0x10000000L;
-   public static final long VID_SLM_CHECKS_LIST_BASE = 0x10000000L;
-   public static final long VID_BUSINESS_TICKETS_LIST_BASE = 0x10000000L;
+   public static final long VID_BUSINESS_SERVICE_CHECK_LIST_BASE = 0x10000000L;
+   public static final long VID_BUSINESS_TICKET_LIST_BASE = 0x10000000L;
 }

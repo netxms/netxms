@@ -2021,7 +2021,7 @@ BOOL LoadObjects()
 	   for (int i = 0; i < count; i++)
 	   {
 		   uint32_t id = DBGetFieldULong(hResult, i, 0);
-         auto service = shared_ptr<BusinessService>();
+         auto service = make_shared<BusinessService>();
 		   if (service->loadFromDatabase(hdb, id))
 		   {
 			   NetObjInsert(service, false, false);  // Insert into indexes
@@ -2044,7 +2044,7 @@ BOOL LoadObjects()
 	   for (int i = 0; i < count; i++)
 	   {
 		   uint32_t id = DBGetFieldULong(hResult, i, 0);
-         auto prototype = shared_ptr<BusinessServicePrototype>();
+         auto prototype = make_shared<BusinessServicePrototype>();
 		   if (prototype->loadFromDatabase(hdb, id))
 		   {
 			   NetObjInsert(prototype, false, false);  // Insert into indexes

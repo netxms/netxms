@@ -1783,10 +1783,10 @@ void ClientSession::processRequest(NXCPMessage *request)
          businessServiceDeleteCheck(request);
          break;
       case CMD_GET_BUSINESS_UPTIME:
-         getSLMData(request);
+         getBusinessServiceUptime(request);
          break;
       case CMD_GET_BUSINESS_TICKETS:
-         getSLMTickets(request);
+         getBusinessServiceTickets(request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -15975,20 +15975,20 @@ void ClientSession::deleteUser2FABinding(NXCPMessage *request)
 }
 
 /**
- * Get business service SLM check list
+ * Get business service check list
  * Expected input parameters:
  * VID_OBJECT_ID                 id of business service
  *
  * Return values:
- * VID_SLMCHECKS_COUNT                    Number of checks. List offset is 10.
- * VID_SLM_CHECKS_LIST_BASE + offset      id of SLM check
- * VID_SLM_CHECKS_LIST_BASE + offset + 1  SLM check violation reason
- * VID_SLM_CHECKS_LIST_BASE + offset + 2  Related data collection item id in related data collection target object
- * VID_SLM_CHECKS_LIST_BASE + offset + 3  Related NetObj object id
- * VID_SLM_CHECKS_LIST_BASE + offset + 4  Threshold for object check and DCI check
- * VID_SLM_CHECKS_LIST_BASE + offset + 5  SLM check name
- * VID_SLM_CHECKS_LIST_BASE + offset + 6  Script text for script check
- * VID_RCC                                Request Completion Code
+ * VID_BUSINESS_SERVICE_CHECK_COUNT                   Number of checks. List offset is 10.
+ * VID_BUSINESS_SERVICE_CHECK_LIST_BASE + offset      Id of business service check
+ * VID_BUSINESS_SERVICE_CHECK_LIST_BASE + offset + 1  Business service check violation reason
+ * VID_BUSINESS_SERVICE_CHECK_LIST_BASE + offset + 2  Related data collection item id in related data collection target object
+ * VID_BUSINESS_SERVICE_CHECK_LIST_BASE + offset + 3  Related NetObj object id
+ * VID_BUSINESS_SERVICE_CHECK_LIST_BASE + offset + 4  Threshold for object check and DCI check
+ * VID_BUSINESS_SERVICE_CHECK_LIST_BASE + offset + 5  Business service check name
+ * VID_BUSINESS_SERVICE_CHECK_LIST_BASE + offset + 6  Script text for script check
+ * VID_RCC                                            Request Completion Code
  */
 void ClientSession::businessServiceGetCheckList(NXCPMessage *request)
 {
@@ -16009,16 +16009,16 @@ void ClientSession::businessServiceGetCheckList(NXCPMessage *request)
 }
 
 /**
- * Modify business service SLM check
+ * Modify business service check
  * Expected input parameters:
- * VID_OBJECT_ID                 id of business service
- * VID_SLMCHECK_ID               id of SLM check
- * VID_SLMCHECK_TYPE             SLM check type. Object = 0, Script = 1, DCI = 2
- * VID_SLMCHECK_RELATED_OBJECT   Related NetObj object id. Mandatory in object and DCI checks, optional in script check
- * VID_SLMCHECK_RELATED_DCI      Related data collection item id in related data collection target object. Mandatory in DCI checks
- * VID_SCRIPT                    Script text for script check. Optional, without it script check just do nothing and stays in NORMAL state.
- * VID_DESCRIPTION               SLM check name
- * VID_THRESHOLD                 Threshold for object check and DCI check. If not set, default threshold will be used instead
+ * VID_OBJECT_ID                                id of business service
+ * VID_BUSINESS_SERVICE_CHECK_ID                id of business service check
+ * VID_BUSINESS_SERVICE_CHECK_TYPE              Business service check type. Object = 0, Script = 1, DCI = 2
+ * VID_BUSINESS_SERVICE_CHECK_RELATED_OBJECT    Related NetObj object id. Mandatory in object and DCI checks, optional in script check
+ * VID_BUSINESS_SERVICE_CHECK_RELATED_DCI       Related data collection item id in related data collection target object. Mandatory in DCI checks
+ * VID_SCRIPT                                   Script text for script check. Optional, without it script check just do nothing and stays in NORMAL state.
+ * VID_DESCRIPTION                              Business service check name
+ * VID_THRESHOLD                                Threshold for object check and DCI check. If not set, default threshold will be used instead
  *
  * Return values:
  * VID_RCC                       Request Completion Code
@@ -16041,10 +16041,10 @@ void ClientSession::businessServiceModifyCheck(NXCPMessage *request)
 }
 
 /**
- * Delete SLM check from business service
+ * Delete business service check from business service
  * Expected input parameters:
  * VID_OBJECT_ID                 id of business service
- * VID_SLMCHECK_ID               id of SLM check
+ * VID_BUSINESS_SERVICE_CHECK_ID id of business service check
  *
  * Return values:
  * VID_RCC                       Request Completion Code
@@ -16055,7 +16055,7 @@ void ClientSession::businessServiceDeleteCheck(NXCPMessage *request)
    shared_ptr<NetObj> obj = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
    {
-      msg.setField(VID_RCC, DeleteCheck(request->getFieldAsUInt32(VID_OBJECT_ID), request->getFieldAsUInt32(VID_SLMCHECK_ID)));
+      msg.setField(VID_RCC, DeleteCheck(request->getFieldAsUInt32(VID_OBJECT_ID), request->getFieldAsUInt32(VID_BUSINESS_SERVICE_CHECK_ID)));
    }
    else
    {
@@ -16077,7 +16077,7 @@ void ClientSession::businessServiceDeleteCheck(NXCPMessage *request)
  * VID_BUSINESS_SERVICE_UPTIME   Business service uptime in percents. Double.
  * VID_RCC                       Request Completion Code
  */
-void ClientSession::getSLMData(NXCPMessage *request)
+void ClientSession::getBusinessServiceUptime(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    shared_ptr<NetObj> obj = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
@@ -16107,24 +16107,24 @@ void ClientSession::getSLMData(NXCPMessage *request)
 }
 
 /**
- * Get SLM tickets list for business service
+ * Get business service tickets list for business service
  * Expected input parameters:
  * VID_OBJECT_ID                 Id of business service
  * VID_TIME_FROM                 Get valid tickets from this time. Seconds since the Epoch.
  * VID_TIME_TO                   Get valid tickets to this time. Seconds since the Epoch.
  *
  * Return values:
- * VID_BUSINESS_TICKETS_COUNT                  Number of tickets. List offset is 10.
- * VID_BUSINESS_TICKETS_LIST_BASE + offset     Id of SLM ticket
- * VID_BUSINESS_TICKETS_LIST_BASE + offset + 1 Id of business service
- * VID_BUSINESS_TICKETS_LIST_BASE + offset + 2 Id of SLM check
- * VID_BUSINESS_TICKETS_LIST_BASE + offset + 3 Ticket creation timestamp
- * VID_BUSINESS_TICKETS_LIST_BASE + offset + 4 Ticket closing timestamp
- * VID_BUSINESS_TICKETS_LIST_BASE + offset + 5 Reason
- * VID_BUSINESS_TICKETS_LIST_BASE + offset + 6 SLM check description
- * VID_RCC                                     Request Completion Code
+ * VID_BUSINESS_TICKET_COUNT                  Number of tickets. List offset is 10.
+ * VID_BUSINESS_TICKET_LIST_BASE + offset     Id of business service ticket
+ * VID_BUSINESS_TICKET_LIST_BASE + offset + 1 Id of business service
+ * VID_BUSINESS_TICKET_LIST_BASE + offset + 2 Id of business service check
+ * VID_BUSINESS_TICKET_LIST_BASE + offset + 3 Ticket creation timestamp
+ * VID_BUSINESS_TICKET_LIST_BASE + offset + 4 Ticket closing timestamp
+ * VID_BUSINESS_TICKET_LIST_BASE + offset + 5 Reason
+ * VID_BUSINESS_TICKET_LIST_BASE + offset + 6 Business service check description
+ * VID_RCC                                    Request Completion Code
  */
-void ClientSession::getSLMTickets(NXCPMessage *request)
+void ClientSession::getBusinessServiceTickets(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    shared_ptr<NetObj> obj = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));

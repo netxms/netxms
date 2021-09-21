@@ -78,7 +78,7 @@ BaseBusinessService::~BaseBusinessService()
 }
 
 /**
- * Load SLM checks from database
+ * Load business service checks from database
  */
 bool BaseBusinessService::loadChecksFromDatabase(DB_HANDLE hdb)
 {
@@ -101,7 +101,7 @@ bool BaseBusinessService::loadChecksFromDatabase(DB_HANDLE hdb)
    int rows = DBGetNumRows(hResult);
    for (int i = 0; i < rows; i++)
    {
-      SlmCheck *check = new SlmCheck();
+      BusinessServiceCheck *check = new BusinessServiceCheck();
       check->loadFromSelect(hResult, i);
       m_checks.add(check);
    }
@@ -112,7 +112,7 @@ bool BaseBusinessService::loadChecksFromDatabase(DB_HANDLE hdb)
 }
 
 /**
- * Delete SLM check from service and database
+ * Delete business service check from service and database
  */
 void BaseBusinessService::deleteCheck(uint32_t checkId)
 {
@@ -128,13 +128,13 @@ void BaseBusinessService::deleteCheck(uint32_t checkId)
 }
 
 /**
- * Copy SLM checks from checks array
+ * Copy business service checks from checks array
  */
-void BaseBusinessService::copyChecks(const ObjectArray<SlmCheck> &checks)
+void BaseBusinessService::copyChecks(const ObjectArray<BusinessServiceCheck> &checks)
 {
    for (int i = 0; i < checks.size(); i++)
    {
-      SlmCheck *ch = new SlmCheck(m_id);
+      BusinessServiceCheck *ch = new BusinessServiceCheck(m_id);
       m_checks.add(ch);
       ch->generateId();
       ch->setType(checks.get(i)->getType());
@@ -148,7 +148,7 @@ void BaseBusinessService::copyChecks(const ObjectArray<SlmCheck> &checks)
 }
 
 /**
- * Delete SLM check from database
+ * Delete business service check from database
  */
 void BaseBusinessService::deleteCheckFromDatabase(uint32_t checkId)
 {
@@ -160,19 +160,19 @@ void BaseBusinessService::deleteCheckFromDatabase(uint32_t checkId)
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, checkId);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
-      NotifyClientsOnSlmCheckDelete(*this, checkId);
+      NotifyClientsOnBusinessServiceCheckDelete(*this, checkId);
       //unlockProperties();
    }
    DBConnectionPoolReleaseConnection(hdb);
 }
 
 /**
- * Create or modify SLM check from request
+ * Create or modify business service check from request
  */
 void BaseBusinessService::modifyCheckFromMessage(NXCPMessage *request)
 {
-   uint32_t checkId = request->getFieldAsUInt32(VID_SLMCHECK_ID);
-   SlmCheck *check = nullptr;
+   uint32_t checkId = request->getFieldAsUInt32(VID_BUSINESS_SERVICE_CHECK_ID);
+   BusinessServiceCheck *check = nullptr;
    if (checkId != 0)
    {
       for (auto c : m_checks)
@@ -186,11 +186,11 @@ void BaseBusinessService::modifyCheckFromMessage(NXCPMessage *request)
    }
    if (check == nullptr)
    {
-      check = new SlmCheck(m_id);
+      check = new BusinessServiceCheck(m_id);
       m_checks.add(check);
    }
    check->modifyFromMessage(request);
-   NotifyClientsOnSlmCheckUpdate(*this, check);
+   NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
 }
 
 /**
@@ -393,7 +393,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
 
    for (auto check : m_checks)
    {
-      SlmTicketData data = {};
+      BusinessServiceTicketData data = {};
       uint32_t oldStatus = check->getStatus();
       uint32_t newStatus = check->execute(&data);
 
@@ -410,9 +410,9 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
       }
       if (oldStatus != newStatus)
       {
-         sendPollerMsg(_T("SLM check \"%s\" status changed, set to: %s\r\n"), check->getName(), newStatus == STATUS_CRITICAL ? _T("Critical") : newStatus == STATUS_NORMAL ? _T("Normal")
+         sendPollerMsg(_T("Business service check \"%s\" status changed, set to: %s\r\n"), check->getName(), newStatus == STATUS_CRITICAL ? _T("Critical") : newStatus == STATUS_NORMAL ? _T("Normal")
                                                                                                                                                                            : _T("Unknown"));
-         NotifyClientsOnSlmCheckUpdate(*this, check);
+         NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
       }
       if (newStatus > m_status)
       {
@@ -428,7 +428,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO business_service_downtime (record_id,service_id,from_timestamp,to_timestamp) VALUES (?,?,?,0)"));
       if (hStmt != NULL)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, CreateUniqueId(IDG_SLM_RECORD));
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, CreateUniqueId(IDG_BUSINESS_SERVICE_RECORD));
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (uint32_t)time(nullptr));
          DBExecute(hStmt);
@@ -461,7 +461,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, UIN
  * Used to ensure, that we have all info about downtimes in parent business service.
  * Parent tickets closed simultaneously with original ticket
  */
-void BusinessService::addChildTicket(SlmTicketData *data)
+void BusinessService::addChildTicket(BusinessServiceTicketData *data)
 {
    unique_ptr<SharedObjectArray<NetObj>> parents = getParents();
    for (auto parent : *parents)
@@ -476,7 +476,7 @@ void BusinessService::addChildTicket(SlmTicketData *data)
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO business_service_tickets (ticket_id,original_ticket_id,original_service_id,check_id,check_description,service_id,create_timestamp,close_timestamp,reason) VALUES (?,?,?,?,?,?,?,0,?)"));
    if (hStmt != NULL)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, CreateUniqueId(IDG_SLM_TICKET));
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, CreateUniqueId(IDG_BUSINESS_SERVICE_TICKET));
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, data->ticket_id);
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, data->service_id);
       DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, data->check_id);
@@ -540,11 +540,11 @@ void BusinessService::configurationPoll(PollerInfo *poller, ClientSession *sessi
 }
 
 /**
- * SLM object checks autobinding
+ * Business service object checks autobinding
  */
 void BusinessService::objectCheckAutoBinding()
 {
-   if (isAutoBindEnabled())
+   if (isFirstFilterBindingEnabled())
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("Business service(%s): Looking for object checks to create"), m_name);
       sendPollerMsg(_T("Business service(%s): Looking for object checks to create \r\n"), m_name);
@@ -554,19 +554,19 @@ void BusinessService::objectCheckAutoBinding()
       for (int i = 0; i < objects->size(); i++)
       {
          shared_ptr<NetObj> object = objects->getShared(i);
-         AutoBindDecision decision = isApplicable(object);
+         AutoBindDecision decision = isFirstFilterApplicable(object);
          if (decision != AutoBindDecision_Ignore)
          {
             uint32_t foundCheckId = 0;
             for (auto check : m_checks)
             {
-               if (check->getType() == SlmCheck::OBJECT && check->getRelatedObject() == object->getId())
+               if (check->getType() == BusinessServiceCheck::CheckType::OBJECT && check->getRelatedObject() == object->getId())
                {
                   foundCheckId = check->getId();
                   break;
                }
             }
-            if (foundCheckId != 0 && decision == AutoBindDecision_Unbind && isAutoUnbindEnabled())
+            if (foundCheckId != 0 && decision == AutoBindDecision_Unbind && isFirstFilterUnbindingEnabled())
             {
                nxlog_debug_tag(DEBUG_TAG, 6, _T("Business service(%s): object check %u deleted"), foundCheckId);
                deleteCheck(foundCheckId);
@@ -574,7 +574,7 @@ void BusinessService::objectCheckAutoBinding()
             }
             if (foundCheckId == 0 && decision == AutoBindDecision_Bind)
             {
-               SlmCheck *check = new SlmCheck(m_id);
+               BusinessServiceCheck *check = new BusinessServiceCheck(m_id);
                m_checks.add(check);
                check->setRelatedObject(object->getId());
                TCHAR checkName[MAX_OBJECT_NAME];
@@ -584,7 +584,7 @@ void BusinessService::objectCheckAutoBinding()
                check->setThreshold(m_objectStatusThreshhold);
                check->saveToDatabase();
                nxlog_debug_tag(DEBUG_TAG, 6, _T("Business service(%s): object check %s[%u] created"), checkName, foundCheckId);
-               NotifyClientsOnSlmCheckUpdate(*this, check);
+               NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
                bindedCount++;
             }
          }
@@ -598,11 +598,11 @@ void BusinessService::objectCheckAutoBinding()
 }
 
 /**
- * SLM DCI checks autobinding
+ * Business service DCI checks autobinding
  */
 void BusinessService::dciCheckAutoBinding()
 {
-   if (isAutoBindDCIEnabled())
+   if (isSecondFilterBindingEnabled())
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("Business service(%s): Looking for DCI checks to create"), m_name);
       sendPollerMsg(_T("Business service(%s): Looking for DCI checks to create \r\n"), m_name);
@@ -621,19 +621,19 @@ void BusinessService::dciCheckAutoBinding()
                shared_ptr<DCObject> dci = target->getDCObjectById(dciIds->get(j), 0);
                if (dci != nullptr)
                {
-                  AutoBindDecision decision = isApplicable(object, dci);
+                  AutoBindDecision decision = isSecondFilterApplicable(object, dci);
                   if (decision != AutoBindDecision_Ignore)
                   {
                      uint32_t foundCheckId = 0;
                      for (auto check : m_checks)
                      {
-                        if (check->getType() == SlmCheck::DCI && check->getRelatedObject() == object->getId() && check->getRelatedDCI() == dci->getId())
+                        if (check->getType() == BusinessServiceCheck::CheckType::DCI && check->getRelatedObject() == object->getId() && check->getRelatedDCI() == dci->getId())
                         {
                            foundCheckId = check->getId();
                            break;
                         }
                      }
-                     if (foundCheckId != 0 && decision == AutoBindDecision_Unbind && isAutoUnbindEnabled())
+                     if (foundCheckId != 0 && decision == AutoBindDecision_Unbind && isFirstFilterUnbindingEnabled())
                      {
                         nxlog_debug_tag(DEBUG_TAG, 6, _T("Business service(%s): DCI check %u deleted"), foundCheckId);
                         deleteCheck(foundCheckId);
@@ -641,9 +641,9 @@ void BusinessService::dciCheckAutoBinding()
                      }
                      if (foundCheckId == 0 && decision == AutoBindDecision_Bind)
                      {
-                        SlmCheck *check = new SlmCheck(m_id);
+                        BusinessServiceCheck *check = new BusinessServiceCheck(m_id);
                         m_checks.add(check);
-                        check->setType(SlmCheck::DCI);
+                        check->setType(BusinessServiceCheck::DCI);
                         check->setRelatedObject(object->getId());
                         check->setRelatedDCI(dci->getId());
                         TCHAR checkName[MAX_OBJECT_NAME];
@@ -653,7 +653,7 @@ void BusinessService::dciCheckAutoBinding()
                         check->setThreshold(m_dciStatusThreshhold);
                         check->saveToDatabase();
                         nxlog_debug_tag(DEBUG_TAG, 6, _T("Business service(%s): DCI check %s[%u] created"), checkName, foundCheckId);
-                        NotifyClientsOnSlmCheckUpdate(*this, check);
+                        NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
                         bindedCount++;
                      }
                   }
@@ -860,7 +860,7 @@ unique_ptr<StringMap> BusinessServicePrototype::getInstances()
       }
    }
 
-   auto resultMap = unique_ptr<StringMap>();
+   auto resultMap = make_unique<StringMap>();
    if (m_pCompiledInstanceDiscoveryFilterScript != nullptr && instanceMap != nullptr)
    {
       for (auto instance : *instanceMap)
@@ -976,8 +976,8 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
       {
          service->setInstance(inst->key);
          service->setPrototypeId(m_id);
-         service->setAutoBindFilter(m_bindFilterSource);
-         service->setAutoBindDCIFilter(m_bindFilterSourceDCI);
+         service->setFirstFilter(m_firstBindFilterSource);
+         service->setSecondFilter(m_secondBindFilterSource);
          service->copyChecks(m_checks);
          service->setAutoBindFlags(m_autoBindFlags);
          NetObjInsert(service, true, false); // Insert into indexes
@@ -1016,7 +1016,7 @@ bool BusinessServicePrototype::lockForDiscoveryPoll()
 */
 
 /**
- * Get list of SLM check of business service or business service prototype
+ * Get list of business service checks of business service or business service prototype
  */
 void GetCheckList(uint32_t serviceId, NXCPMessage *response)
 {
@@ -1029,14 +1029,14 @@ void GetCheckList(uint32_t serviceId, NXCPMessage *response)
    int counter = 0;
    for (auto check : *service->getChecks())
    {
-      check->fillMessage(response, VID_SLM_CHECKS_LIST_BASE + (counter * 10));
+      check->fillMessage(response, VID_BUSINESS_SERVICE_CHECK_LIST_BASE + (counter * 10));
       counter++;
    }
-   response->setField(VID_SLMCHECKS_COUNT, counter);
+   response->setField(VID_BUSINESS_SERVICE_CHECK_COUNT, counter);
 }
 
 /**
- * Modify SLM check
+ * Modify business service check
  */
 uint32_t ModifyCheck(NXCPMessage *request)
 {
@@ -1051,7 +1051,7 @@ uint32_t ModifyCheck(NXCPMessage *request)
 }
 
 /**
- * Delete SLM check
+ * Delete business service check
  */
 uint32_t DeleteCheck(uint32_t serviceId, uint32_t checkId)
 {
@@ -1108,7 +1108,7 @@ double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
 }
 
 /**
- * Get business service SLM tickets
+ * Get business service tickets
  */
 void GetServiceTickets(uint32_t serviceId, time_t from, time_t to, NXCPMessage *msg)
 {
@@ -1141,15 +1141,15 @@ void GetServiceTickets(uint32_t serviceId, time_t from, time_t to, NXCPMessage *
             TCHAR checkDescription[1023];
             DBGetField(hResult, i, 7, checkDescription, 1023);
 
-            msg->setField(VID_BUSINESS_TICKETS_LIST_BASE + (i * 10), original_ticket_id != 0 ? original_ticket_id : ticket_id);
-            msg->setField(VID_BUSINESS_TICKETS_LIST_BASE + (i * 10) + 1, original_ticket_id != 0 ? original_service_id : serviceId);
-            msg->setField(VID_BUSINESS_TICKETS_LIST_BASE + (i * 10) + 2, check_id);
-            msg->setField(VID_BUSINESS_TICKETS_LIST_BASE + (i * 10) + 3, create_timestamp);
-            msg->setField(VID_BUSINESS_TICKETS_LIST_BASE + (i * 10) + 4, close_timestamp);
-            msg->setField(VID_BUSINESS_TICKETS_LIST_BASE + (i * 10) + 5, reason);
-            msg->setField(VID_BUSINESS_TICKETS_LIST_BASE + (i * 10) + 6, checkDescription);
+            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10), original_ticket_id != 0 ? original_ticket_id : ticket_id);
+            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 1, original_ticket_id != 0 ? original_service_id : serviceId);
+            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 2, check_id);
+            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 3, create_timestamp);
+            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 4, close_timestamp);
+            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 5, reason);
+            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 6, checkDescription);
          }
-         msg->setField(VID_BUSINESS_TICKETS_COUNT, count);
+         msg->setField(VID_BUSINESS_TICKET_COUNT, count);
          DBFreeResult(hResult);
       }
       DBFreeStatement(hStmt);

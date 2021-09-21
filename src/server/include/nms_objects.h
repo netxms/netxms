@@ -1256,10 +1256,10 @@ private:
    void internalUnlock() const { MutexUnlock(m_mutexProperties); }
 
 protected:
-   TCHAR *m_bindFilterSource;
-   NXSL_Program *m_bindFilter;
-   TCHAR *m_bindFilterSourceDCI;
-   NXSL_Program *m_bindFilterDCI;
+   TCHAR *m_firstBindFilterSource;
+   NXSL_Program *m_firstBindFilter;
+   TCHAR *m_secondBindFilterSource;
+   NXSL_Program *m_secondBindFilter;
    uint32_t m_autoBindFlags;
 
    void modifyFromMessage(NXCPMessage *request);
@@ -1273,26 +1273,27 @@ protected:
    void toJson(json_t *root);
    void createExportRecord(StringBuffer &str);
    void setAutoBindFlag(bool value, uint32_t flag);
+   AutoBindDecision isApplicable(const shared_ptr<NetObj>& target, const shared_ptr<DCObject>& dci, NXSL_Program *filterProgram);
 
 public:
    AutoBindTarget(NetObj *_this);
    virtual ~AutoBindTarget();
 
-   AutoBindDecision isApplicable(const shared_ptr<NetObj>& object, const shared_ptr<DCObject>& dci = shared_ptr<DCObject>());
-   bool isAutoBindEnabled() { return m_autoBindFlags & AAF_AUTO_APPLY_1; }
-   bool isAutoUnbindEnabled() { return isAutoBindEnabled() && m_autoBindFlags & AAF_AUTO_REMOVE_1; }
-   void setAutoBindFilter(const TCHAR *filter);
-   void setAutoBindMode(bool doBind, bool doUnbind);
+   AutoBindDecision isFirstFilterApplicable(const shared_ptr<NetObj>& object, const shared_ptr<DCObject>& dci = shared_ptr<DCObject>());
+   bool isFirstFilterBindingEnabled() { return m_autoBindFlags & AAF_AUTO_APPLY_1; }
+   bool isFirstFilterUnbindingEnabled() { return isFirstFilterBindingEnabled() && m_autoBindFlags & AAF_AUTO_REMOVE_1; }
+   void setFirstFilter(const TCHAR *filter);
+   void setFirstFilterBindMode(bool doBind, bool doUnbind);
+   const TCHAR *getFirstFilterSource() const { return m_firstBindFilterSource; }
 
-   const TCHAR *getAutoBindScriptSource() const { return m_bindFilterSource; }
-
-   bool isAutoBindDCIEnabled() { return m_autoBindFlags & AAF_AUTO_APPLY_2; }
-   bool isAutoUnbindDCIEnabled() { return isAutoBindDCIEnabled() && m_autoBindFlags & AAF_AUTO_REMOVE_2; }
-   void setAutoBindDCIFilter(const TCHAR *filter);
-   void setAutoBindDCIMode(bool doBind, bool doUnbind);
+   AutoBindDecision isSecondFilterApplicable(const shared_ptr<NetObj>& object, const shared_ptr<DCObject>& dci = shared_ptr<DCObject>());
+   bool isSecondFilterBindingEnabled() { return m_autoBindFlags & AAF_AUTO_APPLY_2; }
+   bool isSecondFilterUnbindingEnabled() { return isSecondFilterBindingEnabled() && m_autoBindFlags & AAF_AUTO_REMOVE_2; }
+   void setSecondFilter(const TCHAR *filter);
+   void setSecondFilterBindMode(bool doBind, bool doUnbind);
    void setAutoBindFlags(uint32_t flags) { m_autoBindFlags = flags; }
 
-   const TCHAR *getAutoBindDCIScriptSource() const { return m_bindFilterSourceDCI; }
+   const TCHAR *getSecondFilterSource() const { return m_secondBindFilterSource; }
 };
 
 /**
@@ -4359,21 +4360,21 @@ public:
 };
 
 /**
- * SLM ticket data
+ * Business service ticket data
  */
-typedef struct{
+struct BusinessServiceTicketData{
    uint32_t ticket_id;
    uint32_t check_id;
    TCHAR description[1023];
    uint32_t service_id;
    time_t create_timestamp;
    TCHAR reason[256];
-} SlmTicketData;
+};
 
 /**
- * SLM check object
+ * Business service check object
  */
-class NXCORE_EXPORTABLE SlmCheck
+class NXCORE_EXPORTABLE BusinessServiceCheck
 {
 protected:
    uint32_t m_status;
@@ -4389,17 +4390,17 @@ protected:
    int m_statusThreshold;
    uint32_t m_serviceId;
 
-   bool insertTicket(SlmTicketData* ticket);
+   bool insertTicket(BusinessServiceTicketData* ticket);
    void closeTicket();
    void compileScript();
    const TCHAR* getReason();
 
 public:
-   SlmCheck(uint32_t serviceId = 0);
-   virtual ~SlmCheck();
+   BusinessServiceCheck(uint32_t serviceId = 0);
+   virtual ~BusinessServiceCheck();
 
    int getType() { return m_type; }
-   void setType( int type ) { if ( type >= OBJECT && type <= DCI ) m_type = type; }
+   void setType( int type ) { if ( type >= CheckType::OBJECT && type <= CheckType::DCI ) m_type = type; }
    const TCHAR* getScript() { return m_script; } const
    void setScript(const TCHAR* script) { m_script = MemCopyString(script); }
    uint32_t getId() { return m_id; }
@@ -4415,7 +4416,7 @@ public:
    void setThreshold(int threshold) { m_statusThreshold = threshold; }
    int getThreshold() { return m_statusThreshold; }
 
-   uint32_t execute(SlmTicketData* ticket);
+   uint32_t execute(BusinessServiceTicketData* ticket);
 
    void modifyFromMessage(NXCPMessage *pRequest);
    void loadFromSelect(DB_RESULT hResult, int row);
@@ -4423,7 +4424,7 @@ public:
    bool saveToDatabase();
    bool deleteFromDatabase();
 
-   enum {
+   enum CheckType{
       OBJECT = 0,
       SCRIPT = 1,
       DCI = 2
@@ -4453,7 +4454,7 @@ class NXCORE_EXPORTABLE BaseBusinessService : public AbstractContainer, public A
 {
   typedef AbstractContainer super;
 protected:
-   ObjectArray<SlmCheck> m_checks;
+   ObjectArray<BusinessServiceCheck> m_checks;
    bool m_busy;
    bool m_pollingDisabled;
    time_t m_lastPollTime;
@@ -4475,11 +4476,11 @@ public:
    BaseBusinessService(const TCHAR* name);
    BaseBusinessService();
    virtual ~BaseBusinessService();
-   ObjectArray<SlmCheck> *getChecks() { return &m_checks; }
+   ObjectArray<BusinessServiceCheck> *getChecks() { return &m_checks; }
    void deleteCheck(uint32_t checkId);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
-   void copyChecks(const ObjectArray<SlmCheck>& checks);
+   void copyChecks(const ObjectArray<BusinessServiceCheck>& checks);
    void modifyCheckFromMessage(NXCPMessage *pRequest);
 };
 
@@ -4495,7 +4496,6 @@ protected:
    uint32_t m_lastPollStatus;
    MUTEX m_hPollerMutex;
 
-   void updateSLMChecks();
    void objectCheckAutoBinding();
    void dciCheckAutoBinding();
    void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
@@ -4521,7 +4521,7 @@ public:
    void configurationPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    bool lockForStatusPoll();
    bool lockForConfigurationPoll();
-   void addChildTicket(SlmTicketData* data);
+   void addChildTicket(BusinessServiceTicketData* data);
 };
 
 /**

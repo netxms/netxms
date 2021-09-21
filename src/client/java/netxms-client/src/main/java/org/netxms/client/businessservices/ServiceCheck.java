@@ -96,11 +96,11 @@ public class ServiceCheck
 	 */
 	public void fillMessage(NXCPMessage msg)
 	{
-	   msg.setFieldInt32(NXCPCodes.VID_SLMCHECK_ID, (int)id);
+	   msg.setFieldInt32(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_ID, (int)id);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
-	   msg.setFieldInt32(NXCPCodes.VID_SLMCHECK_TYPE, checkType.getValue());
-      msg.setFieldInt32(NXCPCodes.VID_SLMCHECK_RELATED_OBJECT, (int)objectId);
-      msg.setFieldInt32(NXCPCodes.VID_SLMCHECK_RELATED_DCI, (int)dciId);
+	   msg.setFieldInt32(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_TYPE, checkType.getValue());
+      msg.setFieldInt32(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_RELATED_OBJECT, (int)objectId);
+      msg.setFieldInt32(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_RELATED_DCI, (int)dciId);
       msg.setField(NXCPCodes.VID_SCRIPT, script);
       msg.setFieldInt32(NXCPCodes.VID_THRESHOLD, threshold);
 	}

@@ -687,11 +687,11 @@ public class NXCSession
                      break;
                   case NXCPCodes.CMD_UPDATE_BUSINESS_CHECK:
                      sendNotification(new SessionNotification(SessionNotification.BUSINESS_SERVICE_CHECK_MODIFY,
-                           msg.getFieldAsInt64(NXCPCodes.VID_SLM_CHECKS_LIST_BASE), new ServiceCheck(msg, NXCPCodes.VID_SLM_CHECKS_LIST_BASE)));
+                           msg.getFieldAsInt64(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_LIST_BASE), new ServiceCheck(msg, NXCPCodes.VID_BUSINESS_SERVICE_CHECK_LIST_BASE)));
                      break;
                   case NXCPCodes.CMD_DELETE_BUSINESS_CHECK:
                      sendNotification(new SessionNotification(SessionNotification.BUSINESS_SERVICE_CHECK_DELETE,
-                           msg.getFieldAsInt64(NXCPCodes.VID_SLMCHECK_ID)));
+                           msg.getFieldAsInt64(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_ID)));
                      break;
                   default:
                      // Check subscriptions
@@ -12733,8 +12733,8 @@ public class NXCSession
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       Map<Long, ServiceCheck> checks = new HashMap<Long, ServiceCheck>();
-      int count = response.getFieldAsInt32(NXCPCodes.VID_SLMCHECKS_COUNT);
-      long base = NXCPCodes.VID_SLM_CHECKS_LIST_BASE;      
+      int count = response.getFieldAsInt32(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_COUNT);
+      long base = NXCPCodes.VID_BUSINESS_SERVICE_CHECK_LIST_BASE;
       for (int i= 0; i < count; i ++)
       {
          ServiceCheck check = new ServiceCheck(response, base);
@@ -12756,7 +12756,7 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_BUSINESS_CHECK);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)businessServiceid);
-      msg.setFieldInt32(NXCPCodes.VID_SLMCHECK_ID, (int)checkId);
+      msg.setFieldInt32(NXCPCodes.VID_BUSINESS_SERVICE_CHECK_ID, (int)checkId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -12817,8 +12817,8 @@ public class NXCSession
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       List<BusinessServiceTicket> tickets = new ArrayList<BusinessServiceTicket>();
-      int count = response.getFieldAsInt32(NXCPCodes.VID_BUSINESS_TICKETS_COUNT);
-      long base = NXCPCodes.VID_BUSINESS_TICKETS_LIST_BASE;      
+      int count = response.getFieldAsInt32(NXCPCodes.VID_BUSINESS_TICKET_COUNT);
+      long base = NXCPCodes.VID_BUSINESS_TICKET_LIST_BASE;
       for (int i= 0; i < count; i++)
       {
          BusinessServiceTicket ticket = new BusinessServiceTicket(response, base);

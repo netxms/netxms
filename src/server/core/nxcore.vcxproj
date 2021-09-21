@@ -319,7 +319,7 @@
     <ClCompile Include="sensor.cpp" />
     <ClCompile Include="server_stats.cpp" />
     <ClCompile Include="session.cpp" />
-    <ClCompile Include="slmcheck.cpp" />
+    <ClCompile Include="businessservicecheck.cpp" />
     <ClCompile Include="smclp.cpp" />
     <ClCompile Include="snmp.cpp" />
     <ClCompile Include="snmptrap.cpp" />

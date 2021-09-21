@@ -28,12 +28,12 @@
 AutoBindTarget::AutoBindTarget(NetObj *_this)
 {
    m_this = _this;
-   m_bindFilter = nullptr;
-   m_bindFilterSource = nullptr;
+   m_firstBindFilter = nullptr;
+   m_firstBindFilterSource = nullptr;
    m_mutexProperties = MutexCreate();
    m_autoBindFlags = 0;
-   m_bindFilterDCI = nullptr;
-   m_bindFilterSourceDCI = nullptr;
+   m_secondBindFilter = nullptr;
+   m_secondBindFilterSource = nullptr;
 }
 
 /**
@@ -41,10 +41,10 @@ AutoBindTarget::AutoBindTarget(NetObj *_this)
  */
 AutoBindTarget::~AutoBindTarget()
 {
-   delete m_bindFilter;
-   MemFree(m_bindFilterSource);
-   delete m_bindFilterDCI;
-   MemFree(m_bindFilterSourceDCI);
+   delete m_firstBindFilter;
+   MemFree(m_firstBindFilterSource);
+   delete m_secondBindFilter;
+   MemFree(m_secondBindFilterSource);
    MutexDestroy(m_mutexProperties);
 }
 
@@ -56,7 +56,7 @@ void AutoBindTarget::setAutoBindFlag(bool value, uint32_t flag)
 /**
  * Set auto bind mode for container
  */
-void AutoBindTarget::setAutoBindMode(bool doBind, bool doUnbind)
+void AutoBindTarget::setFirstFilterBindMode(bool doBind, bool doUnbind)
 {
    internalLock();
    setAutoBindFlag(doBind, AAF_AUTO_APPLY_1);
@@ -68,7 +68,7 @@ void AutoBindTarget::setAutoBindMode(bool doBind, bool doUnbind)
 /**
  * Set auto bind DCI mode for container
  */
-void AutoBindTarget::setAutoBindDCIMode(bool doBind, bool doUnbind)
+void AutoBindTarget::setSecondFilterBindMode(bool doBind, bool doUnbind)
 {
    internalLock();
    setAutoBindFlag(doBind, AAF_AUTO_APPLY_2);
@@ -83,17 +83,17 @@ void AutoBindTarget::setAutoBindDCIMode(bool doBind, bool doUnbind)
  *
  * @param filter new filter script code or NULL to clear filter
  */
-void AutoBindTarget::setAutoBindFilter(const TCHAR *filter)
+void AutoBindTarget::setFirstFilter(const TCHAR *filter)
 {
    internalLock();
-   MemFree(m_bindFilterSource);
-   delete m_bindFilter;
+   MemFree(m_firstBindFilterSource);
+   delete m_firstBindFilter;
    if (filter != nullptr)
    {
       TCHAR error[256];
-      m_bindFilterSource = MemCopyString(filter);
-      m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256, nullptr);
-      if (m_bindFilter == nullptr)
+      m_firstBindFilterSource = MemCopyString(filter);
+      m_firstBindFilter = NXSLCompile(m_firstBindFilterSource, error, 256, nullptr);
+      if (m_firstBindFilter == nullptr)
       {
          TCHAR buffer[1024];
          _sntprintf(buffer, 1024, _T("AutoBind::%s::%s"), m_this->getObjectClassName(), m_this->getName());
@@ -103,8 +103,8 @@ void AutoBindTarget::setAutoBindFilter(const TCHAR *filter)
    }
    else
    {
-      m_bindFilterSource = nullptr;
-      m_bindFilter = nullptr;
+      m_firstBindFilterSource = nullptr;
+      m_firstBindFilter = nullptr;
    }
    internalUnlock();
 }
@@ -114,17 +114,17 @@ void AutoBindTarget::setAutoBindFilter(const TCHAR *filter)
  *
  * @param filter new filter script code or NULL to clear filter
  */
-void AutoBindTarget::setAutoBindDCIFilter(const TCHAR *filter)
+void AutoBindTarget::setSecondFilter(const TCHAR *filter)
 {
    internalLock();
-   MemFree(m_bindFilterSourceDCI);
-   delete m_bindFilterDCI;
+   MemFree(m_secondBindFilterSource);
+   delete m_secondBindFilter;
    if (filter != nullptr)
    {
       TCHAR error[256];
-      m_bindFilterSourceDCI = MemCopyString(filter);
-      m_bindFilterDCI = NXSLCompile(m_bindFilterSourceDCI, error, 256, nullptr);
-      if (m_bindFilterDCI == nullptr)
+      m_secondBindFilterSource = MemCopyString(filter);
+      m_secondBindFilter = NXSLCompile(m_secondBindFilterSource, error, 256, nullptr);
+      if (m_secondBindFilter == nullptr)
       {
          TCHAR buffer[1024];
          _sntprintf(buffer, 1024, _T("AutoBind::%s::%s"), m_this->getObjectClassName(), m_this->getName());
@@ -134,8 +134,8 @@ void AutoBindTarget::setAutoBindDCIFilter(const TCHAR *filter)
    }
    else
    {
-      m_bindFilterSourceDCI = nullptr;
-      m_bindFilterDCI = nullptr;
+      m_secondBindFilterSource = nullptr;
+      m_secondBindFilter = nullptr;
    }
    internalUnlock();
 }
@@ -156,7 +156,7 @@ void AutoBindTarget::modifyFromMessage(NXCPMessage *request)
    if (request->isFieldExist(VID_AUTOBIND_FILTER))
    {
       TCHAR *filter = request->getFieldAsString(VID_AUTOBIND_FILTER);
-      setAutoBindFilter(filter);
+      setFirstFilter(filter);
       MemFree(filter);
    }
 
@@ -164,7 +164,7 @@ void AutoBindTarget::modifyFromMessage(NXCPMessage *request)
    if (request->isFieldExist(VID_AUTOBIND_FILTER_2))
    {
       TCHAR *filter = request->getFieldAsString(VID_AUTOBIND_FILTER_2);
-      setAutoBindDCIFilter(filter);
+      setSecondFilter(filter);
       MemFree(filter);
    }
 }
@@ -176,8 +176,8 @@ void AutoBindTarget::fillMessage(NXCPMessage *msg)
 {
    internalLock();
    msg->setField(VID_AUTOBIND_FLAGS, m_autoBindFlags);
-   msg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
-   msg->setField(VID_AUTOBIND_FILTER_2, CHECK_NULL_EX(m_bindFilterSourceDCI));
+   msg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_firstBindFilterSource));
+   msg->setField(VID_AUTOBIND_FILTER_2, CHECK_NULL_EX(m_secondBindFilterSource));
    internalUnlock();
 }
 
@@ -195,10 +195,10 @@ bool AutoBindTarget::loadFromDatabase(DB_HANDLE hdb, uint32_t objectId)
       if (hResult != nullptr)
       {
          TCHAR *filter = DBGetField(hResult, 0, 0, nullptr, 0);
-         setAutoBindFilter(filter);
+         setFirstFilter(filter);
          MemFree(filter);
          TCHAR *filterDCI = DBGetField(hResult, 0, 1, nullptr, 0);
-         setAutoBindDCIFilter(filterDCI);
+         setSecondFilter(filterDCI);
          MemFree(filterDCI);
          m_autoBindFlags = DBGetFieldULong(hResult, 0, 2);
          DBFreeResult(hResult);
@@ -229,8 +229,8 @@ bool AutoBindTarget::saveToDatabase(DB_HANDLE hdb)
    if (hStmt != nullptr)
    {
       internalLock();
-      DBBind(hStmt, 1, DB_SQLTYPE_TEXT, m_bindFilterSource, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_bindFilterSourceDCI, DB_BIND_STATIC);
+      DBBind(hStmt, 1, DB_SQLTYPE_TEXT, m_firstBindFilterSource, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_secondBindFilterSource, DB_BIND_STATIC);
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_autoBindFlags);
       DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_this->getId());
       success = DBExecute(hStmt);
@@ -250,19 +250,17 @@ bool AutoBindTarget::deleteFromDatabase(DB_HANDLE hdb)
 }
 
 /**
- * Check if object should be automatically applied to given data collection target
- * Returns AutoBindDecision_Bind if applicable, AutoBindDecision_Unbind if not,
- * AutoBindDecision_Ignore if no change required (script error or no auto apply)
+ * Check if object should be automatically applied to given data collection target using filter program
  */
-AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<NetObj>& target, const shared_ptr<DCObject>& dci)
+AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<NetObj>& target, const shared_ptr<DCObject>& dci, NXSL_Program *filterProgram)
 {
    AutoBindDecision result = AutoBindDecision_Ignore;
 
    NXSL_VM *filter = nullptr;
    internalLock();
-   if (isAutoBindEnabled() && (m_bindFilter != nullptr) && !m_bindFilter->isEmpty())
+   if ((filterProgram != nullptr) && !filterProgram->isEmpty())
    {
-      filter = CreateServerScriptVM(m_bindFilter, target);
+      filter = CreateServerScriptVM(filterProgram, target);
       if (filter == nullptr)
       {
          TCHAR buffer[1024];
@@ -301,17 +299,47 @@ AutoBindDecision AutoBindTarget::isApplicable(const shared_ptr<NetObj>& target, 
 }
 
 /**
+ * Check if object should be automatically applied to given data collection target using first filter
+ * Returns AutoBindDecision_Bind if applicable, AutoBindDecision_Unbind if not,
+ * AutoBindDecision_Ignore if no change required (script error or no auto apply)
+ */
+AutoBindDecision AutoBindTarget::isFirstFilterApplicable(const shared_ptr<NetObj>& target, const shared_ptr<DCObject>& dci)
+{
+   AutoBindDecision result = AutoBindDecision_Ignore;
+   if (isFirstFilterBindingEnabled())
+   {
+      result = isApplicable(target, dci, m_firstBindFilter);
+   }
+   return result;
+}
+
+/**
+ * Check if object should be automatically applied to given data collection target using second filter
+ * Returns AutoBindDecision_Bind if applicable, AutoBindDecision_Unbind if not,
+ * AutoBindDecision_Ignore if no change required (script error or no auto apply)
+ */
+AutoBindDecision AutoBindTarget::isSecondFilterApplicable(const shared_ptr<NetObj>& target, const shared_ptr<DCObject>& dci)
+{
+   AutoBindDecision result = AutoBindDecision_Ignore;
+   if (isSecondFilterBindingEnabled())
+   {
+      result = isApplicable(target, dci, m_secondBindFilter);
+   }
+   return result;
+}
+
+/**
  * Serialize object to JSON
  */
 void AutoBindTarget::toJson(json_t *root)
 {
    internalLock();
-   json_object_set_new(root, "autoBind", json_boolean(isAutoBindEnabled()));
-   json_object_set_new(root, "autoUnbind", json_boolean(isAutoUnbindEnabled()));
-   json_object_set_new(root, "applyFilter", json_string_t(m_bindFilterSource));
-   json_object_set_new(root, "autoBindDCI", json_boolean(isAutoBindDCIEnabled()));
-   json_object_set_new(root, "autoUnbindDCI", json_boolean(isAutoUnbindDCIEnabled()));
-   json_object_set_new(root, "applyFilterDCI", json_string_t(m_bindFilterSourceDCI));
+   json_object_set_new(root, "autoBind", json_boolean(isFirstFilterBindingEnabled()));
+   json_object_set_new(root, "autoUnbind", json_boolean(isFirstFilterUnbindingEnabled()));
+   json_object_set_new(root, "applyFilter", json_string_t(m_firstBindFilterSource));
+   json_object_set_new(root, "autoBindDCI", json_boolean(isSecondFilterBindingEnabled()));
+   json_object_set_new(root, "autoUnbindDCI", json_boolean(isSecondFilterUnbindingEnabled()));
+   json_object_set_new(root, "applyFilterDCI", json_string_t(m_secondBindFilterSource));
    internalUnlock();
 }
 
@@ -321,25 +349,25 @@ void AutoBindTarget::toJson(json_t *root)
 void AutoBindTarget::createExportRecord(StringBuffer &str)
 {
    internalLock();
-   if (m_bindFilterSource != nullptr)
+   if (m_firstBindFilterSource != nullptr)
    {
       str.append(_T("\t\t\t<filter autoBind=\""));
-      str.append(isAutoBindEnabled());
+      str.append(isFirstFilterBindingEnabled());
       str.append(_T("\" autoUnbind=\""));
-      str.append(isAutoUnbindEnabled());
+      str.append(isFirstFilterUnbindingEnabled());
       str.append(_T("\">"));
-      str.appendPreallocated(EscapeStringForXML(m_bindFilterSource, -1));
+      str.appendPreallocated(EscapeStringForXML(m_firstBindFilterSource, -1));
       str.append(_T("</filter>\n"));
    }
-   if (m_bindFilterSourceDCI != nullptr)
+   if (m_secondBindFilterSource != nullptr)
    {
-      str.append(_T("\t\t\t<filterDCI autoBindDCI=\""));
-      str.append(isAutoBindDCIEnabled());
-      str.append(_T("\" autoUnbindDCI=\""));
-      str.append(isAutoUnbindDCIEnabled());
+      str.append(_T("\t\t\t<secondFilter autoBind=\""));
+      str.append(isSecondFilterBindingEnabled());
+      str.append(_T("\" autoUnbind=\""));
+      str.append(isSecondFilterUnbindingEnabled());
       str.append(_T("\">"));
-      str.appendPreallocated(EscapeStringForXML(m_bindFilterSourceDCI, -1));
-      str.append(_T("</filterDCI>\n"));
+      str.appendPreallocated(EscapeStringForXML(m_secondBindFilterSource, -1));
+      str.append(_T("</secondFilter>\n"));
    }
    internalUnlock();
 }
@@ -352,7 +380,7 @@ void AutoBindTarget::updateFromImport(ConfigEntry *config)
    ConfigEntry *filter = config->findEntry(_T("filter"));
    if (filter != nullptr)
    {
-      setAutoBindFilter(filter->getValue());
+      setFirstFilter(filter->getValue());
       internalLock();
       setAutoBindFlag(filter->getAttributeAsBoolean(_T("autoBind")), AAF_AUTO_APPLY_1);
       setAutoBindFlag(filter->getAttributeAsBoolean(_T("autoUnbind")), AAF_AUTO_REMOVE_1);
@@ -360,19 +388,19 @@ void AutoBindTarget::updateFromImport(ConfigEntry *config)
    }
    else
    {
-      setAutoBindFilter(nullptr);
+      setFirstFilter(nullptr);
    }
-   filter = config->findEntry(_T("filterDCI"));
+   filter = config->findEntry(_T("secondFilter"));
    if (filter != nullptr)
    {
-      setAutoBindDCIFilter(filter->getValue());
+      setSecondFilter(filter->getValue());
       internalLock();
-      setAutoBindFlag(filter->getAttributeAsBoolean(_T("autoBindDCI")), AAF_AUTO_APPLY_2);
-      setAutoBindFlag(filter->getAttributeAsBoolean(_T("autoUnbindDCI")), AAF_AUTO_REMOVE_2);
+      setAutoBindFlag(filter->getAttributeAsBoolean(_T("autoBind")), AAF_AUTO_APPLY_2);
+      setAutoBindFlag(filter->getAttributeAsBoolean(_T("autoUnbind")), AAF_AUTO_REMOVE_2);
       internalUnlock();
    }
    else
    {
-      setAutoBindDCIFilter(nullptr);
+      setSecondFilter(nullptr);
    }
 }

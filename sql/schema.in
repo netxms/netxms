@@ -2019,7 +2019,7 @@ CREATE TABLE slm_agreements
 ) TABLE_TYPE;
 
 /*
-** SLA tickets
+** Business service tickets
 */
 CREATE TABLE business_service_tickets
 (
@@ -2036,7 +2036,7 @@ CREATE TABLE business_service_tickets
 ) TABLE_TYPE;
 
 /*
-** SLA service change log
+** Business service downtime log
 */
 CREATE TABLE business_service_downtime
 (

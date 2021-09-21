@@ -333,7 +333,7 @@
     <ClCompile Include="session.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="slmcheck.cpp">
+    <ClCompile Include="businessservicecheck.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="smclp.cpp">

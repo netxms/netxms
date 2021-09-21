@@ -2837,7 +2837,7 @@ NXSL_METHOD_DEFINITION(Container, setAutoBindMode)
    if (!argv[0]->isBoolean() || !argv[1]->isBoolean())
       return NXSL_ERR_NOT_BOOLEAN;
 
-   static_cast<shared_ptr<Container>*>(object->getData())->get()->setAutoBindMode(argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
+   static_cast<shared_ptr<Container>*>(object->getData())->get()->setFirstFilterBindMode(argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
    *result = vm->createValue();
    return 0;
 }
@@ -2850,7 +2850,33 @@ NXSL_METHOD_DEFINITION(Container, setAutoBindScript)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   static_cast<shared_ptr<Container>*>(object->getData())->get()->setAutoBindFilter(argv[0]->getValueAsCString());
+   static_cast<shared_ptr<Container>*>(object->getData())->get()->setFirstFilter(argv[0]->getValueAsCString());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * Container::setAutoBindMode() method
+ */
+NXSL_METHOD_DEFINITION(Container, setSecondFilterBindMode)
+{
+   if (!argv[0]->isBoolean() || !argv[1]->isBoolean())
+      return NXSL_ERR_NOT_BOOLEAN;
+
+   static_cast<shared_ptr<Container>*>(object->getData())->get()->setSecondFilterBindMode(argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * Container::setAutoBindScript() method
+ */
+NXSL_METHOD_DEFINITION(Container, setSecondFilterBindScript)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   static_cast<shared_ptr<Container>*>(object->getData())->get()->setSecondFilter(argv[0]->getValueAsCString());
    *result = vm->createValue();
    return 0;
 }
@@ -2879,16 +2905,16 @@ NXSL_Value *NXSL_ContainerClass::getAttr(NXSL_Object *object, const char *attr)
    auto container = SharedObjectFromData<Container>(object);
    if (compareAttributeName(attr, "autoBindScript"))
    {
-      const TCHAR *script = container->getAutoBindScriptSource();
+      const TCHAR *script = container->getFirstFilterSource();
       value = vm->createValue(CHECK_NULL_EX(script));
    }
    else if (compareAttributeName(attr, "isAutoBindEnabled"))
    {
-      value = vm->createValue(container->isAutoBindEnabled());
+      value = vm->createValue(container->isFirstFilterBindingEnabled());
    }
    else if (compareAttributeName(attr, "isAutoUnbindEnabled"))
    {
-      value = vm->createValue(container->isAutoUnbindEnabled());
+      value = vm->createValue(container->isFirstFilterUnbindingEnabled());
    }
    return value;
 }
@@ -2944,7 +2970,7 @@ NXSL_METHOD_DEFINITION(Template, setAutoApplyMode)
    if (!argv[0]->isBoolean() || !argv[1]->isBoolean())
       return NXSL_ERR_NOT_BOOLEAN;
 
-   static_cast<shared_ptr<Template>*>(object->getData())->get()->setAutoBindMode(argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
+   static_cast<shared_ptr<Template>*>(object->getData())->get()->setFirstFilterBindMode(argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
    *result = vm->createValue();
    return 0;
 }
@@ -2957,7 +2983,7 @@ NXSL_METHOD_DEFINITION(Template, setAutoApplyScript)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   static_cast<shared_ptr<Template>*>(object->getData())->get()->setAutoBindFilter(argv[0]->getValueAsCString());
+   static_cast<shared_ptr<Template>*>(object->getData())->get()->setFirstFilter(argv[0]->getValueAsCString());
    *result = vm->createValue();
    return 0;
 }
@@ -2988,16 +3014,16 @@ NXSL_Value *NXSL_TemplateClass::getAttr(NXSL_Object *object, const char *attr)
    auto tmpl = SharedObjectFromData<Template>(object);
    if (compareAttributeName(attr, "autoApplyScript"))
    {
-      const TCHAR *script = tmpl->getAutoBindScriptSource();
+      const TCHAR *script = tmpl->getFirstFilterSource();
       value = vm->createValue(CHECK_NULL_EX(script));
    }
    else if (compareAttributeName(attr, "isAutoApplyEnabled"))
    {
-      value = vm->createValue(tmpl->isAutoBindEnabled());
+      value = vm->createValue(tmpl->isFirstFilterBindingEnabled());
    }
    else if (compareAttributeName(attr, "isAutoRemoveEnabled"))
    {
-      value = vm->createValue(tmpl->isAutoUnbindEnabled());
+      value = vm->createValue(tmpl->isFirstFilterUnbindingEnabled());
    }
    else if (compareAttributeName(attr, "version"))
    {

@@ -16,18 +16,18 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: slmcheck.cpp
+** File: businessservicecheck.cpp
 **
 **/
 
 #include "nxcore.h"
 
-#define DEBUG_TAG _T("slm.check")
+#define DEBUG_TAG _T("business.service.check")
 
 /**
- * SLM check default constructor
+ * Business service check default constructor
  */
-SlmCheck::SlmCheck(uint32_t serviceId)
+BusinessServiceCheck::BusinessServiceCheck(uint32_t serviceId)
 {
 	m_id = 0;
 	m_type = OBJECT;
@@ -44,40 +44,40 @@ SlmCheck::SlmCheck(uint32_t serviceId)
 /**
  * Service class destructor
  */
-SlmCheck::~SlmCheck()
+BusinessServiceCheck::~BusinessServiceCheck()
 {
 	MemFree(m_script);
 	delete m_pCompiledScript;
 }
 
 /**
- * Generates unique ID for SLM check
+ * Generates unique ID for business service check
  */
-void SlmCheck::generateId()
+void BusinessServiceCheck::generateId()
 {
-	m_id = CreateUniqueId(IDG_SLM_CHECK);
+	m_id = CreateUniqueId(IDG_BUSINESS_SERVICE_CHECK);
 }
 
 /**
  * Modify check from request
  */
-void SlmCheck::modifyFromMessage(NXCPMessage *request)
+void BusinessServiceCheck::modifyFromMessage(NXCPMessage *request)
 {
 	// If new check
    if (m_id == 0)
 		generateId();
 
-	if (request->isFieldExist(VID_SLMCHECK_TYPE))
+	if (request->isFieldExist(VID_BUSINESS_SERVICE_CHECK_TYPE))
    {
-      m_type = request->getFieldAsUInt32(VID_SLMCHECK_TYPE);
+      m_type = request->getFieldAsUInt32(VID_BUSINESS_SERVICE_CHECK_TYPE);
    }
-	if (request->isFieldExist(VID_SLMCHECK_RELATED_OBJECT))
+	if (request->isFieldExist(VID_BUSINESS_SERVICE_CHECK_RELATED_OBJECT))
    {
-      m_relatedObject = request->getFieldAsUInt32(VID_SLMCHECK_RELATED_OBJECT);
+      m_relatedObject = request->getFieldAsUInt32(VID_BUSINESS_SERVICE_CHECK_RELATED_OBJECT);
    }
-	if (request->isFieldExist(VID_SLMCHECK_RELATED_DCI))
+	if (request->isFieldExist(VID_BUSINESS_SERVICE_CHECK_RELATED_DCI))
    {
-      m_relatedDCI = request->getFieldAsUInt32(VID_SLMCHECK_RELATED_DCI);
+      m_relatedDCI = request->getFieldAsUInt32(VID_BUSINESS_SERVICE_CHECK_RELATED_DCI);
    }
 	if (request->isFieldExist(VID_SCRIPT))
    {
@@ -98,9 +98,9 @@ void SlmCheck::modifyFromMessage(NXCPMessage *request)
 }
 
 /**
- * Load SLM check from database
+ * Load business service check from database
  */
-void SlmCheck::loadFromSelect(DB_RESULT hResult, int row)
+void BusinessServiceCheck::loadFromSelect(DB_RESULT hResult, int row)
 {
 	m_id = DBGetFieldULong(hResult, row, 0);
 	m_serviceId = DBGetFieldULong(hResult, row, 1);
@@ -118,7 +118,7 @@ void SlmCheck::loadFromSelect(DB_RESULT hResult, int row)
 /**
  * Compile script if there is one
  */
-void SlmCheck::compileScript()
+void BusinessServiceCheck::compileScript()
 {
 	if (m_type != SCRIPT || m_script == NULL)
 	   return;
@@ -135,9 +135,9 @@ void SlmCheck::compileScript()
 }
 
 /**
- * Fill message with SLM check data
+ * Fill message with business service check data
  */
-void SlmCheck::fillMessage(NXCPMessage *msg, uint64_t baseId)
+void BusinessServiceCheck::fillMessage(NXCPMessage *msg, uint64_t baseId)
 {
    msg->setField(baseId, m_id);
    msg->setField(baseId + 1, m_type);
@@ -150,9 +150,9 @@ void SlmCheck::fillMessage(NXCPMessage *msg, uint64_t baseId)
 }
 
 /**
- * Get reason of violated SLM check
+ * Get reason of violated business service check
  */
-const TCHAR* SlmCheck::getReason()
+const TCHAR* BusinessServiceCheck::getReason()
 {
 	if (m_reason[0] == 0 && m_currentTicket != 0)
 	{
@@ -176,9 +176,9 @@ const TCHAR* SlmCheck::getReason()
 }
 
 /**
- * Save SLM check to database
+ * Save business service check to database
  */
-bool SlmCheck::saveToDatabase()
+bool BusinessServiceCheck::saveToDatabase()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    static const TCHAR *columns[] = {
@@ -210,12 +210,12 @@ bool SlmCheck::saveToDatabase()
 }
 
 /**
- * Delete SLM check from database
+ * Delete business service check from database
  */
-bool SlmCheck::deleteFromDatabase()
+bool BusinessServiceCheck::deleteFromDatabase()
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	bool success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM slm_checks WHERE id=?"));
+	bool success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM business_service_checks WHERE id=?"));
 	DBConnectionPoolReleaseConnection(hdb);
 	return success;
 }
@@ -223,23 +223,23 @@ bool SlmCheck::deleteFromDatabase()
 /**
  * Execute check. It could be object status check, or DCI status check or script
  */
-uint32_t SlmCheck::execute(SlmTicketData* ticket)
+uint32_t BusinessServiceCheck::execute(BusinessServiceTicketData* ticket)
 {
 	uint32_t oldStatus = m_status;
 	switch (m_type)
 	{
-		case OBJECT:
+		case CheckType::OBJECT:
 			{
 				shared_ptr<NetObj> obj = FindObjectById(m_relatedObject);
 				if (obj != nullptr)
 				{
 					int threshold = m_statusThreshold != 0 ? m_statusThreshold : ConfigReadInt(_T("BusinessServices.Check.Threshold.Objects"), 1);
 					m_status = obj->getStatus() >= threshold ? STATUS_NORMAL : STATUS_CRITICAL;
-					_tcslcpy(m_reason, _T("SLM check node status threshold violation"), 256);
+					_tcslcpy(m_reason, _T("Object status threshold violation"), 256);
 				}
 			}
 			break;
-		case SCRIPT:
+		case CheckType::SCRIPT:
 			if (m_pCompiledScript != NULL)
 			{
 				NXSL_VM *script = CreateServerScriptVM(m_pCompiledScript, nullptr);
@@ -286,8 +286,6 @@ uint32_t SlmCheck::execute(SlmTicketData* ticket)
 								}
 							}
 						}
-						nxlog_write_tag(6, DEBUG_TAG, _T("SlmCheck::execute script: %s [%ld] return value %d"), m_name, (long)m_id, pValue->getValueAsInt32());
-						nxlog_write_tag(6, DEBUG_TAG, _T("SlmCheck::script: %s"), m_script);
 						delete globals;
 					}
 					else
@@ -311,7 +309,7 @@ uint32_t SlmCheck::execute(SlmTicketData* ticket)
 				m_status = STATUS_NORMAL;
 			}
 			break;
-		case DCI:
+		case CheckType::DCI:
 			{
 				shared_ptr<NetObj> obj = FindObjectById(m_relatedObject);
 				if (obj != nullptr && obj->isDataCollectionTarget())
@@ -319,12 +317,12 @@ uint32_t SlmCheck::execute(SlmTicketData* ticket)
 					shared_ptr<DataCollectionTarget> target = static_pointer_cast<DataCollectionTarget>(obj);
 					int threshold = m_statusThreshold != 0 ? m_statusThreshold : ConfigReadInt(_T("BusinessServices.Check.Threshold.DataCollection"), 1);
 					m_status = target->getDciThreshold(m_relatedDCI) >= threshold ? STATUS_NORMAL : STATUS_CRITICAL;
-					_tcslcpy(m_reason, _T("SLM check DCI status threshold violation"), 256);
+					_tcslcpy(m_reason, _T("DCI status threshold violation"), 256);
 				}
 			}
 			break;
 		default:
-			nxlog_write_tag(4, DEBUG_TAG, _T("SlmCheck::execute() called for undefined check type, check %s/%ld"), m_name, (long)m_id);
+			nxlog_write_tag(4, DEBUG_TAG, _T("BusinessServiceCheck::execute() called for undefined check type, check %s/%ld"), m_name, (long)m_id);
 			m_status = STATUS_NORMAL;
 			break;
 	}
@@ -345,14 +343,14 @@ uint32_t SlmCheck::execute(SlmTicketData* ticket)
 }
 
 /**
- * Insert ticket for this check into slm_tickets
+ * Insert ticket for this check into business_service_tickets
  */
-bool SlmCheck::insertTicket(SlmTicketData* ticket)
+bool BusinessServiceCheck::insertTicket(BusinessServiceTicketData* ticket)
 {
 	if (m_status == STATUS_NORMAL)
 		return false;
 
-	m_currentTicket = CreateUniqueId(IDG_SLM_TICKET);
+	m_currentTicket = CreateUniqueId(IDG_BUSINESS_SERVICE_TICKET);
 
 	bool success = false;
 	time_t currentTime = time(nullptr);
@@ -396,10 +394,10 @@ bool SlmCheck::insertTicket(SlmTicketData* ticket)
 /**
  * Close current ticket
  */
-void SlmCheck::closeTicket()
+void BusinessServiceCheck::closeTicket()
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE slm_tickets SET close_timestamp=? WHERE ticket_id=? OR original_ticket_id=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE business_service_tickets SET close_timestamp=? WHERE ticket_id=? OR original_ticket_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
