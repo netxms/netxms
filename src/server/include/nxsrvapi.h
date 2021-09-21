@@ -39,7 +39,7 @@
 #include <netxms_isc.h>
 #include <nxcldefs.h>
 #include <nxsl.h>
-#include <nxnet.h>
+#include <interface_types.h>
 
 /**
  * Default files
@@ -831,8 +831,8 @@ struct RemoteFileFingerprint
 struct FilePartInfo
 {
    TCHAR *m_name;
-   uint64_t m_size;
    uint64_t m_offset;
+   uint32_t m_size;
    BYTE m_hash[MD5_DIGEST_SIZE];
 
    FilePartInfo()
@@ -857,7 +857,7 @@ struct FilePartInfo
             RemoteFileInfo* remoteFilePart = remoteFiles->get(i);
             if (!_tcscmp(m_name, remoteFilePart->name()))
             {
-               if (m_size == remoteFilePart->size() && !memcmp(m_hash, remoteFilePart->hash(), MD5_DIGEST_SIZE))
+               if ((m_size == static_cast<uint32_t>(remoteFilePart->size())) && !memcmp(m_hash, remoteFilePart->hash(), MD5_DIGEST_SIZE))
                {
                   return true;
                }
@@ -928,8 +928,6 @@ private:
 	VolatileCounter m_bulkDataProcessing;
    bool m_fileResumingEnabled;
 
-   void receiverThread();
-
    uint32_t setupEncryption(RSA *pServerKey);
    uint32_t authenticate(BOOL bProxyData);
    uint32_t setupProxyConnection();
@@ -939,7 +937,7 @@ private:
    void processFileData(NXCPMessage *msg);
    void processFileTransferAbort(NXCPMessage *msg);
    uint32_t uploadFileInternal(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
-         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod, off_t offset = 0,
+         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod, uint64_t offset = 0,
          size_t chunkSize = 0, bool forceBasicTransfer = false);
 
    void processCollectedDataCallback(NXCPMessage *msg);

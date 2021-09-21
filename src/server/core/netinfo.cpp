@@ -22,7 +22,6 @@
 
 #include "nxcore.h"
 
-
 #ifdef _WIN32
 
 #include <iphlpapi.h>

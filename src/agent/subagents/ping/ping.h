@@ -63,7 +63,7 @@ struct PING_TARGET
    uint32_t rttHistory[MAX_POLLS_PER_MINUTE];
    uint32_t jitterHistory[MAX_POLLS_PER_MINUTE];
    int bufPos;
-	int ipAddrAge;
+	uint32_t ipAddrAge;
 	bool dontFragment;
 	bool automatic;
 	time_t lastDataRead;

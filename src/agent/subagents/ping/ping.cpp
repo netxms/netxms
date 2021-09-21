@@ -311,7 +311,7 @@ static LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
          t->movingAverageJitter = 0xFFFFFFFF;
          t->automatic = true;
          t->lastDataRead = time(nullptr);
-         for(int i = 0; i < s_pollsPerMinute; i++)
+         for(uint32_t i = 0; i < s_pollsPerMinute; i++)
             t->rttHistory[i] = 10001;  // Indicate unused slot
 
          s_targetLock.lock();
@@ -565,7 +565,7 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 		t->movingAverageRTT = 0xFFFFFFFF;
       t->movingAverageExp = EMA_EXP(60 / s_pollsPerMinute, s_movingAverageTimePeriod);
       t->movingAverageJitter = 0xFFFFFFFF;
-      for(int i = 0; i < s_pollsPerMinute; i++)
+      for(uint32_t i = 0; i < s_pollsPerMinute; i++)
          t->rttHistory[i] = 10001;  // Indicate unused slot
       s_targets.add(t);
 		bResult = TRUE;
