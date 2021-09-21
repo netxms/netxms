@@ -101,7 +101,7 @@ const ItemValue& ItemValue::operator=(int64_t value)
 {
    m_int64 = value;
    _sntprintf(m_string, MAX_DB_STRING, INT64_FMT, m_int64);
-   m_double = m_int64;
+   m_double = static_cast<double>(m_int64);
    m_uint64 = static_cast<uint64_t>(m_int64);
    return *this;
 }

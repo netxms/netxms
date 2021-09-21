@@ -500,13 +500,13 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 /**
  * Parse MAC address. Could be without separators or with any separator char.
  */
-static bool ParseMACAddress(const char *text, int length, BYTE *mac, int *macLength)
+static bool ParseMACAddress(const char *text, size_t length, BYTE *mac, size_t *macLength)
 {
    bool withSeparator = false;
    char separator = 0;
    int p = 0;
    bool hi = true;
-   for(int i = 0; (i < length) && (p < 64); i++)
+   for(size_t i = 0; (i < length) && (p < 64); i++)
    {
       char c = toupper(text[i]);
       if ((i % 3 == 2) && withSeparator)
@@ -551,7 +551,7 @@ void BuildLldpId(int type, const BYTE *data, size_t length, TCHAR *id, int idLen
    {
       // Some D-Link switches returns MAC address for ID type 4 as formatted text instead of raw bytes
       BYTE macAddr[64];
-      int macLength;
+      size_t macLength;
       if ((length >= MAC_ADDR_LENGTH * 2) && ParseMACAddress(reinterpret_cast<const char*>(data), length, macAddr, &macLength))
       {
    	   BinToStr(macAddr, macLength, &id[_tcslen(id)]);

@@ -1697,7 +1697,7 @@ uint32_t AgentConnection::executeCommand(const TCHAR *command, const StringList 
  * Upload file to agent
  */
 uint32_t AgentConnection::uploadFileInternal(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
-         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod, off_t offset, size_t chunkSize, bool forceBasicTransfer)
+         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod, uint64_t offset, size_t chunkSize, bool forceBasicTransfer)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1782,7 +1782,7 @@ void AgentConnection::prepareFilePartList(const TCHAR *localFile, const TCHAR *d
 
    int handle = _topen(localFile, O_RDONLY | O_BINARY);
 
-   const size_t FILE_PART_SIZE = 1024 * 1024;
+   const uint32_t FILE_PART_SIZE = 1024 * 1024;
    BYTE *buffer = (handle != -1) ? MemAllocArrayNoInit<BYTE>(FILE_PART_SIZE) : nullptr;
 
    for(int i = 0; localFileSize > 0; i++)
@@ -1801,7 +1801,7 @@ void AgentConnection::prepareFilePartList(const TCHAR *localFile, const TCHAR *d
       }
       else
       {
-         info->m_size = localFileSize;
+         info->m_size = static_cast<uint32_t>(localFileSize);
          localFileSize = 0;
       }
 

@@ -266,6 +266,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\base64.h" />
     <ClInclude Include="..\..\include\geolocation.h" />
+    <ClInclude Include="..\..\include\interface_types.h" />
     <ClInclude Include="..\..\include\netxms-regex.h" />
     <ClInclude Include="..\..\include\netxms-version.h" />
     <ClInclude Include="..\..\include\netxms_getopt.h" />
@@ -278,6 +279,7 @@
     <ClInclude Include="..\..\include\nxconfig.h" />
     <ClInclude Include="..\..\include\nxcpapi.h" />
     <ClInclude Include="..\..\include\nxlog.h" />
+    <ClInclude Include="..\..\include\nxnet.h" />
     <ClInclude Include="..\..\include\nxqueue.h" />
     <ClInclude Include="..\..\include\nxsocket.h" />
     <ClInclude Include="..\..\include\nxstat.h" />
