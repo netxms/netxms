@@ -180,16 +180,6 @@
          </enabledWhen>
       </page>
       <page
-            class="org.netxms.ui.eclipse.dashboard.propertypages.AvailabilityChart"
-            id="org.netxms.ui.eclipse.dashboard.propertypages.AvailabilityChart#0"
-            name="%page.name.AvailChart">
-         <enabledWhen>
-            <instanceof
-                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.AvailabilityChartConfig">
-            </instanceof>
-         </enabledWhen>
-      </page>
-      <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.StatusIndicator"
             id="org.netxms.ui.eclipse.dashboard.propertypages.StatusIndicator#0"
             name="%page.name.StatusIndicator">

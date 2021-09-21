@@ -32,7 +32,6 @@ public class ObjectTreeComparator extends ViewerComparator
 {
 	// Categories
 	private static final int CATEGORY_CONTAINER = 10;
-	private static final int CATEGORY_NODELINK = 100;
 	private static final int CATEGORY_OTHER = 255;
 
 	/**

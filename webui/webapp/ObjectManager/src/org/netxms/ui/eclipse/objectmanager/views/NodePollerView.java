@@ -56,7 +56,7 @@ public class NodePollerView extends ViewPart
 {
    public static final String ID = "org.netxms.ui.eclipse.objectmanager.views.NodePollerView"; //$NON-NLS-1$
 
-   private final String[] POLL_NAME = { 
+   private final String[] POLL_NAME = {
          "", //$NON-NLS-1$
          Messages.get().NodePollerView_StatusPoll, 
          Messages.get().NodePollerView_FullConfigPoll,
@@ -306,7 +306,7 @@ public class NodePollerView extends ViewPart
          {
             try
             {
-               session.pollNode(target.getObjectId(), pollType, listener);
+               session.pollObject(target.getObjectId(), pollType, listener);
                onPollComplete(true, null);
             }
             catch(Exception e)

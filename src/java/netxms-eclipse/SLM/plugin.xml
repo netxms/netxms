@@ -27,10 +27,5 @@
                menubarPath="CreateObjectSubmenu/additions">
          </action>
       </objectContribution>
-      <objectContribution
-            adaptable="false"
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.NodeLink"
-            objectClass="org.netxms.client.objects.NodeLink">
-      </objectContribution>
    </extension>
 </plugin>

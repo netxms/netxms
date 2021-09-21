@@ -336,7 +336,7 @@ public class NodePollerView extends ViewPart
          {
             try
             {
-               session.pollNode(target.getObjectId(), pollType, listener);
+               session.pollObject(target.getObjectId(), pollType, listener);
                onPollComplete(true, null);
             }
             catch(Exception e)
