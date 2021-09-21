@@ -4690,8 +4690,8 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir);
 void LIBNETXMS_EXPORTABLE SetNetXMSDataDirectory(const TCHAR *dir);
 
 TcpPingResult LIBNETXMS_EXPORTABLE TcpPing(const InetAddress& addr, UINT16 port, UINT32 timeout);
-UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress& addr, int numRetries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize, bool dontFragment);
-UINT16 LIBNETXMS_EXPORTABLE CalculateIPChecksum(const void *data, size_t len);
+uint32_t LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress& addr, int numRetries, uint32_t timeout, uint32_t *rtt, uint32_t packetSize, bool dontFragment);
+uint16_t LIBNETXMS_EXPORTABLE CalculateIPChecksum(const void *data, size_t len);
 
 TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length);
 String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *str, int length = -1);

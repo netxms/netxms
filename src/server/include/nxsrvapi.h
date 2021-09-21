@@ -39,6 +39,7 @@
 #include <netxms_isc.h>
 #include <nxcldefs.h>
 #include <nxsl.h>
+#include <nxnet.h>
 
 /**
  * Default files
