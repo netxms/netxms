@@ -4447,6 +4447,10 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE ObjectArray<BusinessServiceCheck>;
+#endif
+
 /**
  * Business service base class
  */

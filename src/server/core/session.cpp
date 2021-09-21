@@ -5749,7 +5749,6 @@ void ClientSession::createObject(NXCPMessage *request)
 
                   // Create new object
                   shared_ptr<NetObj> object;
-                  UINT32 nodeId;
                   TCHAR deviceId[MAX_OBJECT_NAME];
                   switch(objectClass)
                   {
