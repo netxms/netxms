@@ -168,9 +168,9 @@ static bool H_UpgradeFromV69()
          {
             uint32_t linkId = DBGetFieldULong(linkUnderMainContainer, i, 0);
             TCHAR query[1024];
-            _sntprintf(query, 1024, _T("INSERT INTO business_services (service_id,is_prototype,prototype_id,instance,instance_method,instance_data,instance_filter,object_status_threshold,dci_status_threshold,instance_source) VALUES (%d,'0',0,'',0,'','',0,0,0)"),
-                  linkId);
-
+            _sntprintf(query, 1024,
+                     _T("INSERT INTO business_services (service_id,is_prototype,prototype_id,instance,instance_method,instance_data,instance_filter,object_status_threshold,dci_status_threshold,instance_source) ")
+                     _T("VALUES (%d,'0',0,'',0,'','',0,0,0)"), linkId);
             if (!SQLQuery(query) && !g_ignoreErrors)
             {
                return false;
@@ -185,7 +185,7 @@ static bool H_UpgradeFromV69()
       return false;
    }
 
-   //remove node link from relationship
+   // remove node link from relationship
    DB_RESULT nodeLinksResult = SQLSelect(_T("SELECT nodelink_id,node_id FROM node_links"));
    if (nodeLinksResult != nullptr)
    {
@@ -462,9 +462,9 @@ static bool H_UpgradeFromV69()
       {
          for(int i = 0; i < autoBindCount; i++)
          {
-            int32_t flag = (DBGetFieldLong(autoBindResult, i, 2) ? AAF_AUTO_APPLY_1 : 0) | (DBGetFieldLong(autoBindResult, i, 3) ? AAF_AUTO_REMOVE_1 : 0);
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, flag);
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(autoBindResult, i, 1));
+            int32_t flags = (DBGetFieldLong(autoBindResult, i, 1) ? AAF_AUTO_APPLY_1 : 0) | (DBGetFieldLong(autoBindResult, i, 2) ? AAF_AUTO_REMOVE_1 : 0);
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, flags);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(autoBindResult, i, 0));
             if (!SQLExecute(hStmt) && !g_ignoreErrors)
             {
                DBFreeStatement(hStmt);
