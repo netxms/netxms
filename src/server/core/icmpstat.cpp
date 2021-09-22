@@ -136,7 +136,7 @@ void IcmpStatCollector::resize(int period)
       {
          pos--;
          if (pos < 0)
-            pos = m_bufferSize;
+            pos = m_bufferSize - 1;
          responseTimes[i] = m_rawResponseTimes[pos];
       }
       m_writePos = 0;
