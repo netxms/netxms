@@ -4737,7 +4737,7 @@ uint32_t GetObjectQueries(NXCPMessage *msg);
 uint32_t ModifyObjectQuery(const NXCPMessage& msg, uint32_t *queryId);
 uint32_t DeleteObjectQuery(uint32_t queryId);
 
-BOOL LoadObjects();
+bool LoadObjects();
 void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter);
 
 bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass);
@@ -4798,7 +4798,7 @@ extern shared_ptr<DashboardRoot> NXCORE_EXPORTABLE g_dashboardRoot;
 extern shared_ptr<BusinessServiceRoot> NXCORE_EXPORTABLE g_businessServiceRoot;
 
 extern UINT32 NXCORE_EXPORTABLE g_dwMgmtNode;
-extern BOOL g_bModificationsLocked;
+extern bool g_modificationsLocked;
 extern ObjectQueue<TemplateUpdateTask> g_templateUpdateQueue;
 
 extern ObjectIndex NXCORE_EXPORTABLE g_idxObjectById;

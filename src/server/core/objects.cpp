@@ -27,7 +27,7 @@
 /**
  * Global data
  */
-BOOL g_bModificationsLocked = FALSE;
+bool g_modificationsLocked = false;
 
 shared_ptr<Network> NXCORE_EXPORTABLE g_entireNetwork;
 shared_ptr<ServiceRoot> NXCORE_EXPORTABLE g_infrastructureServiceRoot;
@@ -1404,10 +1404,10 @@ template<typename T> static void LoadObjectsFromTable(const TCHAR* className, DB
 /**
  * Load objects from database at stratup
  */
-BOOL LoadObjects()
+bool LoadObjects()
 {
    // Prevent objects to change it's modification flag
-   g_bModificationsLocked = TRUE;
+   g_modificationsLocked = true;
 
    DB_HANDLE mainDB = DBConnectionPoolAcquireConnection();
    DB_HANDLE hdb = mainDB;
@@ -1546,18 +1546,27 @@ BOOL LoadObjects()
    // DCI cache size calculation uses information from condition objects
    LoadObjectsFromTable<ConditionObject>(_T("condition"), hdb, _T("conditions"));
    g_idxConditionById.setStartupMode(false);
-   LoadObjectsFromTable<Subnet>(_T("subnet"), hdb, _T("subnets"), IsZoningEnabled() ? [](const shared_ptr<Subnet>& subnet) {
-      if (!subnet->isDeleted())
-      {
-         shared_ptr<Zone> zone = FindZoneByUIN(subnet->getZoneUIN());
-         if (zone != nullptr)
-            zone->addSubnet(subnet);
-      }
-   } : [](const shared_ptr<Subnet>& subnet) {
-      if (!subnet->isDeleted())
-         g_entireNetwork->addSubnet(subnet);
-   });
+
+   if (IsZoningEnabled())
+   {
+      LoadObjectsFromTable<Subnet>(_T("subnet"), hdb, _T("subnets"), [](const shared_ptr<Subnet>& subnet) {
+         if (!subnet->isDeleted())
+         {
+            shared_ptr<Zone> zone = FindZoneByUIN(subnet->getZoneUIN());
+            if (zone != nullptr)
+               zone->addSubnet(subnet);
+         }
+      });
+   }
+   else
+   {
+      LoadObjectsFromTable<Subnet>(_T("subnet"), hdb, _T("subnets"), [](const shared_ptr<Subnet>& subnet) {
+         if (!subnet->isDeleted())
+            g_entireNetwork->addSubnet(subnet);
+      });
+   }
    g_idxSubnetById.setStartupMode(false);
+
    LoadObjectsFromTable<Rack>(_T("rack"), hdb, _T("racks"));
    LoadObjectsFromTable<Chassis>(_T("chassis"), hdb, _T("chassis"));
    g_idxChassisById.setStartupMode(false);
@@ -1565,6 +1574,7 @@ BOOL LoadObjects()
    g_idxMobileDeviceById.setStartupMode(false);
    LoadObjectsFromTable<Sensor>(_T("sensor"), hdb, _T("sensors"));
    g_idxSensorById.setStartupMode(false);
+
    LoadObjectsFromTable<Node>(_T("node"), hdb, _T("nodes"), nullptr, IsZoningEnabled() ? [](const shared_ptr<Node>& node) {
       shared_ptr<Zone> zone = FindZoneByProxyId(node->getId());
       if (zone != nullptr)
@@ -1573,6 +1583,7 @@ BOOL LoadObjects()
       }
    } : static_cast<void (*)(const std::shared_ptr<Node>&)>(nullptr));
    g_idxNodeById.setStartupMode(false);
+
    LoadObjectsFromTable<AccessPoint>(_T("access point"), hdb, _T("access_points"));
    g_idxAccessPointById.setStartupMode(false);
    LoadObjectsFromTable<Interface>(_T("interface"), hdb, _T("interfaces"));
@@ -1608,7 +1619,7 @@ BOOL LoadObjects()
    CALL_ALL_MODULES(pfLinkObjects, ());
 
    // Allow objects to change it's modification flag
-   g_bModificationsLocked = FALSE;
+   g_modificationsLocked = false;
 
    //Prune custom attributes if required
    if (MetaDataReadInt32(_T("PruneCustomAttributes"), 0) > 0)
@@ -1640,7 +1651,7 @@ BOOL LoadObjects()
    if (cachedb != nullptr)
       DBCloseInMemoryDatabase(cachedb);
 
-   return TRUE;
+   return true;
 }
 
 /**

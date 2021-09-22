@@ -1325,7 +1325,7 @@ static void BroadcastObjectChange(ClientSession *session, NetObj *object)
  */
 void NetObj::setModified(uint32_t flags, bool notify)
 {
-   if (g_bModificationsLocked)
+   if (g_modificationsLocked)
       return;
 
    InterlockedOr(&m_modified, flags);
