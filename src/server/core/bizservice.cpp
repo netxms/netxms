@@ -1054,12 +1054,9 @@ uint32_t DeleteCheck(uint32_t serviceId, uint32_t checkId)
 {
    shared_ptr<BaseBusinessService> service = static_pointer_cast<BaseBusinessService>(FindObjectById(serviceId));
    if (service == nullptr)
-   {
       return RCC_INVALID_OBJECT_ID;
-   }
 
    service->deleteCheck(checkId);
-
    return RCC_SUCCESS;
 }
 
@@ -1070,9 +1067,10 @@ double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
 {
    double res = 0;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT from_timestamp,to_timestamp FROM business_service_downtime ") _T("WHERE service_id=? AND "
-                                                                                                               "((from_timestamp BETWEEN ? AND ? OR to_timestamp BETWEEN ? and ?) OR (from_timestamp<? AND ( to_timestamp=0 OR to_timestamp>? )))"));
-   if (hStmt != NULL)
+   DB_STATEMENT hStmt = DBPrepare(hdb,
+            _T("SELECT from_timestamp,to_timestamp FROM business_service_downtime ")
+            _T("WHERE service_id=? AND ((from_timestamp BETWEEN ? AND ? OR to_timestamp BETWEEN ? and ?) OR (from_timestamp<? AND (to_timestamp=0 OR to_timestamp>?)))"));
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, serviceId);
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (uint32_t)from);
@@ -1110,9 +1108,10 @@ double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
 void GetServiceTickets(uint32_t serviceId, time_t from, time_t to, NXCPMessage *msg)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT ticket_id,original_ticket_id,original_service_id,check_id,create_timestamp,close_timestamp,reason,check_description FROM business_service_tickets ") _T("WHERE service_id=? AND "
-                                                                                                                                                                           "((create_timestamp BETWEEN ? AND ? OR close_timestamp BETWEEN ? and ?) OR (create_timestamp<? AND ( close_timestamp=0 OR close_timestamp>? )))"));
-   if (hStmt != NULL)
+   DB_STATEMENT hStmt = DBPrepare(hdb,
+            _T("SELECT ticket_id,original_ticket_id,original_service_id,check_id,create_timestamp,close_timestamp,reason,check_description FROM business_service_tickets ")
+            _T("WHERE service_id=? AND ((create_timestamp BETWEEN ? AND ? OR close_timestamp BETWEEN ? and ?) OR (create_timestamp<? AND (close_timestamp=0 OR close_timestamp>?)))"));
+   if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, serviceId);
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (uint32_t)from);
@@ -1125,26 +1124,28 @@ void GetServiceTickets(uint32_t serviceId, time_t from, time_t to, NXCPMessage *
       if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
+         uint32_t fieldId = VID_BUSINESS_TICKET_LIST_BASE;
          for (int i = 0; i < count; i++)
          {
-            uint32_t ticket_id = DBGetFieldULong(hResult, i, 0);
-            uint32_t original_ticket_id = DBGetFieldULong(hResult, i, 1);
-            uint32_t original_service_id = DBGetFieldULong(hResult, i, 2);
-            uint32_t check_id = DBGetFieldLong(hResult, i, 3);
-            time_t create_timestamp = static_cast<time_t>(DBGetFieldULong(hResult, i, 4));
-            time_t close_timestamp = static_cast<time_t>(DBGetFieldULong(hResult, i, 5));
+            uint32_t ticketId = DBGetFieldULong(hResult, i, 0);
+            uint32_t originalTicketId = DBGetFieldULong(hResult, i, 1);
+            uint32_t originalServiceId = DBGetFieldULong(hResult, i, 2);
+            uint32_t checkId = DBGetFieldLong(hResult, i, 3);
+            time_t creationTimestamp = static_cast<time_t>(DBGetFieldULong(hResult, i, 4));
+            time_t closureTimestamp = static_cast<time_t>(DBGetFieldULong(hResult, i, 5));
             TCHAR reason[256];
             DBGetField(hResult, i, 6, reason, 256);
-            TCHAR checkDescription[1023];
-            DBGetField(hResult, i, 7, checkDescription, 1023);
+            TCHAR checkDescription[1024];
+            DBGetField(hResult, i, 7, checkDescription, 1024);
 
-            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10), original_ticket_id != 0 ? original_ticket_id : ticket_id);
-            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 1, original_ticket_id != 0 ? original_service_id : serviceId);
-            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 2, check_id);
-            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 3, (uint32_t)create_timestamp);
-            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 4, (uint32_t)close_timestamp);
-            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 5, reason);
-            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 6, checkDescription);
+            msg->setField(fieldId++, originalTicketId != 0 ? originalTicketId : ticketId);
+            msg->setField(fieldId++, originalTicketId != 0 ? originalServiceId : serviceId);
+            msg->setField(fieldId++, checkId);
+            msg->setFieldFromTime(fieldId++, creationTimestamp);
+            msg->setFieldFromTime(fieldId++, closureTimestamp);
+            msg->setField(fieldId++, reason);
+            msg->setField(fieldId++, checkDescription);
+            fieldId += 3;
          }
          msg->setField(VID_BUSINESS_TICKET_COUNT, count);
          DBFreeResult(hResult);
