@@ -139,10 +139,10 @@ static void UpdateDataCollectionCache(ObjectIndex *idx)
 /**
  * DCI cache loading thread
  */
-static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
+static void CacheLoadingThread()
 {
    ThreadSetName("CacheLoader");
-   DbgPrintf(1, _T("Started caching of DCI values"));
+   nxlog_debug_tag(_T("obj.dc"), 1, _T("Started caching of DCI values"));
 
 	UpdateDataCollectionCache(&g_idxNodeById);
 	UpdateDataCollectionCache(&g_idxClusterById);
@@ -151,8 +151,7 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
    UpdateDataCollectionCache(&g_idxChassisById);
    UpdateDataCollectionCache(&g_idxSensorById);
 
-   DbgPrintf(1, _T("Finished caching of DCI values"));
-   return THREAD_OK;
+   nxlog_debug_tag(_T("obj.dc"), 1, _T("Finished caching of DCI values"));
 }
 
 /**
@@ -220,7 +219,7 @@ void ObjectsInit()
    g_businessServiceRoot = make_shared<BusinessServiceRoot>();
    NetObjInsert(g_businessServiceRoot, false, false);
 
-	DbgPrintf(1, _T("Built-in objects created"));
+	nxlog_debug_tag(_T("obj.init"), 1, _T("Built-in objects created"));
 }
 
 /**
@@ -1349,28 +1348,58 @@ UINT32 FindLocalMgmtNode()
 }
 
 /**
- * ObjectIndex::forEach callback which recalculates object's status
+ * Template function for loading objects from database
+ * 
+ * @param className    object class name
+ * @param hdb          database handle
+ * @param query        sets table and WHERE condition, if needed
+ * @param index        clearing startup mode for specific object index
+ * @param beforeInsert function called before object insertion in indexes
+ * @param afterInsert  function called after object insertion in indexes
  */
-static void RecalcStatusCallback(NetObj *object, void *data)
+template<typename T> static void LoadObjectsFromTable(const TCHAR* className, DB_HANDLE hdb, const TCHAR* query, void (*beforeInsert)(const shared_ptr<T>& obj) = nullptr, void (*afterInsert)(const shared_ptr<T>& obj) = nullptr)
 {
-	object->calculateCompoundStatus();
+   nxlog_debug_tag(_T("obj.init"), 2, _T("Loading %s%s..."), className, _tcscmp(className, _T("chassis")) ? _T("s") : _T(""));
+   DB_RESULT hResult = DBSelectFormatted(hdb, _T("SELECT id FROM %s"), query);
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for (int i = 0; i < count; i++)
+      {
+         uint32_t id = DBGetFieldULong(hResult, i, 0);
+         auto object = make_shared<T>();
+         if (object->loadFromDatabase(hdb, id))
+         {
+            // In case we need some logic before inserting object to indexes
+            if (beforeInsert != nullptr)
+            {
+               beforeInsert(object);
+            }
+
+            // Insert into indexes
+            NetObjInsert(object, false, false);
+
+            // In case we need some logic after inserting object to indexes
+            if (afterInsert != nullptr)
+            {
+               afterInsert(object);
+            }
+         }
+         else     // Object load failed
+         {
+            object->destroy();
+            nxlog_write_tag(NXLOG_ERROR, _T("obj.init"), _T("Failed to load %s object with ID %u from database"), className, id);
+         }
+      }
+      DBFreeResult(hResult);
+   }
 }
 
 /**
- * ObjectIndex::forEach callback which links objects after loading
+ * Convert macro value to string
  */
-static void LinkObjects(NetObj *object, void *data)
-{
-   object->linkObjects();
-}
-
-/**
- * ObjectIndex::forEach callback which prunes custom attributes
- */
-static void PruneCustomAttributes(NetObj *object, void *data)
-{
-   object->pruneCustomAttributes();
-}
+#define __TO_STRING(x) _T(#x)
+#define TO_STRING(x) __TO_STRING(x)
 
 /**
  * Load objects from database at stratup
@@ -1392,7 +1421,7 @@ BOOL LoadObjects()
                                            _T("last_event_timestamp"), _T("table_id"), _T("flags"), _T("id"), _T("activation_event"),
                                            _T("deactivation_event"), _T("group_id"), _T("iface_id"), _T("vlan_id"), _T("object_id"), nullptr };
 
-      nxlog_debug(1, _T("Caching object configuration tables"));
+      nxlog_debug_tag(_T("obj.init"), 1, _T("Caching object configuration tables"));
       bool success =
                DBCacheTable(cachedb, mainDB, _T("object_properties"), _T("object_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("object_custom_attributes"), _T("object_id,attr_name"), _T("*")) &&
@@ -1473,7 +1502,7 @@ BOOL LoadObjects()
    }
 
    // Load built-in object properties
-   DbgPrintf(2, _T("Loading built-in object properties..."));
+   nxlog_debug_tag(_T("obj.init"), 2, _T("Loading built-in object properties..."));
    g_entireNetwork->loadFromDatabase(hdb);
    g_infrastructureServiceRoot->loadFromDatabase(hdb);
    g_templateRoot->loadFromDatabase(hdb);
@@ -1498,8 +1527,6 @@ BOOL LoadObjects()
    // Load zones
    if (g_flags & AF_ENABLE_ZONING)
    {
-      DbgPrintf(2, _T("Loading zones..."));
-
       // Load (or create) default zone
       auto zone = make_shared<Zone>();
       zone->generateGuid();
@@ -1507,564 +1534,75 @@ BOOL LoadObjects()
       NetObjInsert(zone, false, false);
       g_entireNetwork->addZone(zone);
 
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT id FROM zones WHERE id<>4"));
-      if (hResult != nullptr)
-      {
-         int count = DBGetNumRows(hResult);
-         for(int i = 0; i < count; i++)
-         {
-            UINT32 id = DBGetFieldULong(hResult, i, 0);
-            zone = make_shared<Zone>();
-            if (zone->loadFromDatabase(hdb, id))
-            {
-               if (!zone->isDeleted())
-                  g_entireNetwork->addZone(zone);
-               NetObjInsert(zone, false, false);  // Insert into indexes
-            }
-            else     // Object load failed
-            {
-               zone->destroy();
-               nxlog_write(NXLOG_ERROR, _T("Failed to load zone object with ID %u from database"), id);
-            }
-         }
-         DBFreeResult(hResult);
-      }
+      // Load zones from database
+      LoadObjectsFromTable<Zone>(_T("zone"), hdb, _T("zones WHERE id<>4"), nullptr, [](const shared_ptr<Zone>& zone) {
+         if (!zone->isDeleted())
+            g_entireNetwork->addZone(zone);
+      });
    }
    g_idxZoneByUIN.setStartupMode(false);
 
-   // Load conditions
    // We should load conditions before nodes because
    // DCI cache size calculation uses information from condition objects
-   DbgPrintf(2, _T("Loading conditions..."));
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id FROM conditions"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto condition = make_shared<ConditionObject>();
-         if (condition->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(condition, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            condition->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load condition object with ID %u from database"), id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
+   LoadObjectsFromTable<ConditionObject>(_T("condition"), hdb, _T("conditions"));
    g_idxConditionById.setStartupMode(false);
-
-   // Load subnets
-   DbgPrintf(2, _T("Loading subnets..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM subnets"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
+   LoadObjectsFromTable<Subnet>(_T("subnet"), hdb, _T("subnets"), IsZoningEnabled() ? [](const shared_ptr<Subnet>& subnet) {
+      if (!subnet->isDeleted())
       {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto subnet = make_shared<Subnet>();
-         if (subnet->loadFromDatabase(hdb, id))
-         {
-            if (!subnet->isDeleted())
-            {
-               if (g_flags & AF_ENABLE_ZONING)
-               {
-                  shared_ptr<Zone> zone = FindZoneByUIN(subnet->getZoneUIN());
-                  if (zone != nullptr)
-                     zone->addSubnet(subnet);
-               }
-               else
-               {
-                  g_entireNetwork->addSubnet(subnet);
-               }
-            }
-            NetObjInsert(subnet, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            subnet->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load subnet object with ID %u from database"), id);
-         }
+         shared_ptr<Zone> zone = FindZoneByUIN(subnet->getZoneUIN());
+         if (zone != nullptr)
+            zone->addSubnet(subnet);
       }
-      DBFreeResult(hResult);
-   }
+   } : [](const shared_ptr<Subnet>& subnet) {
+      if (!subnet->isDeleted())
+         g_entireNetwork->addSubnet(subnet);
+   });
    g_idxSubnetById.setStartupMode(false);
-
-   // Load racks
-   DbgPrintf(2, _T("Loading racks..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM racks"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto rack = make_shared<Rack>();
-         if (rack->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(rack, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            nxlog_write(NXLOG_ERROR, _T("Failed to load rack object with ID %u from database"), id);
-            rack->destroy();
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Load chassis
-   DbgPrintf(2, _T("Loading chassis..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM chassis"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto chassis = make_shared<Chassis>();
-         if (chassis->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(chassis, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            nxlog_write(NXLOG_ERROR, _T("Failed to load chassis object with ID %u from database"), id);
-            chassis->destroy();
-         }
-      }
-      DBFreeResult(hResult);
-   }
+   LoadObjectsFromTable<Rack>(_T("rack"), hdb, _T("racks"));
+   LoadObjectsFromTable<Chassis>(_T("chassis"), hdb, _T("chassis"));
    g_idxChassisById.setStartupMode(false);
-
-   // Load mobile devices
-   DbgPrintf(2, _T("Loading mobile devices..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM mobile_devices"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto md = make_shared<MobileDevice>();
-         if (md->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(md, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            md->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load mobile device object with ID %u from database"), id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
+   LoadObjectsFromTable<MobileDevice>(_T("mobile device"), hdb, _T("mobile_devices"));
    g_idxMobileDeviceById.setStartupMode(false);
-
-   // Load sensors
-   DbgPrintf(2, _T("Loading sensors..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM sensors"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto sensor = make_shared<Sensor>();
-         if (sensor->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(sensor, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            sensor->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load sensor object with ID %u from database"), id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
+   LoadObjectsFromTable<Sensor>(_T("sensor"), hdb, _T("sensors"));
    g_idxSensorById.setStartupMode(false);
-
-   // Load nodes
-   DbgPrintf(2, _T("Loading nodes..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM nodes"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
+   LoadObjectsFromTable<Node>(_T("node"), hdb, _T("nodes"), nullptr, IsZoningEnabled() ? [](const shared_ptr<Node>& node) {
+      shared_ptr<Zone> zone = FindZoneByProxyId(node->getId());
+      if (zone != nullptr)
       {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto node = make_shared<Node>();
-         if (node->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(node, false, false);  // Insert into indexes
-            if (IsZoningEnabled())
-            {
-               shared_ptr<Zone> zone = FindZoneByProxyId(id);
-               if (zone != nullptr)
-               {
-                  zone->updateProxyStatus(node, false);
-               }
-            }
-         }
-         else     // Object load failed
-         {
-            node->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load node object with ID %u from database"), id);
-         }
+         zone->updateProxyStatus(node, false);
       }
-      DBFreeResult(hResult);
-   }
+   } : static_cast<void (*)(const std::shared_ptr<Node>&)>(nullptr));
    g_idxNodeById.setStartupMode(false);
-
-   // Load access points
-   DbgPrintf(2, _T("Loading access points..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM access_points"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto ap = make_shared<AccessPoint>();
-         if (ap->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(ap, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            nxlog_write(NXLOG_ERROR, _T("Failed to load access point object with ID %u from database"), id);
-            ap->destroy();
-         }
-      }
-      DBFreeResult(hResult);
-   }
+   LoadObjectsFromTable<AccessPoint>(_T("access point"), hdb, _T("access_points"));
    g_idxAccessPointById.setStartupMode(false);
-
-   // Load interfaces
-   DbgPrintf(2, _T("Loading interfaces..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM interfaces"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto iface = make_shared<Interface>();
-         if (iface->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(iface, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            nxlog_write(NXLOG_ERROR, _T("Failed to load interface object with ID %u from database"), id);
-            iface->destroy();
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Load network services
-   DbgPrintf(2, _T("Loading network services..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM network_services"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto service = make_shared<NetworkService>();
-         if (service->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(service, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            service->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load network service object with ID %u from database"), id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Load VPN connectors
-   DbgPrintf(2, _T("Loading VPN connectors..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM vpn_connectors"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto connector = make_shared<VPNConnector>();
-         if (connector->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(connector, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            connector->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load VPN connector object with ID %u from database"), id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Load clusters
-   DbgPrintf(2, _T("Loading clusters..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM clusters"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto cluster = make_shared<Cluster>();
-         if (cluster->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(cluster, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            cluster->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load cluster object with ID %u from database"), id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
+   LoadObjectsFromTable<Interface>(_T("interface"), hdb, _T("interfaces"));
+   LoadObjectsFromTable<NetworkService>(_T("network service"), hdb, _T("network_services"));
+   LoadObjectsFromTable<VPNConnector>(_T("VPN connector"), hdb, _T("vpn_connectors"));
+   LoadObjectsFromTable<Cluster>(_T("cluster"), hdb, _T("clusters"));
    g_idxClusterById.setStartupMode(false);
 
    // Start cache loading thread.
    // All data collection targets must be loaded at this point.
-   ThreadCreate(CacheLoadingThread, 0, nullptr);
+   ThreadCreate(CacheLoadingThread);
 
-   // Load templates
-   DbgPrintf(2, _T("Loading templates..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM templates"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto tmpl = make_shared<Template>();
-         if (tmpl->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(tmpl, false, false);  // Insert into indexes
-				tmpl->calculateCompoundStatus();	// Force status change to NORMAL
-         }
-         else     // Object load failed
-         {
-            tmpl->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load template object with ID %u from database"), id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Load network maps
-   DbgPrintf(2, _T("Loading network maps..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM network_maps"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto map = make_shared<NetworkMap>();
-         if (map->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(map, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            map->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load network map object with ID %u from database"), id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
+   LoadObjectsFromTable<Template>(_T("template"), hdb, _T("templates"), nullptr, [](const shared_ptr<Template>& t) { t->calculateCompoundStatus(); });
+   LoadObjectsFromTable<NetworkMap>(_T("network map"), hdb, _T("network_maps"));
    g_idxNetMapById.setStartupMode(false);
-
-   // Load container objects
-   DbgPrintf(2, _T("Loading containers..."));
-   TCHAR query[256];
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_CONTAINER);
-   hResult = DBSelect(hdb, query);
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto container = make_shared<Container>();
-         if (container->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(container, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            container->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load container object with ID %u from database"), id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Load template group objects
-   DbgPrintf(2, _T("Loading template groups..."));
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_TEMPLATEGROUP);
-   hResult = DBSelect(hdb, query);
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto group = make_shared<TemplateGroup>();
-         if (group->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(group, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            group->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load template group object with ID %u from database"), id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Load map group objects
-   DbgPrintf(2, _T("Loading map groups..."));
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_NETWORKMAPGROUP);
-   hResult = DBSelect(hdb, query);
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto group = make_shared<NetworkMapGroup>();
-         if (group->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(group, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            group->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load network map group object with ID %u from database"), id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Load dashboard objects
-   DbgPrintf(2, _T("Loading dashboards..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM dashboards"));
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto dashboard = make_shared<Dashboard>();
-         if (dashboard->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(dashboard, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            dashboard->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load dashboard object with ID %u from database"), id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Load dashboard group objects
-   DbgPrintf(2, _T("Loading dashboard groups..."));
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_DASHBOARDGROUP);
-   hResult = DBSelect(hdb, query);
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         auto group = make_shared<DashboardGroup>();
-         if (group->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(group, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            group->destroy();
-            nxlog_write(NXLOG_ERROR, _T("Failed to load dashboard group object with ID %u from database"), id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Loading business services
-   DbgPrintf(2, _T("Loading business services..."));
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_BUSINESS_SERVICE);
-   hResult = DBSelect(hdb, query);
-   if (hResult != nullptr)
-   {
-	   int count = DBGetNumRows(hResult);
-	   for (int i = 0; i < count; i++)
-	   {
-		   uint32_t id = DBGetFieldULong(hResult, i, 0);
-         auto service = make_shared<BusinessService>();
-		   if (service->loadFromDatabase(hdb, id))
-		   {
-			   NetObjInsert(service, false, false);  // Insert into indexes
-		   }
-		   else     // Object load failed
-		   {
-			   nxlog_write(NXLOG_ERROR, _T("Failed to load business service object with ID %u from database"), id);
-		   }
-	   }
-	   DBFreeResult(hResult);
-   }
-
-   // Loading business services prototypes
-   DbgPrintf(2, _T("Loading business services prototypes..."));
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_BUSINESS_SERVICE_PROTOTYPE);
-   hResult = DBSelect(hdb, query);
-   if (hResult != nullptr)
-   {
-	   int count = DBGetNumRows(hResult);
-	   for (int i = 0; i < count; i++)
-	   {
-		   uint32_t id = DBGetFieldULong(hResult, i, 0);
-         auto prototype = make_shared<BusinessServicePrototype>();
-		   if (prototype->loadFromDatabase(hdb, id))
-		   {
-			   NetObjInsert(prototype, false, false);  // Insert into indexes
-		   }
-		   else     // Object load failed
-		   {
-			   nxlog_write(NXLOG_ERROR, _T("Failed to load business service prototype object with ID %u from database"), id);
-		   }
-	   }
-	   DBFreeResult(hResult);
-   }
-
+   LoadObjectsFromTable<Container>(_T("container"), hdb, _T("object_containers WHERE object_class=") TO_STRING(OBJECT_CONTAINER));
+   LoadObjectsFromTable<TemplateGroup>(_T("template group"), hdb, _T("object_containers WHERE object_class=") TO_STRING(OBJECT_TEMPLATEGROUP));
+   LoadObjectsFromTable<NetworkMapGroup>(_T("map group"), hdb, _T("object_containers WHERE object_class=") TO_STRING(OBJECT_NETWORKMAPGROUP));
+   LoadObjectsFromTable<Dashboard>(_T("dashboard"), hdb, _T("dashboards"));
+   LoadObjectsFromTable<DashboardGroup>(_T("dashboard group"), hdb, _T("object_containers WHERE object_class=") TO_STRING(OBJECT_DASHBOARDGROUP));
+   LoadObjectsFromTable<BusinessService>(_T("business service"), hdb, _T("object_containers WHERE object_class=") TO_STRING(OBJECT_BUSINESS_SERVICE));
+   LoadObjectsFromTable<BusinessServicePrototype>(_T("business service prototype"), hdb, _T("object_containers WHERE object_class=") TO_STRING(OBJECT_BUSINESS_SERVICE_PROTOTYPE));
    g_idxObjectById.setStartupMode(false);
 
 	// Load custom object classes provided by modules
    CALL_ALL_MODULES(pfLoadObjects, ());
 
    // Link children to container and template group objects
-   DbgPrintf(2, _T("Linking objects..."));
-	g_idxObjectById.forEach(LinkObjects, nullptr);
+   nxlog_debug_tag(_T("obj.init"), 2, _T("Linking objects..."));
+	g_idxObjectById.forEach([](NetObj *object, void *context) { object->linkObjects(); }, nullptr);
 
 	// Link custom object classes provided by modules
    CALL_ALL_MODULES(pfLinkObjects, ());
@@ -2075,7 +1613,7 @@ BOOL LoadObjects()
    //Prune custom attributes if required
    if (MetaDataReadInt32(_T("PruneCustomAttributes"), 0) > 0)
    {
-      g_idxObjectById.forEach(PruneCustomAttributes, nullptr);
+      g_idxObjectById.forEach([](NetObj *object, void *context) { object->pruneCustomAttributes(); }, nullptr);
       DBQuery(mainDB, _T("DELETE FROM metadata WHERE var_name='PruneCustomAttributes'"));
    }
    DBConnectionPoolReleaseConnection(mainDB);
@@ -2090,7 +1628,7 @@ BOOL LoadObjects()
    // Recalculate status for zone objects
    if (g_flags & AF_ENABLE_ZONING)
    {
-		g_idxZoneByUIN.forEach(RecalcStatusCallback, nullptr);
+		g_idxZoneByUIN.forEach([](NetObj *object, void *context) { object->calculateCompoundStatus(); }, nullptr);
    }
 
    // Start map update thread
@@ -2116,19 +1654,11 @@ void StopObjectMaintenanceThreads()
 }
 
 /**
- * Callback for DeleteUserFromAllObjects
- */
-static void DropUserAccess(NetObj *object, void *userId)
-{
-	object->dropUserAccess(CAST_FROM_POINTER(userId, UINT32));
-}
-
-/**
  * Delete user or group from all objects' ACLs
  */
-void DeleteUserFromAllObjects(UINT32 dwUserId)
+void DeleteUserFromAllObjects(uint32_t userId)
 {
-	g_idxObjectById.forEach(DropUserAccess, CAST_TO_POINTER(dwUserId, void *));
+	g_idxObjectById.forEach([](NetObj *object, void *userId) { object->dropUserAccess(CAST_FROM_POINTER(userId, uint32_t)); }, CAST_TO_POINTER(userId, void *));
 }
 
 /**

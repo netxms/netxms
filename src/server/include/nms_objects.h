@@ -4741,7 +4741,7 @@ void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter);
 
 bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass);
 
-void DeleteUserFromAllObjects(UINT32 dwUserId);
+void DeleteUserFromAllObjects(uint32_t userId);
 
 bool IsValidParentClass(int childClass, int parentClass);
 bool IsEventSource(int objectClass);

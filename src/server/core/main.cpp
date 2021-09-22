@@ -1136,10 +1136,10 @@ retry_db_lock:
    InitUsers();
    if (!LoadUsers())
    {
-      nxlog_write(NXLOG_ERROR, _T("Unable to load users and user groups from database (probably database is corrupted)"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Unable to load users and user groups from database (probably database is corrupted)"));
       return FALSE;
    }
-   nxlog_debug(2, _T("User accounts loaded"));
+   nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("User accounts loaded"));
 
    // Initialize audit
    InitAuditLog();
@@ -1168,12 +1168,12 @@ retry_db_lock:
    LoadSshKeys();
    if (!LoadObjects())
       return FALSE;
-   nxlog_debug(1, _T("Objects loaded and initialized"));
+   nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Objects loaded and initialized"));
 
    // Initialize and load event actions
    if (!LoadActions())
    {
-      nxlog_write(NXLOG_ERROR, _T("Unable to initialize actions"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Unable to initialize actions"));
       return FALSE;
    }
 
@@ -1188,7 +1188,7 @@ retry_db_lock:
 
    if (!LoadPhysicalLinks())
    {
-      nxlog_write(NXLOG_ERROR, _T("Unable to load physical links"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Unable to load physical links"));
       return FALSE;
    }
 
@@ -1209,7 +1209,7 @@ retry_db_lock:
    CheckForMgmtNode();
    if (g_dwMgmtNode == 0)
    {
-      nxlog_write(NXLOG_ERROR, _T("NetXMS server cannot create node object for itself - probably because platform subagent cannot be loaded (check above error messages, if any)"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("NetXMS server cannot create node object for itself - probably because platform subagent cannot be loaded (check above error messages, if any)"));
       return FALSE;
    }
 
