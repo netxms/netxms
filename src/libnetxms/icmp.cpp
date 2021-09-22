@@ -641,8 +641,8 @@ uint32_t PingRequestProcessor::ping(const InetAddress &addr, uint32_t timeout, u
 
 #if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
             struct timespec ts;
-            ts.tv_sec = dwTimeOut / 1000;
-            ts.tv_nsec = (dwTimeOut % 1000) * 1000000;
+            ts.tv_sec = timeout / 1000;
+            ts.tv_nsec = (timeout % 1000) * 1000000;
             int waitResult = pthread_cond_reltimedwait_np(&request.wakeupCondition, &m_mutex, &ts);
 #else
             struct timeval now;
