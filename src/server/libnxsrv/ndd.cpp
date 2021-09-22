@@ -253,22 +253,22 @@ GeoLocation NetworkDeviceDriver::getGeoLocation(SNMP_Transport *snmp, NObject *n
 /**
  * Handler for enumerating indexes
  */
-static UINT32 HandlerIndex(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static uint32_t HandlerIndex(SNMP_Variable *var, SNMP_Transport *transport, InterfaceList *ifList)
 {
-	((InterfaceList *)pArg)->add(new InterfaceInfo(pVar->getValueAsUInt()));
+	ifList->add(new InterfaceInfo(var->getValueAsUInt()));
    return SNMP_ERR_SUCCESS;
 }
 
 /**
  * Handler for enumerating indexes via ifXTable
  */
-static UINT32 HandlerIndexIfXTable(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static uint32_t HandlerIndexIfXTable(SNMP_Variable *var, SNMP_Transport *transport, InterfaceList *ifList)
 {
-   const SNMP_ObjectId& name = pVar->getName();
-   UINT32 index = name.value()[name.length() - 1];
-   if (((InterfaceList *)pArg)->findByIfIndex(index) == NULL)
+   const SNMP_ObjectId& name = var->getName();
+   uint32_t index = name.value()[name.length() - 1];
+   if (ifList->findByIfIndex(index) == nullptr)
    {
-	   ((InterfaceList *)pArg)->add(new InterfaceInfo(index));
+	   ifList->add(new InterfaceInfo(index));
    }
    return SNMP_ERR_SUCCESS;
 }
@@ -276,23 +276,22 @@ static UINT32 HandlerIndexIfXTable(SNMP_Variable *pVar, SNMP_Transport *pTranspo
 /**
  * Handler for enumerating IP addresses via ipAddrTable
  */
-static UINT32 HandlerIpAddr(SNMP_Variable *var, SNMP_Transport *snmp, void *context)
+static uint32_t HandlerIpAddr(SNMP_Variable *var, SNMP_Transport *transport, InterfaceList *ifList)
 {
    // Get address type and prefix
    SNMP_ObjectId oid = var->getName();
-   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
    oid.changeElement(9, 3); // ipAdEntNetMask
    request.bindVariable(new SNMP_Variable(oid));
    oid.changeElement(9, 2); // ipAdEntIfIndex
    request.bindVariable(new SNMP_Variable(oid));
    SNMP_PDU *response;
-   uint32_t rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rc = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
    if (rc == SNMP_ERR_SUCCESS)
    {
       // check number of varbinds and address type (1 = unicast)
       if ((response->getErrorCode() == SNMP_PDU_ERR_SUCCESS) && (response->getNumVariables() == 2))
       {
-         InterfaceList *ifList = static_cast<InterfaceList*>(context);
          InterfaceInfo *iface = ifList->findByIfIndex(response->getVariable(1)->getValueAsUInt());
          if (iface != nullptr)
          {
@@ -301,31 +300,50 @@ static UINT32 HandlerIpAddr(SNMP_Variable *var, SNMP_Transport *snmp, void *cont
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET in HandlerIpAddr failed (%s)"), snmp, SNMPGetProtocolErrorText(response->getErrorCode()));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET in HandlerIpAddr failed (%s)"), transport, SNMPGetProtocolErrorText(response->getErrorCode()));
       }
       delete response;
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET in HandlerIpAddr failed (%s)"), snmp, SNMPGetErrorText(rc));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET in HandlerIpAddr failed (%s)"), transport, SNMPGetErrorText(rc));
    }
    return rc;
 }
 
 /**
+ * Build IP address from OID part
+ */
+static InetAddress InetAddressFromOID(const uint32_t* oid, bool withMask)
+{
+   InetAddress addr;
+   if (((oid[0] == 1) && (oid[1] == 4)) || ((oid[0] == 3) && (oid[1] == 8))) // ipv4 and ipv4z
+   {
+      addr = InetAddress((oid[2] << 24) | (oid[3] << 16) | (oid[4] << 8) | oid[5]);
+      if (withMask)
+         addr.setMaskBits(static_cast<int>(*(oid + oid[1] + 2)));
+   }
+   else if (((oid[0] == 2) && (oid[1] == 16)) || ((oid[0] == 4) && (oid[1] == 20))) // ipv6 and ipv6z
+   {
+      BYTE bytes[16];
+      const uint32_t *p = oid + 2;
+      for(int i = 0; i < 16; i++)
+         bytes[i] = static_cast<BYTE>(*p++);
+      addr = InetAddress(bytes);
+      if (withMask)
+         addr.setMaskBits(static_cast<int>(*(oid + oid[1] + 2)));
+   }
+   return addr;
+}
+
+/**
  * Handler for enumerating IP addresses via ipAddressTable
  */
-static UINT32 HandlerIpAddressTable(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerIpAddressTable(SNMP_Variable *var, SNMP_Transport *transport, InterfaceList *ifList)
 {
-   InterfaceList *ifList = (InterfaceList *)arg;
-
    uint32_t oid[128];
    size_t oidLen = var->getName().length();
    memcpy(oid, var->getName().value(), oidLen * sizeof(uint32_t));
-
-   // Check address family (1 = ipv4, 2 = ipv6)
-   if ((oid[10] != 1) && (oid[10] != 2))
-      return SNMP_ERR_SUCCESS;
 
    uint32_t ifIndex = var->getValueAsUInt();
    InterfaceInfo *iface = ifList->findByIfIndex(ifIndex);
@@ -333,40 +351,28 @@ static UINT32 HandlerIpAddressTable(SNMP_Variable *var, SNMP_Transport *snmp, vo
       return SNMP_ERR_SUCCESS;
 
    // Build IP address from OID
-   InetAddress addr;
-   if (((oid[10] == 1) && (oid[11] == 4)) || ((oid[10] == 3) && (oid[11] == 8))) // ipv4 and ipv4z
-   {
-      addr = InetAddress((uint32_t)((oid[12] << 24) | (oid[13] << 16) | (oid[14] << 8) | oid[15]));
-   }
-   else if (((oid[10] == 2) && (oid[11] == 16)) || ((oid[10] == 4) && (oid[11] == 20))) // ipv6 and ipv6z
-   {
-      BYTE bytes[16];
-      for(int i = 12, j = 0; j < 16; i++, j++)
-         bytes[j] = (BYTE)oid[i];
-      addr = InetAddress(bytes);
-   }
-   else
-   {
+   InetAddress addr = InetAddressFromOID(&oid[10], false);
+   if (!addr.isValid())
       return SNMP_ERR_SUCCESS;   // Unknown or unsupported address format
-   }
 
    if (iface->hasAddress(addr))
       return SNMP_ERR_SUCCESS;   // This IP already set from ipAddrTable
 
    // Get address type and prefix
-   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
    oid[9] = 4; // ipAddressType
    request.bindVariable(new SNMP_Variable(oid, oidLen));
    oid[9] = 5; // ipAddressPrefix
    request.bindVariable(new SNMP_Variable(oid, oidLen));
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
    {
       // check number of varbinds and address type (1 = unicast)
       if ((response->getNumVariables() == 2) && (response->getVariable(0)->getValueAsInt() == 1))
       {
+         static SNMP_ObjectId ipAddressPrefixEntry = SNMP_ObjectId::parse(_T(".1.3.6.1.2.1.4.32.1"));
          SNMP_ObjectId prefix = response->getVariable(1)->getValueAsObjectId();
-         if (prefix.isValid() && !prefix.isZeroDotZero())
+         if (prefix.isValid() && !prefix.isZeroDotZero() && (prefix.compare(ipAddressPrefixEntry) == OID_LONGER))
          {
             // Last element in ipAddressPrefixTable index is prefix length
             addr.setMaskBits((int)prefix.value()[prefix.length() - 1]);
@@ -385,33 +391,17 @@ static UINT32 HandlerIpAddressTable(SNMP_Variable *var, SNMP_Transport *snmp, vo
 /**
  * Handler for enumerating IP address prefixes via ipAddressPrefixTable
  */
-static UINT32 HandlerIpAddressPrefixTable(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerIpAddressPrefixTable(SNMP_Variable *var, SNMP_Transport *transport, InterfaceList *ifList)
 {
-   InterfaceList *ifList = (InterfaceList *)arg;
    const uint32_t *oid = var->getName().value();
    
-   // Check address family (1 = ipv4, 2 = ipv6)
-   if ((oid[10] != 1) && (oid[10] != 2))
-      return SNMP_ERR_SUCCESS;
-
    // Build IP address from OID
-   InetAddress prefix;
-   if (oid[10] == 1)
-   {
-      prefix = InetAddress((UINT32)((oid[13] << 24) | (oid[14] << 16) | (oid[15] << 8) | oid[16]));
-      prefix.setMaskBits((int)oid[17]);
-   }
-   else
-   {
-      BYTE bytes[16];
-      for(int i = 13, j = 0; j < 16; i++, j++)
-         bytes[j] = (BYTE)oid[i];
-      prefix = InetAddress(bytes);
-      prefix.setMaskBits((int)oid[29]);
-   }
+   InetAddress prefix = InetAddressFromOID(&oid[11], true);
+   if (!prefix.isValid())
+      return SNMP_ERR_SUCCESS;   // Unknown or unsupported address format
 
    // Find matching IP and set mask
-   InterfaceInfo *iface = ifList->findByIfIndex(oid[12]);
+   InterfaceInfo *iface = ifList->findByIfIndex(oid[10]);
    if (iface != nullptr)
    {
       for(int i = 0; i < iface->ipAddrList.size(); i++)
@@ -420,6 +410,56 @@ static UINT32 HandlerIpAddressPrefixTable(SNMP_Variable *var, SNMP_Transport *sn
          if ((addr != nullptr) && prefix.contain(*addr))
          {
             addr->setMaskBits(prefix.getMaskBits());
+         }
+      }
+   }
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Handler for enumerating IP address prefixes via local routes in inetCidrRouteTable
+ */
+static uint32_t HandlerInetCidrRouteTable(SNMP_Variable *var, SNMP_Transport *transport, InterfaceList *ifList)
+{
+   if (var->getName().length() < 27)
+      return SNMP_ERR_SUCCESS;
+
+   uint32_t oid[256];
+   memset(oid, 0, sizeof(oid));
+   memcpy(oid, var->getName().value(), var->getName().length() * sizeof(uint32_t));
+
+   // Check route type, only use 1 (other) and 3 (local)
+   if ((var->getValueAsInt() != 1) && (var->getValueAsInt() != 3))
+      return SNMP_ERR_SUCCESS;
+
+   // Build IP address and next hop from OID
+   InetAddress prefix = InetAddressFromOID(&oid[11], true);
+   if (!prefix.isValid() || prefix.isAnyLocal() || prefix.isMulticast() || (prefix.getMaskBits() == 0) || (prefix.getHostBits() == 0))
+      return SNMP_ERR_SUCCESS;   // Unknown or unsupported address format, or prefix of no interest
+
+   uint32_t *policy = oid + oid[12] + 14; // Policy follows prefix, oid[12] contains prefix length
+   if (policy - oid + 3 >= var->getName().length())
+      return SNMP_ERR_SUCCESS;   // Check that length is valid and do not point beyond OID end
+
+   InetAddress nextHop = InetAddressFromOID(policy + policy[0] + 1, false);
+   if (!nextHop.isValid() || !nextHop.isAnyLocal())
+      return SNMP_ERR_SUCCESS;   // Unknown or unsupported address format, or next hop is not 0.0.0.0
+
+   // Get interface index
+   oid[10] = 7;   // inetCidrRouteIfIndex
+   uint32_t ifIndex = 0;
+   if (SnmpGetEx(transport, nullptr, oid, var->getName().length(), &ifIndex, sizeof(uint32_t), 0, nullptr) == SNMP_ERR_SUCCESS)
+   {
+      InterfaceInfo *iface = ifList->findByIfIndex(ifIndex);
+      if (iface != nullptr)
+      {
+         for(int i = 0; i < iface->ipAddrList.size(); i++)
+         {
+            InetAddress *addr = iface->ipAddrList.getList().get(i);
+            if ((addr != nullptr) && (addr->getHostBits() == 0) && prefix.contain(*addr))
+            {
+               addr->setMaskBits(prefix.getMaskBits());
+            }
          }
       }
    }
@@ -445,8 +485,8 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 	// Some devices may not return ifNumber at all or return completely insane values
    // (for example, DLink DGS-3612 can return negative value)
    // Anyway it's just a hint for initial array size
-	UINT32 interfaceCount = 0;
-	SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.1.0"), NULL, 0, &interfaceCount, sizeof(LONG), 0);
+	uint32_t interfaceCount = 0;
+	SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.1.0"), nullptr, 0, &interfaceCount, sizeof(LONG), 0);
 	if ((interfaceCount <= 0) || (interfaceCount > 4096))
 	{
 	   nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): invalid interface count %d received from device"), snmp, interfaceCount);
@@ -603,7 +643,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
       }
 
       // Interface IP addresses and netmasks
-		UINT32 error = SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.20.1.1"), HandlerIpAddr, ifList);
+		uint32_t error = SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.20.1.1"), HandlerIpAddr, ifList);
       if (error == SNMP_ERR_SUCCESS)
       {
          success = true;
@@ -618,6 +658,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
       if (ifList->isPrefixWalkNeeded())
       {
    		SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.32.1.5"), HandlerIpAddressPrefixTable, ifList);
+         SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.24.7.1.8"), HandlerInetCidrRouteTable, ifList);
       }
    }
 	else
