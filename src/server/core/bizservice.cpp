@@ -1075,12 +1075,12 @@ double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, serviceId);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, from);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, to);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, from);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, to);
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, from);
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, to);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (uint32_t)from);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (uint32_t)to);
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (uint32_t)from);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (uint32_t)to);
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (uint32_t)from);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (uint32_t)to);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
       {
@@ -1115,12 +1115,12 @@ void GetServiceTickets(uint32_t serviceId, time_t from, time_t to, NXCPMessage *
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, serviceId);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, from);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, to);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, from);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, to);
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, from);
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, to);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (uint32_t)from);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (uint32_t)to);
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (uint32_t)from);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (uint32_t)to);
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (uint32_t)from);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (uint32_t)to);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
       {
@@ -1141,8 +1141,8 @@ void GetServiceTickets(uint32_t serviceId, time_t from, time_t to, NXCPMessage *
             msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10), original_ticket_id != 0 ? original_ticket_id : ticket_id);
             msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 1, original_ticket_id != 0 ? original_service_id : serviceId);
             msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 2, check_id);
-            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 3, create_timestamp);
-            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 4, close_timestamp);
+            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 3, (uint32_t)create_timestamp);
+            msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 4, (uint32_t)close_timestamp);
             msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 5, reason);
             msg->setField(VID_BUSINESS_TICKET_LIST_BASE + (i * 10) + 6, checkDescription);
          }
