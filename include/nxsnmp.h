@@ -382,7 +382,7 @@ public:
    SNMP_MIBObject *getFirstChild() { return m_pFirst; }
    SNMP_MIBObject *getLastChild() { return m_pLast; }
 
-   UINT32 getObjectId() { return m_dwOID; }
+   uint32_t getObjectId() { return m_dwOID; }
    const TCHAR *getName() { return m_pszName; }
    const TCHAR *getDescription() { return m_pszDescription; }
    int getType() { return m_iType; }
@@ -893,9 +893,13 @@ template <typename T> class __SnmpWalk_WrapperData
 {
 public:
    T *m_object;
-   UINT32 (T::*m_func)(SNMP_Variable *, SNMP_Transport *);
+   uint32_t (T::*m_func)(SNMP_Variable *, SNMP_Transport *);
 
-   __SnmpWalk_WrapperData(T *object, UINT32 (T::*func)(SNMP_Variable *, SNMP_Transport *)) { m_object = object; m_func = func; }
+   __SnmpWalk_WrapperData(T *object, uint32_t (T::*func)(SNMP_Variable *, SNMP_Transport *))
+   {
+      m_object = object;
+      m_func = func;
+   }
 };
 
 /**
@@ -910,7 +914,7 @@ template <typename T> uint32_t __SnmpWalk_Wrapper(SNMP_Variable *v, SNMP_Transpo
 /**
  * Wrapper function for calling SnmpWalk on object
  */
-template <typename T> uint32_t SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid, T *object, UINT32 (T::*func)(SNMP_Variable *, SNMP_Transport *))
+template <typename T> uint32_t SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid, T *object, uint32_t (T::*func)(SNMP_Variable*, SNMP_Transport*))
 {
    __SnmpWalk_WrapperData<T> data(object, func);
    return SnmpWalk(transport, rootOid, __SnmpWalk_Wrapper<T>, &data);
@@ -919,7 +923,7 @@ template <typename T> uint32_t SnmpWalk(SNMP_Transport *transport, const TCHAR *
 /**
  * Wrapper function for calling SnmpWalk on object
  */
-template <typename T> uint32_t SnmpWalk(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen, T *object, UINT32 (T::*func)(SNMP_Variable *, SNMP_Transport *))
+template <typename T> uint32_t SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, T *object, uint32_t (T::*func)(SNMP_Variable*, SNMP_Transport*))
 {
    __SnmpWalk_WrapperData<T> data(object, func);
    return SnmpWalk(transport, rootOid, rootOidLen, __SnmpWalk_Wrapper<T>, &data);
