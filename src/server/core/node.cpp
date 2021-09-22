@@ -10899,12 +10899,12 @@ void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const Ine
    TCHAR debugPrefix[256], buffer[64];
    _sntprintf(debugPrefix, 256, _T("Node::icmpPollAddress(%s [%u], %s, %s):"), m_name, m_id, target, addr.toString(buffer));
 
-   UINT32 status = ICMP_SEND_FAILED, rtt = 0;
+   uint32_t status = ICMP_SEND_FAILED, rtt = 0;
    if (conn != nullptr)
    {
       TCHAR parameter[128];
       _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), addr.toString(buffer));
-      UINT32 rcc = conn->getParameter(parameter, buffer, 64);
+      uint32_t rcc = conn->getParameter(parameter, buffer, 64);
       if (rcc == ERR_SUCCESS)
       {
          nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("%s: proxy response: \"%s\""), debugPrefix, buffer);
@@ -11056,6 +11056,22 @@ DataCollectionError Node::getIcmpStatistic(const TCHAR *param, IcmpStatFunction 
    }
    unlockProperties();
    return rc;
+}
+
+/**
+ * Update ICMP statistic period for already configured ICMP collectors
+ */
+void Node::updateIcmpStatisticPeriod(uint32_t period)
+{
+   lockProperties();
+   if (m_icmpStatCollectors != nullptr)
+   {
+      m_icmpStatCollectors->forEach([](const TCHAR *key, const void *collector, void *context) -> EnumerationCallbackResult {
+         ((IcmpStatCollector*)collector)->resize(CAST_FROM_POINTER(context, int));
+         return _CONTINUE;
+      }, CAST_TO_POINTER(period, void*));
+   }
+   unlockProperties();
 }
 
 /**

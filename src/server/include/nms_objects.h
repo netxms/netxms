@@ -3461,6 +3461,7 @@ public:
    bool getIcmpStatistics(const TCHAR *target, UINT32 *last, UINT32 *min, UINT32 *max, UINT32 *avg, UINT32 *loss) const;
    DataCollectionError getIcmpStatistic(const TCHAR *param, IcmpStatFunction function, TCHAR *value) const;
    StringList *getIcmpStatCollectors() const;
+   void updateIcmpStatisticPeriod(uint32_t period);
 
    NetworkDeviceDriver *getDriver() const { return m_driver; }
    DriverData *getDriverData() { return m_driverData; }
