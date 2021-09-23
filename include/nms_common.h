@@ -1208,13 +1208,10 @@ inline WCHAR *MemCopyStringW(const WCHAR *src)
 #define DCI_DT_DEPRECATED  255	/* used internally by agent */
 
 /**
- * Insert parameter as string
+ * Convert macro parameter to string (after expansion)
  */
-#ifdef UNICODE
-#define STRING(x)   L#x
-#else
-#define STRING(x)   #x
-#endif
+#define __AS_STRING(x) _T(#x)
+#define AS_STRING(x) __AS_STRING(x)
 
 /**
  * Pipe handle
