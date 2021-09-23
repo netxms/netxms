@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,9 +56,9 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public abstract class AbstractGeolocationView extends ViewPart implements ISelectionProvider
 {
 	public static final String JOB_FAMILY = "MapViewJob"; //$NON-NLS-1$
-	
+
 	protected AbstractGeoMapViewer map;
-	
+
 	private MapAccessor mapAccessor;
 	private int zoomLevel = 15;
 	private Action actionZoomIn;
@@ -80,9 +80,9 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 	 */
 	protected abstract int getInitialZoomLevel();
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -97,10 +97,10 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 		{
 		}
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{      
@@ -136,10 +136,10 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 				mapAccessor.setLongitude(centerPoint.getLongitude());
 			}
 		});
-		
+
 		getSite().setSelectionProvider(this);
 	}
-	
+
    /**
     * Activate context
     */
@@ -262,9 +262,9 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
@@ -307,7 +307,7 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
          l.selectionChanged(e);
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
@@ -316,7 +316,7 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
       selectionChangeListeners.add(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
@@ -325,7 +325,7 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
       selectionChangeListeners.remove(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
     */
    @Override
@@ -334,7 +334,7 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
       return selection;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
     */
    @Override

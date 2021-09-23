@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
@@ -48,11 +49,12 @@ import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.FontTools;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Geo location viewer for objects
  */
-public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
+public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements MouseTrackListener
 {
    private static final int OBJECT_TOOLTIP_X_MARGIN = 6;
    private static final int OBJECT_TOOLTIP_Y_MARGIN = 6;
@@ -76,6 +78,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
    public ObjectGeoLocationViewer(Composite parent, int style)
    {
       super(parent, style);
+      WidgetHelper.attachMouseTrackListener(this, this);
 
       objectToolTipHeaderFont = FontTools.createFont(TITLE_FONTS, 1, SWT.BOLD);
       
@@ -158,8 +161,9 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
       redraw();
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#onCacheChange(org.netxms.client.objects.AbstractObject, org.netxms.base.GeoLocation)
+   /**
+    * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#onCacheChange(org.netxms.client.objects.AbstractObject,
+    *      org.netxms.base.GeoLocation)
     */
    @Override
    protected void onCacheChange(AbstractObject object, GeoLocation prevLocation)
@@ -175,6 +179,40 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
       }
    }
 
+   /**
+    * @see org.eclipse.swt.events.MouseTrackListener#mouseHover(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseHover(MouseEvent e)
+   {
+      if (objectTooltipRectangle == null) // ignore hover if tooltip already open
+      {
+         AbstractObject object = getObjectAtPoint(new Point(e.x, e.y));
+         if (object != currentObject)
+         {
+            objectToolTipLocation = (object != null) ? new Point(e.x, e.y) : null;
+            setCurrentObject(object);
+         }
+      }
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.events.MouseTrackListener#mouseEnter(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseEnter(MouseEvent e)
+   {
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.events.MouseTrackListener#mouseExit(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseExit(MouseEvent e)
+   {
+      setCurrentObject(null);
+   }
+   
    /* (non-Javadoc)
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#mouseMove(org.eclipse.swt.events.MouseEvent)
     */
@@ -228,7 +266,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
       redraw();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#drawContent(org.eclipse.swt.graphics.GC, org.netxms.base.GeoLocation, int, int)
     */
    @Override
@@ -311,9 +349,9 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
    private void drawObjectToolTip(GC gc)
    {
       gc.setFont(objectToolTipHeaderFont);
-      Point titleSize = gc.textExtent(currentObject.getObjectName());
+      Point titleSize = gc.textExtent(currentObject.getNameWithAlias());
       gc.setFont(JFaceResources.getDefaultFont());
-      
+
       // Calculate width and height
       int width = Math.max(titleSize.x + 12, 128);
       int height = OBJECT_TOOLTIP_Y_MARGIN * 2 + titleSize.y + 2 + OBJECT_TOOLTIP_SPACING;
@@ -325,8 +363,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
       height += pt.y;
       
       String locationDetails;
-      if ((currentObject.getGeolocation().getTimestamp().getTime() > 0) &&
-          currentObject.getGeolocation().isAutomatic())
+      if ((currentObject.getGeolocation().getTimestamp().getTime() > 0) && currentObject.getGeolocation().isAutomatic())
       {
          locationDetails = String.format(Messages.get().ObjectGeoLocationViewer_ObtainedFrom, 
                RegionalSettings.getDateTimeFormat().format(currentObject.getGeolocation().getTimestamp()),
@@ -340,7 +377,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
       {
          locationDetails = null;
       }
-      
+
       final String postalAddress = currentObject.getPostalAddress().getAddressLine();
       if (!postalAddress.isEmpty())
       {
@@ -349,7 +386,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
             width = pt.x;
          height += pt.y + OBJECT_TOOLTIP_SPACING;
       }
-      
+
       String lastReport, batteryLevel;
       if (currentObject instanceof MobileDevice)
       {
@@ -419,8 +456,8 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
       
       gc.setForeground(colorCache.create(0, 0, 0));
       gc.setFont(objectToolTipHeaderFont);
-      gc.drawText(currentObject.getObjectName(), rect.x + OBJECT_TOOLTIP_X_MARGIN + 12, rect.y + OBJECT_TOOLTIP_Y_MARGIN, true);
-      
+      gc.drawText(currentObject.getNameWithAlias(), rect.x + OBJECT_TOOLTIP_X_MARGIN + 12, rect.y + OBJECT_TOOLTIP_Y_MARGIN, true);
+
       gc.setFont(JFaceResources.getDefaultFont());
       int textLineHeight = gc.textExtent("M").y; //$NON-NLS-1$
       y = rect.y + OBJECT_TOOLTIP_Y_MARGIN + titleSize.y + OBJECT_TOOLTIP_SPACING + 2;
@@ -435,7 +472,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
          y += textLineHeight;
          gc.drawText(postalAddress, rect.x + OBJECT_TOOLTIP_X_MARGIN, y, true);
       }
-      
+
       if (lastReport != null)
       {
          y += textLineHeight + OBJECT_TOOLTIP_SPACING;
