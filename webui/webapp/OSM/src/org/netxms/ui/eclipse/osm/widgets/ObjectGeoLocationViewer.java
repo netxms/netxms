@@ -69,8 +69,9 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    private Rectangle objectTooltipRectangle = null;
    private Font objectToolTipHeaderFont;
    private long rootObjectId = 0;
+   private boolean singleObjectMode = false;
    private String filterString = null;
-   
+
    /**
     * @param parent
     * @param style
@@ -126,7 +127,23 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    {
       this.rootObjectId = rootObjectId;
    }
-   
+
+   /**
+    * @return the singleObjectMode
+    */
+   public boolean isSingleObjectMode()
+   {
+      return singleObjectMode;
+   }
+
+   /**
+    * @param singleObjectMode the singleObjectMode to set
+    */
+   public void setSingleObjectMode(boolean singleObjectMode)
+   {
+      this.singleObjectMode = singleObjectMode;
+   }
+
    /**
     * Process object update
     * 
@@ -141,13 +158,13 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          if (objects.get(index).getObjectId() == object.getObjectId())
             break;
       }
-      
+
       if (index < objects.size())
       {
          AbstractObject curr = objects.set(index, object);
          return curr.getStatus() != object.getStatus();
       }
-      
+
       return false;
    }
    
@@ -157,7 +174,17 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    @Override
    protected void onMapLoad()
    {
-      objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId, filterString);
+      if (singleObjectMode)
+      {
+         objects = new ArrayList<AbstractObject>(1);
+         AbstractObject object = ConsoleSharedData.getSession().findObjectById(rootObjectId);
+         if ((object != null) && coverage.contains(object.getGeolocation()))
+            objects.add(object);
+      }
+      else
+      {
+         objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId, filterString);
+      }
       redraw();
    }
 
@@ -196,7 +223,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.MouseTrackListener#mouseEnter(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -204,7 +231,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    {
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.MouseTrackListener#mouseExit(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -212,8 +239,8 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    {
       setCurrentObject(null);
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#mouseMove(org.eclipse.swt.events.MouseEvent)
     */
    @Override
@@ -229,7 +256,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#mouseDown(org.eclipse.swt.events.MouseEvent)
     */
    @Override

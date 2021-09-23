@@ -161,14 +161,14 @@ public class GeoLocationCache implements SessionListener
 	}
 	
 	/**
-	 * Get all objects in given area. If parent ID is set, only objects under given parent will be included.
-	 * 
-	 * @param area geographical area
-	 * @param parentId parent object ID or 0
-	 * @param filterString object name filter
-	 * @return
-	 */
-	public List<AbstractObject> getObjectsInArea(Area area, long parentId, String filterString)
+    * Get all objects in given area. If parent ID is set, only objects under given parent will be included.
+    * 
+    * @param area geographical area
+    * @param parentId parent object ID or 0
+    * @param filterString object name filter
+    * @return
+    */
+   public List<AbstractObject> getObjectsInArea(Area area, long parentId, String filterString)
 	{
 		List<AbstractObject> list = null;
 		synchronized(locationTree)
@@ -185,7 +185,7 @@ public class GeoLocationCache implements SessionListener
 		}
 		return list;
 	}
-	
+
 	/**
 	 * Add cache listener
 	 * 
